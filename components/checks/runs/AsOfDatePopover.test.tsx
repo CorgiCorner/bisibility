@@ -41,12 +41,12 @@ describe("AsOfDatePopover", () => {
     await user.click(trigger);
     const popover = screen.getByRole("dialog", { name: "As of date" });
     expect(within(popover).getByText("Dates use the project timezone (UTC).")).toBeInTheDocument();
-    expect(within(popover).getByRole("button", { name: "July 17, 2026" })).toHaveAttribute(
+    expect(within(popover).getByRole("button", { name: "Jul 17, 2026" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
 
-    await user.click(within(popover).getByRole("button", { name: "July 20, 2026" }));
+    await user.click(within(popover).getByRole("button", { name: "Jul 20, 2026" }));
 
     expect(onSelect).toHaveBeenCalledWith("2026-07-20");
     await waitFor(() => {

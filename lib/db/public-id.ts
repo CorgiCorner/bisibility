@@ -22,6 +22,8 @@ export const PUBLIC_ID_RESOURCE_REGISTRY = {
   pat: "personalAccessToken",
   pmkt: "projectMarket",
   prj: "project",
+  rcr: "rankCheckRun",
+  sch: "checkSchedule",
   sid: "session",
   sig: "signal",
   svkw: "savedKeyword",

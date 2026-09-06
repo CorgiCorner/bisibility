@@ -27,6 +27,12 @@ const include = {
       },
     },
   },
+  checkSchedule: {
+    select: {
+      name: true,
+      publicId: true,
+    },
+  },
   locationRef: true,
   queuedRankCheckTasks: {
     select: { state: true },

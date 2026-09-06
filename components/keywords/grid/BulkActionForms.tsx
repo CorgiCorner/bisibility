@@ -14,8 +14,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { type BulkFormChrome, runBulkFormBusy } from "./bulk-form-chrome";
 
-export { BulkFrequencyForm } from "./BulkFrequencyForm";
-
 type BulkTagFormProps = BulkFormChrome & {
   action: KeywordAction<BulkKeywordTagInput>;
   onDone: () => void;

@@ -187,7 +187,7 @@ export function ProviderCard({
             timeZone={timeZone}
           />
         ) : (
-          <dl className="-mx-5 -mb-4.5 mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-border-soft border-t bg-bg-sunken/25 px-5 py-3.5 sm:col-span-2 sm:row-start-2">
+          <dl className="-mx-5 -mb-4.5 mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-border border-t bg-bg-sunken/25 px-5 py-3.5 sm:col-span-2 sm:row-start-2">
             {provider.meta.map((row) => (
               <div key={row.label}>
                 <dt className="text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
@@ -215,7 +215,7 @@ export function ProviderCard({
             timeZone={timeZone}
           />
         ) : null}
-        <div className="mt-3.5 flex shrink-0 items-center gap-[7px] border-border-soft border-t pt-3.5 sm:col-start-2 sm:row-start-1 sm:mt-0 sm:flex-wrap sm:justify-end sm:border-t-0 sm:pt-0">
+        <div className="mt-3.5 flex shrink-0 items-center gap-[7px] border-border border-t pt-3.5 sm:col-start-2 sm:row-start-1 sm:mt-0 sm:flex-wrap sm:justify-end sm:border-t-0 sm:pt-0">
           {provider.status === "connected" && canManageProviders ? (
             <ProviderDisconnectAction
               disconnectProvider={actions?.disconnectProvider}

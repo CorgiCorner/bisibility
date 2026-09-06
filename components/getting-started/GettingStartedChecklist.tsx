@@ -56,10 +56,7 @@ export function GettingStartedChecklist({
                 ? selectedId === definition.id
                 : mobileOpenId === definition.id;
               return (
-                <li
-                  className={index === 0 ? "" : "border-t border-border-soft"}
-                  key={definition.id}
-                >
+                <li className={index === 0 ? "" : "border-t border-border"} key={definition.id}>
                   <div
                     className={`relative flex items-center gap-3 px-5 pt-3.5 ${expanded ? "pb-1.5" : "pb-3.5"}`}
                   >

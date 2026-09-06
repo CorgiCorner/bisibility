@@ -68,7 +68,7 @@ describe("BacklinksTable", () => {
     expect(lostRow).toHaveAttribute("data-status", "lost");
     expect(lostRow).toHaveClass("text-fg-muted");
     expect(source).toHaveClass("line-through");
-    expect(within(lostRow as HTMLElement).getByText("lost 12 Jul")).toBeInTheDocument();
+    expect(within(lostRow as HTMLElement).getByText("lost Jul 12")).toBeInTheDocument();
   });
 
   it("turns spam values amber at the 5 point threshold", () => {

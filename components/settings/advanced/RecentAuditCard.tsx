@@ -30,7 +30,7 @@ export function RecentAuditCard({ entries, projectId }: Readonly<RecentAuditCard
       title="Audit log"
     >
       {entries.length ? (
-        <div className="divide-y divide-border-soft overflow-hidden rounded-control border border-border">
+        <div className="divide-y divide-border overflow-hidden rounded-control border border-border">
           {entries.slice(0, 5).map((entry) => (
             <div
               className="grid grid-cols-[34px_minmax(0,1fr)] gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[34px_minmax(0,1fr)_auto] sm:items-center"

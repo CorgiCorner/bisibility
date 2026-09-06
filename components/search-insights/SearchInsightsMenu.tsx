@@ -11,7 +11,7 @@ const surfaceClass =
   "mt-1.5 rounded-card border border-border-control bg-bg-elev p-1.5 shadow-none";
 
 const optionClass =
-  "min-h-0 w-full gap-2.5 rounded-control px-2.5 py-2 text-left text-ui-body text-fg-muted hover:bg-bg-sunken focus:bg-nav-active aria-selected:bg-nav-active";
+  "min-h-0 w-full gap-2.5 rounded-control px-2.5 py-2 text-left text-ui-body text-fg-muted hover:bg-bg-sunken focus:bg-bg-sunken aria-selected:bg-nav-active";
 const selectedOptionClass = "rounded-control border border-border";
 
 type SearchInsightsMenuProps = {

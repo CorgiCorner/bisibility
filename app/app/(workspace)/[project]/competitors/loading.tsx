@@ -62,7 +62,7 @@ export default function CompetitorsLoading() {
               </div>
             ))}
           </div>
-          <div className="mt-4 border-t border-border-soft pt-3.5">
+          <div className="mt-4 border-t border-border pt-3.5">
             <Bar className="h-3 w-full max-w-[420px]" />
           </div>
         </div>
@@ -80,10 +80,7 @@ export default function CompetitorsLoading() {
                 ))}
               </div>
               {rowKeys.map((key) => (
-                <div
-                  className={cn(tableGrid, "border-b border-border-soft px-4.5 py-2.5")}
-                  key={key}
-                >
+                <div className={cn(tableGrid, "border-b border-border px-4.5 py-2.5")} key={key}>
                   <Bar className="h-3.5 w-[70%]" />
                   <Bar className="h-3.5 w-9" />
                   <Bar className="h-3.5 w-9" />

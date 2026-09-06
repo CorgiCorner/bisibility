@@ -5,8 +5,10 @@ export function searchInsightsCurrentReturnPath(
   const view = new URLSearchParams();
   const property = searchParams.get("property");
   const period = searchParams.get("period");
+  const comparison = searchParams.get("comparison");
   if (property) view.set("property", property);
   if (period) view.set("period", period);
+  if (comparison) view.set("comparison", comparison);
   const query = view.toString();
   return query ? `${pathname}?${query}` : pathname;
 }
@@ -22,7 +24,9 @@ export function searchInsightsPropertyViewPath(
   const view = new URLSearchParams();
   view.set("property", property);
   const period = searchParams.get("period");
+  const comparison = searchParams.get("comparison");
   if (period) view.set("period", period);
+  if (comparison) view.set("comparison", comparison);
   if (preserveGa4OauthSelection) {
     for (const key of GA4_SELECTION_PARAMS) {
       const value = searchParams.get(key);

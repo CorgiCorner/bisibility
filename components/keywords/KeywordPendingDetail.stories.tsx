@@ -32,7 +32,6 @@ const actionArgs = {
   projectRef: "prj_demo",
   runCheckNowAction: async () => undefined,
   updateKeywordAction: async () => undefined,
-  updateKeywordScheduleAction: async () => undefined,
 };
 
 function pendingKeyword(state: Exclude<KeywordCheckState, "ranked">): KeywordRow {
@@ -90,7 +89,6 @@ export const NeverChecked: Story = {
     keyword: pendingKeyword("never_checked"),
     providerConnected: true,
     rankState: "never_checked",
-    whatChanged: "first_check",
   },
 };
 
@@ -100,7 +98,6 @@ export const NotRanked: Story = {
     keyword: pendingKeyword("not_ranked"),
     providerConnected: true,
     rankState: "not_ranked",
-    whatChanged: "no_change",
   },
 };
 
@@ -110,7 +107,6 @@ export const Failed: Story = {
     keyword: pendingKeyword("failed"),
     providerConnected: true,
     rankState: "failed",
-    whatChanged: "diff",
   },
 };
 
@@ -120,6 +116,5 @@ export const Running: Story = {
     keyword: pendingKeyword("running"),
     providerConnected: true,
     rankState: "running",
-    whatChanged: "no_change",
   },
 };

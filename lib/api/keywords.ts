@@ -5,13 +5,18 @@ import { addTags } from "@/lib/actions/keyword-helpers";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { Device, type Prisma } from "@/lib/generated/prisma/client";
+import {
+  assertKeywordIdentityUnchanged,
+  KeywordIdentityImmutableError,
+} from "@/lib/keywords/identity";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
+import { cancelRunItemsForKeywordDeletion } from "@/lib/rank-check/runs/cancel";
 import { intentSchema, topicSchema } from "@/lib/schemas/keyword";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { serpMarketLocationValues } from "@/lib/serp/markets";
 import { type ApiContext, forbidden, notFound, projectMatches } from "./context";
-import { ApiInputError } from "./errors";
+import { ApiConflictError, ApiInputError } from "./errors";
 import { scheduleFromPatch } from "./keyword-utils";
 import {
   decodeCursor,
@@ -205,6 +210,18 @@ export async function patchKeyword(ctx: ApiContext, keywordId: string) {
       projectId: ctx.auth.project.id,
     });
   }
+  try {
+    assertKeywordIdentityUnchanged(keyword, {
+      device: data.device,
+      locationId: resolved?.location.id,
+      text: data.keyword,
+    });
+  } catch (error) {
+    if (error instanceof KeywordIdentityImmutableError) {
+      throw new ApiConflictError(error.message);
+    }
+    throw error;
+  }
   const updated = await prisma.keyword.update({
     data: {
       device: data.device,
@@ -262,6 +279,7 @@ export async function deleteKeyword(ctx: ApiContext, keywordId: string) {
   }
 
   await prisma.$transaction(async (tx) => {
+    await cancelRunItemsForKeywordDeletion(tx, [keyword.id]);
     await tx.keyword.delete({ where: { id: keyword.id } });
     await writeAudit(
       {

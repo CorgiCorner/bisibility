@@ -64,7 +64,7 @@ export function AddKeywordCsvReview({ items, onEdit }: Readonly<AddKeywordCsvRev
       <div className="overflow-hidden rounded-control border border-border">
         {preview.map((item) => (
           <div
-            className="flex items-center gap-3 border-t border-border-soft px-3.5 py-2.5 first:border-t-0"
+            className="flex items-center gap-3 border-t border-border px-3.5 py-2.5 first:border-t-0"
             key={item.key}
           >
             <span className="w-6 flex-none font-sans tabular-nums text-[11px] text-fg-muted">
@@ -82,7 +82,7 @@ export function AddKeywordCsvReview({ items, onEdit }: Readonly<AddKeywordCsvRev
           </div>
         ))}
         {remaining > 0 ? (
-          <div className="border-t border-border-soft px-3.5 py-2.5 font-sans tabular-nums text-[11px] text-fg-muted">
+          <div className="border-t border-border px-3.5 py-2.5 font-sans tabular-nums text-[11px] text-fg-muted">
             +{remaining} more
           </div>
         ) : null}

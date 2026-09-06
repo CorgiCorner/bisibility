@@ -4,6 +4,8 @@ import {
 } from "@/components/cost-estimate/SessionSpendProvider";
 import { KeywordImportProvider } from "@/components/keywords/import/KeywordImportProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { MarketContextProvider } from "@/components/markets/MarketContextProvider";
+import type { MarketContextValue } from "@/lib/markets/market-context-value";
 import { render } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { vi } from "vitest";
@@ -33,7 +35,10 @@ export function pendingRows(count = 2): KeywordsGridProps["rows"] {
   }));
 }
 
-export function renderPendingGrid(overrides: Partial<KeywordsGridProps> = {}) {
+export function renderPendingGrid(
+  overrides: Partial<KeywordsGridProps> = {},
+  market: MarketContextValue["market"] = null,
+) {
   const actions = {
     addKeywordsAction: vi.fn().mockResolvedValue({ created: 1, keywords: [] }),
     bulkClearTargetAction: vi.fn().mockResolvedValue({ updated: 1 }),
@@ -67,20 +72,22 @@ export function renderPendingGrid(overrides: Partial<KeywordsGridProps> = {}) {
   };
 
   render(
-    <SessionSpendProvider>
-      <SessionSpendProbe />
-      <KeywordImportProvider activeProjectId="project_1">
-        <KeywordsGrid
-          {...actions}
-          projectId="prj_1"
-          providerConnected={false}
-          rows={pendingRows()}
-          savedViews={[]}
-          tagSuggestions={[]}
-          {...overrides}
-        />
-      </KeywordImportProvider>
-    </SessionSpendProvider>,
+    <MarketContextProvider market={market} projectRef="prj_1">
+      <SessionSpendProvider>
+        <SessionSpendProbe />
+        <KeywordImportProvider activeProjectId="project_1">
+          <KeywordsGrid
+            {...actions}
+            projectId="prj_1"
+            providerConnected={false}
+            rows={pendingRows()}
+            savedViews={[]}
+            tagSuggestions={[]}
+            {...overrides}
+          />
+        </KeywordImportProvider>
+      </SessionSpendProvider>
+    </MarketContextProvider>,
   );
 
   return actions;

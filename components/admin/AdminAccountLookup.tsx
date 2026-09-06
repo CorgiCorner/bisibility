@@ -2,6 +2,7 @@
 
 import { AdminAccountActions } from "@/components/admin/AdminAccountActions";
 import { displayTime } from "@/components/admin/AdminPrimitives";
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button, Card, IdChip, SectionTitle } from "@/components/ui";
 import { lookupInstanceAdminAccount } from "@/lib/actions/instance-admin-account";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -36,7 +37,7 @@ const money = new Intl.NumberFormat("en-US", { currency: "USD", style: "currency
 
 function MetadataTile({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return (
-    <div className="flex min-w-0 flex-col rounded-card border border-border-soft bg-bg-elev px-3 py-2.5">
+    <div className="flex min-w-0 flex-col rounded-card border border-border bg-bg-elev px-3 py-2.5">
       <div className="text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">{label}</div>
       <div className="mt-auto pt-1 text-[13px] font-semibold tabular-nums text-fg">{value}</div>
     </div>
@@ -45,9 +46,11 @@ function MetadataTile({ label, value }: Readonly<{ label: string; value: React.R
 
 function AccountMetadata({
   account,
+  dateFormat,
   onStatusChange,
 }: Readonly<{
   account: FoundAccount;
+  dateFormat: ReturnType<typeof useDateFormat>;
   onStatusChange: (status: FoundAccount["status"]) => void;
 }>) {
   return (
@@ -61,8 +64,8 @@ function AccountMetadata({
         </span>
       </div>
       <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2.5">
-        <MetadataTile label="Created" value={displayTime(account.createdAt)} />
-        <MetadataTile label="Last active" value={displayTime(account.lastActiveAt)} />
+        <MetadataTile label="Created" value={displayTime(account.createdAt, dateFormat)} />
+        <MetadataTile label="Last active" value={displayTime(account.lastActiveAt, dateFormat)} />
         <MetadataTile label="Projects" value={count.format(account.projectCount)} />
         <MetadataTile label="Keywords" value={count.format(account.keywordCount)} />
         <MetadataTile
@@ -96,15 +99,23 @@ function AccountMetadata({
 }
 
 function LookupOutcome({
+  dateFormat,
   onStatusChange,
   result,
 }: Readonly<{
   onStatusChange: (status: FoundAccount["status"]) => void;
+  dateFormat: ReturnType<typeof useDateFormat>;
   result: LookupResult | null;
 }>) {
   if (!result) return null;
   if (result.status === "found") {
-    return <AccountMetadata account={result.account} onStatusChange={onStatusChange} />;
+    return (
+      <AccountMetadata
+        account={result.account}
+        dateFormat={dateFormat}
+        onStatusChange={onStatusChange}
+      />
+    );
   }
 
   if (result.status === "not_found") {
@@ -127,6 +138,7 @@ function LookupOutcome({
 }
 
 export function AdminAccountLookup() {
+  const dateFormat = useDateFormat();
   const [result, setResult] = useState<LookupResult | null>(null);
   const [pending, startTransition] = useTransition();
   const {
@@ -201,7 +213,7 @@ export function AdminAccountLookup() {
         <ClockCounterClockwise aria-hidden size={12} weight="regular" />
         Lookups are recorded in the admin audit log.
       </p>
-      <LookupOutcome onStatusChange={updateAccountStatus} result={result} />
+      <LookupOutcome dateFormat={dateFormat} onStatusChange={updateAccountStatus} result={result} />
     </Card>
   );
 }

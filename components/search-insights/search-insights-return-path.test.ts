@@ -5,13 +5,17 @@ import {
 } from "./search-insights-return-path";
 
 describe("searchInsightsCurrentReturnPath", () => {
-  it("keeps only property then period in deterministic order", () => {
+  it("keeps property, period and comparison in deterministic order", () => {
     expect(
       searchInsightsCurrentReturnPath(
         "/app/prj_1/search-console",
-        new URLSearchParams("period=28&property=sc-domain%3Abisibility.com&noise=drop"),
+        new URLSearchParams(
+          "comparison=yoy&period=28&property=sc-domain%3Abisibility.com&noise=drop",
+        ),
       ),
-    ).toBe("/app/prj_1/search-console?property=sc-domain%3Abisibility.com&period=28");
+    ).toBe(
+      "/app/prj_1/search-console?property=sc-domain%3Abisibility.com&period=28&comparison=yoy",
+    );
   });
 
   it("drops OAuth transients and arbitrary parameters", () => {
@@ -33,13 +37,13 @@ describe("searchInsightsCurrentReturnPath", () => {
       searchInsightsPropertyViewPath(
         "/app/prj_1/search-console",
         new URLSearchParams(
-          "property=sc-domain%3Aexample.com&period=28&google=select&connect=ga4&provider=ga4&reason=drop&other=drop",
+          "property=sc-domain%3Aexample.com&period=28&comparison=yoy&google=select&connect=ga4&provider=ga4&reason=drop&other=drop",
         ),
         "sc-domain:archive.example.com",
         true,
       ),
     ).toBe(
-      "/app/prj_1/search-console?property=sc-domain%3Aarchive.example.com&period=28&google=select&connect=ga4&provider=ga4",
+      "/app/prj_1/search-console?property=sc-domain%3Aarchive.example.com&period=28&comparison=yoy&google=select&connect=ga4&provider=ga4",
     );
   });
 });

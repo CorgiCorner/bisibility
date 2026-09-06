@@ -17,17 +17,17 @@ describe("user date/time formatter", () => {
     ).toBe("2026-06-20");
   });
 
-  it("honors the persisted date format variants with a fixed en-US locale", () => {
+  it("honors the persisted date format variants with English month names", () => {
     expect(
       createUserDateTimeFormatter({
-        dateFormat: "eu",
+        dateFormat: "day_first",
         timezone: "Europe/Warsaw",
       }).formatDate(lateUtc),
-    ).toBe("20/06/2026");
+    ).toBe("20 Jun 2026");
 
     expect(
       createUserDateTimeFormatter({
-        dateFormat: "long",
+        dateFormat: "month_first",
         timezone: "Europe/Warsaw",
       }).formatDate(lateUtc),
     ).toBe("Jun 20, 2026");
@@ -45,7 +45,7 @@ describe("user date/time formatter", () => {
   it("formats a human-readable date and time through one context", () => {
     expect(
       createUserDateTimeFormatter({
-        dateFormat: "long",
+        dateFormat: "month_first",
         timezone: "UTC",
       }).formatDateTime(new Date("2026-07-18T13:40:00.000Z")),
     ).toBe("Jul 18, 2026, 13:40");

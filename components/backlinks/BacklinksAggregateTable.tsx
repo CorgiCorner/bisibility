@@ -1,3 +1,7 @@
+"use client";
+
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { type DateFormat, formatDate } from "@/lib/dates/format";
 import type { BacklinksAggregateRow, BacklinksView } from "./backlinks-table-model";
 
 const labels: Record<Exclude<BacklinksView, "backlinks">, string> = {
@@ -6,15 +10,8 @@ const labels: Record<Exclude<BacklinksView, "backlinks">, string> = {
   top_pages: "Top page",
 };
 
-function shortDate(value: string | null) {
-  return value
-    ? new Date(`${value}T00:00:00Z`).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        timeZone: "UTC",
-        year: "numeric",
-      })
-    : "";
+function shortDate(value: string | null, dateFormat: DateFormat) {
+  return value ? formatDate(value, dateFormat) : "";
 }
 
 export function BacklinksAggregateTable({
@@ -28,6 +25,7 @@ export function BacklinksAggregateTable({
   totalCount: number;
   view: Exclude<BacklinksView, "backlinks">;
 }>) {
+  const dateFormat = useDateFormat();
   return (
     <>
       <p className="m-0 border-b border-border px-4 py-2 text-[12px] text-fg-muted">
@@ -63,7 +61,7 @@ export function BacklinksAggregateTable({
             {row.linksCount}
           </span>
           <span className="whitespace-nowrap text-[12px] text-fg-muted">
-            {shortDate(row.firstSeen)}
+            {shortDate(row.firstSeen, dateFormat)}
           </span>
         </div>
       ))}

@@ -39,6 +39,30 @@ export function coverageShare(named: bigint | number, total: bigint | number) {
   return Math.round((Number(named) / denominator) * 100);
 }
 
+export function coverageTotalsSql(filter: Prisma.Sql) {
+  return Prisma.sql`
+    SELECT
+      "query_totals"."namedClicks",
+      "query_totals"."namedImpressions",
+      "daily_totals"."totalClicks",
+      "daily_totals"."totalImpressions"
+    FROM (
+      SELECT
+        COALESCE(SUM("clicks"), 0) AS "namedClicks",
+        COALESCE(SUM("impressions"), 0) AS "namedImpressions"
+      FROM "search_analytics_query_daily"
+      WHERE ${filter}
+    ) AS "query_totals"
+    CROSS JOIN (
+      SELECT
+        COALESCE(SUM("clicks"), 0) AS "totalClicks",
+        COALESCE(SUM("impressions"), 0) AS "totalImpressions"
+      FROM "search_analytics_daily"
+      WHERE ${filter}
+    ) AS "daily_totals"
+  `;
+}
+
 /**
  * How much of the window the named-query tables actually cover. The numerator is the
  * dimensional query table and the denominator is the aggregate table, which is exactly why the
@@ -51,29 +75,7 @@ export async function getQueryCoverage(
 ): Promise<SearchInsightsCoverage> {
   const filter = searchInsightsWindowFilter(projectId, property, window);
   const [rows, capHitDays] = await Promise.all([
-    prisma.$queryRaw<CoverageRow[]>(Prisma.sql`
-      SELECT
-        (
-          SELECT COALESCE(SUM("clicks"), 0)
-          FROM "search_analytics_query_daily"
-          WHERE ${filter}
-        ) AS "namedClicks",
-        (
-          SELECT COALESCE(SUM("impressions"), 0)
-          FROM "search_analytics_query_daily"
-          WHERE ${filter}
-        ) AS "namedImpressions",
-        (
-          SELECT COALESCE(SUM("clicks"), 0)
-          FROM "search_analytics_daily"
-          WHERE ${filter}
-        ) AS "totalClicks",
-        (
-          SELECT COALESCE(SUM("impressions"), 0)
-          FROM "search_analytics_daily"
-          WHERE ${filter}
-        ) AS "totalImpressions"
-    `),
+    prisma.$queryRaw<CoverageRow[]>(coverageTotalsSql(filter)),
     // Only the dimensional request sets: a capped aggregate request would be a different kind
     // of problem and is not what the coverage sentence is about.
     countCappedDays({ dimensions: PARTITION_DIMENSION_KEYS, projectId, property, window }),

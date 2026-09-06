@@ -2,7 +2,7 @@ import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/projec
 import { redactOpsText } from "@/lib/ops/redact-text";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { isBudgetExhaustedError } from "@/lib/rank-check/budget";
-import { RankCheckRunnerError } from "@/lib/rank-check/runner";
+import { RankCheckRunnerError } from "@/lib/rank-check/runner-error";
 
 export type FirstCheckCandidate = {
   device: "desktop" | "mobile";
@@ -51,6 +51,10 @@ export type FirstCheckPreviewFailureCode =
   | "unexpected";
 
 export type RunFirstCheckPreviewResult =
+  | {
+      runId: string;
+      status: "queued";
+    }
   | {
       position: number | null;
       recordedCostCents: number;

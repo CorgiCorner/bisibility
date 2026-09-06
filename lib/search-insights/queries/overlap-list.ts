@@ -6,6 +6,7 @@ import { OVERLAP_SPLIT_ROWS } from "@/lib/search-insights/constants";
 import type { DateWindow } from "@/lib/search-insights/dates";
 import { loadSearchInsightsScope } from "./context";
 import { drawerListLimit, EMPTY_LIST, type SearchInsightsList } from "./detail-model";
+import { withOverlapWorkMem } from "./overlap-work-mem";
 import { overlapPageFloorSql, overlapQueriesSql } from "./signals";
 import { pagePath } from "./top-rows-model";
 import { searchInsightsWindowFilter } from "./window-filter";
@@ -84,14 +85,8 @@ async function readSplits(filter: Prisma.Sql, queries: readonly string[]) {
  * is joined from the query table rather than folded from the page pivot: the row names where the
  * query itself ranks, not where any one of the competing pages does.
  */
-export async function getOverlapQueries(
-  projectId: string,
-  property: string,
-  window: DateWindow,
-  options: { limit?: number } = {},
-): Promise<SearchInsightsList<SearchInsightsOverlapRow>> {
-  const filter = searchInsightsWindowFilter(projectId, property, window);
-  const rows = await prisma.$queryRaw<OverlapRow[]>(Prisma.sql`
+export function overlapListSql(filter: Prisma.Sql, limit?: number) {
+  return Prisma.sql`
     SELECT
       "overlap"."query",
       "overlap"."clicks",
@@ -108,8 +103,20 @@ export async function getOverlapQueries(
       GROUP BY "query"
     ) AS "ranking" ON "ranking"."query" = "overlap"."query"
     ORDER BY "overlap"."clicks" DESC, "overlap"."query" ASC
-    LIMIT ${drawerListLimit(options.limit)}
-  `);
+    LIMIT ${drawerListLimit(limit)}
+  `;
+}
+
+export async function getOverlapQueries(
+  projectId: string,
+  property: string,
+  window: DateWindow,
+  options: { limit?: number } = {},
+): Promise<SearchInsightsList<SearchInsightsOverlapRow>> {
+  const filter = searchInsightsWindowFilter(projectId, property, window);
+  const rows = await withOverlapWorkMem((transaction) =>
+    transaction.$queryRaw<OverlapRow[]>(overlapListSql(filter, options.limit)),
+  );
   const splits = await readSplits(
     filter,
     rows.map((row) => row.query),
@@ -128,9 +135,10 @@ export async function getOverlapQueries(
 
 export async function loadOverlapQueries(
   projectRef: string,
-  input: { limit?: number; period?: string; property?: string },
+  input: { comparison?: string; limit?: number; period?: string; property?: string },
 ): Promise<SearchInsightsList<SearchInsightsOverlapRow>> {
   const scope = await loadSearchInsightsScope(projectRef, {
+    ...(input.comparison ? { comparison: input.comparison } : {}),
     period: input.period,
     property: input.property,
   });

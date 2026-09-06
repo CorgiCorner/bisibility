@@ -43,11 +43,13 @@ describe("OpenAPI document", () => {
         "previous_position",
         "provider",
         "ranking_url",
+        "run_id",
       ]),
     );
     expect(rankCheck.properties).toMatchObject({
       attempts: { type: ["array", "null"] },
       provider: { type: "string" },
+      run_id: { pattern: "^rcr_[a-z][a-z0-9]{23}$", type: ["string", "null"] },
     });
   });
 

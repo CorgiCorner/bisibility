@@ -2,6 +2,7 @@ import type {
   ArchivedSearchInsightsProperty,
   SearchInsightsPropertyOption,
 } from "@/lib/actions/search-insights";
+import type { DateFormat } from "@/lib/dates/format";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { formatDateLabel } from "@/lib/search-insights/dates";
 import type { SearchInsightsConnection } from "@/lib/search-insights/queries/context";
@@ -45,9 +46,10 @@ export function groupSearchInsightsProperties({
 export function archivedPropertyMetadata(
   option: ArchivedSearchInsightsProperty,
   projectDomain: string,
+  format: DateFormat = "month_first",
 ) {
   const relevance = matchesProjectDomain(option, projectDomain) ? "matches this project · " : "";
-  return `${relevance}last synced ${formatDateLabel(option.lastSyncedDate)}`;
+  return `${relevance}last synced ${formatDateLabel(option.lastSyncedDate, format)}`;
 }
 
 export function propertyConnectionSettingsHref(projectId: string) {

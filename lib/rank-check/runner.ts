@@ -21,6 +21,7 @@ import { rankCheckCostCents } from "./cost";
 import { estimatedRankCheckCostCents } from "./default-cost";
 import { CURRENT_RANK_NORMALIZATION_VERSION } from "./normalization-version";
 import { organicDomainRanksFromV2Results } from "./organic-ranks";
+import { RankCheckRunnerError } from "./runner-error";
 import type { RankCheckRunResult } from "./runner-result";
 
 export { RankCheckClosedBeforePersistenceError } from "./persistence-errors";
@@ -78,23 +79,8 @@ function isProviderThrottleError(error: unknown) {
   return /\b429\b|too many requests|rate.?limit/.test(message);
 }
 
-export type RankCheckRunnerErrorCode =
-  | "keyword_not_found"
-  | "no_provider_connected"
-  | "credentials_unavailable"
-  | "provider_rate_limited"
-  | "provider_failed";
-
-export class RankCheckRunnerError extends Error {
-  constructor(
-    readonly code: RankCheckRunnerErrorCode,
-    message: string,
-    options?: ErrorOptions,
-  ) {
-    super(message, options);
-    this.name = "RankCheckRunnerError";
-  }
-}
+export type { RankCheckRunnerErrorCode } from "./runner-error";
+export { RankCheckRunnerError } from "./runner-error";
 
 export function fallbackSchedule(): RankCheckScheduleInput {
   return {

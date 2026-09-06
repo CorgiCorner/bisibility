@@ -1,7 +1,8 @@
 import { serpDeviceValues, serpMarketOptions } from "@/lib/serp/markets";
-import { apiKeyCreateProperties } from "./api-key-contract";
 import { agentSchemas } from "./openapi-agent-components";
 import { alertRuleSchemas } from "./openapi-alert-components";
+import { apiKeySchemas } from "./openapi-api-key-components";
+import { keywordPatchSchema } from "./openapi-keyword-patch";
 import { keywordResearchSchemas } from "./openapi-keyword-research-components";
 import { keywordMatchSchemas } from "./openapi-keywords";
 import { migrationSchemas } from "./openapi-migration-components";
@@ -71,51 +72,7 @@ export const schemas = {
   ...personalAccessSchemas,
   ...signalSchemas,
   ...alertRuleSchemas,
-  ApiKey: {
-    properties: {
-      created_at: { format: "date-time", type: "string" },
-      expires_at: { format: "date-time", type: ["string", "null"] },
-      id: {
-        example: "key_a00000000000000000000000",
-        pattern: "^key_[a-z][a-z0-9]{23}$",
-        type: "string",
-      },
-      last_used_at: { type: ["string", "null"], format: "date-time" },
-      name: { type: "string" },
-      prefix: { example: "bsb_key_live_xxxxxxxx", type: "string" },
-      revoked_at: { type: ["string", "null"], format: "date-time" },
-      scope: { enum: ["read", "write", "admin"], type: "string" },
-    },
-    required: [
-      "id",
-      "name",
-      "prefix",
-      "created_at",
-      "expires_at",
-      "last_used_at",
-      "revoked_at",
-      "scope",
-    ],
-    type: "object",
-  },
-  ApiKeyCreate: {
-    properties: apiKeyCreateProperties,
-    required: ["name"],
-    type: "object",
-  },
-  ApiKeyIssued: {
-    allOf: [
-      { $ref: "#/components/schemas/ApiKey" },
-      {
-        properties: {
-          masked_value: { type: "string" },
-          token: { example: "bsb_key_live_...", type: "string" },
-        },
-        required: ["masked_value", "token"],
-        type: "object",
-      },
-    ],
-  },
+  ...apiKeySchemas,
   Keyword: {
     properties: {
       country: keywordLocationSchema,
@@ -197,27 +154,7 @@ export const schemas = {
     required: ["created", "skipped", "results"],
     type: "object",
   },
-  KeywordPatch: {
-    properties: {
-      city: { type: ["string", "null"] },
-      country: serpMarketSchema,
-      device: serpDeviceSchema,
-      frequency: {
-        enum: ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
-        type: "string",
-      },
-      intent: { type: ["string", "null"] },
-      keyword: { example: "rank tracker docs", type: "string" },
-      location: { ...serpMarketSchema, description: "Backward-compatible alias for country." },
-      location_key: locationKeySchema,
-      schedule: scheduleInputContractSchema,
-      tags: { items: { type: "string" }, type: "array" },
-      target_url: { type: ["string", "null"] },
-      topic: { type: ["string", "null"] },
-    },
-    required: [],
-    type: "object",
-  },
+  KeywordPatch: keywordPatchSchema,
   Problem: {
     properties: {
       detail: { type: "string" },
@@ -275,6 +212,11 @@ export const schemas = {
       previous_position: { type: ["integer", "null"] },
       provider: { type: "string" },
       ranking_url: { type: ["string", "null"] },
+      run_id: {
+        ...publicIdSchema("rcr"),
+        description: "Rank-check run that produced this result, or null for a legacy row.",
+        type: ["string", "null"],
+      },
       status: { enum: ["completed", "failed", "running"], type: "string" },
     },
     required: [
@@ -285,6 +227,7 @@ export const schemas = {
       "previous_position",
       "provider",
       "ranking_url",
+      "run_id",
       "cost_cents",
       "attempts",
       "error",
@@ -292,6 +235,8 @@ export const schemas = {
     ],
     type: "object",
   },
+  // biome-ignore format: compact schema preserves the central file line cap.
+  RankCheckRunQueued: { properties: { id: publicIdSchema("rcr"), status: { enum: ["queued"], type: "string" } }, required: ["id", "status"], type: "object" },
 };
 
 export function ref(name: keyof typeof schemas) {

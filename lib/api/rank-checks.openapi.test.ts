@@ -3,7 +3,7 @@ import { API_VERSION_HEADER } from "./api-versions";
 import { getOpenApiDocument } from "./openapi";
 
 describe("rank-check OpenAPI resources", () => {
-  it("documents async responses, project selectors, and omits jobs", () => {
+  it("documents queued runs, project selectors, and omits jobs", () => {
     const document = getOpenApiDocument();
     const runCheck = document.paths["/keywords/{id}/checks"].post;
 
@@ -11,7 +11,6 @@ describe("rank-check OpenAPI resources", () => {
     expect(runCheck).toMatchObject({
       parameters: expect.arrayContaining([
         expect.objectContaining({ name: API_VERSION_HEADER }),
-        expect.objectContaining({ name: "async" }),
         { $ref: "#/components/parameters/ProjectHeader" },
         { $ref: "#/components/parameters/ProjectQuery" },
       ]),
@@ -19,7 +18,7 @@ describe("rank-check OpenAPI resources", () => {
         "202": expect.objectContaining({
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/RankCheck" },
+              schema: { $ref: "#/components/schemas/RankCheckRunQueued" },
             },
           },
         }),

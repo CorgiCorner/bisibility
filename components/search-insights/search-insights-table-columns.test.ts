@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ORGANIC_SESSIONS_LABEL } from "./search-insights-copy";
 import {
   MODULE_TABLE_COLUMN,
   MODULE_TABLE_COLUMN_CLASS,
@@ -36,7 +37,14 @@ describe("moduleTableColumns", () => {
   it.each([
     ["queries", ["Query", "Clicks", "Impr", "CTR", "Avg pos", "Actions"]],
     ["pages", ["Page", "Clicks", "Impr", "CTR", "Avg pos", "Actions"]],
-    ["pagesWithSessions", ["Page", "Clicks", "CTR", "Avg pos", "Sessions", "Actions"]],
+    [
+      "pagesWithKeyEvents",
+      ["Page", "Clicks", ORGANIC_SESSIONS_LABEL, "Engagement", "Key events", "Actions"],
+    ],
+    [
+      "pagesWithSessions",
+      ["Page", "Clicks", ORGANIC_SESSIONS_LABEL, "Engagement", "Avg pos", "Actions"],
+    ],
   ] as const)("derives the %s headers in the shared column order", (variant, labels) => {
     expect(moduleTableHeaders(variant).map((header) => header.label)).toEqual(labels);
     expect(moduleTableColumnClasses(variant)).toHaveLength(labels.length);
@@ -46,10 +54,39 @@ describe("moduleTableColumns", () => {
     expect(moduleTableColumns.pages).toBe(moduleTableColumns.queries);
   });
 
+  // The GA4 variant is always six columns: text, clicks, the available funnel, then action.
   it("swaps impressions for sessions rather than adding a fifth numeric column", () => {
     expect(moduleTableColumnOrder.pagesWithSessions).toHaveLength(
       moduleTableColumnOrder.pages.length,
     );
+  });
+
+  it("keeps the key-events funnel shape on the same six-column geometry", () => {
+    expect(moduleTableColumnOrder.pagesWithKeyEvents).toHaveLength(
+      moduleTableColumnOrder.pages.length,
+    );
+  });
+
+  it.each([true, false, null] as const)(
+    "keeps both Top pages lenses aligned with Top queries when key events are %s",
+    (keyEventsConfigured) => {
+      const traffic: "pagesWithKeyEvents" | "pagesWithSessions" =
+        keyEventsConfigured === true ? "pagesWithKeyEvents" : "pagesWithSessions";
+
+      for (const variant of ["pages", traffic] as const) {
+        expect(moduleTableColumnOrder[variant]).toHaveLength(moduleTableColumnOrder.queries.length);
+      }
+    },
+  );
+
+  it("does not give the GA4 funnel headers sort keys", () => {
+    for (const variant of ["pagesWithKeyEvents", "pagesWithSessions"] as const) {
+      for (const header of moduleTableHeaders(variant)) {
+        if ([ORGANIC_SESSIONS_LABEL, "Engagement", "Key events"].includes(header.label)) {
+          expect(header.sortKey).toBeUndefined();
+        }
+      }
+    }
   });
 
   it("keeps every fixed width on the spacing scale, so no table needs an arbitrary value", () => {
@@ -59,6 +96,26 @@ describe("moduleTableColumns", () => {
       const utility = MODULE_TABLE_COLUMN_CLASS[name as keyof typeof MODULE_TABLE_COLUMN_CLASS];
       expect(utility).toBe(`w-${steps}`);
     }
+  });
+
+  it("gives CTR room for the sort gap so the icon cannot paint into Avg pos", () => {
+    expect(MODULE_TABLE_COLUMN.ctr).toBe("60px");
+    expect(MODULE_TABLE_COLUMN_CLASS.ctr).toBe("w-15");
+  });
+
+  it("gives Avg pos room for the sort gap so the label cannot paint into Actions", () => {
+    expect(MODULE_TABLE_COLUMN.position).toBe("84px");
+    expect(MODULE_TABLE_COLUMN_CLASS.position).toBe("w-21");
+  });
+
+  it("gives Engagement room for the nowrap eyebrow so it cannot paint into Key events", () => {
+    expect(MODULE_TABLE_COLUMN.engagement).toBe("92px");
+    expect(MODULE_TABLE_COLUMN_CLASS.engagement).toBe("w-23");
+  });
+
+  it("gives Key events room for the nowrap eyebrow so it cannot paint into Avg pos", () => {
+    expect(MODULE_TABLE_COLUMN.keyEvents).toBe("84px");
+    expect(MODULE_TABLE_COLUMN_CLASS.keyEvents).toBe("w-21");
   });
 
   it("leaves the text column unsized, so the fixed columns decide and it takes what is left", () => {

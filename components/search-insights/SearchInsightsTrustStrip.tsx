@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Tooltip } from "@/components/ui";
 import type { SearchInsightsImportAction } from "@/lib/actions/search-insights";
 import type { WorkerTemporalStatus } from "@/lib/ops/worker-temporal-identity";
@@ -76,7 +77,8 @@ function EmphasizedDate({
   compact = false,
   value,
 }: Readonly<{ compact?: boolean; value: string }>) {
-  const label = formatDateLabel(value);
+  const dateFormat = useDateFormat();
+  const label = formatDateLabel(value, dateFormat);
   const comma = label.lastIndexOf(",");
   const day = comma === -1 ? label : label.slice(0, comma);
   const year = comma === -1 ? "" : label.slice(comma + 1).trim();
@@ -118,9 +120,10 @@ function ImportLine({
   retryAction?: SearchInsightsImportAction;
   statusFacts: SearchSyncControlFacts;
 }>) {
+  const dateFormat = useDateFormat();
   const progress = importProgress(importState, facts);
   if (progress.state === "none") return null;
-  const model = resolveSearchSyncControl(statusFacts);
+  const model = resolveSearchSyncControl(statusFacts, dateFormat);
   const reconnectHref = googleInstallUrl({
     projectId,
     provider: "gsc",
@@ -134,9 +137,7 @@ function ImportLine({
           ? retryAction
           : pauseAction
       : null;
-  const refresh = hideRefresh ? null : (
-    <SearchInsightsRefresh active={model.semanticState === "running"} />
-  );
+  const refresh = hideRefresh ? null : <SearchInsightsRefresh active={false} />;
   return (
     <div
       className={`${NOTE} flex w-full items-center justify-between`}
@@ -175,11 +176,16 @@ export function SearchInsightsTrustStrip({
   statusFacts,
   workerStatus,
 }: Readonly<SearchInsightsTrustStripProps>) {
+  const dateFormat = useDateFormat();
   const facts = importState?.facts ?? statusFacts?.observability ?? null;
-  const progress = importObservabilityProgress(facts);
+  const progress = importObservabilityProgress(facts, new Date(), dateFormat);
   const freshness =
     progress?.freshness ??
-    freshnessPresentation(facts?.lastProbeAt ?? importState?.lastProbeAt ?? null);
+    freshnessPresentation(
+      facts?.lastProbeAt ?? importState?.lastProbeAt ?? null,
+      new Date(),
+      dateFormat,
+    );
   if (!providerAvailableThrough) {
     if (!localViewReady) return null;
     return (

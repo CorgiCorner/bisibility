@@ -46,7 +46,7 @@ export function MatchScopeCard({ domain }: Readonly<MatchScopeCardProps>) {
         What a SERP result has to look like to count for this project.
       </p>
       {domain ? (
-        <div className="mt-5 divide-y divide-border-soft border-y border-border-soft">
+        <div className="mt-5 divide-y divide-border border-y border-border">
           {matchScopeRows(domain).map((row) => (
             <div className="flex items-start justify-between gap-4 py-3" key={row.title}>
               <div className={cn("min-w-0", !row.current && "text-fg-muted")}>

@@ -38,7 +38,7 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
         const panelId = `install-agent-${agent.id}`;
 
         return (
-          <div className="border-t border-border-soft" key={agent.id}>
+          <div className="border-t border-border" key={agent.id}>
             <button
               aria-controls={panelId}
               aria-expanded={expanded}

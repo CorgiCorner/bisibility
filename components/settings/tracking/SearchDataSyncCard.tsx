@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { SearchSyncStatusControl } from "@/components/search-insights/SearchSyncStatusControl";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
@@ -77,6 +78,7 @@ export function SearchDataSyncCard({
   retryAction = retrySearchInsightsImport,
   updateSettings = updateSearchSyncSettings,
 }: Readonly<Props>) {
+  const dateFormat = useDateFormat();
   const router = useRouter();
   const { showToast } = useToast();
   const [pauseBusy, setPauseBusy] = useState(false);
@@ -84,7 +86,7 @@ export function SearchDataSyncCard({
     defaultValues: { pace, projectId, retentionMonths },
     resolver: zodResolver(projectSearchSyncSchema),
   });
-  const control = resolveSearchSyncControl(metrics);
+  const control = resolveSearchSyncControl(metrics, dateFormat);
   const selectedRetentionMonths = form.watch("retentionMonths");
   const selectedPace = form.watch("pace");
   const estimate = searchSyncPreflightEstimate({

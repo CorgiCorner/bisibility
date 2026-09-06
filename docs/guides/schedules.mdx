@@ -1,0 +1,60 @@
+---
+title: "Schedules"
+description: "Create recurring rank-check schedules and manage their members."
+---
+
+A schedule defines when its member keywords receive rank checks. It creates
+planned runs that you can review in **Runs** before they start.
+
+## Create a schedule
+
+Open **Rank tracker**, then **Schedules**, and select **New schedule**. Give
+the schedule a name, choose a cadence, and add the keywords that should belong
+to it. You can also set its start window, check depth, and provider policy.
+
+The schedule editor offers these recurring cadences:
+
+| Cadence | Setup |
+| - | - |
+| Daily | Choose a time. |
+| Weekly | Choose a day of week and a time. |
+| Monthly | Choose a day of month and a time. |
+| Custom cron | Enter a five-field cron expression. Runs must be at least one hour apart. |
+
+The start window can delay a scheduled start by a random number of minutes.
+Choose **None** to start exactly on time.
+
+## Time zone
+
+A new schedule uses the project's time zone unless you choose a specific IANA
+time zone for that schedule. The selected time zone is used to calculate the
+schedule's timing. Monthly and custom cron schedules use it as their wall-clock
+anchor.
+
+## Default schedule
+
+Exactly one schedule is the default for a project. Newly tracked keywords join
+that schedule automatically. Changing the default does not move the existing
+members of the previous default schedule; it stays enabled with its members.
+
+You cannot delete the default schedule. Choose another default first if you
+need to remove it.
+
+## Membership is exclusive
+
+A keyword belongs to one schedule at a time. Adding a keyword to a schedule
+moves it from any other schedule. Removing a keyword from a schedule returns it
+to manual checking rather than adding it to another schedule automatically.
+
+## Pause, skip, and run now
+
+**Pause** stops future runs for the schedule. Resuming starts the cadence from
+the current time and does not backfill missed occurrences.
+
+Use **Skip once** in **Runs** > **Planned** when you only want to cancel one
+future occurrence. It cancels that planned run and its queued targets without
+pausing the schedule.
+
+Use **Run now** in **Runs** > **Planned** to bring one planned or blocked run
+forward immediately. It starts the existing planned occurrence instead of
+creating a separate recurring schedule.

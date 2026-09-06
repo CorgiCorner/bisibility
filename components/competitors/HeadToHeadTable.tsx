@@ -116,7 +116,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
           </div>
           {rows.map((row, index) => (
             <div
-              className={`grid items-center gap-x-2.5 border-border-soft px-4.5 py-2.5 ${
+              className={`grid items-center gap-x-2.5 border-border px-4.5 py-2.5 ${
                 index === rows.length - 1 ? "" : "border-b"
               }`}
               key={row.id}

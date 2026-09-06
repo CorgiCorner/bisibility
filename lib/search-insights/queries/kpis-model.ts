@@ -27,6 +27,10 @@ export type SearchInsightsKpi = {
   value: string;
 };
 
+export type ClicksToSessionsKpi =
+  | { kind: "hidden"; reason: "zero_clicks"; source: "GSC" }
+  | { kind: "visible"; kpi: SearchInsightsKpi };
+
 export type TotalsRow = {
   clicks: bigint | number;
   impressions: bigint | number;
@@ -149,6 +153,22 @@ export function positionDelta(current: WindowTotals, previous: WindowTotals) {
   return UNCHANGED;
 }
 
+function percentagePointDelta(
+  currentRate: number,
+  currentDenominator: number,
+  previousRate: number,
+  previousDenominator: number,
+) {
+  if (currentDenominator <= 0) return previousDenominator > 0 ? NOTHING_TO_COMPARE : UNCHANGED;
+  if (previousDenominator <= 0) return { delta: NO_BASELINE, dir: "up" as const };
+  const change = rounded(displayed(formatCtr(currentRate)) - displayed(formatCtr(previousRate)), 2);
+  if (change === 0) return UNCHANGED;
+  return {
+    delta: `${signed(change, 2, "")} pp`,
+    dir: change > 0 ? ("up" as const) : ("down" as const),
+  };
+}
+
 export function searchInsightsKpis(
   totals: WindowTotalsPair,
   previousWindowCovered = true,
@@ -192,12 +212,24 @@ export function searchInsightsKpis(
   ];
 }
 
-export function organicSessionsKpi(totals: WindowSessionsPair): SearchInsightsKpi {
+export function clicksToSessionsKpi(
+  clicks: WindowTotalsPair,
+  sessions: WindowSessionsPair,
+  previousWindowCovered = true,
+): ClicksToSessionsKpi {
+  if (clicks.current.clicks === 0) return { kind: "hidden", reason: "zero_clicks", source: "GSC" };
+  const current = sessions.current / clicks.current.clicks;
+  const previous = clicks.previous.clicks > 0 ? sessions.previous / clicks.previous.clicks : 0;
   return {
-    ...countDelta(totals.current, totals.previous),
-    label: "Organic sessions",
-    prev: formatCount(totals.previous),
-    source: "GA4",
-    value: formatCount(totals.current),
+    kind: "visible",
+    kpi: {
+      ...(previousWindowCovered
+        ? percentagePointDelta(current, clicks.current.clicks, previous, clicks.previous.clicks)
+        : UNCOVERED_BASELINE),
+      label: "Clicks to sessions",
+      prev: previousWindowCovered && clicks.previous.clicks > 0 ? formatCtr(previous) : NO_DATA,
+      source: "GSC",
+      value: formatCtr(current),
+    },
   };
 }

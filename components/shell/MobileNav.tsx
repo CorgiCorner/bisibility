@@ -5,6 +5,7 @@ import { SidebarFooter } from "@/components/shell/SidebarFooter";
 import { SidebarNav } from "@/components/shell/SidebarNav";
 import { WorkspaceSwitcher } from "@/components/shell/WorkspaceSwitcher";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
+import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
 import Drawer from "@mui/material/Drawer";
 import { ListIcon as List } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -14,6 +15,7 @@ export type MobileNavProps = {
   activeProjectId: string;
   canCreateWorkspace: boolean;
   defaultOpen?: boolean;
+  enabledExperimentalModules?: readonly ExperimentalModuleKey[];
   projectRef: string;
   setupCompleted?: boolean;
   setupDoneCount?: number;
@@ -31,6 +33,7 @@ export function MobileNav({
   activeProjectId,
   canCreateWorkspace,
   defaultOpen = false,
+  enabledExperimentalModules = [],
   projectRef,
   setupCompleted = false,
   setupDoneCount = 0,
@@ -86,6 +89,7 @@ export function MobileNav({
           <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <SidebarNav
               activeHref={activeHref}
+              enabledExperimentalModules={enabledExperimentalModules}
               onNavigate={close}
               projectRef={projectRef}
               setupCompleted={setupCompleted}

@@ -8,25 +8,15 @@ import {
   compareMigrationState,
 } from "../db/migration-state";
 import { warnDeprecatedInspectionDailyBudget } from "../deployment/deprecated-inspection-budget";
-import { collectTemporalHeartbeat } from "../ops/heartbeat-temporal";
-import { refreshWorkerLiveness, WORKER_LIVENESS_REFRESH_MS } from "../ops/liveness";
 import { notifyOps } from "../ops/notify";
-import { publishTemporalSnapshot } from "../ops/temporal-snapshot";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
+import { assertRankCheckRunsScheduleEnabled } from "../rank-check/run-maintenance-config";
 import { rankCheckSchedulerMode } from "../rank-check/scheduler-mode";
 import { assertTemporalSchedulerEnabled, schedulerDriver } from "../scheduler/driver";
 import * as activities from "./activities";
 import { ensureAlertDeliverySweepSchedule } from "./alert-delivery-bootstrap";
-import {
-  deleteRetiredJobProcessorSchedule,
-  ensureTrafficSyncSchedule,
-  RECONCILER_SCHEDULE_ID,
-} from "./bootstrap";
-import {
-  temporalConnectionOptions,
-  temporalSdkConnectionOptions,
-  temporalWebUiUrl,
-} from "./connection-options";
+import { deleteRetiredJobProcessorSchedule, RECONCILER_SCHEDULE_ID } from "./bootstrap";
+import { temporalConnectionOptions, temporalSdkConnectionOptions } from "./connection-options";
 import { temporalDeploymentConfig } from "./deployment-config";
 import {
   ensureAlertDigestFlushSchedule,
@@ -36,20 +26,23 @@ import {
   ensurePresenceSyncSchedule,
   ensureQueuedRankCheckRetentionSchedule,
   ensureRankCheckRawPurgeSchedule,
+  ensureRankCheckRunsSchedule,
   ensureSessionPurgeSchedule,
   ensureSitemapSyncSchedule,
   ensureStaleChecksSchedule,
   ensureStaleImportJobsSchedule,
   ensureWeeklyDigestSchedule,
 } from "./maintenance-schedule-bootstrap";
-import { ensureOpsHeartbeatSchedule } from "./ops-bootstrap";
 import { convergeRankCheckSchedulerSingletons } from "./rank-check-scheduler-convergence";
 import { ensureRankCheckSearchAttributes } from "./search-attribute-bootstrap";
 // Imported directly, not through bootstrap.ts: search-insights-bootstrap.ts already depends on
 // bootstrap.ts for the calendar helpers, so re-exporting it there would close an import cycle.
 import { ensureSearchInsightsSyncSchedule } from "./search-insights-bootstrap";
 import { ensureSearchInsightsQueueReconciliationSchedule } from "./search-insights-reconciliation-bootstrap";
+import { deleteRetiredTrafficIntentSweepSchedule } from "./traffic-bootstrap";
+import { ensureTrafficRuntimeSchedules } from "./traffic-runtime";
 import { probeTemporalTransport } from "./transport-probe";
+import { runWelcomeIntentRuntime } from "./welcome-intent-runtime";
 import { maxConcurrentActivities } from "./worker-config";
 import {
   decideWorkerSchemaGuard,
@@ -57,6 +50,7 @@ import {
   workerSchemaGuardMode,
 } from "./worker-schema-guard";
 import { logWorkerStartupIdentity, workerStartupIdentity } from "./worker-startup-identity";
+import { reportWorkerStartup, safeOpsHeartbeatBootstrap } from "./worker-startup-report";
 import { runWorkerStartupStage } from "./worker-startup-retry";
 
 // Worker uses the TS transform and resolve hook because parameter properties reject strip-only mode:
@@ -78,17 +72,6 @@ const release = process.env.APP_VERSION?.trim() || "unknown";
 const schedulerMode = rankCheckSchedulerMode();
 const schedulerDriverValue = schedulerDriver();
 const workerIdentity = `bisibility-worker/${release}/${process.pid}@${hostname()}`;
-
-type WorkerScheduleResult = { scheduleId: string; status: string };
-
-async function safeOpsHeartbeatBootstrap(): Promise<WorkerScheduleResult> {
-  try {
-    return await ensureOpsHeartbeatSchedule();
-  } catch {
-    console.error("[temporal] ops heartbeat schedule bootstrap failed");
-    return { scheduleId: "ops-heartbeat", status: "failed" };
-  }
-}
 
 async function enforceWorkerSchemaGuard() {
   const mode = workerSchemaGuardMode(process.env.WORKER_SCHEMA_GUARD);
@@ -138,39 +121,6 @@ async function enforceWorkerSchemaGuard() {
       "Worker schema guard blocked startup because the worker is behind the database.",
     );
   }
-}
-
-async function reportWorkerStartup(schedules: WorkerScheduleResult[]) {
-  const failed = schedules.filter((schedule) => schedule.status === "failed");
-  for (const schedule of failed) {
-    await notifyOps({
-      fields: { "Schedule ID": schedule.scheduleId, Status: schedule.status },
-      kind: "schedule_bootstrap",
-      severity: "error",
-      title: "Temporal schedule bootstrap failed",
-    }).catch(() => console.error("[ops] schedule bootstrap notification failed"));
-  }
-
-  const ensured = schedules.filter(
-    (schedule) =>
-      schedule.status === "created" ||
-      schedule.status === "exists" ||
-      schedule.status === "updated",
-  ).length;
-  await refreshWorkerLiveness().catch(() => console.error("[ops] liveness refresh failed"));
-  await publishTemporalSnapshot(new Date(), collectTemporalHeartbeat);
-  await notifyOps({
-    fields: {
-      "Failed schedules": failed.length,
-      Namespace: namespace,
-      "Rank-check scheduler mode": schedulerMode,
-      "Scheduler driver": schedulerDriverValue,
-      "Task queues": `${taskQueue}, ${deliveryTaskQueue}`,
-    },
-    kind: "worker_started",
-    severity: "info",
-    title: `Worker started - ${ensured} schedules ensured`,
-  }).catch(() => console.error("[ops] worker startup notification failed"));
 }
 
 async function run() {
@@ -228,8 +178,14 @@ async function run() {
 
     // Rank-check scheduler convergence is a startup gate. Retire the
     // non-selected singleton before ensuring the selected owner.
+    const rankCheckRunsDecision = await runWorkerStartupStage(
+      "rank-check-runs-maintenance",
+      async () => assertRankCheckRunsScheduleEnabled(schedulerMode),
+    );
     const schedules = await runWorkerStartupStage("schedule-bootstrap", async () => {
       const rankCheckSchedulers = await convergeRankCheckSchedulerSingletons();
+      const retiredTrafficIntentSweepSchedule = await deleteRetiredTrafficIntentSweepSchedule();
+      const rankCheckRunsSchedule = ensureRankCheckRunsSchedule();
       const ensured = await Promise.all([
         deleteRetiredJobProcessorSchedule(),
         ensureAlertDeliverySweepSchedule(),
@@ -243,14 +199,16 @@ async function run() {
         ensureStaleImportJobsSchedule(),
         ensureMigrationHoldReleaseSchedule(),
         ensureWeeklyDigestSchedule(),
-        ensureTrafficSyncSchedule(),
+        ...ensureTrafficRuntimeSchedules(),
         ensureSearchInsightsSyncSchedule(),
         ensureSearchInsightsQueueReconciliationSchedule(),
         ensureSitemapSyncSchedule(),
         ensurePresenceSyncSchedule(),
         safeOpsHeartbeatBootstrap(),
       ]);
+      ensured.push(await rankCheckRunsSchedule);
       ensured.push(
+        retiredTrafficIntentSweepSchedule,
         {
           scheduleId: RECONCILER_SCHEDULE_ID,
           status: rankCheckSchedulers.reconciler,
@@ -268,8 +226,22 @@ async function run() {
         status: schedule.status,
       });
     }
+    const rankCheckRunsSchedule = schedules.find(
+      (schedule) => schedule.scheduleId === "maintenance-rank-check-runs",
+    );
+    console.error("[temporal] rank-check runs schedule", {
+      decision: rankCheckRunsDecision.reason,
+      scheduleId: "maintenance-rank-check-runs",
+      status: rankCheckRunsSchedule?.status ?? "failed",
+    });
 
-    await reportWorkerStartup(schedules);
+    await reportWorkerStartup({
+      namespace,
+      schedulerDriver: schedulerDriverValue,
+      schedulerMode,
+      schedules,
+      taskQueues: [taskQueue, deliveryTaskQueue],
+    });
 
     console.error("[temporal] worker ready", {
       address,
@@ -279,22 +251,11 @@ async function run() {
       scheduler_driver: schedulerDriverValue,
       task_queues: [taskQueue, deliveryTaskQueue],
     });
-    const webUiUrl = temporalWebUiUrl(connectionOptions);
-    if (webUiUrl) {
-      console.error(`[temporal] Web UI: ${webUiUrl}`);
-    }
-    const livenessTimer = setInterval(() => {
-      void refreshWorkerLiveness().catch(() =>
-        console.error("[ops] periodic liveness refresh failed"),
-      );
-      void publishTemporalSnapshot(new Date(), collectTemporalHeartbeat);
-    }, WORKER_LIVENESS_REFRESH_MS);
-    livenessTimer.unref();
-    try {
-      await Promise.all([worker.run(), deliveryWorker.run()]);
-    } finally {
-      clearInterval(livenessTimer);
-    }
+    await runWelcomeIntentRuntime({
+      connectionOptions,
+      deliveryWorker,
+      worker,
+    });
   } finally {
     // Swallow close failures so `finally` cannot replace the original startup error;
     // report them separately.

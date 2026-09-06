@@ -17,8 +17,13 @@ vi.mock("react", async () => {
 
 import { SearchInsightsRefresh } from "./SearchInsightsRefresh";
 
-function visibility(value: "hidden" | "visible") {
+function setVisibilityState(value: "hidden" | "visible") {
+  Object.defineProperty(document, "hidden", { configurable: true, value: value === "hidden" });
   Object.defineProperty(document, "visibilityState", { configurable: true, value });
+}
+
+function visibility(value: "hidden" | "visible") {
+  setVisibilityState(value);
   fireEvent(document, new Event("visibilitychange"));
 }
 
@@ -52,6 +57,28 @@ describe("SearchInsightsRefresh", () => {
     act(() => vi.advanceTimersByTime(45_000));
     expect(routerMock.refresh).toHaveBeenCalledTimes(2);
     expect(vi.getTimerCount()).toBe(1);
+    view.unmount();
+  });
+  it("does not refresh if the document becomes hidden before the timer fires", () => {
+    const view = render(<SearchInsightsRefresh active />);
+    setVisibilityState("hidden");
+
+    act(() => vi.advanceTimersByTime(45_000));
+
+    expect(routerMock.refresh).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    view.unmount();
+  });
+  it("does not start another refresh while the transition is pending", () => {
+    const view = render(<SearchInsightsRefresh active />);
+    fireEvent.click(screen.getByRole("button", { name: "Refresh import status" }));
+    expect(routerMock.refresh).toHaveBeenCalledTimes(1);
+
+    transition.pending = true;
+    view.rerender(<SearchInsightsRefresh active />);
+    act(() => vi.advanceTimersByTime(45_000));
+
+    expect(routerMock.refresh).toHaveBeenCalledTimes(1);
     view.unmount();
   });
   it("uses the Button loading contract while preserving the spinning refresh icon", () => {

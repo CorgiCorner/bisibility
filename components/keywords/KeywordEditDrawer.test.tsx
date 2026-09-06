@@ -48,14 +48,12 @@ vi.mock("@/components/keywords/grid/KeywordInlineEdit", () => ({
     <form id={formId}>Keyword details form</form>
   ),
 }));
-vi.mock("./KeywordScheduleInlineForm", () => ({
-  KeywordScheduleInlineForm: ({ formId }: { formId: string }) => (
-    <form id={formId}>Keyword schedule form</form>
-  ),
+vi.mock("./use-keyword-schedule-modal", () => ({
+  useKeywordScheduleModal: () => ({ onChangeSchedule: vi.fn(), scheduleModal: null }),
 }));
 
 describe("KeywordEditDrawer", () => {
-  it("binds the sticky save action to the active edit section", () => {
+  it("uses Set schedule rather than an inline legacy schedule form", () => {
     render(
       <KeywordEditDrawer
         keyword={{ id: "kw_1", keyword: "rank tracker" } as never}
@@ -63,7 +61,6 @@ describe("KeywordEditDrawer", () => {
         open
         projectId="project_1"
         updateKeywordAction={vi.fn()}
-        updateKeywordScheduleAction={vi.fn()}
       />,
     );
 
@@ -75,10 +72,7 @@ describe("KeywordEditDrawer", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
 
-    expect(screen.getByText("Keyword schedule form")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save schedule" })).toHaveAttribute(
-      "form",
-      "keyword-schedule-kw_1",
-    );
+    expect(screen.getByText(/Assign this keyword to a check schedule/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Set schedule" })).toBeInTheDocument();
   });
 });

@@ -9,6 +9,10 @@ import {
   RECONCILER_SCHEDULE_ID,
 } from "./bootstrap";
 import { ensureRankCheckDispatcherSchedule } from "./rank-check-dispatcher-bootstrap";
+import {
+  ensureRankCheckPlannerSchedule,
+  RANK_CHECK_PLANNER_SCHEDULE_ID,
+} from "./rank-check-planner-bootstrap";
 import { getSchedulerTemporalClient } from "./scheduler-client";
 
 export type RankCheckSingletonRetirementStatus = "absent" | "already_paused" | "paused";
@@ -16,6 +20,7 @@ export type RankCheckSingletonRetirementStatus = "absent" | "already_paused" | "
 export type RankCheckSingletonConvergenceResult = {
   dispatcher: string;
   mode: RankCheckSchedulerMode;
+  planner: string;
   reconciler: string;
 };
 
@@ -62,22 +67,28 @@ export async function convergeRankCheckSchedulerSingletons(
 
   if (mode === "legacy") {
     const dispatcher = await retireSingleton(client, RANK_CHECK_DISPATCHER_SCHEDULE_ID);
+    const planner = await retireSingleton(client, RANK_CHECK_PLANNER_SCHEDULE_ID);
     const reconciler = assertSelectedSchedule(
       (await ensureReconcilerSchedule(client)).status,
       RECONCILER_SCHEDULE_ID,
     );
-    return { dispatcher, mode, reconciler };
+    return { dispatcher, mode, planner, reconciler };
   }
 
   const reconciler = await retireSingleton(client, RECONCILER_SCHEDULE_ID);
   if (mode === "cutover") {
     const dispatcher = await retireSingleton(client, RANK_CHECK_DISPATCHER_SCHEDULE_ID);
-    return { dispatcher, mode, reconciler };
+    const planner = await retireSingleton(client, RANK_CHECK_PLANNER_SCHEDULE_ID);
+    return { dispatcher, mode, planner, reconciler };
   }
 
   const dispatcher = assertSelectedSchedule(
     (await ensureRankCheckDispatcherSchedule(client)).status,
     RANK_CHECK_DISPATCHER_SCHEDULE_ID,
   );
-  return { dispatcher, mode, reconciler };
+  const planner = assertSelectedSchedule(
+    (await ensureRankCheckPlannerSchedule(client)).status,
+    RANK_CHECK_PLANNER_SCHEDULE_ID,
+  );
+  return { dispatcher, mode, planner, reconciler };
 }

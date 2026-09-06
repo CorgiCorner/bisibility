@@ -5,6 +5,7 @@ import type {
   CheckRunRow,
   DeferredGroup,
 } from "@/lib/checks/contract";
+import { type DateFormat, formatDateRange, formatDateTime } from "@/lib/dates/format";
 import { centsToDollars } from "@/lib/format/currency";
 import { relativePast } from "@/lib/format/relative-time";
 
@@ -131,31 +132,24 @@ type CheckRunsViewCounts = {
 };
 
 function calendarDay(date: Date, timeZone: string) {
-  return new Intl.DateTimeFormat("en-CA", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone,
-    year: "numeric",
-  }).format(date);
+  return formatDateTime(date, "iso", timeZone).slice(0, 10);
 }
 
-export function deferredWindow(group: DeferredGroup, now: Date, timeZone: string) {
+function clock(date: Date, timeZone: string) {
+  return formatDateTime(date, "iso", timeZone).slice(-5);
+}
+
+export function deferredWindow(
+  group: DeferredGroup,
+  now: Date,
+  timeZone: string,
+  dateFormat: DateFormat,
+) {
   const first = new Date(group.firstAt);
   const last = new Date(group.lastAt);
-  const date = new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    timeZone,
-  });
-  const time = new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
-    hour12: false,
-    minute: "2-digit",
-    timeZone,
-  });
-  const today =
-    calendarDay(first, timeZone) === calendarDay(now, timeZone) &&
-    calendarDay(last, timeZone) === calendarDay(now, timeZone);
-  if (today) return `today ${time.format(first)}-${time.format(last)}`;
-  return `${date.format(first)}, ${time.format(first)} - ${date.format(last)}, ${time.format(last)}`;
+  const firstDay = calendarDay(first, timeZone);
+  const lastDay = calendarDay(last, timeZone);
+  const today = firstDay === calendarDay(now, timeZone) && lastDay === calendarDay(now, timeZone);
+  if (today) return `today ${clock(first, timeZone)}-${clock(last, timeZone)}`;
+  return `${formatDateRange(firstDay, firstDay, dateFormat)}, ${clock(first, timeZone)} - ${formatDateRange(lastDay, lastDay, dateFormat)}, ${clock(last, timeZone)}`;
 }

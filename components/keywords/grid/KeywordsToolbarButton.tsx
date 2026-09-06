@@ -22,16 +22,42 @@ const compactIconOnlyButtonSx = {
   },
 } satisfies SxProps<Theme>;
 
+const secondaryIconSx = {
+  "& .MuiButton-startIcon": { color: "var(--fg-muted)" },
+  "& .MuiButton-startIcon > svg": { color: "var(--fg-muted)" },
+} satisfies SxProps<Theme>;
+
+const primaryIconSx = {
+  "& .MuiButton-startIcon > svg": { color: "currentColor" },
+} satisfies SxProps<Theme>;
+
 const labeledSecondaryButtonSx = {
   color: "var(--fg)",
   fontSize: "12.5px",
   fontWeight: 400,
 } satisfies SxProps<Theme>;
 
+export const toolbarSecondaryIconClassName = "text-fg-muted";
+
+type LabelFrom = "sm" | "lg" | "xl";
+
+function labelVisibilityClass(
+  compactBelowXl: boolean,
+  iconOnly: boolean,
+  labelFrom?: LabelFrom,
+): string | null {
+  if (iconOnly) return null;
+  const breakpoint = labelFrom ?? (compactBelowXl ? "xl" : "lg");
+  if (breakpoint === "sm") return "hidden sm:inline";
+  if (breakpoint === "xl") return "hidden xl:inline";
+  return "hidden lg:inline";
+}
+
 type KeywordsToolbarButtonProps = Omit<ButtonProps, "sx"> & {
   compactBelowXl?: boolean;
   iconOnly?: boolean;
   label: string;
+  labelFrom?: LabelFrom;
   showTooltip: boolean;
   sx?: SxProps<Theme>;
 };
@@ -41,12 +67,14 @@ export function KeywordsToolbarButton({
   compactBelowXl = false,
   iconOnly = false,
   label,
+  labelFrom,
   showTooltip,
   size = "sm",
   sx,
   ...props
 }: KeywordsToolbarButtonProps) {
   const buttonSx = sxArray(sx);
+  const labelClassName = labelVisibilityClass(compactBelowXl, iconOnly, labelFrom);
   const button = (
     <span className="inline-flex shrink-0">
       <Button
@@ -55,15 +83,13 @@ export function KeywordsToolbarButton({
         size={size}
         sx={[
           iconOnly || compactBelowXl ? compactIconOnlyButtonSx : mobileIconOnlyButtonSx,
-          { "& .MuiButton-startIcon > svg": { color: "currentColor" } },
+          props.variant === "secondary" ? secondaryIconSx : primaryIconSx,
           ...buttonSx,
           !iconOnly && props.variant === "secondary" ? labeledSecondaryButtonSx : false,
         ]}
         {...props}
       >
-        {iconOnly ? null : (
-          <span className={compactBelowXl ? "hidden xl:inline" : "hidden lg:inline"}>{label}</span>
-        )}
+        {labelClassName ? <span className={labelClassName}>{label}</span> : null}
         {children}
       </Button>
     </span>

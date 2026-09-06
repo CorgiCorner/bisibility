@@ -6,7 +6,13 @@ import { parsePublicId } from "@/lib/db/public-id";
 export { makePublicId } from "@/lib/db/public-id";
 
 import { assertProjectWritable, type ProjectWriteMode } from "@/lib/deployment/project-write-mode";
-import { appPath, appRootPath, asProjectRef } from "@/lib/routing/app-path";
+import {
+  appPath,
+  appRootPath,
+  asMarketRef,
+  asProjectRef,
+  marketPath,
+} from "@/lib/routing/app-path";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
 
@@ -161,9 +167,14 @@ export async function requireKeywordScope(
 type RevalidateTarget = { path: string; type?: "layout" | "page" };
 
 const PROJECT_ROUTE = asProjectRef("[project]");
+const MARKET_ROUTE = asMarketRef("[market]");
 
 function projectPage(...segments: string[]): RevalidateTarget {
   return { path: appPath(PROJECT_ROUTE, ...segments), type: "page" };
+}
+
+function marketPage(...segments: string[]): RevalidateTarget {
+  return { path: marketPath(PROJECT_ROUTE, MARKET_ROUTE, ...segments), type: "page" };
 }
 
 function revalidateTargets(targets: RevalidateTarget[]) {
@@ -183,6 +194,7 @@ function keywordDetailTarget(_keywordId?: string | null): RevalidateTarget {
 export function revalidateKeywordViews(keywordId?: string | null) {
   revalidateTargets([
     projectPage("rank-tracker"),
+    marketPage("rank-tracker"),
     keywordDetailTarget(keywordId),
     projectPage("dashboard"),
     projectPage("timeline"),
@@ -196,6 +208,7 @@ export function revalidateRankCheckViews(keywordId?: string | null) {
   revalidateTargets([
     projectPage("dashboard"),
     projectPage("rank-tracker"),
+    marketPage("rank-tracker"),
     keywordDetailTarget(keywordId),
     projectPage("timeline"),
     projectPage("alerts"),
@@ -208,6 +221,7 @@ export function revalidateRankCheckViews(keywordId?: string | null) {
 export function revalidateProviderViews() {
   revalidateTargets([
     projectPage("rank-tracker"),
+    marketPage("rank-tracker"),
     projectPage("integrations"),
     projectPage("dashboard"),
     projectPage("settings"),
@@ -245,7 +259,17 @@ export function revalidateSettingsViews() {
   revalidateTargets([
     projectPage("settings"),
     projectPage("rank-tracker"),
+    marketPage("rank-tracker"),
     projectPage("settings", "audit"),
+  ]);
+}
+
+export function revalidateExperimentalModuleViews() {
+  revalidateTargets([
+    { path: appRootPath(), type: "layout" },
+    projectPage("settings", "experimental"),
+    projectPage("timeline"),
+    projectPage("competitors"),
   ]);
 }
 

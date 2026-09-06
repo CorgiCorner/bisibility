@@ -26,6 +26,7 @@ export type SearchInsightsDrawerActions = {
 };
 
 export type UseSearchInsightsDrawersInput = SearchInsightsDrawerActions & {
+  comparison?: string;
   period: string;
   projectId: string;
   property: string;
@@ -43,6 +44,7 @@ async function readFrame(
   limit: number | undefined,
 ): Promise<SearchInsightsDrawerContent> {
   const scope = {
+    ...(input.comparison ? { comparison: input.comparison } : {}),
     period: input.period,
     projectId: input.projectId,
     property: input.property,

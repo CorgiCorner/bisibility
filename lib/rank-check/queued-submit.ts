@@ -45,7 +45,7 @@ async function markAmbiguous(batchId: string, message: string) {
 async function claimSubmission(batchId: string) {
   return prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`queued-rank-submit:${batchId}`}))`;
-    const batch = await tx.queuedRankCheckBatch.findUniqueOrThrow({
+    const batchQuery = {
       include: {
         connection: true,
         project: { include: { defaults: true } },
@@ -58,9 +58,19 @@ async function claimSubmission(batchId: string) {
         },
       },
       where: { id: batchId },
-    });
+    } as const;
+    let batch = await tx.queuedRankCheckBatch.findUniqueOrThrow(batchQuery);
     if (batch.state === "submitting") return { batch, claimed: false };
     if (batch.state !== "prepared") return { batch, claimed: false };
+    if (batch.runId) {
+      const runs = await tx.$queryRaw<Array<{ status: string }>>`
+        SELECT "status" FROM "rank_check_runs" WHERE "id" = ${batch.runId} FOR UPDATE
+      `;
+      if (!runs[0] || !["queued", "running"].includes(runs[0].status)) {
+        batch = await tx.queuedRankCheckBatch.findUniqueOrThrow(batchQuery);
+        return { batch, claimed: false };
+      }
+    }
     const connection = batch.connection;
     if (connection) {
       await assertQueuedRankCheckBatchAllocation(

@@ -1,6 +1,7 @@
 "use client";
 
 import type { NotificationFeed, NotificationFeedItem } from "@/lib/queries/notifications";
+import { useAppRealtime } from "@/lib/realtime/useAppRealtime";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import Popover from "@mui/material/Popover";
 import {
@@ -110,26 +111,43 @@ function unreadCountForFeed(
 }
 
 export function NotificationBellClient({
+  transport = "stream",
+  ...props
+}: Readonly<NotificationBellClientProps>) {
+  return transport === "polling" ? (
+    <PollingNotificationBell {...props} />
+  ) : (
+    <RealtimeNotificationBell {...props} />
+  );
+}
+
+function PollingNotificationBell(props: Readonly<NotificationBellClientProps>) {
+  const { feed } = useNotificationStream(
+    props.feed,
+    props.projectRef,
+    props.refreshNotificationFeed,
+    "polling",
+  );
+  return <NotificationBellView {...props} feed={feed} />;
+}
+
+function RealtimeNotificationBell(props: Readonly<NotificationBellClientProps>) {
+  const { notifications } = useAppRealtime();
+  return <NotificationBellView {...props} feed={notifications ?? props.feed} />;
+}
+
+function NotificationBellView({
   defaultOpen = false,
   feed,
   markAllNotificationsRead,
   markNotificationRead,
-  projectRef,
-  refreshNotificationFeed,
-  transport = "stream",
 }: Readonly<NotificationBellClientProps>) {
-  const { feed: liveFeed } = useNotificationStream(
-    feed,
-    projectRef,
-    refreshNotificationFeed,
-    transport,
-  );
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
   const [allReadAt, setAllReadAt] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const open = Boolean(anchorEl) || defaultOpen;
-  const unreadCount = unreadCountForFeed(liveFeed, readIds, allReadAt);
+  const unreadCount = unreadCountForFeed(feed, readIds, allReadAt);
 
   function close() {
     setAnchorEl(null);
@@ -198,8 +216,8 @@ export function NotificationBellClient({
           </button>
         </div>
         <div className="max-h-[380px] overflow-y-auto">
-          {liveFeed.items.length > 0 ? (
-            liveFeed.items.map((item) => (
+          {feed.items.length > 0 ? (
+            feed.items.map((item) => (
               <NotificationRow
                 item={item}
                 key={item.id}

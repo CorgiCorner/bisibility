@@ -25,6 +25,7 @@ const observabilityFacts = {
   lastProbeAt: "2026-08-31T10:00:00.000Z",
   qualifyingDays: 7,
   readyThrough: {
+    d1: { current: true, previous: true },
     d7: { current: true, previous: true },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },
@@ -47,7 +48,6 @@ const runningStatusFacts = {
       status: "ok" as const,
       temporalIdentityComparison: { detail: "identities match", status: "match" as const },
     },
-    workflowStatus: "running" as const,
   },
   state: "running",
 } satisfies SearchSyncControlFacts;

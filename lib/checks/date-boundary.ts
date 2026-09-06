@@ -17,6 +17,7 @@ function partValue(parts: Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPa
 }
 
 function zonedDateTimeParts(date: Date, timeZone: string): DateTimeParts {
+  // TIMEZONE MATH (not display): derive project-local fields for boundary calculations.
   const parts = new Intl.DateTimeFormat("en-CA", {
     day: "2-digit",
     hour: "2-digit",

@@ -1,6 +1,7 @@
-import { ChecksWorkspace } from "@/components/checks/ChecksWorkspace";
 import { KeywordsGrid } from "@/components/keywords/grid/KeywordsGrid";
+import { loadRankTrackerCostContext } from "@/components/keywords/rank-tracker-cost-context";
 import { SavedKeywordsWorkspace } from "@/components/keywords/saved/SavedKeywordsWorkspace";
+import { RankTrackerRunsTab } from "@/components/rank-runs/RankTrackerRunsTab";
 import { RankTrackerTabs } from "@/components/rank-tracker/RankTrackerTabs";
 import { PageContent } from "@/components/shell/PageContent";
 import { addKeywords, updateKeyword } from "@/lib/actions/keyword";
@@ -11,7 +12,6 @@ import {
   bulkSetTargetUrl,
   bulkTagKeywords,
 } from "@/lib/actions/keyword-bulk";
-import { updateKeywordSchedule } from "@/lib/actions/keyword-schedule";
 import { importTopQueries } from "@/lib/actions/keyword-suggest";
 import { getFirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { queueFirstChecks, runCheckNow } from "@/lib/actions/rankCheck";
@@ -20,15 +20,15 @@ import { deleteSavedView } from "@/lib/actions/saved-views";
 import { createKeywordSavedView } from "@/lib/actions/saved-views-typed";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
-import { providerLabel } from "@/lib/checks/attempts";
+import { isPublicIdOfType } from "@/lib/db/public-id";
 import { parseRankTrackerAction } from "@/lib/keywords/rank-tracker-command";
 import { rankTrackerNavigationHref } from "@/lib/keywords/rank-tracker-navigation";
 import { keywordSavedViewConfig } from "@/lib/keywords/saved-view-model";
+import { resolveLegacyMarketRef } from "@/lib/markets/market-context";
+import { LEGACY_MARKET_PARAM, legacyMarketDestination } from "@/lib/markets/market-routes";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getPreferences } from "@/lib/queries/account";
 import { getCheckHealth } from "@/lib/queries/check-health";
-import { getCheckRunCount, getCheckRunsView, getUpcomingView } from "@/lib/queries/check-runs";
-import { getProjectCostContext } from "@/lib/queries/cost-calculator";
 import { isProviderConnected } from "@/lib/queries/integrations";
 import {
   getKeywordCount,
@@ -36,18 +36,21 @@ import {
   getKeywordTagSuggestions,
 } from "@/lib/queries/keywords";
 import { getProjectMarkets } from "@/lib/queries/project-markets";
+import { getRankCheckRunCount } from "@/lib/queries/rank-check-runs";
 import { listSavedKeywords, savedKeywordCount } from "@/lib/queries/saved-keywords";
 import { listSavedViews } from "@/lib/queries/saved-views";
-import { getRequestSerpProviderChain } from "@/lib/queries/workspace-request-data";
 import { appPath } from "@/lib/routing/app-path";
-import { redirect } from "next/navigation";
+import { permanentRedirect, redirect } from "next/navigation";
 import { loadRankTrackerPageList, resolveRankTrackerPageQuery } from "./rank-tracker-page-data";
 
 type KeywordsPageProps = {
-  params: Promise<{ project: string }>;
+  // `market` is present only when this page is reached through the market route, which is how
+  // the legacy lens below knows not to undo the segment.
+  params: Promise<{ market?: string; project: string }>;
+  rankTrackerPath?: string;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  marketLocationKey?: string;
 };
-
 function paramValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
@@ -62,12 +65,15 @@ function urlSearchParams(params: Record<string, string | string[] | undefined>) 
   return result;
 }
 
-async function SavedTab({ projectRef }: Readonly<{ projectRef: string }>) {
+async function SavedTab({
+  projectId,
+  projectRef,
+}: Readonly<{ projectId: string; projectRef: string }>) {
   const [
     saved,
     savedCount,
     trackedCount,
-    checksCount,
+    runsCount,
     readable,
     costContext,
     keywordDefaults,
@@ -76,9 +82,9 @@ async function SavedTab({ projectRef }: Readonly<{ projectRef: string }>) {
     listSavedKeywords(projectRef),
     savedKeywordCount(projectRef),
     getKeywordCount(projectRef),
-    getCheckRunCount(projectRef),
+    getRankCheckRunCount(projectId),
     requireReadableProject(projectRef),
-    getProjectCostContext(projectRef),
+    loadRankTrackerCostContext(projectRef),
     getKeywordDefaultMarket(projectRef),
     getProjectMarkets(projectRef),
   ]);
@@ -91,74 +97,55 @@ async function SavedTab({ projectRef }: Readonly<{ projectRef: string }>) {
         canDeleteKeyword={canProjectAction(role, "delete", "keyword")}
         costContext={costContext}
         defaultDevice={keywordDefaults.device}
-        checksCount={checksCount}
         initialSavedCount={savedCount}
         projectId={readable.project.publicId}
         projectMarkets={projectMarkets}
         removeSavedKeywordsAction={removeSavedKeywords}
         rows={saved.rows}
+        runsCount={runsCount}
         trackedCount={trackedCount}
       />
     </PageContent>
   );
 }
 
-async function ChecksTab({
-  projectId,
-  projectRef,
-}: Readonly<{ projectId: string; projectRef: string }>) {
-  const now = new Date();
-  const [initialRuns, upcoming, providerChain, trackedCount, savedCount, checksCount] =
-    await Promise.all([
-      getCheckRunsView(projectRef, { limit: 50, now, range: "7d", status: "all" }),
-      getUpcomingView(projectRef, { now }),
-      getRequestSerpProviderChain(projectId),
-      getKeywordCount(projectRef),
-      savedKeywordCount(projectRef),
-      getCheckRunCount(projectRef),
-    ]);
-
-  return (
-    <PageContent>
-      <section className="grid min-w-0 gap-4">
-        <RankTrackerTabs
-          activeTab="checks"
-          checksCount={checksCount}
-          projectRef={projectRef}
-          savedCount={savedCount}
-          trackedCount={trackedCount}
-        />
-        <ChecksWorkspace
-          initialRuns={initialRuns}
-          key={`${projectRef}:${now.toISOString()}`}
-          now={now.toISOString()}
-          projectId={projectRef}
-          projectRef={projectRef}
-          providerOptions={providerChain.map(({ provider }) => ({
-            label: providerLabel(provider),
-            value: provider,
-          }))}
-          upcoming={upcoming}
-        />
-      </section>
-    </PageContent>
-  );
-}
-
 export default async function KeywordsPage({
+  marketLocationKey,
   params: routeParams,
+  rankTrackerPath: routeRankTrackerPath,
   searchParams,
 }: Readonly<KeywordsPageProps>) {
-  const { project } = await routeParams;
+  const { market, project } = await routeParams;
   const { projectId, publicId } = await resolveProjectAccess(project);
   const params = await searchParams;
-  if (paramValue(params?.tab) === "saved") {
-    return SavedTab({ projectRef: publicId });
+  // `?market=` predates the segment and meant a within-page lens. Promote it to the level it
+  // always described, once, and only from the project route it was minted on.
+  if (!market && params && LEGACY_MARKET_PARAM in params) {
+    const legacyDestination = legacyMarketDestination({
+      marketRef: await resolveLegacyMarketRef(projectId, paramValue(params[LEGACY_MARKET_PARAM])),
+      projectRef: publicId,
+      search: urlSearchParams(params),
+    });
+    if (legacyDestination) {
+      permanentRedirect(legacyDestination);
+    }
   }
   if (paramValue(params?.tab) === "checks") {
-    return ChecksTab({ projectId, projectRef: publicId });
+    const redirectParams = urlSearchParams(params ?? {});
+    redirectParams.set("tab", "runs");
+    redirect(`${appPath(publicId, "rank-tracker")}?${redirectParams.toString()}`);
+  }
+  if (paramValue(params?.tab) === "saved") {
+    return SavedTab({ projectId, projectRef: publicId });
+  }
+  if (paramValue(params?.tab) === "runs") {
+    return RankTrackerRunsTab({ projectId, projectRef: publicId });
   }
   const openAddDrawer = paramValue(params?.add) === "1";
+  // A notification links to one run. The value is echoed into the page, so it is narrowed here:
+  // anything that is not a rank-check run id names no run and gets no status row.
+  const runParam = paramValue(params?.run);
+  const deepLinkRunId = runParam && isPublicIdOfType(runParam, "rcr") ? runParam : null;
   const requestedAction = parseRankTrackerAction(paramValue(params?.action));
   const {
     activeView,
@@ -166,12 +153,18 @@ export default async function KeywordsPage({
     query: requestedQuery,
     staleView,
   } = await resolveRankTrackerPageQuery(publicId, params ?? {});
+  const scopedQuery = marketLocationKey
+    ? {
+        ...requestedQuery,
+        lens: { ...requestedQuery.lens, locationId: marketLocationKey },
+      }
+    : requestedQuery;
   const [
     list,
     savedViews,
     readable,
     checkHealth,
-    checksCount,
+    runsCount,
     costContext,
     tagSuggestions,
     keywordDefaults,
@@ -180,12 +173,12 @@ export default async function KeywordsPage({
     preferences,
     searchConsoleConnected,
   ] = await Promise.all([
-    loadRankTrackerPageList(publicId, requestedQuery),
+    loadRankTrackerPageList(publicId, scopedQuery),
     listSavedViews(publicId),
     requireReadableProject(publicId),
     getCheckHealth(publicId),
-    getCheckRunCount(publicId),
-    getProjectCostContext(publicId),
+    getRankCheckRunCount(projectId),
+    loadRankTrackerCostContext(publicId),
     getKeywordTagSuggestions(publicId),
     getKeywordDefaultMarket(publicId),
     savedKeywordCount(publicId),
@@ -196,9 +189,9 @@ export default async function KeywordsPage({
   const canonicalPage = list.mode === "flat-server" ? list.page : requestedQuery.page;
   const staleLens =
     list.mode === "flat-server" &&
-    (requestedQuery.lens.device !== list.query.lens.device ||
-      requestedQuery.lens.locationId !== list.query.lens.locationId);
-  if (malformedDevice || staleView || staleLens || requestedQuery.page !== canonicalPage) {
+    (scopedQuery.lens.device !== list.query.lens.device ||
+      scopedQuery.lens.locationId !== list.query.lens.locationId);
+  if (malformedDevice || staleView || staleLens || scopedQuery.page !== canonicalPage) {
     const canonicalQuery = {
       ...list.query,
       page: canonicalPage,
@@ -206,7 +199,7 @@ export default async function KeywordsPage({
     };
     redirect(
       rankTrackerNavigationHref({
-        basePath: appPath(publicId, "rank-tracker"),
+        basePath: routeRankTrackerPath ?? appPath(publicId, "rank-tracker"),
         current: urlSearchParams(params ?? {}),
         present: ["page"],
         query: canonicalQuery,
@@ -228,8 +221,8 @@ export default async function KeywordsPage({
       <section className="grid min-w-0 gap-4">
         <RankTrackerTabs
           activeTab="tracked"
-          checksCount={checksCount}
           projectRef={readable.project.publicId}
+          runsCount={runsCount}
           savedCount={savedCount}
           trackedCount={list.totalCount}
         />
@@ -250,6 +243,7 @@ export default async function KeywordsPage({
             canProjectAction(role, "create", "saved_view") ? createKeywordSavedView : undefined
           }
           costContext={costContext}
+          deepLinkRunId={deepLinkRunId}
           deletableSavedViewIds={deletableSavedViewIds}
           deleteSavedViewAction={deletableSavedViewIds.length > 0 ? deleteSavedView : undefined}
           getFirstCheckRunPlanAction={getFirstCheckRunPlan}
@@ -283,7 +277,6 @@ export default async function KeywordsPage({
           totalKeywordCount={list.totalKeywordCount}
           totalCount={list.totalCount}
           updateKeywordAction={updateKeyword}
-          updateKeywordScheduleAction={updateKeywordSchedule}
         />
       </section>
     </PageContent>

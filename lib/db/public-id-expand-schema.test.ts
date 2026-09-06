@@ -20,6 +20,7 @@ function model(name: string) {
 const publicIdModels = [
   "User",
   "Session",
+  "CheckSchedule",
   "Membership",
   "Project",
   "Keyword",

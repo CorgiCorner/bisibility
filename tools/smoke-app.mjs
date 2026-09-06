@@ -98,6 +98,7 @@ const testEnv = {
   CORGICORNER_EPHEMERAL: "1",
   DATABASE_URL: databaseUrl,
   DEPLOYMENT_ENV: "test",
+  DEPLOYMENT_MODE: "cloud",
   DIRECT_URL: databaseUrl,
   POSTGRES_HOST_PORT: postgresHostPort,
   POSTGRES_PASSWORD: postgresPassword,

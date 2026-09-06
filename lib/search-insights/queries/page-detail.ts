@@ -24,6 +24,8 @@ import { pagePath } from "./top-rows-model";
 import { searchInsightsWindowFilter } from "./window-filter";
 
 export type SearchInsightsPageDetail = {
+  engagementRate: number | null;
+  keyEvents: number | null;
   path: string;
   perDay: readonly SearchInsightsDay[];
   /** The queries that landed here, with the slice of the page's clicks each one carried. */
@@ -35,6 +37,8 @@ export type SearchInsightsPageDetail = {
 };
 
 export const EMPTY_PAGE_DETAIL: SearchInsightsPageDetail = {
+  engagementRate: null,
+  keyEvents: null,
   path: "",
   perDay: [],
   queries: EMPTY_LIST,
@@ -96,21 +100,44 @@ export async function getPageDetail(
       LIMIT ${DRAWER_LIST_ROWS}
     `),
     sessionsProperty
-      ? prisma.$queryRaw<Array<{ sessions: bigint }>>(Prisma.sql`
-          SELECT SUM("sessions") AS "sessions"
+      ? prisma.$queryRaw<
+          Array<{
+            engagedSessions: bigint | number | null;
+            keyEvents: bigint | number | null;
+            sessions: bigint | number | null;
+          }>
+        >(Prisma.sql`
+          SELECT
+            SUM("sessions") AS "sessions",
+            CASE WHEN bool_or("engagedSessions" IS NULL) THEN NULL ELSE SUM("engagedSessions") END AS "engagedSessions",
+            CASE WHEN bool_or("keyEvents" IS NULL) THEN NULL ELSE SUM("keyEvents") END AS "keyEvents"
           FROM "organic_sessions_page_daily"
           WHERE ${sessionsWindowFilter(projectId, sessionsProperty, window)}
             AND "keyHash" = ${dimensionKeyHash([normalizeLandingPath(page)])}
         `)
       : Promise.resolve([]),
   ]);
+  const sessionMetrics = sessions[0];
+  const sessionCount =
+    sessionsProperty && sessionMetrics?.sessions != null ? Number(sessionMetrics.sessions) : null;
+  const engagedSessions =
+    sessionsProperty && sessionMetrics?.engagedSessions != null
+      ? Number(sessionMetrics.engagedSessions)
+      : null;
 
   return {
+    engagementRate:
+      sessionCount === null || sessionCount === 0 || engagedSessions === null
+        ? null
+        : engagedSessions / sessionCount,
+    keyEvents:
+      sessionsProperty && sessionMetrics?.keyEvents != null
+        ? Number(sessionMetrics.keyEvents)
+        : null,
     path: pagePath(page),
     perDay: perDaySeries(window, days),
     queries: querySlices(queries),
-    sessions:
-      sessionsProperty && sessions[0]?.sessions != null ? Number(sessions[0].sessions) : null,
+    sessions: sessionCount,
     stats: statsOf(days),
     url: page,
   };
@@ -118,9 +145,10 @@ export async function getPageDetail(
 
 export async function loadPageDetail(
   projectRef: string,
-  input: { page: string; period?: string; property?: string },
+  input: { comparison?: string; page: string; period?: string; property?: string },
 ): Promise<SearchInsightsPageDetail> {
   const scope = await loadSearchInsightsScope(projectRef, {
+    ...(input.comparison ? { comparison: input.comparison } : {}),
     period: input.period,
     property: input.property,
   });

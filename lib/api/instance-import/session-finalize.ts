@@ -6,6 +6,7 @@ import { assertProjectAcceptsMigration } from "@/lib/deployment/project-write-mo
 import type { CloudImportJob, MigrationImportChunk, Prisma } from "@/lib/generated/prisma/client";
 import { writeCloudImportDoneAudit, writeCloudImportFailAudit } from "./audit";
 import { reportCloudImportFailure } from "./failure";
+import { historyImportResultCounts } from "./history-counts";
 import { releaseTerminalImportHold } from "./hold";
 import {
   createKeywordRows,
@@ -89,9 +90,7 @@ async function importChunk(
   const keywordMaps = await loadKeywordMaps(project.id, chunk.keywords, tx);
   const historyCounts = await importHistory(chunk.keywords, keywordMaps.byKey, tx);
   return {
-    history: historyCounts.imported,
-    history_received: historyCounts.received,
-    history_skipped: historyCounts.skipped,
+    ...historyImportResultCounts(historyCounts),
     keywords: chunk.keywords.length,
     keywords_created: keywordCounts.created,
     keywords_skipped: keywordCounts.skipped,

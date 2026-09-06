@@ -119,11 +119,13 @@ export function StepFirstCheck({
         ? "Manual preview can run now. Scheduled checks stay paused."
         : state.status === "running"
           ? "Sample checks are running. You can open the dashboard while they finish."
-          : state.status === "completed"
-            ? hasFailedSampleChecks
-              ? `The sample ${state.rows.length === 1 ? "check" : "checks"} finished with an issue. You can retry the failed ${state.rows.length === 1 ? "check" : "checks"} below. Every keyword still follows your ${frequencyLabel.toLowerCase()} schedule.`
-              : `Sample ${state.rows.length === 1 ? "check" : "checks"} finished. Every keyword follows your ${frequencyLabel.toLowerCase()} schedule from here.`
-            : `${sampleCount} ${sampleCount === 1 ? "check" : "checks"} run once now so you can see it working. Everything else follows your ${frequencyLabel.toLowerCase()} schedule.`;
+          : state.status === "queued"
+            ? "Sample checks are queued. You can open the dashboard while the worker starts them."
+            : state.status === "completed"
+              ? hasFailedSampleChecks
+                ? `The sample ${state.rows.length === 1 ? "check" : "checks"} finished with an issue. You can retry the failed ${state.rows.length === 1 ? "check" : "checks"} below. Every keyword still follows your ${frequencyLabel.toLowerCase()} schedule.`
+                : `Sample ${state.rows.length === 1 ? "check" : "checks"} finished. Every keyword follows your ${frequencyLabel.toLowerCase()} schedule from here.`
+              : `${sampleCount} ${sampleCount === 1 ? "check" : "checks"} run once now so you can see it working. Everything else follows your ${frequencyLabel.toLowerCase()} schedule.`;
 
   function openProvider() {
     providerCloseFocusRef.current = "trigger";

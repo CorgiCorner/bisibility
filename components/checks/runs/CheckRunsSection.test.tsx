@@ -69,7 +69,7 @@ describe("CheckRunsSection", () => {
     fireEvent.click(screen.getByRole("radio", { name: "7d" }));
     fireEvent.click(asOfButton);
     const popover = screen.getByRole("dialog", { name: "As of date" });
-    fireEvent.click(within(popover).getByRole("button", { name: "July 20, 2026" }));
+    fireEvent.click(within(popover).getByRole("button", { name: "Jul 20, 2026" }));
 
     expect(onFilterChange).toHaveBeenCalledWith("deferred");
     expect(onAsOfDateChange).toHaveBeenCalledWith("2026-07-20");

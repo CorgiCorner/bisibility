@@ -8,6 +8,7 @@ import {
   revokeInvite,
   transferOwnership,
 } from "@/lib/actions/team";
+import { getResolvedDateFormat } from "@/lib/dates/request";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getTeamAccess } from "@/lib/queries/team";
 import { asProjectRef } from "@/lib/routing/app-path";
@@ -16,9 +17,10 @@ type TeamSettingsPageProps = { params: Promise<{ project: string }> };
 
 export default async function TeamSettingsPage({ params }: Readonly<TeamSettingsPageProps>) {
   const { project: projectRef } = await params;
+  const { resolved: dateFormat } = await getResolvedDateFormat();
   const [{ project }, team] = await Promise.all([
     requireReadableProject(projectRef),
-    getTeamAccess(projectRef),
+    getTeamAccess(projectRef, dateFormat),
   ]);
 
   return (

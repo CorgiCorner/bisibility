@@ -13,6 +13,7 @@ import {
   WarningCircleIcon as WarningCircle,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import { ImportCompletionSummary } from "./MigrateToCloudImportCompletion";
 import type {
   CloudMigrationHandoff,
   MigrationDirection,
@@ -69,7 +70,7 @@ export function HandoffPanel({
 
   return (
     <div className="mt-4 overflow-hidden rounded-card border border-border bg-bg-elev">
-      <div className="flex items-center gap-[13px] border-border-soft border-b p-[16px_18px]">
+      <div className="flex items-center gap-[13px] border-border border-b p-[16px_18px]">
         <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-control bg-accent-soft text-accent-solid">
           <CloudArrowUp aria-hidden size={20} weight="regular" />
         </span>
@@ -117,7 +118,7 @@ export function HandoffPanel({
         </div>
       ) : null}
       {message ? (
-        <div className="flex items-center gap-2 border-border-soft border-t px-4.5 py-3 text-[12px] text-fg-muted">
+        <div className="flex items-center gap-2 border-border border-t px-4.5 py-3 text-[12px] text-fg-muted">
           {handoff ? (
             <CheckCircle aria-hidden className="text-green-text" size={14} weight="regular" />
           ) : (
@@ -126,35 +127,6 @@ export function HandoffPanel({
           {message}
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function ImportCompletionSummary({
-  completion,
-}: Readonly<{ completion: Extract<MigrationOutcome, { kind: "completed" }>["completion"] }>) {
-  const countEntries = Object.entries(completion.counts ?? {}).filter(([, value]) => value > 0);
-  return (
-    <div className="mt-4 w-full max-w-[420px] rounded-control border border-border bg-bg-sunken px-3.5 py-3 text-left">
-      <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        Import job {completion.jobId}
-      </div>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {countEntries.length > 0 ? (
-          countEntries.map(([label, value]) => (
-            <span
-              className="rounded-full border border-border bg-bg-elev px-2.5 py-1 font-sans tabular-nums text-[10.5px] text-fg-muted"
-              key={label}
-            >
-              {label.replaceAll("_", " ")}: {value}
-            </span>
-          ))
-        ) : (
-          <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-            No imported rows reported.
-          </span>
-        )}
-      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { keywordLocationRelation } from "./keyword-location-test-fixtures";
 import type { Metrics } from "./keyword-metrics";
-import { getKeywordCount, getKeywordRows, getKeywordTagSuggestions } from "./keywords";
+import { getKeywordRows } from "./keywords";
 
 const mocks = vi.hoisted(() => ({
   fetchKeywordMetrics: vi.fn(),
@@ -114,13 +114,6 @@ describe("keyword queries", () => {
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _min: { position: null } });
     mocks.prisma.tag.findMany.mockResolvedValue([]);
-  });
-
-  it("counts keywords after resolving the readable project scope", async () => {
-    mocks.prisma.keyword.count.mockResolvedValueOnce(12);
-    await expect(getKeywordCount("prj_1")).resolves.toBe(12);
-    expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
-    expect(mocks.prisma.keyword.count).toHaveBeenCalledWith({ where: { projectId: "project_1" } });
   });
 
   it("maps the latest attempt status separately from completed rank metrics", async () => {
@@ -293,29 +286,6 @@ describe("keyword queries", () => {
       hasRankData: true,
       lastCheckStatus: "completed",
       position: 101,
-    });
-  });
-
-  it("orders tag suggestions by usage, then recency", async () => {
-    mocks.prisma.tag.findMany.mockResolvedValue([
-      { _count: { keywords: 1 }, createdAt: new Date("2026-06-01T00:00:00.000Z"), name: "Docs" },
-      { _count: { keywords: 3 }, createdAt: new Date("2026-05-01T00:00:00.000Z"), name: "Product" },
-      {
-        _count: { keywords: 1 },
-        createdAt: new Date("2026-06-15T00:00:00.000Z"),
-        name: "Integration",
-      },
-    ]);
-
-    await expect(getKeywordTagSuggestions("prj_1")).resolves.toEqual([
-      "Product",
-      "Integration",
-      "Docs",
-    ]);
-    expect(mocks.prisma.tag.findMany).toHaveBeenCalledWith({
-      include: { _count: { select: { keywords: true } } },
-      orderBy: { createdAt: "desc" },
-      where: { projectId: "project_1" },
     });
   });
 });

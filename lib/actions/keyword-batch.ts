@@ -1,5 +1,6 @@
 import { assertKeywordCapacity, lockKeywordCapacity } from "@/lib/api/resource-limits";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { restoreKeyword } from "@/lib/keywords/archive";
 import { ProjectMarketLimitExceededError } from "@/lib/markets/limits";
 import { ensureKeywordProjectMarketsWithinLimit } from "@/lib/markets/registry";
 import { seedKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
@@ -30,6 +31,7 @@ type KeywordBatchClient = Pick<
 >;
 
 type StoredKeyword = {
+  archivedAt: Date | null;
   device: KeywordBatchRow["device"];
   id: string;
   intent: string | null;
@@ -41,8 +43,14 @@ type StoredKeyword = {
 };
 
 export type KeywordBatchSetResult = {
-  accepted: Array<{ created: boolean; keyword: StoredKeyword; row: KeywordBatchRow }>;
+  accepted: Array<{
+    created: boolean;
+    keyword: StoredKeyword;
+    restored: boolean;
+    row: KeywordBatchRow;
+  }>;
   created: StoredKeyword[];
+  restored: StoredKeyword[];
 };
 
 export function keywordTupleKey(text: string, locationId: string, device: string) {
@@ -128,7 +136,7 @@ export async function createKeywordBatchSet(
   projectId: string,
   rows: readonly KeywordBatchRow[],
 ): Promise<KeywordBatchSetResult> {
-  if (rows.length === 0) return { accepted: [], created: [] };
+  if (rows.length === 0) return { accepted: [], created: [], restored: [] };
   const rowsByKey = uniqueRows(rows);
   const canonicalRows = [...rowsByKey.values()];
   const limit = await lockKeywordCapacity(client, projectId);
@@ -141,6 +149,7 @@ export async function createKeywordBatchSet(
     throw new ProjectMarketLimitExceededError(marketResult.maxMarkets);
   }
   const select = {
+    archivedAt: true,
     device: true,
     id: true,
     intent: true,
@@ -154,6 +163,13 @@ export async function createKeywordBatchSet(
     select,
     where: keywordWhere(projectId, canonicalRows),
   });
+  const archived = existing.filter(
+    (keyword) =>
+      keyword.archivedAt instanceof Date &&
+      rowsByKey.has(keywordTupleKey(keyword.text, keyword.locationId, keyword.device)),
+  );
+  await Promise.all(archived.map((keyword) => restoreKeyword(keyword.id, client)));
+  const restored = archived.map((keyword) => ({ ...keyword, archivedAt: null }));
   const existingKeys = new Set(
     existing.map((keyword) => keywordTupleKey(keyword.text, keyword.locationId, keyword.device)),
   );
@@ -181,7 +197,13 @@ export async function createKeywordBatchSet(
           where: { publicId: { in: candidates.map((candidate) => candidate.publicId) } },
         })
       : [];
-  const persisted = [...existing, ...inserted];
+  const restoredIds = new Set(restored.map((keyword) => keyword.id));
+  const persisted = [
+    ...existing.map((keyword) =>
+      restoredIds.has(keyword.id) ? { ...keyword, archivedAt: null } : keyword,
+    ),
+    ...inserted,
+  ];
   const persistedByKey = new Map(
     persisted.map((keyword) => [
       keywordTupleKey(keyword.text, keyword.locationId, keyword.device),
@@ -198,13 +220,15 @@ export async function createKeywordBatchSet(
   );
 
   const unclaimedCreated = new Set(created.map((keyword) => keyword.publicId));
+  const unclaimedRestored = new Set(restored.map((keyword) => keyword.publicId));
   const accepted = rows.map((row) => {
     const keyword = persistedByKey.get(rowKey(row));
     if (!keyword) throw new Error("Keyword could not be created.");
     const created = unclaimedCreated.delete(keyword.publicId);
-    return { created, keyword, row };
+    const restored = unclaimedRestored.delete(keyword.publicId);
+    return { created, keyword, restored, row };
   });
-  return { accepted, created };
+  return { accepted, created, restored };
 }
 
 export async function createKeywordBatch(
@@ -217,5 +241,5 @@ export async function createKeywordBatch(
     projectId,
     keywords.map((keyword) => ({ ...shared, keyword })),
   );
-  return result.created;
+  return [...result.created, ...result.restored];
 }

@@ -1,7 +1,9 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Card, ChartRegion, SectionTitle, SegmentedControl, ZonedTime } from "@/components/ui";
+import { formatDateRange, formatDateTime } from "@/lib/dates/format";
 import type { KeywordDetailChartState } from "@/lib/keyword-detail/state-model";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
 import {
@@ -10,7 +12,11 @@ import {
   keywordMarketLabel,
   marketComparisonData,
 } from "@/lib/keywords/market-position-history";
-import { dailyPositionPoints, positionHistoryAriaLabel } from "@/lib/keywords/position-history";
+import {
+  dailyPositionPoints,
+  positionDateLabel,
+  positionHistoryAriaLabel,
+} from "@/lib/keywords/position-history";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { chartColors } from "@/lib/theme/chart-colors";
 import { LineChart } from "@mui/x-charts/LineChart";
@@ -52,14 +58,21 @@ export function PositionHistoryCard({
 }: Readonly<PositionHistoryCardProps>) {
   const [range, setRange] = useState<RangeLabel>("30d");
   const [scope, setScope] = useState<"all" | "single">("single");
+  const dateFormat = useDateFormat();
   const { readOnly } = useProjectWriteMode();
   const activeRange = RANGES.find((option) => option.label === range) ?? RANGES[1];
-  const history = dailyPositionPoints(keyword.positionHistory, activeRange.days);
+  const history = dailyPositionPoints(keyword.positionHistory, activeRange.days).map((point) => ({
+    ...point,
+    label:
+      point.label === "Today"
+        ? "Today"
+        : positionDateLabel(new Date(point.checkedAt), new Date(), dateFormat),
+  }));
   const markets = comparisonTargets(marketTargets, keyword);
   const visibleMarkets = markets.slice(0, 6);
   const showComparison = markets.length > 1;
   const allMarkets = showComparison && scope === "all";
-  const comparison = marketComparisonData(visibleMarkets, activeRange.days);
+  const comparison = marketComparisonData(visibleMarkets, activeRange.days, dateFormat);
   const boundaryVisible =
     history.length > 0 &&
     Boolean(
@@ -108,14 +121,12 @@ export function PositionHistoryCard({
   const latestPosition = keyword.positionHistory.at(-1)?.position ?? null;
   const displayedPosition = positions.at(-1) ?? latestPosition;
   const latestCheckedAt = keyword.positionHistory.at(-1)?.checkedAt;
-  const historyDateFormatter = new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    timeZone,
-  });
+  const latestDay = latestCheckedAt
+    ? formatDateTime(new Date(latestCheckedAt), "iso", timeZone).slice(0, 10)
+    : null;
   const latestChip =
     latestPosition !== null && latestPosition > 0
-      ? `Latest #${latestPosition} · ${latestCheckedAt ? historyDateFormatter.format(new Date(latestCheckedAt)) : "Today"}`
+      ? `Latest #${latestPosition} · ${latestDay ? formatDateRange(latestDay, latestDay, dateFormat) : "Today"}`
       : "Latest unavailable";
   const effectiveSchedule = resolveEffectiveSchedule(keyword.schedule);
   const nextCheckLabel: ReactNode = readOnly ? (

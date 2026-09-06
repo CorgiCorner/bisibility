@@ -118,7 +118,10 @@ describe("DataForSEO backlinks payload parsers", () => {
 
   it("maps 402xx and balance messages to a billing signal", () => {
     expect(() => dataForSeoBacklinksRows(billingError)).toThrowError(
-      expect.objectContaining({ name: "DataForSeoBillingError" }),
+      expect.objectContaining({
+        message: "Payment Required. Insufficient balance.",
+        name: "DataForSeoBillingError",
+      }),
     );
   });
 

@@ -120,10 +120,10 @@ describe("research workspace model", () => {
 
   it("formats the next monthly reset in the project timezone", () => {
     expect(nextBudgetResetLabel("America/New_York", new Date("2026-07-22T12:00:00Z"))).toBe(
-      "Aug 1, 2026, 12:00 AM",
+      "Aug 1, 2026, 00:00",
     );
     expect(nextBudgetResetLabel("Europe/Warsaw", new Date("2026-07-31T23:00:00Z"))).toBe(
-      "Sep 1, 2026, 12:00 AM",
+      "Sep 1, 2026, 00:00",
     );
   });
 

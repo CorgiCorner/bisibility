@@ -36,7 +36,7 @@ export function UsageCardsLoading() {
               <SettingsLoadingBar className="h-[82px] w-full" />
               <SettingsLoadingBar className="h-[82px] w-full" />
               <div
-                className="flex items-center gap-4 border-t border-border-soft pt-4"
+                className="flex items-center gap-4 border-t border-border pt-4"
                 data-usage-loading-footer="provider-usage"
               >
                 <SettingsLoadingBar className="h-3 w-28" />

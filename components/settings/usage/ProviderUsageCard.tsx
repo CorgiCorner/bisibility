@@ -13,6 +13,7 @@ import { createUserDateTimeFormatter } from "@/lib/format/user-datetime";
 import type { ProjectProviderSpend } from "@/lib/queries/provider-spend";
 import type { ProviderUsageData } from "@/lib/settings/options";
 import { MARKETING_URL } from "@/lib/site/site";
+import { metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
 import { useState } from "react";
 
@@ -28,7 +29,7 @@ type ProviderUsageCardProps = {
 function Kpi({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div>
-      <span className="tracking-[0.05em] uppercase">{label}</span>
+      <span className={metricEyebrowClassName}>{label}</span>
       <p className="m-0 mt-[5px] text-[15px] font-semibold text-fg tabular-nums">{value}</p>
     </div>
   );
@@ -143,7 +144,7 @@ export function ProviderUsageCard({
       ) : null}
       <section className="mt-4" aria-label="Budget used">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <span className="tracking-[0.08em] uppercase">Budget used</span>
+          <span className={metricEyebrowClassName}>Budget used</span>
           {summary.tightest ? (
             <span className="font-sans tabular-nums text-[11px] text-fg-muted">
               tightest: {summary.tightest.provider} ·{" "}
@@ -156,7 +157,7 @@ export function ProviderUsageCard({
         {summary.maxUsedPercent == null ? null : (
           <SpendBar
             ariaLabel="Budget used"
-            className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-meter-track"
+            className="mt-2 h-1.5 w-full overflow-hidden rounded-full"
             percent={summary.maxUsedPercent}
             roundedFill
             tone={summaryTone}
@@ -166,13 +167,13 @@ export function ProviderUsageCard({
           {projectionExplanation(usage)}
         </p>
       </section>
-      <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border-soft pt-4 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border pt-4 sm:grid-cols-3">
         <Kpi label="Recorded spend" value={recordedSpend(summary.recorded)} />
         <Kpi label="Provider requests (mo)" value={summary.requestCount.toLocaleString("en-US")} />
         <Kpi label="Projected spend" value={projectionKpi(usage)} />
       </div>
       {connections.length ? (
-        <ul className="m-0 mt-4 list-none border-y border-border-soft p-0">
+        <ul className="m-0 mt-4 list-none border-y border-border p-0">
           {connections.map((connection) => (
             <ProviderUsageRow
               connection={connection}
@@ -182,11 +183,11 @@ export function ProviderUsageCard({
           ))}
         </ul>
       ) : (
-        <p className="m-0 mt-4 border-t border-border-soft pt-4 text-[12px] text-fg-muted">
+        <p className="m-0 mt-4 border-t border-border pt-4 text-[12px] text-fg-muted">
           Usage appears once a provider is connected.
         </p>
       )}
-      <div className="-mx-5 mt-5 border-t border-border-soft px-5 pt-4">
+      <div className="-mx-5 mt-5 border-t border-border px-5 pt-4">
         <ExternalLink
           className="text-[12px] font-medium text-accent-text hover:underline"
           href={`${MARKETING_URL}/rank-tracking-cost-calculator`}

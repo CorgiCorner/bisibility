@@ -4,6 +4,7 @@ import type { StorybookConfig } from "@storybook/nextjs-vite";
 import type { Plugin } from "vite";
 
 const runtimeStubs = fileURLToPath(new URL("./browser-runtime-stubs.tsx", import.meta.url));
+const temporalRuntimeStubs = fileURLToPath(new URL("./temporal-runtime-stubs.ts", import.meta.url));
 const prismaRuntimeStub = fileURLToPath(new URL("./prisma-runtime-stub.ts", import.meta.url));
 const imageStub = fileURLToPath(new URL("./next-image-stub.tsx", import.meta.url));
 const fontStub = fileURLToPath(new URL("./next-font-stub.ts", import.meta.url));
@@ -78,11 +79,11 @@ const runtimeAliases = {
   "@upstash/ratelimit": runtimeStubs,
   "@upstash/redis": runtimeStubs,
   "@grpc/grpc-js": runtimeStubs,
-  "@temporalio/activity": runtimeStubs,
-  "@temporalio/client": runtimeStubs,
-  "@temporalio/common": runtimeStubs,
-  "@temporalio/worker": runtimeStubs,
-  "@temporalio/workflow": runtimeStubs,
+  "@temporalio/activity": temporalRuntimeStubs,
+  "@temporalio/client": temporalRuntimeStubs,
+  "@temporalio/common": temporalRuntimeStubs,
+  "@temporalio/worker": temporalRuntimeStubs,
+  "@temporalio/workflow": temporalRuntimeStubs,
   async_hooks: runtimeStubs,
   "client-only": runtimeStubs,
   crypto: runtimeStubs,

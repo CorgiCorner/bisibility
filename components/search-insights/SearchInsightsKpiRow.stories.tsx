@@ -1,3 +1,8 @@
+import {
+  clicksToSessionsKpi,
+  searchInsightsKpis,
+  windowTotals,
+} from "@/lib/search-insights/queries/kpis-model";
 import type { Meta, StoryObj } from "@storybook/react";
 import { SearchInsightsKpiRow } from "./SearchInsightsKpiRow";
 import { storyFirstView } from "./search-insights-story-fixtures";
@@ -20,22 +25,42 @@ type Story = StoryObj<typeof meta>;
 
 export const FourCards: Story = { args: { kpis: storyFirstView.kpis } };
 
-export const WithSecondSource: Story = {
+const reconciliationTotals = {
+  current: windowTotals({ clicks: 12_500, impressions: 486_310, positionWeight: 8_948_104 }),
+  previous: windowTotals({ clicks: 11_000, impressions: 448_210, positionWeight: 9_009_021 }),
+};
+
+const reconciliationSessions = { current: 11_500, previous: 9_680 };
+const reconciliationKpis = searchInsightsKpis(reconciliationTotals);
+
+export const ClicksToSessionsRatio: Story = {
   args: {
-    extra: {
-      delta: "+6.4%",
-      dir: "up",
-      label: "Organic sessions",
-      prev: "14,008",
-      source: "GA4",
-      value: "14,905",
-    },
-    kpis: storyFirstView.kpis,
+    extra: clicksToSessionsKpi(reconciliationTotals, reconciliationSessions),
+    kpis: reconciliationKpis,
   },
 };
 
 export const Declining: Story = {
   args: {
     kpis: storyFirstView.kpis.map((kpi) => ({ ...kpi, delta: "-4.1%", dir: "down" as const })),
+  },
+};
+
+export const ClicksToSessionsNoBaseline: Story = {
+  args: {
+    extra: clicksToSessionsKpi(reconciliationTotals, reconciliationSessions, false),
+    kpis: searchInsightsKpis(reconciliationTotals, false),
+  },
+};
+
+const zeroClicksTotals = {
+  current: windowTotals({ clicks: 0, impressions: 152_480, positionWeight: 2_653_152 }),
+  previous: reconciliationTotals.previous,
+};
+
+export const ClicksToSessionsHidden: Story = {
+  args: {
+    extra: clicksToSessionsKpi(zeroClicksTotals, { current: 0, previous: 9_680 }),
+    kpis: searchInsightsKpis(zeroClicksTotals),
   },
 };

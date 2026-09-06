@@ -22,7 +22,7 @@ import {
   UploadSimpleIcon as UploadSimple,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-import { KeywordsToolbarButton } from "./KeywordsToolbarButton";
+import { KeywordsToolbarButton, toolbarSecondaryIconClassName } from "./KeywordsToolbarButton";
 
 const toggleableColumns = [
   ["change", "Change"],
@@ -90,7 +90,7 @@ export function KeywordsToolbarActions({
           aria-haspopup="menu"
           label="Columns"
           onClick={(event) => setAnchorEl(event.currentTarget)}
-          startIcon={<Eye weight="regular" size={15} className="text-current" />}
+          startIcon={<Eye weight="regular" size={15} className={toolbarSecondaryIconClassName} />}
           variant="secondary"
         />
       </span>
@@ -125,10 +125,22 @@ export function KeywordsToolbarActions({
         showTooltip={mobileTooltips}
         label="Filters"
         onClick={onOpenFilters}
-        startIcon={<Funnel weight="regular" size={15} className="text-current" />}
+        startIcon={
+          <Funnel
+            weight="regular"
+            size={15}
+            className={hasFilters ? "text-current" : toolbarSecondaryIconClassName}
+          />
+        }
         sx={{
           backgroundColor: hasFilters ? "var(--accent-soft)" : "var(--bg-elev)",
           color: hasFilters ? "var(--accent)" : "var(--fg-muted)",
+          ...(hasFilters
+            ? {
+                "& .MuiButton-startIcon": { color: "currentColor" },
+                "& .MuiButton-startIcon > svg": { color: "currentColor" },
+              }
+            : {}),
         }}
         variant="secondary"
       >
@@ -165,7 +177,9 @@ export function KeywordsToolbarActions({
           aria-haspopup="menu"
           label="Import or export"
           onClick={(event) => setTransferAnchor(event.currentTarget)}
-          startIcon={<UploadSimple weight="regular" size={15} className="text-current" />}
+          startIcon={
+            <UploadSimple weight="regular" size={15} className={toolbarSecondaryIconClassName} />
+          }
           variant="secondary"
         />
       </span>
@@ -207,7 +221,12 @@ export function KeywordsToolbarActions({
           onClick={onOpenExport}
           showTooltip
           startIcon={
-            <UploadSimple aria-hidden weight="regular" size={15} className="text-current" />
+            <UploadSimple
+              aria-hidden
+              weight="regular"
+              size={15}
+              className={toolbarSecondaryIconClassName}
+            />
           }
           variant="secondary"
         />
@@ -222,7 +241,12 @@ export function KeywordsToolbarActions({
               onClick={onImportCsv}
               showTooltip
               startIcon={
-                <DownloadSimple aria-hidden weight="regular" size={15} className="text-current" />
+                <DownloadSimple
+                  aria-hidden
+                  weight="regular"
+                  size={15}
+                  className={toolbarSecondaryIconClassName}
+                />
               }
               variant="secondary"
             />
@@ -232,7 +256,8 @@ export function KeywordsToolbarActions({
       {onAddKeyword ? (
         <ProjectReadOnlyTooltip>
           <KeywordsToolbarButton
-            showTooltip={mobileTooltips}
+            compactBelowXl
+            showTooltip
             disabled={readOnly}
             label="Add keyword"
             onClick={onAddKeyword}

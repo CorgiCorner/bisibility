@@ -1,6 +1,7 @@
 "use client";
 
 import { KeywordsScopeLocationSelect } from "@/components/keywords/KeywordsScopeControls";
+import { useMarketContext } from "@/components/markets/MarketContextProvider";
 import { Button, Sheet } from "@/components/ui";
 import {
   type ChangeFilter,
@@ -82,6 +83,7 @@ export function FiltersDrawer({
   query,
   viewId = null,
 }: Readonly<FiltersDrawerProps>) {
+  const { market } = useMarketContext();
   const facets = serverFacets ?? getFilterFacets(rows);
   const activeCount =
     filters.position.length +
@@ -132,7 +134,7 @@ export function FiltersDrawer({
       widthVariant="filters"
     >
       <div className="-mt-1">
-        {lens ? (
+        {lens && !market ? (
           <div className="lg:hidden">
             <FilterSection icon={MapPin} title="Scope">
               <div className="mt-[13px]">

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { notifyRankCheckCompleted, notifyRankCheckFailed } from "@/lib/notifications/events";
+import { publishOperationChanged } from "@/lib/notifications/realtime";
 import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/markets";
 import { emitSignal } from "@/lib/signals/emit";
@@ -20,12 +21,12 @@ import type {
   RankCheckPersistTarget,
 } from "./runner-persistence-types";
 import type { RankCheckRunResult } from "./runner-result";
+import { applyRunItemTransition } from "./runs/items";
 
 export type { RankCheckPersistTarget } from "./runner-persistence-types";
 export type RankCheckFailureTarget = BaseRankCheckFailureTarget & {
   errorCode?: ProviderErrorCode;
 };
-
 type RankCheckResult = RankCheckRunResult;
 export type PersistRankCheckDependencies = {
   enqueueDeliveries: typeof enqueueAlertDeliveries;
@@ -53,7 +54,6 @@ async function updateRunningRankCheck(
     rankCheck: await tx.rankCheck.findUniqueOrThrow({ where: { id: rankCheckId } }),
   };
 }
-
 async function writeRankCheckAudit(
   tx: Prisma.TransactionClient,
   input: {
@@ -81,7 +81,6 @@ async function writeRankCheckAudit(
     tx,
   );
 }
-
 export async function persistRankCheck(
   target: RankCheckPersistTarget,
   result: RankCheckResult,
@@ -115,7 +114,7 @@ export async function persistRankCheck(
     const persisted =
       existing?.rankCheck ??
       (await tx.rankCheck.create({ data: { ...data, publicId: makePublicId("check") } }));
-
+    await applyRunItemTransition(tx, { rankCheckId: persisted.id, to: "completed" });
     if (target.hasSchedule) {
       await tx.keywordSchedule.update({
         data: result.scheduleUpdate,
@@ -127,7 +126,6 @@ export async function persistRankCheck(
         where: { projectId: target.projectId },
       });
     }
-
     if (target.connectionId) {
       await tx.providerConnection.update({
         data: { lastUsedAt: result.rankCheck.checkedAt },
@@ -145,7 +143,6 @@ export async function persistRankCheck(
         usageQuantity: result.rankCheck.billingUnits,
       });
     }
-
     await writeRankCheckAudit(tx, {
       action: "rank_check.completed",
       after: {
@@ -161,7 +158,6 @@ export async function persistRankCheck(
       rankCheckId: requiredPublicAuditId(persisted.publicId, "check", "Rank-check"),
       keywordPublicId: target.keywordPublicId,
     });
-
     const signals = signalsForRankCheck({
       checkedAt: result.rankCheck.checkedAt,
       comparisonAllowed: result.comparisonAllowed,
@@ -178,10 +174,10 @@ export async function persistRankCheck(
     for (const signal of signals) {
       await emitSignal(signal, tx);
     }
-
     await target.persistenceFinalize?.(tx);
     return persisted;
   }, target.transactionOptions);
+  await publishOperationChanged({ projectId: target.projectId }).catch(() => undefined);
   const currentSnapshot = {
     checkedAt: result.rankCheck.checkedAt,
     normalizationVersion: result.rankCheck.normalizationVersion,
@@ -204,7 +200,6 @@ export async function persistRankCheck(
     // The worker sweep recovers alerts when the best-effort Temporal kick is unavailable.
     await dependencies.enqueueDeliveries(alerts.map((alert) => alert.id)).catch(() => undefined);
   }
-
   await notifyRankCheckCompleted({
     checkedAt: result.rankCheck.checkedAt,
     keywordId: target.keywordId,
@@ -213,10 +208,8 @@ export async function persistRankCheck(
     projectId: target.projectId,
     rankCheckId: rankCheck.id,
   }).catch(() => undefined);
-
   return rankCheck;
 }
-
 export async function persistFailedRankCheckInTransaction(
   tx: Prisma.TransactionClient,
   target: RankCheckFailureTarget,
@@ -253,7 +246,7 @@ export async function persistFailedRankCheckInTransaction(
   const persisted =
     existing?.rankCheck ??
     (await tx.rankCheck.create({ data: { ...data, publicId: makePublicId("check") } }));
-
+  await applyRunItemTransition(tx, { rankCheckId: persisted.id, to: "failed" });
   await writeRankCheckProviderCostEntry(tx, {
     connectionId: target.connectionId,
     costCents: target.providerCostCents,
@@ -264,7 +257,6 @@ export async function persistFailedRankCheckInTransaction(
     projectId: target.projectId,
     usage: target.providerUsage,
   });
-
   await writeRankCheckAudit(tx, {
     action: "rank_check.failed",
     after: {
@@ -279,16 +271,16 @@ export async function persistFailedRankCheckInTransaction(
     rankCheckId: requiredPublicAuditId(persisted.publicId, "check", "Rank-check"),
     keywordPublicId: target.keywordPublicId,
   });
-
   await target.persistenceFinalize?.(tx);
   return persisted;
 }
-
 export async function persistFailedRankCheck(target: RankCheckFailureTarget) {
   const rankCheck = await prisma.$transaction(
     (tx) => persistFailedRankCheckInTransaction(tx, target),
     target.transactionOptions,
   );
+  if (target.projectId)
+    await publishOperationChanged({ projectId: target.projectId }).catch(() => undefined);
   const checkedAt = target.checkedAt ?? rankCheck.checkedAt;
   if (target.projectId && target.keywordPublicId && target.keywordText && target.projectDomain) {
     await notifyRankCheckFailed({
@@ -303,6 +295,5 @@ export async function persistFailedRankCheck(target: RankCheckFailureTarget) {
       rankCheckId: requiredPublicAuditId(rankCheck.publicId, "check", "Rank-check"),
     }).catch(() => undefined);
   }
-
   return rankCheck;
 }

@@ -48,7 +48,7 @@ export default function AlertsLoading() {
             </div>
           </div>
           {feedKeys.map((key) => (
-            <div className="flex gap-3.5 border-b border-border-soft px-4.5 py-[15px]" key={key}>
+            <div className="flex gap-3.5 border-b border-border px-4.5 py-[15px]" key={key}>
               <Bar className="h-8.5 w-[34px] shrink-0 rounded-control" />
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <Bar className="h-3.5 w-[60%]" />
@@ -79,7 +79,7 @@ export default function AlertsLoading() {
           </div>
           {ruleKeys.map((key) => (
             <div
-              className="flex items-center gap-3 border-b border-border-soft px-4.5 py-[15px]"
+              className="flex items-center gap-3 border-b border-border px-4.5 py-[15px]"
               key={key}
             >
               <Bar className="hidden h-[38px] w-[5px] shrink-0 rounded-full sm:block" />

@@ -1,4 +1,5 @@
 import { rateForProvider } from "@/lib/cost-estimate/provider-rates";
+import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { CheckAttempt, CheckAttemptOutcome } from "./contract";
 
 type JsonRecord = Record<string, unknown>;
@@ -31,6 +32,8 @@ function numberFor(...values: unknown[]) {
 }
 
 export function providerLabel(provider: string) {
+  const catalogProvider = PROVIDER_CATALOG.find((entry) => entry.id === provider);
+  if (catalogProvider) return catalogProvider.label;
   const known = rateForProvider(provider);
   if (known) return known.label;
   return (

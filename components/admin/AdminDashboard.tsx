@@ -7,14 +7,9 @@ import { AdminProviderUsageTable } from "@/components/admin/AdminProviderUsageTa
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
 import { AdminWorkerHealth } from "@/components/admin/AdminWorkerHealth";
 import { tableHeaderClassName } from "@/components/ui";
+import { type DateFormat, formatDateTime } from "@/lib/dates/format";
 import { checkFailureRate } from "@/lib/ops/instance-admin-health";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
-
-const snapshotTime = new Intl.DateTimeFormat("en-GB", {
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "UTC",
-});
 
 function connectionKindLabel(kind: string) {
   return kind
@@ -25,7 +20,10 @@ function connectionKindLabel(kind: string) {
     .join(" ");
 }
 
-export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard }>) {
+export function AdminDashboard({
+  data,
+  dateFormat = "day_first",
+}: Readonly<{ data: InstanceAdminDashboard; dateFormat?: DateFormat }>) {
   const temporalHeartbeat = data.temporal.status === "ok" ? data.temporal.heartbeat : null;
   const temporalSnapshotNote = data.temporal.status === "stale" ? "Temporal snapshot stale" : null;
   const temporalIssues = [
@@ -36,7 +34,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
   const checkFailureRatePercent = data.availability.rankChecks
     ? checkFailureRate(data.rank24h.failed, data.rank24h.succeeded)
     : null;
-  const unavailable = displayTime(null);
+  const unavailable = displayTime(null, dateFormat);
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -47,7 +45,12 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
         workerStatus={data.worker.status}
       />
 
-      <AdminWorkerHealth available={data.availability.worker} ops={data.ops} worker={data.worker} />
+      <AdminWorkerHealth
+        available={data.availability.worker}
+        dateFormat={dateFormat}
+        ops={data.ops}
+        worker={data.worker}
+      />
 
       <Panel
         description="Execution totals and schedule-to-start lag. Deferred rows never count as successes."
@@ -121,7 +124,9 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
             <Metric
               label="Last budget exhaustion"
               value={
-                <span className="text-sm">{displayTime(data.presence?.occurredAt ?? null)}</span>
+                <span className="text-sm">
+                  {displayTime(data.presence?.occurredAt ?? null, dateFormat)}
+                </span>
               }
             />
           </div>
@@ -134,7 +139,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
       >
         <p className="mb-3 text-xs text-fg-muted">
           {data.temporal.collectedAt
-            ? `As of ${snapshotTime.format(new Date(data.temporal.collectedAt))}`
+            ? `As of ${formatDateTime(new Date(data.temporal.collectedAt), dateFormat).split(", ").at(-1)}`
             : unavailable}
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
@@ -156,7 +161,9 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
             label="Next action"
             value={
               <span className="text-sm">
-                {temporalHeartbeat ? displayTime(temporalHeartbeat.nextActionAt) : unavailable}
+                {temporalHeartbeat
+                  ? displayTime(temporalHeartbeat.nextActionAt, dateFormat)
+                  : unavailable}
               </span>
             }
           />
@@ -202,7 +209,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-xs">
-              <thead className={`border-b border-border ${tableHeaderClassName}`}>
+              <thead className={tableHeaderClassName}>
                 <tr>
                   <th className="pb-2 pr-3">Kind</th>
                   <th className="pb-2 pr-3">Severity</th>
@@ -214,7 +221,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
               <tbody>
                 {data.ops.events.map((event, index) => (
                   <tr
-                    className="border-b border-border-soft last:border-0"
+                    className="border-b border-border last:border-0"
                     key={`${event.createdAt}:${event.kind}:${index}`}
                   >
                     <td className="py-2 pr-3">
@@ -223,7 +230,9 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
                     <td className="py-2 pr-3">
                       <Badge status={event.severity} />
                     </td>
-                    <td className="py-2 pr-3 text-fg-muted">{displayTime(event.createdAt)}</td>
+                    <td className="py-2 pr-3 text-fg-muted">
+                      {displayTime(event.createdAt, dateFormat)}
+                    </td>
                     <td className="py-2 pr-3">
                       <Badge status={event.deliveredAt ? "delivered" : "undelivered"} />
                     </td>

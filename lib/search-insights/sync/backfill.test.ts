@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   },
   readConnection: vi.fn(),
   recordImportFailure: vi.fn(),
+  readImportObservability: vi.fn(),
+  refreshWindowFacts: vi.fn(),
   syncCompleteDay: vi.fn(),
 }));
 
@@ -43,6 +45,12 @@ vi.mock("@/lib/search-insights/sync/day-sync", () => ({
 }));
 vi.mock("@/lib/search-insights/sync/partitions", () => ({
   countCappedDays: mocks.countCappedDays,
+}));
+vi.mock("@/lib/search-insights/queries/import-observability-db", () => ({
+  readImportObservability: mocks.readImportObservability,
+}));
+vi.mock("@/lib/search-insights/queries/window-facts-compute", () => ({
+  refreshWindowFacts: mocks.refreshWindowFacts,
 }));
 
 const property = "sc-domain:example.com";
@@ -100,6 +108,15 @@ describe("runBackfillBatch", () => {
       kind: "data_found",
       returnedDays: 488,
     });
+    mocks.readImportObservability.mockResolvedValue({
+      readyThrough: {
+        d1: { current: true, previous: true },
+        d7: { current: true, previous: true },
+        d28: { current: false, previous: false },
+        d90: { current: true, previous: false },
+      },
+    });
+    mocks.refreshWindowFacts.mockResolvedValue({ failed: [], written: [7, 90] });
   });
 
   it("probes freshness, plans the window and pulls every total before any day partition", async () => {
@@ -421,6 +438,53 @@ describe("runBackfillBatch", () => {
     });
     expect(mocks.probeFreshness).not.toHaveBeenCalled();
     expect(mocks.fetchAggregateRange).not.toHaveBeenCalled();
+  });
+
+  it("refreshes only the windows the readiness gate calls current after stored days", async () => {
+    mocks.loadImportRow.mockResolvedValue(
+      importRow({
+        cursorDate: new Date("2026-07-05T00:00:00.000Z"),
+        earliestTargetDate: new Date("2025-03-07T00:00:00.000Z"),
+        newestFinalizedDate: new Date("2026-07-07T00:00:00.000Z"),
+        state: "running",
+      }),
+    );
+
+    await runBackfillBatch(input);
+
+    expect(mocks.refreshWindowFacts).toHaveBeenCalledWith({
+      finalizedThrough: "2026-07-07",
+      importId: "imp_1",
+      projectId: "project_1",
+      property,
+      readyWindowDays: [7, 90],
+    });
+  });
+
+  it("keeps stored batch results when a facts refresh throws", async () => {
+    mocks.loadImportRow.mockResolvedValue(
+      importRow({
+        cursorDate: new Date("2026-07-05T00:00:00.000Z"),
+        earliestTargetDate: new Date("2025-03-07T00:00:00.000Z"),
+        newestFinalizedDate: new Date("2026-07-07T00:00:00.000Z"),
+        state: "running",
+      }),
+    );
+    const error = new Error("facts unavailable");
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mocks.refreshWindowFacts.mockRejectedValue(error);
+
+    await expect(runBackfillBatch(input)).resolves.toMatchObject({
+      daysProcessed: 2,
+      done: false,
+      nextCursor: "2026-07-03",
+    });
+
+    expect(consoleError).toHaveBeenCalledWith(
+      "[search-insights] window facts refresh failed",
+      expect.objectContaining({ error, importId: "imp_1", projectId: "project_1" }),
+    );
+    consoleError.mockRestore();
   });
 
   it("completes the import once the cursor passes the earliest target day", async () => {

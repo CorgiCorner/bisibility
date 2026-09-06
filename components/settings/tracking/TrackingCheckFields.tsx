@@ -86,7 +86,7 @@ export function TrackingCheckFields({
   }
 
   return (
-    <div className="space-y-4 border-t border-border-soft pt-4">
+    <div className="space-y-4 border-t border-border pt-4">
       <input type="hidden" {...form.register("projectId")} />
       <input type="hidden" {...form.register("city")} />
       <input type="hidden" {...form.register("country")} />

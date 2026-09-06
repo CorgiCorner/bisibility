@@ -47,7 +47,7 @@ export default function AccountLoading() {
           <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
             {accountKeys.map((key) => (
               <div
-                className="flex items-center gap-[13px] border-b border-border-soft px-4.5 py-3.5 last:border-b-0"
+                className="flex items-center gap-[13px] border-b border-border px-4.5 py-3.5 last:border-b-0"
                 key={key}
               >
                 <AccountLoadingBar className="h-8.5 w-[34px] shrink-0 rounded-control" />

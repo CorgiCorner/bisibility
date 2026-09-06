@@ -100,7 +100,7 @@ export function BulkTargetForm({
         )}
       </form>
       {view.hasTargets ? (
-        <div className="border-t border-border-soft pt-3">
+        <div className="border-t border-border pt-3">
           <Button onClick={onRequestClear} size="sm" type="button" variant="secondary">
             Clear target URL{selectedRows.length === 1 ? "" : "s"}
           </Button>

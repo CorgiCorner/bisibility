@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { providerAgeLabel } from "@/lib/integrations/provider-age";
 import { searchModuleConsumerStatus } from "@/lib/integrations/provider-consumer-status";
@@ -11,7 +12,6 @@ import { readSearchImportQueueFacts } from "@/lib/search-insights/queries/import
 import { searchSyncRequestSetsPerHour } from "@/lib/search-insights/sync/plan";
 import { resolveSearchSyncSettings } from "@/lib/settings/search-sync-config";
 import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
-import { describeSearchInsightsBackfillStatus } from "@/lib/temporal/search-insights-status";
 
 type Connection = { lastUsedAt: Date | null; provider: string; status: ProviderStatusKind };
 type ConsumerStatuses = IntegrationProviderData["consumerStatuses"];
@@ -20,6 +20,7 @@ export async function loadGscConsumerStatuses(
   projectId: string,
   connections: readonly Connection[],
   now: Date,
+  dateFormat: DateFormat = "month_first",
 ): Promise<ConsumerStatuses> {
   const connection = connections.find((row) => row.provider === "gsc");
   const active = await prisma.searchInsightsPropertyRegistry.findFirst({
@@ -44,7 +45,7 @@ export async function loadGscConsumerStatuses(
       ])
     : [null, null];
   const settings = resolveSearchSyncSettings(defaults);
-  const [observability, queue, workflowStatus, workerLiveness] =
+  const [observability, queue, workerLiveness] =
     importRow && property
       ? await Promise.all([
           readImportObservability({
@@ -64,33 +65,34 @@ export async function loadGscConsumerStatuses(
             projectId,
             state: importRow.state,
           }),
-          describeSearchInsightsBackfillStatus(projectId, property),
           getWorkerLivenessDetails(),
         ])
-      : [null, null, "unknown" as const, null];
+      : [null, null, null];
   return {
-    searchModule: searchModuleConsumerStatus({
-      connectionStatus,
-      observability: observability ?? undefined,
-      pausedReason: importRow?.pausedReason ?? null,
-      property,
-      pauseStartedAt: importRow?.pauseStartedAt?.toISOString() ?? null,
-      queue: queue ?? undefined,
-      runtime: workerLiveness
-        ? {
-            workerStatus: {
-              status: workerLiveness.status,
-              temporalIdentityComparison: compareWorkerTemporalIdentity(
-                temporalDeploymentConfig(),
-                workerLiveness,
-              ),
-            },
-            workflowStatus,
-          }
-        : undefined,
-      safeError: importRow?.lastError ?? null,
-      state: importRow?.state ?? null,
-    }),
+    searchModule: searchModuleConsumerStatus(
+      {
+        connectionStatus,
+        observability: observability ?? undefined,
+        pausedReason: importRow?.pausedReason ?? null,
+        property,
+        pauseStartedAt: importRow?.pauseStartedAt?.toISOString() ?? null,
+        queue: queue ?? undefined,
+        runtime: workerLiveness
+          ? {
+              workerStatus: {
+                status: workerLiveness.status,
+                temporalIdentityComparison: compareWorkerTemporalIdentity(
+                  temporalDeploymentConfig(),
+                  workerLiveness,
+                ),
+              },
+            }
+          : undefined,
+        safeError: importRow?.lastError ?? null,
+        state: importRow?.state ?? null,
+      },
+      dateFormat,
+    ),
     trafficEnrichment:
       connection?.status === "needs_reauth"
         ? { state: "needs_reauth", summary: "Needs reconnect" }

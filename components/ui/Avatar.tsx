@@ -14,23 +14,37 @@ export type AvatarProps = {
 };
 
 export function Avatar({ alt, className, initials, src }: Readonly<AvatarProps>) {
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
-  if (src && src !== failedSrc) {
+  const canLoad = Boolean(src && src !== failedSrc);
+  const imageReady = canLoad && src === loadedSrc;
+
+  if (imageReady) {
     return (
       // biome-ignore lint/performance/noImgElement: Avatar URLs use arbitrary hosts unsupported by the image optimizer.
-      <img
-        alt={alt}
-        className={cn("object-cover", className)}
-        onError={() => setFailedSrc(src)}
-        src={src}
-      />
+      <img alt={alt} className={cn("object-cover", className)} src={src ?? undefined} />
     );
   }
 
   return (
-    <span aria-hidden={alt ? undefined : true} className={cn("grid place-items-center", className)}>
+    <span
+      aria-hidden={alt ? undefined : true}
+      className={cn("relative grid place-items-center", className)}
+    >
       {initials}
+      {canLoad ? (
+        // Preload off-screen so a missing Gravatar never flashes the broken-image glyph.
+        // biome-ignore lint/performance/noImgElement: Avatar URLs use arbitrary hosts unsupported by the image optimizer.
+        <img
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0"
+          onError={() => setFailedSrc(src ?? null)}
+          onLoad={() => setLoadedSrc(src ?? null)}
+          src={src ?? undefined}
+        />
+      ) : null}
     </span>
   );
 }

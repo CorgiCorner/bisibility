@@ -5,6 +5,7 @@ import { workspaceRowMeta } from "@/components/shell/workspace-labels";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { menuItemRowHoverSx } from "@/lib/ui/menu-item-row-styles";
 import MenuItem from "@mui/material/MenuItem";
 import { CheckIcon as Check } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -24,10 +25,7 @@ export const MENU_ROW_SX = {
   paddingX: "9px",
   paddingY: "8px",
   // The fill belongs to the pointer alone; selection is the check glyph, never a fill.
-  "&:hover": { backgroundColor: "var(--bg-sunken)" },
-  "&.Mui-focusVisible": { backgroundColor: "var(--bg-sunken)" },
-  "&:active": { backgroundColor: "var(--bg-inset)" },
-  "&.Mui-selected": { backgroundColor: "transparent" },
+  ...menuItemRowHoverSx,
 } as const;
 
 export type WorkspaceRowProps = {

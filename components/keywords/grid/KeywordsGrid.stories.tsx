@@ -40,7 +40,6 @@ const actionArgs = {
   runCheckNowAction: async () => undefined,
   tagSuggestions: ["Product", "Docs", "Comparison", "Integration"],
   updateKeywordAction: async () => undefined,
-  updateKeywordScheduleAction: async () => undefined,
 };
 
 const meta = {

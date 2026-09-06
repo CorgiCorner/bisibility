@@ -35,7 +35,7 @@ function ProviderRow() {
           <Bar className="h-8 w-[84px]" />
         </div>
       </div>
-      <div className="mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-t border-border-soft pt-3.5">
+      <div className="mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-t border-border pt-3.5">
         {metaKeys.map((key) => (
           <div className="flex flex-col gap-1.5" key={key}>
             <Bar className="h-2.5 w-[70px]" />

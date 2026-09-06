@@ -52,9 +52,9 @@ export const Expanded: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByTestId("sidebar-collapse-icon")).toBeInTheDocument();
-    await expect(canvas.getByText(/^track$/i)).toBeVisible();
-    await expect(canvas.getByText(/^research$/i)).toBeVisible();
-    await expect(canvas.getByText(/^connect$/i)).toBeVisible();
+    await expect(canvas.getByText("Activity")).toBeVisible();
+    await expect(canvas.getByText("Modules")).toBeVisible();
+    await expect(canvas.getByText("Project")).toBeVisible();
     const searchConsole = canvas.getByText("Search Console").closest("a");
     if (!searchConsole) {
       throw new Error("Search Console navigation link is missing.");

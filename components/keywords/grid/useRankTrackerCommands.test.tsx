@@ -259,3 +259,32 @@ describe("useRankTrackerCommands initial action consumption", () => {
     expect(routerMock.replace).toHaveBeenCalledOnce();
   });
 });
+
+describe("useRankTrackerCommands inside one market", () => {
+  const marketScope = { canonicalKey: "DE", label: "Germany / German", ref: "pmkt_de" };
+
+  it("names the market the page-wide run spends in", () => {
+    render(<Harness input={defaultInput({ marketScope })} />);
+
+    expect(getCmd("rt-run-checks").label).toBe("Run rank checks in Germany / German");
+    expect(getCmd("rt-export").label).toBe("Export keywords");
+  });
+
+  it("withholds the command when the market has nothing on the page to check", () => {
+    render(
+      <Harness
+        input={defaultInput({ marketScope, rowCounts: { all: 3, scoped: 0, visible: 3 } })}
+      />,
+    );
+
+    expect(document.querySelector('[data-testid="cmd-rt-run-checks"]')).toBeNull();
+    expect(document.querySelector('[data-testid="cmd-rt-export"]')).toBeTruthy();
+  });
+
+  it("leaves the project-level command exactly as it was", () => {
+    render(<Harness input={defaultInput()} />);
+
+    expect(getCmd("rt-run-checks").label).toBe("Run rank checks");
+    expect(getCmd("rt-run-checks").hint).toBe("Check visible");
+  });
+});

@@ -1,5 +1,13 @@
 import type { SearchInsightsSortKey } from "@/lib/search-insights/queries/top-rows-sort";
-import { AVG_POSITION_TIP, SESSIONS_JOIN_TIP } from "./search-insights-copy";
+import {
+  AVG_POSITION_TIP,
+  ENGAGEMENT_LABEL,
+  ENGAGEMENT_RATE_TIP,
+  KEY_EVENTS_LABEL,
+  KEY_EVENTS_TIP,
+  ORGANIC_SESSIONS_LABEL,
+  SESSIONS_JOIN_TIP,
+} from "./search-insights-copy";
 
 /**
  * One column geometry for every table in the module. The text column is fluid so a long query
@@ -13,13 +21,19 @@ export const MODULE_TABLE_COLUMN = {
   // The band list carries a caret and a visited dot beside the number, which the narrow
   // decision column has no room for.
   bandPosition: "76px",
-  clicks: "60px",
-  ctr: "52px",
+  // Sans 10px eyebrow + 8px sort gap + 10px icon. 52px was enough for the label
+  // alone; the control paints into Avg pos unless the column holds the gap too.
+  clicks: "72px",
+  ctr: "60px",
+  // Sans 10px eyebrow, nowrap. 52px/60px held the figures; ENGAGEMENT and KEY EVENTS
+  // paint into the next column unless the column holds the label.
+  engagement: "92px",
   impressions: "69px",
-  // Wide enough for the AVG POS header to stay on one line: a header that wraps is the only
-  // one in the table that does, and the label is what the column is named by.
-  position: "60px",
-  sessions: "69px",
+  keyEvents: "84px",
+  // Wide enough for AVG POS plus the sort gap and icon: 76px held the label on
+  // one line, but gap-2 left the control painting into Actions.
+  position: "84px",
+  sessions: "76px",
   text: "minmax(138px,1fr)",
 } as const;
 
@@ -33,24 +47,28 @@ export type ModuleTableColumnName = keyof typeof MODULE_TABLE_COLUMN;
 export const MODULE_TABLE_COLUMN_CLASS = {
   action: "w-23.75",
   bandPosition: "w-19",
-  clicks: "w-15",
-  ctr: "w-13",
+  clicks: "w-18",
+  ctr: "w-15",
+  engagement: "w-23",
   impressions: "w-17.25",
-  position: "w-15",
-  sessions: "w-17.25",
+  keyEvents: "w-21",
+  position: "w-21",
+  sessions: "w-19",
   // The fluid column carries no width: with `table-layout: fixed` an unspecified column takes
   // whatever the fixed ones leave, and its floor lives on the table (see below), because a
   // min-width on a `<col>` is inert.
   text: "w-auto",
 } as const satisfies Record<ModuleTableColumnName, string>;
 
-// Sessions replaces impressions rather than squeezing a fifth numeric column next to a URL:
-// clicks, CTR and position are the decision columns on a page row.
+// The GA4 variants keep six columns: text, clicks, then the funnel values GA4 can fill, then
+// the action. Search Console diagnostics take back a slot whenever the funnel has nothing to say.
 export const moduleTableColumnOrder = {
   drawer: ["text", "clicks", "position"],
   drawerBand: ["text", "clicks", "impressions", "bandPosition"],
+  drawerPages: ["text", "clicks", "engagement", "keyEvents", "position"],
   pages: ["text", "clicks", "impressions", "ctr", "position", "action"],
-  pagesWithSessions: ["text", "clicks", "ctr", "position", "sessions", "action"],
+  pagesWithKeyEvents: ["text", "clicks", "sessions", "engagement", "keyEvents", "action"],
+  pagesWithSessions: ["text", "clicks", "sessions", "engagement", "position", "action"],
   queries: ["text", "clicks", "impressions", "ctr", "position", "action"],
 } as const satisfies Record<string, readonly ModuleTableColumnName[]>;
 
@@ -89,7 +107,9 @@ const moduleTableHeaderByColumn = {
   bandPosition: { align: true, label: "Avg pos", title: AVG_POSITION_TIP },
   clicks: { align: true, label: "Clicks" },
   ctr: { align: true, label: "CTR" },
+  engagement: { align: true, label: ENGAGEMENT_LABEL, title: ENGAGEMENT_RATE_TIP },
   impressions: { align: true, label: "Impr" },
+  keyEvents: { align: true, label: KEY_EVENTS_LABEL, title: KEY_EVENTS_TIP },
   position: {
     align: true,
     label: "Avg pos",
@@ -97,12 +117,12 @@ const moduleTableHeaderByColumn = {
   },
   sessions: {
     align: true,
-    label: "Sessions",
+    label: ORGANIC_SESSIONS_LABEL,
     title: SESSIONS_JOIN_TIP,
   },
   text: {
     label: "Query",
-    labels: { pages: "Page", pagesWithSessions: "Page" },
+    labels: { pages: "Page", pagesWithKeyEvents: "Page", pagesWithSessions: "Page" },
   },
 } as const satisfies Record<ModuleTableColumnName, ModuleTableHeaderDescriptor>;
 
@@ -125,11 +145,13 @@ export function moduleTableHeaders(variant: ModuleTableVariant): readonly Module
  * test beside this file proves each one still matches the widths above.
  */
 export const moduleTableColumns = {
-  drawer: "grid-cols-[minmax(138px,1fr)_60px_60px]",
-  drawerBand: "grid-cols-[minmax(138px,1fr)_60px_69px_76px]",
-  pages: "grid-cols-[minmax(138px,1fr)_60px_69px_52px_60px_95px]",
-  pagesWithSessions: "grid-cols-[minmax(138px,1fr)_60px_52px_60px_69px_95px]",
-  queries: "grid-cols-[minmax(138px,1fr)_60px_69px_52px_60px_95px]",
+  drawer: "grid-cols-[minmax(138px,1fr)_72px_84px]",
+  drawerBand: "grid-cols-[minmax(138px,1fr)_72px_69px_76px]",
+  drawerPages: "grid-cols-[minmax(138px,1fr)_72px_92px_84px_84px]",
+  pages: "grid-cols-[minmax(138px,1fr)_72px_69px_60px_84px_95px]",
+  pagesWithKeyEvents: "grid-cols-[minmax(138px,1fr)_72px_76px_92px_84px_95px]",
+  pagesWithSessions: "grid-cols-[minmax(138px,1fr)_72px_76px_92px_84px_95px]",
+  queries: "grid-cols-[minmax(138px,1fr)_72px_69px_60px_84px_95px]",
 } as const satisfies Record<ModuleTableVariant, string>;
 
 /**
@@ -147,11 +169,13 @@ export const moduleTablesLayout =
  * for the same reason as the grid literals above, and checked against the widths by the test.
  */
 export const moduleTableMinWidth = {
-  drawer: "min-w-64.5",
-  drawerBand: "min-w-85.75",
-  pages: "min-w-118.5",
-  pagesWithSessions: "min-w-118.5",
-  queries: "min-w-118.5",
+  drawer: "min-w-73.5",
+  drawerBand: "min-w-88.75",
+  drawerPages: "min-w-117.5",
+  pages: "min-w-129.5",
+  pagesWithKeyEvents: "min-w-139.25",
+  pagesWithSessions: "min-w-139.25",
+  queries: "min-w-129.5",
 } as const satisfies Record<ModuleTableVariant, string>;
 
 export function moduleTableColumnClasses(variant: ModuleTableVariant) {

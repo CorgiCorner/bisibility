@@ -111,7 +111,7 @@ export function PersonalTokensSection({
       title="Personal access tokens"
     >
       {tokens.length > 0 ? (
-        <div className="divide-y divide-border-soft rounded-control border border-border bg-bg-elev">
+        <div className="divide-y divide-border rounded-control border border-border bg-bg-elev">
           {tokens.map((token) => (
             <div className="flex items-center gap-3 p-3" key={token.id}>
               <span className="min-w-0 flex-1">

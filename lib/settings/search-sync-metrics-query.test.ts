@@ -1,5 +1,8 @@
 import { resolveSearchSyncControl } from "@/lib/search-insights/sync/control-model";
-import { loadSearchSyncMetrics } from "@/lib/settings/search-sync-metrics";
+import {
+  loadSearchSyncMetrics,
+  loadSearchSyncPreflightPlan,
+} from "@/lib/settings/search-sync-metrics";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -10,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   liveness: vi.fn(),
   observability: vi.fn(),
   queue: vi.fn(),
+  readableProject: vi.fn(),
+  requestDefaults: vi.fn(),
   workflow: vi.fn(),
 }));
 vi.mock("@/lib/db/prisma", () => ({
@@ -22,7 +27,10 @@ vi.mock("@/lib/ops/liveness", () => ({ getWorkerLivenessDetails: mocks.liveness 
 vi.mock("@/lib/ops/worker-temporal-identity", () => ({
   compareWorkerTemporalIdentity: mocks.compareIdentity,
 }));
-vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: vi.fn() }));
+vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.readableProject }));
+vi.mock("@/lib/queries/workspace-request-data", () => ({
+  getRequestProjectDefaults: mocks.requestDefaults,
+}));
 vi.mock("@/lib/search-insights/queries/import-observability-db", () => ({
   readImportObservability: mocks.observability,
 }));
@@ -45,6 +53,7 @@ const facts = {
   lastProbeAt: "2026-08-28T15:55:00.000Z",
   qualifyingDays: 7,
   readyThrough: {
+    d1: { current: true, previous: true },
     d7: { current: true, previous: true },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },
@@ -134,7 +143,6 @@ describe("loadSearchSyncMetrics", () => {
       queue: {},
       runtime: {
         workerStatus: { status: "ok", temporalIdentityComparison: { status: "match" } },
-        workflowStatus: "running",
       },
     });
     expect(
@@ -165,5 +173,21 @@ describe("loadSearchSyncMetrics", () => {
         state: metrics.state,
       }),
     ).toMatchObject({ action: null, status: "Complete" });
+  });
+});
+
+describe("loadSearchSyncPreflightPlan", () => {
+  it("reuses the request-memoized project defaults", async () => {
+    mocks.readableProject.mockResolvedValue({ project: { id: "project_1" } });
+    mocks.requestDefaults.mockResolvedValue({
+      searchSyncImportMonths: 6,
+      searchSyncPace: "gentle",
+    });
+
+    await expect(loadSearchSyncPreflightPlan("prj_1")).resolves.toMatchObject({
+      pace: "gentle",
+      retentionMonths: 6,
+    });
+    expect(mocks.requestDefaults).toHaveBeenCalledWith("project_1");
   });
 });

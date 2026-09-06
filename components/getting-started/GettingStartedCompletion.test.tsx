@@ -1,20 +1,20 @@
-import { appPath } from "@/lib/routing/app-path";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { GettingStartedCompletion } from "./GettingStartedCompletion";
 import {
+  ALL_STEPS_COMPLETE,
   FINISH_SETUP_CTA,
-  SEE_DASHBOARD_CTA,
+  FINISH_SETUP_HELPER,
   SETUP_ACK_CHECKLIST_ERROR,
   SETUP_ACK_WRITE_ERROR,
-  SETUP_FINISHED_HEADLINE,
+  WHATS_NEXT_HEADING,
 } from "./getting-started-copy";
 
 const projectRef = "prj_abcdefghijklmnopqrstuvwx";
 
 describe("GettingStartedCompletion", () => {
-  it("renders state A with finish and dashboard actions", () => {
+  it("renders state A with the finish action on the right", () => {
     const { container } = render(
       <GettingStartedCompletion
         acknowledged={false}
@@ -22,13 +22,13 @@ describe("GettingStartedCompletion", () => {
         projectRef={projectRef}
       />,
     );
-    expect(screen.getByText("Setup complete - first positions are in.")).toBeVisible();
+    expect(screen.getByText(ALL_STEPS_COMPLETE)).toBeVisible();
+    expect(screen.getByText(WHATS_NEXT_HEADING)).toBeVisible();
     expect(container.querySelector(".size-10")).toBeNull();
     expect(screen.getByRole("button", { name: FINISH_SETUP_CTA })).toBeVisible();
-    expect(screen.getByRole("link", { name: SEE_DASHBOARD_CTA })).toHaveAttribute(
-      "href",
-      appPath(projectRef, "dashboard"),
-    );
+    expect(screen.getByText(FINISH_SETUP_HELPER)).toBeVisible();
+    expect(container.querySelector(".sm\\:flex-row.sm\\:justify-between")).not.toBeNull();
+    expect(screen.queryByRole("link")).toBeNull();
     expect(container.textContent).not.toMatch(/keyword|schedule|run|position count/i);
     expect(container.textContent).not.toContain("\u2014");
   });
@@ -45,20 +45,6 @@ describe("GettingStartedCompletion", () => {
     );
     await user.click(screen.getByRole("button", { name: FINISH_SETUP_CTA }));
     expect(onAcknowledge).toHaveBeenCalledWith({ projectRef });
-  });
-
-  it("does not acknowledge when see the dashboard is clicked", async () => {
-    const onAcknowledge = vi.fn();
-    const user = userEvent.setup();
-    render(
-      <GettingStartedCompletion
-        acknowledged={false}
-        onAcknowledge={onAcknowledge}
-        projectRef={projectRef}
-      />,
-    );
-    await user.click(screen.getByRole("link", { name: SEE_DASHBOARD_CTA }));
-    expect(onAcknowledge).not.toHaveBeenCalled();
   });
 
   it("surfaces checklist failures separately from write failures", async () => {
@@ -94,18 +80,13 @@ describe("GettingStartedCompletion", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(SETUP_ACK_WRITE_ERROR);
   });
 
-  it("renders state B with setup finished and a dashboard link", () => {
-    const { container } = render(
+  it("renders state B without a finish action or dashboard link", () => {
+    render(
       <GettingStartedCompletion acknowledged onAcknowledge={vi.fn()} projectRef={projectRef} />,
     );
-    expect(screen.getByText(SETUP_FINISHED_HEADLINE)).toBeVisible();
+    expect(screen.getByText(ALL_STEPS_COMPLETE)).toBeVisible();
+    expect(screen.getByText(WHATS_NEXT_HEADING)).toBeVisible();
     expect(screen.queryByRole("button", { name: FINISH_SETUP_CTA })).toBeNull();
-    expect(screen.getByRole("link", { name: SEE_DASHBOARD_CTA })).toHaveAttribute(
-      "href",
-      appPath(projectRef, "dashboard"),
-    );
-    expect(
-      container.querySelectorAll(`a[href="${appPath(projectRef, "dashboard")}"]`),
-    ).toHaveLength(1);
+    expect(screen.queryByRole("link")).toBeNull();
   });
 });

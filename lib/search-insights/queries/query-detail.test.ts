@@ -42,7 +42,9 @@ function statements() {
 
 describe("getQueryDetail", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mocks.prisma.$queryRaw.mockReset();
+    mocks.scope.mockReset();
+    mocks.tracked.mockReset();
     mocks.prisma.$queryRaw.mockResolvedValueOnce(days).mockResolvedValueOnce(pages);
     mocks.tracked.mockResolvedValue(new Set<string>());
   });
@@ -92,6 +94,48 @@ describe("getQueryDetail", () => {
 
     expect(detail.pages.total).toBe(2);
     expect(detail.pages.rows.map((row) => row.path)).toEqual(["/guide", "/blog"]);
+  });
+
+  it("bridges each query page through the shared landing-page GA4 aggregate", async () => {
+    mocks.prisma.$queryRaw.mockReset();
+    mocks.prisma.$queryRaw
+      .mockResolvedValueOnce(days)
+      .mockResolvedValueOnce(pages)
+      .mockResolvedValueOnce([
+        {
+          engagedSessions: 21n,
+          keyEvents: 3n,
+          keyHash: dimensionKeyHash(["/guide"]),
+          sessions: 42n,
+        },
+        {
+          engagedSessions: null,
+          keyEvents: null,
+          keyHash: dimensionKeyHash(["/blog"]),
+          sessions: 12n,
+        },
+      ]);
+
+    const detail = await getQueryDetail(
+      "project_1",
+      "sc-domain:example.com",
+      window,
+      "stored query",
+      "123456789",
+      true,
+    );
+
+    expect(detail.pages.rows).toMatchObject([
+      { engagementRate: 0.5, keyEvents: 3, path: "/guide" },
+      { engagementRate: null, keyEvents: null, path: "/blog" },
+    ]);
+    expect(statements()[2]).toContain('FROM "organic_sessions_page_daily"');
+    expect(statements()[2]).toContain(
+      'CASE WHEN bool_or("engagedSessions" IS NULL) THEN NULL ELSE SUM("engagedSessions") END AS "engagedSessions"',
+    );
+    expect(statements()[2]).toContain(
+      'CASE WHEN bool_or("keyEvents" IS NULL) THEN NULL ELSE SUM("keyEvents") END AS "keyEvents"',
+    );
   });
 
   it("asks Rank Tracker whether this query is already checked", async () => {
@@ -174,6 +218,8 @@ describe("loadQueryDetail", () => {
     const detail = await loadQueryDetail("prj_1", { query: "stored query" });
 
     expect(detail).toEqual({
+      keyEventsConfigured: null,
+      pageMetricsReadable: false,
       pages: { rows: [], total: 0 },
       perDay: [],
       query: "stored query",

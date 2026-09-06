@@ -12,6 +12,7 @@ describe("public ID Prisma write defaults", () => {
       "AlertRule",
       "ApiKey",
       "AuditLog",
+      "CheckSchedule",
       "CloudImportJob",
       "Competitor",
       "IngestHook",
@@ -43,14 +44,17 @@ describe("public ID Prisma write defaults", () => {
 
   it("keeps an explicitly supplied v3 ID and fills nested creates", () => {
     const project = addPublicIdsToData("Project", {
+      checkSchedules: { create: { frequency: "daily", name: "Daily", projectId: "project_1" } },
       members: { create: { role: "owner", userId: "user_1" } },
       publicId: "prj_abcdefghijklmnopqrstuvwx",
       tags: { createMany: { data: [{ name: "urgent" }] } },
     });
+    const checkSchedules = project.checkSchedules as { create: Record<string, unknown> };
     const members = project.members as { create: Record<string, unknown> };
     const tags = project.tags as { createMany: { data: Array<Record<string, unknown>> } };
 
     expect(project.publicId).toBe("prj_abcdefghijklmnopqrstuvwx");
+    expect(parsePublicId(publicId(checkSchedules.create))?.resource).toBe("checkSchedule");
     expect(parsePublicId(publicId(members.create))?.resource).toBe("membership");
     expect(parsePublicId(publicId(tags.createMany.data[0]))?.resource).toBe("tag");
   });

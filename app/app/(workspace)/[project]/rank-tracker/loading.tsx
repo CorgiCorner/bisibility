@@ -44,7 +44,7 @@ export default function KeywordsLoading() {
                 ))}
               </div>
               {rowKeys.map((key) => (
-                <div className={cn(rowGrid, "border-b border-border-soft px-4 py-3.5")} key={key}>
+                <div className={cn(rowGrid, "border-b border-border px-4 py-3.5")} key={key}>
                   <Bar className="h-4 w-4 rounded" />
                   <Bar className="h-3.5 w-[72%]" />
                   <Bar className="h-3.5 w-10" />

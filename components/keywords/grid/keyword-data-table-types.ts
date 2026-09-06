@@ -4,6 +4,7 @@ import type {
 } from "@/components/keywords/action-utils";
 import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
 import type { RankTrackerQueryState } from "@/lib/keywords/rank-tracker-query-types";
+import type { MarketScope } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { SerpDepth } from "@/lib/serp/markets";
@@ -19,7 +20,7 @@ declare module "@mui/x-data-grid" {
 }
 
 export type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> &
-  Pick<KeywordDetailActions, "updateKeywordAction" | "updateKeywordScheduleAction"> & {
+  Pick<KeywordDetailActions, "updateKeywordAction"> & {
     canDeleteKeyword: boolean;
     canUpdateKeyword: boolean;
     checkFailed: boolean;
@@ -28,6 +29,7 @@ export type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAc
     filterCount: number;
     initialDensity?: GridDensity;
     listMode?: "flat-server" | "grouped-client";
+    marketScope?: MarketScope | null;
     matchedTargetCount?: number;
     page?: number;
     pageCount?: number;

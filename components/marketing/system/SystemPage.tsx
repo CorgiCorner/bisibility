@@ -11,7 +11,7 @@ type SystemPageProps = {
   description: string;
   kicker: string;
   statusLabel: string;
-  terminal: ReactNode;
+  terminal?: ReactNode;
   title: string;
 };
 
@@ -70,7 +70,7 @@ export function SystemPage({
           {description}
         </p>
         <div className="mt-7 flex flex-wrap justify-center gap-[11px]">{actions}</div>
-        {terminal}
+        {terminal ?? null}
         <a
           className="mt-5.5 inline-flex items-center gap-[7px] text-[13px] text-fg-muted hover:text-accent-solid"
           href={DOCS_URL}

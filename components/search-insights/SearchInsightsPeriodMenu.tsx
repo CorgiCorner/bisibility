@@ -1,7 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button, Tooltip } from "@/components/ui";
 import { track } from "@/lib/analytics/client";
+import type { DateFormat } from "@/lib/dates/format";
+import type { FinalizedWindow } from "@/lib/search-insights/dates";
 import type { SearchInsightsContext } from "@/lib/search-insights/queries/context";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { cn } from "@/lib/ui/cn";
@@ -11,57 +13,100 @@ import {
   CheckIcon as Check,
 } from "@phosphor-icons/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { SearchInsightsMenu, SearchInsightsMenuOption } from "./SearchInsightsMenu";
 import { PERIOD_MENU_LABEL } from "./search-insights-copy";
-import { periodOptions, periodTriggerLabel } from "./search-insights-workspace-model";
+import {
+  periodOptions,
+  periodTooltipLines,
+  periodTriggerLabel,
+  periodTriggerName,
+} from "./search-insights-workspace-model";
 
 type PeriodMenuProps = {
+  dateFormat?: DateFormat;
   importFacts?: ImportObservabilityFacts | null;
   period: SearchInsightsContext["period"];
-  yoy: SearchInsightsContext["yoy"];
+  window?: FinalizedWindow | null;
 };
 
-export function SearchInsightsPeriodMenu({ importFacts, period, yoy }: Readonly<PeriodMenuProps>) {
+export function SearchInsightsPeriodMenu({
+  dateFormat = "month_first",
+  importFacts,
+  period,
+  window = null,
+}: Readonly<PeriodMenuProps>) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const options = periodOptions(yoy, importFacts);
+  const [pending, startTransition] = useTransition();
+  const options = periodOptions(importFacts, window?.current.end ?? null, period, dateFormat);
 
   // The window lives in the URL so the server render owns it and a shared link keeps it.
   function pick(id: string) {
     setAnchorEl(null);
-    if (id === period.id) return;
+    if (id === period.id || pending) return;
     const next = new URLSearchParams(searchParams);
     next.set("period", id);
-    track("search_insights_period_changed", { window: id });
-    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    startTransition(() => {
+      track("search_insights_period_changed", { window: id });
+      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    });
   }
+
+  const trigger = (
+    <Button
+      aria-expanded={Boolean(anchorEl)}
+      aria-haspopup="listbox"
+      aria-label={periodTriggerName(period, window, dateFormat)}
+      loading={pending}
+      loadingIndicator={
+        <CalendarBlank
+          weight="regular"
+          aria-hidden
+          className="animate-spin text-fg-muted"
+          size={15}
+        />
+      }
+      onClick={(event) => setAnchorEl(event.currentTarget)}
+      size="sm"
+      startIcon={<CalendarBlank weight="regular" aria-hidden className="text-fg-muted" size={15} />}
+      variant="secondary"
+    >
+      <span className="flex items-center gap-2 whitespace-nowrap">
+        <span className="font-sans tabular-nums text-ui-caption">
+          {periodTriggerLabel(period, window, dateFormat)}
+        </span>
+        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
+      </span>
+    </Button>
+  );
 
   return (
     <>
-      <Button
-        aria-expanded={Boolean(anchorEl)}
-        aria-haspopup="listbox"
-        aria-label={PERIOD_MENU_LABEL}
-        onClick={(event) => setAnchorEl(event.currentTarget)}
-        size="sm"
-        variant="secondary"
-      >
-        <span className="flex items-center gap-2 whitespace-nowrap">
-          <CalendarBlank
-            weight="regular"
-            aria-hidden
-            className="shrink-0 text-fg-muted"
-            size={15}
-          />
-          <span className="font-sans tabular-nums text-ui-caption">
-            {periodTriggerLabel(period)}
-          </span>
-          <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
-        </span>
-      </Button>
+      {window ? (
+        <Tooltip
+          content={
+            <span
+              className="block max-w-80 whitespace-normal text-left"
+              data-testid="period-tooltip-content"
+            >
+              {periodTooltipLines(period, window, dateFormat).map((line) => (
+                <span className="block" key={line}>
+                  {line}
+                </span>
+              ))}
+            </span>
+          }
+          placement="bottom-start"
+          semantics="description"
+        >
+          {trigger}
+        </Tooltip>
+      ) : (
+        trigger
+      )}
       <SearchInsightsMenu
         anchorEl={anchorEl}
         ariaLabel={PERIOD_MENU_LABEL}
@@ -79,9 +124,11 @@ export function SearchInsightsPeriodMenu({ importFacts, period, yoy }: Readonly<
                 <span className={cn(option.disabled ? "text-fg-muted" : "text-fg")}>
                   {option.label}
                 </span>
-                <span className="font-sans tabular-nums text-ui-caption text-fg-muted">
-                  {option.sub}
-                </span>
+                {option.dates || option.sub ? (
+                  <span className="font-sans tabular-nums text-ui-caption text-fg-muted">
+                    {[option.dates, option.sub].filter(Boolean).join(" · ")}
+                  </span>
+                ) : null}
               </span>
               {option.id === period.id ? (
                 <Check

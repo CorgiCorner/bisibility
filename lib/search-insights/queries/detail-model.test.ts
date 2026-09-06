@@ -64,6 +64,8 @@ describe("slices", () => {
     expect(pages.total).toBe(31);
     expect(pages.rows[0]).toEqual({
       clicks: 12,
+      engagementRate: null,
+      keyEvents: null,
       path: "/guide?x=1",
       position: 4.2,
       url: "https://example.com/guide?x=1",

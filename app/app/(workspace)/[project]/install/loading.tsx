@@ -27,7 +27,7 @@ export default function InstallLoading() {
             <Bar className="mb-2 h-3.5 w-full max-w-[390px]" />
             <div>
               {agentRows.map((row, index) => (
-                <div className="border-t border-border-soft" data-agent-row key={row}>
+                <div className="border-t border-border" data-agent-row key={row}>
                   <div className="flex min-h-[44px] items-center gap-2.5 py-[11px]">
                     <Bar className="h-4 w-4 shrink-0" />
                     <Bar className="h-3.5 w-[110px]" />
@@ -83,7 +83,7 @@ export default function InstallLoading() {
           <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[repeat(auto-fit,minmax(230px,1fr))]">
             {skillRows.map((row) => (
               <div
-                className="flex min-h-[44px] flex-col gap-0.5 border-t border-border-soft px-2 py-[9px]"
+                className="flex min-h-[44px] flex-col gap-0.5 border-t border-border px-2 py-[9px]"
                 data-skill-row
                 key={row}
               >

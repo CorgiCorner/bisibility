@@ -92,7 +92,11 @@ describe("SettingsShell", () => {
       "aria-current",
       "page",
     );
-    expect(subnav?.querySelectorAll("[data-settings-subnav-icon] svg")).toHaveLength(8);
+    expect(subnav?.querySelectorAll("[data-settings-subnav-icon] svg")).toHaveLength(9);
+    expect(screen.getByRole("link", { name: "Experimental" })).toHaveAttribute(
+      "href",
+      `/app/${projectRef}/settings/experimental`,
+    );
     expect(screen.queryByRole("link", { name: "Markets" })).not.toBeInTheDocument();
     expect(subnav?.querySelector('[data-settings-subnav-icon="developers"]')).toHaveAttribute(
       "data-settings-subnav-icon-weight",
@@ -144,9 +148,9 @@ describe("SettingsShell", () => {
     render(<Shell />);
 
     await user.click(screen.getByRole("button", { name: "Settings section" }));
-    await user.click(screen.getByRole("menuitem", { name: "Advanced" }));
+    await user.click(screen.getByRole("menuitem", { name: "Experimental" }));
 
-    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_7Kd2Qf9m/settings/advanced");
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_7Kd2Qf9m/settings/experimental");
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
 
@@ -194,9 +198,13 @@ describe("SettingsShell", () => {
       const activeRows = subnav?.querySelectorAll('[data-settings-loading-subnav-active="true"]');
 
       expect(boundary).toHaveAttribute("data-settings-loading-boundary", activeSection);
-      expect(boundary?.children).toHaveLength(2);
-      expect(boundary?.firstElementChild).toHaveAttribute("data-settings-loading-mobile-menu", "");
-      expect(boundary?.lastElementChild).toHaveAttribute("data-settings-loading-grid", "");
+      expect(boundary?.children).toHaveLength(1);
+      expect(boundary?.firstElementChild).toHaveAttribute("data-settings-loading-grid", "");
+      expect(
+        boundary?.querySelector(
+          "[data-settings-loading-grid] > div.min-w-0 [data-settings-loading-mobile-menu]",
+        ),
+      ).toBeTruthy();
       expect(
         boundary?.querySelector("[data-settings-loading-mobile-menu] [data-settings-loading-bar]"),
       ).toHaveClass("h-8.5", "w-full");
@@ -216,8 +224,8 @@ describe("SettingsShell", () => {
         "pl-3.5",
         "lg:flex",
       );
-      expect(rows).toHaveLength(8);
-      expect(subnav?.querySelectorAll("[data-settings-loading-subnav-icon-slot]")).toHaveLength(8);
+      expect(rows).toHaveLength(9);
+      expect(subnav?.querySelectorAll("[data-settings-loading-subnav-icon-slot]")).toHaveLength(9);
       expect(activeRows).toHaveLength(1);
       expect(activeRows?.[0]).toHaveAttribute("data-settings-loading-subnav-row", activeSection);
       expect(subnav?.querySelectorAll("[data-settings-loading-subnav-active-dot]")).toHaveLength(1);

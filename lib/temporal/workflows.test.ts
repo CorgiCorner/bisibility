@@ -501,6 +501,28 @@ describe("rankCheckWorkflow", () => {
     });
   });
 
+  it("preserves a direct run item through the manual child workflow path", async () => {
+    mocks.activities.runRankCheckActivity.mockResolvedValue({
+      attempts: [],
+      checkedAt: "2026-01-01T06:00:00.000Z",
+      costCents: 0,
+      keywordId: "keyword_1",
+      position: null,
+      provider: "serpapi",
+      rankCheckId: "rank_running_1",
+      rankingUrl: null,
+    });
+
+    await rankCheckWorkflow({ keywordId: "keyword_1", runItemId: "item_1" });
+
+    expect(mocks.activities.runRankCheckActivity).toHaveBeenCalledWith({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      runItemId: "item_1",
+      source: "manual",
+    });
+  });
+
   it("persists authoritative Temporal schedule metadata for scheduled runs", async () => {
     const scheduledAt = new Date("2026-01-01T05:59:30.000Z");
     mocks.runId = "run_scheduled_1";

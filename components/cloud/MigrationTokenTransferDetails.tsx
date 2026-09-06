@@ -11,7 +11,7 @@ function scopeLabel(scope: IssuedMigrationToken["scope"]) {
 
 function CopyRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
-    <div className="flex items-center gap-2 border-border-soft border-b px-3.5 py-3 last:border-b-0">
+    <div className="flex items-center gap-2 border-border border-b px-3.5 py-3 last:border-b-0">
       <span className="min-w-0 flex-1">
         <span className="block font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           {label}
@@ -65,7 +65,7 @@ export function MigrationTokenTransferDetails({
           <MigrationReachabilityHint surface="destination" targetOrigin={destinationUrl} />
         </div>
       ) : null}
-      <dl className="m-0 mt-4 border-border-soft border-t pt-2">
+      <dl className="m-0 mt-4 border-border border-t pt-2">
         <DetailRow label="Target project" value={workspaceName} />
         <DetailRow label="Scope" value={scopeLabel(token.scope)} />
         <DetailRow label="Expires" value={expires} />

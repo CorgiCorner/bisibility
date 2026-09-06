@@ -20,7 +20,7 @@ export function AdminProviderUsageTable({
     <div className="mt-4 overflow-x-auto">
       <table className="w-full min-w-[680px] text-left text-xs">
         <caption className="sr-only">SERP usage this month by provider</caption>
-        <thead className={`border-b border-border ${tableHeaderClassName}`}>
+        <thead className={tableHeaderClassName}>
           <tr>
             <th className="pb-2 pr-3">Provider</th>
             <th className="pb-2 pr-3">Completed checks</th>
@@ -31,7 +31,7 @@ export function AdminProviderUsageTable({
         </thead>
         <tbody>
           {usage.map((row) => (
-            <tr className="border-b border-border-soft last:border-0" key={row.provider}>
+            <tr className="border-b border-border last:border-0" key={row.provider}>
               <td className="py-2 pr-3 font-semibold text-fg">{row.providerLabel}</td>
               <td className="py-2 pr-3 tabular-nums">{count.format(row.checks)}</td>
               <td className="py-2 pr-3 tabular-nums">{count.format(row.billableUnits)}</td>

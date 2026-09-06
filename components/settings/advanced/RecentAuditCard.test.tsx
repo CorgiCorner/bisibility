@@ -32,13 +32,19 @@ function entry(avatarUrl: string | null): AuditEntry {
 }
 
 describe("RecentAuditCard", () => {
-  it("renders the actor image as a decorative 34px avatar", () => {
+  it("preloads then renders the actor image as a decorative 34px avatar", () => {
     render(
       <RecentAuditCard
         entries={[entry("https://example.com/member.png")]}
         projectId="prj_abcdefghijklmnopqrstuvwx"
       />,
     );
+
+    const preload = document.querySelector("img");
+    expect(preload).toHaveAttribute("src", "https://example.com/member.png");
+    expect(screen.getByText("MU")).toHaveClass("h-8.5", "w-[34px]");
+
+    act(() => preload?.dispatchEvent(new Event("load")));
 
     const image = document.querySelector("img");
     expect(image).toHaveAttribute("src", "https://example.com/member.png");

@@ -1,16 +1,22 @@
 import type { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { GET as realtimeGET } from "../../realtime/stream/route";
 import { GET } from "./route";
 
 const mocks = vi.hoisted(() => ({
   getNotificationFeedForScope: vi.fn(),
   getQueryActor: vi.fn(),
   notificationRealtimeRedisConfigured: vi.fn(),
+  readOperationSnapshot: vi.fn(),
   resolveProjectAccess: vi.fn(),
   subscribeToNotificationEvents: vi.fn(),
+  subscribeToOperationEvents: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/dates/request", () => ({
+  getResolvedDateFormat: vi.fn().mockResolvedValue({ preference: "auto", resolved: "month_first" }),
+}));
 vi.mock("@/lib/notifications/feed", () => ({
   getNotificationFeedForScope: mocks.getNotificationFeedForScope,
   notificationFeedSignature: (feed: unknown) => JSON.stringify(feed),
@@ -18,10 +24,14 @@ vi.mock("@/lib/notifications/feed", () => ({
 vi.mock("@/lib/notifications/realtime", () => ({
   notificationRealtimeRedisConfigured: mocks.notificationRealtimeRedisConfigured,
   subscribeToNotificationEvents: mocks.subscribeToNotificationEvents,
+  subscribeToOperationEvents: mocks.subscribeToOperationEvents,
 }));
 vi.mock("@/lib/queries/_auth", () => ({
   getQueryActor: mocks.getQueryActor,
   resolveProjectAccess: mocks.resolveProjectAccess,
+}));
+vi.mock("@/lib/rank-check/runs/snapshot", () => ({
+  readOperationSnapshot: mocks.readOperationSnapshot,
 }));
 
 function streamRequest() {
@@ -45,10 +55,20 @@ describe("notification stream route", () => {
       publicId: "prj_1",
     });
     mocks.getNotificationFeedForScope.mockResolvedValue({ items: [], unreadCount: 0 });
+    mocks.readOperationSnapshot.mockResolvedValue([]);
     mocks.notificationRealtimeRedisConfigured.mockReturnValue(true);
+    mocks.subscribeToNotificationEvents.mockReturnValue({
+      close: vi.fn(),
+      ready: Promise.resolve(),
+    });
+    mocks.subscribeToOperationEvents.mockReturnValue({ close: vi.fn(), ready: Promise.resolve() });
   });
 
   afterEach(() => vi.useRealTimers());
+
+  it("aliases the app-wide realtime handler", () => {
+    expect(GET).toBe(realtimeGET);
+  });
 
   it("rejects a stream without an explicit project", async () => {
     const response = await GET(
@@ -77,7 +97,7 @@ describe("notification stream route", () => {
     const response = await GET(request);
     const reader = response.body?.getReader();
     let payload = "";
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 5; index += 1) {
       const next = await reader?.read();
       payload += new TextDecoder().decode(next?.value);
     }
@@ -120,6 +140,7 @@ describe("notification stream route", () => {
     await reader?.read();
     await reader?.read();
     await reader?.read();
+    await reader?.read();
     rejectReady("subscriber disconnected after response start");
 
     const degraded = await reader?.read();
@@ -138,6 +159,7 @@ describe("notification stream route", () => {
 
     const response = await GET(streamRequest());
     const reader = response.body?.getReader();
+    await reader?.read();
     await reader?.read();
     await reader?.read();
     await reader?.read();

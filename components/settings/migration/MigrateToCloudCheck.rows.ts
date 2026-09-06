@@ -1,3 +1,4 @@
+import { type DateFormat, formatDateTime } from "@/lib/dates/format";
 import type { MigrationBlocker, MigrationCompatibilityResult } from "./MigrateToCloudWizard.types";
 
 export const MIGRATION_GUIDE_URL = "https://bisibility.com/docs/guides/migration";
@@ -98,12 +99,15 @@ export function pendingRows(): StatusRowData[] {
   ];
 }
 
-export function resultRows(result: MigrationCompatibilityResult): StatusRowData[] {
+export function resultRows(
+  result: MigrationCompatibilityResult,
+  dateFormat: DateFormat = "month_first",
+): StatusRowData[] {
   const { source, target } = result;
   return [
     {
       detail: result.compatible
-        ? `All checks passed (${new Date(result.checkedAt).toLocaleString()}). Continue to start the transfer.`
+        ? `All checks passed (${formatDateTime(new Date(result.checkedAt), dateFormat)}). Continue to start the transfer.`
         : "This project can't transfer yet. Fix the issues below, then run the check again.",
       status: result.compatible ? "READY" : "BLOCKED",
       title: "Ready to transfer?",

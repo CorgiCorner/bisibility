@@ -1,6 +1,11 @@
+"use client";
+
 import { formatCap } from "@/components/checks/upcoming/upcoming-format";
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui";
 import type { CheckRunsView, UpcomingView } from "@/lib/checks/contract";
+import { zonedDateInputValue } from "@/lib/checks/date-boundary";
+import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import {
   ArrowRightIcon as ArrowRight,
   ClockCountdownIcon as Clock,
@@ -24,22 +29,11 @@ type StatusBandsProps = {
   view: CheckRunsView;
 };
 
-function nextMonthLabel(now: Date, timeZone: string) {
-  const values = Object.fromEntries(
-    new Intl.DateTimeFormat("en-US", {
-      month: "numeric",
-      timeZone,
-      year: "numeric",
-    })
-      .formatToParts(now)
-      .map((part) => [part.type, part.value]),
-  );
-  const nextMonth = new Date(Date.UTC(Number(values.year), Number(values.month), 1, 12));
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).format(nextMonth);
+function nextMonthLabel(now: Date, timeZone: string, dateFormat: DateFormat) {
+  const [year, month] = zonedDateInputValue(now, timeZone).split("-").map(Number);
+  const nextMonth = new Date(Date.UTC(year, month, 1, 12));
+  const key = nextMonth.toISOString().slice(0, 10);
+  return formatDateRange(key, key, dateFormat);
 }
 
 function budgetStatus(budget: CheckRunsBudget, view: CheckRunsView) {
@@ -109,6 +103,7 @@ export function CheckRunsStatusBands({
   timeZone,
   view,
 }: Readonly<StatusBandsProps>) {
+  const dateFormat = useDateFormat();
   const budgetState = budgetStatus(budget, view);
   if (budgetState?.kind === "exhausted") {
     const checkLabel = budgetState.skipped === 1 ? "check was" : "checks were";
@@ -143,7 +138,7 @@ export function CheckRunsStatusBands({
         ) : (
           "Checks"
         )}{" "}
-        resume on {nextMonthLabel(now, timeZone)}.
+        resume on {nextMonthLabel(now, timeZone, dateFormat)}.
       </Band>
     );
   }

@@ -1,6 +1,7 @@
 import { applyTheme } from "@/components/shell/set-theme";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
-import { appPath } from "@/lib/routing/app-path";
+import type { NavContext } from "@/lib/nav/nav-items";
+import { appPath, asMarketRef, marketPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -35,9 +36,13 @@ vi.mock("@/lib/nav/nav-items", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/nav/nav-items")>();
   return {
     ...actual,
-    navItems: (projectRef: string) =>
+    navItems: (
+      projectRef: string,
+      context?: NavContext,
+      enabledExperimentalModules?: readonly ("timeline" | "competitors")[],
+    ) =>
       actual
-        .navItems(projectRef)
+        .navItems(projectRef, context, enabledExperimentalModules)
         .map((item) =>
           item.label in navBadgeOverrides
             ? { ...item, badge: navBadgeOverrides[item.label] }
@@ -67,6 +72,39 @@ beforeEach(() => {
 });
 
 describe("Sidebar", () => {
+  it("keeps disabled experimental rows out of the desktop rail and restores enabled rows", () => {
+    const disabled = render(
+      <AppThemeRoot data-collapsed="false" defaultTheme="light">
+        <Sidebar
+          activeProjectId={mockWorkspaces[0].id}
+          canCreateWorkspace
+          enabledExperimentalModules={[]}
+          projectRef={mockWorkspaces[0].publicId}
+          workspaces={mockWorkspaces}
+        />
+      </AppThemeRoot>,
+    );
+
+    expect(disabled.queryByRole("link", { name: "Timeline" })).not.toBeInTheDocument();
+    expect(disabled.queryByRole("link", { name: "Competitors" })).not.toBeInTheDocument();
+    disabled.unmount();
+
+    render(
+      <AppThemeRoot data-collapsed="false" defaultTheme="light">
+        <Sidebar
+          activeProjectId={mockWorkspaces[0].id}
+          canCreateWorkspace
+          enabledExperimentalModules={["timeline", "competitors"]}
+          projectRef={mockWorkspaces[0].publicId}
+          workspaces={mockWorkspaces}
+        />
+      </AppThemeRoot>,
+    );
+
+    expect(screen.getByRole("link", { name: "Timeline" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Competitors" })).toBeInTheDocument();
+  });
+
   beforeEach(() => {
     // biome-ignore lint/suspicious/noDocumentCookie: jsdom cookie setup mirrors the browser contract.
     document.cookie = "theme=light; path=/";
@@ -156,6 +194,7 @@ describe("Sidebar", () => {
         <Sidebar
           activeProjectId={mockWorkspaces[0].id}
           canCreateWorkspace
+          enabledExperimentalModules={["timeline", "competitors"]}
           projectRef={mockWorkspaces[0].publicId}
           workspaces={mockWorkspaces}
         />
@@ -222,6 +261,36 @@ describe("Sidebar", () => {
     expect(collapsed.queryByRole("button", { name: "Search" })).not.toBeInTheDocument();
   });
 
+  it("keeps the current-page marker while the reader is inside a market", () => {
+    // A market URL is the same rail destination one level down. Matching the pathname against
+    // the project-level href marked nothing at all on every market-scoped page.
+    setNavigationState({
+      pathname: marketPath(mockWorkspaces[0].publicId, asMarketRef("pmkt_one"), "rank-tracker"),
+    });
+    render(
+      <AppThemeRoot data-collapsed="false" defaultTheme="light">
+        <Sidebar
+          activeProjectId={mockWorkspaces[0].id}
+          canCreateWorkspace
+          enabledExperimentalModules={["timeline", "competitors"]}
+          projectRef={mockWorkspaces[0].publicId}
+          workspaces={mockWorkspaces}
+        />
+      </AppThemeRoot>,
+    );
+
+    const current = screen.getByRole("link", { name: "Rank Tracker" });
+
+    expect(current).toHaveAttribute(
+      "href",
+      marketPath(mockWorkspaces[0].publicId, asMarketRef("pmkt_one"), "rank-tracker"),
+    );
+    expect(current).toHaveAttribute("aria-current", "page");
+    expect(current).toHaveClass("font-semibold", "text-fg");
+    expect(current.querySelector("svg")).toHaveAttribute("data-weight", "fill");
+    expect(screen.getByRole("link", { name: "Dashboard" })).not.toHaveAttribute("aria-current");
+  });
+
   it("marks the current page with a dot that is always mounted, and never with a fill", () => {
     render(
       <AppThemeRoot data-collapsed="false" defaultTheme="light">
@@ -255,7 +324,7 @@ describe("Sidebar", () => {
     expect(other.querySelector("span[aria-hidden]")).toHaveClass("opacity-0");
   });
 
-  it("separates collapsed navigation groups", () => {
+  it("separates collapsed navigation groups with their 80px tags", () => {
     render(
       <AppThemeRoot data-collapsed="true" defaultTheme="light">
         <Sidebar
@@ -267,15 +336,26 @@ describe("Sidebar", () => {
       </AppThemeRoot>,
     );
 
+    for (const [tag, firstRow] of [
+      ["ACTIVITY", "Dashboard"],
+      ["MODULES", "Rank Tracker"],
+      ["PROJECT", "Markets"],
+    ] as const) {
+      const tagNode = screen.getByText(tag);
+      const row = screen.getByRole("link", { name: firstRow });
+
+      // The collapsed rail is 80px wide, and the tag spans it rather than sitting on the 40px
+      // icon axis: it is a caption for the block below, not another tile in the column.
+      expect(tagNode).toHaveClass("block", "w-20", "text-center", "pt-3.5", "pb-1");
+      expect(row.closest("[class*='flex-col']")).toContainElement(tagNode);
+      expect(tagNode.compareDocumentPosition(row)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    }
+
+    // The tag box separates the groups in both states now, so the collapsed-only 30px pad that
+    // used to stand in for a missing heading is gone.
     expect(
       screen.getByRole("link", { name: "Rank Tracker" }).closest("[class*='flex-col']"),
-    ).toHaveClass("pt-[30px]");
-    expect(
-      screen.getByRole("link", { name: "Keyword Research" }).closest("[class*='flex-col']"),
-    ).toHaveClass("pt-[30px]");
-    expect(
-      screen.getByRole("link", { name: "Integrations" }).closest("[class*='flex-col']"),
-    ).toHaveClass("pt-[30px]");
+    ).not.toHaveClass("pt-[30px]");
   });
 
   it("holds the icon axis at 40px from the rail edge in both states", () => {
@@ -423,7 +503,7 @@ describe("Sidebar", () => {
     expect(rankingIcon(collapsedIdle)).toHaveAttribute("data-weight", "regular");
   });
 
-  it("renders grouped headings and module tags only while expanded", () => {
+  it("swaps the group headings for their 80px tags when the rail collapses", () => {
     function shell(collapsed: boolean) {
       return (
         <AppThemeRoot data-collapsed={collapsed ? "true" : "false"} defaultTheme="light">
@@ -438,21 +518,21 @@ describe("Sidebar", () => {
     }
 
     const expanded = render(shell(false));
-    const track = expanded.getByText(/^track$/i);
-    expect(track).toBeInTheDocument();
-    expect(expanded.getByText(/^research$/i)).toBeInTheDocument();
-    expect(expanded.getByText(/^connect$/i)).toBeInTheDocument();
-    expect(track.closest("a")).toBeNull();
-    expect(track).not.toHaveAttribute("tabindex");
+    const activity = expanded.getByText("Activity");
+    expect(activity).toBeInTheDocument();
+    expect(expanded.getByText("Modules")).toBeInTheDocument();
+    expect(expanded.getByText("Project")).toBeInTheDocument();
+    expect(activity.closest("a")).toBeNull();
+    expect(activity).not.toHaveAttribute("tabindex");
 
     // A heading is a caption, not a destination: a focusable or role-bearing element here would
     // put three extra stops in the rail's tab order.
-    expect(track.tagName).toBe("SPAN");
-    expect(track).not.toHaveAttribute("role");
-    expect(track).not.toHaveAttribute("href");
+    expect(activity.tagName).toBe("SPAN");
+    expect(activity).not.toHaveAttribute("role");
+    expect(activity).not.toHaveAttribute("href");
     // 14 + 10 + 4 = the 28px box ShellSkeleton reserves. `leading-none` is what pins the line
     // box to the font size - preflight is off, so a UA line-height would make it taller.
-    expect(track).toHaveClass(
+    expect(activity).toHaveClass(
       "block",
       "px-[11px]",
       "pt-3.5",
@@ -460,6 +540,12 @@ describe("Sidebar", () => {
       "text-[10px]",
       "leading-none",
     );
+    // What scopes a group covers is in the heading's tooltip, never a subtitle under it.
+    expect(activity.closest("[data-tooltip]")).toHaveAttribute(
+      "data-tooltip",
+      "Follows the level you are on: the project, or the market you switched into.",
+    );
+    expect(expanded.queryByText(/^ACTIVITY$/)).toBeNull();
 
     // The pill lives inside the <a>. Without aria-hidden the row's accessible name becomes
     // "Search Consolealpha", so this query is the guard, not a convenience.
@@ -474,31 +560,58 @@ describe("Sidebar", () => {
       "py-0.5",
       "text-[9.5px]",
       "font-semibold",
-      "bg-nav-active",
+      "bg-bg-sunken",
       "text-fg-muted",
     );
     expect(alpha).not.toHaveClass("font-mono");
     expanded.unmount();
 
     const collapsed = render(shell(true));
-    expect(collapsed.queryByText(/^track$/i)).toBeNull();
-    expect(collapsed.queryByText(/^research$/i)).toBeNull();
-    expect(collapsed.queryByText(/^connect$/i)).toBeNull();
+    expect(collapsed.getByText("ACTIVITY")).toBeInTheDocument();
+    expect(collapsed.getByText("MODULES")).toBeInTheDocument();
+    expect(collapsed.getByText("PROJECT")).toBeInTheDocument();
+    expect(collapsed.queryByText("Activity")).toBeNull();
     expect(collapsed.queryByText("alpha")).toBeNull();
     expect(collapsed.getAllByRole("link").map((link) => link.getAttribute("aria-label"))).toEqual([
       "Dashboard",
-      "Search Console",
+      "Alerts",
       "Rank Tracker",
-      "Competitors",
-      "Timeline",
       "Keyword Research",
       "Domain Overview",
       "Backlinks",
+      "Search Console",
+      "Markets",
       "Integrations",
       "Install",
-      "Alerts",
       "Settings",
     ]);
+  });
+
+  it("renders Markets with the folded map and no count, subtitle or hairline", () => {
+    render(
+      <AppThemeRoot data-collapsed="false" defaultTheme="light">
+        <Sidebar
+          activeProjectId={mockWorkspaces[0].id}
+          canCreateWorkspace
+          enabledExperimentalModules={["timeline", "competitors"]}
+          projectRef={mockWorkspaces[0].publicId}
+          workspaces={mockWorkspaces}
+        />
+      </AppThemeRoot>,
+    );
+
+    const markets = screen.getByRole("link", { name: "Markets" });
+    expect(markets).toHaveAttribute("href", appPath(mockWorkspaces[0].publicId, "markets"));
+    expect(markets.querySelector("svg")).toHaveAttribute("data-nav-icon", "Markets");
+    expect(markets).toHaveTextContent("Markets");
+    // No count anywhere in the rail, and no rule drawn between the groups.
+    const nav = markets.closest("nav") as HTMLElement;
+    expect(nav.textContent).not.toMatch(/\d/u);
+    expect(nav.querySelectorAll("hr, [role='separator']")).toHaveLength(0);
+    for (const group of nav.querySelectorAll("[data-rail-group-heading]")) {
+      const container = group.closest("[class*='flex-col']") as HTMLElement;
+      expect(container.className).not.toMatch(/border|divide/u);
+    }
   });
 
   it("marks Install current and fills only its glyph", () => {
@@ -530,6 +643,7 @@ describe("Sidebar", () => {
         <Sidebar
           activeProjectId={mockWorkspaces[0].id}
           canCreateWorkspace
+          enabledExperimentalModules={["timeline", "competitors"]}
           projectRef={mockWorkspaces[0].publicId}
           workspaces={mockWorkspaces}
         />
@@ -549,7 +663,7 @@ describe("Sidebar", () => {
     expect(flask).toHaveAttribute("data-weight", "regular");
 
     const gcsInsights = screen.getByRole("link", { name: "Search Console" });
-    expect(within(gcsInsights).getByText("alpha")).toHaveClass("bg-nav-active", "text-fg-muted");
+    expect(within(gcsInsights).getByText("alpha")).toHaveClass("bg-bg-sunken", "text-fg-muted");
     const dashboard = screen.getByRole("link", { name: "Dashboard" });
     expect(within(dashboard).getByText("new")).toHaveClass("bg-accent-soft", "text-accent-text");
   });

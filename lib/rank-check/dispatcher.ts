@@ -11,8 +11,9 @@ import {
 } from "./dispatcher-query";
 import { computeDispatcherNextCheckAt } from "./dispatcher-recurrence";
 import type { ClaimDueRankChecksResult, ClaimedRankCheckGroup } from "./dispatcher-types";
+import { claimDueRankCheckItems } from "./items-claim";
 import type { RankCheckScheduleInput } from "./schedule";
-import { dispatcherClaimsAllowed } from "./scheduler-mode";
+import { dispatcherClaimsAllowed, plannerOwnsAutomaticChecks } from "./scheduler-mode";
 
 const DEFAULT_PAGE_SIZE = 100;
 const MAX_PAGE_SIZE = 500;
@@ -105,6 +106,7 @@ export async function claimDueRankChecks(
       },
     };
   }
+  if (plannerOwnsAutomaticChecks()) return claimDueRankCheckItems(options, database as never);
   const pageSize = boundedPageSize(options.pageSize);
   const perProjectCap = rankCheckDispatcherMaxKeywordsPerProject();
 

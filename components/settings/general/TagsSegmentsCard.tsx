@@ -2,25 +2,17 @@
 
 import { generalSettingsCardGeometryClassNames } from "@/components/settings/general/general-settings-layout";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
-import { Button, Input } from "@/components/ui";
+import { Button, Modal, TagAdder, TagChip } from "@/components/ui";
 import { type ActionResult, unwrapActionResult } from "@/lib/actions/action-result";
-import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { PlusIcon as Plus, XIcon as X } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-const tagFormSchema = z.object({
-  name: z.string().trim().min(1, "Tag name is required.").max(48),
-});
-
-type TagForm = z.infer<typeof tagFormSchema>;
+import { useState } from "react";
 
 export type GeneralTag = {
   color: string;
+  keywordCount: number;
   label: string;
+  segmentCount: number;
 };
 
 export type CreateTagAction = (input: {
@@ -46,144 +38,137 @@ function tagKey(label: string) {
   return label.trim().toLocaleLowerCase();
 }
 
+function usageLabel(keywordCount: number, segmentCount: number) {
+  const parts: string[] = [];
+  if (keywordCount > 0) {
+    parts.push(`${keywordCount.toLocaleString("en-US")} keyword${keywordCount === 1 ? "" : "s"}`);
+  }
+  if (segmentCount > 0) {
+    parts.push(`${segmentCount.toLocaleString("en-US")} segment${segmentCount === 1 ? "" : "s"}`);
+  }
+  return parts.join(" and ");
+}
+
 export function TagsSegmentsCard({
   canCreate,
   canDelete,
   createTag,
   deleteTag,
   projectId,
-  tags,
+  tags: initialTags,
 }: Readonly<TagsSegmentsCardProps>) {
   const router = useRouter();
-  const [draftTags, setDraftTags] = useState(() => [...tags]);
-  const [isAdding, setIsAdding] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const savedTags = useRef(new Set(tags.map((tag) => tagKey(tag.label)))).current;
-  const form = useForm<TagForm>({
-    defaultValues: { name: "" },
-    mode: "onChange",
-    resolver: zodResolver(tagFormSchema),
-  });
+  const [tags, setTags] = useState(() => [...initialTags]);
+  const [rowError, setRowError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<GeneralTag | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  function stageTag(values: TagForm, markDirty: () => void) {
-    const label = values.name.trim();
-    if (draftTags.some((tag) => tagKey(tag.label) === tagKey(label))) {
-      form.setError("name", { message: "This tag is already staged." });
+  async function addTag(name: string) {
+    if (tags.some((tag) => tagKey(tag.label) === tagKey(name))) {
+      setRowError(`${name} already exists.`);
       return;
     }
-    setDraftTags((current) => [...current, { color: "var(--accent)", label }]);
-    form.reset({ name: "" });
-    setIsAdding(false);
-    markDirty();
-  }
+    if (!createTag) return;
 
-  async function saveTags() {
-    const currentTagKeys = new Set(draftTags.map((tag) => tagKey(tag.label)));
-    const tagsToCreate = draftTags.filter((tag) => !savedTags.has(tagKey(tag.label)));
-    const tagsToDelete = [...savedTags].filter((tag) => !currentTagKeys.has(tag));
-
-    if ((tagsToCreate.length > 0 && !createTag) || (tagsToDelete.length > 0 && !deleteTag)) {
-      return;
-    }
-
-    setSaveError(null);
+    setRowError(null);
     try {
-      for (const tag of tagsToCreate) {
-        if (createTag) {
-          unwrapActionResult(await createTag({ name: tag.label, projectId }));
-        }
-      }
-      for (const name of tagsToDelete) {
-        if (deleteTag) {
-          unwrapActionResult(await deleteTag({ name, projectId }));
-        }
-      }
-      savedTags.clear();
-      for (const name of currentTagKeys) savedTags.add(name);
+      unwrapActionResult(await createTag({ name, projectId }));
+      setTags((current) => [
+        ...current,
+        { color: "var(--accent)", keywordCount: 0, label: name, segmentCount: 0 },
+      ]);
       router.refresh();
     } catch (error: unknown) {
-      setSaveError(actionErrorMessage(error, "Tags could not be saved."));
-      throw error;
+      setRowError(actionErrorMessage(error, "Tag could not be added."));
     }
   }
 
+  async function removeTag(tag: GeneralTag): Promise<boolean> {
+    if (!deleteTag) return false;
+    setRowError(null);
+    try {
+      unwrapActionResult(await deleteTag({ name: tag.label, projectId }));
+      setTags((current) =>
+        current.filter((candidate) => tagKey(candidate.label) !== tagKey(tag.label)),
+      );
+      router.refresh();
+      return true;
+    } catch (error: unknown) {
+      setRowError(actionErrorMessage(error, "Tag could not be removed."));
+      return false;
+    }
+  }
+
+  function requestRemove(tag: GeneralTag) {
+    if (tag.keywordCount > 0 || tag.segmentCount > 0) {
+      setPendingDelete(tag);
+      return;
+    }
+    void removeTag(tag);
+  }
+
+  async function confirmRemove() {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      if (await removeTag(pendingDelete)) {
+        setPendingDelete(null);
+      }
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  const pendingUsage = pendingDelete
+    ? usageLabel(pendingDelete.keywordCount, pendingDelete.segmentCount)
+    : "";
+
   return (
-    <SettingsCard
-      className={generalSettingsCardGeometryClassNames.tagsSegments}
-      description="Tags group keywords and pages; every saved segment is built from them."
-      onSave={saveTags}
-      title="Tags and segments"
-    >
-      {({ markDirty }) => (
-        <div className="flex flex-wrap items-center gap-2">
-          {draftTags.map((tag) => (
-            <span
-              className="inline-flex h-7 items-center gap-1.5 rounded-full border border-border bg-bg-sunken py-0 pl-2.5 pr-1.5 font-sans tabular-nums text-[11px] text-fg"
-              key={tagKey(tag.label)}
-            >
-              {tag.label}
-              {canDelete ? (
-                <button
-                  aria-label={`Remove ${tag.label}`}
-                  className="inline-flex h-4 w-4 items-center justify-center rounded-full p-0 leading-none text-fg-muted outline-none transition-colors hover:bg-bg-elev hover:text-fg focus-visible:bg-bg-elev focus-visible:text-fg"
-                  onClick={() => {
-                    setDraftTags((current) =>
-                      current.filter((candidate) => tagKey(candidate.label) !== tagKey(tag.label)),
-                    );
-                    markDirty();
-                  }}
-                  type="button"
-                >
-                  <X aria-hidden className="block shrink-0" size={10} weight="regular" />
-                </button>
-              ) : null}
-            </span>
-          ))}
-          {canCreate && isAdding ? (
-            <form
-              className="flex items-start gap-2"
-              onSubmit={form.handleSubmit((values) => stageTag(values, markDirty))}
-            >
-              <span>
-                <label className="sr-only" htmlFor="general-new-tag">
-                  New tag name
-                </label>
-                <Input
-                  autoComplete="off"
-                  className="h-8 min-h-8 w-[180px] px-2.5 text-[12px]"
-                  id="general-new-tag"
-                  placeholder="New tag"
-                  {...form.register("name")}
-                />
-                {form.formState.errors.name ? (
-                  <span className="mt-1 block text-[11px] text-red-text">
-                    {form.formState.errors.name.message}
-                  </span>
-                ) : null}
-              </span>
-              <Button
-                size="xs"
-                startIcon={<Plus aria-hidden size={13} weight="regular" />}
-                type="submit"
-              >
-                Add tag
-              </Button>
-            </form>
-          ) : canCreate ? (
-            <button
-              aria-label="Add tag"
-              className="inline-flex h-7 items-center rounded-full border border-border bg-bg-sidebar px-3 text-[12.5px] font-medium text-fg outline-none transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken"
-              onClick={() => setIsAdding(true)}
-              type="button"
-            >
-              + Add tag
-            </button>
-          ) : null}
-          {saveError ? (
-            <p className="m-0 basis-full text-[12px] text-red-text">{saveError}</p>
-          ) : null}
+    <>
+      <SettingsCard
+        className={generalSettingsCardGeometryClassNames.tagsSegments}
+        description="Tags group keywords and pages. Saved views can filter by them."
+        showSave={false}
+        title="Tags"
+      >
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {tags.map((tag) => (
+              <TagChip
+                key={tagKey(tag.label)}
+                keywordCount={tag.keywordCount}
+                label={tag.label}
+                onRemove={canDelete ? () => requestRemove(tag) : undefined}
+              />
+            ))}
+            {canCreate ? <TagAdder onAdd={addTag} /> : null}
+          </div>
+          {rowError ? <p className="m-0 text-[11px] text-red-text">{rowError}</p> : null}
         </div>
-      )}
-    </SettingsCard>
+      </SettingsCard>
+      <Modal
+        dismissDisabled={deleting}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button disabled={deleting} onClick={() => setPendingDelete(null)} variant="secondary">
+              Cancel
+            </Button>
+            <Button loading={deleting} onClick={() => void confirmRemove()} variant="destructive">
+              Remove tag
+            </Button>
+          </div>
+        }
+        onClose={() => {
+          if (!deleting) setPendingDelete(null);
+        }}
+        open={pendingDelete !== null}
+        size="sm"
+        title={pendingDelete ? `Remove ${pendingDelete.label}?` : undefined}
+      >
+        {pendingUsage ? (
+          <p className="m-0 text-ui-body text-fg-muted">{pendingUsage} use it.</p>
+        ) : null}
+      </Modal>
+    </>
   );
 }

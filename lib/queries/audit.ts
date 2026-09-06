@@ -8,6 +8,7 @@ import { parsePublicId } from "@/lib/db/public-id";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { getQueryActor } from "./_auth";
 import { type AuditDiff, diffFor } from "./audit-diff";
+import { auditEventName } from "./audit-event-name";
 import { publicAuditTargetIdOrNull, redactAuditIds, requiredPublicId } from "./audit-public-values";
 import { formatAuditTimestamp } from "./audit-timestamp";
 
@@ -130,10 +131,6 @@ const RESOURCE_TYPE_BY_TARGET: Record<string, AuditEntry["resource"]["type"]> = 
 function resourceTypeFor(targetType: string): AuditEntry["resource"]["type"] {
   return RESOURCE_TYPE_BY_TARGET[targetType] ?? "project";
 }
-function eventNameFor(action: string): string {
-  const words = action.replace(/[._]/g, " ").trim();
-  return words.charAt(0).toUpperCase() + words.slice(1);
-}
 type AuditRow = {
   id: string;
   publicId: string | null;
@@ -186,7 +183,7 @@ function mapAuditRow(row: AuditRow): AuditEntry {
       name,
     },
     diff: diffFor(redactAuditIds(row.before), redactAuditIds(row.after)),
-    eventName: eventNameFor(row.action),
+    eventName: auditEventName(row.action, row.after),
     eventType: eventTypeFor(row.action),
     id: requiredPublicId(row.publicId, "Audit log", "audit"),
     metadata: {

@@ -28,7 +28,9 @@ import { AccountSection } from "./AccountSection";
 import { feedbackClass, fieldLabelClass } from "./account-ui";
 
 export type PreferencesFormProps = {
+  autoExample: "day_first" | "month_first" | "iso";
   defaults: UserPreferences;
+  todayKey: string;
   updatePreferences: (input: UserPreferences) => Promise<UserPreferences>;
 };
 
@@ -101,7 +103,12 @@ function setPreferenceValue(
   }
 }
 
-export function PreferencesForm({ defaults, updatePreferences }: Readonly<PreferencesFormProps>) {
+export function PreferencesForm({
+  autoExample,
+  defaults,
+  todayKey,
+  updatePreferences,
+}: Readonly<PreferencesFormProps>) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -114,6 +121,7 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
   const dateFormat = watch("dateFormat");
   const landing = watch("landing");
   const density = watch("density");
+  const formatOptions = dateFormatOptions(todayKey, autoExample);
 
   function persist<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
     setPreferenceValue(setValue, key, value);
@@ -147,21 +155,22 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
             </div>
             <SegmentedControl
               ariaLabel="Theme"
+              fitContent
               name="theme"
               onChange={(value) => persist("theme", value)}
-              optionClassName="min-h-8 flex-row gap-1.5 px-3 py-1.5"
               options={themeSegments()}
+              size="xs"
               value={theme}
             />
           </div>
-          <div className="grid gap-3.5 border-t border-border-soft pt-4 sm:grid-cols-2">
+          <div className="grid gap-3.5 border-t border-border pt-4 sm:grid-cols-2">
             <div className={fieldLabelClass}>
               <span>Date format</span>
               <input type="hidden" {...register("dateFormat")} />
               <MenuSelect
                 ariaLabel="Date format"
                 onChange={(value) => persist("dateFormat", value as UserPreferences["dateFormat"])}
-                options={dateFormatOptions}
+                options={formatOptions}
                 triggerClassName={selectTriggerClass}
                 value={dateFormat}
               />
@@ -178,17 +187,18 @@ export function PreferencesForm({ defaults, updatePreferences }: Readonly<Prefer
               />
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-3.5 border-t border-border-soft pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3.5 border-t border-border pt-4">
             <div className="min-w-0">
               <div className="text-[13.5px] font-semibold text-fg">Default table density</div>
               <div className="mt-px text-xs text-fg-muted">Row height in the keyword grid</div>
             </div>
             <SegmentedControl
               ariaLabel="Default table density"
+              fitContent
               name="density"
               onChange={(value) => persist("density", value)}
-              optionClassName="min-h-8 px-3 py-1.5"
               options={densitySegments()}
+              size="xs"
               value={density}
             />
           </div>

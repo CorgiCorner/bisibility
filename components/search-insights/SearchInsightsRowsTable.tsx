@@ -47,8 +47,11 @@ export { ROW_HEIGHT_CLASS } from "./search-insights-rows-model";
 
 export const CELL = "px-4 py-0 align-middle";
 export const NUMERIC = "px-1 text-right font-sans tabular-nums text-ui-caption";
+// Header cell px-1 (4px) plus gap-2 (8px) plus the 10px sort icon. Sortable figures take this
+// end inset so they share the header label's right edge instead of sitting under the chevron.
+export const NUMERIC_SORTED = `${NUMERIC} pe-5.5`;
 export const ROW =
-  "group cursor-pointer border-b border-border-soft text-ui-body transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken";
+  "group cursor-pointer border-b border-border text-ui-body transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken";
 // Quick actions are hover-or-focus only where a pointer can hover. A touch device has no
 // hover, so there the action gives way to a caret and the whole row is the target.
 const QUICK_ACTION =
@@ -80,7 +83,7 @@ function SortableHeader({
   return (
     <button
       className={cn(
-        "inline-flex w-full items-center gap-1 rounded-control uppercase tracking-[0.5px]",
+        "inline-flex w-full min-w-0 max-w-full items-center gap-2 overflow-hidden rounded-control text-inherit",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
         state === "none" ? "text-fg-muted" : "text-fg",
         header.align ? "justify-end" : "justify-start",
@@ -88,11 +91,11 @@ function SortableHeader({
       onClick={key ? () => sort.onSort(key) : undefined}
       type="button"
     >
-      {header.label}
+      <span className="shrink-0 whitespace-nowrap">{header.label}</span>
       <Icon
         aria-hidden
-        className={state === "none" ? "opacity-40" : undefined}
-        size={11}
+        className={cn("shrink-0", state === "none" ? "opacity-40" : undefined)}
+        size={10}
         weight="regular"
       />
     </button>
@@ -128,7 +131,10 @@ export function SearchInsightsTableShell({
 
   return (
     <div
-      className={cn("overflow-x-auto", scroll && `${SCROLL_REGION_CLASS} overflow-y-auto`)}
+      className={cn(
+        "overflow-x-auto border-t border-border",
+        scroll && `${SCROLL_REGION_CLASS} overflow-y-auto`,
+      )}
       onScroll={scroll ? (event) => setScrollTop(event.currentTarget.scrollTop) : undefined}
     >
       <table
@@ -150,11 +156,9 @@ export function SearchInsightsTableShell({
                   aria-sort={sortable ? state : undefined}
                   className={cn(
                     // A header never wraps: it names the column, and AVG POS breaking in two is the one label in
-                    // this table wide enough to try. The numeric headers take the padding of the numbers below
-                    // them, so the two right edges line up. The head sits on the card surface and is ruled off
-                    // by the same border the rows use, so it reads as the top of the table rather than a band
-                    // above it; the fill is what makes a sticky head opaque, so it is the surface, not a tint.
-                    "sticky top-0 z-1 whitespace-nowrap border-b border-border-soft bg-bg-elev px-4 py-2 font-normal",
+                    // this table wide enough to try. Numeric headers share px-1 with the figures; sortable
+                    // columns add the sort-icon inset on the cell so the number lines up with the label.
+                    "sticky top-0 z-1 overflow-hidden whitespace-nowrap border-b border-border bg-bg-elev px-4 py-2 font-normal",
                     header.align ? "px-1 text-right" : "text-left",
                     header.title && !sortable && "cursor-help",
                   )}
@@ -167,7 +171,9 @@ export function SearchInsightsTableShell({
                   ) : sortable && sort ? (
                     <SortableHeader header={header} sort={sort} state={state} />
                   ) : (
-                    header.label
+                    <span className={cn("block truncate", header.align && "text-right")}>
+                      {header.label}
+                    </span>
                   )}
                 </th>
               );
@@ -217,6 +223,7 @@ export function SearchInsightsQueriesTable({
   sort,
   tracked,
 }: Readonly<SearchInsightsQueriesTableProps>) {
+  const figures = sort ? NUMERIC_SORTED : NUMERIC;
   return (
     <SearchInsightsTableShell
       count={rows.length}
@@ -241,12 +248,12 @@ export function SearchInsightsQueriesTable({
               <td className={cn(CELL, "truncate")} title={row.query}>
                 {row.query}
               </td>
-              <td className={cn(CELL, NUMERIC, "font-semibold")}>{formatRowCount(row.clicks)}</td>
-              <td className={cn(CELL, NUMERIC, "text-fg-muted")}>
+              <td className={cn(CELL, figures, "font-semibold")}>{formatRowCount(row.clicks)}</td>
+              <td className={cn(CELL, figures, "text-fg-muted")}>
                 {formatRowCount(row.impressions)}
               </td>
-              <td className={cn(CELL, NUMERIC, "text-fg-muted")}>{formatRowCtr(row.ctr)}</td>
-              <td className={cn(CELL, NUMERIC, positionClassName(row.position))}>
+              <td className={cn(CELL, figures, "text-fg-muted")}>{formatRowCtr(row.ctr)}</td>
+              <td className={cn(CELL, figures, positionClassName(row.position))}>
                 {formatRowPosition(row.position)}
               </td>
               <td className={cn(CELL, "text-right")}>

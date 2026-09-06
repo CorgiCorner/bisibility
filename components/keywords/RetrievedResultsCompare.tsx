@@ -5,11 +5,13 @@ import {
   type CompareState,
   compareChecks,
 } from "@/lib/checks/retrieved-results-model";
+import { type DateFormat, formatDateRange, formatDateTime } from "@/lib/dates/format";
 import { InfoIcon as Info, ProhibitIcon as Prohibit } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
 export type RetrievedResultsCompareProps = {
   from: RetrievedResults;
+  dateFormat?: DateFormat;
   to: RetrievedResults;
   timeZone: string;
   fullCheckDates: readonly string[];
@@ -30,9 +32,11 @@ const CHIP_CLASS: Record<CompareState, string> = {
   unchanged: "border-border bg-bg-sunken text-fg-muted",
   dropped_out: "border-amber-300/50 bg-amber-100/50 text-amber-800",
 };
-function makeDateFormatter(timeZone: string) {
-  const fmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone });
-  return (iso: string) => fmt.format(new Date(iso));
+function makeDateFormatter(timeZone: string, dateFormat: DateFormat) {
+  return (iso: string) => {
+    const key = formatDateTime(new Date(iso), "iso", timeZone).slice(0, 10);
+    return formatDateRange(key, key, dateFormat);
+  };
 }
 function Position({ row }: Readonly<{ row: CompareRow }>) {
   return (
@@ -82,7 +86,7 @@ function ListResult({
           const tracked = row.domain === trackedDomain;
           return (
             <li
-              className={`flex min-h-[49px] flex-wrap items-center gap-2 border-b border-border-soft px-4 py-2 sm:px-5 ${tracked ? "m-3 rounded-control border border-border-control px-3 sm:px-4" : ""}`}
+              className={`flex min-h-[49px] flex-wrap items-center gap-2 border-b border-border px-4 py-2 sm:px-5 ${tracked ? "m-3 rounded-control border border-border-control px-3 sm:px-4" : ""}`}
               key={row.domain}
             >
               <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-fg">
@@ -135,6 +139,7 @@ function RefusedResult({
   );
 }
 export function RetrievedResultsCompare({
+  dateFormat = "day_first",
   from,
   to,
   timeZone,
@@ -142,7 +147,7 @@ export function RetrievedResultsCompare({
   onPickFullPair,
   fullPair,
 }: Readonly<RetrievedResultsCompareProps>): ReactNode {
-  const formatDate = makeDateFormatter(timeZone);
+  const formatDate = makeDateFormatter(timeZone, dateFormat);
   const result = compareChecks(from, to, { formatDate, fullCheckDates });
   const trackedDomain =
     to.tier === "full" ? (to.rows.find((row) => row.tracked)?.domain ?? null) : null;

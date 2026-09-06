@@ -10,10 +10,12 @@ import { parsePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { presenceUrl } from "@/lib/presence/url";
 import { requireReadableProject } from "@/lib/queries/_auth";
+import { activeKeywordWhere } from "@/lib/queries/keyword-active";
 import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
 import type { KeywordDefaultMarketRow } from "@/lib/serp/default-market";
 import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
 
+export { activeKeywordWhere } from "@/lib/queries/keyword-active";
 export type { KeywordLocation } from "@/lib/queries/keyword-location";
 
 import type { Metrics } from "@/lib/queries/keyword-metrics";
@@ -26,6 +28,7 @@ import { fetchProjectKeywordTraffic, getKeywordTraffic } from "@/lib/queries/key
 import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 
 export type {
+  KeywordCheckSchedule,
   KeywordRow,
   KeywordSchedule,
   LastCheckStatus,
@@ -76,6 +79,10 @@ const scheduleSelect = {
   serpDepth: true,
   timezone: true,
 } as const;
+const checkScheduleSelect = {
+  name: true,
+  publicId: true,
+} as const;
 const locationRefSelect = {
   canonicalKey: true,
   cityName: true,
@@ -101,6 +108,7 @@ async function loadKeywords(projectId: string) {
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     select: {
       createdAt: true,
+      checkSchedule: { select: checkScheduleSelect },
       device: true,
       id: true,
       intent: true,
@@ -121,7 +129,7 @@ async function loadKeywords(projectId: string) {
       topic: true,
     },
     take: KEYWORD_LIST_MAX,
-    where: { projectId },
+    where: { ...activeKeywordWhere, projectId },
   });
 }
 
@@ -144,6 +152,7 @@ async function loadKeywordDetail(projectId: string, keywordId: string) {
         },
       },
     },
+    checkSchedule: { select: checkScheduleSelect },
     locationRef: true,
     project: {
       include: {
@@ -195,21 +204,22 @@ export async function getKeywordDefaultMarket(projectId: string) {
   const { project } = await requireReadableProject(projectId);
   const [defaults, keywords] = await Promise.all([
     getRequestProjectDefaults(project.id),
-    prisma.$queryRaw<KeywordDefaultMarketRow[]>`
-      SELECT
-        k.device::text AS device,
-        k.location,
-        jsonb_build_object(
-          'canonicalKey', l."canonicalKey",
-          'cityName', l."cityName",
-          'countryCode', l."countryCode",
-          'displayName', l."displayName",
-          'kind', l.kind
-        ) AS "locationRef"
-      FROM "keywords" k
-      JOIN "locations" l ON l.id = k."locationId"
-      WHERE k."projectId" = ${project.id}
-    `,
+    prisma.keyword.findMany({
+      select: {
+        device: true,
+        location: true,
+        locationRef: {
+          select: {
+            canonicalKey: true,
+            cityName: true,
+            countryCode: true,
+            displayName: true,
+            kind: true,
+          },
+        },
+      },
+      where: { ...activeKeywordWhere, projectId: project.id },
+    }) satisfies Promise<KeywordDefaultMarketRow[]>,
   ]);
   return projectDefaultSerpMarket(defaults, keywords);
 }
@@ -217,9 +227,14 @@ export async function getKeywordDefaultMarket(projectId: string) {
 export async function getKeywordTagSuggestions(projectId: string): Promise<string[]> {
   const { project } = await requireReadableProject(projectId);
   const tags = await prisma.tag.findMany({
-    include: { _count: { select: { keywords: true } } },
+    include: {
+      _count: { select: { keywords: { where: { keyword: activeKeywordWhere } } } },
+    },
     orderBy: { createdAt: "desc" },
-    where: { projectId: project.id },
+    where: {
+      keywords: { some: { keyword: activeKeywordWhere } },
+      projectId: project.id,
+    },
   });
   tags.sort(
     (a, b) =>
@@ -230,7 +245,7 @@ export async function getKeywordTagSuggestions(projectId: string): Promise<strin
 
 export async function getKeywordCount(projectId: string) {
   const { project } = await requireReadableProject(projectId);
-  return prisma.keyword.count({ where: { projectId: project.id } });
+  return prisma.keyword.count({ where: { ...activeKeywordWhere, projectId: project.id } });
 }
 
 export async function getKeywordDetail(projectId: string, keywordId: string) {
@@ -277,6 +292,7 @@ export async function getKeywordDetail(projectId: string, keywordId: string) {
   );
   return {
     ...row,
+    archivedAt: record.archivedAt?.toISOString() ?? null,
     bestPosition: aggregate._min.position ?? row.bestPosition,
     providerConnected: record.project.providerConnections.length > 0,
     traffic,

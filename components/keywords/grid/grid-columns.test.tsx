@@ -2,7 +2,13 @@ import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { KeywordCell, keywordColumns, LocationCell, TagsCell } from "./grid-columns";
+import {
+  KeywordCell,
+  keywordColumns,
+  LocationCell,
+  scheduleTargetsForRow,
+  TagsCell,
+} from "./grid-columns";
 
 const row = keywordRows[0] as KeywordRow;
 
@@ -80,5 +86,36 @@ describe("keywordColumns", () => {
     expect(
       getter?.(undefined, { ...row, position: 6, positionBaseline: 4, previousPosition: 6 }),
     ).toBe(-2);
+  });
+
+  it("sorts and filters by the target schedule", () => {
+    const columns = keywordColumns(
+      {
+        canDeleteKeyword: true,
+        canUpdateKeyword: true,
+        onDelete: vi.fn(),
+        onEdit: vi.fn(),
+        onRunCheck: vi.fn(),
+      },
+      "prj_1",
+    );
+    const scheduleColumn = columns.find((column) => column.field === "frequency");
+    const scheduleRow = {
+      ...row,
+      checkSchedule: { name: "Daily 06:00", publicId: "sch_daily" },
+    } as KeywordRow;
+    const getter = scheduleColumn?.valueGetter as
+      | ((value: undefined, valueRow: KeywordRow) => unknown)
+      | undefined;
+
+    expect(scheduleColumn).toMatchObject({
+      filterable: true,
+      headerName: "Schedule",
+      sortable: true,
+    });
+    expect(getter?.(undefined, scheduleRow)).toBe("Daily 06:00");
+    expect(scheduleTargetsForRow(scheduleRow)).toEqual([
+      expect.objectContaining({ schedule: { name: "Daily 06:00", publicId: "sch_daily" } }),
+    ]);
   });
 });

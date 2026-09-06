@@ -1,21 +1,19 @@
 "use client";
 
 import {
+  ALL_STEPS_COMPLETE,
   FINISH_SETUP_CTA,
   FINISH_SETUP_HELPER,
-  SEE_DASHBOARD_CTA,
   SETUP_ACK_CHECKLIST_ERROR,
   SETUP_ACK_WRITE_ERROR,
-  SETUP_COMPLETE_HEADLINE,
-  SETUP_FINISHED_HEADLINE,
+  WHATS_NEXT_ACKNOWLEDGED,
+  WHATS_NEXT_HEADING,
 } from "@/components/getting-started/getting-started-copy";
 import { Button } from "@/components/ui";
 import type { AcknowledgeGettingStartedResult } from "@/lib/getting-started/acknowledge-result";
-import { appPath } from "@/lib/routing/app-path";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { StepGlyph } from "./StepGlyph";
 
 type GettingStartedCompletionProps = Readonly<{
   acknowledged: boolean;
@@ -31,28 +29,6 @@ export function GettingStartedCompletion({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const dashboardHref = appPath(projectRef, "dashboard");
-
-  if (acknowledged) {
-    return (
-      <section className="rounded-card border border-border bg-bg-elev px-5 py-6 shadow-none sm:flex sm:items-center sm:justify-between sm:gap-5">
-        <div className="flex min-w-0 items-center gap-2">
-          <CheckCircle
-            aria-hidden
-            className="shrink-0 text-green-text"
-            size={18}
-            weight="regular"
-          />
-          <p className="m-0 text-[15px] font-semibold text-fg">{SETUP_FINISHED_HEADLINE}</p>
-        </div>
-        <div className="mt-4 sm:mt-0">
-          <Button className="w-full sm:w-auto" href={dashboardHref} variant="secondary">
-            {SEE_DASHBOARD_CTA}
-          </Button>
-        </div>
-      </section>
-    );
-  }
 
   async function finishSetup() {
     setError(null);
@@ -75,28 +51,28 @@ export function GettingStartedCompletion({
   }
 
   return (
-    <section className="rounded-card border border-border bg-bg-elev px-5 py-6 shadow-none">
-      <div className="flex min-w-0 items-center">
-        <p className="m-0 text-[15px] font-semibold text-fg">{SETUP_COMPLETE_HEADLINE}</p>
+    <section className="overflow-hidden rounded-card border border-border bg-bg-elev shadow-none">
+      <div className="flex items-center gap-2.5 px-5 py-4">
+        <StepGlyph done />
+        <p className="m-0 text-[13px] font-medium text-fg-muted">{ALL_STEPS_COMPLETE}</p>
       </div>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
-        <div className="flex flex-col gap-2">
-          <Button className="w-full sm:w-auto" loading={pending} onClick={finishSetup}>
-            {FINISH_SETUP_CTA}
-          </Button>
-          <p className="m-0 max-w-md text-[12px] leading-5 text-fg-muted">{FINISH_SETUP_HELPER}</p>
-          {error ? (
-            <p className="m-0 max-w-md text-[12px] leading-5 text-danger-text" role="alert">
-              {error}
-            </p>
-          ) : null}
+      <div className="border-t border-border px-5 py-4">
+        <p className="m-0 text-[15px] font-semibold text-fg">{WHATS_NEXT_HEADING}</p>
+        <div className="mt-1 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+          <p className="m-0 min-w-0 max-w-md text-[13px] leading-[1.45] text-fg">
+            {acknowledged ? WHATS_NEXT_ACKNOWLEDGED : FINISH_SETUP_HELPER}
+          </p>
+          {acknowledged ? null : (
+            <Button loading={pending} onClick={finishSetup}>
+              {FINISH_SETUP_CTA}
+            </Button>
+          )}
         </div>
-        <Link
-          className="text-[13px] font-semibold text-accent-text hover:text-accent"
-          href={dashboardHref}
-        >
-          {SEE_DASHBOARD_CTA}
-        </Link>
+        {error ? (
+          <p className="m-0 mt-3 max-w-md text-[12px] leading-5 text-danger-text" role="alert">
+            {error}
+          </p>
+        ) : null}
       </div>
     </section>
   );

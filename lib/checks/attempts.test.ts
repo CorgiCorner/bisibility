@@ -4,9 +4,14 @@ import {
   completedViaFallback,
   deriveCheckAttemptSummary,
   parseCheckAttempts,
+  providerLabel,
 } from "./attempts";
 
 describe("check attempt parsing", () => {
+  it("uses the provider catalog label for SerpApi", () => {
+    expect(providerLabel("serpapi")).toBe("SerpApi");
+  });
+
   it("maps the stored fallback shape and infers bounded outcomes", () => {
     expect(
       parseCheckAttempts([

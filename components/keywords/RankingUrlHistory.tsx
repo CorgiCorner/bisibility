@@ -1,4 +1,8 @@
+"use client";
+
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Card, InfoTooltip, SectionTitle } from "@/components/ui";
+import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import type { KeywordRow, RankingUrlEvent } from "@/lib/queries/keywords";
 import { rankObservationState } from "@/lib/serp/rank-depth";
 import { MinusIcon as Minus, WarningIcon as Warning } from "@phosphor-icons/react/ssr";
@@ -9,11 +13,6 @@ type TimelineEvent = RankingUrlEvent & { changed: boolean };
 const POSITION_EXPLANATION = "#N is the position at that period's last check.";
 const HISTORY_EXPLANATION =
   "A change means Google now ranks a different page of yours. Often fine; check if it dropped. The rank shown for each period is the position recorded at that period's last check.";
-const periodDateFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
 
 function pathFromUrl(value: string) {
   if (value.startsWith("/")) {
@@ -37,11 +36,11 @@ function buildTimeline(history: RankingUrlEvent[]): TimelineEvent[] {
     .reverse();
 }
 
-function periodDateRange(event: RankingUrlEvent) {
-  const startAt = periodDateFormatter.format(new Date(event.startAt));
+function periodDateRange(event: RankingUrlEvent, dateFormat: DateFormat) {
+  const startAt = event.startAt.slice(0, 10);
   return event.isCurrent
-    ? `${startAt} - now`
-    : `${startAt} - ${periodDateFormatter.format(new Date(event.endAt))}`;
+    ? `${formatDateRange(startAt, startAt, dateFormat)} - now`
+    : formatDateRange(startAt, event.endAt.slice(0, 10), dateFormat);
 }
 
 function positionLabel(event: RankingUrlEvent) {
@@ -62,6 +61,7 @@ function periodNote(event: TimelineEvent, index: number, total: number) {
 }
 
 export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>) {
+  const dateFormat = useDateFormat();
   const timeline = buildTimeline(keyword.rankingUrlHistory);
   const urlChanges = timeline.filter((event) => event.changed).length;
   const changeState = timeline.length < 2 ? "first_check" : urlChanges > 0 ? "diff" : "no_change";
@@ -95,7 +95,7 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
         {timeline.length ? (
           timeline.map((event, index) => (
             <div
-              className="grid grid-cols-[18px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 border-b border-border-soft px-5 py-[13px] last:border-b-0 sm:grid-cols-[18px_108px_minmax(0,1fr)_auto]"
+              className="grid grid-cols-[18px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 border-b border-border px-5 py-[13px] last:border-b-0 sm:grid-cols-[18px_108px_minmax(0,1fr)_auto]"
               data-testid="ranking-url-period"
               key={`${event.startAt}-${event.endAt}-${event.url}-${index}`}
             >
@@ -109,7 +109,7 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
                 />
               </span>
               <span className="col-start-2 row-start-1 w-[108px] text-fg-muted">
-                {periodDateRange(event)}
+                {periodDateRange(event, dateFormat)}
               </span>
               <div className="col-span-2 col-start-2 row-start-2 min-w-0 sm:col-span-1 sm:col-start-3 sm:row-start-1">
                 <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">

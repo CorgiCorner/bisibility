@@ -10,6 +10,11 @@ export type KeywordSchedule = {
   serp_depth?: SerpDepth | null;
   timezone: string;
 };
+export type KeywordCheckSchedule = {
+  name: string;
+  nextCheckAt: string | null;
+  publicId: string;
+};
 export type PositionPoint = {
   checkedAt: string;
   degradedToCountry?: boolean;
@@ -64,6 +69,7 @@ export type KeywordRow = {
   difficultyKnown?: boolean;
   engine: string;
   checkState?: KeywordCheckState;
+  checkSchedule?: KeywordCheckSchedule | null;
   completedComparableChecks?: CompletedComparableCheck[];
   hasRankData: boolean;
   hasTag?: boolean;

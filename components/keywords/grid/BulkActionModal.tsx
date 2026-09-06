@@ -2,30 +2,23 @@
 
 import type { KeywordWorkspaceActions } from "@/components/keywords/action-utils";
 import { Button, Modal } from "@/components/ui";
-import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { useState } from "react";
-import { BulkFrequencyForm, BulkTagForm } from "./BulkActionForms";
+import { BulkTagForm } from "./BulkActionForms";
 import { BulkTargetForm } from "./BulkTargetForm";
 import { bulkTargetView } from "./bulk-target-model";
 
-export type BulkMode = "frequency" | "tag" | "target" | null;
+export type BulkMode = "tag" | "target" | null;
 
 const BULK_KEYWORD_FORM_ID = "bulk-keyword-action";
 
-const staticTitles = {
-  frequency: "Set check frequency",
-  tag: "Add tag",
-} as const;
+const staticTitles = { tag: "Add tag" } as const;
 
-const submitCopy = {
-  frequency: { label: "Set frequency", loading: "Saving..." },
-  tag: { label: "Apply tag", loading: "Adding..." },
-} as const;
+const submitCopy = { tag: { label: "Apply tag", loading: "Adding..." } } as const;
 
 type BulkActionModalProps = Pick<
   KeywordWorkspaceActions,
-  "bulkSetFrequencyAction" | "bulkSetTargetAction" | "bulkTagAction"
+  "bulkSetTargetAction" | "bulkTagAction"
 > & {
   actionError: string | null;
   mode: BulkMode;
@@ -34,13 +27,11 @@ type BulkActionModalProps = Pick<
   onError: (message: string | null) => void;
   onRequestClearTarget: () => void;
   projectId: string;
-  providerRate?: CostRateInfo;
   selectedRows: KeywordRow[];
 };
 
 export function BulkActionModal({
   actionError,
-  bulkSetFrequencyAction,
   bulkSetTargetAction,
   bulkTagAction,
   mode,
@@ -49,7 +40,6 @@ export function BulkActionModal({
   onError,
   onRequestClearTarget,
   projectId,
-  providerRate,
   selectedRows,
 }: Readonly<BulkActionModalProps>) {
   const [busy, setBusy] = useState(false);
@@ -127,18 +117,6 @@ export function BulkActionModal({
             onError={onError}
             onRequestClear={onRequestClearTarget}
             projectId={projectId}
-            selectedRows={selectedRows}
-            {...formChrome}
-          />
-        ) : null}
-        {mode === "frequency" ? (
-          <BulkFrequencyForm
-            action={bulkSetFrequencyAction}
-            key={`frequency-${selectedIds.join("|")}`}
-            onDone={onDone}
-            onError={onError}
-            projectId={projectId}
-            providerRate={providerRate}
             selectedRows={selectedRows}
             {...formChrome}
           />

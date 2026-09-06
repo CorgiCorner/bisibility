@@ -73,7 +73,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
 
   return (
     <div
-      className="flex items-center gap-3.5 border-border-soft border-b px-5 py-[13px] last:border-b-0"
+      className="flex items-center gap-3.5 border-border border-b px-5 py-[13px] last:border-b-0"
       id={`signal-${item.id}`}
     >
       <div className="grid min-w-0 flex-1 gap-2 md:grid-cols-[124px_minmax(0,1fr)_auto] md:items-center">

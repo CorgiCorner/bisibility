@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { RANK_CHECK_ITEM_CLAIM_LEASE_MS } from "../rank-check/dispatcher-constants";
 import {
   bootstrapRankCheckDispatcherWorkflow,
   dispatchDueRankChecksWorkflow,
+  RANK_CHECK_DISPATCHER_ACTIVITY_OPTIONS,
 } from "./rank-check-dispatcher-workflows";
 
 const mocks = vi.hoisted(() => ({
@@ -79,6 +81,17 @@ describe("dispatchDueRankChecksWorkflow", () => {
       restored: 1,
       stale: 0,
     });
+  });
+
+  it("keeps the item lease beyond every claim activity attempt", () => {
+    const timeoutMinutes = Number.parseInt(
+      RANK_CHECK_DISPATCHER_ACTIVITY_OPTIONS.startToCloseTimeout,
+      10,
+    );
+    const retryWindowMs =
+      timeoutMinutes * 60_000 * RANK_CHECK_DISPATCHER_ACTIVITY_OPTIONS.retry.maximumAttempts;
+
+    expect(RANK_CHECK_ITEM_CLAIM_LEASE_MS).toBeGreaterThan(retryWindowMs);
   });
 
   it("starts the existing rank-check workflow once for every claimed keyword", async () => {
@@ -237,6 +250,7 @@ describe("dispatchDueRankChecksWorkflow", () => {
           keywordIds: Array.from({ length: 100 }, (_, index) => `keyword_${index + 1}`),
           locationId: "location_1",
           projectId: "project_1",
+          runId: "run_1",
         },
       ],
       metrics: {
@@ -263,7 +277,7 @@ describe("dispatchDueRankChecksWorkflow", () => {
     expect(queuedStarts).toHaveLength(1);
     expect(queuedStarts[0]?.[1]).toMatchObject({
       args: [expect.objectContaining({ keywordIds: expect.any(Array) })],
-      workflowId: "queued-rank-check-project_1-location_1-desktop-1785283200000-0",
+      workflowId: "queued-rank-check-project_1-run_1-location_1-desktop-1785283200000-0",
       workflowIdReusePolicy: "REJECT_DUPLICATE",
     });
     expect(queuedStarts[0]?.[1].args[0].keywordIds).toHaveLength(100);
@@ -305,6 +319,50 @@ describe("dispatchDueRankChecksWorkflow", () => {
     expect(queuedStarts.map((call) => call[1].args[0].keywordIds.length)).toEqual([100, 1]);
   });
 
+  it("threads aligned claimed run items into queued batch children", async () => {
+    mocks.claimDueRankChecksActivity.mockResolvedValue({
+      claimed: 2,
+      claimedAt: "2026-09-02T08:00:00.000Z",
+      groups: [
+        {
+          claims: [],
+          device: "desktop",
+          domain: "example.com",
+          keywordIds: ["keyword_1", "keyword_2"],
+          locationId: "location_1",
+          projectId: "project_1",
+          runId: "run_1",
+          runItemIds: ["item_1", "item_2"],
+        },
+      ],
+      metrics: {
+        distinctProjects: 1,
+        largestProjectClaim: 2,
+        oldestDueLagMsAfter: null,
+        oldestDueLagMsBefore: 0,
+        outcome: "claimed",
+      },
+    });
+    mocks.planQueuedRankCheckGroupActivity.mockResolvedValue({
+      mode: "queued",
+      provider: "dataforseo",
+    });
+
+    await dispatchDueRankChecksWorkflow();
+
+    const queued = mocks.startChild.mock.calls.find(
+      ([workflowType]) => workflowType === "queuedRankCheckBatchWorkflow",
+    );
+    expect(queued?.[1].args[0]).toMatchObject({
+      keywordIds: ["keyword_1", "keyword_2"],
+      runId: "run_1",
+      runItemIds: ["item_1", "item_2"],
+    });
+    expect(
+      mocks.startChild.mock.calls.filter(([workflowType]) => workflowType === "rankCheckWorkflow"),
+    ).toHaveLength(0);
+  });
+
   it("keeps multiple location and device groups independently queued", async () => {
     mocks.claimDueRankChecksActivity.mockResolvedValue({
       claimed: 25,
@@ -316,6 +374,7 @@ describe("dispatchDueRankChecksWorkflow", () => {
           keywordIds: Array.from({ length: 13 }, (_, index) => `desktop_${index + 1}`),
           locationId: "location_1",
           projectId: "project_1",
+          runId: "run_1",
         },
         {
           device: "mobile",
@@ -323,6 +382,7 @@ describe("dispatchDueRankChecksWorkflow", () => {
           keywordIds: Array.from({ length: 12 }, (_, index) => `mobile_${index + 1}`),
           locationId: "location_2",
           projectId: "project_1",
+          runId: "run_2",
         },
       ],
       metrics: {
@@ -358,13 +418,13 @@ describe("dispatchDueRankChecksWorkflow", () => {
         count: 13,
         device: "desktop",
         locationId: "location_1",
-        workflowId: "queued-rank-check-project_1-location_1-desktop-1785283200000-0",
+        workflowId: "queued-rank-check-project_1-run_1-location_1-desktop-1785283200000-0",
       },
       {
         count: 12,
         device: "mobile",
         locationId: "location_2",
-        workflowId: "queued-rank-check-project_1-location_2-mobile-1785283200000-0",
+        workflowId: "queued-rank-check-project_1-run_2-location_2-mobile-1785283200000-0",
       },
     ]);
   });

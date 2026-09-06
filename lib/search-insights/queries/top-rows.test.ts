@@ -1,4 +1,5 @@
 import { ROWS_PAGE_LIMIT } from "@/lib/search-insights/constants";
+import { dimensionKeyHash } from "@/lib/search-insights/keys";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { pageHref, pagePath } from "./top-rows-model";
 
@@ -115,7 +116,56 @@ describe("getTopPages", () => {
     expect(statement().sql).toContain('FROM "search_analytics_page_daily"');
   });
 
-  it("joins page sessions by the normalized landing path in one grouped follow-up query", async () => {
+  it("keeps the Search Console page read's totals, row count, and statement unchanged with GA4", async () => {
+    const searchRows = [
+      {
+        clicks: 2_140n,
+        impressions: 61_300n,
+        page: "https://example.com/blog/self-hosted-rank-tracking",
+        positionWeight: 760_120,
+        total: 2n,
+      },
+      {
+        clicks: 2_000n,
+        impressions: 60_000n,
+        page: "https://example.com/blog/another-page",
+        positionWeight: 720_000,
+        total: 2n,
+      },
+    ];
+    mocks.prisma.$queryRaw.mockReset();
+    mocks.prisma.$queryRaw.mockResolvedValueOnce(searchRows);
+
+    const withoutGa4 = await getTopPages("project_1", "sc-domain:example.com", window, {
+      limit: 50,
+      offset: 0,
+    });
+    const withoutGa4Statement = mocks.prisma.$queryRaw.mock.calls[0]?.[0];
+
+    mocks.prisma.$queryRaw.mockReset();
+    mocks.prisma.$queryRaw.mockResolvedValueOnce(searchRows).mockResolvedValueOnce([]);
+    const withGa4 = await getTopPages(
+      "project_1",
+      "sc-domain:example.com",
+      window,
+      { limit: 50, offset: 0 },
+      "123456789",
+    );
+    const withGa4Statement = mocks.prisma.$queryRaw.mock.calls[0]?.[0];
+
+    expect(withoutGa4).toMatchObject({ total: 2 });
+    expect(withoutGa4.rows).toHaveLength(2);
+    expect(withGa4).toMatchObject({ total: 2 });
+    expect(withGa4.rows).toHaveLength(2);
+    expect(withGa4Statement.sql).toBe(withoutGa4Statement.sql);
+    expect(withGa4Statement.values).toEqual(withoutGa4Statement.values);
+    expect(withoutGa4Statement.sql).toContain('COUNT(*) OVER () AS "total"');
+    expect(withoutGa4Statement.sql).toContain('ORDER BY SUM("clicks") DESC, "page" ASC');
+    expect(withoutGa4Statement.sql).not.toContain("organic_sessions_page_daily");
+    expect(withoutGa4Statement.values.slice(-2)).toEqual([50, 0]);
+  });
+
+  it("returns the real page metrics after every contributing day has been reread", async () => {
     const page = "https://example.com/blog/self-hosted-rank-tracking";
     const { dimensionKeyHash } = await import("@/lib/search-insights/keys");
     const { normalizeLandingPath } = await import("@/lib/search-insights/join");
@@ -130,7 +180,12 @@ describe("getTopPages", () => {
         },
       ])
       .mockResolvedValueOnce([
-        { keyHash: dimensionKeyHash([normalizeLandingPath(page)]), sessions: 1_200n },
+        {
+          engagedSessions: 40n,
+          keyEvents: 7n,
+          keyHash: dimensionKeyHash([normalizeLandingPath(page)]),
+          sessions: 100n,
+        },
       ]);
 
     const result = await getTopPages(
@@ -141,10 +196,59 @@ describe("getTopPages", () => {
       "123456789",
     );
 
-    expect(result.rows[0]?.sessions).toBe(1_200);
+    expect(result.rows[0]).toMatchObject({
+      engagementRate: 0.4,
+      keyEvents: 7,
+      sessions: 100,
+    });
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(2);
     expect(mocks.prisma.$queryRaw.mock.calls[1]?.[0].sql).toContain(
       'FROM "organic_sessions_page_daily"',
+    );
+    expect(mocks.prisma.$queryRaw.mock.calls[1]?.[0].sql).toContain(
+      'CASE WHEN bool_or("engagedSessions" IS NULL) THEN NULL ELSE SUM("engagedSessions") END AS "engagedSessions"',
+    );
+    expect(mocks.prisma.$queryRaw.mock.calls[1]?.[0].sql).toContain(
+      'CASE WHEN bool_or("keyEvents" IS NULL) THEN NULL ELSE SUM("keyEvents") END AS "keyEvents"',
+    );
+  });
+
+  it("keeps mixed reread page metrics unknown for the whole window", async () => {
+    const page = "https://example.com/blog/self-hosted-rank-tracking";
+    mocks.prisma.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          clicks: 2_140n,
+          impressions: 61_300n,
+          page,
+          positionWeight: 760_120,
+          total: 212n,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          engagedSessions: null,
+          keyEvents: null,
+          keyHash: dimensionKeyHash(["/blog/self-hosted-rank-tracking"]),
+          sessions: 100n,
+        },
+      ]);
+
+    const result = await getTopPages(
+      "project_1",
+      "sc-domain:example.com",
+      window,
+      { limit: 50, offset: 0 },
+      "123456789",
+    );
+
+    expect(result.rows[0]).toMatchObject({
+      engagementRate: null,
+      keyEvents: null,
+      sessions: 100,
+    });
+    expect(mocks.prisma.$queryRaw.mock.calls[1]?.[0].sql).toContain(
+      'CASE WHEN bool_or("engagedSessions" IS NULL) THEN NULL ELSE SUM("engagedSessions") END AS "engagedSessions"',
     );
   });
 
@@ -157,11 +261,85 @@ describe("getTopPages", () => {
       "123456789",
     );
 
-    expect(result.rows[0]?.sessions).toBeNull();
+    expect(result.rows[0]).toMatchObject({
+      engagementRate: null,
+      keyEvents: null,
+      sessions: null,
+    });
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(2);
     expect(mocks.prisma.$queryRaw.mock.calls[1]?.[0].sql).toContain(
       'FROM "organic_sessions_page_daily"',
     );
+  });
+
+  it("preserves NULL aggregates instead of converting them to zero", async () => {
+    mocks.prisma.$queryRaw.mockReset();
+    mocks.prisma.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          clicks: 2_140n,
+          impressions: 61_300n,
+          page: "https://example.com/blog/self-hosted-rank-tracking",
+          positionWeight: 760_120,
+          total: 212n,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          engagedSessions: null,
+          keyEvents: null,
+          keyHash: dimensionKeyHash(["/blog/self-hosted-rank-tracking"]),
+          sessions: null,
+        },
+      ]);
+
+    const result = await getTopPages(
+      "project_1",
+      "sc-domain:example.com",
+      window,
+      { limit: 50, offset: 0 },
+      "123456789",
+    );
+
+    expect(result.rows[0]).toMatchObject({
+      engagementRate: null,
+      keyEvents: null,
+      sessions: null,
+    });
+  });
+
+  it.each([
+    ["sessions are zero", { engagedSessions: 0n, keyEvents: 1n, sessions: 0n }],
+    ["engaged sessions are NULL", { engagedSessions: null, keyEvents: 1n, sessions: 100n }],
+    ["sessions are NULL", { engagedSessions: 40n, keyEvents: 1n, sessions: null }],
+  ])("does not calculate engagement when %s", async (_case, metrics) => {
+    mocks.prisma.$queryRaw.mockReset();
+    mocks.prisma.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          clicks: 2_140n,
+          impressions: 61_300n,
+          page: "https://example.com/blog/self-hosted-rank-tracking",
+          positionWeight: 760_120,
+          total: 212n,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          ...metrics,
+          keyHash: dimensionKeyHash(["/blog/self-hosted-rank-tracking"]),
+        },
+      ]);
+
+    const result = await getTopPages(
+      "project_1",
+      "sc-domain:example.com",
+      window,
+      { limit: 50, offset: 0 },
+      "123456789",
+    );
+
+    expect(result.rows[0]?.engagementRate).toBeNull();
   });
 });
 

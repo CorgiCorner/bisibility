@@ -103,7 +103,7 @@ export function ComparisonScopeDrawer({
             const checked = !excluded.has(observation.id);
             return (
               <label
-                className="flex cursor-pointer items-start gap-3 border-border-soft border-b px-3.5 py-3 last:border-b-0 hover:bg-bg-sunken"
+                className="flex cursor-pointer items-start gap-3 border-border border-b px-3.5 py-3 last:border-b-0 hover:bg-bg-sunken"
                 key={observation.id}
               >
                 <input

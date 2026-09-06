@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  ALL_STEPS_COMPLETE,
   FINISH_SETUP_CTA,
+  FINISH_SETUP_HELPER,
   formatSetupProgressLabel,
-  GETTING_STARTED_RAIL_LABEL,
+  GETTING_STARTED_LABEL,
   GETTING_STARTED_SUBTITLE_COMPLETE,
   GETTING_STARTED_SUBTITLE_INCOMPLETE,
   gettingStartedSubtitle,
-  SEE_DASHBOARD_CTA,
-  SETUP_FINISHED_HEADLINE,
+  WHATS_NEXT_HEADING,
 } from "./getting-started-copy";
 
 describe("getting started copy", () => {
@@ -21,14 +22,17 @@ describe("getting started copy", () => {
     expect(GETTING_STARTED_SUBTITLE_COMPLETE).toBe("Done. Everything below is optional.");
   });
 
-  it("uses one rail label everywhere", () => {
-    expect(GETTING_STARTED_RAIL_LABEL).toBe("Get started");
+  it("uses one getting started label everywhere", () => {
+    expect(GETTING_STARTED_LABEL).toBe("Get set up");
   });
 
-  it("uses explicit finish and dashboard actions", () => {
-    expect(FINISH_SETUP_CTA).toBe("Finish setup");
-    expect(SEE_DASHBOARD_CTA).toBe("See the dashboard");
-    expect(SETUP_FINISHED_HEADLINE).toBe("Setup finished.");
+  it("uses an explicit finish action", () => {
+    expect(FINISH_SETUP_CTA).toBe("Mark setup as complete");
+    expect(FINISH_SETUP_HELPER).toBe(
+      "Your first rankings are ready. Mark setup as complete to remove this guide from the sidebar.",
+    );
+    expect(ALL_STEPS_COMPLETE).toBe("All steps are complete");
+    expect(WHATS_NEXT_HEADING).toBe("What's next?");
   });
 
   it("formats progress counts with of grammar", () => {

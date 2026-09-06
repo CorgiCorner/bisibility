@@ -1,7 +1,9 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button, ConfirmModal, inputClassName, PasswordInput, Switch } from "@/components/ui";
 import type { WebhookEndpointView } from "@/lib/alerts/alert-data";
+import { formatDateTime } from "@/lib/dates/format";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -28,6 +30,7 @@ export function WebhookEndpointRow({
   testAction,
   upsertAction,
 }: Readonly<WebhookEndpointRowProps>) {
+  const dateFormat = useDateFormat();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -244,7 +247,7 @@ export function WebhookEndpointRow({
           Last successful delivery:{" "}
           {endpoint.lastDeliveryAt ? (
             <time dateTime={endpoint.lastDeliveryAt}>
-              {new Date(endpoint.lastDeliveryAt).toLocaleString()}
+              {formatDateTime(new Date(endpoint.lastDeliveryAt), dateFormat)}
             </time>
           ) : (
             "None"
@@ -256,7 +259,7 @@ export function WebhookEndpointRow({
               <li className="grid gap-0.5" key={`${attempt.attemptedAt}:${attempt.event}:${index}`}>
                 <span>
                   <time dateTime={attempt.attemptedAt}>
-                    {new Date(attempt.attemptedAt).toLocaleString()}
+                    {formatDateTime(new Date(attempt.attemptedAt), dateFormat)}
                   </time>{" "}
                   {attempt.event} {attempt.status}
                 </span>

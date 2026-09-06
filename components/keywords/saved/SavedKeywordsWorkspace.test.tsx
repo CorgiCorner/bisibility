@@ -17,13 +17,13 @@ describe("SavedKeywordsWorkspace", () => {
         addKeywordsAction={vi.fn()}
         canCreateKeyword
         canDeleteKeyword
-        checksCount={1_240}
         costContext={{} as never}
         defaultDevice="desktop"
         initialSavedCount={3}
         projectId="prj_1"
         removeSavedKeywordsAction={vi.fn()}
         rows={[]}
+        runsCount={124}
         trackedCount={12}
       />,
     );

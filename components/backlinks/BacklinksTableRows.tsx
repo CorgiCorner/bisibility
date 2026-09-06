@@ -1,5 +1,9 @@
+"use client";
+
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { tableHeaderClassName } from "@/components/ui";
 import type { BacklinksRow } from "@/lib/backlinks/types";
+import { type DateFormat, formatDate, formatDateRange } from "@/lib/dates/format";
 import {
   CaretRightIcon as CaretRight,
   StackSimpleIcon as StackSimple,
@@ -13,23 +17,14 @@ import {
 const columns =
   "grid-cols-[30px_minmax(190px,1.12fr)_minmax(220px,1fr)_148px_46px_54px_48px_118px]";
 
-function shortDate(value: string | null) {
+function shortDate(value: string | null, dateFormat: DateFormat) {
   if (!value) return "";
-  return new Date(`${value}T00:00:00Z`).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    timeZone: "UTC",
-    year: "numeric",
-  });
+  return formatDate(value, dateFormat);
 }
 
-function lostDate(value: string | null) {
+function lostDate(value: string | null, dateFormat: DateFormat) {
   if (!value) return "lost";
-  return `lost ${new Date(`${value}T00:00:00Z`).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    timeZone: "UTC",
-  })}`;
+  return `lost ${formatDateRange(value, value, dateFormat)}`;
 }
 
 function sourcePath(url: string) {
@@ -51,6 +46,7 @@ function targetPath(url: string) {
 }
 
 function Flags({ row }: Readonly<{ row: Pick<BacklinksRow, "flags" | "lostAt" | "status"> }>) {
+  const dateFormat = useDateFormat();
   return (
     <span className="flex min-w-0 flex-wrap items-center gap-1">
       {row.status === "new" ? (
@@ -60,7 +56,7 @@ function Flags({ row }: Readonly<{ row: Pick<BacklinksRow, "flags" | "lostAt" | 
       ) : null}
       {row.status === "lost" ? (
         <span className="rounded-full bg-red/10 px-2 py-0.5 text-[10.5px] font-semibold text-red-text">
-          {lostDate(row.lostAt)}
+          {lostDate(row.lostAt, dateFormat)}
         </span>
       ) : null}
       {row.flags.map((flag) => (
@@ -100,6 +96,7 @@ function DataCells({
   status: Pick<BacklinksRow, "lostAt" | "status">;
   target: string;
 }>) {
+  const dateFormat = useDateFormat();
   return (
     <>
       <span className={`truncate ${status.status === "lost" ? "line-through" : ""}`}>{source}</span>
@@ -123,15 +120,21 @@ function DataCells({
       <span className="text-right font-sans tabular-nums text-[12.5px] text-fg-muted">
         {links ?? ""}
       </span>
-      <span className="whitespace-nowrap text-[12px] text-fg-muted">{shortDate(firstSeen)}</span>
+      <span className="whitespace-nowrap text-[12px] text-fg-muted">
+        {shortDate(firstSeen, dateFormat)}
+      </span>
     </>
   );
 }
 
-function LinkRow({ row, summary = false }: Readonly<{ row: BacklinksRow; summary?: boolean }>) {
+function LinkRow({
+  borderTop = true,
+  row,
+  summary = false,
+}: Readonly<{ borderTop?: boolean; row: BacklinksRow; summary?: boolean }>) {
   return (
     <div
-      className={`grid ${columns} items-center gap-2 border-t border-border/70 bg-bg-sunken/40 px-4 py-2 ${
+      className={`grid ${columns} items-center gap-2 ${borderTop ? "border-t border-border/70" : ""} bg-bg-sunken/40 px-4 py-2 ${
         row.status === "lost" ? "bg-bg-inset text-fg-muted" : ""
       }`}
       data-status={row.status}
@@ -153,12 +156,14 @@ function LinkRow({ row, summary = false }: Readonly<{ row: BacklinksRow; summary
 }
 
 function DomainRow({
+  borderTop = true,
   expanded,
   expandedRuns,
   group,
   onRunExpand,
   onToggle,
 }: Readonly<{
+  borderTop?: boolean;
   expanded: boolean;
   expandedRuns: ReadonlySet<string>;
   group: BacklinksDomainGroup;
@@ -171,7 +176,7 @@ function DomainRow({
       <button
         aria-expanded={expandable ? expanded : undefined}
         aria-label={`${expanded ? "Collapse" : "Expand"} ${group.sourceDomain}`}
-        className={`grid w-full ${columns} items-center gap-2 border-0 border-t border-border/70 bg-transparent px-4 py-2.5 text-left text-fg hover:bg-bg-sunken/55 focus-visible:bg-bg-sunken/55 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid ${
+        className={`grid w-full ${columns} items-center gap-2 border-0 ${borderTop ? "border-t border-border/70" : ""} bg-transparent px-4 py-2.5 text-left text-fg hover:bg-bg-sunken/55 focus-visible:bg-bg-sunken/55 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid ${
           expandable ? "cursor-pointer" : "cursor-default"
         } ${group.status === "lost" ? "bg-bg-inset text-fg-muted" : ""}`}
         data-status={group.status}
@@ -249,11 +254,12 @@ export function BacklinksRows({
 }>) {
   if (slice === "all_links") {
     return rows.map((row, index) => (
-      <LinkRow key={`${row.sourceUrl}:${index}`} row={row} summary />
+      <LinkRow borderTop={index > 0} key={`${row.sourceUrl}:${index}`} row={row} summary />
     ));
   }
-  return groups.map((group) => (
+  return groups.map((group, index) => (
     <DomainRow
+      borderTop={index > 0}
       expanded={expandedDomains.has(group.sourceDomain)}
       expandedRuns={expandedRuns.get(group.sourceDomain) ?? new Set()}
       group={group}
@@ -267,7 +273,7 @@ export function BacklinksRows({
 export function BacklinksColumnHeaders() {
   return (
     <div
-      className={`grid ${columns} items-center gap-2 border-b border-border px-4 py-2 font-medium ${tableHeaderClassName}`}
+      className={`grid ${columns} items-center gap-2 px-4 py-2 font-medium ${tableHeaderClassName}`}
     >
       <span />
       <span>Source</span>

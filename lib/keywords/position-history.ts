@@ -1,3 +1,5 @@
+import { type DateFormat, formatDateRange } from "@/lib/dates/format";
+
 type PositionCheck = {
   checkedAt: Date;
   position: number | null;
@@ -34,10 +36,14 @@ export function calendarDayKey(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-export function positionDateLabel(date: Date, now = new Date()) {
+export function positionDateLabel(
+  date: Date,
+  now = new Date(),
+  dateFormat: DateFormat = "month_first",
+) {
   return calendarDayKey(date) === calendarDayKey(now)
     ? "Today"
-    : date.toLocaleDateString("en-US", { day: "numeric", month: "short", timeZone: "UTC" });
+    : formatDateRange(calendarDayKey(date), calendarDayKey(date), dateFormat);
 }
 
 export function earlierDayPosition(

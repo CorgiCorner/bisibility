@@ -64,7 +64,6 @@ const mocks = vi.hoisted(() => {
     project: { id: "project_1", ownerId: "user_1", publicId: "prj_a00000000000000000000000" },
     requireProjectScope: vi.fn(),
     revalidatePath: vi.fn(),
-    startTrafficSyncWorkflow: vi.fn(),
     updateSearchSyncSettings: vi.fn(),
     saveStoredGoogleProperty: vi.fn(),
     writeAudit: vi.fn(),
@@ -112,9 +111,6 @@ vi.mock("@/lib/providers/registry", () => ({
       requiredCredentials: ["apiKey", "login"],
     },
   ],
-}));
-vi.mock("@/lib/temporal/traffic-client", () => ({
-  startTrafficSyncWorkflow: mocks.startTrafficSyncWorkflow,
 }));
 vi.mock("@/lib/providers/analytics/google-oauth-pending", () => ({
   cancelPendingGoogleOAuth: mocks.cancelPendingGoogleOAuth,
@@ -211,10 +207,6 @@ describe("provider actions", () => {
     mocks.prisma.providerConnectionRate.findUnique.mockResolvedValue(null);
     mocks.prisma.providerConnectionRate.deleteMany.mockResolvedValue({ count: 0 });
     mocks.writeAudit.mockResolvedValue({});
-    mocks.startTrafficSyncWorkflow.mockResolvedValue({
-      runId: "run_1",
-      workflowId: "maintenance-traffic-sync",
-    });
     mocks.updateSearchSyncSettings.mockResolvedValue({});
   });
 
@@ -510,7 +502,7 @@ describe("provider actions", () => {
     });
   });
 
-  it("starts an initial traffic sync after connecting an enabled analytics provider", async () => {
+  it("writes initial traffic sync intent while connecting an enabled analytics provider", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
     mocks.prisma.providerConnection.upsert.mockImplementation(({ create }) =>
       Promise.resolve(connection({ ...create, id: "conn_analytics" })),
@@ -526,8 +518,60 @@ describe("provider actions", () => {
       providerId: "plausible",
     });
 
-    expect(mocks.startTrafficSyncWorkflow).toHaveBeenCalledOnce();
+    const upsert = mocks.prisma.providerConnection.upsert.mock.calls[0][0];
+    expect(upsert.create).toMatchObject({
+      firstSyncFinishedAt: null,
+      firstSyncRequestedAt: expect.any(Date),
+      firstSyncStartedAt: null,
+    });
+    expect(upsert.update).toMatchObject({
+      firstSyncFinishedAt: null,
+      firstSyncRequestedAt: upsert.create.firstSyncRequestedAt,
+      firstSyncStartedAt: null,
+    });
     expect(mocks.revalidatePath).not.toHaveBeenCalledWith("/app/rank-tracker");
+  });
+
+  it("rolls back the analytics connection together with its first sync intent", async () => {
+    let committedConnection: Record<string, unknown> | null = null;
+    let attemptedConnection: Record<string, unknown> | null = null;
+    const tx = {
+      $queryRaw: vi.fn(() => Promise.resolve([{ id: "project_1" }])),
+      providerConnection: {
+        findMany: vi.fn(() => Promise.resolve([])),
+        findUnique: vi.fn(() => Promise.resolve(null)),
+        upsert: vi.fn(({ create }) => {
+          attemptedConnection = { ...create, id: "conn_analytics" };
+          return Promise.resolve(connection(attemptedConnection ?? {}));
+        }),
+      },
+    };
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
+    mocks.prisma.$transaction.mockImplementationOnce(async (callback) => {
+      const result = await callback(tx);
+      committedConnection = attemptedConnection;
+      return result;
+    });
+    mocks.writeAudit.mockRejectedValueOnce(new Error("audit unavailable"));
+
+    await expect(
+      connectProvider({
+        credentials: {
+          apiKey: "plausible-key",
+          endpoint: "https://plausible.io",
+          login: "example.com",
+        },
+        projectId: "prj_a00000000000000000000000",
+        providerId: "plausible",
+      }),
+    ).rejects.toThrow("audit unavailable");
+
+    expect(attemptedConnection).toMatchObject({
+      firstSyncFinishedAt: null,
+      firstSyncRequestedAt: expect.any(Date),
+      firstSyncStartedAt: null,
+    });
+    expect(committedConnection).toBeNull();
   });
 
   it("connects a provider and writes its audit inside one transaction", async () => {
@@ -919,6 +963,41 @@ describe("provider actions", () => {
       expect.objectContaining({ action: "provider.set_settings" }),
       mocks.prisma,
     );
+  });
+
+  it("clears an analytics first-sync intent in the disable transaction", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(
+      connection({
+        firstSyncRequestedAt: new Date("2026-09-03T05:00:00.000Z"),
+        id: "conn_analytics",
+        kind: "analytics",
+        provider: "plausible",
+      }),
+    );
+    mocks.prisma.providerConnection.update.mockResolvedValue(
+      connection({
+        enabled: false,
+        id: "conn_analytics",
+        kind: "analytics",
+        provider: "plausible",
+      }),
+    );
+
+    await updateProviderSettings({
+      enabled: false,
+      projectId: "prj_a00000000000000000000000",
+      providerId: "plausible",
+    });
+
+    expect(mocks.prisma.providerConnection.update).toHaveBeenCalledWith({
+      data: {
+        enabled: false,
+        firstSyncFinishedAt: null,
+        firstSyncRequestedAt: null,
+        firstSyncStartedAt: null,
+      },
+      where: { id: "conn_analytics" },
+    });
   });
 
   it("renumbers the third connection without changing the others' relative order", async () => {

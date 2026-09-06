@@ -14,6 +14,8 @@ import { writeAudit } from "@/lib/auth/audit";
 import { auth } from "@/lib/auth/auth";
 import { requireSession } from "@/lib/auth/session";
 import { countOtherSessions, revokeOtherSessions } from "@/lib/auth/session-revocation";
+import { DATE_FORMAT_PREFERENCES, type DateFormatPreference } from "@/lib/dates/format";
+import { resolveDateFormat } from "@/lib/dates/resolve";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { sendEmailChangedNotice } from "@/lib/email/email-changed-notice";
@@ -52,7 +54,7 @@ export type CurrentAccountEmailVerified = {
 
 async function accountEmailContext(userId: string) {
   const user = await prisma.user.findUnique({
-    select: { email: true, emailVerified: true, publicId: true },
+    select: { dateFormat: true, email: true, emailVerified: true, publicId: true },
     where: { id: userId },
   });
 
@@ -154,9 +156,20 @@ export async function requestAccountEmailChange(
 }
 
 /** The change already happened, so a mailer outage must not fail the confirmation. */
-async function notifyPreviousAddress(input: { newEmail: string; previousEmail: string }) {
+async function notifyPreviousAddress(input: {
+  dateFormat: string;
+  newEmail: string;
+  previousEmail: string;
+}) {
   try {
-    await sendEmailChangedNotice({ changedAt: new Date(), ...input });
+    const preference = (DATE_FORMAT_PREFERENCES as readonly string[]).includes(input.dateFormat)
+      ? (input.dateFormat as DateFormatPreference)
+      : "auto";
+    await sendEmailChangedNotice({
+      ...input,
+      changedAt: new Date(),
+      dateFormat: resolveDateFormat(preference),
+    });
   } catch (error: unknown) {
     console.error("[account] email change notice could not be sent", error);
   }
@@ -197,7 +210,11 @@ export async function confirmAccountEmailChange(input: unknown): Promise<Account
   }
 
   revalidateAccountEmailViews();
-  await notifyPreviousAddress({ newEmail: updated.email, previousEmail: current.email });
+  await notifyPreviousAddress({
+    dateFormat: current.dateFormat,
+    newEmail: updated.email,
+    previousEmail: current.email,
+  });
 
   await writeAudit({
     action: "account.email_changed",

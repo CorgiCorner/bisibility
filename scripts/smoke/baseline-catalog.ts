@@ -31,6 +31,8 @@ const publicIdTables = {
   pat: "personal_access_tokens",
   pmkt: "project_markets",
   prj: "projects",
+  rcr: "rank_check_runs",
+  sch: "check_schedules",
   sid: "sessions",
   sig: "signals",
   svkw: "saved_keywords",

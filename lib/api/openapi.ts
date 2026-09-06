@@ -10,7 +10,6 @@ import { locationSearchPaths } from "./openapi-locations";
 import { loopClosurePaths } from "./openapi-loop-closure";
 import { migrationPaths, migrationSecuritySchemes } from "./openapi-migration";
 import {
-  asyncParameter,
   keywordListParameters,
   projectSelectionParameterComponents,
   rankCheckListParameters,
@@ -137,9 +136,9 @@ export function getOpenApiDocument() {
         ...migrationPaths,
         "/keywords/{id}/checks": {
           post: runRankCheckOperation({
-            asyncParameter,
             problemResponses,
             rankCheckRef: ref("RankCheck"),
+            rankCheckRunRef: ref("RankCheckRunQueued"),
             security: personalAccess.apiCredentialSecurity,
           }),
         },

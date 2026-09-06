@@ -4,7 +4,6 @@ import { projectedMonthlySpendCents } from "@/lib/cost-estimate/spend-pace";
 import { prisma } from "@/lib/db/prisma";
 import { resolveEffectiveAllocations } from "@/lib/provider-allocations/compatibility";
 import { loadProviderRateContexts } from "@/lib/provider-rates/connection-context";
-import { aggregateConnectionUsage } from "@/lib/provider-usage/connection-usage";
 import type { ProviderCatalogEntry, ProviderStatus } from "@/lib/providers/types";
 import {
   monthlyLookupSpendByConnection,
@@ -18,6 +17,7 @@ import {
 import { resolveSerpDepth } from "@/lib/serp/markets";
 import type { ProviderAvailabilityData, ProviderUsageStat } from "@/lib/settings/options";
 import { loadProviderAvailability } from "./provider-availability";
+import { loadProviderSpendUsage } from "./provider-spend-usage";
 import { settingsConnectionUsage } from "./settings-provider-summaries";
 import { getRequestMonthlySpendCents } from "./workspace-request-data";
 
@@ -41,6 +41,7 @@ export type ProviderSpendConnection = {
   unit: "cents" | "units";
   used: number;
   usedPercent: number | null;
+  usedPriorMonth: number;
 };
 
 export type ProviderSpendSummary = {
@@ -55,6 +56,25 @@ export type ProviderSpendSummary = {
   requestCount: number;
   tightest: { connectionId: string; provider: string; usedPercent: number } | null;
 };
+
+const MONTH_LABELS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+function monthLabel(date: Date) {
+  return `${MONTH_LABELS[date.getUTCMonth()] ?? ""} ${date.getUTCFullYear()}`;
+}
 
 export type ProjectProviderSpend = {
   connections: ProviderSpendConnection[];
@@ -149,25 +169,12 @@ export async function loadProjectProviderSpend(input: {
       project,
     }).map((resolved) => [resolved.internalConnectionId, resolved]),
   );
-  const usage = new Map(
-    await Promise.all(
-      billableConnections.map(async (connection) => {
-        const metadata = input.catalog.find(
-          (entry) => entry.id === connection.provider,
-        )?.allocation;
-        if (metadata?.kind !== "billable") return [connection.id, null] as const;
-        return [
-          connection.id,
-          await aggregateConnectionUsage(prisma, {
-            connectionId: connection.id,
-            now: input.now,
-            projectId: input.projectId,
-            unit: metadata.allocationUnit,
-          }),
-        ] as const;
-      }),
-    ),
-  );
+  const usage = await loadProviderSpendUsage({
+    catalog: input.catalog,
+    connections: billableConnections,
+    now: input.now,
+    projectId: input.projectId,
+  });
   const primaryConnectionId = primaryProviderConnection(connections, "serp")?.id ?? null;
   const initial = billableConnections.map((connection) => {
     const metadata = input.catalog.find((entry) => entry.id === connection.provider)?.allocation;
@@ -175,7 +182,8 @@ export async function loadProjectProviderSpend(input: {
     const resolved = allocations.get(connection.id);
     const allocation = resolved?.allocation ?? null;
     const connectionUsage = usage.get(connection.id);
-    const used = connectionUsage?.used ?? 0;
+    const used = connectionUsage?.current.used ?? 0;
+    const usedPriorMonth = connectionUsage?.previous.used ?? 0;
     const usedPercent = allocation ? Math.min(100, (used / allocation.amountPerMonth) * 100) : null;
     const availableAtProvider = availability.get(connection.id) ?? undefined;
     return {
@@ -192,11 +200,12 @@ export async function loadProjectProviderSpend(input: {
       providerId: connection.provider,
       quotaReset: metadata.quotaReset,
       remaining: allocation ? allocation.amountPerMonth - used : null,
-      requestCount: connectionUsage?.requestCount ?? 0,
+      requestCount: connectionUsage?.current.requestCount ?? 0,
       status: connection.status,
       unit: metadata.allocationUnit,
       used,
       usedPercent,
+      usedPriorMonth,
     };
   });
   const connectionsWithStates: ProviderSpendConnection[] = initial.map((connection) => {
@@ -245,8 +254,8 @@ export async function loadProjectProviderSpend(input: {
     .sort((left, right) =>
       (left.projectedExhaustionAt ?? "").localeCompare(right.projectedExhaustionAt ?? ""),
     )[0];
-  const monthStart = monthStartUtc(input.now);
   const monthEnd = new Date(Date.UTC(input.now.getUTCFullYear(), input.now.getUTCMonth() + 1, 1));
+  const monthStart = monthStartUtc(input.now);
 
   return {
     connections: connectionsWithStates,
@@ -261,11 +270,7 @@ export async function loadProjectProviderSpend(input: {
           Math.floor((monthEnd.getTime() - input.now.getTime()) / 86_400_000),
         ),
         endsAt: monthEnd.toISOString(),
-        monthLabel: new Intl.DateTimeFormat("en-US", {
-          month: "long",
-          timeZone: "UTC",
-          year: "numeric",
-        }).format(monthStart),
+        monthLabel: monthLabel(monthStart),
         startsAt: monthStart.toISOString(),
       },
       projected: connectionsWithStates.every((connection) => connection.used === 0)

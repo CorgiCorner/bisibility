@@ -3,6 +3,7 @@ import "server-only";
 import { monthlyTrackingCostCents } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
 import { MAX_PROJECT_MARKETS } from "@/lib/markets/limits";
+import { listArchivedProjectMarkets } from "@/lib/markets/registry";
 import { primaryProviderConnection } from "@/lib/rank-check/provider-chain-order";
 import { supportsResearchMarket } from "@/lib/serp/market-capability";
 import { resolveSerpDepth } from "@/lib/serp/markets";
@@ -79,5 +80,69 @@ export async function getProjectMarkets(projectRef: string): Promise<ProjectMark
     monthlyCostCents: monthlyCostCents == null ? null : monthlyCostCents * activeCount,
     perMarketChecks,
     projectId: data.publicId,
+  };
+}
+
+/** A market as a chrome surface offers it: the name the reader knows, and its URL ref. */
+export type ProjectMarketOption = { label: string; ref: string };
+
+/**
+ * The visible markets of a project and nothing else. The shell renders on every page, so this
+ * deliberately does not go through `getProjectMarkets`, which also prices the project. The label
+ * is the one the markets settings page uses, because the language is what keeps `Belgium / Dutch`
+ * apart from `Belgium / French`.
+ */
+export async function listProjectMarketOptions(projectRef: string): Promise<ProjectMarketOption[]> {
+  const { project } = await requireReadableProject(projectRef);
+  const markets = await prisma.projectMarket.findMany({
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: {
+      location: { select: { displayName: true, languageLabel: true } },
+      publicId: true,
+    },
+    where: { projectId: project.id, status: { in: ["active", "paused"] } },
+  });
+
+  return markets.map((market) => ({
+    label: `${market.location.displayName} / ${market.location.languageLabel}`,
+    ref: market.publicId,
+  }));
+}
+
+export type ArchivedProjectMarketsView = {
+  markets: {
+    displayName: string;
+    id: string;
+    keywordCount: number;
+    languageLabel: string;
+  }[];
+  projectId: string;
+};
+
+/** Archived markets plus the keywords a restore resumes, so the UI states the cost first. */
+export async function getArchivedProjectMarkets(
+  projectRef: string,
+): Promise<ArchivedProjectMarketsView> {
+  const { project } = await requireReadableProject(projectRef);
+  const archived = await listArchivedProjectMarkets(project.id);
+  const counts = await prisma.keyword.groupBy({
+    _count: { _all: true },
+    by: ["locationId"],
+    where: {
+      archivedAt: null,
+      locationId: { in: archived.map((market) => market.locationId) },
+      projectId: project.id,
+    },
+  });
+  const countByLocation = new Map(counts.map((row) => [row.locationId, row._count._all]));
+
+  return {
+    markets: archived.map((market) => ({
+      displayName: market.location.displayName,
+      id: market.publicId,
+      keywordCount: countByLocation.get(market.locationId) ?? 0,
+      languageLabel: market.location.languageLabel,
+    })),
+    projectId: project.publicId,
   };
 }

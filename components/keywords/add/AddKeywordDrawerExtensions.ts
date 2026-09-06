@@ -28,6 +28,7 @@ export type AddKeywordDrawerProps = Pick<KeywordWorkspaceActions, "addKeywordsAc
     context: { locationKeys: readonly string[] },
   ) => void;
   onClose: () => void;
+  onExited?: () => void;
   open: boolean;
   projectId: string;
   projectMarkets?: ProjectMarketsView;

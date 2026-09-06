@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button, Modal, useToast } from "@/components/ui";
 import type { SelectSearchInsightsPropertyAction } from "@/lib/actions/search-insights";
 import { formatDateLabel } from "@/lib/search-insights/dates";
@@ -29,6 +30,7 @@ export function SearchInsightsArchivedActivation({
   selectPropertyAction,
   target,
 }: Readonly<ArchivedActivationProps>) {
+  const dateFormat = useDateFormat();
   const router = useRouter();
   const { showToast } = useToast();
   const [busy, setBusy] = useState(false);
@@ -74,7 +76,7 @@ export function SearchInsightsArchivedActivation({
     >
       <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">
         {currentDisplayName} stops syncing and becomes an archive. We will fill the gap since{" "}
-        {target ? formatDateLabel(target.lastSyncedDate) : "the last sync"}.
+        {target ? formatDateLabel(target.lastSyncedDate, dateFormat) : "the last sync"}.
       </p>
     </Modal>
   );

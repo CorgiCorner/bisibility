@@ -41,7 +41,9 @@ function Openers() {
           drawers.openPage({
             clicks: 0,
             ctr: 0,
+            engagementRate: null,
             impressions: 0,
+            keyEvents: null,
             path: storyPageDetail.path,
             position: 0,
             sessions: null,
@@ -83,16 +85,18 @@ const args = {
   }),
   canCreateKeyword: true,
   children: <Openers />,
-  costContext: storyCostContext,
-  defaultDevice: "desktop" as const,
-  defaultMarketKey: "es-es",
   loadBandListAction: async () => storyBandList,
   loadOverlapListAction: async () => storyOverlapList,
   loadPageDetailAction: async () => storyPageDetail,
   loadQueryDetailAction: async () => storyQueryDetail,
+  loadTrackDialogAction: async () => ({
+    costContext: storyCostContext,
+    defaultDevice: "desktop" as const,
+    defaultMarketKey: "es-es",
+    projectMarkets: storyProjectMarkets,
+  }),
   period: "28",
   projectId: "prj_story",
-  projectMarkets: storyProjectMarkets,
   property: "sc-domain:example.com",
 } satisfies StoryObj<typeof meta>["args"];
 

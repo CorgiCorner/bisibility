@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { isSelfHost } from "@/lib/deployment/deployment";
 import { centsToDollars } from "@/lib/format/currency";
@@ -173,6 +174,7 @@ async function categoriesForProject(
   projectId: string,
   now: Date,
   googleOAuth?: GoogleOAuthSetup,
+  dateFormat: DateFormat = "month_first",
 ): Promise<IntegrationCategory[]> {
   const connections = await loadProviderConnections(projectId);
   const [runs, costEntries, gscConsumerStatuses] = await Promise.all([
@@ -186,7 +188,7 @@ async function categoriesForProject(
       PROVIDER_RATE_FEATURES,
       new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
     ) as Promise<ProviderCostEntryRow[]>,
-    loadGscConsumerStatuses(projectId, connections, now),
+    loadGscConsumerStatuses(projectId, connections, now, dateFormat),
   ]);
   const failuresByConnection = new Map<string, SyncFailure>();
   for (const connection of connections) {
@@ -232,7 +234,7 @@ async function categoriesForProject(
 
 export async function getIntegrationsView(
   projectId: string,
-  options: { googleOAuth?: GoogleOAuthSetup; now?: Date } = {},
+  options: { dateFormat?: DateFormat; googleOAuth?: GoogleOAuthSetup; now?: Date } = {},
 ): Promise<IntegrationsView> {
   const { project } = await requireReadableProject(projectId);
   const now = options.now ?? new Date();
@@ -240,7 +242,7 @@ export async function getIntegrationsView(
     prisma.providerConnection.count({
       where: { projectId: project.id, status: "connected" },
     }),
-    categoriesForProject(project.id, now, options.googleOAuth),
+    categoriesForProject(project.id, now, options.googleOAuth, options.dateFormat),
     getRequestProjectDefaults(project.id),
   ]);
 
@@ -249,10 +251,15 @@ export async function getIntegrationsView(
 
 export async function getIntegrationCategories(
   projectId: string,
-  options: { googleOAuth?: GoogleOAuthSetup; now?: Date } = {},
+  options: { dateFormat?: DateFormat; googleOAuth?: GoogleOAuthSetup; now?: Date } = {},
 ): Promise<IntegrationCategory[]> {
   const { project } = await requireReadableProject(projectId);
-  return categoriesForProject(project.id, options.now ?? new Date(), options.googleOAuth);
+  return categoriesForProject(
+    project.id,
+    options.now ?? new Date(),
+    options.googleOAuth,
+    options.dateFormat,
+  );
 }
 
 export async function isProviderConnected(projectId: string, provider: string) {

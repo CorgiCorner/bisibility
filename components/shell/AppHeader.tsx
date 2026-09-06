@@ -1,17 +1,17 @@
-import { AppHeaderTitle } from "@/components/shell/AppHeaderTitle";
-import { CommandPaletteTrigger } from "@/components/shell/CommandPalette";
-import { MobileNav } from "@/components/shell/MobileNav";
+import { AppHeaderFrame } from "@/components/shell/AppHeaderFrame";
 import { NotificationBell } from "@/components/shell/NotificationBell";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
-import { SidebarUserButton } from "@/components/shell/SidebarUserButton";
 import { appVersion } from "@/lib/app-version";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
+import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
 import type { ReactNode } from "react";
 
 export type AppHeaderProps = {
   actions?: ReactNode;
   activeProjectId: string;
   canCreateWorkspace: boolean;
+  context?: ReactNode;
+  enabledExperimentalModules?: readonly ExperimentalModuleKey[];
   projectRef: string;
   setupCompleted?: boolean;
   setupDoneCount?: number;
@@ -27,6 +27,8 @@ export function AppHeader({
   actions,
   activeProjectId,
   canCreateWorkspace,
+  context,
+  enabledExperimentalModules = [],
   projectRef,
   setupCompleted = false,
   setupDoneCount = 0,
@@ -38,37 +40,23 @@ export function AppHeader({
   workspaces,
 }: Readonly<AppHeaderProps>) {
   return (
-    <header className="relative z-40 flex flex-nowrap items-center justify-between gap-2.5 border-b border-border bg-bg px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5">
-      <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
-        <MobileNav
-          activeProjectId={activeProjectId}
-          canCreateWorkspace={canCreateWorkspace}
-          projectRef={projectRef}
-          setupCompleted={setupCompleted}
-          setupDoneCount={setupDoneCount}
-          setupSettledCount={setupSettledCount}
-          setupTotalCount={setupTotalCount}
-          showGettingStarted={showGettingStarted}
-          showHostedLinks={showHostedLinks}
-          user={user}
-          version={appVersion()}
-          workspaces={workspaces}
-        />
-        <AppHeaderTitle setupCompleted={setupCompleted} setupTotalCount={setupTotalCount} />
-      </div>
-      {/* Right cluster order: [spend meter] [search][bell][account]. */}
-      <div className="flex flex-none items-center gap-6">
-        {actions}
-        <div className="flex items-center gap-2">
-          <div className="lg:hidden">
-            <CommandPaletteTrigger variant="header" />
-          </div>
-          <NotificationBell projectId={activeProjectId} projectRef={projectRef} />
-          {user ? (
-            <SidebarUserButton collapsed showHostedLinks={showHostedLinks} user={user} />
-          ) : null}
-        </div>
-      </div>
-    </header>
+    <AppHeaderFrame
+      actions={actions}
+      activeProjectId={activeProjectId}
+      canCreateWorkspace={canCreateWorkspace}
+      context={context}
+      enabledExperimentalModules={enabledExperimentalModules}
+      notificationControl={<NotificationBell projectId={activeProjectId} projectRef={projectRef} />}
+      projectRef={projectRef}
+      setupCompleted={setupCompleted}
+      setupDoneCount={setupDoneCount}
+      setupSettledCount={setupSettledCount}
+      setupTotalCount={setupTotalCount}
+      showGettingStarted={showGettingStarted}
+      showHostedLinks={showHostedLinks}
+      user={user}
+      version={appVersion()}
+      workspaces={workspaces}
+    />
   );
 }

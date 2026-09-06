@@ -1,5 +1,6 @@
 import { displayTime } from "@/components/admin/AdminPrimitives";
 import { Card, filterChipStateClassName, IdChip, SectionTitle, StatusPill } from "@/components/ui";
+import type { DateFormat } from "@/lib/dates/format";
 import type {
   InstanceAdminAuditFilter,
   InstanceAdminAuditPage,
@@ -41,7 +42,12 @@ function AuditResultCell({ result }: Readonly<{ result: InstanceAdminAuditResult
   }
 }
 
-export function AdminAuditTable({ entries, filter, nextCursor }: Readonly<InstanceAdminAuditPage>) {
+export function AdminAuditTable({
+  dateFormat = "day_first",
+  entries,
+  filter,
+  nextCursor,
+}: Readonly<InstanceAdminAuditPage & { dateFormat?: DateFormat }>) {
   return (
     <Card component="section" size="lg" aria-labelledby="admin-activity-heading">
       <SectionTitle id="admin-activity-heading">Admin activity</SectionTitle>
@@ -110,9 +116,9 @@ export function AdminAuditTable({ entries, filter, nextCursor }: Readonly<Instan
                     ? `${entry.targetType}:${entry.targetId}`
                     : `${entry.targetType}:unavailable`;
                   return (
-                    <tr className="border-b border-border-soft last:border-0" key={entry.id}>
+                    <tr className="border-b border-border last:border-0" key={entry.id}>
                       <td className="whitespace-nowrap px-0.5 py-2.5 text-[11.5px] text-fg-muted">
-                        {displayTime(entry.createdAt)}
+                        {displayTime(entry.createdAt, dateFormat)}
                       </td>
                       <td
                         className="truncate px-2 py-2.5 text-[11px]"

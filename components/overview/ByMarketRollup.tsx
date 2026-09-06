@@ -99,7 +99,7 @@ export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRo
         />
       </div>
       <div className="overflow-x-auto">
-        <div className={`${rowGrid} border-t border-border py-2 ${tableHeaderClassName}`}>
+        <div className={`${rowGrid} py-2 ${tableHeaderClassName}`}>
           <span>Market</span>
           <span aria-hidden />
           <span className="text-right">Targets</span>
@@ -108,9 +108,9 @@ export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRo
           <span>Trend</span>
           <span aria-hidden />
         </div>
-        {sortedRows(rows, sort).map((row) => (
+        {sortedRows(rows, sort).map((row, index) => (
           <Link
-            className={`${rowGrid} min-h-[57px] border-t border-border-soft py-3 hover:bg-bg-sunken`}
+            className={`${rowGrid} min-h-[57px] ${index > 0 ? "border-t border-border" : ""} py-3 hover:bg-bg-sunken`}
             href={lensHref(appPath(projectRef, "rank-tracker"), {
               device,
               locationId: row.locationId,

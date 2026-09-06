@@ -1,5 +1,36 @@
 import { describe, expect, it } from "vitest";
-import { dataForSeoLabsLocationParams, extractDataForSeoBalance } from "./dataforseo-client";
+import {
+  dataForSeoBillingStatusCode,
+  dataForSeoLabsLocationParams,
+  envelopeMessage,
+  extractDataForSeoBalance,
+} from "./dataforseo-client";
+
+describe("DataForSEO task failures", () => {
+  const taskFailure = {
+    status_code: 20000,
+    status_message: "Ok.",
+    tasks: [{ status_code: 40201, status_message: "Insufficient funds" }],
+  };
+
+  it("uses a non-OK task message ahead of the successful envelope", () => {
+    expect(envelopeMessage(taskFailure)).toBe("Insufficient funds");
+  });
+
+  it("classifies task status 40201 as billing", () => {
+    expect(dataForSeoBillingStatusCode(taskFailure)).toBe(40201);
+  });
+
+  it("falls back to the envelope when failed tasks have no message", () => {
+    expect(
+      envelopeMessage({
+        status_code: 40000,
+        status_message: "Envelope failed",
+        tasks: [{ status_code: 40501, status_message: "  " }],
+      }),
+    ).toBe("Envelope failed");
+  });
+});
 
 describe("DataForSEO Labs location parameters", () => {
   it("uses the country handle while preserving the selected language", () => {

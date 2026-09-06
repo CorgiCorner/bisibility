@@ -88,7 +88,7 @@ export function AlertRulesList({
 
           return (
             <article
-              className="flex flex-col gap-3 border-border-soft border-b px-4.5 py-[15px] sm:flex-row sm:items-center"
+              className="flex flex-col gap-3 border-border border-b px-4.5 py-[15px] sm:flex-row sm:items-center"
               key={rule.id}
             >
               <span

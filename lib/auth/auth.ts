@@ -11,7 +11,6 @@ import {
   emailOtpTwoFactorPlugin,
   socialOAuthTwoFactorPlugin,
 } from "@/lib/auth/email-otp-two-factor";
-import { prepareFirstRunUserCreation } from "@/lib/auth/first-run";
 import { firstRunCreationState, isPendingFirstRunUser } from "@/lib/auth/first-run-context";
 import { loginCodeGuardPlugin, withOtpEmailRequest } from "@/lib/auth/login-code-guard";
 import {
@@ -31,7 +30,8 @@ import { resolveAuthSecret, resolveAuthSecrets } from "@/lib/auth/secret";
 import { recordSignInAudit } from "@/lib/auth/sign-in-audit";
 import { enforceGoogleSignupCapacity } from "@/lib/auth/signin-capacity";
 import { twoFactorRouteGuard } from "@/lib/auth/two-factor-route-guard";
-import { sendCloudWelcomeSequence } from "@/lib/auth/welcome-signup";
+import { prepareUserCreation } from "@/lib/auth/user-creation";
+import { wakeCloudWelcomeSequenceWorker } from "@/lib/auth/welcome-signup";
 import { prisma } from "@/lib/db/prisma";
 import {
   normalizeAuthorizationServerOrigin,
@@ -81,17 +81,9 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
 }
 
 type SessionCreationInput = { userId: string };
-type UserCreationInput = Parameters<typeof prepareFirstRunUserCreation>[0];
-type UserCreationContext = Parameters<typeof prepareFirstRunUserCreation>[1];
-
 async function prepareSessionCreation(session: SessionCreationInput) {
   await preventDeactivatedSessionCreation(session);
   return addAuthPublicId(session, "sid");
-}
-
-async function prepareUserCreation(user: UserCreationInput, context: UserCreationContext) {
-  const prepared = await prepareFirstRunUserCreation(user, context);
-  return addAuthPublicId(user, "usr", prepared);
 }
 
 // Throw instead of returning false because some provider routes would still set cookies;
@@ -202,7 +194,7 @@ export const auth = betterAuth({
     },
     user: {
       create: {
-        after: sendCloudWelcomeSequence,
+        after: wakeCloudWelcomeSequenceWorker,
         before: prepareUserCreation,
       },
       // Runs after the change-email code is consumed and before the address is written.
@@ -245,6 +237,12 @@ export const auth = betterAuth({
         required: false,
         returned: false,
         type: "string",
+      },
+      welcomeFollowupRequestedAt: {
+        input: false,
+        required: false,
+        returned: false,
+        type: "date",
       },
     },
   },

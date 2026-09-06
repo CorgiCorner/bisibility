@@ -123,6 +123,7 @@ function tint(foreground: Rgb, background: Rgb, amount: number): Rgb {
 
 function token(scheme: ColorSchemeName, name: ColorTokenName): Rgb {
   const hex = colorSchemes[scheme][name];
+  if (hex === "transparent") return rgb(colorSchemes[scheme].bg);
   const color = rgb(hex);
   const alpha = hexAlpha(hex);
   if (alpha === 1) return color;

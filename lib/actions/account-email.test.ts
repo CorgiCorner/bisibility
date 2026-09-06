@@ -153,7 +153,7 @@ describe("account email change actions", () => {
     });
 
     expect(mocks.findUnique).toHaveBeenCalledExactlyOnceWith({
-      select: { email: true, emailVerified: true, publicId: true },
+      select: { dateFormat: true, email: true, emailVerified: true, publicId: true },
       where: { id: "user_1" },
     });
   });
@@ -311,6 +311,7 @@ describe("account email change actions", () => {
     });
     expect(mocks.sendEmailChangedNotice).toHaveBeenCalledExactlyOnceWith({
       changedAt: expect.any(Date),
+      dateFormat: "day_first",
       newEmail: "next@example.com",
       previousEmail: "owner@example.com",
     });

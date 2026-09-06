@@ -38,7 +38,7 @@ vi.mock("@/lib/rank-check/budget", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/rank-check/budget")>()),
   monthlySpendCents: mocks.monthlySpendCents,
 }));
-vi.mock("@/lib/rank-check/fallback", () => ({
+vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadSerpProviderChain,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));

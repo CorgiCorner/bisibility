@@ -2,7 +2,7 @@
 
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
-import { z } from "zod";
+import { createTagSchema, deleteTagSchema, renameTagSchema } from "@/lib/schemas/tag";
 import {
   getActionActor,
   makePublicId,
@@ -11,17 +11,7 @@ import {
   revalidateKeywordViews,
 } from "./_shared";
 import { handledActionResult } from "./action-result";
-
-const idSchema = z.string().trim().min(1).max(120);
-const tagNameSchema = z.string().trim().min(1).max(48);
-const createTagSchema = z.object({ name: tagNameSchema, projectId: idSchema });
-const deleteTagSchema = z.object({ name: tagNameSchema, projectId: idSchema });
-const renameTagSchema = z
-  .object({ fromName: tagNameSchema, projectId: idSchema, toName: tagNameSchema })
-  .refine((data) => data.fromName !== data.toName, {
-    message: "Choose a different tag name.",
-    path: ["toName"],
-  });
+import { TagAlreadyExistsError, TagNotFoundError } from "./tag-errors";
 
 function revalidateKeywords() {
   revalidateKeywordViews();
@@ -41,7 +31,7 @@ export async function createTag(input: unknown) {
     where: { name: data.name, projectId: project.id },
   });
   if (existing) {
-    throw new Error("Tag already exists.");
+    throw new TagAlreadyExistsError();
   }
 
   const tag = await prisma.tag.create({
@@ -72,7 +62,7 @@ export async function renameTag(input: unknown) {
       select: { id: true, keywords: { select: { keywordId: true } }, name: true, publicId: true },
       where: { name: data.fromName, projectId: project.id },
     });
-    if (!source) throw new Error("Tag not found.");
+    if (!source) throw new TagNotFoundError();
 
     const target = await tx.tag.findFirst({
       select: { id: true, name: true, publicId: true },
@@ -130,7 +120,7 @@ export async function deleteTag(input: unknown) {
       select: { id: true, keywords: { select: { keywordId: true } }, name: true, publicId: true },
       where: { name: data.name, projectId: project.id },
     });
-    if (!tag) throw new Error("Tag not found.");
+    if (!tag) throw new TagNotFoundError();
     await tx.tag.delete({ where: { id: tag.id } });
     return { count: tag.keywords.length, name: tag.name, publicId: tag.publicId };
   });

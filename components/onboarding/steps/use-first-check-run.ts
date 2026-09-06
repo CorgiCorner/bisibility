@@ -120,7 +120,7 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
       setState((current) => ({
         ...current,
         message: null,
-        status: "completed",
+        status: current.rows.some((row) => row.status === "queued") ? "queued" : "completed",
       }));
     } catch (error) {
       setState((current) => ({
@@ -170,7 +170,10 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
     }));
     try {
       await runCandidates(candidates);
-      setState((current) => ({ ...current, status: "completed" }));
+      setState((current) => ({
+        ...current,
+        status: current.rows.some((row) => row.status === "queued") ? "queued" : "completed",
+      }));
     } finally {
       runningRef.current = false;
     }

@@ -1,7 +1,12 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui";
-import { migrationImportCountSummary } from "@/lib/migration/import-counts";
+import { formatDateTime } from "@/lib/dates/format";
+import {
+  migrationImportCountEntries,
+  migrationImportCountSummary,
+} from "@/lib/migration/import-counts";
 import { appPath } from "@/lib/routing/app-path";
 import {
   ArrowsClockwiseIcon as ArrowsClockwise,
@@ -37,31 +42,24 @@ const TONES: Record<Tone, { tile: string; text: string; dot: string }> = {
   yellow: { tile: "bg-yellow/15 text-yellow-text", text: "text-yellow-text", dot: "bg-yellow" },
 };
 
-function countEntries(counts: unknown) {
-  if (!counts || typeof counts !== "object" || Array.isArray(counts)) {
-    return [];
-  }
-
-  return Object.entries(counts)
-    .filter(([, value]) => typeof value === "number")
-    .map(([key, value]) => `${value} ${key.replaceAll("_", " ")}`);
-}
-
 function doneDescription(job: CloudImportJobData) {
   const summary = migrationImportCountSummary(job.counts);
   if (!summary.reportsKeywordCreations && summary.imported.length === 0) {
-    return "Transfer completed. Re-connect providers to resume checks.";
+    const note = summary.visibilityNote ? ` ${summary.visibilityNote}` : "";
+    return `Transfer completed.${note} Re-connect providers to resume checks.`;
   }
   const imported =
     summary.imported.length > 0
       ? `Imported ${summary.imported.join(", ")}.`
       : `Imported ${summary.keywordsCreated} new keywords.`;
   const skipped = summary.skipped.length > 0 ? ` ${summary.skipped.join(", ")} skipped.` : "";
-  return `${imported}${skipped} Re-connect providers to resume checks.`;
+  const note = summary.visibilityNote ? ` ${summary.visibilityNote}` : "";
+  return `${imported}${skipped}${note} Re-connect providers to resume checks.`;
 }
 
 function restoredWithNotes(job: CloudImportJobData) {
-  return job.state === "done" && migrationImportCountSummary(job.counts).skipped.length > 0;
+  const summary = migrationImportCountSummary(job.counts);
+  return job.state === "done" && (summary.skipped.length > 0 || summary.visibilityNote !== null);
 }
 
 function failedFollowUp(job: CloudImportJobData) {
@@ -152,6 +150,7 @@ export function TransferPanel({
   projectRef,
   sourceLabel = "self-hosted instance",
 }: Readonly<TransferPanelProps>) {
+  const dateFormat = useDateFormat();
   if (job.state === "idle" && !hasToken) {
     return null;
   }
@@ -159,7 +158,7 @@ export function TransferPanel({
   const cfg = configFor(job, sourceLabel);
   const tone = TONES[cfg.tone];
   const StateIcon = cfg.icon;
-  const counts = countEntries(job.counts);
+  const counts = migrationImportCountEntries(job.counts, "value-label");
   const showProgress =
     job.state === "receiving" || job.state === "importing" || job.state === "done";
 
@@ -201,7 +200,7 @@ export function TransferPanel({
       ) : null}
 
       {counts.length > 0 ? (
-        <div className="grid gap-2 border-border-soft border-t px-5 py-3 sm:grid-cols-3">
+        <div className="grid gap-2 border-border border-t px-5 py-3 sm:grid-cols-3">
           {counts.map((item) => (
             <div
               className="rounded-control bg-bg-sunken px-3 py-2 font-sans tabular-nums text-[11px]"
@@ -214,7 +213,7 @@ export function TransferPanel({
       ) : null}
 
       {job.state === "done" ? (
-        <div className="flex items-center gap-[9px] border-border-soft border-t p-[14px_20px]">
+        <div className="flex items-center gap-[9px] border-border border-t p-[14px_20px]">
           <LinkIcon aria-hidden className="flex-none text-fg-muted" size={15} weight="regular" />
           <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
             Import job {job.id}
@@ -230,7 +229,7 @@ export function TransferPanel({
       ) : null}
 
       {job.state === "failed" ? (
-        <div className="flex flex-col gap-3 border-border-soft border-t p-[14px_20px]">
+        <div className="flex flex-col gap-3 border-border border-t p-[14px_20px]">
           <div className="flex items-start gap-2.5 rounded-control border border-red bg-red/10 px-3.5 py-3">
             <WarningOctagon
               aria-hidden
@@ -251,7 +250,7 @@ export function TransferPanel({
             {job.finishedAt ? (
               <>
                 <span className="h-2.5 w-px bg-border" />
-                <span>{new Date(job.finishedAt).toLocaleString()}</span>
+                <span>{formatDateTime(new Date(job.finishedAt), dateFormat)}</span>
               </>
             ) : null}
           </div>

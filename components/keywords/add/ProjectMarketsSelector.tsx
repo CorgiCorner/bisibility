@@ -124,9 +124,7 @@ export function ProjectMarketsSelector({
                 aria-label={label(market)}
                 aria-pressed={selected}
                 className={`inline-flex min-h-[30px] max-w-full items-center gap-1.5 rounded-full border border-border px-2.5 text-[12px] font-medium outline-offset-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${
-                  selected
-                    ? "bg-accent-soft text-fg"
-                    : "bg-bg-elev text-fg-muted hover:bg-bg-sunken"
+                  selected ? "bg-bg-sunken text-fg" : "bg-bg-elev text-fg-muted hover:bg-bg-sunken"
                 } ${active ? "" : "opacity-60"}`}
                 disabled={!active}
                 key={market.id}
@@ -200,7 +198,7 @@ export function ProjectMarketsSelector({
           {serpDeviceOptions.map((option) => (
             <button
               aria-pressed={devices.includes(option.value)}
-              className={`inline-flex min-h-[30px] items-center gap-1.5 rounded-full border border-border px-3 text-[12px] font-medium outline-offset-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${devices.includes(option.value) ? "bg-accent-soft text-fg" : "bg-bg-elev text-fg-muted hover:bg-bg-sunken"}`}
+              className={`inline-flex min-h-[30px] items-center gap-1.5 rounded-full border border-border px-3 text-[12px] font-medium outline-offset-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${devices.includes(option.value) ? "bg-bg-sunken text-fg" : "bg-bg-elev text-fg-muted hover:bg-bg-sunken"}`}
               key={option.value}
               onClick={() => toggleDevice(option.value)}
               type="button"

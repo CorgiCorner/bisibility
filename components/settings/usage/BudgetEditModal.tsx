@@ -1,14 +1,22 @@
 "use client";
 
-import { Button, Input, Modal, StatusPill, Switch } from "@/components/ui";
+import { BudgetAmountField } from "@/components/settings/usage/BudgetAmountField";
+import {
+  BUDGET_MODAL_CONSEQUENCE_COPY,
+  budgetFieldChanged,
+  budgetInitialValue,
+  buildProviderAllocationPayload,
+  providerUsageContextLine,
+  validateBudgetField,
+} from "@/components/settings/usage/budget-edit-modal-model";
+import { Button, Modal, StatusPill } from "@/components/ui";
 import type { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
 import { appPath } from "@/lib/routing/app-path";
-import {
-  type ProviderAllocationInput,
-  providerAllocationSchema,
-} from "@/lib/schemas/usage-settings";
+import type { ProviderAllocationInput } from "@/lib/schemas/usage-settings";
 import { actionErrorMessage } from "@/lib/ui/action-error";
+import { cn } from "@/lib/ui/cn";
+import { elevatedListClassName, metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,12 +29,6 @@ type BudgetEditModalProps = {
   projectRef: string;
   updateProviderAllocation: typeof updateProviderConnectionAllocationAction;
 };
-function initialValue(connection: ProviderSpendConnection) {
-  if (!connection.allocation) return "";
-  return connection.unit === "cents"
-    ? (connection.allocation.amountPerMonth / 100).toFixed(2)
-    : String(connection.allocation.amountPerMonth);
-}
 
 export function BudgetEditModal({
   connections,
@@ -38,41 +40,47 @@ export function BudgetEditModal({
 }: Readonly<BudgetEditModalProps>) {
   const router = useRouter();
   const [values, setValues] = useState(() =>
-    Object.fromEntries(connections.map((item) => [item.connectionId, initialValue(item)])),
-  );
-  const [noBudget, setNoBudget] = useState(() =>
-    Object.fromEntries(connections.map((item) => [item.connectionId, item.allocation === null])),
+    Object.fromEntries(connections.map((item) => [item.connectionId, budgetInitialValue(item)])),
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const showPrimaryChip = connections.length > 1;
+
+  function setFieldError(connectionId: string, message: string | null) {
+    setErrors((current) => {
+      if (!message) {
+        const { [connectionId]: _removed, ...rest } = current;
+        return rest;
+      }
+      return { ...current, [connectionId]: message };
+    });
+  }
+
+  function validateField(connection: ProviderSpendConnection) {
+    const message = validateBudgetField(connection, values[connection.connectionId] ?? "");
+    setFieldError(connection.connectionId, message);
+    return message === null;
+  }
+
   async function submit() {
-    const changed = connections.filter(
-      (item) =>
-        noBudget[item.connectionId] !== (item.allocation === null) ||
-        (!noBudget[item.connectionId] && values[item.connectionId] !== initialValue(item)),
+    const changed = connections.filter((connection) =>
+      budgetFieldChanged(connection, values[connection.connectionId] ?? ""),
     );
-    const payloads: ProviderAllocationInput[] = [];
     const nextErrors: Record<string, string> = {};
+    const payloads: ProviderAllocationInput[] = [];
     for (const connection of changed) {
-      const payload: ProviderAllocationInput = noBudget[connection.connectionId]
-        ? { allocation: null, connectionId: connection.connectionId }
-        : connection.unit === "cents"
-          ? {
-              allocation: { amountDollars: values[connection.connectionId] ?? "", unit: "cents" },
-              connectionId: connection.connectionId,
-            }
-          : {
-              allocation: { amount: Number(values[connection.connectionId]), unit: "units" },
-              connectionId: connection.connectionId,
-            };
-      const parsed = providerAllocationSchema.safeParse(payload);
-      if (!parsed.success)
-        nextErrors[connection.connectionId] =
-          parsed.error.issues[0]?.message ?? "Enter a valid budget.";
-      else payloads.push(parsed.data);
+      const message = validateBudgetField(connection, values[connection.connectionId] ?? "");
+      if (message) {
+        nextErrors[connection.connectionId] = message;
+        continue;
+      }
+      payloads.push(
+        buildProviderAllocationPayload(connection, values[connection.connectionId] ?? ""),
+      );
     }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
+
     setSaving(true);
     const actionErrors: Record<string, string> = {};
     for (const payload of payloads) {
@@ -92,6 +100,7 @@ export function BudgetEditModal({
       onSaved();
     }
   }
+
   return (
     <Modal
       footer={
@@ -107,26 +116,29 @@ export function BudgetEditModal({
               onClick={submit}
               type="button"
             >
-              Save budget
+              Save
             </Button>
           ) : null}
         </>
       }
       onClose={onClose}
       open
-      title="Edit budget"
+      title="Provider budgets"
       width={560}
     >
       {connections.length ? (
         <>
           <p className="m-0 text-[12.5px] leading-[1.55] text-fg-muted">
-            Set a monthly budget for each provider. Your first save switches this project from the
-            legacy project cap to per-provider budgets.
+            Set a monthly budget for each provider.
           </p>
-          <div className="mt-4 divide-y divide-border-soft border-y border-border-soft">
-            {connections.map((connection) => (
+          <div className="mt-4 hidden sm:grid sm:grid-cols-[minmax(0,1fr)_180px] sm:gap-3">
+            <span />
+            <span className={cn(metricEyebrowClassName, "text-right")}>Budget / month</span>
+          </div>
+          <div className={`mt-1 ${elevatedListClassName}`}>
+            {connections.map((connection, index) => (
               <div
-                className="grid gap-3 py-3.5 sm:grid-cols-[minmax(0,1fr)_180px] sm:items-center"
+                className="grid gap-3 py-3.5 sm:grid-cols-[minmax(0,1fr)_180px] sm:items-start"
                 key={connection.connectionId}
               >
                 <div className="min-w-0">
@@ -134,40 +146,28 @@ export function BudgetEditModal({
                     <span className="truncate text-[13px] font-semibold text-fg">
                       {connection.provider}
                     </span>
-                    {connection.primary ? (
+                    {showPrimaryChip && connection.primary ? (
                       <StatusPill label="Primary" showDot={false} size="sm" status="optional" />
                     ) : null}
                   </div>
                   <p className="m-0 mt-1 font-sans tabular-nums text-[10px] text-fg-muted">
-                    {connection.allocation
-                      ? `Current: ${initialValue(connection)} ${connection.unit === "cents" ? "USD" : "searches"}`
-                      : "No budget"}
+                    {providerUsageContextLine(connection)}
                   </p>
                 </div>
                 <div>
-                  <Input
+                  <BudgetAmountField
                     aria-label={`${connection.provider} monthly budget`}
-                    disabled={noBudget[connection.connectionId]}
-                    inputMode={connection.unit === "cents" ? "decimal" : "numeric"}
+                    autoFocus={index === 0}
+                    connection={connection}
+                    error={errors[connection.connectionId]}
+                    onBlur={() => validateField(connection)}
                     onChange={(event) =>
                       setValues((current) => ({
                         ...current,
                         [connection.connectionId]: event.target.value,
                       }))
                     }
-                    placeholder={connection.unit === "cents" ? "0.00" : "0"}
                     value={values[connection.connectionId] ?? ""}
-                  />
-                  <Switch
-                    checked={Boolean(noBudget[connection.connectionId])}
-                    className="mt-2 w-full justify-between px-2.5 py-1.5"
-                    label="No budget"
-                    onChange={(event) =>
-                      setNoBudget((current) => ({
-                        ...current,
-                        [connection.connectionId]: event.target.checked,
-                      }))
-                    }
                   />
                 </div>
                 {errors[connection.connectionId] ? (
@@ -178,6 +178,9 @@ export function BudgetEditModal({
               </div>
             ))}
           </div>
+          <p className="m-0 mt-4 text-[11.5px] leading-[1.55] text-fg-muted">
+            {BUDGET_MODAL_CONSEQUENCE_COPY}
+          </p>
         </>
       ) : (
         <p className="m-0 text-[12.5px] leading-[1.55] text-fg-muted">

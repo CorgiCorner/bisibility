@@ -1,6 +1,6 @@
 "use client";
 
-import { compactInputClassName } from "@/components/ui/input-styles";
+import { compactInputClassName, inputClassName } from "@/components/ui/input-styles";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
@@ -52,6 +52,11 @@ export const menuSelectPaperSx = {
 export const menuSelectTriggerClass = cn(
   toolbarControlClassName,
   "inline-flex items-center gap-1.5 px-[11px] outline-none transition-colors hover:border-accent focus-visible:border-accent focus-visible:outline-none",
+);
+
+export const menuSelectInputClass = cn(
+  inputClassName,
+  "inline-flex min-h-10 w-full items-center gap-1.5 rounded-control px-[13px] py-[9px] text-ui-body font-medium",
 );
 
 function matchOption(option: MenuSelectOption, term: string): boolean {

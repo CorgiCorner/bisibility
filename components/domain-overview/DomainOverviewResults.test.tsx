@@ -93,7 +93,7 @@ describe("DomainOverviewResults", () => {
 
     expect(screen.getAllByTestId("domain-keyword-row")).toHaveLength(100);
     expect(screen.getByText("keyword 050")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sort Volume descending" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sort Volume descending" })).toHaveClass("gap-2");
     expect(screen.getByRole("button", { name: "Sort SERP Δ descending" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sort Est. traffic ascending" }));
     const sortedRows = screen.getAllByTestId("domain-keyword-row");

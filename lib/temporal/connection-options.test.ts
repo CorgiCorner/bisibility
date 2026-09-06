@@ -1,12 +1,40 @@
 import { describe, expect, it } from "vitest";
-import { temporalConnectionOptions, temporalWebUiUrl } from "./connection-options";
+import {
+  temporalConnectionOptions,
+  temporalSdkConnectionOptions,
+  temporalWebUiUrl,
+} from "./connection-options";
 
 describe("temporalConnectionOptions", () => {
   it("uses the local plaintext server by default", () => {
     expect(temporalConnectionOptions({})).toEqual({
       address: "localhost:7233",
+      connectTimeout: 2_000,
       tlsSource: "auto-no-api-key",
     });
+  });
+
+  it("passes the default and overridden connect timeout to the SDK", () => {
+    expect(temporalSdkConnectionOptions(temporalConnectionOptions({}))).toMatchObject({
+      connectTimeout: 2_000,
+    });
+    expect(
+      temporalSdkConnectionOptions(
+        temporalConnectionOptions({ TEMPORAL_CONNECT_TIMEOUT_MS: "750" }),
+      ),
+    ).toMatchObject({ connectTimeout: 750 });
+  });
+
+  it("rejects a malformed connect timeout", () => {
+    expect(() => temporalConnectionOptions({ TEMPORAL_CONNECT_TIMEOUT_MS: "eventually" })).toThrow(
+      "TEMPORAL_CONNECT_TIMEOUT_MS must be an integer",
+    );
+  });
+
+  it.each(["99", "30001"])("rejects an out-of-range connect timeout of %s ms", (value) => {
+    expect(() => temporalConnectionOptions({ TEMPORAL_CONNECT_TIMEOUT_MS: value })).toThrow(
+      "TEMPORAL_CONNECT_TIMEOUT_MS must be between 100 and 30000",
+    );
   });
 
   it("requires an address for the explicit Temporal driver", () => {
@@ -24,6 +52,7 @@ describe("temporalConnectionOptions", () => {
     ).toEqual({
       address: "namespace.account.tmprl.cloud:7233",
       apiKey: "secret",
+      connectTimeout: 2_000,
       tls: true,
       tlsSource: "auto-api-key",
     });
@@ -37,6 +66,7 @@ describe("temporalConnectionOptions", () => {
       }),
     ).toEqual({
       address: "temporal.internal:7233",
+      connectTimeout: 2_000,
       tls: true,
       tlsSource: "explicit-true",
     });
@@ -74,15 +104,23 @@ describe("temporalConnectionOptions", () => {
 
 describe("temporalWebUiUrl", () => {
   it("returns the local Web UI for the default address", () => {
-    expect(temporalWebUiUrl({ address: "localhost:7233", tlsSource: "auto-no-api-key" })).toBe(
-      "http://localhost:8233",
-    );
+    expect(
+      temporalWebUiUrl({
+        address: "localhost:7233",
+        connectTimeout: 2_000,
+        tlsSource: "auto-no-api-key",
+      }),
+    ).toBe("http://localhost:8233");
   });
 
   it("returns the local Web UI for the IPv4 loopback address", () => {
-    expect(temporalWebUiUrl({ address: "127.0.0.1:7233", tlsSource: "auto-no-api-key" })).toBe(
-      "http://localhost:8233",
-    );
+    expect(
+      temporalWebUiUrl({
+        address: "127.0.0.1:7233",
+        connectTimeout: 2_000,
+        tlsSource: "auto-no-api-key",
+      }),
+    ).toBe("http://localhost:8233");
   });
 
   it("does not return a local Web UI when an API key is configured", () => {
@@ -90,6 +128,7 @@ describe("temporalWebUiUrl", () => {
       temporalWebUiUrl({
         address: "localhost:7233",
         apiKey: "secret",
+        connectTimeout: 2_000,
         tlsSource: "auto-api-key",
       }),
     ).toBeUndefined();
@@ -97,7 +136,12 @@ describe("temporalWebUiUrl", () => {
 
   it("does not return a local Web UI for a TLS endpoint", () => {
     expect(
-      temporalWebUiUrl({ address: "localhost:7233", tls: true, tlsSource: "explicit-true" }),
+      temporalWebUiUrl({
+        address: "localhost:7233",
+        connectTimeout: 2_000,
+        tls: true,
+        tlsSource: "explicit-true",
+      }),
     ).toBeUndefined();
   });
 
@@ -105,6 +149,7 @@ describe("temporalWebUiUrl", () => {
     expect(
       temporalWebUiUrl({
         address: "temporal.internal.example.com:7233",
+        connectTimeout: 2_000,
         tlsSource: "auto-no-api-key",
       }),
     ).toBeUndefined();

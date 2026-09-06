@@ -1,3 +1,4 @@
+import { MarketArchivedError } from "@/lib/markets/archived";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProjectMarketsSelector } from "./ProjectMarketsSelector";
@@ -113,7 +114,7 @@ describe("ProjectMarketsSelector", () => {
       name: "United States / English",
     });
     expect(selected).toHaveAttribute("aria-pressed", "true");
-    expect(selected).toHaveClass("rounded-full", "border-border", "bg-accent-soft", "text-fg");
+    expect(selected).toHaveClass("rounded-full", "border-border", "bg-bg-sunken", "text-fg");
     expect(selected.querySelector("svg")).not.toBeNull();
 
     const positionsOnly = within(section).getByRole("button", { name: "Spain / English" });
@@ -169,6 +170,21 @@ describe("ProjectMarketsSelector", () => {
       "aria-pressed",
       "true",
     );
+  });
+
+  it("reports the archived-market refusal instead of a generic failure", async () => {
+    addProjectMarkets.mockRejectedValueOnce(new MarketArchivedError("DE"));
+    renderSelector();
+
+    fireEvent.click(screen.getByRole("button", { name: "New market" }));
+    fireEvent.click(screen.getByRole("button", { name: "Commit Germany" }));
+
+    expect(
+      await screen.findByText(
+        "Market DE is not tracked by this project. Add it in Settings > Markets first.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByText("Markets could not be added.")).not.toBeInTheDocument();
   });
 
   it("points an empty project at New market instead of Settings", () => {

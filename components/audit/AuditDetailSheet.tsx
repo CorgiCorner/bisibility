@@ -33,9 +33,9 @@ function DiffRows({ diff }: Readonly<{ diff: readonly AuditDiff[] }>) {
   return (
     <div className="overflow-hidden rounded-control border border-border text-xs">
       {diff.map((item) => (
-        <div className="border-border-soft border-b last:border-b-0" key={item.field}>
+        <div className="border-border border-b last:border-b-0" key={item.field}>
           {item.before !== null ? (
-            <div className="flex gap-2 border-border-soft border-b px-[13px] py-2.5 [background:color-mix(in_srgb,var(--red)_7%,transparent)] last:border-b-0">
+            <div className="flex gap-2 border-border border-b px-[13px] py-2.5 [background:color-mix(in_srgb,var(--red)_7%,transparent)] last:border-b-0">
               <span className="shrink-0 text-red-text">-</span>
               <span className="min-w-0 whitespace-pre-wrap break-words text-fg-muted">
                 {item.field}: {formatDiffValue(item.before)}
@@ -59,7 +59,7 @@ function DiffRows({ diff }: Readonly<{ diff: readonly AuditDiff[] }>) {
 function UserAgentRow({ value }: Readonly<{ value: string }>) {
   const recorded = value !== "Not recorded";
   return (
-    <div className="min-w-0 border-border-soft border-t pt-2.5">
+    <div className="min-w-0 border-border border-t pt-2.5">
       <div className="flex items-center justify-between gap-3">
         <span className="text-fg-muted">user_agent</span>
         {recorded ? <CopyButton label="Copy user agent" size="sm" text={value} /> : null}

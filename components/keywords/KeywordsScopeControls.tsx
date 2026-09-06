@@ -1,5 +1,6 @@
 "use client";
 
+import { useMarketContext } from "@/components/markets/MarketContextProvider";
 import { MenuSelect, type MenuSelectOption, Pill, SegmentedControl } from "@/components/ui";
 import {
   type ActiveLens,
@@ -140,7 +141,7 @@ export function KeywordsDeviceScope({
           label: (
             <>
               <Icon aria-hidden size={13} weight="regular" />
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="hidden sm:inline lg:hidden xl:inline">{tab.label}</span>
             </>
           ),
           value: tab.value,
@@ -160,19 +161,23 @@ export function KeywordsScopeControls({
   viewId,
   query,
 }: KeywordsScopeControlsProps) {
+  const { market } = useMarketContext();
+
   return (
-    <div className="flex min-w-0 items-center gap-2">
-      <div className="hidden min-w-0 lg:block">
-        <KeywordsScopeLocationSelect
-          basePath={basePath}
-          lens={lens}
-          locationOptions={locationOptions}
-          onQueryNavigation={onQueryNavigation}
-          triggerClassName="max-w-[260px]"
-          viewId={viewId}
-          query={query}
-        />
-      </div>
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      {!market ? (
+        <div className="hidden min-w-0 max-w-full lg:block lg:max-w-[200px] xl:max-w-[260px]">
+          <KeywordsScopeLocationSelect
+            basePath={basePath}
+            lens={lens}
+            locationOptions={locationOptions}
+            onQueryNavigation={onQueryNavigation}
+            triggerClassName="max-w-full"
+            viewId={viewId}
+            query={query}
+          />
+        </div>
+      ) : null}
       <KeywordsDeviceScope
         basePath={basePath}
         lens={lens}
@@ -192,10 +197,11 @@ export function KeywordsScopeLocationChip({
   viewId,
   query,
 }: KeywordsScopeControlsProps) {
+  const { market } = useMarketContext();
   const go = useScopeNavigation({ basePath, lens, onQueryNavigation, query, viewId });
   const label = locationLabel(lens, locationOptions);
 
-  if (!label) {
+  if (market || !label) {
     return null;
   }
 

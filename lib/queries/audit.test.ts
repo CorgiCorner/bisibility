@@ -126,6 +126,32 @@ describe("getAuditLogView", () => {
     expect(result.entries[0]?.timestamp).toBe("2026-06-19T14:42:08.987Z");
   });
 
+  it("renders skipped occurrences with their schedule and planned date", async () => {
+    mocks.prisma.auditLog.findMany.mockResolvedValue([
+      {
+        ...auditRow(),
+        action: "rank_check_run.skip",
+        after: {
+          plannedFor: "2026-09-05T06:00:00.000Z",
+          publicId: "rcr_abcdefghijklmnopqrstuvwx",
+          schedule: "Daily 06:00",
+          status: "cancelled",
+        },
+        targetId: "rcr_abcdefghijklmnopqrstuvwx",
+        targetType: "rank_check_run",
+      },
+    ]);
+
+    const result = await getAuditLogView(project.publicId);
+    if (!result.authorized) throw new Error("expected authorized audit view");
+
+    expect(result.entries[0]).toMatchObject({
+      actor: { name: "Auditor User" },
+      eventName: "Skipped the Daily 06:00 occurrence planned for Sep 5",
+      resource: { id: "rcr_abcdefghijklmnopqrstuvwx" },
+    });
+  });
+
   it("logs repeated authorized audit-log views once per debounce window", async () => {
     mocks.prisma.auditLog.findFirst
       .mockResolvedValueOnce(null)

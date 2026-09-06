@@ -97,7 +97,7 @@ export function KeywordDetailCheckSplitButton({
             option={{ label: option.label, secondary: option.price, value: option.value }}
           />
         ))}
-        <p className="m-0 border-border-soft border-t px-3 pb-2 pt-2 text-[12px] leading-[1.45] text-fg-muted">
+        <p className="m-0 border-border border-t px-3 pb-2 pt-2 text-[12px] leading-[1.45] text-fg-muted">
           One-time check - tracking stays at {trackingDepthLabel}.
         </p>
       </Menu>

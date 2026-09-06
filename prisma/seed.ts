@@ -160,7 +160,7 @@ type SeedMarket = Awaited<ReturnType<typeof seedDemoMarketLocations>>[number];
 
 async function upsertKeyword(projectId: string, item: SeedKeyword, market: SeedMarket) {
   const publicId = seededPublicId("kw", `seed:${item.publicId}`);
-  const data = {
+  const create = {
     device: Device.desktop,
     location: market.displayName,
     locationId: market.id,
@@ -169,8 +169,8 @@ async function upsertKeyword(projectId: string, item: SeedKeyword, market: SeedM
   };
   const keyword = await prisma.keyword.upsert({
     where: { publicId },
-    update: data,
-    create: { ...data, projectId, publicId },
+    update: { targetUrl: item.targetUrl ?? null },
+    create: { ...create, projectId, publicId },
   });
   const schedule = {
     cronExpression: null,

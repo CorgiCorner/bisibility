@@ -1,3 +1,4 @@
+import type { DateFormat } from "@/lib/dates/format";
 import { formatDateLabel, formatPacificTimestampValue } from "@/lib/search-insights/dates";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
@@ -121,9 +122,18 @@ function nonNegativeInteger(value: number) {
   return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
 }
 
-export function freshnessPresentation(lastProbeAt: string | null, now = new Date()) {
+export function etaLabel(milliseconds: number) {
+  const minutes = Math.ceil(Math.max(0, milliseconds) / 60_000);
+  return minutes < 60 ? `${minutes} min` : `${Math.ceil(minutes / 60)} hr`;
+}
+
+export function freshnessPresentation(
+  lastProbeAt: string | null,
+  now = new Date(),
+  format: DateFormat = "month_first",
+) {
   if (!lastProbeAt) return { label: FRESHNESS_UNKNOWN, tooltip: FRESHNESS_UNKNOWN_NOTE };
-  const timestamp = formatPacificTimestampValue(new Date(lastProbeAt));
+  const timestamp = formatPacificTimestampValue(new Date(lastProbeAt), format);
   return {
     label: `${FRESHNESS_CHECKED_PREFIX} ${relativeActivity(lastProbeAt, now)}`,
     tooltip: `Last checked ${timestamp} Pacific. ${FRESHNESS_ADJUSTMENT_TOOLTIP}`,
@@ -134,6 +144,7 @@ export function freshnessPresentation(lastProbeAt: string | null, now = new Date
 export function importObservabilityProgress(
   facts: ImportObservabilityFacts | null | undefined,
   now = new Date(),
+  format: DateFormat = "month_first",
 ): ImportObservabilityProgress | null {
   if (!facts) return null;
   const targetDays = nonNegativeInteger(facts.targetDays);
@@ -143,11 +154,19 @@ export function importObservabilityProgress(
     targetMonths,
     nonNegativeInteger(facts.deepHistoryMonths.completed),
   );
+  const qualifyingCounter =
+    facts.readyThrough.d1.current && !facts.readyThrough.d7.current
+      ? facts.consecutiveDays >= 7
+        ? "First look ready · 7-day view once its days finalize"
+        : `First look ready · 7-day view in ~${etaLabel(
+            Math.max(1, 7 - facts.consecutiveDays) * facts.stall.expectedDayMs,
+          )}`
+      : `${qualifyingDays} of ${targetDays} finalized days`;
   return {
     deepHistory: `${completedMonths} of ${targetMonths} months`,
-    freshness: freshnessPresentation(facts.lastProbeAt, now),
+    freshness: freshnessPresentation(facts.lastProbeAt, now, format),
     percent: targetDays === 0 ? 0 : Math.round((qualifyingDays / targetDays) * 100),
-    qualifyingCounter: `${qualifyingDays} of ${targetDays} finalized days`,
+    qualifyingCounter,
   };
 }
 
@@ -163,6 +182,7 @@ export type ImportStartupPresentation = {
 export function importStartupPresentation(
   progress: ImportProgress,
   now = new Date(),
+  format: DateFormat = "month_first",
 ): ImportStartupPresentation {
   if (progress.state === "waiting_for_first_data") {
     return {
@@ -208,7 +228,8 @@ export function importStartupPresentation(
             progress.firstDataDate > progress.earliestTargetDate
               ? progress.firstDataDate
               : progress.earliestTargetDate,
-          )} to ${formatDateLabel(progress.newestFinalizedDate)}`
+            format,
+          )} to ${formatDateLabel(progress.newestFinalizedDate, format)}`
         : `Importing your Google history · ${progress.consecutiveDays} of ~${progress.daysTotal} days`,
     showHeartbeat: true,
     showProgress: true,
@@ -216,8 +237,12 @@ export function importStartupPresentation(
   };
 }
 
-export function importRunningLine(progress: ImportProgress, now = new Date()) {
-  const presentation = importStartupPresentation(progress, now);
+export function importRunningLine(
+  progress: ImportProgress,
+  now = new Date(),
+  format: DateFormat = "month_first",
+) {
+  const presentation = importStartupPresentation(progress, now, format);
   return [presentation.fact, presentation.activity].filter(Boolean).join(" · ");
 }
 

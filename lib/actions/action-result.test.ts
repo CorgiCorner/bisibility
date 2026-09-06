@@ -1,4 +1,5 @@
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { KeywordIdentityImmutableError } from "@/lib/keywords/identity";
 import { describe, expect, it } from "vitest";
 import {
   actionFailureResult,
@@ -12,6 +13,7 @@ import {
   MigrationTokenAlreadyConsumedError,
   MigrationTokenNotActiveError,
 } from "./migration-errors";
+import { TagAlreadyExistsError, TagNotFoundError } from "./tag-errors";
 
 describe("handledActionResult", () => {
   it("serializes project read-only failures with the REST boundary semantics", async () => {
@@ -64,6 +66,40 @@ describe("handledActionResult", () => {
       }),
     ).rejects.toThrow("Database unavailable.");
     expect(mapActionFailure(new Error("boom"))).toBeNull();
+  });
+
+  it("maps expected tag conflicts so server actions do not throw a digest", async () => {
+    const conflict = await handledActionResult(async () => {
+      throw new TagAlreadyExistsError();
+    });
+    expect(conflict).toEqual({
+      error: { code: "conflict", message: "Tag already exists.", status: 409 },
+      ok: false,
+    });
+
+    const missing = await handledActionResult(async () => {
+      throw new TagNotFoundError();
+    });
+    expect(missing).toEqual({
+      error: { code: "not_found", message: "Tag not found.", status: 404 },
+      ok: false,
+    });
+  });
+
+  it("maps keyword identity changes to a handled conflict", async () => {
+    const conflict = await handledActionResult(async () => {
+      throw new KeywordIdentityImmutableError("device", "desktop", "mobile");
+    });
+
+    expect(conflict).toEqual({
+      error: {
+        code: "conflict",
+        message:
+          "A different term, market, or device is a different keyword. Add or restore it as its own row and archive the old keyword.",
+        status: 409,
+      },
+      ok: false,
+    });
   });
 });
 

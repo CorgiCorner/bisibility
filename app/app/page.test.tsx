@@ -3,9 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   cookies: vi.fn(),
+  getExperimentalModules: vi.fn(),
   listWorkspaces: vi.fn(),
 }));
 
+vi.mock("@/lib/queries/experimental-modules", () => ({
+  getExperimentalModules: mocks.getExperimentalModules,
+}));
 vi.mock("@/lib/queries/workspaces", () => ({
   listWorkspaces: mocks.listWorkspaces,
 }));
@@ -24,6 +28,7 @@ describe("app entry page", () => {
       throw new Error(`NEXT_REDIRECT:${href}`);
     });
     mocks.cookies.mockResolvedValue(cookieStore({}));
+    mocks.getExperimentalModules.mockResolvedValue([]);
   });
 
   it("sends an account with only incomplete projects to onboarding", async () => {
@@ -62,6 +67,36 @@ describe("app entry page", () => {
     await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_complete/rank-tracker");
 
     expect(redirect).toHaveBeenCalledWith("/app/prj_complete/rank-tracker");
+  });
+
+  it("falls back to the first available section when the saved module is disabled", async () => {
+    mocks.listWorkspaces.mockResolvedValue([
+      {
+        onboardingCompletedAt: new Date("2026-08-01T07:30:00.000Z"),
+        publicId: "prj_complete",
+      },
+    ]);
+    mocks.cookies.mockResolvedValue(cookieStore({ pref_landing: "timeline" }));
+
+    await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_complete/dashboard");
+
+    expect(mocks.getExperimentalModules).toHaveBeenCalledWith("prj_complete");
+    expect(redirect).toHaveBeenCalledWith("/app/prj_complete/dashboard");
+  });
+
+  it("honors the saved module landing when that module is enabled", async () => {
+    mocks.listWorkspaces.mockResolvedValue([
+      {
+        onboardingCompletedAt: new Date("2026-08-01T07:30:00.000Z"),
+        publicId: "prj_complete",
+      },
+    ]);
+    mocks.cookies.mockResolvedValue(cookieStore({ pref_landing: "timeline" }));
+    mocks.getExperimentalModules.mockResolvedValue(["timeline"]);
+
+    await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_complete/timeline");
+
+    expect(redirect).toHaveBeenCalledWith("/app/prj_complete/timeline");
   });
 
   it("migrates the legacy overview landing cookie to dashboard", async () => {

@@ -9,7 +9,11 @@ import { getTemporalSnapshot, type TemporalSnapshotState } from "@/lib/ops/tempo
 import { providerRateLimitPolicy } from "@/lib/providers/rate-limit";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { rankCheckSchedulerMode } from "@/lib/rank-check/scheduler-mode";
-import { resolveSchedulerDriver } from "@/lib/scheduler/driver";
+import {
+  type DiagnosticSchedulerDriver,
+  type ResolvedSchedulerDriver,
+  resolveSchedulerDriver,
+} from "@/lib/scheduler/driver";
 import {
   DEFAULT_SERP_DEPTH,
   DEFAULT_SERP_DEVICE,
@@ -89,6 +93,22 @@ function runtimeHealthFailed(status: RuntimeHealthStatus) {
   return status === "degraded" || status === "down";
 }
 
+// The worker owns the engine when the app declares "worker"; the worker itself
+// uses "temporal" because it is the process allowed to dial the engine.
+//
+// App driver   Worker driver  Compatible
+// worker       temporal       yes
+// same         same           yes
+// different    different      no
+// legacy-auto  legacy-auto    yes (unchanged)
+// legacy-auto  any different  no (unchanged)
+function schedulerDriversCompatible(
+  appDriver: DiagnosticSchedulerDriver,
+  workerDriver: ResolvedSchedulerDriver,
+) {
+  return appDriver === workerDriver || (appDriver === "worker" && workerDriver === "temporal");
+}
+
 function workerSchemaHealth(comparison: MigrationComparison): "drift" | "ok" | "unknown" {
   if (comparison === "ok") return "ok";
   return comparison === "unknown" ? "unknown" : "drift";
@@ -157,7 +177,7 @@ export async function getHealth(ctx: Pick<ApiContext, "headers">, detailed = fal
       ? "invalid"
       : workerLiveness.status === "ok" &&
           workerLiveness.schedulerDriver !== "unknown" &&
-          workerLiveness.schedulerDriver !== driver
+          !schedulerDriversCompatible(driver, workerLiveness.schedulerDriver)
         ? "driver-mismatch"
         : workerLiveness.status === "ok" &&
             isExactRevision(app.appRevision) &&

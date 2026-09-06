@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { deferQueuedRankCheckBatch, finalizeQueuedBatchState } from "./queued-lifecycle";
+import {
+  deferQueuedRankCheckBatch,
+  finalizeQueuedBatchState,
+  queuedBatchProgress,
+} from "./queued-lifecycle";
 
 const mocks = vi.hoisted(() => {
   const state = {
@@ -17,6 +21,7 @@ const mocks = vi.hoisted(() => {
       ? value === where
       : (!where.in || where.in.includes(value)) && !where.notIn?.includes(value);
   const prisma = {
+    $queryRaw: vi.fn(async () => []),
     $transaction: vi.fn(async (callback: (tx: unknown) => unknown) => callback(prisma)),
     auditLog: { create: vi.fn(async () => ({ id: "audit_1" })) },
     providerCostEntry: {
@@ -100,25 +105,53 @@ const mocks = vi.hoisted(() => {
         },
       ),
     },
+    rankCheckRun: { update: vi.fn(async () => ({})) },
+    rankCheckRunItem: {
+      findUnique: vi.fn(async (): Promise<{ runId: string } | null> => null),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+    },
   };
   return {
     claimLease: vi.fn(),
     prisma,
+    publishOperationChanged: vi.fn(() => Promise.resolve()),
     state,
     transitionLease: vi.fn(),
   };
 });
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/notifications/realtime", () => ({
+  publishOperationChanged: mocks.publishOperationChanged,
+}));
 vi.mock("./queued-persistence-lease", () => ({
   assertQueuedPersistenceLease: vi.fn(),
   claimQueuedPersistenceLease: mocks.claimLease,
   transitionQueuedPersistenceLease: mocks.transitionLease,
 }));
 
+describe("queuedBatchProgress", () => {
+  it("reports deferred tasks in processed and total counts", async () => {
+    mocks.prisma.queuedRankCheckTask.groupBy.mockResolvedValueOnce([
+      { _count: { _all: 3 }, state: "completed" },
+      { _count: { _all: 1 }, state: "failed" },
+      { _count: { _all: 2 }, state: "deferred" },
+      { _count: { _all: 4 }, state: "submitted" },
+    ]);
+
+    const progress = await queuedBatchProgress("batch_1");
+
+    expect(progress).toMatchObject({ completed: 3, deferred: 2, failed: 1, pending: 4 });
+    expect(progress.completed + progress.failed + progress.deferred).toBe(6);
+    expect(progress.completed + progress.failed + progress.deferred + progress.pending).toBe(10);
+  });
+});
+
 describe("queued ledger compare-and-set transitions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$transaction.mockImplementation(async (callback) => callback(mocks.prisma));
+    mocks.publishOperationChanged.mockResolvedValue(undefined);
     mocks.state.batch = "submitted";
     mocks.state.evidenceEntries = 0;
     mocks.state.expiresAt = null;
@@ -186,6 +219,34 @@ describe("queued ledger compare-and-set transitions", () => {
     expect(mocks.state.batch).toBe("deferred");
     expect(mocks.state.terminalAt).toEqual(firstTerminalAt);
     expect(mocks.prisma.auditLog.create).toHaveBeenCalledOnce();
+  });
+
+  it("transitions a linked queued task defer and increments its run", async () => {
+    let transactionResolved = false;
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue({ runId: "run_1" });
+    mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.$transaction.mockImplementation(async (callback) => {
+      const result = await callback(mocks.prisma);
+      transactionResolved = true;
+      return result;
+    });
+    mocks.publishOperationChanged.mockImplementation(async () => {
+      expect(transactionResolved).toBe(true);
+      throw new Error("Redis unavailable");
+    });
+
+    await expect(deferQueuedRankCheckBatch("batch_1", "deadline")).resolves.toBeDefined();
+
+    expect(mocks.prisma.rankCheckRunItem.updateMany).toHaveBeenCalledWith({
+      data: { finishedAt: expect.any(Date), status: "deferred" },
+      where: { rankCheckId: "rank_1", status: { in: ["queued", "running"] } },
+    });
+    expect(mocks.prisma.rankCheckRun.update).toHaveBeenCalledWith({
+      data: { deferredCount: { increment: 1 } },
+      where: { id: "run_1" },
+    });
+    expect(mocks.publishOperationChanged).toHaveBeenCalledOnce();
+    expect(mocks.publishOperationChanged).toHaveBeenCalledWith({ projectId: "project_1" });
   });
 
   it("records a known paid deadline charge once in canonical failed spend", async () => {

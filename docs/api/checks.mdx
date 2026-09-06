@@ -48,6 +48,7 @@ Response status is `201` when the check completes during the request.
   "previous_position": 7,
   "provider": "dataforseo",
   "ranking_url": "https://example.com/rank-tracker",
+  "run_id": "rcr_a00000000000000000000000",
   "cost_cents": 0.06,
   "error": null,
   "status": "completed"
@@ -71,42 +72,35 @@ found no matching organic result within the requested depth. A malformed
 provider payload fails the provider attempt and can use the configured fallback
 chain; it is not stored as a completed no-match.
 
-## Run asynchronously
+## Queued response and correlation
 
-Add `?async=true` to hand the check to the Temporal worker and poll the returned
-rank-check resource:
+When inline execution is unavailable, the request queues a rank-check run. The
+response status is `202`; `id` is the public run ID and `status` is `queued`:
 
 ```http
-POST /api/v1/keywords/{id}/checks?async=true
+POST /api/v1/keywords/{id}/checks
 Authorization: Bearer <api_key>
 Content-Type: application/json
 Idempotency-Key: run-check-001
 ```
 
-Response status is `202`.
-
 ```json
 {
-  "id": "cm5xam3k20001js0cg1qw9rle",
-  "keyword_id": "kw_a00000000000000000000000",
-  "attempts": null,
-  "checked_at": "2026-06-28T10:00:00.000Z",
-  "position": null,
-  "previous_position": null,
-  "provider": "primary",
-  "ranking_url": null,
-  "cost_cents": null,
-  "error": null,
-  "status": "running"
+  "id": "rcr_a00000000000000000000000",
+  "status": "queued"
 }
 ```
 
-Poll the resource until `status` is `completed` or `failed`:
+Poll the keyword's completed rank-check history and select the row whose
+`run_id` equals the queued response's `id`. That row contains the final
+`position` and its rank-check `id`:
 
 ```http
-GET /api/v1/rank-checks/{check_id}
+GET /api/v1/keywords/{id}/rank-checks?limit=10&status=completed
 Authorization: Bearer <api_key>
 ```
+
+`run_id` is `null` only for legacy rank-check rows that predate runs.
 
 ## Failure modes
 
@@ -117,7 +111,7 @@ Authorization: Bearer <api_key>
 | `400` | No connected SERP provider is available. |
 | `429` | Rank checks are paused because the monthly project budget is exhausted. |
 | `502` | The connected provider request failed. |
-| `503` | The async scheduler is unavailable. |
+| `503` | The queue worker is unavailable. |
 
 Budget failures are returned as `budget_exhausted` problem responses. Provider
 failures are returned as `provider_unavailable` problem responses.

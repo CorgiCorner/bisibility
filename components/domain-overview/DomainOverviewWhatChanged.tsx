@@ -1,4 +1,5 @@
 import { Card, InfoTooltip } from "@/components/ui";
+import type { DateFormat } from "@/lib/dates/format";
 import type { DomainRankMetrics } from "@/lib/providers/types";
 import {
   ArrowDownIcon as ArrowDown,
@@ -12,9 +13,14 @@ import { sourceDateLabel } from "./domain-overview-metrics";
 const number = new Intl.NumberFormat("en-US");
 
 export function DomainOverviewWhatChanged({
+  dateFormat,
   metrics,
   sourceSnapshotAt,
-}: Readonly<{ metrics: DomainRankMetrics; sourceSnapshotAt: string | null }>) {
+}: Readonly<{
+  dateFormat: DateFormat;
+  metrics: DomainRankMetrics;
+  sourceSnapshotAt: string | null;
+}>) {
   const max = Math.max(1, metrics.isNew, metrics.isLost, metrics.isUp, metrics.isDown);
   const rows = [
     { color: "green" as const, icon: PlusCircle, label: "New", sign: "+", value: metrics.isNew },
@@ -31,7 +37,7 @@ export function DomainOverviewWhatChanged({
           <InfoTooltip text="Compared with DataForSEO's previous index check. The API does not provide that check's date. These are estimated indexed keywords, not your tracked rankings." />
         </div>
         <span className="shrink-0 whitespace-nowrap font-sans tabular-nums text-[10px] uppercase tracking-[0.06em] text-fg-muted">
-          index updated {sourceDateLabel(sourceSnapshotAt)}
+          index updated {sourceDateLabel(sourceSnapshotAt, dateFormat)}
         </span>
       </div>
       <ul aria-label="Keyword movements" className={`${styles.grid} m-0 list-none p-0`}>
@@ -52,7 +58,7 @@ export function DomainOverviewWhatChanged({
               </div>
               <div
                 aria-hidden
-                className="mt-2 hidden h-1 overflow-hidden rounded-full border border-border-soft bg-bg-sunken xl:block"
+                className="mt-2 hidden h-1 overflow-hidden rounded-full border border-border bg-bg-sunken xl:block"
               >
                 <span
                   className={`block h-full rounded-full ${row.color === "green" ? "bg-green" : "bg-red"}`}

@@ -1,30 +1,28 @@
 import { KeywordHeaderCard } from "@/components/keywords/KeywordHeaderCard";
-import { KeywordMetricCards } from "@/components/keywords/KeywordMetricCards";
 import { KeywordPendingDetail } from "@/components/keywords/KeywordPendingDetail";
 import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
 import { PositionHistoryCard } from "@/components/keywords/PositionHistoryCard";
 import { RankingUrlHistory } from "@/components/keywords/RankingUrlHistory";
 import { RetrievedResultsCard } from "@/components/keywords/RetrievedResultsCard";
+import { loadRankTrackerCostContext } from "@/components/keywords/rank-tracker-cost-context";
 import { PageContent } from "@/components/shell/PageContent";
+import { BackLink } from "@/components/ui";
 import { createKeywordAlertRule } from "@/lib/actions/alerts";
-import { addKeywords, addKeywordsMatrix, updateKeyword } from "@/lib/actions/keyword";
+import { addKeywordsMatrix, updateKeyword } from "@/lib/actions/keyword";
 import { bulkDeleteKeywords } from "@/lib/actions/keyword-bulk";
-import { updateKeywordSchedule } from "@/lib/actions/keyword-schedule";
 import { runCheckNow } from "@/lib/actions/rankCheck";
 import { loadRetrievedResults } from "@/lib/actions/retrieved-results";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { providerLabel } from "@/lib/checks/attempts";
 import { deriveKeywordDetailState } from "@/lib/keyword-detail/state-model";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
-import { getProjectCostContext } from "@/lib/queries/cost-calculator";
 import { getKeywordMarketTargets } from "@/lib/queries/keyword-market-targets";
 import { getKeywordDetail, getKeywordTagSuggestions } from "@/lib/queries/keywords";
 import { getProjectMarkets } from "@/lib/queries/project-markets";
 import { loadRetrievedResultsForChecks, storedResultsIndex } from "@/lib/queries/retrieved-results";
 import { getRankCheckRawRetentionDays } from "@/lib/rank-check/raw-retention";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
-import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/ssr";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 type KeywordDetailPageProps = {
@@ -39,7 +37,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
     getKeywordDetail(publicId, id),
     getKeywordTagSuggestions(publicId),
     requireReadableProject(publicId),
-    getProjectCostContext(publicId),
+    loadRankTrackerCostContext(publicId),
     getProjectMarkets(publicId),
   ]);
 
@@ -63,16 +61,11 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
   const canCreateKeyword = canProjectAction(role, "create", "keyword");
   const canUpdateKeyword = canProjectAction(role, "update", "keyword");
   const detailState = deriveKeywordDetailState(keyword, keyword.traffic);
-
-  const backLink = (
-    <Link
-      className="inline-flex w-fit items-center gap-2 font-sans tabular-nums text-[12.5px] text-fg-muted hover:text-accent-text"
-      href={appPath(projectRef, "rank-tracker")}
-    >
-      <ArrowLeft size={14} weight="regular" />
-      All keywords
-    </Link>
+  const checkProviderLabel = providerLabel(
+    costContext?.providerId ?? keyword.dataProvider ?? "unknown",
   );
+
+  const backLink = <BackLink href={appPath(projectRef, "rank-tracker")}>All keywords</BackLink>;
 
   // A keyword without a positive rank has no chart or ranking URL history to plot. The status
   // detail distinguishes an unattempted check from running, failed, and unranked attempts.
@@ -81,7 +74,6 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
       <PageContent className="grid gap-4">
         {backLink}
         <KeywordPendingDetail
-          addKeywordsAction={addKeywords}
           addKeywordsMatrixAction={addKeywordsMatrix}
           bulkDeleteAction={bulkDeleteKeywords}
           canCreateKeyword={canCreateKeyword}
@@ -89,17 +81,16 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
           costContext={costContext}
           createKeywordAlertAction={createKeywordAlertRule}
           keyword={keyword}
-          keywordContext={detailState.keywordContext}
           providerConnected={keyword.providerConnected}
           projectId={publicId}
           projectMarkets={projectMarkets}
           projectRef={publicId}
+          providerLabel={checkProviderLabel}
           rankState={detailState.rankState}
           runCheckNowAction={runCheckNow}
+          searchConsoleConnected={keyword.traffic.hasSearchConsoleConnection}
           updateKeywordAction={updateKeyword}
-          updateKeywordScheduleAction={updateKeywordSchedule}
           targets={marketTargets}
-          whatChanged={detailState.whatChanged}
         />
         <KeywordTrafficCard
           projectRef={publicId}
@@ -114,7 +105,6 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
     <PageContent className="grid gap-4">
       {backLink}
       <KeywordHeaderCard
-        addKeywordsAction={addKeywords}
         addKeywordsMatrixAction={addKeywordsMatrix}
         bulkDeleteAction={bulkDeleteKeywords}
         canCreateKeyword={canCreateKeyword}
@@ -124,17 +114,12 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
         keyword={keyword}
         projectId={publicId}
         projectMarkets={projectMarkets}
+        providerLabel={checkProviderLabel}
         runCheckNowAction={runCheckNow}
+        searchConsoleConnected={keyword.traffic.hasSearchConsoleConnection}
         tagSuggestions={tagSuggestions}
         targets={marketTargets}
         updateKeywordAction={updateKeyword}
-        updateKeywordScheduleAction={updateKeywordSchedule}
-      />
-      <KeywordMetricCards
-        chartState={detailState.chartState}
-        keyword={keyword}
-        keywordContext={detailState.keywordContext}
-        whatChanged={detailState.whatChanged}
       />
       <PositionHistoryCard
         chartState={detailState.chartState}

@@ -7,11 +7,15 @@ const mocks = vi.hoisted(() => ({
   budgetSummary: vi.fn(),
   cookies: vi.fn(),
   deployment: { isCloud: false },
+  experimentalModules: vi.fn(),
   lastExport: vi.fn(),
   listWorkspaces: vi.fn(),
   loadSetupAcknowledgedAt: vi.fn(),
   loadSetupContext: vi.fn(),
+  paletteProps: vi.fn(),
+  projectMarkets: vi.fn(),
   querySession: vi.fn(),
+  sidebarProps: vi.fn(),
   supportWidget: vi.fn(() => <aside data-testid="support-extension" />),
   workerLiveness: vi.fn(),
 }));
@@ -67,7 +71,14 @@ vi.mock("@/components/shell/CloudBetaBanner", () => ({
     ) : null,
 }));
 vi.mock("@/components/shell/CommandPalette", () => ({
-  CommandPaletteProvider: ({ children }: { children: ReactNode }) => children,
+  CommandPaletteProvider: (props: {
+    children: ReactNode;
+    enabledExperimentalModules?: readonly unknown[];
+    markets?: readonly unknown[];
+  }) => {
+    mocks.paletteProps(props);
+    return props.children;
+  },
 }));
 vi.mock("@/components/shell/cloud-beta", () => ({
   CLOUD_BETA_DISMISSAL_COOKIE: "cloud-beta",
@@ -78,23 +89,23 @@ vi.mock("@/components/shell/ProjectWriteModeProvider", () => ({
   ProjectWriteModeProvider: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock("@/components/shell/Sidebar", () => ({
-  Sidebar: ({
-    setupDoneCount,
-    setupTotalCount,
-    showGettingStarted,
-    showHostedLinks,
-  }: {
+  Sidebar: (props: {
+    enabledExperimentalModules?: readonly unknown[];
     setupDoneCount: number;
     setupTotalCount: number;
     showGettingStarted: boolean;
     showHostedLinks: boolean;
-  }) => (
-    <nav
-      data-getting-started={showGettingStarted}
-      data-hosted-links={showHostedLinks}
-      data-sidebar-setup={`${setupDoneCount}/${setupTotalCount}`}
-    />
-  ),
+  }) => {
+    const { setupDoneCount, setupTotalCount, showGettingStarted, showHostedLinks } = props;
+    mocks.sidebarProps(props);
+    return (
+      <nav
+        data-getting-started={showGettingStarted}
+        data-hosted-links={showHostedLinks}
+        data-sidebar-setup={`${setupDoneCount}/${setupTotalCount}`}
+      />
+    );
+  },
 }));
 vi.mock("@/lib/deployment/deployment", () => ({
   get isCloud() {
@@ -120,7 +131,13 @@ vi.mock("@/lib/queries/cloud-beta-export", () => ({
   getLatestCloudPackageExport: mocks.lastExport,
 }));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
+vi.mock("@/lib/queries/experimental-modules", () => ({
+  getExperimentalModules: mocks.experimentalModules,
+}));
 vi.mock("@/lib/queries/setup-context", () => ({ loadSetupContext: mocks.loadSetupContext }));
+vi.mock("@/lib/queries/project-markets", () => ({
+  listProjectMarketOptions: mocks.projectMarkets,
+}));
 vi.mock("@/lib/getting-started/setup-acknowledgement", () => ({
   isSetupAcknowledgedAt: (value: Date | null | undefined) => value != null,
   loadSetupAcknowledgedAt: mocks.loadSetupAcknowledgedAt,
@@ -165,6 +182,10 @@ describe("workspace layout", () => {
       schedule: { mode: "manual" },
     });
     mocks.loadSetupAcknowledgedAt.mockResolvedValue(null);
+    mocks.projectMarkets.mockResolvedValue([
+      { label: "Malaga / Spanish", ref: "pmkt_malaga00000000000000000" },
+    ]);
+    mocks.experimentalModules.mockResolvedValue([]);
     mocks.workerLiveness.mockResolvedValue({
       alertDeliveryTaskQueue: null,
       namespace: null,
@@ -189,6 +210,25 @@ describe("workspace layout", () => {
     expect(markup).not.toContain("data-project-domain");
     expect(mocks.querySession).toHaveBeenCalledOnce();
     expect(mocks.listWorkspaces).toHaveBeenCalledOnce();
+  });
+
+  it("supplies the same enabled experimental modules to the rail and palette", async () => {
+    mocks.experimentalModules.mockResolvedValue(["timeline", "competitors"]);
+
+    renderToStaticMarkup(
+      await WorkspaceShell({
+        activeProjectId: "project_1",
+        children: <div>Workspace content</div>,
+        projectRef: "prj_f00000000000000000000000",
+      }),
+    );
+
+    expect(mocks.sidebarProps).toHaveBeenCalledWith(
+      expect.objectContaining({ enabledExperimentalModules: ["timeline", "competitors"] }),
+    );
+    expect(mocks.paletteProps).toHaveBeenCalledWith(
+      expect.objectContaining({ enabledExperimentalModules: ["timeline", "competitors"] }),
+    );
   });
 
   it("shows getting started while setup is incomplete", async () => {
@@ -423,7 +463,24 @@ describe("workspace layout", () => {
 
     expect(markup).toContain("data-shell-root");
     expect(markup).toContain("Import workspace");
-    expect(markup).toContain("Provider spend temporarily unavailable");
+    expect(markup).toContain("Spend unavailable");
     expect(markup).not.toContain("$0.00");
+  });
+
+  it("hands the project's markets to the command palette", async () => {
+    const projectRef = "prj_f00000000000000000000000";
+    const result = await WorkspaceShell({
+      activeProjectId: "project_1",
+      children: <div>Workspace content</div>,
+      projectRef,
+    });
+    renderToStaticMarkup(result);
+
+    expect(mocks.projectMarkets).toHaveBeenCalledWith(projectRef);
+    expect(mocks.paletteProps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        markets: [{ label: "Malaga / Spanish", ref: "pmkt_malaga00000000000000000" }],
+      }),
+    );
   });
 });

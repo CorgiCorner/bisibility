@@ -143,6 +143,7 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
         (market) => filters.marketIds.length === 0 || filters.marketIds.includes(market.locationId),
       ),
       {
+      dateFormat: dateTime.dateFormat,
       defaultFrequency: projectDefaults?.frequency,
       now,
       range: filters.range,

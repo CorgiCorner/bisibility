@@ -16,6 +16,7 @@ const readyFacts = {
   lastProbeAt: null,
   qualifyingDays: 10,
   readyThrough: {
+    d1: { current: true, previous: true },
     d7: { current: true, previous: false },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },
@@ -40,9 +41,14 @@ const context = {
     },
     status: "connected" as const,
   },
-  counts: { pages: 212, queries: 1284 },
+  counts: { queries: 1284 },
   importState: null,
-  organicSessions: { importState: null, property: null, status: "not_connected" as const },
+  organicSessions: {
+    importState: null,
+    keyEventsConfigured: null,
+    property: null,
+    status: "not_connected" as const,
+  },
   projectDomain: "example.com",
   selectedProperty: {
     displayName: "example.com",
@@ -51,7 +57,12 @@ const context = {
     value: "sc-domain:example.com",
   },
   view: "active" as const,
-  period: { days: 28, id: "28" as const, label: "28 finalized days", sub: "vs previous 28" },
+  period: {
+    comparison: "previous_period" as const,
+    days: 28,
+    id: "28" as const,
+    label: "28 finalized days",
+  },
   window: {
     current: { end: "2026-07-08", start: "2026-06-11" },
     previous: { end: "2026-06-10", start: "2026-05-14" },
@@ -107,11 +118,21 @@ describe("SearchInsightsWorkspace", () => {
     );
     expect(labels).toEqual([
       "Search Console property",
-      "Comparison window",
+      "Comparison window: Jun 11 - Jul 8",
       "Export CSV (1,284 rows)",
       "Refresh stored insights",
       "Sync now",
     ]);
+  });
+
+  it("passes the finalized window to the period chip", () => {
+    renderWorkspace();
+
+    expect(
+      screen.getByRole("button", {
+        name: "Comparison window: Jun 11 - Jul 8",
+      }),
+    ).toHaveTextContent("Jun 11 - Jul 8");
   });
 
   it("does not render the context card until a property is selected", () => {
@@ -119,12 +140,12 @@ describe("SearchInsightsWorkspace", () => {
       context: {
         ...context,
         connection: { property: null, status: "connected_no_property" },
-        counts: { pages: 0, queries: 0 },
+        counts: { queries: 0 },
       },
     });
 
     expect(container.querySelector("section")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Comparison window" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Comparison window:/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Export CSV/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Sync now" })).toBeNull();
   });

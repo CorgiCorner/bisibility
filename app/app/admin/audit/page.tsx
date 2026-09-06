@@ -1,5 +1,6 @@
 import { AdminAuditTable } from "@/components/admin/AdminAuditTable";
 import { requireInstanceAdmin } from "@/lib/auth/instance-admin";
+import { getResolvedDateFormat } from "@/lib/dates/request";
 import { getInstanceAdminAuditPage } from "@/lib/queries/instance-admin-audit";
 
 type InstanceAdminAuditPageProps = {
@@ -15,10 +16,13 @@ export default async function InstanceAdminAuditPage({
 }: Readonly<InstanceAdminAuditPageProps>) {
   await requireInstanceAdmin();
   const params = await searchParams;
-  const audit = await getInstanceAdminAuditPage({
-    cursor: first(params?.cursor),
-    filter: first(params?.filter),
-  });
+  const [audit, { resolved: dateFormat }] = await Promise.all([
+    getInstanceAdminAuditPage({
+      cursor: first(params?.cursor),
+      filter: first(params?.filter),
+    }),
+    getResolvedDateFormat(),
+  ]);
 
-  return <AdminAuditTable {...audit} />;
+  return <AdminAuditTable {...audit} dateFormat={dateFormat} />;
 }

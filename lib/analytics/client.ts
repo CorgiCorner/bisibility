@@ -2,6 +2,7 @@
 // closed to arbitrary strings.
 export interface AnalyticsEventRegistry {
   search_insights_chip_opened: true;
+  search_insights_comparison_changed: true;
   search_insights_csv_exported: true;
   search_insights_drawer_pivot: true;
   search_insights_module_viewed: true;

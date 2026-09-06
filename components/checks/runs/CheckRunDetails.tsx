@@ -170,7 +170,7 @@ export function CheckRunDetails({ columns, keywordHref, now, run }: Readonly<Det
         </p>
       ) : null}
       {run.attempts.length > 0 ? (
-        <div className="mt-2 divide-y divide-border-soft">
+        <div className="mt-2 divide-y divide-border">
           {run.attempts.map((attempt, index) => (
             <AttemptRow
               attempt={attempt}

@@ -16,7 +16,7 @@ export function BackupCodes({ codes }: Readonly<{ codes: readonly string[] }>) {
   }
 
   return (
-    <div className="grid gap-2 rounded-card border border-border-soft bg-bg-sunken p-3">
+    <div className="grid gap-2 rounded-card border border-border bg-bg-sunken p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-[12.5px] font-semibold text-fg">
           <Key size={15} weight="regular" />
@@ -39,7 +39,7 @@ export function BackupCodes({ codes }: Readonly<{ codes: readonly string[] }>) {
       <div className="grid gap-1.5 sm:grid-cols-2">
         {codes.map((code) => (
           <code
-            className="rounded-control border border-border-soft bg-bg-elev px-2 py-1 font-sans tabular-nums text-[12px] text-fg"
+            className="rounded-control border border-border bg-bg-elev px-2 py-1 font-sans tabular-nums text-[12px] text-fg"
             key={code}
           >
             {code}

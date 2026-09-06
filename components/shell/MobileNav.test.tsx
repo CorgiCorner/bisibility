@@ -13,13 +13,19 @@ vi.mock("@/components/shell/SidebarFooter", () => ({
 }));
 vi.mock("@/components/shell/SidebarNav", () => ({
   SidebarNav: ({
+    enabledExperimentalModules,
     setupDoneCount,
     setupTotalCount,
   }: {
+    enabledExperimentalModules?: readonly string[];
     setupDoneCount?: number;
     setupTotalCount?: number;
   }) => (
-    <span data-setup-progress={`${setupDoneCount}/${setupTotalCount}`} data-testid="sidebar-nav" />
+    <span
+      data-enabled-modules={enabledExperimentalModules?.join(",") ?? ""}
+      data-setup-progress={`${setupDoneCount}/${setupTotalCount}`}
+      data-testid="sidebar-nav"
+    />
   ),
 }));
 vi.mock("@/components/shell/WorkspaceSwitcher", () => ({
@@ -96,6 +102,24 @@ describe("MobileNav", () => {
     );
 
     expect(screen.getByTestId("sidebar-nav")).toHaveAttribute("data-setup-progress", "3/4");
+  });
+
+  it("threads enabled experimental modules into drawer navigation", () => {
+    render(
+      <MobileNav
+        activeProjectId="project-1"
+        canCreateWorkspace={false}
+        defaultOpen
+        enabledExperimentalModules={["competitors"]}
+        projectRef="prj_1"
+        workspaces={[]}
+      />,
+    );
+
+    expect(screen.getByTestId("sidebar-nav")).toHaveAttribute(
+      "data-enabled-modules",
+      "competitors",
+    );
   });
 
   it("orders the compact switcher before navigation, with the branded footer last", () => {

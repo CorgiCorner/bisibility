@@ -137,6 +137,19 @@ describe("form primitives", () => {
     expect(toggle).not.toBeChecked();
   });
 
+  it("keeps the disabled thumb visible against the track", () => {
+    render(<Switch disabled label="Locked" />);
+
+    const toggle = screen.getByRole("switch", { name: "Locked" });
+    const visual = toggle.parentElement;
+    const track = visual?.children[1];
+    const thumb = visual?.lastElementChild;
+
+    expect(track?.className).toContain("peer-disabled:bg-bg-inset");
+    expect(thumb?.className).toContain("peer-disabled:bg-fg-muted/55");
+    expect(thumb?.className).not.toContain("peer-disabled:bg-bg-sunken");
+  });
+
   it("applies motion-token duration with reduced-motion reset only on the thumb", () => {
     render(<Switch label="Mo" name="mo" />);
     const v = screen.getByRole("switch", { name: "Mo" }).parentElement;
@@ -181,7 +194,7 @@ describe("form primitives", () => {
     );
     expect(daily.nextElementSibling).toHaveClass(
       "h-[26px]",
-      "bg-nav-active",
+      "bg-bg-sunken",
       "border-border-control",
       "text-fg",
       "font-normal",

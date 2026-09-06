@@ -33,7 +33,7 @@ describe("getIngestHooks", () => {
   });
 
   it("formats hook dates in the project timezone", async () => {
-    await expect(getIngestHooks("prj_1", { dateFormat: "long" })).resolves.toEqual([
+    await expect(getIngestHooks("prj_1", { dateFormat: "month_first" })).resolves.toEqual([
       expect.objectContaining({
         createdLabel: "created May 2, 2026",
         lastUsedLabel: "last used never",

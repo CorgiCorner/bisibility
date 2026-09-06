@@ -91,7 +91,7 @@ function RankingHistoryPanel() {
       </div>
       {rankingHistoryKeys.map((key) => (
         <div
-          className="flex h-[44px] items-center gap-4 border-b border-border-soft px-4"
+          className="flex h-[44px] items-center gap-4 border-b border-border px-4"
           data-keyword-detail-skeleton-ranking-history-row
           key={key}
         >

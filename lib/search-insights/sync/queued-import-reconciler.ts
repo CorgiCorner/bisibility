@@ -2,7 +2,10 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { startSearchInsightsBackfillWorkflow } from "@/lib/temporal/search-insights-client";
+import {
+  startSearchInsightsBackfillWorkflow,
+  startSearchInsightsSyncWorkflow,
+} from "@/lib/temporal/search-insights-client";
 import { resolveSearchInsightsConnection } from "./credentials";
 import { resolveOrganicSessionsConnection } from "./sessions-credentials";
 
@@ -26,6 +29,10 @@ function boundedBatchSize(value: number | undefined) {
   return Math.min(MAX_BATCH_SIZE, Math.max(1, value));
 }
 
+/**
+ * Whether the backfill still has history to walk. False once the cursor has passed the earliest
+ * target, which is what a completed import looks like.
+ */
 function unfinished(row: { cursorDate: Date | null; earliestTargetDate: Date | null }) {
   return !(row.cursorDate && row.earliestTargetDate && row.cursorDate < row.earliestTargetDate);
 }
@@ -76,25 +83,33 @@ export async function reconcileQueuedSearchInsightsImports(options: { batchSize?
       result.scanned += 1;
       cursorId = row.id;
       const source = row.source as QueuedImportSource;
-      if (!unfinished(row)) {
-        result.skipped += 1;
-        continue;
-      }
       try {
         if (!(await matchesActiveConnection({ ...row, source }))) {
           result.skipped += 1;
           continue;
         }
         result.attempted += 1;
-        const started = await startSearchInsightsBackfillWorkflow({
-          projectId: row.projectId,
-          property: row.property,
-          source,
-        });
+        // A queued row with history left is a backfill. A queued row with none is a sync the user
+        // asked for on an import that already finished, which is what the Sync now button now
+        // records instead of starting a workflow it cannot reach. Skipping the second case, as
+        // this loop used to, would turn that button into a control that quietly does nothing.
+        const started = unfinished(row)
+          ? await startSearchInsightsBackfillWorkflow({
+              projectId: row.projectId,
+              property: row.property,
+              source,
+            })
+          : await startSearchInsightsSyncWorkflow({ projectId: row.projectId });
         if (!(await matchesActiveConnection({ ...row, source }))) {
           result.skipped += 1;
           continue;
         }
+        console.info("[search-insights] queued backfill started", {
+          importId: row.id,
+          projectId: row.projectId,
+          source,
+          workflowId: started.workflowId,
+        });
         const propertyGuard = (
           source === "gsc"
             ? { propertyKey: row.property, status: "active" }

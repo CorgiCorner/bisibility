@@ -4,8 +4,54 @@ import { createClient, type RedisClientOptions, type RedisClientType } from "red
 
 export type BisibilityRedisClient = RedisClientType;
 
+const DEFAULT_CONNECT_TIMEOUT_MS = 1_000;
+const DEFAULT_CONNECT_MAX_RETRIES = 3;
+
+type RedisEnvironment = Partial<
+  Record<"REDIS_CONNECT_MAX_RETRIES" | "REDIS_CONNECT_TIMEOUT_MS", string | undefined>
+>;
+
 let client: BisibilityRedisClient | null = null;
 let connectPromise: Promise<BisibilityRedisClient> | null = null;
+
+function integerSetting(
+  name: keyof RedisEnvironment,
+  value: string | undefined,
+  fallback: number,
+  range: { min: number; max: number },
+) {
+  const trimmed = value?.trim();
+  if (!trimmed) return fallback;
+  if (!/^\d+$/.test(trimmed)) throw new Error(`${name} must be an integer`);
+
+  const parsed = Number(trimmed);
+  if (!Number.isSafeInteger(parsed) || parsed < range.min || parsed > range.max) {
+    throw new Error(`${name} must be between ${range.min} and ${range.max}`);
+  }
+  return parsed;
+}
+
+function redisConnectionSettings(
+  env: RedisEnvironment = {
+    REDIS_CONNECT_MAX_RETRIES: process.env.REDIS_CONNECT_MAX_RETRIES,
+    REDIS_CONNECT_TIMEOUT_MS: process.env.REDIS_CONNECT_TIMEOUT_MS,
+  },
+) {
+  return {
+    connectTimeout: integerSetting(
+      "REDIS_CONNECT_TIMEOUT_MS",
+      env.REDIS_CONNECT_TIMEOUT_MS,
+      DEFAULT_CONNECT_TIMEOUT_MS,
+      { min: 1, max: 60_000 },
+    ),
+    maxRetries: integerSetting(
+      "REDIS_CONNECT_MAX_RETRIES",
+      env.REDIS_CONNECT_MAX_RETRIES,
+      DEFAULT_CONNECT_MAX_RETRIES,
+      { min: 0, max: 20 },
+    ),
+  };
+}
 
 function redisUrl() {
   return process.env.REDIS_URL?.trim() || "";
@@ -16,15 +62,18 @@ export function redisConfigured() {
 }
 
 function redisSocketOptions(url: string): RedisClientOptions["socket"] {
-  const reconnectStrategy = (retries: number) => Math.min(retries * 50, 1000);
+  const { connectTimeout, maxRetries } = redisConnectionSettings();
+  const reconnectStrategy = (retries: number) =>
+    retries >= maxRetries ? false : Math.min(retries * 50, 1000);
   const parsed = new URL(url);
   if (parsed.protocol !== "rediss:") {
-    return { reconnectStrategy };
+    return { connectTimeout, reconnectStrategy };
   }
 
   const ca = process.env.REDIS_TLS_CA_B64?.trim();
   return {
     ca: ca ? Buffer.from(ca, "base64").toString("utf8") : undefined,
+    connectTimeout,
     reconnectStrategy,
     servername: parsed.hostname,
     tls: true,
@@ -60,23 +109,26 @@ export async function getRedisClient() {
     return connectPromise;
   }
 
-  client = createRedisClient();
-  if (!client) {
+  const nextClient = createRedisClient();
+  if (!nextClient) {
     return null;
   }
+  client = nextClient;
 
-  connectPromise = client
+  let pendingConnect: Promise<BisibilityRedisClient>;
+  pendingConnect = nextClient
     .connect()
-    .then(() => client as BisibilityRedisClient)
+    .then(() => nextClient)
     .catch((error) => {
-      client = null;
+      if (client === nextClient) client = null;
       throw error;
     })
     .finally(() => {
-      connectPromise = null;
+      if (connectPromise === pendingConnect) connectPromise = null;
     });
+  connectPromise = pendingConnect;
 
-  return connectPromise;
+  return pendingConnect;
 }
 
 export async function closeRedisClient(): Promise<void> {

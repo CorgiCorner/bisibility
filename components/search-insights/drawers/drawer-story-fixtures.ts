@@ -16,16 +16,22 @@ function perDay(seed: number) {
 }
 
 export const storyQueryDetail: SearchInsightsQueryDetail = {
+  keyEventsConfigured: true,
+  pageMetricsReadable: true,
   pages: {
     rows: [
       {
         clicks: 214,
+        engagementRate: 0.58,
+        keyEvents: 7,
         path: "/guides/rank-tracking",
         position: 4.2,
         url: "https://example.com/guides/rank-tracking",
       },
       {
         clicks: 96,
+        engagementRate: 0.41,
+        keyEvents: 2,
         path: "/blog/rank-tracking-2026",
         position: 8.6,
         url: "https://example.com/blog/rank-tracking-2026",
@@ -40,6 +46,8 @@ export const storyQueryDetail: SearchInsightsQueryDetail = {
 };
 
 export const storyPageDetail: SearchInsightsPageDetail = {
+  engagementRate: null,
+  keyEvents: null,
   path: "/guides/rank-tracking",
   perDay: perDay(9),
   queries: {

@@ -277,8 +277,10 @@ export async function ensureReconcilerSchedule(
 }
 
 export {
+  deleteRetiredTrafficIntentSweepSchedule,
   ensureTrafficSyncSchedule,
   isTrafficSyncEnabled,
+  RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID,
   TRAFFIC_SYNC_SCHEDULE_ID,
   TRAFFIC_SYNC_WORKFLOW_TYPE,
 } from "./traffic-bootstrap";

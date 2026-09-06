@@ -50,6 +50,7 @@ export const storyImportFacts = {
   lastProbeAt: isoFromFrozenNow({ hours: -15, minutes: -40 }),
   qualifyingDays: 28,
   readyThrough: {
+    d1: { current: true, previous: true },
     d7: { current: true, previous: true },
     d28: { current: true, previous: true },
     d90: { current: true, previous: false },
@@ -90,9 +91,14 @@ export const storyContext: SearchInsightsContext = {
     },
     status: "connected",
   },
-  counts: { pages: 212, queries: 1284 },
+  counts: { queries: 1284 },
   importState: { ...storyImportState, state: "completed" },
-  organicSessions: { importState: null, property: null, status: "not_connected" },
+  organicSessions: {
+    importState: null,
+    keyEventsConfigured: null,
+    property: null,
+    status: "not_connected",
+  },
   projectDomain: "example.com",
   selectedProperty: {
     displayName: "example.com",
@@ -101,7 +107,12 @@ export const storyContext: SearchInsightsContext = {
     value: "sc-domain:example.com",
   },
   view: "active",
-  period: { days: 28, id: "28", label: "28 finalized days", sub: "vs previous 28" },
+  period: {
+    comparison: "previous_period",
+    days: 28,
+    id: "28",
+    label: "28 finalized days",
+  },
   window: {
     current: { end: "2026-07-08", start: "2026-06-11" },
     previous: { end: "2026-06-10", start: "2026-05-14" },
@@ -127,7 +138,7 @@ export const storySelectPropertyAction = (async (input: unknown) => ({
 })) as SelectSearchInsightsPropertyAction;
 
 export const storySyncAction = (async () => ({
-  status: "started" as const,
+  status: "queued" as const,
 })) as SyncSearchInsightsNowAction;
 
 export const storyOauth = { error: null, provider: null, setup: null } as const;
@@ -180,6 +191,8 @@ export const storyQueryRows: SearchInsightsQueryRow[] = storyQueryTexts.map((que
 
 export const storyPageRows: SearchInsightsPageRow[] = storyPagePaths.map((path, index) => ({
   ...storyMetrics(index),
+  engagementRate: null,
+  keyEvents: null,
   path,
   sessions: null,
   url: `https://example.com${path}`,
@@ -192,7 +205,10 @@ export const storyCoverage: SearchInsightsCoverage = {
   impressionsShare: 41,
 };
 
+export const storySignals = { bandCount: 34, overlapCount: 12 };
+
 export const storyFirstView: SearchInsightsFirstView = {
+  clicksToSessionsKpi: null,
   coverage: storyCoverage,
   deploymentMode: "self-host",
   incidents: [],
@@ -200,12 +216,16 @@ export const storyFirstView: SearchInsightsFirstView = {
     current: { clicks: 12_480, ctr: 0.0257, impressions: 486_310, position: 18.4 },
     previous: { clicks: 11_534, ctr: 0.0244, impressions: 471_690, position: 20 },
   }),
-  organicSessions: { importState: null, property: null, status: "not_connected" },
+  organicSessions: {
+    importState: null,
+    keyEventsConfigured: null,
+    property: null,
+    status: "not_connected",
+  },
   pages: { rows: storyPageRows, total: 212 },
   queries: { rows: storyQueryRows, total: 1284 },
   sessionsKpi: null,
   sessionsReadable: false,
-  signals: { bandCount: 34, overlapCount: 12 },
   trackedTexts: ["open source rank tracker", "google rank tracker open source"],
 };
 

@@ -74,7 +74,7 @@ describe("AddKeywordDrawer", () => {
       "bg-transparent",
       "text-[12.5px]",
     );
-    expect(selected.nextElementSibling).toHaveClass("bg-nav-active", "border-border-control");
+    expect(selected.nextElementSibling).toHaveClass("bg-bg-sunken", "border-border-control");
     expect(screen.queryByRole("radio", { name: "CSV" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: "API" }));
     expect(screen.getByRole("radio", { name: "API" })).toBeChecked();

@@ -46,7 +46,7 @@ function DeliveryStatus({ alert }: Readonly<{ alert: TriggeredAlertView }>) {
   const meta = deliveryStateMeta[alert.deliveryState];
 
   return (
-    <div className="mt-2 rounded-control border border-border-soft bg-bg-sunken px-2.5 py-2 font-sans tabular-nums text-[10.5px]">
+    <div className="mt-2 rounded-control border border-border bg-bg-sunken px-2.5 py-2 font-sans tabular-nums text-[10.5px]">
       <div className={`font-semibold ${meta.className}`}>Delivery: {meta.label}</div>
       {alert.deliveryAttempts.map((attempt, index) => (
         <div className="mt-1 text-fg-muted" key={`${attempt.when}:${attempt.channel}:${index}`}>
@@ -115,7 +115,7 @@ export function AlertFeedRow({
   const Icon = severityIcons[alert.severity];
 
   return (
-    <article className="flex gap-3.5 border-border-soft border-b px-4.5 py-[15px]">
+    <article className="flex gap-3.5 border-border border-b px-4.5 py-[15px]">
       <span
         className="mt-0.5 grid h-8.5 w-[34px] shrink-0 place-items-center rounded-control"
         style={{ backgroundColor: meta.background, color: meta.color }}

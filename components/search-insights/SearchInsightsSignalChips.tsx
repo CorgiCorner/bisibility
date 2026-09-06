@@ -9,28 +9,37 @@ import {
   TargetIcon as Target,
 } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react/lib";
-import type { ReactNode } from "react";
+import { type ReactNode, use } from "react";
+import { useSearchInsightsDrawerHandlers } from "./drawers/useDrawerHandlers";
 import { SIGNAL_COPY } from "./search-insights-copy";
 
 export type SearchInsightsSignalChipsProps = {
   /** Slot for the optional second-source card, which is not a peer of the two chips. */
   ga4Card?: ReactNode;
+  namedQueryCount: number;
   onOpenBand?: () => void;
   onOpenOverlap?: () => void;
-  signals: SearchInsightsSignals;
+  signals?: SearchInsightsSignals;
+  state?: "error" | "pending" | "ready";
 };
+
+export type SearchInsightsSignalResult =
+  | { state: "error" }
+  | { state: "ready"; signals: SearchInsightsSignals };
 
 function Chip({
   count,
   icon: Glyph,
   onOpen,
+  state,
   sub,
   title,
   which,
 }: Readonly<{
-  count: number;
+  count?: number;
   icon: Icon;
   onOpen?: () => void;
+  state: "error" | "pending" | "ready";
   sub: string;
   title: string;
   which: "band" | "overlap";
@@ -42,6 +51,8 @@ function Chip({
         track("search_insights_chip_opened", { which });
         onOpen?.();
       }}
+      aria-busy={state === "pending"}
+      disabled={state !== "ready"}
       type="button"
     >
       <span className="grid h-9.5 w-9.5 shrink-0 place-items-center rounded-control bg-bg-sunken text-fg-muted">
@@ -49,10 +60,22 @@ function Chip({
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex items-baseline gap-2">
-          <span className="font-sans tabular-nums text-ui-section">
-            {count.toLocaleString("en-US")}
+          <span
+            className="inline-flex w-[7ch] shrink-0 font-sans tabular-nums text-ui-section"
+            data-signal-number
+          >
+            {state === "pending" ? (
+              <span
+                aria-hidden
+                className="h-3.5 w-full animate-pulse rounded-control bg-bg-sunken"
+              />
+            ) : null}
+            {state === "ready" ? count?.toLocaleString("en-US") : null}
           </span>
-          <span className="text-ui-body font-semibold">{title}</span>
+          <span className="text-ui-body font-semibold">
+            {state === "error" ? `${SIGNAL_COPY.failed}: ` : null}
+            {title}
+          </span>
         </span>
         <span className="text-ui-caption text-fg-muted">{sub}</span>
       </span>
@@ -63,30 +86,68 @@ function Chip({
 
 export function SearchInsightsSignalChips({
   ga4Card,
+  namedQueryCount,
   onOpenBand,
   onOpenOverlap,
+  state = "ready",
   signals,
 }: Readonly<SearchInsightsSignalChipsProps>) {
+  const drawers = useSearchInsightsDrawerHandlers();
+  const bandCount = signals?.bandCount;
+  const overlapCount = signals?.overlapCount;
   return (
     <div className="grid grid-cols-1 items-stretch gap-2.5 md:grid-cols-2">
       {/* The band is named, not nicknamed: the number cannot mean two things, the jargon can. */}
       <Chip
-        count={signals.bandCount}
+        count={bandCount}
         icon={Target}
-        onOpen={onOpenBand}
+        onOpen={
+          onOpenBand ??
+          (bandCount === undefined
+            ? undefined
+            : () => drawers.openList("band", bandCount, namedQueryCount))
+        }
+        state={state}
         sub={SIGNAL_COPY.bandSub}
         title={`queries at ${positionBandLabel()}`}
         which="band"
       />
       <Chip
-        count={signals.overlapCount}
+        count={overlapCount}
         icon={Intersect}
-        onOpen={onOpenOverlap}
+        onOpen={
+          onOpenOverlap ??
+          (overlapCount === undefined
+            ? undefined
+            : () => drawers.openList("overlap", overlapCount, namedQueryCount))
+        }
+        state={state}
         sub={SIGNAL_COPY.overlapSub}
         title={SIGNAL_COPY.overlapTitle}
         which="overlap"
       />
       {ga4Card ? <div className="md:col-span-2">{ga4Card}</div> : null}
     </div>
+  );
+}
+
+export function SearchInsightsSignalChipsResolver({
+  ga4Card,
+  namedQueryCount,
+  result,
+}: Readonly<{
+  ga4Card?: ReactNode;
+  namedQueryCount: number;
+  result: Promise<SearchInsightsSignalResult>;
+}>) {
+  const settled = use(result);
+  return settled.state === "ready" ? (
+    <SearchInsightsSignalChips
+      ga4Card={ga4Card}
+      namedQueryCount={namedQueryCount}
+      signals={settled.signals}
+    />
+  ) : (
+    <SearchInsightsSignalChips ga4Card={ga4Card} namedQueryCount={namedQueryCount} state="error" />
   );
 }

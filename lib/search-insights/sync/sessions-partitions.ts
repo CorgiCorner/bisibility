@@ -22,7 +22,11 @@ const WRITE_TIMEOUT_MS = 120_000;
 export const ORGANIC_SESSIONS_SETTLING_LAG_DAYS = 1;
 
 type DailyTotal = { date: string; sessions: number };
-type DailyPage = DailyTotal & { path: string };
+type DailyPage = DailyTotal & {
+  engagedSessions: number | null;
+  keyEvents: number | null;
+  path: string;
+};
 type PageRequestProvenance = Pick<
   DailyOrganicSessionsPagesResult,
   "capHit" | "pages" | "requestedRows"
@@ -34,6 +38,11 @@ function rangeDays(start: string, end: string) {
   return days;
 }
 
+function mergeNullableMetric(existing: number | null, contribution: number | null) {
+  if (existing === null || contribution === null) return null;
+  return existing + contribution;
+}
+
 function pagesByDate(rows: DailyOrganicSessionsPagesResult["rows"]) {
   const grouped = new Map<string, Map<string, DailyPage>>();
   for (const row of rows) {
@@ -42,6 +51,10 @@ function pagesByDate(rows: DailyOrganicSessionsPagesResult["rows"]) {
     const existing = values.get(path);
     values.set(path, {
       date: row.date,
+      engagedSessions: existing
+        ? mergeNullableMetric(existing.engagedSessions, row.engagedSessions)
+        : row.engagedSessions,
+      keyEvents: existing ? mergeNullableMetric(existing.keyEvents, row.keyEvents) : row.keyEvents,
       path,
       sessions: (existing?.sessions ?? 0) + row.sessions,
     });
@@ -70,6 +83,12 @@ async function writeDay(
 ) {
   const scope = { date: input.date, projectId: input.projectId, property: input.property };
   const date = dateFromKey(input.date);
+  if (input.pages.length === 0) {
+    const existingPages = await tx.organicSessionsPageDaily.count({
+      where: { date, projectId: input.projectId, property: input.property },
+    });
+    if (existingPages > 0) return;
+  }
   await tx.organicSessionsDaily.deleteMany({
     where: { date, projectId: input.projectId, property: input.property },
   });
@@ -97,6 +116,8 @@ async function writeDay(
         projectId: input.projectId,
         property: input.property,
         sessions: row.sessions,
+        engagedSessions: row.engagedSessions,
+        keyEvents: row.keyEvents,
       })),
       skipDuplicates: true,
     });
@@ -175,19 +196,21 @@ export async function syncOrganicSessionsRange(input: {
     }
 
     for (const date of rangeDays(cursor, coveredThrough)) {
+      const pages = pageMap.get(date) ?? [];
       await prisma.$transaction(
-        (tx) =>
-          writeDay(tx, {
+        async (tx) => {
+          await writeDay(tx, {
             date,
             durationMs,
             fetchedAt,
             pageCapHit: pageRequest.capHit && date === lastReturnedDate,
             pageRequest,
-            pages: pageMap.get(date) ?? [],
+            pages,
             projectId: input.projectId,
             property: input.property,
             sessions: totalMap.get(date) ?? null,
-          }),
+          });
+        },
         { timeout: WRITE_TIMEOUT_MS },
       );
     }

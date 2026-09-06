@@ -50,6 +50,7 @@ describe("analytics client", () => {
   it("pins all existing and new typed event names", () => {
     const events = [
       "search_insights_chip_opened",
+      "search_insights_comparison_changed",
       "search_insights_csv_exported",
       "search_insights_drawer_pivot",
       "search_insights_module_viewed",

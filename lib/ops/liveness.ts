@@ -12,14 +12,29 @@ import {
 import { getRedisClient } from "@/lib/redis/redis";
 import { type ResolvedSchedulerDriver, schedulerDriver } from "@/lib/scheduler/driver";
 import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
+import { cache } from "react";
 import type { WorkerTemporalIdentity } from "./worker-temporal-identity";
 
 export const WORKER_LAST_SEEN_KEY = "ops:worker:lastSeen";
 export const WORKER_LIVENESS_REFRESH_MS = 5 * 60 * 1000;
 // Keep the stale threshold derived so it scales with the worker refresh interval.
 export const WORKER_STALE_AFTER_MS = 3 * WORKER_LIVENESS_REFRESH_MS;
+const DEFAULT_WORKER_LIVENESS_TIMEOUT_MS = 200;
 
-export type WorkerHeartbeatState = "absent" | "fresh" | "future" | "invalid" | "stale";
+const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn) => fn;
+
+/**
+ * "absent" means Redis answered and held no heartbeat. "unreadable" means we could not ask, or
+ * the read lost its deadline. A failed read is not evidence that the worker is gone, and the two
+ * used to collapse into "absent", which reported an outage the app had not observed.
+ */
+export type WorkerHeartbeatState =
+  | "absent"
+  | "fresh"
+  | "future"
+  | "invalid"
+  | "stale"
+  | "unreadable";
 export type WorkerLivenessStatus = "ok" | "stale" | "unknown";
 
 export type WorkerLiveness = WorkerTemporalIdentity & {
@@ -62,14 +77,14 @@ function workerRelease() {
   return process.env.APP_VERSION?.trim() || process.env.SENTRY_RELEASE?.trim() || "unknown";
 }
 
-function unknownLiveness(): WorkerLiveness {
+function unknownLiveness(heartbeatState: WorkerHeartbeatState = "unreadable"): WorkerLiveness {
   return {
     alertDeliveryTaskQueue: null,
     appliedMigration: null,
     bundledMigration: null,
     environment: "unknown",
     heartbeatAgeMs: null,
-    heartbeatState: "absent",
+    heartbeatState,
     lastSeenAt: null,
     namespace: null,
     release: "unknown",
@@ -81,6 +96,51 @@ function unknownLiveness(): WorkerLiveness {
     taskQueue: null,
   };
 }
+
+function workerLivenessTimeoutMs() {
+  const name = "WORKER_LIVENESS_TIMEOUT_MS";
+  const trimmed = process.env.WORKER_LIVENESS_TIMEOUT_MS?.trim();
+  if (!trimmed) return DEFAULT_WORKER_LIVENESS_TIMEOUT_MS;
+  if (!/^\d+$/.test(trimmed)) throw new Error(`${name} must be an integer`);
+
+  const parsed = Number(trimmed);
+  const range = { min: 1, max: 60_000 };
+  if (!Number.isSafeInteger(parsed) || parsed < range.min || parsed > range.max) {
+    throw new Error(`${name} must be between ${range.min} and ${range.max}`);
+  }
+  return parsed;
+}
+
+async function resolveBeforeDeadline<T>(
+  operation: Promise<T>,
+  timeoutMs: number,
+): Promise<T | undefined> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<undefined>((resolve) => {
+        timer = setTimeout(() => resolve(undefined), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+type LivenessRead = { kind: "record"; raw: string } | { kind: "absent" } | { kind: "unreadable" };
+
+async function readWorkerLivenessRecord(): Promise<LivenessRead> {
+  const redis = await getRedisClient();
+  // No client is a failure to ask, not an observed absence.
+  if (!redis) return { kind: "unreadable" };
+  const raw = await redis.get(WORKER_LAST_SEEN_KEY);
+  return raw ? { kind: "record", raw } : { kind: "absent" };
+}
+
+const getRequestWorkerLivenessRecord = perRequestCache((timeoutMs: number) =>
+  resolveBeforeDeadline(readWorkerLivenessRecord(), timeoutMs),
+);
 
 function migrationComparison(value: unknown): MigrationComparison {
   return value === "ok" || value === "worker-ahead" || value === "worker-behind"
@@ -195,12 +255,15 @@ export async function getWorkerLiveness(now = new Date()): Promise<WorkerLivenes
 
 /** Return the persisted timestamp for operator diagnostics without coupling it to Slack. */
 export async function getWorkerLivenessDetails(now = new Date()): Promise<WorkerLiveness> {
+  const timeoutMs = workerLivenessTimeoutMs();
   try {
-    const redis = await getRedisClient();
-    if (!redis) return unknownLiveness();
-    const raw = await redis.get(WORKER_LAST_SEEN_KEY);
-    if (!raw) return unknownLiveness();
-    const record = parseLivenessRecord(raw);
+    // A deadline that wins yields undefined: we did not learn anything, which is not the same
+    // as learning the worker is gone.
+    const read = (await getRequestWorkerLivenessRecord(timeoutMs)) ?? {
+      kind: "unreadable" as const,
+    };
+    if (read.kind !== "record") return unknownLiveness(read.kind);
+    const record = parseLivenessRecord(read.raw);
     if (!record) return { ...unknownLiveness(), heartbeatState: "invalid" };
     const lastSeen = Date.parse(record.lastSeenAt);
     const heartbeatAgeMs = now.getTime() - lastSeen;
@@ -228,6 +291,6 @@ export async function getWorkerLivenessDetails(now = new Date()): Promise<Worker
       taskQueue: record.taskQueue,
     };
   } catch {
-    return unknownLiveness();
+    return unknownLiveness("unreadable");
   }
 }

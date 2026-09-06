@@ -1,0 +1,398 @@
+---
+title: "Runs and schedules API"
+description: "Use the signed-in app API to inspect rank-check runs and manage schedules."
+---
+
+This page documents the app routes under `/api/rank-check-runs` and
+`/api/check-schedules`, plus `/api/operations`. These routes require a signed-in
+session and project access. They are separate from the versioned REST API
+described in [API overview](/api/overview).
+
+Unless noted otherwise, successful responses use this envelope:
+
+```json
+{ "data": {} }
+```
+
+List responses also include `meta.next_cursor`. Validation failures return a
+problem response with status `400`; authentication, project access, missing
+resources, and conflicting commands return `401`, `403`, `404`, and `409`
+respectively.
+
+## REST check correlation
+
+The versioned REST check request, `POST /api/v1/keywords/{id}/checks`, returns
+`202` with `{ "id": "rcr_...", "status": "queued" }` when it queues work. Its
+`id` is the run ID, not a rank-check ID. Poll
+`GET /api/v1/keywords/{id}/rank-checks?status=completed` and select the history
+row whose `run_id` equals that ID. The matching row includes the final position
+and rank-check ID. `run_id` is `null` only for legacy history rows that predate
+runs.
+
+## Operations snapshot
+
+`GET /api/operations?project=prj_...` returns active rank-check runs and active
+Search Console imports for the app header. A rank-check operation includes
+`provider`, a nullable SERP provider catalogue ID, and `providerLabel`, its
+nullable catalogue label. The label is present only when the run's recorded
+launch policy names a known provider; otherwise both fields are `null`.
+`nextCheckAt` is the earliest queued check for a queued or running run, or `null`
+while a target is in flight or no queued check has a start time.
+`firstNotBefore` exposes that time before the first target starts, otherwise `null`.
+`startedTargets` counts targets with execution evidence, excluding unstarted
+queued, skipped, and cancelled targets. `hasRunningTargets` reports whether a
+target is currently in flight. `scheduleTiming` explains the schedule's spread
+or start window, or is `null` for a run without a schedule.
+`launchedAt` records materialization; `startedAt` is `null` until the first target
+is claimed or started, and is not reset by subsequent checks. A run completed
+without materializing targets has equal `startedAt` and `finishedAt`.
+`etaSeconds` is a nullable server-side throughput estimate:
+it is available only after at least three completed targets and 30 seconds of
+elapsed execution. `snapshotAt` is the server time used for relative operation copy.
+
+```json
+{
+  "operations": [
+    {
+      "kind": "rank_check",
+      "id": "rcr_a00000000000000000000000",
+      "provider": "serpapi",
+      "providerLabel": "SerpApi",
+      "etaSeconds": 240,
+      "snapshotAt": "2026-09-03T10:00:30.000Z",
+      "status": "running"
+    }
+  ]
+}
+```
+
+## Selection payload
+
+`POST /api/rank-check-runs/preview` and `POST /api/rank-check-runs` both take a
+`spec`. It is one of these strict objects:
+
+```json
+{ "kind": "single", "keywordId": "kw_a00000000000000000000000", "v": 1 }
+```
+
+```json
+{
+  "kind": "selected",
+  "keywordIds": ["kw_a00000000000000000000000"],
+  "v": 1
+}
+```
+
+```json
+{ "kind": "filter", "query": { "...": "rank tracker query" }, "v": 1 }
+```
+
+```json
+{ "kind": "all", "v": 1 }
+```
+
+The `selected` form accepts 1 to 1,000 unique keyword public IDs. The `filter`
+form carries the full rank-tracker query state: `filters`, `grouped: false`,
+`lens`, `page`, `pageSize`, `savedViewId`, `search`, and `sort`.
+
+`depth`, when supplied, is one of `10`, `20`, `50`, or `100`. `providerId` is
+optional.
+
+## Runs
+
+### Preview a run
+
+```http
+POST /api/rank-check-runs/preview
+Content-Type: application/json
+```
+
+```json
+{
+  "projectId": "prj_a00000000000000000000000",
+  "spec": { "kind": "all", "v": 1 },
+  "depth": 100
+}
+```
+
+The response contains a short-lived `previewToken`, counts, exclusions, a cost
+estimate, and budget state. Send that token unchanged when launching the run.
+
+```json
+{
+  "data": {
+    "budget": {
+      "blocked": false,
+      "capCents": null,
+      "mode": "allocation",
+      "reason": null,
+      "remainingAfterCents": null,
+      "spentCents": null
+    },
+    "estimate": { "costCents": 120, "perTargetCents": 12, "unknownCostTargets": 0 },
+    "excluded": [],
+    "executable": 10,
+    "expiresAt": "2026-09-03T10:05:00.000Z",
+    "keywordCount": 10,
+    "matched": 10,
+    "previewToken": "signed-token",
+    "selectionHash": "hash",
+    "targetCount": 10
+  }
+}
+```
+
+`excluded[].reason` is one of `paused`, `manual`, `in_progress`, `no_provider`,
+or `other_project`. Budget `reason` is `budget_exhausted`, `duplicate`,
+`no_provider`, or `null`.
+
+### Launch a run
+
+```http
+POST /api/rank-check-runs
+Content-Type: application/json
+Idempotency-Key: run-20260903-001
+```
+
+```json
+{
+  "projectId": "prj_a00000000000000000000000",
+  "previewToken": "signed-token",
+  "spec": { "kind": "all", "v": 1 }
+}
+```
+
+`idempotencyKey` may be sent in the body instead of the header. It must contain
+8 to 128 characters. A normal success returns `data` containing the run object
+described below. When all selected keywords already have checks in progress,
+the successful response is:
+
+```json
+{
+  "data": {
+    "message": "All selected keywords already have rank checks in progress.",
+    "outcome": "nothing_to_run",
+    "reason": "already_in_progress"
+  }
+}
+```
+
+### List and retrieve runs
+
+```http
+GET /api/rank-check-runs?project=prj_a00000000000000000000000&segment=history
+GET /api/rank-check-runs/rcr_a00000000000000000000000?project=prj_a00000000000000000000000
+```
+
+List parameters are `project` (required), `segment` (`history` by default or
+`planned`), `status` (a comma-separated list), `limit` (1 to 200, default 50),
+and `cursor`. The allowed status values are `planned`, `blocked`, `queued`,
+`running`, `cancelling`, `completed`, and `cancelled`. The planned segment
+returns unlaunched planned and blocked runs. History returns launched runs,
+including ones later blocked during launch, and skipped scheduled occurrences.
+A skipped occurrence is retained as an audit trace but does not count as a
+launched run.
+
+Run lists use keyset pagination. History is ordered by its launch instant
+(`launchedAt`, or `finishedAt` for a skipped occurrence) then public ID
+descending; planned runs are ordered by `plannedFor` then public ID ascending.
+The opaque cursor is base64url JSON with version `3`, timestamp `t`, and
+`public_id`; pass it back unchanged as `cursor`.
+
+The list response is `{ "data": [run], "meta": { "next_cursor": string | null } }`.
+The detail response adds `selectionSpec` to the same run object.
+
+```json
+{
+  "data": {
+    "kind": "rank_check",
+    "id": "rcr_a00000000000000000000000",
+    "status": "completed",
+    "outcome": "succeeded",
+    "trigger": "scheduled",
+    "selectionKind": "scheduled_due",
+    "counts": {
+      "requested": 10,
+      "total": 10,
+      "skipped": 0,
+      "completed": 10,
+      "failed": 0,
+      "deferred": 0,
+      "cancelled": 0
+    },
+    "keywordCount": 10,
+    "targetCount": 10,
+    "estimatedCostCents": 120,
+    "costCents": 120,
+    "blockedReason": null,
+    "plannedFor": "2026-09-03T10:00:00.000Z",
+    "startedAt": "2026-09-03T10:00:02.000Z",
+    "finishedAt": "2026-09-03T10:00:30.000Z",
+    "parentRunId": null,
+    "checkSchedulePublicId": "sch_a00000000000000000000000",
+    "launchedAt": "2026-09-03T10:00:00.000Z",
+    "parentRelation": null,
+    "parentRunPublicId": null,
+    "requestedBy": {
+      "avatarUrl": "https://example.com/avatar.png",
+      "initials": "EU",
+      "name": "Example User"
+    }
+  }
+}
+```
+
+`outcome` is `succeeded`, `partial`, `failed`, `deferred`, or `null`. `trigger`
+is `manual`, `scheduled`, `api`, or `retry`. `selectionKind` is `single`,
+`selected`, `filter`, `all`, `scheduled_due`, `retry_failed`, `rerun`, or
+`legacy_schedule`.
+
+### List run items
+
+```http
+GET /api/rank-check-runs/rcr_a00000000000000000000000/items?project=prj_a00000000000000000000000
+```
+
+This list accepts `status`, `limit`, and `cursor` in addition to required
+`project`. Its allowed item statuses are `queued`, `running`, `completed`,
+`failed`, `deferred`, `cancelled`, `skipped`, and `blocked`. Items are keyset
+ordered by creation time and a private database tie-breaker. The cursor is opaque;
+pass it back unchanged.
+
+Each item includes an opaque stable `id`, `status`, `estimatedCostCents`, `actualCostCents`,
+`blockedReason`, `notBefore`, `startedAt`, `finishedAt`, `keyword` (`publicId`,
+`text`, `location`, `device`), and `rankCheck` when one exists. `rankCheck`
+contains `publicId`, `position`, `rankingUrl`, and `errorCode`.
+
+### Change a run
+
+All commands below take `{ "projectId": "prj_..." }` and return the updated
+run in `data`.
+
+| Request | Body additions | Behavior |
+| - | - | - |
+| `POST /api/rank-check-runs/{id}/cancel` | None | Requests cancellation for a queued or running run. |
+| `POST /api/rank-check-runs/{id}/run-now` | None | Starts a planned or blocked run now. |
+| `POST /api/rank-check-runs/{id}/skip` | None | Skips one planned occurrence and retains it in History. |
+| `POST /api/rank-check-runs/{id}/retry` | `relation`: `retry_failed` or `retry_deferred` | Creates a retry run for matching targets. |
+
+As with launch, a retry can return the `nothing_to_run` response instead of a
+run object.
+
+## Schedules
+
+### List, create, and retrieve schedules
+
+```http
+GET /api/check-schedules?project=prj_a00000000000000000000000
+POST /api/check-schedules
+GET /api/check-schedules/sch_a00000000000000000000000?project=prj_a00000000000000000000000
+```
+
+Create with a strict JSON object containing `projectId`, `name`, and
+`frequency`. `name` is 1 to 80 characters. The frequency is `paused`, `manual`,
+`daily`, `weekly`, `monthly`, or `custom_cron`. `custom_cron` requires
+`cronExpression`; accepted expressions run no more often than hourly.
+
+Optional fields are `cronExpression`, `jitterMinutes` (0 to 120, default 60),
+`timezone` (an IANA time zone or `null` for the project time zone),
+`providerPolicy`, `serpDepth`, and `timeOfDay` (`HH:mm` or `null`).
+
+```json
+{
+  "projectId": "prj_a00000000000000000000000",
+  "name": "Weekdays",
+  "frequency": "custom_cron",
+  "cronExpression": "0 6 * * 1-5",
+  "jitterMinutes": 15,
+  "timezone": "Europe/Warsaw",
+  "timeOfDay": null
+}
+```
+
+Creation returns `{ "data": { "publicId": "sch_..." } }`. A schedule
+resource contains `publicId`, `name`, `enabled`, `isDefault`, `keywordCount`,
+`frequency`, `cronExpression`, `jitterMinutes`, `timezone`, `timeOfDay`,
+`providerPolicy`, and `serpDepth`.
+
+### Update, delete, and set the default
+
+```http
+PATCH /api/check-schedules/sch_a00000000000000000000000
+DELETE /api/check-schedules/sch_a00000000000000000000000
+POST /api/check-schedules/sch_a00000000000000000000000/set-default
+Content-Type: application/json
+```
+
+`PATCH` accepts `projectId` plus any create field and `enabled`. `DELETE` and
+`set-default` require only `projectId`. Create, update, and set-default return
+`{ "data": { "publicId": "sch_..." } }`; delete returns
+`{ "data": { "deleted": true } }`.
+
+### Manage members
+
+```http
+POST /api/check-schedules/sch_a00000000000000000000000/keywords
+DELETE /api/check-schedules/sch_a00000000000000000000000/keywords
+Content-Type: application/json
+```
+
+Both requests take this strict body:
+
+```json
+{
+  "projectId": "prj_a00000000000000000000000",
+  "keywordIds": ["kw_a00000000000000000000000"]
+}
+```
+
+Provide 1 to 500 keyword public IDs. Each response is
+`{ "data": { "updated": number } }`. Adding a keyword moves it to this
+schedule; deleting it from this membership returns it to manual checking.
+
+## Operations snapshot
+
+```http
+GET /api/operations?project=prj_a00000000000000000000000
+```
+
+This endpoint is session-authenticated and returns an unwrapped snapshot:
+
+```json
+{
+  "operations": [
+    {
+      "kind": "rank_check",
+      "id": "rcr_a00000000000000000000000",
+      "status": "running",
+      "outcome": null,
+      "trigger": "scheduled",
+      "selectionKind": "scheduled_due",
+      "counts": {
+        "requested": 10,
+        "total": 10,
+        "skipped": 0,
+        "completed": 4,
+        "failed": 0,
+        "deferred": 0,
+        "cancelled": 0
+      },
+      "keywordCount": 10,
+      "targetCount": 10,
+      "estimatedCostCents": 120,
+      "costCents": 48,
+      "blockedReason": null,
+      "etaSeconds": 90,
+      "plannedFor": null,
+      "nextCheckAt": null,
+      "snapshotAt": "2026-09-03T10:00:30.000Z",
+      "startedAt": "2026-09-03T10:00:00.000Z",
+      "finishedAt": null,
+      "parentRunId": null
+    }
+  ]
+}
+```
+
+An operations entry can also have `kind: "gsc_import"`, with `id`, `state`,
+and `progress: { "done": number, "total": number }`.

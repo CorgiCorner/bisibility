@@ -2,10 +2,26 @@ import { CommandPaletteProvider, CommandPaletteTrigger } from "@/components/shel
 import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
 import type { Meta, StoryObj } from "@storybook/react";
 
-function PaletteStory({ open = false }: { open?: boolean }) {
+const markets = [
+  { label: "Malaga / Spanish", ref: "pmkt_malaga00000000000000000" },
+  { label: "Belgium / Dutch", ref: "pmkt_belgiumdutch00000000000" },
+];
+
+function PaletteStory({
+  markets: projectMarkets = [],
+  open = false,
+}: {
+  markets?: readonly { label: string; ref: string }[];
+  open?: boolean;
+}) {
   return (
     <div className="min-h-[420px] bg-bg p-8 text-fg">
-      <CommandPaletteProvider defaultOpen={open} projectId="project_1" projectRef="prj_1">
+      <CommandPaletteProvider
+        defaultOpen={open}
+        markets={projectMarkets}
+        projectId="project_1"
+        projectRef="prj_1"
+      >
         <CommandPaletteTrigger />
       </CommandPaletteProvider>
     </div>
@@ -61,6 +77,11 @@ export const Trigger: Story = {
 
 export const Open: Story = {
   render: () => <PaletteStory open />,
+};
+
+/** With markets tracked, the palette leads with the page-in-market rows. */
+export const Markets: Story = {
+  render: () => <PaletteStory markets={markets} open />,
 };
 
 export const Contextual: Story = {

@@ -25,6 +25,8 @@ const mocks = vi.hoisted(() => ({
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
     },
+    rankCheckRun: { update: vi.fn() },
+    rankCheckRunItem: { findUnique: vi.fn(), updateMany: vi.fn() },
     signal: { create: vi.fn() },
   },
 }));
@@ -51,6 +53,7 @@ describe("runKeywordCheckWithFallback persistence", () => {
     mocks.prisma.providerCostEntry.create.mockResolvedValue({ id: "cost_1" });
     mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
     mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue(null);
     mocks.prisma.signal.create.mockImplementation(({ data }) =>
       Promise.resolve({ id: "signal_1", ...data }),
     );
@@ -93,8 +96,15 @@ describe("runKeywordCheckWithFallback persistence", () => {
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 0 } });
     mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
     mocks.prisma.rankCheck.findUniqueOrThrow.mockImplementation(({ where }) =>
-      Promise.resolve({ id: where.id, publicId: "check_a00000000000000000000000", raw: null }),
+      Promise.resolve({
+        costCents: null,
+        id: where.id,
+        publicId: "check_a00000000000000000000000",
+        raw: null,
+      }),
     );
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue({ runId: "run_1" });
+    mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 1 });
     const outcome = await runKeywordCheckWithFallback({
       depth: 20,
       keywordId: "keyword_1",
@@ -122,6 +132,18 @@ describe("runKeywordCheckWithFallback persistence", () => {
       where: { id: "rank_running_1", status: "running" },
     });
     expect(primary.fetchRank).toHaveBeenCalledWith(expect.objectContaining({ depth: 20 }));
+    expect(mocks.prisma.rankCheckRunItem.updateMany).toHaveBeenCalledWith({
+      data: {
+        actualCostCents: null,
+        finishedAt: expect.anything(),
+        status: "completed",
+      },
+      where: { rankCheckId: "rank_running_1", status: { in: ["queued", "running"] } },
+    });
+    expect(mocks.prisma.rankCheckRun.update).toHaveBeenCalledWith({
+      data: { completedCount: { increment: 1 } },
+      where: { id: "run_1" },
+    });
     expect(outcome.rankCheck.id).toBe("rank_running_1");
   });
 

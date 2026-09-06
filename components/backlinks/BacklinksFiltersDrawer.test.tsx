@@ -50,23 +50,24 @@ describe("Backlinks filters drawer", () => {
     expect(trigger).toHaveFocus();
   });
 
-  it("closes from the scrim and Escape without applying draft changes", async () => {
-    const user = userEvent.setup();
-    renderTable();
+  it.each(["scrim", "Escape"])(
+    "closes from %s without applying draft changes",
+    async (dismissal) => {
+      const user = userEvent.setup();
+      renderTable();
 
-    await user.click(filtersButton());
-    await user.type(screen.getByLabelText("Exclude domain"), "toolindex.app");
-    expect(screen.getByText("toolindex.app")).toBeInTheDocument();
-    fireEvent.click(document.querySelector(".MuiBackdrop-root") as Element);
-    await waitFor(() => expect(screen.queryByRole("button", { name: "Close sheet" })).toBeNull());
-    expect(screen.getByText("toolindex.app")).toBeInTheDocument();
-
-    await user.click(filtersButton());
-    await user.type(screen.getByLabelText("Exclude domain"), "toolindex.app");
-    await user.keyboard("{Escape}");
-    await waitFor(() => expect(screen.queryByRole("button", { name: "Close sheet" })).toBeNull());
-    expect(screen.getByText("toolindex.app")).toBeInTheDocument();
-  });
+      await user.click(filtersButton());
+      await user.type(screen.getByLabelText("Exclude domain"), "toolindex.app");
+      expect(screen.getByText("toolindex.app")).toBeInTheDocument();
+      if (dismissal === "scrim") {
+        fireEvent.click(document.querySelector(".MuiBackdrop-root") as Element);
+      } else {
+        await user.keyboard("{Escape}");
+      }
+      await waitFor(() => expect(screen.queryByRole("button", { name: "Close sheet" })).toBeNull());
+      expect(screen.getByText("toolindex.app")).toBeInTheDocument();
+    },
+  );
 
   it("traps focus inside the drawer", async () => {
     const user = userEvent.setup();

@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
   const info = vi.fn();
+  const markWindowFactsStale = vi.fn();
   const table = () => ({ count: vi.fn(), createMany: vi.fn(), deleteMany: vi.fn() });
   const tx = {
     searchAnalyticsPageDaily: table(),
@@ -21,6 +22,7 @@ const mocks = vi.hoisted(() => {
   return {
     fetchEnvelope: vi.fn(),
     info,
+    markWindowFactsStale,
     prisma: {
       searchAnalyticsRequestUsage: { create: vi.fn(() => ({ id: "req_1" })), update: vi.fn() },
       $transaction: vi.fn(async (run: (client: typeof tx) => unknown) => run(tx)),
@@ -31,6 +33,9 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/search-insights/queries/window-facts", () => ({
+  markWindowFactsStale: mocks.markWindowFactsStale,
+}));
 vi.mock("@temporalio/activity", () => ({
   Context: { current: () => ({ log: { info: mocks.info } }) },
 }));
@@ -220,6 +225,23 @@ describe("syncDayPartition", () => {
         source: "gsc",
       },
     });
+  });
+
+  it("marks every facts row touching the stored GSC day stale in the same transaction", async () => {
+    mocks.fetchEnvelope.mockResolvedValue({ rows: [row("seo api")] });
+
+    await syncDayPartition({ ...scope, dimensions: ["query"] });
+
+    expect(mocks.markWindowFactsStale).toHaveBeenCalledWith(
+      {
+        from: "2026-07-07",
+        projectId: "project_1",
+        property: "sc-domain:example.com",
+        to: "2026-07-07",
+        widestWindowDays: 90,
+      },
+      mocks.tx,
+    );
   });
 
   it("writes page rows keyed by the page URL hash", async () => {

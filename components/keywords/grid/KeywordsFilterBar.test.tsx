@@ -73,8 +73,9 @@ describe("KeywordsFilterBar", () => {
     );
 
     const row = container.querySelector("[data-keywords-toolbar-context]");
-    expect(row).toHaveClass("order-2", "flex-row", "flex-nowrap", "items-center", "lg:order-1");
+    expect(row).toHaveClass("order-2", "flex-row", "flex-wrap", "items-center", "lg:order-1");
     expect(row).not.toHaveClass("contents");
+    expect(row).not.toHaveClass("flex-nowrap");
   });
 
   it("refreshes the table from the context row", () => {
@@ -87,7 +88,14 @@ describe("KeywordsFilterBar", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Refresh table" }));
+    const refresh = screen.getByRole("button", { name: "Refresh table" });
+    expect(refresh.querySelector(".lg\\:inline")).toHaveTextContent("Refresh table");
+    expect(refresh.querySelector("svg")).toHaveClass("text-fg-muted");
+    expect(refresh.closest('[data-toolbar-tooltip="true"]')).toHaveAttribute(
+      "data-tooltip-label",
+      "Refresh table",
+    );
+    fireEvent.click(refresh);
     expect(onRefresh).toHaveBeenCalledOnce();
   });
 

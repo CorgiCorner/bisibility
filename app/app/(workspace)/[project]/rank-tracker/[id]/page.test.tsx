@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   getKeywordDetail: vi.fn(),
   getKeywordMarketTargets: vi.fn(),
   getKeywordTagSuggestions: vi.fn(),
-  getProjectCostContext: vi.fn(),
+  loadRankTrackerCostContext: vi.fn(),
   getProjectMarkets: vi.fn(),
   requireReadableProject: vi.fn(),
   resolveProjectAccess: vi.fn(),
@@ -14,9 +14,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/components/keywords/KeywordHeaderCard", () => ({
   KeywordHeaderCard: () => <div data-testid="header-card" />,
-}));
-vi.mock("@/components/keywords/KeywordMetricCards", () => ({
-  KeywordMetricCards: () => <div data-testid="summary-row" />,
 }));
 vi.mock("@/components/keywords/KeywordPendingDetail", () => ({
   KeywordPendingDetail: () => <div data-testid="pending-detail" />,
@@ -72,8 +69,8 @@ vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
   resolveProjectAccess: mocks.resolveProjectAccess,
 }));
-vi.mock("@/lib/queries/cost-calculator", () => ({
-  getProjectCostContext: mocks.getProjectCostContext,
+vi.mock("@/components/keywords/rank-tracker-cost-context", () => ({
+  loadRankTrackerCostContext: mocks.loadRankTrackerCostContext,
 }));
 vi.mock("@/lib/queries/keywords", () => ({
   getKeywordDetail: mocks.getKeywordDetail,
@@ -97,7 +94,7 @@ describe("KeywordDetailPage", () => {
     });
     mocks.getKeywordTagSuggestions.mockResolvedValue([]);
     mocks.getKeywordMarketTargets.mockResolvedValue([]);
-    mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: null });
+    mocks.loadRankTrackerCostContext.mockResolvedValue({ costPerCheckCents: null });
     mocks.getProjectMarkets.mockResolvedValue({
       markets: [],
       maxMarkets: 5,
@@ -132,7 +129,7 @@ describe("KeywordDetailPage", () => {
     const traffic = screen.getByTestId("traffic-card");
     expect(pending.nextElementSibling).toBe(traffic);
     expect(mocks.getKeywordDetail).toHaveBeenCalledWith("prj_1", "kw_pending");
-    expect(mocks.getProjectCostContext).toHaveBeenCalledWith("prj_1");
+    expect(mocks.loadRankTrackerCostContext).toHaveBeenCalledWith("prj_1");
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
   });
 
@@ -161,22 +158,20 @@ describe("KeywordDetailPage", () => {
     );
 
     const header = screen.getByTestId("header-card");
-    const summary = screen.getByTestId("summary-row");
     const chart = screen.getByTestId("position-history");
     const traffic = screen.getByTestId("traffic-card");
     const history = screen.getByTestId("ranking-history");
     // Retrieved results sits directly above the ranking URL history: both are per-check
     // records of what Google did, and "who was around me" reads before "which of my pages".
     const retrieved = screen.getByTestId("retrieved-results");
-    expect(header.nextElementSibling).toBe(summary);
-    expect(summary.nextElementSibling).toBe(chart);
+    expect(header.nextElementSibling).toBe(chart);
     expect(chart.nextElementSibling).toBe(traffic);
     expect(traffic.nextElementSibling).toBe(retrieved);
     expect(retrieved.nextElementSibling).toBe(history);
   });
 
   it("passes costContext.timezone to PositionHistoryCard", async () => {
-    mocks.getProjectCostContext.mockResolvedValue({
+    mocks.loadRankTrackerCostContext.mockResolvedValue({
       costPerCheckCents: null,
       timezone: "Europe/Madrid",
     });
@@ -202,7 +197,7 @@ describe("KeywordDetailPage", () => {
   });
 
   it("falls back to UTC when costContext lacks a timezone", async () => {
-    mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: null });
+    mocks.loadRankTrackerCostContext.mockResolvedValue({ costPerCheckCents: null });
     mocks.getKeywordDetail.mockResolvedValue({
       ...normalDetailState,
       positionHistory: [

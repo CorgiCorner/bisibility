@@ -35,6 +35,8 @@ describe("public ID v3", () => {
       pat: "personalAccessToken",
       pmkt: "projectMarket",
       prj: "project",
+      rcr: "rankCheckRun",
+      sch: "checkSchedule",
       sid: "session",
       sig: "signal",
       svkw: "savedKeyword",

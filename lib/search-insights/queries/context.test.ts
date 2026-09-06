@@ -52,6 +52,7 @@ const importFacts: ImportObservabilityFacts = {
   lastProbeAt: null,
   qualifyingDays: 28,
   readyThrough: {
+    d1: { current: true, previous: true },
     d7: { current: true, previous: true },
     d28: { current: true, previous: true },
     d90: { current: false, previous: false },
@@ -60,15 +61,28 @@ const importFacts: ImportObservabilityFacts = {
   targetDays: 28,
 };
 
+const firstLookWindow = {
+  current: { end: "2026-07-08", start: "2026-07-08" },
+  previous: { end: "2026-07-07", start: "2026-07-07" },
+};
+
+function daySpan({ end, start }: { end: string; start: string }) {
+  return (
+    (Date.parse(`${end}T00:00:00.000Z`) - Date.parse(`${start}T00:00:00.000Z`)) / 86_400_000 + 1
+  );
+}
+
 function factsWith(readyThrough: ImportObservabilityFacts["readyThrough"]) {
   return { ...importFacts, readyThrough };
 }
 function readiness(
-  d7: boolean,
+  d1 = false,
+  d7 = false,
   d28 = false,
   d90 = false,
 ): ImportObservabilityFacts["readyThrough"] {
   return {
+    d1: { current: d1, previous: false },
     d7: { current: d7, previous: false },
     d28: { current: d28, previous: false },
     d90: { current: d90, previous: false },
@@ -93,7 +107,7 @@ describe("getSearchInsightsContext", () => {
     mocks.prisma.searchAnalyticsSyncPartition.findMany.mockResolvedValue([]);
     mocks.prisma.searchAnalyticsRequestUsage.findFirst.mockResolvedValue(null);
     mocks.prisma.searchAnalyticsRequestUsage.findMany.mockResolvedValue([]);
-    mocks.prisma.$queryRaw.mockResolvedValue([{ pages: 212n, queries: 1284n }]);
+    mocks.prisma.$queryRaw.mockResolvedValue([{ queries: 1284n }]);
   });
 
   it("reports the connected property, the finalized window and the stored row counts", async () => {
@@ -115,11 +129,12 @@ describe("getSearchInsightsContext", () => {
       status: "connected",
     });
     expect(context.period.id).toBe("28");
+    expect(context.period.comparison).toBe("previous_period");
     expect(context.window).toEqual({
       current: { end: "2026-07-08", start: "2026-06-11" },
       previous: { end: "2026-06-10", start: "2026-05-14" },
     });
-    expect(context.counts).toEqual({ pages: 212, queries: 1284 });
+    expect(context.counts).toEqual({ queries: 1284 });
     expect(context.importState).toMatchObject({
       facts: scope.importFacts,
       plannedRetentionMonths: 6,
@@ -130,15 +145,42 @@ describe("getSearchInsightsContext", () => {
     expect(context.yoy).toEqual({ monthsImported: 9, required: 13 });
   });
 
+  it("counts grouped queries without reading the page table", async () => {
+    const scope = await loadSearchInsightsScope("prj_1");
+    await getSearchInsightsContext("prj_1", { scope });
+
+    const statement = mocks.prisma.$queryRaw.mock.calls[0]?.[0];
+    expect(statement.sql).not.toContain('"search_analytics_page_daily"');
+    expect(statement.sql).toContain('GROUP BY "query"');
+  });
+
   it.each([
-    ["seven covered days", factsWith(readiness(true)), "7", true],
-    ["five covered days", factsWith(readiness(false)), "7", false],
-    ["ninety covered days", factsWith(readiness(true, true, true)), "90", true],
-  ])("uses %s to select the readable preset", async (_label, facts, period, readable) => {
+    ["first day", factsWith(readiness(true)), "1", firstLookWindow],
+    ["7 days", factsWith(readiness(true, true)), "7", expect.any(Object)],
+    ["28 days", factsWith(readiness(true, true, true)), "28", expect.any(Object)],
+    ["90 days", factsWith(readiness(true, true, true, true)), "90", expect.any(Object)],
+    ["no days", factsWith(readiness()), "7", null],
+  ])("%s selects the ready window", async (_label, facts, period, window) => {
     mocks.readImportObservability.mockResolvedValue(facts);
     const scope = await loadSearchInsightsScope("prj_1", { period: "unavailable" });
-    expect(scope.period.id).toBe(period);
-    expect(Boolean(scope.window)).toBe(readable);
+    expect(scope.period).toMatchObject(period === "1" ? { days: 1, id: period } : { id: period });
+    expect(scope.window).toEqual(window);
+  });
+
+  it.each([
+    ["first look", factsWith(readiness(true))],
+    ["7-day preset", factsWith(readiness(true, true))],
+    ["28-day preset", factsWith(readiness(true, true, true))],
+    ["90-day preset", factsWith(readiness(true, true, true, true))],
+  ])("keeps the %s period and window span aligned", async (_label, facts) => {
+    mocks.readImportObservability.mockResolvedValue(facts);
+
+    const scope = await loadSearchInsightsScope("prj_1", { period: "unavailable" });
+
+    expect(scope.window).not.toBeNull();
+    expect(daySpan(scope.window?.current as { end: string; start: string })).toBe(
+      scope.period.days,
+    );
   });
 
   it("uses the active property's configured retention and gentle request rate", async () => {
@@ -152,11 +194,38 @@ describe("getSearchInsightsContext", () => {
     );
   });
 
-  it("moves the window with the requested period and ignores an invalid one", async () => {
+  it("moves the window with a requested period and falls back to a ready preset", async () => {
     const seven = await getSearchInsightsContext("prj_1", { period: "7" });
     expect(seven.window?.current).toEqual({ end: "2026-07-08", start: "2026-07-02" });
     const invalid = await getSearchInsightsContext("prj_1", { period: "31" });
     expect(invalid.period.days).toBe(28);
+    mocks.readImportObservability.mockResolvedValue(factsWith(readiness(true, true)));
+    const unavailable28 = await loadSearchInsightsScope("prj_1", { period: "28" });
+    const requestedFirstLook = await loadSearchInsightsScope("prj_1", { period: "1" });
+    expect([unavailable28.period.id, requestedFirstLook.period.id]).toEqual(["7", "7"]);
+  });
+
+  it("applies year over year only after thirteen months are imported", async () => {
+    mocks.prisma.searchAnalyticsImport.findUnique.mockResolvedValue({
+      ...importRow,
+      cursorDate: new Date("2025-03-08T00:00:00.000Z"),
+    });
+    const ready = await loadSearchInsightsScope("prj_1", {
+      comparison: "yoy",
+      period: "7",
+    });
+    expect(ready.period.comparison).toBe("year_over_year");
+    expect(ready.window).toEqual({
+      current: { end: "2026-07-08", start: "2026-07-02" },
+      previous: { end: "2025-07-08", start: "2025-07-02" },
+    });
+
+    mocks.prisma.searchAnalyticsImport.findUnique.mockResolvedValue(importRow);
+    const unavailable = await loadSearchInsightsScope("prj_1", {
+      comparison: "yoy",
+      period: "7",
+    });
+    expect(unavailable.period.comparison).toBe("previous_period");
   });
 
   it("reads no rows and no import when nothing is connected", async () => {
@@ -165,7 +234,7 @@ describe("getSearchInsightsContext", () => {
     expect(context.connection).toEqual({ property: null, status: "not_connected" });
     expect(context.importState).toBeNull();
     expect(context.window).toBeNull();
-    expect(context.counts).toEqual({ pages: 0, queries: 0 });
+    expect(context.counts).toEqual({ queries: 0 });
     expect(mocks.prisma.searchAnalyticsImport.findUnique).not.toHaveBeenCalled();
     expect(mocks.prisma.$queryRaw).not.toHaveBeenCalled();
   });
@@ -189,19 +258,6 @@ describe("getSearchInsightsContext", () => {
     expect(context.window).toBeNull();
   });
 
-  it("has no window before the first finalized day is stored", async () => {
-    mocks.prisma.searchAnalyticsImport.findUnique.mockResolvedValue({
-      ...importRow,
-      finalizedThroughDate: null,
-      state: "queued",
-    });
-    mocks.readImportObservability.mockResolvedValue(factsWith(readiness(false)));
-    const context = await getSearchInsightsContext("prj_1");
-    expect(context.window).toBeNull();
-    expect(context.period.id).toBe("7");
-    expect(context.counts).toEqual({ pages: 0, queries: 0 });
-    expect(context.importState?.state).toBe("queued");
-  });
   it("selects an archived property only when the project registry marks it archived", async () => {
     mocks.prisma.searchInsightsPropertyRegistry.findFirst.mockResolvedValue({
       ga4PropertyId: null,
@@ -238,6 +294,7 @@ describe("getSearchInsightsContext", () => {
     });
     expect(scope.organicSessions).toEqual({
       importState: null,
+      keyEventsConfigured: null,
       property: null,
       status: "not_connected",
     });
@@ -259,6 +316,7 @@ describe("getSearchInsightsContext", () => {
     });
     expect(scope.organicSessions).toEqual({
       importState: null,
+      keyEventsConfigured: null,
       property: null,
       status: "not_connected",
     });

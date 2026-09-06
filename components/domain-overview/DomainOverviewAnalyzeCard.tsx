@@ -179,7 +179,7 @@ export function DomainOverviewAnalyzeCard({
             {submitLabel(estimate, matchesReport, false)}
           </Button>
         </div>
-        <div className="-mx-4.5 -mb-4.5 border-t border-border-soft px-4.5 py-3.5 sm:-mx-5 sm:-mb-5 sm:px-5">
+        <div className="-mx-4.5 -mb-4.5 border-t border-border px-4.5 py-3.5 sm:-mx-5 sm:-mb-5 sm:px-5">
           {detected ? (
             <span
               className="inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-bg-sunken px-2.5 py-1 text-[12px]"

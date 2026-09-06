@@ -26,7 +26,7 @@ export function emptyRankCopy(
     return {
       badge: "No data",
       body: "The provider is fetching results for this keyword. The page updates as soon as the check completes.",
-      href: rankTrackerTabPath(projectRef, "checks"),
+      href: rankTrackerTabPath(projectRef, "runs"),
       link: "Refresh",
       position: "No data",
       title: "Rank check in progress",
@@ -36,7 +36,7 @@ export function emptyRankCopy(
     return {
       badge: "No data",
       body: "The last check returned an error.",
-      href: rankTrackerTabPath(projectRef, "checks"),
+      href: rankTrackerTabPath(projectRef, "runs"),
       link: "Retry check",
       position: "No data",
       title: "No position from the latest check",
@@ -46,7 +46,7 @@ export function emptyRankCopy(
     return {
       badge: notRankedLabel(trackedDepth),
       body: "Outside the tracked depth on the last check.",
-      href: rankTrackerTabPath(projectRef, "checks"),
+      href: rankTrackerTabPath(projectRef, "runs"),
       link: checkTopDepthLabel,
       position: `outside top ${trackedDepth}`,
       title: `Not ranked in the top ${trackedDepth}`,

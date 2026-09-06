@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
     providerConnectionRate: { findMany: vi.fn() },
     providerCostEntry: { aggregate: vi.fn(), groupBy: vi.fn() },
     rankCheck: { aggregate: vi.fn(), findMany: vi.fn() },
+    savedView: { findMany: vi.fn() },
   },
   requireReadableProject: vi.fn(),
 }));
@@ -163,6 +164,7 @@ describe("settings queries", () => {
       _sum: { costCents: null, estimatedCostCents: null },
     });
     mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
+    mocks.prisma.savedView.findMany.mockResolvedValue([]);
   });
 
   it("uses the cap-enforcement aggregate for budget and pace", async () => {
@@ -199,7 +201,7 @@ describe("settings queries", () => {
     });
 
     const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
-      dateFormat: "long",
+      dateFormat: "month_first",
       now: new Date("2026-06-01T12:00:00.000Z"),
     });
 
@@ -298,7 +300,9 @@ describe("settings queries", () => {
       primary: true,
       status: "connected",
     });
-    expect(result.tags).toEqual([{ color: "var(--green)", count: 2, label: "product" }]);
+    expect(result.tags).toEqual([
+      { color: "var(--green)", keywordCount: 2, label: "product", segmentCount: 0 },
+    ]);
     expect(result.usage).toMatchObject({
       hasProvider: true,
       primaryProvider: "DataForSEO",

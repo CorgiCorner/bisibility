@@ -1,11 +1,12 @@
 import { Sparkline } from "@/components/charts/Sparkline";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { type ScheduleReference, scheduleRowLabel } from "@/lib/schedules/mixed-state";
 import * as rankDepth from "@/lib/serp/rank-depth";
+import { frequencyOptions } from "@/lib/settings/options";
 import { chartColors } from "@/lib/theme/chart-colors";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react";
-import { FrequencyCell } from "./FrequencyCell";
 import { trafficColumns } from "./grid-columns-traffic";
 import { KeywordChangeCell } from "./KeywordChangeCell";
 import type { KeywordColumnActions } from "./keyword-column-actions";
@@ -20,7 +21,30 @@ import {
   noRankLabel,
 } from "./market-grid-cells";
 import { rowActionsColumn } from "./RowActionsCell";
+import { ScheduleCell, type ScheduleCellTarget } from "./ScheduleCell";
 import { TargetRankingCell } from "./TargetRankingCell";
+
+type ScheduledKeywordRow = KeywordRow & { checkSchedule?: ScheduleReference | null };
+
+function fallbackSchedule(row: KeywordRow): ScheduleReference | null {
+  if (row.schedule.frequency === "manual") return null;
+  const name = frequencyOptions.find((option) => option.value === row.schedule.frequency)?.label;
+  return name ? { name, publicId: `legacy:${row.schedule.frequency}` } : null;
+}
+
+function scheduleTarget(row: KeywordRow): ScheduleCellTarget {
+  return {
+    device: row.device,
+    id: row.id,
+    location: `${row.location.displayName} / ${row.location.languageLabel ?? row.location.hl}`,
+    schedule: (row as ScheduledKeywordRow).checkSchedule ?? fallbackSchedule(row),
+  };
+}
+
+export function scheduleTargetsForRow(row: KeywordRow): ScheduleCellTarget[] {
+  const parent = marketGridParent(row);
+  return (parent?.aggregate.children ?? [row]).map(scheduleTarget);
+}
 
 function DeviceCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
   return (
@@ -161,10 +185,12 @@ export function keywordColumns(
     },
     {
       field: "frequency",
-      headerName: "Frequency",
+      filterable: true,
+      headerName: "Schedule",
       minWidth: 148,
-      renderCell: FrequencyCell,
-      valueGetter: (_value, row) => row.schedule.frequency,
+      renderCell: ({ row }) => <ScheduleCell targets={scheduleTargetsForRow(row)} />,
+      sortable: true,
+      valueGetter: (_value, row) => scheduleRowLabel(scheduleTargetsForRow(row)),
     },
     {
       field: "location",

@@ -7,17 +7,14 @@ export type CompletionAcknowledgementMode = "state-a" | "state-b";
 export type GettingStartedHeaderProgressModel = Readonly<{
   completed: boolean;
   countLabel: string;
-  showCheck: boolean;
 }>;
 
 export function gettingStartedHeaderProgressModel(
   progress: ResolvedSetupProgress,
-  completionMode: CompletionAcknowledgementMode,
+  _completionMode: CompletionAcknowledgementMode,
 ): GettingStartedHeaderProgressModel {
-  const completed = progress.completed;
   return {
-    completed,
+    completed: progress.completed,
     countLabel: formatSetupProgressLabel(progress.settledCount, progress.totalCount),
-    showCheck: completed && completionMode === "state-b",
   };
 }

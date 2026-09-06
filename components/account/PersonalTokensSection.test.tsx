@@ -44,7 +44,7 @@ describe("PersonalTokensSection", () => {
   it("replaces the UTC server date with the browser date after hydration", async () => {
     process.env.TZ = "America/New_York";
     const props = {
-      dateFormat: "long" as const,
+      dateFormat: "month_first" as const,
       token: {
         createdAt: "2026-06-20T01:30:00.000Z",
         expiresAt: null,

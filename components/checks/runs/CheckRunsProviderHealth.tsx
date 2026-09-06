@@ -151,7 +151,7 @@ export function ProviderHealth({
       <p className="mb-0 mt-2.5 text-[12.5px] leading-[1.55] text-fg">
         {deliveryVerdict(view, primaryLabel)}
       </p>
-      <div className="mt-2.5 border-border-soft border-t pt-2.5">
+      <div className="mt-2.5 border-border border-t pt-2.5">
         <p className="m-0 font-sans tabular-nums text-[10.5px] leading-relaxed text-fg-muted">
           {routeFlow(view)}
         </p>

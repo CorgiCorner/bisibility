@@ -9,4 +9,11 @@ describe("MUI popup surfaces", () => {
       boxShadow: "none",
     });
   });
+
+  it("uses workspace-switcher hover fills on every MenuItem", () => {
+    expect(theme.components?.MuiMenuItem?.styleOverrides?.root).toMatchObject({
+      "&:hover": { backgroundColor: "var(--bg-sunken)" },
+      "&.Mui-focusVisible": { backgroundColor: "var(--bg-sunken)" },
+    });
+  });
 });

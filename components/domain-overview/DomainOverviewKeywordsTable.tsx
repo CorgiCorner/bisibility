@@ -217,7 +217,7 @@ export function DomainOverviewKeywordsTable({
             const change = delta(row.rankAbsoluteDelta);
             return (
               <div
-                className="grid min-h-[58px] grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border-soft px-4 py-2 last:border-b-0"
+                className="grid min-h-[58px] grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border px-4 py-2 last:border-b-0"
                 data-testid="domain-keyword-row"
                 key={`${row.keyword}:${row.rankingUrl ?? ""}`}
               >
@@ -266,7 +266,7 @@ export function DomainOverviewKeywordsTable({
         </div>
       </div>
       {canLoadMore && onLoadMore ? (
-        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-border-soft px-4 py-3">
+        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-border px-4 py-3">
           <Button
             loading={loadingMore}
             onClick={onLoadMore}
@@ -290,7 +290,7 @@ export function DomainOverviewKeywordsTable({
       {selection.savingMessage ? (
         <div
           aria-live="polite"
-          className="border-t border-border-soft px-4 py-2 text-[12px] text-fg-muted"
+          className="border-t border-border px-4 py-2 text-[12px] text-fg-muted"
         >
           {selection.savingMessage}
         </div>

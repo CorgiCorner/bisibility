@@ -1,5 +1,6 @@
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
-import { render, screen } from "@testing-library/react";
+import { routerMock } from "@/tests/next-navigation";
+import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@phosphor-icons/react", async (importActual) => {
@@ -74,7 +75,6 @@ const facts = {
 };
 
 const runtime = {
-  workflowStatus: "running" as const,
   workerStatus: {
     status: "ok" as const,
     temporalIdentityComparison: { detail: "identities match", status: "match" as const },
@@ -88,6 +88,7 @@ const observabilityFacts = {
   lastProbeAt: "2026-08-29T17:00:00.000Z",
   qualifyingDays: 7,
   readyThrough: {
+    d1: { current: true, previous: true },
     d7: { current: true, previous: true },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },
@@ -144,6 +145,18 @@ describe("SearchInsightsNoDataState", () => {
     expect(screen.getByRole("button", { name: "Refresh import status" })).toBeInTheDocument();
   });
 
+  it("does not schedule refreshes while the import is queued", () => {
+    vi.useFakeTimers();
+    renderNoData({ pausedReason: null, state: "queued" });
+
+    expect(
+      screen.getByRole("button", { name: "Refresh import status" }).closest("[data-auto-refresh]"),
+    ).toHaveAttribute("data-auto-refresh", "inactive");
+    expect(vi.getTimerCount()).toBe(0);
+    act(() => vi.advanceTimersByTime(90_000));
+    expect(routerMock.refresh).not.toHaveBeenCalled();
+  });
+
   it("offers no refresh control for a state that waits on the customer", () => {
     renderNoData({ connectionStatus: "needs_reauth" });
 
@@ -156,7 +169,7 @@ describe("SearchInsightsNoDataState", () => {
     expect(screen.getByRole("heading", { name: "Paused by you" })).toBeInTheDocument();
     // The strip is the single home for the provenance counters; this card states the block only.
     expect(
-      screen.getByText("The first view opens once seven consecutive finalized days are imported."),
+      screen.getByText("The first look opens once the first finalized day is imported."),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("qualifying-progress")).not.toBeInTheDocument();
     expect(screen.queryByTestId("deep-history-progress")).not.toBeInTheDocument();
@@ -207,7 +220,7 @@ describe("SearchInsightsNoDataState", () => {
   it("uses a neutral status icon instead of the Google icon for a worker-caused state", () => {
     renderNoData({
       pausedReason: null,
-      runtime: { workflowStatus: "unknown", workerStatus: "stale" },
+      runtime: { workerStatus: "stale" },
       state: "running",
     });
 

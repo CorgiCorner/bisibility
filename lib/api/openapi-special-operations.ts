@@ -2,22 +2,20 @@ const json = (schema: object) => ({ "application/json": { schema } });
 const response = (schema: object, description: string) => ({ content: json(schema), description });
 
 export function runRankCheckOperation(input: {
-  asyncParameter: object;
   problemResponses: object;
   rankCheckRef: object;
+  rankCheckRunRef: object;
   security: object[];
 }) {
   return {
     operationId: "runRankCheck",
-    parameters: [input.asyncParameter],
     responses: {
-      "201": response(input.rankCheckRef, "Rank check completed"),
-      "202": response(input.rankCheckRef, "Rank check started"),
-      "503": response({ $ref: "#/components/schemas/Problem" }, "Scheduler unavailable"),
+      "201": response(input.rankCheckRef, "Rank check completed when inline execution is enabled"),
+      "202": response(input.rankCheckRunRef, "Rank check queued"),
       ...input.problemResponses,
     },
     security: input.security,
-    summary: "Run one rank check synchronously or asynchronously",
+    summary: "Queue one rank check",
   };
 }
 

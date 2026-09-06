@@ -35,7 +35,7 @@ export function AdminFailureBreakdown({
         const concentrated = group.projectIds.length > 0;
         return (
           <div
-            className="flex flex-wrap items-center gap-3 border-b border-border-soft px-0.5 py-3 last:border-0"
+            className="flex flex-wrap items-center gap-3 border-b border-border px-0.5 py-3 last:border-0"
             data-admin-failure-group
             key={`${group.provider}:${group.errorSummary}`}
           >

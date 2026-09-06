@@ -33,7 +33,7 @@ export const Default: Story = {
       />
       <AlertBanner
         action={{
-          href: rankTrackerTabPath("prj_story", "checks"),
+          href: rankTrackerTabPath("prj_story", "runs"),
           icon: "arrow",
           label: "View check runs",
         }}
@@ -64,7 +64,7 @@ export const YellowTint: Story = {
 export const WithActionArrow: Story = {
   args: {
     action: {
-      href: rankTrackerTabPath("prj_story", "checks"),
+      href: rankTrackerTabPath("prj_story", "runs"),
       icon: "arrow",
       label: "View check runs",
     },

@@ -154,7 +154,9 @@ export function SearchInsightsWaitingStrip({
           </span>
         </Tooltip>
       ) : null}
-      {showActiveSegments && presentation.showHeartbeat ? <SearchInsightsRefresh active /> : null}
+      {showActiveSegments && presentation.showHeartbeat ? (
+        <SearchInsightsRefresh active={importState?.state === "running"} />
+      ) : null}
       {userPaused || (progress.state === "running" && !waitingForFirstData) ? (
         <SearchImportPauseControl
           action={userPaused ? resumeAction : pauseAction}

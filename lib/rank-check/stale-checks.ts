@@ -2,10 +2,12 @@ import "server-only";
 
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { publishOperationChanged } from "@/lib/notifications/realtime";
 import {
   type QueuedDeadlineMaintenanceCursor,
   reconcileExpiredQueuedRankCheckBatches,
 } from "./queued-deadline-maintenance";
+import { applyRunItemTransition } from "./runs/items";
 import { DEFAULT_STALE_RUNNING_CHECK_MINUTES } from "./stale-window";
 
 export const STALE_RUNNING_CHECK_ERROR = "Check timed out.";
@@ -48,7 +50,7 @@ export async function markStaleRunningChecks(
   const olderThanMinutes = staleWindowMinutes(input.olderThanMinutes);
   const now = input.now ?? new Date();
   const cutoff = new Date(now.getTime() - olderThanMinutes * 60_000);
-  const failed = await prisma.$transaction(async (tx) => {
+  const staleResult = await prisma.$transaction(async (tx) => {
     const staleChecks = await tx.rankCheck.findMany({
       orderBy: { id: "asc" },
       select: {
@@ -67,9 +69,17 @@ export async function markStaleRunningChecks(
       },
     });
     if (staleChecks.length === 0) {
-      return 0;
+      return { failed: 0, projectIds: [] as string[] };
     }
 
+    const staleCheckIds = staleChecks.map((check) => check.id);
+    const linkedItems = await tx.rankCheckRunItem.findMany({
+      select: { rankCheckId: true },
+      where: {
+        rankCheckId: { in: staleCheckIds },
+        status: { in: ["queued", "running"] },
+      },
+    });
     const result = await tx.rankCheck.updateMany({
       data: {
         attemptCount: 0,
@@ -81,8 +91,19 @@ export async function markStaleRunningChecks(
         status: "failed",
         viaFallback: false,
       },
-      where: { id: { in: staleChecks.map((check) => check.id) }, status: "running" },
+      where: { id: { in: staleCheckIds }, status: "running" },
     });
+
+    const projectIds = new Set<string>();
+    for (const item of linkedItems) {
+      if (item.rankCheckId) {
+        const transition = await applyRunItemTransition(tx, {
+          rankCheckId: item.rankCheckId,
+          to: "failed",
+        });
+        if (transition) projectIds.add(transition.projectId);
+      }
+    }
 
     await Promise.all(
       staleChecks.map((check) =>
@@ -110,13 +131,16 @@ export async function markStaleRunningChecks(
       ),
     );
 
-    return result.count;
+    return { failed: result.count, projectIds: [...projectIds] };
   });
+  for (const projectId of staleResult.projectIds) {
+    await publishOperationChanged({ projectId }).catch(() => undefined);
+  }
   const queued = await reconcileExpiredQueuedRankCheckBatches(now, input.queuedCursor);
 
   return {
     cutoff,
-    failed,
+    failed: staleResult.failed,
     olderThanMinutes,
     queuedBatches: queued.examined,
     queuedFailed: queued.failed,

@@ -1,5 +1,20 @@
 import type { BacklinksHistoryMonth } from "@/lib/backlinks/types";
 
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
 type SummaryTrend = {
   backlinks: number[];
   referringDomains: number[];
@@ -45,10 +60,8 @@ export function latestHistoryDeltas(history: readonly BacklinksHistoryMonth[]) {
 }
 
 function monthName(month: string) {
-  const parsed = new Date(`${month}-01T00:00:00.000Z`);
-  return Number.isNaN(parsed.getTime())
-    ? month
-    : new Intl.DateTimeFormat("en", { month: "long", timeZone: "UTC" }).format(parsed);
+  const index = Number(month.slice(5, 7)) - 1;
+  return MONTH_NAMES[index] ?? month;
 }
 
 export function historyFooter(history: readonly BacklinksHistoryMonth[]) {

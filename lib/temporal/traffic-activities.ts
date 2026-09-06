@@ -2,6 +2,8 @@ import "server-only";
 
 import { Context } from "@temporalio/activity";
 import { type SyncTrafficForAllProjectsResult, syncTrafficForAllProjects } from "../traffic/sync";
+import { syncFirstTrafficIntentActivity } from "./traffic-first-sync-activity";
+import type { FirstTrafficSyncWorkflowInput } from "./traffic-first-sync-contract";
 
 export type SyncTrafficActivityResult = SyncTrafficForAllProjectsResult;
 
@@ -18,3 +20,6 @@ export async function syncTrafficActivity(): Promise<SyncTrafficActivityResult> 
 
   return syncTrafficForAllProjects(now, scheduledFor);
 }
+
+export type { FirstTrafficSyncWorkflowInput };
+export { syncFirstTrafficIntentActivity };

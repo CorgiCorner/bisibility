@@ -147,7 +147,7 @@ export function InstallPageContent({
         <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[repeat(auto-fit,minmax(230px,1fr))]">
           {SKILLS.map((skill) => (
             <div
-              className="flex min-h-[44px] w-full flex-col gap-0.5 border-t border-border-soft px-2 py-[9px]"
+              className="flex min-h-[44px] w-full flex-col gap-0.5 border-t border-border px-2 py-[9px]"
               key={skill.name}
             >
               <span className="truncate font-sans text-[12px] font-semibold text-fg">

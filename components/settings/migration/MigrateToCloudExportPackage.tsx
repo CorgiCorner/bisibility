@@ -63,7 +63,7 @@ export function ExportPackageCard({
         <div className="bg-bg-sunken px-[15px] py-2.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Instance import package
         </div>
-        <div className="flex items-center gap-3 border-border-soft border-t px-[15px] py-[13px]">
+        <div className="flex items-center gap-3 border-border border-t px-[15px] py-[13px]">
           <span className="grid h-9 w-9 flex-none place-items-center rounded-control bg-bg-sunken text-accent-text">
             <FileArrowDown aria-hidden size={18} weight="regular" />
           </span>

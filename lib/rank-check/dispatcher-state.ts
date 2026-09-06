@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { computeDispatcherNextCheckAt } from "./dispatcher-recurrence";
+import { RUNNABLE_KEYWORD_SQL } from "./runnable";
 import type { RankCheckScheduleInput } from "./schedule";
 import { dispatcherStateHealingAllowed } from "./scheduler-mode";
 
@@ -85,6 +86,7 @@ function stateRowSelect(target: Prisma.Sql) {
     LEFT JOIN "project_defaults" pd ON pd."projectId" = k."projectId"
     WHERE ${target}
       AND ${automaticFrequencyFilter}
+      AND ${RUNNABLE_KEYWORD_SQL}
     ORDER BY k.id
   `;
 }
@@ -180,6 +182,7 @@ export async function backfillKeywordDispatchStates(
         AND owner."deactivatedAt" IS NULL
         AND p."writeMode" = 'active'
         AND ${automaticFrequencyFilter}
+        AND ${RUNNABLE_KEYWORD_SQL}
       ORDER BY k.id
       FOR UPDATE OF k SKIP LOCKED
       LIMIT ${pageSize}

@@ -29,6 +29,8 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   checkHealth?: CheckHealthView;
   costContext?: ProjectCostContext;
   createSavedViewAction?: (input: CreateSavedViewInput) => Promise<KeywordSavedView>;
+  /** A rank-check run a notification linked to, echoed back so the market slice can be stated. */
+  deepLinkRunId?: string | null;
   deletableSavedViewIds: readonly string[];
   deleteSavedViewAction?: (input: DeleteSavedViewInput) => Promise<unknown>;
   facets?: RankTrackerListFacets;
@@ -59,5 +61,4 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   totalCount?: number;
   totalKeywordCount?: number;
   updateKeywordAction: KeywordActions.KeywordDetailActions["updateKeywordAction"];
-  updateKeywordScheduleAction?: KeywordActions.KeywordDetailActions["updateKeywordScheduleAction"];
 };

@@ -86,7 +86,7 @@ export function SearchInsightsActions({
   async function runSync() {
     try {
       const result = await syncAction({ projectId });
-      if (result.status === "started" || result.status === "cooldown") {
+      if (result.status === "queued" || result.status === "cooldown") {
         const nextAllowedAt = result.nextAllowedAt ? Date.parse(result.nextAllowedAt) : NaN;
         setCooldownExpiresAt(
           result.status === "cooldown" && Number.isFinite(nextAllowedAt)

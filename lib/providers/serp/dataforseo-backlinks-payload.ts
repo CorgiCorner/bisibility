@@ -6,6 +6,7 @@ import type {
   BacklinkSummary,
   BacklinkSummaryResult,
 } from "@/lib/providers/types";
+import { dataForSeoTaskFailureMessage } from "./dataforseo-client";
 import {
   DataForSeoBillingError,
   DataForSeoError,
@@ -70,7 +71,8 @@ function assertSuccess(data: unknown) {
   const root = record(data);
   const currentTask = task(data);
   const statusCode = number(currentTask.status_code || root.status_code);
-  const message = string(currentTask.status_message || root.status_message);
+  const message =
+    dataForSeoTaskFailureMessage(data as DataForSeoResponse) || string(root.status_message);
   if (statusCode === 20000) return "success" as const;
   if (noSearchResults(statusCode, message)) return "empty" as const;
   const chargedCost = responseCostCents(data);

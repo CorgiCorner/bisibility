@@ -7,6 +7,7 @@ import type {
 } from "@/lib/actions/keyword-research";
 import type { removeSavedKeywords, saveKeywords } from "@/lib/actions/saved-keyword";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
+import { type DateFormat, formatDateTime } from "@/lib/dates/format";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import {
   cacheTimeRemaining,
@@ -255,25 +256,16 @@ export function researchFailureState(
 }
 
 function zonedParts(value: Date, timezone: string) {
-  const parts = new Intl.DateTimeFormat("en-US-u-ca-gregory", {
-    day: "numeric",
-    hour: "numeric",
-    hourCycle: "h23",
-    minute: "numeric",
-    month: "numeric",
-    second: "numeric",
-    timeZone: timezone,
-    year: "numeric",
-  }).formatToParts(value);
-  const numberPart = (type: Intl.DateTimeFormatPartTypes) =>
-    Number(parts.find((part) => part.type === type)?.value);
+  const [key, clock = "00:00"] = formatDateTime(value, "iso", timezone).split(", ");
+  const [year, month, day] = key.split("-").map(Number);
+  const [hour, minute] = clock.split(":").map(Number);
   return {
-    day: numberPart("day"),
-    hour: numberPart("hour"),
-    minute: numberPart("minute"),
-    month: numberPart("month"),
-    second: numberPart("second"),
-    year: numberPart("year"),
+    day,
+    hour,
+    minute,
+    month,
+    second: 0,
+    year,
   };
 }
 
@@ -295,15 +287,17 @@ function zonedMonthStart(year: number, month: number, timezone: string) {
   return new Date(instant);
 }
 
-export function nextBudgetResetLabel(timezone: string, now = new Date()) {
+export function nextBudgetResetLabel(
+  timezone: string,
+  dateFormatOrNow: DateFormat | Date = "month_first",
+  maybeNow = new Date(),
+) {
+  const dateFormat = dateFormatOrNow instanceof Date ? "month_first" : dateFormatOrNow;
+  const now = dateFormatOrNow instanceof Date ? dateFormatOrNow : maybeNow;
   const localNow = zonedParts(now, timezone);
   const reset =
     localNow.month === 12
       ? zonedMonthStart(localNow.year + 1, 1, timezone)
       : zonedMonthStart(localNow.year, localNow.month + 1, timezone);
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: timezone,
-  }).format(reset);
+  return formatDateTime(reset, dateFormat, timezone);
 }

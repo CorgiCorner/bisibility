@@ -154,7 +154,7 @@ export function DomainOverviewPagesTable({
             const change = delta(row.etvDeltaPct);
             return (
               <div
-                className="grid min-h-[58px] grid-cols-[minmax(220px,1.25fr)_104px_86px_minmax(180px,1fr)_96px_86px] items-center gap-3 border-b border-border-soft px-4 py-2 last:border-b-0"
+                className="grid min-h-[58px] grid-cols-[minmax(220px,1.25fr)_104px_86px_minmax(180px,1fr)_96px_86px] items-center gap-3 border-b border-border px-4 py-2 last:border-b-0"
                 data-testid="domain-page-row"
                 key={row.path}
               >
@@ -183,7 +183,7 @@ export function DomainOverviewPagesTable({
         </div>
       </div>
       {(hasMore ?? remaining > 0) && onLoadMore ? (
-        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-border-soft px-4 py-3">
+        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-border px-4 py-3">
           <Button
             loading={loadingMore}
             onClick={onLoadMore}

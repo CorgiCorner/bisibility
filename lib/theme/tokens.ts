@@ -42,6 +42,7 @@ export const colorTokenNames = [
 
 export type ColorTokenName = (typeof colorTokenNames)[number];
 export type ColorSchemeName = "light" | "dark";
+type ColorTokenValue = `#${string}` | "transparent";
 
 /**
  * Primary buttons use the brand fill (#F1511C) in both schemes, with the cream
@@ -67,7 +68,7 @@ export const colorSchemes = {
     "bg-sunken": "#ECE7DB4D",
     "bg-band": "#F3EEE3",
     "bg-inset": "#E2DDD0",
-    "table-header-bg": "#ECE7DB",
+    "table-header-bg": "transparent",
     fg: "#1A1813",
     "fg-muted": "#615B4D",
     border: "#DDD8CC",
@@ -116,7 +117,7 @@ export const colorSchemes = {
     "bg-sunken": "#141414",
     "bg-band": "#141414",
     "bg-inset": "#080704",
-    "table-header-bg": "#15110A",
+    "table-header-bg": "transparent",
     fg: "#ECE7DB",
     "fg-muted": "#A09D95",
     // --border is the hairline for chrome and decoration. Dark --border-control
@@ -126,9 +127,9 @@ export const colorSchemes = {
     "border-soft": "#221D15",
     "border-control": "#616060",
     "nav-active": "#231F17",
-    // Sits in the dark hairline band so the track separates from --bg (#0F0C07) and
-    // --bg-elev (#191919) alike instead of vanishing the way recessed fills do.
-    "meter-track": "#443C29",
+    // Neutral mid-gray visible on --bg (#0F0C07) and --bg-elev (#191919); standard
+    // spend-bar track tone across settings and usage surfaces.
+    "meter-track": "#595959",
     accent: "#E08A6A",
     "accent-hover": "#EC9A7C",
     "accent-text": "#F0A18A",
@@ -156,7 +157,7 @@ export const colorSchemes = {
     "code-faint": "#7E7A6E",
     "code-border": "#26231E",
   },
-} as const satisfies Record<ColorSchemeName, Record<ColorTokenName, `#${string}`>>;
+} as const satisfies Record<ColorSchemeName, Record<ColorTokenName, ColorTokenValue>>;
 
 export const tailwindTokenColors = Object.fromEntries(
   colorTokenNames.map((name) => [name, `var(--${name})`]),

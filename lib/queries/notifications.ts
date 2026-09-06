@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import type { NotificationType, Prisma } from "@/lib/generated/prisma/client";
@@ -49,6 +50,7 @@ export type NotificationFeed = {
 };
 
 export type NotificationListOptions = {
+  dateFormat?: DateFormat;
   limit?: number;
   now?: Date;
 };
@@ -81,7 +83,7 @@ async function resolveNotificationScope(
   };
 }
 
-function mapNotification(row: NotificationRow, now: Date): NotificationFeedItem {
+function mapNotification(row: NotificationRow, now: Date, dateFormat: DateFormat) {
   const display = notificationDisplay(row.type, row.body, row.payload, row.project);
 
   return {
@@ -93,7 +95,7 @@ function mapNotification(row: NotificationRow, now: Date): NotificationFeedItem 
     payload: redactAuditIds(row.payload) as Prisma.JsonValue | null,
     projectId: row.project?.publicId ?? null,
     readAt: row.readAt?.toISOString() ?? null,
-    time: relativeTimeLabel(row.createdAt, now),
+    time: relativeTimeLabel(row.createdAt, now, dateFormat),
     title: row.title,
     type: row.type,
   };
@@ -108,7 +110,7 @@ function requiredPublicId(value: string | null, prefix: "ntf", resource: string)
 
 async function listScopedNotifications(
   scope: NotificationScope,
-  { limit, now = new Date() }: NotificationListOptions = {},
+  { dateFormat = "month_first", limit, now = new Date() }: NotificationListOptions = {},
 ) {
   const take = clampLimit(limit);
   const unreadRows = await prisma.notification.findMany({
@@ -128,7 +130,7 @@ async function listScopedNotifications(
         })
       : [];
 
-  return [...unreadRows, ...readRows].map((row) => mapNotification(row, now));
+  return [...unreadRows, ...readRows].map((row) => mapNotification(row, now, dateFormat));
 }
 
 async function countScopedUnreadNotifications(scope: NotificationScope) {

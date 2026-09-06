@@ -1,3 +1,6 @@
+"use client";
+
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import type { UpcomingForecast } from "@/lib/checks/contract";
 import { formatCap, formatEstimatedCost, formatForecastDate } from "./upcoming-format";
 
@@ -8,6 +11,7 @@ export type BudgetForecastNoteProps = {
 // A small, muted note. Only the amounts and dates are emphasised (semibold, full
 // contrast); the surrounding prose stays quiet at ~12px per the design.
 export function BudgetForecastNote({ forecast }: Readonly<BudgetForecastNoteProps>) {
+  const dateFormat = useDateFormat();
   if (!forecast || forecast.next48hCents <= 0) return null;
 
   const cap = formatCap(forecast.capCents);
@@ -20,7 +24,7 @@ export function BudgetForecastNote({ forecast }: Readonly<BudgetForecastNoteProp
           At the current daily rate the <strong className="font-semibold text-fg">{cap} cap</strong>{" "}
           lasts until{" "}
           <strong className="font-semibold text-fg">
-            ~{formatForecastDate(forecast.capLastsUntil)}
+            ~{formatForecastDate(forecast.capLastsUntil, dateFormat)}
           </strong>
           .{" "}
         </>

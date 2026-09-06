@@ -54,7 +54,7 @@ describe("team invite delivery", () => {
     expect(message.html).toContain("Editor");
     expect(message.html).toContain("Owner Example (owner@example.com)");
     expect(message.html).toContain("invited you to bisibility");
-    expect(message.html).toContain("August 1, 2026");
+    expect(message.html).toContain("Aug 1, 2026");
     expect(message.html.match(/<a\b/g)).toHaveLength(1);
     expect(message.html).toContain("min-height:44px");
     expect(message.html).toContain("font-size:16px");
@@ -64,7 +64,7 @@ describe("team invite delivery", () => {
     expect(message.text).toContain("Role: Editor");
     expect(message.text).toContain("Invited by: Owner Example (owner@example.com)");
     expect(message.text).toContain("invited you to bisibility");
-    expect(message.text).toContain("Expires: August 1, 2026");
+    expect(message.text).toContain("Expires: Aug 1, 2026");
     expect(message.text).not.toMatch(/<[^>]+>/);
     expect(message.subject.length).toBeLessThan(60);
   });

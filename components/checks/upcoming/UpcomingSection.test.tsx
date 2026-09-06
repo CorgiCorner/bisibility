@@ -50,7 +50,7 @@ describe("UpcomingSection", () => {
     expect(screen.queryByText("~2h")).not.toBeInTheDocument();
     expect(screen.queryByText("~3h")).not.toBeInTheDocument();
     expect(screen.queryByText(/14:17/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Jul 24, 16:17/)).toBeInTheDocument();
+    expect(screen.getByText(/Jul 24, 2026, 16:17/)).toBeInTheDocument();
     expect(screen.getAllByText(/\(Europe\/Warsaw\)/).length).toBe(3);
     expect(screen.queryByText("hidden fourth sample")).not.toBeInTheDocument();
 
@@ -70,7 +70,7 @@ describe("UpcomingSection", () => {
     fireEvent.click(screen.getByRole("button", { name: /Tomorrow/ }));
 
     expect(screen.getByText("example")).toBeInTheDocument();
-    expect(screen.getByText(/Jul 25, 09:37/)).toBeInTheDocument();
+    expect(screen.getByText(/Jul 25, 2026, 09:37/)).toBeInTheDocument();
     expect(screen.queryByText(/~09:00/)).not.toBeInTheDocument();
     expect(screen.queryByText(/~09:37/)).not.toBeInTheDocument();
   });

@@ -8,6 +8,7 @@ const observability = {
   lastProbeAt: "2026-08-31T10:00:00.000Z",
   qualifyingDays: 5,
   readyThrough: {
+    d1: { current: false, previous: false },
     d7: { current: false, previous: false },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },
@@ -27,7 +28,6 @@ const runtime = {
     status: "ok" as const,
     temporalIdentityComparison: { detail: "identities match", status: "match" as const },
   },
-  workflowStatus: "running" as const,
 };
 const base = {
   connectionStatus: "connected" as const,
@@ -92,13 +92,13 @@ describe("searchModuleConsumerStatus", () => {
     ).toEqual({ detail: "corgitocoin.com", state: "not_configured", summary: "Not configured" });
   });
 
-  it("keeps the existing first-view state while using the shared running summary", () => {
+  it("reports the first view ready when the first finalized day is ready", () => {
     expect(
       searchModuleConsumerStatus({
         ...base,
         observability: {
           ...observability,
-          readyThrough: { ...observability.readyThrough, d7: { current: true, previous: false } },
+          readyThrough: { ...observability.readyThrough, d1: { current: true, previous: false } },
         },
       }),
     ).toMatchObject({ state: "first_view_ready", summary: expect.stringMatching(/^Running ·/) });
@@ -108,7 +108,7 @@ describe("searchModuleConsumerStatus", () => {
     expect(
       searchModuleConsumerStatus({
         ...base,
-        runtime: { ...runtime, workflowStatus: "completed" },
+        runtime: { ...runtime },
         state: "completed",
       }),
     ).toMatchObject({ state: "kept_current", summary: `Complete · ${counter}` });

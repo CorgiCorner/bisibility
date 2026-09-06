@@ -2,9 +2,9 @@ import "server-only";
 
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
-import { SchedulerDisabledError } from "@/lib/scheduler/driver";
+import { SchedulerDisabledError, schedulerDriver } from "@/lib/scheduler/driver";
 import { SYNC_NOW_COOLDOWN_MS } from "@/lib/search-insights/constants";
-import { startSearchInsightsSyncWorkflow } from "@/lib/temporal/search-insights-client";
+import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 import { resolveSearchInsightsConnection, SEARCH_INSIGHTS_SOURCE } from "./credentials";
 import { loadImportRow } from "./import-state";
 
@@ -16,13 +16,13 @@ export type SyncNowInput = {
 
 export type SyncNowResult = {
   nextAllowedAt?: string;
-  status: "started" | "already_running" | "cooldown" | "no_connection" | "unavailable";
+  status: "queued" | "already_running" | "cooldown" | "no_connection" | "unavailable";
 };
 
 /**
  * Precondition: the caller has already authorized the actor for this project with
- * requireProjectScope. This service starts a workflow, stamps the import row and writes an
- * audit record; it performs no authorization of its own.
+ * requireProjectScope. This service records worker-owned sync intent and an audit record; it
+ * performs no authorization of its own.
  */
 export async function requestSearchInsightsSync(input: SyncNowInput): Promise<SyncNowResult> {
   // The internal id is what requireProjectScope already resolved, so the lookup here only
@@ -56,49 +56,73 @@ export async function requestSearchInsightsSync(input: SyncNowInput): Promise<Sy
   }
 
   try {
-    const started = await startSearchInsightsSyncWorkflow({ projectId: project.id });
-    // Upsert, not update: the row is missing whenever the module has never been rendered for
-    // this property, and a stamp that matched nothing would leave this path unthrottled. The
-    // sync workflow upserts the same key, so creating it here only brings that forward.
-    await prisma.searchAnalyticsImport.upsert({
-      create: {
-        lastSyncStartedAt: now,
+    if (schedulerDriver() === "none") throw new SchedulerDisabledError();
+  } catch (error) {
+    if (!(error instanceof SchedulerDisabledError)) throw error;
+    return { status: "unavailable" };
+  }
+
+  // A queued or running row belongs to the backfill, which already owns the provider quota.
+  // A failed import is requeued for that same backfill instead of starting an incremental run
+  // without a completed history. Only settled imports can carry incremental sync intent.
+  const requestsIncremental = row?.state === "completed" || row?.state === "waiting_for_first_data";
+
+  // Upsert, not update: the row is missing whenever the module has never been rendered for
+  // this property. Creating it as queued gives the backfill reconciler the only intent it
+  // should consume for a fresh import.
+  await prisma.searchAnalyticsImport.upsert({
+    create: {
+      lastSyncStartedAt: now,
+      projectId: project.id,
+      property: connection.property,
+      source: SEARCH_INSIGHTS_SOURCE,
+      state: "queued",
+    },
+    update: requestsIncremental
+      ? { lastSyncStartedAt: now, syncRequestedAt: now, syncStartedAt: null }
+      : row?.state === "failed"
+        ? {
+            lastSyncStartedAt: now,
+            pausedReason: null,
+            state: "queued",
+            syncRequestedAt: null,
+            syncStartedAt: null,
+            workflowId: null,
+          }
+        : {
+            lastSyncStartedAt: now,
+            // A prior version could leave this incompatible intent on a queued row. Clear it
+            // so completing the backfill cannot start a stale incremental sync later.
+            syncRequestedAt: null,
+          },
+    where: {
+      projectId_property_source: {
         projectId: project.id,
         property: connection.property,
         source: SEARCH_INSIGHTS_SOURCE,
-        state: "queued",
       },
-      update: { lastSyncStartedAt: now },
-      where: {
-        projectId_property_source: {
-          projectId: project.id,
-          property: connection.property,
-          source: SEARCH_INSIGHTS_SOURCE,
-        },
+    },
+  });
+  if (requestsIncremental) void publishWorkerIntent("search_insights_sync").catch(() => undefined);
+  // The intent and cooldown are durable, so a failed audit must not invite a retry that can
+  // only answer "cooldown".
+  try {
+    await writeAudit({
+      action: "search_insights.sync_now",
+      actorId: input.actorId,
+      after: {
+        property: connection.property,
+        ...(requestsIncremental ? { syncRequestedAt: now } : {}),
       },
+      projectId: project.id,
+      targetId: project.publicId,
+      targetType: "project",
     });
-    // The sync is already running and the cooldown is already stamped, so a failed audit
-    // write must not report it as unavailable: the retry it invites would answer "cooldown".
-    try {
-      await writeAudit({
-        action: "search_insights.sync_now",
-        actorId: input.actorId,
-        after: { property: connection.property, workflowId: started.workflowId },
-        projectId: project.id,
-        targetId: project.publicId,
-        targetType: "project",
-      });
-    } catch (error) {
-      console.error("[search-insights] sync now audit could not be written", {
-        error,
-        projectId: project.id,
-      });
-    }
-    return { status: "started" };
   } catch (error) {
-    if (!(error instanceof SchedulerDisabledError)) {
-      console.error("[search-insights] sync now failed", { error, projectId: project.id });
-    }
-    return { status: "unavailable" };
+    console.error("[search-insights] sync now audit could not be written", {
+      error,
+      projectId: project.id,
+    });
   }
+  return { status: "queued" };
 }

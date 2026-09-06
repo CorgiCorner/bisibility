@@ -43,7 +43,7 @@ export function KpiCard({
           {deltaAction === "check_runs" && projectRef ? (
             <Link
               className={`ml-2 align-baseline font-sans tabular-nums text-xs font-semibold hover:underline ${deltaToneClassName[deltaTone]}`}
-              href={rankTrackerTabPath(projectRef, "checks")}
+              href={rankTrackerTabPath(projectRef, "runs")}
             >
               {delta}
             </Link>

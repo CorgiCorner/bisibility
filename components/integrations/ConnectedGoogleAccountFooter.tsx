@@ -21,8 +21,8 @@ export function ConnectedGoogleAccountFooter({
     <div
       className={
         standalone
-          ? "flex flex-wrap items-center justify-between gap-x-5 gap-y-2 border-t border-border bg-bg-sunken px-5 py-3.5 sm:px-7"
-          : "flex items-center justify-between gap-3 border-t border-border-soft pt-3"
+          ? "flex flex-wrap items-center justify-between gap-x-5 gap-y-2 border-t border-border px-3.5 py-3.5"
+          : "flex items-center justify-between gap-3 border-t border-border pt-3"
       }
       data-slot="connected-google-account-footer"
     >

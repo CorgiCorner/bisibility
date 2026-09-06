@@ -285,6 +285,9 @@ describe("pending Google OAuth property selection", () => {
       expect.objectContaining({
         create: expect.objectContaining({
           credentialsEncrypted: "encrypted_credentials",
+          firstSyncFinishedAt: null,
+          firstSyncRequestedAt: expect.any(Date),
+          firstSyncStartedAt: null,
           projectId: "project_1",
           provider: "gsc",
           publicId: expect.stringMatching(/^conn_[a-z0-9]{24}$/),
@@ -381,6 +384,31 @@ describe("pending Google OAuth property selection", () => {
     );
   });
 
+  it("does not re-request a first sync when an already connected property is reauthorized", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialsEncrypted: "old_credentials",
+      enabled: true,
+      id: "connection_1",
+      kind: "analytics",
+      publicId: "conn_abcdefghijklmnopqrstuvwx",
+      status: "connected",
+    });
+    mocks.prisma.providerConnection.upsert.mockResolvedValue({
+      id: "connection_1",
+      publicId: "conn_abcdefghijklmnopqrstuvwx",
+    });
+
+    await completePendingGooglePropertySelection({
+      projectId: "prj_1",
+      property: "sc-domain:example.com",
+    });
+
+    const { update } = mocks.prisma.providerConnection.upsert.mock.calls[0][0];
+    expect(update).not.toHaveProperty("firstSyncRequestedAt");
+    expect(update).not.toHaveProperty("firstSyncStartedAt");
+    expect(update).not.toHaveProperty("firstSyncFinishedAt");
+  });
+
   it("keeps GA4 pending and does not write connected when the property probe fails", async () => {
     mocks.decryptSecret.mockReturnValue(JSON.stringify({ ...pending, provider: "ga4" }));
     mocks.verifyProviderConnectionBeforeSave.mockRejectedValue(
@@ -423,7 +451,13 @@ describe("pending Google OAuth property selection", () => {
     expect(mocks.prisma.providerConnection.upsert).toHaveBeenCalledOnce();
     expect(mocks.prisma.providerConnection.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        create: expect.objectContaining({ provider: "ga4", status: "connected" }),
+        create: expect.objectContaining({
+          firstSyncFinishedAt: null,
+          firstSyncRequestedAt: expect.any(Date),
+          firstSyncStartedAt: null,
+          provider: "ga4",
+          status: "connected",
+        }),
       }),
     );
     expect(mocks.queueSearchInsightsImport).toHaveBeenCalledWith({

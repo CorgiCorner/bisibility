@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { Prisma, type SearchAnalyticsImport } from "@/lib/generated/prisma/client";
+import type { SearchAnalyticsImport } from "@/lib/generated/prisma/client";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
@@ -9,18 +9,14 @@ import {
   resolveSearchInsightsConnectionState,
   type SearchInsightsConnectionStatus,
 } from "@/lib/search-insights/connection-state";
-import { WINDOW_PRESETS } from "@/lib/search-insights/constants";
-import {
-  type DateWindow,
-  dateKey,
-  type FinalizedWindow,
-  finalizedWindow,
-} from "@/lib/search-insights/dates";
+import { FIRST_LOOK_WINDOW, WINDOW_PRESETS } from "@/lib/search-insights/constants";
+import { dateKey, type FinalizedWindow, finalizedWindow } from "@/lib/search-insights/dates";
 import { searchInsightsPropertyKey } from "@/lib/search-insights/keys";
 import { SEARCH_INSIGHTS_SOURCE } from "@/lib/search-insights/sync/credentials";
 import { searchSyncRequestSetsPerHour } from "@/lib/search-insights/sync/plan";
 import { resolveSearchSyncSettings } from "@/lib/settings/search-sync-config";
 import {
+  resolveComparisonMode,
   resolvePeriod,
   type SearchInsightsPeriod,
   type SearchInsightsProperty,
@@ -28,6 +24,7 @@ import {
   searchInsightsProperty,
   yoyState,
 } from "./context-model";
+import { getWindowCounts, type SearchInsightsCounts } from "./counts";
 import type { ImportObservabilityFacts } from "./import-observability";
 import * as importObservabilityDb from "./import-observability-db";
 import { readSearchImportQueueFacts, type SearchImportQueueFacts } from "./import-queue";
@@ -38,7 +35,7 @@ import {
   readStoredOrganicSessionsContext,
   type SearchInsightsImportState,
 } from "./sessions-context";
-import { searchInsightsWindowFilter } from "./window-filter";
+import { readWindowFacts } from "./window-facts";
 
 export type { SearchInsightsPeriod, SearchInsightsProperty } from "./context-model";
 
@@ -49,9 +46,8 @@ export type SearchInsightsConnection = {
   status: SearchInsightsConnectionStatus;
 };
 
+export type { SearchInsightsCounts } from "./counts";
 export type { SearchInsightsImportState } from "./sessions-context";
-
-export type SearchInsightsCounts = { pages: number; queries: number };
 
 export type SearchInsightsContext = {
   connection: SearchInsightsConnection;
@@ -82,6 +78,7 @@ export type SearchInsightsScope = {
 };
 
 export type SearchInsightsViewOptions = {
+  comparison?: string;
   period?: string;
   /** A stored, non-active GSC property to render without mutating the connection. */
   property?: string;
@@ -119,12 +116,6 @@ async function readConnection(projectId: string): Promise<SearchInsightsConnecti
   };
 }
 
-/**
- * COUNT(DISTINCT ...) stays in the database: the module only needs the two numbers, and the
- * grouped rows behind them run to tens of thousands on a 90 day window. The page count belongs
- * to the first view, not to the context bar, and rides this statement so switching a property
- * costs one round trip instead of two.
- */
 async function resolvePropertyView(
   projectId: string,
   activeProperty: string | null,
@@ -147,30 +138,11 @@ async function resolvePropertyView(
     : { ga4PropertyId: null, property: activeProperty, view: "active" as const };
 }
 
-async function readCounts(
-  projectId: string,
-  property: string,
-  current: DateWindow,
-): Promise<SearchInsightsCounts> {
-  const filter = searchInsightsWindowFilter(projectId, property, current);
-  const rows = await prisma.$queryRaw<{ pages: bigint; queries: bigint }[]>(Prisma.sql`
-    SELECT
-      (
-        SELECT COUNT(DISTINCT "keyHash")
-        FROM "search_analytics_page_daily"
-        WHERE ${filter}
-      ) AS "pages",
-      (
-        SELECT COUNT(DISTINCT "keyHash")
-        FROM "search_analytics_query_daily"
-        WHERE ${filter}
-      ) AS "queries"
-  `);
-  const row = rows.at(0);
-  return { pages: Number(row?.pages ?? 0), queries: Number(row?.queries ?? 0) };
-}
-
-function readyImportPeriod(raw: string | undefined, facts: ImportObservabilityFacts | null) {
+function readyImportPeriod(
+  raw: string | undefined,
+  facts: ImportObservabilityFacts | null,
+  comparison: SearchInsightsPeriod["comparison"],
+) {
   const ready = facts
     ? {
         "7": facts.readyThrough.d7.current,
@@ -183,7 +155,10 @@ function readyImportPeriod(raw: string | undefined, facts: ImportObservabilityFa
     requested && ready?.[requested.id]
       ? requested
       : [...WINDOW_PRESETS].reverse().find(({ id }) => ready?.[id]);
-  return resolvePeriod(preset?.id ?? "7");
+  if (preset) return resolvePeriod(preset.id, comparison);
+  return facts?.readyThrough.d1.current
+    ? { ...FIRST_LOOK_WINDOW, comparison }
+    : resolvePeriod("7", comparison);
 }
 
 export async function loadSearchInsightsScope(
@@ -203,7 +178,12 @@ export async function loadSearchInsightsScope(
       ? await readOrganicSessionsContext(project.id)
       : selection.ga4PropertyId
         ? await readStoredOrganicSessionsContext(project.id, selection.ga4PropertyId)
-        : { importState: null, property: null, status: "not_connected" as const };
+        : {
+            importState: null,
+            keyEventsConfigured: null,
+            property: null,
+            status: "not_connected" as const,
+          };
 
   const importRow = property
     ? await prisma.searchAnalyticsImport.findUnique({
@@ -243,13 +223,15 @@ export async function loadSearchInsightsScope(
         })
       : null,
   ]);
+  const yoy = yoyState(importRow);
+  const comparison = resolveComparisonMode(options.comparison, yoy);
   const period =
     selection.view === "active"
-      ? readyImportPeriod(options.period, importFacts)
-      : resolvePeriod(options.period);
+      ? readyImportPeriod(options.period, importFacts, comparison)
+      : resolvePeriod(options.period, comparison);
   const localReadableThrough =
     selection.view === "active" &&
-    importFacts?.readyThrough.d7.current &&
+    importFacts?.readyThrough.d1.current &&
     importRow?.newestFinalizedDate
       ? dateKey(importRow.newestFinalizedDate)
       : selection.view === "archived" && importRow?.finalizedThroughDate
@@ -266,8 +248,30 @@ export async function loadSearchInsightsScope(
     property,
     queue,
     view: selection.view,
-    window: localReadableThrough ? finalizedWindow(localReadableThrough, period.days) : null,
+    window: localReadableThrough
+      ? finalizedWindow(localReadableThrough, period.days, period.comparison)
+      : null,
   };
+}
+
+/**
+ * The window's query count, from the stored facts when the import has computed them.
+ *
+ * This sits in the page's blocking prefix, which is where the 400 ms budget is spent, and it is
+ * the single most expensive statement there: 441 ms cold at 28 days and 1,173 ms at 90 on a
+ * production-shaped instance. A miss falls through to the live count, so the number is always
+ * right and only sometimes slow.
+ */
+async function countsForWindow(scope: SearchInsightsScope): Promise<SearchInsightsCounts> {
+  if (!scope.property || !scope.window) return { queries: 0 };
+  const read = await readWindowFacts({
+    finalizedThrough: scope.window.current.end,
+    projectId: scope.projectId,
+    property: scope.property,
+    windowDays: scope.period.days,
+  });
+  if (read.kind === "hit") return read.facts.counts;
+  return getWindowCounts(scope.projectId, scope.property, scope.window.current);
 }
 
 export async function getSearchInsightsContext(
@@ -275,10 +279,7 @@ export async function getSearchInsightsContext(
   options: ScopedOptions = {},
 ): Promise<SearchInsightsContext> {
   const scope = options.scope ?? (await loadSearchInsightsScope(projectRef, options));
-  const counts =
-    scope.property && scope.window
-      ? await readCounts(scope.projectId, scope.property, scope.window.current)
-      : { pages: 0, queries: 0 };
+  const counts = scope.property && scope.window ? await countsForWindow(scope) : { queries: 0 };
 
   return {
     connection: scope.connection,

@@ -28,6 +28,7 @@ export type RankCheckActivityInput = {
   keywordId: string;
   providerId?: string;
   rankCheckId?: string;
+  runItemId?: string;
 };
 
 export type RunRankCheckActivityInput = RankCheckActivityInput & {

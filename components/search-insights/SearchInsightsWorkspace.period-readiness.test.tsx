@@ -16,6 +16,7 @@ const importFacts = {
   lastProbeAt: "2026-08-31T10:00:00.000Z",
   qualifyingDays: 7,
   readyThrough: {
+    d1: { current: true, previous: true },
     d7: { current: true, previous: false },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },
@@ -37,7 +38,7 @@ const property = {
 };
 const context = {
   connection: { property, status: "connected" as const },
-  counts: { pages: 0, queries: 0 },
+  counts: { queries: 0 },
   importState: {
     capHitDays: 0,
     cursorDate: "2026-08-31",
@@ -52,8 +53,18 @@ const context = {
     pausedReason: null,
     state: "running",
   },
-  organicSessions: { importState: null, property: null, status: "not_connected" as const },
-  period: { days: 7, id: "7" as const, label: "7 finalized days", sub: "vs previous 7" },
+  organicSessions: {
+    importState: null,
+    keyEventsConfigured: null,
+    property: null,
+    status: "not_connected" as const,
+  },
+  period: {
+    comparison: "previous_period" as const,
+    days: 7,
+    id: "7" as const,
+    label: "7 finalized days",
+  },
   projectDomain: "example.com",
   selectedProperty: property,
   view: "active" as const,
@@ -93,16 +104,20 @@ describe("SearchInsightsWorkspace period readiness", () => {
     const user = userEvent.setup();
     renderWorkspace();
 
-    await user.click(screen.getByRole("button", { name: "Comparison window" }));
+    await user.click(screen.getByRole("button", { name: /^Comparison window:/ }));
 
     const menu = screen.getByRole("listbox", { name: "Comparison window" });
     const seven = within(menu).getByRole("option", { name: /7 finalized days/i });
     const twentyEight = within(menu).getByRole("option", { name: /28 finalized days/i });
     const ninety = within(menu).getByRole("option", { name: /90 finalized days/i });
     expect(seven).not.toHaveAttribute("aria-disabled");
+    expect(seven).toHaveTextContent("Aug 25 - 31");
+    expect(seven).not.toHaveTextContent("Aug 18 - 24");
     expect(twentyEight).toHaveAttribute("aria-disabled", "true");
-    expect(twentyEight).toHaveTextContent("vs previous 28 / ready in ~2 hr");
+    expect(twentyEight).toHaveTextContent("Aug 4 - 31 · ready in ~2 hr");
+    expect(twentyEight).not.toHaveTextContent("Jul 7 - Aug 3");
     expect(ninety).toHaveAttribute("aria-disabled", "true");
-    expect(ninety).toHaveTextContent("vs previous 90 / ready in ~7 hr");
+    expect(ninety).toHaveTextContent("Jun 3 - Aug 31 · ready in ~7 hr");
+    expect(ninety).not.toHaveTextContent("Mar 5 - Jun 2");
   });
 });

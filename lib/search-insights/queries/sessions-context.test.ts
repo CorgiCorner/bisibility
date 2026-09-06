@@ -78,6 +78,17 @@ describe("organicSessionsImportCoversWindow", () => {
     ).toBe(false);
   });
 
+  it("requires only the current boundary when the view has no comparison", () => {
+    const boundaryOnly = importState({ cursorDate: "2026-07-07" });
+    const firstLookWindow: FinalizedWindow = {
+      current: { end: "2026-07-08", start: "2026-07-08" },
+      previous: { end: "2026-07-07", start: "2026-07-07" },
+    };
+
+    expect(organicSessionsImportCoversWindow(boundaryOnly, firstLookWindow, false)).toBe(true);
+    expect(organicSessionsImportCoversWindow(boundaryOnly, firstLookWindow, true)).toBe(false);
+  });
+
   it("uses a completed import's retention boundary as its oldest stored day", () => {
     expect(
       organicSessionsImportCoversWindow(
@@ -101,6 +112,7 @@ describe("importStateView", () => {
       lastProbeAt: null,
       qualifyingDays: 7,
       readyThrough: {
+        d1: { current: true, previous: true },
         d7: { current: true, previous: false },
         d28: { current: false, previous: false },
         d90: { current: false, previous: false },
@@ -178,6 +190,7 @@ describe("readOrganicSessionsContext", () => {
       daysTotal: 488,
       earliestTargetDate: new Date("2025-03-14T00:00:00.000Z"),
       finalizedThroughDate: new Date("2026-07-08T00:00:00.000Z"),
+      keyEventsConfigured: true,
       lastProbeAt: null,
       lastSyncStartedAt: null,
       newestFinalizedDate: new Date("2026-07-08T00:00:00.000Z"),
@@ -187,6 +200,7 @@ describe("readOrganicSessionsContext", () => {
 
     await expect(readOrganicSessionsContext("project_1")).resolves.toMatchObject({
       importState: { daysDone: 30, state: "running" },
+      keyEventsConfigured: true,
       property: "123456789",
       status: "connected",
     });
@@ -221,6 +235,7 @@ describe("readOrganicSessionsContext", () => {
 
     await expect(readOrganicSessionsContext("project_1")).resolves.toEqual({
       importState: null,
+      keyEventsConfigured: null,
       property: null,
       status: "needs_reauth",
     });
@@ -232,6 +247,7 @@ describe("readOrganicSessionsContext", () => {
 
     await expect(readOrganicSessionsContext("project_1")).resolves.toEqual({
       importState: null,
+      keyEventsConfigured: null,
       property: null,
       status: "not_connected",
     });

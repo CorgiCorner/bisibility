@@ -1,3 +1,4 @@
+import { setNavigationState } from "@/tests/next-navigation";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -5,6 +6,7 @@ import { CommandPaletteProvider, CommandPaletteTrigger, useCommandPalette } from
 import { type RegisteredCommand, useRegisterCommands } from "./command-registry";
 
 const mocks = vi.hoisted(() => ({
+  commandGroups: vi.fn(),
   run: vi.fn(async () => undefined),
   search: vi.fn(),
   setMode: vi.fn(),
@@ -23,19 +25,24 @@ vi.mock("./use-keyword-search", () => ({
   useKeywordSearch: () => ({ keywordHits: [], search: mocks.search }),
 }));
 vi.mock("./command-palette-groups", () => ({
-  commandGroups: () => [
-    {
-      items: [
-        {
-          hint: "Open",
-          icon: () => <span>icon</span>,
-          label: "Open overview",
-          run: mocks.run,
-        },
-      ],
-      title: "Navigation",
-    },
-  ],
+  // Records the arguments so the props the provider threads through stay asserted, then
+  // returns the same fixed group every render assertion below is written against.
+  commandGroups: (...args: unknown[]) => {
+    mocks.commandGroups(...args);
+    return [
+      {
+        items: [
+          {
+            hint: "Open",
+            icon: () => <span>icon</span>,
+            label: "Open overview",
+            run: mocks.run,
+          },
+        ],
+        title: "Navigation",
+      },
+    ];
+  },
   filterGroups: (groups: MockGroup[], query: string) => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return groups;
@@ -265,5 +272,31 @@ describe("CommandPalette", () => {
 
     expect(screen.queryByText("Add keyword")).not.toBeInTheDocument();
     expect(screen.getByText("Export keywords")).toBeInTheDocument();
+  });
+
+  it("hands the project's markets to the command groups", () => {
+    const markets = [{ label: "Malaga core", ref: "pmkt_malagacore000000000000" }];
+    setNavigationState({ pathname: "/app/prj_1/m/pmkt_current/rank-tracker" });
+
+    render(
+      <CommandPaletteProvider
+        defaultOpen
+        markets={markets}
+        projectId="project_1"
+        projectRef="prj_1"
+      >
+        <Controls />
+      </CommandPaletteProvider>,
+    );
+
+    expect(mocks.commandGroups).toHaveBeenCalledWith(
+      "prj_1",
+      expect.any(Function),
+      expect.any(Function),
+      [],
+      markets,
+      { marketSegments: ["m", "pmkt_current"] },
+      [],
+    );
   });
 });

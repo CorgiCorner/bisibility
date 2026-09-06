@@ -27,6 +27,17 @@ type Story = StoryObj<typeof meta>;
 
 const pauseAction = async () => ({ ok: true as const, state: "running" });
 
+const firstLookFacts = {
+  ...storyImportFacts,
+  consecutiveDays: 2,
+  readyThrough: {
+    ...storyImportFacts.readyThrough,
+    d1: { current: true, previous: false },
+    d7: { current: false, previous: false },
+  },
+  stall: { ...storyImportFacts.stall, expectedDayMs: 300_000 },
+};
+
 const common = {
   coverage: storyCoverage,
   deploymentMode: "self-host" as const,
@@ -45,7 +56,6 @@ const common = {
         status: "ok" as const,
         temporalIdentityComparison: { detail: "identities match", status: "match" as const },
       },
-      workflowStatus: "running" as const,
     },
     state: "running" as const,
   },
@@ -112,6 +122,14 @@ export const PartialBackfill: Story = {
 };
 
 export const First28Ready: Story = { args: common };
+
+export const FirstLookReady: Story = {
+  args: {
+    ...common,
+    importState: { ...storyImportState, facts: firstLookFacts },
+    statusFacts: { ...common.statusFacts, observability: firstLookFacts },
+  },
+};
 
 export const CalculableZeroCoverage: Story = {
   args: {

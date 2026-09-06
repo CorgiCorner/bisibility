@@ -9,6 +9,7 @@ import {
   writeCloudImportFailAudit,
 } from "./audit";
 import { reportCloudImportFailure } from "./failure";
+import { historyImportResultCounts } from "./history-counts";
 import { releaseTerminalImportHold } from "./hold";
 import { createKeywordRows, importHistory, loadKeywordMaps } from "./importers";
 import type { Project, VerifiedMigrationToken } from "./jobs";
@@ -96,9 +97,7 @@ export async function importCloudExport(
           tx,
         );
         const counts = {
-          history: historyCounts.imported,
-          history_received: historyCounts.received,
-          history_skipped: historyCounts.skipped,
+          ...historyImportResultCounts(historyCounts),
           keywords: body.keywords.length,
           keywords_created: keywordCounts.created,
           keywords_skipped: keywordCounts.skipped,

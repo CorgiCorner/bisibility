@@ -11,7 +11,9 @@ const mocks = vi.hoisted(() => ({
   evaluateKeywordAlerts: vi.fn((): Promise<{ id: string }[]> => Promise.resolve([])),
   notifyRankCheckCompleted: vi.fn(() => Promise.resolve()),
   notifyRankCheckFailed: vi.fn(() => Promise.resolve()),
+  publishOperationChanged: vi.fn(() => Promise.resolve()),
   prisma: {
+    $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     keywordSchedule: { update: vi.fn() },
@@ -19,6 +21,8 @@ const mocks = vi.hoisted(() => ({
     providerConnection: { update: vi.fn() },
     providerCostEntry: { createMany: vi.fn() },
     rankCheck: { create: vi.fn(), findUniqueOrThrow: vi.fn(), updateMany: vi.fn() },
+    rankCheckRun: { update: vi.fn() },
+    rankCheckRunItem: { findUnique: vi.fn(), updateMany: vi.fn() },
     signal: { create: vi.fn() },
   },
 }));
@@ -34,6 +38,9 @@ vi.mock("@/lib/notifications/events", () => ({
   notifyRankCheckCompleted: mocks.notifyRankCheckCompleted,
   notifyRankCheckFailed: mocks.notifyRankCheckFailed,
 }));
+vi.mock("@/lib/notifications/realtime", () => ({
+  publishOperationChanged: mocks.publishOperationChanged,
+}));
 
 const checkedAt = new Date("2026-01-01T06:00:00.000Z");
 const KEYWORD_PUBLIC_ID = "kw_abcdefghijklmnopqrstuvwx";
@@ -42,8 +49,11 @@ const RANK_CHECK_PUBLIC_ID = "check_abcdefghijklmnopqrstuvwx";
 describe("rank-check persistence update path", () => {
   beforeEach(() => {
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
+    mocks.publishOperationChanged.mockResolvedValue(undefined);
     mocks.prisma.auditLog.create.mockResolvedValue({ id: "audit_1" });
     mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.rankCheckRun.update.mockResolvedValue({ projectId: "project_1" });
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue(null);
     mocks.prisma.rankCheck.findUniqueOrThrow.mockImplementation(({ where }) =>
       Promise.resolve({ id: where.id, publicId: RANK_CHECK_PUBLIC_ID, raw: null, trigger: null }),
     );
@@ -57,7 +67,9 @@ describe("rank-check persistence update path", () => {
   });
 
   it("persists completion, schedule state, provider usage, and audit atomically", async () => {
+    let transactionResolved = false;
     const tx = {
+      $queryRaw: vi.fn(),
       auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
       keywordSchedule: { update: vi.fn(() => Promise.resolve({})) },
       projectDefaults: { update: vi.fn() },
@@ -75,9 +87,19 @@ describe("rank-check persistence update path", () => {
         ),
         updateMany: vi.fn(() => Promise.resolve({ count: 1 })),
       },
+      rankCheckRun: { update: vi.fn() },
+      rankCheckRunItem: { findUnique: vi.fn(async () => null), updateMany: vi.fn() },
       signal: { create: vi.fn(({ data }) => Promise.resolve({ id: "signal_1", ...data })) },
     };
-    mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
+    mocks.prisma.$transaction.mockImplementation(async (callback) => {
+      const result = await callback(tx);
+      transactionResolved = true;
+      return result;
+    });
+    mocks.publishOperationChanged.mockImplementation(async () => {
+      expect(transactionResolved).toBe(true);
+      throw new Error("Redis unavailable");
+    });
 
     await persistRankCheck(
       {
@@ -115,6 +137,7 @@ describe("rank-check persistence update path", () => {
     );
 
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(mocks.publishOperationChanged).toHaveBeenCalledWith({ projectId: "project_1" });
     expect(tx.rankCheck.updateMany).toHaveBeenCalledWith({
       data: expect.objectContaining({
         attemptCount: 1,
@@ -274,6 +297,57 @@ describe("rank-check persistence update path", () => {
       }),
     });
     expect(rankCheck.id).toBe("rank_running_1");
+  });
+
+  it("transitions a linked queued task completion and increments its run", async () => {
+    mocks.prisma.rankCheck.findUniqueOrThrow.mockResolvedValue({
+      costCents: 0.06,
+      id: "rank_running_1",
+      publicId: RANK_CHECK_PUBLIC_ID,
+      raw: null,
+      trigger: "scheduled",
+    });
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue({ runId: "run_1" });
+    mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 1 });
+
+    await persistRankCheck(
+      {
+        existingRankCheckId: "rank_running_1",
+        hasDefaults: false,
+        hasSchedule: false,
+        keywordId: "keyword_1",
+        keywordPublicId: KEYWORD_PUBLIC_ID,
+        projectId: "project_1",
+      },
+      {
+        comparisonAllowed: true,
+        rankCheck: {
+          billingUnits: null,
+          checkedAt,
+          costCents: 0.06,
+          estimatedCostCents: null,
+          keywordId: "keyword_1",
+          normalizationVersion: "v1",
+          organicRanks: null,
+          position: 4,
+          previousPosition: 8,
+          provider: "dataforseo",
+          rankingUrl: null,
+          raw: null,
+          requestedDepth: 20,
+        },
+        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
+      },
+    );
+
+    expect(mocks.prisma.rankCheckRunItem.updateMany).toHaveBeenCalledWith({
+      data: { actualCostCents: 0.06, finishedAt: expect.any(Date), status: "completed" },
+      where: { rankCheckId: "rank_running_1", status: { in: ["queued", "running"] } },
+    });
+    expect(mocks.prisma.rankCheckRun.update).toHaveBeenCalledWith({
+      data: { completedCount: { increment: 1 } },
+      where: { id: "run_1" },
+    });
   });
 
   it("clears errorCode on the completed create path after a transient retry", async () => {
@@ -568,9 +642,41 @@ describe("rank-check persistence update path", () => {
     expect(rankCheck.id).toBe("rank_running_1");
   });
 
+  it("transitions a linked queued task failure and increments its run", async () => {
+    mocks.prisma.rankCheck.findUniqueOrThrow.mockResolvedValue({
+      costCents: 0,
+      id: "rank_running_1",
+      publicId: RANK_CHECK_PUBLIC_ID,
+      raw: null,
+      trigger: "scheduled",
+    });
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue({ runId: "run_1" });
+    mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 1 });
+
+    await persistFailedRankCheck({
+      checkedAt,
+      error: "provider unavailable",
+      existingRankCheckId: "rank_running_1",
+      keywordId: "keyword_1",
+      keywordPublicId: KEYWORD_PUBLIC_ID,
+      projectId: "project_1",
+      provider: "dataforseo",
+    });
+
+    expect(mocks.prisma.rankCheckRunItem.updateMany).toHaveBeenCalledWith({
+      data: { actualCostCents: 0, finishedAt: expect.any(Date), status: "failed" },
+      where: { rankCheckId: "rank_running_1", status: { in: ["queued", "running"] } },
+    });
+    expect(mocks.prisma.rankCheckRun.update).toHaveBeenCalledWith({
+      data: { failedCount: { increment: 1 } },
+      where: { id: "run_1" },
+    });
+  });
+
   it("persists failures and audit atomically", async () => {
     const auditCreate = vi.fn((input: unknown) => Promise.resolve({ id: "audit_1", input }));
     const tx = {
+      $queryRaw: vi.fn(),
       auditLog: { create: auditCreate },
       providerCostEntry: { createMany: vi.fn(() => Promise.resolve({ count: 1 })) },
       rankCheck: {
@@ -584,6 +690,8 @@ describe("rank-check persistence update path", () => {
         ),
         updateMany: vi.fn(() => Promise.resolve({ count: 1 })),
       },
+      rankCheckRun: { update: vi.fn() },
+      rankCheckRunItem: { findUnique: vi.fn(async () => null), updateMany: vi.fn() },
       signal: { create: vi.fn() },
     };
     mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));

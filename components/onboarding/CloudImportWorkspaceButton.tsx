@@ -11,6 +11,7 @@ export const RESTORE_PROJECT_TOOLTIP =
 
 function resolvedBrowserTimezone(): string {
   try {
+    // Timezone detection only - not date-order formatting.
     return Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
   } catch {
     return "UTC";

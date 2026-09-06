@@ -106,6 +106,16 @@ export async function retrySearchInsightsImport() {
   return { ok: true as const, state: "running" };
 }
 
+export async function launchRankCheckRunAction() {
+  return {
+    estimatedCostCents: 0,
+    keywordCount: 0,
+    publicId: "rcr_story",
+    status: "queued" as const,
+    targetCount: 0,
+  };
+}
+
 export default function Link({ children, href = "#", ...props }: LinkProps) {
   return React.createElement("a", { ...props, href }, children);
 }

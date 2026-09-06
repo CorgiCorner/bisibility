@@ -17,7 +17,7 @@ import {
 
 type CloudBetaBannerProps = {
   dismissed?: boolean;
-  /** The banner's whole message is "keep an export"; hold it back until there is data. */
+  /** The banner's whole message is "keep a recent export"; hold it back until there is data. */
   hasExportableData?: boolean;
   isCloud: boolean;
   lastExport: CloudPackageExportSummary | null;
@@ -29,8 +29,8 @@ type CloudBetaBannerProps = {
 
 /**
  * The two actions read as links, not buttons: full foreground colour so they carry contrast
- * against the tint, a resting underline so they are recognisable as controls without a chip, and
- * the message's own weight so neither competes with the page's primary action.
+ * against the tint, an underline only on hover so they stay quiet at rest, and the message's
+ * own weight so neither competes with the page's primary action.
  */
 const quietAction = {
   color: "var(--fg)",
@@ -39,13 +39,13 @@ const quietAction = {
   minHeight: 20,
   paddingX: 0,
   paddingY: 0,
-  textDecorationColor: "color-mix(in srgb, var(--fg) 35%, transparent)",
-  textDecorationLine: "underline",
+  textDecorationLine: "none",
   textUnderlineOffset: "3px",
   "&:hover": {
     backgroundColor: "transparent",
     color: "var(--fg)",
     textDecorationColor: "var(--fg)",
+    textDecorationLine: "underline",
   },
 };
 
@@ -132,8 +132,8 @@ export function CloudBetaBanner({
             >
               {/* A single word space after a semibold clause reads as a collision; the extra
                   2px separates the lead from the sentence that qualifies it. */}
-              <strong className="mr-0.5 font-semibold text-fg">You're on the hosted beta.</strong>{" "}
-              Restores aren't guaranteed yet - keep an export.
+              <strong className="mr-0.5 font-semibold text-fg">Hosted beta:</strong> Data recovery
+              isn't guaranteed yet. Keep a recent export.
             </p>
           </div>
           <button

@@ -52,7 +52,7 @@ export async function assertProviderAllocationAvailable(input: Input, db: Enforc
   });
   if (!connection) throw new Error("Provider connection not found.");
   if (!connection.allocationUnit || !connection.allocationAmountPerMonth)
-    return { mode: "allocation" as const, remaining: null };
+    return { mode: "allocation" as const, remaining: null, unit: null };
   const metadata = catalogEntry(input.catalog, input.provider).allocation;
   if (metadata.kind !== "billable" || metadata.allocationUnit !== connection.allocationUnit)
     throw new TypeError("Stored allocation does not match provider metadata.");
@@ -72,5 +72,9 @@ export async function assertProviderAllocationAvailable(input: Input, db: Enforc
     projected > connection.allocationAmountPerMonth
   )
     throw new ProviderAllocationExhaustedError(input.connectionId);
-  return { mode: "allocation" as const, remaining: connection.allocationAmountPerMonth - used };
+  return {
+    mode: "allocation" as const,
+    remaining: connection.allocationAmountPerMonth - used,
+    unit: connection.allocationUnit,
+  };
 }

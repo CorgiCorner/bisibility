@@ -2,8 +2,6 @@ import { AlertBanner } from "@/components/ui";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
-import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
-import Link from "next/link";
 
 export type CheckHealthView = {
   budget: { capCents: number; exhausted: boolean; spentCents: number };
@@ -28,8 +26,6 @@ type KeywordGridHealthNoticesProps = {
   rows: KeywordRow[];
 };
 
-const money = new Intl.NumberFormat("en-US", { currency: "USD", style: "currency" });
-
 function failureTitle(checkFailed: boolean, count: number) {
   if (count > 0) {
     return `${count} ${count === 1 ? "rank check" : "rank checks"} failed in the last 24 hours.`;
@@ -50,12 +46,11 @@ export function KeywordGridHealthNotices({
   checkHealth,
   onDismissFailure,
   onRunChecks,
-  projectRef,
+  projectRef: _projectRef,
   rows,
 }: Readonly<KeywordGridHealthNoticesProps>) {
   const failureCount = checkHealth?.failed24h.count ?? 0;
   const title = failureTitle(checkFailed, failureCount);
-  const budget = checkHealth?.budget;
 
   return (
     <>
@@ -70,30 +65,6 @@ export function KeywordGridHealthNotices({
           onDismiss={failureCount === 0 ? onDismissFailure : undefined}
           tint="red"
           title={title}
-        />
-      ) : null}
-      {budget?.exhausted ? (
-        <AlertBanner
-          action={{
-            href: rankTrackerTabPath(projectRef, "checks"),
-            icon: "arrow",
-            label: "View check runs",
-          }}
-          detail={
-            <>
-              {`Spent ${money.format(budget.spentCents / 100)} of ${money.format(
-                budget.capCents / 100,
-              )} this month.`}{" "}
-              <Link
-                className="font-semibold text-accent-text hover:underline"
-                href={`${appPath(projectRef, "settings")}#provider-usage`}
-              >
-                Raise the budget
-              </Link>
-            </>
-          }
-          tint="yellow"
-          title="Rank checks paused - monthly budget reached."
         />
       ) : null}
     </>

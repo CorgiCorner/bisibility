@@ -1,16 +1,22 @@
 import "server-only";
 
 import { deploymentMode } from "@/lib/deployment/deployment";
-import { startWelcomeFollowupWorkflow } from "@/lib/temporal/welcome-email-client";
+import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 
-type CreatedUser = { email: string; id: string; name: string };
+type CreatedUser = Record<string, unknown>;
 
 export async function sendCloudWelcomeSequence(user: CreatedUser) {
   if (deploymentMode() !== "cloud") return;
 
-  try {
-    await startWelcomeFollowupWorkflow(user.id);
-  } catch {
-    console.error("[welcome] follow-up workflow start failed");
-  }
+  return { data: { ...user, welcomeFollowupRequestedAt: new Date() } };
+}
+
+export async function wakeCloudWelcomeSequenceWorker() {
+  if (deploymentMode() !== "cloud") return;
+
+  void publishWorkerIntent("welcome_followup")
+    .then((result) => {
+      if (!result.ok) console.error("[welcome] worker wake publish failed");
+    })
+    .catch(() => undefined);
 }

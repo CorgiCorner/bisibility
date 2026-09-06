@@ -20,6 +20,42 @@ describe("sanitizeErrorReport", () => {
     });
   });
 
+  it("redacts the market id while keeping the shape of a market-scoped report", () => {
+    // Dropping the segment would be just as private and would make a market-scoped failure
+    // indistinguishable from a project-level one.
+    const sanitized = sanitizeErrorReport({
+      message: "Failed to render",
+      pathname: "/app/prj_abc/m/pmkt_def/rank-tracker?cursor=x#recent",
+    });
+
+    expect(sanitized.pathname).toBe("/app/<project>/m/<market>/rank-tracker");
+  });
+
+  it("redacts the reserved engine axis and keeps the deferred context marker", () => {
+    expect(
+      sanitizeErrorReport({ message: "boom", pathname: "/app/prj_abc/e/gpt/ai-citations" })
+        .pathname,
+    ).toBe("/app/<project>/e/<engine>/ai-citations");
+    expect(
+      sanitizeErrorReport({ message: "boom", pathname: "/app/prj_abc/~/rank-tracker" }).pathname,
+    ).toBe("/app/<project>/~/rank-tracker");
+  });
+
+  it("keeps redacting a market-scoped URL inside a stack line", () => {
+    const sanitized = sanitizeErrorReport({
+      message: "boom",
+      pathname: "/app/prj_abc/rank-tracker",
+      stack:
+        "Error: boom\n    at load (https://app.example.test/app/prj_abc/m/pmkt_def/rank-tracker?connect=secret)",
+    });
+
+    expect(sanitized.stack).toContain(
+      "https://app.example.test/app/<project>/m/<market>/rank-tracker",
+    );
+    expect(sanitized.stack).not.toContain("pmkt_def");
+    expect(sanitized.stack).not.toContain("prj_abc");
+  });
+
   it("strips query strings and fragments from URLs in messages and stack lines", () => {
     const sanitized = sanitizeErrorReport({
       message: "Request failed at https://api.example.test/search?cursor=secret#response",

@@ -9,9 +9,13 @@ import {
 } from "@temporalio/client";
 import { TEMPORAL_TASK_QUEUE } from "./client";
 import { getSchedulerTemporalClient } from "./scheduler-client";
+import { isTrafficSyncEnabled } from "./traffic-sync-enabled";
+
+export { isTrafficSyncEnabled } from "./traffic-sync-enabled";
 
 export const TRAFFIC_SYNC_SCHEDULE_ID = "maintenance-traffic-sync";
 export const TRAFFIC_SYNC_WORKFLOW_TYPE = "syncTrafficWorkflow";
+export const RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID = "maintenance-traffic-intent-sweep";
 
 const CATCHUP_WINDOW = "1 minute";
 const DEFAULT_TRAFFIC_SYNC = { hour: 5, minute: 45 };
@@ -24,18 +28,18 @@ export type EnsureTrafficSyncScheduleResult = {
   status: TrafficScheduleBootstrapStatus;
 };
 
-function isTruthyFlag(raw: string | undefined) {
-  const value = raw?.trim().toLowerCase();
-  return value === "1" || value === "true" || value === "yes" || value === "on";
-}
+export type RetiredTrafficIntentScheduleResult = {
+  scheduleId: string;
+  status: "absent" | "deleted";
+};
+
+export type RetiredTrafficIntentScheduleClient = {
+  getHandle(scheduleId: string): { delete(): Promise<void> };
+};
 
 function envValue(value: string | undefined) {
   const raw = value?.trim();
   return raw && raw.length > 0 ? raw : undefined;
-}
-
-export function isTrafficSyncEnabled() {
-  return isTruthyFlag(process.env.TRAFFIC_SYNC_ENABLED);
 }
 
 function trafficSyncSpec(): ScheduleSpec {
@@ -47,6 +51,14 @@ function isScheduleAlreadyRunning(error: unknown) {
   return (
     error instanceof ScheduleAlreadyRunning ||
     (error as { name?: string }).name === "ScheduleAlreadyRunning"
+  );
+}
+
+function isScheduleNotFound(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { name?: string }).name === "ScheduleNotFoundError"
   );
 }
 
@@ -75,6 +87,7 @@ export async function ensureTrafficSyncSchedule(
   client?: BootstrapScheduleClient,
 ): Promise<EnsureTrafficSyncScheduleResult> {
   if (!isTrafficSyncEnabled()) {
+    console.info("[traffic] first-sync intents disabled because traffic sync is disabled");
     return { scheduleId: TRAFFIC_SYNC_SCHEDULE_ID, status: "disabled" };
   }
 
@@ -92,5 +105,32 @@ export async function ensureTrafficSyncSchedule(
       scheduleId: TRAFFIC_SYNC_SCHEDULE_ID,
     });
     return { scheduleId: TRAFFIC_SYNC_SCHEDULE_ID, status: "failed" };
+  }
+}
+
+export async function deleteRetiredTrafficIntentSweepSchedule(
+  client?: RetiredTrafficIntentScheduleClient,
+): Promise<RetiredTrafficIntentScheduleResult> {
+  try {
+    const temporal = client ?? (await getSchedulerTemporalClient()).schedule;
+    await temporal.getHandle(RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID).delete();
+    return {
+      scheduleId: RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID,
+      status: "deleted",
+    };
+  } catch (error) {
+    if (isScheduleNotFound(error)) {
+      return {
+        scheduleId: RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID,
+        status: "absent",
+      };
+    }
+    console.error("[temporal] retired traffic intent schedule cleanup failed", {
+      error,
+      scheduleId: RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID,
+    });
+    throw new Error("Failed to retire traffic intent sweep schedule.", {
+      cause: error,
+    });
   }
 }

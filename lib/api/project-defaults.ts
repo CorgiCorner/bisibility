@@ -9,7 +9,6 @@ import {
   keywordMarketSelect,
   type ProjectDefaultMarket,
   projectDefaultSerpMarket,
-  serpMarketUpdatePlan,
 } from "@/lib/serp/default-market";
 import { resolveProjectDefaultMarket } from "@/lib/serp/project-default-market";
 import { projectDefaultsUpsertArgs } from "@/lib/settings/project-defaults-write";
@@ -136,9 +135,6 @@ export async function updateProjectDefaults(ctx: ApiContext, projectId: string) 
   const responseMarket = persistedMarket
     ? { ...persistedMarket, source: "explicit" as const }
     : currentMarket;
-  const marketPlan = resolvedDefault
-    ? serpMarketUpdatePlan(keywords, resolvedDefault, currentMarket)
-    : null;
   const defaults = await prisma.$transaction(async (tx) => {
     const stored = await tx.projectDefaults.upsert(
       projectDefaultsUpsertArgs({
@@ -147,16 +143,6 @@ export async function updateProjectDefaults(ctx: ApiContext, projectId: string) 
         serpStopOnMatch: data.serpStopOnMatch,
       }),
     );
-    if (marketPlan && resolvedDefault && marketPlan.updateIds.length > 0) {
-      await tx.keyword.updateMany({
-        data: {
-          device: persistedMarket?.device,
-          location: resolvedDefault.displayName,
-          locationId: resolvedDefault.locationId,
-        },
-        where: { id: { in: marketPlan.updateIds } },
-      });
-    }
     await refreshKeywordDispatchStates({ inheritedProjectId: ctx.auth.project.id }, tx);
     return stored;
   });
@@ -165,9 +151,7 @@ export async function updateProjectDefaults(ctx: ApiContext, projectId: string) 
     actorId: ctx.actorId ?? null,
     after: {
       market: responseMarket,
-      movedKeywords: marketPlan?.updateIds.length ?? 0,
       schedule: defaults,
-      skippedConflicts: marketPlan?.skipped ?? 0,
     },
     before: {
       market: currentMarket,

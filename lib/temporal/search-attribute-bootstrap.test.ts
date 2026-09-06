@@ -39,7 +39,7 @@ describe("rank-check search attribute bootstrap", () => {
         namespace: "bisibility-example",
       }),
     ).rejects.toThrow(
-      "Temporal namespace bisibility-example is missing required Keyword search attributes: projectId, provider.",
+      "Temporal namespace bisibility-example is missing required Keyword search attributes: projectId, provider, runId.",
     );
     expect(state.operatorService.addSearchAttributes).not.toHaveBeenCalled();
   });
@@ -52,15 +52,15 @@ describe("rank-check search attribute bootstrap", () => {
         address: "localhost:7233",
         namespace: "default",
       }),
-    ).resolves.toEqual({ attributes: ["projectId", "provider"], status: "created" });
+    ).resolves.toEqual({ attributes: ["projectId", "provider", "runId"], status: "created" });
     expect(state.operatorService.addSearchAttributes).toHaveBeenCalledWith({
       namespace: "default",
-      searchAttributes: { projectId: 2, provider: 2 },
+      searchAttributes: { projectId: 2, provider: 2, runId: 2 },
     });
   });
 
   it("is idempotent when all attributes already exist", async () => {
-    const state = connection({ keywordId: 2, projectId: 2, provider: 2 });
+    const state = connection({ keywordId: 2, projectId: 2, provider: 2, runId: 2 });
 
     await expect(
       ensureRankCheckSearchAttributes(state.connection, {
@@ -77,7 +77,7 @@ describe("rank-check search attribute bootstrap", () => {
     state.operatorService.listSearchAttributes
       .mockResolvedValueOnce({ customAttributes: {} })
       .mockResolvedValueOnce({
-        customAttributes: { keywordId: 2, projectId: 2, provider: 2 },
+        customAttributes: { keywordId: 2, projectId: 2, provider: 2, runId: 2 },
       });
 
     await expect(

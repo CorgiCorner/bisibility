@@ -8,6 +8,7 @@ import {
   filterGroupedGroups,
   MenuSearchField,
   type MenuSelectInput,
+  menuSelectInputClass,
   menuSelectPaperSx,
   menuSelectTriggerClass,
   resolveSelectedOption,
@@ -40,6 +41,7 @@ type MenuSelectBaseProps = {
   searchPlaceholder?: string;
   searchable?: boolean;
   selectedContent?: (option: ReturnType<typeof resolveSelectedOption>) => ReactNode;
+  size?: "input" | "toolbar";
   triggerClassName?: string;
   triggerTitle?: string;
   triggerWrapperClassName?: string;
@@ -66,6 +68,7 @@ export function MenuSelect({
   searchPlaceholder = "Search...",
   searchable = false,
   selectedContent,
+  size = "toolbar",
   triggerClassName,
   triggerTitle,
   triggerWrapperClassName,
@@ -91,9 +94,15 @@ export function MenuSelect({
           minWidth: `min(${menuMinWidth}px, calc(100vw - 32px))`,
           width: "max-content",
         }
-      : resolvedMenuWidth === undefined
-        ? {}
-        : { maxWidth: resolvedMenuWidth, minWidth: resolvedMenuWidth }),
+      : compact
+        ? {
+            maxWidth: "calc(100vw - 32px)",
+            minWidth: menuSelectPaperSx.minWidth,
+            width: "max-content",
+          }
+        : resolvedMenuWidth === undefined
+          ? {}
+          : { maxWidth: resolvedMenuWidth, minWidth: resolvedMenuWidth }),
     maxHeight: menuMaxHeight ?? "min(360px, calc(100dvh - 84px))",
     overflowY: "auto",
   } satisfies SxProps<Theme>;
@@ -105,7 +114,11 @@ export function MenuSelect({
       aria-haspopup="menu"
       aria-invalid={ariaInvalid}
       aria-label={ariaLabel}
-      className={cn(menuSelectTriggerClass, compact && "text-[12px] leading-4", triggerClassName)}
+      className={cn(
+        size === "input" ? menuSelectInputClass : menuSelectTriggerClass,
+        compact && "text-[12px] leading-4",
+        triggerClassName,
+      )}
       disabled={disabled}
       onClick={(event) => openMenu(event.currentTarget)}
       type="button"
@@ -169,6 +182,7 @@ export function MenuSelect({
         slotProps={{
           list: { "aria-label": ariaLabel, dense: true, sx: { padding: 0 } },
           paper: {
+            elevation: 0,
             sx: paperSx,
           },
           transition: { onExited: handleExited },

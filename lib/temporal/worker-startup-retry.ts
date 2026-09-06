@@ -2,6 +2,7 @@ export type WorkerStartupStage =
   | "app-database-migrations"
   | "namespace-cache"
   | "persistence-schema"
+  | "rank-check-runs-maintenance"
   | "schedule-bootstrap"
   | "search-attributes-bootstrap"
   | "tls-auth"
@@ -39,6 +40,7 @@ function errorCode(error: unknown, seen: Set<object> = new Set()): string | numb
 }
 
 export function classifyWorkerStartupError(stage: WorkerStartupStage, error: unknown): RetryClass {
+  if (stage === "rank-check-runs-maintenance") return "permanent";
   const code = errorCode(error);
   if (PERMANENT_CODES.has(code as never)) return "permanent";
   if (stage === "namespace-cache" && NAMESPACE_PENDING_CODES.has(code as never)) {

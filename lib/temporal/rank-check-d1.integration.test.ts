@@ -2,6 +2,36 @@ import { resolve } from "node:path";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+const directFlowMocks = vi.hoisted(() => ({
+  finalizeRankCheckRun: vi.fn(),
+  paidProviderCall: vi.fn(),
+  prisma: {
+    $executeRaw: vi.fn(),
+    $transaction: vi.fn(),
+    keyword: { findUnique: vi.fn() },
+    projectMarket: { findMany: vi.fn() },
+    rankCheck: { updateMany: vi.fn() },
+    rankCheckRun: { findUnique: vi.fn(), update: vi.fn() },
+    rankCheckRunItem: { findMany: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
+  },
+  writeAudit: vi.fn(),
+}));
+
+vi.mock("../auth/audit", () => ({
+  requiredPublicAuditId: (value: string) => value,
+  writeAudit: directFlowMocks.writeAudit,
+}));
+vi.mock("../db/prisma", () => ({ prisma: directFlowMocks.prisma }));
+vi.mock("../rank-check/fallback", async () => {
+  const actual =
+    await vi.importActual<typeof import("../rank-check/fallback")>("../rank-check/fallback");
+  return { ...actual, runKeywordCheckWithFallback: directFlowMocks.paidProviderCall };
+});
+vi.mock("../rank-check/runs/finalize", () => ({
+  finalizeRankCheckRun: directFlowMocks.finalizeRankCheckRun,
+}));
+
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
 import { runLegacyScheduleRollback } from "../rank-check/legacy-schedule-rollback";
 import { ensurePausedRollbackScheduleWithClient } from "../rank-check/legacy-schedule-rollback-schedule";
@@ -15,13 +45,157 @@ import {
   inventoryRankCheckSchedules,
   pauseOwnedRankCheckSchedule,
 } from "../rank-check/temporal-schedule-inventory";
-import { RANK_CHECK_WORKFLOW_TYPE } from "../rank-check/workflow-id";
+import { RANK_CHECK_WORKFLOW_TYPE, rankCheckWorkflowId } from "../rank-check/workflow-id";
 import { RECONCILER_SCHEDULE_ID } from "./bootstrap";
 import { rankCheckSearchAttributes } from "./client";
+import { runRankCheckActivity } from "./rank-check-activities";
+import { loadRankCheckRunItemsActivity } from "./rank-check-run-activities";
 import { convergeRankCheckSchedulerSingletons } from "./rank-check-scheduler-convergence";
 import { ensureRankCheckSearchAttributes } from "./search-attribute-bootstrap";
 
 const integration = process.env.BISIBILITY_TEMPORAL_D1_INTEGRATION === "1";
+
+type DirectRunState = {
+  item: {
+    actualCostCents: number | null;
+    blockedReason: string | null;
+    id: string;
+    keywordId: string;
+    notBefore: Date | null;
+    rankCheckId: string | null;
+    status: string;
+  };
+  marketActive: boolean;
+  rankCheck: { attemptCount: number; id: string; status: string } | null;
+  run: { cancelledCount: number; id: string; trigger: "api" | "manual" };
+};
+
+let directRunState: DirectRunState | null = null;
+
+function directState(trigger: "api" | "manual"): DirectRunState {
+  return {
+    item: {
+      actualCostCents: null,
+      blockedReason: null,
+      id: `item_direct_${trigger}`,
+      keywordId: `keyword_direct_${trigger}`,
+      notBefore: null,
+      rankCheckId: null,
+      status: "queued",
+    },
+    marketActive: true,
+    rankCheck: null,
+    run: { cancelledCount: 0, id: `run_direct_${trigger}`, trigger },
+  };
+}
+
+function requireDirectState() {
+  if (!directRunState) throw new Error("Direct run state was not initialized.");
+  return directRunState;
+}
+
+function configureDirectActivities(state: DirectRunState) {
+  directRunState = state;
+  vi.clearAllMocks();
+  directFlowMocks.prisma.$executeRaw.mockResolvedValue(1);
+  directFlowMocks.prisma.$transaction.mockImplementation(
+    (callback: (tx: typeof directFlowMocks.prisma) => unknown) => callback(directFlowMocks.prisma),
+  );
+  directFlowMocks.paidProviderCall.mockImplementation(async () => {
+    const current = requireDirectState();
+    return {
+      attempts: [],
+      provider: "primary",
+      rankCheck: {
+        checkedAt: new Date("2026-09-05T00:00:00.000Z"),
+        costCents: 25,
+        id: current.rankCheck?.id ?? "check_direct_1",
+        keywordId: current.item.keywordId,
+        position: 1,
+        rankingUrl: null,
+      },
+    };
+  });
+  directFlowMocks.prisma.keyword.findUnique.mockImplementation(async () => ({
+    archivedAt: null,
+    locationId: "location_direct_1",
+    projectId: "project_direct_1",
+  }));
+  directFlowMocks.prisma.projectMarket.findMany.mockImplementation(async () =>
+    requireDirectState().marketActive ? [{ locationId: "location_direct_1" }] : [],
+  );
+  directFlowMocks.prisma.rankCheckRun.findUnique.mockImplementation(async () => {
+    const current = requireDirectState();
+    return {
+      project: { defaults: { serpDepth: 20 } },
+      projectId: "project_direct_1",
+      selectionKind: "single",
+      selectionSpec: { depth: null, kind: "single", v: 1 },
+      trigger: current.run.trigger,
+    };
+  });
+  directFlowMocks.prisma.rankCheckRunItem.findMany.mockImplementation(async () => {
+    const current = requireDirectState();
+    if (current.item.status !== "queued") return [];
+    return [
+      {
+        id: current.item.id,
+        keyword: { schedule: null },
+        keywordId: current.item.keywordId,
+        notBefore: current.item.notBefore,
+      },
+    ];
+  });
+  directFlowMocks.prisma.rankCheckRunItem.findUnique.mockImplementation(async () => {
+    const current = requireDirectState();
+    return {
+      id: current.item.id,
+      keyword: { publicId: "kw_direct_abcdefghijklmnopqrst" },
+      run: {
+        id: current.run.id,
+        projectId: "project_direct_1",
+        publicId: "rcr_direct_abcdefghijklmnopqrst",
+        requestedCount: 1,
+        status: "running",
+      },
+    };
+  });
+  directFlowMocks.prisma.rankCheck.updateMany.mockImplementation(async ({ data, where }) => {
+    const current = requireDirectState();
+    if (
+      !current.rankCheck ||
+      current.rankCheck.id !== where.id ||
+      current.rankCheck.status !== where.status ||
+      current.rankCheck.attemptCount !== where.attemptCount
+    ) {
+      return { count: 0 };
+    }
+    Object.assign(current.rankCheck, data);
+    return { count: 1 };
+  });
+  directFlowMocks.prisma.rankCheckRunItem.updateMany.mockImplementation(async ({ data, where }) => {
+    const current = requireDirectState();
+    if (current.item.rankCheckId !== where.rankCheckId || current.item.status !== where.status) {
+      return { count: 0 };
+    }
+    Object.assign(current.item, data);
+    return { count: 1 };
+  });
+  directFlowMocks.prisma.rankCheckRun.update.mockImplementation(async ({ data }) => {
+    const increment = data.cancelledCount?.increment;
+    if (typeof increment === "number") requireDirectState().run.cancelledCount += increment;
+    return {};
+  });
+}
+
+async function createDirectRunningRankCheck(input: { runItemId?: string }) {
+  const state = requireDirectState();
+  if (input.runItemId !== state.item.id) throw new Error("Direct run item was not forwarded.");
+  state.item.rankCheckId = "check_direct_1";
+  state.item.status = "running";
+  state.rankCheck = { attemptCount: 0, id: "check_direct_1", status: "running" };
+  return { keywordId: state.item.keywordId, rankCheckId: state.rankCheck.id };
+}
 
 describe.runIf(integration)("D1 real Temporal integration", () => {
   let environment: TestWorkflowEnvironment;
@@ -39,6 +213,73 @@ describe.runIf(integration)("D1 real Temporal integration", () => {
     vi.unstubAllEnvs();
     await environment?.teardown();
   });
+
+  it.each(["manual", "api"] as const)(
+    "cancels an archived-after-enqueue %s item through the direct child flow",
+    async (trigger) => {
+      const state = directState(trigger);
+      expect(state.item.notBefore).toBeNull();
+      expect(state.marketActive).toBe(true);
+      state.marketActive = false;
+      configureDirectActivities(state);
+      const directTaskQueue = `${taskQueue}-direct-${trigger}`;
+      const parentWorkflowId = `direct-run-${trigger}-${process.pid}`;
+      const childWorkflowId = `${rankCheckWorkflowId(state.item.keywordId)}-run-${state.item.id}`;
+      const worker = await Worker.create({
+        activities: {
+          authorizeRankCheckExecutionActivity: async (input: { source: string }) => ({
+            allowed: true,
+            mode: "legacy",
+            reason: null,
+            source: input.source,
+          }),
+          createRunningRankCheckActivity: createDirectRunningRankCheck,
+          loadRankCheckRunItemsActivity,
+          runRankCheckActivity,
+        },
+        connection: environment.nativeConnection,
+        namespace: environment.client.options.namespace,
+        taskQueue: directTaskQueue,
+        workflowsPath: resolve(process.cwd(), "lib/temporal/workflows.ts"),
+      });
+
+      try {
+        const result = await worker.runUntil(async () => {
+          const parent = await environment.client.workflow.start("rankCheckRunWorkflow", {
+            args: [{ runId: state.run.id }],
+            taskQueue: directTaskQueue,
+            workflowId: parentWorkflowId,
+          });
+          const parentResult = await parent.result();
+          const childResult = await environment.client.workflow.getHandle(childWorkflowId).result();
+          return { childResult, parentResult };
+        });
+
+        expect(result.parentResult).toEqual({ skipped: 0, started: 1 });
+        expect(directFlowMocks.paidProviderCall).not.toHaveBeenCalled();
+        expect(directFlowMocks.prisma.$executeRaw).not.toHaveBeenCalled();
+        expect(result.childResult).toEqual({
+          deferred: true,
+          keywordId: state.item.keywordId,
+          reason: "market_inactive",
+        });
+        expect(directFlowMocks.prisma.rankCheckRun.findUnique).toHaveBeenCalledWith({
+          select: expect.any(Object),
+          where: { id: state.run.id },
+        });
+        expect(directFlowMocks.prisma.rankCheckRunItem.findMany).toHaveBeenCalledOnce();
+        expect(state.item).toMatchObject({
+          actualCostCents: 0,
+          blockedReason: "market_inactive",
+          status: "cancelled",
+        });
+        expect(state.run.cancelledCount).toBe(1);
+      } finally {
+        directRunState = null;
+      }
+    },
+    120_000,
+  );
 
   async function createSingleton(scheduleId: string, workflowType: string) {
     await environment.client.schedule.create({

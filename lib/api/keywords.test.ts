@@ -3,9 +3,14 @@ import { deleteKeyword, getKeyword, listKeywords, patchKeyword } from "./keyword
 
 const mocks = vi.hoisted(() => ({
   addTags: vi.fn(),
+  $transaction: vi.fn(),
+  delete: vi.fn(),
   deleteMany: vi.fn(),
   findFirst: vi.fn(),
   findMany: vi.fn(),
+  rankCheckRunUpdate: vi.fn(),
+  rankCheckRunItemFindMany: vi.fn(),
+  rankCheckRunItemUpdateMany: vi.fn(),
   resolveLocation: vi.fn(),
   update: vi.fn(),
   upsert: vi.fn(),
@@ -14,9 +19,20 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    keyword: { findFirst: mocks.findFirst, findMany: mocks.findMany, update: mocks.update },
+    $transaction: mocks.$transaction,
+    keyword: {
+      delete: mocks.delete,
+      findFirst: mocks.findFirst,
+      findMany: mocks.findMany,
+      update: mocks.update,
+    },
     keywordSchedule: { upsert: mocks.upsert },
     keywordTag: { deleteMany: mocks.deleteMany },
+    rankCheckRun: { update: mocks.rankCheckRunUpdate },
+    rankCheckRunItem: {
+      findMany: mocks.rankCheckRunItemFindMany,
+      updateMany: mocks.rankCheckRunItemUpdateMany,
+    },
   },
 }));
 vi.mock("@/lib/actions/keyword-helpers", () => ({ addTags: mocks.addTags }));
@@ -47,6 +63,20 @@ describe("keyword API list filters", () => {
     vi.clearAllMocks();
     mocks.findMany.mockResolvedValue([]);
     mocks.findFirst.mockResolvedValue(null);
+    mocks.rankCheckRunItemFindMany.mockResolvedValue([]);
+    mocks.rankCheckRunItemUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.rankCheckRunUpdate.mockResolvedValue({});
+    mocks.$transaction.mockImplementation(
+      async (callback: (tx: Record<string, unknown>) => unknown) =>
+        callback({
+          keyword: { delete: mocks.delete },
+          rankCheckRun: { update: mocks.rankCheckRunUpdate },
+          rankCheckRunItem: {
+            findMany: mocks.rankCheckRunItemFindMany,
+            updateMany: mocks.rankCheckRunItemUpdateMany,
+          },
+        }),
+    );
     mocks.resolveLocation.mockResolvedValue({
       location: {
         countryCode: "US",
@@ -225,13 +255,40 @@ describe("keyword API list filters", () => {
     expect((await deleteKeyword(context(), "missing")).status).toBe(404);
   });
 
+  it("uses the active-run deletion guard for a single keyword", async () => {
+    mocks.findFirst.mockResolvedValue({
+      id: "keyword_1",
+      publicId: "kw_a00000000000000000000000",
+      text: "rank tracker",
+    });
+    mocks.rankCheckRunItemFindMany.mockResolvedValue([
+      {
+        id: "item_1",
+        keywordId: "keyword_1",
+        rankCheckId: "rank_1",
+        run: { publicId: "rcr_a00000000000000000000000" },
+        runId: "run_1",
+        status: "running",
+      },
+    ]);
+
+    await expect(deleteKeyword(context(), "kw_a00000000000000000000000")).rejects.toThrow(
+      "Run rcr_a00000000000000000000000 is still checking 1 keyword.",
+    );
+
+    expect(mocks.delete).not.toHaveBeenCalled();
+  });
+
   it("resolves a patched city and country and refreshes the resource", async () => {
     const keyword = {
+      device: "desktop",
       id: "keyword_1",
       intent: null,
       location: "United States",
+      locationId: "location_1",
       publicId: "kw_a00000000000000000000000",
       targetUrl: null,
+      text: "rank tracker",
       topic: null,
     };
     mocks.findFirst.mockResolvedValue(keyword);
@@ -257,11 +314,14 @@ describe("keyword API list filters", () => {
 
   it("prefers a canonical location key when patching", async () => {
     const keyword = {
+      device: "desktop",
       id: "keyword_1",
       intent: null,
       location: "United States",
+      locationId: "location_1",
       publicId: "kw_a00000000000000000000000",
       targetUrl: null,
+      text: "rank tracker",
       topic: null,
     };
     mocks.findFirst.mockResolvedValue(keyword);

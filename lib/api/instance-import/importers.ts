@@ -4,6 +4,7 @@ import type { ApiContext } from "@/lib/api/context";
 import { createKeywords } from "@/lib/api/keyword-create";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import type { HistoryImportCounts } from "./history-counts";
 import type { Project } from "./jobs";
 import type { ImportKeyword } from "./schemas";
 
@@ -140,8 +141,13 @@ export async function importHistory(
   keywords: ImportKeyword[],
   byKey: Map<string, string>,
   client: Prisma.TransactionClient,
-) {
+): Promise<HistoryImportCounts> {
   const received = keywords.reduce((count, keyword) => count + keyword.rankingHistory.length, 0);
+  const unknownDepth = keywords.reduce(
+    (count, keyword) =>
+      count + keyword.rankingHistory.filter((check) => check.requestedDepth === null).length,
+    0,
+  );
   const incoming = keywords.flatMap((keyword) => {
     const keywordId = byKey.get(keywordKey(keyword));
     return keywordId
@@ -162,7 +168,9 @@ export async function importHistory(
         }))
       : [];
   });
-  if (incoming.length === 0) return { imported: 0, received, skipped: 0 };
+  if (incoming.length === 0) {
+    return { imported: 0, received, skipped: 0, unknownDepth };
+  }
 
   // Re-imports of the same package must not duplicate history: skip rows whose
   // (keyword, checkedAt) already exists in the destination project's history.
@@ -190,6 +198,7 @@ export async function importHistory(
     imported: data.length,
     received,
     skipped: incoming.length - data.length,
+    unknownDepth,
   };
 }
 

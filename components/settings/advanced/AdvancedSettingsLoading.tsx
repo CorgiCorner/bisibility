@@ -29,7 +29,7 @@ function Frame({
 function AuditFrame() {
   return (
     <Frame className={advancedLoadingCardGeometryClassNames.audit} id="audit">
-      <div className="divide-y divide-border-soft overflow-hidden rounded-control border border-border">
+      <div className="divide-y divide-border overflow-hidden rounded-control border border-border">
         {Array.from({ length: 5 }, (_, index) => (
           <div
             className="grid grid-cols-[34px_minmax(0,1fr)] gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[34px_minmax(0,1fr)_auto] sm:items-center"
@@ -44,7 +44,7 @@ function AuditFrame() {
           </div>
         ))}
       </div>
-      <div className="mt-auto flex justify-end border-border-soft border-t pt-4">
+      <div className="mt-auto flex justify-end border-border border-t pt-4">
         <SettingsLoadingBar className="h-8.5 w-28" />
       </div>
     </Frame>
@@ -61,7 +61,7 @@ function BackupFrame() {
         </div>
         <SettingsLoadingBar className="h-5 w-24" />
       </div>
-      <div className="mt-auto flex justify-end border-border-soft border-t pt-4">
+      <div className="mt-auto flex justify-end border-border border-t pt-4">
         <SettingsLoadingBar className="h-8.5 w-32" />
       </div>
     </Frame>
@@ -72,7 +72,7 @@ function MigrationFrame() {
   return (
     <Frame className={advancedLoadingCardGeometryClassNames.migration} id="self-host-migration">
       <SettingsLoadingBar className="h-2.5 w-full max-w-[520px]" />
-      <div className="mt-auto flex justify-end border-border-soft border-t pt-4">
+      <div className="mt-auto flex justify-end border-border border-t pt-4">
         <SettingsLoadingBar className="h-8.5 w-32" />
       </div>
     </Frame>
@@ -82,7 +82,7 @@ function MigrationFrame() {
 function DangerFrame() {
   return (
     <Frame className={advancedLoadingCardGeometryClassNames.danger} id="danger">
-      <div className="mt-auto flex justify-end border-border-soft border-t pt-4">
+      <div className="mt-auto flex justify-end border-border border-t pt-4">
         <SettingsLoadingBar className="h-9 w-28" />
       </div>
     </Frame>

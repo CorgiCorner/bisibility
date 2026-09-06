@@ -1,8 +1,8 @@
 // Shared schema + options for account preferences. Pure module (no "use server"/"use
 // client") so the RSC page, the server action, and the client form all use one source.
-// The User table has no preference columns yet, so these persist in cookies, the same
-// lightweight approach as the theme cookie read in `app/app/layout.tsx`.
+// Date format lives on User; density, landing, and theme still use cookies.
 
+import { type DateFormat, type DateFormatPreference, formatDate } from "@/lib/dates/format";
 import { type LandingSegment, landingSegments, primaryNavEntries } from "@/lib/nav/nav-items";
 import { z } from "zod";
 
@@ -11,10 +11,10 @@ export const densityValues = ["compact", "standard", "comfortable"] as const;
 // Landing values are the primary sidebar route segments, sourced from `lib/nav/nav-items.ts` so
 // the preference options cannot drift from the rail.
 export const landingValues = landingSegments;
-export const dateFormatValues = ["iso", "eu", "long"] as const;
+export const dateFormatValues = ["auto", "day_first", "month_first", "iso"] as const;
 
 export const preferencesSchema = z.object({
-  dateFormat: z.enum(dateFormatValues).default("iso"),
+  dateFormat: z.enum(dateFormatValues).default("auto"),
   density: z.enum(densityValues).default("standard"),
   landing: z.enum(landingValues).default("dashboard"),
   theme: z.enum(themeValues).default("system"),
@@ -29,6 +29,12 @@ export const PREFERENCE_COOKIES = {
   // theme reuses the existing cookie set by ThemeSegments and read before paint.
   theme: "theme",
 } as const;
+
+// Legacy cookie / preference values from the previous three-option list.
+const DATE_FORMAT_MIGRATIONS: Readonly<Record<string, DateFormatPreference>> = {
+  eu: "day_first",
+  long: "month_first",
+};
 
 // Legacy cookie values from the previous two-option preference, mapped onto the current route
 // segments. `overview` was the old dashboard surface; `keywords` was the old rank tracker list.
@@ -59,13 +65,21 @@ export function resolveLandingPreference(raw: unknown): LandingSegment {
   return DEFAULT_LANDING;
 }
 
+export function resolveStoredDateFormat(raw: unknown): DateFormatPreference | undefined {
+  if (typeof raw !== "string") return undefined;
+  if ((dateFormatValues as readonly string[]).includes(raw)) {
+    return raw as DateFormatPreference;
+  }
+  return DATE_FORMAT_MIGRATIONS[raw];
+}
+
 // Parse loosely: any missing/invalid field falls back to its schema default rather than
 // throwing, so a stale or hand-edited cookie never breaks the page render.
 export function parsePreferences(
   raw: Partial<Record<keyof UserPreferences, unknown>>,
 ): UserPreferences {
   return preferencesSchema.parse({
-    dateFormat: pick(dateFormatValues, raw.dateFormat),
+    dateFormat: resolveStoredDateFormat(raw.dateFormat),
     density: pick(densityValues, raw.density),
     landing: resolveLandingPreference(raw.landing),
     theme: pick(themeValues, raw.theme),
@@ -95,8 +109,18 @@ export const landingOptions = primaryNavEntries.map((entry) => ({
   value: entry.segment,
 })) satisfies readonly { label: string; value: UserPreferences["landing"] }[];
 
-export const dateFormatOptions = [
-  { label: "2025-06-19 (ISO)", value: "iso" },
-  { label: "19/06/2025", value: "eu" },
-  { label: "Jun 19, 2025", value: "long" },
-] as const satisfies readonly { label: string; value: UserPreferences["dateFormat"] }[];
+/**
+ * Menu options with a live example of `todayKey` in each format. `auto` shows the
+ * resolved example passed by the server (Accept-Language), not a second client guess.
+ */
+export function dateFormatOptions(
+  todayKey: string,
+  autoExample: DateFormat,
+): readonly { label: string; value: UserPreferences["dateFormat"] }[] {
+  return [
+    { label: `Auto · ${formatDate(todayKey, autoExample)}`, value: "auto" },
+    { label: formatDate(todayKey, "day_first"), value: "day_first" },
+    { label: formatDate(todayKey, "month_first"), value: "month_first" },
+    { label: formatDate(todayKey, "iso"), value: "iso" },
+  ];
+}

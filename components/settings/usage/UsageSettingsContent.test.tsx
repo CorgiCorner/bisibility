@@ -14,7 +14,7 @@ const usage = {
   hasProvider: true,
   onPaceCents: null,
   period: {
-    dateFormat: "long",
+    dateFormat: "month_first",
     endAt: "2026-09-01T00:00:00.000Z",
     endLabel: "Aug 31, 2026",
     label: "August 2026",
@@ -45,6 +45,7 @@ const usage = {
         unit: "units",
         used: 100,
         usedPercent: 100,
+        usedPriorMonth: 1280,
         availableAtProvider: {
           amount: 222,
           checkedAt: "2026-08-24T17:03:00.000Z",
@@ -71,6 +72,7 @@ const usage = {
         unit: "cents",
         used: 10,
         usedPercent: 0.33,
+        usedPriorMonth: 40,
         availableAtProvider: {
           amount: 12.4,
           checkedAt: "2026-08-24T17:03:00.000Z",
@@ -244,7 +246,7 @@ describe("UsageSettingsContent", () => {
       "href",
       appPath("prj_story", "integrations"),
     );
-    expect(screen.queryByRole("button", { name: "Save budget" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
   });
   it("keeps allocation editor rows available for a connected provider", async () => {
     const user = userEvent.setup();
@@ -255,7 +257,7 @@ describe("UsageSettingsContent", () => {
     await user.click(screen.getByRole("button", { name: "Edit budget" }));
 
     expect(screen.getByLabelText("SerpApi monthly budget")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save budget" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
   it("validates and saves changed per-provider budget payloads", async () => {
     const user = userEvent.setup();
@@ -264,7 +266,7 @@ describe("UsageSettingsContent", () => {
     const input = screen.getByLabelText("DataForSEO monthly budget");
     await user.clear(input);
     await user.type(input, "40.50");
-    await user.click(screen.getByRole("button", { name: "Save budget" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
     expect(actions.updateProviderAllocation).toHaveBeenCalledWith("prj_story", {
       allocation: { amountDollars: "40.50", unit: "cents" },
       connectionId: "conn_data",

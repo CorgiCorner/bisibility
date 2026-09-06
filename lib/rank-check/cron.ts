@@ -14,6 +14,7 @@ export type ParsedCronExpression =
 type CronSchedule = Extract<ParsedCronExpression, { ok: true }>;
 
 const MAX_CRON_MINUTES = 366 * 24 * 60;
+// SCHEDULE MATH (not display): cached formatters derive wall-clock cron fields.
 const zonedFormatters = new Map<string, Intl.DateTimeFormat>();
 
 function nextWholeMinute(from: Date) {
@@ -114,6 +115,7 @@ export function parseCronExpression(expression: string): ParsedCronExpression {
 export function zonedCronParts(date: Date, timezone: string) {
   let formatter = zonedFormatters.get(timezone);
   if (!formatter) {
+    // SCHEDULE MATH (not display): read wall-clock fields in the configured timezone.
     formatter = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone,
       hourCycle: "h23",

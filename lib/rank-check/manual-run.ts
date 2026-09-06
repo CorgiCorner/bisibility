@@ -6,241 +6,117 @@ import {
   requireKeywordScope,
   revalidateRankCheckViews,
 } from "@/lib/actions/_shared";
-import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
+import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
-import { makePublicId } from "@/lib/db/public-id";
-import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
-import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
-import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
+import { budgetExhaustedResult } from "@/lib/rank-check/budget-contract";
+import { inlineRankCheckExecutionEnabled } from "@/lib/rank-check/inline-execution";
+import { launchSingleRankCheckRun } from "@/lib/rank-check/runs/launch-single";
 import {
-  type BudgetExhaustedResult,
-  budgetExhaustedResult,
-} from "@/lib/rank-check/budget-contract";
-import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
-import {
-  loadSerpProviderChain,
-  ProviderChainError,
-  runKeywordCheckWithFallback,
-} from "@/lib/rank-check/fallback";
-import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
-import { persistFailedRankCheck } from "@/lib/rank-check/runner-persistence";
-import { SchedulerDisabledError } from "@/lib/scheduler/driver";
+  ALREADY_IN_PROGRESS_REASON,
+  isLaunchRankCheckRunNothingToRun,
+  LaunchRankCheckRunError,
+  type LaunchRankCheckRunNothingToRunReason,
+  UnrunnableInlineRankCheckError,
+} from "@/lib/rank-check/runs/launch-types";
 import { runCheckNowSchema } from "@/lib/schemas/keyword";
-import { trackedProjectDomain } from "@/lib/schemas/project";
-import { resolveEffectiveSerpDepth } from "@/lib/serp/markets";
-import {
-  manualRankCheckWorkflowId,
-  rankCheckSearchAttributes,
-  startRankCheckWorkflow,
-} from "@/lib/temporal/client";
+import type { RunCheckNowBlockedCode, RunCheckNowResult } from "./manual-run-result";
 
-export type RunCheckNowResult =
-  | BudgetExhaustedResult
-  | { code: "check_in_progress" | "sample_project"; message: string; status: "not_started" }
-  | { rankCheckId: string; status: "running" }
-  | {
-      attempts: number;
-      billingUnits: number | null;
-      position: number | null;
-      provider: string;
-      rankCheckId: string;
-      requestedDepth: number | null;
-      status: "completed";
-    };
-
-function isTemporalUnavailable(error: unknown) {
-  if (error instanceof SchedulerDisabledError) return true;
-  const message = error instanceof Error ? `${error.name} ${error.message}` : String(error);
-  return /ECONNREFUSED|UNAVAILABLE|Unavailable|connection refused|failed to connect|No connection established|deadline exceeded/i.test(
-    message,
-  );
+/**
+ * This surface has called a check already in flight `check_in_progress` since before the predicate
+ * reasons existed, so that one code is translated and the rest are passed through unchanged.
+ */
+function blockedCode(reason: LaunchRankCheckRunNothingToRunReason): RunCheckNowBlockedCode {
+  return reason === ALREADY_IN_PROGRESS_REASON ? "check_in_progress" : reason;
 }
+
+export type { RunCheckNowResult } from "./manual-run-result";
 
 export async function manualRunCheckNow(input: unknown): Promise<RunCheckNowResult> {
   const data = parseActionInput(runCheckNowSchema, input);
   const actor = await getActionActor();
-  const keywordScope = await requireKeywordScope(actor, "update", data.keywordId);
-  if (keywordScope.projectIsSample) {
+  const keyword = await requireKeywordScope(actor, "update", data.keywordId);
+  if (keyword.projectIsSample) {
     return {
       code: "sample_project",
       message: "Sample projects don't run real checks.",
       status: "not_started",
     };
   }
-  const budgetContext = await prisma.keyword.findUnique({
-    select: {
-      project: {
-        select: {
-          budgetCapCents: true,
-          providerAllocationsInitializedAt: true,
-          defaults: { select: { serpDepth: true } },
-          domain: true,
-        },
-      },
-      queuedRankCheckTasks: {
-        select: { state: true },
-        take: 1,
-        where: { state: { in: ACTIVE_QUEUED_TASK_STATES } },
-      },
-      rankChecks: {
-        orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
-        select: { status: true },
-        take: 1,
-      },
-      schedule: { select: { serpDepth: true } },
-    },
-    where: { id: keywordScope.id },
+  const project = await prisma.project.findUniqueOrThrow({
+    select: { domain: true, id: true, isSample: true },
+    where: { id: keyword.projectId },
   });
-  if (!budgetContext) {
-    throw new Error("Keyword not found.");
-  }
-  requireTrackedDomain(budgetContext.project);
-  const auditResult = async (result: RunCheckNowResult) => {
-    await writeAudit({
-      action: "rank_check.run_now",
+  const inlineExecution = inlineRankCheckExecutionEnabled();
+
+  let launched: Awaited<ReturnType<typeof launchSingleRankCheckRun>>;
+  try {
+    launched = await launchSingleRankCheckRun({
       actorId: actor.id,
-      after: {
-        keywordId: keywordScope.publicId,
-        provider: data.providerId ?? ("provider" in result ? result.provider : "primary"),
-        text: keywordScope.text,
-        ...result,
-      },
-      projectId: keywordScope.projectId,
-      targetId: keywordScope.publicId,
-      targetType: "keyword",
+      depth: data.depth,
+      keywordId: keyword.publicId as `kw_${string}`,
+      project,
+      providerId: data.providerId,
+      trigger: "manual",
     });
-    revalidateRankCheckViews(keywordScope.publicId);
-  };
-  if (
-    budgetContext.queuedRankCheckTasks.length > 0 ||
-    budgetContext.rankChecks[0]?.status === "running"
-  ) {
-    const result = {
-      code: "check_in_progress",
-      message: "A rank check is already queued or running.",
-      status: "not_started",
-    } as const;
-    await auditResult(result);
-    return result;
+  } catch (error) {
+    if (error instanceof LaunchRankCheckRunError && error.code === "budget_exhausted") {
+      return budgetExhaustedResult(error.message);
+    }
+    if (error instanceof LaunchRankCheckRunError && error.code === "no_provider") {
+      return { code: "no_provider", message: error.message, status: "not_started" };
+    }
+    throw error;
   }
-  const connections = await loadSerpProviderChain(keywordScope.projectId, data.providerId);
-  const depth = resolveEffectiveSerpDepth({
-    projectDepth: budgetContext.project.defaults?.serpDepth,
-    requestedDepth: data.depth,
-    scheduleDepth: budgetContext.schedule?.serpDepth,
-  });
-  const estimatedCostCents = estimatedRankCheckCostCents(
-    connections[0]?.provider,
-    depth,
-    connections[0]?.costPerCheckCents,
-    connections[0]?.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
-  );
-  if (!budgetContext.project.providerAllocationsInitializedAt) {
+  if (isLaunchRankCheckRunNothingToRun(launched)) {
+    return {
+      code: blockedCode(launched.reason),
+      message: launched.message,
+      status: "not_started",
+    };
+  }
+
+  let result: RunCheckNowResult = { runId: launched.publicId, status: "queued" };
+  if (inlineExecution) {
+    const { runInlineRankCheck } = await import("./runs/inline");
+    let inline: Awaited<ReturnType<typeof runInlineRankCheck>>;
     try {
-      await assertBudgetAvailable(keywordScope.projectId, new Date(), {
-        capCents: budgetContext.project.budgetCapCents,
-        estimatedCostCents,
+      inline = await runInlineRankCheck({
+        depth: data.depth,
+        keywordId: keyword.id,
+        providerId: data.providerId,
+        runPublicId: launched.publicId,
       });
     } catch (error) {
-      if (isBudgetExhaustedError(error)) {
-        return budgetExhaustedResult(error.message);
-      }
-      throw error;
+      // The same refusal the launch makes, one step later: report it the same way rather than
+      // letting it fall through as an unhandled failure.
+      if (!(error instanceof UnrunnableInlineRankCheckError)) throw error;
+      revalidateRankCheckViews(keyword.publicId);
+      return { code: error.reason, message: error.message, status: "not_started" };
     }
-  }
-  // Pre-create the running row so a public id is available immediately for
-  // status polling. The workflow activity claims this row by its internal id.
-  const now = new Date();
-  const runningRow = await prisma.rankCheck.create({
-    data: {
-      attemptCount: 0,
-      checkedAt: now,
-      estimatedCostCents,
-      keywordId: keywordScope.id,
-      provider: data.providerId ?? "primary",
-      publicId: makePublicId("check"),
-      requestedDepth: depth,
-      startedAt: now,
-      status: "running",
-      trigger: "manual",
-    },
-    select: { id: true, publicId: true },
-  });
-  let result: Exclude<RunCheckNowResult, BudgetExhaustedResult>;
-  try {
-    await startRankCheckWorkflow(
-      {
-        depth: data.depth,
-        keywordId: keywordScope.id,
-        providerId: data.providerId,
-        rankCheckId: runningRow.id,
-      },
-      {
-        searchAttributes: rankCheckSearchAttributes({
-          keywordId: keywordScope.id,
-          projectId: keywordScope.projectId,
-          provider: data.providerId,
-        }),
-        workflowId: manualRankCheckWorkflowId(keywordScope.id),
-      },
-    );
+    const rankCheck = await prisma.rankCheck.findUniqueOrThrow({
+      select: { publicId: true, requestedDepth: true },
+      where: { id: inline.rankCheckId },
+    });
     result = {
-      rankCheckId: requiredPublicAuditId(runningRow.publicId, "check", "Rank-check"),
-      status: "running",
-    };
-  } catch (error) {
-    if (!isTemporalUnavailable(error)) {
-      await prisma.rankCheck.delete({ where: { id: runningRow.id } });
-      throw error;
-    }
-    let fallback: Awaited<ReturnType<typeof runKeywordCheckWithFallback>>;
-    try {
-      fallback = await runKeywordCheckWithFallback({
-        depth: data.depth,
-        keywordId: keywordScope.id,
-        providerId: data.providerId,
-        rankCheckId: runningRow.id,
-      });
-    } catch (fallbackError) {
-      if (fallbackError instanceof ProviderChainError) {
-        await persistFailedRankCheck({
-          attempts: fallbackError.attempts,
-          checkedAt: now,
-          error: fallbackError.message,
-          errorCode: fallbackError.dominantCode,
-          existingRankCheckId: runningRow.id,
-          keywordId: keywordScope.id,
-          keywordPublicId: keywordScope.publicId,
-          keywordText: keywordScope.text,
-          projectDomain: trackedProjectDomain(budgetContext.project.domain) ?? undefined,
-          projectId: keywordScope.projectId,
-          provider: data.providerId ?? connections[0]?.provider ?? "primary",
-          requestedDepth: depth,
-        });
-        result = {
-          rankCheckId: requiredPublicAuditId(runningRow.publicId, "check", "Rank-check"),
-          status: "running",
-        };
-        await auditResult(result);
-        return result;
-      }
-      await prisma.rankCheck.deleteMany({
-        where: { id: runningRow.id, status: "running" },
-      });
-      throw fallbackError;
-    }
-    result = {
-      attempts: fallback.attempts.length,
-      billingUnits: fallback.rankCheck.billingUnits,
-      position: fallback.rankCheck.position,
-      provider: fallback.provider,
-      rankCheckId: requiredPublicAuditId(fallback.rankCheck.publicId, "check", "Rank-check"),
-      requestedDepth: fallback.rankCheck.requestedDepth,
+      attempts: inline.attempts.length,
+      billingUnits: null,
+      position: inline.position,
+      provider: inline.provider,
+      rankCheckId: rankCheck.publicId ?? inline.rankCheckId,
+      requestedDepth: rankCheck.requestedDepth,
+      runId: launched.publicId,
       status: "completed",
     };
   }
 
-  await auditResult(result);
-
+  await writeAudit({
+    action: "rank_check.run_now",
+    actorId: actor.id,
+    after: { keywordId: keyword.publicId, provider: data.providerId ?? "primary", ...result },
+    projectId: keyword.projectId,
+    targetId: launched.publicId,
+    targetType: "rank_check_run",
+  });
+  revalidateRankCheckViews(keyword.publicId);
   return result;
 }

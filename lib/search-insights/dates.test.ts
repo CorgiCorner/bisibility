@@ -5,6 +5,7 @@ import {
   diffDays,
   finalizedWindow,
   formatDateLabel,
+  formatDateRangeLabel,
   formatPacificTimestamp,
   monthsBefore,
   pacificToday,
@@ -40,6 +41,7 @@ describe("date keys", () => {
 
   it("labels a day the way the tables read it", () => {
     expect(formatDateLabel("2026-08-17")).toBe("Aug 17, 2026");
+    expect(formatDateLabel("2026-08-17", "day_first")).toBe("17 Aug 2026");
   });
 });
 
@@ -96,6 +98,31 @@ describe("finalizedWindow", () => {
       current: { end: "2026-06-30", start: "2026-06-30" },
       previous: { end: "2026-06-29", start: "2026-06-29" },
     });
+  });
+
+  it("applies year over year to the selected window across Dec and Jan", () => {
+    expect(finalizedWindow("2026-01-02", 10, "year_over_year")).toEqual({
+      current: { end: "2026-01-02", start: "2025-12-24" },
+      previous: { end: "2025-01-02", start: "2024-12-24" },
+    });
+  });
+});
+
+describe("formatDateRangeLabel", () => {
+  it.each([
+    [{ end: "2026-08-28", start: "2026-08-22" }, "Aug 22 - 28"],
+    [{ end: "2026-08-04", start: "2026-07-29" }, "Jul 29 - Aug 4"],
+    [{ end: "2026-08-28", start: "2026-08-28" }, "Aug 28"],
+    [{ end: "2026-01-04", start: "2025-12-29" }, "Dec 29, 2025 - Jan 4, 2026"],
+    [{ end: "2025-12-07", start: "2025-12-01" }, "Dec 1 - 7"],
+  ])("formats %o as %s", (window, expected) => {
+    expect(formatDateRangeLabel(window)).toBe(expected);
+  });
+
+  it("uses the shared date-format preference", () => {
+    const window = { end: "2026-09-02", start: "2026-08-24" };
+    expect(formatDateRangeLabel(window, "day_first")).toBe("24 Aug - 2 Sep");
+    expect(formatDateRangeLabel(window, "iso")).toBe("2026-08-24 - 2026-09-02");
   });
 });
 

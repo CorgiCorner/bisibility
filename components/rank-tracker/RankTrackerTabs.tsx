@@ -4,7 +4,7 @@ import Link from "next/link";
 
 type RankTrackerTabsProps = {
   activeTab: RankTrackerTab;
-  checksCount: number;
+  runsCount: number;
   projectRef: string;
   savedCount: number;
   trackedCount: number;
@@ -34,14 +34,14 @@ function tabClass(active: boolean) {
 
 export function RankTrackerTabs({
   activeTab,
-  checksCount,
+  runsCount,
   projectRef,
   savedCount,
   trackedCount,
 }: Readonly<RankTrackerTabsProps>) {
   const trackedActive = activeTab === "tracked";
   const savedActive = activeTab === "saved";
-  const checksActive = activeTab === "checks";
+  const runsActive = activeTab === "runs";
 
   return (
     <nav aria-label="Rank Tracker views" className="flex gap-1 border-b border-border">
@@ -64,13 +64,13 @@ export function RankTrackerTabs({
         <span className={countChip()}>{savedCount.toLocaleString("en-US")}</span>
       </Link>
       <Link
-        aria-current={checksActive ? "page" : undefined}
-        aria-label={`Checks ${checksCount}`}
-        className={tabClass(checksActive)}
-        href={rankTrackerTabPath(projectRef, "checks")}
+        aria-current={runsActive ? "page" : undefined}
+        aria-label={`Runs ${runsCount}`}
+        className={tabClass(runsActive)}
+        href={rankTrackerTabPath(projectRef, "runs")}
       >
-        <span>Checks</span>
-        <span className={countChip()}>{formatCount(checksCount)}</span>
+        <span>Runs</span>
+        <span className={countChip()}>{formatCount(runsCount)}</span>
       </Link>
     </nav>
   );

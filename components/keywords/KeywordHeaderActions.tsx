@@ -47,7 +47,7 @@ function runCheckActionLabel(
 ) {
   if (pending) return "Starting...";
   if (typeof primaryLabel === "function") return primaryLabel(selectedDepth);
-  return `${primaryLabel} (Top ${selectedDepth})`;
+  return primaryLabel;
 }
 
 export function KeywordHeaderActions({

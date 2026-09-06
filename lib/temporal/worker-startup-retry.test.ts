@@ -4,6 +4,9 @@ import { classifyWorkerStartupError, runWorkerStartupStage } from "./worker-star
 describe("classifyWorkerStartupError", () => {
   it("fails only stable permanent codes and retries recognized transient statuses", () => {
     expect(classifyWorkerStartupError("transport", { code: "ECONNREFUSED" })).toBe("transient");
+    expect(classifyWorkerStartupError("rank-check-runs-maintenance", new Error("disabled"))).toBe(
+      "permanent",
+    );
     expect(classifyWorkerStartupError("schedule-bootstrap", { code: "UNAVAILABLE" })).toBe(
       "transient",
     );

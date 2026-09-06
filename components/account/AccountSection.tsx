@@ -23,8 +23,8 @@ export function AccountSection({
 }: Readonly<AccountSectionProps>) {
   return (
     <section className="space-y-3.5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 w-full sm:w-auto sm:flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <SectionTitle>{title}</SectionTitle>
             {badge}
@@ -35,7 +35,9 @@ export function AccountSection({
             </p>
           ) : null}
         </div>
-        {action ? <div className="flex-none">{action}</div> : null}
+        {action ? (
+          <div className="ml-auto flex min-h-9 shrink-0 items-center gap-3">{action}</div>
+        ) : null}
       </div>
       <Card
         className={cn("rounded-card p-5", tone === "danger" && "border-red", contentClassName)}

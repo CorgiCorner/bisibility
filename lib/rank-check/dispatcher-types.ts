@@ -5,6 +5,8 @@ export type ClaimedRankCheckGroup = {
   keywordIds: string[];
   locationId: string;
   projectId: string;
+  runId?: string;
+  runItemIds?: string[];
 };
 
 export type RankCheckClaimCompensation = {

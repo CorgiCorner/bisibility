@@ -2,6 +2,7 @@
 
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { assertKeywordIdentityUnchanged } from "@/lib/keywords/identity";
 import { addKeywordSchema, addKeywordsSchema, updateKeywordSchema } from "@/lib/schemas/keyword";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
@@ -248,6 +249,7 @@ export async function updateKeyword(input: unknown) {
       device: true,
       intent: true,
       location: true,
+      locationId: true,
       targetUrl: true,
       text: true,
       topic: true,
@@ -266,6 +268,12 @@ export async function updateKeyword(input: unknown) {
           }),
         )
       : null;
+  if (!before) throw new Error("Keyword not found.");
+  assertKeywordIdentityUnchanged(before, {
+    device: data.device,
+    locationId: resolved?.location.id,
+    text: data.keyword,
+  });
   const updated = await prisma.keyword.update({
     data: {
       device: data.device,

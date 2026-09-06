@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   resolveGa4: vi.fn(),
   resolveGsc: vi.fn(),
   start: vi.fn(),
+  startSync: vi.fn(),
   updateMany: vi.fn(),
 }));
 vi.mock("@/lib/db/prisma", () => ({
@@ -13,6 +14,7 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 vi.mock("@/lib/temporal/search-insights-client", () => ({
   startSearchInsightsBackfillWorkflow: mocks.start,
+  startSearchInsightsSyncWorkflow: mocks.startSync,
 }));
 vi.mock("./credentials", () => ({ resolveSearchInsightsConnection: mocks.resolveGsc }));
 vi.mock("./sessions-credentials", () => ({ resolveOrganicSessionsConnection: mocks.resolveGa4 }));
@@ -37,11 +39,13 @@ describe("reconcileQueuedSearchInsightsImports", () => {
     mocks.resolveGsc.mockResolvedValue({ property: "sc-domain:example.com" });
     mocks.resolveGa4.mockResolvedValue({ property: "123456789" });
     mocks.start.mockResolvedValue({ workflowId: "workflow_1" });
+    mocks.startSync.mockResolvedValue({ workflowId: "sync_workflow_1" });
     mocks.updateMany.mockResolvedValue({ count: 1 });
   });
 
   it("starts an eligible frozen queued import and stamps its workflow id", async () => {
     mocks.findMany.mockResolvedValue([queued({ workflowId: "stale_or_null" })]);
+    const consoleInfo = vi.spyOn(console, "info").mockImplementation(() => undefined);
 
     await expect(reconcileQueuedSearchInsightsImports()).resolves.toEqual({
       attempted: 1,
@@ -68,6 +72,13 @@ describe("reconcileQueuedSearchInsightsImports", () => {
         state: "queued",
       },
     });
+    expect(consoleInfo).toHaveBeenCalledWith("[search-insights] queued backfill started", {
+      importId: "import_1",
+      projectId: "project_1",
+      source: "gsc",
+      workflowId: "workflow_1",
+    });
+    consoleInfo.mockRestore();
   });
 
   it("uses a bounded deterministic query and excludes paused rows", async () => {
@@ -133,19 +144,22 @@ describe("reconcileQueuedSearchInsightsImports", () => {
     expect(mocks.start).not.toHaveBeenCalled();
   });
 
-  it("skips completed cursors and stale properties", async () => {
+  it("skips a stale property but syncs a finished cursor rather than dropping it", async () => {
     mocks.findMany.mockResolvedValue([
       queued({ id: "done", cursorDate: new Date("2025-02-28") }),
       queued({ id: "stale", property: "sc-domain:old.example.com" }),
     ]);
     await expect(reconcileQueuedSearchInsightsImports()).resolves.toEqual({
-      attempted: 0,
+      attempted: 1,
       failed: 0,
       scanned: 2,
-      skipped: 2,
-      stamped: 0,
+      skipped: 1,
+      stamped: 1,
     });
+    // A finished backfill that is queued again is the Sync now button's request, so it gets an
+    // incremental sync. Dropping it here would make that button do nothing at all.
     expect(mocks.start).not.toHaveBeenCalled();
+    expect(mocks.startSync).toHaveBeenCalledWith({ projectId: "project_1" });
   });
 
   it("supports GA4 through its matching active connection", async () => {
@@ -197,6 +211,7 @@ describe("reconcileQueuedSearchInsightsImports", () => {
     mocks.resolveGsc
       .mockResolvedValueOnce({ property: "sc-domain:example.com" })
       .mockResolvedValueOnce({ property: "sc-domain:new.example.com" });
+    const consoleInfo = vi.spyOn(console, "info").mockImplementation(() => undefined);
     await expect(reconcileQueuedSearchInsightsImports()).resolves.toEqual({
       attempted: 1,
       failed: 0,
@@ -206,6 +221,11 @@ describe("reconcileQueuedSearchInsightsImports", () => {
     });
     expect(mocks.start).toHaveBeenCalledOnce();
     expect(mocks.updateMany).not.toHaveBeenCalled();
+    expect(consoleInfo).not.toHaveBeenCalledWith(
+      "[search-insights] queued backfill started",
+      expect.anything(),
+    );
+    consoleInfo.mockRestore();
   });
 
   it("isolates a connection guard failure from the next row", async () => {

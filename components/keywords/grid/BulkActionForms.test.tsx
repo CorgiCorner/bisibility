@@ -1,13 +1,30 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { ToastProvider } from "@/components/ui";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { FIELD_HELP } from "@/lib/settings/field-help";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
-import { BulkFrequencyForm } from "./BulkActionForms";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { SetScheduleModal } from "./SetScheduleModal";
+import type { CheckScheduleSummary } from "./set-schedule-model";
+
+const schedules = [
+  {
+    cronExpression: null,
+    enabled: true,
+    frequency: "daily",
+    isDefault: true,
+    jitterMinutes: 60,
+    keywordCount: 1,
+    name: "Daily 06:00",
+    publicId: "sch_daily",
+    serpDepth: null,
+    timeOfDay: "06:00",
+    timezone: "UTC",
+  },
+] satisfies CheckScheduleSummary[];
 
 function renderForm() {
-  const action = vi.fn(async () => undefined);
   const selectedRows = [
     {
       ...(keywordRows[0] as KeywordRow),
@@ -19,19 +36,24 @@ function renderForm() {
     },
   ];
   render(
-    <BulkFrequencyForm
-      action={action}
-      onDone={vi.fn()}
-      onError={vi.fn()}
-      projectId="prj_1"
-      providerRate={{ overrideCents: 1, providerId: "dataforseo" }}
-      selectedRows={selectedRows}
-    />,
+    <ToastProvider>
+      <SetScheduleModal
+        initialView="new"
+        onClose={vi.fn()}
+        onDone={vi.fn()}
+        open
+        projectId="prj_1"
+        providerRate={{ overrideCents: 1, providerId: "dataforseo" }}
+        schedules={schedules}
+        selectedRows={selectedRows}
+      />
+    </ToastProvider>,
   );
-  return action;
 }
 
-describe("BulkFrequencyForm", () => {
+afterEach(() => vi.unstubAllGlobals());
+
+describe("New schedule from selection", () => {
   it("shows help for each schedule field", () => {
     renderForm();
 
@@ -41,34 +63,28 @@ describe("BulkFrequencyForm", () => {
     expect(screen.getByLabelText("Jitter (min)")).toHaveDisplayValue("60");
     expect(screen.getByLabelText("Jitter (min)")).toHaveAttribute("max", "120");
 
-    fireEvent.click(screen.getByRole("button", { name: "Frequency" }));
-    fireEvent.click(screen.getByText("Custom cron"));
+    fireEvent.click(screen.getByRole("radio", { name: "Custom cron" }));
 
     expect(screen.getByRole("button", { name: FIELD_HELP.cron })).toBeInTheDocument();
   });
 
-  it("shows the selected keywords' monthly frequency delta", () => {
-    renderForm();
-
-    expect(screen.getByText("~ +$0.26/mo for 1 keyword")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Frequency" }));
-    fireEvent.click(screen.getByText("Paused"));
-
-    expect(screen.getByText("~ -$0.04/mo for 1 keyword")).toBeInTheDocument();
-  });
-
   it("selects a validated timezone from the searchable catalogue", async () => {
     const user = userEvent.setup();
-    const action = renderForm();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ json: async () => ({ data: { publicId: "sch_new" } }), ok: true })
+      .mockResolvedValueOnce({ json: async () => ({ data: { updated: 1 } }), ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    renderForm();
 
     await user.click(screen.getByRole("button", { name: "Timezone" }));
     await user.type(screen.getByRole("textbox", { name: "Search time zones..." }), "warsaw");
     await user.click(screen.getByRole("menuitem", { name: /Europe\/Warsaw/ }));
-    await user.click(screen.getByRole("button", { name: "Set frequency" }));
+    await user.click(screen.getByRole("button", { name: "Create schedule" }));
 
-    expect(action).toHaveBeenCalledWith(
-      expect.objectContaining({ schedule: expect.objectContaining({ timezone: "Europe/Warsaw" }) }),
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string)).toMatchObject(
+      expect.objectContaining({ timezone: "Europe/Warsaw" }),
     );
   });
 });

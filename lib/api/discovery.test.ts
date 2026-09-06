@@ -318,7 +318,7 @@ describe("API health worker and Temporal liveness", () => {
   });
 
   it("fails probes readably when the scheduler driver is invalid", async () => {
-    vi.stubEnv("SCHEDULER_DRIVER", "worker");
+    vi.stubEnv("SCHEDULER_DRIVER", "sidecar");
 
     await expect(readiness()).resolves.toEqual({ body: { status: "degraded" }, status: 503 });
     await expect(result(getHealth({ headers: new Headers() }))).resolves.toEqual({
@@ -331,21 +331,42 @@ describe("API health worker and Temporal liveness", () => {
     });
   });
 
-  it("degrades detailed health when a live worker uses a conflicting driver", async () => {
-    vi.stubEnv("SCHEDULER_DRIVER", "none");
+  it.each([
+    ["worker", "temporal", "ok", "ok", "ok", 200],
+    ["temporal", "temporal", "ok", "ok", "ok", 200],
+    ["temporal", "none", "driver-mismatch", "degraded", "degraded", 503],
+    ["worker", "none", "driver-mismatch", "degraded", "degraded", 503],
+    ["none", "temporal", "driver-mismatch", "degraded", "degraded", 503],
+  ] as const)(
+    "classifies app driver %s with worker driver %s",
+    async (appDriver, workerDriver, schedulerConfiguration, worker, status, responseStatus) => {
+      vi.stubEnv("SCHEDULER_DRIVER", appDriver);
+      mocks.liveness.mockResolvedValue({
+        appliedMigration: "20260724220000_instance_settings",
+        bundledMigration: "20260724220000_instance_settings",
+        environment: "worker-production",
+        lastSeenAt: "2026-07-21T10:08:44.000Z",
+        release: "worker-image-sha",
+        revision: "worker-public-revision",
+        schedulerDriver: workerDriver,
+        schedulerMode: "cutover",
+        schemaComparison: "ok",
+        status: "ok",
+      });
 
-    await expect(health()).resolves.toMatchObject({
-      body: {
-        services: {
-          schedulerConfiguration: "driver-mismatch",
-          worker: "degraded",
-          workerSchedulerDriver: "temporal",
+      await expect(health()).resolves.toMatchObject({
+        body: {
+          services: {
+            schedulerConfiguration,
+            worker,
+            workerSchedulerDriver: workerDriver,
+          },
+          status,
         },
-        status: "degraded",
-      },
-      status: 503,
-    });
-  });
+        status: responseStatus,
+      });
+    },
+  );
 
   it("degrades detailed health when web and worker revisions differ", async () => {
     mocks.appRevision.mockReturnValue("a".repeat(40));

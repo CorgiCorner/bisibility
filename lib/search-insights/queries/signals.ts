@@ -10,6 +10,7 @@ import {
   POSITION_BAND,
 } from "@/lib/search-insights/constants";
 import type { DateWindow } from "@/lib/search-insights/dates";
+import { withOverlapWorkMem } from "./overlap-work-mem";
 import { searchInsightsWindowFilter } from "./window-filter";
 
 // A query has to be answered by more than one page before the overlap is worth naming.
@@ -72,35 +73,47 @@ export function overlapQueriesSql(filter: Prisma.Sql) {
         COUNT(*) FILTER (WHERE ${overlapPageFloorSql}) AS "pages"
       FROM "overlap_pages"
       GROUP BY "query"
+    ),
+    "scored" AS (
+      SELECT *, MAX("clicks") OVER () AS "maxClicks"
+      FROM "overlap_queries"
     )
     SELECT "query", "clicks", "pages"
-    FROM "overlap_queries"
+    FROM "scored"
     WHERE "pages" >= ${MIN_OVERLAP_PAGES}
       AND "clicks" >= GREATEST(
         ${MIN_QUERY_CLICKS}::float8,
-        ROUND(
-          COALESCE((SELECT MAX("clicks") FROM "overlap_queries"), 0)::float8
-            * ${OVERLAP_FLOOR_SHARE}::float8
-        )
+        ROUND("maxClicks"::float8 * ${OVERLAP_FLOOR_SHARE}::float8)
       )
   `;
 }
 
-async function countOf(statement: Prisma.Sql) {
-  const rows = await prisma.$queryRaw<{ count: bigint | number }[]>(Prisma.sql`
+function countSql(statement: Prisma.Sql) {
+  return Prisma.sql`
     SELECT COUNT(*) AS "count" FROM (${statement}) AS "selected"
-  `);
+  `;
+}
+
+export function overlapCountSql(filter: Prisma.Sql) {
+  return countSql(overlapQueriesSql(filter));
+}
+
+async function countOf(client: Pick<Prisma.TransactionClient, "$queryRaw">, statement: Prisma.Sql) {
+  const rows = await client.$queryRaw<{ count: bigint | number }[]>(countSql(statement));
   return Number(rows.at(0)?.count ?? 0);
 }
 
 export function getPositionBandCount(projectId: string, property: string, window: DateWindow) {
   const filter = searchInsightsWindowFilter(projectId, property, window);
-  return countOf(positionBandQuerySql(filter));
+  return countOf(prisma, positionBandQuerySql(filter));
 }
 
 export function getOverlapCount(projectId: string, property: string, window: DateWindow) {
   const filter = searchInsightsWindowFilter(projectId, property, window);
-  return countOf(overlapQueriesSql(filter));
+  return withOverlapWorkMem(async (transaction) => {
+    const rows = await transaction.$queryRaw<{ count: bigint | number }[]>(overlapCountSql(filter));
+    return Number(rows.at(0)?.count ?? 0);
+  });
 }
 
 export async function getSearchInsightsSignals(

@@ -1,4 +1,5 @@
 import { Card, InfoTooltip } from "@/components/ui";
+import type { DateFormat } from "@/lib/dates/format";
 import type { DomainRankMetrics } from "@/lib/providers/types";
 import { cn } from "@/lib/ui/cn";
 import {
@@ -14,11 +15,13 @@ const toneClass = {
 } as const;
 
 export function DomainOverviewKpiRow({
+  dateFormat,
   metrics,
   previous,
   previousSourceSnapshotAt,
   sourceSnapshotAt,
 }: Readonly<{
+  dateFormat: DateFormat;
   metrics: DomainRankMetrics | null;
   previous: DomainRankMetrics | null;
   previousSourceSnapshotAt: string | null;
@@ -26,8 +29,8 @@ export function DomainOverviewKpiRow({
 }>) {
   const definition = metrics
     ? previousSourceSnapshotAt
-      ? `Estimated from the DataForSEO index snapshot of ${sourceDateLabel(sourceSnapshotAt)}, compared with ${sourceDateLabel(previousSourceSnapshotAt)}. Not tracked ranking data.`
-      : `Estimated from the DataForSEO index snapshot of ${sourceDateLabel(sourceSnapshotAt)}. No prior source snapshot is available yet.`
+      ? `Estimated from the DataForSEO index snapshot of ${sourceDateLabel(sourceSnapshotAt, dateFormat)}, compared with ${sourceDateLabel(previousSourceSnapshotAt, dateFormat)}. Not tracked ranking data.`
+      : `Estimated from the DataForSEO index snapshot of ${sourceDateLabel(sourceSnapshotAt, dateFormat)}. No prior source snapshot is available yet.`
     : "No indexed organic metrics are available for this domain and market.";
   const kpis = metrics ? domainOverviewKpis(metrics, previous) : emptyDomainOverviewKpis();
 

@@ -15,7 +15,7 @@ const props = {
   deleteTag: vi.fn(),
   project: { domain: "example.com", name: "Example", projectId: "prj_7Kd2Qf9m" },
   requestDomainChange: vi.fn(),
-  tags: [{ color: "var(--blue)", label: "brand" }],
+  tags: [{ color: "var(--blue)", keywordCount: 0, label: "brand", segmentCount: 0 }],
   updateProject: vi.fn(),
 };
 

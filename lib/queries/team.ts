@@ -3,6 +3,7 @@ import "server-only";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
+import { type DateFormat, formatDate } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import type { Role } from "@/lib/generated/prisma/client";
@@ -84,13 +85,8 @@ function inviterLabel(inviter: { email: string; name: string }) {
   return name && name !== inviter.email ? `${name} (${inviter.email})` : inviter.email;
 }
 
-function memberAccessLabel(createdAt: Date) {
-  const date = new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(createdAt);
-  return `Project access since ${date}`;
+function memberAccessLabel(createdAt: Date, dateFormat: DateFormat) {
+  return `Project access since ${formatDate(createdAt.toISOString().slice(0, 10), dateFormat)}`;
 }
 
 function canManageMember(actorRole: Role | null, memberRole: Role) {
@@ -125,7 +121,10 @@ function requiredPublicId(value: string | null, prefix: "inv" | "mbr", resource:
   return value;
 }
 
-export async function getTeamAccess(projectId: string): Promise<TeamAccessView> {
+export async function getTeamAccess(
+  projectId: string,
+  dateFormat: DateFormat = "day_first",
+): Promise<TeamAccessView> {
   const { actor, project } = await requireReadableProject(projectId);
   const now = new Date();
   const [members, pendingInvites] = await Promise.all([
@@ -156,7 +155,7 @@ export async function getTeamAccess(projectId: string): Promise<TeamAccessView> 
     members: members.map((member, index) => {
       const manageable = canManageMember(actorRole, member.role);
       return {
-        accessLabel: memberAccessLabel(member.createdAt),
+        accessLabel: memberAccessLabel(member.createdAt, dateFormat),
         avatarUrl: gravatarUrl(member.user.email, 34),
         canChangeRole: manageable,
         canRemove: manageable,

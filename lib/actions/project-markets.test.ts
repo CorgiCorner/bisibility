@@ -234,6 +234,29 @@ describe("project market actions", () => {
     });
   });
 
+  it("rejects a project market update that changes its location with a typed error", async () => {
+    mocks.prisma.projectMarket.findFirst.mockResolvedValue({
+      locationId: "location_1",
+      publicId: "pmkt_abcdefghijklmnopqrstuvwx",
+      status: "active",
+    });
+
+    await expect(
+      setProjectMarketEnabled({
+        enabled: false,
+        locationId: "location_2",
+        marketId: "pmkt_abcdefghijklmnopqrstuvwx",
+        projectId,
+      }),
+    ).rejects.toMatchObject({
+      code: "conflict",
+      name: "ProjectMarketLocationImmutableError",
+      status: 409,
+    });
+    expect(mocks.pauseProjectMarket).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
   it("rejects resuming a removed market when the registry cap is full", async () => {
     mocks.prisma.projectMarket.findFirst.mockResolvedValue({
       locationId: "location_6",

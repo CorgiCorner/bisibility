@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   propertyDisplayName,
   propertyKind,
+  resolveComparisonMode,
   resolvePeriod,
   searchInsightsProperty,
   wholeMonthsBetween,
@@ -42,11 +43,25 @@ describe("resolvePeriod", () => {
     expect(resolvePeriod("yoy").id).toBe("28");
     expect(resolvePeriod("999").id).toBe("28");
     expect(resolvePeriod("28")).toEqual({
+      comparison: "previous_period",
       days: 28,
       id: "28",
       label: "28 finalized days",
-      sub: "vs previous 28",
     });
+  });
+});
+
+describe("resolveComparisonMode", () => {
+  it("enables year over year only with enough imported history", () => {
+    expect(resolveComparisonMode("yoy", { monthsImported: 13, required: 13 })).toBe(
+      "year_over_year",
+    );
+    expect(resolveComparisonMode("yoy", { monthsImported: 12, required: 13 })).toBe(
+      "previous_period",
+    );
+    expect(resolveComparisonMode(undefined, { monthsImported: 16, required: 13 })).toBe(
+      "previous_period",
+    );
   });
 });
 

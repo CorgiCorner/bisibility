@@ -4,24 +4,66 @@ import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { resolveEffectiveSerpDepth } from "@/lib/serp/markets";
 import type { QueuedRankCheckWorkflowInput } from "@/lib/temporal/queued-rank-check-contract";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "./budget";
 import { serpProviderChainOrderBy } from "./provider-chain-order";
 import { queuedRankCheckConfig } from "./queued-config";
+import { unrunnableBatchReason } from "./queued-eligibility";
 import { dataForSeoQueuedEstimate } from "./queued-pricing";
+import { applyRunItemTransition } from "./runs/items";
 import { sha256Hex } from "./sha256";
 
 const TERMINAL_RETENTION_DAYS = 30;
 const AUTOMATIC_FREQUENCIES = new Set(["daily", "weekly", "monthly", "custom_cron"]);
-
 type PreparedKeyword = Awaited<ReturnType<typeof loadContext>>["keywords"][number];
 type EffectiveSchedule = {
   frequency: string;
   serpDepth: number | null;
 };
-
+type ResolvedRunItem = {
+  id: string;
+  keywordId: string;
+  runId: string;
+};
+async function resolveRunItems(tx: Prisma.TransactionClient, input: QueuedRankCheckWorkflowInput) {
+  if (input.runItemIds && input.runItemIds.length !== input.keywordIds.length) {
+    throw new Error("runItemIds must align with keywordIds.");
+  }
+  if (input.runItemIds && new Set(input.runItemIds).size !== input.runItemIds.length) {
+    throw new Error("runItemIds must be unique.");
+  }
+  if (!input.runItemIds && !input.runId) {
+    return { byKeyword: new Map<string, ResolvedRunItem>(), runId: undefined };
+  }
+  const rows = await tx.rankCheckRunItem.findMany({
+    select: { id: true, keywordId: true, runId: true },
+    where: input.runItemIds
+      ? { id: { in: input.runItemIds } }
+      : input.runId
+        ? { keywordId: { in: input.keywordIds }, runId: input.runId }
+        : { id: { in: [] } },
+  });
+  if (input.runItemIds && rows.length !== input.runItemIds.length) {
+    throw new Error("Queued rank-check run item no longer exists.");
+  }
+  const byId = new Map(rows.map((item) => [item.id, item]));
+  const byKeyword = new Map<string, ResolvedRunItem>();
+  for (const [index, keywordId] of input.keywordIds.entries()) {
+    const itemId = input.runItemIds?.[index];
+    const item = itemId ? byId.get(itemId) : rows.find((row) => row.keywordId === keywordId);
+    if (!item) continue;
+    if (item.keywordId !== keywordId || (input.runId && item.runId !== input.runId)) {
+      throw new Error("Queued rank-check run item does not match its keyword or run.");
+    }
+    byKeyword.set(keywordId, item);
+  }
+  const runIds = new Set(rows.map((item) => item.runId));
+  if (runIds.size > 1) throw new Error("Queued rank-check batch spans multiple runs.");
+  return { byKeyword, runId: rows[0]?.runId };
+}
 async function loadContext(tx: Prisma.TransactionClient, input: QueuedRankCheckWorkflowInput) {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`rank-check-budget:${input.projectId}`}))`;
   const project = await tx.project.findUnique({
@@ -57,6 +99,7 @@ async function loadContext(tx: Prisma.TransactionClient, input: QueuedRankCheckW
   if (!eligibilityReason && (project.owner.deactivatedAt || project.writeMode !== "active")) {
     eligibilityReason = "Project state no longer permits scheduled rank checks.";
   }
+  eligibilityReason ??= await unrunnableBatchReason(tx, input.projectId, keywords);
   if (!eligibilityReason && connection?.provider !== "dataforseo") {
     eligibilityReason = "DataForSEO is no longer the effective primary SERP provider.";
   }
@@ -75,7 +118,6 @@ async function loadContext(tx: Prisma.TransactionClient, input: QueuedRankCheckW
   }
   return { connection, eligibilityReason, keywords, project };
 }
-
 function preparedKeyword(keyword: PreparedKeyword, defaults: EffectiveSchedule | null) {
   const schedule = keyword.schedule ?? defaults;
   if (!schedule || !AUTOMATIC_FREQUENCIES.has(schedule.frequency)) return null;
@@ -85,17 +127,11 @@ function preparedKeyword(keyword: PreparedKeyword, defaults: EffectiveSchedule |
   });
   return {
     depth,
-    estimatedCostCents: 0,
-    keyword,
-    previousPosition: keyword.rankChecks[0]?.position ?? null,
-    schedule,
   };
 }
-
 function terminalExpiry(now: Date) {
   return new Date(now.getTime() + TERMINAL_RETENTION_DAYS * 86_400_000);
 }
-
 async function writeRunningAudit(
   tx: Prisma.TransactionClient,
   input: {
@@ -124,7 +160,6 @@ async function writeRunningAudit(
     tx,
   );
 }
-
 export async function prepareQueuedRankCheckBatch(
   input: QueuedRankCheckWorkflowInput & { batchId: string; workflowRunId: string },
 ) {
@@ -143,8 +178,9 @@ export async function prepareQueuedRankCheckBatch(
     };
   }
   const now = new Date();
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const context = await loadContext(tx, input);
+    const runItems = await resolveRunItems(tx, input);
     const prepared = context.keywords.map((keyword) =>
       preparedKeyword(keyword, context.project.defaults),
     );
@@ -169,7 +205,6 @@ export async function prepareQueuedRankCheckBatch(
         deferredReason = "Rank check monthly budget reached before queued batch submission.";
       }
     }
-
     const batch = await tx.queuedRankCheckBatch.create({
       data: {
         claimedAt: new Date(input.claimedAt),
@@ -180,13 +215,14 @@ export async function prepareQueuedRankCheckBatch(
         priority: config.priority,
         projectId: input.projectId,
         queueDeadlineAt: new Date(now.getTime() + config.maxQueueAgeSeconds * 1000),
+        ...(runItems.runId ? { runId: runItems.runId } : {}),
         state: deferredReason ? "deferred" : "prepared",
         terminalAt: deferredReason ? now : null,
       },
     });
-
     for (const [index, keyword] of context.keywords.entries()) {
       const details = prepared[index];
+      const runItem = runItems.byKeyword.get(keyword.id);
       const estimate = details ? dataForSeoQueuedEstimate(config.priority, details.depth) : 0;
       const publicId = makePublicId("check");
       const rankCheck = await tx.rankCheck.create({
@@ -202,6 +238,7 @@ export async function prepareQueuedRankCheckBatch(
           provider: "dataforseo",
           publicId,
           requestedDepth: details?.depth,
+          ...(runItem ? { runId: runItem.runId } : {}),
           scheduleId: "dispatcher-rank-checks",
           scheduledAt: new Date(input.claimedAt),
           startedAt: now,
@@ -210,6 +247,20 @@ export async function prepareQueuedRankCheckBatch(
           workflowRunId: input.workflowRunId,
         },
       });
+      if (runItem) {
+        const linked = await tx.rankCheckRunItem.updateMany({
+          data: { claimExpiresAt: null, rankCheckId: rankCheck.id },
+          where: {
+            id: runItem.id,
+            keywordId: keyword.id,
+            rankCheckId: null,
+            status: "running",
+          },
+        });
+        if (linked.count !== 1) {
+          throw new Error("Queued rank-check run item claim was lost before preparation.");
+        }
+      }
       const taskId = `qtask_${sha256Hex(`${input.batchId}:${keyword.id}`).slice(0, 32)}`;
       await tx.queuedRankCheckTask.create({
         data: {
@@ -228,8 +279,10 @@ export async function prepareQueuedRankCheckBatch(
         projectId: input.projectId,
         publicId,
       });
+      if (deferredReason && runItem) {
+        await applyRunItemTransition(tx, { rankCheckId: rankCheck.id, to: "deferred" });
+      }
     }
-
     return {
       batchId: batch.id,
       maxQueueAgeSeconds: config.maxQueueAgeSeconds,
@@ -238,4 +291,6 @@ export async function prepareQueuedRankCheckBatch(
       state: batch.state,
     };
   });
+  await publishOperationChanged({ projectId: input.projectId }).catch(() => undefined);
+  return result;
 }

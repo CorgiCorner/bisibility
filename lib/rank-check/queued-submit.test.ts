@@ -1,8 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { submitQueuedRankCheckBatch } from "./queued-submit";
+import { cancelRankCheckRun } from "./runs/cancel";
+
+function deferred() {
+  let resolve!: () => void;
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
 
 const mocks = vi.hoisted(() => {
-  const state = { batch: "prepared", task: "prepared" };
+  const state = { batch: "prepared", run: "running", task: "prepared" };
   const batch = () => ({
     connection: { credentialsEncrypted: "encrypted", id: "connection_1" },
     connectionId: "connection_1",
@@ -13,6 +22,7 @@ const mocks = vi.hoisted(() => {
       domain: "example.com",
     },
     projectId: "project_1",
+    runId: "run_1",
     state: state.batch,
     tasks: [
       {
@@ -43,6 +53,7 @@ const mocks = vi.hoisted(() => {
   });
   const prisma = {
     $executeRaw: vi.fn(),
+    $queryRaw: vi.fn(async () => [{ status: state.run }]),
     $transaction: vi.fn(async (input: unknown) => {
       if (typeof input === "function") return input(prisma);
       return Promise.all(input as Promise<unknown>[]);
@@ -92,6 +103,12 @@ const mocks = vi.hoisted(() => {
         },
       ),
     },
+    rankCheckRun: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    rankCheckRunItem: { updateMany: vi.fn() },
   };
   return {
     assertQueuedRankCheckBatchAllocation: vi.fn(),
@@ -133,6 +150,7 @@ describe("queued paid-call fence", () => {
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
     vi.stubEnv("DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED", "1");
     mocks.state.batch = "prepared";
+    mocks.state.run = "running";
     mocks.state.task = "prepared";
     mocks.resolveProviderCredentials.mockReturnValue({
       login: "login",
@@ -159,6 +177,7 @@ describe("queued paid-call fence", () => {
       ],
       failed: [],
     });
+    mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 0 });
   });
 
   it("leaves an allocation preflight infrastructure failure retryable", async () => {
@@ -321,5 +340,48 @@ describe("queued paid-call fence", () => {
     });
     expect(mocks.state.batch).toBe("deferred");
     expect(mocks.state.task).toBe("deferred");
+  });
+
+  it("does not pay after cancellation claims the run and commits", async () => {
+    const cancellationClaimed = deferred();
+    const continueCancellation = deferred();
+    const submissionReachedFence = deferred();
+    const cancellationCommitted = deferred();
+    const allowProvider = deferred();
+
+    mocks.prisma.rankCheckRun.updateMany.mockImplementation(async ({ data }) => {
+      if (data.status !== "cancelling") return { count: 0 };
+      mocks.state.run = "cancelling";
+      cancellationClaimed.resolve();
+      await continueCancellation.promise;
+      return { count: 1 };
+    });
+    mocks.prisma.queuedRankCheckBatch.updateMany.mockImplementation(async ({ data, where }) => {
+      if (data.state === "submitting") submissionReachedFence.resolve();
+      if (!data.state || mocks.state.batch !== where.state) return { count: 0 };
+      mocks.state.batch = data.state;
+      return { count: 1 };
+    });
+    mocks.prisma.$queryRaw.mockImplementation(async () => {
+      submissionReachedFence.resolve();
+      await cancellationCommitted.promise;
+      return [{ status: mocks.state.run }];
+    });
+    mocks.consumeProviderLimit.mockImplementation(async () => {
+      await allowProvider.promise;
+      return { accountKey: "dataforseo:account", success: true };
+    });
+
+    const cancellation = cancelRankCheckRun(mocks.prisma as never, "run_1");
+    await cancellationClaimed.promise;
+    const submission = submitQueuedRankCheckBatch("batch_1");
+    await submissionReachedFence.promise;
+    continueCancellation.resolve();
+    await expect(cancellation).resolves.toBe(true);
+    cancellationCommitted.resolve();
+    allowProvider.resolve();
+    await submission;
+
+    expect(mocks.submit).not.toHaveBeenCalled();
   });
 });

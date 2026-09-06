@@ -2583,9 +2583,11 @@
       "KeywordPatch": {
         "properties": {
           "city": {
+            "description": "Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted.",
             "type": ["string", "null"]
           },
           "country": {
+            "description": "Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -2619,6 +2621,7 @@
             "type": "string"
           },
           "device": {
+            "description": "Keyword identity field. A value different from the stored device is rejected with 409; the same value is accepted.",
             "enum": ["desktop", "mobile"],
             "type": "string"
           },
@@ -2630,11 +2633,12 @@
             "type": ["string", "null"]
           },
           "keyword": {
+            "description": "Keyword identity field. A value different from the stored term is rejected with 409; the same value is accepted.",
             "example": "rank tracker docs",
             "type": "string"
           },
           "location": {
-            "description": "Backward-compatible alias for country.",
+            "description": "Backward-compatible alias for country. Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -2668,7 +2672,7 @@
             "type": "string"
           },
           "location_key": {
-            "description": "Canonical country, region, or city key, optionally qualified with @language. The default language normalizes to the unqualified key.",
+            "description": "Canonical country, region, or city key, optionally qualified with @language. The default language normalizes to the unqualified key. Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted.",
             "example": "ES/Andalusia/Malaga@en",
             "type": "string"
           },
@@ -3660,6 +3664,12 @@
           "ranking_url": {
             "type": ["string", "null"]
           },
+          "run_id": {
+            "description": "Rank-check run that produced this result, or null for a legacy row.",
+            "example": "rcr_a00000000000000000000000",
+            "pattern": "^rcr_[a-z][a-z0-9]{23}$",
+            "type": ["string", "null"]
+          },
           "status": {
             "enum": ["completed", "failed", "running"],
             "type": "string"
@@ -3673,11 +3683,27 @@
           "previous_position",
           "provider",
           "ranking_url",
+          "run_id",
           "cost_cents",
           "attempts",
           "error",
           "status"
         ],
+        "type": "object"
+      },
+      "RankCheckRunQueued": {
+        "properties": {
+          "id": {
+            "example": "rcr_a00000000000000000000000",
+            "pattern": "^rcr_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "status": {
+            "enum": ["queued"],
+            "type": "string"
+          }
+        },
+        "required": ["id", "status"],
         "type": "object"
       },
       "RankedKeywordConnection": {
@@ -6269,7 +6295,7 @@
     },
     "/keywords/{id}/checks": {
       "post": {
-        "description": "Runs synchronously by default or asynchronously when requested.",
+        "description": "Queues a one-item rank-check run unless inline execution is configured.",
         "operationId": "runRankCheck",
         "parameters": [
           {
@@ -6280,14 +6306,6 @@
             "schema": {
               "enum": ["v1"],
               "type": "string"
-            }
-          },
-          {
-            "description": "When true, enqueue the check and return a running rank-check resource.",
-            "in": "query",
-            "name": "async",
-            "schema": {
-              "type": "boolean"
             }
           },
           {
@@ -6306,17 +6324,17 @@
                 }
               }
             },
-            "description": "Rank check completed"
+            "description": "Rank check completed when inline execution is enabled"
           },
           "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RankCheck"
+                  "$ref": "#/components/schemas/RankCheckRunQueued"
                 }
               }
             },
-            "description": "Rank check started"
+            "description": "Rank check queued"
           },
           "400": {
             "content": {
@@ -6377,16 +6395,6 @@
               }
             },
             "description": "Rate limited"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            },
-            "description": "Scheduler unavailable"
           }
         },
         "security": [
@@ -6397,7 +6405,7 @@
             "PersonalAccessToken": []
           }
         ],
-        "summary": "Run a rank check",
+        "summary": "Queue a rank check",
         "tags": ["rank-checks"]
       }
     },

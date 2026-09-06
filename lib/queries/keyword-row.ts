@@ -20,6 +20,7 @@ import { resolveSerpDepth } from "@/lib/serp/markets";
 
 export type {
   CompletedComparableCheck,
+  KeywordCheckSchedule,
   KeywordCheckState,
   KeywordRow,
   KeywordSchedule,
@@ -40,6 +41,8 @@ type ScheduleSource = {
   serpDepth?: number | null;
   timezone: string;
 };
+
+type CheckScheduleSource = { name: string; publicId: string };
 
 type KeywordProject = { defaults: ScheduleSource | null; domain: string };
 type UrlPresenceSource = {
@@ -62,6 +65,7 @@ export type KeywordRowInput = {
     };
   }[];
   createdAt: Date;
+  checkSchedule?: CheckScheduleSource | null;
   device: string;
   id: string;
   intent: string | null;
@@ -229,6 +233,13 @@ export function mapKeyword(
     difficultyKnown: metrics.difficulty !== null,
     engine: "Google",
     checkState: keywordCheckState(latestAttempt, row.queuedRankCheckTasks ?? []),
+    checkSchedule: row.checkSchedule
+      ? {
+          name: row.checkSchedule.name,
+          nextCheckAt: null,
+          publicId: row.checkSchedule.publicId,
+        }
+      : null,
     completedComparableChecks: checks.slice(-2).map((check) => ({
       checkedAt: check.checkedAt.toISOString(),
       position: check.position,

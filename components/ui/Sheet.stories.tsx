@@ -77,7 +77,7 @@ export const FiltersOpen: Story = {
     children: (
       <div className="flex flex-col gap-4">
         {["Ranking data", "Keyword attributes", "SERP features", "Tags"].map((label) => (
-          <section className="border-b border-border-soft pb-4" key={label}>
+          <section className="border-b border-border pb-4" key={label}>
             <h3 className="m-0 text-[11px] uppercase tracking-[0.6px] text-fg-muted">{label}</h3>
             <div className="mt-3 grid grid-cols-2 gap-[7px]">
               <button

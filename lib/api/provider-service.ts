@@ -12,6 +12,8 @@ import {
   type ProviderConnectionRefInput,
   providerConnectionRefSchema,
 } from "@/lib/schemas/provider";
+import { firstSyncIntentOnConnect } from "@/lib/traffic/first-sync-intent-state";
+import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 import { z } from "zod";
 import { auditConnection, auditProviderMutation, type ProviderClient } from "./provider-audit";
 import { renumberProviderChain } from "./provider-chain-writer";
@@ -37,6 +39,10 @@ type ProviderMutationContext = {
 };
 type ProviderMutationClient = ProviderClient &
   Pick<typeof prisma, "$queryRaw" | "project" | "providerConnectionRate">;
+
+function wakeTrafficFirstSyncWorker() {
+  void publishWorkerIntent("traffic_first_sync").catch(() => undefined);
+}
 function providerCatalogItem(providerId: string) {
   const item = PROVIDER_CATALOG.find((provider) => provider.id === providerId);
   if (!item) throw new Error(`Unknown provider: ${providerId}`);
@@ -95,11 +101,17 @@ export async function connectProviderConnection(
         ? 0
         : Math.max(...connections.map((connection) => connection.priority)) + 1);
     const enabled = priority === 0 || input.enabled;
+    const firstSyncIntent = firstSyncIntentOnConnect(
+      before,
+      { enabled, kind: item.kind, status: "connected" },
+      new Date(),
+    );
     const connection = await client.providerConnection.upsert({
       create: {
         costPerCheckCents: cost,
         credentialsEncrypted: secret ?? null,
         enabled,
+        ...firstSyncIntent,
         kind: item.kind,
         publicId: makePublicId("conn"),
         priority,
@@ -110,6 +122,7 @@ export async function connectProviderConnection(
       update: {
         ...(cost === null ? {} : { costPerCheckCents: cost }),
         enabled,
+        ...firstSyncIntent,
         ...(secret ? { credentialsEncrypted: secret } : {}),
         ...(before?.publicId ? {} : { publicId: makePublicId("conn") }),
         priority,
@@ -144,10 +157,12 @@ export async function connectProviderConnection(
       },
       client,
     );
-    return connection;
+    return { connection, shouldWake: "firstSyncRequestedAt" in firstSyncIntent };
   };
 
-  return prisma.$transaction(writeConnection);
+  const result = await prisma.$transaction(writeConnection);
+  if (result.shouldWake) wakeTrafficFirstSyncWorker();
+  return result.connection;
 }
 
 export async function setProviderSettings(
@@ -155,13 +170,26 @@ export async function setProviderSettings(
   context: ProviderMutationContext,
 ) {
   const item = providerCatalogItem(input.providerId);
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, context.projectId);
     const before = await findConnection(context.projectId, item.id, tx);
     if (!before) throw new Error("Provider connection not found.");
+    const firstSyncIntent =
+      item.kind !== "analytics"
+        ? {}
+        : input.enabled === false
+          ? {
+              firstSyncFinishedAt: null,
+              firstSyncRequestedAt: null,
+              firstSyncStartedAt: null,
+            }
+          : input.enabled === true
+            ? firstSyncIntentOnConnect(before, { ...before, enabled: true }, new Date())
+            : {};
     const updated = await tx.providerConnection.update({
       data: {
         ...(typeof input.enabled === "boolean" ? { enabled: input.enabled } : {}),
+        ...firstSyncIntent,
         ...(typeof input.priority === "number" ? { priority: input.priority } : {}),
       },
       where: { id: before.id },
@@ -180,8 +208,10 @@ export async function setProviderSettings(
       },
       tx,
     );
-    return updated;
+    return { connection: updated, shouldWake: "firstSyncRequestedAt" in firstSyncIntent };
   });
+  if (result.shouldWake) wakeTrafficFirstSyncWorker();
+  return result.connection;
 }
 
 export async function disconnectProviderConnection(

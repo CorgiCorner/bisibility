@@ -1,4 +1,5 @@
 import { type SpendTone, spendFillClass } from "@/components/cost-estimate/spend-tone";
+import { cn } from "@/lib/ui/cn";
 
 type SpendBarProps = {
   ariaLabel: string;
@@ -23,7 +24,7 @@ export function SpendBar({
       aria-valuemax={100}
       aria-valuemin={0}
       aria-valuenow={percent}
-      className={className}
+      className={cn("bg-meter-track", className)}
       role={meterRole}
     >
       <span

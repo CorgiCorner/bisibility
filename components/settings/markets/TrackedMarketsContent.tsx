@@ -145,7 +145,7 @@ export function TrackedMarketsContent({
       {error ? <p className="m-0 mt-4 text-[12px] text-red-text">{error}</p> : null}
       {markets.markets.length ? (
         <>
-          <ul className="m-0 mt-5 list-none divide-y divide-border-soft border-y border-border-soft p-0">
+          <ul className="m-0 mt-5 list-none divide-y divide-border border-y border-border p-0">
             {markets.markets.map((market) => {
               const active = market.status === "active";
               const pending = pendingId === market.id;
@@ -197,7 +197,7 @@ export function TrackedMarketsContent({
           </div>
         </>
       ) : (
-        <p className="m-0 mt-5 border-t border-border-soft pt-5 text-[12.5px] leading-[1.55] text-fg-muted">
+        <p className="m-0 mt-5 border-t border-border pt-5 text-[12.5px] leading-[1.55] text-fg-muted">
           No markets yet. Add your first location and language pair to start tracking.
         </p>
       )}

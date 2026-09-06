@@ -47,7 +47,7 @@ describe("Advanced settings loading geometry", () => {
     expect(
       container.querySelector('[data-settings-loading-boundary="advanced"]'),
     ).toBeInTheDocument();
-    expect(container.querySelectorAll("[data-settings-loading-subnav-row]")).toHaveLength(8);
+    expect(container.querySelectorAll("[data-settings-loading-subnav-row]")).toHaveLength(9);
     expect(container.querySelectorAll("[data-settings-loading-frame]")).toHaveLength(3);
   });
 });

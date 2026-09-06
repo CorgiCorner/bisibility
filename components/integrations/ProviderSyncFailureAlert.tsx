@@ -33,18 +33,7 @@ export function ProviderSyncFailureAlert({
       {Number.isNaN(since.getTime()) ? (
         "unknown time"
       ) : (
-        <ZonedTime
-          options={{
-            day: "numeric",
-            hour: "2-digit",
-            hourCycle: "h23",
-            minute: "2-digit",
-            month: "short",
-            year: "numeric",
-          }}
-          timeZone={timeZone}
-          value={failure.since}
-        />
+        <ZonedTime timeZone={timeZone} value={failure.since} />
       )}{" "}
       · {pluralize(failure.consecutiveFailures, "consecutive failure")} ·{" "}
       {failureClass(failure.errorClass)}.

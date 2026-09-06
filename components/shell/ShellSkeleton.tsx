@@ -19,18 +19,12 @@ import { Fragment, type ReactNode } from "react";
 // The boundary has no project yet, so the rail is built against the literal route pattern.
 // Only the row counts are used - the hrefs and labels are discarded.
 const railRows = navItems("[project]");
-const topRowKeys = railRows
-  .filter((item) => item.group === "top")
-  .map((_, index) => `nav-${index}`);
 const groupedRailRows = navItemGroups.map((group) => ({
   ...group,
   rows: railRows
     .filter((item) => item.group === group.id)
     .map((_, index) => `${group.id}-${index}`),
 }));
-const utilityRowKeys = railRows
-  .filter((item) => item.group === "utility")
-  .map((_, index) => `utility-${index}`);
 
 function Block({ className }: Readonly<{ className?: string }>) {
   return <div className={`animate-pulse rounded-control bg-bg-sunken ${className ?? ""}`} />;
@@ -54,11 +48,16 @@ function RailRow({ collapsed }: Readonly<{ collapsed: boolean }>) {
   );
 }
 
-function RailHeading() {
-  // Same 28px box as the settled group heading: 14px top padding, a 10px line box (the
-  // heading's `text-[10px] leading-none`, mirrored here as the block's height), 4px bottom.
+function RailHeading({ collapsed }: Readonly<{ collapsed: boolean }>) {
+  // Same 28px box as the settled group heading, in both states: 14px top padding, a 10px line
+  // box (the heading's `text-[10px] leading-none`, mirrored here as the block's height), 4px
+  // bottom. Collapsed the settled heading is the group's tag across the full 80px rail, so the
+  // placeholder centres its block in the same width instead of disappearing.
   return (
-    <div className="px-[11px] pt-3.5 pb-1" data-testid="shell-skeleton-nav-heading">
+    <div
+      className={collapsed ? "flex w-20 justify-center pt-3.5 pb-1" : "px-[11px] pt-3.5 pb-1"}
+      data-testid="shell-skeleton-nav-heading"
+    >
       <Block className="h-2.5 w-10" />
     </div>
   );
@@ -94,22 +93,14 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
       )}
       {/* Only the nav region gives; the footer is the only pinned area. */}
       <div className="mt-4 flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
-        {topRowKeys.map((key) => (
-          <RailRow collapsed={collapsed} key={key} />
-        ))}
         {groupedRailRows.map((group) => (
           <Fragment key={group.id}>
-            {collapsed ? null : <RailHeading />}
+            <RailHeading collapsed={collapsed} />
             {group.rows.map((key) => (
               <RailRow collapsed={collapsed} key={key} />
             ))}
           </Fragment>
         ))}
-        <div className="flex flex-col gap-0.5 pt-4">
-          {utilityRowKeys.map((key) => (
-            <RailRow collapsed={collapsed} key={key} />
-          ))}
-        </div>
       </div>
       <div
         className={`flex flex-none items-center pt-2 ${collapsed ? "justify-center" : "justify-between px-[11px]"}`}

@@ -42,6 +42,7 @@ export function AddKeywordDrawer({
   initialScheduleFrequency,
   initialTab,
   onClose,
+  onExited,
   onAdded,
   open,
   projectId,
@@ -158,6 +159,7 @@ export function AddKeywordDrawer({
       setMatrixSelection,
       setTagsText,
     });
+    onExited?.();
   }
 
   function handleTabChange(tab: AddKeywordTab) {

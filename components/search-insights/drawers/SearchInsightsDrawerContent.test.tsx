@@ -1,4 +1,10 @@
-import { AVG_POSITION_TIP, NEUTRAL_COPY } from "@/components/search-insights/search-insights-copy";
+import {
+  AVG_POSITION_TIP,
+  DRAWER_PAGE_ENGAGEMENT_TIP,
+  KEY_EVENTS_NOT_CONFIGURED,
+  KEY_EVENTS_TIP,
+  NEUTRAL_COPY,
+} from "@/components/search-insights/search-insights-copy";
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { storyPageDetail, storyQueryDetail } from "./drawer-story-fixtures";
@@ -50,6 +56,28 @@ describe("SearchInsightsDrawerContent", () => {
     expect(screen.queryByRole("table", { name: "Queries landing here" })).not.toBeInTheDocument();
     expect(screen.getAllByTitle("0 clicks")).toHaveLength(7);
     expect(screen.getAllByTitle("0 clicks")[0]).toHaveStyle({ height: "2%" });
+  });
+
+  it("keeps zero-click days visible when another day in the window has clicks", () => {
+    renderContent({
+      detail: {
+        ...measuredZeroPage,
+        perDay: [
+          { clicks: 0, date: "2026-08-01" },
+          { clicks: 1, date: "2026-08-02" },
+          { clicks: 0, date: "2026-08-03" },
+          { clicks: 0, date: "2026-08-04" },
+          { clicks: 0, date: "2026-08-05" },
+          { clicks: 0, date: "2026-08-06" },
+        ],
+        stats: { ...measuredZeroPage.stats, clicks: 1 },
+      },
+      kind: "page",
+    });
+
+    expect(screen.getAllByTitle("0 clicks")).toHaveLength(5);
+    expect(screen.getAllByTitle("0 clicks")[0]).toHaveStyle({ height: "2%" });
+    expect(screen.getByTitle("1 clicks")).toHaveStyle({ height: "100%" });
   });
 
   it("keeps an empty query pivot separate from page privacy copy", () => {
@@ -106,11 +134,156 @@ describe("SearchInsightsDrawerContent", () => {
 
     const table = screen.getByRole("table", { name: heading });
     const headers = within(table).getAllByRole("columnheader");
-    expect(headers.map((header) => header.textContent)).toEqual(["Page", "Clicks", "Avg pos"]);
+    expect(headers.map((header) => header.textContent)).toEqual([
+      "Page",
+      "Clicks",
+      "Engagement",
+      "Key events",
+      "Avg pos",
+    ]);
     expect(headers[0]).toHaveClass("text-left");
     expect(headers[1]).toHaveClass("text-right");
-    expect(headers[2]).toHaveClass("text-right");
-    expect(headers[2]).toHaveAttribute("title", AVG_POSITION_TIP);
+    expect(headers.slice(2).every((header) => header.className.includes("text-right"))).toBe(true);
+    expect(headers[2]).toHaveAttribute("title", DRAWER_PAGE_ENGAGEMENT_TIP);
+    expect(headers[4]).toHaveAttribute("title", AVG_POSITION_TIP);
+  });
+
+  it("shows landing-page engagement and key events without assigning them to the query", () => {
+    renderContent({
+      detail: {
+        ...storyQueryDetail,
+        keyEventsConfigured: true,
+        pageMetricsReadable: true,
+        pages: {
+          rows: [
+            {
+              ...storyQueryDetail.pages.rows[0],
+              engagementRate: 0.5,
+              keyEvents: 3,
+            },
+          ],
+          total: 1,
+        },
+      },
+      kind: "query",
+    });
+
+    const table = screen.getByRole("table", { name: "Your page ranking for it" });
+    const headers = within(table).getAllByRole("columnheader");
+    expect(headers.map((header) => header.textContent)).toEqual([
+      "Page",
+      "Clicks",
+      "Engagement",
+      "Key events",
+      "Avg pos",
+    ]);
+    expect(within(table).getByRole("columnheader", { name: "Engagement" })).toHaveAttribute(
+      "title",
+      DRAWER_PAGE_ENGAGEMENT_TIP,
+    );
+    expect(within(table).getByText("50.0%")).toBeInTheDocument();
+    expect(within(table).getByText("3")).toBeInTheDocument();
+  });
+
+  it("keeps the page drawer's query rows free of landing-page GA4 metrics", () => {
+    renderContent({ detail: storyPageDetail, kind: "page" });
+
+    const table = screen.getByRole("table", { name: "Queries landing here" });
+    expect(
+      within(table)
+        .getAllByRole("columnheader")
+        .map((header) => header.textContent),
+    ).toEqual(["Query", "Clicks", "Avg pos"]);
+    expect(within(table).queryByRole("columnheader", { name: "Engagement" })).toBeNull();
+    expect(within(table).queryByRole("columnheader", { name: "Key events" })).toBeNull();
+  });
+
+  it("renders each key-events state without calling unknown not configured", () => {
+    const row = { ...storyQueryDetail.pages.rows[0], engagementRate: null, keyEvents: null };
+
+    const { rerender } = renderContent({
+      detail: {
+        ...storyQueryDetail,
+        keyEventsConfigured: false,
+        pageMetricsReadable: true,
+        pages: { rows: [row], total: 1 },
+      },
+      kind: "query",
+    });
+    expect(screen.getByText(KEY_EVENTS_NOT_CONFIGURED)).toBeInTheDocument();
+
+    rerender(
+      <SearchInsightsDrawerContent
+        content={{
+          detail: {
+            ...storyQueryDetail,
+            keyEventsConfigured: null,
+            pageMetricsReadable: true,
+            pages: { rows: [row], total: 1 },
+          },
+          kind: "query",
+        }}
+        namedQueryCount={0}
+        onOpen={vi.fn()}
+        onShowAll={vi.fn()}
+        seen={new Set()}
+      />,
+    );
+    const table = screen.getByRole("table", { name: "Your page ranking for it" });
+    expect(screen.queryByText(KEY_EVENTS_NOT_CONFIGURED)).toBeNull();
+    expect(within(table).getAllByTitle(KEY_EVENTS_TIP)).toHaveLength(2);
+    expect(within(table).getAllByRole("cell")[3]).toHaveAttribute("title", KEY_EVENTS_TIP);
+    expect(within(table).getAllByRole("cell")[3]).toHaveTextContent("-");
+
+    rerender(
+      <SearchInsightsDrawerContent
+        content={{
+          detail: {
+            ...storyQueryDetail,
+            keyEventsConfigured: true,
+            pageMetricsReadable: true,
+            pages: {
+              rows: [{ ...row, keyEvents: 0 }],
+              total: 1,
+            },
+          },
+          kind: "query",
+        }}
+        namedQueryCount={0}
+        onOpen={vi.fn()}
+        onShowAll={vi.fn()}
+        seen={new Set()}
+      />,
+    );
+    expect(within(table).getByText("0")).toBeInTheDocument();
+  });
+
+  it("keeps overlap rows aligned to their three-column geometry", () => {
+    renderContent({
+      kind: "overlap",
+      list: {
+        rows: [
+          {
+            clicks: 10,
+            pages: 2,
+            position: 4.2,
+            query: "rank tracking software",
+            split: [
+              { clicks: 7, path: "/guide", url: "https://example.com/guide" },
+              { clicks: 3, path: "/blog", url: "https://example.com/blog" },
+            ],
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    const table = screen.getByRole("table", { name: "Most clicks first" });
+    expect(table.querySelectorAll("col")).toHaveLength(3);
+    expect([...table.querySelectorAll("tbody tr")]).toHaveLength(3);
+    for (const row of table.querySelectorAll("tbody tr")) {
+      expect(row.querySelectorAll("td")).toHaveLength(3);
+    }
   });
 
   it("leaves a normal page pivot and nonzero chart unchanged", () => {

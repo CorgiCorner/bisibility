@@ -111,10 +111,7 @@ export function OverviewSkeleton() {
               <Bar className="h-2.5 w-0" />
             </div>
             {marketRowKeys.map((key) => (
-              <div
-                className={cn(marketGrid, "min-h-[57px] border-t border-border-soft py-3")}
-                key={key}
-              >
+              <div className={cn(marketGrid, "min-h-[57px] border-t border-border py-3")} key={key}>
                 <Bar className="h-5 w-[140px] rounded-full" />
                 <Bar className="h-3 w-[60px]" />
                 <Bar className="ml-auto h-3 w-[60px]" />
@@ -143,7 +140,7 @@ export function OverviewSkeleton() {
               </div>
             ))}
           </div>
-          <div className="mt-4 flex items-start gap-[9px] border-t border-border-soft pt-3.5">
+          <div className="mt-4 flex items-start gap-[9px] border-t border-border pt-3.5">
             <Bar className="h-5 w-5 shrink-0 rounded-control" />
             <Bar className="h-3 w-full max-w-[440px]" />
           </div>
@@ -165,7 +162,7 @@ export function OverviewSkeleton() {
               <div className="flex flex-1 flex-col">
                 {highlightRowKeys.map((rowKey) => (
                   <div
-                    className="flex min-h-[68px] items-center justify-between gap-2.5 border-t border-border-soft px-4.5 py-2.5"
+                    className="flex min-h-[68px] items-center justify-between gap-2.5 border-t border-border px-4.5 py-2.5"
                     key={rowKey}
                   >
                     <div className="min-w-0">

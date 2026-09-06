@@ -22,7 +22,7 @@ export default function PreferencesLoading() {
                 </div>
                 <AccountLoadingBar className="h-8 w-[150px] shrink-0" />
               </div>
-              <div className="grid gap-3.5 border-t border-border-soft pt-4 sm:grid-cols-2">
+              <div className="grid gap-3.5 border-t border-border pt-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                   <AccountLoadingBar className="h-2.5 w-[80px]" />
                   <AccountLoadingBar className="h-10 w-full" />
@@ -32,7 +32,7 @@ export default function PreferencesLoading() {
                   <AccountLoadingBar className="h-10 w-full" />
                 </div>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-3.5 border-t border-border-soft pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-3.5 border-t border-border pt-4">
                 <div className="flex min-w-0 flex-col gap-1">
                   <AccountLoadingBar className="h-3.5 w-[160px]" />
                   <AccountLoadingBar className="h-3 w-[240px]" />

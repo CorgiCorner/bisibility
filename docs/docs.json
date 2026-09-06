@@ -64,7 +64,9 @@
               "guides/analytics",
               "guides/sitemap-monitoring",
               "guides/migration",
-              "guides/operations"
+              "guides/operations",
+              "guides/runs",
+              "guides/schedules"
             ]
           },
           {
@@ -72,6 +74,7 @@
             "pages": [
               "api/overview",
               "api/checks",
+              "api/rank-check-runs",
               "api/rank-history",
               "api/webhooks",
               "api/deploy-webhooks",

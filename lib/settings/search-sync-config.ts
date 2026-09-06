@@ -1,3 +1,4 @@
+import { FIRST_LOOK_WINDOW } from "@/lib/search-insights/constants";
 import {
   SEARCH_SYNC_DIMENSIONAL_SETS_PER_DAY,
   type SearchSyncPace,
@@ -69,7 +70,8 @@ export function searchSyncPreflightEstimate(settings: {
 }) {
   const summary = searchSyncPlanSummary(settings);
   const firstViewHours =
-    (7 * SEARCH_SYNC_DIMENSIONAL_SETS_PER_DAY) / searchSyncRequestSetsPerHour(settings.pace);
+    (FIRST_LOOK_WINDOW.days * SEARCH_SYNC_DIMENSIONAL_SETS_PER_DAY) /
+    searchSyncRequestSetsPerHour(settings.pace);
   const fullHistory = summary.duration.replace(/^about\s+/, "");
   return `Importing ${searchSyncRetentionLabel(settings.retentionMonths)} takes ${summary.requests} requests to Google. First view in ~${searchSyncDurationLabel(firstViewHours)}; full history in ~${fullHistory} at ${searchSyncPaceLabel(settings.pace)} speed.`;
 }

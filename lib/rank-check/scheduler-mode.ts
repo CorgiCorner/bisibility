@@ -64,6 +64,10 @@ export function dispatcherClaimsAllowed(mode = rankCheckSchedulerMode()) {
   return mode === "dispatcher";
 }
 
+export function plannerOwnsAutomaticChecks(mode = rankCheckSchedulerMode()) {
+  return mode === "dispatcher";
+}
+
 export function dispatcherStateHealingAllowed(mode = rankCheckSchedulerMode()) {
   return mode === "cutover" || mode === "dispatcher";
 }

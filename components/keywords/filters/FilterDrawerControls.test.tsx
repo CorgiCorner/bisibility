@@ -59,7 +59,7 @@ describe("FilterSegment", () => {
     expect(control).toHaveClass("border-border-control");
     expect(selectedSurface).toHaveClass(
       "border-border-control",
-      "bg-nav-active",
+      "bg-bg-sunken",
       "text-[12.5px]",
       "font-normal",
     );

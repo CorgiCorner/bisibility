@@ -68,10 +68,7 @@ function TableLoading({ pages = false }: Readonly<{ pages?: boolean }>) {
         <div className={pages ? "min-w-[900px]" : "min-w-[1180px]"}>
           <div className="h-[42px] border-b border-border bg-bg-sunken" />
           {eight.map((key, index) => (
-            <div
-              className="flex h-[58px] items-center gap-8 border-b border-border-soft px-4"
-              key={key}
-            >
+            <div className="flex h-[58px] items-center gap-8 border-b border-border px-4" key={key}>
               <Bar className={cn("h-3", index % 2 ? "w-[58%]" : "w-[72%]")} />
               <Bar className="ml-auto h-3 w-[86px]" />
             </div>

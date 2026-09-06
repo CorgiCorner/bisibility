@@ -1,12 +1,13 @@
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { sendCloudWelcomeSequence } from "./welcome-signup";
+import { sendCloudWelcomeSequence, wakeCloudWelcomeSequenceWorker } from "./welcome-signup";
 
 const mocks = vi.hoisted(() => ({
-  startFollowup: vi.fn(),
+  publishWorkerIntent: vi.fn(),
 }));
 
-vi.mock("@/lib/temporal/welcome-email-client", () => ({
-  startWelcomeFollowupWorkflow: mocks.startFollowup,
+vi.mock("@/lib/worker-intents/realtime", () => ({
+  publishWorkerIntent: mocks.publishWorkerIntent,
 }));
 
 const user = { email: "ada@example.com", id: "user_1", name: "Ada" };
@@ -14,7 +15,7 @@ const user = { email: "ada@example.com", id: "user_1", name: "Ada" };
 describe("signup welcome sequence", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.startFollowup.mockResolvedValue(undefined);
+    mocks.publishWorkerIntent.mockResolvedValue({ mode: "redis", ok: true });
   });
 
   afterEach(() => {
@@ -22,29 +23,46 @@ describe("signup welcome sequence", () => {
     vi.restoreAllMocks();
   });
 
-  it("starts only the durable workflow in Cloud", async () => {
+  it("adds a durable intent to the Cloud user create payload", async () => {
     vi.stubEnv("DEPLOYMENT_MODE", "cloud");
 
-    await sendCloudWelcomeSequence(user);
+    const result = await sendCloudWelcomeSequence(user);
 
-    expect(mocks.startFollowup).toHaveBeenCalledWith("user_1");
+    expect(result).toEqual({
+      data: { ...user, welcomeFollowupRequestedAt: expect.any(Date) },
+    });
+    expect(mocks.publishWorkerIntent).not.toHaveBeenCalled();
   });
 
   it("does nothing for self-hosted signups", async () => {
     vi.stubEnv("DEPLOYMENT_MODE", "self-host");
 
-    await sendCloudWelcomeSequence(user);
+    await expect(sendCloudWelcomeSequence(user)).resolves.toBeUndefined();
 
-    expect(mocks.startFollowup).not.toHaveBeenCalled();
+    expect(mocks.publishWorkerIntent).not.toHaveBeenCalled();
   });
 
-  it("contains a start failure without failing signup", async () => {
+  it("wakes the worker without extending the transaction hook", async () => {
     vi.stubEnv("DEPLOYMENT_MODE", "cloud");
-    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    mocks.startFollowup.mockRejectedValue(new Error("temporal unavailable"));
+    mocks.publishWorkerIntent.mockImplementation(() => new Promise(() => undefined));
 
-    await expect(sendCloudWelcomeSequence(user)).resolves.toBeUndefined();
-    expect(mocks.startFollowup).toHaveBeenCalledWith("user_1");
-    expect(error).toHaveBeenCalledTimes(1);
+    await expect(wakeCloudWelcomeSequenceWorker()).resolves.toBeUndefined();
+    expect(mocks.publishWorkerIntent).toHaveBeenCalledWith("welcome_followup");
+  });
+
+  it("falls back to polling when the wake publish fails", async () => {
+    vi.stubEnv("DEPLOYMENT_MODE", "cloud");
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mocks.publishWorkerIntent.mockResolvedValue({ mode: "redis", ok: false });
+
+    await wakeCloudWelcomeSequenceWorker();
+
+    await vi.waitFor(() => expect(console.error).toHaveBeenCalledOnce());
+  });
+
+  it("keeps the signup hook free from engine clients", () => {
+    const source = readFileSync("lib/auth/welcome-signup.ts", "utf8");
+
+    expect(source).not.toMatch(/lib\/temporal\/.+-client/);
   });
 });

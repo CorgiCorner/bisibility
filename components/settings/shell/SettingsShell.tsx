@@ -22,10 +22,10 @@ export function SettingsShell({
 }: Readonly<SettingsShellProps>) {
   return (
     <div className="mx-auto w-full max-w-[1040px]" data-settings-shell="">
-      <SettingsMobileMenu activeSection={activeSection} projectRef={projectRef} />
       <div className={settingsShellGridClassName}>
         <SettingsSubnav activeSection={activeSection} projectRef={projectRef} />
         <div className={settingsContentColumnClassName}>
+          <SettingsMobileMenu activeSection={activeSection} projectRef={projectRef} />
           <LegacySettingsHashRedirect projectRef={projectRef} />
           {children}
         </div>

@@ -1,4 +1,6 @@
+import { registerAccountAuditDeclarations } from "@/lib/auth/audit-field-declarations-account";
 import { registerAdditionalAuditDeclarations } from "@/lib/auth/audit-field-declarations-extra";
+import { registerRankCheckRunAuditDeclarations } from "@/lib/auth/audit-field-declarations-runs";
 import {
   type AuditFieldPolicy,
   type AuditPayloadPolicy,
@@ -109,31 +111,6 @@ declare(["onboarding.matching_scope.set"], {
   after: { ...f.booleans("includeSubdomains", "rootAndWww"), ...f.urls("urlPrefix") },
 });
 
-declare(["account.profile_updated"], {
-  after: strings("name"),
-  before: strings("name"),
-});
-declare(["account.avatar_updated"], {
-  after: f.urls("image"),
-  before: f.urls("image"),
-});
-declare(["account.email_change_code_requested", "account.email_verification_requested"], {
-  after: strings("email"),
-});
-declare(["account.email_change_requested"], { after: strings("email"), before: strings("email") });
-declare(["account.email_changed"], {
-  after: { ...strings("email"), ...f.numbers("revokedSessionCount") },
-  before: strings("email"),
-});
-declare(["account.email_verified"], {
-  after: { ...strings("email"), ...f.booleans("emailVerified") },
-  before: { ...strings("email"), ...f.booleans("emailVerified") },
-});
-declare(["account.deleted"], {
-  before: { ...strings("email", "name"), counts: projectCounts },
-});
-declare(["account.session_revoked"], { before: strings("id", "ipAddress", "userAgent") });
-declare(["account.sessions_revoked"], { after: f.numbers("revokedCount") });
 declare(["instance_admin.delete_blocked"], { before: f.booleans("isInstanceAdmin") });
 
 declare(["alert_rule.create"], { after: alertRule });
@@ -164,6 +141,10 @@ declare(["settings.budget_updated"], {
   after: f.numbers("capCents"),
   before: f.numbers("capCents"),
 });
+declare(["settings.experimental_modules.update"], {
+  after: { enabledExperimentalModules: list("string") },
+  before: { enabledExperimentalModules: list("string") },
+});
 declare(["settings.project_market.add"], {
   after: { ...f.numbers("added"), marketIds: list("string") },
 });
@@ -186,6 +167,10 @@ declare(
     before: strings("status"),
   },
 );
+declare(["settings.project_market.restore"], {
+  after: { ...f.numbers("resumedKeywords"), ...strings("status") },
+  before: strings("status"),
+});
 
 const competitor = { ...strings("domain", "id", "label") };
 declare(["competitor.add"], { after: competitor });
@@ -299,6 +284,8 @@ registerAdditionalAuditDeclarations(declare, {
   provider,
   rankCheck,
 });
+registerAccountAuditDeclarations(declare, { projectCounts });
+registerRankCheckRunAuditDeclarations(declare);
 
 export function auditPayloadPolicy(action: string) {
   return declarations.get(action);

@@ -104,11 +104,6 @@ async function clickThroughAppPages(page: Page, keyword: string, projectRef: str
   // meta refresh), so assert only that the browser leaves the in-app route.
   await page.goto(`/app/${projectRef}/docs`);
   await expect(page).not.toHaveURL((url) => url.pathname === `/app/${projectRef}/docs`);
-  await expectAppPage(page, `/app/${projectRef}/competitors`, async () => {
-    await expect(
-      page.getByRole("heading", { name: "Competitors", exact: true }).first(),
-    ).toBeVisible();
-  });
   await expectAppPage(page, `/app/${projectRef}/alerts`, async () => {
     await expect(page.getByRole("heading", { name: "Alerts", exact: true }).first()).toBeVisible();
   });
@@ -121,8 +116,6 @@ async function verifyWorkspaceWidths(page: Page, keywordDetailPath: string, proj
     `/app/${projectRef}/rank-tracker`,
     keywordDetailPath,
     `/app/${projectRef}/rank-tracker?tab=checks`,
-    `/app/${projectRef}/timeline`,
-    `/app/${projectRef}/competitors`,
   ];
 
   for (const width of [1024, 1440, 1920]) {

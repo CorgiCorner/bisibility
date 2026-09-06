@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  clicksToSessionsKpi,
   countDelta,
   ctrDelta,
   EMPTY_TOTALS,
@@ -249,5 +250,52 @@ describe("searchInsightsKpis", () => {
     expect(cards[0]).toMatchObject({ delta: "-100.0%", dir: "down" });
     expect(cards[2]).toMatchObject({ delta: "no data", dir: "flat", prev: "2.57%" });
     expect(cards[3]).toMatchObject({ delta: "no data", dir: "flat", prev: "18.4" });
+  });
+});
+
+describe("clicksToSessionsKpi", () => {
+  const clicks = {
+    current: { clicks: 100, ctr: 0, impressions: 100, position: 0 },
+    previous: { clicks: 100, ctr: 0, impressions: 100, position: 0 },
+  };
+
+  it("formats the sessions-to-clicks ratio as a percentage", () => {
+    expect(clicksToSessionsKpi(clicks, { current: 92, previous: 88 })).toEqual({
+      kind: "visible",
+      kpi: {
+        delta: "+4.00 pp",
+        dir: "up",
+        label: "Clicks to sessions",
+        prev: "88.00%",
+        source: "GSC",
+        value: "92.00%",
+      },
+    });
+  });
+
+  it("uses the uncovered-baseline affordance when comparison coverage is unavailable", () => {
+    expect(clicksToSessionsKpi(clicks, { current: 92, previous: 88 }, false)).toEqual({
+      kind: "visible",
+      kpi: expect.objectContaining({ delta: "new", dir: "flat", prev: "no data" }),
+    });
+  });
+
+  it("hides instead of fabricating a ratio when there are no clicks", () => {
+    expect(
+      clicksToSessionsKpi(
+        { ...clicks, current: { ...clicks.current, clicks: 0 } },
+        {
+          current: 92,
+          previous: 88,
+        },
+      ),
+    ).toEqual({ kind: "hidden", reason: "zero_clicks", source: "GSC" });
+  });
+
+  it("keeps zero sessions as a measured zero when clicks exist", () => {
+    expect(clicksToSessionsKpi(clicks, { current: 0, previous: 88 })).toEqual({
+      kind: "visible",
+      kpi: expect.objectContaining({ value: "0.00%" }),
+    });
   });
 });

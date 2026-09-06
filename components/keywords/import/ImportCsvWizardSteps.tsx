@@ -178,7 +178,7 @@ export function MapStep() {
         </div>
         {mapRows.map(([csv, field, req]) => (
           <div
-            className="grid grid-cols-[1fr_24px_1fr] items-center gap-2.5 border-t border-border-soft px-[15px] py-[11px]"
+            className="grid grid-cols-[1fr_24px_1fr] items-center gap-2.5 border-t border-border px-[15px] py-[11px]"
             key={csv}
           >
             <span className="inline-flex min-w-0 items-center gap-[7px] font-sans tabular-nums text-[12.5px]">
@@ -261,7 +261,7 @@ export function ReviewStep({
         </div>
         {previewRows.map(([keyword, url, country, dup]) => (
           <div
-            className="grid grid-cols-[1.7fr_1.3fr_50px_64px] items-center gap-2 border-t border-border-soft px-3.5 py-2.5 text-[12.5px]"
+            className="grid grid-cols-[1.7fr_1.3fr_50px_64px] items-center gap-2 border-t border-border px-3.5 py-2.5 text-[12.5px]"
             key={keyword}
           >
             <span className="truncate font-medium">{keyword}</span>
@@ -276,7 +276,7 @@ export function ReviewStep({
             ) : null}
           </div>
         ))}
-        <div className="border-t border-border-soft px-3.5 py-[9px] text-center font-sans tabular-nums text-[11px] text-fg-muted">
+        <div className="border-t border-border px-3.5 py-[9px] text-center font-sans tabular-nums text-[11px] text-fg-muted">
           + 244 more rows
         </div>
       </div>

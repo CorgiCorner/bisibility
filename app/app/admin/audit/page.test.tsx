@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  dateFormat: vi.fn(),
   getAuditPage: vi.fn(),
   requireAdmin: vi.fn(),
 }));
@@ -11,6 +12,9 @@ vi.mock("@/components/admin/AdminAuditTable", () => ({
 }));
 vi.mock("@/lib/auth/instance-admin", () => ({
   requireInstanceAdmin: mocks.requireAdmin,
+}));
+vi.mock("@/lib/dates/request", () => ({
+  getResolvedDateFormat: mocks.dateFormat,
 }));
 vi.mock("@/lib/queries/instance-admin-audit", () => ({
   getInstanceAdminAuditPage: mocks.getAuditPage,
@@ -24,6 +28,7 @@ describe("instance admin audit page", () => {
   it("passes the page gate and forwards URL filters and cursors", async () => {
     mocks.requireAdmin.mockResolvedValue({ user: { id: "user_admin" } });
     mocks.getAuditPage.mockResolvedValue({ entries: [], filter: "ops", nextCursor: null });
+    mocks.dateFormat.mockResolvedValue({ resolved: "month_first" });
 
     render(
       await InstanceAdminAuditPage({

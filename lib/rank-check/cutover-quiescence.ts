@@ -1,3 +1,4 @@
+import type { WorkerHeartbeatState } from "@/lib/ops/liveness";
 import type { RankCheckSchedulerMode } from "./scheduler-mode";
 
 export type CutoverQuiescenceSnapshot = {
@@ -41,7 +42,7 @@ export type CutoverQuiescenceSnapshot = {
   unrelatedSchedulesConserved: boolean;
   workerMode: RankCheckSchedulerMode | "unknown";
   workerEnvironment: string;
-  workerHeartbeatState: "absent" | "fresh" | "future" | "invalid" | "stale";
+  workerHeartbeatState: WorkerHeartbeatState;
   workerRelease: string;
   workerHeartbeatFresh: boolean;
   workerSchemaReady: boolean;

@@ -10,28 +10,33 @@ import {
 } from "@/components/shell/ProjectWriteModeProvider";
 import { Button, ConfirmModal } from "@/components/ui";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
+import type { MarketScope } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { appPath } from "@/lib/routing/app-path";
 import type { SerpDepth } from "@/lib/serp/markets";
 import {
-  CaretRightIcon as CaretRight,
-  ClockCountdownIcon as ClockCountdown,
+  CalendarDotsIcon as CalendarDots,
   LinkSimpleIcon as LinkSimple,
   TagIcon as Tag,
   TrashIcon as Trash,
   XIcon as X,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BulkActionModal, type BulkMode } from "./BulkActionModal";
+import { BulkRunChecksControls } from "./BulkRunChecksControls";
 import { bulkTargetView } from "./bulk-target-model";
-import { RunChecksSplitButton } from "./RunChecksSplitButton";
+import { SetScheduleModal } from "./SetScheduleModal";
+import type { CheckScheduleSummary } from "./set-schedule-model";
 
-type BulkActionBarProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> & {
+type BulkActionBarProps = Omit<
+  KeywordWorkspaceActions,
+  "addKeywordsAction" | "bulkSetFrequencyAction"
+> & {
   checksRunning?: boolean;
   canDeleteKeyword: boolean;
   canUpdateKeyword: boolean;
+  /** The market the page stands in, or `null` for the project level. */
+  marketScope?: MarketScope | null;
   onClear: () => void;
   onRunChecks?: (keywordIds: string[], depth?: SerpDepth) => void;
   projectId: string;
@@ -39,16 +44,15 @@ type BulkActionBarProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> & {
   providerRate?: CostRateInfo;
   selectedRows: KeywordRow[];
 };
-
 export function BulkActionBar({
   bulkClearTargetAction,
   bulkDeleteAction,
-  bulkSetFrequencyAction,
   bulkSetTargetAction,
   bulkTagAction,
   canDeleteKeyword,
   canUpdateKeyword,
   checksRunning = false,
+  marketScope = null,
   onClear,
   onRunChecks,
   projectId,
@@ -63,8 +67,10 @@ export function BulkActionBar({
   const [clearingTargets, setClearingTargets] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [mode, setMode] = useState<BulkMode>(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [schedules, setSchedules] = useState<CheckScheduleSummary[]>([]);
   const { readOnly } = useProjectWriteMode();
-
   const selectedIds = selectedRows.map((row) => row.id);
   const selectionKey = selectedIds.join("\0");
   const [depthOverride, setDepthOverride] = useState<{ key: string; depth: SerpDepth } | null>(
@@ -72,7 +78,6 @@ export function BulkActionBar({
   );
   const chosenDepth = depthOverride?.key === selectionKey ? depthOverride.depth : null;
   const targetView = bulkTargetView(selectedRows);
-
   if (selectedRows.length === 0) {
     return null;
   }
@@ -82,7 +87,6 @@ export function BulkActionBar({
     onClear();
     router.refresh();
   }
-
   async function handleDelete() {
     if (readOnly) {
       return;
@@ -100,7 +104,6 @@ export function BulkActionBar({
       setDeleting(false);
     }
   }
-
   async function handleClearTargets() {
     if (readOnly) return;
     setActionError(null);
@@ -117,6 +120,29 @@ export function BulkActionBar({
     }
   }
 
+  async function openScheduleModal() {
+    setActionError(null);
+    setScheduleLoading(true);
+    try {
+      const response = await fetch(
+        `/api/check-schedules?project=${encodeURIComponent(projectId)}`,
+        { headers: { Accept: "application/json" } },
+      );
+      const body = (await response.json()) as { data?: CheckScheduleSummary[]; detail?: string };
+      if (!response.ok || !body.data) {
+        throw new Error(body.detail || "Could not load schedules. Try again.");
+      }
+      setSchedules(body.data);
+      setScheduleOpen(true);
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : "Could not load schedules. Try again.",
+      );
+    } finally {
+      setScheduleLoading(false);
+    }
+  }
+
   return (
     <div className="grid gap-2 border-b border-border px-4 py-[11px]">
       <div className="flex flex-wrap items-center gap-2">
@@ -124,25 +150,17 @@ export function BulkActionBar({
           {selectedRows.length} selected
         </span>
         {onRunChecks && canUpdateKeyword ? (
-          providerConnected ? (
-            <RunChecksSplitButton
-              checksRunning={checksRunning}
-              chosenDepth={chosenDepth}
-              onDepthChange={(depth) => setDepthOverride({ key: selectionKey, depth })}
-              onRunChecks={onRunChecks}
-              readOnly={readOnly}
-              selectedRows={selectedRows}
-            />
-          ) : (
-            <Button
-              component={Link}
-              endIcon={<CaretRight aria-hidden size={12} weight="regular" />}
-              href={appPath(projectId, "integrations")}
-              size="xs"
-            >
-              Connect a SERP provider
-            </Button>
-          )
+          <BulkRunChecksControls
+            checksRunning={checksRunning}
+            chosenDepth={chosenDepth}
+            marketScope={marketScope}
+            onDepthChange={(depth) => setDepthOverride({ key: selectionKey, depth })}
+            onRunChecks={onRunChecks}
+            projectId={projectId}
+            providerConnected={providerConnected}
+            readOnly={readOnly}
+            selectedRows={selectedRows}
+          />
         ) : null}
         {canUpdateKeyword ? (
           <ProjectReadOnlyTooltip>
@@ -173,13 +191,15 @@ export function BulkActionBar({
         {canUpdateKeyword ? (
           <ProjectReadOnlyTooltip>
             <Button
-              disabled={readOnly}
-              onClick={() => setMode(mode === "frequency" ? null : "frequency")}
+              disabled={readOnly || scheduleLoading}
+              loading={scheduleLoading}
+              loadingLabel="Loading..."
+              onClick={() => void openScheduleModal()}
               size="xs"
-              startIcon={<ClockCountdown weight="regular" size={15} />}
+              startIcon={<CalendarDots weight="regular" size={15} />}
               variant="secondary"
             >
-              Set frequency
+              Set schedule
             </Button>
           </ProjectReadOnlyTooltip>
         ) : null}
@@ -237,7 +257,6 @@ export function BulkActionBar({
       {canUpdateKeyword ? (
         <BulkActionModal
           actionError={actionError}
-          bulkSetFrequencyAction={bulkSetFrequencyAction}
           bulkSetTargetAction={bulkSetTargetAction}
           bulkTagAction={bulkTagAction}
           mode={mode}
@@ -252,7 +271,17 @@ export function BulkActionBar({
             setClearTargetsOpen(true);
           }}
           projectId={projectId}
+          selectedRows={selectedRows}
+        />
+      ) : null}
+      {canUpdateKeyword ? (
+        <SetScheduleModal
+          onClose={() => setScheduleOpen(false)}
+          onDone={finishAction}
+          open={scheduleOpen}
+          projectId={projectId}
           providerRate={providerRate}
+          schedules={schedules}
           selectedRows={selectedRows}
         />
       ) : null}

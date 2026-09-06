@@ -41,5 +41,9 @@ describe("worker startup diagnostics", () => {
     expect(source).toContain("task_queues: [taskQueue, deliveryTaskQueue],");
     expect(source).toContain("tls: connectionOptions.tls ?? false,");
     expect(source).toContain("tls_source: connectionOptions.tlsSource,");
+    expect(source).toContain('console.error("[temporal] rank-check runs schedule", {');
+    expect(source).toContain("decision: rankCheckRunsDecision.reason,");
+    expect(source).toContain('scheduleId: "maintenance-rank-check-runs",');
+    expect(source).toContain('status: rankCheckRunsSchedule?.status ?? "failed",');
   });
 });

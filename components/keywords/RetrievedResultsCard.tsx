@@ -1,8 +1,10 @@
 "use client";
 
 import { CountryLevelBadge } from "@/components/checks/runs/CheckRunDetails";
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Card } from "@/components/ui";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
+import { type DateFormat, formatDate, formatDateTime } from "@/lib/dates/format";
 import { useState } from "react";
 import { RetrievedResultsCompare } from "./RetrievedResultsCompare";
 import { RetrievedResultsHeader } from "./RetrievedResultsHeader";
@@ -18,25 +20,13 @@ type CardProps = {
   timeZone: string;
 };
 
-function dateFormatter(timeZone: string) {
-  const date = new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone,
-  });
-  const dateTime = new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    hour: "2-digit",
-    hour12: false,
-    minute: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone,
-  });
+function dateFormatter(timeZone: string, dateFormat: DateFormat) {
   return {
-    date: (iso: string) => date.format(new Date(iso)),
-    dateTime: (iso: string) => dateTime.format(new Date(iso)).replace(",", ","),
+    date: (iso: string) => {
+      const key = formatDateTime(new Date(iso), "iso", timeZone).slice(0, 10);
+      return formatDate(key, dateFormat);
+    },
+    dateTime: (iso: string) => formatDateTime(new Date(iso), dateFormat, timeZone),
   };
 }
 
@@ -48,6 +38,7 @@ export function RetrievedResultsCard({
   retentionDays,
   timeZone,
 }: Readonly<CardProps>) {
+  const dateFormat = useDateFormat();
   const [mode, setMode] = useState<"one" | "compare">("one");
   const [selected, setSelected] = useState(entries[0]?.checkId ?? "");
   const [compareFrom, setCompareFrom] = useState(entries[1]?.checkId ?? "");
@@ -55,7 +46,7 @@ export function RetrievedResultsCard({
   const [loaded, setLoaded] = useState<Record<string, RetrievedResults>>(
     initialResults ? { [initialResults.checkId]: initialResults } : {},
   );
-  const format = dateFormatter(timeZone);
+  const format = dateFormatter(timeZone, dateFormat);
   const compareEnabled = entries.filter((entry) => entry.tier !== "none").length >= 2;
   if (entries.length === 0) return null;
 
@@ -111,6 +102,7 @@ export function RetrievedResultsCard({
       {mode === "compare" && earlier && current ? (
         <RetrievedResultsCompare
           from={earlier}
+          dateFormat={dateFormat}
           fullCheckDates={fullEntries.map((entry) => entry.checkedAt)}
           fullPair={
             fullEntries.length >= 2

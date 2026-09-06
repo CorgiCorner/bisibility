@@ -145,7 +145,7 @@ describe("notification event producers", () => {
       "rank tracker: rank data provider unavailable",
       expect.objectContaining({
         errorCode: "provider_billing",
-        href: "/app/prj_1/rank-tracker?tab=checks&run=check_abcdefghijklmnopqrstuvwx",
+        href: "/app/prj_1/rank-tracker?tab=runs&run=check_abcdefghijklmnopqrstuvwx",
         idempotencyKey: expectedKey,
         rankCheckId: "check_abcdefghijklmnopqrstuvwx",
       }),

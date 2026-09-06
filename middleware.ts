@@ -5,6 +5,10 @@ import {
   MANAGED_MCP_RESOURCE_ORIGIN,
   MANAGED_MCP_RESOURCE_URL,
 } from "@/lib/deployment/mcp-origin-contract";
+import {
+  LAST_MARKET_COOKIE_OPTIONS,
+  lastMarketCookieWrite,
+} from "@/lib/markets/last-market-cookie";
 import { type NextRequest, NextResponse } from "next/server";
 import {
   createMarkdownForRequest,
@@ -210,6 +214,18 @@ function withResponsePolicies(request: NextRequest, response: NextResponse) {
     if (robotsTag) {
       response.headers.set("X-Robots-Tag", robotsTag);
     }
+  }
+
+  // A Server Component render cannot set a cookie, so the market level is recorded here, for
+  // every response that renders a market route. It steers where LINKS point; it never decides
+  // what a page shows, and it is emitted only when stale so the response stays cacheable.
+  const lastMarket = lastMarketCookieWrite({
+    method: request.method,
+    pathname: request.nextUrl.pathname,
+    readCookie: (name) => request.cookies.get(name)?.value,
+  });
+  if (lastMarket) {
+    response.cookies.set(lastMarket.name, lastMarket.value, LAST_MARKET_COOKIE_OPTIONS);
   }
 
   return response;

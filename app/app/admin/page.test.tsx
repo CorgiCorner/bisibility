@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   dashboard: vi.fn(),
+  dateFormat: vi.fn(),
   requireAdmin: vi.fn(),
 }));
 
@@ -10,6 +11,9 @@ vi.mock("@/components/admin/AdminDashboard", () => ({
 }));
 vi.mock("@/lib/auth/instance-admin", () => ({
   requireInstanceAdmin: mocks.requireAdmin,
+}));
+vi.mock("@/lib/dates/request", () => ({
+  getResolvedDateFormat: mocks.dateFormat,
 }));
 vi.mock("@/lib/queries/instance-admin", () => ({
   getInstanceAdminDashboard: mocks.dashboard,
@@ -23,6 +27,7 @@ describe("instance admin page", () => {
   it("loads diagnostics only after the instance-admin gate passes", async () => {
     mocks.requireAdmin.mockResolvedValue({ user: { id: "user_admin" } });
     mocks.dashboard.mockResolvedValue({});
+    mocks.dateFormat.mockResolvedValue({ resolved: "month_first" });
 
     await InstanceAdminPage();
 

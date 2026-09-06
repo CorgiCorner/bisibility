@@ -8,7 +8,8 @@ import {
   resetRedisClientForTests,
 } from "@/lib/redis/redis";
 
-const CHANNEL_PREFIX = "bisibility:notifications:v1";
+const NOTIFICATION_CHANNEL_PREFIX = "bisibility:notifications:v1";
+const OPERATION_CHANNEL_PREFIX = "bisibility:operations:v1";
 
 type RedisClient = Pick<BisibilityRedisClient, "publish">;
 
@@ -18,6 +19,12 @@ export type NotificationRealtimeEvent = {
   kind: "created";
   projectId: string | null;
   userId: string;
+};
+
+type OperationRealtimeEvent = {
+  at: string;
+  kind: "changed";
+  projectId: string;
 };
 
 export type PublishNotificationResult =
@@ -46,40 +53,56 @@ export function notificationRealtimeRedisConfigured() {
 }
 
 export function notificationChannel(userId: string) {
-  return `${CHANNEL_PREFIX}:user:${encodeURIComponent(userId)}`;
+  return `${NOTIFICATION_CHANNEL_PREFIX}:user:${encodeURIComponent(userId)}`;
+}
+
+function operationChannel(projectId: string) {
+  return `${OPERATION_CHANNEL_PREFIX}:project:${encodeURIComponent(projectId)}`;
+}
+
+async function publishRealtimeEvent(channel: string, event: unknown) {
+  try {
+    const client = await redis();
+    if (!client) {
+      return { mode: "polling", ok: true } as const;
+    }
+
+    const subscribers = await client.publish(channel, JSON.stringify(event));
+    return { mode: "redis", ok: true, subscribers } as const;
+  } catch (error) {
+    return { error, mode: "redis", ok: false } as const;
+  }
 }
 
 export async function publishNotificationCreated(
   event: NotificationRealtimeEvent,
 ): Promise<PublishNotificationResult> {
-  try {
-    const client = await redis();
-    if (!client) {
-      return { mode: "polling", ok: true };
-    }
-
-    const subscribers = await client.publish(
-      notificationChannel(event.userId),
-      JSON.stringify(event),
-    );
-    return { mode: "redis", ok: true, subscribers };
-  } catch (error) {
-    return { error, mode: "redis", ok: false };
-  }
+  return publishRealtimeEvent(notificationChannel(event.userId), event);
 }
 
-export function subscribeToNotificationEvents(
-  userId: string,
+export async function publishOperationChanged(input: {
+  projectId: string;
+}): Promise<PublishNotificationResult> {
+  const event: OperationRealtimeEvent = {
+    at: new Date().toISOString(),
+    kind: "changed",
+    projectId: input.projectId,
+  };
+  return publishRealtimeEvent(operationChannel(input.projectId), event);
+}
+
+function subscribeToRealtimeEvents<T>(
+  channel: string,
   handlers: {
     onError: (error: unknown) => void;
-    onEvent: (event: NotificationRealtimeEvent) => void;
+    onEvent: (event: T) => void;
   },
+  parseEvent: (value: unknown) => T | null,
 ): NotificationEventSubscriber | null {
   if (!redisConfigured()) {
     return null;
   }
 
-  const channel = notificationChannel(userId);
   let closed = false;
   let subscriber: Awaited<ReturnType<typeof createRedisSubscriber>> = null;
   const subscriberConnect = new AbortController();
@@ -105,10 +128,8 @@ export function subscribeToNotificationEvents(
     client.on("error", reportError);
     await client.subscribe(channel, (message) => {
       try {
-        const event = JSON.parse(message) as NotificationRealtimeEvent;
-        if (event.kind === "created") {
-          handlers.onEvent(event);
-        }
+        const event = parseEvent(JSON.parse(message));
+        if (event) handlers.onEvent(event);
       } catch {
         // Ignore malformed pub/sub payloads; the polling fallback repairs state.
       }
@@ -137,6 +158,34 @@ export function subscribeToNotificationEvents(
     },
     ready,
   };
+}
+
+export function subscribeToNotificationEvents(
+  userId: string,
+  handlers: {
+    onError: (error: unknown) => void;
+    onEvent: (event: NotificationRealtimeEvent) => void;
+  },
+): NotificationEventSubscriber | null {
+  return subscribeToRealtimeEvents(notificationChannel(userId), handlers, (value) => {
+    const event = value as Partial<NotificationRealtimeEvent>;
+    return event.kind === "created" ? (event as NotificationRealtimeEvent) : null;
+  });
+}
+
+export function subscribeToOperationEvents(
+  projectId: string,
+  handlers: {
+    onError: (error: unknown) => void;
+    onEvent: (event: OperationRealtimeEvent) => void;
+  },
+): NotificationEventSubscriber | null {
+  return subscribeToRealtimeEvents(operationChannel(projectId), handlers, (value) => {
+    const event = value as Partial<OperationRealtimeEvent>;
+    return event.kind === "changed" && event.projectId === projectId
+      ? (event as OperationRealtimeEvent)
+      : null;
+  });
 }
 
 export function resetNotificationRealtimeForTests() {

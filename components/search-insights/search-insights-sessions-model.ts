@@ -2,6 +2,7 @@ import { addDays } from "@/lib/search-insights/dates";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { SearchInsightsFirstView } from "@/lib/search-insights/queries/first-view";
 import type { OrganicSessionsPendingPresentation } from "@/lib/search-insights/queries/sessions-context";
+import { GA4_SESSIONS_LABEL } from "./search-insights-copy";
 
 /**
  * Why the second source has no number yet, in the module's own vocabulary. Pure mapping over the
@@ -53,7 +54,7 @@ export function organicSessionsPendingPresentation(
   if (organicSessions.status === "needs_reauth" || importState?.pausedReason === "needs_reauth")
     return {
       kind: "pending",
-      label: "Organic sessions",
+      label: GA4_SESSIONS_LABEL,
       readyIn: null,
       reason: "Reconnect GA4 before the import can continue.",
       source: "GA4",
@@ -62,7 +63,7 @@ export function organicSessionsPendingPresentation(
   if (!importState)
     return {
       kind: "pending",
-      label: "Organic sessions",
+      label: GA4_SESSIONS_LABEL,
       readyIn: null,
       reason: "The GA4 import is queued for worker pickup.",
       source: "GA4",
@@ -71,7 +72,7 @@ export function organicSessionsPendingPresentation(
   if (importState.pausedReason === "user")
     return {
       kind: "pending",
-      label: "Organic sessions",
+      label: GA4_SESSIONS_LABEL,
       readyIn: null,
       reason: "The GA4 import is paused until you resume it.",
       source: "GA4",
@@ -80,7 +81,7 @@ export function organicSessionsPendingPresentation(
   if (importState.pausedReason === "rate_limited")
     return {
       kind: "pending",
-      label: "Organic sessions",
+      label: GA4_SESSIONS_LABEL,
       readyIn: null,
       reason: "The GA4 provider limit will reset before the import resumes.",
       source: "GA4",
@@ -93,7 +94,7 @@ export function organicSessionsPendingPresentation(
   )
     return {
       kind: "pending",
-      label: "Organic sessions",
+      label: GA4_SESSIONS_LABEL,
       readyIn: null,
       reason: "The GA4 import is waiting for a background worker.",
       source: "GA4",
@@ -102,7 +103,7 @@ export function organicSessionsPendingPresentation(
   if (importState.state === "failed" || importState.pausedReason === "error")
     return {
       kind: "pending",
-      label: "Organic sessions",
+      label: GA4_SESSIONS_LABEL,
       readyIn: null,
       reason: "Retry the GA4 import to continue.",
       source: "GA4",
@@ -115,7 +116,7 @@ export function organicSessionsPendingPresentation(
     );
     return {
       kind: "pending",
-      label: "Organic sessions",
+      label: GA4_SESSIONS_LABEL,
       readyIn: null,
       reason: oneDayBehind
         ? "GA4 has not finalized today's data yet."
@@ -127,7 +128,7 @@ export function organicSessionsPendingPresentation(
   if (importState.state === "queued")
     return {
       kind: "pending",
-      label: "Organic sessions",
+      label: GA4_SESSIONS_LABEL,
       readyIn: null,
       reason: "The GA4 import is queued for worker pickup.",
       source: "GA4",
@@ -135,7 +136,7 @@ export function organicSessionsPendingPresentation(
     };
   return {
     kind: "pending",
-    label: "Organic sessions",
+    label: GA4_SESSIONS_LABEL,
     readyIn: readyInGa4Duration(importState, period),
     reason: "Importing newest GA4 ranges.",
     source: "GA4",

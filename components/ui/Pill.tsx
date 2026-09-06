@@ -16,7 +16,7 @@ export type PillBadgeProps = ComponentProps<"span"> & {
 };
 
 const pillBadgeSizeClassName = {
-  xs: "px-1.5 py-0.5 text-[10px]",
+  xs: "px-[7px] py-px text-[9.5px] font-semibold tracking-[0.04em]",
   sm: "px-2 py-0.5 text-ui-micro",
 } as const;
 

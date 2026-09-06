@@ -18,4 +18,4 @@ export const ghostButtonClass =
 export const accentButtonClass =
   "inline-flex min-h-8 items-center rounded-control bg-accent-solid px-3.5 text-[12.5px] font-semibold text-accent-on-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
 
-export const rowListClass = "divide-y divide-border-soft";
+export const rowListClass = "divide-y divide-border";

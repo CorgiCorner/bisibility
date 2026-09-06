@@ -71,6 +71,25 @@ describe("mapKeyword traffic fields", () => {
     expect(row.trafficDate).toBeUndefined();
   });
 
+  it("maps the assigned CheckSchedule and keeps an unassigned keyword manual", () => {
+    const scheduled = mapKeyword(
+      {
+        ...keywordRow(),
+        checkSchedule: { name: "Daily 06:00", publicId: "sch_daily" },
+      },
+      project,
+      metrics,
+    );
+    const manual = mapKeyword(keywordRow(), project, metrics);
+
+    expect(scheduled.checkSchedule).toEqual({
+      name: "Daily 06:00",
+      nextCheckAt: null,
+      publicId: "sch_daily",
+    });
+    expect(manual.checkSchedule).toBeNull();
+  });
+
   it("maps populated traffic snapshot values", () => {
     const traffic: KeywordTrafficSummary = {
       clicks: 19,

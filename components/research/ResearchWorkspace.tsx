@@ -1,6 +1,7 @@
 "use client";
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { Tooltip } from "@/components/ui";
 import type { ResearchKeywordsActionInput } from "@/lib/actions/keyword-research";
@@ -45,6 +46,7 @@ export function ResearchWorkspace({
   researchAction,
   saveKeywordsAction,
 }: Readonly<ResearchWorkspaceProps>) {
+  const dateFormat = useDateFormat();
   const { addSpend } = useSessionSpend();
   const recent = useRecentSearches(context.project.id);
   const projectLocation = context.location as LocationFieldValue;
@@ -202,7 +204,7 @@ export function ResearchWorkspace({
       {hasProvider && !researching && !activeTab ? (
         <ResearchStatePanel
           projectRef={context.project.id}
-          resumeLabel={nextBudgetResetLabel(costContext.timezone ?? "UTC")}
+          resumeLabel={nextBudgetResetLabel(costContext.timezone ?? "UTC", dateFormat)}
           state={
             budgetBlocked ? "budget_exhausted" : researchAvailable ? "idle" : "unsupported_location"
           }
@@ -231,7 +233,7 @@ export function ResearchWorkspace({
           retryLabel={researchRetryLabel(
             activeTab.retryEstimate ?? { cached: false, costCents: null, loading: false },
           )}
-          resumeLabel={nextBudgetResetLabel(costContext.timezone ?? "UTC")}
+          resumeLabel={nextBudgetResetLabel(costContext.timezone ?? "UTC", dateFormat)}
           state={researchFailureState(activeTab.outcome)}
         />
       ) : null}

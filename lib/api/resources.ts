@@ -31,6 +31,7 @@ export const rankCheckSelect = {
   rankingUrl: true,
   raw: true,
   error: true,
+  run: { select: { publicId: true } },
   status: true,
 } satisfies Prisma.RankCheckSelect;
 
@@ -233,6 +234,7 @@ export function rankCheckResource(check: RankCheckRecord) {
     previous_position: check.previousPosition,
     provider: check.provider,
     ranking_url: check.rankingUrl,
+    run_id: check.run ? requireApiPublicId(check.run.publicId, "rcr") : null,
     status: apiRankCheckStatus(check.status),
   };
 }

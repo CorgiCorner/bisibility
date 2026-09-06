@@ -63,7 +63,7 @@ describe("ShellSkeleton", () => {
     expect(container.querySelectorAll(".ml-5\\.5")).toHaveLength(rowCount() + 1);
   });
 
-  it("reserves one heading placeholder per rail group only while expanded", () => {
+  it("reserves one heading placeholder per rail group in both states", () => {
     const expanded = render(
       <ShellSkeleton>
         <div>content</div>
@@ -79,12 +79,19 @@ describe("ShellSkeleton", () => {
     }
     expanded.unmount();
 
+    // Collapsed the settled rail shows the group's 80px tag rather than nothing, so the
+    // placeholder keeps the same box and centres its block across the same width.
     const collapsed = render(
       <ShellSkeleton collapsed>
         <div>content</div>
       </ShellSkeleton>,
     );
-    expect(collapsed.queryAllByTestId("shell-skeleton-nav-heading")).toHaveLength(0);
+    const collapsedHeadings = collapsed.getAllByTestId("shell-skeleton-nav-heading");
+    expect(collapsedHeadings).toHaveLength(navItemGroups.length);
+    for (const heading of collapsedHeadings) {
+      expect(heading).toHaveClass("w-20", "justify-center", "pt-3.5", "pb-1");
+      expect(heading).not.toHaveClass("ml-5.5");
+    }
   });
 
   it("keeps utilities in the scrolling rail and leaves only the footer pinned", () => {

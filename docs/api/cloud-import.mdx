@@ -3,6 +3,8 @@ title: "Instance import"
 description: "Import keywords and rank history with a migration token."
 ---
 
+import CloudImportSessions from "./cloud-import-sessions.mdx";
+
 Instance import accepts an export package and restores keywords plus optional rank
 history into the project associated with a migration token. Use the single
 request endpoint for small packages and the session protocol for large packages.
@@ -161,12 +163,22 @@ History fields:
 | `previousPosition` | Required integer previous position or `null`. |
 | `provider` | Required provider identifier captured by the source check. |
 | `rankingUrl` | Required absolute URL, path, or `null`. |
-| `requestedDepth` | Required requested SERP depth (`10`, `20`, `50`, `100`, or `null`). |
+| `requestedDepth` | Required requested SERP depth (`10`, `20`, `50`, `100`, or `null`). `null` rows are imported and shown in ranking history. Visibility requires a known requested depth of at least 20. Checks with unknown depth do not update Visibility. Affected keywords still count toward its coverage total. |
 
 Only successfully completed source checks are exported as ranking history.
 Failed, running, and deferred attempts are not ranking observations and are not
 included. Imported rows preserve their provider, depth, and normalization
-version.
+version. Visibility measures volume-weighted ranking strength in Google's Top
+20. 100 means every measured keyword ranks #1. Rankings below #20 do not add
+Visibility. Shallow or failed checks are not treated as lost rankings. Top 10
+checks do not update Visibility. Affected keywords still count toward its
+coverage total.
+
+<Warning>
+  Export `requestedDepth` whenever the source instance has it. A `null` value
+  remains valid when the source did not store a depth, and the completed import
+  reports those rows as `history_unknown_depth`.
+</Warning>
 
 <Warning>
   Version 5 history does not distinguish failed attempts from successful
@@ -194,200 +206,12 @@ Every v6 package includes every section, including empty arrays:
 
 | Count | Meaning |
 | - | - |
+| `history_unknown_depth` | When present, received history rows with `requestedDepth: null`. |
 | `alert_rules`, `alert_rules_skipped` | Imported and skipped alert rules. |
 | `competitors` | Imported competitors. |
 | `notification_preferences` | Imported notification preferences. |
 | `saved_views` | Imported saved views. |
 
-## Chunked Session Import
+## Chunked session import
 
-Use sessions when the package is large enough that one request may exceed body
-limits or timeout. A session has three phases: create, upload chunks, finalize.
-
-### 1. Create the Session
-
-```http
-POST /api/v1/cloud/import/sessions
-Authorization: Bearer mig_...
-Content-Type: application/json
-```
-
-```json
-{
-  "version": 6,
-  "chunk_count": 3,
-  "source_project_id": "prj_abcdefghijklmnopqrstuvwx",
-  "totals": {
-    "keywords": 650,
-    "rank_checks": 12000
-  }
-}
-```
-
-`version` must be `6`. `chunk_count` must be between `1` and `500`.
-`source_project_id` is required and prevents importing a project into itself.
-`totals` is optional and is stored with the session manifest.
-
-Success returns `201`.
-
-```json
-{
-  "session_id": "imp_abcdefghijklmnopqrstuvwx",
-  "state": "receiving",
-  "chunk_limits": {
-    "max_body_bytes": 8388608,
-    "max_history_rows": 25000,
-    "max_keywords": 500
-  }
-}
-```
-
-Only one live `receiving` or `importing` session is allowed per token. A second
-live session returns `409`.
-
-### 2. Upload Chunks
-
-Upload each chunk by zero-based index:
-
-```http
-PUT /api/v1/cloud/import/sessions/imp_abcdefghijklmnopqrstuvwx/chunks/0
-Authorization: Bearer mig_...
-Content-Type: application/json
-```
-
-Keyword chunks carry keyword rows:
-
-```json
-{
-  "checksum": "sha256:4f8d72fb6ca13e3140cfb4251850959f3a7a3bfc6f3d898cf0f71ba1a76218bb",
-  "kind": "keywords",
-  "keywords": [{ "id": "kw_abcdefghijklmnopqrstuvwx", "keyword": "rank tracker api", "device": "desktop", "location": "United States", "tags": [], "rankingHistory": [] }]
-}
-```
-
-Section chunks carry non-keyword package sections and optional source keyword
-ids used to map imported alert targets:
-
-```json
-{
-  "checksum": "sha256:f25d1e411a68b72a52872a86c2bf94fba85436aecc335dc172826a7d2be4197e",
-  "kind": "sections",
-  "sections": {
-    "competitors": [{ "id": "cmp_abcdefghijklmnopqrstuvwx", "domain": "example.com", "label": "Example" }],
-    "source_keyword_ids": {
-        "kw_abcdefghijklmnopqrstuvwx": {
-        "text": "rank tracker api",
-        "location": "United States",
-        "device": "desktop"
-      }
-    }
-  }
-}
-```
-
-The checksum is the v6 canonical chunk-content identity for idempotent retries. Retrying the
-same `{sessionId, index}` with the same checksum returns `200`; retrying that
-index with a different checksum returns `409`. Clients should compute the
-`sha256:` value over the canonical JSON body `{ version: 6, ...chunk }`, excluding
-the `checksum` field, before gzip compression.
-
-To gzip a chunk, send the gzip-compressed JSON body with:
-
-```text
-Content-Encoding: gzip
-```
-
-The body limit applies before and after decompression. Oversized chunks return
-`413`.
-
-Success returns:
-
-```json
-{
-  "state": "receiving",
-  "chunks_received": 2,
-  "chunk_count": 3
-}
-```
-
-### 3. Finalize
-
-Finalize after every chunk has been accepted:
-
-```http
-POST /api/v1/cloud/import/sessions/imp_abcdefghijklmnopqrstuvwx/finalize
-Authorization: Bearer mig_...
-Content-Type: application/json
-```
-
-The body may be empty or `{}`. If chunks are missing, finalize returns `409`.
-If another finalize is already importing the session, it returns `409`. Once the
-session is done, a repeated finalize call returns the completed job response.
-
-```json
-{
-  "job_id": "imp_abcdefghijklmnopqrstuvwx",
-  "state": "done",
-  "counts": {
-    "keywords": 650,
-    "keywords_created": 640,
-    "keywords_skipped": 10,
-    "history": 12000,
-    "history_received": 12000
-  }
-}
-```
-
-## Crash Resume
-
-Persist `session_id`, `chunk_count`, and every chunk checksum on the client.
-After a client crash, re-upload all chunks whose success was not recorded. The
-server accepts already stored chunks when the checksum matches.
-
-If the connection drops during finalize, call finalize again. A `200` means the
-session completed. A `409` means chunks are still missing or a finalize is still
-running. Stale `receiving` and `importing` jobs are marked failed by maintenance
-after 30 minutes, after which a new migration token and session are required.
-
-## Status Codes
-
-| Status | Meaning |
-| - | - |
-| `200` | Chunk accepted, session finalized, or compatibility returned. |
-| `201` | Single request import completed or session created. |
-| `400` | Invalid JSON, invalid manifest, invalid chunk, or invalid index. |
-| `401` | Missing or malformed migration token. |
-| `409` | Live session conflict, chunk checksum conflict, missing chunks, already finalizing, or self-import (package exported from the destination project itself, code `self_import`). |
-| `413` | Request body or buffered session payload is too large. |
-| `419` | Migration token is invalid, expired, or already used. |
-| `423` | Destination project is in migration hold. |
-| `429` | Rate limit exceeded. |
-| `500` | Import failed after the job started. |
-
-## Environment Knobs
-
-| Variable | Default | Effect |
-| - | - | - |
-| `BISIBILITY_MIGRATION_IMPORT_MAX_BODY_BYTES` | `8388608` | Maximum JSON body size for single request imports and session requests. |
-| `BISIBILITY_MIGRATION_TOKEN_TTL_MINUTES` | `60` | Migration token lifetime in minutes, clamped between `5` and `1440`. |
-| `BISIBILITY_MIGRATION_HOLD_TTL_HOURS` | `24` | Hours before maintenance releases an expired migration hold. |
-| `BISIBILITY_MIGRATION_EXPORT_MAX_KEYWORDS` | `500` | Maximum keywords included in a downloadable migration package. |
-| `BISIBILITY_MIGRATION_MAX_KEYWORDS` | `50000` | Maximum keywords allowed for direct migration push. |
-| `BISIBILITY_MIGRATION_TARGET_ALLOWLIST` | empty | Comma-separated hostnames allowed as migration targets, with `*.suffix` wildcard support. Empty allows any public host. |
-
-## Existing App Surfaces
-
-The app also implements instance-import state with server actions:
-
-| Function | Purpose |
-| - | - |
-| `mintMigrationToken` | Create a single-use migration token for a project. |
-| `regenerateMigrationToken` | Consume any active token and create a replacement. |
-| `revokeMigrationToken` | Consume an active migration token. |
-| `advanceCloudImportJob` | Advance a job through `receiving`, `importing`, `done`, or `failed`. |
-
-## In-App Wizard
-
-Open `/cloud/import`, generate or paste a migration token, then upload the JSON
-package from the wizard. The wizard uses the same import handlers as the REST
-endpoints.
+<CloudImportSessions />

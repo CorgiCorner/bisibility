@@ -43,6 +43,11 @@ const mocks = vi.hoisted(() => {
       upsert: vi.fn(),
     },
     keywordSchedule: { createMany: vi.fn(), upsert: vi.fn() },
+    rankCheckRun: { update: vi.fn(), updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
+    rankCheckRunItem: {
+      findMany: vi.fn().mockResolvedValue([]),
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
     savedKeyword: { deleteMany: vi.fn() },
     keywordTag: { createMany: vi.fn(), deleteMany: vi.fn() },
     project: { findFirst: vi.fn(), findUnique: vi.fn() },
@@ -689,6 +694,7 @@ describe("server actions", () => {
     });
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       device: "desktop",
+      locationId: "loc_1",
       location: "United States",
       targetUrl: "https://example.com/canonical-target",
       text: "rank tracker",
@@ -700,7 +706,7 @@ describe("server actions", () => {
       text: "rank tracker",
     });
 
-    await updateKeyword({ device: "mobile", keywordId: "kw_a00000000000000000000000" });
+    await updateKeyword({ device: "desktop", keywordId: "kw_a00000000000000000000000" });
 
     const updateData = mocks.prisma.keyword.update.mock.calls[0][0].data;
     expect(Object.hasOwn(updateData, "targetUrl")).toBe(false);

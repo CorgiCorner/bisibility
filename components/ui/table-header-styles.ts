@@ -1,16 +1,15 @@
+import { metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
+
 /**
  * Shared HTML table-header class vocabulary. Every HTML table header and its
  * matching loading skeleton apply this class so the background token, muted
- * text, Sans family, 11px size, and 0.5px tracking stay in lockstep. Borders
- * remain per-table (border-b/border-t, border vs border-control) because each
- * table already declares its own canonical header border.
+ * text, Sans family, 10px size, eyebrow tracking, and two-sided border stay in
+ * lockstep.
  */
-export const tableHeaderTypographyClassName =
-  "text-[11px] uppercase tracking-[0.5px] text-fg-muted";
+export const tableHeaderTypographyClassName = metricEyebrowClassName;
 
 /**
- * The head treatment for dense grids, where a tinted band separates head from body. A table that
- * instead rules its head off with the row border takes the typography alone and paints its own
- * surface, so the two never drift apart.
+ * The head treatment for dense grids uses the surface below the transparent
+ * background token and a shared top and bottom rule.
  */
-export const tableHeaderClassName = `bg-table-header-bg ${tableHeaderTypographyClassName}`;
+export const tableHeaderClassName = `border-y border-border bg-table-header-bg ${tableHeaderTypographyClassName}`;

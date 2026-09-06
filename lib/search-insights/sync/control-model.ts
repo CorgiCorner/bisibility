@@ -1,3 +1,4 @@
+import { type DateFormat, formatDate } from "@/lib/dates/format";
 import type { WorkerTemporalStatus } from "@/lib/ops/worker-temporal-identity";
 import type { SearchInsightsConnectionStatus } from "@/lib/search-insights/connection-state";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
@@ -26,10 +27,8 @@ export type SearchBackfillKind =
   | "waiting_for_first_data"
   | "waiting_worker";
 export type SearchSyncControlAction = "pause" | "reconnect" | "resume" | "retry" | null;
-export type SearchWorkflowStatus = "running" | "completed" | "failed" | "unknown";
 export type SearchSyncQueueReason = "no_worker" | "behind_import" | "worker_pickup" | null;
 export type SearchImportRuntimeFacts = {
-  workflowStatus: SearchWorkflowStatus;
   workerStatus: WorkerTemporalStatus;
 };
 export type SearchImportQueueFacts = { blockingPropertyLabel?: string | null };
@@ -55,11 +54,11 @@ export type SearchBackfillPresentation = {
   title: SearchSyncStatusTitle;
 };
 
-function dateLabel(value: string | null | undefined) {
+function dateLabel(value: string | null | undefined, dateFormat: DateFormat) {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(date.toISOString().slice(0, 10), dateFormat);
 }
 
 function durationLabel(milliseconds: number) {
@@ -137,18 +136,15 @@ function queued(facts: SearchBackfillFacts): SearchBackfillPresentation {
     "Queued",
     reason === "behind_import"
       ? `Queued behind ${property}. That import is using the shared property quota.`
-      : "Queued for worker pickup. The worker checks queued imports every 5 minutes.",
+      : "Queued for worker pickup. The worker checks pending work every few seconds.",
     { polling: true, queueReason: reason },
   );
-}
-
-function hasCurrentCoverage(facts: SearchBackfillFacts) {
-  return facts.observability?.readyThrough.d28.current === true;
 }
 
 /** Resolves supplied selector, runtime, and queue facts without querying external state. */
 export function resolveSearchBackfillPresentation(
   facts: SearchBackfillFacts,
+  dateFormat: DateFormat = "month_first",
 ): SearchBackfillPresentation {
   const connectionMissing =
     facts.connectionStatus === "needs_reauth" ||
@@ -174,7 +170,7 @@ export function resolveSearchBackfillPresentation(
     );
   }
   if (facts.pausedReason === "user") {
-    const pausedOn = dateLabel(facts.pauseStartedAt);
+    const pausedOn = dateLabel(facts.pauseStartedAt, dateFormat);
     return status(
       facts,
       "paused_user",
@@ -200,7 +196,6 @@ export function resolveSearchBackfillPresentation(
       "Google has not reported any search data for this property yet. We check daily and import automatically when it appears.",
     );
 
-  const workflow = facts.runtime?.workflowStatus ?? "unknown";
   if (facts.state === "queued") return queued(facts);
 
   const worker = workerFacts(facts.runtime?.workerStatus);
@@ -215,8 +210,12 @@ export function resolveSearchBackfillPresentation(
   if (facts.state === "running") {
     const silenceMs = facts.observability?.stall.silenceMs;
     const thresholdMs = facts.observability?.stall.thresholdMs;
+    // The silence IS the evidence that nothing is executing: no request-usage row has been
+    // written for longer than the threshold, while our own row says the import is running and a
+    // matching worker is alive. A Temporal describe used to gate this too, but the web process
+    // cannot reach Temporal in production, so that conjunct was permanently false and this
+    // detector never fired.
     const stalled =
-      workflow === "running" &&
       worker.liveness === "ok" &&
       worker.identity === "match" &&
       silenceMs !== undefined &&
@@ -236,15 +235,14 @@ export function resolveSearchBackfillPresentation(
   }
   if (facts.state === "completed") return status(facts, "complete", "Complete", null);
 
-  if (facts.state === "failed" || facts.pausedReason === "error" || workflow === "failed")
+  if (facts.state === "failed" || facts.pausedReason === "error")
     return retry(
       facts,
       facts.safeError?.trim() || "The last import attempt failed. Retry to continue.",
     );
-  if (workflow === "completed")
-    return !hasCurrentCoverage(facts)
-      ? retry(facts, "The import finished before current finalized-day coverage was ready.")
-      : status(facts, "complete", "Complete", null);
+  // Two branches used to sit here keyed on what Temporal said the workflow was doing. Our own
+  // import row is authoritative for our own import, and the web process cannot ask Temporal
+  // anyway, so a row that is neither running, completed nor failed is genuinely unknown.
   return retry(facts, "Import status is unavailable. Retry to continue.");
 }
 
@@ -279,8 +277,11 @@ function semanticState(facts: SearchSyncControlFacts, model: SearchBackfillPrese
   return model.kind === "needs_retry" ? "error" : "running";
 }
 
-export function resolveSearchSyncControl(facts: SearchSyncControlFacts): SearchSyncControlModel {
-  const model = resolveSearchBackfillPresentation(facts);
+export function resolveSearchSyncControl(
+  facts: SearchSyncControlFacts,
+  dateFormat: DateFormat = "month_first",
+): SearchSyncControlModel {
+  const model = resolveSearchBackfillPresentation(facts, dateFormat);
   return {
     action: model.action,
     actionLabel: model.actionLabel,

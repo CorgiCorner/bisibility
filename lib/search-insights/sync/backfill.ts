@@ -13,6 +13,7 @@ import { loadImportRow, recordImportFailure } from "./import-state";
 import { countCappedDays } from "./partitions";
 import { nextPartitions } from "./plan";
 import { isImportUserPaused, userPauseGuard } from "./user-pause";
+import { refreshReadyWindowFacts } from "./window-facts-refresh";
 export const DEFAULT_BACKFILL_BATCH_SIZE = 7;
 export type BackfillBatchInput = {
   batchSize?: number;
@@ -222,6 +223,18 @@ export async function runBackfillBatch(
       });
       if (changed.count === 0) done = false;
       if (changed.count > 0) logSyncInfo(formatSyncComplete("backfill"));
+    }
+    if (stored.length > 0) {
+      try {
+        const importRow = await loadImportRow(row.projectId, row.property);
+        if (importRow) await refreshReadyWindowFacts(importRow);
+      } catch (error) {
+        console.error("[search-insights] window facts refresh failed", {
+          error,
+          importId: row.id,
+          projectId: row.projectId,
+        });
+      }
     }
     return {
       blocked: false,

@@ -1,10 +1,11 @@
 import "server-only";
 
+import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import type { NotificationType, Prisma } from "@/lib/generated/prisma/client";
 import { redactAuditIds } from "@/lib/queries/audit-public-values";
-import type { NotificationFeed, NotificationFeedItem } from "@/lib/queries/notifications";
+import type { NotificationFeed } from "@/lib/queries/notifications";
 import { notificationDisplay, relativeTimeLabel } from "./format";
 import { notificationFeedWhere } from "./scope";
 
@@ -30,6 +31,7 @@ export type NotificationFeedScope = {
 };
 
 export type NotificationFeedOptions = {
+  dateFormat?: DateFormat;
   limit?: number;
   now?: Date;
 };
@@ -49,7 +51,7 @@ function requiredPublicId(value: string | null, prefix: "ntf", resource: string)
   return value;
 }
 
-function mapNotification(row: NotificationRow, now: Date): NotificationFeedItem {
+function mapNotification(row: NotificationRow, now: Date, dateFormat: DateFormat) {
   const display = notificationDisplay(row.type, row.body, row.payload, row.project);
 
   return {
@@ -61,7 +63,7 @@ function mapNotification(row: NotificationRow, now: Date): NotificationFeedItem 
     payload: redactAuditIds(row.payload) as Prisma.JsonValue | null,
     projectId: row.project?.publicId ?? null,
     readAt: row.readAt?.toISOString() ?? null,
-    time: relativeTimeLabel(row.createdAt, now),
+    time: relativeTimeLabel(row.createdAt, now, dateFormat),
     title: row.title,
     type: row.type as NotificationType,
   };
@@ -69,7 +71,7 @@ function mapNotification(row: NotificationRow, now: Date): NotificationFeedItem 
 
 async function listNotificationsForScope(
   scope: NotificationFeedScope,
-  { limit, now = new Date() }: NotificationFeedOptions = {},
+  { dateFormat = "month_first", limit, now = new Date() }: NotificationFeedOptions = {},
 ) {
   const take = clampLimit(limit);
   const unreadRows = await prisma.notification.findMany({
@@ -89,7 +91,7 @@ async function listNotificationsForScope(
         })
       : [];
 
-  return [...unreadRows, ...readRows].map((row) => mapNotification(row, now));
+  return [...unreadRows, ...readRows].map((row) => mapNotification(row, now, dateFormat));
 }
 
 async function countUnreadNotificationsForScope(scope: NotificationFeedScope) {

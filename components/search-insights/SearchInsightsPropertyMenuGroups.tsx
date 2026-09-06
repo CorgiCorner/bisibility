@@ -1,3 +1,6 @@
+"use client";
+
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { MenuGroupHeading } from "@/components/ui";
 import type {
   ArchivedSearchInsightsProperty,
@@ -31,6 +34,7 @@ export function SearchInsightsPropertyMenuGroups({
   onPropertySelect,
   projectDomain,
 }: Readonly<PropertyMenuGroupsProps>) {
+  const dateFormat = useDateFormat();
   const groups = [
     active
       ? {
@@ -60,7 +64,7 @@ export function SearchInsightsPropertyMenuGroups({
             >
               <PropertyListRow
                 className="opacity-75"
-                metadata={archivedPropertyMetadata(option, projectDomain)}
+                metadata={archivedPropertyMetadata(option, projectDomain, dateFormat)}
                 option={option}
               />
             </SearchInsightsMenuOption>

@@ -146,7 +146,7 @@ export async function syncSearchInsightsNow(input: unknown) {
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "update", data.projectId, { type: "project" });
   const result = await requestSearchInsightsSync({ actorId: actor.id, projectId: project.id });
-  if (result.status === "started") revalidatePath(MODULE_ROUTE, "page");
+  if (result.status === "queued") revalidatePath(MODULE_ROUTE, "page");
   return result;
 }
 
@@ -181,7 +181,7 @@ async function runSearchImportTransition(
     revalidatePath(MODULE_ROUTE, "page");
     return { ok: true, state: result.state };
   } catch (error) {
-    console.error("[search-insights] import transition failed", {
+    console.error("[search-insights] import control transition failed", {
       error,
       projectId: project.id,
       transition: expected,

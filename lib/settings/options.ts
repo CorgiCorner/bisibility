@@ -152,6 +152,7 @@ function humanPreview(frequency: RankCheckFrequency, parsed: ParsedCron, timezon
 }
 
 function zonedRunLabel(run: Date, timezone: string) {
+  // SCHEDULE PREVIEW: preserve the compact project-timezone cron label.
   const parts = new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     hour: "2-digit",

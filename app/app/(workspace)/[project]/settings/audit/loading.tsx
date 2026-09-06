@@ -40,7 +40,7 @@ export default function AuditLoading() {
               ))}
             </div>
             {rowKeys.map((key) => (
-              <div className={cn(rowGrid, "border-b border-border-soft px-4 py-4")} key={key}>
+              <div className={cn(rowGrid, "border-b border-border px-4 py-4")} key={key}>
                 <Bar className="h-3 w-[120px]" />
                 <div className="flex min-w-0 items-center gap-2.5">
                   <Bar className="h-[26px] w-[26px] shrink-0 rounded-control" />

@@ -63,7 +63,7 @@ export function RecentlyAddedCard({
       </div>
       {rows.map((row) => (
         <Link
-          className="flex items-center justify-between gap-2.5 border-t border-border-soft px-4.5 py-[11px] hover:bg-bg-sunken"
+          className="flex items-center justify-between gap-2.5 border-t border-border px-4.5 py-[11px] hover:bg-bg-sunken"
           href={appPath(projectRef, "rank-tracker")}
           key={row.id}
         >

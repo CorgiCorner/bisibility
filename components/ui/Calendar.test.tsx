@@ -15,7 +15,7 @@ describe("Calendar", () => {
     render(<Calendar onChange={onChange} value="2026-07-20" />);
 
     expect(screen.getByText("July 2026")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "July 15, 2026" }));
+    fireEvent.click(screen.getByRole("button", { name: "Jul 15, 2026" }));
     expect(onChange).toHaveBeenCalledWith("2026-07-15");
   });
 
@@ -23,7 +23,7 @@ describe("Calendar", () => {
     const onChange = vi.fn();
     render(<Calendar max="2026-07-24" onChange={onChange} value="2026-07-20" />);
 
-    const future = screen.getByRole("button", { name: "July 25, 2026" });
+    const future = screen.getByRole("button", { name: "Jul 25, 2026" });
     expect(future).toBeDisabled();
     fireEvent.click(future);
     expect(onChange).not.toHaveBeenCalled();
@@ -40,20 +40,20 @@ describe("Calendar", () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    screen.getByRole("button", { name: "July 20, 2026" }).focus();
+    screen.getByRole("button", { name: "Jul 20, 2026" }).focus();
     await user.keyboard("{ArrowRight}");
-    expect(screen.getByRole("button", { name: "July 21, 2026" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Jul 21, 2026" })).toHaveFocus();
     await user.keyboard("{ArrowDown}");
-    expect(screen.getByRole("button", { name: "July 28, 2026" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Jul 28, 2026" })).toHaveFocus();
   });
 
   it("clamps arrow navigation to the max day", async () => {
     const user = userEvent.setup();
     render(<Harness max="2026-07-24" />);
 
-    const selected = screen.getByRole("button", { name: "July 20, 2026" });
+    const selected = screen.getByRole("button", { name: "Jul 20, 2026" });
     selected.focus();
     await user.keyboard("{ArrowDown}");
-    expect(screen.getByRole("button", { name: "July 24, 2026" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Jul 24, 2026" })).toHaveFocus();
   });
 });

@@ -30,7 +30,7 @@ describe("GettingStartedHeaderProgress", () => {
       />,
     );
 
-    expect(screen.getByText("Get started")).toBeInTheDocument();
+    expect(screen.getByText("Get set up")).toBeInTheDocument();
     expect(screen.getByText("2 of 4 steps")).toBeInTheDocument();
     expect(screen.getByTestId("setup-progress-indicator").querySelector("svg")).toHaveAttribute(
       "data-progress-ring",
@@ -56,8 +56,9 @@ describe("GettingStartedHeaderProgress", () => {
       />,
     );
 
-    expect(screen.queryByText("4 of 4 steps")).not.toBeInTheDocument();
-    expect(screen.getByTestId("setup-progress-check")).toBeInTheDocument();
+    expect(screen.queryByText("4 of 4 steps")).toBeInTheDocument();
+    expect(screen.queryByTestId("setup-progress-check")).not.toBeInTheDocument();
+    expect(screen.getByTestId("setup-progress-indicator")).toBeInTheDocument();
     expect(container.querySelector(`a[href="${appPath(projectRef, "dashboard")}"]`)).toBeNull();
     expect(screen.queryByRole("link", { name: "Go to dashboard" })).not.toBeInTheDocument();
   });

@@ -471,7 +471,7 @@ describe("OnboardingWizard", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: /Europe\/Warsaw/ }));
     await waitFor(() => expect(updateProjectDefaultsAction).toHaveBeenCalledTimes(1));
     fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
-    expect(await screen.findByText(/next run Aug 30, 2026, 8:00 AM/)).toBeInTheDocument();
+    expect(await screen.findByText(/next run Aug 30, 2026, 08:00/)).toBeInTheDocument();
     expect(screen.queryByText(/Aug 29, 2026/)).not.toBeInTheDocument();
   }, 20_000);
 

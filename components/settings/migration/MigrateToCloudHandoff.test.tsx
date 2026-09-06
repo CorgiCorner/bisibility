@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HandoffPanel } from "./MigrateToCloudHandoff";
+import { ImportCompletionSummary } from "./MigrateToCloudImportCompletion";
 
 const mocks = vi.hoisted(() => ({ create: vi.fn(), writeText: vi.fn() }));
 vi.mock("@/lib/actions/cloud", () => ({ createCloudMigrationHandoff: mocks.create }));
@@ -57,5 +58,24 @@ describe("migration handoff panel", () => {
     expect(await screen.findByText("Handoff unavailable")).toBeInTheDocument();
     rerender(<HandoffPanel direction="to-cloud" handoff={handoff} onHandoff={vi.fn()} />);
     expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
+  });
+
+  it("keeps the Visibility consequence in the source completion summary", () => {
+    render(
+      <ImportCompletionSummary
+        completion={{
+          counts: { history: 2, history_unknown_depth: 1 },
+          jobId: "imp_abcdefghijklmnopqrstuvwx",
+          state: "done",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("1 received history row with unknown depth")).toBeVisible();
+    expect(
+      screen.getByText(
+        "1 received history row has an unknown depth. Checks with unknown depth do not update Visibility. Affected keywords still count toward its coverage total.",
+      ),
+    ).toBeVisible();
   });
 });

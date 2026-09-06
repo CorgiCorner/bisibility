@@ -14,6 +14,7 @@ import {
 import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
+import { getResolvedDateFormat } from "@/lib/dates/request";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { googleOAuthErrorCopy } from "@/lib/integrations/google-oauth-copy";
 import type { GoogleOAuthSetup, ProviderActionHandlers } from "@/lib/integrations/types";
@@ -72,8 +73,10 @@ export default async function IntegrationsPage({
       provider: googleProvider,
     };
   }
+  const { resolved: dateFormat } = await getResolvedDateFormat();
   const [{ categories, connectionCount, timeZone }, readable, searchSyncPlan] = await Promise.all([
     getIntegrationsView(publicId, {
+      dateFormat,
       googleOAuth: googleOAuth ?? undefined,
       now: new Date(),
     }),

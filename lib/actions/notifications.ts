@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 
@@ -22,10 +23,13 @@ function revalidateNotificationViews() {
   revalidatePath("/app", "layout");
 }
 
-export async function refreshNotificationFeed(projectId: string) {
+export async function refreshNotificationFeed(projectId: string, dateFormat?: DateFormat) {
   "use server";
 
-  return getNotificationBellData(projectIdSchema.parse(projectId));
+  const parsedProjectId = projectIdSchema.parse(projectId);
+  return dateFormat
+    ? getNotificationBellData(parsedProjectId, { dateFormat })
+    : getNotificationBellData(parsedProjectId);
 }
 
 export async function markNotificationRead(input: unknown) {

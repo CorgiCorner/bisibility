@@ -1,13 +1,12 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BulkActionBar } from "./BulkActionBar";
 
 const actions = {
   bulkClearTargetAction: vi.fn(async () => undefined),
   bulkDeleteAction: vi.fn(async () => undefined),
-  bulkSetFrequencyAction: vi.fn(async () => undefined),
   bulkSetTargetAction: vi.fn(async () => undefined),
   bulkTagAction: vi.fn(async () => undefined),
 };
@@ -78,7 +77,7 @@ describe("BulkActionBar", () => {
       "Run check (Top 100)",
       "Add tag",
       "Change target URL",
-      "Set frequency",
+      "Set schedule",
       "Delete",
       "Clear",
     ]) {
@@ -137,5 +136,33 @@ describe("BulkActionBar", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
     expect(onRunChecks).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Run checks (Top 20)" })).toBeInTheDocument();
+  });
+
+  it("opens the set-schedule modal after reading the authenticated schedules route", async () => {
+    const fetchMock = vi.fn(async () => ({
+      json: async () => ({ data: [] }),
+      ok: true,
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <BulkActionBar
+        {...actions}
+        canDeleteKeyword
+        canUpdateKeyword
+        onClear={vi.fn()}
+        projectId="prj_1"
+        selectedRows={[row]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Set schedule" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/check-schedules?project=prj_1",
+      expect.objectContaining({ headers: { Accept: "application/json" } }),
+    );
+    expect(screen.getByRole("dialog", { name: /Set schedule for 1 keyword/ })).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 });

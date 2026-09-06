@@ -203,7 +203,7 @@ export function OptionsFooter({
 }: Readonly<{ capabilities: GettingStartedCapabilities; projectRef: ProjectRef }>) {
   if (!capabilities.canInstallSampleData && !capabilities.canManageImports) return null;
   return (
-    <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border-soft pt-4 text-[12.5px] text-fg-muted">
+    <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-4 text-[12.5px] text-fg-muted">
       {capabilities.canInstallSampleData ? (
         <span>
           Just exploring?{" "}

@@ -18,7 +18,7 @@ const usage = {
   hasProvider: true,
   onPaceCents: null,
   period: {
-    dateFormat: "long",
+    dateFormat: "month_first",
     endAt: "2026-09-01T00:00:00.000Z",
     endLabel: "Aug 31, 2026",
     label: "August 2026",
@@ -72,6 +72,7 @@ function connection(
     unit,
     used: 0,
     usedPercent: null,
+    usedPriorMonth: 0,
     ...overrides,
   };
 }

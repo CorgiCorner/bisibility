@@ -4,6 +4,7 @@ import { Toolbar } from "@/components/shell/Toolbar";
 import { Button, MenuMultiSelect, Pill } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { menuItemRowHoverSx } from "@/lib/ui/menu-item-row-styles";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import {
@@ -97,8 +98,7 @@ const ROW_SX = {
   minHeight: 0,
   paddingX: "9px",
   paddingY: "8px",
-  "&:hover": { backgroundColor: "var(--nav-active)" },
-  "&.Mui-focusVisible": { backgroundColor: "var(--nav-active)" },
+  ...menuItemRowHoverSx,
 } as const;
 
 export function OverviewToolbar({

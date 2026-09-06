@@ -2,7 +2,8 @@ import { KNOWN_DATA_INCIDENTS } from "@/lib/search-insights/constants";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { isoFromFrozenNow } from "@/tests/clock";
-import { render, screen } from "@testing-library/react";
+import { routerMock } from "@/tests/next-navigation";
+import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SearchInsightsContextCard } from "./SearchInsightsContextCard";
 import { SearchInsightsNoDataState } from "./SearchInsightsEmptyStates";
@@ -33,6 +34,7 @@ const observabilityFacts = {
   lastProbeAt: "2026-08-28T18:17:00.000Z",
   qualifyingDays: 7,
   readyThrough: {
+    d1: { current: true, previous: true },
     d7: { current: true, previous: true },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },
@@ -54,7 +56,7 @@ const matchedWorker = {
 const runningStatusFacts = {
   connectionStatus: "connected" as const,
   observability: observabilityFacts,
-  runtime: { workerStatus: matchedWorker, workflowStatus: "running" as const },
+  runtime: { workerStatus: matchedWorker },
   state: "running",
 };
 const completedFacts = {
@@ -208,6 +210,52 @@ describe("strip and empty card together", () => {
 });
 
 describe("SearchInsightsTrustStrip", () => {
+  it("uses the waiting strip for d1-only facts while provider availability is pending", () => {
+    const firstLookFacts = {
+      ...observabilityFacts,
+      consecutiveDays: 1,
+      qualifyingDays: 1,
+      readyThrough: {
+        ...observabilityFacts.readyThrough,
+        d1: { current: true, previous: false },
+        d7: { current: false, previous: false },
+      },
+    } satisfies ImportObservabilityFacts;
+
+    const { container } = renderStrip({
+      importState: importStateWithFacts(firstLookFacts),
+      providerAvailableThrough: null,
+      statusFacts: { ...runningStatusFacts, observability: firstLookFacts },
+    });
+
+    expect(screen.getByRole("region", { name: "Data provenance" })).toBeInTheDocument();
+    expect(container.querySelector('[data-startup-segment="fact"]')).toHaveTextContent(
+      "First look ready · 7-day view in ~1 min",
+    );
+    expect(screen.queryByTestId("search-import-line")).not.toBeInTheDocument();
+  });
+
+  it("renders the import line once the d1-ready view has status facts", () => {
+    const firstLookFacts = {
+      ...observabilityFacts,
+      consecutiveDays: 1,
+      qualifyingDays: 1,
+      readyThrough: {
+        ...observabilityFacts.readyThrough,
+        d1: { current: true, previous: false },
+        d7: { current: false, previous: false },
+      },
+    } satisfies ImportObservabilityFacts;
+
+    renderStrip({
+      importState,
+      localViewReady: true,
+      statusFacts: { ...runningStatusFacts, observability: firstLookFacts },
+    });
+
+    expect(screen.getByTestId("search-import-line")).toBeInTheDocument();
+  });
+
   it("uses the elevated surface for the full provenance strip", () => {
     renderStrip();
 
@@ -354,7 +402,7 @@ describe("SearchInsightsTrustStrip", () => {
         statusFacts={{
           ...runningStatusFacts,
           observability: completedFacts,
-          runtime: { workerStatus: matchedWorker, workflowStatus: "completed" },
+          runtime: { workerStatus: matchedWorker },
           state: "completed",
         }}
         workerStatus={matchedWorker}
@@ -364,6 +412,18 @@ describe("SearchInsightsTrustStrip", () => {
     expect(
       screen.getByLabelText("Refresh import status").closest("[data-auto-refresh]"),
     ).toHaveAttribute("data-auto-refresh", "inactive");
+  });
+
+  it("does not schedule refreshes after the local view is ready", () => {
+    vi.useFakeTimers();
+    renderStrip();
+
+    expect(
+      screen.getByLabelText("Refresh import status").closest("[data-auto-refresh]"),
+    ).toHaveAttribute("data-auto-refresh", "inactive");
+    expect(vi.getTimerCount()).toBe(0);
+    act(() => vi.advanceTimersByTime(90_000));
+    expect(routerMock.refresh).not.toHaveBeenCalled();
   });
 
   it("keeps the full-width import action at the right as a secondary control", () => {
@@ -496,6 +556,28 @@ describe("SearchInsightsTrustStrip", () => {
     expect(container.textContent).not.toMatch(/Running.*Running/);
   });
 
+  it("announces the first look without adding a date range to the strip", () => {
+    const firstLookFacts = {
+      ...observabilityFacts,
+      consecutiveDays: 2,
+      readyThrough: {
+        ...observabilityFacts.readyThrough,
+        d1: { current: true, previous: false },
+        d7: { current: false, previous: false },
+      },
+      stall: { ...observabilityFacts.stall, expectedDayMs: 300_000 },
+    } satisfies ImportObservabilityFacts;
+    const { container } = renderStrip({
+      importState: importStateWithFacts(firstLookFacts),
+      statusFacts: { ...runningStatusFacts, observability: firstLookFacts },
+    });
+
+    expect(screen.getByTestId("qualifying-progress")).toHaveTextContent(
+      "First look ready · 7-day view in ~25 min",
+    );
+    expect(container.textContent).not.toMatch(/[A-Z][a-z]{2} \d{1,2} - [A-Z][a-z]{2} \d{1,2}/);
+  });
+
   it("renders phase A as exactly one fact segment without premature progress", () => {
     const { container } = renderStrip({ providerAvailableThrough: null, importState: null });
 
@@ -529,8 +611,7 @@ describe("SearchInsightsTrustStrip", () => {
   });
 
   it("keeps startup ownership guidance while finalized sync uses compact status controls", () => {
-    const expected =
-      "Google only keeps 16 months, so we are copying all of it into your database now. The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.";
+    const expected = OWNERSHIP_COPY.importRunning[0];
     expect(importRunningOwnershipCopy(16, "self-host")).toBe(expected);
     const { rerender } = renderStrip({ providerAvailableThrough: null });
     expect(screen.getByText(expected)).toBeInTheDocument();

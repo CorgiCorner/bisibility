@@ -102,6 +102,8 @@ function sliceRows(content: DrawerContent, onOpen: SearchInsightsDrawerContentPr
       (page): DrawerRow => ({
         clicks: page.clicks,
         key: drawerFrameKey({ kind: "page", path: page.path, url: page.url }),
+        engagementRate: page.engagementRate,
+        keyEvents: page.keyEvents,
         label: page.path,
         onOpen: () => onOpen({ kind: "page", path: page.path, url: page.url }),
         position: page.position,
@@ -217,7 +219,11 @@ export function SearchInsightsDrawerContent({
         ) : null}
         {isList || emptyPagePivot ? null : (
           <DrawerSliceRows
+            keyEventsConfigured={
+              content.kind === "query" ? content.detail.keyEventsConfigured : null
+            }
             label={heading.title}
+            pageMetricsReadable={content.kind === "query" && content.detail.pageMetricsReadable}
             rows={sliceRows(content, onOpen)}
             seen={seen}
             textHeader={content.kind === "query" ? "Page" : "Query"}

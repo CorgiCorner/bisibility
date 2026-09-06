@@ -1,4 +1,7 @@
-import { NEUTRAL_COPY } from "@/components/search-insights/search-insights-copy";
+import {
+  NEUTRAL_COPY,
+  ORGANIC_SESSIONS_LABEL,
+} from "@/components/search-insights/search-insights-copy";
 import { handleShellKeyDown } from "@/components/shell/command-keyboard";
 import { ToastProvider } from "@/components/ui";
 import { DRAWER_LIST_CAP } from "@/lib/search-insights/constants";
@@ -25,6 +28,7 @@ const actions = {
   loadOverlapListAction: vi.fn(),
   loadPageDetailAction: vi.fn(),
   loadQueryDetailAction: vi.fn(),
+  loadTrackDialogAction: vi.fn(),
 };
 
 const shellActions = {
@@ -65,7 +69,9 @@ function Openers() {
           drawers.openPage({
             clicks: 0,
             ctr: 0,
+            engagementRate: null,
             impressions: 0,
+            keyEvents: null,
             path: "/guides/rank-tracking",
             position: 0,
             sessions: null,
@@ -112,12 +118,8 @@ function renderHost(overrides: Partial<typeof actions> = {}, scope: Record<strin
           {...actions}
           {...overrides}
           canCreateKeyword
-          costContext={storyCostContext}
-          defaultDevice="desktop"
-          defaultMarketKey="es-es"
           period="28"
           projectId="prj_1"
-          projectMarkets={storyProjectMarkets}
           property="sc-domain:example.com"
           {...scope}
         >
@@ -150,6 +152,12 @@ describe("SearchInsightsDrawerHost", () => {
     actions.loadOverlapListAction.mockResolvedValue(storyOverlapList);
     actions.loadPageDetailAction.mockResolvedValue(storyPageDetail);
     actions.loadQueryDetailAction.mockResolvedValue(storyQueryDetail);
+    actions.loadTrackDialogAction.mockResolvedValue({
+      costContext: storyCostContext,
+      defaultDevice: "desktop",
+      defaultMarketKey: "es-es",
+      projectMarkets: storyProjectMarkets,
+    });
     actions.addKeywordsAction.mockResolvedValue({
       created: 1,
       persistedKeywordCount: 1,
@@ -178,6 +186,21 @@ describe("SearchInsightsDrawerHost", () => {
       expect(header.classList).not.toContain("text-left");
     }
     expect(actions.loadBandListAction).toHaveBeenCalledWith({
+      limit: undefined,
+      period: "28",
+      projectId: "prj_1",
+      property: "sc-domain:example.com",
+    });
+  });
+
+  it("keeps the selected comparison mode in drawer reads", async () => {
+    const user = userEvent.setup();
+    renderHost({}, { comparison: "yoy" });
+
+    await user.click(screen.getByRole("button", { name: "chip band" }));
+
+    expect(actions.loadBandListAction).toHaveBeenCalledWith({
+      comparison: "yoy",
       limit: undefined,
       period: "28",
       projectId: "prj_1",
@@ -458,6 +481,35 @@ describe("SearchInsightsDrawerHost", () => {
     expect(mocks.track).toHaveBeenCalledWith("search_insights_track_clicked", { source: "row" });
   });
 
+  it("loads the Track dialog payload only on first open", async () => {
+    const user = userEvent.setup();
+    let settle!: (payload: {
+      costContext: typeof storyCostContext;
+      defaultDevice: "desktop";
+      defaultMarketKey: string;
+      projectMarkets: typeof storyProjectMarkets;
+    }) => void;
+    actions.loadTrackDialogAction.mockReturnValue(
+      new Promise((resolve) => {
+        settle = resolve;
+      }),
+    );
+    renderHost();
+
+    expect(actions.loadTrackDialogAction).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "row track" }));
+    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
+    expect(actions.loadTrackDialogAction).toHaveBeenCalledWith({ projectId: "prj_1" });
+
+    settle({
+      costContext: storyCostContext,
+      defaultDevice: "desktop",
+      defaultMarketKey: "es-es",
+      projectMarkets: storyProjectMarkets,
+    });
+    expect(await screen.findByRole("button", { name: "Use project default: daily" })).toBeVisible();
+  });
+
   it("right-aligns natural-width query, page and status footer actions", async () => {
     const user = userEvent.setup();
     let settle!: (result: {
@@ -612,7 +664,7 @@ describe("SearchInsightsDrawerHost", () => {
 
     await user.click(screen.getByRole("button", { name: "row page" }));
 
-    expect(await within(panel()).findByText("Organic sessions")).toBeInTheDocument();
+    expect(await within(panel()).findByText(ORGANIC_SESSIONS_LABEL)).toBeInTheDocument();
     expect(within(panel()).getByText("42")).toBeInTheDocument();
   });
 

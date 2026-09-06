@@ -6,6 +6,7 @@ import {
   legacySchedulingAllowed,
   manualRankChecksAllowed,
   parseRankCheckSchedulerMode,
+  plannerOwnsAutomaticChecks,
   rankCheckSchedulerMode,
 } from "./scheduler-mode";
 
@@ -75,18 +76,21 @@ describe("rank-check scheduler mode", () => {
   it("exposes non-overlapping named predicates", () => {
     expect(legacySchedulingAllowed("legacy")).toBe(true);
     expect(dispatcherClaimsAllowed("legacy")).toBe(false);
+    expect(plannerOwnsAutomaticChecks("legacy")).toBe(false);
     expect(dispatcherStateHealingAllowed("legacy")).toBe(false);
     expect(automaticProviderExecutionAllowed("legacy", "legacy")).toBe(true);
     expect(automaticProviderExecutionAllowed("legacy", "dispatcher")).toBe(false);
 
     expect(legacySchedulingAllowed("cutover")).toBe(false);
     expect(dispatcherClaimsAllowed("cutover")).toBe(false);
+    expect(plannerOwnsAutomaticChecks("cutover")).toBe(false);
     expect(dispatcherStateHealingAllowed("cutover")).toBe(true);
     expect(automaticProviderExecutionAllowed("cutover", "legacy")).toBe(false);
     expect(automaticProviderExecutionAllowed("cutover", "dispatcher")).toBe(false);
 
     expect(legacySchedulingAllowed("dispatcher")).toBe(false);
     expect(dispatcherClaimsAllowed("dispatcher")).toBe(true);
+    expect(plannerOwnsAutomaticChecks("dispatcher")).toBe(true);
     expect(dispatcherStateHealingAllowed("dispatcher")).toBe(true);
     expect(automaticProviderExecutionAllowed("dispatcher", "legacy")).toBe(false);
     expect(automaticProviderExecutionAllowed("dispatcher", "dispatcher")).toBe(true);

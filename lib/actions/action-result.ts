@@ -2,7 +2,9 @@ import {
   MigrationTokenAlreadyConsumedError,
   MigrationTokenNotActiveError,
 } from "@/lib/actions/migration-errors";
+import { TagAlreadyExistsError, TagNotFoundError } from "@/lib/actions/tag-errors";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { KeywordIdentityImmutableError } from "@/lib/keywords/identity";
 
 export type ActionFailure =
   | {
@@ -16,9 +18,19 @@ export type ActionFailure =
       status: 400;
     }
   | {
+      code: "conflict";
+      message: string;
+      status: 409;
+    }
+  | {
       code: "invalid_input";
       message: string;
       status: 400;
+    }
+  | {
+      code: "not_found";
+      message: string;
+      status: 404;
     }
   | {
       code: "migration_token_not_active";
@@ -82,6 +94,15 @@ const TOKEN_ALREADY_CONSUMED_MESSAGE =
 // null so callers rethrow and keep programming/authz bugs visible.
 export function mapActionFailure(error: unknown): ActionFailure | null {
   if (error instanceof ProjectReadOnlyError) {
+    return { code: error.code, message: error.message, status: error.status };
+  }
+  if (error instanceof TagAlreadyExistsError) {
+    return { code: error.code, message: error.message, status: error.status };
+  }
+  if (error instanceof KeywordIdentityImmutableError) {
+    return { code: error.code, message: error.message, status: error.status };
+  }
+  if (error instanceof TagNotFoundError) {
     return { code: error.code, message: error.message, status: error.status };
   }
   if (error instanceof MigrationTokenNotActiveError) {

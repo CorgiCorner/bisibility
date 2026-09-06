@@ -40,6 +40,7 @@ x-app-env: &app-env
   DATABASE_CONNECT_TIMEOUT_MS: ${DATABASE_CONNECT_TIMEOUT_MS:-5000}
   DATABASE_IDLE_TIMEOUT_MS: ${DATABASE_IDLE_TIMEOUT_MS:-10000}
   DATABASE_APPLICATION_NAME: ${DATABASE_APPLICATION_NAME:-bisibility-ssr}
+  SEARCH_INSIGHTS_OVERLAP_WORK_MEM_MB: ${SEARCH_INSIGHTS_OVERLAP_WORK_MEM_MB:-16}
   DATAFORSEO_LOGIN: ${DATAFORSEO_LOGIN:-}
   DATAFORSEO_PASSWORD: ${DATAFORSEO_PASSWORD:-}
   DATA_REGION: ${DATA_REGION:-}
@@ -102,7 +103,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: docker.io/corgicorner/bisibility:0.20.0
+    image: docker.io/corgicorner/bisibility:0.21.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate && if [ "$$DEMO_FIXED_OTP" = "1" ]; then node --experimental-strip-types prisma/seed.ts; fi'
@@ -112,7 +113,7 @@ services:
         condition: service_healthy
 
   app:
-    image: docker.io/corgicorner/bisibility:0.20.0
+    image: docker.io/corgicorner/bisibility:0.21.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:
@@ -299,7 +300,7 @@ services:
       - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-8233}:8080"
 
   worker:
-    image: docker.io/corgicorner/bisibility-worker:0.20.0
+    image: docker.io/corgicorner/bisibility-worker:0.21.0
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     profiles: [ "scheduled" ]
     restart: unless-stopped
@@ -320,6 +321,7 @@ services:
       QUEUED_RANK_CHECK_RETENTION_CRON: ${QUEUED_RANK_CHECK_RETENTION_CRON:-}
       RANK_CHECK_DISPATCHER_INTERVAL: ${RANK_CHECK_DISPATCHER_INTERVAL:-}
       RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS: ${RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS:-25}
+      RANK_CHECK_PLANNER_INTERVAL: ${RANK_CHECK_PLANNER_INTERVAL:-}
       RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS: ${RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS:-}
       RANK_CHECK_RAW_PURGE_CRON: ${RANK_CHECK_RAW_PURGE_CRON:-}
       RANK_CHECK_RECONCILER_ENABLED: ${RANK_CHECK_RECONCILER_ENABLED:-}
@@ -337,6 +339,7 @@ services:
       TRAFFIC_SYNC_CRON: ${TRAFFIC_SYNC_CRON:-}
       TRAFFIC_SYNC_ENABLED: ${TRAFFIC_SYNC_ENABLED:-}
       WEEKLY_DIGEST_CRON: ${WEEKLY_DIGEST_CRON:-}
+      WORKER_INTENT_POLL_INTERVAL_MS: ${WORKER_INTENT_POLL_INTERVAL_MS:-}
     depends_on:
       db-migrations:
         condition: service_completed_successfully

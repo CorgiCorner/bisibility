@@ -1,5 +1,7 @@
 import "server-only";
 
+import { DATE_FORMAT_PREFERENCES, type DateFormatPreference } from "@/lib/dates/format";
+import { resolveDateFormat } from "@/lib/dates/resolve";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { sendEmail } from "@/lib/email/send";
 import { teamInviteEmail } from "@/lib/email/team-invite-template";
@@ -9,7 +11,7 @@ type InviteDeliveryRow = {
   email: string;
   expiresAt: Date;
   id: string;
-  invitedBy: { email: string; name: string };
+  invitedBy: { dateFormat?: string; email: string; name: string };
   project: { name: string };
   role: string;
 };
@@ -46,6 +48,14 @@ async function sendInviteEmail(input: InviteEmail) {
   }
 
   const message = teamInviteEmail({
+    dateFormat: resolveDateFormat(
+      input.invitedBy.dateFormat &&
+        (DATE_FORMAT_PREFERENCES as readonly string[]).includes(input.invitedBy.dateFormat)
+        ? (input.invitedBy.dateFormat as DateFormatPreference)
+        : input.invitedBy.dateFormat
+          ? "auto"
+          : "month_first",
+    ),
     expiresAt: input.expiresAt,
     inviteLink: input.inviteLink,
     inviter: input.invitedBy,

@@ -32,7 +32,7 @@ const writerModules = new Map([
 const localWriterWrappers = new Map([
   ["lib/actions/team.ts", new Set(["auditAndRevalidate"])],
   ["lib/api/provider-audit.ts", new Set(["auditProviderMutation"])],
-  ["lib/api/rank-checks.ts", new Set(["writeFailureAudit"])],
+  ["lib/api/rank-check-request.ts", new Set(["writeFailureAudit"])],
 ]);
 
 function sourceFiles(directory: string): string[] {

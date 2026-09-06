@@ -1,4 +1,5 @@
 import type { UpcomingBlockedGroup, UpcomingBlockReason } from "@/lib/checks/contract";
+import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import { centsToDollars } from "@/lib/format/currency";
 
 const countFormatter = new Intl.NumberFormat("en-US");
@@ -36,14 +37,9 @@ export function formatCap(cents: number) {
   return capFormatter.format(centsToDollars(cents));
 }
 
-export function formatForecastDate(isoDate: string) {
-  const dateOnly = isoDate.slice(0, 10);
-  const date = new Date(`${dateOnly}T12:00:00.000Z`);
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).format(date);
+export function formatForecastDate(isoDate: string, dateFormat: DateFormat) {
+  const key = isoDate.slice(0, 10);
+  return formatDateRange(key, key, dateFormat);
 }
 
 export function findBlockedGroup(blocked: UpcomingBlockedGroup[], reason: UpcomingBlockReason) {

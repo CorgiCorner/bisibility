@@ -115,7 +115,7 @@ export function ActivityList({ provider }: Readonly<Pick<FormProps, "provider">>
       </div>
       {provider.drawer.activities.map((row) => (
         <div
-          className="flex items-center justify-between gap-3 border-border-soft border-t px-3.5 py-[11px] text-[11px]"
+          className="flex items-center justify-between gap-3 border-border border-t px-3.5 py-[11px] text-[11px]"
           key={row.label}
         >
           <span className="text-fg-muted">{row.label}</span>

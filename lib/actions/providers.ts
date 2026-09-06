@@ -29,7 +29,6 @@ import {
   updateProviderCostSchema,
   updateProviderRateSchema,
 } from "@/lib/schemas/provider";
-import { startTrafficSyncWorkflow } from "@/lib/temporal/traffic-client";
 import { z } from "zod";
 import {
   getActionActor,
@@ -142,20 +141,8 @@ export async function saveStoredGoogleProperty(input: unknown) {
 export async function connectProvider(input: unknown) {
   const data = parseActionInput(connectProviderActionSchema, input);
   const scope = await providerScope(data.projectId);
-  const connection = await connectProviderConnection(data, scope);
+  await connectProviderConnection(data, scope);
   revalidateProviderViews();
-
-  if (connection.kind === "analytics" && connection.enabled && connection.status === "connected") {
-    void startTrafficSyncWorkflow()
-      .then(revalidateProviderViews)
-      .catch((error: unknown) => {
-        console.error("[traffic] initial provider sync could not be queued", {
-          error: error instanceof Error ? error.message : "Unknown traffic scheduler error.",
-          projectId: scope.projectId,
-          provider: connection.provider,
-        });
-      });
-  }
 
   return providerMutationSuccess;
 }

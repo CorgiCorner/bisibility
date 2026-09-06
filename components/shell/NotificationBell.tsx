@@ -5,6 +5,7 @@ import {
   markNotificationRead,
   refreshNotificationFeed,
 } from "@/lib/actions/notifications";
+import { getResolvedDateFormat } from "@/lib/dates/request";
 import { NotificationBellClient } from "@/lib/notifications/NotificationBellClient";
 import { getNotificationBellData, type NotificationFeed } from "@/lib/queries/notifications";
 
@@ -21,7 +22,8 @@ export async function NotificationBell({
   projectId,
   projectRef,
 }: Readonly<NotificationBellProps>) {
-  const data = feed ?? (await getNotificationBellData(projectId));
+  const { resolved: dateFormat } = await getResolvedDateFormat();
+  const data = feed ?? (await getNotificationBellData(projectId, { dateFormat }));
 
   return (
     <NotificationBellClient
@@ -30,7 +32,7 @@ export async function NotificationBell({
       markAllNotificationsRead={markAllNotificationsRead.bind(null, projectId)}
       markNotificationRead={markNotificationRead}
       projectRef={projectRef}
-      refreshNotificationFeed={refreshNotificationFeed.bind(null, projectId)}
+      refreshNotificationFeed={refreshNotificationFeed.bind(null, projectId, dateFormat)}
       transport={process.env.NOTIFICATION_TRANSPORT === "polling" ? "polling" : "stream"}
     />
   );

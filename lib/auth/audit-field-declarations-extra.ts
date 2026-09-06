@@ -9,13 +9,30 @@ type SharedPolicies = Record<
   "market" | "projectDefaults" | "provider" | "rankCheck",
   AuditFieldPolicy
 >;
-
 export function registerAdditionalAuditDeclarations(
   declare: Declare,
   { market, projectDefaults, provider, rankCheck }: SharedPolicies,
 ) {
   const list = (policy: AuditFieldPolicy): readonly [AuditFieldPolicy] => [policy];
   const strings = (...names: string[]) => f.strings(...names);
+  const schedule = {
+    ...strings("cronExpression", "frequency", "timezone"),
+    ...f.numbers("jitterMinutes", "serpDepth"),
+  };
+  const checkSchedule = {
+    ...schedule,
+    ...strings("movedTo", "name", "providerPolicy", "publicId", "timeOfDay"),
+    ...f.booleans("enabled", "isDefault"),
+    keywordIds: list("string"),
+    movedFrom: list("string"),
+  };
+  const checkSchedulePolicy = { after: checkSchedule, before: checkSchedule };
+  declare(["check_schedule.create"], checkSchedulePolicy);
+  declare(["check_schedule.update"], checkSchedulePolicy);
+  declare(["check_schedule.delete"], checkSchedulePolicy);
+  declare(["check_schedule.set_default"], checkSchedulePolicy);
+  declare(["check_schedule.assign"], checkSchedulePolicy);
+  declare(["check_schedule.remove"], checkSchedulePolicy);
   const notificationPreference = {
     ...f.booleans("alertEmail", "alertSlack", "alertWebhook", "reportEmail"),
     ...strings("digestFrequency"),
@@ -55,12 +72,10 @@ export function registerAdditionalAuditDeclarations(
   declare(["project_defaults.update", "settings.defaults.update"], {
     after: {
       market,
-      ...f.numbers("movedKeywords", "skippedConflicts"),
       schedule: projectDefaults,
     },
     before: { market, schedule: projectDefaults },
   });
-
   const importJob = {
     ...strings("error", "id", "jobId", "state"),
     ...f.numbers("chunkCount", "progress"),
@@ -91,13 +106,12 @@ export function registerAdditionalAuditDeclarations(
       before: { ...strings("id", "writeMode"), ...f.dates("writeModeChangedAt") },
     },
   );
-
   declare(["rank_check.queue_first"], {
     after: { ...f.numbers("queued"), ...strings("reason") },
   });
   const rankCheckRun = {
     ...(rankCheck as Record<string, AuditFieldPolicy>),
-    ...strings("code", "message"),
+    ...strings("code", "message", "runId"),
     ...f.urls("rankingUrl"),
   };
   declare(["rank_check.requested", "rank_check.run_now"], { after: rankCheckRun });
@@ -118,7 +132,6 @@ export function registerAdditionalAuditDeclarations(
   declare(["settings.run_check_now"], {
     after: { ...f.numbers("failed", "queued", "total"), ...strings("reason") },
   });
-
   declare(["sample_data.remove"], { before: strings("publicId") });
   declare(["saved_keyword.save"], {
     after: f.numbers("duplicateCount", "savedCount"),
@@ -136,7 +149,6 @@ export function registerAdditionalAuditDeclarations(
   const savedView = strings("name", "savedViewId", "surface");
   declare(["saved_view.create"], { after: savedView });
   declare(["saved_view.delete"], { before: savedView });
-
   const signal = {
     ...strings(
       "created_at",
@@ -164,7 +176,6 @@ export function registerAdditionalAuditDeclarations(
   };
   declare(["signal.note_added"], { after: signalNote });
   declare(["signal.note_removed"], { before: signalNote });
-
   declare(["tag.create"], { after: strings("name") });
   declare(["tag.delete"], { before: { ...strings("name"), ...f.numbers("count") } });
   declare(["tag.rename"], {
@@ -186,7 +197,6 @@ export function registerAdditionalAuditDeclarations(
     after: { ...f.dates("snoozedUntil"), ...strings("status") },
     before: { ...f.dates("snoozedUntil"), ...strings("status") },
   });
-
   const providerAllocation = { ...strings("unit"), ...f.numbers("amountPerMonth") };
   declare(["provider.allocation.update"], {
     after: providerAllocation,
@@ -208,7 +218,6 @@ export function registerAdditionalAuditDeclarations(
     after: { ...f.booleans("ok"), ...strings("provider") },
   });
   declare(["provider.test_failed"], { after: strings("message", "provider") });
-
   const webhook = {
     ...strings("description", "publicId"),
     ...f.booleans("enabled"),
@@ -218,7 +227,6 @@ export function registerAdditionalAuditDeclarations(
   declare(["webhook_endpoint.create"], { after: webhook });
   declare(["webhook_endpoint.delete"], { before: webhook });
   declare(["webhook_endpoint.update"], { after: webhook, before: webhook });
-
   declare(["audit_log.purge"], {
     after: { ...f.dates("cutoff"), ...f.numbers("deletedCount", "retentionDays") },
   });
@@ -240,7 +248,6 @@ export function registerAdditionalAuditDeclarations(
     after: { ...strings("email"), ...f.booleans("isInstanceAdmin") },
     before: f.booleans("isInstanceAdmin"),
   });
-
   declare(["account.two_factor_backup_codes_regenerated"], {
     after: f.booleans("regenerated"),
   });
@@ -259,7 +266,6 @@ export function registerAdditionalAuditDeclarations(
     before: f.booleans("enabled"),
   });
   declare(["account.two_factor_step_up_failed"], { after: strings("operation") });
-
   declare(["cloud_import.export_package"], { after: f.numbers("count") });
   declare(["project.self_host_migration.start"], {
     after: {
@@ -280,7 +286,7 @@ export function registerAdditionalAuditDeclarations(
     after: f.numbers("failedChecksCount", "recipients", "topMovers"),
   });
   declare(["search_insights.sync_now"], {
-    after: strings("property", "workflowId"),
+    after: { ...strings("property"), ...f.dates("syncRequestedAt") },
   });
   declare(["sitemap_monitor.disable", "sitemap_monitor.enable"], {
     after: f.booleans("enabled"),

@@ -14,7 +14,7 @@ import { removeMembershipSideEffects } from "./membership-cleanup";
 const INVITE_DAYS = 7;
 const memberSelect = { id: true, publicId: true, role: true, userId: true } as const;
 const inviteDeliveryInclude = {
-  invitedBy: { select: { email: true, name: true } },
+  invitedBy: { select: { dateFormat: true, email: true, name: true } },
   project: { select: { name: true } },
 } as const;
 

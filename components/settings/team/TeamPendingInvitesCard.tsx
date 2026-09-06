@@ -75,7 +75,7 @@ export function TeamPendingInvitesCard({
       frameId="pending-invites"
       title="Pending invites"
     >
-      <div className="divide-y divide-border-soft rounded-control border border-border">
+      <div className="divide-y divide-border rounded-control border border-border">
         {invites.length === 0 ? (
           <div className="flex items-center gap-3 p-3 text-[12.5px] text-fg-muted">
             <span className="grid h-8.5 w-[34px] place-items-center rounded-control border border-dashed border-border">

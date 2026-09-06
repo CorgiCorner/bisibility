@@ -1,4 +1,5 @@
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { menuItemRowHoverSx } from "@/lib/ui/menu-item-row-styles";
 import { createTheme, type PaletteOptions, type Shadows } from "@mui/material/styles";
 import {
   type ColorSchemeName,
@@ -146,6 +147,11 @@ export const theme = createTheme({
           borderRadius: UI_RADIUS_ROLES.card,
           boxShadow: "none",
         },
+      },
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: menuItemRowHoverSx,
       },
     },
     MuiPaper: {

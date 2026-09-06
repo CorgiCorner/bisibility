@@ -1,18 +1,17 @@
-import { SchedulerDisabledError } from "@/lib/scheduler/driver";
 import { SYNC_NOW_COOLDOWN_MS } from "@/lib/search-insights/constants";
 import { requestSearchInsightsSync } from "@/lib/search-insights/sync/sync-now";
 import { dateFromFrozenNow, FROZEN_NOW } from "@/tests/clock";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   audit: vi.fn(),
   loadImportRow: vi.fn(),
+  publishWorkerIntent: vi.fn(),
   prisma: {
     project: { findUnique: vi.fn() },
     searchAnalyticsImport: { upsert: vi.fn() },
   },
   resolveConnection: vi.fn(),
-  startSync: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.audit }));
@@ -24,10 +23,9 @@ vi.mock("@/lib/search-insights/sync/credentials", () => ({
 vi.mock("@/lib/search-insights/sync/import-state", () => ({
   loadImportRow: mocks.loadImportRow,
 }));
-vi.mock("@/lib/temporal/search-insights-client", () => ({
-  startSearchInsightsSyncWorkflow: mocks.startSync,
+vi.mock("@/lib/worker-intents/realtime", () => ({
+  publishWorkerIntent: mocks.publishWorkerIntent,
 }));
-
 const property = "sc-domain:example.com";
 // The action layer authorizes first and hands over the internal id it resolved.
 const input = { actorId: "usr_1", projectId: "project_1" };
@@ -45,23 +43,21 @@ describe("requestSearchInsightsSync", () => {
       property,
     });
     mocks.loadImportRow.mockResolvedValue(null);
-    mocks.startSync.mockResolvedValue({
-      runId: "run_1",
-      workflowId: "search-insights-sync:project_1",
-    });
+    mocks.publishWorkerIntent.mockResolvedValue({ mode: "redis", ok: true });
+    vi.stubEnv("SCHEDULER_DRIVER", "worker");
   });
+
+  afterEach(() => vi.unstubAllEnvs());
 
   it("reports an empty state when the project has no readable property", async () => {
     mocks.resolveConnection.mockResolvedValue(null);
 
     await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "no_connection" });
-    expect(mocks.startSync).not.toHaveBeenCalled();
   });
 
-  it("starts the sync, stamps the attempt and audits it against the project", async () => {
-    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "started" });
+  it("queues a fresh import for backfill and audits it against the project", async () => {
+    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "queued" });
 
-    expect(mocks.startSync).toHaveBeenCalledWith({ projectId: "project_1" });
     expect(mocks.prisma.searchAnalyticsImport.upsert).toHaveBeenCalledWith({
       create: {
         lastSyncStartedAt: FROZEN_NOW,
@@ -70,7 +66,10 @@ describe("requestSearchInsightsSync", () => {
         source: "gsc",
         state: "queued",
       },
-      update: { lastSyncStartedAt: FROZEN_NOW },
+      update: {
+        lastSyncStartedAt: FROZEN_NOW,
+        syncRequestedAt: null,
+      },
       where: {
         projectId_property_source: { projectId: "project_1", property, source: "gsc" },
       },
@@ -78,23 +77,25 @@ describe("requestSearchInsightsSync", () => {
     expect(mocks.audit).toHaveBeenCalledWith({
       action: "search_insights.sync_now",
       actorId: "usr_1",
-      after: { property, workflowId: "search-insights-sync:project_1" },
+      after: { property },
       projectId: "project_1",
       targetId: "prj_abcdefghijklmnopqrstuvwx",
       targetType: "project",
     });
   });
 
-  it("creates the import row while stamping so the very first manual sync is throttled", async () => {
-    // No row yet: the module has never been rendered for this property. A stamp that matched
-    // nothing would leave the one control that rate-limits this path doing nothing at all.
+  it("creates the import row without incremental intent so the backfill worker owns the first run", async () => {
     mocks.loadImportRow.mockResolvedValue(null);
 
-    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "started" });
+    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "queued" });
 
-    const stamp = mocks.prisma.searchAnalyticsImport.upsert.mock.calls[0]?.[0];
-    expect(stamp.create).toMatchObject({ lastSyncStartedAt: FROZEN_NOW, state: "queued" });
-    expect(stamp.update).toEqual({ lastSyncStartedAt: FROZEN_NOW });
+    const upsert = mocks.prisma.searchAnalyticsImport.upsert.mock.calls[0]?.[0];
+    expect(upsert.create).toMatchObject({
+      lastSyncStartedAt: FROZEN_NOW,
+      state: "queued",
+    });
+    expect(upsert.create).not.toHaveProperty("syncRequestedAt");
+    expect(upsert.update).toEqual({ lastSyncStartedAt: FROZEN_NOW, syncRequestedAt: null });
   });
 
   it("refuses a second run inside the cooldown and says when the next one is allowed", async () => {
@@ -105,7 +106,6 @@ describe("requestSearchInsightsSync", () => {
       nextAllowedAt: new Date(lastSyncStartedAt.getTime() + SYNC_NOW_COOLDOWN_MS).toISOString(),
       status: "cooldown",
     });
-    expect(mocks.startSync).not.toHaveBeenCalled();
   });
 
   it("allows a run once the cooldown has elapsed", async () => {
@@ -115,18 +115,46 @@ describe("requestSearchInsightsSync", () => {
       workflowId: null,
     });
 
-    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "started" });
+    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "queued" });
+    expect(mocks.prisma.searchAnalyticsImport.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: {
+          lastSyncStartedAt: FROZEN_NOW,
+          syncRequestedAt: FROZEN_NOW,
+          syncStartedAt: null,
+        },
+      }),
+    );
+    expect(mocks.publishWorkerIntent).toHaveBeenCalledWith("search_insights_sync");
   });
 
-  it("still starts for a completed import that kept its backfill workflow id", async () => {
+  it("stamps incremental intent for an import waiting for its first data", async () => {
+    mocks.loadImportRow.mockResolvedValue({
+      lastSyncStartedAt: dateFromFrozenNow({ minutes: -6 }),
+      state: "waiting_for_first_data",
+      workflowId: null,
+    });
+
+    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "queued" });
+    expect(mocks.prisma.searchAnalyticsImport.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: {
+          lastSyncStartedAt: FROZEN_NOW,
+          syncRequestedAt: FROZEN_NOW,
+          syncStartedAt: null,
+        },
+      }),
+    );
+  });
+
+  it("still queues for a completed import that kept its backfill workflow id", async () => {
     mocks.loadImportRow.mockResolvedValue({
       lastSyncStartedAt: dateFromFrozenNow({ minutes: -6 }),
       state: "completed",
       workflowId: "search-insights-backfill:project_1:abcdef0123456789",
     });
 
-    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "started" });
-    expect(mocks.startSync).toHaveBeenCalledWith({ projectId: "project_1" });
+    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "queued" });
   });
 
   it("joins a running backfill rather than spending the same quota twice", async () => {
@@ -137,7 +165,6 @@ describe("requestSearchInsightsSync", () => {
     });
 
     await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "already_running" });
-    expect(mocks.startSync).not.toHaveBeenCalled();
   });
 
   it.each(["user", "rate_limited"])(
@@ -153,11 +180,10 @@ describe("requestSearchInsightsSync", () => {
       await expect(requestSearchInsightsSync(input)).resolves.toEqual({
         status: "already_running",
       });
-      expect(mocks.startSync).not.toHaveBeenCalled();
     },
   );
 
-  it("starts for an import still queued after a backfill that could not plan anything", async () => {
+  it("queues for an import left queued after a backfill could not plan anything", async () => {
     // The first batch found no finalized day, closed, and released its id; the row is still
     // "queued" and must not answer the manual sync with "already_running" forever.
     mocks.loadImportRow.mockResolvedValue({
@@ -166,43 +192,70 @@ describe("requestSearchInsightsSync", () => {
       workflowId: null,
     });
 
-    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "started" });
-    expect(mocks.startSync).toHaveBeenCalledWith({ projectId: "project_1" });
+    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "queued" });
   });
 
-  it("starts again for a reconnected import whose closed backfill id was cleared", async () => {
+  it("queues again for a reconnected import whose closed backfill id was cleared", async () => {
     mocks.loadImportRow.mockResolvedValue({
       lastSyncStartedAt: dateFromFrozenNow({ minutes: -6 }),
       state: "running",
       workflowId: null,
     });
 
-    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "started" });
-    expect(mocks.startSync).toHaveBeenCalledWith({ projectId: "project_1" });
+    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "queued" });
   });
 
-  it("keeps reporting a started sync when only the audit record could not be written", async () => {
+  it("requeues a failed import for backfill instead of stamping incremental intent", async () => {
+    mocks.loadImportRow.mockResolvedValue({
+      lastSyncStartedAt: dateFromFrozenNow({ minutes: -6 }),
+      state: "failed",
+      workflowId: null,
+    });
+
+    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "queued" });
+    expect(mocks.prisma.searchAnalyticsImport.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: {
+          lastSyncStartedAt: FROZEN_NOW,
+          pausedReason: null,
+          state: "queued",
+          syncRequestedAt: null,
+          syncStartedAt: null,
+          workflowId: null,
+        },
+      }),
+    );
+  });
+
+  it("keeps reporting a queued sync when only the audit record could not be written", async () => {
     mocks.audit.mockRejectedValue(new Error("audit unavailable"));
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-    // The workflow is running and the cooldown is stamped: calling this unavailable would
+    // The intent is durable and the cooldown is stamped: calling this unavailable would
     // invite a retry that can only answer "cooldown".
-    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "started" });
+    await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "queued" });
 
-    expect(mocks.startSync).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });
 
   it("reports unavailable on a deployment with no scheduler", async () => {
-    mocks.startSync.mockRejectedValue(new SchedulerDisabledError());
+    vi.stubEnv("SCHEDULER_DRIVER", "none");
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     await expect(requestSearchInsightsSync(input)).resolves.toEqual({ status: "unavailable" });
 
     expect(mocks.audit).not.toHaveBeenCalled();
+    expect(mocks.prisma.searchAnalyticsImport.upsert).not.toHaveBeenCalled();
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+
+  it("cannot return unavailable under the worker driver", async () => {
+    const result = await requestSearchInsightsSync(input);
+
+    expect(result).toEqual({ status: "queued" });
+    expect(result.status).not.toBe("unavailable");
   });
 
   it("looks the project up by its internal id and stops when nothing answers", async () => {

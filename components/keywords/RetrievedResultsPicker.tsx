@@ -113,7 +113,7 @@ export function RetrievedResultsPicker({
           selectedTo={pickerRole === "from" ? to : undefined}
           value={value}
         />
-        <div className="mx-2 mt-2 border-t border-border-soft px-3 pb-3 pt-3">
+        <div className="mx-2 mt-2 border-t border-border px-3 pb-3 pt-3">
           <label
             className="block font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-fg-muted"
             htmlFor={`${ariaLabel}-jump-date`}

@@ -1,3 +1,4 @@
+import { MarketArchivedError } from "@/lib/markets/archived";
 import { ProjectMarketLimitExceededError } from "@/lib/markets/limits";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createKeywords, KEYWORD_CREATE_TRANSACTION_TIMEOUT_MS } from "./keyword-create";
@@ -237,5 +238,20 @@ describe("REST keyword creation transaction", () => {
       status: 403,
       type: "https://bisibility.com/problems/forbidden",
     });
+  });
+
+  it("maps an archived market to a typed problem response", async () => {
+    mocks.createKeywordBatchSet.mockRejectedValueOnce(new MarketArchivedError("ES@es"));
+
+    const response = await createKeywords(context(), "prj_a00000000000000000000000");
+
+    expect(response.status).toBe(409);
+    expect(response.headers.get("content-type")).toContain("application/problem+json");
+    await expect(response.json()).resolves.toMatchObject({
+      detail: "Market ES@es is not tracked by this project. Add it in Settings > Markets first.",
+      status: 409,
+      type: "https://bisibility.com/problems/conflict",
+    });
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 });

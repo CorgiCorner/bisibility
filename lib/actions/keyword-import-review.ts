@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import type { KeywordImportColumnMapping } from "@/lib/keywords/import-csv-parser";
+import { untrackedMarketMessage } from "@/lib/markets/archived";
 import { KEYWORD_IMPORT_MAX, keywordImportFileLimitMessage } from "@/lib/schemas/keyword";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import {
@@ -35,7 +36,7 @@ export async function filterReviewRowsByProjectMarkets(
     }
     if (!registeredKeys.has(resolved.location.canonicalKey)) {
       errors.push({
-        message: `Market ${resolved.location.canonicalKey} is not tracked by this project. Add it in Settings > Markets first.`,
+        message: untrackedMarketMessage(resolved.location.canonicalKey),
         row: row.row,
       });
       continue;

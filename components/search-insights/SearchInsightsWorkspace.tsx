@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button, InlineCallout } from "@/components/ui";
 import { track } from "@/lib/analytics/client";
 import { formatDateLabel } from "@/lib/search-insights/dates";
@@ -33,6 +34,7 @@ export function SearchInsightsWorkspace({
   syncPlan,
   trustStrip,
 }: Readonly<SearchInsightsWorkspaceProps>) {
+  const dateFormat = useDateFormat();
   const viewed = useRef(false);
   const [activationTarget, setActivationTarget] = useState<ArchivedActivationTarget | null>(null);
   // This guarded render pattern follows the existing local ref guards and emits once per mount.
@@ -59,9 +61,10 @@ export function SearchInsightsWorkspace({
           {context.window ? (
             <>
               <SearchInsightsPeriodMenu
+                dateFormat={dateFormat}
                 importFacts={context.importState?.facts}
                 period={context.period}
-                yoy={context.yoy}
+                window={context.window}
               />
               <SearchInsightsActions
                 exportAction={exportAction}
@@ -84,7 +87,7 @@ export function SearchInsightsWorkspace({
           <span className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-2">
             <span className="min-w-0 flex-1">
               Archived - not syncing. Data ends{" "}
-              {formatDateLabel(context.importState.finalizedThroughDate)}.
+              {formatDateLabel(context.importState.finalizedThroughDate, dateFormat)}.
             </span>
             <Button
               onClick={() =>

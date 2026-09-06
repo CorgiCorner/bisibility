@@ -4,7 +4,6 @@ import { SHOW_CAP_LABEL, SHOW_CAP_TITLE, SHOW_MORE_TITLE } from "./search-insigh
 import {
   collapseLabel,
   counterLabel,
-  footerNote,
   moreLabel,
   moreTitle,
   nextShow,
@@ -70,7 +69,7 @@ describe("rowsReach", () => {
 describe("counter and footer", () => {
   it("counts what is on screen against what the window holds", () => {
     expect(counterLabel(10, 1_284)).toBe("10 of 1,284");
-    expect(footerNote(10, 1_284)).toBe("1,274 more stored, no provider cost");
+    expect(counterLabel(184, 184)).toBe("184 of 184");
   });
 
   it("turns the counter into the way back only once it has expanded", () => {

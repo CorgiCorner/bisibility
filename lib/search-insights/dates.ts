@@ -1,3 +1,6 @@
+import { type DateFormat, formatDate, formatDateRange, formatDateTime } from "@/lib/dates/format";
+import type { SearchInsightsComparisonMode } from "@/lib/search-insights/constants";
+
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const DATE_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/u;
 
@@ -8,22 +11,6 @@ const pacificDayFormatter = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit",
   month: "2-digit",
   timeZone: PACIFIC_TIME_ZONE,
-  year: "numeric",
-});
-
-const pacificStampFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  hour: "2-digit",
-  hourCycle: "h23",
-  minute: "2-digit",
-  month: "short",
-  timeZone: PACIFIC_TIME_ZONE,
-});
-
-const dateLabelFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
   year: "numeric",
 });
 
@@ -128,8 +115,18 @@ export function monthsBefore(key: string, months: number) {
 }
 
 // The current block ends on the newest finalized day; the previous block is the one before it.
-export function finalizedWindow(finalizedThrough: string, days: number): FinalizedWindow {
+export function finalizedWindow(
+  finalizedThrough: string,
+  days: number,
+  comparison: SearchInsightsComparisonMode = "previous_period",
+): FinalizedWindow {
   const currentStart = addDays(finalizedThrough, -(days - 1));
+  if (comparison === "year_over_year") {
+    return {
+      current: { end: finalizedThrough, start: currentStart },
+      previous: { end: monthsBefore(finalizedThrough, 12), start: monthsBefore(currentStart, 12) },
+    };
+  }
   const previousEnd = addDays(currentStart, -1);
   return {
     current: { end: finalizedThrough, start: currentStart },
@@ -137,18 +134,22 @@ export function finalizedWindow(finalizedThrough: string, days: number): Finaliz
   };
 }
 
-export function formatPacificTimestampValue(value: Date) {
-  const parts = new Map(
-    pacificStampFormatter.formatToParts(value).map((part) => [part.type, part.value]),
-  );
-  const time = `${parts.get("hour")}:${parts.get("minute")}`;
-  return `${parts.get("month")} ${parts.get("day")}, ${time}`;
+export function formatPacificTimestampValue(value: Date, format: DateFormat = "month_first") {
+  const key = pacificToday(value);
+  const datePart = format === "iso" ? formatDate(key, format) : formatDateRange(key, key, format);
+  const full = formatDateTime(value, "iso", PACIFIC_TIME_ZONE);
+  const time = full.slice(full.lastIndexOf(", ") + 2);
+  return `${datePart}, ${time}`;
 }
 
-export function formatPacificTimestamp(value: Date) {
-  return `${formatPacificTimestampValue(value)} Pacific`;
+export function formatPacificTimestamp(value: Date, format: DateFormat = "month_first") {
+  return `${formatPacificTimestampValue(value, format)} Pacific`;
 }
 
-export function formatDateLabel(key: string) {
-  return dateLabelFormatter.format(dateFromKey(key));
+export function formatDateLabel(key: string, format: DateFormat = "month_first") {
+  return formatDate(key, format);
+}
+
+export function formatDateRangeLabel(window: DateWindow, format: DateFormat = "month_first") {
+  return formatDateRange(window.start, window.end, format);
 }

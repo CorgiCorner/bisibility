@@ -7,19 +7,20 @@ import { useCallback, useRef, useTransition } from "react";
 
 const POLL_MS = 45_000;
 
+function documentIsHidden() {
+  return document.hidden || document.visibilityState !== "visible";
+}
+
 export function SearchInsightsRefresh({ active }: Readonly<{ active: boolean }>) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const refreshing = useRef(false);
   const refresh = useCallback(() => {
-    if (refreshing.current) return;
-    refreshing.current = true;
+    if (pending) return;
     startTransition(() => {
       router.refresh();
-      refreshing.current = false;
     });
-  }, [router]);
+  }, [pending, router]);
   const hostRef = useCallback(
     (node: HTMLSpanElement | null) => {
       if (timer.current) clearTimeout(timer.current);
@@ -27,14 +28,16 @@ export function SearchInsightsRefresh({ active }: Readonly<{ active: boolean }>)
       if (!node || !active) return;
       const schedule = () => {
         if (timer.current) clearTimeout(timer.current);
-        if (document.visibilityState !== "visible") return;
+        if (documentIsHidden()) return;
         timer.current = setTimeout(() => {
+          timer.current = null;
+          if (documentIsHidden()) return;
           refresh();
           schedule();
         }, POLL_MS);
       };
       const visible = () => {
-        if (document.visibilityState === "visible") {
+        if (!documentIsHidden()) {
           refresh();
           schedule();
         } else if (timer.current) {

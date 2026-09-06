@@ -72,6 +72,14 @@ export {
   claimDueRankChecksActivity,
   compensateFailedRankCheckClaimsActivity,
 } from "./rank-check-dispatcher-activities";
+export {
+  launchDuePlannedRunsActivity,
+  planRankCheckRunsActivity,
+} from "./rank-check-planner-activities";
+export {
+  loadRankCheckRunItemsActivity,
+  reconcileRankCheckRunsActivity,
+} from "./rank-check-run-activities";
 export { reconcileAllSchedulesActivity } from "./reconcile-activities";
 export type {
   SearchInsightsIncrementalActivityInput,
@@ -87,8 +95,14 @@ export {
 } from "./search-insights-activities";
 export type { SearchInsightsQueueReconciliationActivityResult } from "./search-insights-reconciliation-activity";
 export { reconcileQueuedSearchInsightsImportsActivity } from "./search-insights-reconciliation-activity";
-export type { SyncTrafficActivityResult } from "./traffic-activities";
-export { syncTrafficActivity } from "./traffic-activities";
+export type {
+  FirstTrafficSyncWorkflowInput,
+  SyncTrafficActivityResult,
+} from "./traffic-activities";
+export {
+  syncFirstTrafficIntentActivity,
+  syncTrafficActivity,
+} from "./traffic-activities";
 export {
   sendWelcomeEmailActivity,
   sendWelcomeFollowupActivity,

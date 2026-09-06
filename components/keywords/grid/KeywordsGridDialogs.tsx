@@ -25,6 +25,7 @@ type KeywordsGridDialogsProps = Pick<KeywordWorkspaceActions, "addKeywordsAction
   exportTarget: KeywordExportTarget | null;
   keywordDefaults?: ProjectDefaultMarket;
   onCloseAdd: () => void;
+  onExitedAdd?: () => void;
   onCloseExport: () => void;
   projectId: string;
   projectMarkets?: ProjectMarketsView;
@@ -39,6 +40,7 @@ export function KeywordsGridDialogs({
   exportTarget,
   keywordDefaults,
   onCloseAdd,
+  onExitedAdd,
   onCloseExport,
   projectId,
   projectMarkets,
@@ -46,10 +48,7 @@ export function KeywordsGridDialogs({
   tagSuggestions,
 }: KeywordsGridDialogsProps) {
   const resolvedKeywordDefaults = keywordDefaults ?? fallbackKeywordDefaults;
-  const existingKeywords = useMemo(
-    () => (addDraft.open ? existingKeywordsFromRows(rows) : []),
-    [addDraft.open, rows],
-  );
+  const existingKeywords = useMemo(() => existingKeywordsFromRows(rows), [rows]);
 
   return (
     <>
@@ -65,6 +64,7 @@ export function KeywordsGridDialogs({
         initialTab={addDraft.tab}
         key={`${addDraft.tab}:${addDraft.keyword}`}
         onClose={onCloseAdd}
+        onExited={onExitedAdd}
         open={addDraft.open}
         projectId={projectId}
         projectMarkets={projectMarkets}

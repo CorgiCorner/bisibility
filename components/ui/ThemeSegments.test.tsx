@@ -79,15 +79,14 @@ describe("ThemeSegments", () => {
     expect(segment("Light").nextElementSibling?.className).not.toContain("bg-accent");
   });
 
-  it("uses the control-border token, not the layout hairline", () => {
+  it("uses the control-border token on the track and the selected option", () => {
     render(<ThemeSegments defaultPreference="light" />);
 
     const selected = segment("Light");
-    // Tooltip wraps its trigger, so reach the control by its border rather than by a
-    // fixed number of parent hops.
-    const control = selected.closest(".border-border-control");
-    expect(control).toHaveClass("border-border-control");
-    expect(control).not.toHaveClass("border-border");
+    const track = selected.closest(".border-border-control");
+    expect(track).toHaveClass("border-border-control");
+    expect(track).not.toHaveClass("border-border");
     expect(selected.nextElementSibling).toHaveClass("border-border-control");
+    expect(selected.nextElementSibling).toHaveClass("bg-bg-elev");
   });
 });

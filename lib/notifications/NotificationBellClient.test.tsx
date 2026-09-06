@@ -4,10 +4,16 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NotificationBellClient } from "./NotificationBellClient";
 
-const mocks = vi.hoisted(() => ({ status: "live" as "live" | "offline" | "syncing" }));
+const mocks = vi.hoisted(() => ({
+  notifications: null as NotificationFeed | null,
+  status: "live" as "live" | "offline" | "syncing",
+}));
 const preventNavigation = (event: Event) => event.preventDefault();
 vi.mock("./useNotificationStream", () => ({
   useNotificationStream: (feed: NotificationFeed) => ({ feed, status: mocks.status }),
+}));
+vi.mock("@/lib/realtime/useAppRealtime", () => ({
+  useAppRealtime: () => ({ notifications: mocks.notifications, operations: [], status: "live" }),
 }));
 
 const checkFailedItem: NotificationFeedItem = {
@@ -58,6 +64,7 @@ const feed: NotificationFeed = {
 
 describe("NotificationBellClient", () => {
   beforeEach(() => {
+    mocks.notifications = null;
     mocks.status = "live";
     document.addEventListener("click", preventNavigation);
   });
@@ -111,6 +118,22 @@ describe("NotificationBellClient", () => {
     fireEvent.click(screen.getByRole("button", { name: "Mark all read" }));
     await waitFor(() => expect(markAll).toHaveBeenCalledOnce());
     expect(screen.getByRole("button", { name: "Mark all read" })).toBeDisabled();
+  });
+
+  it("uses the app-wide realtime notification feed for stream transport", () => {
+    mocks.notifications = { items: [], unreadCount: 3 };
+
+    render(
+      <NotificationBellClient
+        feed={feed}
+        markAllNotificationsRead={vi.fn(async () => ({ updated: 0 }))}
+        markNotificationRead={vi.fn(async () => ({ updated: 0 }))}
+        projectRef="prj_1"
+        refreshNotificationFeed={vi.fn(async () => feed)}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Notifications" })).toHaveTextContent("3");
   });
 
   it("renders a check_failed row with the reason body and a checks href targeting the run", async () => {

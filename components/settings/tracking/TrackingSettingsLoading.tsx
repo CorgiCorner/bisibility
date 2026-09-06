@@ -51,7 +51,7 @@ export function TrackingSettingsLoading() {
         <SettingsLoadingBar className="mt-2 h-3 w-full max-w-[430px]" />
         <div className="mt-5 space-y-4">
           {Array.from({ length: 3 }, (_, index) => (
-            <div className="space-y-2 border-t border-border-soft pt-3" key={index}>
+            <div className="space-y-2 border-t border-border pt-3" key={index}>
               <SettingsLoadingBar className="h-3 w-32" />
               <SettingsLoadingBar className="h-3 w-full" />
             </div>
@@ -66,7 +66,7 @@ export function TrackingSettingsLoading() {
           </div>
           <SettingsLoadingBar className="h-8 w-24" />
         </div>
-        <div className="mt-5 space-y-3 border-t border-border-soft pt-4">
+        <div className="mt-5 space-y-3 border-t border-border pt-4">
           <SettingsLoadingBar className="h-10 w-full" />
           <SettingsLoadingBar className="h-10 w-full" />
         </div>

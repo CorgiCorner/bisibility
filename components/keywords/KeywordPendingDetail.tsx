@@ -2,52 +2,43 @@
 
 import { AccentCtaLink } from "@/components/ui";
 import { formatEstimateCents, runCostCents } from "@/lib/cost-estimate/project-estimate";
-import type {
-  KeywordDetailKeywordContext,
-  KeywordDetailRankState,
-  KeywordDetailWhatChanged,
-} from "@/lib/keyword-detail/state-model";
+import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import type { ProjectRef } from "@/lib/routing/app-path";
-import type {
-  AddKeywordsInput,
-  AddKeywordsMatrixInput,
-  BulkKeywordIdsInput,
-} from "@/lib/schemas/keyword";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { AddKeywordsMatrixInput, BulkKeywordIdsInput } from "@/lib/schemas/keyword";
+import { resolveSerpDepth, type SerpDepth } from "@/lib/serp/markets";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { KeywordAction, KeywordDetailActions } from "./action-utils";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
 import { KeywordFirstCheckModal } from "./KeywordFirstCheckModal";
 import { KeywordHeaderActions } from "./KeywordHeaderActions";
-import { KeywordMarketSwitcher } from "./KeywordMarketSwitcher";
 import { KeywordMarketsDrawer } from "./KeywordMarketsDrawer";
 import { emptyRankCopy } from "./KeywordPendingEmptyState";
 import { KeywordPendingModules } from "./KeywordPendingModules";
 import { exportHistoryCsv } from "./keyword-history-export";
+import { TargetSwitcher } from "./TargetSwitcher";
 import { useFirstCheckFlow } from "./use-first-check-flow";
+import { useKeywordScheduleModal } from "./use-keyword-schedule-modal";
 import type { RankCheckPollAction } from "./use-rank-check-poll";
 
 type KeywordPendingDetailProps = KeywordDetailActions & {
-  addKeywordsAction?: KeywordAction<AddKeywordsInput>;
   addKeywordsMatrixAction?: KeywordAction<AddKeywordsMatrixInput>;
   bulkDeleteAction?: KeywordAction<BulkKeywordIdsInput>;
   canCreateKeyword?: boolean;
   canUpdateKeyword: boolean;
   costContext?: ProjectCostContext;
   keyword: KeywordRow;
-  keywordContext?: KeywordDetailKeywordContext;
   pollAction?: RankCheckPollAction;
   providerConnected: boolean;
   projectId: string;
   projectMarkets?: ProjectMarketsView;
-  projectRef: ProjectRef;
+  projectRef: string;
+  providerLabel?: string;
   rankState?: Exclude<KeywordDetailRankState, "normal">;
+  searchConsoleConnected?: boolean;
   targets?: readonly KeywordRow[];
-  whatChanged?: KeywordDetailWhatChanged;
 };
 
 function checkCostLabel(depth: SerpDepth, costContext?: ProjectCostContext) {
@@ -60,23 +51,22 @@ function checkCostLabel(depth: SerpDepth, costContext?: ProjectCostContext) {
 }
 
 export function KeywordPendingDetail({
-  addKeywordsAction,
   addKeywordsMatrixAction,
   bulkDeleteAction,
   canCreateKeyword = false,
   canUpdateKeyword,
   costContext,
   keyword,
-  keywordContext,
   pollAction,
   providerConnected,
   projectId,
   projectMarkets,
   projectRef,
+  providerLabel,
   rankState,
   runCheckNowAction,
+  searchConsoleConnected = false,
   targets = [keyword],
-  whatChanged,
 }: Readonly<KeywordPendingDetailProps>) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -105,22 +95,18 @@ export function KeywordPendingDetail({
           ? "not_ranked"
           : "never_checked");
   const state = rankState ?? (checkState === "ranked" ? "not_ranked" : checkState);
-  const copy = emptyRankCopy(state, projectRef, keyword.trackedDepth, providerConnected);
-  const actionCopy = emptyRankCopy(
-    state === "running" ? "never_checked" : state,
-    projectRef,
-    keyword.trackedDepth,
-    providerConnected,
-  );
-  const defaultDepth: SerpDepth =
-    state === "not_ranked" ? 100 : keyword.trackedDepth === 100 ? 100 : 20;
+  const defaultDepth = resolveSerpDepth(keyword.projectSerpDepth);
+  const copy = emptyRankCopy(state, projectRef, defaultDepth, providerConnected);
   const canRunCheck = providerConnected;
   const providerRate = costContext
     ? { overrideCents: costContext.costPerCheckCents, providerId: costContext.providerId }
     : undefined;
-  const linkLabel =
-    typeof actionCopy.link === "function" ? actionCopy.link(defaultDepth) : actionCopy.link;
-
+  const canEditMarkets = canUpdateKeyword && projectMarkets && addKeywordsMatrixAction;
+  const { onChangeSchedule, scheduleModal } = useKeywordScheduleModal({
+    keyword,
+    projectId,
+    providerRate,
+  });
   const sharedActions = {
     canUpdateKeyword,
     editing,
@@ -132,10 +118,10 @@ export function KeywordPendingDetail({
     runPending: false,
   };
   const actions = canRunCheck ? (
-    <KeywordHeaderActions {...sharedActions} primaryLabel={actionCopy.link} />
+    <KeywordHeaderActions {...sharedActions} />
   ) : (
     <div className="flex flex-wrap justify-end gap-2">
-      <AccentCtaLink href={copy.href}>{linkLabel}</AccentCtaLink>
+      <AccentCtaLink href={copy.href}>Connect a provider</AccentCtaLink>
       <KeywordHeaderActions {...sharedActions} showCheck={false} />
     </div>
   );
@@ -145,24 +131,21 @@ export function KeywordPendingDetail({
       <KeywordDetailHeaderChrome
         actions={actions}
         dimensionControls={
-          addKeywordsAction && bulkDeleteAction ? (
-            <KeywordMarketSwitcher
-              addKeywordsAction={addKeywordsAction}
-              bulkDeleteAction={bulkDeleteAction}
-              canCreateKeyword={canCreateKeyword}
-              keyword={keyword}
-              projectId={projectId}
-              projectMarkets={projectMarkets}
-              targets={targets}
-            />
-          ) : undefined
+          <TargetSwitcher
+            keyword={keyword}
+            onEdit={canEditMarkets ? () => setEditing(true) : undefined}
+            projectId={projectId}
+            targets={targets}
+          />
         }
         keyword={keyword}
-        providerId={costContext?.providerId}
+        onChangeSchedule={canUpdateKeyword ? onChangeSchedule : undefined}
+        providerLabel={providerLabel ?? costContext?.providerId ?? keyword.dataProvider}
         rankState={state}
+        searchConsoleConnected={searchConsoleConnected}
         timeZone={costContext?.timezone ?? "UTC"}
       />
-      {canUpdateKeyword && projectMarkets && addKeywordsMatrixAction && bulkDeleteAction ? (
+      {canEditMarkets && bulkDeleteAction ? (
         <KeywordMarketsDrawer
           addKeywordsMatrixAction={addKeywordsMatrixAction}
           bulkDeleteAction={bulkDeleteAction}
@@ -175,13 +158,8 @@ export function KeywordPendingDetail({
           targets={targets}
         />
       ) : null}
-      <KeywordPendingModules
-        copy={copy}
-        keyword={keyword}
-        keywordContext={keywordContext}
-        state={state}
-        whatChanged={whatChanged}
-      />
+      <KeywordPendingModules copy={copy} state={state} />
+      {scheduleModal}
       {modal ? (
         <KeywordFirstCheckModal
           confirmError={modal.error}

@@ -1,0 +1,81 @@
+---
+title: "Runs"
+description: "Understand rank-check runs, their statuses, outcomes, and target results."
+---
+
+A rank-check run is one tracked execution over a selection of keyword targets. A
+run can be started manually, created by a schedule, retried, or started through
+the app API. It groups the work and its results in one place.
+
+A [single check](/api/checks) retrieves one current position for one keyword
+target. A run coordinates multiple checks, including the targets that are still
+waiting, the ones that finished, and the final result of the whole selection.
+
+## Run status
+
+Status describes where the run is in its lifecycle. A run has one of these
+statuses:
+
+| Status | Meaning |
+| - | - |
+| `planned` | A scheduled occurrence is waiting for its planned time. |
+| `blocked` | The run cannot advance at the moment. Inspect its detail for the reason. |
+| `queued` | The run has been accepted and is waiting to start. |
+| `running` | At least one target has started; processing may include gaps before later targets. |
+| `cancelling` | Cancellation was requested and the run is waiting for its remaining work to settle. |
+| `completed` | The run finished processing and has a final outcome. |
+| `cancelled` | The run was cancelled. Results already completed remain available. |
+
+`completed` and `cancelled` are terminal statuses. A terminal run can have
+completed results and, where applicable, a final outcome.
+
+Schedules with no fixed time keep their checks spread across the day (or their
+longer interval). Before the first target starts, the run stays `queued` and
+shows **First check in**. Elapsed time starts with the first target, not when
+the schedule creates the run. Duration excludes that initial wait but includes
+gaps between targets. **No fixed time** remains visible when editing a schedule;
+saving other settings does not assign it a fixed hour.
+
+## Outcomes
+
+Outcome answers a different question from status: what happened across all of a
+run's targets. It is set when the run reaches its terminal state.
+
+| Outcome | Meaning |
+| - | - |
+| `succeeded` | Every target that was not cancelled completed. |
+| `partial` | At least one target completed, but one or more other non-cancelled targets did not. |
+| `failed` | No target completed and at least one target failed, was blocked, or was skipped. |
+| `deferred` | No target ran, or no target completed and the non-cancelled targets were deferred. |
+
+For example, a run that has both completed and failed targets is `partial`, not
+`failed`. Cancelled targets do not prevent the remaining completed targets from
+producing `succeeded`.
+
+## Target status
+
+Each target in a run has its own status. Target status is one of `queued`,
+`running`, `completed`, `failed`, `deferred`, `cancelled`, `skipped`, or
+`blocked`. Use it to see which target needs attention without losing the
+overall run result.
+
+### Not confirmed
+
+`Not confirmed` is a special display label for a blocked target whose send
+could not be confirmed. It is not a failure. It is not counted as spend, and it
+is not retried automatically because the check might already have been sent.
+Run the target again if you need a fresh result.
+
+A run containing a Not confirmed target can never finish with `succeeded`: the
+target remains unfinished for outcome calculation.
+
+## Planned runs
+
+The **Planned** view shows future schedule occurrences before they start. From
+there you can choose **Run now** to start that one occurrence immediately, or
+**Skip once** to cancel that one planned occurrence. These controls do not
+change the schedule itself. To change future cadence or membership, edit the
+[schedule](/guides/schedules).
+
+When a completed run is `partial`, you can retry its failed or deferred targets
+as a new run. The original run and its results are retained.

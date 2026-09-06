@@ -61,7 +61,7 @@ export function SortableColumnHeader({
       <button
         aria-label={`Sort ${String(children)} ${active ? (direction === "asc" ? "descending" : "ascending") : nextDirection === "asc" ? "ascending" : "descending"}`}
         aria-pressed={active}
-        className={`inline-flex w-full items-center gap-1 whitespace-nowrap font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] transition-colors hover:text-fg ${
+        className={`inline-flex w-full items-center gap-2 whitespace-nowrap font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] transition-colors hover:text-fg ${
           align === "right" ? "justify-end text-right" : "text-left"
         } ${active ? "text-accent-text" : "text-fg-muted"}`}
         onClick={onClick}

@@ -129,6 +129,32 @@ describe("MenuSelect", () => {
     expect(trigger.querySelector("[data-menu-select-caret]")).toHaveClass("ml-auto");
   });
 
+  it("sizes compact menus to content instead of the narrow trigger", async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuSelect
+        ariaLabel="Tag"
+        compact
+        onChange={() => undefined}
+        options={[
+          { label: "All tags", value: "all" },
+          { label: "High intent", value: "high" },
+        ]}
+        triggerClassName="min-h-7 rounded-full px-2.5 text-[11.5px] font-semibold"
+        value="all"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Tag" }));
+    const paper = screen.getByRole("menu").closest(".MuiPaper-root");
+    expect(paper).toHaveStyle({
+      boxShadow: "none",
+      minWidth: "180px",
+      width: "max-content",
+    });
+    expect(paper).not.toHaveClass("MuiPaper-elevation8");
+  });
+
   it("supports a local scroll height while keeping the standard popover gap", async () => {
     const user = userEvent.setup();
     render(
@@ -242,59 +268,5 @@ describe("MenuSelect", () => {
     await user.keyboard("{ArrowDown}");
 
     expect(screen.getByRole("menuitem", { name: /Europe\/Warsaw/ })).toHaveFocus();
-  });
-
-  it("exposes triggerTitle as a description via the house tooltip with no native title", () => {
-    render(
-      <MenuSelect
-        ariaLabel="Scope"
-        onChange={() => undefined}
-        options={[{ label: "All", value: "all" }]}
-        triggerTitle="Choose a scope for this project"
-        value="all"
-      />,
-    );
-
-    const trigger = screen.getByRole("button", { name: "Scope" });
-    expect(trigger).not.toHaveAttribute("title");
-    expect(trigger).toHaveAttribute("aria-describedby");
-    const describedBy = trigger.getAttribute("aria-describedby");
-    const desc = document.getElementById(describedBy ?? "");
-    expect(desc).toHaveTextContent("Choose a scope for this project");
-  });
-
-  it("opens the house tooltip visually on hover of a trigger with triggerTitle", async () => {
-    const user = userEvent.setup();
-    render(
-      <MenuSelect
-        ariaLabel="Scope"
-        onChange={() => undefined}
-        options={[{ label: "All", value: "all" }]}
-        triggerTitle="Choose a scope for this project"
-        value="all"
-      />,
-    );
-
-    const trigger = screen.getByRole("button", { name: "Scope" });
-    await user.hover(trigger);
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("Choose a scope for this project");
-  });
-
-  it("opens the house tooltip visually on keyboard focus of a trigger with triggerTitle", async () => {
-    const user = userEvent.setup();
-    render(
-      <MenuSelect
-        ariaLabel="Scope"
-        onChange={() => undefined}
-        options={[{ label: "All", value: "all" }]}
-        triggerTitle="Choose a scope for this project"
-        value="all"
-      />,
-    );
-
-    const trigger = screen.getByRole("button", { name: "Scope" });
-    await user.tab();
-    expect(trigger).toHaveFocus();
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("Choose a scope for this project");
   });
 });

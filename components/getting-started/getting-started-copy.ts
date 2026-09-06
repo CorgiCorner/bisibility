@@ -1,12 +1,12 @@
-export const GETTING_STARTED_RAIL_LABEL = "Get started";
+export const GETTING_STARTED_LABEL = "Get set up";
 export const GETTING_STARTED_SUBTITLE_INCOMPLETE = "Four steps to your first positions.";
 export const GETTING_STARTED_SUBTITLE_COMPLETE = "Done. Everything below is optional.";
-export const FINISH_SETUP_CTA = "Finish setup";
+export const FINISH_SETUP_CTA = "Mark setup as complete";
 export const FINISH_SETUP_HELPER =
-  "Removes Get started from the sidebar. The page stays at this address.";
-export const SEE_DASHBOARD_CTA = "See the dashboard";
-export const SETUP_FINISHED_HEADLINE = "Setup finished.";
-export const SETUP_COMPLETE_HEADLINE = "Setup complete - first positions are in.";
+  "Your first rankings are ready. Mark setup as complete to remove this guide from the sidebar.";
+export const ALL_STEPS_COMPLETE = "All steps are complete";
+export const WHATS_NEXT_HEADING = "What's next?";
+export const WHATS_NEXT_ACKNOWLEDGED = "Keep going from the dashboard, or pick a card below.";
 export const SETUP_ACK_WRITE_ERROR = "Could not save setup confirmation. Try again in a moment.";
 export const SETUP_ACK_CHECKLIST_ERROR =
   "Setup changed before it could be completed. Review the checklist and try again.";
@@ -32,5 +32,5 @@ export function formatSetupProgressLabel(settledCount: number, totalCount: numbe
 }
 
 export function gettingStartedProgressAriaLabel(settledCount: number, totalCount: number): string {
-  return `${GETTING_STARTED_RAIL_LABEL}, ${formatSetupProgressLabel(settledCount, totalCount)} complete`;
+  return `${GETTING_STARTED_LABEL}, ${formatSetupProgressLabel(settledCount, totalCount)} complete`;
 }

@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   firstView: vi.fn(),
   loadProperties: vi.fn(),
   loadRows: vi.fn(),
+  loadTrackDialog: vi.fn(),
   liveness: vi.fn(),
   markets: vi.fn(),
   noData: vi.fn(),
@@ -31,13 +32,13 @@ const mocks = vi.hoisted(() => ({
   scope: vi.fn(),
   syncPlan: vi.fn(),
   selectProperty: vi.fn(),
+  signals: vi.fn(),
   sync: vi.fn(),
   pauseImport: vi.fn(),
   resumeImport: vi.fn(),
   retryImport: vi.fn(),
   trustSection: vi.fn(),
   workspace: vi.fn(),
-  workflowStatus: vi.fn(),
 }));
 
 vi.mock("@/components/search-insights/SearchInsightsEmptyStates", () => ({
@@ -80,6 +81,10 @@ vi.mock("./SearchInsightsSections", () => ({
     mocks.trustSection(props);
     return <div data-testid="trust-section" />;
   },
+  SearchInsightsNoDataSection: (props: unknown) => {
+    mocks.noData(props);
+    return <div data-testid="no-data" />;
+  },
 }));
 vi.mock("@/lib/actions/providers", () => ({
   cancelGooglePropertySelection: mocks.cancelSelection,
@@ -100,6 +105,7 @@ vi.mock("@/lib/actions/search-insights-drawers", () => ({
   loadSearchInsightsOverlapList: mocks.overlapList,
   loadSearchInsightsPageDetail: mocks.pageDetail,
   loadSearchInsightsQueryDetail: mocks.queryDetail,
+  loadSearchInsightsTrackDialog: mocks.loadTrackDialog,
 }));
 vi.mock("@/lib/actions/search-insights-rows", () => ({ loadSearchInsightsRows: mocks.loadRows }));
 vi.mock("@/lib/actions/keyword", () => ({ addKeywordsMatrix: mocks.addKeywords }));
@@ -117,9 +123,6 @@ vi.mock("@/lib/ops/worker-temporal-identity", () => ({
 vi.mock("@/lib/temporal/deployment-config", () => ({
   temporalDeploymentConfig: mocks.deploymentConfig,
 }));
-vi.mock("@/lib/temporal/search-insights-status", () => ({
-  describeSearchInsightsBackfillStatus: mocks.workflowStatus,
-}));
 vi.mock("@/lib/queries/cost-calculator", () => ({ getProjectCostContext: mocks.costContext }));
 vi.mock("@/lib/queries/keywords", () => ({ getKeywordDefaultMarket: mocks.defaultMarket }));
 vi.mock("@/lib/queries/project-markets", () => ({ getProjectMarkets: mocks.markets }));
@@ -129,6 +132,7 @@ vi.mock("@/lib/search-insights/queries/context", () => ({
 }));
 vi.mock("@/lib/search-insights/queries/first-view", () => ({
   getSearchInsightsFirstView: mocks.firstView,
+  getSearchInsightsFirstViewSignals: mocks.signals,
 }));
 vi.mock("@/lib/search-insights/queries/oauth-return", () => ({
   resolveSearchInsightsOauthReturn: mocks.oauth,
@@ -146,7 +150,7 @@ const connected = {
     },
     status: "connected",
   },
-  counts: { pages: 212, queries: 1284 },
+  counts: { queries: 1284 },
   importState: { newestFinalizedDate: "2026-07-08" },
   period: { days: 28, id: "28", label: "28 finalized days", sub: "vs previous 28" },
   window: {
@@ -165,6 +169,33 @@ async function renderPage(query: Record<string, unknown> = {}) {
   );
 }
 
+/**
+ * Run `body` with an unhandled-rejection listener attached and return whatever Node reported.
+ * Node raises the event only after the microtask queue drains, so two macrotask turns pass
+ * before the listener is removed; without them the assertion would pass against unfixed code.
+ */
+async function collectUnhandledRejections(body: () => Promise<void>) {
+  const seen: unknown[] = [];
+  const listener = (reason: unknown) => seen.push(reason);
+  process.on("unhandledRejection", listener);
+  try {
+    await body();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  } finally {
+    process.off("unhandledRejection", listener);
+  }
+  return seen;
+}
+
+async function paintBefore(pendingRead: ReturnType<typeof vi.fn>) {
+  pendingRead.mockReturnValue(new Promise(() => undefined));
+  return Promise.race([
+    renderPage().then(() => "painted" as const),
+    new Promise<"blocked">((resolve) => setTimeout(() => resolve("blocked"), 100)),
+  ]);
+}
+
 describe("SearchInsightsPage", () => {
   beforeEach(() => {
     mocks.syncPlan.mockResolvedValue({ daysTotal: 488, pace: "normal", retentionMonths: 16 });
@@ -174,6 +205,7 @@ describe("SearchInsightsPage", () => {
     mocks.context.mockResolvedValue(connected);
     mocks.oauth.mockResolvedValue({ error: null, provider: null, setup: null });
     mocks.firstView.mockReturnValue(Promise.resolve({}));
+    mocks.signals.mockReturnValue(Promise.resolve({ bandCount: 34, overlapCount: 12 }));
     mocks.readable.mockResolvedValue({ actor: { memberships: [] }, project: { id: "internal_1" } });
     mocks.liveness.mockResolvedValue({
       alertDeliveryTaskQueue: "alert-deliveries",
@@ -191,31 +223,37 @@ describe("SearchInsightsPage", () => {
         "app: default / rank-checks / alert-deliveries · worker: default / rank-checks / alert-deliveries",
       status: "match",
     });
-    mocks.workflowStatus.mockResolvedValue("running");
     mocks.markets.mockResolvedValue({ markets: [], maxMarkets: 5 });
     mocks.defaultMarket.mockResolvedValue({ device: "desktop", locationKey: "us-en" });
     mocks.costContext.mockResolvedValue({ costPerCheckCents: null, depth: 100 });
   });
 
-  it("hands the drawer stack its reads and the Rank Tracker write it may offer", async () => {
+  it("hands the drawer stack its actions and the Rank Tracker write it may offer", async () => {
     await renderPage();
 
     expect(mocks.workspace).toHaveBeenCalledWith(
       expect.objectContaining({
         drawers: expect.objectContaining({
           addKeywordsAction: mocks.addKeywords,
-          defaultDevice: "desktop",
-          defaultMarketKey: "us-en",
           loadBandListAction: mocks.bandList,
           loadOverlapListAction: mocks.overlapList,
           loadPageDetailAction: mocks.pageDetail,
           loadQueryDetailAction: mocks.queryDetail,
+          loadTrackDialogAction: mocks.loadTrackDialog,
           period: "28",
           property: "sc-domain:example.com",
           projectId: "prj_1",
         }),
       }),
     );
+  });
+
+  it("does not read the Track dialog payload during the initial render", async () => {
+    await renderPage();
+
+    expect(mocks.markets).not.toHaveBeenCalled();
+    expect(mocks.defaultMarket).not.toHaveBeenCalled();
+    expect(mocks.costContext).not.toHaveBeenCalled();
   });
 
   it("guards the project and hands the context and actions to the workspace", async () => {
@@ -243,6 +281,21 @@ describe("SearchInsightsPage", () => {
     );
   });
 
+  it("does not await worker liveness before first paint", async () => {
+    await expect(paintBefore(mocks.liveness)).resolves.toBe("painted");
+  });
+
+  it("does not await signals before first paint", async () => {
+    await expect(paintBefore(mocks.signals)).resolves.toBe("painted");
+  });
+
+  it("returns the page when the signals read rejects", async () => {
+    mocks.signals.mockReturnValue(Promise.reject(new Error("signals unavailable")));
+
+    await expect(renderPage()).resolves.toBeDefined();
+    expect(screen.getByTestId("body-section")).toBeInTheDocument();
+  });
+
   it("passes the read-only archived property contract into the server scope", async () => {
     const archivedScope = { ...scope, property: "sc-domain:archived.example.com" };
     mocks.scope.mockResolvedValue(archivedScope);
@@ -267,7 +320,7 @@ describe("SearchInsightsPage", () => {
     );
   });
 
-  it("streams the strip and the body from one read the page never waits on", async () => {
+  it("starts one view and one signals read from one scope and shares each promise", async () => {
     await renderPage({ period: ["90", "7"] });
 
     // One scope for the whole render: the authorization, the stored credential and the import
@@ -275,12 +328,37 @@ describe("SearchInsightsPage", () => {
     expect(mocks.scope).toHaveBeenCalledTimes(1);
     expect(mocks.context).toHaveBeenCalledWith("prj_1", { period: "90", scope });
     expect(mocks.firstView).toHaveBeenCalledWith("prj_1", { period: "90", scope });
-    // One promise, two sections: the stored rows are read once for both.
+    expect(mocks.firstView).toHaveBeenCalledTimes(1);
+    expect(mocks.signals).toHaveBeenCalledTimes(1);
+    expect(mocks.signals).toHaveBeenCalledWith(scope);
+    // One view promise for both consumers and one signals promise for its only consumer.
     const view = mocks.firstView.mock.results[0]?.value;
+    const signals = mocks.signals.mock.results[0]?.value;
     expect(mocks.trustSection).toHaveBeenCalledWith(expect.objectContaining({ view }));
     expect(mocks.bodySection).toHaveBeenCalledWith(
-      expect.objectContaining({ loadRowsAction: mocks.loadRows, period: "28", view }),
+      expect.objectContaining({ loadRowsAction: mocks.loadRows, period: "28", signals, view }),
     );
+  });
+
+  // The same mark is applied to the view promise at page.tsx, by symmetry with this one, but no
+  // test here covers it: every scenario tried reported no unhandled rejection against UNFIXED
+  // code, so any assertion would have been a guard that cannot fail. It is left uncovered and
+  // stated rather than guarded by something that only ever passes.
+  it("marks the status promise handled when neither of its consumers renders", async () => {
+    // Without a property the trust strip and the no-data state are both absent, but the status
+    // read is still started.
+    const unhandled = await collectUnhandledRejections(async () => {
+      mocks.scope.mockResolvedValue({ ...scope, property: null });
+      mocks.context.mockResolvedValue({
+        ...connected,
+        connection: { property: null, status: "not_connected" },
+        window: null,
+      });
+      mocks.liveness.mockRejectedValueOnce(new Error("liveness read failed"));
+      await renderPage();
+    });
+
+    expect(unhandled).toEqual([]);
   });
 
   it("passes worker liveness and Temporal identity agreement to the trust strip", async () => {
@@ -307,12 +385,14 @@ describe("SearchInsightsPage", () => {
     await renderPage();
 
     expect(mocks.liveness).toHaveBeenCalledTimes(1);
+    const status = await mocks.trustSection.mock.calls[0]?.[0].status;
     expect(mocks.compareIdentity).toHaveBeenCalledWith(appIdentity, heartbeat);
     expect(mocks.trustSection).toHaveBeenCalledWith(
       expect.objectContaining({
-        workerStatus: { status: "stale", temporalIdentityComparison },
+        status: expect.any(Promise),
       }),
     );
+    expect(status.workerStatus).toEqual({ status: "stale", temporalIdentityComparison });
   });
 
   it("threads a GA4 setup into the body while preserving the healthy GSC view", async () => {
@@ -384,21 +464,27 @@ describe("SearchInsightsPage", () => {
 
     expect(mocks.trustSection).toHaveBeenCalled();
     expect(mocks.bodySection).not.toHaveBeenCalled();
+    const noDataProps = mocks.noData.mock.calls[0]?.[0];
+    const status = await noDataProps.status;
     expect(mocks.noData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pauseAction: mocks.pauseImport,
+        projectId: "prj_1",
+        resumeAction: mocks.resumeImport,
+        retryAction: mocks.retryImport,
+        status: expect.any(Promise),
+      }),
+    );
+    expect(status).toEqual(
       expect.objectContaining({
         facts: expect.objectContaining({
           connectionStatus: "connected",
           observability: undefined,
           runtime: expect.objectContaining({
             workerStatus: expect.objectContaining({ status: "ok" }),
-            workflowStatus: "running",
           }),
           state: undefined,
         }),
-        pauseAction: mocks.pauseImport,
-        projectId: "prj_1",
-        resumeAction: mocks.resumeImport,
-        retryAction: mocks.retryImport,
       }),
     );
   });

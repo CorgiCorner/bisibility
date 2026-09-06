@@ -38,6 +38,28 @@ describe("notificationDisplay", () => {
     );
   });
 
+  it("leaves stored project-level hrefs valid, so the market segment needs no shim", () => {
+    // Stored hrefs are project-level appPath strings and the market segment is ADDITIVE: the
+    // project routes they name still exist and still render, so normalizeStoredHref learns
+    // nothing new. A market-scoped href, if one is ever stored, is passed through untouched.
+    expect(
+      notificationDisplay(
+        NotificationType.alert_fired,
+        null,
+        { href: "/app/prj_example/alerts" },
+        project,
+      ).href,
+    ).toBe("/app/prj_example/alerts");
+    expect(
+      notificationDisplay(
+        NotificationType.check_complete,
+        null,
+        { href: "/app/prj_example/m/pmkt_one/rank-tracker/kw_1" },
+        project,
+      ).href,
+    ).toBe("/app/prj_example/m/pmkt_one/rank-tracker/kw_1");
+  });
+
   it("normalizes a stored project-scoped keywords href to rank-tracker", () => {
     expect(
       notificationDisplay(

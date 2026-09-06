@@ -2,6 +2,7 @@
 
 import { CheckDepthSplitButton } from "@/components/keywords/CheckDepthSplitButton";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeProvider";
+import { type MarketScope, scopedRunActionLabel } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { SerpDepth } from "@/lib/serp/markets";
 import { effectiveRowDepth, selectionDepthLabel } from "./run-check-depth";
@@ -9,6 +10,8 @@ import { effectiveRowDepth, selectionDepthLabel } from "./run-check-depth";
 type RunChecksSplitButtonProps = {
   checksRunning: boolean;
   chosenDepth: SerpDepth | null;
+  /** Names the market this spend lands in. `null` is the project level and reads as before. */
+  marketScope?: MarketScope | null;
   onDepthChange: (depth: SerpDepth) => void;
   onRunChecks: (keywordIds: string[], depth?: SerpDepth) => void;
   readOnly: boolean;
@@ -18,6 +21,7 @@ type RunChecksSplitButtonProps = {
 export function RunChecksSplitButton({
   checksRunning,
   chosenDepth,
+  marketScope = null,
   onDepthChange,
   onRunChecks,
   readOnly,
@@ -29,7 +33,10 @@ export function RunChecksSplitButton({
   const currentDepth = chosenDepth ?? uniformDepth ?? null;
   const selectionLabel =
     chosenDepth != null ? `Top ${chosenDepth}` : selectionDepthLabel(selectedRows);
-  const actionLabel = selectedRows.length === 1 ? "Run check" : "Run checks";
+  const actionLabel = scopedRunActionLabel(
+    selectedRows.length === 1 ? "Run check" : "Run checks",
+    marketScope,
+  );
 
   return (
     <ProjectReadOnlyTooltip>

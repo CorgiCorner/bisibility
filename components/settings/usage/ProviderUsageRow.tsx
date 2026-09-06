@@ -1,20 +1,26 @@
+"use client";
+
 import { SpendBar } from "@/components/cost-estimate/SpendBar";
 import { spendTone, spendToneTextClass } from "@/components/cost-estimate/spend-tone";
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { StatusPill } from "@/components/ui";
+import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import { formatMoneyCents } from "@/lib/format/money";
 import { relativePast } from "@/lib/format/relative-time";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
+import { metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/ssr";
 
-function resetCopy(connection: ProviderSpendConnection, now: string) {
+function resetCopy(connection: ProviderSpendConnection, now: string, dateFormat: DateFormat) {
   if (connection.quotaReset === "none") return "does not expire";
   if (connection.quotaReset === "billing_cycle") return "resets at billing cycle";
   const next = new Date(
     Date.UTC(new Date(now).getUTCFullYear(), new Date(now).getUTCMonth() + 1, 1),
   );
-  return `resets ${new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", timeZone: "UTC" }).format(next)}`;
+  const key = next.toISOString().slice(0, 10);
+  return `resets ${formatDateRange(key, key, dateFormat)}`;
 }
-function availability(connection: ProviderSpendConnection, now: string) {
+function availability(connection: ProviderSpendConnection, now: string, dateFormat: DateFormat) {
   const value = connection.availableAtProvider;
   if (!value) return null;
   if (value.status === "reconnect_required") return "Reconnect required";
@@ -23,7 +29,7 @@ function availability(connection: ProviderSpendConnection, now: string) {
     value.unit === "usd"
       ? `Balance ${formatMoneyCents(value.amount * 100)}`
       : `${value.amount.toLocaleString("en-US")} left at provider`;
-  return `${amount} (${relativePast(new Date(value.checkedAt), new Date(now))}) · ${resetCopy(connection, now)}`;
+  return `${amount} (${relativePast(new Date(value.checkedAt), new Date(now))}) · ${resetCopy(connection, now, dateFormat)}`;
 }
 function allocationText(connection: ProviderSpendConnection) {
   if (!connection.allocation) return "0 of no budget";
@@ -49,11 +55,12 @@ export function ProviderUsageRow({
   connection,
   now,
 }: Readonly<{ connection: ProviderSpendConnection; now: string }>) {
+  const dateFormat = useDateFormat();
   const percent = connection.usedPercent ?? 0;
   const tone = spendTone(percent, connection.allocation != null);
   const allocationToneClass = tone === "normal" ? "text-fg-muted" : spendToneTextClass[tone];
   return (
-    <li className="border-t border-border-soft first:border-t-0">
+    <li className="border-t border-border first:border-t-0">
       <details className="group">
         <summary className="flex cursor-pointer list-none flex-wrap items-start gap-x-3 gap-y-2 py-3.5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid [&::-webkit-details-marker]:hidden">
           <span className="flex shrink-0 items-center gap-2 whitespace-nowrap">
@@ -79,7 +86,7 @@ export function ProviderUsageRow({
             <span className="flex min-w-0 items-center gap-2">
               <SpendBar
                 ariaLabel={`${connection.provider} budget used`}
-                className="h-1 min-w-[72px] flex-1 overflow-hidden rounded-full bg-meter-track"
+                className="h-1 min-w-[72px] flex-1 overflow-hidden rounded-full"
                 percent={percent}
                 tone={tone}
               />
@@ -89,17 +96,17 @@ export function ProviderUsageRow({
                 {allocationText(connection)}
               </span>
             </span>
-            {availability(connection, now) ? (
+            {availability(connection, now, dateFormat) ? (
               <span className="mt-1 block font-sans tabular-nums text-[10px] text-fg-muted">
-                {availability(connection, now)}
+                {availability(connection, now, dateFormat)}
               </span>
             ) : null}
           </span>
         </summary>
-        <div className="grid gap-4 border-t border-border-soft bg-bg-sunken/40 px-3 py-3 sm:grid-cols-2">
+        <div className="grid gap-4 border-t border-border bg-bg-sunken/40 px-3 py-3 sm:grid-cols-2">
           {connection.features.map((feature) => (
             <div key={feature.feature}>
-              <span className="tracking-[0.05em] uppercase">{feature.label}</span>
+              <span className={metricEyebrowClassName}>{feature.label}</span>
               <p className="m-0 mt-1 text-[13px] font-semibold text-fg tabular-nums">
                 {feature.count.toLocaleString("en-US")}{" "}
                 <span className="font-sans tabular-nums text-[11px] font-normal text-fg-muted">

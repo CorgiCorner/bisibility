@@ -73,8 +73,11 @@ export function ParsedRowsPreview({
                 <td colSpan={PREVIEW_COLUMNS.length} />
               </tr>
             ) : null}
-            {visibleRows.map((row) => (
-              <tr className="h-[42px] border-t border-border-soft" key={row.row}>
+            {visibleRows.map((row, index) => (
+              <tr
+                className={`h-[42px] ${index > 0 || topSpace ? "border-t border-border" : ""}`}
+                key={row.row}
+              >
                 <td className="px-3 py-2.5 font-semibold text-fg">{previewCell(row.keyword)}</td>
                 <td className="px-3 py-2.5 text-fg-muted">{previewCell(row.targetUrl)}</td>
                 <td className="px-3 py-2.5 text-fg-muted">{row.tags?.join(", ") || "-"}</td>

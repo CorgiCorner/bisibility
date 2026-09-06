@@ -62,6 +62,8 @@ export function useParams<
 
 export const redirect = vi.fn();
 
+export const permanentRedirect = vi.fn();
+
 export const notFound = vi.fn();
 
 export const unstable_rethrow = vi.fn();
@@ -79,6 +81,7 @@ beforeEach(() => {
   routerMock.forward.mockReset();
   routerMock.prefetch.mockReset();
   redirect.mockReset();
+  permanentRedirect.mockReset();
   notFound.mockReset();
   unstable_rethrow.mockReset();
 });

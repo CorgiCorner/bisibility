@@ -1,3 +1,4 @@
+import type { DateFormat } from "@/lib/dates/format";
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
 import { relativePast } from "@/lib/format/relative-time";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
@@ -5,10 +6,14 @@ import { sourceDateLabel } from "./domain-overview-metrics";
 import { cacheHoursRemaining } from "./domain-overview-workspace-model";
 
 type DomainOverviewContextBarProps = {
+  dateFormat: DateFormat;
   report: DomainOverviewReport;
 };
 
-export function DomainOverviewContextBar({ report }: Readonly<DomainOverviewContextBarProps>) {
+export function DomainOverviewContextBar({
+  dateFormat,
+  report,
+}: Readonly<DomainOverviewContextBarProps>) {
   const now = new Date();
   const hours = cacheHoursRemaining(report.cachedUntil, now);
 
@@ -18,7 +23,7 @@ export function DomainOverviewContextBar({ report }: Readonly<DomainOverviewCont
       <span aria-hidden className="opacity-50">
         ·
       </span>
-      <span>index snapshot {sourceDateLabel(report.sourceSnapshotAt)}</span>
+      <span>index snapshot {sourceDateLabel(report.sourceSnapshotAt, dateFormat)}</span>
       <span aria-hidden className="opacity-50">
         ·
       </span>

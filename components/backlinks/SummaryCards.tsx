@@ -1,7 +1,9 @@
 "use client";
 
 import { Sparkline } from "@/components/charts/Sparkline";
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import type { BacklinksHistoryMonth, BacklinksSummary } from "@/lib/backlinks/types";
+import { formatDateRange } from "@/lib/dates/format";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react";
 import {
   historyFooter,
@@ -100,6 +102,7 @@ function MonthlyBars({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>
 }
 
 function NewLostCard({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>) {
+  const dateFormat = useDateFormat();
   const footer = historyFooter(history);
   return (
     <section className={`${cardClass} grid content-start gap-2.5`} aria-label="New vs lost">
@@ -118,10 +121,7 @@ function NewLostCard({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>
       <div className="grid grid-cols-12 text-center font-sans tabular-nums text-[9px] text-fg-muted">
         {history.map((month) => (
           <span key={month.month}>
-            {new Date(`${month.month}-01T00:00:00Z`).toLocaleDateString("en", {
-              month: "short",
-              timeZone: "UTC",
-            })}
+            {formatDateRange(`${month.month}-01`, `${month.month}-01`, dateFormat)}
           </span>
         ))}
       </div>
@@ -151,7 +151,7 @@ function ProfileHealth({ summary }: Readonly<{ summary: BacklinksSummary }>) {
       {rows.map(([label, value], index) => (
         <div
           className={`flex items-center justify-between gap-2 py-2 ${
-            index === rows.length - 1 ? "" : "border-b border-border-soft"
+            index === rows.length - 1 ? "" : "border-b border-border"
           }`}
           key={label}
         >

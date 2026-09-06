@@ -81,7 +81,7 @@ function ResultsTableLoading() {
             ))}
           </div>
           {tableRowKeys.map((key, rowIndex) => (
-            <div className={cn(tableGrid, "h-[54px] border-b border-border-soft px-2")} key={key}>
+            <div className={cn(tableGrid, "h-[54px] border-b border-border px-2")} key={key}>
               <Bar className="size-4 rounded" />
               <Bar className={cn("h-3.5", rowIndex % 2 === 0 ? "w-[72%]" : "w-[58%]")} />
               <Bar className="h-3 w-12" />

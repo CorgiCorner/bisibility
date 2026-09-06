@@ -10,7 +10,7 @@ import {
 import { dominantErrorCode, isProviderErrorCode } from "@/lib/providers/provider-error-code";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
-import { appPath } from "@/lib/routing/app-path";
+import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import type { SerpDepth } from "@/lib/serp/markets";
 import Link from "next/link";
 import { effectiveRowDepth, selectionDepthLabel } from "./run-check-depth";
@@ -102,8 +102,8 @@ export function RunChecksConfirmationModal({
   const providerCode = flow ? dominantProviderCode(flow.failures) : null;
   const failurePresentation = providerFailurePresentation(providerCode);
   const failureDetailsHref = firstFailure?.rankCheckId
-    ? `${appPath(projectId, "rank-tracker")}?tab=checks&run=${encodeURIComponent(firstFailure.rankCheckId)}`
-    : `${appPath(projectId, "rank-tracker")}?tab=checks`;
+    ? `${rankTrackerTabPath(projectId, "runs")}&run=${encodeURIComponent(firstFailure.rankCheckId)}`
+    : rankTrackerTabPath(projectId, "runs");
 
   let footer: React.ReactNode = null;
   if (flow?.step === "confirm" || flow?.step === "starting") {

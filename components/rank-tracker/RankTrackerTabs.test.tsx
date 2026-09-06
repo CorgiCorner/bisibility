@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { RankTrackerTabs } from "./RankTrackerTabs";
 
 describe("RankTrackerTabs", () => {
-  it("renders tracked, saved, and checks deep links", () => {
+  it("renders tracked, saved, and runs deep links", () => {
     render(
       <RankTrackerTabs
         activeTab="tracked"
-        checksCount={12_480}
+        runsCount={1_248}
         projectRef="prj_1"
         savedCount={36}
         trackedCount={248}
@@ -22,10 +22,10 @@ describe("RankTrackerTabs", () => {
       "href",
       "/app/prj_1/rank-tracker?tab=saved",
     );
-    expect(screen.getByText("12.5k")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Checks 12480" })).toHaveAttribute(
+    expect(screen.getByText("1.2k")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Runs 1248" })).toHaveAttribute(
       "href",
-      "/app/prj_1/rank-tracker?tab=checks",
+      "/app/prj_1/rank-tracker?tab=runs",
     );
     expect(screen.getByRole("link", { name: "Tracked 248" })).toHaveAttribute(
       "aria-current",
@@ -33,18 +33,18 @@ describe("RankTrackerTabs", () => {
     );
   });
 
-  it("marks Checks current without decorative tab icons", () => {
+  it("marks Runs current without decorative tab icons", () => {
     render(
       <RankTrackerTabs
-        activeTab="checks"
-        checksCount={1_250_000}
+        activeTab="runs"
+        runsCount={1_250_000}
         projectRef="prj_1"
         savedCount={3}
         trackedCount={10}
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Checks 1250000" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Runs 1250000" })).toHaveAttribute(
       "aria-current",
       "page",
     );

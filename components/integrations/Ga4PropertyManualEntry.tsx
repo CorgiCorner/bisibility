@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, inputClassName } from "@/components/ui";
+import { Button, ExternalLink, inputClassName } from "@/components/ui";
 import { normalizeGa4PropertyId } from "@/lib/providers/analytics/property-id";
 
 type Ga4PropertyManualEntryProps = {
@@ -76,23 +76,19 @@ export function Ga4PropertyManualEntry({
         In Google Analytics 4, open Admin (gear, bottom-left) → Property settings → Property details
         and copy the digits-only Property ID. You can also search for “Property ID” in Analytics. Do
         not paste a G- Measurement ID or UA- tracking ID. See Google&apos;s{" "}
-        <a
-          className="text-accent-text underline"
+        <ExternalLink
+          className="text-accent-text hover:underline"
           href="https://developers.google.com/analytics/devguides/reporting/data/v1/property-id"
-          rel="noreferrer"
-          target="_blank"
         >
           Property ID guide
-        </a>{" "}
+        </ExternalLink>{" "}
         and{" "}
-        <a
-          className="text-accent-text underline"
+        <ExternalLink
+          className="text-accent-text hover:underline"
           href="https://support.google.com/analytics/answer/12270356?hl=en"
-          rel="noreferrer"
-          target="_blank"
         >
           Measurement ID guide
-        </a>
+        </ExternalLink>
         .
       </p>
       {propertyError ? (

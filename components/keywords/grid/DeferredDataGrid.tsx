@@ -40,7 +40,7 @@ function InitialKeywordTable<R extends GridValidRowModel>({
         className="min-w-[1080px] table-fixed text-left text-[12px]"
       >
         <thead>
-          <tr className={`h-[42px] border-b border-border ${tableHeaderClassName}`}>
+          <tr className={`h-[42px] ${tableHeaderClassName}`}>
             {visibleColumns.map((column) => (
               <th key={column.field} scope="col" className="truncate px-3 py-3 font-semibold">
                 {column.headerName ?? column.field}
@@ -50,7 +50,7 @@ function InitialKeywordTable<R extends GridValidRowModel>({
         </thead>
         <tbody>
           {rows.slice(0, 10).map((row) => (
-            <tr key={row.id} className="h-[60px] border-b border-border-soft">
+            <tr key={row.id} className="h-[60px] border-b border-border">
               {visibleColumns.map((column) => (
                 <td key={column.field} className="truncate px-3 py-5 text-fg">
                   {cellText(row, column)}

@@ -59,6 +59,9 @@ async function checkWorkerImportGraph() {
         `await import(process.env.${workerModuleEnv});`,
       ],
       {
+        BETTER_AUTH_SECRET: "",
+        BETTER_AUTH_SECRETS: "",
+        NODE_ENV: "production",
         TEMPORAL_WORKER_SMOKE: "1",
         [workerModuleEnv]: pathToFileURL(path.join(root, "lib/temporal/worker.ts")).href,
       },

@@ -3,8 +3,7 @@
 import { RankCheckRunModal } from "@/components/keywords/RankCheckRunModal";
 import { Button } from "@/components/ui";
 import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
-import type { ProjectRef } from "@/lib/routing/app-path";
-import { appPath } from "@/lib/routing/app-path";
+import { appPath, type ProjectRef, rankTrackerTabPath } from "@/lib/routing/app-path";
 import type { SerpDepth } from "@/lib/serp/markets";
 
 export type KeywordFirstCheckModalStep = "confirm" | "running" | "success" | "failed";
@@ -166,8 +165,8 @@ export function KeywordFirstCheckModal({
   const modalOnClose = step === "success" ? onContinue : onClose;
   const failedCopy = failureCopy(errorCode);
   const checksHref = rankCheckId
-    ? `${appPath(projectRef, "rank-tracker")}?tab=checks&run=${encodeURIComponent(rankCheckId)}`
-    : `${appPath(projectRef, "rank-tracker")}?tab=checks`;
+    ? `${rankTrackerTabPath(projectRef, "runs")}&run=${encodeURIComponent(rankCheckId)}`
+    : rankTrackerTabPath(projectRef, "runs");
 
   let footer: React.ReactNode;
   if (isConfirm) {

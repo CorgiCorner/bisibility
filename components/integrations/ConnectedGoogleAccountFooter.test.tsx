@@ -25,7 +25,7 @@ describe("ConnectedGoogleAccountFooter", () => {
       "items-center",
       "justify-between",
       "border-t",
-      "border-border-soft",
+      "border-border",
       "pt-3",
     );
     expect(email.parentElement).toHaveClass("min-w-0");
@@ -60,10 +60,9 @@ describe("ConnectedGoogleAccountFooter", () => {
       "gap-y-2",
       "border-t",
       "border-border",
-      "bg-bg-sunken",
-      "px-5",
+      "px-3.5",
       "py-3.5",
-      "sm:px-7",
     );
+    expect(footer).not.toHaveClass("bg-bg-sunken");
   });
 });

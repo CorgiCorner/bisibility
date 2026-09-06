@@ -4,6 +4,8 @@ import { InviteSignOutButton } from "@/components/invite/InviteSignOutButton";
 import { BrandLockup } from "@/components/ui";
 import { acceptInvite } from "@/lib/actions/team";
 import { getSession } from "@/lib/auth/session";
+import { type DateFormat, formatDate } from "@/lib/dates/format";
+import { resolveDateFormat } from "@/lib/dates/resolve";
 import { getInviteByTokenHash } from "@/lib/queries/invite";
 import { appPath } from "@/lib/routing/app-path";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
@@ -14,6 +16,7 @@ import {
   WarningCircleIcon as WarningCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
@@ -88,12 +91,8 @@ async function getInviteState(token: string): Promise<InviteState> {
   };
 }
 
-function formatInviteDate(date: Date) {
-  return new Intl.DateTimeFormat("en", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date);
+function formatInviteDate(date: Date, dateFormat: DateFormat) {
+  return formatDate(date.toISOString().slice(0, 10), dateFormat);
 }
 
 function Shell({ children }: Readonly<{ children: ReactNode }>) {
@@ -134,6 +133,9 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
   const { token } = await params;
   const invite = await getInviteState(token);
   if (invite.status !== "valid") return <InvalidInvite status={invite.status} />;
+
+  const requestHeaders = await headers();
+  const dateFormat = resolveDateFormat("auto", requestHeaders.get("accept-language"));
 
   const session = await getSession();
   const signedInEmail = session?.user.email.toLowerCase() ?? "";
@@ -199,7 +201,9 @@ export default async function InvitePage({ params }: Readonly<InvitePageProps>) 
               <ClockCountdown aria-hidden size={14} weight="regular" />
               Expires
             </span>
-            <span className="font-medium text-fg">{formatInviteDate(invite.expiresAt)}</span>
+            <span className="font-medium text-fg">
+              {formatInviteDate(invite.expiresAt, dateFormat)}
+            </span>
           </div>
         </div>
 

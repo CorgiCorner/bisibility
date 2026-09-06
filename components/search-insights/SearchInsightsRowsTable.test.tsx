@@ -3,8 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { SearchInsightsPagesTable } from "./SearchInsightsPagesTable";
 import { SearchInsightsQueriesTable } from "./SearchInsightsRowsTable";
+import { ORGANIC_SESSIONS_LABEL } from "./search-insights-copy";
 import { ROW_HEIGHT, SCROLL_REGION_HEIGHT } from "./search-insights-rows-model";
-import { moduleTableColumnOrder, moduleTableMinWidth } from "./search-insights-table-columns";
+import { moduleTableMinWidth } from "./search-insights-table-columns";
 
 function queryRows(count: number) {
   return Array.from({ length: count }, (_, index) => ({
@@ -19,7 +20,9 @@ function queryRows(count: number) {
 const pageRow = {
   clicks: 2_140,
   ctr: 0.035,
+  engagementRate: null,
   impressions: 61_300,
+  keyEvents: null,
   path: "/blog/self-hosted-rank-tracking",
   position: 12.4,
   sessions: null,
@@ -150,66 +153,20 @@ describe("SearchInsightsQueriesTable", () => {
   });
 });
 
-describe("SearchInsightsPagesTable", () => {
-  it("shows the path and links the full URL out to a new tab", () => {
+describe("the first-view tables", () => {
+  it("rules the column header bar top and bottom across both cards", () => {
+    render(<SearchInsightsQueriesTable rows={queryRows(1)} tracked={new Set()} />);
     render(<SearchInsightsPagesTable rows={[pageRow]} />);
 
-    expect(screen.getByText("/blog/self-hosted-rank-tracking")).toBeInTheDocument();
-    const link = screen.getByTitle(`Open ${pageRow.url}`);
-    expect(link).toHaveAttribute("href", pageRow.url);
-    expect(link).toHaveAttribute("target", "_blank");
+    for (const name of ["Top queries", "Top pages"]) {
+      const table = screen.getByRole("table", { name });
+      expect(table.parentElement).toHaveClass("border-t", "border-border");
+      for (const header of within(table).getAllByRole("columnheader")) {
+        expect(header).toHaveClass("border-b", "border-border");
+      }
+    }
   });
 
-  it("offers no outbound link for a stored value that is not a web address", () => {
-    const stored = "android-app://com.example";
-    render(<SearchInsightsPagesTable rows={[{ ...pageRow, path: stored, url: stored }]} />);
-
-    expect(screen.getByText(stored)).toBeInTheDocument();
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
-  });
-
-  it("does not open the row when the customer opens the page", async () => {
-    const onOpen = vi.fn();
-    render(<SearchInsightsPagesTable onOpen={onOpen} rows={[pageRow]} />);
-
-    await userEvent.click(screen.getByTitle(`Open ${pageRow.url}`));
-
-    expect(onOpen).not.toHaveBeenCalled();
-  });
-
-  it("replaces impressions with sessions and explains a missing landing-page match", () => {
-    render(<SearchInsightsPagesTable rows={[pageRow]} showSessions />);
-
-    expect(screen.getByRole("columnheader", { name: "Sessions" })).toHaveAttribute(
-      "title",
-      "Joined from GA4 by landing page. Search Console counts clicks and GA4 counts sessions, so the two never match exactly and a gap is normal.",
-    );
-    expect(screen.queryByRole("columnheader", { name: "Impr" })).not.toBeInTheDocument();
-    expect(screen.getByTitle("No GA4 landing page matched this URL")).toHaveTextContent("-");
-  });
-
-  it.each([
-    [false, "pages"],
-    [true, "pagesWithSessions"],
-  ] as const)(
-    "keeps %s headers and body cells aligned to the shared %s geometry",
-    (showSessions, variant) => {
-      const { unmount } = render(
-        <SearchInsightsPagesTable rows={[pageRow]} showSessions={showSessions} />,
-      );
-      const table = screen.getByRole("table", { name: "Top pages" });
-      const columns = moduleTableColumnOrder[variant];
-
-      expect(within(table).getAllByRole("columnheader")).toHaveLength(columns.length);
-      expect(within(within(table).getAllByRole("row")[1]).getAllByRole("cell")).toHaveLength(
-        columns.length,
-      );
-      unmount();
-    },
-  );
-});
-
-describe("the first-view tables", () => {
   it("explicitly aligns text headers left and numeric headers right", () => {
     render(<SearchInsightsQueriesTable rows={queryRows(1)} tracked={new Set()} />);
     render(<SearchInsightsPagesTable rows={[pageRow]} />);
@@ -288,8 +245,28 @@ describe("column sort controls", () => {
       "Avg pos",
     ]);
     for (const header of sortable) {
-      expect(within(header).getByRole("button")).toBeInTheDocument();
+      expect(within(header).getByRole("button")).toHaveClass("gap-2", "overflow-hidden");
     }
+  });
+
+  it("insets sortable figures by the sort control so they share the header label's right edge", () => {
+    renderQueries();
+
+    const table = screen.getByRole("table", { name: "Top queries" });
+    const cells = within(within(table).getAllByRole("row")[1]).getAllByRole("cell");
+    for (const cell of cells.slice(1, 5)) {
+      expect(cell).toHaveClass("px-1", "pe-5.5");
+    }
+    expect(cells[5]).not.toHaveClass("pe-5.5");
+  });
+
+  it("keeps figures on the header padding when the table is not sortable", () => {
+    render(<SearchInsightsQueriesTable rows={queryRows(1)} tracked={new Set()} />);
+
+    const table = screen.getByRole("table", { name: "Top queries" });
+    const clicks = within(within(table).getAllByRole("row")[1]).getAllByRole("cell")[1];
+    expect(clicks).toHaveClass("px-1");
+    expect(clicks).not.toHaveClass("pe-5.5");
   });
 
   it("marks exactly one column active and leaves the rest unsorted", () => {
@@ -317,6 +294,7 @@ describe("column sort controls", () => {
   it("keeps the sessions column a plain label, because the read cannot order by it", () => {
     render(
       <SearchInsightsPagesTable
+        lens="traffic"
         rows={[pageRow]}
         showSessions
         sort={{ onSort: vi.fn(), value: DEFAULT_SORT }}
@@ -326,10 +304,16 @@ describe("column sort controls", () => {
     const table = screen.getByRole("table", { name: "Top pages" });
     const sessions = within(table)
       .getAllByRole("columnheader")
-      .find((header) => header.textContent?.includes("Sessions"));
+      .find((header) => header.textContent?.includes(ORGANIC_SESSIONS_LABEL));
     expect(sessions).toBeDefined();
     expect(sessions).not.toHaveAttribute("aria-sort");
     expect(within(sessions as HTMLElement).queryByRole("button")).toBeNull();
+
+    const cells = within(within(table).getAllByRole("row")[1]).getAllByRole("cell");
+    expect(cells[1]).toHaveClass("pe-5.5");
+    expect(cells[2]).not.toHaveClass("pe-5.5");
+    expect(cells[3]).not.toHaveClass("pe-5.5");
+    expect(cells[4]).toHaveClass("pe-5.5");
   });
 
   it("leaves the head inert when the table is rendered without a sort controller", () => {

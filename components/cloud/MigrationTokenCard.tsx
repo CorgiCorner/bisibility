@@ -55,7 +55,7 @@ function TokenActions({
   const regenerating = pendingAction === "regenerate";
 
   return (
-    <div className="mt-4.5 border-border-soft border-t pt-4">
+    <div className="mt-4.5 border-border border-t pt-4">
       <div className="flex flex-wrap items-center gap-2.5">
         <Button
           disabled={disabled && !revoking}
@@ -150,7 +150,7 @@ export function MigrationTokenCard({
 
   return (
     <div className="mt-7 overflow-hidden rounded-card border border-border bg-bg-elev">
-      <div className="flex items-center gap-[13px] border-border-soft border-b p-[20px_22px]">
+      <div className="flex items-center gap-[13px] border-border border-b p-[20px_22px]">
         <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-control bg-accent-soft text-accent-solid">
           <Key aria-hidden size={21} weight="regular" />
         </span>
@@ -241,7 +241,7 @@ export function MigrationTokenCard({
         ) : null}
       </div>
       {tokenSecurityNote && status !== "error" && (status === "none" || !visibleToken) ? (
-        <div className="flex items-start gap-[9px] border-border-soft border-t bg-bg-sunken px-[22px] py-3.5 text-[12px] leading-[1.5] text-fg-muted">
+        <div className="flex items-start gap-[9px] border-border border-t bg-bg-sunken px-[22px] py-3.5 text-[12px] leading-[1.5] text-fg-muted">
           <LockSimple
             aria-hidden
             className="mt-px flex-none text-green-text"

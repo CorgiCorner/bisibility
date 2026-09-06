@@ -1,4 +1,8 @@
-export const SCHEDULER_DRIVERS = ["temporal", "none"] as const;
+// Driver ownership:
+// - temporal: this process owns the engine and may construct a client; the worker uses this.
+// - worker: a separate worker inside the engine network owns it; this process must not construct a client.
+// - none: nobody owns the engine and no worker exists, so inline execution is legitimate.
+export const SCHEDULER_DRIVERS = ["temporal", "worker", "none"] as const;
 export const RESERVED_SCHEDULER_DRIVERS = ["external-cron"] as const;
 
 export type SchedulerDriver = (typeof SCHEDULER_DRIVERS)[number];
@@ -11,6 +15,15 @@ export class SchedulerDisabledError extends Error {
   constructor() {
     super("Scheduled execution is disabled for this deployment.");
     this.name = "SchedulerDisabledError";
+  }
+}
+
+export class EngineOwnedByWorkerError extends Error {
+  readonly code = "engine_owned_by_worker";
+
+  constructor() {
+    super("Route scheduled work through the worker process for this deployment.");
+    this.name = "EngineOwnedByWorkerError";
   }
 }
 
@@ -48,5 +61,7 @@ export function assertTemporalSchedulerEnabled(
 ): "temporal" | "legacy-auto" {
   const driver = schedulerDriver(env);
   if (driver === "none") throw new SchedulerDisabledError();
+  // Scheduling remains enabled in worker mode, but engine access belongs to another process.
+  if (driver === "worker") throw new EngineOwnedByWorkerError();
   return driver;
 }

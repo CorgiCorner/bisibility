@@ -1,11 +1,12 @@
 "use client";
 
-import { Button, Pill, ToolbarSearch, Tooltip } from "@/components/ui";
+import { Pill, ToolbarSearch } from "@/components/ui";
 import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
 import type { GridColumnVisibilityModel, GridDensity } from "@mui/x-data-grid";
 import { ArrowClockwiseIcon as ArrowClockwise, XIcon as X } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { KeywordsToolbarActions } from "./KeywordsToolbarActions";
+import { KeywordsToolbarButton, toolbarSecondaryIconClassName } from "./KeywordsToolbarButton";
 
 type KeywordsFilterBarProps = {
   columnVisibilityModel: GridColumnVisibilityModel;
@@ -65,29 +66,31 @@ export function KeywordsFilterBar({
         {hasContextControls ? (
           <div
             // `contents` would leak these into the parent grid as separate rows below xl.
-            className="order-2 flex min-w-0 flex-row flex-nowrap items-center gap-2 lg:order-1"
+            className="order-2 flex min-w-0 flex-row flex-wrap items-center gap-x-2 gap-y-2 lg:order-1"
             data-keywords-toolbar-context=""
           >
             {scopeControl ? (
-              <div className="flex min-w-0 items-center gap-2">{scopeControl}</div>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">{scopeControl}</div>
             ) : null}
             {groupingControl ? <div className="flex-none">{groupingControl}</div> : null}
             {savedViewControl ? (
               <span className="hidden flex-none sm:inline-flex">{savedViewControl}</span>
             ) : null}
-            <Tooltip content="Refresh table">
-              <span className="inline-flex shrink-0">
-                <Button
-                  aria-label="Refresh table"
-                  className="shrink-0"
-                  onClick={onRefresh}
-                  size="sm"
-                  startIcon={<ArrowClockwise weight="regular" aria-hidden size={15} />}
-                  sx={{ minWidth: 40, "& .MuiButton-startIcon": { margin: 0 } }}
-                  variant="secondary"
+            <KeywordsToolbarButton
+              label="Refresh table"
+              labelFrom="lg"
+              onClick={onRefresh}
+              showTooltip
+              startIcon={
+                <ArrowClockwise
+                  weight="regular"
+                  aria-hidden
+                  size={15}
+                  className={toolbarSecondaryIconClassName}
                 />
-              </span>
-            </Tooltip>
+              }
+              variant="secondary"
+            />
           </div>
         ) : null}
         <div className="order-1 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 lg:order-2 lg:grid-cols-[minmax(220px,1fr)_auto] xl:grid-cols-[minmax(320px,1fr)_auto]">

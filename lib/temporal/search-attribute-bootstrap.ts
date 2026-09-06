@@ -1,7 +1,7 @@
 import type { NativeConnection } from "@temporalio/worker";
 
 const KEYWORD_INDEXED_VALUE_TYPE = 2;
-const RANK_CHECK_SEARCH_ATTRIBUTES = ["keywordId", "projectId", "provider"] as const;
+const RANK_CHECK_SEARCH_ATTRIBUTES = ["keywordId", "projectId", "provider", "runId"] as const;
 
 type SearchAttributeConnection = Pick<NativeConnection, "operatorService" | "withDeadline">;
 

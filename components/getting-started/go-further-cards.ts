@@ -13,7 +13,7 @@ export type GoFurtherCard = Readonly<{
 export function goFurtherCards(projectRef: ProjectRef): readonly GoFurtherCard[] {
   return [
     {
-      description: "Give your team access, with roles.",
+      description: "Invite teammates and assign roles.",
       external: false,
       href: settingsSectionHref(projectRef, "team"),
       id: "team",
@@ -24,7 +24,7 @@ export function goFurtherCards(projectRef: ProjectRef): readonly GoFurtherCard[]
       external: false,
       href: appPath(projectRef, "install"),
       id: "ai",
-      title: "Ask AI about your rankings",
+      title: "Connect an AI assistant",
     },
     {
       description: "Free and open source - a star helps.",

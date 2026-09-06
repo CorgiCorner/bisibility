@@ -1,15 +1,22 @@
-import type { RunCheckNowInput } from "@/lib/schemas/keyword";
+import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import { stubBlobDownload } from "@/tests/blob-download";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { stubResizeObserver } from "@/tests/observers";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { pendingRows, renderPendingGrid } from "./KeywordsGrid.test-helpers";
 
-const mocks = vi.hoisted(() => ({ exportKeywords: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  exportKeywords: vi.fn(),
+  fetch: vi.fn(),
+  launchRankCheckRunAction: vi.fn(),
+}));
 
 vi.mock("@/lib/actions/keyword-export-action", () => ({ exportKeywords: mocks.exportKeywords }));
+vi.mock("@/lib/actions/rank-check-run-launch", () => ({
+  launchRankCheckRunAction: mocks.launchRankCheckRunAction,
+}));
 vi.mock("@/components/keywords/import/ImportCsvWizard", () => ({
   ImportCsvWizard: () => null,
 }));
@@ -22,8 +29,41 @@ vi.mock("./DeferredDataGrid", async () => {
   };
 });
 
+const preview = {
+  budget: {
+    blocked: false,
+    capCents: 5_000,
+    mode: "legacy",
+    reason: null,
+    remainingAfterCents: 4_998,
+    spentCents: 0,
+  },
+  estimate: { costCents: 2, perTargetCents: 2, unknownCostTargets: 0 },
+  excluded: [],
+  executable: 1,
+  expiresAt: "2026-09-03T12:00:00.000Z",
+  keywordCount: 1,
+  matched: 1,
+  previewToken: "preview-grid-token",
+  selectionHash: "grid-selection",
+  targetCount: 1,
+} satisfies RankCheckRunPreview;
+
+function previewResponse(value: RankCheckRunPreview = preview) {
+  return new Response(JSON.stringify({ data: value }), { status: 200 });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubGlobal("fetch", mocks.fetch);
+  mocks.fetch.mockResolvedValue(previewResponse());
+  mocks.launchRankCheckRunAction.mockResolvedValue({
+    estimatedCostCents: 2,
+    keywordCount: 1,
+    publicId: "rcr_grid",
+    status: "queued",
+    targetCount: 1,
+  });
   setNavigationState({ pathname: "/app/rank-tracker" });
   mocks.exportKeywords.mockResolvedValue({
     content: "keyword\n",
@@ -34,6 +74,10 @@ beforeEach(() => {
   });
   stubResizeObserver();
   stubBlobDownload();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("KeywordsGrid actions", () => {
@@ -117,15 +161,8 @@ describe("KeywordsGrid actions", () => {
     );
   }, 15_000);
 
-  it("shows Run checks only with a selection and runs it for the selected keywords", async () => {
+  it("wiring: opens preflight from the bulk run-check trigger and launches with the preview token", async () => {
     const rows = pendingRows(2);
-    let resolveCheck!: (value: unknown) => void;
-    const runCheckNowAction = vi.fn(
-      (_input: RunCheckNowInput) =>
-        new Promise((resolve) => {
-          resolveCheck = resolve;
-        }),
-    );
     renderPendingGrid({
       checkHealth: {
         budget: { capCents: 5000, exhausted: false, spentCents: 1250 },
@@ -134,7 +171,6 @@ describe("KeywordsGrid actions", () => {
       },
       providerConnected: true,
       rows,
-      runCheckNowAction,
     });
 
     await screen.findByText(rows[0].keyword);
@@ -146,32 +182,27 @@ describe("KeywordsGrid actions", () => {
     expect(screen.getByText("1 selected")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
 
-    expect(runCheckNowAction).not.toHaveBeenCalled();
-    expect(screen.getByRole("dialog", { name: "Run rank check" })).toBeInTheDocument();
-    expect(screen.getByText("1 keyword")).toBeInTheDocument();
-    expect(screen.getByText("Top 100")).toBeInTheDocument();
-    expect(screen.getByText("~$0.02")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
-
-    expect(runCheckNowAction).toHaveBeenCalledTimes(1);
-    expect([rows[0].id, rows[1].id]).toContain(runCheckNowAction.mock.calls[0][0].keywordId);
-    expect(runCheckNowAction.mock.calls[0][0]).not.toHaveProperty("depth");
-    expect(screen.getByText(rows[0].keyword)).toBeInTheDocument();
-    expect(screen.getByText(rows[1].keyword)).toBeInTheDocument();
-    expect(screen.getByText("Running")).toBeInTheDocument();
-
-    resolveCheck({ status: "queued" });
-    await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledOnce());
-    expect(screen.getByLabelText("session spend cents")).toHaveTextContent("2");
-  }, 10_000);
-
-  it("passes a selected check depth override", async () => {
-    const [row] = pendingRows(1);
-    const runCheckNowAction = vi.fn().mockResolvedValue({
-      rankCheckId: "check_abcdefghijklmnopqrstuvwx",
-      status: "running",
+    expect(
+      await screen.findByRole("dialog", {
+        name: new RegExp(`Check ${rows[0].keyword} in United States`),
+      }),
+    ).toBeInTheDocument();
+    expect(JSON.parse(String(mocks.fetch.mock.calls[0]?.[1]?.body))).toEqual({
+      depth: 100,
+      projectId: "prj_1",
+      spec: { kind: "single", keywordId: rows[0].id, v: 1 },
     });
-    renderPendingGrid({ providerConnected: true, rows: [row], runCheckNowAction });
+    fireEvent.click(screen.getByRole("button", { name: "Start run" }));
+    await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledOnce());
+    expect(mocks.launchRankCheckRunAction).toHaveBeenCalledWith(
+      expect.objectContaining({ previewToken: "preview-grid-token" }),
+    );
+    expect(screen.getByLabelText("session spend cents")).toHaveTextContent("0");
+  }, 20_000);
+
+  it("passes a selected check depth override to the bulk preflight preview", async () => {
+    const [row] = pendingRows(1);
+    renderPendingGrid({ providerConnected: true, rows: [row] });
 
     const keywordRow = (await screen.findByText(row.keyword)).closest(
       '[role="row"]',
@@ -179,43 +210,43 @@ describe("KeywordsGrid actions", () => {
     fireEvent.click(within(keywordRow).getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
-    expect(runCheckNowAction).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 20)" }));
-    expect(runCheckNowAction).not.toHaveBeenCalled();
-    expect(screen.getByRole("dialog", { name: "Run rank check" })).toBeInTheDocument();
-    expect(screen.getAllByText("Top 20")).toHaveLength(2);
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
-    await waitFor(() =>
-      expect(runCheckNowAction).toHaveBeenCalledWith({ depth: 20, keywordId: row.id }),
-    );
-    expect(screen.getByRole("dialog", { name: "Check running" })).toBeInTheDocument();
+    await screen.findByRole("dialog", {
+      name: new RegExp(`Check ${row.keyword} in United States`),
+    });
+    expect(JSON.parse(String(mocks.fetch.mock.calls[0]?.[1]?.body))).toMatchObject({ depth: 20 });
   }, 10_000);
 
-  it("shows sample-project refusal as a final failed modal state", async () => {
+  it("keeps preflight open when the verified launch refuses a sample project", async () => {
     const [row] = pendingRows(1);
-    const runCheckNowAction = vi.fn().mockResolvedValue({
+    mocks.launchRankCheckRunAction.mockResolvedValue({
       code: "sample_project",
       message: "Sample projects don't run real checks.",
       status: "not_started",
     });
-    renderPendingGrid({ providerConnected: true, rows: [row], runCheckNowAction });
+    renderPendingGrid({ providerConnected: true, rows: [row] });
 
     const keywordRow = (await screen.findByText(row.keyword)).closest(
       '[role="row"]',
     ) as HTMLElement;
     fireEvent.click(within(keywordRow).getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
+    await screen.findByRole("dialog", {
+      name: new RegExp(`Check ${row.keyword} in United States`),
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Start run" }));
 
-    expect(await screen.findByRole("dialog", { name: "Check failed" })).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toHaveTextContent("Sample projects don't run real checks.");
-    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Sample projects don't run real checks.",
+    );
+    expect(
+      screen.getByRole("dialog", { name: new RegExp(`Check ${row.keyword} in United States`) }),
+    ).toBeInTheDocument();
   }, 10_000);
 
-  it("opens the same confirmation modal from Retry", async () => {
+  it("opens the same preflight from Retry", async () => {
     const rows = pendingRows(2);
-    const runCheckNowAction = vi.fn().mockResolvedValue({ status: "queued" });
     renderPendingGrid({
       checkHealth: {
         budget: { capCents: 5000, exhausted: false, spentCents: 1250 },
@@ -224,17 +255,17 @@ describe("KeywordsGrid actions", () => {
       },
       providerConnected: true,
       rows,
-      runCheckNowAction,
     });
 
     await screen.findByText(rows[0].keyword);
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 
-    expect(runCheckNowAction).not.toHaveBeenCalled();
-    expect(screen.getByRole("dialog", { name: "Run rank checks" })).toBeInTheDocument();
-    expect(screen.getByText("2 keywords")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and run" }));
-    await waitFor(() => expect(runCheckNowAction).toHaveBeenCalledTimes(2));
+    expect(
+      await screen.findByRole("dialog", { name: /Check 2 selected keywords in United States/ }),
+    ).toBeInTheDocument();
+    expect(JSON.parse(String(mocks.fetch.mock.calls[0]?.[1]?.body))).toMatchObject({
+      spec: { keywordIds: rows.map((row) => row.id), kind: "selected", v: 1 },
+    });
   }, 15_000);
 
   it("exports locally filtered rows as an ID-scoped selection", async () => {

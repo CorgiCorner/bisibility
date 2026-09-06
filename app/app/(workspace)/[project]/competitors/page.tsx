@@ -8,9 +8,11 @@ import { emptyCompetitorFilter } from "@/lib/competitors/competitor-market-model
 import { parseCompetitorScope } from "@/lib/competitors/scope-model";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
 import { getCompetitorsView } from "@/lib/queries/competitors";
+import { getExperimentalModules } from "@/lib/queries/experimental-modules";
 import { getProjectMarkets } from "@/lib/queries/project-markets";
 import { getSavedView, listSavedViews } from "@/lib/queries/saved-views";
 import { listWorkspaces } from "@/lib/queries/workspaces";
+import { hasExperimentalModule } from "@/lib/settings/experimental-modules";
 import { notFound } from "next/navigation";
 
 type CompetitorsPageProps = {
@@ -28,6 +30,10 @@ export default async function CompetitorsPage({
 }: Readonly<CompetitorsPageProps>) {
   const { project } = await routeParams;
   const access = await resolveProjectAccess(project);
+  const enabledExperimentalModules = await getExperimentalModules(access.publicId);
+  if (!hasExperimentalModule(enabledExperimentalModules, "competitors")) {
+    notFound();
+  }
   const workspaces = await listWorkspaces();
   const active = workspaces.find((workspace) => workspace.id === access.publicId);
 

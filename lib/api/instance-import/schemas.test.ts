@@ -56,6 +56,24 @@ function packageV6() {
 }
 
 describe("cloud import package versions", () => {
+  it("accepts an explicit null requested depth but requires the field", () => {
+    const withUnknownDepth = packageV6();
+    const historyWithUnknownDepth = withUnknownDepth.keywords[0]?.rankingHistory[0];
+    if (!historyWithUnknownDepth) throw new Error("Expected version 6 history.");
+    (historyWithUnknownDepth as { requestedDepth: number | null }).requestedDepth = null;
+
+    expect(
+      cloudImportPackageSchema.parse(withUnknownDepth).keywords[0]?.rankingHistory[0]
+        ?.requestedDepth,
+    ).toBeNull();
+
+    const withoutDepth = packageV6();
+    const historyWithoutDepth = withoutDepth.keywords[0]?.rankingHistory[0];
+    if (!historyWithoutDepth) throw new Error("Expected version 6 history.");
+    delete (historyWithoutDepth as { requestedDepth?: number | null }).requestedDepth;
+    expect(cloudImportPackageSchema.safeParse(withoutDepth).success).toBe(false);
+  });
+
   it("accepts strict v6 history and metadata-only v5 packages", () => {
     const v6 = cloudImportPackageSchema.parse(packageV6());
     expect(v6.keywords[0]?.rankingHistory[0]).toMatchObject({

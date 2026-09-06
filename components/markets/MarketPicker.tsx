@@ -218,12 +218,12 @@ export function MarketPicker({
             and the dialog must not grow past the viewport in either case. */}
         <fieldset
           aria-label="Languages"
-          className="m-0 mt-2 max-h-[min(60vh,520px)] min-w-0 overflow-y-auto rounded-control border border-border-soft p-0"
+          className="m-0 mt-2 max-h-[min(60vh,520px)] min-w-0 overflow-y-auto rounded-control border border-border p-0"
           id={listId}
         >
           {showMore ? (
             <div
-              className={`sticky top-0 z-20 flex items-center gap-2 border-b border-border-soft bg-bg-elev px-2 ${searchRowHeightClassName}`}
+              className={`sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-bg-elev px-2 ${searchRowHeightClassName}`}
             >
               <span className="relative flex flex-1 items-center">
                 <Search
@@ -259,7 +259,7 @@ export function MarketPicker({
           </p>
         ))}
       </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border-soft pt-4">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <span className="text-[12px] text-fg-muted">
           {pending.length} {pending.length === 1 ? "market" : "markets"} selected
           {calculatorHref ? (

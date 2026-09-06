@@ -7,7 +7,11 @@ import {
 } from "@/lib/search-insights/constants";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ prisma: { $queryRaw: vi.fn() }, scope: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  prisma: { $queryRaw: vi.fn(), $transaction: vi.fn() },
+  scope: vi.fn(),
+  tx: { $executeRaw: vi.fn(), $queryRaw: vi.fn() },
+}));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("./context", () => ({ loadSearchInsightsScope: mocks.scope }));
@@ -29,13 +33,19 @@ const splits = [
 ];
 
 function statements() {
-  return mocks.prisma.$queryRaw.mock.calls.map((call) => call[0]);
+  return [
+    ...mocks.tx.$queryRaw.mock.calls.map((call) => call[0]),
+    ...mocks.prisma.$queryRaw.mock.calls.map((call) => call[0]),
+  ];
 }
 
 describe("getOverlapQueries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.prisma.$queryRaw.mockResolvedValueOnce(rows).mockResolvedValueOnce(splits);
+    mocks.prisma.$transaction.mockImplementation((run) => run(mocks.tx));
+    mocks.tx.$executeRaw.mockResolvedValue(0);
+    mocks.tx.$queryRaw.mockResolvedValueOnce(rows);
+    mocks.prisma.$queryRaw.mockResolvedValueOnce(splits);
   });
 
   it("wraps the chip's own predicate, so the count and the list cannot disagree", async () => {
@@ -50,6 +60,7 @@ describe("getOverlapQueries", () => {
       expect(statements()[0].sql).toContain(fragment);
     }
     expect(statements()[0].sql).toContain('AS "overlap"');
+    expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
   });
 
   it("carries the query's own average position, so the row reads like the band rows", async () => {
@@ -97,13 +108,15 @@ describe("getOverlapQueries", () => {
 
   it("asks for no split at all when the window holds no overlap", async () => {
     mocks.prisma.$queryRaw.mockReset();
-    mocks.prisma.$queryRaw.mockResolvedValueOnce([]);
+    mocks.tx.$queryRaw.mockReset();
+    mocks.tx.$queryRaw.mockResolvedValueOnce([]);
 
     await expect(getOverlapQueries("project_1", "sc-domain:example.com", window)).resolves.toEqual({
       rows: [],
       total: 0,
     });
-    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(mocks.tx.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(mocks.prisma.$queryRaw).not.toHaveBeenCalled();
   });
 });
 

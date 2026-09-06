@@ -142,6 +142,9 @@ export {
   bootstrapRankCheckDispatcherWorkflow,
   dispatchDueRankChecksWorkflow,
 } from "./rank-check-dispatcher-workflows";
+export { planRankCheckRunsWorkflow } from "./rank-check-planner-workflows";
+export { reconcileRankCheckRunsWorkflow } from "./rank-check-run-maintenance-workflows";
+export { rankCheckRunWorkflow } from "./rank-check-run-workflows";
 // Re-export into workflowsPath so the worker can resolve the reconciler by name
 // inside the same sandbox bundle.
 export { reconcileRankCheckSchedulesWorkflow } from "./reconcile-workflows";
@@ -150,7 +153,7 @@ export {
   searchInsightsBackfillWorkflow,
   searchInsightsSyncWorkflow,
 } from "./search-insights-workflows";
-export { syncTrafficWorkflow } from "./traffic-workflows";
+export { syncFirstTrafficWorkflow, syncTrafficWorkflow } from "./traffic-workflows";
 export { welcomeFollowupWorkflow } from "./welcome-email-workflow";
 export type { RankCheckWorkflowInput, RankCheckWorkflowResult };
 

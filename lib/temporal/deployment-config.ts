@@ -31,3 +31,5 @@ export function temporalDeploymentConfig(
     taskQueue,
   };
 }
+
+export const TEMPORAL_TASK_QUEUE = temporalDeploymentConfig().taskQueue;

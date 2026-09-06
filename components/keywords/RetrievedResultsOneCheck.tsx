@@ -79,7 +79,7 @@ function CompactState({
       <ul className="m-0 mt-3 list-none p-0">
         {results.domains.map((entry) => (
           <li
-            className="flex justify-between border-b border-border-soft py-2 text-[12.5px]"
+            className="flex justify-between border-b border-border py-2 text-[12.5px]"
             key={entry.domain}
           >
             <span>{entry.domain}</span>

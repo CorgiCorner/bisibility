@@ -43,7 +43,7 @@ describe("SidebarUserButton", () => {
       />,
     );
 
-    const imageAvatar = screen.getByRole("button", { name: "Account menu" }).querySelector("img");
+    const imageAvatar = screen.getByRole("button", { name: "Account menu" }).firstElementChild;
     expect(imageAvatar).toHaveClass("h-8", "w-8", "border", "border-border");
     expect(imageAvatar).not.toHaveClass("border-border-control");
   });

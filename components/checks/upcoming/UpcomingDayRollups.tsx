@@ -36,7 +36,7 @@ function DaySummary({ day }: Readonly<{ day: UpcomingDayGroup }>) {
 
 function SampleRows({ day, timeZone }: Readonly<{ day: UpcomingDayGroup; timeZone: string }>) {
   return (
-    <ul className="m-0 list-none space-y-2 border-border-soft border-t px-3.5 py-3">
+    <ul className="m-0 list-none space-y-2 border-border border-t px-3.5 py-3">
       {day.samples.slice(0, 3).map((sample) => (
         <li
           className="flex min-w-0 items-center justify-between gap-3 text-xs"
@@ -112,7 +112,7 @@ export function UpcomingDayRollups({
             {expanded ? (
               <div id={detailsId}>
                 <SampleRows day={day} timeZone={timeZone} />
-                <div className="border-border-soft border-t px-3.5 py-2.5">
+                <div className="border-border border-t px-3.5 py-2.5">
                   <Link className={manageLinkClassName} href={schedulesHref}>
                     Manage schedules in Keywords
                     <CaretRight aria-hidden size={12} weight="regular" />

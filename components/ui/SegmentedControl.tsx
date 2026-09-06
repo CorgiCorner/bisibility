@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
+import CircularProgress from "@mui/material/CircularProgress";
 import { Fragment, type KeyboardEvent, type ReactNode, useId } from "react";
 import { Tooltip } from "./Tooltip";
 import { toolbarControlClassName } from "./toolbar-control-styles";
@@ -35,10 +36,11 @@ export type SegmentedControlProps<T extends string> = {
   fitContent?: boolean;
   label?: ReactNode;
   labelClassName?: string;
+  loading?: boolean;
   name?: string;
   onChange: (value: T) => void;
   optionClassName?: string;
-  /** Merged onto the selected option; use to swap the default `bg-nav-active` fill. */
+  /** Merged onto the selected option; use to swap the default active fill. */
   activeClassName?: string;
   options: readonly SegmentedControlOption<T>[];
   /**
@@ -70,6 +72,7 @@ export function SegmentedControl<T extends string>({
   fitContent = false,
   label,
   labelClassName,
+  loading = false,
   name,
   onChange,
   optionClassName,
@@ -80,10 +83,11 @@ export function SegmentedControl<T extends string>({
 }: Readonly<SegmentedControlProps<T>>) {
   const generatedId = useId();
   const groupName = name ?? generatedId;
+  const busy = disabled || loading;
 
   function selectOption(index: number) {
     const option = options[index];
-    if (!option || disabled || option.disabled) {
+    if (!option || busy || option.disabled) {
       return;
     }
     onChange(option.value);
@@ -110,9 +114,10 @@ export function SegmentedControl<T extends string>({
 
   return (
     <fieldset
+      aria-busy={loading ? true : undefined}
       aria-label={label ? undefined : ariaLabel}
-      className={cn("border-0 p-0", className)}
-      disabled={disabled}
+      className={cn("relative border-0 p-0", className)}
+      disabled={busy}
     >
       {label ? <legend className={cn("mb-1.5 p-0", labelClassName)}>{label}</legend> : null}
       <div
@@ -125,6 +130,7 @@ export function SegmentedControl<T extends string>({
               : size === "field"
                 ? "min-h-10 gap-1 rounded-control border border-border-control bg-transparent p-[3px]"
                 : "gap-1 rounded-control border border-border-control bg-transparent p-1",
+          loading && "opacity-65",
         )}
         style={
           fitContent
@@ -134,7 +140,7 @@ export function SegmentedControl<T extends string>({
       >
         {options.map((option, index) => {
           const active = option.value === value;
-          const optionDisabled = disabled || option.disabled;
+          const optionDisabled = busy || option.disabled;
           const descriptionId = `${generatedId}-desc-${index}`;
           const labelEl = (
             <label className={cn("flex", fitContent ? "flex-none" : "min-w-0")} key={option.value}>
@@ -162,7 +168,11 @@ export function SegmentedControl<T extends string>({
                         ? "min-h-8 px-2 py-1 text-[12.5px] font-semibold"
                         : "min-h-9 px-2 py-1.5 text-[12.5px] font-semibold",
                   active
-                    ? cn("border-border-control bg-nav-active text-fg", activeClassName)
+                    ? cn(
+                        "border-border-control text-fg",
+                        size === "toolbar" ? "bg-bg-sunken" : "bg-nav-active",
+                        activeClassName,
+                      )
                     : "text-fg-muted hover:bg-bg-sunken hover:text-fg",
                   optionDisabled &&
                     "cursor-not-allowed text-fg-muted hover:bg-transparent hover:text-fg-muted",
@@ -193,6 +203,14 @@ export function SegmentedControl<T extends string>({
           );
         })}
       </div>
+      {loading ? (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        >
+          <CircularProgress color="inherit" size={14} thickness={5} />
+        </span>
+      ) : null}
     </fieldset>
   );
 }

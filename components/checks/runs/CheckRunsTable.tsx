@@ -194,7 +194,7 @@ function RunTableBody({
   const hiddenColumns = !columns.depth || !columns.cost || !columns.when;
   const columnCount = tableHeaders(columns).length;
   return (
-    <tbody className="divide-y divide-border-soft">
+    <tbody className="divide-y divide-border">
       {rows.map((run) => {
         const storedResultsAvailable = Boolean(
           run.storedResults && run.storedResults.tier !== "none",
@@ -254,7 +254,7 @@ export function CheckRunsTable(props: Readonly<TableProps>) {
 
   return (
     <>
-      <div className="overflow-x-auto border-border border-y" ref={containerRef}>
+      <div className="overflow-x-auto border-b border-border" ref={containerRef}>
         {/* 900px leaves about 125px for each of six flexible data columns after fixed status and action columns. */}
         <table aria-label="Check runs" className="w-full min-w-[900px] table-fixed border-collapse">
           <thead className={`text-left ${tableHeaderClassName}`}>

@@ -29,10 +29,10 @@ describe("email changed notice", () => {
 
     expect(notice.subject).toBe("Your bisibility email address was changed");
     expect(notice.text).toBe(
-      "The email address on your bisibility account was changed to next@example.com on 27 August 2026. If you did not do this, reply to this email right away.",
+      "The email address on your bisibility account was changed to next@example.com on 27 Aug 2026. If you did not do this, reply to this email right away.",
     );
     expect(notice.html).toContain("next@example.com");
-    expect(notice.html).toContain("27 August 2026");
+    expect(notice.html).toContain("27 Aug 2026");
     expect(notice.html).toContain("If you did not do this, reply to this email right away.");
   });
 

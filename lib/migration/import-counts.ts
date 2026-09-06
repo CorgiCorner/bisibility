@@ -1,3 +1,5 @@
+import { visibilityUnknownDepthImportCopy } from "@/lib/visibility/definition";
+
 type CountLabel = {
   key: string;
   plural: string;
@@ -44,6 +46,20 @@ function label(value: number, labels: CountLabel) {
   return `${value} ${value === 1 ? labels.singular : labels.plural}`;
 }
 
+type CountEntryStyle = "label-value" | "value-label";
+
+function countEntry(key: string, value: number, style: CountEntryStyle) {
+  if (key === "history_unknown_depth") {
+    return label(value, {
+      key,
+      plural: "received history rows with unknown depth",
+      singular: "received history row with unknown depth",
+    });
+  }
+  const text = key.replaceAll("_", " ");
+  return style === "label-value" ? `${text}: ${value}` : `${value} ${text}`;
+}
+
 function parts(record: Record<string, unknown>, labels: CountLabel[]) {
   return labels.flatMap((item) => {
     const value = count(record, item.key);
@@ -51,13 +67,25 @@ function parts(record: Record<string, unknown>, labels: CountLabel[]) {
   });
 }
 
+export function migrationImportCountEntries(
+  counts: unknown,
+  style: CountEntryStyle = "label-value",
+) {
+  const record = countRecord(counts);
+  return Object.entries(record)
+    .filter((entry): entry is [string, number] => typeof entry[1] === "number" && entry[1] > 0)
+    .map(([key, value]) => countEntry(key, value, style));
+}
+
 export function migrationImportCountSummary(counts: unknown) {
   const record = countRecord(counts);
+  const unknownDepth = count(record, "history_unknown_depth");
   return {
     imported: parts(record, importedLabels),
     keywordsCreated: count(record, "keywords_created"),
     keywordsReceived: count(record, "keywords"),
     reportsKeywordCreations: Object.hasOwn(record, "keywords_created"),
     skipped: parts(record, skippedLabels),
+    visibilityNote: unknownDepth > 0 ? visibilityUnknownDepthImportCopy(unknownDepth) : null,
   };
 }

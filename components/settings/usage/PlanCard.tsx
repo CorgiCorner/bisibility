@@ -48,7 +48,7 @@ function HostedPlanSummary() {
         <span className="text-[17px] font-semibold tracking-[-0.2px]">Hosted plan</span>
         <StatusPill label="Free beta" showDot={false} status="ready" />
       </div>
-      <ul className="m-0 grid list-none gap-2 border-t border-border-soft p-0 pt-3 text-[12.5px] leading-[1.5] text-fg-muted">
+      <ul className="m-0 grid list-none gap-2 border-t border-border p-0 pt-3 text-[12.5px] leading-[1.5] text-fg-muted">
         {[
           "Free while the beta lasts, with usage limits and no payment method.",
           "Pricing will be announced before the beta ends.",
@@ -115,11 +115,11 @@ export function PlanCard({
         <div className="space-y-5" data-pricing-state={answered ? "answered" : "hosted-beta"}>
           <HostedPlanSummary />
           {answered ? (
-            <p className="m-0 border-t border-border-soft pt-4 text-[13px] font-medium text-green-text">
+            <p className="m-0 border-t border-border pt-4 text-[13px] font-medium text-green-text">
               Thanks, your answer helps us set the price.
             </p>
           ) : canSubmitPricingFeedback ? (
-            <form className="border-t border-border-soft pt-4" onSubmit={form.handleSubmit(submit)}>
+            <form className="border-t border-border pt-4" onSubmit={form.handleSubmit(submit)}>
               <FieldLabel
                 className="font-sans tabular-nums text-[10px] tracking-[0.5px] text-fg-muted uppercase"
                 htmlFor="hosted-monthly-price"
@@ -159,7 +159,7 @@ export function PlanCard({
               ) : null}
             </form>
           ) : (
-            <p className="m-0 border-t border-border-soft pt-4 text-[12px] text-fg-muted">
+            <p className="m-0 border-t border-border pt-4 text-[12px] text-fg-muted">
               Only the project owner can send pricing feedback.
             </p>
           )}

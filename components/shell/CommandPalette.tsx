@@ -6,6 +6,7 @@ import {
   type CommandItem,
   commandGroups,
   filterGroups,
+  type PaletteMarket,
 } from "@/components/shell/command-palette-groups";
 import {
   CommandRegistryProvider,
@@ -13,12 +14,14 @@ import {
 } from "@/components/shell/command-registry";
 import { useKeywordSearch } from "@/components/shell/use-keyword-search";
 import { Tooltip } from "@/components/ui";
+import { navContextFromPathname } from "@/lib/nav/nav-items";
+import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
 import { useColorScheme } from "@mui/material/styles";
 import {
   CursorIcon as Cursor,
   MagnifyingGlassIcon as MagnifyingGlass,
 } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
 
 type CommandPaletteContextValue = {
@@ -62,13 +65,20 @@ export function CommandPaletteTrigger({ variant }: Readonly<CommandPaletteTrigge
 export type CommandPaletteProviderProps = {
   children: ReactNode;
   defaultOpen?: boolean;
+  enabledExperimentalModules?: readonly ExperimentalModuleKey[];
+  /** The project's markets, resolved on the server. A project with none gets no Markets group. */
+  markets?: readonly PaletteMarket[];
   projectId: string;
   projectRef: string;
 };
 
+const NO_MARKETS: readonly PaletteMarket[] = [];
+
 export function CommandPaletteProvider({
   children,
   defaultOpen = false,
+  enabledExperimentalModules = [],
+  markets = NO_MARKETS,
   projectId,
   projectRef,
 }: Readonly<CommandPaletteProviderProps>) {
@@ -103,6 +113,8 @@ export function CommandPaletteProvider({
         >
           {children}
           <CommandPalette
+            markets={markets}
+            enabledExperimentalModules={enabledExperimentalModules}
             onClose={closePalette}
             open={open}
             projectId={projectId}
@@ -117,6 +129,8 @@ export function CommandPaletteProvider({
 }
 
 type CommandPaletteProps = {
+  markets: readonly PaletteMarket[];
+  enabledExperimentalModules: readonly ExperimentalModuleKey[];
   open: boolean;
   onClose: () => void;
   projectId: string;
@@ -126,6 +140,8 @@ type CommandPaletteProps = {
 };
 
 function CommandPalette({
+  markets,
+  enabledExperimentalModules,
   open,
   onClose,
   projectId,
@@ -133,6 +149,7 @@ function CommandPalette({
   query,
   setQuery,
 }: Readonly<CommandPaletteProps>) {
+  const pathname = usePathname();
   const router = useRouter();
   const { setMode } = useColorScheme();
   const { keywordHits, search } = useKeywordSearch(projectId);
@@ -155,7 +172,18 @@ function CommandPalette({
       : [];
 
   const groups = filterGroups(
-    [...contextual, ...commandGroups(projectRef, router.push, setMode, keywordHits)],
+    [
+      ...contextual,
+      ...commandGroups(
+        projectRef,
+        router.push,
+        setMode,
+        keywordHits,
+        markets,
+        navContextFromPathname(pathname),
+        enabledExperimentalModules,
+      ),
+    ],
     query,
   ).filter((group) => group.items.length > 0);
   const hasResults = groups.length > 0;

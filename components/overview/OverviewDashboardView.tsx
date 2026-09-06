@@ -47,7 +47,7 @@ function CheckHealthBanners({
       {checkHealth.budget.exhausted ? (
         <AlertBanner
           action={{
-            href: rankTrackerTabPath(projectRef, "checks"),
+            href: rankTrackerTabPath(projectRef, "runs"),
             icon: "arrow",
             label: "View check runs",
           }}

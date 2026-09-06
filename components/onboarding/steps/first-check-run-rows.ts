@@ -16,6 +16,13 @@ export type FirstCheckResultRow =
     })
   | (FirstCheckTarget & {
       keywordId: string;
+      publicId: string;
+      runId: string;
+      status: "queued";
+      text: string;
+    })
+  | (FirstCheckTarget & {
+      keywordId: string;
       provider: string;
       publicId: string;
       position: number | null;
@@ -37,7 +44,7 @@ export type FirstCheckRunState = {
   message: string | null;
   mode: "preview";
   rows: FirstCheckResultRow[];
-  status: "completed" | "failed" | "idle" | "running";
+  status: "completed" | "failed" | "idle" | "queued" | "running";
 };
 
 export const initialFirstCheckRunState: FirstCheckRunState = {
@@ -62,6 +69,17 @@ export function previewRow(
   candidate: FirstCheckCandidate,
   result: RunFirstCheckPreviewResult,
 ): FirstCheckResultRow {
+  if (result.status === "queued") {
+    return {
+      device: candidate.device,
+      keywordId: candidate.id,
+      market: candidate.market,
+      publicId: candidate.publicId,
+      runId: result.runId,
+      status: "queued",
+      text: candidate.text,
+    };
+  }
   if (result.status === "completed") {
     return {
       device: candidate.device,

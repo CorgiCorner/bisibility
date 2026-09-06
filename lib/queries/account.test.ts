@@ -111,7 +111,7 @@ describe("account queries", () => {
     await expect(getAccount()).rejects.toThrow("Public ID migration is incomplete.");
   });
 
-  it("parses the four browser preferences and ignores stale timezone and language cookies", async () => {
+  it("reads date format from the user row and the other prefs from cookies", async () => {
     const values: Record<string, string> = {
       pref_density: "compact",
       pref_language: "de",
@@ -119,12 +119,22 @@ describe("account queries", () => {
       theme: "dark",
     };
     mocks.cookies.mockResolvedValue({ get: vi.fn((key: string) => ({ value: values[key] })) });
+    mocks.prisma.user.findUnique.mockResolvedValue({ dateFormat: "day_first" });
 
     await expect(getPreferences()).resolves.toEqual({
-      dateFormat: "iso",
+      dateFormat: "day_first",
       density: "compact",
       landing: "dashboard",
       theme: "dark",
     });
+  });
+
+  it("migrates a legacy long cookie when the user row still says auto", async () => {
+    mocks.cookies.mockResolvedValue({
+      get: vi.fn((key: string) => (key === "pref_date_format" ? { value: "long" } : undefined)),
+    });
+    mocks.prisma.user.findUnique.mockResolvedValue({ dateFormat: "auto" });
+
+    await expect(getPreferences()).resolves.toMatchObject({ dateFormat: "month_first" });
   });
 });

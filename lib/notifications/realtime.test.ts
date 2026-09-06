@@ -4,8 +4,10 @@ import {
   notificationChannel,
   notificationRealtimeRedisConfigured,
   publishNotificationCreated,
+  publishOperationChanged,
   resetNotificationRealtimeForTests,
   subscribeToNotificationEvents,
+  subscribeToOperationEvents,
 } from "./realtime";
 
 const redis = vi.hoisted(() => {
@@ -95,6 +97,21 @@ describe("notification realtime publisher", () => {
     });
   });
 
+  it("publishes operation invalidations to the project channel without throwing", async () => {
+    redis.redisConfigured.mockReturnValue(true);
+
+    await expect(publishOperationChanged({ projectId: "project 1" })).resolves.toEqual({
+      mode: "redis",
+      ok: true,
+      subscribers: 2,
+    });
+
+    expect(redis.publish).toHaveBeenCalledWith(
+      "bisibility:operations:v1:project:project%201",
+      expect.stringContaining('"kind":"changed"'),
+    );
+  });
+
   it("subscribes to the user channel and cleans up the subscriber", async () => {
     redis.redisConfigured.mockReturnValue(true);
     const onError = vi.fn();
@@ -151,6 +168,38 @@ describe("notification realtime publisher", () => {
 
     expect(destroy).toHaveBeenCalledOnce();
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("accepts only matching operation invalidations", async () => {
+    redis.redisConfigured.mockReturnValue(true);
+    const onEvent = vi.fn();
+    let messageHandler: ((message: string) => void) | undefined;
+    redis.subscriber.subscribe.mockImplementation(async (_channel, handler) => {
+      messageHandler = handler;
+    });
+
+    const result = subscribeToOperationEvents("project_1", {
+      onError: vi.fn(),
+      onEvent,
+    });
+    await result?.ready;
+    messageHandler?.(
+      JSON.stringify({ at: "2026-09-02T10:00:00.000Z", kind: "changed", projectId: "other" }),
+    );
+    const event = {
+      at: "2026-09-02T10:00:00.000Z",
+      kind: "changed",
+      projectId: "project_1",
+    } as const;
+    messageHandler?.(JSON.stringify(event));
+    result?.close();
+
+    expect(redis.subscriber.subscribe).toHaveBeenCalledWith(
+      "bisibility:operations:v1:project:project_1",
+      expect.any(Function),
+    );
+    expect(onEvent).toHaveBeenCalledOnce();
+    expect(onEvent).toHaveBeenCalledWith(event);
   });
 
   it("exposes late subscriber setup rejection without leaking handler failures", async () => {

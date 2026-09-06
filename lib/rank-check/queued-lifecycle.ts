@@ -3,6 +3,7 @@ import "server-only";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { resolveSerpDepth } from "@/lib/serp/markets";
 import { positiveCostCents } from "./cost";
 import { RankCheckClosedBeforePersistenceError } from "./persistence-errors";
@@ -21,6 +22,7 @@ import {
   QUEUED_DEADLINE_DB_TRANSACTION_TIMEOUT_MS,
 } from "./queued-timeouts";
 import { persistFailedRankCheckInTransaction } from "./runner-persistence";
+import { applyRunItemTransition } from "./runs/items";
 
 const RETENTION_MS = 30 * 86_400_000;
 
@@ -57,6 +59,7 @@ export async function queuedBatchProgress(batchId: string) {
   });
   return {
     completed: counts.completed,
+    deferred: counts.deferred,
     failed: counts.failed,
     pending: counts.pending,
     state: batch.state,
@@ -170,6 +173,7 @@ async function reconcileTaskAtDeadline(
     });
   }
   if (closed.count === 0) return;
+  await applyRunItemTransition(tx, { rankCheckId: task.rankCheckId, to: "deferred" });
   await writeAudit(
     {
       action: "rank_check.deferred",
@@ -191,7 +195,7 @@ async function reconcileTaskAtDeadline(
 
 export async function deferQueuedRankCheckBatch(batchId: string, reason: string) {
   const now = new Date();
-  await prisma.$transaction(
+  const projectIds = await prisma.$transaction(
     async (tx) => {
       const tasks = await tx.queuedRankCheckTask.findMany({
         include: {
@@ -211,12 +215,16 @@ export async function deferQueuedRankCheckBatch(batchId: string, reason: string)
       for (const task of tasks) {
         await reconcileTaskAtDeadline(tx, task, now, reason);
       }
+      return [...new Set(tasks.map((task) => task.keyword.projectId))];
     },
     {
       maxWait: QUEUED_DEADLINE_DB_MAX_WAIT_MS,
       timeout: QUEUED_DEADLINE_DB_TRANSACTION_TIMEOUT_MS,
     },
   );
+  for (const projectId of projectIds) {
+    await publishOperationChanged({ projectId }).catch(() => undefined);
+  }
   return finalizeQueuedBatchState(batchId, reason);
 }
 

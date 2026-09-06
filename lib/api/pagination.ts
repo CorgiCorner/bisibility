@@ -45,6 +45,28 @@ export function decodeCursor(value: string | null, expectedPrefix: PublicIdPrefi
   }
 }
 
+const unprefixedCursorSchema = cursorSchema.extend({
+  public_id: z.string().trim().min(1),
+});
+
+export function decodeUnprefixedCursor(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return unprefixedCursorSchema.parse(JSON.parse(base64UrlDecode(value)));
+  } catch {
+    throw new ApiInputError("Cursor must be a valid v3 cursor.", "invalid_cursor");
+  }
+}
+
+export function encodeUnprefixedCursor(input: { publicId: string; timestamp: Date }) {
+  return Buffer.from(
+    JSON.stringify({ public_id: input.publicId, t: input.timestamp.toISOString(), v: 3 }),
+  ).toString("base64url");
+}
+
 export function parseLimit(url: URL, fallback = 50, max = 200) {
   const raw = url.searchParams.get("limit");
   if (!raw) {

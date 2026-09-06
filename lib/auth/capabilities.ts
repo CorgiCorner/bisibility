@@ -7,6 +7,7 @@ export type ResourceType =
   | "api_key"
   | "audit_log"
   | "billing"
+  | "check_schedule"
   | "cloud_import_job"
   | "competitor"
   | "ingest_hook"

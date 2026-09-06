@@ -48,7 +48,7 @@ function renderActions(overrides: Partial<Parameters<typeof SearchInsightsAction
     rows: 1,
     truncated: false,
   });
-  const syncAction = vi.fn().mockResolvedValue({ status: "started" });
+  const syncAction = vi.fn().mockResolvedValue({ status: "queued" });
   render(
     <ToastProvider>
       <SearchInsightsActions
@@ -144,7 +144,7 @@ describe("SearchInsightsActions", () => {
         rows: 1,
         truncated: false,
       });
-      const syncAction = vi.fn().mockResolvedValue({ status: "started" });
+      const syncAction = vi.fn().mockResolvedValue({ status: "queued" });
       const actions = (
         <ToastProvider>
           <SearchInsightsActions
@@ -229,12 +229,12 @@ describe("SearchInsightsActions", () => {
   });
 
   it("stands down while the backfill already holds the queue", () => {
-    renderActions({ importState: runningImport });
+    renderActions({ importState: { ...runningImport, plannedRetentionMonths: 6 } });
 
     const button = screen.getByRole("button", { name: "Sync now" });
     expect(button).toBeDisabled();
     expect(button.closest("span")).toHaveAttribute("aria-describedby", expect.any(String));
-    expect(document.body).toHaveTextContent("spend load quota twice");
+    expect(document.body).toHaveTextContent("The 6-month import is still running");
   });
 
   it("disables sync until a Search Console property is selected", () => {

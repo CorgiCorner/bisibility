@@ -2,17 +2,14 @@ import { setNavigationState } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SearchInsightsSessionsCard } from "./SearchInsightsSessionsCard";
+import { SESSIONS_CONNECT_BODY, SESSIONS_CONNECT_TITLE } from "./search-insights-copy";
 
 describe("SearchInsightsSessionsCard", () => {
   it("offers the second consent flow with the design copy", () => {
     render(<SearchInsightsSessionsCard projectId="prj_1" />);
 
-    expect(screen.getByText("Organic sessions (GA4)")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Search Console stops at the click. Connect Analytics to see what happened after it, as a sessions column in Top pages. Second Google consent screen, read only, disconnect any time.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText(SESSIONS_CONNECT_TITLE)).toBeInTheDocument();
+    expect(screen.getByText(SESSIONS_CONNECT_BODY)).toBeInTheDocument();
     const connect = screen.getByRole("link", { name: "Connect" });
     expect(connect).toHaveAttribute("href", expect.stringContaining("provider=ga4"));
     expect(connect).toHaveClass("MuiButton-outlined");

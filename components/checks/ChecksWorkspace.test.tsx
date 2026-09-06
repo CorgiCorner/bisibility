@@ -114,7 +114,7 @@ describe("ChecksWorkspace", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "As of: Jul 24, 2026" }));
     const popover = screen.getByRole("dialog", { name: "As of date" });
-    fireEvent.click(within(popover).getByRole("button", { name: "July 20, 2026" }));
+    fireEvent.click(within(popover).getByRole("button", { name: "Jul 20, 2026" }));
 
     await waitFor(() => {
       expect(mocks.loadCheckRuns).toHaveBeenLastCalledWith({

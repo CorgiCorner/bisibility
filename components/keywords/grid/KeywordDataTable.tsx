@@ -42,7 +42,7 @@ const KeywordEditDrawer = dynamic(
   { ssr: false },
 );
 // biome-ignore format: Compact parameter destructuring keeps this production module within 300 lines.
-export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetFrequencyAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkFailed, checkHealth, filterChips, filterCount, initialDensity, listMode = "grouped-client", matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onDismissFailure, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, providerConnected, projectId, projectMarkets, rows, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction, updateKeywordScheduleAction }: KeywordDataTableProps) {
+export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkFailed, checkHealth, filterChips, filterCount, initialDensity, listMode = "grouped-client", marketScope = null, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onDismissFailure, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, providerConnected, projectId, projectMarkets, rows, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const flatServer = listMode === "flat-server" && query !== undefined;
@@ -163,12 +163,12 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
       <BulkActionBar
         bulkClearTargetAction={bulkClearTargetAction}
         bulkDeleteAction={bulkDeleteAction}
-        bulkSetFrequencyAction={bulkSetFrequencyAction}
         bulkSetTargetAction={bulkSetTargetAction}
         bulkTagAction={bulkTagAction}
         canDeleteKeyword={canDeleteKeyword}
         canUpdateKeyword={canUpdateKeyword}
         checksRunning={selectedIds.some((id) => pendingCheckIds.has(id))}
+        marketScope={marketScope}
         onClear={() => setRowSelectionModel({ ids: new Set(), type: "include" })}
         onRunChecks={onRunChecks}
         projectId={projectId}
@@ -253,7 +253,6 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
           projectMarkets={projectMarkets}
           providerRate={checkHealth?.providerRate}
           updateKeywordAction={updateKeywordAction}
-          updateKeywordScheduleAction={updateKeywordScheduleAction}
         />
       ) : null}
       <ConfirmModal

@@ -2,6 +2,7 @@
 
 import {
   DRAWER_LIST_CAP,
+  RETENTION_MONTHS,
   SEARCH_INSIGHTS_EXPORT_ROW_CAP,
   SEARCH_INSIGHTS_ROWS_CAP,
 } from "@/lib/search-insights/constants";
@@ -12,6 +13,7 @@ export const PREFIX_TIP = "Covers only URLs starting with this exact address.";
 
 export const PROPERTY_MENU_LABEL = "Search Console property";
 export const PERIOD_MENU_LABEL = "Comparison window";
+export const PERIOD_PACIFIC_TOOLTIP = "Google finalizes days in Pacific time";
 
 export const NO_PROPERTY_LABEL = "No property connected";
 export const PROPERTIES_LOADING = "Loading properties...";
@@ -24,8 +26,6 @@ export const SYNC_LABEL = "Sync now";
 // A manual sync spends Google's load quota, so each disabled state says why rather than
 // inviting a second click.
 export const SYNC_TITLES = {
-  backfill:
-    "The 16-month import is still running. A manual sync queues behind it and would spend load quota twice.",
   cooldown:
     "Finalized days change once a day, so a second sync inside the cooldown would return the same rows.",
   pausedProvider:
@@ -36,6 +36,11 @@ export const SYNC_TITLES = {
   ready: "Fetch anything Google has finalized since the last run.",
   requiresProperty: "Connect a Search Console property first.",
 } as const;
+
+export function backfillSyncTitle(months: number) {
+  const depthLabel = months >= RETENTION_MONTHS ? `${RETENTION_MONTHS}-month` : `${months}-month`;
+  return `The ${depthLabel} import is still running. A manual sync queues behind it and would spend load quota twice.`;
+}
 
 export const SYNC_TOASTS = {
   already_running: "A sync is already running. The screen updates as it finishes.",
@@ -50,7 +55,7 @@ export const SELECT_FAILED = "The property could not be selected. Try again.";
 export const REAUTH_REQUIRED = "Reconnect the Google account, then choose the property again.";
 
 const IMPORT_RUNNING_PROGRESS =
-  "The first 7-day view unlocks as soon as its finalized days are ready; older months keep loading in the background.";
+  "The first look opens with the first finalized day, the 7-day view follows as its days finalize, and older months keep loading in the background.";
 
 // Every string that claims where the data lives, self-host first, cloud second. The guard limits
 // ownership phrasing to the self-host branch, because a cloud workspace is not the customer's own
@@ -109,9 +114,8 @@ export const FRESHNESS_FINAL_PREFIX = "Final through";
 export const FRESHNESS_CHECKED_PREFIX = "checked";
 export const FRESHNESS_ADJUSTMENT_TOOLTIP = "Google may adjust recent data until it finalizes.";
 // The strip owns every provenance counter, so the empty card states only what the module is
-// waiting for. Seven consecutive finalized days plus aggregate cover is what opens the window.
-export const FIRST_VIEW_BLOCKED =
-  "The first view opens once seven consecutive finalized days are imported.";
+// waiting for. The first finalized day plus aggregate cover is what opens the first look.
+export const FIRST_VIEW_BLOCKED = "The first look opens once the first finalized day is imported.";
 // Two different waits, and the cell must never blame the first when the second is what is
 // happening: a property mid-backfill has no finalized days yet, while a property whose boundary
 // moved has plenty but not yet a full window of them.
@@ -157,14 +161,35 @@ export const TABLE_CAPTIONS = {
   queries: "Google's named queries only",
 } as const;
 
+export const PAGE_LENS_CONTROL_LABEL = "Top pages lens";
+export const PAGE_LENS_SEARCH_LABEL = "Search";
+export const PAGE_LENS_TRAFFIC_LABEL = "Traffic";
+
+export const ORGANIC_SESSIONS_LABEL = "Organic sessions";
 export const SESSIONS_CONNECT_TITLE = "Organic sessions (GA4)";
 export const SESSIONS_CONNECT_BODY =
-  "Search Console stops at the click. Connect Analytics to see what happened after it, as a sessions column in Top pages. Second Google consent screen, read only, disconnect any time.";
+  "See which queries and landing pages bring engaged visitors, and which convert.";
 export const SESSIONS_CONNECT_CTA = "Connect";
 export const SESSIONS_JOIN_TIP =
   "Joined from GA4 by landing page. Search Console counts clicks and GA4 counts sessions, so the two never match exactly and a gap is normal.";
 export const NO_SESSIONS_MATCH_TITLE = "No GA4 landing page matched this URL";
 export const MANAGE_SESSIONS_LABEL = "Manage GA4";
+export const ENGAGEMENT_LABEL = "Engagement";
+export const ENGAGEMENT_RATE_TIP = "imported before engagement and key events were tracked";
+export const DRAWER_PAGE_ENGAGEMENT_TIP = "engagement of the landing page, not of this query";
+export const KEY_EVENTS_LABEL = "Key events";
+export const KEY_EVENTS_NOT_CONFIGURED = "No key events configured in GA4.";
+export const KEY_EVENTS_TIP = "imported before engagement and key events were tracked";
+export const CLICKS_TO_SESSIONS_HIDDEN = "No Google clicks in this window - nothing to reconcile";
+export const GA4_SESSIONS_LABEL = "GA4 sessions";
+export const GA4_CONNECTION_TITLE = "Google Analytics (GA4)";
+export const GA4_PICKER_TITLE = "Connect Google Analytics 4";
+export const GA4_PICKER_PROMISE = `${SESSIONS_CONNECT_BODY} Read-only.`;
+export const GA4_PICKER_PROPERTY_LABEL = "Property";
+export const GA4_PICKER_MANUAL_LINK = "Enter a property ID manually";
+export const GA4_PICKER_LIST_LINK = "Choose from discovered properties";
+export const GA4_PICKER_NOT_NOW = "Not now";
+export const GA4_PICKER_USE = "Use this property";
 
 export const AVG_POSITION_TIP =
   "Average position in Google's results over the selected window, weighted by impressions. Decimals because it is an average, not a single rank.";
@@ -194,6 +219,7 @@ export const TABLES_FOOTNOTE =
 
 export const SIGNAL_COPY = {
   bandSub: "Already earning impressions, none of them in the top three",
+  failed: "Could not count",
   overlapSub: "2 or more of your pages ranking for the same query",
   overlapTitle: "queries with page overlap",
 } as const;
@@ -230,7 +256,7 @@ export const DRAWER_COPY = {
   queryPagesTitle: "Your pages competing for it",
   queryPageTitle: "Your page ranking for it",
   retry: "Try again",
-  sessions: "Organic sessions",
+  sessions: ORGANIC_SESSIONS_LABEL,
   track: "Track this query in Rank Tracker",
   tracked: "Tracked in Rank Tracker",
 } as const;
@@ -261,3 +287,5 @@ export function trackDoneCopy(frequency: string) {
   if (frequency === "paused") return "Added paused in Rank Tracker.";
   return `Tracked ${frequency.replace("_", " ")} in Rank Tracker.`;
 }
+
+export const OPEN_IN_SEARCH_CONSOLE_LABEL = "Open in Search Console";

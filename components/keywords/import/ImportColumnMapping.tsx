@@ -46,7 +46,7 @@ export function ImportColumnMapping({
       </div>
       {sourceColumns.map((source) => (
         <div
-          className="grid grid-cols-[minmax(0,1fr)_20px_minmax(0,1fr)] items-center gap-2 border-t border-border-soft px-[15px] py-[11px]"
+          className="grid grid-cols-[minmax(0,1fr)_20px_minmax(0,1fr)] items-center gap-2 border-t border-border px-[15px] py-[11px]"
           key={source.index}
         >
           <span className="inline-flex min-w-0 items-center gap-[7px] font-sans tabular-nums text-[12.5px]">

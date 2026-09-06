@@ -1,4 +1,5 @@
 import { Prisma } from "@/lib/generated/prisma/client";
+import { RUNNABLE_KEYWORD_SQL } from "./runnable";
 import type { RankCheckScheduleInput } from "./schedule";
 
 export type DispatchRow = {
@@ -48,6 +49,7 @@ export async function oldestEligibleDueAt(tx: DispatchTransaction, now: Date) {
       AND p."writeMode" = 'active'
       AND NULLIF(BTRIM(p.domain), '') IS NOT NULL
       AND ${automaticFrequencyFilter}
+      AND ${RUNNABLE_KEYWORD_SQL}
     ORDER BY state."nextCheckAt", state."keywordId"
     LIMIT 1
   `);
@@ -81,6 +83,7 @@ export function fairDueStatesSql(now: Date, pageSize: number, perProjectCap: num
         AND p."writeMode" = 'active'
         AND NULLIF(BTRIM(p.domain), '') IS NOT NULL
         AND ${automaticFrequencyFilter}
+        AND ${RUNNABLE_KEYWORD_SQL}
     ),
     fair_candidates AS MATERIALIZED (
       SELECT "keywordId", "nextCheckAt", "projectId", "projectRank"

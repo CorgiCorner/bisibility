@@ -1,3 +1,4 @@
+import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import type { DomainOverviewScope } from "@/lib/domain-overview/types";
 import type { DomainRankMetrics, HistoricalOverviewRow } from "@/lib/providers/types";
 
@@ -9,16 +10,6 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
   notation: "compact",
   style: "currency",
-});
-const shortDate = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
-const monthDate = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  timeZone: "UTC",
-  year: "numeric",
 });
 
 export type DomainOverviewKpi = {
@@ -176,12 +167,29 @@ export function historyMetricValue(row: HistoricalOverviewRow, metric: HistoryMe
   return row.metrics.etv ?? 0;
 }
 
+const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
 export function historyLabel(row: Pick<HistoricalOverviewRow, "month" | "year">) {
-  return monthDate.format(new Date(Date.UTC(row.year, row.month - 1, 1)));
+  return `${MONTH_LABELS[row.month - 1] ?? ""} ${row.year}`;
 }
 
-export function sourceDateLabel(value: string | null) {
-  return value ? shortDate.format(new Date(value)) : "unknown";
+export function sourceDateLabel(value: string | null, dateFormat: DateFormat = "month_first") {
+  if (!value) return "unknown";
+  const key = value.slice(0, 10);
+  return formatDateRange(key, key, dateFormat);
 }
 
 export function scopeLabel(scope: DomainOverviewScope) {

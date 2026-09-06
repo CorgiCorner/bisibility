@@ -23,7 +23,7 @@ const usage: ProviderUsageCardProps["usage"] = {
   hasProvider: true,
   onPaceCents: null,
   period: {
-    dateFormat: "long",
+    dateFormat: "month_first",
     endAt: "2026-09-01T00:00:00.000Z",
     endLabel: "August 31, 2026",
     label: "August 2026",
@@ -129,6 +129,7 @@ describe("ProviderUsageCard", () => {
             unit: "cents",
             used: 0,
             usedPercent: null,
+            usedPriorMonth: 0,
           },
         ],
         summary: { ...usage.providerSpend.summary, attention: ["connection_1"] },

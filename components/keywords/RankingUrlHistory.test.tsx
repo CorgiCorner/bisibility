@@ -156,7 +156,7 @@ describe("RankingUrlHistory", () => {
     renderHistory(history);
 
     expect(screen.queryByText("Current")).not.toBeInTheDocument();
-    expect(screen.getByText("May 12 - May 12")).toBeInTheDocument();
+    expect(screen.getByText("May 12")).toBeInTheDocument();
     expect(screen.queryByText(/- now/)).not.toBeInTheDocument();
   });
 

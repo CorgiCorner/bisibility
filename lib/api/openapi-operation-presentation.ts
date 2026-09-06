@@ -68,8 +68,8 @@ export const openApiOperationPresentation: Record<string, OperationPresentation>
   revokeProjectTeamInvite: { summary: "Revoke a project team invite" },
   revokeTeamInvite: { summary: "Revoke a team invite by ID" },
   runRankCheck: {
-    description: "Runs synchronously by default or asynchronously when requested.",
-    summary: "Run a rank check",
+    description: "Queues a one-item rank-check run unless inline execution is configured.",
+    summary: "Queue a rank check",
   },
   syncProjectTraffic: { summary: "Sync analytics traffic" },
   updateSitemapMonitor: { summary: "Update sitemap monitor" },

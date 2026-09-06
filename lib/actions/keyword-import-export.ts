@@ -10,6 +10,7 @@ import {
   parseKeywordImportCsvRows,
   parseKeywordImportCsvTable,
 } from "@/lib/keywords/import-csv-parser";
+import { untrackedMarketMessage } from "@/lib/markets/archived";
 import { KEYWORD_IMPORT_MAX, keywordImportFileLimitMessage } from "@/lib/schemas/keyword";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
@@ -117,7 +118,7 @@ export async function importKeywordsFromCsv(input: unknown) {
     }
     if (!registeredKeys.has(resolved.location.canonicalKey)) {
       errors.push({
-        message: `Market ${resolved.location.canonicalKey} is not tracked by this project. Add it in Settings > Markets first.`,
+        message: untrackedMarketMessage(resolved.location.canonicalKey),
         row: row.row,
       });
       continue;

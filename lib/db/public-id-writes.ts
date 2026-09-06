@@ -4,6 +4,7 @@ const prefixByModel = {
   AlertRule: "alr",
   ApiKey: "key",
   AuditLog: "audit",
+  CheckSchedule: "sch",
   CloudImportJob: "imp",
   Competitor: "cmp",
   IngestHook: "dwh",
@@ -31,6 +32,7 @@ const nestedModels: Partial<
   Record<keyof typeof prefixByModel, Record<string, keyof typeof prefixByModel>>
 > = {
   AlertRule: { triggered: "TriggeredAlert" },
+  CheckSchedule: { keywords: "Keyword" },
   CloudImportJob: {},
   Keyword: { rankChecks: "RankCheck", signals: "Signal", triggeredAlerts: "TriggeredAlert" },
   MigrationToken: { importJobs: "CloudImportJob" },
@@ -38,6 +40,7 @@ const nestedModels: Partial<
     alertRules: "AlertRule",
     apiKeys: "ApiKey",
     cloudImportJobs: "CloudImportJob",
+    checkSchedules: "CheckSchedule",
     competitors: "Competitor",
     ingestHooks: "IngestHook",
     invites: "Invite",

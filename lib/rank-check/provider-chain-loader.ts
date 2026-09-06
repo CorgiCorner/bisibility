@@ -5,7 +5,8 @@ import {
 } from "@/lib/provider-rates/connection-context";
 import { dominantErrorCode, type ProviderErrorCode } from "@/lib/providers/provider-error-code";
 import { serpProviderChainOrderBy } from "./provider-chain-order";
-import { type RankCheckConnectionInput, RankCheckRunnerError } from "./runner";
+import type { RankCheckConnectionInput } from "./runner";
+import { RankCheckRunnerError } from "./runner-error";
 
 export type FallbackAttempt = {
   provider: string;

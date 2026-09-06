@@ -40,10 +40,12 @@ vi.mock("./top-rows", () => ({
 }));
 vi.mock("./tracked", () => ({ getTrackedQueryTexts: mocks.tracked }));
 
-const { getSearchInsightsFirstView, getSearchInsightsRowsPage } = await import("./first-view");
+const { getSearchInsightsFirstView, getSearchInsightsFirstViewSignals, getSearchInsightsRowsPage } =
+  await import("./first-view");
 
 const incident = KNOWN_DATA_INCIDENTS[0];
 const scope = {
+  period: { days: 28, id: "28" },
   projectId: "project_1",
   property: "sc-domain:example.com",
   window: {
@@ -97,7 +99,7 @@ describe("getSearchInsightsFirstView", () => {
     });
     expect(view.deploymentMode).toBe("self-host");
     expect(view.coverage.clicksShare).toBe(62);
-    expect(view.signals).toEqual({ bandCount: 34, overlapCount: 12 });
+    expect(mocks.signals).not.toHaveBeenCalled();
     expect(view.kpis[0]).toMatchObject({ delta: "+8.2%", value: "12,480" });
   });
 
@@ -109,6 +111,32 @@ describe("getSearchInsightsFirstView", () => {
 
     expect(mocks.scope).not.toHaveBeenCalled();
     expect(view.kpis[0]).toMatchObject({ value: "12,480" });
+  });
+
+  it("loads signals independently from the scope the page already resolved", async () => {
+    const signals = await getSearchInsightsFirstViewSignals(scope as SearchInsightsScope);
+
+    expect(mocks.scope).not.toHaveBeenCalled();
+    expect(mocks.signals).toHaveBeenCalledTimes(1);
+    expect(mocks.signals).toHaveBeenCalledWith(
+      scope.projectId,
+      scope.property,
+      scope.window.current,
+    );
+    expect(signals).toEqual({ bandCount: 34, overlapCount: 12 });
+  });
+
+  it.each([
+    ["property", { property: null }],
+    ["window", { window: null }],
+  ])("uses empty signals when the resolved scope has no %s", async (_missing, override) => {
+    const signals = await getSearchInsightsFirstViewSignals({
+      ...scope,
+      ...override,
+    } as SearchInsightsScope);
+
+    expect(signals).toEqual({ bandCount: 0, overlapCount: 0 });
+    expect(mocks.signals).not.toHaveBeenCalled();
   });
 
   it("asks about the tracked state of the queries it actually loaded", async () => {
@@ -127,6 +155,137 @@ describe("getSearchInsightsFirstView", () => {
     expect(view.kpis.every(({ delta, prev }) => delta === "new" && prev === "no data")).toBe(true);
   });
 
+  it("does not compare the first look even when its prior day is recorded", async () => {
+    mocks.scope.mockResolvedValue({
+      ...scope,
+      importFacts: { readyThrough: { d1: { current: true, previous: true } } },
+      organicSessions: {
+        importState: sessionsImport(),
+        property: "123456789",
+        status: "connected",
+      },
+      period: { days: 1, id: "1" },
+      window: {
+        current: { end: "2026-07-08", start: "2026-07-08" },
+        previous: { end: "2026-07-07", start: "2026-07-07" },
+      },
+    });
+    mocks.sessionsTotals.mockResolvedValue({ current: 9_120, previous: 8_004 });
+
+    const view = await getSearchInsightsFirstView("prj_1");
+
+    expect(view.kpis.map(({ delta, dir, prev }) => ({ delta, dir, prev }))).toEqual([
+      { delta: "new", dir: "flat", prev: "no data" },
+      { delta: "new", dir: "flat", prev: "no data" },
+      { delta: "new", dir: "flat", prev: "no data" },
+      { delta: "new", dir: "flat", prev: "no data" },
+    ]);
+    expect(view.sessionsKpi).toMatchObject({ delta: "new", dir: "flat", prev: "no data" });
+  });
+
+  it("reads sessions for the first look when GA4 covers only its boundary day", async () => {
+    const boundaryOnlySessions = {
+      importState: sessionsImport({ cursorDate: "2026-07-07" }),
+      property: "123456789",
+      status: "connected" as const,
+    };
+    mocks.scope.mockResolvedValue({
+      ...scope,
+      organicSessions: boundaryOnlySessions,
+      period: { days: 1, id: "1" },
+      window: {
+        current: { end: "2026-07-08", start: "2026-07-08" },
+        previous: { end: "2026-07-07", start: "2026-07-07" },
+      },
+    });
+    mocks.sessionsTotals.mockResolvedValue({ current: 9_120, previous: 8_004 });
+
+    const firstLook = await getSearchInsightsFirstView("prj_1");
+
+    expect(firstLook.sessionsReadable).toBe(true);
+    expect(firstLook.sessionsKpi).toMatchObject({ value: "73.08%" });
+    expect(firstLook.clicksToSessionsKpi).toMatchObject({ kind: "visible" });
+    expect(mocks.pages).toHaveBeenLastCalledWith(
+      "project_1",
+      scope.property,
+      { end: "2026-07-08", start: "2026-07-08" },
+      { limit: FIRST_VIEW_ROW_BUFFER, offset: 0 },
+      "123456789",
+    );
+
+    mocks.sessionsTotals.mockClear();
+    mocks.scope.mockResolvedValue({
+      ...scope,
+      organicSessions: boundaryOnlySessions,
+      period: { days: 7, id: "7" },
+    });
+
+    const preset = await getSearchInsightsFirstView("prj_1");
+
+    expect(preset.sessionsKpi).toBeNull();
+    expect(preset.sessionsReadable).toBe(false);
+    expect(mocks.sessionsTotals).not.toHaveBeenCalled();
+    expect(mocks.pages).toHaveBeenLastCalledWith(
+      "project_1",
+      scope.property,
+      scope.window.current,
+      { limit: FIRST_VIEW_ROW_BUFFER, offset: 0 },
+      null,
+    );
+  });
+
+  it("keeps covered 7-day KPI output byte-identical", async () => {
+    mocks.scope.mockResolvedValue({
+      ...scope,
+      importFacts: { readyThrough: { d7: { current: true, previous: true } } },
+      organicSessions: {
+        importState: sessionsImport(),
+        property: "123456789",
+        status: "connected",
+      },
+      period: { days: 7, id: "7" },
+    });
+    mocks.sessionsTotals.mockResolvedValue({ current: 9_120, previous: 8_004 });
+
+    const view = await getSearchInsightsFirstView("prj_1");
+
+    expect(view.kpis).toEqual([
+      {
+        delta: "+8.2%",
+        dir: "up",
+        label: "Clicks",
+        prev: "11,534",
+        source: "GSC",
+        value: "12,480",
+      },
+      {
+        delta: "+3.1%",
+        dir: "up",
+        label: "Impressions",
+        prev: "471,690",
+        source: "GSC",
+        value: "486,310",
+      },
+      {
+        delta: "+0.13 pp",
+        dir: "up",
+        label: "CTR",
+        prev: "2.44%",
+        source: "GSC",
+        value: "2.57%",
+      },
+      {
+        delta: "1.6 better",
+        dir: "up",
+        label: "Avg position",
+        prev: "20.0",
+        source: "GSC",
+        value: "18.4",
+      },
+    ]);
+    expect(view.sessionsKpi).toMatchObject({ delta: "+3.69 pp", dir: "up", prev: "69.39%" });
+  });
+
   it("carries a published provider anomaly that overlaps the compared period", async () => {
     mocks.scope.mockResolvedValue({
       ...scope,
@@ -137,6 +296,21 @@ describe("getSearchInsightsFirstView", () => {
     });
     const view = await getSearchInsightsFirstView("prj_1");
     expect(view.incidents).toEqual([incident]);
+  });
+
+  it("does not carry an anomaly that only falls between year-over-year windows", async () => {
+    mocks.scope.mockResolvedValue({
+      ...scope,
+      period: { comparison: "year_over_year", days: 7, id: "7" },
+      window: {
+        current: { end: "2026-05-07", start: "2026-05-01" },
+        previous: { end: "2025-05-07", start: "2025-05-01" },
+      },
+    });
+
+    const view = await getSearchInsightsFirstView("prj_1");
+
+    expect(view.incidents).toEqual([]);
   });
 
   it("suppresses sessions until the connected import covers the compared window", async () => {
@@ -182,8 +356,33 @@ describe("getSearchInsightsFirstView", () => {
       "123456789",
     );
     expect(mocks.sessionsTotals).toHaveBeenCalledWith("project_1", "123456789", scope.window);
-    expect(view.sessionsKpi).toMatchObject({ label: "Organic sessions", source: "GA4" });
+    expect(view.sessionsKpi).toMatchObject({ label: "Clicks to sessions", source: "GSC" });
     expect(view.sessionsReadable).toBe(true);
+  });
+
+  it("exposes a hidden reconciliation state instead of a card with no value", async () => {
+    mocks.scope.mockResolvedValue({
+      ...scope,
+      organicSessions: {
+        importState: sessionsImport(),
+        property: "123456789",
+        status: "connected",
+      },
+    });
+    mocks.totals.mockResolvedValue({
+      current: { clicks: 0, ctr: 0, impressions: 100, position: 0 },
+      previous: { clicks: 8, ctr: 0.01, impressions: 100, position: 0 },
+    });
+    mocks.sessionsTotals.mockResolvedValue({ current: 4, previous: 4 });
+
+    const view = await getSearchInsightsFirstView("prj_1");
+
+    expect(view.clicksToSessionsKpi).toEqual({
+      kind: "hidden",
+      reason: "zero_clicks",
+      source: "GSC",
+    });
+    expect(view.sessionsKpi).toBeNull();
   });
 
   it("renders an empty view rather than querying a property with no finalized day", async () => {

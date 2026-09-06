@@ -115,7 +115,7 @@ export function RetrievedResultsPickerMenu({
           preset={preset}
         />
       ))}
-      {presets.length ? <div className="my-2 border-t border-border-soft" /> : null}
+      {presets.length ? <div className="my-2 border-t border-border" /> : null}
       <Heading>Recent checks</Heading>
       {rows.map((row) => (
         <RowButton

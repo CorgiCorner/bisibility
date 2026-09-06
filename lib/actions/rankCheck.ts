@@ -6,7 +6,8 @@ import { parsePublicId } from "@/lib/db/public-id";
 import type { RankCheckFrequency } from "@/lib/generated/prisma/client";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
-import { manualRunCheckNow, type RunCheckNowResult } from "@/lib/rank-check/manual-run";
+import { manualRunCheckNow } from "@/lib/rank-check/manual-run";
+import type { RunCheckNowResult } from "@/lib/rank-check/manual-run-result";
 import { isScheduledFrequency, SCHEDULED_FREQUENCIES } from "@/lib/rank-check/schedule";
 import { queueFirstChecksSchema } from "@/lib/schemas/keyword";
 import {

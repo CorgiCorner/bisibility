@@ -85,8 +85,8 @@ export function reachLabel(shown: number, total: number, cap: number) {
 }
 
 /**
- * The control walks 10 -> 50 -> all and then disappears; the head counter turns into the way
- * back. Every step reads rows that are already stored, so none of it costs a provider request.
+ * The control walks 10 -> 50 -> all and then disappears. Collapse is the way back.
+ * Every step reads rows that are already stored, so none of it costs a provider request.
  */
 export function moreLabel(show: RowsShow, total: number) {
   if (show === "all" || total <= FIRST_VIEW_ROWS) return null;
@@ -101,11 +101,6 @@ export function moreTitle(show: RowsShow, total: number) {
 
 export function collapseLabel(show: RowsShow) {
   return show === FIRST_VIEW_ROWS ? null : COLLAPSE_LABEL;
-}
-
-export function footerNote(shown: number, total: number) {
-  const rest = Math.max(0, total - shown);
-  return `${rest.toLocaleString("en-US")} more stored, no provider cost`;
 }
 
 /**

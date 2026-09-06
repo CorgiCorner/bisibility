@@ -208,9 +208,24 @@ describe("bars and stats", () => {
       { clicks: 10, date: "2026-07-08" },
     ]);
 
-    expect(bars.map((bar) => bar.height)).toEqual([0, 50, 100]);
+    expect(bars.map((bar) => bar.height)).toEqual([2, 50, 100]);
     expect(bars[2].title).toBe("10 clicks");
+    expect(drawerWindowLabel(1)).toBe("1 finalized day");
     expect(drawerWindowLabel(28)).toBe("28 finalized days");
+  });
+
+  it("keeps the zero baseline when only one day of the window has clicks", () => {
+    const bars = drawerBars([
+      { clicks: 0, date: "2026-07-01" },
+      { clicks: 1, date: "2026-07-02" },
+      { clicks: 0, date: "2026-07-03" },
+      { clicks: 0, date: "2026-07-04" },
+      { clicks: 0, date: "2026-07-05" },
+      { clicks: 0, date: "2026-07-06" },
+    ]);
+
+    expect(bars.map((bar) => bar.height)).toEqual([2, 100, 2, 2, 2, 2]);
+    expect(bars.filter((bar) => bar.title === "0 clicks")).toHaveLength(5);
   });
 
   it("draws a visible zero baseline without changing semantic values", () => {

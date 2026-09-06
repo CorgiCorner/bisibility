@@ -35,6 +35,9 @@ vi.mock("@/lib/auth/first-run", () => ({
   redirectToSetupIfFirstRun: mocks.firstRunGate,
 }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
+vi.mock("@/lib/dates/request", () => ({
+  getResolvedDateFormat: vi.fn().mockResolvedValue({ preference: "auto", resolved: "month_first" }),
+}));
 vi.mock("@/lib/deployment/deployment", () => ({ isCloud: true }));
 vi.mock("@/lib/app-extensions", () => ({
   appExtensions: { renderOnboardingQuizSlot: mocks.renderOnboardingQuizSlot },

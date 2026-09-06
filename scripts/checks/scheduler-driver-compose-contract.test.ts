@@ -66,8 +66,12 @@ describe("scheduler driver Compose compatibility matrix", () => {
       TEMPORAL_ADDRESS: "temporal.internal.example.com:7233",
     });
 
+    // The explicit connect timeout is part of the options by design: the web process cannot
+    // reach the cluster in production, and the SDK default of 10,000 ms made every call a ten
+    // second wait before a guaranteed failure.
     expect(options).toEqual({
       address: "temporal.internal.example.com:7233",
+      connectTimeout: 2000,
       tlsSource: "auto-no-api-key",
     });
   });

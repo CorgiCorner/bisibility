@@ -1,7 +1,8 @@
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { headerMetaFor } from "@/components/shell/header-title";
-import { appPath, appRootPath } from "@/lib/routing/app-path";
+import { appPath, appRootPath, marketPath, resolvedContextPath } from "@/lib/routing/app-path";
+import { rankTrackerSchedulesPath } from "@/lib/routing/rank-tracker-schedules-path";
 import { describe, expect, it } from "vitest";
 
 const routeCases = [
@@ -59,7 +60,7 @@ const routeCases = [
   {
     path: appPath("prj_1", "getting-started"),
     pattern: appPath("[project]", "getting-started"),
-    title: "Get started",
+    title: "Get set up",
   },
   {
     path: appPath("prj_1", "search-console"),
@@ -70,6 +71,21 @@ const routeCases = [
     path: appPath("prj_1", "gcs-insights"),
     pattern: appPath("[project]", "gcs-insights"),
     title: "Overview",
+  },
+  {
+    path: rankTrackerSchedulesPath("prj_1"),
+    pattern: rankTrackerSchedulesPath("[project]"),
+    title: "Schedules",
+  },
+  {
+    path: rankTrackerSchedulesPath("prj_1", "sch_test"),
+    pattern: rankTrackerSchedulesPath("[project]", "[publicId]"),
+    title: "Schedules",
+  },
+  {
+    path: appPath("prj_1", "rank-tracker", "runs", "rcr_test"),
+    pattern: appPath("[project]", "rank-tracker", "runs", "[id]"),
+    title: "Run · rcr_test",
   },
   {
     path: appPath("prj_1", "rank-tracker", "kw_test"),
@@ -132,6 +148,11 @@ const routeCases = [
     title: "Settings",
   },
   {
+    path: appPath("prj_1", "settings", "experimental"),
+    pattern: appPath("[project]", "settings", "experimental"),
+    title: "Settings",
+  },
+  {
     path: appPath("prj_1", "settings", "general"),
     pattern: appPath("[project]", "settings", "general"),
     title: "Settings",
@@ -161,11 +182,38 @@ const routeCases = [
     pattern: appPath("[project]", "timeline"),
     title: "Timeline",
   },
+  {
+    path: appPath("prj_1", "markets"),
+    pattern: appPath("[project]", "markets"),
+    title: "Markets",
+  },
+  {
+    path: marketPath("prj_1", "pmkt_1", "rank-tracker"),
+    pattern: marketPath("[project]", "[market]", "rank-tracker"),
+    title: "Rank Tracker",
+  },
+  {
+    // Redirect-only routes: they never paint a header, but the section they resolve to must
+    // still read correctly through the context segment.
+    path: marketPath("prj_1", "pmkt_1", "settings"),
+    pattern: marketPath("[project]", "[market]", "[...page]"),
+    title: "Settings",
+  },
+  {
+    path: resolvedContextPath("prj_1", "rank-tracker"),
+    pattern: resolvedContextPath("[project]", "[...page]"),
+    title: "Rank Tracker",
+  },
 ] as const;
 
 function pageRoutePatterns(directory: string, segments: string[] = []): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     if (entry.isDirectory()) {
+      // A parallel-route slot renders INTO a layout that some other route already owns. It
+      // mints no URL of its own, so it has no page to title.
+      if (entry.name.startsWith("@")) {
+        return [];
+      }
       const nextSegments =
         entry.name.startsWith("(") && entry.name.endsWith(")")
           ? segments
@@ -204,6 +252,15 @@ describe("dashboard header titles", () => {
     expect(headerMetaFor(appPath("prj_1", "rank-tracker"))).toEqual({ title: "Rank Tracker" });
   });
 
+  it("uses the schedules header from the prototype", () => {
+    expect(headerMetaFor(rankTrackerSchedulesPath("prj_1"))).toEqual({
+      title: "Schedules",
+    });
+    expect(headerMetaFor(rankTrackerSchedulesPath("prj_1", "sch_test"))).toEqual({
+      title: "Schedules",
+    });
+  });
+
   it("keeps Settings free of redundant project-domain metadata", () => {
     expect(headerMetaFor(appPath("prj_1", "settings", "general"))).toEqual({
       headerVariant: "settings",
@@ -218,14 +275,46 @@ describe("dashboard header titles", () => {
   it("uses state-aware getting-started metadata", () => {
     expect(headerMetaFor(appPath("prj_1", "getting-started"))).toEqual({
       subtitle: "Four steps to your first positions.",
-      title: "Get started",
+      title: "Get set up",
     });
     expect(
       headerMetaFor(appPath("prj_1", "getting-started"), { completed: true, totalCount: 4 }),
     ).toEqual({
       subtitle: "Done. Everything below is optional.",
-      title: "Get started",
+      title: "Get set up",
     });
+  });
+
+  it("keeps the header title correct under a market segment", () => {
+    // Inserting a segment silently shifted the section index before; both surfaces that
+    // match section literals must still see the same section.
+    expect(headerMetaFor(marketPath("prj_1", "pmkt_1", "rank-tracker"))).toEqual({
+      title: "Rank Tracker",
+    });
+    expect(headerMetaFor(marketPath("prj_1", "pmkt_1", "rank-tracker", "kw_1"))).toEqual({
+      subtitle: "Position history, ranking URL and schedule.",
+      title: "Keyword details",
+    });
+    expect(headerMetaFor(marketPath("prj_1", "pmkt_1", "settings", "audit"))).toEqual({
+      subtitle: "Review project changes and security events.",
+      title: "Audit log",
+    });
+    expect(headerMetaFor(resolvedContextPath("prj_1", "competitors"))).toMatchObject({
+      title: "Competitors",
+    });
+  });
+
+  it("names the markets route the rail points at", () => {
+    // The rail gained a Markets row and the market routing work gave it a page; the title has
+    // to exist here by hand or that row lands on a header that reads "Overview".
+    expect(headerMetaFor(appPath("prj_1", "markets"))).toEqual({
+      subtitle: "The navigation level your tracked keywords are measured in.",
+      title: "Markets",
+    });
+    // A settings subsection called markets is Settings, not the rail destination.
+    expect(headerMetaFor(appPath("prj_1", "settings", "markets")).title).toBe("Settings");
+    // And the rail destination still reads as itself one level down, inside a market.
+    expect(headerMetaFor(marketPath("prj_1", "pmkt_1", "markets")).title).toBe("Markets");
   });
 
   it("uses descriptive Install copy", () => {

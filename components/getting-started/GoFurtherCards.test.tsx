@@ -20,15 +20,15 @@ describe("GoFurtherCards", () => {
       "href",
       settingsSectionHref(projectRef, "team"),
     );
-    expect(screen.getByRole("link", { name: /Ask AI about your rankings/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Connect an AI assistant/ })).toHaveAttribute(
       "href",
       appPath(projectRef, "install"),
     );
-    expect(screen.getByRole("link", { name: /Ask AI about your rankings/ })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Connect an AI assistant/ })).not.toHaveAttribute(
       "target",
     );
-    expect(screen.getByText("Give your team access, with roles.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Ask AI about your rankings/ })).not.toHaveAttribute(
+    expect(screen.getByText("Invite teammates and assign roles.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Connect an AI assistant/ })).not.toHaveAttribute(
       "target",
     );
     expect(screen.getByText("Connect Claude, ChatGPT or any MCP client.")).toBeInTheDocument();
@@ -56,7 +56,7 @@ describe("GoFurtherCards", () => {
     render(<GoFurtherCards projectRef={projectRef} />);
 
     expect(screen.getByRole("link", { name: /Invite teammates/ })).not.toHaveAttribute("target");
-    expect(screen.getByRole("link", { name: /Ask AI about your rankings/ })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Connect an AI assistant/ })).not.toHaveAttribute(
       "target",
     );
     expect(screen.getByRole("link", { name: /Star bisibility on GitHub/ })).toHaveAttribute(

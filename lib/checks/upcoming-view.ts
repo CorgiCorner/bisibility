@@ -1,3 +1,4 @@
+import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import { defaultCostPerCheckCents } from "@/lib/rank-check/default-cost";
 import { resolveSerpDepth } from "@/lib/serp/markets";
 import type { UpcomingBlockReason, UpcomingDayGroup, UpcomingView } from "./contract";
@@ -21,6 +22,7 @@ export type UpcomingProviderSource = {
 export type UpcomingViewInput = {
   blockedReason: UpcomingBlockReason | null;
   budgetCapCents: number;
+  dateFormat?: DateFormat;
   now: Date;
   projectTimezone: string;
   providers: readonly UpcomingProviderSource[];
@@ -29,6 +31,7 @@ export type UpcomingViewInput = {
 };
 
 function zonedDateParts(date: Date, timeZone: string) {
+  // DATA KEY (not display): project-local calendar parts group schedules by day.
   const parts = new Intl.DateTimeFormat("en-CA", {
     day: "2-digit",
     month: "2-digit",
@@ -49,16 +52,15 @@ function dayKey(date: Date, timeZone: string) {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-function dayLabel(date: Date, now: Date, timeZone: string) {
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+function dayLabel(date: Date, now: Date, timeZone: string, dateFormat: DateFormat) {
   const offset = zonedDay(date, timeZone) - zonedDay(now, timeZone);
   if (offset === 0) return "Today";
   if (offset === 1) return "Tomorrow";
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    timeZone,
-    weekday: "short",
-  }).format(date);
+  const key = dayKey(date, timeZone);
+  const weekday = WEEKDAYS[new Date(`${key}T00:00:00.000Z`).getUTCDay()];
+  return `${weekday}, ${formatDateRange(key, key, dateFormat)}`;
 }
 
 function primaryProvider(providers: readonly UpcomingProviderSource[]) {
@@ -111,7 +113,12 @@ function dayGroups(input: UpcomingViewInput): UpcomingDayGroup[] {
         count: 1,
         estimatedCostCents: scheduleCost(schedule, input.providers),
         key,
-        label: dayLabel(schedule.nextCheckAt, input.now, input.projectTimezone),
+        label: dayLabel(
+          schedule.nextCheckAt,
+          input.now,
+          input.projectTimezone,
+          input.dateFormat ?? "month_first",
+        ),
         samples: [sample],
       });
       continue;

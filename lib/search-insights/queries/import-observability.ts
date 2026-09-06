@@ -26,7 +26,7 @@ export type ImportObservabilityFacts = {
   qualifyingDays: number;
   consecutiveDays: number;
   targetDays: number;
-  readyThrough: { d7: ReadyRange; d28: ReadyRange; d90: ReadyRange };
+  readyThrough: { d1: ReadyRange; d7: ReadyRange; d28: ReadyRange; d90: ReadyRange };
   deepHistoryMonths: { completed: number; target: number };
   lastActivityAt: string | null;
   lastProbeAt: string | null;
@@ -145,6 +145,7 @@ function readyThrough(
 ): ImportObservabilityFacts["readyThrough"] {
   if (!boundary) {
     return {
+      d1: { current: false, previous: false },
       d7: { current: false, previous: false },
       d28: { current: false, previous: false },
       d90: { current: false, previous: false },
@@ -157,7 +158,7 @@ function readyThrough(
       previous: rangeReady(days, ranges, previousEnd, length),
     };
   };
-  return { d7: ready(7), d28: ready(28), d90: ready(90) };
+  return { d1: ready(1), d7: ready(7), d28: ready(28), d90: ready(90) };
 }
 
 function consecutiveDays(days: ReadonlySet<string>, boundary: string | null) {

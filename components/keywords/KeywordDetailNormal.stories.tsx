@@ -1,7 +1,6 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/story-theme-preview";
 import { KeywordHeaderCard } from "@/components/keywords/KeywordHeaderCard";
-import { KeywordMetricCards } from "@/components/keywords/KeywordMetricCards";
 import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { PositionHistoryCard } from "@/components/keywords/PositionHistoryCard";
@@ -25,7 +24,8 @@ const keyword = {
       rankingUrl: "https://acme.dev/headless-cms",
     },
   ],
-  intent: "High intent",
+  intent: "Commercial",
+  checkSchedule: { name: "Daily 06:00", nextCheckAt: null, publicId: "sch_daily" },
   positionBaseline: 5,
   targetUrl: "https://acme.dev/legacy-headless-cms",
   positionHistory: keywordRows[0].positionHistory.map((point, index, history) => ({
@@ -110,8 +110,7 @@ const meta = {
         <KeywordDetailStoryThemes>
           <ToastProvider>
             <main className="grid max-w-6xl gap-4 text-fg">
-              <KeywordHeaderCard {...actions} keyword={keyword} />
-              <KeywordMetricCards keyword={keyword} keywordContext="full" />
+              <KeywordHeaderCard {...actions} keyword={keyword} searchConsoleConnected />
               <PositionHistoryCard
                 chartState="normal"
                 keyword={keyword}
@@ -135,7 +134,7 @@ const meta = {
     ),
   ],
   parameters: {
-    chromatic: { viewports: [390, 768, 1440] },
+    chromatic: { viewports: [390, 768, 1280, 1440] },
     nextjs: { appDirectory: true },
   },
   title: "Keyword detail/Normal detail",

@@ -74,10 +74,7 @@ export function TeamRolesAccessCard() {
           <div className="grid grid-cols-[minmax(220px,1.5fr)_repeat(4,1fr)] border-b border-border bg-bg-sunken px-4 py-3 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             <span>Capability</span>
             {displayedRoles.map((role) => (
-              <span
-                className={cn("text-center", role.value === "owner" && "text-accent-text")}
-                key={role.value}
-              >
+              <span className="text-center" key={role.value}>
                 {role.label}
               </span>
             ))}
@@ -86,7 +83,7 @@ export function TeamRolesAccessCard() {
             <div
               className={cn(
                 "grid min-h-[42px] grid-cols-[minmax(220px,1.5fr)_repeat(4,1fr)] items-center px-4 text-[12.5px]",
-                index < capabilityRows.length - 1 && "border-b border-border-soft",
+                index < capabilityRows.length - 1 && "border-b border-border",
               )}
               key={row.label}
             >
@@ -101,7 +98,7 @@ export function TeamRolesAccessCard() {
               ))}
             </div>
           ))}
-          <p className="m-0 border-t border-border-soft px-4 py-3 text-[11.5px] text-fg-muted">
+          <p className="m-0 border-t border-border px-4 py-3 text-[11.5px] text-fg-muted">
             Owner is unique and can transfer ownership. Every role change is written to the audit
             log. Existing audit grants are shown on member rows and cannot be assigned here.
           </p>

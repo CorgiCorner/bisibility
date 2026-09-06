@@ -52,6 +52,14 @@ describe("SampleProjectBanner", () => {
     expect(icon).toHaveAttribute("aria-hidden", "true");
   });
 
+  it("routes create-project through the secondary button", () => {
+    renderBanner();
+
+    const link = screen.getByRole("link", { name: "Create your real project" });
+    expect(link).toHaveAttribute("href", "/onboarding?new=1");
+    expect(link.className).toContain("MuiButton-outlined");
+  });
+
   it("opens a confirmation modal instead of relabeling the banner button", () => {
     renderBanner();
 

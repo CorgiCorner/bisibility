@@ -59,7 +59,6 @@ function setup() {
       rows={pendingRows(1)}
       searchValue=""
       updateKeywordAction={vi.fn()}
-      updateKeywordScheduleAction={vi.fn()}
     />,
   );
 }

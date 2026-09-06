@@ -54,9 +54,10 @@ export async function getPositionBandQueries(
 
 export async function loadPositionBandQueries(
   projectRef: string,
-  input: { limit?: number; period?: string; property?: string },
+  input: { comparison?: string; limit?: number; period?: string; property?: string },
 ): Promise<SearchInsightsList<SearchInsightsBandRow>> {
   const scope = await loadSearchInsightsScope(projectRef, {
+    ...(input.comparison ? { comparison: input.comparison } : {}),
     period: input.period,
     property: input.property,
   });

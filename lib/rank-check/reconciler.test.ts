@@ -6,13 +6,19 @@ import {
 } from "./reconciler";
 
 const mocks = vi.hoisted(() => ({
-  prisma: { keyword: { findMany: vi.fn() } },
+  activeMarkets: [{ locationId: "location_active", projectId: "p1" }],
+  prisma: {
+    keyword: { findMany: vi.fn() },
+    projectMarket: { findMany: vi.fn() },
+  },
 }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 
 type KeywordRow = {
+  archivedAt?: Date | null;
   id: string;
+  locationId?: string;
   projectId: string;
   project: {
     defaults: ScheduleShape | null;
@@ -56,14 +62,19 @@ function clientMock(existingScheduleIds: string[] = []) {
 }
 
 function setKeywords(rows: KeywordRow[]) {
+  mocks.prisma.projectMarket.findMany.mockResolvedValue(mocks.activeMarkets);
   mocks.prisma.keyword.findMany.mockResolvedValue(
-    rows.map((row) => ({
-      ...row,
-      project: {
-        ...row.project,
-        owner: row.project.owner ?? { deactivatedAt: null },
-      },
-    })),
+    rows
+      .filter((row) => (row.archivedAt ?? null) === null)
+      .map((row) => ({
+        archivedAt: null,
+        locationId: "location_active",
+        ...row,
+        project: {
+          ...row.project,
+          owner: row.project.owner ?? { deactivatedAt: null },
+        },
+      })),
   );
 }
 
@@ -301,5 +312,77 @@ describe("reconcileAllSchedules", () => {
     expect(client.create).not.toHaveBeenCalled();
     expect(handle.delete).toHaveBeenCalledTimes(1);
     expect(result.deleted).toBe(1);
+  });
+  it("stops considering rows whose market is no longer active and prunes their schedule", async () => {
+    setKeywords([
+      { id: "k1", projectId: "p1", project: { defaults: null }, schedule: automatic() },
+      {
+        id: "k2",
+        locationId: "location_paused",
+        projectId: "p1",
+        project: { defaults: null },
+        schedule: automatic(),
+      },
+      {
+        id: "k3",
+        locationId: "location_removed",
+        projectId: "p1",
+        project: { defaults: null },
+        schedule: automatic(),
+      },
+    ]);
+    const { client, handle } = clientMock(["rank-check-k1", "rank-check-k2", "rank-check-k3"]);
+
+    const result = await reconcileAllSchedules(client);
+
+    expect(client.create).toHaveBeenCalledTimes(1);
+    expect(client.create).toHaveBeenCalledWith(
+      expect.objectContaining({ scheduleId: "rank-check-k1" }),
+    );
+    expect(handle.delete).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject<Partial<ReconcileResult>>({ created: 1, deleted: 2 });
+  });
+
+  it("never asks the database for archived rows", async () => {
+    setKeywords([
+      { id: "k1", projectId: "p1", project: { defaults: null }, schedule: automatic() },
+      {
+        archivedAt: new Date("2026-09-01T06:00:00.000Z"),
+        id: "k2",
+        projectId: "p1",
+        project: { defaults: null },
+        schedule: automatic(),
+      },
+    ]);
+    const { client, handle } = clientMock(["rank-check-k1", "rank-check-k2"]);
+
+    await reconcileAllSchedules(client);
+
+    expect(mocks.prisma.keyword.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { archivedAt: null } }),
+    );
+    expect(client.getHandle).toHaveBeenCalledWith("rank-check-k2");
+    expect(handle.delete).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves a schedule that still has an active market alone when a sibling market pauses", async () => {
+    setKeywords([
+      { id: "k1", projectId: "p1", project: { defaults: null }, schedule: automatic() },
+      {
+        id: "k2",
+        locationId: "location_paused",
+        projectId: "p1",
+        project: { defaults: null },
+        schedule: automatic(),
+      },
+    ]);
+    const { client } = clientMock();
+
+    const result = await reconcileAllSchedules(client);
+
+    expect(client.create).toHaveBeenCalledWith(
+      expect.objectContaining({ scheduleId: "rank-check-k1" }),
+    );
+    expect(result).toMatchObject<Partial<ReconcileResult>>({ created: 1, failed: 0 });
   });
 });

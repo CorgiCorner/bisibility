@@ -51,7 +51,7 @@ export function SearchInsightsTrustStripLoading() {
 function TableCardLoading() {
   return (
     <section className="overflow-hidden rounded-card border border-border bg-bg-elev">
-      <div className="flex items-baseline justify-between gap-2.5 border-b border-border px-4 pb-3 pt-3.5">
+      <div className="flex items-baseline justify-between gap-2.5 px-4 pb-3 pt-3.5">
         <div className="flex flex-col gap-1.5">
           <div className={cn(BAR, "h-3.5 w-28")} />
           <div className={cn(BAR, "h-2.5 w-44")} />
@@ -60,11 +60,11 @@ function TableCardLoading() {
       </div>
       {/* The same wrapper the real table gets: below the width the columns need, the rows scroll
           instead of squeezing the fluid text column away. */}
-      <div className="flex flex-col overflow-x-auto">
+      <div className="flex flex-col overflow-x-auto border-t border-border">
         {SKELETON_ROWS.map((row) => (
           <div
             className={cn(
-              "grid items-center gap-2.5 border-b border-border-soft px-4 py-3",
+              "grid items-center gap-2.5 border-b border-border px-4 py-3 last:border-b-0",
               moduleTableColumns.queries,
             )}
             key={row}

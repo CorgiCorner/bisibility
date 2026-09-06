@@ -1,6 +1,4 @@
 import { hashApiKey } from "@/lib/providers/crypto";
-import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
-import { BudgetExhaustedError } from "@/lib/rank-check/budget";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetIdempotencyForTests } from "./idempotency";
 import { resetRateLimitStateForTests } from "./ratelimit";
@@ -19,26 +17,7 @@ const mocks = vi.hoisted(() => {
   };
   const keywordStore = new Map<string, StoredKeyword>();
   let publicIdSequence = 0;
-  class RankCheckRunnerError extends Error {
-    readonly code: string;
-
-    constructor(code = "provider_failed", message = "Rank check failed.") {
-      super(message);
-      this.name = "RankCheckRunnerError";
-      this.code = code;
-    }
-  }
-
   return {
-    ProviderChainError: class ProviderChainError extends RankCheckRunnerError {
-      readonly attempts: { message: string; provider: string }[];
-
-      constructor(attempts: { message: string; provider: string }[] = []) {
-        super("provider_failed", "All providers failed.");
-        this.name = "ProviderChainError";
-        this.attempts = attempts;
-      }
-    },
     keywordStore,
     makePublicId: vi.fn((prefix: string) => {
       const suffix = `a${publicIdSequence.toString(36).padStart(23, "0")}`;
@@ -62,6 +41,11 @@ const mocks = vi.hoisted(() => {
         update: vi.fn(),
       },
       keywordSchedule: { createMany: vi.fn(), upsert: vi.fn() },
+      rankCheckRun: { update: vi.fn(), updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
+      rankCheckRunItem: {
+        findMany: vi.fn().mockResolvedValue([]),
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
       keywordTag: { createMany: vi.fn(), deleteMany: vi.fn() },
       projectMarket: { findMany: vi.fn(), upsert: vi.fn() },
       projectDefaults: { findUnique: vi.fn() },
@@ -81,8 +65,7 @@ const mocks = vi.hoisted(() => {
         update: vi.fn(),
       },
     },
-    persistFailedRankCheck: vi.fn(() => Promise.resolve({ id: "rank_failed_1" })),
-    RankCheckRunnerError,
+    launchSingleRankCheckRun: vi.fn(),
     resolveKeywordLocation: vi.fn(
       async (input: {
         country?: string;
@@ -115,7 +98,6 @@ const mocks = vi.hoisted(() => {
     resetPublicIds: () => {
       publicIdSequence = 0;
     },
-    runKeywordCheckWithFallback: vi.fn(),
   };
 });
 
@@ -148,14 +130,8 @@ vi.mock("@/lib/providers/registry", () => ({
   ],
 }));
 
-vi.mock("@/lib/rank-check/runner", () => ({
-  persistFailedRankCheck: mocks.persistFailedRankCheck,
-  RankCheckRunnerError: mocks.RankCheckRunnerError,
-}));
-
-vi.mock("@/lib/rank-check/fallback", () => ({
-  ProviderChainError: mocks.ProviderChainError,
-  runKeywordCheckWithFallback: mocks.runKeywordCheckWithFallback,
+vi.mock("@/lib/rank-check/runs/launch-single", () => ({
+  launchSingleRankCheckRun: mocks.launchSingleRankCheckRun,
 }));
 
 const rawKey = "bsb_key_test_1234567890abcdef";
@@ -351,6 +327,13 @@ describe("public API router", () => {
       }),
     );
     mocks.prisma.providerConnectionRate.upsert.mockResolvedValue({ id: "rate_1" });
+    mocks.launchSingleRankCheckRun.mockResolvedValue({
+      estimatedCostCents: 1,
+      keywordCount: 1,
+      publicId: "rcr_a00000000000000000000000",
+      status: "queued",
+      targetCount: 1,
+    });
   });
 
   afterEach(() => {
@@ -842,8 +825,12 @@ describe("public API router", () => {
     expect(body.results[0]).toMatchObject({ status: "created", warning });
   });
 
-  it("patches keyword location with location_key", async () => {
-    const existing = keywordRow("kw_a00000000000000000000000");
+  it("accepts an identical location_key while patching metadata", async () => {
+    const existing = {
+      ...keywordRow("kw_a00000000000000000000000"),
+      location: "Austin, Texas, United States",
+      locationId: "loc_austin",
+    };
     const updated = {
       ...existing,
       intent: "informational",
@@ -905,26 +892,13 @@ describe("public API router", () => {
     });
   });
 
-  it("runs a single-keyword rank check through the runner", async () => {
+  it("queues a one-item rank-check run", async () => {
     mocks.prisma.keyword.findFirst.mockResolvedValue({
       id: "keyword_1",
+      project: { domain: "example.com", isSample: false },
       projectId: "project_1",
       publicId: "kw_a00000000000000000000000",
       text: "rank tracker",
-    });
-    mocks.runKeywordCheckWithFallback.mockResolvedValue({
-      rankCheck: {
-        checkedAt: new Date("2026-01-06T00:00:00.000Z"),
-        costCents: 0.06,
-        id: "check_a00000000000000000000000",
-        keywordId: "keyword_1",
-        position: 4,
-        previousPosition: 8,
-        provider: "dataforseo",
-        publicId: "check_a00000000000000000000000",
-        rankingUrl: "https://example.com/page",
-        status: "completed",
-      },
     });
 
     const response = await call(
@@ -933,16 +907,14 @@ describe("public API router", () => {
     );
     const body = await response.json();
 
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(202);
     expect(body).toMatchObject({
-      id: "check_a00000000000000000000000",
-      keyword_id: "kw_a00000000000000000000000",
-      position: 4,
+      id: "rcr_a00000000000000000000000",
+      status: "queued",
     });
-    expect(mocks.runKeywordCheckWithFallback).toHaveBeenCalledWith({
-      keywordId: "keyword_1",
-      providerId: undefined,
-    });
+    expect(mocks.launchSingleRankCheckRun).toHaveBeenCalledWith(
+      expect.objectContaining({ keywordId: "kw_a00000000000000000000000", trigger: "api" }),
+    );
   });
 
   it("deletes keywords and writes audit in one transaction", async () => {
@@ -966,101 +938,6 @@ describe("public API router", () => {
         targetId: "kw_a00000000000000000000000",
       }),
     });
-  });
-
-  it("maps exhausted rank-check budgets to a 429 problem response", async () => {
-    mocks.prisma.keyword.findFirst.mockResolvedValue({
-      id: "keyword_1",
-      projectId: "project_1",
-      publicId: "kw_a00000000000000000000000",
-      text: "rank tracker",
-    });
-    mocks.runKeywordCheckWithFallback.mockRejectedValue(
-      new BudgetExhaustedError({ capCents: 1, projectId: "project_1", spentCents: 1 }),
-    );
-
-    const response = await call(
-      authedRequest("POST", "/keywords/kw_a00000000000000000000000/checks", {}),
-      "/keywords/kw_a00000000000000000000000/checks",
-    );
-
-    expect(response.status).toBe(429);
-    await expect(response.json()).resolves.toMatchObject({
-      detail: "Rank check monthly budget reached.",
-      status: 429,
-      title: "Budget exhausted",
-      type: "https://bisibility.com/problems/budget_exhausted",
-    });
-    expect(mocks.persistFailedRankCheck).not.toHaveBeenCalled();
-  });
-
-  it("maps provider rate limits to 429 problem details with retry headers", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-01-06T00:00:00.000Z"));
-    mocks.prisma.keyword.findFirst.mockResolvedValue({
-      id: "keyword_1",
-      project: { domain: "example.com" },
-      projectId: "project_1",
-      publicId: "kw_a00000000000000000000000",
-      text: "rank tracker",
-    });
-    mocks.runKeywordCheckWithFallback.mockRejectedValue(
-      new ProviderRateLimitedError("serpapi", {
-        accountKey: "serpapi:test",
-        resetAt: new Date("2026-01-06T00:00:45.000Z").getTime(),
-      }),
-    );
-
-    const response = await call(
-      authedRequest("POST", "/keywords/kw_a00000000000000000000000/checks", {}),
-      "/keywords/kw_a00000000000000000000000/checks",
-    );
-
-    expect(response.status).toBe(429);
-    expect(response.headers.get("Retry-After")).toBe("45");
-    expect(response.headers.get("RateLimit-Reset")).toBe("45");
-    await expect(response.json()).resolves.toMatchObject({
-      detail: "Provider rate limit reached; retry shortly.",
-      status: 429,
-      title: "Rate limit exceeded",
-      type: "https://bisibility.com/problems/rate_limited",
-    });
-  });
-
-  it("maps rank-check runner provider failures to a 502 problem response", async () => {
-    mocks.prisma.keyword.findFirst.mockResolvedValue({
-      id: "keyword_1",
-      project: { domain: "example.com" },
-      projectId: "project_1",
-      publicId: "kw_a00000000000000000000000",
-      text: "rank tracker",
-    });
-    mocks.runKeywordCheckWithFallback.mockRejectedValue(
-      new mocks.RankCheckRunnerError("provider_failed", "provider unavailable"),
-    );
-
-    const response = await call(
-      authedRequest("POST", "/keywords/kw_a00000000000000000000000/checks", {
-        provider_id: "serpapi",
-      }),
-      "/keywords/kw_a00000000000000000000000/checks",
-    );
-
-    expect(response.status).toBe(502);
-    await expect(response.json()).resolves.toMatchObject({
-      detail: "Rank check provider request failed.",
-      status: 502,
-      title: "Provider unavailable",
-      type: "https://bisibility.com/problems/provider_unavailable",
-    });
-    expect(mocks.persistFailedRankCheck).toHaveBeenCalledWith(
-      expect.objectContaining({
-        error: "provider unavailable",
-        keywordId: "keyword_1",
-        keywordPublicId: "kw_a00000000000000000000000",
-        provider: "serpapi",
-      }),
-    );
   });
 
   it("executes documented snake-case schedules for patch and bulk requests", async () => {
@@ -1117,33 +994,6 @@ describe("public API router", () => {
         }),
       }),
     );
-  });
-
-  it("maps rank-check runner missing keywords to a 404 problem response", async () => {
-    mocks.prisma.keyword.findFirst.mockResolvedValue({
-      id: "keyword_1",
-      project: { domain: "example.com" },
-      projectId: "project_1",
-      publicId: "kw_a00000000000000000000000",
-      text: "rank tracker",
-    });
-    mocks.runKeywordCheckWithFallback.mockRejectedValue(
-      new mocks.RankCheckRunnerError("keyword_not_found", "Keyword no longer exists."),
-    );
-
-    const response = await call(
-      authedRequest("POST", "/keywords/kw_a00000000000000000000000/checks", {}),
-      "/keywords/kw_a00000000000000000000000/checks",
-    );
-
-    expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toMatchObject({
-      detail: "Keyword no longer exists.",
-      status: 404,
-      title: "Provider unavailable",
-      type: "https://bisibility.com/problems/provider_unavailable",
-    });
-    expect(mocks.persistFailedRankCheck).not.toHaveBeenCalled();
   });
 
   it("connects providers with API-key auth without using session actions", async () => {

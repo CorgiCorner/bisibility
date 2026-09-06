@@ -9,7 +9,9 @@ export type SearchInsightsQueryRow = {
 export type SearchInsightsPageRow = {
   clicks: number;
   ctr: number;
+  engagementRate: number | null;
   impressions: number;
+  keyEvents: number | null;
   /** Pathname and search of the stored URL: the part that tells two pages apart. */
   path: string;
   position: number;
@@ -92,6 +94,8 @@ export function pageRows(
   return {
     rows: rows.map((row) => ({
       ...metrics(row),
+      engagementRate: null,
+      keyEvents: null,
       path: pagePath(row.page),
       sessions: null,
       url: row.page,

@@ -1,6 +1,6 @@
 import { SidebarNav } from "@/components/shell/SidebarNav";
-import type { NavBadge } from "@/lib/nav/nav-items";
-import { appPath } from "@/lib/routing/app-path";
+import type { NavBadge, NavContext } from "@/lib/nav/nav-items";
+import { appPath, asMarketRef, marketPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
 import { render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -17,9 +17,16 @@ vi.mock("@/lib/nav/nav-items", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/nav/nav-items")>();
   return {
     ...actual,
-    navItems: (projectRef: string) =>
+    // The context is forwarded, not dropped: `navItems` accepts one and can emit market-scoped
+    // hrefs from it, so a double that swallowed the argument would hide exactly the regression
+    // the market-level test below exists to catch.
+    navItems: (
+      projectRef: string,
+      context?: NavContext,
+      enabledExperimentalModules?: readonly ("timeline" | "competitors")[],
+    ) =>
       actual
-        .navItems(projectRef)
+        .navItems(projectRef, context, enabledExperimentalModules)
         .map((item) =>
           item.label in navBadgeOverrides
             ? { ...item, badge: navBadgeOverrides[item.label] }
@@ -43,14 +50,78 @@ vi.mock("next/link", () => ({
 }));
 
 describe("SidebarNav", () => {
+  it("keeps disabled experimental rows out of the mobile drawer and restores enabled rows", () => {
+    setNavigationState({ pathname: appPath("prj_1", "dashboard") });
+    const disabled = render(<SidebarNav enabledExperimentalModules={[]} projectRef="prj_1" />);
+
+    expect(disabled.queryByRole("link", { name: "Timeline" })).not.toBeInTheDocument();
+    expect(disabled.queryByRole("link", { name: "Competitors" })).not.toBeInTheDocument();
+    disabled.unmount();
+
+    render(
+      <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
+    );
+
+    expect(screen.getByRole("link", { name: "Timeline" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Competitors" })).toBeInTheDocument();
+  });
+
   it("makes expanded navigation links span the drawer width", () => {
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
-    render(<SidebarNav projectRef="prj_1" />);
+    render(<SidebarNav enabledExperimentalModules={["competitors"]} projectRef="prj_1" />);
 
     expect(screen.getByRole("link", { name: "Dashboard" })).toHaveClass("w-full");
   });
 
-  it("uses the Google logo and active fill for Search Console", () => {
+  it("keeps the current-page marker on a market-scoped URL", () => {
+    // The market is a level of the SAME destination, so the row that rendered the page must
+    // stay marked. Comparing the raw pathname against the project-level href left every row
+    // unmarked, which reads as "you are nowhere" rather than as a different page.
+    setNavigationState({
+      pathname: marketPath("prj_1", asMarketRef("pmkt_one"), "rank-tracker"),
+    });
+    render(
+      <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
+    );
+
+    const current = screen.getByRole("link", { name: "Rank Tracker" });
+
+    expect(current).toHaveAttribute("aria-current", "page");
+    expect(current.querySelector("svg")).toHaveAttribute("data-weight", "fill");
+    expect(screen.getByRole("link", { name: "Dashboard" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("keeps routed drawer links in the current market and unrouted links at project level", () => {
+    setNavigationState({
+      pathname: marketPath("prj_1", asMarketRef("pmkt_one"), "rank-tracker"),
+    });
+    render(<SidebarNav enabledExperimentalModules={["competitors"]} projectRef="prj_1" />);
+
+    const current = screen.getByRole("link", { name: "Rank Tracker" });
+    expect(current).toHaveAttribute(
+      "href",
+      marketPath("prj_1", asMarketRef("pmkt_one"), "rank-tracker"),
+    );
+    expect(current).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Competitors" })).toHaveAttribute(
+      "href",
+      appPath("prj_1", "competitors"),
+    );
+  });
+
+  it("keeps account-route drawer links at project level", () => {
+    setNavigationState({ pathname: "/app/account/preferences" });
+    render(
+      <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
+    );
+
+    for (const link of screen.getAllByRole("link")) {
+      expect(link.getAttribute("href")).toMatch(/^\/app\/prj_1\//u);
+      expect(link.getAttribute("href")).not.toContain("/m/");
+    }
+  });
+
+  it("uses the rising chart and active fill for Search Console", () => {
     setNavigationState({ pathname: appPath("prj_1", "search-console") });
     render(<SidebarNav projectRef="prj_1" />);
 
@@ -75,13 +146,13 @@ describe("SidebarNav", () => {
     expect(other).toHaveAttribute("data-weight", "regular");
   });
 
-  it("shows grouped headings and module tags only in the expanded drawer", () => {
+  it("shows group headings and module tags in the expanded drawer, tags when collapsed", () => {
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
     const expanded = render(<SidebarNav projectRef="prj_1" />);
 
-    expect(expanded.getByText(/^track$/i)).toBeInTheDocument();
-    expect(expanded.getByText(/^research$/i)).toBeInTheDocument();
-    expect(expanded.getByText(/^connect$/i)).toBeInTheDocument();
+    expect(expanded.getByText("Activity")).toBeInTheDocument();
+    expect(expanded.getByText("Modules")).toBeInTheDocument();
+    expect(expanded.getByText("Project")).toBeInTheDocument();
 
     const gcsInsights = expanded.getByText("Search Console").closest("a");
     expect(gcsInsights).not.toBeNull();
@@ -98,9 +169,12 @@ describe("SidebarNav", () => {
     expanded.unmount();
 
     const collapsed = render(<SidebarNav collapsed projectRef="prj_1" />);
-    expect(collapsed.queryByText(/^track$/i)).toBeNull();
-    expect(collapsed.queryByText(/^research$/i)).toBeNull();
-    expect(collapsed.queryByText(/^connect$/i)).toBeNull();
+    expect(collapsed.queryByText("Activity")).toBeNull();
+    expect(collapsed.queryByText("Modules")).toBeNull();
+    expect(collapsed.queryByText("Project")).toBeNull();
+    expect(collapsed.getByText("ACTIVITY")).toHaveClass("w-20", "text-center");
+    expect(collapsed.getByText("MODULES")).toHaveClass("w-20", "text-center");
+    expect(collapsed.getByText("PROJECT")).toHaveClass("w-20", "text-center");
     expect(collapsed.queryByText("alpha")).toBeNull();
   });
 
@@ -108,7 +182,7 @@ describe("SidebarNav", () => {
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
     render(<SidebarNav projectRef="prj_1" />);
 
-    const heading = screen.getByText(/^track$/i);
+    const heading = screen.getByText("Activity");
 
     // A heading is a caption, not a destination: a focusable or role-bearing element here would
     // put three extra stops in the rail's tab order.
@@ -130,28 +204,39 @@ describe("SidebarNav", () => {
     );
   });
 
-  it("keeps utility links in normal navigation flow", () => {
+  it("keeps every destination inside a group and nothing pinned below them", () => {
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
     render(<SidebarNav projectRef="prj_1" />);
 
-    const connect = screen.getByText(/^connect$/i);
+    // Alerts and Settings used to be an ungrouped block after the last heading. They are now
+    // ordinary rows of Activity and Project, still in normal flow and still not pinned.
+    const activity = screen.getByText("Activity");
     const alerts = screen.getByRole("link", { name: "Alerts" });
+    const project = screen.getByText("Project");
     const settings = screen.getByRole("link", { name: "Settings" });
-    expect(connect.compareDocumentPosition(alerts)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(alerts.compareDocumentPosition(settings)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+
+    expect(activity.compareDocumentPosition(alerts)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(alerts.compareDocumentPosition(project)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(project.compareDocumentPosition(settings)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(alerts.parentElement).not.toHaveClass("mt-auto");
+    expect(settings.parentElement).not.toHaveClass("mt-auto");
+    // Settings is the last row of the rail, so nothing sits outside the three groups.
+    const rows = screen.getAllByRole("link");
+    expect(rows[rows.length - 1]).toBe(settings);
   });
 
   it("renders experimental navigation as an icon with an accessible tooltip", () => {
     navBadgeOverrides.Dashboard = "new";
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
-    render(<SidebarNav projectRef="prj_1" />);
+    render(
+      <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
+    );
 
     // Text tags are decorative: they must not alter the containing row's accessible name.
     const gcsInsights = screen.getByRole("link", { name: "Search Console" });
     const alpha = within(gcsInsights).getByText("alpha");
     expect(alpha).toHaveAttribute("aria-hidden", "true");
-    expect(alpha).toHaveClass("px-[7px]", "py-0.5", "bg-nav-active", "text-fg-muted");
+    expect(alpha).toHaveClass("px-[7px]", "py-0.5", "bg-bg-sunken", "text-fg-muted");
 
     const competitors = screen.getByRole("link", { name: "Competitors" });
     expect(competitors.querySelector("[data-experimental-badge-flask]")).toBeInTheDocument();

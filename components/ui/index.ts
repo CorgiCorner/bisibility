@@ -3,6 +3,7 @@ export { AlertBanner, type AlertBannerAction, type AlertBannerProps } from "./Al
 export { AlertBannerStack, type AlertBannerStackProps } from "./AlertBannerStack";
 export { AppDrawer, type AppDrawerCloseReason, type AppDrawerProps } from "./AppDrawer";
 export { Avatar, type AvatarProps } from "./Avatar";
+export { BackLink, type BackLinkProps } from "./BackLink";
 export {
   BrandLockup,
   type BrandLockupOrientation,
@@ -55,7 +56,7 @@ export { ExternalLink, type ExternalLinkProps } from "./ExternalLink";
 export { FieldLabel, type FieldLabelProps } from "./FieldLabel";
 export { filterChipStateClassName } from "./filter-chip-styles";
 export { GithubStars, type GithubStarsProps, type GithubStarsSize } from "./GithubStars";
-export { IdChip, type IdChipProps } from "./IdChip";
+export { IdChip, type IdChipProps, shortId } from "./IdChip";
 export { InfoTooltip, type InfoTooltipProps } from "./InfoTooltip";
 export {
   InlineCallout,
@@ -100,6 +101,13 @@ export { MenuSelectOptionItem } from "./MenuSelectOptionItem";
 export { Modal, type ModalProps, type ModalSize } from "./Modal";
 export { ModuleMark, type ModuleMarkProps, type ModuleMarkVariant } from "./ModuleMark";
 export { menuTransitionDuration, useMenuExitLifecycle } from "./menu-exit-lifecycle";
+export {
+  type OperationAction,
+  OperationRow,
+  type OperationRowProps,
+  type OperationRowVariant,
+  type OperationState,
+} from "./OperationRow";
 export { PasswordInput, type PasswordInputProps } from "./PasswordInput";
 export { Pill, PillBadge, type PillBadgeProps, type PillProps } from "./Pill";
 export {
@@ -120,6 +128,14 @@ export {
   type SegmentedControlSize,
 } from "./SegmentedControl";
 export { Sheet, type SheetHeightVariant, type SheetProps, type SheetWidthVariant } from "./Sheet";
+export {
+  StatusChip,
+  type StatusChipProps,
+  type StatusChipShape,
+  type StatusChipSize,
+  type StatusChipTone,
+  type StatusChipVariant,
+} from "./StatusChip";
 export { type StatusKind, StatusPill, type StatusPillProps } from "./StatusPill";
 export {
   type StepDotState,
@@ -135,6 +151,13 @@ export {
   type SummaryStripTone,
 } from "./SummaryStrip";
 export { Switch, type SwitchProps } from "./Switch";
+export {
+  itemStatusChipPresentation,
+  runStatusChipPresentation,
+  type StatusChipPresentation,
+} from "./status-chip-mapping";
+export { TagAdder, type TagAdderProps } from "./TagAdder";
+export { TagChip, type TagChipProps } from "./TagChip";
 export { Textarea, type TextareaProps } from "./Textarea";
 export { ThemeRoot } from "./ThemeRoot";
 export {
@@ -159,4 +182,5 @@ export {
 export { tableHeaderClassName, tableHeaderTypographyClassName } from "./table-header-styles";
 export type { ToastSeverity } from "./toast-presentation";
 export { toolbarControlClassName } from "./toolbar-control-styles";
+export { useLiveNow } from "./useLiveNow";
 export { useBrowserTimeZone, ZonedTime, type ZonedTimeProps } from "./ZonedTime";

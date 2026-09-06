@@ -28,10 +28,7 @@ export function CronRunPreview({
   if (preview.status !== "ready") return null;
 
   return (
-    <div
-      aria-live="polite"
-      className="mt-3 rounded-control border border-border-soft bg-bg-sunken p-3"
-    >
+    <div aria-live="polite" className="mt-3 rounded-control border border-border bg-bg-sunken p-3">
       <div className="flex items-center gap-2 text-[12px] font-semibold text-fg">
         <CheckCircle aria-hidden className="text-green-text" size={15} weight="regular" />
         Next three cron anchors

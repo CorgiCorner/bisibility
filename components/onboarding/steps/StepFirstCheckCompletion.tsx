@@ -1,3 +1,7 @@
+"use client";
+
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { formatDateTime } from "@/lib/dates/format";
 import { appPath } from "@/lib/routing/app-path";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
 
@@ -18,6 +22,7 @@ export function StepFirstCheckCompletion({
   projectId,
   timezone,
 }: Readonly<Props>) {
+  const dateFormat = useDateFormat();
   const rankTrackerHref = appPath(projectId, "rank-tracker");
   const settingsHref = appPath(projectId, "settings", "tracking");
   const singular = keywordCount === 1;
@@ -57,13 +62,7 @@ export function StepFirstCheckCompletion({
     );
   let nextRun: string | null = null;
   try {
-    nextRun = nextCheckAt
-      ? new Intl.DateTimeFormat("en", {
-          dateStyle: "medium",
-          timeStyle: "short",
-          timeZone: timezone,
-        }).format(new Date(nextCheckAt))
-      : null;
+    nextRun = nextCheckAt ? formatDateTime(new Date(nextCheckAt), dateFormat, timezone) : null;
   } catch {
     nextRun = null;
   }

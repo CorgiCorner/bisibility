@@ -31,7 +31,7 @@ export function DomainOverviewDistribution({ metrics }: Readonly<{ metrics: Doma
             <span className="font-sans tabular-nums text-[12px] text-fg-muted">{bucket.label}</span>
             <span
               aria-hidden
-              className="h-2 overflow-hidden rounded-full border border-border-soft bg-bg-sunken"
+              className="h-2 overflow-hidden rounded-full border border-border bg-bg-sunken"
             >
               <span
                 className="block h-full rounded-full bg-accent-solid"

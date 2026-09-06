@@ -74,6 +74,32 @@ describe("selectImportObservabilityFacts", () => {
     ).toEqual(d28);
   });
 
+  it("opens d1 for a complete boundary day with a covering aggregate", () => {
+    const selected = facts([day(boundary)], {
+      aggregateRanges: [aggregate(boundary, boundary)],
+    });
+
+    expect(selected.readyThrough.d1).toEqual({ current: true, previous: false });
+    expect(selected.readyThrough.d7.current).toBe(false);
+  });
+
+  it("keeps d1 closed without every partition or a qualifying aggregate", () => {
+    expect(
+      facts([day(boundary).slice(0, 2)], {
+        aggregateRanges: [aggregate(boundary, boundary)],
+      }).readyThrough.d1.current,
+    ).toBe(false);
+    expect(facts([day(boundary)], { aggregateRanges: [] }).readyThrough.d1.current).toBe(false);
+  });
+
+  it("marks d1 previous ready for two consecutive complete days", () => {
+    expect(
+      facts([day(boundary), day(addDays(boundary, -1))], {
+        aggregateRanges: [aggregate(addDays(boundary, -1), boundary)],
+      }).readyThrough.d1,
+    ).toEqual({ current: true, previous: true });
+  });
+
   it("requires complete partitions and a persisted final aggregate for every preset range", () => {
     const rows = consecutive(90);
     expect(facts(rows, { aggregateRanges: [] }).readyThrough.d90.current).toBe(false);
@@ -166,6 +192,7 @@ describe("selectImportObservabilityFacts", () => {
   it("returns only JSON-safe values", () => {
     const selected = facts(consecutive(14));
     expect(JSON.parse(JSON.stringify(selected))).toEqual(selected);
+    expect(Object.keys(selected.readyThrough).sort()).toEqual(["d1", "d28", "d7", "d90"]);
     expect(Object.keys(selected).sort()).toEqual([
       "consecutiveDays",
       "deepHistoryMonths",

@@ -37,6 +37,9 @@ function ResultIcon({ row }: Readonly<{ row: FirstCheckResultRow }>) {
       <CircleNotch aria-hidden className="bv-spin text-accent-text" size={16} weight="regular" />
     );
   }
+  if (row.status === "queued") {
+    return <CircleNotch aria-hidden className="text-accent-text" size={16} weight="regular" />;
+  }
   if (row.status === "failed") {
     return <WarningCircle aria-hidden className="text-red-text" size={16} weight="regular" />;
   }
@@ -47,6 +50,8 @@ function resultText(row: FirstCheckResultRow) {
   switch (row.status) {
     case "pending":
       return "Checking...";
+    case "queued":
+      return "Queued";
     case "completed":
       return rankingLabel(row.position, row.rankingUrl);
     case "failed":
@@ -79,6 +84,7 @@ function ResultTarget({ row }: Readonly<{ row: FirstCheckResultRow }>) {
 function resultsNote(state: FirstCheckRunState) {
   const failed = state.rows.filter((row) => row.status === "failed").length;
   if (state.status === "running") return "Live checks usually return within a minute.";
+  if (state.status === "queued") return "Queued checks start when the worker claims the run.";
   if (failed === 1 && state.rows.length === 1) {
     return "The sample check failed. Retry it below.";
   }

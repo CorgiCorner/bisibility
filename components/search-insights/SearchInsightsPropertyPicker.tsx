@@ -10,11 +10,12 @@ import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import { searchSyncPreflightCopy } from "@/lib/search-insights/sync/plan";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import {
+  ArrowSquareOutIcon as ArrowSquareOut,
   CaretDownIcon as CaretDown,
   GlobeHemisphereWestIcon as GlobeHemisphereWest,
 } from "@phosphor-icons/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import {
   SearchInsightsMenu,
   SearchInsightsMenuNotice,
@@ -27,6 +28,7 @@ import { groupSearchInsightsProperties } from "./SearchInsightsPropertyPickerGro
 import { PropertyKindPill, PropertyName } from "./SearchInsightsPropertyRow";
 import {
   NO_PROPERTY_LABEL,
+  OPEN_IN_SEARCH_CONSOLE_LABEL,
   PROPERTIES_EMPTY,
   PROPERTIES_FAILED,
   PROPERTIES_RECONNECT,
@@ -56,6 +58,9 @@ export function SearchInsightsPropertyPicker({
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [pendingProperty, setPendingProperty] = useState<SearchInsightsPropertyOption | null>(null);
+  const [viewPending, startViewTransition] = useTransition();
+  const [selectPending, startSelectTransition] = useTransition();
+  const navigationPending = viewPending || selectPending;
   const property = connection.property;
   const displayedProperty = viewedProperty ?? property;
   const connectHref = googleInstallUrl({
@@ -65,6 +70,12 @@ export function SearchInsightsPropertyPicker({
   });
   const needsConnection =
     connection.status === "not_connected" || connection.status === "needs_reauth";
+  const searchConsoleHref = (() => {
+    if (!displayedProperty) return undefined;
+    const url = new URL("https://search.google.com/search-console");
+    url.searchParams.set("resource_id", displayedProperty.value);
+    return url.toString();
+  })();
 
   // The account's property list is a live Google call, so it is fetched when the menu opens
   // rather than on every page render. Only a non-empty list is remembered: a lost consent, a
@@ -98,20 +109,22 @@ export function SearchInsightsPropertyPicker({
     }
   }
 
-  async function pick(option: SearchInsightsPropertyOption) {
-    setPendingProperty(null);
-    setAnchorEl(null);
-    if (option.value === property?.value) return;
-    try {
-      const result = await selectPropertyAction({ projectId, property: option.value });
-      if (result.status === "reauth_required") {
-        showToast(REAUTH_REQUIRED, { severity: "connection" });
-        return;
+  function pick(option: SearchInsightsPropertyOption) {
+    if (option.value === property?.value || selectPending) return;
+    startSelectTransition(async () => {
+      try {
+        const result = await selectPropertyAction({ projectId, property: option.value });
+        if (result.status === "reauth_required") {
+          showToast(REAUTH_REQUIRED, { severity: "connection" });
+          return;
+        }
+        router.refresh();
+      } catch (error) {
+        showToast(actionErrorMessage(error, SELECT_FAILED), { severity: "error" });
+      } finally {
+        setPendingProperty(null);
       }
-      router.refresh();
-    } catch (error) {
-      showToast(actionErrorMessage(error, SELECT_FAILED), { severity: "error" });
-    }
+    });
   }
 
   const groupedOptions = useMemo(
@@ -130,10 +143,12 @@ export function SearchInsightsPropertyPicker({
   }
   function viewProperty(value: string) {
     setAnchorEl(null);
-    if (value === displayedProperty?.value) return;
-    router.push(
-      searchInsightsPropertyViewPath(pathname, searchParams, value, preserveGa4OauthSelection),
-    );
+    if (value === displayedProperty?.value || viewPending) return;
+    startViewTransition(() => {
+      router.push(
+        searchInsightsPropertyViewPath(pathname, searchParams, value, preserveGa4OauthSelection),
+      );
+    });
   }
 
   return (
@@ -144,17 +159,23 @@ export function SearchInsightsPropertyPicker({
         aria-label={PROPERTY_MENU_LABEL}
         className="max-w-105"
         href={needsConnection ? connectHref : undefined}
-        onClick={!needsConnection ? (event) => void openMenu(event.currentTarget) : undefined}
-        size="sm"
-        variant="secondary"
-      >
-        <span className="flex min-w-0 items-center gap-2">
+        loading={navigationPending}
+        loadingIndicator={
           <GlobeHemisphereWest
             weight="regular"
             aria-hidden
-            className="shrink-0 text-fg-muted"
+            className="animate-spin text-fg-muted"
             size={15}
           />
+        }
+        onClick={!needsConnection ? (event) => void openMenu(event.currentTarget) : undefined}
+        size="sm"
+        startIcon={
+          <GlobeHemisphereWest weight="regular" aria-hidden className="text-fg-muted" size={15} />
+        }
+        variant="secondary"
+      >
+        <span className="flex min-w-0 items-center gap-2">
           {displayedProperty ? (
             <PropertyName name={displayedProperty.displayName} value={displayedProperty.value} />
           ) : (
@@ -168,6 +189,18 @@ export function SearchInsightsPropertyPicker({
           <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
         </span>
       </Button>
+      {searchConsoleHref ? (
+        <Button
+          endIcon={<ArrowSquareOut aria-hidden size={14} weight="regular" />}
+          href={searchConsoleHref}
+          rel="noreferrer noopener"
+          size="sm"
+          target="_blank"
+          variant="secondary"
+        >
+          {OPEN_IN_SEARCH_CONSOLE_LABEL}
+        </Button>
+      ) : null}
       <SearchInsightsMenu
         anchorEl={anchorEl}
         ariaLabel={PROPERTY_MENU_LABEL}
@@ -196,7 +229,11 @@ export function SearchInsightsPropertyPicker({
             <Button onClick={() => setPendingProperty(null)} variant="secondary">
               Cancel
             </Button>
-            <Button onClick={() => pendingProperty && void pick(pendingProperty)} variant="primary">
+            <Button
+              loading={selectPending}
+              onClick={() => pendingProperty && pick(pendingProperty)}
+              variant="primary"
+            >
               Switch property
             </Button>
           </>

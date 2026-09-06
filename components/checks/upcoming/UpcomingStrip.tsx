@@ -129,7 +129,7 @@ export function UpcomingStrip({
               <ul className="m-0 list-none space-y-3">
                 {openDay.samples.slice(0, 3).map((sample) => (
                   <li
-                    className="flex min-w-0 items-center justify-between gap-4 border-border-soft border-b pb-3 text-[13px] last:border-b-0 last:pb-0"
+                    className="flex min-w-0 items-center justify-between gap-4 border-border border-b pb-3 text-[13px] last:border-b-0 last:pb-0"
                     key={`${sample.keywordId}-${sample.nextCheckAt}`}
                   >
                     <span className="truncate text-fg">{sample.keyword}</span>

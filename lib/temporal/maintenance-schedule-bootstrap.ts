@@ -10,8 +10,6 @@ import {
   isTruthyFlag,
 } from "@/lib/temporal/bootstrap";
 
-// Maintenance schedule ids deliberately use a `maintenance-` prefix (NOT
-// `rank-check-`) so the reconciler's `rank-check-*` prune pass never touches them.
 export const AUDIT_PURGE_SCHEDULE_ID = "maintenance-audit-purge";
 export const RANK_CHECK_RAW_PURGE_SCHEDULE_ID = "maintenance-rank-check-raw-purge";
 export const QUEUED_RANK_CHECK_RETENTION_SCHEDULE_ID = "maintenance-queued-rank-check-retention";
@@ -44,8 +42,6 @@ const DEFAULT_MIGRATION_HOLD_RELEASE_INTERVAL = "1 hour";
 const DEFAULT_ALERT_DIGEST_FLUSH_INTERVAL = "5 minutes";
 const DEFAULT_ALERT_HEALTH_INTERVAL = "1 hour";
 
-// Omitted CalendarSpec fields default to 0 for second, so these UTC calendar
-// specs fire once per day/week at the given minute.
 const DEFAULT_AUDIT_PURGE = { hour: 3, minute: 17 };
 const DEFAULT_RANK_CHECK_RAW_PURGE = { hour: 3, minute: 29 };
 const DEFAULT_QUEUED_RANK_CHECK_RETENTION = { hour: 3, minute: 41 };
@@ -207,7 +203,12 @@ export async function ensureStaleChecksSchedule(
     client,
   );
 }
-
+export {
+  ensureRankCheckRunsSchedule,
+  RANK_CHECK_RUNS_SCHEDULE_ID,
+  RANK_CHECK_RUNS_WORKFLOW_TYPE,
+  rankCheckRunsScheduleDecision,
+} from "./rank-check-run-maintenance-bootstrap";
 export async function ensureStaleImportJobsSchedule(
   client?: BootstrapScheduleClient,
 ): Promise<EnsureScheduleResult> {

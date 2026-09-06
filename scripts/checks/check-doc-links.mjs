@@ -68,6 +68,11 @@ for (const pageId of docsNavigation.orphanPageIds) {
     `${relative(ROOT, publishedDocsPages.get(pageId).file)}: orphan documentation page is not reachable from docs/docs.json navigation`,
   );
 }
+for (const missing of docsNavigation.missingImports) {
+  failures.push(
+    `${relative(ROOT, missing.sourceFile)}: missing imported documentation source ${missing.importPath}`,
+  );
+}
 for (const missing of docsNavigation.missingFragments) {
   failures.push(
     `${relative(ROOT, missing.sourceFile)}: missing fragment target ${missing.href}`,
@@ -78,6 +83,7 @@ const apiWorkflowGroup = docsTab?.groups?.find((group) => group.group === "API w
 const expectedApiWorkflows = [
   "api/overview",
   "api/checks",
+  "api/rank-check-runs",
   "api/rank-history",
   "api/webhooks",
   "api/deploy-webhooks",

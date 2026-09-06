@@ -8,14 +8,19 @@ describe("tableHeaderClassName", () => {
     expect(tableHeaderClassName).not.toContain("bg-[var(--table-header-bg)]");
   });
 
-  it("pins Sans, 11px, uppercase, and 0.5px tracking for all headers", () => {
+  it("rules every header on its top and bottom edges", () => {
+    expect(tableHeaderClassName).toContain("border-y");
+    expect(tableHeaderClassName).toContain("border-border");
+  });
+
+  it("pins Sans, 10px, uppercase, and eyebrow tracking for all headers", () => {
     expect(tableHeaderClassName).not.toContain("font-mono");
-    expect(tableHeaderClassName).toContain("text-[11px]");
+    expect(tableHeaderClassName).toContain("font-sans");
+    expect(tableHeaderClassName).toContain("text-[10px]");
     expect(tableHeaderClassName).toContain("uppercase");
-    expect(tableHeaderClassName).toContain("tracking-[0.5px]");
-    expect(tableHeaderClassName).not.toContain("text-[10px]");
-    expect(tableHeaderClassName).not.toContain("10.5px");
-    expect(tableHeaderClassName).not.toContain("0.6px");
+    expect(tableHeaderClassName).toContain("tracking-[0.08em]");
+    expect(tableHeaderClassName).not.toContain("text-[11px]");
+    expect(tableHeaderClassName).not.toContain("tracking-[0.5px]");
   });
 
   it("uses the muted foreground token for header text", () => {

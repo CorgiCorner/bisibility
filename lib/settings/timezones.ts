@@ -14,6 +14,7 @@ type CatalogueCache = {
 let catalogueCache: CatalogueCache | undefined;
 
 function offsetLabel(timeZone: string, reference: Date) {
+  // TIMEZONE METADATA (not a calendar date): resolve the current GMT offset label.
   const label = new Intl.DateTimeFormat("en-US", {
     timeZone,
     timeZoneName: "longOffset",
@@ -108,6 +109,7 @@ function timezoneCatalogue(reference: Date) {
 
 export function isSupportedTimezone(value: string) {
   try {
+    // TIMEZONE VALIDATION (not display): construction rejects unsupported zone names.
     new Intl.DateTimeFormat("en-US", { timeZone: value }).format();
     return true;
   } catch {

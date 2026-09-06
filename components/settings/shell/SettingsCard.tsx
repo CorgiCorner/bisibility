@@ -84,7 +84,10 @@ export function SettingsCard({
           ) : null}
         </div>
         {showSave || action ? (
-          <div className="flex min-h-9 items-center gap-3" data-settings-card-actions="">
+          <div
+            className="ml-auto flex min-h-9 shrink-0 items-center gap-3"
+            data-settings-card-actions=""
+          >
             <span aria-live="polite" className="text-[12px] font-medium text-green-text">
               {saved ? <span data-settings-card-saved="">Saved</span> : null}
             </span>

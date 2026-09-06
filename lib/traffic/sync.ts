@@ -6,8 +6,6 @@ import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
 import { classifyProviderFailure, type ProviderFailureClass } from "@/lib/providers/failure-class";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { getAnalyticsProvider } from "@/lib/providers/registry";
-import type { ProviderStatus } from "@/lib/providers/types";
-import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
 import { isUserActionableTrafficFailure } from "./failure-policy";
 import type { TrafficKeyword } from "./match";
 import { trafficRuntimeCredentials } from "./runtime-credentials";
@@ -26,19 +24,13 @@ import {
 } from "./snapshots";
 import { addTrafficMetrics, emptyTrafficMetrics, warnIfTrafficTruncated } from "./sync-metrics";
 import { notifyTrafficRun, recordTrafficOperationalRun } from "./sync-observability";
+import { loadTrafficConnections, type TrafficConnectionLoadOptions } from "./traffic-connections";
 
-type TrafficConnection = {
-  credentialsEncrypted: string | null;
-  id: string;
-  provider: string;
-  status: ProviderStatus;
-};
-
+type TrafficSyncOptions = TrafficConnectionLoadOptions;
 export type TrafficConnectionSkip = {
   provider: string;
   reason: "needs_reauth" | "no_capability" | "rate_limited";
 };
-
 export type TrafficSyncRunStatus =
   | "succeeded_with_data"
   | "succeeded_empty"
@@ -46,7 +38,6 @@ export type TrafficSyncRunStatus =
   | "failed"
   | "skipped_needs_reauth"
   | "not_applicable";
-
 export type TrafficConnectionRun = TrafficSnapshotSyncMetrics & {
   connectionId: string;
   error?: string;
@@ -54,7 +45,6 @@ export type TrafficConnectionRun = TrafficSnapshotSyncMetrics & {
   provider: string;
   status: TrafficSyncRunStatus;
 };
-
 export type ProjectTrafficSyncSummary = {
   connections: number;
   keywordSnapshots: number;
@@ -79,18 +69,6 @@ function errorMessage(error: unknown) {
 
 const REDACTED_PROVIDER_ERROR = "Provider sync failed. See worker logs for details.";
 
-async function loadConnections(projectId: string): Promise<TrafficConnection[]> {
-  return prisma.providerConnection.findMany({
-    orderBy: providerChainOrderBy(),
-    select: { credentialsEncrypted: true, id: true, provider: true, status: true },
-    where: {
-      ...providerChainWhere("analytics"),
-      projectId,
-      status: { in: ["connected", "needs_reauth"] },
-    },
-  });
-}
-
 async function loadKeywords(projectId: string): Promise<TrafficKeyword[]> {
   return prisma.keyword.findMany({
     select: {
@@ -112,9 +90,10 @@ export async function syncTrafficForProject(
   projectId: string,
   now: Date,
   scheduledFor: Date | null = null,
+  options: TrafficSyncOptions = {},
 ): Promise<ProjectTrafficSyncSummary> {
   const [connections, keywords] = await Promise.all([
-    loadConnections(projectId),
+    loadTrafficConnections(projectId, options),
     loadKeywords(projectId),
   ]);
   const summary: ProjectTrafficSyncSummary = {
@@ -252,6 +231,9 @@ export async function syncTrafficForAllProjects(
   now = new Date(),
   scheduledFor: Date | null = null,
 ): Promise<SyncTrafficForAllProjectsResult> {
+  const dailyFirstSyncCutoff = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
   const projects = await prisma.project.findMany({
     select: { id: true },
     where: {
@@ -259,6 +241,10 @@ export async function syncTrafficForAllProjects(
         some: {
           enabled: true,
           kind: "analytics",
+          OR: [
+            { firstSyncRequestedAt: null },
+            { firstSyncFinishedAt: { lt: dailyFirstSyncCutoff } },
+          ],
           status: { in: ["connected", "needs_reauth"] },
         },
       },
@@ -271,7 +257,9 @@ export async function syncTrafficForAllProjects(
       results.push({
         ok: true,
         projectId: project.id,
-        summary: await syncTrafficForProject(project.id, now, scheduledFor),
+        summary: await syncTrafficForProject(project.id, now, scheduledFor, {
+          dailyFirstSyncCutoff,
+        }),
       });
     } catch (error) {
       console.error("[traffic] project sync failed", { error, projectId: project.id });

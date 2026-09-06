@@ -15,10 +15,12 @@ type AccountShellProps = {
 export function AccountShell({ activeSection, children }: Readonly<AccountShellProps>) {
   return (
     <div className="mx-auto w-full max-w-[1040px]" data-account-shell="">
-      <AccountMobileMenu activeSection={activeSection} />
       <div className={settingsShellGridClassName}>
         <AccountSubnav activeSection={activeSection} />
-        <div className={settingsContentColumnClassName}>{children}</div>
+        <div className={settingsContentColumnClassName}>
+          <AccountMobileMenu activeSection={activeSection} />
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import {
   Button,
   filterChipStateClassName,
@@ -15,21 +16,11 @@ import type {
   CheckRunsCounts,
   CheckRunTriggerFilter,
 } from "@/lib/checks/contract";
+import { formatDate } from "@/lib/dates/format";
 import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { AsOfDatePopover } from "./AsOfDatePopover";
 import { rangeOptions } from "./check-runs-format";
-
-const asOfDateFormat = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-  year: "numeric",
-});
-
-function asOfDateLabel(value: string) {
-  return asOfDateFormat.format(new Date(`${value}T00:00:00.000Z`));
-}
 
 const triggerOptions = [
   { label: "All triggers", value: "all" },
@@ -64,6 +55,7 @@ export function CheckRunsHeader({
   timeZone,
   trigger,
 }: Readonly<HeaderProps>) {
+  const dateFormat = useDateFormat();
   const [dateAnchor, setDateAnchor] = useState<HTMLElement | null>(null);
   const providerMenuOptions = [{ label: "All providers", value: "all" }, ...providerOptions];
 
@@ -108,7 +100,7 @@ export function CheckRunsHeader({
               sx={{ fontWeight: 400 }}
               variant="secondary"
             >
-              As of: {asOfDateLabel(asOfDate)}
+              As of: {formatDate(asOfDate, dateFormat)}
             </Button>
           </Tooltip>
         </div>

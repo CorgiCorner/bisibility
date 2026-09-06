@@ -105,7 +105,7 @@ export function ProviderRates({
         const clearLabel = rate.source === "manual" ? fallbackLabel(rate) : null;
         const isEditing = editing === rate.feature;
         return (
-          <div className="border-border-soft border-t" key={rate.feature}>
+          <div className="border-border border-t" key={rate.feature}>
             <div className="flex items-start justify-between gap-3 px-3.5 py-2.5">
               <span className="pt-1 text-[13px] font-medium">{rate.label}</span>
               {rate.editable === false ? (
@@ -183,13 +183,13 @@ export function ProviderRates({
       })}
       {error ? (
         <p
-          className="m-0 border-border-soft border-t px-3.5 py-2 text-[10px] text-red-text"
+          className="m-0 border-border border-t px-3.5 py-2 text-[10px] text-red-text"
           role="alert"
         >
           {error}
         </p>
       ) : null}
-      <p className="m-0 border-border-soft border-t bg-bg-sunken px-3.5 py-[11px] text-[10px] leading-[1.6] text-fg-muted">
+      <p className="m-0 border-border border-t bg-bg-sunken px-3.5 py-[11px] text-[10px] leading-[1.6] text-fg-muted">
         Set a rate to override any of these. Providers bill you directly.
       </p>
     </section>

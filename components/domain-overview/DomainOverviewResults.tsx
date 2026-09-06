@@ -1,3 +1,6 @@
+"use client";
+
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import type { SaveSelectedKeywordsAction } from "@/lib/actions/domain-overview";
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
 import type { HistoricalOverviewRow } from "@/lib/providers/types";
@@ -50,13 +53,15 @@ export function DomainOverviewResults({
   tableLoading,
   saveSelectedKeywordsAction,
 }: Readonly<DomainOverviewResultsProps>) {
+  const dateFormat = useDateFormat();
   const metrics = report.overview;
   return (
     <div aria-live="polite" className="grid min-w-0 gap-4.5">
-      <DomainOverviewContextBar report={report} />
+      <DomainOverviewContextBar dateFormat={dateFormat} report={report} />
       {report.state === "no_data" || !metrics ? (
         <>
           <DomainOverviewKpiRow
+            dateFormat={dateFormat}
             metrics={null}
             previous={null}
             previousSourceSnapshotAt={null}
@@ -77,6 +82,7 @@ export function DomainOverviewResults({
       ) : (
         <>
           <DomainOverviewKpiRow
+            dateFormat={dateFormat}
             metrics={metrics}
             previous={report.previousOverview}
             previousSourceSnapshotAt={report.previousSourceSnapshotAt}
@@ -91,6 +97,7 @@ export function DomainOverviewResults({
               onLoad={onLoadHistory}
             />
             <DomainOverviewWhatChanged
+              dateFormat={dateFormat}
               metrics={metrics}
               sourceSnapshotAt={report.sourceSnapshotAt}
             />

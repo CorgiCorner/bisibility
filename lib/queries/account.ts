@@ -3,10 +3,12 @@ import "server-only";
 import {
   PREFERENCE_COOKIES,
   parsePreferences,
+  resolveStoredDateFormat,
   type UserPreferences,
 } from "@/lib/account/preferences-shared";
 import { requireSession } from "@/lib/auth/session";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
+import type { DateFormatPreference } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { cookies } from "next/headers";
@@ -154,14 +156,50 @@ export async function getAccount(): Promise<AccountView> {
 }
 
 /**
- * Preferences live in browser cookies until User has columns; invalid values use defaults.
+ * Density, landing, and theme live in cookies; date format lives on the user row.
+ * A legacy date-format cookie still wins while the column is at its `auto` default, so
+ * readers who already picked ISO/EU/long do not silently fall back to Auto.
  */
 export async function getPreferences(): Promise<UserPreferences> {
-  const store = await cookies();
+  const session = await requireSession();
+  const [store, user] = await Promise.all([
+    cookies(),
+    prisma.user.findUnique({
+      select: { dateFormat: true },
+      where: { id: session.user.id },
+    }),
+  ]);
+  const stored = user?.dateFormat ?? "auto";
+  const cookieFormat = store.get(PREFERENCE_COOKIES.dateFormat)?.value;
+  const dateFormat = stored === "auto" ? (resolveStoredDateFormat(cookieFormat) ?? stored) : stored;
   return parsePreferences({
-    dateFormat: store.get(PREFERENCE_COOKIES.dateFormat)?.value,
+    dateFormat,
     density: store.get(PREFERENCE_COOKIES.density)?.value,
     landing: store.get(PREFERENCE_COOKIES.landing)?.value,
     theme: store.get(PREFERENCE_COOKIES.theme)?.value,
   });
+}
+
+export async function persistDateFormatPreference(
+  userId: string,
+  dateFormat: DateFormatPreference,
+) {
+  const existing = await prisma.user.findUnique({
+    select: { dateFormat: true, publicId: true },
+    where: { id: userId },
+  });
+  if (!existing?.publicId) {
+    throw new Error("User public ID is not available.");
+  }
+
+  const previousFormat = resolveStoredDateFormat(existing.dateFormat) ?? "auto";
+  if (previousFormat === dateFormat) {
+    return { changed: false, publicId: existing.publicId, previousFormat };
+  }
+
+  await prisma.user.update({
+    data: { dateFormat },
+    where: { id: userId },
+  });
+  return { changed: true, publicId: existing.publicId, previousFormat };
 }

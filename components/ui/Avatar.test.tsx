@@ -17,6 +17,14 @@ describe("Avatar", () => {
       />,
     );
 
+    expect(screen.getByText("JD")).toBeInTheDocument();
+    expect(queryImg()).toHaveAttribute("src", "https://example.com/avatar.png");
+
+    act(() => {
+      queryImg()?.dispatchEvent(new Event("load"));
+    });
+
+    expect(screen.queryByText("JD")).toBeNull();
     expect(queryImg()).toHaveAttribute("src", "https://example.com/avatar.png");
   });
 
@@ -49,6 +57,7 @@ describe("Avatar", () => {
       />,
     );
 
+    expect(screen.getByText("JD")).toBeInTheDocument();
     const img = queryImg();
     expect(img).not.toBeNull();
     act(() => {
@@ -87,6 +96,11 @@ describe("Avatar", () => {
       />,
     );
 
+    expect(screen.getByText("JD")).toBeInTheDocument();
+    act(() => {
+      queryImg()?.dispatchEvent(new Event("load"));
+    });
+
     expect(queryImg()).toHaveAttribute("src", "https://example.com/valid.png");
     expect(screen.queryByText("JD")).toBeNull();
   });
@@ -100,6 +114,12 @@ describe("Avatar", () => {
         src="https://example.com/a.png"
       />,
     );
+
+    expect(screen.getByText("JD")).toHaveClass("h-8", "w-8", "rounded-control", "bg-accent-solid");
+
+    act(() => {
+      queryImg()?.dispatchEvent(new Event("load"));
+    });
 
     expect(queryImg()).toHaveClass("h-8", "w-8", "rounded-control", "bg-accent-solid");
 
@@ -125,6 +145,24 @@ describe("Avatar", () => {
       />,
     );
 
+    act(() => {
+      queryImg()?.dispatchEvent(new Event("load"));
+    });
+
     expect(queryImg()).toHaveClass("object-cover");
+  });
+
+  it("shows initials while the image is still loading", () => {
+    render(
+      <Avatar
+        alt=""
+        className="h-8 w-8 rounded-control"
+        initials="JD"
+        src="https://example.com/a.png"
+      />,
+    );
+
+    expect(screen.getByText("JD")).toBeInTheDocument();
+    expect(queryImg()).toHaveClass("opacity-0");
   });
 });

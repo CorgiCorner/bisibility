@@ -7,8 +7,11 @@ const PROJECT_PUBLIC_ID = "prj_abcdefghijklmnopqrstuvwx";
 const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
   prisma: {
+    $transaction: vi.fn(),
     keyword: { deleteMany: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
     project: { findFirst: vi.fn() },
+    rankCheckRun: { update: vi.fn() },
+    rankCheckRunItem: { findMany: vi.fn(), updateMany: vi.fn() },
     user: { findUnique: vi.fn() },
   },
   requireSession: vi.fn(),
@@ -49,6 +52,12 @@ describe("bulk target URL actions", () => {
       },
     ]);
     mocks.prisma.keyword.updateMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.rankCheckRun.update.mockResolvedValue({});
+    mocks.prisma.rankCheckRunItem.findMany.mockResolvedValue([]);
+    mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.$transaction.mockImplementation(
+      async (callback: (tx: typeof mocks.prisma) => unknown) => callback(mocks.prisma),
+    );
   });
 
   it("sets one explicit URL for the selected keywords", async () => {
@@ -122,5 +131,75 @@ describe("bulk target URL actions", () => {
       }),
     );
     expect(JSON.stringify(mocks.writeAudit.mock.calls[0]?.[0])).not.toContain("keyword_1");
+  });
+
+  it("cancels a queued active-run item before deleting its keyword", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce([
+      { id: "keyword_1", publicId: KEYWORD_PUBLIC_ID, text: "rank tracker" },
+    ]);
+    mocks.prisma.rankCheckRunItem.findMany.mockResolvedValueOnce([
+      {
+        id: "item_1",
+        keywordId: "keyword_1",
+        rankCheckId: null,
+        run: { publicId: "rcr_abcdefghijklmnopqrstuvwx" },
+        runId: "run_1",
+        status: "queued",
+      },
+    ]);
+
+    await bulkDeleteKeywords({ keywordIds: [KEYWORD_PUBLIC_ID], projectId: PROJECT_PUBLIC_ID });
+
+    expect(mocks.prisma.rankCheckRunItem.updateMany).toHaveBeenCalledWith({
+      data: {
+        claimExpiresAt: null,
+        finishedAt: expect.any(Date),
+        status: "cancelled",
+      },
+      where: {
+        OR: [{ status: "queued" }, { rankCheckId: null, status: "running" }],
+        id: "item_1",
+      },
+    });
+    // Counters are recomputed from rows at finalize; deletion never touches the run row.
+    expect(mocks.prisma.rankCheckRun.update).not.toHaveBeenCalled();
+    expect(mocks.prisma.keyword.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["keyword_1"] } },
+    });
+  });
+
+  it("refuses deletion while an active run is checking the selected keywords", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce([
+      { id: "keyword_1", publicId: KEYWORD_PUBLIC_ID, text: "rank tracker" },
+      { id: "keyword_2", publicId: "kw_zbcdefghijklmnopqrstuvwx", text: "seo tool" },
+    ]);
+    mocks.prisma.rankCheckRunItem.findMany.mockResolvedValueOnce([
+      {
+        id: "item_1",
+        keywordId: "keyword_1",
+        rankCheckId: "rank_1",
+        run: { publicId: "rcr_abcdefghijklmnopqrstuvwx" },
+        runId: "run_1",
+        status: "running",
+      },
+      {
+        id: "item_2",
+        keywordId: "keyword_2",
+        rankCheckId: "rank_2",
+        run: { publicId: "rcr_abcdefghijklmnopqrstuvwx" },
+        runId: "run_1",
+        status: "running",
+      },
+    ]);
+
+    await expect(
+      bulkDeleteKeywords({
+        keywordIds: [KEYWORD_PUBLIC_ID, "kw_zbcdefghijklmnopqrstuvwx"],
+        projectId: PROJECT_PUBLIC_ID,
+      }),
+    ).rejects.toThrow("Run rcr_abcdefghijklmnopqrstuvwx is still checking 2 keywords.");
+
+    expect(mocks.prisma.keyword.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheckRunItem.updateMany).not.toHaveBeenCalled();
   });
 });

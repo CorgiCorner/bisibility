@@ -8,6 +8,8 @@ export type QueuedRankCheckGroupInput = {
   keywordIds: string[];
   locationId: string;
   projectId: string;
+  runId?: string;
+  runItemIds?: string[];
 };
 
 export type QueuedRankCheckBatchInput = QueuedRankCheckGroupInput & {
@@ -17,12 +19,18 @@ export type QueuedRankCheckBatchInput = QueuedRankCheckGroupInput & {
 export function chunkQueuedRankCheckGroup(
   input: QueuedRankCheckGroupInput,
 ): QueuedRankCheckBatchInput[] {
+  if (input.runItemIds && input.runItemIds.length !== input.keywordIds.length) {
+    throw new Error("runItemIds must align with keywordIds.");
+  }
   const chunks: QueuedRankCheckBatchInput[] = [];
   for (let offset = 0; offset < input.keywordIds.length; offset += DATAFORSEO_TASK_POST_LIMIT) {
     chunks.push({
       ...input,
       chunkIndex: chunks.length,
       keywordIds: input.keywordIds.slice(offset, offset + DATAFORSEO_TASK_POST_LIMIT),
+      ...(input.runItemIds
+        ? { runItemIds: input.runItemIds.slice(offset, offset + DATAFORSEO_TASK_POST_LIMIT) }
+        : {}),
     });
   }
   return chunks;
@@ -38,6 +46,7 @@ export function queuedBatchWorkflowId(input: QueuedRankCheckBatchInput) {
   return [
     "queued-rank-check",
     workflowIdPart(input.projectId),
+    ...(input.runId ? [workflowIdPart(input.runId)] : []),
     workflowIdPart(input.locationId),
     workflowIdPart(input.device),
     claimedAt,

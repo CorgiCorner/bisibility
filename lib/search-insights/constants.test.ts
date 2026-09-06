@@ -1,20 +1,34 @@
 import { GSC_QUERY_STATS_PAGE_SIZE } from "@/lib/providers/analytics/gsc-query-pagination";
 import {
   DEFAULT_WINDOW_ID,
+  FIRST_LOOK_WINDOW,
   incidentsOverlapping,
   KNOWN_DATA_INCIDENTS,
   positionBandLabel,
   SEARCH_ANALYTICS_ROW_LIMIT,
   WINDOW_PRESETS,
-  YEAR_OVER_YEAR,
+  YEAR_OVER_YEAR_COMPARISON,
 } from "@/lib/search-insights/constants";
 import { describe, expect, it } from "vitest";
 
 describe("window presets", () => {
-  it("offers the three finalized windows plus a disabled year-over-year preset", () => {
+  it("defines the first-look window without adding it to the menu presets", () => {
+    expect(FIRST_LOOK_WINDOW).toEqual({
+      days: 1,
+      id: "1",
+      label: "1 finalized day",
+    });
+    expect(WINDOW_PRESETS.map((preset) => preset.id)).toEqual(["7", "28", "90"]);
+  });
+
+  it("keeps year over year separate from the three window presets", () => {
     expect(WINDOW_PRESETS.map((preset) => preset.id)).toEqual(["7", "28", "90"]);
     expect(WINDOW_PRESETS.map((preset) => preset.days)).toEqual([7, 28, 90]);
-    expect(YEAR_OVER_YEAR.disabled).toBe(true);
+    expect(YEAR_OVER_YEAR_COMPARISON).toEqual({
+      label: "Compare with same period last year",
+      mode: "year_over_year",
+      query: "yoy",
+    });
   });
 
   it("defaults to the 28 day window", () => {

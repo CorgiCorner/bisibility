@@ -77,9 +77,9 @@ describe("CloudBetaBanner", () => {
 
     rerender(<CloudBetaBanner {...defaultProps} />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("You're on the hosted beta");
-    expect(screen.getByRole("status")).toHaveTextContent("Restores aren't guaranteed yet");
-    expect(screen.getByRole("status")).toHaveTextContent("keep an export");
+    expect(screen.getByRole("status")).toHaveTextContent("Hosted beta:");
+    expect(screen.getByRole("status")).toHaveTextContent("Data recovery isn't guaranteed yet");
+    expect(screen.getByRole("status")).toHaveTextContent("Keep a recent export");
     // The banner states one risk. A reassurance about parity with self-hosting belongs in the
     // coverage modal, not in the strip a reader sees on every page.
     expect(screen.getByRole("status")).not.toHaveTextContent("match self-hosted");
@@ -88,7 +88,7 @@ describe("CloudBetaBanner", () => {
   it("renders the hosted beta lead semibold", () => {
     render(<CloudBetaBanner {...defaultProps} />);
 
-    expect(screen.getByText("You're on the hosted beta.")).toHaveClass("font-semibold");
+    expect(screen.getByText("Hosted beta:")).toHaveClass("font-semibold");
   });
 
   it("uses the elevated shell surface with a 40px default minimum height", () => {
@@ -133,13 +133,13 @@ describe("CloudBetaBanner", () => {
     expect(warningIcon.getAttribute("class") ?? "").not.toMatch(
       /(?:^|\s)(?:mt-|top-|translate-y-)[^\s]*/,
     );
-    expect(screen.getByTestId("cloud-beta-content")).toHaveTextContent("You're on the hosted beta");
+    expect(screen.getByTestId("cloud-beta-content")).toHaveTextContent("Hosted beta:");
 
     const actions = within(screen.getByTestId("cloud-beta-actions"));
     expect(actions.getByRole("button", { name: "What beta covers" })).toBeInTheDocument();
     expect(actions.getByRole("button", { name: "Export data" })).toBeInTheDocument();
     for (const name of ["What beta covers", "Export data"]) {
-      expect(actions.getByRole("button", { name })).toHaveClass("hover:underline");
+      expect(actions.getByRole("button", { name })).toHaveClass("no-underline", "hover:underline");
     }
     expect(screen.getByTestId("cloud-beta-actions")).toHaveClass(
       "flex",

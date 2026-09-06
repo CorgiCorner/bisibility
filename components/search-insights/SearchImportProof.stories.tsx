@@ -33,7 +33,7 @@ const matchedWorker = {
   status: "ok" as const,
   temporalIdentityComparison: { detail: "identities match", status: "match" as const },
 };
-const runtime = { workerStatus: matchedWorker, workflowStatus: "running" as const };
+const runtime = { workerStatus: matchedWorker };
 
 function factsForDays(days: number): ImportObservabilityFacts {
   return {
@@ -41,6 +41,7 @@ function factsForDays(days: number): ImportObservabilityFacts {
     consecutiveDays: days,
     qualifyingDays: days,
     readyThrough: {
+      d1: { current: days >= 1, previous: days >= 2 },
       d7: { current: days >= 7, previous: days >= 14 },
       d28: { current: days >= 28, previous: days >= 56 },
       d90: { current: days >= 90, previous: days >= 180 },
@@ -54,6 +55,7 @@ function factsForDays(days: number): ImportObservabilityFacts {
 }
 
 const fiveDayFacts = factsForDays(5);
+const beforeFirstLookFacts = factsForDays(0);
 const sevenDayFacts = factsForDays(7);
 const sevenDayImport = { ...storyImportState, facts: sevenDayFacts };
 
@@ -77,7 +79,7 @@ export const CounterParity: Story = {
           <SearchInsightsTrustStrip
             coverage={storyCoverage}
             deploymentMode="self-host"
-            importState={{ ...storyImportState, facts: fiveDayFacts }}
+            importState={{ ...storyImportState, facts: beforeFirstLookFacts }}
             incidents={[]}
             localViewReady={false}
             providerAvailabilitySource="metadata"
@@ -89,7 +91,7 @@ export const CounterParity: Story = {
           <EmptyBackfill
             facts={{
               connectionStatus: "connected",
-              observability: fiveDayFacts,
+              observability: beforeFirstLookFacts,
               runtime,
               state: "running",
             }}
@@ -107,7 +109,9 @@ const totals = {
 
 export const SevenDayReveal: Story = {
   play: async ({ canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByRole("button", { name: "Comparison window" }));
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: /^Comparison window:/ }),
+    );
   },
   render: () => (
     <ProofCanvas>
@@ -115,8 +119,12 @@ export const SevenDayReveal: Story = {
         <div className="flex justify-end">
           <SearchInsightsPeriodMenu
             importFacts={sevenDayFacts}
-            period={{ days: 7, id: "7", label: "7 finalized days", sub: "vs previous 7" }}
-            yoy={{ monthsImported: 0, required: 13 }}
+            period={{
+              comparison: "previous_period",
+              days: 7,
+              id: "7",
+              label: "7 finalized days",
+            }}
           />
         </div>
         <div className="overflow-hidden rounded-card border border-border bg-bg-elev">

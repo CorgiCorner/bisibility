@@ -3,17 +3,37 @@ import type { LoadSearchInsightsRowsAction } from "@/lib/actions/search-insights
 import { ROWS_PAGE_LIMIT, SEARCH_INSIGHTS_ROWS_CAP } from "@/lib/search-insights/constants";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { SearchInsightsFirstView } from "@/lib/search-insights/queries/first-view";
+import type { SearchInsightsSignals } from "@/lib/search-insights/queries/signals";
+import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchInsightsDrawerContext } from "./drawers/useDrawerHandlers";
 import { SearchInsightsBody } from "./SearchInsightsBody";
+import { SearchInsightsPagesLens, SearchInsightsPagesTable } from "./SearchInsightsPagesTable";
+import { SearchInsightsSessionsCard } from "./SearchInsightsSessionsCard";
+import { SearchInsightsSignalChips } from "./SearchInsightsSignalChips";
+import {
+  ENGAGEMENT_RATE_TIP,
+  GA4_SESSIONS_LABEL,
+  KEY_EVENTS_NOT_CONFIGURED,
+  KEY_EVENTS_TIP,
+  NO_SESSIONS_MATCH_TITLE,
+  ORGANIC_SESSIONS_LABEL,
+  PAGE_LENS_CONTROL_LABEL,
+  PAGE_LENS_SEARCH_LABEL,
+  PAGE_LENS_TRAFFIC_LABEL,
+  SESSIONS_CONNECT_TITLE,
+  SESSIONS_JOIN_TIP,
+  TABLE_CAPTIONS,
+} from "./search-insights-copy";
 import { ROW_HEIGHT } from "./search-insights-rows-model";
 import {
   storyFirstView,
   storyImportFacts,
   storyImportState,
   storyQueryRows,
+  storySignals,
 } from "./search-insights-story-fixtures";
 
 const mocks = vi.hoisted(() => ({ track: vi.fn() }));
@@ -50,23 +70,36 @@ type BodyOptions = {
   onTrack?: (row: { query: string }) => void;
   period?: string;
   property?: string;
+  signals?: SearchInsightsSignals;
   view?: SearchInsightsFirstView;
 };
 
 function body(options: BodyOptions = {}) {
   const loadRowsAction =
     options.loadRowsAction ?? ((async () => ({ kind: "pages", rows: [], total: 0 })) as never);
+  const currentView = options.view ?? view();
   return (
     <ToastProvider>
       <SearchInsightsBody
-        ga4Card={options.ga4Card}
         importState={options.importState ?? null}
         loadRowsAction={loadRowsAction}
         onTrack={options.onTrack}
         period={options.period ?? "28"}
         projectId="prj_1"
         property={options.property ?? "sc-domain:example.com"}
-        view={options.view ?? view()}
+        signalChips={
+          <SearchInsightsSignalChips
+            ga4Card={
+              options.ga4Card ??
+              (currentView.organicSessions.status === "not_connected" ? (
+                <SearchInsightsSessionsCard projectId="prj_1" />
+              ) : null)
+            }
+            namedQueryCount={currentView.queries.total}
+            signals={options.signals ?? storySignals}
+          />
+        }
+        view={currentView}
       />
     </ToastProvider>
   );
@@ -80,7 +113,9 @@ function pageRows(count: number) {
   return Array.from({ length: count }, (_, index) => ({
     clicks: 300 - index,
     ctr: 0.03,
+    engagementRate: null,
     impressions: 9_000,
+    keyEvents: null,
     path: `/guide/${index}`,
     position: 8.2,
     sessions: null,
@@ -120,6 +155,7 @@ describe("SearchInsightsBody", () => {
           ...storyImportFacts,
           readyThrough: {
             ...storyImportFacts.readyThrough,
+            d1: { current: false, previous: false },
             d7: { current: false, previous: false },
           },
         },
@@ -143,6 +179,41 @@ describe("SearchInsightsBody", () => {
     }
     expect(screen.queryByText(/the two tables never sum to the KPI row/)).not.toBeInTheDocument();
     expect(screen.queryByText(/7 finalized days/)).not.toBeInTheDocument();
+  });
+
+  it("uses the no-traffic reason once only the first-look day is ready", () => {
+    renderBody({
+      importState: {
+        ...storyImportState,
+        facts: {
+          ...storyImportFacts,
+          readyThrough: {
+            d1: { current: true, previous: false },
+            d7: { current: false, previous: false },
+            d28: { current: false, previous: false },
+            d90: { current: false, previous: false },
+          },
+        },
+      },
+      period: "1",
+      view: view({
+        pages: { rows: [], total: 0 },
+        queries: { rows: [], total: 0 },
+      }),
+    });
+
+    for (const card of [queriesCard(), pagesCard()]) {
+      expect(
+        within(card).getByText(
+          "Google reported no search traffic for this property in this window.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        within(card).queryByText(
+          "Waiting for the first finalized days. Rows appear here after finalized days are imported.",
+        ),
+      ).not.toBeInTheDocument();
+    }
   });
 
   it("explains privacy only in an empty queries card when pages have traffic", () => {
@@ -206,8 +277,8 @@ describe("SearchInsightsBody", () => {
     await userEvent.click(screen.getByRole("button", { name: /queries at positions 4-20/ }));
     await userEvent.click(screen.getByRole("button", { name: /queries with page overlap/ }));
 
-    expect(openList).toHaveBeenNthCalledWith(1, "band", storyFirstView.signals.bandCount, 47);
-    expect(openList).toHaveBeenNthCalledWith(2, "overlap", storyFirstView.signals.overlapCount, 47);
+    expect(openList).toHaveBeenNthCalledWith(1, "band", storySignals.bandCount, 47);
+    expect(openList).toHaveBeenNthCalledWith(2, "overlap", storySignals.overlapCount, 47);
   });
 
   it("reports the chip kind without sending row data to analytics", async () => {
@@ -223,7 +294,7 @@ describe("SearchInsightsBody", () => {
   it("shows the connect card until sessions are connected", () => {
     renderBody();
 
-    expect(screen.getByText("Organic sessions (GA4)")).toBeInTheDocument();
+    expect(screen.getByText(SESSIONS_CONNECT_TITLE)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Connect" })).toBeInTheDocument();
   });
 
@@ -241,6 +312,7 @@ describe("SearchInsightsBody", () => {
             state: "running",
             updatedAt: "2026-07-08T04:00:00.000Z",
           },
+          keyEventsConfigured: null,
           property: "123456789",
           status: "connected",
         },
@@ -249,7 +321,7 @@ describe("SearchInsightsBody", () => {
       }),
     });
 
-    expect(screen.getByText("Organic sessions")).toBeInTheDocument();
+    expect(screen.getByText(GA4_SESSIONS_LABEL)).toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument();
     expect(screen.getByText("Running")).toBeInTheDocument();
     expect(screen.getByText("Ready in ~4 hr")).toBeInTheDocument();
@@ -269,6 +341,7 @@ describe("SearchInsightsBody", () => {
             state: "running",
             updatedAt: "2026-07-08T04:00:00.000Z",
           },
+          keyEventsConfigured: null,
           property: "123456789",
           status: "connected",
         },
@@ -292,6 +365,7 @@ describe("SearchInsightsBody", () => {
             finalizedThroughDate: "2026-07-07",
             state: "completed",
           },
+          keyEventsConfigured: null,
           property: "123456789",
           status: "connected",
         },
@@ -300,7 +374,7 @@ describe("SearchInsightsBody", () => {
       }),
     });
 
-    expect(screen.getByText("Organic sessions")).toBeInTheDocument();
+    expect(screen.getByText(GA4_SESSIONS_LABEL)).toBeInTheDocument();
     expect(screen.getByText("Waiting for today's GA4 data")).toBeInTheDocument();
     expect(screen.getByText("GA4 has not finalized today's data yet.")).toBeInTheDocument();
   });
@@ -316,6 +390,7 @@ describe("SearchInsightsBody", () => {
             finalizedThroughDate: "2026-07-06",
             state: "completed",
           },
+          keyEventsConfigured: null,
           property: "123456789",
           status: "connected",
         },
@@ -332,13 +407,18 @@ describe("SearchInsightsBody", () => {
   it("names a connected source that needs reauthentication instead of dropping its KPI slot", () => {
     renderBody({
       view: view({
-        organicSessions: { importState: null, property: "123456789", status: "needs_reauth" },
+        organicSessions: {
+          importState: null,
+          keyEventsConfigured: null,
+          property: "123456789",
+          status: "needs_reauth",
+        },
         sessionsKpi: null,
         sessionsReadable: false,
       }),
     });
 
-    expect(screen.getByText("Organic sessions")).toBeInTheDocument();
+    expect(screen.getByText(GA4_SESSIONS_LABEL)).toBeInTheDocument();
     expect(screen.getByText("Needs reauth")).toBeInTheDocument();
     expect(screen.getByText("Reconnect GA4 before the import can continue.")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Connect" })).not.toBeInTheDocument();
@@ -355,24 +435,35 @@ describe("SearchInsightsBody", () => {
   });
 
   it("swaps Top pages to sessions and exposes the management link once connected", () => {
+    setNavigationState({ searchParams: { lens: "traffic" } });
     renderBody({
       view: view({
-        organicSessions: { importState: null, property: "123456789", status: "connected" },
+        organicSessions: {
+          importState: null,
+          keyEventsConfigured: null,
+          property: "123456789",
+          status: "connected",
+        },
         pages: { rows: [{ ...pageRows(1)[0], sessions: 84 }], total: 1 },
-        sessionsKpi: {
-          delta: "+2%",
-          dir: "up",
-          label: "Organic sessions",
-          prev: "82",
-          source: "GA4",
-          value: "84",
+        clicksToSessionsKpi: {
+          kind: "visible",
+          kpi: {
+            delta: "+2.00 pp",
+            dir: "up",
+            label: "Clicks to sessions",
+            prev: "82.00%",
+            source: "GSC",
+            value: "84.00%",
+          },
         },
         sessionsReadable: true,
       }),
     });
 
     const card = pagesCard();
-    expect(within(card).getByRole("columnheader", { name: "Sessions" })).toHaveAttribute(
+    expect(
+      within(card).getByRole("columnheader", { name: ORGANIC_SESSIONS_LABEL }),
+    ).toHaveAttribute(
       "title",
       "Joined from GA4 by landing page. Search Console counts clicks and GA4 counts sessions, so the two never match exactly and a gap is normal.",
     );
@@ -387,17 +478,21 @@ describe("SearchInsightsBody", () => {
   it("keeps a connected import out of the sessions table until its history is readable", () => {
     renderBody({
       view: view({
-        organicSessions: { importState: null, property: "123456789", status: "connected" },
+        organicSessions: {
+          importState: null,
+          keyEventsConfigured: null,
+          property: "123456789",
+          status: "connected",
+        },
         sessionsReadable: false,
       }),
     });
 
     const card = pagesCard();
-    expect(within(card).queryByRole("columnheader", { name: "Sessions" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Manage GA4" })).toHaveAttribute(
-      "href",
-      "/app/prj_1/integrations?connect=ga4",
-    );
+    expect(
+      within(card).queryByRole("columnheader", { name: ORGANIC_SESSIONS_LABEL }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Manage GA4" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Connect" })).not.toBeInTheDocument();
   });
 
@@ -411,7 +506,8 @@ describe("SearchInsightsBody", () => {
     renderBody();
 
     const card = queriesCard();
-    expect(within(card).getByText("10 of 1,284")).toBeInTheDocument();
+    const more = within(card).getByRole("button", { name: "Show more" });
+    expect(within(more.parentElement as HTMLElement).getByText("10 of 1,284")).toBeInTheDocument();
     expect(within(card).getAllByRole("row")).toHaveLength(11);
   });
 
@@ -810,5 +906,348 @@ describe("SearchInsightsBody", () => {
       expect(screen.getByText(/More rows could not be loaded/)).toBeInTheDocument(),
     );
     expect(within(card).getAllByRole("row").length).toBeGreaterThan(1);
+  });
+
+  it.each([
+    [
+      "Search",
+      "search",
+      true,
+      ["Page", "Clicks", "Impr", "CTR", "Avg pos", "Actions"],
+      ["/guide/0", "300", "9,000", "3.0%", "#8.2", ""],
+    ],
+    [
+      "Traffic with key events configured",
+      "traffic",
+      true,
+      ["Page", "Clicks", ORGANIC_SESSIONS_LABEL, "Engagement", "Key events", "Actions"],
+      ["/guide/0", "300", "84", "62.5%", "7", ""],
+    ],
+    [
+      "Traffic without key events configured",
+      "traffic",
+      false,
+      ["Page", "Clicks", ORGANIC_SESSIONS_LABEL, "Engagement", "Avg pos", "Actions"],
+      ["/guide/0", "300", "84", "62.5%", "#8.2", ""],
+    ],
+  ] as const)(
+    "keeps %s headers and cells in the same order",
+    (_name, lens, keyEventsConfigured, headers, cells) => {
+      const row = {
+        ...pageRows(1)[0],
+        engagementRate: 0.625,
+        keyEvents: 7,
+        sessions: 84,
+      };
+      render(
+        <SearchInsightsPagesTable
+          keyEventsConfigured={keyEventsConfigured}
+          lens={lens}
+          rows={[row]}
+          showSessions
+        />,
+      );
+
+      const table = screen.getByRole("table", { name: "Top pages" });
+      const bodyCells = within(within(table).getAllByRole("row")[1]).getAllByRole("cell");
+      expect(
+        within(table)
+          .getAllByRole("columnheader")
+          .map((header) => header.textContent),
+      ).toEqual(headers);
+      expect(bodyCells.map((cell) => cell.textContent)).toEqual(cells);
+    },
+  );
+
+  it("shows null GA4 funnel metrics as tracked-later values", () => {
+    render(
+      <SearchInsightsPagesTable
+        keyEventsConfigured
+        lens="traffic"
+        rows={[{ ...pageRows(1)[0], engagementRate: null, keyEvents: null, sessions: 84 }]}
+        showSessions
+      />,
+    );
+
+    const table = screen.getByRole("table", { name: "Top pages" });
+    const cells = within(within(table).getAllByRole("row")[1]).getAllByRole("cell");
+    expect(cells[3]).toHaveTextContent("-");
+    expect(cells[3]).toHaveAttribute("title", ENGAGEMENT_RATE_TIP);
+    expect(cells[4]).toHaveTextContent("-");
+    expect(cells[4]).toHaveAttribute("title", KEY_EVENTS_TIP);
+  });
+
+  it("renders zero sessions with no engagement percentage", () => {
+    render(
+      <SearchInsightsPagesTable
+        keyEventsConfigured
+        lens="traffic"
+        rows={[{ ...pageRows(1)[0], engagementRate: null, sessions: 0 }]}
+        showSessions
+      />,
+    );
+
+    const table = screen.getByRole("table", { name: "Top pages" });
+    const cells = within(within(table).getAllByRole("row")[1]).getAllByRole("cell");
+    expect(cells[2]).toHaveTextContent("0");
+    expect(cells[3]).toHaveTextContent("-");
+    expect(cells[3]).not.toHaveTextContent("0.0%");
+  });
+
+  it("leaves engagement and key events as plain headers", () => {
+    render(
+      <SearchInsightsPagesTable
+        keyEventsConfigured
+        lens="traffic"
+        rows={[{ ...pageRows(1)[0], engagementRate: 0.625, keyEvents: 7, sessions: 84 }]}
+        showSessions
+        sort={{ onSort: vi.fn(), value: { direction: "desc", key: "clicks" } }}
+      />,
+    );
+
+    const table = screen.getByRole("table", { name: "Top pages" });
+    for (const label of [ORGANIC_SESSIONS_LABEL, "Engagement", "Key events"]) {
+      const header = within(table)
+        .getAllByRole("columnheader")
+        .find((item) => item.textContent === label) as HTMLElement;
+      expect(header).not.toHaveAttribute("aria-sort");
+      expect(within(header).queryByRole("button")).toBeNull();
+    }
+  });
+
+  it("keeps the not-configured sentence in the Top pages caption and Manage GA4 in the footer", () => {
+    setNavigationState({ searchParams: { lens: "traffic" } });
+    renderBody({
+      view: view({
+        organicSessions: {
+          importState: null,
+          keyEventsConfigured: false,
+          property: "123456789",
+          status: "connected",
+        },
+        pages: {
+          rows: [{ ...pageRows(1)[0], engagementRate: 0.6, keyEvents: 3, sessions: 8 }],
+          total: 1,
+        },
+        sessionsReadable: true,
+      }),
+    });
+
+    const card = pagesCard();
+    const heading = within(card).getByRole("heading", { name: "Top pages" });
+    const manage = within(card).getByRole("link", { name: "Manage GA4" });
+    expect(within(card).getByText(KEY_EVENTS_NOT_CONFIGURED, { exact: false })).toBeInTheDocument();
+    expect(heading.parentElement?.nextElementSibling).not.toContainElement(manage);
+    expect(manage).toHaveAttribute("href", "/app/prj_1/integrations?connect=ga4");
+    expect(manage.parentElement).toHaveClass("ms-auto");
+    expect(
+      within(card).queryByRole("columnheader", { name: "Key events" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("puts the Top pages lens on the title row and keeps Manage GA4 in Traffic", () => {
+    const connected = {
+      importState: null,
+      keyEventsConfigured: false as const,
+      property: "123456789",
+      status: "connected" as const,
+    };
+    const pages = {
+      rows: [{ ...pageRows(1)[0], engagementRate: 0.6, keyEvents: 3, sessions: 8 }],
+      total: 1,
+    };
+
+    setNavigationState({ searchParams: { lens: "search" } });
+    const { unmount } = renderBody({
+      view: view({ organicSessions: connected, pages, sessionsReadable: true }),
+    });
+
+    const searchCard = pagesCard();
+    const heading = within(searchCard).getByRole("heading", { name: "Top pages" });
+    const caption = within(searchCard).getByText(TABLE_CAPTIONS.pages);
+    const lens = within(searchCard).getByRole("group", { name: PAGE_LENS_CONTROL_LABEL });
+    const titleGroup = heading.parentElement as HTMLElement;
+    const header = titleGroup.parentElement as HTMLElement;
+    expect(titleGroup).toContainElement(caption);
+    expect(titleGroup).toHaveClass("gap-1");
+    expect(header).toHaveClass("items-start", "justify-between");
+    expect(header).toContainElement(lens);
+    expect(titleGroup).not.toContainElement(lens);
+    expect(
+      screen.getByRole("radio", { name: PAGE_LENS_SEARCH_LABEL }).parentElement?.parentElement,
+    ).toHaveClass("min-h-[30px]");
+    expect(within(searchCard).queryByRole("link", { name: "Manage GA4" })).not.toBeInTheDocument();
+    expect(
+      within(searchCard).queryByText(KEY_EVENTS_NOT_CONFIGURED, { exact: false }),
+    ).not.toBeInTheDocument();
+    expect(within(searchCard).queryByText(" / ")).not.toBeInTheDocument();
+
+    unmount();
+    setNavigationState({ searchParams: { lens: "traffic" } });
+    renderBody({
+      view: view({ organicSessions: connected, pages, sessionsReadable: true }),
+    });
+
+    const trafficCard = pagesCard();
+    const trafficHeading = within(trafficCard).getByRole("heading", { name: "Top pages" });
+    const manage = within(trafficCard).getByRole("link", { name: "Manage GA4" });
+    expect(manage).toHaveAttribute("href", "/app/prj_1/integrations?connect=ga4");
+    expect(manage).toHaveClass("hover:underline");
+    expect(manage).not.toHaveClass("underline");
+    expect(trafficHeading.parentElement?.nextElementSibling).not.toContainElement(manage);
+    expect(manage.parentElement).toHaveClass("ms-auto");
+    expect(
+      within(trafficCard).getByText(KEY_EVENTS_NOT_CONFIGURED, { exact: false }),
+    ).toBeInTheDocument();
+    expect(within(trafficCard).queryByText(" / ")).not.toBeInTheDocument();
+  });
+
+  it("does not claim key events are unconfigured when the Admin API result is unknown", () => {
+    renderBody({
+      view: view({
+        organicSessions: {
+          importState: null,
+          keyEventsConfigured: null,
+          property: "123456789",
+          status: "connected",
+        },
+        pages: {
+          rows: [{ ...pageRows(1)[0], engagementRate: 0.6, keyEvents: 3, sessions: 8 }],
+          total: 1,
+        },
+        sessionsReadable: true,
+      }),
+    });
+
+    const card = pagesCard();
+    expect(
+      within(card).queryByText(KEY_EVENTS_NOT_CONFIGURED, { exact: false }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(card).queryByRole("columnheader", { name: "Key events" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the page link independent of the GA4 funnel", async () => {
+    const onOpen = vi.fn();
+    const row = { ...pageRows(1)[0], engagementRate: 0.625, keyEvents: 7, sessions: 84 };
+    render(
+      <SearchInsightsPagesTable
+        keyEventsConfigured
+        lens="traffic"
+        onOpen={onOpen}
+        rows={[row]}
+        showSessions
+      />,
+    );
+
+    const link = screen.getByTitle(`Open ${row.url}`);
+    expect(link).toHaveAttribute("href", row.url);
+    expect(link).toHaveAttribute("target", "_blank");
+    await userEvent.click(link);
+
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("offers no outbound link for a stored value that is not a web address", () => {
+    const stored = "android-app://com.example";
+    render(<SearchInsightsPagesTable rows={[{ ...pageRows(1)[0], path: stored, url: stored }]} />);
+
+    expect(screen.getByText(stored)).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
+  it("still explains a missing landing-page match", () => {
+    render(<SearchInsightsPagesTable lens="traffic" rows={[pageRows(1)[0]]} showSessions />);
+
+    expect(screen.getByRole("columnheader", { name: ORGANIC_SESSIONS_LABEL })).toHaveAttribute(
+      "title",
+      SESSIONS_JOIN_TIP,
+    );
+    expect(screen.getByTitle(NO_SESSIONS_MATCH_TITLE)).toHaveTextContent("-");
+  });
+
+  it.each([
+    [PAGE_LENS_TRAFFIC_LABEL, true],
+    [PAGE_LENS_SEARCH_LABEL, false],
+    [PAGE_LENS_SEARCH_LABEL, null],
+  ] as const)(
+    "defaults Top pages to %s only when GA4 key events are %s",
+    (expectedLens, keyEventsConfigured) => {
+      renderBody({
+        view: view({
+          organicSessions: {
+            importState: null,
+            keyEventsConfigured,
+            property: "123456789",
+            status: "connected",
+          },
+          sessionsReadable: true,
+        }),
+      });
+
+      expect(screen.getByRole("radio", { name: expectedLens })).toBeChecked();
+    },
+  );
+
+  it("does not render a Top pages lens without a joined GA4 property", () => {
+    renderBody();
+
+    expect(screen.queryByRole("group", { name: PAGE_LENS_CONTROL_LABEL })).toBeNull();
+    expect(within(pagesCard()).getByRole("columnheader", { name: "Impr" })).toBeInTheDocument();
+  });
+
+  it("writes the chosen Top pages lens to the ambient URL and reads it on render", async () => {
+    setNavigationState({
+      pathname: "/app/prj_1/search-console",
+      searchParams: { google: "select", period: "7" },
+    });
+    const ga4View = view({
+      organicSessions: {
+        importState: null,
+        keyEventsConfigured: true,
+        property: "123456789",
+        status: "connected",
+      },
+      sessionsReadable: true,
+    });
+    const { unmount } = renderBody({ view: ga4View });
+
+    await userEvent.click(screen.getByRole("radio", { name: PAGE_LENS_SEARCH_LABEL }));
+    expect(routerMock.replace).toHaveBeenCalledWith(
+      "/app/prj_1/search-console?google=select&period=7&lens=search",
+      { scroll: false },
+    );
+
+    unmount();
+    setNavigationState({
+      pathname: "/app/prj_1/search-console",
+      searchParams: { google: "select", lens: "search", period: "7" },
+    });
+    renderBody({ view: ga4View });
+
+    expect(screen.getByRole("radio", { name: PAGE_LENS_SEARCH_LABEL })).toBeChecked();
+    expect(within(pagesCard()).getByRole("columnheader", { name: "Impr" })).toBeInTheDocument();
+  });
+
+  it("makes the Top pages lens reachable and operable by keyboard", async () => {
+    setNavigationState({
+      pathname: "/app/prj_1/search-console",
+      searchParams: { google: "select", period: "7" },
+    });
+    const user = userEvent.setup();
+    render(<SearchInsightsPagesLens lens="search" showSessions />);
+
+    const search = screen.getByRole("radio", { name: PAGE_LENS_SEARCH_LABEL });
+    expect(screen.getByRole("group", { name: PAGE_LENS_CONTROL_LABEL })).toBeInTheDocument();
+    expect(search).toBeChecked();
+    await user.tab();
+    expect(search).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+
+    expect(routerMock.replace).toHaveBeenCalledWith(
+      "/app/prj_1/search-console?google=select&period=7&lens=traffic",
+      { scroll: false },
+    );
   });
 });

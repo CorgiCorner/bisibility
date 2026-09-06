@@ -1,5 +1,6 @@
 import { Badge, displayTime, Metric, Panel } from "@/components/admin/AdminPrimitives";
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
+import type { DateFormat } from "@/lib/dates/format";
 import type { MigrationComparison } from "@/lib/db/migration-state";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 
@@ -16,10 +17,12 @@ function migrationName(value: string | null) {
 
 export function AdminWorkerHealth({
   available,
+  dateFormat,
   ops,
   worker,
 }: Readonly<{
   available: boolean;
+  dateFormat: DateFormat;
   ops: InstanceAdminDashboard["ops"];
   worker: InstanceAdminDashboard["worker"];
 }>) {
@@ -41,7 +44,7 @@ export function AdminWorkerHealth({
           <Metric label="Status" value={<Badge status={worker.status} />} />
           <Metric
             label="Last heartbeat"
-            value={<span className="text-sm">{displayTime(worker.lastSeenAt)}</span>}
+            value={<span className="text-sm">{displayTime(worker.lastSeenAt, dateFormat)}</span>}
           />
           <Metric label="Release" value={<span>{worker.release}</span>} />
           <Metric label="Environment" value={<span>{worker.environment}</span>} />

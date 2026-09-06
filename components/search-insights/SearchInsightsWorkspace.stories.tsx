@@ -1,4 +1,5 @@
 import { ToastProvider } from "@/components/ui";
+import { finalizedWindow } from "@/lib/search-insights/dates";
 import type { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "storybook/test";
 import type { CancelGooglePropertySelectionAction } from "./SearchInsightsOauthReturn";
@@ -56,7 +57,39 @@ export const Connected: Story = { args: common };
 export const BackfillRunning: Story = {
   args: {
     ...common,
-    context: { ...storyContext, counts: { pages: 41, queries: 96 }, importState: storyImportState },
+    context: { ...storyContext, counts: { queries: 96 }, importState: storyImportState },
+  },
+};
+
+export const FirstLook: Story = {
+  args: {
+    ...common,
+    context: {
+      ...storyContext,
+      period: {
+        comparison: "previous_period",
+        days: 1,
+        id: "1",
+        label: "1 finalized day",
+      },
+      window: finalizedWindow("2026-07-08", 1),
+    },
+  },
+};
+
+export const SevenDays: Story = {
+  args: {
+    ...common,
+    context: {
+      ...storyContext,
+      period: {
+        comparison: "previous_period",
+        days: 7,
+        id: "7",
+        label: "7 finalized days",
+      },
+      window: finalizedWindow("2026-07-08", 7),
+    },
   },
 };
 
@@ -66,7 +99,7 @@ export const NotConnected: Story = {
     context: {
       ...storyContext,
       connection: { property: null, status: "not_connected" },
-      counts: { pages: 0, queries: 0 },
+      counts: { queries: 0 },
       importState: null,
       window: null,
       yoy: { monthsImported: 0, required: 13 },

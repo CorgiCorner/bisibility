@@ -55,7 +55,7 @@ export function AdminProviderHealth({ rows }: Readonly<{ rows: readonly Provider
         const barWidth = Math.min(100, Math.max(0, row.failureRatePercent ?? 0));
         return (
           <div
-            className="flex flex-wrap items-center gap-3 border-b border-border-soft px-0.5 py-3 last:border-0"
+            className="flex flex-wrap items-center gap-3 border-b border-border px-0.5 py-3 last:border-0"
             key={row.provider}
           >
             <span className="min-w-[4.75rem] shrink-0 text-xs font-bold text-fg">

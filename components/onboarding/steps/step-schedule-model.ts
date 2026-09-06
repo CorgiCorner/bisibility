@@ -13,15 +13,22 @@ import {
   DEFAULT_ONBOARDING_LOCATION_KEY,
   MAX_ONBOARDING_LOCATIONS,
 } from "@/components/onboarding/onboarding-locations";
-import { canonicalKeySchema, deviceSchema, keywordScheduleBaseSchema } from "@/lib/schemas/keyword";
-import type { ProjectDefaultsInput } from "@/lib/schemas/project";
+import { canonicalKeySchema, deviceSchema } from "@/lib/schemas/keyword";
+import { type ProjectDefaultsInput, projectDefaultsSchema } from "@/lib/schemas/project";
 import { serpDepthSchema } from "@/lib/schemas/serp-depth";
 import { DEFAULT_SERP_DEVICE, type SerpDepth, type SerpDevice } from "@/lib/serp/markets";
 import { z } from "zod";
 
 export const DEFAULT_ONBOARDING_SERP_DEPTH: SerpDepth = 20;
 
-export const onboardingTrackingDefaultsSchema = keywordScheduleBaseSchema.extend({
+const trackingScheduleSchema = z.object({
+  cronExpression: projectDefaultsSchema.shape.cronExpression,
+  frequency: projectDefaultsSchema.shape.frequency,
+  jitterMinutes: projectDefaultsSchema.shape.jitterMinutes,
+  timezone: projectDefaultsSchema.shape.timezone,
+});
+
+export const onboardingTrackingDefaultsSchema = trackingScheduleSchema.extend({
   devices: z.array(deviceSchema).min(1),
   locations: z
     .array(canonicalKeySchema)

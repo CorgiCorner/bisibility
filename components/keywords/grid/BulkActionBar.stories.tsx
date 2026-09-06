@@ -6,7 +6,6 @@ const actionArgs = {
   budget: { capCents: 5000, spentCents: 1250 },
   bulkClearTargetAction: async () => undefined,
   bulkDeleteAction: async () => undefined,
-  bulkSetFrequencyAction: async () => undefined,
   bulkSetTargetAction: async () => undefined,
   bulkTagAction: async () => undefined,
   canDeleteKeyword: true,
@@ -15,7 +14,7 @@ const actionArgs = {
 };
 
 const meta = {
-  title: "Keywords/BulkActionBar",
+  title: "dashboard-keywords",
   component: BulkActionBar,
   decorators: [
     (Story) => (
@@ -41,6 +40,17 @@ export const SelectedRows: Story = {
     projectId: "prj_7Kd2Qf9m",
     selectedRows: keywordRows.slice(0, 3),
   },
+};
+
+export const SelectionTrue: Story = {
+  args: {
+    ...actionArgs,
+    onClear: () => undefined,
+    onRunChecks: () => undefined,
+    projectId: "prj_7Kd2Qf9m",
+    selectedRows: keywordRows.slice(0, 3),
+  },
+  name: "selection-true",
 };
 
 export const ChecksRunning: Story = {

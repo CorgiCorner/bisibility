@@ -46,6 +46,9 @@ vi.mock("@/lib/actions/team", () => ({
   revokeInvite: vi.fn(),
   transferOwnership: vi.fn(),
 }));
+vi.mock("@/lib/dates/request", () => ({
+  getResolvedDateFormat: vi.fn().mockResolvedValue({ preference: "auto", resolved: "month_first" }),
+}));
 vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
 }));
@@ -80,7 +83,7 @@ describe("team settings route", () => {
     );
 
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_abcdefghijklmnopqrstuvwx");
-    expect(mocks.getTeamAccess).toHaveBeenCalledWith("prj_abcdefghijklmnopqrstuvwx");
+    expect(mocks.getTeamAccess).toHaveBeenCalledWith("prj_abcdefghijklmnopqrstuvwx", "month_first");
     expect(screen.getByText("Team content").closest("[data-active-section]")).toHaveAttribute(
       "data-active-section",
       "team",

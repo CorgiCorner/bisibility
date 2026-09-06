@@ -20,12 +20,12 @@ const project = {
 };
 
 const tags = [
-  { color: "var(--blue)", label: "brand" },
-  { color: "var(--green)", label: "product" },
-  { color: "var(--purple)", label: "blog" },
-  { color: "var(--yellow)", label: "docs" },
-  { color: "var(--accent)", label: "high-intent" },
-  { color: "var(--blue)", label: "competitor" },
+  { color: "var(--blue)", keywordCount: 0, label: "brand", segmentCount: 0 },
+  { color: "var(--green)", keywordCount: 0, label: "product", segmentCount: 0 },
+  { color: "var(--purple)", keywordCount: 0, label: "blog", segmentCount: 0 },
+  { color: "var(--yellow)", keywordCount: 0, label: "docs", segmentCount: 0 },
+  { color: "var(--accent)", keywordCount: 0, label: "high-intent", segmentCount: 0 },
+  { color: "var(--blue)", keywordCount: 0, label: "competitor", segmentCount: 0 },
 ];
 
 const createTag: CreateTagAction = async () => ({ ok: true, value: { created: true } });

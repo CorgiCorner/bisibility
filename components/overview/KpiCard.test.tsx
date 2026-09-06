@@ -34,7 +34,7 @@ describe("KpiCard", () => {
 
     expect(screen.getByRole("link", { name: "first check failed" })).toHaveAttribute(
       "href",
-      "/app/prj_example/rank-tracker?tab=checks",
+      "/app/prj_example/rank-tracker?tab=runs",
     );
   });
 });

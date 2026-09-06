@@ -123,10 +123,7 @@ export function NoDataBanner({
     );
   } else if (state === "running") {
     action = (
-      <FirstCheckBannerLink
-        href={rankTrackerTabPath(projectRef, "checks")}
-        label="View check runs"
-      />
+      <FirstCheckBannerLink href={rankTrackerTabPath(projectRef, "runs")} label="View check runs" />
     );
   }
 

@@ -11,7 +11,7 @@ function TokenCardLoading() {
       className="mt-7 overflow-hidden rounded-card border border-border bg-bg-elev"
       data-cloud-import-loading-frame="token-card"
     >
-      <div className="flex items-center gap-[13px] border-border-soft border-b p-[20px_22px]">
+      <div className="flex items-center gap-[13px] border-border border-b p-[20px_22px]">
         <Bar className="h-[42px] w-[42px] flex-none rounded-control" />
         <div className="min-w-0 flex-1 space-y-1.5">
           <Bar className="h-[15px] w-[140px]" />
@@ -25,7 +25,7 @@ function TokenCardLoading() {
         <Bar className="mt-1.5 h-[13px] w-[220px] max-w-[80%]" />
         <Bar className="mt-4.5 h-[42px] w-[210px] rounded-control" />
       </div>
-      <div className="flex items-start gap-[9px] border-border-soft border-t bg-bg-sunken px-[22px] py-3.5">
+      <div className="flex items-start gap-[9px] border-border border-t bg-bg-sunken px-[22px] py-3.5">
         <Bar className="mt-0.5 h-3.5 w-3.5 flex-none rounded-control" />
         <div className="min-w-0 flex-1 space-y-1.5">
           <Bar className="h-3 w-full" />

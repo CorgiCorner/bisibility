@@ -14,6 +14,7 @@ const observability = {
   lastProbeAt: "2026-08-31T10:00:00.000Z",
   qualifyingDays: 7,
   readyThrough: {
+    d1: { current: true, previous: true },
     d7: { current: true, previous: false },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },
@@ -29,7 +30,6 @@ const observability = {
 } as const;
 
 const runtime: SearchImportRuntimeFacts = {
-  workflowStatus: "running",
   workerStatus: {
     status: "ok",
     temporalIdentityComparison: { detail: "identities match", status: "match" },
@@ -83,42 +83,36 @@ describe("search import presentation resolver", () => {
     expect(mismatched).toMatchObject({ kind: "waiting_worker", title: "Waiting on worker" });
   });
 
-  it.each(["completed", "failed"] as const)(
-    "renders an unowned %s workflow with missing current coverage as needs retry",
-    (workflowStatus) => {
-      const model = resolveSearchBackfillPresentation({
-        ...base,
-        runtime: { ...runtime, workflowStatus },
-        state: null,
-      });
-      expect(model).toMatchObject({ kind: "needs_retry", title: "Needs retry" });
-      expect(model.title).not.toContain("delayed");
-    },
-  );
+  it("renders an import row with no state and missing current coverage as needs retry", () => {
+    const model = resolveSearchBackfillPresentation({
+      ...base,
+      runtime: { ...runtime },
+      state: null,
+    });
+    expect(model).toMatchObject({ kind: "needs_retry", title: "Needs retry" });
+    expect(model.title).not.toContain("delayed");
+  });
 
-  it.each(["completed", "failed"] as const)(
-    "keeps durable %s work authoritative over a terminal previous execution",
-    (workflowStatus) => {
-      const queued = resolveSearchBackfillPresentation({
-        ...base,
-        runtime: { ...runtime, workflowStatus },
-        state: "queued",
-      });
-      const running = resolveSearchBackfillPresentation({
-        ...base,
-        runtime: { ...runtime, workflowStatus },
-        state: "running",
-      });
+  it("keeps our own durable state authoritative", () => {
+    const queued = resolveSearchBackfillPresentation({
+      ...base,
+      runtime: { ...runtime },
+      state: "queued",
+    });
+    const running = resolveSearchBackfillPresentation({
+      ...base,
+      runtime: { ...runtime },
+      state: "running",
+    });
 
-      expect(queued).toMatchObject({ kind: "queued", title: "Queued" });
-      expect(running).toMatchObject({ kind: "running", title: "Running" });
-    },
-  );
+    expect(queued).toMatchObject({ kind: "queued", title: "Queued" });
+    expect(running).toMatchObject({ kind: "running", title: "Running" });
+  });
 
   it("keeps a durable completion complete even when fewer than 28 days are available", () => {
     const model = resolveSearchBackfillPresentation({
       ...base,
-      runtime: { ...runtime, workflowStatus: "completed" },
+      runtime: { ...runtime },
       state: "completed",
     });
     expect(model).toMatchObject({ action: null, kind: "complete", title: "Complete" });
@@ -128,7 +122,7 @@ describe("search import presentation resolver", () => {
     expect(
       resolveSearchSyncControl({
         ...base,
-        runtime: { ...runtime, workflowStatus: "completed" },
+        runtime: { ...runtime },
         state: "completed",
       }),
     ).toMatchObject({ semanticState: "complete", status: "Complete" });
@@ -143,7 +137,7 @@ describe("search import presentation resolver", () => {
   it.each([
     [
       "no worker",
-      { runtime: { workflowStatus: "unknown", workerStatus: "stale" } },
+      { runtime: { workerStatus: "stale" } },
       "no_worker",
       "Waiting on worker",
       "Import is waiting for the background worker - restart it and it resumes.",
@@ -160,7 +154,7 @@ describe("search import presentation resolver", () => {
       {},
       "worker_pickup",
       "Queued",
-      "Queued for worker pickup. The worker checks queued imports every 5 minutes.",
+      "Queued for worker pickup. The worker checks pending work every few seconds.",
     ],
   ] as const)("derives queued reason for %s", (_name, overrides, reason, title, supportingText) => {
     const model = resolveSearchBackfillPresentation({ ...base, ...overrides, state: "queued" });
@@ -189,7 +183,7 @@ describe("search import presentation resolver", () => {
       resolveSearchBackfillPresentation({ ...base, state: "queued" }),
       resolveSearchBackfillPresentation({
         ...base,
-        runtime: { ...runtime, workflowStatus: "failed" },
+        runtime: { ...runtime },
       }),
       resolveSearchBackfillPresentation({
         ...base,
@@ -197,7 +191,7 @@ describe("search import presentation resolver", () => {
           ...observability,
           readyThrough: { ...observability.readyThrough, d28: { current: true, previous: true } },
         },
-        runtime: { ...runtime, workflowStatus: "completed" },
+        runtime: { ...runtime },
         state: "completed",
       }),
       resolveSearchBackfillPresentation({

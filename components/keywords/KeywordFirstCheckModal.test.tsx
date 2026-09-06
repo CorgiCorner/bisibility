@@ -236,7 +236,7 @@ describe("KeywordFirstCheckModal", () => {
     const link = screen.getByRole("link", { name: "View check details" });
     expect(link).toHaveAttribute(
       "href",
-      "/app/prj_demo/rank-tracker?tab=checks&run=check_abcdefghijklmnopqrstuvwx",
+      "/app/prj_demo/rank-tracker?tab=runs&run=check_abcdefghijklmnopqrstuvwx",
     );
   });
 
@@ -295,7 +295,7 @@ describe("KeywordFirstCheckModal", () => {
     );
 
     const link = screen.getByRole("link", { name: "View check details" });
-    expect(link).toHaveAttribute("href", "/app/prj_demo/rank-tracker?tab=checks");
+    expect(link).toHaveAttribute("href", "/app/prj_demo/rank-tracker?tab=runs");
   });
 
   it("Try again calls the handler", () => {

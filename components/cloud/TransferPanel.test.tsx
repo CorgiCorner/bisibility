@@ -91,6 +91,23 @@ describe("TransferPanel", () => {
     expect(screen.queryByText("Restored with notes")).not.toBeInTheDocument();
   });
 
+  it("explains when received history has unknown depth for Visibility", () => {
+    renderPanel("done", {
+      job: {
+        counts: { history: 4, history_unknown_depth: 1, keywords_created: 3 },
+        finishedAt: "2026-07-20T12:01:00.000Z",
+        progress: 100,
+      },
+    });
+
+    expect(screen.getByText("Restored with notes")).toBeVisible();
+    expect(
+      screen.getByText(
+        /1 received history row has an unknown depth\. Checks with unknown depth do not update Visibility\. Affected keywords still count toward its coverage total\./,
+      ),
+    ).toBeVisible();
+  });
+
   it("separates created and skipped rows in an idempotent re-import summary", () => {
     renderPanel("done", {
       job: {

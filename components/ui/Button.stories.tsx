@@ -22,7 +22,7 @@ export const Default: Story = {
   render: () => (
     <>
       <Button startIcon={<Plus size={15} weight="regular" />}>Add keyword</Button>
-      <Button variant="secondary">Set frequency</Button>
+      <Button variant="secondary">Set schedule</Button>
       <Button variant="ghost">Clear</Button>
       <Button startIcon={<Trash size={15} weight="regular" />} variant="destructive">
         Delete

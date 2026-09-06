@@ -1,20 +1,28 @@
 import { SearchInsightsBody } from "@/components/search-insights/SearchInsightsBody";
+import { SearchInsightsNoDataState } from "@/components/search-insights/SearchInsightsEmptyStates";
 import { SearchInsightsGa4OauthCard } from "@/components/search-insights/SearchInsightsGa4OauthCard";
 import type { SearchInsightsOauthReturn } from "@/components/search-insights/SearchInsightsOauthReturn";
+import { SearchInsightsSessionsCard } from "@/components/search-insights/SearchInsightsSessionsCard";
+import {
+  SearchInsightsSignalChips,
+  SearchInsightsSignalChipsResolver,
+  type SearchInsightsSignalResult,
+} from "@/components/search-insights/SearchInsightsSignalChips";
 import { SearchInsightsTrustStrip } from "@/components/search-insights/SearchInsightsTrustStrip";
 import type { SearchInsightsImportAction } from "@/lib/actions/search-insights";
 import type { LoadSearchInsightsRowsAction } from "@/lib/actions/search-insights-rows";
-import type { WorkerTemporalStatus } from "@/lib/ops/worker-temporal-identity";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { SearchInsightsFirstView } from "@/lib/search-insights/queries/first-view";
 import type { SearchInsightsOauthReturn as OauthReturn } from "@/lib/search-insights/queries/oauth-return";
-import type { SearchSyncControlFacts } from "@/lib/search-insights/sync/control-model";
+import type { SearchInsightsSignals } from "@/lib/search-insights/queries/signals";
+import type { SearchInsightsStatus } from "@/lib/search-insights/status-facts";
 import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
+import { Suspense } from "react";
 
 /**
- * Both sections await the same promise, which the page starts without awaiting: the context
- * card paints straight away, the strip and the body stream in behind their own fallbacks, and
- * the stored rows are read once for the two of them.
+ * The page creates one first-view promise and one signals promise from the same resolved scope.
+ * The strip and body share the first view, while only the chips await signals, so each stored
+ * lane is read once without holding the tables behind the signal counts.
  */
 export async function SearchInsightsTrustStripSection({
   importState,
@@ -22,25 +30,23 @@ export async function SearchInsightsTrustStripSection({
   projectId,
   resumeAction,
   retryAction,
-  statusFacts,
+  status,
   view,
-  workerStatus,
 }: Readonly<{
   importState: SearchInsightsImportState | null;
   pauseAction: SearchInsightsImportAction;
   resumeAction: SearchInsightsImportAction;
   retryAction: SearchInsightsImportAction;
   projectId: string;
-  statusFacts: SearchSyncControlFacts;
+  status: Promise<SearchInsightsStatus>;
   view: Promise<SearchInsightsFirstView>;
-  workerStatus: WorkerTemporalStatus;
 }>) {
-  const data = await view;
+  const [data, runtime] = await Promise.all([view, status]);
   return (
     <SearchInsightsTrustStrip
       coverage={data.coverage}
       deploymentMode={data.deploymentMode}
-      localViewReady={importState?.facts?.readyThrough.d7.current === true}
+      localViewReady={importState?.facts?.readyThrough.d1.current === true}
       providerAvailabilitySource={importState?.availabilityBoundarySource ?? null}
       providerAvailableThrough={importState?.newestFinalizedDate ?? null}
       importState={importState}
@@ -49,8 +55,33 @@ export async function SearchInsightsTrustStripSection({
       projectId={projectId}
       resumeAction={resumeAction}
       retryAction={retryAction}
-      statusFacts={statusFacts}
-      workerStatus={workerStatus}
+      statusFacts={runtime.facts}
+      workerStatus={runtime.workerStatus}
+    />
+  );
+}
+
+export async function SearchInsightsNoDataSection({
+  pauseAction,
+  projectId,
+  resumeAction,
+  retryAction,
+  status,
+}: Readonly<{
+  pauseAction: SearchInsightsImportAction;
+  projectId: string;
+  resumeAction: SearchInsightsImportAction;
+  retryAction: SearchInsightsImportAction;
+  status: Promise<SearchInsightsStatus>;
+}>) {
+  const runtime = await status;
+  return (
+    <SearchInsightsNoDataState
+      facts={runtime.facts}
+      pauseAction={pauseAction}
+      projectId={projectId}
+      resumeAction={resumeAction}
+      retryAction={retryAction}
     />
   );
 }
@@ -66,6 +97,7 @@ export async function SearchInsightsBodySection({
   projectId,
   property,
   returnPath,
+  signals,
   syncPlan,
   view,
 }: Readonly<{
@@ -79,30 +111,53 @@ export async function SearchInsightsBodySection({
   projectId: string;
   property: string;
   returnPath: string;
+  signals: Promise<SearchInsightsSignals>;
   syncPlan?: SearchSyncPreflightPlan;
   view: Promise<SearchInsightsFirstView>;
 }>) {
   const data = await view;
+  const signalResult = signals.then<SearchInsightsSignalResult, SearchInsightsSignalResult>(
+    (counts) => ({ signals: counts, state: "ready" }),
+    () => ({ state: "error" }),
+  );
+  const ga4Card =
+    ga4Oauth?.provider === "ga4" && (ga4Oauth.setup || ga4Oauth.error) ? (
+      <SearchInsightsGa4OauthCard
+        cancelAction={cancelAction}
+        completeAction={completeAction}
+        disconnectAction={disconnectAction}
+        oauth={ga4Oauth}
+        projectId={projectId}
+        returnPath={returnPath}
+        syncPlan={syncPlan}
+      />
+    ) : data.organicSessions.status === "not_connected" ? (
+      <SearchInsightsSessionsCard projectId={projectId} />
+    ) : null;
   return (
     <SearchInsightsBody
-      ga4Card={
-        ga4Oauth?.provider === "ga4" && (ga4Oauth.setup || ga4Oauth.error) ? (
-          <SearchInsightsGa4OauthCard
-            cancelAction={cancelAction}
-            completeAction={completeAction}
-            disconnectAction={disconnectAction}
-            oauth={ga4Oauth}
-            projectId={projectId}
-            returnPath={returnPath}
-            syncPlan={syncPlan}
-          />
-        ) : undefined
-      }
       importState={importState}
       loadRowsAction={loadRowsAction}
       period={period}
       projectId={projectId}
       property={property}
+      signalChips={
+        <Suspense
+          fallback={
+            <SearchInsightsSignalChips
+              ga4Card={ga4Card}
+              namedQueryCount={data.queries.total}
+              state="pending"
+            />
+          }
+        >
+          <SearchInsightsSignalChipsResolver
+            ga4Card={ga4Card}
+            namedQueryCount={data.queries.total}
+            result={signalResult}
+          />
+        </Suspense>
+      }
       view={data}
     />
   );

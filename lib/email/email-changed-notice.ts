@@ -1,5 +1,6 @@
 import "server-only";
 
+import { type DateFormat, formatDate } from "@/lib/dates/format";
 import { escapeHtml } from "@/lib/email/escape-html";
 import { resolveFounderEmailIdentity } from "@/lib/email/founder-email-identity";
 import { sendEmail } from "@/lib/email/send";
@@ -8,21 +9,17 @@ export const EMAIL_CHANGED_NOTICE_SUBJECT = "Your bisibility email address was c
 
 export type EmailChangedNoticeInput = {
   changedAt: Date;
+  dateFormat?: DateFormat;
   newEmail: string;
   previousEmail: string;
 };
 
-function changedAtLabel(changedAt: Date) {
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "long",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(changedAt);
+function changedAtLabel(changedAt: Date, dateFormat: DateFormat) {
+  return formatDate(changedAt.toISOString().slice(0, 10), dateFormat);
 }
 
 export function emailChangedNotice(input: EmailChangedNoticeInput) {
-  const changedAt = changedAtLabel(input.changedAt);
+  const changedAt = changedAtLabel(input.changedAt, input.dateFormat ?? "day_first");
   const text =
     `The email address on your bisibility account was changed to ${input.newEmail} on ${changedAt}. ` +
     "If you did not do this, reply to this email right away.";

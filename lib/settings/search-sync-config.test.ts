@@ -37,7 +37,7 @@ describe("resolveSearchSyncSettings", () => {
     expect(searchSyncRetentionLabel(settings.retentionMonths)).toBe("3 months");
     expect(searchSyncPaceLabel(settings.pace)).toBe("Standard");
     expect(searchSyncPreflightEstimate(settings)).toBe(
-      "Importing 3 months takes about 400 requests to Google. First view in ~30 min; full history in ~9 hours at Standard speed.",
+      "Importing 3 months takes about 400 requests to Google. First view in ~5 min; full history in ~9 hours at Standard speed.",
     );
   });
 });

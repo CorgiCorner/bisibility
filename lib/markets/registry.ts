@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { ProjectMarketStatus } from "@/lib/generated/prisma/client";
+import { MarketArchivedError } from "./archived";
 import {
   type AddProjectMarketsResult,
   projectMarketAddResult,
@@ -29,6 +30,45 @@ export function listProjectMarkets(projectId: string, client: ProjectMarketClien
   });
 }
 
+/** Archived markets, so a caller can offer an explicit restore. */
+export function listArchivedProjectMarkets(
+  projectId: string,
+  client: ProjectMarketClient = prisma,
+) {
+  return client.projectMarket.findMany({
+    include: { location: true },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    where: { projectId, status: ProjectMarketStatus.removed },
+  });
+}
+
+/** One read for the write paths: the cap counts visible rows, the guard needs archived ones. */
+function listProjectMarketsForWrite(projectId: string, client: ProjectMarketClient) {
+  return client.projectMarket.findMany({
+    include: { location: { select: { canonicalKey: true } } },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    where: { projectId },
+  });
+}
+
+type RegistryRow = {
+  location: { canonicalKey: string };
+  locationId: string;
+  status: ProjectMarketStatus;
+};
+
+function assertNoArchivedMarket(
+  registry: readonly RegistryRow[],
+  requested: readonly { locationId: string }[],
+) {
+  const requestedLocationIds = new Set(requested.map(({ locationId }) => locationId));
+  const archived = registry.find(
+    (market) =>
+      market.status === ProjectMarketStatus.removed && requestedLocationIds.has(market.locationId),
+  );
+  if (archived) throw new MarketArchivedError(archived.location.canonicalKey);
+}
+
 /** Creates a market once or restores the existing market to active. */
 export function ensureActiveProjectMarket(
   { projectId, locationId }: ProjectMarketRef,
@@ -46,15 +86,22 @@ export function ensureActiveProjectMarket(
   });
 }
 
+type EnsureProjectMarketsOptions = {
+  preserveVisibleStatus: boolean;
+  refuseArchived: boolean;
+};
+
 /** Adds or revives a set without letting API/import writes bypass the registry cap. */
 async function ensureProjectMarkets(
   projectId: string,
   locations: readonly { locationId: string }[],
   client: ProjectMarketClient,
-  preserveVisibleStatus: boolean,
+  { preserveVisibleStatus, refuseArchived }: EnsureProjectMarketsOptions,
 ): Promise<AddProjectMarketsResult> {
   const unique = uniqueProjectMarketLocations(locations);
-  const visible = await listProjectMarkets(projectId, client);
+  const registry = await listProjectMarketsForWrite(projectId, client);
+  if (refuseArchived) assertNoArchivedMarket(registry, unique);
+  const visible = registry.filter((market) => market.status !== ProjectMarketStatus.removed);
   const outcome = projectMarketAddResult(
     visible.map((market) => market.locationId),
     unique,
@@ -87,7 +134,10 @@ export function ensureProjectMarketsWithinLimit(
   locations: readonly { locationId: string }[],
   client: ProjectMarketClient = prisma,
 ) {
-  return ensureProjectMarkets(projectId, locations, client, false);
+  return ensureProjectMarkets(projectId, locations, client, {
+    preserveVisibleStatus: false,
+    refuseArchived: true,
+  });
 }
 
 /** Reconciliation activates new or removed rows while retaining a visible paused status. */
@@ -96,16 +146,22 @@ export function reconcileProjectMarketsWithinLimit(
   locations: readonly { locationId: string }[],
   client: ProjectMarketClient = prisma,
 ) {
-  return ensureProjectMarkets(projectId, locations, client, true);
+  return ensureProjectMarkets(projectId, locations, client, {
+    preserveVisibleStatus: true,
+    refuseArchived: true,
+  });
 }
 
-/** Keyword writes create missing registry rows but never resume a paused market. */
+/** Keyword writes create missing rows but never resume a paused or archived market. */
 export function ensureKeywordProjectMarketsWithinLimit(
   projectId: string,
   locations: readonly { locationId: string }[],
   client: ProjectMarketClient = prisma,
 ) {
-  return ensureProjectMarkets(projectId, locations, client, true);
+  return ensureProjectMarkets(projectId, locations, client, {
+    preserveVisibleStatus: true,
+    refuseArchived: true,
+  });
 }
 
 export function pauseProjectMarket(
@@ -126,5 +182,21 @@ export function removeProjectMarket(
   return client.projectMarket.update({
     where: { projectId_locationId: { projectId, locationId } },
     data: { status: ProjectMarketStatus.removed },
+  });
+}
+
+/**
+ * The only way back from removed; it never touches a keyword's own archive state.
+ * The write is a compare-and-swap on the removed status, so a restore that lands after a
+ * concurrent archive matches nothing instead of silently undoing it. Callers treat a zero
+ * count as the refusal.
+ */
+export function restoreProjectMarket(
+  { projectId, locationId }: ProjectMarketRef,
+  client: ProjectMarketClient = prisma,
+) {
+  return client.projectMarket.updateMany({
+    where: { locationId, projectId, status: ProjectMarketStatus.removed },
+    data: { status: ProjectMarketStatus.active },
   });
 }

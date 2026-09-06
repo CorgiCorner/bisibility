@@ -1,7 +1,7 @@
 const DAY_MS = 86_400_000;
 
 // Shared relative label keeps pending server-detail and client-list states consistent.
-export function addedLabel(iso: string): string {
+export function addedLabel(iso: string, dateFormat: DateFormat): string {
   const then = new Date(iso);
   if (Number.isNaN(then.getTime())) {
     return "recently";
@@ -19,7 +19,7 @@ export function addedLabel(iso: string): string {
   if (days < 30) {
     return `${Math.floor(days / 7)}w ago`;
   }
-  return then.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(iso.slice(0, 10), dateFormat);
 }
 
 export function formatVolume(volume: number): string {
@@ -31,3 +31,5 @@ export function formatVolume(volume: number): string {
   }
   return String(volume);
 }
+
+import { type DateFormat, formatDate } from "@/lib/dates/format";

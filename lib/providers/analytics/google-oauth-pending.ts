@@ -18,17 +18,18 @@ import {
   ProviderHttpError,
 } from "@/lib/providers/failure-class";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
-import { dateKey } from "@/lib/search-insights/dates";
 import { queueSearchInsightsImport } from "@/lib/search-insights/sync/ensure-import";
+import { firstSyncIntentOnConnect } from "@/lib/traffic/first-sync-intent-state";
+import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { listGa4Properties, listGoogleSites, refreshGoogleAccessToken } from "./google-client";
+import { pendingGscContext } from "./google-oauth-pending-gsc-context";
 import { ga4PropertyOptions, gscPropertyOptions } from "./google-property-options";
 import { normalizeGa4PropertyId } from "./property-id";
 
 const GOOGLE_OAUTH_PENDING_COOKIE = "google_oauth_pending";
 export const GOOGLE_OAUTH_PENDING_TTL_MS = 10 * 60 * 1000;
-
 const pendingSchema = z.object({
   accountEmail: z.string().email().max(320).optional(),
   actorId: z.string().trim().min(1).max(120),
@@ -100,41 +101,6 @@ export async function cancelPendingGoogleOAuth(projectId: string) {
   if (!context) return { status: "not_found" as const };
   context.cookieStore.delete(GOOGLE_OAUTH_PENDING_COOKIE);
   return { status: "cancelled" as const };
-}
-
-async function pendingGscContext(projectId: string) {
-  const [project, rows] = await Promise.all([
-    prisma.project?.findUnique?.({ select: { domain: true }, where: { id: projectId } }) ??
-      Promise.resolve(null),
-    prisma.searchInsightsPropertyRegistry?.findMany?.({
-      select: { propertyKey: true },
-      where: { projectId, status: "archived" },
-    }) ?? Promise.resolve([]),
-  ]);
-  const archivedProperties = await Promise.all(
-    rows.map(async (row) => {
-      const partition = await prisma.searchAnalyticsSyncPartition.findFirst({
-        orderBy: { date: "desc" },
-        select: { date: true },
-        where: { projectId, property: row.propertyKey, source: "gsc" },
-      });
-      if (!partition) return null;
-      const kind = row.propertyKey.startsWith("sc-domain:") ? "domain" : "url-prefix";
-      return {
-        kind,
-        label: row.propertyKey.startsWith("sc-domain:")
-          ? row.propertyKey.slice(10)
-          : row.propertyKey,
-        lastSyncedDate: dateKey(partition.date),
-        permissionLevel: "",
-        value: row.propertyKey,
-      } as const;
-    }),
-  );
-  return {
-    archivedProperties: archivedProperties.filter((property) => property !== null),
-    projectDomain: project?.domain ?? "",
-  };
 }
 
 export function formatGooglePropertyDiscoveryLog(input: {
@@ -232,7 +198,6 @@ export async function completePendingGooglePropertySelection(input: {
     property = selected.siteUrl;
     permissionLevel = selected.permissionLevel;
   }
-
   const provider = context.pending.provider;
   const providerDefinition = PROVIDER_CATALOG.find((item) => item.id === provider);
   if (!providerDefinition) throw new Error(`Unknown provider: ${provider}`);
@@ -247,15 +212,17 @@ export async function completePendingGooglePropertySelection(input: {
     projectId: context.project.id,
     provider: providerDefinition,
   });
-
   const where = { projectId_provider: { projectId: context.project.id, provider } };
-  await prisma.$transaction(async (tx) => {
+  const savedConnection = await prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, context.project.id);
     const before = await tx.providerConnection.findUnique({ where });
     const previousProperty = decryptProviderCredentials(before?.credentialsEncrypted).login ?? null;
+    const after = { enabled: true, kind: "analytics", status: "connected" };
+    const firstSyncIntent = firstSyncIntentOnConnect(before, after);
     const data = {
       credentialsEncrypted: encryptSecret(JSON.stringify(credentials)),
       enabled: true,
+      ...firstSyncIntent,
       kind: "analytics" as const,
       publicId: before?.publicId ?? makePublicId("conn"),
       status: "connected" as const,
@@ -289,8 +256,10 @@ export async function completePendingGooglePropertySelection(input: {
       },
       tx,
     );
-    return saved;
+    return { saved, shouldWake: "firstSyncRequestedAt" in firstSyncIntent };
   });
+  if (savedConnection.shouldWake)
+    void publishWorkerIntent("traffic_first_sync").catch(() => undefined);
   context.cookieStore.delete(GOOGLE_OAUTH_PENDING_COOKIE);
   if (provider === "gsc" || provider === "ga4") {
     await queueSearchInsightsImport({ projectId: context.project.id, property, source: provider });

@@ -55,19 +55,21 @@ export async function monthlySpendCents(
 ) {
   const client = options.client ?? prisma;
   const period = monthUtcRange(now);
-  const rankChecks = await client.rankCheck.aggregate({
-    _sum: { costCents: true, estimatedCostCents: true },
-    where: {
-      checkedAt: period,
-      ...(options.excludeRankCheckId ? { id: { not: options.excludeRankCheckId } } : {}),
-      keyword: { projectId },
-      ...whereExecutedChecks(),
-    },
-  });
-  const providerCosts = await client.providerCostEntry.aggregate({
-    _sum: { costCents: true },
-    where: { cached: false, createdAt: period, feature: { not: "rank_check" }, projectId },
-  });
+  const [rankChecks, providerCosts] = await Promise.all([
+    client.rankCheck.aggregate({
+      _sum: { costCents: true, estimatedCostCents: true },
+      where: {
+        checkedAt: period,
+        ...(options.excludeRankCheckId ? { id: { not: options.excludeRankCheckId } } : {}),
+        keyword: { projectId },
+        ...whereExecutedChecks(),
+      },
+    }),
+    client.providerCostEntry.aggregate({
+      _sum: { costCents: true },
+      where: { cached: false, createdAt: period, feature: { not: "rank_check" }, projectId },
+    }),
+  ]);
 
   return (
     Number(rankChecks._sum.costCents ?? 0) +

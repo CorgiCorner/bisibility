@@ -79,6 +79,18 @@ describe("rank tracker export membership", () => {
     ).resolves.toEqual(keywordIds);
   });
 
+  it("returns every broad SQL match when the membership limit is disabled", async () => {
+    const keywordIds = ids(501);
+    mocks.queryRaw.mockResolvedValueOnce([raw(keywordIds)]);
+
+    await expect(
+      resolveAuthorizedRankTrackerExportKeywordIds(project, defaultRankTrackerQueryState, {
+        membershipLimit: null,
+      }),
+    ).resolves.toEqual(keywordIds);
+    expect(mocks.queryRaw.mock.calls[0][0].sql).not.toContain("LIMIT ? OFFSET ?");
+  });
+
   it("chunks exact candidates and stops when the 501st exact match is proven", async () => {
     const candidateChunks = [
       ids(250, "internal_a"),
@@ -123,6 +135,26 @@ describe("rank tracker export membership", () => {
       resolveAuthorizedRankTrackerExportKeywordIds(project, query),
     ).resolves.toHaveLength(500);
     expect(mocks.hydrate.mock.calls.every((call) => call[1].length <= 250)).toBe(true);
+  });
+
+  it("returns every exact match when the membership limit is disabled", async () => {
+    const candidateChunks = [ids(250, "internal_a"), ids(250, "internal_b"), ids(1, "internal_c")];
+    mocks.queryRaw
+      .mockResolvedValueOnce([raw(candidateChunks[0])])
+      .mockResolvedValueOnce([raw(candidateChunks[1])])
+      .mockResolvedValueOnce([raw(candidateChunks[2])]);
+    mocks.hydrate.mockImplementation(async (_project, chunk) =>
+      chunk.map((id: string) => ({ id })),
+    );
+    const query = {
+      ...defaultRankTrackerQueryState,
+      filters: { ...defaultRankTrackerQueryState.filters, wrongUrl: true },
+    };
+
+    await expect(
+      resolveAuthorizedRankTrackerExportKeywordIds(project, query, { membershipLimit: null }),
+    ).resolves.toHaveLength(501);
+    expect(mocks.hydrate).toHaveBeenCalledTimes(3);
   });
 
   it("uses keyset cursors and keeps mutable requested sorting out of exact scans", async () => {

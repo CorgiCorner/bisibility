@@ -15,6 +15,16 @@ export const VISIBILITY_DESCRIPTION =
 export const VISIBILITY_SHALLOW_CHECK_COPY =
   "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.";
 
+export const VISIBILITY_UNKNOWN_DEPTH_COPY =
+  "Checks with unknown depth do not update Visibility. Affected keywords still count toward its coverage total.";
+
+export const VISIBILITY_REQUIRED_DEPTH_COPY = `Visibility requires a known requested depth of at least ${VISIBILITY_HORIZON}.`;
+
+export function visibilityUnknownDepthImportCopy(count: number) {
+  const noun = count === 1 ? "row has" : "rows have";
+  return `${count} received history ${noun} an unknown depth. ${VISIBILITY_UNKNOWN_DEPTH_COPY}`;
+}
+
 export function visibilityCoverageCopy(coverage: {
   limited: boolean;
   measured: number;

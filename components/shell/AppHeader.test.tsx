@@ -2,8 +2,9 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AppHeader } from "./AppHeader";
 
+vi.mock("@/components/ui/Tooltip", () => import("@/tests/mui-tooltip"));
 vi.mock("./AppHeaderTitle", () => ({
-  AppHeaderTitle: () => <div>Header title</div>,
+  AppHeaderTitle: () => <div data-testid="header-title">Header title</div>,
 }));
 vi.mock("./CommandPalette", () => ({
   CommandPaletteTrigger: ({ variant }: { variant?: string }) => (
@@ -14,13 +15,19 @@ vi.mock("./CommandPalette", () => ({
 }));
 vi.mock("./MobileNav", () => ({
   MobileNav: ({
+    enabledExperimentalModules,
     setupDoneCount,
     setupTotalCount,
   }: {
+    enabledExperimentalModules?: readonly string[];
     setupDoneCount?: number;
     setupTotalCount?: number;
   }) => (
-    <button data-setup-progress={`${setupDoneCount}/${setupTotalCount}`} type="button">
+    <button
+      data-enabled-modules={enabledExperimentalModules?.join(",") ?? ""}
+      data-setup-progress={`${setupDoneCount}/${setupTotalCount}`}
+      type="button"
+    >
       Navigation
     </button>
   ),
@@ -35,7 +42,7 @@ describe("AppHeader", () => {
       <AppHeader
         activeProjectId="proj_example"
         canCreateWorkspace={false}
-        projectRef="project-example"
+        projectRef="prj_example"
         setupDoneCount={3}
         setupTotalCount={4}
         showGettingStarted
@@ -49,19 +56,36 @@ describe("AppHeader", () => {
     );
   });
 
-  it("keeps 24px between provider spend and the utility controls", () => {
+  it("threads enabled experimental modules into mobile navigation", () => {
+    render(
+      <AppHeader
+        activeProjectId="proj_example"
+        canCreateWorkspace={false}
+        enabledExperimentalModules={["timeline"]}
+        projectRef="prj_example"
+        workspaces={[]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Navigation" })).toHaveAttribute(
+      "data-enabled-modules",
+      "timeline",
+    );
+  });
+
+  it("keeps the spend pill close to the utility controls", () => {
     render(
       <AppHeader
         actions={<div data-testid="provider-spend">Provider spend</div>}
         activeProjectId="proj_example"
         canCreateWorkspace={false}
-        projectRef="project-example"
+        projectRef="prj_example"
         workspaces={[]}
       />,
     );
 
-    expect(screen.getByTestId("provider-spend").parentElement).toHaveClass("gap-6");
-    expect(screen.getByTestId("provider-spend").parentElement).not.toHaveClass("gap-5");
+    expect(screen.getByTestId("provider-spend").parentElement).toHaveClass("gap-2.5");
+    expect(screen.getByTestId("provider-spend").parentElement).not.toHaveClass("gap-6");
   });
 
   it("keeps the search trigger available only below the desktop breakpoint", () => {
@@ -69,7 +93,7 @@ describe("AppHeader", () => {
       <AppHeader
         activeProjectId="proj_example"
         canCreateWorkspace={false}
-        projectRef="project-example"
+        projectRef="prj_example"
         workspaces={[]}
       />,
     );
@@ -77,5 +101,37 @@ describe("AppHeader", () => {
     const trigger = screen.getByRole("button", { name: "Search" });
     expect(trigger.parentElement).toHaveClass("lg:hidden");
     expect(trigger).toHaveAttribute("data-variant", "header");
+  });
+  it("puts the context slot immediately left of the page title", () => {
+    render(
+      <AppHeader
+        activeProjectId="proj_example"
+        canCreateWorkspace={false}
+        context={<div data-testid="context-slot">United States</div>}
+        projectRef="prj_example"
+        workspaces={[]}
+      />,
+    );
+
+    const slot = screen.getByTestId("context-slot");
+    expect(slot.compareDocumentPosition(screen.getByTestId("header-title"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it("renders no context slot when the route matched none", () => {
+    // The account layout mounts this same header for three routes that have no context, and
+    // every project-scoped route matches a slot default that renders nothing.
+    render(
+      <AppHeader
+        activeProjectId="proj_example"
+        canCreateWorkspace={false}
+        projectRef="prj_example"
+        workspaces={[]}
+      />,
+    );
+
+    expect(screen.queryByTestId("context-slot")).toBeNull();
+    expect(screen.queryByRole("group", { name: "Change context" })).toBeNull();
   });
 });

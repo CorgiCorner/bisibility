@@ -94,7 +94,7 @@ module.
 
 ```sh
 cd examples/go
-go get github.com/bisibility/bisibility-sdk-go@v0.1.0
+go get github.com/bisibility/bisibility-sdk-go@v0.10.0
 go run ./quickstart
 go run ./error-handling
 ```

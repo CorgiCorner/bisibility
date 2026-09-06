@@ -138,7 +138,7 @@ func run() (err error) {
 	fmt.Printf("Created keyword %s\n", keywordID)
 
 	fmt.Println("Running rank check")
-	check, err := client.RunRankCheck(ctx, keywordID, nil)
+	check, err := client.RunRankCheckAndWait(ctx, keywordID, nil, nil)
 	if err != nil {
 		return err
 	}

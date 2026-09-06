@@ -6,6 +6,7 @@ import {
   SearchInsightsOauthReturn,
   type SearchInsightsOauthReturnProps,
 } from "./SearchInsightsOauthReturn";
+import { GA4_CONNECTION_TITLE } from "./search-insights-copy";
 
 type SearchInsightsGa4OauthCardProps = Pick<
   SearchInsightsOauthReturnProps,
@@ -41,7 +42,7 @@ export function SearchInsightsGa4OauthCard({
   return (
     <div className="flex flex-col gap-3 rounded-card border border-border bg-bg-elev p-4">
       <div>
-        <p className="m-0 text-ui-body font-semibold">Organic sessions (GA4)</p>
+        <p className="m-0 text-ui-body font-semibold">{GA4_CONNECTION_TITLE}</p>
         <p className="m-0 mt-1 text-ui-caption text-fg-muted">
           The Analytics connection was not completed. Search Console data remains available.
         </p>

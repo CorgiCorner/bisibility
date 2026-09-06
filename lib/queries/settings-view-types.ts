@@ -76,7 +76,7 @@ export type SettingsView = {
     writeMode: "active" | "migration_hold" | "migrated";
   };
   providers: SettingsProviderSummary[];
-  tags: { color: string; count: number; label: string }[];
+  tags: { color: string; keywordCount: number; label: string; segmentCount: number }[];
   team: {
     color: "accent" | "blue" | "purple";
     email: string;

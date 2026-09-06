@@ -10,7 +10,6 @@ import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider
 import { AlertBanner, AlertBannerStack } from "@/components/ui";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
 import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
-import Link from "next/link";
 import type { ReactNode } from "react";
 import type { CheckHealthView } from "./KeywordGridHealthNotices";
 
@@ -42,14 +41,12 @@ type EmptyRankNotice =
     };
 
 function emptyRankNotice({
-  budgetExhausted,
   checkStates,
   failedCount,
   providerConnected,
   projectRef,
   readOnly,
 }: {
-  budgetExhausted: boolean;
   checkStates: KeywordCheckState[];
   failedCount: number;
   providerConnected?: boolean;
@@ -64,33 +61,10 @@ function emptyRankNotice({
       title: "Rank checks paused - migration hold.",
     };
   }
-  if (budgetExhausted) {
-    return {
-      action: {
-        href: rankTrackerTabPath(projectRef, "checks"),
-        icon: "arrow",
-        label: "View check runs",
-      },
-      detail: (
-        <>
-          No new rank checks can start until the monthly budget resets or is increased.{" "}
-          <Link
-            className="font-semibold text-accent-text hover:underline"
-            href={`${appPath(projectRef, "settings")}#provider-usage`}
-          >
-            Raise the budget
-          </Link>
-        </>
-      ),
-      kind: "alert",
-      tint: "yellow",
-      title: "Rank checks paused - monthly budget reached.",
-    };
-  }
   if (failedCount > 0 || checkStates.includes("failed")) {
     return {
       action: {
-        href: rankTrackerTabPath(projectRef, "checks"),
+        href: rankTrackerTabPath(projectRef, "runs"),
         label: "Review check runs",
       },
       detail: "Some keyword positions could not be updated.",
@@ -102,7 +76,7 @@ function emptyRankNotice({
   if (checkStates.includes("running")) {
     return {
       action: {
-        href: rankTrackerTabPath(projectRef, "checks"),
+        href: rankTrackerTabPath(projectRef, "runs"),
         icon: "arrow",
         label: "View check runs",
       },
@@ -115,7 +89,7 @@ function emptyRankNotice({
   if (checkStates.some((state) => state === "not_ranked")) {
     return {
       action: {
-        href: rankTrackerTabPath(projectRef, "checks"),
+        href: rankTrackerTabPath(projectRef, "runs"),
         icon: "arrow",
         label: "View check runs",
       },
@@ -149,7 +123,6 @@ export function KeywordsGridNotices({
 }: Readonly<KeywordsGridNoticesProps>) {
   const { readOnly } = useProjectWriteMode();
   const rankNotice = emptyRankNotice({
-    budgetExhausted: checkHealth?.budget.exhausted ?? false,
     checkStates,
     failedCount: checkHealth?.failed24h.count ?? 0,
     providerConnected,

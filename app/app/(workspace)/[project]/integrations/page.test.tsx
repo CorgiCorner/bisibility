@@ -42,6 +42,9 @@ vi.mock("@/lib/actions/providers", () => ({
 vi.mock("@/lib/actions/traffic-sync", () => ({ syncProjectTraffic: vi.fn() }));
 vi.mock("@/lib/auth/authorize", () => ({ getProjectRole: () => "owner" }));
 vi.mock("@/lib/auth/capabilities", () => ({ canProjectAction: () => true }));
+vi.mock("@/lib/dates/request", () => ({
+  getResolvedDateFormat: vi.fn().mockResolvedValue({ preference: "auto", resolved: "month_first" }),
+}));
 vi.mock("@/lib/providers/analytics/google-oauth-pending", () => ({
   getPendingGoogleOAuthSetup: vi.fn(),
 }));

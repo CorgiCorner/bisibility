@@ -28,24 +28,37 @@ const mocks = vi.hoisted(() => ({
   loadProviderRateContext: vi.fn(),
   notifyDeferredRankCheckOps: vi.fn(),
   notifyFailedRankCheckOps: vi.fn(),
+  paidProvider: { fetchRank: vi.fn() },
+  persistProviderResult: vi.fn(),
   persistFailedRankCheck: vi.fn(),
+  publishOperationChanged: vi.fn(() => Promise.resolve()),
   prisma: {
+    $executeRaw: vi.fn(),
+    $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     keyword: { findUnique: vi.fn() },
+    projectMarket: { findMany: vi.fn() },
     providerConnection: { findFirst: vi.fn() },
     rankCheck: {
       create: vi.fn(),
       delete: vi.fn(),
+      findFirst: vi.fn(),
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
+    rankCheckRun: { create: vi.fn(), updateMany: vi.fn() },
+    rankCheckRunItem: { findUnique: vi.fn(), updateMany: vi.fn() },
   },
   runKeywordCheckWithFallback: vi.fn(),
 }));
 
 vi.mock("../db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("../notifications/realtime", () => ({
+  publishOperationChanged: mocks.publishOperationChanged,
+}));
 vi.mock("../provider-rates/connection-context", () => ({
   loadProviderRateContext: mocks.loadProviderRateContext,
 }));
@@ -80,6 +93,7 @@ function runningInput(
 describe("rank-check activities", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$executeRaw.mockResolvedValue(1);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.loadProviderRateContext.mockResolvedValue({ entries: [], manualAmountCents: null });
     mocks.prisma.auditLog.create.mockResolvedValue({ id: "audit_1" });
@@ -89,12 +103,19 @@ describe("rank-check activities", () => {
       projectId: "project_1",
     });
     mocks.prisma.keyword.findUnique.mockResolvedValue({
+      archivedAt: null,
+      locationId: "location_1",
       project: { defaults: null },
+      projectId: "project_1",
       publicId: "kw_a00000000000000000000000",
       schedule: null,
     });
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: "location_1" }]);
+    mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
     mocks.prisma.rankCheck.findUnique.mockResolvedValue(null);
     mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 0 });
+    mocks.prisma.rankCheckRun.create.mockResolvedValue({ id: "run_wrapped_1" });
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -165,6 +186,7 @@ describe("rank-check activities", () => {
       }),
       select: { id: true, publicId: true },
     });
+    expect(mocks.publishOperationChanged).toHaveBeenCalledWith({ projectId: "project_1" });
   });
 
   it("reserves the runtime chain head by priority", async () => {
@@ -244,8 +266,14 @@ describe("rank-check activities", () => {
     );
     expect(mocks.prisma.keyword.findUnique).toHaveBeenCalledWith({
       select: {
+        projectId: true,
         publicId: true,
-        project: { select: { defaults: { select: { serpDepth: true } } } },
+        project: {
+          select: {
+            defaults: { select: { serpDepth: true } },
+            providerAllocationsInitializedAt: true,
+          },
+        },
         schedule: { select: { serpDepth: true } },
       },
       where: { id: "keyword_1" },
@@ -311,6 +339,54 @@ describe("rank-check activities", () => {
     });
   });
 
+  it("wraps a legacy fire once and reuses its linked rank check on replay", async () => {
+    mocks.prisma.rankCheck.create.mockResolvedValue({
+      id: "rank_legacy_1",
+      publicId: "check_a00000000000000000000000",
+    });
+    mocks.prisma.rankCheck.findFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: "rank_legacy_1", runId: "run_wrapped_1" });
+    const input = runningInput({
+      scheduleId: "rank-check-keyword_1",
+      trigger: "scheduled",
+      workflowRunId: "temporal_run_1",
+    });
+
+    await expect(createRunningRankCheckActivity(input)).resolves.toMatchObject({
+      rankCheckId: "rank_legacy_1",
+    });
+    await expect(createRunningRankCheckActivity(input)).resolves.toMatchObject({
+      rankCheckId: "rank_legacy_1",
+    });
+
+    expect(mocks.prisma.rankCheck.create).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheckRun.create).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheckRun.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        items: {
+          create: expect.objectContaining({
+            keywordId: "keyword_1",
+            rankCheckId: "rank_legacy_1",
+            status: "running",
+          }),
+        },
+        selectionKind: "legacy_schedule",
+        selectionSpec: {
+          kind: "legacy_schedule",
+          keywordId: "kw_a00000000000000000000000",
+          v: 1,
+        },
+        status: "running",
+      }),
+      select: { id: true },
+    });
+    expect(mocks.prisma.rankCheck.update).toHaveBeenCalledWith({
+      data: { runId: "run_wrapped_1" },
+      where: { id: "rank_legacy_1" },
+    });
+  });
+
   it("claims an existing pre-created running row", async () => {
     mocks.prisma.rankCheck.update.mockResolvedValue({
       id: "rank_existing_1",
@@ -332,8 +408,76 @@ describe("rank-check activities", () => {
     });
   });
 
+  it("returns the linked rank check without creating again on activity replay", async () => {
+    const item = {
+      keywordId: "keyword_1",
+      rankCheck: { workflowRunId: "run_manual_1" },
+      rankCheckId: null as string | null,
+      run: { projectId: "project_1" },
+      runId: "run_1",
+      status: "queued",
+    };
+    mocks.prisma.rankCheck.create.mockResolvedValue({
+      id: "rank_running_1",
+      publicId: "check_a00000000000000000000000",
+    });
+    mocks.prisma.rankCheckRunItem.findUnique.mockImplementation(async () => item);
+    mocks.prisma.rankCheckRunItem.updateMany.mockImplementation(async ({ data, where }) => {
+      if (item.status !== where.status) return { count: 0 };
+      item.rankCheckId = data.rankCheckId;
+      item.status = data.status;
+      return { count: 1 };
+    });
+    mocks.prisma.rankCheckRun.updateMany.mockResolvedValue({ count: 1 });
+    const input = runningInput({ runItemId: "item_1" });
+
+    await expect(createRunningRankCheckActivity(input)).resolves.toEqual({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+    });
+    await expect(createRunningRankCheckActivity(input)).resolves.toEqual({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+    });
+
+    expect(mocks.prisma.rankCheck.create).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheck.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ runId: "run_1" }),
+      select: { id: true, publicId: true },
+    });
+    expect(mocks.prisma.rankCheckRunItem.updateMany).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a run item owned by another keyword before writing a rank check", async () => {
+    const item = {
+      keywordId: "keyword_2",
+      rankCheckId: null,
+      runId: "run_1",
+      status: "queued",
+    };
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue(item);
+
+    await expect(
+      createRunningRankCheckActivity(runningInput({ runItemId: "item_1" })),
+    ).rejects.toMatchObject({
+      nonRetryable: true,
+      type: "rank_check_run_item_keyword_mismatch",
+    });
+
+    expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheck.update).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheckRunItem.updateMany).not.toHaveBeenCalled();
+    expect(item).toEqual({
+      keywordId: "keyword_2",
+      rankCheckId: null,
+      runId: "run_1",
+      status: "queued",
+    });
+  });
+
   it("audits the running transition in the same transaction", async () => {
     const tx = {
+      $queryRaw: vi.fn(),
       auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
       rankCheck: {
         create: vi.fn(({ data }) =>
@@ -385,9 +529,10 @@ describe("rank-check activities", () => {
     vi.setSystemTime(new Date("2026-01-01T06:01:00.000Z"));
     const estimatedCostCents = { toString: () => "0.75" };
     const tx = {
+      $queryRaw: vi.fn(),
       auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
       rankCheck: {
-        update: vi.fn(() =>
+        findUniqueOrThrow: vi.fn(() =>
           Promise.resolve({
             estimatedCostCents,
             id: "rank_running_1",
@@ -403,7 +548,10 @@ describe("rank-check activities", () => {
             startedAt: new Date("2026-01-01T06:00:05.000Z"),
           }),
         ),
+        updateMany: vi.fn(async () => ({ count: 1 })),
       },
+      rankCheckRun: { update: vi.fn() },
+      rankCheckRunItem: { findUnique: vi.fn(async () => null), updateMany: vi.fn() },
     };
     mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
 
@@ -411,7 +559,7 @@ describe("rank-check activities", () => {
       discardRankCheckActivity({ rankCheckId: "rank_running_1", reason: "rate limited" }),
     ).resolves.toEqual({ rankCheckId: "rank_running_1" });
 
-    expect(tx.rankCheck.update).toHaveBeenCalledWith({
+    expect(tx.rankCheck.updateMany).toHaveBeenCalledWith({
       data: {
         attemptCount: 0,
         deferredReason: "rate limited",
@@ -421,6 +569,10 @@ describe("rank-check activities", () => {
         status: "deferred",
         viaFallback: false,
       },
+      where: { id: "rank_running_1", status: "running" },
+    });
+    expect(mocks.publishOperationChanged).toHaveBeenCalledWith({ projectId: "project_1" });
+    expect(tx.rankCheck.findUniqueOrThrow).toHaveBeenCalledWith({
       select: {
         estimatedCostCents: true,
         id: true,
@@ -459,6 +611,24 @@ describe("rank-check activities", () => {
       scheduledAt: new Date("2026-01-01T06:00:00.000Z"),
       startedAt: new Date("2026-01-01T06:00:05.000Z"),
     });
+  });
+
+  it("does not let a discard replay overwrite a completed check", async () => {
+    const item = { status: "completed" };
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 0 });
+    mocks.prisma.rankCheckRunItem.updateMany.mockImplementation(async ({ data }) => {
+      item.status = data.status;
+      return { count: 1 };
+    });
+
+    await expect(
+      discardRankCheckActivity({ rankCheckId: "rank_completed_1", reason: "late retry" }),
+    ).resolves.toEqual({ rankCheckId: "rank_completed_1" });
+
+    expect(mocks.prisma.rankCheck.findUniqueOrThrow).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheckRunItem.updateMany).not.toHaveBeenCalled();
+    expect(mocks.notifyDeferredRankCheckOps).not.toHaveBeenCalled();
+    expect(item.status).toBe("completed");
   });
 
   it("marks the running row failed through shared failure persistence", async () => {
@@ -777,5 +947,138 @@ describe("rank-check activities", () => {
       nonRetryable: true,
       type: RANK_CHECK_CLOSED_FAILURE,
     });
+  });
+
+  it("allows only the run-item CAS winner to reach the paid provider", async () => {
+    const item = {
+      keywordId: "keyword_1",
+      rankCheckId: null as string | null,
+      run: { projectId: "project_1" },
+      runId: "run_1",
+      status: "queued",
+    };
+    let storedRankCheck: Record<string, unknown> | null = null;
+    mocks.prisma.rankCheck.create.mockImplementation(async ({ data }) => {
+      storedRankCheck = { ...data, id: "rank_1" };
+      return { id: "rank_1", publicId: "check_a00000000000000000000000" };
+    });
+    mocks.prisma.rankCheck.findUnique.mockImplementation(async () => storedRankCheck);
+    mocks.prisma.rankCheckRunItem.findUnique.mockImplementation(async () => ({
+      ...item,
+      rankCheck: storedRankCheck,
+    }));
+    mocks.prisma.rankCheckRunItem.updateMany.mockImplementation(async ({ data, where }) => {
+      if (where.status !== item.status) return { count: 0 };
+      item.rankCheckId = data.rankCheckId;
+      item.status = data.status;
+      return { count: 1 };
+    });
+    mocks.prisma.rankCheckRun.updateMany.mockResolvedValue({ count: 1 });
+    mocks.paidProvider.fetchRank.mockResolvedValue({ position: 3 });
+    mocks.runKeywordCheckWithFallback.mockImplementation(async ({ keywordId, rankCheckId }) => {
+      await mocks.paidProvider.fetchRank({ keywordId });
+      return {
+        attempts: [],
+        provider: "primary",
+        rankCheck: {
+          checkedAt: new Date("2026-09-02T08:00:00.000Z"),
+          costCents: 1,
+          id: rankCheckId,
+          keywordId,
+          position: 3,
+          rankingUrl: null,
+        },
+      };
+    });
+
+    async function executeClaimant(workflowRunId: string) {
+      const running = await createRunningRankCheckActivity(
+        runningInput({ runItemId: "item_1", workflowRunId }),
+      );
+      return runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: running.rankCheckId,
+        runItemId: "item_1",
+        source: "manual",
+      });
+    }
+
+    await executeClaimant("workflow_winner");
+    await executeClaimant("workflow_loser").catch(() => undefined);
+
+    expect(mocks.paidProvider.fetchRank).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not repeat a paid provider call when persistence triggers an activity retry", async () => {
+    mocks.paidProvider.fetchRank.mockResolvedValue({ position: 3 });
+    mocks.persistProviderResult
+      .mockRejectedValueOnce(new Error("database unavailable after provider success"))
+      .mockResolvedValueOnce(undefined);
+    mocks.runKeywordCheckWithFallback.mockImplementation(async ({ keywordId, rankCheckId }) => {
+      await mocks.paidProvider.fetchRank({ keywordId });
+      await mocks.persistProviderResult({ rankCheckId });
+      return {
+        attempts: [],
+        provider: "primary",
+        rankCheck: {
+          checkedAt: new Date("2026-09-02T08:00:00.000Z"),
+          costCents: 1,
+          id: rankCheckId,
+          keywordId,
+          position: 3,
+          rankingUrl: null,
+        },
+      };
+    });
+    mocks.prisma.$executeRaw.mockResolvedValueOnce(1).mockResolvedValueOnce(0);
+
+    async function executeWithActivityRetry() {
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        try {
+          return await runRankCheckActivity({
+            keywordId: "keyword_1",
+            rankCheckId: "rank_1",
+            source: "manual",
+          });
+        } catch (error) {
+          const nonRetryable = (error as { nonRetryable?: boolean }).nonRetryable === true;
+          if (nonRetryable || attempt === 2) throw error;
+        }
+      }
+    }
+
+    await executeWithActivityRetry().catch(() => undefined);
+
+    expect(mocks.paidProvider.fetchRank).toHaveBeenCalledTimes(1);
+  });
+
+  it("records a refused paid-call fence as send_unconfirmed without spend", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-02T08:00:00.000Z"));
+    mocks.prisma.$executeRaw.mockResolvedValue(0);
+    mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_1",
+        runItemId: "item_1",
+        source: "manual",
+      }),
+    ).rejects.toMatchObject({
+      nonRetryable: true,
+      type: "rank_check_paid_call_already_attempted",
+    });
+
+    expect(mocks.prisma.rankCheckRunItem.updateMany).toHaveBeenCalledWith({
+      data: {
+        actualCostCents: null,
+        blockedReason: "send_unconfirmed",
+        finishedAt: new Date("2026-09-02T08:00:00.000Z"),
+        status: "blocked",
+      },
+      where: { rankCheckId: "rank_1", status: "running" },
+    });
+    expect(mocks.runKeywordCheckWithFallback).not.toHaveBeenCalled();
   });
 });

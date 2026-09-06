@@ -1,3 +1,4 @@
+import type { DateFormat } from "@/lib/dates/format";
 import { propertyDisplayName } from "@/lib/search-insights/queries/context-model";
 import {
   resolveSearchBackfillPresentation,
@@ -17,12 +18,15 @@ function consumerState(
   if (kind === "needs_reauth") return "needs_reauth";
   if (kind === "needs_retry") return "sync_failed";
   if (kind === "paused_user") return "paused_by_user";
-  return kind === "running" && input.observability?.readyThrough.d7.current
+  return kind === "running" && input.observability?.readyThrough.d1.current
     ? "first_view_ready"
     : "backfill_running";
 }
 
-export function searchModuleConsumerStatus(input: SearchModuleInput): ProviderConsumerStatus {
+export function searchModuleConsumerStatus(
+  input: SearchModuleInput,
+  dateFormat: DateFormat = "month_first",
+): ProviderConsumerStatus {
   if (input.connectionStatus === "connected" && !input.state) {
     return {
       ...(input.property ? { detail: propertyDisplayName(input.property) } : {}),
@@ -30,7 +34,7 @@ export function searchModuleConsumerStatus(input: SearchModuleInput): ProviderCo
       summary: "Not configured",
     };
   }
-  const presentation = resolveSearchBackfillPresentation(input);
+  const presentation = resolveSearchBackfillPresentation(input, dateFormat);
   return {
     ...(input.property ? { detail: propertyDisplayName(input.property) } : {}),
     state: consumerState(presentation.kind, input),

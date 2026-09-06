@@ -1,3 +1,4 @@
+import { Prisma } from "@/lib/generated/prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -9,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 
-const { coverageShare, getQueryCoverage } = await import("./coverage");
+const { coverageShare, coverageTotalsSql, getQueryCoverage } = await import("./coverage");
 
 const window = { end: "2026-07-08", start: "2026-06-11" };
 
@@ -43,6 +44,13 @@ describe("getQueryCoverage", () => {
     const statement = mocks.prisma.$queryRaw.mock.calls[0]?.[0];
     expect(statement.sql).toContain('FROM "search_analytics_query_daily"');
     expect(statement.sql).toContain('FROM "search_analytics_daily"');
+  });
+
+  it("aggregates clicks and impressions in one scan per table", () => {
+    const statement = coverageTotalsSql(Prisma.sql`"projectId" = ${"project_1"}`);
+
+    expect(statement.sql.match(/FROM "search_analytics_query_daily"/g)).toHaveLength(1);
+    expect(statement.sql.match(/FROM "search_analytics_daily"/g)).toHaveLength(1);
   });
 
   it("counts the days the provider stopped at its row ceiling, not the request sets", async () => {

@@ -1,8 +1,10 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { extname, join, posix, relative, sep } from "node:path";
+import { dirname, extname, join, posix, relative, resolve, sep } from "node:path";
 
 const HTTP_OPERATION = /^(?:DELETE|GET|PATCH|POST|PUT) \//;
 const PRIVATE_DOCS_DIRECTORIES = new Set(["plans", "private"]);
+const RELATIVE_MDX_IMPORT =
+  /^\s*import\s+\w+\s+from\s+["'](\.[^"']+\.mdx?)["'];?\s*$/gm;
 
 function walk(directory) {
   return readdirSync(directory, { withFileTypes: true })
@@ -70,6 +72,10 @@ export function extractDocHrefs(source, includePlainUrls = false) {
     );
   }
   return [...new Set(matches.map((match) => match[1]))];
+}
+
+export function extractRelativeMdxImports(source) {
+  return [...source.matchAll(RELATIVE_MDX_IMPORT)].map((match) => match[1]);
 }
 
 export function normalizePageId(value) {
@@ -143,15 +149,43 @@ export function pageAnchors(source) {
 
 export function analyzeDocsNavigation(pages, navigation) {
   const knownPageIds = new Set(pages.keys());
+  const pageIdByFile = new Map([...pages].map(([pageId, page]) => [resolve(page.file), pageId]));
+  const importsForPage = (page) =>
+    extractRelativeMdxImports(page.source).map((importPath) => ({
+      importPath,
+      pageId: pageIdByFile.get(resolve(dirname(page.file), importPath)),
+    }));
+  const renderedSource = (pageId, visiting = new Set()) => {
+    if (visiting.has(pageId)) return "";
+    const page = pages.get(pageId);
+    if (!page) return "";
+    const nextVisiting = new Set(visiting).add(pageId);
+    return page.source.replace(RELATIVE_MDX_IMPORT, (statement, importPath) => {
+      const importedPageId = pageIdByFile.get(resolve(dirname(page.file), importPath));
+      return importedPageId ? renderedSource(importedPageId, nextVisiting) : statement;
+    });
+  };
   const reachable = new Set();
   const pending = [...collectNavigationPageIds(navigation)];
   const missingFragments = [];
+  const missingImports = [];
+
+  for (const page of pages.values()) {
+    for (const imported of importsForPage(page)) {
+      if (!imported.pageId) {
+        missingImports.push({ sourceFile: page.file, importPath: imported.importPath });
+      }
+    }
+  }
 
   while (pending.length) {
     const pageId = pending.shift();
     if (reachable.has(pageId) || !knownPageIds.has(pageId)) continue;
     reachable.add(pageId);
     const page = pages.get(pageId);
+    for (const imported of importsForPage(page)) {
+      if (imported.pageId && !reachable.has(imported.pageId)) pending.push(imported.pageId);
+    }
     for (const href of extractDocHrefs(page.source)) {
       const target = resolveDocsHref(href, pageId, knownPageIds);
       if (!target) continue;
@@ -159,7 +193,9 @@ export function analyzeDocsNavigation(pages, navigation) {
     }
   }
 
-  const anchors = new Map([...pages].map(([pageId, page]) => [pageId, pageAnchors(page.source)]));
+  const anchors = new Map(
+    [...pages].map(([pageId]) => [pageId, pageAnchors(renderedSource(pageId))]),
+  );
   for (const [sourcePageId, page] of pages) {
     for (const href of extractDocHrefs(page.source, true)) {
       const target = resolveDocsHref(href, sourcePageId, knownPageIds);
@@ -177,6 +213,7 @@ export function analyzeDocsNavigation(pages, navigation) {
 
   return {
     orphanPageIds: [...knownPageIds].filter((pageId) => !reachable.has(pageId)).sort(),
+    missingImports,
     missingFragments,
   };
 }

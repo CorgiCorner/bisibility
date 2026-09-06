@@ -4,17 +4,22 @@ import { trackingScheduleValueWithDepthOverride } from "@/components/keywords/ad
 import { TRACK_FAILED, trackDoneCopy } from "@/components/search-insights/search-insights-copy";
 import { useToast } from "@/components/ui";
 import type { addKeywordsMatrix } from "@/lib/actions/keyword";
+import type {
+  LoadSearchInsightsTrackDialogAction,
+  SearchInsightsTrackDialogPayload,
+} from "@/lib/actions/search-insights-drawers";
 import { track } from "@/lib/analytics/client";
-import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
-import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { trackedKey } from "@/lib/search-insights/queries/tracked-model";
-import type { SerpDevice } from "@/lib/serp/markets";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { SearchInsightsDrawer } from "./SearchInsightsDrawer";
-import { type TrackQueryConfirm, TrackQueryDialog } from "./TrackQueryDialog";
+import {
+  type TrackQueryConfirm,
+  TrackQueryDialog,
+  TrackQueryDialogLoading,
+} from "./TrackQueryDialog";
 import { SearchInsightsDrawerContext } from "./useDrawerHandlers";
 import {
   type SearchInsightsDrawerActions,
@@ -28,13 +33,11 @@ export type SearchInsightsDrawerHostProps = SearchInsightsDrawerActions & {
   addKeywordsAction: AddKeywordsMatrixAction;
   canCreateKeyword: boolean;
   children: ReactNode;
-  costContext: ProjectCostContext;
-  defaultDevice: SerpDevice;
-  defaultMarketKey: string | null;
+  comparison?: string;
+  loadTrackDialogAction: LoadSearchInsightsTrackDialogAction;
   period: string;
   projectId: string;
   property: string;
-  projectMarkets: ProjectMarketsView;
 };
 
 /**
@@ -46,20 +49,26 @@ export function SearchInsightsDrawerHost({
   addKeywordsAction,
   canCreateKeyword,
   children,
-  costContext,
-  defaultDevice,
-  defaultMarketKey,
+  comparison,
+  loadTrackDialogAction,
   period,
   projectId,
-  projectMarkets,
   property,
   ...actions
 }: Readonly<SearchInsightsDrawerHostProps>) {
   const router = useRouter();
   const { showToast } = useToast();
-  const drawers = useSearchInsightsDrawers({ ...actions, period, projectId, property });
+  const drawers = useSearchInsightsDrawers({
+    ...actions,
+    comparison,
+    period,
+    projectId,
+    property,
+  });
   const focus = useTrackFocus(drawers.bodyRef);
   const [target, setTarget] = useState<string | null>(null);
+  const [trackDialog, setTrackDialog] = useState<SearchInsightsTrackDialogPayload | null>(null);
+  const trackDialogRead = useRef<Promise<SearchInsightsTrackDialogPayload> | null>(null);
   const [adding, setAdding] = useState<ReadonlySet<string>>(new Set());
   const [tracked, setTracked] = useState<ReadonlySet<string>>(new Set());
   // The chip already knows how many rows its list holds, so the frame is titled from that number
@@ -68,6 +77,7 @@ export function SearchInsightsDrawerHost({
   const [namedQueryCounts, setNamedQueryCounts] = useState({ band: 0, overlap: 0 });
 
   async function confirm(query: string, choice: TrackQueryConfirm) {
+    if (!trackDialog) return;
     setTarget(null);
     // One entry per write in flight: two rows started together must each keep their own label.
     setAdding((current) => new Set(current).add(query));
@@ -79,7 +89,7 @@ export function SearchInsightsDrawerHost({
         locations: [{ locationKey: choice.locationKey }],
         projectId,
         schedule: trackingScheduleValueWithDepthOverride(choice.schedule, {
-          ...costContext,
+          ...trackDialog.costContext,
           depth: choice.serpDepth,
         }),
         tags: [],
@@ -91,7 +101,9 @@ export function SearchInsightsDrawerHost({
       if (result.created > 0 || result.skippedDuplicates > 0) {
         setTracked((current) => new Set([...current, trackedKey(query)]));
         const effectiveFrequency =
-          choice.schedule === "project_default" ? costContext.rawFrequency : choice.schedule;
+          choice.schedule === "project_default"
+            ? trackDialog.costContext.rawFrequency
+            : choice.schedule;
         showToast(trackDoneCopy(effectiveFrequency), { severity: "success" });
         router.refresh();
       }
@@ -112,6 +124,18 @@ export function SearchInsightsDrawerHost({
     focus.capture();
     setTarget(query);
     track("search_insights_track_clicked", { source });
+    if (trackDialog || trackDialogRead.current) return;
+    const read = loadTrackDialogAction({ projectId });
+    trackDialogRead.current = read;
+    void read
+      .then(setTrackDialog)
+      .catch((error) => {
+        setTarget(null);
+        showToast(actionErrorMessage(error, TRACK_FAILED), { severity: "error" });
+      })
+      .finally(() => {
+        trackDialogRead.current = null;
+      });
   }
 
   return (
@@ -153,17 +177,21 @@ export function SearchInsightsDrawerHost({
         seen={drawers.seen}
         tracked={tracked}
       />
-      <TrackQueryDialog
-        costContext={costContext}
-        defaultDevice={defaultDevice}
-        defaultMarketKey={defaultMarketKey}
-        markets={projectMarkets}
-        onCancel={() => setTarget(null)}
-        onConfirm={(choice) => {
-          if (target) void confirm(target, choice);
-        }}
-        query={target}
-      />
+      {trackDialog ? (
+        <TrackQueryDialog
+          costContext={trackDialog.costContext}
+          defaultDevice={trackDialog.defaultDevice}
+          defaultMarketKey={trackDialog.defaultMarketKey}
+          markets={trackDialog.projectMarkets}
+          onCancel={() => setTarget(null)}
+          onConfirm={(choice) => {
+            if (target) void confirm(target, choice);
+          }}
+          query={target}
+        />
+      ) : (
+        <TrackQueryDialogLoading onCancel={() => setTarget(null)} query={target} />
+      )}
     </SearchInsightsDrawerContext.Provider>
   );
 }

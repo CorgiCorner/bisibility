@@ -69,7 +69,7 @@ describe("getPageDetail", () => {
     expect(detail.queries.total).toBe(12);
   });
 
-  it("leaves sessions absent rather than reporting a zero it never read", async () => {
+  it("leaves page metrics absent rather than reporting zeros it never read", async () => {
     const detail = await getPageDetail(
       "project_1",
       "sc-domain:example.com",
@@ -77,15 +77,15 @@ describe("getPageDetail", () => {
       "https://example.com/guide",
     );
 
-    expect(detail.sessions).toBeNull();
+    expect(detail).toMatchObject({ engagementRate: null, keyEvents: null, sessions: null });
   });
 
-  it("sums sessions with the normalized landing path when the second source is connected", async () => {
+  it("returns the real page metrics after every contributing day has been reread", async () => {
     mocks.prisma.$queryRaw.mockReset();
     mocks.prisma.$queryRaw
       .mockResolvedValueOnce(days)
       .mockResolvedValueOnce(queries)
-      .mockResolvedValueOnce([{ sessions: 42n }]);
+      .mockResolvedValueOnce([{ engagedSessions: 21n, keyEvents: 3n, sessions: 42n }]);
 
     const detail = await getPageDetail(
       "project_1",
@@ -95,10 +95,55 @@ describe("getPageDetail", () => {
       "123456789",
     );
 
-    expect(detail.sessions).toBe(42);
+    expect(detail).toMatchObject({ engagementRate: 0.5, keyEvents: 3, sessions: 42 });
     const statement = mocks.prisma.$queryRaw.mock.calls[2]?.[0];
     expect(statement.sql).toContain('FROM "organic_sessions_page_daily"');
+    expect(statement.sql).toContain(
+      'CASE WHEN bool_or("engagedSessions" IS NULL) THEN NULL ELSE SUM("engagedSessions") END AS "engagedSessions"',
+    );
+    expect(statement.sql).toContain(
+      'CASE WHEN bool_or("keyEvents" IS NULL) THEN NULL ELSE SUM("keyEvents") END AS "keyEvents"',
+    );
     expect(statement.values).toContain(dimensionKeyHash(["/guide"]));
+  });
+
+  it("keeps mixed reread page metrics unknown for the whole window", async () => {
+    mocks.prisma.$queryRaw.mockReset();
+    mocks.prisma.$queryRaw
+      .mockResolvedValueOnce(days)
+      .mockResolvedValueOnce(queries)
+      .mockResolvedValueOnce([{ engagedSessions: null, keyEvents: null, sessions: 42n }]);
+
+    const detail = await getPageDetail(
+      "project_1",
+      "sc-domain:example.com",
+      window,
+      "https://example.com/guide",
+      "123456789",
+    );
+
+    expect(detail).toMatchObject({ engagementRate: null, keyEvents: null, sessions: 42 });
+    expect(mocks.prisma.$queryRaw.mock.calls[2]?.[0].sql).toContain(
+      'CASE WHEN bool_or("engagedSessions" IS NULL) THEN NULL ELSE SUM("engagedSessions") END AS "engagedSessions"',
+    );
+  });
+
+  it("preserves NULL page aggregates rather than changing them to zero", async () => {
+    mocks.prisma.$queryRaw.mockReset();
+    mocks.prisma.$queryRaw
+      .mockResolvedValueOnce(days)
+      .mockResolvedValueOnce(queries)
+      .mockResolvedValueOnce([{ engagedSessions: null, keyEvents: null, sessions: null }]);
+
+    const detail = await getPageDetail(
+      "project_1",
+      "sc-domain:example.com",
+      window,
+      "https://example.com/guide",
+      "123456789",
+    );
+
+    expect(detail).toMatchObject({ engagementRate: null, keyEvents: null, sessions: null });
   });
 });
 

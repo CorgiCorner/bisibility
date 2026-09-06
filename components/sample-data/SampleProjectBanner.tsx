@@ -1,9 +1,8 @@
 "use client";
 
-import { ConfirmModal, iconWellClassName } from "@/components/ui";
+import { Button, ConfirmModal, iconWellClassName } from "@/components/ui";
 import { removeSampleData } from "@/lib/actions/sample-data";
 import { appPath, asProjectRef, type ProjectRef } from "@/lib/routing/app-path";
-import Button from "@mui/material/Button";
 import { TestTubeIcon as TestTube, TrashIcon as Trash } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,34 +47,25 @@ export function SampleProjectBanner({ projectId, projectRef }: Readonly<SamplePr
         </p>
       </div>
       <div className="mt-3 flex flex-col gap-2 sm:mt-0 sm:flex-row sm:items-center">
-        <Button
-          color="inherit"
-          component={Link}
-          href="/onboarding?new=1"
-          size="small"
-          sx={{
-            borderColor: "var(--border)",
-            color: "var(--fg)",
-            minHeight: 34,
-            whiteSpace: "nowrap",
-          }}
-          variant="outlined"
-        >
+        <Button component={Link} href="/onboarding?new=1" size="sm" variant="secondary">
           Create your real project
         </Button>
         <Button
           onClick={() => setConfirmOpen(true)}
-          size="small"
+          size="sm"
           startIcon={<Trash aria-hidden size={14} weight="regular" />}
           sx={{
-            borderColor: "var(--red)",
+            backgroundColor: "var(--bg-elev)",
+            border: "1px solid var(--red)",
             color: "var(--red)",
-            minHeight: 34,
             whiteSpace: "nowrap",
-            "&:hover": { borderColor: "var(--red)", backgroundColor: "var(--bg-sunken)" },
+            "&:hover": {
+              backgroundColor: "var(--bg-sunken)",
+              border: "1px solid var(--red)",
+            },
           }}
           type="button"
-          variant="outlined"
+          variant="secondary"
         >
           Remove sample data
         </Button>

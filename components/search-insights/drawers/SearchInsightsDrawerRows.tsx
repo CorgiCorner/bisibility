@@ -2,10 +2,17 @@
 
 import {
   AVG_POSITION_TIP,
+  DRAWER_PAGE_ENGAGEMENT_TIP,
+  ENGAGEMENT_LABEL,
+  ENGAGEMENT_RATE_TIP,
+  KEY_EVENTS_LABEL,
+  KEY_EVENTS_NOT_CONFIGURED,
+  KEY_EVENTS_TIP,
   overlapBadgeTitle,
 } from "@/components/search-insights/search-insights-copy";
 import {
   formatRowCount,
+  formatRowCtr,
   formatRowPosition,
   tableRowKeys,
 } from "@/components/search-insights/search-insights-rows-model";
@@ -23,23 +30,23 @@ import type { ReactNode } from "react";
 import { drawerFrameKey } from "./drawer-model";
 
 const ROW =
-  "cursor-pointer border-b border-border-soft last:border-b-0 hover:bg-bg-sunken focus-visible:bg-bg-sunken";
+  "cursor-pointer border-b border-border last:border-b-0 hover:bg-bg-sunken focus-visible:bg-bg-sunken";
 const CELL = "px-3.25 py-2.5 align-middle";
 const TEXT = "truncate font-sans tabular-nums text-ui-caption";
 const NUMBER = "px-1 text-right font-sans tabular-nums text-ui-caption font-semibold";
 const MUTED = "px-1 text-right font-sans tabular-nums text-ui-caption text-fg-muted";
 const DECISION =
   "flex items-center justify-end gap-1.5 font-sans tabular-nums text-ui-caption text-fg-muted";
-
 export type DrawerRow = {
   clicks: number;
+  engagementRate?: number | null;
   key: string;
+  keyEvents?: number | null;
   label: string;
   onOpen: () => void;
   position: number | null;
   title: string;
 };
-
 function ListTable({
   children,
   headers,
@@ -87,65 +94,110 @@ function ListTable({
     </div>
   );
 }
-
 const SLICE_NUMERIC_HEADERS = [
   { align: true, label: "Clicks" },
   { align: true, label: "Avg pos", title: AVG_POSITION_TIP },
 ] as const;
-
 export type DrawerSliceRowsProps = {
+  keyEventsConfigured?: boolean | null;
   label: string;
+  pageMetricsReadable?: boolean;
   rows: readonly DrawerRow[];
   seen: ReadonlySet<string>;
   textHeader: "Page" | "Query";
 };
-
-/** A query's pages, or a page's queries: the same three columns either way. */
-export function DrawerSliceRows({ label, rows, seen, textHeader }: Readonly<DrawerSliceRowsProps>) {
-  const headers = [{ label: textHeader }, ...SLICE_NUMERIC_HEADERS];
+/** Query pages can carry page metrics; page queries stay Search Console only. */
+export function DrawerSliceRows({
+  keyEventsConfigured = null,
+  label,
+  pageMetricsReadable = false,
+  rows,
+  seen,
+  textHeader,
+}: Readonly<DrawerSliceRowsProps>) {
+  const showPageMetrics = textHeader === "Page" && pageMetricsReadable;
+  const headers = showPageMetrics
+    ? [
+        { label: textHeader },
+        { align: true, label: "Clicks" },
+        { align: true, label: ENGAGEMENT_LABEL, title: DRAWER_PAGE_ENGAGEMENT_TIP },
+        { align: true, label: KEY_EVENTS_LABEL },
+        SLICE_NUMERIC_HEADERS[1],
+      ]
+    : [{ label: textHeader }, ...SLICE_NUMERIC_HEADERS];
   return (
-    <ListTable headers={headers} label={label} variant="drawer">
-      <tbody>
-        {rows.map((row) => (
-          <tr
-            className={cn(ROW, "data-[seen=1]:bg-bg-sunken")}
-            data-seen={seen.has(row.key) ? "1" : undefined}
-            key={row.key}
-            onClick={row.onOpen}
-            onKeyDown={tableRowKeys(row.onOpen)}
-            tabIndex={0}
-          >
-            <td className={cn(CELL, TEXT)} title={row.title}>
-              {row.label}
-            </td>
-            <td className={cn(CELL, NUMBER)}>{formatRowCount(row.clicks)}</td>
-            <td className={cn(CELL, "px-1")}>
-              <span className={DECISION}>
-                {row.position === null ? "-" : formatRowPosition(row.position)}
-                <CaretRight aria-hidden className="shrink-0" size={11} weight="regular" />
-              </span>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </ListTable>
+    <>
+      {showPageMetrics && keyEventsConfigured === false ? (
+        <p className="m-0 mb-2.25 text-ui-caption leading-normal text-fg-muted">
+          {KEY_EVENTS_NOT_CONFIGURED}
+        </p>
+      ) : null}
+      <ListTable
+        headers={headers}
+        label={label}
+        variant={showPageMetrics ? "drawerPages" : "drawer"}
+      >
+        <tbody>
+          {rows.map((row) => (
+            <tr
+              className={cn(ROW, "data-[seen=1]:bg-bg-sunken")}
+              data-seen={seen.has(row.key) ? "1" : undefined}
+              key={row.key}
+              onClick={row.onOpen}
+              onKeyDown={tableRowKeys(row.onOpen)}
+              tabIndex={0}
+            >
+              <td className={cn(CELL, TEXT)} title={row.title}>
+                {row.label}
+              </td>
+              <td className={cn(CELL, NUMBER)}>{formatRowCount(row.clicks)}</td>
+              {showPageMetrics ? (
+                <>
+                  <td
+                    className={cn(CELL, MUTED)}
+                    title={row.engagementRate == null ? ENGAGEMENT_RATE_TIP : undefined}
+                  >
+                    {row.engagementRate == null ? "-" : formatRowCtr(row.engagementRate)}
+                  </td>
+                  <td
+                    className={cn(CELL, MUTED)}
+                    title={
+                      row.keyEvents == null && keyEventsConfigured !== false
+                        ? KEY_EVENTS_TIP
+                        : undefined
+                    }
+                  >
+                    {keyEventsConfigured === false || row.keyEvents == null
+                      ? "-"
+                      : formatRowCount(row.keyEvents)}
+                  </td>
+                </>
+              ) : null}
+              <td className={cn(CELL, "px-1")}>
+                <span className={DECISION}>
+                  {row.position === null ? "-" : formatRowPosition(row.position)}
+                  <CaretRight aria-hidden className="shrink-0" size={11} weight="regular" />
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </ListTable>
+    </>
   );
 }
-
 const BAND_HEADERS = [
   { label: "Query" },
   { align: true, label: "Clicks" },
   { align: true, label: "Impr" },
   { align: true, label: "Avg pos", title: AVG_POSITION_TIP },
 ] as const;
-
 export type DrawerBandRowsProps = {
   label: string;
   onOpen: (query: string) => void;
   rows: readonly SearchInsightsBandRow[];
   seen: ReadonlySet<string>;
 };
-
 /** The band list carries demand as well, because demand is what its ordering is about. */
 export function DrawerBandRows({ label, onOpen, rows, seen }: Readonly<DrawerBandRowsProps>) {
   return (
@@ -182,25 +234,19 @@ export function DrawerBandRows({ label, onOpen, rows, seen }: Readonly<DrawerBan
     </ListTable>
   );
 }
-
 export type DrawerOverlapRowsProps = {
   label: string;
   onOpen: (query: string) => void;
   rows: readonly SearchInsightsOverlapRow[];
   seen: ReadonlySet<string>;
 };
-
-/**
- * The overlap rows prove the overlap rather than asserting it: the busiest of the project's own
- * pages sit under the query in the same columns, and the badge counts the rest.
- */
 export function DrawerOverlapRows({ label, onOpen, rows, seen }: Readonly<DrawerOverlapRowsProps>) {
   return (
     <ListTable label={label} variant="drawer">
       {rows.map((row) => {
         const open = () => onOpen(row.query);
         return (
-          <tbody className="border-b border-border-soft last:border-b-0" key={row.query}>
+          <tbody className="border-b border-border last:border-b-0" key={row.query}>
             <tr
               className="cursor-pointer hover:bg-bg-sunken focus-visible:bg-bg-sunken data-[seen=1]:bg-bg-sunken"
               data-seen={

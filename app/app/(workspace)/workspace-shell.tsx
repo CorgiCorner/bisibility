@@ -2,6 +2,7 @@ import { HeaderProviderSpend } from "@/components/cost-estimate/HeaderProviderSp
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { AppFooter } from "@/components/shell/AppFooter";
 import { AppHeader } from "@/components/shell/AppHeader";
+import { AppRealtimeProvider } from "@/components/shell/AppRealtimeProvider";
 import { AppThemeRoot } from "@/components/shell/AppThemeRoot";
 import { CloudBetaBanner } from "@/components/shell/CloudBetaBanner";
 import { CommandPaletteProvider } from "@/components/shell/CommandPalette";
@@ -26,6 +27,8 @@ import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
 import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { getQuerySession } from "@/lib/queries/_auth";
 import { getLatestCloudPackageExport } from "@/lib/queries/cloud-beta-export";
+import { getExperimentalModules } from "@/lib/queries/experimental-modules";
+import { listProjectMarketOptions } from "@/lib/queries/project-markets";
 import { loadSetupContext } from "@/lib/queries/setup-context";
 import { loadWorkspaceBudgetSummary } from "@/lib/queries/workspace-budget-summary";
 import { listWorkspaces } from "@/lib/queries/workspaces";
@@ -39,12 +42,19 @@ import type { ReactNode } from "react";
 type WorkspaceShellProps = {
   activeProjectId: string;
   children: ReactNode;
+  /**
+   * The header context slot, already rendered. The shell neither fetches nor resolves it: the
+   * project layout hands down a parallel route that is matched against the URL, and the account
+   * layout mounts this same shell for three routes that have no context and hands down nothing.
+   */
+  context?: ReactNode;
   projectRef: string;
 };
 
 export async function WorkspaceShell({
   activeProjectId,
   children,
+  context,
   projectRef,
 }: Readonly<WorkspaceShellProps>) {
   const session = await getQuerySession();
@@ -59,6 +69,8 @@ export async function WorkspaceShell({
     supportWidget,
     setupContext,
     setupAcknowledgedAt,
+    markets,
+    enabledExperimentalModules,
   ] = await Promise.all([
     listWorkspaces(),
     loadWorkspaceBudgetSummary(activeProjectId, now),
@@ -73,6 +85,8 @@ export async function WorkspaceShell({
       : Promise.resolve(null),
     loadSetupContext(projectRef),
     loadSetupAcknowledgedAt(session.user.id, projectRef),
+    listProjectMarketOptions(projectRef),
+    getExperimentalModules(projectRef),
   ]);
   const workerLiveness = instanceAdminSession ? await getWorkerLivenessDetails() : null;
   const temporalIdentityComparison = workerLiveness
@@ -114,45 +128,17 @@ export async function WorkspaceShell({
       <ProjectWriteModeProvider projectRef={projectRef} writeMode={active.writeMode}>
         {supportWidget}
         <SessionSpendProvider key={active.publicId}>
-          <CommandPaletteProvider projectId={active.publicId} projectRef={projectRef}>
-            <Sidebar
-              activeProjectId={active.publicId}
-              canCreateWorkspace={canCreateWorkspace}
-              projectRef={projectRef}
-              setupCompleted={setupCompleted}
-              setupDoneCount={setupProgress.doneCount}
-              setupSettledCount={setupProgress.settledCount}
-              setupTotalCount={setupProgress.totalCount}
-              showGettingStarted={showGettingStarted}
-              showHostedLinks={isCloud}
-              user={user}
-              version={appVersion()}
-              workspaces={workspaces}
-            />
-            <div className="flex min-w-0 flex-col">
-              <CloudBetaBanner
-                dismissed={cloudBetaDismissed}
-                hasExportableData={active.keywordCount > 0}
-                isCloud={isCloud}
-                key={active.publicId}
-                lastExport={lastCloudExport}
-                now={now.toISOString()}
-                projectId={active.publicId}
-                projectRef={projectRef}
-                projectName={active.name}
-              />
-              <AppHeader
-                actions={
-                  <HeaderProviderSpend
-                    action={budgetSummary?.headerAction}
-                    projectRef={projectRef}
-                    recorded={budgetSummary?.recorded ?? null}
-                    tightest={budgetSummary?.tightest ?? null}
-                    usedPercent={budgetSummary?.maxUsedPercent ?? null}
-                  />
-                }
+          <CommandPaletteProvider
+            markets={markets}
+            enabledExperimentalModules={enabledExperimentalModules}
+            projectId={active.publicId}
+            projectRef={projectRef}
+          >
+            <AppRealtimeProvider key={active.publicId} projectRef={active.publicId}>
+              <Sidebar
                 activeProjectId={active.publicId}
                 canCreateWorkspace={canCreateWorkspace}
+                enabledExperimentalModules={enabledExperimentalModules}
                 projectRef={projectRef}
                 setupCompleted={setupCompleted}
                 setupDoneCount={setupProgress.doneCount}
@@ -161,28 +147,68 @@ export async function WorkspaceShell({
                 showGettingStarted={showGettingStarted}
                 showHostedLinks={isCloud}
                 user={user}
+                version={appVersion()}
                 workspaces={workspaces}
               />
-              <ProjectWriteModeBanner />
-              <main className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-5.5">{children}</main>
-              <AppFooter
-                schemaStatus={
-                  instanceAdminSession && workerLiveness
-                    ? workerLiveness.schemaComparison === "ok"
-                      ? "ok"
-                      : workerLiveness.schemaComparison === "unknown"
-                        ? "unknown"
-                        : "drift"
-                    : undefined
-                }
-                showInstanceAdmin={Boolean(instanceAdminSession)}
-                temporalIdentityDetail={temporalIdentityComparison?.detail}
-                temporalIdentityStatus={temporalIdentityComparison?.status}
-                workerStatus={
-                  instanceAdminSession && workerLiveness ? workerLiveness.status : undefined
-                }
-              />
-            </div>
+              <div className="flex min-w-0 flex-col">
+                <CloudBetaBanner
+                  dismissed={cloudBetaDismissed}
+                  hasExportableData={active.keywordCount > 0}
+                  isCloud={isCloud}
+                  key={active.publicId}
+                  lastExport={lastCloudExport}
+                  now={now.toISOString()}
+                  projectId={active.publicId}
+                  projectRef={projectRef}
+                  projectName={active.name}
+                />
+                <AppHeader
+                  actions={
+                    <HeaderProviderSpend
+                      action={budgetSummary?.headerAction}
+                      projectRef={projectRef}
+                      recorded={budgetSummary?.recorded ?? null}
+                      tightest={budgetSummary?.tightest ?? null}
+                      usedPercent={budgetSummary?.maxUsedPercent ?? null}
+                    />
+                  }
+                  activeProjectId={active.publicId}
+                  canCreateWorkspace={canCreateWorkspace}
+                  context={context}
+                  enabledExperimentalModules={enabledExperimentalModules}
+                  projectRef={projectRef}
+                  setupCompleted={setupCompleted}
+                  setupDoneCount={setupProgress.doneCount}
+                  setupSettledCount={setupProgress.settledCount}
+                  setupTotalCount={setupProgress.totalCount}
+                  showGettingStarted={showGettingStarted}
+                  showHostedLinks={isCloud}
+                  user={user}
+                  workspaces={workspaces}
+                />
+                <ProjectWriteModeBanner />
+                <main className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-5.5">
+                  {children}
+                </main>
+                <AppFooter
+                  schemaStatus={
+                    instanceAdminSession && workerLiveness
+                      ? workerLiveness.schemaComparison === "ok"
+                        ? "ok"
+                        : workerLiveness.schemaComparison === "unknown"
+                          ? "unknown"
+                          : "drift"
+                      : undefined
+                  }
+                  showInstanceAdmin={Boolean(instanceAdminSession)}
+                  temporalIdentityDetail={temporalIdentityComparison?.detail}
+                  temporalIdentityStatus={temporalIdentityComparison?.status}
+                  workerStatus={
+                    instanceAdminSession && workerLiveness ? workerLiveness.status : undefined
+                  }
+                />
+              </div>
+            </AppRealtimeProvider>
           </CommandPaletteProvider>
         </SessionSpendProvider>
       </ProjectWriteModeProvider>

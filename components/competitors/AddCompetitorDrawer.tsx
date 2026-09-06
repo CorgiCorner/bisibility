@@ -156,7 +156,7 @@ export function AddCompetitorDrawer({
           {suggestions.length > 0 ? (
             suggestions.map((suggestion) => (
               <div
-                className="flex items-center gap-3 border-border-soft border-t px-[15px] py-3"
+                className="flex items-center gap-3 border-border border-t px-[15px] py-3"
                 key={suggestion.domain}
               >
                 <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-control bg-bg-sunken font-sans tabular-nums text-[11px] font-semibold text-fg-muted">
@@ -180,7 +180,7 @@ export function AddCompetitorDrawer({
               </div>
             ))
           ) : (
-            <div className="border-border-soft border-t px-[15px] py-3 text-[12.5px] leading-5 text-fg-muted">
+            <div className="border-border border-t px-[15px] py-3 text-[12.5px] leading-5 text-fg-muted">
               No observed competitor domains yet. Add a bare domain manually.
             </div>
           )}

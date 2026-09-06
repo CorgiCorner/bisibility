@@ -162,7 +162,7 @@ describe("RunChecksConfirmationModal failures", () => {
     if (!footer) throw new Error("Expected a modal footer.");
     expect(within(footer).getByRole("link", { name: "View check details" })).toHaveAttribute(
       "href",
-      "/app/prj_demo/rank-tracker?tab=checks&run=check_abcdefghijklmnopqrstuvwx",
+      "/app/prj_demo/rank-tracker?tab=runs&run=check_abcdefghijklmnopqrstuvwx",
     );
     expect(within(footer).getByRole("button", { name: "Try again" })).toBeInTheDocument();
     expect(within(footer).getByRole("link", { name: "Open integrations" })).toBeInTheDocument();

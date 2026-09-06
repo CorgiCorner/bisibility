@@ -3,8 +3,10 @@ import { ApiInputError } from "./errors";
 import {
   decodeCursor,
   decodeOffsetCursor,
+  decodeUnprefixedCursor,
   encodeCursor,
   encodeOffsetCursor,
+  encodeUnprefixedCursor,
   paginateArray,
 } from "./pagination";
 
@@ -118,5 +120,19 @@ describe("v3 API cursors", () => {
 
     expectInvalidCursor(() => decodeCursor(keyset, "kw"));
     expectInvalidCursor(() => decodeOffsetCursor(offset));
+  });
+
+  it("round-trips an unprefixed item ID without relaxing public cursors", () => {
+    const cursor = encodeUnprefixedCursor({
+      publicId: "run_item_db_1",
+      timestamp: new Date("2026-09-02T12:00:00.000Z"),
+    });
+
+    expect(decodeUnprefixedCursor(cursor)).toEqual({
+      public_id: "run_item_db_1",
+      t: "2026-09-02T12:00:00.000Z",
+      v: 3,
+    });
+    expectInvalidCursor(() => decodeCursor(cursor, "rcr"));
   });
 });

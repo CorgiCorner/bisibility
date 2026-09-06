@@ -2,10 +2,11 @@ import "server-only";
 
 import { MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY } from "@/lib/alerts/limits";
 import { projectedMonthlySpendCents } from "@/lib/cost-estimate/spend-pace";
+import type { DateFormatPreference } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { centsToDollars } from "@/lib/format/currency";
-import { createUserDateTimeFormatter, type DateFormatPreference } from "@/lib/format/user-datetime";
+import { createUserDateTimeFormatter } from "@/lib/format/user-datetime";
 import { DEFAULT_INSPECTION_DAILY_LIMIT } from "@/lib/presence/constants";
 import { presenceUrl } from "@/lib/presence/url";
 import {
@@ -39,6 +40,7 @@ import { loadProjectProviderSpend } from "./provider-spend";
 import { initials, memberColor, roleLabel } from "./settings-members";
 import { settingsConnectionUsage, settingsProviderSummaries } from "./settings-provider-summaries";
 import type { SettingsView } from "./settings-view-types";
+import { segmentCountByTag } from "./tag-usage";
 
 export type { SettingsView } from "./settings-view-types";
 
@@ -87,7 +89,8 @@ function labelFromDate(prefix: string, date: Date | null | undefined, dateTime: 
 export async function getSettings(projectId: string, options: { dateFormat?: DateFormatPreference; now?: Date } = {}): Promise<SettingsView> {
   const { project } = await requireReadableProject(projectId);
   const now = options.now ?? new Date();
-  const [fullProject, monthChecks, spentCents, connectionLookups, providerSpend] = await Promise.all([
+  const [fullProject, monthChecks, spentCents, connectionLookups, providerSpend, savedViews] =
+    await Promise.all([
     prisma.project.findUnique({
       include: {
         // Every key the user may still act on: expired keys stay listed as a state of their
@@ -113,6 +116,10 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
     monthlySpendCents(project.id, now),
     monthlyLookupSpendByConnection(project.id, now),
     loadProjectProviderSpend({ catalog: PROVIDER_CATALOG, now, projectId: project.id }),
+    prisma.savedView.findMany({
+      select: { config: true },
+      where: { projectId: project.id, surface: "keywords" },
+    }),
   ]);
   if (!fullProject) throw new Error("Project not found.");
   const gscConnection = fullProject.providerConnections.find((item) => item.provider === "gsc");
@@ -172,6 +179,7 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
     ) ?? 0;
   const completedMonthChecks = monthChecks.filter((check) => check.status === "completed");
   const observedUsage = aggregateObservedUsage(completedMonthChecks);
+  const segmentCounts = segmentCountByTag(savedViews);
   return {
     apiKeys: fullProject.apiKeys.map((apiKey) => ({
       createdLabel: labelFromDate("created", apiKey.createdAt, dateTime),
@@ -238,8 +246,9 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
     providers: settingsProviderSummaries(fullProject.providerConnections, completedMonthChecks),
     tags: fullProject.tags.map((tag) => ({
       color: tag.color ?? "var(--blue)",
-      count: tag._count.keywords,
+      keywordCount: tag._count.keywords,
       label: tag.name,
+      segmentCount: segmentCounts.get(tag.name.trim().toLocaleLowerCase()) ?? 0,
     })),
     team: fullProject.members.map((member, index) => ({
       color: memberColor(index),

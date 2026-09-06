@@ -1,4 +1,7 @@
-import { gettingStartedSubtitle } from "@/components/getting-started/getting-started-copy";
+import {
+  GETTING_STARTED_LABEL,
+  gettingStartedSubtitle,
+} from "@/components/getting-started/getting-started-copy";
 import { appSectionPath } from "@/lib/routing/app-path";
 
 export type HeaderMeta = {
@@ -51,6 +54,15 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
     return sectionMeta("Instance administration", "Worker health and operator diagnostics.");
   }
 
+  if (matches(sectionPath, "/rank-tracker/schedules")) {
+    return { title: "Schedules" };
+  }
+
+  const runMatch = /^\/rank-tracker\/runs\/(rcr_[^/]+)$/u.exec(sectionPath);
+  if (runMatch?.[1]) {
+    return { title: `Run · ${runMatch[1]}` };
+  }
+
   // The detail page for one keyword. "Keyword" alone sat one letter away from the list it
   // was opened from, so the header read as a truncation rather than a different screen.
   if (matches(sectionPath, "/rank-tracker") && sectionPath !== "/rank-tracker") {
@@ -83,13 +95,20 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
     );
   }
 
+  // The rail's Markets row, and the page the market level is chosen from. This module
+  // deliberately does not import the nav model, so a new rail destination needs its title added
+  // here by hand or the header falls back to "Overview".
+  if (matches(sectionPath, "/markets")) {
+    return sectionMeta("Markets", "The navigation level your tracked keywords are measured in.");
+  }
+
   if (matches(sectionPath, "/integrations")) {
     return sectionMeta("Integrations", "Connect data providers and analytics sources.");
   }
 
   if (matches(sectionPath, "/getting-started")) {
     return sectionMeta(
-      "Get started",
+      GETTING_STARTED_LABEL,
       gettingStartedSubtitle(setup?.completed ?? false, setup?.totalCount ?? 4),
     );
   }

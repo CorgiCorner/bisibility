@@ -24,8 +24,10 @@ export const initialKeywordGridState = {
 export const dataGridHeaderSx = {
   "--DataGrid-rowBorderColor": "var(--border)",
   backgroundColor: "var(--table-header-bg)",
+  borderBottom: "1px solid var(--border)",
   borderColor: "var(--border)",
   borderRadius: 0,
+  borderTop: "1px solid var(--border)",
   color: "var(--fg-muted)",
   fontFamily: "var(--font-sans), system-ui, sans-serif",
   fontVariantNumeric: "tabular-nums",

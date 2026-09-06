@@ -9,9 +9,11 @@ import {
   DAILY_ROW_CEILING,
   SEARCH_ANALYTICS_ROW_LIMIT,
   SEARCH_INSIGHTS_SEARCH_TYPE,
+  WINDOW_PRESETS,
 } from "@/lib/search-insights/constants";
 import { type DateWindow, dateFromKey } from "@/lib/search-insights/dates";
 import { dimensionKeyHash } from "@/lib/search-insights/keys";
+import { markWindowFactsStale } from "@/lib/search-insights/queries/window-facts";
 import { formatPartitionStored, logSyncInfo } from "./activity-log";
 import { assertRequestedProperty, SEARCH_INSIGHTS_SOURCE } from "./credentials";
 import { accountSearchAnalyticsRequests } from "./request-usage";
@@ -35,10 +37,7 @@ export type PartitionScope = {
   projectId: string;
   property: string;
 };
-export type DayPartition = {
-  provenance: PartitionProvenance;
-  rows: GscRow[];
-};
+export type DayPartition = { provenance: PartitionProvenance; rows: GscRow[] };
 function metricColumns(row: GscRow, fetchedAt: Date) {
   return {
     clicks: numberValue(row.clicks),
@@ -233,6 +232,16 @@ export async function syncDayPartition(input: {
         provenance: partition.provenance,
         scope,
       });
+      await markWindowFactsStale(
+        {
+          from: scope.date,
+          projectId: scope.projectId,
+          property: scope.property,
+          to: scope.date,
+          widestWindowDays: Math.max(...WINDOW_PRESETS.map(({ days }) => days)),
+        },
+        tx,
+      );
       const where = partitionColumns(scope);
       if (input.dimensions[0] === "page") return tx.searchAnalyticsPageDaily.count({ where });
       if (input.dimensions.length === 1) return tx.searchAnalyticsQueryDaily.count({ where });

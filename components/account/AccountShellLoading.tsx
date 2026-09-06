@@ -81,10 +81,12 @@ export function AccountShellLoading({
       data-account-loading-boundary={activeSection}
       data-account-shell-loading=""
     >
-      <AccountLoadingMobileMenu />
       <div className={settingsShellGridClassName} data-account-loading-grid="">
         <AccountLoadingSubnav activeSection={activeSection} />
-        <div className={settingsContentColumnClassName}>{children}</div>
+        <div className={settingsContentColumnClassName}>
+          <AccountLoadingMobileMenu />
+          {children}
+        </div>
       </div>
     </div>
   );

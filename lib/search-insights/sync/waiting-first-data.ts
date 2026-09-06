@@ -3,7 +3,6 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { GscSearchAnalyticsSession } from "@/lib/providers/analytics/gsc-search-analytics";
 import { monthsBefore, pacificToday } from "@/lib/search-insights/dates";
-import { startSearchInsightsBackfillWorkflow } from "@/lib/temporal/search-insights-client";
 import { fetchAggregateRange } from "./aggregate";
 import { isImportUserPaused, userPauseGuard } from "./user-pause";
 
@@ -15,7 +14,7 @@ type WaitingImportRow = {
 type WaitingReprobeResult = {
   daysProcessed: 0;
   projectId: string;
-  status: "already_claimed" | "backfill_started" | "user_paused" | "waiting_for_first_data";
+  status: "already_claimed" | "backfill_queued" | "user_paused" | "waiting_for_first_data";
 };
 
 export async function reprobeWaitingImport(input: {
@@ -72,13 +71,5 @@ export async function reprobeWaitingImport(input: {
   if (await isImportUserPaused(input.row.id)) {
     return { daysProcessed: 0, projectId: input.projectId, status: "user_paused" };
   }
-  const started = await startSearchInsightsBackfillWorkflow({
-    projectId: input.projectId,
-    property: input.property,
-  });
-  await prisma.searchAnalyticsImport.updateMany({
-    data: { workflowId: started.workflowId },
-    where: { ...userPauseGuard(input.row.id), state: "queued", workflowId: null },
-  });
-  return { daysProcessed: 0, projectId: input.projectId, status: "backfill_started" };
+  return { daysProcessed: 0, projectId: input.projectId, status: "backfill_queued" };
 }

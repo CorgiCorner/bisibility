@@ -161,6 +161,16 @@ describe("search insights actions", () => {
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
+  it("refreshes the module after the worker intent is queued", async () => {
+    mocks.requestSync.mockResolvedValue({ status: "queued" });
+
+    await expect(syncSearchInsightsNow({ projectId: "prj_1" })).resolves.toEqual({
+      status: "queued",
+    });
+
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/search-console", "page");
+  });
+
   it("builds the export from the project reference and the requested window", async () => {
     const csv = { csv: "query,clicks", filename: "queries.csv", rows: 1, truncated: false };
     mocks.csv.mockResolvedValue(csv);

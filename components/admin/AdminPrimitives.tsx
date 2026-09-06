@@ -1,18 +1,15 @@
 import { Card, SectionTitle } from "@/components/ui";
+import { type DateFormat, formatDateTime } from "@/lib/dates/format";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 import { cn } from "@/lib/ui/cn";
 import type { ReactNode } from "react";
 
-const dateTime = new Intl.DateTimeFormat("en-GB", {
-  dateStyle: "medium",
-  timeZone: "UTC",
-  timeStyle: "medium",
-});
-
 const unavailable = "-";
 
-export function displayTime(value: string | null) {
-  return value ? dateTime.format(new Date(value)) : unavailable;
+export function displayTime(value: string | null, dateFormat: DateFormat = "day_first") {
+  if (!value) return unavailable;
+  const date = new Date(value);
+  return `${formatDateTime(date, dateFormat)}:${String(date.getUTCSeconds()).padStart(2, "0")}`;
 }
 
 export function duration(value: number | null) {
@@ -48,7 +45,7 @@ export function Badge({ children, status }: Readonly<{ children?: ReactNode; sta
 
 export function Metric({ label, value }: Readonly<{ label: string; value: ReactNode }>) {
   return (
-    <div className="min-w-0 rounded-card border border-border-soft bg-bg-sunken px-3 py-2.5">
+    <div className="min-w-0 rounded-card border border-border bg-bg-sunken px-3 py-2.5">
       <div className="text-[11px] font-medium text-fg-muted">{label}</div>
       <div className="mt-1 text-lg font-semibold text-fg">{value}</div>
     </div>

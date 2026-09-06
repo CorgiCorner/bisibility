@@ -35,7 +35,7 @@ export function TeamSettingsContentLoading() {
           <div className="mt-5 overflow-hidden rounded-control border border-border">
             {Array.from({ length: frame.rows }, (_, index) => (
               <div
-                className="flex min-h-[42px] items-center gap-3 border-b border-border-soft p-3 last:border-b-0"
+                className="flex min-h-[42px] items-center gap-3 border-b border-border p-3 last:border-b-0"
                 key={index}
               >
                 {frame.id === "roles" ? null : (
@@ -53,7 +53,7 @@ export function TeamSettingsContentLoading() {
           </div>
           {frame.id === "members" ? (
             <div
-              className="mt-5 flex items-center border-t border-border-soft pt-4"
+              className="mt-5 flex items-center border-t border-border pt-4"
               data-team-loading-footer="members"
             >
               <SettingsLoadingBar className="h-8 w-32" />

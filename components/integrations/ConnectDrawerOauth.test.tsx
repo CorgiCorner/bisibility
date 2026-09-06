@@ -130,7 +130,7 @@ describe("ConnectDrawerOauth", () => {
 
     expect(
       screen.getByText(
-        "Importing 6 months takes about 700 requests to Google. First view in ~1 hr; full history in ~1.5 days at Reduced speed.",
+        "Importing 6 months takes about 700 requests to Google. First view in ~9 min; full history in ~1.5 days at Reduced speed.",
       ),
     ).toBeInTheDocument();
     expect(searchSyncPlanSummary).toHaveBeenLastCalledWith({
@@ -582,7 +582,7 @@ describe("ConnectDrawerOauth", () => {
     expect(reconnectAccount.querySelector("svg")).toBeNull();
     expect(getComputedStyle(reconnectAccount).borderStyle).toBe("none");
     const footer = reconnectAccount.closest('[data-slot="connected-google-account-footer"]');
-    expect(footer).toHaveClass("border-t", "border-border-soft", "pt-3");
+    expect(footer).toHaveClass("border-t", "border-border", "pt-3");
     expect(footer).not.toHaveTextContent("·");
     expect(screen.queryByRole("link", { name: "Switch account" })).toBeNull();
   });
@@ -772,10 +772,16 @@ describe("ConnectDrawerOauth", () => {
       "href",
       "https://developers.google.com/analytics/devguides/reporting/data/v1/property-id",
     );
+    expect(
+      screen.getByRole("link", { name: "Property ID guide" }).querySelector("svg"),
+    ).toHaveAttribute("aria-hidden", "true");
     expect(screen.getByRole("link", { name: "Measurement ID guide" })).toHaveAttribute(
       "href",
       "https://support.google.com/analytics/answer/12270356?hl=en",
     );
+    expect(
+      screen.getByRole("link", { name: "Measurement ID guide" }).querySelector("svg"),
+    ).toHaveAttribute("aria-hidden", "true");
     fireEvent.blur(input);
     expect(screen.getByRole("alert")).toHaveTextContent("Enter a Property ID first.");
 

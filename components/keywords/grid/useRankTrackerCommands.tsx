@@ -2,6 +2,7 @@
 
 import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
 import type { RankTrackerAction } from "@/lib/keywords/rank-tracker-command";
+import { type MarketScope, scopedRunActionLabel } from "@/lib/markets/market-scope";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef } from "react";
 
@@ -9,18 +10,22 @@ type UseRankTrackerCommandsInput = {
   canCreateKeyword: boolean;
   canUpdateKeyword: boolean;
   initialAction: RankTrackerAction | null;
+  /** Names the market the run command spends in; `null` is the project level. */
+  marketScope?: MarketScope | null;
   onAdd: () => void;
   onExport: () => void;
   onFilter: () => void;
   onImport: () => void;
   onRunChecks: () => void;
-  rowCounts: { all: number; visible: number };
+  /** `scoped` is how many of the visible rows the run command would actually check. */
+  rowCounts: { all: number; scoped?: number; visible: number };
 };
 
 export function useRankTrackerCommands({
   canCreateKeyword,
   canUpdateKeyword,
   initialAction,
+  marketScope = null,
   onAdd,
   onExport,
   onFilter,
@@ -31,7 +36,9 @@ export function useRankTrackerCommands({
   const router = useRouter();
   const canExport = rowCounts.visible > 0;
   const canFilter = rowCounts.all > 0;
-  const canRunChecks = canUpdateKeyword && canExport;
+  const runCheckRows = rowCounts.scoped ?? rowCounts.visible;
+  const canRunChecks = canUpdateKeyword && canExport && runCheckRows > 0;
+  const runChecksLabel = scopedRunActionLabel("Run rank checks", marketScope);
 
   const commands = useMemo<RegisteredCommand[]>(() => {
     const cmds: RegisteredCommand[] = [];
@@ -72,7 +79,7 @@ export function useRankTrackerCommands({
     if (canRunChecks) {
       cmds.push({
         id: "rt-run-checks",
-        label: "Run rank checks",
+        label: runChecksLabel,
         scope: "rank-tracker",
         hint: "Check visible",
         run: onRunChecks,
@@ -89,6 +96,7 @@ export function useRankTrackerCommands({
     onFilter,
     onImport,
     onRunChecks,
+    runChecksLabel,
   ]);
 
   const registerRef = useRegisterCommands(commands);

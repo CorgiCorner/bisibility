@@ -3,7 +3,8 @@ import {
   resetSettingsActionMocks,
   settingsScheduleInput,
 } from "@/lib/actions/settings-test-harness";
-import { appPath } from "@/lib/routing/app-path";
+import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness";
+import { appPath, asMarketRef, marketPath } from "@/lib/routing/app-path";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const settingsActionMocks = getSettingsActionMocks();
@@ -20,11 +21,29 @@ describe("settings default actions", () => {
     vi.unstubAllEnvs();
   });
 
-  it("updates schedule defaults and moves the current default keyword market", async () => {
+  it("updates schedule defaults without relabeling existing keywords", async () => {
     settingsActionMocks.prisma.keyword.findMany.mockResolvedValue([
-      { device: "desktop", id: "kw_1", location: "United States", text: "rank tracker" },
-      { device: "desktop", id: "kw_2", location: "United States", text: "seo tool" },
-      { device: "mobile", id: "kw_3", location: "Germany", text: "rank tracker" },
+      {
+        device: "desktop",
+        id: "kw_1",
+        location: "United States",
+        locationId: "loc_us",
+        text: "rank tracker",
+      },
+      {
+        device: "desktop",
+        id: "kw_2",
+        location: "United States",
+        locationId: "loc_us",
+        text: "seo tool",
+      },
+      {
+        device: "mobile",
+        id: "kw_3",
+        location: "Germany",
+        locationId: "loc_de",
+        text: "rank tracker",
+      },
     ]);
 
     const result = await actions.updateDefaultRankCheckSettings(settingsScheduleInput());
@@ -51,22 +70,20 @@ describe("settings default actions", () => {
     const upsert = settingsActionMocks.prisma.projectDefaults.upsert.mock.calls[0]?.[0];
     expect(upsert?.create).not.toHaveProperty("serpStopOnMatch");
     expect(upsert?.update).not.toHaveProperty("serpStopOnMatch");
-    expect(settingsActionMocks.prisma.keyword.updateMany).toHaveBeenCalledWith({
-      data: { device: "mobile", location: "Germany", locationId: "loc_de" },
-      where: { id: { in: ["kw_2"] } },
-    });
+    expect(settingsActionMocks.prisma.keyword.updateMany).not.toHaveBeenCalled();
+    expect(
+      settingsActionMocks.prisma.keyword.findMany.mock.results[0]?.value,
+    ).resolves.toContainEqual(expect.objectContaining({ id: "kw_2", locationId: "loc_us" }));
     expect(settingsActionMocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "settings.defaults.update",
         after: expect.objectContaining({
           market: { city: null, country: "Germany", device: "mobile", locationKey: "DE" },
-          movedKeywords: 1,
           schedule: expect.objectContaining({
             device: "mobile",
             frequency: "weekly",
             inspectionDailyLimit: 50,
           }),
-          skippedConflicts: 1,
         }),
       }),
     );
@@ -86,6 +103,28 @@ describe("settings default actions", () => {
     expect(settingsActionMocks.prisma.projectDefaults.upsert).toHaveBeenCalledTimes(1);
   });
 
+  it("uses the changed default market for a keyword created later", async () => {
+    settingsActionMocks.prisma.projectDefaults.findUnique.mockResolvedValue({
+      city: null,
+      country: "United States",
+      device: "desktop",
+      locationKey: "US",
+    });
+
+    await actions.updateDefaultRankCheckSettings(settingsScheduleInput());
+
+    const defaults = settingsActionMocks.prisma.projectDefaults.upsert.mock.calls[0]?.[0]?.update;
+    settingsActionMocks.resolveKeywordLocation.mockClear();
+    const { createdRows, response } = await createKeywordAfterDefault(defaults);
+
+    expect(response.status).toBe(201);
+    expect(settingsActionMocks.resolveKeywordLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { canonicalKey: "DE", kind: "city" },
+    });
+    expect(createdRows).toMatchObject([{ device: "mobile", locationId: "loc_de" }]);
+  });
+
   it("persists the project stop-on-match setting", async () => {
     await actions.updateDefaultRankCheckSettings(settingsScheduleInput({ serpStopOnMatch: false }));
 
@@ -97,7 +136,7 @@ describe("settings default actions", () => {
     );
   });
 
-  it("moves city default keywords by canonical location key", async () => {
+  it("keeps city default keywords at their existing market", async () => {
     settingsActionMocks.prisma.projectDefaults.findUnique.mockResolvedValue({
       city: "Austin, Texas, United States",
       country: "United States",
@@ -162,17 +201,10 @@ describe("settings default actions", () => {
       select: expect.objectContaining({ locationRef: expect.anything() }),
       where: { projectId: "project_1" },
     });
-    expect(settingsActionMocks.prisma.keyword.updateMany).toHaveBeenCalledWith({
-      data: {
-        device: "mobile",
-        location: "Dallas, Texas, United States",
-        locationId: "loc_dallas",
-      },
-      where: { id: { in: ["kw_2"] } },
-    });
+    expect(settingsActionMocks.prisma.keyword.updateMany).not.toHaveBeenCalled();
   });
 
-  it("persists an explicit default market even when no keywords move", async () => {
+  it("persists an explicit default market for later keyword creation", async () => {
     settingsActionMocks.prisma.keyword.findMany.mockResolvedValue([]);
 
     await actions.updateDefaultRankCheckSettings(settingsScheduleInput());
@@ -201,7 +233,6 @@ describe("settings default actions", () => {
       expect.objectContaining({
         after: expect.objectContaining({
           market: { city: null, country: "Germany", device: "mobile", locationKey: "DE" },
-          movedKeywords: 0,
         }),
       }),
     );
@@ -266,6 +297,7 @@ describe("settings default actions", () => {
     expect(settingsActionMocks.revalidatePath.mock.calls).toEqual([
       [appPath("[project]", "settings"), "page"],
       [appPath("[project]", "rank-tracker"), "page"],
+      [marketPath("[project]", asMarketRef("[market]"), "rank-tracker"), "page"],
       [appPath("[project]", "settings", "audit"), "page"],
     ]);
   });

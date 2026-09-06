@@ -90,8 +90,9 @@ describe("TeamMembersCard", () => {
   it("keeps the current-user badge compact beside the member name", () => {
     renderCard({ members: [owner] });
 
-    const currentUserBadge = screen.getByText("you");
-    expect(currentUserBadge).toHaveClass("h-4", "px-1.5", "text-[9px]");
+    const currentUserBadge = screen.getByText("you").closest("span");
+    if (!currentUserBadge) throw new Error("Current user badge is missing.");
+    expect(currentUserBadge).toHaveClass("h-5", "px-1.5", "text-[9px]");
     expect(currentUserBadge.parentElement).toHaveClass("gap-1.5");
     expect(currentUserBadge.closest("[data-team-member-row]"))?.toHaveClass("p-3");
   });

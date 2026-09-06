@@ -5,7 +5,7 @@ import { ConnectDrawerOauthSelection } from "@/components/integrations/ConnectDr
 import type { Notice } from "@/components/integrations/ConnectDrawerSchema";
 import { providerActionErrorNotice } from "@/components/integrations/ConnectDrawerSchema";
 import { ConnectedGoogleAccountFooter } from "@/components/integrations/ConnectedGoogleAccountFooter";
-import { Button, ConfirmModal, ModuleMark } from "@/components/ui";
+import { ConfirmModal, ModuleMark } from "@/components/ui";
 import type {
   cancelGooglePropertySelection,
   completeGooglePropertySelection,
@@ -19,6 +19,7 @@ import { actionErrorMessage } from "@/lib/ui/action-error";
 import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { SearchInsightsGa4PropertyPicker } from "./SearchInsightsGa4PropertyPicker";
 import { SELECT_FAILED } from "./search-insights-copy";
 
 export type CancelGooglePropertySelectionAction = typeof cancelGooglePropertySelection;
@@ -38,7 +39,7 @@ export type SearchInsightsOauthReturnProps = {
 /**
  * The consent screen returns to this module rather than to Integrations, so the property
  * choice has to be finishable here. Search Console is the module's own flow; the analytics
- * provider comes back through the same seam and is handed to the same picker.
+ * provider comes back through the same seam and uses the local GA4 picker.
  */
 export function SearchInsightsOauthReturn({
   cancelAction,
@@ -122,7 +123,7 @@ export function SearchInsightsOauthReturn({
 
   return (
     <div
-      className={isGa4 ? "w-full max-w-[340px]" : "w-full max-w-[676px]"}
+      className={isGa4 ? "w-full" : "w-full max-w-[676px]"}
       data-testid="search-insights-oauth-return"
     >
       {!isGa4 && syncPlan ? (
@@ -144,44 +145,19 @@ export function SearchInsightsOauthReturn({
         </header>
       ) : null}
       {isGa4 ? (
-        <ConnectDrawerOauthSelection
-          isGa4
-          allowManualEntry={isGa4}
-          footerAction={
-            <Button
-              loading={cancelling}
-              onClick={() => void cancel()}
-              size="xs"
-              type="button"
-              variant="ghost"
-              sx={{ color: "var(--red)", "&:hover": { color: "var(--red)" } }}
-            >
-              Disconnect
-            </Button>
-          }
+        <SearchInsightsGa4PropertyPicker
+          cancelling={cancelling}
           manualEntry={manualEntry}
+          onCancel={() => void cancel()}
           onManualEntryChange={setManualEntry}
           onPropertyChange={setProperty}
           onPropertyErrorChange={setPropertyError}
+          onRetry={setup.error ? () => startRetry(() => router.refresh()) : undefined}
           onSelect={() => void select()}
           pending={pending || settling}
           property={property}
           propertyError={propertyError}
-          readOnly={false}
-          retryAction={
-            setup.error ? (
-              <Button
-                loading={retrying}
-                loadingLabel="Retrying…"
-                onClick={() => startRetry(() => router.refresh())}
-                size="xs"
-                type="button"
-                variant="secondary"
-              >
-                Retry
-              </Button>
-            ) : undefined
-          }
+          retrying={retrying}
           setup={setup}
         />
       ) : syncPlan ? (

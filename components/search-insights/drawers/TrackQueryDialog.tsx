@@ -58,6 +58,36 @@ const depthOptions = serpDepthValues.map((depth) => ({
   value: String(depth),
 }));
 
+function trackDialogTitle(query: string | null) {
+  return (
+    <span className="flex min-w-0 flex-col gap-1.25">
+      <span className={LABEL}>{TRACK_DIALOG_COPY.title}</span>
+      <span className="text-ui-section break-words">{query}</span>
+    </span>
+  );
+}
+
+export function TrackQueryDialogLoading({
+  onCancel,
+  query,
+}: Readonly<Pick<TrackQueryDialogProps, "onCancel" | "query">>) {
+  return (
+    <Modal
+      headerDivider
+      onClose={onCancel}
+      open={query !== null}
+      size="sm"
+      title={trackDialogTitle(query)}
+    >
+      <div aria-label="Loading" className="flex flex-col gap-3.5" role="status">
+        <div className="h-16 animate-pulse rounded-card bg-bg-sunken" />
+        <div className="h-20 animate-pulse rounded-card bg-bg-sunken" />
+        <div className="h-16 animate-pulse rounded-card bg-bg-sunken" />
+      </div>
+    </Modal>
+  );
+}
+
 /**
  * A check costs the customer provider money every day it runs, so the row's action opens this and
  * never adds anything: confirm is the only thing that writes.
@@ -100,12 +130,7 @@ export function TrackQueryDialog({
       open={query !== null}
       primaryActionDisabled={readOnly || !selectedKey}
       size="sm"
-      title={
-        <span className="flex min-w-0 flex-col gap-1.25">
-          <span className={LABEL}>{TRACK_DIALOG_COPY.title}</span>
-          <span className="text-ui-section break-words">{query}</span>
-        </span>
-      }
+      title={trackDialogTitle(query)}
       footer={
         <div className="flex items-center gap-2.5">
           <Button onClick={onCancel} size="sm" variant="ghost">

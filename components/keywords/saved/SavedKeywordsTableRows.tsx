@@ -91,7 +91,7 @@ export function SavedKeywordsTableRows({
           <col className="w-[52px]" />
         </colgroup>
         <thead>
-          <tr className={`border-b border-border ${tableHeaderClassName}`}>
+          <tr className={tableHeaderClassName}>
             <th className="px-4 py-[9px] text-left">
               <Checkbox
                 aria-checked={someSelected ? "mixed" : allSelected}
@@ -122,7 +122,7 @@ export function SavedKeywordsTableRows({
             return (
               <tr
                 className={cn(
-                  "cursor-pointer border-b border-border-soft transition-colors hover:bg-bg-sunken",
+                  "cursor-pointer border-b border-border transition-colors hover:bg-bg-sunken",
                   selected && "bg-accent-soft shadow-[inset_2px_0_0_var(--accent)]",
                 )}
                 key={row.publicId}

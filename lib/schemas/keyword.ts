@@ -11,9 +11,9 @@ import {
 import { isSupportedProjectTimezone } from "@/lib/settings/timezones";
 import { z } from "zod";
 import { serpDepthSchema } from "./serp-depth";
+import { tagNameSchema } from "./tag";
 
 const idSchema = z.string().trim().min(1).max(120);
-const tagSchema = z.string().trim().min(1).max(48);
 const unsupportedSerpMarketMessage = "Choose a supported SERP country.";
 export const KEYWORD_IMPORT_MAX = 500;
 export const KEYWORD_IMPORT_LIMIT_MESSAGE = "Add up to 500 keywords per import.";
@@ -145,7 +145,7 @@ export const addKeywordSchema = z.object({
   locationKey: canonicalKeySchema.optional(),
   projectId: idSchema,
   schedule: keywordScheduleSchema.optional(),
-  tags: z.array(tagSchema).max(12).default([]),
+  tags: z.array(tagNameSchema).max(12).default([]),
   targetUrl: targetUrlSchema,
   topic: topicSchema,
   intent: intentSchema,
@@ -220,7 +220,7 @@ export const updateKeywordSchema = z.object({
   keywordId: idSchema,
   location: serpMarketNameSchema.optional(),
   locationKey: canonicalKeySchema.optional(),
-  tags: z.array(tagSchema).max(12).optional(),
+  tags: z.array(tagNameSchema).max(12).optional(),
   targetUrl: targetUrlSchema,
   topic: topicSchema,
   intent: intentSchema,
@@ -232,7 +232,7 @@ export const bulkKeywordIdsSchema = z.object({
 });
 
 export const bulkKeywordTagSchema = bulkKeywordIdsSchema.extend({
-  tags: z.array(tagSchema).min(1).max(12),
+  tags: z.array(tagNameSchema).min(1).max(12),
 });
 
 export const bulkKeywordTargetSchema = bulkKeywordIdsSchema.extend({

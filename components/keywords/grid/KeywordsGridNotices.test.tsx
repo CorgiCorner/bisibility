@@ -1,4 +1,3 @@
-import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -160,7 +159,7 @@ describe("KeywordsGridNotices", () => {
     expect(runCheckNowAction).toHaveBeenCalledWith({ keywordId: "kw_pending" });
   });
 
-  it("shows the monthly budget block before queued copy", () => {
+  it("does not render a legacy budget notice on the keyword surface", () => {
     renderNotices({
       checkHealth: {
         budget: { capCents: 1000, exhausted: true, spentCents: 1000 },
@@ -171,16 +170,8 @@ describe("KeywordsGridNotices", () => {
       providerConnected: true,
     });
 
-    expect(screen.getByText("Rank checks paused - monthly budget reached.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View check runs" })).toHaveAttribute(
-      "href",
-      rankTrackerTabPath("prj_1", "checks"),
-    );
-    expect(screen.getByRole("link", { name: "Raise the budget" })).toHaveAttribute(
-      "href",
-      `${appPath("prj_1", "settings")}#provider-usage`,
-    );
-    expect(screen.queryByText(/first check pending/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/budget reached/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Edit budget" })).not.toBeInTheDocument();
   });
 
   it("shows the migration hold instead of claiming checks are queued", () => {

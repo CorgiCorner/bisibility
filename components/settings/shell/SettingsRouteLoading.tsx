@@ -87,10 +87,12 @@ export function SettingsRouteLoading({
       data-settings-loading-boundary={activeSection}
       data-settings-route-loading=""
     >
-      <SettingsLoadingMobileMenu />
       <div className={settingsShellGridClassName} data-settings-loading-grid="">
         <SettingsLoadingSubnav activeSection={activeSection} />
-        <div className={settingsContentColumnClassName}>{children}</div>
+        <div className={settingsContentColumnClassName}>
+          <SettingsLoadingMobileMenu />
+          {children}
+        </div>
       </div>
     </div>
   );

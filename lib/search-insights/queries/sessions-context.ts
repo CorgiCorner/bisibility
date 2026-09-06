@@ -31,6 +31,7 @@ export type SearchInsightsImportState = {
 
 export type OrganicSessionsContext = {
   importState: SearchInsightsImportState | null;
+  keyEventsConfigured: boolean | null;
   property: string | null;
   status: "connected" | "needs_reauth" | "not_connected";
 };
@@ -38,7 +39,7 @@ export type OrganicSessionsContext = {
 /** A client-safe slot for a connected GA4 source whose compared sessions are not readable yet. */
 export type OrganicSessionsPendingPresentation = {
   kind: "pending";
-  label: "Organic sessions";
+  label: string;
   readyIn: string | null;
   reason: string;
   source: "GA4";
@@ -99,6 +100,7 @@ export function importStateView(
 export function organicSessionsImportCoversWindow(
   importState: SearchInsightsImportState | null,
   window: FinalizedWindow,
+  comparesPrevious = true,
 ) {
   if (!importState?.finalizedThroughDate) return false;
   if (importState.finalizedThroughDate < window.current.end) return false;
@@ -108,15 +110,17 @@ export function organicSessionsImportCoversWindow(
       : importState.cursorDate
         ? addDays(importState.cursorDate, 1)
         : null;
-  return Boolean(oldestStoredDate && oldestStoredDate <= window.previous.start);
+  const earliestRequiredDate = comparesPrevious ? window.previous.start : window.current.start;
+  return Boolean(oldestStoredDate && oldestStoredDate <= earliestRequiredDate);
 }
 
 export function organicSessionsPropertyForWindow(
   context: OrganicSessionsContext,
   window: FinalizedWindow,
+  comparesPrevious = true,
 ) {
   return context.status === "connected" && context.property
-    ? organicSessionsImportCoversWindow(context.importState, window)
+    ? organicSessionsImportCoversWindow(context.importState, window, comparesPrevious)
       ? context.property
       : null
     : null;
@@ -129,8 +133,20 @@ export async function readOrganicSessionsContext(
     select: { credentialsEncrypted: true, enabled: true, id: true, provider: true, status: true },
     where: { projectId_provider: { projectId, provider: "ga4" } },
   });
-  if (!connection) return { importState: null, property: null, status: "not_connected" };
-  if (!connection.enabled) return { importState: null, property: null, status: "not_connected" };
+  if (!connection)
+    return {
+      importState: null,
+      keyEventsConfigured: null,
+      property: null,
+      status: "not_connected",
+    };
+  if (!connection.enabled)
+    return {
+      importState: null,
+      keyEventsConfigured: null,
+      property: null,
+      status: "not_connected",
+    };
 
   const resolved = resolveOrganicSessionsProperty(connection);
   const property = resolved?.property ?? null;
@@ -141,6 +157,7 @@ export async function readOrganicSessionsContext(
     : null;
   return {
     importState: importRow ? importStateView(importRow) : null,
+    keyEventsConfigured: importRow?.keyEventsConfigured ?? null,
     property,
     status:
       connection.status === "needs_reauth"
@@ -161,6 +178,7 @@ export async function readStoredOrganicSessionsContext(
   });
   return {
     importState: importRow ? importStateView(importRow) : null,
+    keyEventsConfigured: importRow?.keyEventsConfigured ?? null,
     property,
     status: importRow ? "connected" : "not_connected",
   };

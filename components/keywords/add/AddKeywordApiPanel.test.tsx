@@ -27,7 +27,7 @@ describe("AddKeywordApiPanel", () => {
 
     const header = screen.getByText("curl", { selector: "div" }).parentElement;
     expect(header).toHaveClass("border-code-border");
-    expect(header).not.toHaveClass("border-border-soft");
+    expect(header).not.toHaveClass("border-border");
 
     const spec = screen.getByRole("link", { name: /\/api\/v1\/openapi\.json$/ });
     expect(spec).toHaveAttribute("target", "_blank");

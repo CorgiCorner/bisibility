@@ -9,6 +9,10 @@ import { fetchAggregateRange, probeFreshness } from "./aggregate";
 import { resolveSearchInsightsConnection, SEARCH_INSIGHTS_SOURCE } from "./credentials";
 import { syncCompleteGscDay } from "./day-sync";
 import { ensureSearchInsightsImport } from "./ensure-import";
+import {
+  cacheGa4KeyEventsConfiguration,
+  cacheGa4KeyEventsConfigurationsForAllProjects,
+} from "./ga4-key-events";
 import { recordImportFailure } from "./import-state";
 import { countCappedDays } from "./partitions";
 import { incrementalDays, resumedImportState } from "./plan";
@@ -19,10 +23,11 @@ import {
 } from "./sessions-incremental";
 import { isImportUserPaused, userPauseGuard } from "./user-pause";
 import { reprobeWaitingImport } from "./waiting-first-data";
+import { refreshReadyWindowFacts } from "./window-facts-refresh";
 
 export type IncrementalStatus =
   | "already_claimed"
-  | "backfill_started"
+  | "backfill_queued"
   | "failed"
   | "needs_reauth"
   | "no_new_days"
@@ -180,7 +185,7 @@ export async function runIncrementalSync(input: {
       return { daysProcessed: 0, projectId: input.projectId, status: "user_paused" };
     }
     const lastProcessedDay = days[daysProcessed - 1];
-    await prisma.searchAnalyticsImport.update({
+    const updatedImport = await prisma.searchAnalyticsImport.update({
       data: {
         ...(cappedDays === null ? {} : { capHitDays: cappedDays }),
         finalizedThroughDate: dateFromKey(lastProcessedDay),
@@ -195,6 +200,15 @@ export async function runIncrementalSync(input: {
       },
       where: userPauseGuard(row.id),
     });
+    try {
+      await refreshReadyWindowFacts(updatedImport);
+    } catch (error) {
+      console.error("[search-insights] window facts refresh failed", {
+        error,
+        importId: row.id,
+        projectId: input.projectId,
+      });
+    }
     if (row.pausedReason === "rate_limited") {
       logSyncInfo(formatSyncResumed({ reason: "quota", stream: "incremental" }));
     }
@@ -224,6 +238,19 @@ async function runOrganicSessionsIncrementalForProject(input: { now: Date; proje
       property: connection.property,
       source: "ga4",
     });
+    try {
+      await cacheGa4KeyEventsConfiguration({
+        credentials: connection.credentials,
+        now: input.now,
+        projectId: input.projectId,
+        property: connection.property,
+      });
+    } catch (error) {
+      console.error("[search-insights] key events cache failed", {
+        error,
+        projectId: input.projectId,
+      });
+    }
     await runOrganicSessionsIncrementalSync({
       now: input.now,
       projectId: input.projectId,
@@ -261,6 +288,7 @@ export async function runIncrementalForAllProjects(
   }
   try {
     await runOrganicSessionsIncrementalForAllProjects(now);
+    await cacheGa4KeyEventsConfigurationsForAllProjects(now);
   } catch (error) {
     console.error("[search-insights] sessions sweep failed", { error });
   }

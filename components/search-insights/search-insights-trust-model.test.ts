@@ -36,6 +36,7 @@ const observabilityFacts = {
   lastProbeAt: isoFromFrozenNow({ days: -1, minutes: -5 }),
   qualifyingDays: 7,
   readyThrough: {
+    d1: { current: true, previous: true },
     d7: { current: true, previous: true },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },
@@ -245,6 +246,61 @@ describe("importObservabilityProgress", () => {
       percent: 70,
       qualifyingCounter: "7 of 10 finalized days",
     });
+  });
+
+  it("announces the first look until the seven-day view is finalized", () => {
+    const firstLookFacts = {
+      ...observabilityFacts,
+      consecutiveDays: 2,
+      readyThrough: {
+        ...observabilityFacts.readyThrough,
+        d1: { current: true, previous: false },
+        d7: { current: false, previous: false },
+      },
+      stall: { ...observabilityFacts.stall, expectedDayMs: 300_000 },
+      targetDays: 28,
+    } satisfies ImportObservabilityFacts;
+
+    expect(importObservabilityProgress(firstLookFacts)?.qualifyingCounter).toBe(
+      "First look ready · 7-day view in ~25 min",
+    );
+    expect(
+      importObservabilityProgress({
+        ...firstLookFacts,
+        consecutiveDays: 1,
+        stall: { ...firstLookFacts.stall, expectedDayMs: 900_000 },
+      })?.qualifyingCounter,
+    ).toBe("First look ready · 7-day view in ~2 hr");
+    expect(
+      importObservabilityProgress({
+        ...firstLookFacts,
+        consecutiveDays: 7,
+      })?.qualifyingCounter,
+    ).toBe("First look ready · 7-day view once its days finalize");
+    expect(
+      importObservabilityProgress({
+        ...firstLookFacts,
+        consecutiveDays: 10,
+      })?.qualifyingCounter,
+    ).toBe("First look ready · 7-day view once its days finalize");
+    expect(
+      importObservabilityProgress({
+        ...firstLookFacts,
+        readyThrough: {
+          ...firstLookFacts.readyThrough,
+          d7: { current: true, previous: true },
+        },
+      })?.qualifyingCounter,
+    ).toBe("7 of 28 finalized days");
+    expect(
+      importObservabilityProgress({
+        ...firstLookFacts,
+        readyThrough: {
+          ...firstLookFacts.readyThrough,
+          d1: { current: false, previous: false },
+        },
+      })?.qualifyingCounter,
+    ).toBe("7 of 28 finalized days");
   });
 
   it("changes deep-history progress when the selector target changes", () => {

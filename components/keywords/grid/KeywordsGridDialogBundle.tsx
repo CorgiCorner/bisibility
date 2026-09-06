@@ -1,13 +1,11 @@
 "use client";
 import type { KeywordExportTarget } from "@/components/keywords/export-target-model";
-import type { Dispatch, SetStateAction } from "react";
+import type { MarketScope } from "@/lib/markets/market-scope";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { type AddKeywordDraft, KeywordsGridDialogs } from "./KeywordsGridDialogs";
 import type { KeywordsGridProps } from "./keywords-grid-types";
-import { RunChecksConfirmationModal } from "./RunChecksConfirmationModal";
 import { RankTrackerCommandMarker } from "./useRankTrackerCommands";
-import type { useRunChecksModal } from "./useRunChecksModal";
 
-type RunFlow = ReturnType<typeof useRunChecksModal>;
 type Props = Pick<
   KeywordsGridProps,
   | "addKeywordsAction"
@@ -24,18 +22,17 @@ type Props = Pick<
   | "tagSuggestions"
 > & {
   addDraft: AddKeywordDraft;
-  closeRunChecks: RunFlow["close"];
-  confirmRunChecks: RunFlow["confirm"];
   exportTarget: KeywordExportTarget | null;
+  marketScope?: MarketScope | null;
   onExport: () => void;
   onFilter: () => void;
   onImport: () => void;
   onRunChecks: () => void;
   openAddDrawer: (keyword?: string, tab?: AddKeywordDraft["tab"]) => void;
   pendingRows: number;
+  preflightDialog: ReactNode;
   requestRows: KeywordsGridProps["rows"];
-  retryRunChecks: RunFlow["retry"];
-  runChecksFlow: RunFlow["flow"];
+  scopedRows?: number;
   setAddDraft: Dispatch<SetStateAction<AddKeywordDraft>>;
   setExportTarget: Dispatch<SetStateAction<KeywordExportTarget | null>>;
 };
@@ -45,38 +42,37 @@ export function KeywordsGridDialogBundle(props: Props) {
     addKeywordsAction,
     canCreateKeyword,
     canUpdateKeyword,
-    checkHealth,
-    closeRunChecks,
-    confirmRunChecks,
     costContext,
     exportTarget,
     initialAction,
     keywordDefaults,
+    marketScope = null,
     onExport,
     onFilter,
     onImport,
     onRunChecks,
     openAddDrawer,
     pendingRows,
+    preflightDialog,
+    scopedRows,
     projectId,
     projectMarkets,
     requestRows,
-    retryRunChecks,
-    runChecksFlow,
     setAddDraft,
     setExportTarget,
     tagSuggestions,
   } = props;
   return (
     <>
-      {(canCreateKeyword && addDraft.open) || exportTarget ? (
+      {canCreateKeyword || exportTarget ? (
         <KeywordsGridDialogs
           addDraft={addDraft}
           addKeywordsAction={addKeywordsAction}
           exportTarget={exportTarget}
           costContext={costContext}
           keywordDefaults={keywordDefaults}
-          onCloseAdd={() => setAddDraft({ keyword: "", open: false, tab: "manual" })}
+          onCloseAdd={() => setAddDraft((current) => ({ ...current, open: false }))}
+          onExitedAdd={() => setAddDraft({ keyword: "", open: false, tab: "manual" })}
           onCloseExport={() => setExportTarget(null)}
           projectId={projectId}
           projectMarkets={projectMarkets}
@@ -84,25 +80,18 @@ export function KeywordsGridDialogBundle(props: Props) {
           tagSuggestions={tagSuggestions ?? []}
         />
       ) : null}
-      <RunChecksConfirmationModal
-        flow={runChecksFlow}
-        onClose={closeRunChecks}
-        onConfirm={() => void confirmRunChecks()}
-        onRetry={retryRunChecks}
-        projectId={projectId}
-        providerRate={checkHealth?.providerRate}
-        rows={requestRows}
-      />
+      {preflightDialog}
       <RankTrackerCommandMarker
         canCreateKeyword={canCreateKeyword}
         canUpdateKeyword={canUpdateKeyword}
         initialAction={initialAction ?? null}
+        marketScope={marketScope}
         onAdd={openAddDrawer}
         onExport={onExport}
         onFilter={onFilter}
         onImport={onImport}
         onRunChecks={onRunChecks}
-        rowCounts={{ all: requestRows.length, visible: pendingRows }}
+        rowCounts={{ all: requestRows.length, scoped: scopedRows, visible: pendingRows }}
       />
     </>
   );

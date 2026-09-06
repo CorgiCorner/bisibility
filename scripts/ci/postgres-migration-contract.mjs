@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { verifySavedKeywordMarketMigration } from "./saved-keyword-market-migration-postgres.ts";
+import { verifyWelcomeIntentMigration } from "./welcome-intent-migration-postgres.ts";
 
 const { Client } = pg;
 
@@ -54,6 +55,7 @@ export async function runPostgresMigrationContract() {
   const directUrl = required("DIRECT_URL");
   await waitForPostgres(directUrl);
   await verifySavedKeywordMarketMigration(directUrl);
+  await verifyWelcomeIntentMigration(directUrl);
 
   const configuredEnv = {
     DATABASE_URL: databaseUrl,
@@ -70,6 +72,26 @@ export async function runPostgresMigrationContract() {
   run("npm", ["run", "db:migrate"], sentinelEnv);
   run("npm", ["run", "db:migrate"], configuredEnv);
   run("npm", ["run", "db:migrate"], configuredEnv);
+  run(
+    "node",
+    [
+      "--experimental-transform-types",
+      "--import",
+      "./lib/temporal/register-loader.mjs",
+      "scripts/ci/traffic-first-sync-intent-postgres.ts",
+    ],
+    configuredEnv,
+  );
+  run(
+    "node",
+    [
+      "--experimental-transform-types",
+      "--import",
+      "./lib/temporal/register-loader.mjs",
+      "scripts/ci/welcome-intent-postgres.ts",
+    ],
+    configuredEnv,
+  );
   run(
     "npx",
     [
@@ -93,6 +115,7 @@ export async function runPostgresMigrationContract() {
     ],
     configuredEnv,
   );
+  run("npm", ["run", "test:rank-check-run-launch-postgres"], configuredEnv);
   run("npm", ["run", "test:data-migration-runner-postgres"], configuredEnv);
   run("npm", ["run", "test:baseline-catalog"], configuredEnv);
 }

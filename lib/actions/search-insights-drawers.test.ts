@@ -35,6 +35,7 @@ describe("search insights drawer reads", () => {
 
   it("hands the project reference and the window to each read service", async () => {
     await loadSearchInsightsQueryDetail({
+      comparison: "yoy",
       period: "90",
       projectId: "prj_1",
       property: "sc-domain:archived.example.com",
@@ -56,6 +57,7 @@ describe("search insights drawer reads", () => {
     });
 
     expect(mocks.query).toHaveBeenCalledWith("prj_1", {
+      comparison: "yoy",
       period: "90",
       property: "sc-domain:archived.example.com",
       query: "stored query",

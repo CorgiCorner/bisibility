@@ -101,7 +101,7 @@ describe("KeywordsGrid pending state", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /add keyword/i })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /device/i })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: /frequency/i })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /schedule/i })).toBeInTheDocument();
     expect(await screen.findByText(keywordRows[0].keyword)).toBeInTheDocument();
     expect(
       await screen.findAllByRole("gridcell", { name: "Not checked" }, { timeout: 10_000 }),

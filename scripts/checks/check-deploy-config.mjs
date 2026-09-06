@@ -104,6 +104,7 @@ const composeEnv = {
   SITE_URL: "https://example.com",
   TEMPORAL_ADDRESS: "temporal.example.com:7233",
   TEMPORAL_POSTGRES_PASSWORD: "temporal-test",
+  WORKER_INTENT_POLL_INTERVAL_MS: "2000",
 };
 function renderCompose(files, environment = {}) {
   const result = spawnSync("docker", ["compose", ...files.flatMap((file) => ["-f", file]), "config"], {
@@ -152,6 +153,10 @@ for (const service of [coreConfig.services.app, coreConfig.services["db-migratio
   );
 }
 assert(workerConfig.services.worker, "Worker overlay must add the worker service");
+assert(
+  workerConfig.services.worker.environment.WORKER_INTENT_POLL_INTERVAL_MS === "2000",
+  "Worker overlay must forward the worker intent poll interval",
+);
 assert(
   !workerConfig.services.worker.depends_on?.temporal,
   "External worker overlay must not depend on a service named temporal",

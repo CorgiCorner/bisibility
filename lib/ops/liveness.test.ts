@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   appliedMigrationSummary: vi.fn(),
   bundledMigrationSummary: vi.fn(),
+  cacheEntries: new Map<unknown, Map<string, unknown>>(),
   get: vi.fn(),
   getRedisClient: vi.fn(),
   revision: vi.fn(),
@@ -18,6 +19,20 @@ vi.mock("@/lib/db/migration-state", async (importOriginal) => ({
   bundledMigrationSummary: mocks.bundledMigrationSummary,
 }));
 vi.mock("@/lib/redis/redis", () => ({ getRedisClient: mocks.getRedisClient }));
+vi.mock("react", () => ({
+  cache:
+    (fn: (...args: unknown[]) => unknown) =>
+    (...args: unknown[]) => {
+      let entries = mocks.cacheEntries.get(fn);
+      if (!entries) {
+        entries = new Map();
+        mocks.cacheEntries.set(fn, entries);
+      }
+      const key = JSON.stringify(args);
+      if (!entries.has(key)) entries.set(key, fn(...args));
+      return entries.get(key);
+    },
+}));
 
 import {
   getWorkerLiveness,
@@ -32,6 +47,7 @@ describe("worker liveness", () => {
   beforeEach(() => {
     vi.unstubAllEnvs();
     vi.clearAllMocks();
+    mocks.cacheEntries.clear();
     mocks.revision.mockReturnValue("unknown");
     mocks.appliedMigrationSummary.mockResolvedValue({
       count: 2,
@@ -42,6 +58,65 @@ describe("worker liveness", () => {
       latest: "20260724220000_instance_settings",
     });
     mocks.getRedisClient.mockResolvedValue({ get: mocks.get, set: mocks.set });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("returns unknown by the configured deadline when Redis never answers", async () => {
+    vi.useFakeTimers();
+    vi.stubEnv("WORKER_LIVENESS_TIMEOUT_MS", "75");
+    let rejectRedis: ((error: Error) => void) | undefined;
+    mocks.getRedisClient.mockReturnValue(
+      new Promise((_, reject) => {
+        rejectRedis = reject;
+      }),
+    );
+
+    const pending = getWorkerLivenessDetails(new Date("2000-01-01T00:00:00.000Z"));
+    await vi.advanceTimersByTimeAsync(74);
+    let settled = false;
+    void pending
+      .finally(() => {
+        settled = true;
+      })
+      .catch(() => undefined);
+    await Promise.resolve();
+    expect(settled).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1);
+    // A read that lost its deadline taught us nothing. Reporting "absent" would claim the worker
+    // is gone on the strength of our own timeout.
+    await expect(pending).resolves.toMatchObject({
+      heartbeatState: "unreadable",
+      status: "unknown",
+    });
+    rejectRedis?.(new Error("late Redis failure"));
+    await Promise.resolve();
+  });
+
+  it("rejects an invalid liveness deadline before reading Redis", async () => {
+    vi.stubEnv("WORKER_LIVENESS_TIMEOUT_MS", "1.5");
+
+    await expect(getWorkerLivenessDetails()).rejects.toThrow(
+      "WORKER_LIVENESS_TIMEOUT_MS must be an integer",
+    );
+    expect(mocks.getRedisClient).not.toHaveBeenCalled();
+  });
+
+  it("reads Redis once while deriving liveness from each caller's now", async () => {
+    mocks.get.mockResolvedValue("2000-01-01T00:00:00.000Z");
+
+    const [first, second] = await Promise.all([
+      getWorkerLivenessDetails(new Date("2000-01-01T00:01:00.000Z")),
+      getWorkerLivenessDetails(new Date("2000-01-01T00:02:00.000Z")),
+    ]);
+
+    expect(mocks.getRedisClient).toHaveBeenCalledOnce();
+    expect(mocks.get).toHaveBeenCalledOnce();
+    expect(first).toMatchObject({ heartbeatAgeMs: 60_000, heartbeatState: "fresh" });
+    expect(second).toMatchObject({ heartbeatAgeMs: 120_000, heartbeatState: "fresh" });
   });
 
   it("keeps liveness independent from Slack configuration", async () => {
@@ -173,6 +248,19 @@ describe("worker liveness", () => {
     });
   });
 
+  it("separates a heartbeat Redis denied us from one Redis says is not there", async () => {
+    mocks.get.mockResolvedValueOnce(null);
+    await expect(getWorkerLivenessDetails()).resolves.toMatchObject({
+      heartbeatState: "absent",
+    });
+
+    mocks.cacheEntries.clear();
+    mocks.get.mockRejectedValueOnce(new Error("redis unavailable"));
+    await expect(getWorkerLivenessDetails()).resolves.toMatchObject({
+      heartbeatState: "unreadable",
+    });
+  });
+
   it("distinguishes absent and invalid worker heartbeat evidence", async () => {
     mocks.get.mockResolvedValueOnce(null);
     await expect(getWorkerLivenessDetails()).resolves.toMatchObject({
@@ -180,6 +268,7 @@ describe("worker liveness", () => {
       status: "unknown",
     });
 
+    mocks.cacheEntries.clear();
     mocks.get.mockResolvedValueOnce("not-a-timestamp");
     await expect(getWorkerLivenessDetails()).resolves.toMatchObject({
       heartbeatState: "invalid",
@@ -192,6 +281,7 @@ describe("worker liveness", () => {
     mocks.get.mockResolvedValueOnce(now.toISOString());
     await expect(getWorkerLiveness(now)).resolves.toBe("ok");
 
+    mocks.cacheEntries.clear();
     mocks.get.mockResolvedValueOnce(new Date(now.getTime() - WORKER_STALE_AFTER_MS).toISOString());
     await expect(getWorkerLiveness(now)).resolves.toBe("ok");
   });

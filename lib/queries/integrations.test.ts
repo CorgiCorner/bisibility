@@ -32,7 +32,6 @@ const mocks = vi.hoisted(() => ({
   requireReadableProject: vi.fn(),
   getRequestProjectDefaults: vi.fn(),
   queue: vi.fn(),
-  workflow: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -49,9 +48,6 @@ vi.mock("@/lib/search-insights/queries/import-observability-db", () => ({
 }));
 vi.mock("@/lib/temporal/deployment-config", () => ({
   temporalDeploymentConfig: mocks.deploymentConfig,
-}));
-vi.mock("@/lib/temporal/search-insights-status", () => ({
-  describeSearchInsightsBackfillStatus: mocks.workflow,
 }));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
 vi.mock("./workspace-request-data", () => ({
@@ -89,6 +85,7 @@ const selectorFacts = {
   lastProbeAt: null,
   qualifyingDays: 28,
   readyThrough: {
+    d1: { current: false, previous: false },
     d7: { current: false, previous: false },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },
@@ -124,7 +121,6 @@ describe("integration queries", () => {
     mocks.liveness.mockResolvedValue(workerLiveness);
     mocks.observability.mockResolvedValue(selectorFacts);
     mocks.queue.mockResolvedValue({});
-    mocks.workflow.mockResolvedValue("running");
   });
 
   it("loads connected providers from ProviderConnection rows in priority order", async () => {
@@ -450,7 +446,6 @@ describe("integration queries", () => {
       projectId: "project_1",
       state: "running",
     });
-    expect(mocks.workflow).toHaveBeenCalledWith("project_1", "sc-domain:corgitocoin.com");
     expect(mocks.compareIdentity).toHaveBeenCalledWith(temporalDeployment, workerLiveness);
   });
 

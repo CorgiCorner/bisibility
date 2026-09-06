@@ -17,16 +17,18 @@ Rank history is stored as rank-check rows. Each row belongs to one keyword.
   "previous_position": 7,
   "provider": "dataforseo",
   "ranking_url": "https://example.com/rank-tracker",
+  "run_id": "rcr_a00000000000000000000000",
   "cost_cents": 0.06,
   "error": null,
   "status": "completed"
 }
 ```
 
-`status` can be `running`, `completed`, or `failed`. Async rank-check requests
-create a `running` row first. Workers or inline execution later update that row
-to `completed`, or persist a `failed` row with an `error` message when the
-provider run fails.
+`status` can be `running`, `completed`, or `failed`. `run_id` identifies the
+rank-check run that produced the row. It is `null` for legacy rows that predate
+runs. A queued request creates its history row when execution begins; workers
+or inline execution later update that row to `completed`, or persist a `failed`
+row with an `error` message when the provider run fails.
 
 `attempts` records provider fallback attempts (`{ "provider", "message" }`)
 before the final status; it is `null` when no fallback attempts were recorded.
@@ -62,6 +64,7 @@ Response:
       "previous_position": 7,
       "provider": "dataforseo",
       "ranking_url": "https://example.com/rank-tracker",
+      "run_id": "rcr_a00000000000000000000000",
       "cost_cents": 0.06,
       "error": null,
       "status": "completed"
@@ -78,9 +81,9 @@ GET /api/v1/rank-checks/{check_id}
 Authorization: Bearer <api_key>
 ```
 
-Returns one rank-check resource or `404`. For checks started asynchronously,
-poll this endpoint until `status` changes from `running` to `completed` or
-`failed`.
+Returns one rank-check resource or `404`. Use this endpoint after a history row
+has provided the rank-check `id`. A queued request returns a run ID, not a
+rank-check ID, so correlate it through the keyword history first.
 
 ## Export project rank history
 
@@ -112,12 +115,13 @@ include the same fields and are not cursor-paginated.
 ## Async polling flow
 
 ```http
-POST /api/v1/keywords/{id}/checks?async=true
+POST /api/v1/keywords/{id}/checks
 Authorization: Bearer <api_key>
 Content-Type: application/json
 ```
 
-The API returns `202` with a `running` rank-check resource when the workflow is
-queued. Use the returned `id` with `GET /api/v1/rank-checks/{check_id}` to poll
-for the final status. If the scheduler is unavailable, the request returns
-`503` and no running row is kept.
+The API returns `202` with `{ "id": "rcr_...", "status": "queued" }` when the
+workflow is queued. Poll `GET /keywords/{id}/rank-checks?status=completed` and
+select the row whose `run_id` equals that queued run ID. The matching row holds
+the final position and rank-check ID. If the queue worker is unavailable, the
+request returns `503` and no run is kept.

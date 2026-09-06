@@ -31,7 +31,7 @@ function renderActions(
 describe("KeywordHeaderActions", () => {
   it("keeps only the check and overflow controls on the visible action row", () => {
     const handlers = renderActions();
-    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 50)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
     expect(screen.queryByRole("button", { name: "Add alert" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Alert on" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Export CSV" })).not.toBeInTheDocument();
@@ -52,7 +52,7 @@ describe("KeywordHeaderActions", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
 
     expect(handlers.onRunCheck).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 20)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
     expect(handlers.onRunCheck).toHaveBeenCalledWith(20);
   });
 
@@ -113,7 +113,7 @@ describe("KeywordHeaderActions", () => {
       providerRate: { overrideCents: 0, providerId: "local-sequence" },
     });
 
-    const action = screen.getByRole("button", { name: "Run check (Top 100)" });
+    const action = screen.getByRole("button", { name: "Run check" });
     expect(action).toHaveClass("min-h-[36px]", "MuiButton-outlined");
     expect(action).not.toHaveClass("MuiButton-contained");
     expect(screen.queryByText("Top 100 · $0.00")).not.toBeInTheDocument();
@@ -153,7 +153,7 @@ describe("KeywordHeaderActions", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
-    expect(screen.getByRole("button", { name: "Run check (Top 20)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run check" })).toBeInTheDocument();
 
     rerender(
       <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
@@ -161,7 +161,7 @@ describe("KeywordHeaderActions", () => {
       </ProjectWriteModeProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
     expect(handlers.onRunCheck).toHaveBeenCalledWith(100);
   });
 
@@ -173,7 +173,7 @@ describe("KeywordHeaderActions", () => {
 
   it("blocks writes in migration hold but keeps exports available", () => {
     renderActions({}, "migration_hold");
-    expect(screen.getByRole("button", { name: "Run check (Top 50)" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Run check" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Choose check depth" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "More keyword actions" }));
     expect(screen.getByRole("menuitem", { name: "Export CSV" })).toBeEnabled();

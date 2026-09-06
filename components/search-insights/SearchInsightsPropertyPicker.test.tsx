@@ -2,7 +2,27 @@ import { ToastProvider } from "@/components/ui";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import type { TransitionStartFunction } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const transitions = vi.hoisted(() => ({
+  active: null as "select" | "view" | null,
+  call: 0,
+  select: { pending: false, start: vi.fn() },
+  view: { pending: false, start: vi.fn() },
+}));
+vi.mock("react", async () => {
+  const actual = await vi.importActual<typeof import("react")>("react");
+  return {
+    ...actual,
+    useTransition: (): [boolean, TransitionStartFunction] => {
+      const state = transitions.call % 2 === 0 ? transitions.view : transitions.select;
+      transitions.call += 1;
+      return [state.pending, state.start];
+    },
+  };
+});
+
 import { SearchInsightsPropertyPicker } from "./SearchInsightsPropertyPicker";
 
 const connected = {
@@ -54,6 +74,29 @@ function renderPicker(overrides: Partial<Parameters<typeof SearchInsightsPropert
 }
 
 describe("SearchInsightsPropertyPicker", () => {
+  beforeEach(() => {
+    transitions.active = null;
+    transitions.call = 0;
+    for (const [name, state] of [
+      ["view", transitions.view],
+      ["select", transitions.select],
+    ] as const) {
+      state.pending = false;
+      state.start.mockReset();
+      state.start.mockImplementation((callback) => {
+        transitions.active = name;
+        const result = callback();
+        if (result && typeof result.then === "function") {
+          void result.finally(() => {
+            transitions.active = null;
+          });
+        } else {
+          transitions.active = null;
+        }
+      });
+    }
+  });
+
   it("labels the footer action as Manage connection", async () => {
     const user = userEvent.setup();
     renderPicker();
@@ -73,6 +116,53 @@ describe("SearchInsightsPropertyPicker", () => {
       screen.getByText("Covers the whole domain: every subdomain and protocol."),
     ).toBeInTheDocument();
     expect(screen.getByText("domain")).toHaveAttribute("aria-describedby");
+  });
+
+  it("links a domain property to Search Console with external protections", () => {
+    renderPicker();
+
+    const link = screen.getByRole("link", { name: "Open in Search Console" });
+    expect(link).toHaveAttribute(
+      "href",
+      "https://search.google.com/search-console?resource_id=sc-domain%3Aexample.com",
+    );
+    expect(link).toHaveAttribute("rel", "noreferrer noopener");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("links a URL-prefix property to Search Console", () => {
+    renderPicker({
+      connection: {
+        property: {
+          displayName: "https://example.com/",
+          kind: "url-prefix",
+          kindLabel: "url prefix",
+          value: "https://example.com/",
+        },
+        status: "connected",
+      },
+    });
+
+    expect(screen.getByRole("link", { name: "Open in Search Console" })).toHaveAttribute(
+      "href",
+      "https://search.google.com/search-console?resource_id=https%3A%2F%2Fexample.com%2F",
+    );
+  });
+
+  it("links the property displayed for an archived view to Search Console", () => {
+    renderPicker({
+      viewedProperty: {
+        displayName: "archive.example.com",
+        kind: "domain",
+        kindLabel: "domain",
+        value: "sc-domain:archive.example.com",
+      },
+    });
+
+    expect(screen.getByRole("link", { name: "Open in Search Console" })).toHaveAttribute(
+      "href",
+      "https://search.google.com/search-console?resource_id=sc-domain%3Aarchive.example.com",
+    );
   });
 
   it("keeps menu and modal rows aligned across property lengths, kinds, and history states", async () => {
@@ -361,6 +451,32 @@ describe("SearchInsightsPropertyPicker", () => {
     );
   });
 
+  it("issues archived-view navigation from inside its own transition", async () => {
+    routerMock.push.mockImplementation(() => {
+      expect(transitions.active).toBe("view");
+    });
+    renderPicker({
+      loadPropertiesAction: vi.fn().mockResolvedValue({
+        archived: [
+          {
+            displayName: "archive.example.com",
+            kind: "domain",
+            kindLabel: "domain",
+            lastSyncedDate: "2020-01-15",
+            value: "sc-domain:archive.example.com",
+          },
+        ],
+        properties,
+      }),
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Search Console property" }));
+    await userEvent.click(await screen.findByRole("option", { name: /archive\.example\.com/i }));
+
+    expect(transitions.view.start).toHaveBeenCalledOnce();
+    expect(transitions.select.start).not.toHaveBeenCalled();
+  });
+
   it("does not navigate when the displayed active property is selected", async () => {
     setNavigationState({
       pathname: "/app/prj_1/search-console",
@@ -545,6 +661,39 @@ describe("SearchInsightsPropertyPicker", () => {
       property: "https://blog.example.com/",
     });
     await waitFor(() => expect(routerMock.refresh).toHaveBeenCalled());
+  });
+
+  it("runs the property action and refresh from inside their own transition", async () => {
+    const selectPropertyAction = vi.fn().mockImplementation(async () => {
+      expect(transitions.active).toBe("select");
+      return { property: "https://blog.example.com/", status: "saved" };
+    });
+    routerMock.refresh.mockImplementation(() => {
+      expect(transitions.active).toBe("select");
+    });
+    renderPicker({ selectPropertyAction });
+
+    await userEvent.click(screen.getByRole("button", { name: "Search Console property" }));
+    await userEvent.click(await screen.findByRole("option", { name: /blog\.example\.com/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Switch property" }));
+
+    await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledOnce());
+    expect(transitions.select.start).toHaveBeenCalledOnce();
+    expect(transitions.view.start).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["view", transitions.view],
+    ["select", transitions.select],
+  ] as const)("shows the trigger pending state for the %s transition", (_name, state) => {
+    state.pending = true;
+    renderPicker();
+
+    const trigger = screen.getByRole("button", { name: "Search Console property" });
+    expect(trigger).toBeDisabled();
+    expect(trigger).toHaveAttribute("aria-busy", "true");
+    expect(trigger.querySelectorAll("svg")).toHaveLength(2);
+    expect(trigger.querySelectorAll("svg.animate-spin")).toHaveLength(1);
   });
 
   it("separates the switch question from interpolated import copy", async () => {

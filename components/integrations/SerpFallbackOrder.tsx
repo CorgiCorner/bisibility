@@ -227,7 +227,7 @@ export function SerpFallbackOrder({
 
   return (
     <Card className="overflow-hidden p-0" size="md">
-      <div className="border-border-soft border-b px-4 py-3.5">
+      <div className="border-border border-b px-4 py-3.5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <span className="text-[10px] uppercase tracking-[0.5px] text-fg">
             SERP fallback order
@@ -241,14 +241,14 @@ export function SerpFallbackOrder({
           bisibility continues with the next active provider.
         </p>
       </div>
-      <ol className="m-0 list-none divide-y divide-border-soft p-0">
+      <ol className="m-0 list-none divide-y divide-border p-0">
         {active.map((provider, index) => providerRow(provider, index))}
         {paused.map((provider) => providerRow(provider, -1))}
         {disconnected.map((provider) => providerRow(provider, -1))}
       </ol>
       {error ? (
         <p
-          className="m-0 border-border-soft border-t px-4 py-2.5 text-[12px] text-red-text"
+          className="m-0 border-border border-t px-4 py-2.5 text-[12px] text-red-text"
           role="alert"
         >
           {error}

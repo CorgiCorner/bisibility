@@ -81,6 +81,7 @@ export default defineConfig({
             "components/**/*.test.{ts,tsx}",
             "lib/**/*.test.{ts,tsx}",
           ],
+          exclude: ["lib/**/*.postgres.test.ts"],
           setupFiles: ["./vitest.setup.ts"],
         },
       },
@@ -112,6 +113,15 @@ export default defineConfig({
           name: "release-guardrails",
           environment: "node",
           include: ["scripts/**/*.test.ts"],
+          testTimeout: 30_000,
+        },
+      },
+      {
+        resolve: { alias: baseTestAliases },
+        test: {
+          name: "postgres-smoke",
+          environment: "node",
+          include: ["lib/**/*.postgres.test.ts"],
           testTimeout: 30_000,
         },
       },

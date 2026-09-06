@@ -33,12 +33,7 @@ type DispatcherActivities = {
   >;
 };
 
-const {
-  backfillKeywordDispatchStatesActivity,
-  claimDueRankChecksActivity,
-  compensateFailedRankCheckClaimsActivity,
-  planQueuedRankCheckGroupActivity,
-} = proxyActivities<DispatcherActivities>({
+export const RANK_CHECK_DISPATCHER_ACTIVITY_OPTIONS = {
   retry: {
     backoffCoefficient: 2,
     initialInterval: "5 seconds",
@@ -46,7 +41,14 @@ const {
     maximumInterval: "30 seconds",
   },
   startToCloseTimeout: "1 minute",
-});
+} as const;
+
+const {
+  backfillKeywordDispatchStatesActivity,
+  claimDueRankChecksActivity,
+  compensateFailedRankCheckClaimsActivity,
+  planQueuedRankCheckGroupActivity,
+} = proxyActivities<DispatcherActivities>(RANK_CHECK_DISPATCHER_ACTIVITY_OPTIONS);
 
 const BOOTSTRAP_WORKFLOW_ID = "bootstrap-rank-check-dispatcher";
 const BOOTSTRAP_WORKFLOW_TYPE = "bootstrapRankCheckDispatcherWorkflow";
@@ -111,6 +113,7 @@ export type DispatchDueRankChecksResult = ClaimDueRankChecksResult & {
 };
 
 function claimsForKeywords(group: ClaimedRankCheckGroup, keywordIds: string[]) {
+  if (group.runItemIds) return [];
   const selected = new Set(keywordIds);
   const claims = group.claims.filter((claim) => selected.has(claim.keywordId));
   if (claims.length !== keywordIds.length) {
@@ -130,18 +133,20 @@ export async function dispatchDueRankChecksWorkflow(): Promise<DispatchDueRankCh
   const failedClaims: RankCheckClaimCompensation[] = [];
   for (const group of claimed.groups) {
     const route = await planQueuedRankCheckGroupActivity(group);
-    if (route.mode === "queued" || route.mode === "deferred") {
+    if (route.mode === "queued" || route.mode === "deferred" || group.runItemIds) {
       const chunks = chunkQueuedRankCheckGroup({
         claimedAt: claimed.claimedAt,
         device: group.device,
         keywordIds: group.keywordIds,
         locationId: group.locationId,
         projectId: group.projectId,
+        ...(group.runId ? { runId: group.runId } : {}),
+        ...(group.runItemIds ? { runItemIds: group.runItemIds } : {}),
       });
       for (const chunk of chunks) {
         const outcome = await startQueuedBatchChild({
           ...chunk,
-          ...(route.mode === "deferred" ? { preflightDeferredReason: route.reason } : {}),
+          ...(route.mode !== "queued" ? { preflightDeferredReason: route.reason } : {}),
         });
         if (outcome.status === "started") {
           queuedBatches += 1;

@@ -1,10 +1,15 @@
 "use server";
 
-import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
+import { writeAudit } from "@/lib/auth/audit";
 import { unitCostCentsFor } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
 import { monthlySpendCents, projectBudgetCapCents } from "@/lib/rank-check/budget";
-import { loadSerpProviderChain, runKeywordCheckWithFallback } from "@/lib/rank-check/fallback";
+import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
+import { launchSingleRankCheckRun } from "@/lib/rank-check/runs/launch-single";
+import {
+  isLaunchRankCheckRunNothingToRun,
+  LaunchRankCheckRunError,
+} from "@/lib/rank-check/runs/launch-types";
 import { isSampleProject } from "@/lib/sample-data/marker";
 import {
   getFirstCheckRunPlanSchema,
@@ -46,11 +51,8 @@ export type {
   RunFirstCheckPreviewResult,
 } from "./rank-check-preview-result";
 
-function connectionCount(projectId: string, kind: "analytics" | "serp") {
-  return prisma.providerConnection.count({
-    where: { enabled: true, kind, projectId, status: "connected" },
-  });
-}
+// biome-ignore format: compact helper keeps this module under the project line cap.
+function connectionCount(projectId: string, kind: "analytics" | "serp") { return prisma.providerConnection.count({ where: { enabled: true, kind, projectId, status: "connected" } }); }
 
 async function firstCheckCandidates(projectId: string, limit: number, keywordText?: string) {
   const select = {
@@ -85,24 +87,14 @@ async function firstCheckCandidates(projectId: string, limit: number, keywordTex
   ].map(firstCheckCandidate);
 }
 
+// biome-ignore format: compact mapper keeps this module under the project line cap.
 function firstCheckCandidate(row: {
   device: "desktop" | "mobile";
   id: string;
   locationRef: { displayName: string; languageLabel: string };
   publicId: string;
   text: string;
-}) {
-  return {
-    device: row.device,
-    id: row.id,
-    market: {
-      languageLabel: row.locationRef.languageLabel,
-      locationLabel: row.locationRef.displayName,
-    },
-    publicId: row.publicId,
-    text: row.text,
-  };
-}
+}) { return { device: row.device, id: row.id, market: { languageLabel: row.locationRef.languageLabel, locationLabel: row.locationRef.displayName }, publicId: row.publicId, text: row.text }; }
 
 export async function listFirstCheckCandidates(
   input: unknown,
@@ -216,39 +208,39 @@ export async function runFirstCheckPreview(input: unknown): Promise<RunFirstChec
   if (keywordScope.projectIsSample) {
     return previewFailure("sample_project", "Sample projects don't run real checks.");
   }
-
   try {
-    let result: RunFirstCheckPreviewResult;
-    let auditTargetId = keywordScope.publicId;
-    let auditTargetType = "keyword";
     try {
-      const preview = await runKeywordCheckWithFallback({ keywordId: keywordScope.id });
-      auditTargetId = requiredPublicAuditId(preview.rankCheck.publicId, "check", "Rank-check");
-      auditTargetType = "rank_check";
-      result = {
-        position: preview.rankCheck.position,
-        recordedCostCents: Number(preview.rankCheck.costCents ?? 0),
-        provider: preview.provider,
-        rankingUrl: preview.rankCheck.rankingUrl ?? null,
-        status: "completed",
-      };
+      const project = await prisma.project.findUniqueOrThrow({
+        select: { domain: true, id: true, isSample: true },
+        where: { id: keywordScope.projectId },
+      });
+      const launched = await launchSingleRankCheckRun({
+        actorId: actor.id,
+        keywordId: keywordScope.publicId as `kw_${string}`,
+        project,
+        trigger: "manual",
+      });
+      const result: RunFirstCheckPreviewResult = isLaunchRankCheckRunNothingToRun(launched)
+        ? previewFailure("failed", launched.message)
+        : { runId: launched.publicId, status: "queued" };
+      await writeAudit({
+        action: "rank_check.run_now",
+        actorId: actor.id,
+        after: { keywordId: keywordScope.publicId, preview: true, ...result },
+        projectId: keywordScope.projectId,
+        targetId: "runId" in result ? result.runId : keywordScope.publicId,
+        targetType: "runId" in result ? "rank_check_run" : "keyword",
+      });
+      revalidateRankCheckViews(keywordScope.publicId);
+      return result;
     } catch (error) {
+      if (error instanceof LaunchRankCheckRunError && error.code === "budget_exhausted") {
+        return previewFailure("budget_exhausted", error.message);
+      }
       const expected = expectedPreviewFailure(error);
       if (!expected) throw error;
-      result = expected;
+      return expected;
     }
-
-    await writeAudit({
-      action: "rank_check.run_now",
-      actorId: actor.id,
-      after: { keywordId: keywordScope.publicId, preview: true, ...result },
-      projectId: keywordScope.projectId,
-      targetId: auditTargetId,
-      targetType: auditTargetType,
-    });
-    revalidateRankCheckViews(keywordScope.publicId);
-
-    return result;
   } catch (error) {
     return unexpectedPreviewFailure(error, {
       keywordId: keywordScope.publicId,

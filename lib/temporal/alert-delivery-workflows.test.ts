@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => {
     prepareAlertDigestDeliveryActivity: vi.fn(),
     reserveAlertDeliveryBudgetActivity: vi.fn(),
     sweepAlertDeliveriesActivity: vi.fn(),
+    sweepFirstTrafficSyncIntentActivity: vi.fn(),
   };
   return { activities, proxyActivities: vi.fn(() => activities), uuid4: vi.fn(() => "claim_1") };
 });
@@ -269,6 +270,7 @@ describe("alertDeliveryWorkflow", () => {
   it("delegates sweep workflows to the sweep activity", async () => {
     mocks.activities.sweepAlertDeliveriesActivity.mockResolvedValue({ scanned: 2, started: 1 });
     await expect(sweepAlertDeliveriesWorkflow()).resolves.toEqual({ scanned: 2, started: 1 });
+    expect(mocks.activities.sweepFirstTrafficSyncIntentActivity).not.toHaveBeenCalled();
   });
 });
 

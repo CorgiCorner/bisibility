@@ -1,6 +1,8 @@
+import { type DateFormat, formatDate } from "@/lib/dates/format";
 import { escapeHtml } from "./escape-html";
 
 export type TeamInviteEmailInput = {
+  dateFormat?: DateFormat;
   expiresAt: Date;
   inviteLink: string;
   inviter: { email: string; name: string };
@@ -19,13 +21,8 @@ function inviterLabel(inviter: TeamInviteEmailInput["inviter"]) {
   return name && name !== inviter.email ? `${name} (${inviter.email})` : inviter.email;
 }
 
-function expiryLabel(expiresAt: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "long",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(expiresAt);
+function expiryLabel(expiresAt: Date, dateFormat: DateFormat) {
+  return formatDate(expiresAt.toISOString().slice(0, 10), dateFormat);
 }
 
 function subjectFor(projectName: string) {
@@ -35,7 +32,7 @@ function subjectFor(projectName: string) {
 }
 
 export function teamInviteEmail(input: TeamInviteEmailInput) {
-  const expires = expiryLabel(input.expiresAt);
+  const expires = expiryLabel(input.expiresAt, input.dateFormat ?? "month_first");
   const inviter = inviterLabel(input.inviter);
   const role = roleLabel(input.role);
   const safe = {

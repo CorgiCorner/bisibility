@@ -1,8 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { claimDueRankChecks } from "./dispatcher";
+import { computeDispatcherNextCheckAt } from "./dispatcher-recurrence";
+import { measureDispatcherStateCoverage } from "./dispatcher-state-coverage";
 
 const mocks = vi.hoisted(() => ({
+  claimItems: vi.fn(),
   executeRaw: vi.fn(),
+  plannerOwns: vi.fn(() => false),
   queryRaw: vi.fn(),
   transaction: vi.fn(),
 }));
@@ -10,6 +14,11 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { $transaction: mocks.transaction },
+}));
+vi.mock("./items-claim", () => ({ claimDueRankCheckItems: mocks.claimItems }));
+vi.mock("./scheduler-mode", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./scheduler-mode")>()),
+  plannerOwnsAutomaticChecks: mocks.plannerOwns,
 }));
 
 const now = new Date("2026-07-28T12:00:00.000Z");
@@ -39,6 +48,13 @@ describe("claimDueRankChecks", () => {
   beforeEach(() => {
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
     vi.clearAllMocks();
+    mocks.plannerOwns.mockReturnValue(false);
+    mocks.claimItems.mockResolvedValue({
+      claimed: 0,
+      claimedAt: now.toISOString(),
+      groups: [],
+      metrics: { outcome: "empty_or_skipped_locked" },
+    });
     mocks.executeRaw.mockResolvedValue(1);
     mocks.queryRaw.mockResolvedValue([]);
     mocks.transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) =>
@@ -47,6 +63,70 @@ describe("claimDueRankChecks", () => {
   });
 
   afterEach(() => vi.unstubAllEnvs());
+
+  it("delegates to run-item claims when the planner owns dispatcher mode", async () => {
+    mocks.plannerOwns.mockReturnValue(true);
+    await expect(claimDueRankChecks({ now, pageSize: 100 })).resolves.toMatchObject({
+      claimed: 0,
+      groups: [],
+    });
+    expect(mocks.claimItems).toHaveBeenCalledWith(
+      { now, pageSize: 100 },
+      expect.objectContaining({ $transaction: mocks.transaction }),
+    );
+  });
+
+  it("keeps coverage exact after a planner-owned run item completes", async () => {
+    mocks.plannerOwns.mockReturnValue(true);
+    mocks.claimItems.mockResolvedValue({
+      claimed: 1,
+      claimedAt: now.toISOString(),
+      groups: [],
+      metrics: { outcome: "claimed" },
+    });
+    await claimDueRankChecks({ now });
+    const schedule = {
+      cronExpression: null,
+      frequency: "daily" as const,
+      jitterMinutes: 0,
+      nextCheckAt: null,
+      timezone: "UTC",
+    };
+    const nextCheckAt = computeDispatcherNextCheckAt(schedule, "keyword_1", now);
+    const countRow = {
+      eligible: 1n,
+      eligibleWithState: 1n,
+      gone: 0n,
+      ineligible: 0n,
+      maxNextCheckAt: nextCheckAt,
+      minNextCheckAt: nextCheckAt,
+      missing: 0n,
+    };
+    const coverageDatabase = {
+      $queryRaw: vi.fn(async (query: { sql: string }) =>
+        query.sql.includes("WITH eligible AS")
+          ? [countRow]
+          : [
+              {
+                anchorCheckAt: null,
+                cronExpression: null,
+                frequency: "daily",
+                jitterMinutes: 0,
+                keywordId: "keyword_1",
+                nextCheckAt,
+                timezone: "UTC",
+              },
+            ],
+      ),
+    };
+
+    const coverage = await measureDispatcherStateCoverage(now, coverageDatabase as never);
+
+    expect(coverage.exact).toBe(true);
+    expect(coverage.recurrenceMismatches).toBe(0);
+    expect(mocks.executeRaw).not.toHaveBeenCalled();
+    expect(mocks.queryRaw).not.toHaveBeenCalled();
+  });
 
   it("claims only indexed due state in one locked transaction", async () => {
     const dueCheckAt = new Date("2026-07-28T11:00:00.000Z");

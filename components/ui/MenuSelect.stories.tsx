@@ -41,6 +41,19 @@ function LongMenu() {
   );
 }
 
+function InputSizedMenu() {
+  const [value, setValue] = useState("draft");
+  return (
+    <MenuSelect
+      ariaLabel="Input-sized menu"
+      onChange={setValue}
+      options={shortOptions}
+      size="input"
+      value={value}
+    />
+  );
+}
+
 function MultiLongMenu() {
   const [values, setValues] = useState<string[]>(["opt-001"]);
   return (
@@ -98,6 +111,18 @@ export const SearchableMultiLong: Story = {
         Multi-select with 40 options - search, toggle, close, and reopen rapidly
       </span>
       <MultiLongMenu />
+    </div>
+  ),
+};
+
+export const InputSized: Story = {
+  name: "Input-sized menu",
+  render: () => (
+    <div className="flex w-[300px] flex-col gap-2">
+      <span className="text-[12.5px] font-semibold text-fg-muted">
+        Matches the standard input control height and typography.
+      </span>
+      <InputSizedMenu />
     </div>
   ),
 };

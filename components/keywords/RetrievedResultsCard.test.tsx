@@ -245,7 +245,7 @@ describe("RetrievedResultsCard", () => {
       "true",
     );
     expect(screen.getByRole("button", { name: "Stored checks" })).toHaveTextContent(
-      "12 Mar 2026, 06:00 · top 8 kept",
+      "Mar 12, 2026, 06:00 · top 8 kept",
     );
     expect(screen.getByText("8 of 100 retrieved")).toBeInTheDocument();
 
@@ -320,10 +320,10 @@ describe("RetrievedResultsCard", () => {
     expect(within(header).getByText("From")).toHaveClass("uppercase");
     expect(within(header).getByText("To")).toHaveClass("uppercase");
     expect(within(header).getByRole("button", { name: "Earlier check" })).toHaveTextContent(
-      "5 Mar 2026, 06:00 · top 8 kept",
+      "Mar 5, 2026, 06:00 · top 8 kept",
     );
     expect(within(header).getByRole("button", { name: "Later check" })).toHaveTextContent(
-      "12 Mar 2026, 06:00 · top 8 kept",
+      "Mar 12, 2026, 06:00 · top 8 kept",
     );
     const selected = screen.getByRole("button", { name: "Compare two" });
     expect(selected).toHaveAttribute("aria-pressed", "true");

@@ -12,9 +12,9 @@ const meta = {
     ),
   ],
   args: {
-    activeTab: "checks",
-    checksCount: 12_480,
+    activeTab: "runs",
     projectRef: "prj_story",
+    runsCount: 1_248,
     savedCount: 36,
     trackedCount: 248,
   },
@@ -24,7 +24,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Checks: Story = {};
+export const Runs: Story = {};
 
 export const Narrow: Story = {
   decorators: [

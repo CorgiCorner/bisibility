@@ -45,7 +45,7 @@ function deltaLabel(metric: GrowthMetric) {
 
 function GrowthCard({ label, metric }: Readonly<{ label: string; metric: GrowthMetric }>) {
   return (
-    <div className="flex min-w-0 flex-col rounded-card border border-border-soft bg-bg-sunken px-3 py-2.5">
+    <div className="flex min-w-0 flex-col rounded-card border border-border bg-bg-sunken px-3 py-2.5">
       <div className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">{label}</div>
       <div className="mt-auto pt-1 text-xl font-semibold tabular-nums tracking-[-0.4px] text-fg">
         {count.format(metric.total)}
@@ -81,7 +81,7 @@ function Growth({ data }: Readonly<{ data: InstanceAdminAdministration }>) {
         {growthCards.map((card) => (
           <GrowthCard key={card.key} label={card.label} metric={data.growth[card.key]} />
         ))}
-        <div className="flex min-w-0 flex-col rounded-card border border-border-soft bg-bg-sunken px-3 py-2.5">
+        <div className="flex min-w-0 flex-col rounded-card border border-border bg-bg-sunken px-3 py-2.5">
           <div className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">
             Active accounts (approx.)
           </div>
@@ -148,7 +148,7 @@ function TopConsumption({
               {boundedRows.map((row) => {
                 const share = Math.min(100, Math.max(0, row.sharePercent));
                 return (
-                  <tr className="border-b border-border-soft last:border-0" key={row.projectId}>
+                  <tr className="border-b border-border last:border-0" key={row.projectId}>
                     <td className="px-0.5 py-2">
                       <IdChip
                         className="max-w-full"

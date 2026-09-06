@@ -1,40 +1,40 @@
+"use client";
+
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { type DateFormat, formatDate } from "@/lib/dates/format";
 import type { UrlPresenceView } from "@/lib/queries/keywords";
 
 export type IndexStatusDisplay = {
-  chips: { label: string }[];
-  detail: string;
+  fields: { label: string; value: string }[];
 };
 
-function dateLabel(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(new Date(value));
+function dateLabel(value: string, dateFormat: DateFormat) {
+  return formatDate(value.slice(0, 10), dateFormat);
 }
 
 export function indexStatusDisplay(
   presence: UrlPresenceView | null | undefined,
+  dateFormat: DateFormat = "month_first",
 ): IndexStatusDisplay | null {
   if (!presence) return null;
-  const coverage = presence.coverageState?.toLocaleLowerCase() ?? "";
-  const inSitemap = coverage.includes("submitted") && !coverage.includes("not submitted");
   return {
-    chips: [
+    fields: [
+      { label: "Indexed", value: presence.indexed ? "Yes" : "No" },
       {
-        label: presence.indexed ? "Indexed" : "Not indexed",
+        label: "Canonical",
+        value:
+          presence.canonicalOk === true
+            ? "Self"
+            : presence.canonicalOk === false
+              ? "Mismatch"
+              : "Unknown",
       },
-      ...(presence.canonicalOk === true
-        ? [{ label: "Canonical self" }]
-        : presence.canonicalOk === false
-          ? [{ label: "Canonical mismatch" }]
-          : []),
-      ...(inSitemap ? [{ label: "In sitemap" }] : []),
+      {
+        label: "Crawled",
+        value: presence.lastCrawlAt ? dateLabel(presence.lastCrawlAt, dateFormat) : "Not crawled",
+      },
+      { label: "Last inspected", value: dateLabel(presence.checkedAt, dateFormat) },
     ],
-    detail: presence.lastCrawlAt
-      ? `last crawled ${dateLabel(presence.lastCrawlAt)}`
-      : `checked ${dateLabel(presence.checkedAt)}`,
   };
 }
 
@@ -43,21 +43,19 @@ export function KeywordIndexStatus({
 }: Readonly<{
   presence: UrlPresenceView | null | undefined;
 }>) {
-  const display = indexStatusDisplay(presence);
+  const dateFormat = useDateFormat();
+  const display = indexStatusDisplay(presence, dateFormat);
   if (!display) return null;
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border-soft pt-3 font-sans tabular-nums text-[11px] text-fg-muted">
+    <footer className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3 font-sans tabular-nums text-[11px] text-fg-muted">
       <span className="uppercase tracking-[0.5px] text-fg-muted">Index status</span>
-      {display.chips.map((chip) => (
-        <span
-          className="inline-flex rounded-full border border-border bg-bg-sunken px-2 py-[3px] font-semibold text-fg"
-          key={chip.label}
-        >
-          {chip.label}
+      {display.fields.map((field) => (
+        <span key={field.label}>
+          <span className="sr-only">{field.label}: </span>
+          <span className="font-semibold text-fg">{field.label}</span> · {field.value}
         </span>
       ))}
-      <span>{display.detail}</span>
-    </div>
+    </footer>
   );
 }

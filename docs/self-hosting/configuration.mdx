@@ -90,16 +90,27 @@ hand.
 
 | Variable | Purpose |
 | - | - |
-| `SCHEDULER_DRIVER` | Execution backend: `none` for the core topology or `temporal` when the worker overlay is present. `external-cron` is reserved but not supported. New Compose files set this value; an absent value preserves legacy installs. This is independent from `RANK_CHECK_SCHEDULER_MODE`. |
+| `SCHEDULER_DRIVER` | Selects how this process handles scheduled work. An absent value preserves legacy installs. This is independent from `RANK_CHECK_SCHEDULER_MODE`. |
 | `BISIBILITY_DEPLOYMENT_SUFFIX` | One generated suffix used to derive a dedicated namespace and both task queues for a new deployment. Existing installs without it retain their old defaults. |
 | `TEMPORAL_POSTGRES_PASSWORD` | Separate generated password used only by the bundled Temporal PostgreSQL service. The environment generator creates it automatically. Existing installations without it temporarily fall back to `POSTGRES_PASSWORD`. |
 | `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE`, `TEMPORAL_ALERT_DELIVERY_TASK_QUEUE` | Temporal connection and deployment-isolation settings shared by the web app and worker. External deployments must use a dedicated namespace or explicitly unique queue names. |
 | `TEMPORAL_API_KEY` | Temporal Cloud API key. When set, TLS is enabled automatically. |
+| `TEMPORAL_CONNECT_TIMEOUT_MS` | Temporal client connection timeout in milliseconds. Defaults to `2000`; valid values are integers from `100` through `30000`. |
+| `TEMPORAL_CONNECT_FAILURE_COOLDOWN_MS` | Delay in milliseconds before retrying a failed Temporal client connection. Defaults to `30000`; valid values are integers from `100` through `30000`. |
 | `WORKER_SCHEMA_GUARD` | Worker/database migration guard: `enforce` (default) blocks a worker whose bundled schema is older than the database, `warn` reports drift without blocking, and `off` skips the check. |
 | `TEMPORAL_TLS` | `auto` preserves compatibility: an API key enables TLS and an address alone does not. Set `true` or `false` to override it explicitly. Legacy boolean spellings remain accepted. |
 | `TEMPORAL_NAMESPACE_RETENTION` | Retention managed by the bundled namespace job, default `24h`. External Temporal namespaces are validated but never created or mutated by the app or worker. |
 | `TEMPORAL_MAX_CONCURRENT_ACTIVITIES` | Maximum concurrent activities for the Temporal worker. Defaults to `5`. |
 | `TEMPORAL_UI_URL` | Base URL of your Temporal Web UI. When set, ops Slack messages link workflows to it. |
+| `WORKER_INTENT_POLL_INTERVAL_MS` | Fallback interval for durable user-intent pickup when the realtime wake is unavailable. Defaults to `2000`; valid values are integers from `100` through `60000`. |
+
+### Scheduler driver values
+
+| Value | Meaning |
+|-|-|
+| `temporal` | this process owns the scheduling engine and may connect to it; the worker uses this |
+| `worker` | a separate worker process owns the engine; this process only records what it wants done |
+| `none` | no worker exists; scheduled execution is disabled and checks run inline |
 
 ### Rank checks and maintenance
 
@@ -107,7 +118,7 @@ hand.
 | - | - |
 | `RANK_CHECK_SCHEDULER_MODE` | Exclusive automatic scheduler owner: `legacy` (default) runs the reconciler and per-keyword Schedules, `cutover` pauses both owners while allowing state healing, and `dispatcher` runs only the due-work dispatcher. Empty means `legacy`; any other non-empty value fails closed. Set the same value on the app and worker. |
 | `RANK_CHECK_RECONCILER_ENABLED`, `RANK_CHECK_DISPATCHER_ENABLED` | Deprecated D1 compatibility fallback used only when `RANK_CHECK_SCHEDULER_MODE` is absent. Both active is rejected. Both false selects `cutover`; dispatcher true plus reconciler false selects `dispatcher`; other default/false combinations select `legacy`. |
-| `RANK_CHECK_RECONCILER_INTERVAL`, `RANK_CHECK_DISPATCHER_INTERVAL`, `STALE_CHECKS_INTERVAL` | Worker-owned legacy reconciliation, dispatcher polling, and stale-check tuning. |
+| `RANK_CHECK_RECONCILER_INTERVAL`, `RANK_CHECK_DISPATCHER_INTERVAL`, `RANK_CHECK_PLANNER_INTERVAL`, `STALE_CHECKS_INTERVAL` | Worker-owned legacy reconciliation, dispatcher polling, planner planning, and stale-check tuning. |
 | `RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS` | Maximum due keywords one project may claim in one dispatcher pass. Defaults to `25`; valid values are integers from `1` through `100`. Invalid values fail the claim before database work. |
 | `DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED` | Independent DataForSEO Standard queue route. It is OFF by default and can submit only in `dispatcher` mode. In `cutover`, already-submitted work may finish result retrieval, but no new paid submission is allowed. Manual checks remain available in every mode. |
 | `DATAFORSEO_QUEUE_PRIORITY` | `high` (default for an enabled queued path) or `normal`. High uses provider priority `2`. Invalid values fail the queued gate closed. |
@@ -220,5 +231,7 @@ values for the operator record. App reads refresh within about 60 seconds.
 
 | Variable | Purpose |
 | - | - |
+| `SEARCH_INSIGHTS_OVERLAP_WORK_MEM_MB` | Per-query overlap sort memory in MiB. Defaults to `16`; valid values are integers from `4` through `32`. |
+| `SEARCH_INSIGHTS_TIMING_RECORD_RATE` | Fraction from `0` through `1` of Search Insights renders that emit phase timing logs. Defaults to `0.05`. |
 | `SEARCH_SYNC_IMPORT_MONTHS` | Default historical import depth. Valid values are `16`, `12`, `6`, and `3`; invalid values fall back to `16`. |
 | `SEARCH_SYNC_PACE` | Default import pace. Use `normal` or `gentle`; gentle uses half the request throughput. Invalid values fall back to `normal`. Project settings override this default. |

@@ -1,3 +1,4 @@
+import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiContext, PersonalApiContext } from "./context";
 import { resetIdempotencyForTests } from "./idempotency";
@@ -36,7 +37,10 @@ vi.mock("./ratelimit", () => ({
   rateLimitExceeded: vi.fn(),
 }));
 vi.mock("@/lib/actions/_shared", () => ({
-  makePublicId: vi.fn(() => "prj_b00000000000000000000000"),
+  makePublicId: vi.fn((prefix: string) =>
+    prefix === "kw" ? "kw_b00000000000000000000000" : "prj_b00000000000000000000000",
+  ),
+  parseActionInput: (_schema: unknown, input: unknown) => input,
 }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
@@ -221,10 +225,7 @@ describe("project write API routes", () => {
       project_id: "prj_a00000000000000000000000",
       serp_stop_on_match: false,
     });
-    expect(mocks.prisma.keyword.updateMany).toHaveBeenCalledWith({
-      data: { device: "mobile", location: "Germany", locationId: "loc_de" },
-      where: { id: { in: ["kw_2"] } },
-    });
+    expect(mocks.prisma.keyword.updateMany).not.toHaveBeenCalled();
     expect(mocks.prisma.project.create).not.toHaveBeenCalled();
     expect(mocks.prisma.projectDefaults.upsert).toHaveBeenCalledTimes(1);
     expect(mocks.prisma.projectDefaults.upsert).toHaveBeenCalledWith(
@@ -320,7 +321,6 @@ describe("project write API routes", () => {
       expect.objectContaining({
         after: expect.objectContaining({
           market: expect.objectContaining({ country: "Germany", device: "mobile" }),
-          movedKeywords: 0,
         }),
       }),
     );
@@ -376,7 +376,7 @@ describe("project write API routes", () => {
     );
   });
 
-  it("moves city default markets through canonical location keys", async () => {
+  it("persists city default markets through canonical location keys without relabeling keywords", async () => {
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
       city: "Austin, Texas, United States",
       country: "United States",
@@ -451,14 +451,7 @@ describe("project write API routes", () => {
       }),
       where: { projectId: "project_1" },
     });
-    expect(mocks.prisma.keyword.updateMany).toHaveBeenCalledWith({
-      data: {
-        device: "mobile",
-        location: "Dallas, Texas, United States",
-        locationId: "loc_dallas",
-      },
-      where: { id: { in: ["kw_2"] } },
-    });
+    expect(mocks.prisma.keyword.updateMany).not.toHaveBeenCalled();
   });
 
   it("rejects defaults market patches that omit country or device", async () => {
@@ -547,6 +540,73 @@ describe("project write API routes", () => {
     expect(mocks.prisma.projectDefaults.upsert).not.toHaveBeenCalled();
     expect(mocks.prisma.keyword.updateMany).not.toHaveBeenCalled();
     expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
+  it("updates the default market without relabeling existing keywords", async () => {
+    const existing = {
+      device: "desktop",
+      id: "kw_1",
+      location: "United States",
+      locationId: "loc_us",
+      text: "rank tracker",
+    };
+    mocks.prisma.keyword.findMany.mockResolvedValue([existing]);
+
+    const response = await projectHandlers.updateProjectDefaults(
+      context("PATCH", "/projects/prj_a00000000000000000000000/defaults", {
+        country: "DE",
+        device: "mobile",
+        frequency: "daily",
+        jitter_minutes: 60,
+        timezone: "UTC",
+      }),
+      "prj_a00000000000000000000000",
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.prisma.projectDefaults.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          country: "Germany",
+          device: "mobile",
+          locationKey: "DE",
+        }),
+      }),
+    );
+    expect(mocks.prisma.keyword.updateMany).not.toHaveBeenCalled();
+    expect(existing.locationId).toBe("loc_us");
+  });
+
+  it("uses the changed API default market for a keyword created later", async () => {
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
+      city: null,
+      country: "United States",
+      device: "desktop",
+      locationKey: "US",
+    });
+
+    const response = await projectHandlers.updateProjectDefaults(
+      context("PATCH", "/projects/prj_a00000000000000000000000/defaults", {
+        country: "DE",
+        device: "mobile",
+        frequency: "daily",
+        jitter_minutes: 60,
+        timezone: "UTC",
+      }),
+      "prj_a00000000000000000000000",
+    );
+
+    expect(response.status).toBe(200);
+    const defaults = mocks.prisma.projectDefaults.upsert.mock.calls[0]?.[0]?.update;
+    mocks.resolveKeywordLocation.mockClear();
+    const created = await createKeywordAfterDefault(defaults);
+
+    expect(created.response.status).toBe(201);
+    expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { canonicalKey: "DE", kind: "city" },
+    });
+    expect(created.createdRows).toMatchObject([{ device: "mobile", locationId: "loc_de" }]);
   });
 
   it("forbids reading defaults through an API key scoped to another project", async () => {

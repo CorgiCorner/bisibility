@@ -1,16 +1,20 @@
 "use client";
 
-import type { SearchInsightsKpi } from "@/lib/search-insights/queries/kpis-model";
+import type {
+  ClicksToSessionsKpi,
+  SearchInsightsKpi,
+} from "@/lib/search-insights/queries/kpis-model";
 import type { OrganicSessionsPendingPresentation } from "@/lib/search-insights/queries/sessions-context";
 import { cn } from "@/lib/ui/cn";
 import {
   ArrowDownRightIcon as ArrowDownRight,
   ArrowUpRightIcon as ArrowUpRight,
 } from "@phosphor-icons/react";
+import { CLICKS_TO_SESSIONS_HIDDEN } from "./search-insights-copy";
 
 export type SearchInsightsKpiRowProps = {
   /** Optional fifth card, so a second source can join the row without a second layout. */
-  extra?: SearchInsightsKpi | OrganicSessionsPendingPresentation | null;
+  extra?: ClicksToSessionsKpi | OrganicSessionsPendingPresentation | null;
   kpis: readonly SearchInsightsKpi[];
 };
 
@@ -74,21 +78,31 @@ function PendingKpiCard({ pending }: Readonly<{ pending: OrganicSessionsPendingP
 }
 
 export function SearchInsightsKpiRow({ extra, kpis }: Readonly<SearchInsightsKpiRowProps>) {
-  const cards = extra ? [...kpis, extra] : [...kpis];
+  const cards =
+    extra?.kind === "visible"
+      ? [...kpis, extra.kpi]
+      : extra?.kind === "pending"
+        ? [...kpis, extra]
+        : [...kpis];
   return (
-    <div
-      className={cn(
-        "grid grid-cols-2 gap-2.5",
-        cards.length > 4 ? "lg:grid-cols-5" : "lg:grid-cols-4",
-      )}
-    >
-      {cards.map((kpi) =>
-        "kind" in kpi ? (
-          <PendingKpiCard key={kpi.label} pending={kpi} />
-        ) : (
-          <KpiCard key={kpi.label} kpi={kpi} />
-        ),
-      )}
-    </div>
+    <>
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-2.5",
+          cards.length > 4 ? "lg:grid-cols-5" : "lg:grid-cols-4",
+        )}
+      >
+        {cards.map((kpi) =>
+          "kind" in kpi ? (
+            <PendingKpiCard key={kpi.label} pending={kpi} />
+          ) : (
+            <KpiCard key={kpi.label} kpi={kpi} />
+          ),
+        )}
+      </div>
+      {extra?.kind === "hidden" ? (
+        <p className="m-0 px-0.5 text-ui-caption text-fg-muted">{CLICKS_TO_SESSIONS_HIDDEN}</p>
+      ) : null}
+    </>
   );
 }

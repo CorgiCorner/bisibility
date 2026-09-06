@@ -4,8 +4,10 @@ import type { KeywordHit } from "@/components/shell/keyword-search";
 import { applyTheme, readTheme } from "@/components/shell/set-theme";
 import { authClient } from "@/lib/auth/client";
 import { rankTrackerActionHref } from "@/lib/keywords/rank-tracker-command";
-import { docsNavItem, navItems } from "@/lib/nav/nav-items";
-import { appPath } from "@/lib/routing/app-path";
+import { hasMarketRoute, sectionPathOf } from "@/lib/markets/market-route-sections";
+import { docsNavItem, type NavContext, navItems } from "@/lib/nav/nav-items";
+import { appPath, appSectionPath, type MarketRef, marketPath } from "@/lib/routing/app-path";
+import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
 import {
   DownloadSimpleIcon as DownloadSimple,
   MagnifyingGlassIcon as MagnifyingGlass,
@@ -25,26 +27,38 @@ export type CommandItem = {
 };
 
 export type CommandGroup = {
-  title: "Actions" | "Keywords" | "Navigate" | "On this page";
+  title: "Actions" | "Keywords" | "Markets" | "Navigate" | "On this page";
   items: CommandItem[];
 };
+
+/**
+ * A market the palette may offer, already carrying the name the reader sees elsewhere. The
+ * palette composes the sentence and holds no opinion about how a market is labelled, so a
+ * later change to that naming cannot leave a second copy of the rule here.
+ */
+export type PaletteMarket = { label: string; ref: MarketRef };
 
 export function commandGroups(
   projectRef: string,
   push: (href: string) => void,
   setMode: (mode: "dark" | "light") => void,
   keywordHits: KeywordHit[],
+  markets: readonly PaletteMarket[] = [],
+  context?: NavContext,
+  enabledExperimentalModules: readonly ExperimentalModuleKey[] = [],
 ): CommandGroup[] {
-  const navigate = [...navItems(projectRef), docsNavItem].map((item) => ({
-    icon: item.icon,
-    label: item.label,
-    hint: "Go to",
-    run: item.external
-      ? () => {
-          window.open(item.href, "_blank", "noopener,noreferrer");
-        }
-      : () => push(item.href),
-  }));
+  const navigate = [...navItems(projectRef, context, enabledExperimentalModules), docsNavItem].map(
+    (item) => ({
+      icon: item.icon,
+      label: item.label,
+      hint: "Go to",
+      run: item.external
+        ? () => {
+            window.open(item.href, "_blank", "noopener,noreferrer");
+          }
+        : () => push(item.href),
+    }),
+  );
 
   const keywords = keywordHits.map((hit) => ({
     icon: MagnifyingGlass,
@@ -53,7 +67,13 @@ export function commandGroups(
     run: () => push(appPath(projectRef, "rank-tracker", hit.id)),
   }));
 
+  const marketRows = marketItems(projectRef, markets, push);
+
   return [
+    // Above Navigate: a market row answers the same question more precisely, and a reader who
+    // has markets at all is usually after one of them. With no markets there is no group, so
+    // a project that tracks none sees exactly the palette it saw before.
+    ...(marketRows.length > 0 ? [{ title: "Markets" as const, items: marketRows }] : []),
     { title: "Navigate", items: navigate },
     { title: "Keywords", items: keywords },
     { title: "Actions", items: actionItems(projectRef, push, setMode) },
@@ -72,6 +92,39 @@ export function filterGroups(groups: CommandGroup[], query: string): CommandGrou
       items: group.items.filter((item) => item.label.toLowerCase().includes(normalized)),
     }))
     .filter((group) => group.items.length > 0);
+}
+
+/** The section segments of a nav href: `/app/prj_1/rank-tracker` becomes `["rank-tracker"]`. */
+function sectionSegments(href: string): string[] {
+  return appSectionPath(href).split("/").filter(Boolean);
+}
+
+/**
+ * One row per market per section that actually renders under `m/{market}`. The gate is
+ * `hasMarketRoute`, the same list every other market URL in this app is built from, so a
+ * section the market layer does not serve can never be offered here and 404 the reader.
+ *
+ * Rows carry an explicit id because the palette otherwise keys an item by its group title and
+ * label, and two markets are free to read the same to a human.
+ */
+function marketItems(
+  projectRef: string,
+  markets: readonly PaletteMarket[],
+  push: (href: string) => void,
+): CommandItem[] {
+  const routed = navItems(projectRef)
+    .map((item) => ({ ...item, segments: sectionSegments(item.href) }))
+    .filter((item) => hasMarketRoute(sectionPathOf(item.segments)));
+
+  return markets.flatMap((market) =>
+    routed.map((item) => ({
+      icon: item.icon,
+      id: `market:${market.ref}:${item.segments.join("/")}`,
+      label: `${item.label} in ${market.label}`,
+      hint: "Market",
+      run: () => push(marketPath(projectRef, market.ref, ...item.segments)),
+    })),
+  );
 }
 
 function actionItems(

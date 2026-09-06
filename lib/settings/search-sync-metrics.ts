@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
 import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { requireReadableProject } from "@/lib/queries/_auth";
+import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 import { pacificQuotaDayRange } from "@/lib/search-insights/dates";
 import * as importObservabilityDb from "@/lib/search-insights/queries/import-observability-db";
 import { readSearchImportQueueFacts } from "@/lib/search-insights/queries/import-queue";
@@ -14,7 +15,6 @@ import {
 } from "@/lib/settings/search-sync-config";
 import { deriveSearchSyncMetrics } from "@/lib/settings/search-sync-metrics-model";
 import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
-import { describeSearchInsightsBackfillStatus } from "@/lib/temporal/search-insights-status";
 
 export async function loadSearchSyncMetrics(
   projectId: string,
@@ -47,7 +47,7 @@ export async function loadSearchSyncMetrics(
       where: { attemptedAt: { gte: quotaDay.start, lt: quotaDay.end }, projectId, property },
     }),
   ]);
-  const [observability, queue, workflowStatus, workerLiveness] = await Promise.all([
+  const [observability, queue, workerLiveness] = await Promise.all([
     row
       ? importObservabilityDb.readImportObservability({
           daysTotal: row.daysTotal,
@@ -68,7 +68,6 @@ export async function loadSearchSyncMetrics(
           state: row.state,
         })
       : null,
-    describeSearchInsightsBackfillStatus(projectId, property),
     getWorkerLivenessDetails(),
   ]);
   return {
@@ -94,7 +93,6 @@ export async function loadSearchSyncMetrics(
           workerLiveness,
         ),
       },
-      workflowStatus,
     },
     safeError: row?.lastError ?? null,
     state: row?.state ?? null,
@@ -103,6 +101,6 @@ export async function loadSearchSyncMetrics(
 
 export async function loadSearchSyncPreflightPlan(projectId: string) {
   const { project } = await requireReadableProject(projectId);
-  const defaults = await prisma.projectDefaults.findUnique({ where: { projectId: project.id } });
+  const defaults = await getRequestProjectDefaults(project.id);
   return searchSyncPreflightPlan(resolveSearchSyncSettings(defaults));
 }

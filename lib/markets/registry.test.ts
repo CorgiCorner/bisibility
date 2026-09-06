@@ -26,6 +26,7 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 import { ProjectMarketStatus } from "@/lib/generated/prisma/client";
+import { MarketArchivedError } from "./archived";
 import {
   ensureActiveProjectMarket,
   ensureKeywordProjectMarketsWithinLimit,
@@ -37,6 +38,15 @@ import {
 } from "./registry";
 
 const reference = { projectId: "project_1", locationId: "location_1" };
+
+function archivedRow() {
+  return {
+    location: { canonicalKey: "ES@es" },
+    locationId: "location_1",
+    publicId: "pmkt_abcdefghijklmnopqrstuvwx",
+    status: ProjectMarketStatus.removed,
+  };
+}
 
 describe("project market registry", () => {
   beforeEach(() => {
@@ -167,6 +177,81 @@ describe("project market registry", () => {
         update: { status: ProjectMarketStatus.active },
       }),
     );
+  });
+
+  it("refuses a keyword write that would revive an archived market", async () => {
+    const stored = [archivedRow()];
+    mocks.findMany.mockResolvedValue(stored);
+
+    await expect(
+      ensureKeywordProjectMarketsWithinLimit("project_1", [{ locationId: "location_1" }]),
+    ).rejects.toMatchObject({
+      marketName: "ES@es",
+      message: "Market ES@es is not tracked by this project. Add it in Settings > Markets first.",
+      name: "MarketArchivedError",
+    });
+    expect(mocks.upsert).not.toHaveBeenCalled();
+    expect(stored[0]?.status).toBe(ProjectMarketStatus.removed);
+  });
+
+  it("keeps a visible active market untouched when a keyword write references it", async () => {
+    mocks.findMany.mockResolvedValue([
+      {
+        locationId: "location_1",
+        publicId: "pmkt_abcdefghijklmnopqrstuvwx",
+        status: ProjectMarketStatus.active,
+      },
+    ]);
+
+    await expect(
+      ensureKeywordProjectMarketsWithinLimit("project_1", [{ locationId: "location_1" }]),
+    ).resolves.toEqual({
+      added: 0,
+      marketIds: ["pmkt_abcdefghijklmnopqrstuvwx"],
+      ok: true,
+    });
+    expect(mocks.upsert).not.toHaveBeenCalled();
+  });
+
+  it("refuses to create a market whose archived pair already exists", async () => {
+    mocks.findMany.mockResolvedValue([archivedRow()]);
+
+    await expect(
+      ensureProjectMarketsWithinLimit("project_1", [{ locationId: "location_1" }]),
+    ).rejects.toBeInstanceOf(MarketArchivedError);
+    expect(mocks.upsert).not.toHaveBeenCalled();
+  });
+
+  it("refuses an archived market during onboarding reconciliation", async () => {
+    mocks.findMany.mockResolvedValue([archivedRow()]);
+
+    await expect(
+      reconcileProjectMarketsWithinLimit("project_1", [{ locationId: "location_1" }]),
+    ).rejects.toMatchObject({
+      marketName: "ES@es",
+      message: "Market ES@es is not tracked by this project. Add it in Settings > Markets first.",
+      name: "MarketArchivedError",
+    });
+    expect(mocks.upsert).not.toHaveBeenCalled();
+  });
+
+  it("keeps a live market during onboarding reconciliation", async () => {
+    mocks.findMany.mockResolvedValue([
+      {
+        locationId: "location_1",
+        publicId: "pmkt_abcdefghijklmnopqrstuvwx",
+        status: ProjectMarketStatus.active,
+      },
+    ]);
+
+    await expect(
+      reconcileProjectMarketsWithinLimit("project_1", [{ locationId: "location_1" }]),
+    ).resolves.toEqual({
+      added: 0,
+      marketIds: ["pmkt_abcdefghijklmnopqrstuvwx"],
+      ok: true,
+    });
+    expect(mocks.upsert).not.toHaveBeenCalled();
   });
 
   it("pauses an existing market without changing its identity", async () => {

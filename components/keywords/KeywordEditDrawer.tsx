@@ -7,14 +7,11 @@ import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { useState } from "react";
 import type { KeywordDetailActions } from "./action-utils";
-import { KeywordScheduleInlineForm } from "./KeywordScheduleInlineForm";
+import { useKeywordScheduleModal } from "./use-keyword-schedule-modal";
 
 type EditSection = "details" | "schedule";
 
-type KeywordEditDrawerProps = Pick<
-  KeywordDetailActions,
-  "updateKeywordAction" | "updateKeywordScheduleAction"
-> & {
+type KeywordEditDrawerProps = Pick<KeywordDetailActions, "updateKeywordAction"> & {
   keyword: KeywordRow;
   focusTargetUrl?: boolean;
   onClose: () => void;
@@ -38,14 +35,15 @@ export function KeywordEditDrawer({
   projectMarkets,
   providerRate,
   updateKeywordAction,
-  updateKeywordScheduleAction,
 }: Readonly<KeywordEditDrawerProps>) {
   const [section, setSection] = useState<EditSection>("details");
   const [saving, setSaving] = useState(false);
+  const { onChangeSchedule, scheduleModal } = useKeywordScheduleModal({
+    keyword,
+    projectId,
+    providerRate,
+  });
   const detailsFormId = `keyword-details-${keyword.id}`;
-  const scheduleFormId = `keyword-schedule-${keyword.id}`;
-  const activeFormId = section === "details" ? detailsFormId : scheduleFormId;
-  const options = updateKeywordScheduleAction ? sectionOptions : sectionOptions.slice(0, 1);
 
   function handleClose() {
     if (saving) return;
@@ -60,74 +58,68 @@ export function KeywordEditDrawer({
   }
 
   return (
-    <Sheet
-      footer={
-        <div className="flex items-center gap-2.5">
-          <Button disabled={saving} onClick={handleClose} type="button" variant="secondary">
-            Cancel
-          </Button>
-          <Button
-            className="flex-1"
-            form={activeFormId}
-            loading={saving}
-            loadingLabel="Saving..."
-            type="submit"
-          >
-            {section === "details" ? "Save details" : "Save schedule"}
-          </Button>
-        </div>
-      }
-      onClose={handleClose}
-      open={open}
-      title={
-        <span className="block min-w-0">
-          <span className="block">Edit keyword</span>
-          <span className="mt-1 block truncate text-[12px] font-normal text-fg-muted">
-            {keyword.keyword}
+    <>
+      <Sheet
+        footer={
+          <div className="flex items-center gap-2.5">
+            <Button disabled={saving} onClick={handleClose} type="button" variant="secondary">
+              Cancel
+            </Button>
+            {section === "details" ? (
+              <Button
+                className="flex-1"
+                form={detailsFormId}
+                loading={saving}
+                loadingLabel="Saving..."
+                type="submit"
+              >
+                Save details
+              </Button>
+            ) : (
+              <Button className="flex-1" onClick={onChangeSchedule} type="button">
+                Set schedule
+              </Button>
+            )}
+          </div>
+        }
+        onClose={handleClose}
+        open={open}
+        title={
+          <span className="block min-w-0">
+            <span className="block">Edit keyword</span>
+            <span className="mt-1 block truncate text-[12px] font-normal text-fg-muted">
+              {keyword.keyword}
+            </span>
           </span>
-        </span>
-      }
-    >
-      {updateKeywordScheduleAction ? (
+        }
+      >
         <SegmentedControl
           ariaLabel="Edit section"
           className="mb-5"
           disabled={saving}
           onChange={setSection}
-          options={options}
+          options={sectionOptions}
           value={section}
         />
-      ) : null}
-      <div hidden={section !== "details"}>
-        <KeywordInlineEdit
-          focusTargetUrl={focusTargetUrl}
-          formId={detailsFormId}
-          drawerMarkets={projectMarkets?.markets}
-          hideSubmit
-          keyword={keyword}
-          layout="drawer"
-          onSaved={handleSaved}
-          onSavingChange={setSaving}
-          projectId={projectId}
-          updateKeywordAction={updateKeywordAction}
-        />
-      </div>
-      {updateKeywordScheduleAction ? (
-        <div hidden={section !== "schedule"}>
-          <KeywordScheduleInlineForm
-            formId={scheduleFormId}
+        <div hidden={section !== "details"}>
+          <KeywordInlineEdit
+            focusTargetUrl={focusTargetUrl}
+            formId={detailsFormId}
+            drawerMarkets={projectMarkets?.markets}
             hideSubmit
             keyword={keyword}
             layout="drawer"
             onSaved={handleSaved}
             onSavingChange={setSaving}
-            projectDepth={keyword.projectSerpDepth}
-            providerRate={providerRate}
-            scheduleDepth={keyword.schedule?.serp_depth}
-            updateKeywordScheduleAction={updateKeywordScheduleAction}
+            projectId={projectId}
+            updateKeywordAction={updateKeywordAction}
           />
         </div>
-      ) : null}
-    </Sheet>
+        <p className="text-[13px] text-fg-muted" hidden={section !== "schedule"}>
+          Assign this keyword to a check schedule for the selected target.
+        </p>
+      </Sheet>
+      {scheduleModal}
+    </>
   );
 }

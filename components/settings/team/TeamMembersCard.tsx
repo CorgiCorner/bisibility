@@ -124,7 +124,7 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
         title="Members"
       >
         <div>
-          <div className="divide-y divide-border-soft rounded-control border border-border">
+          <div className="divide-y divide-border rounded-control border border-border">
             {members.map((member) => {
               const actionPending = pendingAction?.endsWith(member.id);
               const rolePending = pendingAction === `role:${member.id}`;
@@ -150,9 +150,7 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                     <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
                       <span className="truncate">{member.name}</span>
                       {member.isCurrentUser ? (
-                        <span className="inline-flex h-4 items-center rounded-full border border-border bg-bg-sunken px-1.5 font-sans tabular-nums text-[9px] font-semibold leading-none tracking-[0.3px] text-fg-muted">
-                          you
-                        </span>
+                        <StatusPill label="you" showDot={false} size="sm" status="optional" />
                       ) : null}
                     </span>
                     <span className="block truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
@@ -201,7 +199,7 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
           ) : null}
           {canManageTeam ? (
             <div
-              className="mt-5 flex justify-end border-t border-border-soft pt-4"
+              className="mt-5 flex justify-end border-t border-border pt-4"
               data-team-members-footer=""
             >
               <Button

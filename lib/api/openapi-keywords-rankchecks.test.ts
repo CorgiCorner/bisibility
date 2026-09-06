@@ -137,10 +137,24 @@ describe("OpenAPI document", () => {
     });
     expect(responseSchema).toMatchObject({
       properties: {
+        data: {
+          items: {
+            $ref: "#/components/schemas/RankCheck",
+          },
+        },
         meta: {
           properties: {
             next_cursor: { type: ["string", "null"] },
           },
+        },
+      },
+    });
+    expect(
+      getOpenApiDocument().paths["/rank-checks/{check_id}"].get.responses["200"],
+    ).toMatchObject({
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/RankCheck" },
         },
       },
     });

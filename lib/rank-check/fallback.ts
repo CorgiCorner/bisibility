@@ -31,10 +31,9 @@ import {
   persistRankCheck,
   type RankCheckConnectionInput,
   type RankCheckKeywordInput,
-  RankCheckRunnerError,
-  type RankCheckRunnerErrorCode,
   runCheck,
 } from "./runner";
+import { RankCheckRunnerError, type RankCheckRunnerErrorCode } from "./runner-error";
 import type { RankCheckScheduleInput } from "./schedule";
 
 export type { KeywordRankLocation } from "./fallback-location";

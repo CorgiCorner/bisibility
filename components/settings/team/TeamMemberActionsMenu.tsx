@@ -2,6 +2,7 @@
 
 import { type ConfirmKind, ConfirmModal, Tooltip } from "@/components/ui";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { menuItemRowHoverSx } from "@/lib/ui/menu-item-row-styles";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react";
@@ -45,7 +46,7 @@ const memberMenuRowSx = {
   borderRadius: UI_RADIUS_ROLES.control,
   fontSize: "12.5px",
   minHeight: 34,
-  "&.Mui-focusVisible, &:hover": { backgroundColor: "var(--color-bg-hover)" },
+  ...menuItemRowHoverSx,
 };
 
 export function TeamMemberActionsMenu({

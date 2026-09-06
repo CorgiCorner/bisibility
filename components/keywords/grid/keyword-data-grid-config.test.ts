@@ -31,6 +31,8 @@ describe("dataGridHeaderSx", () => {
   it("paints the header-row hairline with --border, matching the card top", () => {
     expect(dataGridHeaderSx["--DataGrid-rowBorderColor"]).toBe("var(--border)");
     expect(dataGridHeaderSx.borderColor).toBe("var(--border)");
+    expect(dataGridHeaderSx.borderTop).toBe("1px solid var(--border)");
+    expect(dataGridHeaderSx.borderBottom).toBe("1px solid var(--border)");
     expect(keywordGridSx["& .MuiDataGrid-container--top"]).toEqual({
       "--DataGrid-rowBorderColor": "var(--border)",
     });

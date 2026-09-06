@@ -5,7 +5,11 @@ export const ORGANIC_SESSIONS_PAGE_SIZE = 25_000;
 const ORGANIC_SESSIONS_MAX_ROWS = 100_000;
 
 export type DailyOrganicSessions = { date: string; sessions: number };
-export type DailyOrganicSessionsPage = DailyOrganicSessions & { landingPage: string };
+export type DailyOrganicSessionsPage = DailyOrganicSessions & {
+  engagedSessions: number | null;
+  keyEvents: number | null;
+  landingPage: string;
+};
 export type DailyOrganicSessionsPagesResult = {
   capHit: boolean;
   pages: number;
@@ -23,11 +27,24 @@ function sessions(value: string | undefined) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function nullableMetric(value: string | undefined) {
+  if (!value?.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function pageRow(row: Ga4Row): DailyOrganicSessionsPage | null {
   const date = dateKey(row.dimensionValues?.[0]?.value);
   const landingPage = row.dimensionValues?.[1]?.value?.trim();
   if (!date || !landingPage || landingPage === "(not set)") return null;
-  return { date, landingPage, sessions: sessions(row.metricValues?.[0]?.value) };
+  // Metric order is load-bearing: sessions, engagedSessions, keyEvents.
+  return {
+    date,
+    engagedSessions: nullableMetric(row.metricValues?.[1]?.value),
+    keyEvents: nullableMetric(row.metricValues?.[2]?.value),
+    landingPage,
+    sessions: sessions(row.metricValues?.[0]?.value),
+  };
 }
 
 function totalRow(row: Ga4Row): DailyOrganicSessions | null {
@@ -59,7 +76,7 @@ export async function fetchDailyOrganicSessionsByLandingPage(input: {
       dimensions: ["date", "landingPage"],
       endDate: input.endDate,
       limit: pageLimit,
-      metrics: ["sessions"],
+      metrics: ["sessions", "engagedSessions", "keyEvents"],
       offset,
       orderBys: [{ dimension: { dimensionName: "date" } }],
       startDate: input.startDate,

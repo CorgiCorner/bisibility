@@ -1,6 +1,8 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { AccentCtaLink, Button, Card, EmptyState, ModuleMark } from "@/components/ui";
+import { formatDateTime } from "@/lib/dates/format";
 import { appPath } from "@/lib/routing/app-path";
 import {
   ArrowsClockwiseIcon as ArrowsClockwise,
@@ -70,6 +72,7 @@ export function DomainOverviewStatePanel({
   state,
   target,
 }: Readonly<DomainOverviewStatePanelProps>) {
+  const dateFormat = useDateFormat();
   if (state === "loading") return <DomainOverviewResultsLoading />;
   if (state === "idle") {
     return (
@@ -139,7 +142,7 @@ export function DomainOverviewStatePanel({
       <EmptyState
         description={
           resetAt
-            ? `Another analysis is already running. Try again after ${new Date(resetAt).toLocaleTimeString()}.`
+            ? `Another analysis is already running. Try again after ${formatDateTime(new Date(resetAt), dateFormat)}.`
             : "Another analysis is already running. Wait for it to finish before retrying."
         }
         icon={<ArrowsClockwise weight="regular" size={28} />}
@@ -152,7 +155,7 @@ export function DomainOverviewStatePanel({
       <EmptyState
         description={
           resetAt
-            ? `The provider is temporarily rate limited. Try again after ${new Date(resetAt).toLocaleTimeString()}.`
+            ? `The provider is temporarily rate limited. Try again after ${formatDateTime(new Date(resetAt), dateFormat)}.`
             : "The provider is temporarily rate limited. Try again shortly."
         }
         icon={<ArrowsClockwise weight="regular" size={28} />}

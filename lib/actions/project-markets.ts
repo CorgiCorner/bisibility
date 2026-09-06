@@ -20,6 +20,7 @@ import {
   pauseProjectMarket,
   reconcileProjectMarketsWithinLimit,
   removeProjectMarket,
+  restoreProjectMarket,
 } from "@/lib/markets/registry";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { z } from "zod";
@@ -36,6 +37,25 @@ const addMarketsSchema = z.object({
   projectId: idSchema,
 });
 const marketActionSchema = z.object({ marketId: idSchema, projectId: idSchema });
+
+class ProjectMarketLocationImmutableError extends Error {
+  readonly code = "conflict";
+  readonly status = 409;
+
+  constructor() {
+    super("A project market location cannot be changed in place.");
+    this.name = "ProjectMarketLocationImmutableError";
+  }
+}
+
+function assertProjectMarketLocationUnchanged(
+  current: { locationId: string },
+  next: { locationId?: string },
+) {
+  if (next.locationId !== undefined && next.locationId !== current.locationId) {
+    throw new ProjectMarketLocationImmutableError();
+  }
+}
 
 export type ProjectMarketChoice = z.infer<typeof marketChoiceSchema>;
 export type { AddProjectMarketsResult } from "@/lib/markets/project-market-add-result";
@@ -182,8 +202,12 @@ async function scopedMarket(projectId: string, marketId: string, action: "delete
 }
 
 export async function setProjectMarketEnabled(input: unknown) {
-  const data = parseActionInput(marketActionSchema.extend({ enabled: z.boolean() }), input);
+  const data = parseActionInput(
+    marketActionSchema.extend({ enabled: z.boolean(), locationId: idSchema.optional() }),
+    input,
+  );
   const { actor, market, project } = await scopedMarket(data.projectId, data.marketId, "update");
+  assertProjectMarketLocationUnchanged(market, data);
   let resumed: Awaited<ReturnType<typeof ensureProjectMarketsWithinLimit>> | null = null;
   if (data.enabled) {
     for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -215,6 +239,62 @@ export async function setProjectMarketEnabled(input: unknown) {
     targetType: "project_market",
   });
   revalidateSettingsViews();
+}
+
+/**
+ * Restoring resumes spend, so it is deliberate, it costs the same admin role the archive did,
+ * and the audit records what resumes. The cap read, the compare-and-swap and the audit share one
+ * Serializable transaction so two concurrent restores cannot both pass a check made one below
+ * the cap, and so no audit row can outlive a write that matched nothing.
+ */
+export async function restoreProjectMarketFromProject(input: unknown) {
+  const data = parseActionInput(marketActionSchema, input);
+  const { actor, market, project } = await scopedMarket(data.projectId, data.marketId, "delete");
+  if (market.status !== ProjectMarketStatus.removed) {
+    throw new Error("Only an archived market can be restored.");
+  }
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const resumedKeywords = await prisma.$transaction(
+        async (tx) => {
+          const visible = await listProjectMarkets(project.id, tx);
+          if (visible.length >= MAX_PROJECT_MARKETS) {
+            throw new ProjectMarketLimitExceededError(MAX_PROJECT_MARKETS);
+          }
+          const resuming = await tx.keyword.count({
+            where: { archivedAt: null, locationId: market.locationId, projectId: project.id },
+          });
+          const restored = await restoreProjectMarket(
+            { locationId: market.locationId, projectId: project.id },
+            tx,
+          );
+          if (restored.count === 0) {
+            throw new Error("Only an archived market can be restored.");
+          }
+          await writeAudit(
+            {
+              action: "settings.project_market.restore",
+              actorId: actor.id,
+              after: { resumedKeywords: resuming, status: ProjectMarketStatus.active },
+              before: { status: market.status },
+              projectId: project.id,
+              targetId: market.publicId,
+              targetType: "project_market",
+            },
+            tx,
+          );
+          return resuming;
+        },
+        { isolationLevel: "Serializable" },
+      );
+      revalidateSettingsViews();
+      return { resumedKeywords };
+    } catch (error) {
+      if (attempt === 2 || !isSerializableConflict(error)) throw error;
+    }
+  }
+  throw new Error("Project market restore did not complete.");
 }
 
 export async function removeProjectMarketFromProject(input: unknown) {

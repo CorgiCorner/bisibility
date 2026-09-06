@@ -190,6 +190,11 @@ model User {
   isInstanceAdmin              Boolean                  @default(false)
   deactivatedAt                DateTime?
   marketingEmailUnsubscribedAt DateTime?
+  dateFormat                   String                   @default("auto")
+  welcomeFollowupRequestedAt   DateTime?
+  welcomeFollowupStartedAt     DateTime?
+  welcomeFollowupFinishedAt    DateTime?
+  welcomeFollowupExpiredAt     DateTime?
   pausedSearchAnalyticsImports SearchAnalyticsImport[]  @relation("SearchImportPausedBy")
   sessions                     Session[]
   accounts                     Account[]
@@ -217,9 +222,11 @@ model User {
   signalsCreated               Signal[]                 @relation("SignalCreator")
   createdIngestHooks           IngestHook[]
   onboardingQuizResponses      OnboardingQuizResponse[]
+  requestedRankCheckRuns       RankCheckRun[]           @relation("RankCheckRunRequestedBy")
   createdAt                    DateTime                 @default(now())
   updatedAt                    DateTime                 @updatedAt
 
+  // Migration-only partial index: users (welcomeFollowupStartedAt) for pending worker intents.
   @@map("users")
 }
 
@@ -500,6 +507,8 @@ model Project {
   providerConnections              ProviderConnection[]
   providerCostEntries              ProviderCostEntry[]
   queuedRankCheckBatches           QueuedRankCheckBatch[]
+  rankCheckRuns                    RankCheckRun[]
+  checkSchedules                   CheckSchedule[]
   backlinkSnapshots                BacklinkSnapshot[]
   domainOverviewSnapshots          DomainOverviewSnapshot[]
   pageTrafficSnapshots             PageTrafficSnapshot[]
@@ -511,6 +520,7 @@ model Project {
   searchAnalyticsSyncPartitions    SearchAnalyticsSyncPartition[]
   searchAnalyticsRequestUsage      SearchAnalyticsRequestUsage[]
   searchInsightsPropertyRegistry   SearchInsightsPropertyRegistry[]
+  searchInsightsWindowFacts        SearchInsightsWindowFacts[]
   organicSessionsDaily             OrganicSessionsDaily[]
   organicSessionsPageDaily         OrganicSessionsPageDaily[]
   apiKeys                          ApiKey[]
@@ -569,16 +579,16 @@ model ProviderCostEntry {
 }
 
 model Membership {
-  id                    String    @id @default(cuid())
-  publicId              String    @unique
-  userId                String
-  projectId             String
-  role                  Role      @default(member)
-  setupAcknowledgedAt   DateTime?
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project               Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  publicId            String    @unique
+  userId              String
+  projectId           String
+  role                Role      @default(member)
+  setupAcknowledgedAt DateTime?
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project             Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@unique([userId, projectId])
   @@index([projectId])
@@ -603,6 +613,7 @@ model ProjectDefaults {
   inspectionDailyLimit   Int                @default(50)
   searchSyncImportMonths Int?
   searchSyncPace         String?
+  enabledExperimentalModules String[] @default([])
   lastCheckedAt          DateTime?
   nextCheckAt            DateTime?
   createdAt              DateTime           @default(now())
@@ -640,20 +651,24 @@ model Keyword {
   location             String
   locationId           String
   device               Device                   @default(desktop)
+  checkScheduleId      String?
   targetUrl            String?
   topic                String?
   intent               String?
   project              Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   locationRef          Location                 @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  checkSchedule        CheckSchedule?           @relation(fields: [checkScheduleId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   tags                 KeywordTag[]
   schedule             KeywordSchedule?
   dispatchState        KeywordDispatchState?
   queuedRankCheckTasks QueuedRankCheckTask[]
   rankChecks           RankCheck[]
+  rankCheckRunItems    RankCheckRunItem[]
   trafficSnapshots     KeywordTrafficSnapshot[]
   alertTargets         AlertRuleTarget[]
   triggeredAlerts      TriggeredAlert[]
   signals              Signal[]
+  archivedAt           DateTime?
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
 
@@ -661,6 +676,7 @@ model Keyword {
   @@index([projectId])
   @@index([projectId, topic])
   @@index([locationId])
+  @@index([checkScheduleId])
   @@map("keywords")
 }
 
@@ -776,6 +792,34 @@ model KeywordSchedule {
   @@map("keyword_schedules")
 }
 
+model CheckSchedule {
+  id             String             @id @default(cuid())
+  publicId       String             @unique
+  projectId      String
+  project        Project            @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  name           String
+  frequency      RankCheckFrequency
+  cronExpression String?
+  /// Local time in 24-hour HH:mm format.
+  timeOfDay      String?
+  /// Null uses the project time zone.
+  timezone       String?
+  jitterMinutes  Int                @default(60)
+  serpDepth      Int?
+  /// Null uses the project provider policy.
+  providerPolicy String?
+  enabled        Boolean            @default(true)
+  /// A migration-only partial unique index enforces one default per project.
+  isDefault      Boolean            @default(false)
+  keywords       Keyword[]
+  rankCheckRuns  RankCheckRun[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([projectId])
+  @@map("check_schedules")
+}
+
 model KeywordDispatchState {
   keywordId   String   @id
   keyword     Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
@@ -801,7 +845,11 @@ model RankCheck {
   provider             String
   /// Allowed values when set: "scheduled", "manual".
   trigger              String?
+  /// Legacy Temporal schedule ID written by rank-check activities, not a CheckSchedule ID.
   scheduleId           String?
+  runId                String?
+  run                  RankCheckRun?        @relation(fields: [runId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  runItem              RankCheckRunItem?
   workflowRunId        String?
   scheduledAt          DateTime?
   startedAt            DateTime?
@@ -834,7 +882,97 @@ model RankCheck {
   @@index([viaFallback, checkedAt, id])
   @@index([provider, checkedAt, id])
   @@index([trigger, checkedAt, id])
+  @@index([runId])
   @@map("rank_checks")
+}
+
+model RankCheckRun {
+  id                      String                 @id @default(cuid())
+  publicId                String                 @unique
+  projectId               String
+  project                 Project                @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Allowed values: "manual", "scheduled", "api", "retry".
+  trigger                 String
+  /// Allowed values: "single", "selected", "filter", "all", "scheduled_due", "retry_failed", "rerun", "legacy_schedule".
+  selectionKind           String
+  selectionSpec           Json
+  selectionHash           String
+  idempotencyKey          String?
+  /// Allowed values: "planned", "blocked", "queued", "running", "cancelling", "completed", "cancelled".
+  status                  String                 @default("queued")
+  /// Allowed values when set: "succeeded", "partial", "failed", "deferred".
+  outcome                 String?
+  blockedReason           String?
+  requestedCount          Int                    @default(0)
+  totalCount              Int                    @default(0)
+  skippedCount            Int                    @default(0)
+  completedCount          Int                    @default(0)
+  failedCount             Int                    @default(0)
+  deferredCount           Int                    @default(0)
+  cancelledCount          Int                    @default(0)
+  keywordCount            Int                    @default(0)
+  targetCount             Int                    @default(0)
+  estimatedCostCents      Int                    @default(0)
+  costCents               Int                    @default(0)
+  requestedById           String?
+  requestedBy             User?                  @relation("RankCheckRunRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  checkScheduleId         String?
+  checkSchedule           CheckSchedule?         @relation(fields: [checkScheduleId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  plannedFor              DateTime?
+  launchedAt              DateTime?
+  claimedAt               DateTime?
+  startedAt               DateTime?
+  finishedAt              DateTime?
+  parentRunId             String?
+  parentRun               RankCheckRun?          @relation("RankCheckRunParent", fields: [parentRunId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  childRuns               RankCheckRun[]         @relation("RankCheckRunParent")
+  /// Allowed values when set: "retry_failed", "retry_deferred", "rerun".
+  parentRelation          String?
+  orchestrationWorkflowId String?                @unique
+  items                   RankCheckRunItem[]
+  rankChecks              RankCheck[]
+  queuedRankCheckBatches  QueuedRankCheckBatch[]
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+
+  @@unique([projectId, idempotencyKey])
+  @@index([projectId, startedAt, id])
+  @@index([projectId, status])
+  @@index([status, claimedAt, id])
+  @@index([checkScheduleId, plannedFor])
+  @@map("rank_check_runs")
+}
+
+model RankCheckRunItem {
+  id                 String             @id @default(cuid())
+  runId              String
+  run                RankCheckRun       @relation(fields: [runId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  keywordId          String
+  keyword            Keyword            @relation(fields: [keywordId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Allowed values: "queued", "running", "completed", "failed", "deferred", "cancelled", "skipped", "blocked".
+  status             String             @default("queued")
+  blockedReason      String?
+  notBefore          DateTime?
+  claimExpiresAt     DateTime?
+  claimAttempts      Int                @default(0)
+  rankCheckId        String?            @unique
+  rankCheck          RankCheck?         @relation(fields: [rankCheckId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  sourceRunItemId    String?
+  sourceRunItem      RankCheckRunItem?  @relation("RankCheckRunItemSource", fields: [sourceRunItemId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  derivedRunItems    RankCheckRunItem[] @relation("RankCheckRunItemSource")
+  estimatedCostCents Int?
+  actualCostCents    Int?
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@unique([runId, keywordId])
+  @@index([runId, status])
+  @@index([keywordId])
+  // Migration-only partial unique index: keywordId WHERE status = 'running'.
+  @@index([status, notBefore])
+  @@map("rank_check_run_items")
 }
 
 model RankCheckRawPurgeProgress {
@@ -859,6 +997,8 @@ model QueuedRankCheckBatch {
   id              String                @id
   projectId       String
   project         Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  runId           String?
+  run             RankCheckRun?         @relation(fields: [runId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   connectionId    String?
   connection      ProviderConnection?   @relation(fields: [connectionId], references: [id], onDelete: SetNull)
   provider        String                @default("dataforseo")
@@ -876,6 +1016,7 @@ model QueuedRankCheckBatch {
   updatedAt       DateTime              @updatedAt
 
   @@index([projectId, createdAt])
+  @@index([runId])
   @@index([state, expiresAt])
   // Migration-only partial index: queued_rank_check_batches (queueDeadlineAt, id) for active states.
   @@map("queued_rank_check_batches")
@@ -1076,12 +1217,17 @@ model ProviderConnection {
   rates                    ProviderConnectionRate[]
   queuedRankCheckBatches   QueuedRankCheckBatch[]
   lastUsedAt               DateTime?
+  firstSyncRequestedAt     DateTime?
+  firstSyncStartedAt       DateTime?
+  firstSyncFinishedAt      DateTime?
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
 
   @@unique([projectId, provider])
   @@index([projectId])
   @@index([projectId, kind, priority])
+  @@index([kind, firstSyncFinishedAt, firstSyncStartedAt, firstSyncRequestedAt], map: "provider_connections_first_sync_intent_idx")
+  // Migration-only partial index: firstSyncStartedAt for pending worker intents.
   @@map("provider_connections")
 }
 
@@ -1771,24 +1917,92 @@ model OrganicSessionsDaily {
 
 /// Organic-search sessions per day and landing page, joined to page rows by path.
 model OrganicSessionsPageDaily {
-  id        String   @id @default(cuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   /// The analytics numeric property id.
-  property  String
-  date      DateTime @db.Date
+  property        String
+  date            DateTime @db.Date
   /// Landing page path as reported, leading slash and no origin.
-  path      String
+  path            String
   /// sha256 hex of the path, used as the unique key so long text never exceeds the btree row limit.
-  keyHash   String
-  sessions  Int
-  fetchedAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  keyHash         String
+  sessions        Int
+  /// Null means the day was imported before these metrics were read, never zero engaged sessions.
+  engagedSessions Int?
+  /// Null means the day was imported before these metrics were read, never zero key events.
+  keyEvents       Int?
+  fetchedAt       DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@unique([projectId, property, date, keyHash], map: "organic_sessions_page_daily_partition_key")
   @@index([projectId, property, keyHash, date], map: "organic_sessions_page_daily_drawer_idx")
   @@map("organic_sessions_page_daily")
+}
+
+/// Window aggregates computed once by the import instead of on every render.
+///
+/// Measured on a container shaped like the production instance class (1 GiB, 2 vCPU,
+/// `work_mem` 4 MB) over 12.96M query-page rows, cold: at the 90 day window the overlap count is
+/// 4,202 ms, the distinct counts 2,617 ms, the top-query read 1,494 ms and coverage 1,657 ms.
+/// The evidence is in the run directory as `t1b-micro-benchmark/timings-micro.md`.
+///
+/// ONE WRITER. The import writes these rows at the end of a batch. A render only reads; on a miss
+/// it computes live and records the miss, and never writes. Two writers on one table is a defect
+/// class being closed elsewhere in this module, not one to open here.
+///
+/// STALENESS IS A FLAG, NOT A CLEVER KEY. Moving `finalizedThrough` forward is not the only event
+/// that changes these numbers: a backfill filling a GAP INSIDE an already-computed window changes
+/// them while the boundary stands still. So any write to daily rows inside a covered span marks
+/// the affected rows stale, and the import recomputes every window in one transaction.
+///
+/// The compared window is its own row, same `windowDays`, `finalizedThrough` one day before this
+/// row's window starts. A delta is then two reads and the history accumulates by itself.
+///
+/// A row exists only for a window the readiness gate already calls ready. The selector owns
+/// readiness; this table must never outrun it.
+///
+/// Scalars and small vectors only. Top pages stay live: measured 364 ms cold at 90 days, inside
+/// budget, so storing them would buy a staleness surface for nothing. Top queries are the one
+/// exception, at 1,494 ms cold, and only the top hundred by clicks for the default sort, which is
+/// why the column says lens: it is not the pager's source.
+model SearchInsightsWindowFacts {
+  id                 String   @id @default(cuid())
+  projectId          String
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// The normalized property key produced by searchInsightsPropertyKey.
+  property           String
+  /// Allowed values: "web".
+  searchType         String   @default("web")
+  /// Window length in days, matching a window preset.
+  windowDays         Int
+  /// Newest finalized day inside this window.
+  finalizedThrough   DateTime @db.Date
+  /// Which import produced the row.
+  importId           String
+  /// How many days of the window actually carried data when it was computed.
+  coveredDays        Int
+  /// Set when a daily row inside the covered span changed. A stale row is never served.
+  stale              Boolean  @default(false)
+  /// Verbatim `getQueryCoverage` output.
+  coverage           Json
+  /// Verbatim grouped query count for the window.
+  counts             Json
+  /// Verbatim `getSearchInsightsSignals` output.
+  signals            Json
+  /// Verbatim window totals for the KPI row.
+  totals             Json
+  /// Top hundred queries by clicks under the default sort only.
+  defaultLensQueries Json
+  computedAt         DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([projectId, property, searchType, windowDays, finalizedThrough], map: "search_insights_window_facts_key")
+  @@index([projectId, property, finalizedThrough], map: "search_insights_window_facts_sweep_idx")
+  @@index([projectId, property, stale], map: "search_insights_window_facts_stale_idx")
+  @@map("search_insights_window_facts")
 }
 
 /// One durable entry per normalized GSC property used by a project. Archived rows preserve
@@ -1835,6 +2049,9 @@ model SearchAnalyticsImport {
   newestFinalizedDate        DateTime? @db.Date
   /// Provenance for newestFinalizedDate: "metadata" or "fallback"; null means legacy/unknown.
   availabilityBoundarySource String?
+  /// Whether GA4 has configured key events; null means legacy/unknown.
+  keyEventsConfigured        Boolean?
+  keyEventsCheckedAt         DateTime?
   /// Latest day whose partitions are fully stored.
   finalizedThroughDate       DateTime? @db.Date
   /// First aggregate day observed with impressions.
@@ -1851,6 +2068,10 @@ model SearchAnalyticsImport {
   capHitDays                 Int       @default(0)
   lastSyncStartedAt          DateTime?
   lastSyncFinishedAt         DateTime?
+  /// Manual incremental-sync intent written by the app and consumed by the worker.
+  syncRequestedAt            DateTime?
+  /// Worker-side claim timestamp for the current manual incremental-sync intent.
+  syncStartedAt              DateTime?
   /// When the provider was last asked with dataState "all"; shown as "Fresh through".
   lastProbeAt                DateTime?
   lastQuotaPausedAt          DateTime?
@@ -1863,6 +2084,8 @@ model SearchAnalyticsImport {
   @@unique([projectId, property, source], map: "search_analytics_imports_partition_key")
   @@index([projectId, source])
   @@index([pausedById])
+  @@index([syncRequestedAt, syncStartedAt], map: "search_analytics_imports_sync_intent_idx")
+  // Migration-only partial index: syncRequestedAt for pending worker intents.
   @@map("search_analytics_imports")
 }
 

@@ -59,7 +59,7 @@ describe("OverviewSkeleton", () => {
       ".grid-cols-\\[repeat\\(auto-fit\\,minmax\\(140px\\,1fr\\)\\)\\] > div",
     );
     expect(metrics).toHaveLength(4);
-    const footer = dataSourcePanel.querySelector(".border-t.border-border-soft");
+    const footer = dataSourcePanel.querySelector(".border-t.border-border");
     expect(footer).not.toBeNull();
   });
 

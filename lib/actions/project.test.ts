@@ -1,3 +1,4 @@
+import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { completeProjectOnboarding, createProject, updateProjectDefaults } from "./project";
 
@@ -214,11 +215,23 @@ describe("project actions", () => {
     expect(mocks.prisma.project.updateMany).toHaveBeenCalledTimes(2);
   });
 
-  it("updates project defaults and moves the current default keyword market", async () => {
+  it("updates the default market without relabeling existing keywords", async () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([
-      { device: "desktop", id: "kw_1", location: "United States", text: "rank tracker" },
-      { device: "desktop", id: "kw_2", location: "US", text: "seo tool" },
-      { device: "mobile", id: "kw_3", location: "Germany", text: "rank tracker" },
+      {
+        device: "desktop",
+        id: "kw_1",
+        location: "United States",
+        locationId: "loc_us",
+        text: "rank tracker",
+      },
+      { device: "desktop", id: "kw_2", location: "US", locationId: "loc_us", text: "seo tool" },
+      {
+        device: "mobile",
+        id: "kw_3",
+        location: "Germany",
+        locationId: "loc_de",
+        text: "rank tracker",
+      },
     ]);
 
     const result = await updateProjectDefaults({
@@ -258,27 +271,55 @@ describe("project actions", () => {
     const upsert = mocks.prisma.projectDefaults.upsert.mock.calls[0]?.[0];
     expect(upsert?.create).not.toHaveProperty("serpStopOnMatch");
     expect(upsert?.update).not.toHaveProperty("serpStopOnMatch");
-    expect(mocks.prisma.keyword.updateMany).toHaveBeenCalledWith({
-      data: { device: "mobile", location: "Germany", locationId: "loc_de" },
-      where: { id: { in: ["kw_2"] } },
-    });
+    expect(mocks.prisma.keyword.updateMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.keyword.findMany.mock.results[0]?.value).resolves.toContainEqual(
+      expect.objectContaining({ id: "kw_2", locationId: "loc_us" }),
+    );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "project_defaults.update",
         after: expect.objectContaining({
-          movedKeywords: 1,
           schedule: expect.not.objectContaining({
             createdAt: expect.anything(),
             id: expect.anything(),
             projectId: expect.anything(),
             updatedAt: expect.anything(),
           }),
-          skippedConflicts: 1,
         }),
       }),
     );
     const audit = mocks.writeAudit.mock.calls.at(-1)?.[0];
     expect(JSON.stringify(audit)).not.toContain("defaults_1");
+  });
+
+  it("uses the changed default market for a keyword created later", async () => {
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
+      city: null,
+      country: "United States",
+      device: "desktop",
+      locationKey: "US",
+    });
+
+    await updateProjectDefaults({
+      country: "DE",
+      cronExpression: null,
+      device: "mobile",
+      frequency: "weekly",
+      jitterMinutes: 30,
+      projectId: PROJECT_PUBLIC_ID,
+      timezone: "Europe/Berlin",
+    });
+
+    const defaults = mocks.prisma.projectDefaults.upsert.mock.calls[0]?.[0]?.update;
+    mocks.resolveKeywordLocation.mockClear();
+    const { createdRows, response } = await createKeywordAfterDefault(defaults);
+
+    expect(response.status).toBe(201);
+    expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { canonicalKey: "DE", kind: "city" },
+    });
+    expect(createdRows).toMatchObject([{ device: "mobile", locationId: "loc_de" }]);
   });
 
   it("returns a server warning when lowering depth affects alerts", async () => {

@@ -1,9 +1,8 @@
 import {
-  GETTING_STARTED_RAIL_LABEL,
+  GETTING_STARTED_LABEL,
   gettingStartedProgressAriaLabel,
 } from "@/components/getting-started/getting-started-copy";
 import { SetupProgressRing } from "@/components/getting-started/SetupProgressRing";
-import { CheckIcon as Check } from "@phosphor-icons/react/dist/ssr";
 import {
   type CompletionAcknowledgementMode,
   gettingStartedHeaderProgressModel,
@@ -29,27 +28,15 @@ export function GettingStartedHeaderProgress({
         aria-label={gettingStartedProgressAriaLabel(progress.settledCount, progress.totalCount)}
       >
         <span className="text-[15px] font-semibold leading-[1.35] text-fg">
-          {GETTING_STARTED_RAIL_LABEL}
+          {GETTING_STARTED_LABEL}
         </span>
         <span aria-hidden className="text-[13.5px] leading-[1.35] text-fg-muted">
           ·
         </span>
-        {model.showCheck ? (
-          <Check
-            aria-label="Setup complete"
-            className="text-green-text"
-            data-testid="setup-progress-check"
-            size={22}
-            weight="regular"
-          />
-        ) : (
-          <>
-            <span className="size-[22px] shrink-0" data-testid="setup-progress-indicator">
-              <SetupProgressRing doneCount={progress.doneCount} totalCount={progress.totalCount} />
-            </span>
-            <span className="text-[13.5px] leading-[1.35] text-fg-muted">{model.countLabel}</span>
-          </>
-        )}
+        <span className="size-[22px] shrink-0" data-testid="setup-progress-indicator">
+          <SetupProgressRing doneCount={progress.doneCount} totalCount={progress.totalCount} />
+        </span>
+        <span className="text-[13.5px] leading-[1.35] text-fg-muted">{model.countLabel}</span>
       </div>
     </div>
   );

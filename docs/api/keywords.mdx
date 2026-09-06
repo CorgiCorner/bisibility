@@ -260,15 +260,15 @@ Patch fields are optional:
 
 | Field | Description |
 | - | - |
-| `keyword` | New keyword text. |
+| `keyword` | Identity field. Must match the stored keyword text. |
 | `target_url` | Absolute URL, path, `null`, or omitted. |
 | `topic` | Topic label, 1 to 80 characters, `null`, or omitted. |
 | `intent` | Intent label, 1 to 80 characters, `null`, or omitted. |
-| `device` | `desktop` or `mobile`. |
-| `country` | Supported SERP country. |
-| `city` | City name resolved against the selected country. |
-| `location_key` | Canonical country, region, or city key, optionally qualified with `@language`. |
-| `location` | Alias for `country`; prefer `country`. When both are sent, `location` wins. |
+| `device` | Identity field. Must match the stored `desktop` or `mobile` device. |
+| `country` | Identity field. Must resolve to the stored SERP market. |
+| `city` | Identity field. Must resolve to the stored city in the selected country. |
+| `location_key` | Identity field. Canonical country, region, or city key, optionally qualified with `@language`; must resolve to the stored market. |
+| `location` | Identity field and alias for `country`; prefer `country`. When both are sent, `location` wins and must resolve to the stored market. |
 | `tags` | Replaces the full tag set. |
 | `frequency` | Sets a default schedule with timezone `UTC`, jitter `60`, and no cron expression. |
 | `schedule` | Full schedule object. Overrides `frequency` if present. |
@@ -277,6 +277,10 @@ Within `schedule`, `jitter_minutes` accepts the inclusive range `0` to `120`.
 Custom schedules use `cron_expression`. Daily and weekly schedules use a stable,
 keyword-specific interval phase independent of `timezone`; monthly and custom
 cron schedules use `timezone` as their wall-clock anchor.
+
+Identity fields are accepted when they match the stored term, market, and device.
+A differing identity value returns `409`. To track a different term, market, or
+device, add it as its own keyword and archive the old keyword.
 
 Returns the updated keyword resource.
 

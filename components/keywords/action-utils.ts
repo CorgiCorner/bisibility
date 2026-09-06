@@ -4,7 +4,6 @@ import type {
   BulkKeywordIdsInput,
   BulkKeywordTagInput,
   BulkKeywordTargetInput,
-  KeywordScheduleUpdateInput,
   RunCheckNowInput,
   UpdateKeywordInput,
 } from "@/lib/schemas/keyword";
@@ -27,7 +26,6 @@ export type KeywordDetailActions = {
   createKeywordAlertAction?: KeywordAction<CreateKeywordAlertInput>;
   runCheckNowAction: KeywordAction<RunCheckNowInput>;
   updateKeywordAction: KeywordAction<UpdateKeywordInput>;
-  updateKeywordScheduleAction?: KeywordAction<KeywordScheduleUpdateInput>;
 };
 
 export { actionErrorMessage } from "@/lib/ui/action-error";

@@ -22,6 +22,7 @@ const connection = {
   unit: "cents",
   used: 10,
   usedPercent: 0.33,
+  usedPriorMonth: 0,
 } satisfies ProviderSpendConnection;
 
 describe("ProviderUsageRow", () => {

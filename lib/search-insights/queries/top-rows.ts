@@ -30,6 +30,25 @@ export type TopRowsPage = {
 
 export const EMPTY_ROWS = { rows: [], total: 0 } as const;
 
+export type LandingPageGa4Metrics = {
+  engagementRate: number | null;
+  keyEvents: number | null;
+  sessions: number | null;
+};
+
+type LandingPageGa4Aggregate = {
+  engagedSessions: bigint | number | null;
+  keyEvents: bigint | number | null;
+  keyHash: string;
+  sessions: bigint | number | null;
+};
+
+const EMPTY_LANDING_PAGE_GA4_METRICS: LandingPageGa4Metrics = {
+  engagementRate: null,
+  keyEvents: null,
+  sessions: null,
+};
+
 /** Only the ratios divide, so only they can be NULL for a row with no impressions. */
 const NULLABLE_SORT_KEYS: ReadonlySet<SearchInsightsSortKey> = new Set(["ctr", "position"]);
 
@@ -105,6 +124,65 @@ export async function getTopQueries(
   return queryRows(rows);
 }
 
+/**
+ * The second-source page lookup shared by every page surface. It deliberately keeps a whole
+ * window unknown when any contributing GA4 row is unknown, rather than making a partial sum
+ * look complete.
+ */
+export async function getLandingPageGa4Metrics(
+  projectId: string,
+  sessionsProperty: string | null,
+  window: DateWindow,
+  pages: readonly string[],
+): Promise<Map<string, LandingPageGa4Metrics>> {
+  if (!sessionsProperty || pages.length === 0) return new Map();
+  const pagesWithHashes = pages.map((page) => ({
+    hash: dimensionKeyHash([normalizeLandingPath(page)]),
+    page,
+  }));
+  const hashes = [...new Set(pagesWithHashes.map(({ hash }) => hash))];
+  const sessions = await prisma.$queryRaw<LandingPageGa4Aggregate[]>(Prisma.sql`
+    SELECT
+      "keyHash",
+      SUM("sessions") AS "sessions",
+      CASE WHEN bool_or("engagedSessions" IS NULL) THEN NULL ELSE SUM("engagedSessions") END AS "engagedSessions",
+      CASE WHEN bool_or("keyEvents" IS NULL) THEN NULL ELSE SUM("keyEvents") END AS "keyEvents"
+    FROM "organic_sessions_page_daily"
+    WHERE ${sessionsWindowFilter(projectId, sessionsProperty, window)}
+      AND "keyHash" IN (${Prisma.join(hashes)})
+    GROUP BY "keyHash"
+  `);
+  const numberOrNull = (value: bigint | number | null) => (value === null ? null : Number(value));
+  const byHash = new Map(
+    sessions.map((row) => [
+      row.keyHash,
+      {
+        engagedSessions: numberOrNull(row.engagedSessions),
+        keyEvents: numberOrNull(row.keyEvents),
+        sessions: numberOrNull(row.sessions),
+      },
+    ]),
+  );
+  return new Map(
+    pagesWithHashes.map(({ hash, page }) => {
+      const metrics = byHash.get(hash);
+      const sessions = metrics?.sessions ?? null;
+      const engagedSessions = metrics?.engagedSessions ?? null;
+      return [
+        page,
+        {
+          engagementRate:
+            sessions === null || sessions === 0 || engagedSessions === null
+              ? null
+              : engagedSessions / sessions,
+          keyEvents: metrics?.keyEvents ?? null,
+          sessions,
+        },
+      ];
+    }),
+  );
+}
+
 export async function getTopPages(
   projectId: string,
   property: string,
@@ -129,24 +207,17 @@ export async function getTopPages(
   `);
   const result = pageRows(rows);
   if (!sessionsProperty || result.rows.length === 0) return result;
-  const rowsWithHashes = result.rows.map((row) => ({
-    hash: dimensionKeyHash([normalizeLandingPath(row.url)]),
-    row,
-  }));
-  const hashes = rowsWithHashes.map(({ hash }) => hash);
-  const sessions = await prisma.$queryRaw<Array<{ keyHash: string; sessions: bigint }>>(Prisma.sql`
-    SELECT "keyHash", SUM("sessions") AS "sessions"
-    FROM "organic_sessions_page_daily"
-    WHERE ${sessionsWindowFilter(projectId, sessionsProperty, window)}
-      AND "keyHash" IN (${Prisma.join(hashes)})
-    GROUP BY "keyHash"
-  `);
-  const byHash = new Map(sessions.map((row) => [row.keyHash, Number(row.sessions)]));
+  const metricsByPage = await getLandingPageGa4Metrics(
+    projectId,
+    sessionsProperty,
+    window,
+    result.rows.map((row) => row.url),
+  );
   return {
     ...result,
-    rows: rowsWithHashes.map(({ hash, row }) => ({
+    rows: result.rows.map((row) => ({
       ...row,
-      sessions: byHash.get(hash) ?? null,
+      ...(metricsByPage.get(row.url) ?? EMPTY_LANDING_PAGE_GA4_METRICS),
     })),
   };
 }

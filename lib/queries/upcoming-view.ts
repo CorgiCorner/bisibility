@@ -3,6 +3,7 @@ import "server-only";
 import { providerLabel } from "@/lib/checks/attempts";
 import type { UpcomingProviderSource, UpcomingScheduleSource } from "@/lib/checks/upcoming-view";
 import { buildUpcomingView } from "@/lib/checks/upcoming-view";
+import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
@@ -13,7 +14,10 @@ import {
   getRequestSerpProviderChain,
 } from "./workspace-request-data";
 
-export async function getUpcomingView(projectId: string, options: { now?: Date } = {}) {
+export async function getUpcomingView(
+  projectId: string,
+  options: { dateFormat?: DateFormat; now?: Date } = {},
+) {
   const now = options.now ?? new Date();
   const { project } = await requireReadableProject(projectId);
   const [keywords, defaults, providerChain, spentCents] = await Promise.all([
@@ -71,6 +75,7 @@ export async function getUpcomingView(projectId: string, options: { now?: Date }
   return buildUpcomingView({
     blockedReason,
     budgetCapCents: project.budgetCapCents,
+    dateFormat: options.dateFormat ?? "iso",
     now,
     projectTimezone: defaults?.timezone ?? "UTC",
     providers,

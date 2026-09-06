@@ -18,6 +18,7 @@ export type ApiErrorCode =
   | "rate_limited"
   | "scheduler_unavailable"
   | "self_import"
+  | "sample_project"
   | "snapshot_expired"
   | "unauthorized"
   | "unsupported_api_version"
@@ -66,6 +67,7 @@ const errorTitles = {
   not_found: "Not found",
   project_domain_required: "Project domain required",
   project_read_only: "Project read-only",
+  sample_project: "Sample project",
   provider_unavailable: "Provider unavailable",
   rate_limited: "Rate limit exceeded",
   scheduler_unavailable: "Scheduler unavailable",

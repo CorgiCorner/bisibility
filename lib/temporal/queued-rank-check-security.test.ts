@@ -17,10 +17,11 @@ describe("queued rank-check workflow data boundary", () => {
       keywordIds: ["opaque_keyword_id"],
       locationId: "location_1",
       projectId: "project_1",
+      runId: "run_1",
     });
     const serializedAttributes = JSON.stringify(queuedRankCheckSearchAttributes("project_1"));
 
-    expect(workflowId).toBe("queued-rank-check-project_1-location_1-desktop-1785283200000-0");
+    expect(workflowId).toBe("queued-rank-check-project_1-run_1-location_1-desktop-1785283200000-0");
     expect(workflowId).not.toContain("private keyword text");
     expect(serializedAttributes).not.toContain('"name":"keywordId"');
     expect(serializedAttributes).not.toMatch(/credential|login|password/i);

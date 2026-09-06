@@ -1,12 +1,13 @@
 import { type Actor, AuthorizationError } from "@/lib/auth/authorize";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import type { Role } from "@/lib/generated/prisma/client";
-import { appPath } from "@/lib/routing/app-path";
+import { appPath, asMarketRef, marketPath } from "@/lib/routing/app-path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   makePublicId,
   requireKeywordScope,
   requireProjectScope,
+  revalidateKeywordViews,
   revalidateProviderViews,
 } from "./_shared";
 
@@ -89,6 +90,18 @@ describe("revalidateProviderViews", () => {
     revalidateProviderViews();
 
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
+  });
+});
+
+describe("revalidateKeywordViews", () => {
+  it("refreshes the project and market Rank Tracker routes after a mutation", () => {
+    revalidateKeywordViews();
+
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(
+      marketPath("[project]", asMarketRef("[market]"), "rank-tracker"),
+      "page",
+    );
   });
 });
 

@@ -1,13 +1,12 @@
 "use client";
 
 import {
-  GETTING_STARTED_RAIL_LABEL,
+  GETTING_STARTED_LABEL,
   gettingStartedProgressAriaLabel,
 } from "@/components/getting-started/getting-started-copy";
 import { SetupProgressRing } from "@/components/getting-started/SetupProgressRing";
 import { Tooltip } from "@/components/ui";
 import { appPath } from "@/lib/routing/app-path";
-import { CheckIcon as Check } from "@phosphor-icons/react";
 import Link from "next/link";
 
 export type GettingStartedNavLinkProps = Readonly<{
@@ -27,7 +26,7 @@ export function GettingStartedNavLink({
   doneCount,
   onNavigate,
   projectRef,
-  setupComplete = false,
+  setupComplete: _setupComplete = false,
   settledCount,
   totalCount,
 }: GettingStartedNavLinkProps) {
@@ -55,20 +54,10 @@ export function GettingStartedNavLink({
         onClick={onNavigate}
       >
         <span className="grid h-[30px] w-[30px] flex-none place-items-center">
-          {setupComplete ? (
-            <span
-              aria-hidden
-              className="grid size-5 place-items-center rounded-full bg-accent-solid text-accent-on-solid"
-              data-setup-complete-indicator
-            >
-              <Check size={12} weight="regular" />
-            </span>
-          ) : (
-            <SetupProgressRing doneCount={doneCount} size={20} totalCount={totalCount} />
-          )}
+          <SetupProgressRing doneCount={doneCount} size={20} totalCount={totalCount} />
         </span>
         {collapsed ? null : (
-          <span className="min-w-0 flex-1 truncate">{GETTING_STARTED_RAIL_LABEL}</span>
+          <span className="min-w-0 flex-1 truncate">{GETTING_STARTED_LABEL}</span>
         )}
       </Link>
     </Tooltip>

@@ -4,6 +4,8 @@ import {
   keywordExportTarget,
 } from "@/components/keywords/export-target-model";
 import { useKeywordImport } from "@/components/keywords/import/KeywordImportProvider";
+import { useMarketContext } from "@/components/markets/MarketContextProvider";
+import { manualPreflightDepth, useRunPreflight } from "@/components/rank-runs/useRunPreflight";
 import { emptyKeywordFilters, removeFilterChip } from "@/lib/keywords/keyword-filter-model";
 import {
   filterFieldsForChip,
@@ -12,15 +14,17 @@ import {
   resetRankTrackerPage,
 } from "@/lib/keywords/rank-tracker-navigation";
 import { emptySavedViewConfig } from "@/lib/keywords/saved-view-model";
-import { appPath } from "@/lib/routing/app-path";
-import { useRouter } from "next/navigation";
+import { marketRunPartition, resolveMarketScope } from "@/lib/markets/market-scope";
+import type { RunSelectionSpec } from "@/lib/rank-check/runs/selection";
+import { appPath, marketPath } from "@/lib/routing/app-path";
+import type { SerpDepth } from "@/lib/serp/markets";
 import { useState } from "react";
 import { KeywordDataTable } from "./KeywordDataTable";
 import { KeywordsGridDialogBundle } from "./KeywordsGridDialogBundle";
 import type { AddKeywordDraft } from "./KeywordsGridDialogs";
+import { KeywordsGridEmpty } from "./KeywordsGridEmpty";
 import { KeywordsGridScopeChip } from "./KeywordsGridFilterOverlays";
 import { KeywordsGridNoticeBlock } from "./KeywordsGridNoticeBlock";
-import { KeywordsGridProjectEmpty } from "./KeywordsGridProjectEmpty";
 import { KeywordsGridScopeView } from "./KeywordsGridScopeView";
 import { KeywordsGridServerFilters } from "./KeywordsGridServerFilters";
 import { emptyCheckStates } from "./keyword-empty-check-states";
@@ -29,13 +33,11 @@ import { initialAddKeywordDraft } from "./keywords-grid-initial-state";
 import type { KeywordsGridProps } from "./keywords-grid-types";
 import { useFlatRankTrackerNavigation } from "./use-flat-rank-tracker-navigation";
 import { useKeywordsGridViewState } from "./use-keywords-grid-view-state";
-import { useRunChecksModal } from "./useRunChecksModal";
 export function KeywordsGrid(props: KeywordsGridProps) {
   const {
     activeViewId = null,
     bulkClearTargetAction,
     bulkDeleteAction,
-    bulkSetFrequencyAction,
     bulkSetTargetAction,
     bulkTagAction,
     canCreateKeyword,
@@ -49,7 +51,6 @@ export function KeywordsGrid(props: KeywordsGridProps) {
     getFirstCheckRunPlanAction,
     initialAddOpen = false,
     initialViewConfig,
-    importTopQueriesAction,
     lens,
     listMode = "grouped-client",
     locations,
@@ -57,7 +58,6 @@ export function KeywordsGrid(props: KeywordsGridProps) {
     page,
     pageSize,
     projectId,
-    searchConsoleConnected,
     query,
     queueFirstChecksAction,
     runCheckNowAction,
@@ -66,11 +66,13 @@ export function KeywordsGrid(props: KeywordsGridProps) {
     totalCount,
     totalKeywordCount,
     updateKeywordAction,
-    updateKeywordScheduleAction,
   } = props;
-  const router = useRouter();
   const flatServer = listMode === "flat-server" && query !== undefined;
   const { openKeywordImport } = useKeywordImport();
+  // The URL, never a cookie, decides which market this page stands in; an unnameable market
+  // resolves to null so no surface labels a spend with a guess.
+  const marketContext = useMarketContext();
+  const marketScope = resolveMarketScope(marketContext, props.projectMarkets?.markets);
   const [addDraft, setAddDraft] = useState(() =>
     initialAddKeywordDraft(canCreateKeyword, initialAddOpen),
   );
@@ -82,21 +84,7 @@ export function KeywordsGrid(props: KeywordsGridProps) {
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchValue, setSearchValue] = useState(flatServer ? query.search : initialConfig.search);
-  const {
-    close: closeRunChecks,
-    confirm: confirmRunChecks,
-    flow: runChecksFlow,
-    pendingIds,
-    request: requestRunChecks,
-    retry: retryRunChecks,
-  } = useRunChecksModal({
-    onSettled: () => router.refresh(),
-    projectId,
-    providerRate: checkHealth?.providerRate,
-    rows,
-    runCheckNowAction,
-  });
-  const checkFailed = runChecksFlow?.step === "failed";
+  const preflight = useRunPreflight({ projectId, providerId: costContext?.providerId });
   const {
     activeLens,
     capturedFilters,
@@ -114,7 +102,9 @@ export function KeywordsGrid(props: KeywordsGridProps) {
     rows,
     searchValue,
   });
-  const keywordsPath = appPath(projectId, "rank-tracker");
+  const keywordsPath = marketContext.market
+    ? marketPath(projectId, marketContext.market.ref, "rank-tracker")
+    : appPath(projectId, "rank-tracker");
   const openAddDrawer = (keyword = "", tab: AddKeywordDraft["tab"] = "manual") =>
     setAddDraft({ keyword, open: true, tab });
   const { markSearchCommitted, navigateQuery, onSearchChange, onSearchCommit, resetScope } =
@@ -160,39 +150,51 @@ export function KeywordsGrid(props: KeywordsGridProps) {
       searchValue,
       selectedIds,
     });
+  const requestRunChecks = (keywordIds: string[], depth?: SerpDepth) => {
+    const selectedRows = rows.filter((row) => keywordIds.includes(row.id));
+    if (selectedRows.length === 0) return;
+    const first = selectedRows[0];
+    const resolvedDepth = manualPreflightDepth(selectedRows, depth, costContext?.depth);
+    const spec: RunSelectionSpec =
+      selectedRows.length === 1 && first
+        ? { kind: "single", keywordId: first.id as `kw_${string}`, v: 1 }
+        : {
+            kind: "selected",
+            keywordIds: selectedRows.map((row) => row.id as `kw_${string}`),
+            v: 1,
+          };
+    void preflight.request({ depth: resolvedDepth, rows: selectedRows, spec });
+  };
+  // The palette command runs the FILTERED page rows; inside a market that means the filtered
+  // rows OF THAT MARKET, which is also what its label now claims.
+  const filteredRunIds = marketRunPartition(filteredRows, marketScope).inMarketIds;
   const dialogs = (
     <KeywordsGridDialogBundle
       {...props}
       addDraft={addDraft}
-      closeRunChecks={closeRunChecks}
-      confirmRunChecks={confirmRunChecks}
       exportTarget={exportTarget}
+      marketScope={marketScope}
       onExport={() => setExportTarget(buildExportTarget())}
       onFilter={() => setFiltersOpen(true)}
       onImport={() => openKeywordImport(projectId)}
-      onRunChecks={() => requestRunChecks(filteredRows.map((row) => row.id))}
+      onRunChecks={() => requestRunChecks(filteredRunIds)}
       openAddDrawer={openAddDrawer}
       pendingRows={filteredRows.length}
+      preflightDialog={preflight.dialog}
       requestRows={rows}
-      retryRunChecks={retryRunChecks}
-      runChecksFlow={runChecksFlow}
+      scopedRows={filteredRunIds.length}
       setAddDraft={setAddDraft}
       setExportTarget={setExportTarget}
     />
   );
   if ((totalCount ?? rows.length) === 0) {
     return (
-      <KeywordsGridProjectEmpty
-        canCreateKeyword={canCreateKeyword}
-        canManageProviders={props.canManageProviders}
-        costContext={costContext}
+      <KeywordsGridEmpty
+        {...props}
         dialogs={dialogs}
-        importTopQueriesAction={importTopQueriesAction}
-        onAddKeyword={() => openAddDrawer()}
+        marketScope={marketScope}
         onImportCsv={() => openKeywordImport(projectId)}
         openAddDrawer={openAddDrawer}
-        projectId={projectId}
-        searchConsoleConnected={searchConsoleConnected}
       />
     );
   }
@@ -216,6 +218,7 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         checkHealth={checkHealth}
         emptyRankCheckStates={emptyRankCheckStates}
         flatServer={flatServer}
+        marketScope={marketScope}
         getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
         projectId={projectId}
         queueFirstChecksAction={queueFirstChecksAction}
@@ -227,11 +230,10 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         {...props}
         bulkClearTargetAction={bulkClearTargetAction}
         bulkDeleteAction={bulkDeleteAction}
-        bulkSetFrequencyAction={bulkSetFrequencyAction}
         bulkSetTargetAction={bulkSetTargetAction}
         bulkTagAction={bulkTagAction}
         canDeleteKeyword={canDeleteKeyword}
-        checkFailed={checkFailed}
+        checkFailed={false}
         checkHealth={checkHealth}
         filterChips={filterChips}
         filterCount={filterChips.length}
@@ -239,7 +241,7 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         savedViewControl={scopeView.savedView}
         onAddKeyword={canCreateKeyword ? () => openAddDrawer() : undefined}
         onClearFilters={clearFilters}
-        onDismissFailure={closeRunChecks}
+        onDismissFailure={() => undefined}
         onImportCsv={canCreateKeyword ? () => openKeywordImport(projectId) : undefined}
         onOpenExport={(selectedIds) => setExportTarget(buildExportTarget(selectedIds))}
         onOpenFilters={() => setFiltersOpen(true)}
@@ -256,9 +258,10 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         onRunChecks={requestRunChecks}
         onSearchChange={onSearchChange}
         onSearchCommit={onSearchCommit}
-        pendingCheckIds={pendingIds}
+        pendingCheckIds={new Set<string>()}
         projectId={projectId}
         listMode={listMode}
+        marketScope={marketScope}
         matchedTargetCount={matchedTargetCount}
         page={page}
         pageSize={pageSize}
@@ -276,7 +279,6 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         }
         scopeControl={scopeView.control}
         updateKeywordAction={updateKeywordAction}
-        updateKeywordScheduleAction={updateKeywordScheduleAction}
       />
       <KeywordsGridServerFilters
         activeViewId={activeViewId}

@@ -5,6 +5,7 @@ import { createKeywordBatchSet } from "@/lib/actions/keyword-helpers";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { MarketArchivedError } from "@/lib/markets/archived";
 import { ProjectMarketLimitExceededError } from "@/lib/markets/limits";
 import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
@@ -222,6 +223,12 @@ export async function createKeywords(
           })
         : await persist(client);
   } catch (error) {
+    if (error instanceof MarketArchivedError) {
+      return errorResponse("conflict", error.message, 409, {
+        headers: ctx.headers,
+        instance: ctx.instance,
+      });
+    }
     if (
       !(error instanceof KeywordLimitExceededError) &&
       !(error instanceof ProjectMarketLimitExceededError)

@@ -1,3 +1,5 @@
+import type { DateFormatPreference } from "@/lib/dates/format";
+
 export type ProviderUsageFeature =
   | "backlinks"
   | "domain_overview"
@@ -37,7 +39,7 @@ export type ProviderConnectionUsageData = {
 export type ProviderUsageData = {
   budget: { capCents: number; spentCents: number };
   period: {
-    dateFormat: "eu" | "iso" | "long";
+    dateFormat: DateFormatPreference;
     endAt: string;
     endLabel: string;
     label: string;

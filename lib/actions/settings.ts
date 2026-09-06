@@ -18,11 +18,7 @@ import {
   projectDefaultsSchema,
   trackingScopeSchema,
 } from "@/lib/schemas/project";
-import {
-  keywordMarketSelect,
-  projectDefaultSerpMarket,
-  serpMarketUpdatePlan,
-} from "@/lib/serp/default-market";
+import { keywordMarketSelect, projectDefaultSerpMarket } from "@/lib/serp/default-market";
 import { resolveProjectDefaultMarket } from "@/lib/serp/project-default-market";
 import {
   projectDefaultsConfig,
@@ -174,9 +170,13 @@ export async function updateDefaultRankCheckSettings(input: unknown) {
   ]);
   const schedule = normalizeSchedule(data);
   const resolvedDefault = await resolveProjectDefaultMarket({ ...data, projectId: project.id });
-  const { displayName, locationId, ...market } = resolvedDefault;
+  const market = {
+    city: resolvedDefault.city,
+    country: resolvedDefault.country,
+    device: resolvedDefault.device,
+    locationKey: resolvedDefault.locationKey,
+  };
   const currentMarket = projectDefaultSerpMarket(beforeDefaults, keywords);
-  const marketPlan = serpMarketUpdatePlan(keywords, resolvedDefault, currentMarket);
   const defaults = await prisma.$transaction(async (tx) => {
     const stored = await tx.projectDefaults.upsert(
       projectDefaultsUpsertArgs({
@@ -185,16 +185,6 @@ export async function updateDefaultRankCheckSettings(input: unknown) {
         serpStopOnMatch: data.serpStopOnMatch,
       }),
     );
-    if (marketPlan.updateIds.length > 0) {
-      await tx.keyword.updateMany({
-        data: {
-          device: market.device,
-          location: displayName,
-          locationId,
-        },
-        where: { id: { in: marketPlan.updateIds } },
-      });
-    }
     await refreshKeywordDispatchStates({ inheritedProjectId: project.id }, tx);
     return stored;
   });
@@ -203,9 +193,7 @@ export async function updateDefaultRankCheckSettings(input: unknown) {
     actorId: actor.id,
     after: {
       market,
-      movedKeywords: marketPlan.updateIds.length,
       schedule: projectDefaultsConfig(defaults),
-      skippedConflicts: marketPlan.skipped,
     },
     before: {
       market: currentMarket,

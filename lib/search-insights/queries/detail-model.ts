@@ -21,6 +21,8 @@ export type SearchInsightsDay = {
  */
 export type SearchInsightsPageSlice = {
   clicks: number;
+  engagementRate: number | null;
+  keyEvents: number | null;
   path: string;
   position: number;
   url: string;
@@ -102,11 +104,19 @@ export function perDaySeries(window: DateWindow, rows: readonly DayRow[]): Searc
 }
 
 export function pageSlices(
-  rows: readonly (CountedRow & { clicks: bigint | number; page: string; position: number })[],
+  rows: readonly (CountedRow & {
+    clicks: bigint | number;
+    engagementRate?: number | null;
+    keyEvents?: number | null;
+    page: string;
+    position: number;
+  })[],
 ): SearchInsightsList<SearchInsightsPageSlice> {
   return {
     rows: rows.map((row) => ({
       clicks: Number(row.clicks),
+      engagementRate: row.engagementRate ?? null,
+      keyEvents: row.keyEvents ?? null,
       path: pagePath(row.page),
       position: Number(row.position ?? 0),
       url: row.page,

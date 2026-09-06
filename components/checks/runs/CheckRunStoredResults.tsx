@@ -18,7 +18,7 @@ export function CheckRunStoredResults({ keywordHref, run }: Readonly<Props>) {
   const showGap = retrieved != null && depth != null && retrieved < depth;
 
   return (
-    <div className="mt-2 border-t border-border-soft pt-2">
+    <div className="mt-2 border-t border-border pt-2">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-sans tabular-nums text-[10.5px]">
         <strong className="font-semibold text-fg">Retrieved results</strong>
         {retrieved != null ? (

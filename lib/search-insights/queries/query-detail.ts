@@ -17,13 +17,19 @@ import {
   type SearchInsightsStats,
   statsOf,
 } from "./detail-model";
+import { organicSessionsPropertyForWindow } from "./sessions-context";
+import { getLandingPageGa4Metrics } from "./top-rows";
 import { getTrackedQueryTexts } from "./tracked";
 import { trackedKey } from "./tracked-model";
 import { searchInsightsWindowFilter } from "./window-filter";
 
 export type SearchInsightsQueryDetail = {
+  /** Whether the drawer's page rows can read a matching, fully covered GA4 window. */
+  pageMetricsReadable: boolean;
   /** The pages Google chose for this query, with the slice of it each one carries. */
   pages: SearchInsightsList<SearchInsightsPageSlice>;
+  /** The GA4 key-event configuration is a separate true, false, or unknown state. */
+  keyEventsConfigured: boolean | null;
   perDay: readonly SearchInsightsDay[];
   query: string;
   stats: SearchInsightsStats;
@@ -32,6 +38,8 @@ export type SearchInsightsQueryDetail = {
 };
 
 export const EMPTY_QUERY_DETAIL: SearchInsightsQueryDetail = {
+  keyEventsConfigured: null,
+  pageMetricsReadable: false,
   pages: EMPTY_LIST,
   perDay: [],
   query: "",
@@ -63,6 +71,8 @@ export async function getQueryDetail(
   property: string,
   window: DateWindow,
   query: string,
+  sessionsProperty: string | null = null,
+  keyEventsConfigured: boolean | null = null,
 ): Promise<SearchInsightsQueryDetail> {
   const filter = searchInsightsWindowFilter(projectId, property, window);
   const [days, pages, tracked] = await Promise.all([
@@ -93,9 +103,17 @@ export async function getQueryDetail(
     `),
     getTrackedQueryTexts(projectId, [query]),
   ]);
+  const metricsByPage = await getLandingPageGa4Metrics(
+    projectId,
+    sessionsProperty,
+    window,
+    pages.map((page) => page.page),
+  );
 
   return {
-    pages: pageSlices(pages),
+    keyEventsConfigured,
+    pageMetricsReadable: Boolean(sessionsProperty),
+    pages: pageSlices(pages.map((page) => ({ ...page, ...metricsByPage.get(page.page) }))),
     perDay: perDaySeries(window, days),
     query,
     stats: statsOf(days),
@@ -109,13 +127,28 @@ export async function getQueryDetail(
  */
 export async function loadQueryDetail(
   projectRef: string,
-  input: { period?: string; property?: string; query: string },
+  input: { comparison?: string; period?: string; property?: string; query: string },
 ): Promise<SearchInsightsQueryDetail> {
   const scope = await loadSearchInsightsScope(projectRef, {
+    ...(input.comparison ? { comparison: input.comparison } : {}),
     period: input.period,
     property: input.property,
   });
-  const window = scope.window?.current ?? null;
-  if (!scope.property || !window) return { ...EMPTY_QUERY_DETAIL, query: input.query };
-  return getQueryDetail(scope.projectId, scope.property, window, input.query);
+  const finalized = scope.window;
+  const window = finalized?.current ?? null;
+  if (!scope.property || !finalized || !window) {
+    return { ...EMPTY_QUERY_DETAIL, query: input.query };
+  }
+  const organicSessions = scope.organicSessions;
+  const sessionsProperty = organicSessions
+    ? organicSessionsPropertyForWindow(organicSessions, finalized)
+    : null;
+  return getQueryDetail(
+    scope.projectId,
+    scope.property,
+    window,
+    input.query,
+    sessionsProperty,
+    organicSessions?.keyEventsConfigured ?? null,
+  );
 }

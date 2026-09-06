@@ -189,7 +189,9 @@ export function drawerBars(perDay: readonly SearchInsightsDay[]): DrawerBar[] {
   const peak = perDay.reduce((highest, day) => Math.max(highest, day.clicks), 0);
   return perDay.map((day) => ({
     date: day.date,
-    height: peak > 0 ? Math.round((day.clicks / peak) * 100) : 2,
+    // 2% is the hairline used when every day is empty. A zero day next to a peak must keep
+    // that same baseline; otherwise one clicky day collapses the rest to 0px.
+    height: peak > 0 && day.clicks > 0 ? Math.round((day.clicks / peak) * 100) : 2,
     title: `${day.clicks.toLocaleString("en-US")} clicks`,
   }));
 }
@@ -219,6 +221,7 @@ export function drawerStatCards(stats: SearchInsightsStats) {
 
 /** The label beside the bars. Every day of the window is finalized, and it says so. */
 export function drawerWindowLabel(days: number) {
+  if (days === 1) return "1 finalized day";
   return `${days.toLocaleString("en-US")} finalized days`;
 }
 

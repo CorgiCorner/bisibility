@@ -2,15 +2,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { markStaleRunningChecks, STALE_RUNNING_CHECK_ERROR } from "./stale-checks";
 
 const mocks = vi.hoisted(() => ({
+  publishOperationChanged: vi.fn(() => Promise.resolve()),
   reconcileQueued: vi.fn(),
   prisma: {
+    $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
-    rankCheck: { findMany: vi.fn(), updateMany: vi.fn() },
+    rankCheck: { findMany: vi.fn(), findUniqueOrThrow: vi.fn(), updateMany: vi.fn() },
+    rankCheckRun: { update: vi.fn() },
+    rankCheckRunItem: { findMany: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
   },
 }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/notifications/realtime", () => ({
+  publishOperationChanged: mocks.publishOperationChanged,
+}));
 vi.mock("./queued-deadline-maintenance", () => ({
   reconcileExpiredQueuedRankCheckBatches: mocks.reconcileQueued,
 }));
@@ -19,6 +26,11 @@ describe("markStaleRunningChecks", () => {
   beforeEach(() => {
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.auditLog.create.mockResolvedValue({ id: "audit_1" });
+    mocks.prisma.rankCheck.findUniqueOrThrow.mockResolvedValue({ costCents: null });
+    mocks.prisma.rankCheckRun.update.mockResolvedValue({});
+    mocks.prisma.rankCheckRunItem.findMany.mockResolvedValue([]);
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue(null);
+    mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 0 });
     mocks.reconcileQueued.mockResolvedValue({
       examined: 0,
       failed: 0,
@@ -126,6 +138,90 @@ describe("markStaleRunningChecks", () => {
     expect(mocks.reconcileQueued).toHaveBeenCalledWith(now, undefined);
   });
 
+  it("fails linked run items once while leaving legacy checks unlinked", async () => {
+    const now = new Date("2026-01-01T06:20:00.000Z");
+    const staleChecks = [
+      {
+        estimatedCostCents: 12,
+        id: "rank_linked",
+        keyword: { projectId: "project_1", publicId: "kw_a00000000000000000000000" },
+        keywordId: "keyword_1",
+        provider: "serpapi",
+        publicId: "check_a00000000000000000000000",
+      },
+      {
+        estimatedCostCents: 8,
+        id: "rank_legacy",
+        keyword: { projectId: "project_1", publicId: "kw_b00000000000000000000000" },
+        keywordId: "keyword_2",
+        provider: "serpapi",
+        publicId: "check_b00000000000000000000000",
+      },
+    ];
+    const checkStatuses = new Map(staleChecks.map((check) => [check.id, "running"]));
+    let itemStatus = "running";
+    let failedCount = 0;
+
+    mocks.prisma.rankCheck.findMany.mockImplementation(async () =>
+      staleChecks.filter((check) => checkStatuses.get(check.id) === "running"),
+    );
+    mocks.prisma.rankCheck.updateMany.mockImplementation(async ({ where }) => {
+      let count = 0;
+      for (const id of where.id.in) {
+        if (checkStatuses.get(id) === "running") {
+          checkStatuses.set(id, "failed");
+          count += 1;
+        }
+      }
+      return { count };
+    });
+    mocks.prisma.rankCheckRunItem.findMany.mockImplementation(async () =>
+      itemStatus === "running" ? [{ rankCheckId: "rank_linked" }] : [],
+    );
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue({
+      run: { projectId: "project_1" },
+      runId: "run_1",
+    });
+    mocks.prisma.rankCheckRunItem.updateMany.mockImplementation(async ({ data }) => {
+      if (itemStatus !== "running") return { count: 0 };
+      itemStatus = data.status;
+      return { count: 1 };
+    });
+    mocks.prisma.rankCheckRun.update.mockImplementation(async ({ data }) => {
+      failedCount += data.failedCount.increment;
+      return { projectId: "project_1" };
+    });
+
+    await expect(markStaleRunningChecks({ now })).resolves.toMatchObject({ failed: 2 });
+    await expect(markStaleRunningChecks({ now })).resolves.toMatchObject({ failed: 0 });
+
+    expect(itemStatus).toBe("failed");
+    expect(failedCount).toBe(1);
+    expect(mocks.prisma.rankCheckRunItem.findMany).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheckRunItem.findMany).toHaveBeenCalledWith({
+      select: { rankCheckId: true },
+      where: {
+        rankCheckId: { in: ["rank_linked", "rank_legacy"] },
+        status: { in: ["queued", "running"] },
+      },
+    });
+    expect(mocks.prisma.rankCheckRunItem.findUnique).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheckRunItem.findUnique).toHaveBeenCalledWith({
+      select: {
+        run: { select: { id: true, projectId: true, requestedCount: true, status: true } },
+        runId: true,
+      },
+      where: { rankCheckId: "rank_linked" },
+    });
+    expect(mocks.prisma.rankCheckRun.update).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheckRun.update).toHaveBeenCalledWith({
+      data: { failedCount: { increment: 1 } },
+      where: { id: "run_1" },
+    });
+    expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledOnce();
+    expect(mocks.publishOperationChanged).toHaveBeenCalledWith({ projectId: "project_1" });
+  });
+
   it("audits stale failures inside the same transaction as the update", async () => {
     const now = new Date("2026-01-01T06:20:00.000Z");
     const tx = {
@@ -144,6 +240,12 @@ describe("markStaleRunningChecks", () => {
           ]),
         ),
         updateMany: vi.fn(() => Promise.resolve({ count: 1 })),
+      },
+      rankCheckRun: { update: vi.fn() },
+      rankCheckRunItem: {
+        findMany: vi.fn(() => Promise.resolve([])),
+        findUnique: vi.fn(),
+        updateMany: vi.fn(),
       },
     };
     mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));

@@ -1,10 +1,12 @@
 import { ToastProvider } from "@/components/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { SearchInsightsBody } from "./SearchInsightsBody";
+import { SearchInsightsSignalChips } from "./SearchInsightsSignalChips";
 import {
   storyFirstView,
   storyImportState,
   storyLoadRowsAction,
+  storySignals,
 } from "./search-insights-story-fixtures";
 
 const meta = {
@@ -31,6 +33,7 @@ const common = {
   period: "28",
   projectId: "prj_story",
   property: "sc-domain:example.com",
+  signalChips: <SearchInsightsSignalChips namedQueryCount={1284} signals={storySignals} />,
   view: storyFirstView,
 };
 
@@ -51,6 +54,7 @@ export const SessionsImporting: Story = {
           state: "running",
           updatedAt: "2026-08-31T11:00:00.000Z",
         },
+        keyEventsConfigured: null,
         property: "123456789",
         status: "connected",
       },
@@ -65,7 +69,9 @@ export const EmptyWindow: Story = {
       ...storyFirstView,
       pages: { rows: [], total: 0 },
       queries: { rows: [], total: 0 },
-      signals: { bandCount: 0, overlapCount: 0 },
     },
+    signalChips: (
+      <SearchInsightsSignalChips namedQueryCount={0} signals={{ bandCount: 0, overlapCount: 0 }} />
+    ),
   },
 };

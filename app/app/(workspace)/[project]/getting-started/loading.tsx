@@ -28,7 +28,7 @@ export default function GettingStartedLoading() {
               <div
                 className={cn(
                   "flex min-h-[49px] items-center gap-3 px-5 py-3.5",
-                  index > 0 && "border-t border-border-soft",
+                  index > 0 && "border-t border-border",
                 )}
                 key={step}
               >

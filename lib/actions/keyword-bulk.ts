@@ -3,6 +3,7 @@
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
+import { cancelRunItemsForKeywordDeletion } from "@/lib/rank-check/runs/cancel";
 import {
   bulkKeywordFrequencySchema,
   bulkKeywordIdsSchema,
@@ -30,7 +31,11 @@ export async function bulkDeleteKeywords(input: unknown) {
     where: keywordIdsWhere(project.id, data.keywordIds),
   });
 
-  await prisma.keyword.deleteMany({ where: { id: { in: keywords.map((keyword) => keyword.id) } } });
+  await prisma.$transaction(async (tx) => {
+    const keywordIds = keywords.map((keyword) => keyword.id);
+    await cancelRunItemsForKeywordDeletion(tx, keywordIds);
+    await tx.keyword.deleteMany({ where: { id: { in: keywordIds } } });
+  });
   await writeAudit({
     action: "keyword.bulk_delete",
     actorId: actor.id,

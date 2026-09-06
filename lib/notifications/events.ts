@@ -184,7 +184,7 @@ export async function notifyRankCheckCompleted(input: {
 }
 
 function checksHrefSegments(rankCheckId: string): string[] {
-  return [`rank-tracker?tab=checks&run=${encodeURIComponent(rankCheckId)}`];
+  return [`rank-tracker?tab=runs&run=${encodeURIComponent(rankCheckId)}`];
 }
 
 export async function notifyRankCheckFailed(input: RankFailureInput) {

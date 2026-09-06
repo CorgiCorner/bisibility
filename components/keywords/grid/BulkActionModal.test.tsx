@@ -5,7 +5,6 @@ import { describe, expect, it, vi } from "vitest";
 import { BulkActionModal, type BulkMode } from "./BulkActionModal";
 
 const actions = {
-  bulkSetFrequencyAction: vi.fn(async () => undefined),
   bulkSetTargetAction: vi.fn(async () => undefined),
   bulkTagAction: vi.fn(async () => undefined),
 };
@@ -51,10 +50,5 @@ describe("BulkActionModal", () => {
   it("uses the standard modal chrome for change target URL", () => {
     renderMode("target");
     expectStandardChrome("Change target URL", "Change target");
-  });
-
-  it("uses the standard modal chrome for set frequency", () => {
-    renderMode("frequency");
-    expectStandardChrome("Set check frequency", "Set frequency");
   });
 });

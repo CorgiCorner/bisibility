@@ -135,7 +135,7 @@ describe("PositionHistoryCard", () => {
 
     expect(screen.getByTestId("line-chart")).toHaveAttribute(
       "data-labels",
-      JSON.stringify(["20 days ago", "Latest same day", "Today"]),
+      JSON.stringify(["Jun 30", "Jul 14", "Today"]),
     );
     expect(screen.getByTestId("line-chart")).toHaveAttribute(
       "data-positions",
@@ -146,7 +146,7 @@ describe("PositionHistoryCard", () => {
 
     expect(screen.getByTestId("line-chart")).toHaveAttribute(
       "data-labels",
-      JSON.stringify(["Latest same day", "Today"]),
+      JSON.stringify(["Jul 14", "Today"]),
     );
   });
 
@@ -197,7 +197,7 @@ describe("PositionHistoryCard", () => {
     );
 
     const overlay = screen.getByText("Not enough history to chart yet.").parentElement;
-    expect(overlay).toHaveTextContent("Current #6 | Next check Jul 21, 08:00");
+    expect(overlay).toHaveTextContent("Current #6 | Next check Jul 21, 2026, 08:00");
     expect(overlay).toHaveTextContent("(Europe/Madrid)");
   });
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.21.0] - 2026-09-05
+
+- Added scheduled rank-check runs with clear recovery, API correlation IDs, fast pickup, and worker-owned launches.
+
+- Improved Search Console with first-day reports, GA4 context, faster queued sync, responsive tables, stored window aggregates, and clear Visibility coverage.
+
+- Added personal date formats and market-aware navigation, polished keyword and tag controls, fixed crawler metadata, and made Timeline and Competitors opt-in per project.
+
+- **Breaking:** API keyword term, market, and device are immutable; pausing or archiving a market cancels queued checks, and changing defaults leaves existing keywords unchanged.
+
 ## [0.20.0] - 2026-09-02
 
 - Fixed Search Console Insights so previously imported data continues to unlock reports as the finalized window advances, with clearer coverage status.

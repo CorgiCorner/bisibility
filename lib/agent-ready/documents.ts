@@ -87,6 +87,7 @@ function toolBySlug(slug: string) {
 
 export function createRobotsTxt(origin: string) {
   const policy = [
+    `Content-Signal: ${contentSignal}`,
     "Allow: /",
     "Disallow: /app",
     "Disallow: /login",
@@ -103,11 +104,7 @@ export function createRobotsTxt(origin: string) {
 
   const blocks = robotAgents.map((agent) => [`User-agent: ${agent}`, ...policy].join("\n"));
 
-  return [
-    ...blocks,
-    `Content-Signal: ${contentSignal}`,
-    `Sitemap: ${absoluteUrl(origin, "/sitemap.xml")}`,
-  ].join("\n\n");
+  return [...blocks, `Sitemap: ${absoluteUrl(origin, "/sitemap.xml")}`].join("\n\n");
 }
 
 export function createSitemapEntries(origin: string): MetadataRoute.Sitemap {

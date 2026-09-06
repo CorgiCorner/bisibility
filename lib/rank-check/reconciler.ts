@@ -2,9 +2,11 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
+import { activeKeywordWhere } from "@/lib/queries/keyword-active";
 import { RECONCILER_SCHEDULE_ID } from "@/lib/temporal/bootstrap";
 import { getSchedulerTemporalClient } from "@/lib/temporal/scheduler-client";
 import type { ReconcileResult } from "./reconcile-result";
+import { activeMarketLocationIdsByProject, isRunnableKeyword } from "./runnable";
 import { isScheduledFrequency, type RankCheckScheduleInput } from "./schedule";
 import { legacySchedulingAllowed } from "./scheduler-mode";
 import {
@@ -77,10 +79,15 @@ type IntentSweep = {
   scanned: number;
 };
 
+const NO_ACTIVE_MARKETS: ReadonlySet<string> = new Set();
+
 async function reconcileIntent(temporal: ReconcilerScheduleClient): Promise<IntentSweep> {
+  const activeLocationsByProject = await activeMarketLocationIdsByProject(prisma);
   const keywords = await prisma.keyword.findMany({
     select: {
+      archivedAt: true,
       id: true,
+      locationId: true,
       projectId: true,
       project: {
         select: {
@@ -91,6 +98,7 @@ async function reconcileIntent(temporal: ReconcilerScheduleClient): Promise<Inte
       },
       schedule: { select: scheduleSelect },
     },
+    where: activeKeywordWhere,
   });
 
   const sweep: IntentSweep = { created: 0, desired: new Set(), failed: 0, scanned: 0, updated: 0 };
@@ -98,6 +106,12 @@ async function reconcileIntent(temporal: ReconcilerScheduleClient): Promise<Inte
   for (const keyword of keywords) {
     sweep.scanned += 1;
     if (keyword.project.owner.deactivatedAt || isProjectReadOnly(keyword.project.writeMode)) {
+      continue;
+    }
+    // A row in a paused or removed market is left out of the desired set, so prune deletes
+    // whatever Schedule it still has. The CheckSchedule itself is never touched.
+    const activeLocationIds = activeLocationsByProject.get(keyword.projectId) ?? NO_ACTIVE_MARKETS;
+    if (!isRunnableKeyword(keyword, activeLocationIds)) {
       continue;
     }
     const schedule = toScheduleInput(keyword.schedule ?? keyword.project.defaults);

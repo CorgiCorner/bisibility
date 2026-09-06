@@ -11,6 +11,24 @@ const options = [
 ] as const;
 
 describe("SegmentedControl", () => {
+  it("shows a stable busy affordance and disables its options while loading", () => {
+    render(
+      <SegmentedControl<Mode>
+        loading
+        name="loading"
+        onChange={() => {}}
+        options={options}
+        size="xs"
+        value="a"
+      />,
+    );
+
+    const control = screen.getByRole("group");
+    expect(control).toHaveAttribute("aria-busy", "true");
+    expect(control.querySelector(".MuiCircularProgress-root")).toBeInTheDocument();
+    for (const option of screen.getAllByRole("radio")) expect(option).toBeDisabled();
+  });
+
   it("stretches the option span to fill the field-size label by default", () => {
     render(
       <SegmentedControl<Mode>
@@ -63,7 +81,7 @@ describe("SegmentedControl", () => {
     );
 
     const span = screen.getByRole("radio", { name: "A" }).nextElementSibling;
-    expect(span).toHaveClass("h-[26px]", "w-full");
+    expect(span).toHaveClass("h-[26px]", "w-full", "bg-bg-sunken", "border-border-control");
   });
 
   it("preserves the fixed height of xs-size options", () => {
@@ -79,6 +97,25 @@ describe("SegmentedControl", () => {
 
     const span = screen.getByRole("radio", { name: "A" }).nextElementSibling;
     expect(span).toHaveClass("h-6", "w-full");
+  });
+
+  it("frames the extra-small track and keeps a control border on the selected option", () => {
+    render(
+      <SegmentedControl<Mode>
+        name="xs-fill"
+        onChange={() => {}}
+        options={options}
+        size="xs"
+        value="a"
+      />,
+    );
+
+    const radio = screen.getByRole("radio", { name: "A" });
+    const span = radio.nextElementSibling;
+    const track = radio.parentElement?.parentElement;
+
+    expect(track).toHaveClass("border", "border-border-control");
+    expect(span).toHaveClass("bg-nav-active", "border-border-control");
   });
 
   it("preserves native radio semantics and keyboard navigation", () => {

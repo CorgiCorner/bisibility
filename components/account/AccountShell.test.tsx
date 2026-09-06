@@ -152,6 +152,15 @@ describe("AccountShell", () => {
     },
   );
 
+  it("keeps the mobile section MenuSelect inside the content column width", () => {
+    const { container } = render(<Shell activeSection="preferences" />);
+
+    const column = container.querySelector("[data-account-shell] > div > div.min-w-0");
+    expect(column).toHaveClass("max-w-[760px]");
+    expect(column?.querySelector('[aria-label="Account section"]')).toBeTruthy();
+    expect(container.querySelector("[data-account-shell] > .mb-5")).toBeNull();
+  });
+
   it.each(loadingBoundaries)(
     "$name loading boundary mirrors the desktop sidebar and mobile selector geometry",
     ({ activeSection }) => {
@@ -161,9 +170,12 @@ describe("AccountShell", () => {
 
       const boundary = container.querySelector("[data-account-loading-boundary]");
       expect(boundary).toHaveAttribute("data-account-loading-boundary", activeSection);
-      expect(boundary?.children).toHaveLength(2);
-      expect(boundary?.firstElementChild).toHaveAttribute("data-account-loading-mobile-menu", "");
-      expect(boundary?.lastElementChild).toHaveAttribute("data-account-loading-grid", "");
+      expect(boundary?.children).toHaveLength(1);
+      expect(boundary?.firstElementChild).toHaveAttribute("data-account-loading-grid", "");
+
+      const contentColumn = boundary?.querySelector("[data-account-loading-grid] > div.min-w-0");
+      expect(contentColumn).toHaveClass("max-w-[760px]");
+      expect(contentColumn?.querySelector("[data-account-loading-mobile-menu]")).toBeTruthy();
 
       const subnav = boundary?.querySelector("[data-account-loading-subnav]");
       expect(subnav).toHaveClass(

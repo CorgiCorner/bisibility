@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import type { ProviderCredentials } from "@/lib/providers/types";
 import { providerChainWhere } from "@/lib/rank-check/provider-chain-order";
 import { addDays, dateFromKey, dateKey, diffDays, pacificToday } from "@/lib/search-insights/dates";
 import { ensureSearchInsightsImport } from "./ensure-import";
@@ -27,10 +28,45 @@ export type SessionsIncrementalResult = {
 };
 
 const TRAILING_DAYS = 3;
+export const ORGANIC_SESSIONS_METRICS_REREAD_DAYS = 3;
 
 function newestSettledDate(now: Date) {
   // Re-upserting the short tail lets yesterday converge as the provider settles it.
   return addDays(pacificToday(now), -ORGANIC_SESSIONS_SETTLING_LAG_DAYS);
+}
+
+export async function rereadOrganicSessionsMetrics(input: {
+  credentials: ProviderCredentials;
+  end: string;
+  projectId: string;
+  property: string;
+  start: Date | null;
+}) {
+  if (!input.start) return { capHit: false, daysProcessed: 0 };
+  const days = await prisma.organicSessionsPageDaily.groupBy({
+    by: ["date"],
+    orderBy: { date: "asc" },
+    take: ORGANIC_SESSIONS_METRICS_REREAD_DAYS,
+    where: {
+      date: { gte: input.start, lte: dateFromKey(input.end) },
+      engagedSessions: null,
+      projectId: input.projectId,
+      property: input.property,
+    },
+  });
+  let capHit = false;
+  for (const day of days) {
+    const date = dateKey(day.date);
+    const result = await syncOrganicSessionsRange({
+      credentials: input.credentials,
+      end: date,
+      projectId: input.projectId,
+      property: input.property,
+      start: date,
+    });
+    capHit = capHit || result.capHit;
+  }
+  return { capHit, daysProcessed: days.length };
 }
 
 export async function runOrganicSessionsIncrementalSync(input: {
@@ -73,16 +109,24 @@ export async function runOrganicSessionsIncrementalSync(input: {
   });
 
   try {
-    const { capHit } = await syncOrganicSessionsRange({
+    const { capHit: incrementalCapHit } = await syncOrganicSessionsRange({
       credentials: connection.credentials,
       end,
       projectId: input.projectId,
       property,
       start,
     });
-    const capHitDays = capHit
-      ? await countCappedDays({ projectId: input.projectId, property, source: "ga4" })
-      : null;
+    const reread = await rereadOrganicSessionsMetrics({
+      credentials: connection.credentials,
+      end: newest,
+      projectId: input.projectId,
+      property,
+      start: row.earliestTargetDate,
+    });
+    const capHitDays =
+      incrementalCapHit || reread.capHit
+        ? await countCappedDays({ projectId: input.projectId, property, source: "ga4" })
+        : null;
     await prisma.searchAnalyticsImport.update({
       data: {
         ...(capHitDays === null ? {} : { capHitDays }),

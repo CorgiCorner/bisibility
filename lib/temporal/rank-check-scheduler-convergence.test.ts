@@ -7,6 +7,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
 import { RECONCILER_SCHEDULE_ID } from "./bootstrap";
+import { RANK_CHECK_PLANNER_SCHEDULE_ID } from "./rank-check-planner-bootstrap";
 import {
   convergeRankCheckSchedulerSingletons,
   type RankCheckSchedulerConvergenceClient,
@@ -84,10 +85,8 @@ describe("rank-check singleton convergence", () => {
     vi.unstubAllEnvs();
   });
 
-  it.each([
-    ["legacy", RECONCILER_SCHEDULE_ID, RANK_CHECK_DISPATCHER_SCHEDULE_ID],
-    ["dispatcher", RANK_CHECK_DISPATCHER_SCHEDULE_ID, RECONCILER_SCHEDULE_ID],
-  ] as const)("keeps only the %s singleton active", async (mode, selected, retired) => {
+  it("keeps only the reconciler active in legacy mode", async () => {
+    const mode = "legacy";
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", mode);
     const { client, events, schedules } = clientMock({
       [RANK_CHECK_DISPATCHER_SCHEDULE_ID]: {
@@ -98,17 +97,48 @@ describe("rank-check singleton convergence", () => {
         paused: false,
         workflowType: "reconcileRankCheckSchedulesWorkflow",
       },
+      [RANK_CHECK_PLANNER_SCHEDULE_ID]: {
+        paused: false,
+        workflowType: "planRankCheckRunsWorkflow",
+      },
       "maintenance-audit-purge": { paused: false, workflowType: "purgeAuditLogsWorkflow" },
     });
 
     await expect(convergeRankCheckSchedulerSingletons(client)).resolves.toMatchObject({ mode });
-    expect(schedules.get(selected)?.paused).toBe(false);
-    expect(schedules.get(retired)?.paused).toBe(true);
+    expect(schedules.get(RECONCILER_SCHEDULE_ID)?.paused).toBe(false);
+    expect(schedules.get(RANK_CHECK_DISPATCHER_SCHEDULE_ID)?.paused).toBe(true);
+    expect(schedules.get(RANK_CHECK_PLANNER_SCHEDULE_ID)?.paused).toBe(true);
     expect(schedules.get("maintenance-audit-purge")?.paused).toBe(false);
-    expect(events[0]).toBe(`pause:${retired}`);
+    expect(events[0]).toBe(`pause:${RANK_CHECK_DISPATCHER_SCHEDULE_ID}`);
   });
 
-  it("pauses both automatic rank-check singletons in cutover", async () => {
+  it("keeps the dispatcher and planner active in dispatcher mode", async () => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
+    const { client, schedules } = clientMock({
+      [RANK_CHECK_DISPATCHER_SCHEDULE_ID]: {
+        paused: false,
+        workflowType: "dispatchDueRankChecksWorkflow",
+      },
+      [RECONCILER_SCHEDULE_ID]: {
+        paused: false,
+        workflowType: "reconcileRankCheckSchedulesWorkflow",
+      },
+      [RANK_CHECK_PLANNER_SCHEDULE_ID]: {
+        paused: true,
+        workflowType: "planRankCheckRunsWorkflow",
+      },
+    });
+
+    await expect(convergeRankCheckSchedulerSingletons(client)).resolves.toMatchObject({
+      mode: "dispatcher",
+      planner: "updated",
+    });
+    expect(schedules.get(RECONCILER_SCHEDULE_ID)?.paused).toBe(true);
+    expect(schedules.get(RANK_CHECK_DISPATCHER_SCHEDULE_ID)?.paused).toBe(false);
+    expect(schedules.get(RANK_CHECK_PLANNER_SCHEDULE_ID)?.paused).toBe(false);
+  });
+
+  it("pauses every automatic rank-check singleton in cutover", async () => {
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
     const { client, schedules } = clientMock({
       [RANK_CHECK_DISPATCHER_SCHEDULE_ID]: {
@@ -119,6 +149,10 @@ describe("rank-check singleton convergence", () => {
         paused: false,
         workflowType: "reconcileRankCheckSchedulesWorkflow",
       },
+      [RANK_CHECK_PLANNER_SCHEDULE_ID]: {
+        paused: false,
+        workflowType: "planRankCheckRunsWorkflow",
+      },
     });
 
     await expect(convergeRankCheckSchedulerSingletons(client)).resolves.toMatchObject({
@@ -126,6 +160,7 @@ describe("rank-check singleton convergence", () => {
     });
     expect(schedules.get(RANK_CHECK_DISPATCHER_SCHEDULE_ID)?.paused).toBe(true);
     expect(schedules.get(RECONCILER_SCHEDULE_ID)?.paused).toBe(true);
+    expect(schedules.get(RANK_CHECK_PLANNER_SCHEDULE_ID)?.paused).toBe(true);
   });
 
   it("is idempotent and unpauses the selected singleton after rollback", async () => {

@@ -39,6 +39,7 @@ function zonedAnchorCron(schedule: RankCheckScheduleInput) {
   if (!anchor || Number.isNaN(anchor.getTime())) {
     throw new Error("Monthly schedules require nextCheckAt.");
   }
+  // SCHEDULE MATH (not display): preserve the configured wall-clock recurrence anchor.
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: schedule.timezone ?? "UTC",
     hourCycle: "h23",

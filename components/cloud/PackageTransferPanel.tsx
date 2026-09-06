@@ -97,7 +97,7 @@ function TransferStatus({
         </div>
       ) : null}
       {message ? (
-        <div className="border-border-soft border-t px-5 py-3 text-[12.5px] text-fg-muted">
+        <div className="border-border border-t px-5 py-3 text-[12.5px] text-fg-muted">
           {message}
         </div>
       ) : null}
@@ -223,7 +223,7 @@ export function PackageTransferPanel({
 
   return (
     <div className="mt-4.5 overflow-hidden rounded-card border border-border bg-bg-elev">
-      <div className="flex items-center gap-[13px] border-border-soft border-b p-[16px_20px]">
+      <div className="flex items-center gap-[13px] border-border border-b p-[16px_20px]">
         <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-control bg-blue/15 text-blue-text">
           <FileJs aria-hidden size={20} weight="regular" />
         </span>

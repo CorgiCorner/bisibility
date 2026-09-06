@@ -1,4 +1,11 @@
-import { appRootPath, appSectionPath } from "@/lib/routing/app-path";
+import {
+  appPathContext,
+  appRootPath,
+  appSectionPath,
+  ENGINE_SEGMENT,
+  MARKET_SEGMENT,
+  RESOLVED_CONTEXT_SEGMENT,
+} from "@/lib/routing/app-path";
 
 type ErrorReportContent = {
   message: string;
@@ -15,13 +22,30 @@ function stripUrlQueryAndFragment(value: string) {
   return suffixIndex === -1 ? value : value.slice(0, suffixIndex);
 }
 
+/**
+ * The context segment carries an identifier, so it is redacted like the project. Dropping it
+ * would be just as private and strictly worse: a report from a market-scoped page would be
+ * indistinguishable from one from the project page, which is the silent kind of breakage.
+ */
+function contextPlaceholderSegments(pathname: string) {
+  const context = appPathContext(pathname);
+  if (context.kind === "market") return [MARKET_SEGMENT, "<market>"];
+  if (context.kind === "engine") return [ENGINE_SEGMENT, "<engine>"];
+  if (context.kind === "resolved") return [RESOLVED_CONTEXT_SEGMENT];
+  return [];
+}
+
 function sanitizeProjectPath(value: string) {
   const pathname = stripUrlQueryAndFragment(value);
   if (!pathname.startsWith(PROJECT_PATH_PREFIX)) {
     return pathname;
   }
 
-  return appRootPath("<project>", appSectionPath(pathname));
+  return appRootPath(
+    "<project>",
+    ...contextPlaceholderSegments(pathname),
+    appSectionPath(pathname),
+  );
 }
 
 function sanitizeUrl(value: string) {

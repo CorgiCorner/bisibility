@@ -1,12 +1,15 @@
 import { schedulerDriver } from "../scheduler/driver";
+import { temporalIntegerSetting } from "./integer-setting";
 
 export type TemporalConnectionOptions = {
   address: string;
   apiKey?: string;
+  connectTimeout: number;
   tls?: boolean;
   tlsSource: "auto-api-key" | "auto-no-api-key" | "explicit-false" | "explicit-true";
 };
 
+const DEFAULT_CONNECT_TIMEOUT_MS = 2_000;
 const LOCAL_TEMPORAL_ADDRESSES = new Set(["localhost:7233", "127.0.0.1:7233"]);
 
 export function temporalWebUiUrl(options: TemporalConnectionOptions): string | undefined {
@@ -53,6 +56,12 @@ export function temporalConnectionOptions(
   return {
     address: configuredAddress ?? "localhost:7233",
     ...(apiKey ? { apiKey } : {}),
+    connectTimeout: temporalIntegerSetting(
+      "TEMPORAL_CONNECT_TIMEOUT_MS",
+      env.TEMPORAL_CONNECT_TIMEOUT_MS,
+      DEFAULT_CONNECT_TIMEOUT_MS,
+      { min: 100, max: 30_000 },
+    ),
     ...(tls.value === undefined ? {} : { tls: tls.value }),
     tlsSource: tls.source,
   };

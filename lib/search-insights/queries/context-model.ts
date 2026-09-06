@@ -1,17 +1,20 @@
 import {
+  DEFAULT_COMPARISON_MODE,
   DEFAULT_WINDOW_ID,
   RETENTION_MONTHS,
+  type SearchInsightsComparisonMode,
   WINDOW_PRESETS,
   type WindowPresetId,
+  YEAR_OVER_YEAR_COMPARISON,
   YOY_MIN_HISTORY_MONTHS,
 } from "@/lib/search-insights/constants";
 import { dateKey } from "@/lib/search-insights/dates";
 
 export type SearchInsightsPeriod = {
+  comparison: SearchInsightsComparisonMode;
   days: number;
   id: WindowPresetId;
   label: string;
-  sub: string;
 };
 
 export type SearchInsightsPropertyKind = "domain" | "url-prefix";
@@ -54,12 +57,24 @@ export function searchInsightsProperty(value: string): SearchInsightsProperty {
   };
 }
 
-export function resolvePeriod(raw: string | undefined): SearchInsightsPeriod {
+export function resolvePeriod(
+  raw: string | undefined,
+  comparison: SearchInsightsComparisonMode = DEFAULT_COMPARISON_MODE,
+): SearchInsightsPeriod {
   const preset =
     WINDOW_PRESETS.find((candidate) => candidate.id === raw) ??
     WINDOW_PRESETS.find((candidate) => candidate.id === DEFAULT_WINDOW_ID);
   if (!preset) throw new Error("No comparison window preset is configured.");
-  return { days: preset.days, id: preset.id, label: preset.label, sub: preset.sub };
+  return { comparison, days: preset.days, id: preset.id, label: preset.label };
+}
+
+export function resolveComparisonMode(
+  raw: string | undefined,
+  yoy: SearchInsightsYoy,
+): SearchInsightsComparisonMode {
+  return raw === YEAR_OVER_YEAR_COMPARISON.query && yoy.monthsImported >= yoy.required
+    ? YEAR_OVER_YEAR_COMPARISON.mode
+    : DEFAULT_COMPARISON_MODE;
 }
 
 // Whole months only: a partial month of history does not make a year-over-year comparison honest.

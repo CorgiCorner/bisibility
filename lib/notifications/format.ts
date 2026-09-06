@@ -1,3 +1,4 @@
+import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import type { NotificationType, Prisma } from "@/lib/generated/prisma/client";
 import { appRootPath, projectScopedHref } from "@/lib/routing/app-path";
 
@@ -91,7 +92,11 @@ export function notificationDisplay(
   };
 }
 
-export function relativeTimeLabel(date: Date, now = new Date()) {
+export function relativeTimeLabel(
+  date: Date,
+  now = new Date(),
+  dateFormat: DateFormat = "month_first",
+) {
   const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
   if (seconds < 60) {
     return "now";
@@ -112,5 +117,6 @@ export function relativeTimeLabel(date: Date, now = new Date()) {
     return `${days}d`;
   }
 
-  return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+  const key = date.toISOString().slice(0, 10);
+  return formatDateRange(key, key, dateFormat);
 }

@@ -1,8 +1,16 @@
 "use client";
 
+import {
+  HEADER_SPEND_CAP_TOOLTIP,
+  headerNoCapAriaLabel,
+  headerNoCapLabel,
+} from "@/components/cost-estimate/header-spend-cap-copy";
+import { formatProviderBudgetUsedLabel } from "@/components/cost-estimate/provider-spend-label";
+import { spendFillClass, spendTone } from "@/components/cost-estimate/spend-tone";
+import { quietChipVariants, Tooltip } from "@/components/ui";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
-import { DOCS_URL } from "@/lib/site/site";
-import { ProviderSpendMeter } from "./ProviderSpendMeter";
+import { cn } from "@/lib/ui/cn";
+import Link from "next/link";
 
 export type HeaderProviderSpendProps = {
   action: "details" | "set_budget" | null | undefined;
@@ -12,50 +20,102 @@ export type HeaderProviderSpendProps = {
   usedPercent: number | null;
 };
 
-// Compact provider-spend meter for the app header. Its figures are the server
-// read model, so the displayed amount and allocation percentage always agree.
+const pillClassName = cn(
+  quietChipVariants({ size: "sm" }),
+  "max-w-none font-sans text-[10.5px] font-semibold leading-none tabular-nums text-fg transition-colors",
+);
+
+const linkPillClassName = cn(
+  pillClassName,
+  "no-underline hover:border-border-control hover:bg-bg-inset active:bg-bg-inset",
+);
+
+function CapMiniBar({ percent }: Readonly<{ percent: number }>) {
+  const tone = spendTone(percent, true);
+  return (
+    <span
+      aria-hidden
+      className="relative h-1 w-9 shrink-0 overflow-hidden rounded-full border border-border-strong bg-transparent"
+    >
+      <span
+        className={cn("absolute inset-y-0 left-0 rounded-full", spendFillClass[tone])}
+        style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
+      />
+    </span>
+  );
+}
+
+function WarningDot() {
+  return (
+    <span
+      aria-hidden
+      className="h-1.5 w-1.5 shrink-0 rounded-full"
+      style={{ backgroundColor: "var(--yellow)" }}
+    />
+  );
+}
+
+// Compact monthly-cap pill for the app header. Figures come from the server read model.
 export function HeaderProviderSpend({
   action,
   recorded,
   projectRef,
-  tightest,
   usedPercent,
 }: Readonly<HeaderProviderSpendProps>) {
-  if (action === null) return null;
+  if (action === null) {
+    return null;
+  }
+
   if (recorded == null || action === undefined) {
     return (
-      <div
-        aria-label="Provider spend temporarily unavailable"
-        className="hidden min-w-[210px] flex-none pt-[3px] md:block"
-      >
-        <span className="block font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
-          BUDGET
-        </span>
-        <span className="mt-1 block font-sans tabular-nums text-xs text-fg-muted">
-          Temporarily unavailable
-        </span>
+      <div className="hidden self-center md:flex md:items-center">
+        <span className={cn(pillClassName, "text-fg-muted")}>Spend unavailable</span>
       </div>
     );
   }
 
+  const usageHref = appPath(projectRef, "settings", "usage");
+  const setCapHref = `${usageHref}?budget=edit`;
+  const spentCents = recorded.cents;
+
+  if (action === "set_budget" || usedPercent == null) {
+    return (
+      <div className="hidden self-center md:flex md:items-center">
+        <Tooltip
+          content={HEADER_SPEND_CAP_TOOLTIP}
+          placement="bottom"
+          wrapperClassName="items-center"
+        >
+          <Link
+            aria-label={headerNoCapAriaLabel(spentCents)}
+            className={cn(linkPillClassName, "gap-1.5")}
+            href={setCapHref}
+          >
+            <WarningDot />
+            <span>{headerNoCapLabel(spentCents)}</span>
+          </Link>
+        </Tooltip>
+      </div>
+    );
+  }
+
+  const usedLabel = formatProviderBudgetUsedLabel(usedPercent);
   return (
-    <div className="hidden min-w-[210px] flex-none pt-[3px] md:block">
-      <ProviderSpendMeter
-        capCents={null}
-        docsHref={`${DOCS_URL}/integrations#budget-cap`}
-        headerAction={{
-          href:
-            action === "set_budget"
-              ? `${appPath(projectRef, "settings", "usage")}?budget=edit`
-              : appPath(projectRef, "settings", "usage"),
-          label: action === "set_budget" ? "Set budget" : "Details",
-        }}
-        recorded={recorded}
-        spentCents={recorded.cents}
-        tightest={tightest}
-        usedPercent={usedPercent}
-        variant="header"
-      />
+    <div className="hidden self-center md:flex md:items-center">
+      <Tooltip
+        content={HEADER_SPEND_CAP_TOOLTIP}
+        placement="bottom"
+        wrapperClassName="items-center"
+      >
+        <Link
+          aria-label={`Monthly cap ${usedLabel}`}
+          className={cn(linkPillClassName, "gap-2")}
+          href={usageHref}
+        >
+          <CapMiniBar percent={usedPercent} />
+          <span>{usedLabel}</span>
+        </Link>
+      </Tooltip>
     </div>
   );
 }

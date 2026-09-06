@@ -1,10 +1,16 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { ScheduleAlreadyRunning, ScheduleOverlapPolicy } from "@temporalio/client";
+import {
+  ScheduleAlreadyRunning,
+  ScheduleNotFoundError,
+  ScheduleOverlapPolicy,
+} from "@temporalio/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  deleteRetiredTrafficIntentSweepSchedule,
   ensureTrafficSyncSchedule,
   isTrafficSyncEnabled,
+  RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID,
   TRAFFIC_SYNC_SCHEDULE_ID,
 } from "./bootstrap";
 
@@ -50,7 +56,9 @@ describe("traffic sync schedule bootstrap", () => {
           type: "startWorkflow",
           workflowType: "syncTrafficWorkflow",
         }),
-        policies: expect.objectContaining({ overlap: ScheduleOverlapPolicy.SKIP }),
+        policies: expect.objectContaining({
+          overlap: ScheduleOverlapPolicy.SKIP,
+        }),
         scheduleId: TRAFFIC_SYNC_SCHEDULE_ID,
         spec: { calendars: [{ hour: 5, minute: 45 }] },
       }),
@@ -91,6 +99,48 @@ describe("traffic sync schedule bootstrap", () => {
       status: "failed",
     });
     expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it("removes the retired traffic intent cadence", async () => {
+    const deleteSchedule = vi.fn();
+    const getHandle = vi.fn(() => ({ delete: deleteSchedule }));
+
+    await expect(deleteRetiredTrafficIntentSweepSchedule({ getHandle })).resolves.toEqual({
+      scheduleId: RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID,
+      status: "deleted",
+    });
+    expect(getHandle).toHaveBeenCalledWith(RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID);
+    expect(deleteSchedule).toHaveBeenCalledOnce();
+  });
+
+  it("treats a missing retired traffic intent cadence as already clean", async () => {
+    const deleteSchedule = vi
+      .fn()
+      .mockRejectedValue(
+        new ScheduleNotFoundError("missing", RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID),
+      );
+
+    await expect(
+      deleteRetiredTrafficIntentSweepSchedule({
+        getHandle: vi.fn(() => ({ delete: deleteSchedule })),
+      }),
+    ).resolves.toEqual({
+      scheduleId: RETIRED_TRAFFIC_INTENT_SWEEP_SCHEDULE_ID,
+      status: "absent",
+    });
+  });
+
+  it("fails the startup stage when retirement cannot be confirmed", async () => {
+    const deleteSchedule = vi.fn().mockRejectedValue(new Error("Temporal unavailable"));
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await expect(
+      deleteRetiredTrafficIntentSweepSchedule({
+        getHandle: vi.fn(() => ({ delete: deleteSchedule })),
+      }),
+    ).rejects.toThrow("Failed to retire traffic intent sweep schedule");
+
     consoleError.mockRestore();
   });
 });

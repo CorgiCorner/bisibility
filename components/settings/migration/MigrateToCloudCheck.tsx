@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button, InfoTooltip } from "@/components/ui";
 import { unwrapActionFailureResult } from "@/lib/actions/action-result";
 import { getCloudMigrationCompatibility, preflightMigrationTarget } from "@/lib/actions/cloud";
@@ -60,6 +61,7 @@ export function CheckStep({
   onCompatibilityChange,
   projectId,
 }: Readonly<CheckStepProps>) {
+  const dateFormat = useDateFormat();
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   let checkLabel = "Run compatibility check";
@@ -135,7 +137,7 @@ export function CheckStep({
             }}
           />
         ) : null}
-        {(compatibility ? resultRows(compatibility) : pendingRows()).map((row) => (
+        {(compatibility ? resultRows(compatibility, dateFormat) : pendingRows()).map((row) => (
           <StatusRow data={row} key={row.title} />
         ))}
       </div>

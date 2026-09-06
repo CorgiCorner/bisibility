@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createTag, createTagResult, deleteTag, renameTag } from "./tags";
+import {
+  createTag,
+  createTagResult,
+  deleteTag,
+  deleteTagResult,
+  renameTag,
+  renameTagResult,
+} from "./tags";
 
 const mocks = vi.hoisted(() => {
   class AuthorizationError extends Error {
@@ -149,6 +156,49 @@ describe("tag actions", () => {
     });
 
     expect(mocks.prisma.tag.create).not.toHaveBeenCalled();
+  });
+
+  it("returns a handled conflict when creating a duplicate tag", async () => {
+    mocks.prisma.tag.findFirst.mockResolvedValueOnce({ id: "tag_existing" });
+
+    await expect(
+      createTagResult({ name: "Guides", projectId: "prj_abcdefghijklmnopqrstuvwx" }),
+    ).resolves.toMatchObject({
+      error: { code: "conflict", message: "Tag already exists.", status: 409 },
+      ok: false,
+    });
+
+    expect(mocks.prisma.tag.create).not.toHaveBeenCalled();
+  });
+
+  it("returns a handled miss when deleting an unknown tag", async () => {
+    mocks.prisma.tag.findFirst.mockResolvedValueOnce(null);
+
+    await expect(
+      deleteTagResult({ name: "Docs", projectId: "prj_abcdefghijklmnopqrstuvwx" }),
+    ).resolves.toMatchObject({
+      error: { code: "not_found", message: "Tag not found.", status: 404 },
+      ok: false,
+    });
+
+    expect(mocks.prisma.tag.delete).not.toHaveBeenCalled();
+  });
+
+  it("returns a handled miss when renaming an unknown tag", async () => {
+    mocks.prisma.tag.findFirst.mockResolvedValueOnce(null);
+
+    await expect(
+      renameTagResult({
+        fromName: "Docs",
+        projectId: "prj_abcdefghijklmnopqrstuvwx",
+        toName: "Guides",
+      }),
+    ).resolves.toMatchObject({
+      error: { code: "not_found", message: "Tag not found.", status: 404 },
+      ok: false,
+    });
+
+    expect(mocks.prisma.tag.update).not.toHaveBeenCalled();
   });
 
   it("merges keyword links when renaming to an existing tag", async () => {

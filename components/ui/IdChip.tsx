@@ -3,11 +3,12 @@ import { cva } from "class-variance-authority";
 import { CopyButton } from "./CopyButton";
 
 export type IdChipProps = {
-  value: string;
   copyLabel?: string;
   size?: "xs" | "sm" | "md" | "lg";
   className?: string;
   copyClassName?: string;
+  displayValue?: string;
+  value: string;
 };
 
 const idChipVariants = cva("inline-flex items-center", {
@@ -32,12 +33,17 @@ const idTextSizeByIdChipSize = {
   lg: "text-[11px]",
 } satisfies Record<IdChipSize, string>;
 
+export function shortId(value: string) {
+  return value.slice(0, 10);
+}
+
 export function IdChip({
   value,
   copyLabel = "Copy ID",
   size = "sm",
   className,
   copyClassName,
+  displayValue = value,
 }: Readonly<IdChipProps>) {
   return (
     <span
@@ -46,8 +52,11 @@ export function IdChip({
         idChipVariants({ size }),
         className,
       )}
+      title={value}
     >
-      <span className={cn("font-mono leading-[1.45]", idTextSizeByIdChipSize[size])}>{value}</span>
+      <span className={cn("font-mono leading-[1.45]", idTextSizeByIdChipSize[size])}>
+        {displayValue}
+      </span>
       <CopyButton
         aria-label={copyLabel}
         className={cn("shrink-0", copyClassName)}

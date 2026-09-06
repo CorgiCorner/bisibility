@@ -47,7 +47,7 @@ describe("KeywordsToolbarActions", () => {
     expect(style.fontWeight).toBe("400");
   });
 
-  it("keeps toolbar action icons on the button foreground color contract", () => {
+  it("keeps secondary toolbar action icons on the muted foreground contract", () => {
     render(
       <KeywordsToolbarActions
         {...props}
@@ -58,20 +58,23 @@ describe("KeywordsToolbarActions", () => {
       />,
     );
 
-    for (const label of [
-      "Columns",
-      "Filters",
-      "Import or export",
-      "Export",
-      "Import",
-      "Add keyword",
-    ]) {
+    for (const label of ["Columns", "Import or export", "Export", "Import"]) {
       for (const action of screen.getAllByRole("button", { name: label })) {
+        const startIcon = action.querySelector(".MuiButton-startIcon");
         const icon = action.querySelector(".MuiButton-startIcon svg");
-        expect(icon, `${label} action icon`).toHaveClass("text-current");
-        expect(icon, `${label} action icon`).not.toHaveClass("text-accent", "text-accent-text");
+        expect(startIcon, `${label} action icon`).toHaveStyle({ color: "var(--fg-muted)" });
+        expect(icon, `${label} action icon svg`).toHaveClass("text-fg-muted");
       }
     }
+
+    const filters = screen.getByRole("button", { name: "Filters" });
+    expect(filters.querySelector(".MuiButton-startIcon")).not.toHaveStyle({
+      color: "var(--fg-muted)",
+    });
+
+    const addKeyword = screen.getByRole("button", { name: "Add keyword" });
+    const addIcon = addKeyword.querySelector(".MuiButton-startIcon");
+    expect(addIcon).not.toHaveStyle({ color: "var(--fg-muted)" });
   });
 
   it("renders density as a radiogroup with the active option checked", () => {
@@ -129,5 +132,16 @@ describe("KeywordsToolbarActions", () => {
         label,
       );
     }
+  });
+
+  it("keeps Add keyword compact below xl like the transfer actions", () => {
+    render(<KeywordsToolbarActions {...props} density="compact" onAddKeyword={vi.fn()} />);
+
+    const addKeyword = screen.getByRole("button", { name: "Add keyword" });
+    expect(addKeyword).toHaveStyle({ minWidth: 40 });
+    expect(addKeyword.closest('[data-toolbar-tooltip="true"]')).toHaveAttribute(
+      "data-tooltip-label",
+      "Add keyword",
+    );
   });
 });

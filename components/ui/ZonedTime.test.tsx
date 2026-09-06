@@ -35,7 +35,7 @@ describe("ZonedTime", () => {
       const markup = renderToStaticMarkup(
         <ZonedTime timeZone="Europe/Warsaw" value="2026-07-24T14:17:00.000Z" />,
       );
-      expect(markup).toContain("Jul 24, 16:17");
+      expect(markup).toContain("Jul 24, 2026, 16:17");
       expect(markup).not.toContain("your time");
       expect(markup).not.toContain("Europe/Warsaw");
     } finally {

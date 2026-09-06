@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { SearchInsightsRowsCard, type SearchInsightsRowsCardProps } from "./SearchInsightsRowsCard";
 
 function card(props: Partial<SearchInsightsRowsCardProps> = {}) {
+  const { children = <div>Rows</div>, ...rest } = props;
   return (
     <SearchInsightsRowsCard
       caption="Stored rows"
@@ -12,9 +13,9 @@ function card(props: Partial<SearchInsightsRowsCardProps> = {}) {
       shown={10}
       title="Top queries"
       total={184}
-      {...props}
+      {...rest}
     >
-      <div>Rows</div>
+      {children}
     </SearchInsightsRowsCard>
   );
 }
@@ -24,20 +25,23 @@ function section(title = "Top queries") {
 }
 
 describe("SearchInsightsRowsCard", () => {
-  it("keeps the truthful header counter passive and visually stable after expansion", () => {
+  it("places the counter next to the expander, not opposite the title", () => {
+    render(card());
+    const heading = within(section()).getByRole("heading", { name: "Top queries" });
+    const more = within(section()).getByRole("button", { name: "Show more" });
+    const footer = more.parentElement as HTMLElement;
+    const counter = within(footer).getByText("10 of 184");
+
+    expect(heading.parentElement).not.toContainElement(counter);
+    expect(counter.tagName).toBe("SPAN");
+    expect(counter).toHaveClass("font-sans", "tabular-nums", "text-ui-caption", "text-fg-muted");
+    expect(counter).not.toHaveClass("px-2", "py-0.5");
+    expect(within(section()).queryByRole("button", { name: /10 of 184/ })).toBeNull();
+  });
+
+  it("keeps the counter visually stable after expansion", () => {
     const { rerender } = render(card());
     const collapsedCounter = within(section()).getByText("10 of 184");
-
-    expect(collapsedCounter.tagName).toBe("SPAN");
-    expect(collapsedCounter).toHaveClass(
-      "shrink-0",
-      "px-2",
-      "py-0.5",
-      "font-sans tabular-nums",
-      "text-ui-caption",
-      "text-fg-muted",
-    );
-    expect(within(section()).queryByRole("button", { name: /10 of 184/ })).toBeNull();
 
     rerender(card({ show: 50, shown: 50 }));
     const expandedCounter = within(section()).getByText("50 of 184");
@@ -45,6 +49,59 @@ describe("SearchInsightsRowsCard", () => {
     expect(expandedCounter.tagName).toBe("SPAN");
     expect(expandedCounter.className).toBe(collapsedCounter.className);
     expect(within(section()).queryByRole("button", { name: /50 of 184/ })).toBeNull();
+  });
+
+  it("pins a header control opposite the title group without stretching its gap", () => {
+    render(card({ headerEnd: <button type="button">Lens</button> }));
+    const heading = within(section()).getByRole("heading", { name: "Top queries" });
+    const caption = within(section()).getByText("Stored rows");
+    const lens = within(section()).getByRole("button", { name: "Lens" });
+    const titleGroup = heading.parentElement as HTMLElement;
+    const header = titleGroup.parentElement as HTMLElement;
+
+    expect(titleGroup).toContainElement(caption);
+    expect(titleGroup).toHaveClass("gap-1");
+    expect(titleGroup).not.toContainElement(lens);
+    expect(header).toHaveClass("items-start", "justify-between");
+    expect(header).toContainElement(lens);
+  });
+
+  it("pins a footer action to the expander row, opposite the counter", () => {
+    render(card({ footerEnd: <a href="/manage">Manage GA4</a> }));
+    const more = within(section()).getByRole("button", { name: "Show more" });
+    const footer = more.parentElement as HTMLElement;
+    const action = within(footer).getByRole("link", { name: "Manage GA4" });
+
+    expect(
+      within(section()).getByRole("heading", { name: "Top queries" }).parentElement,
+    ).not.toContainElement(action);
+    expect(action.parentElement).toHaveClass("ms-auto");
+  });
+
+  it("opens a footer for a trailing action even when the table has no expander", () => {
+    render(
+      card({
+        children: (
+          <table>
+            <tbody>
+              <tr className="border-b border-border">
+                <td>Row</td>
+              </tr>
+            </tbody>
+          </table>
+        ),
+        footerEnd: <a href="/manage">Manage GA4</a>,
+        shown: 1,
+        total: 1,
+      }),
+    );
+
+    const tableWrap = within(section()).getByText("Row").closest("div") as HTMLElement;
+    const action = within(section()).getByRole("link", { name: "Manage GA4" });
+
+    expect(tableWrap).not.toHaveClass("[&_tbody_tr:last-child]:border-b-0");
+    expect(within(section()).queryByText("1 of 1")).toBeNull();
+    expect(action.parentElement).toHaveClass("ms-auto");
   });
 
   it("puts collapse before the remaining expansion action with a twelve pixel gap", () => {
@@ -57,7 +114,65 @@ describe("SearchInsightsRowsCard", () => {
     expect(footer).toHaveClass("gap-3");
     expect(footer).not.toHaveClass("border-t");
     expect(collapse.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(within(footer).getByText("134 more stored, no provider cost")).toBeInTheDocument();
+    expect(more).toHaveClass("min-h-[30px]");
+    expect(collapse).toHaveClass("min-h-[30px]");
+    expect(within(footer).getByText("50 of 184")).toBeInTheDocument();
+    expect(within(footer).queryByText(/more stored/)).toBeNull();
+  });
+
+  it("drops the card title divider when rows follow, because the table head already rules itself off", () => {
+    render(card());
+    const header = within(section()).getByRole("heading", { name: "Top queries" }).parentElement
+      ?.parentElement as HTMLElement;
+
+    expect(header).not.toHaveClass("border-b");
+  });
+
+  it("drops the last row divider when there is no pagination footer", () => {
+    render(
+      card({
+        children: (
+          <table>
+            <tbody>
+              <tr className="border-b border-border">
+                <td>Row</td>
+              </tr>
+            </tbody>
+          </table>
+        ),
+        shown: 1,
+        total: 1,
+      }),
+    );
+
+    const tableWrap = within(section()).getByText("Row").closest("div") as HTMLElement;
+    expect(tableWrap).toHaveClass("[&_tbody_tr:last-child]:border-b-0");
+    expect(within(section()).queryByRole("button", { name: /Show more/ })).toBeNull();
+    expect(within(section()).queryByText("1 of 1")).toBeNull();
+  });
+
+  it("keeps the last row divider when a pagination footer follows", () => {
+    render(
+      card({
+        children: (
+          <table>
+            <tbody>
+              <tr className="border-b border-border" data-testid="row">
+                <td>Row</td>
+              </tr>
+            </tbody>
+          </table>
+        ),
+        show: 10,
+        shown: 10,
+        total: 184,
+      }),
+    );
+
+    const tableWrap = within(section()).getByTestId("row").parentElement?.parentElement
+      ?.parentElement as HTMLElement;
+    expect(tableWrap).not.toHaveClass("[&_tbody_tr:last-child]:border-b-0");
+    expect(within(section()).getByRole("button", { name: /Show more/ })).toBeInTheDocument();
   });
 
   it("keeps collapse available at the fully expanded state without a zero remainder note", () => {
@@ -68,6 +183,7 @@ describe("SearchInsightsRowsCard", () => {
 
     expect(footer).not.toHaveClass("border-t");
     expect(within(footer).queryByRole("button", { name: /Show all|Show more/ })).toBeNull();
+    expect(within(footer).getByText("184 of 184")).toBeInTheDocument();
     expect(within(footer).queryByText(/0 more stored/)).toBeNull();
   });
 

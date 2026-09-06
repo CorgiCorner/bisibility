@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { menuItemRowHoverSx } from "@/lib/ui/menu-item-row-styles";
 import MenuItem from "@mui/material/MenuItem";
 import { CheckIcon as Check } from "@phosphor-icons/react";
 import type { MenuSelectOption } from "./menu-select-support";
@@ -16,8 +17,7 @@ export const menuSelectRowSx = {
   minHeight: 0,
   paddingX: "9px",
   paddingY: "8px",
-  "&:hover": { backgroundColor: "var(--nav-active)" },
-  "&.Mui-focusVisible": { backgroundColor: "var(--nav-active)" },
+  ...menuItemRowHoverSx,
 } as const;
 
 type MenuSelectOptionItemProps = {

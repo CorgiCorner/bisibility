@@ -7,13 +7,21 @@ import {
 } from "@temporalio/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ activity: vi.fn(), proxyActivities: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  activity: vi.fn(),
+  backfills: vi.fn(),
+  proxyActivities: vi.fn(),
+}));
 vi.mock("@temporalio/workflow", () => ({
   proxyActivities: mocks.proxyActivities.mockReturnValue({
     reconcileQueuedSearchInsightsImportsActivity: mocks.activity,
   }),
 }));
+vi.mock("../search-insights/sync/queued-import-reconciler", () => ({
+  reconcileQueuedSearchInsightsImports: mocks.backfills,
+}));
 
+import { reconcileQueuedSearchInsightsImportsActivity } from "./search-insights-reconciliation-activity";
 import {
   ensureSearchInsightsQueueReconciliationSchedule,
   SEARCH_INSIGHTS_QUEUE_RECONCILIATION_SCHEDULE_ID,
@@ -23,10 +31,28 @@ import { reconcileQueuedSearchInsightsImportsWorkflow } from "./search-insights-
 
 describe("queued search insights workflow", () => {
   it("delegates one deterministic sweep to the activity", async () => {
-    const result = { attempted: 2, failed: 1, scanned: 3, skipped: 1, stamped: 1 };
+    const result = {
+      attempted: 2,
+      failed: 1,
+      scanned: 3,
+      skipped: 1,
+      stamped: 1,
+    };
     mocks.activity.mockResolvedValue(result);
     await expect(reconcileQueuedSearchInsightsImportsWorkflow()).resolves.toEqual(result);
     expect(mocks.activity).toHaveBeenCalledOnce();
+  });
+});
+
+describe("queued search insights reconciliation activity", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("runs only queued-import backfills", async () => {
+    const backfills = { attempted: 1, failed: 0, scanned: 1, skipped: 0, stamped: 1 };
+    mocks.backfills.mockResolvedValue(backfills);
+
+    await expect(reconcileQueuedSearchInsightsImportsActivity()).resolves.toEqual(backfills);
+    expect(mocks.backfills).toHaveBeenCalledOnce();
   });
 });
 

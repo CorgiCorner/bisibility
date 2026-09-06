@@ -17,7 +17,7 @@ type Props = {
 };
 
 const rowClass =
-  "rounded-control border border-border-soft bg-bg-sunken/30 px-3.5 py-3 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4";
+  "rounded-control border border-border bg-bg-sunken/30 px-3.5 py-3 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4";
 
 export const consumerActionSx = {
   color: "var(--fg-muted)",
@@ -65,7 +65,7 @@ export function ProviderConsumerRows(props: Readonly<Props>) {
   const trafficNeverSynced = props.statuses.trafficEnrichment.state === "never_synced";
 
   return (
-    <div className="mt-3.5 grid gap-2 border-border-soft border-t pt-3.5 sm:col-span-2 sm:row-start-2">
+    <div className="mt-3.5 grid gap-2 border-border border-t pt-3.5 sm:col-span-2 sm:row-start-2">
       <fieldset aria-label="Search Console" className={`${rowClass} m-0 min-w-0`}>
         <ConsumerCopy label="Search Console" status={props.statuses.searchModule} />
         {props.projectRef ? (

@@ -5,6 +5,7 @@ import {
   type UserMenuLink,
 } from "@/components/shell/user-menu-items";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { menuItemRowHoverSx } from "@/lib/ui/menu-item-row-styles";
 import MenuItem from "@mui/material/MenuItem";
 import Link from "next/link";
 
@@ -16,8 +17,7 @@ export const USER_MENU_ROW_SX = {
   minHeight: 0,
   paddingX: "9px",
   paddingY: "8px",
-  "&:hover": { backgroundColor: "var(--bg-sunken)" },
-  "&.Mui-focusVisible": { backgroundColor: "var(--bg-sunken)" },
+  ...menuItemRowHoverSx,
 } as const;
 
 export type UserMenuRowProps = {

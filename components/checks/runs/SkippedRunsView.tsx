@@ -1,4 +1,8 @@
+"use client";
+
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import type { CheckRange, DeferredGroup, DeferredReason } from "@/lib/checks/contract";
+import type { DateFormat } from "@/lib/dates/format";
 import {
   CaretRightIcon as CaretRight,
   GaugeIcon as Gauge,
@@ -58,10 +62,17 @@ const reasonMeta: Record<
 
 function GroupCard({
   group,
+  dateFormat,
   links,
   now,
   timeZone,
-}: Readonly<{ group: DeferredGroup; links: SkippedRunsLinks; now: Date; timeZone: string }>) {
+}: Readonly<{
+  dateFormat: DateFormat;
+  group: DeferredGroup;
+  links: SkippedRunsLinks;
+  now: Date;
+  timeZone: string;
+}>) {
   const meta = reasonMeta[group.reason];
   const Icon = meta.icon;
   const quantity =
@@ -69,7 +80,7 @@ function GroupCard({
       ? `${group.keywordCount.toLocaleString("en-US")} ${
           group.keywordCount === 1 ? "keyword" : "keywords"
         } · every scheduled run skipped`
-      : `${group.count.toLocaleString("en-US")} checks · ${deferredWindow(group, now, timeZone)}`;
+      : `${group.count.toLocaleString("en-US")} checks · ${deferredWindow(group, now, timeZone, dateFormat)}`;
   return (
     <article className="flex min-w-0 gap-3 rounded-card border border-border bg-bg-elev p-4">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-bg-sunken text-yellow-text">
@@ -100,6 +111,7 @@ type SkippedProps = {
 };
 
 export function SkippedRunsView({ groups, links, now, range, timeZone }: Readonly<SkippedProps>) {
+  const dateFormat = useDateFormat();
   return (
     <section
       aria-label="Skipped checks"
@@ -111,7 +123,14 @@ export function SkippedRunsView({ groups, links, now, range, timeZone }: Readonl
       </p>
       <div className="mt-3 grid gap-2.5 lg:grid-cols-2">
         {groups.map((group) => (
-          <GroupCard group={group} key={group.reason} links={links} now={now} timeZone={timeZone} />
+          <GroupCard
+            dateFormat={dateFormat}
+            group={group}
+            key={group.reason}
+            links={links}
+            now={now}
+            timeZone={timeZone}
+          />
         ))}
       </div>
     </section>

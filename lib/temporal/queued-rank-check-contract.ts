@@ -4,6 +4,7 @@ export type QueuedRankCheckWorkflowInput = QueuedRankCheckBatchInput & {
   batchId?: string;
   polls?: number;
   preflightDeferredReason?: string;
+  runItemIds?: string[];
   startedAt?: string;
 };
 

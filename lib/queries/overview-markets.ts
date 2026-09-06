@@ -1,3 +1,4 @@
+import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import type { OverviewRange } from "./overview-filters";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -43,6 +44,7 @@ export type OverviewRegistryMarket = {
 };
 
 type BuildOptions = {
+  dateFormat?: DateFormat;
   defaultFrequency?: string | null;
   now: Date;
   range: OverviewRange;
@@ -90,12 +92,9 @@ function share(count: number, total: number) {
   return total > 0 ? Math.round((count / total) * 100) : 0;
 }
 
-function dateLabel(value: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).format(value);
+function dateLabel(value: Date, dateFormat: DateFormat) {
+  const key = value.toISOString().slice(0, 10);
+  return formatDateRange(key, key, dateFormat);
 }
 
 function signedPoints(value: number) {
@@ -118,7 +117,7 @@ export function buildOverviewMarkets(
 ): OverviewMarketRow[] {
   const options = Array.isArray(registryOrOptions) ? maybeOptions : registryOrOptions;
   if (!options) throw new Error("Overview market build options are required.");
-  const { defaultFrequency, now, range } = options;
+  const { dateFormat = "month_first", defaultFrequency, now, range } = options;
   const active = keywords.filter(
     (keyword) =>
       keyword.locationId &&
@@ -158,7 +157,7 @@ export function buildOverviewMarkets(
 
     return {
       deltaPoints,
-      deltaTooltip: `Top-10 share ${signedPoints(deltaPoints)} vs ${dateLabel(previousStart)} - ${dateLabel(previousEnd)}, the previous ${days} days.`,
+      deltaTooltip: `Top-10 share ${signedPoints(deltaPoints)} vs ${dateLabel(previousStart, dateFormat)} - ${dateLabel(previousEnd, dateFormat)}, the previous ${days} days.`,
       languageLabel,
       locationId,
       locationLabel,

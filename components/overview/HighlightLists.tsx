@@ -84,13 +84,13 @@ export function HighlightLists({ lists, projectRef, rowHref }: Readonly<Highligh
             </div>
             <div className="flex flex-1 flex-col">
               {list.rows.length === 0 ? (
-                <div className="grid flex-1 place-items-center border-t border-border-soft p-3">
+                <div className="grid flex-1 place-items-center border-t border-border p-3">
                   <EmptyState compact {...emptyCopy[list.kind]} />
                 </div>
               ) : (
                 list.rows.map((row) => (
                   <Link
-                    className="flex min-h-[68px] items-center justify-between gap-2.5 border-t border-border-soft px-4.5 py-2.5 hover:bg-bg-sunken"
+                    className="flex min-h-[68px] items-center justify-between gap-2.5 border-t border-border px-4.5 py-2.5 hover:bg-bg-sunken"
                     href={rowHref?.(row) ?? appPath(projectRef, "rank-tracker", row.id)}
                     key={row.id}
                   >

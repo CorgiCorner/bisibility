@@ -1,22 +1,22 @@
 {
   "schemaVersion": 3,
-  "release": "v0.20.0",
+  "release": "v0.21.0",
   "source": {
     "repository": "https://github.com/CorgiCorner/bisibility",
-    "tag": "v0.20.0"
+    "tag": "v0.21.0"
   },
   "images": {
-    "web": "ghcr.io/corgicorner/bisibility:0.20.0",
-    "worker": "ghcr.io/corgicorner/bisibility-worker:0.20.0"
+    "web": "ghcr.io/corgicorner/bisibility:0.21.0",
+    "worker": "ghcr.io/corgicorner/bisibility-worker:0.21.0"
   },
   "artifacts": {
     "composeCompatibility": {
       "name": "docker-compose.self-host.yml",
-      "sha256": "7c2340f374dfae809211c2d5de0cf210e99df1e17363c1723e06987ceb28d8ea"
+      "sha256": "b2039741c4623700946f43f76ea745d21a942ae26bdb15b6e28a0184f091e962"
     },
     "composeCore": {
       "name": "compose.yaml",
-      "sha256": "8ad12ff04bab3719459861fde4b57b03e077f36f5bb13d38f948acd9bc06fbd5"
+      "sha256": "be667747049945a7419820a72008bcd09ef096eb85309862230c63ec265ada2a"
     },
     "composeTemporal": {
       "name": "compose.temporal.yaml",
@@ -24,11 +24,11 @@
     },
     "composeWorker": {
       "name": "compose.worker.yaml",
-      "sha256": "dfdd57f08e21f278f61fdfb6345151eb3ac06a19398c0c5e102ca924bc6898d3"
+      "sha256": "489abb05d5f5660bfee79b414fb98e3dfa1999d5a6889b74f84e7a899d687ded"
     },
     "environment": {
       "name": "bisibility.env.example",
-      "sha256": "d8f7576f294123f4e56c7d35903f9796eacfa7edd35b41d96f3e1d863d320bd5"
+      "sha256": "51c92905999fd5490001099cd6ce8b871d31fc7df27580aaf55038f05455bc02"
     },
     "generator": {
       "name": "generate-self-host-env.mjs",

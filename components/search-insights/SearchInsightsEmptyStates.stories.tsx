@@ -33,13 +33,13 @@ const runtime = {
     status: "ok" as const,
     temporalIdentityComparison: { detail: "identities match", status: "match" as const },
   },
-  workflowStatus: "running" as const,
 };
 const startupFacts = {
   ...storyImportFacts,
   consecutiveDays: 0,
   qualifyingDays: 0,
   readyThrough: {
+    d1: { current: false, previous: false },
     d7: { current: false, previous: false },
     d28: { current: false, previous: false },
     d90: { current: false, previous: false },

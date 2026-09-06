@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button, EmptyState, ModuleMark } from "@/components/ui";
 import type { SearchInsightsImportAction } from "@/lib/actions/search-insights";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
@@ -104,7 +105,8 @@ export function SearchInsightsNoDataState({
   resumeAction,
   retryAction,
 }: Readonly<SearchInsightsNoDataStateProps>) {
-  const model = resolveSearchBackfillPresentation(facts);
+  const dateFormat = useDateFormat();
+  const model = resolveSearchBackfillPresentation(facts, dateFormat);
   const workerCaused = model.kind === "waiting_worker";
   const reconnectHref = googleInstallUrl({
     projectId,
@@ -132,11 +134,12 @@ export function SearchInsightsNoDataState({
       />
     ) : null;
   const watching = SELF_RESOLVING.has(model.kind);
+  const importRunning = model.kind === "running";
   const action =
     primary || watching ? (
       <div className="flex flex-wrap items-center justify-center gap-2.5">
         {primary}
-        {watching ? <SearchInsightsRefresh active /> : null}
+        {watching ? <SearchInsightsRefresh active={importRunning} /> : null}
       </div>
     ) : null;
   return (

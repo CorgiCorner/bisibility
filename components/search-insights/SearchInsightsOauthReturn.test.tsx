@@ -68,7 +68,7 @@ describe("SearchInsightsOauthReturn", () => {
     expect(propertyTrigger).not.toHaveClass("min-h-[52px]", "px-4");
     expect(screen.getByText("Owner · Domain property")).toBeVisible();
     const importInfo = screen.getByText(
-      "Importing 16 months takes about 1,900 requests to Google. First view in ~30 min; full history in ~2 days at Standard speed.",
+      "Importing 16 months takes about 1,900 requests to Google. First view in ~5 min; full history in ~2 days at Standard speed.",
     );
     expect(importInfo).toBeVisible();
     expect(screen.getByRole("button", { name: "Import depth" })).toHaveTextContent("16 months");
@@ -80,10 +80,16 @@ describe("SearchInsightsOauthReturn", () => {
     const disconnect = screen.getByRole("button", { name: "Disconnect" });
     const reconnectAccount = screen.getByRole("link", { name: "Reconnect account" });
     const footer = disconnect.closest('[data-slot="connected-google-account-footer"]');
+    expect(footer).toBeInstanceOf(HTMLElement);
+    if (!(footer instanceof HTMLElement)) return;
     expect(footer).toHaveTextContent("owner@example.com");
     expect(footer).not.toHaveTextContent("Connected as");
     expect(footer).not.toHaveTextContent("Switch account");
     expect(footer).toHaveClass("border-t", "border-border");
+    expect(footer).not.toHaveClass("bg-bg-sunken");
+    expect(footer.parentElement).toHaveClass("overflow-hidden", "rounded-control");
+    expect(footer.parentElement).not.toHaveClass("p-3.5");
+    expect(footer.previousElementSibling).toHaveClass("p-3.5");
     expect(footer).not.toHaveTextContent("·");
     expect(reconnectAccount).toHaveAttribute(
       "href",
@@ -225,9 +231,66 @@ describe("SearchInsightsOauthReturn", () => {
       </ToastProvider>,
     );
 
-    expect(screen.getByRole("button", { name: "Google Analytics property" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Use selected property" })).toBeEnabled();
+    const layout = screen.getByTestId("search-insights-oauth-return");
+    expect(layout).toHaveClass("w-full");
+    expect(layout).not.toHaveClass("max-w-[340px]");
+    expect(screen.getByRole("heading", { name: "Connect Google Analytics 4" })).toBeVisible();
+    const promise = screen.getByText(
+      "See which queries and landing pages bring engaged visitors, and which convert. Read-only.",
+    );
+    expect(promise).toHaveClass("text-ui-caption");
+    const trigger = screen.getByRole("button", { name: "Google Analytics property" });
+    expect(trigger).toHaveAttribute("aria-describedby", promise.id);
+    expect(screen.queryByText("Property ID 123456789")).not.toBeInTheDocument();
+    expect(screen.queryByText("GA4")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Disconnect" })).not.toBeInTheDocument();
+    const manual = screen.getByRole("button", { name: "Enter a property ID manually" });
+    expect(manual).toHaveClass(
+      "min-h-6",
+      "text-[11.5px]",
+      "text-fg",
+      "hover:underline",
+      "-ms-2",
+      "px-2",
+    );
+    expect(manual).not.toHaveClass("underline", "text-fg-muted");
+    const confirm = screen.getByRole("button", { name: "Use this property" });
+    expect(confirm).toBeEnabled();
+    expect(confirm).toHaveClass("MuiButton-outlined");
     expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+    const footer = screen.getByRole("button", { name: "Not now" }).parentElement;
+    expect(footer).toHaveClass("justify-end", "border-t", "border-border", "px-4");
+  });
+
+  it("abandons an unfinished GA4 selection as Not now instead of disconnecting", async () => {
+    const cancelAction = vi.fn();
+    const disconnectAction = vi.fn();
+    render(
+      <ToastProvider>
+        <SearchInsightsOauthReturn
+          cancelAction={cancelAction}
+          completeAction={vi.fn()}
+          disconnectAction={disconnectAction}
+          projectId="prj_1"
+          setup={{
+            properties: [
+              {
+                kind: "ga4",
+                label: "Store (123456789)",
+                permissionLevel: "Account",
+                value: "123456789",
+              },
+            ],
+            provider: "ga4",
+          }}
+        />
+      </ToastProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Not now" }));
+
+    expect(cancelAction).toHaveBeenCalledWith({ projectId: "prj_1" });
+    expect(disconnectAction).not.toHaveBeenCalled();
   });
 
   it("keeps GA4 discovery failure actionable with manual entry and a safe retry", async () => {
@@ -252,7 +315,9 @@ describe("SearchInsightsOauthReturn", () => {
       </ToastProvider>,
     );
 
-    expect(screen.getByText("Select a Google Analytics 4 property")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Connect Google Analytics 4" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Not now" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Disconnect" })).not.toBeInTheDocument();
     expect(screen.getByText("Couldn't load your GA4 properties.")).toBeInTheDocument();
     const input = screen.getByRole("textbox", { name: /Google Analytics 4 property id/i });
     await userEvent.type(input, "123456789");

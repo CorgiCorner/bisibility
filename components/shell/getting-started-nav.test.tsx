@@ -1,3 +1,7 @@
+import {
+  GETTING_STARTED_LABEL,
+  gettingStartedProgressAriaLabel,
+} from "@/components/getting-started/getting-started-copy";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
 import { appPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
@@ -37,7 +41,7 @@ describe("getting-started navigation", () => {
         showGettingStarted={visible}
       />,
     );
-    expect(Boolean(screen.queryByRole("link", { name: "Get started" }))).toBe(visible);
+    expect(Boolean(screen.queryByRole("link", { name: GETTING_STARTED_LABEL }))).toBe(visible);
   });
 
   it("renders the special entry outside normal nav semantics with a calculated ring", () => {
@@ -51,7 +55,7 @@ describe("getting-started navigation", () => {
         showGettingStarted
       />,
     );
-    const setupLink = screen.getByRole("link", { name: "Get started" });
+    const setupLink = screen.getByRole("link", { name: GETTING_STARTED_LABEL });
 
     expect(setupLink).toHaveAttribute("data-getting-started-nav");
     expect(setupLink).toHaveClass("border", "rounded-control", "bg-bg-elev");
@@ -61,7 +65,7 @@ describe("getting-started navigation", () => {
       "stroke-dasharray",
       "12.6 50.3",
     );
-    expect(container.querySelector('[data-nav-icon="Get started"]')).toBeNull();
+    expect(container.querySelector(`[data-nav-icon="${GETTING_STARTED_LABEL}"]`)).toBeNull();
 
     rerender(
       <SidebarNav
@@ -73,11 +77,13 @@ describe("getting-started navigation", () => {
       />,
     );
     expect(
-      screen.getByRole("link", { name: "Get started" }).querySelector("[data-progress-arc]"),
+      screen
+        .getByRole("link", { name: GETTING_STARTED_LABEL })
+        .querySelector("[data-progress-arc]"),
     ).toHaveAttribute("stroke-dasharray", "37.7 50.3");
   });
 
-  it("shows a done indicator when setup is complete but not acknowledged", () => {
+  it("keeps a full progress ring when setup is complete but not acknowledged", () => {
     setNavigationState({ pathname: appPath(projectRef, "dashboard") });
     render(
       <SidebarNav
@@ -90,9 +96,12 @@ describe("getting-started navigation", () => {
       />,
     );
 
-    const link = screen.getByRole("link", { name: "Get started" });
-    expect(link.querySelector("[data-setup-complete-indicator]")).not.toBeNull();
-    expect(link.querySelector("[data-progress-arc]")).toBeNull();
+    const link = screen.getByRole("link", { name: GETTING_STARTED_LABEL });
+    expect(link.querySelector("[data-setup-complete-indicator]")).toBeNull();
+    expect(link.querySelector("[data-progress-arc]")).toHaveAttribute(
+      "stroke-dasharray",
+      "50.3 50.3",
+    );
   });
 
   it("supports the collapsed setup entry with an accessible progress label", () => {
@@ -108,7 +117,7 @@ describe("getting-started navigation", () => {
       />,
     );
 
-    const link = screen.getByRole("link", { name: "Get started, 3 of 4 steps complete" });
+    const link = screen.getByRole("link", { name: gettingStartedProgressAriaLabel(3, 4) });
     expect(link).toHaveClass("ml-5.5", "mb-2", "h-9", "w-9");
     expect(link).not.toHaveAttribute("title");
     expect(link.querySelector("[data-progress-ring]")).toHaveAttribute("width", "20");
@@ -134,6 +143,6 @@ describe("getting-started navigation", () => {
         />
       </AppThemeRoot>,
     );
-    expect(Boolean(screen.queryByRole("link", { name: "Get started" }))).toBe(visible);
+    expect(Boolean(screen.queryByRole("link", { name: GETTING_STARTED_LABEL }))).toBe(visible);
   });
 });
