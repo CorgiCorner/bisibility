@@ -1,7 +1,9 @@
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { CronRunPreview } from "@/components/settings/tracking/CronRunPreview";
 import type { TrackingDefaultsForm } from "@/components/settings/tracking/tracking-form";
-import { FieldLabel, Input, MenuSelect } from "@/components/ui";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Input } from "@/components/ui/Input";
+import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import { frequencyOptions } from "@/lib/settings/options";
 import { isSupportedProjectTimezone, timezoneSelectOptions } from "@/lib/settings/timezones";

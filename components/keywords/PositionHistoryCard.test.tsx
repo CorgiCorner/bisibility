@@ -6,32 +6,33 @@ import { historyAnnotationTop, PositionHistoryCard } from "./PositionHistoryCard
 
 const { lineChart } = vi.hoisted(() => ({ lineChart: vi.fn() }));
 
-vi.mock("@mui/x-charts/hooks", () => ({
-  useDrawingArea: () => ({ height: 234, left: 42, top: 18, width: 440 }),
-  useXScale: () => () => 482,
-  useYScale: () => (value: number) => 18 + (value - 1) * 10,
-}));
+vi.mock("recharts", () => {
+  const exports = {
+    usePlotArea: () => ({ height: 234, x: 42, y: 18, width: 440 }),
+    useXAxisScale: () => () => 482,
+    useYAxisScale: () => (value: number) => 18 + (value - 1) * 10,
+    ReferenceLine: (props: { label: { value: string; position: string }; y: number }) => (
+      <g data-label-position={props.label.position} data-testid="reference-line" data-y={props.y}>
+        <text>{props.label.value}</text>
+      </g>
+    ),
+  };
+  return { default: exports, ...exports };
+});
 
-vi.mock("@mui/x-charts/ChartsReferenceLine", () => ({
-  ChartsReferenceLine: (props: { label: string; spacing: { x: number; y: number }; y: number }) => (
-    <g data-spacing={JSON.stringify(props.spacing)} data-testid="reference-line" data-y={props.y}>
-      <text>{props.label}</text>
-    </g>
-  ),
-}));
-
-vi.mock("@mui/x-charts/LineChart", () => ({
-  LineChart: (props: {
+vi.mock("@/components/charts/TimeSeriesChart", () => ({
+  TimeSeriesChart: (props: {
     children?: ReactNode;
-    series: { data: number[] }[];
-    xAxis: { data: string[] }[];
-    yAxis: { tickInterval?: number[]; valueFormatter?: (value: number) => string }[];
+    series: { values: number[] }[];
+    labels: string[];
+    yTicks?: number[];
+    formatValue?: (value: number) => string;
   }) => {
     lineChart(props);
     return (
       <svg
-        data-labels={JSON.stringify(props.xAxis[0]?.data)}
-        data-positions={JSON.stringify(props.series[0]?.data)}
+        data-labels={JSON.stringify(props.labels)}
+        data-positions={JSON.stringify(props.series[0]?.values)}
         data-testid="line-chart"
       >
         {props.children}

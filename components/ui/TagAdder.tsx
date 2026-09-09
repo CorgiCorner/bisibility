@@ -4,8 +4,9 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import { type TagNameFormValues, tagNameFormSchema } from "@/lib/schemas/tag";
 import { cn } from "@/lib/ui/cn";
 import { MOTION_MENU_EXIT } from "@/lib/ui/motion";
-import { PlusIcon as Plus, XIcon as X } from "@phosphor-icons/react";
-import { type TransitionEvent, useCallback, useRef, useState } from "react";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { type TransitionEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Kbd } from "./Kbd";
 import {
@@ -51,6 +52,14 @@ export function TagAdder({ disabled = false, onAdd }: Readonly<TagAdderProps>) {
   const skipBlurCommitRef = useRef(false);
   const exitFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const exitFinishedRef = useRef(false);
+  useEffect(() => {
+    return () => {
+      if (exitFallbackRef.current !== null) {
+        clearTimeout(exitFallbackRef.current);
+        exitFallbackRef.current = null;
+      }
+    };
+  }, []);
   const inputRef = useCallback(
     (input: HTMLInputElement | null) => {
       formRef(input);

@@ -69,9 +69,8 @@ describe("AsOfDatePopover", () => {
 
     await user.keyboard(" ");
     expect(screen.getByRole("dialog", { name: "As of date" })).toBeVisible();
-    const backdrop = document.querySelector(".MuiBackdrop-root");
-    expect(backdrop).toBeInstanceOf(HTMLElement);
-    fireEvent.click(backdrop as HTMLElement);
+    fireEvent.pointerDown(document.body);
+    fireEvent.click(document.body);
 
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "As of date" })).not.toBeInTheDocument();

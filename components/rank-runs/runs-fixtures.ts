@@ -16,7 +16,7 @@ export const historyRun: RankRunRecord = {
   counts,
   estimatedCostCents: 192,
   finishedAt: "2026-09-03T06:04:00.000Z",
-  id: "rcr_history_0001",
+  id: "rcr_abcdefghijklmnopqrstuvwx",
   keywordCount: 24,
   kind: "rank_check",
   launchedAt: "2026-09-03T06:00:00.000Z",

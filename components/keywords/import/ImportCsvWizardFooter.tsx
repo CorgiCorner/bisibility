@@ -1,7 +1,9 @@
-import { Button } from "@/components/ui";
-import { ArrowLeftIcon as ArrowLeft, ArrowRightIcon as ArrowRight } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 
 type ImportCsvWizardFooterProps = {
+  hasMarkets?: boolean;
   canImport: boolean;
   confirmImport: () => Promise<void>;
   isReviewing: boolean;
@@ -13,6 +15,7 @@ type ImportCsvWizardFooterProps = {
 };
 
 export function ImportCsvWizardFooter({
+  hasMarkets = true,
   canImport,
   confirmImport,
   isReviewing,
@@ -28,7 +31,12 @@ export function ImportCsvWizardFooter({
         <Button disabled={isSubmitting} onClick={startOver} type="button" variant="secondary">
           Start over
         </Button>
-        <Button disabled={isSubmitting} onClick={() => void next()} sx={{ flex: 1 }} type="button">
+        <Button
+          disabled={isSubmitting}
+          onClick={() => void next()}
+          style={{ flex: 1 }}
+          type="button"
+        >
           Done
         </Button>
       </div>
@@ -53,18 +61,18 @@ export function ImportCsvWizardFooter({
           disabled={isSubmitting || isReviewing || !canImport}
           key="review-confirmation"
           onClick={() => void confirmImport()}
-          sx={{ flex: 1 }}
+          style={{ flex: 1 }}
           type="button"
         >
           {isSubmitting ? "Importing..." : primaryLabel}
         </Button>
       ) : (
         <Button
-          disabled={isSubmitting || isReviewing || (step === 3 && !canImport)}
+          disabled={!hasMarkets || isSubmitting || isReviewing || (step === 3 && !canImport)}
           endIcon={<ArrowRight size={14} weight="regular" />}
           key="step-navigation"
           onClick={() => void next()}
-          sx={{ flex: 1 }}
+          style={{ flex: 1 }}
           type="button"
         >
           {isReviewing ? "Checking..." : isSubmitting ? "Importing..." : primaryLabel}

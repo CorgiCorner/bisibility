@@ -1,5 +1,10 @@
 import type { TemporalCounterReadState } from "@/lib/ops/heartbeat-counter-state";
 import type { DatabaseHeartbeat } from "@/lib/ops/heartbeat-data";
+import {
+  dispatchLine,
+  dispatchReasons,
+  rankScheduleLine,
+} from "@/lib/ops/heartbeat-dispatch-format";
 import { scheduleBreakdownText } from "@/lib/ops/heartbeat-schedule-breakdown";
 import type { TemporalHeartbeat, TemporalScheduleIssue } from "@/lib/ops/heartbeat-temporal";
 import {
@@ -103,19 +108,7 @@ export function heartbeatVerdict(input: HeartbeatEventInput): {
   const rank = input.database.rank;
   const traffic = trafficReason(input);
   if (traffic) reasons.push(traffic);
-  if (input.database.schedule.tracked > 0 && input.database.schedule.active === 0) {
-    reasons.push({
-      severity: "warning",
-      text: `Rank checks: no automatic schedule is active for ${input.database.schedule.tracked} tracked keyword${input.database.schedule.tracked === 1 ? "" : "s"}. Set an automatic keyword schedule.`,
-    });
-  }
-  if (input.database.schedule.dueWithoutRun > 0) {
-    const count = input.database.schedule.dueWithoutRun;
-    reasons.push({
-      severity: "error",
-      text: `Rank checks: ${count} automatic schedule${count === 1 ? "" : "s"} became due in 24 h but no scheduled run executed - inspect the rank-check reconciler and worker queue.`,
-    });
-  }
+  reasons.push(...dispatchReasons(input.database, input.now));
   if (rank.failed > 0) {
     const examples = rank.topFailures.slice(0, 3).join(", ");
     reasons.push({
@@ -150,7 +143,12 @@ export function heartbeatVerdict(input: HeartbeatEventInput): {
       text: `Ops delivery: ${input.database.undeliveredEvents} events undelivered - check Slack and Redis, then run the outbox sweep.`,
     });
   }
-  if (input.database.bootstrapErrors.length > 0) {
+  if (!input.database.collectionAvailable) {
+    reasons.push({
+      severity: "error",
+      text: "Database collection failed - rank, traffic and outbox health could not be evaluated.",
+    });
+  } else if (input.database.bootstrapErrors.length > 0) {
     const count = input.database.bootstrapErrors.length;
     reasons.push({
       severity: "error",
@@ -216,19 +214,19 @@ function transientLine(input: HeartbeatEventInput) {
 }
 
 function rankLine(database: DatabaseHeartbeat) {
+  if (!database.collectionAvailable) return "Unavailable - check outcomes were not evaluated";
   const rank = database.rank;
   return `Scheduled ${rank.scheduled} · succeeded ${rank.succeeded} · failed ${rank.failed} · deferred ${rank.deferred} · stuck ${rank.stuck}`;
 }
 
-function healthyLine(input: HeartbeatEventInput) {
-  const parts = [`worker up ${relativeTime(input.workerStartedAt, input.now).replace(" ago", "")}`];
+function collectionLine(input: HeartbeatEventInput) {
+  if (!input.database.collectionAvailable) return "Unavailable - database collection failed";
+  const parts: string[] = [];
   if (input.database.undeliveredEvents === 0) parts.push("ops outbox clear");
-  if (input.database.rank.failed === 0 && input.database.rank.stuck === 0)
-    parts.push("rank checks: no failures");
   if (input.database.bootstrapErrors.length === 0 && input.temporal.inspectionErrors === 0) {
     parts.push("no bootstrap errors");
   }
-  return parts.join(" · ");
+  return parts.join(" · ") || "Needs attention";
 }
 
 function temporalCounterLine(input: HeartbeatEventInput) {
@@ -263,19 +261,24 @@ export function buildHeartbeatEvent(input: HeartbeatEventInput): OpsEventInput {
   }
   if (transient) fields.Transient = transient;
   fields["Rank checks (24h)"] = rankLine(input.database);
+  fields["Rank dispatch"] = dispatchLine(input.database, input.now);
+  fields["Rank schedules"] = rankScheduleLine(input.database);
   if (input.database.rank.lagP50Ms !== null && input.database.rank.lagP95Ms !== null) {
     fields["Start lag"] =
       `p50 ${duration(input.database.rank.lagP50Ms)} · p95 ${duration(input.database.rank.lagP95Ms)}`;
   }
-  const traffic = trafficLines(input.database, input.now);
+  const traffic = input.database.collectionAvailable
+    ? trafficLines(input.database, input.now)
+    : "Unavailable - traffic outcomes were not evaluated";
   fields.Traffic = trafficAttention ? `${traffic}\n${trafficAttention.text}` : traffic;
   const next = input.temporal.nextActionAt
-    ? relativeTime(input.temporal.nextActionAt, input.now)
-    : "not scheduled";
-  fields.Schedules = `${input.temporal.schedules} inspected · ${input.temporal.recentActions} actions in 24 h · next ${next}`;
+    ? `next ${relativeTime(input.temporal.nextActionAt, input.now)}`
+    : "no upcoming active action";
+  fields.Schedules = `${input.temporal.schedules} inspected · ${input.temporal.recentActions} sampled actions in 24 h · ${next}`;
   const counters = temporalCounterLine(input);
   if (counters) fields["Temporal counters"] = counters;
-  fields.Healthy = healthyLine(input);
+  fields.Worker = `up ${relativeTime(input.workerStartedAt, input.now).replace(" ago", "")} · liveness only`;
+  fields.Collection = collectionLine(input);
   return {
     fields,
     kind: "heartbeat",

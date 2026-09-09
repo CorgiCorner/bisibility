@@ -1,7 +1,9 @@
 "use client";
 
 import { settingsCardFrameClassName } from "@/components/settings/shell/settings-layout";
-import { Button, Card, SectionTitle } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import { cn } from "@/lib/ui/cn";
 import { type ReactNode, useRef, useState } from "react";
 

@@ -1,19 +1,11 @@
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { fireEvent, render, screen } from "@testing-library/react";
-import type { ComponentProps } from "react";
+import { stubResizeObserver } from "@/tests/observers";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordDataTable } from "./KeywordDataTable";
-import type { KeywordGridViewport } from "./KeywordGridViewport";
 import { pendingRows } from "./KeywordsGrid.test-helpers";
 
-let viewportProps: ComponentProps<typeof KeywordGridViewport>;
-vi.mock("./KeywordGridViewport", () => ({
-  KeywordGridViewport: (props: ComponentProps<typeof KeywordGridViewport>) => {
-    viewportProps = props;
-    return <div data-testid="viewport" />;
-  },
-}));
 vi.mock("./KeywordsFilterBar", () => ({
   KeywordsFilterBar: (props: { groupingControl?: React.ReactNode }) => <>{props.groupingControl}</>,
 }));
@@ -42,8 +34,8 @@ function setup() {
       checkFailed={false}
       filterChips={[]}
       filterCount={0}
-      listMode="flat-server"
       matchedTargetCount={100}
+      pageCount={4}
       onClearFilters={vi.fn()}
       onDismissFailure={vi.fn()}
       onOpenExport={vi.fn()}
@@ -66,20 +58,39 @@ function setup() {
 describe("KeywordDataTable query history", () => {
   beforeEach(() => {
     setNavigationState({ pathname: "/app/prj_1/rank-tracker", searchParams: { page: "2" } });
+    stubResizeObserver();
   });
 
   it("pushes pagination as a separate history entry", () => {
     setup();
-    viewportProps.onPaginationModelChange?.({ page: 2, pageSize: 25 }, {} as never);
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     expect(routerMock.push).toHaveBeenCalledWith(expect.stringContaining("page=3"));
+    expect(routerMock.replace).not.toHaveBeenCalled();
+  });
+
+  it("offers only the Rank Tracker page sizes and resets to page one", () => {
+    setup();
+    fireEvent.click(screen.getByRole("button", { name: "Rows per page" }));
+
+    const menu = within(screen.getByRole("menu"));
+    expect(menu.queryByText("10", { exact: true })).not.toBeInTheDocument();
+    expect(menu.queryByText("250", { exact: true })).not.toBeInTheDocument();
+    expect(menu.getByText("25", { exact: true })).toBeInTheDocument();
+    expect(menu.getByText("50", { exact: true })).toBeInTheDocument();
+    fireEvent.click(menu.getByText("100", { exact: true }));
+
+    const params = new URL(String(routerMock.push.mock.calls.at(-1)?.[0]), "https://example.com")
+      .searchParams;
+    expect(params.get("page")).toBe("1");
+    expect(params.get("pageSize")).toBe("100");
     expect(routerMock.replace).not.toHaveBeenCalled();
   });
 
   it("pushes sorting as a separate history entry", () => {
     setup();
-    viewportProps.onSortModelChange?.([{ field: "keyword", sort: "desc" }], {} as never);
+    fireEvent.click(screen.getByRole("button", { name: "Sort Position descending" }));
     expect(routerMock.push).toHaveBeenCalledWith(
-      expect.stringMatching(/sort=keyword.*dir=desc.*page=1/),
+      expect.stringMatching(/sort=position.*dir=desc.*page=1/),
     );
     expect(routerMock.replace).not.toHaveBeenCalled();
   });

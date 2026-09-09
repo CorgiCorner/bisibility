@@ -5,8 +5,9 @@ import type {
   SerpRankInput,
   SerpRankResult,
 } from "@/lib/providers/types";
+import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
-import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/markets";
+import { serpApiObservationRun } from "./observation-extract-serpapi";
 import { decideOrganicResult, type OrganicResultCandidate } from "./organic-result-decision";
 import { requireDeterminateOrganicResult } from "./payload-contract-error";
 import { rawPayload, type SerpApiResponse, serpApiOrganicCandidates } from "./serpapi-payload";
@@ -19,12 +20,7 @@ const SEARCH_REQUEST_TIMEOUT_MS = 60_000;
 const RETRY_BASE_MS = 200;
 const GOOGLE_ORGANIC_PAGE_SIZE = 10;
 
-type SerpApiGoogleParams = {
-  depth: SerpDepth;
-  gl: string;
-  hl: string;
-  location: string;
-};
+type SerpApiGoogleParams = { depth: SerpDepth; gl: string; hl: string; location: string };
 
 class SerpApiError extends Error {
   constructor(
@@ -177,6 +173,7 @@ function buildSearchUrl(
     engine: "google",
     ...googleParams,
     q: input.keyword,
+    nfpr: "1",
   });
   if (start > 0) {
     params.set("start", String(start));
@@ -193,8 +190,12 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
   });
   const pages: SerpApiResponse[] = [];
   const candidates: OrganicResultCandidate[] = [];
+  const pageStarts = searchPageStarts(depth);
+  const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
+  let stoppedOnMatch = false;
+  let reachedEnd = false;
 
-  for (const start of searchPageStarts(depth)) {
+  for (const start of pageStarts) {
     const data = await requestJson(
       buildSearchUrl(input, apiKey, googleParams, start),
       credentials,
@@ -213,16 +214,32 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
     candidates.push(...serpApiOrganicCandidates(pageResults, start));
 
     const decision = decideOrganicResult({ candidates, depth, domain: input.domain });
-    if (resolveSerpStopOnMatch(input.stopOnMatch) && decision.outcome === "match") {
+    if (stopOnMatch && decision.outcome === "match") {
+      stoppedOnMatch = true;
       break;
     }
 
-    if (pageResults.length === 0) {
+    if (
+      pageResults.length === 0 ||
+      !(
+        data.serpapi_pagination?.next ||
+        data.serpapi_pagination?.next_link ||
+        data.pagination?.next
+      )
+    ) {
+      reachedEnd = true;
       break;
     }
   }
 
-  return { candidates, depth, pages };
+  return {
+    candidates,
+    depth,
+    pages,
+    reachedEnd,
+    requestedPageCount: pageStarts.length,
+    stoppedOnMatch,
+  };
 }
 
 export const serpApiProvider: SerpProvider = {
@@ -261,22 +278,38 @@ export const serpApiProvider: SerpProvider = {
 
   async fetchRank(input: SerpRankInput): Promise<SerpRankResult> {
     const credentials = input.credentials ?? {};
-    const { candidates, depth, pages } = await fetchGoogleOrganicResults(
-      input,
-      requireApiKey(credentials),
-    );
+    const { candidates, depth, pages, reachedEnd, requestedPageCount, stoppedOnMatch } =
+      await fetchGoogleOrganicResults(input, requireApiKey(credentials));
     const decision = requireDeterminateOrganicResult(
       "SerpApi",
       decideOrganicResult({ candidates, depth, domain: input.domain }),
     );
 
+    const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
+    const checkedAt = new Date();
     return {
       billingUnits: pages.length,
       position: decision.position,
       rankingUrl: decision.rankingUrl,
       costCents: 0,
-      checkedAt: new Date(),
+      checkedAt,
       raw: rawPayload(pages, decision),
+      observation: serpApiObservationRun({
+        completeness: stoppedOnMatch
+          ? "truncated_by_stop_on_match"
+          : reachedEnd || pages.length === requestedPageCount
+            ? "complete"
+            : "unknown",
+        configuredScope: {
+          device: input.device,
+          language: input.location.hl,
+          location: input.location.primaryGeoName,
+        },
+        effectiveScope: null,
+        executedAt: checkedAt,
+        pages,
+        requestPolicy: { depth, findTargetsIn: null, forcedAiOverview: false, stopOnMatch },
+      }),
     };
   },
 };

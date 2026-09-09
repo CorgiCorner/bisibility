@@ -12,7 +12,7 @@ import { saveSavedKeywordRows } from "@/lib/saved-keywords/service";
 import { saveKeywordsSchema } from "@/lib/schemas/saved-keyword";
 import { normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
-import { supportsResearchMarket } from "@/lib/serp/market-capability";
+import { supportsResearchScope } from "@/lib/serp/research-capability";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
@@ -117,7 +117,7 @@ export async function selectDomainOverviewMarketAction(input: unknown) {
   const locationCode = domainOverviewLocationCode(resolved.location);
   const supported =
     locationCode != null &&
-    supportsResearchMarket(resolved.location.countryCode, resolved.location.languageCode);
+    supportsResearchScope(resolved.location.countryCode, resolved.location.languageCode);
   return {
     canonicalKey: resolved.location.canonicalKey,
     locationCode: supported ? locationCode : null,

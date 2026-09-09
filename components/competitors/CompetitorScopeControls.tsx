@@ -1,15 +1,13 @@
 "use client";
 
 import { MarketCombobox } from "@/components/markets/MarketCombobox";
-import { SegmentedControl } from "@/components/ui";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { competitorScopeHref } from "@/lib/competitors/scope-model";
 import type { CompetitorMarketOption, CompetitorsViewModel } from "@/lib/competitors/types";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import {
-  DeviceMobileIcon as DeviceMobile,
-  InfoIcon as Info,
-  MonitorIcon as Monitor,
-} from "@phosphor-icons/react";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import { useRouter } from "next/navigation";
 import { competitorRegistryOptions } from "./competitor-market-mapping";
 

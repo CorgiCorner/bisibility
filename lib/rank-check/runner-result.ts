@@ -1,6 +1,7 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
+import type { ObservationRunInput } from "@/lib/observation/types";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type { RankNormalizationVersion } from "./normalization-version";
 import type { OrganicDomainRank } from "./organic-ranks";
 
@@ -21,6 +22,8 @@ export type RankCheckRunResult = {
     provider: string;
     rankingUrl: string | null;
     raw: Prisma.InputJsonObject | null;
+    /** Durable observation captured by the provider adapter, when available. */
+    observation?: ObservationRunInput | null;
     requestedDepth: SerpDepth;
   };
   scheduleUpdate: {

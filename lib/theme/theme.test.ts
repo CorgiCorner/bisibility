@@ -1,19 +1,12 @@
+import { readFileSync } from "node:fs";
+import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { describe, expect, it } from "vitest";
-import { theme } from "./theme";
 
-describe("MUI popup surfaces", () => {
-  it("gives DataGrid menus a border after global Paper shadows are removed", () => {
-    const root = theme.components?.MuiPaper?.styleOverrides?.root;
-    expect(root).toMatchObject({
-      "&:has(.MuiDataGrid-menuList)": { border: "1px solid var(--border)" },
-      boxShadow: "none",
-    });
-  });
-
-  it("uses workspace-switcher hover fills on every MenuItem", () => {
-    expect(theme.components?.MuiMenuItem?.styleOverrides?.root).toMatchObject({
-      "&:hover": { backgroundColor: "var(--bg-sunken)" },
-      "&.Mui-focusVisible": { backgroundColor: "var(--bg-sunken)" },
-    });
+describe("CSS theme contract", () => {
+  it("keeps native control radii aligned with the shared design tokens", () => {
+    const css = readFileSync("app/styles/theme-tokens.css", "utf8");
+    for (const [role, value] of Object.entries(UI_RADIUS_ROLES)) {
+      expect(css).toContain(`--radius-${role}: ${value};`);
+    }
   });
 });

@@ -1,14 +1,12 @@
 "use client";
 
-import { CopyButton } from "@/components/ui";
-import {
-  CaretDownIcon as CaretDown,
-  CaretUpIcon as CaretUp,
-  CubeIcon as Cube,
-  DotsThreeIcon as DotsThree,
-  MonitorIcon as Monitor,
-  TerminalIcon as Terminal,
-} from "@phosphor-icons/react";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CaretUpIcon as CaretUp } from "@phosphor-icons/react/dist/csr/CaretUp";
+import { CubeIcon as Cube } from "@phosphor-icons/react/dist/csr/Cube";
+import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react/dist/csr/DotsThree";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
+import { TerminalIcon as Terminal } from "@phosphor-icons/react/dist/csr/Terminal";
 import { useState } from "react";
 import { HighlightedInstallCode } from "./CommandHighlight";
 import { AGENTS, type AgentInstall } from "./install-catalog";
@@ -65,8 +63,7 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
                     >
                       <HighlightedInstallCode code={command} />
                     </pre>
-                    {/* The button is a MUI IconButton, whose emotion styles beat a Tailwind
-                        "absolute" on the same element - position this wrapper instead. */}
+                    {/* Position the copy control independently of its tooltip wrapper. */}
                     <span className="absolute right-[7px] top-[7px]">
                       <CopyButton
                         aria-hidden={!expanded}
@@ -74,7 +71,7 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
                         label={expanded ? `Copy ${agent.label} command` : undefined}
                         tabIndex={expanded ? undefined : -1}
                         size="sm"
-                        sx={{ color: "var(--code-faint)" }}
+                        style={{ "--control-color": "var(--code-faint)" }}
                         text={command}
                       />
                     </span>

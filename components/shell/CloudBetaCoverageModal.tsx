@@ -1,13 +1,12 @@
 "use client";
 
-import { Button, Modal } from "@/components/ui";
-import {
-  CheckIcon as Check,
-  DownloadSimpleIcon as DownloadSimple,
-  HardDrivesIcon as HardDrives,
-  InfoIcon as Info,
-  XIcon as X,
-} from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { HardDrivesIcon as HardDrives } from "@phosphor-icons/react/dist/csr/HardDrives";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 
 type CloudBetaCoverageModalProps = {
   onClose: () => void;

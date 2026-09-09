@@ -1,7 +1,8 @@
 "use client";
 
 import { useAppRealtime } from "@/components/shell/AppRealtimeProvider";
-import { Button, SegmentedControl } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { pluralize } from "@/lib/format/pluralize";
 import { rankCheckOperationSchema } from "@/lib/rank-check/runs/contract";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";

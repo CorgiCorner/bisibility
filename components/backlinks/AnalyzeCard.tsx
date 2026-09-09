@@ -1,23 +1,19 @@
 "use client";
 
-import {
-  Button,
-  Card,
-  compactInputClassName,
-  InfoTooltip,
-  MenuSelect,
-  pricingTriggerClassName,
-  SegmentedControl,
-  Switch,
-} from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { compactInputClassName } from "@/components/ui/input-styles";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { pricingTriggerClassName } from "@/components/ui/PricingPopover";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Switch } from "@/components/ui/Switch";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
-import {
-  GlobeSimpleIcon as GlobeSimple,
-  LinkIcon as Link,
-  XIcon as X,
-} from "@phosphor-icons/react";
+import { GlobeSimpleIcon as GlobeSimple } from "@phosphor-icons/react/dist/csr/GlobeSimple";
+import { LinkIcon as Link } from "@phosphor-icons/react/dist/csr/Link";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -178,7 +174,7 @@ export function AnalyzeCard({
               loading={submitting}
               loadingLabel={analyzeLabel(estimate, true)}
               startIcon={<Link aria-hidden size={14} weight="regular" />}
-              sx={{ minWidth: 216 }}
+              style={{ minWidth: 216 }}
               title={!targetIsSet ? "Enter a domain first - the price appears here" : undefined}
               type="submit"
             >

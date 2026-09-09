@@ -16,7 +16,7 @@ export {
   type ButtonProps,
   type ButtonSize,
   type ButtonVariant,
-  buttonXsSx,
+  buttonXsStyle,
 } from "./Button";
 export { Calendar, type CalendarProps } from "./Calendar";
 export { Card, type CardProps } from "./Card";
@@ -40,6 +40,26 @@ export {
   type DisclosureProps,
 } from "./Disclosure";
 export { DomainIconLayer, type DomainIconLayerProps } from "./DomainIconLayer";
+export { DataTable } from "./data-table/DataTable";
+export { DataTableColumnsMenu } from "./data-table/DataTableColumnsMenu";
+export { DataTableDensityMenu } from "./data-table/DataTableDensityMenu";
+export { dataTableRowHeight } from "./data-table/data-table-density";
+export { useDataTableLayout } from "./data-table/data-table-layout-store";
+export type {
+  DataTableColumn,
+  DataTableColumnMeta,
+  DataTableColumnPinning,
+  DataTableColumnsMenuProps,
+  DataTableDensity,
+  DataTableDensityMenuProps,
+  DataTableLayoutControlProps,
+  DataTablePagination,
+  DataTableProps,
+  DataTableRowBase,
+  DataTableRowKind,
+  DataTableSort,
+  DataTableSortDirection,
+} from "./data-table/data-table-types";
 export {
   buildDomainIconUrl,
   buildPublicDomainIconUrl,
@@ -94,7 +114,7 @@ export {
   type MenuSelectOption,
   type MenuSelectOptionGroup,
   type MenuSelectProps,
-  menuSelectPaperSx,
+  menuSelectPaperStyle,
   menuSelectTriggerClass,
 } from "./MenuSelect";
 export { MenuSelectOptionItem } from "./MenuSelectOptionItem";
@@ -166,7 +186,7 @@ export {
   ThemeSegmentsRow,
   type ThemeSegmentsSize,
 } from "./ThemeSegments";
-export { type ToastContextValue, type ToastOptions, ToastProvider, useToast } from "./Toast";
+export { ToastProvider } from "./Toast";
 export {
   ToolbarSearch,
   type ToolbarSearchProps,
@@ -180,6 +200,7 @@ export {
   type TooltipSemantics,
 } from "./Tooltip";
 export { tableHeaderClassName, tableHeaderTypographyClassName } from "./table-header-styles";
+export { type ToastContextValue, type ToastOptions, useToast } from "./toast-context";
 export type { ToastSeverity } from "./toast-presentation";
 export { toolbarControlClassName } from "./toolbar-control-styles";
 export { useLiveNow } from "./useLiveNow";

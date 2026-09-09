@@ -4,6 +4,7 @@ import {
   type MarketRef,
   type ProjectRef,
 } from "@/lib/routing/app-path";
+import { hasMarketRoute } from "./market-route-sections";
 import { resolvedContextDestination } from "./market-routes";
 
 /**
@@ -14,6 +15,8 @@ import { resolvedContextDestination } from "./market-routes";
 export type HeaderContextMarket = {
   countryCode: string;
   keywordCount: number;
+  description?: string;
+  status?: "active" | "paused";
   languageCode: string;
   name: string;
   ref: MarketRef;
@@ -41,6 +44,7 @@ export function marketSearchVisible(marketCount: number): boolean {
  */
 export type HeaderContextState =
   | { kind: "market"; market: HeaderContextMarket }
+  | { kind: "all-markets" }
   | { kind: "none" }
   | { kind: "placeholder"; label: string };
 
@@ -60,7 +64,7 @@ export function headerContextState(
     return { kind: "placeholder", label: context.ref };
   }
   if (context.kind !== "market") {
-    return NO_CONTEXT;
+    return hasMarketRoute(appSectionPath(pathname)) ? { kind: "all-markets" } : NO_CONTEXT;
   }
   const market = markets.find((candidate) => candidate.ref === context.ref);
   // A market the header cannot name is not one it can offer to leave. The route layer 404s an
@@ -83,9 +87,12 @@ export function marketKeywordLabel(keywordCount: number): string {
 
 /** One row of the market list: everything the popover renders, and nothing else. */
 export type MarketRow = {
+  countryCode?: string;
   countLabel: string;
   name: string;
   pair: string;
+  description?: string;
+  paused?: boolean;
   value: string;
 };
 
@@ -97,12 +104,21 @@ export function marketRows(markets: readonly HeaderContextMarket[], search: stri
   const term = search.trim().toLocaleLowerCase("en-US");
   return markets
     .map((market) => ({
+      countryCode: market.countryCode,
       countLabel: marketKeywordLabel(market.keywordCount),
       name: market.name,
       pair: marketPairLabel(market),
+      description: market.description,
+      paused: market.status === "paused",
       value: market.ref,
     }))
-    .filter((row) => !term || `${row.name} ${row.pair}`.toLocaleLowerCase("en-US").includes(term));
+    .filter(
+      (row) =>
+        !term ||
+        `${row.name} ${row.pair} ${row.description ?? ""}`
+          .toLocaleLowerCase("en-US")
+          .includes(term),
+    );
 }
 
 function sectionSegments(pathname: string): string[] {

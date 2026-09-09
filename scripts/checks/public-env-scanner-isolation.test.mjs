@@ -11,7 +11,7 @@ function makeTmpRoot() {
     mkdirSync(path.join(root, directory), { recursive: true });
   }
   for (const file of [
-    "middleware.ts",
+    "proxy.ts",
     "instrumentation.ts",
     "instrumentation-client.ts",
     "next.config.ts",

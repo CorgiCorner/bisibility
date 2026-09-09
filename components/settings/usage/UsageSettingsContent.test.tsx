@@ -124,7 +124,7 @@ describe("UsageSettingsContent", () => {
     expect(input).toHaveAttribute("maxlength", "4");
     expect(input).toHaveClass("h-[35px]", "min-h-[35px]");
     expect(input).not.toHaveClass("min-h-10");
-    expect(button).toHaveClass("MuiButton-sizeMedium");
+    expect(button).toHaveAttribute("data-size", "md");
     expect(
       screen.queryByText("Four digits at most. The answer is not a commitment."),
     ).not.toBeInTheDocument();

@@ -1,5 +1,5 @@
 import type { RankCheckSchedulerMode } from "../rank-check/scheduler-mode";
-import type { SerpDepth } from "../serp/markets";
+import type { SerpDepth } from "../serp/constants";
 
 export const PROVIDER_RATE_LIMITED_FAILURE = "provider_rate_limited";
 export const PROJECT_DOMAIN_REQUIRED_FAILURE = "project_domain_required";

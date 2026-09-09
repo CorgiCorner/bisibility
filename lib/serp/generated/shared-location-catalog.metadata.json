@@ -1,0 +1,109 @@
+{
+  "artifact": {
+    "gzipBytes": 1011544,
+    "gzipSha256": "7e55ee96879dcba64eae8205744cc186ab5298f1136cf6699284d2cef352dc49",
+    "jsonBytes": 6771048,
+    "jsonSha256": "991181d79ac48d30dd7e93a201824c56521ae6af16d36d04d8f30a2c67cf185d",
+    "path": "lib/serp/generated/shared-location-catalog.json.gz",
+    "tuple": ["canonicalKey", "kind", "googleID", "primaryGeoName", "secondaryGeoName"]
+  },
+  "collisionExamples": [
+    {
+      "canonicalKey": "AT/Vienna",
+      "entries": [
+        {
+          "googleId": 20050,
+          "kind": "region"
+        },
+        {
+          "googleId": 9198853,
+          "kind": "region"
+        }
+      ]
+    },
+    {
+      "canonicalKey": "CH/Geneva",
+      "entries": [
+        {
+          "googleId": 20133,
+          "kind": "region"
+        },
+        {
+          "googleId": 9198175,
+          "kind": "region"
+        }
+      ]
+    },
+    {
+      "canonicalKey": "IT/Aosta Valley",
+      "entries": [
+        {
+          "googleId": 20523,
+          "kind": "region"
+        },
+        {
+          "googleId": 9053424,
+          "kind": "region"
+        }
+      ]
+    },
+    {
+      "canonicalKey": "MX/Oaxaca",
+      "entries": [
+        {
+          "googleId": 20714,
+          "kind": "region"
+        },
+        {
+          "googleId": 1010137,
+          "kind": "region"
+        }
+      ]
+    },
+    {
+      "canonicalKey": "MX/Zacatecas",
+      "entries": [
+        {
+          "googleId": 20726,
+          "kind": "region"
+        },
+        {
+          "googleId": 1010207,
+          "kind": "region"
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "acceptedCities": 43341,
+    "acceptedRegions": 16438,
+    "dataForSeoGoogleIds": 266897,
+    "duplicateGoogleIds": 4865,
+    "excludedAmbiguousAliases": 334,
+    "excludedCollidingCandidates": 2666,
+    "excludedCollidingKeys": 866,
+    "excludedCountryDisagreement": 0,
+    "excludedKindDisagreement": 139245,
+    "excludedOutsideSharedCountries": 342,
+    "missingSerpApiGoogleIds": 64531,
+    "resolvedAliases": 4531,
+    "serpApiGoogleIds": 205852,
+    "serpApiOnlyGoogleIds": 3486,
+    "accepted": 59779
+  },
+  "format": 1,
+  "sources": {
+    "dataForSeo": {
+      "csvSha256": "e32557fa4aa5164a2bf457d4c42293b59bb27daaf2c19f67b407778c82830377",
+      "csvUrl": "https://cdn.dataforseo.com/v3/locations/locations_serp_google_2026_07_14.csv",
+      "snapshotDate": "2026-07-14",
+      "sha256": "e32557fa4aa5164a2bf457d4c42293b59bb27daaf2c19f67b407778c82830377"
+    },
+    "serpApi": {
+      "jsonSha256": "59f0866db88b020a7ebb3eec86a5dc3170554b80032acd08277da8c656b07aa6",
+      "jsonUrl": "https://serpapi.com/locations.json",
+      "snapshotDate": "2026-09-07",
+      "sha256": "59f0866db88b020a7ebb3eec86a5dc3170554b80032acd08277da8c656b07aa6"
+    }
+  }
+}

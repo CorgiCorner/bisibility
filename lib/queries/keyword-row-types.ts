@@ -1,5 +1,6 @@
+import type { ExpectedUrlSource } from "@/lib/expected-url/types";
 import type { KeywordLocation } from "@/lib/queries/keyword-location";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 
 export type KeywordSchedule = {
   cron_expression: string | null;
@@ -68,6 +69,11 @@ export type KeywordRow = {
   difficulty: number;
   difficultyKnown?: boolean;
   engine: string;
+  /** Current editable target; expectedUrl may retain the value captured by the last check. */
+  currentExpectedUrl?: string | null;
+  expectedUrl?: string | null;
+  expectedUrlFallbackCurrent?: boolean;
+  expectedUrlSource?: ExpectedUrlSource | null;
   checkState?: KeywordCheckState;
   checkSchedule?: KeywordCheckSchedule | null;
   completedComparableChecks?: CompletedComparableCheck[];
@@ -87,6 +93,7 @@ export type KeywordRow = {
   positionHistoryBoundaryAt: string | null;
   positionHistory: PositionPoint[];
   projectSerpDepth?: SerpDepth;
+  projectTimezone?: string;
   previousPosition: number | null;
   rankingPages: number;
   rankingPath: string | null;

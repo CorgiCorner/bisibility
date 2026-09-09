@@ -1,7 +1,7 @@
 "use client";
 
 import { OtpInput } from "@/components/auth/OtpInput";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth/client";
 import { FIRST_RUN_SIGN_IN_HEADER, FIRST_RUN_SIGN_IN_VALUE } from "@/lib/auth/first-run-request";
 import {
@@ -11,11 +11,9 @@ import {
 } from "@/lib/auth/first-run-schema";
 import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import {
-  CaretRightIcon as CaretRight,
-  ShieldCheckIcon as ShieldCheck,
-  TerminalWindowIcon as TerminalWindow,
-} from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/csr/ShieldCheck";
+import { TerminalWindowIcon as TerminalWindow } from "@phosphor-icons/react/dist/csr/TerminalWindow";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { completeSetupAction, requestSetupCodeAction, type SetupActionResult } from "./actions";

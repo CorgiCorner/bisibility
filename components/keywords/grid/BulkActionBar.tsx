@@ -4,22 +4,19 @@ import {
   actionErrorMessage,
   type KeywordWorkspaceActions,
 } from "@/components/keywords/action-utils";
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button, ConfirmModal } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { MarketScope } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import type { SerpDepth } from "@/lib/serp/markets";
-import {
-  CalendarDotsIcon as CalendarDots,
-  LinkSimpleIcon as LinkSimple,
-  TagIcon as Tag,
-  TrashIcon as Trash,
-  XIcon as X,
-} from "@phosphor-icons/react";
+import type { SerpDepth } from "@/lib/serp/constants";
+import { CalendarDotsIcon as CalendarDots } from "@phosphor-icons/react/dist/csr/CalendarDots";
+import { LinkSimpleIcon as LinkSimple } from "@phosphor-icons/react/dist/csr/LinkSimple";
+import { TagIcon as Tag } from "@phosphor-icons/react/dist/csr/Tag";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BulkActionModal, type BulkMode } from "./BulkActionModal";
@@ -210,15 +207,14 @@ export function BulkActionBar({
               onClick={() => setConfirmOpen(true)}
               size="xs"
               startIcon={<Trash weight="regular" size={15} />}
-              sx={{
-                backgroundColor: "transparent",
-                border: "1px solid var(--red)",
-                color: "var(--red)",
-                "&:hover": {
-                  backgroundColor: "color-mix(in srgb, var(--red) 12%, transparent)",
-                  border: "1px solid var(--red)",
-                  color: "var(--red)",
-                },
+              style={{
+                "--control-background-color": "transparent",
+                "--control-border": "1px solid var(--red)",
+                "--control-color": "var(--red)",
+                "--control-hover-background-color":
+                  "color-mix(in srgb, var(--red) 12%, transparent)",
+                "--control-hover-border": "1px solid var(--red)",
+                "--control-hover-color": "var(--red)",
               }}
               variant="secondary"
             >
@@ -230,7 +226,7 @@ export function BulkActionBar({
           onClick={onClear}
           size="xs"
           startIcon={<X weight="regular" size={14} />}
-          sx={{ marginLeft: "auto" }}
+          style={{ marginLeft: "auto" }}
           variant="ghost"
         >
           Clear
@@ -274,11 +270,14 @@ export function BulkActionBar({
           selectedRows={selectedRows}
         />
       ) : null}
-      {canUpdateKeyword ? (
+      {canUpdateKeyword && scheduleOpen ? (
         <SetScheduleModal
           onClose={() => setScheduleOpen(false)}
-          onDone={finishAction}
-          open={scheduleOpen}
+          onDone={() => {
+            setScheduleOpen(false);
+            finishAction();
+          }}
+          open
           projectId={projectId}
           providerRate={providerRate}
           schedules={schedules}

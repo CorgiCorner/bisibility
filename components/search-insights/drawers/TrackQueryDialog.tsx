@@ -5,11 +5,11 @@ import {
   trackingScheduleOptions,
 } from "@/components/keywords/add/TrackingConfigurationFields";
 import { TRACK_DIALOG_COPY } from "@/components/search-insights/search-insights-copy";
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button, MenuSelect, Modal } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { Modal } from "@/components/ui/Modal";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import {
@@ -17,9 +17,9 @@ import {
   type SerpDevice,
   serpDepthValues,
   serpDeviceOptions,
-} from "@/lib/serp/markets";
+} from "@/lib/serp/constants";
 import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
-import { CheckIcon as Check } from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { useRef, useState } from "react";
 import {
   trackConfirmLabel,
@@ -144,7 +144,7 @@ export function TrackQueryDialog({
                   onConfirm({ device, locationKey: selectedKey, schedule, serpDepth });
               }}
               ref={confirmRef}
-              sx={{ flex: 1 }}
+              style={{ flex: 1 }}
             >
               {trackConfirmLabel(schedule, costContext.rawFrequency)}
             </Button>

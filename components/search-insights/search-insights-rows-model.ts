@@ -12,7 +12,6 @@ import {
   type SearchInsightsSort,
   type SearchInsightsSortKey,
 } from "@/lib/search-insights/queries/top-rows-sort";
-import type { KeyboardEvent } from "react";
 import {
   COLLAPSE_LABEL,
   SHOW_CAP_TITLE,
@@ -34,24 +33,6 @@ export type RowsState<TRow> = {
 
 export type QueryRowsState = RowsState<SearchInsightsQueryRow>;
 export type PageRowsState = RowsState<SearchInsightsPageRow>;
-
-export function tableRowKeys(open: () => void) {
-  return (event: KeyboardEvent<HTMLTableRowElement>) => {
-    if (event.target !== event.currentTarget) return;
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    open();
-  };
-}
-
-// One row of the module's table density, measured once so the windowed list can place rows it
-// has not rendered. Rows carry the matching height class, so the constant is a fact rather
-// than an estimate. The scroll region is the design's fixed height for the expanded state.
-export const ROW_HEIGHT = 37;
-export const ROW_HEIGHT_CLASS = "h-9.25";
-export const SCROLL_REGION_HEIGHT = 520;
-export const SCROLL_REGION_CLASS = "max-h-130";
-export const WINDOW_OVERSCAN = 6;
 
 export function nextShow(show: RowsShow): RowsShow {
   return show === FIRST_VIEW_ROWS ? FIRST_VIEW_ROW_BUFFER : "all";
@@ -124,22 +105,6 @@ export function formatRowCount(value: number) {
 }
 
 /**
- * Which rows a scrolled list actually has to render. Only the band around the offset is put in
- * the DOM; the rest is accounted for by the padding above and below it, so the scrollbar still
- * describes the whole list.
- */
-export function windowedRange(input: { count: number; height: number; scrollTop: number }) {
-  const visible = Math.ceil(input.height / ROW_HEIGHT);
-  const start = Math.max(0, Math.floor(input.scrollTop / ROW_HEIGHT) - WINDOW_OVERSCAN);
-  const end = Math.min(input.count, start + visible + WINDOW_OVERSCAN * 2);
-  return { end, start };
-}
-
-export function windowedPadding(range: { end: number; start: number }, count: number) {
-  return { bottom: Math.max(0, count - range.end) * ROW_HEIGHT, top: range.start * ROW_HEIGHT };
-}
-
-/**
  * A header cycles between exactly three states: unsorted, then the column's own default direction,
  * then the other one. Re-clicking never returns to unsorted - the table is always ordered by
  * something, and "unsorted" is only what the other columns are.
@@ -149,9 +114,4 @@ export function nextSort(current: SearchInsightsSort, key: SearchInsightsSortKey
     return { direction: SEARCH_INSIGHTS_SORT_DEFAULT_DIRECTION[key], key };
   }
   return { direction: current.direction === "asc" ? ("desc" as const) : ("asc" as const), key };
-}
-
-export function ariaSortValue(current: SearchInsightsSort, key: SearchInsightsSortKey | undefined) {
-  if (!key || current.key !== key) return "none" as const;
-  return current.direction === "asc" ? ("ascending" as const) : ("descending" as const);
 }

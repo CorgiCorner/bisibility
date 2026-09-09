@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
-import { ChartDonutIcon as ChartDonut } from "@phosphor-icons/react";
+import { ChartDonutIcon as ChartDonut } from "@phosphor-icons/react/dist/csr/ChartDonut";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   SESSIONS_CONNECT_BODY,

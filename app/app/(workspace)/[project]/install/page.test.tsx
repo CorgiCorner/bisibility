@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   resolveProjectAccess: vi.fn(),
 }));
 
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/CopyButton", () => ({
   CopyButton: ({ label }: { label?: string }) => <button aria-label={label} type="button" />,
 }));
 vi.mock("@/components/shell/PageContent", () => ({

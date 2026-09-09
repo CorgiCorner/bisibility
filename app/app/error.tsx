@@ -1,14 +1,13 @@
 "use client";
 
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
-import { Button, SectionTitle } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import { reportAppError } from "@/lib/observability/error-reporting";
 import { FEEDBACK_URL, GITHUB_ISSUES_URL } from "@/lib/site/site";
-import {
-  CheckIcon as Check,
-  CopyIcon as Copy,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { CopyIcon as Copy } from "@phosphor-icons/react/dist/csr/Copy";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";

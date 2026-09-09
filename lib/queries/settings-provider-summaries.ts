@@ -21,7 +21,7 @@ import {
   type ObservedProviderCheckCost,
 } from "@/lib/rank-check/observed-usage";
 import { primaryProviderConnection } from "@/lib/rank-check/provider-chain-order";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type {
   ProviderAvailabilityData,
   ProviderConnectionUsageData,

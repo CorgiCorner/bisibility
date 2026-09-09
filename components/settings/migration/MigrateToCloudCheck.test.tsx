@@ -11,7 +11,7 @@ vi.mock("@/lib/actions/cloud", () => ({
   getCloudMigrationCompatibility: mocks.compatibility,
   preflightMigrationTarget: mocks.preflight,
 }));
-vi.mock("@/components/ui/Toast", () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+vi.mock("@/components/ui/toast-context", () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 
 const projectId = "prj_abcdefghijklmnopqrstuvwx";
 

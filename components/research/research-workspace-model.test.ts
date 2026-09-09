@@ -4,55 +4,35 @@ import {
   mapWithConcurrency,
   markTabsSaved,
   nextBudgetResetLabel,
-  recentSearchLocation,
   recentSearchReplay,
   researchFailureState,
   researchRetryLabel,
   researchSaveInput,
+  researchScopeLocationKey,
   researchTabRequest,
 } from "./research-workspace-model";
 
-const projectDefault = {
-  canonicalKey: "US",
+const scope = {
   countryCode: "US",
-  displayName: "United States",
-  kind: "country" as const,
+  countryName: "United States",
+  languageCode: "en",
+  languageLabel: "English",
+  providerLocationCode: 2840,
+  researchAvailable: true,
 };
 
 describe("research workspace model", () => {
-  it("rebuilds the market a recent search ran in", () => {
-    expect(recentSearchLocation({ market: "United States" }, projectDefault)).toBe(projectDefault);
+  it("uses a country-language key for a research scope", () => {
+    expect(researchScopeLocationKey(scope)).toBe("US");
     expect(
-      recentSearchLocation({ locationKey: "US", market: "United States" }, projectDefault),
-    ).toBe(projectDefault);
-    expect(recentSearchLocation({ locationKey: "DE", market: "Germany" }, projectDefault)).toEqual(
-      expect.objectContaining({ canonicalKey: "DE", countryCode: "DE", kind: "country" }),
-    );
-    expect(
-      recentSearchLocation({ locationKey: "ES@en", market: "Spain - English" }, projectDefault),
-    ).toEqual(
-      expect.objectContaining({
-        canonicalKey: "ES@en",
+      researchScopeLocationKey({
+        ...scope,
         countryCode: "ES",
-        displayName: "Spain - English",
-        hl: "en",
-        kind: "country",
+        countryName: "Spain",
         languageCode: "en",
         languageLabel: "English",
       }),
-    );
-    expect(
-      recentSearchLocation(
-        { locationKey: "US/US-TX/Austin", market: "Austin, Texas, United States" },
-        projectDefault,
-      ),
-    ).toEqual({
-      canonicalKey: "US/US-TX/Austin",
-      cityName: "Austin",
-      countryCode: "US",
-      displayName: "Austin, Texas, United States",
-      kind: "city",
-    });
+    ).toBe("ES@en");
   });
 
   it("falls back from a stale recent connection and detects expired cache entries", () => {
@@ -63,7 +43,7 @@ describe("research workspace model", () => {
         createdAt: "2026-07-22T08:00:00.000Z",
         includeClickstream: true,
         locationKey: "DE",
-        market: "Germany",
+        scopeLabel: "Germany / German",
         mode: "ideas",
         resultLimit: 300,
         seed: "seo",
@@ -79,7 +59,6 @@ describe("research workspace model", () => {
       overrides: {
         connectionId: "conn_b00000000000000000000000",
         includeClickstream: true,
-        locationKey: "DE",
         mode: "ideas",
         resultLimit: 300,
       },
@@ -92,7 +71,7 @@ describe("research workspace model", () => {
         connectionId: "conn_a00000000000000000000000",
         id: "tab_1",
         includeClickstream: true,
-        location: projectDefault,
+        scope,
         mode: "related",
         outcome: { ok: false, reason: "rate_limited" },
         requestedLimit: 100,
@@ -235,7 +214,7 @@ describe("research workspace model", () => {
       {
         id: "tab_1",
         includeClickstream: false,
-        location: projectDefault,
+        scope,
         mode: "auto" as const,
         outcome: {
           cached: true,

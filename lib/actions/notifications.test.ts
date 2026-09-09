@@ -1,7 +1,7 @@
 import { NotificationType } from "@/lib/generated/prisma/client";
+import { createNotification } from "@/lib/notifications/create";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  createNotification,
   markAllNotificationsRead,
   markNotificationRead,
   refreshNotificationFeed,

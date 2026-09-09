@@ -1,4 +1,5 @@
 import { MarketCombobox, type MarketComboboxOption } from "@/components/markets/MarketCombobox";
+import { MARKET_PICKER_SEARCH_THRESHOLD } from "@/components/markets/market-picker-constants";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -44,13 +45,20 @@ const catalog = [
   ),
 ];
 
+const largeCatalog = [
+  ...catalog,
+  market("FR", "France", "FR", "French", "fr", { id: "fr", label: "FR catalog" }),
+  market("DE", "Germany", "DE", "German", "de", { id: "de", label: "DE catalog" }),
+  market("IT", "Italy", "IT", "Italian", "it", { id: "it", label: "IT catalog" }),
+];
+
 describe("MarketCombobox", () => {
   it("groups tracked and catalog markets, showing tracked first", async () => {
     const user = userEvent.setup();
     render(
       <MarketCombobox
         ariaLabel="Market"
-        catalogMarkets={catalog}
+        catalogMarkets={largeCatalog}
         onChange={vi.fn()}
         trackedMarkets={tracked}
         value="US"
@@ -67,7 +75,7 @@ describe("MarketCombobox", () => {
     render(
       <MarketCombobox
         ariaLabel="Market"
-        catalogMarkets={catalog}
+        catalogMarkets={largeCatalog}
         menuWidth={312}
         onChange={vi.fn()}
         trackedMarkets={tracked}
@@ -76,9 +84,10 @@ describe("MarketCombobox", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Market" }));
-    expect(document.querySelector<HTMLElement>(".MuiPaper-root")).toHaveStyle({
-      maxWidth: "312px",
-      minWidth: "312px",
+    expect(document.querySelector<HTMLElement>("[data-ui-overlay]")).toHaveStyle({
+      maxWidth: "calc(100vw - 32px)",
+      minWidth: "min(312px, calc(100vw - 32px))",
+      width: "312px",
     });
   });
 
@@ -87,7 +96,7 @@ describe("MarketCombobox", () => {
     render(
       <MarketCombobox
         ariaLabel="Market"
-        catalogMarkets={catalog}
+        catalogMarkets={largeCatalog}
         onChange={vi.fn()}
         selectedCountryCode="US"
         trackedMarkets={tracked}
@@ -110,7 +119,7 @@ describe("MarketCombobox", () => {
     render(
       <MarketCombobox
         ariaLabel="Market"
-        catalogMarkets={catalog}
+        catalogMarkets={largeCatalog}
         onChange={vi.fn()}
         trackedMarkets={tracked}
         value="US"
@@ -129,7 +138,7 @@ describe("MarketCombobox", () => {
     render(
       <MarketCombobox
         ariaLabel="Market"
-        catalogMarkets={catalog}
+        catalogMarkets={largeCatalog}
         onChange={vi.fn()}
         trackedMarkets={tracked}
         value="US"
@@ -148,7 +157,7 @@ describe("MarketCombobox", () => {
     render(
       <MarketCombobox
         ariaLabel="Market"
-        catalogMarkets={catalog}
+        catalogMarkets={largeCatalog}
         onChange={onChange}
         trackedMarkets={tracked}
         value="US"
@@ -183,7 +192,7 @@ describe("MarketCombobox", () => {
     render(
       <MarketCombobox
         ariaLabel="Market"
-        catalogMarkets={catalog}
+        catalogMarkets={largeCatalog}
         onChange={vi.fn()}
         trackedMarkets={tracked}
         value="US"
@@ -208,7 +217,7 @@ describe("MarketCombobox", () => {
     render(
       <MarketCombobox
         ariaLabel="Market"
-        catalogMarkets={catalog}
+        catalogMarkets={largeCatalog}
         onChange={onChange}
         trackedMarkets={tracked}
         value="US"
@@ -237,5 +246,70 @@ describe("MarketCombobox", () => {
     const esItem = screen.getByRole("menuitem", { name: /Spain \/ Spanish/ });
     expect(esItem).not.toHaveAttribute("aria-disabled", "true");
     expect(esItem).toHaveAttribute("data-current", "true");
+  });
+
+  it("shows search only above the shared registry threshold", async () => {
+    const user = userEvent.setup();
+    const six = Array.from({ length: MARKET_PICKER_SEARCH_THRESHOLD }, (_, index) =>
+      market(`M${index}`, `Market ${index}`, "ES", "Spanish", "es", {
+        id: `market-${index}`,
+        label: `Market ${index}`,
+      }),
+    );
+    const { unmount } = render(
+      <MarketCombobox
+        ariaLabel="Market"
+        catalogMarkets={[]}
+        onChange={vi.fn()}
+        trackedMarkets={six}
+        value="M0"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Market" }));
+    expect(screen.queryByRole("textbox", { name: "Search markets..." })).not.toBeInTheDocument();
+    expect(screen.queryByText("Tracked markets")).not.toBeInTheDocument();
+
+    unmount();
+    render(
+      <MarketCombobox
+        ariaLabel="Market"
+        catalogMarkets={[]}
+        onChange={vi.fn()}
+        trackedMarkets={[
+          ...six,
+          market("M6", "Market 6", "ES", "Spanish", "es", { id: "market-6", label: "Market 6" }),
+        ]}
+        value="M0"
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Market" }));
+    expect(screen.getByRole("textbox", { name: "Search markets..." })).toBeVisible();
+  });
+
+  it("keeps a catalog-only menu search-only above the shared registry threshold", async () => {
+    const user = userEvent.setup();
+    render(
+      <MarketCombobox
+        ariaLabel="Market"
+        catalogMarkets={[
+          ...largeCatalog,
+          market("SE", "Sweden", "SE", "Swedish", "sv", { id: "se", label: "SE catalog" }),
+        ]}
+        onChange={vi.fn()}
+        trackedMarkets={[]}
+        value="US"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Market" }));
+    expect(screen.getByRole("textbox", { name: "Search markets..." })).toBeVisible();
+    expect(
+      screen.queryByRole("menuitem", { name: /United States \/ English/ }),
+    ).not.toBeInTheDocument();
+
+    await user.type(screen.getByRole("textbox", { name: "Search markets..." }), "sweden");
+    expect(screen.queryByText("Catalog")).not.toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Sweden \/ Swedish/ })).toBeInTheDocument();
   });
 });

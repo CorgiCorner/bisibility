@@ -1,5 +1,9 @@
-import { toolbarControlClassName } from "@/components/ui";
-import type { GridColumnVisibilityModel, GridDensity } from "@mui/x-data-grid";
+import type {
+  DataTableColumn,
+  DataTableDensity,
+} from "@/components/ui/data-table/data-table-types";
+import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
+import type { KeywordRow } from "@/lib/queries/keywords";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -24,6 +28,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const columns: readonly DataTableColumn<KeywordRow>[] = [
+  {
+    accessorKey: "keyword",
+    header: "Keyword",
+    meta: { lockVisible: true, title: "Keyword" },
+  },
+  { accessorKey: "change", header: "Change", meta: { title: "Change" } },
+  { accessorKey: "volume", header: "Volume", meta: { title: "Volume" } },
+];
+
 function ToolbarControl({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <span
@@ -36,8 +50,8 @@ function ToolbarControl({ children }: Readonly<{ children: ReactNode }>) {
 
 function FilterBarStory() {
   const [searchValue, setSearchValue] = useState("rank tracker");
-  const [density, setDensity] = useState<GridDensity>("standard");
-  const [columns, setColumns] = useState<GridColumnVisibilityModel>({
+  const [density, setDensity] = useState<DataTableDensity>("standard");
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({
     change: true,
     rankingUrl: true,
     sparkline: true,
@@ -47,7 +61,9 @@ function FilterBarStory() {
 
   return (
     <KeywordsFilterBar
-      columnVisibilityModel={columns}
+      columnSizing={{}}
+      columns={columns}
+      columnVisibility={columnVisibility}
       density={density}
       filterChips={[
         { key: "change", label: "Change: Improved" },
@@ -56,8 +72,10 @@ function FilterBarStory() {
       ]}
       filterCount={3}
       groupingControl={<ToolbarControl>Group: Tags</ToolbarControl>}
+      id="filter-bar-story-table"
       onClearFilters={() => undefined}
-      onColumnVisibilityChange={setColumns}
+      onColumnSizingChange={() => undefined}
+      onColumnVisibilityChange={setColumnVisibility}
       onDensityChange={setDensity}
       onOpenExport={() => undefined}
       onOpenFilters={() => undefined}
@@ -74,11 +92,15 @@ function FilterBarStory() {
 
 export const Interactive: Story = {
   args: {
-    columnVisibilityModel: {},
+    columnSizing: {},
+    columns,
+    columnVisibility: {},
     density: "standard",
     filterChips: [],
     filterCount: 0,
+    id: "filter-bar-story-table",
     onClearFilters: () => undefined,
+    onColumnSizingChange: () => undefined,
     onColumnVisibilityChange: () => undefined,
     onDensityChange: () => undefined,
     onOpenExport: () => undefined,

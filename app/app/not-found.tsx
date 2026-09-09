@@ -1,7 +1,8 @@
-import { Button, EmptyState } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { getSession } from "@/lib/auth/session";
 import { appRootPath } from "@/lib/routing/app-path";
-import { SquaresFourIcon as SquaresFour } from "@phosphor-icons/react/dist/ssr";
+import { SquaresFourIcon as SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

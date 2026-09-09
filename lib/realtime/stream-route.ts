@@ -12,7 +12,7 @@ import {
   subscribeToNotificationEvents,
   subscribeToOperationEvents,
 } from "@/lib/notifications/realtime";
-import { getQueryActor, resolveProjectAccess } from "@/lib/queries/_auth";
+import { getQueryActor, getQuerySession, resolveProjectAccess } from "@/lib/queries/_auth";
 import { readOperationSnapshot } from "@/lib/rank-check/runs/snapshot";
 import type { NextRequest } from "next/server";
 import {
@@ -25,6 +25,7 @@ import {
   sseEvent,
   streamHeaders,
 } from "./sse";
+import { canReadStream } from "./stream-access";
 
 function temporarilyUnavailable() {
   return new Response("Notification stream temporarily unavailable", {
@@ -44,9 +45,11 @@ export async function GET(req: NextRequest) {
   const projectRef = new URL(req.url).searchParams.get("project");
   if (!projectRef) return new Response("Project is required", { status: 400 });
 
+  let session: Awaited<ReturnType<typeof getQuerySession>>;
   let actor: Awaited<ReturnType<typeof getQueryActor>>;
   // EventSource follows redirects, so route-control throws become plain auth statuses here.
   try {
+    session = await getQuerySession();
     actor = await getQueryActor();
   } catch {
     return new Response("Unauthorized", { status: 401 });
@@ -66,10 +69,14 @@ export async function GET(req: NextRequest) {
     operations: Awaited<ReturnType<typeof readOperationSnapshot>>;
   };
   try {
+    if (!(await canReadStream(session, access.projectId)))
+      return new Response("Unauthorized", { status: 401 });
     const [feed, operations] = await Promise.all([
       getNotificationFeedForScope(scope, { dateFormat }),
       readOperationSnapshot(access.projectId),
     ]);
+    if (!(await canReadStream(session, access.projectId)))
+      return new Response("Unauthorized", { status: 401 });
     initial = { feed, operations };
   } catch {
     return temporarilyUnavailable();
@@ -114,6 +121,7 @@ export async function GET(req: NextRequest) {
         function close() {
           if (closed) return;
           closed = true;
+          req.signal?.removeEventListener("abort", close);
           if (heartbeat) clearInterval(heartbeat);
           if (poll) clearInterval(poll);
           if (reconciliation) clearInterval(reconciliation);
@@ -134,11 +142,23 @@ export async function GET(req: NextRequest) {
           }
         }
 
+        async function stillAuthorized() {
+          if (closed) return false;
+          try {
+            if (await canReadStream(session, access.projectId)) return !closed;
+          } catch {
+            // A failed authorization read must stop delivery, not retain an old grant.
+          }
+          close();
+          return false;
+        }
+
         function sendNotifications(force = false) {
           notificationQueue = notificationQueue
             .then(async () => {
-              if (closed) return;
+              if (!(await stillAuthorized())) return;
               const feed = await getNotificationFeedForScope(scope, { dateFormat });
+              if (!(await stillAuthorized())) return;
               const signature = notificationFeedSignature(feed);
               if (force || signature !== notificationSignature) {
                 notificationSignature = signature;
@@ -151,8 +171,9 @@ export async function GET(req: NextRequest) {
         function sendOperations(force = false) {
           operationQueue = operationQueue
             .then(async () => {
-              if (closed) return;
+              if (!(await stillAuthorized())) return;
               const operations = await readOperationSnapshot(access.projectId);
+              if (!(await stillAuthorized())) return;
               const signature = JSON.stringify(operations);
               if (force || signature !== operationSignature) {
                 operationSignature = signature;
@@ -230,7 +251,11 @@ export async function GET(req: NextRequest) {
             sendNotifications(true);
             sendOperations(true);
           }, RECONCILIATION_INTERVAL_MS);
-          heartbeat = setInterval(() => enqueue(": heartbeat\n\n"), HEARTBEAT_INTERVAL_MS);
+          heartbeat = setInterval(() => {
+            void stillAuthorized().then((allowed) => {
+              if (allowed) enqueue(": heartbeat\n\n");
+            });
+          }, HEARTBEAT_INTERVAL_MS);
         } catch {
           degradeToPolling();
         }

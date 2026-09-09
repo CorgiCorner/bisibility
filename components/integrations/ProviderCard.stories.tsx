@@ -5,6 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 const meta = {
   title: "Integrations/ProviderCard",
   component: ProviderCard,
+  parameters: { nextjs: { appDirectory: true } },
   args: {
     searchSyncPlan: { daysTotal: 93, pace: "gentle", retentionMonths: 3 },
     timeZone: "Europe/Warsaw",

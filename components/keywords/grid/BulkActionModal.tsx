@@ -1,7 +1,8 @@
 "use client";
 
 import type { KeywordWorkspaceActions } from "@/components/keywords/action-utils";
-import { Button, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { useState } from "react";
 import { BulkTagForm } from "./BulkActionForms";

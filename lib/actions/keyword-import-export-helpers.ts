@@ -1,9 +1,12 @@
 import ExcelJS from "exceljs";
 
 export {
+  canonicalKeywordImportLocationKey,
   deduplicateKeywordImportRows,
   type KeywordImportRow,
   keywordImportKey,
+  keywordImportLocationKey,
+  keywordImportSelectionKey,
   parseKeywordImportCsv,
 } from "./keyword-import-csv";
 

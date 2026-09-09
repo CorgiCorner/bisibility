@@ -6,7 +6,7 @@ import {
   SystemSecondaryAction,
 } from "@/components/marketing/system/SystemPage";
 import { reportAppError } from "@/lib/observability/error-reporting";
-import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 

@@ -1,4 +1,7 @@
-.searchInput::-webkit-search-cancel-button {
-  appearance: none;
-  display: none;
+@layer theme, base, components, utilities;
+@layer components {
+  .searchInput::-webkit-search-cancel-button {
+    appearance: none;
+    display: none;
+  }
 }

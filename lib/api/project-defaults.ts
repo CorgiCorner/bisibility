@@ -14,6 +14,7 @@ import { resolveProjectDefaultMarket } from "@/lib/serp/project-default-market";
 import { projectDefaultsUpsertArgs } from "@/lib/settings/project-defaults-write";
 import type { ApiContext } from "./context";
 import { forbidden, projectMatches } from "./context";
+import { legacyMarketLocationSelection } from "./legacy-market-input";
 import { resourceResponse } from "./responses";
 import { objectBody, parseApiInput, readJsonBody } from "./surface";
 
@@ -115,12 +116,21 @@ export async function updateProjectDefaults(ctx: ApiContext, projectId: string) 
     data.country !== undefined ||
     data.device !== undefined ||
     data.locationKey !== undefined;
+  // Legacy city names stay structured so the resolver can preserve their provider region.
+  const legacyCountry = data.country ?? currentMarket.country;
   const resolvedDefault = shouldResolveMarket
     ? await resolveProjectDefaultMarket({
         city: data.city,
-        country: data.country ?? currentMarket.country,
+        country: legacyCountry,
         device: data.device ?? currentMarket.device,
-        locationKey: data.locationKey,
+        ...(data.locationKey
+          ? { selection: { canonicalKey: data.locationKey, kind: "city" as const } }
+          : {
+              selection: legacyMarketLocationSelection({
+                city: data.city,
+                country: legacyCountry,
+              }),
+            }),
         projectId: ctx.auth.project.id,
       })
     : null;

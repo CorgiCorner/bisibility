@@ -16,7 +16,7 @@ import {
 import { canonicalKeySchema, deviceSchema } from "@/lib/schemas/keyword";
 import { type ProjectDefaultsInput, projectDefaultsSchema } from "@/lib/schemas/project";
 import { serpDepthSchema } from "@/lib/schemas/serp-depth";
-import { DEFAULT_SERP_DEVICE, type SerpDepth, type SerpDevice } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEVICE, type SerpDepth, type SerpDevice } from "@/lib/serp/constants";
 import { z } from "zod";
 
 export const DEFAULT_ONBOARDING_SERP_DEPTH: SerpDepth = 20;
@@ -79,6 +79,20 @@ export function withTrackingDefaults(
     serpDepth: values?.serpDepth ?? flowState?.serpDepth ?? DEFAULT_ONBOARDING_SERP_DEPTH,
     timezone: values?.timezone ?? "UTC",
   };
+}
+
+/**
+ * The markets a step starts with: the draft's stored selections carry the server's display name
+ * and language, so they win; only a key without one (the default country) is rebuilt locally.
+ */
+export function draftLocationSelections(
+  keys: readonly string[],
+  selections: readonly LocationFieldValue[] | undefined,
+): LocationFieldValue[] {
+  return keys.map(
+    (key) =>
+      selections?.find((selection) => selection.canonicalKey === key) ?? locationValueForKey(key),
+  );
 }
 
 export function completedTrackingDefaults(

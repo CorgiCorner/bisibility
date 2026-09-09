@@ -28,8 +28,8 @@ async function latestOtpFor(email: string) {
   throw new Error(`OTP for ${email} was not captured.`);
 }
 
-export async function signIn(page: Page, email: string) {
-  await page.goto("/login");
+export async function signIn(page: Page, email: string, options: { navigate?: boolean } = {}) {
+  if (options.navigate !== false) await page.goto("/login");
   await page.getByLabel("Email").fill(email);
   await page.getByRole("button", { name: "Send login code" }).click();
   const firstBox = page.getByRole("textbox", { name: "Code", exact: true });
@@ -80,7 +80,7 @@ export async function testAndSaveDataForSeo(page: Page) {
       await page.waitForLoadState("networkidle");
     }
   }
-  const saveButton = page.getByRole("button", { name: "Save DataForSEO", exact: true });
+  const saveButton = page.getByRole("button", { name: "Save connection", exact: true });
   await expect(saveButton).toBeEnabled();
   await saveButton.click();
   await expect(page.getByRole("status")).toContainText("DataForSEO connected", {
@@ -89,7 +89,11 @@ export async function testAndSaveDataForSeo(page: Page) {
   await expect(page.getByRole("button", { name: "Continue", exact: true })).toBeEnabled();
 }
 
-export async function completeOnboarding(page: Page, suffix: string) {
+export async function completeOnboarding(
+  page: Page,
+  suffix: string,
+  options: { runPreview?: boolean; skipProvider?: boolean } = {},
+) {
   const domain = `e2e-${suffix}.example.com`;
   const keyword = `rank tracker ${suffix}`;
 
@@ -99,11 +103,27 @@ export async function completeOnboarding(page: Page, suffix: string) {
   await website.fill(domain);
   await clickWizardPrimary(page, "Continue", /[?&]step=2(?:&|$)/);
 
-  await testAndSaveDataForSeo(page);
-  await clickProviderContinue(page, /[?&]step=3(?:&|$)/);
+  if (options.skipProvider) {
+    // The wizard passes onSkip, so the affordance renders as a button; it falls back to a
+    // link when only an href is supplied. Match either rather than pinning one role.
+    await page
+      .getByRole("button", { name: /Skip provider connection/ })
+      .or(page.getByRole("link", { name: /Skip provider connection/ }))
+      .click();
+    await expect(page).toHaveURL(/[?&]step=3(?:&|$)/, { timeout: wizardNavigationTimeout });
+  } else {
+    await testAndSaveDataForSeo(page);
+    await clickProviderContinue(page, /[?&]step=3(?:&|$)/);
+  }
 
   await page.getByPlaceholder("One keyword per line").fill(keyword);
   await clickWizardPrimary(page, "Continue", /[?&]step=4(?:&|$)/);
+  if (options.runPreview) {
+    const runCheck = page.getByRole("button", { name: "Run check", exact: true });
+    await expect(runCheck).toBeEnabled();
+    await runCheck.click();
+    await expect(page.getByText(/Sample checks are queued|recorded cost/)).toBeVisible();
+  }
   await clickWizardPrimary(page, "Open app", /\/app\/prj_[^/]+\/getting-started$/);
 
   const projectRef = new URL(page.url()).pathname.split("/")[2];

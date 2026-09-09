@@ -1,35 +1,18 @@
 "use client";
 
-import useMediaQuery from "@mui/material/useMediaQuery";
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
+import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { type ToastEntry, ToastItem } from "./ToastItem";
+import { ToastContext, type ToastOptions } from "./toast-context";
 import { createToastLifecycle, type ToastLifecycle } from "./toast-lifecycle";
-import { type ToastSeverity, toastPresentations } from "./toast-presentation";
+import { toastPresentations } from "./toast-presentation";
 
-export type ToastOptions = {
-  severity?: ToastSeverity;
-  undo?: () => Promise<void> | void;
-};
-
-export type ToastContextValue = {
-  showToast: (message: ReactNode, options?: ToastOptions) => void;
-};
+export { type ToastContextValue, type ToastOptions, useToast } from "./toast-context";
 
 type ToastProviderProps = { children: ReactNode };
 
 const UNDO_TOAST_DURATION = 6000;
 const UNDO_ERROR_MESSAGE = "Undo failed. Please try again.";
-
-const fallbackToastContext: ToastContextValue = { showToast: () => undefined };
-const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
   const [toasts, setToastsState] = useState<ToastEntry[]>([]);
@@ -37,7 +20,7 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
   const lifecyclesRef = useRef(new Map<number, ToastLifecycle>());
   const mountedRef = useRef(false);
   const nextIdRef = useRef(1);
-  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", { noSsr: true });
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   const updateToasts = useCallback((updater: (current: ToastEntry[]) => ToastEntry[]) => {
     setToastsState((current) => {
@@ -226,8 +209,4 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
       ) : null}
     </ToastContext.Provider>
   );
-}
-
-export function useToast() {
-  return useContext(ToastContext) ?? fallbackToastContext;
 }

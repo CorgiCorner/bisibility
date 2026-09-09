@@ -1,4 +1,9 @@
-import { serpDeviceValues, serpMarketOptions } from "@/lib/serp/markets";
+import { serpDeviceValues } from "@/lib/serp/constants";
+import {
+  deprecatedLegacyMarketField,
+  legacyMarketNameOpenApiSchema,
+  primaryLocationKeyDescription,
+} from "./legacy-market-input";
 import { scheduleInputContractSchema } from "./openapi-schedule-schema";
 
 const marketIdentityDescription =
@@ -7,12 +12,11 @@ const termIdentityDescription =
   "Keyword identity field. A value different from the stored term is rejected with 409; the same value is accepted.";
 const deviceIdentityDescription =
   "Keyword identity field. A value different from the stored device is rejected with 409; the same value is accepted.";
-const marketSchema = { enum: serpMarketOptions, example: "United States", type: "string" };
 
 export const keywordPatchSchema = {
   properties: {
-    city: { description: marketIdentityDescription, type: ["string", "null"] },
-    country: { ...marketSchema, description: marketIdentityDescription },
+    city: deprecatedLegacyMarketField(marketIdentityDescription, { type: ["string", "null"] }),
+    country: legacyMarketNameOpenApiSchema(marketIdentityDescription),
     device: {
       description: deviceIdentityDescription,
       enum: serpDeviceValues,
@@ -28,12 +32,13 @@ export const keywordPatchSchema = {
       example: "rank tracker docs",
       type: "string",
     },
-    location: {
-      ...marketSchema,
-      description: `Backward-compatible alias for country. ${marketIdentityDescription}`,
-    },
+    location: legacyMarketNameOpenApiSchema(
+      `Backward-compatible alias for country. ${marketIdentityDescription}`,
+    ),
     location_key: {
-      description: `Canonical country, region, or city key, optionally qualified with @language. The default language normalizes to the unqualified key. ${marketIdentityDescription}`,
+      description: primaryLocationKeyDescription(
+        `The default language normalizes to the unqualified key. ${marketIdentityDescription}`,
+      ),
       example: "ES/Andalusia/Malaga@en",
       type: "string",
     },

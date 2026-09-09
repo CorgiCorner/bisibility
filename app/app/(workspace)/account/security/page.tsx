@@ -1,14 +1,17 @@
 import { revokeSession, signOutEverywhere } from "@/app/app/(workspace)/account/actions";
 import { AccountShell } from "@/components/account/AccountShell";
+import { DemoAccountNotice } from "@/components/account/DemoAccountNotice";
 import { PersonalTokensSection } from "@/components/account/PersonalTokensSection";
 import { SecurityFactors } from "@/components/account/SecurityFactors";
 import { SessionsSection } from "@/components/account/SessionsSection";
 import { issuePersonalTokenAction, revokePersonalTokenAction } from "@/lib/actions/personalToken";
 import { requireSession } from "@/lib/auth/session";
+import { readOnlyDemoConfig } from "@/lib/demo/config";
 import { getAccount, getPreferences } from "@/lib/queries/account";
 import { getPersonalTokens } from "@/lib/queries/personal-tokens";
 
 export default async function SecurityPage() {
+  if (readOnlyDemoConfig()) return <DemoAccountNotice section="security" />;
   const session = await requireSession();
   const [account, preferences] = await Promise.all([getAccount(), getPreferences()]);
   const personalTokens = await getPersonalTokens(session.user.id);

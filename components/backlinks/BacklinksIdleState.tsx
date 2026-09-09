@@ -1,8 +1,10 @@
 "use client";
 
-import { AccentCtaLink, EmptyState, ModuleMark } from "@/components/ui";
+import { AccentCtaLink } from "@/components/ui/AccentCtaLink";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ModuleMark } from "@/components/ui/ModuleMark";
 import { appPath } from "@/lib/routing/app-path";
-import { LinkIcon as Link } from "@phosphor-icons/react";
+import { LinkIcon as Link } from "@phosphor-icons/react/dist/csr/Link";
 
 const bullets = [
   "Runs on your own DataForSEO key, price shown before every run",

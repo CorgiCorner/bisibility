@@ -1,7 +1,8 @@
 "use client";
 
 import { relativePast } from "@/lib/format/relative-time";
-import { ClockCounterClockwiseIcon as Recent, XIcon as X } from "@phosphor-icons/react";
+import { ClockCounterClockwiseIcon as Recent } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import {
   type RecentBacklinksTarget,
   recentTargetKey,

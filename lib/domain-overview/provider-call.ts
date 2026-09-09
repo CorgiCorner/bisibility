@@ -12,9 +12,9 @@ import type { SerpRankLocation } from "@/lib/serp/location";
 import {
   researchProviderLanguageCode,
   researchProviderLocation,
-} from "@/lib/serp/market-capability";
+} from "@/lib/serp/research-capability";
 import type { DomainOverviewSource } from "./context";
-import type { DomainOverviewMarket, DomainOverviewScope } from "./types";
+import type { DomainOverviewResearchScope, DomainOverviewScope } from "./types";
 
 function estimate(input: {
   itemCount: number;
@@ -61,12 +61,12 @@ function paidCallInput(input: {
   };
 }
 
-function providerLocation(market: DomainOverviewMarket): SerpRankLocation {
-  return researchProviderLocation(market);
+function providerLocation(researchScope: DomainOverviewResearchScope): SerpRankLocation {
+  return researchProviderLocation(researchScope);
 }
 
 function providerTarget(
-  input: DomainOverviewMarket & {
+  input: DomainOverviewResearchScope & {
     scope: DomainOverviewScope;
     target: string;
   },
@@ -107,7 +107,7 @@ export function preflightDomainOverview(input: {
 }
 
 export function fetchDomainOverviewMetrics(
-  input: DomainOverviewMarket & {
+  input: DomainOverviewResearchScope & {
     budgetCapCents: number;
     projectId: string;
     scope: DomainOverviewScope;
@@ -129,7 +129,7 @@ export function fetchDomainOverviewMetrics(
 }
 
 export function fetchDomainHistory(
-  input: DomainOverviewMarket & {
+  input: DomainOverviewResearchScope & {
     budgetCapCents: number;
     projectId: string;
     scope: DomainOverviewScope;
@@ -151,7 +151,7 @@ export function fetchDomainHistory(
 }
 
 export function fetchDomainKeywords(
-  input: DomainOverviewMarket & {
+  input: DomainOverviewResearchScope & {
     budgetCapCents: number;
     limit: number;
     offset: number;
@@ -180,7 +180,7 @@ export function fetchDomainKeywords(
 }
 
 export function fetchDomainPages(
-  input: DomainOverviewMarket & {
+  input: DomainOverviewResearchScope & {
     budgetCapCents: number;
     limit: number;
     offset: number;

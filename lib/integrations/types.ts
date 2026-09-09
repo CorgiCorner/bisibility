@@ -8,7 +8,7 @@ import type {
   UpdateProviderCostInput,
   UpdateProviderRateInput,
 } from "@/lib/schemas/provider";
-import type { SerpDepth, SerpDevice, SerpMarketName } from "@/lib/serp/markets";
+import type { SerpDepth, SerpDevice } from "@/lib/serp/constants";
 import type { StatusKind } from "@/lib/ui/status-kind";
 
 export type ProviderStatusKind = Extract<
@@ -107,7 +107,7 @@ export type DrawerDefaults = {
   device: Capitalize<SerpDevice>;
   endpoint: string;
   language: string;
-  location: SerpMarketName;
+  locationKey: string;
   login: string;
   secret: string;
 };

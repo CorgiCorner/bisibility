@@ -1,6 +1,6 @@
 "use client";
 
-import { InfoTooltip } from "@/components/ui";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ProviderCard, type ProviderCardState } from "./ProviderCard";
 import {
   type ConnectedProviderMap,

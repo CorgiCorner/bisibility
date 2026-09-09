@@ -32,13 +32,13 @@ describe("KeywordsGridMarketEmpty", () => {
     const { onAddKeyword } = renderEmpty();
 
     const add = screen.getByRole("button", { name: "Add keywords to Germany / German" });
-    expect(add).toHaveClass("MuiButton-contained");
+    expect(add).toHaveAttribute("data-variant", "primary");
     fireEvent.click(add);
     expect(onAddKeyword).toHaveBeenCalledOnce();
 
     const copy = screen.getByRole("link", { name: "Copy keywords from another market" });
     expect(copy).toHaveAttribute("href", "/app/prj_1/rank-tracker");
-    expect(copy).not.toHaveClass("MuiButton-contained");
+    expect(copy).not.toHaveAttribute("data-variant", "primary");
   });
 
   it("keeps the way in from another market when this reader cannot create keywords", () => {

@@ -26,7 +26,7 @@ import {
   primaryProviderConnection,
   providerChainOrderBy,
 } from "@/lib/rank-check/provider-chain-order";
-import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 import { requireReadableProject } from "./_auth";
 import { loadGscConsumerStatuses } from "./integration-consumer-status";
 import {
@@ -120,7 +120,7 @@ function integrationProvider(
         device: "Desktop",
         endpoint: credentials.endpoint ?? "",
         language: "English",
-        location: DEFAULT_SERP_MARKET,
+        locationKey: "US",
         login: displayedLogin ?? "",
         secret: "",
       },

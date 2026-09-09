@@ -4,7 +4,7 @@ import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
-import { resolveSerpDepth } from "@/lib/serp/markets";
+import { resolveSerpDepth } from "@/lib/serp/constants";
 import { positiveCostCents } from "./cost";
 import { RankCheckClosedBeforePersistenceError } from "./persistence-errors";
 import {

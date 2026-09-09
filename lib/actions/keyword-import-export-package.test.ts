@@ -44,6 +44,7 @@ function keyword(overrides: Record<string, unknown> = {}) {
     device: "desktop",
     id: "keyword_1",
     location: "United States",
+    locationRef: { canonicalKey: "US" },
     publicId: ids.keyword,
     rankChecks: [
       {
@@ -105,6 +106,7 @@ describe("keyword export packages", () => {
             keyword: {
               device: "desktop",
               location: "United States",
+              locationRef: { canonicalKey: "US" },
               publicId: ids.keyword,
               text: "rank tracker",
             },
@@ -143,7 +145,7 @@ describe("keyword export packages", () => {
     vi.useRealTimers();
   });
 
-  it("exports the complete strict version 6 cloud import package", async () => {
+  it("exports the complete strict version 7 cloud import package", async () => {
     const result = await exportCloudImportPackage({ projectId: ids.project });
     const payload = JSON.parse(result.content);
 
@@ -162,6 +164,7 @@ describe("keyword export packages", () => {
     expect(mocks.prisma.keyword.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         include: {
+          locationRef: { select: { canonicalKey: true } },
           rankChecks: {
             orderBy: { checkedAt: "desc" },
             where: { status: "completed" },
@@ -175,7 +178,7 @@ describe("keyword export packages", () => {
       exported_at: "2026-06-28T12:00:00.000Z",
       project_id: ids.project,
       scope: "history",
-      version: 6,
+      version: 7,
     });
     expect(payload.keywords).toEqual([
       expect.objectContaining({
@@ -183,6 +186,7 @@ describe("keyword export packages", () => {
         id: ids.keyword,
         keyword: "rank tracker",
         location: "United States",
+        location_key: "US",
         tags: ["SEO", "Product"],
         target_url: "/rank",
       }),
@@ -203,7 +207,13 @@ describe("keyword export packages", () => {
       expect.objectContaining({
         condition_type: "threshold",
         id: ids.rule,
-        targets: [expect.objectContaining({ keyword_id: ids.keyword, type: "keyword" })],
+        targets: [
+          expect.objectContaining({
+            keyword_id: ids.keyword,
+            location_key: "US",
+            type: "keyword",
+          }),
+        ],
       }),
     ]);
     expect(payload.competitors).toEqual([

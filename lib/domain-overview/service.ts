@@ -31,7 +31,7 @@ import {
 } from "./snapshot";
 import {
   normalizeDomainOverviewAnalysis,
-  normalizeDomainOverviewMarket,
+  normalizeDomainOverviewResearchScope,
   normalizeDomainOverviewTarget,
 } from "./target";
 import type {
@@ -121,7 +121,7 @@ export async function analyzeDomainOverview(
           rows: [],
           totalCount: 0,
         }),
-        market: input,
+        researchScope: input,
         overview: overview.data,
         overviewCached: overview.cached,
         overviewCost: overview.costCents,
@@ -155,7 +155,7 @@ export async function analyzeDomainOverview(
       }
       return report({
         keywords: modules.keywords,
-        market: input,
+        researchScope: input,
         overview: overview.data,
         overviewCached: true,
         overviewCost: 0,
@@ -208,7 +208,7 @@ export async function analyzeDomainOverview(
     }).catch(() => undefined);
     return report({
       keywords,
-      market: input,
+      researchScope: input,
       overview: overview.data,
       overviewCached: overview.cached,
       overviewCost: overview.costCents,
@@ -227,7 +227,7 @@ export async function loadDomainOverviewHistory(
 ): Promise<DomainHistoryOutcome> {
   try {
     const input = {
-      ...normalizeDomainOverviewMarket(options),
+      ...normalizeDomainOverviewResearchScope(options),
       ...normalizeDomainOverviewTarget(options.target, options.scopeOverride),
     };
     const { project, source } = await requireDomainOverviewSource(context.projectId);

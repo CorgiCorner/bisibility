@@ -7,10 +7,12 @@ import {
 import { addKeywordSchema } from "@/lib/schemas/keyword";
 import { z } from "zod";
 
-export type AddKeywordTab = "api" | "csv" | "manual";
+export type AddKeywordEntryTab = "api" | "csv" | "manual";
+export type AddKeywordTab = AddKeywordEntryTab | "suggestions";
 
 export const ADD_KEYWORD_TABS: { id: AddKeywordTab; label: string }[] = [
   { id: "manual", label: "Manual" },
+  { id: "suggestions", label: "Suggestions" },
   { id: "api", label: "API" },
 ];
 
@@ -32,6 +34,20 @@ export function parseKeywordLines(value: string): string[] {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+}
+
+export function appendKeywordSuggestions(current: string, suggestions: readonly string[]): string {
+  const existing = new Set(
+    parseKeywordTargetLines(current).map(({ keyword }) => keyword.toLowerCase()),
+  );
+  const additions = suggestions
+    .map((query) => query.trim())
+    .filter((query) => {
+      if (!query || existing.has(query.toLowerCase())) return false;
+      existing.add(query.toLowerCase());
+      return true;
+    });
+  return [current.trimEnd(), ...additions].filter(Boolean).join("\n");
 }
 
 export type ParsedKeywordTarget = {

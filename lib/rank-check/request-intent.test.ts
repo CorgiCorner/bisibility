@@ -33,6 +33,14 @@ const rankCheck = {
   status: "completed",
   trigger: "manual",
 };
+const POLAND_LOCATION = {
+  gl: "pl",
+  hl: "pl",
+  kind: "country",
+  primaryGeoCode: null,
+  primaryGeoName: "Poland",
+  secondaryGeoName: "Poland",
+};
 
 const mocks = vi.hoisted(() => ({
   connectionConnect: vi.fn(),
@@ -54,7 +62,7 @@ const mocks = vi.hoisted(() => ({
     $executeRaw: vi.fn(),
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
-    keyword: { findUnique: vi.fn() },
+    keyword: { findMany: vi.fn(), findUnique: vi.fn() },
     keywordSchedule: { update: vi.fn() },
     project: { findUnique: vi.fn(), findUniqueOrThrow: vi.fn() },
     projectDefaults: { update: vi.fn() },
@@ -162,12 +170,15 @@ describe("single rank-check request intent", () => {
     mocks.prisma.$executeRaw.mockResolvedValue(1);
     mocks.prisma.$queryRaw.mockResolvedValue([]);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
+    mocks.prisma.keyword.findMany.mockResolvedValue([]);
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       ...keyword,
       _count: { rankChecks: 0 },
+      archivedAt: null,
+      locationId: "location_active",
       device: "desktop",
       location: "Poland",
-      locationRef: null,
+      locationRef: POLAND_LOCATION,
       project: {
         budgetCapCents: null,
         defaults: { serpDepth: 100, serpStopOnMatch: false },
@@ -212,10 +223,18 @@ describe("single rank-check request intent", () => {
       run: { id: "run_1", projectId: keyword.projectId, requestedCount: 1, status: "queued" },
     });
     mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue({
+      id: "item_1",
+      keyword: { publicId: keyword.publicId },
       keywordId: keyword.id,
       rankCheck: { workflowRunId: null },
       rankCheckId: null,
-      run: { id: "run_1", projectId: keyword.projectId, requestedCount: 1, status: "running" },
+      run: {
+        id: "run_1",
+        projectId: keyword.projectId,
+        publicId: run.publicId,
+        requestedCount: 1,
+        status: "running",
+      },
       runId: "run_1",
       status: "queued",
     });

@@ -5,16 +5,16 @@ import {
   type KeywordExportTarget,
   keywordExportTargetLabel,
 } from "@/components/keywords/export-target-model";
-import { Button, MenuSelect, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { Modal } from "@/components/ui/Modal";
 import { exportKeywords } from "@/lib/actions/keyword-export-action";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { downloadBlob } from "@/lib/ui/download";
-import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  CheckIcon as Check,
-  DownloadSimpleIcon as DownloadSimple,
-  LockSimpleIcon as LockSimple,
-} from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";

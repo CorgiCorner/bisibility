@@ -1,11 +1,9 @@
 import { cn } from "@/lib/ui/cn";
 import type { Icon } from "@phosphor-icons/react";
-import {
-  CheckCircleIcon as CheckCircle,
-  PauseIcon as Pause,
-  SealCheckIcon as SealCheck,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
+import { PauseIcon as Pause } from "@phosphor-icons/react/dist/ssr/Pause";
+import { SealCheckIcon as SealCheck } from "@phosphor-icons/react/dist/ssr/SealCheck";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 
 export type StatusChipTone =
   | "neutral"

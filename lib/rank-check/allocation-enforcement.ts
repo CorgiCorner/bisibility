@@ -3,7 +3,7 @@ import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { assertProviderAllocationAvailable } from "@/lib/provider-usage/enforcement";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { estimatedRankCheckCostCents } from "./default-cost";
 import type { DataForSeoQueuePriority } from "./queued-config";
 import { dataForSeoQueuedEstimate, queuedBillingUnits } from "./queued-pricing";

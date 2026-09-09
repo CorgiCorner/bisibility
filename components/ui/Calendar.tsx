@@ -3,7 +3,8 @@
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { formatDate, formatDayOfMonth } from "@/lib/dates/format";
 import { cn } from "@/lib/ui/cn";
-import { CaretLeftIcon as CaretLeft, CaretRightIcon as CaretRight } from "@phosphor-icons/react";
+import { CaretLeftIcon as CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { useRef, useState } from "react";
 
 export type CalendarProps = {

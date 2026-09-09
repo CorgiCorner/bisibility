@@ -1,6 +1,6 @@
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
-import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react";
+import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 
 type ResearchKeywordCellProps = {
   canRemoveSaved: boolean;

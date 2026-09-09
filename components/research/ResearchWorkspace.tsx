@@ -2,10 +2,13 @@
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import type { LocationFieldValue } from "@/components/keywords/LocationField";
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { ResearchKeywordsActionInput } from "@/lib/actions/keyword-research";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
+import {
+  researchScopeForStoredLocationKey,
+  researchScopeOptionsForProject,
+} from "@/lib/research/scope";
 import { useState } from "react";
 import { RecentResearchSearches } from "./RecentResearchSearches";
 import { ResearchResults } from "./ResearchResults";
@@ -13,17 +16,17 @@ import { ResearchSearchCard } from "./ResearchSearchCard";
 import { ResearchSeedTabs } from "./ResearchSeedTabs";
 import { ResearchStatePanel } from "./ResearchStatePanel";
 import { ResearchTrackingDrawer } from "./ResearchTrackingDrawer";
-import { researchMetricsAvailable } from "./research-market-capability";
-import { hasMetricsScopeMismatch, metricsScope } from "./research-metrics-scope";
+import { researchScopeMetricsAvailable } from "./research-scope-capability";
 import {
   focusResearchSeedInput,
   nextBudgetResetLabel,
   type ResearchAddDraft,
   type ResearchWorkspaceProps,
-  recentSearchLocation,
   recentSearchReplay,
   researchFailureState,
   researchRetryLabel,
+  researchScopeLocationKey,
+  researchScopeTrackingLocation,
   researchTabRequest,
 } from "./research-workspace-model";
 import { useRecentSearches } from "./useRecentSearches";
@@ -49,19 +52,16 @@ export function ResearchWorkspace({
   const dateFormat = useDateFormat();
   const { addSpend } = useSessionSpend();
   const recent = useRecentSearches(context.project.id);
-  const projectLocation = context.location as LocationFieldValue;
-  const prefillLocation = prefill?.locationKey
-    ? recentSearchLocation(
-        {
-          locationKey: prefill.locationKey,
-          market: prefill.locationKey.split("/").at(-1) ?? prefill.locationKey,
-        },
-        projectLocation,
-      )
-    : projectLocation;
+  const scopeOptions = researchScopeOptionsForProject([
+    context.defaultScope,
+    ...(projectMarkets?.markets ?? []),
+  ]);
+  const prefillScope = prefill?.locationKey
+    ? researchScopeForStoredLocationKey(prefill.locationKey, context.defaultScope)
+    : context.defaultScope;
   const [connectionId, setConnectionId] = useState(context.connections[0]?.id ?? "");
   const [includeClickstream, setIncludeClickstream] = useState(false);
-  const [location, setLocation] = useState(prefillLocation);
+  const [scope, setScope] = useState(prefillScope);
   const [mode, setMode] = useState<KeywordResearchMode>("auto");
   const [resultLimit, setResultLimit] = useState<100 | 300 | 500>(100);
   const [seeds, setSeeds] = useState<string[]>(prefill?.seed.trim() ? [prefill.seed.trim()] : []);
@@ -72,7 +72,7 @@ export function ResearchWorkspace({
   ): ResearchKeywordsActionInput => ({
     connectionId,
     includeClickstream,
-    locationKey: location.canonicalKey,
+    locationKey: researchScopeLocationKey(scope),
     mode,
     projectId: context.project.id,
     resultLimit,
@@ -85,7 +85,7 @@ export function ResearchWorkspace({
     connectionId,
     includeClickstream,
     initialBudgetBlocked: checkHealth.budget.exhausted,
-    location,
+    scope,
     mode,
     projectId: context.project.id,
     recent,
@@ -94,7 +94,7 @@ export function ResearchWorkspace({
   });
   // biome-ignore format: grouped hook state keeps this page component below the line limit.
   const { activeTab, budgetBlocked, closeTab, markAdded, markSaved, researching, runResearch, setActiveTabId, tabs } = researchRuns;
-  const researchAvailable = researchMetricsAvailable(location);
+  const researchAvailable = researchScopeMetricsAvailable(scope);
   const savedKeywords = useResearchSavedKeywords({
     canRemove: canDeleteSavedKeywords,
     markSaved,
@@ -113,8 +113,6 @@ export function ResearchWorkspace({
     label: connection.label,
     value: connection.id,
   }));
-  const scope = metricsScope(location, context.language.label);
-
   function openRecentSearch(search: Parameters<typeof recentSearchReplay>[0]) {
     const replay = recentSearchReplay(
       search,
@@ -122,23 +120,28 @@ export function ResearchWorkspace({
       context.connections.map((connection) => connection.id),
     );
     if (!replay.connectionId) return;
-    const searchLocation = recentSearchLocation(search, projectLocation);
+    const searchScope = search.locationKey
+      ? researchScopeForStoredLocationKey(search.locationKey, context.defaultScope)
+      : context.defaultScope;
     setMode(search.mode);
     setResultLimit(search.resultLimit);
     setIncludeClickstream(search.includeClickstream);
     setConnectionId(replay.connectionId);
-    setLocation(searchLocation);
-    if (!researchMetricsAvailable(searchLocation)) {
+    setScope(searchScope);
+    if (!researchScopeMetricsAvailable(searchScope)) {
       setSeeds([search.seed]);
       scheduleEstimate([]);
       return;
     }
     if (replay.cached) {
-      void runResearch([search.seed], replay.overrides, searchLocation);
+      void runResearch([search.seed], replay.overrides, searchScope);
       return;
     }
     setSeeds([search.seed]);
-    scheduleEstimate([search.seed], replay.overrides);
+    scheduleEstimate([search.seed], {
+      ...replay.overrides,
+      locationKey: researchScopeLocationKey(searchScope),
+    });
   }
 
   return (
@@ -151,10 +154,8 @@ export function ResearchWorkspace({
             disabled={budgetBlocked || !hasProvider}
             estimate={estimate}
             includeClickstream={includeClickstream}
-            location={location}
-            metricsScope={
-              researchAvailable && hasMetricsScopeMismatch(location) ? scope : undefined
-            }
+            scope={scope}
+            scopes={[scope, ...scopeOptions]}
             mode={mode}
             onConnectionChange={(value) => {
               setConnectionId(value);
@@ -168,10 +169,10 @@ export function ResearchWorkspace({
               setResultLimit(value);
               scheduleEstimate(researchAvailable ? seeds : [], { resultLimit: value });
             }}
-            onLocationChange={(value) => {
-              setLocation(value);
-              scheduleEstimate(researchMetricsAvailable(value) ? seeds : [], {
-                locationKey: value.canonicalKey,
+            onScopeChange={(value) => {
+              setScope(value);
+              scheduleEstimate(researchScopeMetricsAvailable(value) ? seeds : [], {
+                locationKey: researchScopeLocationKey(value),
               });
             }}
             lookupDisabled={!hasProvider || !researchAvailable}
@@ -181,7 +182,6 @@ export function ResearchWorkspace({
             }}
             onSeedsChange={updateSeeds}
             onSubmit={(next) => void runResearch(next)}
-            projectId={context.project.id}
             researching={researching}
             resultLimit={resultLimit}
             seeds={seeds}
@@ -205,6 +205,7 @@ export function ResearchWorkspace({
         <ResearchStatePanel
           projectRef={context.project.id}
           resumeLabel={nextBudgetResetLabel(costContext.timezone ?? "UTC", dateFormat)}
+          scopeLabel={`${scope.countryName} / ${scope.languageLabel}`}
           state={
             budgetBlocked ? "budget_exhausted" : researchAvailable ? "idle" : "unsupported_location"
           }
@@ -216,7 +217,7 @@ export function ResearchWorkspace({
       activeTab.outcome.rows.length === 0 ? (
         <ResearchStatePanel
           cached={activeTab.outcome.cached}
-          market={activeTab.location.displayName}
+          scopeLabel={`${activeTab.scope.countryName} / ${activeTab.scope.languageLabel}`}
           mode={activeTab.mode}
           onEditSearch={focusResearchSeedInput}
           projectRef={context.project.id}
@@ -227,13 +228,14 @@ export function ResearchWorkspace({
         <ResearchStatePanel
           charged={"charged" in activeTab.outcome ? activeTab.outcome.charged : false}
           onRetry={() =>
-            void runResearch([activeTab.seed], researchTabRequest(activeTab), activeTab.location)
+            void runResearch([activeTab.seed], researchTabRequest(activeTab), activeTab.scope)
           }
           projectRef={context.project.id}
           retryLabel={researchRetryLabel(
             activeTab.retryEstimate ?? { cached: false, costCents: null, loading: false },
           )}
           resumeLabel={nextBudgetResetLabel(costContext.timezone ?? "UTC", dateFormat)}
+          scopeLabel={`${activeTab.scope.countryName} / ${activeTab.scope.languageLabel}`}
           state={researchFailureState(activeTab.outcome)}
         />
       ) : null}
@@ -247,13 +249,13 @@ export function ResearchWorkspace({
         <ResearchResults
           costContext={costContext}
           defaultTracking={{
-            device: context.defaultMarket.device,
-            location: activeTab.location,
+            device: context.defaultDevice,
+            location: researchScopeTrackingLocation(activeTab.scope),
             scheduleFrequency: "project_default",
           }}
           deeperEstimate={activeTab.deeperEstimate}
           key={activeTab.id}
-          metricsAvailable={researchMetricsAvailable(activeTab.location)}
+          metricsAvailable={researchScopeMetricsAvailable(activeTab.scope)}
           onAdd={setAddDraft}
           onDeeper={() => {
             const deeper = activeTab.requestedLimit === 100 ? 300 : 500;
@@ -261,7 +263,7 @@ export function ResearchWorkspace({
             void runResearch(
               [activeTab.seed],
               researchTabRequest(activeTab, deeper),
-              activeTab.location,
+              activeTab.scope,
             );
           }}
           onRemoveSaved={
@@ -273,7 +275,7 @@ export function ResearchWorkspace({
           projectId={context.project.id}
           seed={activeTab.seed}
           trackingMarketCount={
-            projectMarkets?.markets.filter((market) => market.status === "active").length ?? 0
+            projectMarkets?.markets.filter((entry) => entry.status === "active").length ?? 0
           }
         />
       ) : null}
@@ -281,7 +283,7 @@ export function ResearchWorkspace({
         addKeywordsAction={addKeywordsAction}
         costContext={costContext}
         draft={addDraft}
-        location={projectLocation}
+        location={researchScopeTrackingLocation(scope)}
         onAdded={(created, added) => {
           markAdded(
             created.map((keyword) => keyword.text),
@@ -291,7 +293,7 @@ export function ResearchWorkspace({
         }}
         onClose={() => setAddDraft(null)}
         project={context.project}
-        projectDefaultDevice={context.defaultMarket.device}
+        projectDefaultDevice={context.defaultDevice}
         projectMarkets={projectMarkets}
       />
     </section>

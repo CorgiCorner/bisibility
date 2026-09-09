@@ -6,6 +6,7 @@ import {
   advancedCardGeometryClassNames,
   advancedLoadingCardGeometryClassNames,
 } from "@/components/settings/advanced/advanced-settings-layout";
+import { settingsSections } from "@/components/settings/shell/settings-sections";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -47,7 +48,9 @@ describe("Advanced settings loading geometry", () => {
     expect(
       container.querySelector('[data-settings-loading-boundary="advanced"]'),
     ).toBeInTheDocument();
-    expect(container.querySelectorAll("[data-settings-loading-subnav-row]")).toHaveLength(9);
+    expect(container.querySelectorAll("[data-settings-loading-subnav-row]")).toHaveLength(
+      settingsSections.length,
+    );
     expect(container.querySelectorAll("[data-settings-loading-frame]")).toHaveLength(3);
   });
 });

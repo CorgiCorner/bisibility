@@ -1,4 +1,4 @@
-import Dialog from "@mui/material/Dialog";
+import { DialogSurface as Dialog } from "@/components/ui/DialogSurface";
 import type { ReactNode } from "react";
 import { act } from "react";
 import { hydrateRoot } from "react-dom/client";
@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   toastProvider: vi.fn(),
 }));
 
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/Toast", () => ({
   ToastProvider: ({ children }: { children: ReactNode }) => {
     mocks.toastProvider();
     return children;
@@ -52,7 +52,12 @@ function DashboardShell() {
 
 function QuizDialog() {
   return (
-    <Dialog aria-labelledby="quiz-title" open transitionDuration={0}>
+    <Dialog
+      aria-labelledby="quiz-title"
+      open
+      duration={{ enter: 0, exit: 0 }}
+      onClose={() => undefined}
+    >
       <section>
         <h2 id="quiz-title">Welcome to bisibility</h2>
       </section>

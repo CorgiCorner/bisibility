@@ -8,19 +8,21 @@ const mocks = vi.hoisted(() => ({
   signOut: vi.fn(),
 }));
 
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/Avatar", () => ({
   Avatar: ({ initials, src }: { initials: string; src?: string | null }) =>
     src ? <span data-avatar-src={src} /> : <span>{initials}</span>,
+}));
+vi.mock("@/components/ui/toast-context", () => ({
   useToast: () => ({ showToast: mocks.showToast }),
 }));
 vi.mock("@/lib/auth/client", () => ({ authClient: { signOut: mocks.signOut } }));
-vi.mock("@mui/material/Divider", () => ({
-  default: ({ sx }: { sx?: Record<string, string> }) => (
-    <div data-divider-margin-x={sx?.marginX} data-testid="user-menu-divider" />
+vi.mock("@/components/ui/Divider", () => ({
+  Divider: ({ style }: { style?: Record<string, string> }) => (
+    <div data-divider-margin-x={style?.marginLeft} data-testid="user-menu-divider" />
   ),
 }));
-vi.mock("@mui/material/Menu", () => ({
-  default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+vi.mock("@/components/ui/Menu", () => ({
+  Menu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 vi.mock("./UserMenuRow", () => ({
   UserMenuRow: ({

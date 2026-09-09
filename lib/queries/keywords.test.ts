@@ -39,6 +39,7 @@ vi.mock("./keyword-traffic", () => ({
 const rankCheckSelect = {
   checkedAt: true,
   errorCode: true,
+  expectedUrlAtCheck: true,
   id: true,
   normalizationVersion: true,
   position: true,
@@ -233,6 +234,8 @@ describe("keyword queries", () => {
     expect(row.rankingUrl).toBe("https://example.com/ranking-now");
     expect(row.rankingPath).toBe("/ranking-now");
     expect(row.targetUrl).toBe("https://example.com/canonical-target");
+    expect(row.expectedUrl).toBe("https://example.com/canonical-target");
+    expect(row.expectedUrlFallbackCurrent).toBe(true);
     expect(row.topic).toBe("Product");
     expect(row.intent).toBe("commercial");
   });

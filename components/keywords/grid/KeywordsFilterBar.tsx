@@ -1,23 +1,33 @@
 "use client";
 
-import { Pill, ToolbarSearch } from "@/components/ui";
+import type {
+  DataTableColumn,
+  DataTableDensity,
+} from "@/components/ui/data-table/data-table-types";
+import { Pill } from "@/components/ui/Pill";
+import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
 import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
-import type { GridColumnVisibilityModel, GridDensity } from "@mui/x-data-grid";
-import { ArrowClockwiseIcon as ArrowClockwise, XIcon as X } from "@phosphor-icons/react";
+import type { KeywordRow } from "@/lib/queries/keywords";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import type { ReactNode } from "react";
 import { KeywordsToolbarActions } from "./KeywordsToolbarActions";
 import { KeywordsToolbarButton, toolbarSecondaryIconClassName } from "./KeywordsToolbarButton";
 
 type KeywordsFilterBarProps = {
-  columnVisibilityModel: GridColumnVisibilityModel;
-  density: GridDensity;
+  columnSizing: Record<string, number>;
+  columns: readonly DataTableColumn<KeywordRow>[];
+  columnVisibility: Record<string, boolean>;
+  density: DataTableDensity;
   filterChips: KeywordFilterChip[];
   filterCount: number;
   groupingControl?: ReactNode;
+  id: string;
   onAddKeyword?: () => void;
   onClearFilters: () => void;
-  onColumnVisibilityChange: (model: GridColumnVisibilityModel) => void;
-  onDensityChange: (density: GridDensity) => void;
+  onColumnSizingChange: (next: Record<string, number>) => void;
+  onColumnVisibilityChange: (next: Record<string, boolean>) => void;
+  onDensityChange: (density: DataTableDensity) => void;
   onImportCsv?: () => void;
   onOpenExport: () => void;
   onOpenFilters: () => void;
@@ -32,13 +42,17 @@ type KeywordsFilterBarProps = {
 };
 
 export function KeywordsFilterBar({
-  columnVisibilityModel,
+  columnSizing,
+  columns,
+  columnVisibility,
   density,
   filterChips,
   filterCount,
   groupingControl,
+  id,
   onAddKeyword,
   onClearFilters,
+  onColumnSizingChange,
   onColumnVisibilityChange,
   onDensityChange,
   onImportCsv,
@@ -104,10 +118,14 @@ export function KeywordsFilterBar({
             value={searchValue}
           />
           <KeywordsToolbarActions
-            columnVisibilityModel={columnVisibilityModel}
+            columnSizing={columnSizing}
+            columns={columns}
+            columnVisibility={columnVisibility}
             density={density}
             filterCount={filterCount}
+            id={id}
             onAddKeyword={onAddKeyword}
+            onColumnSizingChange={onColumnSizingChange}
             onColumnVisibilityChange={onColumnVisibilityChange}
             onDensityChange={onDensityChange}
             onImportCsv={onImportCsv}

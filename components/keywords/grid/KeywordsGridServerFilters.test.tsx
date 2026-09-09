@@ -13,8 +13,6 @@ const props = {
   activeViewId: null,
   draftFilters: emptyKeywordFilters,
   facets: { intents: [], positions: [], tags: [], topics: [] },
-  filters: emptyKeywordFilters,
-  flatServer: false,
   keywordsPath: "/app/project/rank-tracker",
   lens: { device: "desktop" as const, locationId: null },
   locationOptions: [],
@@ -33,7 +31,6 @@ const props = {
   },
   rows: [],
   setDraftFilters: vi.fn(),
-  setFilters: vi.fn(),
 };
 
 describe("KeywordsGridServerFilters", () => {

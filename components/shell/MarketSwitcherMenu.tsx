@@ -1,6 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { CountryFlag } from "@/components/keywords/CountryFlag";
+import { Button } from "@/components/ui/Button";
 import {
   type HeaderContextMarket,
   type MarketRow,
@@ -8,6 +9,9 @@ import {
   marketSearchVisible,
 } from "@/lib/markets/header-context";
 import { cn } from "@/lib/ui/cn";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { GlobeHemisphereWestIcon as Globe } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { type KeyboardEvent as ReactKeyboardEvent, useCallback, useId, useState } from "react";
 
 /**
@@ -29,14 +33,16 @@ const ruleClassName = "-mx-1.5 my-1.5 block h-px flex-none bg-border";
  * it no longer has to overflow to reach the edges. Without that, `overflow-y: auto` computes
  * `overflow-x` to `auto` rather than `visible`, and the rule's negative margin is simply cut off.
  */
-const listClassName = "-mx-1.5 flex max-h-[260px] flex-col overflow-y-auto px-1.5 outline-none";
+const listClassName =
+  "-mx-1.5 flex max-h-[min(360px,60vh)] flex-col gap-1 overflow-y-auto px-1.5 outline-none";
 
 const rowClassName =
-  "flex h-8 w-full flex-none items-center gap-2 rounded-control px-2 text-left text-[13px] text-fg transition-colors hover:bg-bg-sunken";
+  "flex min-h-11 w-full flex-none items-center gap-3 rounded-control px-2.5 py-2 text-left text-[13px] text-fg transition-colors hover:bg-bg-sunken active:bg-bg-inset";
 
 export type MarketSwitcherMenuProps = Readonly<{
   markets: readonly HeaderContextMarket[];
-  onAddMarket: () => void;
+  onAddMarket?: () => void;
+  showAllMarkets?: boolean;
   onDismiss: () => void;
   onSelect: (value: string) => void;
   selectedValue: string;
@@ -67,16 +73,35 @@ function MarketOption({ active, domId, onSelect, row, selected }: MarketOptionPr
       tabIndex={-1}
       type="button"
     >
-      <span className="min-w-0 truncate" data-market-name>
-        {row.name}
+      <span aria-hidden className="grid h-7 w-7 flex-none place-items-center text-fg-muted">
+        {row.value === ALL_MARKETS_VALUE ? (
+          <Globe size={17} weight="regular" />
+        ) : (
+          <CountryFlag code={row.countryCode ?? ""} className="h-4 w-6 rounded-[2px]" />
+        )}
       </span>
-      {row.pair ? (
-        <span className="flex-none text-[11px] text-fg-muted" data-market-pair>
-          {row.pair}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate" data-market-name title={row.name}>
+          {row.name}
         </span>
+        {row.pair ? (
+          <span
+            className="block truncate text-[11px] font-normal text-fg-muted"
+            data-market-pair
+            title={row.description ?? row.pair}
+          >
+            {row.description ?? row.pair}
+          </span>
+        ) : null}
+      </span>
+      {row.paused ? (
+        <span className="flex-none text-[10px] font-normal text-fg-muted">Paused</span>
       ) : null}
       <span className="ml-auto flex-none tabular-nums text-[11px] text-fg-muted" data-market-count>
         {row.countLabel}
+      </span>
+      <span className="w-3.5 flex-none text-accent-text">
+        {selected ? <Check aria-hidden size={14} weight="regular" /> : null}
       </span>
     </button>
   );
@@ -101,17 +126,21 @@ export function MarketSwitcherMenu({
   onDismiss,
   onSelect,
   selectedValue,
+  showAllMarkets = true,
 }: MarketSwitcherMenuProps) {
   const listId = useId();
   const [search, setSearch] = useState("");
   const [requestedValue, setRequestedValue] = useState(selectedValue);
 
-  // `All markets` is never filtered out: it is the way back to the project level, and a search
-  // that hides it would strand the reader inside a market they cannot name.
-  const rows: MarketRow[] = [
-    { countLabel: String(markets.length), name: "All markets", pair: "", value: ALL_MARKETS_VALUE },
-    ...marketRows(markets, search),
-  ];
+  const allMarketsRow: MarketRow = {
+    countLabel: String(markets.length),
+    name: "All markets",
+    pair: "",
+    value: ALL_MARKETS_VALUE,
+  };
+  const filteredMarkets = marketRows(markets, search);
+  // Project pages keep the unfiltered way back; keyword details only switch tracked targets.
+  const rows = showAllMarkets ? [allMarketsRow, ...filteredMarkets] : filteredMarkets;
   const values = rows.map((row) => row.value);
   // Derived, not stored: narrowing the search can drop the active row, and the first row is
   // then the honest answer. Recomputing beats an effect that reconciles two states.
@@ -164,7 +193,7 @@ export function MarketSwitcherMenu({
   return (
     <div
       aria-label="Switch market"
-      className="flex w-[290px] max-w-[calc(100vw-32px)] flex-col p-1.5 outline-none"
+      className="flex w-[360px] max-w-[calc(100vw-32px)] flex-col p-1.5 outline-none"
       onKeyDown={handleDialogKeyDown}
       ref={focusDialog}
       role="dialog"
@@ -188,15 +217,19 @@ export function MarketSwitcherMenu({
         role="listbox"
         tabIndex={0}
       >
-        <MarketOption
-          active={rows[0].value === activeValue}
-          domId={domIdOf(rows[0].value)}
-          onSelect={onSelect}
-          row={rows[0]}
-          selected={false}
-        />
-        <span aria-hidden className={ruleClassName} data-market-rule />
-        {rows.slice(1).map((row) => (
+        {showAllMarkets ? (
+          <>
+            <MarketOption
+              active={allMarketsRow.value === activeValue}
+              domId={domIdOf(allMarketsRow.value)}
+              onSelect={onSelect}
+              row={allMarketsRow}
+              selected={selectedValue === ALL_MARKETS_VALUE}
+            />
+            <span aria-hidden className={ruleClassName} data-market-rule />
+          </>
+        ) : null}
+        {filteredMarkets.map((row) => (
           <MarketOption
             active={row.value === activeValue}
             domId={domIdOf(row.value)}
@@ -206,14 +239,28 @@ export function MarketSwitcherMenu({
             selected={row.value === selectedValue}
           />
         ))}
-        {rows.length === 1 ? (
-          <p className="m-0 px-2 py-3 text-[12px] text-fg-muted">No market matches that.</p>
+        {filteredMarkets.length === 0 ? (
+          <p className="m-0 px-2 py-3 text-[12px] text-fg-muted">
+            {markets.length
+              ? "No market matches that."
+              : "Add your first market to choose where and in which language to track keywords."}
+          </p>
         ) : null}
       </div>
-      <span aria-hidden className={ruleClassName} data-market-rule />
-      <Button fullWidth onClick={onAddMarket} size="sm" variant="secondary">
-        Add market
-      </Button>
+      {onAddMarket ? (
+        <>
+          <span aria-hidden className={ruleClassName} data-market-rule />
+          <Button
+            fullWidth
+            onClick={onAddMarket}
+            size="sm"
+            startIcon={<Plus aria-hidden size={14} weight="regular" />}
+            variant="secondary"
+          >
+            Add market
+          </Button>
+        </>
+      ) : null}
     </div>
   );
 }

@@ -45,6 +45,7 @@
               "self-hosting/railway",
               "self-hosting/temporal",
               "self-hosting/configuration",
+              "self-hosting/analytics",
               "self-hosting/email",
               "self-hosting/security",
               "self-hosting/backup-restore",

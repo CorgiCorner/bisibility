@@ -1,17 +1,12 @@
 import "@testing-library/jest-dom/vitest";
-import { FROZEN_NOW } from "@/tests/clock";
-import { afterAll, beforeEach, vi } from "vitest";
+import "./vitest.setup.common";
 
-vi.mock("next/navigation", () => import("@/tests/next-navigation"));
-
-function resetSystemDate() {
-  vi.useFakeTimers({ toFake: ["Date"] });
-  vi.setSystemTime(FROZEN_NOW);
+// jsdom has no layout observer. Layout and animation contracts run in the browser project.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
 }
-
-resetSystemDate();
-beforeEach(resetSystemDate);
-
-afterAll(() => {
-  vi.useRealTimers();
-});
+if (typeof globalThis.ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = ResizeObserverStub;
+}

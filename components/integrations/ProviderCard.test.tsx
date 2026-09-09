@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { describe, expect, it, vi } from "vitest";
 import { integrationCategories } from "./integrations-fixtures";
 import { ProviderCard as ProductionProviderCard, type ProviderCardProps } from "./ProviderCard";
-import { consumerActionSx } from "./ProviderConsumerRows";
+import { consumerActionStyle } from "./ProviderConsumerRows";
 
 function ProviderCard({
   timeZone = "UTC",
@@ -22,12 +22,12 @@ vi.mock("@/components/integrations/ConnectDrawer", () => ({
 
 describe("ProviderCard", () => {
   it("uses one muted accent interaction contract for consumer-row actions", () => {
-    expect(consumerActionSx).toEqual({
-      color: "var(--fg-muted)",
-      "&:hover, &.Mui-focusVisible": {
-        borderColor: "var(--accent)",
-        color: "var(--accent-text)",
-      },
+    expect(consumerActionStyle).toEqual({
+      "--control-color": "var(--fg-muted)",
+      "--control-hover-border-color": "var(--accent)",
+      "--control-hover-color": "var(--accent-text)",
+      "--control-focus-border-color": "var(--accent)",
+      "--control-focus-color": "var(--accent-text)",
     });
   });
 
@@ -56,9 +56,14 @@ describe("ProviderCard", () => {
         provider={provider}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Test" }));
-
-    expect(screen.getByRole("button", { name: "Testing..." })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for DataForSEO" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Test" }));
+    fireEvent.click(screen.getByRole("button", { name: "Actions for DataForSEO" }));
+    expect(screen.getByRole("menuitem", { name: "Testing..." })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
     finish?.({ message: "Stored credentials work.", ok: true });
 
     await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
@@ -114,18 +119,25 @@ describe("ProviderCard", () => {
       "href",
       "/app/prj_1/search-console",
     );
-    expect(within(searchRow).getByRole("link", { name: "Open Search Console" })).toHaveClass(
-      "MuiButton-outlined",
-      "MuiButton-sizeSmall",
-      "min-h-[30px]",
+    expect(within(searchRow).getByRole("link", { name: "Open Search Console" })).toHaveAttribute(
+      "data-variant",
+      "secondary",
+    );
+    expect(within(searchRow).getByRole("link", { name: "Open Search Console" })).toHaveAttribute(
+      "data-size",
+      expect.stringMatching(/^(xs|sm)$/),
+    );
+    expect(within(searchRow).getByRole("link", { name: "Open Search Console" })).toHaveAttribute(
+      "data-size",
+      "xs",
     );
     const trafficRow = screen.getByRole("group", { name: "Traffic enrichment" });
-    expect(trafficRow).toHaveTextContent(
-      "Not synced yet. Sync to add Search Console clicks, impressions, and CTR to matching Rank Tracker keywords.",
-    );
-    expect(trafficRow).not.toHaveTextContent(
-      "Adds clicks, impressions, and CTR to matching keywords in Rank Tracker.",
-    );
+    expect(trafficRow).toHaveTextContent("Not synced yet");
+    expect(
+      within(trafficRow).getByRole("button", {
+        name: "Adds clicks, impressions, and CTR to matching keywords in Rank Tracker.",
+      }),
+    ).toBeVisible();
     expect(trafficRow).not.toHaveTextContent("Traffic snapshots");
     expect(trafficRow).not.toHaveTextContent("this pipeline");
     expect(screen.queryByText("LAST SYNC")).not.toBeInTheDocument();
@@ -155,9 +167,10 @@ describe("ProviderCard", () => {
     expect(screen.queryByText("Not configured")).not.toBeInTheDocument();
   });
 
-  it("renders provider metadata as a full-width card footer", () => {
-    const provider = integrationCategories[0].providers[0];
-    const { container } = render(
+  it("keeps connected metadata without repeating the state badge", () => {
+    const base = integrationCategories[0].providers[0];
+    const provider = { ...base, meta: [...base.meta, { label: "State", value: "Enabled" }] };
+    render(
       <ProviderCard
         canManageProviders={false}
         canUpdateProject={false}
@@ -166,8 +179,36 @@ describe("ProviderCard", () => {
       />,
     );
 
-    const footer = container.querySelector("dl");
-    expect(footer).toHaveClass("-mx-5", "-mb-4.5", "border-t", "bg-bg-sunken/25", "px-5");
+    expect(screen.getByText("Last rank check")).toBeVisible();
+    expect(screen.getByText("12 min ago")).toBeVisible();
+    expect(screen.getByText("Connected")).toBeVisible();
+    expect(screen.queryByText("State")).not.toBeInTheDocument();
+  });
+
+  it("omits empty metadata and consumer panels before a provider is connected", () => {
+    render(
+      <ProviderCard
+        canManageProviders
+        canUpdateProject
+        provider={{
+          ...integrationCategories[1].providers[0],
+          status: "ready",
+          secondaryAction: undefined,
+          meta: [
+            { label: "Last sync", value: "Never" },
+            { label: "State", value: "Ready" },
+          ],
+          consumerStatuses: {
+            searchModule: { state: "not_configured", summary: "Not configured" },
+            trafficEnrichment: { state: "not_configured", summary: "Not configured" },
+          },
+        }}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Connect" })).toBeVisible();
+    expect(screen.queryByText("Never")).not.toBeInTheDocument();
+    expect(screen.queryByText("State")).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Traffic enrichment" })).not.toBeInTheDocument();
   });
 
   it("labels connected Search Console account management as connection settings", () => {
@@ -205,7 +246,8 @@ describe("ProviderCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Disconnect" }));
+    fireEvent.click(screen.getByRole("button", { name: "Actions for DataForSEO" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Disconnect" }));
     const dialog = screen.getByRole("dialog", { name: "Disconnect provider" });
     fireEvent.click(within(dialog).getByRole("button", { name: "Disconnect provider" }));
 
@@ -266,9 +308,7 @@ describe("ProviderCard", () => {
     );
 
     const trafficRow = screen.getByRole("group", { name: "Traffic enrichment" });
-    expect(trafficRow).toHaveTextContent(
-      "Not synced yet. Sync to add Search Console clicks, impressions, and CTR to matching Rank Tracker keywords.",
-    );
+    expect(trafficRow).toHaveTextContent("Not synced yet");
     fireEvent.click(screen.getByRole("button", { name: "Sync keyword traffic" }));
 
     expect(screen.getByRole("button", { name: "Syncing keyword traffic..." })).toBeDisabled();
@@ -324,9 +364,11 @@ describe("ProviderCard", () => {
       }),
     );
 
-    expect(screen.getByRole("group", { name: "Traffic enrichment" })).toHaveTextContent(
-      "Adds clicks, impressions, and CTR to matching keywords in Rank Tracker.",
-    );
+    expect(
+      screen.getByRole("button", {
+        name: "Adds clicks, impressions, and CTR to matching keywords in Rank Tracker.",
+      }),
+    ).toBeVisible();
     await waitFor(() =>
       expect(actions.syncProjectTraffic).toHaveBeenCalledWith({ projectId: "prj_1" }),
     );
@@ -464,6 +506,24 @@ describe("ProviderCard", () => {
     expect(screen.getByRole("button", { name: "Manage" })).toBeInTheDocument();
   });
 
+  it("keeps connection maintenance disabled while the project is read-only", () => {
+    render(
+      <ProjectWriteModeProvider projectRef="prj_1" writeMode="migration_hold">
+        <ProviderCard
+          canManageProviders
+          canUpdateProject
+          provider={integrationCategories[0].providers[0]}
+        />
+      </ProjectWriteModeProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Actions for DataForSEO" }));
+    expect(screen.getByRole("menuitem", { name: "Test" })).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("menuitem", { name: "Disconnect" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
+
   it("disables analytics sync while the project is read-only", () => {
     const provider = {
       ...integrationCategories[1].providers[0],
@@ -514,7 +574,8 @@ describe("ProviderCard", () => {
           provider={integrationCategories[0].providers[0]}
         />,
       );
-      fireEvent.click(screen.getByRole("button", { name: "Disconnect" }));
+      fireEvent.click(screen.getByRole("button", { name: "Actions for DataForSEO" }));
+      fireEvent.click(screen.getByRole("menuitem", { name: "Disconnect" }));
       fireEvent.click(
         within(screen.getByRole("dialog", { name: "Disconnect provider" })).getByRole("button", {
           name: "Disconnect provider",

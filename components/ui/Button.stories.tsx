@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
-import { PlusIcon as Plus, TrashIcon as Trash } from "@phosphor-icons/react";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {

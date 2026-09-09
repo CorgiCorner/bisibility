@@ -1,11 +1,15 @@
 "use client";
 
-import { Button, ExpiryChoiceGroup, inputClassName, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { ExpiryChoiceGroup } from "@/components/ui/ExpiryChoiceGroup";
+import { inputClassName } from "@/components/ui/input-styles";
+import { Modal } from "@/components/ui/Modal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { type IssueApiKeyInput, issueApiKeySchema } from "@/lib/schemas/apiKey";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
-import { CheckCircleIcon as CheckCircle, PlusIcon as Plus } from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";

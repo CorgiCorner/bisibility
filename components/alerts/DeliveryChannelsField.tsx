@@ -1,16 +1,15 @@
 "use client";
 
-import { Checkbox, Tooltip } from "@/components/ui";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { SLACK_ALERT_CHANNEL_DASHBOARD_LABEL } from "@/lib/alerts/channel-availability";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
 import type { AlertChannelInput } from "@/lib/alerts/schema";
-import {
-  BellIcon as Bell,
-  EnvelopeSimpleIcon as EnvelopeSimple,
-  LockSimpleIcon as LockSimple,
-  SlackLogoIcon as SlackLogo,
-  WebhooksLogoIcon as WebhooksLogo,
-} from "@phosphor-icons/react";
+import { BellIcon as Bell } from "@phosphor-icons/react/dist/csr/Bell";
+import { EnvelopeSimpleIcon as EnvelopeSimple } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
+import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
+import { SlackLogoIcon as SlackLogo } from "@phosphor-icons/react/dist/csr/SlackLogo";
+import { WebhooksLogoIcon as WebhooksLogo } from "@phosphor-icons/react/dist/csr/WebhooksLogo";
 import type { Icon } from "@phosphor-icons/react/lib";
 import type { UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
 

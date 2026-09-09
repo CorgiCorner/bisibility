@@ -1,3 +1,5 @@
+import { OnboardingEntryAnalytics } from "@/components/analytics/OnboardingEntryAnalytics";
+import { locationFieldValueFromKeywordLocation } from "@/components/keywords/location-field-value";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import {
   buildOnboardingStepHref,
@@ -8,10 +10,10 @@ import {
   type OnboardingFlowState,
 } from "@/components/onboarding/onboarding-fixtures";
 import type { OnboardingWizardActions } from "@/components/onboarding/onboarding-wizard-actions";
-import type { ConnectedProviderMap } from "@/components/onboarding/steps/StepConnectProvider.fields";
 import { addKeywordsMatrix } from "@/lib/actions/keyword";
 import { importTopQueries } from "@/lib/actions/keyword-suggest";
 import { completeProjectOnboarding } from "@/lib/actions/project";
+import { createProjectMarket } from "@/lib/actions/project-market-create";
 import {
   completeGooglePropertySelection,
   connectProvider,
@@ -28,28 +30,30 @@ import { fetchRankedKeywordSuggestions } from "@/lib/actions/ranked-keywords";
 import { installSampleData } from "@/lib/actions/sample-data";
 import { updateDefaultRankCheckSettings } from "@/lib/actions/settings";
 import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
-import { requireApiPublicId } from "@/lib/api/public-id";
+import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { dataResidencyMessage } from "@/lib/deployment/deployment";
 import { googleOAuthErrorCopy } from "@/lib/integrations/google-oauth-copy";
 import { MAX_ONBOARDING_WEBSITE_LENGTH } from "@/lib/onboarding/website";
 import { isGoogleOAuthConfigured } from "@/lib/providers/analytics/google-client";
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
 import { requireReadableProject } from "@/lib/queries/_auth";
-import { getProjectCostContext } from "@/lib/queries/cost-calculator";
-import { getIntegrationCategories } from "@/lib/queries/integrations";
 import {
   getOnboardingGscPropertyLabel,
   getOnboardingKeywordCount,
+  getOnboardingKeywordTexts,
+  getOnboardingLocationDetails,
   getOnboardingNextCheckAt,
-  getOnboardingSampleKeyword,
+  getOnboardingTrackingStartedAt,
 } from "@/lib/queries/onboarding";
 import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 import { listWorkspaces } from "@/lib/queries/workspaces";
 import { DEFAULT_MONTHLY_COST_CAP_CENTS } from "@/lib/rank-check/budget";
-import { listEligibleRankedKeywordConnections } from "@/lib/ranked-keywords/service";
+import { serpDepthValues } from "@/lib/serp/constants";
 import { redirect } from "next/navigation";
 import { createOnboardingProject, deriveOnboardingWebsite, saveOnboardingMarkets } from "./actions";
 import { resolveOnboardingLocations } from "./onboarding-location-state";
+import { getOnboardingProviderState } from "./onboarding-provider-state";
+import { updateOnboardingProject } from "./update-project";
 
 // Restore ownership matching with issue #863:
 // import { saveMatchingScope } from "./actions";
@@ -60,82 +64,12 @@ type SearchParamValue = string | string[] | undefined;
 function paramValue(value: SearchParamValue) {
   return Array.isArray(value) ? value[0] : value;
 }
-
 function paramValues(value: SearchParamValue) {
   return value ? (Array.isArray(value) ? value : [value]) : [];
 }
 
-type IntegrationCategories = Awaited<ReturnType<typeof getIntegrationCategories>>;
-
-function connectedSerpProvider(categories: IntegrationCategories) {
-  const providers = categories.find((category) => category.id === "serp")?.providers ?? [];
-  return (
-    providers.find(
-      (provider) =>
-        provider.status === "connected" && provider.enabled !== false && provider.primary,
-    ) ??
-    providers.find((provider) => provider.status === "connected" && provider.enabled !== false) ??
-    null
-  );
-}
-
-// Saved connections let step 3 restore each provider card's verified state.
-function serpConnectionsMap(categories: IntegrationCategories): ConnectedProviderMap {
-  const providers = categories.find((category) => category.id === "serp")?.providers ?? [];
-  const map: ConnectedProviderMap = {};
-  for (const provider of providers) {
-    if (
-      (provider.id === "dataforseo" || provider.id === "serpapi") &&
-      provider.status === "connected" &&
-      provider.enabled !== false
-    ) {
-      map[provider.id] = {};
-    }
-  }
-  return map;
-}
-
-function connectedAnalyticsSource(categories: IntegrationCategories) {
-  const providers = categories.find((category) => category.id === "analytics")?.providers ?? [];
-  return providers.some(
-    (provider) => provider.status === "connected" && provider.enabled !== false,
-  );
-}
-
 function gscCallbackSucceeded(params: Record<string, string | string[] | undefined> | undefined) {
   return paramValue(params?.google) === "connected" && paramValue(params?.provider) === "gsc";
-}
-
-async function getOnboardingProviderState(projectId: string | null) {
-  if (!projectId) {
-    return {
-      costPerCheckCents: null,
-      hasAnalyticsSource: false,
-      providerConnected: false,
-      providerId: null,
-      rankedKeywordConnections: [],
-      serpConnections: {} as ConnectedProviderMap,
-    };
-  }
-
-  const [categories, rankedKeywordConnections, costContext] = await Promise.all([
-    getIntegrationCategories(projectId),
-    listEligibleRankedKeywordConnections(projectId),
-    getProjectCostContext(projectId),
-  ]);
-  const provider = connectedSerpProvider(categories);
-
-  return {
-    costPerCheckCents: costContext.costPerCheckCents,
-    hasAnalyticsSource: connectedAnalyticsSource(categories),
-    providerConnected: Boolean(provider),
-    providerId: provider?.id ?? null,
-    rankedKeywordConnections: rankedKeywordConnections.map((connection) => ({
-      ...connection,
-      id: requireApiPublicId(connection.id, "conn"),
-    })),
-    serpConnections: serpConnectionsMap(categories),
-  };
 }
 
 export default async function OnboardingPage({ searchParams }: Readonly<OnboardingPageProps>) {
@@ -159,16 +93,17 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   const googleProvider = paramValue(params?.provider);
   const [
     keywordCount,
-    initialKeywordText,
+    initialKeywordTexts,
     providerState,
     connectedGscPropertyLabel,
     googleOAuth,
     projectDefaults,
     nextCheckAt,
+    trackingStartedAt,
   ] = project
     ? await Promise.all([
         getOnboardingKeywordCount(project.publicId),
-        getOnboardingSampleKeyword(project.publicId),
+        getOnboardingKeywordTexts(project.publicId),
         getOnboardingProviderState(project.publicId),
         getOnboardingGscPropertyLabel(project.id),
         googleStatus === "select" && googleProvider === "gsc"
@@ -184,8 +119,10 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
             : null,
         getRequestProjectDefaults(project.id),
         getOnboardingNextCheckAt(project.publicId),
+        getOnboardingTrackingStartedAt(project.publicId),
       ])
-    : [0, null, await getOnboardingProviderState(null), null, null, null, null];
+    : [0, [], await getOnboardingProviderState(null), null, null, null, null, null];
+  const initialKeywordText = initialKeywordTexts[0] ?? null;
   const locations = await resolveOnboardingLocations({
     countryValues: paramValues(params?.country),
     locValues: paramValues(params?.loc),
@@ -205,8 +142,12 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
   const initialProject = project
     ? {
         ...project,
+        trackingStartedAt,
         device: projectDefaults?.device ?? undefined,
         frequency: projectDefaults?.frequency,
+        cronExpression: projectDefaults?.cronExpression,
+        jitterMinutes: projectDefaults?.jitterMinutes,
+        serpDepth: serpDepthValues.find((depth) => depth === projectDefaults?.serpDepth),
         timezone: projectDefaults?.timezone ?? "UTC",
       }
     : null;
@@ -238,12 +179,14 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     completeGooglePropertySelectionAction: completeGooglePropertySelection,
     completeOnboardingAction: completeProjectOnboarding,
     connectProviderAction: connectProvider,
+    createMarketAction: createProjectMarket,
     createProjectAction: createOnboardingProject,
+    updateProjectAction: updateOnboardingProject,
     deriveWebsiteAction: deriveOnboardingWebsite,
     getObservedPositionsAction: getObservedPositions,
     importTopQueriesAction: importTopQueries,
     fetchRankedKeywordSuggestionsAction: fetchRankedKeywordSuggestions,
-    installSampleDataAction: installSampleData,
+    installSampleDataAction: (await getInstanceAdminSession()) ? installSampleData : undefined,
     loadStoredGooglePropertiesAction: loadStoredGoogleProperties,
     listFirstCheckCandidatesAction: listFirstCheckCandidates,
     runFirstCheckPreviewAction: runFirstCheckPreview,
@@ -262,10 +205,11 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
           Set up your project
         </h1>
         <p className="m-0 mt-2 max-w-[560px] text-[15px] leading-[1.5] text-fg-muted">
-          A few quick steps - everything can be changed later.
+          A few quick steps to start tracking your website.
         </p>
       </section>
 
+      <OnboardingEntryAnalytics />
       <OnboardingWizard
         actions={actions}
         costPerCheckCents={providerState.costPerCheckCents}
@@ -275,9 +219,26 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         gscGoogleOAuth={googleOAuth}
         gscPropertyLabel={connectedGscPropertyLabel}
         hasAnalyticsSource={providerState.hasAnalyticsSource}
+        hasOtherAnalyticsSource={providerState.hasOtherAnalyticsSource}
         initialFlowState={flowState}
+        initialLocationSelections={(await getOnboardingLocationDetails(locations)).map((row) =>
+          locationFieldValueFromKeywordLocation(row),
+        )}
         initialKeywordCount={keywordCount}
         initialKeywordText={initialKeywordText}
+        initialKeywordDraft={initialKeywordTexts.join("\n")}
+        initialFirstCheckCandidates={
+          currentStep === 4 && projectId && initialKeywordText
+            ? (
+                await listFirstCheckCandidates({
+                  projectId,
+                  keywordText: initialKeywordText,
+                  includeExisting: true,
+                  limit: Math.max(1, locations.length * devices.length),
+                })
+              ).candidates
+            : undefined
+        }
         initialProject={initialProject}
         initialWebsite={project?.domain ? undefined : websitePrefill}
         initialSerpConnections={providerState.serpConnections}

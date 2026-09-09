@@ -1,4 +1,4 @@
-import type { StatusChipTone } from "@/components/ui";
+import type { StatusChipTone } from "@/components/ui/StatusChip";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 
 export type PreflightScope = {

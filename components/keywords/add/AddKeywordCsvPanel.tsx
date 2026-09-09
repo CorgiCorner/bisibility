@@ -1,8 +1,8 @@
 "use client";
 
-import { Textarea } from "@/components/ui";
+import { Textarea } from "@/components/ui/Textarea";
 import { keywordImportTemplateCsv } from "@/lib/keywords/import-csv-template";
-import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react";
+import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
 
 type AddKeywordCsvPanelProps = {
   csvText: string;

@@ -1,41 +1,46 @@
 "use client";
 
 import type { CsvKeywordReviewItem } from "@/components/keywords/AddKeywordCsvReviewModel";
-import { SegmentedControl } from "@/components/ui";
+import { ScheduleAssignment } from "@/components/markets/blocks/ScheduleAssignment";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import {
   ADD_KEYWORD_TABS,
   type AddKeywordDrawerForm,
   type AddKeywordTab,
 } from "@/lib/keywords/add-keyword-drawer-shared";
-import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import type { SerpDevice } from "@/lib/serp/markets";
+import dynamic from "next/dynamic";
+import type { ComponentProps } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import { AddKeywordApiPanel } from "./AddKeywordApiPanel";
 import { AddKeywordCsvPanel } from "./AddKeywordCsvPanel";
 import { AddKeywordCsvReview } from "./AddKeywordCsvReview";
 import { AddKeywordManualPanel } from "./AddKeywordManualPanel";
-import { ProjectMarketsSelector } from "./ProjectMarketsSelector";
+import { AddKeywordTrackingControls } from "./AddKeywordTrackingControls";
+import type { useKeywordSuggestionSources } from "./useKeywordSuggestionSources";
+
+const AddKeywordSuggestionsPanel = dynamic(() => import("./AddKeywordSuggestionsPanel"), {
+  ssr: false,
+});
 
 type AddKeywordDrawerPanelsProps = {
+  currentKeywords: string;
+  onAppendQueries: (queries: string[]) => void;
   activeTab: AddKeywordTab;
+  suggestionSources: ReturnType<typeof useKeywordSuggestionSources>;
   count: number;
   csvParseError: string | null;
   csvReviewOpen: boolean;
   csvText: string;
   domain?: string;
   errors: FieldErrors<AddKeywordDrawerForm>;
-  initialDevices?: readonly SerpDevice[];
-  initialMarketKeys: readonly string[];
   onAppendTag: (tag: string) => void;
   onCsvReviewEdit: () => void;
   onCsvTextChange: (value: string) => void;
-  onMatrixChange: (value: { devices: SerpDevice[]; locationKeys: string[] }) => void;
   onTabChange: (tab: AddKeywordTab) => void;
   onTagsChange: (value: string) => void;
   projectId: string;
-  defaultDevice: SerpDevice;
-  projectMarkets: ProjectMarketsView;
   register: UseFormRegister<AddKeywordDrawerForm>;
+  tracking: ComponentProps<typeof AddKeywordTrackingControls>;
   reviewItems: CsvKeywordReviewItem[];
   tagSuggestions: readonly string[];
   tagsText: string;
@@ -43,27 +48,26 @@ type AddKeywordDrawerPanelsProps = {
 
 export function AddKeywordDrawerPanels({
   activeTab,
+  suggestionSources,
+  currentKeywords,
+  onAppendQueries,
   count,
   csvParseError,
   csvReviewOpen,
   csvText,
   domain,
   errors,
-  initialDevices,
-  initialMarketKeys,
   onAppendTag,
   onCsvReviewEdit,
   onCsvTextChange,
-  onMatrixChange,
   onTabChange,
   onTagsChange,
   projectId,
-  defaultDevice,
-  projectMarkets,
   register,
   reviewItems,
   tagSuggestions,
   tagsText,
+  tracking,
 }: Readonly<AddKeywordDrawerPanelsProps>) {
   return (
     <>
@@ -90,16 +94,7 @@ export function AddKeywordDrawerPanels({
           register={register}
           tagSuggestions={tagSuggestions}
           tagsText={tagsText}
-          trackingControls={
-            <ProjectMarketsSelector
-              defaultDevice={defaultDevice}
-              initialDevices={initialDevices}
-              initialMarketKeys={initialMarketKeys}
-              markets={projectMarkets}
-              onChange={onMatrixChange}
-              projectId={projectId}
-            />
-          }
+          trackingControls={<AddKeywordTrackingControls {...tracking} />}
         />
       ) : null}
 
@@ -114,6 +109,29 @@ export function AddKeywordDrawerPanels({
 
       {activeTab === "csv" && csvReviewOpen ? (
         <AddKeywordCsvReview items={reviewItems} onEdit={onCsvReviewEdit} />
+      ) : null}
+
+      {activeTab === "csv" ? (
+        <ScheduleAssignment
+          fixed={
+            reviewItems.filter((item) => !item.alreadyTracked && item.issues.length === 0).length
+          }
+          keywordCount={count}
+          onChange={tracking.onScheduleChange}
+          onNewSchedule={tracking.onNewSchedule}
+          schedules={tracking.schedules}
+          selectedId={tracking.scheduleId}
+        />
+      ) : null}
+
+      {activeTab === "suggestions" ? (
+        <AddKeywordSuggestionsPanel
+          sourceState={suggestionSources}
+          key={projectId}
+          currentKeywords={currentKeywords}
+          onAppendQueries={onAppendQueries}
+          projectId={projectId}
+        />
       ) : null}
 
       {activeTab === "api" ? <AddKeywordApiPanel projectId={projectId} /> : null}

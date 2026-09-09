@@ -1,10 +1,8 @@
-import {
-  BracketsCurlyIcon as BracketsCurly,
-  ChartLineIcon as ChartLine,
-  FileCsvIcon as FileCsv,
-  FileXlsIcon as FileXls,
-  TargetIcon as Target,
-} from "@phosphor-icons/react";
+import { BracketsCurlyIcon as BracketsCurly } from "@phosphor-icons/react/dist/csr/BracketsCurly";
+import { ChartLineIcon as ChartLine } from "@phosphor-icons/react/dist/csr/ChartLine";
+import { FileCsvIcon as FileCsv } from "@phosphor-icons/react/dist/csr/FileCsv";
+import { FileXlsIcon as FileXls } from "@phosphor-icons/react/dist/csr/FileXls";
+import { TargetIcon as Target } from "@phosphor-icons/react/dist/csr/Target";
 import type { ComponentType, ReactNode } from "react";
 
 export const exportFormats = ["csv", "xlsx", "json"] as const;

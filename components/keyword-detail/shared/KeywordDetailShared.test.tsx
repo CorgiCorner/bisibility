@@ -7,7 +7,7 @@ import {
   keywordDetailPageStates,
 } from "@/components/keyword-detail/shared/KeywordDetailStatePill";
 import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
-import { StepDots } from "@/components/ui";
+import { StepDots } from "@/components/ui/StepDots";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

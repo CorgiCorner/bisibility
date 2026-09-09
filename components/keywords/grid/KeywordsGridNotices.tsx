@@ -1,4 +1,3 @@
-import { keywordCountLabel } from "@/components/keywords/action-utils";
 import { FirstCheckBanner, FirstCheckBannerLink } from "@/components/rank-check/FirstCheckBanner";
 import {
   FirstCheckBannerAction,
@@ -7,9 +6,11 @@ import {
   type RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { AlertBanner, AlertBannerStack } from "@/components/ui";
+import { AlertBanner } from "@/components/ui/AlertBanner";
+import { AlertBannerStack } from "@/components/ui/AlertBannerStack";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
-import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
+import { appPath } from "@/lib/routing/app-path";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import type { ReactNode } from "react";
 import type { CheckHealthView } from "./KeywordGridHealthNotices";
 
@@ -24,7 +25,6 @@ type KeywordsGridNoticesProps = {
   queueFirstChecksAction: QueueFirstChecksAction;
   runCheckNowAction?: RunFirstCheckAction;
   rowCount: number;
-  totalKeywordCount?: number;
 };
 
 type EmptyRankNotice =
@@ -64,7 +64,7 @@ function emptyRankNotice({
   if (failedCount > 0 || checkStates.includes("failed")) {
     return {
       action: {
-        href: rankTrackerTabPath(projectRef, "runs"),
+        href: projectRunsPath(projectRef),
         label: "Review check runs",
       },
       detail: "Some keyword positions could not be updated.",
@@ -76,7 +76,7 @@ function emptyRankNotice({
   if (checkStates.includes("running")) {
     return {
       action: {
-        href: rankTrackerTabPath(projectRef, "runs"),
+        href: projectRunsPath(projectRef),
         icon: "arrow",
         label: "View check runs",
       },
@@ -89,7 +89,7 @@ function emptyRankNotice({
   if (checkStates.some((state) => state === "not_ranked")) {
     return {
       action: {
-        href: rankTrackerTabPath(projectRef, "runs"),
+        href: projectRunsPath(projectRef),
         icon: "arrow",
         label: "View check runs",
       },
@@ -119,7 +119,6 @@ export function KeywordsGridNotices({
   queueFirstChecksAction,
   runCheckNowAction,
   rowCount,
-  totalKeywordCount,
 }: Readonly<KeywordsGridNoticesProps>) {
   const { readOnly } = useProjectWriteMode();
   const rankNotice = emptyRankNotice({
@@ -129,17 +128,6 @@ export function KeywordsGridNotices({
     projectRef: projectId,
     readOnly,
   });
-  const truncationNotice =
-    totalKeywordCount !== undefined && totalKeywordCount > rowCount ? (
-      <AlertBannerStack>
-        <AlertBanner
-          detail={`This project tracks ${keywordCountLabel(totalKeywordCount)}. Search, filters, and export apply to the loaded set.`}
-          tint="yellow"
-          title={`Showing the ${rowCount.toLocaleString("en-US")} most recently added keywords`}
-        />
-      </AlertBannerStack>
-    ) : null;
-
   return (
     <>
       {rankNotice?.kind === "first-check" ? (
@@ -173,7 +161,6 @@ export function KeywordsGridNotices({
           />
         </AlertBannerStack>
       ) : null}
-      {truncationNotice}
     </>
   );
 }

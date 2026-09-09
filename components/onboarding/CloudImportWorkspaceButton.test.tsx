@@ -27,7 +27,7 @@ describe("CloudImportWorkspaceButton", () => {
     const button = screen.getByRole("button", { name: "Restore project" });
     expect(button.closest("form")).toHaveClass("m-0", "inline-flex", "items-end");
     expect(button.closest("form")).not.toHaveClass("rounded-card", "border", "p-4");
-    expect(button).toHaveClass("MuiButton-outlined");
+    expect(button).toHaveAttribute("data-variant", "secondary");
     const describedBy = button.getAttribute("aria-describedby");
     expect(describedBy).toBeTruthy();
     expect(document.getElementById(describedBy ?? "")).toHaveTextContent(RESTORE_PROJECT_TOOLTIP);

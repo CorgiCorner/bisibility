@@ -5,12 +5,12 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { scheduledRunProjection, scheduleProviderId } from "@/lib/queries/check-schedule-list";
 import { monthlySpendCents } from "@/lib/rank-check/budget";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
+import { readActiveSearchImportSnapshot } from "@/lib/search-insights/sync/operation-snapshot";
 import { type OperationSnapshot, operationSnapshotSchema } from "./contract";
 import { rankCheckProviderPresentation } from "./provider-presentation";
 import { pendingRunItems, runStartFacts, startedRunItemWhere } from "./start-facts";
 
 const ACTIVE_RUN_STATUSES = ["queued", "running", "cancelling", "blocked"];
-const ACTIVE_IMPORT_STATES = ["queued", "running", "waiting_for_first_data", "paused"];
 const snapshotRunSelect = {
   _count: {
     select: {
@@ -155,19 +155,14 @@ async function operationForRun(
 
 export async function readOperationSnapshot(projectId: string): Promise<OperationSnapshot[]> {
   const snapshotAt = new Date();
-  const [runs, imports] = await Promise.all([
+  const [runs, searchImport] = await Promise.all([
     prisma.rankCheckRun.findMany({
       orderBy: [{ launchedAt: "desc" }, { id: "desc" }],
       select: snapshotRunSelect,
       take: 50,
       where: { projectId, status: { in: ACTIVE_RUN_STATUSES } },
     }),
-    prisma.searchAnalyticsImport.findMany({
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      select: { daysDone: true, daysTotal: true, id: true, state: true },
-      take: 50,
-      where: { projectId, source: "gsc", state: { in: ACTIVE_IMPORT_STATES } },
-    }),
+    readActiveSearchImportSnapshot(projectId),
   ]);
 
   const spentCents = runs.some((run) => run.blockedReason === "budget_exhausted")
@@ -185,12 +180,23 @@ export async function readOperationSnapshot(projectId: string): Promise<Operatio
         ),
       ),
     )),
-    ...imports.map((entry) => ({
-      id: entry.id,
-      kind: "gsc_import" as const,
-      progress: { done: entry.daysDone, total: entry.daysTotal },
-      state: entry.state,
-    })),
+    ...(searchImport
+      ? [
+          {
+            capabilities: searchImport.capabilities,
+            id: searchImport.id,
+            kind: "gsc_import" as const,
+            presentation: {
+              action: searchImport.presentation.action,
+              supportingText: searchImport.presentation.supportingText,
+              title: searchImport.presentation.title,
+            },
+            progress: searchImport.progress,
+            property: searchImport.property,
+            state: searchImport.state,
+          },
+        ]
+      : []),
   ];
 
   return operationSnapshotSchema.array().parse(operations);

@@ -1,3 +1,4 @@
+import { SETUP_STEP_DEFINITIONS } from "@/lib/getting-started/setup-steps";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import GettingStartedLoading from "./loading";
@@ -11,6 +12,11 @@ describe("GettingStartedLoading", () => {
     expect(content).not.toHaveClass("max-w-[1400px]");
     expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(12);
     expect(container.querySelectorAll("section")).toHaveLength(3);
+    expect(
+      container.querySelectorAll(
+        '[data-testid="getting-started-loading-grid"] > section:first-child > div',
+      ),
+    ).toHaveLength(SETUP_STEP_DEFINITIONS.length);
     expect(container.querySelector('[data-testid="getting-started-loading-grid"]')).toHaveClass(
       "lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]",
     );

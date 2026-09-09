@@ -1,13 +1,11 @@
-import {
-  CrownSimpleIcon as CrownSimple,
-  GaugeIcon as Gauge,
-  KeyIcon as Key,
-  PlugsIcon as Plugs,
-  TrashIcon as Trash,
-  UserMinusIcon as UserMinus,
-  UserPlusIcon as UserPlus,
-  WarningIcon as Warning,
-} from "@phosphor-icons/react";
+import { CrownSimpleIcon as CrownSimple } from "@phosphor-icons/react/dist/csr/CrownSimple";
+import { GaugeIcon as Gauge } from "@phosphor-icons/react/dist/csr/Gauge";
+import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
+import { PlugsIcon as Plugs } from "@phosphor-icons/react/dist/csr/Plugs";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
+import { UserMinusIcon as UserMinus } from "@phosphor-icons/react/dist/csr/UserMinus";
+import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/csr/UserPlus";
+import { WarningIcon as Warning } from "@phosphor-icons/react/dist/csr/Warning";
 
 export type ConfirmKind =
   | "deactivateAccount"

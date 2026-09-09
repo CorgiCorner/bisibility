@@ -1,8 +1,8 @@
 import { AdminRefresh } from "@/components/admin/AdminRefresh";
 import { AdminTabs } from "@/components/admin/AdminTabs";
-import { BrandLockup } from "@/components/ui";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import { appRootPath } from "@/lib/routing/app-path";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import Link from "next/link";
 import type { ReactNode } from "react";
 

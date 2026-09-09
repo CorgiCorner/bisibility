@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Actor } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { requirePublicId } from "@/lib/db/public-id";
 import type {
@@ -10,7 +11,7 @@ import type {
 } from "@/lib/generated/prisma/client";
 import { markStaleImportJobs } from "@/lib/migration/stale-jobs";
 import { trackedProjectDomain } from "@/lib/schemas/project";
-import { requireReadableProject } from "./_auth";
+import { requireReadableProject, requireReadableProjectFor } from "./_auth";
 
 export type CloudTokenView = {
   createdAt: string;
@@ -124,7 +125,16 @@ export async function getCloudImportJobStatus(projectId: string): Promise<CloudI
 }
 
 export async function getCloudImportView(projectId: string): Promise<CloudImportView> {
-  const { project } = await requireReadableProject(projectId);
+  return readCloudImportView(await requireReadableProject(projectId));
+}
+
+export async function getCloudImportViewFor(actor: Actor, projectId: string) {
+  return readCloudImportView(await requireReadableProjectFor(actor, projectId));
+}
+
+async function readCloudImportView({
+  project,
+}: Awaited<ReturnType<typeof requireReadableProject>>) {
   const publicProjectId = requirePublicId(project.publicId, "prj");
   await markStaleImportJobs({ projectId: project.id });
   const now = new Date();

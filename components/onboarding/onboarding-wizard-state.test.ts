@@ -41,3 +41,41 @@ describe("initialOnboardingDraft", () => {
     expect(draft.schedule.timezone).toBe("UTC");
   });
 });
+
+it("uses stored region metadata on resume instead of interpreting a two-part key as a city", () => {
+  const selection = {
+    canonicalKey: "ES/Andalusia@en",
+    countryCode: "ES",
+    displayName: "Andalusia, Spain",
+    kind: "region" as const,
+    languageCode: "en",
+    languageLabel: "English",
+  };
+  const draft = initialOnboardingDraft(null, { locations: [selection.canonicalKey] }, "", [
+    selection,
+  ]);
+  expect(draft.schedule.locationSelections).toEqual([selection]);
+});
+
+it("restores saved keyword text and the selected depth and schedule", () => {
+  const draft = initialOnboardingDraft(
+    {
+      ...project,
+      frequency: "daily",
+      serpDepth: 50,
+      jitterMinutes: 15,
+      cronExpression: "30 8 * * *",
+    },
+    flowState,
+    "",
+    [],
+    "rank tracker\nseo api",
+  );
+  expect(draft.addKeywords.keywords).toBe("rank tracker\nseo api");
+  expect(draft.schedule).toMatchObject({
+    frequency: "daily",
+    serpDepth: 50,
+    jitterMinutes: 15,
+    cronExpression: "30 8 * * *",
+  });
+});

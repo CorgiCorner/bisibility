@@ -12,7 +12,8 @@ const mocks = vi.hoisted(() => {
     $executeRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
-    keyword: { createMany: vi.fn(), findMany: vi.fn() },
+    keyword: { createMany: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
+    checkSchedule: { findFirst: vi.fn() },
     keywordSchedule: { createMany: vi.fn() },
     keywordTag: { createMany: vi.fn() },
     project: { findFirst: vi.fn() },
@@ -26,6 +27,7 @@ const mocks = vi.hoisted(() => {
   prisma.$transaction.mockImplementation((callback) => callback(prisma));
 
   return {
+    mirrorScheduleToKeywords: vi.fn(),
     AuthorizationError,
     authorize: vi.fn(() => ({ actorId: "user_1", projectId: "project_1", role: "admin" })),
     prisma,
@@ -35,6 +37,10 @@ const mocks = vi.hoisted(() => {
     writeAudit: vi.fn(),
   };
 });
+
+vi.mock("@/lib/rank-check/schedules/service-membership", () => ({
+  mirrorScheduleToKeywords: mocks.mirrorScheduleToKeywords,
+}));
 
 // Location resolution is covered by its own suite; stub it to a country row so
 // this test focuses on paused-schedule creation.
@@ -95,6 +101,47 @@ describe("paused keyword create action", () => {
       },
       warning: null,
     });
+  });
+
+  it.each(["text", "csv"])(
+    "assigns the selected schedule to newly created %s targets",
+    async (method) => {
+      const publicId = `sch_${"a".repeat(24)}`;
+      const schedule = { id: "schedule_1", publicId, frequency: "weekly" };
+      mocks.prisma.checkSchedule.findFirst.mockResolvedValue(schedule);
+      await addKeywords({
+        checkScheduleId: publicId,
+        projectId: `prj_${"a".repeat(24)}`,
+        ...(method === "csv"
+          ? { rows: [{ keyword: "rank tracker" }] }
+          : { keywords: ["rank tracker"] }),
+      });
+      expect(mocks.prisma.checkSchedule.findFirst).toHaveBeenCalledWith({
+        where: { archivedAt: null, enabled: true, projectId: "project_1", publicId },
+      });
+      expect(mocks.prisma.keyword.updateMany).toHaveBeenCalledWith({
+        data: { checkScheduleId: "schedule_1" },
+        where: { id: { in: ["keyword_1"] } },
+      });
+      expect(mocks.mirrorScheduleToKeywords).toHaveBeenCalledWith(
+        mocks.prisma,
+        "project_1",
+        schedule,
+        ["keyword_1"],
+      );
+    },
+  );
+
+  it("rejects a foreign or unavailable CSV schedule before creating keywords", async () => {
+    mocks.prisma.checkSchedule.findFirst.mockResolvedValue(null);
+    await expect(
+      addKeywords({
+        checkScheduleId: `sch_${"a".repeat(24)}`,
+        projectId: `prj_${"a".repeat(24)}`,
+        rows: [{ keyword: "rank tracker" }],
+      }),
+    ).rejects.toMatchObject({ code: "keyword_schedule_invalid" });
+    expect(mocks.prisma.keyword.createMany).not.toHaveBeenCalled();
   });
 
   it("creates keyword schedules as paused when the input schedule is paused", async () => {

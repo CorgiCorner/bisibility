@@ -39,7 +39,7 @@ const source = {
   },
   provider,
 };
-const market = {
+const researchScope = {
   countryCode: "PL",
   languageCode: "pl",
   locationCode: 2616,
@@ -106,7 +106,7 @@ describe("domain overview provider calls", () => {
     });
   });
 
-  it("charges domain_overview and forwards the direct numeric market", async () => {
+  it("charges domain_overview and forwards the direct numeric location", async () => {
     provider.fetchDomainRankOverview.mockResolvedValue({
       costCents: 1.2,
       metrics: null,
@@ -114,7 +114,7 @@ describe("domain overview provider calls", () => {
     });
 
     await fetchDomainOverviewMetrics({
-      ...market,
+      ...researchScope,
       budgetCapCents: 500,
       projectId: "project_1",
       scope: "root",
@@ -153,7 +153,7 @@ describe("domain overview provider calls", () => {
     provider.fetchRankedKeywords.mockResolvedValue({ costCents: 2, rows: [], totalCount: 0 });
 
     await fetchDomainKeywords({
-      ...market,
+      ...researchScope,
       budgetCapCents: 500,
       limit: 25,
       offset: 50,

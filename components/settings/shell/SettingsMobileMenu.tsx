@@ -5,7 +5,7 @@ import {
   settingsSectionHref,
   settingsSections,
 } from "@/components/settings/shell/settings-sections";
-import { MenuSelect } from "@/components/ui";
+import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { useRouter } from "next/navigation";
 

@@ -111,50 +111,29 @@ describe("KeywordHeaderCard", () => {
       "href",
       "https://example.com/rank-tracker",
     );
-    expect(metadata).toHaveTextContent("Target /rank-tracker");
+    expect(metadata).toHaveTextContent("Expected for this market: /rank-tracker");
     expect(metadata).toHaveTextContent("DataForSEO");
     expect(metadata.querySelectorAll('[data-testid="keyword-detail-slot"]')).toHaveLength(8);
   });
 
-  it("keeps the locale search link and target switcher without legacy tracking controls", () => {
+  it("keeps the locale search link without duplicating the page context controls", () => {
     renderCard();
     expect(screen.getByRole("link", { name: "View SERP" })).toHaveAttribute(
       "href",
       expect.stringContaining("gl=us&hl=en"),
     );
-    expect(screen.getByRole("button", { name: /United States \/ English/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Device" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Track location" })).not.toBeInTheDocument();
   });
 
-  it("lists target schedules and opens SetScheduleModal for the selected target", async () => {
-    renderCard({
-      targets: [
-        keyword,
-        {
-          ...keyword,
-          checkSchedule: { name: "Weekly Monday", nextCheckAt: null, publicId: "sch_weekly" },
-          device: "mobile",
-          id: "keyword_mobile",
-        },
-      ],
-    });
-    fireEvent.click(screen.getByRole("button", { name: /United States \/ English/ }));
-    expect(await screen.findByText("United States / English · desktop")).toBeInTheDocument();
-    expect(screen.getByText("Weekly Monday")).toBeInTheDocument();
-    fireEvent.keyDown(screen.getByRole("menu", { name: "United States / English" }), {
-      key: "Escape",
-    });
-    await waitFor(() =>
-      expect(
-        screen.queryByRole("menu", { name: "United States / English" }),
-      ).not.toBeInTheDocument(),
-    );
+  it("opens SetScheduleModal for the current keyword", async () => {
+    renderCard();
     mocks.fetch.mockResolvedValueOnce(new Response(JSON.stringify({ data: [] })));
     fireEvent.click(screen.getByRole("button", { name: "change" }));
     expect(await screen.findByRole("dialog", { name: /Set schedule/ })).toBeInTheDocument();
   });
 
-  it("keeps market editing and scheduling available without a legacy schedule editor", () => {
+  it("keeps keyword editing and scheduling separate from header market management", () => {
     renderCard({
       projectMarkets: {
         markets: [],
@@ -164,10 +143,10 @@ describe("KeywordHeaderCard", () => {
         projectId: "prj_1",
       },
     });
-    const drawer = screen.getByText("Markets and devices drawer");
-    expect(drawer).toHaveAttribute("data-open", "false");
+    expect(screen.queryByText("Markets and devices drawer")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    expect(drawer).toHaveAttribute("data-open", "true");
+    expect(screen.getByText("Keyword editor")).toHaveAttribute("data-open", "true");
+    expect(screen.getByText("Keyword editor")).toHaveAttribute("data-can-save", "true");
     expect(screen.getByRole("button", { name: "change" })).toBeInTheDocument();
   });
 });

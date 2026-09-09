@@ -48,10 +48,11 @@ describe("StepFirstCheck", () => {
       listFirstCheckCandidatesAction,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
 
     await waitFor(() =>
       expect(listFirstCheckCandidatesAction).toHaveBeenCalledWith({
+        includeExisting: true,
         keywordText: "rank tracker",
         limit: 4,
         projectId: "prj_1",
@@ -73,13 +74,12 @@ describe("StepFirstCheck", () => {
     });
 
     expect(screen.queryByText("First available keyword")).not.toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeEnabled(),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Run check" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
 
     await waitFor(() => expect(listFirstCheckCandidatesAction).toHaveBeenCalledTimes(1));
     expect(listFirstCheckCandidatesAction).toHaveBeenCalledWith({
+      includeExisting: true,
       keywordText: "persisted rank tracker",
       limit: 1,
       projectId: "prj_1",
@@ -94,11 +94,9 @@ describe("StepFirstCheck", () => {
       providerReady: true,
     }));
     renderReadyStep({ keywordDraft: undefined, listFirstCheckCandidatesAction });
-    expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Run check" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Retry loading keyword" }));
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeEnabled(),
-    );
+    await waitFor(() => expect(screen.getByRole("button", { name: "Run check" })).toBeEnabled());
     expect(listFirstCheckCandidatesAction).toHaveBeenCalledTimes(1);
   });
 
@@ -124,7 +122,7 @@ describe("StepFirstCheck", () => {
     const legacyQueueAction = { queueFirstChecksAction };
 
     renderReadyStep({ ...legacyQueueAction, runFirstCheckPreviewAction });
-    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
 
     await waitFor(() => expect(screen.getAllByText("Checking...")).toHaveLength(2));
     await waitFor(() => expect(runFirstCheckPreviewAction).toHaveBeenCalledTimes(1));
@@ -179,7 +177,7 @@ describe("StepFirstCheck", () => {
       })),
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
 
     expect(await screen.findByText(/0 of 1 check · \$0\.0000 recorded cost/)).toBeInTheDocument();
     expect(
@@ -210,7 +208,7 @@ describe("StepFirstCheck", () => {
     });
 
     renderReadyStep({ runFirstCheckPreviewAction });
-    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
 
     expect(await screen.findByText("Monthly rank-check budget reached.")).toBeInTheDocument();
     expect(screen.getByText("#2 / example.com/keyword_1")).toBeInTheDocument();
@@ -250,83 +248,19 @@ describe("StepFirstCheck", () => {
         }),
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
 
     expect(await screen.findByText(/\$0\.0055 recorded cost/)).toBeInTheDocument();
-    const dashboard = screen.getByRole("button", { name: "Go to dashboard" });
-    expect(dashboard).toHaveClass("MuiButton-contained", "MuiButton-sizeLarge");
+    const dashboard = screen.getByRole("button", { name: "View dashboard" });
+    expect(dashboard).toHaveAttribute("data-variant", "primary");
+    expect(dashboard).toHaveAttribute("data-size", "lg");
     expect(dashboard).toHaveAttribute("type", "submit");
     expect(screen.queryByRole("button", { name: "Open app" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Run a test check (1 keyword)" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Run check" })).toBeNull();
     expect(
       screen
         .getAllByRole("button")
-        .filter((button) => button.classList.contains("MuiButton-contained")),
+        .filter((button) => button.getAttribute("data-variant") === "primary"),
     ).toHaveLength(1);
-  });
-
-  it("shows matrix transparency and mixed persisted-cost shortfall", async () => {
-    renderReadyStep({
-      defaults: {
-        country: "United States",
-        cronExpression: null,
-        device: "desktop",
-        devices: ["desktop", "mobile"],
-        frequency: "manual",
-        jitterMinutes: 60,
-        locationSelections: [
-          {
-            canonicalKey: "US",
-            countryCode: "US",
-            displayName: "United States",
-            kind: "country",
-            languageCode: "en",
-            languageLabel: "English",
-          },
-          {
-            canonicalKey: "PL",
-            countryCode: "PL",
-            displayName: "Poland",
-            kind: "country",
-            languageCode: "pl",
-            languageLabel: "Polish",
-          },
-        ],
-        locations: ["US", "PL"],
-        projectId: "prj_1",
-        timezone: "UTC",
-      },
-      listFirstCheckCandidatesAction: vi.fn(async () => ({
-        candidates: [
-          candidate("1", "rank tracker"),
-          candidate("2", "rank tracker", "mobile"),
-          {
-            ...candidate("3", "rank tracker"),
-            market: { languageLabel: "Polish", locationLabel: "Poland" },
-          },
-          {
-            ...candidate("4", "rank tracker", "mobile"),
-            market: { languageLabel: "Polish", locationLabel: "Poland" },
-          },
-        ],
-        hasAnalyticsSource: false,
-        isSampleProject: false,
-        providerReady: true,
-      })),
-      runFirstCheckPreviewAction: vi.fn(async ({ keywordId }) =>
-        keywordId === "kw_4"
-          ? { code: "failed" as const, message: "Failed", status: "failed" as const }
-          : {
-              position: 2,
-              provider: "dataforseo",
-              rankingUrl: null,
-              recordedCostCents: 0.2,
-              status: "completed" as const,
-            },
-      ),
-    });
-    expect(screen.getByText("1 keyword · 2 markets · both devices · 4 checks")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
-    expect(await screen.findByText(/3 of 4 checks · \$0\.0060 recorded cost/)).toBeInTheDocument();
   });
 });

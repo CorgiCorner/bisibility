@@ -161,7 +161,12 @@ describe("POST /api/v1/cloud/import hardening", () => {
       Promise.resolve(jobRow({ ...data, id: where.id })),
     );
     mocks.prisma.keyword.findMany.mockResolvedValue([
-      { device: "desktop", id: "keyword_1", location: "United States", text: "rank tracker" },
+      {
+        device: "desktop",
+        id: "keyword_1",
+        locationRef: { canonicalKey: "US" },
+        text: "rank tracker",
+      },
     ]);
     mocks.prisma.rankCheck.createMany.mockResolvedValue({ count: 1 });
     mocks.prisma.rankCheck.findMany.mockResolvedValue([]);

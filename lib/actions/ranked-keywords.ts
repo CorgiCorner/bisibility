@@ -26,7 +26,7 @@ export type FetchRankedKeywordSuggestionsInput = {
 export async function fetchRankedKeywordSuggestions(input: unknown) {
   const data = parseActionInput(rankedKeywordsSchema, input);
   const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "read", data.projectId, { type: "project" });
+  const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
   const result = await fetchRankedKeywords({
     actorId: actor.id,
     connectionId: data.connectionId,

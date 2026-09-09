@@ -1,6 +1,6 @@
 "use client";
 
-import { Textarea } from "@/components/ui";
+import { Textarea } from "@/components/ui/Textarea";
 import {
   type AddKeywordDrawerForm,
   fieldClass,

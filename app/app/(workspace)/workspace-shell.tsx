@@ -7,15 +7,16 @@ import { AppThemeRoot } from "@/components/shell/AppThemeRoot";
 import { CloudBetaBanner } from "@/components/shell/CloudBetaBanner";
 import { CommandPaletteProvider } from "@/components/shell/CommandPalette";
 import { CLOUD_BETA_DISMISSAL_COOKIE, isCloudBetaDismissed } from "@/components/shell/cloud-beta";
-import {
-  ProjectWriteModeBanner,
-  ProjectWriteModeProvider,
-} from "@/components/shell/ProjectWriteModeProvider";
+import { DemoBanner } from "@/components/shell/DemoBanner";
+import { ProjectWriteModeBanner } from "@/components/shell/ProjectWriteModeNotices";
+import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { appExtensions } from "@/lib/app-extensions";
 import { appVersion } from "@/lib/app-version";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
+import { readOnlyDemoConfig } from "@/lib/demo/config";
+import { demoSnapshotCapturedAt } from "@/lib/demo/snapshot";
 import { isCloud } from "@/lib/deployment/deployment";
 import { workspaceRoleLine } from "@/lib/format/workspace-role-line";
 import {
@@ -58,6 +59,8 @@ export async function WorkspaceShell({
   projectRef,
 }: Readonly<WorkspaceShellProps>) {
   const session = await getQuerySession();
+  const demo = readOnlyDemoConfig();
+  const demoCapturedAt = demo ? await demoSnapshotCapturedAt() : null;
 
   const now = new Date();
   // Workspace chrome reads are independent. Self-host skips the Cloud-only audit query.
@@ -74,9 +77,9 @@ export async function WorkspaceShell({
   ] = await Promise.all([
     listWorkspaces(),
     loadWorkspaceBudgetSummary(activeProjectId, now),
-    isCloud ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
+    isCloud && !demo ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
     getInstanceAdminSession(),
-    isCloud
+    isCloud && !demo
       ? appExtensions.renderSupportWidget({
           email: session.user.email,
           id: session.user.id,
@@ -96,7 +99,7 @@ export async function WorkspaceShell({
   if (!active) {
     notFound();
   }
-  const canCreateWorkspace = Boolean(session.user.id);
+  const canCreateWorkspace = !demo && Boolean(session.user.id);
 
   const cookieStore = await cookies();
   const theme = normalizeThemePreference(cookieStore.get("theme")?.value);
@@ -106,7 +109,8 @@ export async function WorkspaceShell({
   );
   const setupProgress = resolveSetupProgress(setupContext);
   const setupCompleted = setupProgress.completed;
-  const showGettingStarted = !setupCompleted || !isSetupAcknowledgedAt(setupAcknowledgedAt);
+  const showGettingStarted =
+    !demo && (!setupCompleted || !isSetupAcknowledgedAt(setupAcknowledgedAt));
 
   // Header meta + user role line follow the active workspace.
   const roleLine = workspaceRoleLine(active.role, active.name, active.domain);
@@ -151,17 +155,21 @@ export async function WorkspaceShell({
                 workspaces={workspaces}
               />
               <div className="flex min-w-0 flex-col">
-                <CloudBetaBanner
-                  dismissed={cloudBetaDismissed}
-                  hasExportableData={active.keywordCount > 0}
-                  isCloud={isCloud}
-                  key={active.publicId}
-                  lastExport={lastCloudExport}
-                  now={now.toISOString()}
-                  projectId={active.publicId}
-                  projectRef={projectRef}
-                  projectName={active.name}
-                />
+                {demo ? (
+                  <DemoBanner capturedAt={demoCapturedAt} />
+                ) : (
+                  <CloudBetaBanner
+                    dismissed={cloudBetaDismissed}
+                    hasExportableData={active.keywordCount > 0}
+                    isCloud={isCloud}
+                    key={active.publicId}
+                    lastExport={lastCloudExport}
+                    now={now.toISOString()}
+                    projectId={active.publicId}
+                    projectRef={projectRef}
+                    projectName={active.name}
+                  />
+                )}
                 <AppHeader
                   actions={
                     <HeaderProviderSpend

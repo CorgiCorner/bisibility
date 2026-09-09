@@ -4,6 +4,7 @@ import { readOperationSnapshot } from "./snapshot";
 
 const mocks = vi.hoisted(() => ({
   loadProviderChain: vi.fn(),
+  activeSearchImport: vi.fn(),
   monthlySpend: vi.fn(),
   keyword: { findMany: vi.fn() },
   rankCheckRun: { findMany: vi.fn() },
@@ -18,6 +19,9 @@ vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadProviderChain,
 }));
 vi.mock("@/lib/rank-check/budget", () => ({ monthlySpendCents: mocks.monthlySpend }));
+vi.mock("@/lib/search-insights/sync/operation-snapshot", () => ({
+  readActiveSearchImportSnapshot: mocks.activeSearchImport,
+}));
 
 const baseRun = {
   _count: { items: 0 },
@@ -74,9 +78,14 @@ describe("readOperationSnapshot", () => {
     mocks.rankCheckRun.findMany.mockImplementation(({ where }) =>
       Promise.resolve(fixture.filter((run) => where.status.in.includes(run.status))),
     );
-    mocks.searchAnalyticsImport.findMany.mockResolvedValue([
-      { daysDone: 14, daysTotal: 30, id: "import_1", state: "running" },
-    ]);
+    mocks.activeSearchImport.mockResolvedValue({
+      capabilities: { pause: true, resume: false, retry: false },
+      id: "import_1",
+      presentation: { action: "pause", supportingText: "Import is running.", title: "Importing" },
+      progress: { done: 28, total: 488 },
+      property: "sc-domain:example.com",
+      state: "running",
+    });
   });
 
   it("maps active runs and imports into validated operation DTOs", async () => {
@@ -112,9 +121,12 @@ describe("readOperationSnapshot", () => {
       }),
     );
     expect(operations.at(-1)).toEqual({
+      capabilities: { pause: true, resume: false, retry: false },
       id: "import_1",
       kind: "gsc_import",
-      progress: { done: 14, total: 30 },
+      presentation: { action: "pause", supportingText: "Import is running.", title: "Importing" },
+      progress: { done: 28, total: 488 },
+      property: "sc-domain:example.com",
       state: "running",
     });
     expect(operationSnapshotSchema.array().safeParse(operations).success).toBe(true);
@@ -128,16 +140,7 @@ describe("readOperationSnapshot", () => {
         },
       }),
     );
-    expect(mocks.searchAnalyticsImport.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        take: 50,
-        where: {
-          projectId: "project_1",
-          source: "gsc",
-          state: { in: ["queued", "running", "waiting_for_first_data", "paused"] },
-        },
-      }),
-    );
+    expect(mocks.activeSearchImport).toHaveBeenCalledWith("project_1");
   });
 
   it("leaves ETA null until three targets complete", async () => {
@@ -146,7 +149,7 @@ describe("readOperationSnapshot", () => {
     mocks.rankCheckRun.findMany.mockResolvedValue([
       { ...baseRun, completedCount: 2, publicId: "rcr_running", status: "running" },
     ]);
-    mocks.searchAnalyticsImport.findMany.mockResolvedValue([]);
+    mocks.activeSearchImport.mockResolvedValue(null);
 
     const [operation] = await readOperationSnapshot("project_1");
 
@@ -165,7 +168,7 @@ describe("readOperationSnapshot", () => {
         totalCount: 20,
       },
     ]);
-    mocks.searchAnalyticsImport.findMany.mockResolvedValue([]);
+    mocks.activeSearchImport.mockResolvedValue(null);
 
     const [operation] = await readOperationSnapshot("project_1");
 
@@ -210,7 +213,7 @@ describe("readOperationSnapshot", () => {
     mocks.keyword.findMany.mockResolvedValue([
       { device: "desktop", locationId: "market_1", text: "coffee beans" },
     ]);
-    mocks.searchAnalyticsImport.findMany.mockResolvedValue([]);
+    mocks.activeSearchImport.mockResolvedValue(null);
 
     const [operation] = await readOperationSnapshot("project_1");
 
@@ -232,7 +235,7 @@ describe("readOperationSnapshot", () => {
         status: "blocked",
       },
     ]);
-    mocks.searchAnalyticsImport.findMany.mockResolvedValue([]);
+    mocks.activeSearchImport.mockResolvedValue(null);
 
     const [operation] = await readOperationSnapshot("project_1");
 

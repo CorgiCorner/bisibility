@@ -49,6 +49,7 @@ const mocks = vi.hoisted(() => {
       keywordTag: { createMany: vi.fn(), deleteMany: vi.fn() },
       projectMarket: { findMany: vi.fn(), upsert: vi.fn() },
       projectDefaults: { findUnique: vi.fn() },
+      project: { findUnique: vi.fn(), updateMany: vi.fn() },
       providerConnection: {
         findUnique: vi.fn(),
         findMany: vi.fn(),
@@ -120,14 +121,10 @@ vi.mock("@/lib/serp/location-service", () => ({
   resolveKeywordLocation: mocks.resolveKeywordLocation,
 }));
 
-vi.mock("@/lib/providers/registry", () => ({
+vi.mock("@/lib/providers/registry", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/providers/registry")>()),
   getAnalyticsProvider: vi.fn(() => ({ testConnection: async () => ({ ok: true }) })),
   getSerpProvider: vi.fn(() => ({ testConnection: async () => ({ ok: true }) })),
-  PROVIDER_CATALOG: [
-    { id: "google-search-console", kind: "analytics", label: "Google Search Console" },
-    { id: "dataforseo", kind: "serp", label: "DataForSEO" },
-    { id: "serpapi", kind: "serp", label: "SerpApi" },
-  ],
 }));
 
 vi.mock("@/lib/rank-check/runs/launch-single", () => ({
@@ -150,6 +147,7 @@ function project() {
 function authRow() {
   return {
     hashedKey: hashApiKey(rawKey),
+    scopes: ["read", "write", "admin"],
     id: "api_key_1",
     name: "Production",
     prefix: rawKey.slice(0, 21),
@@ -315,6 +313,12 @@ describe("public API router", () => {
       Promise.resolve({ ...create, id: `project_market_${create.locationId}` }),
     );
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      budgetCapCents: null,
+      providerAllocationsInitializedAt: null,
+      providerConnections: [],
+    });
+    mocks.prisma.project.updateMany.mockResolvedValue({ count: 1 });
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
     mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
     mocks.prisma.providerConnection.update.mockResolvedValue({});
@@ -1097,7 +1101,7 @@ describe("public API router", () => {
         kind: "analytics",
         lastUsedAt: new Date("2026-01-05T00:00:00.000Z"),
         priority: 0,
-        provider: "google-search-console",
+        provider: "gsc",
         publicId: "conn_b00000000000000000000000",
         status: "connected",
         updatedAt: new Date("2026-01-05T00:00:00.000Z"),
@@ -1123,7 +1127,7 @@ describe("public API router", () => {
         expect.objectContaining({
           category_id: "analytics",
           connection_id: "conn_b00000000000000000000000",
-          id: "google-search-console",
+          id: "gsc",
           status: "connected",
         }),
       ]),

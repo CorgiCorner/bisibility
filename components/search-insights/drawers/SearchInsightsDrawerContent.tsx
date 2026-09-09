@@ -2,9 +2,10 @@
 
 import { DRAWER_COPY, NEUTRAL_COPY } from "@/components/search-insights/search-insights-copy";
 import { formatRowCount } from "@/components/search-insights/search-insights-rows-model";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { SearchInsightsDay } from "@/lib/search-insights/queries/detail-model";
-import { CaretDownIcon as CaretDown, ChartDonutIcon as ChartDonut } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { ChartDonutIcon as ChartDonut } from "@phosphor-icons/react/dist/csr/ChartDonut";
 import {
   type SearchInsightsDrawerContent as DrawerContent,
   drawerBars,

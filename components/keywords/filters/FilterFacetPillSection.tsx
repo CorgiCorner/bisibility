@@ -1,6 +1,6 @@
 "use client";
 
-import { Pill } from "@/components/ui";
+import { Pill } from "@/components/ui/Pill";
 import { type FilterIcon, FilterSection, toggleFilterValue } from "./FilterDrawerControls";
 
 type FilterFacetPillSectionProps = {

@@ -1,7 +1,9 @@
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
+import type { NewMarketCreateInput } from "@/lib/markets/create-input";
 import { KEYWORD_IMPORT_LIMIT_MESSAGE } from "@/lib/schemas/keyword";
 import { MARKETING_URL } from "@/lib/site/site";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import type { AddKeywordsForm, AddKeywordsInput } from "./StepAddKeywords";
@@ -38,6 +40,126 @@ function renderStep(
 }
 
 describe("StepAddKeywords", () => {
+  it("creates a market through the shared drawer and the create action, then submits it with the keywords", async () => {
+    const user = userEvent.setup();
+    const projectId = `prj_${"a".repeat(24)}`;
+    const createMarketAction = vi.fn(async (input: NewMarketCreateInput) => ({
+      canonicalKey: input.canonicalKey,
+      countryCode: input.countryCode,
+      displayName: "Spain",
+      keywordCount: 0,
+      kind: input.kind,
+      languageCode: input.languageCode,
+      languageLabel: "Spanish",
+      publicId: `pmkt_${"a".repeat(24)}`,
+    }));
+    const addKeywordsAction = vi.fn(async (_input: AddKeywordsInput) => ({
+      created: 1,
+      persistedKeywordCount: 1,
+      keywords: [{ id: "keyword_1", publicId: "kw_1" }],
+      skippedDuplicates: 0,
+    }));
+    const saveMarketsAction = vi.fn(async (input: { marketKeys: string[] }) => ({
+      marketKeys: input.marketKeys,
+    }));
+    const onMarketsChange = vi.fn();
+    renderStep(
+      {
+        addKeywordsAction,
+        createMarketAction,
+        defaultValues: { ...keywordDefaults("rank tracker"), projectId },
+        flowState: { projectId },
+        onMarketsChange,
+        saveMarketsAction,
+      },
+      { withContinue: true },
+    );
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Another market" }));
+    await user.type(screen.getByLabelText("Custom name (optional)"), "Discarded draft");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(keywordBox()).toHaveValue("rank tracker");
+    expect(createMarketAction).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Another market" }));
+    expect(screen.getByLabelText("Custom name (optional)")).toHaveValue("");
+    await user.click(screen.getByRole("button", { name: "Country" }));
+    await user.type(screen.getByRole("textbox", { name: "Search countries" }), "Spain");
+    await user.click(await screen.findByRole("menuitem", { name: "Spain" }));
+    await user.click(screen.getByRole("button", { name: "Language" }));
+    await user.click(screen.getByRole("menuitem", { name: "Spanish" }));
+    await user.click(screen.getByRole("button", { name: "Location" }));
+    await user.click(screen.getByRole("menuitem", { name: "Spain (Country)" }));
+    expect(screen.queryByRole("button", { name: /devices/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Paste keywords" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Create market" }));
+
+    await waitFor(() =>
+      expect(createMarketAction).toHaveBeenCalledWith({
+        canonicalKey: "ES",
+        countryCode: "ES",
+        devices: ["desktop"],
+        kind: "country",
+        languageCode: "es",
+        method: { kind: "empty" },
+        name: "",
+        projectId,
+        schedule: null,
+      }),
+    );
+    expect(await screen.findByRole("button", { name: "Remove Spain / Spanish" })).toBeVisible();
+    expect(addKeywordsAction).not.toHaveBeenCalled();
+    expect(saveMarketsAction).not.toHaveBeenCalled();
+    expect(keywordBox()).toHaveValue("rank tracker");
+    expect(onMarketsChange).toHaveBeenLastCalledWith([
+      expect.objectContaining({ canonicalKey: "US" }),
+      expect.objectContaining({
+        canonicalKey: "ES",
+        displayName: "Spain",
+        kind: "country",
+        languageLabel: "Spanish",
+      }),
+    ]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    await waitFor(() =>
+      expect(saveMarketsAction).toHaveBeenCalledWith({
+        marketKeys: ["US", "ES"],
+        projectId,
+      }),
+    );
+    expect(addKeywordsAction).toHaveBeenCalledWith(
+      expect.objectContaining({ locations: [{ locationKey: "US" }, { locationKey: "ES" }] }),
+    );
+  });
+
+  it("keeps a draft market's server display name instead of rebuilding it from its key", () => {
+    renderStep({
+      defaultValues: { ...keywordDefaults(), locations: ["ES/Andalusia/Malaga@en"] },
+      flowState: { projectId: "prj_1" },
+      trackingDefaults: {
+        frequency: "daily",
+        locationSelections: [
+          {
+            canonicalKey: "ES/Andalusia/Malaga@en",
+            countryCode: "ES",
+            displayName: "Malaga, Andalusia, Spain",
+            kind: "city",
+            languageCode: "en",
+            languageLabel: "English",
+          },
+        ],
+        locations: ["ES/Andalusia/Malaga@en"],
+      } as unknown as ComponentProps<typeof StepAddKeywords>["trackingDefaults"],
+    });
+
+    expect(
+      screen.getByRole("button", { name: "Remove Malaga, Andalusia, Spain / English" }),
+    ).toBeVisible();
+  });
+
   it("keeps placeholder and entered text on the same typography geometry", () => {
     renderStep({ defaultValues: keywordDefaults() });
 
@@ -53,6 +175,12 @@ describe("StepAddKeywords", () => {
       "placeholder:text-[12px]",
       "placeholder:leading-4",
     );
+  });
+
+  it("keeps exactly one device owner in the step", () => {
+    renderStep({ defaultValues: keywordDefaults() });
+
+    expect(screen.getAllByRole("button", { name: /devices/i })).toHaveLength(1);
   });
 
   it("previews trimmed unique keywords and ignored duplicate lines", () => {
@@ -93,12 +221,10 @@ describe("StepAddKeywords", () => {
     expect(screen.getAllByText(message)).toHaveLength(1);
   });
 
-  it("renders the analytics teaser when no source is connected", () => {
+  it("omits Search Console when no source is connected", () => {
     renderStep({ defaultValues: keywordDefaults() });
 
-    expect(
-      screen.getByText("Connect Search Console above to import your real queries."),
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/Search Console/)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Import top queries from Search Console/i }),
     ).not.toBeInTheDocument();
@@ -123,9 +249,6 @@ describe("StepAddKeywords", () => {
     expect(
       screen.getByRole("button", { name: /Import top queries from Search Console/i }),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText("Connect Search Console above to import your real queries."),
-    ).not.toBeInTheDocument();
   });
 
   it("opens the suggestion picker and appends the confirmed queries", async () => {
@@ -212,7 +335,7 @@ describe("StepAddKeywords", () => {
     });
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
 
-    expect(screen.getByText("≈ 0 checks/month at Top 20")).toBeInTheDocument();
+    expect(screen.getByText("Manual checks at Top 20")).toBeInTheDocument();
     expect(screen.queryByText(/\$|monthly cost cap/)).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Estimate provider cost" })).toBeNull();
   });
@@ -241,7 +364,7 @@ describe("StepAddKeywords", () => {
 
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
 
-    expect(screen.getByText("≈ 0 checks/month at Top 10")).toBeInTheDocument();
+    expect(screen.getByText("Manual checks at Top 10")).toBeInTheDocument();
   });
 
   it("hides the hosted calculator link on self-hosted instances", () => {
@@ -255,7 +378,7 @@ describe("StepAddKeywords", () => {
     expect(screen.queryByRole("link", { name: "Estimate provider cost" })).toBeNull();
   });
 
-  it("submits one matrix action and shows created/skipped feedback", async () => {
+  it("submits one matrix action and proceeds without intermediate success feedback", async () => {
     const onComplete = vi.fn();
     const addKeywordsAction = vi.fn(async (_input: AddKeywordsInput) => ({
       created: 2,
@@ -293,10 +416,10 @@ describe("StepAddKeywords", () => {
       tags: [],
       targetUrl: null,
     });
-    expect(await screen.findByText("2 added, 6 already tracked")).toBeInTheDocument();
     await waitFor(() =>
       expect(onComplete).toHaveBeenCalledWith(expect.any(Object), expect.any(Object), 1, null),
     );
+    expect(screen.queryByText(/added, .*already tracked/)).not.toBeInTheDocument();
   });
 
   it("surfaces matrix location degrade warnings", async () => {
@@ -333,3 +456,5 @@ describe("StepAddKeywords", () => {
     );
   });
 });
+
+vi.mock("@/components/cost-estimate/useCostEstimate", () => import("@/tests/cost-estimate"));

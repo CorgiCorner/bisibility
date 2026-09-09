@@ -1,6 +1,6 @@
 "use client";
 
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { authClient } from "@/lib/auth/client";
 import { useState } from "react";
 import { ghostButtonClass } from "./account-ui";

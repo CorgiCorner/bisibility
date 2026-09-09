@@ -12,7 +12,7 @@ type Props = {
 function ResultMessage({ label, result }: { label: string; result: ProviderTestResult }) {
   return (
     <p
-      className={`m-0 mt-3 text-[12.5px] leading-[1.45] sm:col-span-2 ${result.ok ? "text-green-text" : "text-red-text"}`}
+      className={`m-0 mt-3 text-[12.5px] leading-[1.45] ${result.ok ? "text-green-text" : "text-red-text"}`}
       role={result.ok ? "status" : "alert"}
     >
       <strong className="font-semibold">{label}</strong> {result.message}
@@ -29,7 +29,7 @@ export function ProviderCardFeedback({
   return (
     <>
       {disconnectNotice ? (
-        <div className="mt-3 sm:col-span-2">
+        <div className="mt-3">
           <ActionNotice notice={disconnectNotice} />
         </div>
       ) : null}
@@ -40,9 +40,9 @@ export function ProviderCardFeedback({
         />
       ) : null}
       {neverSynced ? (
-        <p className="m-0 mt-3 text-[12.5px] leading-[1.45] text-fg-muted sm:col-span-2">
-          <strong className="font-semibold text-fg">Never synced.</strong> Traffic data appears
-          after the first sync. Use Sync now to load it immediately.
+        <p className="m-0 mt-3 text-[12.5px] leading-[1.45] text-fg-muted">
+          <strong className="font-semibold text-fg">Never synced.</strong> Use Sync now to load
+          traffic data.
         </p>
       ) : null}
       {syncResult ? (

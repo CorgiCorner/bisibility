@@ -11,6 +11,7 @@ import { selectRankTrackerKeywords } from "./rank-tracker-selection";
 export async function getRankTrackerKeywordList(
   input: RankTrackerListQueryInput,
 ): Promise<RankTrackerListResult> {
+  if (input.query.grouped) throw new Error("Rank tracker list query supports flat mode only.");
   const {
     exactRows,
     project,

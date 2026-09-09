@@ -4,10 +4,10 @@ import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarFooter } from "@/components/shell/SidebarFooter";
 import { SidebarNav } from "@/components/shell/SidebarNav";
 import { WorkspaceSwitcher } from "@/components/shell/WorkspaceSwitcher";
+import { DialogSurface as Drawer } from "@/components/ui/DialogSurface";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
-import Drawer from "@mui/material/Drawer";
-import { ListIcon as List } from "@phosphor-icons/react";
+import { ListIcon as List } from "@phosphor-icons/react/dist/csr/List";
 import { useState } from "react";
 
 export type MobileNavProps = {
@@ -61,18 +61,16 @@ export function MobileNav({
         </button>
       </span>
       <Drawer
-        anchor="left"
+        side="left"
         open={open}
         onClose={close}
-        slotProps={{
-          paper: {
-            sx: {
-              backgroundColor: "var(--bg-elev)",
-              borderRight: "1px solid var(--border)",
-              boxShadow: "none",
-              color: "var(--fg)",
-              width: 248,
-            },
+        contentProps={{
+          style: {
+            backgroundColor: "var(--bg-elev)",
+            borderRight: "1px solid var(--border)",
+            boxShadow: "none",
+            color: "var(--fg)",
+            width: 248,
           },
         }}
       >

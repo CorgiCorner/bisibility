@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import React from "react";
 
+export { competitorDetailsFormSchema } from "./competitor-action-stubs";
+export { refreshKeywordViewsAfterImport } from "./keyword-action-stubs";
+
 type LinkProps = {
   children?: ReactNode;
   href?: string;
@@ -29,6 +32,27 @@ export async function addKeywordsMatrix() {
 
 export async function addProjectMarkets() {
   return { added: 0, marketIds: [], ok: true as const };
+}
+
+export async function createProjectMarket() {
+  return {
+    canonicalKey: "ES",
+    countryCode: "ES",
+    displayName: "All of Spain",
+    keywordCount: 0,
+    kind: "country" as const,
+    languageCode: "es",
+    languageLabel: "Spanish",
+    publicId: "pmkt_preview0000000000000",
+  };
+}
+
+export async function saveAnalyticsConsent(values: { analytics: boolean; replay: boolean }) {
+  return {
+    ...values,
+    decidedAt: 1,
+    status: "decided" as const,
+  };
 }
 
 export async function addSignalNote() {

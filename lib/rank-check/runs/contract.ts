@@ -1,5 +1,6 @@
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { providerIdSchema } from "@/lib/schemas/provider";
+import { SEARCH_SYNC_STATUS_VOCABULARY } from "@/lib/search-insights/sync/control-model";
 import { z } from "zod";
 
 export const RUN_TRIGGERS = ["manual", "scheduled", "api", "retry"] as const;
@@ -129,12 +130,23 @@ export const rankCheckOperationSchema = z.object({
 export type RankCheckOperation = z.infer<typeof rankCheckOperationSchema>;
 
 export const gscImportOperationSchema = z.object({
+  capabilities: z.object({
+    pause: z.boolean(),
+    resume: z.boolean(),
+    retry: z.boolean(),
+  }),
   kind: z.literal("gsc_import"),
   id: z.string(),
+  presentation: z.object({
+    action: z.enum(["pause", "reconnect", "resume", "retry"]).nullable(),
+    supportingText: z.string().nullable(),
+    title: z.enum(SEARCH_SYNC_STATUS_VOCABULARY),
+  }),
+  property: z.string().min(1),
   state: z.string(),
   progress: z.object({
-    done: nonNegativeIntegerSchema,
-    total: nonNegativeIntegerSchema,
+    done: nonNegativeIntegerSchema.nullable(),
+    total: nonNegativeIntegerSchema.nullable(),
   }),
 });
 export type GscImportOperation = z.infer<typeof gscImportOperationSchema>;

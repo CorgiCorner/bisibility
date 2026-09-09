@@ -18,7 +18,7 @@ export function renderReadyStep(overrides: Partial<Parameters<typeof StepFirstCh
       flowState={{ projectId: "prj_1", providerId: "dataforseo" }}
       getObservedPositionsAction={vi.fn(async () => [])}
       keywordCount={3}
-      keywordDraft="rank tracker\nseo api"
+      keywordDraft={"rank tracker\nseo api"}
       listFirstCheckCandidatesAction={vi.fn(async () => ({
         candidates: [
           candidate("keyword_1", "rank tracker"),

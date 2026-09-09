@@ -1,5 +1,5 @@
-import { inputClassName } from "@/components/ui";
-import { DEFAULT_SERP_DEPTH, languageForSerpMarket, SERP_ENGINE } from "@/lib/serp/markets";
+import { inputClassName } from "@/components/ui/input-styles";
+import { DEFAULT_SERP_DEPTH, SERP_ENGINE } from "@/lib/serp/constants";
 
 export const onboardingFormId = "onboarding-step-form";
 
@@ -27,14 +27,6 @@ export const trackingDefaults = {
   engine: SERP_ENGINE.label,
   serpDepth: `Top ${DEFAULT_SERP_DEPTH}`,
 } as const;
-
-/**
- * Resolves the SERP language from the selected market so the read-only Language
- * field reflects the same canonical market map used by provider adapters.
- */
-export function languageForCountry(country: string | undefined) {
-  return languageForSerpMarket(country);
-}
 
 export function displayProvider(providerId?: string | null) {
   if (providerId === "dataforseo") {

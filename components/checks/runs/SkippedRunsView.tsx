@@ -3,13 +3,11 @@
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import type { CheckRange, DeferredGroup, DeferredReason } from "@/lib/checks/contract";
 import type { DateFormat } from "@/lib/dates/format";
-import {
-  CaretRightIcon as CaretRight,
-  GaugeIcon as Gauge,
-  PauseIcon as Pause,
-  PuzzlePieceIcon as PuzzlePiece,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
+import { GaugeIcon as Gauge } from "@phosphor-icons/react/dist/ssr/Gauge";
+import { PauseIcon as Pause } from "@phosphor-icons/react/dist/ssr/Pause";
+import { PuzzlePieceIcon as PuzzlePiece } from "@phosphor-icons/react/dist/ssr/PuzzlePiece";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import Link from "next/link";
 import { deferredWindow, rangeCopy } from "./check-runs-format";
 

@@ -3,7 +3,8 @@ import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { SettingsShellLoading } from "@/components/settings/shell/SettingsShellLoading";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { settingsCardGeometryClassNames } from "@/components/settings/shell/settings-layout";
-import { FieldLabel, Input } from "@/components/ui";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Input } from "@/components/ui/Input";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
 

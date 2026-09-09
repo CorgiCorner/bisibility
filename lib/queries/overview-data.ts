@@ -3,7 +3,7 @@ import "server-only";
 import { whereExecutedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { monthStartUtc } from "@/lib/rank-check/budget";
-import { supportsResearchMarket } from "@/lib/serp/market-capability";
+import { supportsResearchScope } from "@/lib/serp/research-capability";
 import { fetchProjectKeywordVolumes } from "./keyword-metrics-query";
 import {
   normalizeOverviewFilters,
@@ -155,7 +155,7 @@ export async function loadOverviewMetricData(
     })),
     projectMarkets: projectMarkets.map((market) => ({
       ...market,
-      researchAvailable: supportsResearchMarket(
+      researchAvailable: supportsResearchScope(
         market.location.countryCode,
         market.location.languageCode,
       ),

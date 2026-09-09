@@ -11,8 +11,8 @@ Authorization: Bearer <api_key>
 ```
 
 This authenticated reference-data endpoint is not scoped to one project. It
-returns supported countries and cached cities without using a project's
-provider credentials.
+returns countries, regions, and cities from the shared bundled catalog without
+using a project's provider credentials or making live provider requests.
 
 | Query | Description |
 | - | - |
@@ -24,11 +24,10 @@ provider credentials.
 {
   "data": [
     {
-      "id": "loc_abc123",
       "kind": "city",
       "display_name": "Austin, Texas, United States",
       "country_code": "US",
-      "region_code": "TX",
+      "region_code": null,
       "region_name": "Texas",
       "city_name": "Austin",
       "location_key": "US/Texas/Austin",

@@ -15,6 +15,8 @@ export type SerpApiResponse = {
   extra_credits?: number;
   organic_results?: unknown[];
   plan_searches_left?: number;
+  pagination?: { next?: string };
+  serpapi_pagination?: { next?: string; next_link?: string };
   searches_per_month?: number;
   total_searches_left?: number;
 };

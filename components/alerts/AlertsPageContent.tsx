@@ -2,52 +2,36 @@
 
 import { AlertFeedRow, isAlertUnread, UnreadSummary } from "@/components/alerts/AlertFeedSections";
 import { AlertRulesList } from "@/components/alerts/AlertRulesList";
-import { AlertsAllClear, AlertsCaughtUp } from "@/components/alerts/AlertsEmptyStates";
+import {
+  AlertsAllClear,
+  AlertsCaughtUp,
+  AlertsFilteredEmpty,
+} from "@/components/alerts/AlertsEmptyStates";
 import { AlertsLiveToolbar } from "@/components/alerts/AlertsLiveToolbar";
 import { AlertTemplateButtons } from "@/components/alerts/AlertTemplateButtons";
 import { NewRuleAction } from "@/components/alerts/NewRuleAction";
-import { AlertBanner, Button, Card, SectionTitle, SegmentedControl } from "@/components/ui";
+import { FacetBar } from "@/components/feeds/FacetBar";
+import { AlertBanner } from "@/components/ui/AlertBanner";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { markProjectAlertsRead } from "@/lib/actions/alert-feed";
-import type {
-  AlertActionHandlers,
-  AlertRuleView,
-  AlertTargetOptions,
-  AlertTemplate,
-  TriggeredAlertView,
-} from "@/lib/alerts/alert-data";
+import type { TriggeredAlertView } from "@/lib/alerts/alert-data";
 import { pluralize } from "@/lib/format/pluralize";
 import { appPath } from "@/lib/routing/app-path";
-import {
-  ArrowRightIcon as ArrowRight,
-  CheckIcon as Check,
-  ListMagnifyingGlassIcon as ListMagnifyingGlass,
-} from "@phosphor-icons/react";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { ListMagnifyingGlassIcon as ListMagnifyingGlass } from "@phosphor-icons/react/dist/csr/ListMagnifyingGlass";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type AlertFilter = "all" | "unread" | "urgent";
 
-export type AlertsPageContentProps = {
-  actions: AlertActionHandlers;
-  alerts: TriggeredAlertView[];
-  canCreate: boolean;
-  canDelete: boolean;
-  canManage: boolean;
-  canReadAudit: boolean;
-  canUpdate: boolean;
-  firedInWindowCount: number;
-  gscConnected: boolean;
-  gscInstallHref: string;
-  hasTrackedKeywords: boolean;
-  projectDomain?: string | null;
-  projectId: string;
-  projectRef: string;
-  rules: AlertRuleView[];
-  snoozedInWindowCount: number;
-  targets: AlertTargetOptions;
-  templates: AlertTemplate[];
-};
+import type { AlertsPageContentProps } from "./AlertsPageContent.types";
+
+export type { AlertsPageContentProps } from "./AlertsPageContent.types";
 
 function filterAlerts(alerts: TriggeredAlertView[], readIds: Set<string>, filter: AlertFilter) {
   if (filter === "unread") {
@@ -67,6 +51,8 @@ export function AlertsPageContent({
   canManage,
   canReadAudit,
   canUpdate,
+  facetOptions,
+  facets = [],
   firedInWindowCount,
   gscConnected,
   gscInstallHref,
@@ -87,8 +73,9 @@ export function AlertsPageContent({
   const [visibleCount, setVisibleCount] = useState(6);
   const activeRuleCount = rules.filter((rule) => rule.status === "active").length;
   const liveAlerts = alerts.filter((alert) => !dismissedIds.has(alert.id));
-  const feedQuiet = activeRuleCount > 0 && firedInWindowCount === 0;
-  const feedCaughtUp = firedInWindowCount > 0 && liveAlerts.length === 0;
+  const feedQuiet = facets.length === 0 && activeRuleCount > 0 && firedInWindowCount === 0;
+  const feedCaughtUp = facets.length === 0 && firedInWindowCount > 0 && liveAlerts.length === 0;
+  const feedFilteredEmpty = facets.length > 0 && liveAlerts.length === 0;
   const snoozedCount = snoozedInWindowCount + dismissedIds.size;
   const filteredAlerts = filterAlerts(liveAlerts, readIds, filter);
   const shownAlerts = filteredAlerts.slice(0, visibleCount);
@@ -137,6 +124,7 @@ export function AlertsPageContent({
         projectId={projectId}
         targets={targets}
       />
+      {facetOptions ? <FacetBar facets={facets} options={facetOptions} /> : null}
       {!hasTrackedKeywords ? (
         <AlertBanner
           action={{
@@ -149,7 +137,9 @@ export function AlertsPageContent({
           title="No keywords are currently tracked."
         />
       ) : null}
-      {feedQuiet ? (
+      {feedFilteredEmpty ? (
+        <AlertsFilteredEmpty facets={facets} />
+      ) : feedQuiet ? (
         <AlertsAllClear
           action={
             canCreate ? (

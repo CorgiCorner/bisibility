@@ -4,8 +4,8 @@ import { PositionTrendCard } from "./PositionTrendCard";
 
 const { lineChart } = vi.hoisted(() => ({ lineChart: vi.fn() }));
 
-vi.mock("@mui/x-charts/LineChart", () => ({
-  LineChart: (props: unknown) => {
+vi.mock("@/components/charts/TimeSeriesChart", () => ({
+  TimeSeriesChart: (props: unknown) => {
     lineChart(props);
     return <div data-testid="line-chart" />;
   },
@@ -41,8 +41,8 @@ describe("PositionTrendCard", () => {
 
     expect(lineChart).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        margin: { top: 12, right: 16, bottom: 28, left: 16 },
-        yAxis: [expect.objectContaining({ width: 20 })],
+        margin: { top: 12, right: 16, bottom: 0, left: 16 },
+        yWidth: 20,
       }),
     );
     expect(

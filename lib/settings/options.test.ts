@@ -1,6 +1,7 @@
 import { computeNextCheckAt } from "@/lib/rank-check/schedule";
 import { describe, expect, it } from "vitest";
 import {
+  countryOptions,
   type DefaultsData,
   frequencyOptions,
   getInspectionSchedulePreview,
@@ -51,6 +52,12 @@ describe("frequencyOptions", () => {
       "paused",
       "custom_cron",
     ]);
+  });
+});
+
+describe("countryOptions", () => {
+  it("uses ISO country codes as option values", () => {
+    expect(countryOptions).toContainEqual({ label: "Poland", value: "PL" });
   });
 });
 

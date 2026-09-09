@@ -1,7 +1,7 @@
 "use client";
 
-import { Tooltip } from "@/components/ui";
-import { XIcon as X } from "@phosphor-icons/react";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import type { ResearchTab } from "./research-workspace-model";
 
 export function ResearchSeedTabs({

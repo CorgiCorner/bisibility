@@ -5,10 +5,14 @@ import {
   countryValueForCode,
   type LocationFieldValue,
 } from "@/components/keywords/location-picker-data";
-import { Button, ExternalLink, Input, Tooltip } from "@/components/ui";
-import { researchMetricsUnavailableNote } from "@/lib/serp/market-capability";
+import { Button } from "@/components/ui/Button";
+import { ExternalLink } from "@/components/ui/ExternalLink";
+import { Input } from "@/components/ui/Input";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { researchMetricsUnavailableNote } from "@/lib/serp/research-capability";
 import { MARKETING_URL } from "@/lib/site/site";
-import { CheckIcon as Check, MagnifyingGlassIcon as Search } from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { MagnifyingGlassIcon as Search } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useId, useMemo, useState } from "react";
 import {
   additionalMarketLanguages,
@@ -157,7 +161,7 @@ export function MarketPicker({
     // keeps the sentence a description, so the row is still announced as its language plus
     // the short suffix rather than reading the whole sentence back as its name.
     // A disabled button emits no pointer or focus events, so a tracked row needs the
-    // wrapper MUI documents; that row is not actionable anyway, so pointer-only is the
+    // tooltip wrapper; that row is not actionable anyway, so pointer-only is the
     // most the sentence can be there.
     return (
       <Tooltip

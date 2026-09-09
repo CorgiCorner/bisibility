@@ -1,15 +1,13 @@
 "use client";
 
 import { AlertTargetUrlDialog } from "@/components/alerts/AlertTargetUrlDialog";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { getAlertCtaTargets, muteTriggeredAlert } from "@/lib/actions/alert-feed";
-import {
-  BellSlashIcon as BellSlash,
-  CaretRightIcon as CaretRight,
-  ColumnsIcon as Columns,
-  ListMagnifyingGlassIcon as ListMagnifyingGlass,
-  TargetIcon as Target,
-} from "@phosphor-icons/react";
+import { BellSlashIcon as BellSlash } from "@phosphor-icons/react/dist/csr/BellSlash";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { ColumnsIcon as Columns } from "@phosphor-icons/react/dist/csr/Columns";
+import { ListMagnifyingGlassIcon as ListMagnifyingGlass } from "@phosphor-icons/react/dist/csr/ListMagnifyingGlass";
+import { TargetIcon as Target } from "@phosphor-icons/react/dist/csr/Target";
 import type { Icon } from "@phosphor-icons/react/lib";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

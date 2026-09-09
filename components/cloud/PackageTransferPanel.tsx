@@ -1,17 +1,15 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { MigrationImportCompletion } from "@/lib/migration/result";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import {
-  CaretRightIcon as CaretRight,
-  CheckCircleIcon as CheckCircle,
-  CloudArrowUpIcon as CloudArrowUp,
-  DownloadSimpleIcon as DownloadSimple,
-  FileArrowUpIcon as FileArrowUp,
-  FileJsIcon as FileJs,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { CloudArrowUpIcon as CloudArrowUp } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { FileArrowUpIcon as FileArrowUp } from "@phosphor-icons/react/dist/csr/FileArrowUp";
+import { FileJsIcon as FileJs } from "@phosphor-icons/react/dist/csr/FileJs";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useState } from "react";
 import type { CloudImportPackageFile } from "./cloud-token";
 import { assertPackageFileSize, parsePackageContent, parsePackageUpload } from "./package-content";

@@ -1,6 +1,7 @@
 "use client";
 
-import { InfoTooltip, type StatusKind, StatusPill } from "@/components/ui";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { type StatusKind, StatusPill } from "@/components/ui/StatusPill";
 import type { OnboardingSerpProviderId, providerOptions } from "./StepConnectProvider.fields";
 
 export type ProviderCardState = "connected" | "dirty" | "failed" | "idle" | "tested";

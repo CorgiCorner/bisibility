@@ -32,7 +32,7 @@ describe("DimensionSwitcher", () => {
     const current = screen.getByRole("menuitem", { name: "desktop, currently shown" });
     const addMobile = screen.getByRole("menuitem", { name: "Add Mobile" });
     expect(current).toHaveAttribute("aria-current", "true");
-    expect(current).toHaveClass("Mui-selected");
+    expect(current).toHaveAttribute("data-selected", "true");
     expect(addMobile.querySelector("svg")).not.toBeNull();
     expect(addMobile).toHaveTextContent("Mobile+ Track");
     expect(screen.queryByRole("menuitem", { name: "Add Desktop" })).not.toBeInTheDocument();
@@ -57,14 +57,14 @@ describe("DimensionSwitcher", () => {
     fireEvent.click(trigger);
 
     const menu = screen.getByRole("menu");
-    const paper = menu.closest(".MuiPaper-root");
+    const paper = menu.closest("[data-ui-overlay]");
     expect(paper).toHaveStyle({ maxWidth: "calc(100vw - 24px)", width: "290px" });
 
     fireEvent.keyDown(menu, { key: "Escape" });
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
-  it("includes a custom location and links to live SERP results", () => {
+  it("does not invent untracked locations and links to live SERP results", () => {
     render(
       <DimensionSwitcher
         icon={<span>location</span>}
@@ -79,8 +79,7 @@ describe("DimensionSwitcher", () => {
       "href",
       "https://google.example/search",
     );
-    fireEvent.click(screen.getByRole("button", { name: /Warsaw/i }));
-    expect(screen.getByText(/only tracking Warsaw/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Warsaw/i })).toBeDisabled();
   });
 
   it("disables writable dimension changes in read-only mode", () => {

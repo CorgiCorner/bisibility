@@ -3,7 +3,7 @@ import "server-only";
 import type { AlertRuleForm } from "@/lib/alerts/schema";
 import { prisma } from "@/lib/db/prisma";
 import { serpDepthDecreaseWarning } from "@/lib/schemas/serp-depth";
-import { resolveSerpDepth, type SerpDepth } from "@/lib/serp/markets";
+import { resolveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
 import {
   alertDepthConflict,
   alertDepthConflictWarning,

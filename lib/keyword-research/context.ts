@@ -5,9 +5,9 @@ import { prisma } from "@/lib/db/prisma";
 import { getSerpProvider } from "@/lib/providers/registry";
 import type { SerpProvider } from "@/lib/providers/types";
 import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
-import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
 import { normalizeCanonicalLocationKey, serpRankLocation } from "@/lib/serp/location";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
+import { keywordResearchDefault } from "./default-scope";
 import type { KeywordResearchConnection } from "./types";
 
 export async function keywordResearchProject(projectId: string) {
@@ -87,13 +87,13 @@ export function connectionResources(
 }
 
 export async function researchLocation(project: KeywordResearchProject, overrideKey?: string) {
-  const market = projectDefaultSerpMarket(project.defaults, project.keywords);
-  const locationKey = overrideKey ?? market.locationKey;
+  const defaultResearch = overrideKey === undefined ? await keywordResearchDefault(project) : null;
+  const locationKey = overrideKey ?? defaultResearch?.locationKey ?? "US";
   const normalized = normalizeCanonicalLocationKey(locationKey);
   const persisted =
     overrideKey === undefined
       ? (project.defaults?.locationRef ??
-        project.keywords.find((keyword) => keyword.locationRef?.canonicalKey === market.locationKey)
+        project.keywords.find((keyword) => keyword.locationRef?.canonicalKey === locationKey)
           ?.locationRef)
       : project.keywords.find((keyword) => keyword.locationRef?.canonicalKey === overrideKey)
           ?.locationRef;

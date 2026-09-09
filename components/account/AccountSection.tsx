@@ -1,4 +1,5 @@
-import { Card, SectionTitle } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import { cn } from "@/lib/ui/cn";
 import type { ReactNode } from "react";
 
@@ -42,7 +43,7 @@ export function AccountSection({
       <Card
         className={cn("rounded-card p-5", tone === "danger" && "border-red", contentClassName)}
         size="md"
-        sx={tone === "danger" ? { borderColor: "var(--red)" } : undefined}
+        style={tone === "danger" ? { borderColor: "var(--red)" } : undefined}
       >
         {children}
       </Card>

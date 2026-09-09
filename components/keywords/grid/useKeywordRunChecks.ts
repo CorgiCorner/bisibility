@@ -6,7 +6,7 @@ import { type CostRateInfo, runCostCents } from "@/lib/cost-estimate/project-est
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import { runCheckNowSchema } from "@/lib/schemas/keyword";
-import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
 import { useState } from "react";
 import { effectiveRowDepth } from "./run-check-depth";
 

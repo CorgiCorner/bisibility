@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { ReactNode } from "react";
 
 type OnboardingStepSkipBaseProps = {
@@ -10,7 +10,7 @@ type OnboardingStepSkipBaseProps = {
 };
 
 type OnboardingStepSkipProps = OnboardingStepSkipBaseProps &
-  ({ href: string; onClick?: never } | { href?: never; onClick: () => void });
+  ({ href: string; onClick?: () => void } | { href?: never; onClick: () => void });
 
 export function OnboardingStepSkip({
   ariaLabel,
@@ -23,7 +23,7 @@ export function OnboardingStepSkip({
     <Button
       aria-label={ariaLabel}
       className={className}
-      {...(onClick ? { onClick, type: "button" as const } : { href: href ?? "" })}
+      {...(href ? { href, onClick } : { onClick, type: "button" as const })}
       size="lg"
       variant="ghost"
     >

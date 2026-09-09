@@ -1,9 +1,9 @@
 "use client";
 
-import { Calendar } from "@/components/ui";
+import { Calendar } from "@/components/ui/Calendar";
+import { Popup as Popover } from "@/components/ui/Popup";
 import { zonedDateInputValue } from "@/lib/checks/date-boundary";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Popover from "@mui/material/Popover";
 
 type AsOfDatePopoverProps = {
   anchorEl: HTMLElement | null;
@@ -32,24 +32,22 @@ export function AsOfDatePopover({
   return (
     <Popover
       anchorEl={anchorEl}
-      anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      align="end"
+      side="bottom"
       onClose={onClose}
       open={Boolean(anchorEl)}
-      slotProps={{
-        paper: {
-          "aria-label": "As of date",
-          role: "dialog",
-          sx: {
-            backgroundColor: "var(--bg-elev)",
-            border: "1px solid var(--border)",
-            borderRadius: UI_RADIUS_ROLES.card,
-            boxShadow: "none",
-            marginTop: "6px",
-            overflow: "hidden",
-          },
+      contentProps={{
+        "aria-label": "As of date",
+        role: "dialog",
+        style: {
+          backgroundColor: "var(--bg-elev)",
+          border: "1px solid var(--border)",
+          borderRadius: UI_RADIUS_ROLES.card,
+          boxShadow: "none",
+          marginTop: "6px",
+          overflow: "hidden",
         },
       }}
-      transformOrigin={{ horizontal: "right", vertical: "top" }}
     >
       <div className="w-[292px] bg-bg-elev p-3.5 text-fg">
         <Calendar

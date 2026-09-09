@@ -15,8 +15,8 @@ import type {
   SerpProvider,
   SerpRankResult,
 } from "@/lib/providers/types";
+import { DEFAULT_SERP_DEPTH, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
-import { DEFAULT_SERP_DEPTH, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/markets";
 import { rankCheckCostCents } from "./cost";
 import { estimatedRankCheckCostCents } from "./default-cost";
 import { CURRENT_RANK_NORMALIZATION_VERSION } from "./normalization-version";
@@ -30,10 +30,7 @@ export type {
   RankCheckFailureTarget,
   RankCheckPersistTarget,
 } from "./runner-persistence";
-export {
-  persistFailedRankCheck,
-  persistRankCheck,
-} from "./runner-persistence";
+export { persistFailedRankCheck, persistRankCheck } from "./runner-persistence";
 
 import { computeNextCheckAt, type RankCheckScheduleInput } from "./schedule";
 
@@ -195,6 +192,7 @@ export async function runCheck(input: RunCheckInput): Promise<RankCheckRunResult
               input.connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
             ),
       normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
+      observation: rank.observation ?? null,
       raw: rankCheckRaw(rank),
     },
     scheduleUpdate: {

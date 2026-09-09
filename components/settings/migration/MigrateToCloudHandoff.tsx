@@ -1,17 +1,16 @@
 "use client";
 
-import { Button, CopyButton } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { CopyButton } from "@/components/ui/CopyButton";
 import { unwrapActionFailureResult } from "@/lib/actions/action-result";
 import { createCloudMigrationHandoff } from "@/lib/actions/cloud";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import {
-  CaretRightIcon as CaretRight,
-  CheckCircleIcon as CheckCircle,
-  CloudArrowUpIcon as CloudArrowUp,
-  CloudCheckIcon as CloudCheck,
-  LinkIcon,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { CloudArrowUpIcon as CloudArrowUp } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
+import { CloudCheckIcon as CloudCheck } from "@phosphor-icons/react/dist/csr/CloudCheck";
+import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useState } from "react";
 import { ImportCompletionSummary } from "./MigrateToCloudImportCompletion";
 import type {
@@ -84,7 +83,7 @@ export function HandoffPanel({
           disabled={busy}
           onClick={handleGenerate}
           startIcon={<LinkIcon aria-hidden size={14} weight="regular" />}
-          sx={{ flex: "none" }}
+          style={{ flex: "none" }}
           type="button"
           variant="primary"
         >
@@ -227,7 +226,7 @@ export function DoneStep({
               <Button
                 disabled={busy || holdPending}
                 onClick={onKeepReadOnly}
-                sx={{ color: "var(--fg-muted)", minHeight: 40 }}
+                style={{ "--control-color": "var(--fg-muted)", minHeight: 40 }}
                 type="button"
                 variant="secondary"
               >
@@ -236,7 +235,7 @@ export function DoneStep({
               <Button
                 disabled={busy || holdPending}
                 onClick={onMarkMigrated}
-                sx={{ minHeight: 40 }}
+                style={{ minHeight: 40 }}
                 type="button"
                 variant="primary"
               >

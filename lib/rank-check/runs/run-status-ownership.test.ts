@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
-import ts from "typescript";
+import ts from "@typescript/typescript6";
 import { describe, expect, it } from "vitest";
 import { RUN_STATUSES, TERMINAL_RUN_STATUSES } from "./contract";
 

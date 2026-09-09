@@ -83,6 +83,7 @@ Detailed response:
   "serp": {
     "default_depth": 100,
     "default_device": "desktop",
+    "default_location_key": "US",
     "default_market": "United States",
     "depths": [10, 20, 50, 100],
     "devices": ["desktop", "mobile"],
@@ -92,6 +93,7 @@ Detailed response:
         "gl": "us",
         "language_code": "en",
         "language_label": "English",
+        "location_key": "US",
         "name": "United States"
       }
     ]
@@ -249,9 +251,25 @@ Returns provider pricing inputs used by the public rank-tracking cost estimator.
 GET /api/v1/cost-estimate
 ```
 
-Returns an anonymous cost estimate for a provider, keyword count, location count,
-device count, schedule, and organic result depth. Pass `depth=10`, `20`, `50`, or
-`100`; omitted depth defaults to `100`.
+Returns the shared anonymous usage and cost estimate used by onboarding and the
+rank-tracking calculator. It accepts keyword count, market count (`locations` for
+API compatibility), device count, schedule, provider, and organic result depth.
+Pass `depth=10`, `20`, `50`, or `100`; omitted depth defaults to `100`.
+
+`checks_per_run` counts logical rank checks. `result_pages_per_run` includes depth,
+and `monthly_billing_units` estimates result pages for the full month. One keyword
+in one market on one device, checked daily at Top 20, returns 1 check, 2 pages per
+run, and 60 pages per month.
+
+`frequency` accepts `daily`, `weekly`, `monthly`, `manual`, `paused`, or
+`custom_cron`. Manual and paused schedules return zero scheduled runs and monthly
+usage. For custom schedules, send `cron_expression`; a missing or invalid cron
+returns `null` for `runs_per_month` and monthly usage/cost fields. Per-run usage
+remains available. Estimates assume full depth; actual usage can be lower.
+
+```http
+GET /api/v1/cost-estimate?keywords=1&locations=1&devices=1&frequency=daily&depth=20&provider=dataforseo&option=live
+```
 
 ## llms.txt
 

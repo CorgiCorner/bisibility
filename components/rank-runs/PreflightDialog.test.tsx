@@ -1,4 +1,5 @@
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -35,7 +36,7 @@ const preview: RankCheckRunPreview = {
 function props(overrides: Partial<PreflightDialogProps> = {}): PreflightDialogProps {
   return {
     budgetHref: "/app/prj_story/settings#provider-usage",
-    duplicateRunHref: "/app/prj_story/rank-tracker/runs/rcr_story",
+    duplicateRunHref: projectRunsPath("prj_story"),
     initialDepth: 20,
     initialPreview: preview,
     initialProviderId: "provider-dataforseo",

@@ -1,11 +1,9 @@
 "use client";
 
 import { NewRuleDrawer } from "@/components/alerts/NewRuleDrawer";
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
 import type {
   AlertActionHandlers,
   AlertTargetOptions,

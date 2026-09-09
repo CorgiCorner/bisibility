@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui";
-import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useTransition } from "react";
 

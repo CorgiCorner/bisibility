@@ -8,7 +8,7 @@ import {
   providerAllocationReservation,
   reserveProviderAllocation,
 } from "@/lib/rank-check/runs/launch-preflight";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 
 export async function wrapLegacyRankCheck(
   tx: Prisma.TransactionClient,

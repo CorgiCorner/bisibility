@@ -1,4 +1,4 @@
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -256,7 +256,7 @@ describe("SearchInsightsOauthReturn", () => {
     expect(manual).not.toHaveClass("underline", "text-fg-muted");
     const confirm = screen.getByRole("button", { name: "Use this property" });
     expect(confirm).toBeEnabled();
-    expect(confirm).toHaveClass("MuiButton-outlined");
+    expect(confirm).toHaveAttribute("data-variant", "secondary");
     expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
     const footer = screen.getByRole("button", { name: "Not now" }).parentElement;
     expect(footer).toHaveClass("justify-end", "border-t", "border-border", "px-4");

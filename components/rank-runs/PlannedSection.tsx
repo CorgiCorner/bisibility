@@ -1,5 +1,8 @@
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Button, runStatusChipPresentation, StatusChip, useBrowserTimeZone } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { StatusChip } from "@/components/ui/StatusChip";
+import { runStatusChipPresentation } from "@/components/ui/status-chip-mapping";
+import { useBrowserTimeZone } from "@/components/ui/ZonedTime";
 import { formatDateTime } from "@/lib/dates/format";
 import { pluralize } from "@/lib/format/pluralize";
 import { formatPlannedDay, plannedRunDayKey } from "./runs-format";

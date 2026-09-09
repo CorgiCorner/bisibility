@@ -2,7 +2,7 @@ import { cloudImportBodySchema } from "@/lib/api/instance-import/schemas";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { describe, expect, it, vi } from "vitest";
 import { historyImportResultCounts } from "./history-counts";
-import { importHistory, keywordKey } from "./importers";
+import { importHistory, keywordKey, loadKeywordMaps, loadKeywordMapsForProject } from "./importers";
 
 const keywordId = "kw_abcdefghijklmnopqrstuvwx";
 
@@ -80,5 +80,93 @@ describe("imported history depth counts", () => {
       history_skipped: 1,
       history_unknown_depth: 1,
     });
+  });
+
+  it("keeps same-label language locations distinct and maps v6 country names to their canonical row", async () => {
+    const parsed = cloudImportBodySchema.parse({
+      alert_rules: [],
+      competitors: [],
+      keywords: [
+        {
+          device: "desktop",
+          id: keywordId,
+          keyword: "rank tracker",
+          location: "Madrid, Community of Madrid, Spain",
+          location_key: "ES/Community of Madrid/Madrid@en",
+          tags: [],
+        },
+        {
+          device: "desktop",
+          id: "kw_bbcdefghijklmnopqrstuvwx",
+          keyword: "rank tracker",
+          location: "Madrid, Community of Madrid, Spain",
+          location_key: "ES/Community of Madrid/Madrid@es",
+          tags: [],
+        },
+        {
+          device: "desktop",
+          id: "kw_ccdefghijklmnopqrstuvwxy",
+          keyword: "country row",
+          location: "United States",
+          tags: [],
+        },
+      ],
+      notification_preferences: [],
+      project_id: "prj_bbcdefghijklmnopqrstuvwx",
+      saved_views: [],
+      version: 6,
+    });
+    const importClient = {
+      keyword: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            device: "desktop",
+            id: "keyword_en",
+            locationRef: { canonicalKey: "ES/Community of Madrid/Madrid@en" },
+            text: "rank tracker",
+          },
+          {
+            device: "desktop",
+            id: "keyword_es",
+            locationRef: { canonicalKey: "ES/Community of Madrid/Madrid" },
+            text: "rank tracker",
+          },
+          {
+            device: "desktop",
+            id: "keyword_us",
+            locationRef: { canonicalKey: "US" },
+            text: "country row",
+          },
+        ]),
+      },
+    } as unknown as Prisma.TransactionClient;
+    const maps = await loadKeywordMaps("project_1", parsed.keywords, importClient);
+    const [english, spanish, unitedStates] = parsed.keywords;
+    if (!english || !spanish || !unitedStates) throw new Error("Expected three imported keywords.");
+
+    expect(maps.byKey.get(keywordKey(english))).toBe("keyword_en");
+    expect(maps.byKey.get(keywordKey(spanish))).toBe("keyword_es");
+    expect(maps.byKey.get(keywordKey(unitedStates))).toBe("keyword_us");
+
+    const sourceMaps = await loadKeywordMapsForProject(importClient, "project_1", {
+      [keywordId]: {
+        device: "desktop",
+        location: "Madrid, Community of Madrid, Spain",
+        location_key: "ES/Community of Madrid/Madrid@en",
+        text: "rank tracker",
+      },
+      kw_bbcdefghijklmnopqrstuvwx: {
+        device: "desktop",
+        location: "Madrid, Community of Madrid, Spain",
+        location_key: "ES/Community of Madrid/Madrid",
+        text: "rank tracker",
+      },
+    });
+    expect(sourceMaps.bySource).toEqual(
+      new Map([
+        [keywordId, "keyword_en"],
+        ["kw_bbcdefghijklmnopqrstuvwx", "keyword_es"],
+      ]),
+    );
   });
 });

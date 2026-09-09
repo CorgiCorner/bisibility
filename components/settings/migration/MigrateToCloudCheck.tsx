@@ -1,19 +1,18 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Button, InfoTooltip } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { unwrapActionFailureResult } from "@/lib/actions/action-result";
 import { getCloudMigrationCompatibility, preflightMigrationTarget } from "@/lib/actions/cloud";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import {
-  ArrowUpRightIcon as ArrowUpRight,
-  CaretDownIcon as CaretDown,
-  CheckCircleIcon as CheckCircle,
-  CircleIcon as Circle,
-  InfoIcon as Info,
-  LockSimpleIcon as LockSimple,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { CircleIcon as Circle } from "@phosphor-icons/react/dist/csr/Circle";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useState } from "react";
 import {
   compatibilityBlockers,

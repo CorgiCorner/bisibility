@@ -1,15 +1,12 @@
 "use client";
 
-import {
-  menuSelectPaperSx,
-  menuTransitionDuration,
-  toolbarControlClassName,
-  useMenuExitLifecycle,
-} from "@/components/ui";
+import { Menu } from "@/components/ui/Menu";
+import { menuSelectPaperStyle } from "@/components/ui/MenuSelect";
+import { useMenuExitLifecycle } from "@/components/ui/menu-exit-lifecycle";
+import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import type { StoredResultsIndexEntry } from "@/lib/checks/contract";
 import { cn } from "@/lib/ui/cn";
-import Menu from "@mui/material/Menu";
-import { CaretDownIcon as CaretDown } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { RetrievedResultsPickerMenu } from "./RetrievedResultsPickerMenu";
@@ -84,25 +81,22 @@ export function RetrievedResultsPicker({
       </button>
       <Menu
         anchorEl={anchorEl}
-        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+        align="start"
+        side="bottom"
         onClose={closeMenu}
         open={open}
-        slotProps={{
-          list: { "aria-label": ariaLabel, dense: true, sx: { padding: 0 } },
-          paper: {
-            sx: {
-              ...menuSelectPaperSx,
-              maxHeight: "min(714px, calc(100dvh - 32px))",
-              maxWidth: "calc(100vw - 32px)",
-              minWidth: "min(560px, calc(100vw - 32px))",
-              overflowY: "auto",
-              width: "min(560px, calc(100vw - 32px))",
-            },
+        listProps={{ "aria-label": ariaLabel, style: { padding: 0 } }}
+        contentProps={{
+          style: {
+            ...menuSelectPaperStyle,
+            maxHeight: "min(714px, calc(100dvh - 32px))",
+            maxWidth: "calc(100vw - 32px)",
+            minWidth: "min(560px, calc(100vw - 32px))",
+            overflowY: "auto",
+            width: "min(560px, calc(100vw - 32px))",
           },
-          transition: { onExited: handleExited },
         }}
-        transformOrigin={{ horizontal: "left", vertical: "top" }}
-        transitionDuration={menuTransitionDuration}
+        onExited={handleExited}
       >
         <RetrievedResultsPickerMenu
           formatDate={formatDate}

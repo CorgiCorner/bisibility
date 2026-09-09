@@ -16,6 +16,8 @@ import { pausedSchedule } from "./AddKeywordDrawerLocation";
 
 type DrawerInputArgs = {
   activeTab: AddKeywordTab;
+  /** The project schedule the reader assigned to these rows, if any. */
+  checkScheduleId?: string | null;
   csvRows?: DrawerCsvKeywordRow[];
   csvText: string;
   devices: AddKeywordsMatrixInput["devices"];
@@ -27,15 +29,24 @@ type DrawerInputArgs = {
 
 type DrawerInputResult = { input: AddKeywordsInput | AddKeywordsMatrixInput } | { warning: string };
 
-function scheduleFor(values: AddKeywordDrawerForm) {
+function scheduleFor(values: AddKeywordDrawerForm, checkScheduleId?: string | null) {
+  if (checkScheduleId) return undefined;
+  if (checkScheduleId === null)
+    return {
+      ...pausedSchedule,
+      frequency: "manual" as const,
+      serpDepth: values.schedule?.serpDepth,
+      timezone: values.schedule?.timezone ?? "UTC",
+    };
   return values.isPaused ? pausedSchedule : values.schedule;
 }
 
-function manualInput(
-  values: AddKeywordDrawerForm,
-  devices: AddKeywordsMatrixInput["devices"],
-  locationKeys: string[],
-): DrawerInputResult {
+function manualInput({
+  checkScheduleId,
+  devices,
+  locationKeys,
+  values,
+}: DrawerInputArgs): DrawerInputResult {
   const parsed = parseKeywordTargetLines(values.keywords);
   const lineError = keywordTargetLineError(parsed);
   if (lineError) {
@@ -51,12 +62,13 @@ function manualInput(
 
   return {
     input: {
+      ...(checkScheduleId ? { checkScheduleId } : {}),
       intent: values.intent,
       keywords: entries.map((entry) => entry.keyword),
       devices,
       locations: locationKeys.map((locationKey) => ({ locationKey })),
       projectId: values.projectId,
-      schedule: scheduleFor(values),
+      schedule: scheduleFor(values, checkScheduleId),
       tags: values.tags ?? [],
       targetUrl: values.targetUrl,
       topic: values.topic,
@@ -65,6 +77,7 @@ function manualInput(
 }
 
 function csvInput({
+  checkScheduleId,
   csvRows,
   csvText,
   existingKeywords,
@@ -79,11 +92,16 @@ function csvInput({
   if (newRows.length === 0) {
     return { warning: "All parsed keywords are already tracked for their location and device." };
   }
-  return { input: { projectId: values.projectId, rows: newRows, schedule: scheduleFor(values) } };
+  return {
+    input: {
+      ...(checkScheduleId ? { checkScheduleId } : {}),
+      projectId: values.projectId,
+      rows: newRows,
+      schedule: scheduleFor(values, checkScheduleId),
+    },
+  };
 }
 
 export function addKeywordDrawerInput(args: DrawerInputArgs): DrawerInputResult {
-  return args.activeTab === "csv"
-    ? csvInput(args)
-    : manualInput(args.values, args.devices, args.locationKeys);
+  return args.activeTab === "csv" ? csvInput(args) : manualInput(args);
 }

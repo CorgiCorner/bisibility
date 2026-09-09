@@ -13,10 +13,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("@/components/ui", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/components/ui")>();
-  return { ...actual, useToast: () => ({ showToast: mocks.showToast }) };
-});
+vi.mock("@/components/ui/toast-context", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/ui/toast-context")>()),
+  useToast: () => ({ showToast: mocks.showToast }),
+}));
 
 const observabilityFacts = {
   consecutiveDays: 7,
@@ -76,10 +76,8 @@ describe("SearchDataSyncCard", () => {
       />,
     );
 
-    expect(screen.getByText("Needs reauth")).toBeInTheDocument();
-    expect(
-      screen.getByText("Connect Search Console to import finalized search data."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Reconnect required")).toBeInTheDocument();
+    expect(screen.getByText("Reconnect Search Console to continue importing.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Connect Search Console" })).toHaveAttribute(
       "href",
       expect.stringContaining("provider=gsc"),
@@ -121,12 +119,12 @@ describe("SearchDataSyncCard", () => {
       />,
     );
 
-    expect(screen.getByText("Paused by you")).toBeInTheDocument();
+    expect(screen.getByText("Paused")).toBeInTheDocument();
     expect(
-      screen.getByText("New finalized days will not be imported until you resume sync."),
+      screen.getByText("Resume when you are ready to continue importing."),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Resume Search Console sync" })).toHaveTextContent(
-      "Resume sync",
+      "Resume",
     );
   });
   it("shows settings, live metrics, and shared quota rationale", () => {
@@ -185,11 +183,9 @@ describe("SearchDataSyncCard", () => {
         updateSettings={vi.fn()}
       />,
     );
-    expect(screen.getByText("Paused by provider limits")).toBeInTheDocument();
+    expect(screen.getByText("Waiting for Google")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "The provider limit resets automatically, then the import resumes automatically.",
-      ),
+      screen.getByText("Google will resume the import automatically when its limit allows."),
     ).toBeInTheDocument();
     expect(screen.queryByText(/quota Aug 12/i)).not.toBeInTheDocument();
   });

@@ -1,5 +1,5 @@
 import { onboardingDefaults } from "@/components/onboarding/onboarding-fixtures";
-import { DEFAULT_SERP_DEVICE } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEVICE } from "@/lib/serp/constants";
 import type { KeywordSetupForm } from "./keyword-setup-model";
 import type { AddKeywordsForm } from "./step-add-keywords-model";
 import type { TrackingDefaultsForm } from "./step-schedule-model";

@@ -17,15 +17,14 @@ import {
 import {
   DEFAULT_SERP_DEPTH,
   DEFAULT_SERP_DEVICE,
-  DEFAULT_SERP_MARKET,
   SERP_ENGINE,
   serpDepthValues,
   serpDeviceOptions,
-  serpMarkets,
-} from "@/lib/serp/markets";
+} from "@/lib/serp/constants";
 import { getApiVersionCapabilities } from "./api-versions";
 import { getCapabilities, getLlmsText } from "./capabilities";
 import type { ApiContext } from "./context";
+import { DEFAULT_LOCATION_KEY, legacySerpMarketCatalog } from "./legacy-market-input";
 import { getOpenApiDocument } from "./openapi";
 import { jsonResponse, textResponse } from "./responses";
 
@@ -51,20 +50,16 @@ function providerRateLimits() {
   return limits;
 }
 
+// default_market and markets are the legacy name catalog; location_key is the reference.
 function serpCapabilities() {
   return {
+    ...legacySerpMarketCatalog(),
     default_depth: DEFAULT_SERP_DEPTH,
     default_device: DEFAULT_SERP_DEVICE,
-    default_market: DEFAULT_SERP_MARKET,
+    default_location_key: DEFAULT_LOCATION_KEY,
     depths: serpDepthValues,
     devices: serpDeviceOptions,
     engine: SERP_ENGINE,
-    markets: serpMarkets.map((market) => ({
-      gl: market.google.gl,
-      language_code: market.language.code,
-      language_label: market.language.label,
-      name: market.name,
-    })),
   };
 }
 

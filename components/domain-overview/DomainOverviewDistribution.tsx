@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
 import type { DomainRankMetrics } from "@/lib/providers/types";
 import { positionBuckets } from "./domain-overview-metrics";
 

@@ -574,7 +574,7 @@ describe("ConnectDrawerOauth", () => {
     expect(screen.getByText("Access granted:")).toBeInTheDocument();
     expect(screen.queryByText("Connection")).not.toBeInTheDocument();
     expect(screen.queryByText("Settings changed")).not.toBeInTheDocument();
-    expect(container).not.toHaveTextContent(
+    expect((container.textContent ?? "").replace(/\s+/g, " ").trim()).not.toMatch(
       /Recent activity|Last sync|Never|Connection state|Enabled/,
     );
     expect(screen.getByRole("img", { name: "Google logo" })).toBeInTheDocument();
@@ -619,15 +619,17 @@ describe("ConnectDrawerOauth", () => {
     expect(trigger).toHaveTextContent("AlphaHero");
     expect(trigger).toHaveTextContent("GA4");
     expect(trigger).not.toHaveTextContent("419395686");
-    expect(screen.getByText("Property ID 419395686")).toBeInTheDocument();
+    expect(screen.getByTitle("419395686")).toHaveTextContent("419395686");
+    expect(screen.getByRole("button", { name: "Copy property ID" })).toBeVisible();
     expect(screen.queryByText("Google Analytics property")).not.toBeInTheDocument();
 
     const rescue = screen.getByRole("button", { name: "I don't see my property" });
     const primary = screen.getByRole("button", { name: "Use selected property" });
     const cancel = screen.getByRole("button", { name: "Cancel" });
     const footer = primary.parentElement;
-    expect(rescue).toHaveClass("MuiButton-text");
-    expect(rescue).not.toHaveClass("MuiButton-outlined", "w-full");
+    expect(rescue).toHaveAttribute("data-variant", "ghost");
+    expect(rescue).not.toHaveAttribute("data-variant", "secondary");
+    expect(rescue).not.toHaveClass("w-full");
     expect(
       rescue.compareDocumentPosition(footer as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
@@ -666,7 +668,7 @@ describe("ConnectDrawerOauth", () => {
     );
 
     expect(screen.queryByRole("button", { name: "Google Analytics property" })).toBeNull();
-    expect(screen.queryByText("Property ID 419395686")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Copy property ID" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Google Analytics 4 property id")).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Enter a numeric Google Analytics 4 Property ID.",

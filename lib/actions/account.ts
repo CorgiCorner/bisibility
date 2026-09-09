@@ -2,10 +2,10 @@
 
 import { updateProfileNameRecord } from "@/lib/account/profile-service";
 import { writeAudit } from "@/lib/auth/audit";
-import { requireSession } from "@/lib/auth/session";
 import { revokeOtherSessions } from "@/lib/auth/session-revocation";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
+import { requireMutableAccountSession as requireSession } from "@/lib/demo/mutable-account-session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";

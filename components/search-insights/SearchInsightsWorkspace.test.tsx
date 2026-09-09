@@ -1,6 +1,8 @@
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
+import { validateEventProps } from "@/lib/analytics/event-schemas";
+import { WINDOW_PRESETS } from "@/lib/search-insights/constants";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchInsightsWorkspace } from "./SearchInsightsWorkspace";
@@ -70,10 +72,13 @@ const context = {
   yoy: { monthsImported: 9, required: 13 },
 };
 
-function renderWorkspace(overrides: Partial<SearchInsightsWorkspaceProps> = {}) {
+function renderWorkspace(
+  overrides: Partial<SearchInsightsWorkspaceProps> = {},
+  searchParams = { period: "28" } as Record<string, string>,
+) {
   setNavigationState({
     pathname: "/app/prj_1/search-console",
-    searchParams: { period: "28" },
+    searchParams,
   });
   return render(
     <ToastProvider>
@@ -99,7 +104,59 @@ function renderWorkspace(overrides: Partial<SearchInsightsWorkspaceProps> = {}) 
 describe("SearchInsightsWorkspace", () => {
   beforeEach(() => {
     mocks.track.mockReset();
+    mocks.track.mockImplementation((event, props) => validateEventProps(event, props));
   });
+
+  it.each(WINDOW_PRESETS.filter(({ id }) => id !== "28"))(
+    "validates analytics and shows skeletons when changing to $id days",
+    async ({ id, label }) => {
+      const user = userEvent.setup();
+      let completeNavigation = () => {};
+      const navigation = new Promise<void>((resolve) => {
+        completeNavigation = resolve;
+      });
+      routerMock.replace.mockReturnValue(navigation);
+      renderWorkspace(
+        {
+          children: <p>Current metrics and tables</p>,
+          trustStrip: <p>Current coverage</p>,
+        },
+        {
+          period: "28",
+          property: "sc-domain:example.com",
+          comparison: "previous_period",
+        },
+      );
+
+      await user.click(screen.getByRole("button", { name: /^Comparison window:/ }));
+      await user.click(await screen.findByRole("option", { name: (name) => name.includes(label) }));
+
+      expect(
+        await screen.findByRole("region", { name: "Search Console data loading" }),
+      ).toHaveAttribute("aria-busy", "true");
+      expect(screen.queryByText("Current metrics and tables")).not.toBeInTheDocument();
+      expect(screen.queryByText("Current coverage")).not.toBeInTheDocument();
+      const trigger = screen.getByRole("button", { name: /^Comparison window:/ });
+      expect(trigger).toBeDisabled();
+      expect(trigger.querySelector(".animate-spin")).toBeNull();
+      expect(screen.getByRole("button", { name: "Search Console property" })).toBeVisible();
+      expect(routerMock.replace).toHaveBeenCalledWith(
+        `/app/prj_1/search-console?period=${id}&property=sc-domain%3Aexample.com&comparison=previous_period`,
+        { scroll: false },
+      );
+      expect(mocks.track).toHaveBeenCalledWith("search_insights_period_changed", { window: id });
+
+      await act(async () => completeNavigation());
+      await waitFor(() =>
+        expect(
+          screen.queryByRole("region", { name: "Search Console data loading" }),
+        ).not.toBeInTheDocument(),
+      );
+      expect(screen.getByText("Current metrics and tables")).toBeVisible();
+      expect(screen.getByText("Current coverage")).toBeVisible();
+      expect(trigger).toBeEnabled();
+    },
+  );
 
   it("reports one module view for its workspace mount", () => {
     renderWorkspace();
@@ -262,7 +319,7 @@ describe("SearchInsightsWorkspace", () => {
     expect(message).toBeInTheDocument();
     expect(screen.queryByText("2026-08-26")).toBeNull();
     expect(action).toHaveClass("shrink-0");
-    expect(action).toHaveClass("MuiButton-outlined");
+    expect(action).toHaveAttribute("data-variant", "secondary");
     expect(action.parentElement).toHaveClass("flex-1", "justify-between");
     expect(action.parentElement?.parentElement).toHaveClass("flex-1");
     expect(message).toHaveClass("min-w-0", "flex-1");

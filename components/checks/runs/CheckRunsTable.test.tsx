@@ -1,9 +1,10 @@
 import { parseCheckAttempts } from "@/lib/checks/attempts";
 import type { CheckRunRow, CheckRunsView } from "@/lib/checks/contract";
 import { stubIntersectionObserver, stubResizeObserver } from "@/tests/observers";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CheckRunsTable } from "./CheckRunsTable";
+import { checkRunsFixtureView } from "./check-runs-fixtures";
 
 const now = new Date("2026-07-24T14:45:00.000Z");
 
@@ -106,7 +107,7 @@ describe("CheckRunsTable", () => {
     render(<CheckRunsTable {...tableProps(viewFor(rows))} />);
 
     const table = screen.getByRole("table", { name: "Check runs" });
-    expect(table).toHaveClass("min-w-[900px]");
+    expect(table).toHaveAttribute("data-layout", "auto");
     const headerCells = within(table).getAllByRole("columnheader");
     expect(headerCells.map((cell) => cell.textContent)).toEqual([
       "Status",
@@ -119,7 +120,6 @@ describe("CheckRunsTable", () => {
       "Depth",
       "Cost",
       "When",
-      "",
     ]);
 
     expect(screen.getByText("San Francisco, CA, US")).toBeInTheDocument();
@@ -203,27 +203,48 @@ describe("CheckRunsTable", () => {
     expect(keywordLinks).toHaveLength(2);
   });
 
-  it("expands a completed run that has stored results", () => {
+  it("renders expanded details as depth-one section rows and toggles their group", () => {
     stubResizeObserver();
     stubIntersectionObserver();
+    const onToggleRun = vi.fn();
+    const run = marketRow({
+      id: "run_stored_sections",
+      storedResults: {
+        tier: "full",
+        stoppedAtResult: true,
+        requestedDepth: 100,
+        retrievedPositions: 22,
+        fullDetailUntil: "2026-10-31T00:00:00.000Z",
+      },
+    });
 
-    const rows = [
-      marketRow({
-        id: "run_stored",
-        keywordPublicId: "kw_stored",
-        storedResults: {
-          tier: "full",
-          stoppedAtResult: true,
-          requestedDepth: 100,
-          retrievedPositions: 22,
-          fullDetailUntil: "2026-10-31T00:00:00.000Z",
-        },
-      }),
-    ];
+    render(
+      <CheckRunsTable
+        {...tableProps(viewFor([run]))}
+        expandedRunIds={new Set([run.id])}
+        onToggleRun={onToggleRun}
+      />,
+    );
 
-    render(<CheckRunsTable {...tableProps(viewFor(rows))} />);
+    const table = screen.getByRole("table", { name: "Check runs" });
+    const statusResize = screen.getByRole("separator", { name: "Resize Status column" });
+    expect(table.querySelectorAll('[data-depth="1"]')).not.toHaveLength(0);
+    expect(screen.getByText("Completed")).toBeInTheDocument();
+    expect(table.style.getPropertyValue("--dt-col-status")).toBe("140px");
+    expect(statusResize).toHaveAttribute("aria-valuemin", "140");
+    expect(screen.getByText("Retrieved results")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Collapse ai meeting notes run/ }));
+    expect(onToggleRun).toHaveBeenCalledWith(run.id);
+  });
 
-    expect(screen.getByRole("button", { name: /Expand ai meeting notes run/ })).toBeInTheDocument();
+  it("keeps the manual load-more control outside the table", () => {
+    stubResizeObserver();
+    stubIntersectionObserver();
+    const onLoadMore = vi.fn();
+    render(<CheckRunsTable {...tableProps(checkRunsFixtureView)} onLoadMore={onLoadMore} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Load 50 more" }));
+    expect(onLoadMore).toHaveBeenCalledOnce();
   });
 
   it("does not expand a completed run whose storedResults is null", () => {
@@ -265,13 +286,14 @@ describe("CheckRunsTable", () => {
     const compactResult = within(within(table).getAllByRole("row")[1]).getByTitle(
       "All providers failed",
     );
-    const details = screen.getByText("Provider chain").parentElement?.parentElement;
     expect(compactResult).toHaveTextContent("All providers failed");
-    expect(details).toHaveTextContent("All providers failed");
-    expect(details).not.toHaveTextContent(rawError);
-    expect(details?.querySelector(".text-green-text")).toBeNull();
-    expect(details?.querySelector(".text-red-text")).not.toBeNull();
-    expect(details).not.toHaveTextContent("Ok.");
-    expect(details).not.toHaveTextContent("Completed");
+    expect(screen.getByText("Provider chain").parentElement).toHaveTextContent(
+      "All providers failed",
+    );
+    expect(screen.queryByText(rawError)).not.toBeInTheDocument();
+    expect(table.querySelector(".text-green-text")).toBeNull();
+    expect(table.querySelector(".text-red-text")).not.toBeNull();
+    expect(screen.queryByText("Ok.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Completed")).not.toBeInTheDocument();
   });
 });

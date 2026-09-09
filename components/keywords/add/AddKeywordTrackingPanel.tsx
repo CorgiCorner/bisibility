@@ -2,7 +2,7 @@
 
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type { AddKeywordDrawerForm } from "@/lib/keywords/add-keyword-drawer-shared";
-import type { SerpDevice } from "@/lib/serp/markets";
+import type { SerpDevice } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import {

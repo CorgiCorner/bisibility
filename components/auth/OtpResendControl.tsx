@@ -1,14 +1,14 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { useHumanVerification } from "@/lib/verification/human-verification-client";
-import Button from "@mui/material/Button";
 import { useRef, useState } from "react";
 
 const resendReferenceLabel = "Code sent Resend again in 1:00";
-const linkButtonSx = {
-  backgroundColor: "transparent",
-  border: "none",
-  color: "var(--fg)",
+const linkButtonStyle = {
+  "--control-background-color": "transparent",
+  "--control-border": "none",
+  "--control-color": "var(--fg)",
   fontSize: "13px",
   fontWeight: 600,
   minWidth: 0,
@@ -62,34 +62,26 @@ export function OtpResendControl({
       <div className="flex items-center justify-center gap-1.5 text-[13px] text-fg-muted">
         {resentCode ? "Code sent" : "Did not get it?"}
         <Button
-          color="inherit"
           disabled={disabled}
           onClick={() => void resend()}
-          style={{ backgroundColor: "transparent", border: "none" }}
-          sx={{
-            ...linkButtonSx,
+          style={{
+            ...linkButtonStyle,
             fontVariantNumeric: "tabular-nums",
             minHeight: "36px",
-            textDecoration: "none",
-            "&:hover": {
-              backgroundColor: "transparent",
-              textDecoration: "underline",
-              textDecorationColor: "var(--fg)",
-              textUnderlineOffset: "3px",
-            },
-            "&.Mui-focusVisible": {
-              outline: "2px solid var(--border-control)",
-              outlineOffset: "2px",
-              textDecoration: "underline",
-              textUnderlineOffset: "3px",
-            },
-            "&.Mui-disabled": {
-              backgroundColor: "transparent",
-              border: "none",
-              color: "var(--fg-muted)",
-              opacity: 1,
-              textDecoration: "none",
-            },
+            "--control-text-decoration": "none",
+            "--control-hover-background-color": "transparent",
+            "--control-hover-text-decoration": "underline",
+            "--control-hover-text-decoration-color": "var(--fg)",
+            "--control-hover-text-underline-offset": "3px",
+            "--control-focus-outline": "2px solid var(--border-control)",
+            "--control-focus-outline-offset": "2px",
+            "--control-focus-text-decoration": "underline",
+            "--control-focus-text-underline-offset": "3px",
+            "--control-disabled-background-color": "transparent",
+            "--control-disabled-border": "none",
+            "--control-disabled-color": "var(--fg-muted)",
+            "--control-disabled-opacity": 1,
+            "--control-disabled-text-decoration": "none",
           }}
           type="button"
         >

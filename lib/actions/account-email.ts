@@ -12,12 +12,12 @@ import {
 } from "@/lib/auth/account-email-change-schema";
 import { writeAudit } from "@/lib/auth/audit";
 import { auth } from "@/lib/auth/auth";
-import { requireSession } from "@/lib/auth/session";
 import { countOtherSessions, revokeOtherSessions } from "@/lib/auth/session-revocation";
 import { DATE_FORMAT_PREFERENCES, type DateFormatPreference } from "@/lib/dates/format";
 import { resolveDateFormat } from "@/lib/dates/resolve";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
+import { requireMutableAccountSession as requireSession } from "@/lib/demo/mutable-account-session";
 import { sendEmailChangedNotice } from "@/lib/email/email-changed-notice";
 import { appPath, appRootPath, asProjectRef } from "@/lib/routing/app-path";
 import { revalidatePath } from "next/cache";

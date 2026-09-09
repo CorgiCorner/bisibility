@@ -18,7 +18,7 @@ describe("OnboardingWizard timezone", () => {
     });
     fireEvent.click(skipProvider);
 
-    await screen.findByRole("heading", { name: "Add your first keywords" });
+    expect(await screen.findAllByRole("heading", { name: "Keywords" })).toHaveLength(2);
     const timezoneInput = screen.getByDisplayValue("Europe/Madrid") as HTMLInputElement;
     expect(timezoneInput).toHaveAttribute("type", "hidden");
     expect(timezoneInput).toHaveAttribute("name", "timezone");

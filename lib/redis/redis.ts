@@ -1,6 +1,6 @@
 import "@/lib/deployment/runtime-env.generated";
 
-import { createClient, type RedisClientOptions, type RedisClientType } from "redis";
+import type { RedisClientOptions, RedisClientType } from "redis";
 
 export type BisibilityRedisClient = RedisClientType;
 
@@ -80,26 +80,9 @@ function redisSocketOptions(url: string): RedisClientOptions["socket"] {
   };
 }
 
-function createRedisClient() {
+export async function getRedisClient() {
   const url = redisUrl();
   if (!url) {
-    return null;
-  }
-
-  const redis = createClient({
-    socket: redisSocketOptions(url),
-    url,
-  });
-  redis.on("error", () => {
-    // Keep node-redis from emitting unhandled error events; callers decide
-    // whether a Redis failure is fatal for their workflow.
-  });
-
-  return redis;
-}
-
-export async function getRedisClient() {
-  if (!redisConfigured()) {
     return null;
   }
   if (client?.isReady) {
@@ -109,19 +92,23 @@ export async function getRedisClient() {
     return connectPromise;
   }
 
-  const nextClient = createRedisClient();
-  if (!nextClient) {
-    return null;
-  }
-  client = nextClient;
-
+  const socket = redisSocketOptions(url);
+  // Share SDK loading as well as connection setup across concurrent callers.
   let pendingConnect: Promise<BisibilityRedisClient>;
-  pendingConnect = nextClient
-    .connect()
-    .then(() => nextClient)
-    .catch((error) => {
-      if (client === nextClient) client = null;
-      throw error;
+  pendingConnect = import("redis")
+    .then(async ({ createClient }) => {
+      const nextClient = createClient({ socket, url });
+      nextClient.on("error", () => {
+        // Callers decide whether a Redis failure is fatal for their workflow.
+      });
+      if (connectPromise === pendingConnect) client = nextClient;
+      try {
+        await nextClient.connect();
+        return nextClient;
+      } catch (error) {
+        if (client === nextClient) client = null;
+        throw error;
+      }
     })
     .finally(() => {
       if (connectPromise === pendingConnect) connectPromise = null;

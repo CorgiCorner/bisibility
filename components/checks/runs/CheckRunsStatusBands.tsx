@@ -2,17 +2,15 @@
 
 import { formatCap } from "@/components/checks/upcoming/upcoming-format";
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { CheckRunsView, UpcomingView } from "@/lib/checks/contract";
 import { zonedDateInputValue } from "@/lib/checks/date-boundary";
 import { type DateFormat, formatDateRange } from "@/lib/dates/format";
-import {
-  ArrowRightIcon as ArrowRight,
-  ClockCountdownIcon as Clock,
-  PauseCircleIcon as Pause,
-  ArrowClockwiseIcon as Retry,
-  WarningCircleIcon as Warning,
-} from "@phosphor-icons/react/dist/ssr";
+import { ArrowClockwiseIcon as Retry } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { ClockCountdownIcon as Clock } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
+import { PauseCircleIcon as Pause } from "@phosphor-icons/react/dist/ssr/PauseCircle";
+import { WarningCircleIcon as Warning } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import Link from "next/link";
 import type { ReactNode } from "react";
 

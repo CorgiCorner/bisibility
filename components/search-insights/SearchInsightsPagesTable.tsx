@@ -1,36 +1,24 @@
 "use client";
 
-import { SegmentedControl } from "@/components/ui";
-import { pageHref, type SearchInsightsPageRow } from "@/lib/search-insights/queries/top-rows-model";
-import { cn } from "@/lib/ui/cn";
-import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react";
+import { DataTable } from "@/components/ui/data-table/DataTable";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import type { SearchInsightsPageRow } from "@/lib/search-insights/queries/top-rows-model";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import {
-  CELL,
+  forwardSearchInsightsSort,
   type ModuleTableSort,
-  NUMERIC,
-  NUMERIC_SORTED,
-  ROW,
-  ROW_HEIGHT_CLASS,
-  SearchInsightsTableShell,
+  searchInsightsDataTableSort,
 } from "./SearchInsightsRowsTable";
 import {
-  ENGAGEMENT_RATE_TIP,
-  KEY_EVENTS_TIP,
-  NO_SESSIONS_MATCH_TITLE,
   PAGE_LENS_CONTROL_LABEL,
   PAGE_LENS_SEARCH_LABEL,
   PAGE_LENS_TRAFFIC_LABEL,
 } from "./search-insights-copy";
 import {
-  formatRowCount,
-  formatRowCtr,
-  formatRowPosition,
-  positionClassName,
-  tableRowKeys,
-} from "./search-insights-rows-model";
-import { moduleTableHeaders } from "./search-insights-table-columns";
+  type SearchInsightsPageDataTableRow,
+  searchInsightsPageColumns,
+} from "./search-insights-pages-columns";
 
 export const PAGE_LENS_QUERY_PARAM = "lens";
 
@@ -89,116 +77,48 @@ export function SearchInsightsPagesLens({
 }
 
 export type SearchInsightsPagesTableProps = {
+  keyEventsConfigured?: boolean | null;
   lens?: SearchInsightsPageLens;
   onOpen?: (row: SearchInsightsPageRow) => void;
   rows: readonly SearchInsightsPageRow[];
   scroll?: boolean;
-  keyEventsConfigured?: boolean | null;
   showSessions?: boolean;
   sort?: ModuleTableSort;
 };
 
 export function SearchInsightsPagesTable({
+  keyEventsConfigured = null,
   lens,
   onOpen,
   rows,
   scroll = false,
-  keyEventsConfigured = null,
   showSessions = false,
   sort,
 }: Readonly<SearchInsightsPagesTableProps>) {
   const activeLens = pageLensFromQuery(lens, showSessions, keyEventsConfigured);
   const showTraffic = activeLens === "traffic";
-  const variant = showTraffic
-    ? keyEventsConfigured === true
-      ? "pagesWithKeyEvents"
-      : "pagesWithSessions"
-    : "pages";
-  const figures = sort ? NUMERIC_SORTED : NUMERIC;
-  return (
-    <SearchInsightsTableShell
-      count={rows.length}
-      headers={moduleTableHeaders(variant)}
-      label="Top pages"
-      scroll={scroll}
-      sort={sort}
-      variant={variant}
-    >
-      {(range) =>
-        rows.slice(range.start, range.end).map((row) => {
-          const open = () => onOpen?.(row);
-          const href = pageHref(row.url);
-          return (
-            <tr
-              className={cn(ROW, ROW_HEIGHT_CLASS)}
-              key={row.url}
-              onClick={open}
-              onKeyDown={tableRowKeys(open)}
-              tabIndex={0}
-            >
-              <td
-                className={cn(CELL, "truncate font-sans tabular-nums text-ui-caption")}
-                title={row.url}
-              >
-                {row.path}
-              </td>
-              <td className={cn(CELL, figures, "font-semibold")}>{formatRowCount(row.clicks)}</td>
-              {showTraffic ? (
-                <>
-                  <td
-                    className={cn(CELL, NUMERIC, "text-fg-muted")}
-                    title={row.sessions === null ? NO_SESSIONS_MATCH_TITLE : undefined}
-                  >
-                    {row.sessions === null ? "-" : formatRowCount(row.sessions)}
-                  </td>
-                  <td
-                    className={cn(CELL, NUMERIC, "text-fg-muted")}
-                    title={row.engagementRate === null ? ENGAGEMENT_RATE_TIP : undefined}
-                  >
-                    {row.engagementRate === null ? "-" : formatRowCtr(row.engagementRate)}
-                  </td>
-                  {keyEventsConfigured === true ? (
-                    <td
-                      className={cn(CELL, NUMERIC, "text-fg-muted")}
-                      title={row.keyEvents === null ? KEY_EVENTS_TIP : undefined}
-                    >
-                      {row.keyEvents === null ? "-" : formatRowCount(row.keyEvents)}
-                    </td>
-                  ) : (
-                    <td className={cn(CELL, figures, positionClassName(row.position))}>
-                      {formatRowPosition(row.position)}
-                    </td>
-                  )}
-                </>
-              ) : (
-                <>
-                  <td className={cn(CELL, figures, "text-fg-muted")}>
-                    {formatRowCount(row.impressions)}
-                  </td>
-                  <td className={cn(CELL, figures, "text-fg-muted")}>{formatRowCtr(row.ctr)}</td>
-                  <td className={cn(CELL, figures, positionClassName(row.position))}>
-                    {formatRowPosition(row.position)}
-                  </td>
-                </>
-              )}
-              <td className={cn(CELL, "text-right")}>
-                {href ? (
-                  <a
-                    className="inline-grid h-6 w-6 place-items-center rounded-control border border-border-control opacity-50 transition-opacity hover:opacity-100 focus-visible:opacity-100 group-hover:opacity-100"
-                    href={href}
-                    onClick={(event) => event.stopPropagation()}
-                    rel="noreferrer"
-                    target="_blank"
-                    title={`Open ${href}`}
-                  >
-                    <ArrowUpRight aria-hidden size={12} weight="regular" />
-                  </a>
-                ) : null}
-              </td>
-            </tr>
-          );
-        })
-      }
-    </SearchInsightsTableShell>
+  const dataRows = useMemo<SearchInsightsPageDataTableRow[]>(
+    () => rows.map((row) => ({ ...row, id: row.url })),
+    [rows],
   );
+  const columns = useMemo(
+    () => searchInsightsPageColumns({ keyEventsConfigured, showTraffic, sortable: Boolean(sort) }),
+    [keyEventsConfigured, showTraffic, sort],
+  );
+  const table = (
+    <DataTable
+      ariaLabel="Top pages"
+      columns={columns}
+      density="compact"
+      id="search-insights-pages"
+      layout={scroll ? "fill" : "auto"}
+      onRowClick={onOpen}
+      onSortingChange={(next) => forwardSearchInsightsSort(sort, next)}
+      rows={dataRows}
+      sorting={searchInsightsDataTableSort(sort)}
+      sortingMode="server"
+    />
+  );
+
+  return scroll ? <div className="h-130">{table}</div> : table;
 }

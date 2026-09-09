@@ -2,6 +2,7 @@ import type { DateFormat } from "@/lib/dates/format";
 import { formatDateLabel, formatPacificTimestampValue } from "@/lib/search-insights/dates";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
+import { selectSearchImportCoverage } from "@/lib/search-insights/sync/control-model";
 import {
   FRESHNESS_ADJUSTMENT_TOOLTIP,
   FRESHNESS_CHECKED_PREFIX,
@@ -114,7 +115,7 @@ export function relativeActivity(value: string, now = new Date()) {
 export type ImportObservabilityProgress = {
   deepHistory: string;
   freshness: { label: string; tooltip: string };
-  percent: number;
+  percent: number | null;
   qualifyingCounter: string;
 };
 
@@ -147,25 +148,23 @@ export function importObservabilityProgress(
   format: DateFormat = "month_first",
 ): ImportObservabilityProgress | null {
   if (!facts) return null;
-  const targetDays = nonNegativeInteger(facts.targetDays);
-  const qualifyingDays = Math.min(targetDays, nonNegativeInteger(facts.qualifyingDays));
+  const coverage = selectSearchImportCoverage({ observability: facts });
   const targetMonths = nonNegativeInteger(facts.deepHistoryMonths.target);
   const completedMonths = Math.min(
     targetMonths,
     nonNegativeInteger(facts.deepHistoryMonths.completed),
   );
   const qualifyingCounter =
-    facts.readyThrough.d1.current && !facts.readyThrough.d7.current
-      ? facts.consecutiveDays >= 7
-        ? "First look ready · 7-day view once its days finalize"
-        : `First look ready · 7-day view in ~${etaLabel(
-            Math.max(1, 7 - facts.consecutiveDays) * facts.stall.expectedDayMs,
-          )}`
-      : `${qualifyingDays} of ${targetDays} finalized days`;
+    coverage.completed !== null && coverage.total !== null
+      ? `${coverage.completed} of ${coverage.total} finalized days`
+      : "Finalized import coverage is not available.";
   return {
     deepHistory: `${completedMonths} of ${targetMonths} months`,
     freshness: freshnessPresentation(facts.lastProbeAt, now, format),
-    percent: targetDays === 0 ? 0 : Math.round((qualifyingDays / targetDays) * 100),
+    percent:
+      coverage.completed !== null && coverage.total !== null && coverage.total > 0
+        ? Math.round((coverage.completed / coverage.total) * 100)
+        : null,
     qualifyingCounter,
   };
 }

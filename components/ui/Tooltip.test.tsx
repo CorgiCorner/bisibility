@@ -18,7 +18,7 @@ function mockMatchMedia(reduced = false) {
 }
 
 function transitionNode() {
-  return screen.getByRole("tooltip").firstElementChild as HTMLElement;
+  return screen.getByRole("tooltip").closest("[data-ui-tooltip]") as HTMLElement;
 }
 
 beforeEach(() => {
@@ -31,12 +31,12 @@ afterEach(() => {
 });
 
 function open(el: HTMLElement, ms = 500) {
-  fireEvent.mouseOver(el);
+  fireEvent.pointerMove(el);
   act(() => vi.advanceTimersByTime(ms));
 }
 
 function close(el: HTMLElement) {
-  fireEvent.mouseLeave(el);
+  fireEvent.pointerLeave(el);
   act(() => vi.advanceTimersByTime(0));
   act(() => vi.advanceTimersByTime(MOTION_TOOLTIP));
 }
@@ -84,18 +84,18 @@ describe("TooltipProvider markup", () => {
 describe("Tooltip enter delay and cold animation", () => {
   it("waits 500ms before showing on hover", () => {
     const t = renderSingle();
-    fireEvent.mouseOver(t);
+    fireEvent.pointerMove(t);
     act(() => vi.advanceTimersByTime(499));
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     act(() => vi.advanceTimersByTime(1));
     expect(screen.getByRole("tooltip")).toBeInTheDocument();
   });
 
-  it("cold open starts at scale(0.97)", () => {
+  it("cold open enables the entrance animation", () => {
     const t = renderSingle();
     open(t);
-    expect(transitionNode().style.transform).toBe("scale(0.97)");
-    expect(transitionNode().style.transition).toContain(`${MOTION_TOOLTIP}ms`);
+    expect(transitionNode()).not.toHaveAttribute("data-instant");
+    expect(transitionNode()).toHaveAttribute("data-state", "delayed-open");
   });
 });
 
@@ -117,12 +117,11 @@ describe("Tooltip warm sequence", () => {
   it("second tooltip within 800ms is instant, no reanimation", () => {
     const { a, b } = renderTwo();
     open(a);
-    expect(transitionNode().style.transform).toBe("scale(0.97)");
+    expect(transitionNode()).not.toHaveAttribute("data-instant");
     close(a);
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     open(b, 0);
-    expect(transitionNode().style.transform).toBe("none");
-    expect(transitionNode().style.transition).toBe("none");
+    expect(transitionNode()).toHaveAttribute("data-instant", "true");
   });
 
   it("an overlapping second tooltip pairs zero delay with zero transition", () => {
@@ -130,7 +129,7 @@ describe("Tooltip warm sequence", () => {
     open(a);
     open(b, 0);
     const second = screen.getAllByRole("tooltip").find((node) => node.textContent === "B");
-    expect(second?.firstElementChild).toHaveStyle({ transform: "none", transition: "none" });
+    expect(second?.closest("[data-ui-tooltip]")).toHaveAttribute("data-instant", "true");
   });
 
   it("cold returns after 800ms warm window", () => {
@@ -139,7 +138,7 @@ describe("Tooltip warm sequence", () => {
     close(a);
     act(() => vi.advanceTimersByTime(800 - MOTION_TOOLTIP));
     open(b);
-    expect(transitionNode().style.transform).toBe("scale(0.97)");
+    expect(transitionNode()).not.toHaveAttribute("data-instant");
   });
 });
 
@@ -243,12 +242,11 @@ describe("Tooltip description semantics", () => {
 });
 
 describe("Tooltip reduced motion", () => {
-  it("no scale transform under reduced motion", () => {
+  it("disables the entrance animation under reduced motion", () => {
     mockMatchMedia(true);
     const t = renderSingle();
     open(t);
-    expect(transitionNode().style.transform).toBe("none");
-    expect(transitionNode().style.transition).toBe("none");
+    expect(transitionNode()).toHaveAttribute("data-instant", "true");
   });
 });
 
@@ -265,7 +263,7 @@ describe("TooltipProvider cleanup", () => {
     );
     const trigger = screen.getByRole("button", { name: "C" });
     open(trigger);
-    fireEvent.mouseLeave(trigger);
+    fireEvent.pointerLeave(trigger);
     act(() => vi.advanceTimersByTime(0));
     const cooldownIndexes = setSpy.mock.calls.flatMap((call, index) =>
       call[1] === 800 ? [index] : [],
@@ -278,19 +276,22 @@ describe("TooltipProvider cleanup", () => {
     clearSpy.mockRestore();
   });
 
-  it("cancels an active transition RAF on unmount", () => {
-    const rafSpy = vi.spyOn(globalThis, "cancelAnimationFrame");
+  it("cancels a pending long press on unmount", () => {
+    const setSpy = vi.spyOn(globalThis, "setTimeout");
+    const clearSpy = vi.spyOn(globalThis, "clearTimeout");
     const { unmount } = render(
-      <TooltipProvider>
-        <Tooltip content="C">
-          <button type="button">C</button>
-        </Tooltip>
-      </TooltipProvider>,
+      <Tooltip content="Help">
+        <button type="button">Trigger</button>
+      </Tooltip>,
     );
-    open(screen.getByRole("button", { name: "C" }));
+    fireEvent.touchStart(screen.getByRole("button", { name: "Help" }));
+    const index = setSpy.mock.calls.findIndex((call) => call[1] === 700);
+    const timer = setSpy.mock.results[index]?.value;
+    expect(timer).toBeDefined();
     unmount();
-    expect(rafSpy).toHaveBeenCalled();
-    rafSpy.mockRestore();
+    expect(clearSpy).toHaveBeenCalledWith(timer);
+    setSpy.mockRestore();
+    clearSpy.mockRestore();
   });
 });
 

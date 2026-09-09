@@ -1,21 +1,21 @@
 "use client";
 
 import { Toolbar } from "@/components/shell/Toolbar";
-import { Button, MenuMultiSelect, Pill } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
+import { MenuMultiSelect } from "@/components/ui/MenuSelect";
+import { Pill } from "@/components/ui/Pill";
 import { appPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { menuItemRowHoverSx } from "@/lib/ui/menu-item-row-styles";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import {
-  CalendarBlankIcon as CalendarBlank,
-  CaretDownIcon as CaretDown,
-  CheckIcon as Check,
-  GlobeHemisphereWestIcon as Globe,
-  MonitorIcon as Monitor,
-  PlusIcon as Plus,
-  TagIcon as Tag,
-} from "@phosphor-icons/react";
+import { menuItemRowHoverStyle } from "@/lib/ui/menu-item-row-styles";
+import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { GlobeHemisphereWestIcon as Globe } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { TagIcon as Tag } from "@phosphor-icons/react/dist/csr/Tag";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useState } from "react";
@@ -78,7 +78,7 @@ function filterMenus(selected: SelectedFilters): readonly FilterMenu[] {
   ];
 }
 
-const PAPER_SX = {
+const PAPER_STYLE = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border)",
   borderRadius: UI_RADIUS_ROLES.card,
@@ -89,22 +89,29 @@ const PAPER_SX = {
   padding: "6px",
 } as const;
 
-const ROW_SX = {
+const ROW_STYLE = {
   borderRadius: UI_RADIUS_ROLES.control,
-  color: "var(--fg-muted)",
+  "--control-color": "var(--fg-muted)",
   fontSize: "13px",
   gap: "12px",
   justifyContent: "space-between",
   minHeight: 0,
-  paddingX: "9px",
-  paddingY: "8px",
-  ...menuItemRowHoverSx,
+  paddingLeft: "9px",
+  paddingRight: "9px",
+  paddingTop: "8px",
+  paddingBottom: "8px",
+  ...menuItemRowHoverStyle,
 } as const;
 
 export function OverviewToolbar({
+  canCreateKeyword = true,
   initialSelected,
   projectRef,
-}: Readonly<{ initialSelected?: SelectedFilters; projectRef: string }>) {
+}: Readonly<{
+  canCreateKeyword?: boolean;
+  initialSelected?: SelectedFilters;
+  projectRef: string;
+}>) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [openKey, setOpenKey] = useState<MenuKey | null>(null);
   const pathname = usePathname();
@@ -155,17 +162,19 @@ export function OverviewToolbar({
     <div className="-mx-4 -mt-4 mb-5.5 sm:-mx-5 lg:-mx-7 lg:-mt-5.5">
       <Toolbar
         action={
-          <Button
-            component={Link}
-            href={appPath(projectRef, "rank-tracker?add=1")}
-            size="sm"
-            startIcon={<Plus size={15} weight="regular" />}
-            sx={{ height: 37, minHeight: 37, whiteSpace: "nowrap" }}
-            variant="primary"
-          >
-            <span className="hidden sm:inline">Add keyword</span>
-            <span className="sm:hidden">Add</span>
-          </Button>
+          canCreateKeyword ? (
+            <Button
+              component={Link}
+              href={appPath(projectRef, "rank-tracker?add=1")}
+              size="sm"
+              startIcon={<Plus size={15} weight="regular" />}
+              style={{ height: 37, minHeight: 37, whiteSpace: "nowrap" }}
+              variant="primary"
+            >
+              <span className="hidden sm:inline">Add keyword</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          ) : null
         }
       >
         {selected.marketOptions.length > 0 ? (
@@ -210,15 +219,13 @@ export function OverviewToolbar({
       {menus.map((menu) => (
         <Menu
           anchorEl={anchorEl}
-          disableRestoreFocus
+          restoreFocus={false}
           id={`overview-${menu.key}-menu`}
           key={menu.key}
           onClose={() => setOpenKey(null)}
           open={openKey === menu.key}
-          slotProps={{
-            list: { "aria-label": menu.key, dense: true, sx: { padding: 0 } },
-            paper: { sx: PAPER_SX },
-          }}
+          listProps={{ "aria-label": menu.key, style: { padding: 0 } }}
+          contentProps={{ style: PAPER_STYLE }}
         >
           {menu.options.map((option) => {
             const current = menu.selected === option.value;
@@ -228,7 +235,7 @@ export function OverviewToolbar({
                 href={hrefFor(menu.key, option.value)}
                 key={`${menu.key}:${option.value ?? "all"}`}
                 onClick={() => setOpenKey(null)}
-                sx={ROW_SX}
+                style={ROW_STYLE}
               >
                 <span className={current ? "text-fg" : undefined}>{option.label}</span>
                 {current ? (

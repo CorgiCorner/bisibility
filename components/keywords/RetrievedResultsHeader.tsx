@@ -1,11 +1,9 @@
 "use client";
 
-import { InfoTooltip } from "@/components/ui";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
-import {
-  ArrowRightIcon as ArrowRight,
-  ClockCounterClockwiseIcon as History,
-} from "@phosphor-icons/react";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { ClockCounterClockwiseIcon as History } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
 import { RetrievedResultsPicker } from "./RetrievedResultsPicker";
 
 const TITLE_TIP =

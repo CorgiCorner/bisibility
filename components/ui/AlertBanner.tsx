@@ -2,12 +2,10 @@
 
 import { docsLinkProps } from "@/lib/site/site";
 import { MOTION_MENU_EXIT } from "@/lib/ui/motion";
-import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  CaretRightIcon as CaretRight,
-  WarningCircleIcon as WarningCircle,
-  XIcon as X,
-} from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import Link from "next/link";
 import {
   type CSSProperties,

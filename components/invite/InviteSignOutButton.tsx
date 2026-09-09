@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth/client";
-import { SignOutIcon as SignOut } from "@phosphor-icons/react";
+import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
 import { useState } from "react";
 
 export function InviteSignOutButton({ returnTo }: Readonly<{ returnTo: string }>) {

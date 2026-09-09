@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui";
-import { type SerpDepth, serpDepthValues } from "@/lib/serp/markets";
+import { Button } from "@/components/ui/Button";
+import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
 import type { ReactNode } from "react";
 import type { PreflightProvider } from "./preflight-presentation";
 
@@ -31,17 +31,17 @@ function ChoiceButton({ active, children, disabled, onClick, title }: Readonly<C
       onClick={onClick}
       role="radio"
       size="xs"
-      sx={
+      style={
         active
           ? {
-              backgroundColor: "var(--accent-soft)",
-              borderColor: "var(--accent)",
-              color: "var(--accent-text)",
+              "--control-background-color": "var(--accent-soft)",
+              "--control-border-color": "var(--accent)",
+              "--control-color": "var(--accent-text)",
             }
           : {
-              backgroundColor: "var(--bg-elev)",
-              borderColor: "var(--border-control)",
-              color: "var(--fg-muted)",
+              "--control-background-color": "var(--bg-elev)",
+              "--control-border-color": "var(--border-control)",
+              "--control-color": "var(--fg-muted)",
             }
       }
       title={title}

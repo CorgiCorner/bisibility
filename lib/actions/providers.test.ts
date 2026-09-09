@@ -44,7 +44,7 @@ const mocks = vi.hoisted(() => {
     prisma: {
       $queryRaw: vi.fn(),
       $transaction: vi.fn(),
-      project: { findUnique: vi.fn() },
+      project: { findUnique: vi.fn(), updateMany: vi.fn() },
       providerConnection: {
         delete: vi.fn(),
         findMany: vi.fn(),
@@ -64,6 +64,9 @@ const mocks = vi.hoisted(() => {
     project: { id: "project_1", ownerId: "user_1", publicId: "prj_a00000000000000000000000" },
     requireProjectScope: vi.fn(),
     revalidatePath: vi.fn(),
+    readAnalyticsSurfaceFromHeaders: vi.fn(),
+    readConsentFromCookies: vi.fn(),
+    trackServerEvent: vi.fn(),
     updateSearchSyncSettings: vi.fn(),
     saveStoredGoogleProperty: vi.fn(),
     writeAudit: vi.fn(),
@@ -76,6 +79,12 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/provider-allocations/legacy-backfill", () => ({
   backfillLegacyProjectAllocationInLockedTransaction:
     mocks.backfillLegacyProjectAllocationInLockedTransaction,
+}));
+
+vi.mock("@/lib/analytics/server", () => ({
+  readAnalyticsSurfaceFromHeaders: mocks.readAnalyticsSurfaceFromHeaders,
+  readConsentFromCookies: mocks.readConsentFromCookies,
+  trackServerEvent: mocks.trackServerEvent,
 }));
 vi.mock("@/lib/providers/registry", () => ({
   getAnalyticsProvider: vi.fn(() => mocks.analyticsProvider),
@@ -90,6 +99,12 @@ vi.mock("@/lib/providers/registry", () => ({
     {
       defaultStatus: "ready",
       id: "dataforseo",
+      allocation: {
+        kind: "billable",
+        billing: "metered",
+        allocationUnit: "cents",
+        quotaReset: "none",
+      },
       kind: "serp",
       label: "DataForSEO",
       requiredCredentials: ["login", "password"],
@@ -97,15 +112,34 @@ vi.mock("@/lib/providers/registry", () => ({
     {
       defaultStatus: "ready",
       id: "serpapi",
+      allocation: {
+        kind: "billable",
+        billing: "quota",
+        allocationUnit: "units",
+        quotaReset: "billing_cycle",
+      },
       kind: "serp",
       label: "SerpApi",
       requiredCredentials: ["apiKey"],
     },
-    { defaultStatus: "optional", id: "gsc", kind: "analytics", label: "Google Search Console" },
-    { defaultStatus: "optional", id: "ga4", kind: "analytics", label: "Google Analytics 4" },
+    {
+      defaultStatus: "optional",
+      allocation: { kind: "non_billable" },
+      id: "gsc",
+      kind: "analytics",
+      label: "Google Search Console",
+    },
+    {
+      defaultStatus: "optional",
+      allocation: { kind: "non_billable" },
+      id: "ga4",
+      kind: "analytics",
+      label: "Google Analytics 4",
+    },
     {
       defaultStatus: "optional",
       id: "plausible",
+      allocation: { kind: "non_billable" },
       kind: "analytics",
       label: "Plausible",
       requiredCredentials: ["apiKey", "login"],
@@ -208,6 +242,13 @@ describe("provider actions", () => {
     mocks.prisma.providerConnectionRate.deleteMany.mockResolvedValue({ count: 0 });
     mocks.writeAudit.mockResolvedValue({});
     mocks.updateSearchSyncSettings.mockResolvedValue({});
+    mocks.readAnalyticsSurfaceFromHeaders.mockResolvedValue("onboarding");
+    mocks.readConsentFromCookies.mockResolvedValue({
+      analytics: true,
+      decidedAt: 1,
+      replay: false,
+      status: "decided",
+    });
   });
 
   it("rejects invalid input before reading the actor", async () => {
@@ -414,13 +455,18 @@ describe("provider actions", () => {
       }),
     );
     expect(result).toEqual({ ok: true });
-    expect(mocks.backfillLegacyProjectAllocationInLockedTransaction).not.toHaveBeenCalled();
+    expect(mocks.backfillLegacyProjectAllocationInLockedTransaction).toHaveBeenCalledOnce();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         after: expect.objectContaining({ costPerCheck: 0.0123 }),
       }),
       mocks.prisma,
     );
+    expect(mocks.trackServerEvent).toHaveBeenCalledWith("provider_connected", {
+      consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
+      distinctId: "user_1",
+      properties: { provider: "dataforseo", surface: "onboarding" },
+    });
     expect(JSON.stringify(mocks.writeAudit.mock.calls)).not.toContain("password");
   });
 
@@ -576,6 +622,7 @@ describe("provider actions", () => {
 
   it("connects a provider and writes its audit inside one transaction", async () => {
     const tx = {
+      project: { updateMany: vi.fn() },
       $queryRaw: vi.fn(() => Promise.resolve([{ id: "project_1" }])),
       providerConnection: {
         findMany: vi.fn(() => Promise.resolve([])),
@@ -751,6 +798,7 @@ describe("provider actions", () => {
           releaseLock = await acquireProjectLock();
           return [{ id: mocks.project.id }];
         }),
+        project: { updateMany: vi.fn() },
         providerConnection: { findMany, findUnique, update: vi.fn(), upsert },
       };
       try {
@@ -803,6 +851,11 @@ describe("provider actions", () => {
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "provider.test" }),
     );
+    expect(mocks.trackServerEvent).toHaveBeenCalledWith("provider_connection_tested", {
+      consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
+      distinctId: "user_1",
+      properties: { error_category: null, ok: true, provider: "serpapi" },
+    });
   });
 
   it("does not restore stored connection state after testing credential overrides", async () => {

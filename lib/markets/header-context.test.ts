@@ -76,8 +76,22 @@ describe("market row copy", () => {
 
   it("builds one row per market, in registry order", () => {
     expect(marketRows(MARKETS, "")).toEqual([
-      { countLabel: "12 kw", name: "United States", pair: "US-en", value: "pmkt_us" },
-      { countLabel: "empty", name: "Spain", pair: "ES-es", value: "pmkt_es" },
+      {
+        countryCode: "US",
+        countLabel: "12 kw",
+        name: "United States",
+        pair: "US-en",
+        paused: false,
+        value: "pmkt_us",
+      },
+      {
+        countryCode: "ES",
+        countLabel: "empty",
+        name: "Spain",
+        pair: "ES-es",
+        paused: false,
+        value: "pmkt_es",
+      },
     ]);
   });
 

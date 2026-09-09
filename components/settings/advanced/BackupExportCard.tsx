@@ -4,9 +4,10 @@ import type { CloudImportPackageFile } from "@/components/cloud/cloud-token";
 import { downloadWorkspacePackage } from "@/components/cloud/workspace-package-download";
 import { AdvancedCardFrame } from "@/components/settings/advanced/AdvancedCardFrame";
 import { advancedCardGeometryClassNames } from "@/components/settings/advanced/advanced-settings-layout";
-import { Button, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/toast-context";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { useState } from "react";
 
 export type BackupExportAction = (input: { projectId: string }) => Promise<CloudImportPackageFile>;

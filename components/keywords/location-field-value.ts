@@ -1,48 +1,28 @@
 import type { KeywordLocation } from "@/lib/queries/keywords";
-import { DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
+import { parseCanonicalKey } from "@/lib/serp/location";
 import type { LocationFieldValue } from "./LocationField";
-import {
-  countryNameForCode,
-  countryValueForCode,
-  countryValueForName,
-} from "./location-picker-data";
-
-function regionNameFromDisplayName(value: string) {
-  const parts = value
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  return parts.length >= 3 ? parts.slice(1, -1).join(", ") : null;
-}
+import { countryNameForCode } from "./location-picker-data";
 
 export function locationFieldValueFromKeywordLocation(
   location: KeywordLocation,
   fallbackDisplayName = location.displayName,
 ): LocationFieldValue {
-  if (location.kind === "city") {
-    return {
-      canonicalKey: location.canonicalKey,
-      cityName: location.cityName,
-      countryCode: location.countryCode,
-      displayName: location.displayName,
-      kind: "city",
-      regionName: regionNameFromDisplayName(location.displayName),
-    };
-  }
-
-  return (
-    countryValueForCode(location.countryCode) ??
-    countryValueForName(location.displayName) ?? {
-      canonicalKey: location.canonicalKey,
-      cityName: null,
-      countryCode: location.countryCode,
-      displayName: fallbackDisplayName,
-      kind: "country",
-      regionName: null,
-    }
-  );
+  const parsed = parseCanonicalKey(location.canonicalKey);
+  return {
+    canonicalKey: location.canonicalKey,
+    cityName: location.kind === "city" ? location.cityName : null,
+    countryCode: location.countryCode,
+    displayName: location.displayName || fallbackDisplayName,
+    kind: location.kind,
+    languageCode: location.hl,
+    languageLabel: location.languageLabel,
+    regionName:
+      location.kind === "region"
+        ? (parsed?.regionName ?? parsed?.cityName ?? null)
+        : (parsed?.regionName ?? null),
+  };
 }
 
 export function countryForLocationFieldValue(value: LocationFieldValue) {
-  return countryNameForCode(value.countryCode) ?? DEFAULT_SERP_MARKET;
+  return countryNameForCode(value.countryCode) ?? value.countryCode;
 }

@@ -6,7 +6,6 @@ import {
   actionFailureResult,
 } from "@/lib/actions/action-result";
 import { auth } from "@/lib/auth/auth";
-import { requireSession } from "@/lib/auth/session";
 import {
   beginTwoFactorEnrollment,
   completeTwoFactorEnrollment,
@@ -24,6 +23,7 @@ import {
   twoFactorManagementSchema,
 } from "@/lib/auth/two-factor-management-schema";
 import { authorizeTwoFactorOperation } from "@/lib/auth/two-factor-step-up";
+import { requireMutableAccountSession as requireSession } from "@/lib/demo/mutable-account-session";
 import { headers } from "next/headers";
 import { unstable_rethrow } from "next/navigation";
 

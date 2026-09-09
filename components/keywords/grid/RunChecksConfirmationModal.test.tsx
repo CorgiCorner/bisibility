@@ -162,7 +162,7 @@ describe("RunChecksConfirmationModal failures", () => {
     if (!footer) throw new Error("Expected a modal footer.");
     expect(within(footer).getByRole("link", { name: "View check details" })).toHaveAttribute(
       "href",
-      "/app/prj_demo/rank-tracker?tab=runs&run=check_abcdefghijklmnopqrstuvwx",
+      "/app/prj_demo/runs",
     );
     expect(within(footer).getByRole("button", { name: "Try again" })).toBeInTheDocument();
     expect(within(footer).getByRole("link", { name: "Open integrations" })).toBeInTheDocument();
@@ -181,6 +181,21 @@ describe("RunChecksConfirmationModal failures", () => {
         "The rank check could not run because of a provider error. Try again, or view check details for more information.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("links a strict rank-check run to its canonical detail page", () => {
+    renderFailed([
+      {
+        code: "provider_billing",
+        message: RAW_PROVIDER_MESSAGE,
+        rankCheckId: "rcr_abcdefghijklmnopqrstuvwx",
+      },
+    ]);
+
+    expect(screen.getByRole("link", { name: "View check details" })).toHaveAttribute(
+      "href",
+      "/app/prj_demo/runs/rank-checks/rcr_abcdefghijklmnopqrstuvwx",
+    );
   });
 
   it("uses the dominant recognized provider code regardless of failure order", () => {

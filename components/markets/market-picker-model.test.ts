@@ -1,6 +1,6 @@
 import { countryValueForCode } from "@/components/keywords/location-picker-data";
+import { serpCountryCatalog } from "@/lib/serp/country-catalog";
 import { serpLanguageCatalog } from "@/lib/serp/generated/serp-language-catalog";
-import { serpMarkets } from "@/lib/serp/markets";
 import { describe, expect, it } from "vitest";
 import {
   additionalMarketLanguages,
@@ -43,9 +43,9 @@ describe("market picker model", () => {
     // The picker resolves a clicked row through the location's full language set. If a
     // suggested row ever fell outside that set it would render, look selected, and then
     // be dropped on commit - so the containment has to hold for every market, not Spain.
-    for (const market of serpMarkets) {
-      const location = countryValueForCode(market.google.gl.toUpperCase());
-      if (!location) throw new Error(`Missing location fixture for ${market.name}.`);
+    for (const market of serpCountryCatalog) {
+      const location = countryValueForCode(market.countryCode);
+      if (!location) throw new Error(`Missing location fixture for ${market.displayName}.`);
       const all = new Set(allMarketLanguages(location).map((language) => language.code));
       const codes = [
         ...recommendedMarketLanguages(location),
@@ -53,10 +53,12 @@ describe("market picker model", () => {
       ].map((language) => language.code);
 
       for (const code of codes) {
-        expect(all, `${market.name} offers ${code} outside its language set`).toContain(code);
+        expect(all, `${market.displayName} offers ${code} outside its language set`).toContain(
+          code,
+        );
       }
-      expect(codes, market.name).toHaveLength(serpLanguageCatalog.length);
-      expect(new Set(codes).size, market.name).toBe(serpLanguageCatalog.length);
+      expect(codes, market.displayName).toHaveLength(serpLanguageCatalog.length);
+      expect(new Set(codes).size, market.displayName).toBe(serpLanguageCatalog.length);
     }
   });
 
@@ -75,5 +77,17 @@ describe("market picker model", () => {
       canonicalKey: "ES@en",
       researchAvailable: false,
     });
+  });
+
+  it.each([
+    { canonicalKey: "ES/ES-MD", kind: "region" as const },
+    { canonicalKey: "ES/ES-MD/Madrid", kind: "city" as const },
+  ])("keeps the selected $kind geography when changing language", (location) => {
+    const choice = marketChoice(
+      { ...spain(), ...location, displayName: "Presentation label" },
+      { code: "en", label: "English" },
+    );
+    expect(choice.canonicalKey).toBe(`${location.canonicalKey}@en`);
+    expect(choice.kind).toBe(location.kind);
   });
 });

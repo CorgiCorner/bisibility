@@ -7,13 +7,11 @@ import {
   rankRunNoticeDismissalStorageKey,
   useRankRunNoticeDismissalSnapshot,
 } from "@/components/rank-runs/notice-dismissals";
-import { Button } from "@/components/ui";
-import {
-  CaretRightIcon as CaretRight,
-  XIcon as Close,
-  ArrowClockwiseIcon as Retry,
-  WarningCircleIcon as Warning,
-} from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { ArrowClockwiseIcon as Retry } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { WarningCircleIcon as Warning } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { XIcon as Close } from "@phosphor-icons/react/dist/csr/X";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -127,7 +125,7 @@ function DismissButton({ notice }: Readonly<{ notice: BudgetNotice }>) {
       aria-label="Dismiss this notice"
       onClick={() => dismissRankRunNotice(noticeIdentity(notice))}
       size="sm"
-      sx={{ height: 26, minHeight: 26, minWidth: 26, padding: 0, width: 26 }}
+      style={{ height: 26, minHeight: 26, minWidth: 26, padding: 0, width: 26 }}
       title="Dismiss"
       variant="ghost"
     >

@@ -1,3 +1,4 @@
+import CompetitorsSettingsLoading from "@/app/app/(workspace)/[project]/settings/(sections)/competitors/loading";
 import { AdvancedSettingsLoading } from "@/components/settings/advanced/AdvancedSettingsLoading";
 import { DataSourcesSettingsRouteLoading } from "@/components/settings/data-sources/DataSourcesSettingsLoading";
 import { DevelopersLoading } from "@/components/settings/developers/DevelopersLoading";
@@ -22,6 +23,7 @@ import {
 import {
   legacySettingsHashMap,
   resolveLegacySettingsHash,
+  settingsSections,
 } from "@/components/settings/shell/settings-sections";
 import { TeamSettingsLoading } from "@/components/settings/team/TeamSettingsLoading";
 import { TrackingSettingsRouteLoading } from "@/components/settings/tracking/TrackingSettingsLoading";
@@ -63,6 +65,11 @@ const loadingBoundaries = [
   { activeSection: "usage", name: "Usage and billing", render: () => <UsageLoading /> },
   { activeSection: "team", name: "Team", render: () => <TeamSettingsLoading /> },
   { activeSection: "advanced", name: "Advanced", render: () => <AdvancedSettingsLoading /> },
+  {
+    activeSection: "competitors",
+    name: "Competitors",
+    render: () => <CompetitorsSettingsLoading />,
+  },
 ] as const;
 
 function Shell() {
@@ -92,10 +99,17 @@ describe("SettingsShell", () => {
       "aria-current",
       "page",
     );
-    expect(subnav?.querySelectorAll("[data-settings-subnav-icon] svg")).toHaveLength(9);
+    expect(subnav?.querySelectorAll("[data-settings-subnav-icon] svg")).toHaveLength(
+      settingsSections.length,
+    );
     expect(screen.getByRole("link", { name: "Experimental" })).toHaveAttribute(
       "href",
       `/app/${projectRef}/settings/experimental`,
+    );
+    expect(screen.getAllByRole("link", { name: "Competitors" })).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "Competitors" })).toHaveAttribute(
+      "href",
+      "/app/prj_7Kd2Qf9m/settings/competitors",
     );
     expect(screen.queryByRole("link", { name: "Markets" })).not.toBeInTheDocument();
     expect(subnav?.querySelector('[data-settings-subnav-icon="developers"]')).toHaveAttribute(
@@ -148,6 +162,7 @@ describe("SettingsShell", () => {
     render(<Shell />);
 
     await user.click(screen.getByRole("button", { name: "Settings section" }));
+    expect(screen.getAllByRole("menuitem", { name: "Competitors" })).toHaveLength(1);
     await user.click(screen.getByRole("menuitem", { name: "Experimental" }));
 
     expect(routerMock.push).toHaveBeenCalledWith("/app/prj_7Kd2Qf9m/settings/experimental");
@@ -224,8 +239,10 @@ describe("SettingsShell", () => {
         "pl-3.5",
         "lg:flex",
       );
-      expect(rows).toHaveLength(9);
-      expect(subnav?.querySelectorAll("[data-settings-loading-subnav-icon-slot]")).toHaveLength(9);
+      expect(rows).toHaveLength(settingsSections.length);
+      expect(subnav?.querySelectorAll("[data-settings-loading-subnav-icon-slot]")).toHaveLength(
+        settingsSections.length,
+      );
       expect(activeRows).toHaveLength(1);
       expect(activeRows?.[0]).toHaveAttribute("data-settings-loading-subnav-row", activeSection);
       expect(subnav?.querySelectorAll("[data-settings-loading-subnav-active-dot]")).toHaveLength(1);

@@ -3,11 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { KeywordsFilterBar } from "./KeywordsFilterBar";
 
 const baseProps = {
-  columnVisibilityModel: {},
+  columnSizing: {},
+  columns: [],
+  columnVisibility: {},
   density: "standard" as const,
   filterChips: [],
   filterCount: 0,
   onClearFilters: vi.fn(),
+  onColumnSizingChange: vi.fn(),
   onColumnVisibilityChange: vi.fn(),
   onDensityChange: vi.fn(),
   onOpenExport: vi.fn(),
@@ -15,6 +18,7 @@ const baseProps = {
   onRefresh: vi.fn(),
   onRemoveFilter: vi.fn(),
   onSearchChange: vi.fn(),
+  id: "filter-bar-table",
   searchValue: "",
 };
 

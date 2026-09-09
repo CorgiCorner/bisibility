@@ -47,6 +47,7 @@ vi.mock("@/lib/temporal/search-insights-status", () => ({
 const settings = { pace: "normal" as const, retentionMonths: 16 as const };
 const property = "sc-domain:example.com";
 const facts = {
+  importCoverage: { completed: 7, total: 488 },
   consecutiveDays: 7,
   deepHistoryMonths: { completed: 0, target: 16 },
   lastActivityAt: "2026-08-28T15:50:00.000Z",
@@ -121,7 +122,7 @@ describe("loadSearchSyncMetrics", () => {
     });
   });
 
-  it("returns selector facts that resolve a healthy import to Running with Pause", async () => {
+  it("returns selector facts that resolve a healthy import to Importing with Pause", async () => {
     const metrics = await loadSearchSyncMetrics("prj_1", property, settings);
 
     expect(mocks.observability).toHaveBeenCalledWith(
@@ -152,13 +153,14 @@ describe("loadSearchSyncMetrics", () => {
         runtime: metrics.runtime,
         state: metrics.state,
       }),
-    ).toMatchObject({ action: "pause", status: "Running" });
+    ).toMatchObject({ action: "pause", status: "Importing" });
   });
 
   it("keeps a completed import complete when finalized coverage is available", async () => {
     mocks.findUnique.mockResolvedValue({ ...row, state: "completed" });
     mocks.observability.mockResolvedValue({
       ...facts,
+      importCoverage: { completed: 488, total: 488 },
       readyThrough: { ...facts.readyThrough, d28: { current: true, previous: true } },
     });
     mocks.workflow.mockResolvedValue("completed");
@@ -172,7 +174,7 @@ describe("loadSearchSyncMetrics", () => {
         runtime: metrics.runtime,
         state: metrics.state,
       }),
-    ).toMatchObject({ action: null, status: "Complete" });
+    ).toMatchObject({ action: null, status: "Completed" });
   });
 });
 

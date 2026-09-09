@@ -27,8 +27,8 @@ describe("CheckDepthSplitButton", () => {
 
     const action = screen.getByRole("button", { name: "Run check (Top 20)" });
     expect(action).toHaveClass("min-h-[30px]");
-    expect(action).toHaveClass("MuiButton-outlined");
-    expect(action).not.toHaveClass("MuiButton-contained");
+    expect(action).toHaveAttribute("data-variant", "secondary");
+    expect(action).not.toHaveAttribute("data-variant", "primary");
   });
 
   it("uses the header CTA height at md", () => {
@@ -44,9 +44,9 @@ describe("CheckDepthSplitButton", () => {
 
     const action = screen.getByRole("button", { name: "Run first check (Top 20)" });
     expect(action).toHaveClass("min-h-[36px]");
-    expect(action).toHaveClass("MuiButton-outlined");
+    expect(action).toHaveAttribute("data-variant", "secondary");
     expect(action).not.toHaveClass("min-h-[30px]");
-    expect(action).not.toHaveClass("MuiButton-contained");
+    expect(action).not.toHaveAttribute("data-variant", "primary");
   });
 
   it("runs from the primary button and only changes depth from the menu", () => {

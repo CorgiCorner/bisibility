@@ -20,9 +20,12 @@ function marketRow(publicId: string, locationId: string, displayName: string) {
       countryCode: displayName === "Spain" ? "ES" : "US",
       displayName,
       languageCode: displayName === "Spain" ? "es" : "en",
+      languageLabel: displayName === "Spain" ? "Spanish" : "English",
     },
     locationId,
     publicId,
+    name: displayName,
+    status: "active",
   };
 }
 
@@ -34,9 +37,9 @@ describe("listHeaderMarkets", () => {
       marketRow("pmkt_us", "loc_us", "United States"),
       marketRow("pmkt_es", "loc_es", "Spain"),
     ]);
-    mocks.prisma.keyword.groupBy.mockResolvedValue([
-      { _count: { _all: 12 }, locationId: "loc_us" },
-    ]);
+    mocks.prisma.keyword.groupBy.mockResolvedValue(
+      Array.from({ length: 12 }, (_, i) => ({ locationId: "loc_us", text: `keyword ${i}` })),
+    );
   });
 
   it("authorizes the project before reading any market", async () => {
@@ -54,9 +57,19 @@ describe("listHeaderMarkets", () => {
         keywordCount: 12,
         languageCode: "en",
         name: "United States",
+        description: "United States / English",
+        status: "active",
         ref: "pmkt_us",
       },
-      { countryCode: "ES", keywordCount: 0, languageCode: "es", name: "Spain", ref: "pmkt_es" },
+      {
+        countryCode: "ES",
+        keywordCount: 0,
+        languageCode: "es",
+        name: "Spain",
+        ref: "pmkt_es",
+        description: "Spain / Spanish",
+        status: "active",
+      },
     ]);
     expect(mocks.prisma.keyword.groupBy).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -85,4 +98,23 @@ describe("listHeaderMarkets", () => {
     await expect(listHeaderMarkets("prj_example")).resolves.toEqual([]);
     expect(mocks.prisma.keyword.groupBy).not.toHaveBeenCalled();
   });
+});
+
+it("preserves a custom name and paused status and counts terms across devices once", async () => {
+  mocks.requireReadableProject.mockResolvedValue({ project: { id: "project_internal_1" } });
+  mocks.prisma.projectMarket.findMany.mockResolvedValue([
+    { ...marketRow("pmkt_us", "loc_us", "United States"), name: "US launch", status: "paused" },
+  ]);
+  mocks.prisma.keyword.groupBy.mockResolvedValue([{ locationId: "loc_us", text: "rank tracker" }]);
+  expect(await listHeaderMarkets("prj_example")).toEqual([
+    expect.objectContaining({
+      name: "US launch",
+      keywordCount: 1,
+      status: "paused",
+      description: "United States / English",
+    }),
+  ]);
+  expect(mocks.prisma.keyword.groupBy).toHaveBeenLastCalledWith(
+    expect.objectContaining({ by: ["locationId", "text"] }),
+  );
 });

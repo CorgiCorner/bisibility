@@ -1,5 +1,5 @@
 import { rankNormalizationVersions } from "@/lib/rank-check/normalization-version";
-import { serpDepthValues } from "@/lib/serp/markets";
+import { serpDepthValues } from "@/lib/serp/constants";
 
 const position = { minimum: 1, type: ["integer", "null"] };
 const rankingUrl = {

@@ -1,7 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
-import { EyeIcon as Eye, EyeSlashIcon as EyeSlash } from "@phosphor-icons/react";
+import { EyeIcon as Eye } from "@phosphor-icons/react/dist/csr/Eye";
+import { EyeSlashIcon as EyeSlash } from "@phosphor-icons/react/dist/csr/EyeSlash";
 import { forwardRef, type InputHTMLAttributes, useState } from "react";
 import { inputClassName } from "./input-styles";
 

@@ -1,6 +1,5 @@
-import { locationSearchWireCandidate } from "@/lib/test/fixtures/location";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ResearchSearchCard } from "./ResearchSearchCard";
 
 const baseProps = {
@@ -8,70 +7,69 @@ const baseProps = {
   connectionOptions: [{ label: "DataForSEO", value: "conn_a00000000000000000000000" }],
   estimate: { cached: false, costCents: 3, loading: false },
   includeClickstream: false,
-  location: {
-    canonicalKey: "US",
+  scope: {
     countryCode: "US",
-    displayName: "United States",
-    hl: "en",
-    kind: "country" as const,
+    countryName: "United States",
+    languageCode: "en",
     languageLabel: "English",
+    providerLocationCode: 2840,
+    researchAvailable: true,
   },
+  scopes: [],
   mode: "auto" as const,
-  metricsScope: undefined,
   onConnectionChange: vi.fn(),
   onIncludeClickstreamChange: vi.fn(),
   onLimitChange: vi.fn(),
-  onLocationChange: vi.fn(),
+  onScopeChange: vi.fn(),
   onModeChange: vi.fn(),
   onSeedsChange: vi.fn(),
   onSubmit: vi.fn(),
-  projectId: "prj_1",
   researching: false,
   resultLimit: 100 as const,
   seeds: [] as string[],
 };
 
-const fetchMock = vi.fn();
-vi.stubGlobal("fetch", fetchMock);
-
-afterEach(() => {
-  fetchMock.mockReset();
-});
-
 describe("ResearchSearchCard", () => {
+  it("allows country selection when lookup is blocked but locks it during research", () => {
+    const onScopeChange = vi.fn();
+    const { rerender } = render(
+      <ResearchSearchCard
+        {...baseProps}
+        disabled
+        lookupDisabled
+        onScopeChange={onScopeChange}
+        seeds={["seo"]}
+      />,
+    );
+    const country = screen.getByRole("combobox", { name: "Country and language" });
+    expect(country).toBeEnabled();
+    fireEvent.change(country, { target: { value: "ger" } });
+    fireEvent.click(screen.getByRole("option", { name: "Germany / German" }));
+    expect(onScopeChange).toHaveBeenCalledWith(expect.objectContaining({ countryCode: "DE" }));
+    expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
+    rerender(<ResearchSearchCard {...baseProps} researching />);
+    expect(screen.getByRole("combobox", { name: "Country and language" })).toBeDisabled();
+  });
+
   it("fills the full-width tooltip wrapper", () => {
     const { container } = render(<ResearchSearchCard {...baseProps} />);
 
-    expect(container.querySelector(".MuiCard-root")).toHaveClass("w-full");
+    expect(container.querySelector("[data-slot='card']")).toHaveClass("w-full");
   });
 
-  it("portals the market listbox outside the card and keeps options selectable", async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        data: [
-          locationSearchWireCandidate({
-            canonical_key: "DE",
-            country_code: "DE",
-            display_name: "Germany",
-            id: "country:DE",
-          }),
-        ],
-      }),
-    } as Response);
+  it("portals the country and language listbox outside the card and keeps options selectable", async () => {
+    const onScopeChange = vi.fn();
+    render(<ResearchSearchCard {...baseProps} onScopeChange={onScopeChange} />);
 
-    const onLocationChange = vi.fn();
-    render(<ResearchSearchCard {...baseProps} onLocationChange={onLocationChange} />);
-
-    const marketInput = screen.getByRole("combobox", { name: "Market" });
-    fireEvent.change(marketInput, { target: { value: "ger" } });
+    const scopeInput = screen.getByRole("combobox", { name: "Country and language" });
+    fireEvent.change(scopeInput, { target: { value: "ger" } });
 
     const listbox = await screen.findByRole("listbox");
-    expect(listbox.closest(".MuiCard-root")).toBeNull();
+    expect(listbox.closest("[data-slot='card']")).toBeNull();
 
-    const germanyOption = await screen.findByText("Germany");
+    const germanyOption = await screen.findByText("Germany / German");
     fireEvent.click(germanyOption);
-    expect(onLocationChange).toHaveBeenCalledWith(expect.objectContaining({ canonicalKey: "DE" }));
+    expect(onScopeChange).toHaveBeenCalledWith(expect.objectContaining({ countryCode: "DE" }));
   });
 
   it("renders the action estimate and its cached-free state", () => {
@@ -87,12 +85,12 @@ describe("ResearchSearchCard", () => {
     expect(screen.getByRole("button", { name: "Research free, cached" })).toBeInTheDocument();
   });
 
-  it("keeps the market label visible in the compact research control", () => {
+  it("keeps the country and language label visible in the compact research control", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
-    const market = screen.getByRole("combobox", { name: "Market" });
-    expect(market).toHaveValue("United States / English");
-    expect(market).toHaveClass(
+    const scope = screen.getByRole("combobox", { name: "Country and language" });
+    expect(scope).toHaveValue("United States / English");
+    expect(scope).toHaveClass(
       "min-h-[34px]",
       "py-1",
       "compact-text-13",
@@ -100,34 +98,14 @@ describe("ResearchSearchCard", () => {
       "font-normal",
       "bg-bg-elev",
     );
-    expect(market).not.toHaveClass("h-10", "min-h-10", "text-[12px]", "font-medium");
-    expect(screen.getByTestId("location-field-caret")).toHaveClass("right-3");
+    expect(scope).not.toHaveClass("h-10", "min-h-10", "text-[12px]", "font-medium");
   });
 
-  it("disables provider work for an unsupported pair but keeps the market editable", () => {
+  it("disables provider work for an unsupported pair but keeps the scope editable", () => {
     render(<ResearchSearchCard {...baseProps} lookupDisabled />);
 
     expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
-    expect(screen.getByRole("combobox", { name: "Market" })).toBeEnabled();
-  });
-
-  it("hides the metrics scope when the country selection already matches it", () => {
-    render(<ResearchSearchCard {...baseProps} />);
-
-    expect(screen.queryByRole("status", { name: /Metrics scope:/ })).not.toBeInTheDocument();
-  });
-
-  it("renders the exact metrics scope for a city degraded to its country", () => {
-    render(
-      <ResearchSearchCard
-        {...baseProps}
-        metricsScope={{ country: "Spain", language: "Spanish" }}
-      />,
-    );
-
-    expect(
-      screen.getByRole("status", { name: "Metrics scope: Spain - Spanish" }),
-    ).toHaveTextContent("Metrics scope: Spain - Spanish");
+    expect(screen.getByRole("combobox", { name: "Country and language" })).toBeEnabled();
   });
 
   it("hides the provider control while only one provider supports research", () => {

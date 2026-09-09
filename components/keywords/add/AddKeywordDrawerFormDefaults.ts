@@ -1,7 +1,7 @@
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type { AddKeywordDrawerForm } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
-import type { SerpDevice } from "@/lib/serp/markets";
+import type { SerpDevice } from "@/lib/serp/constants";
 import { trackingScheduleValue } from "./AddKeywordDrawerExtensions";
 import { countryForSelection } from "./AddKeywordDrawerLocation";
 

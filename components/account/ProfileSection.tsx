@@ -1,11 +1,11 @@
 "use client";
 
-import { CopyButton } from "@/components/ui";
+import { IdChip } from "@/components/ui/IdChip";
 import { updateProfileName } from "@/lib/actions/account";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -117,10 +117,12 @@ export function ProfileSection({
         </div>
         <div className={cn(fieldLabelClass, "sm:col-span-2 sm:max-w-[50%]")}>
           {"User ID "}
-          <span className="flex min-h-10 items-center gap-2 rounded-control border border-border bg-transparent px-3 normal-case tracking-normal text-fg">
-            <span className="min-w-0 flex-1 truncate font-mono text-fg">{publicId}</span>
-            <CopyButton label="Copy user ID" size="sm" text={publicId} />
-          </span>
+          <IdChip
+            className="flex min-h-10 justify-between bg-transparent px-3 normal-case tracking-normal text-fg"
+            copyLabel="Copy user ID"
+            size="xs"
+            value={publicId}
+          />
         </div>
       </form>
       {message ? (

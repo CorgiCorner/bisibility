@@ -1,7 +1,9 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Button, Modal, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/toast-context";
 import type { SelectSearchInsightsPropertyAction } from "@/lib/actions/search-insights";
 import { formatDateLabel } from "@/lib/search-insights/dates";
 import { actionErrorMessage } from "@/lib/ui/action-error";

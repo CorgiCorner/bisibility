@@ -11,6 +11,7 @@ export {
   type CalculatorInputs,
 } from "@/lib/cost-estimate/calculator-defaults";
 
+import type { CostEstimateInput } from "@/lib/cost-estimate/api-contract";
 import {
   AUTO_PLAN_KEY,
   type CalculatorDefaults,
@@ -19,88 +20,14 @@ import {
 } from "@/lib/cost-estimate/calculator-defaults";
 import type { ProviderRate } from "@/lib/cost-estimate/estimate";
 import { centsToDollars } from "@/lib/format/currency";
-import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { createElement, Fragment } from "react";
-
-export const sliderSx = {
-  color: "var(--accent-solid)",
-  height: 8,
-  mx: 0.5,
-  py: "18px",
-  "&.MuiSlider-marked": { marginBottom: 0 },
-  "& .MuiSlider-rail": {
-    borderRadius: "9999px",
-    color: "var(--meter-track)",
-    height: 8,
-    opacity: 1,
-  },
-  "& .MuiSlider-track": {
-    backgroundColor: "var(--accent-solid)",
-    border: "none",
-    borderRadius: "9999px",
-    height: 8,
-  },
-  "& .MuiSlider-mark": {
-    backgroundColor: "var(--border)",
-    borderRadius: "9999px",
-    height: 8,
-    width: 2,
-  },
-  '& .MuiSlider-mark[style*="left:0%"]': { display: "none" },
-  '& .MuiSlider-mark[style*="left:100%"]': { display: "none" },
-  "& .MuiSlider-markActive": {
-    backgroundColor: "var(--accent-on-solid)",
-    opacity: 0.55,
-  },
-  "& .MuiSlider-thumb": {
-    backgroundColor: "var(--accent-solid)",
-    boxShadow: "0 0 0 3px var(--bg-elev)",
-    height: 24,
-    width: 24,
-    "&::after": { height: 44, width: 44 },
-    "&:hover, &.Mui-active": {
-      boxShadow:
-        "0 0 0 3px var(--bg-elev), 0 0 0 6px color-mix(in srgb, var(--accent-solid) 28%, transparent)",
-    },
-    "&.Mui-focusVisible": {
-      boxShadow: "0 0 0 2px var(--bg-elev), 0 0 0 4px var(--accent)",
-    },
-  },
-} as const;
-
-export const numberFieldSx = {
-  width: 112,
-  "& .MuiInputBase-input": {
-    color: "var(--fg)",
-    fontFamily: "var(--font-sans), sans-serif",
-    fontSize: "13px",
-    // One value treatment for every slider: Sans, semibold, in --fg. The accent is reserved
-    // for the track and the selected segment, so the number no longer competes with them.
-    fontWeight: 600,
-    padding: "9px 10px",
-    textAlign: "right",
-  },
-  "& .MuiOutlinedInput-notchedOutline": { borderColor: "var(--border)" },
-  "& .MuiOutlinedInput-root": {
-    backgroundColor: "transparent",
-    borderRadius: UI_RADIUS_ROLES.control,
-  },
-  "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "var(--accent)",
-  },
-  "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: "var(--accent)",
-  },
-} as const;
 
 // Deltas on top of the shared secondary/sm button: a muted resting label and an accent
 // border on hover. Everything else already comes from the design-system variant.
-export const resetButtonSx = {
-  color: "var(--fg-muted)",
-  "&:hover": {
-    borderColor: "var(--accent)",
-    color: "var(--fg)",
-  },
+export const resetButtonStyle = {
+  "--control-color": "var(--fg-muted)",
+  "--control-hover-border-color": "var(--accent)",
+  "--control-hover-color": "var(--fg)",
 } as const;
 
 export function clampInteger(value: number, min: number, max?: number): number {
@@ -166,3 +93,16 @@ export const neutralSegmentProps = {
   optionClassName: "flex-row min-h-7 px-2.5 py-0.5 text-[12px] font-medium",
   size: "field" as const,
 };
+
+export function calculatorEstimateInput(inputs: CalculatorInputs): CostEstimateInput {
+  return {
+    keywordCount: inputs.keywordCount,
+    locationCount: inputs.locationCount,
+    deviceCount: deviceCountFor(inputs.devices),
+    depth: inputs.depth,
+    frequency: inputs.frequency,
+    providerId: inputs.providerId,
+    optionKey: inputs.flatOptionKey,
+    planKey: inputs.planKey,
+  };
+}

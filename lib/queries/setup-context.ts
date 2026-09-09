@@ -1,5 +1,7 @@
 import "server-only";
 
+import { effectiveCompetitors } from "@/lib/competitors/effective";
+import { getCompetitorSuggestions } from "@/lib/competitors/suggestions";
 import { prisma } from "@/lib/db/prisma";
 import { type PublicIdForPrefix, requirePublicId } from "@/lib/db/public-id";
 import type { RankCheckFrequency } from "@/lib/generated/prisma/client";
@@ -71,7 +73,7 @@ async function loadSetupContextUncached(
   now = new Date(),
 ): Promise<SetupContext> {
   const { project } = await requireReadableProject(projectRef);
-  const [keywords, providerCount, completedCheckCount, activeBatch, defaults] = await Promise.all([
+  const setupReads = await Promise.all([
     prisma.keyword.findMany({
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       select: {
@@ -99,10 +101,32 @@ async function loadSetupContextUncached(
       select: { frequency: true, timezone: true },
       where: { projectId: project.id },
     }),
+    prisma.project.findUnique({
+      select: { competitorSetupOutcome: true },
+      where: { id: project.id },
+    }),
+    effectiveCompetitors(project.id, null),
   ]);
+  const [
+    keywords,
+    providerCount,
+    completedCheckCount,
+    activeBatch,
+    defaults,
+    competitorSetup,
+    competitors,
+  ] = setupReads;
+  const competitorSetupOutcome =
+    competitors.length > 0 ? "confirmed" : (competitorSetup?.competitorSetupOutcome ?? null);
+  const competitorSuggestions =
+    completedCheckCount > 0 && competitorSetupOutcome === null
+      ? await getCompetitorSuggestions(project.id)
+      : [];
 
   return {
     completedCheckCount,
+    competitorSetupOutcome,
+    competitorSuggestions,
     inFlightBatch: batchProgress(activeBatch),
     keywordCount: keywords.length,
     keywordIds: keywords.map((keyword) => requirePublicId(keyword.publicId, "kw")),

@@ -1,6 +1,6 @@
 "use client";
 
-import { compactInputTypographyClassName, inputClassName } from "@/components/ui";
+import { compactInputTypographyClassName, inputClassName } from "@/components/ui/input-styles";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
 import { cn } from "@/lib/ui/cn";
 import { forwardRef, type InputHTMLAttributes } from "react";

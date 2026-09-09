@@ -1,11 +1,11 @@
 import { PageContent } from "@/components/shell/PageContent";
+import { SETUP_STEP_DEFINITIONS } from "@/lib/getting-started/setup-steps";
 import { cn } from "@/lib/ui/cn";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
   return <div className={cn("animate-pulse rounded-control bg-bg-sunken", className)} />;
 }
 
-const steps = ["create", "keywords", "source", "check"] as const;
 const cards = ["team", "ai", "github"] as const;
 
 export default function GettingStartedLoading() {
@@ -24,13 +24,13 @@ export default function GettingStartedLoading() {
           data-testid="getting-started-loading-grid"
         >
           <section className="min-w-0">
-            {steps.map((step, index) => (
+            {SETUP_STEP_DEFINITIONS.map((step, index) => (
               <div
                 className={cn(
                   "flex min-h-[49px] items-center gap-3 px-5 py-3.5",
                   index > 0 && "border-t border-border",
                 )}
-                key={step}
+                key={step.id}
               >
                 <Bar className="size-5 shrink-0 rounded-full" />
                 <Bar className={cn("h-4", index === 1 ? "w-[148px]" : "w-[126px]")} />

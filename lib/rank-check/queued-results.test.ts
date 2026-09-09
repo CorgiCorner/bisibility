@@ -367,6 +367,24 @@ describe("queued result persistence", () => {
     expect(mocks.persistFailed).toHaveBeenCalledOnce();
   });
 
+  it("persists a billable empty SERP without failing or retrying the task", async () => {
+    mocks.tasks.splice(0, mocks.tasks.length, mocks.makeTask("empty", "ready", null));
+    mocks.fetchResult.mockResolvedValue({
+      status_code: 20000,
+      tasks: [{ status_code: 40102, cost: 0.002, result: [{ items: null }] }],
+    });
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    expect(mocks.persistFailed).not.toHaveBeenCalled();
+    expect(mocks.persistRankCheck).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        rankCheck: expect.objectContaining({ position: null, rankingUrl: null, costCents: 0.2 }),
+      }),
+    );
+    expect(mocks.tasks[0]?.state).toBe("completed");
+    expect(mocks.fetchResult).toHaveBeenCalledOnce();
+  });
+
   it("selects the minimum rank_group from all matching queued results", async () => {
     mocks.tasks.splice(0, mocks.tasks.length, mocks.makeTask("success", "ready", null));
     mocks.fetchResult.mockResolvedValue({

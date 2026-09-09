@@ -1,35 +1,43 @@
 "use client";
 
-import { Card, Sheet } from "@/components/ui";
+import {
+  type CompetitorSetupActions,
+  ConfirmCompetitorsStep,
+} from "@/components/getting-started/ConfirmCompetitorsStep";
+import { Card } from "@/components/ui/Card";
+import { Sheet } from "@/components/ui/Sheet";
+import { track } from "@/lib/analytics/client";
 import {
   resolveSetupProgress,
   type SetupContext,
   type SetupCta,
   type SetupStepId,
 } from "@/lib/getting-started/setup-steps";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { useState } from "react";
 import { StepGlyph } from "./StepGlyph";
 import { StepStateMeta } from "./StepStateMeta";
-import { VideoWalkthroughPlaceholder } from "./VideoWalkthroughPlaceholder";
+import { VideoWalkthrough } from "./VideoWalkthrough";
 import { Walkthrough } from "./Walkthrough";
 
 type GettingStartedChecklistProps = {
+  competitorActions: CompetitorSetupActions;
   context: SetupContext;
   now: Date;
   onCta: (cta: SetupCta) => void;
 };
 
 export function GettingStartedChecklist({
+  competitorActions,
   context,
   now,
   onCta,
 }: Readonly<GettingStartedChecklistProps>) {
   const progress = resolveSetupProgress(context);
   const initialId =
-    progress.steps.find(({ state }) => state.family !== "done")?.definition.id ??
-    progress.steps[0].definition.id;
+    progress.steps.find(({ state }) => state.family !== "done" && state.family !== "skipped")
+      ?.definition.id ?? progress.steps[0].definition.id;
   const isDesktop = useMediaQuery("(min-width:1024px)");
   const [selectedId, setSelectedId] = useState<SetupStepId>(initialId);
   const [mobileOpenId, setMobileOpenId] = useState<SetupStepId | null>(null);
@@ -40,6 +48,36 @@ export function GettingStartedChecklist({
   function selectStep(id: SetupStepId) {
     setSelectedId(id);
     if (!isDesktop) setMobileOpenId(id);
+  }
+
+  function recordCta(step: SetupStepId, cta: SetupCta, kind: "accelerate" | "primary") {
+    track("getting_started_cta_clicked", { cta: kind, step });
+    onCta(cta);
+  }
+
+  function renderStepContent(
+    id: SetupStepId,
+    state: (typeof progress.steps)[number]["state"],
+    expanded?: boolean,
+  ) {
+    if (id === "confirm_competitors") {
+      return (
+        <ConfirmCompetitorsStep
+          actions={competitorActions}
+          projectId={context.project.publicRef ?? ""}
+          state={state}
+          suggestions={context.competitorSuggestions}
+        />
+      );
+    }
+    return (
+      <Walkthrough
+        expanded={expanded}
+        id={id}
+        onCta={(cta) => recordCta(id, cta, "primary")}
+        state={state}
+      />
+    );
   }
 
   return (
@@ -72,6 +110,7 @@ export function GettingStartedChecklist({
                     <StepGlyph
                       blocked={state.family === "blocked"}
                       done={state.family === "done"}
+                      skipped={state.family === "skipped"}
                     />
                     <span className="pointer-events-none min-w-0 flex-1">
                       <span
@@ -80,7 +119,12 @@ export function GettingStartedChecklist({
                       >
                         {definition.title}
                       </span>
-                      <StepStateMeta id={metaId} now={now} onCta={onCta} state={state} />
+                      <StepStateMeta
+                        id={metaId}
+                        now={now}
+                        onCta={(cta) => recordCta(definition.id, cta, "accelerate")}
+                        state={state}
+                      />
                     </span>
                     {expanded ? null : (
                       <CaretRight
@@ -99,14 +143,7 @@ export function GettingStartedChecklist({
                   >
                     <div className="min-h-0 overflow-hidden">
                       <div className="pb-3 pl-[52px] pr-5">
-                        {isDesktop ? (
-                          <Walkthrough
-                            expanded={expanded}
-                            id={definition.id}
-                            onCta={onCta}
-                            state={state}
-                          />
-                        ) : null}
+                        {isDesktop ? renderStepContent(definition.id, state, expanded) : null}
                       </div>
                     </div>
                   </div>
@@ -115,13 +152,13 @@ export function GettingStartedChecklist({
             })}
           </ol>
         </section>
-        <section className="hidden min-w-0 p-5 lg:flex">
-          <VideoWalkthroughPlaceholder videoRef={selected.definition.videoRef} />
+        <section className="hidden min-w-0 self-start p-5 lg:flex">
+          <VideoWalkthrough step={selected.definition.id} videoRef={selected.definition.videoRef} />
         </section>
       </div>
       {!isDesktop && mobileOpen ? (
         <Sheet onClose={() => setMobileOpenId(null)} open title={mobileOpen.definition.title}>
-          <Walkthrough id={mobileOpen.definition.id} onCta={onCta} state={mobileOpen.state} />
+          {renderStepContent(mobileOpen.definition.id, mobileOpen.state)}
         </Sheet>
       ) : null}
     </Card>

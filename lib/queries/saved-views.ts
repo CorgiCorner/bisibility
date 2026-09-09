@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getProjectRole } from "@/lib/auth/authorize";
+import { type Actor, getProjectRole } from "@/lib/auth/authorize";
 import { canDeleteProjectSavedView } from "@/lib/auth/capabilities";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType } from "@/lib/db/public-id";
@@ -11,7 +11,7 @@ import {
   type SavedViewResource,
   type SavedViewSurface,
 } from "@/lib/saved-views/model";
-import { requireReadableProject } from "./_auth";
+import { requireReadableProject, requireReadableProjectFor } from "./_auth";
 
 const savedViewSelect = {
   config: true,
@@ -35,7 +35,21 @@ export async function listSavedViews(
   projectId: string,
   surface: SavedViewSurface = "keywords",
 ): Promise<SavedViewResource[]> {
-  const { actor, project } = await requireReadableProject(projectId);
+  return readSavedViews(await requireReadableProject(projectId), surface);
+}
+
+export async function listSavedViewsFor(
+  actor: Actor,
+  projectId: string,
+  surface: SavedViewSurface,
+) {
+  return readSavedViews(await requireReadableProjectFor(actor, projectId), surface);
+}
+
+async function readSavedViews(
+  { actor, project }: Awaited<ReturnType<typeof requireReadableProject>>,
+  surface: SavedViewSurface,
+): Promise<SavedViewResource[]> {
   const views = await prisma.savedView.findMany({
     orderBy: [{ name: "asc" }, { createdAt: "asc" }],
     select: savedViewSelect,

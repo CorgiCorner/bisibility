@@ -19,6 +19,7 @@ const fixtures = vi.hoisted(() => {
   };
   const mocks = {
     createKeywordBatchSet: vi.fn(),
+    defaultMarket: vi.fn(),
     resolveKeywordLocation: vi.fn(),
     transaction: vi.fn(),
     writeAudit: vi.fn(),
@@ -54,12 +55,7 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 vi.mock("@/lib/serp/default-market", () => ({
-  projectDefaultSerpMarket: () => ({
-    city: null,
-    country: "United States",
-    device: "desktop",
-    locationKey: null,
-  }),
+  projectDefaultSerpMarket: fixtures.mocks.defaultMarket,
 }));
 vi.mock("@/lib/serp/location-service", () => ({
   resolveKeywordLocation: fixtures.mocks.resolveKeywordLocation,
@@ -96,6 +92,12 @@ describe("REST keyword creation transaction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     calls.length = 0;
+    mocks.defaultMarket.mockReturnValue({
+      city: null,
+      country: "United States",
+      device: "desktop",
+      locationKey: null,
+    });
     mocks.resolveKeywordLocation.mockImplementation(async () => {
       calls.push("location");
       return {
@@ -151,10 +153,39 @@ describe("REST keyword creation transaction", () => {
     );
 
     expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
-      city: undefined,
-      country: "Spain",
-      language: "en",
       projectId: "project_1",
+      selection: { canonicalKey: "ES@en", kind: "city" },
+    });
+  });
+
+  it("resolves a legacy city against the default country without inventing an exact key", async () => {
+    await createKeywords(
+      context({ city: "Austin", keyword: "rank tracker", tags: [] }),
+      "prj_a00000000000000000000000",
+    );
+
+    expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { cityName: "Austin", countryCode: "US", kind: "city" },
+    });
+  });
+
+  it("keeps the default canonical city when a legacy request changes only language", async () => {
+    mocks.defaultMarket.mockReturnValue({
+      city: "Austin, Texas, United States",
+      country: "United States",
+      device: "desktop",
+      locationKey: "US/Texas/Austin",
+    });
+
+    await createKeywords(
+      context({ keyword: "rank tracker", language: "es", tags: [] }),
+      "prj_a00000000000000000000000",
+    );
+
+    expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { canonicalKey: "US/Texas/Austin@es", kind: "city" },
     });
   });
 
@@ -248,7 +279,7 @@ describe("REST keyword creation transaction", () => {
     expect(response.status).toBe(409);
     expect(response.headers.get("content-type")).toContain("application/problem+json");
     await expect(response.json()).resolves.toMatchObject({
-      detail: "Market ES@es is not tracked by this project. Add it in Settings > Markets first.",
+      detail: "Market ES@es is not tracked by this project. Add it in Markets first.",
       status: 409,
       type: "https://bisibility.com/problems/conflict",
     });

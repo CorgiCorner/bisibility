@@ -1,6 +1,6 @@
-import { AccentCtaLink } from "@/components/ui";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { AccentCtaLink } from "./AccentCtaLink";
 
 describe("AccentCtaLink", () => {
   it("keeps a trailing caret on the solid 40px connect chrome", () => {

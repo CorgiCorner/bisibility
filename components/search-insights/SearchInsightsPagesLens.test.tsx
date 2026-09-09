@@ -51,6 +51,6 @@ describe("SearchInsightsPagesLens", () => {
     const control = screen.getByRole("group", { name: PAGE_LENS_CONTROL_LABEL });
     expect(control).toHaveAttribute("aria-busy", "true");
     for (const option of screen.getAllByRole("radio")) expect(option).toBeDisabled();
-    expect(control.querySelector(".MuiCircularProgress-root")).toBeInTheDocument();
+    expect(control.querySelector("[data-spinner]")).toBeInTheDocument();
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { Modal } from "@/components/ui/Modal";
-import { useToast } from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/toast-context";
 import { type ReactNode, useRef, useState } from "react";
 import { CONFIRM, type ConfirmKind } from "./confirm-copy";
 import { dangerIconWellClassName } from "./icon-well-styles";

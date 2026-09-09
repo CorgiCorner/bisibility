@@ -107,38 +107,7 @@ describe("SearchInsightsRefresh", () => {
     expect(button).not.toHaveAttribute("aria-busy", "true");
     expect(button.querySelectorAll("svg")).toHaveLength(1);
     expect(button.querySelector("svg")).not.toHaveClass("animate-spin");
-    const generatedClass = Array.from(button.classList).find((className) =>
-      className.endsWith("-MuiButton-root"),
-    );
-    const rules = Array.from(document.styleSheets).flatMap((sheet) =>
-      Array.from(sheet.cssRules, (rule) => rule.cssText),
-    );
-    expect(
-      rules.some(
-        (rule) =>
-          rule.includes(`.${generatedClass}:not(.Mui-focusVisible):not(:hover)`) &&
-          rule.includes("background-color: transparent"),
-      ),
-    ).toBe(true);
-  });
-
-  it("returns pointer-focused refresh to a borderless transparent idle state", async () => {
-    render(<SearchInsightsRefresh active={false} />);
-    const button = screen.getByRole("button", { name: "Refresh import status" });
-
-    fireEvent.mouseDown(button);
-    button.focus();
-    fireEvent.mouseUp(button);
-    fireEvent.click(button);
-    fireEvent.mouseLeave(button);
-
-    const style = getComputedStyle(button);
-    expect(button).toHaveFocus();
-    expect(button).not.toHaveClass("Mui-focusVisible");
-    expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
-    expect(style.borderStyle).toBe("none");
-    expect(style.boxShadow).toBe("none");
-    expect(button.querySelector(".MuiTouchRipple-root")).toBeNull();
+    expect(button).toHaveAttribute("data-variant", "ghost");
   });
 
   it("keeps manual refresh available while polling is inactive", () => {

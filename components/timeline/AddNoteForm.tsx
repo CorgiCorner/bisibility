@@ -1,11 +1,15 @@
 "use client";
 
-import { AppDrawer, MenuSelect, Textarea } from "@/components/ui";
+import { AppDrawer } from "@/components/ui/AppDrawer";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { Textarea } from "@/components/ui/Textarea";
 import { addSignalNote } from "@/lib/actions/signals";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { type CreateSignalNoteInput, createSignalNoteSchema } from "@/lib/timeline/types";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { NotePencilIcon as NotePencil, PlusIcon as Plus, XIcon as X } from "@phosphor-icons/react";
+import { NotePencilIcon as NotePencil } from "@phosphor-icons/react/dist/csr/NotePencil";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";

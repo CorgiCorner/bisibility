@@ -71,6 +71,7 @@ export function KeywordsGridDialogBundle(props: Props) {
           exportTarget={exportTarget}
           costContext={costContext}
           keywordDefaults={keywordDefaults}
+          initialMarketKeys={marketScope ? [marketScope.canonicalKey] : undefined}
           onCloseAdd={() => setAddDraft((current) => ({ ...current, open: false }))}
           onExitedAdd={() => setAddDraft({ keyword: "", open: false, tab: "manual" })}
           onCloseExport={() => setExportTarget(null)}

@@ -212,7 +212,7 @@ describe("KeywordFirstCheckModal", () => {
     expect(screen.getByRole("link", { name: "View check details" })).toBeInTheDocument();
   });
 
-  it("renders transient failure copy with Try again and View check details CTAs", () => {
+  it("sends a check result without a run ID to the Runs list", () => {
     render(
       <KeywordFirstCheckModal
         {...baseProps}
@@ -234,9 +234,27 @@ describe("KeywordFirstCheckModal", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
     const link = screen.getByRole("link", { name: "View check details" });
-    expect(link).toHaveAttribute(
+    expect(link).toHaveAttribute("href", "/app/prj_demo/runs");
+  });
+
+  it("links a strict rank-check run to its canonical detail page", () => {
+    render(
+      <KeywordFirstCheckModal
+        {...baseProps}
+        confirmError={null}
+        confirming={false}
+        costLabel={null}
+        depth={20}
+        errorCode="provider_rate_limited"
+        rankCheckId="rcr_abcdefghijklmnopqrstuvwx"
+        open
+        step="failed"
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "View check details" })).toHaveAttribute(
       "href",
-      "/app/prj_demo/rank-tracker?tab=runs&run=check_abcdefghijklmnopqrstuvwx",
+      "/app/prj_demo/runs/rank-checks/rcr_abcdefghijklmnopqrstuvwx",
     );
   });
 
@@ -279,7 +297,7 @@ describe("KeywordFirstCheckModal", () => {
     ).toBeInTheDocument();
   });
 
-  it("falls back to the Checks tab when transient failure has no run id", () => {
+  it("falls back to Runs when transient failure has no run id", () => {
     render(
       <KeywordFirstCheckModal
         {...baseProps}
@@ -295,7 +313,7 @@ describe("KeywordFirstCheckModal", () => {
     );
 
     const link = screen.getByRole("link", { name: "View check details" });
-    expect(link).toHaveAttribute("href", "/app/prj_demo/rank-tracker?tab=runs");
+    expect(link).toHaveAttribute("href", "/app/prj_demo/runs");
   });
 
   it("Try again calls the handler", () => {

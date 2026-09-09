@@ -4,17 +4,17 @@ import {
   FilterSection,
   toggleFilterValue,
 } from "@/components/keywords/filters/FilterDrawerControls";
-import { Button, Checkbox, Sheet } from "@/components/ui";
-import Slider from "@mui/material/Slider";
-import {
-  ArrowRightIcon as ArrowRight,
-  CalendarBlankIcon as CalendarBlank,
-  CaretRightIcon as CaretRight,
-  ChartBarIcon as ChartBar,
-  LinkIcon as Link,
-  ProhibitIcon as Prohibit,
-  TextTIcon as TextT,
-} from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Sheet } from "@/components/ui/Sheet";
+import { Slider } from "@/components/ui/Slider";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { ChartBarIcon as ChartBar } from "@phosphor-icons/react/dist/csr/ChartBar";
+import { LinkIcon as Link } from "@phosphor-icons/react/dist/csr/Link";
+import { ProhibitIcon as Prohibit } from "@phosphor-icons/react/dist/csr/Prohibit";
+import { TextTIcon as TextT } from "@phosphor-icons/react/dist/csr/TextT";
 import type { ReactNode } from "react";
 import {
   activeBacklinksFilterCount,
@@ -65,9 +65,14 @@ function RangeFilter({
         getAriaLabel={(index) => `${ariaLabel} ${index === 0 ? "minimum" : "maximum"}`}
         max={max}
         min={0}
-        onChange={(_, next) => onChange(next as [number, number])}
-        size="small"
-        sx={{ color: "var(--accent)", display: "block", mx: 0.5, width: "calc(100% - 8px)" }}
+        onValueChange={(next) => onChange(next as [number, number])}
+        style={{
+          color: "var(--accent)",
+          display: "block",
+          marginLeft: 4,
+          marginRight: 4,
+          width: "calc(100% - 8px)",
+        }}
         value={value}
       />
       <div className="flex justify-between font-sans tabular-nums text-[10px] text-fg-muted">
@@ -140,7 +145,7 @@ export function BacklinksFiltersDrawer({
             <Button
               endIcon={<CaretRight size={14} weight="regular" />}
               onClick={onApply}
-              sx={{ flex: 1 }}
+              style={{ flex: 1 }}
             >
               Show {resultCount.toLocaleString("en-US")} {resultCount === 1 ? "domain" : "domains"}
             </Button>

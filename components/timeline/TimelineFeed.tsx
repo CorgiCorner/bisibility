@@ -1,12 +1,11 @@
+import { FacetBar } from "@/components/feeds/FacetBar";
 import { AddNoteForm } from "@/components/timeline/AddNoteForm";
 import { TimelineRow } from "@/components/timeline/TimelineRow";
-import {
-  Card,
-  compactInputTypographyClassName,
-  EmptyState,
-  filterChipStateClassName,
-  ModuleMark,
-} from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { filterChipStateClassName } from "@/components/ui/filter-chip-styles";
+import { compactInputTypographyClassName } from "@/components/ui/input-styles";
+import { ModuleMark } from "@/components/ui/ModuleMark";
 import type { DateFormatPreference } from "@/lib/format/user-datetime";
 import type { TimelineFilterKey, TimelineView } from "@/lib/queries/timeline";
 import { appPath } from "@/lib/routing/app-path";
@@ -16,16 +15,14 @@ import {
   timelineFilters,
   timelineGroups,
 } from "@/lib/timeline/timeline-data";
-import {
-  ClockCounterClockwiseIcon as ClockCounterClockwise,
-  FileDashedIcon as FileDashed,
-  FileMagnifyingGlassIcon as FileMagnifyingGlass,
-  MagnifyingGlassIcon as MagnifyingGlass,
-  MedalIcon as Medal,
-  NotePencilIcon as NotePencil,
-  RocketLaunchIcon as RocketLaunch,
-  StackIcon as Stack,
-} from "@phosphor-icons/react/dist/ssr";
+import { ClockCounterClockwiseIcon as ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise";
+import { FileDashedIcon as FileDashed } from "@phosphor-icons/react/dist/ssr/FileDashed";
+import { FileMagnifyingGlassIcon as FileMagnifyingGlass } from "@phosphor-icons/react/dist/ssr/FileMagnifyingGlass";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
+import { MedalIcon as Medal } from "@phosphor-icons/react/dist/ssr/Medal";
+import { NotePencilIcon as NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil";
+import { RocketLaunchIcon as RocketLaunch } from "@phosphor-icons/react/dist/ssr/RocketLaunch";
+import { StackIcon as Stack } from "@phosphor-icons/react/dist/ssr/Stack";
 import Link from "next/link";
 
 type TimelineFeedProps = {
@@ -47,17 +44,20 @@ const filterIcons = {
 
 function timelineHref({
   filter,
+  facets = [],
   page = 1,
   projectRef,
   search,
 }: {
   filter: TimelineFilterKey;
+  facets?: TimelineView["facets"];
   page?: number;
   projectRef: string;
   search: string;
 }) {
   const params = new URLSearchParams();
   if (filter !== "all") params.set("filter", filter);
+  for (const facet of facets) params.append("f", `${facet.axis}:${facet.value}`);
   if (search) params.set("q", search);
   if (page > 1) params.set("page", String(page));
   const query = params.toString();
@@ -67,10 +67,12 @@ function timelineHref({
 
 function FilterChip({
   filter,
+  facets,
   projectRef,
   search,
 }: Readonly<{
   filter: TimelineFilterView;
+  facets: TimelineView["facets"];
   projectRef: string;
   search: string;
 }>) {
@@ -83,7 +85,7 @@ function FilterChip({
       className={`inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-control border px-3 text-[12.5px] font-semibold outline-none transition-colors ${filterChipStateClassName(
         selected,
       )}`}
-      href={timelineHref({ filter: filter.key, projectRef, search })}
+      href={timelineHref({ facets, filter: filter.key, projectRef, search })}
       prefetch={false}
     >
       <Icon aria-hidden size={14} weight="regular" />
@@ -113,17 +115,23 @@ function TimelineGroupCard({
 }
 
 function TimelineEmpty({
+  facets,
   filtered,
   outOfRange,
   projectRef,
-}: Readonly<{ filtered: boolean; outOfRange: boolean; projectRef: string }>) {
+}: Readonly<{
+  facets: TimelineView["facets"];
+  filtered: boolean;
+  outOfRange: boolean;
+  projectRef: string;
+}>) {
   if (outOfRange) {
     return (
       <EmptyState
         action={
           <Link
             className="inline-flex min-h-9 items-center rounded-control border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid"
-            href={appPath(projectRef, "timeline")}
+            href={timelineHref({ facets, filter: "all", projectRef, search: "" })}
           >
             Back to page 1
           </Link>
@@ -163,6 +171,7 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
         <Link
           className="inline-flex min-h-8 items-center rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
           href={timelineHref({
+            facets: view.facets,
             filter: view.filter,
             page: view.page - 1,
             projectRef,
@@ -180,6 +189,7 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
         <Link
           className="inline-flex min-h-8 items-center rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
           href={timelineHref({
+            facets: view.facets,
             filter: view.filter,
             page: view.page + 1,
             projectRef,
@@ -205,6 +215,7 @@ export function TimelineFeed({
   view,
 }: Readonly<TimelineFeedProps>) {
   const filters = timelineFilters(view);
+  const facets = view.facets ?? [];
   const groups = timelineGroups(view.rows, view.now, {
     dateFormat,
     timezone: view.timeZone,
@@ -222,6 +233,14 @@ export function TimelineFeed({
             {view.filter !== "all" ? (
               <input name="filter" type="hidden" value={view.filter} />
             ) : null}
+            {facets.map((facet) => (
+              <input
+                key={`${facet.axis}:${facet.value}`}
+                name="f"
+                type="hidden"
+                value={`${facet.axis}:${facet.value}`}
+              />
+            ))}
             <label className="flex h-[34px] min-w-0 flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent px-3 transition-colors focus-within:border-accent">
               <MagnifyingGlass
                 weight="regular"
@@ -252,12 +271,14 @@ export function TimelineFeed({
           {filters.map((filter) => (
             <FilterChip
               filter={filter}
+              facets={facets}
               key={filter.key}
               projectRef={projectRef}
               search={view.search}
             />
           ))}
         </div>
+        {view.facetOptions ? <FacetBar facets={facets} options={view.facetOptions} /> : null}
       </Card>
 
       {groups.length > 0 ? (
@@ -271,6 +292,7 @@ export function TimelineFeed({
         ))
       ) : (
         <TimelineEmpty
+          facets={facets}
           filtered={view.isFiltered}
           outOfRange={view.page > 1}
           projectRef={projectRef}

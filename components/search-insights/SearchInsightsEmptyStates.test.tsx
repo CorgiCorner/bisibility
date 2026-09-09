@@ -3,18 +3,14 @@ import { routerMock } from "@/tests/next-navigation";
 import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@phosphor-icons/react", async (importActual) => {
-  const actual = await importActual<typeof import("@phosphor-icons/react")>();
-  return {
-    ...actual,
-    ChartBarIcon: (props: React.SVGProps<SVGSVGElement>) => (
-      <svg data-icon="chart-bar" {...props} />
-    ),
-    GoogleLogoIcon: (props: React.SVGProps<SVGSVGElement>) => (
-      <svg data-icon="google-logo" {...props} />
-    ),
-  };
-});
+vi.mock("@phosphor-icons/react/dist/csr/ChartBar", () => ({
+  ChartBarIcon: (props: React.SVGProps<SVGSVGElement>) => <svg data-icon="chart-bar" {...props} />,
+}));
+vi.mock("@phosphor-icons/react/dist/csr/GoogleLogo", () => ({
+  GoogleLogoIcon: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-icon="google-logo" {...props} />
+  ),
+}));
 
 import {
   SearchInsightsNoDataState,
@@ -48,7 +44,7 @@ describe("SearchInsightsNoPropertyState", () => {
     expect(link).toHaveAttribute("href", "https://search.google.com/search-console/about");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noreferrer noopener");
-    expect(link.lastElementChild).toHaveClass("MuiButton-endIcon");
+    expect(link.lastElementChild).toHaveAttribute("data-button-end-icon");
     expect(link.lastElementChild?.querySelector("svg")).toBeInTheDocument();
 
     const actions = link.parentElement;
@@ -122,11 +118,9 @@ describe("SearchInsightsNoDataState", () => {
       state: "waiting_for_first_data",
     });
 
-    expect(screen.getByRole("heading", { name: "Waiting for first data" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Waiting for data" })).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Google has not reported any search data for this property yet. We check daily and import automatically when it appears.",
-      ),
+      screen.getByText("Google has not reported finalized search data for this property yet."),
     ).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/0 of 0|\bETA\b|completion|first-28/i);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
@@ -158,15 +152,15 @@ describe("SearchInsightsNoDataState", () => {
   });
 
   it("offers no refresh control for a state that waits on the customer", () => {
-    renderNoData({ connectionStatus: "needs_reauth" });
+    renderNoData({ connectionStatus: "needs_reauth", pausedReason: null });
 
-    expect(screen.getByRole("heading", { name: "Needs reauth" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Reconnect required" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Refresh import status" })).not.toBeInTheDocument();
   });
 
-  it("renders the exact actor-neutral paused contract with exactly one Resume", () => {
+  it("does not render an unsafe legacy pause control", () => {
     const { container } = renderNoData();
-    expect(screen.getByRole("heading", { name: "Paused by you" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Paused" })).toBeInTheDocument();
     // The strip is the single home for the provenance counters; this card states the block only.
     expect(
       screen.getByText("The first look opens once the first finalized day is imported."),
@@ -174,15 +168,10 @@ describe("SearchInsightsNoDataState", () => {
     expect(screen.queryByTestId("qualifying-progress")).not.toBeInTheDocument();
     expect(screen.queryByTestId("deep-history-progress")).not.toBeInTheDocument();
     expect(screen.queryByTestId("freshness-note")).not.toBeInTheDocument();
+    expect(screen.getByText("Paused on Aug 27, 2026.")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Paused on Aug 27, 2026. New finalized days will not be imported until you resume sync.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Resume Search Console import" })).toHaveLength(1);
-    expect(screen.getByRole("button", { name: "Resume Search Console import" })).toHaveTextContent(
-      "Resume sync",
-    );
+      screen.queryByRole("button", { name: "Resume Search Console import" }),
+    ).not.toBeInTheDocument();
     expect(container.textContent).not.toMatch(
       /import is running|resumes automatically|we will notify|data ends at|unknown date/i,
     );
@@ -193,41 +182,42 @@ describe("SearchInsightsNoDataState", () => {
   it.each([
     [
       "needs_reauth",
-      { connectionStatus: "needs_reauth", pausedReason: "user" },
-      "Needs reauth",
+      { connectionStatus: "needs_reauth", pausedReason: null },
+      "Reconnect required",
       "link",
     ],
-    ["quota", { pausedReason: "rate_limited" }, "Paused by provider limits", null],
+    ["quota", { pausedReason: "rate_limited" }, "Waiting for Google", null],
     [
       "error",
       { pausedReason: null, safeError: "Provider failed.", state: "failed" },
-      "Needs retry",
-      "button",
+      "Failed",
+      null,
     ],
   ] as const)("renders focused %s state", (_name, overrides, title, actionRole) => {
     const { container } = renderNoData(overrides);
     expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
     if (actionRole === "link")
       expect(screen.getByRole("link", { name: "Reconnect Search Console" })).toBeInTheDocument();
-    if (actionRole === "button")
-      expect(
-        screen.getByRole("button", { name: "Retry Search Console import" }),
-      ).toBeInTheDocument();
     if (!actionRole) expect(screen.queryByRole("button")).not.toBeInTheDocument();
     if (_name !== "quota") expect(container.textContent).not.toMatch(/resumes automatically/i);
   });
 
-  it("uses a neutral status icon instead of the Google icon for a worker-caused state", () => {
+  it("shows Delayed only for confirmed stale runtime facts", () => {
     renderNoData({
       pausedReason: null,
       runtime: { workerStatus: "stale" },
       state: "running",
     });
 
-    expect(
-      screen.getByRole("img", { name: "Search import status" }).querySelector("svg"),
-    ).toHaveAttribute("data-icon", "chart-bar");
-    expect(screen.queryByRole("img", { name: "Search Console module" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Delayed" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Search Console module" })).toBeInTheDocument();
+  });
+
+  it("uses status unavailable and Refresh for unknown running runtime facts", () => {
+    renderNoData({ pausedReason: null, runtime: undefined, state: "running" });
+
+    expect(screen.getByRole("heading", { name: "Status unavailable" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh import status" })).toBeInTheDocument();
   });
 
   it.each([

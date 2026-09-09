@@ -1,5 +1,5 @@
 import { cn } from "@/lib/ui/cn";
-import { CheckIcon as Check } from "@phosphor-icons/react/ssr";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/ssr/Check";
 import type { ReactNode } from "react";
 import { iconWellClassName } from "./icon-well-styles";
 
@@ -42,6 +42,7 @@ export function EmptyState({
 
   return (
     <div
+      data-empty-state
       className={cn(
         "flex flex-col items-center justify-center text-center",
         // Compact always sits inside something that already has an edge - a card, a column -

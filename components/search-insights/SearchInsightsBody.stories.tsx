@@ -1,4 +1,4 @@
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { Meta, StoryObj } from "@storybook/react";
 import { SearchInsightsBody } from "./SearchInsightsBody";
 import { SearchInsightsSignalChips } from "./SearchInsightsSignalChips";
@@ -20,7 +20,7 @@ const meta = {
       </ToastProvider>
     ),
   ],
-  parameters: { layout: "fullscreen" },
+  parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
   title: "Search Console/Body",
 } satisfies Meta<typeof SearchInsightsBody>;
 

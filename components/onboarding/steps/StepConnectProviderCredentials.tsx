@@ -1,12 +1,13 @@
 "use client";
 
+import { providerCredentialFieldsFor } from "@/lib/integrations/credential-fields";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import { ProviderCredentialForm } from "./ProviderCredentialForm";
-import {
-  credentialFields,
-  type OnboardingConnectProviderInput,
-  type OnboardingSerpProviderId,
-  type ProviderTestResult,
+import type {
+  CredentialField,
+  OnboardingConnectProviderInput,
+  OnboardingSerpProviderId,
+  ProviderTestResult,
 } from "./StepConnectProvider.fields";
 
 type StepConnectProviderCredentialsProps = {
@@ -50,7 +51,11 @@ export function StepConnectProviderCredentials({
         login: errors.login?.message,
         secret: errors.secret?.message,
       }}
-      fields={credentialFields[providerId]}
+      fields={
+        providerCredentialFieldsFor(providerId, {
+          connected: savedConnection,
+        }) as readonly CredentialField[]
+      }
       onSave={onSave}
       onTest={onTest}
       providerId={providerId}

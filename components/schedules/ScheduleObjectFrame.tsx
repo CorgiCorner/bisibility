@@ -1,11 +1,12 @@
 import { PageContent } from "@/components/shell/PageContent";
-import { BackLink } from "@/components/ui";
+import { BackLink } from "@/components/ui/BackLink";
 import type { ReactNode } from "react";
 
 type ScheduleObjectFrameProps = {
   bodyLabel: string;
   breadcrumb: { href: string; label: ReactNode };
   children?: ReactNode;
+  navigation?: ReactNode;
   subtitle?: ReactNode;
   title: string;
 };
@@ -14,11 +15,13 @@ export function ScheduleObjectFrame({
   bodyLabel,
   breadcrumb,
   children,
+  navigation,
   subtitle,
   title,
 }: Readonly<ScheduleObjectFrameProps>) {
   return (
     <PageContent className="grid gap-4">
+      {navigation}
       <nav aria-label="Breadcrumb" className="w-fit text-[12.5px] text-fg-muted">
         <BackLink href={breadcrumb.href}>{breadcrumb.label}</BackLink>
       </nav>

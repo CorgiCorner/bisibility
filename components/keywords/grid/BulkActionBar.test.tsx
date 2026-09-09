@@ -1,7 +1,7 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { BulkActionBar } from "./BulkActionBar";
 
 const actions = {
@@ -12,7 +12,40 @@ const actions = {
 };
 const row = keywordRows[0] as KeywordRow;
 
+afterEach(() => vi.unstubAllGlobals());
+
 describe("BulkActionBar", () => {
+  it.each(["Cancel", "Close modal"])(
+    "resets the schedule flow after closing with %s",
+    async (closeButton) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ json: async () => ({ data: [] }), ok: true })),
+      );
+      render(
+        <BulkActionBar
+          {...actions}
+          canDeleteKeyword
+          canUpdateKeyword
+          onClear={vi.fn()}
+          projectId="prj_1"
+          selectedRows={[row]}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Set schedule" }));
+      fireEvent.click(await screen.findByRole("button", { name: /^New schedule/ }));
+      fireEvent.change(screen.getByRole("textbox", { name: "Name" }), {
+        target: { value: "Draft cadence" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: closeButton }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      fireEvent.click(screen.getByRole("button", { name: "Set schedule" }));
+      expect(await screen.findByRole("radiogroup", { name: "Schedule" })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: /^New schedule/ }));
+      expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Daily 06:00");
+    },
+  );
+
   it("shows the selected depth and runs only from the main button", () => {
     const onRunChecks = vi.fn();
     render(
@@ -81,7 +114,7 @@ describe("BulkActionBar", () => {
       "Delete",
       "Clear",
     ]) {
-      expect(screen.getByRole("button", { name })).toHaveClass("min-h-[30px]");
+      expect(screen.getByRole("button", { name })).toHaveAttribute("data-size", "xs");
     }
   });
 

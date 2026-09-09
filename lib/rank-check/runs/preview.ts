@@ -12,7 +12,7 @@ import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
 import { activeMarketLocationIds, unrunnableKeywordReason } from "@/lib/rank-check/runnable";
 import type { UnrunnableReason } from "@/lib/rank-check/runnable-reasons";
-import { resolveEffectiveSerpDepth, type SerpDepth } from "@/lib/serp/markets";
+import { resolveEffectiveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
 import { RUN_STATUSES, TERMINAL_RUN_STATUSES } from "./contract";
 import { type RankCheckRunProject, requireRankCheckRunProject } from "./launch-types";
 import { createPreviewToken } from "./preview-token";
@@ -62,6 +62,7 @@ type KeywordRow = {
   publicId: string;
   queuedRankCheckTasks: Array<{ state: string }>;
   rankChecks: Array<{ status: string }>;
+  checkSchedule?: { serpDepth: number | null } | null;
   schedule: { serpDepth: number | null } | null;
   text: string;
 };
@@ -89,6 +90,7 @@ function estimateTargets(
     const depth = resolveEffectiveSerpDepth({
       projectDepth,
       requestedDepth,
+      checkScheduleDepth: row.checkSchedule?.serpDepth,
       scheduleDepth: row.schedule?.serpDepth,
     });
     const cost = estimatedRankCheckCostCents(
@@ -199,6 +201,7 @@ export async function previewRankCheckRun(
           select: { status: true },
           take: 1,
         },
+        checkSchedule: { select: { serpDepth: true } },
         schedule: { select: { serpDepth: true } },
         text: true,
       },

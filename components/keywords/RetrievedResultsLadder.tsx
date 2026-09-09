@@ -2,12 +2,14 @@
 
 import type { RetrievedResults, RetrievedRow } from "@/lib/checks/contract";
 import { gapBlock } from "@/lib/checks/retrieved-results-model";
+import { matchingCompetitor, type TrackedCompetitor } from "@/lib/competitors/serp-comparison";
 import { type RefObject, useCallback, useRef } from "react";
 
 const ROW_HEIGHT = 65;
 const CONTEXT_ROWS = 3;
 
 type LadderProps = {
+  competitors?: readonly TrackedCompetitor[];
   results: Extract<RetrievedResults, { tier: "full" }>;
   trackedRef?: RefObject<HTMLLIElement | null>;
 };
@@ -20,9 +22,14 @@ function rowLabel(row: RetrievedRow) {
 }
 
 function LadderRow({
+  competitor,
   row,
   trackedRef,
-}: Readonly<{ row: RetrievedRow; trackedRef?: RefObject<HTMLLIElement | null> }>) {
+}: Readonly<{
+  competitor?: TrackedCompetitor;
+  row: RetrievedRow;
+  trackedRef?: RefObject<HTMLLIElement | null>;
+}>) {
   return (
     <li
       aria-label={rowLabel(row)}
@@ -54,16 +61,20 @@ function LadderRow({
           {row.domain}
         </span>
       </span>
-      {row.tracked ? (
+      {row.tracked || competitor ? (
         <span className="rounded-full border border-accent-solid px-2.5 py-1 font-sans tabular-nums text-[10px] font-medium text-accent-text">
-          Your site
+          {row.tracked ? "Your site" : "Competitor"}
         </span>
       ) : null}
     </li>
   );
 }
 
-export function RetrievedResultsLadder({ results, trackedRef }: Readonly<LadderProps>) {
+export function RetrievedResultsLadder({
+  competitors = [],
+  results,
+  trackedRef,
+}: Readonly<LadderProps>) {
   const scrollerRef = useRef<HTMLElement | null>(null);
   const gap = gapBlock({
     requestedDepth: results.requestedDepth,
@@ -91,7 +102,12 @@ export function RetrievedResultsLadder({ results, trackedRef }: Readonly<LadderP
     >
       <ol className="m-0 list-none p-0">
         {results.rows.map((row) => (
-          <LadderRow key={`${row.position}-${row.domain}`} row={row} trackedRef={trackedRef} />
+          <LadderRow
+            competitor={matchingCompetitor(row.domain, competitors)}
+            key={`${row.position}-${row.domain}`}
+            row={row}
+            trackedRef={trackedRef}
+          />
         ))}
       </ol>
       {gap ? (

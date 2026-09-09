@@ -95,7 +95,13 @@ describe("KeywordDetailHeaderChrome", () => {
     render(
       <KeywordDetailHeaderChrome
         actions={null}
-        keyword={{ ...keywordRows[0], rankingUrl: null, targetUrl: "/self-host" }}
+        keyword={{
+          ...keywordRows[0],
+          expectedUrl: "/self-host",
+          expectedUrlSource: "hreflang",
+          rankingUrl: null,
+          targetUrl: "/self-host",
+        }}
         timeZone="UTC"
       />,
     );
@@ -105,7 +111,9 @@ describe("KeywordDetailHeaderChrome", () => {
       "text-[13px]",
       "text-fg-muted",
     );
-    expect(screen.getByText(/Target \/self-host/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Expected for this market: \/self-host \(hreflang\)/),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View SERP" })).toBeInTheDocument();
   });
 
@@ -128,7 +136,7 @@ describe("KeywordDetailHeaderChrome", () => {
     expect(screen.queryByText("Intent: High intent")).not.toBeInTheDocument();
   });
 
-  it("shows unavailable metric guidance once below the second slot row", () => {
+  it("distinguishes missing US keyword metrics from an unsupported market", () => {
     render(
       <KeywordDetailHeaderChrome
         actions={null}
@@ -140,9 +148,62 @@ describe("KeywordDetailHeaderChrome", () => {
     expect(screen.getAllByText("n/a")).toHaveLength(4);
     expect(
       screen.getAllByText(
-        "No search volume or difficulty data for this market - positions are tracked normally.",
+        "Search volume and difficulty are unavailable for this keyword. Rank tracking is unaffected.",
       ),
     ).toHaveLength(1);
+  });
+
+  it.each([
+    [false, true, "Search volume is unavailable for this keyword. Rank tracking is unaffected."],
+    [true, false, "Difficulty is unavailable for this keyword. Rank tracking is unaffected."],
+    [true, true, null],
+  ])(
+    "reports only the missing keyword metric with volumeKnown=%s and difficultyKnown=%s",
+    (volumeKnown, difficultyKnown, note) => {
+      render(
+        <KeywordDetailHeaderChrome
+          actions={null}
+          keyword={{
+            ...keywordRows[0],
+            cpcKnown: false,
+            difficulty: 0,
+            difficultyKnown,
+            volume: 0,
+            volumeKnown,
+            location: { ...keywordRows[0].location, countryCode: "US", gl: "us", hl: "en" },
+          }}
+          timeZone="UTC"
+        />,
+      );
+
+      expect(
+        screen.queryByText(/No search volume or difficulty data for this market/),
+      ).not.toBeInTheDocument();
+      if (note) expect(screen.getByText(note)).toBeVisible();
+      else expect(screen.queryByText(/unavailable for this keyword/)).not.toBeInTheDocument();
+    },
+  );
+
+  it("reserves unavailable market guidance for a country-language pair outside the research catalog", () => {
+    render(
+      <KeywordDetailHeaderChrome
+        actions={null}
+        keyword={{
+          ...keywordRows[0],
+          difficultyKnown: false,
+          volumeKnown: false,
+          location: { ...keywordRows[0].location, countryCode: "ES", gl: "es", hl: "en" },
+        }}
+        timeZone="UTC"
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "No search volume or difficulty data for this market - positions are tracked normally.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByText(/unavailable for this keyword/)).not.toBeInTheDocument();
   });
 
   it("uses catalog labels and hides or shows the GSC index footer", () => {
@@ -197,4 +258,33 @@ describe("KeywordDetailHeaderChrome", () => {
     expect(screen.getByText(/9 Aug, \d{2}:30/)).toBeInTheDocument();
     expect(screen.queryByText(/2026/)).not.toBeInTheDocument();
   });
+  it.each([
+    ["/alternatives", "/alternatives"],
+    [null, "Not set"],
+  ])(
+    "shows the current target %s while retaining the historical ranking URL",
+    (currentExpectedUrl, label) => {
+      render(
+        <KeywordDetailHeaderChrome
+          actions={null}
+          keyword={{
+            ...keywordRows[0],
+            currentExpectedUrl,
+            expectedUrl: "/old-target",
+            targetUrl: currentExpectedUrl,
+            rankingUrl: "https://example.com/actual-result",
+          }}
+          timeZone="UTC"
+        />,
+      );
+      expect(
+        screen.getByText((content) => content.includes(`Expected for this market: ${label}`)),
+      ).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "/actual-result" })).toHaveAttribute(
+        "href",
+        "https://example.com/actual-result",
+      );
+      expect(screen.queryByText(/old-target/)).not.toBeInTheDocument();
+    },
+  );
 });

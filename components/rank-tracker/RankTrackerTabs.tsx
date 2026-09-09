@@ -4,20 +4,11 @@ import Link from "next/link";
 
 type RankTrackerTabsProps = {
   activeTab: RankTrackerTab;
-  runsCount: number;
+  runsCount?: number;
   projectRef: string;
   savedCount: number;
   trackedCount: number;
 };
-
-const compactCount = new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 1,
-  notation: "compact",
-});
-
-function formatCount(value: number) {
-  return compactCount.format(value).toLowerCase();
-}
 
 function countChip() {
   return "rounded-control bg-bg-sunken px-[7px] py-0.5 font-sans tabular-nums text-[11px] text-fg-muted";
@@ -34,14 +25,12 @@ function tabClass(active: boolean) {
 
 export function RankTrackerTabs({
   activeTab,
-  runsCount,
   projectRef,
   savedCount,
   trackedCount,
 }: Readonly<RankTrackerTabsProps>) {
   const trackedActive = activeTab === "tracked";
   const savedActive = activeTab === "saved";
-  const runsActive = activeTab === "runs";
 
   return (
     <nav aria-label="Rank Tracker views" className="flex gap-1 border-b border-border">
@@ -62,15 +51,6 @@ export function RankTrackerTabs({
       >
         <span>Saved</span>
         <span className={countChip()}>{savedCount.toLocaleString("en-US")}</span>
-      </Link>
-      <Link
-        aria-current={runsActive ? "page" : undefined}
-        aria-label={`Runs ${runsCount}`}
-        className={tabClass(runsActive)}
-        href={rankTrackerTabPath(projectRef, "runs")}
-      >
-        <span>Runs</span>
-        <span className={countChip()}>{formatCount(runsCount)}</span>
       </Link>
     </nav>
   );

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { domainOverviewSnapshotCachedUntil, domainOverviewSnapshotFreshness } from "./cache-policy";
 import type { DomainOverviewScope, DomainRecentTarget } from "./types";
 
 export async function recentDomainOverviewTargets(projectId: string, limit = 8, now = new Date()) {
@@ -15,7 +16,7 @@ export async function recentDomainOverviewTargets(projectId: string, limit = 8, 
       target: true,
     },
     take: Math.max(limit * 8, limit),
-    where: { cachedUntil: { gt: now }, projectId },
+    where: { ...domainOverviewSnapshotFreshness(now), projectId },
   });
   const seen = new Set<string>();
   const recent: DomainRecentTarget[] = [];
@@ -24,7 +25,7 @@ export async function recentDomainOverviewTargets(projectId: string, limit = 8, 
     seen.add(row.target);
     const scope: DomainOverviewScope = row.scope === "subdomain" ? "subdomain" : "root";
     recent.push({
-      cachedUntil: row.cachedUntil.toISOString(),
+      cachedUntil: domainOverviewSnapshotCachedUntil(row),
       fetchedAt: row.fetchedAt.toISOString(),
       languageCode: row.languageCode,
       locationCode: row.locationCode,

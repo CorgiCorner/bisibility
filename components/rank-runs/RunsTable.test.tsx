@@ -1,9 +1,7 @@
 import { DateFormatProvider } from "@/components/dates/DateFormatProvider";
-import { rankTrackerRunsPath } from "@/lib/routing/rank-tracker-runs-path";
-import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-runs-path";
+import { render, screen, within } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { RunsTable } from "./RunsTable";
 import { historyRun } from "./runs-fixtures";
 
@@ -11,7 +9,7 @@ describe("RunsTable", () => {
   it("uses run labels without repeating run", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
+        emptyActionHref="/app/prj_1/runs/schedules"
         projectRef="prj_1"
         rows={[
           historyRun,
@@ -34,11 +32,7 @@ describe("RunsTable", () => {
   it("shows a compact run ID while retaining the full copy value and tooltip", () => {
     const run = { ...historyRun, id: "rcr_9d2e41abcdef" };
     render(
-      <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
-        projectRef="prj_1"
-        rows={[run]}
-      />,
+      <RunsTable emptyActionHref="/app/prj_1/runs/schedules" projectRef="prj_1" rows={[run]} />,
     );
 
     expect(screen.getByText("rcr_9d2e41").parentElement).toHaveAttribute("title", run.id);
@@ -49,7 +43,7 @@ describe("RunsTable", () => {
     render(
       <DateFormatProvider value="day_first">
         <RunsTable
-          emptyActionHref="/app/prj_1/rank-tracker/schedules"
+          emptyActionHref="/app/prj_1/runs/schedules"
           projectRef="prj_1"
           rows={[historyRun]}
         />
@@ -62,7 +56,7 @@ describe("RunsTable", () => {
   it("shows the terminal outcome as the one History badge", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
+        emptyActionHref="/app/prj_1/runs/schedules"
         projectRef="prj_1"
         rows={[{ ...historyRun, outcome: "partial", status: "completed" }]}
       />,
@@ -75,7 +69,7 @@ describe("RunsTable", () => {
   it("does not repeat a one-to-one keyword and target selection", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
+        emptyActionHref="/app/prj_1/runs/schedules"
         projectRef="prj_1"
         rows={[historyRun]}
       />,
@@ -87,7 +81,7 @@ describe("RunsTable", () => {
   it("shows both counts when a selection expands to more targets", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
+        emptyActionHref="/app/prj_1/runs/schedules"
         projectRef="prj_1"
         rows={[{ ...historyRun, keywordCount: 1, targetCount: 2 }]}
       />,
@@ -99,7 +93,7 @@ describe("RunsTable", () => {
   it("uses the blocked presentation instead of the stored reason code", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
+        emptyActionHref="/app/prj_1/runs/schedules"
         projectRef="prj_1"
         rows={[{ ...historyRun, blockedReason: "temporal_unavailable", status: "blocked" }]}
       />,
@@ -112,7 +106,7 @@ describe("RunsTable", () => {
   it("shows the effective first slot while a running run has claimed nothing", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
+        emptyActionHref="/app/prj_1/runs/schedules"
         projectRef="prj_1"
         rows={[
           {
@@ -143,7 +137,7 @@ describe("RunsTable", () => {
   it("shows actual cost for a blocked run that already launched", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
+        emptyActionHref="/app/prj_1/runs/schedules"
         projectRef="prj_1"
         rows={[
           {
@@ -165,7 +159,7 @@ describe("RunsTable", () => {
   it("shows an estimate for an unlaunched blocked run", () => {
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
+        emptyActionHref="/app/prj_1/runs/schedules"
         projectRef="prj_1"
         rows={[
           {
@@ -186,40 +180,6 @@ describe("RunsTable", () => {
     expect(screen.queryByText("actual")).toBeNull();
   });
 
-  it("opens a History row with the canonical run detail path", () => {
-    render(
-      <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
-        projectRef="prj_1"
-        rows={[historyRun]}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("row", { name: /Scheduled/ }));
-
-    expect(routerMock.push).toHaveBeenCalledWith(rankTrackerRunsPath("prj_1", historyRun.id));
-  });
-
-  it("opens the canonical run page with Tab and Enter", async () => {
-    const user = userEvent.setup();
-    render(
-      <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
-        projectRef="prj_1"
-        rows={[historyRun]}
-      />,
-    );
-    const link = screen.getByRole("link", { name: "Scheduled" });
-    const opened = vi.fn((event: Event) => event.preventDefault());
-    link.addEventListener("click", opened);
-
-    await user.tab();
-    await user.keyboard("{Enter}");
-
-    expect(document.activeElement).toBe(link);
-    expect(opened).toHaveBeenCalledOnce();
-  });
-
   it("shows a person avatar and keeps Schedule and API launches text-only", () => {
     const userRun = {
       ...historyRun,
@@ -238,7 +198,7 @@ describe("RunsTable", () => {
     const apiRun = { ...historyRun, id: "rcr_api", requestedBy: null, trigger: "api" as const };
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
+        emptyActionHref="/app/prj_1/runs/schedules"
         projectRef="prj_1"
         rows={[userRun, initialsRun, scheduledRun, apiRun]}
       />,
@@ -260,6 +220,20 @@ describe("RunsTable", () => {
     expect(apiActor.querySelector("img")).toBeNull();
   });
 
+  it("keeps the archived schedule name and badge on its run", () => {
+    const archivedRun = {
+      ...historyRun,
+      requestedBy: null,
+      trigger: "scheduled" as const,
+      checkScheduleName: "Weekly review",
+      checkScheduleArchived: true,
+    };
+    render(<RunsTable rows={[archivedRun]} projectRef="prj_1" emptyActionHref="/schedules" />);
+    const actor = screen.getByTestId(`run-actor-${archivedRun.id}`);
+    expect(within(actor).getByText("Weekly review")).toBeInTheDocument();
+    expect(within(actor).getByText("Archived")).toBeInTheDocument();
+  });
+
   it("renders a skipped occurrence as an audit-only History row", () => {
     const skippedRun = {
       ...historyRun,
@@ -275,7 +249,7 @@ describe("RunsTable", () => {
         total: 24,
       },
       finishedAt: "2026-09-05T06:05:00.000Z",
-      id: "rcr_skipped_0001",
+      id: "rcr_bcdefghijklmnopqrstuvwxy",
       launchedAt: null,
       outcome: null,
       plannedFor: "2026-09-05T06:00:00.000Z",
@@ -286,7 +260,7 @@ describe("RunsTable", () => {
     };
     render(
       <RunsTable
-        emptyActionHref="/app/prj_1/rank-tracker/schedules"
+        emptyActionHref="/app/prj_1/runs/schedules"
         projectRef="prj_1"
         rows={[skippedRun]}
       />,
@@ -303,7 +277,22 @@ describe("RunsTable", () => {
     expect(screen.getByText("nothing billed")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Scheduled" })).toHaveAttribute(
       "href",
-      rankTrackerRunsPath("prj_1", skippedRun.id),
+      projectRunRankCheckPath("prj_1", skippedRun.id),
+    );
+  });
+
+  it("sends malformed legacy run IDs to the Runs list", () => {
+    render(
+      <RunsTable
+        emptyActionHref="/app/prj_1/runs/schedules"
+        projectRef="prj_1"
+        rows={[{ ...historyRun, id: "rcr_legacy" }]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Scheduled" })).toHaveAttribute(
+      "href",
+      projectRunsPath("prj_1"),
     );
   });
 });

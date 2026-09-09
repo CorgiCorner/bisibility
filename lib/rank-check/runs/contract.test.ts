@@ -110,14 +110,35 @@ describe("operation snapshot contract", () => {
 
   it("parses a minimal GSC import snapshot", () => {
     const fixture = {
+      capabilities: { pause: true, resume: false, retry: false },
       kind: "gsc_import",
       id: "import_example",
-      state: "importing",
+      presentation: { action: "pause", supportingText: null, title: "Importing" },
+      property: "sc-domain:example.com",
+      state: "running",
       progress: { done: 2, total: 5 },
     } as const;
 
     expect(operationSnapshotSchema.parse(fixture)).toEqual(fixture);
     expect(gscImportOperationSchema.safeParse(fixture).success).toBe(true);
+  });
+
+  it("parses the non-mutating GSC reconnect presentation", () => {
+    const fixture = {
+      capabilities: { pause: false, resume: false, retry: false },
+      kind: "gsc_import",
+      id: "import_example",
+      presentation: {
+        action: "reconnect",
+        supportingText: "Reconnect Search Console to continue importing.",
+        title: "Reconnect required",
+      },
+      property: "sc-domain:example.com",
+      state: "paused",
+      progress: { done: 2, total: 5 },
+    } as const;
+
+    expect(gscImportOperationSchema.parse(fixture)).toEqual(fixture);
   });
 
   it("rejects an unknown operation kind", () => {

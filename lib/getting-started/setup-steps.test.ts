@@ -11,6 +11,8 @@ const scheduledAt = new Date("2026-09-01T06:00:00.000Z");
 function context(overrides: Partial<SetupContext> = {}): SetupContext {
   return {
     completedCheckCount: 0,
+    competitorSetupOutcome: null,
+    competitorSuggestions: [],
     inFlightBatch: null,
     keywordCount: 0,
     keywordIds: [],
@@ -32,14 +34,19 @@ function stateFor(id: (typeof SETUP_STEP_DEFINITIONS)[number]["id"], ctx: SetupC
 }
 
 describe("setup step definitions", () => {
-  it("keeps four stable ids, display order, titles, and video references", () => {
+  it("keeps five stable ids, display order, titles, and video references", () => {
     expect(
       SETUP_STEP_DEFINITIONS.map(({ id, title, videoRef }) => ({ id, title, videoRef })),
     ).toEqual([
       { id: "create_project", title: "Create your project", videoRef: "create-project" },
-      { id: "add_keywords", title: "Track your first keywords", videoRef: "add-keywords" },
       { id: "connect_source", title: "Connect a data source", videoRef: "connect-source" },
+      { id: "add_keywords", title: "Track your first keywords", videoRef: "add-keywords" },
       { id: "first_check", title: "Run your first rank check", videoRef: "first-check" },
+      {
+        id: "confirm_competitors",
+        title: "Confirm competitors",
+        videoRef: "confirm-competitors",
+      },
     ]);
   });
 
@@ -175,14 +182,57 @@ describe("setup step definitions", () => {
     });
   });
 
-  it("derives completed count from the resolved list", () => {
+  it("blocks competitor confirmation before the first completed check", () => {
+    expect(stateFor("confirm_competitors", context())).toEqual({
+      family: "blocked",
+      reason: "Needs first check results",
+      unblockedBy: "first_check",
+    });
+  });
+
+  it("keeps competitor confirmation ready after the first completed check without an outcome", () => {
+    expect(stateFor("confirm_competitors", context({ completedCheckCount: 1 }))).toEqual({
+      family: "ready",
+    });
+  });
+
+  it("resolves persisted competitor outcomes as settled states", () => {
+    expect(
+      stateFor(
+        "confirm_competitors",
+        context({ completedCheckCount: 1, competitorSetupOutcome: "confirmed" }),
+      ),
+    ).toEqual({ family: "done" });
+    expect(
+      stateFor(
+        "confirm_competitors",
+        context({ completedCheckCount: 1, competitorSetupOutcome: "skipped" }),
+      ),
+    ).toEqual({ family: "skipped" });
+  });
+
+  it("keeps an unresolved competitor choice outside completed progress", () => {
     const progress = resolveSetupProgress(
       context({ completedCheckCount: 1, keywordCount: 3, providerExists: true }),
     );
     expect(progress.doneCount).toBe(4);
     expect(progress.settledCount).toBe(4);
+    expect(progress.completed).toBe(false);
+    expect(progress.steps).toHaveLength(5);
+  });
+
+  it("treats four existing steps and skipped competitors as setup complete", () => {
+    const progress = resolveSetupProgress(
+      context({
+        completedCheckCount: 1,
+        competitorSetupOutcome: "skipped",
+        keywordCount: 3,
+        providerExists: true,
+      }),
+    );
     expect(progress.completed).toBe(true);
-    expect(progress.steps).toHaveLength(4);
+    expect(progress.settledCount).toBe(5);
+    expect(progress.totalCount).toBe(5);
   });
 
   it("treats four done and one skipped as completed", () => {

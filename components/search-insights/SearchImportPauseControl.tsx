@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/toast-context";
 import type { SearchInsightsImportAction } from "@/lib/actions/search-insights";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";

@@ -1,18 +1,16 @@
 "use client";
 
-import { useToast } from "@/components/ui";
+import { IconButton } from "@/components/ui/IconButton";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
+import { useToast } from "@/components/ui/toast-context";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import {
-  ChartLineUpIcon as ChartLineUp,
-  CopyIcon as Copy,
-  DotsThreeVerticalIcon as DotsThreeVertical,
-  MagnifyingGlassIcon as MagnifyingGlass,
-  TrashIcon as Trash,
-} from "@phosphor-icons/react";
+import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/csr/ChartLineUp";
+import { CopyIcon as Copy } from "@phosphor-icons/react/dist/csr/Copy";
+import { DotsThreeVerticalIcon as DotsThreeVertical } from "@phosphor-icons/react/dist/csr/DotsThreeVertical";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import Link from "next/link";
 import { type MouseEvent, useState } from "react";
 import { savedKeywordResearchHref } from "./saved-keywords-table-model";
@@ -64,7 +62,7 @@ export function SavedKeywordRowMenu({
           setAnchorEl(event.currentTarget);
         }}
         size="small"
-        sx={{ color: "var(--fg-muted)" }}
+        style={{ "--control-color": "var(--fg-muted)" }}
       >
         <DotsThreeVertical size={17} weight="regular" />
       </IconButton>
@@ -73,21 +71,19 @@ export function SavedKeywordRowMenu({
         onClick={(event) => event.stopPropagation()}
         onClose={close}
         open={Boolean(anchorEl)}
-        slotProps={{
-          list: { dense: true },
-          paper: {
-            sx: {
-              backgroundColor: "var(--bg-elev)",
-              border: "1px solid var(--border)",
-              borderRadius: UI_RADIUS_ROLES.control,
-              minWidth: 210,
-              padding: "6px",
-            },
+        listProps={{}}
+        contentProps={{
+          style: {
+            backgroundColor: "var(--bg-elev)",
+            border: "1px solid var(--border)",
+            borderRadius: UI_RADIUS_ROLES.control,
+            minWidth: 210,
+            padding: "6px",
           },
         }}
       >
         {canTrack ? (
-          <MenuItem onClick={(event) => select(event, () => onTrack(row))} sx={{ gap: "9px" }}>
+          <MenuItem onClick={(event) => select(event, () => onTrack(row))} style={{ gap: "9px" }}>
             <ChartLineUp weight="regular" size={14} />
             Track now
           </MenuItem>
@@ -96,19 +92,19 @@ export function SavedKeywordRowMenu({
           component={Link}
           href={savedKeywordResearchHref(projectRef, row)}
           onClick={close}
-          sx={{ gap: "9px" }}
+          style={{ gap: "9px" }}
         >
           <MagnifyingGlass weight="regular" size={14} />
           Open source search
         </MenuItem>
-        <MenuItem onClick={copy} sx={{ gap: "9px" }}>
+        <MenuItem onClick={copy} style={{ gap: "9px" }}>
           <Copy weight="regular" size={14} />
           Copy keyword
         </MenuItem>
         {canDelete ? (
           <MenuItem
             onClick={(event) => select(event, () => onRemove(row))}
-            sx={{ color: "var(--red)", gap: "9px" }}
+            style={{ "--control-color": "var(--red)", gap: "9px" }}
           >
             <Trash weight="regular" size={14} />
             Remove from saved

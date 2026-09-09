@@ -1,12 +1,12 @@
 "use client";
 
-import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { Button } from "@/components/ui/Button";
 import { type MarketScope, marketRunPartition } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
-import type { SerpDepth } from "@/lib/serp/markets";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react";
+import type { SerpDepth } from "@/lib/serp/constants";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import Link from "next/link";
 import { RunChecksSplitButton } from "./RunChecksSplitButton";
 

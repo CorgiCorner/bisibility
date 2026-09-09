@@ -1,3 +1,10 @@
+import {
+  CLOUD_MIGRATION_PACKAGE_VERSION,
+  CLOUD_MIGRATION_PACKAGE_VERSIONS,
+  LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION,
+  PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION,
+} from "@/lib/migration/package-version";
+
 const projectId = {
   pattern: "^prj_[a-z][a-z0-9]{23}$",
   type: "string",
@@ -23,7 +30,14 @@ export const cloudImportCapabilitySchemas = {
       project_id: projectId,
       saved_views: { items: { type: "object" }, type: "array" },
       scope: { enum: ["current", "history"], type: "string" },
-      version: { const: 5, type: "integer" },
+      version: {
+        enum: [
+          CLOUD_MIGRATION_PACKAGE_VERSION,
+          PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION,
+          LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION,
+        ],
+        type: "integer",
+      },
     },
     required: [
       "version",
@@ -49,7 +63,7 @@ export const cloudImportCapabilitySchemas = {
         },
         type: "object",
       },
-      version: { const: 5, type: "integer" },
+      version: { enum: CLOUD_MIGRATION_PACKAGE_VERSIONS, type: "integer" },
     },
     required: ["version", "chunk_count", "source_project_id"],
     type: "object",

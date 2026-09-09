@@ -5,6 +5,10 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { keywordLabel } from "@/lib/ops/labels";
 import { DEFAULT_STALE_RUNNING_CHECK_MINUTES } from "@/lib/rank-check/stale-checks";
 import {
+  collectRankDispatchHeartbeat,
+  type RankDispatchHeartbeat,
+} from "./heartbeat-dispatch-data";
+import {
   collectRankScheduleHeartbeat,
   type RankScheduleHeartbeat,
 } from "./heartbeat-schedule-data";
@@ -40,13 +44,18 @@ export type { TrafficHeartbeatRow };
 
 export type DatabaseHeartbeat = {
   bootstrapErrors: string[];
+  collectionAvailable: boolean;
+  dispatch: RankDispatchHeartbeat | null;
   rank: RankHeartbeat;
   schedule: RankScheduleHeartbeat;
   traffic: TrafficHeartbeatRow[];
   undeliveredEvents: number;
 };
 
-export type OperationalHeartbeat = Omit<DatabaseHeartbeat, "rank" | "schedule">;
+export type OperationalHeartbeat = Omit<
+  DatabaseHeartbeat,
+  "collectionAvailable" | "dispatch" | "rank" | "schedule"
+>;
 
 type RankHeartbeatRow = {
   attempts: Prisma.JsonValue | null;
@@ -183,12 +192,13 @@ export async function collectOperationalHeartbeat(now: Date): Promise<Operationa
 
 export async function collectDatabaseHeartbeat(now: Date): Promise<DatabaseHeartbeat> {
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  const [rank, schedule, operational] = await Promise.all([
+  const [rank, schedule, dispatch, operational] = await Promise.all([
     collectRankHeartbeatWindow(now, since),
-    collectRankScheduleHeartbeat(now, since),
+    collectRankScheduleHeartbeat(now),
+    collectRankDispatchHeartbeat(now),
     collectOperationalHeartbeat(now),
   ]);
-  return { ...operational, rank, schedule };
+  return { ...operational, rank, schedule, dispatch, collectionAvailable: true };
 }
 
 export async function pruneOperationalObservability(now: Date) {

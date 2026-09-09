@@ -1,10 +1,7 @@
 import { projectMarketAddResult } from "@/lib/markets/project-market-add-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  addProjectMarkets,
-  reconcileProjectMarkets,
-  setProjectMarketEnabled,
-} from "./project-markets";
+import { setProjectMarketEnabled, updateProjectMarket } from "./project-market-lifecycle";
+import { addProjectMarkets, reconcileProjectMarkets } from "./project-markets";
 
 const mocks = vi.hoisted(() => ({
   ensureProjectMarketsWithinLimit: vi.fn(),
@@ -19,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   reconcileProjectMarketsWithinLimit: vi.fn(),
   resolveKeywordLocation: vi.fn(),
   revalidateSettingsViews: vi.fn(),
+  resumeProjectMarket: vi.fn(),
   writeAudit: vi.fn(),
 }));
 
@@ -37,6 +35,7 @@ vi.mock("@/lib/markets/registry", () => ({
   pauseProjectMarket: mocks.pauseProjectMarket,
   reconcileProjectMarketsWithinLimit: mocks.reconcileProjectMarketsWithinLimit,
   removeProjectMarket: vi.fn(),
+  resumeProjectMarket: mocks.resumeProjectMarket,
 }));
 vi.mock("@/lib/serp/location-service", () => ({
   resolveKeywordLocation: mocks.resolveKeywordLocation,
@@ -72,6 +71,8 @@ describe("project market actions", () => {
       marketIds: ["pmkt_abcdefghijklmnopqrstuvwx"],
       ok: true,
     });
+    mocks.pauseProjectMarket.mockResolvedValue({ count: 1 });
+    mocks.resumeProjectMarket.mockResolvedValue({ count: 1 });
   });
 
   it("returns an explicit result without writing when additions exceed the shared cap", async () => {
@@ -217,7 +218,7 @@ describe("project market actions", () => {
       publicId: "pmkt_abcdefghijklmnopqrstuvwx",
       status: "active",
     });
-    mocks.pauseProjectMarket.mockResolvedValue({ status: "paused" });
+    mocks.pauseProjectMarket.mockResolvedValue({ count: 1 });
 
     await setProjectMarketEnabled({
       enabled: false,
@@ -229,7 +230,14 @@ describe("project market actions", () => {
       type: "project_market",
     });
     expect(mocks.prisma.projectMarket.findFirst).toHaveBeenCalledWith({
-      select: { locationId: true, publicId: true, status: true },
+      select: {
+        futureKeywordDevices: true,
+        id: true,
+        locationId: true,
+        name: true,
+        publicId: true,
+        status: true,
+      },
       where: { projectId: "project_1", publicId: "pmkt_abcdefghijklmnopqrstuvwx" },
     });
   });
@@ -257,26 +265,63 @@ describe("project market actions", () => {
     expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 
-  it("rejects resuming a removed market when the registry cap is full", async () => {
+  it("persists only the mutable name and future-keyword defaults", async () => {
+    mocks.prisma.projectMarket.findFirst.mockResolvedValue({
+      futureKeywordDevices: ["desktop", "mobile"],
+      id: "market_1",
+      locationId: "location_1",
+      name: "Malaga",
+      publicId: "pmkt_abcdefghijklmnopqrstuvwx",
+      status: "active",
+    });
+    mocks.prisma.projectMarket.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      updateProjectMarket({
+        futureKeywordDevices: ["mobile"],
+        marketId: "pmkt_abcdefghijklmnopqrstuvwx",
+        name: "Malaga core",
+        projectId,
+      }),
+    ).resolves.toEqual({ futureKeywordDevices: ["mobile"], name: "Malaga core" });
+
+    expect(mocks.prisma.projectMarket.updateMany).toHaveBeenCalledWith({
+      data: { futureKeywordDevices: ["mobile"], name: "Malaga core" },
+      where: { id: "market_1", projectId: "project_1", status: "active" },
+    });
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "settings.project_market.update" }),
+      expect.anything(),
+    );
+  });
+
+  it("rejects blank names and malformed market IDs before a write or audit", async () => {
+    await expect(
+      updateProjectMarket({
+        futureKeywordDevices: ["desktop"],
+        marketId: "pmkt_invalid",
+        name: "   ",
+        projectId,
+      }),
+    ).rejects.toBeDefined();
+    expect(mocks.prisma.projectMarket.findFirst).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
+  it("rejects resuming a removed market without writing or auditing", async () => {
     mocks.prisma.projectMarket.findFirst.mockResolvedValue({
       locationId: "location_6",
       publicId: "pmkt_abcdefghijklmnopqrstuvwx",
       status: "removed",
     });
-    mocks.ensureProjectMarketsWithinLimit.mockResolvedValue({
-      code: "market_limit",
-      maxMarkets: 5,
-      ok: false,
-      remaining: 0,
-    });
-
     await expect(
       setProjectMarketEnabled({
         enabled: true,
         marketId: "pmkt_abcdefghijklmnopqrstuvwx",
         projectId,
       }),
-    ).rejects.toThrow("This project can track up to 5 markets.");
+    ).rejects.toThrow("Project market lifecycle changed.");
+    expect(mocks.resumeProjectMarket).not.toHaveBeenCalled();
     expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 

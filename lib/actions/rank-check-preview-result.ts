@@ -5,6 +5,7 @@ import { isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { RankCheckRunnerError } from "@/lib/rank-check/runner-error";
 
 export type FirstCheckCandidate = {
+  previousResult?: Exclude<RunFirstCheckPreviewResult, { status: "failed" }>;
   device: "desktop" | "mobile";
   id: string;
   market: {
@@ -57,7 +58,8 @@ export type RunFirstCheckPreviewResult =
     }
   | {
       position: number | null;
-      recordedCostCents: number;
+      recordedCostCents: number | null;
+      requestedDepth?: number;
       provider: string;
       rankingUrl: string | null;
       status: "completed";

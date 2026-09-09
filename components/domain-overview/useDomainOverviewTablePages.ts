@@ -5,10 +5,10 @@ import type {
   LoadDomainPagesPageAction,
 } from "@/lib/actions/domain-overview";
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
+import type { ResearchScope } from "@/lib/research/scope";
 import { type Dispatch, type SetStateAction, useRef, useState } from "react";
 import {
   type DomainOverviewEstimateView,
-  type DomainOverviewMarketView,
   type DomainOverviewUiOutcome,
   domainOverviewReportIdentity,
   reportFrom,
@@ -140,7 +140,7 @@ function appendPages(
 }
 
 export function useDomainOverviewTablePages({
-  activeMarket,
+  activeResearchScope,
   addSpend,
   estimate,
   loadKeywordsPageAction,
@@ -149,7 +149,7 @@ export function useDomainOverviewTablePages({
   report,
   setOutcome,
 }: Readonly<{
-  activeMarket: DomainOverviewMarketView | null;
+  activeResearchScope: (ResearchScope & { providerLocationCode: number }) | null;
   addSpend: (costCents: number) => void;
   estimate: DomainOverviewEstimateView;
   loadKeywordsPageAction: LoadDomainKeywordsPageAction;
@@ -169,7 +169,7 @@ export function useDomainOverviewTablePages({
   const currentPaging = paging.identity === identity ? paging : initialPaging(report, identity);
 
   async function loadMore(module: TableModule) {
-    if (!activeMarket || !report || activeRequest.current?.identity === identity) return;
+    if (!activeResearchScope || !report || activeRequest.current?.identity === identity) return;
     const current = module === "keywords" ? report.keywords : report.pages;
     const modulePaging = currentPaging[module];
     if (!current.ok || !modulePaging.hasMore) return;

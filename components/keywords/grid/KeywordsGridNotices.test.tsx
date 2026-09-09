@@ -36,28 +36,6 @@ function renderNotices(props: Partial<ComponentProps<typeof KeywordsGridNotices>
 }
 
 describe("KeywordsGridNotices", () => {
-  it("renders the truncation banner when the total count exceeds loaded rows", () => {
-    renderNotices({ rowCount: 1000, totalKeywordCount: 1001 });
-
-    expect(screen.getByText("Showing the 1,000 most recently added keywords")).toBeInTheDocument();
-    expect(screen.getByText(/This project tracks 1,001 keywords/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/This project tracks 1,001 keywords/).closest("output")?.parentElement,
-    ).not.toHaveClass("border-b");
-  });
-
-  it("does not render the truncation banner when the total count equals loaded rows", () => {
-    renderNotices({ rowCount: 1000, totalKeywordCount: 1000 });
-
-    expect(screen.queryByText(/most recently added keywords/)).not.toBeInTheDocument();
-  });
-
-  it("does not render the truncation banner when the total count is unknown", () => {
-    renderNotices({ rowCount: 1000 });
-
-    expect(screen.queryByText(/most recently added keywords/)).not.toBeInTheDocument();
-  });
-
   it("shows failed-check copy instead of a connect-provider cause when a provider is connected", () => {
     renderNotices({
       checkHealth: {

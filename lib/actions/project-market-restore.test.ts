@@ -1,6 +1,6 @@
 import { type Action, canProjectAction } from "@/lib/auth/capabilities";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { restoreProjectMarketFromProject } from "./project-markets";
+import { restoreProjectMarketFromProject } from "./project-market-lifecycle";
 
 const mocks = vi.hoisted(() => ({
   getActionActor: vi.fn(),

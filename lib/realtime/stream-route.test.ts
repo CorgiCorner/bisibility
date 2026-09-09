@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   getResolvedDateFormat: vi.fn(),
   getNotificationFeedForScope: vi.fn(),
   getQueryActor: vi.fn(),
+  getQuerySession: vi.fn(),
+  canReadStream: vi.fn(),
   notificationRealtimeRedisConfigured: vi.fn(),
   readOperationSnapshot: vi.fn(),
   resolveProjectAccess: vi.fn(),
@@ -13,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   subscribeToOperationEvents: vi.fn(),
 }));
 
+vi.mock("./stream-access", () => ({ canReadStream: mocks.canReadStream }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/dates/request", () => ({
   getResolvedDateFormat: mocks.getResolvedDateFormat,
@@ -28,6 +31,7 @@ vi.mock("@/lib/notifications/realtime", () => ({
 }));
 vi.mock("@/lib/queries/_auth", () => ({
   getQueryActor: mocks.getQueryActor,
+  getQuerySession: mocks.getQuerySession,
   resolveProjectAccess: mocks.resolveProjectAccess,
 }));
 vi.mock("@/lib/rank-check/runs/snapshot", () => ({
@@ -49,6 +53,8 @@ describe("app realtime stream", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    mocks.getQuerySession.mockResolvedValue({ session: { id: "session" }, user: { id: "user_1" } });
+    mocks.canReadStream.mockResolvedValue(true);
     operationHandlers = undefined;
     mocks.getQueryActor.mockResolvedValue({ id: "user_1" });
     mocks.resolveProjectAccess.mockResolvedValue({
@@ -191,5 +197,55 @@ describe("app realtime stream", () => {
 
     expect(vi.getTimerCount()).toBe(2);
     await reader.cancel();
+  });
+  it.each(["poll", "redis", "heartbeat"])(
+    "closes a revoked stream during %s delivery",
+    async (transport) => {
+      mocks.notificationRealtimeRedisConfigured.mockReturnValue(transport !== "poll");
+      const response = await GET(streamRequest());
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Expected response body.");
+      for (let index = 0; index < (transport === "poll" ? 5 : 4); index++) await nextText(reader);
+      mocks.canReadStream.mockResolvedValue(false);
+      if (transport === "redis") operationHandlers?.onEvent();
+      await vi.advanceTimersByTimeAsync(transport === "heartbeat" ? 25_000 : 4_000);
+      expect(await reader.read()).toMatchObject({ done: true });
+      expect(mocks.readOperationSnapshot).toHaveBeenCalledOnce();
+      expect(mocks.getNotificationFeedForScope).toHaveBeenCalledOnce();
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+
+  it("discards a snapshot fetched while access is revoked", async () => {
+    const response = await GET(streamRequest());
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Expected response body.");
+    for (let index = 0; index < 4; index++) await nextText(reader);
+    mocks.readOperationSnapshot.mockImplementation(async () => {
+      mocks.canReadStream.mockResolvedValue(false);
+      return [{ secret: "after-revocation" }];
+    });
+    operationHandlers?.onEvent();
+    await vi.advanceTimersByTimeAsync(4_000);
+    expect(await reader.read()).toMatchObject({ done: true });
+  });
+
+  it("closes on a failed authorization refresh", async () => {
+    const response = await GET(streamRequest());
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Expected response body.");
+    for (let index = 0; index < 4; index++) await nextText(reader);
+    mocks.canReadStream.mockRejectedValue(new Error("database unavailable"));
+    operationHandlers?.onEvent();
+    await vi.advanceTimersByTimeAsync(4_000);
+    expect(await reader.read()).toMatchObject({ done: true });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("withholds initial data if access expires while the snapshot is loaded", async () => {
+    mocks.canReadStream.mockResolvedValueOnce(true).mockResolvedValue(false);
+    const response = await GET(streamRequest());
+    expect(response.status).toBe(401);
+    expect(mocks.subscribeToOperationEvents).not.toHaveBeenCalled();
   });
 });

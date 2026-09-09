@@ -3,9 +3,10 @@
 import { AdvancedCardFrame } from "@/components/settings/advanced/AdvancedCardFrame";
 import { advancedCardGeometryClassNames } from "@/components/settings/advanced/advanced-settings-layout";
 import { MigrateToCloudWizard } from "@/components/settings/migration/MigrateToCloudWizard";
-import { Button, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { ArrowCounterClockwiseIcon as ArrowCounterClockwise } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon as ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

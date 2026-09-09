@@ -69,19 +69,33 @@ Paste one phrase per line, then set:
 Useful reason tags include `Improve`, `Protect`, `Launch`, `Investigate`, and
 `Long term`.
 
-## Import CSV
+## Import CSV or XLSX
 
-Select **Import CSV**, then upload a file or paste CSV content. The supported
-starter columns are:
+Create the project's markets first, then select **Import CSV**. Choose the
+**Market for rows without a location** before uploading a file or pasting CSV.
+When you open import from a market, it is selected for you. With a selected
+market, only `keyword` is required:
 
 ```text
-keyword,target_url,tags,country,device
-open source analytics,/vs/ga,"Comparison",US,desktop
-self hosted seo tool,/self-host,"Product",US,desktop
+keyword,target_url,tags,device
+open source analytics,/vs/ga,"Comparison",desktop
+self hosted seo tool,/self-host,"Product",mobile
 ```
 
-Review the parsed rows and correct validation errors before confirming the
-import. Duplicate keyword, location, and device combinations are skipped.
+To import into several existing markets, choose **Use markets from the file**
+and provide `country` with the matching `language`, or an exact `location_key`.
+The downloaded template uses the project's existing markets. Location fields
+in a row take precedence over the selected market.
+
+Review shows each row's resolved market and device, plus the row numbers and
+reasons for validation failures. Unknown locations are rejected rather than
+changed to country-level tracking. Imports never create missing markets or
+move existing keywords between them. A paused market accepts keywords, but
+its rank checks wait until the market is resumed.
+
+Duplicate keyword, market, and device combinations are skipped. Fix excluded
+rows or confirm the valid rows shown in Review; markets are checked again at
+confirmation.
 
 ## Run and review the first check
 

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/ui/cn";
-import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/ssr";
+import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/ssr/ShieldCheck";
 
 type DataResidencyNoteProps = {
   className?: string;

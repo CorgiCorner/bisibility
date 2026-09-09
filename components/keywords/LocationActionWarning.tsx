@@ -1,4 +1,4 @@
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 
 type LocationActionWarningProps = {
   message: string | null;

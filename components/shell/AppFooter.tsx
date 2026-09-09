@@ -1,4 +1,6 @@
-import { ExternalLink, ThemeSegments } from "@/components/ui";
+import { PrivacyChoicesLink } from "@/components/analytics/PrivacyChoicesLink";
+import { ExternalLink } from "@/components/ui/ExternalLink";
+import { ThemeSegments } from "@/components/ui/ThemeSegments";
 import { instanceAdminNavItem } from "@/lib/nav/nav-items";
 
 type AppFooterProps = {
@@ -92,7 +94,10 @@ export function AppFooter({
       ) : (
         <span />
       )}
-      <ThemeSegments size="sm" />
+      <div className="flex items-center gap-2">
+        <PrivacyChoicesLink />
+        <ThemeSegments size="sm" />
+      </div>
     </footer>
   );
 }

@@ -38,9 +38,17 @@ const rawSelectionSchema = z.object({
     .optional(),
   totalCount: z.coerce.number().int().nonnegative(),
 });
-const exactSortFields = new Set(["volume", "difficulty", "clicks", "impressions", "ctr"]);
+const flatExactSortFields = new Set([
+  "volume",
+  "difficulty",
+  "clicks",
+  "impressions",
+  "ctr",
+  "change",
+  "sparkline",
+]);
 
-function requiresExactRows(query: RankTrackerQueryState) {
+export function requiresExactRows(query: RankTrackerQueryState) {
   return Boolean(
     query.filters.change !== "any" ||
       query.filters.urlChanged ||
@@ -48,11 +56,12 @@ function requiresExactRows(query: RankTrackerQueryState) {
       query.filters.serp.length ||
       query.search ||
       query.filters.volMin > 0 ||
-      query.filters.volMax < 50 ||
-      exactSortFields.has(query.sort.field) ||
-      query.sort.field === "change" ||
-      query.sort.field === "sparkline",
+      query.filters.volMax < 50,
   );
+}
+
+function requiresExactFlatRows(query: RankTrackerQueryState) {
+  return requiresExactRows(query) || flatExactSortFields.has(query.sort.field);
 }
 
 async function rawSelection(
@@ -77,8 +86,7 @@ export async function selectRankTrackerKeywordsForProject(
   project: RankTrackerSelectionProject,
   query: RankTrackerQueryState,
 ) {
-  if (query.grouped) throw new Error("Rank tracker list query supports flat mode only.");
-  const exact = requiresExactRows(query);
+  const exact = requiresExactFlatRows(query);
   const raw = await rawSelection(project.id, query, { candidatesOnly: exact });
   const effectiveQuery = resolvedQuery(query, raw);
   const exactRows = exact
@@ -127,12 +135,11 @@ export async function resolveRankTrackerExportKeywordIdsForProject(
   query: RankTrackerQueryState,
   options?: ExportSelectionOptions,
 ) {
-  if (query.grouped) throw new Error("Rank tracker list query supports flat mode only.");
   const membershipLimit =
     options?.membershipLimit === undefined
       ? keywordExportMembershipProbeLimit()
       : options.membershipLimit;
-  if (requiresExactRows(query)) return exactExportIds(project, query, membershipLimit);
+  if (requiresExactFlatRows(query)) return exactExportIds(project, query, membershipLimit);
   const raw = await rawSelection(project.id, query, {
     publicIds: true,
     ...(membershipLimit === null ? { unpaginated: true } : { selectionLimit: membershipLimit }),

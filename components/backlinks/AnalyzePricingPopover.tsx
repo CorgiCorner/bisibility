@@ -1,6 +1,6 @@
 "use client";
 
-import { PricingPopover, type PricingRow } from "@/components/ui";
+import { PricingPopover, type PricingRow } from "@/components/ui/PricingPopover";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { backlinksRates, estimatedFeatureCostCents } from "@/lib/cost-estimate/provider-rates";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";

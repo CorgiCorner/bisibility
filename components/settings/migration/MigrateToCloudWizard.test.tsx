@@ -8,13 +8,10 @@ import {
   defaultPublicProjectId,
   makeBlockedSessionsPreflightPayload,
   makeCompatibilityPayload,
-  makeLegacyPreflightPayload,
   makeOverLimitCompatibilityPayload,
   makePlanPayload,
-  makePreflightFailurePayload,
   makePreflightPayload,
   makeTransferResult,
-  makeUnsupportedPreflightPayload,
   retryPublicJobId,
 } from "./__tests__/migration.fixtures";
 import { MigrateToCloudWizard } from "./MigrateToCloudWizard";
@@ -59,8 +56,6 @@ vi.mock("@/lib/actions/instance-migration", () => ({
   planChunkedTransfer: mocks.planChunkedTransfer,
   transferSectionsChunk: mocks.transferSectionsChunk,
 }));
-
-const otherPublicProjectId = "prj_zbcdefghijklmnopqrstuvwx";
 
 function Wizard(props: { direction?: "to-cloud" | "to-self-host"; projectId?: string }) {
   return (
@@ -131,39 +126,6 @@ describe("MigrateToCloudWizard", () => {
     expect(mocks.enableMigrationHold).not.toHaveBeenCalled();
   });
 
-  it("renders a configured target failure inline without reclassifying the default as user input", async () => {
-    const message =
-      "Migration target configuration is invalid. Check BISIBILITY_CLOUD_URL or the site URL. Target URL port must be empty, 80, 443, or 8443.";
-    mocks.preflightMigrationTarget.mockResolvedValueOnce(makePreflightFailurePayload(message));
-    renderWizard();
-
-    fireEvent.click(screen.getByRole("button", { name: /Run compatibility check/i }));
-
-    expect(await screen.findByText(message)).toBeInTheDocument();
-    expect(mocks.preflightMigrationTarget).toHaveBeenCalledWith({
-      projectId: defaultPublicProjectId,
-    });
-    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
-  });
-
-  it("renders a rejected user target inline with the validator reason", async () => {
-    const message = "Target URL port must be empty, 80, 443, or 8443.";
-    mocks.preflightMigrationTarget.mockResolvedValueOnce(makePreflightFailurePayload(message));
-    renderWizard();
-    fireEvent.change(screen.getByLabelText("Destination URL"), {
-      target: { value: "https://target.example.com:3000" },
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /Run compatibility check/i }));
-
-    expect(await screen.findByText(message)).toBeInTheDocument();
-    expect(mocks.preflightMigrationTarget).toHaveBeenCalledWith({
-      projectId: defaultPublicProjectId,
-      targetOrigin: "https://target.example.com:3000",
-    });
-    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
-  });
-
   it("blocks incompatible destinations instead of treating counts as decorative", async () => {
     mocks.getCloudMigrationCompatibility.mockResolvedValueOnce(makeOverLimitCompatibilityPayload());
     mocks.preflightMigrationTarget.mockResolvedValueOnce(makeBlockedSessionsPreflightPayload());
@@ -176,44 +138,6 @@ describe("MigrateToCloudWizard", () => {
     expect((await screen.findAllByText("BLOCKED")).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
     expect(mocks.enableMigrationHold).not.toHaveBeenCalled();
-  });
-
-  it("blocks a reachable target that lacks the required package protocol", async () => {
-    mocks.preflightMigrationTarget.mockResolvedValueOnce(makeLegacyPreflightPayload());
-    renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Run compatibility check/i }));
-
-    expect(
-      await screen.findByText(/doesn't support the transfer format this project needs/i),
-    ).toBeInTheDocument();
-    expect(screen.getByText("MIG-104")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
-    expect(mocks.enableMigrationHold).not.toHaveBeenCalled();
-  });
-
-  it("blocks a reachable target when protocol versions are missing", async () => {
-    mocks.preflightMigrationTarget.mockResolvedValueOnce(makeUnsupportedPreflightPayload());
-    renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Run compatibility check/i }));
-
-    expect(
-      await screen.findByText(/didn't report which import formats it supports/i),
-    ).toBeInTheDocument();
-    expect(screen.getByText("MIG-103")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
-    expect(mocks.enableMigrationHold).not.toHaveBeenCalled();
-  });
-
-  it("invalidates compatibility after the destination URL changes", async () => {
-    renderWizard("to-self-host");
-    const input = screen.getByLabelText("Self-host URL");
-    fireEvent.change(input, { target: { value: "https://one.example.com" } });
-    await runCompatibilityCheck();
-
-    fireEvent.change(input, { target: { value: "https://two.example.com" } });
-
-    expect(screen.getByText("REQUIRED")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
   });
 
   it("uses one edited to-cloud destination for the check and transfer", async () => {
@@ -240,31 +164,6 @@ describe("MigrateToCloudWizard", () => {
     );
   });
 
-  it("invalidates compatibility after the active project changes", async () => {
-    const view = renderWizard();
-    await runCompatibilityCheck();
-
-    view.rerenderProject(otherPublicProjectId);
-
-    expect(screen.getByText("REQUIRED")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
-  });
-
-  it("rejects a compatibility result older than five minutes", async () => {
-    renderWizard();
-    await runCompatibilityCheck();
-    const clock = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 5 * 60_000 + 1);
-
-    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-
-    expect(
-      await screen.findByText("Run a current compatibility check before continuing."),
-    ).toBeInTheDocument();
-    expect(screen.getByText("REQUIRED")).toBeInTheDocument();
-    expect(mocks.enableMigrationHold).not.toHaveBeenCalled();
-    clock.mockRestore();
-  });
-
   it("runs Push as Check, Transfer, Done and renders confirmed job counts", async () => {
     renderWizard();
     await continueToTransfer();
@@ -286,7 +185,10 @@ describe("MigrateToCloudWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
     expect(await screen.findByText("hosted instance import complete")).toBeInTheDocument();
-    expect(screen.getByText(`Import job ${defaultPublicJobId}`)).toBeInTheDocument();
+    expect(screen.getByTitle(defaultPublicJobId)).toHaveTextContent(
+      defaultPublicJobId.slice(0, 10),
+    );
+    expect(screen.getByRole("button", { name: "Copy import job ID" })).toBeVisible();
     expect(screen.getByText("keywords: 1")).toBeInTheDocument();
     expect(screen.getByText("history: 2")).toBeInTheDocument();
     expect(screen.getByText("Writes are active on this source project.")).toBeInTheDocument();

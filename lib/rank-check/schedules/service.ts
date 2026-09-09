@@ -31,7 +31,7 @@ export class DefaultCheckScheduleDeletionError extends Error {
 async function requireSchedule(tx: Prisma.TransactionClient, projectId: string, publicId: string) {
   const schedule = await tx.checkSchedule.findFirst({
     select: checkScheduleSelect,
-    where: { projectId, publicId },
+    where: { archivedAt: null, projectId, publicId },
   });
   if (!schedule) throw new ApiNotFoundError("Check schedule not found.");
   return schedule;
@@ -199,11 +199,11 @@ export async function setDefaultSchedule(actorId: string, projectId: string, sch
       const schedule = await requireSchedule(tx, projectId, scheduleId);
       const previous = await tx.checkSchedule.findFirst({
         select: { publicId: true },
-        where: { isDefault: true, projectId },
+        where: { archivedAt: null, isDefault: true, projectId },
       });
       await tx.checkSchedule.updateMany({
         data: { isDefault: false },
-        where: { isDefault: true, projectId },
+        where: { archivedAt: null, isDefault: true, projectId },
       });
       const updated = await tx.checkSchedule.update({
         data: { isDefault: true },
@@ -236,7 +236,7 @@ export async function deleteSchedule(actorId: string, projectId: string, schedul
       if (schedule.isDefault) throw new DefaultCheckScheduleDeletionError();
       const fallback = await tx.checkSchedule.findFirst({
         select: checkScheduleSelect,
-        where: { isDefault: true, projectId },
+        where: { archivedAt: null, isDefault: true, projectId },
       });
       if (!fallback) throw new ApiNotFoundError("Default check schedule not found.");
       const members = await tx.keyword.findMany({

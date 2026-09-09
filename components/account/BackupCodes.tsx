@@ -1,8 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { downloadTextFile } from "@/lib/ui/download";
-import { DownloadSimpleIcon as DownloadSimple, KeyIcon as Key } from "@phosphor-icons/react";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
 
 const RECOVERY_CODES_FILENAME = "bisibility_recovery_codes.txt";
 

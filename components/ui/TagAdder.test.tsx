@@ -1,7 +1,12 @@
 import { TagAdder } from "@/components/ui/TagAdder";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe("TagAdder", () => {
   it("opens an inline input from the ghost chip", async () => {
@@ -84,5 +89,18 @@ describe("TagAdder", () => {
     expect(screen.getByRole("button", { name: "Cancel adding tag" })).toHaveClass(
       "data-[entered]:delay-[60ms]",
     );
+  });
+
+  it("cancels the exit fallback before it fires when unmounted", () => {
+    vi.useFakeTimers();
+    const clearTimeout = vi.spyOn(globalThis, "clearTimeout");
+    const view = render(<TagAdder onAdd={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add tag" }));
+    fireEvent.keyDown(screen.getByLabelText("New tag name"), { key: "Escape" });
+    view.unmount();
+
+    expect(clearTimeout).toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1_000));
   });
 });

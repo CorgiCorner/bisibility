@@ -1,5 +1,5 @@
 import { SampleProjectBanner } from "@/components/sample-data/SampleProjectBanner";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {

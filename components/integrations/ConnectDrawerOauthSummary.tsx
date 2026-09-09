@@ -1,7 +1,9 @@
-import { InlineCallout, PillBadge, ProviderLogo } from "@/components/ui";
+import { InlineCallout } from "@/components/ui/InlineCallout";
+import { PillBadge } from "@/components/ui/Pill";
+import { ProviderLogo } from "@/components/ui/ProviderLogo";
 import { googlePropertyDisplayName } from "@/lib/integrations/google-property-grouping";
 import type { IntegrationProviderData } from "@/lib/integrations/types";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { GoogleScopes } from "./ConnectDrawerScopes";
 
 function kindBadge(property: string) {

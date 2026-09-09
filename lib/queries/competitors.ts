@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Actor } from "@/lib/auth/authorize";
 import {
   buildCompetitorMarket,
   emptyCompetitorFilter,
@@ -10,6 +11,7 @@ import {
   competitorMarketKey,
   resolveCompetitorMarket,
 } from "@/lib/competitors/scope-model";
+import { competitorAppliesToMarket } from "@/lib/competitors/serp-comparison";
 import type { CompetitorMarketOption } from "@/lib/competitors/types";
 import { normalizeCompetitorDomain } from "@/lib/competitors/types";
 import { prisma } from "@/lib/db/prisma";
@@ -17,8 +19,9 @@ import { isPublicIdOfType } from "@/lib/db/public-id";
 import { fetchProjectKeywordVolumes } from "@/lib/queries/keyword-metrics-query";
 import { storedOrganicDomainRanks } from "@/lib/rank-check/organic-ranks";
 import { trackedProjectDomain } from "@/lib/schemas/project";
-import { requireReadableProject } from "./_auth";
+import { requireReadableProject, requireReadableProjectFor } from "./_auth";
 import { legacyOrganicRanks } from "./competitor-legacy-ranks";
+import { loadCompetitorPolicies } from "./competitor-policies";
 import type { QueryKeywordDetail } from "./competitor-query-model";
 import {
   competitorMarketData,
@@ -30,19 +33,14 @@ import {
 const LEGACY_FALLBACK_MAX = 500;
 
 async function queryCompetitors(
-  projectId: string,
+  { project }: Awaited<ReturnType<typeof requireReadableProject>>,
   requested: CompetitorScope | null | undefined,
   includeAllMarkets: boolean,
 ) {
-  const { project } = await requireReadableProject(projectId);
   const projectDomain = trackedProjectDomain(project.domain) ?? "";
   const ownDomain = normalizeCompetitorDomain(projectDomain) ?? projectDomain;
   const [competitorRows, keywordSummaries] = await Promise.all([
-    prisma.competitor.findMany({
-      orderBy: [{ label: "asc" }, { domain: "asc" }],
-      select: { domain: true, label: true, publicId: true },
-      where: { projectId: project.id },
-    }),
+    loadCompetitorPolicies(project.id),
     prisma.keyword.findMany({
       orderBy: [{ id: "asc" }],
       select: {
@@ -74,6 +72,10 @@ async function queryCompetitors(
   const summaries = summarizeCompetitorMarkets(keywordSummaries);
   const selected = resolveCompetitorMarket(summaries, requested);
   const managed = competitorRows.map(managedCompetitor);
+  const managedForMarket = (locationId: string) =>
+    competitorRows
+      .filter((competitor) => competitorAppliesToMarket(competitor, locationId))
+      .map(managedCompetitor);
   const details =
     includeAllMarkets || selected
       ? await prisma.keyword.findMany({
@@ -137,7 +139,7 @@ async function queryCompetitors(
         legacyRanks,
         volumes,
         ownDomain,
-        managed,
+        managedForMarket(option.locationId),
       ),
       emptyCompetitorFilter,
     );
@@ -166,7 +168,7 @@ function requiredProjectPublicId(value: string) {
 }
 
 export async function getCompetitorsView(projectId: string, requested?: CompetitorScope | null) {
-  const result = await queryCompetitors(projectId, requested, false);
+  const result = await queryCompetitors(await requireReadableProject(projectId), requested, false);
   return {
     managedCompetitors: result.managedCompetitors,
     market: result.market,
@@ -178,7 +180,15 @@ export async function getCompetitorsView(projectId: string, requested?: Competit
 }
 
 export async function getCompetitorsApiView(projectId: string) {
-  const result = await queryCompetitors(projectId, null, true);
+  return readCompetitorsApiView(await requireReadableProject(projectId));
+}
+
+export async function getCompetitorsApiViewFor(actor: Actor, projectId: string) {
+  return readCompetitorsApiView(await requireReadableProjectFor(actor, projectId));
+}
+
+async function readCompetitorsApiView(scope: Awaited<ReturnType<typeof requireReadableProject>>) {
+  const result = await queryCompetitors(scope, null, true);
   return {
     managedCompetitors: result.managedCompetitors,
     markets: result.allMarkets ?? [],

@@ -1,16 +1,19 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { AccentCtaLink, Button, Card, EmptyState, ModuleMark } from "@/components/ui";
+import { AccentCtaLink } from "@/components/ui/AccentCtaLink";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ModuleMark } from "@/components/ui/ModuleMark";
 import { formatDateTime } from "@/lib/dates/format";
+import type { ResearchScope } from "@/lib/research/scope";
 import { appPath } from "@/lib/routing/app-path";
-import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  ChartLineDownIcon as ChartLineDown,
-  CheckCircleIcon as CheckCircle,
-  GlobeIcon as Globe,
-  MagnifyingGlassMinusIcon as MagnifyingGlassMinus,
-} from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
+import { ChartLineDownIcon as ChartLineDown } from "@phosphor-icons/react/dist/csr/ChartLineDown";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/csr/Globe";
+import { MagnifyingGlassMinusIcon as MagnifyingGlassMinus } from "@phosphor-icons/react/dist/csr/MagnifyingGlassMinus";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { DomainOverviewResultsLoading } from "./DomainOverviewLoadingSkeletons";
@@ -18,12 +21,12 @@ import type { DomainOverviewUiState } from "./domain-overview-workspace-model";
 
 type DomainOverviewStatePanelProps = {
   charged?: boolean | null;
-  market?: string;
   onClearFilters?: () => void;
   onRetry?: () => void;
   projectRef: string;
   resetAt?: number;
   retryLabel?: string;
+  researchScope?: ResearchScope | null;
   state: DomainOverviewUiState;
   target?: string;
 };
@@ -63,12 +66,12 @@ function ProviderAction({ projectRef }: Readonly<{ projectRef: string }>) {
 
 export function DomainOverviewStatePanel({
   charged = null,
-  market,
   onClearFilters,
   onRetry,
   projectRef,
   resetAt,
   retryLabel = "Retry",
+  researchScope,
   state,
   target,
 }: Readonly<DomainOverviewStatePanelProps>) {
@@ -129,11 +132,14 @@ export function DomainOverviewStatePanel({
     );
   }
   if (state === "unsupported_location") {
+    const description = researchScope
+      ? `Research is not available for ${researchScope.countryName} / ${researchScope.languageLabel}. Rank tracking is unaffected.`
+      : "Research is not available for this country and language pair. Rank tracking is unaffected.";
     return (
       <EmptyState
-        description="Domain intelligence is not available for this market. Choose another country or city."
+        description={description}
         icon={<Globe weight="regular" size={28} />}
-        title="This market is not supported for Domain Overview"
+        title="Research is not available for this country and language"
       />
     );
   }
@@ -193,7 +199,7 @@ export function DomainOverviewStatePanel({
             Check backlinks instead
           </Button>
         }
-        description={`The DataForSEO index may not cover ${target ?? "this domain"} yet${market ? ` in ${market}` : ""}. Try another market or scope.`}
+        description={`The DataForSEO index may not cover ${target ?? "this domain"} yet${researchScope ? ` in ${researchScope.countryName} / ${researchScope.languageLabel}` : ""}. Try another country and language.`}
         sectionTitle="Index coverage"
         title="No index data for this domain"
       />

@@ -1,4 +1,4 @@
-import { MapPinIcon as MapPin } from "@phosphor-icons/react";
+import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import { CountryFlag } from "./CountryFlag";
 import { countryNameForCode, type LocationSuggestion } from "./location-picker-data";
 
@@ -13,7 +13,7 @@ function cityCaption(option: LocationSuggestion) {
 
 type LocationResultsProps = {
   activeOption: LocationSuggestion | undefined;
-  cities: LocationSuggestion[];
+  places: LocationSuggestion[];
   countries: LocationSuggestion[];
   hasOptions: boolean;
   listId: string;
@@ -25,7 +25,7 @@ type LocationResultsProps = {
 
 export function LocationResults({
   activeOption,
-  cities,
+  places,
   countries,
   hasOptions,
   listId,
@@ -52,13 +52,13 @@ export function LocationResults({
           startIndex={0}
         />
       ) : null}
-      {cities.length > 0 ? (
+      {places.length > 0 ? (
         <LocationGroup
           activeOption={activeOption}
-          label="Cities"
+          label="Regions and cities"
           listId={listId}
           onPick={onPick}
-          options={cities}
+          options={places}
           startIndex={countries.length}
         />
       ) : null}
@@ -67,7 +67,7 @@ export function LocationResults({
       ) : null}
       {showEmpty ? (
         <span className="block px-3 py-2 normal-case text-fg-muted">
-          No results yet. City suggestions are powered by your connected providers.
+          No matching locations. Try another name or select the country.
         </span>
       ) : null}
     </div>
@@ -76,7 +76,7 @@ export function LocationResults({
 
 type LocationGroupProps = {
   activeOption: LocationSuggestion | undefined;
-  label: "Countries" | "Cities";
+  label: "Countries" | "Regions and cities";
   listId: string;
   onPick: (option: LocationSuggestion) => void;
   options: LocationSuggestion[];
@@ -129,9 +129,9 @@ function LocationGroup({
               <span className="block truncate text-[12.5px] font-semibold">
                 {option.kind === "city" ? option.cityName : option.displayName}
               </span>
-              {option.kind === "city" ? (
+              {option.kind !== "country" ? (
                 <span className="block truncate text-[11.5px] text-fg-muted">
-                  {cityCaption(option)}
+                  {option.kind === "region" ? "Region" : "City"} · {cityCaption(option)}
                 </span>
               ) : null}
             </span>

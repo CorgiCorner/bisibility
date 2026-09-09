@@ -1,8 +1,10 @@
 "use client";
 
-import { CopyButton, IdChip, Sheet } from "@/components/ui";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { IdChip } from "@/components/ui/IdChip";
+import { Sheet } from "@/components/ui/Sheet";
 import type { AuditDiff, AuditEntry } from "@/lib/queries/audit";
-import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import type { ReactNode } from "react";
 import { downloadAuditEntries } from "./audit-export";
 import { OperationPill } from "./OperationPill";

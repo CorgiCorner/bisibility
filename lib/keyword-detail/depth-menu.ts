@@ -3,7 +3,7 @@ import "server-only";
 import type { ResolveProviderRateInput } from "@/lib/provider-rates/resolver";
 import type { KeywordRow } from "@/lib/queries/keyword-row-types";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
-import { resolveEffectiveSerpDepth, type SerpDepth, serpDepthValues } from "@/lib/serp/markets";
+import { resolveEffectiveSerpDepth, type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
 
 export type KeywordDetailDepthMenuKeyword = Pick<
   KeywordRow,

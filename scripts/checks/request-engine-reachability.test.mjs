@@ -111,6 +111,52 @@ describe("request to engine client reachability guard", () => {
     );
   });
 
+  it("does not select test helpers as request roots", () => {
+    withFixture(
+      {
+        "app/(workspace)/[project]/rank-tracker/page.test-helpers.tsx": sideEffectImport("./page"),
+        "app/(workspace)/[project]/rank-tracker/page.tsx": sideEffectImport(
+          "@/lib/temporal/client",
+        ),
+        "lib/temporal/client.ts": "export const client = true;",
+      },
+      (root) => {
+        assert.deepEqual(inspectRepository(root).reachablePaths.map(({ key }) => key), [
+          "app/(workspace)/[project]/rank-tracker/page.tsx -> lib/temporal/client.ts",
+        ]);
+      },
+    );
+  });
+
+  it("follows a production request through an imported test helper", () => {
+    withFixture(
+      {
+        "app/request.ts": sideEffectImport("./request.test-helpers"),
+        "app/request.test-helpers.ts": sideEffectImport("@/lib/temporal/client"),
+        "lib/temporal/client.ts": "export const client = true;",
+      },
+      (root) => {
+        assert.deepEqual(inspectRepository(root).reachablePaths.map(({ key }) => key), [
+          "app/request.ts -> app/request.test-helpers.ts -> lib/temporal/client.ts",
+        ]);
+      },
+    );
+  });
+
+  it("keeps generic helpers as request roots", () => {
+    withFixture(
+      {
+        "app/request-helpers.ts": sideEffectImport("@/lib/temporal/client"),
+        "lib/temporal/client.ts": "export const client = true;",
+      },
+      (root) => {
+        assert.deepEqual(inspectRepository(root).reachablePaths.map(({ key }) => key), [
+          "app/request-helpers.ts -> lib/temporal/client.ts",
+        ]);
+      },
+    );
+  });
+
   it("ignores type-only imports and follows the equivalent value import", () => {
     withFixture(
       {

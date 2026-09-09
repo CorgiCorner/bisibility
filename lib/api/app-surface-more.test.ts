@@ -56,7 +56,7 @@ vi.mock("@/lib/team/service", () => ({
   resendTeamInvite: vi.fn(),
   revokeTeamInvite: mocks.actions.revokeInvite,
 }));
-vi.mock("@/lib/queries/team", () => ({ getTeamAccess: mocks.queries.getTeamAccess }));
+vi.mock("@/lib/queries/team", () => ({ getTeamAccessFor: mocks.queries.getTeamAccess }));
 vi.mock("@/lib/actions/providers", () => ({
   connectProvider: mocks.actions.connectProvider,
   disconnectProvider: mocks.actions.disconnectProvider,
@@ -66,17 +66,17 @@ vi.mock("@/lib/actions/providers", () => ({
 vi.mock("@/lib/queries/integrations", () => ({
   getIntegrationCategories: mocks.queries.getIntegrationCategories,
 }));
-vi.mock("@/lib/actions/saved-views", () => ({
-  createSavedView: mocks.actions.createSavedView,
-  deleteSavedView: mocks.actions.deleteSavedView,
+vi.mock("@/lib/saved-views/service", () => ({
+  createSavedViewFor: mocks.actions.createSavedView,
+  deleteSavedViewFor: mocks.actions.deleteSavedView,
 }));
-vi.mock("@/lib/queries/saved-views", () => ({ listSavedViews: mocks.queries.listSavedViews }));
-vi.mock("@/lib/actions/competitors", () => ({
-  addManagedCompetitor: mocks.actions.addManagedCompetitor,
-  removeManagedCompetitor: mocks.actions.removeManagedCompetitor,
+vi.mock("@/lib/queries/saved-views", () => ({ listSavedViewsFor: mocks.queries.listSavedViews }));
+vi.mock("@/lib/competitors/service", () => ({
+  addManagedCompetitorFor: mocks.actions.addManagedCompetitor,
+  removeManagedCompetitorFor: mocks.actions.removeManagedCompetitor,
 }));
 vi.mock("@/lib/queries/competitors", () => ({
-  getCompetitorsApiView: mocks.queries.getCompetitorsApiView,
+  getCompetitorsApiViewFor: mocks.queries.getCompetitorsApiView,
 }));
 vi.mock("@/lib/notifications/preferences-update", () => ({
   applyNotificationPreferences: mocks.actions.updateNotificationPreferences,
@@ -93,7 +93,7 @@ vi.mock("@/lib/migration/token-service", () => ({
   mintMigrationTokenForProject: mocks.tokenService.mint,
   revokeMigrationTokenForProject: mocks.tokenService.revoke,
 }));
-vi.mock("@/lib/queries/cloud", () => ({ getCloudImportView: mocks.queries.getCloudImportView }));
+vi.mock("@/lib/queries/cloud", () => ({ getCloudImportViewFor: mocks.queries.getCloudImportView }));
 
 const ids = {
   competitor: "cmp_aaaaaaaaaaaaaaaaaaaaaaaa",
@@ -113,6 +113,9 @@ const project = {
   publicId: ids.project,
   updatedAt: new Date("2026-01-02T00:00:00.000Z"),
 };
+
+const apiActor = { id: project.ownerId, memberships: [{ projectId: project.id, role: "admin" }] };
+const mutationContext = { actor: apiActor, auditActorId: null };
 
 function request(method: string, path: string, body?: unknown) {
   return new Request(`https://example.com/api/v1${path}`, {
@@ -237,21 +240,29 @@ describe("public API remaining app surface routes", () => {
     ]).toEqual([200, 201, 200, 200, 201, 200]);
     expect(mocks.actions.createSavedView).toHaveBeenCalledWith(
       expect.objectContaining({ name: "Mine", projectId: ids.project }),
+      mutationContext,
     );
-    expect(mocks.actions.deleteSavedView).toHaveBeenCalledWith({
-      projectId: ids.project,
-      viewId: ids.savedView,
-    });
+    expect(mocks.actions.deleteSavedView).toHaveBeenCalledWith(
+      {
+        projectId: ids.project,
+        viewId: ids.savedView,
+      },
+      mutationContext,
+    );
     expect(mocks.actions.addManagedCompetitor).toHaveBeenCalledWith(
       expect.objectContaining({
         domain: "competitor.example.com",
         projectId: ids.project,
       }),
+      mutationContext,
     );
-    expect(mocks.actions.removeManagedCompetitor).toHaveBeenCalledWith({
-      competitorId: ids.competitor,
-      projectId: ids.project,
-    });
+    expect(mocks.actions.removeManagedCompetitor).toHaveBeenCalledWith(
+      {
+        competitorId: ids.competitor,
+        projectId: ids.project,
+      },
+      mutationContext,
+    );
     expect(JSON.stringify(await views.json())).not.toContain("user_db_1");
     await expect(competitors.json()).resolves.toMatchObject({
       meta: {
@@ -293,12 +304,13 @@ describe("public API remaining app surface routes", () => {
     });
 
     expect([listResponse.status, createResponse.status]).toEqual([200, 201]);
-    expect(mocks.queries.listSavedViews).toHaveBeenCalledWith(ids.project, "competitors");
+    expect(mocks.queries.listSavedViews).toHaveBeenCalledWith(apiActor, ids.project, "competitors");
     expect(mocks.actions.createSavedView).toHaveBeenCalledWith(
       expect.objectContaining({
         config: expect.objectContaining({ surface: "competitors", version: 1 }),
         name: "US desktop",
       }),
+      mutationContext,
     );
   });
 
@@ -308,6 +320,7 @@ describe("public API remaining app surface routes", () => {
       check_email: true,
     });
     const tokens = await call("GET", `/projects/${ids.project}/migration-tokens`);
+    expect(mocks.queries.getCloudImportView).toHaveBeenCalledWith(apiActor, ids.project);
     const mint = await call("POST", `/projects/${ids.project}/migration-tokens`, {
       scope: "keywords",
     });

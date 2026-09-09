@@ -10,6 +10,16 @@ function violations(source) {
 }
 
 describe("server Tooltip boundary guard", () => {
+  it("rejects Tooltip leaf imports, including aliases, in a Server Component", () => {
+    const result = violations(`
+      import { Tooltip as HelpBubble } from "@/components/ui/Tooltip";
+      export function Fixture() {
+        return <HelpBubble content="Help"><button>Open</button></HelpBubble>;
+      }
+    `);
+    assert.equal(result.length, 1);
+  });
+
   it("rejects direct Tooltip JSX in a Server Component", () => {
     const result = violations(`
       import { Tooltip } from "@/components/ui";

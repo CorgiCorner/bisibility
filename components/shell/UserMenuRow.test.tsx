@@ -1,6 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { Menu, MenuContent } from "@/components/ui/primitives/menu";
+import { render as renderDom, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
-import { USER_MENU_ROW_SX, UserMenuRow } from "./UserMenuRow";
+import { USER_MENU_ROW_STYLE, UserMenuRow } from "./UserMenuRow";
 import {
   accountLinks,
   communityLinks,
@@ -8,12 +10,18 @@ import {
   resourceLinksForDeployment,
 } from "./user-menu-items";
 
+function render(children: ReactNode) {
+  return renderDom(
+    <Menu open>
+      <MenuContent>{children}</MenuContent>
+    </Menu>,
+  );
+}
+
 describe("UserMenuRow", () => {
   it("uses the sunken surface for account-menu hover and keyboard focus", () => {
-    expect(USER_MENU_ROW_SX["&:hover"]).toEqual({ backgroundColor: "var(--bg-sunken)" });
-    expect(USER_MENU_ROW_SX["&.Mui-focusVisible"]).toEqual({
-      backgroundColor: "var(--bg-sunken)",
-    });
+    expect(USER_MENU_ROW_STYLE["--control-hover-background-color"]).toBe("var(--bg-sunken)");
+    expect(USER_MENU_ROW_STYLE["--control-focus-background-color"]).toBe("var(--bg-sunken)");
   });
 
   it("hides the managed homepage link on self-hosted deployments", () => {

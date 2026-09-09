@@ -2,7 +2,7 @@
 
 import type { BacklinksOutcome, BacklinksRow } from "@/lib/backlinks/types";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
-import { CheckIcon as Check } from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { useState } from "react";
 import { BacklinksAggregateTable } from "./BacklinksAggregateTable";
 import { BacklinksExportMenu } from "./BacklinksExportMenu";

@@ -1,9 +1,10 @@
 import type { SerpLanguage } from "./language-catalog";
 import {
-  type CityLocationLookup,
   type CountrySeed,
   canonicalKey,
   countrySeed,
+  type LocationCandidate,
+  type LocationLookup,
   type LocationSelector,
   type LocationStore,
   locationLanguage,
@@ -11,10 +12,9 @@ import {
 } from "./location";
 
 // Resolves a location selector into a persisted, deduplicated location row.
-// Country selectors are deterministic (offline seed). City selectors go through
-// a provider lookup and are cached by canonicalKey. Unresolved cities DEGRADE to
-// the country row with a warning - the create/edit caller decides how to surface
-// it; the runner/adapter path must never throw on stored data (design §5).
+// Country selectors are deterministic (offline seed). Region and city selectors
+// go through a provider catalog and are cached by canonicalKey. An unresolved
+// granular location degrades to country; create/edit callers reject that result.
 
 export type LocationResolution = {
   location: ResolvedLocation;
@@ -24,7 +24,8 @@ export type LocationResolution = {
 
 export type ResolveDeps = {
   store: LocationStore;
-  lookup?: CityLocationLookup;
+  lookup?: LocationLookup;
+  trustedCandidate?: LocationCandidate;
 };
 
 export async function resolveLocation(
@@ -38,32 +39,41 @@ export async function resolveLocation(
   }
   const language = locationLanguage(countryCode, selector.languageCode);
 
-  const cityName = selector.cityName?.trim();
-  if (!cityName) {
+  const kind =
+    selector.kind ?? (selector.cityName ? "city" : selector.regionName ? "region" : "country");
+  if (kind === "country") {
     const location = await getOrCreateCountry(countryCode, seed, language, deps.store);
     return { location, degraded: false, warning: null };
   }
-
-  const candidate = deps.lookup
-    ? await deps.lookup.findCity({
-        cityName,
-        countryCode,
-        regionCode: selector.regionCode,
-        regionName: selector.regionName,
-      })
-    : null;
-
-  if (!candidate) {
+  const name =
+    kind === "region"
+      ? selector.regionName?.trim() || selector.regionCode?.trim()
+      : selector.cityName?.trim();
+  if (!name) {
     const location = await getOrCreateCountry(countryCode, seed, language, deps.store);
     return {
       location,
       degraded: true,
-      warning: `Could not resolve "${cityName}" in ${seed.displayName}; tracking at country level.`,
+      warning: `Could not resolve a ${kind} in ${seed.displayName}; tracking at country level.`,
+    };
+  }
+
+  const candidate =
+    deps.trustedCandidate ??
+    (deps.lookup ? await deps.lookup.find({ ...selector, countryCode, kind }) : null);
+
+  if (!candidate || !matchesSelector(candidate, selector, countryCode, kind)) {
+    const location = await getOrCreateCountry(countryCode, seed, language, deps.store);
+    return {
+      location,
+      degraded: true,
+      warning: `Could not resolve "${name}" in ${seed.displayName}; tracking at country level.`,
     };
   }
 
   const key = canonicalKey({
-    countryCode,
+    countryCode: candidate.countryCode,
+    kind: candidate.kind,
     regionCode: candidate.regionCode,
     regionName: candidate.regionName,
     cityName: candidate.cityName,
@@ -71,13 +81,14 @@ export async function resolveLocation(
   });
   const cached = await deps.store.findByKey(key);
   if (cached) {
-    return { location: cached, degraded: false, warning: null };
+    const location = deps.store.enrich ? await deps.store.enrich(cached, candidate) : cached;
+    return { location, degraded: false, warning: null };
   }
 
   const location = await persist(deps.store, {
-    kind: "city",
+    kind: candidate.kind,
     displayName: candidate.displayName,
-    countryCode,
+    countryCode: candidate.countryCode,
     regionCode: candidate.regionCode,
     cityName: candidate.cityName,
     gl: seed.gl,
@@ -90,6 +101,21 @@ export async function resolveLocation(
     canonicalKey: key,
   });
   return { location, degraded: false, warning: null };
+}
+
+function matchesSelector(
+  candidate: LocationCandidate,
+  selector: LocationSelector,
+  countryCode: string,
+  kind: LocationCandidate["kind"],
+) {
+  return (
+    candidate.kind === kind &&
+    candidate.countryCode.toUpperCase() === countryCode &&
+    (!selector.selectedCanonicalKey ||
+      canonicalKey({ ...candidate, languageCode: undefined }) ===
+        canonicalKey({ ...selector, countryCode, kind, languageCode: undefined }))
+  );
 }
 
 async function getOrCreateCountry(

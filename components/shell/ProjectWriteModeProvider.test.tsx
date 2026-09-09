@@ -1,6 +1,8 @@
 import {
   ProjectReadOnlyTooltip,
   ProjectWriteModeBanner,
+} from "@/components/shell/ProjectWriteModeNotices";
+import {
   ProjectWriteModeProvider,
   useProjectWriteMode,
 } from "@/components/shell/ProjectWriteModeProvider";

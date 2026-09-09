@@ -1,6 +1,6 @@
 "use client";
 
-import { useToast } from "@/components/ui";
+import { useToast } from "@/components/ui/toast-context";
 import type { removeSavedKeywords, saveKeywords } from "@/lib/actions/saved-keyword";
 import { rankTrackerTabPath } from "@/lib/routing/app-path";
 import { actionErrorMessage } from "@/lib/ui/action-error";

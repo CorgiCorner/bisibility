@@ -25,6 +25,8 @@ const mocks = vi.hoisted(() => {
     update: "member",
   } as const;
   const prisma = {
+    $queryRaw: vi.fn(),
+    $transaction: vi.fn(),
     competitor: {
       create: vi.fn(),
       delete: vi.fn(),
@@ -32,9 +34,10 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn(),
       update: vi.fn(),
     },
-    project: { findFirst: vi.fn() },
+    project: { findFirst: vi.fn(), updateMany: vi.fn() },
     user: { findUnique: vi.fn() },
   };
+  prisma.$transaction.mockImplementation((callback) => callback(prisma));
 
   return {
     AuthorizationError,
@@ -93,6 +96,8 @@ describe("competitor actions", () => {
       label: "Competitor",
       publicId: competitorPublicId,
     });
+    mocks.prisma.$queryRaw.mockResolvedValue([]);
+    mocks.prisma.project.updateMany.mockResolvedValue({ count: 1 });
     mocks.writeAudit.mockResolvedValue({});
   });
 
@@ -126,6 +131,7 @@ describe("competitor actions", () => {
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "competitor.add", targetId: competitorPublicId }),
+      mocks.prisma,
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "competitors"), "page");
     await expect(
@@ -208,6 +214,10 @@ describe("competitor actions", () => {
     expect(mocks.prisma.competitor.delete).toHaveBeenCalledWith({
       where: { id: "competitor_db_1" },
     });
+    for (const segments of [["settings", "competitors"], ["dashboard"], ["rank-tracker", "[id]"]]) {
+      expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", ...segments), "page");
+    }
+
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "competitor.remove",

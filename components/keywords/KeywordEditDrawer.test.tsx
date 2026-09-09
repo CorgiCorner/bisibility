@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordEditDrawer } from "./KeywordEditDrawer";
 
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/Button", () => ({
   Button: ({
     children,
     loading: _loading,
@@ -15,6 +15,8 @@ vi.mock("@/components/ui", () => ({
     loadingLabel?: string;
     variant?: string;
   }) => <button {...props}>{children}</button>,
+}));
+vi.mock("@/components/ui/SegmentedControl", () => ({
   SegmentedControl: ({
     onChange,
     options,
@@ -27,6 +29,8 @@ vi.mock("@/components/ui", () => ({
         {option.label}
       </button>
     )),
+}));
+vi.mock("@/components/ui/Sheet", () => ({
   Sheet: ({
     children,
     footer,

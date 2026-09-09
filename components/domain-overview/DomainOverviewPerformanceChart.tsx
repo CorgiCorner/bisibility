@@ -1,11 +1,13 @@
 "use client";
 
-import { Button, Card, ChartRegion, SegmentedControl } from "@/components/ui";
+import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { ChartRegion } from "@/components/ui/ChartRegion";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import type { HistoricalOverviewRow } from "@/lib/providers/types";
-import { chartColors } from "@/lib/theme/chart-colors";
-import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react";
+import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/csr/ChartLineUp";
 import { useState } from "react";
 import { type HistoryMetric, historyLabel, historyMetricValue } from "./domain-overview-metrics";
 
@@ -27,12 +29,6 @@ const metricLabels: Record<HistoryMetric, string> = {
   top10: "Top 10",
   traffic: "Est. traffic",
   value: "Traffic value",
-};
-const axisTextStyle = {
-  fill: "var(--fg-muted)",
-  fontFamily: "var(--font-sans), system-ui, sans-serif",
-  fontVariantNumeric: "tabular-nums",
-  fontSize: 11,
 };
 
 function formatValue(value: number, metric: HistoryMetric) {
@@ -103,59 +99,18 @@ export function DomainOverviewPerformanceChart({
           className="mt-2 h-[260px]"
           label={`${metricLabels[metric]} monthly organic performance chart`}
         >
-          <LineChart
-            axisHighlight={{ x: "line", y: "none" }}
-            grid={{ horizontal: true }}
+          <TimeSeriesChart
             height={260}
-            hideLegend
-            margin={{ bottom: 28, left: 0, right: 34, top: 12 }}
-            series={[
-              {
-                area: true,
-                baseline: 0,
-                color: chartColors.accent,
-                curve: "linear",
-                data: values,
-                label: metricLabels[metric],
-                showMark: false,
-                valueFormatter: (value) =>
-                  typeof value === "number" ? formatValue(value, metric) : "No data",
-              },
-            ]}
-            skipAnimation
-            sx={{
-              "& .MuiAreaElement-root": { fill: "var(--accent)", fillOpacity: 0.09 },
-              "& .MuiChartsGrid-line": { stroke: "var(--border)" },
-              "& .MuiLineElement-root": { strokeWidth: 2.5 },
-              "& .MuiChartsAxis-tickLabel": axisTextStyle,
-              "& .MuiChartsAxis-directionY .MuiChartsAxis-tickLabel": {
-                // The axis anchor sits 42px right of the card title; align every label start to it.
-                textAnchor: "start",
-                transform: "translateX(-42px)",
-              },
-            }}
-            xAxis={[
-              {
-                data: labels,
-                disableLine: true,
-                disableTicks: true,
-                scaleType: "point",
-                tickLabelInterval: (_value: unknown, index: number) =>
-                  visible.length <= 7 || index % 2 === 0 || index === visible.length - 1,
-                tickLabelStyle: axisTextStyle,
-              },
-            ]}
-            yAxis={[
-              {
-                disableLine: true,
-                disableTicks: true,
-                min: 0,
-                tickLabelStyle: axisTextStyle,
-                tickNumber: 5,
-                valueFormatter: (value: number) => formatValue(value, metric),
-                width: 48,
-              },
-            ]}
+            labels={labels}
+            series={[{ label: metricLabels[metric], values, color: "var(--accent)", fill: true }]}
+            formatValue={(value) => formatValue(value, metric)}
+            areaOpacity={0.09}
+            strokeWidth={2.5}
+            yWidth={48}
+            xTickIndexes={labels.flatMap((_, index) =>
+              visible.length <= 7 || index % 2 === 0 || index === visible.length - 1 ? [index] : [],
+            )}
+            margin={{ top: 12, right: 34, bottom: 0, left: 0 }}
           />
         </ChartRegion>
       ) : (

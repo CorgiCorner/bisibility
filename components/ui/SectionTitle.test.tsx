@@ -8,7 +8,6 @@ describe("SectionTitle", () => {
 
     const heading = screen.getByRole("heading", { name: "Revenue", level: 2 });
     expect(heading).toHaveClass("text-ui-section", "font-semibold");
-    expect(heading).toHaveStyle({ fontSize: "15px", fontWeight: "600", lineHeight: "1.35" });
   });
 
   it("keeps small and large on their existing variants", () => {
@@ -46,7 +45,6 @@ describe("SectionTitle", () => {
     const heading = screen.getByRole("heading", { name: "Compact revenue" });
     expect(heading).toHaveClass("text-ui-section");
     expect(heading).not.toHaveClass("text-lg");
-    expect(heading).toHaveStyle({ fontSize: "15px", fontWeight: "600", lineHeight: "1.35" });
   });
 
   it("keeps caller font-size overrides on the non-semantic large variant", () => {

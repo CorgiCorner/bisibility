@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
-vi.mock("@/components/ui/Tooltip", () => import("@/tests/mui-tooltip"));
+vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 
 describe("WorkspaceSwitcher", () => {
   it.each([true, false])(
@@ -318,24 +318,12 @@ describe("WorkspaceSwitcher", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Switch project" }));
     const menu = await screen.findByRole("menu", { name: "Projects" });
-    const paper = document.querySelector<HTMLElement>(".MuiMenu-paper");
-
-    expect(paper).not.toBeNull();
-    const generatedClass = Array.from(paper?.classList ?? []).find((className) =>
-      className.endsWith("-MuiPaper-root-MuiPopover-paper-MuiMenu-paper"),
-    );
-    const paperRule = Array.from(document.styleSheets)
-      .flatMap((sheet) => Array.from(sheet.cssRules, (rule) => rule.cssText))
-      .find((rule) => generatedClass !== undefined && rule.includes(`.${generatedClass}`));
-
-    expect(paperRule).toContain("background-color: var(--bg-elev)");
-    expect(paperRule).toContain("border: 1px solid var(--border-control)");
-    expect(paperRule).toContain("box-shadow: none");
-    expect(paperRule).toContain("max-width: calc(100vw - 16px)");
-    expect(paperRule).toContain("width: 320px");
-    expect(paper?.parentElement?.style.opacity).toBe("");
-    expect(paper?.parentElement?.style.transform ?? "").not.toMatch(/scale/);
-    expect(paper?.style.transition ?? "").not.toMatch(/180ms/);
+    expect(menu.style.backgroundColor).toBe("var(--bg-elev)");
+    expect(menu.style.border).toBe("1px solid var(--border-control)");
+    expect(menu.style.boxShadow).toBe("none");
+    expect(menu.style.maxWidth).toBe("calc(100vw - 16px)");
+    expect(menu.style.width).toBe("320px");
+    expect(menu).toHaveAttribute("data-instant", "true");
 
     fireEvent.keyDown(menu, { key: "Escape" });
     await waitFor(() => {

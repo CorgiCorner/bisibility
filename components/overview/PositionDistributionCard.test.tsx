@@ -1,12 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { PositionDistributionCard } from "./PositionDistributionCard";
-
-const { barChartMock } = vi.hoisted(() => ({
-  barChartMock: vi.fn((..._args: unknown[]) => null),
-}));
-
-vi.mock("@mui/x-charts/BarChart", () => ({ BarChart: barChartMock }));
 
 describe("PositionDistributionCard", () => {
   it("uses the chart-bar icon for its empty state", () => {
@@ -16,7 +10,7 @@ describe("PositionDistributionCard", () => {
     expect(container.querySelector('[data-icon="ChartLineUpIcon"]')).not.toBeInTheDocument();
   });
 
-  it("places every count, including zero, outside its bar", () => {
+  it("exposes every count, including zero, to keyboard and screen reader users", () => {
     render(
       <PositionDistributionCard
         buckets={[
@@ -29,57 +23,10 @@ describe("PositionDistributionCard", () => {
       />,
     );
 
-    const chartProps = barChartMock.mock.calls.at(-1)?.[0] as
-      | {
-          height: number;
-          margin: { bottom: number; left: number; right: number; top: number };
-          series: Array<{
-            barLabel: ({ value }: { value: number }) => string | null;
-            barLabelPlacement: string;
-          }>;
-          sx: Record<string, unknown>;
-        }
-      | undefined;
-    const series = chartProps?.series[0];
-    expect(chartProps).toMatchObject({
-      height: 244,
-      margin: { top: 22, right: 8, bottom: 28, left: 8 },
-    });
-    expect(series?.barLabelPlacement).toBe("outside");
-    expect(series?.barLabel({ value: 1 })).toBe("1");
-    expect(series?.barLabel({ value: 0 })).toBe("0");
-    expect(chartProps?.sx).toMatchObject({
-      "& .MuiBarLabel-root": {
-        fill: "var(--fg-muted)",
-        fontSize: 11,
-        fontWeight: 400,
-        transform: "translateY(-4px)",
-      },
-      "@container (max-width: 359px)": {
-        "& .MuiBarLabel-root": { fontSize: 10 },
-      },
-    });
-    expect(screen.getByRole("button", { name: "Positions 1 to 3: 1 keywords" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Positions 4 to 10: 0 keywords" })).toBeVisible();
+    const emptyBucket = screen.getByRole("button", { name: "Positions 4 to 10: 0 keywords" });
+    expect(emptyBucket).toHaveAttribute("type", "button");
     expect(
-      screen.getByText(
-        "Ranked keywords grouped by current position. Keywords outside the top 100 are not shown.",
-        { selector: "p" },
-      ),
-    ).toBeVisible();
-    expect(
-      screen.queryByRole("button", {
-        name: "Ranked keywords grouped by current position. Keywords outside the top 100 are not shown.",
-      }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /1 keyword by rank bucket/ }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("region", { name: /Position distribution chart/ })).toBeInTheDocument();
-    expect(
-      screen
-        .getByRole("heading", { name: "Position distribution" })
-        .closest("[data-overview-chart-header]"),
-    ).toHaveClass("min-h-[96px]");
+      screen.getByRole("button", { name: "Positions 1 to 3: 1 keywords" }),
+    ).toBeInTheDocument();
   });
 });

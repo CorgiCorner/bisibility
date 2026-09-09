@@ -1,14 +1,15 @@
 "use client";
 
-import { AccentCtaLink, Button, EmptyState, ModuleMark } from "@/components/ui";
+import { AccentCtaLink } from "@/components/ui/AccentCtaLink";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ModuleMark } from "@/components/ui/ModuleMark";
 import { appPath } from "@/lib/routing/app-path";
 import { docsLinkProps } from "@/lib/site/site";
-import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  BinocularsIcon as Binoculars,
-  CheckCircleIcon as CheckCircle,
-  MagnifyingGlassMinusIcon as MagnifyingGlassMinus,
-} from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
+import { BinocularsIcon as Binoculars } from "@phosphor-icons/react/dist/csr/Binoculars";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { MagnifyingGlassMinusIcon as MagnifyingGlassMinus } from "@phosphor-icons/react/dist/csr/MagnifyingGlassMinus";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ResearchResultsLoading } from "./ResearchLoadingSkeletons";
@@ -26,7 +27,7 @@ export type ResearchState =
 type ResearchStatePanelProps = {
   cached?: boolean | null;
   charged?: boolean | null;
-  market?: string;
+  scopeLabel?: string;
   mode?: string;
   onEditSearch?: () => void;
   onRetry?: () => void;
@@ -123,19 +124,18 @@ function LookupFailedState({
 
 function EmptyResultsState({
   cached,
-  market,
+  scopeLabel,
   mode,
   onEditSearch,
 }: Readonly<{
   cached: boolean | null;
-  market?: string;
+  scopeLabel?: string;
   mode: string;
   onEditSearch?: () => void;
 }>) {
   const bullets = [
     ...(mode === "auto" ? [] : ["Switch mode to Auto to cascade across all sources"]),
     "Broaden a seed: shorter, more generic phrasing",
-    "Try a larger market, some phrases only surface there",
   ];
 
   return (
@@ -158,7 +158,9 @@ function EmptyResultsState({
       }
       bullets={bullets}
       icon={<MagnifyingGlassMinus weight="regular" size={28} />}
-      title={market ? `No ideas found for these seeds in ${market}` : "No keyword ideas found"}
+      title={
+        scopeLabel ? `No ideas found for these seeds in ${scopeLabel}` : "No keyword ideas found"
+      }
     />
   );
 }
@@ -183,7 +185,7 @@ function MessageState({
 export function ResearchStatePanel({
   cached = null,
   charged = null,
-  market,
+  scopeLabel,
   mode = "auto",
   onEditSearch,
   onRetry,
@@ -240,8 +242,8 @@ export function ResearchStatePanel({
   if (state === "unsupported_location") {
     return (
       <MessageState
-        description="Keyword research is not available for this market. Rank tracking for it is unaffected."
-        title="This market is not supported for research"
+        description={`Research is not available for ${scopeLabel ?? "this country and language"}. Rank tracking is unaffected.`}
+        title="Research is not available for this country and language"
       />
     );
   }
@@ -256,6 +258,11 @@ export function ResearchStatePanel({
     );
   }
   return (
-    <EmptyResultsState cached={cached} market={market} mode={mode} onEditSearch={onEditSearch} />
+    <EmptyResultsState
+      cached={cached}
+      mode={mode}
+      onEditSearch={onEditSearch}
+      scopeLabel={scopeLabel}
+    />
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultSerpKeywordMarket, projectDefaultSerpMarket } from "./default-market";
+import { projectDefaultSerpMarket } from "./default-market";
 
 describe("SERP default market planning", () => {
   it("prefers an explicit project default over derived keyword markets", () => {
@@ -74,30 +74,50 @@ describe("SERP default market planning", () => {
     });
   });
 
-  it("uses the dominant supported keyword market", () => {
+  it("ignores denormalized labels when selecting a default", () => {
     expect(
-      defaultSerpKeywordMarket([
-        { device: "desktop", location: "Global" },
-        { device: "mobile", location: "DE" },
-        { device: "mobile", location: "Germany" },
-      ]),
-    ).toMatchObject({ device: "mobile", location: "Germany" });
+      projectDefaultSerpMarket(null, [{ device: "mobile", location: "Germany" }]),
+    ).toMatchObject({
+      locationKey: "US",
+      source: "fallback",
+    });
   });
 
-  it("uses deterministic tie-breaks for equal keyword markets", () => {
-    const tied = [
-      { device: "mobile" as const, location: "Poland" },
-      { device: "desktop" as const, location: "United States" },
-      { device: "desktop" as const, location: "Germany" },
-    ];
-
-    expect(defaultSerpKeywordMarket(tied)).toMatchObject({
-      device: "desktop",
-      location: "United States",
+  it("takes the explicit canonical key over a stale country label", () => {
+    expect(
+      projectDefaultSerpMarket(
+        { country: "United States", device: "mobile", locationKey: "DE@en" },
+        [],
+      ),
+    ).toMatchObject({
+      country: "Germany",
+      locationKey: "DE@en",
+      source: "explicit",
     });
-    expect(defaultSerpKeywordMarket([...tied].reverse())).toMatchObject({
-      device: "desktop",
-      location: "United States",
+  });
+
+  it("keeps same-named regions and language variants separate", () => {
+    const make = (key: string) => ({
+      device: "mobile" as const,
+      location: "Display label",
+      locationRef: {
+        canonicalKey: key,
+        cityName: null,
+        countryCode: "ES",
+        displayName: "Andalusia",
+        kind: "region" as const,
+      },
+    });
+    expect(
+      projectDefaultSerpMarket(null, [
+        make("ES/Andalusia"),
+        make("ES/Andalusia@en"),
+        make("ES/Andalusia@en"),
+      ]),
+    ).toMatchObject({
+      locationKey: "ES/Andalusia@en",
+      displayName: "Andalusia",
+      source: "derived",
     });
   });
 });

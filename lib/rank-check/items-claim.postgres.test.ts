@@ -1,145 +1,14 @@
-import { PGlite } from "@electric-sql/pglite";
 import { describe, expect, it, vi } from "vitest";
 import { claimDueRankCheckItems } from "./items-claim";
+import { createClaimFixture, publicId, RUN_PUBLIC_ID } from "./items-claim.postgres-fixtures";
 
 vi.mock("@/lib/notifications/realtime", () => ({
   publishOperationChanged: vi.fn(async () => undefined),
 }));
 
-type Row = Record<string, unknown>;
-type WhereClause = Row & { OR?: Row[] };
-type UpdateArgs = { data: Row; where: WhereClause };
-
-/**
- * The claim reads `keywords."archivedAt"` and correlates each row against `project_markets`, so
- * the fixture carries both. Anything the claim touches must exist here or this suite stops
- * proving that the SQL runs on Postgres at all.
- */
-const SCHEMA = `
-  CREATE TABLE projects (id text PRIMARY KEY, domain text);
-  CREATE TABLE project_markets (
-    id text PRIMARY KEY, "projectId" text, "locationId" text, status text
-  );
-  CREATE TABLE keywords (
-    id text PRIMARY KEY, "publicId" text, "projectId" text, "locationId" text,
-    device text, "archivedAt" timestamptz
-  );
-  CREATE TABLE rank_check_runs (
-    id text PRIMARY KEY, "publicId" text, "projectId" text, "requestedCount" int,
-    "selectionKind" text, trigger text, status text, "startedAt" timestamptz, "finishedAt" timestamptz,
-    outcome text, "costCents" int DEFAULT 0, "cancelledCount" int DEFAULT 0,
-    "completedCount" int DEFAULT 0, "deferredCount" int DEFAULT 0, "failedCount" int DEFAULT 0,
-    "keywordCount" int DEFAULT 0, "skippedCount" int DEFAULT 0, "targetCount" int DEFAULT 0,
-    "totalCount" int DEFAULT 0
-  );
-  CREATE TABLE rank_check_run_items (
-    id text PRIMARY KEY, "runId" text, "keywordId" text, status text,
-    "actualCostCents" int, "blockedReason" text, "claimAttempts" int DEFAULT 0,
-    "claimExpiresAt" timestamptz, "finishedAt" timestamptz, "notBefore" timestamptz,
-    "rankCheckId" text, "startedAt" timestamptz, "updatedAt" timestamptz
-  );
-`;
-
-/** The audit writer rejects anything but a strict 24-character public-ID suffix. */
-function publicId(prefix: string, seed: string) {
-  return `${prefix}_${seed.padEnd(24, "x")}`;
-}
-
-const RUN_PUBLIC_ID = publicId("rcr", "run");
-
-function assignments(data: Row, values: unknown[]) {
-  return Object.entries(data)
-    .map(([column, value]) => {
-      if (value && typeof value === "object" && "increment" in value) {
-        const step = (value as { increment: number }).increment;
-        return `"${column}" = COALESCE("${column}", 0) + $${values.push(step)}`;
-      }
-      return `"${column}" = $${values.push(value)}`;
-    })
-    .join(", ");
-}
-
-function conditions(where: WhereClause, values: unknown[]): string {
-  const parts = Object.entries(where).map(([column, value]) => {
-    if (column === "OR") {
-      const alternatives = (value as Row[]).map((clause) => `(${conditions(clause, values)})`);
-      return `(${alternatives.join(" OR ")})`;
-    }
-    return value === null ? `"${column}" IS NULL` : `"${column}" = $${values.push(value)}`;
-  });
-  return parts.length === 0 ? "TRUE" : parts.join(" AND ");
-}
-
-/**
- * A Prisma-shaped client backed by real Postgres. Every write the claim performs - the claim SQL,
- * the cancellation of a row that stopped being runnable, and the run counters - lands in the
- * tables above, so a column the production code adds cannot be silently absent here.
- */
-async function createFixture() {
-  const db = new PGlite();
-  await db.exec(SCHEMA);
-  const audits: Row[] = [];
-  const query = async (text: string, values: unknown[] = []) =>
-    (await db.query(text, values)).rows as Row[];
-  const updateMany = async (table: string, { data, where }: UpdateArgs) => {
-    const values: unknown[] = [];
-    const set = assignments(data, values);
-    const filter = conditions(where, values);
-    const updated = await query(
-      `UPDATE "${table}" SET ${set} WHERE ${filter} RETURNING id`,
-      values,
-    );
-    return { count: updated.length };
-  };
-  const tx = {
-    $queryRaw: async (sql: { text: string; values: unknown[] }) => query(sql.text, sql.values),
-    auditLog: {
-      create: async ({ data }: { data: Row }) => {
-        audits.push(data);
-        return data;
-      },
-    },
-    rankCheckRun: {
-      update: (args: UpdateArgs) => updateMany("rank_check_runs", args),
-      updateMany: (args: UpdateArgs) => updateMany("rank_check_runs", args),
-    },
-    rankCheckRunItem: {
-      groupBy: async ({ where }: { where: { runId: string } }) => {
-        const rows = await query(
-          `SELECT "keywordId", status, COUNT(*)::int AS count,
-             COALESCE(SUM("actualCostCents"), 0)::int AS cost
-           FROM "rank_check_run_items" WHERE "runId" = $1 GROUP BY "keywordId", status`,
-          [where.runId],
-        );
-        return rows.map((row) => ({
-          _count: { _all: row.count },
-          _sum: { actualCostCents: row.cost },
-          keywordId: row.keywordId,
-          status: row.status,
-        }));
-      },
-      updateMany: (args: UpdateArgs) => updateMany("rank_check_run_items", args),
-    },
-  };
-  const database = {
-    $transaction: async (callback: (value: typeof tx) => Promise<unknown>) => {
-      await db.exec("BEGIN");
-      try {
-        const result = await callback(tx);
-        await db.exec("COMMIT");
-        return result;
-      } catch (error) {
-        await db.exec("ROLLBACK");
-        throw error;
-      }
-    },
-  };
-  return { audits, database, db, query };
-}
-
 describe("first target claim SQL", () => {
   it("claims queued runs only when due and never resets the first execution time", async () => {
-    const { database, db, query } = await createFixture();
+    const { database, db, query } = await createClaimFixture();
     try {
       await db.exec(`
         INSERT INTO projects VALUES ('project', 'example.com');
@@ -180,7 +49,7 @@ describe("first target claim SQL", () => {
   });
 
   it("cancels scheduled rows whose market is archived after enqueue", async () => {
-    const { audits, database, db, query } = await createFixture();
+    const { audits, database, db, query } = await createClaimFixture();
     try {
       await db.exec(`
         INSERT INTO projects VALUES ('project', 'example.com');
@@ -233,7 +102,7 @@ describe("first target claim SQL", () => {
   });
 
   it.each(["manual", "api"])("does not claim immediate %s run items", async (trigger) => {
-    const { audits, database, db, query } = await createFixture();
+    const { audits, database, db, query } = await createClaimFixture();
     try {
       await db.exec(`
         INSERT INTO projects VALUES ('project', 'example.com');
@@ -254,6 +123,114 @@ describe("first target claim SQL", () => {
         { status: "queued", blockedReason: null },
       ]);
       expect(audits).toEqual([]);
+    } finally {
+      await db.close();
+    }
+  });
+
+  it("reclaims only an expired unlinked lease and keeps its first start", async () => {
+    const { audits, database, db, query } = await createClaimFixture();
+    const now = new Date("2026-09-04T14:00:00.000Z");
+    const firstStart = new Date("2026-09-04T13:00:00.000Z");
+    try {
+      await db.exec(`
+        INSERT INTO projects VALUES ('project', 'example.com');
+        INSERT INTO project_markets VALUES ('pm', 'project', 'market', 'active');
+        INSERT INTO keywords (id, "publicId", "projectId", "locationId", device)
+          VALUES ('expired-keyword', '${publicId("kw", "expired")}', 'project', 'market', 'desktop'),
+            ('linked-keyword', '${publicId("kw", "linked")}', 'project', 'market', 'desktop'),
+            ('unexpired-keyword', '${publicId("kw", "unexpired")}', 'project', 'market', 'desktop');
+        INSERT INTO rank_check_runs (id, "publicId", "projectId", "requestedCount", "selectionKind", status)
+          VALUES ('run', '${RUN_PUBLIC_ID}', 'project', 3, 'scheduled_due', 'running');
+        INSERT INTO rank_check_run_items
+          (id, "runId", "keywordId", status, "claimAttempts", "claimExpiresAt", "rankCheckId", "startedAt")
+          VALUES
+            ('expired', 'run', 'expired-keyword', 'running', 1, '2026-09-04 13:59:00', NULL, '2026-09-04 13:00:00'),
+            ('linked', 'run', 'linked-keyword', 'running', 1, '2026-09-04 13:59:00', 'check-1', '2026-09-04 13:00:00'),
+            ('unexpired', 'run', 'unexpired-keyword', 'running', 1, '2026-09-04 14:01:00', NULL, '2026-09-04 13:00:00');
+      `);
+
+      await expect(claimDueRankCheckItems({ now }, database as never)).resolves.toMatchObject({
+        claimed: 1,
+        groups: [expect.objectContaining({ runItemIds: ["expired"] })],
+      });
+      expect(
+        await query(
+          'SELECT id, status, "claimAttempts", "claimExpiresAt", "rankCheckId", "startedAt" FROM rank_check_run_items ORDER BY id',
+        ),
+      ).toEqual([
+        {
+          id: "expired",
+          status: "running",
+          claimAttempts: 2,
+          claimExpiresAt: new Date("2026-09-04T14:05:00.000Z"),
+          rankCheckId: null,
+          startedAt: firstStart,
+        },
+        {
+          id: "linked",
+          status: "running",
+          claimAttempts: 1,
+          claimExpiresAt: new Date("2026-09-04T13:59:00.000Z"),
+          rankCheckId: "check-1",
+          startedAt: firstStart,
+        },
+        {
+          id: "unexpired",
+          status: "running",
+          claimAttempts: 1,
+          claimExpiresAt: new Date("2026-09-04T14:01:00.000Z"),
+          rankCheckId: null,
+          startedAt: firstStart,
+        },
+      ]);
+      expect(audits.map((audit) => (audit.after as { reason: string }).reason)).toEqual([
+        "lease_expired",
+      ]);
+    } finally {
+      await db.close();
+    }
+  });
+
+  it("blocks an exhausted expired lease, finalizes its run, and audits the loss", async () => {
+    const { audits, database, db, query } = await createClaimFixture();
+    const now = new Date("2026-09-04T14:00:00.000Z");
+    try {
+      await db.exec(`
+        INSERT INTO projects VALUES ('project', 'example.com');
+        INSERT INTO project_markets VALUES ('pm', 'project', 'market', 'active');
+        INSERT INTO keywords (id, "publicId", "projectId", "locationId", device)
+          VALUES ('keyword', '${publicId("kw", "lost")}', 'project', 'market', 'desktop');
+        INSERT INTO rank_check_runs (id, "publicId", "projectId", "requestedCount", "selectionKind", status)
+          VALUES ('run', '${RUN_PUBLIC_ID}', 'project', 1, 'scheduled_due', 'running');
+        INSERT INTO rank_check_run_items
+          (id, "runId", "keywordId", status, "claimAttempts", "claimExpiresAt", "startedAt")
+          VALUES ('lost', 'run', 'keyword', 'running', 3, '2026-09-04 13:59:00', '2026-09-04 13:00:00');
+      `);
+
+      await expect(claimDueRankCheckItems({ now }, database as never)).resolves.toMatchObject({
+        claimed: 0,
+        groups: [],
+      });
+      expect(
+        await query(
+          'SELECT status, "blockedReason", "claimAttempts", "claimExpiresAt", "finishedAt" FROM rank_check_run_items',
+        ),
+      ).toEqual([
+        {
+          status: "blocked",
+          blockedReason: "claim_lost",
+          claimAttempts: 4,
+          claimExpiresAt: null,
+          finishedAt: now,
+        },
+      ]);
+      expect(
+        await query('SELECT status, outcome, "skippedCount", "targetCount" FROM rank_check_runs'),
+      ).toEqual([{ status: "completed", outcome: "failed", skippedCount: 1, targetCount: 1 }]);
+      expect(audits.map((audit) => audit.after)).toEqual([
+        expect.objectContaining({ reason: "claim_lost" }),
+      ]);
     } finally {
       await db.close();
     }

@@ -122,7 +122,7 @@ describe("notification event producers", () => {
     );
   });
 
-  it("notifyRankCheckFailed stores the reason body, checks href with run reference, and unchanged idempotency key", async () => {
+  it("notifyRankCheckFailed preserves a check payload and directs it to Runs", async () => {
     await notifyRankCheckFailed({
       code: "provider_billing",
       failedAt: new Date("2026-08-21T00:00:00.000Z"),
@@ -145,11 +145,38 @@ describe("notification event producers", () => {
       "rank tracker: rank data provider unavailable",
       expect.objectContaining({
         errorCode: "provider_billing",
-        href: "/app/prj_1/rank-tracker?tab=runs&run=check_abcdefghijklmnopqrstuvwx",
+        href: "/app/prj_1/runs",
         idempotencyKey: expectedKey,
         rankCheckId: "check_abcdefghijklmnopqrstuvwx",
       }),
       expectedKey,
+    );
+  });
+
+  it("notifyRankCheckFailed directs a strict run ID to canonical details", async () => {
+    await notifyRankCheckFailed({
+      code: "provider_billing",
+      failedAt: new Date("2026-08-21T00:00:00.000Z"),
+      keywordId: "keyword_1",
+      keywordPublicId: "kw_public_1",
+      keywordText: "rank tracker",
+      message: "rank data provider unavailable",
+      projectDomain: "example.com",
+      projectId: "project_1",
+      rankCheckId: "rcr_abcdefghijklmnopqrstuvwx",
+    });
+
+    expect(mocks.createNotification).toHaveBeenCalledWith(
+      expect.any(String),
+      "project_1",
+      NotificationType.check_failed,
+      "Rank check failed",
+      "rank tracker: rank data provider unavailable",
+      expect.objectContaining({
+        href: "/app/prj_1/runs/rank-checks/rcr_abcdefghijklmnopqrstuvwx",
+        rankCheckId: "rcr_abcdefghijklmnopqrstuvwx",
+      }),
+      expect.any(String),
     );
   });
 

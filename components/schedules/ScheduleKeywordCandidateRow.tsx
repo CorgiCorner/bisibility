@@ -1,4 +1,4 @@
-import { Checkbox } from "@/components/ui";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { useId } from "react";
 import type { ScheduleKeywordCandidate } from "./AddKeywordsDrawer";
 

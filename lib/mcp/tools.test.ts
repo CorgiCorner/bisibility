@@ -337,6 +337,24 @@ describe("MCP tool dispatch", () => {
     }
   });
 
+  it("forwards result depth and custom cadence to the shared estimate endpoint", async () => {
+    const result = await dispatchMcpTool(
+      "get_cost_estimate",
+      {
+        keywords: 1,
+        depth: 20,
+        frequency: "custom_cron",
+        cron_expression: "0 6 * * *",
+      },
+      "bsb_key_live_test",
+    );
+    expect(result.payload).toMatchObject({
+      method: "GET",
+      path: ["cost-estimate"],
+      search: "?keywords=1&depth=20&frequency=custom_cron&cron_expression=0+6+*+*+*",
+    });
+  });
+
   it("preserves cost, backlink pagination, and provider-setting arguments", async () => {
     const projectId = "prj_a00000000000000000000000";
 
@@ -540,6 +558,16 @@ describe("MCP tool dispatch", () => {
     expect(
       getMcpToolDefinitions().find((tool) => tool.name === "research_keywords")?.description,
     ).toContain("estimate_only first");
+  });
+
+  it("passes the location_key filter the keyword list tool advertises", async () => {
+    const result = await dispatchMcpTool(
+      "list_keywords",
+      { location_key: "US@en", project_id: "prj_abcdefghijklmnopqrstuvwx" },
+      "bsb_key_live_test",
+    );
+
+    expect(result.payload).toMatchObject({ search: "?location_key=US%40en" });
   });
 
   it("maps canonical location search to the project-independent REST endpoint", async () => {

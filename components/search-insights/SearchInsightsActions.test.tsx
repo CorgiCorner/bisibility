@@ -1,4 +1,4 @@
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import { SYNC_NOW_COOLDOWN_MS } from "@/lib/search-insights/constants";
 import { FROZEN_NOW_MS } from "@/tests/clock";
 import { routerMock } from "@/tests/next-navigation";
@@ -16,16 +16,11 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/analytics/client", () => ({ track: mocks.track }));
 vi.mock("@/lib/ui/download", () => ({ downloadTextFile: mocks.downloadTextFile }));
-vi.mock("@phosphor-icons/react", async () => {
-  const actual =
-    await vi.importActual<typeof import("@phosphor-icons/react")>("@phosphor-icons/react");
-  return {
-    ...actual,
-    ArrowClockwiseIcon: (props: SVGProps<SVGSVGElement>) => (
-      <svg data-testid="arrow-clockwise-icon" {...props} />
-    ),
-  };
-});
+vi.mock("@phosphor-icons/react/dist/csr/ArrowClockwise", () => ({
+  ArrowClockwiseIcon: (props: SVGProps<SVGSVGElement>) => (
+    <svg data-testid="arrow-clockwise-icon" {...props} />
+  ),
+}));
 
 const runningImport = {
   capHitDays: 0,
@@ -83,8 +78,8 @@ describe("SearchInsightsActions", () => {
       screen.getByRole("button", { name: /Export CSV \(1,284 rows\)/ }),
       screen.getByRole("button", { name: "Sync now" }),
     ]) {
-      expect(button).toHaveClass("MuiButton-outlined");
-      expect(button).not.toHaveClass("MuiButton-text");
+      expect(button).toHaveAttribute("data-variant", "secondary");
+      expect(button).not.toHaveAttribute("data-variant", "ghost");
     }
   });
 
@@ -117,8 +112,9 @@ describe("SearchInsightsActions", () => {
     renderActions();
 
     const button = screen.getByRole("button", { name: "Refresh stored insights" });
-    expect(button).toHaveClass("MuiButton-outlined", "MuiButton-sizeSmall");
-    expect(button).not.toHaveClass("MuiButton-text");
+    expect(button).toHaveAttribute("data-variant", "secondary");
+    expect(button).toHaveAttribute("data-size", expect.stringMatching(/^(xs|sm)$/));
+    expect(button).not.toHaveAttribute("data-variant", "ghost");
     expect(button).toContainElement(screen.getByTestId("arrow-clockwise-icon"));
   });
 

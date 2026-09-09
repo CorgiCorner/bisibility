@@ -1,8 +1,13 @@
 "use client";
 
+import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { Card, ChartRegion, SectionTitle, SegmentedControl, ZonedTime } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { ChartRegion } from "@/components/ui/ChartRegion";
+import { SectionTitle } from "@/components/ui/SectionTitle";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { ZonedTime } from "@/components/ui/ZonedTime";
 import { formatDateRange, formatDateTime } from "@/lib/dates/format";
 import type { KeywordDetailChartState } from "@/lib/keyword-detail/state-model";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
@@ -19,7 +24,6 @@ import {
 } from "@/lib/keywords/position-history";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { chartColors } from "@/lib/theme/chart-colors";
-import { LineChart } from "@mui/x-charts/LineChart";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { DegradedPositionMarkers } from "./DegradedPositionMarkers";
@@ -42,13 +46,6 @@ const RANGES = [
 ] as const;
 
 type RangeLabel = (typeof RANGES)[number]["label"];
-
-const axisTextStyle = {
-  fill: "var(--fg-muted)",
-  fontFamily: "var(--font-sans), system-ui, sans-serif",
-  fontVariantNumeric: "tabular-nums",
-  fontSize: 11,
-};
 
 export function PositionHistoryCard({
   chartState,
@@ -103,19 +100,17 @@ export function PositionHistoryCard({
     ? comparison.values.map((series, index) => ({
         color: marketPositionPalette[index % marketPositionPalette.length],
         curve: "linear" as const,
-        data: series.data,
+        values: series.data,
         label: keywordMarketLabel(series.target),
-        showMark: false,
       }))
     : [
         {
-          area: true,
+          fill: true,
           baseline: maxPosition,
           color: chartColors.accent,
           curve: "linear" as const,
-          data: chartPositions,
+          values: chartPositions,
           label: "Position",
-          showMark: false,
         },
       ];
   const latestPosition = keyword.positionHistory.at(-1)?.position ?? null;
@@ -198,46 +193,16 @@ export function PositionHistoryCard({
             </div>
           </div>
         ) : (
-          <LineChart
-            grid={{ horizontal: true }}
+          <TimeSeriesChart
             height={280}
-            hideLegend
-            margin={{ top: 18, right: 18, bottom: 28, left: 42 }}
+            labels={chartLabels}
             series={chartSeries}
-            skipAnimation
-            sx={{
-              "& .MuiAreaElement-root": { fill: "var(--accent)", fillOpacity: 0.1 },
-              "& .MuiChartsGrid-line": { stroke: "var(--border)" },
-              "& .MuiChartsAxis-tickLabel": axisTextStyle,
-              "& .MuiLineElement-root": {
-                ...(allMarkets ? {} : { stroke: "var(--accent)" }),
-                strokeLinecap: "round",
-                strokeLinejoin: "round",
-                strokeWidth: 2.8,
-              },
-            }}
-            xAxis={[
-              {
-                data: chartLabels,
-                disableLine: true,
-                disableTicks: true,
-                scaleType: "point",
-                tickLabelStyle: axisTextStyle,
-              },
-            ]}
-            yAxis={[
-              {
-                disableLine: true,
-                disableTicks: true,
-                domainLimit: "strict",
-                max: maxPosition,
-                min: 1,
-                reverse: true,
-                tickInterval: [1, 10, 20],
-                tickLabelStyle: axisTextStyle,
-                valueFormatter: (value: number) => `#${value}`,
-              },
-            ]}
+            min={1}
+            max={maxPosition}
+            reversed
+            yTicks={[1, 10, 20]}
+            formatValue={(value) => `#${value}`}
+            margin={{ top: 18, right: 18, bottom: 0, left: 0 }}
           >
             {!allMarkets && target !== null ? <TargetReferenceLine target={target} /> : null}
             {!allMarkets && target !== null ? (
@@ -246,6 +211,7 @@ export function PositionHistoryCard({
             {allMarkets ? (
               comparison.values.map((series, index) => (
                 <DegradedPositionMarkers
+                  labels={chartLabels}
                   color={
                     marketPositionPalette[index % marketPositionPalette.length] ??
                     chartColors.accent
@@ -257,12 +223,13 @@ export function PositionHistoryCard({
               ))
             ) : (
               <DegradedPositionMarkers
+                labels={chartLabels}
                 color={chartColors.accent}
                 location={keyword.location}
                 points={history}
               />
             )}
-          </LineChart>
+          </TimeSeriesChart>
         )}
       </ChartRegion>
       {!notEnough ? (

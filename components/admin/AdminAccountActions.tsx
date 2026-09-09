@@ -1,15 +1,15 @@
 "use client";
 
-import { Button, ConfirmModal, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useToast } from "@/components/ui/toast-context";
 import {
   resetInstanceAdminAccountLimits,
   setInstanceAdminAccountDeactivated,
 } from "@/lib/actions/instance-admin-account-actions";
-import {
-  GaugeIcon as Gauge,
-  UserMinusIcon as UserMinus,
-  UserPlusIcon as UserPlus,
-} from "@phosphor-icons/react";
+import { GaugeIcon as Gauge } from "@phosphor-icons/react/dist/csr/Gauge";
+import { UserMinusIcon as UserMinus } from "@phosphor-icons/react/dist/csr/UserMinus";
+import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/csr/UserPlus";
 import { useState, useTransition } from "react";
 
 type AccountStatus = "active" | "deactivated";

@@ -1,0 +1,62 @@
+---
+title: "Product analytics"
+description: "Configure optional operator-owned Plausible analytics and understand the neutral event contract."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+Self-host builds do not include the hosted product analytics SDK or session
+recorder. No hosted project key is configured or read by the self-host runtime.
+
+Operators can optionally connect their own [Plausible](https://plausible.io)
+instance with `NEXT_PUBLIC_PLAUSIBLE_URL` and `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`.
+Both values are required. This integration is disabled by default and does not
+show the hosted product analytics consent banner.
+
+The shared UI retains neutral event contracts for operator-owned integrations.
+The events below describe those contracts; their presence does not load a
+tracker or send data to the hosted service. Hosted consent and replay controls
+are maintained with the hosted implementation.
+
+## Event contract
+
+Event names use `snake_case`, and each event accepts only the properties listed
+below. Domain names, websites, hostnames, keyword text, email addresses, login
+details, passwords, API keys, and credentials are never event properties.
+
+| Event | Side | Emitted when | Properties |
+| - | - | - | - |
+| `$pageview` | Client | The SDK records a page view. | Redacted `$current_url` |
+| `landing_hero_viewed` | Client | A resolved hero experiment variant is rendered with analytics consent. | `experiment`, `$feature/landing-hero-actions: "control" \| "dual_cta"` |
+| `onboarding_entered` | Client | The authenticated onboarding page renders with analytics consent. | None |
+| `landing_cta_submitted` | Client | The landing-page call to action is submitted. | `has_website: boolean` |
+| `landing_cost_estimate_opened` | Client | The landing-page cost estimate is opened. | None |
+| `user_signed_up` | Server | A user account is created. | `method: "otp" \| "github" \| "google"` |
+| `onboarding_project_created` | Server | The onboarding project is created. | `frequency` |
+| `provider_connection_tested` | Server | A provider connection test finishes. | `provider`, `ok`, `error_category` |
+| `provider_connected` | Server | A provider is connected. | `provider`, `surface: "onboarding" \| "getting_started" \| "settings"` |
+| `keywords_added` | Server | Keywords are added manually or imported. | `keyword_count`, `market_count`, `source: "manual" \| "search_console"`, `surface` |
+| `rank_check_preview_completed` | Server | A first-check preview is queued, completes, or fails. | `provider`, `status: "queued" \| "completed" \| "failed"`, `duration_ms`, `surface: "onboarding" \| "getting_started"` |
+| `onboarding_step_skipped` | Client | An onboarding step is skipped. | `step`, optional `reason` |
+| `onboarding_completed` | Server | Project onboarding is completed. | `has_provider`, `keyword_count`, `first_check_ran` |
+| `getting_started_cta_clicked` | Client | A getting-started action is selected. | `step`, `cta: "primary" \| "accelerate" \| "go_further"`, optional `card` |
+| `setup_video_opened` | Client | A getting-started setup video is opened. | `step` |
+| `ui_option_selected` | Client | An opted-in design-system control changes. | `module`, `control`, `value` |
+| `consent_updated` | Server, anonymous | Analytics choices are saved. This event carries no identity. | `analytics`, `replay`, `version` |
+
+The `surface` property is derived on the server from the active product flow. It
+is not accepted from client input.
+
+## Disable analytics
+
+Leave `NEXT_PUBLIC_POSTHOG_KEY` unset and do not configure the complete
+Plausible pair:
+
+```bash
+# NEXT_PUBLIC_POSTHOG_KEY=
+# NEXT_PUBLIC_PLAUSIBLE_DOMAIN=
+# NEXT_PUBLIC_PLAUSIBLE_URL=
+```
+
+With both providers disabled, bisibility loads no analytics provider, installs
+no analytics sink, sends no analytics events, and shows no consent banner.

@@ -25,7 +25,7 @@ function listOrTrue<T extends string>(values: T[], expression: (value: T) => Pri
 
 export function lensPredicate(lens: ActiveLens) {
   return Prisma.sql`${lens.device === "all" ? Prisma.sql`true` : Prisma.sql`k.device::text = ${lens.device}`}
-    AND ${lens.locationId ? Prisma.sql`(NOT EXISTS (SELECT 1 FROM "keywords" known JOIN "locations" known_location ON known_location.id = known."locationId" WHERE known."projectId" = k."projectId" AND known_location."canonicalKey" = ${lens.locationId}) OR l."canonicalKey" = ${lens.locationId})` : Prisma.sql`true`}`;
+    AND ${lens.locationId ? Prisma.sql`(NOT EXISTS (SELECT 1 FROM project_locations WHERE "canonicalKey" = ${lens.locationId}) OR l."canonicalKey" = ${lens.locationId})` : Prisma.sql`true`}`;
 }
 
 export function contentPredicate(

@@ -1,41 +1,57 @@
+import { MarketsPageContent } from "@/components/markets/page/MarketsPageContent";
 import { PageContent } from "@/components/shell/PageContent";
-import { AccentCtaLink, InlineCallout } from "@/components/ui";
-import { archivedMarketNote } from "@/lib/markets/archived";
-import { ARCHIVED_MARKET_NOTE_PARAM, archivedMarketNoteRef } from "@/lib/markets/market-routes";
-import { resolveProjectAccess } from "@/lib/queries/_auth";
-import { appPath } from "@/lib/routing/app-path";
+import { addKeywords } from "@/lib/actions/keyword";
+import { createProjectMarket } from "@/lib/actions/project-market-create";
+import {
+  removeProjectMarketFromProject,
+  restoreProjectMarketFromProject,
+  setProjectMarketEnabled,
+  updateProjectMarket,
+} from "@/lib/actions/project-market-lifecycle";
+import { getProjectRole } from "@/lib/auth/authorize";
+import { canProjectAction } from "@/lib/auth/capabilities";
+import { requireReadableProject } from "@/lib/queries/_auth";
+import { getArchivedProjectMarkets, getProjectMarkets } from "@/lib/queries/project-markets";
 
 type MarketsPageProps = {
   params: Promise<{ project: string }>;
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<{ "new-market"?: string | string[] }>;
 };
 
-/**
- * The canonical markets route named by the URL contract. Markets are still administered with
- * the rest of the tracking defaults, so this route owns the address and the archived-market
- * note while the registry UI stays where it is.
- */
 export default async function MarketsPage({ params, searchParams }: Readonly<MarketsPageProps>) {
-  const { project } = await params;
-  const access = await resolveProjectAccess(project);
-  // The note echoes the id back to the reader, so the query value is shape-checked before it
-  // reaches the page rather than after.
-  const archivedRef = archivedMarketNoteRef((await searchParams)?.[ARCHIVED_MARKET_NOTE_PARAM]);
+  const { project: projectRef } = await params;
+  const pageSearchParams = await searchParams;
+  const [access, markets, archivedMarkets] = await Promise.all([
+    requireReadableProject(projectRef),
+    getProjectMarkets(projectRef),
+    getArchivedProjectMarkets(projectRef),
+  ]);
+  const role = getProjectRole(access.actor, access.project.id);
+  const writable = access.project.writeMode === "active";
+  const canEdit = writable && canProjectAction(role, "update", "project_market");
+  const canArchive = writable && canProjectAction(role, "update", "project_market");
+  const canAddKeywords = writable && canProjectAction(role, "create", "keyword");
+  const canCreateMarket = writable && canProjectAction(role, "create", "project_market");
+  const canRestore = writable && canProjectAction(role, "delete", "project_market");
 
   return (
-    <PageContent variant="constrained">
-      {archivedRef ? (
-        <InlineCallout className="mb-4" tint="yellow">
-          {archivedMarketNote(archivedRef)}
-        </InlineCallout>
-      ) : null}
-      <p className="mb-4 text-[13px] text-fg-muted">
-        Markets are the navigation level your tracked keywords are measured in. They are
-        administered with the rest of your tracking defaults.
-      </p>
-      <AccentCtaLink href={appPath(access.publicId, "settings", "tracking")}>
-        Manage markets
-      </AccentCtaLink>
+    <PageContent variant="analytics">
+      <MarketsPageContent
+        addKeywordsAction={addKeywords}
+        archivedMarkets={archivedMarkets}
+        canAddKeywords={canAddKeywords}
+        canCreateMarket={canCreateMarket}
+        canArchive={canArchive}
+        canEdit={canEdit}
+        canRestore={canRestore}
+        createMarketAction={createProjectMarket}
+        markets={markets}
+        onArchive={removeProjectMarketFromProject}
+        onRestore={restoreProjectMarketFromProject}
+        onSave={updateProjectMarket}
+        onStatusChange={setProjectMarketEnabled}
+        openNewMarket={pageSearchParams?.["new-market"] === "1"}
+      />
     </PageContent>
   );
 }

@@ -22,11 +22,11 @@ import type { CheckHealth } from "@/lib/queries/check-health";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { getKeywordResearchPageContext } from "@/lib/queries/keyword-research";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
+import type { ResearchScope } from "@/lib/research/scope";
 import type { SaveKeywordsInput } from "@/lib/schemas/saved-keyword";
+import { countrySeed } from "@/lib/serp/location";
 import type { ResearchEstimateView } from "./ResearchSearchCard";
 import type { ResearchState } from "./ResearchStatePanel";
-
-export { recentSearchLocation } from "./research-location";
 
 type PageContext = Awaited<ReturnType<typeof getKeywordResearchPageContext>>;
 
@@ -125,7 +125,7 @@ export type ResearchTab = {
   deeperEstimate?: { cached: boolean; costCents: number };
   id: string;
   includeClickstream: boolean;
-  location: LocationFieldValue;
+  scope: ResearchScope;
   mode: KeywordResearchMode;
   outcome: UiResearchOutcome;
   requestedLimit: 100 | 300 | 500;
@@ -140,9 +140,30 @@ export function researchTabRequest(
   return {
     connectionId: tab.connectionId,
     includeClickstream: tab.includeClickstream,
-    locationKey: tab.location.canonicalKey,
+    locationKey: researchScopeLocationKey(tab.scope),
     mode: tab.mode,
     resultLimit,
+  };
+}
+
+export function researchScopeLocationKey(scope: ResearchScope) {
+  const defaultLanguage = countrySeed(scope.countryCode)?.hl;
+  return defaultLanguage === scope.languageCode
+    ? scope.countryCode
+    : `${scope.countryCode}@${scope.languageCode}`;
+}
+
+export function researchScopeTrackingLocation(scope: ResearchScope): LocationFieldValue {
+  return {
+    canonicalKey: researchScopeLocationKey(scope),
+    cityName: null,
+    countryCode: scope.countryCode,
+    displayName: scope.countryName,
+    hl: scope.languageCode,
+    kind: "country",
+    languageCode: scope.languageCode,
+    languageLabel: scope.languageLabel,
+    regionName: null,
   };
 }
 
@@ -211,7 +232,6 @@ export function recentSearchReplay(
       connectionId,
       fresh: false,
       includeClickstream: search.includeClickstream,
-      locationKey: search.locationKey,
       mode: search.mode,
       resultLimit: search.resultLimit,
     } satisfies Partial<ResearchKeywordsActionInput>,

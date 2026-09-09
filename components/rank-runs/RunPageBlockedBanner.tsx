@@ -1,7 +1,7 @@
 "use client";
 
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { blockedRunPresentation } from "@/lib/rank-check/runs/blocked-presentation";
 import { appPath, appRootPath, type ProjectRef } from "@/lib/routing/app-path";
 import type { RunPageData } from "./RunPageTypes";

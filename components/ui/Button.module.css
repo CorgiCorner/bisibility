@@ -1,0 +1,193 @@
+@layer theme, base, components, utilities;
+@layer components {
+  .root {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    vertical-align: middle;
+    gap: 8px;
+    min-width: 64px;
+    border-radius: var(--radius-control);
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-weight: 600;
+    line-height: 1.25;
+    text-decoration: var(--control-text-decoration, none);
+    text-decoration-color: var(--control-text-decoration-color, currentColor);
+    text-underline-offset: var(--control-text-underline-offset, auto);
+    text-transform: none;
+    cursor: pointer;
+    user-select: none;
+    background-color: var(--control-background-color, var(--button-bg));
+    color: var(--control-color, var(--button-fg));
+    border: var(--control-border, 1px solid var(--button-border));
+    border-color: var(--control-border-color, var(--button-border));
+    transition:
+      background-color 0.16s ease,
+      border-color 0.16s ease,
+      color 0.16s ease,
+      transform var(--motion-press) ease;
+  }
+  .primary {
+    --button-bg: var(--accent-solid);
+    --button-fg: var(--accent-on-solid);
+    --button-border: var(--accent-solid);
+    --button-hover-bg: var(--accent-solid-hover);
+    --button-hover-border: var(--accent-solid-hover);
+  }
+  .secondary {
+    --button-bg: var(--bg-elev);
+    --button-fg: var(--fg);
+    --button-border: var(--border-control);
+    --button-hover-bg: var(--bg-sunken);
+  }
+  .ghost {
+    border: var(--control-border, none);
+    --button-bg: transparent;
+    --button-fg: var(--fg-muted);
+    --button-border: transparent;
+    --button-hover-bg: var(--bg-sunken);
+    --button-hover-fg: var(--fg);
+  }
+  .destructive {
+    --button-bg: var(--red);
+    --button-fg: var(--error-contrast);
+    --button-border: var(--red);
+  }
+  .xs {
+    font-size: 12px;
+    min-height: 30px;
+    padding: 4px 10px;
+  }
+  .sm {
+    font-size: 12.5px;
+    min-height: 34px;
+    padding: 6px 12px;
+  }
+  .md {
+    font-size: 13px;
+    min-height: 36px;
+    padding: 8px 16px;
+  }
+  .lg {
+    font-size: 14.5px;
+    min-height: 44px;
+    padding: 11px 18px;
+  }
+  .ghost.xs {
+    padding: 5px 11px;
+  }
+  .ghost.sm {
+    padding: 5px 6px;
+  }
+  .ghost.md {
+    padding: 7px 9px;
+  }
+  .ghost.lg {
+    padding: 9px 12px;
+  }
+  .root:hover:not(:disabled):not([aria-disabled="true"]) {
+    background-color: var(
+      --control-hover-background-color,
+      var(--control-background-color, var(--button-hover-bg, var(--button-bg)))
+    );
+    color: var(
+      --control-hover-color,
+      var(--control-color, var(--button-hover-fg, var(--button-fg)))
+    );
+    border: var(--control-hover-border, var(--control-border, 1px solid var(--button-border)));
+    border-color: var(
+      --control-hover-border-color,
+      var(--control-border-color, var(--button-hover-border, var(--button-border)))
+    );
+  }
+  .root:disabled,
+  .root[aria-disabled="true"] {
+    cursor: default;
+    pointer-events: none;
+    background-color: var(--control-disabled-background-color, var(--bg-sunken));
+    color: var(--control-disabled-color, var(--fg-muted));
+    border: var(--control-disabled-border, 1px solid var(--border-control));
+    border-color: var(--control-disabled-border-color, var(--border-control));
+    opacity: var(--control-disabled-opacity, 1);
+  }
+  .root[data-loading="true"] {
+    background-color: var(--button-bg);
+    color: var(--button-fg);
+    border-color: var(--button-border);
+    opacity: 0.65;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .root:not(.ghost):active:not(:focus-visible):not(:disabled) {
+      transform: scale(var(--control-press-scale, 0.97));
+    }
+  }
+
+  .root:focus-visible:not(:disabled):not([aria-disabled="true"]) {
+    background-color: var(
+      --control-focus-background-color,
+      var(--control-background-color, var(--button-focus-bg, var(--button-bg)))
+    );
+    color: var(
+      --control-focus-color,
+      var(--control-color, var(--button-focus-fg, var(--button-fg)))
+    );
+    border-color: var(
+      --control-focus-border-color,
+      var(--control-border-color, var(--button-border))
+    );
+    outline: var(--control-focus-outline, 2px solid var(--accent-solid));
+    outline-offset: var(--control-focus-outline-offset, 2px);
+    text-decoration: var(--control-focus-text-decoration, var(--control-text-decoration, none));
+    text-underline-offset: var(
+      --control-focus-text-underline-offset,
+      var(--control-text-underline-offset, auto)
+    );
+  }
+  .ghost {
+    --button-focus-bg: var(--bg-sunken);
+    --button-focus-fg: var(--fg);
+  }
+  .root:hover:not(:disabled):not([aria-disabled="true"]) {
+    text-decoration: var(--control-hover-text-decoration, var(--control-text-decoration, none));
+    text-decoration-color: var(
+      --control-hover-text-decoration-color,
+      var(--control-text-decoration-color, currentColor)
+    );
+    text-underline-offset: var(
+      --control-hover-text-underline-offset,
+      var(--control-text-underline-offset, auto)
+    );
+  }
+  .root:disabled,
+  .root[aria-disabled="true"] {
+    text-decoration: var(--control-disabled-text-decoration, var(--control-text-decoration, none));
+    text-decoration-color: var(
+      --control-disabled-text-decoration-color,
+      var(--control-text-decoration-color, currentColor)
+    );
+  }
+  .root[aria-pressed="true"] {
+    background-color: var(
+      --control-selected-background-color,
+      var(--control-background-color, var(--button-bg))
+    );
+    border-color: var(
+      --control-selected-border-color,
+      var(--control-border-color, var(--button-border))
+    );
+    color: var(--control-selected-color, var(--control-color, var(--button-fg)));
+  }
+  .destructive:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+  .ghost:hover:not(:disabled):not([aria-disabled="true"]) {
+    border: var(--control-hover-border, var(--control-border, none));
+  }
+  .ghost:disabled {
+    border: var(--control-disabled-border, none);
+  }
+  .ghost[data-loading="true"] {
+    border: none;
+  }
+}

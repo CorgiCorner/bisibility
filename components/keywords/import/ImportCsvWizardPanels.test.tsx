@@ -1,8 +1,8 @@
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import { keywordImportTemplateCsv } from "@/lib/keywords/import-csv-template";
 import { stubBlobDownload } from "@/tests/blob-download";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { DoneStep, MapStep, ReviewStep, TemplateStep, UploadStep } from "./ImportCsvWizardPanels";
 import { ParsedRowsPreview } from "./ParsedRowsPreview";
 
@@ -12,6 +12,12 @@ function renderTemplate() {
       <TemplateStep />
     </ToastProvider>,
   );
+}
+
+function mockPreviewViewport() {
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(320);
+  vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(320);
+  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(456);
 }
 
 describe("ImportCsvWizardPanels", () => {
@@ -69,12 +75,16 @@ describe("ImportCsvWizardPanels", () => {
     ].map((label, index) => ({ index, label })),
   };
 
+  afterEach(() => vi.restoreAllMocks());
+
   it("downloads the CSV template", async () => {
     const { objectUrls } = stubBlobDownload();
     renderTemplate();
     const download = screen.getByRole("button", { name: "Download template.csv" });
-    expect(download).toHaveClass("MuiButton-outlined", "MuiButton-sizeMedium");
-    expect(download).not.toHaveClass("MuiButton-contained", "MuiButton-sizeLarge");
+    expect(download).toHaveAttribute("data-variant", "secondary");
+    expect(download).toHaveAttribute("data-size", "md");
+    expect(download).not.toHaveAttribute("data-variant", "primary");
+    expect(download).not.toHaveAttribute("data-size", "lg");
     fireEvent.click(download);
     expect(objectUrls).toHaveBeenCalledOnce();
     const blob = objectUrls.mock.calls[0]?.[0];
@@ -118,7 +128,7 @@ describe("ImportCsvWizardPanels", () => {
     expect(screen.getByText("Save as")).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Only Keyword is required\. Optional tracking fields use your project defaults/,
+        /Keyword is required\. Missing location fields use the market selected above/,
       ),
     ).toBeInTheDocument();
     expect(
@@ -126,10 +136,13 @@ describe("ImportCsvWizardPanels", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders mapped and review labels for CSV and workbooks", () => {
+  it("renders mapped and review labels for CSV and workbooks", async () => {
     const { rerender } = render(<MapStep {...mapProps} parsedCount={2} />);
     expect(screen.getByRole("button", { name: "Map keyword" })).toHaveTextContent("Keyword");
     expect(screen.getByRole("button", { name: "Map target_url" })).toHaveTextContent("Target URL");
+    fireEvent.click(screen.getByRole("button", { name: "Map keyword" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Tags" }));
+    expect(mapProps.onMappingChange).toHaveBeenCalledWith(0, "tags");
     expect(screen.getByText(/2 keywords found/)).toBeInTheDocument();
     rerender(<MapStep {...mapProps} parsedCount={null} />);
     expect(screen.getByText(/Workbook selected/)).toBeInTheDocument();
@@ -140,13 +153,18 @@ describe("ImportCsvWizardPanels", () => {
     rerender(<ReviewStep parsedCount={2} review={review} />);
     expect(screen.getByText(/2 valid rows ready after removing 1 duplicate/)).toBeInTheDocument();
     expect(screen.getByText("/mobile")).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Imported rows preview" })).toHaveAttribute(
+      "data-layout",
+      "auto",
+    );
     expect(screen.queryByText("Duplicate handling")).not.toBeInTheDocument();
     expect(screen.queryByText("Skip existing keywords")).not.toBeInTheDocument();
     rerender(<ReviewStep parsedCount={null} review={null} />);
     expect(screen.getByText(/Checking rows before import/)).toBeInTheDocument();
   });
 
-  it("renders only ten preview rows until the preview is scrolled", () => {
+  it("renders the bounded preview with DataTable semantics", () => {
+    mockPreviewViewport();
     const rows = Array.from({ length: 11 }, (_, index) => ({
       keyword: `keyword ${index + 1}`,
       row: index + 1,
@@ -154,7 +172,32 @@ describe("ImportCsvWizardPanels", () => {
     render(<ParsedRowsPreview rows={rows} />);
 
     expect(screen.getByText("keyword 10")).toBeInTheDocument();
-    expect(screen.queryByText("keyword 11")).not.toBeInTheDocument();
+    expect(screen.getByText("keyword 11")).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Imported rows preview" })).toHaveAttribute(
+      "data-layout",
+      "fill",
+    );
+  });
+
+  it("virtualizes a large preview and reaches its final row after scrolling", () => {
+    mockPreviewViewport();
+    const rows = Array.from({ length: 1_000 }, (_, index) => ({
+      keyword: `keyword ${index + 1}`,
+      row: index + 1,
+    }));
+    render(<ParsedRowsPreview rows={rows} />);
+
+    const table = screen.getByRole("table", { name: "Imported rows preview" });
+    const body = screen.getByTestId("imported-rows-preview-body");
+    expect(table).toHaveAttribute("data-layout", "fill");
+    expect(table.parentElement).toHaveStyle({ height: "456px" });
+    expect(body.childElementCount).toBeLessThan(30);
+    expect(screen.queryByText("keyword 1000")).not.toBeInTheDocument();
+
+    table.scrollTop = 55_586;
+    fireEvent.scroll(table);
+
+    expect(screen.getByText("keyword 1000")).toBeInTheDocument();
   });
 
   it("renders completion warnings and limits displayed errors", () => {
@@ -177,4 +220,27 @@ describe("ImportCsvWizardPanels", () => {
     expect(screen.getByText("Row 6: Error 5")).toBeInTheDocument();
     expect(screen.queryByText("Row 7: Error 6")).not.toBeInTheDocument();
   });
+});
+
+it("shows exact row failures and paused-market consequences during review", () => {
+  render(
+    <ReviewStep
+      parsedCount={2}
+      review={{
+        duplicateRows: 0,
+        received: 2,
+        rows: [
+          { keyword: "first keyword", row: 2, marketName: "US launch", marketStatus: "paused" },
+        ],
+        errors: [
+          { row: 3, message: "Market GB is not tracked by this project. Add it in Markets first." },
+        ],
+      }}
+    />,
+  );
+  expect(screen.getByText("US launch (paused)")).toBeVisible();
+  expect(screen.getByRole("status")).toHaveTextContent("until those markets are resumed");
+  expect(screen.getByRole("list", { name: "Import validation errors" })).toHaveTextContent(
+    "Row 3: Market GB is not tracked",
+  );
 });

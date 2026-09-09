@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, Tooltip, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { useToast } from "@/components/ui/toast-context";
 import type {
   ExportSearchInsightsCsvAction,
   SyncSearchInsightsNowAction,
@@ -10,11 +12,9 @@ import { SYNC_NOW_COOLDOWN_MS } from "@/lib/search-insights/constants";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { downloadTextFile } from "@/lib/ui/download";
-import {
-  ArrowClockwiseIcon as ArrowClockwise,
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  DownloadSimpleIcon as DownloadSimple,
-} from "@phosphor-icons/react";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
+import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useSyncExternalStore, useTransition } from "react";
 import { EXPORT_FAILED, EXPORT_TRUNCATED, SYNC_FAILED, SYNC_TOASTS } from "./search-insights-copy";

@@ -25,7 +25,7 @@ const rankCheck: OperationSnapshot = {
   estimatedCostCents: 0,
   etaSeconds: null,
   finishedAt: null,
-  id: "rcr_example",
+  id: "rcr_abcdefghijklmnopqrstuvwx",
   keywordCount: 1,
   kind: "rank_check",
   nextCheckAt: null,
@@ -115,14 +115,14 @@ describe("OperationsTray pill lifecycle", () => {
       {
         ...rankCheck,
         hasRunningTargets: false,
-        id: "rcr_queued",
+        id: "rcr_abcdefghijklmnopqrstuvwz",
         startedAt: null,
         status: "queued",
       },
       {
         ...rankCheck,
         hasRunningTargets: false,
-        id: "rcr_between_checks",
+        id: "rcr_abcdefghijklmnopqrstuvwq",
         nextCheckAt: "2026-09-05T14:00:00.000Z",
       },
     ]);
@@ -151,7 +151,15 @@ describe("OperationsTray pill lifecycle", () => {
 
   it("derives import status from its source state", () => {
     const view = renderTray([
-      { id: "import_1", kind: "gsc_import", progress: { done: 0, total: 1 }, state: "queued" },
+      {
+        capabilities: { pause: true, resume: false, retry: false },
+        id: "import_1",
+        kind: "gsc_import",
+        presentation: { action: "pause", supportingText: "Import is queued.", title: "Queued" },
+        progress: { done: 0, total: 1 },
+        property: "sc-domain:example.com",
+        state: "queued",
+      },
     ]);
 
     expect(
@@ -163,9 +171,16 @@ describe("OperationsTray pill lifecycle", () => {
           notifications: null,
           operations: [
             {
+              capabilities: { pause: true, resume: false, retry: false },
               id: "import_1",
               kind: "gsc_import",
+              presentation: {
+                action: "pause",
+                supportingText: "Import is running.",
+                title: "Importing",
+              },
               progress: { done: 0, total: 1 },
+              property: "sc-domain:example.com",
               state: "running",
             },
           ],

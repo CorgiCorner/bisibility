@@ -1,8 +1,6 @@
-import {
-  ListBulletsIcon as ListBullets,
-  MapPinIcon as MapPin,
-  MonitorIcon as Monitor,
-} from "@phosphor-icons/react";
+import { ListBulletsIcon as ListBullets } from "@phosphor-icons/react/dist/csr/ListBullets";
+import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 
 export type KeywordDetailContextPillsProps = {
   depth: number;

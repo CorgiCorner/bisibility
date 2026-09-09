@@ -1,11 +1,11 @@
 import type { LocationFieldValue } from "@/components/keywords/location-picker-data";
-import { canonicalKey } from "@/lib/serp/location";
-import { supportsResearchMarket } from "@/lib/serp/market-capability";
 import {
-  resolveSerpMarket,
-  serpMarketLanguages,
-  suggestedSerpMarketLanguages,
-} from "@/lib/serp/markets";
+  countryLanguages,
+  defaultCountryLanguage,
+  suggestedCountryLanguages,
+} from "@/lib/serp/country-language";
+import { canonicalKey, normalizeCanonicalLocationKey } from "@/lib/serp/location";
+import { supportsResearchScope } from "@/lib/serp/research-capability";
 
 export type MarketPickerChoice = {
   canonicalKey: string;
@@ -17,19 +17,20 @@ export type MarketPickerChoice = {
 };
 
 type MarketLanguage = { code: string; label: string };
+type CountryScope = Pick<LocationFieldValue, "countryCode">;
 
 /** Both groups sort by label and by label only, so selecting a language never moves it. */
 function byLabel(left: MarketLanguage, right: MarketLanguage) {
   return left.label.localeCompare(right.label, "en");
 }
 
-export function defaultMarketLanguage(location: LocationFieldValue): MarketLanguage {
-  return resolveSerpMarket(location.countryCode).language;
+export function defaultMarketLanguage(location: CountryScope): MarketLanguage {
+  return defaultCountryLanguage(location.countryCode);
 }
 
-export function recommendedMarketLanguages(location: LocationFieldValue) {
+export function recommendedMarketLanguages(location: CountryScope) {
   const fallback = defaultMarketLanguage(location);
-  const suggested = suggestedSerpMarketLanguages(location.countryCode);
+  const suggested = suggestedCountryLanguages(location.countryCode);
   return [fallback, ...suggested]
     .filter(
       (language, index, all) => all.findIndex((item) => item.code === language.code) === index,
@@ -37,10 +38,10 @@ export function recommendedMarketLanguages(location: LocationFieldValue) {
     .sort(byLabel);
 }
 
-export function additionalMarketLanguages(location: LocationFieldValue, query: string) {
+export function additionalMarketLanguages(location: CountryScope, query: string) {
   const suggested = new Set(recommendedMarketLanguages(location).map((language) => language.code));
   return filterMarketLanguages(
-    serpMarketLanguages(location.countryCode).filter((language) => !suggested.has(language.code)),
+    countryLanguages(location.countryCode).filter((language) => !suggested.has(language.code)),
     query,
   ).sort(byLabel);
 }
@@ -60,8 +61,8 @@ export function filterMarketLanguages(languages: readonly MarketLanguage[], quer
     The suggested group is unioned in rather than assumed to be inside the country's set:
     a rendered row that this cannot resolve would look selected and then vanish on commit,
     so containment is built here instead of being derived from two other functions. */
-export function allMarketLanguages(location: LocationFieldValue) {
-  const catalog = serpMarketLanguages(location.countryCode);
+export function allMarketLanguages(location: CountryScope) {
+  const catalog = countryLanguages(location.countryCode);
   const known = new Set(catalog.map((language) => language.code));
   return [
     ...catalog,
@@ -73,17 +74,16 @@ export function marketChoice(
   location: LocationFieldValue,
   language: { code: string; label: string },
 ): MarketPickerChoice {
+  const { selector } = normalizeCanonicalLocationKey(location.canonicalKey, location.kind);
   return {
     canonicalKey: canonicalKey({
-      cityName: location.cityName,
-      countryCode: location.countryCode,
+      ...selector,
       languageCode: language.code,
-      regionName: location.regionName,
     }),
     countryCode: location.countryCode,
     displayName: location.displayName,
     kind: location.kind,
     language,
-    researchAvailable: supportsResearchMarket(location.countryCode, language.code),
+    researchAvailable: supportsResearchScope(location.countryCode, language.code),
   };
 }

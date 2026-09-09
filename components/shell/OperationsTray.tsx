@@ -1,13 +1,15 @@
 "use client";
 
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
-import { OperationRow, quietChipVariants } from "@/components/ui";
+import { OperationRow } from "@/components/ui/OperationRow";
+import { Popup as Popover } from "@/components/ui/Popup";
+import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
 import { useAppRealtime } from "@/lib/realtime/useAppRealtime";
-import { type ProjectRef, rankTrackerTabPath } from "@/lib/routing/app-path";
+import type { ProjectRef } from "@/lib/routing/app-path";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Popover from "@mui/material/Popover";
-import { XIcon as X } from "@phosphor-icons/react";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useEffect, useState } from "react";
 import {
   isTrayOperation,
@@ -24,7 +26,7 @@ export const operationsTrayPopoverOrigins = {
   transformOrigin: { horizontal: "right", vertical: "top" },
 } as const;
 
-export const operationsTrayPaperSx = {
+export const operationsTrayPaperStyle = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border)",
   borderRadius: UI_RADIUS_ROLES.card,
@@ -56,7 +58,7 @@ export function OperationsTray({
   defaultOpen = false,
   projectRef,
 }: Readonly<{ defaultOpen?: boolean; projectRef: ProjectRef }>) {
-  const { operations } = useAppRealtime();
+  const { operations, status } = useAppRealtime();
   const deploymentMode = useDeploymentMode();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState(defaultOpen);
@@ -65,9 +67,10 @@ export function OperationsTray({
     .filter(isTrayOperation)
     .map((operation) => operationPresentationFor(operation, projectRef, deploymentMode));
   const pill = labelForPill(trayOperations);
-  const runsHref = rankTrackerTabPath(projectRef, "runs");
+  const runsHref = projectRunsPath(projectRef);
+  const stale = status === "offline" || status === "reconnecting";
 
-  // Synchronize MUI's DOM anchor with the realtime operation store when it drains.
+  // Synchronize the popup anchor with the realtime operation store when it drains.
   useEffect(() => {
     if (pill.kind === "idle") {
       setAnchorEl(null);
@@ -128,23 +131,16 @@ export function OperationsTray({
       )}
       <Popover
         anchorEl={anchorEl}
-        anchorOrigin={operationsTrayPopoverOrigins.anchorOrigin}
+        align="end"
+        side="bottom"
         aria-label="Activity"
         onClose={() => setOpen(false)}
         open={open}
-        slotProps={{
-          paper: {
-            elevation: 0,
-            sx: operationsTrayPaperSx,
-          },
+        contentProps={{
+          style: operationsTrayPaperStyle,
         }}
-        transformOrigin={operationsTrayPopoverOrigins.transformOrigin}
       >
-        <div
-          aria-label="Activity"
-          className="flex max-h-[calc(100dvh-96px)] flex-col"
-          role="dialog"
-        >
+        <div className="flex max-h-[calc(100dvh-96px)] flex-col">
           <header className="flex flex-none items-center justify-between gap-2.5 border-b border-border px-4 py-[13px]">
             <span className="text-sm font-semibold">Activity</span>
             <button
@@ -157,6 +153,14 @@ export function OperationsTray({
             </button>
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto">
+            {stale && trayOperations.length > 0 ? (
+              <p
+                className="m-0 border-b border-border px-4 py-2 text-xs text-fg-muted"
+                role="status"
+              >
+                Live updates are unavailable. Showing the last known operations.
+              </p>
+            ) : null}
             {trayOperations.length > 0 ? (
               trayOperations.map((operation) => (
                 <div className="border-b border-border last:border-b-0" key={operation.id}>

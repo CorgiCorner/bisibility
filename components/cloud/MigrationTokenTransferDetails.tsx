@@ -1,7 +1,7 @@
 "use client";
 
 import { MigrationReachabilityHint } from "@/components/settings/migration/MigrationReachabilityHint";
-import { CopyButton } from "@/components/ui";
+import { CopyButton } from "@/components/ui/CopyButton";
 import type { IssuedMigrationToken } from "./cloud-token";
 import { remainingMinutesLabel } from "./cloud-token";
 

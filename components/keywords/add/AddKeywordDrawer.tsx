@@ -2,41 +2,44 @@
 
 import { buildCsvKeywordReview } from "@/components/keywords/AddKeywordCsvReviewModel";
 import { splitTagInput } from "@/components/keywords/action-utils";
-import { AppDrawer } from "@/components/ui";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   type AddKeywordDrawerForm,
   type AddKeywordTab,
   addKeywordDrawerSchema,
+  appendKeywordSuggestions,
   parseCsvKeywordsResult,
   parseKeywordLines,
 } from "@/lib/keywords/add-keyword-drawer-shared";
-import { DEFAULT_SERP_DEVICE, DEFAULT_SERP_MARKET, type SerpDevice } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEVICE, type SerpDevice } from "@/lib/serp/constants";
 import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { buildDrawerCsvKeywordRowsForTracking } from "./AddKeywordCsvRows";
-import {
-  type AddKeywordDrawerProps,
-  addKeywordDrawerCtaLabel,
-  useAddKeywordTrackingSchedule,
-} from "./AddKeywordDrawerExtensions";
+import { type AddKeywordDrawerProps, addKeywordDrawerCtaLabel } from "./AddKeywordDrawerExtensions";
 import { AddKeywordDrawerFeedback } from "./AddKeywordDrawerFeedback";
 import { AddKeywordDrawerFooter } from "./AddKeywordDrawerFooter";
 import { drawerFormDefaults } from "./AddKeywordDrawerFormDefaults";
-import { initialLocationValue } from "./AddKeywordDrawerLocation";
+import { AddKeywordDrawerFrame } from "./AddKeywordDrawerFrame";
+import { DEFAULT_DRAWER_LOCATION_KEY, initialLocationValue } from "./AddKeywordDrawerLocation";
 import { AddKeywordDrawerPanels } from "./AddKeywordDrawerPanels";
 import { resetAddKeywordDrawer } from "./AddKeywordDrawerReset";
+import { drawerMarketRegistry, selectedDrawerMarketKeys } from "./add-keyword-drawer-markets";
+import { useAddKeywordDrawerMarkets } from "./useAddKeywordDrawerMarkets";
 import { useAddKeywordDrawerSave } from "./useAddKeywordDrawerSave";
+import { useKeywordSuggestionSources } from "./useKeywordSuggestionSources";
+
+type MatrixSelection = { devices: SerpDevice[]; locationKeys: string[] };
 
 export function AddKeywordDrawer({
   addKeywordsAction,
   costContext,
   consumeSavedIds,
   defaultDevice = DEFAULT_SERP_DEVICE,
-  defaultLocation = DEFAULT_SERP_MARKET,
+  defaultLocation = DEFAULT_DRAWER_LOCATION_KEY,
   defaultLocationSelection,
   domain,
   existingKeywords = [],
+  initialDevices,
   initialKeyword,
   initialMarketKeys,
   initialScheduleFrequency,
@@ -48,38 +51,32 @@ export function AddKeywordDrawer({
   projectId,
   projectMarkets,
   tagSuggestions = [],
-  showSchedule = false,
 }: AddKeywordDrawerProps) {
+  const suggestionSources = useKeywordSuggestionSources(projectId);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AddKeywordTab>(initialTab ?? "manual");
   const [csvReviewOpen, setCsvReviewOpen] = useState(false);
   const [csvText, setCsvText] = useState("");
   const [tagsText, setTagsText] = useState("");
-  const drawerMarkets = projectMarkets ?? {
-    markets: [],
-    maxMarkets: 5,
-    monthlyCostCents: null,
-    perMarketChecks: 0,
-    projectId,
-  };
-  const defaultMarketKeys = drawerMarkets.markets
-    .filter(
-      (market) =>
-        market.status === "active" &&
-        (initialMarketKeys === undefined || initialMarketKeys.includes(market.canonicalKey)),
-    )
-    .map((market) => market.canonicalKey);
-  const [matrixSelection, setMatrixSelection] = useState<{
-    devices: SerpDevice[];
-    locationKeys: string[];
-  }>({
-    devices: [defaultDevice],
+  const drawerMarkets = drawerMarketRegistry(projectId, projectMarkets);
+  const defaultMarketKeys = selectedDrawerMarketKeys(drawerMarkets.markets, initialMarketKeys);
+  const defaultDevices = initialDevices?.length ? [...new Set(initialDevices)] : [defaultDevice];
+  const [matrixSelection, setMatrixSelection] = useState<MatrixSelection>({
+    devices: defaultDevices,
     locationKeys: defaultMarketKeys,
   });
   const [locationValue, setLocationValue] = useState(() =>
     initialLocationValue(defaultLocation, defaultLocationSelection),
   );
+  const markets = useAddKeywordDrawerMarkets({
+    costContext,
+    markets: drawerMarkets,
+    projectId,
+    selection: matrixSelection,
+    setSelection: setMatrixSelection,
+  });
+  const marketStep = markets.step;
   const {
     formState: { errors, isSubmitting },
     handleSubmit,
@@ -102,9 +99,6 @@ export function AddKeywordDrawer({
   const keywordsValue = watch("keywords");
   const tags = watch("tags") ?? [];
   const targetUrl = watch("targetUrl");
-  const isPaused = Boolean(watch("isPaused"));
-  const { scheduleFrequency } = useAddKeywordTrackingSchedule(watch, setValue, costContext);
-  const effectivePaused = isPaused || scheduleFrequency === "paused";
   const parsedKeywords = useMemo(() => parseKeywordLines(keywordsValue ?? ""), [keywordsValue]);
   const csvParseResult = useMemo(() => parseCsvKeywordsResult(csvText), [csvText]);
   const csvParseError = csvParseResult.error;
@@ -128,24 +122,24 @@ export function AddKeywordDrawer({
   const submitDisabled =
     isSubmitting ||
     activeTab === "api" ||
+    activeTab === "suggestions" ||
     count === 0 ||
     (activeTab === "manual" &&
       (matrixSelection.locationKeys.length === 0 || matrixSelection.devices.length === 0)) ||
     hasCsvRowErrors ||
     Boolean(activeTab === "csv" && csvParseError);
-  const ctaLabel = addKeywordDrawerCtaLabel(activeTab, csvReviewOpen, effectivePaused);
+  const ctaLabel = addKeywordDrawerCtaLabel(activeTab, csvReviewOpen, false);
 
-  const handleMatrixChange = useCallback(
-    (next: { devices: SerpDevice[]; locationKeys: string[] }) => setMatrixSelection(next),
-    [],
-  );
+  const handleMatrixChange = useCallback((next: MatrixSelection) => setMatrixSelection(next), []);
 
   function handleExited() {
+    markets.reset();
     const nextLocation = initialLocationValue(defaultLocation, defaultLocationSelection);
     setLocationValue(nextLocation);
     resetAddKeywordDrawer({
       costContext,
       defaultDevice,
+      defaultDevices,
       defaultMarketKeys,
       initialScheduleFrequency,
       location: nextLocation,
@@ -157,12 +151,14 @@ export function AddKeywordDrawer({
       setCsvReviewOpen,
       setCsvText,
       setMatrixSelection,
+      setScheduleId: markets.setScheduleId,
       setTagsText,
     });
     onExited?.();
   }
 
   function handleTabChange(tab: AddKeywordTab) {
+    if (tab === "suggestions") void suggestionSources.load();
     setActionError(null);
     setActionWarning(null);
     setCsvReviewOpen(false);
@@ -197,6 +193,7 @@ export function AddKeywordDrawer({
   const save = useAddKeywordDrawerSave({
     activeTab,
     addKeywordsAction,
+    checkScheduleId: markets.scheduleId,
     consumeSavedIds,
     csvRows,
     csvText,
@@ -210,36 +207,40 @@ export function AddKeywordDrawer({
     setActionWarning,
   });
 
+  function appendSuggestions(queries: string[]) {
+    setValue("keywords", appendKeywordSuggestions(keywordsValue ?? "", queries), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    handleTabChange("manual");
+  }
+
   async function submit(values: AddKeywordDrawerForm) {
+    if (activeTab === "suggestions" || activeTab === "api") return;
     if (activeTab === "csv" && !csvReviewOpen) return handleReviewKeywords();
     return save(values);
   }
 
   return (
-    <AppDrawer
-      description={
-        domain ? `Track where ${domain} ranks in Google.` : "Track new keywords in Google."
-      }
+    <AddKeywordDrawerFrame
+      creator={markets.creator}
+      domain={domain}
       footer={
-        <AddKeywordDrawerFooter
-          ctaLabel={ctaLabel}
-          activeTab={activeTab}
-          deviceCount={matrixSelection.devices.length}
-          isPaused={isPaused}
-          isReviewMode={isCsvReviewButton}
-          isSubmitting={isSubmitting}
-          keywordCount={count}
-          onReview={() => void handleReviewKeywords()}
-          register={register}
-          submitDisabled={submitDisabled}
-          showPauseToggle={!showSchedule}
-          marketCount={matrixSelection.locationKeys.length}
-        />
+        activeTab === "suggestions" ? null : (
+          <AddKeywordDrawerFooter
+            ctaLabel={ctaLabel}
+            isReviewMode={isCsvReviewButton}
+            isSubmitting={isSubmitting}
+            onReview={() => void handleReviewKeywords()}
+            submitDisabled={submitDisabled}
+          />
+        )
       }
+      marketOpen={marketStep.open}
+      scheduleStep={markets.scheduleStep}
       onClose={onClose}
       onExited={handleExited}
       open={open}
-      title="Add keywords"
     >
       <form
         className="flex flex-col gap-5.5"
@@ -249,31 +250,30 @@ export function AddKeywordDrawer({
         <input type="hidden" {...register("projectId")} />
         <AddKeywordDrawerPanels
           activeTab={activeTab}
+          suggestionSources={suggestionSources}
           count={count}
+          currentKeywords={keywordsValue ?? ""}
+          onAppendQueries={appendSuggestions}
           csvReviewOpen={csvReviewOpen}
           csvText={csvText}
           csvParseError={csvParseError}
-          defaultDevice={defaultDevice}
           domain={domain}
           errors={errors}
-          initialDevices={matrixSelection.devices}
-          initialMarketKeys={matrixSelection.locationKeys}
           onAppendTag={appendTag}
           onCsvReviewEdit={() => setCsvReviewOpen(false)}
           onCsvTextChange={handleCsvTextChange}
-          onMatrixChange={handleMatrixChange}
           onTabChange={handleTabChange}
           onTagsChange={handleTagsChange}
           projectId={projectId}
-          projectMarkets={drawerMarkets}
           register={register}
           reviewItems={reviewItems}
           tagSuggestions={tagSuggestions}
           tagsText={tagsText}
+          tracking={markets.tracking(count, handleMatrixChange)}
         />
 
         <AddKeywordDrawerFeedback error={actionError} warning={actionWarning} />
       </form>
-    </AppDrawer>
+    </AddKeywordDrawerFrame>
   );
 }

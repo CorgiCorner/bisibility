@@ -54,7 +54,7 @@ describe("team mutation REST endpoints", () => {
     );
     await expect(response.json()).resolves.toEqual({ id: "member_1", role: "viewer" });
     expect(mocks.changeRole).toHaveBeenCalledWith(
-      { memberId: "member_1", projectId: "project_1", role: "viewer" },
+      { memberId: "member_1", projectId: "prj_1", role: "viewer" },
       {
         actor: { id: "user_1", memberships: [{ projectId: "project_1", role: "owner" }] },
         auditActorId: "user_1",
@@ -66,7 +66,7 @@ describe("team mutation REST endpoints", () => {
     const response = await deleteTeamMember(context("DELETE"), "member_1", "prj_1");
     await expect(response.json()).resolves.toEqual({ id: "member_1" });
     expect(mocks.remove).toHaveBeenCalledWith(
-      { memberId: "member_1", projectId: "project_1" },
+      { memberId: "member_1", projectId: "prj_1" },
       expect.objectContaining({ auditActorId: "user_1" }),
     );
   });
@@ -78,7 +78,7 @@ describe("team mutation REST endpoints", () => {
       id: "invite_1",
     });
     expect(mocks.resend).toHaveBeenCalledWith(
-      { inviteId: "invite_1", projectId: "project_1" },
+      { inviteId: "invite_1", projectId: "prj_1" },
       expect.objectContaining({ auditActorId: "user_1" }),
     );
   });

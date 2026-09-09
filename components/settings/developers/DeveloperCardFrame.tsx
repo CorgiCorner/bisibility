@@ -1,5 +1,6 @@
 import { settingsCardNaturalFrameClassName } from "@/components/settings/shell/settings-layout";
-import { Card, SectionTitle } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import { cn } from "@/lib/ui/cn";
 import type { ReactNode } from "react";
 

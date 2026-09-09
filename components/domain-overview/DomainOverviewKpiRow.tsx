@@ -1,4 +1,5 @@
-import { Card, InfoTooltip } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { DateFormat } from "@/lib/dates/format";
 import type { DomainRankMetrics } from "@/lib/providers/types";
 import { cn } from "@/lib/ui/cn";
@@ -31,7 +32,7 @@ export function DomainOverviewKpiRow({
     ? previousSourceSnapshotAt
       ? `Estimated from the DataForSEO index snapshot of ${sourceDateLabel(sourceSnapshotAt, dateFormat)}, compared with ${sourceDateLabel(previousSourceSnapshotAt, dateFormat)}. Not tracked ranking data.`
       : `Estimated from the DataForSEO index snapshot of ${sourceDateLabel(sourceSnapshotAt, dateFormat)}. No prior source snapshot is available yet.`
-    : "No indexed organic metrics are available for this domain and market.";
+    : "No indexed organic metrics are available for this domain, country and language.";
   const kpis = metrics ? domainOverviewKpis(metrics, previous) : emptyDomainOverviewKpis();
 
   return (

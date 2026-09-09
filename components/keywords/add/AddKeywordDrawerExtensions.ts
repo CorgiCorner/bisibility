@@ -3,10 +3,14 @@
 import type { ExistingKeyword } from "@/components/keywords/AddKeywordCsvReviewModel";
 import type { KeywordWorkspaceActions } from "@/components/keywords/action-utils";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
-import type { AddKeywordDrawerForm, AddKeywordTab } from "@/lib/keywords/add-keyword-drawer-shared";
+import type {
+  AddKeywordDrawerForm,
+  AddKeywordEntryTab,
+  AddKeywordTab,
+} from "@/lib/keywords/add-keyword-drawer-shared";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import type { SerpDevice } from "@/lib/serp/markets";
+import type { SerpDevice } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 import type { UseFormSetValue, UseFormWatch } from "react-hook-form";
 import type { TrackingScheduleSelection } from "./TrackingConfigurationFields";
@@ -18,10 +22,11 @@ export type AddKeywordDrawerProps = Pick<KeywordWorkspaceActions, "addKeywordsAc
   defaultLocationSelection?: LocationFieldValue;
   domain?: string;
   existingKeywords?: readonly ExistingKeyword[];
+  initialDevices?: readonly SerpDevice[];
   initialKeyword?: string;
   initialMarketKeys?: readonly string[];
   initialScheduleFrequency?: TrackingScheduleSelection;
-  initialTab?: AddKeywordTab;
+  initialTab?: AddKeywordEntryTab;
   consumeSavedIds?: readonly string[];
   onAdded?: (
     keywords: Array<{ publicId: string; text: string }>,
@@ -35,6 +40,12 @@ export type AddKeywordDrawerProps = Pick<KeywordWorkspaceActions, "addKeywordsAc
   showSchedule?: boolean;
   tagSuggestions?: readonly string[];
 };
+
+/** What the panel is for, which changes while the nested New market step is open. */
+export function addKeywordDrawerDescription(marketStepOpen: boolean, domain?: string) {
+  if (marketStepOpen) return "The market is added to the project and selected for these keywords.";
+  return domain ? `Track where ${domain} ranks in Google.` : "Track new keywords in Google.";
+}
 
 export function trackingScheduleValue(
   frequency: TrackingScheduleSelection | undefined,

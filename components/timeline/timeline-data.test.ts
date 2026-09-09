@@ -13,6 +13,7 @@ function signalRow(overrides: Partial<TimelineSignalRow> = {}): TimelineSignalRo
     id: "signal_1",
     keyword: {
       device: "mobile",
+      locationId: "location_malaga",
       locationRef: { displayName: "Malaga, Spain", languageLabel: "Spanish" },
       publicId: "kw_1",
       text: "seo software",

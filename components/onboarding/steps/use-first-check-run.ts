@@ -12,15 +12,14 @@ import type {
   ListFirstCheckCandidatesInput,
   RunFirstCheckPreviewInput,
 } from "@/lib/schemas/keyword";
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import {
   candidateFromFailedRow,
   clientErrorRow,
-  type FirstCheckRunState,
-  initialFirstCheckRunState,
   pendingRow,
   previewRow,
 } from "./first-check-run-rows";
+import { createFirstCheckRunStore, firstCheckRowsStatus } from "./first-check-run-store";
 
 export type { FirstCheckResultRow, FirstCheckRunState } from "./first-check-run-rows";
 
@@ -34,21 +33,30 @@ export type FirstCheckRunActions = {
   ) => Promise<RunFirstCheckPreviewResult>;
 };
 
-export function useFirstCheckRun(actions: FirstCheckRunActions) {
-  const [state, setState] = useState<FirstCheckRunState>(initialFirstCheckRunState);
+export function useFirstCheckRun(
+  actions: FirstCheckRunActions,
+  initialCandidates: FirstCheckCandidate[] = [],
+  initialProjectId?: string | null,
+) {
+  const [store] = useState(() => createFirstCheckRunStore(initialCandidates, initialProjectId));
+  const state = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
+  const { setState } = store;
+  const projectRef = useRef<string | null>(initialProjectId ?? null);
   const runningRef = useRef(false);
 
-  async function runCandidates(candidates: FirstCheckCandidate[]) {
+  async function runCandidates(projectId: string, candidates: FirstCheckCandidate[]) {
     if (!actions.runFirstCheckPreviewAction) return;
     for (const candidate of candidates) {
       try {
-        const result = await actions.runFirstCheckPreviewAction({ keywordId: candidate.publicId });
+        const result =
+          candidate.previousResult ??
+          (await actions.runFirstCheckPreviewAction({ keywordId: candidate.publicId }));
+        const resultRow = previewRow(candidate, result);
         setState((current) => ({
           ...current,
-          rows: current.rows.map((row) =>
-            row.keywordId === candidate.id ? previewRow(candidate, result) : row,
-          ),
+          rows: current.rows.map((row) => (row.keywordId === candidate.id ? resultRow : row)),
         }));
+        if (resultRow.status === "queued") store.track(projectId, resultRow);
       } catch (error) {
         setState((current) => ({
           ...current,
@@ -75,6 +83,7 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
     try {
       const { candidates, isSampleProject, providerReady } =
         await actions.listFirstCheckCandidatesAction({
+          includeExisting: true,
           keywordText: options.keywordText,
           ...(options.limit ? { limit: options.limit } : {}),
           projectId,
@@ -102,10 +111,10 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
 
       if (candidates.length === 0) {
         setState({
-          message: "No keywords are ready for a first check.",
+          message: "This keyword is no longer available. Go back to choose a keyword.",
           mode: "preview",
           rows: [],
-          status: "completed",
+          status: "failed",
         });
         return;
       }
@@ -113,14 +122,18 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
       setState({
         message: null,
         mode: "preview",
-        rows: candidates.map(pendingRow),
+        rows: candidates.map((candidate) =>
+          candidate.previousResult
+            ? previewRow(candidate, candidate.previousResult)
+            : pendingRow(candidate),
+        ),
         status: "running",
       });
-      await runCandidates(candidates);
+      await runCandidates(projectId, candidates);
       setState((current) => ({
         ...current,
         message: null,
-        status: current.rows.some((row) => row.status === "queued") ? "queued" : "completed",
+        status: firstCheckRowsStatus(current.rows),
       }));
     } catch (error) {
       setState((current) => ({
@@ -132,7 +145,10 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
   }
 
   async function start(input: { keywordText?: string; limit?: number; projectId: string | null }) {
-    if (runningRef.current || !input.projectId) return;
+    const status = store.getSnapshot().status;
+    if (runningRef.current || status === "queued" || status === "running" || !input.projectId)
+      return;
+    projectRef.current = input.projectId;
     runningRef.current = true;
     try {
       if (!input.keywordText) {
@@ -154,8 +170,17 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
   }
 
   async function retryFailed() {
-    if (runningRef.current || !actions.runFirstCheckPreviewAction) return;
-    const candidates = state.rows
+    const current = store.getSnapshot();
+    const projectId = projectRef.current;
+    if (
+      runningRef.current ||
+      current.status === "queued" ||
+      current.status === "running" ||
+      !projectId ||
+      !actions.runFirstCheckPreviewAction
+    )
+      return;
+    const candidates = current.rows
       .filter((row) => row.status === "failed")
       .map(candidateFromFailedRow);
     if (candidates.length === 0) return;
@@ -169,10 +194,10 @@ export function useFirstCheckRun(actions: FirstCheckRunActions) {
       status: "running",
     }));
     try {
-      await runCandidates(candidates);
+      await runCandidates(projectId, candidates);
       setState((current) => ({
         ...current,
-        status: current.rows.some((row) => row.status === "queued") ? "queued" : "completed",
+        status: firstCheckRowsStatus(current.rows),
       }));
     } finally {
       runningRef.current = false;

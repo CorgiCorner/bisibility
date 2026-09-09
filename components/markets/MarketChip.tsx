@@ -1,9 +1,7 @@
-import { quietChipVariants } from "@/components/ui";
+import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
 import { cn } from "@/lib/ui/cn";
-import {
-  DeviceMobileIcon as DeviceMobile,
-  MonitorIcon as Monitor,
-} from "@phosphor-icons/react/dist/ssr";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/ssr/DeviceMobile";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/ssr/Monitor";
 
 export type MarketChipDevice = "desktop" | "mobile";
 export type MarketChipSize = "sm" | "md";

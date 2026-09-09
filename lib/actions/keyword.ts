@@ -6,7 +6,6 @@ import { assertKeywordIdentityUnchanged } from "@/lib/keywords/identity";
 import { addKeywordSchema, addKeywordsSchema, updateKeywordSchema } from "@/lib/schemas/keyword";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
-import { DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
 import { normalizeSchedule } from "./_schedule";
 import {
   getActionActor,
@@ -14,6 +13,7 @@ import {
   requireKeywordScope,
   requireProjectScope,
 } from "./_shared";
+import { addKeywordsMatrixWithAnalytics } from "./keyword-analytics";
 import {
   addTags,
   consumeSavedKeywords,
@@ -28,10 +28,10 @@ import {
   resolveKeywordRows,
   uniqueLocationWarnings,
 } from "./keyword-location";
-import { addKeywordsMatrix as addKeywordsMatrixImpl } from "./keyword-matrix";
+import { linkCheckSchedule, resolveCheckSchedule } from "./keyword-schedule-assignment";
 
 export async function addKeywordsMatrix(input: unknown) {
-  return addKeywordsMatrixImpl(input);
+  return addKeywordsMatrixWithAnalytics(input);
 }
 
 export async function addKeyword(input: unknown) {
@@ -119,6 +119,7 @@ export async function addKeywords(input: unknown) {
   if (rows?.length) {
     const resolvedRows = await resolveKeywordRows(rows, project.id);
     const keywords = await prisma.$transaction(async (tx) => {
+      const assigned = await resolveCheckSchedule(tx, project.id, data.checkScheduleId);
       const persisted = await createKeywordBatchSet(
         tx,
         project.id,
@@ -139,12 +140,14 @@ export async function addKeywords(input: unknown) {
         return resolved ? promotedSavedKeywordPairs([keyword], resolved.location.canonicalKey) : [];
       });
       const created = persisted.created;
+      if (assigned) await linkCheckSchedule(tx, project.id, assigned, created);
       const targetKeyword = created.length === 1 ? created[0] : null;
       await writeAudit(
         {
           action: "keyword.batch_add",
           actorId: actor.id,
           after: {
+            checkScheduleId: assigned?.publicId ?? null,
             keywordIds: created.map((keyword) => keyword.publicId),
             rows: rows.map((row) => ({
               device: row.device,
@@ -185,6 +188,7 @@ export async function addKeywords(input: unknown) {
   );
   const keywordText = data.keywords ?? [];
   const keywords = await prisma.$transaction(async (tx) => {
+    const assigned = await resolveCheckSchedule(tx, project.id, data.checkScheduleId);
     const persisted = await createKeywordBatchSet(
       tx,
       project.id,
@@ -201,12 +205,14 @@ export async function addKeywords(input: unknown) {
       })),
     );
     const created = persisted.created;
+    if (assigned) await linkCheckSchedule(tx, project.id, assigned, created);
     const targetKeyword = created.length === 1 ? created[0] : null;
     await writeAudit(
       {
         action: "keyword.batch_add",
         actorId: actor.id,
         after: {
+          checkScheduleId: assigned?.publicId ?? null,
           keywordIds: created.map((keyword) => keyword.publicId),
           intent: data.intent ?? null,
           tags: data.tags,
@@ -256,19 +262,19 @@ export async function updateKeyword(input: unknown) {
     },
     where: { id: keyword.id },
   });
+  if (!before) throw new Error("Keyword not found.");
   // City-only edits resolve against the existing country string.
   const resolved =
     data.locationKey || data.location || data.city
       ? await resolveKeywordLocation(
           keywordLocationResolverInput({
             city: data.city,
-            location: data.location ?? before?.location ?? DEFAULT_SERP_MARKET,
+            location: data.location ?? before.location,
             locationKey: data.locationKey,
             projectId: keyword.projectId,
           }),
         )
       : null;
-  if (!before) throw new Error("Keyword not found.");
   assertKeywordIdentityUnchanged(before, {
     device: data.device,
     locationId: resolved?.location.id,

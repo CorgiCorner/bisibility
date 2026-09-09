@@ -3,6 +3,7 @@ import {
   type AuditPayloadPolicy,
   auditFields as f,
 } from "@/lib/auth/audit-payload-policy";
+import { registerOnboardingAuditDeclarations } from "./audit-field-declarations-onboarding";
 
 type Declare = (actions: readonly string[], policy?: AuditPayloadPolicy) => void;
 type SharedPolicies = Record<
@@ -13,6 +14,7 @@ export function registerAdditionalAuditDeclarations(
   declare: Declare,
   { market, projectDefaults, provider, rankCheck }: SharedPolicies,
 ) {
+  registerOnboardingAuditDeclarations(declare);
   const list = (policy: AuditFieldPolicy): readonly [AuditFieldPolicy] => [policy];
   const strings = (...names: string[]) => f.strings(...names);
   const schedule = {
@@ -21,18 +23,19 @@ export function registerAdditionalAuditDeclarations(
   };
   const checkSchedule = {
     ...schedule,
+    ...f.dates("archivedAt"),
     ...strings("movedTo", "name", "providerPolicy", "publicId", "timeOfDay"),
     ...f.booleans("enabled", "isDefault"),
     keywordIds: list("string"),
     movedFrom: list("string"),
   };
   const checkSchedulePolicy = { after: checkSchedule, before: checkSchedule };
-  declare(["check_schedule.create"], checkSchedulePolicy);
-  declare(["check_schedule.update"], checkSchedulePolicy);
+  declare(["check_schedule.create", "check_schedule.update"], checkSchedulePolicy);
   declare(["check_schedule.delete"], checkSchedulePolicy);
   declare(["check_schedule.set_default"], checkSchedulePolicy);
   declare(["check_schedule.assign"], checkSchedulePolicy);
   declare(["check_schedule.remove"], checkSchedulePolicy);
+  declare(["check_schedule.archive", "check_schedule.restore"], checkSchedulePolicy);
   const notificationPreference = {
     ...f.booleans("alertEmail", "alertSlack", "alertWebhook", "reportEmail"),
     ...strings("digestFrequency"),

@@ -1,6 +1,7 @@
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { appPath } from "@/lib/routing/app-path";
-import { ArrowRightIcon as ArrowRight, LinkIcon as LinkSimple } from "@phosphor-icons/react/ssr";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { LinkIcon as LinkSimple } from "@phosphor-icons/react/dist/ssr/Link";
 import Link from "next/link";
 
 export function DomainOverviewBacklinksTeaser({

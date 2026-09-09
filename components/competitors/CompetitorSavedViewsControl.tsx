@@ -1,7 +1,10 @@
 "use client";
 
 import { actionErrorMessage } from "@/components/keywords/action-utils";
-import { Button, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
+import { useToast } from "@/components/ui/toast-context";
 import {
   type CompetitorSavedViewConfig,
   competitorSavedViewHref,
@@ -14,14 +17,10 @@ import type {
   CreateProjectSavedViewInput,
   SavedViewResource,
 } from "@/lib/saved-views/model";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import {
-  BookmarkSimpleIcon as BookmarkSimple,
-  CaretDownIcon as CaretDown,
-  CheckIcon as Check,
-  TrashIcon as Trash,
-} from "@phosphor-icons/react";
+import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { SaveCompetitorViewModal } from "./SaveCompetitorViewModal";

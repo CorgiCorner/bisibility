@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { CityCandidate, LocationStore, ResolvedLocation } from "./location";
+import {
+  type LocationCandidate,
+  LocationInputError,
+  type LocationStore,
+  type ResolvedLocation,
+} from "./location";
 import { resolveLocation } from "./location-resolver";
 
 function fakeStore() {
@@ -21,16 +26,18 @@ function fakeStore() {
   return { store, rows, creates };
 }
 
-const austin: CityCandidate = {
+const austin: LocationCandidate = {
+  countryCode: "US",
   displayName: "Austin, Texas, United States",
+  kind: "city",
   regionCode: "US-TX",
   cityName: "Austin",
   primaryGeoCode: 1026201,
   primaryGeoName: "Austin,Texas,United States",
   secondaryGeoName: "Austin, Texas, United States",
 };
-const cityLookup = { findCity: async () => austin };
-const missLookup = { findCity: async () => null };
+const cityLookup = { find: async () => austin };
+const missLookup = { find: async () => null };
 
 describe("resolveLocation", () => {
   it("resolves a country deterministically and caches it", async () => {
@@ -58,9 +65,10 @@ describe("resolveLocation", () => {
       { cityName: "Malaga", countryCode: "ES", regionName: "Andalusia" },
       {
         lookup: {
-          findCity: async () => ({
+          find: async () => ({
             ...austin,
             cityName: "Malaga",
+            countryCode: "ES",
             displayName: "Malaga, Andalusia, Spain",
             primaryGeoName: "Malaga,Andalusia,Spain",
             regionCode: null,
@@ -75,9 +83,10 @@ describe("resolveLocation", () => {
       { cityName: "Malaga", countryCode: "ES", languageCode: "es", regionName: "Andalusia" },
       {
         lookup: {
-          findCity: async () => ({
+          find: async () => ({
             ...austin,
             cityName: "Malaga",
+            countryCode: "ES",
             displayName: "Malaga, Andalusia, Spain",
             primaryGeoName: "Malaga,Andalusia,Spain",
             regionCode: null,
@@ -92,9 +101,10 @@ describe("resolveLocation", () => {
       { cityName: "Malaga", countryCode: "ES", languageCode: "en", regionName: "Andalusia" },
       {
         lookup: {
-          findCity: async () => ({
+          find: async () => ({
             ...austin,
             cityName: "Malaga",
+            countryCode: "ES",
             displayName: "Malaga, Andalusia, Spain",
             primaryGeoName: "Malaga,Andalusia,Spain",
             regionCode: null,
@@ -144,12 +154,116 @@ describe("resolveLocation", () => {
     expect(creates).toEqual(["US/US-TX/Austin"]);
   });
 
+  it("enriches a matching cached location from a trusted common-catalog candidate", async () => {
+    const { rows, store } = fakeStore();
+    rows.set("US/US-TX/Austin", {
+      canonicalKey: "US/US-TX/Austin",
+      cityName: "Austin",
+      countryCode: "US",
+      displayName: "Austin, Texas, United States",
+      gl: "us",
+      hl: "en",
+      id: "loc_legacy",
+      kind: "city",
+      languageCode: "en",
+      languageLabel: "English",
+      primaryGeoCode: 1026201,
+      primaryGeoName: "Austin,Texas,United States",
+      regionCode: "US-TX",
+      secondaryGeoName: "United States",
+    });
+    let enrichedCandidate: LocationCandidate | null = null;
+    store.enrich = async (location, candidate) => {
+      enrichedCandidate = candidate;
+      return { ...location, secondaryGeoName: candidate.secondaryGeoName };
+    };
+
+    const resolution = await resolveLocation(
+      { cityName: "Austin", countryCode: "US" },
+      { store, trustedCandidate: austin },
+    );
+
+    expect(enrichedCandidate).toBe(austin);
+    expect(resolution.location).toMatchObject({
+      id: "loc_legacy",
+      canonicalKey: "US/US-TX/Austin",
+      primaryGeoCode: 1026201,
+      secondaryGeoName: "Austin, Texas, United States",
+    });
+  });
+
+  it("propagates a cached handle conflict from a trusted common-catalog candidate", async () => {
+    const { rows, store } = fakeStore();
+    rows.set("US/US-TX/Austin", {
+      canonicalKey: "US/US-TX/Austin",
+      cityName: "Austin",
+      countryCode: "US",
+      displayName: "Austin, Texas, United States",
+      gl: "us",
+      hl: "en",
+      id: "loc_legacy",
+      kind: "city",
+      languageCode: "en",
+      languageLabel: "English",
+      primaryGeoCode: 999999,
+      primaryGeoName: "Dallas,Texas,United States",
+      regionCode: "US-TX",
+      secondaryGeoName: "United States",
+    });
+    store.enrich = async () => {
+      throw new LocationInputError(
+        "canonicalKey",
+        "Cached location conflicts with the selected place.",
+      );
+    };
+
+    await expect(
+      resolveLocation(
+        { cityName: "Austin", countryCode: "US" },
+        { store, trustedCandidate: austin },
+      ),
+    ).rejects.toMatchObject({ field: "canonicalKey" });
+  });
+
+  it("persists an uncached region with the provider's trusted kind", async () => {
+    const { store, creates } = fakeStore();
+    const resolution = await resolveLocation(
+      { countryCode: "ES", kind: "region", regionName: "Andalusia" },
+      {
+        lookup: {
+          find: async () => ({
+            cityName: null,
+            countryCode: "ES",
+            displayName: "Andalusia, Spain",
+            kind: "region",
+            primaryGeoCode: 21160,
+            primaryGeoName: "Andalusia,Spain",
+            regionCode: null,
+            regionName: "Andalusia",
+            secondaryGeoName: "Andalusia, Spain",
+          }),
+        },
+        store,
+      },
+    );
+
+    expect(resolution).toMatchObject({ degraded: false, warning: null });
+    expect(resolution.location).toMatchObject({
+      canonicalKey: "ES/Andalusia",
+      cityName: null,
+      kind: "region",
+    });
+    expect(creates).toEqual(["ES/Andalusia"]);
+  });
+
   it("keeps same-named provider cities distinct when only region labels are known", async () => {
     const { store, creates } = fakeStore();
     const labelLookup = {
-      findCity: async (input: { regionName?: string | null }) => ({
+      find: async (input: { regionName?: string | null }) => ({
+        countryCode: "US",
         cityName: "Austin",
         displayName: `Austin,${input.regionName},United States`,
+        kind: "city" as const,
         primaryGeoCode: input.regionName === "Texas" ? 1026201 : 1026202,
         primaryGeoName: `Austin,${input.regionName},United States`,
         regionCode: null,

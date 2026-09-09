@@ -1,6 +1,6 @@
 "use client";
 
-import { PricingPopover, type PricingRow } from "@/components/ui";
+import { PricingPopover, type PricingRow } from "@/components/ui/PricingPopover";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import {
   estimatedFeatureCostCents,

@@ -16,7 +16,7 @@ describe("rank tracker URL query contract", () => {
       grouped: false,
       lens: { device: DEFAULT_LENS_DEVICE, locationId: null },
       page: 1,
-      pageSize: 25,
+      pageSize: 50,
       savedViewId: null,
       search: "",
       sort: { direction: "asc", field: "position" },
@@ -49,7 +49,7 @@ describe("rank tracker URL query contract", () => {
       contains: "x".repeat(81),
       device: "tablet",
       page: "999999",
-      pageSize: "100",
+      pageSize: "10",
       q: "q".repeat(121),
       tags: many,
       volMax: "-1",
@@ -63,10 +63,21 @@ describe("rank tracker URL query contract", () => {
     expect(parsed.state.filters.volMax).toBe(50);
     expect(parsed.state.lens.device).toBe(DEFAULT_LENS_DEVICE);
     expect(parsed.state.page).toBe(1);
-    expect(parsed.state.pageSize).toBe(25);
+    expect(parsed.state.pageSize).toBe(50);
     expect(parsed.issues).toEqual(
       expect.arrayContaining(["change", "contains", "device", "page", "pageSize", "q", "tags"]),
     );
+  });
+
+  test.each([25, 50, 100] as const)("preserves valid pageSize=%i deep links", (pageSize) => {
+    const parsed = parseRankTrackerQuery({ pageSize: String(pageSize) });
+    expect(parsed.state.pageSize).toBe(pageSize);
+    expect(parsed.present).toContain("pageSize");
+    const canonical = serializeRankTrackerQuery(parsed).toString();
+    expect(canonical).toBe(`pageSize=${pageSize}`);
+    expect(
+      parseRankTrackerQuery(Object.fromEntries(new URLSearchParams(canonical))).state.pageSize,
+    ).toBe(pageSize);
   });
 
   test.each([
@@ -106,13 +117,13 @@ describe("rank tracker URL query contract", () => {
       volMin: "5",
       wrongUrl: "1",
     });
-    const canonical = serializeRankTrackerQuery(first.state).toString();
+    const canonical = serializeRankTrackerQuery(first).toString();
     expect(canonical).toBe(
       "q=boots&location=loc-1&device=mobile&position=top10%2Ctop3&change=down&volMin=5&volMax=40&contains=sale&tags=B%2CA&topics=Winter&intents=buy%2Clearn&serp=video%2Cpaa&lastCheck=not_checked&wrongUrl=1&urlChanged=1&sort=volume&dir=desc&page=3&pageSize=50&grouped=1&view=view-1",
     );
     expect(
       serializeRankTrackerQuery(
-        parseRankTrackerQuery(Object.fromEntries(new URLSearchParams(canonical))).state,
+        parseRankTrackerQuery(Object.fromEntries(new URLSearchParams(canonical))),
       ).toString(),
     ).toBe(canonical);
   });
@@ -129,6 +140,7 @@ describe("rank tracker URL query contract", () => {
     expect(resolved.filters.change).toBe("up");
     expect(resolved.filters.tags).toEqual(["Saved"]);
     expect(resolved.lens).toEqual(saved.lens);
+    expect(resolved.pageSize).toBe(50);
   });
 
   test("URL values override saved view values and can explicitly clear fields", () => {

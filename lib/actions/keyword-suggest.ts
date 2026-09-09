@@ -1,5 +1,10 @@
 "use server";
 
+import {
+  readAnalyticsSurfaceFromHeaders,
+  readConsentFromCookies,
+  trackServerEvent,
+} from "@/lib/analytics/server";
 import { prisma } from "@/lib/db/prisma";
 import {
   sanitizeTopQueries,
@@ -96,6 +101,19 @@ export async function importTopQueries(input: unknown): Promise<ImportTopQueries
     return { queries: [], reason: "needs_reauth" };
   }
   const { suggestions, hidden, hiddenCount } = sanitizeTopQueries(rows, data.limit);
+  const surface = await readAnalyticsSurfaceFromHeaders();
+  if (surface && suggestions.length > 0) {
+    await trackServerEvent("keywords_added", {
+      consent: await readConsentFromCookies(),
+      distinctId: actor.id,
+      properties: {
+        keyword_count: suggestions.length,
+        market_count: 0,
+        source: "search_console",
+        surface,
+      },
+    });
+  }
   return {
     hidden,
     hiddenCount,

@@ -2,7 +2,7 @@
 // weekly summary, and viewport-sized keyword table.
 
 import { PageContent } from "@/components/shell/PageContent";
-import { SummaryStrip } from "@/components/ui";
+import { SummaryStrip } from "@/components/ui/SummaryStrip";
 import { cn } from "@/lib/ui/cn";
 
 function Bar({ className }: Readonly<{ className?: string }>) {

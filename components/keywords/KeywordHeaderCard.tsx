@@ -5,21 +5,16 @@ import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import type { AddKeywordsMatrixInput, BulkKeywordIdsInput } from "@/lib/schemas/keyword";
-import { resolveSerpDepth } from "@/lib/serp/markets";
+import { resolveSerpDepth } from "@/lib/serp/constants";
 import { useState } from "react";
-import type { KeywordAction, KeywordDetailActions } from "./action-utils";
+import type { KeywordDetailActions } from "./action-utils";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
+import { KeywordEditDrawer } from "./KeywordEditDrawer";
 import { KeywordHeaderActions } from "./KeywordHeaderActions";
-import { KeywordMarketsDrawer } from "./KeywordMarketsDrawer";
 import { exportHistoryCsv } from "./keyword-history-export";
-import { TargetSwitcher } from "./TargetSwitcher";
 import { useKeywordScheduleModal } from "./use-keyword-schedule-modal";
 
 type KeywordHeaderCardProps = KeywordDetailActions & {
-  addKeywordsMatrixAction?: KeywordAction<AddKeywordsMatrixInput>;
-  bulkDeleteAction: KeywordAction<BulkKeywordIdsInput>;
-  canCreateKeyword: boolean;
   canUpdateKeyword: boolean;
   costContext?: ProjectCostContext;
   keyword: KeywordRow;
@@ -28,14 +23,10 @@ type KeywordHeaderCardProps = KeywordDetailActions & {
   providerLabel?: string;
   rankState?: KeywordDetailRankState;
   searchConsoleConnected?: boolean;
-  targets?: readonly KeywordRow[];
   tagSuggestions?: readonly string[];
 };
 
 export function KeywordHeaderCard({
-  addKeywordsMatrixAction,
-  bulkDeleteAction,
-  canCreateKeyword,
   canUpdateKeyword,
   costContext,
   keyword,
@@ -44,7 +35,7 @@ export function KeywordHeaderCard({
   providerLabel,
   rankState,
   searchConsoleConnected = false,
-  targets = [keyword],
+  updateKeywordAction,
 }: KeywordHeaderCardProps) {
   const [editing, setEditing] = useState(false);
   const effectiveDepth = resolveSerpDepth(keyword.projectSerpDepth);
@@ -53,7 +44,6 @@ export function KeywordHeaderCard({
     : undefined;
   const preflight = useRunPreflight({ projectId, providerId: costContext?.providerId });
   const runPending = preflight.opening;
-  const canEditMarkets = canUpdateKeyword && projectMarkets && addKeywordsMatrixAction;
   const { onChangeSchedule, scheduleModal } = useKeywordScheduleModal({
     keyword,
     projectId,
@@ -81,14 +71,6 @@ export function KeywordHeaderCard({
             runPending={runPending}
           />
         }
-        dimensionControls={
-          <TargetSwitcher
-            keyword={keyword}
-            onEdit={canEditMarkets ? () => setEditing(true) : undefined}
-            projectId={projectId}
-            targets={targets}
-          />
-        }
         keyword={keyword}
         onChangeSchedule={canUpdateKeyword ? onChangeSchedule : undefined}
         providerLabel={providerLabel ?? costContext?.providerId ?? keyword.dataProvider}
@@ -97,17 +79,16 @@ export function KeywordHeaderCard({
         timeZone={costContext?.timezone ?? "UTC"}
       />
       {preflight.dialog}
-      {canEditMarkets ? (
-        <KeywordMarketsDrawer
-          addKeywordsMatrixAction={addKeywordsMatrixAction}
-          bulkDeleteAction={bulkDeleteAction}
-          canCreateKeyword={canCreateKeyword}
+      {canUpdateKeyword ? (
+        <KeywordEditDrawer
+          key={keyword.id}
           keyword={keyword}
           onClose={() => setEditing(false)}
           open={editing}
           projectId={projectId}
           projectMarkets={projectMarkets}
-          targets={targets}
+          providerRate={providerRate}
+          updateKeywordAction={updateKeywordAction}
         />
       ) : null}
       {scheduleModal}

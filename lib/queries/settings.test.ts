@@ -1,3 +1,4 @@
+import { keywordLocation } from "@/lib/test/fixtures/location";
 import { dateFromFrozenNow, FROZEN_NOW_ISO } from "@/tests/clock";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getSettings } from "./settings";
@@ -97,6 +98,7 @@ function keyword(overrides: Record<string, unknown> = {}) {
   return {
     device: "desktop",
     location: "United States",
+    locationRef: keywordLocation(),
     tags: [],
     targetUrl: null,
     ...overrides,
@@ -223,10 +225,23 @@ describe("settings queries", () => {
           },
         ],
         keywords: [
-          keyword({ device: "mobile", location: "Germany" }),
           keyword({
             device: "mobile",
             location: "Germany",
+            locationRef: keywordLocation({
+              canonicalKey: "DE",
+              countryCode: "DE",
+              displayName: "Germany",
+            }),
+          }),
+          keyword({
+            device: "mobile",
+            location: "Germany",
+            locationRef: keywordLocation({
+              canonicalKey: "DE",
+              countryCode: "DE",
+              displayName: "Germany",
+            }),
             targetUrl: "https://example.com/a",
           }),
           keyword({

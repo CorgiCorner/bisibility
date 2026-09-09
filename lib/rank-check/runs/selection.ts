@@ -68,6 +68,7 @@ export const runSelectionKeywordSelect = {
     select: { status: true },
     take: 1,
   },
+  checkSchedule: { select: { serpDepth: true } },
   schedule: { select: { serpDepth: true } },
   text: true,
 } satisfies Prisma.KeywordSelect;

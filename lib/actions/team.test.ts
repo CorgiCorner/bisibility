@@ -92,6 +92,7 @@ describe("team actions", () => {
     mocks.prisma.$transaction.mockImplementation((fn) => fn(mocks.prisma));
     mocks.prisma.invite.updateMany.mockResolvedValue({ count: 1 });
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });
+    mocks.prisma.invite.findUnique.mockResolvedValue(null);
     mockActor("admin");
   });
 
@@ -135,6 +136,7 @@ describe("team actions", () => {
         create: expect.objectContaining({ email: "teammate@example.com" }),
         where: {
           projectId_email: { email: "teammate@example.com", projectId: "project_1" },
+          role: { notIn: ["admin", "owner"] },
         },
       }),
     );
@@ -262,6 +264,7 @@ describe("team actions", () => {
           create: expect.objectContaining({ email: "repeat@example.com" }),
           where: {
             projectId_email: { email: "repeat@example.com", projectId: "project_1" },
+            role: { notIn: ["admin", "owner"] },
           },
         }),
       );
@@ -387,7 +390,8 @@ describe("team actions", () => {
     expect(mocks.prisma.membership.create).not.toHaveBeenCalled();
   });
 
-  it("revokes and resends pending invites with audit records", async () => {
+  it("lets an owner revoke and resend admin invites with audit records", async () => {
+    mockActor("owner");
     const invite = {
       email: "teammate@example.com",
       expiresAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -527,6 +531,7 @@ describe("team actions", () => {
   });
 
   it("denies ownership transfer for admins", async () => {
+    mocks.prisma.invite.findUnique.mockResolvedValue(null);
     mockActor("admin");
 
     await expect(

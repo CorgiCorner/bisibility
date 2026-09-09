@@ -16,6 +16,7 @@ export type TemporalHeartbeat = {
   issueSchedules: string[];
   missedCatchupTotal: number;
   nextActionAt: string | null;
+  // Only actions retained in each schedule's bounded recent history, not a full execution count.
   recentActions: number;
   scheduleIssues: TemporalScheduleIssue[];
   schedules: number;
@@ -24,10 +25,14 @@ export type TemporalHeartbeat = {
 
 export type OpsScheduleClient = Pick<Client["schedule"], "getHandle" | "list">;
 
-function nextAction(descriptions: ScheduleDescription[]) {
-  const times = descriptions.flatMap((description) => description.info.nextActionTimes);
+function nextAction(descriptions: ScheduleDescription[], now: Date) {
+  const times = descriptions
+    .filter((description) => !description.state.paused)
+    .flatMap((description) => description.info.nextActionTimes)
+    .map((time) => time.getTime())
+    .filter((time) => Number.isFinite(time) && time > now.getTime());
   if (times.length === 0) return null;
-  return new Date(Math.min(...times.map((time) => time.getTime()))).toISOString();
+  return new Date(Math.min(...times)).toISOString();
 }
 
 /** Inspect every Temporal Schedule. Missed/overlap counters are SDK lifetime counters. */
@@ -74,7 +79,7 @@ export async function collectTemporalHeartbeat(
       (sum, description) => sum + description.info.numActionsMissedCatchupWindow,
       0,
     ),
-    nextActionAt: nextAction(descriptions),
+    nextActionAt: nextAction(descriptions, now),
     recentActions: descriptions.reduce(
       (sum, description) =>
         sum + description.info.recentActions.filter((action) => action.takenAt >= since).length,

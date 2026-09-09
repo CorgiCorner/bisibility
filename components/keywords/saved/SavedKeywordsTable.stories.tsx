@@ -59,7 +59,7 @@ const meta = {
       </div>
     ),
   ],
-  parameters: { layout: "fullscreen" },
+  parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
   title: "Keywords/Saved/Table",
 } satisfies Meta<typeof SavedKeywordsTable>;
 

@@ -2,10 +2,10 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
-import ts from "typescript";
+import ts from "@typescript/typescript6";
 
 const SOURCE_ROOTS = ["app", "components", "hooks", "lib"];
-const TOOLTIP_MODULE = "@/components/ui";
+const TOOLTIP_MODULES = new Set(["@/components/ui", "@/components/ui/Tooltip"]);
 const MESSAGE =
   "Server Components must not render Tooltip directly; create a client boundary that owns both Tooltip and trigger.";
 const VIOLATION_BASELINE = 16;
@@ -27,7 +27,7 @@ function importedTooltipNames(sourceFile) {
     if (
       !ts.isImportDeclaration(statement) ||
       !ts.isStringLiteral(statement.moduleSpecifier) ||
-      statement.moduleSpecifier.text !== TOOLTIP_MODULE ||
+      !TOOLTIP_MODULES.has(statement.moduleSpecifier.text) ||
       statement.importClause?.isTypeOnly ||
       !statement.importClause?.namedBindings ||
       !ts.isNamedImports(statement.importClause.namedBindings)

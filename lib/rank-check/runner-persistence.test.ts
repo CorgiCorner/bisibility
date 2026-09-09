@@ -1,3 +1,4 @@
+import type { ObservationRunInput } from "@/lib/observation/types";
 import { SIGNAL_TYPES } from "@/lib/signals/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -17,6 +18,8 @@ const mocks = vi.hoisted(() => ({
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     keywordSchedule: { update: vi.fn() },
+    observationItem: { createMany: vi.fn() },
+    observationRun: { create: vi.fn() },
     projectDefaults: { update: vi.fn() },
     providerConnection: { update: vi.fn() },
     providerCostEntry: { createMany: vi.fn() },
@@ -212,6 +215,188 @@ describe("rank-check persistence update path", () => {
     });
   });
 
+  it("persists observations inside the rank-check transaction", async () => {
+    const tx = {
+      auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
+      keywordSchedule: { update: vi.fn() },
+      observationItem: { createMany: vi.fn(() => Promise.resolve({ count: 1 })) },
+      observationRun: { create: vi.fn(() => Promise.resolve({ id: "observation_run_1" })) },
+      projectDefaults: { update: vi.fn() },
+      providerConnection: { update: vi.fn() },
+      providerCostEntry: { createMany: vi.fn() },
+      rankCheck: {
+        create: vi.fn(({ data }) =>
+          Promise.resolve({ id: "rank_new_1", publicId: RANK_CHECK_PUBLIC_ID, ...data }),
+        ),
+        findUniqueOrThrow: vi.fn(),
+        updateMany: vi.fn(),
+      },
+      signal: { create: vi.fn() },
+    };
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
+    const observation: ObservationRunInput = {
+      provider: "example-provider",
+      surface: "web_serp",
+      engine: "google",
+      requestPolicy: { depth: 20, stopOnMatch: true, forcedAiOverview: false },
+      completeness: "complete",
+      configuredScope: { location: "US", language: "en", device: "desktop" },
+      executedAt: checkedAt,
+      items: [{ resultKind: "local_pack", domain: "example.com", rawFragment: { item: 1 } }],
+    };
+
+    await persistRankCheck(
+      {
+        hasDefaults: false,
+        hasSchedule: false,
+        keywordId: "keyword_1",
+        keywordPublicId: KEYWORD_PUBLIC_ID,
+        projectId: "project_1",
+      },
+      {
+        comparisonAllowed: true,
+        rankCheck: {
+          billingUnits: null,
+          checkedAt,
+          costCents: 0,
+          estimatedCostCents: null,
+          keywordId: "keyword_1",
+          normalizationVersion: "v1",
+          observation,
+          organicRanks: null,
+          position: 4,
+          previousPosition: 8,
+          provider: "example-provider",
+          rankingUrl: "https://example.com/rank-tracker",
+          raw: null,
+          requestedDepth: 20,
+        },
+        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
+      },
+    );
+
+    expect(tx.observationRun.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        projectId: "project_1",
+        rankCheckId: "rank_new_1",
+      }),
+    });
+  });
+
+  it("persists observations for an already running rank check", async () => {
+    const tx = {
+      auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
+      keywordSchedule: { update: vi.fn() },
+      observationItem: { createMany: vi.fn(() => Promise.resolve({ count: 1 })) },
+      observationRun: { create: vi.fn(() => Promise.resolve({ id: "observation_run_1" })) },
+      projectDefaults: { update: vi.fn() },
+      providerConnection: { update: vi.fn() },
+      providerCostEntry: { createMany: vi.fn() },
+      rankCheck: {
+        create: vi.fn(),
+        findUniqueOrThrow: vi.fn(({ where }) =>
+          Promise.resolve({
+            id: where.id,
+            publicId: RANK_CHECK_PUBLIC_ID,
+            raw: null,
+            trigger: null,
+          }),
+        ),
+        updateMany: vi.fn(() => Promise.resolve({ count: 1 })),
+      },
+      signal: { create: vi.fn(({ data }) => Promise.resolve({ id: "signal_1", ...data })) },
+    };
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
+    const observation: ObservationRunInput = {
+      provider: "example-provider",
+      surface: "web_serp",
+      engine: "google",
+      requestPolicy: { depth: 20, stopOnMatch: false, forcedAiOverview: false },
+      completeness: "unknown",
+      configuredScope: { location: "US", language: "en", device: "desktop" },
+      executedAt: checkedAt,
+      items: [{ resultKind: "ai_overview", rawFragment: { item: 1 } }],
+    };
+
+    await persistRankCheck(
+      {
+        existingRankCheckId: "rank_running_1",
+        hasDefaults: false,
+        hasSchedule: false,
+        keywordId: "keyword_1",
+        keywordPublicId: KEYWORD_PUBLIC_ID,
+        projectId: "project_1",
+      },
+      {
+        comparisonAllowed: true,
+        rankCheck: {
+          billingUnits: null,
+          checkedAt,
+          costCents: 0,
+          estimatedCostCents: null,
+          keywordId: "keyword_1",
+          normalizationVersion: "v1",
+          observation,
+          organicRanks: null,
+          position: 4,
+          previousPosition: 8,
+          provider: "example-provider",
+          rankingUrl: null,
+          raw: null,
+          requestedDepth: 20,
+        },
+        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
+      },
+    );
+
+    expect(tx.rankCheck.create).not.toHaveBeenCalled();
+    expect(tx.observationRun.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        completeness: "unknown",
+        projectId: "project_1",
+        rankCheckId: "rank_running_1",
+      }),
+    });
+    expect(tx.observationItem.createMany).toHaveBeenCalledOnce();
+  });
+
+  it("does not create an observation when none was captured", async () => {
+    mocks.prisma.rankCheck.create.mockImplementation(({ data }) =>
+      Promise.resolve({ id: "rank_new_1", publicId: RANK_CHECK_PUBLIC_ID, ...data }),
+    );
+
+    await persistRankCheck(
+      {
+        hasDefaults: false,
+        hasSchedule: false,
+        keywordId: "keyword_1",
+        keywordPublicId: KEYWORD_PUBLIC_ID,
+        projectId: "project_1",
+      },
+      {
+        comparisonAllowed: true,
+        rankCheck: {
+          billingUnits: null,
+          checkedAt,
+          costCents: 0,
+          estimatedCostCents: null,
+          keywordId: "keyword_1",
+          normalizationVersion: "v1",
+          organicRanks: null,
+          position: 4,
+          previousPosition: 8,
+          provider: "example-provider",
+          rankingUrl: null,
+          raw: null,
+          requestedDepth: 20,
+        },
+        scheduleUpdate: { lastCheckedAt: checkedAt, nextCheckAt: null },
+      },
+    );
+
+    expect(mocks.prisma.observationRun.create).not.toHaveBeenCalled();
+  });
+
   it("checks persistence ownership before the canonical spend write", async () => {
     const persistenceGuard = vi.fn(() =>
       Promise.reject(new RankCheckClosedBeforePersistenceError()),
@@ -241,6 +426,7 @@ describe("rank-check persistence update path", () => {
         existingRankCheckId: "rank_running_1",
         hasDefaults: false,
         hasSchedule: false,
+        expectedUrlAtCheck: "https://example.com/recorded",
         keywordId: "keyword_1",
         keywordPublicId: KEYWORD_PUBLIC_ID,
         keywordTargetUrl: "https://example.com/rank-tracker",
@@ -275,6 +461,7 @@ describe("rank-check persistence update path", () => {
         degradedToCountry: false,
         error: null,
         errorCode: null,
+        expectedUrlAtCheck: "https://example.com/recorded",
         position: 4,
         requestedDepth: 50,
         status: "completed",
@@ -290,7 +477,7 @@ describe("rank-check persistence update path", () => {
         payload: {
           after: "https://example.com/rank-tracker",
           before: "https://example.com/old-page",
-          matchesTargetUrl: true,
+          matchesTargetUrl: false,
           requestedDepth: 50,
         },
         type: SIGNAL_TYPES.rankingUrlChanged,
@@ -357,6 +544,7 @@ describe("rank-check persistence update path", () => {
 
     await persistRankCheck(
       {
+        expectedUrlAtCheck: "https://example.com/recorded",
         hasDefaults: false,
         hasSchedule: false,
         keywordId: "keyword_1",
@@ -388,6 +576,7 @@ describe("rank-check persistence update path", () => {
       data: expect.objectContaining({
         error: null,
         errorCode: null,
+        expectedUrlAtCheck: "https://example.com/recorded",
         publicId: expect.stringMatching(/^check_/),
         status: "completed",
       }),
@@ -607,6 +796,7 @@ describe("rank-check persistence update path", () => {
       checkedAt,
       errorCode: "provider_billing",
       error: "provider unavailable",
+      expectedUrlAtCheck: "https://example.com/failed-recorded",
       existingRankCheckId: "rank_running_1",
       keywordId: "keyword_1",
       keywordPublicId: KEYWORD_PUBLIC_ID,
@@ -624,6 +814,7 @@ describe("rank-check persistence update path", () => {
         degradedToCountry: false,
         error: "provider unavailable",
         errorCode: "provider_billing",
+        expectedUrlAtCheck: "https://example.com/failed-recorded",
         finishedAt: expect.any(Date),
         requestedDepth: 10,
         status: "failed",

@@ -12,7 +12,7 @@ describe("SampleDataButton", () => {
     render(<SampleDataButton help={SAMPLE_DATA_BUTTON_TOOLTIP} variant="secondary" />);
 
     const button = screen.getByRole("button", { name: "Load sample project" });
-    expect(button).toHaveClass("MuiButton-outlined");
+    expect(button).toHaveAttribute("data-variant", "secondary");
     const describedBy = button.getAttribute("aria-describedby");
     expect(describedBy).toBeTruthy();
     expect(document.getElementById(describedBy ?? "")).toHaveTextContent(

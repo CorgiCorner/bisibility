@@ -29,7 +29,9 @@ describe("CloudBetaCoverageModal", () => {
     expect(ourSideCopy.parentElement).toHaveTextContent("Nightly snapshots are kept for 7 days");
     expect(yourSideCopy.parentElement).toHaveTextContent("Keep a recent export.");
     expect(screen.queryByText("On yours")).not.toBeInTheDocument();
-    expect(pricingCopy).toHaveTextContent(/Self-host stays available\.$/);
+    expect((pricingCopy.textContent ?? "").replace(/\s+/g, " ").trim()).toMatch(
+      /Self-host stays available\.$/,
+    );
     for (const row of neutralRows) {
       expect(row).toHaveClass("border-border");
       expect(row).not.toHaveClass("border-accent", "bg-accent-soft", "bg-bg-sunken");

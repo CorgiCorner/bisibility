@@ -6,10 +6,12 @@ import type {
   PendingAction,
 } from "@/components/integrations/ConnectDrawerSchema";
 import { providerCredentialFields } from "@/components/integrations/provider-auth";
-import { Button, inputClassName, PasswordInput } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { inputClassName } from "@/components/ui/input-styles";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { COST_ESTIMATE_PER_CHECK_LABEL } from "@/lib/integrations/settings-copy";
 import type { IntegrationProviderData } from "@/lib/integrations/types";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import type { FieldErrors, UseFormReturn } from "react-hook-form";
 
 type FormProps = {
@@ -45,9 +47,11 @@ export function CredentialFields({
 
         return (
           <label className={labelClass} htmlFor={inputId} key={field.name}>
-            {field.label}
+            <span id={`${inputId}-label`}>{field.label}</span>
             {field.type === "password" ? (
               <PasswordInput
+                aria-describedby={field.description ? `${inputId}-description` : undefined}
+                aria-labelledby={`${inputId}-label`}
                 className={inputClass}
                 id={inputId}
                 placeholder={field.placeholder}
@@ -55,6 +59,8 @@ export function CredentialFields({
               />
             ) : (
               <input
+                aria-describedby={field.description ? `${inputId}-description` : undefined}
+                aria-labelledby={`${inputId}-label`}
                 autoComplete="off"
                 className={inputClass}
                 id={inputId}
@@ -64,7 +70,10 @@ export function CredentialFields({
               />
             )}
             {field.description ? (
-              <span className="font-sans text-[11.5px] normal-case leading-5 tracking-normal text-fg-muted">
+              <span
+                className="font-sans text-[11.5px] normal-case leading-5 tracking-normal text-fg-muted"
+                id={`${inputId}-description`}
+              >
                 {field.description}
               </span>
             ) : null}

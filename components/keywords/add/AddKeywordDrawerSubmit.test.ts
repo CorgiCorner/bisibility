@@ -48,6 +48,71 @@ describe("addKeywordDrawerInput", () => {
     });
   });
 
+  it("submits a just-created market by its canonical key with the assigned schedule", () => {
+    const scheduleId = `sch_${"a".repeat(24)}`;
+
+    expect(
+      addKeywordDrawerInput({
+        activeTab: "manual",
+        checkScheduleId: scheduleId,
+        csvText: "",
+        devices: ["desktop"],
+        existingKeywords: [],
+        locationKeys: ["US", "ES/Andalusia/Malaga"],
+        locationValue: {
+          canonicalKey: "US",
+          cityName: null,
+          countryCode: "US",
+          displayName: "United States",
+          kind: "country",
+          regionName: null,
+        },
+        values,
+      }),
+    ).toMatchObject({
+      input: {
+        checkScheduleId: scheduleId,
+        locations: [{ locationKey: "US" }, { locationKey: "ES/Andalusia/Malaga" }],
+      },
+    });
+  });
+
+  it.each(["manual", "csv"] as const)(
+    "an explicit Manual selection overrides an old cadence in the %s form",
+    (activeTab) => {
+      const result = addKeywordDrawerInput({
+        activeTab,
+        checkScheduleId: null,
+        csvText: "rank tracker",
+        devices: ["desktop"],
+        existingKeywords: [],
+        locationKeys: ["US"],
+        locationValue: {
+          canonicalKey: "US",
+          cityName: null,
+          countryCode: "US",
+          displayName: "United States",
+          kind: "country",
+          regionName: null,
+        },
+        values: {
+          ...values,
+          schedule: {
+            frequency: "daily",
+            cronExpression: null,
+            jitterMinutes: 15,
+            timezone: "Europe/Warsaw",
+            serpDepth: 100,
+          },
+        },
+      });
+      expect(result).toMatchObject({
+        input: { schedule: { frequency: "manual", timezone: "Europe/Warsaw", serpDepth: 100 } },
+      });
+      if ("input" in result) expect(result.input).not.toHaveProperty("checkScheduleId");
+    },
+  );
+
   it("rejects an old per-line target override instead of silently dropping markets", () => {
     expect(
       addKeywordDrawerInput({

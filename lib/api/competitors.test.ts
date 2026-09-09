@@ -2,20 +2,21 @@ import type { ApiContext } from "@/lib/api/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { listProjectCompetitors } from "./competitors";
 
-const mocks = vi.hoisted(() => ({ getCompetitorsApiView: vi.fn() }));
+const mocks = vi.hoisted(() => ({ getCompetitorsApiViewFor: vi.fn() }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/queries/competitors", () => ({
-  getCompetitorsApiView: mocks.getCompetitorsApiView,
+  getCompetitorsApiViewFor: mocks.getCompetitorsApiViewFor,
 }));
-vi.mock("@/lib/actions/competitors", () => ({
-  addManagedCompetitor: vi.fn(),
-  removeManagedCompetitor: vi.fn(),
+vi.mock("@/lib/competitors/service", () => ({
+  addManagedCompetitorFor: vi.fn(),
+  removeManagedCompetitorFor: vi.fn(),
 }));
 
 function context(): ApiContext {
   const url = new URL("https://app.example.com/api/v1/projects/prj_1/competitors");
   return {
+    actor: { id: "api-key", memberships: [{ projectId: "project_1", role: "admin" }] },
     auth: {
       apiKey: {
         id: "key_1",
@@ -45,7 +46,7 @@ function context(): ApiContext {
 describe("competitors API projection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getCompetitorsApiView.mockResolvedValue({
+    mocks.getCompetitorsApiViewFor.mockResolvedValue({
       managedCompetitors: [],
       markets: [
         {

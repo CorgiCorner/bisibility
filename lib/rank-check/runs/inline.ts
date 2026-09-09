@@ -2,7 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { activeMarketLocationIds, unrunnableKeywordReason } from "@/lib/rank-check/runnable";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import {
   createRunningRankCheckActivity,
   failRankCheckActivity,
@@ -69,6 +69,7 @@ export async function runInlineRankCheck(input: RunInlineRankCheckInput) {
       keywordId: input.keywordId,
       providerId: input.providerId,
       rankCheckId: running.rankCheckId,
+      runItemId: item.id,
       source: "manual",
     });
   } catch (error) {

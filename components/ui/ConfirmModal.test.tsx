@@ -1,7 +1,7 @@
-import { ToastProvider } from "@/components/ui";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CONFIRM, ConfirmModal, type ConfirmModalProps } from "./ConfirmModal";
+import { ToastProvider } from "./Toast";
 
 afterEach(() => {
   vi.useRealTimers();

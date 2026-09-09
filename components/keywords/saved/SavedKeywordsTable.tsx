@@ -2,14 +2,14 @@
 
 import type { KeywordAction } from "@/components/keywords/action-utils";
 import { AddKeywordDrawer } from "@/components/keywords/add/AddKeywordDrawer";
-import { Card } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
 import { monthlyTrackingCostCents } from "@/lib/cost-estimate/project-estimate";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
 import type { AddKeywordsInput } from "@/lib/schemas/keyword";
 import type { RemoveSavedKeywordsInput } from "@/lib/schemas/saved-keyword";
-import type { SerpDevice } from "@/lib/serp/markets";
+import type { SerpDevice } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { SavedKeywordsEmptyState } from "./SavedKeywordsEmptyState";
@@ -19,6 +19,7 @@ import {
   SavedKeywordsToolbar,
 } from "./SavedKeywordsTableChrome";
 import { SavedKeywordsTableRows } from "./SavedKeywordsTableRows";
+import type { SavedKeywordsTableRow } from "./saved-keywords-table-columns";
 import { filterSavedKeywords, savedKeywordLocation } from "./saved-keywords-table-model";
 
 export type SavedKeywordsTableProps = {
@@ -66,6 +67,15 @@ export function SavedKeywordsTable({
   const activePage = Math.min(page, maxPage);
   const startIndex = activePage * pageSize;
   const pageRows = filtered.slice(startIndex, startIndex + pageSize);
+  const dataTableRows = useMemo(
+    () =>
+      pageRows.map<SavedKeywordsTableRow>((row) => ({
+        ...row,
+        id: row.publicId,
+        keyword: row.text,
+      })),
+    [pageRows],
+  );
   const selectedSet = new Set(selectedIds);
   const selectedRows = rows.filter((row) => selectedSet.has(row.publicId));
   const trackingCost = monthlyTrackingCostCents(
@@ -108,19 +118,6 @@ export function SavedKeywordsTable({
     );
   }
 
-  function togglePage() {
-    const pageIds = pageRows.map((row) => row.publicId);
-    const everySelected = pageIds.every((id) => selectedSet.has(id));
-    setSelectedIds((current) => {
-      const next = new Set(current);
-      for (const id of pageIds) {
-        if (everySelected) next.delete(id);
-        else next.add(id);
-      }
-      return [...next];
-    });
-  }
-
   if (rows.length === 0) return <SavedKeywordsEmptyState projectRef={projectId} />;
 
   return (
@@ -152,17 +149,19 @@ export function SavedKeywordsTable({
           </p>
         ) : null}
         {filtered.length > 0 ? (
-          <SavedKeywordsTableRows
-            canDelete={canDeleteKeyword}
-            canTrack={canCreateKeyword}
-            onRemove={(row) => void removeRows([row])}
-            onSelectAll={togglePage}
-            onToggle={toggleRow}
-            onTrack={(row) => setTrackDraft([row])}
-            projectRef={projectId}
-            rows={pageRows}
-            selectedIds={selectedSet}
-          />
+          <div className="[&>[role=table]]:border-0">
+            <SavedKeywordsTableRows
+              canDelete={canDeleteKeyword}
+              canTrack={canCreateKeyword}
+              onRemove={(row) => void removeRows([row])}
+              onSelectionChange={(selection) => setSelectedIds([...selection])}
+              onToggle={toggleRow}
+              onTrack={(row) => setTrackDraft([row])}
+              projectRef={projectId}
+              rows={dataTableRows}
+              selectedIds={selectedSet}
+            />
+          </div>
         ) : (
           <div className="px-6 py-16 text-center">
             <h2 className="m-0 text-[15px] font-semibold">No saved keywords match</h2>

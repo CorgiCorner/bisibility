@@ -12,7 +12,7 @@ describe("StepFirstCheck", () => {
       runFirstCheckPreviewAction: vi.fn(() => never),
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Run a test check (1 keyword)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
     fireEvent.click(screen.getByRole("button", { name: "Open app" }));
 
     await waitFor(() =>
@@ -44,8 +44,8 @@ describe("StepFirstCheck", () => {
     const saveMarketsAction = vi.fn(() => saving.promise);
     const completeOnboardingAction = vi.fn(async () => undefined);
     renderReadyStep({ completeOnboardingAction, saveMarketsAction });
-    const form = screen.getByText("Review").closest("form");
-    if (!form) throw new Error("Review form was not rendered.");
+    const form = screen.getByText("First check").closest("form");
+    if (!form) throw new Error("First check form was not rendered.");
 
     fireEvent.submit(form);
     fireEvent.submit(form);
@@ -61,8 +61,8 @@ describe("StepFirstCheck", () => {
     const saveMarketsAction = vi.fn(async () => ({ marketKeys: ["US"] }));
     const completeOnboardingAction = vi.fn(async () => undefined);
     renderReadyStep({ completeOnboardingAction, saveMarketsAction });
-    const form = screen.getByText("Review").closest("form");
-    if (!form) throw new Error("Review form was not rendered.");
+    const form = screen.getByText("First check").closest("form");
+    if (!form) throw new Error("First check form was not rendered.");
 
     fireEvent.submit(form);
     await waitFor(() => expect(routerMock.push).toHaveBeenCalledTimes(1));

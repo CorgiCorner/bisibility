@@ -150,6 +150,7 @@ describe("run selection", () => {
         queuedRankCheckTasks: [],
         rankCheckRunItems: [{ status: "queued" }],
         rankChecks: [{ status: "completed" }],
+        checkSchedule: null,
         schedule: null,
         text: "one",
       }),

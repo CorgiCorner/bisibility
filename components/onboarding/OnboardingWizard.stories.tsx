@@ -16,10 +16,12 @@ import {
   StepCreateProject,
 } from "@/components/onboarding/steps/StepCreateProject";
 import { StepFirstCheck } from "@/components/onboarding/steps/StepFirstCheck";
-import { Avatar, BrandLockup, Button } from "@/components/ui";
-import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/ssr";
+import { Avatar } from "@/components/ui/Avatar";
+import { BrandLockup } from "@/components/ui/BrandLockup";
+import { Button } from "@/components/ui/Button";
+import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/ssr/SignOut";
 import type { Meta, StoryObj } from "@storybook/react";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 type StoryProps = {
   analyticsMode?: "connected" | "none";
@@ -78,7 +80,7 @@ const firstCheckActions = {
     status: "completed" as const,
   }),
 };
-const storyFlowState = { projectId: onboardingDefaults.projectId };
+const storyFlowState = { projectId: `prj_${"a".repeat(24)}` };
 const createProjectWithCompetitors: CreateProjectFormValues = {
   website: "acme.dev",
 };
@@ -121,6 +123,20 @@ function providerPanel(mode: StoryProps["providerMode"] = "none") {
   );
 }
 
+/** A canned creation: the story never reaches a server action. */
+const createMarketAction: NonNullable<
+  ComponentProps<typeof StepAddKeywords>["createMarketAction"]
+> = async (input) => ({
+  canonicalKey: input.canonicalKey,
+  countryCode: input.countryCode,
+  displayName: input.name || input.canonicalKey,
+  keywordCount: 0,
+  kind: input.kind,
+  languageCode: input.languageCode,
+  languageLabel: input.languageCode === "en" ? "English" : input.languageCode,
+  publicId: `pmkt_${"a".repeat(24)}`,
+});
+
 function createProjectPanel(competitorMode: StoryProps["competitorMode"]) {
   return (
     <StepCreateProject
@@ -149,6 +165,7 @@ function panelForStep(
             : storyFlowState
         }
         hasAnalyticsSource={analyticsMode === "connected"}
+        createMarketAction={createMarketAction}
         importTopQueriesAction={importTopQueriesAction}
         monthlyCapCents={5_000}
         fetchRankedKeywordSuggestionsAction={fetchRankedKeywordSuggestionsAction}
@@ -224,10 +241,11 @@ function OnboardingStory({
             <Button
               size="xs"
               startIcon={<SignOut aria-hidden size={13} weight="regular" />}
-              sx={{
-                color: "var(--accent-text)",
+              style={{
+                "--control-color": "var(--accent-text)",
                 minWidth: 0,
-                paddingX: "8px",
+                paddingLeft: "8px",
+                paddingRight: "8px",
               }}
               type="button"
               variant="ghost"

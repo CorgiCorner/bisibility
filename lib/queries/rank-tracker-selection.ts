@@ -12,7 +12,6 @@ type AuthorizedProject = RankTrackerSelectionProject;
 type ExportSelectionOptions = { membershipLimit?: number | null };
 
 export async function selectRankTrackerKeywords(projectRef: string, query: RankTrackerQueryState) {
-  if (query.grouped) throw new Error("Rank tracker list query supports flat mode only.");
   const { project } = await requireReadableProject(projectRef);
   return selectRankTrackerKeywordsForProject(project, query);
 }

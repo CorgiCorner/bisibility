@@ -57,7 +57,7 @@ describe("SavedViewsControl", () => {
 
     const trigger = screen.getByRole("button", { name: "All keywords" });
     expect(trigger).toHaveClass("font-normal", "text-fg", "min-h-[34px]");
-    expect(trigger).not.toHaveClass("MuiButton-root");
+    expect(trigger).not.toHaveAttribute("data-slot", "button");
     expect(trigger.querySelector(".truncate")).toHaveClass("text-fg");
   });
 

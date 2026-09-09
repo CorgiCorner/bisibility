@@ -4,7 +4,7 @@ export type AddProjectMarketsResult =
   | { added: number; marketIds: readonly string[]; ok: true }
   | { code: "market_limit"; maxMarkets: number; ok: false; remaining: number };
 
-export type ResolvedProjectMarket = { locationId: string };
+export type ResolvedProjectMarket = { locationId: string; name?: string };
 
 export function uniqueProjectMarketLocations(markets: readonly ResolvedProjectMarket[]) {
   return [...new Map(markets.map((market) => [market.locationId, market])).values()];

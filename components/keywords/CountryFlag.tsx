@@ -1,4 +1,4 @@
-import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react";
+import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
 import { hasFlag } from "country-flag-icons";
 import AE from "country-flag-icons/react/3x2/AE";
 import AT from "country-flag-icons/react/3x2/AT";

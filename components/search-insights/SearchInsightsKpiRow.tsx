@@ -6,10 +6,8 @@ import type {
 } from "@/lib/search-insights/queries/kpis-model";
 import type { OrganicSessionsPendingPresentation } from "@/lib/search-insights/queries/sessions-context";
 import { cn } from "@/lib/ui/cn";
-import {
-  ArrowDownRightIcon as ArrowDownRight,
-  ArrowUpRightIcon as ArrowUpRight,
-} from "@phosphor-icons/react";
+import { ArrowDownRightIcon as ArrowDownRight } from "@phosphor-icons/react/dist/csr/ArrowDownRight";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { CLICKS_TO_SESSIONS_HIDDEN } from "./search-insights-copy";
 
 export type SearchInsightsKpiRowProps = {

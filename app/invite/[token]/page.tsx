@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { InviteSignInForm } from "@/components/invite/InviteSignInForm";
 import { InviteSignOutButton } from "@/components/invite/InviteSignOutButton";
-import { BrandLockup } from "@/components/ui";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import { acceptInvite } from "@/lib/actions/team";
 import { getSession } from "@/lib/auth/session";
 import { type DateFormat, formatDate } from "@/lib/dates/format";
@@ -9,12 +9,10 @@ import { resolveDateFormat } from "@/lib/dates/resolve";
 import { getInviteByTokenHash } from "@/lib/queries/invite";
 import { appPath } from "@/lib/routing/app-path";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
-import {
-  CaretRightIcon as CaretRight,
-  CheckCircleIcon as CheckCircle,
-  ClockCountdownIcon as ClockCountdown,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
+import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";

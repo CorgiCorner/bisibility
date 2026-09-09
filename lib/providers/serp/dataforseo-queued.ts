@@ -3,8 +3,8 @@ import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { ProviderCredentials, SerpDevice } from "@/lib/providers/types";
 import type { DataForSeoQueuePriority } from "@/lib/rank-check/queued-config";
 import { QUEUED_RESULT_GET_TIMEOUT_MS } from "@/lib/rank-check/queued-timeouts";
+import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
-import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/markets";
 import { DataForSeoError, redactedMessage } from "./dataforseo-errors";
 import { dataForSeoResponseCostCents } from "./dataforseo-payload";
 
@@ -68,6 +68,7 @@ function taskPayload(input: DataForSeoQueuedTaskInput, priority: DataForSeoQueue
     depth: resolveSerpDepth(input.depth),
     device: input.device,
     keyword: input.keyword,
+    search_param: "&nfpr=1",
     language_code: input.location.hl,
     ...(input.location.primaryGeoCode === null
       ? { location_name: input.location.primaryGeoName }

@@ -79,7 +79,9 @@ describe("competitors query", () => {
         domain: "rankzly.io",
         id: "competitor_db_1",
         label: "Rankzly",
+        marketOverrides: [],
         publicId: competitorPublicId,
+        scopePolicy: "all_markets",
       },
     ]);
     mocks.prisma.$queryRaw.mockResolvedValue([]);
@@ -154,6 +156,66 @@ describe("competitors query", () => {
       projectId: projectPublicId,
     });
     expect(JSON.stringify(view)).not.toContain("competitor_db_1");
+  });
+
+  it.each([
+    { scopePolicy: "all_markets", mode: "excluded", expected: false },
+    { scopePolicy: "selected_markets", mode: "added", expected: true },
+    { scopePolicy: "selected_markets", mode: null, expected: false },
+  ])(
+    "applies $scopePolicy with $mode to comparison columns and shares",
+    async ({ scopePolicy, mode, expected }) => {
+      mocks.prisma.competitor.findMany.mockResolvedValue([
+        {
+          domain: "rankzly.io",
+          label: "Rankzly",
+          publicId: competitorPublicId,
+          scopePolicy,
+          marketOverrides: mode ? [{ mode, projectMarket: { locationId: "location_us" } }] : [],
+        },
+      ]);
+      const view = await getCompetitorsView(projectPublicId);
+      expect(view.managedCompetitors).toHaveLength(1);
+      expect(view.market?.columns.some((column) => column.domain === "rankzly.io")).toBe(expected);
+      expect(view.market?.rows[0]?.ranks["rankzly.io"]).toBe(expected ? 3 : undefined);
+      expect(view.market?.shares.some((share) => share.domain === "rankzly.io")).toBe(expected);
+    },
+  );
+
+  it("applies an exclusion to both devices in its market without hiding other markets in the API", async () => {
+    mocks.prisma.competitor.findMany.mockResolvedValue([
+      {
+        domain: "rankzly.io",
+        label: "Rankzly",
+        publicId: competitorPublicId,
+        scopePolicy: "all_markets",
+        marketOverrides: [{ mode: "excluded", projectMarket: { locationId: "location_us" } }],
+      },
+    ]);
+    mocks.prisma.keyword.findMany.mockImplementation(async (query) =>
+      query.select.publicId
+        ? [
+            detail(),
+            detail({ id: "keyword_2", publicId: "kw_2", device: "mobile" }),
+            detail({ id: "keyword_3", publicId: "kw_3", locationId: "location_pl" }),
+          ]
+        : [
+            summary(),
+            summary({ id: "keyword_2", device: "mobile" }),
+            summary({
+              id: "keyword_3",
+              locationId: "location_pl",
+              locationRef: { ...location, canonicalKey: "country:pl", displayName: "Poland" },
+            }),
+          ],
+    );
+    const view = await getCompetitorsApiView(projectPublicId);
+    expect(view.markets).toHaveLength(3);
+    for (const market of view.markets) {
+      expect(market.columns.some((column) => column.domain === "rankzly.io")).toBe(
+        market.location === "Poland",
+      );
+    }
   });
 
   it("uses raw payloads only for legacy latest checks without a compact snapshot", async () => {

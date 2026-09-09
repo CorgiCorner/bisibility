@@ -1,5 +1,5 @@
 import { PGlite } from "@electric-sql/pglite";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { selectFairDueStates } from "./dispatcher-query";
 import { seedKeywordDispatchStates } from "./dispatcher-state";
 
@@ -86,16 +86,22 @@ async function inTransaction<T>(callback: (tx: never) => Promise<T>) {
 }
 
 describe("runnable predicate in the raw dispatch SQL", () => {
+  beforeAll(() => {
+    db = new PGlite();
+  });
+
   beforeEach(async () => {
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
-    db = new PGlite();
+    // Reuse the engine while rebuilding all schema and fixture state per test.
+    await db.exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
     await db.exec(FIXTURE);
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     vi.unstubAllEnvs();
-    await db.close();
   });
+
+  afterAll(() => db.close());
 
   it("selects only the active market's live row as due", async () => {
     const rows = await inTransaction((tx) => selectFairDueStates(tx, now, 100, 100));

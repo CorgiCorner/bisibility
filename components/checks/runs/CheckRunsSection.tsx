@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
 import type {
   CheckRange,
   CheckRunFilter,

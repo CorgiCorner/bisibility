@@ -609,7 +609,7 @@
           },
           "schema_versions_supported": {
             "items": {
-              "enum": [6],
+              "enum": [7, 6],
               "type": "integer"
             },
             "type": "array"
@@ -679,35 +679,13 @@
             "type": "string"
           },
           "location": {
-            "enum": [
-              "United States",
-              "United Kingdom",
-              "Canada",
-              "Australia",
-              "Germany",
-              "France",
-              "Spain",
-              "Italy",
-              "Netherlands",
-              "Sweden",
-              "Poland",
-              "Ireland",
-              "Portugal",
-              "Belgium",
-              "Switzerland",
-              "Austria",
-              "Denmark",
-              "Norway",
-              "Finland",
-              "Brazil",
-              "Mexico",
-              "India",
-              "Japan",
-              "Singapore",
-              "New Zealand",
-              "South Africa",
-              "United Arab Emirates"
-            ],
+            "description": "Human-readable source location label. Version 7 identifies the location by location_key.",
+            "maxLength": 240,
+            "minLength": 1,
+            "type": "string"
+          },
+          "location_key": {
+            "description": "Canonical source Location key. Required by version 7 exports.",
             "type": "string"
           },
           "rankingHistory": {
@@ -752,35 +730,13 @@
             "type": "string"
           },
           "location": {
-            "enum": [
-              "United States",
-              "United Kingdom",
-              "Canada",
-              "Australia",
-              "Germany",
-              "France",
-              "Spain",
-              "Italy",
-              "Netherlands",
-              "Sweden",
-              "Poland",
-              "Ireland",
-              "Portugal",
-              "Belgium",
-              "Switzerland",
-              "Austria",
-              "Denmark",
-              "Norway",
-              "Finland",
-              "Brazil",
-              "Mexico",
-              "India",
-              "Japan",
-              "Singapore",
-              "New Zealand",
-              "South Africa",
-              "United Arab Emirates"
-            ],
+            "description": "Human-readable source location label. Version 7 identifies the location by location_key.",
+            "maxLength": 240,
+            "minLength": 1,
+            "type": "string"
+          },
+          "location_key": {
+            "description": "Canonical source Location key. Required by version 7 exports.",
             "type": "string"
           },
           "type": {
@@ -875,7 +831,8 @@
             "type": "string"
           },
           "version": {
-            "const": 6,
+            "description": "Version 7 exports require location_key. Version 6 and metadata-only version 5 remain import-compatible.",
+            "enum": [7, 6, 5],
             "type": "integer"
           }
         },
@@ -983,7 +940,7 @@
             "type": "object"
           },
           "version": {
-            "const": 6,
+            "enum": [7, 6],
             "type": "integer"
           }
         },
@@ -1070,35 +1027,13 @@
             "type": "string"
           },
           "location": {
-            "enum": [
-              "United States",
-              "United Kingdom",
-              "Canada",
-              "Australia",
-              "Germany",
-              "France",
-              "Spain",
-              "Italy",
-              "Netherlands",
-              "Sweden",
-              "Poland",
-              "Ireland",
-              "Portugal",
-              "Belgium",
-              "Switzerland",
-              "Austria",
-              "Denmark",
-              "Norway",
-              "Finland",
-              "Brazil",
-              "Mexico",
-              "India",
-              "Japan",
-              "Singapore",
-              "New Zealand",
-              "South Africa",
-              "United Arab Emirates"
-            ],
+            "description": "Human-readable source location label. Version 7 identifies the location by location_key.",
+            "maxLength": 240,
+            "minLength": 1,
+            "type": "string"
+          },
+          "location_key": {
+            "description": "Canonical source Location key. Required by version 7 exports.",
             "type": "string"
           },
           "text": {
@@ -2119,9 +2054,13 @@
       "KeywordCreateItem": {
         "properties": {
           "city": {
+            "deprecated": true,
+            "description": "City name resolved within country when location_key is omitted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
             "type": ["string", "null"]
           },
           "country": {
+            "deprecated": true,
+            "description": "Country market name used when location_key is omitted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -2166,12 +2105,14 @@
             "type": "string"
           },
           "language": {
-            "description": "SERP UI language code. Combines with country when location_key is omitted. The country default may be omitted.",
+            "deprecated": true,
+            "description": "SERP UI language code combined with country when location_key is omitted; use the @language qualifier on location_key instead. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
             "example": "en",
             "type": "string"
           },
           "location": {
-            "description": "Backward-compatible alias for country.",
+            "deprecated": true,
+            "description": "Backward-compatible alias for country. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -2205,7 +2146,7 @@
             "type": "string"
           },
           "location_key": {
-            "description": "Canonical country, region, or city key. Takes precedence over country, language, location, and city.",
+            "description": "Primary location reference: canonical country, region, or city key, optionally qualified with @language. Takes precedence over the deprecated country, language, location, and city fields.",
             "example": "ES/Andalusia/Malaga@en",
             "type": "string"
           },
@@ -2583,11 +2524,13 @@
       "KeywordPatch": {
         "properties": {
           "city": {
-            "description": "Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted.",
+            "deprecated": true,
+            "description": "Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
             "type": ["string", "null"]
           },
           "country": {
-            "description": "Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted.",
+            "deprecated": true,
+            "description": "Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -2638,7 +2581,8 @@
             "type": "string"
           },
           "location": {
-            "description": "Backward-compatible alias for country. Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted.",
+            "deprecated": true,
+            "description": "Backward-compatible alias for country. Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -2672,7 +2616,7 @@
             "type": "string"
           },
           "location_key": {
-            "description": "Canonical country, region, or city key, optionally qualified with @language. The default language normalizes to the unqualified key. Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted.",
+            "description": "Primary location reference: canonical country, region, or city key, optionally qualified with @language. The default language normalizes to the unqualified key. Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted.",
             "example": "ES/Andalusia/Malaga@en",
             "type": "string"
           },
@@ -3291,35 +3235,6 @@
           },
           "country": {
             "description": "Persisted default country for new keywords.",
-            "enum": [
-              "United States",
-              "United Kingdom",
-              "Canada",
-              "Australia",
-              "Germany",
-              "France",
-              "Spain",
-              "Italy",
-              "Netherlands",
-              "Sweden",
-              "Poland",
-              "Ireland",
-              "Portugal",
-              "Belgium",
-              "Switzerland",
-              "Austria",
-              "Denmark",
-              "Norway",
-              "Finland",
-              "Brazil",
-              "Mexico",
-              "India",
-              "Japan",
-              "Singapore",
-              "New Zealand",
-              "South Africa",
-              "United Arab Emirates"
-            ],
             "example": "United States",
             "type": "string"
           },
@@ -3402,10 +3317,13 @@
       "ProjectDefaultsPatch": {
         "properties": {
           "city": {
+            "deprecated": true,
+            "description": "Optional city name resolved within country when location_key is omitted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
             "type": ["string", "null"]
           },
           "country": {
-            "description": "Optional country selector when location_key is omitted. Provide together with device.",
+            "deprecated": true,
+            "description": "Optional country selector when location_key is omitted. Provide together with device. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -3457,7 +3375,7 @@
             "type": "integer"
           },
           "location_key": {
-            "description": "Updates the default market from a canonical location key. Country and city are resolved from the location catalog; device defaults to the current default device when omitted.",
+            "description": "Primary location reference: canonical country, region, or city key, optionally qualified with @language. Updates the default market from a canonical location key. Country and city are resolved from the location catalog; device defaults to the current default device when omitted.",
             "example": "ES/Andalusia/Malaga@en",
             "type": "string"
           },
@@ -5774,6 +5692,15 @@
             }
           },
           {
+            "description": "Custom cron expression; an invalid or missing expression leaves monthly estimates unknown.",
+            "in": "query",
+            "name": "cron_expression",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
             "description": "Keyword count. Must be an integer greater than or equal to 0.",
             "in": "query",
             "name": "keywords",
@@ -5795,7 +5722,7 @@
             }
           },
           {
-            "description": "Location count per keyword.",
+            "description": "Market count per keyword; each market combines a location and language.",
             "in": "query",
             "name": "locations",
             "schema": {
@@ -5821,7 +5748,7 @@
             "name": "frequency",
             "schema": {
               "default": "daily",
-              "enum": ["daily", "weekly", "monthly"],
+              "enum": ["daily", "weekly", "monthly", "manual", "paused", "custom_cron"],
               "type": "string"
             }
           },
@@ -10094,7 +10021,16 @@
             }
           },
           {
-            "description": "Filter by canonical country or stored location alias. Also accepted as filter[country].",
+            "description": "Filter by the exact canonical location key, optionally qualified with @language. Also accepted as filter[location_key].",
+            "in": "query",
+            "name": "location_key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Filter by canonical country or stored location alias. Also accepted as filter[country]. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
             "in": "query",
             "name": "country",
             "schema": {

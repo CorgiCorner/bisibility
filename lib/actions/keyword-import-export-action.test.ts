@@ -281,7 +281,7 @@ describe("keyword workbook import action", () => {
     expect(result.rows).toEqual([]);
     expect(result.errors).toEqual([
       {
-        message: "Market GB is not tracked by this project. Add it in Settings > Markets first.",
+        message: "Market GB is not tracked by this project. Add it in Markets first.",
         row: 2,
       },
     ]);
@@ -308,7 +308,7 @@ describe("keyword workbook import action", () => {
     ]);
     mocks.resolveKeywordLocation.mockResolvedValueOnce({
       ...resolvedLocation("United Kingdom"),
-      location: { ...resolvedLocation("United Kingdom").location, canonicalKey: "GB@en" },
+      location: resolvedLocation("United Kingdom").location,
     });
 
     const result = await importKeywordsFromCsv({
@@ -319,7 +319,7 @@ describe("keyword workbook import action", () => {
 
     expect(result).toMatchObject({
       created: 0,
-      errors: [{ message: expect.stringContaining("Settings > Markets"), row: 2 }],
+      errors: [{ message: expect.stringContaining("Markets"), row: 2 }],
       failed: 1,
     });
     expect(mocks.prisma.keyword.createMany).not.toHaveBeenCalled();
@@ -527,13 +527,12 @@ describe("keyword workbook import action", () => {
     expect(result).toMatchObject({ created: 2, errors: [], failed: 0, parsed: 2, received: 2 });
     expect(mocks.resolveKeywordLocation).toHaveBeenCalledTimes(1);
     expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
-      city: null,
-      country: "United States",
       projectId: "project_1",
+      selection: { canonicalKey: "US", kind: "city" },
     });
   });
 
-  it("returns resolver warnings from degraded city imports", async () => {
+  it("rejects degraded city imports instead of importing them into a country market", async () => {
     mocks.prisma.keyword.findMany.mockReset();
     mocks.prisma.keyword.findMany
       .mockResolvedValueOnce([])
@@ -566,11 +565,107 @@ describe("keyword workbook import action", () => {
     });
 
     expect(result).toMatchObject({
-      created: 2,
-      warning: 'Could not resolve "Austin" in United States; tracking at country level.',
-      warnings: ['Could not resolve "Austin" in United States; tracking at country level.'],
+      created: 0,
+      failed: 2,
+      skipped: 0,
+      errors: [
+        { row: 2, message: expect.stringContaining("could not be resolved exactly") },
+        { row: 3, message: expect.stringContaining("could not be resolved exactly") },
+      ],
     });
     expect(mocks.resolveKeywordLocation).toHaveBeenCalledTimes(1);
+    expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        city: "Austin",
+        country: "United States",
+        projectId: "project_1",
+      }),
+    );
+  });
+
+  it("rejects an explicit location key that the resolver degrades", async () => {
+    mocks.prisma.keyword.findMany.mockReset();
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+
+    const result = await importKeywordsFromCsv({
+      csv: "keyword,location_key,device\nrank tracker,US/Austin,desktop",
+      projectId: PROJECT_PUBLIC_ID,
+    });
+
+    expect(result).toMatchObject({
+      created: 0,
+      errors: [{ message: "Location key US/Austin could not be resolved exactly.", row: 2 }],
+      failed: 1,
+    });
+    expect(mocks.resolveKeywordLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { canonicalKey: "US/Austin", kind: "city" },
+    });
+    expect(mocks.prisma.keyword.createMany).not.toHaveBeenCalled();
+  });
+
+  it("keeps a structured legacy city distinct from a partial explicit location key", async () => {
+    const country = resolvedLocation("United States").location;
+    const austin = {
+      ...country,
+      canonicalKey: "US/Texas/Austin",
+      cityName: "Austin",
+      displayName: "Austin, Texas, United States",
+      id: "loc_austin",
+      kind: "city" as const,
+      primaryGeoName: "Austin,Texas,United States",
+      regionCode: "US-TX",
+      secondaryGeoName: "Austin,Texas,United States",
+    };
+    mocks.prisma.keyword.findMany.mockReset();
+    mocks.prisma.keyword.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        storedKeyword(
+          "rank tracker",
+          "keyword_austin",
+          "kw_cccdefghijklmnopqrstuvwx",
+          "loc_austin",
+          "desktop",
+          null,
+        ),
+      ]);
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      { location: { canonicalKey: "US/Texas/Austin" }, locationId: "loc_austin" },
+    ]);
+    mocks.resolveKeywordLocation
+      .mockResolvedValueOnce(resolvedLocation("United States"))
+      .mockResolvedValueOnce({ degraded: false, location: austin, warning: null });
+
+    const result = await importKeywordsFromCsv({
+      csv: [
+        "keyword,country,city,location_key,device",
+        "rank tracker,,,US/Austin,desktop",
+        "rank tracker,US,Austin,,desktop",
+      ].join("\n"),
+      projectId: PROJECT_PUBLIC_ID,
+    });
+
+    expect(result).toMatchObject({
+      created: 1,
+      errors: [{ message: "Location key US/Austin could not be resolved exactly.", row: 2 }],
+      failed: 1,
+      parsed: 2,
+      received: 2,
+    });
+    expect(mocks.resolveKeywordLocation).toHaveBeenCalledTimes(2);
+    expect(mocks.resolveKeywordLocation).toHaveBeenNthCalledWith(1, {
+      projectId: "project_1",
+      selection: { canonicalKey: "US/Austin", kind: "city" },
+    });
+    expect(mocks.resolveKeywordLocation).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        city: "Austin",
+        country: "United States",
+        projectId: "project_1",
+      }),
+    );
   });
 
   it.each(["GB", "United Kingdom"])(
@@ -618,12 +713,131 @@ describe("keyword workbook import action", () => {
 
     const result = await importKeywordsFromCsv({
       csv: "keyword,target_url,tags,country,device\nrank tracker,/rank,Core,,desktop",
+      defaultMarketKey: "GB",
       projectId: PROJECT_PUBLIC_ID,
     });
 
     expect(result).toMatchObject({ created: 0, errors: [], failed: 0, skipped: 1 });
     expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
     expect(mocks.prisma.keyword.createMany).not.toHaveBeenCalled();
+  });
+
+  it("requires explicit geography instead of silently using the old project default", async () => {
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      defaults: { country: "United States", device: "desktop", locationKey: "US" },
+      keywords: [],
+    });
+    const input = { csv: "keyword\nfirst keyword", projectId: PROJECT_PUBLIC_ID };
+    const review = await reviewKeywordImport(input);
+    const result = await importKeywordsFromCsv(input);
+    expect(review.rows).toEqual([]);
+    expect(review.errors).toEqual([
+      { row: 2, message: expect.stringContaining("Choose a market") },
+    ]);
+    expect(result).toMatchObject({ created: 0, failed: 1, skipped: 0, received: 1 });
+    expect(mocks.resolveKeywordLocation).not.toHaveBeenCalled();
+    expect(mocks.prisma.keyword.createMany).not.toHaveBeenCalled();
+  });
+
+  it("imports keyword-only rows into a selected paused market without resuming it", async () => {
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      {
+        name: "US launch",
+        location: { canonicalKey: "US" },
+        locationId: "loc_US",
+        status: "paused",
+      },
+    ]);
+    mocks.prisma.keyword.findMany.mockReset();
+    mocks.prisma.keyword.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        storedKeyword("first keyword", "keyword_1", KEYWORD_PUBLIC_ID, "loc_US", "desktop", null),
+      ]);
+    const input = {
+      csv: "keyword\nfirst keyword",
+      defaultMarketKey: "US",
+      projectId: PROJECT_PUBLIC_ID,
+    };
+    const review = await reviewKeywordImport(input);
+    expect(review.rows).toEqual([
+      expect.objectContaining({
+        keyword: "first keyword",
+        locationKey: "US",
+        marketName: "US launch",
+        marketStatus: "paused",
+        language: "en",
+      }),
+    ]);
+    expect(await importKeywordsFromCsv(input)).toMatchObject({ created: 1, failed: 0, skipped: 0 });
+    expect(mocks.prisma.projectMarket.upsert).not.toHaveBeenCalled();
+  });
+
+  it("checks a selected market against the authorized project before resolving rows", async () => {
+    const input = {
+      csv: "keyword\nfirst keyword",
+      defaultMarketKey: "ES",
+      projectId: PROJECT_PUBLIC_ID,
+    };
+    await expect(reviewKeywordImport(input)).rejects.toThrow(
+      "Market ES is not tracked by this project",
+    );
+    await expect(importKeywordsFromCsv(input)).rejects.toThrow(
+      "Market ES is not tracked by this project",
+    );
+    expect(mocks.resolveKeywordLocation).not.toHaveBeenCalled();
+    expect(mocks.prisma.keyword.createMany).not.toHaveBeenCalled();
+  });
+
+  it("rechecks markets after review and does not count rejected rows as skipped", async () => {
+    const input = { csv: "keyword,country\nfirst keyword,GB", projectId: PROJECT_PUBLIC_ID };
+    expect((await reviewKeywordImport(input)).rows).toHaveLength(1);
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      { location: { canonicalKey: "US" }, locationId: "loc_US", status: "active" },
+    ]);
+    const result = await importKeywordsFromCsv(input);
+    expect(result).toMatchObject({ created: 0, failed: 1, skipped: 0, received: 1 });
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("deduplicates equivalent canonical markets after resolution", async () => {
+    const input = {
+      csv: "keyword,location_key\nfirst keyword,US\nfirst keyword,US@en",
+      projectId: PROJECT_PUBLIC_ID,
+    };
+    const review = await reviewKeywordImport(input);
+    expect(review).toMatchObject({ duplicateRows: 1, errors: [], received: 2 });
+    expect(review.rows).toHaveLength(1);
+  });
+
+  it("uses the same explicit market for keyword-only XLSX review and save", async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Keywords");
+    sheet.addRow(["keyword"]);
+    sheet.addRow(["first keyword"]);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const bytes = buffer instanceof ArrayBuffer ? buffer : new Uint8Array(buffer).buffer;
+    const file = new File([bytes], "keywords.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    Object.defineProperty(file, "arrayBuffer", { value: async () => bytes });
+    const input = new FormData();
+    input.set("file", file);
+    input.set("projectId", PROJECT_PUBLIC_ID);
+    input.set("defaultMarketKey", "GB");
+    mocks.prisma.keyword.findMany.mockReset();
+    mocks.prisma.keyword.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        storedKeyword("first keyword", "keyword_1", KEYWORD_PUBLIC_ID, "loc_GB", "desktop", null),
+      ]);
+    expect((await reviewKeywordImport(input)).rows).toEqual([
+      expect.objectContaining({ keyword: "first keyword", locationKey: "GB" }),
+    ]);
+    expect(await importKeywordsFromCsv(input)).toMatchObject({ created: 1, failed: 0, skipped: 0 });
+    expect(mocks.prisma.keyword.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: [expect.objectContaining({ locationId: "loc_GB" })] }),
+    );
   });
 
   it("exports real XLSX workbooks", async () => {

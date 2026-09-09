@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import { rankTrackerTabPath } from "@/lib/routing/app-path";
-import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react";
+import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 import Link from "next/link";
 
 type ResearchDetailSaveActionProps = {
@@ -32,15 +32,13 @@ export function ResearchDetailSaveAction({
       <Button
         onClick={() => onSave(row)}
         startIcon={<BookmarkSimple weight="regular" size={14} />}
-        sx={{
+        style={{
           width: "100%",
-          backgroundColor: "var(--bg-sidebar)",
-          border: "1px solid var(--accent)",
-          color: "var(--accent-hover)",
-          "&:hover": {
-            backgroundColor: "var(--bg-sidebar)",
-            border: "1px solid var(--accent-hover)",
-          },
+          "--control-background-color": "var(--bg-sidebar)",
+          "--control-border": "1px solid var(--accent)",
+          "--control-color": "var(--accent-hover)",
+          "--control-hover-background-color": "var(--bg-sidebar)",
+          "--control-hover-border": "1px solid var(--accent-hover)",
         }}
         variant="secondary"
       >

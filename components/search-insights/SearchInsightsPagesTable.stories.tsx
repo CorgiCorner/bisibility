@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, within } from "storybook/test";
 import { SearchInsightsPagesLens, SearchInsightsPagesTable } from "./SearchInsightsPagesTable";
 import { SearchInsightsRowsCard } from "./SearchInsightsRowsCard";
 import {
   KEY_EVENTS_NOT_CONFIGURED,
   MANAGE_SESSIONS_LABEL,
+  ORGANIC_SESSIONS_LABEL,
   TABLE_CAPTIONS,
   TABLE_TITLES,
 } from "./search-insights-copy";
@@ -25,6 +27,24 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const trafficHeaderWidths = [
+  { id: "sessions", label: ORGANIC_SESSIONS_LABEL, minWidth: 136 },
+  { id: "engagement", label: "Engagement", minWidth: 104 },
+  { id: "key-events", label: "Key events", minWidth: 92 },
+] as const;
+
+function assertTrafficHeaderWidths(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement);
+  for (const { id, label, minWidth } of trafficHeaderWidths) {
+    const header = canvas.getByRole("columnheader", { name: label });
+    const headerLabel = header.querySelector<HTMLSpanElement>("span.truncate");
+    if (!headerLabel) throw new Error(`Traffic header ${id} is missing its label.`);
+
+    expect(header.getBoundingClientRect().width).toBeGreaterThanOrEqual(minWidth);
+    expect(headerLabel.scrollWidth).toBeLessThanOrEqual(headerLabel.clientWidth);
+  }
+}
+
 export const SearchClicks: Story = { args: { rows: storyPageRows } };
 
 const trafficLensRows = [
@@ -33,12 +53,21 @@ const trafficLensRows = [
   { ...storyPageRows[2], engagementRate: 0.57, keyEvents: 22, sessions: 5_180 },
 ];
 
+const expandedPageRows = Array.from({ length: 5_000 }, (_, index) => ({
+  ...storyPageRows[index % storyPageRows.length],
+  path: `/expanded-page-${index + 1}`,
+  url: `https://example.com/expanded-page-${index + 1}`,
+}));
+
 export const TrafficLensWithKeyEvents: Story = {
   args: {
     keyEventsConfigured: true,
     lens: "traffic",
     rows: trafficLensRows,
     showSessions: true,
+  },
+  play: async ({ canvasElement }) => {
+    assertTrafficHeaderWidths(canvasElement);
   },
 };
 
@@ -93,4 +122,24 @@ function TrafficLensNoKeyEventsFrame() {
 export const TrafficLensNoKeyEvents: Story = {
   args: { rows: trafficLensRows },
   render: () => <TrafficLensNoKeyEventsFrame />,
+};
+
+export const ExpandedCardVirtualized: Story = {
+  args: { rows: expandedPageRows, scroll: true },
+  render: () => (
+    <div className="max-w-3xl">
+      <SearchInsightsRowsCard
+        caption={TABLE_CAPTIONS.pages}
+        emptyReason="Google reported no search traffic for this property in this window."
+        onCollapse={() => {}}
+        onMore={() => {}}
+        show="all"
+        shown={expandedPageRows.length}
+        title={TABLE_TITLES.pages}
+        total={expandedPageRows.length}
+      >
+        <SearchInsightsPagesTable rows={expandedPageRows} scroll />
+      </SearchInsightsRowsCard>
+    </div>
+  ),
 };

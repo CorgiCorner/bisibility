@@ -29,7 +29,7 @@ describe("StepConnectGscCard", () => {
     expect(screen.queryByLabelText("Search Console property")).not.toBeInTheDocument();
     const connectButton = screen.getByRole("link", { name: "Connect" });
     expect(connectButton).toHaveAttribute("href", expect.not.stringContaining("property="));
-    expect(connectButton).toHaveClass("MuiButton-outlined");
+    expect(connectButton).toHaveAttribute("data-variant", "secondary");
     expect(connectButton).not.toHaveClass("mt-4");
     expect(connectButton).toHaveClass("w-full", "sm:w-auto");
     expect(connectButton.parentElement).toHaveClass("mt-4", "flex", "justify-end");
@@ -77,7 +77,8 @@ describe("StepConnectGscCard", () => {
     expect(screen.queryByText(/sc-domain:/)).not.toBeInTheDocument();
     const changeButton = screen.getByRole("button", { name: "Change property" });
     expect(changeButton).not.toHaveClass("mt-4");
-    expect(changeButton).toHaveClass("w-full", "sm:w-auto", "MuiButton-outlined");
+    expect(changeButton).toHaveAttribute("data-variant", "secondary");
+    expect(changeButton).toHaveClass("w-full", "sm:w-auto");
     expect(changeButton.parentElement).toHaveClass("mt-4", "flex", "justify-end");
     fireEvent.click(changeButton);
     expect(
@@ -155,7 +156,8 @@ describe("StepConnectGscCard", () => {
       ).not.toBeInTheDocument(),
     );
     const selectButton = screen.getByRole("button", { name: "Select property" });
-    expect(selectButton).toHaveClass("w-full", "sm:w-auto", "MuiButton-outlined");
+    expect(selectButton).toHaveAttribute("data-variant", "secondary");
+    expect(selectButton).toHaveClass("w-full", "sm:w-auto");
     expect(selectButton.parentElement).toHaveClass("flex", "justify-end");
     fireEvent.click(selectButton);
     fireEvent.click(screen.getByRole("button", { name: "Use selected property" }));

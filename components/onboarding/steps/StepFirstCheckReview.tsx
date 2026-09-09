@@ -3,7 +3,7 @@
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { trackingDefaults } from "@/components/onboarding/onboarding-form-utils";
 import { languageForLocationValue } from "@/components/onboarding/onboarding-location-field";
-import { MenuSelect } from "@/components/ui";
+import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
 import { timezoneSelectOptions } from "@/lib/settings/timezones";
 import type { ReactNode } from "react";
@@ -97,7 +97,7 @@ export function StepFirstCheckReview({
   const scheduledValue = frequencyLabel;
 
   return (
-    <div className="mt-5 rounded-card border border-border">
+    <div className="mt-5 rounded-card border border-border" data-analytics-mask>
       <SummaryRow
         index={0}
         label="Tracking"

@@ -52,9 +52,9 @@ describe("MenuSelect grouped", () => {
     const header = screen.getByText("Tracked markets");
     expect(header).toHaveAttribute("data-slot", "menu-group-header");
     expect(header).toHaveAttribute("role", "presentation");
-    expect(header).toHaveClass("MuiListSubheader-gutters", "uppercase");
+    expect(header).toHaveClass("uppercase");
     expect(header).not.toHaveClass("font-mono");
-    expect(header).not.toHaveClass("MuiListSubheader-sticky");
+    expect(header.style.position).not.toBe("sticky");
     expect(header).toHaveStyle({
       backgroundColor: "var(--bg-sunken)",
       marginBottom: "4px",
@@ -65,7 +65,7 @@ describe("MenuSelect grouped", () => {
     });
   });
 
-  it("matches Paper width to the live trigger width with the shared six-pixel gap", async () => {
+  it("uses the live trigger as a minimum menu width with the shared six-pixel gap", async () => {
     const user = userEvent.setup();
     render(
       <MenuSelect
@@ -90,13 +90,13 @@ describe("MenuSelect grouped", () => {
 
     await user.click(trigger);
 
-    const paper = document.querySelector<HTMLElement>(".MuiPaper-root");
+    const paper = screen.getByRole("menu");
     expect(paper).not.toBeNull();
     expect(paper).toHaveStyle({
       marginTop: "6px",
-      maxWidth: "443px",
-      minWidth: "443px",
-      top: "100px",
+      maxWidth: "calc(100vw - 32px)",
+      minWidth: "min(443px, calc(100vw - 32px))",
+      width: "max-content",
     });
   });
 
@@ -149,6 +149,9 @@ describe("MenuSelect grouped", () => {
     await user.click(screen.getByRole("button", { name: "Market" }));
     expect(screen.getByText("Tracked markets")).toBeInTheDocument();
     expect(screen.queryByText("Catalog")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Search..." })).toHaveAccessibleDescription(
+      "More options available. Type to search.",
+    );
     expect(screen.getByRole("menuitem", { name: /United States/ })).toBeInTheDocument();
   });
 
@@ -168,6 +171,7 @@ describe("MenuSelect grouped", () => {
     await user.type(screen.getByRole("textbox", { name: "Search..." }), "poland");
     expect(screen.getByText("Catalog")).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: /Poland/ })).toBeInTheDocument();
+    expect(screen.queryByText("More options available. Type to search.")).not.toBeInTheDocument();
     expect(screen.queryByText("Tracked markets")).not.toBeInTheDocument();
   });
 
@@ -265,7 +269,7 @@ describe("MenuSelect grouped", () => {
     expect(screen.getByRole("menuitem", { name: /United States/ })).toHaveFocus();
     await user.keyboard("{Enter}");
     expect(onChange).toHaveBeenCalledWith("US");
-    await waitForElementToBeRemoved(() => screen.queryByText("Tracked markets"));
+    await waitFor(() => expect(screen.queryByText("Tracked markets")).not.toBeInTheDocument());
 
     rerender(
       <MenuSelect

@@ -4,11 +4,9 @@ import {
   decodeKeywordImportCsv,
   LEGACY_XLS_IMPORT_MESSAGE,
 } from "@/lib/keywords/import-csv-parser";
-import {
-  FileCsvIcon as FileCsv,
-  FileXlsIcon as FileXls,
-  UploadSimpleIcon as UploadSimple,
-} from "@phosphor-icons/react";
+import { FileCsvIcon as FileCsv } from "@phosphor-icons/react/dist/csr/FileCsv";
+import { FileXlsIcon as FileXls } from "@phosphor-icons/react/dist/csr/FileXls";
+import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
 
 const importAccept = [
   ".csv",

@@ -1,3 +1,4 @@
+import { Modal } from "@/components/ui/Modal";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { handleShellKeyDown } from "./command-keyboard";
@@ -28,29 +29,20 @@ function ShellKeyboardHarness({
       <button data-testid="outside-overlay" type="button">
         Outside overlay
       </button>
-      <div className="MuiModal-root">
-        <button
-          className="MuiBackdrop-root"
-          data-testid="lower-backdrop"
-          onClick={onLowerBackdropClick}
-          type="button"
-        >
-          Lower backdrop
-        </button>
-      </div>
-      <div className="MuiModal-root" onKeyDown={onOverlayKeyDown} role="dialog" tabIndex={-1}>
-        <button
-          className="MuiBackdrop-root"
-          data-testid="top-backdrop"
-          onClick={onTopBackdropClick}
-          type="button"
-        >
-          Top backdrop
-        </button>
-        <button data-testid="inside-overlay" type="button">
-          Inside overlay
-        </button>
-      </div>
+      {!paletteOpen ? (
+        <>
+          <Modal title="Lower panel" open onClose={onLowerBackdropClick}>
+            <span>Lower panel body</span>
+          </Modal>
+          <Modal title="Top panel" open onClose={onTopBackdropClick}>
+            <div>
+              <button data-testid="inside-overlay" type="button" onKeyDown={onOverlayKeyDown}>
+                Inside overlay
+              </button>
+            </div>
+          </Modal>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -73,11 +65,11 @@ describe("handleShellKeyDown", () => {
 
     fireEvent.keyDown(screen.getByTestId("inside-overlay"), { key: "Escape" });
 
-    expect(callbacks.onOverlayKeyDown).toHaveBeenCalledOnce();
-    expect(callbacks.onTopBackdropClick).not.toHaveBeenCalled();
+    expect(callbacks.onOverlayKeyDown).not.toHaveBeenCalled();
+    expect(callbacks.onTopBackdropClick).toHaveBeenCalledOnce();
   });
 
-  it("uses the topmost backdrop when Escape is pressed outside an overlay", () => {
+  it("lets the topmost overlay handle Escape even when focus is outside it", () => {
     const callbacks = renderHarness();
 
     fireEvent.keyDown(screen.getByTestId("outside-overlay"), { key: "Escape" });
@@ -89,7 +81,7 @@ describe("handleShellKeyDown", () => {
   it("closes the palette before considering an open overlay", () => {
     const callbacks = renderHarness({ paletteOpen: true });
 
-    fireEvent.keyDown(screen.getByTestId("inside-overlay"), { key: "Escape" });
+    fireEvent.keyDown(screen.getByTestId("outside-overlay"), { key: "Escape" });
 
     expect(callbacks.closePalette).toHaveBeenCalledOnce();
     expect(callbacks.onTopBackdropClick).not.toHaveBeenCalled();

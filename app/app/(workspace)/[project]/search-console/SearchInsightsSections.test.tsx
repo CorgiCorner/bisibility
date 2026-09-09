@@ -2,7 +2,7 @@ import {
   storyFirstView,
   storySignals,
 } from "@/components/search-insights/search-insights-story-fixtures";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { SearchInsightsSignals } from "@/lib/search-insights/queries/signals";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -83,8 +83,8 @@ it("renders the tables and an honest chip state when the signals read rejects", 
     button.textContent?.includes("Could not count"),
   );
 
-  expect(page.querySelector('table[aria-label="Top queries"]')).not.toBeNull();
-  expect(page.querySelector('table[aria-label="Top pages"]')).not.toBeNull();
+  expect(page.querySelector('[role="table"][aria-label="Top queries"]')).not.toBeNull();
+  expect(page.querySelector('[role="table"][aria-label="Top pages"]')).not.toBeNull();
   expect(chips).toHaveLength(2);
   for (const chip of chips) {
     expect(chip.textContent).not.toMatch(/\b0\b/);

@@ -3,11 +3,12 @@ import "server-only";
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
+import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
-import { resolveEffectiveSerpDepth } from "@/lib/serp/markets";
+import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
 import { plannedOccurrences } from "./occurrence";
 import { scheduledRunMembers } from "./schedule-members";
 
@@ -122,41 +123,49 @@ async function persistOccurrence(
   occurrence: ReturnType<typeof plannedOccurrences>[number],
 ) {
   const idempotencyKey = `plan:${schedule.publicId}:${occurrence.occurrenceKey}`;
-  const existing = await prisma.rankCheckRun.findUnique({
-    select: { id: true },
-    where: { projectId_idempotencyKey: { idempotencyKey, projectId: schedule.projectId } },
-  });
-  if (existing) return null;
-  const publicId = makePublicId("rcr");
-  const members = scheduledRunMembers(schedule.keywords);
-  const run = await prisma.rankCheckRun.upsert({
-    create: {
-      checkScheduleId: schedule.id,
-      estimatedCostCents: 0,
-      idempotencyKey,
-      keywordCount: 0,
-      orchestrationWorkflowId: `rank-check-run-${publicId}`,
-      plannedFor: occurrence.plannedFor,
-      projectId: schedule.projectId,
-      publicId,
-      requestedCount: 0,
-      selectionHash: members.selectionHash,
-      selectionKind: "scheduled_due",
-      selectionSpec: {
-        checkScheduleId: schedule.publicId,
-        kind: "scheduled_due",
-        occurrenceKey: occurrence.occurrenceKey,
-        v: 1,
+  return prisma.$transaction(async (tx) => {
+    await lockProjectForProviderMutation(tx, schedule.projectId);
+    const current = await tx.checkSchedule.findFirst({
+      where: { id: schedule.id, archivedAt: null, enabled: true },
+      select: { id: true },
+    });
+    if (!current) return null;
+    const existing = await tx.rankCheckRun.findUnique({
+      select: { id: true },
+      where: { projectId_idempotencyKey: { idempotencyKey, projectId: schedule.projectId } },
+    });
+    if (existing) return null;
+    const publicId = makePublicId("rcr");
+    const members = scheduledRunMembers(schedule.keywords);
+    const run = await tx.rankCheckRun.upsert({
+      create: {
+        checkScheduleId: schedule.id,
+        estimatedCostCents: 0,
+        idempotencyKey,
+        keywordCount: 0,
+        orchestrationWorkflowId: `rank-check-run-${publicId}`,
+        plannedFor: occurrence.plannedFor,
+        projectId: schedule.projectId,
+        publicId,
+        requestedCount: 0,
+        selectionHash: members.selectionHash,
+        selectionKind: "scheduled_due",
+        selectionSpec: {
+          checkScheduleId: schedule.publicId,
+          kind: "scheduled_due",
+          occurrenceKey: occurrence.occurrenceKey,
+          v: 1,
+        },
+        status: "planned",
+        targetCount: 0,
+        totalCount: 0,
+        trigger: "scheduled",
       },
-      status: "planned",
-      targetCount: 0,
-      totalCount: 0,
-      trigger: "scheduled",
-    },
-    update: {},
-    where: { projectId_idempotencyKey: { idempotencyKey, projectId: schedule.projectId } },
+      update: {},
+      where: { projectId_idempotencyKey: { idempotencyKey, projectId: schedule.projectId } },
+    });
+    return run.id;
   });
-  return run.id;
 }
 
 async function planSchedule(schedule: PlannerSchedule, now: Date) {
@@ -184,6 +193,7 @@ export async function planRankCheckRuns(
     select: plannerScheduleSelect,
     take: limit + 1,
     where: {
+      archivedAt: null,
       enabled: true,
       frequency: { in: ["daily", "weekly", "monthly", "custom_cron"] },
       ...(input.cursor ? { id: { gt: input.cursor } } : {}),

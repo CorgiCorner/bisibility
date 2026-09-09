@@ -1,5 +1,5 @@
 import type { CalculatorPrefill } from "@/lib/queries/cost-calculator";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type { EstimateFrequency } from "./estimate";
 import { PROVIDER_RATES } from "./provider-rates";
 

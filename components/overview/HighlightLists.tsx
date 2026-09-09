@@ -1,7 +1,10 @@
 import { MarketChip } from "@/components/markets/MarketChip";
-import { Card, EmptyState, Tooltip } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { appPath } from "@/lib/routing/app-path";
-import { ArrowDownIcon as ArrowDown, ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/ssr";
+import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown";
+import { ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp";
 import Link from "next/link";
 import type { HighlightList, HighlightRow } from "./types";
 

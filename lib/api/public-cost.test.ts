@@ -200,6 +200,60 @@ describe("public cost API routes", () => {
     },
   );
 
+  it.each([
+    [10, 1, 30],
+    [20, 2, 60],
+    [50, 5, 150],
+    [100, 10, 300],
+  ])("returns shared quantities for Top %s", async (depth, perRun, monthly) => {
+    const response = await call(`/cost-estimate?keywords=1&depth=${depth}&frequency=daily`);
+    expect(response.status).toBe(200);
+    expect((await response.json()).data).toMatchObject({
+      checks_per_run: 1,
+      result_pages_per_run: perRun,
+      monthly_billing_units: monthly,
+      runs_per_month: 30,
+    });
+  });
+
+  it.each(["manual", "paused"])("returns zero scheduled usage for %s", async (frequency) => {
+    const response = await call(`/cost-estimate?keywords=1&depth=20&frequency=${frequency}`);
+    expect((await response.json()).data).toMatchObject({
+      result_pages_per_run: 2,
+      monthly_checks: 0,
+      monthly_billing_units: 0,
+      runs_per_month: 0,
+    });
+  });
+
+  it("includes every keyword, market, and device with a custom schedule", async () => {
+    const response = await call(
+      "/cost-estimate?keywords=3&locations=2&devices=2&depth=20&frequency=custom_cron&cron_expression=0%206%20*%20*%20*",
+    );
+    expect((await response.json()).data).toMatchObject({
+      checks_per_run: 12,
+      result_pages_per_run: 24,
+      monthly_billing_units: 720,
+      runs_per_month: 30,
+    });
+  });
+
+  it.each(["", "&cron_expression=invalid"])(
+    "keeps an unknown custom forecast nullable: %s",
+    async (suffix) => {
+      const response = await call(
+        `/cost-estimate?keywords=1&depth=20&frequency=custom_cron${suffix}`,
+      );
+      expect((await response.json()).data).toMatchObject({
+        result_pages_per_run: 2,
+        runs_per_month: null,
+        monthly_checks: null,
+        monthly_billing_units: null,
+        monthly_cost_cents: null,
+      });
+    },
+  );
+
   it("returns not found for unknown providers", async () => {
     const response = await call("/cost-estimate?keywords=1&provider=unknown");
 

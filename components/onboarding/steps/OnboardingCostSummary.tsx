@@ -1,4 +1,4 @@
-import { DatabaseIcon as Database } from "@phosphor-icons/react";
+import { DatabaseIcon as Database } from "@phosphor-icons/react/dist/csr/Database";
 import type { ReactNode } from "react";
 
 /** Shared shell keeps the step 4-5 cost summary visually continuous as rows are added. */

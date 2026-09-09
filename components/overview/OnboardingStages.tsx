@@ -2,14 +2,12 @@
 
 import type { GettingStartedCapabilities } from "@/components/overview/getting-started";
 import { SampleDataButton } from "@/components/sample-data/SampleDataButton";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
-import {
-  ArrowLineDownIcon as ArrowLineDown,
-  ArrowUpRightIcon as ArrowUpRight,
-  CaretRightIcon as CaretRight,
-  MagnifyingGlassIcon as MagnifyingGlass,
-} from "@phosphor-icons/react";
+import { ArrowLineDownIcon as ArrowLineDown } from "@phosphor-icons/react/dist/csr/ArrowLineDown";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -207,40 +205,31 @@ export function OptionsFooter({
       {capabilities.canInstallSampleData ? (
         <span>
           Just exploring?{" "}
-          {/* Styled like the quiet links beside it; the MUI text variant's primary color
-              made this the loudest thing in a footer meant to whisper. The separator is a
-              plain space and the padding is zero, exactly like the link in the next item:
-              a flex gap plus button padding put 10px here against that item's 4px, so the
-              two halves of one footer line were spaced differently. */}
+          {/* Match the quiet adjacent links, including their plain-space separation. */}
           <SampleDataButton
             label="Load sample project"
             size="sm"
-            sx={{
-              color: "var(--fg-muted)",
+            style={{
+              "--control-color": "var(--fg-muted)",
               fontSize: "12.5px",
               fontWeight: 600,
               minHeight: 0,
-              px: 0,
-              py: 0,
+              paddingLeft: 0,
+              paddingRight: 0,
+              paddingTop: 0,
+              paddingBottom: 0,
               verticalAlign: "baseline",
-              textDecoration: "underline",
-              textDecorationColor: "var(--border)",
-              textUnderlineOffset: "2px",
-              "&:hover": {
-                backgroundColor: "transparent",
-                color: "var(--fg)",
-                textDecoration: "underline",
-                textDecorationColor: "var(--border)",
-              },
-              // While the action runs the button is disabled, and MUI repaints a disabled
-              // button in its own grey - which dropped this link out of the sentence it sits
-              // in. It keeps its colour and its underline, and only dims.
-              "&.Mui-disabled": {
-                color: "var(--fg-muted)",
-                opacity: 0.6,
-                textDecoration: "underline",
-                textDecorationColor: "var(--border)",
-              },
+              "--control-text-decoration": "underline",
+              "--control-text-decoration-color": "var(--border)",
+              "--control-text-underline-offset": "2px",
+              "--control-hover-background-color": "transparent",
+              "--control-hover-color": "var(--fg)",
+              "--control-hover-text-decoration": "underline",
+              "--control-hover-text-decoration-color": "var(--border)",
+              "--control-disabled-color": "var(--fg-muted)",
+              "--control-disabled-opacity": 0.6,
+              "--control-disabled-text-decoration": "underline",
+              "--control-disabled-text-decoration-color": "var(--border)",
             }}
             variant="ghost"
           />

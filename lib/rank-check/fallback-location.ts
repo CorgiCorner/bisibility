@@ -3,7 +3,6 @@ import {
   countryDegradedRankLocation,
   type SerpRankLocation,
   serpRankLocation,
-  serpRankLocationFromLegacy,
 } from "@/lib/serp/location";
 
 export type KeywordRankLocation = {
@@ -11,14 +10,22 @@ export type KeywordRankLocation = {
   granular: boolean;
 };
 
-export function keywordRankLocation(
-  location: Location | null | undefined,
-  legacyLocation: string,
-): KeywordRankLocation {
+export function keywordRankLocation(location: Location): KeywordRankLocation {
   if (!location) {
-    return { granular: false, handles: serpRankLocationFromLegacy(legacyLocation) };
+    throw new Error("Keyword location relation is required.");
   }
-  return { granular: location.kind === "city", handles: serpRankLocation(location) };
+  const handles = serpRankLocation(location);
+  if (
+    !handles.gl.trim() ||
+    !handles.hl.trim() ||
+    !handles.primaryGeoName.trim() ||
+    !handles.secondaryGeoName.trim() ||
+    (handles.primaryGeoCode !== null &&
+      (!Number.isInteger(handles.primaryGeoCode) || handles.primaryGeoCode < 0))
+  ) {
+    throw new Error("Keyword location relation contains invalid provider handles.");
+  }
+  return { granular: location.kind === "city", handles };
 }
 
 const PROVIDER_LACKS_CITY_HANDLE: Record<string, (handles: SerpRankLocation) => boolean> = {

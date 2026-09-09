@@ -1,5 +1,5 @@
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type { DataForSeoQueuePriority } from "./queued-config";
 
 const COST_PER_PAGE_CENTS = {

@@ -1,6 +1,9 @@
+import { type GroupedResearchRow, groupResearchRows } from "@/lib/keyword-research/grouping";
 import type { KeywordResearchSuccess } from "@/lib/keyword-research/types";
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 import { ResearchResults } from "./ResearchResults";
+import { ResearchResultsTable } from "./ResearchResultsTable";
 
 const meta = {
   component: ResearchResults,
@@ -71,6 +74,37 @@ const result: KeywordResearchSuccess = {
   ],
 };
 
+function ResearchResultsTableStory({
+  initialSelected = [],
+  rows,
+}: Readonly<{ initialSelected?: string[]; rows: GroupedResearchRow[] }>) {
+  const [activeKeyword, setActiveKeyword] = useState<string | null>(null);
+  const [selectedKeywords, setSelectedKeywords] = useState(initialSelected);
+  return (
+    <ResearchResultsTable
+      activeKeyword={activeKeyword}
+      cached
+      canRemoveSaved
+      deeper={null}
+      fetchedAt="2026-07-22T10:00:00.000Z"
+      fetchedCount={rows.length}
+      filterCount={rows.length === 0 ? 1 : 0}
+      onActiveChange={(row) => setActiveKeyword(row.keyword)}
+      onAddSelected={() => undefined}
+      onDeeper={() => undefined}
+      onOpenFilters={() => undefined}
+      onSaveSelected={() => undefined}
+      onSelectionChange={setSelectedKeywords}
+      onToggleSave={() => undefined}
+      rows={rows}
+      seed="seo tools"
+      selectedKeywords={selectedKeywords}
+      totalCount={result.rows.length}
+      trackingMarketCount={3}
+    />
+  );
+}
+
 export const CachedPartialResult: Story = {
   args: {
     costContext: {
@@ -125,4 +159,19 @@ export const OffCatalogMetricsUnavailable: Story = {
     metricsAvailable: false,
     trackingMarketCount: 3,
   },
+};
+
+export const SelectedResults: Story = {
+  args: CachedPartialResult.args,
+  render: () => (
+    <ResearchResultsTableStory
+      initialSelected={["best seo tools", "seo tool"]}
+      rows={groupResearchRows(result.rows)}
+    />
+  ),
+};
+
+export const EmptyFilteredResults: Story = {
+  args: CachedPartialResult.args,
+  render: () => <ResearchResultsTableStory rows={[]} />,
 };

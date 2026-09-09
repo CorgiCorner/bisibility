@@ -1,5 +1,5 @@
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { CheckStatusChip } from "@/components/ui";
+import { CheckStatusChip } from "@/components/ui/CheckStatusChip";
 import { relativePast } from "@/lib/format/relative-time";
 import type { LastCheckStatus } from "@/lib/queries/keywords";
 

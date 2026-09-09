@@ -1,11 +1,11 @@
 "use client";
 
-import { Card, EmptyState, SectionTitle } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { UpcomingView } from "@/lib/checks/contract";
-import {
-  CalendarBlankIcon as CalendarBlank,
-  CaretRightIcon as CaretRight,
-} from "@phosphor-icons/react";
+import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import Link from "next/link";
 import { BudgetForecastNote } from "./BudgetForecastNote";
 import { UpcomingBlockedAlerts } from "./UpcomingBlockedAlerts";

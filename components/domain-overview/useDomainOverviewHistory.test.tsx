@@ -4,8 +4,8 @@ import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
   domainOverviewHistoryFixture,
-  domainOverviewMarketFixture,
   domainOverviewReportFixture,
+  domainOverviewScopeFixture,
 } from "./fixtures";
 import { useDomainOverviewHistory } from "./useDomainOverviewHistory";
 
@@ -52,7 +52,7 @@ function renderHistoryHook(
   const hook = renderHook(
     ({ report }: { report: DomainOverviewReport }) =>
       useDomainOverviewHistory({
-        activeMarket: domainOverviewMarketFixture,
+        activeResearchScope: domainOverviewScopeFixture,
         addSpend,
         estimate: {
           cached: false,

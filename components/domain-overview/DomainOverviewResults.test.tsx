@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { DomainOverviewKeywordsTable } from "./DomainOverviewKeywordsTable";
 import { DomainOverviewPagesTable } from "./DomainOverviewPagesTable";
 import { DomainOverviewResults } from "./DomainOverviewResults";
-import { domainOverviewMarketFixture, domainOverviewReportFixture } from "./fixtures";
+import { domainOverviewReportFixture, domainOverviewScopeFixture } from "./fixtures";
 
 const handlers = {
   onLoadHistory: () => {},
@@ -19,10 +19,10 @@ describe("DomainOverviewResults", () => {
         historyError={false}
         historyEstimateCents={12}
         historyLoading={false}
-        market={domainOverviewMarketFixture}
         {...handlers}
         projectRef="prj_1"
         report={domainOverviewReportFixture}
+        researchScope={domainOverviewScopeFixture}
         tableEstimateCents={{ keywords: 2, pages: 3 }}
         tableError={null}
         tableFetchedCount={{ keywords: 100, pages: 100 }}
@@ -31,6 +31,10 @@ describe("DomainOverviewResults", () => {
       />,
     );
     expect(screen.getByText("Top organic keywords")).toBeInTheDocument();
+    const rankingUrl = screen.getByRole("link", { name: "https://example.com/desks/1" });
+    expect(rankingUrl).toHaveAttribute("href", "https://example.com/desks/1");
+    expect(rankingUrl).toHaveAttribute("target", "_blank");
+    expect(rankingUrl).toHaveAttribute("rel", "noreferrer noopener");
     expect(screen.getByText("Top pages")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /add to saved keywords/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /load history/i })).toHaveTextContent("$0.12");
@@ -52,10 +56,10 @@ describe("DomainOverviewResults", () => {
         historyError={false}
         historyEstimateCents={12}
         historyLoading={false}
-        market={domainOverviewMarketFixture}
         {...handlers}
         projectRef="prj_1"
         report={{ ...domainOverviewReportFixture, overview: null, state: "no_data" }}
+        researchScope={domainOverviewScopeFixture}
         tableEstimateCents={{ keywords: 2, pages: 3 }}
         tableError={null}
         tableFetchedCount={{ keywords: 100, pages: 100 }}
@@ -109,7 +113,7 @@ describe("DomainOverviewResults", () => {
     expect(within(deltaRows[0]).getByText("keyword 000")).toBeInTheDocument();
     expect(within(finalDeltaRow).getByText("keyword 098")).toBeInTheDocument();
     const loadButton = screen.getByRole("button", { name: /load next 100 keywords.*\$0\.02/i });
-    expect(loadButton).toHaveClass("MuiButton-outlined");
+    expect(loadButton).toHaveAttribute("data-variant", "secondary");
     fireEvent.click(loadButton);
     expect(onLoadMore).toHaveBeenCalledOnce();
     expect(screen.getByText(/sorting the fetched rows is free/i)).toBeInTheDocument();
@@ -218,8 +222,9 @@ describe("DomainOverviewResults", () => {
     if (!finalDeltaRow) throw new Error("Expected a final page row after delta sorting");
     expect(within(deltaRows[0]).getByText("/page-000")).toBeInTheDocument();
     expect(within(finalDeltaRow).getByText("/page-098")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /load next 100 pages.*\$0\.03/i })).toHaveClass(
-      "MuiButton-outlined",
+    expect(screen.getByRole("button", { name: /load next 100 pages.*\$0\.03/i })).toHaveAttribute(
+      "data-variant",
+      "secondary",
     );
     expect(
       screen.getByText(

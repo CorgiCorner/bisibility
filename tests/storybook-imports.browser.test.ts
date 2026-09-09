@@ -18,7 +18,8 @@ function storyExportNames(module: StoryModule) {
 }
 
 describe("storybook stories", () => {
-  it.each(storyModules)("%s imports cleanly", async (_path, loadStoryModule) => {
+  // Import checks do not render or mutate the shared canvas; keep play tests sequential.
+  it.concurrent.each(storyModules)("%s imports cleanly", async (_path, loadStoryModule) => {
     const module = await loadStoryModule();
 
     expect(module.default).toBeTruthy();

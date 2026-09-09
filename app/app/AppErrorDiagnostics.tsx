@@ -1,14 +1,12 @@
 "use client";
 
 import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { sanitizeErrorReport } from "@/lib/errors/sanitize-error-report";
 import { cn } from "@/lib/ui/cn";
-import {
-  CaretRightIcon as CaretRight,
-  CheckIcon as Check,
-  CopyIcon as Copy,
-} from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { CopyIcon as Copy } from "@phosphor-icons/react/dist/csr/Copy";
 import { useId, useRef, useState } from "react";
 
 export type AppErrorDetails = {
@@ -122,20 +120,16 @@ export function AppErrorDiagnostics({
             startIcon={
               copied ? <Check size={12} weight="regular" /> : <Copy size={12} weight="regular" />
             }
-            sx={{
-              // Darker inset on the trace panel; the code-* tokens carry the
-              // dark surface in both themes, so mix toward black rather than --bg.
-              backgroundColor: "color-mix(in srgb, var(--code-bg) 82%, #000)",
-              borderColor: "var(--code-border)",
-              color: "var(--code-faint)",
+            style={{
+              "--control-background-color": "color-mix(in srgb, var(--code-bg) 82%, #000)",
+              "--control-border-color": "var(--code-border)",
+              "--control-color": "var(--code-faint)",
               fontSize: "11px",
               minHeight: 26,
               padding: "0 9px",
-              "&:hover": {
-                backgroundColor: "color-mix(in srgb, var(--code-bg) 82%, #000)",
-                borderColor: "var(--border)",
-                color: "var(--code-fg)",
-              },
+              "--control-hover-background-color": "color-mix(in srgb, var(--code-bg) 82%, #000)",
+              "--control-hover-border-color": "var(--border)",
+              "--control-hover-color": "var(--code-fg)",
             }}
             type="button"
             variant="secondary"

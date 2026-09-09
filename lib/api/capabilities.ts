@@ -3,15 +3,18 @@ import { JITTER_MINUTES_MAX, JITTER_MINUTES_MIN } from "@/lib/schemas/keyword";
 import {
   DEFAULT_SERP_DEPTH,
   DEFAULT_SERP_DEVICE,
-  DEFAULT_SERP_MARKET,
   SERP_ENGINE,
   serpDepthValues,
   serpDeviceValues,
-  serpMarketOptions,
-} from "@/lib/serp/markets";
+} from "@/lib/serp/constants";
 import { apiKeyCreateProperties } from "./api-key-contract";
 import { API_VERSION_HEADER, getApiVersionCapabilities } from "./api-versions";
 import { cloudImportCapabilitySchemas } from "./cloud-import-capabilities";
+import {
+  DEFAULT_LOCATION_KEY,
+  legacyMarketNameOpenApiSchema,
+  primaryLocationKeyDescription,
+} from "./legacy-market-input";
 import { loopClosureToolInputSchemas } from "./loop-closure-capabilities";
 import { getOpenApiDocument } from "./openapi";
 import { COST_ESTIMATE_MAX_KEYWORDS, COST_ESTIMATE_MAX_LOCATIONS } from "./public-cost";
@@ -35,8 +38,9 @@ function projectMemberToolSchema(memberName: string) {
   } as const;
 }
 
-const serpMarketSchema = { enum: serpMarketOptions, type: "string" } as const;
 const serpDeviceSchema = { enum: serpDeviceValues, type: "string" } as const;
+const locationKeySchema = (detail: string) =>
+  ({ description: primaryLocationKeyDescription(detail), type: "string" }) as const;
 const savedViewTools = savedViewCapabilitySchemas(projectToolSchema);
 
 const scheduleSchema = {
@@ -60,9 +64,12 @@ const toolInputSchemas = {
   addKeywords: {
     properties: {
       api_key: { type: "string" },
-      country: { ...serpMarketSchema, default: DEFAULT_SERP_MARKET },
+      country: legacyMarketNameOpenApiSchema(
+        "Country market name used when location_key is omitted; defaults to the project default market.",
+      ),
       device: { ...serpDeviceSchema, default: DEFAULT_SERP_DEVICE },
       keywords: { items: { type: "string" }, minItems: 1, type: "array" },
+      location_key: locationKeySchema("Defaults to the project default market."),
       project_id: { type: "string" },
       schedule: scheduleSchema,
       target_url: { type: ["string", "null"] },
@@ -78,7 +85,13 @@ const toolInputSchemas = {
   estimateSerpCost: {
     properties: {
       devices: { default: 1, enum: [1, 2], type: "integer" },
-      frequency: { default: "daily", enum: ["daily", "weekly", "monthly"], type: "string" },
+      frequency: {
+        default: "daily",
+        enum: ["daily", "weekly", "monthly", "manual", "paused", "custom_cron"],
+        type: "string",
+      },
+      cron_expression: { type: "string", maxLength: 120 },
+      depth: { default: 100, enum: [10, 20, 50, 100], type: "integer" },
       keywords: { maximum: COST_ESTIMATE_MAX_KEYWORDS, minimum: 0, type: "integer" },
       locations: { default: 1, maximum: COST_ESTIMATE_MAX_LOCATIONS, minimum: 1, type: "integer" },
       option: { enum: ["standard", "priority", "live"], type: "string" },
@@ -93,8 +106,10 @@ const toolInputSchemas = {
   updateProjectDefaults: {
     properties: {
       api_key: { type: "string" },
-      // Omitted country and device are a no-op for schedule-only updates.
-      country: serpMarketSchema,
+      // Omitted market fields are a no-op for schedule-only updates.
+      country: legacyMarketNameOpenApiSchema(
+        "Country market name when location_key is omitted; provide together with device.",
+      ),
       cron_expression: { type: ["string", "null"] },
       device: serpDeviceSchema,
       frequency: {
@@ -106,6 +121,7 @@ const toolInputSchemas = {
         minimum: JITTER_MINUTES_MIN,
         type: "integer",
       },
+      location_key: locationKeySchema("Updates the default market."),
       project_id: { type: "string" },
       serp_stop_on_match: { type: "boolean" },
       timezone: { type: "string" },
@@ -121,9 +137,10 @@ const toolInputSchemas = {
   listKeywords: {
     properties: {
       api_key: { type: "string" },
-      country: serpMarketSchema,
+      country: legacyMarketNameOpenApiSchema("Country filter matched against stored labels."),
       device: serpDeviceSchema,
       limit: { maximum: 200, minimum: 1, type: "integer" },
+      location_key: locationKeySchema("Filters by the exact canonical location key."),
       project_id: { type: "string" },
       search: { type: "string" },
     },
@@ -279,7 +296,7 @@ export function getLlmsText() {
     "Tools:",
     capabilities,
     "",
-    `SERP: ${SERP_ENGINE.label}, default market ${DEFAULT_SERP_MARKET}, default device ${DEFAULT_SERP_DEVICE}, default depth Top ${DEFAULT_SERP_DEPTH}.`,
+    `SERP: ${SERP_ENGINE.label}, default location key ${DEFAULT_LOCATION_KEY}, default device ${DEFAULT_SERP_DEVICE}, default depth Top ${DEFAULT_SERP_DEPTH}.`,
     `Supported SERP depths: ${serpDepthValues.join(", ")}.`,
     "",
     "Example: GET /api/v1/projects/{project_id}/keywords?limit=50",

@@ -1,10 +1,9 @@
-import type { DomainOverviewMarketOption } from "@/lib/domain-overview/market-options";
-import { DOMAIN_OVERVIEW_UNAVAILABLE_TOOLTIP } from "@/lib/domain-overview/market-options";
+import type { ResearchScope } from "@/lib/research/scope";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { DomainOverviewAnalyzeCard } from "./DomainOverviewAnalyzeCard";
-import { domainOverviewMarketFixture } from "./fixtures";
+import { domainOverviewScopeFixture } from "./fixtures";
 
 const estimate = {
   cached: false,
@@ -17,80 +16,92 @@ const estimate = {
   valid: true,
 };
 
-const currentMarket: DomainOverviewMarketOption = {
-  canonicalKey: domainOverviewMarketFixture.canonicalKey,
-  cityName: null,
-  countryCode: "US",
-  displayName: domainOverviewMarketFixture.displayName,
-  kind: "country",
-  languageCode: "en",
-  languageLabel: "English",
-  locationCode: domainOverviewMarketFixture.locationCode,
-  provenance: null,
-  regionName: null,
+const germanyScope: ResearchScope = {
+  countryCode: "DE",
+  countryName: "Germany",
+  languageCode: "de",
+  languageLabel: "German",
+  providerLocationCode: 2276,
   researchAvailable: true,
 };
 
-const provenanceMarket: DomainOverviewMarketOption = {
-  ...currentMarket,
-  canonicalKey: "DE",
-  countryCode: "DE",
-  displayName: "Germany",
-  locationCode: 2276,
-  provenance: "Berlin tracked at city level - domain analysis runs on the country pair.",
-};
-
-const unavailableMarket: DomainOverviewMarketOption = {
-  ...currentMarket,
-  canonicalKey: "ES@en",
+const unavailableScope: ResearchScope = {
   countryCode: "ES",
-  displayName: "Spain",
-  locationCode: 2724,
+  countryName: "Spain",
+  languageCode: "eu",
+  languageLabel: "Basque",
+  providerLocationCode: 2724,
   researchAvailable: false,
 };
 
+const searchableCatalogScopes: ResearchScope[] = [
+  unavailableScope,
+  ...(
+    [
+      ["FR", "France", 2250],
+      ["IT", "Italy", 2380],
+      ["PT", "Portugal", 2620],
+      ["BE", "Belgium", 2056],
+      ["NL", "Netherlands", 2528],
+      ["SE", "Sweden", 2752],
+    ] as const
+  ).map(([countryCode, countryName, providerLocationCode]) => ({
+    ...domainOverviewScopeFixture,
+    countryCode,
+    countryName,
+    providerLocationCode,
+  })),
+];
+
 function renderCard(
-  trackedMarkets: readonly DomainOverviewMarketOption[],
-  onMarketChange = vi.fn(),
+  trackedScopes: readonly ResearchScope[],
+  onResearchScopeChange = vi.fn(),
+  catalogScopes: readonly ResearchScope[] = [unavailableScope],
 ) {
   render(
     <DomainOverviewAnalyzeCard
-      catalogMarkets={[unavailableMarket]}
+      catalogScopes={catalogScopes}
       estimate={estimate}
-      market={domainOverviewMarketFixture}
-      onMarketChange={onMarketChange}
+      onResearchScopeChange={onResearchScopeChange}
       onScopeChange={vi.fn()}
       onSubmit={vi.fn()}
       onTargetChange={vi.fn()}
+      researchScope={domainOverviewScopeFixture}
       submitting={false}
       target="example.com"
-      trackedMarkets={trackedMarkets}
+      trackedScopes={trackedScopes}
     />,
   );
-  return onMarketChange;
+  return onResearchScopeChange;
 }
 
-describe("DomainOverviewAnalyzeCard market combobox", () => {
-  it("fills the desktop market wrapper through the tooltip trigger", () => {
-    renderCard([currentMarket]);
+describe("DomainOverviewAnalyzeCard country and language picker", () => {
+  it("fills the desktop picker wrapper and shows the selected country flag", () => {
+    renderCard([domainOverviewScopeFixture]);
 
-    const trigger = screen.getByRole("button", { name: /Market:/ });
+    const trigger = screen.getByRole("button", {
+      name: "Country and language: United States / English",
+    });
     expect(trigger).toHaveClass("h-[34px]", "min-h-[34px]", "w-full");
     expect(trigger).not.toHaveClass("h-10", "min-h-10");
     expect(trigger.parentElement).toHaveClass("w-full");
     expect(trigger.parentElement?.parentElement).toHaveClass("md:w-[230px]");
+    expect(trigger.querySelector("[data-country-flag='US']")).toBeInTheDocument();
   });
 
-  it("shows the selected country flag in the market trigger", () => {
-    renderCard([currentMarket]);
+  it("uses the exact change tooltip", async () => {
+    const user = userEvent.setup();
+    renderCard([domainOverviewScopeFixture]);
+    const trigger = screen.getByRole("button", {
+      name: "Country and language: United States / English",
+    });
 
-    expect(
-      screen.getByRole("button", { name: /Market:/ }).querySelector("[data-country-flag='US']"),
-    ).toBeInTheDocument();
+    await user.hover(trigger);
+    expect(await screen.findByText("Change country and language")).toBeInTheDocument();
   });
 
   it("keeps the domain target within the exact compact control height", () => {
-    renderCard([currentMarket]);
+    renderCard([domainOverviewScopeFixture]);
 
     const target = screen.getByRole("textbox", { name: "Domain or subdomain" });
     expect(target.parentElement).toHaveClass("h-[34px]", "min-h-[34px]");
@@ -108,53 +119,61 @@ describe("DomainOverviewAnalyzeCard market combobox", () => {
   });
 
   it("uses the neutral subdomain example in the domain placeholder", () => {
-    renderCard([currentMarket]);
+    renderCard([domainOverviewScopeFixture]);
 
     expect(screen.getByRole("textbox", { name: "Domain or subdomain" })).toHaveAttribute(
       "placeholder",
       "Enter any domain or subdomain, e.g. blog.acme.example.com",
     );
   });
-  it("preserves tracked payloads and exposes provenance and unavailable reasons", async () => {
+
+  it("preserves tracked scope payloads and exposes unavailable reasons", async () => {
     const user = userEvent.setup();
-    const onMarketChange = renderCard([currentMarket, provenanceMarket]);
-
-    await user.click(screen.getByRole("button", { name: /Market:/ }));
-    const provenance = screen.getByRole("menuitem", { name: /Germany \/ English/ });
-    expect(provenance).not.toHaveAttribute("title");
-    const provenanceDescId = provenance.getAttribute("aria-describedby");
-    expect(provenanceDescId).not.toBeNull();
-    expect(document.getElementById(provenanceDescId ?? "")).toHaveTextContent(
-      provenanceMarket.provenance ?? "",
+    const onResearchScopeChange = renderCard(
+      [domainOverviewScopeFixture, germanyScope],
+      vi.fn(),
+      searchableCatalogScopes,
     );
-    await user.click(provenance);
-    expect(onMarketChange).toHaveBeenCalledWith(provenanceMarket);
+    const trigger = screen.getByRole("button", {
+      name: "Country and language: United States / English",
+    });
 
-    await user.click(screen.getByRole("button", { name: /Market:/ }));
-    await user.type(screen.getByRole("textbox", { name: "Search markets..." }), "spain");
-    const unavailable = screen.getByRole("menuitem", { name: /Spain \/ English/ });
+    await user.click(trigger);
+    const germany = screen.getByRole("menuitem", { name: /Germany \/ German/ });
+    expect(germany).not.toHaveAttribute("title");
+    await user.click(germany);
+    expect(onResearchScopeChange).toHaveBeenCalledWith(germanyScope);
+
+    await user.click(trigger);
+    await user.type(
+      screen.getByRole("textbox", { name: "Search countries and languages..." }),
+      "spain",
+    );
+    const unavailable = screen.getByRole("menuitem", { name: /Spain \/ Basque/ });
     expect(unavailable).toHaveAttribute("aria-disabled", "true");
     expect(unavailable).not.toHaveAttribute("title");
     const unavailableDescId = unavailable.getAttribute("aria-describedby");
     expect(unavailableDescId).not.toBeNull();
     expect(document.getElementById(unavailableDescId ?? "")).toHaveTextContent(
-      DOMAIN_OVERVIEW_UNAVAILABLE_TOOLTIP,
+      "Research is not available for Spain / Basque. Rank tracking is unaffected.",
     );
     expect(unavailable).toHaveTextContent("unavailable");
     fireEvent.click(unavailable);
-    expect(onMarketChange).toHaveBeenCalledTimes(1);
+    expect(onResearchScopeChange).toHaveBeenCalledTimes(1);
   });
 
   it("hides the catalog until search and uses the exact empty-state messages", async () => {
     const user = userEvent.setup();
-    renderCard([]);
+    renderCard([], vi.fn(), searchableCatalogScopes);
 
-    await user.click(screen.getByRole("button", { name: /Market:/ }));
-    expect(screen.queryByText("Catalog")).not.toBeInTheDocument();
-    expect(screen.getByText("Type to search the catalog.")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Country and language: United States / English" }),
+    );
+    expect(screen.queryByText("Countries and languages")).not.toBeInTheDocument();
+    expect(screen.getByText("Type to search countries and languages.")).toBeInTheDocument();
 
-    const search = screen.getByRole("textbox", { name: "Search markets..." });
+    const search = screen.getByRole("textbox", { name: "Search countries and languages..." });
     await user.type(search, "missing");
-    expect(screen.getByText("No market matches this search.")).toBeInTheDocument();
+    expect(screen.getByText("No country and language matches this search.")).toBeInTheDocument();
   });
 });

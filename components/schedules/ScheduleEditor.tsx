@@ -1,8 +1,10 @@
 "use client";
 
-import { Button, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { rankTrackerSchedulesPath } from "@/lib/routing/rank-tracker-schedules-path";
+import { calendarCronExpression } from "@/lib/rank-check/schedule-calendar";
+import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,7 +12,6 @@ import { AddKeywordsDrawer } from "./AddKeywordsDrawer";
 import { ScheduleEditorFields } from "./ScheduleEditorFields";
 import { ScheduleEditorMembers } from "./ScheduleEditorMembers";
 import {
-  calendarCronExpression,
   type ScheduleEditorMember,
   type ScheduleEditorProps,
   type ScheduleEditorValues,
@@ -50,9 +51,12 @@ export function ScheduleEditor({
   candidates = [],
   connectedProviders,
   defaultScheduleName,
+  embedded = false,
   isNew = false,
   members = [],
   memberSummary,
+  onCancel,
+  onSaved,
   pendingMembers: initialPendingMembers = [],
   projectId,
   projectDefaults,
@@ -65,7 +69,7 @@ export function ScheduleEditor({
   const form = useForm<ScheduleEditorValues>({
     defaultValues: {
       ...scheduleEditorDefaults(schedule),
-      isDefault: defaultScheduleName === null || schedule.isDefault,
+      isDefault: (isNew && defaultScheduleName === null) || schedule.isDefault,
     },
     resolver: zodResolver(scheduleEditorSchema),
   });
@@ -126,7 +130,14 @@ export function ScheduleEditor({
         });
       }
       showToast("Schedule saved.", { severity: "success" });
-      if (isNew) router.replace(rankTrackerSchedulesPath(projectId, scheduleId));
+      if (onSaved)
+        onSaved({
+          publicId: scheduleId,
+          name: values.name,
+          frequency: values.frequency,
+          isDefault: values.isDefault,
+        });
+      else if (isNew) router.replace(projectSchedulesPath(projectId, scheduleId));
       else router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not save the schedule.");
@@ -139,7 +150,13 @@ export function ScheduleEditor({
       noValidate
       onSubmit={form.handleSubmit((values) => void save(values))}
     >
-      <div className="grid min-w-0 gap-3.5 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+      <div
+        className={
+          embedded
+            ? "grid min-w-0 gap-3.5"
+            : "grid min-w-0 gap-3.5 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]"
+        }
+      >
         <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
           <header className="border-b border-border px-4 py-3.5">
             <h2 className="m-0 text-[15px] font-semibold text-fg">Schedule</h2>
@@ -153,24 +170,32 @@ export function ScheduleEditor({
             referenceIso={referenceIso}
           />
         </section>
-        <ScheduleEditorMembers
-          memberCount={storedMembers.length + pendingMembers.length}
-          memberSummary={memberSummary}
-          onOpenDrawer={() => setPickerOpen(true)}
-          pendingMembers={pendingMembers}
-          scheduleName={form.watch("name") || "this schedule"}
-          storedMembers={storedMembers}
-        />
+        {embedded ? (
+          <p className="m-0 text-[12px] text-fg-muted">{memberSummary}</p>
+        ) : (
+          <ScheduleEditorMembers
+            memberCount={storedMembers.length + pendingMembers.length}
+            memberSummary={memberSummary}
+            onOpenDrawer={() => setPickerOpen(true)}
+            pendingMembers={pendingMembers}
+            scheduleName={form.watch("name") || "this schedule"}
+            storedMembers={storedMembers}
+          />
+        )}
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2.5">
         {message ? <span className="mr-auto text-[12px] text-fg-muted">{message}</span> : null}
-        <Button
-          onClick={() => router.replace(rankTrackerSchedulesPath(projectId))}
-          type="button"
-          variant="ghost"
-        >
-          Cancel
-        </Button>
+        {!embedded ? (
+          <Button
+            onClick={() =>
+              onCancel ? onCancel() : router.replace(projectSchedulesPath(projectId))
+            }
+            type="button"
+            variant="ghost"
+          >
+            Cancel
+          </Button>
+        ) : null}
         <Button loading={formState.isSubmitting} loadingLabel="Saving..." type="submit">
           Save schedule
         </Button>

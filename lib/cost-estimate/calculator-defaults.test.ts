@@ -1,4 +1,4 @@
-import { serpDepthValues } from "@/lib/serp/markets";
+import { serpDepthValues } from "@/lib/serp/constants";
 import { describe, expect, it } from "vitest";
 import { ANONYMOUS_CALCULATOR_DEFAULTS } from "./calculator-defaults";
 

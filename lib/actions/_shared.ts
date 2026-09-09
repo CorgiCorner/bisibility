@@ -235,6 +235,8 @@ export function revalidateAlertViews() {
 
 export function revalidateCompetitorViews() {
   revalidateTargets([
+    projectPage("settings", "competitors"),
+    keywordDetailTarget(),
     projectPage("competitors"),
     projectPage("dashboard"),
     projectPage("settings", "audit"),

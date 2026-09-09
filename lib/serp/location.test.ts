@@ -19,10 +19,16 @@ describe("location core", () => {
     expect(canonicalKey({ countryCode: "US", regionName: "Texas", cityName: "Austin" })).toBe(
       "US/Texas/Austin",
     );
+    expect(
+      canonicalKey({ countryCode: "US", regionName: "California", cityName: "San Francisco" }),
+    ).toBe("US/California/San Francisco");
     expect(canonicalKey({ countryCode: "US", regionName: "Minnesota", cityName: "Austin" })).toBe(
       "US/Minnesota/Austin",
     );
     expect(canonicalKey({ countryCode: "US", cityName: "Austin" })).toBe("US/Austin");
+    expect(canonicalKey({ countryCode: "ES", kind: "region", regionName: "Andalusia" })).toBe(
+      "ES/Andalusia",
+    );
     expect(canonicalKey({ countryCode: "US", cityName: "  San   Jose " })).toBe("US/San Jose");
     expect(canonicalKey({ countryCode: "ES", languageCode: "es" })).toBe("ES");
     expect(canonicalKey({ countryCode: "ES", languageCode: "en" })).toBe("ES@en");
@@ -55,6 +61,11 @@ describe("location core", () => {
       languageCode: "en",
       regionName: "Andalusia",
     });
+    expect(parseCanonicalKey("ES/Andalusia", "region")).toEqual({
+      countryCode: "ES",
+      kind: "region",
+      regionName: "Andalusia",
+    });
   });
 
   it("normalizes the default language alias before lookup", () => {
@@ -70,6 +81,15 @@ describe("location core", () => {
     expect(normalizeCanonicalLocationKey("ES/Andalusia/Malaga@en").canonicalKey).toBe(
       "ES/Andalusia/Malaga@en",
     );
+    expect(normalizeCanonicalLocationKey("ES/Andalusia@en", "region")).toEqual({
+      canonicalKey: "ES/Andalusia@en",
+      selector: {
+        countryCode: "ES",
+        kind: "region",
+        languageCode: "en",
+        regionName: "Andalusia",
+      },
+    });
   });
 
   it.each(["ES@zz", "ES@en@fr", "ES@"])(
@@ -111,6 +131,15 @@ describe("location core", () => {
       languageLabel: "English",
     });
     expect(countrySeed("PL")).toMatchObject({ countryCode: "PL", gl: "pl" });
+    expect(countrySeed("CZ")).toMatchObject({ countryCode: "CZ", gl: "cz", hl: "cs" });
+    expect(countrySeed("SK")).toMatchObject({ countryCode: "SK", gl: "sk", hl: "sk" });
+    expect(countrySeed("HU")).toMatchObject({ countryCode: "HU", gl: "hu", hl: "hu" });
+    expect(countrySeed("RO")).toMatchObject({ countryCode: "RO", gl: "ro", hl: "ro" });
+    expect(countrySeed("UA")).toMatchObject({ countryCode: "UA", gl: "ua", hl: "uk" });
+    expect(countrySeed("GR")).toMatchObject({ countryCode: "GR", gl: "gr", hl: "el" });
+    expect(countrySeed("KR")).toMatchObject({ countryCode: "KR", gl: "kr", hl: "ko" });
+    expect(countrySeed("ID")).toMatchObject({ countryCode: "ID", gl: "id", hl: "id" });
+    expect(countrySeed("AR")).toMatchObject({ countryCode: "AR", gl: "ar", hl: "es" });
     expect(countrySeed("ZZ")).toBeNull();
   });
 

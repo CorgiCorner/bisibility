@@ -1,5 +1,5 @@
 import type { Device } from "@/lib/generated/prisma/client";
-import { supportsResearchMarket } from "@/lib/serp/market-capability";
+import { supportsResearchScope } from "@/lib/serp/research-capability";
 import { completedCheckAttempts, parseCheckAttempts, providerLabel } from "./attempts";
 import type {
   CheckRange,
@@ -137,7 +137,7 @@ function rowFor(source: CheckRunSource): CheckRunRow | null {
     provider: source.provider,
     providerLabel: providerLabel(source.provider),
     requestedDepth: source.requestedDepth,
-    researchMetricsAvailable: supportsResearchMarket(
+    researchMetricsAvailable: supportsResearchScope(
       source.keyword.locationRef.countryCode,
       source.keyword.locationRef.languageCode,
     ),

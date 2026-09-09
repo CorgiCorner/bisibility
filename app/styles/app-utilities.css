@@ -1,5 +1,5 @@
 /* The pre-paint session hint avoids auth-nav flash; specificity must outrank
-   Tailwind and MUI display classes. */
+   component display classes. */
 html[data-authed="true"] .bv-anon-only {
   display: none;
 }

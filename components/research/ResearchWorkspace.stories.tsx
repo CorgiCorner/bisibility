@@ -25,24 +25,14 @@ const context: ResearchWorkspaceProps["context"] = {
   connections: [
     { id: "conn_a00000000000000000000000", label: "DataForSEO", provider: "dataforseo" },
   ],
-  defaultMarket: {
-    city: null,
-    country: "United States",
-    device: "desktop" as const,
-    displayName: "United States",
-    locationKey: "US",
-    source: "explicit" as const,
-  },
-  language: { code: "en", label: "English" },
-  location: {
-    canonicalKey: "US",
-    cityName: null,
+  defaultDevice: "desktop" as const,
+  defaultScope: {
     countryCode: "US",
-    displayName: "United States",
-    hl: "en",
-    kind: "country" as const,
+    countryName: "United States",
+    languageCode: "en",
     languageLabel: "English",
-    regionName: null,
+    providerLocationCode: 2840,
+    researchAvailable: true,
   },
   project: { domain: "acme.dev", id: "prj_story", name: "Acme" },
 };
@@ -102,29 +92,18 @@ export const BudgetExhausted: Story = {
   },
 };
 
-export const CityMetricsScope: Story = {
+export const CountryAndLanguage: Story = {
   args: {
     ...Idle.args,
     context: {
       ...context,
-      defaultMarket: {
-        city: "Malaga",
-        country: "Spain",
-        device: "desktop",
-        displayName: "Malaga, Andalusia, Spain",
-        locationKey: "ES/ES-AN/Malaga",
-        source: "explicit",
-      },
-      language: { code: "es", label: "Spanish" },
-      location: {
-        canonicalKey: "ES/ES-AN/Malaga",
-        cityName: "Malaga",
+      defaultScope: {
         countryCode: "ES",
-        displayName: "Malaga, Andalusia, Spain",
-        hl: "es",
-        kind: "city",
+        countryName: "Spain",
+        languageCode: "es",
         languageLabel: "Spanish",
-        regionName: null,
+        providerLocationCode: 2724,
+        researchAvailable: true,
       },
     },
   },

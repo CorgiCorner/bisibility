@@ -149,7 +149,12 @@ describe("importCloudExport hardening", () => {
     );
     mocks.createKeywords.mockResolvedValue(Response.json({ created: 1, skipped: 0 }));
     mocks.prisma.keyword.findMany.mockResolvedValue([
-      { device: "desktop", id: "keyword_1", location: "United States", text: "rank tracker" },
+      {
+        device: "desktop",
+        id: "keyword_1",
+        locationRef: { canonicalKey: "US" },
+        text: "rank tracker",
+      },
     ]);
     mocks.prisma.rankCheck.createMany.mockResolvedValue({ count: 1 });
     mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
@@ -265,39 +270,22 @@ describe("importCloudExport hardening", () => {
     });
   });
 
-  it("drops history rows whose destination keyword cannot be resolved", async () => {
-    const result = await importCloudExport(
-      token,
-      importBody({
-        keywords: [
-          keyword("rank tracker", ids.firstKeyword),
-          keyword("missing keyword", ids.secondKeyword),
-        ],
-      }),
-      url,
-    );
+  it("fails rather than attaching history when a destination keyword has no exact location identity", async () => {
+    await expect(
+      importCloudExport(
+        token,
+        importBody({
+          keywords: [
+            keyword("rank tracker", ids.firstKeyword),
+            keyword("missing keyword", ids.secondKeyword),
+          ],
+        }),
+        url,
+      ),
+    ).rejects.toThrow("Imported location key US could not be resolved exactly.");
 
-    expect(result.counts).toMatchObject({ history: 1, history_received: 2 });
-    expect(mocks.prisma.rankCheck.createMany).toHaveBeenCalledWith({
-      skipDuplicates: true,
-      data: [
-        {
-          attemptCount: 1,
-          checkedAt: new Date("2026-06-20T10:00:00.000Z"),
-          degradedToCountry: false,
-          keywordId: "keyword_1",
-          normalizationVersion: "v1",
-          position: 3,
-          previousPosition: 7,
-          provider: "dataforseo",
-          publicId: expect.stringMatching(/^check_[a-z][a-z0-9]{23}$/),
-          rankingUrl: `https://example.com/${ids.firstKeyword}`,
-          requestedDepth: 100,
-          status: "completed",
-          viaFallback: false,
-        },
-      ],
-    });
+    expect(mocks.prisma.rankCheck.createMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.migrationToken.updateMany).not.toHaveBeenCalled();
   });
 });
 

@@ -8,7 +8,7 @@ import { SidebarFooter } from "@/components/shell/SidebarFooter";
 import { SidebarRailGroups } from "@/components/shell/SidebarRail";
 import { SidebarToggleIcon } from "@/components/shell/SidebarToggleIcon";
 import { WorkspaceSwitcher } from "@/components/shell/WorkspaceSwitcher";
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { navContextFromPathname, navItems } from "@/lib/nav/nav-items";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";

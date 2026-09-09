@@ -27,14 +27,14 @@ describe("ScheduleObjectFrame", () => {
     rerender(
       <ScheduleObjectFrame
         bodyLabel="Schedule body"
-        breadcrumb={{ href: "/app/prj_1/rank-tracker/schedules", label: "All schedules" }}
+        breadcrumb={{ href: "/app/prj_1/runs/schedules", label: "All schedules" }}
         title="Schedule"
       />,
     );
 
     expect(screen.getByRole("link", { name: "All schedules" })).toHaveAttribute(
       "href",
-      "/app/prj_1/rank-tracker/schedules",
+      "/app/prj_1/runs/schedules",
     );
     expect(screen.getByRole("link", { name: "All schedules" }).querySelector("svg")).toBeVisible();
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();

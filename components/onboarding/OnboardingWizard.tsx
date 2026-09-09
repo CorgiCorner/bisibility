@@ -1,5 +1,4 @@
 "use client";
-import { CloudImportWorkspaceButton } from "@/components/onboarding/CloudImportWorkspaceButton";
 import { OnboardingNav } from "@/components/onboarding/OnboardingNav";
 import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
 import type { OnboardingWizardProps } from "@/components/onboarding/OnboardingWizard.types";
@@ -12,17 +11,13 @@ import {
   type OnboardingFlowState,
   type OnboardingStepNumber,
 } from "@/components/onboarding/onboarding-fixtures";
-import { feedbackClass } from "@/components/onboarding/onboarding-form-utils";
-import { locationValuesForKeys } from "@/components/onboarding/onboarding-location-field";
+import { feedbackClass, keywordLines } from "@/components/onboarding/onboarding-form-utils";
 import {
   initialOnboardingDraft,
   projectIdFor,
 } from "@/components/onboarding/onboarding-wizard-state";
-import {
-  SAMPLE_DATA_BUTTON_TOOLTIP,
-  SampleDataButton,
-} from "@/components/sample-data/SampleDataButton";
 import { useState } from "react";
+import { OnboardingProjectOptions } from "./OnboardingProjectOptions";
 import { readCurrentProviderValues } from "./onboarding-provider-values";
 import {
   type ConnectedProviderMap,
@@ -31,16 +26,17 @@ import {
   providerOptions,
 } from "./steps/StepConnectProvider.fields";
 import { StepConnectProviderSkip } from "./steps/StepConnectProviderSkip";
+import { useOnboardingSources } from "./use-onboarding-sources";
 // biome-ignore format: Compact initial props keep this production component within its line limit.
 export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMessage,
   gscJustConnected,
   gscGoogleOAuth,
   gscOAuthConfigured,
   gscPropertyLabel,
-  hasAnalyticsSource,
+  hasAnalyticsSource, hasOtherAnalyticsSource,
   initialFlowState,
-  initialKeywordCount,
-  initialKeywordText,
+  initialLocationSelections,
+  initialKeywordCount, initialKeywordText, initialKeywordDraft, initialFirstCheckCandidates,
   initialProject,
   initialWebsite,
   initialSerpConnections,
@@ -50,6 +46,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
   providerConnected,
   rankedKeywordConnections = [],
 }: Readonly<OnboardingWizardProps>) {
+  const sources = useOnboardingSources({ gscJustConnected, gscGoogleOAuth, gscPropertyLabel, hasAnalyticsSource, hasOtherAnalyticsSource, rankedKeywordConnections });
   const startingFlowState = {
     ...initialFlowState,
     projectId: projectIdFor(initialProject, initialFlowState),
@@ -57,9 +54,11 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [project, setProject] = useState(initialProject);
   const [flowState, setFlowState] = useState<OnboardingFlowState>(startingFlowState);
-  const initialDraft = initialOnboardingDraft(initialProject, startingFlowState, initialWebsite);
+  const initialDraft = initialOnboardingDraft(initialProject, startingFlowState, initialWebsite, initialLocationSelections, initialKeywordDraft);
   const [draft, setDraft] = useState(() => initialDraft);
   const [keywordCount, setKeywordCount] = useState(initialKeywordCount);
+  const [keywordsSaving, setKeywordsSaving] = useState(false);
+  const [firstCheckCandidates, setFirstCheckCandidates] = useState(initialFirstCheckCandidates);
   const [authoritativeNextCheckAt, setAuthoritativeNextCheckAt] = useState(nextCheckAt);
   const [hasConnectedProvider, setHasConnectedProvider] = useState(providerConnected);
   const [serpConnections, setSerpConnections] = useState<ConnectedProviderMap>(
@@ -67,7 +66,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
   );
   const [maxReachableStep, setMaxReachableStep] = useState(initialStep);
   const [providerContinueDisabled, setProviderContinueDisabled] = useState(
-    !providerConnected && !hasAnalyticsSource,
+    !providerConnected && !sources.hasAnalyticsSource,
   );
   const [keywordsContinueDisabled, setKeywordsContinueDisabled] = useState(
     initialDraft.addKeywords.locations.length === 0,
@@ -94,7 +93,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
     }
   }
   function goToStep(step: OnboardingStepNumber, nextFlowState = flowState) {
-    if (step > currentStep || step > maxReachableStep) {
+    if (keywordsSaving || step > currentStep || step > maxReachableStep) {
       return;
     }
     replaceStep(step, nextFlowState);
@@ -118,6 +117,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
     completion,
   ) => {
     const nextFlowState = { ...flowState, projectId: nextProject.publicId };
+    if (project && nextProject.domain !== project.domain) sources.invalidateGsc();
     setProject(nextProject);
     setDraft((current) => ({
       ...current,
@@ -160,7 +160,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
   function continueWithConnectedDataSource() {
     handleProviderSkip(currentProviderValues());
   }
-  const handleKeywordsComplete: OnboardingWizardStepsProps["onKeywordsComplete"] = (
+  const handleKeywordsComplete: OnboardingWizardStepsProps["onKeywordsComplete"] = async (
     values,
     defaults,
     nextKeywordCount,
@@ -168,6 +168,13 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
   ) => {
     setDraft((current) => ({ ...current, addKeywords: values, schedule: defaults }));
     setKeywordCount(nextKeywordCount);
+    const { candidates } = await actions.listFirstCheckCandidatesAction({
+      projectId: values.projectId,
+      keywordText: keywordLines(values.keywords)[0],
+      includeExisting: true,
+      limit: Math.max(1, values.locations.length * values.devices.length),
+    });
+    setFirstCheckCandidates(candidates);
     updateFlowAndStep(4, {
       ...flowState,
       devices: values.devices,
@@ -175,7 +182,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
       projectId: values.projectId,
     });
     setInlineWarning(warning ?? null);
-    if (hasAnalyticsSource) {
+    if (sources.hasAnalyticsSource) {
       void actions.syncProjectTrafficAction({ projectId: values.projectId }).catch(() => {
         setInlineWarning(
           "Search Console sync didn't finish - observed data may take a moment. You can retry from Integrations.",
@@ -184,21 +191,20 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
     }
   };
   const handleKeywordsChange: OnboardingWizardStepsProps["onKeywordsChange"] = (keywords) => {
+    setFirstCheckCandidates(undefined);
     setDraft((current) => ({
       ...current,
       addKeywords: { ...current.addKeywords, keywords },
     }));
   };
-  const handleMarketsChange: OnboardingWizardStepsProps["onMarketsChange"] = (locations) => {
+  const handleMarketsChange: OnboardingWizardStepsProps["onMarketsChange"] = (selections) => {
+    setFirstCheckCandidates(undefined);
+    const locations = selections.map((selection) => selection.canonicalKey);
     setKeywordsContinueDisabled(locations.length === 0);
     setDraft((current) => ({
       ...current,
       addKeywords: { ...current.addKeywords, locations },
-      schedule: {
-        ...current.schedule,
-        locations,
-        locationSelections: locationValuesForKeys(locations),
-      },
+      schedule: { ...current.schedule, locationSelections: [...selections], locations },
     }));
   };
   async function handleTimezoneChange(timezone: string) {
@@ -208,13 +214,13 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
     setAuthoritativeNextCheckAt(result.nextCheckAt ?? null);
   }
   const providerStepContinueDisabled =
-    currentStep === 2 && providerContinueDisabled && !hasAnalyticsSource;
+    currentStep === 2 && providerContinueDisabled && !sources.hasAnalyticsSource;
   const continueDisabled =
     providerStepContinueDisabled || (currentStep === 3 && keywordsContinueDisabled);
   const canContinueWithConnectedDataSource =
     currentStep === 2 &&
     !providerStepContinueDisabled &&
-    hasAnalyticsSource &&
+    sources.hasAnalyticsSource &&
     !hasConnectedProvider;
   return (
     <OnboardingStepper
@@ -233,20 +239,22 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
           dataResidencyMessage={dataResidencyMessage}
           draft={draft}
           flowState={flowState}
-          gscJustConnected={gscJustConnected}
-          gscGoogleOAuth={gscGoogleOAuth}
+          gscJustConnected={sources.gscJustConnected}
+          gscGoogleOAuth={sources.gscGoogleOAuth}
           gscOAuthConfigured={gscOAuthConfigured}
-          gscPropertyLabel={gscPropertyLabel}
-          hasAnalyticsSource={hasAnalyticsSource}
+          gscPropertyLabel={sources.gscPropertyLabel}
+          hasAnalyticsSource={sources.hasAnalyticsSource}
           hasConnectedProvider={providerReady}
           connectedProviderId={connectedProviderId}
           initialSerpConnections={serpConnections}
           initialKeywordText={initialKeywordText}
+          initialFirstCheckCandidates={firstCheckCandidates}
           keywordCount={keywordCount}
           monthlyCapCents={monthlyCapCents}
           nextCheckAt={authoritativeNextCheckAt}
           onCreateProjectComplete={handleCreateProjectComplete}
           onKeywordsChange={handleKeywordsChange}
+          onKeywordsSavingChange={setKeywordsSaving}
           onMarketsChange={handleMarketsChange}
           onKeywordsComplete={handleKeywordsComplete}
           onProviderComplete={handleProviderComplete}
@@ -256,26 +264,18 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
           onTimezoneChange={handleTimezoneChange}
           project={project}
           projectedCostPerCheckCents={projectedCostPerCheckCents}
-          rankedKeywordConnections={rankedKeywordConnections}
+          rankedKeywordConnections={sources.rankedKeywordConnections}
         />
         {currentStep !== 4 ? (
           <OnboardingNav
+            busy={keywordsSaving}
             continueDisabled={continueDisabled}
-            continueLabel="Continue"
+            continueLabel={keywordsSaving ? "Saving keywords..." : "Continue"}
             currentStep={currentStep}
             flowState={flowState}
             leadingAction={
               currentStep === 1 ? (
-                <div className="flex flex-wrap items-end gap-x-3">
-                  <SampleDataButton
-                    action={actions.installSampleDataAction}
-                    help={SAMPLE_DATA_BUTTON_TOOLTIP}
-                    label="Load sample project"
-                    size="lg"
-                    variant="secondary"
-                  />
-                  <CloudImportWorkspaceButton />
-                </div>
+                <OnboardingProjectOptions action={actions.installSampleDataAction} />
               ) : undefined
             }
             // biome-ignore format: Guarded compact handler keeps this component within its line limit.

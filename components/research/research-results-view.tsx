@@ -1,14 +1,16 @@
 "use client";
 
-import { Button, MenuSelectOptionItem, menuSelectPaperSx } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Menu } from "@/components/ui/Menu";
+import { menuSelectPaperStyle } from "@/components/ui/MenuSelect";
+import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import { downloadTextFile } from "@/lib/ui/download";
-import Menu from "@mui/material/Menu";
-import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { useState } from "react";
 
 // Client-only export UI. Pure table/panel helpers live in research-results-model.tsx
-// so consumers that only format data do not pull the MUI menu chain in.
+// so consumers that only format data do not pull the interactive menu chain in.
 
 export type ResearchExportFormat = "csv" | "json";
 
@@ -94,10 +96,8 @@ export function ResearchExportMenu({
         anchorEl={anchorEl}
         onClose={() => setAnchorEl(null)}
         open={Boolean(anchorEl)}
-        slotProps={{
-          list: { "aria-label": "Export results", dense: true, sx: { padding: 0 } },
-          paper: { sx: menuSelectPaperSx },
-        }}
+        listProps={{ "aria-label": "Export results", style: { padding: 0 } }}
+        contentProps={{ style: menuSelectPaperStyle }}
       >
         <MenuSelectOptionItem
           current={false}

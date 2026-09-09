@@ -1,6 +1,6 @@
-import { Card } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
-import { RocketLaunchIcon as RocketLaunch } from "@phosphor-icons/react/dist/ssr";
+import { RocketLaunchIcon as RocketLaunch } from "@phosphor-icons/react/dist/ssr/RocketLaunch";
 import { GhostKpiRow } from "./GhostKpiRow";
 import type { GettingStartedCapabilities, GettingStartedProgress } from "./getting-started";
 import type { AddKeywordsAction, OnboardingCardProps } from "./OnboardingCard";

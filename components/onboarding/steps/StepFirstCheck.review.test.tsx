@@ -32,9 +32,9 @@ describe("StepFirstCheck", () => {
       keywordDraft: "rank tracker\nseo api",
     });
 
-    expect(screen.getByText("Review")).toBeInTheDocument();
+    expect(screen.getByText("First check")).toBeInTheDocument();
     expect(
-      screen.getByText("Everything's ready. Your first check runs daily."),
+      screen.getByText("Your daily schedule is set. You can also run a sample check now."),
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText("Tracking: 3 keywords · Google · United States (English) · 2 devices"),
@@ -43,7 +43,7 @@ describe("StepFirstCheck", () => {
     expect(screen.getByLabelText(/Data source: DataForSEO/)).toBeVisible();
     expect(screen.queryByText(/Sample keyword/i)).toBeNull();
     expect(screen.queryByText("Project")).toBeNull();
-    expect(screen.queryByText("First check")).toBeNull();
+    expect(screen.queryByText("Review")).toBeNull();
     expect(screen.queryByRole("button", { name: "Keyword used for the sample checks" })).toBeNull();
     expect(screen.getByRole("button", { name: "Project timezone" })).toBeInTheDocument();
     for (const row of screen.getAllByLabelText(/^(Tracking|Schedule|Data source):/)) {
@@ -54,12 +54,14 @@ describe("StepFirstCheck", () => {
 
     const openAppButton = screen.getByRole("button", { name: "Open app" });
     const runSampleChecksButton = screen.getByRole("button", {
-      name: "Run a test check (1 keyword)",
+      name: "Run check",
     });
     expect(openAppButton.closest("footer")).toHaveClass("-mx-6", "px-6", "sm:-mx-7", "sm:px-7");
-    expect(openAppButton).toHaveClass("MuiButton-text", "MuiButton-sizeLarge");
+    expect(openAppButton).toHaveAttribute("data-variant", "ghost");
+    expect(openAppButton).toHaveAttribute("data-size", "lg");
     expect(openAppButton).toHaveAttribute("type", "submit");
-    expect(runSampleChecksButton).toHaveClass("MuiButton-contained", "MuiButton-sizeLarge");
+    expect(runSampleChecksButton).toHaveAttribute("data-variant", "primary");
+    expect(runSampleChecksButton).toHaveAttribute("data-size", "lg");
     expect(runSampleChecksButton).toHaveAttribute("type", "button");
   });
 
@@ -146,14 +148,15 @@ describe("StepFirstCheck", () => {
       "aria-expanded",
       "false",
     );
-    expect(screen.queryByRole("button", { name: "Run a test check (1 keyword)" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Run check" })).toBeNull();
     const openAppButton = screen.getByRole("button", { name: "Open app" });
-    expect(openAppButton).toHaveClass("MuiButton-contained", "MuiButton-sizeLarge");
+    expect(openAppButton).toHaveAttribute("data-variant", "primary");
+    expect(openAppButton).toHaveAttribute("data-size", "lg");
     expect(openAppButton).toHaveAttribute("type", "submit");
     expect(
       screen
         .getAllByRole("button")
-        .filter((button) => button.classList.contains("MuiButton-contained")),
+        .filter((button) => button.getAttribute("data-variant") === "primary"),
     ).toHaveLength(1);
     expect(
       screen.getByText(
@@ -179,7 +182,7 @@ describe("StepFirstCheck", () => {
       "false",
     );
     expect(screen.queryByRole("button", { name: /Show observed positions/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Run a test check (1 keyword)" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Run check" })).toBeNull();
   });
 
   it("allows manual preview while automatic checks are paused", () => {
@@ -195,7 +198,7 @@ describe("StepFirstCheck", () => {
       },
     });
 
-    expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "Run check" })).not.toBeDisabled();
     expect(screen.getByLabelText("Schedule: Paused - no checks are scheduled")).toBeVisible();
     expect(
       screen.getByText("Everything's ready. Checks are paused until you resume the schedule."),
@@ -220,7 +223,7 @@ describe("StepFirstCheck", () => {
       providerConnected: true,
     });
 
-    expect(screen.getByRole("button", { name: "Run a test check (1 keyword)" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Run check" })).toBeDisabled();
     expect(
       screen.getByText("Sample projects keep their synthetic ranking history."),
     ).toBeInTheDocument();

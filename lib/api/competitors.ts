@@ -1,10 +1,10 @@
 import "server-only";
 
-import { addManagedCompetitor, removeManagedCompetitor } from "@/lib/actions/competitors";
+import { addManagedCompetitorFor, removeManagedCompetitorFor } from "@/lib/competitors/service";
 import type { CompetitorObservation } from "@/lib/competitors/types";
 import { addManagedCompetitorSchema, removeManagedCompetitorSchema } from "@/lib/competitors/types";
-import { getCompetitorsApiView } from "@/lib/queries/competitors";
-import type { ApiContext } from "./context";
+import { getCompetitorsApiViewFor } from "@/lib/queries/competitors";
+import { type ApiContext, apiMutationContext, requireApiActor } from "./context";
 import { paginateArray } from "./pagination";
 import { listResponse, resourceResponse } from "./responses";
 import {
@@ -31,7 +31,7 @@ export async function listProjectCompetitors(ctx: ApiContext, projectId: string)
   const scoped = scopedProject(ctx, projectId);
   if (scoped) return scoped;
 
-  const view = await runDomain(() => getCompetitorsApiView(projectId));
+  const view = await runDomain(() => getCompetitorsApiViewFor(requireApiActor(ctx), projectId));
   const { nextCursor, page } = paginateArray(ctx.url, view.managedCompetitors);
 
   return listResponse(page.map(snakeizeKeys), nextCursor, {
@@ -58,7 +58,7 @@ export async function addProjectCompetitor(ctx: ApiContext, projectId: string) {
     ...objectBody(body),
     project_id: projectId,
   });
-  const competitor = await runDomain(() => addManagedCompetitor(input));
+  const competitor = await runDomain(() => addManagedCompetitorFor(input, apiMutationContext(ctx)));
 
   return resourceResponse(snakeizeKeys(competitor), { headers: ctx.headers, status: 201 });
 }
@@ -75,9 +75,9 @@ export async function removeProjectCompetitor(
 
   const input = parseApiInput(removeManagedCompetitorSchema, {
     competitor_id: competitorId,
-    project_id: projectId ?? ctx.auth.project.id,
+    project_id: projectId ?? ctx.auth.project.publicId,
   });
-  const result = await runDomain(() => removeManagedCompetitor(input));
+  const result = await runDomain(() => removeManagedCompetitorFor(input, apiMutationContext(ctx)));
 
   return resourceResponse(snakeizeKeys(result), { headers: ctx.headers });
 }

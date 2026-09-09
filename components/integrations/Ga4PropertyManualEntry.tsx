@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, ExternalLink, inputClassName } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { ExternalLink } from "@/components/ui/ExternalLink";
+import { inputClassName } from "@/components/ui/input-styles";
 import { normalizeGa4PropertyId } from "@/lib/providers/analytics/property-id";
 
 type Ga4PropertyManualEntryProps = {

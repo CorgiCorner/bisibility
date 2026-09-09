@@ -3,7 +3,7 @@
 import { CheckRunsSection } from "@/components/checks/runs/CheckRunsSection";
 import { BudgetForecastNote } from "@/components/checks/upcoming/BudgetForecastNote";
 import { UpcomingSection } from "@/components/checks/upcoming/UpcomingSection";
-import { Card } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
 import { loadCheckRuns } from "@/lib/actions/checks";
 import type {
   CheckRange,

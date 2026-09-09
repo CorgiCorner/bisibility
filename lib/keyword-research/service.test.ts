@@ -194,7 +194,7 @@ describe("keyword research service", () => {
     expect(mocks.paidCall).not.toHaveBeenCalled();
   });
 
-  it("does not annotate the same tracked text from another market pair", async () => {
+  it("does not annotate the same tracked text from another country-language pair", async () => {
     mocks.project.mockResolvedValue({
       ...project,
       keywords: [{ locationRef: { canonicalKey: "GB" }, text: "tracked keyword" }],
@@ -228,7 +228,7 @@ describe("keyword research service", () => {
           countryCode: "GB",
           languageCode: "en",
           location: "GB",
-          normalizedText: "other market",
+          normalizedText: "other scope",
         },
       ],
     });
@@ -238,14 +238,14 @@ describe("keyword research service", () => {
       value: {
         costCents: 1,
         fetchedAt: "2026-07-22T10:00:00.000Z",
-        rows: [row("Saved   Keyword"), row("Other Market")],
+        rows: [row("Saved   Keyword"), row("Other Scope")],
       },
     });
 
     await expect(run({ mode: "ideas" })).resolves.toMatchObject({
       rows: [
         { alreadySaved: true, keyword: "Saved   Keyword" },
-        { alreadySaved: false, keyword: "Other Market" },
+        { alreadySaved: false, keyword: "Other Scope" },
       ],
     });
   });

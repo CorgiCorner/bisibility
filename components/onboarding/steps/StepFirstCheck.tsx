@@ -2,9 +2,9 @@
 import { buildOnboardingStepHref } from "@/components/onboarding/onboarding-fixtures";
 import { displayProvider, onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
 import { locationValuesForKeys } from "@/components/onboarding/onboarding-location-field";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
-import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useRef, useState } from "react";
 import { FirstCheckErrors } from "./FirstCheckErrors";
 import { FirstCheckQueueMessage } from "./FirstCheckQueueMessage";
@@ -52,6 +52,7 @@ export function StepFirstCheck({
   keywordDraft,
   initialConnections,
   initialKeywordText,
+  initialFirstCheckCandidates,
   listFirstCheckCandidatesAction,
   nextCheckAt,
   onBack,
@@ -95,13 +96,18 @@ export function StepFirstCheck({
     navigationProjectId,
     saveMarketsAction,
   });
-  const { retryFailed, start, state } = useFirstCheckRun({
-    listFirstCheckCandidatesAction,
-    runFirstCheckPreviewAction,
-  });
+  const { retryFailed, start, state } = useFirstCheckRun(
+    {
+      listFirstCheckCandidatesAction,
+      runFirstCheckPreviewAction,
+    },
+    initialFirstCheckCandidates?.filter((candidate) => candidate.text === sampleKeyword),
+    projectId,
+  );
   const canPreview = providerReady || sampleProject;
   const previewDisabled =
     state.status === "running" ||
+    state.status === "queued" ||
     !hasProject ||
     keywordCount === 0 ||
     sampleProject ||
@@ -169,7 +175,7 @@ export function StepFirstCheck({
       onClick={onBack}
       size="lg"
       startIcon={<ArrowLeft aria-hidden size={15} weight="regular" />}
-      sx={{ color: "var(--fg-muted)" }}
+      style={{ "--control-color": "var(--fg-muted)" }}
       type="button"
       variant="secondary"
     >
@@ -180,24 +186,27 @@ export function StepFirstCheck({
       href={buildOnboardingStepHref(3, flowState)}
       size="lg"
       startIcon={<ArrowLeft aria-hidden size={15} weight="regular" />}
-      sx={{ color: "var(--fg-muted)" }}
+      style={{ "--control-color": "var(--fg-muted)" }}
       variant="secondary"
     >
       Back
     </Button>
   );
 
-  const reviewDescription = !providerReady
-    ? "Almost ready. Everything is set - connect a data provider whenever you want to run checks."
-    : defaults?.frequency === "manual"
-      ? "Everything's ready. Run your first check whenever you like - nothing runs until you start it."
-      : defaults?.frequency === "paused"
-        ? "Everything's ready. Checks are paused until you resume the schedule."
-        : `Everything's ready. Your first check runs ${frequencyLabel.toLowerCase()}.`;
+  const reviewDescription =
+    state.status === "completed"
+      ? "Your first results are ready."
+      : !providerReady
+        ? "Almost ready. Everything is set - connect a data provider whenever you want to run checks."
+        : defaults?.frequency === "manual"
+          ? "Everything's ready. Run your first check whenever you like - nothing runs until you start it."
+          : defaults?.frequency === "paused"
+            ? "Everything's ready. Checks are paused until you resume the schedule."
+            : `Your ${frequencyLabel.toLowerCase()} schedule is set. You can also run a sample check now.`;
 
   return (
     <form id={onboardingFormId} onSubmit={onSubmit}>
-      <div className="text-lg font-semibold tracking-[-0.4px]">Review</div>
+      <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">First check</h2>
       <div className="mt-1 text-[13px] text-fg-muted">{reviewDescription}</div>
 
       <StepFirstCheckReview

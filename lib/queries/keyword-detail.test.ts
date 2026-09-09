@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   fetchProjectKeywordMetrics: vi.fn(),
   fetchProjectKeywordTraffic: vi.fn(),
   getKeywordTraffic: vi.fn(),
+  resolveExpectedUrlForKeyword: vi.fn(),
   prisma: {
     keyword: { findFirst: vi.fn(), findMany: vi.fn() },
     rankCheck: { aggregate: vi.fn() },
@@ -25,6 +26,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/expected-url/keyword", () => ({
+  resolveExpectedUrlForKeyword: mocks.resolveExpectedUrlForKeyword,
+}));
 vi.mock("./_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
 }));
@@ -41,6 +45,7 @@ const rankCheckSelect = {
   checkedAt: true,
   degradedToCountry: true,
   errorCode: true,
+  expectedUrlAtCheck: true,
   id: true,
   normalizationVersion: true,
   position: true,
@@ -115,6 +120,7 @@ describe("keyword detail query", () => {
     mocks.requireReadableProject.mockResolvedValue({ project: mocks.project });
     mocks.prisma.keyword.findFirst.mockResolvedValue(null);
     mocks.prisma.keyword.findMany.mockResolvedValue([]);
+    mocks.resolveExpectedUrlForKeyword.mockResolvedValue({ source: null, url: null });
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({
       _min: { position: null },
     });

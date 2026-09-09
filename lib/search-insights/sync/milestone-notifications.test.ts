@@ -1,3 +1,4 @@
+import { isPublicIdOfType } from "@/lib/db/public-id";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -5,12 +6,15 @@ const mocks = vi.hoisted(() => ({
   findUnique: vi.fn(),
   observability: vi.fn(),
 }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    notification: { createMany: mocks.createMany },
-    searchAnalyticsImport: { findUnique: mocks.findUnique },
-  },
-}));
+vi.mock("@/lib/db/prisma", async () => {
+  const { withPublicIdWrites } = await import("@/lib/db/public-id-writes");
+  return {
+    prisma: withPublicIdWrites({
+      notification: { createMany: mocks.createMany },
+      searchAnalyticsImport: { findUnique: mocks.findUnique },
+    }),
+  };
+});
 vi.mock("@/lib/search-insights/queries/import-observability-db", () => ({
   readImportObservability: mocks.observability,
 }));
@@ -51,6 +55,9 @@ describe("deliverSearchImportMilestone", () => {
     const call = mocks.createMany.mock.calls[0][0];
     expect(call.skipDuplicates).toBe(true);
     expect(call.data).toHaveLength(2);
+    const ids = call.data.map((row: { publicId: string }) => row.publicId);
+    expect(ids.every((id: string) => isPublicIdOfType(id, "ntf"))).toBe(true);
+    expect(new Set(ids).size).toBe(2);
     expect(new Set(call.data.map((row: { userId: string }) => row.userId))).toEqual(
       new Set(["owner_1", "member_1"]),
     );

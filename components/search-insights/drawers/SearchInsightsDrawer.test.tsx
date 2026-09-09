@@ -1,8 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { storyQueryDetail } from "./drawer-story-fixtures";
 import { SearchInsightsDrawer, type SearchInsightsDrawerProps } from "./SearchInsightsDrawer";
+import { DrawerSliceRows } from "./SearchInsightsDrawerRows";
 
 function renderTrackedDrawer(overrides: Partial<SearchInsightsDrawerProps> = {}) {
   const props: SearchInsightsDrawerProps = {
@@ -87,5 +89,35 @@ describe("SearchInsightsDrawer title", () => {
     expect(
       within(drawer).queryByRole("link", { name: /^Search Google for / }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("SearchInsightsDrawer rows", () => {
+  it("opens a seen row from the keyboard while retaining its accent", async () => {
+    const onOpen = vi.fn();
+    render(
+      <DrawerSliceRows
+        label="Queries landing here"
+        rows={[
+          {
+            clicks: 44,
+            key: "query:rank tracking software",
+            label: "rank tracking software",
+            onOpen,
+            position: 4.2,
+            title: "rank tracking software",
+          },
+        ]}
+        seen={new Set(["query:rank tracking software"])}
+        textHeader="Query"
+      />,
+    );
+
+    const row = screen.getByText("rank tracking software").closest('[role="row"]');
+    expect(row).toHaveClass("!bg-bg-sunken");
+    (row as HTMLElement).focus();
+    await userEvent.keyboard("{Enter}");
+
+    expect(onOpen).toHaveBeenCalledTimes(1);
   });
 });

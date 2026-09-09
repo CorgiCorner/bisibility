@@ -7,6 +7,7 @@ import {
 } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
+import { resolveExpectedUrlForKeyword } from "@/lib/expected-url/keyword";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { presenceUrl } from "@/lib/presence/url";
 import { requireReadableProject } from "@/lib/queries/_auth";
@@ -40,7 +41,7 @@ export type {
 
 import { trackedProjectDomain } from "@/lib/schemas/project";
 
-export const KEYWORD_LIST_MAX = 1000;
+const KEYWORD_ROW_QUERY_LIMIT = 1000;
 const LIST_CHECK_HISTORY = 12;
 // Counts newest attempts, including failed checks.
 // Bounds position chart, ranking-URL history, and CSV export.
@@ -56,6 +57,7 @@ const rankCheckSelect = {
   checkedAt: true,
   degradedToCountry: true,
   errorCode: true,
+  expectedUrlAtCheck: true,
   id: true,
   normalizationVersion: true,
   position: true,
@@ -80,6 +82,7 @@ const scheduleSelect = {
   timezone: true,
 } as const;
 const checkScheduleSelect = {
+  serpDepth: true,
   name: true,
   publicId: true,
 } as const;
@@ -128,7 +131,7 @@ async function loadKeywords(projectId: string) {
       text: true,
       topic: true,
     },
-    take: KEYWORD_LIST_MAX,
+    take: KEYWORD_ROW_QUERY_LIMIT,
     where: { ...activeKeywordWhere, projectId },
   });
 }
@@ -186,7 +189,7 @@ export async function getKeywordRows(projectId: string): Promise<KeywordRow[]> {
   const [keywords, defaults, metricsMap, trafficMap] = await Promise.all([
     loadKeywords(project.id),
     getRequestProjectDefaults(project.id),
-    fetchProjectKeywordMetrics(project.id, KEYWORD_LIST_MAX),
+    fetchProjectKeywordMetrics(project.id, KEYWORD_ROW_QUERY_LIMIT),
     fetchProjectKeywordTraffic(project.id),
   ]);
   const meta = { defaults, domain: trackedProjectDomain(project.domain) ?? "" };
@@ -258,7 +261,7 @@ export async function getKeywordDetail(projectId: string, keywordId: string) {
   const comparablePredicate = currentComparableCheck
     ? whereComparableTo(currentComparableCheck)
     : null;
-  const [metrics, aggregate, traffic, urlPresence] = await Promise.all([
+  const [metrics, aggregate, traffic, urlPresence, expectedUrlResolution] = await Promise.all([
     fetchKeywordMetrics(record.id, DETAIL_CHECK_HISTORY),
     comparablePredicate
       ? prisma.rankCheck.aggregate({
@@ -280,9 +283,10 @@ export async function getKeywordDetail(projectId: string, keywordId: string) {
           where: { projectId_url: { projectId: project.id, url } },
         })
       : Promise.resolve(null),
+    resolveExpectedUrlForKeyword(record.id),
   ]);
   const row = mapKeyword(
-    { ...record, urlPresence },
+    { ...record, expectedUrlResolution, urlPresence },
     {
       defaults: record.project.defaults,
       domain: trackedProjectDomain(record.project.domain) ?? "",

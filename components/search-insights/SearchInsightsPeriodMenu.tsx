@@ -1,19 +1,16 @@
 "use client";
 
-import { Button, Tooltip } from "@/components/ui";
-import { track } from "@/lib/analytics/client";
+import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { DateFormat } from "@/lib/dates/format";
 import type { FinalizedWindow } from "@/lib/search-insights/dates";
 import type { SearchInsightsContext } from "@/lib/search-insights/queries/context";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { cn } from "@/lib/ui/cn";
-import {
-  CalendarBlankIcon as CalendarBlank,
-  CaretDownIcon as CaretDown,
-  CheckIcon as Check,
-} from "@phosphor-icons/react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { useState } from "react";
 import { SearchInsightsMenu, SearchInsightsMenuOption } from "./SearchInsightsMenu";
 import { PERIOD_MENU_LABEL } from "./search-insights-copy";
 import {
@@ -26,6 +23,8 @@ import {
 type PeriodMenuProps = {
   dateFormat?: DateFormat;
   importFacts?: ImportObservabilityFacts | null;
+  onPeriodChange: (id: string) => void;
+  pending?: boolean;
   period: SearchInsightsContext["period"];
   window?: FinalizedWindow | null;
 };
@@ -33,26 +32,18 @@ type PeriodMenuProps = {
 export function SearchInsightsPeriodMenu({
   dateFormat = "month_first",
   importFacts,
+  onPeriodChange,
+  pending = false,
   period,
   window = null,
 }: Readonly<PeriodMenuProps>) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [pending, startTransition] = useTransition();
   const options = periodOptions(importFacts, window?.current.end ?? null, period, dateFormat);
 
-  // The window lives in the URL so the server render owns it and a shared link keeps it.
   function pick(id: string) {
     setAnchorEl(null);
     if (id === period.id || pending) return;
-    const next = new URLSearchParams(searchParams);
-    next.set("period", id);
-    startTransition(() => {
-      track("search_insights_period_changed", { window: id });
-      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
-    });
+    onPeriodChange(id);
   }
 
   const trigger = (
@@ -60,15 +51,7 @@ export function SearchInsightsPeriodMenu({
       aria-expanded={Boolean(anchorEl)}
       aria-haspopup="listbox"
       aria-label={periodTriggerName(period, window, dateFormat)}
-      loading={pending}
-      loadingIndicator={
-        <CalendarBlank
-          weight="regular"
-          aria-hidden
-          className="animate-spin text-fg-muted"
-          size={15}
-        />
-      }
+      disabled={pending}
       onClick={(event) => setAnchorEl(event.currentTarget)}
       size="sm"
       startIcon={<CalendarBlank weight="regular" aria-hidden className="text-fg-muted" size={15} />}

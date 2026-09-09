@@ -13,9 +13,31 @@ describe("StepAddKeywords schedule summary", () => {
 
     expect(screen.getByRole("button", { name: "Devices" })).toHaveTextContent("Mobile");
     expect(screen.getByRole("button", { name: "Frequency" })).toHaveTextContent("Manual");
+    expect(
+      screen.queryByText(/result pages? per run|result pages\/month|Manual checks/),
+    ).not.toBeInTheDocument();
+    fireEvent.change(keywordBox(), { target: { value: "rank tracker" } });
+    expect(screen.getByText("Up to 2 result pages per run · 1 market")).toBeVisible();
+    expect(screen.getByText("Manual checks at Top 20")).toBeVisible();
+    fireEvent.change(keywordBox(), { target: { value: "" } });
+    expect(
+      screen.queryByText(/result pages? per run|result pages\/month|Manual checks/),
+    ).not.toBeInTheDocument();
   });
 
-  it("warns near the keyword limit and projects daily checks", () => {
+  it("budgets two pages per daily Top 20 check and 60 pages per month", () => {
+    render(
+      <StepAddKeywords
+        flowState={{ projectId: "prj_1", providerId: "serpapi" }}
+        trackingDefaults={{ frequency: "daily" } as OnboardingTrackingDefaultsInput}
+      />,
+    );
+    fireEvent.change(keywordBox(), { target: { value: "rank tracker" } });
+    expect(screen.getByText("Up to 2 result pages per run · 1 market")).toBeVisible();
+    expect(screen.getByText("≈ 60 result pages/month at Top 20")).toBeVisible();
+  });
+
+  it("warns near the keyword limit and projects daily result pages", () => {
     render(
       <StepAddKeywords
         flowState={{ devices: ["desktop", "mobile"], locations: ["US", "PL"], projectId: "prj_1" }}
@@ -26,13 +48,11 @@ describe("StepAddKeywords schedule summary", () => {
       target: { value: Array.from({ length: 450 }, (_, index) => `keyword ${index}`).join("\n") },
     });
     expect(screen.getByText("approaching the 500-keyword import limit")).toBeInTheDocument();
-    expect(
-      screen.getByText("450 keywords × 2 devices × 2 locations = 1800 checks"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("≈ 54000 checks/month at Top 20")).toBeInTheDocument();
+    expect(screen.getByText("Up to 3600 result pages per run · 2 markets")).toBeInTheDocument();
+    expect(screen.getByText("≈ 108000 result pages/month at Top 20")).toBeInTheDocument();
   });
 
-  it("projects weekly checks from the tracking draft", () => {
+  it("projects weekly result pages from the tracking draft", () => {
     render(
       <StepAddKeywords
         flowState={{ projectId: "prj_1", providerId: "serpapi" }}
@@ -40,7 +60,7 @@ describe("StepAddKeywords schedule summary", () => {
       />,
     );
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
-    expect(screen.getByText("≈ 8 checks/month at Top 20")).toBeInTheDocument();
+    expect(screen.getByText("≈ 16 result pages/month at Top 20")).toBeInTheDocument();
   });
 
   it("places usage after defaults and updates it from frequency, devices, and depth", async () => {
@@ -48,18 +68,18 @@ describe("StepAddKeywords schedule summary", () => {
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
 
     const defaultsHeading = screen.getByRole("heading", { name: "Tracking defaults" });
-    const initialEstimate = screen.getByText("≈ 0 checks/month at Top 20");
+    const initialEstimate = screen.getByText("Manual checks at Top 20");
     expect(
       defaultsHeading.compareDocumentPosition(initialEstimate) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
     fireEvent.click(screen.getByRole("button", { name: "Frequency" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Monthly" }));
-    expect(screen.getByText("≈ 2 checks/month at Top 20")).toBeInTheDocument();
+    expect(screen.getByText("≈ 4 result pages/month at Top 20")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Devices" }));
     fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Desktop" }));
-    expect(screen.getByText("≈ 4 checks/month at Top 20")).toBeInTheDocument();
+    expect(screen.getByText("≈ 8 result pages/month at Top 20")).toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole("menu", { name: "Devices" }), { key: "Escape" });
     await waitFor(() =>
       expect(screen.queryByRole("menu", { name: "Devices" })).not.toBeInTheDocument(),
@@ -67,8 +87,12 @@ describe("StepAddKeywords schedule summary", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "SERP depth" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 10" }));
-    expect(screen.getByText("≈ 4 checks/month at Top 10")).toBeInTheDocument();
-    expect(screen.getByText(/Top 10 checks do not update Visibility/)).toBeInTheDocument();
+    expect(screen.getByText("Up to 4 result pages per run · 1 market")).toBeVisible();
+    expect(screen.getByText("≈ 4 result pages/month at Top 10")).toBeInTheDocument();
+    expect(screen.queryByText(/Top 10 checks do not update Visibility/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Choose Top 20 or deeper to update Visibility/ }),
+    ).toBeInTheDocument();
   });
 
   it("excludes an unparseable custom cron schedule instead of pricing it at zero", () => {
@@ -119,6 +143,9 @@ describe("StepAddKeywords schedule summary", () => {
 
     await waitFor(() => expect(screen.getByRole("region", { name: "Markets" })).toHaveFocus());
     expect(onComplete).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText(/result pages? per run|result pages\/month|Manual checks/),
+    ).not.toBeInTheDocument();
   });
 
   it("saves tracking defaults with keywords and keeps language inside market chips", async () => {
@@ -165,3 +192,5 @@ describe("StepAddKeywords schedule summary", () => {
 });
 
 import { onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
+
+vi.mock("@/components/cost-estimate/useCostEstimate", () => import("@/tests/cost-estimate"));

@@ -1,14 +1,12 @@
 "use client";
 
-import { ZonedTime } from "@/components/ui";
+import { DialogSurface as Drawer } from "@/components/ui/DialogSurface";
+import { ZonedTime } from "@/components/ui/ZonedTime";
 import type { UpcomingBlockedGroup, UpcomingDayGroup } from "@/lib/checks/contract";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Drawer from "@mui/material/Drawer";
-import {
-  CaretRightIcon as CaretRight,
-  WarningCircleIcon as WarningCircle,
-  XIcon as X,
-} from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import Link from "next/link";
 import { useId, useState } from "react";
 import {
@@ -75,29 +73,27 @@ export function UpcomingStrip({
       </section>
 
       <Drawer
-        anchor="bottom"
+        side="bottom"
         onClose={() => setOpenDayKey(null)}
         open={openDay !== null}
-        slotProps={{
-          backdrop: {
-            "aria-label": "Close upcoming details",
-            sx: { backgroundColor: "rgba(20,16,8,.42)" },
-          },
-          paper: {
-            "aria-labelledby": titleId,
-            "aria-modal": "true",
-            role: "dialog",
-            sx: {
-              backgroundColor: "var(--bg-elev)",
-              borderColor: "var(--border)",
-              borderRadius: `${UI_RADIUS_ROLES.card} ${UI_RADIUS_ROLES.card} 0 0`,
-              borderTop: "1px solid var(--border)",
-              boxShadow: "none",
-              color: "var(--fg)",
-              height: "min(76vh, 420px)",
-              maxHeight: "76vh",
-              overflow: "hidden",
-            },
+        backdropProps={{
+          "aria-label": "Close upcoming details",
+          style: { backgroundColor: "rgba(20,16,8,.42)" },
+        }}
+        contentProps={{
+          "aria-labelledby": titleId,
+          "aria-modal": "true",
+          role: "dialog",
+          style: {
+            backgroundColor: "var(--bg-elev)",
+            borderColor: "var(--border)",
+            borderRadius: `${UI_RADIUS_ROLES.card} ${UI_RADIUS_ROLES.card} 0 0`,
+            borderTop: "1px solid var(--border)",
+            boxShadow: "none",
+            color: "var(--fg)",
+            height: "min(76vh, 420px)",
+            maxHeight: "76vh",
+            overflow: "hidden",
           },
         }}
       >

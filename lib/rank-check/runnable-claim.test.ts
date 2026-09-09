@@ -1,5 +1,5 @@
 import { PGlite } from "@electric-sql/pglite";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { claimDueRankCheckItems } from "./items-claim";
 
 const mocks = vi.hoisted(() => ({
@@ -123,17 +123,20 @@ function cancellation(itemId: string) {
 }
 
 describe("claiming due rank-check items honours the runnable predicate", () => {
+  beforeAll(() => {
+    db = new PGlite();
+  });
+
   beforeEach(async () => {
     vi.clearAllMocks();
     itemUpdates = [];
     runUpdates = [];
-    db = new PGlite();
+    // Reuse the engine while rebuilding all schema and fixture state per test.
+    await db.exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
     await db.exec(FIXTURE);
   });
 
-  afterEach(async () => {
-    await db.close();
-  });
+  afterAll(() => db.close());
 
   it("claims only the active market's live row", async () => {
     const result = await claimDueRankCheckItems({ now }, claimDatabase() as never);

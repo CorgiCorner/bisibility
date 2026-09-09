@@ -1,10 +1,11 @@
 "use client";
 
-import { MenuSelectOptionItem, menuSelectPaperSx } from "@/components/ui";
-import Button from "@mui/material/Button";
-import ButtonGroup from "@mui/material/ButtonGroup";
-import Menu from "@mui/material/Menu";
-import { CaretDownIcon as CaretDown } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { ButtonGroup } from "@/components/ui/ButtonGroup";
+import { Menu } from "@/components/ui/Menu";
+import { menuSelectPaperStyle } from "@/components/ui/MenuSelect";
+import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { useId, useState } from "react";
 
 export type KeywordDetailCheckDepthOption = {
@@ -24,16 +25,14 @@ export type KeywordDetailCheckSplitButtonProps = {
   trackingDepthLabel: string;
 };
 
-const actionSx = {
-  backgroundColor: "var(--accent-solid)",
-  borderColor: "var(--accent-solid)",
-  color: "var(--accent-on-solid)",
+const actionStyle = {
+  "--control-background-color": "var(--accent-solid)",
+  "--control-border-color": "var(--accent-solid)",
+  "--control-color": "var(--accent-on-solid)",
   minHeight: 40,
   textTransform: "none",
-  "&:hover": {
-    backgroundColor: "var(--accent-solid-hover)",
-    borderColor: "var(--accent-solid-hover)",
-  },
+  "--control-hover-background-color": "var(--accent-solid-hover)",
+  "--control-hover-border-color": "var(--accent-solid-hover)",
 } as const;
 
 export function KeywordDetailCheckSplitButton({
@@ -56,8 +55,8 @@ export function KeywordDetailCheckSplitButton({
 
   return (
     <>
-      <ButtonGroup aria-label={actionLabel} variant="contained">
-        <Button disabled={disabled} onClick={onAction} sx={actionSx} type="button">
+      <ButtonGroup aria-label={actionLabel}>
+        <Button disabled={disabled} onClick={onAction} style={actionStyle} type="button">
           {actionLabel}
         </Button>
         <Button
@@ -67,7 +66,7 @@ export function KeywordDetailCheckSplitButton({
           aria-label={caretAriaLabel}
           disabled={disabled}
           onClick={(event) => setAnchorEl(event.currentTarget)}
-          sx={{ ...actionSx, minWidth: 40, paddingX: 0.75 }}
+          style={{ ...actionStyle, minWidth: 40, paddingLeft: 6, paddingRight: 6 }}
           type="button"
         >
           <CaretDown aria-hidden size={13} weight="regular" />
@@ -78,10 +77,8 @@ export function KeywordDetailCheckSplitButton({
         id={menuId}
         onClose={closeMenu}
         open={open}
-        slotProps={{
-          list: { "aria-label": "Check depth", dense: true, sx: { padding: 0 } },
-          paper: { sx: menuSelectPaperSx },
-        }}
+        listProps={{ "aria-label": "Check depth", style: { padding: 0 } }}
+        contentProps={{ style: menuSelectPaperStyle }}
       >
         <div className="px-3 pb-1 pt-2 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
           Check depth

@@ -1,18 +1,19 @@
-import { Button, Card, InfoTooltip } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { IdChip } from "@/components/ui/IdChip";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { API_KEY_EXPIRY_DAYS } from "@/lib/api/api-key-policy";
 import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
 import {
   OAUTH_ACCESS_TOKEN_TTL_LABEL,
   OAUTH_REFRESH_TOKEN_TTL_LABEL,
 } from "@/lib/auth/oauth-policy";
-import {
-  ArrowUDownLeftIcon as ArrowUDownLeft,
-  CaretRightIcon as CaretRight,
-  ClockIcon as Clock,
-  HourglassIcon as Hourglass,
-  KeyIcon as Key,
-  ShieldCheckIcon as ShieldCheck,
-} from "@phosphor-icons/react";
+import { ArrowUDownLeftIcon as ArrowUDownLeft } from "@phosphor-icons/react/dist/csr/ArrowUDownLeft";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { ClockIcon as Clock } from "@phosphor-icons/react/dist/csr/Clock";
+import { HourglassIcon as Hourglass } from "@phosphor-icons/react/dist/csr/Hourglass";
+import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
+import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/csr/ShieldCheck";
 import { OAuthConsentScopes } from "./OAuthConsentScopes";
 import { formatOAuthConsentCountdown } from "./useOAuthConsentCountdown";
 
@@ -42,7 +43,11 @@ function ClientBox({ client }: Readonly<{ client: OAuthConsentClient }>) {
       </div>
       <p className="mt-1.5 mb-0 text-[13px] font-semibold text-fg">{client.name}</p>
       <p className="mt-0.5 mb-0 break-all text-[11.5px] font-semibold text-fg-muted">
-        {client.id || "Unknown client"}
+        {client.id ? (
+          <IdChip copyLabel="Copy client ID" size="xs" value={client.id} />
+        ) : (
+          "Unknown client"
+        )}
       </p>
       {client.redirectUri ? (
         <p className="mt-1.5 mb-0 flex items-start gap-2 break-all text-[10.5px] text-fg-muted">

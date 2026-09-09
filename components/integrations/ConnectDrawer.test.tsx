@@ -274,7 +274,7 @@ describe("ConnectDrawer", () => {
 
     const testingButton = await screen.findByRole("button", { name: "Testing…" });
     expect(testingButton).toHaveAttribute("aria-busy", "true");
-    expect(testingButton.querySelector(".MuiCircularProgress-root")).toBeInTheDocument();
+    expect(testingButton.querySelector("[data-spinner]")).toBeInTheDocument();
 
     finishTest?.({ message: "ok", ok: true });
     expect(await screen.findByRole("button", { name: "Verified" })).toBeInTheDocument();

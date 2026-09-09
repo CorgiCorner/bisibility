@@ -4,11 +4,9 @@ import {
   FirstCheckRunModal,
   type FirstCheckRunScope,
 } from "@/components/rank-check/FirstCheckRunModal";
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
 import type { FirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import { asProjectRef, type ProjectRef } from "@/lib/routing/app-path";

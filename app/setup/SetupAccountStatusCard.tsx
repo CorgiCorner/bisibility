@@ -1,5 +1,6 @@
-import { Button, Card } from "@/components/ui";
-import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/ssr";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/ssr/ShieldCheck";
 import Link from "next/link";
 import type { ReactNode } from "react";
 

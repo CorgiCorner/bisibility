@@ -1,5 +1,6 @@
 import "server-only";
 
+import { readOnlyDemoConfig } from "@/lib/demo/config";
 import { notifyOps } from "@/lib/ops/notify";
 import { reserveEmailDailyBudget } from "./budget";
 import { requireEmailFrom } from "./from";
@@ -35,6 +36,7 @@ export async function sendEmail({
   text,
   sendCounterReserved = false,
 }: SendEmailInput) {
+  if (readOnlyDemoConfig()) throw new Error("Email delivery is disabled in the demo.");
   const provider = resolveEmailProvider();
 
   if (!provider) {

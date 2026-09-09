@@ -1,5 +1,6 @@
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
@@ -48,7 +49,7 @@ const actions = {
 const baseArgs: PreflightDialogProps = {
   ...actions,
   budgetHref: "/app/prj_story/settings#provider-usage",
-  duplicateRunHref: "/app/prj_story/rank-tracker/runs/rcr_story",
+  duplicateRunHref: projectRunsPath("prj_story"),
   initialDepth: 20,
   initialPreview: defaultPreview,
   initialProviderId: "provider-dataforseo",

@@ -11,7 +11,7 @@ import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import type { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
-import { resolveEffectiveSerpDepth } from "@/lib/serp/markets";
+import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
 import { ACTIVE_RUN_STATUSES } from "./contract";
 import { LaunchRankCheckRunError, type LaunchRankCheckRunInput } from "./launch-types";
 import type { RunSelectionKeyword } from "./selection";
@@ -37,6 +37,7 @@ export function estimateRunRows(
     const depth = resolveEffectiveSerpDepth({
       projectDepth,
       requestedDepth: input.depth,
+      checkScheduleDepth: row.checkSchedule?.serpDepth,
       scheduleDepth: row.schedule?.serpDepth,
     });
     return {

@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   exportSearchInsightsCsv,
   loadSearchInsightsProperties,
+  pauseSearchInsightsImport,
+  retrySearchInsightsImport,
   selectSearchInsightsProperty,
   syncSearchInsightsNow,
 } from "./search-insights";
@@ -17,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   requireScope: vi.fn(),
   revalidatePath: vi.fn(),
   saveProperty: vi.fn(),
+  transitionImport: vi.fn(),
   transaction: vi.fn(),
   updateRegistry: vi.fn(),
   upsertRegistry: vi.fn(),
@@ -39,6 +42,9 @@ vi.mock("@/lib/search-insights/queries/query-export", () => ({
 vi.mock("@/lib/search-insights/sync/sync-now", () => ({
   requestSearchInsightsSync: mocks.requestSync,
 }));
+vi.mock("@/lib/search-insights/sync/user-pause-control", () => ({
+  transitionExactSearchImport: mocks.transitionImport,
+}));
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
   unstable_cache: (read: () => unknown) => read,
@@ -57,6 +63,7 @@ describe("search insights actions", () => {
     mocks.saveProperty.mockResolvedValue({ property: "sc-domain:example.com", status: "saved" });
     mocks.requestSync.mockResolvedValue({ status: "unavailable" });
     mocks.findArchived.mockResolvedValue([]);
+    mocks.transitionImport.mockResolvedValue({ changed: true, state: "paused" });
     mocks.transaction.mockImplementation((callback) =>
       callback({
         searchInsightsPropertyRegistry: {
@@ -169,6 +176,65 @@ describe("search insights actions", () => {
     });
 
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/search-console", "page");
+  });
+
+  it("authorizes and forwards only the frozen import target before invalidating its views", async () => {
+    await expect(
+      pauseSearchInsightsImport({
+        importId: "import_a",
+        projectId: "prj_1",
+        property: "sc-domain:example.com",
+        transition: "pause",
+      }),
+    ).resolves.toEqual({ ok: true, state: "paused" });
+
+    expect(mocks.requireScope).toHaveBeenCalledWith(mocks.actor, "update", "prj_1", {
+      type: "project",
+    });
+    expect(mocks.transitionImport).toHaveBeenCalledWith({
+      actorId: "user_1",
+      importId: "import_a",
+      projectId: "project_1",
+      property: "sc-domain:example.com",
+      transition: "pause",
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/search-console", "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app/[project]/runs", "page");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/api/operations");
+  });
+
+  it("rejects legacy and stale control input without selecting another active property", async () => {
+    await expect(
+      pauseSearchInsightsImport({ projectId: "prj_1", transition: "pause" }),
+    ).resolves.toMatchObject({ ok: false });
+    expect(mocks.transitionImport).not.toHaveBeenCalled();
+
+    mocks.transitionImport.mockResolvedValue({ changed: false, state: "unavailable" });
+    await expect(
+      retrySearchInsightsImport({
+        importId: "import_a",
+        projectId: "prj_1",
+        property: "sc-domain:example.com",
+        transition: "retry",
+      }),
+    ).resolves.toMatchObject({ ok: false });
+    expect(mocks.revalidatePath).not.toHaveBeenCalledWith("/app/[project]/runs", "page");
+  });
+
+  it("rejects an unauthorized exact control before the target transition", async () => {
+    mocks.requireScope.mockRejectedValue(new Error("forbidden"));
+
+    await expect(
+      pauseSearchInsightsImport({
+        importId: "import_a",
+        projectId: "prj_1",
+        property: "sc-domain:example.com",
+        transition: "pause",
+      }),
+    ).resolves.toMatchObject({ ok: false });
+
+    expect(mocks.transitionImport).not.toHaveBeenCalled();
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
   it("builds the export from the project reference and the requested window", async () => {

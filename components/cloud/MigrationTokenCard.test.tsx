@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
 import { MigrationTokenCard, type MigrationTokenStatus } from "./MigrationTokenCard";
 
-vi.mock("@/components/ui/Toast", () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+vi.mock("@/components/ui/toast-context", () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 
 const writeText = vi.fn();
 

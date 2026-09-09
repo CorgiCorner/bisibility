@@ -150,14 +150,20 @@ describe("AlertsPageContent optimistic rollback", () => {
           keyword: "rank tracker",
           location: "Warsaw, Poland",
           device: "mobile",
+          feedMeta: {
+            engine: "Google",
+            market: { id: "pmkt_warsaw", label: "Warsaw, Poland" },
+            severity: "urgent",
+            source: "RANK",
+          },
         },
       ],
     });
 
-    const meta = screen.getByText(/Google \/ Warsaw, Poland \/ Mobile \/ 5m ago/);
-    expect(meta).toBeInTheDocument();
-    expect(meta.textContent).not.toContain("US");
-    expect(meta.textContent).not.toContain("Desktop");
+    expect(screen.getByText("RANK")).toBeInTheDocument();
+    expect(screen.getByText("Warsaw, Poland")).toBeInTheDocument();
+    expect(screen.getByText("Mobile")).toBeInTheDocument();
+    expect(screen.queryByText("/", { exact: true })).toBeNull();
   });
 
   it("renders distinct meta lines for alerts with different keyword markets", () => {
@@ -169,6 +175,12 @@ describe("AlertsPageContent optimistic rollback", () => {
           keyword: "rank tracker",
           location: "Warsaw, Poland",
           device: "mobile",
+          feedMeta: {
+            engine: "Google",
+            market: { id: "pmkt_warsaw", label: "Warsaw, Poland" },
+            severity: "urgent",
+            source: "RANK",
+          },
         },
         {
           ...alerts[0],
@@ -176,14 +188,19 @@ describe("AlertsPageContent optimistic rollback", () => {
           keyword: "best CRM",
           location: "London, United Kingdom",
           device: "desktop",
+          feedMeta: {
+            engine: "Google",
+            market: { id: "pmkt_london", label: "London, United Kingdom" },
+            severity: "urgent",
+            source: "RANK",
+          },
         },
       ],
     });
 
-    expect(screen.getByText(/Google \/ Warsaw, Poland \/ Mobile \/ 5m ago/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/Google \/ London, United Kingdom \/ Desktop \/ 5m ago/),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Warsaw, Poland")).toBeInTheDocument();
+    expect(screen.getByText("London, United Kingdom")).toBeInTheDocument();
+    expect(screen.getByText("Desktop")).toBeInTheDocument();
   });
 
   it("renders the terminal delivery state and its affected channel", () => {

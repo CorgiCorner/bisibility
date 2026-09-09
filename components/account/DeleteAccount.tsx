@@ -1,9 +1,9 @@
 "use client";
 
-import { ConfirmModal } from "@/components/ui";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
-import { TrashIcon as Trash } from "@phosphor-icons/react";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useState } from "react";
 import { feedbackClass } from "./account-ui";
 

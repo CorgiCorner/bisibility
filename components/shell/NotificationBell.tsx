@@ -1,12 +1,12 @@
 import "@/lib/deployment/runtime-env.generated";
 
+import { NotificationBellClient } from "@/components/shell/NotificationBellClient";
 import {
   markAllNotificationsRead,
   markNotificationRead,
   refreshNotificationFeed,
 } from "@/lib/actions/notifications";
 import { getResolvedDateFormat } from "@/lib/dates/request";
-import { NotificationBellClient } from "@/lib/notifications/NotificationBellClient";
 import { getNotificationBellData, type NotificationFeed } from "@/lib/queries/notifications";
 
 export type NotificationBellProps = {

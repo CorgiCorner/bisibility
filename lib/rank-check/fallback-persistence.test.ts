@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
     auditLog: { create: vi.fn() },
     keyword: { findUnique: vi.fn() },
     keywordSchedule: { update: vi.fn() },
+    observationItem: { createMany: vi.fn() },
+    observationRun: { create: vi.fn().mockResolvedValue({ id: "obs_1" }) },
     project: { findUnique: vi.fn() },
     projectDefaults: { update: vi.fn() },
     providerConnection: { findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
@@ -42,6 +44,15 @@ vi.mock("@/lib/notifications/events", () => ({
 function provider(fetchRank: SerpProvider["fetchRank"], id = "primary"): SerpProvider {
   return { fetchRank, id, label: id, testConnection: vi.fn() };
 }
+
+const COUNTRY_LOCATION = {
+  gl: "us",
+  hl: "en",
+  kind: "country",
+  primaryGeoCode: null,
+  primaryGeoName: "United States",
+  secondaryGeoName: "United States",
+};
 
 describe("runKeywordCheckWithFallback persistence", () => {
   beforeEach(() => {
@@ -77,7 +88,7 @@ describe("runKeywordCheckWithFallback persistence", () => {
       id: "keyword_1",
       publicId: "kw_a00000000000000000000000",
       location: "United States",
-      locationRef: null,
+      locationRef: COUNTRY_LOCATION,
       project: { defaults: { frequency: "daily", jitterMinutes: 0 }, domain: "example.com" },
       projectId: "project_1",
       rankChecks: [{ position: 9, raw: null }],
@@ -163,7 +174,7 @@ describe("runKeywordCheckWithFallback persistence", () => {
       id: "keyword_1",
       publicId: "kw_a00000000000000000000000",
       location: "United States",
-      locationRef: null,
+      locationRef: COUNTRY_LOCATION,
       project: { defaults: { frequency: "daily", jitterMinutes: 0 }, domain: "example.com" },
       projectId: "project_1",
       rankChecks: [{ position: 9, raw: null }],
@@ -222,7 +233,7 @@ describe("runKeywordCheckWithFallback persistence", () => {
       id: "keyword_1",
       publicId: "kw_a00000000000000000000000",
       location: "United States",
-      locationRef: null,
+      locationRef: COUNTRY_LOCATION,
       project: { defaults: { frequency: "daily", jitterMinutes: 0 }, domain: "example.com" },
       projectId: "project_1",
       rankChecks: [{ position: 9, raw: null }],

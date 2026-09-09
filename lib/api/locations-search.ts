@@ -2,65 +2,44 @@ import "server-only";
 
 import type { LocationSearchItem } from "@/lib/api/locations-search-contract";
 import { prisma } from "@/lib/db/prisma";
-import type { Location, Prisma } from "@/lib/generated/prisma/client";
-import { countryCodeForMarketName, countrySeed } from "@/lib/serp/location";
-import type { LocationSuggestion } from "@/lib/serp/location-lookup";
+import type { Location } from "@/lib/generated/prisma/client";
+import type { SharedLocationSuggestion } from "@/lib/serp/common-location-catalog";
+import {
+  serpCountryByCode,
+  serpCountryCatalog,
+  serpCountryForName,
+} from "@/lib/serp/country-catalog";
 import { suggestKeywordLocations } from "@/lib/serp/location-service";
-import { serpMarkets } from "@/lib/serp/markets";
 import { requireApiPublicId } from "./public-id";
 
 const DEFAULT_MAX_RESULTS = 10;
-const MIN_PROVIDER_QUERY_LENGTH = 3;
-const MIN_CACHE_CITY_HITS = 3;
 
 export type LocationCandidate = LocationSearchItem & { id: string; kind: Location["kind"] };
 
 function candidateId(kind: LocationCandidate["kind"], canonicalKey: string) {
-  return `${kind === "country" ? "country" : "location"}:${canonicalKey}`;
+  const prefix =
+    kind === "country" ? "country" : kind === "region" ? "location:region" : "location";
+  return `${prefix}:${canonicalKey}`;
 }
 
 function normalizeSearch(value: string) {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-function regionNameFromDisplayName(value: string) {
-  const parts = value
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  return parts.length >= 3 ? parts.slice(1, -1).join(", ") : null;
-}
-
-function toCacheCandidate(row: Location): LocationCandidate {
-  return {
-    canonical_key: row.canonicalKey,
-    city_name: row.cityName,
-    country_code: row.countryCode,
-    display_name: row.displayName,
-    hl: row.hl,
-    id: candidateId(row.kind, row.canonicalKey),
-    kind: row.kind,
-    language_code: row.languageCode,
-    language_label: row.languageLabel,
-    region_code: row.regionCode,
-    region_name: row.kind === "city" ? regionNameFromDisplayName(row.displayName) : null,
-  };
-}
-
-function toSuggestionCandidate(candidate: LocationSuggestion): LocationCandidate {
-  const seed = countrySeed(candidate.countryCode);
+function toSuggestionCandidate(candidate: SharedLocationSuggestion): LocationCandidate {
+  const country = serpCountryByCode(candidate.countryCode);
   return {
     canonical_key: candidate.canonicalKey,
     city_name: candidate.cityName,
     country_code: candidate.countryCode,
     display_name: candidate.displayName,
-    hl: seed?.hl ?? "en",
-    id: candidateId("city", candidate.canonicalKey),
-    kind: "city",
-    language_code: seed?.languageCode ?? "en",
-    language_label: seed?.languageLabel ?? "English",
+    hl: country?.languageCode ?? "en",
+    id: candidateId(candidate.kind, candidate.canonicalKey),
+    kind: candidate.kind,
+    language_code: country?.languageCode ?? "en",
+    language_label: country?.languageLabel ?? "English",
     region_code: candidate.regionCode,
-    region_name: candidate.regionName ?? regionNameFromDisplayName(candidate.displayName),
+    region_name: candidate.regionName ?? null,
   };
 }
 
@@ -80,24 +59,26 @@ function countryRank(haystacks: string[], query: string) {
 }
 
 function countryCandidates(query: string): LocationCandidate[] {
-  return serpMarkets
-    .flatMap((market) => {
-      const countryCode = market.google.gl.toUpperCase();
-      const rank = countryRank([market.name, ...market.aliases, countryCode], query);
+  return serpCountryCatalog
+    .flatMap((country) => {
+      const rank = countryRank(
+        [country.displayName, ...country.aliases, country.countryCode],
+        query,
+      );
       if (rank === null) {
         return [];
       }
       return [
         {
-          canonical_key: countryCode,
+          canonical_key: country.countryCode,
           city_name: null,
-          country_code: countryCode,
-          display_name: market.name,
-          hl: market.language.code,
-          id: candidateId("country", countryCode),
+          country_code: country.countryCode,
+          display_name: country.displayName,
+          hl: country.languageCode,
+          id: candidateId("country", country.countryCode),
           kind: "country" as const,
-          language_code: market.language.code,
-          language_label: market.language.label,
+          language_code: country.languageCode,
+          language_label: country.languageLabel,
           rank,
           region_code: null,
           region_name: null,
@@ -108,47 +89,32 @@ function countryCandidates(query: string): LocationCandidate[] {
     .map(({ rank: _rank, ...candidate }) => candidate);
 }
 
-function countryFilter(country: string | null): string | null {
-  if (!country) {
-    return null;
-  }
-  const trimmed = country.trim();
+type CountryFilter =
+  | { countryCode: null; invalid: false }
+  | { countryCode: string; invalid: false }
+  | { countryCode: null; invalid: true };
+
+function countryFilter(country: string | null): CountryFilter {
+  const trimmed = country?.trim();
+  if (!trimmed) return { countryCode: null, invalid: false };
   if (/^[A-Za-z]{2}$/.test(trimmed)) {
-    return trimmed.toUpperCase();
+    const countryCode = trimmed.toUpperCase();
+    return serpCountryByCode(countryCode)
+      ? { countryCode, invalid: false }
+      : { countryCode: null, invalid: true };
   }
-  return countryCodeForMarketName(trimmed);
-}
-
-function cacheWhere(query: string, countryCode: string | null): Prisma.LocationWhereInput {
-  const where: Prisma.LocationWhereInput = {
-    kind: "city",
-    OR: [
-      { displayName: { contains: query, mode: "insensitive" } },
-      { cityName: { contains: query, mode: "insensitive" } },
-    ],
-  };
-  if (countryCode) {
-    where.countryCode = countryCode;
-  }
-  return where;
-}
-
-async function searchCache(query: string, countryCode: string | null, limit: number) {
-  const rows = await prisma.location.findMany({
-    orderBy: [{ displayName: "asc" }],
-    take: limit,
-    where: cacheWhere(query, countryCode),
-  });
-  return rows.map(toCacheCandidate);
+  const countryCode = serpCountryForName(trimmed)?.countryCode;
+  return countryCode ? { countryCode, invalid: false } : { countryCode: null, invalid: true };
 }
 
 function dedupe(candidates: LocationCandidate[]) {
   const seen = new Set<string>();
   return candidates.filter((candidate) => {
-    if (seen.has(candidate.canonical_key)) {
+    const key = `${candidate.kind}:${candidate.canonical_key}`;
+    if (seen.has(key)) {
       return false;
     }
-    seen.add(candidate.canonical_key);
+    seen.add(key);
     return true;
   });
 }
@@ -185,31 +151,19 @@ export async function searchLocations(input: LocationSearchInput): Promise<Locat
     return { candidates: [], warning: null };
   }
   const limit = input.limit ?? DEFAULT_MAX_RESULTS;
-  const countryCode = countryFilter(input.country);
-  const countries = countryCandidates(query);
-  const cachedCities = await searchCache(query, countryCode, limit);
-  let cities = cachedCities;
-
-  if (
-    input.projectId &&
-    query.length >= MIN_PROVIDER_QUERY_LENGTH &&
-    cities.length < MIN_CACHE_CITY_HITS
-  ) {
-    try {
-      const suggestions = await suggestKeywordLocations({
-        countryCode: countryCode && countrySeed(countryCode) ? countryCode : null,
-        limit,
-        projectId: input.projectId,
-        query,
-      });
-      cities = dedupe([...cities, ...suggestions.map(toSuggestionCandidate)]);
-    } catch {
-      cities = cachedCities;
-    }
-  }
+  const filter = countryFilter(input.country);
+  if (filter.invalid) return { candidates: [], warning: null };
+  const countries = countryCandidates(query).filter(
+    (candidate) => !filter.countryCode || candidate.country_code === filter.countryCode,
+  );
+  const suggestions = await suggestKeywordLocations({
+    countryCode: filter.countryCode,
+    limit,
+    query,
+  });
 
   return {
-    candidates: dedupe([...countries, ...cities]).slice(0, limit),
+    candidates: dedupe([...countries, ...suggestions.map(toSuggestionCandidate)]).slice(0, limit),
     warning: null,
   };
 }

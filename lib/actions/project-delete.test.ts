@@ -1,5 +1,5 @@
+import { deleteProjectById } from "@/lib/projects/settings-store";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteProjectById } from "./project";
 
 const mocks = vi.hoisted(() => {
   const prisma = {

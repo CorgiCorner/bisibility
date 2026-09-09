@@ -52,6 +52,7 @@ function packageKeyword(keyword: KeywordRow) {
     id: requirePublicId(keyword.publicId, "kw"),
     keyword: keyword.text,
     location: keyword.location,
+    location_key: keyword.locationRef.canonicalKey,
     rankingHistory: rankHistory(keyword.rankChecks),
     tags: keyword.tags.map((item) => item.tag.name),
     target_url: keyword.targetUrl,
@@ -74,6 +75,7 @@ export async function exportKeywordChunk(input: ExportKeywordChunkInput) {
   const maxHistoryRows = positiveLimit(input.maxHistoryRows, CHUNK_MAX_HISTORY_ROWS);
   const rows = await prisma.keyword.findMany({
     include: {
+      locationRef: { select: { canonicalKey: true } },
       rankChecks: {
         orderBy: { checkedAt: "desc" },
         where: whereCompletedChecks(),
@@ -148,7 +150,12 @@ function sourceKeywordIds(rows: SourceKeywordRow[]) {
   return Object.fromEntries(
     rows.map((keyword) => [
       requirePublicId(keyword.publicId, "kw"),
-      { device: keyword.device, location: keyword.location, text: keyword.text },
+      {
+        device: keyword.device,
+        location: keyword.location,
+        location_key: keyword.locationRef.canonicalKey,
+        text: keyword.text,
+      },
     ]),
   );
 }
@@ -159,7 +166,15 @@ export async function exportSectionsChunk({ projectId, userId }: ExportSectionsC
       include: {
         targets: {
           include: {
-            keyword: { select: { device: true, location: true, publicId: true, text: true } },
+            keyword: {
+              select: {
+                device: true,
+                location: true,
+                locationRef: { select: { canonicalKey: true } },
+                publicId: true,
+                text: true,
+              },
+            },
             tag: { select: { name: true } },
           },
         },
@@ -183,7 +198,13 @@ export async function exportSectionsChunk({ projectId, userId }: ExportSectionsC
     }),
     prisma.keyword.findMany({
       orderBy: { publicId: "asc" },
-      select: { device: true, location: true, publicId: true, text: true },
+      select: {
+        device: true,
+        location: true,
+        locationRef: { select: { canonicalKey: true } },
+        publicId: true,
+        text: true,
+      },
       where: { projectId },
     }),
   ]);
@@ -210,6 +231,7 @@ export async function exportSectionsChunk({ projectId, userId }: ExportSectionsC
               keyword: target.keyword.text,
               keyword_id: requirePublicId(target.keyword.publicId, "kw"),
               location: target.keyword.location,
+              location_key: target.keyword.locationRef.canonicalKey,
               type: "keyword",
             },
           ];
@@ -243,6 +265,7 @@ export async function exportSectionsChunk({ projectId, userId }: ExportSectionsC
 }
 
 type KeywordRow = Awaited<ReturnType<typeof prisma.keyword.findMany>>[number] & {
+  locationRef: { canonicalKey: string };
   rankChecks: {
     checkedAt: Date;
     normalizationVersion: string | null;
@@ -258,6 +281,7 @@ type KeywordRow = Awaited<ReturnType<typeof prisma.keyword.findMany>>[number] & 
 type SourceKeywordRow = {
   device: string;
   location: string;
+  locationRef: { canonicalKey: string };
   publicId: string;
   text: string;
 };

@@ -6,7 +6,8 @@ import { spendTone } from "@/components/cost-estimate/spend-tone";
 import { BudgetEditModal } from "@/components/settings/usage/BudgetEditModal";
 import { ProviderUsageRow } from "@/components/settings/usage/ProviderUsageRow";
 import { UsageCard } from "@/components/settings/usage/UsageCard";
-import { Button, ExternalLink } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { ExternalLink } from "@/components/ui/ExternalLink";
 import type { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
 import { formatMoneyCents } from "@/lib/format/money";
 import { createUserDateTimeFormatter } from "@/lib/format/user-datetime";
@@ -14,7 +15,7 @@ import type { ProjectProviderSpend } from "@/lib/queries/provider-spend";
 import type { ProviderUsageData } from "@/lib/settings/options";
 import { MARKETING_URL } from "@/lib/site/site";
 import { metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useState } from "react";
 
 type ProviderUsageCardProps = {

@@ -42,6 +42,18 @@ describe("cost calculator query contract", () => {
     expect(href).toContain("devices=mobile");
   });
 
+  it("accepts an explicit supported provider and flat pricing mode", () => {
+    expect(
+      calculatorInputOverridesFromSearchParams({
+        option: "live",
+        provider: "dataforseo",
+      }),
+    ).toEqual({
+      flatOptionKey: "live",
+      providerId: "dataforseo",
+    });
+  });
+
   it("clamps counts and ignores unsupported values", () => {
     expect(
       calculatorInputOverridesFromSearchParams({
@@ -50,12 +62,35 @@ describe("cost calculator query contract", () => {
         frequency: "hourly",
         keywords: "99999",
         locations: "0",
-        provider: "serpapi",
+        option: "not-a-mode",
+        provider: "not-a-provider",
       }),
     ).toEqual({ keywordCount: 1000, locationCount: 1 });
   });
 
-  it("returns no override when no supported query input is present", () => {
-    expect(calculatorInputOverridesFromSearchParams({ provider: "serpapi" })).toBeUndefined();
+  it("accepts a supported provider without an option override", () => {
+    expect(calculatorInputOverridesFromSearchParams({ provider: "serpapi" })).toEqual({
+      providerId: "serpapi",
+    });
+  });
+
+  it("keeps only provider options supported by the selected rate", () => {
+    expect(
+      calculatorInputOverridesFromSearchParams({
+        option: "not-a-mode",
+        provider: "dataforseo",
+      }),
+    ).toEqual({ providerId: "dataforseo" });
+    expect(
+      buildCostCalculatorHref({
+        depth: 20,
+        devices: ["desktop"],
+        flatOptionKey: "not-a-mode",
+        frequency: "daily",
+        keywordCount: 100,
+        locationCount: 1,
+        providerId: "dataforseo",
+      }),
+    ).toBeNull();
   });
 });

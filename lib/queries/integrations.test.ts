@@ -79,6 +79,7 @@ const temporalDeployment = {
 };
 const workerLiveness = { ...temporalDeployment, status: "ok" as const };
 const selectorFacts = {
+  importCoverage: { completed: 37, total: 488 },
   consecutiveDays: 28,
   deepHistoryMonths: { completed: 0, target: 16 },
   lastActivityAt: null,
@@ -375,12 +376,12 @@ describe("integration queries", () => {
   });
 
   it("loads durable Search Console progress independently from traffic sync", async () => {
-    const searchImportProgress = { qualifyingDays: 28, targetDays: 28 };
+    const searchImportProgress = selectorFacts.importCoverage;
     mocks.prisma.providerConnection.findMany.mockResolvedValue([
       connection({ id: "connection_gsc", kind: "analytics", provider: "gsc" }),
     ]);
     mocks.prisma.searchInsightsPropertyRegistry.findFirst.mockResolvedValue({
-      propertyKey: "sc-domain:corgitocoin.com",
+      propertyKey: "sc-domain:example.com",
     });
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
       searchSyncImportMonths: 3,
@@ -414,11 +415,11 @@ describe("integration queries", () => {
 
     expect(provider?.consumerStatuses).toEqual({
       searchModule: {
-        detail: "corgitocoin.com",
+        detail: "example.com",
         state: "backfill_running",
         summary: expect.stringMatching(
           new RegExp(
-            `^Running · ${searchImportProgress.qualifyingDays} of ${searchImportProgress.targetDays} finalized days are imported\\. ·`,
+            `^Importing · ${searchImportProgress.completed} of ${searchImportProgress.total} finalized days are imported\\. ·`,
           ),
         ),
       },
@@ -436,7 +437,7 @@ describe("integration queries", () => {
       expect.objectContaining({
         plannedRetentionMonths: 3,
         projectId: "project_1",
-        property: "sc-domain:corgitocoin.com",
+        property: "sc-domain:example.com",
         requestSetsPerHour: 21,
       }),
     );
@@ -516,13 +517,13 @@ describe("integration queries", () => {
 
     expect(dataforseo).toMatchObject({
       credentialIssue: undefined,
-      drawer: { defaults: { costPerCheck: 0.0155, login: "", secret: "" } },
+      drawer: { defaults: { costPerCheck: 0.0155, locationKey: "US", login: "", secret: "" } },
       primary: true,
       status: "connected",
     });
     expect(gsc).toMatchObject({
       credentialIssue: undefined,
-      drawer: { defaults: { login: "", secret: "" } },
+      drawer: { defaults: { locationKey: "US", login: "", secret: "" } },
       status: "connected",
       syncFailure: {
         consecutiveFailures: 1,
@@ -546,7 +547,7 @@ describe("integration queries", () => {
 
     expect(provider).toMatchObject({
       credentialIssue: "unreadable",
-      drawer: { defaults: { login: "", secret: "" } },
+      drawer: { defaults: { locationKey: "US", login: "", secret: "" } },
       status: "connected",
     });
   });

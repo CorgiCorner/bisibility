@@ -1,17 +1,15 @@
-import { scheduledRunsPerMonth } from "@/lib/cost-estimate/project-estimate";
 import {
   DEFAULT_SERP_DEPTH,
-  DEFAULT_SERP_MARKET,
   SERP_ENGINE,
   type SerpDepth,
   type SerpDevice,
   serpDeviceValues,
-} from "@/lib/serp/markets";
-import type { RankCheckFrequency } from "@/lib/settings/options";
+} from "@/lib/serp/constants";
+
+export { DEFAULT_ONBOARDING_FREQUENCY } from "@/lib/onboarding/defaults";
 
 export type OnboardingStepNumber = 1 | 2 | 3 | 4;
 export const DEFAULT_ONBOARDING_DEVICE: SerpDevice = "mobile";
-export const DEFAULT_ONBOARDING_FREQUENCY: RankCheckFrequency = "manual";
 export type OnboardingIconKey = "database" | "folder" | "lightning" | "search";
 
 export type OnboardingStep = {
@@ -24,20 +22,20 @@ export type OnboardingStep = {
 };
 
 export const onboardingSteps = [
-  { n: 1, title: "Create project", desc: "Name and domain", icon: "folder" },
+  { n: 1, title: "Website", desc: "Name and domain", icon: "folder" },
   {
     n: 2,
-    title: "Connect data",
-    desc: "Rank checks and search insights",
+    title: "Provider",
+    desc: "SERP provider and search insights",
     icon: "database",
   },
   {
     n: 3,
-    title: "Add keywords",
+    title: "Keywords",
     desc: "Keywords and tracking defaults",
     icon: "search",
   },
-  { n: 4, title: "Review", desc: "Your setup at a glance", icon: "lightning" },
+  { n: 4, title: "First check", desc: "Run it and open your dashboard", icon: "lightning" },
 ] satisfies OnboardingStep[];
 
 export const totalOnboardingSteps = onboardingSteps.length;
@@ -54,7 +52,7 @@ export const onboardingDefaults = {
   addKeywords: "",
   apiLogin: "",
   apiPassword: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
-  country: DEFAULT_SERP_MARKET,
+  country: "United States",
   device: "Mobile",
   domain: "acme.dev",
   engine: SERP_ENGINE.label,
@@ -141,44 +139,4 @@ export function countKeywordLines(value: string) {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean).length;
-}
-
-export function keywordCheckSummary(count: number, locationCount = 1, deviceCount = 1) {
-  const keyword = count === 1 ? "keyword" : "keywords";
-  const checks = count * locationCount * deviceCount;
-  const check = checks === 1 ? "check" : "checks";
-  const device = deviceCount === 1 ? "device" : "devices";
-  const location = locationCount === 1 ? "location" : "locations";
-
-  return `${count} ${keyword} \u00d7 ${deviceCount} ${device} \u00d7 ${locationCount} ${location} = ${checks} ${check}`;
-}
-
-export function keywordMonthlyCheckCount(
-  count: number,
-  locationCount = 1,
-  deviceCount = 1,
-  frequency: RankCheckFrequency = "daily",
-  cronExpression?: string | null,
-) {
-  const scheduledRuns = scheduledRunsPerMonth(frequency, cronExpression);
-  return scheduledRuns == null ? null : count * locationCount * deviceCount * scheduledRuns;
-}
-
-export function keywordMonthlyCheckSummary(
-  count: number,
-  locationCount = 1,
-  deviceCount = 1,
-  frequency: RankCheckFrequency = "daily",
-  cronExpression?: string | null,
-) {
-  const monthlyChecks = keywordMonthlyCheckCount(
-    count,
-    locationCount,
-    deviceCount,
-    frequency,
-    cronExpression,
-  );
-  return monthlyChecks == null
-    ? "excludes custom cron schedule"
-    : `\u2248 ${monthlyChecks} checks/month`;
 }

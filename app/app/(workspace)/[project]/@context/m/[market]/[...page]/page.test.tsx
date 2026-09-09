@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({ listHeaderMarkets: vi.fn(), resolveProjectAcce
 
 vi.mock("@/lib/queries/_auth", () => ({ resolveProjectAccess: mocks.resolveProjectAccess }));
 vi.mock("@/lib/queries/header-markets", () => ({ listHeaderMarkets: mocks.listHeaderMarkets }));
-vi.mock("@/components/ui/Tooltip", () => import("@/tests/mui-tooltip"));
+vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 
 import NoHeaderContext from "../../../default";
 import HeaderContextRoute from "./page";

@@ -1,11 +1,9 @@
-import { Button, ExternalLink } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { ExternalLink } from "@/components/ui/ExternalLink";
 import { appRootPath } from "@/lib/routing/app-path";
-import {
-  CaretRightIcon as CaretRight,
-  CheckCircleIcon as CheckCircle,
-  EnvelopeSimpleIcon as EnvelopeSimple,
-} from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
+import { EnvelopeSimpleIcon as EnvelopeSimple } from "@phosphor-icons/react/dist/ssr/EnvelopeSimple";
 
 export function SetupSuccess({ mailerConfigured }: Readonly<{ mailerConfigured: boolean }>) {
   return (
@@ -26,7 +24,6 @@ export function SetupSuccess({ mailerConfigured }: Readonly<{ mailerConfigured: 
       </div>
       <Button
         className="w-full"
-        component={Link}
         endIcon={<CaretRight size={15} weight="regular" />}
         href={appRootPath()}
         size="lg"

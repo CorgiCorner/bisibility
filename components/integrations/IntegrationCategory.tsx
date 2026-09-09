@@ -1,9 +1,11 @@
 import { ProviderCard } from "@/components/integrations/ProviderCard";
 import { SerpFallbackOrder } from "@/components/integrations/SerpFallbackOrder";
-import { SectionTitle } from "@/components/ui";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { IntegrationCategoryData, ProviderActionHandlers } from "@/lib/integrations/types";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
+import { ProviderConsumerPanel } from "./ProviderConsumerPanel";
+import { providerConsumerStatuses } from "./provider-card-config";
 
 export type IntegrationCategoryProps = {
   actions?: ProviderActionHandlers;
@@ -44,7 +46,7 @@ export function IntegrationCategory({
           {category.description}
         </p>
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,19rem),1fr))] items-stretch gap-3">
         {category.providers.map((provider, index) => {
           const isFirstSerpProvider = category.id === "serp" && index === 0;
 
@@ -53,6 +55,7 @@ export function IntegrationCategory({
               actions={actions}
               canManageProviders={canManageProviders}
               canUpdateProject={canUpdateProject}
+              consumerDetails="separate"
               deploymentMode={deploymentMode}
               initialOpen={initialConnectProviderId === provider.id}
               key={provider.id}
@@ -66,6 +69,19 @@ export function IntegrationCategory({
           );
         })}
       </div>
+      {category.providers
+        .filter((provider) => providerConsumerStatuses(provider))
+        .map((provider) => (
+          <ProviderConsumerPanel
+            actions={actions}
+            canUpdateProject={canUpdateProject}
+            key={provider.id}
+            projectId={projectId}
+            projectRef={projectRef}
+            provider={provider}
+            timeZone={timeZone}
+          />
+        ))}
       {category.id === "serp" ? (
         <SerpFallbackOrder
           actions={actions}

@@ -1,13 +1,14 @@
 "use client";
 
+import { DialogSurface as Drawer } from "@/components/ui/DialogSurface";
+import { IconButton } from "@/components/ui/IconButton";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { MOTION_DRAWER_ENTER, MOTION_DRAWER_EXIT } from "@/lib/ui/motion";
-import Drawer from "@mui/material/Drawer";
-import IconButton from "@mui/material/IconButton";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { XIcon as X } from "@phosphor-icons/react";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import type { ReactNode, Ref } from "react";
 import { useId } from "react";
+import { type DrawerBackAction, DrawerBackButton } from "./DrawerBackButton";
 
 /** Why the panel is closing, so a caller can treat Escape differently from the close button. */
 export type AppDrawerCloseReason = "backdropClick" | "escapeKeyDown";
@@ -19,6 +20,7 @@ export type AppDrawerProps = {
       while the panel is still sliding out looks like the drawer never animated at all. */
   onExited?: () => void;
   title: ReactNode;
+  backAction?: DrawerBackAction;
   /** Compact action rendered beside, but outside, the labelled title. */
   titleAction?: ReactNode;
   description?: string;
@@ -37,6 +39,7 @@ export type AppDrawerProps = {
 const panelBorder = "1px solid var(--border)";
 
 export function AppDrawer({
+  backAction,
   autoFocusClose = false,
   bodyRef,
   open,
@@ -51,40 +54,38 @@ export function AppDrawer({
   sheetOnMobile = false,
 }: Readonly<AppDrawerProps>) {
   const titleId = useId();
-  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", { noSsr: true });
-  const narrow = useMediaQuery("(max-width:640px)", { noSsr: true });
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const narrow = useMediaQuery("(max-width:640px)");
   const sheet = sheetOnMobile && narrow;
 
   return (
     <Drawer
-      anchor={sheet ? "bottom" : "right"}
+      side={sheet ? "bottom" : "right"}
       open={open}
       onClose={(_event, reason) => onClose(reason)}
-      transitionDuration={{ enter: MOTION_DRAWER_ENTER, exit: MOTION_DRAWER_EXIT }}
-      slotProps={{
-        transition: {
-          onExited,
-          ...(reducedMotion ? { timeout: 0 } : {}),
-        },
-        paper: {
-          "aria-labelledby": titleId,
-          "aria-modal": true,
-          role: "dialog",
-          sx: {
-            backgroundColor: "var(--bg-elev)",
-            boxShadow: "none",
-            color: "var(--fg)",
-            ...(sheet
-              ? {
-                  borderTop: panelBorder,
-                  borderTopLeftRadius: UI_RADIUS_ROLES.card,
-                  borderTopRightRadius: UI_RADIUS_ROLES.card,
-                  maxHeight: "88vh",
-                  maxWidth: "100%",
-                  width: "100%",
-                }
-              : { borderLeft: panelBorder, maxWidth: "94vw", width: 560 }),
-          },
+      onExited={onExited}
+      duration={{
+        enter: reducedMotion ? 0 : MOTION_DRAWER_ENTER,
+        exit: reducedMotion ? 0 : MOTION_DRAWER_EXIT,
+      }}
+      contentProps={{
+        "aria-labelledby": titleId,
+        "aria-modal": true,
+        role: "dialog",
+        style: {
+          backgroundColor: "var(--bg-elev)",
+          boxShadow: "none",
+          color: "var(--fg)",
+          ...(sheet
+            ? {
+                borderTop: panelBorder,
+                borderTopLeftRadius: UI_RADIUS_ROLES.card,
+                borderTopRightRadius: UI_RADIUS_ROLES.card,
+                maxHeight: "88vh",
+                maxWidth: "100%",
+                width: "100%",
+              }
+            : { borderLeft: panelBorder, maxWidth: "94vw", width: 560 }),
         },
       }}
     >
@@ -93,6 +94,7 @@ export function AppDrawer({
           <div className="min-w-0 flex-1">
             {headerLeading ? <div className="mb-1.25">{headerLeading}</div> : null}
             <div className="flex min-w-0 items-center gap-1.5">
+              {backAction ? <DrawerBackButton {...backAction} /> : null}
               <h2
                 className="m-0 min-w-0 truncate text-[18px] font-semibold leading-tight"
                 id={titleId}

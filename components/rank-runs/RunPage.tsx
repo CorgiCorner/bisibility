@@ -2,7 +2,7 @@
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { useAppRealtime } from "@/components/shell/AppRealtimeProvider";
-import { useLiveNow } from "@/components/ui";
+import { useLiveNow } from "@/components/ui/useLiveNow";
 import { formatDateTimeCurrentYear } from "@/lib/dates/format";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { useEffect, useRef, useState } from "react";

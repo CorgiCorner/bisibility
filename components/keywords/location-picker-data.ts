@@ -2,19 +2,24 @@
 
 import {
   locationSearchConsumerResponseSchema,
+  type NormalizedLocationSearchItem,
   normalizeLocationSearchItem,
 } from "@/lib/api/locations-search-contract";
-import { normalizeSerpMarketName, serpMarkets } from "@/lib/serp/markets";
+import {
+  serpCountryByCode,
+  serpCountryCatalog,
+  serpCountryForName,
+} from "@/lib/serp/country-catalog";
 import { useRef, useState } from "react";
 
 // Data layer for LocationField. Countries come from the offline SERP market
-// catalog; mixed country/city suggestions come from /api/locations/search via a
+// catalog; mixed country/region/city suggestions come from /api/locations/search via a
 // debounced, request-versioned fetch. State updates run from handlers/promises,
 // not useEffect, per ENGINEERING.md.
 
 const DEBOUNCE_MS = 180;
 export const MIN_LOCATION_QUERY_LENGTH = 2;
-export const EMPTY_PROVIDER_HINT_LENGTH = 3;
+export const EMPTY_LOCATION_HINT_LENGTH = 3;
 let reportedInvalidSearchResponse = false;
 
 export function resetInvalidSearchResponseReport() {
@@ -47,51 +52,47 @@ export type LocationSuggestion = LocationFieldValue & {
 };
 
 // Offline country catalog (sorted by name) keyed on ISO code.
-export const countryOptions: CountryOption[] = serpMarkets
-  .map((market) => ({
-    code: market.google.gl.toUpperCase(),
-    hl: market.language.code,
-    languageLabel: market.language.label,
-    name: market.name,
+export const countryOptions: CountryOption[] = serpCountryCatalog
+  .map((country) => ({
+    code: country.countryCode,
+    hl: country.languageCode,
+    languageLabel: country.languageLabel,
+    name: country.displayName,
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
 export function countryNameForCode(code: string): string | null {
-  return countryOptions.find((option) => option.code === code.toUpperCase())?.name ?? null;
+  return serpCountryByCode(code)?.displayName ?? null;
 }
 
 export function countryValueForCode(code: string): LocationFieldValue | null {
   const countryCode = code.trim().toUpperCase();
-  const name = countryNameForCode(countryCode);
-  if (!name) {
+  const country = serpCountryByCode(countryCode);
+  if (!country) {
     return null;
   }
   return {
     canonicalKey: countryCode,
     cityName: null,
     countryCode,
-    displayName: name,
-    hl: countryOptions.find((option) => option.code === countryCode)?.hl,
+    displayName: country.displayName,
+    hl: country.languageCode,
     kind: "country",
-    languageCode: countryOptions.find((option) => option.code === countryCode)?.hl,
-    languageLabel: countryOptions.find((option) => option.code === countryCode)?.languageLabel,
+    languageCode: country.languageCode,
+    languageLabel: country.languageLabel,
     regionName: null,
   };
 }
 
 export function countryValueForName(name: string): LocationFieldValue | null {
-  const normalized = normalizeSerpMarketName(name);
-  if (!normalized) {
-    return null;
-  }
-  const option = countryOptions.find((item) => item.name === normalized);
-  return option ? countryValueForCode(option.code) : null;
+  const country = serpCountryForName(name);
+  return country ? countryValueForCode(country.countryCode) : null;
 }
 
 function toSuggestion(
   item: ReturnType<typeof normalizeLocationSearchItem>,
 ): LocationSuggestion | null {
-  if (item.kind !== "country" && item.kind !== "city") {
+  if (item.kind !== "country" && item.kind !== "region" && item.kind !== "city") {
     return null;
   }
   return {
@@ -115,14 +116,27 @@ function reportInvalidSearchResponse() {
   }
 }
 
-async function fetchLocations(
+export type LocationSearchRequest = {
+  /** ISO alpha-2 code that scopes shared catalog locations to one country. */
+  country?: string | null;
+  projectId: string | null;
+  signal: AbortSignal;
+};
+
+/**
+ * The one client call to /api/locations/search: every typeahead in the app reads the wire contract
+ * through this, so a response the contract rejects is dropped in one place.
+ */
+export async function fetchLocationSearchItems(
   term: string,
-  projectId: string | null,
-  signal: AbortSignal,
-): Promise<LocationSuggestion[]> {
+  { country, projectId, signal }: LocationSearchRequest,
+): Promise<NormalizedLocationSearchItem[]> {
   const params = new URLSearchParams({ q: term });
   if (projectId) {
     params.set("project", projectId);
+  }
+  if (country) {
+    params.set("country", country);
   }
   const response = await fetch(`/api/locations/search?${params.toString()}`, {
     headers: { accept: "application/json" },
@@ -143,26 +157,47 @@ async function fetchLocations(
     reportInvalidSearchResponse();
     return [];
   }
-  return parsed.data.data.flatMap((item) => {
-    const suggestion = toSuggestion(normalizeLocationSearchItem(item));
+  return parsed.data.data.map(normalizeLocationSearchItem);
+}
+
+async function fetchLocations(
+  term: string,
+  projectId: string | null,
+  signal: AbortSignal,
+): Promise<LocationSuggestion[]> {
+  const items = await fetchLocationSearchItems(term, { projectId, signal });
+  return items.flatMap((item) => {
+    const suggestion = toSuggestion(item);
     return suggestion ? [suggestion] : [];
   });
 }
 
-export type LocationSearchState = {
+export type SuggestionSearchState<T> = {
   lastCompletedTerm: string | null;
   loading: boolean;
-  suggestions: LocationSuggestion[];
+  suggestions: T[];
   search: (value: string) => void;
   clear: () => void;
 };
+
+export type LocationSearchState = SuggestionSearchState<LocationSuggestion>;
 
 /**
  * Request versioning drops stale typeahead responses; updates stay in handlers and
  * fetch continuations, not effects.
  */
 export function useLocationSearch(projectId: string | null): LocationSearchState {
-  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  return useSuggestionSearch((term, signal) => fetchLocations(term, projectId, signal));
+}
+
+/**
+ * Debounced, abortable typeahead over any loader. `load` is read when a search starts, so a
+ * host may hand in a closure over its current scope (the country a picker is mounted for).
+ */
+export function useSuggestionSearch<T>(
+  load: (term: string, signal: AbortSignal) => Promise<readonly T[]>,
+): SuggestionSearchState<T> {
+  const [suggestions, setSuggestions] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastCompletedTerm, setLastCompletedTerm] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -199,10 +234,10 @@ export function useLocationSearch(projectId: string | null): LocationSearchState
       controllerRef.current?.abort();
       const controller = new AbortController();
       controllerRef.current = controller;
-      void fetchLocations(term, projectId, controller.signal)
+      void load(term, controller.signal)
         .then((hits) => {
           if (requestRef.current === requestId) {
-            setSuggestions(hits);
+            setSuggestions([...hits]);
             setLoading(false);
             setLastCompletedTerm(term);
           }

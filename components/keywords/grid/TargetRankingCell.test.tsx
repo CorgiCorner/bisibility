@@ -11,7 +11,9 @@ function row(overrides: Partial<KeywordRow> = {}): KeywordRow {
 describe("TargetRankingCell", () => {
   it("shows matching target and observed ranking URLs separately", () => {
     render(
-      <TargetRankingCell row={row({ rankingUrl: "https://acme.dev/docs", targetUrl: "/docs" })} />,
+      <TargetRankingCell
+        row={row({ expectedUrl: "/docs", rankingUrl: "https://acme.dev/docs", targetUrl: "/docs" })}
+      />,
     );
 
     const matchStatus = screen.getByText("Matches");
@@ -37,16 +39,52 @@ describe("TargetRankingCell", () => {
 
   it("marks a different observed page as the wrong URL", () => {
     render(
-      <TargetRankingCell row={row({ rankingUrl: "https://acme.dev/blog", targetUrl: "/docs" })} />,
+      <TargetRankingCell
+        row={row({ expectedUrl: "/docs", rankingUrl: "https://acme.dev/blog", targetUrl: "/docs" })}
+      />,
     );
 
     expect(screen.getByText("Wrong URL")).toBeInTheDocument();
+  });
+
+  it("judges a historical ranking against its recorded expected URL", () => {
+    render(
+      <TargetRankingCell
+        row={row({
+          expectedUrl: "/docs",
+          expectedUrlFallbackCurrent: false,
+          expectedUrlSource: "explicit",
+          rankingUrl: "https://acme.dev/docs",
+          targetUrl: "/new-target",
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Matches")).toBeInTheDocument();
+    expect(screen.getByText("Expected for this market: /docs (explicit)")).toBeInTheDocument();
+  });
+
+  it("states when a legacy check uses the current target URL and does not invent one", () => {
+    const { rerender } = render(
+      <TargetRankingCell
+        row={row({
+          expectedUrl: "/docs",
+          expectedUrlFallbackCurrent: true,
+          rankingUrl: "https://acme.dev/docs",
+        })}
+      />,
+    );
+    expect(screen.getByText("judged against the current target URL")).toBeInTheDocument();
+
+    rerender(<TargetRankingCell row={row({ expectedUrl: null, targetUrl: null })} />);
+    expect(screen.getByText("Not set")).toBeInTheDocument();
   });
 
   it("does not invent a ranking URL before the first check", () => {
     const pending = row({
       checkState: "never_checked",
       hasRankData: false,
+      expectedUrl: null,
       rankingPath: null,
       rankingUrl: null,
       targetUrl: null,

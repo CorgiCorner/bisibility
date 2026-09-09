@@ -2,7 +2,7 @@
 
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
-import { FieldLabel } from "@/components/ui";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 import { updatePresenceInspectionBudget } from "@/lib/actions/presence-settings";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { projectInspectionBudgetSchema } from "@/lib/schemas/project";

@@ -6,6 +6,7 @@
       "!**/node_modules",
       "!**/.next",
       "!**/.cache",
+      "!**/.vitest",
       "!**/deploy/.terraform",
       "!**/scripts",
       "!**/storybook-static",

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { Client, Connection } from "@temporalio/client";
+import type { Client } from "@temporalio/client";
 import {
   type SearchAttributePair,
   WorkflowIdConflictPolicy,
@@ -61,6 +61,7 @@ export async function getTemporalClient(): Promise<Client> {
 
     const options = temporalConnectionOptions();
     const pending = (async () => {
+      const { Client, Connection } = await import("@temporalio/client");
       const connection = await Connection.connect(temporalSdkConnectionOptions(options));
       return new Client({ connection, namespace: TEMPORAL_NAMESPACE });
     })();

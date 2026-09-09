@@ -94,6 +94,8 @@ export function alertRuleAuditResource(value: {
 }
 
 export function providerConnectionAuditResource(value: {
+  allocationAmountPerMonth?: number | null;
+  allocationUnit?: string | null;
   costPerCheckCents?: unknown;
   credentialsEncrypted?: string | null;
   enabled: boolean;
@@ -104,6 +106,12 @@ export function providerConnectionAuditResource(value: {
   status: string;
 }) {
   return {
+    ...(value.allocationUnit === undefined
+      ? {}
+      : {
+          allocationAmountPerMonth: value.allocationAmountPerMonth ?? null,
+          allocationUnit: value.allocationUnit,
+        }),
     costPerCheck:
       value.costPerCheckCents == null ? null : centsToDollars(Number(value.costPerCheckCents)),
     enabled: value.enabled,

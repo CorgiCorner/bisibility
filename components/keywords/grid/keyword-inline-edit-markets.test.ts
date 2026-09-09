@@ -109,7 +109,7 @@ describe("drawerMarketOptions", () => {
     });
   });
 
-  it("marks paused registry markets as disabled with the paused secondary text", () => {
+  it("allows editing paused markets and explains when checks resume", () => {
     const paused = market({
       canonicalKey: "BE@fr",
       countryCode: "BE",
@@ -122,13 +122,13 @@ describe("drawerMarketOptions", () => {
     const options = drawerMarketOptions([paused], "BE@fr", keyword());
     const option = options[0];
     expect(option).toMatchObject({
-      disabled: true,
+      disabled: false,
       languageCode: "fr",
       languageLabel: "French",
       locationLabel: "Belgium",
       payload: "BE@fr",
       secondary: "paused",
-      tooltip: "Enable this market in Settings before selecting it.",
+      tooltip: "Keywords can be added now. Rank checks start after the market is resumed.",
       value: "BE@fr",
     });
   });

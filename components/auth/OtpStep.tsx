@@ -2,20 +2,18 @@
 
 import { OtpInput } from "@/components/auth/OtpInput";
 import { OtpResendControl } from "@/components/auth/OtpResendControl";
-import { DataResidencyNote } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { DataResidencyNote } from "@/components/ui/DataResidencyNote";
 import type { LoginFormValues } from "@/lib/auth/login-schema";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Button from "@mui/material/Button";
-import {
-  ArrowLeftIcon as ArrowLeft,
-  EnvelopeSimpleOpenIcon as EnvelopeSimpleOpen,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { EnvelopeSimpleOpenIcon as EnvelopeSimpleOpen } from "@phosphor-icons/react/dist/csr/EnvelopeSimpleOpen";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import type { SyntheticEvent } from "react";
 import { type Control, Controller, useWatch } from "react-hook-form";
 
-const linkButtonSx = {
-  color: "var(--fg-muted)",
+const linkButtonStyle = {
+  "--control-color": "var(--fg-muted)",
   fontSize: "13px",
   fontWeight: 600,
   minWidth: 0,
@@ -72,11 +70,11 @@ export function OtpStep({
   return (
     <div className="w-full max-w-[380px]">
       <Button
-        color="inherit"
         onClick={onBack}
         startIcon={<ArrowLeft size={15} weight="regular" />}
-        sx={{ ...linkButtonSx, paddingInline: "8px" }}
+        style={{ ...linkButtonStyle, paddingInline: "8px" }}
         type="button"
+        variant="ghost"
       >
         Back
       </Button>
@@ -135,21 +133,19 @@ export function OtpStep({
         <Button
           disabled={submitting || !otpComplete}
           fullWidth
-          sx={{
+          style={{
             borderRadius: UI_RADIUS_ROLES.control,
             fontSize: "14.5px",
             fontWeight: 600,
             marginTop: "16px",
             padding: "12px",
-            "&.Mui-disabled": {
-              backgroundColor: "var(--bg-sunken)",
-              borderColor: "var(--border)",
-              color: "var(--fg-muted)",
-              opacity: 1,
-            },
+            "--control-disabled-background-color": "var(--bg-sunken)",
+            "--control-disabled-border-color": "var(--border)",
+            "--control-disabled-color": "var(--fg-muted)",
+            "--control-disabled-opacity": 1,
           }}
           type="submit"
-          variant="contained"
+          variant="primary"
         >
           {submitting ? "Verifying..." : "Verify and continue"}
         </Button>

@@ -154,12 +154,12 @@ async function reclaimExpired(
       "claimExpiresAt" = CASE
         WHEN "claimAttempts" + 1 > ${RANK_CHECK_ITEM_CLAIM_MAX_ATTEMPTS}
           THEN NULL
-        ELSE ${claimExpiresAt}
+        ELSE ${claimExpiresAt}::timestamp(3)
       END,
       "claimAttempts" = "claimAttempts" + 1,
       "finishedAt" = CASE
         WHEN "claimAttempts" + 1 > ${RANK_CHECK_ITEM_CLAIM_MAX_ATTEMPTS}
-          THEN ${now}
+          THEN ${now}::timestamp(3)
         ELSE NULL
       END,
       "updatedAt" = ${now}

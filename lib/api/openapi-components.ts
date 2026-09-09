@@ -1,4 +1,9 @@
-import { serpDeviceValues, serpMarketOptions } from "@/lib/serp/markets";
+import { serpDeviceValues } from "@/lib/serp/constants";
+import {
+  deprecatedLegacyMarketField,
+  legacyMarketNameOpenApiSchema,
+  primaryLocationKeyDescription,
+} from "./legacy-market-input";
 import { agentSchemas } from "./openapi-agent-components";
 import { alertRuleSchemas } from "./openapi-alert-components";
 import { apiKeySchemas } from "./openapi-api-key-components";
@@ -16,7 +21,6 @@ import {
 } from "./openapi-schedule-schema";
 import { signalSchemas } from "./openapi-signal-components";
 
-const serpMarketSchema = { enum: serpMarketOptions, example: "United States", type: "string" };
 const serpDeviceSchema = { enum: serpDeviceValues, type: "string" };
 const publicIdPattern = "^[a-z]+_[a-z][a-z0-9]{23}$";
 const locationKeySchema = {
@@ -108,22 +112,26 @@ export const schemas = {
   },
   KeywordCreateItem: {
     properties: {
-      city: { type: ["string", "null"] },
-      country: serpMarketSchema,
+      city: deprecatedLegacyMarketField(
+        "City name resolved within country when location_key is omitted.",
+        { type: ["string", "null"] },
+      ),
+      country: legacyMarketNameOpenApiSchema(
+        "Country market name used when location_key is omitted.",
+      ),
       device: serpDeviceSchema,
       intent: { type: ["string", "null"] },
       keyword: { example: "rank tracker api", type: "string" },
-      language: {
-        description:
-          "SERP UI language code. Combines with country when location_key is omitted. The country default may be omitted.",
-        example: "en",
-        type: "string",
-      },
-      location: { ...serpMarketSchema, description: "Backward-compatible alias for country." },
+      language: deprecatedLegacyMarketField(
+        "SERP UI language code combined with country when location_key is omitted; use the @language qualifier on location_key instead.",
+        { example: "en", type: "string" },
+      ),
+      location: legacyMarketNameOpenApiSchema("Backward-compatible alias for country."),
       location_key: {
         ...locationKeySchema,
-        description:
-          "Canonical country, region, or city key. Takes precedence over country, language, location, and city.",
+        description: primaryLocationKeyDescription(
+          "Takes precedence over the deprecated country, language, location, and city fields.",
+        ),
       },
       schedule: scheduleInputContractSchema,
       tags: { items: { type: "string" }, type: "array" },

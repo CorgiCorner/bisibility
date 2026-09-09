@@ -1,26 +1,21 @@
 "use client";
 
 import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
-import {
-  MenuSelect,
-  menuSelectPaperSx,
-  ToolbarSearch,
-  toolbarControlClassName,
-} from "@/components/ui";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
+import { MenuSelect, menuSelectPaperStyle } from "@/components/ui/MenuSelect";
+import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
+import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { pluralize } from "@/lib/format/pluralize";
 import type { AuditEntry, AuditEventType, AuditStatus } from "@/lib/queries/audit";
 import { cn } from "@/lib/ui/cn";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import {
-  BracketsCurlyIcon as BracketsCurly,
-  CalendarBlankIcon as CalendarBlank,
-  CaretDownIcon as CaretDown,
-  FileCsvIcon as FileCsv,
-  FunnelIcon as Funnel,
-  UploadSimpleIcon as UploadSimple,
-  UserIcon as User,
-} from "@phosphor-icons/react";
+import { BracketsCurlyIcon as BracketsCurly } from "@phosphor-icons/react/dist/csr/BracketsCurly";
+import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { FileCsvIcon as FileCsv } from "@phosphor-icons/react/dist/csr/FileCsv";
+import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
+import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
+import { UserIcon as User } from "@phosphor-icons/react/dist/csr/User";
 import { useMemo, useRef, useState } from "react";
 import type { AuditExportFormat } from "./audit-export";
 import {
@@ -177,15 +172,13 @@ export function AuditFilters({
             id="audit-export-menu"
             onClose={() => setExportAnchor(null)}
             open={Boolean(exportAnchor)}
-            slotProps={{
-              list: { "aria-label": "Export audit events", dense: true, sx: { padding: 0 } },
-              paper: { sx: { ...menuSelectPaperSx, minWidth: 232 } },
-            }}
+            listProps={{ "aria-label": "Export audit events", style: { padding: 0 } }}
+            contentProps={{ style: { ...menuSelectPaperStyle, minWidth: 232 } }}
           >
             <div className="px-3 pb-1 pt-2 text-[9.5px] uppercase tracking-[0.6px] text-fg-muted">
               Export {pluralize(visibleCount, "event")}
             </div>
-            <MenuItem onClick={() => runExport("csv")} sx={{ gap: "10px" }}>
+            <MenuItem onClick={() => runExport("csv")} style={{ gap: "10px" }}>
               <FileCsv aria-hidden className="text-green-text" size={16} weight="regular" />
               <span className="flex flex-col">
                 <span className="text-[13px] text-fg">CSV</span>
@@ -194,7 +187,7 @@ export function AuditFilters({
                 </span>
               </span>
             </MenuItem>
-            <MenuItem onClick={() => runExport("json")} sx={{ gap: "10px" }}>
+            <MenuItem onClick={() => runExport("json")} style={{ gap: "10px" }}>
               <BracketsCurly aria-hidden className="text-blue-text" size={16} weight="regular" />
               <span className="flex flex-col">
                 <span className="text-[13px] text-fg">JSON</span>

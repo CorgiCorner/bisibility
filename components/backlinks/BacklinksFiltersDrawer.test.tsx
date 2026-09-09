@@ -60,7 +60,8 @@ describe("Backlinks filters drawer", () => {
       await user.type(screen.getByLabelText("Exclude domain"), "toolindex.app");
       expect(screen.getByText("toolindex.app")).toBeInTheDocument();
       if (dismissal === "scrim") {
-        fireEvent.click(document.querySelector(".MuiBackdrop-root") as Element);
+        fireEvent.pointerDown(document.querySelector('[data-slot="dialog-overlay"]') as Element);
+        fireEvent.click(document.querySelector('[data-slot="dialog-overlay"]') as Element);
       } else {
         await user.keyboard("{Escape}");
       }

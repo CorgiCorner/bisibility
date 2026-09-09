@@ -84,7 +84,10 @@ export async function readKeywordImportInput(input: unknown) {
   if (typeof FormData === "undefined" || !(input instanceof FormData)) return input;
   const projectId = input.get("projectId");
   const refresh = input.get("refresh");
+  const defaultMarketKey = input.get("defaultMarketKey");
   return {
+    defaultMarketKey:
+      typeof defaultMarketKey === "string" && defaultMarketKey ? defaultMarketKey : null,
     columnMapping: readColumnMapping(input.get("columnMapping")),
     csv: await importTextFrom(input.get("file") ?? input.get("csv")),
     projectId: typeof projectId === "string" ? projectId : undefined,

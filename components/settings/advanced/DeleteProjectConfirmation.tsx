@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, Input, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { appPath } from "@/lib/routing/app-path";
 import { actionErrorMessage } from "@/lib/ui/action-error";

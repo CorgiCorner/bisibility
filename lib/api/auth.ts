@@ -3,7 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { Role } from "@/lib/generated/prisma/client";
 import { verifyApiKey } from "@/lib/providers/crypto";
-import { type ApiScope, isApiScope, scopesForTier } from "./scope-policy";
+import { type ApiScope, parseStoredApiScopes } from "./scope-policy";
 
 const API_KEY_PREFIX_LENGTH = 21;
 
@@ -12,14 +12,6 @@ export const PERSONAL_TOKEN_PREFIX = "bsb_pat_live_";
 export const LEGACY_BEARER_PREFIXES = ["bsk_", "bsp_"] as const;
 
 export type { ApiScope } from "./scope-policy";
-
-function resolveApiKeyScopes(apiKey: { scopes?: unknown }): readonly ApiScope[] {
-  if (!Array.isArray(apiKey.scopes)) {
-    return scopesForTier("admin");
-  }
-  const scopes = apiKey.scopes.filter(isApiScope);
-  return scopes.length ? scopes : scopesForTier("admin");
-}
 
 export class ApiAuthError extends Error {
   readonly code = "unauthorized";
@@ -90,16 +82,6 @@ function bearerToken(req: Request) {
   return token;
 }
 
-// Personal tokens always store the cumulative tier array; fall back to the
-// least-privileged tier instead of ApiKey's permissive legacy default.
-function resolvePersonalTokenScopes(token: { scopes?: unknown }): readonly ApiScope[] {
-  if (!Array.isArray(token.scopes)) {
-    return scopesForTier("read");
-  }
-  const scopes = token.scopes.filter(isApiScope);
-  return scopes.length ? scopes : scopesForTier("read");
-}
-
 async function authenticatePersonalToken(rawKey: string): Promise<PersonalTokenAuth> {
   const candidates = await prisma.personalAccessToken.findMany({
     select: {
@@ -139,6 +121,9 @@ async function authenticatePersonalToken(rawKey: string): Promise<PersonalTokenA
     throw new ApiAuthError("Account is deactivated.");
   }
 
+  const scopes = parseStoredApiScopes(token.scopes);
+  if (!scopes) throw new ApiAuthError();
+
   await prisma.personalAccessToken.update({
     data: { lastUsedAt: new Date() },
     select: { id: true },
@@ -153,7 +138,7 @@ async function authenticatePersonalToken(rawKey: string): Promise<PersonalTokenA
       name: token.name,
       prefix: token.prefix,
       publicId: token.publicId,
-      scopes: resolvePersonalTokenScopes(token),
+      scopes,
       userId: token.userId,
     },
     user: {
@@ -214,6 +199,9 @@ export async function authenticateApiKey(req: Request): Promise<AuthenticatedApi
     throw new ApiAuthError("API key has expired.");
   }
 
+  const scopes = parseStoredApiScopes(apiKey.scopes);
+  if (!scopes) throw new ApiAuthError();
+
   await prisma.apiKey.update({
     data: { lastUsedAt: new Date() },
     select: { id: true },
@@ -226,7 +214,7 @@ export async function authenticateApiKey(req: Request): Promise<AuthenticatedApi
       name: apiKey.name,
       prefix: apiKey.prefix,
       projectId: apiKey.projectId,
-      scopes: resolveApiKeyScopes(apiKey),
+      scopes,
     },
     project: apiKey.project,
   };

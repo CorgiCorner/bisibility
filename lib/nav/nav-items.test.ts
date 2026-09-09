@@ -13,17 +13,13 @@ const allExperimentalModules = experimentalModuleKeys;
 describe("navItems", () => {
   it("omits experimental modules until their keys are enabled", () => {
     const disabled = navItems("prj_example");
-    const timelineOnly = navItems("prj_example", undefined, ["timeline"]);
     const competitorsOnly = navItems("prj_example", undefined, ["competitors"]);
 
     expect(disabled.map((item) => item.label)).not.toContain("Timeline");
     expect(disabled.map((item) => item.label)).not.toContain("Competitors");
-    expect(timelineOnly.find((item) => item.label === "Timeline")).toMatchObject({
-      badge: "experimental",
-      group: "activity",
-      scope: "level",
-    });
-    expect(timelineOnly.map((item) => item.label)).not.toContain("Competitors");
+    expect(
+      navItems("prj_example", undefined, allExperimentalModules).map((item) => item.label),
+    ).not.toContain("Timeline");
     expect(competitorsOnly.find((item) => item.label === "Competitors")).toMatchObject({
       badge: "experimental",
       group: "modules",
@@ -37,8 +33,6 @@ describe("navItems", () => {
       navItems("prj_example", undefined, allExperimentalModules).map((item) => item.label),
     ).toEqual([
       "Dashboard",
-      "Timeline",
-      "Alerts",
       "Rank Tracker",
       "Competitors",
       "Keyword Research",
@@ -46,24 +40,23 @@ describe("navItems", () => {
       "Backlinks",
       "Search Console",
       "Markets",
+      "Alerts",
+      "Runs",
       "Integrations",
       "Install",
       "Settings",
     ]);
   });
 
-  it("assigns every rail row to one of the three groups", () => {
+  it("keeps Dashboard above the headed rail groups", () => {
     const items = navItems("prj_example", undefined, allExperimentalModules);
 
     expect(navItemGroups.map((group) => [group.id, group.label, group.tag])).toEqual([
-      ["activity", "Activity", "ACTIVITY"],
       ["modules", "Modules", "MODULES"],
       ["project", "Project", "PROJECT"],
     ]);
-    expect(items.filter((item) => item.group === "activity").map((item) => item.label)).toEqual([
+    expect(items.filter((item) => item.group === null).map((item) => item.label)).toEqual([
       "Dashboard",
-      "Timeline",
-      "Alerts",
     ]);
     // Market modules first, own-axis modules after: the order is the group's only sub-structure.
     expect(items.filter((item) => item.group === "modules").map((item) => item.label)).toEqual([
@@ -76,15 +69,14 @@ describe("navItems", () => {
     ]);
     expect(items.filter((item) => item.group === "project").map((item) => item.label)).toEqual([
       "Markets",
+      "Alerts",
+      "Runs",
       "Integrations",
       "Install",
       "Settings",
     ]);
-    // Every destination is in exactly one group, so no renderer needs an ungrouped block.
     expect(items).toHaveLength(13);
-    expect(new Set(items.map((item) => item.group))).toEqual(
-      new Set(navItemGroups.map((group) => group.id)),
-    );
+    expect(new Set(items.map((item) => item.group))).toEqual(new Set([null, "modules", "project"]));
   });
 
   it("says what scopes a group covers in its tooltip rather than under its heading", () => {
@@ -93,7 +85,6 @@ describe("navItems", () => {
       expect(group.tag).toBe(group.label.toUpperCase());
     }
     expect(navItemGroups.map((group) => group.tooltip)).toEqual([
-      "Follows the level you are on: the project, or the market you switched into.",
       "Market modules follow the selected market. The rest keep their own axis.",
       "Project-wide configuration. A market never narrows it.",
     ]);
@@ -127,12 +118,13 @@ describe("navItems", () => {
     );
   });
 
-  it("uses the history clock icon for Timeline", () => {
-    expect(
-      navItems("prj_example", undefined, allExperimentalModules).find(
-        (item) => item.label === "Timeline",
-      )?.icon.displayName,
-    ).toBe("ClockCounterClockwiseIcon");
+  it("keeps Timeline available as a landing preference without placing it in the rail", () => {
+    expect(primaryNavEntries.find((item) => item.segment === "timeline")?.icon.displayName).toBe(
+      "ClockCounterClockwiseIcon",
+    );
+    expect(navItems("prj_example", undefined, allExperimentalModules)).not.toContainEqual(
+      expect.objectContaining({ label: "Timeline" }),
+    );
   });
 
   it("uses the siren icon for Alerts", () => {
@@ -141,6 +133,14 @@ describe("navItems", () => {
         (item) => item.label === "Alerts",
       )?.icon.displayName,
     ).toBe("SirenIcon");
+    expect(
+      navItems("prj_example", undefined, allExperimentalModules).find(
+        (item) => item.label === "Alerts",
+      ),
+    ).toMatchObject({
+      group: "project",
+      scope: "project",
+    });
   });
 
   it("gives Markets the folded map and leaves the globe to Domain Overview", () => {
@@ -172,15 +172,15 @@ describe("navItems", () => {
       ),
     ).toEqual({
       Dashboard: undefined,
-      Timeline: "experimental",
       Alerts: "alpha",
       "Rank Tracker": undefined,
       Competitors: "experimental",
       "Keyword Research": undefined,
       "Domain Overview": undefined,
       Backlinks: undefined,
-      "Search Console": "alpha",
+      "Search Console": "beta",
       Markets: undefined,
+      Runs: undefined,
       Integrations: undefined,
       Install: undefined,
       Settings: undefined,
@@ -208,8 +208,7 @@ describe("navItems", () => {
       ),
     ).toEqual({
       Dashboard: "level",
-      Timeline: "level",
-      Alerts: "level",
+      Alerts: "project",
       "Rank Tracker": "market",
       Competitors: "market",
       "Keyword Research": "own-axis",
@@ -217,6 +216,7 @@ describe("navItems", () => {
       Backlinks: "own-axis",
       "Search Console": "own-axis",
       Markets: "project",
+      Runs: "project",
       Integrations: "project",
       Install: "project",
       Settings: "project",
@@ -244,8 +244,8 @@ describe("navItems", () => {
     );
 
     expect(hrefs.Dashboard).toBe("/app/prj_example/dashboard");
-    expect(hrefs.Timeline).toBe("/app/prj_example/timeline");
-    expect(hrefs.Alerts).toBe("/app/prj_example/alerts");
+    expect(hrefs.Alerts).toBe("/app/prj_example/alerts?f=market:pmkt_example");
+    expect(hrefs.Alerts).not.toContain("/m/pmkt_example/alerts");
     expect(hrefs["Rank Tracker"]).toBe("/app/prj_example/m/pmkt_example/rank-tracker");
     expect(hrefs.Competitors).toBe("/app/prj_example/competitors");
     expect(hrefs.Backlinks).toBe("/app/prj_example/backlinks");
@@ -279,11 +279,12 @@ describe("navItems", () => {
     expect(landingSegments).not.toContain("markets");
   });
 
-  it("still resolves a rail entry for every landing segment", () => {
-    // primaryNavEntries throws at module load when a landing segment has no rail row, and the
-    // module is imported by server actions, so this is an import-time crash rather than a
-    // render-time one. Reading it here is what proves the module still loads.
+  it("keeps landing preferences independent from rail entries", () => {
     expect(primaryNavEntries.map((entry) => entry.segment)).toEqual([...landingSegments]);
+    expect(primaryNavEntries.find((entry) => entry.segment === "timeline")?.label).toBe("Timeline");
+    expect(
+      navItems("prj_example", undefined, allExperimentalModules).map((item) => item.label),
+    ).not.toContain("Timeline");
     for (const entry of primaryNavEntries) {
       expect(entry.label.length).toBeGreaterThan(0);
       expect(entry.icon).toBeDefined();

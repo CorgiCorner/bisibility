@@ -102,6 +102,24 @@ describe("probeProviderConnection", () => {
     ).rejects.toThrow("Connection test failed: Rate limited, try again shortly.");
   });
 
+  it("returns verified availability for saving the starting budget", async () => {
+    mocks.testConnection.mockResolvedValue({
+      ok: true,
+      message: "Connected",
+      balance: 200,
+      availabilityTotal: 250,
+    });
+    await expect(
+      verifyProviderConnectionBeforeSave({
+        credentials: { apiKey: "test", login: "test" },
+        hasStoredCredentials: false,
+        projectId: "project_1",
+        provider,
+      }),
+    ).resolves.toEqual({ ok: true, message: "Connected", balance: 200, availabilityTotal: 250 });
+    expect(mocks.testConnection).toHaveBeenCalledOnce();
+  });
+
   it("maps an actual probe rate limit to the pre-save error", async () => {
     mocks.consumeProviderLimit.mockResolvedValue({ success: false });
 

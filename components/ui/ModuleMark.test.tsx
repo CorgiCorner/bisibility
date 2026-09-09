@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { BellIcon as Bell, type Icon, type IconProps } from "@phosphor-icons/react";
+import type { Icon, IconProps } from "@phosphor-icons/react";
+import { BellIcon as Bell } from "@phosphor-icons/react/dist/csr/Bell";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ModuleMark } from "./ModuleMark";

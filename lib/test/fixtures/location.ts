@@ -1,7 +1,7 @@
 import type { LocationSearchItem } from "@/lib/api/locations-search-contract";
 import type { KeywordLocation } from "@/lib/queries/keyword-location";
+import type { SharedLocationSuggestion as ProviderLocationSuggestion } from "@/lib/serp/common-location-catalog";
 import type { ResolvedLocation } from "@/lib/serp/location";
-import type { LocationSuggestion as ProviderLocationSuggestion } from "@/lib/serp/location-lookup-providers";
 
 export type UiLocationSuggestion = {
   canonicalKey: string;
@@ -61,6 +61,7 @@ export function providerLocationSuggestion(
     cityName: "Austin",
     countryCode: "US",
     displayName: "Austin, Texas, United States",
+    kind: "city",
     primaryGeoCode: 1,
     primaryGeoName: "Austin, Texas, United States",
     regionCode: "US-TX",

@@ -31,8 +31,11 @@ import { recordSignInAudit } from "@/lib/auth/sign-in-audit";
 import { enforceGoogleSignupCapacity } from "@/lib/auth/signin-capacity";
 import { twoFactorRouteGuard } from "@/lib/auth/two-factor-route-guard";
 import { prepareUserCreation } from "@/lib/auth/user-creation";
-import { wakeCloudWelcomeSequenceWorker } from "@/lib/auth/welcome-signup";
+import { handleCreatedUser } from "@/lib/auth/welcome-signup";
 import { prisma } from "@/lib/db/prisma";
+import { readOnlyDemoPlugin } from "@/lib/demo/auth-plugin";
+import { readOnlyDemoConfig } from "@/lib/demo/config";
+import { loadDemoIdentity } from "@/lib/demo/identity";
 import {
   normalizeAuthorizationServerOrigin,
   resolveMcpResourceUrl,
@@ -44,7 +47,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { emailOTP, jwt, twoFactor } from "better-auth/plugins";
 
-const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+const SESSION_TTL_SECONDS = 60 * 60 * (readOnlyDemoConfig() ? 2 : 24 * 30);
 
 const AUTH_SECRET = resolveAuthSecret();
 const AUTH_SECRETS = resolveAuthSecrets();
@@ -82,6 +85,9 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
 
 type SessionCreationInput = { userId: string };
 async function prepareSessionCreation(session: SessionCreationInput) {
+  if (readOnlyDemoConfig() && (await loadDemoIdentity())?.id !== session.userId) {
+    throw new APIError("FORBIDDEN", { message: "Demo identity is unavailable." });
+  }
   await preventDeactivatedSessionCreation(session);
   return addAuthPublicId(session, "sid");
 }
@@ -194,7 +200,7 @@ export const auth = betterAuth({
     },
     user: {
       create: {
-        after: wakeCloudWelcomeSequenceWorker,
+        after: handleCreatedUser,
         before: prepareUserCreation,
       },
       // Runs after the change-email code is consumed and before the address is written.
@@ -247,6 +253,7 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    readOnlyDemoPlugin(),
     emailOTP({
       changeEmail: { enabled: true, verifyCurrentEmail: true },
       otpLength: 6,

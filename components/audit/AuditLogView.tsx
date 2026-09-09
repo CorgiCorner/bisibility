@@ -1,16 +1,14 @@
 "use client";
 
-import { DataGrid } from "@/components/keywords/grid/DataGrid";
-import { dataGridHeaderSx } from "@/components/keywords/grid/keyword-data-grid-config";
-import { Card, EmptyState } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { DataTable } from "@/components/ui/data-table/DataTable";
+import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { AuditDateRange, AuditEntry } from "@/lib/queries/audit";
-import type { GridRowParams } from "@mui/x-data-grid";
-import {
-  LockSimpleIcon as LockSimple,
-  MagnifyingGlassIcon as MagnifyingGlass,
-} from "@phosphor-icons/react";
+import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useContext, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AuditDetailSheet } from "./AuditDetailSheet";
 import { AuditFilters } from "./AuditFilters";
 import { auditColumns } from "./audit-columns";
@@ -22,6 +20,14 @@ import {
   defaultAuditFilters,
   eventTypeOptions,
 } from "./audit-filtering";
+import {
+  AUDIT_TABLE_DEFAULT_PAGINATION,
+  AUDIT_TABLE_DEFAULT_SORT,
+  AUDIT_TABLE_DENSITY,
+  AUDIT_TABLE_ID,
+  type AuditTablePaginationState,
+  auditTablePagination,
+} from "./audit-table-state";
 
 export type AuditLogViewProps = {
   dateRange: AuditDateRange;
@@ -31,31 +37,7 @@ export type AuditLogViewProps = {
   truncated: boolean;
 };
 
-const AuditEntryLimitContext = createContext(200);
-
-const initialGridState = {
-  pagination: { paginationModel: { pageSize: 10 } },
-  sorting: { sortModel: [{ field: "timestamp", sort: "desc" }] },
-} as const;
-
-const gridSx = {
-  border: 0,
-  color: "var(--fg)",
-  fontFamily: "var(--font-sans), system-ui, sans-serif",
-  "& .MuiDataGrid-cell": {
-    alignItems: "center",
-    borderColor: "var(--border-soft)",
-    display: "flex",
-    lineHeight: "normal",
-    outline: "none",
-  },
-  "& .MuiDataGrid-columnHeaders": dataGridHeaderSx,
-  "& .MuiDataGrid-footerContainer": { borderColor: "var(--border)" },
-  "& .MuiDataGrid-row": { cursor: "pointer" },
-};
-
-function AuditNoRowsOverlay() {
-  const entryLimit = useContext(AuditEntryLimitContext);
+function AuditNoRows({ entryLimit }: Readonly<{ entryLimit: number }>) {
   return (
     <div className="grid h-full place-items-center p-6">
       <EmptyState
@@ -67,10 +49,6 @@ function AuditNoRowsOverlay() {
   );
 }
 
-const gridSlots = {
-  noRowsOverlay: AuditNoRowsOverlay,
-};
-
 export function AuditLogView({
   dateRange,
   entries,
@@ -81,19 +59,20 @@ export function AuditLogView({
   const router = useRouter();
   const pathname = usePathname();
   const [filters, setFilters] = useState<AuditFilterState>(defaultAuditFilters);
+  const [pagination, setPagination] = useState<AuditTablePaginationState>(
+    AUDIT_TABLE_DEFAULT_PAGINATION,
+  );
   const [selectedEntry, setSelectedEntry] = useState<AuditEntry | null>(null);
+  const [sorting, setSorting] = useState<DataTableSort | null>(AUDIT_TABLE_DEFAULT_SORT);
   const filteredEntries = useMemo(() => applyAuditFilters(entries, filters), [entries, filters]);
   const actors = useMemo(() => actorOptions(entries), [entries]);
+  const columns = useMemo(() => auditColumns({ onOpenEntry: setSelectedEntry }), []);
   const eventTypes = useMemo(() => eventTypeOptions(entries), [entries]);
-  // The date range is server-driven via the URL; keep the select in sync with the resolved value.
   const activeFilters = { ...filters, dateRange };
+  const tablePagination = auditTablePagination(filteredEntries.length, pagination);
 
-  function openEntry(params: GridRowParams<AuditEntry>) {
-    setSelectedEntry(params.row);
-  }
-
-  // Date range re-queries on the server (RSC); the other facets stay in-page client state.
   function handleFilterChange(next: AuditFilterState) {
+    setPagination((current) => ({ ...current, page: 1 }));
     if (next.dateRange !== dateRange) {
       const query = next.dateRange === "30d" ? "" : `?range=${next.dateRange}`;
       router.replace(`${pathname}${query}`, { scroll: false });
@@ -117,27 +96,25 @@ export function AuditLogView({
         />
         <div className="min-w-0 overflow-hidden" data-testid="audit-grid-scroll-boundary">
           <div
-            className="h-[min(614px,calc(100dvh-260px))] min-h-[360px] w-full min-w-0"
+            className="h-[min(614px,calc(100dvh-260px))] min-h-[360px] w-full min-w-0 [&>[role=table]]:border-0"
             data-testid="audit-grid-viewport"
           >
-            <AuditEntryLimitContext.Provider value={entryLimit}>
-              <DataGrid
-                aria-label="Audit log"
-                columnHeaderHeight={42}
-                columns={auditColumns}
-                disableRowSelectionOnClick
-                getRowId={(row) => row.id}
-                hideFooterSelectedRowCount
-                initialState={initialGridState}
-                onRowClick={openEntry}
-                pageSizeOptions={[10, 25, 50]}
-                pagination
-                rowHeight={52}
-                rows={filteredEntries}
-                slots={gridSlots}
-                sx={gridSx}
-              />
-            </AuditEntryLimitContext.Provider>
+            <DataTable
+              ariaLabel="Audit log"
+              columns={columns}
+              density={AUDIT_TABLE_DENSITY}
+              emptyState={<AuditNoRows entryLimit={entryLimit} />}
+              id={AUDIT_TABLE_ID}
+              layout="fill"
+              onPaginationChange={setPagination}
+              onRowClick={setSelectedEntry}
+              onSortingChange={setSorting}
+              pagination={tablePagination}
+              paginationMode="client"
+              rows={filteredEntries}
+              sorting={sorting}
+              sortingMode="client"
+            />
           </div>
         </div>
       </Card>

@@ -1,4 +1,4 @@
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { LoadSearchInsightsPropertiesAction } from "@/lib/actions/search-insights";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";

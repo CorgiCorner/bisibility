@@ -69,6 +69,32 @@ async function expectAppPage(page: Page, path: string, assertVisible: () => Prom
   await assertVisible();
 }
 
+async function enableExperimentalModules(page: Page, projectRef: string) {
+  const path = `/app/${projectRef}/settings/experimental`;
+  const moduleLabels = ["Timeline", "Competitors"] as const;
+  await expectAppPage(page, path, async () => {
+    for (const label of moduleLabels) {
+      const experimentalModule = page.getByRole("switch", { name: label, exact: true });
+      await expect(experimentalModule).toBeEnabled();
+      await expect(experimentalModule).not.toBeChecked();
+      await experimentalModule.focus();
+      const saved = page.waitForResponse(
+        (candidate) =>
+          candidate.request().method() === "POST" && new URL(candidate.url()).pathname === path,
+        { timeout: 30_000 },
+      );
+      const [response] = await Promise.all([saved, page.keyboard.press("Space")]);
+      expect(response.ok()).toBe(true);
+      await expect(experimentalModule).toBeChecked();
+    }
+  });
+
+  await page.reload();
+  for (const label of moduleLabels) {
+    await expect(page.getByRole("switch", { name: label, exact: true })).toBeChecked();
+  }
+}
+
 async function clickThroughAppPages(page: Page, keyword: string, projectRef: string) {
   await expectAppPage(page, `/app/${projectRef}/dashboard`, async () => {
     await expect(
@@ -76,10 +102,12 @@ async function clickThroughAppPages(page: Page, keyword: string, projectRef: str
     ).toBeVisible();
   });
 
+  const rankTrackerTable = page.getByRole("table", { name: "Rank tracker keywords" });
+  const keywordLink = rankTrackerTable.getByRole("link", { name: keyword, exact: true });
   await expectAppPage(page, `/app/${projectRef}/rank-tracker`, async () => {
-    await expect(page.getByText(keyword).first()).toBeVisible();
+    await expect(keywordLink).toBeVisible();
   });
-  await page.getByRole("link", { name: "View keyword details" }).click();
+  await keywordLink.click();
   await expect(page).toHaveURL(
     (url) => url.pathname.startsWith(`/app/${projectRef}/rank-tracker/kw_`),
     { timeout: 30_000 },
@@ -153,20 +181,42 @@ async function verifyWorkspaceWidths(page: Page, keywordDetailPath: string, proj
     }
   }
 
-  await page.goto(`/app/${projectRef}/settings/general`);
-  const settingsWidth = await page
-    .locator("main > div")
-    .first()
-    .evaluate((node) => node.getBoundingClientRect().width);
-  expect(settingsWidth).toBeCloseTo(1040, 0);
-
-  await page.goto("/app/account");
-  const accountWidth = await page
-    .locator("main > div")
-    .first()
-    .evaluate((node) => node.getBoundingClientRect().width);
-  expect(accountWidth).toBeCloseTo(1040, 0);
+  for (const [path, selector] of [
+    [`/app/${projectRef}/settings/general`, "[data-settings-shell]"],
+    ["/app/account", "[data-account-shell]"],
+  ] as const) {
+    await expectAppPage(page, path, async () => {
+      // Streamed shells can be attached before their content is revealed.
+      const shell = page.locator(`main:visible ${selector}:visible`);
+      await expect(shell).toHaveCount(1);
+      await expect
+        .poll(() => shell.evaluate((node) => node.getBoundingClientRect().width), {
+          message: `${path} visible shell should finish laying out at 1040px`,
+        })
+        .toBeCloseTo(1040, 0);
+    });
+  }
 }
+
+test("no-key runtime makes no third-party requests and renders no consent banner", async ({
+  page,
+}) => {
+  test.skip(Boolean(process.env.E2E_POSTHOG_KEY), "This guard requires the no-key runtime.");
+  const appHost = new URL(process.env.E2E_BASE_URL ?? "http://127.0.0.1:3100").host;
+  const thirdPartyHosts = new Set<string>();
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if ((url.protocol === "http:" || url.protocol === "https:") && url.host !== appHost) {
+      thirdPartyHosts.add(url.host);
+    }
+  });
+
+  await page.goto("/login");
+  await page.waitForLoadState("networkidle");
+
+  expect([...thirdPartyHosts]).toEqual([]);
+  await expect(page.getByLabel("Analytics consent")).toHaveCount(0);
+});
 
 test("release flow: auth, onboarding, app pages, keyword detail, logout", async ({ page }) => {
   test.setTimeout(360_000);
@@ -175,6 +225,7 @@ test("release flow: auth, onboarding, app pages, keyword detail, logout", async 
 
   await signIn(page, email);
   const { keyword, projectRef } = await completeOnboarding(page, suffix);
+  await enableExperimentalModules(page, projectRef);
   const keywordDetailPath = await clickThroughAppPages(page, keyword, projectRef);
   await verifyWorkspaceWidths(page, keywordDetailPath, projectRef);
 

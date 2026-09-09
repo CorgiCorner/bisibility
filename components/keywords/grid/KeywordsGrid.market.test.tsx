@@ -4,19 +4,10 @@ import { asMarketRef } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
 import { stubResizeObserver } from "@/tests/observers";
 import { screen } from "@testing-library/react";
-import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderPendingGrid } from "./KeywordsGrid.test-helpers";
 
 vi.mock("@/components/keywords/import/ImportCsvWizard", () => ({ ImportCsvWizard: () => null }));
-vi.mock("./DeferredDataGrid", async () => {
-  const { MuiDataGrid } = await import("./MuiDataGrid");
-  return {
-    DeferredDataGrid: (props: Omit<ComponentProps<typeof MuiDataGrid>, "onReady">) => (
-      <MuiDataGrid {...props} onReady={() => undefined} />
-    ),
-  };
-});
 
 const projectMarkets = {
   markets: [
@@ -67,8 +58,37 @@ describe("KeywordsGrid inside one market", () => {
     expect(
       screen.getByRole("link", { name: "Copy keywords from another market" }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Choose what to track" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "No keywords yet" })).not.toBeInTheDocument();
   });
+
+  it.each(["active", "paused"] as const)(
+    "shows the empty %s market when other markets contain keywords",
+    (status) => {
+      renderPendingGrid(
+        {
+          projectMarkets: {
+            ...projectMarkets,
+            markets: [{ ...projectMarkets.markets[0], status }],
+          },
+          locations: [
+            { count: 10, displayName: "Spain", id: "ES", kind: "country" },
+            { count: 0, displayName: "United States", id: "US", kind: "country" },
+          ],
+          rows: [],
+          matchedTargetCount: 0,
+          totalCount: 10,
+        },
+        unitedStates,
+      );
+      expect(
+        screen.getByRole("heading", { name: "No keywords in United States / English yet" }),
+      ).toBeVisible();
+      expect(
+        screen.getByRole("button", { name: "Add keywords to United States / English" }),
+      ).toBeEnabled();
+      expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    },
+  );
 
   it("states the deep-linked run's slice as a status row inside the frame", () => {
     renderPendingGrid(
@@ -96,16 +116,16 @@ describe("KeywordsGrid inside one market", () => {
   it("keeps its project-level copy when the market cannot be named", () => {
     renderPendingGrid({ rows: [], totalCount: 0 }, unitedStates);
 
-    expect(screen.getByRole("heading", { name: "Choose what to track" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "No keywords yet" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /No keywords in/ })).not.toBeInTheDocument();
   });
 });
 
 describe("KeywordsGrid at the project level", () => {
-  it("leaves the empty state exactly as it was", () => {
+  it("shows the project-level empty state", () => {
     renderPendingGrid({ projectMarkets, rows: [], totalCount: 0 });
 
-    expect(screen.getByRole("heading", { name: "Choose what to track" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "No keywords yet" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /No keywords in/ })).not.toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: "Copy keywords from another market" }),
@@ -123,4 +143,31 @@ describe("KeywordsGrid at the project level", () => {
     expect(screen.queryByTestId("market-run-slice")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "View all markets" })).not.toBeInTheDocument();
   });
+});
+
+it("explains paused-market preparation while retaining Add keywords", () => {
+  renderPendingGrid(
+    {
+      projectMarkets: {
+        ...projectMarkets,
+        markets: [{ ...projectMarkets.markets[0], status: "paused" }],
+      },
+      rows: [],
+      totalCount: 0,
+    },
+    unitedStates,
+  );
+  expect(screen.getByText(/Rank checks will not start until you resume this market/)).toBeVisible();
+  expect(
+    screen.getByRole("button", { name: "Add keywords to United States / English" }),
+  ).toBeEnabled();
+});
+it("explains market identity before any keywords exist", () => {
+  renderPendingGrid({
+    projectMarkets: { ...projectMarkets, markets: [] },
+    rows: [],
+    totalCount: 0,
+  });
+  expect(screen.getByRole("heading", { name: "Start with your first market" })).toBeVisible();
+  expect(screen.getByText(/Adding another market later keeps existing keywords/)).toBeVisible();
 });

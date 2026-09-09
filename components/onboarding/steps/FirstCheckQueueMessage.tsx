@@ -1,4 +1,4 @@
-import { InfoIcon as Info } from "@phosphor-icons/react";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 
 export function FirstCheckQueueMessage({ message }: Readonly<{ message: string }>) {
   return (

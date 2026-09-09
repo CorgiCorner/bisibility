@@ -4,6 +4,7 @@ import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import type { SaveSelectedKeywordsAction } from "@/lib/actions/domain-overview";
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
 import type { HistoricalOverviewRow } from "@/lib/providers/types";
+import type { ResearchScope } from "@/lib/research/scope";
 import { DomainOverviewBacklinksTeaser } from "./DomainOverviewBacklinksTeaser";
 import { DomainOverviewContextBar } from "./DomainOverviewContextBar";
 import { DomainOverviewDistribution } from "./DomainOverviewDistribution";
@@ -14,19 +15,18 @@ import { DomainOverviewPerformanceChart } from "./DomainOverviewPerformanceChart
 import { DomainOverviewNoDataCard, DomainOverviewStatePanel } from "./DomainOverviewStatePanel";
 import { DomainOverviewWhatChanged } from "./DomainOverviewWhatChanged";
 import { saveDomainKeywords } from "./domain-overview-keyword-tracking";
-import type { DomainOverviewMarketView } from "./domain-overview-workspace-model";
 
 type DomainOverviewResultsProps = {
   history: HistoricalOverviewRow[] | null;
   historyError: boolean;
   historyEstimateCents: number | null;
   historyLoading: boolean;
-  market: DomainOverviewMarketView;
   onLoadHistory: () => void;
   onLoadMoreKeywords: () => void;
   onLoadMorePages: () => void;
   projectRef: string;
   report: DomainOverviewReport;
+  researchScope: ResearchScope & { providerLocationCode: number };
   tableEstimateCents: { keywords: number | null; pages: number | null };
   tableError: "keywords" | "pages" | null;
   tableFetchedCount: { keywords: number; pages: number };
@@ -40,12 +40,12 @@ export function DomainOverviewResults({
   historyError,
   historyEstimateCents,
   historyLoading,
-  market,
   onLoadHistory,
   onLoadMoreKeywords,
   onLoadMorePages,
   projectRef,
   report,
+  researchScope,
   tableEstimateCents,
   tableError,
   tableFetchedCount,
@@ -68,13 +68,13 @@ export function DomainOverviewResults({
             sourceSnapshotAt={report.sourceSnapshotAt}
           />
           <DomainOverviewNoDataCard
-            description="The selected domain has no indexed organic history in this market."
+            description="The selected domain has no indexed organic history for this country and language."
             sectionTitle="Organic performance"
             title="No index history to display"
           />
           <DomainOverviewStatePanel
-            market={market.displayName}
             projectRef={projectRef}
+            researchScope={researchScope}
             state="no_data"
             target={report.target}
           />
@@ -116,7 +116,7 @@ export function DomainOverviewResults({
                 saveSelectedKeywordsAction
                   ? (rows) =>
                       saveDomainKeywords(saveSelectedKeywordsAction, {
-                        market,
+                        researchScope,
                         projectId: projectRef,
                         report,
                         rows,

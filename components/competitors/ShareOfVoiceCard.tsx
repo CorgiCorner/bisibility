@@ -1,7 +1,8 @@
-import { Card, SectionTitle } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { CompetitorFilter, CompetitorKind, CompetitorMarket } from "@/lib/competitors/types";
 import { countLabel } from "@/lib/format/pluralize";
-import { InfoIcon as Info } from "@phosphor-icons/react";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import type { ReactNode } from "react";
 import { CompetitorFilterControls } from "./CompetitorFilterControls";
 import { CompetitorTile } from "./CompetitorTile";

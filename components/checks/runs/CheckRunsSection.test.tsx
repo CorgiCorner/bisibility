@@ -60,7 +60,7 @@ describe("CheckRunsSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Filter by Skipped - 28" }));
     const asOfButton = screen.getByRole("button", { name: "As of: Jul 24, 2026" });
     expect(asOfButton).toHaveStyle({ fontWeight: "400" });
-    fireEvent.mouseOver(asOfButton);
+    fireEvent.pointerMove(asOfButton);
     expect(
       await screen.findByText(
         "Stats cover the selected 24h window ending on this date. The table starts with the newest check on or before it.",
@@ -152,7 +152,7 @@ describe("CheckRunsSection", () => {
 
     const badges = screen.getAllByText("country-level");
     expect(screen.getByText("fallback")).toBeInTheDocument();
-    fireEvent.mouseOver(badges[0] as HTMLElement);
+    fireEvent.pointerMove(badges[0] as HTMLElement);
     expect(await screen.findByText(countryLevelTooltip)).toBeInTheDocument();
     expect(
       screen.getByText("via backup (SerpApi) - DataForSEO rate-limited · #5 of top 20"),
@@ -225,12 +225,14 @@ describe("CheckRunsSection", () => {
       />,
     );
 
-    controllers[0]?.trigger([
-      {
-        contentRect: { width: 520 } as DOMRectReadOnly,
-        target: document.body,
-      } as unknown as ResizeObserverEntry,
-    ]);
+    for (const controller of controllers) {
+      controller.trigger([
+        {
+          contentRect: { width: 520 } as DOMRectReadOnly,
+          target: document.body,
+        } as unknown as ResizeObserverEntry,
+      ]);
+    }
 
     await waitFor(() => {
       expect(screen.queryByRole("columnheader", { name: "Depth" })).not.toBeInTheDocument();

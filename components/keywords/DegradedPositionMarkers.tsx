@@ -1,5 +1,5 @@
 import type { KeywordLocation, PositionPoint } from "@/lib/queries/keywords";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useXAxisScale, useYAxisScale } from "recharts";
 
 function countryName(countryCode: string) {
   if (!countryCode) return "the country";
@@ -14,19 +14,22 @@ export function degradedPositionCopy(location: KeywordLocation) {
 
 export function DegradedPositionMarkers({
   color,
+  labels,
   location,
   points,
 }: Readonly<{
   color: string;
+  labels: readonly string[];
   location: KeywordLocation;
   points: readonly PositionPoint[];
 }>) {
-  const xScale = useXScale<"point">();
-  const yScale = useYScale<"linear">();
+  const xScale = useXAxisScale();
+  const yScale = useYAxisScale();
+  if (!xScale || !yScale) return null;
   const copy = degradedPositionCopy(location);
   return points.flatMap((point) => {
     if (!point.degradedToCountry) return [];
-    const x = xScale(point.label);
+    const x = xScale(labels.indexOf(point.label));
     const y = yScale(point.position);
     if (typeof x !== "number" || typeof y !== "number") return [];
     return [

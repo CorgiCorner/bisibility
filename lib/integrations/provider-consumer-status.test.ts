@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { searchModuleConsumerStatus } from "./provider-consumer-status";
 
 const observability = {
+  importCoverage: { completed: 5, total: 488 },
   consecutiveDays: 5,
   deepHistoryMonths: { completed: 0, target: 16 },
   lastActivityAt: "2026-08-31T10:00:00.000Z",
@@ -33,22 +34,22 @@ const base = {
   connectionStatus: "connected" as const,
   observability,
   pausedReason: null,
-  property: "sc-domain:corgitocoin.com",
+  property: "sc-domain:example.com",
   runtime,
   state: "running",
 };
-const counter = `${observability.qualifyingDays} of ${observability.targetDays} finalized days are imported.`;
+const counter = `${observability.importCoverage.completed} of ${observability.importCoverage.total} finalized days are imported.`;
 
 describe("searchModuleConsumerStatus", () => {
-  it("adapts the shared running presentation with its selector counter and support", () => {
+  it("adapts the shared importing presentation with its selector counter and support", () => {
     expect(searchModuleConsumerStatus(base)).toEqual({
-      detail: "corgitocoin.com",
+      detail: "example.com",
       state: "backfill_running",
-      summary: `Running · ${counter} · Next request in about 10 min.`,
+      summary: `Importing · ${counter} · Next request in about 10 min.`,
     });
   });
 
-  it("uses the shared queued reason instead of a local running summary", () => {
+  it("uses the shared queued presentation without inferring worker activity", () => {
     expect(
       searchModuleConsumerStatus({
         ...base,
@@ -57,7 +58,7 @@ describe("searchModuleConsumerStatus", () => {
       }),
     ).toMatchObject({
       state: "backfill_running",
-      summary: `Queued · ${counter} · Queued behind example.com. That import is using the shared property quota.`,
+      summary: `Queued · ${counter} · Import is queued.`,
     });
   });
 
@@ -77,7 +78,20 @@ describe("searchModuleConsumerStatus", () => {
       }),
     ).toEqual({
       state: "needs_reauth",
-      summary: "Needs reauth · Connect Search Console to import finalized search data.",
+      summary: "Reconnect required · Reconnect Search Console to continue importing.",
+    });
+  });
+
+  it("does not substitute recent readiness for missing full import coverage", () => {
+    expect(
+      searchModuleConsumerStatus({
+        ...base,
+        observability: { ...observability, importCoverage: undefined },
+      }),
+    ).toMatchObject({
+      state: "backfill_running",
+      summary:
+        "Importing · Finalized import coverage is not available. · Next request in about 10 min.",
     });
   });
 
@@ -86,10 +100,10 @@ describe("searchModuleConsumerStatus", () => {
       searchModuleConsumerStatus({
         connectionStatus: "connected",
         observability: undefined,
-        property: "sc-domain:corgitocoin.com",
+        property: "sc-domain:example.com",
         state: null,
       }),
-    ).toEqual({ detail: "corgitocoin.com", state: "not_configured", summary: "Not configured" });
+    ).toEqual({ detail: "example.com", state: "not_configured", summary: "Not configured" });
   });
 
   it("reports the first view ready when the first finalized day is ready", () => {
@@ -101,39 +115,43 @@ describe("searchModuleConsumerStatus", () => {
           readyThrough: { ...observability.readyThrough, d1: { current: true, previous: false } },
         },
       }),
-    ).toMatchObject({ state: "first_view_ready", summary: expect.stringMatching(/^Running ·/) });
+    ).toMatchObject({ state: "first_view_ready", summary: expect.stringMatching(/^Importing ·/) });
   });
 
   it("uses durable completion rather than assuming every property has four weeks of history", () => {
     expect(
       searchModuleConsumerStatus({
         ...base,
+        observability: { ...observability, importCoverage: { completed: 5, total: 5 } },
         runtime: { ...runtime },
         state: "completed",
       }),
-    ).toMatchObject({ state: "kept_current", summary: `Complete · ${counter}` });
+    ).toMatchObject({
+      state: "kept_current",
+      summary: "Completed · 5 of 5 finalized days are imported.",
+    });
   });
 
   it.each([
     [
       "provider pause",
       { pausedReason: "rate_limited", state: "paused" },
-      "Paused by provider limits",
-      "The provider limit resets automatically, then the import resumes automatically.",
+      "Waiting for Google",
+      "Google will resume the import automatically when its limit allows.",
       "backfill_running",
     ],
     [
       "failed import",
       { safeError: "Import failed", state: "failed" },
-      "Needs retry",
+      "Failed",
       "Import failed",
       "sync_failed",
     ],
     [
       "waiting worker",
       { runtime: { ...runtime, workerStatus: "stale" } },
-      "Waiting on worker",
-      "Import is waiting for the background worker - restart it and it resumes.",
+      "Delayed",
+      "The active worker is unavailable or does not match this import.",
       "backfill_running",
     ],
   ] as const)(
@@ -142,7 +160,7 @@ describe("searchModuleConsumerStatus", () => {
       const status = searchModuleConsumerStatus({ ...base, ...overrides });
 
       expect(status).toMatchObject({ state, summary: `${title} · ${counter} · ${support}` });
-      expect(status.summary).not.toMatch(/^Running|Not configured/);
+      expect(status.summary).not.toMatch(/^Importing|Not configured/);
     },
   );
 });

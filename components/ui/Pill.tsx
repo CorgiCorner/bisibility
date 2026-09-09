@@ -1,12 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
-import { MOTION_PRESS } from "@/lib/ui/motion";
-import { sxArray } from "@/lib/ui/mui-sx";
-import ButtonBase, { type ButtonBaseProps } from "@mui/material/ButtonBase";
 import type { ComponentProps } from "react";
+import { Button, type ButtonProps } from "./Button";
 
-export type PillProps = ButtonBaseProps & {
+export type PillProps = Omit<ButtonProps, "size"> & {
   active?: boolean;
   size?: "sm" | "md" | "lg";
 };
@@ -34,40 +32,29 @@ export function PillBadge({ className, size = "sm", ...props }: Readonly<PillBad
   );
 }
 
-const sizeSx = {
-  sm: { borderRadius: "9999px", columnGap: "4px", fontSize: "11px", minHeight: 28, px: "10px" },
-  md: { borderRadius: "9999px", columnGap: "6px", fontSize: "12px", minHeight: 34, px: "12px" },
-  lg: { borderRadius: "9999px", columnGap: "8px", fontSize: "13px", minHeight: 40, px: "16px" },
-} as const;
-
-export function Pill({ active = false, className, size = "md", sx, ...props }: PillProps) {
-  const additionalSx = sxArray(sx);
-
+const pillSizes = {
+  sm: "min-h-7 gap-1 px-2.5 text-[11px]",
+  md: "min-h-8.5 gap-1.5 px-3 text-[12px]",
+  lg: "min-h-10 gap-2 px-4 text-[13px]",
+};
+export function Pill({ active = false, className, size = "md", style, ...props }: PillProps) {
   return (
-    <ButtonBase
-      className={cn("inline-flex items-center whitespace-nowrap font-semibold", className)}
-      sx={[
-        {
-          backgroundColor: active ? "var(--accent-soft)" : "var(--bg-elev)",
-          border: "1px solid var(--border-control)",
-          color: active ? "var(--accent)" : "var(--fg-muted)",
-          fontWeight: 600,
-          transition: `background-color .16s ease, border-color .16s ease, color .16s ease, transform ${MOTION_PRESS}ms ease`,
-          "&:hover": {
-            backgroundColor: active
-              ? "color-mix(in srgb, var(--accent) 18%, var(--bg-elev))"
-              : "var(--bg-sunken)",
-            borderColor: active ? "var(--accent-hover)" : "var(--accent)",
-            color: active ? "var(--accent-hover)" : "var(--accent)",
-          },
-          "@media (prefers-reduced-motion: no-preference)": {
-            "&:active:not(:focus-visible):not(.Mui-disabled)": { transform: "scale(0.98)" },
-          },
-        },
-        sizeSx[size],
-        ...additionalSx,
-      ]}
+    <Button
       {...props}
+      size="xs"
+      variant="secondary"
+      className={cn("rounded-full whitespace-nowrap font-semibold", pillSizes[size], className)}
+      style={{
+        "--control-press-scale": ".98",
+        "--control-background-color": active ? "var(--accent-soft)" : "var(--bg-elev)",
+        "--control-color": active ? "var(--accent)" : "var(--fg-muted)",
+        "--control-hover-background-color": active
+          ? "color-mix(in srgb, var(--accent) 18%, var(--bg-elev))"
+          : "var(--bg-sunken)",
+        "--control-hover-border-color": active ? "var(--accent-hover)" : "var(--accent)",
+        "--control-hover-color": active ? "var(--accent-hover)" : "var(--accent)",
+        ...style,
+      }}
     />
   );
 }

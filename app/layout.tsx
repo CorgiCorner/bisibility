@@ -1,7 +1,15 @@
+import { AnalyticsRuntime } from "@/components/analytics/AnalyticsRuntime";
+import { ConsentSlot } from "@/components/analytics/ConsentSlot";
 import { WebMcpTools } from "@/components/integrations/WebMcpTools";
 import { KeywordImportProvider } from "@/components/keywords/import/KeywordImportProvider";
-import { InlineScript, ToastProvider, TooltipProvider } from "@/components/ui";
+import { InlineScript } from "@/components/ui/InlineScript";
+import { ToastProvider } from "@/components/ui/Toast";
+import { TooltipProvider } from "@/components/ui/Tooltip";
+import { pendingConsent } from "@/lib/analytics/consent";
+import { providerRequiresConsent, resolveAnalyticsProvider } from "@/lib/analytics/provider";
+import { readConsentFromCookies } from "@/lib/analytics/server";
 import { appExtensions } from "@/lib/app-extensions";
+import { getSessionReference } from "@/lib/auth/session";
 import { sessionHintInitScript } from "@/lib/auth/session-hint";
 import { rootMetadata } from "@/lib/seo/jsonld";
 import { themeInitScript } from "@/lib/theme/browser-theme";
@@ -18,7 +26,15 @@ type RootLayoutProps = {
   children: ReactNode;
 };
 
-export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
+export default async function RootLayout({ children }: Readonly<RootLayoutProps>) {
+  const provider = resolveAnalyticsProvider(process.env);
+  // Reading cookies or the session in the root layout opts every route into dynamic
+  // rendering. Skip both when no consent-gated provider is configured, so a build
+  // without an analytics key keeps its statically rendered and prerendered routes.
+  const [consent, session] = providerRequiresConsent(provider)
+    ? await Promise.all([readConsentFromCookies(), getSessionReference()])
+    : [pendingConsent(), null];
+
   return (
     <html
       lang="en"
@@ -32,6 +48,8 @@ export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
         {appExtensions.renderHead()}
       </head>
       <body suppressHydrationWarning>
+        <AnalyticsRuntime consent={consent} provider={provider} userId={session?.user.id} />
+        <ConsentSlot />
         <Providers>
           <TooltipProvider>
             <WebMcpTools />

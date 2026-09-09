@@ -1,10 +1,13 @@
 import { OverviewDashboardView } from "@/components/overview/OverviewDashboardView";
 import { OverviewSkeleton } from "@/components/overview/OverviewSkeleton";
 import { PageContent } from "@/components/shell/PageContent";
-import { resolveProjectAccess } from "@/lib/queries/_auth";
+import { getProjectRole } from "@/lib/auth/authorize";
+import { canProjectAction } from "@/lib/auth/capabilities";
+import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getPreferences } from "@/lib/queries/account";
 import { getCheckHealth } from "@/lib/queries/check-health";
 import { getOverview, parseOverviewFilters } from "@/lib/queries/overview";
+import { getOverviewCompetitors } from "@/lib/queries/overview-competitors";
 import { Suspense } from "react";
 
 type OverviewPageProps = {
@@ -24,14 +27,22 @@ async function OverviewData({
   projectRef: import("@/lib/routing/app-path").ProjectRef;
 }>) {
   const now = new Date();
-  const [overview, checkHealth] = await Promise.all([
+  const [overview, checkHealth, readable, competitors] = await Promise.all([
     getOverview(projectRef, { dateFormat, filters }),
     getCheckHealth(projectRef, { now }),
+    requireReadableProject(projectRef),
+    isSample ? Promise.resolve(null) : getOverviewCompetitors(projectRef, filters, now),
   ]);
   const state = overview.state ?? (overview.isEmpty ? "empty" : "populated");
 
   return (
     <OverviewDashboardView
+      competitors={competitors}
+      canCreateKeyword={canProjectAction(
+        getProjectRole(readable.actor, readable.project.id),
+        "create",
+        "keyword",
+      )}
       checkHealth={checkHealth}
       isSample={isSample}
       overview={{ ...overview, state }}

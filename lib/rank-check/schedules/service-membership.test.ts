@@ -73,6 +73,23 @@ describe("check schedule membership service", () => {
     mocks.writeAudit.mockResolvedValue({});
   });
 
+  it.each([
+    [null, "Europe/Warsaw"],
+    ["UTC", "UTC"],
+  ])("uses timezone %s when assigning keywords", async (timezone, expected) => {
+    mocks.tx.checkSchedule.findFirst.mockResolvedValue({ ...scheduleB, timezone });
+    mocks.tx.project.findUnique.mockResolvedValue({ defaults: { timezone: "Europe/Warsaw" } });
+    mocks.tx.keyword.findMany.mockResolvedValue([
+      { checkScheduleId: null, checkSchedule: null, id: "keyword_1", publicId: kw1 },
+    ]);
+    await assignKeywordsToSchedule("user_1", projectId, {
+      keywordIds: [kw1],
+      projectId: `prj_${"p".repeat(24)}`,
+      scheduleId: scheduleBId,
+    });
+    expect(mocks.tx.$executeRaw.mock.calls[0][0].values).toContain(expected);
+  });
+
   it("moves exclusive membership, mirrors cadence, and audits previous schedules", async () => {
     mocks.tx.keyword.findMany.mockResolvedValue([
       {

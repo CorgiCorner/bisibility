@@ -2,9 +2,8 @@ import type { KeywordRow } from "@/lib/queries/keyword-row-types";
 import { describe, expect, it } from "vitest";
 import {
   aggregateMarketGridRows,
-  buildMarketGridViewRows,
+  groupRow,
   marketGridDefaultsToGrouped,
-  selectedMarketTargetIds,
 } from "./market-grid-model";
 
 function target(overrides: Partial<KeywordRow> & { id: string }): KeywordRow {
@@ -175,6 +174,22 @@ describe("market grid aggregate model", () => {
     expect(aggregate?.sparkline).toEqual([6, 7, 3]);
   });
 
+  it("displays the newest active check instead of the first child timestamp", () => {
+    const aggregate = aggregateMarketGridRows([
+      target({ id: "old", lastCheckAt: "2026-08-10T00:00:00.000Z" }),
+      target({ id: "new", lastCheckAt: "2026-08-12T00:00:00.000Z" }),
+      {
+        ...target({ id: "paused", lastCheckAt: "2026-08-14T00:00:00.000Z" }),
+        marketStatus: "paused",
+      },
+    ])[0];
+
+    if (!aggregate) throw new Error("Expected aggregate");
+
+    expect(aggregate.lastChecked).toBe("2026-08-12T00:00:00.000Z");
+    expect(groupRow(aggregate, aggregate.children).lastCheckAt).toBe("2026-08-12T00:00:00.000Z");
+  });
+
   it("defaults to grouped only when at least two market pairs exist", () => {
     const one = target({ id: "one" });
     const two = target({
@@ -186,52 +201,31 @@ describe("market grid aggregate model", () => {
     expect(marketGridDefaultsToGrouped([one, two])).toBe(true);
   });
 
-  it("flattens exactly two levels and expands children in fixed order", () => {
+  it("shapes grouped rows with fixed-order children for table-owned expansion", () => {
     const rows = [
       { ...target({ device: "Mobile", id: "mobile" }), registryOrder: 1 },
       { ...target({ id: "desktop" }), registryOrder: 0 },
     ];
-    const collapsed = buildMarketGridViewRows(rows, true, new Set());
-    const parentId = collapsed[0]?.id ?? "";
-    const expanded = buildMarketGridViewRows(rows, true, new Set([parentId]));
+    const aggregate = aggregateMarketGridRows(rows)[0];
+    if (!aggregate) throw new Error("Expected aggregate");
+    const parent = groupRow(aggregate, aggregate.children);
 
-    expect(collapsed).toHaveLength(1);
-    expect(collapsed[0]?.marketGrid).toMatchObject({ expanded: false, kind: "parent" });
-    expect(expanded.map((row) => row.id)).toEqual([parentId, "desktop", "mobile"]);
-    expect(expanded[1]?.marketGrid).toEqual({ kind: "child", parentId });
+    expect(parent).toMatchObject({ kind: "group", marketGrid: { kind: "parent" } });
+    expect(parent?.subRows?.map((row) => row.id)).toEqual(["desktop", "mobile"]);
+    expect(parent?.subRows?.[0]?.marketGrid).toEqual({ kind: "child", parentId: parent?.id });
   });
 
-  it("maps a parent selection to every underlying target exactly once", () => {
-    const rows = [target({ id: "desktop" }), target({ device: "Mobile", id: "mobile" })];
-    const view = buildMarketGridViewRows(rows, true, new Set());
+  it("creates a group row from the supplied matching children", () => {
+    const aggregate = aggregateMarketGridRows([
+      target({ id: "first" }),
+      target({ id: "second", device: "Mobile" }),
+    ])[0];
+    if (!aggregate) throw new Error("Expected aggregate");
 
-    expect(selectedMarketTargetIds(view, new Set([view[0]?.id ?? ""]))).toEqual([
-      "desktop",
-      "mobile",
-    ]);
-  });
+    const second = aggregate.children[1];
+    if (!second) throw new Error("Expected second child");
+    const row = groupRow(aggregate, [second]);
 
-  it("sorts parents by aggregates while retaining fixed child order", () => {
-    const rows = [
-      { ...target({ id: "alpha-mobile", keyword: "alpha", position: 8 }), registryOrder: 1 },
-      { ...target({ id: "alpha-desktop", keyword: "alpha", position: 6 }), registryOrder: 0 },
-      target({ id: "beta", keyword: "beta", position: 2 }),
-    ];
-    const collapsed = buildMarketGridViewRows(rows, true, new Set(), {
-      field: "position",
-      sort: "asc",
-    });
-    const alphaId = collapsed.find((row) => row.keyword === "alpha")?.id ?? "";
-    const expanded = buildMarketGridViewRows(rows, true, new Set([alphaId]), {
-      field: "position",
-      sort: "asc",
-    });
-
-    expect(expanded.map((row) => row.id)).toEqual([
-      expect.stringContaining("beta"),
-      alphaId,
-      "alpha-desktop",
-      "alpha-mobile",
-    ]);
+    expect(row.subRows.map((child) => child.id)).toEqual(["second"]);
   });
 });

@@ -1,7 +1,6 @@
 "use client";
 
 import { actionErrorMessage } from "@/components/keywords/action-utils";
-import { Sheet } from "@/components/ui";
 import {
   importKeywordsFromCsv,
   previewKeywordImportFile,
@@ -11,13 +10,22 @@ import { refreshKeywordViewsAfterImport } from "@/lib/actions/keyword-import-ref
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { parseCsvKeywordsResult } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { KeywordImportColumnMapping } from "@/lib/keywords/import-csv-parser";
+import { keywordImportTemplateForMarkets } from "@/lib/keywords/import-csv-template";
+import {
+  initialImportMarketKey,
+  type KeywordImportMarketContext,
+} from "@/lib/keywords/import-market-context";
+import {
+  keywordImportWizardInput,
+  updateKeywordImportMapping,
+} from "@/lib/keywords/import-wizard-input";
 import { KEYWORD_IMPORT_MAX, keywordImportFileLimitMessage } from "@/lib/schemas/keyword";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { ImportCsvWizardBody } from "./ImportCsvWizardBody";
 import { ImportCsvWizardFooter } from "./ImportCsvWizardFooter";
-import { ImportStepper } from "./ImportCsvWizardSteps";
+import { ImportCsvWizardFrame } from "./ImportCsvWizardFrame";
 import { type ImportWizardForm, importWizardSchema } from "./import-csv-wizard-schema";
 
 type ImportResult = Awaited<ReturnType<typeof importKeywordsFromCsv>>;
@@ -25,12 +33,18 @@ type ImportReview = Awaited<ReturnType<typeof reviewKeywordImport>>;
 // biome-ignore format: compact server-action result type keeps the wizard under the file line cap.
 type ImportFilePreview = Extract<Awaited<ReturnType<typeof previewKeywordImportFile>>, { ok: true }>;
 type ImportCsvWizardProps = {
+  marketContext?: KeywordImportMarketContext;
   onClose: () => void;
   open: boolean;
   projectId?: string;
 };
 
-export function ImportCsvWizard({ onClose, open, projectId }: Readonly<ImportCsvWizardProps>) {
+export function ImportCsvWizard({
+  marketContext,
+  onClose,
+  open,
+  projectId,
+}: Readonly<ImportCsvWizardProps>) {
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [columnMapping, setColumnMapping] = useState<KeywordImportColumnMapping>({});
@@ -51,10 +65,18 @@ export function ImportCsvWizard({ onClose, open, projectId }: Readonly<ImportCsv
     trigger,
     watch,
   } = useForm<ImportWizardForm>({
-    defaultValues: { csv: "", duplicateMode: "skip", projectId, refresh: "deferred" },
+    defaultValues: {
+      defaultMarketKey: initialImportMarketKey(marketContext),
+      csv: "",
+      duplicateMode: "skip",
+      projectId,
+      refresh: "deferred",
+    },
     resolver: zodResolver(importWizardSchema),
   });
   const csvText = watch("csv");
+  const defaultMarketKey = watch("defaultMarketKey");
+  const hasMarkets = marketContext === undefined || marketContext.markets.length > 0;
   const csvParseResult = useMemo(() => parseCsvKeywordsResult(csvText ?? ""), [csvText]);
   const csvParsedCount = csvParseResult.keywords.length;
   const csvReceivedCount = csvParseResult.rows.length;
@@ -80,7 +102,13 @@ export function ImportCsvWizard({ onClose, open, projectId }: Readonly<ImportCsv
     setResult(null);
     setReview(null);
     setStep(1);
-    reset({ csv: "", duplicateMode: "skip", projectId, refresh: "deferred" });
+    reset({
+      defaultMarketKey: initialImportMarketKey(marketContext),
+      csv: "",
+      duplicateMode: "skip",
+      projectId,
+      refresh: "deferred",
+    });
   }
 
   async function close() {
@@ -94,6 +122,7 @@ export function ImportCsvWizard({ onClose, open, projectId }: Readonly<ImportCsv
   }
 
   async function next() {
+    if (!hasMarkets) return;
     if (step === 5) {
       await close();
       return;
@@ -114,18 +143,14 @@ export function ImportCsvWizard({ onClose, open, projectId }: Readonly<ImportCsv
       setActionError(null);
       setIsReviewing(true);
       try {
-        const input = importFile
-          ? (() => {
-              const formData = new FormData();
-              formData.set("file", importFile);
-              if (projectId) formData.set("projectId", projectId);
-              formData.set("refresh", "deferred");
-              if (Object.keys(columnMapping).length) {
-                formData.set("columnMapping", JSON.stringify(columnMapping));
-              }
-              return formData;
-            })()
-          : { columnMapping, csv: csvText ?? "", projectId, refresh: "deferred" as const };
+        const input = keywordImportWizardInput({
+          file: importFile,
+          columnMapping,
+          csv: csvText ?? "",
+          defaultMarketKey,
+          projectId,
+          refresh: "deferred",
+        });
         setReview(await reviewKeywordImport(input));
       } catch (error) {
         setActionError(actionErrorMessage(error));
@@ -199,29 +224,32 @@ export function ImportCsvWizard({ onClose, open, projectId }: Readonly<ImportCsv
   async function save(values: ImportWizardForm) {
     setActionError(null);
     try {
-      if (importFile) {
-        const input = new FormData();
-        input.set("file", importFile);
-        if (values.projectId) input.set("projectId", values.projectId);
-        input.set("refresh", values.refresh);
-        if (Object.keys(columnMapping).length) {
-          input.set("columnMapping", JSON.stringify(columnMapping));
-        }
-        const importResult = await importKeywordsFromCsv(input);
-        setResult(importResult);
-      } else {
-        const importResult = await importKeywordsFromCsv({ ...values, columnMapping });
-        setResult(importResult);
-      }
+      if (!hasMarkets || !review?.rows.length) return;
+      setResult(
+        await importKeywordsFromCsv(
+          keywordImportWizardInput({ ...values, file: importFile, columnMapping }),
+        ),
+      );
       setStep(5);
     } catch (error) {
       setActionError(actionErrorMessage(error));
     }
   }
   return (
-    <Sheet
+    <ImportCsvWizardFrame
+      marketContext={marketContext}
+      pending={isSubmitting || isReviewing}
+      projectId={projectId}
+      selectedMarketKey={defaultMarketKey}
+      step={step}
+      onMarketChange={(key) => {
+        setValue("defaultMarketKey", key, { shouldDirty: true });
+        setReview(null);
+        if (step === 4) setStep(3);
+      }}
       footer={
         <ImportCsvWizardFooter
+          hasMarkets={hasMarkets}
           canImport={
             canImport &&
             (step !== 3 || !hasHeader || columnMapping.keyword !== undefined) &&
@@ -238,48 +266,35 @@ export function ImportCsvWizard({ onClose, open, projectId }: Readonly<ImportCsv
       }
       onClose={close}
       open={open}
-      title={
-        <span className="block">
-          <span className="block">Import keywords</span>
-          <span className="mt-1 block text-[13px] font-normal tracking-normal text-fg-muted">
-            Bulk-add keywords from CSV or XLSX.
-          </span>
-          <ImportStepper step={step} />
-        </span>
-      }
-      widthVariant="form"
     >
-      <form onSubmit={(event) => event.preventDefault()}>
-        <ImportCsvWizardBody
-          actionError={actionError}
-          csvText={csvText ?? ""}
-          errorMessage={errors.csv?.message ?? csvParseError ?? undefined}
-          hasHeader={hasHeader}
-          importFile={importFile}
-          isReviewing={isReviewing}
-          mapping={columnMapping}
-          onCsvTextChange={updateCsv}
-          onCsvFileError={handleCsvFileError}
-          onMappingChange={(sourceIndex, destination) => {
-            setColumnMapping((current) => {
-              const next = Object.fromEntries(
-                Object.entries(current).filter(
-                  ([field, index]) => index !== sourceIndex && field !== destination,
-                ),
-              ) as KeywordImportColumnMapping;
-              return destination ? { ...next, [destination]: sourceIndex } : next;
-            });
-            setReview(null);
-          }}
-          onUnsupportedFile={handleUnsupportedFile}
-          onWorkbookFileChange={updateWorkbookFile}
-          parsedCount={parsedCount}
-          review={review}
-          result={result}
-          step={step}
-          sourceColumns={sourceColumns}
-        />
-      </form>
-    </Sheet>
+      <ImportCsvWizardBody
+        templateCsv={keywordImportTemplateForMarkets(
+          marketContext?.markets.map((market) => market.canonicalKey) ?? [],
+          defaultMarketKey,
+        )}
+        actionError={actionError}
+        csvText={csvText ?? ""}
+        errorMessage={errors.csv?.message ?? csvParseError ?? undefined}
+        hasHeader={hasHeader}
+        importFile={importFile}
+        isReviewing={isReviewing}
+        mapping={columnMapping}
+        onCsvTextChange={updateCsv}
+        onCsvFileError={handleCsvFileError}
+        onMappingChange={(sourceIndex, destination) => {
+          setColumnMapping((current) =>
+            updateKeywordImportMapping(current, sourceIndex, destination),
+          );
+          setReview(null);
+        }}
+        onUnsupportedFile={handleUnsupportedFile}
+        onWorkbookFileChange={updateWorkbookFile}
+        parsedCount={parsedCount}
+        review={review}
+        result={result}
+        step={step}
+        sourceColumns={sourceColumns}
+      />
+    </ImportCsvWizardFrame>
   );
 }

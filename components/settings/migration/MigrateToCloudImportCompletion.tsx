@@ -1,3 +1,4 @@
+import { IdChip } from "@/components/ui/IdChip";
 import {
   migrationImportCountEntries,
   migrationImportCountSummary,
@@ -11,8 +12,9 @@ export function ImportCompletionSummary({
   const summary = migrationImportCountSummary(completion.counts);
   return (
     <div className="mt-4 w-full max-w-[420px] rounded-control border border-border bg-bg-sunken px-3.5 py-3 text-left">
-      <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        Import job {completion.jobId}
+      <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-fg-muted">
+        Import job
+        <IdChip copyLabel="Copy import job ID" size="xs" value={completion.jobId} />
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
         {countEntries.length > 0 ? (

@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, inputClassName, MenuMultiSelect, MenuSelect } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { inputClassName } from "@/components/ui/input-styles";
+import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
 import type { AlertTargetOptions } from "@/lib/alerts/alert-data";
 import type { NewRuleForm, RuleTemplateId } from "@/lib/alerts/new-rule-data";
 import { ruleSeverityMeta, ruleTemplates } from "@/lib/alerts/new-rule-data";
@@ -57,12 +59,12 @@ export function TemplatePicker({
               key={id}
               onClick={() => onSelect(templateId)}
               size="sm"
-              sx={
+              style={
                 active
                   ? {
-                      backgroundColor: "var(--accent-soft)",
-                      borderColor: "var(--accent)",
-                      color: "var(--accent-text)",
+                      "--control-background-color": "var(--accent-soft)",
+                      "--control-border-color": "var(--accent)",
+                      "--control-color": "var(--accent-text)",
                     }
                   : undefined
               }

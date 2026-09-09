@@ -6,10 +6,9 @@ import { RankingUrlHistory } from "@/components/keywords/RankingUrlHistory";
 import { RetrievedResultsCard } from "@/components/keywords/RetrievedResultsCard";
 import { loadRankTrackerCostContext } from "@/components/keywords/rank-tracker-cost-context";
 import { PageContent } from "@/components/shell/PageContent";
-import { BackLink } from "@/components/ui";
+import { BackLink } from "@/components/ui/BackLink";
 import { createKeywordAlertRule } from "@/lib/actions/alerts";
-import { addKeywordsMatrix, updateKeyword } from "@/lib/actions/keyword";
-import { bulkDeleteKeywords } from "@/lib/actions/keyword-bulk";
+import { updateKeyword } from "@/lib/actions/keyword";
 import { runCheckNow } from "@/lib/actions/rankCheck";
 import { loadRetrievedResults } from "@/lib/actions/retrieved-results";
 import { getProjectRole } from "@/lib/auth/authorize";
@@ -17,9 +16,9 @@ import { canProjectAction } from "@/lib/auth/capabilities";
 import { providerLabel } from "@/lib/checks/attempts";
 import { deriveKeywordDetailState } from "@/lib/keyword-detail/state-model";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
-import { getKeywordMarketTargets } from "@/lib/queries/keyword-market-targets";
+import { getKeywordCompetitors } from "@/lib/queries/competitor-policies";
+import { getKeywordTargetContext } from "@/lib/queries/keyword-target-context";
 import { getKeywordDetail, getKeywordTagSuggestions } from "@/lib/queries/keywords";
-import { getProjectMarkets } from "@/lib/queries/project-markets";
 import { loadRetrievedResultsForChecks, storedResultsIndex } from "@/lib/queries/retrieved-results";
 import { getRankCheckRawRetentionDays } from "@/lib/rank-check/raw-retention";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
@@ -33,18 +32,20 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
   const { id, project } = await params;
   const { publicId } = await resolveProjectAccess(project);
   const projectRef = asProjectRef(publicId);
-  const [keyword, tagSuggestions, readable, costContext, projectMarkets] = await Promise.all([
-    getKeywordDetail(publicId, id),
-    getKeywordTagSuggestions(publicId),
-    requireReadableProject(publicId),
-    loadRankTrackerCostContext(publicId),
-    getProjectMarkets(publicId),
-  ]);
+  const [keyword, tagSuggestions, readable, costContext, targetContext, competitors] =
+    await Promise.all([
+      getKeywordDetail(publicId, id),
+      getKeywordTagSuggestions(publicId),
+      requireReadableProject(publicId),
+      loadRankTrackerCostContext(publicId),
+      getKeywordTargetContext(publicId, id),
+      getKeywordCompetitors(publicId, id),
+    ]);
 
   if (!keyword) {
     notFound();
   }
-  const marketTargets = await getKeywordMarketTargets(publicId, keyword.id);
+  const { projectMarkets, targets: marketTargets } = targetContext;
   const storedChecks = await storedResultsIndex({
     keywordPublicId: id,
     projectId: readable.project.id,
@@ -58,7 +59,6 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
       })
     : [];
   const role = getProjectRole(readable.actor, readable.project.id);
-  const canCreateKeyword = canProjectAction(role, "create", "keyword");
   const canUpdateKeyword = canProjectAction(role, "update", "keyword");
   const detailState = deriveKeywordDetailState(keyword, keyword.traffic);
   const checkProviderLabel = providerLabel(
@@ -66,17 +66,29 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
   );
 
   const backLink = <BackLink href={appPath(projectRef, "rank-tracker")}>All keywords</BackLink>;
+  const retrievedResultsCard = (
+    <RetrievedResultsCard
+      competitors={competitors}
+      ownDomain={readable.project.domain ?? ""}
+      entries={storedChecks}
+      initialResults={newestResults}
+      loadResults={async (checkIds) => {
+        "use server";
+        return loadRetrievedResults({ checkIds, projectId: publicId });
+      }}
+      rankingUrl={keyword.rankingUrl ?? null}
+      retentionDays={getRankCheckRawRetentionDays()}
+      timeZone={costContext?.timezone ?? "UTC"}
+    />
+  );
 
   // A keyword without a positive rank has no chart or ranking URL history to plot. The status
-  // detail distinguishes an unattempted check from running, failed, and unranked attempts.
+  // detail distinguishes attempt states; stored SERPs stay readable even without a domain match.
   if (detailState.rankState !== "normal") {
     return (
       <PageContent className="grid gap-4">
         {backLink}
         <KeywordPendingDetail
-          addKeywordsMatrixAction={addKeywordsMatrix}
-          bulkDeleteAction={bulkDeleteKeywords}
-          canCreateKeyword={canCreateKeyword}
           canUpdateKeyword={canUpdateKeyword}
           costContext={costContext}
           createKeywordAlertAction={createKeywordAlertRule}
@@ -90,13 +102,13 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
           runCheckNowAction={runCheckNow}
           searchConsoleConnected={keyword.traffic.hasSearchConsoleConnection}
           updateKeywordAction={updateKeyword}
-          targets={marketTargets}
         />
         <KeywordTrafficCard
           projectRef={publicId}
           traffic={keyword.traffic}
           trafficState={detailState.trafficState}
         />
+        {retrievedResultsCard}
       </PageContent>
     );
   }
@@ -105,9 +117,6 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
     <PageContent className="grid gap-4">
       {backLink}
       <KeywordHeaderCard
-        addKeywordsMatrixAction={addKeywordsMatrix}
-        bulkDeleteAction={bulkDeleteKeywords}
-        canCreateKeyword={canCreateKeyword}
         canUpdateKeyword={canUpdateKeyword}
         costContext={costContext}
         createKeywordAlertAction={createKeywordAlertRule}
@@ -118,7 +127,6 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
         runCheckNowAction={runCheckNow}
         searchConsoleConnected={keyword.traffic.hasSearchConsoleConnection}
         tagSuggestions={tagSuggestions}
-        targets={marketTargets}
         updateKeywordAction={updateKeyword}
       />
       <PositionHistoryCard
@@ -132,17 +140,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
         traffic={keyword.traffic}
         trafficState={detailState.trafficState}
       />
-      <RetrievedResultsCard
-        entries={storedChecks}
-        initialResults={newestResults}
-        loadResults={async (checkIds) => {
-          "use server";
-          return loadRetrievedResults({ checkIds, projectId: publicId });
-        }}
-        rankingUrl={keyword.rankingUrl ?? null}
-        retentionDays={getRankCheckRawRetentionDays()}
-        timeZone={costContext?.timezone ?? "UTC"}
-      />
+      {retrievedResultsCard}
       <RankingUrlHistory keyword={keyword} />
     </PageContent>
   );

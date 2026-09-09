@@ -1,4 +1,4 @@
-import { InfoTooltip } from "@/components/ui";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -25,7 +25,7 @@ export function StepConnectProviderEditor({
     <>
       {hidden}
       {showHeading ? (
-        <div className="text-lg font-semibold tracking-[-0.4px]">Connect data</div>
+        <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">Provider</h2>
       ) : null}
       {cards}
       {providerError}

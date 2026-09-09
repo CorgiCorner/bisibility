@@ -4,7 +4,7 @@ import { actionErrorMessage } from "@/components/onboarding/onboarding-form-util
 import { appPath, appRootPath } from "@/lib/routing/app-path";
 import { useRouter } from "next/navigation";
 import { type SyntheticEvent, useRef, useState } from "react";
-import type { SaveOnboardingMarketsAction } from "./OnboardingMarkets";
+import type { SaveOnboardingMarketsAction } from "./onboarding-market-actions";
 
 type FirstCheckSubmitInput = {
   completeOnboardingAction?: (input: { projectId: string }) => Promise<unknown>;

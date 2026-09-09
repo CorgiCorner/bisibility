@@ -1,12 +1,12 @@
 "use client";
-import { Button, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import type { ReactNode } from "react";
 
 type Props = {
   children: ReactNode;
   busy: boolean;
   disabled: boolean;
-  label: string;
   onCancel?: () => void;
   onExited?: () => void;
   onSave: () => void;
@@ -16,7 +16,6 @@ export function StepConnectProviderModal({
   busy,
   children,
   disabled,
-  label,
   onCancel,
   onExited,
   onSave,
@@ -38,7 +37,7 @@ export function StepConnectProviderModal({
             type="button"
             variant="primary"
           >
-            Save {label}
+            Save connection
           </Button>
         </>
       }

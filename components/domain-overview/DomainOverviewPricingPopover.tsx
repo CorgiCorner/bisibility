@@ -1,6 +1,6 @@
 "use client";
 
-import { PricingPopover } from "@/components/ui";
+import { PricingPopover } from "@/components/ui/PricingPopover";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { domainOverviewListEstimate } from "@/lib/cost-estimate/provider-rates";
 import type { DomainOverviewEstimateView } from "./domain-overview-workspace-model";

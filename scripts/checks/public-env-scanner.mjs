@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import ts from "typescript";
+import ts from "@typescript/typescript6";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -11,7 +11,7 @@ const scanEntries = [
   "app",
   "lib",
   "components",
-  "middleware.ts",
+  "proxy.ts",
   "instrumentation.ts",
   "instrumentation-client.ts",
   "next.config.ts",

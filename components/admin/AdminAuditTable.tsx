@@ -1,13 +1,14 @@
-import { displayTime } from "@/components/admin/AdminPrimitives";
-import { Card, filterChipStateClassName, IdChip, SectionTitle, StatusPill } from "@/components/ui";
+import { AdminAuditDataTable } from "@/components/admin/admin-audit-table-columns";
+import { Card } from "@/components/ui/Card";
+import { filterChipStateClassName } from "@/components/ui/filter-chip-styles";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { DateFormat } from "@/lib/dates/format";
 import type {
   InstanceAdminAuditFilter,
   InstanceAdminAuditPage,
-  InstanceAdminAuditResult,
 } from "@/lib/queries/instance-admin-audit";
 import { appRootPath } from "@/lib/routing/app-path";
-import { ClockCounterClockwiseIcon as ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr";
+import { ClockCounterClockwiseIcon as ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise";
 import Link from "next/link";
 
 const filters = [
@@ -25,21 +26,6 @@ function auditHref(filter: InstanceAdminAuditFilter, cursor?: string | null) {
   const query = params.toString();
   const path = appRootPath("admin", "audit");
   return query ? `${path}?${query}` : path;
-}
-
-function AuditResultCell({ result }: Readonly<{ result: InstanceAdminAuditResult }>) {
-  switch (result) {
-    case "ok":
-      return <StatusPill label="OK" size="sm" status="success" />;
-    case "failed":
-      return <StatusPill size="sm" status="failed" />;
-    case "blocked":
-      return <StatusPill label="Blocked" showDot size="sm" status="planned" />;
-    default: {
-      const exhaustive: never = result;
-      throw new Error(`Unhandled audit result: ${exhaustive}`);
-    }
-  }
 }
 
 export function AdminAuditTable({
@@ -81,77 +67,8 @@ export function AdminAuditTable({
             No instance-admin audit entries match this filter.
           </p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[760px] table-fixed text-left">
-              <caption className="sr-only">Instance administrator activity</caption>
-              <colgroup>
-                <col className="w-[16%]" />
-                <col className="w-[20%]" />
-                <col className="w-[22%]" />
-                <col className="w-[30%]" />
-                <col className="w-[12%]" />
-              </colgroup>
-              <thead>
-                <tr className="border-b border-border text-[10px] uppercase tracking-[0.4px] text-fg-muted">
-                  <th className="px-0.5 pb-2 font-medium" scope="col">
-                    Time
-                  </th>
-                  <th className="px-2 pb-2 font-medium" scope="col">
-                    Actor
-                  </th>
-                  <th className="px-2 pb-2 font-medium" scope="col">
-                    Action
-                  </th>
-                  <th className="px-2 pb-2 font-medium" scope="col">
-                    Target
-                  </th>
-                  <th className="px-2 pb-2 font-medium" scope="col">
-                    Result
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map((entry) => {
-                  const target = entry.targetId
-                    ? `${entry.targetType}:${entry.targetId}`
-                    : `${entry.targetType}:unavailable`;
-                  return (
-                    <tr className="border-b border-border last:border-0" key={entry.id}>
-                      <td className="whitespace-nowrap px-0.5 py-2.5 text-[11.5px] text-fg-muted">
-                        {displayTime(entry.createdAt, dateFormat)}
-                      </td>
-                      <td
-                        className="truncate px-2 py-2.5 text-[11px]"
-                        title={entry.actorEmail ?? undefined}
-                      >
-                        {entry.actorEmail ?? "-"}
-                      </td>
-                      <td
-                        className="truncate px-2 py-2.5 text-[11.5px] font-semibold"
-                        title={entry.action}
-                      >
-                        {entry.action}
-                      </td>
-                      <td className="px-2 py-2.5">
-                        {entry.targetId ? (
-                          <IdChip
-                            className="min-w-0 max-w-full border-0 bg-transparent px-0"
-                            copyLabel={`Copy audit target ${target}`}
-                            size="sm"
-                            value={target}
-                          />
-                        ) : (
-                          <span className="text-[11px] text-fg-muted">{target}</span>
-                        )}
-                      </td>
-                      <td className="px-2 py-2.5">
-                        <AuditResultCell result={entry.result} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="mt-3 [&>[role=table]]:border-0">
+            <AdminAuditDataTable dateFormat={dateFormat} entries={entries} />
           </div>
         )}
 

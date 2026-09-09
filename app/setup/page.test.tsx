@@ -11,10 +11,16 @@ const mocks = vi.hoisted(() => ({
   requireSession: vi.fn(),
 }));
 
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/BrandLockup", () => ({
   BrandLockup: () => <span data-testid="brand-lockup">bisibility</span>,
+}));
+vi.mock("@/components/ui/Button", () => ({
   Button: ({ children }: { children: ReactNode }) => <button type="submit">{children}</button>,
+}));
+vi.mock("@/components/ui/Card", () => ({
   Card: ({ children }: { children: ReactNode }) => <section>{children}</section>,
+}));
+vi.mock("@/components/ui/ExternalLink", () => ({
   ExternalLink: ({ children, href }: { children: ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),

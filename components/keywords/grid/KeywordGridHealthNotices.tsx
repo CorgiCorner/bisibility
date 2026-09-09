@@ -1,4 +1,4 @@
-import { AlertBanner } from "@/components/ui";
+import { AlertBanner } from "@/components/ui/AlertBanner";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";

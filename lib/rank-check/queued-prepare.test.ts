@@ -44,6 +44,7 @@ const mocks = vi.hoisted(() => {
           locationRef: {},
           publicId: "kw_abcdefghijklmnopqrstuvwx",
           rankChecks: [],
+          checkSchedule: null as { serpDepth: number | null } | null,
           schedule: { frequency: "daily", serpDepth: 20 },
         },
       ]),
@@ -192,6 +193,7 @@ describe("queued rank-check run-item preparation", () => {
     mocks.prisma.keyword.findMany.mockResolvedValueOnce([
       {
         archivedAt,
+        checkSchedule: null,
         id: "keyword_1",
         locationId: "location_active",
         locationRef: {},
@@ -212,6 +214,19 @@ describe("queued rank-check run-item preparation", () => {
       status: "deferred",
     });
     expect(mocks.state.tasks[0]).toMatchObject({ error: reason, state: "deferred" });
+  });
+
+  it("prepares the assigned schedule depth instead of a stale keyword override", async () => {
+    const rows = await mocks.prisma.keyword.findMany();
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce([
+      {
+        ...rows[0],
+        checkSchedule: { serpDepth: null },
+        schedule: { frequency: "daily", serpDepth: 100 },
+      },
+    ]);
+    await prepareQueuedRankCheckBatch(baseInput);
+    expect(mocks.state.rankChecks[0]).toMatchObject({ requestedDepth: 20 });
   });
 
   it("replays old input without runItemIds through the original standalone writes", async () => {

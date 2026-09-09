@@ -4,6 +4,11 @@ import { parseCronExpression } from "@/lib/rank-check/cron";
 import { isSupportedProjectTimezone } from "@/lib/settings/timezones";
 import { z } from "zod";
 import {
+  projectIdSchema,
+  scheduleIdSchema,
+  scheduleTargetSchema,
+} from "./check-schedule-lifecycle";
+import {
   JITTER_MINUTES_MAX,
   JITTER_MINUTES_MIN,
   JITTER_MINUTES_RANGE_MESSAGE,
@@ -12,12 +17,6 @@ import {
 } from "./keyword";
 import { serpDepthSchema } from "./serp-depth";
 
-const projectIdSchema = z
-  .string()
-  .refine((value) => isPublicIdOfType(value, "prj"), "Project not found.");
-const scheduleIdSchema = z
-  .string()
-  .refine((value) => isPublicIdOfType(value, "sch"), "Check schedule not found.");
 const scheduleProviderIds: ReadonlySet<string> = new Set(
   PROVIDER_CATALOG.filter((provider) => provider.kind === "serp").map((provider) => provider.id),
 );
@@ -147,13 +146,6 @@ export const updateCheckScheduleSchema = z
   .strict()
   .superRefine(requireCustomCron)
   .superRefine(requireCalendarCron);
-
-const scheduleTargetSchema = z
-  .object({
-    projectId: projectIdSchema,
-    scheduleId: scheduleIdSchema,
-  })
-  .strict();
 
 export const setDefaultCheckScheduleSchema = scheduleTargetSchema;
 export const deleteCheckScheduleSchema = scheduleTargetSchema;

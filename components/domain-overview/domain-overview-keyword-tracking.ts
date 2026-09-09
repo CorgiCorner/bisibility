@@ -1,7 +1,8 @@
 import type { SaveSelectedKeywordsAction } from "@/lib/actions/domain-overview";
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
 import type { RankedKeywordRow } from "@/lib/providers/types";
-import type { DomainOverviewMarketView } from "./domain-overview-workspace-model";
+import type { ResearchScope } from "@/lib/research/scope";
+import { canonicalKey } from "@/lib/serp/location";
 
 export type SaveDomainKeywords = (
   rows: readonly RankedKeywordRow[],
@@ -10,7 +11,7 @@ export type SaveDomainKeywords = (
 export function saveDomainKeywords(
   action: SaveSelectedKeywordsAction,
   input: {
-    market: DomainOverviewMarketView;
+    researchScope: ResearchScope;
     projectId: string;
     report: DomainOverviewReport;
     rows: readonly RankedKeywordRow[];
@@ -25,7 +26,7 @@ export function saveDomainKeywords(
       difficulty: row.difficulty,
       intent: row.intent,
       keyword: row.keyword,
-      location: input.market.canonicalKey,
+      location: canonicalKey(input.researchScope),
       searchVolume: row.searchVolume,
       sourceSeed: input.report.target,
       variantCount: 0,

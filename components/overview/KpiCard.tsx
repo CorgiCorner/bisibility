@@ -1,5 +1,6 @@
-import { Card, InfoTooltip } from "@/components/ui";
-import { rankTrackerTabPath } from "@/lib/routing/app-path";
+import { Card } from "@/components/ui/Card";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import Link from "next/link";
 import type { KpiDeltaTone, OverviewKpi } from "./types";
 
@@ -43,7 +44,7 @@ export function KpiCard({
           {deltaAction === "check_runs" && projectRef ? (
             <Link
               className={`ml-2 align-baseline font-sans tabular-nums text-xs font-semibold hover:underline ${deltaToneClassName[deltaTone]}`}
-              href={rankTrackerTabPath(projectRef, "runs")}
+              href={projectRunsPath(projectRef)}
             >
               {delta}
             </Link>

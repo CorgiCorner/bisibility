@@ -1,48 +1,36 @@
-import { tableHeaderClassName } from "@/components/ui";
-import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+"use client";
 
-const count = new Intl.NumberFormat("en-US");
-const money = new Intl.NumberFormat("en-US", {
-  currency: "USD",
-  maximumFractionDigits: 4,
-  minimumFractionDigits: 2,
-  style: "currency",
-});
+import {
+  adminProviderUsageColumns,
+  adminProviderUsageRows,
+} from "@/components/admin/admin-provider-table-columns";
+import { DataTable } from "@/components/ui/data-table/DataTable";
+import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
+import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import { useMemo, useState } from "react";
 
 export function AdminProviderUsageTable({
   usage,
 }: Readonly<{ usage: InstanceAdminDashboard["stats"]["providerUsage"] }>) {
+  const [sorting, setSorting] = useState<DataTableSort | null>(null);
+  const rows = useMemo(() => adminProviderUsageRows(usage), [usage]);
+
   if (usage.length === 0) {
     return <p className="mt-4 text-xs text-fg-muted">No completed SERP checks this month.</p>;
   }
 
   return (
-    <div className="mt-4 overflow-x-auto">
-      <table className="w-full min-w-[680px] text-left text-xs">
-        <caption className="sr-only">SERP usage this month by provider</caption>
-        <thead className={tableHeaderClassName}>
-          <tr>
-            <th className="pb-2 pr-3">Provider</th>
-            <th className="pb-2 pr-3">Completed checks</th>
-            <th className="pb-2 pr-3">Requests / units</th>
-            <th className="pb-2 pr-3">Reference cost</th>
-            <th className="pb-2">Rate basis</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usage.map((row) => (
-            <tr className="border-b border-border last:border-0" key={row.provider}>
-              <td className="py-2 pr-3 font-semibold text-fg">{row.providerLabel}</td>
-              <td className="py-2 pr-3 tabular-nums">{count.format(row.checks)}</td>
-              <td className="py-2 pr-3 tabular-nums">{count.format(row.billableUnits)}</td>
-              <td className="py-2 pr-3 tabular-nums">
-                {row.referenceCostKnown ? money.format(row.referenceCostCents / 100) : "-"}
-              </td>
-              <td className="py-2 text-[11px] text-fg-muted">{row.rateBasis}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="mt-4 [&>[role=table]]:border-0">
+      <DataTable
+        ariaLabel="SERP usage this month by provider"
+        columns={adminProviderUsageColumns}
+        id="admin-provider-usage-table"
+        layout="auto"
+        onSortingChange={setSorting}
+        rows={rows}
+        sorting={sorting}
+        sortingMode="client"
+      />
       <p className="mb-0 mt-2 text-[11px] leading-relaxed text-fg-muted">
         Reference estimates use maintained provider rates and recorded request units. User-entered
         costs are ignored; provider invoices remain authoritative.

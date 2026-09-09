@@ -1,42 +1,6 @@
-import { Button, type ButtonProps, Tooltip } from "@/components/ui";
-import { sxArray } from "@/lib/ui/mui-sx";
-import type { SxProps, Theme } from "@mui/material/styles";
-
-const mobileIconOnlyButtonSx = {
-  "@media (max-width:1023px)": {
-    minWidth: 40,
-    "& .MuiButton-startIcon": {
-      marginLeft: 0,
-      marginRight: 0,
-    },
-  },
-} satisfies SxProps<Theme>;
-
-const compactIconOnlyButtonSx = {
-  "@media (max-width:1279px)": {
-    minWidth: 40,
-    "&& .MuiButton-startIcon": {
-      marginLeft: 0,
-      marginRight: 0,
-    },
-  },
-} satisfies SxProps<Theme>;
-
-const secondaryIconSx = {
-  "& .MuiButton-startIcon": { color: "var(--fg-muted)" },
-  "& .MuiButton-startIcon > svg": { color: "var(--fg-muted)" },
-} satisfies SxProps<Theme>;
-
-const primaryIconSx = {
-  "& .MuiButton-startIcon > svg": { color: "currentColor" },
-} satisfies SxProps<Theme>;
-
-const labeledSecondaryButtonSx = {
-  color: "var(--fg)",
-  fontSize: "12.5px",
-  fontWeight: 400,
-} satisfies SxProps<Theme>;
-
+import { Button, type ButtonProps } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { cn } from "@/lib/ui/cn";
 export const toolbarSecondaryIconClassName = "text-fg-muted";
 
 type LabelFrom = "sm" | "lg" | "xl";
@@ -53,13 +17,12 @@ function labelVisibilityClass(
   return "hidden lg:inline";
 }
 
-type KeywordsToolbarButtonProps = Omit<ButtonProps, "sx"> & {
+type KeywordsToolbarButtonProps = ButtonProps & {
   compactBelowXl?: boolean;
   iconOnly?: boolean;
   label: string;
   labelFrom?: LabelFrom;
   showTooltip: boolean;
-  sx?: SxProps<Theme>;
 };
 
 export function KeywordsToolbarButton({
@@ -70,23 +33,30 @@ export function KeywordsToolbarButton({
   labelFrom,
   showTooltip,
   size = "sm",
-  sx,
+  style,
+  className,
   ...props
 }: KeywordsToolbarButtonProps) {
-  const buttonSx = sxArray(sx);
   const labelClassName = labelVisibilityClass(compactBelowXl, iconOnly, labelFrom);
   const button = (
     <span className="inline-flex shrink-0">
       <Button
         aria-label={label}
-        className="shrink-0 whitespace-nowrap"
+        className={cn(
+          "shrink-0 whitespace-nowrap",
+          iconOnly || compactBelowXl
+            ? "max-xl:min-w-10 max-xl:gap-0"
+            : "max-lg:min-w-10 max-lg:gap-0",
+          props.variant === "secondary" && "[&_[data-button-start-icon]]:text-fg-muted",
+          className,
+        )}
         size={size}
-        sx={[
-          iconOnly || compactBelowXl ? compactIconOnlyButtonSx : mobileIconOnlyButtonSx,
-          props.variant === "secondary" ? secondaryIconSx : primaryIconSx,
-          ...buttonSx,
-          !iconOnly && props.variant === "secondary" ? labeledSecondaryButtonSx : false,
-        ]}
+        style={{
+          ...style,
+          ...(!iconOnly && props.variant === "secondary"
+            ? { color: "var(--fg)", fontSize: "12.5px", fontWeight: 400 }
+            : {}),
+        }}
         {...props}
       >
         {labelClassName ? <span className={labelClassName}>{label}</span> : null}

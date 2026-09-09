@@ -4,11 +4,9 @@ import { authClient } from "@/lib/auth/client";
 import { mergeReturnToHash } from "@/lib/auth/return-to";
 import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import {
-  CaretRightIcon as CaretRight,
-  CircleNotchIcon as CircleNotch,
-  EnvelopeSimpleOpenIcon as EnvelopeSimpleOpen,
-} from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { CircleNotchIcon as CircleNotch } from "@phosphor-icons/react/dist/csr/CircleNotch";
+import { EnvelopeSimpleOpenIcon as EnvelopeSimpleOpen } from "@phosphor-icons/react/dist/csr/EnvelopeSimpleOpen";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

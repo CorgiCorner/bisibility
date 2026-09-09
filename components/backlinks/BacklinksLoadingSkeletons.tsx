@@ -1,5 +1,4 @@
 import { PageContent } from "@/components/shell/PageContent";
-import { tableHeaderClassName } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
 import type { ComponentPropsWithoutRef } from "react";
 
@@ -67,16 +66,17 @@ function ResultsTableLoading() {
       </div>
       <div className="min-w-0 overflow-x-auto">
         <div className="min-w-[840px]">
-          <div
-            className={`grid h-[42px] grid-cols-[minmax(220px,1.5fr)_minmax(180px,1fr)_minmax(160px,1fr)_92px_112px] items-center gap-4 px-4 ${tableHeaderClassName}`}
-          >
+          <div className="grid h-[42px] grid-cols-[minmax(220px,1.5fr)_minmax(180px,1fr)_minmax(160px,1fr)_92px_112px] items-center gap-4 border-b border-border bg-table-header-bg px-4">
             {tableHeaderKeys.map((key, index) => (
               <Bar className={cn("h-2.5 bg-border", index === 0 ? "w-[82px]" : "w-11")} key={key} />
             ))}
           </div>
           {tableRowKeys.map((key, index) => (
             <div
-              className="grid h-[58px] grid-cols-[minmax(220px,1.5fr)_minmax(180px,1fr)_minmax(160px,1fr)_92px_112px] items-center gap-4 border-b border-border px-4"
+              className={cn(
+                "grid h-[58px] grid-cols-[minmax(220px,1.5fr)_minmax(180px,1fr)_minmax(160px,1fr)_92px_112px] items-center gap-4 px-4",
+                index < tableRowKeys.length - 1 && "border-b border-border",
+              )}
               key={key}
             >
               <Bar className={cn("h-3.5", index % 2 === 0 ? "w-[72%]" : "w-[58%]")} />

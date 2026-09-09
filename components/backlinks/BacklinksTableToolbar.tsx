@@ -1,5 +1,5 @@
-import { SegmentedControl, type SegmentedControlOption } from "@/components/ui";
-import { FunnelSimpleIcon as FunnelSimple } from "@phosphor-icons/react";
+import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/SegmentedControl";
+import { FunnelSimpleIcon as FunnelSimple } from "@phosphor-icons/react/dist/csr/FunnelSimple";
 import type { KeyboardEvent, ReactNode } from "react";
 import type { BacklinksFilter, BacklinksSlice, BacklinksView } from "./backlinks-table-model";
 

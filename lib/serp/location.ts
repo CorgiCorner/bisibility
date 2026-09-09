@@ -1,10 +1,5 @@
+import { serpCountryCatalog, serpCountryForName } from "./country-catalog";
 import { resolveSerpLanguage, type SerpLanguage } from "./language-catalog";
-import {
-  DEFAULT_SERP_MARKET,
-  normalizeSerpMarketName,
-  resolveSerpMarket,
-  serpMarkets,
-} from "./markets";
 
 // Neutral, vendor-free location model. A tracked location is a country, region,
 // or city. All provider-specific handles are neutralized to primary/secondary
@@ -31,15 +26,33 @@ export type ResolvedLocation = {
 
 export type LocationSelector = {
   countryCode: string;
+  kind?: LocationKind;
   languageCode?: string | null;
   regionCode?: string | null;
   regionName?: string | null;
+  selectedCanonicalKey?: string;
   cityName?: string | null;
 };
 
 export type LocationSelection =
-  | { kind: "country"; countryCode: string; languageCode?: string | null }
+  | {
+      kind: "country";
+      canonicalKey: string;
+    }
+  | {
+      kind: "country";
+      countryCode: string;
+      languageCode?: string | null;
+    }
+  | { kind: "region"; canonicalKey: string }
   | { kind: "city"; canonicalKey: string }
+  | {
+      kind: "region";
+      countryCode: string;
+      languageCode?: string | null;
+      regionCode?: string | null;
+      regionName: string;
+    }
   | {
       kind: "city";
       countryCode: string;
@@ -48,13 +61,15 @@ export type LocationSelection =
       cityName: string;
     };
 
-// A city match returned by a provider location lookup. Carries the neutral
-// handles the adapters need; the resolver decides caching/persistence.
-export type CityCandidate = {
+// A granular match returned by a provider location catalog. Its kind comes from
+// the provider response and is verified against the selected canonical key.
+export type LocationCandidate = {
+  kind: "region" | "city";
   displayName: string;
+  countryCode: string;
   regionCode: string | null;
   regionName?: string | null;
-  cityName: string;
+  cityName: string | null;
   primaryGeoCode: number | null;
   primaryGeoName: string;
   secondaryGeoName: string;
@@ -65,16 +80,14 @@ export interface LocationStore {
   findByKey(canonicalKey: string): Promise<ResolvedLocation | null>;
   // Implement with a canonicalKey upsert; the resolver re-reads after create races.
   create(row: Omit<ResolvedLocation, "id">): Promise<ResolvedLocation>;
+  // Enrich a cached row only after the resolver verifies a trusted candidate has
+  // the same canonical location identity. Optional for in-memory test stores.
+  enrich?(location: ResolvedLocation, candidate: LocationCandidate): Promise<ResolvedLocation>;
 }
 
-// Provider-backed city search (implemented per adapter in M3+).
-export interface CityLocationLookup {
-  findCity(input: {
-    countryCode: string;
-    regionCode?: string | null;
-    regionName?: string | null;
-    cityName: string;
-  }): Promise<CityCandidate | null>;
+// Provider-backed region/city search (implemented per adapter in M3+).
+export interface LocationLookup {
+  find(input: LocationSelector & { kind: "region" | "city" }): Promise<LocationCandidate | null>;
 }
 
 export type CountrySeed = {
@@ -87,17 +100,17 @@ export type CountrySeed = {
 };
 
 const countrySeeds = new Map<string, CountrySeed>(
-  serpMarkets.map((market) => {
-    const countryCode = market.google.gl.toUpperCase();
+  serpCountryCatalog.map((country) => {
+    const countryCode = country.countryCode;
     return [
       countryCode,
       {
         countryCode,
-        displayName: market.name,
-        gl: market.google.gl,
-        hl: market.language.code,
-        languageCode: market.language.code,
-        languageLabel: market.language.label,
+        displayName: country.displayName,
+        gl: countryCode.toLowerCase(),
+        hl: country.languageCode,
+        languageCode: country.languageCode,
+        languageLabel: country.languageLabel,
       },
     ];
   }),
@@ -110,11 +123,7 @@ export function countrySeed(countryCode: string): CountrySeed | null {
 
 /** Maps a legacy market name/alias (e.g. "United States", "usa") to its ISO code. */
 export function countryCodeForMarketName(value: string): string | null {
-  const name = normalizeSerpMarketName(value);
-  if (!name) {
-    return null;
-  }
-  return resolveSerpMarket(name).google.gl.toUpperCase();
+  return serpCountryForName(value)?.countryCode ?? null;
 }
 
 function normalizePart(value: string) {
@@ -148,19 +157,29 @@ export function locationLanguage(countryCode: string, languageCode?: string | nu
   return language;
 }
 
-/** Stable dedup key. Country: "US". City: "US/US-TX/Austin" or "US/Texas/Austin". */
+function selectorKind(selector: LocationSelector): LocationKind {
+  if (selector.kind) return selector.kind;
+  if (selector.cityName) return "city";
+  if (selector.regionCode || selector.regionName) return "region";
+  return "country";
+}
+
+/** Stable dedup key. Country: "US"; region: "US/Texas"; city: "US/Texas/Austin". */
 export function canonicalKey(selector: LocationSelector): string {
   const country = selector.countryCode.trim().toUpperCase();
+  const kind = selectorKind(selector);
+  const region = selector.regionCode
+    ? normalizePart(selector.regionCode).toUpperCase()
+    : selector.regionName
+      ? normalizePart(selector.regionName)
+      : "";
   const city = selector.cityName ? normalizePart(selector.cityName) : "";
-  let key = country;
-  if (!city) {
-    key = country;
-  } else {
-    let region = "";
-    if (selector.regionCode) region = normalizePart(selector.regionCode).toUpperCase();
-    else if (selector.regionName) region = normalizePart(selector.regionName);
-    key = [country, region, city].filter((part) => part !== "").join("/");
-  }
+  const key =
+    kind === "region" && region
+      ? [country, region].join("/")
+      : kind === "city" && city
+        ? [country, region, city].filter(Boolean).join("/")
+        : country;
 
   if (!selector.languageCode) {
     return key;
@@ -171,7 +190,10 @@ export function canonicalKey(selector: LocationSelector): string {
   return language.code === defaultLanguage ? key : `${key}@${language.code}`;
 }
 
-export function parseCanonicalKey(value: string): LocationSelector | null {
+export function parseCanonicalKey(
+  value: string,
+  expectedKind?: LocationKind,
+): LocationSelector | null {
   const qualifiedParts = value.trim().split("@");
   if (qualifiedParts.length > 2 || !qualifiedParts[0]) {
     return null;
@@ -195,9 +217,14 @@ export function parseCanonicalKey(value: string): LocationSelector | null {
     return { countryCode, ...language };
   }
   if (parts.length === 2) {
-    return { cityName: middle, countryCode, ...language };
+    if (expectedKind === "country") return null;
+    return expectedKind === "region"
+      ? /^[A-Z]{2}-[A-Z0-9]+$/.test(middle)
+        ? { countryCode, kind: "region", regionCode: middle, ...language }
+        : { countryCode, kind: "region", regionName: middle, ...language }
+      : { cityName: middle, countryCode, ...language };
   }
-  if (!cityName) {
+  if (!cityName || expectedKind === "country" || expectedKind === "region") {
     return null;
   }
   return /^[A-Z]{2}-[A-Z0-9]+$/.test(middle)
@@ -205,7 +232,10 @@ export function parseCanonicalKey(value: string): LocationSelector | null {
     : { cityName, countryCode, ...language, regionName: middle };
 }
 
-export function normalizeCanonicalLocationKey(value: string): {
+export function normalizeCanonicalLocationKey(
+  value: string,
+  expectedKind?: LocationKind,
+): {
   canonicalKey: string;
   selector: LocationSelector;
 } {
@@ -217,7 +247,7 @@ export function normalizeCanonicalLocationKey(value: string): {
   if (rawLanguageCode !== null && !resolveSerpLanguage(rawLanguageCode)) {
     throw new LocationInputError("languageCode", `Unsupported language: ${rawLanguageCode}`);
   }
-  const selector = parseCanonicalKey(value);
+  const selector = parseCanonicalKey(value, expectedKind);
   if (!selector) {
     throw new LocationInputError("canonicalKey", `Unsupported location key: ${value}`);
   }
@@ -250,26 +280,6 @@ export function serpRankLocation(
   };
 }
 
-/** Country-level handles from a supported ISO alpha-2 seed (offline, deterministic). */
-function countryRankLocation(seed: CountrySeed): SerpRankLocation {
-  return {
-    gl: seed.gl,
-    hl: seed.hl,
-    // Countries query by name on both providers; numeric codes only disambiguate cities.
-    primaryGeoCode: null,
-    primaryGeoName: seed.displayName,
-    secondaryGeoName: seed.displayName,
-  };
-}
-
-// This network-free hot-path fallback never throws; unknown legacy locations
-// degrade to the default market.
-export function serpRankLocationFromLegacy(value: string | null | undefined): SerpRankLocation {
-  const countryCode = value ? countryCodeForMarketName(value) : null;
-  const seed = (countryCode ? countrySeed(countryCode) : null) ?? defaultCountrySeed();
-  return countryRankLocation(seed);
-}
-
 // Reconstruct country names from gl when degrading city handles; unknown gl values
 // preserve existing names and never throw.
 export function countryDegradedRankLocation(location: SerpRankLocation): SerpRankLocation {
@@ -285,15 +295,4 @@ export function countryDegradedRankLocation(location: SerpRankLocation): SerpRan
 
 function countrySeedForGl(gl: string): CountrySeed | null {
   return countrySeed(gl) ?? null;
-}
-
-function defaultCountrySeed(): CountrySeed {
-  const code = countryCodeForMarketName(DEFAULT_SERP_MARKET);
-  const seed = code ? countrySeed(code) : null;
-  if (!seed) {
-    // The default market is always in the seed table; this is an unreachable guard
-    // kept only so the return type stays non-null without a non-null assertion.
-    throw new Error("Default SERP market seed is missing.");
-  }
-  return seed;
 }

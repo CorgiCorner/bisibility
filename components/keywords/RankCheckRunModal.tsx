@@ -1,6 +1,6 @@
 "use client";
 
-import { Modal, type ModalProps } from "@/components/ui";
+import { Modal, type ModalProps } from "@/components/ui/Modal";
 import type { ReactNode } from "react";
 
 export type RankCheckRunStep = "confirm" | "starting" | "running" | "success" | "failed";

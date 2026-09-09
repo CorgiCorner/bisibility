@@ -4,6 +4,7 @@ import type {
   AlertTargetTypeInput,
 } from "@/lib/alerts/schema";
 import type { AlertSeverity as AlertSeverityValue } from "@/lib/alerts/severity";
+import type { FeedRowMetadata } from "@/lib/feeds/facets";
 import type { Device } from "@/lib/generated/prisma/client";
 import { ruleTemplates } from "./new-rule-data";
 
@@ -42,6 +43,7 @@ export type TriggeredAlertView = {
   keyword: string;
   location: string;
   device: Device;
+  feedMeta?: FeedRowMetadata;
   previous: string;
   rankingUrl?: string | null;
   rule: string;
@@ -95,6 +97,7 @@ export type AlertRuleView = {
   fires: string;
   id: string;
   marketIds: string[];
+  marketScope?: string;
   name: string;
   period: string;
   recipientIds: string[];

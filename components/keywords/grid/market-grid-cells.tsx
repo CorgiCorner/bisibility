@@ -1,17 +1,10 @@
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
 import * as rankDepth from "@/lib/serp/rank-depth";
-import IconButton from "@mui/material/IconButton";
-import type { GridRenderCellParams } from "@mui/x-data-grid";
-import {
-  CaretDownIcon as CaretDown,
-  CaretRightIcon as CaretRight,
-  ClockCountdownIcon as ClockCountdown,
-  EyeIcon as Eye,
-  MapPinIcon as MapPin,
-} from "@phosphor-icons/react";
+import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/csr/ClockCountdown";
+import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import Link from "next/link";
 
 const noDataClassName = "font-sans tabular-nums text-xs font-semibold text-fg-muted";
@@ -47,20 +40,20 @@ export function NoDataValue({
 export function MarketKeywordCell({
   projectRef,
   row,
-}: Readonly<Pick<GridRenderCellParams<KeywordRow>, "row"> & { projectRef: string }>) {
+}: Readonly<{ projectRef: string; row: KeywordRow }>) {
   const parent = marketGridParent(row);
   if (parent) {
-    const Caret = parent.expanded ? CaretDown : CaretRight;
     const marketCount = new Set(
       parent.aggregate.children.map((child) => child.location.canonicalKey),
     ).size;
     return (
-      <span className="flex min-w-0 items-center gap-2">
-        <Caret aria-hidden className="flex-none text-fg-muted" size={14} weight="regular" />
-        <span className="min-w-0">
-          <span className="bv-keyword-title block truncate text-[13.5px] font-semibold text-fg">
-            {row.keyword}
-          </span>
+      <span className="flex w-full min-w-0 items-center">
+        <span className="min-w-0 flex-1">
+          <Tooltip content={row.keyword} wrapperClassName="w-full min-w-0">
+            <span className="bv-keyword-title block w-full truncate text-[13.5px] font-semibold text-fg group-hover:text-accent-text group-hover:underline">
+              {row.keyword}
+            </span>
+          </Tooltip>
           <span className="block font-sans tabular-nums text-[10.5px] text-fg-muted">
             {marketCount} {marketCount === 1 ? "market" : "markets"} /{" "}
             {parent.aggregate.activeTargetCount} active targets
@@ -70,31 +63,19 @@ export function MarketKeywordCell({
     );
   }
   return (
-    <span className="flex w-full min-w-0 items-center gap-1">
-      <Tooltip content="View keyword details">
-        <IconButton
-          aria-label="View keyword details"
-          className="h-7 min-h-0 w-7 min-w-0 shrink-0"
-          component={Link}
-          href={appPath(projectRef, "rank-tracker", row.id)}
-          onClick={(event) => event.stopPropagation()}
-          size="small"
-          sx={{
-            color: "var(--fg-muted)",
-            "&:hover": { backgroundColor: "var(--accent-soft)", color: "var(--accent-text)" },
-          }}
-        >
-          <Eye weight="regular" size={14} />
-        </IconButton>
-      </Tooltip>
-      <span className="bv-keyword-title min-w-0 flex-1 truncate text-[13.5px] font-medium text-fg">
+    <Tooltip content={row.keyword} wrapperClassName="w-full min-w-0">
+      <Link
+        className="bv-keyword-title block w-full min-w-0 truncate text-[13.5px] font-medium text-fg group-hover:text-accent-text group-hover:underline"
+        href={appPath(projectRef, "rank-tracker", row.id)}
+        onClick={(event) => event.stopPropagation()}
+      >
         {row.keyword}
-      </span>
-    </span>
+      </Link>
+    </Tooltip>
   );
 }
 
-export function MarketPositionCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
+export function MarketPositionCell({ row }: Readonly<{ row: KeywordRow }>) {
   const parent = marketGridParent(row);
   if (!row.hasRankData) return <NoDataValue className="text-[13px]" label={noRankLabel(row)} />;
   if (rankDepth.isPositionOutsideTrackedDepth(row.position, row.trackedDepth))
@@ -124,9 +105,7 @@ export function MarketPositionCell({ row }: Readonly<GridRenderCellParams<Keywor
   );
 }
 
-export function MarketLocationCell({
-  row,
-}: Readonly<Pick<GridRenderCellParams<KeywordRow>, "row">>) {
+export function MarketLocationCell({ row }: Readonly<{ row: KeywordRow }>) {
   const parent = marketGridParent(row);
   const isCity = row.location.kind === "city";
   return (
@@ -144,7 +123,7 @@ export function MarketLocationCell({
   );
 }
 
-export function MarketVolumeCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
+export function MarketVolumeCell({ row }: Readonly<{ row: KeywordRow }>) {
   const parent = marketGridParent(row);
   if (parent?.aggregate.volume === null) return <NoDataValue label="No supported volume pairs" />;
   if (!parent && row.volumeKnown === false)
@@ -167,7 +146,7 @@ export function MarketVolumeCell({ row }: Readonly<GridRenderCellParams<KeywordR
   );
 }
 
-export function MarketDifficultyCell({ row }: Readonly<GridRenderCellParams<KeywordRow>>) {
+export function MarketDifficultyCell({ row }: Readonly<{ row: KeywordRow }>) {
   const parent = marketGridParent(row);
   if (parent?.aggregate.difficulty === "mixed") return <span>mixed</span>;
   if (row.difficultyKnown === false) return <NoDataValue label="No difficulty data" />;

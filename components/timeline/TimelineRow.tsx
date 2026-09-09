@@ -1,17 +1,16 @@
+import { FeedMetadataTokens } from "@/components/feeds/FacetToken";
 import { RemoveNoteAction } from "@/components/timeline/RemoveNoteAction";
 import type { TimelineItem } from "@/lib/timeline/timeline-data";
-import {
-  ArrowUpRightIcon as ArrowUpRight,
-  DesktopIcon as Desktop,
-  DeviceMobileIcon as DeviceMobile,
-  FileMagnifyingGlassIcon as FileMagnifyingGlass,
-  MedalIcon as Medal,
-  NotePencilIcon as NotePencil,
-  RocketLaunchIcon as RocketLaunch,
-  type StackIcon as Stack,
-  UploadSimpleIcon as UploadSimple,
-  WarningIcon as Warning,
-} from "@phosphor-icons/react/dist/ssr";
+import type { StackIcon as Stack } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
+import { DesktopIcon as Desktop } from "@phosphor-icons/react/dist/ssr/Desktop";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/ssr/DeviceMobile";
+import { FileMagnifyingGlassIcon as FileMagnifyingGlass } from "@phosphor-icons/react/dist/ssr/FileMagnifyingGlass";
+import { MedalIcon as Medal } from "@phosphor-icons/react/dist/ssr/Medal";
+import { NotePencilIcon as NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil";
+import { RocketLaunchIcon as RocketLaunch } from "@phosphor-icons/react/dist/ssr/RocketLaunch";
+import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple";
+import { WarningIcon as Warning } from "@phosphor-icons/react/dist/ssr/Warning";
 
 const itemIcons = {
   api: UploadSimple,
@@ -32,10 +31,23 @@ const tintStyles = {
 } satisfies Record<TimelineItem["tint"], { bg: string; color: string }>;
 
 function TimelineMeta({ item }: Readonly<{ item: TimelineItem }>) {
-  if (!item.marketMeta) return <>{item.meta}</>;
+  if (!item.marketMeta) {
+    return item.feedMeta ? <FeedMetadataTokens metadata={item.feedMeta} /> : item.meta;
+  }
   const [keyword, location, language, source] = item.marketMeta.segments;
   const deviceLabel = item.marketMeta.device === "mobile" ? "Mobile" : "Desktop";
   const DeviceIcon = item.marketMeta.device === "mobile" ? DeviceMobile : Desktop;
+  if (item.feedMeta) {
+    return (
+      <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <span className="max-w-[220px] truncate font-semibold text-fg">{keyword}</span>
+        <FeedMetadataTokens device={deviceLabel} metadata={item.feedMeta} />
+        <span className="sr-only">
+          {location} {language} {source}
+        </span>
+      </span>
+    );
+  }
   const textSegments = [keyword, location, language];
 
   return (

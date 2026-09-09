@@ -1,7 +1,8 @@
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import { finalizedWindow } from "@/lib/search-insights/dates";
+import { getRouter } from "@storybook/nextjs-vite/navigation.mock";
 import type { Meta, StoryObj } from "@storybook/react";
-import { userEvent, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import type { CancelGooglePropertySelectionAction } from "./SearchInsightsOauthReturn";
 import { SearchInsightsWorkspace } from "./SearchInsightsWorkspace";
 import {
@@ -124,5 +125,27 @@ export const PropertyMenuOpen: Story = {
     await userEvent.click(
       within(canvasElement).getByRole("button", { name: "Search Console property" }),
     );
+  },
+};
+
+export const PeriodChanging: Story = {
+  args: {
+    ...common,
+    children: <p>Current metrics and tables</p>,
+    trustStrip: <p>Current coverage</p>,
+  },
+  beforeEach: () => {
+    const router = getRouter();
+    router.replace.mockImplementation(() => new Promise<void>(() => {}));
+    return () => router.replace.mockReset();
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: /^Comparison window:/ }));
+    await userEvent.click(
+      within(canvasElement.ownerDocument.body).getByRole("option", { name: /90 finalized days/ }),
+    );
+    await expect(canvas.getByRole("region", { name: "Search Console data loading" })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: /^Comparison window:/ })).toBeDisabled();
   },
 };

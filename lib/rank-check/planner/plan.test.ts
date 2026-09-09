@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   assertBudget: vi.fn(),
   existingKeys: new Set<string>(),
   findMany: vi.fn(),
+  currentSchedule: vi.fn(),
+  queryRaw: vi.fn(),
   isBudgetExhausted: vi.fn(),
   loadChain: vi.fn(),
   makePublicId: vi.fn(),
@@ -15,6 +17,21 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    $transaction: async (fn: (tx: object) => unknown) =>
+      fn({
+        $queryRaw: mocks.queryRaw,
+        checkSchedule: { findFirst: mocks.currentSchedule },
+        rankCheckRun: {
+          findUnique: vi.fn(({ where }) =>
+            Promise.resolve(
+              mocks.existingKeys.has(where.projectId_idempotencyKey.idempotencyKey)
+                ? { id: "existing" }
+                : null,
+            ),
+          ),
+          upsert: mocks.upsert,
+        },
+      }),
     checkSchedule: { findMany: mocks.findMany },
     project: { findUnique: vi.fn() },
     providerConnection: { findFirst: vi.fn() },
@@ -78,6 +95,7 @@ describe("rank-check run planner", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.existingKeys.clear();
+    mocks.currentSchedule.mockResolvedValue({ id: "schedule" });
     let sequence = 0;
     mocks.makePublicId.mockImplementation(() => `rcr_${String(++sequence).padStart(24, "a")}`);
     mocks.loadChain.mockResolvedValue([
@@ -94,6 +112,16 @@ describe("rank-check run planner", () => {
       mocks.existingKeys.add(create.idempotencyKey);
       return Promise.resolve({ ...create, id: `run_${mocks.existingKeys.size}` });
     });
+  });
+
+  it("does not recreate occurrences from a scan taken before archiving", async () => {
+    mocks.findMany.mockResolvedValue([schedule("daily", "daily")]);
+    mocks.currentSchedule.mockResolvedValue(null);
+    await planRankCheckRuns({ now: new Date("2026-09-02T08:00:00.000Z") });
+    expect(mocks.upsert).not.toHaveBeenCalled();
+    expect(mocks.currentSchedule).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "daily", archivedAt: null, enabled: true } }),
+    );
   });
 
   it("creates a thin planned row for each enabled occurrence", async () => {

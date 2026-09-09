@@ -4,7 +4,7 @@ import { MarketSwitcher } from "@/components/shell/MarketSwitcher";
 import type { HeaderContextMarket } from "@/lib/markets/header-context";
 import { headerContextState } from "@/lib/markets/header-context";
 import { appRootPath, type ProjectRef } from "@/lib/routing/app-path";
-import { CaretDownIcon as CaretDown } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { usePathname } from "next/navigation";
 
 /**
@@ -41,9 +41,9 @@ export function HeaderContextSlot({ contexts = [], projectRef = "" }: HeaderCont
       className="flex min-w-0 flex-none items-center gap-1"
       role="group"
     >
-      {state.kind === "market" ? (
+      {state.kind === "market" || state.kind === "all-markets" ? (
         <MarketSwitcher
-          market={state.market}
+          market={state.kind === "market" ? state.market : undefined}
           markets={contexts}
           pathname={pathname}
           projectRef={projectRef}
@@ -56,8 +56,6 @@ export function HeaderContextSlot({ contexts = [], projectRef = "" }: HeaderCont
           <CaretDown aria-hidden className="flex-none opacity-40" size={11} weight="regular" />
         </span>
       )}
-      {/* The hairline belongs to the slot, so a page with no context has no stray divider. */}
-      <span aria-hidden className="ml-1 h-5 w-px flex-none bg-border" data-context-hairline />
     </div>
   );
 }

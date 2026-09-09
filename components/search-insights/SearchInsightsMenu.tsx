@@ -1,8 +1,8 @@
 "use client";
 
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
 import { cn } from "@/lib/ui/cn";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import type { ReactNode } from "react";
 
 // Both context-bar dropdowns are listboxes over a short, known set, so they share one surface
@@ -33,16 +33,14 @@ export function SearchInsightsMenu({
   return (
     <Menu
       anchorEl={anchorEl}
-      anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+      align="start"
+      side="bottom"
       onClose={onClose}
       open={Boolean(anchorEl)}
-      transformOrigin={{ horizontal: "left", vertical: "top" }}
-      slotProps={{
-        list: { "aria-label": ariaLabel, className: "p-0", dense: true, role: "listbox" },
-        paper: {
-          className: cn(surfaceClass, wide ? "min-w-85" : "min-w-75"),
-          sx: { minWidth: anchorEl?.getBoundingClientRect().width },
-        },
+      listProps={{ "aria-label": ariaLabel, className: "p-0", role: "listbox" }}
+      contentProps={{
+        className: cn(surfaceClass, wide ? "min-w-85" : "min-w-75"),
+        style: { minWidth: anchorEl?.getBoundingClientRect().width },
       }}
     >
       {children}
@@ -75,13 +73,12 @@ export function SearchInsightsMenuOption({
         className,
         disabled && "cursor-not-allowed opacity-70",
       )}
-      disableRipple={disabled}
       onClick={() => {
         if (disabled) return;
         onSelect?.();
       }}
       role="option"
-      sx={{ borderRadius: "var(--radius-control, 6px)" }}
+      style={{ borderRadius: "var(--radius-control, 6px)" }}
     >
       {children}
     </MenuItem>

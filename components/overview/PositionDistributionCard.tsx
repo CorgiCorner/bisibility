@@ -1,10 +1,20 @@
 "use client";
 
-import { Card, ChartRegion } from "@/components/ui";
-import { chartColors, rankBucketColors, rankBucketCssVars } from "@/lib/theme/chart-colors";
-import { BarChart } from "@mui/x-charts/BarChart";
-import { ChartBarIcon as ChartBar } from "@phosphor-icons/react";
+import { Card } from "@/components/ui/Card";
+import { ChartRegion } from "@/components/ui/ChartRegion";
+import { rankBucketCssVars } from "@/lib/theme/chart-colors";
+import { ChartBarIcon as ChartBar } from "@phosphor-icons/react/dist/csr/ChartBar";
 import { useState } from "react";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  ResponsiveContainer,
+  useXAxisScale,
+  useYAxisScale,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { ChartNoDataOverlay } from "./ChartNoDataOverlay";
 import { OverviewChartHeader } from "./OverviewChartHeader";
 import type { DistributionBucket } from "./types";
@@ -17,7 +27,7 @@ export type PositionDistributionCardProps = {
 const axisTextStyle = {
   fill: "var(--fg-muted)",
   fontFamily: "var(--font-sans), system-ui, sans-serif",
-  fontVariantNumeric: "tabular-nums",
+  style: { fontVariantNumeric: "tabular-nums" },
   fontSize: 10,
 };
 
@@ -27,10 +37,6 @@ const percentFormatter = new Intl.NumberFormat("en-US", {
 });
 const positionDistributionDefinition =
   "Ranked keywords grouped by current position. Keywords outside the top 100 are not shown.";
-
-function bucketColor(index: number) {
-  return rankBucketColors[index % rankBucketColors.length];
-}
 
 function bucketFill(index: number) {
   return rankBucketCssVars[index % rankBucketCssVars.length];
@@ -56,6 +62,32 @@ function bucketPercentLabel(count: number, total: number) {
 function bucketMax(buckets: DistributionBucket[]) {
   const max = Math.max(1, ...buckets.map((bucket) => bucket.count));
   return Math.ceil(max * 1.2);
+}
+
+function DistributionLabels({ buckets }: { buckets: DistributionBucket[] }) {
+  const xScale = useXAxisScale();
+  const yScale = useYAxisScale();
+  if (!xScale || !yScale) return null;
+  return (
+    <g data-chart-counts aria-hidden>
+      {buckets.map((bucket) => {
+        const x = xScale(bucket.label);
+        const y = yScale(bucket.count);
+        return x === undefined || y === undefined ? null : (
+          <text
+            key={bucket.label}
+            x={x}
+            y={y - 8}
+            textAnchor="middle"
+            fill="var(--fg-muted)"
+            fontSize={11}
+          >
+            {countFormatter.format(bucket.count)}
+          </text>
+        );
+      })}
+    </g>
+  );
 }
 
 function BarInteractionLayer({
@@ -112,13 +144,12 @@ export function PositionDistributionCard({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const max = bucketMax(buckets);
   const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
-  const chartValues = buckets.map((bucket) => bucket.count);
 
   return (
     <Card
       className="flex h-full min-w-0 flex-col px-5 py-4.5"
       size="md"
-      sx={{ containerType: "inline-size" }}
+      style={{ containerType: "inline-size" }}
     >
       <OverviewChartHeader
         definition={positionDistributionDefinition}
@@ -137,64 +168,43 @@ export function PositionDistributionCard({
               .map((bucket) => `${bucketRangeLabel(bucket.label)}: ${bucket.count} keywords`)
               .join("; ")}`}
           >
-            <BarChart
-              axisHighlight={{ x: "none", y: "none" }}
-              borderRadius={5}
-              disableAxisListener
+            <ResponsiveContainer
+              width="100%"
               height={244}
-              hideLegend
-              margin={{ top: 22, right: 8, bottom: 28, left: 8 }}
-              series={[
-                {
-                  color: chartColors.accent,
-                  data: chartValues,
-                  label: "Keywords",
-                  barLabel: ({ value }) =>
-                    typeof value === "number" ? countFormatter.format(value) : null,
-                  barLabelPlacement: "outside",
-                },
-              ]}
-              slotProps={{
-                bar: ({ dataIndex }) => ({
-                  style: {
-                    fill: bucketFill(dataIndex),
-                    filter: hoveredIndex === dataIndex ? "brightness(1.15) saturate(1.12)" : "none",
-                    transition: "filter 140ms ease",
-                  },
-                }),
-                tooltip: { trigger: "none" },
-              }}
-              sx={{
-                "& .MuiBarElement-root": { rx: 5, ry: 5 },
-                "& .MuiBarLabel-root": {
-                  fill: "var(--fg-muted)",
-                  fontFamily: "var(--font-sans), system-ui, sans-serif",
-                  fontVariantNumeric: "tabular-nums",
-                  fontSize: 11,
-                  fontWeight: 400,
-                  transform: "translateY(-4px)",
-                },
-                "@container (max-width: 359px)": {
-                  "& .MuiBarLabel-root": { fontSize: 10 },
-                },
-                "& .MuiChartsAxis-tickLabel": axisTextStyle,
-              }}
-              xAxis={[
-                {
-                  colorMap: {
-                    colors: buckets.map((_bucket, index) => bucketColor(index)),
-                    type: "ordinal",
-                    values: buckets.map((bucket) => bucket.label),
-                  },
-                  data: buckets.map((bucket) => bucket.label),
-                  disableLine: true,
-                  disableTicks: true,
-                  scaleType: "band",
-                  tickLabelStyle: axisTextStyle,
-                },
-              ]}
-              yAxis={[{ max, min: 0, position: "none" }]}
-            />
+              initialDimension={{ width: 600, height: 244 }}
+              minWidth={0}
+            >
+              <BarChart
+                data={buckets}
+                margin={{ top: 22, right: 8, bottom: 0, left: 8 }}
+                barCategoryGap="25%"
+                accessibilityLayer={false}
+              >
+                <XAxis
+                  dataKey="label"
+                  type="category"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={axisTextStyle}
+                  height={28}
+                  interval={0}
+                />
+                <YAxis domain={[0, max]} hide />
+                <Bar dataKey="count" radius={5} isAnimationActive={false}>
+                  {buckets.map((bucket, index) => (
+                    <Cell
+                      key={bucket.label}
+                      fill={bucketFill(index)}
+                      style={{
+                        filter: hoveredIndex === index ? "brightness(1.15) saturate(1.12)" : "none",
+                        transition: "filter 140ms ease",
+                      }}
+                    />
+                  ))}
+                </Bar>
+                <DistributionLabels buckets={buckets} />
+              </BarChart>
+            </ResponsiveContainer>
             <BarInteractionLayer
               buckets={buckets}
               hoveredIndex={hoveredIndex}

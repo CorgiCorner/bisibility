@@ -1,17 +1,23 @@
 import "server-only";
 
 import { alertSeverities, defaultAlertSeverity } from "@/lib/alerts/severity";
-import { keywordCreateItemSchema } from "@/lib/api/schemas";
 import { type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { IMPORT_PACKAGE_MAX_KEYWORDS } from "@/lib/migration/package-limits";
 import {
   CLOUD_MIGRATION_PACKAGE_VERSION,
   LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION,
+  PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION,
 } from "@/lib/migration/package-version";
 import { savedViewSurfaceSchema } from "@/lib/saved-views/model";
 import { z } from "zod";
-import { importKeywordSchema, legacyImportKeywordSchema } from "./keyword-schema";
+import {
+  importKeywordSchema,
+  legacyImportKeywordSchema,
+  version6ImportKeywordSchema,
+  version7ImportKeywordSchema,
+} from "./keyword-schema";
+import { alertRuleTargetSchema } from "./location-identity-schema";
 
 export { importKeywordSchema } from "./keyword-schema";
 
@@ -24,7 +30,6 @@ const strictPublicId = (prefix: PublicIdPrefix) =>
   z.string().refine((value) => parsePublicId(value)?.prefix === prefix, {
     message: `Expected a strict ${prefix}_ v3 public ID.`,
   });
-const locationSchema = keywordCreateItemSchema.shape.location.unwrap();
 const nullableTextSchema = z.string().min(1).max(160).nullable().optional();
 const nullableNumberSchema = z.number().nullable().optional();
 const rankPositionSchema = z.number().int().min(1).nullable().optional();
@@ -44,33 +49,6 @@ const alertConditionSchema = z.enum([
 const alertTargetSchema = z.enum(["all", "keyword", "tag"]);
 const alertSeveritySchema = z.enum(alertSeverities);
 export const tokenSchema = z.string().min(20).max(256);
-const keywordTargetSchema = z
-  .object({
-    device: keywordCreateItemSchema.shape.device.optional(),
-    keyword: keywordCreateItemSchema.shape.keyword.optional(),
-    keyword_id: strictPublicId("kw"),
-    location: locationSchema.optional(),
-    type: z.literal("keyword"),
-  })
-  .strict()
-  .transform((value) => ({
-    device: value.device,
-    keyword: value.keyword,
-    keywordId: value.keyword_id,
-    location: value.location,
-    tag: undefined,
-    type: value.type,
-  }));
-const tagTargetSchema = z
-  .object({ tag: z.string().min(1).max(80), type: z.literal("tag") })
-  .strict()
-  .transform((value) => ({
-    ...value,
-    keyword: undefined,
-    keywordId: undefined,
-    location: undefined,
-  }));
-const alertRuleTargetSchema = z.union([keywordTargetSchema, tagTargetSchema]);
 const importAlertRuleSchema = z
   .object({
     change_pct: nullableNumberSchema,
@@ -223,7 +201,13 @@ const cloudImportBodyShape = {
   projectId: strictPublicId("prj").optional(),
   savedViews: z.array(savedViewSchema).max(500).default([]),
   scope: z.enum(["current", "history"]).optional(),
-  version: z.literal(CLOUD_MIGRATION_PACKAGE_VERSION).optional(),
+  version: z
+    .union([
+      z.literal(CLOUD_MIGRATION_PACKAGE_VERSION),
+      z.literal(PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION),
+      z.literal(LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION),
+    ])
+    .optional(),
 };
 
 export const cloudImportBodySchema = z.preprocess(
@@ -237,11 +221,13 @@ const packageSections = [
   "notificationPreferences",
   "savedViews",
 ] as const;
-function packageSchema(version: 5 | 6) {
+function packageSchema(version: 5 | 6 | 7) {
   const keywords =
     version === LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION
       ? z.array(legacyImportKeywordSchema).max(IMPORT_PACKAGE_MAX_KEYWORDS)
-      : importKeywordsSchema;
+      : version === PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION
+        ? z.array(version6ImportKeywordSchema).max(IMPORT_PACKAGE_MAX_KEYWORDS)
+        : z.array(version7ImportKeywordSchema).max(IMPORT_PACKAGE_MAX_KEYWORDS);
   return z
     .looseObject({
       ...cloudImportBodyShape,
@@ -276,6 +262,7 @@ function packageSchema(version: 5 | 6) {
 
 const normalizedCloudImportPackageSchema = z.discriminatedUnion("version", [
   packageSchema(CLOUD_MIGRATION_PACKAGE_VERSION),
+  packageSchema(PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION),
   packageSchema(LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION),
 ]);
 

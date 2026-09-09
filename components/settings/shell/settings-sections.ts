@@ -1,20 +1,20 @@
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import type { Icon } from "@phosphor-icons/react";
-import {
-  CodeIcon as Code,
-  CreditCardIcon as CreditCard,
-  CrosshairIcon as Crosshair,
-  DatabaseIcon as Database,
-  FlaskIcon as Flask,
-  PaperPlaneTiltIcon as PaperPlaneTilt,
-  ShieldWarningIcon as ShieldWarning,
-  SlidersHorizontalIcon as SlidersHorizontal,
-  UserPlusIcon as UserPlus,
-} from "@phosphor-icons/react/dist/ssr";
+import { CodeIcon as Code } from "@phosphor-icons/react/dist/ssr/Code";
+import { CreditCardIcon as CreditCard } from "@phosphor-icons/react/dist/ssr/CreditCard";
+import { CrosshairIcon as Crosshair } from "@phosphor-icons/react/dist/ssr/Crosshair";
+import { DatabaseIcon as Database } from "@phosphor-icons/react/dist/ssr/Database";
+import { FlagIcon as Flag } from "@phosphor-icons/react/dist/ssr/Flag";
+import { FlaskIcon as Flask } from "@phosphor-icons/react/dist/ssr/Flask";
+import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist/ssr/PaperPlaneTilt";
+import { ShieldWarningIcon as ShieldWarning } from "@phosphor-icons/react/dist/ssr/ShieldWarning";
+import { SlidersHorizontalIcon as SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal";
+import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/ssr/UserPlus";
 
 export const settingsSections = [
   { icon: SlidersHorizontal, id: "general", label: "General" },
   { icon: Crosshair, id: "tracking", label: "Tracking" },
+  { icon: Flag, id: "competitors", label: "Competitors" },
   { icon: Flask, id: "experimental", label: "Experimental" },
   { icon: Database, id: "data-sources", label: "Data sources" },
   { icon: PaperPlaneTilt, id: "notifications", label: "Notifications" },

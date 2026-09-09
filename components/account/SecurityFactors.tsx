@@ -12,10 +12,8 @@ import type { TwoFactorManagementInput } from "@/lib/auth/two-factor-management-
 import { completeTwoFactorEnrollmentSchema } from "@/lib/auth/two-factor-management-schema";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { cn } from "@/lib/ui/cn";
-import {
-  DeviceMobileIcon as DeviceMobile,
-  ShieldCheckIcon as ShieldCheck,
-} from "@phosphor-icons/react";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
+import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/csr/ShieldCheck";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

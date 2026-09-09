@@ -6,7 +6,7 @@ import {
   type RankRunNoticeIdentity,
   useRankRunNoticeDismissalSnapshot,
 } from "@/components/rank-runs/notice-dismissals";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { appPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 import { useMemo } from "react";

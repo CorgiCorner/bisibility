@@ -43,6 +43,7 @@ deploy/*.tfvars
 .codex/
 
 # Test / coverage
+.vitest/
 coverage/
 *.tsbuildinfo
 

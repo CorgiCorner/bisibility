@@ -1,5 +1,6 @@
 import type { SetupCta, SetupStepState } from "@/lib/getting-started/setup-steps";
-import { CircleNotchIcon as CircleNotch, ClockIcon as Clock } from "@phosphor-icons/react";
+import { CircleNotchIcon as CircleNotch } from "@phosphor-icons/react/dist/csr/CircleNotch";
+import { ClockIcon as Clock } from "@phosphor-icons/react/dist/csr/Clock";
 import { formatScheduledRun } from "./schedule-phrase";
 
 type StepStateMetaProps = {

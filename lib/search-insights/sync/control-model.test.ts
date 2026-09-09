@@ -5,18 +5,20 @@ import {
   SEARCH_SYNC_STATUS_VOCABULARY,
   type SearchBackfillFacts,
   type SearchImportRuntimeFacts,
+  selectSearchImportCoverage,
 } from "./control-model";
 
 const observability = {
-  consecutiveDays: 7,
+  importCoverage: { completed: 28, total: 488 },
+  consecutiveDays: 28,
   deepHistoryMonths: { completed: 0, target: 16 },
   lastActivityAt: "2026-08-31T10:00:00.000Z",
   lastProbeAt: "2026-08-31T10:00:00.000Z",
-  qualifyingDays: 7,
+  qualifyingDays: 28,
   readyThrough: {
     d1: { current: true, previous: true },
-    d7: { current: true, previous: false },
-    d28: { current: false, previous: false },
+    d7: { current: true, previous: true },
+    d28: { current: true, previous: true },
     d90: { current: false, previous: false },
   },
   stall: {
@@ -43,169 +45,155 @@ const base: SearchBackfillFacts = {
 };
 
 describe("search import presentation resolver", () => {
-  it("uses pace-aware stall evidence instead of treating a ten-minute gap as universally stuck", () => {
-    const slow = resolveSearchBackfillPresentation(base);
-    expect(slow).toMatchObject({ kind: "running", title: "Running" });
-    expect(slow.supportingText).toBe("Next request in about 10 min.");
-
-    const fast = resolveSearchBackfillPresentation({
+  it("keeps full day coverage active until the import itself completes", () => {
+    const full = {
       ...base,
-      observability: {
-        ...observability,
-        stall: {
-          ...observability.stall,
-          expectedBatchMs: 60_000,
-          expectedDayMs: 60_000,
-          nextRequestInMs: 0,
-          thresholdMs: 60_000,
-        },
-      },
+      observability: { ...observability, importCoverage: { completed: 488, total: 488 } },
+    };
+    expect(resolveSearchBackfillPresentation(full)).toMatchObject({
+      title: "Importing",
+      kind: "running",
+      polling: true,
+      supportingText: "All planned days are imported. Import is still running.",
     });
-    expect(fast).toMatchObject({ action: "retry", kind: "needs_retry", title: "Needs retry" });
-    expect(fast.supportingText).toBe("No import activity for about 10 min.");
+    expect(resolveSearchBackfillPresentation({ ...full, state: "completed" })).toMatchObject({
+      title: "Completed",
+      kind: "complete",
+      polling: false,
+    });
   });
 
-  it("only renders a stall when every runtime predicate confirms it", () => {
+  it.each([
+    ["queued", { state: "queued" }, "Queued"],
+    ["current import", { state: "running" }, "Importing"],
+    ["user pause", { pausedReason: "user", state: "paused" }, "Paused"],
+    ["quota wait", { pausedReason: "rate_limited", state: "paused" }, "Waiting for Google"],
+    ["reauth", { pausedReason: "needs_reauth", state: "paused" }, "Reconnect required"],
+    ["first data", { state: "waiting_for_first_data" }, "Waiting for data"],
+    [
+      "confirmed unavailable worker",
+      { runtime: { workerStatus: "stale" }, state: "running" },
+      "Delayed",
+    ],
+    ["failed state", { state: "failed" }, "Failed"],
+    ["saved error pause", { pausedReason: "error", state: "paused" }, "Failed"],
+    ["completed", { state: "completed" }, "Completed"],
+    ["unrecognized durable state", { state: "resuming" }, "Status unavailable"],
+  ] as const)("presents %s factually", (_name, overrides, title) => {
+    expect(resolveSearchBackfillPresentation({ ...base, ...overrides }).title).toBe(title);
+  });
+
+  it.each([
+    ["missing", undefined],
+    ["unknown", { workerStatus: "unknown" }],
+  ] as const)(
+    "does not infer worker failure from %s runtime evidence",
+    (_name, runtimeOverride) => {
+      const model = resolveSearchBackfillPresentation({
+        ...base,
+        ...(runtimeOverride ? { runtime: runtimeOverride } : { runtime: undefined }),
+        state: "running",
+      });
+
+      expect(model).toMatchObject({ kind: "status_unavailable", title: "Status unavailable" });
+      expect(model.title).not.toBe("Delayed");
+    },
+  );
+
+  it("uses only a positive liveness failure or identity mismatch for Delayed", () => {
     const mismatched = resolveSearchBackfillPresentation({
       ...base,
-      observability: {
-        ...observability,
-        stall: { ...observability.stall, silenceMs: 31 * 60_000 },
-      },
       runtime: {
-        ...runtime,
         workerStatus: {
           status: "ok",
           temporalIdentityComparison: { detail: "different queues", status: "mismatch" },
         },
       },
     });
-    expect(mismatched).toMatchObject({ kind: "waiting_worker", title: "Waiting on worker" });
+
+    expect(mismatched).toMatchObject({ kind: "waiting_worker", title: "Delayed" });
   });
 
-  it("renders an import row with no state and missing current coverage as needs retry", () => {
+  it("uses request pace only while current facts confirm an import is running", () => {
+    expect(resolveSearchBackfillPresentation(base).supportingText).toBe(
+      "Next request in about 10 min.",
+    );
+    expect(
+      resolveSearchBackfillPresentation({
+        ...base,
+        observability: { ...observability, stall: { ...observability.stall, nextRequestInMs: 0 } },
+      }).supportingText,
+    ).toBe("Import is running.");
+    expect(
+      resolveSearchBackfillPresentation({ ...base, state: "queued" }).supportingText,
+    ).not.toMatch(/worker pickup|every few seconds|60 seconds/i);
+  });
+
+  it("keeps safeError auxiliary instead of letting it select lifecycle", () => {
     const model = resolveSearchBackfillPresentation({
       ...base,
-      runtime: { ...runtime },
-      state: null,
-    });
-    expect(model).toMatchObject({ kind: "needs_retry", title: "Needs retry" });
-    expect(model.title).not.toContain("delayed");
-  });
-
-  it("keeps our own durable state authoritative", () => {
-    const queued = resolveSearchBackfillPresentation({
-      ...base,
-      runtime: { ...runtime },
-      state: "queued",
-    });
-    const running = resolveSearchBackfillPresentation({
-      ...base,
-      runtime: { ...runtime },
+      safeError: "A previous request failed.",
       state: "running",
     });
 
-    expect(queued).toMatchObject({ kind: "queued", title: "Queued" });
-    expect(running).toMatchObject({ kind: "running", title: "Running" });
+    expect(model).toMatchObject({ kind: "running", title: "Importing" });
+    expect(model.supportingText).not.toContain("previous request failed");
   });
 
-  it("keeps a durable completion complete even when fewer than 28 days are available", () => {
-    const model = resolveSearchBackfillPresentation({
-      ...base,
-      runtime: { ...runtime },
-      state: "completed",
-    });
-    expect(model).toMatchObject({ action: null, kind: "complete", title: "Complete" });
-  });
-
-  it("uses a non-running semantic state for a durable completion", () => {
+  it("selects qualifying coverage rather than raw planned counters", () => {
+    expect(selectSearchImportCoverage(base)).toEqual({ completed: 28, total: 488, unit: "days" });
     expect(
-      resolveSearchSyncControl({
+      resolveSearchBackfillPresentation({
         ...base,
-        runtime: { ...runtime },
-        state: "completed",
-      }),
-    ).toMatchObject({ semanticState: "complete", status: "Complete" });
+        observability: { ...observability, importCoverage: { completed: 28, total: 488 } },
+      }).description,
+    ).toBe("28 of 488 finalized days are imported.");
   });
 
-  it("does not complete from seven readable current days without a completed state", () => {
-    const model = resolveSearchBackfillPresentation(base);
-    expect(model).toMatchObject({ kind: "running", title: "Running" });
-    expect(model.kind).not.toBe("complete");
-  });
-
-  it.each([
-    [
-      "no worker",
-      { runtime: { workerStatus: "stale" } },
-      "no_worker",
-      "Waiting on worker",
-      "Import is waiting for the background worker - restart it and it resumes.",
-    ],
-    [
-      "behind another property",
-      { queue: { blockingPropertyLabel: "example.com" } },
-      "behind_import",
-      "Queued",
-      "Queued behind example.com. That import is using the shared property quota.",
-    ],
-    [
-      "worker pickup",
-      {},
-      "worker_pickup",
-      "Queued",
-      "Queued for worker pickup. The worker checks pending work every few seconds.",
-    ],
-  ] as const)("derives queued reason for %s", (_name, overrides, reason, title, supportingText) => {
-    const model = resolveSearchBackfillPresentation({ ...base, ...overrides, state: "queued" });
-    expect(model).toMatchObject({ queueReason: reason, supportingText, title });
-  });
-
-  it.each([
-    ["missing worker runtime", undefined],
-    ["legacy ok worker status without identity proof", "ok"],
-  ] as const)("derives no worker for %s", (_name, workerStatus) => {
-    const model = resolveSearchBackfillPresentation({
+  it("keeps progress indeterminate when qualifying total is unknown", () => {
+    const unknownTotal = {
       ...base,
-      runtime: workerStatus ? { ...runtime, workerStatus } : undefined,
-      state: "queued",
+      observability: { ...observability, importCoverage: { completed: 28, total: 0 } },
+    };
+
+    expect(selectSearchImportCoverage(unknownTotal)).toEqual({
+      completed: 28,
+      total: null,
+      unit: "days",
     });
-    expect(model).toMatchObject({ kind: "waiting_worker", queueReason: "no_worker" });
+    expect(resolveSearchBackfillPresentation(unknownTotal).description).toBe(
+      "Finalized import coverage is not available.",
+    );
   });
 
-  it("keeps every rendered title inside the closed vocabulary", () => {
+  it("does not fall back to a readiness counter in older snapshots", () => {
+    expect(
+      selectSearchImportCoverage({
+        observability: { ...observability, importCoverage: undefined },
+      }),
+    ).toEqual({ completed: null, total: null, unit: "days" });
+  });
+
+  it("keeps semantic state derived from the factual presentation", () => {
+    expect(resolveSearchSyncControl({ ...base, state: "completed" })).toMatchObject({
+      semanticState: "complete",
+      status: "Completed",
+    });
+    expect(resolveSearchSyncControl({ ...base, state: "failed" })).toMatchObject({
+      semanticState: "error",
+      status: "Failed",
+    });
+  });
+
+  it("keeps every title inside the closed factual vocabulary", () => {
     const models = [
       resolveSearchBackfillPresentation(base),
-      resolveSearchBackfillPresentation({ ...base, pausedReason: "user" }),
-      resolveSearchBackfillPresentation({ ...base, pausedReason: "rate_limited" }),
-      resolveSearchBackfillPresentation({ ...base, pausedReason: "needs_reauth" }),
-      resolveSearchBackfillPresentation({ ...base, state: "waiting_for_first_data" }),
       resolveSearchBackfillPresentation({ ...base, state: "queued" }),
-      resolveSearchBackfillPresentation({
-        ...base,
-        runtime: { ...runtime },
-      }),
-      resolveSearchBackfillPresentation({
-        ...base,
-        observability: {
-          ...observability,
-          readyThrough: { ...observability.readyThrough, d28: { current: true, previous: true } },
-        },
-        runtime: { ...runtime },
-        state: "completed",
-      }),
-      resolveSearchBackfillPresentation({
-        ...base,
-        runtime: { ...runtime, workerStatus: "stale" },
-        state: "queued",
-      }),
-      resolveSearchSyncControl({ connectionStatus: "not_connected" }),
-      resolveSearchSyncControl({ connectionStatus: "connected_no_property" }),
+      resolveSearchBackfillPresentation({ ...base, state: "waiting_for_first_data" }),
+      resolveSearchBackfillPresentation({ ...base, state: "failed" }),
+      resolveSearchBackfillPresentation({ ...base, state: "completed" }),
+      resolveSearchBackfillPresentation({ ...base, runtime: undefined }),
     ];
-    for (const model of models) {
-      const title = "title" in model ? model.title : model.status;
-      expect(SEARCH_SYNC_STATUS_VOCABULARY).toContain(title);
-    }
-    expect(SEARCH_SYNC_STATUS_VOCABULARY).not.toContain("Sync now");
+    for (const model of models) expect(SEARCH_SYNC_STATUS_VOCABULARY).toContain(model.title);
   });
 });

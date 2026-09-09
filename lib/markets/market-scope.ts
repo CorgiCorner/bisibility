@@ -15,6 +15,9 @@ export type MarketScopeSource = {
   displayName: string;
   id: string;
   languageLabel: string;
+  name?: string;
+  locationId?: string;
+  status?: "active" | "paused";
 };
 
 export type MarketScope = {
@@ -22,6 +25,7 @@ export type MarketScope = {
   canonicalKey: string;
   label: string;
   ref: MarketRef;
+  status?: "active" | "paused";
 };
 
 /** The same two halves the market chip shows, in one string a sentence can carry. */
@@ -43,7 +47,12 @@ export function resolveMarketScope(
   }
   const match = markets?.find((market) => market.id === ref);
   return match
-    ? { canonicalKey: match.canonicalKey, label: marketScopeLabel(match), ref: match.id }
+    ? {
+        canonicalKey: match.canonicalKey,
+        label: match.name && match.name !== match.locationId ? match.name : marketScopeLabel(match),
+        ref: match.id,
+        status: match.status,
+      }
     : null;
 }
 

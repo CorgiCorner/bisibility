@@ -1,4 +1,4 @@
-import { type SerpDepth, serpDepthValues } from "@/lib/serp/markets";
+import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
 import { z } from "zod";
 
 const [top10, top20, top50, top100] = serpDepthValues;

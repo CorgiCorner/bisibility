@@ -52,8 +52,7 @@ vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 
-const untracked =
-  "Market ES@es is not tracked by this project. Add it in Settings > Markets first.";
+const untracked = "Market ES@es is not tracked by this project. Add it in Markets first.";
 
 function registryRow(status: "active" | "paused" | "removed") {
   return {

@@ -1,10 +1,11 @@
 "use client";
 
 import { PackageTransferPanel } from "@/components/cloud/PackageTransferPanel";
-import { Checkbox, SegmentedControl, type SegmentedControlOption } from "@/components/ui";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/SegmentedControl";
 import type { MigrationImportCompletion } from "@/lib/migration/result";
 import { appRootPath } from "@/lib/routing/app-path";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { ExportPackageCard, exportActiveCloudImportPackage } from "./MigrateToCloudExportPackage";
 import { HandoffPanel } from "./MigrateToCloudHandoff";
 import { InfoBox, StepHeading, StepLabel, TokenSourceStep } from "./MigrateToCloudTransferParts";

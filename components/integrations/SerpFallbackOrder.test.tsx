@@ -36,10 +36,12 @@ describe("SerpFallbackOrder", () => {
       />,
     );
 
-    expect(screen.getByText(/^Rank checks try active providers/)).toHaveClass("mt-2");
+    expect(
+      screen.getByText("If a provider fails or is rate-limited, the next active provider is used."),
+    ).toBeVisible();
   });
 
-  it("shows active, paused, and disconnected providers in one explicit order", () => {
+  it("shows the order of connected providers without repeating disconnected cards", () => {
     const [dataForSeo, serpApi] = connectedProviders();
     render(
       <SerpFallbackOrder
@@ -56,8 +58,22 @@ describe("SerpFallbackOrder", () => {
 
     expect(screen.getByText("First provider")).toBeInTheDocument();
     expect(screen.getByText("Paused · not used for rank checks")).toBeInTheDocument();
-    expect(screen.getAllByText("Not connected")).toHaveLength(1);
+    expect(screen.queryByText("Not connected")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
     expect(screen.queryByText("Connect below")).not.toBeInTheDocument();
+  });
+
+  it("shows a compact explanation when no provider is connected", () => {
+    render(
+      <SerpFallbackOrder
+        canManageProviders
+        providers={connectedProviders().map((provider) => ({ ...provider, status: "ready" }))}
+      />,
+    );
+    expect(
+      screen.getByText("Connect a SERP provider above to configure fallback order."),
+    ).toBeVisible();
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
   });
 
   it("persists the visible top-to-bottom order", async () => {

@@ -1,4 +1,5 @@
 import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
+import type { ObservationRunInput } from "@/lib/observation/types";
 import { ProviderCallError } from "@/lib/providers/call-error";
 import { encryptSecret } from "@/lib/providers/crypto";
 import { clearProviderRateLimitState, ProviderRateLimitedError } from "@/lib/providers/rate-limit";
@@ -26,6 +27,15 @@ const US_LOCATION: SerpRankLocation = {
   secondaryGeoName: "United States",
 };
 
+const COUNTRY_LOCATION = {
+  gl: "us",
+  hl: "en",
+  kind: "country",
+  primaryGeoCode: null,
+  primaryGeoName: "United States",
+  secondaryGeoName: "United States",
+};
+
 function hasRequestHostname(input: string | URL | Request, hostname: string) {
   const requestUrl = new URL(input instanceof Request ? input.url : input);
   return requestUrl.hostname === hostname;
@@ -42,6 +52,8 @@ const mocks = vi.hoisted(() => ({
     auditLog: { create: vi.fn() },
     keyword: { count: vi.fn(), findUnique: vi.fn(), groupBy: vi.fn() },
     keywordSchedule: { update: vi.fn() },
+    observationItem: { createMany: vi.fn() },
+    observationRun: { create: vi.fn().mockResolvedValue({ id: "obs_1" }) },
     project: { findUnique: vi.fn() },
     projectDefaults: { findUnique: vi.fn(), update: vi.fn() },
     providerConnection: { findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
@@ -548,7 +560,7 @@ describe("runKeywordCheckWithFallback", () => {
       id: "keyword_1",
       publicId: "kw_a00000000000000000000000",
       location: "United States",
-      locationRef: null,
+      locationRef: COUNTRY_LOCATION,
       project: {
         budgetCapCents: 500,
         defaults: { frequency: "daily", jitterMinutes: 0, serpDepth: 100 },
@@ -626,8 +638,86 @@ describe("runKeywordCheckWithFallback", () => {
     });
   });
 
+  it("persists the observation the provider captured with the rank check", async () => {
+    const observation: ObservationRunInput = {
+      provider: "serpapi",
+      surface: "web_serp",
+      engine: "google",
+      requestPolicy: { depth: 10, stopOnMatch: false, forcedAiOverview: false },
+      completeness: "complete",
+      configuredScope: { location: "United States", language: "en", device: "desktop" },
+      executedAt: new Date("2026-01-01T06:00:00.000Z"),
+      items: [
+        {
+          resultKind: "local_pack",
+          blockPosition: 1,
+          positionInBlock: 1,
+          businessName: "Example Bakery",
+          domain: "example.com",
+          rawFragment: { title: "Example Bakery" },
+        },
+      ],
+    };
+    const capturing = provider("serpapi", vi.fn().mockResolvedValue({ ...ranked(3), observation }));
+    mocks.prisma.keyword.findUnique.mockResolvedValue({
+      device: "desktop",
+      id: "keyword_1",
+      publicId: "kw_a00000000000000000000000",
+      location: "United States",
+      locationRef: COUNTRY_LOCATION,
+      project: {
+        budgetCapCents: 500,
+        defaults: { frequency: "daily", jitterMinutes: 0, serpDepth: 10 },
+        domain: "example.com",
+        id: "project_1",
+        writeMode: "active",
+      },
+      projectId: "project_1",
+      rankChecks: [],
+      schedule: { frequency: "daily", jitterMinutes: 0, serpDepth: 10 },
+      text: "rank tracker",
+    });
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      {
+        costPerCheckCents: null,
+        credentialsEncrypted: encryptSecret(JSON.stringify({ apiKey: "serp-key" })),
+        provider: "serpapi",
+      },
+    ]);
+    mocks.prisma.providerConnection.findFirst.mockResolvedValue({ id: "connection_serpapi" });
+    mocks.prisma.rankCheck.create.mockImplementation(({ data }) =>
+      Promise.resolve({ id: "rank_1", ...data }),
+    );
+
+    await runKeywordCheckWithFallback({
+      keywordId: "keyword_1",
+      resolveProvider: () => capturing,
+    });
+
+    expect(mocks.prisma.observationRun.create).toHaveBeenCalledOnce();
+    expect(mocks.prisma.observationRun.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        completeness: "complete",
+        projectId: "project_1",
+        provider: "serpapi",
+        rankCheckId: "rank_1",
+      }),
+    });
+    expect(mocks.prisma.observationItem.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          businessName: "Example Bakery",
+          observationRunId: "obs_1",
+          ordinal: 0,
+          resultKind: "local_pack",
+        }),
+      ],
+    });
+  });
+
   it.each([
     {
+      checkSchedule: null,
       expectedDepth: 10,
       expectedStopOnMatch: false,
       label: "schedule override",
@@ -640,6 +730,7 @@ describe("runKeywordCheckWithFallback", () => {
       schedule: { frequency: "daily", jitterMinutes: 0, serpDepth: 10 },
     },
     {
+      checkSchedule: null,
       expectedDepth: 20,
       expectedStopOnMatch: true,
       label: "project default",
@@ -647,15 +738,32 @@ describe("runKeywordCheckWithFallback", () => {
       schedule: null,
     },
     {
+      checkSchedule: null,
       expectedDepth: 100,
       expectedStopOnMatch: true,
       label: "system default",
       projectDefaults: null,
       schedule: null,
     },
+    {
+      checkSchedule: { serpDepth: null },
+      expectedDepth: 20,
+      expectedStopOnMatch: true,
+      label: "assigned schedule inheriting the project instead of stale keyword depth",
+      projectDefaults: { frequency: "daily", jitterMinutes: 0, serpDepth: 20 },
+      schedule: { frequency: "daily", jitterMinutes: 0, serpDepth: 10 },
+    },
+    {
+      checkSchedule: { serpDepth: 50 },
+      expectedDepth: 50,
+      expectedStopOnMatch: true,
+      label: "assigned schedule pinned depth",
+      projectDefaults: { frequency: "daily", jitterMinutes: 0, serpDepth: 20 },
+      schedule: { frequency: "daily", jitterMinutes: 0, serpDepth: 10 },
+    },
   ] as const)(
     "resolves depth from the $label",
-    async ({ expectedDepth, expectedStopOnMatch, projectDefaults, schedule }) => {
+    async ({ expectedDepth, expectedStopOnMatch, projectDefaults, schedule, checkSchedule }) => {
       const fetchRank = vi.fn().mockResolvedValue(ranked(5));
       const primary = provider("primary", fetchRank);
       mocks.prisma.keyword.findUnique.mockResolvedValue({
@@ -664,11 +772,12 @@ describe("runKeywordCheckWithFallback", () => {
         id: "keyword_1",
         publicId: "kw_a00000000000000000000000",
         location: "United States",
-        locationRef: null,
+        locationRef: COUNTRY_LOCATION,
         project: { defaults: projectDefaults, domain: "example.com" },
         projectId: "project_1",
         rankChecks: [],
         schedule,
+        checkSchedule,
         text: "rank tracker",
       });
       mocks.prisma.providerConnection.findMany.mockResolvedValue([
@@ -697,11 +806,9 @@ describe("runKeywordCheckWithFallback", () => {
     },
   );
 
-  it("degrades to the default market when a null relation has an unsupported legacy string", async () => {
+  it("rejects a missing Location relation before the provider can receive a request", async () => {
     const fetchRank = vi.fn().mockResolvedValue(ranked(5));
     const primary = provider("primary", fetchRank);
-    // No joined Location row and a free-form legacy string the alias table does not
-    // know: the runner must derive a country object synchronously and never throw.
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       device: "desktop",
       id: "keyword_1",
@@ -725,34 +832,28 @@ describe("runKeywordCheckWithFallback", () => {
       Promise.resolve({ id: "rank_1", ...data }),
     );
 
-    await runKeywordCheckWithFallback({
-      keywordId: "keyword_1",
-      resolveProvider: () => primary,
-    });
-
-    expect(fetchRank).toHaveBeenCalledWith(
-      expect.objectContaining({
-        location: expect.objectContaining({
-          gl: "us",
-          hl: "en",
-          primaryGeoName: "United States",
-          secondaryGeoName: "United States",
-        }),
-      }),
-    );
+    await expect(
+      runKeywordCheckWithFallback({ keywordId: "keyword_1", resolveProvider: () => primary }),
+    ).rejects.toThrow("Keyword location relation is required.");
+    expect(fetchRank).not.toHaveBeenCalled();
   });
 
-  it("derives the country object from a supported legacy string when the relation is null", async () => {
+  it("rejects malformed Location provider handles before the provider can receive a request", async () => {
     const fetchRank = vi.fn().mockResolvedValue(ranked(5));
     const primary = provider("primary", fetchRank);
-    // Dedup-loser / not-yet-migrated row: locationRef null but legacy string is a
-    // known alias, so the runner maps it to the country seed (no DB/network).
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       device: "desktop",
       id: "keyword_1",
       publicId: "kw_a00000000000000000000000",
-      location: "Germany",
-      locationRef: null,
+      location: "United States",
+      locationRef: {
+        gl: "us",
+        hl: "en",
+        kind: "country",
+        primaryGeoCode: null,
+        primaryGeoName: "",
+        secondaryGeoName: "United States",
+      },
       project: { defaults: { frequency: "daily", jitterMinutes: 0 }, domain: "example.com" },
       projectId: "project_1",
       rankChecks: [],
@@ -770,18 +871,10 @@ describe("runKeywordCheckWithFallback", () => {
       Promise.resolve({ id: "rank_1", ...data }),
     );
 
-    await runKeywordCheckWithFallback({ keywordId: "keyword_1", resolveProvider: () => primary });
-
-    expect(fetchRank).toHaveBeenCalledWith(
-      expect.objectContaining({
-        location: expect.objectContaining({
-          gl: "de",
-          hl: "de",
-          primaryGeoName: "Germany",
-          secondaryGeoName: "Germany",
-        }),
-      }),
-    );
+    await expect(
+      runKeywordCheckWithFallback({ keywordId: "keyword_1", resolveProvider: () => primary }),
+    ).rejects.toThrow("Keyword location relation contains invalid provider handles.");
+    expect(fetchRank).not.toHaveBeenCalled();
   });
 
   it("builds the neutral object from a joined Location row without re-resolving", async () => {
@@ -890,7 +983,7 @@ describe("runKeywordCheckWithFallback", () => {
       id: "keyword_1",
       publicId: "kw_a00000000000000000000000",
       location: "United States",
-      locationRef: null,
+      locationRef: COUNTRY_LOCATION,
       project: { defaults: { frequency: "daily", jitterMinutes: 0 }, domain: "example.com" },
       projectId: "project_1",
       rankChecks: [{ position: 8, raw: previousRaw }],
@@ -959,7 +1052,7 @@ describe("runKeywordCheckWithFallback", () => {
       id: "keyword_1",
       publicId: "kw_a00000000000000000000000",
       location: "United States",
-      locationRef: null,
+      locationRef: COUNTRY_LOCATION,
       project: {
         budgetCapCents: 10,
         defaults: { frequency: "daily", jitterMinutes: 0 },
@@ -1013,7 +1106,7 @@ describe("runKeywordCheckWithFallback", () => {
       device: "desktop",
       id: "keyword_1",
       location: "United States",
-      locationRef: null,
+      locationRef: COUNTRY_LOCATION,
       project: {
         budgetCapCents: 10,
         defaults: { frequency: "daily", jitterMinutes: 0 },
@@ -1054,7 +1147,7 @@ describe("runKeywordCheckWithFallback", () => {
       device: "desktop",
       id: "keyword_1",
       location: "United States",
-      locationRef: null,
+      locationRef: COUNTRY_LOCATION,
       project: {
         budgetCapCents: 500,
         defaults: { frequency: "daily", jitterMinutes: 0 },

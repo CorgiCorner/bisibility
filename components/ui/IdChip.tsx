@@ -7,7 +7,6 @@ export type IdChipProps = {
   size?: "xs" | "sm" | "md" | "lg";
   className?: string;
   copyClassName?: string;
-  displayValue?: string;
   value: string;
 };
 
@@ -43,7 +42,6 @@ export function IdChip({
   size = "sm",
   className,
   copyClassName,
-  displayValue = value,
 }: Readonly<IdChipProps>) {
   return (
     <span
@@ -55,10 +53,9 @@ export function IdChip({
       title={value}
     >
       <span className={cn("font-mono leading-[1.45]", idTextSizeByIdChipSize[size])}>
-        {displayValue}
+        {shortId(value)}
       </span>
       <CopyButton
-        aria-label={copyLabel}
         className={cn("shrink-0", copyClassName)}
         label={copyLabel}
         size={size}

@@ -7,16 +7,16 @@ import {
 } from "./context";
 
 const mocks = vi.hoisted(() => ({
-  defaultMarket: vi.fn(),
-  project: { findFirst: vi.fn() },
+  prisma: {
+    keyword: { groupBy: vi.fn() },
+    location: { findMany: vi.fn() },
+    project: { findFirst: vi.fn() },
+  },
   resolveLocation: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db/prisma", () => ({ prisma: { project: mocks.project } }));
-vi.mock("@/lib/serp/default-market", () => ({
-  projectDefaultSerpMarket: mocks.defaultMarket,
-}));
+vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/serp/location-service", () => ({
   resolveKeywordLocation: mocks.resolveLocation,
 }));
@@ -32,8 +32,9 @@ const connection = {
 describe("keyword research connection IDs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.project.findFirst.mockResolvedValue(null);
-    mocks.defaultMarket.mockReturnValue({ locationKey: "US" });
+    mocks.prisma.keyword.groupBy.mockResolvedValue([]);
+    mocks.prisma.location.findMany.mockResolvedValue([]);
+    mocks.prisma.project.findFirst.mockResolvedValue(null);
     mocks.resolveLocation.mockResolvedValue({
       location: {
         canonicalKey: "ES@en",
@@ -50,7 +51,7 @@ describe("keyword research connection IDs", () => {
     await keywordResearchProject("project_1");
     await keywordResearchPageProject("project_1");
 
-    for (const [input] of mocks.project.findFirst.mock.calls) {
+    for (const [input] of mocks.prisma.project.findFirst.mock.calls) {
       expect(input).toMatchObject({
         select: {
           providerConnections: {
@@ -80,7 +81,7 @@ describe("keyword research connection IDs", () => {
     },
   );
 
-  it("resolves a qualified country market with its explicit language", async () => {
+  it("resolves a qualified country with its explicit language", async () => {
     await expect(
       researchLocation(
         {
@@ -94,6 +95,46 @@ describe("keyword research connection IDs", () => {
     expect(mocks.resolveLocation).toHaveBeenCalledWith({
       projectId: "project_1",
       selection: { countryCode: "ES", kind: "country", languageCode: "en" },
+    });
+  });
+
+  it("uses the ranked default scope when no location key is supplied", async () => {
+    mocks.prisma.keyword.groupBy.mockResolvedValue([
+      { _count: { _all: 4 }, device: "desktop", locationId: "loc_es" },
+      { _count: { _all: 1 }, device: "desktop", locationId: "loc_de" },
+    ]);
+    mocks.prisma.location.findMany.mockResolvedValue([
+      { countryCode: "ES", hl: "es", id: "loc_es", languageLabel: "Spanish" },
+      { countryCode: "DE", hl: "de", id: "loc_de", languageLabel: "German" },
+    ]);
+    mocks.resolveLocation.mockResolvedValue({
+      location: {
+        canonicalKey: "ES",
+        gl: "ES",
+        hl: "es",
+        primaryGeoCode: null,
+        primaryGeoName: "Spain",
+        secondaryGeoName: "Spain",
+      },
+    });
+
+    await expect(
+      researchLocation({
+        defaults: null,
+        id: "project_1",
+        keywords: [
+          { device: "desktop", location: "Germany", locationRef: { canonicalKey: "DE" } },
+          {
+            device: "desktop",
+            location: "Malaga, Spain",
+            locationRef: { canonicalKey: "ES/ES-AN/Malaga" },
+          },
+        ],
+      } as never),
+    ).resolves.toMatchObject({ key: "ES", value: { gl: "ES", hl: "es" } });
+    expect(mocks.resolveLocation).toHaveBeenCalledWith({
+      projectId: "project_1",
+      selection: { countryCode: "ES", kind: "country", languageCode: undefined },
     });
   });
 });

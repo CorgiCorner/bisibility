@@ -5,10 +5,10 @@
 // three hand-maintained copies: a row change had to land three times or the two live surfaces
 // silently drifted. Sidebar and SidebarNav now compose this; ShellSkeleton mirrors its boxes.
 
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { NavItem, NavItemGroupDescriptor } from "@/lib/nav/nav-items";
 import { navItemGroups, RAIL_ICON_SIZE } from "@/lib/nav/nav-items";
-import { FlaskIcon as Flask } from "@phosphor-icons/react/ssr";
+import { FlaskIcon as Flask } from "@phosphor-icons/react/dist/ssr/Flask";
 import Link from "next/link";
 
 export type SidebarRailRowProps = {
@@ -130,7 +130,7 @@ function SidebarRailBadge({ badge }: Readonly<{ badge?: NavItem["badge"] }>) {
   return (
     <span
       // Decorative status, and the row's accessible name is the label alone: without this the
-      // expanded link announces as "Search Consolealpha".
+      // expanded link announces as "Search Consolebeta".
       aria-hidden
       className={[
         "inline-flex flex-none items-center rounded-full px-[7px] py-0.5 text-[9.5px] font-semibold",
@@ -182,8 +182,7 @@ export type SidebarRailGroupsProps = {
 };
 
 /**
- * The three groups, in model order, each headed by its caption. Every rail destination is in
- * exactly one group, so there is no ungrouped block above or below this.
+ * Dashboard is a standalone top row. The headed groups below it stay in model order.
  */
 export function SidebarRailGroups({
   collapsed,
@@ -193,6 +192,17 @@ export function SidebarRailGroups({
 }: Readonly<SidebarRailGroupsProps>) {
   return (
     <>
+      {items
+        .filter((item) => item.group === null)
+        .map((item) => (
+          <SidebarRailRow
+            collapsed={collapsed}
+            currentHref={currentHref}
+            item={item}
+            key={`${item.href}:${collapsed ? "collapsed" : "expanded"}`}
+            onNavigate={onNavigate}
+          />
+        ))}
       {navItemGroups.map((group) => (
         <div className="flex flex-col gap-0.5" key={group.id}>
           <SidebarRailGroupHeading collapsed={collapsed} group={group} />

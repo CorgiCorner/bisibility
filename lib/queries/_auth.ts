@@ -46,12 +46,11 @@ export const getQueryActor = perRequestCache(async (): Promise<Actor> => {
   };
 });
 
-const loadReadableProject = perRequestCache(async (projectId: string) => {
+async function loadProject(projectId: string) {
   if (parsePublicId(projectId)?.prefix !== "prj") {
     throw new Error("Project not found.");
   }
 
-  const actor = await getQueryActor();
   const project = await prisma.project.findFirst({
     select: {
       budgetCapCents: true,
@@ -70,8 +69,19 @@ const loadReadableProject = perRequestCache(async (projectId: string) => {
     throw new Error("Project not found.");
   }
 
+  return project;
+}
+
+const loadReadableProject = perRequestCache(async (projectId: string) => ({
+  actor: await getQueryActor(),
+  project: await loadProject(projectId),
+}));
+
+export async function requireReadableProjectFor(actor: Actor, projectId: string) {
+  const project = await loadProject(projectId);
+  authorize(actor, "read", { projectId: project.id, type: "project" });
   return { actor, project };
-});
+}
 
 export async function requireReadableProject(projectId: string) {
   const { actor, project } = await loadReadableProject(projectId);

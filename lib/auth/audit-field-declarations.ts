@@ -1,4 +1,5 @@
 import { registerAccountAuditDeclarations } from "@/lib/auth/audit-field-declarations-account";
+import { registerCompetitorAuditDeclarations } from "@/lib/auth/audit-field-declarations-competitors";
 import { registerAdditionalAuditDeclarations } from "@/lib/auth/audit-field-declarations-extra";
 import { registerRankCheckRunAuditDeclarations } from "@/lib/auth/audit-field-declarations-runs";
 import {
@@ -148,6 +149,9 @@ declare(["settings.experimental_modules.update"], {
 declare(["settings.project_market.add"], {
   after: { ...f.numbers("added"), marketIds: list("string") },
 });
+declare(["project_market.create"], {
+  after: { ...f.numbers("keywordCount"), ...strings("method", "scheduleId") },
+});
 declare(["onboarding.project_markets.reconcile"], {
   after: {
     ...f.numbers("added"),
@@ -167,15 +171,16 @@ declare(
     before: strings("status"),
   },
 );
+declare(["settings.project_market.update"], {
+  after: { futureKeywordDevices: list("string"), ...strings("name") },
+  before: { futureKeywordDevices: list("string"), ...strings("name") },
+});
 declare(["settings.project_market.restore"], {
   after: { ...f.numbers("resumedKeywords"), ...strings("status") },
   before: strings("status"),
 });
 
-const competitor = { ...strings("domain", "id", "label") };
-declare(["competitor.add"], { after: competitor });
-declare(["competitor.remove"], { before: competitor });
-declare(["competitor.rename"], { after: competitor, before: competitor });
+registerCompetitorAuditDeclarations(declare);
 const ingestHook = { ...strings("id", "label"), ...f.booleans("disabled") };
 declare(["ingest_hook.create"], { after: ingestHook });
 declare(["ingest_hook.delete"], { before: ingestHook });
@@ -232,6 +237,10 @@ declare(["keyword.bulk_clear_target", "keyword.bulk_set_target"], {
   after: f.urls("targetUrl"),
   before: keywordRows,
 });
+declare(["keyword.target_url_reset"], {
+  after: f.urls("targetUrl"),
+  before: f.urls("targetUrl"),
+});
 declare(["keyword.bulk_set_frequency"], {
   after: { keywordIds: list("string"), schedule },
 });
@@ -243,7 +252,7 @@ declare(["keyword.csv_import"], {
 });
 declare(["keyword.matrix_add"], {
   after: {
-    ...strings("intent", "topic"),
+    ...strings("checkScheduleId", "intent", "topic"),
     ...f.numbers("skippedDuplicates"),
     ...f.urls("targetUrl"),
     keywordIds: list("string"),
@@ -254,7 +263,7 @@ declare(["keyword_schedule.update"], { after: schedule, before: schedule });
 declare(["keyword.add"], { after: { ...keyword, tags: list("string") } });
 declare(["keyword.batch_add"], {
   after: {
-    ...strings("intent", "topic"),
+    ...strings("checkScheduleId", "intent", "topic"),
     ...f.numbers("created", "skipped"),
     ...f.urls("targetUrl"),
     keywordIds: list("string"),

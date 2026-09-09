@@ -1,11 +1,13 @@
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { SetupCta, SetupStepId, SetupStepState } from "@/lib/getting-started/setup-steps";
-import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { walkthroughCopy } from "./walkthrough-copy";
+
+type WalkthroughStepId = Exclude<SetupStepId, "confirm_competitors">;
 
 type WalkthroughProps = {
   expanded?: boolean;
-  id: SetupStepId;
+  id: WalkthroughStepId;
   onCta: (cta: SetupCta) => void;
   state: SetupStepState;
 };

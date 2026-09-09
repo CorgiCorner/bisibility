@@ -31,6 +31,8 @@ const workerStartedAt = new Date(Date.now() - process.uptime() * 1000);
 function emptyDatabaseHeartbeat(message: string): DatabaseHeartbeat {
   return {
     bootstrapErrors: [message],
+    collectionAvailable: false,
+    dispatch: null,
     rank: {
       deferred: 0,
       failed: 0,
@@ -41,7 +43,13 @@ function emptyDatabaseHeartbeat(message: string): DatabaseHeartbeat {
       succeeded: 0,
       topFailures: [],
     },
-    schedule: { active: 0, dueWithoutRun: 0, tracked: 0 },
+    schedule: {
+      activeSchedules: 0,
+      activeScheduledKeywords: 0,
+      plannedOverdue: 0,
+      oldestPlannedFor: null,
+      tracked: 0,
+    },
     traffic: [],
     undeliveredEvents: 0,
   };

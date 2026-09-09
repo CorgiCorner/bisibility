@@ -76,7 +76,9 @@ describe("team service public identifiers", () => {
     expect(mocks.prisma.invite.findFirst).toHaveBeenCalledWith({
       where: { acceptedAt: null, projectId: "project_1", publicId: invitePublicId },
     });
-    expect(mocks.prisma.invite.delete).toHaveBeenCalledWith({ where: { id: "invite_db_1" } });
+    expect(mocks.prisma.invite.delete).toHaveBeenCalledWith({
+      where: { id: "invite_db_1", role: "viewer" },
+    });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ targetId: invitePublicId }),
     );

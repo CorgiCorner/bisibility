@@ -1,11 +1,6 @@
-import { countryCodeForMarketName, countrySeed } from "./location";
-import {
-  DEFAULT_SERP_DEVICE,
-  DEFAULT_SERP_MARKET,
-  normalizeSerpMarketName,
-  type SerpDevice,
-  serpDeviceValues,
-} from "./markets";
+import { DEFAULT_SERP_DEVICE, type SerpDevice, serpDeviceValues } from "./constants";
+import { serpCountryByCode, serpCountryForName } from "./country-catalog";
+import { parseCanonicalKey } from "./location";
 
 export type KeywordMarketRow = {
   device: SerpDevice;
@@ -61,64 +56,20 @@ export const keywordMarketSelect = {
   text: true,
 } as const;
 
-export function defaultSerpKeywordMarket(
-  keywords: readonly Pick<KeywordMarketRow, "device" | "location">[],
-) {
-  const counts = new Map<string, { count: number; device: SerpDevice; location: string }>();
-  for (const keyword of keywords) {
-    const location = normalizeSerpMarketName(keyword.location);
-    if (!location) {
-      continue;
-    }
-    const key = `${location}\u0000${keyword.device}`;
-    const current = counts.get(key);
-    counts.set(key, {
-      count: (current?.count ?? 0) + 1,
-      device: keyword.device,
-      location,
-    });
-  }
-
-  return (
-    [...counts.values()].sort(
-      (a, b) =>
-        b.count - a.count ||
-        marketRank(a.location, a.device) - marketRank(b.location, b.device) ||
-        a.location.localeCompare(b.location) ||
-        serpDeviceValues.indexOf(a.device) - serpDeviceValues.indexOf(b.device),
-    )[0] ?? {
-      count: 0,
-      device: DEFAULT_SERP_DEVICE,
-      location: DEFAULT_SERP_MARKET,
-    }
-  );
-}
-
-function marketRank(location: string, device: SerpDevice) {
-  if (location === DEFAULT_SERP_MARKET && device === DEFAULT_SERP_DEVICE) {
-    return 0;
-  }
-  if (location === DEFAULT_SERP_MARKET) {
-    return 1;
-  }
-  return 2;
-}
-
-function defaultLocationKey() {
-  return countryCodeForMarketName(DEFAULT_SERP_MARKET) ?? "US";
-}
-
-function countryKey(country: string) {
-  return countryCodeForMarketName(country);
+function marketRank(locationKey: string, device: SerpDevice) {
+  if (locationKey !== "US") return 2;
+  return device === DEFAULT_SERP_DEVICE ? 0 : 1;
 }
 
 function fallbackProjectMarket(source: ProjectDefaultMarket["source"]): ProjectDefaultMarket {
+  const country = serpCountryByCode("US");
+  if (!country) throw new Error("The default country is missing from the country catalog.");
   return {
     city: null,
-    country: DEFAULT_SERP_MARKET,
+    country: country.displayName,
     device: DEFAULT_SERP_DEVICE,
-    displayName: DEFAULT_SERP_MARKET,
-    locationKey: defaultLocationKey(),
+    displayName: country.displayName,
+    locationKey: "US",
     source,
   };
 }
@@ -126,16 +77,23 @@ function fallbackProjectMarket(source: ProjectDefaultMarket["source"]): ProjectD
 function explicitDefaultMarket(
   defaults: ProjectDefaultMarketRow | null | undefined,
 ): ProjectDefaultMarket | null {
-  if (!defaults?.country || !defaults.device) {
-    return null;
-  }
-  const country = normalizeSerpMarketName(defaults.country) ?? defaults.country;
+  if (!defaults?.device) return null;
+  // Older persisted project defaults may predate locationKey. Translate only that
+  // compatibility input; a canonical key always wins over the stored display label.
+  const locationKey =
+    defaults.locationKey ??
+    (defaults.country ? serpCountryForName(defaults.country)?.countryCode : null);
+  if (!locationKey) return null;
+  const parsed = parseCanonicalKey(locationKey);
+  if (!parsed) return null;
+  const country = serpCountryByCode(parsed.countryCode);
+  if (!country) return null;
   return {
     city: defaults.city ?? null,
-    country,
+    country: country.displayName,
     device: defaults.device,
-    displayName: defaults.city ?? country,
-    locationKey: defaults.locationKey ?? countryKey(country) ?? defaultLocationKey(),
+    displayName: defaults.city ?? parsed.cityName ?? parsed.regionName ?? country.displayName,
+    locationKey,
     source: "explicit",
   };
 }
@@ -145,8 +103,7 @@ function locationRefMarket(row: KeywordDefaultMarketRow): ProjectDefaultMarket |
   if (!ref) {
     return null;
   }
-  const seed = countrySeed(ref.countryCode);
-  const country = seed?.displayName ?? normalizeSerpMarketName(ref.displayName);
+  const country = serpCountryByCode(ref.countryCode)?.displayName;
   if (!country) {
     return null;
   }
@@ -161,25 +118,6 @@ function locationRefMarket(row: KeywordDefaultMarketRow): ProjectDefaultMarket |
   };
 }
 
-function legacyLocationMarket(row: KeywordDefaultMarketRow): ProjectDefaultMarket | null {
-  const country = normalizeSerpMarketName(row.location);
-  if (!country) {
-    return null;
-  }
-  return {
-    city: null,
-    country,
-    device: row.device,
-    displayName: country,
-    locationKey: countryKey(country) ?? defaultLocationKey(),
-    source: "derived",
-  };
-}
-
-function keywordProjectMarket(row: KeywordDefaultMarketRow): ProjectDefaultMarket | null {
-  return locationRefMarket(row) ?? legacyLocationMarket(row);
-}
-
 export function projectDefaultSerpMarket(
   defaults: ProjectDefaultMarketRow | null | undefined,
   keywords: readonly KeywordDefaultMarketRow[],
@@ -191,7 +129,7 @@ export function projectDefaultSerpMarket(
 
   const counts = new Map<string, ProjectDefaultMarket & { count: number }>();
   for (const row of keywords) {
-    const market = keywordProjectMarket(row);
+    const market = locationRefMarket(row);
     if (!market) {
       continue;
     }
@@ -202,7 +140,7 @@ export function projectDefaultSerpMarket(
   const selected = [...counts.values()].sort(
     (a, b) =>
       b.count - a.count ||
-      marketRank(a.country, a.device) - marketRank(b.country, b.device) ||
+      marketRank(a.locationKey, a.device) - marketRank(b.locationKey, b.device) ||
       a.displayName.localeCompare(b.displayName) ||
       serpDeviceValues.indexOf(a.device) - serpDeviceValues.indexOf(b.device),
   )[0];

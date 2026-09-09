@@ -1,6 +1,8 @@
-import { MENU_ROW_SX, WorkspaceRow } from "@/components/shell/WorkspaceRow";
+import { MENU_ROW_STYLE, WorkspaceRow } from "@/components/shell/WorkspaceRow";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
-import { render, screen } from "@testing-library/react";
+import { Menu, MenuContent } from "@/components/ui/primitives/menu";
+import { render as renderDom, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 function renderRow(active: boolean) {
@@ -11,14 +13,20 @@ function checkGlyph(container: HTMLElement) {
   return container.querySelector<SVGElement>("svg");
 }
 
+function render(children: ReactNode) {
+  return renderDom(
+    <Menu open>
+      <MenuContent>{children}</MenuContent>
+    </Menu>,
+  );
+}
+
 describe("WorkspaceRow", () => {
   it("uses the sunken surface for pointer and keyboard focus while preserving active press", () => {
-    expect(MENU_ROW_SX["&:hover"]).toEqual({ backgroundColor: "var(--bg-sunken)" });
-    expect(MENU_ROW_SX["&.Mui-focusVisible"]).toEqual({
-      backgroundColor: "var(--bg-sunken)",
-    });
-    expect(MENU_ROW_SX["&:active"]).toEqual({ backgroundColor: "var(--bg-inset)" });
-    expect(MENU_ROW_SX["&.Mui-selected"]).toEqual({ backgroundColor: "transparent" });
+    expect(MENU_ROW_STYLE["--control-hover-background-color"]).toBe("var(--bg-sunken)");
+    expect(MENU_ROW_STYLE["--control-focus-background-color"]).toBe("var(--bg-sunken)");
+    expect(MENU_ROW_STYLE["--control-active-background-color"]).toBe("var(--bg-inset)");
+    expect(MENU_ROW_STYLE["--control-selected-background-color"]).toBe("transparent");
   });
 
   it("marks the current workspace with a visible check and no selected fill", () => {
@@ -26,7 +34,7 @@ describe("WorkspaceRow", () => {
 
     const row = screen.getByRole("menuitem");
     expect(row).toHaveAttribute("aria-current", "true");
-    expect(row.className).not.toContain("Mui-selected");
+    expect(row).not.toHaveAttribute("data-selected", "true");
     expect(checkGlyph(container)?.style.visibility).toBe("visible");
   });
 

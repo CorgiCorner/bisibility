@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   read: vi.fn(),
   release: vi.fn(),
   resetAt: vi.fn(),
-  supportsResearchMarket: vi.fn(),
+  supportsResearchScope: vi.fn(),
   wait: vi.fn(),
   write: vi.fn(),
 }));
@@ -33,9 +33,10 @@ vi.mock("./cache", () => ({
   keywordMetricsCacheKey: ({ keyword }: { keyword: string }) => `km:${keyword}`,
   writeKeywordMetricsCache: mocks.write,
 }));
-vi.mock("@/lib/serp/market-capability", () => ({
+vi.mock("@/lib/serp/research-capability", () => ({
   researchProviderRankLocation: (location: unknown) => location,
-  supportsResearchMarket: mocks.supportsResearchMarket,
+  researchScopeForLocation: (location: unknown) => location,
+  supportsResearchScope: mocks.supportsResearchScope,
 }));
 vi.mock("./context", () => ({
   connectionResources: () => [
@@ -93,7 +94,7 @@ describe("keyword metrics service", () => {
     mocks.resetAt.mockResolvedValue(123_456);
     mocks.wait.mockResolvedValue(null);
     mocks.write.mockResolvedValue(true);
-    mocks.supportsResearchMarket.mockReturnValue(true);
+    mocks.supportsResearchScope.mockReturnValue(true);
     mocks.fetch.mockResolvedValue({ costCents: 1.01, rows: [{ keyword: "Beta", ...metrics }] });
     mocks.paidCall.mockImplementation(
       ({ call }: { call: (credentials: object) => Promise<unknown> }) => call({}),
@@ -202,7 +203,7 @@ describe("keyword metrics service", () => {
   });
 
   it("rejects an unsupported country-language pair before cache or paid work", async () => {
-    mocks.supportsResearchMarket.mockReturnValue(false);
+    mocks.supportsResearchScope.mockReturnValue(false);
 
     await expect(run()).resolves.toEqual({ ok: false, reason: "unsupported_location" });
     expect(mocks.read).not.toHaveBeenCalled();

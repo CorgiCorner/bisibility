@@ -1,7 +1,8 @@
 "use client";
 
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
-import { CopyButton, ExternalLink } from "@/components/ui";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { ExternalLink } from "@/components/ui/ExternalLink";
 import { loopbackTunnelCommand, migrationTargetHostKind } from "@/lib/migration/target-host";
 
 const QUICK_TUNNEL_DOCS_HREF =

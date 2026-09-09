@@ -2,16 +2,20 @@
 
 import { CountryLevelBadge } from "@/components/checks/runs/CheckRunDetails";
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Card } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
+import type { TrackedCompetitor } from "@/lib/competitors/serp-comparison";
 import { type DateFormat, formatDate, formatDateTime } from "@/lib/dates/format";
 import { useState } from "react";
 import { RetrievedResultsCompare } from "./RetrievedResultsCompare";
 import { RetrievedResultsHeader } from "./RetrievedResultsHeader";
 import { RetrievedResultsOneCheck } from "./RetrievedResultsOneCheck";
+import { SerpCompetitorComparison } from "./SerpCompetitorComparison";
 
 type LoadResults = (checkIds: string[]) => Promise<RetrievedResults[]>;
 type CardProps = {
+  competitors?: readonly TrackedCompetitor[];
+  ownDomain?: string;
   entries: readonly StoredResultsIndexEntry[];
   initialResults: RetrievedResults | null;
   loadResults: LoadResults;
@@ -31,6 +35,8 @@ function dateFormatter(timeZone: string, dateFormat: DateFormat) {
 }
 
 export function RetrievedResultsCard({
+  competitors = [],
+  ownDomain = "",
   entries,
   initialResults,
   loadResults,
@@ -101,6 +107,7 @@ export function RetrievedResultsCard({
       ) : null}
       {mode === "compare" && earlier && current ? (
         <RetrievedResultsCompare
+          competitors={competitors}
           from={earlier}
           dateFormat={dateFormat}
           fullCheckDates={fullEntries.map((entry) => entry.checkedAt)}
@@ -119,7 +126,15 @@ export function RetrievedResultsCard({
         />
       ) : null}
       {mode === "one" && current ? (
+        <SerpCompetitorComparison
+          competitors={competitors}
+          ownDomain={ownDomain}
+          results={current}
+        />
+      ) : null}
+      {mode === "one" && current ? (
         <RetrievedResultsOneCheck
+          competitors={competitors}
           formatDate={format.date}
           rankingUrl={rankingUrl}
           results={current}

@@ -6,17 +6,15 @@ import {
   FullCapacityCard,
   GoogleCapacityNote,
 } from "@/components/auth/SignInCapacity";
-import { DataResidencyNote } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { DataResidencyNote } from "@/components/ui/DataResidencyNote";
 import type { LoginFormValues } from "@/lib/auth/login-schema";
 import type { SignInCapacity, SignInCapacityMiss } from "@/lib/auth/signin-capacity-types";
 import type { LegalConsentLinks } from "@/lib/deployment/legal";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Button from "@mui/material/Button";
-import {
-  CaretRightIcon as CaretRight,
-  GithubLogoIcon as GithubLogo,
-  GoogleLogoIcon as GoogleLogo,
-} from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/csr/GithubLogo";
+import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/csr/GoogleLogo";
 import type { ReactNode, SyntheticEvent } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import { EmailSignInUnavailable } from "./EmailSignInUnavailable";
@@ -169,23 +167,22 @@ export function LoginEmailStep({
               const isDisabled = socialProvider !== null;
               const button = (
                 <Button
-                  color="inherit"
                   disabled={isDisabled}
                   key={provider}
                   onClick={() => onProviderSignIn(provider)}
                   startIcon={<Icon size={18} weight="regular" />}
-                  sx={{
-                    backgroundColor: "var(--bg-elev)",
-                    borderColor: "var(--border)",
+                  style={{
+                    "--control-background-color": "var(--bg-elev)",
+                    "--control-border-color": "var(--border)",
                     borderRadius: UI_RADIUS_ROLES.control,
-                    color: "var(--fg)",
+                    "--control-color": "var(--fg)",
                     fontSize: "14px",
                     fontWeight: 600,
                     padding: "11px",
-                    "&:hover": { borderColor: "var(--fg-muted)" },
+                    "--control-hover-border-color": "var(--fg-muted)",
                   }}
                   type="button"
-                  variant="outlined"
+                  variant="secondary"
                   {...(provider === "google" && capacity ? { fullWidth: true } : {})}
                 >
                   {label}
@@ -259,7 +256,7 @@ export function LoginEmailStep({
               disabled={isSubmitting || !verificationReady}
               endIcon={<CaretRight size={16} weight="regular" />}
               fullWidth
-              sx={{
+              style={{
                 borderRadius: UI_RADIUS_ROLES.control,
                 fontSize: "14.5px",
                 fontWeight: 600,
@@ -267,7 +264,7 @@ export function LoginEmailStep({
                 padding: "12px",
               }}
               type="submit"
-              variant="contained"
+              variant="primary"
             >
               Send login code
             </Button>

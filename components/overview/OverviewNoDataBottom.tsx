@@ -1,9 +1,10 @@
 "use client";
 
-import { Button, Card } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { appPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import Link from "next/link";
 import { DataSourceStatusBadge } from "./DataSourceStatusBadge";
 import type { DataSourceHealth, HighlightRow } from "./types";
@@ -91,10 +92,11 @@ export function ViewAllKeywordsButton({ projectRef }: Readonly<{ projectRef: str
       component="a"
       endIcon={<CaretRight size={15} weight="regular" />}
       href={appPath(projectRef, "rank-tracker")}
-      sx={{
+      style={{
         alignSelf: "flex-start",
-        "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
-        "& .MuiButton-endIcon": { ml: "7px", mr: 0 },
+        "--control-hover-border-color": "var(--accent)",
+        "--control-hover-color": "var(--accent-text)",
+        gap: "7px",
       }}
       variant="secondary"
     >

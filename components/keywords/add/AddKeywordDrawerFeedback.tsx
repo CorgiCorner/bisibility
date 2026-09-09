@@ -1,5 +1,5 @@
 import { LocationActionWarning } from "@/components/keywords/LocationActionWarning";
-import { XIcon as X } from "@phosphor-icons/react";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 
 export function AddKeywordDrawerFeedback({
   error,

@@ -41,6 +41,7 @@ export const featurePresenceKeys = new Set([
 ]);
 const featureContainerKeys = new Set(["items", "organic_results", "result", "tasks"]);
 const featureAliases: [RegExp, string][] = [
+  [/local_pack|local_results|places/, "local"],
   [/featured|answer_box/, "featured"],
   [/people|related_question/, "paa"],
   [/sitelink/, "sitelinks"],

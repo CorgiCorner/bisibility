@@ -10,10 +10,11 @@ import {
   parseKeywordImportCsvRows,
   parseKeywordImportCsvTable,
 } from "@/lib/keywords/import-csv-parser";
-import { untrackedMarketMessage } from "@/lib/markets/archived";
-import { KEYWORD_IMPORT_MAX, keywordImportFileLimitMessage } from "@/lib/schemas/keyword";
-import { denormalizedLocationLabel } from "@/lib/serp/location-label";
-import { resolveKeywordLocation } from "@/lib/serp/location-service";
+import {
+  canonicalKeySchema,
+  KEYWORD_IMPORT_MAX,
+  keywordImportFileLimitMessage,
+} from "@/lib/schemas/keyword";
 import { z } from "zod";
 import { getActionActor, requireProjectScope, revalidateKeywordViews } from "./_shared";
 import { exportCloudImportPackage as exportCloudPackage } from "./keyword-cloud-package";
@@ -24,7 +25,7 @@ import {
   parseKeywordImportCsv,
 } from "./keyword-import-export-helpers";
 import { readKeywordImportInput } from "./keyword-import-input";
-import { reviewKeywordImportRows } from "./keyword-import-review";
+import { filterReviewRowsByProjectMarkets, reviewKeywordImportRows } from "./keyword-import-review";
 
 const projectIdSchema = z
   .string()
@@ -33,7 +34,7 @@ const projectIdSchema = z
   })
   .optional();
 // biome-ignore format: compact schema keeps this server action under the file line cap.
-const importSchema = z.object({ columnMapping: z.partialRecord(z.enum(keywordImportFields), z.number().int().nonnegative()).default({}), csv: z.string().trim().min(1, "Upload CSV or XLSX rows, or paste CSV rows."), projectId: projectIdSchema, refresh: z.enum(["deferred", "immediate"]).default("immediate") });
+const importSchema = z.object({ defaultMarketKey: canonicalKeySchema.nullable().optional(), columnMapping: z.partialRecord(z.enum(keywordImportFields), z.number().int().nonnegative()).default({}), csv: z.string().trim().min(1, "Upload CSV or XLSX rows, or paste CSV rows."), projectId: projectIdSchema, refresh: z.enum(["deferred", "immediate"]).default("immediate") });
 
 type Actor = Awaited<ReturnType<typeof getActionActor>>;
 
@@ -81,7 +82,7 @@ export async function reviewKeywordImport(input: unknown) {
   const data = await readCsvInput(input);
   const actor = await getActionActor();
   const project = await scopedProject(actor, "create", data.projectId);
-  return reviewKeywordImportRows(project.id, data.csv, data.columnMapping);
+  return reviewKeywordImportRows(project.id, data.csv, data.columnMapping, data.defaultMarketKey);
 }
 
 // biome-ignore format: compact import flow keeps this server action under the file line cap.
@@ -91,56 +92,33 @@ export async function importKeywordsFromCsv(input: unknown) {
   const project = await scopedProject(actor, "create", data.projectId);
   const { errors, parsed, received } = parseKeywordImportCsv(
     data.csv,
-    await keywordImportDefaults(project.id),
+    await keywordImportDefaults(project.id, data.defaultMarketKey),
     data.columnMapping,
   );
   if (received > KEYWORD_IMPORT_MAX) throw new Error(keywordImportFileLimitMessage(received));
   if (parsed.length === 0) return { created: 0, errors, failed: errors.length, parsed: 0, received, skipped: 0 };
   const { skipped, uniqueRows } = deduplicateKeywordImportRows(parsed);
 
-  const warnings = new Set<string>();
-  const registeredMarkets = await prisma.projectMarket.findMany({
-    select: { location: { select: { canonicalKey: true } } },
-    where: { projectId: project.id, status: { in: ["active", "paused"] } },
-  });
-  const registeredKeys = new Set(
-    registeredMarkets.map((market) => market.location.canonicalKey),
-  );
-  const locations = new Map<string, Awaited<ReturnType<typeof resolveKeywordLocation>>>();
-  const preparedRows: KeywordBatchRow[] = [];
-  for (const row of uniqueRows) {
-    const locationCacheKey = row.locationKey ?? `${row.location}\u0000${row.city ?? ""}`;
-    let resolved = locations.get(locationCacheKey);
-    if (!resolved) {
-      // biome-ignore format: compact location input keeps this action under the file line cap.
-      resolved = await resolveKeywordLocation(row.locationKey ? { projectId: project.id, selection: { canonicalKey: row.locationKey, kind: "city" } } : { city: row.city, country: row.location, projectId: project.id });
-      locations.set(locationCacheKey, resolved);
-    }
-    if (!registeredKeys.has(resolved.location.canonicalKey)) {
-      errors.push({
-        message: untrackedMarketMessage(resolved.location.canonicalKey),
-        row: row.row,
-      });
-      continue;
-    }
-    if (resolved.warning) warnings.add(resolved.warning);
-    preparedRows.push({
-      device: row.device,
-      keyword: row.keyword,
-      location: denormalizedLocationLabel(resolved.location),
-      locationId: resolved.location.id,
-      schedule: null,
-      tags: row.tags,
-      targetUrl: row.targetUrl,
-      intent: row.intent,
-      topic: row.topic,
-    });
-  }
+  const marketReview = await filterReviewRowsByProjectMarkets(project.id, uniqueRows);
+  errors.push(...marketReview.errors);
+  const preparedRows: KeywordBatchRow[] = marketReview.rows.map((row) => ({
+    device: row.device,
+    keyword: row.keyword,
+    location: row.locationLabel,
+    locationId: row.locationId,
+    schedule: null,
+    tags: row.tags,
+    targetUrl: row.targetUrl,
+    intent: row.intent,
+    topic: row.topic,
+  }));
+
+  if (!preparedRows.length) return { created: 0, errors, failed: errors.length, parsed: parsed.length, received, skipped: skipped + marketReview.duplicateRows, warning: null, warnings: [] };
 
   const created = await prisma.$transaction(async (tx) => {
     const persisted = await createKeywordBatchSet(tx, project.id, preparedRows);
     const keywords = persisted.created;
-    const transactionSkipped = uniqueRows.length - keywords.length;
+    const transactionSkipped = marketReview.duplicateRows + preparedRows.length - keywords.length;
     const targetKeyword = keywords.length === 1 ? keywords[0] : null;
     await writeAudit(
       {
@@ -157,7 +135,7 @@ export async function importKeywordsFromCsv(input: unknown) {
       },
       tx,
     );
-    return { keywords, skipped: skipped + transactionSkipped, warnings: [...warnings] };
+    return { keywords, skipped: skipped + transactionSkipped, warnings: [] as string[] };
   });
   if (data.refresh === "immediate") revalidateKeywordViews();
 

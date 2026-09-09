@@ -1,5 +1,6 @@
 "use client";
 
+import type { KeywordImportMarketContext } from "@/lib/keywords/import-market-context";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import {
@@ -18,7 +19,7 @@ const ImportCsvWizard = dynamic(
 );
 
 type KeywordImportContextValue = {
-  openKeywordImport: (projectId: string) => void;
+  openKeywordImport: (projectId: string, marketContext?: KeywordImportMarketContext) => void;
 };
 
 const KeywordImportContext = createContext<KeywordImportContextValue | null>(null);
@@ -38,14 +39,19 @@ type KeywordImportProviderProps = {
 
 function KeywordImportProviderState({ children }: Readonly<{ children: ReactNode }>) {
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [marketContext, setMarketContext] = useState<KeywordImportMarketContext>();
   const visibleChildren = useRef(children);
 
   // Hold the server-fed grid steady until the user dismisses the import result.
   if (!projectId) visibleChildren.current = children;
 
-  const openKeywordImport = useCallback((nextProjectId: string) => {
-    setProjectId(nextProjectId);
-  }, []);
+  const openKeywordImport = useCallback(
+    (nextProjectId: string, context?: KeywordImportMarketContext) => {
+      setMarketContext(context);
+      setProjectId(nextProjectId);
+    },
+    [],
+  );
   const closeKeywordImport = useCallback(() => {
     setProjectId(null);
   }, []);
@@ -55,7 +61,13 @@ function KeywordImportProviderState({ children }: Readonly<{ children: ReactNode
     <KeywordImportContext.Provider value={contextValue}>
       {visibleChildren.current}
       {projectId ? (
-        <ImportCsvWizard key={projectId} onClose={closeKeywordImport} open projectId={projectId} />
+        <ImportCsvWizard
+          marketContext={marketContext}
+          key={projectId}
+          onClose={closeKeywordImport}
+          open
+          projectId={projectId}
+        />
       ) : null}
     </KeywordImportContext.Provider>
   );

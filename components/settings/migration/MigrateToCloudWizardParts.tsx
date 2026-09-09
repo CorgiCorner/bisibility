@@ -1,6 +1,7 @@
-import { Button, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/ui/cn";
-import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react";
+import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
 
 const steps = ["Check", "Transfer", "Done"] as const;
 
@@ -102,7 +103,7 @@ export function EnableReadOnlyConfirmModal({
             loading={busy}
             loadingLabel="Enabling read-only..."
             onClick={onConfirm}
-            sx={{ minHeight: 40 }}
+            style={{ minHeight: 40 }}
             type="button"
             variant="primary"
           >
@@ -158,7 +159,7 @@ export function MarkMigratedConfirmModal({
             loading={busy}
             loadingLabel="Marking..."
             onClick={onConfirm}
-            sx={{ minHeight: 40 }}
+            style={{ minHeight: 40 }}
             type="button"
             variant="primary"
           >
@@ -218,7 +219,7 @@ export function CancelMigrationConfirmModal({
             <Button
               disabled={busy}
               onClick={onKeepReadOnly ?? onClose}
-              sx={{ minHeight: 40 }}
+              style={{ minHeight: 40 }}
               type="button"
               variant="primary"
             >
@@ -239,7 +240,7 @@ export function CancelMigrationConfirmModal({
               loading={busy}
               loadingLabel="Cancelling..."
               onClick={onConfirm}
-              sx={{ minHeight: 40 }}
+              style={{ minHeight: 40 }}
               type="button"
               variant="destructive"
             >

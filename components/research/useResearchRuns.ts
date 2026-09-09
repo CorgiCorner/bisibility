@@ -1,11 +1,15 @@
 "use client";
 
-import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type {
   ResearchKeywordsAction,
   ResearchKeywordsActionInput,
 } from "@/lib/actions/keyword-research";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
+import {
+  type ResearchScope,
+  researchScopeForLocationKey,
+  researchScopeKey,
+} from "@/lib/research/scope";
 import { useState } from "react";
 import {
   actualResearchCostCents,
@@ -16,6 +20,7 @@ import {
   markTabsTracked,
   RESEARCH_SEED_CONCURRENCY,
   type ResearchTab,
+  researchScopeLocationKey,
   type UiResearchOutcome,
 } from "./research-workspace-model";
 import type { useRecentSearches } from "./useRecentSearches";
@@ -25,7 +30,7 @@ type UseResearchRunsInput = {
   connectionId: string;
   includeClickstream: boolean;
   initialBudgetBlocked: boolean;
-  location: LocationFieldValue;
+  scope: ResearchScope;
   mode: KeywordResearchMode;
   projectId: string;
   recent: Pick<ReturnType<typeof useRecentSearches>, "add">;
@@ -38,7 +43,7 @@ export function useResearchRuns({
   connectionId,
   includeClickstream,
   initialBudgetBlocked,
-  location,
+  scope,
   mode,
   projectId,
   recent,
@@ -58,7 +63,7 @@ export function useResearchRuns({
     return {
       ...(requestedConnectionId ? { connectionId: requestedConnectionId } : {}),
       includeClickstream: overrides.includeClickstream ?? includeClickstream,
-      locationKey: overrides.locationKey ?? location.canonicalKey,
+      locationKey: overrides.locationKey ?? researchScopeLocationKey(scope),
       mode: overrides.mode ?? mode,
       projectId,
       resultLimit: overrides.resultLimit ?? resultLimit,
@@ -70,11 +75,11 @@ export function useResearchRuns({
   async function runResearch(
     nextSeeds: string[],
     overrides: Partial<ResearchKeywordsActionInput> = {},
-    runLocation: LocationFieldValue = location,
+    runScope: ResearchScope = scope,
   ) {
     setResearching(true);
     try {
-      const withLocation = { ...overrides, locationKey: runLocation.canonicalKey };
+      const withLocation = { ...overrides, locationKey: researchScopeLocationKey(runScope) };
       const requestedLimit = (overrides.resultLimit ?? resultLimit) as 100 | 300 | 500;
       const runConnectionId = (overrides.connectionId ?? connectionId) || undefined;
       const runClickstream = overrides.includeClickstream ?? includeClickstream;
@@ -110,8 +115,8 @@ export function useResearchRuns({
             cachedUntil: outcome.cachedUntil,
             connectionId: runConnectionId,
             includeClickstream: runClickstream,
-            locationKey: runLocation.canonicalKey,
-            market: runLocation.displayName,
+            locationKey: researchScopeLocationKey(runScope),
+            scopeLabel: `${runScope.countryName} / ${runScope.languageLabel}`,
             mode: runMode,
             resultLimit: requestedLimit,
             seed,
@@ -122,7 +127,7 @@ export function useResearchRuns({
           deeperEstimate,
           id: `${Date.now()}-${index}`,
           includeClickstream: runClickstream,
-          location: runLocation,
+          scope: runScope,
           mode: runMode,
           outcome,
           requestedLimit,
@@ -143,10 +148,12 @@ export function useResearchRuns({
   }
 
   function markAdded(keywords: string[], locationKeys: readonly string[]) {
-    const selected = new Set(locationKeys);
+    const selected = new Set(
+      locationKeys.map((locationKey) => researchScopeKey(researchScopeForLocationKey(locationKey))),
+    );
     setTabs((current) =>
       current.map((tab) =>
-        selected.has(tab.location.canonicalKey) ? markTabsTracked([tab], keywords)[0] : tab,
+        selected.has(researchScopeKey(tab.scope)) ? markTabsTracked([tab], keywords)[0] : tab,
       ),
     );
   }

@@ -1,4 +1,4 @@
-import { StatusPill } from "@/components/ui";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { scheduleCadenceLabel } from "@/lib/schedules/cadence-label";
 import type { CheckScheduleSummary, ScheduleChoice } from "./set-schedule-model";
 
@@ -6,6 +6,7 @@ type SetScheduleModalChoicesProps = {
   choice: ScheduleChoice;
   currentSchedule: CheckScheduleSummary | null;
   currentScheduleId: string | null;
+  hasScheduledTargets: boolean;
   loadError?: string | null;
   loading?: boolean;
   monthlyDelta: (schedule: CheckScheduleSummary | null) => string;
@@ -53,6 +54,7 @@ export function SetScheduleModalChoices({
   choice,
   currentSchedule,
   currentScheduleId,
+  hasScheduledTargets,
   loadError,
   loading = false,
   monthlyDelta,
@@ -107,7 +109,9 @@ export function SetScheduleModalChoices({
               <span className="mt-[3px] block text-[11.5px] leading-[17px] text-fg-muted">
                 {current
                   ? `All ${targetLabel(selectedCount)} already here.`
-                  : `All ${targetLabel(selectedCount)} move from ${currentSchedule?.name ?? "their current schedule"}.`}
+                  : currentSchedule
+                    ? `All ${targetLabel(selectedCount)} move from ${currentSchedule.name}.`
+                    : `Assign ${targetSubject(selectedCount)} to this schedule.`}
               </span>
             </span>
             <span className="min-w-0 text-right">
@@ -148,9 +152,10 @@ export function SetScheduleModalChoices({
         </span>
       </button>
       <span aria-hidden className="mx-5.5 my-[5px] h-px bg-border" />
-      <label className="grid grid-cols-[15px_minmax(0,1fr)_minmax(0,1fr)] items-start gap-2.5 px-5.5 py-3.5 text-left has-[:focus-visible]:bg-bg-sunken has-[:not(:disabled)]:hover:bg-bg-sunken">
+      <label className="has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 grid grid-cols-[15px_minmax(0,1fr)_minmax(0,1fr)] items-start gap-2.5 px-5.5 py-3.5 text-left has-[:focus-visible]:bg-bg-sunken has-[:not(:disabled)]:hover:bg-bg-sunken">
         <input
-          checked={choice === "remove"}
+          checked={choice === "remove" && Boolean(currentScheduleId)}
+          disabled={!currentScheduleId}
           className="sr-only"
           name="schedule-choice"
           onChange={() => onChoose("remove")}
@@ -160,7 +165,7 @@ export function SetScheduleModalChoices({
           aria-hidden
           className="mt-px grid h-[15px] w-[15px] place-items-center rounded-full border-[1.5px] border-border-control"
         >
-          {choice === "remove" ? (
+          {choice === "remove" && currentScheduleId ? (
             <span className="h-[7px] w-[7px] rounded-full bg-accent-solid" />
           ) : null}
         </span>
@@ -171,7 +176,9 @@ export function SetScheduleModalChoices({
           <span className="mt-[3px] block text-[11.5px] leading-[17px] text-fg-muted">
             {currentScheduleId
               ? "Only when you launch a run."
-              : `All ${targetLabel(selectedCount)} already run on request.`}
+              : hasScheduledTargets
+                ? "Select targets from one schedule to remove them."
+                : `All ${targetLabel(selectedCount)} already run on request.`}
           </span>
         </span>
         <span className="text-right text-[11px] leading-[18px] text-fg-muted">

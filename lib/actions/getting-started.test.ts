@@ -31,6 +31,8 @@ describe("acknowledgeGettingStarted", () => {
     mocks.requireProjectScope.mockResolvedValue({ id: "project-1", publicId: projectRef });
     mocks.loadSetupContext.mockResolvedValue({
       completedCheckCount: 1,
+      competitorSetupOutcome: "confirmed",
+      competitorSuggestions: [],
       inFlightBatch: null,
       keywordCount: 1,
       keywordIds: ["kw_abcdefghijklmnopqrstuvwx"],
@@ -58,6 +60,8 @@ describe("acknowledgeGettingStarted", () => {
   it("rejects acknowledgement before setup is complete without writing", async () => {
     mocks.loadSetupContext.mockResolvedValueOnce({
       completedCheckCount: 0,
+      competitorSetupOutcome: null,
+      competitorSuggestions: [],
       inFlightBatch: null,
       keywordCount: 1,
       keywordIds: ["kw_abcdefghijklmnopqrstuvwx"],

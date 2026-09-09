@@ -20,7 +20,18 @@ type Story = StoryObj<typeof meta>;
 export const Idle: Story = {};
 export const Loading: Story = { args: { state: "loading" } };
 export const NoData: Story = {
-  args: { market: "Austin, United States", state: "no_data", target: "example.com" },
+  args: {
+    researchScope: {
+      countryCode: "US",
+      countryName: "United States",
+      languageCode: "en",
+      languageLabel: "English",
+      providerLocationCode: 2840,
+      researchAvailable: true,
+    },
+    state: "no_data",
+    target: "example.com",
+  },
 };
 export const Empty: Story = { args: { state: "empty" } };
 export const Partial: Story = { args: { state: "partial" } };

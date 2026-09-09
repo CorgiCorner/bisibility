@@ -2,7 +2,7 @@ import type { RankCheckFrequency } from "@/lib/generated/prisma/client";
 import { nextThreeCronRuns } from "@/lib/rank-check/dispatcher-recurrence";
 import { computeNextCheckAt } from "@/lib/rank-check/schedule";
 import type { KeywordScheduleInput } from "@/lib/schemas/keyword";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { isSupportedTimezone } from "@/lib/settings/timezones";
 
 const MIN_CUSTOM_CRON_CADENCE_MS = 60 * 60 * 1_000;

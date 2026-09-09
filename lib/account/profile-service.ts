@@ -2,9 +2,11 @@ import "server-only";
 
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { assertDemoAccountMutable } from "@/lib/demo/config";
 
 /** Shared by the session action and personal-token API; callers authorize and revalidate. */
 export async function updateProfileNameRecord(userId: string, name: string) {
+  assertDemoAccountMutable();
   const before = await prisma.user.findUnique({
     select: { name: true, publicId: true },
     where: { id: userId },

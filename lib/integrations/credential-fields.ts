@@ -11,6 +11,7 @@ type SerpCredentialField = CredentialField & { name: "login" | "secret" };
 export const DATAFORSEO_CREDENTIAL_FIELDS = [
   { label: "API login", name: "login", placeholder: "you@company.com" },
   {
+    description: "Use your API password, not your account password.",
     label: "API password",
     name: "secret",
     placeholder: "API password",

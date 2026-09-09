@@ -1,4 +1,4 @@
-import { DEFAULT_SERP_DEPTH } from "./markets";
+import { DEFAULT_SERP_DEPTH } from "./constants";
 
 export const TRACKED_DEPTH_NOT_FOUND_LABEL = `Not found in top ${DEFAULT_SERP_DEPTH}`;
 

@@ -1,13 +1,10 @@
-import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type {
   AnalyzeDomainOverviewAction,
   LoadDomainHistoryAction,
   LoadDomainKeywordsPageAction,
   LoadDomainPagesPageAction,
   SaveSelectedKeywordsAction,
-  SelectDomainOverviewMarketAction,
 } from "@/lib/actions/domain-overview";
-import type { DomainOverviewMarketOption } from "@/lib/domain-overview/market-options";
 import type {
   DomainOverviewOutcome,
   DomainOverviewReport,
@@ -15,24 +12,17 @@ import type {
   DomainRecentTarget,
 } from "@/lib/domain-overview/types";
 import { normalizeDomain } from "@/lib/domains/normalize";
+import { type ResearchScope, researchScopeKey } from "@/lib/research/scope";
 import { getDomain } from "tldts";
 
-export type DomainOverviewMarketSelection = LocationFieldValue & {
-  languageCode: string;
-  languageLabel: string;
-  locationCode: number | null;
-};
-
-export type DomainOverviewMarketView = DomainOverviewMarketSelection & { locationCode: number };
-
 export type DomainOverviewPageContext = {
-  catalogMarkets: DomainOverviewMarketOption[];
+  catalogScopes: ResearchScope[];
   competitorDomains: string[];
   costContext: { capCents: number; spentCents: number; timezone?: string };
   defaultTarget: string;
   providerStatus: "connected" | "needs_reauth" | "no_provider";
   recentTargets: DomainRecentTarget[];
-  trackedMarkets: DomainOverviewMarketOption[];
+  trackedScopes: ResearchScope[];
 };
 
 export type DomainOverviewEstimateView = {
@@ -80,10 +70,9 @@ export type DomainOverviewWorkspaceProps = {
   loadHistoryAction: LoadDomainHistoryAction;
   loadKeywordsPageAction: LoadDomainKeywordsPageAction;
   loadPagesPageAction: LoadDomainPagesPageAction;
-  market: DomainOverviewMarketSelection | null;
   projectId: string;
   projectRef: string;
-  selectMarketAction: SelectDomainOverviewMarketAction;
+  researchScope: ResearchScope | null;
   saveSelectedKeywordsAction?: SaveSelectedKeywordsAction;
 };
 
@@ -160,43 +149,42 @@ export function failureResetAt(outcome: DomainOverviewUiOutcome | null) {
   return outcome && !outcome.ok && "resetAt" in outcome ? outcome.resetAt : undefined;
 }
 
-export function marketLabel(market: DomainOverviewMarketSelection) {
-  return `${market.displayName}, ${market.languageLabel}`;
-}
-
-export function supportedMarket(
-  market: DomainOverviewMarketSelection | null,
-): DomainOverviewMarketView | null {
-  return market?.locationCode == null ? null : { ...market, locationCode: market.locationCode };
+export function supportedResearchScope(
+  scope: ResearchScope | null,
+): (ResearchScope & { providerLocationCode: number }) | null {
+  return scope?.providerLocationCode == null
+    ? null
+    : (scope as ResearchScope & { providerLocationCode: number });
 }
 
 export function reportUrl(input: {
-  market: DomainOverviewMarketView;
+  domainScope?: DomainOverviewScope;
   projectRef: string;
-  scope?: DomainOverviewScope;
+  researchScope: ResearchScope;
   target: string;
 }) {
   const params = new URLSearchParams({
     domain: input.target,
-    market: input.market.canonicalKey,
+    researchScope: researchScopeKey(input.researchScope),
   });
-  if (input.scope) params.set("scope", input.scope);
+  if (input.domainScope) params.set("scope", input.domainScope);
   return `/app/${encodeURIComponent(input.projectRef)}/domain-overview?${params.toString()}`;
 }
 
 export function estimateInput(input: {
-  market: DomainOverviewMarketView;
+  domainScope?: DomainOverviewScope;
   projectId: string;
-  scopeOverride?: DomainOverviewScope;
+  researchScope: ResearchScope & { providerLocationCode: number };
   target: string;
 }) {
   return {
+    countryCode: input.researchScope.countryCode,
     estimateOnly: true,
     fresh: false,
-    languageCode: input.market.languageCode,
-    locationCode: input.market.locationCode,
+    languageCode: input.researchScope.languageCode,
+    locationCode: input.researchScope.providerLocationCode,
     projectId: input.projectId,
-    scopeOverride: input.scopeOverride,
+    scopeOverride: input.domainScope,
     target: input.target,
   };
 }

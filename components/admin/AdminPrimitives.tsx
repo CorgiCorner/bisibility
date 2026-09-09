@@ -1,4 +1,5 @@
-import { Card, SectionTitle } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import { type DateFormat, formatDateTime } from "@/lib/dates/format";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 import { cn } from "@/lib/ui/cn";

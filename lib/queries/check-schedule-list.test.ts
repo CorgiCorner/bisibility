@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   checkSchedule: { findMany: vi.fn() },
+  assignedCounts: vi.fn(),
   getDefaults: vi.fn(),
   keyword: { groupBy: vi.fn() },
   keywordTag: { findMany: vi.fn() },
@@ -16,7 +17,10 @@ vi.mock("@/lib/cost-estimate/project-estimate", () => ({ unitCostCentsFor: mocks
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     checkSchedule: mocks.checkSchedule,
-    keyword: mocks.keyword,
+    keyword: {
+      groupBy: (args: { _count?: object }) =>
+        args._count ? mocks.assignedCounts(args) : mocks.keyword.groupBy(args),
+    },
     keywordTag: mocks.keywordTag,
     projectMarket: mocks.projectMarket,
   },
@@ -24,7 +28,7 @@ vi.mock("@/lib/db/prisma", () => ({
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadProviderChain,
 }));
-vi.mock("@/lib/serp/markets", () => ({ resolveSerpDepth: mocks.resolveDepth }));
+vi.mock("@/lib/serp/constants", () => ({ resolveSerpDepth: mocks.resolveDepth }));
 vi.mock("./workspace-request-data", () => ({ getRequestProjectDefaults: mocks.getDefaults }));
 
 import { listCheckScheduleRows } from "./check-schedule-list";
@@ -32,6 +36,7 @@ import { listCheckScheduleRows } from "./check-schedule-list";
 describe("check schedule list query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.assignedCounts.mockResolvedValue([]);
     mocks.getDefaults.mockResolvedValue({ serpDepth: 20, timezone: "Europe/Madrid" });
     mocks.loadProviderChain.mockResolvedValue([
       {
@@ -45,6 +50,18 @@ describe("check schedule list query", () => {
     mocks.keyword.groupBy.mockResolvedValue([]);
     mocks.keywordTag.findMany.mockResolvedValue([]);
     mocks.projectMarket.findMany.mockResolvedValue([{ locationId: "market_live" }]);
+  });
+
+  it("filters archive rows separately from current schedules", async () => {
+    mocks.checkSchedule.findMany.mockResolvedValue([]);
+    await listCheckScheduleRows("project_1", "archived");
+    expect(mocks.checkSchedule.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { projectId: "project_1", archivedAt: { not: null } } }),
+    );
+    await listCheckScheduleRows("project_1");
+    expect(mocks.checkSchedule.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({ where: { projectId: "project_1", archivedAt: null } }),
+    );
   });
 
   it("derives row scope, cadence, and per-run cost from schedule data", async () => {

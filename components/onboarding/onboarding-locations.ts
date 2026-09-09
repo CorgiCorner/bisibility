@@ -3,13 +3,10 @@ import {
   countryCodeForMarketName,
   countrySeed,
   normalizeCanonicalLocationKey,
-  parseCanonicalKey,
 } from "@/lib/serp/location";
-import { DEFAULT_SERP_MARKET, type SerpMarketName } from "@/lib/serp/markets";
 
 export { MAX_PROJECT_MARKETS as MAX_ONBOARDING_LOCATIONS } from "@/lib/markets/limits";
-export const DEFAULT_ONBOARDING_LOCATION_KEY =
-  countryCodeForMarketName(DEFAULT_SERP_MARKET) ?? "US";
+export const DEFAULT_ONBOARDING_LOCATION_KEY = "US";
 
 export type OnboardingLocationCandidate = {
   key: string;
@@ -35,12 +32,7 @@ export function countryLocationKey(value: string | undefined | null) {
   return value ? countryCodeForMarketName(value) : null;
 }
 
-export function countryNameForLocationKey(key: string): SerpMarketName | null {
-  const selector = parseCanonicalKey(key);
-  const seed = selector ? countrySeed(selector.countryCode) : null;
-  return seed ? (seed.displayName as SerpMarketName) : null;
-}
-
+/** Compatibility reader for persisted project-default names. UI state remains a location key. */
 export function legacyCountryLocationCandidates(values: readonly string[] | undefined) {
   return (values ?? []).flatMap((value) => {
     const key = countryLocationKey(value);

@@ -29,6 +29,7 @@ const include = {
   },
   checkSchedule: {
     select: {
+      serpDepth: true,
       name: true,
       publicId: true,
     },
@@ -45,6 +46,7 @@ const include = {
       checkedAt: true,
       degradedToCountry: true,
       errorCode: true,
+      expectedUrlAtCheck: true,
       id: true,
       normalizationVersion: true,
       position: true,

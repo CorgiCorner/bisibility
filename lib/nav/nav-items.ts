@@ -6,29 +6,29 @@ import {
   MARKET_SEGMENT,
   SEARCH_CONSOLE_SEGMENT,
 } from "@/lib/routing/app-path";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import {
   type ExperimentalModuleKey,
   hasExperimentalModule,
 } from "@/lib/settings/experimental-modules";
 import { DOCS_URL } from "@/lib/site/site";
+import { BinocularsIcon as Binoculars } from "@phosphor-icons/react/dist/ssr/Binoculars";
+import { BookOpenTextIcon as BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText";
+import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/ssr/ChartLineUp";
+import { ClockCounterClockwiseIcon as ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise";
+import { GearSixIcon as GearSix } from "@phosphor-icons/react/dist/ssr/GearSix";
+import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/ssr/Globe";
+import { LinkIcon as Link } from "@phosphor-icons/react/dist/ssr/Link";
+import { MapTrifoldIcon as MapTrifold } from "@phosphor-icons/react/dist/ssr/MapTrifold";
+import { PlayCircleIcon as PlayCircle } from "@phosphor-icons/react/dist/ssr/PlayCircle";
+import { PuzzlePieceIcon as PuzzlePiece } from "@phosphor-icons/react/dist/ssr/PuzzlePiece";
+import { RankingIcon as Ranking } from "@phosphor-icons/react/dist/ssr/Ranking";
+import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/ssr/ShieldCheck";
+import { SirenIcon as Siren } from "@phosphor-icons/react/dist/ssr/Siren";
+import { SparkleIcon as Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle";
+import { SquaresFourIcon as SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour";
+import { UsersThreeIcon as UsersThree } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import type { Icon } from "@phosphor-icons/react/lib";
-import {
-  BinocularsIcon as Binoculars,
-  BookOpenTextIcon as BookOpenText,
-  ChartLineUpIcon as ChartLineUp,
-  ClockCounterClockwiseIcon as ClockCounterClockwise,
-  GearSixIcon as GearSix,
-  GlobeIcon as Globe,
-  LinkIcon as Link,
-  MapTrifoldIcon as MapTrifold,
-  PuzzlePieceIcon as PuzzlePiece,
-  RankingIcon as Ranking,
-  ShieldCheckIcon as ShieldCheck,
-  SirenIcon as Siren,
-  SparkleIcon as Sparkle,
-  SquaresFourIcon as SquaresFour,
-  UsersThreeIcon as UsersThree,
-} from "@phosphor-icons/react/ssr";
 
 /**
  * One icon size for every tile in the sidebar rail. The logo mark, the workspace tile and the
@@ -37,14 +37,12 @@ import {
  */
 export const RAIL_ICON_SIZE = 18;
 
-export type NavBadge = "new" | "alpha" | "experimental";
+export type NavBadge = "new" | "alpha" | "beta" | "experimental";
 
 /**
- * The rail has exactly three groups and every destination sits in one of them. There is no
- * ungrouped block: an id without a heading used to be hardcoded by each renderer, which is how
- * the same list came to be maintained three times.
+ * Headed rail groups. Dashboard intentionally stays outside them at the top of every rail.
  */
-export type NavItemGroup = "activity" | "modules" | "project";
+export type NavItemGroup = "modules" | "project";
 
 /**
  * What a destination is scoped to.
@@ -58,7 +56,7 @@ export type NavScope = "level" | "market" | "own-axis" | "project";
 
 export type NavItem = {
   /** The rail consumes this grouping while command-palette navigation stays flat. */
-  group: NavItemGroup;
+  group: NavItemGroup | null;
   label: string;
   href: string;
   icon: Icon;
@@ -96,6 +94,17 @@ type PrimaryNavEntry = {
   icon: Icon;
 };
 
+const landingNavEntries = {
+  dashboard: { icon: SquaresFour, label: "Dashboard" },
+  "search-console": { icon: ChartLineUp, label: "Search Console" },
+  "keyword-research": { icon: Binoculars, label: "Keyword Research" },
+  "domain-overview": { icon: Globe, label: "Domain Overview" },
+  "rank-tracker": { icon: Ranking, label: "Rank Tracker" },
+  backlinks: { icon: Link, label: "Backlinks" },
+  competitors: { icon: UsersThree, label: "Competitors" },
+  timeline: { icon: ClockCounterClockwise, label: "Timeline" },
+} as const satisfies Record<LandingSegment, Omit<PrimaryNavEntry, "segment">>;
+
 export type NavItemGroupDescriptor = {
   id: NavItemGroup;
   label: string;
@@ -105,15 +114,7 @@ export type NavItemGroupDescriptor = {
   tooltip: string;
 };
 
-// Headings never change with the navigation level: the same three captions read the same whether
-// the viewer is on the project or inside a market. Only the rows below them resolve differently.
 export const navItemGroups = [
-  {
-    id: "activity",
-    label: "Activity",
-    tag: "ACTIVITY",
-    tooltip: "Follows the level you are on: the project, or the market you switched into.",
-  },
   {
     id: "modules",
     label: "Modules",
@@ -143,6 +144,7 @@ export type NavContext = {
 };
 
 const MARKET_FOLLOWING_SCOPES: ReadonlySet<NavScope> = new Set<NavScope>(["level", "market"]);
+const GLOBAL_FEED_SEGMENTS = new Set(["alerts", "timeline"]);
 
 /** Derives the rail context from the URL, never from a cookie or stored preference. */
 export function navContextFromPathname(pathname: string): NavContext | undefined {
@@ -156,6 +158,12 @@ export function navItemHref(
   projectRef: string,
   context?: NavContext,
 ): string {
+  if (entry.segment === "runs") return projectRunsPath(projectRef);
+  const marketRef =
+    context?.marketSegments?.[0] === MARKET_SEGMENT ? context.marketSegments[1] : undefined;
+  if (marketRef && GLOBAL_FEED_SEGMENTS.has(entry.segment)) {
+    return `${appPath(projectRef, entry.segment)}?f=market:${encodeURIComponent(marketRef)}`;
+  }
   const marketSegments =
     MARKET_FOLLOWING_SCOPES.has(entry.scope) && hasMarketRoute(sectionPathOf([entry.segment]))
       ? (context?.marketSegments ?? [])
@@ -163,37 +171,13 @@ export function navItemHref(
   return appPath(projectRef, ...marketSegments, entry.segment);
 }
 
-// Keyword research scouts the market (Binoculars); Rank Tracker is the podium of tracked
-// positions (Ranking). Markets takes the folded map rather than a globe, because Domain Overview
-// already owns the globe and two globes in one rail read as the same destination twice.
-// The order is the rail order: inside Modules the market-scoped rows come first and the own-axis
-// rows after, and that order is the only sub-structure the group has. `landingSegments`
-// deliberately preserves the independent preference order above rather than treating every
-// reachable rail item as a landing page.
 const railNavEntries = [
   {
-    group: "activity",
+    group: null,
     label: "Dashboard",
     scope: "level",
     segment: "dashboard",
     icon: SquaresFour,
-  },
-  {
-    group: "activity",
-    label: "Timeline",
-    scope: "level",
-    segment: "timeline",
-    icon: ClockCounterClockwise,
-    badge: "experimental",
-    experimentalModule: "timeline",
-  },
-  {
-    group: "activity",
-    label: "Alerts",
-    scope: "level",
-    segment: "alerts",
-    icon: Siren,
-    badge: "alpha",
   },
   {
     group: "modules",
@@ -232,9 +216,18 @@ const railNavEntries = [
     scope: "own-axis",
     segment: SEARCH_CONSOLE_SEGMENT,
     icon: ChartLineUp,
-    badge: "alpha",
+    badge: "beta",
   },
   { group: "project", label: "Markets", scope: "project", segment: "markets", icon: MapTrifold },
+  {
+    group: "project",
+    label: "Alerts",
+    scope: "project",
+    segment: "alerts",
+    icon: Siren,
+    badge: "alpha",
+  },
+  { group: "project", label: "Runs", scope: "project", segment: "runs", icon: PlayCircle },
   {
     group: "project",
     label: "Integrations",
@@ -246,14 +239,10 @@ const railNavEntries = [
   { group: "project", label: "Settings", scope: "project", segment: "settings", icon: GearSix },
 ] as const satisfies readonly RailNavEntry[];
 
-export const primaryNavEntries: readonly PrimaryNavEntry[] = landingSegments.map((segment) => {
-  const entry = railNavEntries.find((item) => item.segment === segment);
-  if (!entry) {
-    throw new Error(`Missing landing navigation entry for ${segment}`);
-  }
-
-  return { label: entry.label, segment, icon: entry.icon };
-});
+export const primaryNavEntries: readonly PrimaryNavEntry[] = landingSegments.map((segment) => ({
+  ...landingNavEntries[segment],
+  segment,
+}));
 
 export function navItems(
   projectRef: string,

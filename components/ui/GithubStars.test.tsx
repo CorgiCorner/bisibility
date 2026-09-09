@@ -8,7 +8,7 @@ describe("GithubStars", () => {
 
     const link = screen.getByRole("link", { name: "GitHub repository" });
     expect(link).toHaveAttribute("href", "https://github.com/CorgiCorner/bisibility");
-    expect(link).not.toHaveTextContent(/\d/);
+    expect((link.textContent ?? "").replace(/\s+/g, " ").trim()).not.toMatch(/\d/);
     expect(link.querySelectorAll("svg")).toHaveLength(1);
   });
 

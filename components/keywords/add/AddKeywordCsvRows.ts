@@ -2,8 +2,8 @@ import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type { AddKeywordDrawerForm } from "@/lib/keywords/add-keyword-drawer-shared";
 import { CsvParseError, parseKeywordImportCsvRows } from "@/lib/keywords/import-csv-parser";
 import { type AddKeywordsRowInput, addKeywordsRowSchema } from "@/lib/schemas/keyword";
+import type { SerpDevice } from "@/lib/serp/constants";
 import { canonicalKey, countryCodeForMarketName } from "@/lib/serp/location";
-import type { SerpDevice } from "@/lib/serp/markets";
 import { countryForSelection } from "./AddKeywordDrawerLocation";
 
 export type CsvKeywordRowIssue = {

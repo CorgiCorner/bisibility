@@ -7,10 +7,10 @@ import {
   shellUserRoleLine,
 } from "@/components/shell/types";
 import { UserMenu } from "@/components/shell/UserMenu";
-import { Avatar } from "@/components/ui";
+import { Avatar } from "@/components/ui/Avatar";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { cn } from "@/lib/ui/cn";
-import { DotsThreeVerticalIcon as DotsThreeVertical } from "@phosphor-icons/react";
+import { DotsThreeVerticalIcon as DotsThreeVertical } from "@phosphor-icons/react/dist/csr/DotsThreeVertical";
 import { useState } from "react";
 
 export type SidebarUserButtonProps = {

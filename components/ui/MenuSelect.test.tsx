@@ -87,6 +87,21 @@ describe("MenuMultiSelect", () => {
 });
 
 describe("MenuSelect", () => {
+  it("pins the caret to the end of shared input selects by default", () => {
+    render(
+      <MenuSelect
+        ariaLabel="Country"
+        onChange={vi.fn()}
+        options={[{ label: "United States", value: "US" }]}
+        size="input"
+        value="US"
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Country" }).querySelector("[data-menu-select-caret]"),
+    ).toHaveClass("ml-auto");
+  });
+
   it("uses the shared select-sized toolbar treatment", () => {
     render(
       <MenuSelect
@@ -129,12 +144,12 @@ describe("MenuSelect", () => {
     expect(trigger.querySelector("[data-menu-select-caret]")).toHaveClass("ml-auto");
   });
 
-  it("sizes compact menus to content instead of the narrow trigger", async () => {
+  it.each([false, true])("sizes menus to content with compact=%s", async (compact) => {
     const user = userEvent.setup();
     render(
       <MenuSelect
         ariaLabel="Tag"
-        compact
+        compact={compact}
         onChange={() => undefined}
         options={[
           { label: "All tags", value: "all" },
@@ -146,13 +161,13 @@ describe("MenuSelect", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Tag" }));
-    const paper = screen.getByRole("menu").closest(".MuiPaper-root");
+    const paper = screen.getByRole("menu");
     expect(paper).toHaveStyle({
       boxShadow: "none",
-      minWidth: "180px",
+      maxWidth: "calc(100vw - 32px)",
+      minWidth: "min(180px, calc(100vw - 32px))",
       width: "max-content",
     });
-    expect(paper).not.toHaveClass("MuiPaper-elevation8");
   });
 
   it("supports a local scroll height while keeping the standard popover gap", async () => {
@@ -171,7 +186,7 @@ describe("MenuSelect", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Property" }));
-    const paper = screen.getByRole("menu").closest(".MuiPaper-root");
+    const paper = screen.getByRole("menu");
     expect(paper).toHaveStyle({
       marginTop: "6px",
       maxHeight: "min(192px, calc(100dvh - 84px))",
@@ -191,7 +206,7 @@ describe("MenuSelect", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Default property" }));
-    const paper = screen.getByRole("menu").closest(".MuiPaper-root");
+    const paper = screen.getByRole("menu");
     expect(paper).toHaveStyle({ marginTop: "6px", maxHeight: "min(360px, calc(100dvh - 84px))" });
   });
 

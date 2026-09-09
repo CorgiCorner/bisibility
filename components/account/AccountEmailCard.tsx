@@ -12,7 +12,9 @@ import {
   type VerificationCodeForm,
   verificationCodeSchema,
 } from "@/components/account/account-email-form";
-import { FieldLabel, Input, StatusPill } from "@/components/ui";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Input } from "@/components/ui/Input";
+import { StatusPill } from "@/components/ui/StatusPill";
 import type {
   CurrentAccountEmailVerificationRequested,
   CurrentAccountEmailVerified,

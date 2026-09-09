@@ -1,5 +1,5 @@
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
 
 type DepthRow = Pick<KeywordRow, "projectSerpDepth" | "schedule">;
 

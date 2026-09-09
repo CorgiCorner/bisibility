@@ -1,11 +1,12 @@
 import { finalizedWindow } from "@/lib/search-insights/dates";
 import type { Meta, StoryObj } from "@storybook/react";
-import { userEvent, within } from "storybook/test";
+import { fn, userEvent, within } from "storybook/test";
 import { SearchInsightsPeriodMenu } from "./SearchInsightsPeriodMenu";
 import { storyContext, storyImportFacts } from "./search-insights-story-fixtures";
 
 const meta = {
   args: {
+    onPeriodChange: fn(),
     importFacts: storyContext.importState?.facts,
     period: storyContext.period,
     window: storyContext.window,

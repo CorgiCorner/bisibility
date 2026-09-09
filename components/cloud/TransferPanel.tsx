@@ -1,25 +1,24 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { IdChip } from "@/components/ui/IdChip";
 import { formatDateTime } from "@/lib/dates/format";
 import {
   migrationImportCountEntries,
   migrationImportCountSummary,
 } from "@/lib/migration/import-counts";
 import { appPath } from "@/lib/routing/app-path";
-import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  CaretRightIcon as CaretRight,
-  CheckCircleIcon as CheckCircle,
-  CloudArrowDownIcon as CloudArrowDown,
-  DatabaseIcon as Database,
-  DownloadSimpleIcon as DownloadSimple,
-  type Icon,
-  LinkIcon,
-  WarningIcon as Warning,
-  WarningOctagonIcon as WarningOctagon,
-} from "@phosphor-icons/react";
+import type { Icon } from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { CloudArrowDownIcon as CloudArrowDown } from "@phosphor-icons/react/dist/csr/CloudArrowDown";
+import { DatabaseIcon as Database } from "@phosphor-icons/react/dist/csr/Database";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
+import { WarningIcon as Warning } from "@phosphor-icons/react/dist/csr/Warning";
+import { WarningOctagonIcon as WarningOctagon } from "@phosphor-icons/react/dist/csr/WarningOctagon";
 import type { CloudImportJobData } from "./cloud-token";
 
 type TransferState = CloudImportJobData["state"];
@@ -215,8 +214,9 @@ export function TransferPanel({
       {job.state === "done" ? (
         <div className="flex items-center gap-[9px] border-border border-t p-[14px_20px]">
           <LinkIcon aria-hidden className="flex-none text-fg-muted" size={15} weight="regular" />
-          <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
-            Import job {job.id}
+          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 text-[11.5px] text-fg-muted">
+            Import job
+            {job.id ? <IdChip copyLabel="Copy import job ID" size="xs" value={job.id} /> : null}
           </span>
           <a
             className="inline-flex flex-none items-center gap-1.5 rounded-control bg-accent-solid px-3.5 py-2 font-semibold text-[12px] text-accent-on-solid"
@@ -246,7 +246,14 @@ export function TransferPanel({
           <div className="flex flex-wrap items-center gap-x-[11px] gap-y-2 font-sans tabular-nums text-[11px] text-fg-muted">
             <span className="text-red-text">failed</span>
             <span className="h-2.5 w-px bg-border" />
-            <span>transfer_id {job.id ?? "pending"}</span>
+            <span className="inline-flex flex-wrap items-center gap-1.5">
+              Import job
+              {job.id ? (
+                <IdChip copyLabel="Copy import job ID" size="xs" value={job.id} />
+              ) : (
+                "pending"
+              )}
+            </span>
             {job.finishedAt ? (
               <>
                 <span className="h-2.5 w-px bg-border" />
@@ -260,7 +267,7 @@ export function TransferPanel({
               onClick={onNewToken}
               size="sm"
               startIcon={<ArrowsClockwise aria-hidden size={13} weight="regular" />}
-              sx={{ flex: "none" }}
+              style={{ flex: "none" }}
               type="button"
               variant="primary"
             >

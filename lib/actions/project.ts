@@ -8,6 +8,7 @@ import {
   revalidateSettingsViews,
 } from "@/lib/actions/_shared";
 import { getProjectDepthDecreaseWarning } from "@/lib/alerts/depth-conflict.server";
+import { readConsentFromCookies, trackServerEvent } from "@/lib/analytics/server";
 import { createProjectRecord } from "@/lib/api/project-service";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { authorize } from "@/lib/auth/authorize";
@@ -51,6 +52,25 @@ export async function completeProjectOnboarding(input: unknown) {
     data: { onboardingCompletedAt: new Date() },
     where: { id: project.id, onboardingCompletedAt: null },
   });
+
+  if (result.count === 1) {
+    const [providerCount, keywordCount, firstCheckCount] = await Promise.all([
+      prisma.providerConnection.count({
+        where: { enabled: true, kind: "serp", projectId: project.id, status: "connected" },
+      }),
+      prisma.keyword.count({ where: { projectId: project.id } }),
+      prisma.rankCheckRun.count({ where: { projectId: project.id } }),
+    ]);
+    await trackServerEvent("onboarding_completed", {
+      consent: await readConsentFromCookies(),
+      distinctId: actor.id,
+      properties: {
+        first_check_ran: firstCheckCount > 0,
+        has_provider: providerCount > 0,
+        keyword_count: keywordCount,
+      },
+    });
+  }
 
   return { completed: result.count === 1 };
 }
@@ -110,67 +130,4 @@ export async function updateProjectDefaults(input: unknown) {
   revalidateSettingsViews();
 
   return { ...publicProjectDefaults(defaults, project.publicId), warning };
-}
-
-export async function readProjectSettingsSnapshot(projectId: string) {
-  return prisma.project.findUnique({
-    select: { domain: true, name: true, publicId: true, trackingScope: true },
-    where: { id: projectId },
-  });
-}
-
-export async function updateProjectSettingsSnapshot(projectId: string, data: { name: string }) {
-  return prisma.project.update({
-    data: { name: data.name },
-    select: { domain: true, name: true, publicId: true, trackingScope: true },
-    where: { id: projectId },
-  });
-}
-
-export async function readProjectDeleteSnapshot(projectId: string) {
-  return prisma.project.findUnique({
-    select: {
-      _count: {
-        select: { apiKeys: true, keywords: true, members: true, providerConnections: true },
-      },
-      domain: true,
-      name: true,
-      publicId: true,
-    },
-    where: { id: projectId },
-  });
-}
-
-export async function deleteProjectById(
-  projectId: string,
-  audit: {
-    actorId: string;
-    before: NonNullable<Awaited<ReturnType<typeof readProjectDeleteSnapshot>>>;
-    targetId: string;
-  },
-) {
-  return prisma.$transaction(async (tx) => {
-    await writeAudit(
-      {
-        action: "project.delete",
-        actorId: audit.actorId,
-        before: audit.before,
-        projectId,
-        targetId: audit.targetId,
-        targetType: "project",
-      },
-      tx,
-    );
-    return tx.project.delete({ where: { id: projectId } });
-  });
-}
-
-export async function readActorProjects(actorId: string) {
-  const projects = await prisma.project.findMany({
-    orderBy: { createdAt: "asc" },
-    select: { id: true, publicId: true },
-    where: { members: { some: { userId: actorId } } },
-  });
-
-  return projects;
 }

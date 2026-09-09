@@ -1,4 +1,5 @@
 import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness";
+import { keywordLocation } from "@/lib/test/fixtures/location";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiContext, PersonalApiContext } from "./context";
 import { resetIdempotencyForTests } from "./idempotency";
@@ -166,9 +167,31 @@ describe("project write API routes", () => {
     );
     mocks.prisma.project.delete.mockResolvedValue(project);
     mocks.prisma.keyword.findMany.mockResolvedValue([
-      { device: "desktop", id: "kw_1", location: "United States", text: "rank tracker" },
-      { device: "desktop", id: "kw_2", location: "US", text: "seo tool" },
-      { device: "mobile", id: "kw_3", location: "Germany", text: "rank tracker" },
+      {
+        device: "desktop",
+        id: "kw_1",
+        location: "United States",
+        locationRef: keywordLocation(),
+        text: "rank tracker",
+      },
+      {
+        device: "desktop",
+        id: "kw_2",
+        location: "US",
+        locationRef: keywordLocation(),
+        text: "seo tool",
+      },
+      {
+        device: "mobile",
+        id: "kw_3",
+        location: "Germany",
+        locationRef: keywordLocation({
+          canonicalKey: "DE",
+          countryCode: "DE",
+          displayName: "Germany",
+        }),
+        text: "rank tracker",
+      },
     ]);
     mocks.prisma.keyword.updateMany.mockResolvedValue({ count: 1 });
     mocks.resolveKeywordLocation.mockResolvedValue({
@@ -298,9 +321,35 @@ describe("project write API routes", () => {
 
   it("updates schedule-only defaults without moving keyword markets", async () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([
-      { device: "mobile", id: "kw_1", location: "Germany", text: "rank tracker" },
-      { device: "mobile", id: "kw_2", location: "DE", text: "seo tool" },
-      { device: "desktop", id: "kw_3", location: "United States", text: "rank checker" },
+      {
+        device: "mobile",
+        id: "kw_1",
+        location: "Germany",
+        locationRef: keywordLocation({
+          canonicalKey: "DE",
+          countryCode: "DE",
+          displayName: "Germany",
+        }),
+        text: "rank tracker",
+      },
+      {
+        device: "mobile",
+        id: "kw_2",
+        location: "DE",
+        locationRef: keywordLocation({
+          canonicalKey: "DE",
+          countryCode: "DE",
+          displayName: "Germany",
+        }),
+        text: "seo tool",
+      },
+      {
+        device: "desktop",
+        id: "kw_3",
+        location: "United States",
+        locationRef: keywordLocation(),
+        text: "rank checker",
+      },
     ]);
 
     const defaults = await call("PATCH", "/projects/prj_a00000000000000000000000/defaults", {
@@ -511,8 +560,28 @@ describe("project write API routes", () => {
   it("returns derived defaults without creating a defaults row", async () => {
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
     mocks.prisma.keyword.findMany.mockResolvedValue([
-      { device: "mobile", id: "kw_1", location: "Germany", text: "rank tracker" },
-      { device: "mobile", id: "kw_2", location: "DE", text: "seo tool" },
+      {
+        device: "mobile",
+        id: "kw_1",
+        location: "Germany",
+        locationRef: keywordLocation({
+          canonicalKey: "DE",
+          countryCode: "DE",
+          displayName: "Germany",
+        }),
+        text: "rank tracker",
+      },
+      {
+        device: "mobile",
+        id: "kw_2",
+        location: "DE",
+        locationRef: keywordLocation({
+          canonicalKey: "DE",
+          countryCode: "DE",
+          displayName: "Germany",
+        }),
+        text: "seo tool",
+      },
     ]);
 
     const response = await getProjectDefaults(

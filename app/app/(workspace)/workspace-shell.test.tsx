@@ -85,8 +85,10 @@ vi.mock("@/components/shell/cloud-beta", () => ({
   isCloudBetaDismissed: () => false,
 }));
 vi.mock("@/components/shell/ProjectWriteModeProvider", () => ({
-  ProjectWriteModeBanner: () => null,
   ProjectWriteModeProvider: ({ children }: { children: ReactNode }) => children,
+}));
+vi.mock("@/components/shell/ProjectWriteModeNotices", () => ({
+  ProjectWriteModeBanner: () => null,
 }));
 vi.mock("@/components/shell/Sidebar", () => ({
   Sidebar: (props: {
@@ -170,6 +172,8 @@ describe("workspace layout", () => {
     mocks.lastExport.mockResolvedValue(null);
     mocks.loadSetupContext.mockResolvedValue({
       completedCheckCount: 0,
+      competitorSetupOutcome: null,
+      competitorSuggestions: [],
       inFlightBatch: null,
       keywordCount: 0,
       keywordIds: [],
@@ -239,14 +243,16 @@ describe("workspace layout", () => {
     });
     const markup = renderToStaticMarkup(result);
     expect(markup).toContain('data-getting-started="true"');
-    expect(markup).toContain('data-sidebar-setup="1/4"');
-    expect(markup).toContain('data-header-setup="1/4"');
+    expect(markup).toContain('data-sidebar-setup="1/5"');
+    expect(markup).toContain('data-header-setup="1/5"');
   });
 
   it("removes getting started only after completed setup is acknowledged", async () => {
     const projectRef = "prj_f00000000000000000000000";
     mocks.loadSetupContext.mockResolvedValueOnce({
       completedCheckCount: 1,
+      competitorSetupOutcome: "confirmed",
+      competitorSuggestions: [],
       inFlightBatch: null,
       keywordCount: 1,
       keywordIds: ["kw_abcdefghijklmnopqrstuvwx"],

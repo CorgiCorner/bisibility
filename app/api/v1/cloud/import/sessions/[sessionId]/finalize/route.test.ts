@@ -186,7 +186,12 @@ describe("POST /api/v1/cloud/import/sessions/{sessionId}/finalize", () => {
       Promise.resolve(job({ ...data, id: where.id })),
     );
     mocks.prisma.keyword.findMany.mockResolvedValue([
-      { device: "desktop", id: "keyword_1", location: "United States", text: "rank tracker" },
+      {
+        device: "desktop",
+        id: "keyword_1",
+        locationRef: { canonicalKey: "US" },
+        text: "rank tracker",
+      },
     ]);
     mocks.createKeywords.mockResolvedValue(Response.json({ created: 1, skipped: 0 }));
     mocks.prisma.rankCheck.createMany.mockResolvedValue({ count: 1 });

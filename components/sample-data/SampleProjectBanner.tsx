@@ -1,9 +1,12 @@
 "use client";
 
-import { Button, ConfirmModal, iconWellClassName } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { iconWellClassName } from "@/components/ui/icon-well-styles";
 import { removeSampleData } from "@/lib/actions/sample-data";
 import { appPath, asProjectRef, type ProjectRef } from "@/lib/routing/app-path";
-import { TestTubeIcon as TestTube, TrashIcon as Trash } from "@phosphor-icons/react";
+import { TestTubeIcon as TestTube } from "@phosphor-icons/react/dist/csr/TestTube";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -54,15 +57,13 @@ export function SampleProjectBanner({ projectId, projectRef }: Readonly<SamplePr
           onClick={() => setConfirmOpen(true)}
           size="sm"
           startIcon={<Trash aria-hidden size={14} weight="regular" />}
-          sx={{
-            backgroundColor: "var(--bg-elev)",
-            border: "1px solid var(--red)",
-            color: "var(--red)",
+          style={{
+            "--control-background-color": "var(--bg-elev)",
+            "--control-border": "1px solid var(--red)",
+            "--control-color": "var(--red)",
             whiteSpace: "nowrap",
-            "&:hover": {
-              backgroundColor: "var(--bg-sunken)",
-              border: "1px solid var(--red)",
-            },
+            "--control-hover-background-color": "var(--bg-sunken)",
+            "--control-hover-border": "1px solid var(--red)",
           }}
           type="button"
           variant="secondary"

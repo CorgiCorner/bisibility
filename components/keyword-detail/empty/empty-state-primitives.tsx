@@ -1,4 +1,5 @@
-import { Card, SegmentedControl } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { ReactNode } from "react";
 
 const ranges = ["7d", "30d", "90d"] as const;

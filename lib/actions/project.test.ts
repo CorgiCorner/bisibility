@@ -10,9 +10,11 @@ const mocks = vi.hoisted(() => {
   const prisma = {
     $executeRaw: vi.fn(),
     $transaction: vi.fn(),
-    keyword: { findMany: vi.fn(), updateMany: vi.fn() },
+    keyword: { count: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
     project: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
     projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
+    providerConnection: { count: vi.fn() },
+    rankCheckRun: { count: vi.fn() },
     user: { findUnique: vi.fn() },
   };
 
@@ -23,9 +25,16 @@ const mocks = vi.hoisted(() => {
     requireSession: vi.fn(),
     revalidatePath: vi.fn(),
     resolveKeywordLocation: vi.fn(),
+    readConsentFromCookies: vi.fn(),
+    trackServerEvent: vi.fn(),
     writeAudit: vi.fn(),
   };
 });
+
+vi.mock("@/lib/analytics/server", () => ({
+  readConsentFromCookies: mocks.readConsentFromCookies,
+  trackServerEvent: mocks.trackServerEvent,
+}));
 
 vi.mock("@/lib/auth/authorize", () => ({ authorize: mocks.authorize }));
 vi.mock("@/lib/alerts/depth-conflict.server", () => ({
@@ -74,6 +83,15 @@ describe("project actions", () => {
     );
     mocks.prisma.keyword.findMany.mockResolvedValue([]);
     mocks.prisma.keyword.updateMany.mockResolvedValue({ count: 0 });
+    mocks.prisma.keyword.count.mockResolvedValue(3);
+    mocks.prisma.providerConnection.count.mockResolvedValue(1);
+    mocks.prisma.rankCheckRun.count.mockResolvedValue(1);
+    mocks.readConsentFromCookies.mockResolvedValue({
+      analytics: true,
+      decidedAt: 1,
+      replay: false,
+      status: "decided",
+    });
     mocks.resolveKeywordLocation.mockResolvedValue({
       degraded: false,
       location: {
@@ -205,6 +223,11 @@ describe("project actions", () => {
       data: { onboardingCompletedAt: expect.any(Date) },
       where: { id: "project_1", onboardingCompletedAt: null },
     });
+    expect(mocks.trackServerEvent).toHaveBeenCalledWith("onboarding_completed", {
+      consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
+      distinctId: "user_1",
+      properties: { first_check_ran: true, has_provider: true, keyword_count: 3 },
+    });
 
     mocks.prisma.project.updateMany.mockResolvedValueOnce({ count: 0 });
 
@@ -213,6 +236,7 @@ describe("project actions", () => {
     });
 
     expect(mocks.prisma.project.updateMany).toHaveBeenCalledTimes(2);
+    expect(mocks.trackServerEvent).toHaveBeenCalledTimes(1);
   });
 
   it("updates the default market without relabeling existing keywords", async () => {
@@ -272,7 +296,7 @@ describe("project actions", () => {
     expect(upsert?.create).not.toHaveProperty("serpStopOnMatch");
     expect(upsert?.update).not.toHaveProperty("serpStopOnMatch");
     expect(mocks.prisma.keyword.updateMany).not.toHaveBeenCalled();
-    expect(mocks.prisma.keyword.findMany.mock.results[0]?.value).resolves.toContainEqual(
+    await expect(mocks.prisma.keyword.findMany.mock.results[0]?.value).resolves.toContainEqual(
       expect.objectContaining({ id: "kw_2", locationId: "loc_us" }),
     );
     expect(mocks.writeAudit).toHaveBeenCalledWith(

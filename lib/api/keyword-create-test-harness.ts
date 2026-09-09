@@ -16,8 +16,11 @@ type CreatedKeyword = {
   text: string;
 };
 
-/** Exercises the REST creation path and retains the row supplied to createMany. */
-export async function createKeywordAfterDefault(defaults: DefaultMarket) {
+/** Exercises the REST creation path for one body and retains the rows supplied to createMany. */
+export async function createKeywordAfterDefault(
+  defaults: DefaultMarket,
+  body: unknown = { keyword: "after default change" },
+) {
   const createdRows: CreatedKeyword[] = [];
   const project = {
     id: "project_1",
@@ -68,7 +71,7 @@ export async function createKeywordAfterDefault(defaults: DefaultMarket) {
   const req = new Request(
     "https://example.com/api/v1/projects/prj_a00000000000000000000000/keywords",
     {
-      body: JSON.stringify({ keyword: "after default change" }),
+      body: JSON.stringify(body),
       headers: { "content-type": "application/json" },
       method: "POST",
     },

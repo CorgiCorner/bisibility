@@ -1,6 +1,6 @@
 "use client";
 
-import { useToast } from "@/components/ui";
+import { useToast } from "@/components/ui/toast-context";
 import type { LoadSearchInsightsRowsAction } from "@/lib/actions/search-insights-rows";
 import {
   FIRST_VIEW_ROWS,

@@ -1,5 +1,6 @@
 import { AccountShell } from "@/components/account/AccountShell";
-import { Card, SectionTitle } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { Meta, StoryObj } from "@storybook/react";
 
 type ActiveSection = "profile" | "preferences" | "security";

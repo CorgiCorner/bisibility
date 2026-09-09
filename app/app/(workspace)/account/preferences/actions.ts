@@ -6,7 +6,7 @@ import {
   type UserPreferences,
 } from "@/lib/account/preferences-shared";
 import { writeAudit } from "@/lib/auth/audit";
-import { requireSession } from "@/lib/auth/session";
+import { requireMutableAccountSession as requireSession } from "@/lib/demo/mutable-account-session";
 import { persistDateFormatPreference } from "@/lib/queries/account";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";

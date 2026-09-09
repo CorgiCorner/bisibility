@@ -3,11 +3,9 @@
 import { track } from "@/lib/analytics/client";
 import { positionBandLabel } from "@/lib/search-insights/constants";
 import type { SearchInsightsSignals } from "@/lib/search-insights/queries/signals";
-import {
-  CaretRightIcon as CaretRight,
-  IntersectIcon as Intersect,
-  TargetIcon as Target,
-} from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { IntersectIcon as Intersect } from "@phosphor-icons/react/dist/csr/Intersect";
+import { TargetIcon as Target } from "@phosphor-icons/react/dist/csr/Target";
 import type { Icon } from "@phosphor-icons/react/lib";
 import { type ReactNode, use } from "react";
 import { useSearchInsightsDrawerHandlers } from "./drawers/useDrawerHandlers";

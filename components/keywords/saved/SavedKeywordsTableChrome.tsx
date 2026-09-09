@@ -1,17 +1,17 @@
 "use client";
 
 import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
-import { Button, MenuSelect, ToolbarSearch } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { appPath } from "@/lib/routing/app-path";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
-import {
-  CaretLeftIcon as CaretLeft,
-  CaretRightIcon as CaretRight,
-  DownloadSimpleIcon as DownloadSimple,
-  MagnifyingGlassIcon as MagnifyingGlass,
-  TrashIcon as Trash,
-} from "@phosphor-icons/react";
+import { CaretLeftIcon as CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import Link from "next/link";
 import { useMemo, useRef } from "react";
 import { downloadSavedKeywordsCsv } from "./saved-keywords-export";
@@ -122,7 +122,11 @@ export function SavedKeywordsBulkBar({
           onClick={onRemove}
           size="sm"
           startIcon={<Trash weight="regular" size={13} />}
-          sx={{ borderColor: "var(--red)", color: "var(--red)", minHeight: 30 }}
+          style={{
+            "--control-border-color": "var(--red)",
+            "--control-color": "var(--red)",
+            minHeight: 30,
+          }}
           variant="secondary"
         >
           Remove
@@ -134,7 +138,7 @@ export function SavedKeywordsBulkBar({
           disabled={Boolean(trackDisabledReason)}
           onClick={onTrack}
           size="sm"
-          sx={{ minHeight: 30 }}
+          style={{ minHeight: 30 }}
         >
           Track {count}
           {estimate == null ? null : (

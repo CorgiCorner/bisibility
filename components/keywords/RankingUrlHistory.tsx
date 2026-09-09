@@ -1,11 +1,14 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Card, InfoTooltip, SectionTitle } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import type { KeywordRow, RankingUrlEvent } from "@/lib/queries/keywords";
 import { rankObservationState } from "@/lib/serp/rank-depth";
-import { MinusIcon as Minus, WarningIcon as Warning } from "@phosphor-icons/react/ssr";
+import { MinusIcon as Minus } from "@phosphor-icons/react/dist/ssr/Minus";
+import { WarningIcon as Warning } from "@phosphor-icons/react/dist/ssr/Warning";
 import { RankingUrlExternalLink } from "./RankingUrlExternalLink";
 
 type TimelineEvent = RankingUrlEvent & { changed: boolean };

@@ -58,7 +58,7 @@ describe("StepConnectProvider submission", () => {
 
     expect(
       getComputedStyle(screen.getByRole("button", { name: "Test connection" })).fontWeight,
-    ).toBe(getComputedStyle(screen.getByRole("button", { name: "Save DataForSEO" })).fontWeight);
+    ).toBe(getComputedStyle(screen.getByRole("button", { name: "Save connection" })).fontWeight);
   });
 
   it("still rejects empty fields when the selected provider is not connected", async () => {
@@ -90,7 +90,7 @@ describe("StepConnectProvider submission", () => {
     );
 
     await clickTestConnection(testProviderConnectionAction);
-    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save connection" }));
 
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
     const connectInput = connectProviderAction.mock.calls[0][0] as Record<string, unknown>;
@@ -111,7 +111,7 @@ describe("StepConnectProvider submission", () => {
         priority: 0,
       }),
     );
-    expect(screen.getByText("Connect data")).toBeInTheDocument();
+    expect(screen.getByText("Provider")).toBeInTheDocument();
   });
 
   it("submits SerpApi from onboarding as an API key credential", async () => {
@@ -137,7 +137,7 @@ describe("StepConnectProvider submission", () => {
     expect(screen.queryByLabelText("API login")).not.toBeInTheDocument();
 
     await clickTestConnection(testProviderConnectionAction);
-    fireEvent.click(screen.getByRole("button", { name: "Save SerpApi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save connection" }));
 
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
     const connectInput = connectProviderAction.mock.calls[0][0] as Record<string, unknown>;

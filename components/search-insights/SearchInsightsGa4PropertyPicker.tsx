@@ -1,13 +1,14 @@
 "use client";
 
 import { Ga4PropertyManualEntry } from "@/components/integrations/Ga4PropertyManualEntry";
-import { Button, FieldLabel, MenuSelect, ModuleMark } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { ModuleMark } from "@/components/ui/ModuleMark";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
-import {
-  ArrowLeftIcon as ArrowLeft,
-  GoogleLogoIcon as GoogleLogo,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/csr/GoogleLogo";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useId } from "react";
 import {
   GA4_PICKER_LIST_LINK,

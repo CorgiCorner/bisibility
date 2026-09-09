@@ -1,7 +1,7 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { MenuGroupHeading } from "@/components/ui";
+import { MenuGroupHeading } from "@/components/ui/MenuGroupHeading";
 import type {
   ArchivedSearchInsightsProperty,
   SearchInsightsPropertyOption,

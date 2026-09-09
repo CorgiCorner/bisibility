@@ -1,6 +1,7 @@
 "use client";
 
-import { buildDomainIconUrl, DomainIconLayer } from "@/components/ui";
+import { DomainIconLayer } from "@/components/ui/DomainIconLayer";
+import { buildDomainIconUrl } from "@/components/ui/domain-icon-url";
 
 /** Fallback glyph: the brand's first letter, with the host prefix dropped so
  * `www.acme.dev` and `acme.dev` resolve to the same tile. */

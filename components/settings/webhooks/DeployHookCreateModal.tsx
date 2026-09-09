@@ -1,9 +1,12 @@
 "use client";
 
-import { Button, inputClassName, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { inputClassName } from "@/components/ui/input-styles";
+import { Modal } from "@/components/ui/Modal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { createIngestHookSchema } from "@/lib/schemas/ingestHook";
-import { CheckCircleIcon as CheckCircle, PlusIcon as Plus } from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";

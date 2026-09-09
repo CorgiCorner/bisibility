@@ -11,7 +11,7 @@ describe("keywordExportTarget", () => {
       ...defaultRankTrackerQueryState,
       filters: { ...emptyKeywordFilters, wrongUrl: true },
       page: 2,
-      pageSize: 10 as const,
+      pageSize: 25 as const,
     };
     const target = keywordExportTarget({
       filterChips: [{ key: "wrongUrl", label: "Wrong URL ranking" }],

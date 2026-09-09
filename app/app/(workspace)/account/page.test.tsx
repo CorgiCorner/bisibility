@@ -27,6 +27,9 @@ vi.mock("@/components/account/DeleteAccount", () => ({
 vi.mock("@/components/account/ProfileSection", () => ({
   ProfileSection: () => <div data-testid="profile-section" />,
 }));
+vi.mock("@/components/analytics/PrivacyChoicesLink", () => ({
+  PrivacyChoicesLink: () => <button type="button">Privacy choices</button>,
+}));
 vi.mock("@/lib/queries/account", () => ({
   getAccount: mocks.getAccount,
 }));
@@ -87,5 +90,6 @@ describe("AccountPage", () => {
     expect(screen.getByTestId("account-email-card")).toBeInTheDocument();
     expect(screen.getByTestId("profile-section")).toBeInTheDocument();
     expect(screen.getByTestId("connected-accounts")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Privacy choices" })).toBeVisible();
   });
 });

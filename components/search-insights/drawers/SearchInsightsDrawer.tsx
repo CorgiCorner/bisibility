@@ -1,16 +1,16 @@
 "use client";
 
 import { DRAWER_COPY, TRACK_DIALOG_COPY } from "@/components/search-insights/search-insights-copy";
-import { AppDrawer, type AppDrawerCloseReason, Button, Tooltip } from "@/components/ui";
+import { AppDrawer, type AppDrawerCloseReason } from "@/components/ui/AppDrawer";
+import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { pageHref } from "@/lib/search-insights/queries/top-rows-model";
 import { trackedKey } from "@/lib/search-insights/queries/tracked-model";
-import {
-  ArrowLeftIcon as ArrowLeft,
-  ArrowSquareOutIcon as ArrowSquareOut,
-  ArrowUpRightIcon as ArrowUpRight,
-  CheckIcon as Check,
-  PlusIcon as Plus,
-} from "@phosphor-icons/react";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { ArrowSquareOutIcon as ArrowSquareOut } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import type { ReactNode, RefObject } from "react";
 import {
   drawerGoogleSearchHref,

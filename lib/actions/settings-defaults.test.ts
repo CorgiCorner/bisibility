@@ -71,7 +71,7 @@ describe("settings default actions", () => {
     expect(upsert?.create).not.toHaveProperty("serpStopOnMatch");
     expect(upsert?.update).not.toHaveProperty("serpStopOnMatch");
     expect(settingsActionMocks.prisma.keyword.updateMany).not.toHaveBeenCalled();
-    expect(
+    await expect(
       settingsActionMocks.prisma.keyword.findMany.mock.results[0]?.value,
     ).resolves.toContainEqual(expect.objectContaining({ id: "kw_2", locationId: "loc_us" }));
     expect(settingsActionMocks.writeAudit).toHaveBeenCalledWith(

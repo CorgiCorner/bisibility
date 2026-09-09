@@ -1,3 +1,12 @@
+import type { IntegrationProviderData } from "@/lib/integrations/types";
+
+export function providerConsumerStatuses(provider: IntegrationProviderData) {
+  return provider.id === "gsc" &&
+    (provider.status === "connected" || provider.status === "needs_reauth")
+    ? provider.consumerStatuses
+    : undefined;
+}
+
 export const actionLabels = {
   connected: "Manage",
   needs_reauth: "Reconnect",
@@ -6,16 +15,12 @@ export const actionLabels = {
   ready: "Connect",
 } as const;
 
-export const responsiveActionSx = {
-  width: "100%",
-  "@media (min-width:640px)": { width: "auto" },
-} as const;
-
-export const outlineActionSx = {
-  ...responsiveActionSx,
-  color: "var(--fg-muted)",
-  "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
-  "&.Mui-focusVisible": { borderColor: "var(--accent)", color: "var(--accent-text)" },
+export const outlineActionStyle = {
+  "--control-color": "var(--fg-muted)",
+  "--control-hover-border-color": "var(--accent)",
+  "--control-hover-color": "var(--accent-text)",
+  "--control-focus-border-color": "var(--accent)",
+  "--control-focus-color": "var(--accent-text)",
 } as const;
 
 export const reauthCopy: Record<string, string> = {

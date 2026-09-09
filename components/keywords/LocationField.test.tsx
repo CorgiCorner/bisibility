@@ -104,7 +104,7 @@ describe("LocationField", () => {
     expect(url).toContain("q=aus");
     expect(url).toContain("project=prj_1");
     expect(await screen.findByText("Countries")).toBeInTheDocument();
-    expect(await screen.findByText("Cities")).toBeInTheDocument();
+    expect(await screen.findByText("Regions and cities")).toBeInTheDocument();
     const countryOption = screen.getByRole("option", { name: "Australia" });
     const cityOption = screen.getByRole("option", { name: /Austin/ });
     expect(countryOption.querySelector("[data-country-flag='AU']")).toBeInTheDocument();
@@ -113,6 +113,29 @@ describe("LocationField", () => {
     expect(screen.getByTestId("kind")).toHaveTextContent("city");
     expect(screen.getByTestId("display")).toHaveTextContent("Austin, Texas, United States");
     expect(screen.getByTestId("key")).toHaveTextContent("US/Texas/Austin");
+  });
+
+  it("includes regions in keyboard selection and retains their type and key", async () => {
+    mockLocations([
+      locationSearchWireCandidate({
+        canonical_key: "ES/Andalusia@en",
+        city_name: null,
+        country_code: "ES",
+        display_name: "Andalusia, Spain",
+        id: "location:region:ES/Andalusia@en",
+        kind: "region",
+        region_name: "Andalusia",
+      }),
+    ]);
+    render(<Harness />);
+    const input = screen.getByRole("combobox", { name: /location/i });
+    fireEvent.change(input, { target: { value: "anda" } });
+    const option = await screen.findByRole("option", { name: /Andalusia, Spain.*Region/ });
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(input).toHaveAttribute("aria-activedescendant", option.id);
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(screen.getByTestId("kind")).toHaveTextContent("region");
+    expect(screen.getByTestId("key")).toHaveTextContent("ES/Andalusia@en");
   });
 
   it("supports keyboard selection", async () => {
@@ -174,7 +197,7 @@ describe("LocationField", () => {
     });
 
     await waitFor(() => expect(warning).toHaveBeenCalledWith(expect.any(String)));
-    expect(screen.getByText(/No results yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/No matching locations/i)).toBeInTheDocument();
     expect(screen.getByTestId("key")).toHaveTextContent("US");
     warning.mockRestore();
   });
@@ -303,7 +326,7 @@ describe("LocationField", () => {
     const input = screen.getByRole("combobox", { name: /location/i });
     fireEvent.change(input, { target: { value: "zzzz" } });
 
-    expect(await screen.findByText(/powered by your connected providers/i)).toBeInTheDocument();
+    expect(await screen.findByText(/No matching locations/i)).toBeInTheDocument();
     fireEvent.keyDown(input, { key: "Enter" });
     expect(screen.getByTestId("display")).toHaveTextContent("United States");
   });

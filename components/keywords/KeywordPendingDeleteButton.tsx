@@ -1,8 +1,8 @@
 "use client";
 
-import { ConfirmModal } from "@/components/ui";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
-import { TrashIcon as Trash } from "@phosphor-icons/react";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { actionErrorMessage, type KeywordWorkspaceActions } from "./action-utils";

@@ -1,11 +1,10 @@
-import { PillBadge, Tooltip } from "@/components/ui";
+import { PillBadge } from "@/components/ui/Pill";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { SearchInsightsPropertyOption } from "@/lib/actions/search-insights";
 import type { SearchInsightsConnection } from "@/lib/search-insights/queries/context";
 import { cn } from "@/lib/ui/cn";
-import {
-  GlobeHemisphereWestIcon as GlobeHemisphereWest,
-  LinkSimpleIcon as LinkSimple,
-} from "@phosphor-icons/react";
+import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
+import { LinkSimpleIcon as LinkSimple } from "@phosphor-icons/react/dist/csr/LinkSimple";
 import { propertyTip, propertyTruncation } from "./search-insights-workspace-model";
 
 type Property = SearchInsightsPropertyOption | NonNullable<SearchInsightsConnection["property"]>;

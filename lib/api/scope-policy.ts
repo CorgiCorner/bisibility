@@ -36,3 +36,9 @@ export function grantedApiScopes(scopes: readonly string[]): readonly ApiScope[]
   const tier = [...API_SCOPE_ORDER].reverse().find((scope) => scopes.includes(scope));
   return tier ? scopesForTier(tier) : [];
 }
+
+/** Stored credentials must never gain permissions from malformed or missing scopes. */
+export function parseStoredApiScopes(value: unknown): readonly ApiScope[] | null {
+  if (!Array.isArray(value) || value.length === 0 || !value.every(isApiScope)) return null;
+  return value;
+}

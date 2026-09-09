@@ -13,18 +13,15 @@ import {
   emptyResearchFilters,
 } from "@/lib/keyword-research/view-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
-import { RESEARCH_METRICS_UNAVAILABLE_TOOLTIP } from "@/lib/serp/market-capability";
-import {
-  InfoIcon as Info,
-  WarningCircleIcon as WarningCircle,
-  XIcon as X,
-} from "@phosphor-icons/react";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { type ReactNode, useMemo, useState } from "react";
 import { ResearchDetailPanel } from "./ResearchDetailPanel";
 import { ResearchFiltersDrawer } from "./ResearchFiltersDrawer";
 import { ResearchResultsTable } from "./ResearchResultsTable";
-import { rowsForResearchMarket } from "./research-market-capability";
 import { deeperResearchCostCents } from "./research-results-model";
+import { rowsForResearchScope } from "./research-scope-capability";
 import type { ResearchAddDraft, ResearchSaveDraft } from "./research-workspace-model";
 
 type ResearchResultsProps = {
@@ -48,6 +45,8 @@ const sourceLabels: Record<KeywordResearchSource, string> = {
   related: "related",
   suggestion: "suggestions",
 };
+const RESEARCH_SCOPE_UNAVAILABLE_TOOLTIP =
+  "No search volume or difficulty data for this country and language. Rank tracking is unaffected.";
 
 function joinLabels(labels: string[]) {
   if (labels.length <= 1) return labels[0] ?? "";
@@ -144,7 +143,7 @@ export function ResearchResults({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const grouped = useMemo(
-    () => groupResearchRows(rowsForResearchMarket(result.rows, metricsAvailable)),
+    () => groupResearchRows(rowsForResearchScope(result.rows, metricsAvailable)),
     [metricsAvailable, result.rows],
   );
   const rows = useMemo(() => applyResearchFilters(grouped, filters), [filters, grouped]);
@@ -249,7 +248,7 @@ export function ResearchResults({
       {!metricsAvailable ? (
         <p className="m-0 flex items-start gap-2 text-[12.5px] leading-5 text-fg-muted">
           <Info weight="regular" aria-hidden className="mt-0.5 shrink-0" size={14} />
-          {RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}
+          {RESEARCH_SCOPE_UNAVAILABLE_TOOLTIP}
         </p>
       ) : null}
       <ResearchFiltersDrawer

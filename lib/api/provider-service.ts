@@ -3,6 +3,8 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { dollarsToCents } from "@/lib/format/currency";
+import { initialProviderAllocation } from "@/lib/provider-allocations/initial-allocation";
+import { backfillLegacyProjectAllocationInLockedTransaction } from "@/lib/provider-allocations/legacy-backfill";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { credentialsFromInput } from "@/lib/providers/credentials-input";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
@@ -71,7 +73,7 @@ export async function connectProviderConnection(
     ...decryptProviderCredentials(stored?.credentialsEncrypted),
     ...credentialsFromInput(input),
   };
-  await verifyProviderConnectionBeforeSave({
+  const verification = await verifyProviderConnectionBeforeSave({
     credentials,
     hasStoredCredentials: Boolean(stored?.credentialsEncrypted),
     projectId: context.projectId,
@@ -106,8 +108,21 @@ export async function connectProviderConnection(
       { enabled, kind: item.kind, status: "connected" },
       new Date(),
     );
+    if (!before && item.allocation.kind === "billable") {
+      // Preserve existing legacy budgets before creating an account-based allocation.
+      await backfillLegacyProjectAllocationInLockedTransaction(
+        client,
+        context.projectId,
+        PROVIDER_CATALOG,
+      );
+      await client.project.updateMany({
+        data: { providerAllocationsInitializedAt: new Date() },
+        where: { id: context.projectId, providerAllocationsInitializedAt: null },
+      });
+    }
     const connection = await client.providerConnection.upsert({
       create: {
+        ...initialProviderAllocation(item, verification),
         costPerCheckCents: cost,
         credentialsEncrypted: secret ?? null,
         enabled,

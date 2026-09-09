@@ -9,10 +9,14 @@ import type {
   SearchImportQueueFacts,
   SearchImportRuntimeFacts,
 } from "@/lib/search-insights/sync/control-model";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
+import { serpCountryCatalog } from "@/lib/serp/country-catalog";
 import { rankScheduleTiming } from "@/lib/settings/rank-schedule-timing";
 
-export { serpMarketOptions as countryOptions } from "@/lib/serp/markets";
+export const countryOptions = serpCountryCatalog.map((country) => ({
+  label: country.displayName,
+  value: country.countryCode,
+}));
 
 import type { ProviderIconName } from "@/lib/integrations/types";
 import type { ProviderTint } from "@/lib/providers/registry";

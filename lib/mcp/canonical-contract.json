@@ -74,7 +74,7 @@
   {
     "name": "get_cost_estimate",
     "title": "Get cost estimate",
-    "description": "Estimate the monthly rank-check cost for a keyword portfolio using the public provider rate cards. Provide the keyword count plus optional devices per keyword (1-2), locations per keyword, and check frequency (daily, weekly, or monthly). Pick a rate card with provider (defaults to dataforseo) and optionally a flat-rate option key or a plan key; see get_provider_rates for available keys. Anonymous endpoint.",
+    "description": "Estimate rank checks, result pages, and monthly provider cost for a keyword portfolio. Provide keywords, markets (locations), devices (1-2), and depth (10, 20, 50, or 100; default 100). Frequency supports daily, weekly, monthly, manual, paused, and custom_cron with cron_expression. Missing or invalid custom cron leaves monthly quantities and costs unknown. Pick a provider (default dataforseo) and optionally an option or plan key; see get_provider_rates. Anonymous endpoint.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -88,7 +88,7 @@
         "frequency": {
           "description": "Rank-check frequency used to estimate monthly checks. Defaults to daily.",
           "type": "string",
-          "enum": ["daily", "weekly", "monthly"]
+          "enum": ["daily", "weekly", "monthly", "manual", "paused", "custom_cron"]
         },
         "keywords": {
           "type": "integer",
@@ -97,7 +97,7 @@
           "description": "Keyword count to estimate for."
         },
         "locations": {
-          "description": "Location count per keyword. Defaults to 1.",
+          "description": "Market count per keyword; each market combines a location and language. Defaults to 1.",
           "type": "integer",
           "minimum": 1,
           "maximum": 100
@@ -119,6 +119,16 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 80
+        },
+        "depth": {
+          "description": "Organic result depth. Defaults to Top 100.",
+          "type": "integer",
+          "enum": [10, 20, 50, 100]
+        },
+        "cron_expression": {
+          "description": "Cron expression for custom_cron; missing or invalid values leave monthly estimates unknown.",
+          "type": "string",
+          "maxLength": 120
         }
       },
       "required": ["keywords"]

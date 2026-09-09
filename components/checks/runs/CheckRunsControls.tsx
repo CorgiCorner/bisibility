@@ -1,14 +1,12 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import {
-  Button,
-  filterChipStateClassName,
-  MenuSelect,
-  SectionTitle,
-  SegmentedControl,
-  Tooltip,
-} from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { filterChipStateClassName } from "@/components/ui/filter-chip-styles";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { SectionTitle } from "@/components/ui/SectionTitle";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type {
   CheckRange,
   CheckRunFilter,
@@ -17,7 +15,7 @@ import type {
   CheckRunTriggerFilter,
 } from "@/lib/checks/contract";
 import { formatDate } from "@/lib/dates/format";
-import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/ssr";
+import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank";
 import { useState } from "react";
 import { AsOfDatePopover } from "./AsOfDatePopover";
 import { rangeOptions } from "./check-runs-format";
@@ -97,7 +95,7 @@ export function CheckRunsHeader({
               onClick={(event) => setDateAnchor(event.currentTarget)}
               size="sm"
               startIcon={<CalendarBlank weight="regular" aria-hidden size={15} />}
-              sx={{ fontWeight: 400 }}
+              style={{ fontWeight: 400 }}
               variant="secondary"
             >
               As of: {formatDate(asOfDate, dateFormat)}

@@ -48,7 +48,10 @@ vi.mock("@/lib/auth/authorize", () => ({
   AuthorizationError: mocks.AuthorizationError,
   authorize: mocks.authorize,
 }));
-vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
+vi.mock("@/lib/auth/session", () => ({
+  getSession: mocks.requireSession,
+  requireSession: mocks.requireSession,
+}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 const tagRows = [
   { id: "tag_product", name: "Product" },
@@ -57,9 +60,13 @@ const tagRows = [
   { id: "tag_comparison", name: "Comparison" },
 ];
 
-function mockActor(role: "admin" | "member" | "owner" | "viewer" = "member") {
+function mockActor(
+  role: "admin" | "member" | "owner" | "viewer" = "member",
+  isInstanceAdmin = false,
+) {
   mocks.requireSession.mockResolvedValue({ user: { id: "user_1" } });
   mocks.prisma.user.findUnique.mockResolvedValue({
+    isInstanceAdmin,
     memberships: [{ projectId: "project_1", role }],
     role,
   });
@@ -90,9 +97,19 @@ function mockInstallTransaction() {
 }
 
 describe("sample-data actions", () => {
+  it.each(["owner", "admin", "member", "viewer"] as const)(
+    "rejects a non-instance-admin with role %s before reading or writing sample data",
+    async (role) => {
+      mockActor(role);
+      await expect(installSampleData()).rejects.toMatchObject({ code: "forbidden" });
+      expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+      expect(mocks.tx.membership.findFirst).not.toHaveBeenCalled();
+      expect(mocks.tx.project.create).not.toHaveBeenCalled();
+    },
+  );
   beforeEach(() => {
     vi.clearAllMocks();
-    mockActor();
+    mockActor("member", true);
     mockInstallTransaction();
     mocks.authorize.mockReturnValue({ actorId: "user_1", role: "owner" });
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });

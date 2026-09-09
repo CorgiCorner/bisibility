@@ -1,13 +1,26 @@
-import { FieldLabel, Input, MenuSelect } from "@/components/ui";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Input } from "@/components/ui/Input";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { monthDays, weekdays } from "@/lib/rank-check/schedule-calendar";
+import { scheduleTimezoneOptions } from "@/lib/schedules/form-defaults";
+import { scheduleNameAfterChange } from "@/lib/schedules/suggested-name";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { FIELD_HELP } from "@/lib/settings/field-help";
-import { timezoneSelectOptions } from "@/lib/settings/timezones";
-import type { FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
+import type {
+  FieldErrors,
+  PathValue,
+  UseFormRegister,
+  UseFormSetValue,
+  UseFormWatch,
+} from "react-hook-form";
 import type { NewScheduleValues } from "./set-schedule-model";
 
 type NewScheduleFromSelectionProps = {
   errors: FieldErrors<NewScheduleValues>;
   register: UseFormRegister<NewScheduleValues>;
   selectedCount: number;
+  projectDepth?: SerpDepth;
+  projectTimezone?: string;
   setValue: UseFormSetValue<NewScheduleValues>;
   watch: UseFormWatch<NewScheduleValues>;
 };
@@ -22,7 +35,8 @@ const timeOptions = ["06:00", "08:00", "18:00", "22:00"].map((value) => ({
   label: value,
   value,
 }));
-const dayOptions = ["Monday", "Thursday"].map((value) => ({ label: value, value }));
+const dayOptions = weekdays.map((value) => ({ label: value, value }));
+const monthDayOptions = monthDays.map((value) => ({ label: value, value }));
 
 function targetLabel(count: number) {
   return `${count} target${count === 1 ? "" : "s"}`;
@@ -32,14 +46,29 @@ export function NewScheduleFromSelection({
   errors,
   register,
   selectedCount,
+  projectDepth,
+  projectTimezone,
   setValue,
   watch,
 }: Readonly<NewScheduleFromSelectionProps>) {
   const frequency = watch("frequency");
   const cronExpression = watch("cronExpression");
   const day = watch("day");
+  const dayOfMonth = watch("dayOfMonth");
   const timeOfDay = watch("timeOfDay");
   const timezone = watch("timezone");
+
+  function setCadenceValue<
+    K extends "frequency" | "day" | "dayOfMonth" | "timeOfDay" | "cronExpression",
+  >(field: K, value: NewScheduleValues[K]) {
+    const before = { ...watch(), weekday: watch("day") };
+    const after = { ...before, [field]: value, weekday: field === "day" ? value : before.weekday };
+    setValue("name", scheduleNameAfterChange(before.name, before, after));
+    setValue(field, value as PathValue<NewScheduleValues, K>, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }
 
   return (
     <div className="grid gap-3">
@@ -69,7 +98,7 @@ export function NewScheduleFromSelection({
                 checked={frequency === option.value}
                 className="sr-only"
                 name="new-schedule-frequency"
-                onChange={() => setValue("frequency", option.value, { shouldDirty: true })}
+                onChange={() => setCadenceValue("frequency", option.value)}
                 type="radio"
               />
               {option.label}
@@ -84,6 +113,7 @@ export function NewScheduleFromSelection({
             aria-label="Cron"
             placeholder="0 6 * * *"
             {...register("cronExpression")}
+            onChange={(event) => setCadenceValue("cronExpression", event.currentTarget.value)}
             value={cronExpression}
           />
           {errors.cronExpression ? (
@@ -92,14 +122,20 @@ export function NewScheduleFromSelection({
         </div>
       ) : null}
       <div className="flex flex-wrap gap-3">
-        {frequency === "weekly" ? (
+        {frequency === "weekly" || frequency === "monthly" ? (
           <div className="grid min-w-0 flex-1 gap-1.5">
-            <span className="text-[12px] font-semibold text-fg">Day</span>
+            <span className="text-[12px] font-semibold text-fg">
+              {frequency === "weekly" ? "Day" : "Day of month"}
+            </span>
             <MenuSelect
-              ariaLabel="Day"
-              onChange={(value) => setValue("day", value as NewScheduleValues["day"])}
-              options={dayOptions}
-              value={day}
+              ariaLabel={frequency === "weekly" ? "Day" : "Day of month"}
+              onChange={(value) =>
+                frequency === "weekly"
+                  ? setCadenceValue("day", value as NewScheduleValues["day"])
+                  : setCadenceValue("dayOfMonth", value as NewScheduleValues["dayOfMonth"])
+              }
+              options={frequency === "weekly" ? dayOptions : monthDayOptions}
+              value={frequency === "weekly" ? day : dayOfMonth}
             />
           </div>
         ) : null}
@@ -107,7 +143,7 @@ export function NewScheduleFromSelection({
           <span className="text-[12px] font-semibold text-fg">Time</span>
           <MenuSelect
             ariaLabel="Time"
-            onChange={(value) => setValue("timeOfDay", value)}
+            onChange={(value) => setCadenceValue("timeOfDay", value)}
             options={timeOptions}
             value={timeOfDay}
           />
@@ -121,7 +157,7 @@ export function NewScheduleFromSelection({
           onChange={(value) =>
             setValue("timezone", value, { shouldDirty: true, shouldValidate: true })
           }
-          options={timezoneSelectOptions(timezone)}
+          options={scheduleTimezoneOptions(projectTimezone, timezone)}
           searchable
           searchPlaceholder="Search time zones..."
           value={timezone}
@@ -143,9 +179,13 @@ export function NewScheduleFromSelection({
           <p className="m-0 text-[11.5px] text-red-text">{errors.jitterMinutes.message}</p>
         ) : null}
       </div>
-      <p className="m-0 text-[11.5px] leading-relaxed text-fg-muted">
-        Depth and provider follow the project. Change them in the schedule after it exists.
-      </p>
+      <div className="grid gap-1 text-[11.5px] leading-relaxed">
+        <p className="m-0 text-fg">
+          Depth:{" "}
+          <span>{projectDepth ? `Project default (Top ${projectDepth})` : "Project default"}</span>
+        </p>
+        <p className="m-0 text-fg-muted">Depth and provider follow your project settings.</p>
+      </div>
       <p className="m-0 text-[12.5px] leading-relaxed text-fg">
         {selectedCount} {selectedCount === 1 ? "keyword" : "keywords"} /{" "}
         {targetLabel(selectedCount)}, cost depends on cadence.

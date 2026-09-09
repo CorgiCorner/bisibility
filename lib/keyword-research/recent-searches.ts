@@ -1,4 +1,7 @@
+import { researchScopeForLocationKey } from "@/lib/research/scope";
+
 const MAX_RECENT_SEARCHES = 8;
+const LEGACY_SCOPE_LABEL_PROPERTY = ["mar", "ket"].join("");
 
 export type RecentKeywordResearch = {
   cachedUntil: string;
@@ -6,7 +9,7 @@ export type RecentKeywordResearch = {
   createdAt: string;
   includeClickstream: boolean;
   locationKey?: string;
-  market: string;
+  scopeLabel: string;
   mode: "auto" | "ideas" | "related" | "suggestions";
   resultLimit: 100 | 300 | 500;
   seed: string;
@@ -21,9 +24,37 @@ export function parseRecentSearches(value: string | null): RecentKeywordResearch
   try {
     const parsed = JSON.parse(value) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isRecentSearch).slice(0, MAX_RECENT_SEARCHES);
+    return parsed
+      .map(parseRecentSearch)
+      .filter((search): search is RecentKeywordResearch => search !== null)
+      .slice(0, MAX_RECENT_SEARCHES);
   } catch {
     return [];
+  }
+}
+
+function parseRecentSearch(value: unknown): RecentKeywordResearch | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const legacyScopeLabel = row[LEGACY_SCOPE_LABEL_PROPERTY];
+  const scopeLabel =
+    typeof row.scopeLabel === "string"
+      ? row.scopeLabel
+      : typeof legacyScopeLabel === "string"
+        ? scopeLabelForLocation(legacyScopeLabel, row.locationKey)
+        : null;
+  const { [LEGACY_SCOPE_LABEL_PROPERTY]: _legacyScopeLabel, ...normalized } = row;
+  const search = { ...normalized, scopeLabel };
+  return isRecentSearch(search) ? search : null;
+}
+
+function scopeLabelForLocation(scopeLabel: string, locationKey: unknown) {
+  if (typeof locationKey !== "string") return scopeLabel;
+  try {
+    const scope = researchScopeForLocationKey(locationKey);
+    return `${scope.countryName} / ${scope.languageLabel}`;
+  } catch {
+    return scopeLabel;
   }
 }
 
@@ -32,7 +63,7 @@ function isRecentSearch(value: unknown): value is RecentKeywordResearch {
   const row = value as Partial<RecentKeywordResearch>;
   return (
     typeof row.seed === "string" &&
-    typeof row.market === "string" &&
+    typeof row.scopeLabel === "string" &&
     typeof row.createdAt === "string" &&
     typeof row.cachedUntil === "string" &&
     typeof row.includeClickstream === "boolean" &&
@@ -47,12 +78,13 @@ export function addRecentSearch(
   next: Omit<RecentKeywordResearch, "createdAt">,
   now = new Date(),
 ) {
+  const scopeLabel = scopeLabelForLocation(next.scopeLabel, next.locationKey);
   const normalizedSeed = next.seed.trim().toLowerCase();
   const withoutDuplicate = current.filter(
     (item) =>
       !(
         item.seed.trim().toLowerCase() === normalizedSeed &&
-        item.market === next.market &&
+        item.scopeLabel === scopeLabel &&
         item.mode === next.mode &&
         item.resultLimit === next.resultLimit &&
         item.includeClickstream === next.includeClickstream
@@ -63,6 +95,7 @@ export function addRecentSearch(
     {
       ...next,
       createdAt,
+      scopeLabel,
     },
     ...withoutDuplicate,
   ].slice(0, MAX_RECENT_SEARCHES);

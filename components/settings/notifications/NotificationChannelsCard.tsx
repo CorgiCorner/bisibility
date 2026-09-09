@@ -4,7 +4,8 @@ import { notificationCardGeometryClassNames } from "@/components/settings/notifi
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { FieldLabel, Switch } from "@/components/ui";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Switch } from "@/components/ui/Switch";
 import { updateNotificationPreferences } from "@/lib/actions/notification-prefs";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";

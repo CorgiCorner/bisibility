@@ -1,14 +1,25 @@
+import { track } from "@/lib/analytics/client";
 import type { SetupContext, SetupCta, SetupStepState } from "@/lib/getting-started/setup-steps";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GettingStartedChecklist } from "./GettingStartedChecklist";
 
+vi.mock("@/lib/analytics/client", () => ({ track: vi.fn() }));
+
 const now = new Date("2026-08-30T17:00:00.000Z");
+const competitorActions = {
+  addManualCompetitor: vi.fn().mockResolvedValue({}),
+  confirmSuggestedCompetitor: vi.fn().mockResolvedValue({}),
+  dismissCompetitorSuggestion: vi.fn().mockResolvedValue({}),
+  skipCompetitorSetup: vi.fn().mockResolvedValue({}),
+};
 
 function context(overrides: Partial<SetupContext> = {}): SetupContext {
   return {
     completedCheckCount: 0,
+    competitorSetupOutcome: null,
+    competitorSuggestions: [],
     inFlightBatch: null,
     keywordCount: 0,
     keywordIds: [],
@@ -29,7 +40,12 @@ function contextFor(state: SetupStepState): SetupContext {
     },
   };
   if (state.family === "done")
-    return context({ ...ready, completedCheckCount: 1, providerExists: true });
+    return context({
+      ...ready,
+      completedCheckCount: 1,
+      competitorSetupOutcome: "confirmed",
+      providerExists: true,
+    });
   if (state.family === "blocked") return context(ready);
   if (state.family === "running")
     return context({
@@ -66,16 +82,27 @@ function setViewport(desktop: boolean) {
 function setup(state: SetupStepState, desktop = true) {
   setViewport(desktop);
   const onCta = vi.fn<(cta: SetupCta) => void>();
-  render(<GettingStartedChecklist context={contextFor(state)} now={now} onCta={onCta} />);
+  render(
+    <GettingStartedChecklist
+      competitorActions={competitorActions}
+      context={contextFor(state)}
+      now={now}
+      onCta={onCta}
+    />,
+  );
   return { onCta, user: userEvent.setup() };
 }
 
-beforeEach(() => setViewport(true));
+beforeEach(() => {
+  setViewport(true);
+  vi.mocked(track).mockClear();
+});
 
 describe("GettingStartedChecklist", () => {
   it("selects the first incomplete step by default and removes the inner progress header", () => {
     render(
       <GettingStartedChecklist
+        competitorActions={competitorActions}
         context={context({
           keywordCount: 1,
           project: {
@@ -126,26 +153,15 @@ describe("GettingStartedChecklist", () => {
     expect(
       within(panel as HTMLElement).queryByText("Collect the first keyword positions"),
     ).toBeNull();
-    const badge = within(video).getByText("Coming soon");
-    expect(video).toHaveClass("text-center");
-    expect(badge.parentElement).toHaveClass("mx-auto", "flex", "items-center");
-    expect(badge).toBeVisible();
-    expect(badge).toHaveClass("border");
-    expect(badge).toHaveStyle({ color: "var(--purple-text)" });
-    expect(badge).not.toHaveClass("bg-accent-subtle", "text-accent-text");
-    expect(within(video).getByText("Video walkthroughs")).toBeVisible();
-    expect(
-      within(video).getByText(
-        "We are recording a short clip for each step. Until they land, every step on the left opens with its written version.",
-      ),
-    ).toBeVisible();
+    const player = within(video).getByTestId("setup-video");
+    expect(player).toHaveAttribute("controls");
+    expect(player).toHaveAttribute("preload", "none");
+    expect(player).toHaveAttribute("data-video-ref", "first-check");
+    expect(within(video).queryByText("Video walkthroughs")).not.toBeInTheDocument();
     expect(within(video).queryByText("Collect the first keyword positions")).toBeNull();
-    expect(video).toHaveAttribute("data-video-ref", "first-check");
-    expect(video).toHaveClass("w-full", "flex-1", "rounded-card", "border-dashed");
-    expect(video.parentElement).toHaveClass("lg:flex", "p-5");
-    expect(screen.getByRole("button", { name: "Run first check" })).toHaveClass(
-      "MuiButton-outlined",
-    );
+    expect(video).toHaveClass("w-full", "overflow-hidden", "rounded-card");
+    expect(video.parentElement).toHaveClass("lg:flex", "p-5", "self-start");
+    expect(screen.getByRole("button", { name: "Run first check" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Run first check" }).querySelector("svg")).toBeNull();
     expect(
       screen
@@ -158,7 +174,7 @@ describe("GettingStartedChecklist", () => {
     setup({ cta: { id: "run_first_check", label: "Run first check" }, family: "action" });
     const panels = screen.getAllByTestId(/^setup-step-panel-/);
 
-    expect(panels).toHaveLength(4);
+    expect(panels).toHaveLength(5);
     expect(panels[0]).toHaveClass("grid", "grid-rows-[0fr]", "opacity-0", "overflow-hidden");
     expect(panels[3]).toHaveClass("grid-rows-[1fr]", "opacity-100");
     expect(panels[3]).toHaveClass(
@@ -249,11 +265,29 @@ describe("GettingStartedChecklist", () => {
     expect(screen.getAllByRole("button", { name: cta.label })).toHaveLength(1);
     await user.click(screen.getByRole("button", { name: cta.label }));
     expect(onCta).toHaveBeenCalledWith(cta);
+    expect(track).toHaveBeenCalledWith("getting_started_cta_clicked", {
+      cta: "accelerate",
+      step: "first_check",
+    });
+  });
+
+  it("tracks a primary checklist CTA with its setup step", async () => {
+    const cta = { id: "run_first_check", label: "Run first check" } as const;
+    const { onCta, user } = setup({ cta, family: "action" });
+
+    await user.click(screen.getByRole("button", { name: cta.label }));
+
+    expect(onCta).toHaveBeenCalledWith(cta);
+    expect(track).toHaveBeenCalledWith("getting_started_cta_clicked", {
+      cta: "primary",
+      step: "first_check",
+    });
   });
 
   it("keeps rows transparent, strikes completed titles, and omits the column divider", () => {
     const { container } = render(
       <GettingStartedChecklist
+        competitorActions={competitorActions}
         context={contextFor({ family: "done" })}
         now={now}
         onCta={vi.fn()}
@@ -268,7 +302,7 @@ describe("GettingStartedChecklist", () => {
       "hover:bg-bg-sunken",
       "focus-within:bg-bg-sunken",
     );
-    expect(container.querySelectorAll("li.border-t")).toHaveLength(3);
+    expect(container.querySelectorAll("li.border-t")).toHaveLength(4);
   });
 
   it("keeps done copy past tense and all copy free of banned promises", async () => {

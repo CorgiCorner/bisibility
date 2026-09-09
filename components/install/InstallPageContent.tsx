@@ -1,6 +1,6 @@
 import { AgentInstallList } from "@/components/install/AgentInstallList";
 import { curlExample, SKILLS } from "@/components/install/install-catalog";
-import { CopyButton } from "@/components/ui";
+import { CopyButton } from "@/components/ui/CopyButton";
 import type { InstallApiKeySummary } from "@/lib/queries/install";
 import { appPath } from "@/lib/routing/app-path";
 import Link from "next/link";
@@ -14,12 +14,11 @@ type InstallPageContentProps = {
   projectRef: string;
 };
 
-// CopyButton is a MUI IconButton: emotion injects its rules outside any cascade layer, so a
-// Tailwind "absolute" on the button itself loses. Position a plain wrapper instead.
+// Position the copy control independently of its inline tooltip wrapper.
 const codeCopyWrapperClassName = "absolute right-[7px] top-[7px]";
 const codeCopyClassName =
   "!h-7 !min-h-7 !min-w-7 !w-7 !rounded-control !bg-transparent !p-0 text-code-faint";
-const codeCopySx = { color: "var(--code-faint)" };
+const codeCopyStyle = { "--control-color": "var(--code-faint)" };
 
 export function capitalizeFirst(value: string) {
   return value ? `${value[0].toUpperCase()}${value.slice(1)}` : value;
@@ -36,7 +35,7 @@ function CodeBlock({ label, text }: Readonly<{ label: string; text: string }>) {
           className={codeCopyClassName}
           label={label}
           size="sm"
-          sx={codeCopySx}
+          style={codeCopyStyle}
           text={text}
         />
       </span>

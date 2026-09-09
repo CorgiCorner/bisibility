@@ -9,14 +9,19 @@ import type {
   RankedKeywordsPage,
   RelevantPagesResult,
 } from "@/lib/providers/types";
-import { domainOverviewCachedUntil, withDomainOverviewCache } from "./cache";
+import { withDomainOverviewCache } from "./cache";
+import {
+  domainOverviewCachedUntil,
+  domainOverviewSnapshotCachedUntil,
+  domainOverviewSnapshotFreshness,
+} from "./cache-policy";
 import type { DomainOverviewProject, DomainOverviewSource } from "./context";
 import { fetchDomainOverviewMetrics } from "./provider-call";
-import type { DomainOverviewMarket, DomainOverviewScope } from "./types";
+import type { DomainOverviewResearchScope, DomainOverviewScope } from "./types";
 
 type Snapshot = Prisma.DomainOverviewSnapshotGetPayload<object>;
 
-type SnapshotKey = DomainOverviewMarket & {
+type SnapshotKey = DomainOverviewResearchScope & {
   projectId: string;
   scope: DomainOverviewScope;
   target: string;
@@ -100,7 +105,7 @@ function snapshotPage<T extends RankedKeywordsPage | RelevantPagesResult>(
 
 export function domainOverviewSnapshotData(snapshot: Snapshot) {
   return {
-    cachedUntil: snapshot.cachedUntil.toISOString(),
+    cachedUntil: domainOverviewSnapshotCachedUntil(snapshot),
     fetchedAt: snapshot.fetchedAt.toISOString(),
     overview: snapshotMetrics(snapshot.overview),
     previousFetchedAt: snapshot.previousFetchedAt?.toISOString() ?? null,
@@ -120,16 +125,20 @@ export function domainOverviewSnapshotModules(snapshot: Snapshot) {
 
 export function findDomainOverviewSnapshot(input: SnapshotKey & { now: Date; provider?: string }) {
   return prisma.domainOverviewSnapshot.findFirst({
-    where: {
-      cachedUntil: { gt: input.now },
-      languageCode: input.languageCode,
-      locationCode: input.locationCode,
-      projectId: input.projectId,
-      ...(input.provider ? { provider: input.provider } : {}),
-      scope: input.scope,
-      target: input.target,
-    },
+    where: snapshotLookupWhere(input),
   });
+}
+
+function snapshotLookupWhere(input: SnapshotKey & { now: Date; provider?: string }) {
+  return {
+    ...domainOverviewSnapshotFreshness(input.now),
+    languageCode: input.languageCode,
+    locationCode: input.locationCode,
+    projectId: input.projectId,
+    ...(input.provider ? { provider: input.provider } : {}),
+    scope: input.scope,
+    target: input.target,
+  };
 }
 
 export function findDomainOverviewSnapshotMetadata(
@@ -137,15 +146,7 @@ export function findDomainOverviewSnapshotMetadata(
 ) {
   return prisma.domainOverviewSnapshot.findFirst({
     select: { cachedUntil: true, fetchedAt: true, overview: true, provider: true },
-    where: {
-      cachedUntil: { gt: input.now },
-      languageCode: input.languageCode,
-      locationCode: input.locationCode,
-      projectId: input.projectId,
-      ...(input.provider ? { provider: input.provider } : {}),
-      scope: input.scope,
-      target: input.target,
-    },
+    where: snapshotLookupWhere(input),
   });
 }
 

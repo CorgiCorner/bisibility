@@ -1,7 +1,7 @@
 import "server-only";
 
-import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
+import { makePublicId } from "@/lib/db/public-id";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import { propertyDisplayName } from "@/lib/search-insights/queries/context-model";
 import { readImportObservability } from "@/lib/search-insights/queries/import-observability-db";
@@ -59,7 +59,7 @@ export async function deliverSearchImportMilestone(input: {
       idempotencyKey,
       payload: { href: searchConsolePath(asProjectRef(imported.project.publicId)) },
       projectId: imported.projectId,
-      publicId: `ntf_${randomUUID().replaceAll("-", "")}`,
+      publicId: makePublicId("ntf"),
       title,
       type: "import_done" as const,
       userId,

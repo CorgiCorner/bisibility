@@ -5,8 +5,10 @@ import {
 import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import type { TrackingDefaultsForm } from "@/components/settings/tracking/tracking-form";
-import { FieldLabel, MenuSelect, Switch } from "@/components/ui";
-import { type SerpDepth, serpDepthValues, serpDeviceOptions } from "@/lib/serp/markets";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { Switch } from "@/components/ui/Switch";
+import { type SerpDepth, serpDepthValues, serpDeviceOptions } from "@/lib/serp/constants";
 import type { DefaultsData } from "@/lib/settings/options";
 import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
 import { useState } from "react";

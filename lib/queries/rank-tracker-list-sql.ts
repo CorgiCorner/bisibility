@@ -3,6 +3,7 @@ import type { RankTrackerQueryState } from "@/lib/keywords/rank-tracker-query-ty
 import { derivedKeywordColumns } from "./rank-tracker-list-derived";
 import { contentPredicate, lensPredicate } from "./rank-tracker-list-filters";
 import { rankTrackerOrderBy } from "./rank-tracker-list-sort";
+import { rankTrackerLocationsSql } from "./rank-tracker-locations-sql";
 
 export function buildRankTrackerListSql(
   projectId: string,
@@ -36,6 +37,8 @@ export function buildRankTrackerListSql(
       LEFT JOIN "project_defaults" pd ON pd."projectId" = k."projectId"
       CROSS JOIN LATERAL (${derivedKeywordColumns}) d
       WHERE k."projectId" = ${projectId}
+    ), project_locations AS (
+      ${rankTrackerLocationsSql(projectId, "project_keywords")}
     ), lens_keywords AS MATERIALIZED (
       SELECT k.* FROM project_keywords k
       JOIN "locations" l ON l."canonicalKey" = k."canonicalKey"
@@ -77,8 +80,7 @@ export function buildRankTrackerListSql(
       (SELECT COUNT(*) FROM matched)::int AS "matchedTargetCount",
       COALESCE((SELECT jsonb_agg(jsonb_build_object('id', "canonicalKey", 'displayName', "displayName",
         'kind', "locationKind", 'count', count) ORDER BY count DESC, "displayName", "canonicalKey")
-        FROM (SELECT "canonicalKey", "displayName", "locationKind", COUNT(*)::int count
-          FROM project_keywords GROUP BY 1,2,3) locations), '[]'::jsonb) AS locations,
+        FROM project_locations), '[]'::jsonb) AS locations,
       jsonb_build_object(
         'positions', jsonb_build_array(
           jsonb_build_object('id','top3','label','Top 3','count',(SELECT COUNT(*) FROM lens_keywords WHERE position <= 3)),

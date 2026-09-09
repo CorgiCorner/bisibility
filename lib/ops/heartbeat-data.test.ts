@@ -11,8 +11,13 @@ const mocks = vi.hoisted(() => ({
   projectFindMany: vi.fn(),
   providerFindMany: vi.fn(),
   rankFindMany: vi.fn(),
+  dispatch: vi.fn(),
+  schedule: vi.fn(),
   transaction: vi.fn(),
 }));
+
+vi.mock("./heartbeat-dispatch-data", () => ({ collectRankDispatchHeartbeat: mocks.dispatch }));
+vi.mock("./heartbeat-schedule-data", () => ({ collectRankScheduleHeartbeat: mocks.schedule }));
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -64,6 +69,19 @@ describe("database heartbeat aggregation", () => {
     mocks.opsCount.mockResolvedValue(2);
     mocks.keywordFindMany.mockResolvedValue([]);
     mocks.keywordCount.mockResolvedValue(0);
+    mocks.dispatch.mockResolvedValue({
+      expiredClaims: 0,
+      oldestExpiredClaimAt: null,
+      overdueQueued: 0,
+      oldestOverdueQueuedAt: null,
+    });
+    mocks.schedule.mockResolvedValue({
+      activeSchedules: 0,
+      activeScheduledKeywords: 0,
+      plannedOverdue: 0,
+      oldestPlannedFor: null,
+      tracked: 0,
+    });
   });
 
   afterEach(() => vi.unstubAllEnvs());
@@ -181,7 +199,20 @@ describe("database heartbeat aggregation", () => {
     ]);
     expect(result).toMatchObject({
       bootstrapErrors: ["rank-check-1: failed"],
-      schedule: { active: 0, dueWithoutRun: 0, tracked: 0 },
+      dispatch: {
+        expiredClaims: 0,
+        oldestExpiredClaimAt: null,
+        overdueQueued: 0,
+        oldestOverdueQueuedAt: null,
+      },
+      collectionAvailable: true,
+      schedule: {
+        activeSchedules: 0,
+        activeScheduledKeywords: 0,
+        plannedOverdue: 0,
+        oldestPlannedFor: null,
+        tracked: 0,
+      },
       undeliveredEvents: 2,
     });
   });
@@ -447,73 +478,40 @@ describe("database heartbeat aggregation", () => {
     expect(result.rank7d.failed).toBe(1);
   });
 
-  it("distinguishes anchored future schedules from phased overdue schedules without a run", async () => {
+  it("threads current schedule and dispatch facts independently of successful RankChecks", async () => {
     mocks.rankFindMany.mockResolvedValue([]);
     mocks.operationalFindMany.mockResolvedValue([]);
-    mocks.keywordFindMany.mockResolvedValue([
-      {
-        id: "keyword_monthly",
-        project: { defaults: null, owner: { deactivatedAt: null }, writeMode: "normal" },
-        rankChecks: [],
-        schedule: {
-          frequency: "monthly",
-          nextCheckAt: new Date("2026-07-19T17:15:00.000Z"),
-        },
-      },
-    ]);
-    mocks.keywordCount.mockResolvedValue(1);
+    const dispatch = {
+      expiredClaims: 1,
+      oldestExpiredClaimAt: "2026-07-16T10:00:00Z",
+      overdueQueued: 2,
+      oldestOverdueQueuedAt: "2026-07-16T11:00:00Z",
+    };
+    const schedule = {
+      activeSchedules: 1,
+      activeScheduledKeywords: 3,
+      plannedOverdue: 1,
+      oldestPlannedFor: "2026-07-16T10:00:00Z",
+      tracked: 4,
+    };
+    mocks.dispatch.mockResolvedValue(dispatch);
+    mocks.schedule.mockResolvedValue(schedule);
 
-    await expect(
-      collectDatabaseHeartbeat(new Date("2026-07-19T06:00:00.000Z")),
-    ).resolves.toMatchObject({ schedule: { active: 1, dueWithoutRun: 0, tracked: 1 } });
-    expect(mocks.keywordCount).toHaveBeenCalledWith({
-      where: { project: { owner: { deactivatedAt: null }, writeMode: "active" } },
+    await expect(collectDatabaseHeartbeat(now)).resolves.toMatchObject({
+      dispatch,
+      schedule,
+      rank: { failed: 0, stuck: 0 },
     });
-    expect(mocks.keywordFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          project: { owner: { deactivatedAt: null }, writeMode: "active" },
-        }),
-      }),
-    );
-
-    mocks.keywordFindMany.mockResolvedValue([
-      {
-        id: "keyword_daily",
-        project: { defaults: null, owner: { deactivatedAt: null }, writeMode: "normal" },
-        rankChecks: [],
-        schedule: {
-          frequency: "daily",
-          nextCheckAt: new Date("2026-07-19T05:15:00.000Z"),
-        },
-      },
-    ]);
-    mocks.keywordCount.mockResolvedValue(1);
-
-    await expect(
-      collectDatabaseHeartbeat(new Date("2026-07-19T06:00:00.000Z")),
-    ).resolves.toMatchObject({ schedule: { active: 1, dueWithoutRun: 1, tracked: 1 } });
+    expect(mocks.dispatch).toHaveBeenCalledExactlyOnceWith(now);
+    expect(mocks.schedule).toHaveBeenCalledExactlyOnceWith(now);
+    expect(mocks.keywordFindMany).not.toHaveBeenCalled();
   });
 
-  it("does not mark a due schedule missed when its scheduled run was created", async () => {
+  it("does not replace a failed dispatch collection with a healthy zero", async () => {
     mocks.rankFindMany.mockResolvedValue([]);
     mocks.operationalFindMany.mockResolvedValue([]);
-    mocks.keywordFindMany.mockResolvedValue([
-      {
-        id: "keyword_daily",
-        project: { defaults: null, owner: { deactivatedAt: null }, writeMode: "normal" },
-        rankChecks: [{ scheduledAt: new Date("2026-07-19T05:16:00.000Z") }],
-        schedule: {
-          frequency: "daily",
-          nextCheckAt: new Date("2026-07-19T05:15:00.000Z"),
-        },
-      },
-    ]);
-    mocks.keywordCount.mockResolvedValue(1);
-
-    await expect(
-      collectDatabaseHeartbeat(new Date("2026-07-19T06:00:00.000Z")),
-    ).resolves.toMatchObject({ schedule: { active: 1, dueWithoutRun: 0, tracked: 1 } });
+    mocks.dispatch.mockRejectedValue(new Error("dispatch query failed"));
+    await expect(collectDatabaseHeartbeat(now)).rejects.toThrow("dispatch query failed");
   });
 
   it("keeps digest tenant names out by default and restores them only after opt-in", async () => {

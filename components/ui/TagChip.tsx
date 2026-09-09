@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
-import { XIcon as X } from "@phosphor-icons/react";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { tagChipClassName, tagChipSurfaceClassName } from "./tag-chip-styles";
 
 export type TagChipProps = {

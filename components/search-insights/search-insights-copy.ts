@@ -126,29 +126,6 @@ export const COVERAGE_PENDING_WINDOW =
 export const COVERAGE_NOTE =
   "Google hides low-volume query text for privacy, so the rest is real traffic with no query attached.";
 export const IMPORT_PAUSED_LINE = "History import paused, resumes automatically";
-export const IMPORT_WAITING_FOR_WORKER =
-  "Import is waiting for the background worker - restart it and it resumes.";
-export const IMPORT_WAITING_FOR_WORKER_TOOLTIP =
-  "Imports run on the background worker (Temporal). If it is down, restart it and the import continues from where it stopped - nothing already imported is lost.";
-
-const WORKER_IDENTITY_MISMATCH_COPY = {
-  detail: [
-    "Align the app and worker Temporal namespace and task queue, then restart the worker. Nothing already imported is lost.",
-    "Background processing is reconnecting. The import will continue automatically, and nothing already imported is affected.",
-  ],
-  line: [
-    "Import is waiting for the background worker configuration to match.",
-    "Import is waiting for background processing to reconnect.",
-  ],
-} as const;
-
-export function workerIdentityMismatchCopy(mode: "cloud" | "self-host", detail: string | null) {
-  const line = ownershipCopy(WORKER_IDENTITY_MISMATCH_COPY.line, mode);
-  return {
-    detail: ownershipCopy(WORKER_IDENTITY_MISMATCH_COPY.detail, mode),
-    line: mode === "self-host" && detail ? `${line} ${detail}` : line,
-  };
-}
 export const INCIDENT_PILL = "Known Google data issue";
 
 export const TABLE_TITLES = {

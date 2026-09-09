@@ -1,7 +1,4 @@
-/**
- * MUI d3-color crashes on CSS variables, so series colors must be literal hex values.
- * Keep these synced with globals.css; rendered CSS overrides still provide dark mode.
- */
+/** Literal palette for data and exports; rendered charts use the semantic CSS variables below. */
 export const chartColors = {
   accent: "#f1511c",
   green: "#3c9a63",

@@ -7,7 +7,10 @@ import {
 import { generalSettingsCardGeometryClassNames } from "@/components/settings/general/general-settings-layout";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
-import { Button, CopyButton, FieldLabel, Input } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { IdChip } from "@/components/ui/IdChip";
+import { Input } from "@/components/ui/Input";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { createProjectSchema } from "@/lib/schemas/project";
 import { actionErrorMessage } from "@/lib/ui/action-error";
@@ -129,12 +132,12 @@ export function ProjectDetailsCard({
           </SettingsField>
           <SettingsField width="field">
             <FieldLabel className={labelClass} label="Project ID" />
-            <span className="mt-1.5 flex min-h-10 items-center gap-2 rounded-control border border-border bg-bg-sunken px-3">
-              <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[12.5px] text-fg-muted">
-                {project.projectId}
-              </span>
-              <CopyButton label="Copy project ID" size="sm" text={project.projectId} />
-            </span>
+            <IdChip
+              className="mt-1.5 flex min-h-10 justify-between bg-bg-sunken px-3"
+              copyLabel="Copy project ID"
+              size="xs"
+              value={project.projectId}
+            />
           </SettingsField>
           {saveError ? <p className="m-0 text-[12px] text-red-text">{saveError}</p> : null}
         </div>

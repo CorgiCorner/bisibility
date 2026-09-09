@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, Modal } from "@/components/ui";
-import { TrashIcon as Trash } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 
 type DeleteDeployHookModalProps = {
   busy: boolean;

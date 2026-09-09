@@ -1,5 +1,5 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -22,17 +22,33 @@ type HeaderActionsMockProps = {
   runPending: boolean;
 };
 
-vi.mock("@/components/ui", async () => {
-  const actual = await vi.importActual<typeof import("@/components/ui")>("@/components/ui");
-  return {
-    ...actual,
-    Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    IdChip: ({ value }: { value: string }) => <span>{value}</span>,
-  };
-});
+vi.mock("@/components/ui/Card", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/ui/Card")>()),
+  Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
+vi.mock("@/components/ui/IdChip", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/ui/IdChip")>()),
+  IdChip: ({ value }: { value: string }) => <span>{value}</span>,
+}));
 vi.mock("./keyword-history-export", () => ({ exportHistoryCsv: mocked.exportHistoryCsv }));
 vi.mock("@/lib/actions/rank-check-run-launch", () => ({
   launchRankCheckRunAction: mocked.launchRankCheckRunAction,
+}));
+vi.mock("./KeywordEditDrawer", () => ({
+  KeywordEditDrawer: ({
+    open,
+    updateKeywordAction,
+  }: {
+    open: boolean;
+    updateKeywordAction: unknown;
+  }) => (
+    <p
+      data-open={open ? "true" : "false"}
+      data-can-save={typeof updateKeywordAction === "function"}
+    >
+      Keyword editor
+    </p>
+  ),
 }));
 vi.mock("./KeywordMarketsDrawer", () => ({
   KeywordMarketsDrawer: ({ open }: { open: boolean }) => (
@@ -75,6 +91,7 @@ export const keyword = {
   intent: "commercial",
   keyword: "rank tracker",
   location: {
+    canonicalKey: "US",
     countryCode: "US",
     displayName: "United States",
     gl: "us",
@@ -91,6 +108,7 @@ export const keyword = {
     next_check_at: "2026-08-11T06:00:00.000Z",
     timezone: "UTC",
   },
+  targetUrl: null,
   tags: ["core"],
   topic: "SEO",
   urlPresence: null,
@@ -146,7 +164,6 @@ export function renderCard(overrides: Record<string, unknown> = {}) {
     <SessionSpendProvider>
       <ToastProvider>
         <KeywordHeaderCard
-          canCreateKeyword
           canUpdateKeyword
           keyword={keyword as never}
           projectId="prj_1"

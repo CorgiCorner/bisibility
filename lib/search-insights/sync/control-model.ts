@@ -4,18 +4,30 @@ import type { SearchInsightsConnectionStatus } from "@/lib/search-insights/conne
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 
 export const SEARCH_SYNC_STATUS_VOCABULARY = [
-  "Running",
-  "Paused by you",
-  "Paused by provider limits",
-  "Waiting for first data",
-  "Waiting on worker",
-  "Needs reauth",
-  "Needs retry",
   "Queued",
-  "Complete",
+  "Importing",
+  "Paused",
+  "Waiting for Google",
+  "Reconnect required",
+  "Waiting for data",
+  "Delayed",
+  "Failed",
+  "Completed",
+  "Status unavailable",
 ] as const;
 
-export type SearchSyncStatusTitle = (typeof SEARCH_SYNC_STATUS_VOCABULARY)[number];
+type LegacyImportStatusTitle =
+  | "Complete"
+  | "Needs reauth"
+  | "Needs retry"
+  | "Paused by provider limits"
+  | "Paused by you"
+  | "Running"
+  | "Waiting on worker";
+
+export type SearchSyncStatusTitle =
+  | (typeof SEARCH_SYNC_STATUS_VOCABULARY)[number]
+  | LegacyImportStatusTitle;
 export type SearchBackfillKind =
   | "complete"
   | "needs_reauth"
@@ -24,13 +36,12 @@ export type SearchBackfillKind =
   | "paused_user"
   | "queued"
   | "running"
+  | "status_unavailable"
   | "waiting_for_first_data"
   | "waiting_worker";
 export type SearchSyncControlAction = "pause" | "reconnect" | "resume" | "retry" | null;
 export type SearchSyncQueueReason = "no_worker" | "behind_import" | "worker_pickup" | null;
-export type SearchImportRuntimeFacts = {
-  workerStatus: WorkerTemporalStatus;
-};
+export type SearchImportRuntimeFacts = { workerStatus: WorkerTemporalStatus };
 export type SearchImportQueueFacts = { blockingPropertyLabel?: string | null };
 
 export type SearchBackfillFacts = {
@@ -43,6 +54,11 @@ export type SearchBackfillFacts = {
   safeError?: string | null;
   state?: string | null;
 };
+export type SearchImportCoverage = Readonly<{
+  completed: number | null;
+  total: number | null;
+  unit: "days";
+}>;
 export type SearchBackfillPresentation = {
   action: SearchSyncControlAction;
   actionLabel: string | null;
@@ -53,28 +69,41 @@ export type SearchBackfillPresentation = {
   supportingText: string | null;
   title: SearchSyncStatusTitle;
 };
+function finiteNonNegative(value: number | undefined) {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? Math.floor(value)
+    : null;
+}
 
+/** Full-plan coverage uses persisted day partitions, independently of 28-day readiness. */
+export function selectSearchImportCoverage(facts: SearchBackfillFacts): SearchImportCoverage {
+  const qualifying = finiteNonNegative(facts.observability?.importCoverage?.completed);
+  const target = finiteNonNegative(facts.observability?.importCoverage?.total);
+  if (target === null || target === 0) return { completed: qualifying, total: null, unit: "days" };
+  return {
+    completed: qualifying === null ? null : Math.min(qualifying, target),
+    total: target,
+    unit: "days",
+  };
+}
+function description(facts: SearchBackfillFacts) {
+  const coverage = selectSearchImportCoverage(facts);
+  return coverage.completed !== null && coverage.total !== null
+    ? `${coverage.completed} of ${coverage.total} finalized days are imported.`
+    : "Finalized import coverage is not available.";
+}
 function dateLabel(value: string | null | undefined, dateFormat: DateFormat) {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return formatDate(date.toISOString().slice(0, 10), dateFormat);
 }
-
 function durationLabel(milliseconds: number) {
   const seconds = Math.max(0, Math.round(milliseconds / 1_000));
   if (seconds < 60) return `${seconds} sec`;
   const minutes = Math.round(seconds / 60);
   return minutes < 60 ? `${minutes} min` : `${Math.round(minutes / 60)} hr`;
 }
-
-function description(facts: SearchBackfillFacts) {
-  const observability = facts.observability;
-  return observability
-    ? `${observability.qualifyingDays} of ${observability.targetDays} finalized days are imported.`
-    : "Finalized import coverage is not available.";
-}
-
 function workerFacts(status: WorkerTemporalStatus | undefined) {
   if (!status) return { identity: "unknown", liveness: "unknown" } as const;
   if (typeof status === "string") return { identity: "unknown", liveness: status } as const;
@@ -102,148 +131,127 @@ function status(
     title,
   };
 }
-
-function retry(facts: SearchBackfillFacts, supportingText: string) {
-  return status(facts, "needs_retry", "Needs retry", supportingText, {
-    action: "retry",
-    actionLabel: "Retry",
-  });
+function connectionPresentation(facts: SearchBackfillFacts) {
+  const chooseProperty = facts.connectionStatus === "connected_no_property";
+  const connectFirst = facts.connectionStatus === "not_connected";
+  return status(
+    facts,
+    "needs_reauth",
+    "Reconnect required",
+    "Reconnect Search Console to continue importing.",
+    {
+      action: "reconnect",
+      actionLabel: chooseProperty
+        ? "Choose property"
+        : connectFirst
+          ? "Connect Search Console"
+          : "Reconnect Search Console",
+    },
+  );
 }
-
-function workerUnavailable(worker: ReturnType<typeof workerFacts>) {
-  return worker.liveness !== "ok" || worker.identity !== "match";
+function failed(facts: SearchBackfillFacts) {
+  return status(
+    facts,
+    "needs_retry",
+    "Failed",
+    facts.safeError?.trim() || "The last import attempt failed.",
+    {
+      action: "retry",
+      actionLabel: "Retry",
+    },
+  );
 }
-
-function queued(facts: SearchBackfillFacts): SearchBackfillPresentation {
+function runningPresentation(facts: SearchBackfillFacts) {
   const worker = workerFacts(facts.runtime?.workerStatus);
-  const property = facts.queue?.blockingPropertyLabel?.trim();
-  const reason = workerUnavailable(worker)
-    ? "no_worker"
-    : property
-      ? "behind_import"
-      : "worker_pickup";
-  if (reason === "no_worker")
+  if (worker.liveness === "stale" || worker.identity === "mismatch") {
     return status(
       facts,
       "waiting_worker",
-      "Waiting on worker",
-      "Import is waiting for the background worker - restart it and it resumes.",
-      { queueReason: reason },
+      "Delayed",
+      "The active worker is unavailable or does not match this import.",
+      {
+        queueReason: "no_worker",
+      },
     );
-  return status(
-    facts,
-    "queued",
-    "Queued",
-    reason === "behind_import"
-      ? `Queued behind ${property}. That import is using the shared property quota.`
-      : "Queued for worker pickup. The worker checks pending work every few seconds.",
-    { polling: true, queueReason: reason },
-  );
+  }
+  if (worker.liveness !== "ok" || worker.identity !== "match") {
+    return status(
+      facts,
+      "status_unavailable",
+      "Status unavailable",
+      "Current runtime facts are unavailable. Refresh to check again.",
+    );
+  }
+  const coverage = selectSearchImportCoverage(facts);
+  const nextRequestInMs = facts.observability?.stall.nextRequestInMs;
+  const supportingText =
+    coverage.total !== null && coverage.completed === coverage.total
+      ? "All planned days are imported. Import is still running."
+      : typeof nextRequestInMs === "number" &&
+          Number.isFinite(nextRequestInMs) &&
+          nextRequestInMs > 0
+        ? `Next request in about ${durationLabel(nextRequestInMs)}.`
+        : "Import is running.";
+  return status(facts, "running", "Importing", supportingText, {
+    action: "pause",
+    actionLabel: "Pause",
+    polling: true,
+  });
 }
 
-/** Resolves supplied selector, runtime, and queue facts without querying external state. */
+/** Resolves supplied durable, coverage, and runtime facts without querying external state. */
 export function resolveSearchBackfillPresentation(
   facts: SearchBackfillFacts,
   dateFormat: DateFormat = "month_first",
 ): SearchBackfillPresentation {
-  const connectionMissing =
-    facts.connectionStatus === "needs_reauth" ||
-    facts.connectionStatus === "not_connected" ||
-    facts.connectionStatus === "connected_no_property" ||
-    facts.pausedReason === "needs_reauth";
-  if (connectionMissing) {
-    const chooseProperty = facts.connectionStatus === "connected_no_property";
-    const connectFirst = facts.connectionStatus === "not_connected";
-    return status(
-      facts,
-      "needs_reauth",
-      "Needs reauth",
-      "Connect Search Console to import finalized search data.",
-      {
-        action: "reconnect",
-        actionLabel: chooseProperty
-          ? "Choose property"
-          : connectFirst
-            ? "Connect Search Console"
-            : "Reconnect Search Console",
-      },
-    );
-  }
+  if (facts.state === "completed") return status(facts, "complete", "Completed", null);
+  if (facts.state === "failed" || facts.pausedReason === "error") return failed(facts);
   if (facts.pausedReason === "user") {
     const pausedOn = dateLabel(facts.pauseStartedAt, dateFormat);
     return status(
       facts,
       "paused_user",
-      "Paused by you",
-      pausedOn
-        ? `Paused on ${pausedOn}. New finalized days will not be imported until you resume sync.`
-        : "New finalized days will not be imported until you resume sync.",
-      { action: "resume", actionLabel: "Resume sync" },
+      "Paused",
+      pausedOn ? `Paused on ${pausedOn}.` : "Resume when you are ready to continue importing.",
+      { action: "resume", actionLabel: "Resume" },
     );
   }
-  if (facts.pausedReason === "rate_limited")
+  if (facts.pausedReason === "rate_limited") {
     return status(
       facts,
       "paused_provider",
-      "Paused by provider limits",
-      "The provider limit resets automatically, then the import resumes automatically.",
+      "Waiting for Google",
+      "Google will resume the import automatically when its limit allows.",
     );
-  if (facts.state === "waiting_for_first_data")
+  }
+  if (
+    facts.connectionStatus === "needs_reauth" ||
+    facts.connectionStatus === "not_connected" ||
+    facts.connectionStatus === "connected_no_property" ||
+    facts.pausedReason === "needs_reauth"
+  ) {
+    return connectionPresentation(facts);
+  }
+  if (facts.state === "waiting_for_first_data") {
     return status(
       facts,
       "waiting_for_first_data",
-      "Waiting for first data",
-      "Google has not reported any search data for this property yet. We check daily and import automatically when it appears.",
-    );
-
-  if (facts.state === "queued") return queued(facts);
-
-  const worker = workerFacts(facts.runtime?.workerStatus);
-  if (facts.state === "running" && workerUnavailable(worker))
-    return status(
-      facts,
-      "waiting_worker",
-      "Waiting on worker",
-      "Import is waiting for the background worker - restart it and it resumes.",
-      { queueReason: "no_worker" },
-    );
-  if (facts.state === "running") {
-    const silenceMs = facts.observability?.stall.silenceMs;
-    const thresholdMs = facts.observability?.stall.thresholdMs;
-    // The silence IS the evidence that nothing is executing: no request-usage row has been
-    // written for longer than the threshold, while our own row says the import is running and a
-    // matching worker is alive. A Temporal describe used to gate this too, but the web process
-    // cannot reach Temporal in production, so that conjunct was permanently false and this
-    // detector never fired.
-    const stalled =
-      worker.liveness === "ok" &&
-      worker.identity === "match" &&
-      silenceMs !== undefined &&
-      thresholdMs !== undefined &&
-      silenceMs > thresholdMs;
-    if (stalled) return retry(facts, `No import activity for about ${durationLabel(silenceMs)}.`);
-    const nextRequestInMs = facts.observability?.stall.nextRequestInMs;
-    return status(
-      facts,
-      "running",
-      "Running",
-      typeof nextRequestInMs === "number"
-        ? `Next request in about ${durationLabel(nextRequestInMs)}.`
-        : "Import is running.",
-      { action: "pause", actionLabel: "Pause", polling: true },
+      "Waiting for data",
+      "Google has not reported finalized search data for this property yet.",
     );
   }
-  if (facts.state === "completed") return status(facts, "complete", "Complete", null);
-
-  if (facts.state === "failed" || facts.pausedReason === "error")
-    return retry(
-      facts,
-      facts.safeError?.trim() || "The last import attempt failed. Retry to continue.",
-    );
-  // Two branches used to sit here keyed on what Temporal said the workflow was doing. Our own
-  // import row is authoritative for our own import, and the web process cannot ask Temporal
-  // anyway, so a row that is neither running, completed nor failed is genuinely unknown.
-  return retry(facts, "Import status is unavailable. Retry to continue.");
+  if (facts.state === "queued")
+    return status(facts, "queued", "Queued", "Import is queued.", {
+      action: "pause",
+      actionLabel: "Pause",
+    });
+  if (facts.state === "running") return runningPresentation(facts);
+  return status(
+    facts,
+    "status_unavailable",
+    "Status unavailable",
+    "Current import facts are unavailable. Refresh to check again.",
+  );
 }
 
 export type SearchSyncSemanticState =
@@ -255,9 +263,7 @@ export type SearchSyncSemanticState =
   | "property_required"
   | "quota"
   | "running";
-export type SearchSyncControlFacts = Omit<SearchBackfillFacts, "connectionStatus"> & {
-  connectionStatus?: SearchInsightsConnectionStatus;
-};
+export type SearchSyncControlFacts = SearchBackfillFacts;
 export type SearchSyncControlModel = {
   action: SearchSyncControlAction;
   actionLabel: string | null;
@@ -266,7 +272,6 @@ export type SearchSyncControlModel = {
   status: SearchSyncStatusTitle;
   supportingText: string | null;
 };
-
 function semanticState(facts: SearchSyncControlFacts, model: SearchBackfillPresentation) {
   if (facts.connectionStatus === "not_connected") return "not_connected" as const;
   if (facts.connectionStatus === "connected_no_property") return "property_required" as const;

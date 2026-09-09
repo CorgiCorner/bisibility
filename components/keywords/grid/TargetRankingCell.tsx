@@ -1,4 +1,5 @@
-import { StatusPill, Tooltip } from "@/components/ui";
+import { StatusPill } from "@/components/ui/StatusPill";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { hasUrlMismatch } from "@/lib/alerts/url-mismatch";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import { pathFromUrl } from "@/lib/queries/keyword-row-format";
@@ -19,11 +20,12 @@ function UrlPath({ value }: Readonly<{ value: string }>) {
 }
 
 function MatchStatus({ row }: Readonly<{ row: KeywordRow }>) {
-  if (!row.targetUrl || !row.rankingUrl) return null;
+  const expectedUrl = row.expectedUrl ?? row.targetUrl;
+  if (!expectedUrl || !row.rankingUrl) return null;
   const mismatch = hasUrlMismatch({
     position: row.hasRankData ? row.position : null,
     rankingUrl: row.rankingUrl,
-    targetUrl: row.targetUrl,
+    targetUrl: expectedUrl,
   });
   return (
     <span className="shrink-0 self-center">
@@ -48,6 +50,8 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
     : row.checkState === "never_checked"
       ? "Not checked yet"
       : "Not found";
+  const expectedSource = row.expectedUrlSource ? ` (${row.expectedUrlSource})` : "";
+  const expectedUrl = row.expectedUrl ?? row.targetUrl;
 
   return (
     <div className="flex w-full min-w-0 items-center gap-1.5 py-1 text-[11.5px] leading-tight">
@@ -56,7 +60,22 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
           <span className="w-[48px] shrink-0 font-sans tabular-nums text-[9.5px] uppercase text-fg-muted">
             Target
           </span>
-          {row.targetUrl ? <UrlPath value={row.targetUrl} /> : null}
+          {expectedUrl ? (
+            <span className="min-w-0">
+              <UrlPath value={expectedUrl} />
+              <span className="sr-only">
+                Expected for this market: {pathFromUrl(expectedUrl)}
+                {expectedSource}
+              </span>
+            </span>
+          ) : (
+            <span className="font-sans tabular-nums text-[11px] text-fg-muted">Not set</span>
+          )}
+          {row.expectedUrlFallbackCurrent ? (
+            <span className="sr-only" title="judged against the current target URL">
+              judged against the current target URL
+            </span>
+          ) : null}
         </div>
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="w-[48px] shrink-0 font-sans tabular-nums text-[9.5px] uppercase text-fg-muted">

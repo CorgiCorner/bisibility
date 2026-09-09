@@ -1,15 +1,24 @@
-import { render, screen } from "@testing-library/react";
+import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import KeywordDetailPage from "./page";
 
 const mocks = vi.hoisted(() => ({
   getKeywordDetail: vi.fn(),
+  getKeywordCompetitors: vi.fn(),
+  storedResultsIndex: vi.fn(),
+  loadRetrievedResultsForChecks: vi.fn(),
+  loadRetrievedResults: vi.fn(),
   getKeywordMarketTargets: vi.fn(),
   getKeywordTagSuggestions: vi.fn(),
   loadRankTrackerCostContext: vi.fn(),
   getProjectMarkets: vi.fn(),
   requireReadableProject: vi.fn(),
   resolveProjectAccess: vi.fn(),
+}));
+
+vi.mock("@/lib/queries/competitor-policies", () => ({
+  getKeywordCompetitors: mocks.getKeywordCompetitors,
 }));
 
 vi.mock("@/components/keywords/KeywordHeaderCard", () => ({
@@ -47,11 +56,13 @@ vi.mock("@/components/keywords/PositionHistoryCard", () => ({
     return <div data-testid="position-history" />;
   },
 }));
-vi.mock("@/components/keywords/RetrievedResultsCard", () => ({
-  RetrievedResultsCard: () => <div data-testid="retrieved-results" />,
+vi.mock("@/lib/actions/retrieved-results", () => ({
+  loadRetrievedResults: mocks.loadRetrievedResults,
 }));
-vi.mock("@/lib/actions/retrieved-results", () => ({ loadRetrievedResults: vi.fn() }));
-vi.mock("@/lib/queries/retrieved-results", () => ({ storedResultsIndex: vi.fn(async () => []) }));
+vi.mock("@/lib/queries/retrieved-results", () => ({
+  storedResultsIndex: mocks.storedResultsIndex,
+  loadRetrievedResultsForChecks: mocks.loadRetrievedResultsForChecks,
+}));
 vi.mock("@/lib/rank-check/raw-retention", () => ({ getRankCheckRawRetentionDays: () => 90 }));
 vi.mock("@/components/keywords/RankingUrlHistory", () => ({
   RankingUrlHistory: () => <div data-testid="ranking-history" />,
@@ -83,10 +94,51 @@ vi.mock("@/lib/queries/project-markets", () => ({
   getProjectMarkets: mocks.getProjectMarkets,
 }));
 
+const savedResults: Extract<RetrievedResults, { tier: "full" }>[] = [0, 1].map((index) => ({
+  checkId: `check_saved_${index}`,
+  checkedAt: `2026-09-0${8 - index}T00:10:00.000Z`,
+  provider: index === 0 ? "serpapi" : "dataforseo",
+  providerLabel: index === 0 ? "SerpApi" : "DataForSEO",
+  tier: "full",
+  requestedDepth: 20,
+  retrievedPositions: 2,
+  trackedPosition: null,
+  stoppedAtResult: false,
+  rows: [
+    {
+      position: index + 1,
+      domain: "competitor.test",
+      url: "https://competitor.test/page",
+      title: "Provider result",
+      tracked: false,
+    },
+  ],
+  features: [],
+  aiOverview: null,
+  fullDetailUntil: null,
+}));
+const savedEntries: StoredResultsIndexEntry[] = savedResults.map((result) => ({
+  checkId: result.checkId,
+  checkedAt: result.checkedAt,
+  provider: result.provider,
+  providerLabel: result.providerLabel,
+  tier: result.tier,
+  position: null,
+  degradedToCountry: false,
+  requestedDepth: result.requestedDepth,
+  retrievedPositions: result.retrievedPositions,
+  stoppedAtResult: result.stoppedAtResult,
+  fullDetailUntil: result.fullDetailUntil,
+}));
+
 describe("KeywordDetailPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     positionHistoryProps.mockClear();
+    mocks.storedResultsIndex.mockResolvedValue([]);
+    mocks.getKeywordCompetitors.mockResolvedValue([]);
+    mocks.loadRetrievedResultsForChecks.mockResolvedValue([savedResults[0]]);
+    mocks.loadRetrievedResults.mockResolvedValue([savedResults[1]]);
     mocks.resolveProjectAccess.mockResolvedValue({
       mode: "member",
       projectId: "project_1",
@@ -125,6 +177,7 @@ describe("KeywordDetailPage", () => {
       }),
     );
 
+    expect(screen.queryByTestId("retrieved-results-card")).not.toBeInTheDocument();
     const pending = screen.getByTestId("pending-detail");
     const traffic = screen.getByTestId("traffic-card");
     expect(pending.nextElementSibling).toBe(traffic);
@@ -134,6 +187,7 @@ describe("KeywordDetailPage", () => {
   });
 
   it("uses the normal-detail composition order from the reference", async () => {
+    mocks.storedResultsIndex.mockResolvedValue(savedEntries);
     mocks.getKeywordDetail.mockResolvedValue({
       ...normalDetailState,
       cpcKnown: true,
@@ -163,12 +217,56 @@ describe("KeywordDetailPage", () => {
     const history = screen.getByTestId("ranking-history");
     // Retrieved results sits directly above the ranking URL history: both are per-check
     // records of what Google did, and "who was around me" reads before "which of my pages".
-    const retrieved = screen.getByTestId("retrieved-results");
+    const retrieved = screen.getByTestId("retrieved-results-card");
     expect(header.nextElementSibling).toBe(chart);
     expect(chart.nextElementSibling).toBe(traffic);
     expect(traffic.nextElementSibling).toBe(retrieved);
     expect(retrieved.nextElementSibling).toBe(history);
   });
+
+  it.each(["ok", "failed", "running"])(
+    "keeps provider SERPs and comparison without a domain match when attempt health is %s",
+    async (latestAttemptHealth) => {
+      mocks.getKeywordDetail.mockResolvedValue({
+        id: "kw_unranked",
+        checkState: "not_ranked",
+        hasRankData: false,
+        position: 101,
+        latestAttemptHealth,
+        rankingUrl: null,
+        providerConnected: true,
+        traffic: { hasAnalyticsConnection: false, pages: [], query: null },
+      });
+      mocks.storedResultsIndex.mockResolvedValue(savedEntries);
+      render(
+        await KeywordDetailPage({
+          params: Promise.resolve({ id: "kw_unranked", project: "prj_1" }),
+        }),
+      );
+      expect(screen.getByTestId("pending-detail")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Provider result" })).toHaveAttribute(
+        "href",
+        "https://competitor.test/page",
+      );
+      expect(screen.getByRole("region", { name: "Retrieved results" })).toBeInTheDocument();
+      expect(mocks.loadRetrievedResultsForChecks).toHaveBeenCalledWith({
+        checkIds: ["check_saved_0"],
+        projectId: "project_1",
+      });
+      const compare = screen.getByRole("button", { name: "Compare two" });
+      expect(compare).toBeEnabled();
+      fireEvent.click(compare);
+      expect(await screen.findByText(/These checks used different providers/)).toBeInTheDocument();
+      await waitFor(() =>
+        expect(mocks.loadRetrievedResults).toHaveBeenCalledWith({
+          checkIds: ["check_saved_1"],
+          projectId: "prj_1",
+        }),
+      );
+      expect(screen.getByRole("heading", { name: "SERP snapshots" })).toBeInTheDocument();
+      expect(screen.queryByTestId("position-history")).not.toBeInTheDocument();
+    },
+  );
 
   it("passes costContext.timezone to PositionHistoryCard", async () => {
     mocks.loadRankTrackerCostContext.mockResolvedValue({

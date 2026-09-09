@@ -1,11 +1,13 @@
 "use client";
 
+import { useRuleEnabledQueue } from "@/components/alerts/alert-rule-enabled-queue";
 import { NewRuleDrawer } from "@/components/alerts/NewRuleDrawer";
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button, Card, SectionTitle, Switch } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
+import { Switch } from "@/components/ui/Switch";
 import type {
   AlertActionHandlers,
   AlertRuleView,
@@ -13,20 +15,18 @@ import type {
 } from "@/lib/alerts/alert-data";
 import { ruleStatusMeta, severityMeta } from "@/lib/alerts/alert-data";
 import { MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY } from "@/lib/alerts/limits";
-import {
-  BellRingingIcon as BellRinging,
-  ClockCountdownIcon as ClockCountdown,
-  EnvelopeSimpleIcon as EnvelopeSimple,
-  FunnelSimpleIcon as FunnelSimple,
-  InfoIcon as Info,
-  PencilSimpleIcon as PencilSimple,
-  SlackLogoIcon as SlackLogo,
-  TrashIcon as Trash,
-  WebhooksLogoIcon as WebhooksLogo,
-} from "@phosphor-icons/react";
+import { BellRingingIcon as BellRinging } from "@phosphor-icons/react/dist/csr/BellRinging";
+import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/csr/ClockCountdown";
+import { EnvelopeSimpleIcon as EnvelopeSimple } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
+import { FunnelSimpleIcon as FunnelSimple } from "@phosphor-icons/react/dist/csr/FunnelSimple";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { PencilSimpleIcon as PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
+import { SlackLogoIcon as SlackLogo } from "@phosphor-icons/react/dist/csr/SlackLogo";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
+import { WebhooksLogoIcon as WebhooksLogo } from "@phosphor-icons/react/dist/csr/WebhooksLogo";
 import type { Icon } from "@phosphor-icons/react/lib";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
 export type AlertRulesListProps = {
   actions: AlertActionHandlers;
@@ -45,6 +45,42 @@ const channelIcons: Record<string, Icon> = {
   Webhook: WebhooksLogo,
 };
 
+function AlertRuleEnabledSwitch({
+  actions,
+  projectId,
+  readOnly,
+  rule,
+}: Readonly<{
+  actions: AlertActionHandlers;
+  projectId: string;
+  readOnly: boolean;
+  rule: AlertRuleView;
+}>) {
+  const router = useRouter();
+  const toggle = useRuleEnabledQueue(rule.enabled, async (enabled) => {
+    await actions.setAlertRuleEnabledAction({ enabled, projectId, ruleId: rule.id });
+    router.refresh();
+  });
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Switch
+        aria-busy={toggle.pending || undefined}
+        aria-label={toggle.enabled ? "Pause rule" : "Enable rule"}
+        checked={toggle.enabled}
+        className="shrink-0 border-0 bg-transparent p-0"
+        disabled={readOnly}
+        onChange={() => toggle.request(!toggle.enabled)}
+      />
+      {toggle.error ? (
+        <span className="text-[10px] text-red-text" role="alert">
+          {toggle.error}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 export function AlertRulesList({
   actions,
   canDelete,
@@ -56,18 +92,8 @@ export function AlertRulesList({
   targets,
 }: Readonly<AlertRulesListProps>) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [editRule, setEditRule] = useState<AlertRuleView | null>(null);
   const { readOnly } = useProjectWriteMode();
-
-  function run(work: () => Promise<unknown>) {
-    if (readOnly) {
-      return;
-    }
-    startTransition(() => {
-      void work().then(() => router.refresh());
-    });
-  }
 
   return (
     <>
@@ -83,7 +109,6 @@ export function AlertRulesList({
         {rules.map((rule) => {
           const severity = severityMeta[rule.severity];
           const status = ruleStatusMeta[rule.status];
-          const active = rule.status === "active";
           const ChannelIcon = channelIcons[rule.channel] ?? BellRinging;
 
           return (
@@ -122,6 +147,7 @@ export function AlertRulesList({
                     <FunnelSimple weight="regular" aria-hidden size={12} />
                     {rule.scope}
                   </span>
+                  <span>{rule.marketScope ?? "All markets"}</span>
                   <span className="inline-flex items-center gap-1">
                     <ClockCountdown weight="regular" aria-hidden size={12} />
                     {rule.period}
@@ -135,20 +161,11 @@ export function AlertRulesList({
               </div>
               {canUpdate ? (
                 <ProjectReadOnlyTooltip>
-                  <Switch
-                    aria-label={active ? "Pause rule" : "Enable rule"}
-                    checked={active}
-                    className="shrink-0 border-0 bg-transparent p-0"
-                    disabled={readOnly || isPending}
-                    onChange={() =>
-                      run(() =>
-                        actions.setAlertRuleEnabledAction({
-                          enabled: !rule.enabled,
-                          projectId,
-                          ruleId: rule.id,
-                        }),
-                      )
-                    }
+                  <AlertRuleEnabledSwitch
+                    actions={actions}
+                    projectId={projectId}
+                    readOnly={readOnly}
+                    rule={rule}
                   />
                 </ProjectReadOnlyTooltip>
               ) : null}
@@ -159,7 +176,7 @@ export function AlertRulesList({
                     disabled={readOnly}
                     onClick={() => setEditRule(rule)}
                     size="sm"
-                    sx={{ minHeight: 32, minWidth: 32, padding: 0 }}
+                    style={{ minHeight: 32, minWidth: 32, padding: 0 }}
                     type="button"
                     variant="secondary"
                   >
@@ -171,17 +188,20 @@ export function AlertRulesList({
                 <ProjectReadOnlyTooltip>
                   <Button
                     aria-label={`Delete ${rule.name}`}
-                    disabled={readOnly || isPending}
+                    disabled={readOnly}
                     onClick={() =>
-                      run(() => actions.deleteAlertRuleAction({ projectId, ruleId: rule.id }))
+                      void actions
+                        .deleteAlertRuleAction({ projectId, ruleId: rule.id })
+                        .then(() => router.refresh())
                     }
                     size="sm"
-                    sx={{
-                      color: "var(--red)",
+                    style={{
+                      "--control-color": "var(--red)",
                       minHeight: 32,
                       minWidth: 32,
                       padding: 0,
-                      "&:hover": { borderColor: "var(--red)", color: "var(--red)" },
+                      "--control-hover-border-color": "var(--red)",
+                      "--control-hover-color": "var(--red)",
                     }}
                     type="button"
                     variant="secondary"

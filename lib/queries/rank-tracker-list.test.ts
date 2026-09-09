@@ -63,13 +63,13 @@ describe("getRankTrackerKeywordList", () => {
       query: {
         ...defaultRankTrackerQueryState,
         page: 99,
-        pageSize: 10,
+        pageSize: 25,
       },
     });
     expect(result).toMatchObject({
       matchedTargetCount: 51,
-      page: 6,
-      pageCount: 6,
+      page: 3,
+      pageCount: 3,
       rows: [],
       totalCount: 80,
     });
@@ -80,7 +80,7 @@ describe("getRankTrackerKeywordList", () => {
     mocks.queryRaw.mockResolvedValueOnce([{ ...metadata, matchedTargetCount: 0 }]);
     const result = await getRankTrackerKeywordList({
       projectRef: "prj_public",
-      query: { ...defaultRankTrackerQueryState, page: 99, pageSize: 10 },
+      query: { ...defaultRankTrackerQueryState, page: 99, pageSize: 25 },
     });
     expect(result).toMatchObject({ matchedTargetCount: 0, page: 1, pageCount: 0, rows: [] });
   });
@@ -111,7 +111,7 @@ describe("getRankTrackerKeywordList", () => {
       query: {
         ...defaultRankTrackerQueryState,
         filters: { ...defaultRankTrackerQueryState.filters, wrongUrl: true },
-        pageSize: 10,
+        pageSize: 25,
       },
     });
     expect(result).toMatchObject({ matchedTargetCount: 1, pageCount: 1, totalCount: 80 });
@@ -146,7 +146,7 @@ describe("getRankTrackerKeywordList", () => {
       query: {
         ...defaultRankTrackerQueryState,
         filters: { ...defaultRankTrackerQueryState.filters, wrongUrl: true },
-        pageSize: 10,
+        pageSize: 25,
       },
     });
     expect(result).toMatchObject({

@@ -8,7 +8,7 @@ import {
 } from "@/lib/cost-estimate/provider-rates";
 import { serpProviderCapabilities } from "@/lib/providers/registry";
 import { defaultCostPerCheckCents } from "@/lib/rank-check/default-cost";
-import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
 import type { ProviderRateFeature } from "./resolver";
 import { LIST_PROVIDER_RATE_CONTEXT } from "./resolver";
 

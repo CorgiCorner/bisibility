@@ -1,5 +1,5 @@
 import { domainMatches, normalizeDomain } from "@/lib/domains/normalize";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 
 export const organicResultAnomalyCodes = [
   "organic_rank_missing",

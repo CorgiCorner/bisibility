@@ -1,20 +1,13 @@
 import "server-only";
 
 import { ApiInputError, ApiNotFoundError } from "@/lib/api/errors";
-import {
-  decodeCursor,
-  decodeUnprefixedCursor,
-  encodeCursor,
-  encodeUnprefixedCursor,
-  parseLimit,
-  splitPage,
-} from "@/lib/api/pagination";
+import { decodeCursor, encodeCursor, parseLimit } from "@/lib/api/pagination";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { getRequestMonthlySpendCents } from "@/lib/queries/workspace-request-data";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { activeMarketLocationIds, runnableKeywordWhere } from "@/lib/rank-check/runnable";
-import { ITEM_STATUSES, type ItemStatus, RUN_STATUSES } from "@/lib/rank-check/runs/contract";
+import { RUN_STATUSES } from "@/lib/rank-check/runs/contract";
 import { scheduledRunProjection, scheduleProviderId } from "./check-schedule-list";
 import {
   type RankCheckRunActor,
@@ -27,7 +20,7 @@ import {
   skippedByRunPublicId,
   wasSkippedBeforeLaunch,
 } from "./rank-check-run-history";
-import { budgetForRuns, iso, statusCsv } from "./rank-check-run-query-helpers";
+import { budgetForRuns, statusCsv } from "./rank-check-run-query-helpers";
 
 async function rankCheckRunReadModel(
   row: RankCheckRunRow,
@@ -195,74 +188,10 @@ export async function getRetryParentRun(projectId: string, publicId: string) {
   return row;
 }
 
-export async function listRankCheckRunItems(projectId: string, publicId: string, url: URL) {
-  const run = await prisma.rankCheckRun.findFirst({
-    select: { id: true },
-    where: { projectId, publicId },
-  });
-  if (!run) throw new ApiNotFoundError("Rank-check run not found.");
-  const limit = parseLimit(url, 50, 200);
-  const cursor = decodeUnprefixedCursor(url.searchParams.get("cursor"));
-  const statuses = statusCsv(url.searchParams.get("status"), ITEM_STATUSES);
-  const cursorDate = cursor ? new Date(cursor.t) : null;
-  const cursorId = cursor?.public_id;
-  const rows = await prisma.rankCheckRunItem.findMany({
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-    select: {
-      actualCostCents: true,
-      blockedReason: true,
-      createdAt: true,
-      estimatedCostCents: true,
-      finishedAt: true,
-      id: true,
-      keyword: {
-        select: {
-          device: true,
-          location: true,
-          locationRef: { select: { languageLabel: true } },
-          publicId: true,
-          text: true,
-        },
-      },
-      notBefore: true,
-      rankCheck: { select: { errorCode: true, position: true, publicId: true, rankingUrl: true } },
-      startedAt: true,
-      status: true,
-    },
-    take: limit + 1,
-    where: {
-      runId: run.id,
-      ...(statuses ? { status: { in: statuses } } : {}),
-      ...(cursorDate
-        ? {
-            OR: [
-              { createdAt: { gt: cursorDate } },
-              { createdAt: cursorDate, id: { gt: cursorId } },
-            ],
-          }
-        : {}),
-    },
-  });
-  const { nextCursor, page } = splitPage(rows, limit, (row) =>
-    encodeUnprefixedCursor({ publicId: row.id, timestamp: row.createdAt }),
-  );
-  return {
-    data: page.map(({ createdAt, id, keyword: { locationRef, ...keyword }, ...row }) => ({
-      ...row,
-      finishedAt: iso(row.finishedAt),
-      id: encodeUnprefixedCursor({ publicId: id, timestamp: createdAt }),
-      keyword: { ...keyword, languageLabel: locationRef?.languageLabel ?? null },
-      notBefore: iso(row.notBefore),
-      startedAt: iso(row.startedAt),
-      status: row.status as ItemStatus,
-    })),
-    nextCursor,
-  };
-}
-
 function scheduleSelect(activeLocationIds: Iterable<string>) {
   return {
     _count: { select: { keywords: { where: runnableKeywordWhere(activeLocationIds) } } },
+    archivedAt: true,
     cronExpression: true,
     enabled: true,
     frequency: true,
@@ -281,7 +210,12 @@ type ScheduleSource = Prisma.CheckScheduleGetPayload<{ select: ReturnType<typeof
 
 function scheduleDto(row: ScheduleSource) {
   const { _count, publicId, ...schedule } = row;
-  return { ...schedule, keywordCount: _count.keywords, publicId };
+  return {
+    ...schedule,
+    archivedAt: row.archivedAt?.toISOString() ?? null,
+    keywordCount: _count.keywords,
+    publicId,
+  };
 }
 
 export async function listCheckSchedules(projectId: string) {
@@ -289,7 +223,7 @@ export async function listCheckSchedules(projectId: string) {
   const rows = await prisma.checkSchedule.findMany({
     orderBy: [{ isDefault: "desc" }, { name: "asc" }, { publicId: "asc" }],
     select: scheduleSelect(activeLocationIds),
-    where: { projectId },
+    where: { archivedAt: null, projectId },
   });
   return rows.map(scheduleDto);
 }
@@ -303,3 +237,5 @@ export async function getCheckSchedule(projectId: string, publicId: string) {
   if (!row) throw new ApiNotFoundError("Check schedule not found.");
   return scheduleDto(row);
 }
+
+export { listRankCheckRunItems } from "./rank-check-run-items";

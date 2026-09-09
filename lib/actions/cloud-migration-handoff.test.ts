@@ -338,7 +338,7 @@ describe("cloud migration handoff actions", () => {
         JSON.stringify({
           app_version: "1.2.3",
           latest_migration: "20260708010000_target",
-          schema_versions_supported: [6],
+          schema_versions_supported: [7],
         }),
         { status: 200 },
       ),
@@ -352,7 +352,7 @@ describe("cloud migration handoff actions", () => {
       origin: "https://target.example.com",
       reachable: true,
       sameInstance: false,
-      schemaVersionsSupported: [6],
+      schemaVersionsSupported: [7],
       sourceDeploymentMode: "cloud",
       supportsSessions: true,
     });
@@ -364,7 +364,7 @@ describe("cloud migration handoff actions", () => {
     mocks.migrationFetch.mockResolvedValueOnce(new Response(null, { status: 404 }));
     await expect(preflightMigrationTarget({ projectId })).resolves.toMatchObject({
       reachable: true,
-      reason: "Target instance does not support strict v6 migration packages.",
+      reason: "Target instance does not support strict v7 migration packages.",
       supportsSessions: false,
     });
 

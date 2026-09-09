@@ -1,12 +1,12 @@
 import { AdminFailureBreakdown } from "@/components/admin/AdminFailureBreakdown";
 import { AdminHealthPills } from "@/components/admin/AdminHealthPills";
 import { AdminOpsActions } from "@/components/admin/AdminOpsActions";
-import { Badge, displayTime, Metric, Panel, RankWindow } from "@/components/admin/AdminPrimitives";
+import { displayTime, Metric, Panel, RankWindow } from "@/components/admin/AdminPrimitives";
 import { AdminProviderHealth } from "@/components/admin/AdminProviderHealth";
 import { AdminProviderUsageTable } from "@/components/admin/AdminProviderUsageTable";
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
 import { AdminWorkerHealth } from "@/components/admin/AdminWorkerHealth";
-import { tableHeaderClassName } from "@/components/ui";
+import { AdminDashboardOpsEventsTable } from "@/components/admin/admin-dashboard-tables";
 import { type DateFormat, formatDateTime } from "@/lib/dates/format";
 import { checkFailureRate } from "@/lib/ops/instance-admin-health";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
@@ -207,40 +207,8 @@ export function AdminDashboard({
         ) : data.ops.events.length === 0 ? (
           <p className="text-xs text-fg-muted">No operational events recorded.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-xs">
-              <thead className={tableHeaderClassName}>
-                <tr>
-                  <th className="pb-2 pr-3">Kind</th>
-                  <th className="pb-2 pr-3">Severity</th>
-                  <th className="pb-2 pr-3">Created</th>
-                  <th className="pb-2 pr-3">Delivery</th>
-                  <th className="pb-2">Attempts</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.ops.events.map((event, index) => (
-                  <tr
-                    className="border-b border-border last:border-0"
-                    key={`${event.createdAt}:${event.kind}:${index}`}
-                  >
-                    <td className="py-2 pr-3">
-                      <span>{event.kind}</span>
-                    </td>
-                    <td className="py-2 pr-3">
-                      <Badge status={event.severity} />
-                    </td>
-                    <td className="py-2 pr-3 text-fg-muted">
-                      {displayTime(event.createdAt, dateFormat)}
-                    </td>
-                    <td className="py-2 pr-3">
-                      <Badge status={event.deliveredAt ? "delivered" : "undelivered"} />
-                    </td>
-                    <td className="py-2 tabular-nums text-fg-muted">{event.attempts}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="[&>[role=table]]:border-0">
+            <AdminDashboardOpsEventsTable dateFormat={dateFormat} events={data.ops.events} />
           </div>
         )}
       </Panel>

@@ -38,7 +38,7 @@ describe("HeadToHeadTable", () => {
     );
     const tableHeader = screen.getByText("Keyword").parentElement;
 
-    expect(card).toHaveClass("MuiPaper-outlined");
+    expect(card).toHaveClass("border", "border-border");
     expect(header).toHaveClass("border-b", "border-border");
     expect(notice).not.toHaveClass("border-b", "border-t");
     expect(tableHeader).toHaveClass("border-b", "border-border");

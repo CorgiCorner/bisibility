@@ -1,6 +1,6 @@
 "use client";
 
-import { CopyButton } from "@/components/ui";
+import { CopyButton } from "@/components/ui/CopyButton";
 import {
   API_KEY_PLACEHOLDER,
   buildCreateKeywordsCurlSnippet,
@@ -21,11 +21,9 @@ const toneColor = {
 } as const;
 
 const codeDarkCopy = {
-  color: "var(--code-faint)",
-  "&:hover": {
-    backgroundColor: "color-mix(in srgb, var(--code-fg) 8%, transparent)",
-    color: "var(--code-fg)",
-  },
+  "--control-color": "var(--code-faint)",
+  "--control-hover-background-color": "color-mix(in srgb, var(--code-fg) 8%, transparent)",
+  "--control-hover-color": "var(--code-fg)",
 };
 
 function browserApiBaseUrl() {
@@ -70,6 +68,11 @@ export function AddKeywordApiPanel({ projectId }: Readonly<AddKeywordApiPanelPro
 
   return (
     <div className="flex flex-col gap-2.5">
+      <p className="m-0 text-[12px] leading-5 text-fg-muted">
+        Each country, location and language combination belongs to a project market. The API creates
+        missing markets within your project limit. Adding keywords to a paused market keeps it
+        paused; existing keywords and rank history stay in their original markets.
+      </p>
       <p className="m-0 text-[12.5px] text-fg-muted">
         Batch-add keywords from your own scripts or CI. Authenticate with a project API key.
       </p>
@@ -84,7 +87,7 @@ export function AddKeywordApiPanel({ projectId }: Readonly<AddKeywordApiPanelPro
           >
             curl
           </div>
-          <CopyButton label="Copy curl snippet" size="sm" sx={codeDarkCopy} text={snippet} />
+          <CopyButton label="Copy curl snippet" size="sm" style={codeDarkCopy} text={snippet} />
         </div>
         <HighlightedCurl snippet={snippet} />
       </div>

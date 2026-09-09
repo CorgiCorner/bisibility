@@ -2,11 +2,22 @@
 
 import type { AlertTargetOptions } from "@/lib/alerts/alert-data";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
-import { CheckIcon as Check } from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import type { UseFormSetValue } from "react-hook-form";
 
 const chipClass =
   "inline-flex h-[30px] items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[12.5px] font-medium";
+
+export function ruleMarketScopeLabel(
+  marketIds: readonly string[],
+  markets: AlertTargetOptions["markets"],
+) {
+  if (!marketIds.length) return "All markets";
+  const labels = marketIds
+    .map((marketId) => markets.find((market) => market.id === marketId)?.label)
+    .filter((label): label is string => Boolean(label));
+  return labels.length === 1 ? labels[0] : `${marketIds.length} markets`;
+}
 
 export function NewRuleMarketFields({
   marketIds,
@@ -57,7 +68,8 @@ export function NewRuleMarketFields({
         })}
       </div>
       <p className="m-0 mt-[9px] font-sans tabular-nums text-[10.5px] leading-[1.5] text-fg-muted">
-        Rule fires only for checks in the selected markets.
+        Scope: {ruleMarketScopeLabel(marketIds, markets)}. Rule fires only for checks in the
+        selected markets.
       </p>
     </section>
   );

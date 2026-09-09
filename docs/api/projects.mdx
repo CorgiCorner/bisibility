@@ -153,11 +153,13 @@ Content-Type: application/json
 
 Project defaults store scheduling intent. `country` and `device` in this
 endpoint represent the project's current default keyword market, derived from
-existing keywords. Supplying both `country` and `device` moves eligible keywords
-from the current default market to the new market. `city` narrows that market
-when it resolves inside the selected country. `location_key` is the canonical
-market selector and can point at a country, region, or city. Omitting market
-fields updates only the schedule and does not move keywords.
+existing keywords. `location_key` is the primary location reference and can
+point at a country, region, or city; send it with `device` to move eligible
+keywords from the current default market to the new market. The legacy
+`country` and `city` selectors still resolve to the same location, but they are
+deprecated: send `location_key` instead. They are accepted until Bisibility
+0.24.0, then removed. Omitting market fields updates only the schedule and does
+not move keywords.
 
 `country` and `device` must be supplied together unless `location_key` is
 provided.

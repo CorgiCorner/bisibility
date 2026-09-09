@@ -1,4 +1,5 @@
-import { iconWellClassName, ToastProvider } from "@/components/ui";
+import { iconWellClassName } from "@/components/ui/icon-well-styles";
+import { ToastProvider } from "@/components/ui/Toast";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -57,7 +58,7 @@ describe("SampleProjectBanner", () => {
 
     const link = screen.getByRole("link", { name: "Create your real project" });
     expect(link).toHaveAttribute("href", "/onboarding?new=1");
-    expect(link.className).toContain("MuiButton-outlined");
+    expect(link).toHaveAttribute("data-variant", "secondary");
   });
 
   it("opens a confirmation modal instead of relabeling the banner button", () => {

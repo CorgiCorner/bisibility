@@ -1,22 +1,20 @@
 "use client";
 
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { useToast } from "@/components/ui";
+import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
+import { IconButton } from "@/components/ui/IconButton";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
+import { useToast } from "@/components/ui/toast-context";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import type { GridColDef } from "@mui/x-data-grid";
-import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  ArrowUpRightIcon as ArrowUpRight,
-  CopyIcon as Copy,
-  DotsThreeVerticalIcon as DotsThreeVertical,
-  PencilSimpleIcon as PencilSimple,
-  TrashIcon as Trash,
-} from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
+import { CopyIcon as Copy } from "@phosphor-icons/react/dist/csr/Copy";
+import { DotsThreeVerticalIcon as DotsThreeVertical } from "@phosphor-icons/react/dist/csr/DotsThreeVertical";
+import { PencilSimpleIcon as PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
 import { type MouseEvent, useState } from "react";
 import { effectiveRowDepth } from "./run-check-depth";
@@ -38,25 +36,30 @@ export function rowActionsColumn(
   callbacks: RowActionCallbacks,
   projectRef: string,
   pendingCheckIds: ReadonlySet<string> = new Set(),
-): GridColDef<KeywordRow> {
+): DataTableColumn<KeywordRow> {
   return {
-    align: "right",
-    disableColumnMenu: true,
-    field: "actions",
-    filterable: false,
-    headerName: "",
-    renderCell: ({ row }) =>
-      marketGridParent(row) ? null : (
+    cell: ({ row }) =>
+      marketGridParent(row.original) ? null : (
         <RowActionsCell
           {...callbacks}
-          checkPending={pendingCheckIds.has(row.id)}
+          checkPending={pendingCheckIds.has(row.original.id)}
           projectRef={projectRef}
-          row={row}
+          row={row.original}
         />
       ),
-    resizable: false,
-    sortable: false,
-    width: 52,
+    enableSorting: false,
+    header: "",
+    id: "actions",
+    maxSize: 52,
+    meta: {
+      align: "end",
+      lockResize: true,
+      lockVisible: true,
+      pin: "right",
+      sortable: false,
+    },
+    minSize: 52,
+    size: 52,
   };
 }
 
@@ -123,7 +126,7 @@ export function RowActionsCell({
         aria-label="Keyword actions"
         onClick={openMenu}
         size="small"
-        sx={{ color: "var(--fg-muted)" }}
+        style={{ "--control-color": "var(--fg-muted)" }}
       >
         <DotsThreeVertical size={17} weight="regular" />
       </IconButton>
@@ -133,23 +136,23 @@ export function RowActionsCell({
         onClick={(event) => event.stopPropagation()}
         onClose={closeMenu}
         open={Boolean(anchorEl)}
-        slotProps={{ paper: { sx: { border: "1px solid var(--border)" } } }}
+        contentProps={{ style: { border: "1px solid var(--border)" } }}
       >
         {canUpdateKeyword ? (
           <MenuItem
             disabled={readOnly}
             onClick={(event) => select(event, onEdit)}
-            sx={{ gap: "10px", minHeight: 36 }}
+            style={{ gap: "10px", minHeight: 36 }}
           >
             <PencilSimple weight="regular" size={15} />
             Edit keyword
           </MenuItem>
         ) : null}
-        <MenuItem onClick={open} sx={{ gap: "10px", minHeight: 36 }}>
+        <MenuItem onClick={open} style={{ gap: "10px", minHeight: 36 }}>
           <ArrowUpRight weight="regular" size={15} />
           View details
         </MenuItem>
-        <MenuItem onClick={copyId} sx={{ gap: "10px", minHeight: 36 }}>
+        <MenuItem onClick={copyId} style={{ gap: "10px", minHeight: 36 }}>
           <Copy weight="regular" size={15} />
           Copy keyword ID
         </MenuItem>
@@ -157,7 +160,7 @@ export function RowActionsCell({
           <MenuItem
             disabled={readOnly || checkPending}
             onClick={(event) => select(event, onRunCheck)}
-            sx={{ gap: "10px", minHeight: 36 }}
+            style={{ gap: "10px", minHeight: 36 }}
           >
             <ArrowsClockwise weight="regular" size={15} />
             {`Run check (Top ${effectiveRowDepth(row)})`}
@@ -167,7 +170,7 @@ export function RowActionsCell({
           <MenuItem
             disabled={readOnly}
             onClick={(event) => select(event, onDelete)}
-            sx={{ color: "var(--red)", gap: "10px", minHeight: 36 }}
+            style={{ "--control-color": "var(--red)", gap: "10px", minHeight: 36 }}
           >
             <Trash weight="regular" size={15} />
             Delete

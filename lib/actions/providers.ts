@@ -2,6 +2,11 @@
 
 import { updateSearchSyncSettings } from "@/lib/actions/presence-settings";
 import {
+  readAnalyticsSurfaceFromHeaders,
+  readConsentFromCookies,
+  trackServerEvent,
+} from "@/lib/analytics/server";
+import {
   updateProviderConnectionRate,
   updateProviderCostConnection,
 } from "@/lib/api/provider-rate-service";
@@ -143,13 +148,36 @@ export async function connectProvider(input: unknown) {
   const scope = await providerScope(data.projectId);
   await connectProviderConnection(data, scope);
   revalidateProviderViews();
+  const surface = await readAnalyticsSurfaceFromHeaders();
+  if (surface) {
+    await trackServerEvent("provider_connected", {
+      consent: await readConsentFromCookies(),
+      distinctId: scope.actorId ?? undefined,
+      properties: { provider: data.providerId, surface },
+    });
+  }
 
   return providerMutationSuccess;
 }
 
 export async function testConnection(input: unknown) {
   const data = parseActionInput(testProviderConnectionSchema, input);
-  return testProviderConnection(data, await providerScope(data.projectId));
+  const scope = await providerScope(data.projectId);
+  const result = await testProviderConnection(data, scope);
+  await trackServerEvent("provider_connection_tested", {
+    consent: await readConsentFromCookies(),
+    distinctId: scope.actorId ?? undefined,
+    properties: {
+      error_category: result.ok
+        ? null
+        : "rateLimited" in result && result.rateLimited
+          ? "rate_limit"
+          : "unknown",
+      ok: result.ok,
+      provider: data.providerId,
+    },
+  });
+  return result;
 }
 
 export async function updateProviderSettings(input: unknown) {

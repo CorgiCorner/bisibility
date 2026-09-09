@@ -1,4 +1,5 @@
-import { Card, SectionTitle } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { DataSourceHealth } from "./types";
 
 export type DataSourcePanelProps = {

@@ -1,29 +1,26 @@
 import "server-only";
 
-import { prisma } from "@/lib/db/prisma";
-import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
+import {
+  createSharedLocationLookup,
+  findSharedLocationCandidateByCanonicalKey,
+  searchSharedLocations,
+} from "./common-location-catalog";
 import {
   countryCodeForMarketName,
   type LocationSelection,
   normalizeCanonicalLocationKey,
 } from "./location";
-import {
-  createCityLocationLookup,
-  lookupConfigFromConnections,
-  suggestLocations,
-} from "./location-lookup";
 import { type LocationResolution, resolveLocation } from "./location-resolver";
 import { prismaLocationStore } from "./location-store";
 
 // Server-side glue for the keyword WRITE path: given a project and a
-// {country, city?} selector, build the Prisma store + a lookup from the
-// project's configured SERP providers and resolve to a persisted Location.
+// {country, region?, city?} selector, resolve against the shared offline
+// location catalog, and persist the selected provider handles.
 //
-// Country-only selectors are deterministic and skip the provider lookup entirely
-// (no network, no creds needed). City selectors go through the project's
-// configured provider(s); an unresolved city degrades to the country row with a
-// warning. resolveLocation may THROW for an unsupported country - that is the
-// intended user-facing/correctable create-edit error (design §5).
+// Country-only selectors are deterministic and skip catalog loading. An
+// unresolved granular location degrades to
+// the country row with a warning. resolveLocation may THROW for an unsupported
+// country - that is the intended user-facing/correctable create-edit error.
 
 export type LegacyKeywordLocationInput = {
   projectId: string;
@@ -45,31 +42,23 @@ export type ResolveKeywordLocationInput =
   | SelectionKeywordLocationInput;
 
 export type SuggestKeywordLocationsInput = {
-  projectId: string;
+  projectId?: string | null;
   query: string;
   countryCode?: string | null;
   limit?: number;
 };
 
-async function loadSerpConnections(projectId: string) {
-  const connections = await prisma.providerConnection.findMany({
-    orderBy: providerChainOrderBy(),
-    select: { credentialsEncrypted: true, provider: true },
-    where: { ...providerChainWhere("serp"), projectId },
-  });
-  return connections;
-}
+const sharedLocationLookup = createSharedLocationLookup();
 
-async function lookupForProject(projectId: string) {
-  const connections = await loadSerpConnections(projectId);
-  const config = lookupConfigFromConnections(connections);
-  return {
-    config,
-    lookup:
-      config.dataForSeo || config.serpApi
-        ? createCityLocationLookup(config, { projectId })
-        : undefined,
-  };
+function resolveWithCatalog(
+  selector: Parameters<typeof resolveLocation>[0],
+  trustedCandidate?: Awaited<ReturnType<typeof findSharedLocationCandidateByCanonicalKey>>,
+) {
+  return resolveLocation(selector, {
+    lookup: sharedLocationLookup,
+    store: prismaLocationStore,
+    ...(trustedCandidate ? { trustedCandidate } : {}),
+  });
 }
 
 function isSelectionInput(
@@ -80,6 +69,10 @@ function isSelectionInput(
 
 async function resolveSelection(input: SelectionKeywordLocationInput): Promise<LocationResolution> {
   if (input.selection.kind === "country") {
+    if ("canonicalKey" in input.selection) {
+      const normalized = normalizeCanonicalLocationKey(input.selection.canonicalKey, "country");
+      return resolveLocation(normalized.selector, { store: prismaLocationStore });
+    }
     return resolveLocation(
       {
         countryCode: input.selection.countryCode,
@@ -90,29 +83,53 @@ async function resolveSelection(input: SelectionKeywordLocationInput): Promise<L
   }
 
   if ("canonicalKey" in input.selection) {
-    const normalized = normalizeCanonicalLocationKey(input.selection.canonicalKey);
+    const normalized = normalizeCanonicalLocationKey(
+      input.selection.canonicalKey,
+      input.selection.kind,
+    );
+    const trustedCandidate = await findSharedLocationCandidateByCanonicalKey(
+      normalized.canonicalKey,
+      input.selection.kind,
+    );
     const cached = await prismaLocationStore.findByKey(normalized.canonicalKey);
-    if (cached) {
+    if (cached && !trustedCandidate) {
       return { degraded: false, location: cached, warning: null };
     }
-    const { selector } = normalized;
-    if (!selector.cityName) {
+    const selector = { ...normalized.selector, selectedCanonicalKey: normalized.canonicalKey };
+    if (!selector.cityName && !selector.regionName && !selector.regionCode) {
       return resolveLocation(selector, { store: prismaLocationStore });
     }
-    const { lookup } = await lookupForProject(input.projectId);
-    return resolveLocation(selector, { lookup, store: prismaLocationStore });
+    const resolution = await resolveWithCatalog(selector, trustedCandidate);
+    const canRetryAsRegion =
+      input.selection.kind === "city" &&
+      Boolean(normalized.selector.cityName) &&
+      !normalized.selector.regionName &&
+      !normalized.selector.regionCode;
+    if (!resolution.degraded || !canRetryAsRegion) {
+      return resolution;
+    }
+    // Older generic location-key callers sent `kind: city` for every granular
+    // key. A two-part key can be a region, so retry it as that exact catalog item.
+    return resolveLocation(
+      {
+        countryCode: normalized.selector.countryCode,
+        kind: "region",
+        languageCode: normalized.selector.languageCode,
+        regionName: normalized.selector.cityName,
+        selectedCanonicalKey: normalized.canonicalKey,
+      },
+      { lookup: sharedLocationLookup, store: prismaLocationStore },
+    );
   }
 
-  const { lookup } = await lookupForProject(input.projectId);
-  return resolveLocation(
-    {
-      cityName: input.selection.cityName,
-      countryCode: input.selection.countryCode,
-      languageCode: input.selection.languageCode,
-      regionName: input.selection.regionName,
-    },
-    { lookup, store: prismaLocationStore },
-  );
+  return resolveWithCatalog({
+    countryCode: input.selection.countryCode,
+    kind: input.selection.kind,
+    languageCode: input.selection.languageCode,
+    regionCode: input.selection.kind === "region" ? input.selection.regionCode : undefined,
+    regionName: input.selection.regionName,
+    cityName: input.selection.kind === "city" ? input.selection.cityName : null,
+  });
 }
 
 /**
@@ -138,26 +155,13 @@ export async function resolveKeywordLocation(
     return resolveLocation({ countryCode, languageCode }, { store: prismaLocationStore });
   }
 
-  const { lookup } = await lookupForProject(input.projectId);
-
-  return resolveLocation(
-    { cityName, countryCode, languageCode },
-    { lookup, store: prismaLocationStore },
-  );
+  return resolveWithCatalog({ cityName, countryCode, languageCode });
 }
 
-export async function suggestKeywordLocations(input: SuggestKeywordLocationsInput) {
-  const { config } = await lookupForProject(input.projectId);
-  if (!config.dataForSeo && !config.serpApi) {
-    return [];
-  }
-  return suggestLocations(
-    {
-      countryCode: input.countryCode,
-      limit: input.limit,
-      query: input.query,
-    },
-    config,
-    { projectId: input.projectId },
-  );
+export async function suggestKeywordLocations({
+  countryCode,
+  limit,
+  query,
+}: SuggestKeywordLocationsInput) {
+  return searchSharedLocations({ countryCode, limit, query });
 }

@@ -1,7 +1,7 @@
 import type { MarketComboboxOption } from "@/components/markets/MarketCombobox";
 import type { CompetitorMarketOption } from "@/lib/competitors/types";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import { supportsResearchMarket } from "@/lib/serp/market-capability";
+import { supportsResearchScope } from "@/lib/serp/research-capability";
 
 const NO_VOLUME_TOOLTIP = "SOV needs search volume - this pair is outside the research catalog.";
 
@@ -25,7 +25,7 @@ function registryMarkets(
         languageCode: market.hl,
         languageLabel: market.languageLabel,
         monthlyCostCents: null,
-        researchAvailable: supportsResearchMarket(market.countryCode, market.hl),
+        researchAvailable: supportsResearchScope(market.countryCode, market.hl),
         status: "active" as const,
       },
     ];
@@ -48,7 +48,7 @@ export function competitorRegistryOptions(
 ): MarketComboboxOption<CompetitorMarketOption | null>[] {
   return registryMarkets(markets, projectMarkets).map((market) => {
     const target = targetMarket(market, markets, currentDevice);
-    const researchAvailable = supportsResearchMarket(market.countryCode, market.languageCode);
+    const researchAvailable = supportsResearchScope(market.countryCode, market.languageCode);
     const paused = market.status !== "active";
     const disabled = !researchAvailable || paused || !target;
     const secondary = !researchAvailable

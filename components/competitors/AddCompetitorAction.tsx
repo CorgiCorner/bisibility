@@ -1,9 +1,9 @@
 "use client";
 
 import { AddCompetitorDrawer } from "@/components/competitors/AddCompetitorDrawer";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { SuggestedCompetitor } from "@/lib/competitors/types";
-import { PlusIcon as Plus } from "@phosphor-icons/react";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useState } from "react";
 
 type AddCompetitorActionProps = {

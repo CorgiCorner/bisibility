@@ -9,8 +9,10 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NewRuleDrawer } from "./NewRuleDrawer";
 
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/input-styles", () => ({
   inputClassName: "border border-border-control bg-transparent",
+}));
+vi.mock("@/components/ui/Button", () => ({
   Button: ({
     children,
     startIcon: _startIcon,
@@ -19,8 +21,14 @@ vi.mock("@/components/ui", () => ({
   }: ButtonHTMLAttributes<HTMLButtonElement> & { startIcon?: ReactNode; variant?: string }) => (
     <button {...props}>{children}</button>
   ),
+}));
+vi.mock("@/components/ui/Checkbox", () => ({
   Checkbox: (props: InputHTMLAttributes<HTMLInputElement>) => <input type="checkbox" {...props} />,
+}));
+vi.mock("@/components/ui/ConfirmModal", () => ({
   ConfirmModal: () => null,
+}));
+vi.mock("@/components/ui/MenuSelect", () => ({
   MenuSelect: ({
     ariaLabel,
     onChange,
@@ -47,9 +55,13 @@ vi.mock("@/components/ui", () => ({
       ))}
     </select>
   ),
+}));
+vi.mock("@/components/ui/PasswordInput", () => ({
   PasswordInput: (props: InputHTMLAttributes<HTMLInputElement>) => (
     <input type="password" {...props} />
   ),
+}));
+vi.mock("@/components/ui/Sheet", () => ({
   Sheet: ({
     children,
     footer,
@@ -65,6 +77,8 @@ vi.mock("@/components/ui", () => ({
         {footer}
       </div>
     ) : null,
+}));
+vi.mock("@/components/ui/Tooltip", () => ({
   Tooltip: ({ children }: { children: ReactNode }) => children,
 }));
 const targets: AlertTargetOptions = { keywords: [], markets: [], members: [], tags: [] };
@@ -165,7 +179,7 @@ describe("NewRuleDrawer", () => {
       "aria-pressed",
       "true",
     );
-    expect(screen.getByText("Rule fires only for checks in the selected markets.")).toBeVisible();
+    expect(screen.getByText(/Scope: All markets/)).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Spain / Spanish" }));
     fireEvent.click(screen.getByRole("button", { name: "Create rule" }));
 

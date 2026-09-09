@@ -1,6 +1,7 @@
 "use client";
 
-import { Avatar, Button } from "@/components/ui";
+import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth/client";
 import { useState } from "react";
 
@@ -43,11 +44,11 @@ export function OAuthConsentAccountBar({
         loadingLabel="switching"
         onClick={() => void switchAccount()}
         size="xs"
-        sx={{
+        style={{
           minWidth: 0,
           paddingInline: "4px",
-          textDecoration: "underline",
-          textUnderlineOffset: "2px",
+          "--control-text-decoration": "underline",
+          "--control-text-underline-offset": "2px",
         }}
         type="button"
         variant="ghost"

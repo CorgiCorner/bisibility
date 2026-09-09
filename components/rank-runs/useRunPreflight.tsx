@@ -6,7 +6,8 @@ import type { ProblemDetails } from "@/lib/api/responses";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import type { RunSelectionSpec } from "@/lib/rank-check/runs/selection";
-import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
+import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PreflightDialog } from "./PreflightDialog";
@@ -145,7 +146,7 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
       {active ? (
         <PreflightDialog
           budgetHref={`/app/${projectId}/settings/usage?budget=edit`}
-          duplicateRunHref={`/app/${projectId}/rank-tracker?tab=runs`}
+          duplicateRunHref={projectRunsPath(projectId)}
           initialDepth={active.depth}
           initialPreview={active.preview}
           initialProviderId={providerId ?? undefined}

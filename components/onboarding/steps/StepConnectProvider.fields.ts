@@ -9,6 +9,13 @@ import {
   type OnboardingFlowState,
   onboardingDefaults,
 } from "@/components/onboarding/onboarding-fixtures";
+import {
+  DATAFORSEO_LIVE_RANK_CHECK_COST,
+  DATAFORSEO_MINIMUM_TOP_UP,
+  DATAFORSEO_TRIAL_CREDIT,
+  dataForSeoLiveRankCheckCostAtDepth,
+  serpApiFreeMonthlySearches,
+} from "@/lib/cost-estimate/provider-cost-copy";
 import { dollarsToCents } from "@/lib/format/currency";
 import {
   DATAFORSEO_CREDENTIAL_FIELDS,
@@ -20,6 +27,7 @@ import { serpApiCostCaption } from "./StepConnectProvider.provider-pricing";
 
 export type OnboardingSerpProviderId = "dataforseo" | "serpapi";
 export type CredentialField = {
+  description?: string;
   label: string;
   name: "login" | "secret";
   placeholder: string;
@@ -40,8 +48,7 @@ export const providerOptions = [
     affiliate: true,
     capability: "Also powers keyword research and difficulty.",
     costCaption: "Pay per check - from ~$0.002",
-    costDetail:
-      "Billed in USD at your configured depth - about $0.002 at Top 10 and $0.0155 at Top 100.",
+    costDetail: `Billed in USD at your configured depth - about ${DATAFORSEO_LIVE_RANK_CHECK_COST} at Top 10 and ${dataForSeoLiveRankCheckCostAtDepth(100)} at Top 100. New accounts get ${DATAFORSEO_TRIAL_CREDIT} of trial credit; top-ups start at ${DATAFORSEO_MINIMUM_TOP_UP} and are not a monthly fee.`,
     docsHref: "https://dataforseo.com/?aff=205409",
     label: "DataForSEO",
     value: "dataforseo",
@@ -50,8 +57,7 @@ export const providerOptions = [
     affiliate: false,
     capability: "Rank checks only.",
     costCaption: serpApiCostCaption(),
-    costDetail:
-      "Plans include monthly searches. A Top-N check uses up to one search per 10 results, often fewer when a match is found early.",
+    costDetail: `Plans include monthly searches; the free plan has ${serpApiFreeMonthlySearches()}. A Top-N check uses up to one search per 10 results, often fewer when a match is found early.`,
     docsHref: "https://serpapi.com",
     label: "SerpApi",
     value: "serpapi",

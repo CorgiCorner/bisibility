@@ -1,7 +1,7 @@
 import { flatPerCheckCostCents, pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { rateForProvider } from "@/lib/cost-estimate/provider-rates";
 import { type ResolveProviderRateInput, resolveProviderRate } from "@/lib/provider-rates/resolver";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 
 const DEFAULT_FLAT_OPTION_KEY = "live";
 const DEFAULT_PLAN_KEY = "production";

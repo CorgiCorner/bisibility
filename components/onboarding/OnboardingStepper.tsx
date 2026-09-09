@@ -1,5 +1,6 @@
 "use client";
 
+import { OnboardingWizardVideoAction } from "@/components/onboarding/OnboardingWizardVideoAction";
 import {
   buildOnboardingStepHref,
   type OnboardingFlowState,
@@ -7,9 +8,10 @@ import {
   onboardingSteps,
   totalOnboardingSteps,
 } from "@/components/onboarding/onboarding-fixtures";
-import { Button, type StepDotState } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import type { StepDotState } from "@/components/ui/StepDots";
 import { cn } from "@/lib/ui/cn";
-import { CheckIcon as Check } from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -43,9 +45,12 @@ export function OnboardingStepper({
 
   return (
     <div className="mt-6">
-      <span className="text-xs text-fg-muted tabular-nums">
-        Step {currentStep} of {totalOnboardingSteps}
-      </span>
+      <div className="flex items-center justify-between" data-testid="onboarding-step-header">
+        <span className="text-xs text-fg-muted tabular-nums">
+          Step {currentStep} of {totalOnboardingSteps}
+        </span>
+        <OnboardingWizardVideoAction currentStep={currentStep} />
+      </div>
       <div
         aria-label="Onboarding progress"
         aria-valuemax={totalOnboardingSteps}
@@ -103,9 +108,8 @@ function StepRailItem({
   const state: StepDotState = done ? "past" : active ? "current" : "upcoming";
 
   const className = cn(
-    "flex w-full items-center gap-3 rounded-control border border-transparent bg-transparent px-0 py-[11px] text-left",
+    "flex w-full items-center gap-3 rounded-control border-0 bg-transparent px-0 py-[11px] text-left",
     locked ? "cursor-default" : "cursor-pointer",
-    active && "border-accent",
   );
   const content = (
     <>
@@ -184,21 +188,16 @@ function StepRailNavigation({
         disabled={locked}
         onClick={locked ? undefined : () => onStepChange(step.n)}
         size="xs"
-        sx={{
+        style={{
           justifyContent: "flex-start",
           minHeight: 0,
           padding: "11px 0",
           textAlign: "left",
-          backgroundColor: "transparent",
-          "&:hover": {
-            backgroundColor: "transparent",
-          },
-          "&.Mui-disabled": {
-            backgroundColor: "transparent",
-            border: "1px solid transparent",
-            color: "inherit",
-          },
-          "&.Mui-disabled:hover": { backgroundColor: "transparent" },
+          "--control-background-color": "transparent",
+          "--control-hover-background-color": "transparent",
+          "--control-disabled-background-color": "transparent",
+          "--control-disabled-border": "none",
+          "--control-disabled-color": "inherit",
         }}
         type="button"
         variant="ghost"

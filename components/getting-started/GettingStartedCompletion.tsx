@@ -9,7 +9,7 @@ import {
   WHATS_NEXT_ACKNOWLEDGED,
   WHATS_NEXT_HEADING,
 } from "@/components/getting-started/getting-started-copy";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { AcknowledgeGettingStartedResult } from "@/lib/getting-started/acknowledge-result";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

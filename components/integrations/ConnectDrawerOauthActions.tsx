@@ -1,5 +1,5 @@
-import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { Button } from "@/components/ui/Button";
 import type { ReactNode } from "react";
 import { ConnectedGoogleAccountFooter } from "./ConnectedGoogleAccountFooter";
 
@@ -16,17 +16,17 @@ type ConnectDrawerOauthActionsProps = {
   setupActive: boolean;
 };
 
-const oauthButtonSx = {
+const oauthButtonStyle = {
   gap: "9px",
   minHeight: 40,
-  "&:hover": { borderColor: "var(--accent)" },
-  "&.Mui-focusVisible": { borderColor: "var(--accent)" },
+  "--control-hover-border-color": "var(--accent)",
+  "--control-focus-border-color": "var(--accent)",
 } as const;
 
 function DisabledButton({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <ProjectReadOnlyTooltip className="block">
-      <Button disabled fullWidth sx={oauthButtonSx} type="button" variant="secondary">
+      <Button disabled fullWidth style={oauthButtonStyle} type="button" variant="secondary">
         {children}
       </Button>
     </ProjectReadOnlyTooltip>
@@ -50,7 +50,7 @@ export function ConnectDrawerOauthActions({
       <Button
         fullWidth
         href={href}
-        sx={oauthButtonSx}
+        style={oauthButtonStyle}
         variant={setupActive ? "ghost" : "secondary"}
       >
         {setupActive
@@ -74,7 +74,7 @@ export function ConnectDrawerOauthActions({
           loading={pending}
           loadingLabel="Loading properties…"
           onClick={loadStoredProperties}
-          sx={oauthButtonSx}
+          style={oauthButtonStyle}
           type="button"
           variant="secondary"
         >

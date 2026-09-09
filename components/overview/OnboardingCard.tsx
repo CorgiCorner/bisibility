@@ -17,11 +17,11 @@ import {
   StagePanel,
 } from "@/components/overview/OnboardingStages";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { StepDots } from "@/components/ui";
+import { StepDots } from "@/components/ui/StepDots";
 import type { TopQuerySuggestion } from "@/lib/keyword-suggest/sanitize-top-queries";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { asProjectRef } from "@/lib/routing/app-path";
-import { DEFAULT_SERP_DEPTH } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

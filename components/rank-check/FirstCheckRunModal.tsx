@@ -1,7 +1,9 @@
 "use client";
 
 import { displayProvider } from "@/components/onboarding/onboarding-form-utils";
-import { Button, Modal, SegmentedControl } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { FirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";

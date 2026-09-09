@@ -1,9 +1,11 @@
 "use client";
 
-import { filterChipStateClassName, MenuSelect } from "@/components/ui";
+import { filterChipStateClassName } from "@/components/ui/filter-chip-styles";
+import { MenuSelect } from "@/components/ui/MenuSelect";
 import { competitorPositionBuckets } from "@/lib/competitors/competitor-market-model";
 import type { CompetitorFilter } from "@/lib/competitors/types";
-import { TagIcon as Tag, XIcon as X } from "@phosphor-icons/react";
+import { TagIcon as Tag } from "@phosphor-icons/react/dist/csr/Tag";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 
 type CompetitorFilterControlsProps = {
   filter: CompetitorFilter;

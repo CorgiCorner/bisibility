@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, type ButtonProps, Tooltip } from "@/components/ui";
+import { Button, type ButtonProps } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { installSampleData } from "@/lib/actions/sample-data";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
@@ -17,7 +18,7 @@ type SampleDataButtonProps = {
   help?: string;
   label?: string;
   size?: ButtonProps["size"];
-  sx?: ButtonProps["sx"];
+  style?: ButtonProps["style"];
   variant?: ButtonProps["variant"];
 };
 
@@ -28,7 +29,7 @@ export function SampleDataButton({
   help,
   label = "Load sample project",
   size = "sm",
-  sx,
+  style,
   variant = "primary",
 }: Readonly<SampleDataButtonProps>) {
   const router = useRouter();
@@ -56,7 +57,7 @@ export function SampleDataButton({
       fullWidth={fullWidth}
       onClick={handleClick}
       size={size}
-      sx={sx}
+      style={style}
       type="button"
       variant={variant}
     >

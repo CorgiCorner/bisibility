@@ -1,107 +1,120 @@
 import { Sparkline } from "@/components/charts/Sparkline";
+import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
-import type { GridColDef } from "@mui/x-data-grid";
 import { ResearchKeywordCell } from "./ResearchKeywordCell";
 import { ResearchUnavailableMetric } from "./ResearchUnavailableMetric";
 import { chronologicalTrend, difficultyPillStyle, IntentChip } from "./research-results-model";
+import type { ResearchResultsTableRow } from "./research-results-table-state";
 
 export function researchResultsColumns(input: {
   canRemoveSaved: boolean;
   metricsAvailable: boolean;
   onToggleSave: (row: GroupedResearchRow) => void;
-}): GridColDef<GroupedResearchRow>[] {
+}): DataTableColumn<ResearchResultsTableRow>[] {
   return [
     {
-      field: "keyword",
-      flex: 1.5,
-      headerName: "Keyword",
-      minWidth: 210,
-      renderCell: ({ row }) => (
+      accessorKey: "keyword",
+      cell: ({ row }) => (
         <ResearchKeywordCell
           canRemoveSaved={input.canRemoveSaved}
           onToggleSave={input.onToggleSave}
-          row={row}
+          row={row.original}
         />
       ),
-      sortable: false,
+      header: "Keyword",
+      id: "keyword",
+      meta: { flex: 1.5, lockVisible: true, pin: "left", sortable: false, title: "Keyword" },
+      minSize: 212,
+      size: 212,
     },
     {
-      field: "searchVolume",
-      headerName: "Volume",
-      minWidth: 92,
-      renderCell: ({ row }) =>
+      accessorFn: (row) => row.searchVolume ?? -1,
+      cell: ({ row }) =>
         input.metricsAvailable ? (
           <span className="font-sans tabular-nums text-[12px]">
-            {row.searchVolume == null ? "-" : row.searchVolume.toLocaleString("en-US")}
+            {row.original.searchVolume == null
+              ? "-"
+              : row.original.searchVolume.toLocaleString("en-US")}
           </span>
         ) : (
           <ResearchUnavailableMetric label="Search volume unavailable" />
         ),
+      header: "Volume",
+      id: "searchVolume",
+      meta: { align: "end", title: "Volume" },
+      minSize: 92,
+      size: 92,
+      sortDescFirst: true,
     },
     {
-      field: "trend",
-      headerName: "Trend",
-      minWidth: 102,
-      renderCell: ({ row }) =>
+      cell: ({ row }) =>
         input.metricsAvailable ? (
           <Sparkline
-            ariaLabel={`Monthly volume trend for ${row.keyword}`}
-            data={chronologicalTrend(row.monthlyTrend).map((point) => point.searchVolume)}
+            ariaLabel={`Monthly volume trend for ${row.original.keyword}`}
+            data={chronologicalTrend(row.original.monthlyTrend).map((point) => point.searchVolume)}
           />
         ) : (
           <ResearchUnavailableMetric label="Search trend unavailable" />
         ),
-      sortable: false,
+      header: "Trend",
+      id: "trend",
+      meta: { sortable: false, title: "Trend" },
+      minSize: 104,
+      size: 104,
     },
     {
-      field: "difficulty",
-      headerName: "KD",
-      minWidth: 68,
-      renderCell: ({ row }) =>
+      cell: ({ row }) =>
         input.metricsAvailable ? (
           <span
             className="rounded-full border px-2 py-0.5 font-sans tabular-nums text-[11px] font-semibold"
-            style={difficultyPillStyle(row.difficulty)}
+            style={difficultyPillStyle(row.original.difficulty)}
           >
-            {row.difficulty ?? "-"}
+            {row.original.difficulty ?? "-"}
           </span>
         ) : (
           <ResearchUnavailableMetric label="KD unavailable" />
         ),
-      sortable: false,
+      header: "KD",
+      id: "difficulty",
+      meta: { sortable: false, title: "Keyword difficulty" },
+      minSize: 68,
+      size: 68,
     },
     {
-      field: "cpcCents",
-      headerName: "CPC",
-      minWidth: 78,
-      renderCell: ({ row }) =>
+      cell: ({ row }) =>
         input.metricsAvailable ? (
           <span className="font-sans tabular-nums text-[11.5px]">
-            {row.cpcCents == null ? "-" : formatEstimateCents(row.cpcCents)}
+            {row.original.cpcCents == null ? "-" : formatEstimateCents(row.original.cpcCents)}
           </span>
         ) : (
           <ResearchUnavailableMetric label="CPC unavailable" />
         ),
-      sortable: false,
+      header: "CPC",
+      id: "cpcCents",
+      meta: { align: "end", sortable: false, title: "Cost per click" },
+      minSize: 80,
+      size: 80,
     },
     {
-      field: "intent",
-      headerName: "Intent",
-      minWidth: 96,
-      renderCell: ({ row }) => <IntentChip intent={row.intent} />,
-      sortable: false,
+      cell: ({ row }) => <IntentChip intent={row.original.intent} />,
+      header: "Intent",
+      id: "intent",
+      meta: { sortable: false, title: "Intent" },
+      minSize: 96,
+      size: 96,
     },
     {
-      field: "source",
-      headerName: "Source",
-      minWidth: 104,
-      renderCell: ({ row }) => (
+      cell: ({ row }) => (
         <code className="rounded bg-bg-sunken px-2 py-1 text-[10.5px] text-fg-muted">
-          {row.source}
+          {row.original.source}
         </code>
       ),
-      sortable: false,
+      header: "Source",
+      id: "source",
+      meta: { sortable: false, title: "Source" },
+      minSize: 104,
+      size: 104,
     },
   ];
 }

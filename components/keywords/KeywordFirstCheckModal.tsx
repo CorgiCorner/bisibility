@@ -1,10 +1,12 @@
 "use client";
 
 import { RankCheckRunModal } from "@/components/keywords/RankCheckRunModal";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { isPublicIdOfType } from "@/lib/db/public-id";
 import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
-import { appPath, type ProjectRef, rankTrackerTabPath } from "@/lib/routing/app-path";
-import type { SerpDepth } from "@/lib/serp/markets";
+import { appPath, type ProjectRef } from "@/lib/routing/app-path";
+import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-runs-path";
+import type { SerpDepth } from "@/lib/serp/constants";
 
 export type KeywordFirstCheckModalStep = "confirm" | "running" | "success" | "failed";
 
@@ -164,9 +166,10 @@ export function KeywordFirstCheckModal({
   const isConfirm = step === "confirm";
   const modalOnClose = step === "success" ? onContinue : onClose;
   const failedCopy = failureCopy(errorCode);
-  const checksHref = rankCheckId
-    ? `${rankTrackerTabPath(projectRef, "runs")}&run=${encodeURIComponent(rankCheckId)}`
-    : rankTrackerTabPath(projectRef, "runs");
+  const detailRunId = rankCheckId && isPublicIdOfType(rankCheckId, "rcr") ? rankCheckId : null;
+  const checksHref = detailRunId
+    ? projectRunRankCheckPath(projectRef, detailRunId)
+    : projectRunsPath(projectRef);
 
   let footer: React.ReactNode;
   if (isConfirm) {

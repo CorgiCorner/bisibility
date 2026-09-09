@@ -8,14 +8,12 @@ import { hasMarketRoute, sectionPathOf } from "@/lib/markets/market-route-sectio
 import { docsNavItem, type NavContext, navItems } from "@/lib/nav/nav-items";
 import { appPath, appSectionPath, type MarketRef, marketPath } from "@/lib/routing/app-path";
 import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
-import {
-  DownloadSimpleIcon as DownloadSimple,
-  MagnifyingGlassIcon as MagnifyingGlass,
-  PaletteIcon as Palette,
-  PlusIcon as Plus,
-  SignOutIcon as SignOut,
-  UploadSimpleIcon as UploadSimple,
-} from "@phosphor-icons/react";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { PaletteIcon as Palette } from "@phosphor-icons/react/dist/csr/Palette";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
+import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
 import type { Icon } from "@phosphor-icons/react/lib";
 
 export type CommandItem = {

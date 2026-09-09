@@ -1,4 +1,4 @@
-import { inputClassName } from "@/components/ui";
+import { inputClassName } from "@/components/ui/input-styles";
 
 // Shared Tailwind class strings for account-level forms and rows.
 

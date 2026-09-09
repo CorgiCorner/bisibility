@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, Modal, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/toast-context";
 import type {
   ArchivedSearchInsightsProperty,
   SearchInsightsPropertyOption,
@@ -9,11 +11,9 @@ import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import { searchSyncPreflightCopy } from "@/lib/search-insights/sync/plan";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import {
-  ArrowSquareOutIcon as ArrowSquareOut,
-  CaretDownIcon as CaretDown,
-  GlobeHemisphereWestIcon as GlobeHemisphereWest,
-} from "@phosphor-icons/react";
+import { ArrowSquareOutIcon as ArrowSquareOut } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import {

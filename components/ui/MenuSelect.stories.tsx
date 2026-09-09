@@ -1,4 +1,6 @@
+import { DataTableDensityMenu } from "@/components/ui/data-table/DataTableDensityMenu";
 import { MenuMultiSelect, MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
+import { GlobeIcon } from "@phosphor-icons/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
@@ -125,4 +127,55 @@ export const InputSized: Story = {
       <InputSizedMenu />
     </div>
   ),
+};
+
+function ContentSizedMenus() {
+  const [source, setSource] = useState("all");
+  const [density, setDensity] = useState<"compact" | "standard" | "comfortable">("compact");
+  const [values, setValues] = useState(["long"]);
+  const descriptiveOptions: MenuSelectOption[] = [
+    {
+      icon: <GlobeIcon aria-hidden size={15} weight="regular" />,
+      label: "A very long market label that still needs to remain readable on a narrow screen",
+      secondary: "example-with-a-long-unbroken-domain-name-for-layout-checks.example.com",
+      trailing: "12",
+      value: "long",
+    },
+    { label: "Other market", value: "other" },
+  ];
+  return (
+    <div className="flex flex-wrap items-start gap-4">
+      <MenuSelect
+        ariaLabel="Run source"
+        onChange={setSource}
+        options={[
+          { label: "All sources", value: "all" },
+          { label: "Rank checks", value: "rank_checks" },
+          { label: "Search Console", value: "search_console" },
+        ]}
+        value={source}
+      />
+      <DataTableDensityMenu density={density} onDensityChange={setDensity} />
+      <MenuSelect
+        ariaLabel="Fixed-width menu"
+        menuWidth={240}
+        onChange={() => undefined}
+        options={descriptiveOptions}
+        selectedContent={() => "Market"}
+        value="long"
+      />
+      <MenuMultiSelect
+        ariaLabel="Long multi-select"
+        onChange={setValues}
+        options={descriptiveOptions}
+        summary={() => "Markets"}
+        values={values}
+      />
+    </div>
+  );
+}
+
+export const ContentSizing: Story = {
+  name: "Content width and readable long labels",
+  render: () => <ContentSizedMenus />,
 };

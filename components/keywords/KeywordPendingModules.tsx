@@ -1,20 +1,18 @@
 "use client";
 
+import { Card } from "@/components/ui/Card";
 import {
-  Card,
   dangerIconWellClassName,
   iconWellClassName,
   iconWellSurfaceClassName,
-  SectionTitle,
-} from "@/components/ui";
+} from "@/components/ui/icon-well-styles";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import { cn } from "@/lib/ui/cn";
-import {
-  ClockCountdownIcon as ClockCountdown,
-  RankingIcon as Ranking,
-  SpinnerGapIcon as SpinnerGap,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react/ssr";
+import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
+import { RankingIcon as Ranking } from "@phosphor-icons/react/dist/ssr/Ranking";
+import { SpinnerGapIcon as SpinnerGap } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import type { EmptyRankCopy } from "./KeywordPendingEmptyState";
 
 type KeywordPendingModulesProps = {

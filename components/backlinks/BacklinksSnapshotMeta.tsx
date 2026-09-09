@@ -1,7 +1,8 @@
 import type { BacklinksSnapshot } from "@/lib/backlinks/types";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { relativePast } from "@/lib/format/relative-time";
-import { ClockIcon as Clock, GlobeSimpleIcon as GlobeSimple } from "@phosphor-icons/react";
+import { ClockIcon as Clock } from "@phosphor-icons/react/dist/csr/Clock";
+import { GlobeSimpleIcon as GlobeSimple } from "@phosphor-icons/react/dist/csr/GlobeSimple";
 
 type BacklinksSnapshotMetaProps = {
   estimateCents: number | null;

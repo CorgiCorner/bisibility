@@ -29,8 +29,8 @@ import {
 } from "@/lib/rank-check/provider-chain-order";
 import { normalizeTrackingScope, trackedProjectDomain } from "@/lib/schemas/project";
 import { resolveSearchInsightsConnectionState } from "@/lib/search-insights/connection-state";
+import { resolveSerpDepth, resolveSerpStopOnMatch } from "@/lib/serp/constants";
 import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
-import { resolveSerpDepth, resolveSerpStopOnMatch } from "@/lib/serp/markets";
 import { resolveSearchSyncSettings } from "@/lib/settings/search-sync-config";
 import { loadSearchSyncMetrics } from "@/lib/settings/search-sync-metrics";
 import { requireReadableProject } from "./_auth";

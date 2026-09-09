@@ -5,18 +5,18 @@ import {
   FilterSection,
   toggleFilterValue,
 } from "@/components/keywords/filters/FilterDrawerControls";
-import { Button, Sheet, Switch } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Sheet } from "@/components/ui/Sheet";
+import { Slider } from "@/components/ui/Slider";
+import { Switch } from "@/components/ui/Switch";
 import {
   activeResearchFilterCount,
   emptyResearchFilters,
   type ResearchFilters,
 } from "@/lib/keyword-research/view-model";
-import Slider from "@mui/material/Slider";
-import {
-  ChartBarIcon as ChartBar,
-  CompassIcon as Compass,
-  FunnelIcon as Funnel,
-} from "@phosphor-icons/react";
+import { ChartBarIcon as ChartBar } from "@phosphor-icons/react/dist/csr/ChartBar";
+import { CompassIcon as Compass } from "@phosphor-icons/react/dist/csr/Compass";
+import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
 
 type ResearchFiltersDrawerProps = {
   filters: ResearchFilters;
@@ -59,7 +59,7 @@ export function ResearchFiltersDrawer({
           <Button onClick={() => onChange(emptyResearchFilters)} type="button" variant="secondary">
             Reset
           </Button>
-          <Button onClick={onClose} sx={{ flex: 1 }} type="button">
+          <Button onClick={onClose} style={{ flex: 1 }} type="button">
             Show {resultCount} {resultCount === 1 ? "result" : "results"}
           </Button>
         </div>
@@ -98,11 +98,11 @@ export function ResearchFiltersDrawer({
           </span>
         </div>
         <Slider
-          max={10_000}
+          max={10000}
           min={0}
-          onChange={(_, value) => patch({ minVolume: value as number })}
+          onValueChange={(value) => patch({ minVolume: value as number })}
           step={100}
-          sx={{ color: "var(--accent)" }}
+          style={{ color: "var(--accent)" }}
           value={filters.minVolume}
         />
         <div className="mb-2 mt-3 text-[12px] text-fg-muted">Keyword difficulty</div>

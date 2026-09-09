@@ -157,7 +157,7 @@ describe("POST /api/v1/cloud/import", () => {
       {
         device: "desktop",
         id: "keyword_1",
-        location: "United States",
+        locationRef: { canonicalKey: "US" },
         text: "rank tracker",
       },
     ]);
@@ -203,7 +203,7 @@ describe("POST /api/v1/cloud/import", () => {
       {
         device: "desktop",
         keyword: "rank tracker",
-        location: "United States",
+        location_key: "US",
         tags: ["SEO"],
         target_url: "/rank",
       },

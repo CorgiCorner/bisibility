@@ -2,7 +2,7 @@
 
 import { removeSignalNote } from "@/lib/actions/signals";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { TrashIcon as Trash } from "@phosphor-icons/react";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

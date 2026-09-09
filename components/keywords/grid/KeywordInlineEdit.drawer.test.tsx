@@ -46,7 +46,7 @@ const drawerMarkets = [
 ];
 
 describe("KeywordInlineEdit drawer markets", () => {
-  it("uses active registry markets and submits the selected canonical key", async () => {
+  it("allows preparing keywords in paused registry markets and submits the canonical key", async () => {
     const user = userEvent.setup();
     const updateKeywordAction = vi.fn(async () => ({}));
     render(
@@ -63,19 +63,19 @@ describe("KeywordInlineEdit drawer markets", () => {
     await user.click(screen.getByRole("button", { name: "Market" }));
     const paused = screen.getByRole("menuitem", { name: /Belgium \/ French/ });
     expect(paused).toHaveTextContent("paused");
-    expect(paused).toHaveAttribute("aria-disabled", "true");
+    expect(paused).not.toHaveAttribute("aria-disabled", "true");
     expect(paused).not.toHaveAttribute("title");
     const pausedDescId = paused.getAttribute("aria-describedby");
     expect(pausedDescId).not.toBeNull();
     expect(document.getElementById(pausedDescId ?? "")).toHaveTextContent(
-      "Enable this market in Settings before selecting it.",
+      "Keywords can be added now. Rank checks start after the market is resumed.",
     );
-    await user.click(screen.getByRole("menuitem", { name: /Spain \/ Spanish/ }));
+    await user.click(paused);
     fireEvent.submit(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(updateKeywordAction).toHaveBeenCalledOnce());
     expect(updateKeywordAction).toHaveBeenCalledWith(
-      expect.objectContaining({ locationKey: "ES" }),
+      expect.objectContaining({ locationKey: "BE@fr" }),
     );
   });
 

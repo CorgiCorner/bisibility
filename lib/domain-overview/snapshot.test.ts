@@ -1,5 +1,5 @@
 import { Prisma } from "@/lib/generated/prisma/client";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   findDomainOverviewSnapshotMetadata,
   persistDomainOverviewModules,
@@ -28,7 +28,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("./cache", () => ({
-  domainOverviewCachedUntil: (fetchedAt: Date) => fetchedAt.getTime() + 43_200_000,
   withDomainOverviewCache: mocks.withCache,
 }));
 vi.mock("./provider-call", () => ({ fetchDomainOverviewMetrics: mocks.fetchMetrics }));
@@ -68,11 +67,17 @@ const key = {
 describe("domain overview snapshots", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("READ_ONLY_DEMO", "0");
+    vi.stubEnv("DOMAIN_OVERVIEW_CACHE_TTL_SECONDS", "");
     mocks.prisma.$transaction.mockImplementation(
       (callback: (tx: typeof mocks.tx) => Promise<unknown>) => callback(mocks.tx),
     );
     mocks.tx.domainOverviewSnapshot.update.mockResolvedValue({ id: "snapshot_1" });
     mocks.prisma.domainOverviewSnapshot.updateMany.mockResolvedValue({ count: 1 });
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
   });
 
   it("sanitizes persisted metric JSON and rejects empty values", () => {
@@ -197,7 +202,11 @@ describe("domain overview snapshots", () => {
     });
   });
 
-  it("replays durable first-page modules without consulting provider cache", async () => {
+  it.each([false, true])("replays durable modules without paid calls (demo: %s)", async (demo) => {
+    vi.stubEnv("READ_ONLY_DEMO", demo ? "1" : "0");
+    vi.useFakeTimers();
+    const now = new Date(demo ? "2026-08-28T10:00:00.000Z" : "2026-07-30T11:00:00.000Z");
+    vi.setSystemTime(now);
     mocks.prisma.domainOverviewSnapshot.findFirst.mockResolvedValue({
       cachedUntil: new Date("2026-07-30T22:00:00.000Z"),
       fetchedAt: new Date("2026-07-30T10:00:00.000Z"),
@@ -229,11 +238,27 @@ describe("domain overview snapshots", () => {
     ).resolves.toMatchObject({
       cached: true,
       costCents: 0,
+      data: { cachedUntil: demo ? "2026-08-29T10:00:00.000Z" : "2026-07-30T22:00:00.000Z" },
       durable: true,
       modules: {
         keywords: { consumedCount: 0, costCents: 2, rows: [], totalCount: 12 },
         pages: { consumedCount: 0, costCents: 3, rows: [], totalCount: 4 },
       },
+    });
+    const expectedWhere = {
+      ...key,
+      provider: "dataforseo",
+      ...(demo
+        ? { fetchedAt: { gt: new Date("2026-07-29T10:00:00.000Z") } }
+        : { cachedUntil: { gt: now } }),
+    };
+    expect(mocks.prisma.domainOverviewSnapshot.findFirst).toHaveBeenLastCalledWith({
+      where: expectedWhere,
+    });
+    await findDomainOverviewSnapshotMetadata({ ...key, now, provider: "dataforseo" });
+    expect(mocks.prisma.domainOverviewSnapshot.findFirst).toHaveBeenLastCalledWith({
+      select: { cachedUntil: true, fetchedAt: true, overview: true, provider: true },
+      where: expectedWhere,
     });
     expect(mocks.withCache).not.toHaveBeenCalled();
     expect(mocks.fetchMetrics).not.toHaveBeenCalled();

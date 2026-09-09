@@ -1,4 +1,4 @@
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type { OrganicResultAnomalyCode } from "./organic-result-decision";
 
 export type OrganicResultGoldenFixture = {

@@ -1,15 +1,14 @@
 "use client";
 
 import { MigrationReachabilityHint } from "@/components/settings/migration/MigrationReachabilityHint";
-import { Button, ConfirmModal } from "@/components/ui";
-import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  KeyIcon as Key,
-  LockSimpleIcon as LockSimple,
-  PlusIcon as Plus,
-  WarningCircleIcon as WarningCircle,
-  WarningOctagonIcon as WarningOctagon,
-} from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
+import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
+import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { WarningOctagonIcon as WarningOctagon } from "@phosphor-icons/react/dist/csr/WarningOctagon";
 import { useState } from "react";
 import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
 import { TokenMeta } from "./MigrationTokenMeta";
@@ -63,7 +62,7 @@ function TokenActions({
           loadingLabel="Revoking"
           onClick={() => setConfirmKind("revokeMigrationToken")}
           size="sm"
-          sx={{ color: "var(--red-text)" }}
+          style={{ "--control-color": "var(--red-text)" }}
           type="button"
           variant="secondary"
         >

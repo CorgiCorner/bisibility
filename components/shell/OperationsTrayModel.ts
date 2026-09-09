@@ -1,15 +1,12 @@
 import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
-import {
-  type OperationRowProps,
-  runStatusChipPresentation,
-  type StatusChipTone,
-} from "@/components/ui";
+import { runStatusChipPresentation } from "@/components/ui/status-chip-mapping";
 import {
   pauseSearchInsightsImport,
   resumeSearchInsightsImport,
   retrySearchInsightsImport,
 } from "@/lib/actions/search-insights";
 import { pluralize } from "@/lib/format/pluralize";
+import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { blockedRunPresentation } from "@/lib/rank-check/runs/blocked-presentation";
 import type {
   GscImportOperation,
@@ -18,52 +15,18 @@ import type {
 } from "@/lib/rank-check/runs/contract";
 import { selectionSummarySuffix } from "@/lib/rank-check/runs/selection-label";
 import { type ProjectRef, searchConsolePath } from "@/lib/routing/app-path";
-import { rankTrackerRunsPath } from "@/lib/routing/rank-tracker-runs-path";
+import { projectRunRankCheckPath } from "@/lib/routing/project-runs-path";
+import type { TrayOperation } from "./OperationsTrayModel.types";
 
-export type TrayOperation = Pick<
-  OperationRowProps,
-  | "action"
-  | "actor"
-  | "completed"
-  | "counts"
-  | "deferred"
-  | "etaSeconds"
-  | "failed"
-  | "href"
-  | "meta"
-  | "nextCheckAt"
-  | "now"
-  | "provider"
-  | "resumeDate"
-  | "showBar"
-  | "state"
-  | "stateLine"
-  | "status"
-  | "title"
-  | "total"
-  | "unit"
-> & {
-  attention: Extract<StatusChipTone, "attention" | "critical"> | null;
-  blocked: boolean;
-  id: string;
-  kind: OperationSnapshot["kind"];
-  lifecycle: "executing" | "terminal" | "waiting";
-};
-
-export type OperationsTrayPill =
-  | { kind: "idle" }
-  | {
-      count: number;
-      kind: "busy";
-      tone: StatusChipTone;
-      word: "blocked" | "failed" | "running" | "waiting";
-    };
+export type { OperationsTrayPill, TrayOperation } from "./OperationsTrayModel.types";
 
 export function isTrayOperation(operation: OperationSnapshot) {
   return !(
-    operation.kind === "rank_check" &&
-    operation.status === "cancelled" &&
-    operation.startedAt === null
+    (operation.kind === "rank_check" &&
+      operation.status === "cancelled" &&
+      operation.startedAt === null) ||
+    (operation.kind === "gsc_import" &&
+      (operation.presentation.title === "Completed" || operation.presentation.title === "Failed"))
   );
 }
 
@@ -109,6 +72,7 @@ function rankCheckPresentation(
 
   return {
     action: operation.status === "queued" || operation.status === "running" ? "cancel" : "",
+    actionHref: null,
     actor: null,
     attention,
     blocked: operation.status === "blocked",
@@ -117,7 +81,7 @@ function rankCheckPresentation(
     deferred: operation.counts.deferred,
     etaSeconds: operation.etaSeconds ?? null,
     failed: operation.counts.failed,
-    href: rankTrackerRunsPath(projectRef, operation.id),
+    href: projectRunRankCheckPath(projectRef, operation.id),
     id: operation.id,
     kind: operation.kind,
     lifecycle:
@@ -133,6 +97,7 @@ function rankCheckPresentation(
     nextCheckAt: operation.nextCheckAt,
     now: operation.snapshotAt ?? null,
     provider: operation.providerLabel ?? null,
+    property: null,
     resumeDate: null,
     showBar: true,
     state,
@@ -162,62 +127,76 @@ function gscImportPresentation(
   operation: GscImportOperation,
   projectRef: ProjectRef,
 ): TrayOperation {
-  const stateMap: Record<
-    string,
-    Pick<TrayOperation, "action" | "attention" | "state" | "stateLine">
-  > = {
-    completed: { action: "", attention: null, state: "succeeded", stateLine: null },
-    failed: { action: "retry", attention: "critical", state: "failed", stateLine: null },
-    paused: {
-      action: "resume",
-      attention: "attention",
-      state: "worker",
-      stateLine: "The import is paused. Resume it to continue importing finalized search data.",
-    },
-    queued: { action: "pause", attention: null, state: "worker", stateLine: null },
-    running: { action: "pause", attention: null, state: "worker", stateLine: null },
-    waiting_for_first_data: {
-      action: "pause",
-      attention: "attention",
-      state: "worker",
-      stateLine:
-        "Google has not reported any search data for this property yet. We check daily and will import automatically when it appears.",
-    },
-  };
-  const mapped = stateMap[operation.state] ?? {
-    action: "" as const,
-    attention: "attention" as const,
-    state: "worker" as const,
-    stateLine: "Waiting for the import worker to pick this up - it polls every 60 seconds.",
-  };
+  const searchConsoleHref = `${searchConsolePath(projectRef)}?${new URLSearchParams({
+    property: operation.property,
+  }).toString()}`;
+  const reconnectHref =
+    operation.presentation.action === "reconnect" &&
+    operation.presentation.title === "Reconnect required"
+      ? googleInstallUrl({
+          projectId: projectRef,
+          property: operation.property,
+          provider: "gsc",
+          returnPath: searchConsoleHref,
+        })
+      : null;
+  const transitionAction =
+    operation.presentation.action === "pause" ||
+    operation.presentation.action === "resume" ||
+    operation.presentation.action === "retry"
+      ? operation.presentation.action
+      : null;
+  const action = reconnectHref
+    ? "reconnect"
+    : transitionAction && operation.capabilities[transitionAction]
+      ? transitionAction
+      : "";
+  const title = operation.presentation.title;
+  const running = title === "Importing";
+  const queued = title === "Queued";
+  const terminal = title === "Completed" || title === "Failed";
+  const attention = running || queued ? null : title === "Failed" ? "critical" : "attention";
+  const state = running
+    ? "running"
+    : queued
+      ? "queued"
+      : title === "Completed"
+        ? "succeeded"
+        : title === "Failed"
+          ? "failed"
+          : "deferred";
 
   return {
-    ...mapped,
+    action,
+    actionHref: reconnectHref,
     actor: null,
+    attention,
     blocked: false,
-    completed: operation.progress.done,
+    completed: operation.progress.done ?? 0,
     counts: null,
     deferred: 0,
     etaSeconds: null,
     failed: 0,
-    href: searchConsolePath(projectRef),
+    href: searchConsoleHref,
     id: operation.id,
     kind: operation.kind,
-    lifecycle:
-      operation.state === "running"
-        ? "executing"
-        : operation.state === "queued"
-          ? "waiting"
-          : "terminal",
-    meta: "",
+    lifecycle: running ? "executing" : queued ? "waiting" : terminal ? "terminal" : "attention",
+    meta: title,
     nextCheckAt: null,
     now: null,
     provider: null,
+    property: operation.property,
     resumeDate: null,
-    showBar: true,
+    showBar:
+      operation.progress.done !== null &&
+      operation.progress.total !== null &&
+      operation.progress.total > 0 &&
+      (terminal || operation.progress.done < operation.progress.total),
+    state,
+    stateLine: operation.presentation.supportingText,
     status: null,
     title: "Search Console import",
-    total: operation.progress.total,
+    total: operation.progress.total ?? 0,
     unit: "days",
   };
 }
@@ -232,34 +211,7 @@ export function operationPresentationFor(
     : gscImportPresentation(operation, projectRef);
 }
 
-export function labelForPill(operations: readonly TrayOperation[]): OperationsTrayPill {
-  const attention = operations.filter((operation) => operation.attention !== null);
-  if (operations.length === 0) {
-    return { kind: "idle" };
-  }
-  if (attention.length === 0) {
-    const executing = operations.filter((operation) => operation.lifecycle === "executing");
-    if (executing.length > 0) {
-      return { count: executing.length, kind: "busy", tone: "info", word: "running" };
-    }
-    const waiting = operations.filter((operation) => operation.lifecycle === "waiting");
-    if (waiting.length > 0) {
-      return { count: waiting.length, kind: "busy", tone: "info", word: "waiting" };
-    }
-    return { kind: "idle" };
-  }
-  const hasFailure = attention.some((operation) => operation.attention === "critical");
-  return {
-    count: attention.length,
-    kind: "busy",
-    tone: hasFailure ? "critical" : "attention",
-    word: hasFailure
-      ? "failed"
-      : attention.every((operation) => operation.blocked)
-        ? "blocked"
-        : "waiting",
-  };
-}
+export { labelForPill } from "./OperationsTrayPillModel";
 
 export async function performOperationAction(
   operation: TrayOperation,
@@ -277,14 +229,20 @@ export async function performOperationAction(
     if (!response.ok) throw new Error("Rank check cancellation failed.");
     return;
   }
-  const input = { projectId: projectRef, transition: operation.action };
+  if (operation.action === "reconnect") return;
+  const exactInput = {
+    importId: operation.id,
+    projectId: projectRef,
+    property: operation.property,
+    transition: operation.action,
+  };
   const result =
     operation.action === "pause"
-      ? await pauseSearchInsightsImport(input)
+      ? await pauseSearchInsightsImport(exactInput)
       : operation.action === "resume"
-        ? await resumeSearchInsightsImport(input)
+        ? await resumeSearchInsightsImport(exactInput)
         : operation.action === "retry"
-          ? await retrySearchInsightsImport(input)
+          ? await retrySearchInsightsImport(exactInput)
           : { ok: true };
   if (!result.ok) {
     throw new Error("message" in result ? result.message : "Operation update failed.");

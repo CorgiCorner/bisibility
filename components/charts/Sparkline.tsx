@@ -1,6 +1,6 @@
 "use client";
 
-import { SparkLineChart } from "@mui/x-charts/SparkLineChart";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export type SparklineProps = {
   ariaLabel: string;
@@ -30,17 +30,43 @@ export function Sparkline({
       role="img"
       style={{ height, width: responsive ? "100%" : width }}
     >
-      <SparkLineChart
-        color={color}
-        curve="linear"
-        data={points.map((point) => point.value)}
+      <ResponsiveContainer
+        width="100%"
         height={height}
-        margin={{ top: 6, right: 4, bottom: 6, left: 4 }}
-        showTooltip
-        valueFormatter={valueFormatter}
-        width={responsive ? undefined : width}
-        xAxis={{ data: points.map((point) => point.index), scaleType: "linear" }}
-      />
+        initialDimension={{ width, height }}
+        minWidth={0}
+      >
+        <LineChart
+          data={points}
+          margin={{ top: 6, right: 4, bottom: 6, left: 4 }}
+          accessibilityLayer
+        >
+          <XAxis dataKey="index" type="number" domain={["dataMin", "dataMax"]} hide />
+          <YAxis domain={["dataMin", "dataMax"]} hide />
+          <Line
+            dataKey="value"
+            type="linear"
+            stroke={color}
+            strokeWidth={2}
+            dot={false}
+            isAnimationActive={false}
+          />
+          <Tooltip
+            isAnimationActive={false}
+            labelFormatter={() => ""}
+            formatter={(value) => [
+              typeof value === "number" ? (valueFormatter?.(value) ?? String(value)) : "No data",
+              "",
+            ]}
+            contentStyle={{
+              background: "var(--bg-elev)",
+              border: "1px solid var(--border)",
+              borderRadius: 6,
+              fontSize: 11,
+            }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </span>
   );
 }

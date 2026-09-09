@@ -1,5 +1,6 @@
 import { alertPositionThreshold } from "@/lib/alerts/depth-conflict";
 import { comparableCompletedWindow } from "@/lib/checks/status";
+import type { ExpectedUrlResolution } from "@/lib/expected-url/types";
 import { deriveRankingUrlPeriods } from "@/lib/keyword-detail/ranking-url-history";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
 import { earlierDayPosition, positionDateLabel } from "@/lib/keywords/position-history";
@@ -16,7 +17,7 @@ import type {
   UrlPresenceView,
 } from "@/lib/queries/keyword-row-types";
 import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
-import { resolveSerpDepth } from "@/lib/serp/markets";
+import { resolveSerpDepth } from "@/lib/serp/constants";
 
 export type {
   CompletedComparableCheck,
@@ -42,7 +43,7 @@ type ScheduleSource = {
   timezone: string;
 };
 
-type CheckScheduleSource = { name: string; publicId: string };
+type CheckScheduleSource = { name: string; publicId: string; serpDepth?: number | null };
 
 type KeywordProject = { defaults: ScheduleSource | null; domain: string };
 type UrlPresenceSource = {
@@ -82,11 +83,13 @@ export type KeywordRowInput = {
     languageLabel?: string;
   };
   publicId: string;
+  expectedUrlResolution?: ExpectedUrlResolution;
   queuedRankCheckTasks?: { state: string }[];
   rankChecks: {
     checkedAt: Date;
     degradedToCountry?: boolean;
     errorCode: string | null;
+    expectedUrlAtCheck?: string | null;
     id: string;
     normalizationVersion: string | null;
     position: number | null;
@@ -201,6 +204,10 @@ export function mapKeyword(
   const previousPosition = latest?.previousPosition ?? null;
   const positionBaseline = earlierDayPosition(completedChecks, latest);
   const rankingUrl = latest?.rankingUrl ?? null;
+  const expectedUrlAtCheck = latest?.expectedUrlAtCheck ?? null;
+  const currentExpectedUrl = row.expectedUrlResolution?.url ?? row.targetUrl;
+  const expectedUrl = expectedUrlAtCheck ?? currentExpectedUrl;
+  const expectedUrlFallbackCurrent = Boolean(latest && !expectedUrlAtCheck && expectedUrl);
   const rankingUrls = checks.flatMap((check) => (check.rankingUrl ? [check.rankingUrl] : []));
   const targetPosition = row.alertTargets
     ?.filter(({ rule }) => rule.enabled)
@@ -219,6 +226,11 @@ export function mapKeyword(
     schedule = scheduleView(project.defaults, effective.nextCheckAt);
   }
 
+  if (row.checkSchedule?.serpDepth !== undefined) {
+    schedule.serp_depth =
+      row.checkSchedule.serpDepth === null ? null : resolveSerpDepth(row.checkSchedule.serpDepth);
+  }
+
   return {
     bestPosition: positions.length ? Math.min(...positions) : null,
     clicks: traffic?.clicks ?? null,
@@ -232,6 +244,10 @@ export function mapKeyword(
     difficulty: metrics.difficulty ?? 0,
     difficultyKnown: metrics.difficulty !== null,
     engine: "Google",
+    currentExpectedUrl,
+    expectedUrl,
+    expectedUrlFallbackCurrent,
+    expectedUrlSource: row.expectedUrlResolution?.source ?? (row.targetUrl ? "explicit" : null),
     checkState: keywordCheckState(latestAttempt, row.queuedRankCheckTasks ?? []),
     checkSchedule: row.checkSchedule
       ? {
@@ -272,6 +288,7 @@ export function mapKeyword(
           ],
     ),
     projectSerpDepth,
+    projectTimezone: project.defaults?.timezone ?? "UTC",
     previousPosition,
     rankingPages: new Set(rankingUrls).size,
     rankingPath: rankingUrl ? pathFromUrl(rankingUrl) : null,

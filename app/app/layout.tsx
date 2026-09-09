@@ -1,6 +1,6 @@
 import { DateFormatProvider } from "@/components/dates/DateFormatProvider";
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import { appExtensions } from "@/lib/app-extensions";
 import { redirectToSetupIfFirstRun } from "@/lib/auth/first-run";
 import { requireSession } from "@/lib/auth/session";

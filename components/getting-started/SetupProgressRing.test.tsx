@@ -7,9 +7,9 @@ describe("SetupProgressRing", () => {
     [1, 4, "12.6 50.3"],
     [3, 4, "37.7 50.3"],
     [4, 4, "50.3 50.3"],
-  ])("calculates the SVG arc for %i of %i", (doneCount, totalCount, dasharray) => {
+  ])("calculates the SVG arc for %i of %i", (settledCount, totalCount, dasharray) => {
     const { container } = render(
-      <SetupProgressRing doneCount={doneCount} totalCount={totalCount} />,
+      <SetupProgressRing settledCount={settledCount} totalCount={totalCount} />,
     );
     const ring = container.querySelector("[data-progress-ring]");
     const arc = container.querySelector("[data-progress-arc]");

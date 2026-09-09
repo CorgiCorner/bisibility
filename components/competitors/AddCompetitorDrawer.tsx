@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, inputClassName, Sheet } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { inputClassName } from "@/components/ui/input-styles";
+import { Sheet } from "@/components/ui/Sheet";
 import { addManagedCompetitor } from "@/lib/actions/competitors";
 import {
   type AddManagedCompetitorInput,
@@ -9,7 +11,8 @@ import {
 } from "@/lib/competitors/types";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { InfoIcon as Info, PlusIcon as Plus } from "@phosphor-icons/react";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

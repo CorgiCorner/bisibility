@@ -8,11 +8,14 @@ const scheduledNextRunAt = new Date("2026-09-01T06:00:00.000Z");
 const mocks = vi.hoisted(() => ({
   prisma: {
     keyword: { findMany: vi.fn() },
+    project: { findUnique: vi.fn() },
     providerConnection: { count: vi.fn() },
     projectDefaults: { findUnique: vi.fn() },
     queuedRankCheckBatch: { findMany: vi.fn() },
     rankCheck: { count: vi.fn() },
   },
+  effectiveCompetitors: vi.fn(),
+  getCompetitorSuggestions: vi.fn(),
   requireReadableProject: vi.fn(),
 }));
 
@@ -21,6 +24,12 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
 }));
+vi.mock("@/lib/competitors/suggestions", () => ({
+  getCompetitorSuggestions: mocks.getCompetitorSuggestions,
+}));
+vi.mock("@/lib/competitors/effective", () => ({
+  effectiveCompetitors: mocks.effectiveCompetitors,
+}));
 
 describe("loadSetupContext", () => {
   beforeEach(() => {
@@ -28,6 +37,7 @@ describe("loadSetupContext", () => {
     mocks.requireReadableProject.mockResolvedValue({
       project: { id: "project_1", name: "Example project", publicId: PROJECT_REF },
     });
+    mocks.prisma.project.findUnique.mockResolvedValue({ competitorSetupOutcome: null });
     mocks.prisma.keyword.findMany.mockResolvedValue([]);
     mocks.prisma.providerConnection.count.mockResolvedValue(0);
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
@@ -36,6 +46,8 @@ describe("loadSetupContext", () => {
     });
     mocks.prisma.queuedRankCheckBatch.findMany.mockResolvedValue([]);
     mocks.prisma.rankCheck.count.mockResolvedValue(0);
+    mocks.effectiveCompetitors.mockResolvedValue([]);
+    mocks.getCompetitorSuggestions.mockResolvedValue([]);
   });
 
   it("authorizes the route project before loading one authoritative context", async () => {
@@ -78,6 +90,8 @@ describe("loadSetupContext", () => {
 
     await expect(loadSetupContext(PROJECT_REF, now)).resolves.toEqual({
       completedCheckCount: 2,
+      competitorSetupOutcome: null,
+      competitorSuggestions: [],
       inFlightBatch: null,
       keywordCount: 2,
       keywordIds: ["kw_abcdefghijklmnopqrstuvwx", "kw_bcdefghijklmnopqrstuvwxy"],
@@ -89,6 +103,63 @@ describe("loadSetupContext", () => {
       providerExists: true,
       schedule: { mode: "scheduled", nextRunAt: scheduledNextRunAt, timezone: "UTC" },
     });
+  });
+
+  it.each([
+    { completedCheckCount: 0, competitorSetupOutcome: null },
+    { completedCheckCount: 1, competitorSetupOutcome: "confirmed" },
+    { completedCheckCount: 1, competitorSetupOutcome: "skipped" },
+  ] as const)("does not derive suggestions outside a ready confirmation state", async (setup) => {
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      competitorSetupOutcome: setup.competitorSetupOutcome,
+    });
+    mocks.prisma.rankCheck.count.mockResolvedValue(setup.completedCheckCount);
+    mocks.getCompetitorSuggestions.mockResolvedValue([
+      { bestPosition: 3, domain: "first.example.org", of: 12, seenOn: 9 },
+    ]);
+
+    await expect(loadSetupContext(PROJECT_REF, now)).resolves.toMatchObject({
+      completedCheckCount: setup.completedCheckCount,
+      competitorSetupOutcome: setup.competitorSetupOutcome,
+      competitorSuggestions: [],
+    });
+    expect(mocks.getCompetitorSuggestions).not.toHaveBeenCalled();
+  });
+
+  it("derives suggestions when competitor confirmation is ready", async () => {
+    const suggestion = { bestPosition: 3, domain: "first.example.org", of: 12, seenOn: 9 };
+    mocks.prisma.rankCheck.count.mockResolvedValue(1);
+    mocks.getCompetitorSuggestions.mockResolvedValue([suggestion]);
+
+    await expect(loadSetupContext(PROJECT_REF, now)).resolves.toMatchObject({
+      competitorSetupOutcome: null,
+      competitorSuggestions: [suggestion],
+    });
+    expect(mocks.getCompetitorSuggestions).toHaveBeenCalledWith("project_1");
+  });
+
+  it("resolves a stale skipped outcome as confirmed from effective membership", async () => {
+    mocks.prisma.project.findUnique.mockResolvedValue({ competitorSetupOutcome: "skipped" });
+    mocks.prisma.rankCheck.count.mockResolvedValue(1);
+    mocks.effectiveCompetitors.mockResolvedValue([
+      {
+        aliases: [],
+        domain: "legacy.example.org",
+        evidence: null,
+        id: "cmp_abcdefghijklmnopqrstuvwx",
+        label: null,
+        scopePolicy: "all_markets",
+        source: "manual",
+      },
+    ]);
+
+    await expect(loadSetupContext(PROJECT_REF, now)).resolves.toMatchObject({
+      competitorSetupOutcome: "confirmed",
+      competitorSuggestions: [],
+    });
+
+    expect(mocks.effectiveCompetitors).toHaveBeenCalledWith("project_1", null);
+    expect(mocks.getCompetitorSuggestions).not.toHaveBeenCalled();
   });
 
   it("uses keyword overrides and dispatch state to resolve the earliest scheduled run", async () => {

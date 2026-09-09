@@ -47,12 +47,10 @@ describe("OnboardingWizard provider state", () => {
     expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-    expect(
-      await screen.findByRole("heading", { name: "Add your first keywords" }),
-    ).toBeInTheDocument();
+    expect(await screen.findAllByRole("heading", { name: "Keywords" })).toHaveLength(2);
 
     const rail = screen.getByLabelText("Onboarding steps");
-    fireEvent.click(within(rail).getByRole("button", { name: "Connect data, completed" }));
+    fireEvent.click(within(rail).getByRole("button", { name: "Provider, completed" }));
 
     expect((screen.getByLabelText("API key") as HTMLInputElement).value).toBe("");
     expect(screen.queryByDisplayValue("dataforseo-secret")).not.toBeInTheDocument();

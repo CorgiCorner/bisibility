@@ -4,12 +4,12 @@ import type {
 } from "@/lib/actions/domain-overview";
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
 import type { RankedKeywordRow, RelevantPageRow } from "@/lib/providers/types";
+import type { ResearchScope } from "@/lib/research/scope";
 import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   DomainOverviewEstimateView,
-  DomainOverviewMarketView,
   DomainOverviewUiOutcome,
 } from "./domain-overview-workspace-model";
 import { reportFrom } from "./domain-overview-workspace-model";
@@ -95,7 +95,7 @@ function buildReport(
       ok: true,
     },
     languageCode: "en",
-    locationCode: 1_026_201,
+    locationCode: 2840,
     ok: true,
     overview: null,
     pages: {
@@ -151,17 +151,13 @@ function pagePageResult(
   };
 }
 
-const market: DomainOverviewMarketView = {
-  canonicalKey: "US/US-TX/Austin",
-  cityName: "Austin",
+const researchScope: ResearchScope & { providerLocationCode: number } = {
   countryCode: "US",
-  displayName: "Austin, Texas, United States",
-  hl: "en",
-  kind: "city",
+  countryName: "United States",
   languageCode: "en",
   languageLabel: "English",
-  locationCode: 1_026_201,
-  regionName: "Texas",
+  providerLocationCode: 2840,
+  researchAvailable: true,
 };
 
 const estimate: DomainOverviewEstimateView = {
@@ -190,7 +186,7 @@ function renderPagesHook(report: DomainOverviewReport, actions: Actions) {
     ({ report }: { report: DomainOverviewReport }) => {
       const [outcome, setOutcome] = useState<DomainOverviewUiOutcome | null>(report);
       const api = useDomainOverviewTablePages({
-        activeMarket: market,
+        activeResearchScope: researchScope,
         addSpend: actions.addSpend,
         estimate,
         loadKeywordsPageAction: actions.loadKeywordsPageAction,

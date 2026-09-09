@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AnalyzeCard } from "./AnalyzeCard";
@@ -109,17 +110,16 @@ describe("AnalyzeCard", () => {
     render(<AnalyzeCard {...baseProps} />);
     const trigger = screen.getByRole("button", { name: "How is this priced?" });
 
-    fireEvent.click(trigger);
+    await userEvent.click(trigger);
     expect(screen.getByText("Provider cost")).toBeInTheDocument();
-    const popoverRoot = document.querySelector(".MuiPopover-root");
+    const popoverRoot = document.querySelector("[data-ui-overlay]");
     expect(popoverRoot).not.toBeNull();
     fireEvent.keyDown(popoverRoot as Element, { key: "Escape" });
     await waitFor(() => expect(screen.queryByText("Provider cost")).not.toBeInTheDocument());
 
-    fireEvent.click(trigger);
-    const backdrop = document.querySelector(".MuiBackdrop-root");
-    expect(backdrop).not.toBeNull();
-    fireEvent.click(backdrop as Element);
+    await userEvent.click(trigger);
+    fireEvent.pointerDown(document.body);
+    fireEvent.click(document.body);
     await waitFor(() => expect(screen.queryByText("Provider cost")).not.toBeInTheDocument());
   });
 

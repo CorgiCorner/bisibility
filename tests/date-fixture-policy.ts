@@ -1,5 +1,5 @@
 import { FROZEN_NOW_MS } from "@/tests/clock";
-import ts from "typescript";
+import ts from "@typescript/typescript6";
 
 const NEAR_FROZEN_NOW_MS = 24 * 60 * 60 * 1_000;
 const UTC_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z)?$/u;

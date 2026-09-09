@@ -5,7 +5,7 @@ import { requireProjectScope } from "@/lib/actions/_shared";
 import { assertInviteMailerReady, deliverInvite } from "@/lib/actions/team-invite-delivery";
 import { assertAdminOrOwnerRemains, assertOwnerForAdminTier } from "@/lib/actions/team-rbac";
 import { writeAudit } from "@/lib/auth/audit";
-import type { Actor } from "@/lib/auth/authorize";
+import { type Actor, getProjectRole } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType, makePublicId } from "@/lib/db/public-id";
 import { assertInviteCreateAllowed, assertInviteResendAllowed } from "./invite-rate-limit";
@@ -36,6 +36,13 @@ async function requireTeamManager(context: TeamMutationContext, projectId: strin
   return requireProjectScope(context.actor, "manage", projectId, { type: "team" });
 }
 
+// Keep the privilege check valid if another request upgrades an invite before the upsert.
+function editableInviteFilter(context: TeamMutationContext, projectId: string) {
+  return getProjectRole(context.actor, projectId) === "owner"
+    ? {}
+    : { role: { notIn: ["admin" as const, "owner" as const] } };
+}
+
 async function findMember(projectId: string, memberId: string): Promise<MemberRow | null> {
   if (!isPublicIdOfType(memberId, "mbr")) return null;
   return prisma.membership.findFirst({
@@ -61,7 +68,14 @@ export async function inviteTeamMember(
 ) {
   assertInviteMailerReady();
   const project = await requireTeamManager(context, data.projectId);
+  assertOwnerForAdminTier(context.actor, project.id, data.role);
   const email = canonicalInviteEmail(data.email);
+  const existingInvite = await prisma.invite.findUnique({
+    select: { role: true },
+    where: { projectId_email: { email, projectId: project.id } },
+  });
+  if (existingInvite)
+    assertOwnerForAdminTier(context.actor, project.id, existingInvite.role, data.role);
   const existingMember = await prisma.membership.findFirst({
     select: { id: true },
     where: { projectId: project.id, user: { email: { equals: email, mode: "insensitive" } } },
@@ -81,7 +95,10 @@ export async function inviteTeamMember(
     create: { ...inviteData, email, projectId: project.id, publicId: makePublicId("inv") },
     include: inviteDeliveryInclude,
     update: { ...inviteData, acceptedAt: null },
-    where: { projectId_email: { email, projectId: project.id } },
+    where: {
+      projectId_email: { email, projectId: project.id },
+      ...editableInviteFilter(context, project.id),
+    },
   });
   const result = await deliverInvite(invite, rawToken);
   await writeAudit({
@@ -103,7 +120,8 @@ export async function revokeTeamInvite(
     where: { acceptedAt: null, projectId: project.id, publicId: data.inviteId },
   });
   if (!invite) throw new Error("Invite not found.");
-  await prisma.invite.delete({ where: { id: invite.id } });
+  assertOwnerForAdminTier(context.actor, project.id, invite.role);
+  await prisma.invite.delete({ where: { id: invite.id, role: invite.role } });
   await writeAudit({
     action: "team.invite.revoke",
     actorId: context.auditActorId,
@@ -125,6 +143,7 @@ export async function resendTeamInvite(
     where: { acceptedAt: null, projectId: project.id, publicId: data.inviteId },
   });
   if (!before) throw new Error("Invite not found.");
+  assertOwnerForAdminTier(context.actor, project.id, before.role);
   await assertInviteResendAllowed(before.id);
 
   const rawToken = newInviteToken();
@@ -132,7 +151,7 @@ export async function resendTeamInvite(
   const invite = await prisma.invite.update({
     data: { expiresAt, token: hashInviteToken(rawToken) },
     include: inviteDeliveryInclude,
-    where: { id: before.id },
+    where: { id: before.id, role: before.role },
   });
   const result = await deliverInvite(invite, rawToken);
   await writeAudit({

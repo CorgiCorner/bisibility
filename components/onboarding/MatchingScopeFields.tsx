@@ -1,4 +1,5 @@
-import { Checkbox } from "@/components/ui";
+import { Checkbox } from "@/components/ui/Checkbox";
+import type { AnalyticsControlId } from "@/lib/analytics/controls";
 import { cn } from "@/lib/ui/cn";
 import type { FieldValues, Path, UseFormRegister } from "react-hook-form";
 import { z } from "zod";
@@ -23,6 +24,12 @@ export const defaultMatchingScopeValues = {
 } satisfies MatchingScopeValues;
 
 type MatchingScopeFieldName = keyof MatchingScopeValues;
+
+const analyticsControls = {
+  includeSubdomains: "onboarding.matching_subdomains",
+  rootAndWww: "onboarding.matching_root_www",
+  urlPrefix: "onboarding.matching_url_prefix",
+} satisfies Record<MatchingScopeFieldName, AnalyticsControlId>;
 
 type ScopeOption = {
   description: string;
@@ -72,7 +79,7 @@ export function MatchingScopeFields<T extends FieldValues>({
   values,
 }: Readonly<MatchingScopeFieldsProps<T>>) {
   return (
-    <div className="mt-3 flex flex-col gap-2.5">
+    <div className="mt-3 flex flex-col gap-2.5" data-analytics-mask>
       {scopeOptionsFor(displayDomain(domain)).map((option) => {
         const selected = values[option.field];
         const inputId = `matching-scope-${option.field}`;
@@ -89,6 +96,7 @@ export function MatchingScopeFields<T extends FieldValues>({
             key={option.field}
           >
             <Checkbox
+              analytics={{ control: analyticsControls[option.field] }}
               aria-label={option.title}
               id={inputId}
               {...register(option.field as Path<T>)}

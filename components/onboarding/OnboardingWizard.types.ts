@@ -1,3 +1,5 @@
+import type { LocationFieldValue } from "@/components/keywords/location-picker-data";
+import type { FirstCheckCandidate } from "@/lib/actions/rank-check-preview-result";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
 import type { OnboardingFlowState, OnboardingStepNumber } from "./onboarding-fixtures";
@@ -14,9 +16,13 @@ export type OnboardingWizardProps = {
   gscOAuthConfigured: boolean;
   gscPropertyLabel?: string | null;
   hasAnalyticsSource: boolean;
+  hasOtherAnalyticsSource?: boolean;
   initialFlowState: OnboardingFlowState;
+  initialLocationSelections?: readonly LocationFieldValue[];
   initialKeywordCount: number;
   initialKeywordText?: string | null;
+  initialKeywordDraft?: string;
+  initialFirstCheckCandidates?: FirstCheckCandidate[];
   initialProject: OnboardingProject | null;
   initialWebsite?: string;
   initialSerpConnections?: ConnectedProviderMap;

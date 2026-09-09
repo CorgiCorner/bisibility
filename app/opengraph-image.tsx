@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 
 export const alt = "Open-source SEO platform";
 export const contentType = "image/png";
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const size = {
   height: 630,
   width: 1200,

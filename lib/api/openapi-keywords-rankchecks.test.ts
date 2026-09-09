@@ -18,6 +18,7 @@ describe("OpenAPI document", () => {
       "topic",
       "intent",
       "device",
+      "location_key",
       "country",
       "position_gt",
       "position_lt",

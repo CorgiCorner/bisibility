@@ -1,5 +1,5 @@
 import { deferred } from "@/tests/deferred";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { type FirstCheckRunActions, useFirstCheckRun } from "./use-first-check-run";
 
@@ -62,9 +62,50 @@ describe("StepFirstCheck", () => {
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Start twice" })).toHaveAttribute(
         "data-status",
-        "completed",
+        "failed",
       ),
     );
+  });
+
+  it("keeps the start guard after a launch has returned queued", async () => {
+    const run = vi.fn(async () => ({ status: "queued" as const, runId: "rcr_1" }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => {})),
+    );
+    try {
+      const view = render(
+        <DoubleStartHarness
+          actions={{
+            runFirstCheckPreviewAction: run,
+            listFirstCheckCandidatesAction: vi.fn(async () => ({
+              candidates: [
+                {
+                  id: "keyword_1",
+                  publicId: "kw_1",
+                  text: "rank tracker",
+                  device: "desktop" as const,
+                  market: { languageLabel: "English", locationLabel: "United States" },
+                },
+              ],
+              hasAnalyticsSource: false,
+              isSampleProject: false,
+              providerReady: true,
+            })),
+          }}
+        />,
+      );
+      await act(async () => fireEvent.click(screen.getByRole("button", { name: "Start twice" })));
+      expect(screen.getByRole("button", { name: "Start twice" })).toHaveAttribute(
+        "data-status",
+        "queued",
+      );
+      await act(async () => fireEvent.click(screen.getByRole("button", { name: "Start twice" })));
+      expect(run).toHaveBeenCalledTimes(1);
+      view.unmount();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("rejects an unscoped preview instead of falling back to multiple keyword texts", async () => {

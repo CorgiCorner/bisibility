@@ -7,6 +7,7 @@ import {
   saveStoredGoogleProperty,
 } from "@/lib/providers/analytics/google-stored-property";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { dateKey } from "@/lib/search-insights/dates";
 import { searchInsightsPropertyKey } from "@/lib/search-insights/keys";
 import type { SearchInsightsProperty } from "@/lib/search-insights/queries/context";
@@ -21,12 +22,13 @@ import {
   type SearchInsightsCsv,
 } from "@/lib/search-insights/queries/query-export";
 import { requestSearchInsightsSync } from "@/lib/search-insights/sync/sync-now";
-import { transitionActiveSearchImport } from "@/lib/search-insights/sync/user-pause-control";
+import { transitionExactSearchImport } from "@/lib/search-insights/sync/user-pause-control";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
 
 const MODULE_ROUTE = searchConsolePath(asProjectRef("[project]"));
+const RUNS_ROUTE = projectRunsPath(asProjectRef("[project]"));
 const SOURCE = "gsc";
 
 const projectSchema = z.object({
@@ -36,6 +38,8 @@ const selectPropertySchema = projectSchema.extend({
   property: z.string().trim().min(1).max(300),
 });
 const transitionSchema = projectSchema.extend({
+  importId: z.string().trim().min(1).max(120),
+  property: z.string().trim().min(1).max(300),
   transition: z.enum(["pause", "resume", "retry"]),
 });
 const exportSchema = projectSchema.extend({
@@ -166,24 +170,30 @@ async function runSearchImportTransition(
   input: unknown,
   expected: "pause" | "resume" | "retry",
 ): Promise<SearchImportActionResult> {
-  const data = parseActionInput(transitionSchema, input);
-  if (data.transition !== expected) return { message: transitionFailure(expected), ok: false };
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "update", data.projectId, { type: "project" });
+  const parsed = transitionSchema.safeParse(input);
+  if (!parsed.success || parsed.data.transition !== expected) {
+    return { message: transitionFailure(expected), ok: false };
+  }
+  const data = parsed.data;
   try {
-    const result = await transitionActiveSearchImport({
+    const actor = await getActionActor();
+    const project = await requireProjectScope(actor, "update", data.projectId, { type: "project" });
+    const result = await transitionExactSearchImport({
       actorId: actor.id,
+      importId: data.importId,
       projectId: project.id,
-      projectPublicId: project.publicId,
+      property: data.property,
       transition: expected,
     });
     if (!result.changed) return { message: transitionFailure(expected), ok: false };
     revalidatePath(MODULE_ROUTE, "page");
+    revalidatePath(RUNS_ROUTE, "page");
+    revalidatePath("/api/operations");
     return { ok: true, state: result.state };
   } catch (error) {
     console.error("[search-insights] import control transition failed", {
       error,
-      projectId: project.id,
+      projectId: data.projectId,
       transition: expected,
     });
     return { message: transitionFailure(expected), ok: false };

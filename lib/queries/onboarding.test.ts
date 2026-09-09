@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  existingOnboardingPlaceLocationKeys,
   getOnboardingKeywordCount,
+  getOnboardingKeywordTexts,
   getOnboardingNextCheckAt,
   getOnboardingProjectMarketKeys,
   hasActiveOnboardingApiKey,
@@ -10,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     $queryRaw: vi.fn(),
     apiKey: { findFirst: vi.fn() },
+    location: { findMany: vi.fn() },
     projectMarket: { findMany: vi.fn() },
     keywordDispatchState: { findFirst: vi.fn() },
     keyword: { findFirst: vi.fn(), findMany: vi.fn() },
@@ -146,5 +149,29 @@ describe("getOnboardingNextCheckAt", () => {
       keyword("paused", "2026-08-29T02:00:00Z", defaults("paused")),
     ]);
     await expect(getOnboardingNextCheckAt("prj_1")).resolves.toEqual(next);
+  });
+});
+
+it("retains cached regions when validating resumed onboarding locations", async () => {
+  mocks.prisma.location.findMany.mockResolvedValue([{ canonicalKey: "ES/Andalusia@en" }]);
+  expect(await existingOnboardingPlaceLocationKeys(["ES/Andalusia@en"])).toEqual(
+    new Set(["ES/Andalusia@en"]),
+  );
+  expect(mocks.prisma.location.findMany).toHaveBeenCalledWith({
+    select: { canonicalKey: true },
+    where: { canonicalKey: { in: ["ES/Andalusia@en"] }, kind: { in: ["city", "region"] } },
+  });
+});
+
+it("loads one saved keyword text per identity across markets and devices", async () => {
+  mocks.requireReadableProject.mockResolvedValue({ project: { id: "project_1" } });
+  mocks.prisma.keyword.findMany.mockResolvedValue([{ text: "rank tracker" }, { text: "seo api" }]);
+  expect(await getOnboardingKeywordTexts("prj_1")).toEqual(["rank tracker", "seo api"]);
+  expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
+  expect(mocks.prisma.keyword.findMany).toHaveBeenCalledWith({
+    distinct: ["textNormalized"],
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { text: true },
+    where: { projectId: "project_1", archivedAt: null },
   });
 });

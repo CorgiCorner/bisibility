@@ -6,7 +6,6 @@ type Props = {
   busy: boolean;
   disabled: boolean;
   editor: ReactNode;
-  label: string;
   mode: "modal" | "step";
   onCancel?: () => void;
   onExited: () => void;
@@ -19,7 +18,6 @@ export function StepConnectProviderLayout({
   busy,
   disabled,
   editor,
-  label,
   mode,
   onCancel,
   onExited,
@@ -32,7 +30,6 @@ export function StepConnectProviderLayout({
       <StepConnectProviderModal
         busy={busy}
         disabled={disabled}
-        label={label}
         onCancel={onCancel}
         onExited={onExited}
         onSave={onSave}

@@ -2,7 +2,7 @@
 
 import { RateSourceChip } from "@/components/integrations/RateSourceChip";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { centsToDollars } from "@/lib/format/currency";
 import type { ProviderActionHandlers, ProviderRateData } from "@/lib/integrations/types";
 import type { ProviderRateFeature } from "@/lib/provider-rates/resolver";
@@ -169,7 +169,7 @@ export function ProviderRates({
                   <Button
                     disabled={pending}
                     onClick={() => void save(rate, null)}
-                    sx={{ color: "var(--fg-muted)" }}
+                    style={{ "--control-color": "var(--fg-muted)" }}
                     type="button"
                     variant="secondary"
                   >

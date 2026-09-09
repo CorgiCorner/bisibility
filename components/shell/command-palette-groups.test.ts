@@ -28,9 +28,8 @@ describe("commandGroups", () => {
 
     expect(disabledNavigate?.items.map((item) => item.label)).not.toContain("Timeline");
     expect(disabledNavigate?.items.map((item) => item.label)).not.toContain("Competitors");
-    expect(enabledNavigate?.items.map((item) => item.label)).toEqual(
-      expect.arrayContaining(["Timeline", "Competitors"]),
-    );
+    expect(enabledNavigate?.items.map((item) => item.label)).toContain("Competitors");
+    expect(enabledNavigate?.items.map((item) => item.label)).not.toContain("Timeline");
     expect(enabledMarkets?.items.map((item) => item.label)).toEqual(
       disabledMarkets?.items.map((item) => item.label),
     );

@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { launchRankCheckRun } from "./launch";
 import {
   ALREADY_IN_PROGRESS_REASON,

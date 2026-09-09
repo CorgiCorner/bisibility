@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ScheduleEditor } from "./ScheduleEditor";
@@ -22,7 +22,7 @@ const schedule = {
 const connectedProviders = [{ label: "SerpApi", value: "serpapi" }];
 const projectDefaults = { provider: connectedProviders[0], serpDepth: 20 } as const;
 
-function renderEditor() {
+function renderEditor(value = schedule) {
   return render(
     <ScheduleEditor
       connectedProviders={connectedProviders}
@@ -30,7 +30,7 @@ function renderEditor() {
       projectId="prj_story"
       projectDefaults={projectDefaults}
       projectTimezone="Europe/Madrid"
-      schedule={schedule}
+      schedule={value}
     />,
   );
 }
@@ -50,6 +50,48 @@ function savedPayload(fetchMock: ReturnType<typeof mockScheduleUpdate>) {
 describe("ScheduleEditor submission", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("keeps a restored schedule nondefault when the project has no default", async () => {
+    const fetchMock = mockScheduleUpdate();
+    render(
+      <ScheduleEditor
+        connectedProviders={connectedProviders}
+        defaultScheduleName={null}
+        projectId="prj_story"
+        projectDefaults={projectDefaults}
+        projectTimezone="Europe/Warsaw"
+        schedule={{ ...schedule, enabled: false }}
+      />,
+    );
+    expect(
+      screen.getByRole("switch", { name: /^Use as default for new keywords/ }),
+    ).not.toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Save schedule" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock).toHaveBeenCalledWith("/api/check-schedules/sch_story", expect.any(Object));
+  });
+
+  it("updates the automatic name through cadence changes and saves it", async () => {
+    const user = userEvent.setup();
+    const fetchMock = mockScheduleUpdate();
+    renderEditor({ ...schedule, name: "Daily 06:00" });
+    await user.click(screen.getByRole("radio", { name: "Weekly" }));
+    await user.click(screen.getByRole("button", { name: "Day of week" }));
+    await user.click(screen.getByRole("menuitem", { name: "Friday" }));
+    fireEvent.change(screen.getByLabelText("Time, 24-hour"), { target: { value: "08:00" } });
+    expect(screen.getByLabelText("Name")).toHaveValue("Weekly · Fri 08:00");
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(savedPayload(fetchMock)).toMatchObject({ name: "Weekly · Fri 08:00", serpDepth: null });
+  });
+
+  it("preserves a custom name when frequency or time changes", async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await user.click(screen.getByRole("radio", { name: "Weekly" }));
+    fireEvent.change(screen.getByLabelText("Time, 24-hour"), { target: { value: "08:00" } });
+    expect(screen.getByLabelText("Name")).toHaveValue("Commercial daily");
   });
 
   it("saves project-default provider and depth values as follow-default", async () => {

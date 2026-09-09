@@ -1,5 +1,5 @@
 import { cn } from "@/lib/ui/cn";
-import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/ssr";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown";
 import type { ReactNode } from "react";
 
 export type DisclosureHeadingLevel = "h2" | "h3" | "h4" | "h5" | "h6";

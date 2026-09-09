@@ -1,10 +1,10 @@
 "use client";
 
+import { DialogSurface as Dialog } from "@/components/ui/DialogSurface";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { MOTION_MODAL_ENTER, MOTION_MODAL_EXIT } from "@/lib/ui/motion";
-import Dialog from "@mui/material/Dialog";
-import { XIcon as X } from "@phosphor-icons/react";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { cva } from "class-variance-authority";
 import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useId } from "react";
 
@@ -15,6 +15,7 @@ export type ModalProps = {
   open: boolean;
   onClose: () => void;
   title?: ReactNode;
+  description?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
   size?: ModalSize;
@@ -43,6 +44,7 @@ export function Modal({
   ariaLabelledBy,
   children,
   contentClassName,
+  description,
   dismissDisabled = false,
   footer,
   footerClassName,
@@ -59,7 +61,8 @@ export function Modal({
   width,
 }: Readonly<ModalProps>) {
   const titleId = useId();
-  const hasHeader = title || showClose;
+  const descriptionId = useId();
+  const hasHeader = title || description || showClose;
 
   function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
     const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229;
@@ -93,33 +96,29 @@ export function Modal({
   return (
     <Dialog
       aria-labelledby={title ? titleId : ariaLabelledBy}
+      aria-describedby={description ? descriptionId : undefined}
       onClose={handleDialogClose}
       open={open}
-      slotProps={{
-        backdrop: { sx: { backgroundColor: "rgba(20,16,8,.44)" } },
-        paper: {
-          className: "rounded-card",
-          elevation: 0,
-          onKeyDown: handleKeyDown,
-          sx: {
-            "&.rounded-card": { borderRadius: UI_RADIUS_ROLES.card },
-            backgroundColor: "var(--bg-elev)",
-            border: "1px solid var(--border)",
-            boxShadow: "none",
-            color: "var(--fg)",
-            margin: "24px",
-            maxHeight: "calc(100dvh - 48px)",
-            maxWidth: "calc(100% - 48px)",
-            overflow: "hidden",
-            width: width ?? modalWidth[size],
-          },
-        },
-        transition: {
-          ...(initialFocus ? { onEntered: initialFocus } : {}),
-          ...(onExited ? { onExited } : {}),
+      backdropProps={{ style: { backgroundColor: "rgba(20,16,8,.44)" } }}
+      contentProps={{
+        className: "rounded-card",
+        onKeyDown: handleKeyDown,
+        style: {
+          borderRadius: UI_RADIUS_ROLES.card,
+          backgroundColor: "var(--bg-elev)",
+          border: "1px solid var(--border)",
+          boxShadow: "none",
+          color: "var(--fg)",
+          margin: 0,
+          maxHeight: "calc(100dvh - 48px)",
+          maxWidth: "calc(100% - 48px)",
+          overflow: "hidden",
+          width: width ?? modalWidth[size],
         },
       }}
-      transitionDuration={{ enter: MOTION_MODAL_ENTER, exit: MOTION_MODAL_EXIT }}
+      onEntered={initialFocus}
+      onExited={onExited}
+      duration={{ enter: MOTION_MODAL_ENTER, exit: MOTION_MODAL_EXIT }}
     >
       <div className="flex max-h-[calc(100dvh-48px)] min-h-0 flex-col overflow-hidden">
         {hasHeader ? (
@@ -129,16 +128,24 @@ export function Modal({
               headerDivider ? "border-b border-border py-4.5" : "pb-0",
             )}
           >
-            {title ? (
-              <h2
-                className="m-0 min-w-0 text-[16.5px] font-semibold leading-tight tracking-[-0.3px] text-fg"
-                id={titleId}
-              >
-                {title}
-              </h2>
-            ) : (
-              <span />
-            )}
+            <div className="min-w-0 flex-1">
+              {title ? (
+                <h2
+                  className="m-0 min-w-0 text-wrap! text-[16.5px] font-semibold leading-tight tracking-[-0.3px] text-fg"
+                  id={titleId}
+                >
+                  {title}
+                </h2>
+              ) : null}
+              {description ? (
+                <p
+                  className="m-0 mt-1.5 text-[13px] leading-normal text-fg-muted"
+                  id={descriptionId}
+                >
+                  {description}
+                </p>
+              ) : null}
+            </div>
             {showClose ? (
               <button
                 aria-label="Close modal"

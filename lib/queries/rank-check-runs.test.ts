@@ -499,6 +499,82 @@ describe("rank-check run queries", () => {
     );
   });
 
+  it("returns the persisted result depth and fractional cost within the requested project", async () => {
+    mocks.runFindFirst.mockResolvedValue({ id: "run_1" });
+    mocks.itemFindMany.mockResolvedValue([
+      {
+        ...item("item_1", new Date()),
+        status: "completed",
+        rankCheck: {
+          costCents: { toString: () => "0.4000" },
+          errorCode: null,
+          position: null,
+          provider: "dataforseo",
+          publicId: "check_1",
+          rankingUrl: null,
+          requestedDepth: 20,
+        },
+      },
+    ]);
+    const page = await listRankCheckRunItems(
+      "project_1",
+      runIds[0] as string,
+      new URL("https://example.com/items"),
+    );
+    expect(page.data[0]?.rankCheck).toMatchObject({
+      costCents: 0.4,
+      requestedDepth: 20,
+      position: null,
+    });
+    expect(mocks.runFindFirst).toHaveBeenCalledWith({
+      select: { id: true },
+      where: { projectId: "project_1", publicId: runIds[0] },
+    });
+    expect(mocks.itemFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          rankCheck: {
+            select: {
+              costCents: true,
+              errorCode: true,
+              position: true,
+              provider: true,
+              publicId: true,
+              rankingUrl: true,
+              requestedDepth: true,
+            },
+          },
+        }),
+        where: { runId: "run_1" },
+      }),
+    );
+  });
+
+  it("filters a shared scheduled run to the requested keyword", async () => {
+    mocks.runFindFirst.mockResolvedValue({ id: "run_1" });
+    mocks.itemFindMany.mockResolvedValue([]);
+    await listRankCheckRunItems(
+      "project_1",
+      runIds[0] as string,
+      new URL("https://example.com/items?keyword=kw_target&limit=1"),
+    );
+    expect(mocks.itemFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { runId: "run_1", keyword: { publicId: "kw_target" } } }),
+    );
+  });
+
+  it("does not read items when the run is outside the project", async () => {
+    mocks.runFindFirst.mockResolvedValue(null);
+    await expect(
+      listRankCheckRunItems(
+        "other_project",
+        runIds[0] as string,
+        new URL("https://example.com/items"),
+      ),
+    ).rejects.toThrow("Rank-check run not found.");
+    expect(mocks.itemFindMany).not.toHaveBeenCalled();
+  });
+
   it("maps schedule list and detail reads", async () => {
     const row = {
       _count: { keywords: 3 },

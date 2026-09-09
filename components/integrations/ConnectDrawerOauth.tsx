@@ -1,7 +1,7 @@
 "use client";
 
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { ConfirmModal } from "@/components/ui";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import type {
   GoogleOAuthSetup,
   GooglePropertySaveResult,

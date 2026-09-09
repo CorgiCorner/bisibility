@@ -3,7 +3,6 @@ import { stubBlobDownload } from "@/tests/blob-download";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { stubResizeObserver } from "@/tests/observers";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { pendingRows, renderPendingGrid } from "./KeywordsGrid.test-helpers";
 
@@ -12,7 +11,6 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   launchRankCheckRunAction: vi.fn(),
 }));
-
 vi.mock("@/lib/actions/keyword-export-action", () => ({ exportKeywords: mocks.exportKeywords }));
 vi.mock("@/lib/actions/rank-check-run-launch", () => ({
   launchRankCheckRunAction: mocks.launchRankCheckRunAction,
@@ -20,15 +18,6 @@ vi.mock("@/lib/actions/rank-check-run-launch", () => ({
 vi.mock("@/components/keywords/import/ImportCsvWizard", () => ({
   ImportCsvWizard: () => null,
 }));
-vi.mock("./DeferredDataGrid", async () => {
-  const { MuiDataGrid } = await import("./MuiDataGrid");
-  return {
-    DeferredDataGrid: (props: Omit<ComponentProps<typeof MuiDataGrid>, "onReady">) => (
-      <MuiDataGrid {...props} onReady={() => undefined} />
-    ),
-  };
-});
-
 const preview = {
   budget: {
     blocked: false,
@@ -268,7 +257,7 @@ describe("KeywordsGrid actions", () => {
     });
   }, 15_000);
 
-  it("exports locally filtered rows as an ID-scoped selection", async () => {
+  it("exports searched server results as a query selection", async () => {
     const rows = pendingRows(2);
     renderPendingGrid({ rows });
 
@@ -282,7 +271,7 @@ describe("KeywordsGrid actions", () => {
       }),
     );
 
-    expect(await screen.findByText("Export 1 selected keyword")).toBeInTheDocument();
+    expect(await screen.findByText("Export 2 filtered keywords")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
 
     await waitFor(() =>
@@ -301,7 +290,10 @@ describe("KeywordsGrid actions", () => {
         projectId: "prj_1",
         range: "30",
         scope: "current",
-        selection: { keywordIds: [rows[0].id], mode: "selected" },
+        selection: {
+          mode: "query",
+          query: expect.objectContaining({ grouped: false, search: rows[0].keyword }),
+        },
       }),
     );
   }, 15_000);

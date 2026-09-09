@@ -8,11 +8,11 @@ const mocks = vi.hoisted(() => ({
   getKeywordCount: vi.fn(),
   getRankCheckRunCount: vi.fn(),
   getKeywordDefaultMarket: vi.fn(),
-  getKeywordRows: vi.fn(),
   getKeywordTagSuggestions: vi.fn(),
   getPreferences: vi.fn(),
   loadRankTrackerCostContext: vi.fn(),
   getProjectMarkets: vi.fn(),
+  getRankTrackerGroupedList: vi.fn(),
   getRankTrackerKeywordList: vi.fn(),
   getSavedView: vi.fn(),
   isProviderConnected: vi.fn(),
@@ -56,9 +56,10 @@ vi.mock("@/lib/queries/integrations", () => ({ isProviderConnected: mocks.isProv
 vi.mock("@/lib/queries/keywords", () => ({
   getKeywordCount: mocks.getKeywordCount,
   getKeywordDefaultMarket: mocks.getKeywordDefaultMarket,
-  getKeywordRows: mocks.getKeywordRows,
   getKeywordTagSuggestions: mocks.getKeywordTagSuggestions,
-  KEYWORD_LIST_MAX: 1000,
+}));
+vi.mock("@/lib/queries/rank-tracker-grouped-list", () => ({
+  getRankTrackerGroupedList: mocks.getRankTrackerGroupedList,
 }));
 vi.mock("@/lib/queries/project-markets", () => ({ getProjectMarkets: mocks.getProjectMarkets }));
 vi.mock("@/lib/queries/rank-check-runs", () => ({
@@ -111,7 +112,18 @@ describe("KeywordsPage canonicalization", () => {
       locationKey: "US",
       source: "explicit",
     });
-    mocks.getKeywordRows.mockResolvedValue([]);
+    mocks.getRankTrackerGroupedList.mockResolvedValue({
+      facets: { intents: [], positions: [], tags: [], topics: [] },
+      groups: [],
+      locations: [],
+      matchedGroupCount: 0,
+      matchedTargetCount: 0,
+      page: 1,
+      pageCount: 0,
+      pageSize: 25,
+      resolvedLens: { device: "all", locationId: null },
+      totalCount: 9,
+    });
     mocks.getKeywordTagSuggestions.mockResolvedValue([]);
     mocks.getRankTrackerKeywordList.mockResolvedValue({
       facets: { intents: [], positions: [], tags: [], topics: [] },

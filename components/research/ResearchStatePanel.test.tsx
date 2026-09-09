@@ -10,7 +10,7 @@ const expected: Array<[ResearchState, RegExp]> = [
   ["needs_reauth", /needs to be reconnected/i],
   ["lookup_failed", /lookup did not go through/i],
   ["empty", /no keyword ideas found/i],
-  ["unsupported_location", /market is not supported/i],
+  ["unsupported_location", /^Research is not available for this country and language$/],
 ];
 
 describe("ResearchStatePanel", () => {

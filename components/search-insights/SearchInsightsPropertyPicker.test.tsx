@@ -1,4 +1,4 @@
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -229,9 +229,9 @@ describe("SearchInsightsPropertyPicker", () => {
     ]);
     for (const [index, header] of [...headers].entries()) {
       expect(header).toHaveAttribute("role", "presentation");
-      expect(header).toHaveClass("MuiListSubheader-gutters", "uppercase");
+      expect(header).toHaveClass("uppercase");
       expect(header).not.toHaveClass("font-mono");
-      expect(header).not.toHaveClass("MuiListSubheader-sticky");
+      expect((header as HTMLElement).style.position).not.toBe("sticky");
       expect(header).toHaveStyle({
         backgroundColor: "var(--bg-sunken)",
         marginBottom: "4px",
@@ -276,7 +276,8 @@ describe("SearchInsightsPropertyPicker", () => {
     const content = footer?.querySelector('[data-slot="menu-action-footer-content"]');
     expect(content).toHaveClass("px-1.5", "py-1.5");
     expect(content?.parentElement).toBe(footer);
-    expect(connection).toHaveClass("w-full", "MuiButton-outlined");
+    expect(connection).toHaveAttribute("data-variant", "secondary");
+    expect(connection).toHaveClass("w-full");
     expect(connection).toHaveAttribute("href", "/app/prj_1/integrations?connect=gsc#provider-gsc");
     expect(screen.queryByRole("button", { name: "Change property" })).toBeNull();
     expect(screen.queryByRole("dialog", { name: "Change Search Console property" })).toBeNull();
@@ -327,7 +328,9 @@ describe("SearchInsightsPropertyPicker", () => {
 
     const link = screen.getByRole("link", { name: "Manage connection" });
     expect(link).toHaveAttribute("href", "/app/prj_1/integrations?connect=gsc#provider-gsc");
-    expect(link).toHaveClass("w-full", "MuiButton-outlined", "min-h-[30px]");
+    expect(link).toHaveAttribute("data-variant", "secondary");
+    expect(link).toHaveClass("w-full");
+    expect(link).toHaveAttribute("data-size", "xs");
     expect(screen.queryByRole("button", { name: "Change property" })).toBeNull();
     expect(screen.queryByRole("dialog", { name: "Change Search Console property" })).toBeNull();
   });

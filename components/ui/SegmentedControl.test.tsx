@@ -25,7 +25,7 @@ describe("SegmentedControl", () => {
 
     const control = screen.getByRole("group");
     expect(control).toHaveAttribute("aria-busy", "true");
-    expect(control.querySelector(".MuiCircularProgress-root")).toBeInTheDocument();
+    expect(control.querySelector("[data-spinner]")).toBeInTheDocument();
     for (const option of screen.getAllByRole("radio")) expect(option).toBeDisabled();
   });
 

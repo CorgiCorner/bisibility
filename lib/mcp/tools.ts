@@ -97,6 +97,7 @@ function dispatchToRest(name: string, input: ToolArgs): RestCall {
       "limit",
       "country",
       "device",
+      "location_key",
       "position_gt",
       "position_lt",
       "search",

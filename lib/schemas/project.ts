@@ -1,13 +1,9 @@
+import { LEGACY_DEFAULT_MARKET_NAME } from "@/lib/api/legacy-market-input";
 import {
   DEFAULT_INSPECTION_DAILY_LIMIT,
   MAX_INSPECTION_DAILY_LIMIT,
 } from "@/lib/presence/constants";
-import {
-  DEFAULT_SERP_DEPTH,
-  DEFAULT_SERP_DEVICE,
-  DEFAULT_SERP_MARKET,
-  type SerpDepth,
-} from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_DEVICE, type SerpDepth } from "@/lib/serp/constants";
 import { z } from "zod";
 import {
   canonicalKeySchema,
@@ -76,7 +72,7 @@ export function trackedProjectDomain(value: string | null | undefined) {
 export const projectDefaultsSchema = keywordScheduleBaseSchema
   .extend({
     city: serpCitySchema,
-    country: serpMarketNameSchema.default(DEFAULT_SERP_MARKET),
+    country: serpMarketNameSchema.default(LEGACY_DEFAULT_MARKET_NAME),
     device: deviceSchema.default(DEFAULT_SERP_DEVICE),
     locationKey: canonicalKeySchema.optional(),
     projectId: idSchema,

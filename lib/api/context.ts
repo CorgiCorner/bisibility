@@ -1,5 +1,6 @@
 import type { Actor } from "@/lib/auth/authorize";
 import type { AuthenticatedApiKey, PersonalTokenAuth } from "./auth";
+import { ApiForbiddenError } from "./errors";
 import { errorResponse } from "./responses";
 
 export type ApiContext = {
@@ -53,4 +54,13 @@ export function notFound(ctx: Pick<ApiContext, "headers" | "instance">, detail: 
     headers: ctx.headers,
     instance: ctx.instance,
   });
+}
+
+export function requireApiActor(ctx: Pick<ApiContext, "actor">): Actor {
+  if (!ctx.actor) throw new ApiForbiddenError("API actor is required.");
+  return ctx.actor;
+}
+
+export function apiMutationContext(ctx: ApiContext) {
+  return { actor: requireApiActor(ctx), auditActorId: ctx.actorId ?? null };
 }

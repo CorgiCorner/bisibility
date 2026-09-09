@@ -1,6 +1,6 @@
 "use client";
 
-import { InfoIcon as Info } from "@phosphor-icons/react";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import { Tooltip } from "./Tooltip";
 
 export type InfoTooltipProps = {

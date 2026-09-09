@@ -1,10 +1,10 @@
+"use client";
+
+import { track } from "@/lib/analytics/client";
 import type { ProjectRef } from "@/lib/routing/app-path";
-import { docsLinkProps } from "@/lib/site/site";
-import {
-  SparkleIcon as Sparkle,
-  StarIcon as Star,
-  UserPlusIcon as UserPlus,
-} from "@phosphor-icons/react/dist/ssr";
+import { SparkleIcon as Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle";
+import { StarIcon as Star } from "@phosphor-icons/react/dist/ssr/Star";
+import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/ssr/UserPlus";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { type GoFurtherCard, goFurtherCards } from "./go-further-cards";
@@ -31,6 +31,14 @@ function CardContent({ card }: Readonly<{ card: GoFurtherCard }>) {
 }
 
 export function GoFurtherCards({ projectRef }: Readonly<{ projectRef: ProjectRef }>) {
+  function recordClick(card: GoFurtherCard) {
+    track("getting_started_cta_clicked", {
+      card: card.id,
+      cta: "go_further",
+      step: "first_check",
+    });
+  }
+
   return (
     <section aria-labelledby="go-further-heading">
       <h2
@@ -44,13 +52,21 @@ export function GoFurtherCards({ projectRef }: Readonly<{ projectRef: ProjectRef
           card.external ? (
             <a
               className={cardClassName}
+              href={card.href}
               key={card.id}
-              {...docsLinkProps(card.href, { external: true })}
+              onClick={() => recordClick(card)}
+              rel="noreferrer noopener"
+              target="_blank"
             >
               <CardContent card={card} />
             </a>
           ) : (
-            <Link className={cardClassName} href={card.href} key={card.id}>
+            <Link
+              className={cardClassName}
+              href={card.href}
+              key={card.id}
+              onClick={() => recordClick(card)}
+            >
               <CardContent card={card} />
             </Link>
           ),

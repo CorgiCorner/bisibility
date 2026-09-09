@@ -1,9 +1,7 @@
 import type { UpcomingBlockedGroup } from "@/lib/checks/contract";
-import {
-  GaugeIcon as Gauge,
-  PauseIcon as Pause,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react/dist/ssr";
+import { GaugeIcon as Gauge } from "@phosphor-icons/react/dist/ssr/Gauge";
+import { PauseIcon as Pause } from "@phosphor-icons/react/dist/ssr/Pause";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import Link from "next/link";
 import { findBlockedGroup, formatCheckCount, formatKeywordCount } from "./upcoming-format";
 

@@ -288,7 +288,6 @@ export function StepConnectProvider({
       busy={isSubmitting}
       disabled={isSubmitting || testingProviderId !== null || currentTestResult?.ok !== true}
       editor={editor}
-      label={selectedProvider.label}
       mode={mode}
       onCancel={onModalClose}
       onExited={handleModalExited}

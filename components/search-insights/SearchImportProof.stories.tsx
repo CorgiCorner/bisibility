@@ -3,7 +3,7 @@ import { searchInsightsKpis } from "@/lib/search-insights/queries/kpis-model";
 import type { SearchBackfillFacts } from "@/lib/search-insights/sync/control-model";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
-import { userEvent, within } from "storybook/test";
+import { fn, userEvent, within } from "storybook/test";
 import { SearchInsightsNoDataState } from "./SearchInsightsEmptyStates";
 import { SearchInsightsKpiRow } from "./SearchInsightsKpiRow";
 import { SearchInsightsPeriodMenu } from "./SearchInsightsPeriodMenu";
@@ -119,6 +119,7 @@ export const SevenDayReveal: Story = {
         <div className="flex justify-end">
           <SearchInsightsPeriodMenu
             importFacts={sevenDayFacts}
+            onPeriodChange={fn()}
             period={{
               comparison: "previous_period",
               days: 7,

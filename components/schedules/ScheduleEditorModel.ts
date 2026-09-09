@@ -1,36 +1,12 @@
 import { parseCronExpression, zonedCronParts } from "@/lib/rank-check/cron";
+import { monthDays, weekdays } from "@/lib/rank-check/schedule-calendar";
+import { newScheduleDefaults } from "@/lib/schedules/form-defaults";
 import { serpDepthSchema } from "@/lib/schemas/serp-depth";
-import { type SerpDepth, serpDepthValues } from "@/lib/serp/markets";
+import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
 import { CronExpressionParser } from "cron-parser";
 import { z } from "zod";
 
 export const scheduleFrequencies = ["daily", "weekly", "monthly", "custom_cron"] as const;
-export const weekdays = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-] as const;
-function ordinal(value: number) {
-  const suffix =
-    value % 10 === 1 && value % 100 !== 11
-      ? "st"
-      : value % 10 === 2 && value % 100 !== 12
-        ? "nd"
-        : value % 10 === 3 && value % 100 !== 13
-          ? "rd"
-          : "th";
-  return `${value}${suffix}`;
-}
-
-export const monthDays = Array.from({ length: 28 }, (_, index) => ordinal(index + 1)) as [
-  string,
-  ...string[],
-];
-
 const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const timeOfDaySchema = z.string().superRefine((value, context) => {
   if (value === "") return;
@@ -73,16 +49,6 @@ export const scheduleEditorSchema = z
 
 export type ScheduleEditorValues = z.infer<typeof scheduleEditorSchema>;
 
-const weekdayNumberByName = {
-  Friday: 5,
-  Monday: 1,
-  Saturday: 6,
-  Sunday: 0,
-  Thursday: 4,
-  Tuesday: 2,
-  Wednesday: 3,
-} as const;
-
 const weekdayNameByNumber = [
   "Sunday",
   "Monday",
@@ -95,19 +61,6 @@ const weekdayNameByNumber = [
 
 function onlyValue(field: ReadonlySet<number> | null) {
   return field?.size === 1 ? [...field][0] : null;
-}
-
-export function calendarCronExpression(
-  values: Pick<ScheduleEditorValues, "dayOfMonth" | "frequency" | "timeOfDay" | "weekday">,
-) {
-  if (values.frequency !== "weekly" && values.frequency !== "monthly") return null;
-  if (!values.timeOfDay) return null;
-  const [hour, minute] = values.timeOfDay.split(":").map(Number);
-  const calendarField =
-    values.frequency === "weekly"
-      ? `* * ${weekdayNumberByName[values.weekday]}`
-      : `${Number.parseInt(values.dayOfMonth, 10)} * *`;
-  return `${minute} ${hour} ${calendarField}`;
 }
 
 export type ScheduleEditorSchedule = {
@@ -170,6 +123,14 @@ export type ScheduleEditorProps = {
   isNew?: boolean;
   members?: readonly ScheduleEditorMember[];
   memberSummary?: string;
+  embedded?: boolean;
+  onCancel?: () => void;
+  onSaved?: (schedule: {
+    publicId: string;
+    name: string;
+    frequency: string;
+    isDefault: boolean;
+  }) => void;
   pendingMembers?: readonly ScheduleEditorMember[];
   connectedProviders: readonly ScheduleEditorProvider[];
   projectId: string;
@@ -177,6 +138,17 @@ export type ScheduleEditorProps = {
   projectTimezone: string;
   referenceIso?: string;
   schedule: ScheduleEditorSchedule;
+};
+
+export const newEditorSchedule: ScheduleEditorSchedule = {
+  ...newScheduleDefaults,
+  cronExpression: null,
+  enabled: true,
+  isDefault: false,
+  keywordCount: 0,
+  providerPolicy: null,
+  publicId: "new",
+  serpDepth: null,
 };
 
 export function scheduleEditorDefaults(schedule: ScheduleEditorSchedule): ScheduleEditorValues {
@@ -193,7 +165,7 @@ export function scheduleEditorDefaults(schedule: ScheduleEditorSchedule): Schedu
   const day = frequency === "monthly" && parsedCron?.ok ? (onlyValue(parsedCron.day) ?? 1) : 1;
   return {
     cronExpression: schedule.cronExpression ?? "0 6 * * 1-5",
-    dayOfMonth: ordinal(Math.min(Math.max(day, 1), 28)),
+    dayOfMonth: monthDays[Math.min(Math.max(day, 1), 28) - 1] ?? "1st",
     frequency,
     isDefault: schedule.isDefault,
     jitterMinutes: String(schedule.jitterMinutes) as ScheduleEditorValues["jitterMinutes"],
@@ -240,19 +212,10 @@ export function cronPreview(
   }
 }
 
-export function defaultScheduleNote(
-  currentName: string,
-  defaultScheduleName: string | null | undefined,
-  isDefault: boolean,
-) {
-  if (defaultScheduleName === null) return "The only schedule is the default.";
-  if (isDefault) {
-    return "This is the default schedule. Choose another schedule and make it default to replace it.";
-  }
-  if (defaultScheduleName && defaultScheduleName !== currentName) {
-    return `Newly tracked keywords join this schedule. Turning this on removes the default from ${defaultScheduleName}, which stays enabled with its members.`;
-  }
-  return "Newly tracked keywords join this schedule. Turning this on makes it the default.";
+export function defaultScheduleNote(defaultScheduleName: string | null | undefined) {
+  return defaultScheduleName
+    ? `Replaces ${defaultScheduleName} for new keywords. Existing keywords keep their schedules.`
+    : "Enable to use this schedule for new keywords. Existing keywords keep their schedules.";
 }
 
 export function scheduleDepthOptions(projectDepth: SerpDepth) {

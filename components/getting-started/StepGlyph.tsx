@@ -1,12 +1,16 @@
-import { CheckIcon as Check } from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 
-export function StepGlyph({ blocked, done }: Readonly<{ blocked?: boolean; done: boolean }>) {
-  if (done) {
+export function StepGlyph({
+  blocked,
+  done,
+  skipped,
+}: Readonly<{ blocked?: boolean; done: boolean; skipped?: boolean }>) {
+  if (done || skipped) {
     return (
       <span
         aria-hidden
-        className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-fg-muted text-bg-elev"
-        data-testid="step-glyph-done"
+        className={`grid h-5 w-5 shrink-0 place-items-center rounded-full bg-fg-muted text-bg-elev ${skipped ? "opacity-65" : ""}`}
+        data-testid={skipped ? "step-glyph-skipped" : "step-glyph-done"}
       >
         <Check data-testid="step-check" size={11} weight="regular" />
       </span>

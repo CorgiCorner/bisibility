@@ -6,7 +6,9 @@ import {
   type VerificationCodeForm,
   verificationCodeSchema,
 } from "@/components/account/account-email-form";
-import { Button, FieldLabel, Input } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Input } from "@/components/ui/Input";
 import type {
   AccountEmailChangeCodeRequested,
   AccountEmailChanged,

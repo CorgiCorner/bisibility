@@ -1,7 +1,7 @@
 "use client";
 
-import { Tooltip } from "@/components/ui";
-import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 
 type RankingUrlExternalLinkProps = {
   href: string;

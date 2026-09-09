@@ -1,5 +1,6 @@
 import type { KeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import type { ActiveLens, LensLocationOption } from "@/lib/keywords/lens-model";
+import type { MarketGridGroupRow } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keyword-row-types";
 
 export const RANK_TRACKER_SORT_FIELDS = [
@@ -21,7 +22,7 @@ export const RANK_TRACKER_SORT_FIELDS = [
   "topic",
   "intent",
 ] as const;
-export const RANK_TRACKER_PAGE_SIZES = [10, 25, 50] as const;
+export const RANK_TRACKER_PAGE_SIZES = [25, 50, 100] as const;
 export const RANK_TRACKER_MAX_PAGE = 10_000;
 
 export type RankTrackerSortField = (typeof RANK_TRACKER_SORT_FIELDS)[number];
@@ -76,4 +77,9 @@ export type RankTrackerListResult = {
   resolvedLens: ActiveLens;
   rows: KeywordRow[];
   totalCount: number;
+};
+
+export type RankTrackerGroupedListResult = Omit<RankTrackerListResult, "rows"> & {
+  groups: MarketGridGroupRow[];
+  matchedGroupCount: number;
 };

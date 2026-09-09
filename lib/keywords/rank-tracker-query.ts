@@ -11,6 +11,7 @@ import type { SavedViewConfig } from "@/lib/keywords/saved-view-model";
 import { z } from "zod";
 import {
   RANK_TRACKER_MAX_PAGE,
+  RANK_TRACKER_PAGE_SIZES,
   RANK_TRACKER_SORT_FIELDS,
   type RankTrackerQueryField,
   type RankTrackerQueryParseResult,
@@ -70,7 +71,9 @@ const schemas = {
   lastCheck: z.enum(lastCheckIds),
   location: text(120),
   page: numberSchema(1, RANK_TRACKER_MAX_PAGE).pipe(z.int()),
-  pageSize: numberSchema(10, 50).pipe(z.union([z.literal(10), z.literal(25), z.literal(50)])),
+  pageSize: numberSchema(25, 100).pipe(
+    z.union(RANK_TRACKER_PAGE_SIZES.map((size) => z.literal(size))),
+  ),
   savedViewId: text(120),
   search: text(120),
   sort: z.enum(RANK_TRACKER_SORT_FIELDS),
@@ -110,7 +113,7 @@ export const defaultRankTrackerQueryState: RankTrackerQueryState = {
   grouped: false,
   lens: { device: DEFAULT_LENS_DEVICE, locationId: null },
   page: 1,
-  pageSize: 25,
+  pageSize: 50,
   savedViewId: null,
   search: "",
   sort: { direction: "asc", field: "position" },
@@ -190,7 +193,7 @@ export function parseRankTrackerQuery(params: NextSearchParams): RankTrackerQuer
         safe(schemas.location, scalar(params, "location") ?? "", "", "location", issues) || null,
     },
     page: safe(schemas.page, scalar(params, "page"), 1, "page", issues),
-    pageSize: safe(schemas.pageSize, scalar(params, "pageSize"), 25, "pageSize", issues),
+    pageSize: safe(schemas.pageSize, scalar(params, "pageSize"), 50, "pageSize", issues),
     savedViewId:
       safe(schemas.savedViewId, scalar(params, "view") ?? "", "", "view", issues) || null,
     search: safe(schemas.search, scalar(params, "q") ?? "", "", "q", issues),
@@ -257,7 +260,7 @@ export function serializeRankTrackerQuery(
     params.set("dir", state.sort.direction);
   }
   if (state.page !== 1 || present.has("page")) params.set("page", String(state.page));
-  if (state.pageSize !== 25 || present.has("pageSize")) {
+  if (state.pageSize !== 50 || present.has("pageSize")) {
     params.set("pageSize", String(state.pageSize));
   }
   if (state.grouped || present.has("grouped")) params.set("grouped", state.grouped ? "1" : "0");

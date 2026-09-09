@@ -1,8 +1,6 @@
 import type { ActiveSession } from "@/lib/queries/account";
-import {
-  DeviceMobileIcon as DeviceMobile,
-  MonitorIcon as Monitor,
-} from "@phosphor-icons/react/dist/ssr";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/ssr/DeviceMobile";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/ssr/Monitor";
 import { rowListClass } from "./account-ui";
 import { RevokeSessionButton } from "./RevokeSessionButton";
 import { SignOutEverywhereButton } from "./SignOutEverywhereButton";

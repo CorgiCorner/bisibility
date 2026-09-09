@@ -1,15 +1,18 @@
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { RetrievedResults } from "@/lib/checks/contract";
 import {
   type CompareRow,
   type CompareState,
   compareChecks,
 } from "@/lib/checks/retrieved-results-model";
+import { matchingCompetitor, type TrackedCompetitor } from "@/lib/competitors/serp-comparison";
 import { type DateFormat, formatDateRange, formatDateTime } from "@/lib/dates/format";
-import { InfoIcon as Info, ProhibitIcon as Prohibit } from "@phosphor-icons/react";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { ProhibitIcon as Prohibit } from "@phosphor-icons/react/dist/csr/Prohibit";
 import type { ReactNode } from "react";
 
 export type RetrievedResultsCompareProps = {
+  competitors?: readonly TrackedCompetitor[];
   from: RetrievedResults;
   dateFormat?: DateFormat;
   to: RetrievedResults;
@@ -56,10 +59,12 @@ function Chip({ row }: Readonly<{ row: CompareRow }>) {
   );
 }
 function ListResult({
+  competitors,
   notice,
   result,
   trackedDomain,
 }: Readonly<{
+  competitors: readonly TrackedCompetitor[];
   notice: ReactNode;
   result: Extract<ReturnType<typeof compareChecks>, { kind: "list" }>;
   trackedDomain: string | null;
@@ -92,9 +97,9 @@ function ListResult({
               <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-fg">
                 {row.domain}
               </span>
-              {tracked ? (
+              {tracked || matchingCompetitor(row.domain, competitors) ? (
                 <span className="rounded-full border border-accent-solid px-2.5 py-1 font-sans tabular-nums text-[10px] text-accent-text">
-                  Your site
+                  {tracked ? "Your site" : "Competitor"}
                 </span>
               ) : null}
               <Position row={row} />
@@ -139,6 +144,7 @@ function RefusedResult({
   );
 }
 export function RetrievedResultsCompare({
+  competitors = [],
   dateFormat = "day_first",
   from,
   to,
@@ -165,7 +171,12 @@ export function RetrievedResultsCompare({
   return (
     <div>
       {result.kind === "list" ? (
-        <ListResult notice={providerNotice} result={result} trackedDomain={trackedDomain} />
+        <ListResult
+          competitors={competitors}
+          notice={providerNotice}
+          result={result}
+          trackedDomain={trackedDomain}
+        />
       ) : (
         <>
           {providerNotice}

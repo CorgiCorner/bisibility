@@ -1,126 +1,74 @@
 "use client";
 
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { SegmentedControl } from "@/components/ui";
-import Checkbox from "@mui/material/Checkbox";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import type { GridColumnVisibilityModel, GridDensity } from "@mui/x-data-grid";
-import {
-  DownloadSimpleIcon as DownloadSimple,
-  EyeIcon as Eye,
-  FunnelIcon as Funnel,
-  ListIcon as List,
-  ListDashesIcon as ListDashes,
-  LockSimpleIcon as LockSimple,
-  PlusIcon as Plus,
-  RowsIcon as Rows,
-  UploadSimpleIcon as UploadSimple,
-} from "@phosphor-icons/react";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { DataTableColumnsMenu } from "@/components/ui/data-table/DataTableColumnsMenu";
+import { DataTableDensityMenu } from "@/components/ui/data-table/DataTableDensityMenu";
+import type {
+  DataTableColumn,
+  DataTableDensity,
+} from "@/components/ui/data-table/data-table-types";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
+import type { KeywordRow } from "@/lib/queries/keywords";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
 import { useState } from "react";
 import { KeywordsToolbarButton, toolbarSecondaryIconClassName } from "./KeywordsToolbarButton";
 
-const toggleableColumns = [
-  ["change", "Change"],
-  ["volume", "Volume"],
-  ["sparkline", "12-wk trend"],
-  ["lastChecked", "Last checked"],
-  ["location", "Location"],
-  ["targetRanking", "Target and ranking"],
-  ["tags", "Tags"],
-  ["topic", "Topic"],
-  ["intent", "Intent"],
-] as const;
-
-const menuRowSx = { alignItems: "center", display: "flex", gap: "10px", minHeight: 36 };
-
-const densities = [
-  { value: "compact", label: "Compact", icon: ListDashes },
-  { value: "standard", label: "Standard", icon: List },
-  { value: "comfortable", label: "Comfortable", icon: Rows },
-] satisfies { value: GridDensity; label: string; icon: typeof List }[];
+const menuRowStyle = { alignItems: "center", display: "flex", gap: "10px", minHeight: 36 };
 
 type KeywordsToolbarActionsProps = {
-  columnVisibilityModel: GridColumnVisibilityModel;
-  density: GridDensity;
+  columnSizing: Record<string, number>;
+  columns: readonly DataTableColumn<KeywordRow>[];
+  columnVisibility: Record<string, boolean>;
+  density: DataTableDensity;
   filterCount: number;
+  id: string;
   onAddKeyword?: () => void;
-  onColumnVisibilityChange: (model: GridColumnVisibilityModel) => void;
-  onDensityChange: (density: GridDensity) => void;
+  onColumnSizingChange: (next: Record<string, number>) => void;
+  onColumnVisibilityChange: (next: Record<string, boolean>) => void;
+  onDensityChange: (density: DataTableDensity) => void;
   onImportCsv?: () => void;
   onOpenExport: () => void;
   onOpenFilters: () => void;
 };
 
 export function KeywordsToolbarActions({
-  columnVisibilityModel,
+  columnSizing,
+  columns,
+  columnVisibility,
   density,
   filterCount,
+  id,
   onAddKeyword,
+  onColumnSizingChange,
   onColumnVisibilityChange,
   onDensityChange,
   onImportCsv,
   onOpenExport,
   onOpenFilters,
 }: Readonly<KeywordsToolbarActionsProps>) {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [transferAnchor, setTransferAnchor] = useState<null | HTMLElement>(null);
   const { readOnly } = useProjectWriteMode();
   const mobileTooltips = useMediaQuery("(max-width:1023px)");
   const hasFilters = filterCount > 0;
 
-  function toggleColumn(field: keyof typeof columnVisibilityModel) {
-    onColumnVisibilityChange({
-      ...columnVisibilityModel,
-      [field]: columnVisibilityModel[field] === false,
-    });
-  }
-
   return (
     <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
-      <span className="hidden lg:inline-flex">
-        <KeywordsToolbarButton
-          showTooltip={mobileTooltips}
-          aria-controls={anchorEl ? "keyword-columns-menu" : undefined}
-          aria-expanded={anchorEl ? "true" : undefined}
-          aria-haspopup="menu"
-          label="Columns"
-          onClick={(event) => setAnchorEl(event.currentTarget)}
-          startIcon={<Eye weight="regular" size={15} className={toolbarSecondaryIconClassName} />}
-          variant="secondary"
+      <span className="inline-flex">
+        <DataTableColumnsMenu
+          columnSizing={columnSizing}
+          columns={columns}
+          columnVisibility={columnVisibility}
+          id={id}
+          onColumnSizingChange={onColumnSizingChange}
+          onColumnVisibilityChange={onColumnVisibilityChange}
         />
       </span>
-      <Menu
-        anchorEl={anchorEl}
-        id="keyword-columns-menu"
-        onClose={() => setAnchorEl(null)}
-        open={Boolean(anchorEl)}
-        slotProps={{ paper: { sx: { border: "1px solid var(--border)" } } }}
-      >
-        <div className="px-4 pb-1 pt-2 font-sans tabular-nums text-[11px] uppercase tracking-[0.6px] text-fg-muted">
-          Toggle columns
-        </div>
-        <MenuItem disabled sx={menuRowSx}>
-          <span className="grid w-[18px] place-items-center">
-            <LockSimple weight="regular" size={14} />
-          </span>
-          {"Keyword / Pos "}
-        </MenuItem>
-        {toggleableColumns.map(([field, label]) => (
-          <MenuItem key={field} onClick={() => toggleColumn(field)} sx={menuRowSx}>
-            <Checkbox
-              checked={columnVisibilityModel[field] !== false}
-              size="small"
-              sx={{ padding: 0, width: 18 }}
-            />
-            {label}
-          </MenuItem>
-        ))}
-      </Menu>
       <KeywordsToolbarButton
         showTooltip={mobileTooltips}
         label="Filters"
@@ -132,15 +80,9 @@ export function KeywordsToolbarActions({
             className={hasFilters ? "text-current" : toolbarSecondaryIconClassName}
           />
         }
-        sx={{
-          backgroundColor: hasFilters ? "var(--accent-soft)" : "var(--bg-elev)",
-          color: hasFilters ? "var(--accent)" : "var(--fg-muted)",
-          ...(hasFilters
-            ? {
-                "& .MuiButton-startIcon": { color: "currentColor" },
-                "& .MuiButton-startIcon > svg": { color: "currentColor" },
-              }
-            : {}),
+        style={{
+          "--control-background-color": hasFilters ? "var(--accent-soft)" : "var(--bg-elev)",
+          "--control-color": hasFilters ? "var(--accent)" : "var(--fg-muted)",
         }}
         variant="secondary"
       >
@@ -151,23 +93,7 @@ export function KeywordsToolbarActions({
         ) : null}
       </KeywordsToolbarButton>
       <span className="hidden lg:inline-flex">
-        <SegmentedControl
-          activeVariant="neutral"
-          ariaLabel="Table density"
-          fitContent
-          onChange={onDensityChange}
-          options={densities.map((item) => {
-            const Icon = item.icon;
-            return {
-              ariaLabel: item.label,
-              label: <Icon aria-hidden size={13} weight="regular" />,
-              tooltip: item.label,
-              value: item.value,
-            };
-          })}
-          size="toolbar"
-          value={density}
-        />
+        <DataTableDensityMenu density={density} onDensityChange={onDensityChange} />
       </span>
       <span className="inline-flex lg:hidden">
         <KeywordsToolbarButton
@@ -188,14 +114,14 @@ export function KeywordsToolbarActions({
         id="keyword-transfer-menu"
         onClose={() => setTransferAnchor(null)}
         open={Boolean(transferAnchor)}
-        slotProps={{ paper: { sx: { border: "1px solid var(--border)", minWidth: 190 } } }}
+        contentProps={{ style: { border: "1px solid var(--border)", minWidth: 190 } }}
       >
         <MenuItem
           onClick={() => {
             setTransferAnchor(null);
             onOpenExport();
           }}
-          sx={menuRowSx}
+          style={menuRowStyle}
         >
           <UploadSimple weight="regular" aria-hidden size={15} />
           Export keywords
@@ -207,7 +133,7 @@ export function KeywordsToolbarActions({
               setTransferAnchor(null);
               onImportCsv();
             }}
-            sx={menuRowSx}
+            style={menuRowStyle}
           >
             <DownloadSimple weight="regular" aria-hidden size={15} />
             Import keywords

@@ -32,10 +32,12 @@ const alertActions = {
 
 type AlertsPageProps = {
   params: Promise<{ project: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function AlertsPage({ params }: Readonly<AlertsPageProps>) {
+export default async function AlertsPage({ params, searchParams }: Readonly<AlertsPageProps>) {
   const { project } = await params;
+  const feedSearchParams = await searchParams;
   const access = await resolveProjectAccess(project);
   const workspaces = await listWorkspaces();
   const active = workspaces.find((workspace) => workspace.id === access.publicId);
@@ -44,7 +46,7 @@ export default async function AlertsPage({ params }: Readonly<AlertsPageProps>) 
   }
 
   const [view, feedStats, gscConnected] = await Promise.all([
-    getAlertsView(active.id),
+    feedSearchParams ? getAlertsView(active.id, feedSearchParams) : getAlertsView(active.id),
     getAlertFeedStats(access.projectId),
     isProviderConnected(active.id, "gsc"),
   ]);
@@ -68,6 +70,8 @@ export default async function AlertsPage({ params }: Readonly<AlertsPageProps>) 
         canManage={canProjectAction(active.role, "manage", "webhook_endpoint")}
         canReadAudit={canReadProjectAudit(active.role)}
         canUpdate={canProjectAction(active.role, "update", "alert_rule")}
+        facetOptions={view.facetOptions}
+        facets={view.facets}
         firedInWindowCount={feedStats.firedInWindowCount}
         gscConnected={gscConnected}
         gscInstallHref={gscInstallUrl(active.id)}

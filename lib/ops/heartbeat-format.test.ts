@@ -8,6 +8,13 @@ function healthyInput(): HeartbeatEventInput {
   return {
     database: {
       bootstrapErrors: [],
+      collectionAvailable: true,
+      dispatch: {
+        expiredClaims: 0,
+        oldestExpiredClaimAt: null,
+        overdueQueued: 0,
+        oldestOverdueQueuedAt: null,
+      },
       rank: {
         deferred: 0,
         failed: 0,
@@ -18,7 +25,13 @@ function healthyInput(): HeartbeatEventInput {
         succeeded: 1,
         topFailures: [],
       },
-      schedule: { active: 1, dueWithoutRun: 0, tracked: 1 },
+      schedule: {
+        activeSchedules: 1,
+        activeScheduledKeywords: 1,
+        plannedOverdue: 0,
+        oldestPlannedFor: null,
+        tracked: 1,
+      },
       traffic: [
         {
           latestSuccessAt: "2026-07-17T10:00:00.000Z",
@@ -81,10 +94,13 @@ describe("heartbeat Slack digest", () => {
     expect(event).toMatchInlineSnapshot(`
       {
         "fields": {
-          "Healthy": "worker up 9.6 h · ops outbox clear · rank checks: no failures · no bootstrap errors",
+          "Collection": "ops outbox clear · no bootstrap errors",
           "Rank checks (24h)": "Scheduled 1 · succeeded 1 · failed 0 · deferred 0 · stuck 0",
-          "Schedules": "8 inspected · 8 actions in 24 h · next in 22.0 h",
+          "Rank dispatch": "0 expired unlinked claims · 0 overdue queued targets",
+          "Rank schedules": "1 active schedule · 1 scheduled runnable keyword · 0 overdue planned runs",
+          "Schedules": "8 inspected · 8 sampled actions in 24 h · next in 22.0 h",
           "Traffic": "GSC ok 1 · needs reauth 0 · stale 0 · failed 0 · not run 0",
+          "Worker": "up 9.6 h · liveness only",
         },
         "kind": "heartbeat",
         "severity": "info",
@@ -104,7 +120,7 @@ describe("heartbeat Slack digest", () => {
     const input = healthyInput();
     input.now = new Date("2026-07-19T06:00:00.000Z");
     input.database.rank = { ...input.database.rank, scheduled: 0, succeeded: 0 };
-    input.database.schedule = { active: 1, dueWithoutRun: 0, tracked: 1 };
+    input.database.schedule.activeSchedules = 1;
 
     const event = buildHeartbeatEvent(input);
 
@@ -120,7 +136,7 @@ describe("heartbeat Slack digest", () => {
       scheduled: 0,
       succeeded: 1,
     };
-    input.database.schedule = { active: 0, dueWithoutRun: 0, tracked: 1 };
+    input.database.schedule.activeSchedules = 0;
     input.database.traffic = ["gsc", "ga4", "plausible"].map((provider, index) => ({
       latestSuccessAt: null,
       project: `project_${index + 1}`,
@@ -146,16 +162,16 @@ describe("heartbeat Slack digest", () => {
     expectSafeRenderedDigest(event);
   });
 
-  it("raises an error when an active schedule became due without a scheduled run", () => {
+  it("warns about a persisted overdue plan without claiming proven execution failure", () => {
     const input = healthyInput();
     input.database.rank = { ...input.database.rank, scheduled: 0, succeeded: 0 };
-    input.database.schedule = { active: 1, dueWithoutRun: 1, tracked: 1 };
+    input.database.schedule.plannedOverdue = 1;
 
     const event = buildHeartbeatEvent(input);
 
-    expect(event.severity).toBe("error");
+    expect(event.severity).toBe("warning");
     expect(attentionLines(event)).toEqual([
-      expect.stringContaining("became due in 24 h but no scheduled run executed"),
+      expect.stringContaining("planned run past the 15 min grace"),
     ]);
   });
 
@@ -168,8 +184,8 @@ describe("heartbeat Slack digest", () => {
 
     const event = buildHeartbeatEvent(input);
 
-    expect(event.fields?.Healthy).toContain("rank checks: no failures");
-    expect(event.fields?.Healthy).not.toMatch(/(?:^| · )no failures(?: · |$)/);
+    expect(event.fields?.["Rank checks (24h)"]).toContain("failed 0");
+    expect(event.fields).not.toHaveProperty("Healthy");
     expect(event.fields?.Traffic).toContain("class provider_5xx");
     expect(event.fields).not.toHaveProperty("Needs attention");
     expect(event.severity).toBe("warning");

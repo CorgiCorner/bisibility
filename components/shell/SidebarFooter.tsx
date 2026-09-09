@@ -1,7 +1,7 @@
 export type { ShellUser } from "@/components/shell/types";
 
 import type { ShellUser } from "@/components/shell/types";
-import { BrandLockup } from "@/components/ui";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 
 export type SidebarFooterProps = {
   collapsed?: boolean;

@@ -1,7 +1,10 @@
+import { countrySeed } from "@/lib/serp/location";
 import { render } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { vi } from "vitest";
 import { OnboardingWizard } from "./OnboardingWizard";
+
+const languageLabels: Record<string, string> = { en: "English", es: "Spanish" };
 
 export const project = {
   domain: "example.com",
@@ -26,6 +29,16 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
     completeGooglePropertySelectionAction: vi.fn(async (input) => ({ property: input.property })),
     completeOnboardingAction: vi.fn(async () => ({ completed: true })),
     connectProviderAction: vi.fn(async () => undefined),
+    createMarketAction: vi.fn(async (input) => ({
+      canonicalKey: input.canonicalKey,
+      countryCode: input.countryCode,
+      displayName: input.name || countrySeed(input.countryCode)?.displayName || input.countryCode,
+      keywordCount: 0,
+      kind: input.kind,
+      languageCode: input.languageCode,
+      languageLabel: languageLabels[input.languageCode] ?? input.languageCode,
+      publicId: `pmkt_${"a".repeat(24)}`,
+    })),
     createProjectAction: vi.fn(async () => project),
     deriveWebsiteAction: vi.fn(async () => ({ domain: "example.com", name: "example" })),
     fetchRankedKeywordSuggestionsAction: vi.fn(async () => ({ reason: "no_source" as const })),

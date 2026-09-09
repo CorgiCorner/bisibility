@@ -60,6 +60,16 @@ const args = {
 
 export const OverlayBulkAction: Story = { args, name: "overlay-bulk-action" };
 export const ModalSetSchedule: Story = { args, name: "modal-set-schedule" };
+export const ModalSetScheduleUnassigned: Story = {
+  args: {
+    ...args,
+    currentScheduleId: null,
+    providerRate: undefined,
+    schedules: [{ ...schedules[0], name: "Manual", frequency: "manual", timeOfDay: null }],
+    selectedRows: [{ ...keywordRows[0], checkSchedule: null }],
+  },
+  name: "modal-set-schedule-unassigned",
+};
 export const ModalSetScheduleChosen: Story = {
   args: { ...args, initialChoice: "sch_weekly" },
   name: "modal-set-schedule-chosen",

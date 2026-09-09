@@ -28,6 +28,21 @@ describe("keywordExportSelectionSchema", () => {
         query: { ...defaultRankTrackerQueryState, page: 10_000 },
       }),
     ).toMatchObject({ mode: "query", query: { page: 10_000 } });
+    expect(() =>
+      keywordExportSelectionSchema.parse({
+        mode: "query",
+        query: { ...defaultRankTrackerQueryState, pageSize: 10 },
+      }),
+    ).toThrow();
+  });
+
+  it.each([25, 50, 100] as const)("accepts supported Rank Tracker page size %i", (pageSize) => {
+    expect(
+      keywordExportSelectionSchema.parse({
+        mode: "query",
+        query: { ...defaultRankTrackerQueryState, pageSize },
+      }),
+    ).toMatchObject({ mode: "query", query: { pageSize } });
   });
 
   it("rejects ambiguous, duplicate, and oversized selected IDs", () => {

@@ -14,7 +14,7 @@ type ResearchTrackingDrawerProps = Pick<
   ) => void;
   onClose: () => void;
   project: ResearchWorkspaceProps["context"]["project"];
-  projectDefaultDevice: ResearchWorkspaceProps["context"]["defaultMarket"]["device"];
+  projectDefaultDevice: ResearchWorkspaceProps["context"]["defaultDevice"];
 };
 
 export function ResearchTrackingDrawer({

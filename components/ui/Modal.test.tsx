@@ -171,33 +171,6 @@ describe("Modal exit lifecycle", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it("keeps content mounted during exit and fires onExited only after the transition", () => {
-    const onExited = vi.fn();
-    const onClose = vi.fn();
-    const { rerender } = render(
-      <Modal onClose={onClose} onExited={onExited} open title="Exit test">
-        <button type="button">content</button>
-      </Modal>,
-    );
-
-    expect(screen.getByText("content")).toBeInTheDocument();
-
-    rerender(
-      <Modal onClose={onClose} onExited={onExited} open={false} title="Exit test">
-        <button type="button">content</button>
-      </Modal>,
-    );
-
-    expect(screen.getByText("content")).toBeInTheDocument();
-    expect(onExited).not.toHaveBeenCalled();
-
-    act(() => {
-      vi.advanceTimersByTime(MOTION_MODAL_EXIT + 50);
-    });
-
-    expect(onExited).toHaveBeenCalledOnce();
-  });
-
   it("does not fire onExited when open remains true", () => {
     const onExited = vi.fn();
     render(

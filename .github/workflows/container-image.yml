@@ -450,6 +450,11 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.source_sha }}
 
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version-file: .nvmrc
+
       - name: Stage immutable release assets
         run: |
           mkdir -p "$RUNNER_TEMP/release-assets"
@@ -468,6 +473,8 @@ jobs:
           RELEASE_TAG: v${{ github.event.client_payload.version }}
         run: |
           set -euo pipefail
+          node scripts/distribution/release-notes.mjs --tag "$RELEASE_TAG" \
+            > "$RUNNER_TEMP/release-notes.md"
           assets=(
             compose.yaml
             compose.worker.yaml
@@ -478,7 +485,9 @@ jobs:
             upgrade.sh
             distribution-manifest.json
           )
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+          if gh release view "$RELEASE_TAG" --json tagName,body > "$RUNNER_TEMP/published-release.json"; then
+            node scripts/distribution/release-notes.mjs --tag "$RELEASE_TAG" \
+              --verify "$RUNNER_TEMP/published-release.json"
             mkdir -p "$RUNNER_TEMP/published-assets"
             for asset in "${assets[@]}"; do
               gh release download "$RELEASE_TAG" \
@@ -499,7 +508,7 @@ jobs:
             "$RUNNER_TEMP/release-assets/upgrade.sh" \
             "$RUNNER_TEMP/release-assets/distribution-manifest.json" \
             --verify-tag \
-            --generate-notes \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
             --title "$RELEASE_TAG"
 
   sync-dockerhub-descriptions:

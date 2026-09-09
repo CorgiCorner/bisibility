@@ -1,5 +1,6 @@
 import { OAuthConsentForm } from "@/components/auth/OAuthConsentForm";
-import { BrandLockup, InfoTooltip } from "@/components/ui";
+import { BrandLockup } from "@/components/ui/BrandLockup";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { getOAuthConsentCopy } from "@/lib/auth/oauth-consent-copy";
 import { OAUTH_AUTHORIZATION_TTL_SECONDS } from "@/lib/auth/oauth-policy";
 import { requireSession } from "@/lib/auth/session";
@@ -7,7 +8,7 @@ import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { getOAuthConsentClient } from "@/lib/queries/oauth-consent";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
-import { FingerprintIcon as Fingerprint } from "@phosphor-icons/react/dist/ssr";
+import { FingerprintIcon as Fingerprint } from "@phosphor-icons/react/dist/ssr/Fingerprint";
 import type { Metadata } from "next";
 import Link from "next/link";
 

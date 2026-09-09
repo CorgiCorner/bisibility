@@ -1,7 +1,7 @@
 "use client";
 
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
-import { Switch } from "@/components/ui";
+import { Switch } from "@/components/ui/Switch";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   type ExperimentalModuleKey,

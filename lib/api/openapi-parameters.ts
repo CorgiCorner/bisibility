@@ -1,3 +1,4 @@
+import { legacyMarketDeprecationNote } from "./legacy-market-input";
 import { signalSourceValues } from "./openapi-signal-components";
 import { COST_ESTIMATE_MAX_KEYWORDS, COST_ESTIMATE_MAX_LOCATIONS } from "./public-cost";
 
@@ -95,12 +96,18 @@ export const keywordListParameters = [
     type: "string",
   }),
   queryParameter(
-    "country",
-    "Filter by canonical country or stored location alias. Also accepted as filter[country].",
-    {
-      type: "string",
-    },
+    "location_key",
+    "Filter by the exact canonical location key, optionally qualified with @language. Also accepted as filter[location_key].",
+    { type: "string" },
   ),
+  {
+    ...queryParameter(
+      "country",
+      `Filter by canonical country or stored location alias. Also accepted as filter[country]. ${legacyMarketDeprecationNote()}`,
+      { type: "string" },
+    ),
+    deprecated: true,
+  },
   queryParameter(
     "position_gt",
     "Match keywords with a rank check position greater than this number. Also accepted as filter[position_gt].",
@@ -234,6 +241,11 @@ export function withProjectSelectionParameters<T extends Record<string, Record<s
 
 export const costEstimateParameters = [
   queryParameter(
+    "cron_expression",
+    "Custom cron expression; an invalid or missing expression leaves monthly estimates unknown.",
+    { type: "string", maxLength: 120 },
+  ),
+  queryParameter(
     "keywords",
     "Keyword count. Must be an integer greater than or equal to 0.",
     { maximum: COST_ESTIMATE_MAX_KEYWORDS, minimum: 0, type: "integer" },
@@ -244,12 +256,16 @@ export const costEstimateParameters = [
     enum: [10, 20, 50, 100],
     type: "integer",
   }),
-  queryParameter("locations", "Location count per keyword.", {
-    default: 1,
-    maximum: COST_ESTIMATE_MAX_LOCATIONS,
-    minimum: 1,
-    type: "integer",
-  }),
+  queryParameter(
+    "locations",
+    "Market count per keyword; each market combines a location and language.",
+    {
+      default: 1,
+      maximum: COST_ESTIMATE_MAX_LOCATIONS,
+      minimum: 1,
+      type: "integer",
+    },
+  ),
   queryParameter("devices", "Device count per keyword.", {
     default: 1,
     enum: [1, 2],
@@ -257,7 +273,7 @@ export const costEstimateParameters = [
   }),
   queryParameter("frequency", "Rank-check frequency used to estimate monthly checks.", {
     default: "daily",
-    enum: ["daily", "weekly", "monthly"],
+    enum: ["daily", "weekly", "monthly", "manual", "paused", "custom_cron"],
     type: "string",
   }),
   queryParameter("provider", "Provider rate card to use.", {

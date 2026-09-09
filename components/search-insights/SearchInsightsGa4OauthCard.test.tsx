@@ -1,4 +1,4 @@
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import { render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { SearchInsightsGa4OauthCard } from "./SearchInsightsGa4OauthCard";

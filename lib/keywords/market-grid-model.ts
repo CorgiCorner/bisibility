@@ -1,56 +1,36 @@
 import type { KeywordRow } from "@/lib/queries/keyword-row-types";
-
-export type MarketGridTarget = KeywordRow & {
-  marketStatus?: "active" | "paused" | "removed";
-  registryOrder?: number;
-};
-
-export type MarketGridAggregate = {
-  activeTargetCount: number;
-  change: number | null;
-  children: MarketGridTarget[];
-  difficulty: number | "mixed" | null;
-  hasPartiallyUnsupportedVolume: boolean;
-  keyword: string;
-  position: number | null;
-  rankingUrls: string[];
-  sparkline: number[];
-  stale: boolean;
-  tags: string[];
-  volume: number | null;
-};
+import type { LensLocationOption } from "./lens-model";
+import type { MarketGridAggregate, MarketGridTarget } from "./market-grid-sorting";
+import { compareMarketGridText, fixedTargetOrder, marketGridTerm } from "./market-grid-sorting";
 
 export type MarketGridViewRow = MarketGridTarget & {
+  kind?: "group";
   marketGrid?:
-    | { aggregate: MarketGridAggregate; expanded: boolean; kind: "parent" }
+    | { aggregate: MarketGridAggregate; kind: "parent" }
     | { parentId: string; kind: "child" };
+  subRows?: MarketGridViewRow[];
+};
+
+export type MarketGridGroupRow = MarketGridViewRow & {
+  kind: "group";
+  subRows: MarketGridViewRow[];
 };
 
 export type MarketGridParentMetadata = {
   aggregate: MarketGridAggregate;
-  expanded: boolean;
   kind: "parent";
 };
-
 export function marketGridParent(row: KeywordRow): MarketGridParentMetadata | undefined {
   const metadata = (row as MarketGridViewRow).marketGrid;
   return metadata?.kind === "parent" ? metadata : undefined;
 }
-
 export function marketGridChild(row: KeywordRow) {
   return (row as MarketGridViewRow).marketGrid?.kind === "child";
 }
-
 const STALE_AFTER_MS = 48 * 60 * 60 * 1000;
-
-function normalizedKeyword(value: string) {
-  return value.trim().toLocaleLowerCase("en-US");
-}
-
 function isActive(target: MarketGridTarget) {
   return target.marketStatus !== "paused" && target.marketStatus !== "removed";
 }
-
 function pairKey(target: MarketGridTarget) {
   return target.location.canonicalKey;
 }
@@ -65,27 +45,18 @@ function best(values: Array<number | null>) {
 }
 
 function aggregateSparkline(targets: readonly MarketGridTarget[]) {
-  const length = Math.max(0, ...targets.map((target) => target.sparkline.length));
-  return Array.from({ length }, (_, index) =>
-    Math.min(
-      ...targets.flatMap((target) => {
-        const offset = length - target.sparkline.length;
-        const value = target.sparkline[index - offset];
-        return value === undefined ? [] : [value];
-      }),
-    ),
-  );
-}
-
-function fixedTargetOrder(left: MarketGridTarget, right: MarketGridTarget) {
-  return (
-    (left.registryOrder ?? Number.MAX_SAFE_INTEGER) -
-      (right.registryOrder ?? Number.MAX_SAFE_INTEGER) ||
-    left.location.displayName.localeCompare(right.location.displayName) ||
-    left.location.hl.localeCompare(right.location.hl) ||
-    left.device.localeCompare(right.device) ||
-    left.id.localeCompare(right.id)
-  );
+  let length = 0;
+  for (const target of targets) length = Math.max(length, target.sparkline.length);
+  const result: number[] = [];
+  for (let index = 0; index < length; index += 1) {
+    let point: number | undefined;
+    for (const target of targets) {
+      const value = target.sparkline[index - (length - target.sparkline.length)];
+      if (value !== undefined) point = point === undefined ? value : Math.min(point, value);
+    }
+    if (point !== undefined) result.push(point);
+  }
+  return result;
 }
 
 export function aggregateMarketGridRows(
@@ -94,8 +65,13 @@ export function aggregateMarketGridRows(
 ): MarketGridAggregate[] {
   const groups = new Map<string, MarketGridTarget[]>();
   for (const row of rows) {
-    const key = normalizedKeyword(row.keyword);
-    groups.set(key, [...(groups.get(key) ?? []), row]);
+    const key = marketGridTerm(row.keyword);
+    const group = groups.get(key);
+    if (group) {
+      group.push(row);
+      continue;
+    }
+    groups.set(key, [row]);
   }
 
   return [...groups.values()].map((group) => {
@@ -106,7 +82,13 @@ export function aggregateMarketGridRows(
       if (!pairRows.has(pairKey(target))) pairRows.set(pairKey(target), target);
     }
     const pairs = [...pairRows.values()];
-    const supportedVolumePairs = pairs.filter((target) => target.volumeKnown !== false);
+    const supportedVolumePairs = new Map<string, MarketGridTarget>();
+    for (const target of active) {
+      if (target.volumeKnown !== false && !supportedVolumePairs.has(pairKey(target))) {
+        supportedVolumePairs.set(pairKey(target), target);
+      }
+    }
+    const knownVolumePairs = [...supportedVolumePairs.values()];
     const position = best(active.map(currentPosition));
     const priorPosition = best(active.map((target) => target.positionBaseline));
     const difficulty =
@@ -122,6 +104,10 @@ export function aggregateMarketGridRows(
       if (!target.lastCheckAt) return false;
       return now.getTime() - new Date(target.lastCheckAt).getTime() > STALE_AFTER_MS;
     });
+    const lastChecked = active.reduce<string | null>((latest, target) => {
+      if (!target.lastCheckAt || (latest !== null && target.lastCheckAt <= latest)) return latest;
+      return target.lastCheckAt;
+    }, null);
 
     return {
       activeTargetCount: active.length,
@@ -129,33 +115,48 @@ export function aggregateMarketGridRows(
       children,
       difficulty,
       hasPartiallyUnsupportedVolume:
-        supportedVolumePairs.length > 0 && supportedVolumePairs.length < pairs.length,
-      keyword: children[0]?.keyword ?? "",
+        knownVolumePairs.length > 0 && knownVolumePairs.length < pairs.length,
+      keyword: children.reduce(
+        (lowest, child) =>
+          compareMarketGridText(child.keyword, lowest) < 0 ? child.keyword : lowest,
+        children[0]?.keyword ?? "",
+      ),
+      lastChecked,
       position,
       rankingUrls,
       sparkline: aggregateSparkline(active),
       stale,
       tags: children[0]?.tags ?? [],
       volume:
-        supportedVolumePairs.length === 0
+        knownVolumePairs.length === 0
           ? null
-          : supportedVolumePairs.reduce((total, target) => total + target.volume, 0),
+          : knownVolumePairs.reduce((total, target) => total + target.volume, 0),
     };
   });
 }
 
-export function marketGridDefaultsToGrouped(rows: readonly MarketGridTarget[]) {
-  return new Set(rows.map(pairKey)).size >= 2;
+export function marketGridDefaultsToGrouped(
+  rows: readonly (MarketGridTarget | LensLocationOption)[],
+) {
+  const canonicalKeys = new Set<string>();
+  for (const row of rows) {
+    canonicalKeys.add("location" in row ? row.location.canonicalKey : row.id);
+  }
+  return canonicalKeys.size >= 2;
 }
 
 function parentId(keyword: string) {
-  return `market-group:${encodeURIComponent(normalizedKeyword(keyword))}`;
+  return `market-group:${encodeURIComponent(marketGridTerm(keyword))}`;
 }
 
-function parentRow(aggregate: MarketGridAggregate, expanded: boolean): MarketGridViewRow {
-  const source = aggregate.children[0];
+export function groupRow(
+  aggregate: MarketGridAggregate,
+  children: readonly MarketGridTarget[],
+): MarketGridGroupRow {
+  const source = children[0];
   if (!source) throw new Error("A market grid group requires at least one target.");
-  const marketCount = new Set(aggregate.children.filter(isActive).map(pairKey)).size;
+  const id = parentId(aggregate.keyword);
+  const marketCount = new Set(children.filter(isActive).map(pairKey)).size;
   const position = aggregate.position ?? 101;
   return {
     ...source,
@@ -163,13 +164,16 @@ function parentRow(aggregate: MarketGridAggregate, expanded: boolean): MarketGri
     difficulty: typeof aggregate.difficulty === "number" ? aggregate.difficulty : 0,
     difficultyKnown: typeof aggregate.difficulty === "number",
     hasRankData: aggregate.position !== null,
-    id: parentId(aggregate.keyword),
+    id,
+    kind: "group",
+    keyword: aggregate.keyword,
+    lastCheckAt: aggregate.lastChecked,
     location: {
       ...source.location,
       displayName: `${marketCount} ${marketCount === 1 ? "market" : "markets"}`,
     },
     locationName: `${marketCount} ${marketCount === 1 ? "market" : "markets"}`,
-    marketGrid: { aggregate, expanded, kind: "parent" },
+    marketGrid: { aggregate, kind: "parent" },
     position,
     positionBaseline: aggregate.change === null ? null : position + aggregate.change,
     rankingPages: aggregate.rankingUrls.length,
@@ -177,74 +181,19 @@ function parentRow(aggregate: MarketGridAggregate, expanded: boolean): MarketGri
     rankingUrl: aggregate.rankingUrls.length === 1 ? aggregate.rankingUrls[0] : null,
     sparkline: aggregate.sparkline,
     tags: aggregate.tags,
+    subRows: children.map((child) => ({
+      ...child,
+      marketGrid: { kind: "child" as const, parentId: id },
+      tags: [],
+    })),
     volume: aggregate.volume ?? 0,
     volumeKnown: aggregate.volume !== null,
-  };
+  } as MarketGridGroupRow;
 }
 
-export function buildMarketGridViewRows(
-  rows: readonly MarketGridTarget[],
-  grouped: boolean,
-  expandedParentIds: ReadonlySet<string>,
-  sort: { field: string; sort: "asc" | "desc" } | null = null,
-): MarketGridViewRow[] {
-  if (!grouped) return [...rows];
-  const aggregates = aggregateMarketGridRows(rows);
-  if (sort) {
-    const direction = sort.sort === "asc" ? 1 : -1;
-    aggregates.sort((left, right) => {
-      const leftValue = aggregateSortValue(left, sort.field);
-      const rightValue = aggregateSortValue(right, sort.field);
-      if (typeof leftValue === "number" && typeof rightValue === "number") {
-        return (leftValue - rightValue) * direction || left.keyword.localeCompare(right.keyword);
-      }
-      return (
-        String(leftValue ?? "").localeCompare(String(rightValue ?? "")) * direction ||
-        left.keyword.localeCompare(right.keyword)
-      );
-    });
-  }
-  return aggregates.flatMap((aggregate) => {
-    const id = parentId(aggregate.keyword);
-    const expanded = expandedParentIds.has(id);
-    const parent = parentRow(aggregate, expanded);
-    return expanded
-      ? [
-          parent,
-          ...aggregate.children.map((child) => ({
-            ...child,
-            marketGrid: { kind: "child" as const, parentId: id },
-            tags: [],
-          })),
-        ]
-      : [parent];
-  });
-}
-
-function aggregateSortValue(aggregate: MarketGridAggregate, field: string) {
-  if (field === "position") return aggregate.position ?? Number.MAX_SAFE_INTEGER;
-  if (field === "change") return aggregate.change ?? Number.MIN_SAFE_INTEGER;
-  if (field === "volume") return aggregate.volume ?? Number.MIN_SAFE_INTEGER;
-  if (field === "difficulty")
-    return typeof aggregate.difficulty === "number"
-      ? aggregate.difficulty
-      : Number.MIN_SAFE_INTEGER;
-  if (field === "sparkline") return aggregate.sparkline.at(-1) ?? Number.MAX_SAFE_INTEGER;
-  return aggregate.keyword;
-}
-
-export function selectedMarketTargetIds(
-  viewRows: readonly MarketGridViewRow[],
-  selectedIds: ReadonlySet<string>,
-) {
-  const selected = new Set<string>();
-  for (const row of viewRows) {
-    if (!selectedIds.has(row.id)) continue;
-    if (row.marketGrid?.kind === "parent") {
-      for (const child of row.marketGrid.aggregate.children) selected.add(child.id);
-    } else {
-      selected.add(row.id);
-    }
-  }
-  return [...selected];
-}
+export type { MarketGridAggregate, MarketGridTarget } from "./market-grid-sorting";
+export {
+  aggregateSortValue,
+  compareMarketGridAggregates,
+  marketGridTerm,
+} from "./market-grid-sorting";

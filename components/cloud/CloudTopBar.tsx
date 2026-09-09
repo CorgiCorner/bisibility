@@ -1,5 +1,6 @@
-import { BrandLockup } from "@/components/ui";
-import { CaretDownIcon as CaretDown, CloudIcon as Cloud } from "@phosphor-icons/react/dist/ssr";
+import { BrandLockup } from "@/components/ui/BrandLockup";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown";
+import { CloudIcon as Cloud } from "@phosphor-icons/react/dist/ssr/Cloud";
 
 export type CloudTopBarContext = "onboard" | "settings";
 

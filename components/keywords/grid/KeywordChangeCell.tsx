@@ -1,11 +1,9 @@
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import * as rankDepth from "@/lib/serp/rank-depth";
-import {
-  ArrowDownIcon as ArrowDown,
-  ArrowUpIcon as ArrowUp,
-  CircleIcon as Circle,
-} from "@phosphor-icons/react";
+import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
+import { ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/csr/ArrowUp";
+import { CircleIcon as Circle } from "@phosphor-icons/react/dist/csr/Circle";
 
 function deltaFor(row: KeywordRow) {
   if (row.positionBaseline === null) return null;

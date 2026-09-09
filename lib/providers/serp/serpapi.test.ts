@@ -1,4 +1,5 @@
-import type { SerpRankLocation } from "@/lib/serp/location";
+import type { Location } from "@/lib/generated/prisma/client";
+import { type SerpRankLocation, serpRankLocation } from "@/lib/serp/location";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { serpApiProvider } from "./serpapi";
 
@@ -10,7 +11,12 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 function searchResponse(results: unknown[], extras: Record<string, unknown> = {}) {
-  return { organic_results: results, search_metadata: { status: "Success" }, ...extras };
+  return {
+    organic_results: results,
+    search_metadata: { status: "Success" },
+    serpapi_pagination: { next: "https://serpapi.com/search.json?start=10" },
+    ...extras,
+  };
 }
 
 // Neutral, pre-resolved handles the runner hands the adapter (design §2.3). SerpApi
@@ -57,6 +63,7 @@ describe("serpApiProvider", () => {
     [10, 1],
     [20, 2],
     [50, 5],
+    [100, 10],
   ] as const)("uses %i-result depth across %i search request(s)", async (depth, requests) => {
     const fetchMock = vi
       .fn()
@@ -71,7 +78,31 @@ describe("serpApiProvider", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(requests);
     expect(result.billingUnits).toBe(requests);
+    for (const [url] of fetchMock.mock.calls) {
+      expect(new URL(String(url)).searchParams.get("nfpr")).toBe("1");
+    }
   });
+
+  it.each([20, 100] as const)(
+    "stops at the actual final page even when top %i was requested",
+    async (depth) => {
+      const fetchMock = vi.fn().mockResolvedValueOnce(
+        jsonResponse(
+          searchResponse([{ link: "https://competitor.com/", position: 1 }], {
+            serpapi_pagination: undefined,
+          }),
+        ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const result = await serpApiProvider.fetchRank(rankInput({ depth }));
+      expect(fetchMock).toHaveBeenCalledOnce();
+      expect(result).toMatchObject({
+        position: null,
+        billingUnits: 1,
+        observation: { completeness: "complete" },
+      });
+    },
+  );
 
   it("allows a slow search page within the provider response window", async () => {
     vi.useFakeTimers();
@@ -184,12 +215,13 @@ describe("serpApiProvider", () => {
     const result = await serpApiProvider.fetchRank(
       rankInput({
         depth: 20,
-        location: location({
+        location: serpRankLocation({
           gl: "pl",
           hl: "pl",
+          primaryGeoCode: null,
           primaryGeoName: "Poland",
           secondaryGeoName: "Poland",
-        }),
+        } as Location),
       }),
     );
 
@@ -224,6 +256,9 @@ describe("serpApiProvider", () => {
     expect(requestedUrl).toContain("gl=pl");
     expect(requestedUrl).toContain("hl=pl");
     expect(requestedUrl).toContain("location=Poland");
+    expect(requestedUrl).toBe(
+      "https://serpapi.com/search.json?api_key=serp-key&device=desktop&engine=google&gl=pl&hl=pl&location=Poland&q=rank+tracker&nfpr=1",
+    );
     expect(requestedUrl).not.toContain("num=");
     expect(requestedUrl).not.toContain("start=");
     // The geo pin is the canonical string only; never uule/lat/lon (design §2.3).
@@ -412,13 +447,15 @@ describe("serpApiProvider", () => {
     await serpApiProvider.fetchRank(
       rankInput({
         depth: 20,
-        location: location({
+        location: serpRankLocation({
           // A city resolved for the code-based provider still carries a code, but
           // SerpApi ignores it and pins on the canonical secondaryGeoName string.
+          gl: "us",
+          hl: "en",
           primaryGeoCode: 1026339,
           primaryGeoName: "Austin,Texas,United States",
           secondaryGeoName: "Austin, Texas, United States",
-        }),
+        } as Location),
       }),
     );
 
@@ -698,5 +735,134 @@ describe("serpApiProvider", () => {
 
     expect(message).toContain("[redacted]");
     expect(message).not.toContain("serp-secret-key");
+  });
+});
+
+describe("SerpApi observation capture", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it("records a complete local-results page with the requested client policy", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          searchResponse([{ link: "https://competitor.example.com", position: 1 }], {
+            local_results: { places: [{ place_id: "local", title: "Local result" }] },
+          }),
+        ),
+      ),
+    );
+
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 10, stopOnMatch: false }));
+
+    expect(result.observation).toMatchObject({
+      completeness: "complete",
+      items: [expect.objectContaining({ resultKind: "local_pack", title: "Local result" })],
+      requestPolicy: {
+        depth: 10,
+        findTargetsIn: null,
+        forcedAiOverview: false,
+        stopOnMatch: false,
+      },
+    });
+    expect(result.observation?.executedAt).toBe(result.checkedAt);
+  });
+
+  it("marks a client-side match break as truncated", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse(searchResponse([{ link: "https://example.com/match", position: 1 }])),
+        ),
+    );
+
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: true }));
+
+    expect(result.observation?.completeness).toBe("truncated_by_stop_on_match");
+  });
+
+  it("leaves completeness unknown when a later requested page has no organic results", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          jsonResponse(searchResponse([{ link: "https://competitor.example.com", position: 1 }])),
+        )
+        .mockResolvedValueOnce(jsonResponse({ search_metadata: { status: "Success" } })),
+    );
+
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: false }));
+
+    expect(result.observation?.completeness).toBe("unknown");
+  });
+});
+
+describe("SerpApi observation completeness", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it("records a complete observation when an armed policy fetches every requested page", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve(
+          jsonResponse(
+            searchResponse([
+              { link: "https://competitor.example.org/first", position: 1, title: "Competitor" },
+            ]),
+          ),
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: true }));
+
+    expect(result.observation?.completeness).toBe("complete");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("records a truncated observation when the armed policy fires", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse(
+            searchResponse([{ link: "https://example.com/first", position: 1, title: "Example" }]),
+          ),
+        ),
+    );
+
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: true }));
+
+    expect(result.observation?.completeness).toBe("truncated_by_stop_on_match");
+  });
+
+  it("records an unknown observation when a later requested page lacks organic results", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          jsonResponse(
+            searchResponse([
+              { link: "https://competitor.example.org/first", position: 1, title: "Competitor" },
+            ]),
+          ),
+        )
+        .mockResolvedValueOnce(jsonResponse({ search_metadata: { status: "Success" } })),
+    );
+
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: false }));
+
+    expect(result.observation?.completeness).toBe("unknown");
   });
 });

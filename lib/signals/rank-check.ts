@@ -1,5 +1,5 @@
 import { comparableUrl } from "@/lib/alerts/url-mismatch";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { SIGNAL_TYPES, type SignalInput } from "./types";
 
 export type RankCheckSignalArgs = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useBrowserTimeZone } from "@/components/ui";
+import { useBrowserTimeZone } from "@/components/ui/ZonedTime";
 import { createUserDateTimeFormatter, type DateFormatPreference } from "@/lib/format/user-datetime";
 import type { PersonalTokenData } from "@/lib/queries/personal-tokens";
 

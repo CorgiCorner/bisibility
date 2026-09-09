@@ -2,7 +2,7 @@
 
 import type { DomainRecentTarget } from "@/lib/domain-overview/types";
 import { relativePast } from "@/lib/format/relative-time";
-import { ClockCounterClockwiseIcon as Clock } from "@phosphor-icons/react";
+import { ClockCounterClockwiseIcon as Clock } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
 import { cacheHoursRemaining } from "./domain-overview-workspace-model";
 
 type DomainOverviewRecentTargetsProps = {

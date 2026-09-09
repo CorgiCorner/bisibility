@@ -27,6 +27,7 @@ export const difficultyExpression = Prisma.sql`LEAST(100, GREATEST(0, ROUND(CASE
 
 export const serpFeaturesExpression = Prisma.sql`ARRAY(SELECT DISTINCT feature FROM (
   SELECT CASE
+    WHEN key ~ 'local_pack|local_results|places' THEN 'local'
     WHEN key ~ 'featured|answer_box' THEN 'featured'
     WHEN key ~ 'people|related_question' THEN 'paa'
     WHEN key ~ 'sitelink' THEN 'sitelinks'

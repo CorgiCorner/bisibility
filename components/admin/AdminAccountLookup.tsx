@@ -3,14 +3,15 @@
 import { AdminAccountActions } from "@/components/admin/AdminAccountActions";
 import { displayTime } from "@/components/admin/AdminPrimitives";
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Button, Card, IdChip, SectionTitle } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { IdChip } from "@/components/ui/IdChip";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import { lookupInstanceAdminAccount } from "@/lib/actions/instance-admin-account";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import {
-  ClockCounterClockwiseIcon as ClockCounterClockwise,
-  MagnifyingGlassIcon as MagnifyingGlass,
-  UserIcon as User,
-} from "@phosphor-icons/react";
+import { ClockCounterClockwiseIcon as ClockCounterClockwise } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { UserIcon as User } from "@phosphor-icons/react/dist/csr/User";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";

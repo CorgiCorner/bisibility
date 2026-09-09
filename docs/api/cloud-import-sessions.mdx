@@ -11,7 +11,7 @@ Content-Type: application/json
 
 ```json
 {
-  "version": 6,
+  "version": 7,
   "chunk_count": 3,
   "source_project_id": "prj_abcdefghijklmnopqrstuvwx",
   "totals": {
@@ -21,7 +21,8 @@ Content-Type: application/json
 }
 ```
 
-`version` must be `6`. `chunk_count` must be between `1` and `500`.
+New exporters send version `7`; a destination also accepts version `6` session
+manifests. `chunk_count` must be between `1` and `500`.
 `source_project_id` is required and prevents importing a project into itself.
 `totals` is optional and is stored with the session manifest.
 
@@ -58,7 +59,7 @@ Keyword chunks carry keyword rows:
 {
   "checksum": "sha256:4f8d72fb6ca13e3140cfb4251850959f3a7a3bfc6f3d898cf0f71ba1a76218bb",
   "kind": "keywords",
-  "keywords": [{ "id": "kw_abcdefghijklmnopqrstuvwx", "keyword": "rank tracker api", "device": "desktop", "location": "United States", "tags": [], "rankingHistory": [] }]
+  "keywords": [{ "id": "kw_abcdefghijklmnopqrstuvwx", "keyword": "rank tracker api", "device": "desktop", "location": "United States", "location_key": "US", "tags": [], "rankingHistory": [] }]
 }
 ```
 
@@ -75,6 +76,7 @@ ids used to map imported alert targets:
       "kw_abcdefghijklmnopqrstuvwx": {
         "text": "rank tracker api",
         "location": "United States",
+        "location_key": "US",
         "device": "desktop"
       }
     }
@@ -82,10 +84,10 @@ ids used to map imported alert targets:
 }
 ```
 
-The checksum is the v6 canonical chunk-content identity for idempotent retries. Retrying the
+The checksum is the v7 canonical chunk-content identity for idempotent retries. Retrying the
 same `{sessionId, index}` with the same checksum returns `200`; retrying that
 index with a different checksum returns `409`. Clients should compute the
-`sha256:` value over the canonical JSON body `{ version: 6, ...chunk }`, excluding
+`sha256:` value over the canonical JSON body `{ version: 7, ...chunk }`, excluding
 the `checksum` field, before gzip compression.
 
 To gzip a chunk, send the gzip-compressed JSON body with:

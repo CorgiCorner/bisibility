@@ -1,35 +1,26 @@
 import "server-only";
 
-import {
-  positiveTtl,
-  readProviderLookupCache,
-  withProviderLookupCache,
-} from "@/lib/provider-lookups/cache";
+import { readProviderLookupCache, withProviderLookupCache } from "@/lib/provider-lookups/cache";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { chargedProviderCostCents } from "@/lib/providers/call-error";
 import type { RankedKeywordsPage, RelevantPagesResult } from "@/lib/providers/types";
+import { domainOverviewCacheTtlSeconds } from "./cache-policy";
 import type {
   DomainModuleOutcome,
   DomainOverviewLookupFailure,
-  DomainOverviewMarket,
   DomainOverviewReport,
+  DomainOverviewResearchScope,
   DomainOverviewScope,
 } from "./types";
 
-export const DEFAULT_TTL_SECONDS = 43_200;
+export {
+  DEFAULT_TTL_SECONDS,
+  domainOverviewCachedUntil,
+  domainOverviewCacheTtlSeconds,
+} from "./cache-policy";
 
 export type DomainOverviewCacheModule = "history" | "keywords" | "overview" | "pages";
 export type CachedDomainOverviewModule<T> = { costCents: number; data: T; fetchedAt: string };
-
-export function domainOverviewCacheTtlSeconds() {
-  return positiveTtl(process.env.DOMAIN_OVERVIEW_CACHE_TTL_SECONDS, DEFAULT_TTL_SECONDS);
-}
-
-export function domainOverviewCachedUntil(fetchedAt: string | Date) {
-  return new Date(
-    new Date(fetchedAt).getTime() + domainOverviewCacheTtlSeconds() * 1000,
-  ).toISOString();
-}
 
 export function domainOverviewCacheKey(input: {
   languageCode: string;
@@ -189,7 +180,7 @@ type SnapshotReportData = Pick<
 
 export function domainOverviewReport(input: {
   keywords: DomainModuleOutcome<RankedKeywordsPage>;
-  market: DomainOverviewMarket;
+  researchScope: DomainOverviewResearchScope;
   overview: SnapshotReportData;
   overviewCached: boolean;
   overviewCost: number;
@@ -202,7 +193,7 @@ export function domainOverviewReport(input: {
     module.ok ? module.cached : module.costCents === 0,
   );
   return {
-    ...input.market,
+    ...input.researchScope,
     ...input.overview,
     cached: input.overviewCached && modulesCached,
     costCents: input.overviewCost + input.keywords.costCents + input.pages.costCents,

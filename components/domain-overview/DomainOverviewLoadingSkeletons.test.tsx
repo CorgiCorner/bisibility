@@ -11,8 +11,8 @@ describe("DomainOverviewLoadingSkeletons", () => {
     const route = screen.getByLabelText("Domain Overview page loading");
     const analyzeCard = route.querySelector('[data-skeleton="analyze-card"]');
     const target = route.querySelector('[data-skeleton="target-control"]');
-    const marketWrapper = route.querySelector('[data-skeleton="market-wrapper"]');
-    const market = route.querySelector('[data-skeleton="market-control"]');
+    const scopeWrapper = route.querySelector('[data-skeleton="scope-wrapper"]');
+    const scope = route.querySelector('[data-skeleton="scope-control"]');
     const action = route.querySelector('[data-skeleton="analyze-action"]');
     const idlePanel = route.querySelector('[data-skeleton="idle-panel"]');
 
@@ -33,8 +33,8 @@ describe("DomainOverviewLoadingSkeletons", () => {
       "border-border",
       "md:min-w-[320px]",
     );
-    expect(marketWrapper).toHaveClass("md:w-[230px]");
-    expect(market).toHaveClass("h-[34px]", "w-full", "rounded-control", "border-border");
+    expect(scopeWrapper).toHaveClass("md:w-[230px]");
+    expect(scope).toHaveClass("h-[34px]", "w-full", "rounded-control", "border-border");
     expect(action).toHaveClass("h-[37px]", "min-w-[200px]");
     expect(idlePanel).toHaveClass(
       "rounded-card",

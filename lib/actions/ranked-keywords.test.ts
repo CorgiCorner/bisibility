@@ -24,7 +24,7 @@ describe("fetchRankedKeywordSuggestions action", () => {
     mocks.requireScope.mockResolvedValue({ id: "project_1" });
   });
 
-  it("authorizes read access and delegates validated pagination", async () => {
+  it("authorizes keyword creation and delegates validated pagination", async () => {
     mocks.fetch.mockResolvedValue({ ok: false, reason: "no_source" });
     await expect(
       fetchRankedKeywordSuggestions({
@@ -33,8 +33,8 @@ describe("fetchRankedKeywordSuggestions action", () => {
         projectId: "prj_1",
       }),
     ).resolves.toEqual({ reason: "no_source" });
-    expect(mocks.requireScope).toHaveBeenCalledWith({ id: "user_1" }, "read", "prj_1", {
-      type: "project",
+    expect(mocks.requireScope).toHaveBeenCalledWith({ id: "user_1" }, "create", "prj_1", {
+      type: "keyword",
     });
     expect(mocks.fetch).toHaveBeenCalledWith({
       actorId: "user_1",

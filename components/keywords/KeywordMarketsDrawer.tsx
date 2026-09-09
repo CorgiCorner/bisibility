@@ -1,12 +1,16 @@
 "use client";
 
-import { ProjectMarketsSelector } from "@/components/keywords/add/ProjectMarketsSelector";
-import { Button, Sheet, useToast } from "@/components/ui";
+import { AddKeywordTrackingControls } from "@/components/keywords/add/AddKeywordTrackingControls";
+import { useAddKeywordDrawerMarkets } from "@/components/keywords/add/useAddKeywordDrawerMarkets";
+import { NewMarketCreator } from "@/components/markets/sheet/NewMarketCreator";
+import { Button } from "@/components/ui/Button";
+import { Sheet } from "@/components/ui/Sheet";
+import { useToast } from "@/components/ui/toast-context";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import type { AddKeywordsMatrixInput, BulkKeywordIdsInput } from "@/lib/schemas/keyword";
-import type { SerpDevice } from "@/lib/serp/markets";
+import type { SerpDevice } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { actionErrorMessage, deviceValue, type KeywordAction } from "./action-utils";
@@ -88,6 +92,12 @@ export function KeywordMarketsDrawer({
     devices: initialDevices,
     locationKeys: initialMarketKeys,
   });
+  const marketFlow = useAddKeywordDrawerMarkets({
+    markets: projectMarkets,
+    projectId,
+    selection,
+    setSelection,
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingAddition, setPendingAddition] = useState<PendingAddition | null>(null);
@@ -164,61 +174,85 @@ export function KeywordMarketsDrawer({
     }
   }
 
-  return (
-    <Sheet
-      footer={
-        <div className="flex items-center gap-2.5">
-          <Button disabled={saving} onClick={onClose} type="button" variant="secondary">
-            Cancel
-          </Button>
-          <Button
-            className="flex-1"
-            disabled={!valid || saving}
-            loading={saving}
-            loadingLabel="Saving..."
-            onClick={() => void save()}
-            type="button"
-          >
-            Save markets and devices
-          </Button>
-        </div>
-      }
-      onClose={onClose}
-      open={open}
-      title={
-        <span className="block min-w-0">
-          <span className="block">Edit</span>
-          <span className="mt-1 block truncate text-[12px] font-normal text-fg-muted">
-            {keyword.keyword}
-          </span>
-        </span>
-      }
-    >
-      <ProjectMarketsSelector
-        defaultDevice={deviceValue(keyword.device)}
-        description="This keyword is tracked for every selected market and device."
-        initialDevices={initialDevices}
-        initialMarketKeys={initialMarketKeys}
-        markets={projectMarkets}
-        onChange={setSelection}
-        projectId={projectId}
-      />
-      <div
-        aria-label="Keyword target change"
-        className="mt-5 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
+  const footer = (
+    <div className="flex items-center gap-2.5">
+      <Button disabled={saving} onClick={onClose} type="button" variant="secondary">
+        Cancel
+      </Button>
+      <Button
+        className="flex-1"
+        disabled={!valid || saving}
+        loading={saving}
+        loadingLabel="Saving..."
+        onClick={() => void save()}
+        type="button"
       >
-        <p className="m-0 font-sans tabular-nums text-[11px] text-fg">
-          {selection.locationKeys.length} markets x {selection.devices.length}{" "}
-          {selection.devices.length === 1 ? "device" : "devices"} = {nextCount} checks per run
-        </p>
-        <p className="m-0 mt-1 text-[11.5px] text-fg-muted">
-          {checkDeltaLabel(uniqueTargets.length, nextCount)}
-        </p>
-      </div>
-      {!valid ? (
-        <p className="mt-3 text-[12px] text-red-text">Select at least one market and device.</p>
-      ) : null}
-      {error ? <p className="mt-3 text-[12px] text-red-text">{error}</p> : null}
-    </Sheet>
+        Save markets and devices
+      </Button>
+    </div>
+  );
+
+  return (
+    <NewMarketCreator {...marketFlow.creator} definitionOnly={{ devices: selection.devices }}>
+      {(market) => (
+        <Sheet
+          backAction={
+            marketFlow.step.open ? { label: "Back to keyword", onClick: market.onBack } : undefined
+          }
+          footer={marketFlow.step.open ? market.footer : footer}
+          onClose={onClose}
+          onExited={market.onClose}
+          open={open}
+          title={
+            marketFlow.step.open ? (
+              market.title
+            ) : (
+              <span className="block min-w-0">
+                <span className="block">Markets and devices</span>
+                <span className="mt-1 block truncate text-[12px] font-normal text-fg-muted">
+                  {keyword.keyword}
+                </span>
+              </span>
+            )
+          }
+        >
+          {marketFlow.step.open ? (
+            market.content
+          ) : (
+            <>
+              <p className="m-0 mb-4 text-[12px] text-fg-muted">
+                This keyword is tracked for every selected market and device.
+              </p>
+              <div className="grid gap-4">
+                <AddKeywordTrackingControls
+                  {...marketFlow.tracking(1, setSelection)}
+                  schedules={[]}
+                  showSchedule={false}
+                />
+              </div>
+              <div
+                aria-label="Keyword target change"
+                className="mt-5 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
+              >
+                <p className="m-0 font-sans tabular-nums text-[11px] text-fg">
+                  {selection.locationKeys.length} markets x {selection.devices.length}{" "}
+                  {selection.devices.length === 1 ? "device" : "devices"} = {nextCount} checks per
+                  run
+                </p>
+                <p className="m-0 mt-1 text-[11.5px] text-fg-muted">
+                  {checkDeltaLabel(uniqueTargets.length, nextCount)}
+                </p>
+              </div>
+              {!valid ? (
+                <p className="mt-3 text-[12px] text-red-text">
+                  Select at least one market and device.
+                </p>
+              ) : null}
+              {error ? <p className="mt-3 text-[12px] text-red-text">{error}</p> : null}
+            </>
+          )}
+        </Sheet>
+      )}
+    </NewMarketCreator>
   );
 }

@@ -1,4 +1,5 @@
-import { Card, SectionTitle } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { KeywordDetailTrafficState } from "@/lib/keyword-detail/state-model";
 import type { KeywordTrafficDetail, PageTrafficSnapshotLike } from "@/lib/queries/keyword-traffic";
 import { appPath } from "@/lib/routing/app-path";

@@ -23,6 +23,8 @@ export type DurableAggregateRange = {
   startDate: string;
 };
 export type ImportObservabilityFacts = {
+  /** Whole planned import; absent on older snapshots or before a plan exists. */
+  importCoverage?: { completed: number; total: number } | null;
   qualifyingDays: number;
   consecutiveDays: number;
   targetDays: number;
@@ -202,7 +204,12 @@ export function selectImportObservabilityFacts(
     input.plannedRetentionMonths === undefined
       ? Math.floor(nonNegativeInteger(input.daysTotal) / 30)
       : nonNegativeInteger(input.plannedRetentionMonths);
+  const plannedDays = nonNegativeInteger(input.daysTotal);
   return {
+    importCoverage:
+      input.boundary && input.earliestTargetDate && plannedDays > 0
+        ? { completed: Math.min(available.size, plannedDays), total: plannedDays }
+        : null,
     qualifyingDays,
     consecutiveDays: consecutive,
     targetDays: TARGET_DAYS,

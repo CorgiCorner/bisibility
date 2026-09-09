@@ -1,4 +1,5 @@
-import { Button, InlineCallout } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { InlineCallout } from "@/components/ui/InlineCallout";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import type { SearchInsightsOauthReturn as OauthReturn } from "@/lib/search-insights/queries/oauth-return";
 import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";

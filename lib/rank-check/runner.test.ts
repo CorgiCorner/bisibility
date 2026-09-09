@@ -2,12 +2,17 @@ import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
 import { encryptSecret } from "@/lib/providers/crypto";
 import { clearProviderRateLimitState } from "@/lib/providers/rate-limit";
 import type { SerpProvider } from "@/lib/providers/types";
-import { serpRankLocationFromLegacy } from "@/lib/serp/location";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { persistFailedRankCheck, persistRankCheck, RankCheckRunnerError, runCheck } from "./runner";
 import { computeNextCheckAt } from "./schedule";
 
-const US_LOCATION = serpRankLocationFromLegacy("United States");
+const US_LOCATION = {
+  gl: "us",
+  hl: "en",
+  primaryGeoCode: null,
+  primaryGeoName: "United States",
+  secondaryGeoName: "United States",
+};
 const mocks = vi.hoisted(() => ({
   evaluateKeywordAlerts: vi.fn(() => Promise.resolve([])),
   notifyRankCheckCompleted: vi.fn(() => Promise.resolve()),
@@ -16,6 +21,8 @@ const mocks = vi.hoisted(() => ({
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     keywordSchedule: { update: vi.fn() },
+    observationItem: { createMany: vi.fn() },
+    observationRun: { create: vi.fn().mockResolvedValue({ id: "obs_1" }) },
     projectDefaults: { update: vi.fn() },
     providerConnection: { update: vi.fn() },
     providerCostEntry: { create: vi.fn(), createMany: vi.fn() },

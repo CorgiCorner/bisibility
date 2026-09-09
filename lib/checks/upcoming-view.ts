@@ -1,6 +1,6 @@
 import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import { defaultCostPerCheckCents } from "@/lib/rank-check/default-cost";
-import { resolveSerpDepth } from "@/lib/serp/markets";
+import { resolveSerpDepth } from "@/lib/serp/constants";
 import type { UpcomingBlockReason, UpcomingDayGroup, UpcomingView } from "./contract";
 
 const DAY_MS = 86_400_000;

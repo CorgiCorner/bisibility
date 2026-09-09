@@ -5,7 +5,8 @@ import { ConnectDrawerOauthSelection } from "@/components/integrations/ConnectDr
 import type { Notice } from "@/components/integrations/ConnectDrawerSchema";
 import { providerActionErrorNotice } from "@/components/integrations/ConnectDrawerSchema";
 import { ConnectedGoogleAccountFooter } from "@/components/integrations/ConnectedGoogleAccountFooter";
-import { ConfirmModal, ModuleMark } from "@/components/ui";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { ModuleMark } from "@/components/ui/ModuleMark";
 import type {
   cancelGooglePropertySelection,
   completeGooglePropertySelection,
@@ -16,7 +17,7 @@ import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react";
+import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/csr/GoogleLogo";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { SearchInsightsGa4PropertyPicker } from "./SearchInsightsGa4PropertyPicker";

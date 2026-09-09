@@ -1,7 +1,8 @@
 "use client";
 
 import { AlertRowActions } from "@/components/alerts/AlertRowActions";
-import { Card } from "@/components/ui";
+import { FeedMetadataTokens } from "@/components/feeds/FacetToken";
+import { Card } from "@/components/ui/Card";
 import type {
   AlertDeliveryStateView,
   AlertSeverity,
@@ -9,13 +10,11 @@ import type {
   TriggeredAlertView,
 } from "@/lib/alerts/alert-data";
 import { severityMeta } from "@/lib/alerts/alert-data";
-import {
-  ArrowRightIcon as ArrowRight,
-  InfoIcon as Info,
-  LightbulbIcon as Lightbulb,
-  SirenIcon as Siren,
-  WarningIcon as Warning,
-} from "@phosphor-icons/react";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { LightbulbIcon as Lightbulb } from "@phosphor-icons/react/dist/csr/Lightbulb";
+import { SirenIcon as Siren } from "@phosphor-icons/react/dist/csr/Siren";
+import { WarningIcon as Warning } from "@phosphor-icons/react/dist/csr/Warning";
 import type { Icon } from "@phosphor-icons/react/lib";
 
 const severityOrder: AlertSeverity[] = ["urgent", "warning", "info"];
@@ -145,10 +144,20 @@ export function AlertFeedRow({
             <span className="truncate">Ranking URL: {alert.rankingUrl}</span>
           </div>
         ) : null}
-        <p className="m-0 mt-2 font-sans tabular-nums text-[10.5px] text-fg-muted">
-          {meta.label} / {alert.rule} / Google / {alert.location} / {deviceLabel(alert.device)} /{" "}
-          {alert.when}
-        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-2 font-sans tabular-nums text-[10.5px] text-fg-muted">
+          <FeedMetadataTokens
+            device={deviceLabel(alert.device)}
+            metadata={
+              alert.feedMeta ?? {
+                engine: "Google",
+                severity: meta.label,
+                source: "RANK",
+              }
+            }
+          />
+          <span>{alert.rule}</span>
+          <span>{alert.when}</span>
+        </div>
         <DeliveryStatus alert={alert} />
         <AlertRowActions
           alertId={alert.id}

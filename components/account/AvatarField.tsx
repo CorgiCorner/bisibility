@@ -1,4 +1,4 @@
-import { Avatar } from "@/components/ui";
+import { Avatar } from "@/components/ui/Avatar";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 
 export type AvatarFieldProps = {

@@ -123,7 +123,7 @@ describe("ProjectMarketsSelector", () => {
     expect(within(positionsOnly).getByText("no volume/KD")).toHaveStyle({ fontSize: "10px" });
 
     const paused = within(section).getByRole("button", { name: "Belgium / Arabic" });
-    expect(paused).toBeDisabled();
+    expect(paused).toBeEnabled();
     expect(within(paused).getByText("PAUSED")).toHaveStyle({ fontSize: "9px" });
   });
 
@@ -180,9 +180,7 @@ describe("ProjectMarketsSelector", () => {
     fireEvent.click(screen.getByRole("button", { name: "Commit Germany" }));
 
     expect(
-      await screen.findByText(
-        "Market DE is not tracked by this project. Add it in Settings > Markets first.",
-      ),
+      await screen.findByText("Market DE is not tracked by this project. Add it in Markets first."),
     ).toBeVisible();
     expect(screen.queryByText("Markets could not be added.")).not.toBeInTheDocument();
   });

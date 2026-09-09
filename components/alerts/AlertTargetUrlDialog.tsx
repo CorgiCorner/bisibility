@@ -1,12 +1,12 @@
 "use client";
 
 import { TargetUrlField } from "@/components/keywords/TargetUrlField";
-import { AppDrawer } from "@/components/ui";
+import { AppDrawer } from "@/components/ui/AppDrawer";
+import { Button } from "@/components/ui/Button";
 import { setAlertKeywordTargetUrl } from "@/lib/actions/alert-feed";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { targetUrlValueSchema } from "@/lib/schemas/keyword";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import Button from "@mui/material/Button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -65,7 +65,7 @@ export function AlertTargetUrlDialog({
           placeholder="https://example.com/page"
           {...register("targetUrl")}
         />
-        <Button disabled={isSubmitting} sx={{ minHeight: 40 }} type="submit" variant="contained">
+        <Button disabled={isSubmitting} style={{ minHeight: 40 }} type="submit" variant="primary">
           {isSubmitting ? "Saving..." : "Save target URL"}
         </Button>
         {actionError ? (

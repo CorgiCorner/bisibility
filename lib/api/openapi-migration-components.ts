@@ -1,19 +1,22 @@
 import { ALERT_CHANNELS_OPENAPI_DESCRIPTION } from "@/lib/alerts/channel-availability";
 import { alertSeverities } from "@/lib/alerts/severity";
-import { CLOUD_MIGRATION_PACKAGE_VERSION } from "@/lib/migration/package-version";
+import {
+  CLOUD_MIGRATION_PACKAGE_VERSION,
+  CLOUD_MIGRATION_PACKAGE_VERSIONS,
+  LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION,
+  PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION,
+} from "@/lib/migration/package-version";
 import { savedViewSurfaces } from "@/lib/saved-views/model";
-import { serpDeviceValues, serpMarketOptions } from "@/lib/serp/markets";
+import {
+  cloudImportKeywordAlertTargetSchema,
+  cloudImportKeywordSchema,
+  cloudImportSourceKeywordSchema,
+} from "./openapi-migration-location-schemas";
 import { cloudImportRankingHistorySchema } from "./openapi-migration-ranking-history";
 
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
-const text = { type: "string" };
 const nullableText = { type: ["string", "null"] };
 const position = { minimum: 1, type: ["integer", "null"] };
-const targetUrl = {
-  description: "Absolute URL, path, null, or omitted.",
-  maxLength: 500,
-  type: ["string", "null"],
-};
 const publicId = (prefix: string) => ({ pattern: `^${prefix}_[a-z][a-z0-9]{23}$`, type: "string" });
 const keywordSectionProperties = {
   keywords: { items: ref("CloudImportKeyword"), maxItems: 500, type: "array" },
@@ -76,18 +79,7 @@ export const migrationSchemas = {
     discriminator: { propertyName: "type" },
     oneOf: [ref("CloudImportKeywordAlertTarget"), ref("CloudImportTagAlertTarget")],
   },
-  CloudImportKeywordAlertTarget: {
-    additionalProperties: false,
-    properties: {
-      device: { enum: serpDeviceValues, type: "string" },
-      keyword: { maxLength: 180, minLength: 1, type: "string" },
-      keyword_id: publicId("kw"),
-      location: { enum: serpMarketOptions, type: "string" },
-      type: { const: "keyword", type: "string" },
-    },
-    required: ["keyword_id", "type"],
-    type: "object",
-  },
+  CloudImportKeywordAlertTarget: cloudImportKeywordAlertTargetSchema,
   CloudImportTagAlertTarget: {
     additionalProperties: false,
     properties: {
@@ -111,7 +103,7 @@ export const migrationSchemas = {
       app_version: { type: "string" },
       latest_migration: { type: ["string", "null"] },
       schema_versions_supported: {
-        items: { enum: [CLOUD_MIGRATION_PACKAGE_VERSION], type: "integer" },
+        items: { enum: CLOUD_MIGRATION_PACKAGE_VERSIONS, type: "integer" },
         type: "array",
       },
     },
@@ -147,24 +139,7 @@ export const migrationSchemas = {
     required: ["counts", "job_id", "state"],
     type: "object",
   },
-  CloudImportKeyword: {
-    additionalProperties: false,
-    properties: {
-      device: { enum: serpDeviceValues, type: "string" },
-      id: publicId("kw"),
-      keyword: { maxLength: 180, minLength: 1, type: "string" },
-      location: { enum: serpMarketOptions, type: "string" },
-      rankingHistory: {
-        items: ref("CloudImportRankingHistory"),
-        maxItems: 5000,
-        type: "array",
-      },
-      tags: { items: { maxLength: 48, minLength: 1, type: "string" }, maxItems: 12, type: "array" },
-      target_url: targetUrl,
-    },
-    required: ["id", "keyword", "device", "location"],
-    type: "object",
-  },
+  CloudImportKeyword: cloudImportKeywordSchema,
   CloudImportNotificationPreference: {
     additionalProperties: false,
     properties: {
@@ -186,7 +161,16 @@ export const migrationSchemas = {
       ...keywordSectionProperties,
       ...importSectionProperties,
       exported_at: { format: "date-time", type: "string" },
-      version: { const: CLOUD_MIGRATION_PACKAGE_VERSION, type: "integer" },
+      version: {
+        description:
+          "Version 7 exports require location_key. Version 6 and metadata-only version 5 remain import-compatible.",
+        enum: [
+          CLOUD_MIGRATION_PACKAGE_VERSION,
+          PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION,
+          LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION,
+        ],
+        type: "integer",
+      },
     },
     required: [
       "version",
@@ -224,7 +208,7 @@ export const migrationSchemas = {
         type: "object",
       },
       source_project_id: publicId("prj"),
-      version: { const: CLOUD_MIGRATION_PACKAGE_VERSION, type: "integer" },
+      version: { enum: CLOUD_MIGRATION_PACKAGE_VERSIONS, type: "integer" },
     },
     required: ["version", "chunk_count", "source_project_id"],
     type: "object",
@@ -254,16 +238,7 @@ export const migrationSchemas = {
     },
     type: "object",
   },
-  CloudImportSourceKeyword: {
-    additionalProperties: false,
-    properties: {
-      device: { enum: serpDeviceValues, type: "string" },
-      location: { enum: serpMarketOptions, type: "string" },
-      text,
-    },
-    required: ["device", "location", "text"],
-    type: "object",
-  },
+  CloudImportSourceKeyword: cloudImportSourceKeywordSchema,
   CloudImportUploadChunk: {
     oneOf: [
       {

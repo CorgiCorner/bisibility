@@ -4,6 +4,7 @@ import { getTimelineView } from "./timeline";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    projectMarket: { findMany: vi.fn() },
     signal: {
       findMany: vi.fn(),
     },
@@ -58,6 +59,7 @@ describe("getTimelineView", () => {
     vi.clearAllMocks();
     mocks.requireReadableProject.mockResolvedValue({ project: mocks.project });
     mocks.getRequestProjectDefaults.mockResolvedValue({ timezone: "Europe/Madrid" });
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
     mocks.prisma.signal.findMany.mockResolvedValue([]);
   });
 
@@ -73,6 +75,7 @@ describe("getTimelineView", () => {
         keyword: {
           select: {
             device: true,
+            locationId: true,
             locationRef: { select: { displayName: true, languageLabel: true } },
             publicId: true,
             text: true,
@@ -190,5 +193,59 @@ describe("getTimelineView", () => {
     expect(view.page).toBe(1);
     expect(view.rows).toEqual([]);
     expect(view.isFiltered).toBe(true);
+  });
+
+  it("intersects trusted URL facets in the Signal query without changing legacy pagination", async () => {
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      {
+        location: { displayName: "Malaga core", languageLabel: "Spanish" },
+        locationId: "location_malaga",
+        publicId: "pmkt_abcdefghijklmnopqrstuvwx",
+      },
+    ]);
+
+    await getTimelineView("prj_1", {
+      f: [
+        "module:rank",
+        "market:pmkt_abcdefghijklmnopqrstuvwx",
+        "language:spanish",
+        "engine:google",
+        "severity:warning",
+      ],
+      now,
+      page: 2,
+      pageSize: 10,
+    });
+
+    expect(mocks.prisma.signal.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: 10,
+        take: 11,
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            { source: { in: ["rank_tracker"] } },
+            { keyword: { locationId: { in: ["location_malaga"] } } },
+            { keyword: { locationRef: { languageLabel: { in: ["Spanish"] } } } },
+            { severity: { in: ["warning"] } },
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it("drops an inaccessible market token and does not turn it into a hidden feed context", async () => {
+    const view = await getTimelineView("prj_1", {
+      f: ["market:pmkt_other_project", "severity:warning"],
+      now,
+    });
+
+    expect(view.facets).toEqual([{ axis: "severity", value: "warning" }]);
+    expect(mocks.prisma.signal.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.not.arrayContaining([{ keyword: expect.anything() }]),
+        }),
+      }),
+    );
   });
 });

@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Actor } from "@/lib/auth/authorize";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
@@ -7,7 +8,7 @@ import { type DateFormat, formatDate } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import type { Role } from "@/lib/generated/prisma/client";
-import { requireReadableProject } from "@/lib/queries/_auth";
+import { requireReadableProject, requireReadableProjectFor } from "@/lib/queries/_auth";
 
 export type TeamRoleLabel = "Admin" | "Editor" | "Owner" | "Viewer";
 export type TeamRoleValue = "admin" | "member" | "owner" | "viewer";
@@ -125,7 +126,21 @@ export async function getTeamAccess(
   projectId: string,
   dateFormat: DateFormat = "day_first",
 ): Promise<TeamAccessView> {
-  const { actor, project } = await requireReadableProject(projectId);
+  return readTeamAccess(await requireReadableProject(projectId), dateFormat);
+}
+
+export async function getTeamAccessFor(
+  actor: Actor,
+  projectId: string,
+  dateFormat: DateFormat = "day_first",
+) {
+  return readTeamAccess(await requireReadableProjectFor(actor, projectId), dateFormat);
+}
+
+async function readTeamAccess(
+  { actor, project }: Awaited<ReturnType<typeof requireReadableProject>>,
+  dateFormat: DateFormat,
+) {
   const now = new Date();
   const [members, pendingInvites] = await Promise.all([
     prisma.membership.findMany({

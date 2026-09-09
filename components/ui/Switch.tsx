@@ -1,5 +1,7 @@
 "use client";
 
+import { track } from "@/lib/analytics/client";
+import { type AnalyticsControlId, analyticsControlModule } from "@/lib/analytics/controls";
 import { cn } from "@/lib/ui/cn";
 import {
   type ChangeEvent,
@@ -11,6 +13,7 @@ import {
 } from "react";
 
 export type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, "role" | "size" | "type"> & {
+  analytics?: { control: AnalyticsControlId };
   description?: ReactNode;
   inputClassName?: string;
   label?: ReactNode;
@@ -36,6 +39,7 @@ const thumbClass =
 
 export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   {
+    analytics,
     checked,
     className,
     defaultChecked,
@@ -64,6 +68,13 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
       setInternalChecked(event.currentTarget.checked);
     }
     onChange?.(event);
+    if (analytics) {
+      track("ui_option_selected", {
+        control: analytics.control,
+        module: analyticsControlModule(analytics.control),
+        value: event.currentTarget.checked,
+      });
+    }
   }
 
   return (

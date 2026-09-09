@@ -9,9 +9,11 @@ import {
   type QueueFirstChecksAction,
   type RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
-import { Card, InfoTooltip } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { ProjectRef } from "@/lib/routing/app-path";
-import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
+import { appPath } from "@/lib/routing/app-path";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { VISIBILITY_DESCRIPTION, visibilityCoverageCopy } from "@/lib/visibility/definition";
 import { PositionDistributionCard } from "./PositionDistributionCard";
@@ -122,9 +124,7 @@ export function NoDataBanner({
       />
     );
   } else if (state === "running") {
-    action = (
-      <FirstCheckBannerLink href={rankTrackerTabPath(projectRef, "runs")} label="View check runs" />
-    );
+    action = <FirstCheckBannerLink href={projectRunsPath(projectRef)} label="View check runs" />;
   }
 
   return <FirstCheckBanner action={action} detail={copy.detail} title={copy.title} />;

@@ -21,8 +21,15 @@ function scheduleClient(descriptions: Record<string, unknown | Error>) {
   };
 }
 
-function description(input: { missed?: number; next?: Date[]; recent?: Date[]; skipped?: number }) {
+function description(input: {
+  missed?: number;
+  next?: Date[];
+  paused?: boolean;
+  recent?: Date[];
+  skipped?: number;
+}) {
   return {
+    state: { paused: input.paused ?? false },
     info: {
       nextActionTimes: input.next ?? [],
       numActionsMissedCatchupWindow: input.missed ?? 0,
@@ -36,6 +43,56 @@ function description(input: { missed?: number; next?: Date[]; recent?: Date[]; s
 }
 
 describe("Temporal heartbeat collection", () => {
+  it("ignores paused advertised times without dropping lifetime counters or recent history", async () => {
+    const now = new Date("2026-09-09T12:00:00.000Z");
+    const { client } = scheduleClient({
+      paused: description({
+        missed: 2,
+        next: [new Date("2026-07-29T12:00:00.000Z")],
+        paused: true,
+        recent: [new Date("2026-09-09T11:00:00.000Z")],
+        skipped: 3,
+      }),
+      active: description({ next: [new Date("2026-09-09T12:01:00.000Z")] }),
+    });
+    await expect(collectTemporalHeartbeat(now, client)).resolves.toMatchObject({
+      missedCatchupTotal: 2,
+      nextActionAt: "2026-09-09T12:01:00.000Z",
+      recentActions: 1,
+      schedules: 2,
+      skippedOverlapTotal: 3,
+    });
+  });
+
+  it.each([
+    { next: [new Date("2026-09-09T11:00:00.000Z")] },
+    { next: [new Date("2026-09-09T12:00:00.000Z")] },
+    { next: [new Date("2026-09-09T13:00:00.000Z")], paused: true },
+    { next: [] },
+    { next: [new Date("invalid")] },
+  ])("returns no next action without a valid unpaused future time: %o", async (input) => {
+    const { client } = scheduleClient({ schedule: description(input) });
+    await expect(
+      collectTemporalHeartbeat(new Date("2026-09-09T12:00:00.000Z"), client),
+    ).resolves.toMatchObject({ inspectionErrors: 0, nextActionAt: null });
+  });
+
+  it("selects the earliest valid future time from mixed active schedule times", async () => {
+    const { client } = scheduleClient({
+      schedule: description({
+        next: [
+          new Date("invalid"),
+          new Date("2026-09-09T11:00:00.000Z"),
+          new Date("2026-09-09T13:00:00.000Z"),
+          new Date("2026-09-09T12:01:00.000Z"),
+        ],
+      }),
+    });
+    await expect(
+      collectTemporalHeartbeat(new Date("2026-09-09T12:00:00.000Z"), client),
+    ).resolves.toMatchObject({ nextActionAt: "2026-09-09T12:01:00.000Z" });
+  });
+
   it("inspects every schedule and reports direct SDK counters", async () => {
     const now = new Date("2026-07-16T12:00:00.000Z");
     const { client, describe: describeMock } = scheduleClient({

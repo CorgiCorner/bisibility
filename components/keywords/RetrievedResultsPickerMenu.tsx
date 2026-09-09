@@ -1,7 +1,7 @@
 "use client";
 
 import type { StoredResultsIndexEntry } from "@/lib/checks/contract";
-import { CheckIcon as Check } from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import type { PickerPreset, PickerRow } from "./retrieved-results-picker-model";
 import { retainedLabel } from "./retrieved-results-picker-model";
 

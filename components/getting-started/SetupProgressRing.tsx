@@ -1,5 +1,5 @@
 export type SetupProgressRingProps = Readonly<{
-  doneCount: number;
+  settledCount: number;
   size?: 20 | 22;
   totalCount: number;
 }>;
@@ -7,16 +7,16 @@ export type SetupProgressRingProps = Readonly<{
 const RADIUS = 8;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-export function setupProgressArc(doneCount: number, totalCount: number) {
-  const ratio = totalCount > 0 ? Math.min(1, Math.max(0, doneCount / totalCount)) : 0;
+export function setupProgressArc(settledCount: number, totalCount: number) {
+  const ratio = totalCount > 0 ? Math.min(1, Math.max(0, settledCount / totalCount)) : 0;
   return {
     arcLength: (CIRCUMFERENCE * ratio).toFixed(1),
     circumference: CIRCUMFERENCE.toFixed(1),
   };
 }
 
-export function SetupProgressRing({ doneCount, size = 22, totalCount }: SetupProgressRingProps) {
-  const { arcLength, circumference } = setupProgressArc(doneCount, totalCount);
+export function SetupProgressRing({ settledCount, size = 22, totalCount }: SetupProgressRingProps) {
+  const { arcLength, circumference } = setupProgressArc(settledCount, totalCount);
 
   return (
     <svg aria-hidden data-progress-ring height={size} viewBox="0 0 20 20" width={size}>

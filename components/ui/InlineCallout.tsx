@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import type { ReactNode } from "react";
 
 /**

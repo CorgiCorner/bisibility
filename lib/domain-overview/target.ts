@@ -1,10 +1,10 @@
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
-import { researchCountryLocationCode, supportsResearchMarket } from "@/lib/serp/market-capability";
+import { researchCountryLocationCode, supportsResearchScope } from "@/lib/serp/research-capability";
 import { getDomain } from "tldts";
 import type {
   AnalyzeDomainOverviewOptions,
-  DomainOverviewMarket,
+  DomainOverviewResearchScope,
   DomainOverviewScope,
 } from "./types";
 
@@ -40,13 +40,13 @@ export function normalizeDomainOverviewTarget(
   return { scope, target: scope === "root" ? registrable : hostname };
 }
 
-export function normalizeDomainOverviewMarket(options: DomainOverviewMarket) {
+export function normalizeDomainOverviewResearchScope(options: DomainOverviewResearchScope) {
   const countryCode = options.countryCode?.trim().toUpperCase();
   const languageCode = options.languageCode.trim().toLowerCase();
   if (!Number.isInteger(options.locationCode) || options.locationCode <= 0 || !languageCode) {
     throw new ProviderLookupSignal({ ok: false, reason: "unsupported_location" });
   }
-  if (countryCode && !supportsResearchMarket(countryCode, languageCode)) {
+  if (countryCode && !supportsResearchScope(countryCode, languageCode)) {
     throw new ProviderLookupSignal({ ok: false, reason: "unsupported_location" });
   }
   return {
@@ -76,7 +76,7 @@ export function domainOverviewPageLimit(value: number | undefined, maximum: numb
 
 export function normalizeDomainOverviewAnalysis(options: AnalyzeDomainOverviewOptions) {
   return {
-    ...normalizeDomainOverviewMarket(options),
+    ...normalizeDomainOverviewResearchScope(options),
     ...normalizeDomainOverviewTarget(options.target, options.scopeOverride),
     keywordLimit: domainOverviewPageLimit(options.keywordLimit, 100),
     pageLimit: domainOverviewPageLimit(options.pageLimit, 1_000),

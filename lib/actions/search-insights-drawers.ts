@@ -22,7 +22,7 @@ import {
   loadQueryDetail,
   type SearchInsightsQueryDetail,
 } from "@/lib/search-insights/queries/query-detail";
-import type { SerpDevice } from "@/lib/serp/markets";
+import type { SerpDevice } from "@/lib/serp/constants";
 import { z } from "zod";
 import { parseActionInput } from "./_shared";
 

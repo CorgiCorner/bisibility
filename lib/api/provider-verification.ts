@@ -65,4 +65,5 @@ export async function verifyProviderConnectionBeforeSave({
     }
     throw new Error(`Connection test failed: ${result.message}`);
   }
+  return result;
 }

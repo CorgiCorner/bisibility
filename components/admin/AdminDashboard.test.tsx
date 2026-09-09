@@ -1,6 +1,12 @@
-import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  baseData,
+  disabledTemporal,
+  staleTemporal,
+  unavailableTemporal,
+  withTemporal,
+} from "./admin-dashboard-test-fixtures";
 
 vi.mock("@/components/admin/AdminOpsActions", () => ({
   AdminOpsActions: () => <div data-testid="admin-ops-actions" />,
@@ -8,116 +14,9 @@ vi.mock("@/components/admin/AdminOpsActions", () => ({
 
 import { AdminDashboard } from "./AdminDashboard";
 
-const heartbeat = {
-  inspectionErrors: 0,
-  issueSchedules: [],
-  missedCatchupTotal: 0,
-  nextActionAt: null,
-  recentActions: 3,
-  scheduleIssues: [],
-  schedules: 8,
-  skippedOverlapTotal: 0,
-};
-
-const baseData = {
-  availability: {
-    dataSources: true,
-    opsDelivery: true,
-    opsEvents: true,
-    presence: true,
-    rankChecks: true,
-    stats: true,
-    worker: true,
-  },
-  generatedAt: "2026-07-17T12:00:00.000Z",
-  ops: {
-    configured: true,
-    enabled: true,
-    events: [],
-    undeliveredCount: 0,
-  },
-  rank24h: {
-    deferred: 0,
-    failed: 0,
-    failureBreakdown: { groups: [], remainderCount: 0 },
-    fallbackBreakdown: { groups: [], remainderCount: 0 },
-    lagP50Ms: null,
-    lagP95Ms: null,
-    scheduled: 0,
-    stuck: 0,
-    succeeded: 0,
-  },
-  rank7d: {
-    deferred: 0,
-    failed: 0,
-    lagP50Ms: null,
-    lagP95Ms: null,
-    scheduled: 0,
-    stuck: 0,
-    succeeded: 0,
-  },
-  stats: {
-    activeProviderConnectionsByKind: [
-      { count: 3, kind: "analytics" },
-      { count: 1, kind: "serp" },
-    ],
-    keywords: 3,
-    projects: 3,
-    providerUsage: [
-      {
-        billableUnits: 12,
-        checks: 3,
-        provider: "serpapi",
-        providerLabel: "SerpApi",
-        rateBasis: "Production plan equivalent",
-        referenceCostCents: 12,
-        referenceCostKnown: true,
-      },
-      {
-        billableUnits: 1,
-        checks: 1,
-        provider: "dataforseo",
-        providerLabel: "DataForSEO",
-        rateBasis: "Live depth pricing",
-        referenceCostCents: 0.2,
-        referenceCostKnown: true,
-      },
-    ],
-    users: 1,
-  },
-  providerHealth: [],
-  presence: null,
-  temporal: {
-    bootstrapErrors: [],
-    collectedAt: "2026-07-17T11:55:00.000Z",
-    heartbeat,
-    status: "ok",
-  },
-  worker: {
-    alertDeliveryTaskQueue: "alert-deliveries",
-    appliedMigration: "20260724220000_instance_settings",
-    bundledMigration: "20260724220000_instance_settings",
-    environment: "production",
-    heartbeatAgeMs: 0,
-    heartbeatState: "fresh",
-    lastSeenAt: "2026-07-17T12:00:00.000Z",
-    namespace: "default",
-    release: "worker-image-sha",
-    revision: "worker-public-revision",
-    schedulerDriver: "temporal",
-    schedulerMode: "legacy",
-    schemaComparison: "ok",
-    status: "ok",
-    taskQueue: "rank-checks",
-    temporalIdentityComparison: {
-      detail:
-        "app: default / rank-checks / alert-deliveries · worker: default / rank-checks / alert-deliveries",
-      status: "match",
-    },
-  },
-} satisfies InstanceAdminDashboard;
-
 describe("AdminDashboard", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("shows worker release and schema agreement details", () => {
     render(<AdminDashboard data={baseData} />);
 
@@ -172,7 +71,7 @@ describe("AdminDashboard", () => {
     const rows = within(table).getAllByRole("row");
     expect(rows).toHaveLength(3);
     expect(within(rows[1] as HTMLElement).getByText("SerpApi")).toBeInTheDocument();
-    expect(within(rows[1] as HTMLElement).getByText("12", { selector: "td" })).toBeInTheDocument();
+    expect(within(rows[1] as HTMLElement).getByText("12")).toBeInTheDocument();
     expect(within(rows[1] as HTMLElement).getByText("$0.12")).toBeInTheDocument();
     expect(within(rows[2] as HTMLElement).getByText("$0.002")).toBeInTheDocument();
     expect(screen.queryByText("Estimated provider spend (month)")).not.toBeInTheDocument();
@@ -228,12 +127,33 @@ describe("AdminDashboard", () => {
   });
 
   it("keeps Ops event actions above the event list without duplicate status tiles", () => {
-    render(<AdminDashboard data={baseData} />);
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1_200);
+    render(
+      <AdminDashboard
+        data={{
+          ...baseData,
+          ops: {
+            ...baseData.ops,
+            events: [
+              {
+                attempts: 1,
+                createdAt: "2026-07-17T12:00:00.000Z",
+                deliveredAt: "2026-07-17T12:00:04.000Z",
+                kind: "worker_started",
+                severity: "info",
+              },
+            ],
+          },
+        }}
+      />,
+    );
 
     const ops = screen.getByRole("region", { name: "Ops events" });
     expect(within(ops).getByTestId("admin-ops-actions")).toBeInTheDocument();
     expect(within(ops).queryByText("Undelivered")).not.toBeInTheDocument();
     expect(within(ops).queryByText("Slack")).not.toBeInTheDocument();
+    const table = within(ops).getByRole("table", { name: "Recent operational events" });
+    expect(table.style.getPropertyValue("--dt-table-width")).toBe("1200px");
   });
 
   it("shows deferred URL-presence counts from the latest budget event", () => {
@@ -256,19 +176,7 @@ describe("AdminDashboard", () => {
   });
 
   it("renders unavailable Temporal metrics as hyphens with an explicit unknown-state note", () => {
-    render(
-      <AdminDashboard
-        data={{
-          ...baseData,
-          temporal: {
-            bootstrapErrors: [],
-            collectedAt: null,
-            heartbeat: null,
-            status: "unavailable",
-          },
-        }}
-      />,
-    );
+    render(<AdminDashboard data={withTemporal(unavailableTemporal)} />);
 
     const temporal = screen.getByRole("region", { name: "Temporal" });
     expect(
@@ -283,20 +191,11 @@ describe("AdminDashboard", () => {
   it("distinguishes a disabled scheduler from a failed worker or Temporal service", () => {
     render(
       <AdminDashboard
-        data={{
-          ...baseData,
-          temporal: {
-            bootstrapErrors: [],
-            collectedAt: null,
-            heartbeat: null,
-            status: "disabled",
-          },
-          worker: {
-            ...baseData.worker,
-            schedulerDriver: "none",
-            status: "unknown",
-          },
-        }}
+        data={withTemporal(disabledTemporal, {
+          ...baseData.worker,
+          schedulerDriver: "none",
+          status: "unknown",
+        })}
       />,
     );
 
@@ -310,19 +209,7 @@ describe("AdminDashboard", () => {
   });
 
   it("renders stale Temporal snapshots as unknown while preserving their collection time", () => {
-    render(
-      <AdminDashboard
-        data={{
-          ...baseData,
-          temporal: {
-            bootstrapErrors: [],
-            collectedAt: "2026-07-17T11:20:00.000Z",
-            heartbeat,
-            status: "stale",
-          },
-        }}
-      />,
-    );
+    render(<AdminDashboard data={withTemporal(staleTemporal)} />);
 
     const temporal = screen.getByRole("region", { name: "Temporal" });
     expect(within(temporal).getByText(/^As of \d{2}:\d{2}$/)).toBeInTheDocument();

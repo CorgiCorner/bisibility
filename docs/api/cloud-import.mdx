@@ -72,7 +72,7 @@ Response:
 
 ```json
 {
-  "schema_versions_supported": [6],
+  "schema_versions_supported": [7, 6],
   "app_version": "0.2.0",
   "latest_migration": "20260730204200_rank_check_normalization_version"
 }
@@ -88,7 +88,7 @@ Post the export package directly to `/api/v1/cloud/import`:
 ```json
 {
   "exported_at": "2026-06-28T10:00:00.000Z",
-  "version": 6,
+  "version": 7,
   "project_id": "prj_abcdefghijklmnopqrstuvwx",
   "scope": "history",
   "keywords": [
@@ -96,6 +96,7 @@ Post the export package directly to `/api/v1/cloud/import`:
       "id": "kw_abcdefghijklmnopqrstuvwx",
       "keyword": "rank tracker api",
       "location": "United States",
+      "location_key": "US",
       "device": "desktop",
       "target_url": "https://example.com/rank-tracker",
       "tags": ["api"],
@@ -119,11 +120,14 @@ Post the export package directly to `/api/v1/cloud/import`:
 }
 ```
 
-The endpoint accepts direct v6 packages. Version 6 accepts only snake-case
-package fields, exact lowercase public IDs, and native JSON number and boolean
-types. It rejects wrapper objects, body tokens, and unknown fields. A version 5
-package is accepted only when every `rankingHistory` array is empty; update and
-re-export any version 5 package that carries ranking history.
+The endpoint accepts strict v7 packages and compatible v6 packages. Version 7
+exports identify every keyword location with `location_key`; the human-readable
+`location` label can name a country, region, or city. Version 6 continues to use
+the legacy country label. All versions accept only snake-case package fields,
+exact lowercase public IDs, and native JSON number and boolean types. They reject
+wrapper objects, body tokens, and unknown fields. A version 5 package is accepted
+only when every `rankingHistory` array is empty; update and re-export any version
+5 package that carries ranking history.
 
 Top-level fields:
 
@@ -145,7 +149,8 @@ Keyword fields:
 | `id` | Required strict `kw_` v3 source keyword ID. |
 | `keyword` | Required keyword text. |
 | `device` | Required: `desktop` or `mobile`. |
-| `location` | Required location label. |
+| `location` | Required human-readable source location label. |
+| `location_key` | Required in version 7. Canonical country, region, or city key, optionally qualified with `@language`. It takes precedence over `location`. |
 | `target_url` | Absolute URL, path, `null`, or omitted. |
 | `tags` | Up to 12 tags. Defaults to `[]`. |
 | `rankingHistory` | Optional. Up to 5000 historical checks per keyword. |
@@ -183,7 +188,7 @@ coverage total.
 <Warning>
   Version 5 history does not distinguish failed attempts from successful
   no-match observations. bisibility rejects it rather than importing ambiguous
-  ranking data. Update the source instance and create a version 6 export.
+  ranking data. Update the source instance and create a version 7 export.
 </Warning>
 
 Success returns `201`.
@@ -202,7 +207,7 @@ Success returns `201`.
 }
 ```
 
-Every v6 package includes every section, including empty arrays:
+Every v7 package includes every section, including empty arrays:
 
 | Count | Meaning |
 | - | - |

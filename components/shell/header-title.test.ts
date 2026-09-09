@@ -2,7 +2,7 @@ import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { headerMetaFor } from "@/components/shell/header-title";
 import { appPath, appRootPath, marketPath, resolvedContextPath } from "@/lib/routing/app-path";
-import { rankTrackerSchedulesPath } from "@/lib/routing/rank-tracker-schedules-path";
+import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { describe, expect, it } from "vitest";
 
 const routeCases = [
@@ -63,6 +63,16 @@ const routeCases = [
     title: "Get set up",
   },
   {
+    path: appPath("prj_1", "runs"),
+    pattern: appPath("[project]", "runs"),
+    title: "Runs",
+  },
+  {
+    path: appPath("prj_1", "runs", "rank-checks", "rcr_test"),
+    pattern: appPath("[project]", "runs", "rank-checks", "[id]"),
+    title: "Run",
+  },
+  {
     path: appPath("prj_1", "search-console"),
     pattern: appPath("[project]", "search-console"),
     title: "Search Console",
@@ -73,19 +83,29 @@ const routeCases = [
     title: "Overview",
   },
   {
-    path: rankTrackerSchedulesPath("prj_1"),
-    pattern: rankTrackerSchedulesPath("[project]"),
-    title: "Schedules",
+    path: appPath("prj_1", "rank-tracker", "schedules"),
+    pattern: appPath("[project]", "rank-tracker", "schedules"),
+    title: "Runs",
   },
   {
-    path: rankTrackerSchedulesPath("prj_1", "sch_test"),
-    pattern: rankTrackerSchedulesPath("[project]", "[publicId]"),
-    title: "Schedules",
+    path: appPath("prj_1", "rank-tracker", "schedules", "sch_test"),
+    pattern: appPath("[project]", "rank-tracker", "schedules", "[publicId]"),
+    title: "Runs",
+  },
+  {
+    path: projectSchedulesPath("prj_1"),
+    pattern: projectSchedulesPath("[project]"),
+    title: "Runs",
+  },
+  {
+    path: projectSchedulesPath("prj_1", "sch_test"),
+    pattern: projectSchedulesPath("[project]", "[publicId]"),
+    title: "Runs",
   },
   {
     path: appPath("prj_1", "rank-tracker", "runs", "rcr_test"),
     pattern: appPath("[project]", "rank-tracker", "runs", "[id]"),
-    title: "Run · rcr_test",
+    title: "Run",
   },
   {
     path: appPath("prj_1", "rank-tracker", "kw_test"),
@@ -116,6 +136,11 @@ const routeCases = [
     path: appPath("prj_1", "settings", "audit"),
     pattern: appPath("[project]", "settings", "audit"),
     title: "Audit log",
+  },
+  {
+    path: appPath("prj_1", "settings", "competitors"),
+    pattern: appPath("[project]", "settings", "competitors"),
+    title: "Settings",
   },
   {
     path: appPath("prj_1", "settings", "import"),
@@ -252,12 +277,22 @@ describe("dashboard header titles", () => {
     expect(headerMetaFor(appPath("prj_1", "rank-tracker"))).toEqual({ title: "Rank Tracker" });
   });
 
-  it("uses the schedules header from the prototype", () => {
-    expect(headerMetaFor(rankTrackerSchedulesPath("prj_1"))).toEqual({
-      title: "Schedules",
+  it("identifies Runs and a rank-check detail before rank-tracker routes", () => {
+    expect(headerMetaFor(appPath("prj_1", "runs"))).toEqual({
+      title: "Runs",
+      subtitle: "Rank checks and Search Console imports for this project.",
     });
-    expect(headerMetaFor(rankTrackerSchedulesPath("prj_1", "sch_test"))).toEqual({
-      title: "Schedules",
+    expect(
+      headerMetaFor(appPath("prj_1", "runs", "rank-checks", "rcr_abcdefghijklmnopqrstuvwx")),
+    ).toEqual({ id: "rcr_abcdefghijklmnopqrstuvwx", title: "Run" });
+  });
+
+  it("keeps schedules in the project Runs section", () => {
+    expect(headerMetaFor(projectSchedulesPath("prj_1"))).toMatchObject({
+      title: "Runs",
+    });
+    expect(headerMetaFor(projectSchedulesPath("prj_1", "sch_test"))).toMatchObject({
+      title: "Runs",
     });
   });
 
@@ -292,7 +327,6 @@ describe("dashboard header titles", () => {
       title: "Rank Tracker",
     });
     expect(headerMetaFor(marketPath("prj_1", "pmkt_1", "rank-tracker", "kw_1"))).toEqual({
-      subtitle: "Position history, ranking URL and schedule.",
       title: "Keyword details",
     });
     expect(headerMetaFor(marketPath("prj_1", "pmkt_1", "settings", "audit"))).toEqual({
@@ -308,7 +342,7 @@ describe("dashboard header titles", () => {
     // The rail gained a Markets row and the market routing work gave it a page; the title has
     // to exist here by hand or that row lands on a header that reads "Overview".
     expect(headerMetaFor(appPath("prj_1", "markets"))).toEqual({
-      subtitle: "The navigation level your tracked keywords are measured in.",
+      subtitle: "Manage locations, keyword defaults, and market lifecycle.",
       title: "Markets",
     });
     // A settings subsection called markets is Settings, not the rail destination.

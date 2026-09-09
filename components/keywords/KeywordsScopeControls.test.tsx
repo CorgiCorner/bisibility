@@ -134,7 +134,7 @@ describe("KeywordsScopeControls", () => {
 });
 
 describe("KeywordsScopeLocationSelect", () => {
-  it("uses a viewport-safe content width and keeps location metadata untruncated", async () => {
+  it("uses a viewport-safe content width and preserves accessible location metadata", async () => {
     const user = userEvent.setup();
     const { container } = render(
       <div className="overflow-hidden">
@@ -149,7 +149,7 @@ describe("KeywordsScopeLocationSelect", () => {
     await user.click(screen.getByRole("button", { name: "Location scope" }));
 
     const menu = screen.getByRole("menu", { name: "Location scope" });
-    const paper = menu.closest<HTMLElement>(".MuiPaper-root");
+    const paper = menu.closest<HTMLElement>("[data-ui-overlay]");
     expect(paper).toHaveStyle({
       maxWidth: "calc(100vw - 32px)",
       minWidth: "min(280px, calc(100vw - 32px))",
@@ -157,7 +157,9 @@ describe("KeywordsScopeLocationSelect", () => {
     });
     expect(container).not.toContainElement(paper);
     expect(document.body).toContainElement(paper);
-    expect(screen.getByText("United States")).toHaveClass("whitespace-nowrap");
-    expect(screen.getByText("1 keyword · country")).toHaveClass("whitespace-nowrap");
+    expect(
+      screen.getByRole("menuitem", { name: /^United States\s*1 keyword · country$/ }),
+    ).toBeVisible();
+    expect(screen.getByText("United States")).toHaveAttribute("title", "United States");
   });
 });

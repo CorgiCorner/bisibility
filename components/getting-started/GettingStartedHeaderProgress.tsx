@@ -34,7 +34,10 @@ export function GettingStartedHeaderProgress({
           ·
         </span>
         <span className="size-[22px] shrink-0" data-testid="setup-progress-indicator">
-          <SetupProgressRing doneCount={progress.doneCount} totalCount={progress.totalCount} />
+          <SetupProgressRing
+            settledCount={progress.settledCount}
+            totalCount={progress.totalCount}
+          />
         </span>
         <span className="text-[13.5px] leading-[1.35] text-fg-muted">{model.countLabel}</span>
       </div>

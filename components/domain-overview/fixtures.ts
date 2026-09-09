@@ -1,6 +1,6 @@
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
 import type { HistoricalOverviewRow } from "@/lib/providers/types";
-import type { DomainOverviewMarketView } from "./domain-overview-workspace-model";
+import type { ResearchScope } from "@/lib/research/scope";
 
 const overview = {
   count: 12_940,
@@ -24,18 +24,14 @@ const overview = {
   pos91_100: 1_940,
 };
 
-export const domainOverviewMarketFixture: DomainOverviewMarketView = {
-  canonicalKey: "US/US-TX/Austin",
-  cityName: "Austin",
+export const domainOverviewScopeFixture = {
   countryCode: "US",
-  displayName: "Austin, Texas, United States",
-  hl: "en",
-  kind: "city",
+  countryName: "United States",
   languageCode: "en",
   languageLabel: "English",
-  locationCode: 1_026_201,
-  regionName: "Texas",
-};
+  providerLocationCode: 2840,
+  researchAvailable: true,
+} satisfies ResearchScope;
 
 export const domainOverviewReportFixture: DomainOverviewReport = {
   cached: true,
@@ -80,7 +76,7 @@ export const domainOverviewReportFixture: DomainOverviewReport = {
     ok: true,
   },
   languageCode: "en",
-  locationCode: 1_026_201,
+  locationCode: 2840,
   ok: true,
   overview,
   pages: {

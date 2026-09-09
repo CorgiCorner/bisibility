@@ -1,5 +1,5 @@
 import { TwoFactorChallengeForm } from "@/components/auth/TwoFactorChallengeForm";
-import { BrandLockup } from "@/components/ui";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import { returnToOrDefault } from "@/lib/auth/return-to";
 import { getSession } from "@/lib/auth/session";
 import { createNoindexMetadata } from "@/lib/seo/noindex";

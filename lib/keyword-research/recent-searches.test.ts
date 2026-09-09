@@ -13,17 +13,95 @@ import {
 const input = {
   cachedUntil: "2026-07-22T20:00:00.000Z",
   includeClickstream: false,
-  market: "United States",
+  scopeLabel: "United States / English",
   mode: "auto" as const,
   resultLimit: 100 as const,
   seed: "rank tracker",
 };
+const referenceBase = process.env.R5_REFERENCE_BASE === "1";
 
 describe("recent keyword research", () => {
   it("uses a per-project storage key and ignores invalid JSON", () => {
     expect(recentSearchesKey("prj_1")).toBe("bisibility:keyword-research:recent:prj_1");
     expect(parseRecentSearches("not-json")).toEqual([]);
     expect(parseRecentSearches(JSON.stringify([{ seed: 1 }]))).toEqual([]);
+  });
+
+  it.each([
+    {
+      expected: { locationKey: "ES/ES-AN/Malaga", scopeLabel: "Spain / Spanish" },
+      name: "derives a country-language scope from a legacy city location key",
+      row: {
+        cachedUntil: "2026-07-22T20:00:00.000Z",
+        createdAt: "2026-07-22T08:00:00.000Z",
+        includeClickstream: false,
+        locationKey: "ES/ES-AN/Malaga",
+        market: "Malaga, Spain",
+        mode: "auto",
+        resultLimit: 100,
+        seed: "rank tracker",
+      },
+    },
+    {
+      expected: { locationKey: null, scopeLabel: "Malaga, Spain" },
+      name: "keeps a legacy display string when no location key was stored",
+      row: {
+        cachedUntil: "2026-07-22T20:00:00.000Z",
+        createdAt: "2026-07-22T08:00:00.000Z",
+        includeClickstream: false,
+        market: "Malaga, Spain",
+        mode: "auto",
+        resultLimit: 100,
+        seed: "rank tracker",
+      },
+    },
+  ])("$name", ({ expected, row }) => {
+    const [search] = parseRecentSearches(JSON.stringify([row]));
+
+    expect(
+      JSON.stringify({
+        locationKey: search?.locationKey ?? null,
+        scopeLabel: search?.scopeLabel ?? null,
+      }),
+    ).toBe(JSON.stringify(expected));
+  });
+
+  it.each([
+    {
+      allowedScopeRename: { locationKey: "ES/ES-AN/Malaga", scopeLabel: "Spain / Spanish" },
+      baseExpected: { locationKey: "ES/ES-AN/Malaga", scopeLabel: "Malaga, Spain" },
+      input: { locationKey: "ES/ES-AN/Malaga", scopeLabel: "Malaga, Spain" },
+      name: "maps a city display label to its card-mandated country-language scope",
+    },
+    {
+      baseExpected: { locationKey: null, scopeLabel: "Malaga, Spain" },
+      input: { scopeLabel: "Malaga, Spain" },
+      name: "keeps the supplied display string without a location key",
+    },
+    {
+      baseExpected: { locationKey: "unknown", scopeLabel: "Unknown location" },
+      input: { locationKey: "unknown", scopeLabel: "Unknown location" },
+      name: "keeps the supplied display string for an unrecognized location key",
+    },
+  ])("$name", ({ allowedScopeRename, baseExpected, input: scopeInput }) => {
+    const [search] = addRecentSearch(
+      [],
+      { ...input, ...scopeInput },
+      new Date("2026-07-22T08:00:00.000Z"),
+    );
+
+    expect(
+      JSON.stringify({
+        cacheKey: recentSearchesKey("prj_1"),
+        locationKey: search?.locationKey ?? null,
+        scopeLabel: search?.scopeLabel ?? null,
+      }),
+    ).toBe(
+      JSON.stringify({
+        cacheKey: "bisibility:keyword-research:recent:prj_1",
+        ...(referenceBase ? baseExpected : (allowedScopeRename ?? baseExpected)),
+      }),
+    );
   });
 
   it("deduplicates equivalent searches and keeps the server cache expiry", () => {

@@ -2,7 +2,10 @@
 
 import { generalSettingsCardGeometryClassNames } from "@/components/settings/general/general-settings-layout";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
-import { Button, Modal, TagAdder, TagChip } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { TagAdder } from "@/components/ui/TagAdder";
+import { TagChip } from "@/components/ui/TagChip";
 import { type ActionResult, unwrapActionResult } from "@/lib/actions/action-result";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";

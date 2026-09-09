@@ -1,15 +1,13 @@
 "use client";
 
 import type { ProviderIconName } from "@/lib/integrations/types";
-import {
-  ChartBarIcon as ChartBar,
-  DatabaseIcon as Database,
-  GlobeHemisphereWestIcon as GlobeHemisphereWest,
-  LinkIcon as Link,
-  MagnifyingGlassIcon as MagnifyingGlass,
-  TableIcon as Table,
-  TrendUpIcon as TrendUp,
-} from "@phosphor-icons/react";
+import { ChartBarIcon as ChartBar } from "@phosphor-icons/react/dist/csr/ChartBar";
+import { DatabaseIcon as Database } from "@phosphor-icons/react/dist/csr/Database";
+import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
+import { LinkIcon as Link } from "@phosphor-icons/react/dist/csr/Link";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { TableIcon as Table } from "@phosphor-icons/react/dist/csr/Table";
+import { TrendUpIcon as TrendUp } from "@phosphor-icons/react/dist/csr/TrendUp";
 import { useState } from "react";
 import { buildLogoDevUrl } from "./provider-logo-url";
 

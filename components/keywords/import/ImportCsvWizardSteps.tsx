@@ -1,19 +1,17 @@
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import {
   keywordImportTemplateColumns,
   keywordImportTemplateCsv,
 } from "@/lib/keywords/import-csv-template";
-import {
-  ArrowRightIcon as ArrowRight,
-  CheckIcon as Check,
-  CheckCircleIcon as CheckCircle,
-  CloudArrowUpIcon as CloudArrowUp,
-  DownloadSimpleIcon as DownloadSimple,
-  FileCsvIcon as FileCsv,
-  FolderOpenIcon as FolderOpen,
-  InfoIcon as Info,
-  TableIcon as Table,
-} from "@phosphor-icons/react";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { CloudArrowUpIcon as CloudArrowUp } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { FileCsvIcon as FileCsv } from "@phosphor-icons/react/dist/csr/FileCsv";
+import { FolderOpenIcon as FolderOpen } from "@phosphor-icons/react/dist/csr/FolderOpen";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { TableIcon as Table } from "@phosphor-icons/react/dist/csr/Table";
 
 export { DoneStep } from "./ImportCsvWizardDoneStep";
 
@@ -89,7 +87,7 @@ export function TemplateStep() {
       <Button
         size="lg"
         startIcon={<DownloadSimple size={16} weight="regular" />}
-        sx={{ marginTop: "16px" }}
+        style={{ marginTop: "16px" }}
         type="button"
         variant="primary"
       >

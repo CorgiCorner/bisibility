@@ -1,11 +1,14 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Button, IdChip, StatusChip, shortId } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { IdChip } from "@/components/ui/IdChip";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { formatDateTime } from "@/lib/dates/format";
 import { relativeFuture } from "@/lib/format/relative-time";
-import { type ProjectRef, rankTrackerTabPath } from "@/lib/routing/app-path";
-import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react";
+import type { ProjectRef } from "@/lib/routing/app-path";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import Link from "next/link";
 import type { RunPageSummary } from "./RunPageModel";
 import type { RunPageData } from "./RunPageTypes";
@@ -43,7 +46,7 @@ export function RunPageHeader({
     <>
       <Link
         className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-medium text-fg-muted no-underline hover:text-accent-text"
-        href={rankTrackerTabPath(projectRef, "runs")}
+        href={projectRunsPath(projectRef)}
       >
         <ArrowLeft aria-hidden size={12} weight="regular" />
         All runs
@@ -65,7 +68,6 @@ export function RunPageHeader({
               <IdChip
                 className="border-border bg-transparent"
                 copyLabel={`Copy run ID ${run.id}`}
-                displayValue={shortId(run.id)}
                 size="xs"
                 value={run.id}
               />

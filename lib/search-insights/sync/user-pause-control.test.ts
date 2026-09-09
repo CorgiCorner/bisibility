@@ -1,119 +1,171 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { transitionActiveSearchImport } from "./user-pause-control";
+import { transitionExactSearchImport } from "./user-pause-control";
 
 const mocks = vi.hoisted(() => ({
   audit: vi.fn(),
-  resolveConnection: vi.fn(),
-  startBackfill: vi.fn(),
+  decrypt: vi.fn(),
+  readCredentials: vi.fn(),
   transaction: vi.fn(),
-  tx: { searchAnalyticsImport: { findUnique: vi.fn(), update: vi.fn() } },
+  tx: {
+    project: { findUnique: vi.fn() },
+    providerConnection: { findUnique: vi.fn() },
+    searchAnalyticsImport: { findFirst: vi.fn(), updateMany: vi.fn() },
+  },
 }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.audit }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: { $transaction: mocks.transaction } }));
-vi.mock("@/lib/temporal/search-insights-client", () => ({
-  startSearchInsightsBackfillWorkflow: mocks.startBackfill,
+vi.mock("@/lib/deployment/project-write-mode", () => ({
+  isProjectReadOnly: (writeMode: string) => writeMode !== "active",
 }));
-vi.mock("./credentials", () => ({ resolveSearchInsightsConnection: mocks.resolveConnection }));
+vi.mock("@/lib/providers/crypto", () => ({ decryptProviderCredentials: mocks.decrypt }));
+vi.mock("@/lib/providers/analytics/gsc-credentials", () => ({
+  readGscCredentials: mocks.readCredentials,
+}));
 
-const base = {
+const target = {
   actorId: "user_1",
+  importId: "import_a",
   projectId: "project_1",
-  projectPublicId: "prj_1",
+  property: "sc-domain:a.example.com",
 };
 const row = {
   cursorDate: new Date("2026-07-01"),
   earliestTargetDate: new Date("2025-03-01"),
-  id: "import_1",
+  id: target.importId,
   pauseStartedAt: null,
   pausedById: null,
   pausedReason: null,
-  property: "sc-domain:example.com",
+  property: target.property,
+  source: "gsc",
   state: "running",
 };
 
-describe("transitionActiveSearchImport", () => {
+describe("transitionExactSearchImport", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.resolveConnection.mockResolvedValue({ property: row.property });
     mocks.transaction.mockImplementation((work) => work(mocks.tx));
-    mocks.tx.searchAnalyticsImport.findUnique.mockResolvedValue(row);
-    mocks.tx.searchAnalyticsImport.update.mockImplementation(({ data }) => ({ ...row, ...data }));
+    mocks.tx.project.findUnique.mockResolvedValue({ id: target.projectId, writeMode: "active" });
+    mocks.tx.providerConnection.findUnique.mockResolvedValue({
+      credentialsEncrypted: "encrypted",
+      enabled: true,
+      status: "connected",
+    });
+    mocks.decrypt.mockReturnValue({ login: target.property });
+    mocks.readCredentials.mockReturnValue({ property: target.property });
+    mocks.tx.searchAnalyticsImport.findFirst.mockResolvedValue(row);
+    mocks.tx.searchAnalyticsImport.updateMany.mockResolvedValue({ count: 1 });
   });
 
-  it("atomically pauses with actor and append-only audit", async () => {
-    await transitionActiveSearchImport({ ...base, transition: "pause" });
-    expect(mocks.tx.searchAnalyticsImport.update).toHaveBeenCalledWith(
+  it("pauses only the frozen import identity and audits that exact row", async () => {
+    await expect(transitionExactSearchImport({ ...target, transition: "pause" })).resolves.toEqual({
+      changed: true,
+      state: "paused",
+    });
+
+    expect(mocks.tx.searchAnalyticsImport.findFirst).toHaveBeenCalledWith({
+      where: { id: target.importId, projectId: target.projectId, source: "gsc" },
+    });
+    expect(mocks.tx.searchAnalyticsImport.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          pausedById: "user_1",
-          pausedReason: "user",
-          state: "paused",
+        where: expect.objectContaining({
+          id: target.importId,
+          pausedReason: null,
+          projectId: target.projectId,
+          property: target.property,
+          source: "gsc",
+          state: "running",
         }),
       }),
     );
     expect(mocks.audit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "search_data_sync.pause",
-        actorId: "user_1",
-        after: expect.objectContaining({ reason: "user" }),
+        actorId: target.actorId,
+        projectId: target.projectId,
+        targetId: target.importId,
       }),
       mocks.tx,
     );
   });
 
-  it("is idempotent for repeated pause and resume", async () => {
-    mocks.tx.searchAnalyticsImport.findUnique.mockResolvedValue({
-      ...row,
-      pausedReason: "user",
-      state: "paused",
+  it("rejects an archived A target after active property B replaces it", async () => {
+    mocks.readCredentials.mockReturnValue({ property: "sc-domain:b.example.com" });
+
+    await expect(transitionExactSearchImport({ ...target, transition: "pause" })).resolves.toEqual({
+      changed: false,
+      state: "unavailable",
     });
-    await transitionActiveSearchImport({ ...base, transition: "pause" });
-    expect(mocks.tx.searchAnalyticsImport.update).not.toHaveBeenCalled();
-    mocks.tx.searchAnalyticsImport.findUnique.mockResolvedValue(row);
-    await transitionActiveSearchImport({ ...base, transition: "resume" });
-    expect(mocks.tx.searchAnalyticsImport.update).not.toHaveBeenCalled();
+    expect(mocks.tx.searchAnalyticsImport.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects a property switch that occurs after the client rendered", async () => {
+    mocks.tx.searchAnalyticsImport.findFirst.mockResolvedValue({
+      ...row,
+      property: "sc-domain:b.example.com",
+    });
+
+    await expect(transitionExactSearchImport({ ...target, transition: "pause" })).resolves.toEqual({
+      changed: false,
+      state: "unavailable",
+    });
+    expect(mocks.tx.searchAnalyticsImport.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects a stale concurrent transition when the conditional write no longer matches", async () => {
+    mocks.tx.searchAnalyticsImport.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(transitionExactSearchImport({ ...target, transition: "pause" })).resolves.toEqual({
+      changed: false,
+      state: "unavailable",
+    });
+    expect(mocks.audit).not.toHaveBeenCalled();
+  });
+
+  it.each(["migration_hold", "migrated"])(
+    "rejects %s write mode without writing",
+    async (writeMode) => {
+      mocks.tx.project.findUnique.mockResolvedValueOnce({
+        id: target.projectId,
+        writeMode,
+      });
+      await expect(
+        transitionExactSearchImport({ ...target, transition: "pause" }),
+      ).resolves.toEqual({
+        changed: false,
+        state: "unavailable",
+      });
+
+      expect(mocks.tx.searchAnalyticsImport.updateMany).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects disconnected capability without writing", async () => {
+    mocks.tx.project.findUnique.mockResolvedValue({ id: target.projectId, writeMode: "active" });
+
+    mocks.tx.providerConnection.findUnique.mockResolvedValue({
+      credentialsEncrypted: "encrypted",
+      enabled: false,
+      status: "connected",
+    });
+    await expect(transitionExactSearchImport({ ...target, transition: "pause" })).resolves.toEqual({
+      changed: false,
+      state: "unavailable",
+    });
+    expect(mocks.tx.searchAnalyticsImport.updateMany).not.toHaveBeenCalled();
   });
 
   it.each([
-    ["needs_reauth", "paused"],
-    ["rate_limited", "paused"],
-    ["error", "failed"],
-  ])("rejects resume from %s without clearing the durable reason", async (pausedReason, state) => {
-    mocks.tx.searchAnalyticsImport.findUnique.mockResolvedValue({ ...row, pausedReason, state });
-    await expect(
-      transitionActiveSearchImport({ ...base, transition: "resume" }),
-    ).resolves.toMatchObject({ changed: false });
-    expect(mocks.tx.searchAnalyticsImport.update).not.toHaveBeenCalled();
-  });
+    ["resume", { pausedReason: "user", state: "paused" }, "queued"],
+    ["retry", { pausedReason: "error", state: "failed" }, "queued"],
+  ] as const)(
+    "allows exact %s only from its capability state",
+    async (transition, current, state) => {
+      mocks.tx.searchAnalyticsImport.findFirst.mockResolvedValue({ ...row, ...current });
 
-  it("retries an error through the frozen gap-fill plan", async () => {
-    mocks.tx.searchAnalyticsImport.findUnique.mockResolvedValue({
-      ...row,
-      lastError: "safe",
-      lastErrorClass: "provider",
-      pausedReason: "error",
-      state: "failed",
-    });
-    await transitionActiveSearchImport({ ...base, transition: "retry" });
-    const data = mocks.tx.searchAnalyticsImport.update.mock.calls[0]?.[0].data;
-    expect(data).toMatchObject({ lastError: null, pausedReason: null, state: "queued" });
-    expect(data).not.toHaveProperty("cursorDate");
-    expect(data).not.toHaveProperty("earliestTargetDate");
-    expect(mocks.startBackfill).not.toHaveBeenCalled();
-  });
-
-  it("resumes the frozen cursor without resetting plan depth", async () => {
-    mocks.tx.searchAnalyticsImport.findUnique.mockResolvedValue({
-      ...row,
-      pausedReason: "user",
-      state: "paused",
-    });
-    await transitionActiveSearchImport({ ...base, transition: "resume" });
-    const data = mocks.tx.searchAnalyticsImport.update.mock.calls[0]?.[0].data;
-    expect(data).toMatchObject({ pausedReason: null, state: "queued" });
-    expect(data).not.toHaveProperty("cursorDate");
-    expect(data).not.toHaveProperty("earliestTargetDate");
-    expect(data).not.toHaveProperty("workflowId");
-    expect(mocks.startBackfill).not.toHaveBeenCalled();
-  });
+      await expect(transitionExactSearchImport({ ...target, transition })).resolves.toEqual({
+        changed: true,
+        state,
+      });
+    },
+  );
 });

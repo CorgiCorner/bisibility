@@ -1,103 +1,34 @@
 "use client";
 
-import {
-  AVG_POSITION_TIP,
-  DRAWER_PAGE_ENGAGEMENT_TIP,
-  ENGAGEMENT_LABEL,
-  ENGAGEMENT_RATE_TIP,
-  KEY_EVENTS_LABEL,
-  KEY_EVENTS_NOT_CONFIGURED,
-  KEY_EVENTS_TIP,
-  overlapBadgeTitle,
-} from "@/components/search-insights/search-insights-copy";
-import {
-  formatRowCount,
-  formatRowCtr,
-  formatRowPosition,
-  tableRowKeys,
-} from "@/components/search-insights/search-insights-rows-model";
-import {
-  type ModuleTableVariant,
-  moduleTableColumnClasses,
-  moduleTableMinWidth,
-} from "@/components/search-insights/search-insights-table-columns";
-import { tableHeaderClassName } from "@/components/ui";
+import { KEY_EVENTS_NOT_CONFIGURED } from "@/components/search-insights/search-insights-copy";
+import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { SearchInsightsBandRow } from "@/lib/search-insights/queries/band-list";
 import type { SearchInsightsOverlapRow } from "@/lib/search-insights/queries/overlap-list";
-import { cn } from "@/lib/ui/cn";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react";
-import type { ReactNode } from "react";
 import { drawerFrameKey } from "./drawer-model";
+import {
+  type DrawerBandDataTableRow,
+  type DrawerOverlapDataTableRow,
+  type DrawerRow,
+  type DrawerSliceDataTableRow,
+  drawerBandColumns,
+  drawerOverlapColumns,
+  drawerOverlapRows,
+  drawerSliceColumns,
+} from "./drawer-table-columns";
 
-const ROW =
-  "cursor-pointer border-b border-border last:border-b-0 hover:bg-bg-sunken focus-visible:bg-bg-sunken";
-const CELL = "px-3.25 py-2.5 align-middle";
-const TEXT = "truncate font-sans tabular-nums text-ui-caption";
-const NUMBER = "px-1 text-right font-sans tabular-nums text-ui-caption font-semibold";
-const MUTED = "px-1 text-right font-sans tabular-nums text-ui-caption text-fg-muted";
-const DECISION =
-  "flex items-center justify-end gap-1.5 font-sans tabular-nums text-ui-caption text-fg-muted";
-export type DrawerRow = {
-  clicks: number;
-  engagementRate?: number | null;
-  key: string;
-  keyEvents?: number | null;
-  label: string;
-  onOpen: () => void;
-  position: number | null;
-  title: string;
-};
-function ListTable({
-  children,
-  headers,
-  label,
-  variant,
-}: Readonly<{
-  children: ReactNode;
-  headers?: readonly { align?: boolean; label: string; title?: string }[];
-  label: string;
-  variant: ModuleTableVariant;
-}>) {
-  return (
-    <div className="overflow-x-auto rounded-card border border-border">
-      <table
-        aria-label={label}
-        className={cn("w-full table-fixed border-collapse", moduleTableMinWidth[variant])}
-      >
-        <colgroup>
-          {moduleTableColumnClasses(variant).map((columnClass, index) => (
-            <col className={columnClass} key={`${columnClass}-${index}`} />
-          ))}
-        </colgroup>
-        {headers ? (
-          <thead className={tableHeaderClassName}>
-            <tr>
-              {headers.map((header) => (
-                <th
-                  className={cn(
-                    "whitespace-nowrap px-3.25 py-2 font-normal",
-                    header.align ? "px-1 text-right" : "text-left",
-                    header.title && "cursor-help",
-                  )}
-                  key={header.label}
-                  scope="col"
-                  title={header.title}
-                >
-                  {header.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-        ) : null}
-        {children}
-      </table>
-    </div>
-  );
+export type { DrawerRow } from "./drawer-table-columns";
+
+const EMPTY_SORT = null;
+const NOOP_SORT = () => {};
+
+function drawerRowClassName(seen: ReadonlySet<string>) {
+  return (row: { id: string }) => (seen.has(row.id) ? "!bg-bg-sunken" : undefined);
 }
-const SLICE_NUMERIC_HEADERS = [
-  { align: true, label: "Clicks" },
-  { align: true, label: "Avg pos", title: AVG_POSITION_TIP },
-] as const;
+
+function queryRowClassName(seen: ReadonlySet<string>, query: string) {
+  return seen.has(drawerFrameKey({ kind: "query", query })) ? "!bg-bg-sunken" : undefined;
+}
+
 export type DrawerSliceRowsProps = {
   keyEventsConfigured?: boolean | null;
   label: string;
@@ -106,7 +37,7 @@ export type DrawerSliceRowsProps = {
   seen: ReadonlySet<string>;
   textHeader: "Page" | "Query";
 };
-/** Query pages can carry page metrics; page queries stay Search Console only. */
+
 export function DrawerSliceRows({
   keyEventsConfigured = null,
   label,
@@ -116,15 +47,7 @@ export function DrawerSliceRows({
   textHeader,
 }: Readonly<DrawerSliceRowsProps>) {
   const showPageMetrics = textHeader === "Page" && pageMetricsReadable;
-  const headers = showPageMetrics
-    ? [
-        { label: textHeader },
-        { align: true, label: "Clicks" },
-        { align: true, label: ENGAGEMENT_LABEL, title: DRAWER_PAGE_ENGAGEMENT_TIP },
-        { align: true, label: KEY_EVENTS_LABEL },
-        SLICE_NUMERIC_HEADERS[1],
-      ]
-    : [{ label: textHeader }, ...SLICE_NUMERIC_HEADERS];
+  const dataRows: DrawerSliceDataTableRow[] = rows.map((row) => ({ ...row, id: row.key }));
   return (
     <>
       {showPageMetrics && keyEventsConfigured === false ? (
@@ -132,168 +55,77 @@ export function DrawerSliceRows({
           {KEY_EVENTS_NOT_CONFIGURED}
         </p>
       ) : null}
-      <ListTable
-        headers={headers}
-        label={label}
-        variant={showPageMetrics ? "drawerPages" : "drawer"}
-      >
-        <tbody>
-          {rows.map((row) => (
-            <tr
-              className={cn(ROW, "data-[seen=1]:bg-bg-sunken")}
-              data-seen={seen.has(row.key) ? "1" : undefined}
-              key={row.key}
-              onClick={row.onOpen}
-              onKeyDown={tableRowKeys(row.onOpen)}
-              tabIndex={0}
-            >
-              <td className={cn(CELL, TEXT)} title={row.title}>
-                {row.label}
-              </td>
-              <td className={cn(CELL, NUMBER)}>{formatRowCount(row.clicks)}</td>
-              {showPageMetrics ? (
-                <>
-                  <td
-                    className={cn(CELL, MUTED)}
-                    title={row.engagementRate == null ? ENGAGEMENT_RATE_TIP : undefined}
-                  >
-                    {row.engagementRate == null ? "-" : formatRowCtr(row.engagementRate)}
-                  </td>
-                  <td
-                    className={cn(CELL, MUTED)}
-                    title={
-                      row.keyEvents == null && keyEventsConfigured !== false
-                        ? KEY_EVENTS_TIP
-                        : undefined
-                    }
-                  >
-                    {keyEventsConfigured === false || row.keyEvents == null
-                      ? "-"
-                      : formatRowCount(row.keyEvents)}
-                  </td>
-                </>
-              ) : null}
-              <td className={cn(CELL, "px-1")}>
-                <span className={DECISION}>
-                  {row.position === null ? "-" : formatRowPosition(row.position)}
-                  <CaretRight aria-hidden className="shrink-0" size={11} weight="regular" />
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </ListTable>
+      <div className="overflow-hidden rounded-card">
+        <DataTable
+          ariaLabel={label}
+          columns={drawerSliceColumns({ keyEventsConfigured, showPageMetrics, textHeader })}
+          density="compact"
+          id={`search-insights-drawer-slice-${textHeader.toLowerCase()}${showPageMetrics ? "-metrics" : ""}`}
+          layout="auto"
+          onRowClick={(row) => row.onOpen()}
+          onSortingChange={NOOP_SORT}
+          rowClassName={drawerRowClassName(seen)}
+          rows={dataRows}
+          sorting={EMPTY_SORT}
+        />
+      </div>
     </>
   );
 }
-const BAND_HEADERS = [
-  { label: "Query" },
-  { align: true, label: "Clicks" },
-  { align: true, label: "Impr" },
-  { align: true, label: "Avg pos", title: AVG_POSITION_TIP },
-] as const;
+
 export type DrawerBandRowsProps = {
   label: string;
   onOpen: (query: string) => void;
   rows: readonly SearchInsightsBandRow[];
   seen: ReadonlySet<string>;
 };
-/** The band list carries demand as well, because demand is what its ordering is about. */
+
 export function DrawerBandRows({ label, onOpen, rows, seen }: Readonly<DrawerBandRowsProps>) {
+  const dataRows: DrawerBandDataTableRow[] = rows.map((row) => ({ ...row, id: row.query }));
   return (
-    <ListTable headers={BAND_HEADERS} label={label} variant="drawerBand">
-      <tbody>
-        {rows.map((row) => {
-          const open = () => onOpen(row.query);
-          return (
-            <tr
-              className={cn(ROW, "data-[seen=1]:bg-bg-sunken")}
-              data-seen={
-                seen.has(drawerFrameKey({ kind: "query", query: row.query })) ? "1" : undefined
-              }
-              key={row.query}
-              onClick={open}
-              onKeyDown={tableRowKeys(open)}
-              tabIndex={0}
-            >
-              <td className={cn(CELL, TEXT)} title={row.query}>
-                {row.query}
-              </td>
-              <td className={cn(CELL, NUMBER)}>{formatRowCount(row.clicks)}</td>
-              <td className={cn(CELL, MUTED)}>{formatRowCount(row.impressions)}</td>
-              <td className={cn(CELL, "px-1")}>
-                <span className={DECISION}>
-                  {formatRowPosition(row.position)}
-                  <CaretRight aria-hidden className="shrink-0" size={11} weight="regular" />
-                </span>
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </ListTable>
+    <div className="overflow-hidden rounded-card">
+      <DataTable
+        ariaLabel={label}
+        columns={drawerBandColumns}
+        density="compact"
+        id="search-insights-drawer-band"
+        layout="auto"
+        onRowClick={(row) => onOpen(row.query)}
+        onSortingChange={NOOP_SORT}
+        rowClassName={(row) => queryRowClassName(seen, row.query)}
+        rows={dataRows}
+        sorting={EMPTY_SORT}
+      />
+    </div>
   );
 }
+
 export type DrawerOverlapRowsProps = {
   label: string;
   onOpen: (query: string) => void;
   rows: readonly SearchInsightsOverlapRow[];
   seen: ReadonlySet<string>;
 };
+
 export function DrawerOverlapRows({ label, onOpen, rows, seen }: Readonly<DrawerOverlapRowsProps>) {
+  const dataRows: DrawerOverlapDataTableRow[] = drawerOverlapRows(rows);
   return (
-    <ListTable label={label} variant="drawer">
-      {rows.map((row) => {
-        const open = () => onOpen(row.query);
-        return (
-          <tbody className="border-b border-border last:border-b-0" key={row.query}>
-            <tr
-              className="cursor-pointer hover:bg-bg-sunken focus-visible:bg-bg-sunken data-[seen=1]:bg-bg-sunken"
-              data-seen={
-                seen.has(drawerFrameKey({ kind: "query", query: row.query })) ? "1" : undefined
-              }
-              onClick={open}
-              onKeyDown={tableRowKeys(open)}
-              tabIndex={0}
-            >
-              <td className={cn(CELL, "pb-1")}>
-                <span className="flex min-w-0 items-center gap-2">
-                  <span className={TEXT} title={row.query}>
-                    {row.query}
-                  </span>
-                  <span
-                    className="shrink-0 rounded-control border border-border px-1.5 font-sans tabular-nums text-ui-micro text-fg-muted"
-                    title={overlapBadgeTitle(row.pages)}
-                  >
-                    x{row.pages}
-                  </span>
-                </span>
-              </td>
-              <td className={cn(CELL, NUMBER, "pb-1")}>{formatRowCount(row.clicks)}</td>
-              <td className={cn(CELL, "px-1 pb-1")}>
-                <span className={DECISION}>
-                  {row.position === null ? "-" : formatRowPosition(row.position)}
-                  <CaretRight aria-hidden className="shrink-0" size={11} weight="regular" />
-                </span>
-              </td>
-            </tr>
-            {row.split.map((page) => (
-              <tr key={page.url}>
-                <td
-                  className="truncate px-3.25 pb-1.5 pl-7.25 font-sans tabular-nums text-ui-micro text-fg-muted"
-                  title={page.url}
-                >
-                  {page.path}
-                </td>
-                <td className="px-1 pb-1.5 text-right font-sans tabular-nums text-ui-micro text-fg-muted">
-                  {formatRowCount(page.clicks)}
-                </td>
-                <td />
-              </tr>
-            ))}
-          </tbody>
-        );
-      })}
-    </ListTable>
+    <div className="overflow-hidden rounded-card [&>[role=table]>div>[role=rowgroup]:first-child]:hidden">
+      <DataTable
+        ariaLabel={label}
+        columns={drawerOverlapColumns}
+        defaultExpanded="all"
+        density="compact"
+        id="search-insights-drawer-overlap"
+        layout="auto"
+        onGroupRowClick={(row) => {
+          if ("query" in row) onOpen(row.query);
+        }}
+        onSortingChange={NOOP_SORT}
+        rowClassName={(row) => ("query" in row ? queryRowClassName(seen, row.query) : undefined)}
+        rows={dataRows}
+        sorting={EMPTY_SORT}
+      />
+    </div>
   );
 }

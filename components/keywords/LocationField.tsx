@@ -7,15 +7,17 @@ import {
 } from "@/components/keywords/location-field-parts";
 import { locationKeyHandler } from "@/components/keywords/location-key-handler";
 import {
-  EMPTY_PROVIDER_HINT_LENGTH,
+  EMPTY_LOCATION_HINT_LENGTH,
   type LocationFieldValue,
   type LocationSuggestion,
   useLocationSearch,
 } from "@/components/keywords/location-picker-data";
-import { FieldLabel, Input } from "@/components/ui";
+import { AnchoredList as Popper } from "@/components/ui/AnchoredList";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/ui/cn";
-import Popper from "@mui/material/Popper";
-import { CaretDownIcon as CaretDown, MapPinIcon as MapPin } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import { type FocusEvent, useId, useRef, useState } from "react";
 import { CountryFlag } from "./CountryFlag";
 import { LocationResults, locationOptionDomId } from "./location-field-results";
@@ -49,7 +51,7 @@ export function LocationField({
   disabled = false,
   label = "Location",
   labelHidden = false,
-  placeholder = "Search country or city",
+  placeholder = "Search country, region, or city",
   variant = "form",
   controlClassName,
 }: Readonly<LocationFieldProps>) {
@@ -62,9 +64,9 @@ export function LocationField({
   const anchorRef = useRef<HTMLSpanElement | null>(null);
   const listboxRef = useRef<HTMLDivElement | null>(null);
   const { clear, lastCompletedTerm, loading, search, suggestions } = useLocationSearch(projectId);
-  const cities = suggestions.filter((suggestion) => suggestion.kind === "city");
+  const places = suggestions.filter((suggestion) => suggestion.kind !== "country");
   const countries = suggestions.filter((suggestion) => suggestion.kind === "country");
-  const options = [...countries, ...cities];
+  const options = [...countries, ...places];
   const currentInput = draft ?? value.displayName;
   const hasOptions = options.length > 0;
   const listId = `${prefix}-location-list`;
@@ -75,7 +77,7 @@ export function LocationField({
     expanded &&
     !loading &&
     options.length === 0 &&
-    (lastCompletedTerm?.length ?? 0) >= EMPTY_PROVIDER_HINT_LENGTH;
+    (lastCompletedTerm?.length ?? 0) >= EMPTY_LOCATION_HINT_LENGTH;
 
   function selectOption(option: LocationSuggestion) {
     clear();
@@ -187,30 +189,10 @@ export function LocationField({
             />
           ) : null}
         </span>
-        <Popper
-          anchorEl={anchorRef.current}
-          open={visible}
-          placement="bottom-start"
-          ref={listboxRef}
-          sx={(theme) => ({ zIndex: theme.zIndex.modal + 1 })}
-          modifiers={[
-            { name: "flip", enabled: true },
-            { name: "preventOverflow", enabled: true, options: { padding: 8 } },
-            { name: "offset", enabled: true, options: { offset: [0, 4] } },
-            {
-              name: "sameWidth",
-              enabled: true,
-              phase: "beforeWrite",
-              requires: ["computeStyles"],
-              fn: ({ state }) => {
-                state.styles.popper.width = `${state.rects.reference.width}px`;
-              },
-            },
-          ]}
-        >
+        <Popper anchorEl={anchorRef.current} open={visible} ref={listboxRef}>
           <LocationResults
             activeOption={activeOption}
-            cities={cities}
+            places={places}
             countries={countries}
             hasOptions={hasOptions}
             listId={listId}

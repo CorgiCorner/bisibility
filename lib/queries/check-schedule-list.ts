@@ -6,11 +6,12 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { activeMarketLocationIds, runnableKeywordWhere } from "@/lib/rank-check/runnable";
 import { ordinalDayOfMonth, persistedScheduleCalendar } from "@/lib/schedules/cadence-label";
-import { resolveSerpDepth } from "@/lib/serp/markets";
+import { resolveSerpDepth } from "@/lib/serp/constants";
 import { getRequestProjectDefaults } from "./workspace-request-data";
 
 function scheduleListSelect(activeLocationIds: Iterable<string>) {
   return {
+    archivedAt: true,
     cronExpression: true,
     enabled: true,
     frequency: true,
@@ -132,6 +133,7 @@ function scheduleListDto(
 
   return {
     ...schedule,
+    archivedAt: row.archivedAt?.toISOString() ?? null,
     dayOfMonth:
       schedule.frequency === "monthly"
         ? (persistedCalendar.dayOfMonth ?? (plannedFor ? dayOfMonth(plannedFor, timezone) : null))
@@ -153,7 +155,10 @@ function scheduleListDto(
   };
 }
 
-export async function listCheckScheduleRows(projectId: string) {
+export async function listCheckScheduleRows(
+  projectId: string,
+  status: "current" | "archived" = "current",
+) {
   const [defaults, activeLocationIds] = await Promise.all([
     getRequestProjectDefaults(projectId),
     activeMarketLocationIds(projectId, prisma),
@@ -161,10 +166,10 @@ export async function listCheckScheduleRows(projectId: string) {
   const rows = await prisma.checkSchedule.findMany({
     orderBy: [{ isDefault: "desc" }, { name: "asc" }, { publicId: "asc" }],
     select: scheduleListSelect(activeLocationIds),
-    where: { projectId },
+    where: { archivedAt: status === "archived" ? { not: null } : null, projectId },
   });
   const scheduleIds = rows.map((schedule) => schedule.id);
-  const [memberGroups, tagAssignments, providers] = await Promise.all([
+  const [memberGroups, tagAssignments, providers, assignedCounts] = await Promise.all([
     scheduleIds.length > 0
       ? prisma.keyword.groupBy({
           by: ["checkScheduleId", "device", "locationId", "text"],
@@ -195,9 +200,16 @@ export async function listCheckScheduleRows(projectId: string) {
         loadSerpProviderChain(projectId, scheduleProviderId(schedule.providerPolicy)),
       ),
     ),
+    prisma.keyword.groupBy({
+      by: ["checkScheduleId"],
+      _count: { _all: true },
+      where: { projectId, checkScheduleId: { in: scheduleIds } },
+    }),
   ]);
-  return rows.map((schedule, index) =>
-    scheduleListDto(
+  return rows.map((schedule, index) => ({
+    assignedKeywordCount:
+      assignedCounts.find((group) => group.checkScheduleId === schedule.id)?._count._all ?? 0,
+    ...scheduleListDto(
       schedule,
       memberGroups.filter((group) => group.checkScheduleId === schedule.id),
       defaults?.serpDepth,
@@ -205,5 +217,5 @@ export async function listCheckScheduleRows(projectId: string) {
       providers[index]?.[0],
       tagAssignments.filter(({ keyword }) => keyword.checkScheduleId === schedule.id),
     ),
-  );
+  }));
 }

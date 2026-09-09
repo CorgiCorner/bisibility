@@ -1,9 +1,11 @@
 "use client";
 
-import { Button, InfoTooltip } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import type { RelevantPagesResult } from "@/lib/providers/types";
-import { DownloadSimpleIcon as DownloadSimple, PlusIcon as Plus } from "@phosphor-icons/react";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useState } from "react";
 import {
   formatDomainCount,

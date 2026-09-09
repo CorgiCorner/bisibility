@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
-import * as ts from "typescript";
+import * as ts from "@typescript/typescript6";
 import { describe, expect, it } from "vitest";
 import {
   type ColorSchemeName,
@@ -377,6 +377,23 @@ function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
 }
 
 describe("theme contrast contract", () => {
+  it.each(["light", "dark"] as const)(
+    "keeps contrasting sections readable and inverted in %s mode",
+    (scheme) => {
+      const sectionLuminance = luminance(token(scheme, "contrast-bg"));
+      const pageLuminance = luminance(token(scheme, "bg"));
+      if (scheme === "light") expect(sectionLuminance).toBeLessThan(pageLuminance);
+      else expect(sectionLuminance).toBeGreaterThan(pageLuminance);
+      for (const surface of ["contrast-bg", "contrast-surface"] as const) {
+        for (const foreground of ["contrast-fg", "contrast-muted", "contrast-accent"] as const) {
+          expect(
+            contrast(token(scheme, foreground), token(scheme, surface)),
+          ).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+    },
+  );
+
   const root = resolve(import.meta.dirname, "../..");
   const staticSourceGroups = sourceFileGroups(root, ["components", "app"]);
   const availableInteractiveBoundarySourcePaths = interactiveBoundarySourcePaths.filter((path) =>
@@ -395,8 +412,8 @@ describe("theme contrast contract", () => {
 
   it("maps semantic Tailwind foregrounds to the theme contrast colors", () => {
     expect(tailwindSemanticColors).toMatchObject({
-      "error-contrast": "var(--mui-palette-error-contrastText)",
-      "primary-contrast": "var(--mui-palette-primary-contrastText)",
+      "error-contrast": "var(--error-contrast)",
+      "primary-contrast": "var(--accent-on-solid)",
     });
   });
 

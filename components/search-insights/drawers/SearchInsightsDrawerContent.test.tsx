@@ -108,10 +108,8 @@ describe("SearchInsightsDrawerContent", () => {
     const table = screen.getByRole("table", { name: "Queries landing here" });
     const headers = within(table).getAllByRole("columnheader");
     expect(headers.map((header) => header.textContent)).toEqual(["Query", "Clicks", "Avg pos"]);
-    expect(headers[0]).toHaveAttribute("scope", "col");
-    expect(headers[0]).toHaveClass("text-left");
-    expect(headers[1]).toHaveClass("text-right");
-    expect(headers[2]).toHaveClass("text-right");
+    expect(headers[0]).not.toHaveClass("justify-end");
+    expect(headers.slice(1).every((header) => header.className.includes("justify-end"))).toBe(true);
     expect(headers[2]).toHaveAttribute("title", AVG_POSITION_TIP);
 
     const cells = within(table).getAllByRole("cell");
@@ -141,9 +139,8 @@ describe("SearchInsightsDrawerContent", () => {
       "Key events",
       "Avg pos",
     ]);
-    expect(headers[0]).toHaveClass("text-left");
-    expect(headers[1]).toHaveClass("text-right");
-    expect(headers.slice(2).every((header) => header.className.includes("text-right"))).toBe(true);
+    expect(headers[0]).not.toHaveClass("justify-end");
+    expect(headers.slice(1).every((header) => header.className.includes("justify-end"))).toBe(true);
     expect(headers[2]).toHaveAttribute("title", DRAWER_PAGE_ENGAGEMENT_TIP);
     expect(headers[4]).toHaveAttribute("title", AVG_POSITION_TIP);
   });
@@ -231,9 +228,9 @@ describe("SearchInsightsDrawerContent", () => {
     );
     const table = screen.getByRole("table", { name: "Your page ranking for it" });
     expect(screen.queryByText(KEY_EVENTS_NOT_CONFIGURED)).toBeNull();
-    expect(within(table).getAllByTitle(KEY_EVENTS_TIP)).toHaveLength(2);
-    expect(within(table).getAllByRole("cell")[3]).toHaveAttribute("title", KEY_EVENTS_TIP);
-    expect(within(table).getAllByRole("cell")[3]).toHaveTextContent("-");
+    expect(within(table).getAllByTitle(KEY_EVENTS_TIP)).toHaveLength(3);
+    const keyEventsCell = table.querySelector('[role="cell"][data-column-id="key-events"]');
+    expect(within(keyEventsCell as HTMLElement).getByTitle(KEY_EVENTS_TIP)).toHaveTextContent("-");
 
     rerender(
       <SearchInsightsDrawerContent
@@ -279,10 +276,12 @@ describe("SearchInsightsDrawerContent", () => {
     });
 
     const table = screen.getByRole("table", { name: "Most clicks first" });
-    expect(table.querySelectorAll("col")).toHaveLength(3);
-    expect([...table.querySelectorAll("tbody tr")]).toHaveLength(3);
-    for (const row of table.querySelectorAll("tbody tr")) {
-      expect(row.querySelectorAll("td")).toHaveLength(3);
+    expect(within(table).getAllByRole("columnheader")).toHaveLength(3);
+    const body = within(table).getByTestId("search-insights-drawer-overlap-body");
+    const rows = within(body).getAllByRole("row");
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
+      expect(within(row).getAllByRole("cell")).toHaveLength(3);
     }
   });
 

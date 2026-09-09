@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/admin/AdminAccountLookup", () => ({
   AdminAccountLookup: () => <section aria-label="Account lookup" />,
@@ -47,6 +47,8 @@ const data = {
 } as const;
 
 describe("AdminAdministration", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("renders four 30-day growth sparklines and the approximate activity label", () => {
     const { container } = render(<AdminAdministration data={data} />);
 
@@ -85,6 +87,18 @@ describe("AdminAdministration", () => {
     expect(
       within(table).getByRole("img", { name: "37.5% of instance reference cost" }).firstChild,
     ).toHaveStyle({ width: "37.5%" });
+  });
+
+  it("reserves room for sortable consumption headers and fills a wide table container", () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1_200);
+    render(<AdminAdministration data={data} />);
+
+    const table = screen.getByRole("table", {
+      name: "Top project and provider consumption this month",
+    });
+    expect(table.style.getPropertyValue("--dt-table-width")).toBe("1200px");
+    expect(table.style.getPropertyValue("--dt-col-units")).toBe("144px");
+    expect(table.style.getPropertyValue("--dt-col-referenceCost")).toBe("140px");
   });
 
   it("shows the self-host mailer warning with canonical docs", () => {

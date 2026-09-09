@@ -1,7 +1,8 @@
 "use server";
 
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
-import { authorize } from "@/lib/auth/authorize";
+import { AuthorizationError, authorize } from "@/lib/auth/authorize";
+import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { appPath } from "@/lib/routing/app-path";
@@ -44,6 +45,13 @@ async function findExistingSampleProject(client: SampleProjectLookupClient, acto
 
 export async function installSampleData() {
   const actor = await getActionActor();
+  const adminSession = await getInstanceAdminSession();
+  if (adminSession?.user.id !== actor.id) {
+    throw new AuthorizationError(
+      "forbidden",
+      "Only instance administrators can load sample projects.",
+    );
+  }
   authorize(actor, "create", { ownerId: actor.id, requiredRole: "member", type: "project" });
 
   const result = await prisma.$transaction(async (tx) => {

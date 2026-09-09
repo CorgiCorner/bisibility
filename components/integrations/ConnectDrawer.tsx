@@ -32,7 +32,7 @@ import {
   hasRequiredCredentialFields,
 } from "@/components/integrations/provider-credentials";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { Sheet } from "@/components/ui";
+import { Sheet } from "@/components/ui/Sheet";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type {
   IntegrationProviderData,

@@ -2,8 +2,8 @@ import {
   EmptyModuleCard,
   EmptyModuleLabel,
 } from "@/components/keyword-detail/empty/empty-state-primitives";
-import { Button } from "@/components/ui";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/ssr";
+import { Button } from "@/components/ui/Button";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 
 export type SchedulePausedBudgetExhaustedProps = {
   pauseReason?: string;

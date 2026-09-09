@@ -1,7 +1,9 @@
 "use client";
 
 import { useMarketContext } from "@/components/markets/MarketContextProvider";
-import { MenuSelect, type MenuSelectOption, Pill, SegmentedControl } from "@/components/ui";
+import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
+import { Pill } from "@/components/ui/Pill";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import {
   type ActiveLens,
   type LensDevice,
@@ -13,14 +15,12 @@ import {
   resetRankTrackerPage,
 } from "@/lib/keywords/rank-tracker-navigation";
 import type { RankTrackerQueryState } from "@/lib/keywords/rank-tracker-query-types";
-import {
-  DeviceMobileIcon as DeviceMobile,
-  DevicesIcon as Devices,
-  GlobeHemisphereWestIcon as GlobeHemisphereWest,
-  MapPinIcon as MapPin,
-  MonitorIcon as Monitor,
-  XIcon as X,
-} from "@phosphor-icons/react";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
+import { DevicesIcon as Devices } from "@phosphor-icons/react/dist/csr/Devices";
+import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
+import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const ALL_LOCATIONS = "__all__";

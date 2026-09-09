@@ -7,7 +7,9 @@ import { RowActionsCell } from "./RowActionsCell";
 
 const mocks = vi.hoisted(() => ({ push: vi.fn(), showToast: vi.fn(), writeText: vi.fn() }));
 
-vi.mock("@/components/ui", () => ({ useToast: () => ({ showToast: mocks.showToast }) }));
+vi.mock("@/components/ui/toast-context", () => ({
+  useToast: () => ({ showToast: mocks.showToast }),
+}));
 
 const row = keywordRows[0] as KeywordRow;
 

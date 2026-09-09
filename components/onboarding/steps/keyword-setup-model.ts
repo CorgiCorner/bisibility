@@ -1,5 +1,5 @@
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
-import { DEFAULT_SERP_DEVICE } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEVICE } from "@/lib/serp/constants";
 import type { z } from "zod";
 import type { AddKeywordsForm } from "./step-add-keywords-model";
 import { addKeywordsFormSchema } from "./step-add-keywords-model";

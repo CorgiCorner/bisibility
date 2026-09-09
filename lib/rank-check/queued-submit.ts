@@ -12,8 +12,8 @@ import {
 } from "@/lib/providers/serp/dataforseo-queued";
 import type { SerpDevice } from "@/lib/providers/types";
 import { trackedProjectDomain } from "@/lib/schemas/project";
+import { resolveSerpDepth, resolveSerpStopOnMatch } from "@/lib/serp/constants";
 import { serpRankLocation } from "@/lib/serp/location";
-import { resolveSerpDepth, resolveSerpStopOnMatch } from "@/lib/serp/markets";
 import { assertQueuedRankCheckBatchAllocation } from "./allocation-enforcement";
 import { queuedRankCheckConfig } from "./queued-config";
 import { deferQueuedRankCheckBatch } from "./queued-lifecycle";

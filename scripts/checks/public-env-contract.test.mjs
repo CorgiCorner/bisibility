@@ -20,7 +20,7 @@ function hasErrorMatching(errors, substring) {
 function makeTmpRoot() {
   const tmp = mkdtempSync(path.join(tmpdir(), "env-contract-test-"));
   for (const d of ["app", "lib", "components"]) mkdirSync(path.join(tmp, d), { recursive: true });
-  for (const f of ["middleware.ts", "instrumentation.ts", "instrumentation-client.ts", "next.config.ts", "sentry.edge.config.ts", "sentry.server.config.ts"]) {
+  for (const f of ["proxy.ts", "instrumentation.ts", "instrumentation-client.ts", "next.config.ts", "sentry.edge.config.ts", "sentry.server.config.ts"]) {
     writeFileSync(path.join(tmp, f), "");
   }
   return tmp;
@@ -185,7 +185,7 @@ describe("scanner AST features", () => {
   const tmpRoot = mkdtempSync(path.join(tmpdir(), "env-scanner-ast-"));
   before(() => {
     for (const d of ["app", "lib", "components"]) mkdirSync(path.join(tmpRoot, d), { recursive: true });
-    for (const f of ["middleware.ts", "instrumentation.ts", "instrumentation-client.ts", "next.config.ts", "sentry.edge.config.ts", "sentry.server.config.ts"]) {
+    for (const f of ["proxy.ts", "instrumentation.ts", "instrumentation-client.ts", "next.config.ts", "sentry.edge.config.ts", "sentry.server.config.ts"]) {
       writeFileSync(path.join(tmpRoot, f), "");
     }
   });

@@ -4,7 +4,7 @@ import { Sparkline } from "@/components/charts/Sparkline";
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import type { BacklinksHistoryMonth, BacklinksSummary } from "@/lib/backlinks/types";
 import { formatDateRange } from "@/lib/dates/format";
-import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import {
   historyFooter,
   latestHistoryDeltas,

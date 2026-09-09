@@ -122,9 +122,13 @@ describe("CompetitorsWorkspace", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Export" })).toHaveClass("MuiButton-sizeSmall");
-    expect(screen.getByRole("button", { name: "Add competitor" })).toHaveClass(
-      "MuiButton-sizeSmall",
+    expect(screen.getByRole("button", { name: "Export" })).toHaveAttribute(
+      "data-size",
+      expect.stringMatching(/^(xs|sm)$/),
+    );
+    expect(screen.getByRole("button", { name: "Add competitor" })).toHaveAttribute(
+      "data-size",
+      expect.stringMatching(/^(xs|sm)$/),
     );
     expect(screen.queryByLabelText("Search engine")).not.toBeInTheDocument();
   });

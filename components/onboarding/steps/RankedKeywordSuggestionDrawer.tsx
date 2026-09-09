@@ -1,16 +1,23 @@
 "use client";
 
-import { AppDrawer, Button } from "@/components/ui";
+import { AppDrawer } from "@/components/ui/AppDrawer";
+import { Button } from "@/components/ui/Button";
+import { DataTable } from "@/components/ui/data-table/DataTable";
 import { useMemo, useState } from "react";
 import {
   normalizeRankedKeyword,
   type RankedKeywordGroup,
   rankedKeywordTraffic,
 } from "./keyword-ranked-model";
+import {
+  type RankedSuggestionTableRow,
+  rankedSuggestionTableColumns,
+} from "./ranked-suggestion-table-columns";
 
 const DEFAULT_SELECTION = 3;
 
 type RankedKeywordSuggestionDrawerProps = {
+  selectionOnly?: boolean;
   canLoad: boolean;
   currentKeywords: readonly string[];
   groups: RankedKeywordGroup[];
@@ -36,6 +43,7 @@ function orderedGroups(groups: readonly RankedKeywordGroup[]) {
 }
 
 export function RankedKeywordSuggestionDrawer({
+  selectionOnly = false,
   canLoad,
   currentKeywords,
   groups,
@@ -55,10 +63,20 @@ export function RankedKeywordSuggestionDrawer({
     [currentKeywords],
   );
   const ordered = useMemo(() => orderedGroups(groups), [groups]);
-  const selectable = ordered.filter((group) => !group.alreadyTracked && !current.has(group.key));
+  const rows = useMemo<RankedSuggestionTableRow[]>(
+    () =>
+      ordered.map((group) => ({
+        group,
+        id: group.key,
+        keyword: group.row.keyword,
+        tracked: group.alreadyTracked || current.has(group.key),
+      })),
+    [current, ordered],
+  );
+  const selectable = rows.filter((row) => !row.tracked);
   const initial = selectable.slice(0, Math.min(DEFAULT_SELECTION, remaining));
-  const [selected, setSelected] = useState(() => new Set(initial.map((group) => group.key)));
-  const active = selectable.filter((group) => selected.has(group.key)).slice(0, remaining);
+  const [selected, setSelected] = useState(() => new Set(initial.map((row) => row.id)));
+  const active = selectable.filter((row) => selected.has(row.id)).slice(0, remaining);
   const allSelected = active.length > 0 && active.length === Math.min(selectable.length, remaining);
 
   function toggle(key: string) {
@@ -72,9 +90,7 @@ export function RankedKeywordSuggestionDrawer({
 
   function selectTop() {
     setSelected(
-      new Set(
-        selectable.slice(0, Math.min(DEFAULT_SELECTION, remaining)).map((group) => group.key),
-      ),
+      new Set(selectable.slice(0, Math.min(DEFAULT_SELECTION, remaining)).map((row) => row.id)),
     );
   }
 
@@ -93,10 +109,11 @@ export function RankedKeywordSuggestionDrawer({
             </Button>
             <Button
               disabled={active.length === 0}
-              onClick={() => onConfirm(active.map((group) => group.row.keyword.trim()))}
+              onClick={() => onConfirm(active.map((row) => row.group.row.keyword.trim()))}
               type="button"
             >
-              Add {active.length} {active.length === 1 ? "keyword" : "keywords"}
+              {selectionOnly ? "Use" : "Add"} {active.length}{" "}
+              {active.length === 1 ? "keyword" : "keywords"}
             </Button>
           </div>
         </div>
@@ -109,7 +126,7 @@ export function RankedKeywordSuggestionDrawer({
         {!allSelected ? (
           <Button
             onClick={() =>
-              setSelected(new Set(selectable.slice(0, remaining).map((item) => item.key)))
+              setSelected(new Set(selectable.slice(0, remaining).map((row) => row.id)))
             }
             size="xs"
             type="button"
@@ -135,54 +152,21 @@ export function RankedKeywordSuggestionDrawer({
           {active.length} of {selectable.length} selected
         </span>
       </div>
-      <div className="mt-3 overflow-x-auto">
-        <table
-          aria-label="Ranked keyword suggestions"
-          className="w-full min-w-[560px] border-collapse text-left text-[12px]"
-        >
-          <thead>
-            <tr className="border-b border-border text-[10px] uppercase text-fg-muted">
-              <th className="w-10" />
-              <th className="py-2">Keyword</th>
-              <th>Position</th>
-              <th>Volume</th>
-              <th>Est. traffic</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ordered.map((group) => {
-              const tracked = group.alreadyTracked || current.has(group.key);
-              return (
-                <tr className="border-b border-border" key={group.key}>
-                  <td>
-                    <input
-                      aria-label={`Select ${group.row.keyword}`}
-                      checked={!tracked && selected.has(group.key)}
-                      className="size-4 accent-accent"
-                      disabled={tracked}
-                      onChange={() => toggle(group.key)}
-                      type="checkbox"
-                    />
-                  </td>
-                  <td className="py-2 font-medium text-fg">
-                    {group.row.keyword}
-                    {group.count > 1 ? (
-                      <span className="ml-2 text-fg-muted">+{group.count - 1} variants</span>
-                    ) : null}
-                    {tracked ? <span className="ml-2 text-fg-muted">Already tracked</span> : null}
-                  </td>
-                  <td>{group.row.position ?? "-"}</td>
-                  <td>{group.row.searchVolume ?? "-"}</td>
-                  <td>
-                    {group.row.estimatedTraffic == null
-                      ? "-"
-                      : Math.round(group.row.estimatedTraffic)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="mt-3" data-analytics-mask>
+        <DataTable
+          ariaLabel="Ranked keyword suggestions"
+          columns={rankedSuggestionTableColumns({
+            onToggle: toggle,
+            selected,
+            trackedLabel: selectionOnly ? "In draft" : "Already tracked",
+          })}
+          density="compact"
+          id="ranked-keyword-suggestions"
+          layout="auto"
+          onSortingChange={() => undefined}
+          rows={rows}
+          sorting={null}
+        />
       </div>
       {canLoad ? (
         <Button

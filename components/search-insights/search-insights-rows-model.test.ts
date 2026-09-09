@@ -8,15 +8,9 @@ import {
   moreTitle,
   nextShow,
   positionClassName,
-  ROW_HEIGHT,
-  ROW_HEIGHT_CLASS,
   reachLabel,
   rowsReach,
-  SCROLL_REGION_CLASS,
-  SCROLL_REGION_HEIGHT,
   visibleRows,
-  windowedPadding,
-  windowedRange,
 } from "./search-insights-rows-model";
 
 describe("nextShow", () => {
@@ -94,39 +88,5 @@ describe("positionClassName", () => {
     expect(positionClassName(10)).toBe("text-fg");
     expect(positionClassName(18.4)).toBe("text-fg-muted");
     expect(positionClassName(64)).toBe("text-fg-muted");
-  });
-});
-
-describe("windowedRange", () => {
-  it("renders the band around the offset plus an overscan on each side", () => {
-    const range = windowedRange({ count: 1_000, height: 520, scrollTop: 37 * 100 });
-
-    expect(range.start).toBe(94);
-    expect(range.end).toBe(94 + 15 + 12);
-    expect(range.end - range.start).toBeLessThan(40);
-  });
-
-  it("never reaches past either end of the list", () => {
-    expect(windowedRange({ count: 1_000, height: 520, scrollTop: 0 }).start).toBe(0);
-    expect(windowedRange({ count: 12, height: 520, scrollTop: 0 }).end).toBe(12);
-  });
-
-  it("accounts for the rows it did not render, so the scrollbar stays honest", () => {
-    const range = windowedRange({ count: 1_000, height: 520, scrollTop: 37 * 100 });
-    const padding = windowedPadding(range, 1_000);
-
-    expect(padding.top).toBe(range.start * ROW_HEIGHT);
-    expect(padding.top + (range.end - range.start) * ROW_HEIGHT + padding.bottom).toBe(
-      1_000 * ROW_HEIGHT,
-    );
-  });
-});
-
-describe("row geometry", () => {
-  // The windowed list places rows it never renders, so the measured heights and the classes the
-  // rows carry have to be the same numbers. The spacing scale is four pixels a step.
-  it("binds the row and region classes to the heights the model measures with", () => {
-    expect(ROW_HEIGHT_CLASS).toBe(`h-${ROW_HEIGHT / 4}`);
-    expect(SCROLL_REGION_CLASS).toBe(`max-h-${SCROLL_REGION_HEIGHT / 4}`);
   });
 });

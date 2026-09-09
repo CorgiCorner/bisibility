@@ -1,6 +1,21 @@
 import type { PublicIdForPrefix } from "@/lib/db/public-id";
+import type { SetupVideoRef } from "@/lib/getting-started/video-manifest";
 
-export type SetupStepId = "create_project" | "add_keywords" | "connect_source" | "first_check";
+export type SetupStepId =
+  | "create_project"
+  | "add_keywords"
+  | "connect_source"
+  | "first_check"
+  | "confirm_competitors";
+
+export type CompetitorSuggestionEvidence = {
+  kind?: "competitor" | "other" | "platform";
+  nonBrandSeenOn?: number;
+  bestPosition: number;
+  domain: string;
+  of: number;
+  seenOn: number;
+};
 
 export type SetupCta = {
   id: "add_keywords" | "connect_source" | "create_project" | "run_first_check";
@@ -9,8 +24,8 @@ export type SetupCta = {
 
 export type SetupStepState =
   | { family: "done" }
-  // Settled like done. No current definition emits this; the competitors skip will.
   | { family: "skipped" }
+  | { family: "ready" }
   | { cta: SetupCta; family: "action" }
   | {
       accelerate?: SetupCta;
@@ -22,6 +37,8 @@ export type SetupStepState =
 
 export type SetupContext = {
   completedCheckCount: number;
+  competitorSetupOutcome: "confirmed" | "skipped" | null;
+  competitorSuggestions: CompetitorSuggestionEvidence[];
   inFlightBatch: {
     completed: number;
     rankCheckIds: PublicIdForPrefix<"check">[];
@@ -41,7 +58,7 @@ export type SetupContext = {
 export type StepDefinition = {
   id: SetupStepId;
   title: string;
-  videoRef: string;
+  videoRef: SetupVideoRef;
   resolve(ctx: SetupContext): SetupStepState;
 };
 
@@ -81,18 +98,25 @@ function resolveFirstCheck(ctx: SetupContext): SetupStepState {
   };
 }
 
+function resolveCompetitorConfirmation(ctx: SetupContext): SetupStepState {
+  if (ctx.completedCheckCount === 0) {
+    return {
+      family: "blocked",
+      reason: "Needs first check results",
+      unblockedBy: "first_check",
+    };
+  }
+  if (ctx.competitorSetupOutcome === "confirmed") return done();
+  if (ctx.competitorSetupOutcome === "skipped") return { family: "skipped" };
+  return { family: "ready" };
+}
+
 export const SETUP_STEP_DEFINITIONS = [
   {
     id: "create_project",
     resolve: (ctx) => (ctx.project.exists ? done() : action("create_project", "Create project")),
     title: "Create your project",
     videoRef: "create-project",
-  },
-  {
-    id: "add_keywords",
-    resolve: (ctx) => (ctx.keywordCount > 0 ? done() : action("add_keywords", "Add keywords")),
-    title: "Track your first keywords",
-    videoRef: "add-keywords",
   },
   {
     id: "connect_source",
@@ -102,10 +126,22 @@ export const SETUP_STEP_DEFINITIONS = [
     videoRef: "connect-source",
   },
   {
+    id: "add_keywords",
+    resolve: (ctx) => (ctx.keywordCount > 0 ? done() : action("add_keywords", "Add keywords")),
+    title: "Track your first keywords",
+    videoRef: "add-keywords",
+  },
+  {
     id: "first_check",
     resolve: resolveFirstCheck,
     title: "Run your first rank check",
     videoRef: "first-check",
+  },
+  {
+    id: "confirm_competitors",
+    resolve: resolveCompetitorConfirmation,
+    title: "Confirm competitors",
+    videoRef: "confirm-competitors",
   },
 ] as const satisfies readonly StepDefinition[];
 

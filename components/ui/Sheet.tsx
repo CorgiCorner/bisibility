@@ -1,11 +1,12 @@
 "use client";
 
+import { DialogSurface as Drawer } from "@/components/ui/DialogSurface";
 import { MOTION_DRAWER_ENTER, MOTION_DRAWER_EXIT } from "@/lib/ui/motion";
-import Drawer from "@mui/material/Drawer";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { XIcon as X } from "@phosphor-icons/react";
-import type { ReactNode } from "react";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import type { ComponentProps, ReactNode } from "react";
 import { useId } from "react";
+import { type DrawerBackAction, DrawerBackButton } from "./DrawerBackButton";
 
 export type SheetHeightVariant = "form" | "filters";
 export type SheetWidthVariant = "form" | "filters";
@@ -14,6 +15,7 @@ export type SheetProps = {
   open: boolean;
   onClose: () => void;
   title: ReactNode;
+  backAction?: DrawerBackAction;
   headerAction?: ReactNode;
   footer?: ReactNode;
   heightVariant?: SheetHeightVariant;
@@ -33,6 +35,7 @@ const sheetWidths: Record<SheetWidthVariant, number> = {
 };
 
 export function Sheet({
+  backAction,
   children,
   footer,
   heightVariant = "form",
@@ -43,19 +46,17 @@ export function Sheet({
   title,
   widthVariant,
 }: Readonly<SheetProps>) {
-  const isDesktop = useMediaQuery("(min-width:1024px)", { noSsr: true });
-  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", { noSsr: true });
+  const isDesktop = useMediaQuery("(min-width:1024px)");
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const titleId = useId();
   const anchor = isDesktop ? "right" : "bottom";
   const dataMode = heightVariant === "filters" ? "filters-drawer" : "form-sheet";
-  const paperSlotProps = {
+  const paperSlotProps: ComponentProps<"div"> & { "data-m": string; "data-open": string } = {
     "aria-labelledby": titleId,
     "data-m": dataMode,
     "data-open": open ? "true" : "false",
     role: "dialog",
-    sx: {
-      // Use the same 1024px breakpoint for anchor and dimensions; MUI lg defaults to
-      // 1200px and misstyles widths from 1024-1199px.
+    style: {
       backgroundColor: "var(--bg-elev)",
       borderColor: "var(--border)",
       borderLeft: isDesktop ? "1px solid var(--border)" : "none",
@@ -76,27 +77,28 @@ export function Sheet({
 
   return (
     <Drawer
-      anchor={anchor}
+      side={anchor}
       onClose={onClose}
       open={open}
-      slotProps={{
-        backdrop: { sx: { backgroundColor: "rgba(20,16,8,.42)" } },
-        paper: paperSlotProps,
-        transition: {
-          ...(onExited ? { onExited } : {}),
-          ...(reducedMotion ? { timeout: 0 } : {}),
-        },
+      backdropProps={{ style: { backgroundColor: "rgba(20,16,8,.42)" } }}
+      contentProps={paperSlotProps}
+      onExited={onExited}
+      duration={{
+        enter: reducedMotion ? 0 : MOTION_DRAWER_ENTER,
+        exit: reducedMotion ? 0 : MOTION_DRAWER_EXIT,
       }}
-      transitionDuration={{ enter: MOTION_DRAWER_ENTER, exit: MOTION_DRAWER_EXIT }}
     >
       <div className="flex min-h-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-3 border-b border-border bg-bg-elev px-6 py-5">
-          <h2
-            className="m-0 min-w-0 text-[18px] font-semibold leading-tight tracking-[-0.4px] text-fg"
-            id={titleId}
-          >
-            {title}
-          </h2>
+          <div className="flex min-w-0 items-center gap-2">
+            {backAction ? <DrawerBackButton {...backAction} /> : null}
+            <h2
+              className="m-0 min-w-0 text-[18px] font-semibold leading-tight tracking-[-0.4px] text-fg"
+              id={titleId}
+            >
+              {title}
+            </h2>
+          </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {headerAction}
             <button

@@ -1,6 +1,6 @@
-import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { ResearchSearchCard } from "@/components/research/ResearchSearchCard";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
+import type { ResearchScope } from "@/lib/research/scope";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
@@ -9,13 +9,13 @@ const connectionOptions = [{ label: "DataForSEO", value: "conn_a0000000000000000
 function ResearchSearchCardStory() {
   const [connectionId, setConnectionId] = useState(connectionOptions[0].value);
   const [includeClickstream, setIncludeClickstream] = useState(false);
-  const [location, setLocation] = useState<LocationFieldValue>({
-    canonicalKey: "US",
+  const [scope, setScope] = useState<ResearchScope>({
     countryCode: "US",
-    displayName: "United States",
-    hl: "en",
-    kind: "country",
+    countryName: "United States",
+    languageCode: "en",
     languageLabel: "English",
+    providerLocationCode: 2840,
+    researchAvailable: true,
   });
   const [mode, setMode] = useState<KeywordResearchMode>("auto");
   const [resultLimit, setResultLimit] = useState<100 | 300 | 500>(100);
@@ -29,16 +29,16 @@ function ResearchSearchCardStory() {
           connectionOptions={connectionOptions}
           estimate={{ cached: false, costCents: 3, loading: false }}
           includeClickstream={includeClickstream}
-          location={location}
+          scope={scope}
+          scopes={[scope]}
           mode={mode}
           onConnectionChange={setConnectionId}
           onIncludeClickstreamChange={setIncludeClickstream}
           onLimitChange={setResultLimit}
-          onLocationChange={setLocation}
+          onScopeChange={setScope}
           onModeChange={setMode}
           onSeedsChange={setSeeds}
           onSubmit={() => undefined}
-          projectId="prj_1"
           researching={false}
           resultLimit={resultLimit}
           seeds={seeds}

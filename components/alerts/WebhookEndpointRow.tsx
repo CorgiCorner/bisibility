@@ -1,7 +1,11 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Button, ConfirmModal, inputClassName, PasswordInput, Switch } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { inputClassName } from "@/components/ui/input-styles";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Switch } from "@/components/ui/Switch";
 import type { WebhookEndpointView } from "@/lib/alerts/alert-data";
 import { formatDateTime } from "@/lib/dates/format";
 import { useRouter } from "next/navigation";

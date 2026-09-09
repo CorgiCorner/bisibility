@@ -1,9 +1,8 @@
-import { Button, Card } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { appPath } from "@/lib/routing/app-path";
-import {
-  BookmarkSimpleIcon as BookmarkSimple,
-  MagnifyingGlassIcon as MagnifyingGlass,
-} from "@phosphor-icons/react/dist/ssr";
+import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import Link from "next/link";
 
 const headers = [
@@ -43,7 +42,7 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
           href={appPath(projectRef, "keyword-research")}
           size="md"
           startIcon={<MagnifyingGlass size={13} weight="regular" />}
-          sx={{ marginTop: "22px", minHeight: 40, paddingInline: "18px" }}
+          style={{ marginTop: "22px", minHeight: 40, paddingInline: "18px" }}
         >
           Find keywords in Research
         </Button>

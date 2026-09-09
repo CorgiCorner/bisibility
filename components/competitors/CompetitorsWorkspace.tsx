@@ -8,7 +8,9 @@ import { HeadToHeadTable } from "@/components/competitors/HeadToHeadTable";
 import { ShareOfVoiceCard } from "@/components/competitors/ShareOfVoiceCard";
 import type { KeywordWorkspaceActions } from "@/components/keywords/action-utils";
 import { AddKeywordDrawer } from "@/components/keywords/add/AddKeywordDrawer";
-import { Button, EmptyState, ModuleMark } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ModuleMark } from "@/components/ui/ModuleMark";
 import { downloadCompetitorMarketCsv } from "@/lib/competitors/competitor-csv";
 import { buildCompetitorMarket } from "@/lib/competitors/competitor-market-model";
 import { useCompetitorDraft } from "@/lib/competitors/draft-store";
@@ -25,12 +27,10 @@ import type {
   CreateProjectSavedViewInput,
   SavedViewResource,
 } from "@/lib/saved-views/model";
-import {
-  CaretRightIcon as CaretRight,
-  FunnelSimpleIcon as FunnelSimple,
-  UploadSimpleIcon as UploadSimple,
-  UsersThreeIcon as UsersThree,
-} from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { FunnelSimpleIcon as FunnelSimple } from "@phosphor-icons/react/dist/csr/FunnelSimple";
+import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
+import { UsersThreeIcon as UsersThree } from "@phosphor-icons/react/dist/csr/UsersThree";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";

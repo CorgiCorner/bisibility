@@ -162,7 +162,12 @@ describe("cloud import package restoration", () => {
     );
     mocks.createKeywords.mockResolvedValue(Response.json({ created: 1, skipped: 0 }));
     mocks.prisma.keyword.findMany.mockResolvedValue([
-      { device: "desktop", id: "keyword_1", location: "United States", text: "rank tracker" },
+      {
+        device: "desktop",
+        id: "keyword_1",
+        locationRef: { canonicalKey: "US" },
+        text: "rank tracker",
+      },
     ]);
     mocks.prisma.rankCheck.createMany.mockResolvedValue({ count: 1 });
     mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
@@ -210,7 +215,7 @@ describe("cloud import package restoration", () => {
       {
         device: "desktop",
         keyword: "rank tracker",
-        location: "United States",
+        location_key: "US",
         tags: ["SEO"],
         target_url: "/rank",
       },
@@ -269,6 +274,40 @@ describe("cloud import package restoration", () => {
     });
     expect(JSON.stringify(mocks.notifyCloudImportFailed.mock.calls)).not.toContain("prisma");
     expect(JSON.stringify(mocks.notifyCloudImportFailed.mock.calls)).not.toContain("SELECT");
+  });
+
+  it("fails the transaction before history attaches when a canonical location key has no exact row", async () => {
+    const body = importBody({
+      keywords: [
+        {
+          device: "desktop",
+          id: ids.keyword,
+          keyword: "rank tracker",
+          location: "Madrid, Community of Madrid, Spain",
+          location_key: "ES/Community of Madrid/Madrid@en",
+          rankingHistory: [
+            {
+              checkedAt: "2026-06-20T10:00:00.000Z",
+              normalizationVersion: "v1",
+              position: 3,
+              previousPosition: 7,
+              provider: "dataforseo",
+              rankingUrl: "https://example.com/rank-tracker",
+              requestedDepth: 100,
+            },
+          ],
+          tags: [],
+        },
+      ],
+    });
+
+    await expect(importCloudExport(token, body, url)).rejects.toThrow(
+      "ES/Community of Madrid/Madrid@en could not be resolved exactly",
+    );
+
+    expect(mocks.createKeywords).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheck.createMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.migrationToken.updateMany).not.toHaveBeenCalled();
   });
 
   it("applies the first notification preference and counts the rest as skipped", async () => {

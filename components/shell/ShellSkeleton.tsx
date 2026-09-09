@@ -19,6 +19,9 @@ import { Fragment, type ReactNode } from "react";
 // The boundary has no project yet, so the rail is built against the literal route pattern.
 // Only the row counts are used - the hrefs and labels are discarded.
 const railRows = navItems("[project]");
+const standaloneRailRows = railRows
+  .filter((item) => item.group === null)
+  .map((_, index) => `standalone-${index}`);
 const groupedRailRows = navItemGroups.map((group) => ({
   ...group,
   rows: railRows
@@ -93,6 +96,9 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
       )}
       {/* Only the nav region gives; the footer is the only pinned area. */}
       <div className="mt-4 flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
+        {standaloneRailRows.map((key) => (
+          <RailRow collapsed={collapsed} key={key} />
+        ))}
         {groupedRailRows.map((group) => (
           <Fragment key={group.id}>
             <RailHeading collapsed={collapsed} />

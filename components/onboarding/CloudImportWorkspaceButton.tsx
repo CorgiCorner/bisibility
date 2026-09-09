@@ -1,7 +1,8 @@
 "use client";
 
 import { actionErrorMessage, feedbackClass } from "@/components/onboarding/onboarding-form-utils";
-import { Button, Tooltip } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { createCloudImportWorkspace } from "@/lib/actions/cloud";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState, useTransition } from "react";

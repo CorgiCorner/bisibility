@@ -6,9 +6,9 @@ import {
   failureCharge,
   failureState,
   reportUrl,
-  supportedMarket,
+  supportedResearchScope,
 } from "./domain-overview-workspace-model";
-import { domainOverviewMarketFixture } from "./fixtures";
+import { domainOverviewScopeFixture } from "./fixtures";
 
 describe("domain overview workspace model", () => {
   it("detects registrable domains and subdomains", () => {
@@ -63,18 +63,20 @@ describe("domain overview workspace model", () => {
     expect(failureCharge({ costCents: 3, ok: false, reason: "lookup_failed" })).toBe(true);
   });
 
-  it("keeps market and report URL dimensions explicit", () => {
-    expect(supportedMarket({ ...domainOverviewMarketFixture, locationCode: null })).toBeNull();
-    expect(supportedMarket(domainOverviewMarketFixture)).toEqual(domainOverviewMarketFixture);
+  it("keeps country-language and report URL dimensions explicit", () => {
+    expect(
+      supportedResearchScope({ ...domainOverviewScopeFixture, providerLocationCode: null }),
+    ).toBeNull();
+    expect(supportedResearchScope(domainOverviewScopeFixture)).toEqual(domainOverviewScopeFixture);
     expect(
       reportUrl({
-        market: domainOverviewMarketFixture,
+        domainScope: "subdomain",
         projectRef: "prj_1",
-        scope: "subdomain",
+        researchScope: domainOverviewScopeFixture,
         target: "blog.example.com",
       }),
     ).toBe(
-      "/app/prj_1/domain-overview?domain=blog.example.com&market=US%2FUS-TX%2FAustin&scope=subdomain",
+      "/app/prj_1/domain-overview?domain=blog.example.com&researchScope=US%3Aen&scope=subdomain",
     );
   });
 

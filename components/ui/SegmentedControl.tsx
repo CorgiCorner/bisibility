@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
-import CircularProgress from "@mui/material/CircularProgress";
 import { Fragment, type KeyboardEvent, type ReactNode, useId } from "react";
+import { Spinner } from "./Spinner";
 import { Tooltip } from "./Tooltip";
 import { toolbarControlClassName } from "./toolbar-control-styles";
 
@@ -208,7 +208,7 @@ export function SegmentedControl<T extends string>({
           aria-hidden
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
         >
-          <CircularProgress color="inherit" size={14} thickness={5} />
+          <Spinner size={14} />
         </span>
       ) : null}
     </fieldset>

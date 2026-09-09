@@ -6,7 +6,7 @@ import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
-import { resolveEffectiveSerpDepth } from "@/lib/serp/markets";
+import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
 import type { QueuedRankCheckWorkflowInput } from "@/lib/temporal/queued-rank-check-contract";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "./budget";
 import { serpProviderChainOrderBy } from "./provider-chain-order";
@@ -85,6 +85,7 @@ async function loadContext(tx: Prisma.TransactionClient, input: QueuedRankCheckW
         take: 1,
         where: { status: "completed" },
       },
+      checkSchedule: { select: { serpDepth: true } },
       schedule: true,
     },
     orderBy: { id: "asc" },
@@ -123,6 +124,7 @@ function preparedKeyword(keyword: PreparedKeyword, defaults: EffectiveSchedule |
   if (!schedule || !AUTOMATIC_FREQUENCIES.has(schedule.frequency)) return null;
   const depth = resolveEffectiveSerpDepth({
     projectDepth: defaults?.serpDepth,
+    checkScheduleDepth: keyword.checkSchedule?.serpDepth,
     scheduleDepth: keyword.schedule?.serpDepth,
   });
   return {

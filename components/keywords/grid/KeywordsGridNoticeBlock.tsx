@@ -1,6 +1,9 @@
 "use client";
+import { AlertBanner } from "@/components/ui/AlertBanner";
 import type { MarketScope } from "@/lib/markets/market-scope";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
+import type { KeywordRow } from "@/lib/queries/keywords";
+import { appPath } from "@/lib/routing/app-path";
 import { KeywordsGridNotices } from "./KeywordsGridNotices";
 import type { KeywordsGridProps } from "./keywords-grid-types";
 import { MarketRunSliceStatus } from "./MarketRunSliceStatus";
@@ -15,18 +18,24 @@ type Props = Pick<
   | "providerConnected"
   | "projectId"
   | "queueFirstChecksAction"
-  | "rows"
   | "runCheckNowAction"
-  | "totalKeywordCount"
 > & {
   emptyRankCheckStates: KeywordCheckState[];
-  flatServer: boolean;
-  marketScope: MarketScope | null;
+  marketScope?: MarketScope | null;
+  rows: KeywordRow[];
 };
 export function KeywordsGridNoticeBlock(props: Props) {
-  const firstPendingKeywordId = props.flatServer
-    ? null
-    : (props.rows.find((row) => row.checkState === "never_checked")?.id ?? null);
+  if (props.marketScope?.status === "paused")
+    return (
+      <AlertBanner
+        tint="yellow"
+        title="This market is paused"
+        detail="You can add and edit keywords. New rank checks will not start until you resume this market."
+        action={{ href: appPath(props.projectId, "markets"), label: "Manage markets" }}
+      />
+    );
+  const firstPendingKeywordId =
+    props.rows.find((row) => row.checkState === "never_checked")?.id ?? null;
   return (
     <>
       {props.marketScope && props.deepLinkRunId ? (
@@ -39,7 +48,7 @@ export function KeywordsGridNoticeBlock(props: Props) {
       <KeywordsGridNotices
         canManageProviders={props.canManageProviders}
         checkHealth={props.checkHealth}
-        checkStates={props.flatServer ? [] : props.emptyRankCheckStates}
+        checkStates={props.emptyRankCheckStates}
         firstPendingKeywordId={firstPendingKeywordId}
         getFirstCheckRunPlanAction={props.getFirstCheckRunPlanAction}
         providerConnected={props.providerConnected}
@@ -47,7 +56,6 @@ export function KeywordsGridNoticeBlock(props: Props) {
         queueFirstChecksAction={props.queueFirstChecksAction}
         runCheckNowAction={props.canUpdateKeyword ? props.runCheckNowAction : undefined}
         rowCount={props.rows.length}
-        totalKeywordCount={props.flatServer ? undefined : props.totalKeywordCount}
       />
     </>
   );

@@ -13,13 +13,13 @@ export type DomainOverviewServiceContext = {
   projectId: string;
 };
 
-export type DomainOverviewMarket = {
+export type DomainOverviewResearchScope = {
   countryCode?: string;
   languageCode: string;
   locationCode: number;
 };
 
-export type AnalyzeDomainOverviewOptions = DomainOverviewMarket & {
+export type AnalyzeDomainOverviewOptions = DomainOverviewResearchScope & {
   estimateOnly?: boolean;
   fresh?: boolean;
   keywordLimit?: number;
@@ -29,7 +29,7 @@ export type AnalyzeDomainOverviewOptions = DomainOverviewMarket & {
   target: string;
 };
 
-export type LoadDomainModuleOptions = DomainOverviewMarket & {
+export type LoadDomainModuleOptions = DomainOverviewResearchScope & {
   fresh?: boolean;
   limit: number;
   maxCostCents?: number;
@@ -38,7 +38,7 @@ export type LoadDomainModuleOptions = DomainOverviewMarket & {
   target: string;
 };
 
-export type LoadDomainHistoryOptions = DomainOverviewMarket & {
+export type LoadDomainHistoryOptions = DomainOverviewResearchScope & {
   fresh?: boolean;
   maxCostCents?: number;
   scopeOverride?: DomainOverviewScope;

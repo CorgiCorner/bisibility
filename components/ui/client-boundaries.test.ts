@@ -15,12 +15,16 @@ const browserIconModules = readdirSync(import.meta.dirname)
       return (
         importStatement.startsWith("import ") &&
         !importStatement.startsWith("import type ") &&
-        importStatement.includes('from "@phosphor-icons/react"')
+        /from ["']@phosphor-icons\/react(?:\/dist\/csr(?:\/[^"']+)?)?["']/.test(importStatement)
       );
     });
   });
 
 describe("UI client boundaries", () => {
+  it("checks a non-empty set of browser icon modules", () => {
+    expect(browserIconModules.length).toBeGreaterThan(0);
+  });
+
   it.each(browserIconModules)("marks %s as a client module", (fileName) => {
     const source = readFileSync(resolve(import.meta.dirname, fileName), "utf8");
 

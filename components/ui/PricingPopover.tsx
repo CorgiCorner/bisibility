@@ -1,7 +1,7 @@
 "use client";
 
+import { Popup as Popover } from "@/components/ui/Popup";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Popover from "@mui/material/Popover";
 import type { ReactNode } from "react";
 
 export type PricingRow = { label: string; value: string };
@@ -24,21 +24,19 @@ export function PricingPopover({
   return (
     <Popover
       anchorEl={anchor}
-      anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      align="end"
+      side="bottom"
       onClose={onClose}
       open={Boolean(anchor)}
-      slotProps={{
-        paper: {
-          sx: {
-            backgroundColor: "var(--bg-elev)",
-            border: "1px solid var(--border)",
-            borderRadius: UI_RADIUS_ROLES.control,
-            boxShadow: "none",
-            marginTop: "10px",
-          },
+      contentProps={{
+        style: {
+          backgroundColor: "var(--bg-elev)",
+          border: "1px solid var(--border)",
+          borderRadius: UI_RADIUS_ROLES.control,
+          boxShadow: "none",
+          marginTop: "10px",
         },
       }}
-      transformOrigin={{ horizontal: "right", vertical: "top" }}
     >
       <div className="w-[330px] max-w-[calc(100vw-32px)] p-4 text-fg">
         <p className="mb-2.5 mt-0 text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">

@@ -3,6 +3,7 @@
 import { writeAudit } from "@/lib/auth/audit";
 import { unitCostCentsFor } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
+import { firstCheckTargets } from "@/lib/queries/first-check-targets";
 import { monthlySpendCents, projectBudgetCapCents } from "@/lib/rank-check/budget";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { launchSingleRankCheckRun } from "@/lib/rank-check/runs/launch-single";
@@ -17,13 +18,9 @@ import {
   listFirstCheckCandidatesSchema,
   runFirstCheckPreviewSchema,
 } from "@/lib/schemas/keyword";
+import { DEFAULT_SERP_DEPTH, SERP_ENGINE, serpDepthValues } from "@/lib/serp/constants";
+import { serpCountryByCode } from "@/lib/serp/country-catalog";
 import { keywordMarketSelect, projectDefaultSerpMarket } from "@/lib/serp/default-market";
-import {
-  DEFAULT_SERP_DEPTH,
-  DEFAULT_SERP_MARKET,
-  SERP_ENGINE,
-  serpDepthValues,
-} from "@/lib/serp/markets";
 import {
   getActionActor,
   parseActionInput,
@@ -31,6 +28,7 @@ import {
   requireProjectScope,
   revalidateRankCheckViews,
 } from "./_shared";
+import { emitFirstCheckPreviewResult } from "./rank-check-preview-analytics";
 import {
   expectedPreviewFailure,
   type FirstCheckRunPlan,
@@ -106,7 +104,9 @@ export async function listFirstCheckCandidates(
   const [candidates, serpConnections, analyticsConnections] = await Promise.all([
     sampleProject
       ? Promise.resolve([])
-      : firstCheckCandidates(project.id, data.limit, data.keywordText),
+      : data.includeExisting && data.keywordText
+        ? firstCheckTargets(project.id, data.keywordText, data.limit)
+        : firstCheckCandidates(project.id, data.limit, data.keywordText),
     sampleProject ? Promise.resolve(0) : connectionCount(project.id, "serp"),
     connectionCount(project.id, "analytics"),
   ]);
@@ -121,6 +121,11 @@ export async function listFirstCheckCandidates(
 
 // biome-ignore format: compact label table keeps this file under the project line cap.
 const frequencyLabels: Record<string, string> = { custom_cron: "Custom cron", daily: "Daily", manual: "Manual", monthly: "Monthly", paused: "Paused", weekly: "Weekly" };
+const samplePreviewCountry = (() => {
+  const country = serpCountryByCode("US");
+  if (!country) throw new Error("The default country is missing from the country catalog.");
+  return country;
+})();
 
 function previewSerpDepth(value: number | null | undefined) {
   return serpDepthValues.find((depth) => depth === value) ?? DEFAULT_SERP_DEPTH;
@@ -148,7 +153,7 @@ export async function getFirstCheckRunPlan(input: unknown): Promise<FirstCheckRu
         device: "Desktop",
         engine: SERP_ENGINE.label,
         frequency: "Daily",
-        location: DEFAULT_SERP_MARKET,
+        location: samplePreviewCountry.displayName,
       },
     };
   }
@@ -193,6 +198,7 @@ export async function getFirstCheckRunPlan(input: unknown): Promise<FirstCheckRu
 }
 
 export async function runFirstCheckPreview(input: unknown): Promise<RunFirstCheckPreviewResult> {
+  const startedAt = Date.now();
   const data = parseActionInput(runFirstCheckPreviewSchema, input);
   const actor = await getActionActor();
   let keywordScope: Awaited<ReturnType<typeof requireKeywordScope>>;
@@ -208,6 +214,15 @@ export async function runFirstCheckPreview(input: unknown): Promise<RunFirstChec
   if (keywordScope.projectIsSample) {
     return previewFailure("sample_project", "Sample projects don't run real checks.");
   }
+  const emitResult = async (result: RunFirstCheckPreviewResult) => {
+    await emitFirstCheckPreviewResult({
+      actorId: actor.id,
+      projectId: keywordScope.projectId,
+      result,
+      startedAt,
+    });
+    return result;
+  };
   try {
     try {
       const project = await prisma.project.findUniqueOrThrow({
@@ -232,20 +247,22 @@ export async function runFirstCheckPreview(input: unknown): Promise<RunFirstChec
         targetType: "runId" in result ? "rank_check_run" : "keyword",
       });
       revalidateRankCheckViews(keywordScope.publicId);
-      return result;
+      return emitResult(result);
     } catch (error) {
       if (error instanceof LaunchRankCheckRunError && error.code === "budget_exhausted") {
-        return previewFailure("budget_exhausted", error.message);
+        return emitResult(previewFailure("budget_exhausted", error.message));
       }
       const expected = expectedPreviewFailure(error);
       if (!expected) throw error;
-      return expected;
+      return emitResult(expected);
     }
   } catch (error) {
-    return unexpectedPreviewFailure(error, {
-      keywordId: keywordScope.publicId,
-      projectId: keywordScope.projectPublicId,
-    });
+    return emitResult(
+      unexpectedPreviewFailure(error, {
+        keywordId: keywordScope.publicId,
+        projectId: keywordScope.projectPublicId,
+      }),
+    );
   }
 }
 

@@ -9,7 +9,7 @@ import { difficultyBucket } from "@/lib/keyword-research/view-model";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 
 // Pure presentation helpers shared by the results table and the detail panel.
-// Keep this module free of "use client", MUI and DOM APIs so the panel does not
+// Keep this module free of "use client" and DOM APIs so the panel does not
 // drag the export-menu dependency chain in - see research-results-view.tsx.
 
 export type MonthlyTrendPoint = GroupedResearchRow["monthlyTrend"][number];

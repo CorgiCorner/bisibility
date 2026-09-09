@@ -1,9 +1,11 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { searchLocations } from "./locations-search";
 import { locationSearchResponseSchema } from "./locations-search-contract";
 
 const mocks = vi.hoisted(() => ({
-  prisma: { location: { findMany: vi.fn() } },
+  prisma: { membership: { findFirst: vi.fn() } },
   suggestKeywordLocations: vi.fn(),
 }));
 
@@ -13,76 +15,96 @@ vi.mock("@/lib/serp/location-service", () => ({
   suggestKeywordLocations: mocks.suggestKeywordLocations,
 }));
 
-function cachedRow(overrides: Record<string, unknown> = {}) {
+function sharedCandidate(overrides: Record<string, unknown> = {}) {
   return {
     canonicalKey: "US/Texas/Austin",
     cityName: "Austin",
     countryCode: "US",
     displayName: "Austin,Texas,United States",
-    hl: "en",
-    id: "loc_1",
-    kind: "city",
-    languageCode: "en",
-    languageLabel: "English",
+    kind: "city" as const,
+    primaryGeoCode: 1_026_201,
+    primaryGeoName: "Austin,Texas,United States",
     regionCode: null,
+    regionName: "Texas",
+    secondaryGeoName: "Austin, Texas, United States",
     ...overrides,
   };
 }
 
 describe("searchLocations", () => {
+  it("reads countries from the generated location catalog without cache suggestions", () => {
+    const source = readFileSync(join(import.meta.dirname, "locations-search.ts"), "utf8");
+
+    expect(source).toContain('from "@/lib/serp/country-catalog"');
+    expect(source).not.toContain("@/lib/serp/markets");
+    expect(source).not.toContain("prisma.location");
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.prisma.location.findMany.mockResolvedValue([]);
     mocks.suggestKeywordLocations.mockResolvedValue([]);
   });
 
-  it("returns cached city hits with no provider call", async () => {
-    mocks.prisma.location.findMany.mockResolvedValue([cachedRow()]);
+  it("returns a shared city suggestion without a project, provider, or database cache", async () => {
+    mocks.suggestKeywordLocations.mockResolvedValue([sharedCandidate()]);
 
-    const result = await searchLocations({ country: null, query: "Aust" });
+    const result = await searchLocations({ country: "United States", query: "Austin" });
 
-    expect(mocks.prisma.location.findMany).toHaveBeenCalledWith(
+    expect(mocks.suggestKeywordLocations).toHaveBeenCalledWith({
+      countryCode: "US",
+      limit: 10,
+      query: "Austin",
+    });
+    expect(mocks.prisma.membership.findFirst).not.toHaveBeenCalled();
+    expect(result.candidates).toEqual([
       expect.objectContaining({
-        orderBy: [{ displayName: "asc" }],
-        where: expect.objectContaining({
-          OR: [
-            { displayName: { contains: "Aust", mode: "insensitive" } },
-            { cityName: { contains: "Aust", mode: "insensitive" } },
-          ],
-          kind: "city",
-        }),
+        canonical_key: "US/Texas/Austin",
+        city_name: "Austin",
+        id: "location:US/Texas/Austin",
+        kind: "city",
+        region_name: "Texas",
       }),
-    );
-    expect(result.candidates).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          canonical_key: "US/Texas/Austin",
-          city_name: "Austin",
-          country_code: "US",
-          display_name: "Austin,Texas,United States",
-          id: "location:US/Texas/Austin",
-          kind: "city",
-          language_code: "en",
-          language_label: "English",
-          region_code: null,
-          region_name: "Texas",
-        }),
-      ]),
-    );
-    expect(mocks.suggestKeywordLocations).not.toHaveBeenCalled();
+    ]);
     expect(locationSearchResponseSchema.parse({ data: result.candidates }).data).toEqual(
       result.candidates,
     );
   });
 
-  it("filters cached city rows by ISO country from a legacy market name", async () => {
+  it("filters shared suggestions by ISO country from a legacy market name", async () => {
     await searchLocations({ country: "United States", query: "Berlin" });
 
-    expect(mocks.prisma.location.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ countryCode: "US" }),
+    expect(mocks.suggestKeywordLocations).toHaveBeenCalledWith({
+      countryCode: "US",
+      limit: 10,
+      query: "Berlin",
+    });
+  });
+
+  it("keeps a shared region selectable", async () => {
+    mocks.suggestKeywordLocations.mockResolvedValue([
+      sharedCandidate({
+        canonicalKey: "ES/Andalusia",
+        cityName: null,
+        countryCode: "ES",
+        displayName: "Andalusia, Spain",
+        kind: "region",
+        primaryGeoCode: 21_160,
+        primaryGeoName: "Andalusia,Spain",
+        regionName: "Andalusia",
+        secondaryGeoName: "Andalusia, Spain",
       }),
-    );
+    ]);
+
+    const result = await searchLocations({ country: "ES", query: "Andalusia" });
+
+    expect(result.candidates).toEqual([
+      expect.objectContaining({
+        canonical_key: "ES/Andalusia",
+        city_name: null,
+        kind: "region",
+        region_name: "Andalusia",
+      }),
+    ]);
   });
 
   it("adds catalog country matches independently of project membership", async () => {
@@ -92,8 +114,8 @@ describe("searchLocations", () => {
       "AE",
       "GB",
       "US",
+      "UM",
     ]);
-    expect(mocks.suggestKeywordLocations).not.toHaveBeenCalled();
   });
 
   it("assigns a stable id to catalog country matches", async () => {
@@ -108,67 +130,54 @@ describe("searchLocations", () => {
     ]);
   });
 
-  it("adds provider city suggestions when authorized, query is long enough, and cache is thin", async () => {
-    mocks.suggestKeywordLocations.mockResolvedValue([
-      {
-        canonicalKey: "US/Texas/Dallas",
-        cityName: "Dallas",
-        countryCode: "US",
-        displayName: "Dallas,Texas,United States",
-        primaryGeoCode: 101,
-        primaryGeoName: "Dallas,Texas,United States",
-        regionCode: null,
-        regionName: "Texas",
-        secondaryGeoName: "Dallas,Texas,United States",
-      },
-    ]);
+  it.each([
+    ["CZ", "Czechia"],
+    ["SK", "Slovakia"],
+    ["HU", "Hungary"],
+    ["RO", "Romania"],
+    ["UA", "Ukraine"],
+    ["GR", "Greece"],
+    ["KR", "South Korea"],
+    ["ID", "Indonesia"],
+    ["AR", "Argentina"],
+  ])("returns %s as an offline catalog country suggestion", async (countryCode, query) => {
+    const result = await searchLocations({ country: null, query });
 
-    const result = await searchLocations({
-      country: "United States",
-      projectId: "p1",
-      query: "Dallas",
-    });
+    expect(result.candidates).toContainEqual(
+      expect.objectContaining({
+        canonical_key: countryCode,
+        id: `country:${countryCode}`,
+        kind: "country",
+      }),
+    );
+  });
+
+  it("scopes country and location candidates to a valid country filter", async () => {
+    mocks.suggestKeywordLocations.mockResolvedValue([sharedCandidate()]);
+
+    const result = await searchLocations({ country: "US", query: "Aus" });
+
+    expect(result.candidates).toEqual([
+      expect.objectContaining({ canonical_key: "US/Texas/Austin", country_code: "US" }),
+    ]);
+    expect(result.candidates).not.toContainEqual(expect.objectContaining({ country_code: "AU" }));
+  });
+
+  it("searches shared catalog entries for a short query without project access", async () => {
+    await searchLocations({ country: "United States", query: "Au" });
 
     expect(mocks.suggestKeywordLocations).toHaveBeenCalledWith({
       countryCode: "US",
       limit: 10,
-      projectId: "p1",
-      query: "Dallas",
-    });
-    expect(result.candidates[0]).toMatchObject({
-      canonical_key: "US/Texas/Dallas",
-      city_name: "Dallas",
-      region_name: "Texas",
+      query: "Au",
     });
   });
 
-  it("does not call providers without a project or for short queries", async () => {
-    await searchLocations({ country: "United States", query: "Dallas" });
-    await searchLocations({ country: "United States", projectId: "p1", query: "Da" });
-
+  it("returns no locations for an invalid ISO country filter", async () => {
+    await expect(searchLocations({ country: "ZZ", query: "Madrid" })).resolves.toEqual({
+      candidates: [],
+      warning: null,
+    });
     expect(mocks.suggestKeywordLocations).not.toHaveBeenCalled();
-  });
-
-  it("does not call providers when the cache already has three city hits", async () => {
-    mocks.prisma.location.findMany.mockResolvedValue([
-      cachedRow({ canonicalKey: "US/Texas/Austin", id: "loc_1" }),
-      cachedRow({ canonicalKey: "US/Texas/Dallas", cityName: "Dallas", id: "loc_2" }),
-      cachedRow({ canonicalKey: "US/Texas/Houston", cityName: "Houston", id: "loc_3" }),
-    ]);
-
-    await searchLocations({ country: "United States", projectId: "p1", query: "Texas" });
-
-    expect(mocks.suggestKeywordLocations).not.toHaveBeenCalled();
-  });
-
-  it("falls back to global provider suggestions when the country filter is unsupported", async () => {
-    await searchLocations({ country: "Atlantis", projectId: "p1", query: "Xyz" });
-
-    expect(mocks.suggestKeywordLocations).toHaveBeenCalledWith({
-      countryCode: null,
-      limit: 10,
-      projectId: "p1",
-      query: "Xyz",
-    });
   });
 });

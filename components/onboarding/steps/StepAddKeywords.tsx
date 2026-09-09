@@ -1,5 +1,6 @@
 "use client";
 
+import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import {
   buildOnboardingStepHref,
   type OnboardingFlowState,
@@ -9,16 +10,15 @@ import {
   feedbackClass,
   onboardingFormId,
 } from "@/components/onboarding/onboarding-form-utils";
-import { locationValuesForKeys } from "@/components/onboarding/onboarding-location-field";
 import { locationSelectionInputForKey } from "@/components/onboarding/onboarding-locations";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
 import { type AddKeywordsMatrixInput, KEYWORD_IMPORT_MAX } from "@/lib/schemas/keyword";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
-import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_DEVICE, type SerpDevice } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_DEVICE, type SerpDevice } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { KeywordImportSummary } from "./KeywordImportSummary";
 import {
@@ -32,7 +32,10 @@ import {
   keywordSetupFormSchema,
   projectDefaultsInput,
 } from "./keyword-setup-model";
-import type { SaveOnboardingMarketsAction } from "./OnboardingMarkets";
+import type {
+  CreateOnboardingMarketAction,
+  SaveOnboardingMarketsAction,
+} from "./onboarding-market-actions";
 import { focusFirstKeywordSetupError, keywordSetupDefaults } from "./step-add-keywords-defaults";
 import {
   type AddKeywordsForm,
@@ -43,6 +46,7 @@ import {
 } from "./step-add-keywords-model";
 import {
   completedTrackingDefaults,
+  draftLocationSelections,
   type OnboardingTrackingDefaultsInput,
   withTrackingDefaults,
 } from "./step-schedule-model";
@@ -60,8 +64,9 @@ type StepAddKeywordsProps = {
     skippedDuplicates: number;
     warnings?: string[];
   }>;
-  awaitingPropertySelection?: boolean;
   costPerCheckCents?: number | null;
+  /** Creates a market through the shared contract; absent until the project exists. */
+  createMarketAction?: CreateOnboardingMarketAction;
   defaultValues?: AddKeywordsForm;
   fetchRankedKeywordSuggestionsAction?: FetchRankedKeywordSuggestionsAction;
   flowState?: OnboardingFlowState;
@@ -73,9 +78,11 @@ type StepAddKeywordsProps = {
     defaults: OnboardingTrackingDefaultsInput,
     keywordCount: number,
     warning?: string | null,
-  ) => void;
+  ) => void | Promise<void>;
   onKeywordsChange?: (keywords: string) => void;
-  onMarketsChange?: (locations: string[]) => void;
+  onSavingChange?: (saving: boolean) => void;
+  /** The markets as the step tracks them, server names included, for the wizard's draft. */
+  onMarketsChange?: (locations: LocationFieldValue[]) => void;
   projectDomain?: string;
   rankedKeywordConnections?: RankedKeywordConnection[];
   saveMarketsAction?: SaveOnboardingMarketsAction;
@@ -85,8 +92,8 @@ type StepAddKeywordsProps = {
 
 export function StepAddKeywords({
   addKeywordsAction,
-  awaitingPropertySelection = false,
   costPerCheckCents,
+  createMarketAction,
   defaultValues,
   fetchRankedKeywordSuggestionsAction,
   flowState,
@@ -95,6 +102,7 @@ export function StepAddKeywords({
   onComplete,
   onKeywordsChange,
   onMarketsChange,
+  onSavingChange,
   projectDomain = "your site",
   rankedKeywordConnections = [],
   saveMarketsAction,
@@ -105,10 +113,10 @@ export function StepAddKeywords({
   const scheduleDefaults = withTrackingDefaults(trackingDefaults, flowState);
   const formDefaults = keywordSetupDefaults(scheduleDefaults, defaultValues);
   const [selectedLocations, setSelectedLocations] = useState(() =>
-    locationValuesForKeys(formDefaults.locations),
+    draftLocationSelections(formDefaults.locations, trackingDefaults?.locationSelections),
   );
   const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const savingRef = useRef(false);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
   const {
     formState: { errors, isSubmitting },
@@ -152,8 +160,10 @@ export function StepAddKeywords({
   }
 
   async function onSubmit(values: KeywordSetupForm) {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    onSavingChange?.(true);
     setActionError(null);
-    setActionSuccess(null);
     setActionWarning(null);
     const defaults = completedTrackingDefaults(values, selectedLocations);
     const submitted = keywordDraftPreview(values.keywords);
@@ -161,7 +171,7 @@ export function StepAddKeywords({
       await saveMarketsAction?.({ marketKeys: values.locations, projectId: values.projectId });
       await updateProjectDefaultsAction?.(projectDefaultsInput(defaults));
       if (!addKeywordsAction) {
-        onComplete?.(keywordFormValues(values), defaults, submitted.uniqueKeywords.length);
+        await onComplete?.(keywordFormValues(values), defaults, submitted.uniqueKeywords.length);
       } else {
         const result = await addKeywordsAction({
           devices: values.devices,
@@ -173,19 +183,27 @@ export function StepAddKeywords({
           targetUrl: null,
         });
         const warning = result.warnings?.join(" ") ?? null;
-        setActionSuccess(`${result.created} added, ${result.skippedDuplicates} already tracked`);
         setActionWarning(warning);
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        onComplete?.(keywordFormValues(values), defaults, result.persistedKeywordCount, warning);
+        await onComplete?.(
+          keywordFormValues(values),
+          defaults,
+          result.persistedKeywordCount,
+          warning,
+        );
       }
       if (!onComplete) router.push(buildOnboardingStepHref(4, { ...flowState, projectId }));
     } catch (cause) {
       setActionError(actionErrorMessage(cause));
+    } finally {
+      savingRef.current = false;
+      onSavingChange?.(false);
     }
   }
 
   return (
     <form
+      aria-busy={isSubmitting}
+      data-analytics-mask
       id={onboardingFormId}
       noValidate
       onSubmit={handleSubmit(onSubmit, focusFirstKeywordSetupError)}
@@ -195,13 +213,12 @@ export function StepAddKeywords({
       <input type="hidden" {...register("cronExpression")} />
       <input type="hidden" {...register("jitterMinutes")} />
       <input type="hidden" {...register("timezone")} />
-      <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">Add your first keywords</h2>
+      <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">Keywords</h2>
       <p className="m-0 mt-1 text-[13px] text-fg-muted">
         Paste keywords or import suggestions from the data sources you connected.
       </p>
       {projectId ? (
         <KeywordTopQueryImport
-          awaitingPropertySelection={awaitingPropertySelection}
           costContext={costContext}
           currentKeywords={keywords}
           hasAnalyticsSource={hasAnalyticsSource}
@@ -242,15 +259,14 @@ export function StepAddKeywords({
         </p>
       ) : null}
       <TrackingDefaultsFields
+        createMarketAction={createMarketAction}
         devices={devices}
         errors={{
           devices: errors.devices?.message,
           frequency: errors.frequency?.message,
           locations: errors.locations?.message,
         }}
-        flowState={flowState}
         frequency={frequency}
-        initialDepth={formDefaults.serpDepth}
         locations={selectedLocations}
         onDepthChange={(depth) => setValue("serpDepth", depth, { shouldDirty: true })}
         onDevicesChange={setDevices}
@@ -261,8 +277,9 @@ export function StepAddKeywords({
           const locationKeys = next.map((item) => item.canonicalKey);
           setSelectedLocations(next);
           setValue("locations", locationKeys, { shouldDirty: true, shouldValidate: true });
-          onMarketsChange?.(locationKeys);
+          onMarketsChange?.(next);
         }}
+        projectId={projectId}
         serpDepth={serpDepth}
       />
       <KeywordImportSummary
@@ -276,14 +293,8 @@ export function StepAddKeywords({
       {actionError ? (
         <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>
       ) : null}
-      {actionSuccess ? (
-        <p className={`m-0 mt-3 ${feedbackClass} text-green-text`}>{actionSuccess}</p>
-      ) : null}
-      {actionWarning ? (
+      {actionWarning && !isSubmitting ? (
         <p className={`m-0 mt-3 ${feedbackClass} text-yellow-text`}>{actionWarning}</p>
-      ) : null}
-      {isSubmitting ? (
-        <p className={`m-0 mt-3 ${feedbackClass} text-fg-muted`}>Saving setup...</p>
       ) : null}
     </form>
   );

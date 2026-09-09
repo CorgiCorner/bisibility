@@ -13,7 +13,7 @@ import { migrationDestinationOrigin } from "@/lib/migration/destination-origin";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getCloudImportView } from "@/lib/queries/cloud";
 import { appPath } from "@/lib/routing/app-path";
-import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import { headers } from "next/headers";
 import Link from "next/link";
 

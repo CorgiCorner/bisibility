@@ -71,6 +71,24 @@ describe("mapKeyword traffic fields", () => {
     expect(row.trafficDate).toBeUndefined();
   });
 
+  it("exposes the project time zone independently of the keyword override", () => {
+    const defaults = {
+      cronExpression: null,
+      frequency: "daily" as const,
+      jitterMinutes: 15,
+      lastCheckedAt: null,
+      nextCheckAt: null,
+      timezone: "Europe/Warsaw",
+    };
+    const row = mapKeyword(
+      { ...keywordRow(), schedule: { ...defaults, timezone: "UTC" } },
+      { ...project, defaults },
+      metrics,
+    );
+    expect(row.projectTimezone).toBe("Europe/Warsaw");
+    expect(row.schedule.timezone).toBe("UTC");
+  });
+
   it("maps the assigned CheckSchedule and keeps an unassigned keyword manual", () => {
     const scheduled = mapKeyword(
       {
@@ -88,6 +106,65 @@ describe("mapKeyword traffic fields", () => {
       publicId: "sch_daily",
     });
     expect(manual.checkSchedule).toBeNull();
+  });
+
+  it.each([null, 50] as const)(
+    "shows the assigned schedule depth %s instead of the legacy keyword depth",
+    (serpDepth) => {
+      const row = mapKeyword(
+        {
+          ...keywordRow(),
+          checkSchedule: { name: "Daily 06:00", publicId: "sch_daily", serpDepth },
+          schedule: {
+            cronExpression: null,
+            frequency: "daily",
+            jitterMinutes: 0,
+            lastCheckedAt: null,
+            nextCheckAt: null,
+            serpDepth: 100,
+            timezone: "UTC",
+          },
+        },
+        project,
+        metrics,
+      );
+      expect(row.schedule.serp_depth).toBe(serpDepth);
+    },
+  );
+
+  it("keeps historical URL judgment on the recorded expected URL", () => {
+    const historical = mapKeyword(
+      {
+        ...keywordRow(),
+        rankChecks: [
+          rankCheck("2026-07-02T10:00:00.000Z", "check_snapshot", 3, {
+            expectedUrlAtCheck: "https://example.com/a",
+            rankingUrl: "https://example.com/a",
+          }),
+        ],
+        targetUrl: "https://example.com/b",
+      },
+      project,
+      metrics,
+    );
+    const legacy = mapKeyword(
+      {
+        ...keywordRow(),
+        rankChecks: [rankCheck("2026-07-02T10:00:00.000Z", "check_legacy", 3)],
+        targetUrl: "https://example.com/b",
+      },
+      project,
+      metrics,
+    );
+
+    expect(historical).toMatchObject({
+      expectedUrl: "https://example.com/a",
+      expectedUrlFallbackCurrent: false,
+    });
+    expect(legacy).toMatchObject({
+      expectedUrl: "https://example.com/b",
+      expectedUrlFallbackCurrent: true,
+    });
   });
 
   it("maps populated traffic snapshot values", () => {

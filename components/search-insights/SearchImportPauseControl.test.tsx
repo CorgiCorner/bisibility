@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchImportPauseControl } from "./SearchImportPauseControl";
 
 const mocks = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("@/components/ui", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/components/ui")>();
-  return { ...actual, useToast: () => ({ showToast: mocks.showToast }) };
-});
+vi.mock("@/components/ui/toast-context", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/ui/toast-context")>()),
+  useToast: () => ({ showToast: mocks.showToast }),
+}));
 
 describe("SearchImportPauseControl", () => {
   beforeEach(() => vi.clearAllMocks());

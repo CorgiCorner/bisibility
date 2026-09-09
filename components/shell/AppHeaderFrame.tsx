@@ -53,8 +53,8 @@ export function AppHeaderFrame({
   workspaces,
 }: Readonly<AppHeaderFrameProps>) {
   return (
-    <header className="relative z-40 flex flex-nowrap items-center justify-between gap-2.5 border-b border-border bg-bg px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5">
-      <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
+    <header className="relative z-40 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center justify-between gap-2.5 sm:flex sm:flex-nowrap border-b border-border bg-bg px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5">
+      <div className="contents sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:gap-3 sm:overflow-hidden">
         <MobileNav
           activeProjectId={activeProjectId}
           canCreateWorkspace={canCreateWorkspace}
@@ -70,13 +70,15 @@ export function AppHeaderFrame({
           version={version}
           workspaces={workspaces}
         />
-        {/* The context, then its hairline, then the title: the slot renders nothing at all on a
-            page that carries no context, so the hairline travels with it. */}
-        {context}
-        <AppHeaderTitle setupCompleted={setupCompleted} setupTotalCount={setupTotalCount} />
+        <div className="contents sm:flex sm:min-w-0 sm:flex-wrap sm:items-center sm:gap-3">
+          <div className="col-span-3 row-start-2 min-w-0 empty:hidden sm:contents">{context}</div>
+          <div className="col-start-2 row-start-1 min-w-0 sm:contents">
+            <AppHeaderTitle setupCompleted={setupCompleted} setupTotalCount={setupTotalCount} />
+          </div>
+        </div>
       </div>
       {/* Right cluster: spend pill and account utilities share one rhythm. */}
-      <div className="flex flex-none items-center gap-2.5">
+      <div className="col-start-3 row-start-1 flex flex-none items-center gap-2.5">
         {actions}
         <OperationsTray defaultOpen={operationsTrayDefaultOpen} projectRef={projectRef} />
         <div className="lg:hidden">

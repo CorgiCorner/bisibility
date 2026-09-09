@@ -14,7 +14,7 @@ import { type CostRateInfo, runCostCents } from "@/lib/cost-estimate/project-est
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { neutralRankCheckFailurePresentation } from "@/lib/rank-check/failure-presentation";
 import { runCheckNowSchema } from "@/lib/schemas/keyword";
-import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
 import { useState } from "react";
 import { mapWithConcurrency } from "./bounded-dispatch";
 import type { RunChecksFlow } from "./RunChecksConfirmationModal";

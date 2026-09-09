@@ -2,11 +2,14 @@
 
 import { TeamReadOnlyCard } from "@/components/settings/team/TeamReadOnlyCard";
 import { teamCardGeometryClassNames } from "@/components/settings/team/team-card-layout";
-import { Button, StatusPill, Tooltip } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { StatusPill } from "@/components/ui/StatusPill";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { PendingInviteData } from "@/lib/queries/team";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
-import { EnvelopeSimpleIcon as EnvelopeSimple, XIcon as X } from "@phosphor-icons/react";
+import { EnvelopeSimpleIcon as EnvelopeSimple } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

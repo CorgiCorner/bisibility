@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
 
 const ghostLabels = ["Avg. position", "Tracked keywords", "In top 10", "Visibility"];
 

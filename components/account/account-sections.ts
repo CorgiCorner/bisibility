@@ -1,9 +1,7 @@
 import type { Icon } from "@phosphor-icons/react";
-import {
-  GearSixIcon as GearSix,
-  ShieldCheckIcon as ShieldCheck,
-  UserCircleIcon as UserCircle,
-} from "@phosphor-icons/react/dist/ssr";
+import { GearSixIcon as GearSix } from "@phosphor-icons/react/dist/ssr/GearSix";
+import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/ssr/ShieldCheck";
+import { UserCircleIcon as UserCircle } from "@phosphor-icons/react/dist/ssr/UserCircle";
 
 export const accountSections = [
   { href: "/app/account", icon: UserCircle, id: "profile", label: "Profile" },

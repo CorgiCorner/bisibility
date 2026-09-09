@@ -1,18 +1,18 @@
 "use client";
 
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button, MenuSelectOptionItem, menuSelectPaperSx } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
+import { Menu } from "@/components/ui/Menu";
+import { menuSelectPaperStyle } from "@/components/ui/MenuSelect";
+import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
 import {
   type CostRateInfo,
   formatEstimateCents,
   runCostCents,
 } from "@/lib/cost-estimate/project-estimate";
-import type { SerpDepth } from "@/lib/serp/markets";
-import Menu from "@mui/material/Menu";
-import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react";
+import type { SerpDepth } from "@/lib/serp/constants";
+import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react/dist/csr/DotsThree";
 import { useState } from "react";
 import { CheckDepthSplitButton } from "./CheckDepthSplitButton";
 
@@ -57,7 +57,7 @@ export function KeywordHeaderActions({
   onExport,
   onRunCheck,
   onToggleEdit,
-  primaryLabel = "Run check",
+  primaryLabel = (depth: SerpDepth) => `Run check (Top ${depth})`,
   providerRate,
   runPending,
   showCheck = true,
@@ -93,7 +93,7 @@ export function KeywordHeaderActions({
         aria-haspopup="menu"
         aria-label="More keyword actions"
         onClick={(event) => setActionsMenuAnchor(event.currentTarget)}
-        sx={{ minWidth: 40, paddingX: 0.75 }}
+        style={{ minWidth: 40, paddingLeft: 6, paddingRight: 6 }}
         variant="secondary"
       >
         <DotsThree aria-hidden size={17} weight="regular" />
@@ -102,10 +102,8 @@ export function KeywordHeaderActions({
         anchorEl={actionsMenuAnchor}
         onClose={() => setActionsMenuAnchor(null)}
         open={Boolean(actionsMenuAnchor)}
-        slotProps={{
-          list: { "aria-label": "More keyword actions", dense: true, sx: { padding: 0 } },
-          paper: { sx: menuSelectPaperSx },
-        }}
+        listProps={{ "aria-label": "More keyword actions", style: { padding: 0 } }}
+        contentProps={{ style: menuSelectPaperStyle }}
       >
         {canUpdateKeyword ? (
           <MenuSelectOptionItem

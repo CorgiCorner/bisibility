@@ -52,7 +52,7 @@ describe("StepConnectProvider feedback", () => {
     await waitFor(() => expect(testProviderConnectionAction).toHaveBeenCalledTimes(1));
 
     const button = screen.getByRole("button", { name: "Test connection" });
-    const spinnerSelector = ".bv-spin, .MuiCircularProgress-root";
+    const spinnerSelector = ".bv-spin, [data-spinner]";
     expect(container.querySelectorAll(spinnerSelector)).toHaveLength(1);
     expect(button.querySelectorAll(spinnerSelector)).toHaveLength(1);
     expect(button).toHaveAttribute("aria-busy", "true");
@@ -89,5 +89,38 @@ describe("StepConnectProvider feedback", () => {
 
     expect(await screen.findByText("Test failed")).toBeInTheDocument();
     expect(within(screen.getByRole("status")).getByText("Credentials expired")).toBeInTheDocument();
+  });
+  it("associates credential errors and announces rejected actions", async () => {
+    const testProviderConnectionAction = vi.fn(async () => {
+      throw new Error("Provider rejected credentials.");
+    });
+    renderProviderStep({
+      defaultValues: { projectId: "prj_1", providerId: "dataforseo", login: "", secret: "" },
+      testProviderConnectionAction,
+    });
+    fireEvent.change(screen.getByLabelText("API login"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("API password"), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const login = await screen.findByLabelText("API login");
+    expect(login).toHaveAttribute("aria-invalid", "true");
+    expect(login.getAttribute("aria-describedby")).toMatch(/-error$/);
+    const password = screen.getByPlaceholderText("API password");
+    expect(password).toHaveAttribute("aria-invalid", "true");
+    expect(password.getAttribute("aria-describedby")).toMatch(/-error$/);
+    fireEvent.change(login, { target: { value: "login" } });
+    fireEvent.change(password, { target: { value: "password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Provider rejected credentials.");
+  });
+
+  it("announces a rejected save action", async () => {
+    const connectProviderAction = vi.fn(async () => {
+      throw new Error("Provider could not be saved.");
+    });
+    const testProviderConnectionAction = vi.fn(async () => ({ message: "Connected", ok: true }));
+    renderProviderStep({ connectProviderAction, testProviderConnectionAction });
+    await clickTestConnection(testProviderConnectionAction);
+    fireEvent.click(screen.getByRole("button", { name: "Save connection" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Provider could not be saved.");
   });
 });

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/Button", () => ({
   Button: ({ children, href }: { children: ReactNode; component: "a"; href: string }) => (
     <a href={href}>{children}</a>
   ),

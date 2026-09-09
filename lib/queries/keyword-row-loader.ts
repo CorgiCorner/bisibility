@@ -14,6 +14,7 @@ const rankCheckSelect = {
   checkedAt: true,
   degradedToCountry: true,
   errorCode: true,
+  expectedUrlAtCheck: true,
   id: true,
   normalizationVersion: true,
   position: true,

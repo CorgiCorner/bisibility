@@ -1,5 +1,9 @@
-import { Button } from "@/components/ui";
+"use client";
+
+import { Button } from "@/components/ui/Button";
+import { DataTable } from "@/components/ui/data-table/DataTable";
 import { moveSummary, type ScheduleEditorMember } from "./ScheduleEditorModel";
+import { scheduleMemberTableColumns } from "./schedule-members-table-columns";
 
 type ScheduleEditorMembersProps = {
   memberCount: number;
@@ -19,6 +23,7 @@ export function ScheduleEditorMembers({
   storedMembers,
 }: Readonly<ScheduleEditorMembersProps>) {
   const members = [...storedMembers, ...pendingMembers];
+  const rows = members.map((member) => ({ ...member, id: member.publicId }));
   const consequence = moveSummary(pendingMembers, scheduleName);
 
   return (
@@ -36,29 +41,16 @@ export function ScheduleEditorMembers({
       </header>
 
       {members.length ? (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[520px] table-fixed border-collapse text-left">
-            <thead className="border-b border-border text-[11px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
-              <tr>
-                <th className="px-4 py-2.5">Keyword</th>
-                <th className="w-[130px] px-4 py-2.5">Checks</th>
-                <th className="w-[210px] px-4 py-2.5">Pending</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((member) => (
-                <tr className="border-t border-border text-[12px]" key={member.publicId}>
-                  <td className="truncate px-4 py-[11px] font-semibold text-fg">{member.name}</td>
-                  <td className="px-4 py-[11px] tabular-nums text-fg-muted">
-                    {member.targetCount} checks
-                  </td>
-                  <td className="px-4 py-[11px] text-[11.5px] leading-5 text-fg-muted">
-                    {member.pending ? `Moves from ${member.sourceName ?? "manual"}` : null}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="min-w-0 [&>[role=table]]:border-0">
+          <DataTable
+            ariaLabel="Schedule members"
+            columns={scheduleMemberTableColumns}
+            id="schedule-editor-members"
+            layout="auto"
+            onSortingChange={() => undefined}
+            rows={rows}
+            sorting={null}
+          />
         </div>
       ) : (
         <p className="m-0 px-4 pb-3.5 pt-1.5 text-[12px] leading-5 text-fg-muted">

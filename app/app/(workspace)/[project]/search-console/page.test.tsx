@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
+import { startTransition, use } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SearchInsightsPage from "./page";
 
@@ -27,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   overlapList: vi.fn(),
   pageDetail: vi.fn(),
   queryDetail: vi.fn(),
+  readBody: false,
   readable: vi.fn(),
   resolve: vi.fn(),
   scope: vi.fn(),
@@ -75,7 +77,11 @@ vi.mock("@/components/shell/PageContent", () => ({
 vi.mock("./SearchInsightsSections", () => ({
   SearchInsightsBodySection: (props: unknown) => {
     mocks.bodySection(props);
-    return <div data-testid="body-section" />;
+    return (
+      <div data-testid="body-section">
+        {mocks.readBody ? use((props as { view: Promise<string> }).view) : null}
+      </div>
+    );
   },
   SearchInsightsTrustStripSection: (props: unknown) => {
     mocks.trustSection(props);
@@ -200,6 +206,7 @@ describe("SearchInsightsPage", () => {
   beforeEach(() => {
     mocks.syncPlan.mockResolvedValue({ daysTotal: 488, pace: "normal", retentionMonths: 16 });
     vi.clearAllMocks();
+    mocks.readBody = false;
     mocks.resolve.mockResolvedValue({ publicId: "prj_1" });
     mocks.scope.mockResolvedValue(scope);
     mocks.context.mockResolvedValue(connected);
@@ -254,6 +261,36 @@ describe("SearchInsightsPage", () => {
     expect(mocks.markets).not.toHaveBeenCalled();
     expect(mocks.defaultMarket).not.toHaveBeenCalled();
     expect(mocks.costContext).not.toHaveBeenCalled();
+  });
+
+  it("shows streamed skeletons for a new period instead of retaining the previous period", async () => {
+    mocks.firstView.mockReturnValue(Promise.resolve("28-day data"));
+    // The section test double below reads the same deferred view as the streamed server section.
+    mocks.readBody = true;
+    let rendered!: ReturnType<typeof render>;
+    await act(async () => {
+      rendered = await renderPage();
+    });
+    expect(await screen.findByText("28-day data")).toBeVisible();
+    let completeView = (_value: string) => {};
+    mocks.firstView.mockReturnValue(
+      new Promise<string>((resolve) => {
+        completeView = resolve;
+      }),
+    );
+    mocks.context.mockResolvedValue({
+      ...connected,
+      period: { ...connected.period, days: 90, id: "90", label: "90 finalized days" },
+    });
+    const nextPage = await SearchInsightsPage({
+      params: Promise.resolve({ project: "prj_1" }),
+      searchParams: Promise.resolve({ period: "90" }),
+    });
+    await act(async () => startTransition(() => rendered.rerender(nextPage)));
+    expect(await screen.findByTestId("body-skeleton")).toBeVisible();
+    expect(screen.queryByText("28-day data")).not.toBeInTheDocument();
+    await act(async () => completeView("90-day data"));
+    expect(await screen.findByText("90-day data")).toBeVisible();
   });
 
   it("guards the project and hands the context and actions to the workspace", async () => {

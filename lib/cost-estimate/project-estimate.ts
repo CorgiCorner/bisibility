@@ -8,7 +8,7 @@ import {
   type ResolveProviderRateInput,
 } from "@/lib/provider-rates/resolver";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { parseCronExpression, type RankCheckFrequency, runsPerMonth } from "@/lib/settings/options";
 
 export type CostRateInfo = {

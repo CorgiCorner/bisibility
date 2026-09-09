@@ -1,4 +1,4 @@
-import { type SerpDepth, type SerpDevice, serpDepthValues } from "@/lib/serp/markets";
+import { type SerpDepth, type SerpDevice, serpDepthValues } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 import {
   CALCULATOR_KEYWORD_MAX,
@@ -9,6 +9,7 @@ import {
   type CalculatorDevices,
 } from "./calculator-defaults";
 import type { EstimateFrequency } from "./estimate";
+import { SELECTABLE_PROVIDER_RATES } from "./provider-rates";
 
 type SearchParamValue = string | string[] | undefined;
 type CalculatorSearchParams = Record<string, SearchParamValue>;
@@ -16,15 +17,23 @@ type CalculatorSearchParams = Record<string, SearchParamValue>;
 type CostCalculatorLinkInput = {
   depth: SerpDepth;
   devices: readonly SerpDevice[];
+  flatOptionKey?: string;
   frequency: RankCheckFrequency;
   keywordCount: number;
   locationCount: number;
+  providerId?: string;
 };
 
 export type CalculatorInputOverrides = Partial<
   Pick<
     CalculatorDefaults["inputs"],
-    "depth" | "devices" | "frequency" | "keywordCount" | "locationCount"
+    | "depth"
+    | "devices"
+    | "flatOptionKey"
+    | "frequency"
+    | "keywordCount"
+    | "locationCount"
+    | "providerId"
   >
 >;
 
@@ -55,6 +64,21 @@ function supportedDepth(value: SearchParamValue) {
   return serpDepthValues.includes(candidate as SerpDepth) ? (candidate as SerpDepth) : undefined;
 }
 
+function supportedProvider(providerId: string | undefined) {
+  return SELECTABLE_PROVIDER_RATES.find((rate) => rate.providerId === providerId);
+}
+
+function supportedProviderFromSearchParams(value: SearchParamValue) {
+  return supportedProvider(firstValue(value));
+}
+
+function supportedFlatOption(value: SearchParamValue, providerId: string | undefined) {
+  const provider = supportedProvider(providerId);
+  const optionKey = firstValue(value);
+  if (provider?.pricingModel !== "flat" || !optionKey) return undefined;
+  return provider.options.some((option) => option.key === optionKey) ? optionKey : undefined;
+}
+
 function calculatorDevices(devices: readonly SerpDevice[]): CalculatorDevices {
   const selected = new Set(devices);
   if (selected.size > 1) return "both";
@@ -63,6 +87,10 @@ function calculatorDevices(devices: readonly SerpDevice[]): CalculatorDevices {
 
 export function buildCostCalculatorHref(input: CostCalculatorLinkInput) {
   if (!supportedFrequencies.has(input.frequency as EstimateFrequency)) return null;
+  const provider = input.providerId ? supportedProvider(input.providerId) : undefined;
+  if (input.providerId && !provider) return null;
+  if (input.flatOptionKey && !supportedFlatOption(input.flatOptionKey, input.providerId))
+    return null;
 
   const params = new URLSearchParams({
     keywords: String(input.keywordCount),
@@ -71,6 +99,8 @@ export function buildCostCalculatorHref(input: CostCalculatorLinkInput) {
     frequency: input.frequency,
     depth: String(input.depth),
   });
+  if (provider) params.set("provider", provider.providerId);
+  if (input.flatOptionKey) params.set("option", input.flatOptionKey);
   return `/rank-tracking-cost-calculator?${params.toString()}`;
 }
 
@@ -93,12 +123,16 @@ export function calculatorInputOverridesFromSearchParams(
     CALCULATOR_LOCATION_MIN,
     CALCULATOR_LOCATION_MAX,
   );
+  const provider = supportedProviderFromSearchParams(params.provider);
+  const flatOptionKey = supportedFlatOption(params.option, provider?.providerId);
 
   if (depth !== undefined) overrides.depth = depth;
   if (devices !== undefined) overrides.devices = devices;
   if (frequency !== undefined) overrides.frequency = frequency;
   if (keywordCount !== undefined) overrides.keywordCount = keywordCount;
   if (locationCount !== undefined) overrides.locationCount = locationCount;
+  if (provider) overrides.providerId = provider.providerId;
+  if (flatOptionKey !== undefined) overrides.flatOptionKey = flatOptionKey;
 
   if (Object.keys(overrides).length === 0) return undefined;
   return overrides;

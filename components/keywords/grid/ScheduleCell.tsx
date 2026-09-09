@@ -1,7 +1,7 @@
 "use client";
 
 import { MarketLabel } from "@/components/schedules/MarketLabel";
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { type ScheduleReference, scheduleRowLabel } from "@/lib/schedules/mixed-state";
 
 export type ScheduleCellTarget = {

@@ -1,5 +1,5 @@
 import { PageContent } from "@/components/shell/PageContent";
-import { ConclusionSubtitle } from "@/components/ui";
+import { ConclusionSubtitle } from "@/components/ui/ConclusionSubtitle";
 import { cn } from "@/lib/ui/cn";
 
 // Shared pulsing skeleton for the dashboard. Mirrors OverviewSections: the

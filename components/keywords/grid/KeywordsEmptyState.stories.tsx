@@ -39,3 +39,11 @@ export const SearchConsoleDisconnected: Story = {
     searchConsoleConnected: false,
   },
 };
+
+export const NoMarkets: Story = {
+  args: { ...Default.args, hasMarkets: false },
+};
+
+export const NoProvider: Story = {
+  args: { ...Default.args, providerConnected: false },
+};

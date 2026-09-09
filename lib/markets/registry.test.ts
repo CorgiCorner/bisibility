@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   upsert: vi.fn(),
-  update: vi.fn(),
+  updateMany: vi.fn(),
   delete: vi.fn(),
   deleteKeywordHistory: vi.fn(),
   deleteKeywords: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock("@/lib/db/prisma", () => ({
     projectMarket: {
       findMany: mocks.findMany,
       upsert: mocks.upsert,
-      update: mocks.update,
+      updateMany: mocks.updateMany,
       delete: mocks.delete,
     },
     keywordHistory: { deleteMany: mocks.deleteKeywordHistory },
@@ -76,6 +76,8 @@ describe("project market registry", () => {
     expect(mocks.upsert).toHaveBeenNthCalledWith(1, {
       where: { projectId_locationId: reference },
       create: {
+        futureKeywordDevices: ["desktop", "mobile"],
+        name: "location_1",
         publicId: "pmkt_abcdefghijklmnopqrstuvwx",
         ...reference,
         status: ProjectMarketStatus.active,
@@ -187,7 +189,7 @@ describe("project market registry", () => {
       ensureKeywordProjectMarketsWithinLimit("project_1", [{ locationId: "location_1" }]),
     ).rejects.toMatchObject({
       marketName: "ES@es",
-      message: "Market ES@es is not tracked by this project. Add it in Settings > Markets first.",
+      message: "Market ES@es is not tracked by this project. Add it in Markets first.",
       name: "MarketArchivedError",
     });
     expect(mocks.upsert).not.toHaveBeenCalled();
@@ -229,7 +231,7 @@ describe("project market registry", () => {
       reconcileProjectMarketsWithinLimit("project_1", [{ locationId: "location_1" }]),
     ).rejects.toMatchObject({
       marketName: "ES@es",
-      message: "Market ES@es is not tracked by this project. Add it in Settings > Markets first.",
+      message: "Market ES@es is not tracked by this project. Add it in Markets first.",
       name: "MarketArchivedError",
     });
     expect(mocks.upsert).not.toHaveBeenCalled();
@@ -257,8 +259,8 @@ describe("project market registry", () => {
   it("pauses an existing market without changing its identity", async () => {
     await pauseProjectMarket(reference);
 
-    expect(mocks.update).toHaveBeenCalledWith({
-      where: { projectId_locationId: reference },
+    expect(mocks.updateMany).toHaveBeenCalledWith({
+      where: { ...reference, status: ProjectMarketStatus.active },
       data: { status: ProjectMarketStatus.paused },
     });
   });
@@ -266,8 +268,11 @@ describe("project market registry", () => {
   it("soft-removes a market without deleting keywords or keyword history", async () => {
     await removeProjectMarket(reference);
 
-    expect(mocks.update).toHaveBeenCalledWith({
-      where: { projectId_locationId: reference },
+    expect(mocks.updateMany).toHaveBeenCalledWith({
+      where: {
+        ...reference,
+        status: { in: [ProjectMarketStatus.active, ProjectMarketStatus.paused] },
+      },
       data: { status: ProjectMarketStatus.removed },
     });
     expect(mocks.delete).not.toHaveBeenCalled();

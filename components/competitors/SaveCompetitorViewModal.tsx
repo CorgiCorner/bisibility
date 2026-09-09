@@ -1,14 +1,15 @@
 "use client";
 
 import { actionErrorMessage } from "@/components/keywords/action-utils";
-import { Modal, useToast } from "@/components/ui";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/toast-context";
 import type { CompetitorSavedViewConfig } from "@/lib/competitors/saved-view-model";
 import { competitorSavedViewHref } from "@/lib/competitors/saved-view-model";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { type SavedViewFormValues, savedViewNameSchema } from "@/lib/keywords/saved-view-model";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import type { CreateProjectSavedViewInput, SavedViewResource } from "@/lib/saved-views/model";
-import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react";
+import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 

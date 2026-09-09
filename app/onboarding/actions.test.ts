@@ -1,4 +1,4 @@
-import { computeNextCheckAt } from "@/lib/rank-check/schedule";
+import { computeNextCheckAt, type RankCheckFrequency } from "@/lib/rank-check/schedule";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createOnboardingProject, deriveOnboardingWebsite, saveOnboardingMarkets } from "./actions";
 
@@ -17,7 +17,14 @@ const mocks = vi.hoisted(() => ({
   revalidateSettingsViews: vi.fn(),
   requireProjectScope: vi.fn(),
   reconcileProjectMarkets: vi.fn(),
+  readConsentFromCookies: vi.fn(),
+  trackServerEvent: vi.fn(),
   writeAudit: vi.fn(),
+}));
+
+vi.mock("@/lib/analytics/server", () => ({
+  readConsentFromCookies: mocks.readConsentFromCookies,
+  trackServerEvent: mocks.trackServerEvent,
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
@@ -56,6 +63,12 @@ describe("onboarding actions", () => {
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });
     mocks.requireProjectScope.mockResolvedValue({ id: "project_internal_1", publicId: "prj_1" });
     mocks.reconcileProjectMarkets.mockResolvedValue({ marketIds: [], removedMarketIds: [] });
+    mocks.readConsentFromCookies.mockResolvedValue({
+      analytics: true,
+      decidedAt: 1,
+      replay: false,
+      status: "decided",
+    });
   });
 
   it("derives a normalized domain and project name before creation", async () => {
@@ -69,12 +82,17 @@ describe("onboarding actions", () => {
     expect(mocks.createProject).toHaveBeenCalledWith({
       domain: "example.co.uk",
       name: "example",
-      defaults: { frequency: "daily", timezone: "UTC" },
+      defaults: { frequency: "manual", timezone: "UTC" },
     });
     expect(mocks.prisma.apiKey.create).not.toHaveBeenCalled();
+    expect(mocks.trackServerEvent).toHaveBeenCalledWith("onboarding_project_created", {
+      consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
+      distinctId: "user_1",
+      properties: { frequency: "manual" },
+    });
   });
 
-  it("passes a valid browser timezone through to daily defaults", async () => {
+  it("preserves the browser timezone in manual defaults", async () => {
     const input = {
       website: "https://www.example.com",
       timezone: "Europe/Madrid",
@@ -87,7 +105,7 @@ describe("onboarding actions", () => {
     expect(mocks.createProject).toHaveBeenCalledWith({
       domain: "example.com",
       name: "example",
-      defaults: { frequency: "daily", timezone: "Europe/Madrid" },
+      defaults: { frequency: "manual", timezone: "Europe/Madrid" },
     });
   });
 
@@ -96,38 +114,27 @@ describe("onboarding actions", () => {
     expect(mocks.createProject).toHaveBeenLastCalledWith({
       domain: "example.com",
       name: "example",
-      defaults: { frequency: "daily", timezone: "UTC" },
+      defaults: { frequency: "manual", timezone: "UTC" },
     });
 
     await createOnboardingProject({ website: "https://www.example.com", timezone: 42 });
     expect(mocks.createProject).toHaveBeenLastCalledWith({
       domain: "example.com",
       name: "example",
-      defaults: { frequency: "daily", timezone: "UTC" },
+      defaults: { frequency: "manual", timezone: "UTC" },
     });
   });
 
-  it("anchors the created daily schedule in the captured timezone", async () => {
+  it("creates defaults with no automatic next check", async () => {
     await createOnboardingProject({
       website: "https://www.example.com",
       timezone: "Europe/Madrid",
     });
     const call = mocks.createProject.mock.calls.at(-1)?.[0] as {
-      defaults: { frequency: string; timezone: string };
+      defaults: { frequency: RankCheckFrequency; timezone: string };
     };
-    // A daily schedule whose wall-clock anchor is captured in Europe/Madrid lands
-    // at a different absolute instant than the same shape anchored in UTC when a
-    // Madrid DST transition falls inside the 24-hour window.
-    const from = new Date("2026-03-28T10:00:00.000Z");
-    const madridNext = computeNextCheckAt(
-      { frequency: "daily", timezone: call.defaults.timezone },
-      from,
-    );
-    const utcNext = computeNextCheckAt({ frequency: "daily", timezone: "UTC" }, from);
-
-    expect(call.defaults.timezone).toBe("Europe/Madrid");
-    expect(madridNext).toBeInstanceOf(Date);
-    expect(madridNext?.getTime()).not.toBe(utcNext?.getTime());
+    expect(call.defaults).toEqual({ frequency: "manual", timezone: "Europe/Madrid" });
+    expect(computeNextCheckAt(call.defaults, new Date("2026-03-28T10:00:00.000Z"))).toBeNull();
   });
 
   it("authorizes preview derivation without creating a project", async () => {

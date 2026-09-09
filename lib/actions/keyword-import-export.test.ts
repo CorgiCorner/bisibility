@@ -95,6 +95,7 @@ bad,not a url,tag,US,desktop`);
         device: "desktop",
         keyword: "rank, tracker",
         location: "United States",
+        locationKey: "US",
         row: 2,
         tags: ["core", "seo"],
         targetUrl: "/rank",
@@ -105,6 +106,7 @@ bad,not a url,tag,US,desktop`);
         device: "mobile",
         keyword: 'quote "test"',
         location: "United Kingdom",
+        locationKey: "GB",
         row: 3,
         tags: ["tag"],
       },
@@ -116,8 +118,13 @@ bad,not a url,tag,US,desktop`);
 
     expect(result.errors).toEqual([]);
     expect(result.parsed).toMatchObject([
-      { device: "desktop", keyword: "first keyword", location: "United States" },
-      { device: "desktop", keyword: "second keyword", location: "United States" },
+      { device: "desktop", keyword: "first keyword", location: "United States", locationKey: "US" },
+      {
+        device: "desktop",
+        keyword: "second keyword",
+        location: "United States",
+        locationKey: "US",
+      },
     ]);
   });
 
@@ -146,8 +153,8 @@ bad,not a url,tag,US,desktop`);
         location: "United States",
         locationKey: "GB/England/London",
       },
-      { city: "Austin", keyword: "city row", location: "United States", locationKey: undefined },
-      { city: null, keyword: "country row", location: "United Kingdom", locationKey: undefined },
+      { city: "Austin", keyword: "city row", location: "United States" },
+      { city: null, keyword: "country row", location: "United Kingdom", locationKey: "GB" },
       {
         city: "New York",
         keyword: "default row",
@@ -155,6 +162,7 @@ bad,not a url,tag,US,desktop`);
         locationKey: "US/New York/New York",
       },
     ]);
+    expect(result.parsed[1]?.locationKey).toBeUndefined();
   });
 
   it("qualifies each CSV country with its language while location_key wins", () => {
@@ -175,7 +183,6 @@ bad,not a url,tag,US,desktop`);
         city: "Malaga",
         keyword: "english city row",
         language: "en",
-        locationKey: "ES/Malaga@en",
       },
       {
         keyword: "qualified city row",
@@ -184,6 +191,24 @@ bad,not a url,tag,US,desktop`);
       },
       { keyword: "explicit row", language: "es", locationKey: "GB@en" },
     ]);
+    expect(result.parsed[1]?.locationKey).toBeUndefined();
+    expect(result.parsed[2]).toMatchObject({ locationKeyIsExplicit: true });
+  });
+
+  it("translates legacy country aliases into canonical location keys", () => {
+    const result = parseKeywordImportCsv(
+      "keyword,country,city,language,device\nalias row,España,Malaga,en,desktop",
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.parsed).toMatchObject([
+      {
+        city: "Malaga",
+        keyword: "alias row",
+        language: "en",
+      },
+    ]);
+    expect(result.parsed[0]?.locationKey).toBeUndefined();
   });
 
   it("keeps the project default city when a row overrides only language", () => {
@@ -224,10 +249,10 @@ bad,not a url,tag,US,desktop`);
     ]);
   });
 
-  it("builds duplicate keys from canonical country codes when available", () => {
+  it("keeps canonical and legacy selections separate in duplicate keys", () => {
     const row = { device: "desktop" as const, keyword: "rank tracker", location: "United Kingdom" };
 
-    expect(keywordImportKey(row)).toBe(keywordImportKey({ ...row, locationKey: "GB" }));
+    expect(keywordImportKey(row)).not.toBe(keywordImportKey({ ...row, locationKey: "GB" }));
     expect(keywordImportKey(row)).toBe(keywordImportKey({ ...row, location: "GB" }));
   });
 
@@ -425,4 +450,15 @@ bad,not a url,tag,US,desktop`);
       scope: "history",
     });
   });
+});
+
+it("inherits the selected market's language for a city-only row", () => {
+  const result = parseKeywordImportCsv("keyword,city\ncity keyword,Malaga", {
+    city: null,
+    country: "Spain",
+    device: "desktop",
+    locationKey: "ES@en",
+  });
+  expect(result.errors).toEqual([]);
+  expect(result.parsed[0]).toMatchObject({ city: "Malaga", language: "en", location: "Spain" });
 });

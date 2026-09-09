@@ -4,6 +4,12 @@ import { GettingStartedChecklist } from "@/components/getting-started/GettingSta
 import { RunChecksConfirmationModal } from "@/components/keywords/grid/RunChecksConfirmationModal";
 import { useRunChecksModal } from "@/components/keywords/grid/useRunChecksModal";
 import { useRankCheckBatchProgress } from "@/components/keywords/use-rank-check-batch-progress";
+import {
+  addManualCompetitor,
+  confirmSuggestedCompetitor,
+  dismissCompetitorSuggestion,
+  skipCompetitorSetup,
+} from "@/lib/actions/competitor-set";
 import type { RunCheckNowResult } from "@/lib/actions/rankCheck";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { SetupContext, SetupCta } from "@/lib/getting-started/setup-steps";
@@ -80,7 +86,17 @@ function FirstCheckController({
 
   return (
     <>
-      <GettingStartedChecklist context={liveContext} now={now} onCta={handleCta} />
+      <GettingStartedChecklist
+        competitorActions={{
+          addManualCompetitor,
+          confirmSuggestedCompetitor,
+          dismissCompetitorSuggestion,
+          skipCompetitorSetup,
+        }}
+        context={liveContext}
+        now={now}
+        onCta={handleCta}
+      />
       <RunChecksConfirmationModal
         flow={modal.flow}
         onClose={modal.close}

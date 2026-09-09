@@ -158,6 +158,7 @@ export default async function SearchInsightsPage({
           property: scope.property,
         }
       : undefined;
+  const viewKey = `${publicId}:${scope.property}:${context.period.id}:${context.period.comparison}:${context.window?.current.end}`;
   const status = loadSearchInsightsStatus(context, scope);
   // Both consumers of this one sit in conditional JSX: the trust strip renders only with a view,
   // and the no-data state only without a window. Neither renders for a project with no property,
@@ -186,7 +187,7 @@ export default async function SearchInsightsPage({
         syncPlan={syncPlan}
         trustStrip={
           view ? (
-            <Suspense fallback={<SearchInsightsTrustStripLoading />}>
+            <Suspense key={viewKey} fallback={<SearchInsightsTrustStripLoading />}>
               <SearchInsightsTrustStripSection
                 importState={context.importState}
                 pauseAction={pauseSearchInsightsImport}
@@ -201,7 +202,7 @@ export default async function SearchInsightsPage({
         }
       >
         {view && signals && context.window && scope.property ? (
-          <Suspense fallback={<SearchInsightsBodyLoading />}>
+          <Suspense key={viewKey} fallback={<SearchInsightsBodyLoading />}>
             <SearchInsightsBodySection
               cancelAction={cancelGooglePropertySelection}
               completeAction={completeGooglePropertySelection}
@@ -220,7 +221,7 @@ export default async function SearchInsightsPage({
           </Suspense>
         ) : null}
         {view && !context.window ? (
-          <Suspense fallback={<SearchInsightsBodyLoading />}>
+          <Suspense key={viewKey} fallback={<SearchInsightsBodyLoading />}>
             <SearchInsightsNoDataSection
               pauseAction={pauseSearchInsightsImport}
               projectId={publicId}

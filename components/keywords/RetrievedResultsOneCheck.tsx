@@ -1,9 +1,12 @@
 "use client";
 
-import { Button, InfoTooltip, Tooltip } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { RetrievedResults } from "@/lib/checks/contract";
 import { featureChips } from "@/lib/checks/retrieved-results-model";
-import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react";
+import type { TrackedCompetitor } from "@/lib/competitors/serp-comparison";
+import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
 import { useRef } from "react";
 import { RetrievedResultsLadder } from "./RetrievedResultsLadder";
 
@@ -15,6 +18,7 @@ const AI_OVERVIEW_UNKNOWN =
   "This provider does not report AI overviews, so this check cannot say whether one appeared.";
 
 type Props = {
+  competitors?: readonly TrackedCompetitor[];
   rankingUrl: string | null;
   results: RetrievedResults;
   retentionDays: number | null;
@@ -96,6 +100,7 @@ function CompactState({
 }
 
 export function RetrievedResultsOneCheck({
+  competitors = [],
   rankingUrl,
   results,
   retentionDays,
@@ -146,7 +151,7 @@ export function RetrievedResultsOneCheck({
           {AI_OVERVIEW_NOTE}
         </p>
       ) : null}
-      <RetrievedResultsLadder results={results} trackedRef={trackedRef} />
+      <RetrievedResultsLadder competitors={competitors} results={results} trackedRef={trackedRef} />
       <p className="m-0 flex items-center gap-1.5 border-t border-border px-4 py-3 text-[12px] text-fg-muted sm:px-5">
         {results.fullDetailUntil === null
           ? "Full detail is kept for as long as you keep the database."

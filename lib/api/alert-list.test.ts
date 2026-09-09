@@ -240,7 +240,7 @@ describe("alert feed window", () => {
     expect(JSON.stringify(alert)).not.toContain(rawAttempt);
   });
 
-  it("selects the keyword location relation and maps location and device from it", async () => {
+  it("selects trusted location metadata and maps location and device from it", async () => {
     mocks.prisma.triggeredAlert.findMany.mockResolvedValue([
       {
         afterPosition: 14,
@@ -271,7 +271,13 @@ describe("alert feed window", () => {
     expect(mocks.prisma.triggeredAlert.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         include: expect.objectContaining({
-          keyword: { select: { device: true, locationRef: { select: { displayName: true } } } },
+          keyword: {
+            select: {
+              device: true,
+              locationId: true,
+              locationRef: { select: { displayName: true, languageLabel: true } },
+            },
+          },
         }),
       }),
     );

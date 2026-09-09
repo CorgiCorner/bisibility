@@ -35,7 +35,7 @@ describe("AdminFailureBreakdown", () => {
     );
 
     expect(screen.getByText("203,431")).toBeInTheDocument();
-    expect(screen.getByText("project-concentrated")).toBeInTheDocument();
+    expect(screen.getByTitle("project-concentrated")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy project ID" })).toBeInTheDocument();
     expect(screen.getByText("across 342 projects")).toBeInTheDocument();
     expect(screen.getByText(/first seen 3d ago/)).toBeInTheDocument();

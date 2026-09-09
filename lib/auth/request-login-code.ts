@@ -1,7 +1,8 @@
 "use server";
 
+import "@/lib/deployment/runtime-env.generated";
+
 import { createHash } from "node:crypto";
-import { auth } from "@/lib/auth/auth";
 import { withVerifiedLoginCodeRequest } from "@/lib/auth/login-code-request-context";
 import { loginSchema } from "@/lib/auth/login-schema";
 import { EMAIL_CAPACITY_EXHAUSTED } from "@/lib/auth/signin-capacity-types";
@@ -52,6 +53,7 @@ export async function requestLoginCode(input: unknown): Promise<RequestLoginCode
     if (!verification.success) return { code: verification.code, ok: false };
   }
 
+  const { auth } = await import("@/lib/auth/auth");
   try {
     await withVerifiedLoginCodeRequest(() =>
       auth.api.sendVerificationOTP({

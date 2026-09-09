@@ -8,9 +8,11 @@ import {
 } from "@/lib/actions/_shared";
 import { createProject } from "@/lib/actions/project";
 import { reconcileProjectMarkets } from "@/lib/actions/project-markets";
+import { readConsentFromCookies, trackServerEvent } from "@/lib/analytics/server";
 import { writeAudit } from "@/lib/auth/audit";
 import { authorize } from "@/lib/auth/authorize";
 import { MAX_PROJECT_MARKETS } from "@/lib/markets/limits";
+import { DEFAULT_ONBOARDING_FREQUENCY } from "@/lib/onboarding/defaults";
 import { type OnboardingWebsiteInput, onboardingWebsiteSchema } from "@/lib/onboarding/website";
 import { websiteProjectIdentity } from "@/lib/onboarding/website.server";
 import { canonicalKeySchema } from "@/lib/schemas/keyword";
@@ -45,11 +47,17 @@ export async function deriveOnboardingWebsite(input: OnboardingWebsiteInput) {
 
 export async function createOnboardingProject(input: unknown) {
   const data = parseActionInput(createOnboardingProjectSchema, input);
+  const actor = await getActionActor();
   const timezone = normalizeProjectTimezone(data.timezone);
   const identity = websiteProjectIdentity(data.website);
   const project = await createProject({
     ...identity,
-    defaults: { frequency: "daily", timezone },
+    defaults: { frequency: DEFAULT_ONBOARDING_FREQUENCY, timezone },
+  });
+  await trackServerEvent("onboarding_project_created", {
+    consent: await readConsentFromCookies(),
+    distinctId: actor.id,
+    properties: { frequency: DEFAULT_ONBOARDING_FREQUENCY },
   });
   return { ...project, timezone };
 }

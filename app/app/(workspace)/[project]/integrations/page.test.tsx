@@ -24,8 +24,10 @@ vi.mock("@/components/integrations/IntegrationCategory", () => ({
 vi.mock("@/components/shell/PageContent", () => ({
   PageContent: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/Card", () => ({
   Card: ({ children }: { children: ReactNode }) => children,
+}));
+vi.mock("@/components/ui/icon-well-styles", () => ({
   iconWellClassName: "",
 }));
 vi.mock("@/lib/actions/providers", () => ({
@@ -58,12 +60,10 @@ vi.mock("@/lib/queries/integrations", () => ({
 vi.mock("@/lib/settings/search-sync-metrics", () => ({
   loadSearchSyncPreflightPlan: mocks.loadSearchSyncPreflightPlan,
 }));
-vi.mock("@phosphor-icons/react/dist/ssr", () => ({
-  CaretRightIcon: () => null,
-  KeyIcon: () => null,
-  PuzzlePieceIcon: () => null,
-  RankingIcon: () => null,
-}));
+vi.mock("@phosphor-icons/react/dist/ssr/CaretRight", () => ({ CaretRightIcon: () => null }));
+vi.mock("@phosphor-icons/react/dist/ssr/Key", () => ({ KeyIcon: () => null }));
+vi.mock("@phosphor-icons/react/dist/ssr/PuzzlePiece", () => ({ PuzzlePieceIcon: () => null }));
+vi.mock("@phosphor-icons/react/dist/ssr/Ranking", () => ({ RankingIcon: () => null }));
 
 describe("IntegrationsPage", () => {
   beforeEach(() => {

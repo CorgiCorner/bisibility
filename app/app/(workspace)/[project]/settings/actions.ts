@@ -6,16 +6,16 @@ import {
   requireProjectScope,
   revalidateSettingsViews,
 } from "@/lib/actions/_shared";
+import { joinWaitlist } from "@/lib/actions/waitlist";
+import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
+import { waitlistSchema } from "@/lib/landing/waitlist-schema";
 import {
   deleteProjectById,
   readActorProjects,
   readProjectDeleteSnapshot,
   readProjectSettingsSnapshot,
   updateProjectSettingsSnapshot,
-} from "@/lib/actions/project";
-import { joinWaitlist } from "@/lib/actions/waitlist";
-import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
-import { waitlistSchema } from "@/lib/landing/waitlist-schema";
+} from "@/lib/projects/settings-store";
 import { createProjectSchema, normalizeTrackingScope } from "@/lib/schemas/project";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";

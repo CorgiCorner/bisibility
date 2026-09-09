@@ -147,6 +147,58 @@ describe("rank check preview read actions", () => {
     );
   });
 
+  it("restores completed and active targets only when explicitly requested for a selected keyword", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce([
+      {
+        ...keywordRow("keyword_1", KEYWORD_PUBLIC_ID, "rank tracker", "desktop"),
+        rankCheckRunItems: [],
+        rankChecks: [
+          {
+            position: null,
+            provider: "dataforseo",
+            rankingUrl: null,
+            requestedDepth: 20,
+            costCents: { toString: () => "0.4000" },
+          },
+        ],
+      },
+      {
+        ...keywordRow("keyword_2", SECOND_KEYWORD_PUBLIC_ID, "rank tracker", "mobile"),
+        rankCheckRunItems: [{ run: { publicId: "rcr_existing" } }],
+        rankChecks: [],
+      },
+      {
+        ...keywordRow("keyword_3", "kw_third", "rank tracker", "desktop"),
+        rankCheckRunItems: [],
+        rankChecks: [],
+      },
+    ]);
+    mocks.prisma.providerConnection.count.mockResolvedValue(1);
+    const result = await listFirstCheckCandidates({
+      projectId: PROJECT_PUBLIC_ID,
+      keywordText: "rank tracker",
+      includeExisting: true,
+      limit: 3,
+    });
+    expect(result.candidates[0]?.previousResult).toMatchObject({
+      status: "completed",
+      position: null,
+      requestedDepth: 20,
+      recordedCostCents: 0.4,
+    });
+    expect(result.candidates[1]?.previousResult).toEqual({
+      status: "queued",
+      runId: "rcr_existing",
+    });
+    expect(result.candidates[2]?.previousResult).toBeUndefined();
+    expect(mocks.prisma.keyword.findMany).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        where: { projectId: "project_1", text: "rank tracker", archivedAt: null },
+        take: 3,
+      }),
+    );
+  });
+
   it("short-circuits candidate listing for sample projects", async () => {
     mocks.prisma.project.findFirst.mockResolvedValueOnce({
       id: "project_1",

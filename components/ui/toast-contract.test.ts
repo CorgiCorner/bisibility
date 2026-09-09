@@ -20,7 +20,7 @@ describe("toast API contract", () => {
   const sources = productionRoots.flatMap(productionSources);
 
   it("does not expose icon or tint in ToastOptions", () => {
-    const source = readFileSync(join(root, "components/ui/Toast.tsx"), "utf8");
+    const source = readFileSync(join(root, "components/ui/toast-context.ts"), "utf8");
     const options = source.match(/export type ToastOptions = \{([\s\S]*?)\n\};/)?.[1] ?? "";
     expect(options).not.toMatch(/\b(icon|tint)\??\s*:/);
     expect(options).toMatch(/severity\?: ToastSeverity/);

@@ -24,9 +24,13 @@ export async function listHeaderMarkets(projectRef: string): Promise<HeaderConte
   const markets = await prisma.projectMarket.findMany({
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     select: {
-      location: { select: { countryCode: true, displayName: true, languageCode: true } },
+      location: {
+        select: { countryCode: true, displayName: true, languageCode: true, languageLabel: true },
+      },
       locationId: true,
       publicId: true,
+      name: true,
+      status: true,
     },
     where: { projectId: project.id, status: { in: visibleStatuses } },
   });
@@ -35,21 +39,27 @@ export async function listHeaderMarkets(projectRef: string): Promise<HeaderConte
   }
 
   const counts = await prisma.keyword.groupBy({
-    _count: { _all: true },
-    by: ["locationId"],
+    by: ["locationId", "text"],
     where: {
       archivedAt: null,
       locationId: { in: markets.map((market) => market.locationId) },
       projectId: project.id,
     },
   });
-  const countByLocation = new Map(counts.map((row) => [row.locationId, row._count._all]));
+  const countByLocation = new Map<string, number>();
+  for (const row of counts)
+    countByLocation.set(row.locationId, (countByLocation.get(row.locationId) ?? 0) + 1);
 
   return markets.map((market) => ({
     countryCode: market.location.countryCode,
     keywordCount: countByLocation.get(market.locationId) ?? 0,
     languageCode: market.location.languageCode,
-    name: market.location.displayName,
+    name:
+      market.name?.trim() && market.name !== market.locationId
+        ? market.name
+        : market.location.displayName,
+    description: `${market.location.displayName} / ${market.location.languageLabel}`,
+    status: market.status === "paused" ? "paused" : "active",
     ref: asMarketRef(market.publicId),
   }));
 }

@@ -6,12 +6,10 @@ import {
   subscribeThemePreference,
   type ThemePreference,
 } from "@/lib/theme/browser-theme";
-import {
-  MonitorIcon as Monitor,
-  MoonStarsIcon as MoonStars,
-  PaletteIcon as Palette,
-  SunIcon as Sun,
-} from "@phosphor-icons/react";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
+import { MoonStarsIcon as MoonStars } from "@phosphor-icons/react/dist/csr/MoonStars";
+import { PaletteIcon as Palette } from "@phosphor-icons/react/dist/csr/Palette";
+import { SunIcon as Sun } from "@phosphor-icons/react/dist/csr/Sun";
 import { useSyncExternalStore } from "react";
 import { SegmentedControl, type SegmentedControlSize } from "./SegmentedControl";
 

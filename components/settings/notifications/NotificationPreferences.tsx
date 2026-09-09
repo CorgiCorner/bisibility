@@ -1,6 +1,6 @@
 import { NotificationChannelsCard } from "@/components/settings/notifications/NotificationChannelsCard";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
 import { appRootPath } from "@/lib/routing/app-path";
 

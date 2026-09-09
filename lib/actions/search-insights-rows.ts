@@ -47,3 +47,8 @@ export async function loadSearchInsightsRows(input: unknown): Promise<SearchInsi
 }
 
 export type LoadSearchInsightsRowsAction = typeof loadSearchInsightsRows;
+
+// The action itself takes `unknown`, because a server action must not trust its caller and
+// parses the payload here. This is the shape it accepts once parsed, for callers and tests that
+// need to describe a request without re-declaring the schema.
+export type SearchInsightsRowsRequest = z.infer<typeof rowsSchema>;

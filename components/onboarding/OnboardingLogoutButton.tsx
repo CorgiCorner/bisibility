@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth/client";
-import { SignOutIcon as SignOut } from "@phosphor-icons/react";
+import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
 import { useState } from "react";
 
 /** Uses the dashboard sign-out path so onboarding clears the session before login. */
@@ -22,7 +22,12 @@ export function OnboardingLogoutButton() {
       onClick={() => void handleSignOut()}
       size="xs"
       startIcon={<SignOut aria-hidden size={13} weight="regular" />}
-      sx={{ color: "var(--accent-text)", minWidth: 0, paddingX: "8px" }}
+      style={{
+        "--control-color": "var(--accent-text)",
+        minWidth: 0,
+        paddingLeft: "8px",
+        paddingRight: "8px",
+      }}
       type="button"
       variant="ghost"
     >

@@ -1,7 +1,8 @@
 "use client";
 
 import { feedbackClass, keywordLines } from "@/components/onboarding/onboarding-form-utils";
-import { Button, MenuSelect } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { MenuSelect } from "@/components/ui/MenuSelect";
 import { rankedKeywordPageRate } from "@/lib/cost-estimate/provider-rates";
 import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
 import { appPath } from "@/lib/routing/app-path";
@@ -21,6 +22,8 @@ import { RankedKeywordSuggestionDrawer } from "./RankedKeywordSuggestionDrawer";
 export type { FetchRankedKeywordSuggestionsAction } from "./keyword-ranked-model";
 
 type Props = {
+  allowTracked?: boolean;
+  compact?: boolean;
   connections: RankedKeywordConnection[];
   currentKeywords: string;
   domain: string;
@@ -30,6 +33,8 @@ type Props = {
 };
 
 export function KeywordRankedImport({
+  allowTracked = false,
+  compact = false,
   connections,
   currentKeywords,
   domain,
@@ -105,23 +110,34 @@ export function KeywordRankedImport({
 
   if (connections.length === 0) return null;
   return (
-    <section className="mt-4 rounded-card border border-border bg-bg-sunken p-4">
-      <h3 className="m-0 text-[13.5px] font-semibold">Import keywords {domain} ranks for</h3>
-      <p className="m-0 mt-1 text-[12.5px] leading-5 text-fg-muted">
-        Uses your DataForSEO account. Results are cached for 12 hours.
-      </p>
+    <section
+      className={compact ? "" : "mt-4 rounded-card border border-border bg-bg-sunken p-4"}
+      data-analytics-mask
+    >
+      {!compact ? (
+        <>
+          <h3 className="m-0 text-[13.5px] font-semibold">Import keywords {domain} ranks for</h3>
+          <p className="m-0 mt-1 text-[12.5px] leading-5 text-fg-muted">
+            Uses your DataForSEO account. Results are cached for 12 hours.
+          </p>
+        </>
+      ) : null}
       {connections.length > 1 ? (
         <div className="mt-3 flex items-center gap-2">
           <span className="text-[12px] font-medium text-fg-muted">Connection</span>
           <MenuSelect
             ariaLabel="DataForSEO connection"
-            onChange={setConnectionId}
+            onChange={(id) => {
+              setConnectionId(id);
+              setPages([]);
+              setError(null);
+            }}
             options={connections.map((item) => ({ label: item.label, value: item.id }))}
             value={connectionId}
           />
         </div>
       ) : null}
-      <div className="mt-3">
+      <div className={compact && connections.length === 1 ? "" : "mt-3"}>
         <Button
           disabled={!fetchAction}
           loading={pending}
@@ -129,7 +145,8 @@ export function KeywordRankedImport({
           type="button"
           variant="secondary"
         >
-          Import from DataForSEO{pageCost ? ` (about ${pageCost}/page)` : ""}
+          {compact ? "Choose keywords" : "Import from DataForSEO"}
+          {pageCost ? ` (about ${pageCost}/page)` : ""}
         </Button>
       </div>
       {error ? <ErrorMessage projectRef={projectId} reason={error} /> : null}
@@ -138,7 +155,10 @@ export function KeywordRankedImport({
         <RankedKeywordSuggestionDrawer
           canLoad={canLoad}
           currentKeywords={current}
-          groups={groupRankedKeywords(pages)}
+          groups={groupRankedKeywords(pages).map((group) =>
+            allowTracked ? { ...group, alreadyTracked: false } : group,
+          )}
+          selectionOnly={compact}
           onClose={() => setDrawerOpen(false)}
           onConfirm={appendSelected}
           onLoadMore={() => void load((lastPage?.offset ?? 0) + 100)}

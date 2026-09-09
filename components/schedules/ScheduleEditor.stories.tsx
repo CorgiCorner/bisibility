@@ -74,7 +74,7 @@ const meta = {
   render: (args) => (
     <ScheduleObjectFrame
       bodyLabel="Schedule editor"
-      breadcrumb={{ href: "/app/prj_story/rank-tracker/schedules", label: "All schedules" }}
+      breadcrumb={{ href: "/app/prj_story/runs/schedules", label: "All schedules" }}
       subtitle={
         args.isNew
           ? "Not saved yet. It runs on its cadence once saved with at least one keyword."

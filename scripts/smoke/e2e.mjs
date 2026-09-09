@@ -1,8 +1,10 @@
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
+import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { gunzipSync, inflateSync } from "node:zlib";
 import { ensureDockerVmFreeSpace } from "./docker-ephemeral.mjs";
 import { waitForUsableService } from "./harness-readiness.mjs";
 
@@ -28,6 +30,69 @@ const otpFile = path.join(reportDir, "otp.json");
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function decodeAnalyticsPayload(raw, encoding) {
+  let body = raw;
+  if (encoding === "gzip") body = gunzipSync(body);
+  if (encoding === "deflate") body = inflateSync(body);
+  const text = body.toString("utf8");
+  const encoded = new URLSearchParams(text).get("data");
+  if (!encoded) return JSON.parse(text);
+  let decoded = Buffer.from(encoded, "base64");
+  if (decoded[0] === 0x1f && decoded[1] === 0x8b) decoded = gunzipSync(decoded);
+  return JSON.parse(decoded.toString("utf8"));
+}
+
+function analyticsEvents(payload) {
+  if (Array.isArray(payload)) return payload.flatMap(analyticsEvents);
+  if (!payload || typeof payload !== "object") return [];
+  if (Array.isArray(payload.batch)) return payload.batch.flatMap(analyticsEvents);
+  return typeof payload.event === "string" ? [payload] : [];
+}
+
+async function startAnalyticsCollector() {
+  const events = [];
+  const server = createServer((request, response) => {
+    response.setHeader("Access-Control-Allow-Credentials", "true");
+    response.setHeader("Access-Control-Allow-Headers", "content-type");
+    response.setHeader("Access-Control-Allow-Methods", "DELETE, GET, OPTIONS, POST");
+    response.setHeader("Access-Control-Allow-Origin", baseUrl);
+    if (request.method === "OPTIONS") return response.end();
+    if (request.url === "/__events" && request.method === "GET") {
+      response.setHeader("Content-Type", "application/json");
+      return response.end(JSON.stringify(events));
+    }
+    if (request.url === "/__events" && request.method === "DELETE") {
+      events.length = 0;
+      response.statusCode = 204;
+      return response.end();
+    }
+    const chunks = [];
+    request.on("data", (chunk) => chunks.push(chunk));
+    request.on("end", () => {
+      if (request.method === "POST" && chunks.length > 0) {
+        try {
+          events.push(
+            ...analyticsEvents(
+              decodeAnalyticsPayload(Buffer.concat(chunks), request.headers["content-encoding"]),
+            ),
+          );
+        } catch {
+          // Feature-flag and malformed requests are irrelevant to capture assertions.
+        }
+      }
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify({ featureFlags: {}, status: 1 }));
+    });
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("Analytics collector did not bind.");
+  return {
+    close: () => new Promise((resolve) => server.close(resolve)),
+    url: `http://127.0.0.1:${address.port}`,
+  };
 }
 
 function run(command, args, options = {}) {
@@ -219,14 +284,21 @@ const serverEnv = {
   ...testEnv,
   DATABASE_URL: pgUrl,
   DIRECT_URL: pgUrl,
+  NEXT_PUBLIC_POSTHOG_HOST: process.env.E2E_POSTHOG_HOST ?? "",
+  NEXT_PUBLIC_POSTHOG_KEY: process.env.E2E_POSTHOG_KEY ?? "",
   NODE_ENV: "development",
   PORT: String(port),
 };
 
 let server;
+let analyticsCollector;
 let exitCode = 0;
 
 try {
+  if (process.env.E2E_POSTHOG_KEY) {
+    analyticsCollector = await startAnalyticsCollector();
+    serverEnv.NEXT_PUBLIC_POSTHOG_HOST = analyticsCollector.url;
+  }
   ensureDockerVmFreeSpace({ profile: "runtime" });
   await fs.mkdir(reportDir, { recursive: true });
   await fs.writeFile(otpFile, "{}");
@@ -249,13 +321,20 @@ try {
   await waitForHttp(baseUrl);
   await warmDevelopmentRoutes();
   await run("npx", ["playwright", "test"], {
-    env: { ...serverEnv, BISIBILITY_E2E_OTP_FILE: otpFile, E2E_BASE_URL: baseUrl },
+    env: {
+      ...serverEnv,
+      BISIBILITY_E2E_OTP_FILE: otpFile,
+      E2E_BASE_URL: baseUrl,
+      E2E_POSTHOG_KEY: process.env.E2E_POSTHOG_KEY ?? "",
+      E2E_POSTHOG_HOST: analyticsCollector?.url ?? process.env.E2E_POSTHOG_HOST ?? "",
+    },
   });
 } catch (error) {
   console.error(error);
   exitCode = 1;
 } finally {
   await stopServer(server);
+  await analyticsCollector?.close();
   try {
     await cleanupE2eUsers();
   } catch (error) {

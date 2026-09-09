@@ -126,7 +126,7 @@ describe("PricingPopover", () => {
     fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
     expect(screen.getByText("Profile summary")).toBeInTheDocument();
 
-    const popoverRoot = document.querySelector(".MuiPopover-root");
+    const popoverRoot = screen.getByRole("dialog");
     expect(popoverRoot).not.toBeNull();
     fireEvent.keyDown(popoverRoot as Element, { key: "Escape" });
 

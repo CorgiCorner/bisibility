@@ -5,21 +5,12 @@ import {
 } from "@/components/keywords/grid/RunChecksConfirmationModal";
 import { KeywordHeaderCard } from "@/components/keywords/KeywordHeaderCard";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "storybook/test";
 
 const keyword = keywordRows[1];
-const targets = [
-  { ...keyword, checkSchedule: { name: "Daily 06:00", nextCheckAt: null, publicId: "sch_daily" } },
-  {
-    ...keyword,
-    checkSchedule: { name: "Weekly Monday", nextCheckAt: null, publicId: "sch_weekly" },
-    device: "mobile",
-    id: "keyword_story_mobile",
-  },
-];
 const costContext = {
   capCents: 5_000,
   costPerCheckCents: 2,
@@ -38,12 +29,30 @@ const costContext = {
 } satisfies ProjectCostContext;
 const actionArgs = {
   addKeywordsAction: async () => undefined,
-  bulkDeleteAction: async () => undefined,
-  canCreateKeyword: true,
   canUpdateKeyword: true,
   costContext,
   createKeywordAlertAction: async () => undefined,
-  projectId: "proj_demo",
+  projectId: "prj_demo",
+  projectMarkets: {
+    markets: [
+      {
+        canonicalKey: keyword.location.canonicalKey,
+        countryCode: "US",
+        displayName: "United States",
+        id: "pmkt_us",
+        languageCode: "en",
+        languageLabel: "English",
+        keywordCount: 1,
+        monthlyCostCents: 0,
+        researchAvailable: true,
+        status: "active" as const,
+      },
+    ],
+    maxMarkets: 5,
+    monthlyCostCents: 0,
+    perMarketChecks: 1,
+    projectId: "prj_demo",
+  },
   runCheckNowAction: async () => undefined,
   tagSuggestions: ["Product", "Docs", "Comparison"],
   updateKeywordAction: async () => undefined,
@@ -65,7 +74,7 @@ function flow(step: RunChecksFlow["step"]): RunChecksFlow {
 function HeaderWithCheckModal({ step }: Readonly<{ step: RunChecksFlow["step"] }>) {
   return (
     <>
-      <KeywordHeaderCard {...actionArgs} keyword={keyword} targets={targets} />
+      <KeywordHeaderCard {...actionArgs} keyword={keyword} />
       <RunChecksConfirmationModal
         flow={flow(step)}
         onClose={() => undefined}
@@ -104,41 +113,41 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { args: { ...actionArgs, keyword, targets } };
+export const Default: Story = { args: { ...actionArgs, keyword } };
 export const RankstateRunning: Story = {
-  args: { ...actionArgs, keyword, rankState: "running", targets },
+  args: { ...actionArgs, keyword, rankState: "running" },
 };
 export const RankstateNeverChecked: Story = {
-  args: { ...actionArgs, keyword, rankState: "never_checked", targets },
+  args: { ...actionArgs, keyword, rankState: "never_checked" },
 };
 export const RankstateFailed: Story = {
-  args: { ...actionArgs, keyword, rankState: "failed", targets },
+  args: { ...actionArgs, keyword, rankState: "failed" },
 };
 export const RankstateNotRanked: Story = {
-  args: { ...actionArgs, keyword, rankState: "not_ranked", targets },
+  args: { ...actionArgs, keyword, rankState: "not_ranked" },
 };
 export const RankstateNoData: Story = {
-  args: { ...actionArgs, keyword: { ...keyword, hasRankData: false }, targets },
+  args: { ...actionArgs, keyword: { ...keyword, hasRankData: false } },
 };
 export const CheckmodalstateConfirm: Story = {
-  args: { ...actionArgs, keyword, targets },
+  args: { ...actionArgs, keyword },
   render: () => <HeaderWithCheckModal step="confirm" />,
 };
 export const CheckmodalstateRunning: Story = {
-  args: { ...actionArgs, keyword, targets },
+  args: { ...actionArgs, keyword },
   render: () => <HeaderWithCheckModal step="running" />,
 };
 export const CheckmodalstateSuccess: Story = {
-  args: { ...actionArgs, keyword, targets },
+  args: { ...actionArgs, keyword },
   render: () => <HeaderWithCheckModal step="success" />,
 };
 export const CheckmodalstateFailed: Story = {
-  args: { ...actionArgs, keyword, targets },
+  args: { ...actionArgs, keyword },
   render: () => <HeaderWithCheckModal step="failed" />,
 };
 
 export const MoremenuopenTrue: Story = {
-  args: { ...actionArgs, keyword, targets },
+  args: { ...actionArgs, keyword },
   play: async ({ canvasElement }) => {
     await userEvent.click(
       within(canvasElement).getByRole("button", { name: "More keyword actions" }),
@@ -147,15 +156,18 @@ export const MoremenuopenTrue: Story = {
 };
 
 export const ThemeDark: Story = {
-  args: { ...actionArgs, keyword, targets },
+  args: { ...actionArgs, keyword },
   parameters: { theme: "dark" },
 };
 
-export const MenuTargets: Story = {
-  args: { ...actionArgs, keyword, targets },
+export const EditKeyword: Story = {
+  args: { ...actionArgs, keyword },
   play: async ({ canvasElement }) => {
     await userEvent.click(
-      within(canvasElement).getByRole("button", { name: /United States \/ English/ }),
+      within(canvasElement).getByRole("button", { name: "More keyword actions" }),
+    );
+    await userEvent.click(
+      within(canvasElement.ownerDocument.body).getByRole("menuitem", { name: "Edit" }),
     );
   },
 };

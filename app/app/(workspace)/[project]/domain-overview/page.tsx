@@ -7,18 +7,19 @@ import {
   loadDomainKeywordsPageAction,
   loadDomainPagesPageAction,
   saveSelectedKeywordsAction,
-  selectDomainOverviewMarketAction,
 } from "@/lib/actions/domain-overview";
 import type { DomainOverviewScope } from "@/lib/domain-overview/types";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
-import {
-  getDomainOverviewMarket,
-  getDomainOverviewPageContext,
-} from "@/lib/queries/domain-overview";
+import { getDomainOverviewPageContext } from "@/lib/queries/domain-overview";
+import { researchScopeKey } from "@/lib/research/scope";
 
 type DomainOverviewPageProps = {
   params: Promise<{ project: string }>;
-  searchParams: Promise<{ domain?: string | string[]; market?: string | string[]; scope?: string }>;
+  searchParams: Promise<{
+    domain?: string | string[];
+    researchScope?: string | string[];
+    scope?: string;
+  }>;
 };
 
 function first(value: string | string[] | undefined) {
@@ -32,21 +33,26 @@ export default async function DomainOverviewPage({
   const [{ project }, query] = await Promise.all([params, searchParams]);
   const { publicId } = await resolveProjectAccess(project);
   const context = await getDomainOverviewPageContext(publicId);
-  const marketKey = first(query.market);
-  const market = marketKey
-    ? await getDomainOverviewMarket(publicId, marketKey)
-    : context.defaultMarket;
+  const requestedScope = first(query.researchScope);
+  const researchScope = requestedScope
+    ? ([context.defaultScope, ...context.trackedScopes, ...context.catalogScopes].find(
+        (scope) => scope && researchScopeKey(scope) === requestedScope,
+      ) ?? context.defaultScope)
+    : context.defaultScope;
   const target = first(query.domain)?.trim() ?? "";
   const scope: DomainOverviewScope | undefined =
     query.scope === "root" || query.scope === "subdomain" ? query.scope : undefined;
   const canLookup =
-    context.providerStatus === "connected" && market?.locationCode != null && Boolean(target);
+    context.providerStatus === "connected" &&
+    researchScope?.providerLocationCode != null &&
+    Boolean(target);
   let estimate = canLookup
     ? await analyzeDomainOverviewAction({
         estimateOnly: true,
         fresh: false,
-        languageCode: market.languageCode,
-        locationCode: market.locationCode,
+        countryCode: researchScope.countryCode,
+        languageCode: researchScope.languageCode,
+        locationCode: researchScope.providerLocationCode,
         projectId: publicId,
         scopeOverride: scope,
         target,
@@ -57,8 +63,9 @@ export default async function DomainOverviewPage({
       ? await analyzeDomainOverviewAction({
           estimateOnly: false,
           fresh: false,
-          languageCode: market?.languageCode,
-          locationCode: market?.locationCode,
+          countryCode: researchScope?.countryCode,
+          languageCode: researchScope?.languageCode,
+          locationCode: researchScope?.providerLocationCode,
           maxCostCents: 0,
           projectId: publicId,
           scopeOverride: scope,
@@ -73,8 +80,9 @@ export default async function DomainOverviewPage({
     estimate = await analyzeDomainOverviewAction({
       estimateOnly: true,
       fresh: false,
-      languageCode: market?.languageCode,
-      locationCode: market?.locationCode,
+      countryCode: researchScope?.countryCode,
+      languageCode: researchScope?.languageCode,
+      locationCode: researchScope?.providerLocationCode,
       projectId: publicId,
       scopeOverride: scope,
       target,
@@ -90,14 +98,13 @@ export default async function DomainOverviewPage({
         initialOutcome={initialOutcome}
         initialScope={scope}
         initialTarget={target}
-        key={`${market?.canonicalKey ?? "none"}:${target}:${scope ?? "auto"}`}
+        key={`${researchScope ? researchScopeKey(researchScope) : "none"}:${target}:${scope ?? "auto"}`}
         loadHistoryAction={loadDomainHistoryAction}
         loadKeywordsPageAction={loadDomainKeywordsPageAction}
         loadPagesPageAction={loadDomainPagesPageAction}
-        market={market}
         projectId={publicId}
         projectRef={publicId}
-        selectMarketAction={selectDomainOverviewMarketAction}
+        researchScope={researchScope}
         saveSelectedKeywordsAction={saveSelectedKeywordsAction}
       />
     </PageContent>

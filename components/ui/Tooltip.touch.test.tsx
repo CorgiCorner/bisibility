@@ -51,12 +51,12 @@ function renderTwo() {
 }
 
 function hoverOpen(el: HTMLElement) {
-  fireEvent.mouseOver(el);
+  fireEvent.pointerMove(el);
   act(() => vi.advanceTimersByTime(500));
 }
 
 function hoverClose(el: HTMLElement) {
-  fireEvent.mouseLeave(el);
+  fireEvent.pointerLeave(el);
   act(() => vi.advanceTimersByTime(0));
   act(() => vi.advanceTimersByTime(MOTION_TOOLTIP));
 }
@@ -77,7 +77,7 @@ describe("Tooltip cold touch", () => {
     act(() => vi.advanceTimersByTime(200));
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     fireEvent.touchEnd(t);
-    fireEvent.mouseOver(t);
+    fireEvent.pointerMove(t);
     act(() => vi.advanceTimersByTime(2000));
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
@@ -127,7 +127,7 @@ describe("Tooltip touch leave delay", () => {
     fireEvent.touchStart(t);
     act(() => vi.advanceTimersByTime(700));
     fireEvent.touchEnd(t);
-    fireEvent.mouseLeave(t);
+    fireEvent.pointerLeave(t);
     act(() => vi.advanceTimersByTime(1499));
     expect(screen.getByRole("tooltip")).toBeInTheDocument();
   });
@@ -153,7 +153,7 @@ describe("Tooltip touch interaction recovery", () => {
     const t = renderSingle();
     fireEvent.touchStart(t);
     act(() => vi.advanceTimersByTime(100));
-    fireEvent.mouseOver(t);
+    fireEvent.pointerMove(t);
     act(() => vi.advanceTimersByTime(500));
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     act(() => vi.advanceTimersByTime(100));

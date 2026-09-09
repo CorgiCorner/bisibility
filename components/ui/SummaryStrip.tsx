@@ -1,9 +1,7 @@
 import { cn } from "@/lib/ui/cn";
-import {
-  MinusIcon as Minus,
-  TrendDownIcon as TrendDown,
-  TrendUpIcon as TrendUp,
-} from "@phosphor-icons/react/dist/ssr";
+import { MinusIcon as Minus } from "@phosphor-icons/react/dist/ssr/Minus";
+import { TrendDownIcon as TrendDown } from "@phosphor-icons/react/dist/ssr/TrendDown";
+import { TrendUpIcon as TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp";
 
 export type SummaryStripTone = "dropped" | "improved" | "steady";
 export type SummaryStripProps = {

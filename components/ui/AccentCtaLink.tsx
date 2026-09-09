@@ -1,4 +1,4 @@
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import Link from "next/link";
 import type { ReactNode } from "react";
 

@@ -1,3 +1,4 @@
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ByMarketRollup } from "./ByMarketRollup";
@@ -36,7 +37,7 @@ const rows = [
 ];
 
 function marketRows() {
-  return screen.getAllByRole("link");
+  return screen.getAllByRole("row").slice(1);
 }
 
 describe("ByMarketRollup", () => {
@@ -44,12 +45,23 @@ describe("ByMarketRollup", () => {
     render(<ByMarketRollup device="mobile" projectRef="prj_test" rows={rows} />);
 
     expect(screen.getByText("3 active markets / paused markets excluded")).toBeVisible();
-    expect(
-      marketRows().map((row) => within(row).getByText(/Belgium|Spain/).parentElement?.textContent),
-    ).toEqual(["Belgium/ French", "Belgium/ Dutch", "Spain/ Spanish"]);
+    expect(screen.getByRole("table", { name: "By market rollup" })).toBeVisible();
+    expect(marketRows().map((row) => within(row).getByRole("link").textContent)).toEqual([
+      "Belgium/ French",
+      "Belgium/ Dutch",
+      "Spain/ Spanish",
+    ]);
     expect(screen.getAllByText("2 of 4 in top 10")).toHaveLength(3);
-    expect(screen.getByRole("link", { name: /Belgium \/ Dutch/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View Belgium / Dutch" })).toHaveAttribute(
       "href",
+      "/app/prj_test/rank-tracker?location=loc_be_nl&device=mobile",
+    );
+    fireEvent.click(marketRows()[1]);
+    expect(routerMock.push).toHaveBeenCalledWith(
+      "/app/prj_test/rank-tracker?location=loc_be_nl&device=mobile",
+    );
+    fireEvent.keyDown(marketRows()[1], { key: "Enter" });
+    expect(routerMock.push).toHaveBeenLastCalledWith(
       "/app/prj_test/rank-tracker?location=loc_be_nl&device=mobile",
     );
     expect(
@@ -66,9 +78,11 @@ describe("ByMarketRollup", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Sort: A-Z" }));
 
     expect(screen.getByRole("button", { name: "Sort markets" })).toHaveTextContent("Sort: A-Z");
-    expect(
-      marketRows().map((row) => within(row).getByText(/Belgium|Spain/).parentElement?.textContent),
-    ).toEqual(["Belgium/ Dutch", "Belgium/ French", "Spain/ Spanish"]);
+    expect(marketRows().map((row) => within(row).getByRole("link").textContent)).toEqual([
+      "Belgium/ Dutch",
+      "Belgium/ French",
+      "Spain/ Spanish",
+    ]);
   });
 
   it("keeps an off-catalog enabled market in the rollup with its availability suffix", () => {

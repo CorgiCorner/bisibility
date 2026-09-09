@@ -1,7 +1,7 @@
-import { Card } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
 import { getOAuthConsentCopy } from "@/lib/auth/oauth-consent-copy";
 import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
-import { HourglassLowIcon as HourglassLow } from "@phosphor-icons/react";
+import { HourglassLowIcon as HourglassLow } from "@phosphor-icons/react/dist/csr/HourglassLow";
 
 export function OAuthConsentExpired({ client }: Readonly<{ client: OAuthConsentClient }>) {
   const copy = getOAuthConsentCopy(client);

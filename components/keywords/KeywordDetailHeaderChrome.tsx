@@ -1,19 +1,20 @@
 "use client";
 
 import { buildGoogleSerpUrl } from "@/components/keywords/filters/DimensionSwitcher";
-import { Card, IdChip, shortId, useBrowserTimeZone } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { IdChip } from "@/components/ui/IdChip";
+import { useBrowserTimeZone } from "@/components/ui/ZonedTime";
 import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { resolveSerpDepth } from "@/lib/serp/markets";
-import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react";
+import { resolveSerpDepth } from "@/lib/serp/constants";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import type { ReactNode } from "react";
 import { KeywordDetailHeaderSlot } from "./KeywordDetailHeaderSlot";
 import { KeywordIndexStatus } from "./KeywordIndexStatus";
-import { metadataChipClassName } from "./keyword-header-model";
+import { keywordMetricsAvailabilityNote, metadataChipClassName } from "./keyword-header-model";
 
 type KeywordDetailHeaderChromeProps = {
   actions: ReactNode;
-  dimensionControls?: ReactNode;
   keyword: KeywordRow;
   onChangeSchedule?: () => void;
   providerLabel?: string | null;
@@ -22,15 +23,13 @@ type KeywordDetailHeaderChromeProps = {
   timeZone: string;
 };
 
-const unavailableMetricCopy =
-  "No search volume or difficulty data for this market - positions are tracked normally.";
 const topicTags = new Map([
   ["product", "Product"],
   ["docs", "Docs"],
   ["comparison", "Comparison"],
 ]);
 
-function pathLabel(value: string | null) {
+function pathLabel(value: string | null | undefined) {
   if (!value) return "Not set";
   if (value.startsWith("/")) return value;
   try {
@@ -101,7 +100,6 @@ function keywordChips(keyword: KeywordRow) {
 }
 export function KeywordDetailHeaderChrome({
   actions,
-  dimensionControls,
   keyword,
   onChangeSchedule,
   providerLabel,
@@ -111,12 +109,14 @@ export function KeywordDetailHeaderChrome({
 }: Readonly<KeywordDetailHeaderChromeProps>) {
   const browserTimeZone = useBrowserTimeZone();
   const currentRankingUrl = rankState === "normal" ? keyword.rankingUrl : null;
+  const expectedUrl =
+    keyword.currentExpectedUrl !== undefined
+      ? keyword.currentExpectedUrl
+      : (keyword.expectedUrl ?? keyword.targetUrl);
+  const expectedUrlDetail = `Expected for this market: ${pathLabel(expectedUrl)}${expectedUrl && keyword.expectedUrlSource ? ` (${keyword.expectedUrlSource})` : ""}`;
   const liveSerpHref = buildGoogleSerpUrl(keyword.keyword, keyword.location);
   const schedule = keyword.checkSchedule ?? null;
-  const unavailableMetrics =
-    keyword.volumeKnown === false ||
-    keyword.cpcKnown === false ||
-    keyword.difficultyKnown === false;
+  const unavailableMetricCopy = keywordMetricsAvailabilityNote(keyword);
   const previousCheck = keyword.completedComparableChecks?.at(-2);
   const projectDepth = resolveSerpDepth(keyword.projectSerpDepth);
   const positionDetail =
@@ -143,27 +143,23 @@ export function KeywordDetailHeaderChrome({
           <h1 className="m-0 min-w-0 text-[23px] font-semibold leading-tight tracking-[-0.6px] text-fg">
             {keyword.keyword}
           </h1>
-          <IdChip
-            className="border-border bg-transparent"
-            displayValue={shortId(keyword.id)}
-            size="xs"
-            value={keyword.id}
-          />
+          <IdChip className="border-border bg-transparent" size="xs" value={keyword.id} />
         </div>
         {actions}
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-[7px]">
-        {dimensionControls}
-        {chips.topic ? <span className={metadataChipClassName}>Topic: {chips.topic}</span> : null}
-        {chips.intent ? (
-          <span className={metadataChipClassName}>Intent: {chips.intent}</span>
-        ) : null}
-        {chips.tags.map((tag) => (
-          <span className={metadataChipClassName} key={tag}>
-            {tag}
-          </span>
-        ))}
-      </div>
+      {chips.topic || chips.intent || chips.tags.length > 0 ? (
+        <div className="mt-3 flex flex-wrap items-center gap-[7px]">
+          {chips.topic ? <span className={metadataChipClassName}>Topic: {chips.topic}</span> : null}
+          {chips.intent ? (
+            <span className={metadataChipClassName}>Intent: {chips.intent}</span>
+          ) : null}
+          {chips.tags.map((tag) => (
+            <span className={metadataChipClassName} key={tag}>
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
       <div
         aria-label="Keyword check metadata"
         className="mt-3.5 grid grid-cols-1 gap-x-[26px] gap-y-4 sm:grid-cols-2 xl:grid-cols-4"
@@ -174,7 +170,7 @@ export function KeywordDetailHeaderChrome({
         <KeywordDetailHeaderSlot
           detail={
             <span>
-              Target {pathLabel(keyword.targetUrl)} ·{" "}
+              {expectedUrlDetail} ·{" "}
               <a
                 className="inline-flex items-center gap-1 font-semibold text-accent-text hover:underline"
                 href={liveSerpHref}
@@ -276,7 +272,7 @@ export function KeywordDetailHeaderChrome({
         <KeywordDetailHeaderSlot detail="Not available" label="Competition" state="textual">
           <span className="font-sans tabular-nums text-[12.5px] font-semibold text-fg">n/a</span>
         </KeywordDetailHeaderSlot>
-        {unavailableMetrics ? (
+        {unavailableMetricCopy ? (
           <p className="m-0 text-[11px] text-fg-muted sm:col-span-2 xl:col-span-4">
             {unavailableMetricCopy}
           </p>

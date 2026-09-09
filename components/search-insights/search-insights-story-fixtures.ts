@@ -48,6 +48,7 @@ export const storyImportFacts = {
   deepHistoryMonths: { completed: 3, target: 16 },
   lastActivityAt: isoFromFrozenNow({ hours: -7, minutes: -5 }),
   lastProbeAt: isoFromFrozenNow({ hours: -15, minutes: -40 }),
+  importCoverage: { completed: 118, total: 487 },
   qualifyingDays: 28,
   readyThrough: {
     d1: { current: true, previous: true },

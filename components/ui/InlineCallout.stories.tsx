@@ -1,5 +1,5 @@
 import { docsLinkProps } from "@/lib/site/site";
-import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import type { Meta, StoryObj } from "@storybook/react";
 import { InlineCallout, InlineCode } from "./InlineCallout";
 

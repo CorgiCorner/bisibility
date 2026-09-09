@@ -99,21 +99,23 @@ describe("AuditFilters command registration", () => {
     ).toBe(null);
   });
 
-  it("uses a viewport-safe content width and keeps status labels untruncated", async () => {
+  it("uses a viewport-safe content width and preserves full accessible status labels", async () => {
     const user = userEvent.setup();
     renderFilters();
 
     await user.click(screen.getByRole("button", { name: "Status" }));
 
     const menu = screen.getByRole("menu", { name: "Status" });
-    expect(menu.closest(".MuiPaper-root")).toHaveStyle({
+    expect(menu.closest("[data-ui-overlay]")).toHaveStyle({
       maxWidth: "calc(100vw - 32px)",
       minWidth: "min(160px, calc(100vw - 32px))",
       width: "max-content",
     });
     for (const label of ["Status", "Success", "Failed"]) {
-      expect(screen.getByText(label, { selector: ".MuiMenuItem-root span.block" })).toHaveClass(
-        "whitespace-nowrap",
+      expect(screen.getByRole("menuitem", { name: label })).toHaveTextContent(label);
+      expect(screen.getByText(label, { selector: "[data-menu-item] span.block" })).toHaveAttribute(
+        "title",
+        label,
       );
     }
   });

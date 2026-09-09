@@ -2,7 +2,7 @@
 
 import { relativeFuture } from "@/lib/format/relative-time";
 import { cn } from "@/lib/ui/cn";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { Button } from "./Button";
 import { StatusChip } from "./StatusChip";
 import type { StatusChipPresentation } from "./status-chip-mapping";
@@ -23,10 +23,12 @@ export type OperationState =
   | "succeeded"
   | "not_confirmed"
   | "cancelled";
-export type OperationAction = "" | "cancel" | "pause" | "retry" | "resume";
+export type OperationAction = "" | "cancel" | "pause" | "reconnect" | "retry" | "resume";
 
 export type OperationRowProps = {
   action: OperationAction;
+  /** A navigation action never calls an operation mutation. */
+  actionHref?: string | null;
   actor: string | null;
   completed: number;
   counts: string | null;
@@ -85,12 +87,12 @@ const STATE_DEFINITIONS = {
   },
   worker: {
     tone: "var(--yellow)",
-    copy: () => "Waiting for the import worker to pick this up - it polls every 60 seconds.",
+    copy: () => "Import worker status is delayed. Refresh to check again.",
   },
   quota: {
     tone: "var(--yellow)",
     copy: ({ provider }) =>
-      `${provider ?? "Provider"} quota reached for today - the import resumes at 00:00 UTC.`,
+      `${provider ?? "Provider"} quota reached. The import resumes automatically when allowed.`,
   },
   deferred: {
     tone: "var(--yellow)",
@@ -136,8 +138,12 @@ const ACTIONS = {
     label: "Pause",
     tip: "Pauses the import after the current month. Nothing already imported is discarded.",
   },
-  retry: { label: "Retry", tip: "Opens the preflight scoped to the failed checks only." },
-  resume: { label: "Resume", tip: "Hands the import back to the worker queue." },
+  reconnect: {
+    label: "Reconnect",
+    tip: "Reconnect Search Console for this property.",
+  },
+  retry: { label: "Retry", tip: "Retries this exact operation from its saved state." },
+  resume: { label: "Resume", tip: "Returns this import to its saved queue." },
 } as const satisfies Record<Exclude<OperationAction, "">, { label: string; tip: string }>;
 
 const numberFormatter = new Intl.NumberFormat("en-US");
@@ -212,11 +218,13 @@ export function OperationRow(props: Readonly<OperationRowProps>) {
         {actionDefinition ? (
           <Button
             aria-label={`${actionDefinition.label} ${props.title}`}
-            onClick={props.onAction}
+            href={props.actionHref ?? undefined}
+            onClick={props.actionHref ? undefined : props.onAction}
             size="xs"
-            sx={{
-              "&:hover": { backgroundColor: "var(--nav-active)", color: "var(--fg)" },
-              border: "1px solid transparent",
+            style={{
+              "--control-hover-background-color": "var(--nav-active)",
+              "--control-hover-color": "var(--fg)",
+              "--control-border": "1px solid transparent",
               fontSize: "11.5px",
               lineHeight: 1.25,
               minHeight: "28px",

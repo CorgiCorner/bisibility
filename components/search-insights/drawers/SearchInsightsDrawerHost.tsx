@@ -2,7 +2,7 @@
 
 import { trackingScheduleValueWithDepthOverride } from "@/components/keywords/add/AddKeywordDrawerExtensions";
 import { TRACK_FAILED, trackDoneCopy } from "@/components/search-insights/search-insights-copy";
-import { useToast } from "@/components/ui";
+import { useToast } from "@/components/ui/toast-context";
 import type { addKeywordsMatrix } from "@/lib/actions/keyword";
 import type {
   LoadSearchInsightsTrackDialogAction,

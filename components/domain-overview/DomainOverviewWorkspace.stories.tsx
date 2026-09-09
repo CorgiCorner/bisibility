@@ -11,8 +11,8 @@ import { userEvent, within } from "storybook/test";
 import { DomainOverviewWorkspace } from "./DomainOverviewWorkspace";
 import {
   domainOverviewHistoryFixture,
-  domainOverviewMarketFixture,
   domainOverviewReportFixture,
+  domainOverviewScopeFixture,
 } from "./fixtures";
 
 const analyzeAction = (async (input: unknown) => {
@@ -27,7 +27,7 @@ const analyzeAction = (async (input: unknown) => {
         historyMode: "lazy",
         keywordPageEstimatedCostCents: 2,
         languageCode: "en",
-        locationCode: domainOverviewMarketFixture.locationCode,
+        locationCode: domainOverviewScopeFixture.providerLocationCode,
         ok: true,
         pagePageEstimatedCostCents: 3,
         provider: "dataforseo",
@@ -67,45 +67,33 @@ const saveSelectedKeywordsAction = (async (input: unknown) => {
   return { created: [], duplicateCount: 0, savedCount: rows.length };
 }) as SaveSelectedKeywordsAction;
 
-const trackedMarkets = [
+const trackedScopes = [
   {
-    canonicalKey: "ES",
-    cityName: null,
     countryCode: "ES",
-    displayName: "Spain",
-    kind: "country" as const,
+    countryName: "Spain",
     languageCode: "es",
     languageLabel: "Spanish",
-    locationCode: 2724,
-    provenance: "Malaga tracked at city level - domain analysis runs on the country pair.",
-    regionName: null,
+    providerLocationCode: 2724,
     researchAvailable: true,
   },
   {
-    canonicalKey: "ES@en",
-    cityName: null,
     countryCode: "ES",
-    displayName: "Spain",
-    kind: "country" as const,
+    countryName: "Spain",
     languageCode: "en",
     languageLabel: "English",
-    locationCode: 2724,
-    provenance: null,
-    regionName: null,
+    providerLocationCode: 2724,
     researchAvailable: false,
   },
 ];
 
-const catalogMarkets = [
+const catalogScopes = [
   {
-    ...trackedMarkets[0],
-    canonicalKey: "US",
+    ...trackedScopes[0],
     countryCode: "US",
-    displayName: "United States",
+    countryName: "United States",
     languageCode: "en",
     languageLabel: "English",
-    locationCode: 2840,
-    provenance: null,
+    providerLocationCode: 2840,
   },
 ];
 
@@ -130,13 +118,13 @@ type Story = StoryObj<typeof meta>;
 const common = {
   analyzeAction,
   context: {
-    catalogMarkets,
+    catalogScopes,
     competitorDomains: ["competitor-one.example.com", "competitor-two.example.com"],
     costContext: { capCents: 5000, spentCents: 1419 },
     defaultTarget: "example.com",
     providerStatus: "connected" as const,
     recentTargets: [],
-    trackedMarkets,
+    trackedScopes,
   },
   initialEstimate: {
     cached: false,
@@ -151,13 +139,9 @@ const common = {
   loadHistoryAction,
   loadKeywordsPageAction,
   loadPagesPageAction,
-  market: trackedMarkets[0],
+  researchScope: trackedScopes[0],
   projectId: "prj_story",
   projectRef: "prj_story",
-  selectMarketAction: async (input: unknown) => {
-    const value = input as { canonicalKey: string };
-    return { canonicalKey: value.canonicalKey, locationCode: 1_026_201, supported: true };
-  },
   saveSelectedKeywordsAction,
 };
 
@@ -188,7 +172,7 @@ export const Results: Story = {
           cachedUntil: "2026-08-13T12:00:00.000Z",
           fetchedAt: "2026-08-12T12:00:00.000Z",
           languageCode: "en",
-          locationCode: domainOverviewMarketFixture.locationCode,
+          locationCode: domainOverviewScopeFixture.providerLocationCode,
           scope: "root",
           target: "other.example.com",
         },

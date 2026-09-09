@@ -1,10 +1,10 @@
 "use client";
 
 import { CheckDepthSplitButton } from "@/components/keywords/CheckDepthSplitButton";
-import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeProvider";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { type MarketScope, scopedRunActionLabel } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { effectiveRowDepth, selectionDepthLabel } from "./run-check-depth";
 
 type RunChecksSplitButtonProps = {

@@ -2,14 +2,12 @@
 
 import type { CloudImportPackageFile } from "@/components/cloud/cloud-token";
 import { downloadWorkspacePackage } from "@/components/cloud/workspace-package-download";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { exportCloudImportPackage } from "@/lib/actions/cloud";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import {
-  DownloadSimpleIcon as DownloadSimple,
-  FileArrowDownIcon as FileArrowDown,
-  ShieldWarningIcon as ShieldWarning,
-} from "@phosphor-icons/react";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { FileArrowDownIcon as FileArrowDown } from "@phosphor-icons/react/dist/csr/FileArrowDown";
+import { ShieldWarningIcon as ShieldWarning } from "@phosphor-icons/react/dist/csr/ShieldWarning";
 import { useState } from "react";
 
 type ExportPackageCardProps = {

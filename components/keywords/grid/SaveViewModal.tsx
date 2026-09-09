@@ -1,7 +1,9 @@
 "use client";
 
 import { actionErrorMessage } from "@/components/keywords/action-utils";
-import { Button, Modal, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   type CreateSavedViewInput,
@@ -11,11 +13,9 @@ import {
   savedViewHref,
   savedViewNameSchema,
 } from "@/lib/keywords/saved-view-model";
-import {
-  BookmarkSimpleIcon as BookmarkSimple,
-  FunnelSimpleIcon as FunnelSimple,
-  XIcon as X,
-} from "@phosphor-icons/react";
+import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
+import { FunnelSimpleIcon as FunnelSimple } from "@phosphor-icons/react/dist/csr/FunnelSimple";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 

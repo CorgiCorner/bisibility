@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AppHeader } from "./AppHeader";
 
-vi.mock("@/components/ui/Tooltip", () => import("@/tests/mui-tooltip"));
+vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 vi.mock("./AppHeaderTitle", () => ({
   AppHeaderTitle: () => <div data-testid="header-title">Header title</div>,
 }));

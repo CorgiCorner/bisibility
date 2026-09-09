@@ -32,5 +32,11 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next", "storybook-static", "examples"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "storybook-static",
+    "examples",
+    "scripts/checks/ui-consistency/fixtures"
+  ]
 }

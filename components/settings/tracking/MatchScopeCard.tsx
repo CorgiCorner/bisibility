@@ -1,6 +1,8 @@
 import { settingsCardFrameClassName } from "@/components/settings/shell/settings-layout";
 import { trackingCardGeometryClassNames } from "@/components/settings/tracking/tracking-settings-layout";
-import { Card, SectionTitle, StatusPill } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { cn } from "@/lib/ui/cn";
 
 type MatchScopeCardProps = { domain: string | null };

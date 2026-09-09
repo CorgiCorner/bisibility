@@ -1,7 +1,6 @@
 import { KeywordsGrid } from "@/components/keywords/grid/KeywordsGrid";
 import { loadRankTrackerCostContext } from "@/components/keywords/rank-tracker-cost-context";
 import { SavedKeywordsWorkspace } from "@/components/keywords/saved/SavedKeywordsWorkspace";
-import { RankTrackerRunsTab } from "@/components/rank-runs/RankTrackerRunsTab";
 import { RankTrackerTabs } from "@/components/rank-tracker/RankTrackerTabs";
 import { PageContent } from "@/components/shell/PageContent";
 import { addKeywords, updateKeyword } from "@/lib/actions/keyword";
@@ -40,6 +39,7 @@ import { getRankCheckRunCount } from "@/lib/queries/rank-check-runs";
 import { listSavedKeywords, savedKeywordCount } from "@/lib/queries/saved-keywords";
 import { listSavedViews } from "@/lib/queries/saved-views";
 import { appPath } from "@/lib/routing/app-path";
+import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-runs-path";
 import { permanentRedirect, redirect } from "next/navigation";
 import { loadRankTrackerPageList, resolveRankTrackerPageQuery } from "./rank-tracker-page-data";
 
@@ -63,6 +63,20 @@ function urlSearchParams(params: Record<string, string | string[] | undefined>) 
     }
   }
   return result;
+}
+
+function legacyRunsDestination(
+  projectRef: string,
+  params: Record<string, string | string[] | undefined>,
+): string {
+  const runId = paramValue(params.run);
+  if (runId && isPublicIdOfType(runId, "rcr")) {
+    return projectRunRankCheckPath(projectRef, runId);
+  }
+  return projectRunsPath(projectRef, {
+    source: "rank_checks",
+    view: paramValue(params.segment) === "planned" ? "planned" : undefined,
+  });
 }
 
 async function SavedTab({
@@ -118,6 +132,10 @@ export default async function KeywordsPage({
   const { market, project } = await routeParams;
   const { projectId, publicId } = await resolveProjectAccess(project);
   const params = await searchParams;
+  const tab = paramValue(params?.tab);
+  if (params && (tab === "checks" || tab === "runs")) {
+    redirect(legacyRunsDestination(publicId, params));
+  }
   // `?market=` predates the segment and meant a within-page lens. Promote it to the level it
   // always described, once, and only from the project route it was minted on.
   if (!market && params && LEGACY_MARKET_PARAM in params) {
@@ -130,16 +148,8 @@ export default async function KeywordsPage({
       permanentRedirect(legacyDestination);
     }
   }
-  if (paramValue(params?.tab) === "checks") {
-    const redirectParams = urlSearchParams(params ?? {});
-    redirectParams.set("tab", "runs");
-    redirect(`${appPath(publicId, "rank-tracker")}?${redirectParams.toString()}`);
-  }
-  if (paramValue(params?.tab) === "saved") {
+  if (tab === "saved") {
     return SavedTab({ projectId, projectRef: publicId });
-  }
-  if (paramValue(params?.tab) === "runs") {
-    return RankTrackerRunsTab({ projectId, projectRef: publicId });
   }
   const openAddDrawer = paramValue(params?.add) === "1";
   // A notification links to one run. The value is echoed into the page, so it is narrowed here:
@@ -149,6 +159,7 @@ export default async function KeywordsPage({
   const requestedAction = parseRankTrackerAction(paramValue(params?.action));
   const {
     activeView,
+    groupedWasSpecified,
     malformedDevice,
     query: requestedQuery,
     staleView,
@@ -164,7 +175,6 @@ export default async function KeywordsPage({
     savedViews,
     readable,
     checkHealth,
-    runsCount,
     costContext,
     tagSuggestions,
     keywordDefaults,
@@ -173,11 +183,10 @@ export default async function KeywordsPage({
     preferences,
     searchConsoleConnected,
   ] = await Promise.all([
-    loadRankTrackerPageList(publicId, scopedQuery),
+    loadRankTrackerPageList(publicId, scopedQuery, groupedWasSpecified),
     listSavedViews(publicId),
     requireReadableProject(publicId),
     getCheckHealth(publicId),
-    getRankCheckRunCount(projectId),
     loadRankTrackerCostContext(publicId),
     getKeywordTagSuggestions(publicId),
     getKeywordDefaultMarket(publicId),
@@ -186,11 +195,10 @@ export default async function KeywordsPage({
     getPreferences(),
     isProviderConnected(publicId, "gsc"),
   ]);
-  const canonicalPage = list.mode === "flat-server" ? list.page : requestedQuery.page;
+  const canonicalPage = list.page;
   const staleLens =
-    list.mode === "flat-server" &&
-    (scopedQuery.lens.device !== list.query.lens.device ||
-      scopedQuery.lens.locationId !== list.query.lens.locationId);
+    scopedQuery.lens.device !== list.query.lens.device ||
+    scopedQuery.lens.locationId !== list.query.lens.locationId;
   if (malformedDevice || staleView || staleLens || scopedQuery.page !== canonicalPage) {
     const canonicalQuery = {
       ...list.query,
@@ -222,7 +230,6 @@ export default async function KeywordsPage({
         <RankTrackerTabs
           activeTab="tracked"
           projectRef={readable.project.publicId}
-          runsCount={runsCount}
           savedCount={savedCount}
           trackedCount={list.totalCount}
         />
@@ -261,20 +268,17 @@ export default async function KeywordsPage({
           searchConsoleConnected={searchConsoleConnected}
           queueFirstChecksAction={queueFirstChecks}
           runCheckNowAction={runCheckNow}
-          rows={list.rows}
+          rows={list.mode === "grouped-server" ? list.groups : list.rows}
           savedViews={savedViews}
           tagSuggestions={tagSuggestions}
-          facets={list.mode === "flat-server" ? list.facets : undefined}
-          listMode={list.mode}
-          locations={list.mode === "flat-server" ? list.locations : undefined}
-          matchedTargetCount={
-            list.mode === "flat-server" ? list.matchedTargetCount : list.rows.length
-          }
-          page={list.mode === "flat-server" ? list.page : undefined}
-          pageCount={list.mode === "flat-server" ? list.pageCount : undefined}
-          pageSize={list.mode === "flat-server" ? list.pageSize : undefined}
+          facets={list.facets}
+          locations={list.locations}
+          matchedGroupCount={list.mode === "grouped-server" ? list.matchedGroupCount : undefined}
+          matchedTargetCount={list.matchedTargetCount}
+          page={list.page}
+          pageCount={list.pageCount}
+          pageSize={list.pageSize}
           query={query}
-          totalKeywordCount={list.totalKeywordCount}
           totalCount={list.totalCount}
           updateKeywordAction={updateKeyword}
         />

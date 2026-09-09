@@ -58,8 +58,10 @@ describe("CloudBackupModal", () => {
     render(<CloudBackupModal {...defaultProps} />);
 
     const exportChip = screen.getByTestId("cloud-backup-export-status");
-    expect(exportChip).toHaveTextContent(/^Last export 6d ago$/);
-    expect(exportChip).not.toHaveTextContent(
+    expect((exportChip.textContent ?? "").replace(/\s+/g, " ").trim()).toMatch(
+      /^Last export 6d ago$/,
+    );
+    expect((exportChip.textContent ?? "").replace(/\s+/g, " ").trim()).not.toMatch(
       /\b\d[\d,]*\s+(?:keywords?|rows?|records?|items?|sections?)\b/i,
     );
     expect(exportChip.closest("h2")).toBe(
@@ -128,8 +130,10 @@ describe("CloudBackupModal", () => {
       exportedAt: expect.any(String),
     });
     const exportChip = screen.getByTestId("cloud-backup-export-status");
-    expect(exportChip).toHaveTextContent(/^Last export just now$/);
-    expect(exportChip).not.toHaveTextContent(
+    expect((exportChip.textContent ?? "").replace(/\s+/g, " ").trim()).toMatch(
+      /^Last export just now$/,
+    );
+    expect((exportChip.textContent ?? "").replace(/\s+/g, " ").trim()).not.toMatch(
       /\b\d[\d,]*\s+(?:keywords?|rows?|records?|items?|sections?)\b/i,
     );
     expect(screen.getByRole("status")).toHaveTextContent("Package exported and downloaded.");

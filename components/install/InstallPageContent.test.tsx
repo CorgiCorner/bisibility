@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { capitalizeFirst, InstallPageContent } from "./InstallPageContent";
 import { SKILLS } from "./install-catalog";
 
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/CopyButton", () => ({
   CopyButton: ({ label }: { label?: string }) => <button aria-label={label} type="button" />,
 }));
 

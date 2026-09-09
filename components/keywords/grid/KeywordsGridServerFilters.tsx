@@ -4,50 +4,48 @@ import {
   patchRankTrackerFilters,
   RANK_TRACKER_FILTER_FIELDS,
 } from "@/lib/keywords/rank-tracker-navigation";
+import type {
+  RankTrackerQueryField,
+  RankTrackerQueryState,
+} from "@/lib/keywords/rank-tracker-query-types";
+import type { KeywordRow } from "@/lib/queries/keywords";
 import type { Dispatch, SetStateAction } from "react";
 import { KeywordsGridFilterDrawer } from "./KeywordsGridFilterOverlays";
 import type { KeywordsGridProps } from "./keywords-grid-types";
 
-type Query = KeywordsGridProps["query"];
-type Props = Pick<KeywordsGridProps, "facets" | "rows"> & {
+type Props = Pick<KeywordsGridProps, "facets"> & {
   activeViewId: string | null;
   draftFilters: KeywordFilters;
-  filters: KeywordFilters;
-  flatServer: boolean;
   keywordsPath: string;
   lens: NonNullable<KeywordsGridProps["lens"]>;
   locationOptions: NonNullable<KeywordsGridProps["locations"]>;
-  navigateQuery: (
-    query: Query,
-    present: import("@/lib/keywords/rank-tracker-query-types").RankTrackerQueryField[],
-  ) => void;
+  navigateQuery: (query: RankTrackerQueryState, present: RankTrackerQueryField[]) => void;
   onClose: () => void;
   open: boolean;
-  query: Query;
+  query: RankTrackerQueryState;
+  rows: KeywordRow[];
   setDraftFilters: Dispatch<SetStateAction<KeywordFilters>>;
-  setFilters: Dispatch<SetStateAction<KeywordFilters>>;
 };
 export function KeywordsGridServerFilters(props: Props) {
   return (
     <KeywordsGridFilterDrawer
       activeViewId={props.activeViewId}
       facets={props.facets}
-      filters={props.flatServer ? props.draftFilters : props.filters}
+      filters={props.draftFilters}
       keywordsPath={props.keywordsPath}
       lens={props.lens}
       locationOptions={props.locationOptions}
       onApply={(next) => {
-        if (props.query)
-          props.navigateQuery(patchRankTrackerFilters(props.query, next), [
-            ...RANK_TRACKER_FILTER_FIELDS,
-            "page",
-          ]);
+        props.navigateQuery(patchRankTrackerFilters(props.query, next), [
+          ...RANK_TRACKER_FILTER_FIELDS,
+          "page",
+        ]);
         props.onClose();
       }}
-      onChange={props.flatServer ? props.setDraftFilters : props.setFilters}
+      onChange={props.setDraftFilters}
       onClose={props.onClose}
       open={props.open}
-      query={props.flatServer ? props.query : undefined}
+      query={props.query}
       rows={props.rows}
     />
   );

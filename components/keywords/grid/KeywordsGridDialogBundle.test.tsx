@@ -5,14 +5,16 @@ import { KeywordsGridDialogBundle } from "./KeywordsGridDialogBundle";
 vi.mock("./KeywordsGridDialogs", () => ({
   KeywordsGridDialogs: ({
     addDraft,
+    initialMarketKeys,
     onCloseAdd,
     onExitedAdd,
   }: {
     addDraft: { open: boolean };
+    initialMarketKeys?: string[];
     onCloseAdd: () => void;
     onExitedAdd?: () => void;
   }) => (
-    <div>
+    <div data-testid="market-selection" data-keys={initialMarketKeys?.join(",")}>
       <button onClick={onCloseAdd} type="button">
         close-add
       </button>
@@ -87,4 +89,14 @@ describe("KeywordsGridDialogBundle", () => {
     expect(screen.getByTestId("add-drawer-state")).toBeInTheDocument();
     expect(screen.getByTestId("add-drawer-state")).toHaveAttribute("data-open", "false");
   });
+});
+
+it("passes the current market to the keyword drawer", () => {
+  render(
+    <KeywordsGridDialogBundle
+      {...baseProps}
+      marketScope={{ canonicalKey: "ES", label: "Spain", ref: "pmkt_es", status: "paused" }}
+    />,
+  );
+  expect(screen.getByTestId("market-selection")).toHaveAttribute("data-keys", "ES");
 });

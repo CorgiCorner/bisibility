@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, PasswordInput } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { useState } from "react";
 
 const SECRET_BYTES = 32;

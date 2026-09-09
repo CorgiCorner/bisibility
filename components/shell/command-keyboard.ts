@@ -10,6 +10,7 @@ export function handleShellKeyDown(
   event: KeyboardEvent<HTMLElement>,
   { closePalette, paletteOpen, togglePalette }: ShellKeyOptions,
 ) {
+  if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
     event.preventDefault();
     togglePalette();
@@ -22,13 +23,7 @@ export function handleShellKeyDown(
       closePalette();
       return;
     }
-    if (event.target instanceof Element && event.target.closest(".MuiModal-root")) {
-      // Focused MUI overlays handle Escape themselves so callers receive the right close reason.
-      return;
-    }
-    if (closeOpenMuiOverlay()) {
-      event.preventDefault();
-    }
+    // The topmost overlay owns Escape through its document capture listener.
     return;
   }
 
@@ -38,7 +33,7 @@ export function handleShellKeyDown(
 }
 
 function focusKeywordSearch(event: KeyboardEvent<HTMLElement>) {
-  if (hasOpenMuiOverlay()) {
+  if (hasOpenOverlay()) {
     return;
   }
   const searchInput = document.getElementById("keywords-filter");
@@ -64,16 +59,6 @@ function hasShortcutModifier(event: KeyboardEvent<HTMLElement>) {
   return event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
 }
 
-function hasOpenMuiOverlay() {
-  return Boolean(document.querySelector(".MuiModal-root"));
-}
-
-function closeOpenMuiOverlay() {
-  const backdrops = document.querySelectorAll<HTMLElement>(".MuiModal-root .MuiBackdrop-root");
-  const backdrop = backdrops[backdrops.length - 1];
-  if (!backdrop) {
-    return false;
-  }
-  backdrop.click();
-  return true;
+function hasOpenOverlay() {
+  return Boolean(document.querySelector('[data-ui-overlay][data-state="open"]'));
 }

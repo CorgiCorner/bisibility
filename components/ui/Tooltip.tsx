@@ -1,30 +1,26 @@
 "use client";
 
+import * as Primitive from "@/components/ui/primitives/tooltip";
 import { cn } from "@/lib/ui/cn";
-import MuiTooltip from "@mui/material/Tooltip";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useForkRef } from "@mui/material/utils";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
 import {
   type CSSProperties,
   cloneElement,
-  createContext,
-  forwardRef,
-  type HTMLAttributes,
   isValidElement,
   type ReactElement,
   type ReactNode,
   type TouchEvent as ReactTouchEvent,
-  type Ref,
-  type RefObject,
   useCallback,
-  useContext,
   useEffect,
   useId,
-  useMemo,
   useRef,
   useState,
 } from "react";
-import { TooltipTransition } from "./TooltipTransition";
+import { TooltipProvider, useTooltipContext, WARM_WINDOW_MS } from "./tooltip-context";
+
+export { TooltipProvider } from "./tooltip-context";
+
+import tooltipStyles from "./tooltip.module.css";
 
 export type TooltipSemantics = "label" | "description";
 export type TooltipPlacement =
@@ -50,50 +46,19 @@ export type TooltipProps = {
   wrapperClassName?: string;
 };
 
-const WARM_WINDOW_MS = 800;
-const ENTER_DELAY = 500;
-const ENTER_NEXT_DELAY = 0;
 const TOUCH_OPEN_DELAY = 700;
 const TOUCH_LEAVE_DELAY = 1500;
 
-type TooltipContextValue = {
-  beginOpen: () => boolean;
-  beginClose: () => void;
-};
-
-const fallbackContext: TooltipContextValue = {
-  beginOpen: () => false,
-  beginClose: () => undefined,
-};
-
-const TooltipContext = createContext<TooltipContextValue>(fallbackContext);
-
-function useTooltipProviderCooldownCleanup(
-  cooldownTimerRef: RefObject<ReturnType<typeof setTimeout> | undefined>,
-) {
-  // Synchronizes timer ownership with the browser lifecycle on provider unmount.
-  useEffect(() => {
-    return () => {
-      if (cooldownTimerRef.current !== undefined) {
-        clearTimeout(cooldownTimerRef.current);
-        cooldownTimerRef.current = undefined;
-      }
-    };
-  }, [cooldownTimerRef]);
+function useTooltipTouchCleanup(clearOpen: () => void, clearLeave: () => void) {
+  // Releases long-press timers owned by the browser when the trigger unmounts.
+  useEffect(
+    () => () => {
+      clearOpen();
+      clearLeave();
+    },
+    [clearOpen, clearLeave],
+  );
 }
-
-type TooltipTriggerProps = HTMLAttributes<HTMLElement> & {
-  child: ReactElement<Record<string, unknown>>;
-};
-
-const TooltipTrigger = forwardRef<HTMLElement, TooltipTriggerProps>(function TooltipTrigger(
-  { child, onTouchStart: _muiTouchStart, ...injectedProps },
-  forwardedRef,
-) {
-  const childRef = (child.props as { ref?: Ref<HTMLElement> }).ref;
-  const ref = useForkRef(forwardedRef, childRef);
-  return cloneElement(child, { ...injectedProps, ref });
-});
 
 const visuallyHidden: CSSProperties = {
   border: 0,
@@ -107,37 +72,7 @@ const visuallyHidden: CSSProperties = {
   width: 1,
 };
 
-export function TooltipProvider({ children }: { children: ReactNode }) {
-  const warmRef = useRef(false);
-  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  const beginOpen = useCallback(() => {
-    const wasWarm = warmRef.current;
-    warmRef.current = true;
-    if (cooldownTimerRef.current !== undefined) {
-      clearTimeout(cooldownTimerRef.current);
-      cooldownTimerRef.current = undefined;
-    }
-    return wasWarm;
-  }, []);
-
-  const beginClose = useCallback(() => {
-    warmRef.current = true;
-    if (cooldownTimerRef.current !== undefined) clearTimeout(cooldownTimerRef.current);
-    cooldownTimerRef.current = setTimeout(() => {
-      warmRef.current = false;
-      cooldownTimerRef.current = undefined;
-    }, WARM_WINDOW_MS);
-  }, []);
-
-  const value = useMemo(() => ({ beginClose, beginOpen }), [beginClose, beginOpen]);
-
-  useTooltipProviderCooldownCleanup(cooldownTimerRef);
-
-  return <TooltipContext.Provider value={value}>{children}</TooltipContext.Provider>;
-}
-
-export function Tooltip({
+function TooltipContent({
   children,
   content,
   placement,
@@ -145,16 +80,15 @@ export function Tooltip({
   semantics = "label",
   wrapperClassName,
 }: Readonly<TooltipProps>) {
-  const { beginClose, beginOpen } = useContext(TooltipContext);
-  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", {
-    noSsr: true,
-  });
+  const { beginClose, beginOpen } = useTooltipContext();
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const [open, setOpen] = useState(false);
   const [warmCycle, setWarmCycle] = useState(false);
 
   const isDescription = semantics === "description";
   const descriptionId = useId();
 
+  const clickInProgressRef = useRef(false);
   const touchActiveRef = useRef(false);
   const touchOpenedRef = useRef(false);
   const touchOpenTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -207,14 +141,7 @@ export function Tooltip({
     }
   }, [beginClose, clearTouchOpenTimer]);
 
-  useEffect(() => {
-    return () => {
-      clearTouchOpenTimer();
-      clearTouchLeaveTimer();
-      touchActiveRef.current = false;
-      touchOpenedRef.current = false;
-    };
-  }, [clearTouchLeaveTimer, clearTouchOpenTimer]);
+  useTooltipTouchCleanup(clearTouchOpenTimer, clearTouchLeaveTimer);
 
   if (!isValidElement(children)) return children;
 
@@ -251,48 +178,86 @@ export function Tooltip({
     });
   }
 
-  const {
-    onTouchStart: _manualTouchStart,
-    ref: _childRef,
-    ...triggerProps
-  } = childElement.props as Record<string, unknown> & { ref?: Ref<HTMLElement> };
+  if (
+    !isDescription &&
+    typeof content === "string" &&
+    !childProps["aria-label"] &&
+    !childProps["aria-labelledby"]
+  ) {
+    childElement = cloneElement(childElement, { "aria-label": content });
+  }
+  const [side, alignment] = (placement ?? "bottom").split("-") as [
+    "top" | "bottom" | "left" | "right",
+    "start" | "end" | undefined,
+  ];
 
   return (
-    <span className={cn("relative inline-flex max-w-full", wrapperClassName)}>
-      <MuiTooltip
-        arrow={arrow}
-        disableInteractive
-        disableTouchListener
-        enterDelay={ENTER_DELAY}
-        enterNextDelay={ENTER_NEXT_DELAY}
-        onClose={() => {
-          if (touchActiveRef.current || touchLeaveTimerRef.current !== undefined) return;
-          setOpen(false);
-          beginClose();
-        }}
-        onOpen={() => {
-          if (touchActiveRef.current || touchOpenedRef.current) return;
-          setOpen(true);
-          setWarmCycle(beginOpen());
-        }}
+    <span
+      className={cn("relative inline-flex max-w-full", wrapperClassName)}
+      onClickCapture={() => {
+        clickInProgressRef.current = true;
+        queueMicrotask(() => {
+          clickInProgressRef.current = false;
+        });
+      }}
+    >
+      <Primitive.Tooltip
         open={open}
-        placement={placement}
-        slots={{ transition: TooltipTransition }}
-        slotProps={{
-          transition: {
-            reducedMotion,
-            warm: warmCycle,
-          },
+        onOpenChange={(next) => {
+          if (next) {
+            if (touchActiveRef.current || touchOpenedRef.current) return;
+            setOpen(true);
+            setWarmCycle(beginOpen());
+          } else {
+            if (
+              clickInProgressRef.current ||
+              touchActiveRef.current ||
+              touchLeaveTimerRef.current !== undefined
+            )
+              return;
+            setOpen(false);
+            beginClose();
+          }
         }}
-        title={content}
       >
-        <TooltipTrigger child={childElement} {...triggerProps} />
-      </MuiTooltip>
+        <Primitive.TooltipTrigger asChild>{childElement}</Primitive.TooltipTrigger>
+        <Primitive.TooltipPortal>
+          <Primitive.TooltipContent
+            side={side}
+            align={alignment ?? "center"}
+            sideOffset={6}
+            data-ui-tooltip
+            className={tooltipStyles.content}
+            data-instant={warmCycle || reducedMotion || undefined}
+          >
+            {content}
+            {arrow ? <Primitive.TooltipArrow className="fill-fg" /> : null}
+          </Primitive.TooltipContent>
+        </Primitive.TooltipPortal>
+      </Primitive.Tooltip>
       {isDescription ? (
         <span id={descriptionId} style={visuallyHidden}>
           {content}
         </span>
       ) : null}
     </span>
+  );
+}
+
+export function Tooltip(props: Readonly<TooltipProps>) {
+  const { provided } = useTooltipContext();
+  if (props.content == null || props.content === false || props.content === "") {
+    return (
+      <span className={cn("relative inline-flex max-w-full", props.wrapperClassName)}>
+        {props.children}
+      </span>
+    );
+  }
+  return provided ? (
+    <TooltipContent {...props} />
+  ) : (
+    <TooltipProvider>
+      <TooltipContent {...props} />
+    </TooltipProvider>
   );
 }

@@ -18,15 +18,17 @@ const conditionLabels = {
   threshold: "rank crosses threshold",
   url_mismatch: "ranking URL differs from target URL",
 };
-const ALERT_FEED_WINDOW_MS = 48 * 60 * 60 * 1000;
+
+export type AlertFeedQuery = {
+  marketsByLocation?: ReadonlyMap<string, { id: string; label: string; language: string }>;
+  where?: readonly Prisma.TriggeredAlertWhereInput[];
+};
+
 function requiredPublicId(value: string | null, resource: string, prefix: PublicIdPrefix) {
   if (!value || parsePublicId(value)?.prefix !== prefix) {
     throw new Error(`${resource} public ID is not available.`);
   }
   return value;
-}
-function alertFeedWindowStart(now: Date) {
-  return new Date(now.getTime() - ALERT_FEED_WINDOW_MS);
 }
 function relativeTime(date: Date) {
   const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
@@ -180,9 +182,12 @@ function ruleView(
 function alertView(
   alert: Awaited<ReturnType<typeof loadAlerts>>[number],
   keywordLabels: ReadonlyMap<string, string>,
+  marketsByLocation: AlertFeedQuery["marketsByLocation"],
 ): TriggeredAlertView {
   const payload = alert.payload;
   const severity = payloadValue(payload, "severity") ?? alert.rule.severity;
+  const market = marketsByLocation?.get(alert.keyword.locationId);
+  const visibleSeverity = severity === "info" || severity === "urgent" ? severity : "warning";
   return {
     action: payloadValue(payload, "action") ?? "Review the latest rank check.",
     ctas: payloadList(payload, "ctas") ?? ["Open keyword"],
@@ -198,6 +203,16 @@ function alertView(
       when: relativeTime(attempt.attemptedAt),
     })),
     deliveryState: alert.deliveryState,
+    feedMeta: {
+      engine: "Google",
+      ...(alert.keyword.locationRef.languageLabel
+        ? { language: alert.keyword.locationRef.languageLabel }
+        : {}),
+      ...(market ? { market: { id: market.id, label: market.label } } : {}),
+      module: "rank",
+      severity: visibleSeverity,
+      source: "RANK",
+    },
     headline: payloadValue(payload, "headline") ?? alert.rule.name,
     id: requiredPublicId(alert.publicId, "Triggered alert", "al"),
     keyword: keywordLabels.get(alert.keywordId) ?? "Unknown keyword",
@@ -206,7 +221,7 @@ function alertView(
     previous: payloadValue(payload, "previous") ?? positionText(alert.beforePosition),
     rankingUrl: payloadValue(payload, "rankingUrl"),
     rule: alert.rule.name,
-    severity: severity === "info" || severity === "urgent" ? severity : "warning",
+    severity: visibleSeverity,
     targetUrl: payloadValue(payload, "targetUrl"),
     unread: alert.status === "firing",
     when: relativeTime(alert.firedAt),
@@ -233,8 +248,16 @@ async function loadRules(projectId: string) {
     where: { projectId },
   });
 }
-async function loadAlerts(projectId: string) {
+async function loadAlerts(
+  projectId: string,
+  where: readonly Prisma.TriggeredAlertWhereInput[] = [],
+) {
   const now = new Date();
+  const baseWhere = {
+    firedAt: { gte: new Date(now.getTime() - 48 * 60 * 60 * 1000) },
+    rule: { projectId },
+    ...visibleAlertSnoozeWhere(now),
+  };
   return prisma.triggeredAlert.findMany({
     include: {
       deliveryAttempts: {
@@ -244,40 +267,22 @@ async function loadAlerts(projectId: string) {
         orderBy: { attemptedAt: "desc" },
         take: 3,
       },
-      keyword: { select: { device: true, locationRef: { select: { displayName: true } } } },
+      keyword: {
+        select: {
+          device: true,
+          locationId: true,
+          locationRef: { select: { displayName: true, languageLabel: true } },
+        },
+      },
       rule: { select: { conditionType: true, name: true, projectId: true, severity: true } },
     },
     orderBy: { firedAt: "desc" },
     take: 50,
-    where: {
-      firedAt: { gte: alertFeedWindowStart(now) },
-      rule: { projectId },
-      ...visibleAlertSnoozeWhere(now),
-    },
+    where: where.length ? { AND: [baseWhere, ...where] } : baseWhere,
   });
 }
-export async function getAlertFeedStats(projectId: string) {
-  const now = new Date();
-  const windowStart = alertFeedWindowStart(now);
-  const [stats] = await prisma.$queryRaw<
-    { firedInWindowCount: bigint; snoozedInWindowCount: bigint; totalCount: bigint }[]
-  >`
-    SELECT
-      COUNT(*) FILTER (WHERE ta."firedAt" >= ${windowStart}) AS "firedInWindowCount",
-      COUNT(*) FILTER (
-        WHERE ta."firedAt" >= ${windowStart} AND ta."snoozedUntil" > ${now}
-      ) AS "snoozedInWindowCount",
-      COUNT(*) AS "totalCount"
-    FROM "triggered_alerts" ta
-    JOIN "alert_rules" ar ON ar.id = ta."ruleId"
-    WHERE ar."projectId" = ${projectId}
-  `;
-  return {
-    firedInWindowCount: Number(stats?.firedInWindowCount ?? 0),
-    snoozedInWindowCount: Number(stats?.snoozedInWindowCount ?? 0),
-    totalCount: Number(stats?.totalCount ?? 0),
-  };
-}
+
+export { getAlertFeedStats } from "./alert-feed-stats";
 export async function listAlertRuleViews(projectId: string): Promise<AlertRuleView[]> {
   const [rules, keywordData] = await Promise.all([
     loadRules(projectId),
@@ -285,10 +290,13 @@ export async function listAlertRuleViews(projectId: string): Promise<AlertRuleVi
   ]);
   return rules.map((rule) => ruleView(rule, keywordData.labels));
 }
-export async function listTriggeredAlertViews(projectId: string): Promise<TriggeredAlertView[]> {
+export async function listTriggeredAlertViews(
+  projectId: string,
+  query: AlertFeedQuery = {},
+): Promise<TriggeredAlertView[]> {
   const [alerts, keywordData] = await Promise.all([
-    loadAlerts(projectId),
+    loadAlerts(projectId, query.where),
     getRequestAlertKeywordData(projectId),
   ]);
-  return alerts.map((alert) => alertView(alert, keywordData.labels));
+  return alerts.map((alert) => alertView(alert, keywordData.labels, query.marketsByLocation));
 }

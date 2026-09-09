@@ -25,7 +25,15 @@ describe("GET operations", () => {
       publicId: "prj_1",
     });
     mocks.readOperationSnapshot.mockResolvedValue([
-      { id: "import_1", kind: "gsc_import", progress: { done: 2, total: 4 }, state: "running" },
+      {
+        capabilities: { pause: true, resume: false, retry: false },
+        id: "import_1",
+        kind: "gsc_import",
+        presentation: { action: "pause", supportingText: "Import is running.", title: "Importing" },
+        property: "sc-domain:example.com",
+        progress: { done: 2, total: 4 },
+        state: "running",
+      },
     ]);
   });
 
@@ -47,8 +55,15 @@ describe("GET operations", () => {
     await expect(response.json()).resolves.toEqual({
       operations: [
         {
+          capabilities: { pause: true, resume: false, retry: false },
           id: "import_1",
           kind: "gsc_import",
+          presentation: {
+            action: "pause",
+            supportingText: "Import is running.",
+            title: "Importing",
+          },
+          property: "sc-domain:example.com",
           progress: { done: 2, total: 4 },
           state: "running",
         },
@@ -65,5 +80,14 @@ describe("GET operations", () => {
       GET(new Request("https://example.com/api/operations?project=prj_foreign")),
     ).rejects.toMatchObject({ digest: "NEXT_HTTP_ERROR_FALLBACK;404" });
     expect(mocks.readOperationSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("returns a non-cacheable degraded response when the snapshot cannot be read", async () => {
+    mocks.readOperationSnapshot.mockRejectedValue(new Error("snapshot unavailable"));
+
+    const response = await GET(new Request("https://example.com/api/operations?project=prj_1"));
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
 });

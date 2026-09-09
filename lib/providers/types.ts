@@ -1,6 +1,7 @@
+import type { ObservationRunInput } from "@/lib/observation/types";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
-import type { SerpDepth } from "@/lib/serp/markets";
 import type { ProviderAllocationCatalog } from "./allocation-catalog";
 import type {
   AnalyticsQueryStatsInput,
@@ -94,6 +95,8 @@ export type SerpRankResult = {
   costCents: number;
   checkedAt: Date;
   raw?: SerpRawPayload | null;
+  /** Durable observation rows extracted at ingest (PR0); absent when the adapter captured none. */
+  observation?: ObservationRunInput | null;
 };
 
 export type RankedKeywordRow = {

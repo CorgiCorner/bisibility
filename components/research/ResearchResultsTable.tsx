@@ -1,20 +1,26 @@
 "use client";
 
-import { DataGrid } from "@/components/keywords/grid/DataGrid";
-import { keywordGridSx } from "@/components/keywords/grid/keyword-data-grid-config";
-import { Button, Card } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { DataTable } from "@/components/ui/data-table/DataTable";
+import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { relativePast } from "@/lib/format/relative-time";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
-import type { GridRowSelectionModel } from "@mui/x-data-grid";
-import {
-  BookmarkSimpleIcon as BookmarkSimple,
-  FunnelIcon as Funnel,
-  PlusIcon as Plus,
-  XIcon as X,
-} from "@phosphor-icons/react";
-import { useMemo } from "react";
+import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
+import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useMemo, useState } from "react";
 import { researchResultsColumns } from "./research-results-columns";
+import {
+  RESEARCH_RESULTS_DEFAULT_PAGE_SIZE,
+  RESEARCH_RESULTS_PAGE_SIZE_OPTIONS,
+  RESEARCH_RESULTS_TABLE_ID,
+  researchResultsSelectedKeywords,
+  researchResultsSelectionIds,
+  researchResultsTableRows,
+} from "./research-results-table-state";
 import { ResearchExportMenu } from "./research-results-view";
 
 export type ResearchDeeperOffer = { cached: boolean; costCents: number | null; nextLimit: number };
@@ -64,11 +70,23 @@ export function ResearchResultsTable({
   trackingMarketCount = 1,
   metricsAvailable = true,
 }: Readonly<ResearchResultsTableProps>) {
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: RESEARCH_RESULTS_DEFAULT_PAGE_SIZE,
+  });
+  const [sorting, setSorting] = useState<DataTableSort | null>({
+    direction: "desc",
+    field: "searchVolume",
+  });
   const columns = useMemo(
     () => researchResultsColumns({ canRemoveSaved, metricsAvailable, onToggleSave }),
     [canRemoveSaved, metricsAvailable, onToggleSave],
   );
-  const selectionModel: GridRowSelectionModel = { ids: new Set(selectedKeywords), type: "include" };
+  const tableRows = useMemo(() => researchResultsTableRows(rows), [rows]);
+  const selection = useMemo(
+    () => researchResultsSelectionIds(tableRows, selectedKeywords),
+    [selectedKeywords, tableRows],
+  );
   const checksPerRun = selectedKeywords.length * trackingMarketCount;
   const fetchedAge = relativePast(new Date(fetchedAt), new Date());
 
@@ -105,14 +123,12 @@ export function ResearchResultsTable({
               }}
               size="sm"
               startIcon={<BookmarkSimple weight="regular" size={14} />}
-              sx={{
-                backgroundColor: "var(--bg-sidebar)",
-                border: "1px solid var(--accent)",
-                color: "var(--accent-hover)",
-                "&:hover": {
-                  backgroundColor: "var(--bg-sidebar)",
-                  border: "1px solid var(--accent-hover)",
-                },
+              style={{
+                "--control-background-color": "var(--bg-sidebar)",
+                "--control-border": "1px solid var(--accent)",
+                "--control-color": "var(--accent-hover)",
+                "--control-hover-background-color": "var(--bg-sidebar)",
+                "--control-hover-border": "1px solid var(--accent-hover)",
               }}
               variant="secondary"
             >
@@ -150,44 +166,41 @@ export function ResearchResultsTable({
         </p>
         <ResearchExportMenu rows={rows} seed={seed} />
       </div>
-      <div className="min-w-0 overflow-x-auto">
-        <div className="h-[620px] min-w-[930px]">
-          <DataGrid
-            checkboxSelection
-            columnHeaderHeight={42}
-            columns={columns}
-            disableRowSelectionExcludeModel
-            disableRowSelectionOnClick
-            getRowClassName={({ row }) =>
-              row.keyword === activeKeyword ? "bv-research-active" : ""
-            }
-            getRowId={(row) => row.keyword}
-            hideFooter
-            initialState={{ sorting: { sortModel: [{ field: "searchVolume", sort: "desc" }] } }}
-            isRowSelectable={({ row }) => !row.alreadyTracked}
-            onRowClick={({ row }) => onActiveChange(row)}
-            onRowSelectionModelChange={(model) => onSelectionChange([...model.ids].map(String))}
-            rowHeight={54}
-            rowSelectionModel={selectionModel}
-            rows={rows}
-            sx={{
-              ...keywordGridSx,
-              "& .bv-research-active": {
-                backgroundColor: "var(--accent-soft)",
-                borderLeft: "2px solid var(--accent)",
-              },
-              "& .MuiDataGrid-row": { cursor: "pointer" },
-              "& .bv-research-save-toggle": {
-                opacity: 0,
-                transition: "opacity .16s ease, color .16s ease",
-              },
-              "& .bv-research-save-toggle:focus-visible, & .MuiDataGrid-row:hover .bv-research-save-toggle":
-                {
-                  opacity: 1,
-                },
-            }}
-          />
-        </div>
+      <div
+        className="h-[620px] min-w-0 [&>[role=table]]:border-0 [&_.bv-research-save-toggle]:opacity-0 [&_.bv-research-save-toggle]:transition-[opacity,color] [&_[role=row]:hover_.bv-research-save-toggle]:opacity-100 [&_.bv-research-save-toggle:focus-visible]:opacity-100"
+        data-testid="research-results-viewport"
+      >
+        <DataTable
+          ariaLabel="Keyword research results"
+          columns={columns}
+          emptyState={
+            <p className="m-0 text-[12px] text-fg-muted">No keywords match these filters.</p>
+          }
+          id={RESEARCH_RESULTS_TABLE_ID}
+          layout="fill"
+          onPaginationChange={setPagination}
+          onRowClick={onActiveChange}
+          onSelectionChange={(next) =>
+            onSelectionChange(researchResultsSelectedKeywords(tableRows, next, selectedKeywords))
+          }
+          onSortingChange={setSorting}
+          pagination={{
+            ...pagination,
+            pageSizeOptions: RESEARCH_RESULTS_PAGE_SIZE_OPTIONS,
+            rowCount: tableRows.length,
+          }}
+          paginationMode="client"
+          rowClassName={(row) =>
+            row.keyword === activeKeyword
+              ? "!bg-accent-soft ![--dt-row-background:var(--accent-soft)] shadow-[inset_2px_0_0_var(--accent)] [&_[data-column-id=selection]]:shadow-[inset_2px_0_0_var(--accent)]"
+              : undefined
+          }
+          rows={tableRows}
+          selectable={(row) => !row.alreadyTracked}
+          selection={selection}
+          sorting={sorting}
+          sortingMode="client"
+        />
       </div>
       {deeper ? (
         <p className="m-0 border-t border-border px-4 py-3 text-[12px] text-fg-muted">

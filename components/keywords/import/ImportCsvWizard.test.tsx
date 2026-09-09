@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
 type MockButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   endIcon?: ReactNode;
   startIcon?: ReactNode;
-  sx?: unknown;
+  style?: unknown;
 };
 type MockSheetProps = {
   children: ReactNode;
@@ -43,14 +43,16 @@ vi.mock("@/lib/actions/keyword-import-export", () => ({
 vi.mock("@/lib/actions/keyword-import-refresh", () => ({
   refreshKeywordViewsAfterImport: mocks.refreshKeywordViewsAfterImport,
 }));
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/Button", () => ({
   Button: ({
     children,
     endIcon: _endIcon,
     startIcon: _startIcon,
-    sx: _sx,
+    style: _sx,
     ...props
   }: MockButtonProps) => <button {...props}>{children}</button>,
+}));
+vi.mock("@/components/ui/Sheet", () => ({
   Sheet: ({ children, footer, onClose, open, title }: MockSheetProps) =>
     open ? (
       <div>
@@ -237,6 +239,108 @@ describe("ImportCsvWizard", () => {
     });
   });
 
+  it("blocks an empty project's import and links directly to Markets", async () => {
+    render(
+      <ImportCsvWizard
+        onClose={mocks.onClose}
+        open
+        projectId="prj_abcdefghijklmnopqrstuvwx"
+        marketContext={{ markets: [] }}
+      />,
+    );
+    expect(await continueButton()).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent("Create a market before importing");
+    expect(screen.getByRole("link", { name: "Manage markets" })).toHaveAttribute(
+      "href",
+      "/app/prj_abcdefghijklmnopqrstuvwx/markets",
+    );
+    expect(mocks.reviewKeywordImport).not.toHaveBeenCalled();
+  });
+
+  it("invalidates review when the default market changes while keeping uploaded CSV", async () => {
+    const user = userEvent.setup();
+    render(
+      <ImportCsvWizard
+        onClose={mocks.onClose}
+        open
+        projectId="prj_abcdefghijklmnopqrstuvwx"
+        marketContext={{
+          initialMarketKey: "US",
+          markets: [
+            {
+              id: "pmkt_us",
+              canonicalKey: "US",
+              displayName: "United States",
+              languageLabel: "English",
+              status: "active",
+            },
+            {
+              id: "pmkt_gb",
+              canonicalKey: "GB",
+              displayName: "United Kingdom",
+              languageLabel: "English",
+              status: "active",
+            },
+          ],
+        }}
+      />,
+    );
+    await reachReviewWithCsv();
+    await user.click(screen.getByRole("button", { name: "Market for rows without a location" }));
+    await user.click(screen.getByRole("menuitem", { name: "United Kingdom / English" }));
+    expect(screen.getByText("Map 2")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Import keywords" })).not.toBeInTheDocument();
+    fireEvent.click(await continueButton());
+    await waitFor(() =>
+      expect(mocks.reviewKeywordImport).toHaveBeenLastCalledWith(
+        expect.objectContaining({ csv: "rank tracker\nseo api", defaultMarketKey: "GB" }),
+      ),
+    );
+    expect(mocks.importKeywordsFromCsv).not.toHaveBeenCalled();
+  });
+
+  it("carries the paused market opened from Rank Tracker into CSV review and confirmation", async () => {
+    render(
+      <ImportCsvWizard
+        onClose={mocks.onClose}
+        open
+        projectId="prj_abcdefghijklmnopqrstuvwx"
+        marketContext={{
+          initialMarketKey: "GB",
+          markets: [
+            {
+              id: "pmkt_us",
+              canonicalKey: "US",
+              displayName: "United States",
+              languageLabel: "English",
+              status: "active",
+            },
+            {
+              id: "pmkt_gb",
+              canonicalKey: "GB",
+              displayName: "United Kingdom",
+              languageLabel: "English",
+              status: "paused",
+            },
+          ],
+        }}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Market for rows without a location" }),
+    ).toHaveTextContent("United Kingdom / English (paused)");
+    await reachReviewWithCsv();
+    expect(mocks.reviewKeywordImport).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultMarketKey: "GB" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Import keywords" }));
+    await waitFor(() =>
+      expect(mocks.importKeywordsFromCsv).toHaveBeenCalledWith(
+        expect.objectContaining({ defaultMarketKey: "GB" }),
+      ),
+    );
+  });
+
   it("validates an empty upload and unsupported files", async () => {
     renderWizard();
     await reachUpload();
@@ -306,6 +410,7 @@ describe("ImportCsvWizard", () => {
     expect(mocks.importKeywordsFromCsv).toHaveBeenCalledWith({
       columnMapping: {},
       csv: "rank tracker\nseo api",
+      defaultMarketKey: null,
       duplicateMode: "skip",
       projectId: "project_1",
       refresh: "deferred",

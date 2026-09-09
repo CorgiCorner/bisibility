@@ -2,7 +2,8 @@
 
 import { WebhookEndpointRow } from "@/components/alerts/WebhookEndpointRow";
 import { WebhookSecretField } from "@/components/alerts/WebhookSecretField";
-import { Button, inputClassName } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { inputClassName } from "@/components/ui/input-styles";
 import type { WebhookEndpointView } from "@/lib/alerts/alert-data";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

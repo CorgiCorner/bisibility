@@ -1,16 +1,14 @@
 "use client";
 
-import { InfoTooltip } from "@/components/ui";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type {
   CapacityMeter as CapacityMeterValue,
   EmailCapacityConstraint,
 } from "@/lib/auth/signin-capacity-types";
 import { DOCS_URL } from "@/lib/site/site";
-import {
-  HardDrivesIcon as HardDrives,
-  HourglassLowIcon as HourglassLow,
-  MoonStarsIcon as MoonStars,
-} from "@phosphor-icons/react";
+import { HardDrivesIcon as HardDrives } from "@phosphor-icons/react/dist/csr/HardDrives";
+import { HourglassLowIcon as HourglassLow } from "@phosphor-icons/react/dist/csr/HourglassLow";
+import { MoonStarsIcon as MoonStars } from "@phosphor-icons/react/dist/csr/MoonStars";
 
 const SELF_HOSTING_URL = `${DOCS_URL}/self-hosting`;
 

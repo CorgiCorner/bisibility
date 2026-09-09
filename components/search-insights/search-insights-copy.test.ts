@@ -8,7 +8,6 @@ import {
   FRESHNESS_ADJUSTMENT_TOOLTIP,
   FRESHNESS_CHECKED_PREFIX,
   FRESHNESS_FINAL_PREFIX,
-  IMPORT_WAITING_FOR_WORKER,
   importDoneCopy,
   importRunningOwnershipCopy,
   NEUTRAL_COPY,
@@ -174,23 +173,18 @@ describe("search insights ownership copy", () => {
 describe("search import status copy", () => {
   it("exposes only the closed status vocabulary", () => {
     expect(SEARCH_SYNC_STATUS_VOCABULARY).toEqual([
-      "Running",
-      "Paused by you",
-      "Paused by provider limits",
-      "Waiting for first data",
-      "Waiting on worker",
-      "Needs reauth",
-      "Needs retry",
       "Queued",
-      "Complete",
+      "Importing",
+      "Paused",
+      "Waiting for Google",
+      "Reconnect required",
+      "Waiting for data",
+      "Delayed",
+      "Failed",
+      "Completed",
+      "Status unavailable",
     ]);
-    expect(new Set(SEARCH_SYNC_STATUS_VOCABULARY).size).toBe(9);
-  });
-
-  it("explains the worker wait with a concrete recovery action", () => {
-    expect(IMPORT_WAITING_FOR_WORKER).toBe(
-      "Import is waiting for the background worker - restart it and it resumes.",
-    );
+    expect(new Set(SEARCH_SYNC_STATUS_VOCABULARY).size).toBe(10);
   });
 
   it("keeps Sync now as the control label while an import is running", () => {

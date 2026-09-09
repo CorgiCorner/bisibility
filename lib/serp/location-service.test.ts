@@ -1,24 +1,33 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { resolveKeywordLocation } from "./location-service";
+import { resolveKeywordLocation, suggestKeywordLocations } from "./location-service";
+
+const austin = {
+  cityName: "Austin",
+  countryCode: "US",
+  displayName: "Austin,Texas,United States",
+  kind: "city" as const,
+  primaryGeoCode: 1_026_201,
+  primaryGeoName: "Austin,Texas,United States",
+  regionCode: null,
+  regionName: "Texas",
+  secondaryGeoName: "Austin, Texas, United States",
+};
 
 const mocks = vi.hoisted(() => ({
-  createCityLocationLookup: vi.fn(),
-  lookupConfigFromConnections: vi.fn(),
-  prisma: {
-    location: { findUnique: vi.fn(), upsert: vi.fn() },
-    providerConnection: { findMany: vi.fn() },
-  },
+  findSharedLocationCandidateByCanonicalKey: vi.fn(),
+  lookupFind: vi.fn(),
+  prisma: { location: { findUnique: vi.fn(), updateMany: vi.fn(), upsert: vi.fn() } },
+  searchSharedLocations: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("./location-lookup", () => ({
-  createCityLocationLookup: mocks.createCityLocationLookup,
-  lookupConfigFromConnections: mocks.lookupConfigFromConnections,
+vi.mock("./common-location-catalog", () => ({
+  createSharedLocationLookup: () => ({ find: mocks.lookupFind }),
+  findSharedLocationCandidateByCanonicalKey: mocks.findSharedLocationCandidateByCanonicalKey,
+  searchSharedLocations: mocks.searchSharedLocations,
 }));
 
-// The real prismaLocationStore + resolveLocation run against the mocked prisma;
-// only the provider HTTP layer (createCityLocationLookup) is faked, so no network.
 function upsertEchoesCreate() {
   mocks.prisma.location.upsert.mockImplementation(({ create }) => ({
     ...create,
@@ -29,62 +38,64 @@ function upsertEchoesCreate() {
 describe("resolveKeywordLocation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.findSharedLocationCandidateByCanonicalKey.mockResolvedValue(null);
+    mocks.lookupFind.mockResolvedValue(null);
     mocks.prisma.location.findUnique.mockResolvedValue(null);
-    mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
-    mocks.lookupConfigFromConnections.mockReturnValue({});
+    mocks.prisma.location.updateMany.mockResolvedValue({ count: 0 });
+    mocks.searchSharedLocations.mockResolvedValue([]);
     upsertEchoesCreate();
   });
 
-  it("country-only resolves deterministically without any provider lookup", async () => {
+  it("resolves a country without loading granular catalog data", async () => {
     const result = await resolveKeywordLocation({ country: "United States", projectId: "p1" });
 
-    expect(result.degraded).toBe(false);
-    expect(result.warning).toBeNull();
-    expect(result.location).toMatchObject({
-      canonicalKey: "US",
-      countryCode: "US",
-      displayName: "United States",
-      kind: "country",
+    expect(result).toMatchObject({
+      degraded: false,
+      location: { canonicalKey: "US", countryCode: "US", kind: "country" },
     });
-    // No provider connections loaded, no lookup built for a country-only selector.
-    expect(mocks.prisma.providerConnection.findMany).not.toHaveBeenCalled();
-    expect(mocks.createCityLocationLookup).not.toHaveBeenCalled();
+    expect(mocks.findSharedLocationCandidateByCanonicalKey).not.toHaveBeenCalled();
+    expect(mocks.lookupFind).not.toHaveBeenCalled();
   });
 
-  it("country plus language resolves a qualified market without provider lookup", async () => {
-    const result = await resolveKeywordLocation({
-      country: "Spain",
-      language: "en",
-      projectId: "p1",
-    });
+  it("uses a trusted shared catalog candidate for an explicit city key", async () => {
+    mocks.findSharedLocationCandidateByCanonicalKey.mockResolvedValue(austin);
 
-    expect(result.location).toMatchObject({
-      canonicalKey: "ES@en",
-      countryCode: "ES",
-      displayName: "Spain",
-      kind: "country",
-      languageCode: "en",
-    });
-    expect(mocks.prisma.providerConnection.findMany).not.toHaveBeenCalled();
-  });
-
-  it("selection country resolves by ISO code without any provider lookup", async () => {
     const result = await resolveKeywordLocation({
       projectId: "p1",
-      selection: { countryCode: "PL", kind: "country" },
+      selection: { canonicalKey: "US/Texas/Austin", kind: "city" },
     });
 
-    expect(result.location).toMatchObject({
-      canonicalKey: "PL",
-      countryCode: "PL",
-      displayName: "Poland",
-      kind: "country",
+    expect(mocks.findSharedLocationCandidateByCanonicalKey).toHaveBeenCalledWith(
+      "US/Texas/Austin",
+      "city",
+    );
+    expect(mocks.lookupFind).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      degraded: false,
+      location: { canonicalKey: "US/Texas/Austin", primaryGeoCode: 1_026_201 },
     });
-    expect(mocks.prisma.providerConnection.findMany).not.toHaveBeenCalled();
   });
 
-  it("selection canonicalKey uses the cached row without loading providers", async () => {
-    mocks.prisma.location.findUnique.mockResolvedValueOnce({
+  it("preserves a selected non-default language while reading the unqualified catalog key", async () => {
+    mocks.findSharedLocationCandidateByCanonicalKey.mockResolvedValue(austin);
+
+    const result = await resolveKeywordLocation({
+      projectId: "p1",
+      selection: { canonicalKey: "US/Texas/Austin@es", kind: "city" },
+    });
+
+    expect(mocks.findSharedLocationCandidateByCanonicalKey).toHaveBeenCalledWith(
+      "US/Texas/Austin@es",
+      "city",
+    );
+    expect(result.location).toMatchObject({
+      canonicalKey: "US/Texas/Austin@es",
+      languageCode: "es",
+    });
+  });
+
+  it("enriches an exact cached catalog selection instead of trusting country fallback handles", async () => {
+    const cached = {
       canonicalKey: "US/Texas/Austin",
       cityName: "Austin",
       countryCode: "US",
@@ -92,170 +103,132 @@ describe("resolveKeywordLocation", () => {
       gl: "us",
       hl: "en",
       id: "loc_existing",
+      kind: "city" as const,
+      languageCode: "en",
+      languageLabel: "English",
+      primaryGeoCode: null,
+      primaryGeoName: "United States",
+      regionCode: null,
+      secondaryGeoName: "United States",
+    };
+    mocks.findSharedLocationCandidateByCanonicalKey.mockResolvedValue(austin);
+    mocks.prisma.location.findUnique.mockResolvedValue(cached);
+
+    const result = await resolveKeywordLocation({
+      projectId: "p1",
+      selection: { canonicalKey: "US/Texas/Austin", kind: "city" },
+    });
+
+    expect(result).toMatchObject({ degraded: false, location: { id: "loc_existing" } });
+    expect(mocks.prisma.location.updateMany).toHaveBeenCalledWith({
+      data: {
+        primaryGeoCode: 1_026_201,
+        primaryGeoName: "Austin,Texas,United States",
+        secondaryGeoName: "Austin, Texas, United States",
+      },
+      where: {
+        canonicalKey: "US/Texas/Austin",
+        countryCode: "US",
+        id: "loc_existing",
+        kind: "city",
+        primaryGeoCode: null,
+        primaryGeoName: "United States",
+        secondaryGeoName: "United States",
+      },
+    });
+  });
+
+  it("keeps an unknown historical cached selection readable", async () => {
+    mocks.prisma.location.findUnique.mockResolvedValueOnce({
+      canonicalKey: "US/Legacy/Austin",
+      cityName: "Austin",
+      countryCode: "US",
+      displayName: "Austin,Legacy,United States",
+      gl: "us",
+      hl: "en",
+      id: "loc_existing",
       kind: "city",
       languageCode: "en",
       languageLabel: "English",
-      primaryGeoCode: 1026201,
-      primaryGeoName: "Austin,Texas,United States",
+      primaryGeoCode: null,
+      primaryGeoName: "United States",
       regionCode: null,
-      secondaryGeoName: "Austin,Texas,United States",
+      secondaryGeoName: "United States",
     });
 
     const result = await resolveKeywordLocation({
       projectId: "p1",
-      selection: { canonicalKey: "US/Texas/Austin", kind: "city" },
+      selection: { canonicalKey: "US/Legacy/Austin", kind: "city" },
     });
 
-    expect(result.degraded).toBe(false);
     expect(result.location.id).toBe("loc_existing");
-    expect(mocks.prisma.providerConnection.findMany).not.toHaveBeenCalled();
-    expect(mocks.createCityLocationLookup).not.toHaveBeenCalled();
+    expect(mocks.lookupFind).not.toHaveBeenCalled();
   });
 
-  it("normalizes a default-language key before the first database lookup", async () => {
-    mocks.prisma.location.findUnique.mockResolvedValueOnce({
-      canonicalKey: "ES",
+  it("does not bind an ambiguous legacy city name when shared lookup refuses it", async () => {
+    const result = await resolveKeywordLocation({
+      city: "Austin",
+      country: "United States",
+      projectId: "p1",
+    });
+
+    expect(result).toMatchObject({
+      degraded: true,
+      location: { canonicalKey: "US", kind: "country" },
+    });
+  });
+
+  it("retries a historical two-part city sentinel as its exact region", async () => {
+    const andalusia = {
       cityName: null,
       countryCode: "ES",
-      displayName: "Spain",
-      gl: "es",
-      hl: "es",
-      id: "loc_spain",
-      kind: "country",
-      languageCode: "es",
-      languageLabel: "Spanish",
-      primaryGeoCode: null,
-      primaryGeoName: "Spain",
+      displayName: "Andalusia,Spain",
+      kind: "region" as const,
+      primaryGeoCode: 21_160,
+      primaryGeoName: "Andalusia,Spain",
       regionCode: null,
-      secondaryGeoName: "Spain",
-    });
+      regionName: "Andalusia",
+      secondaryGeoName: "Andalusia, Spain",
+    };
+    mocks.lookupFind.mockImplementation((input) =>
+      Promise.resolve(input.kind === "region" ? andalusia : null),
+    );
 
     const result = await resolveKeywordLocation({
       projectId: "p1",
-      selection: { canonicalKey: "ES@es", kind: "city" },
+      selection: { canonicalKey: "ES/Andalusia", kind: "city" },
     });
 
-    expect(mocks.prisma.location.findUnique).toHaveBeenCalledWith({
-      where: { canonicalKey: "ES" },
+    expect(mocks.lookupFind.mock.calls.map(([input]) => input.kind)).toEqual(["city", "region"]);
+    expect(result).toMatchObject({
+      degraded: false,
+      location: { canonicalKey: "ES/Andalusia", kind: "region" },
     });
-    expect(result.location.id).toBe("loc_spain");
-    expect(mocks.prisma.providerConnection.findMany).not.toHaveBeenCalled();
   });
 
-  it.each(["ES@zz", "ES@en@fr", "ES@"])(
-    "rejects invalid language qualifiers before database lookup: %s",
-    async (canonicalKey) => {
-      await expect(
-        resolveKeywordLocation({
-          projectId: "p1",
-          selection: { canonicalKey, kind: "city" },
-        }),
-      ).rejects.toMatchObject({ field: "languageCode" });
-      expect(mocks.prisma.location.findUnique).not.toHaveBeenCalled();
-    },
-  );
-
-  it("city resolves through the configured provider and yields a city locationId", async () => {
-    mocks.prisma.providerConnection.findMany.mockResolvedValue([
-      { credentialsEncrypted: "enc", provider: "dataforseo" },
-    ]);
-    mocks.lookupConfigFromConnections.mockReturnValue({
-      dataForSeo: { login: "l", password: "p" },
-    });
-    mocks.createCityLocationLookup.mockReturnValue({
-      findCity: vi.fn().mockResolvedValue({
-        cityName: "Austin",
-        displayName: "Austin,Texas,United States",
-        primaryGeoCode: 1026201,
-        primaryGeoName: "Austin,Texas,United States",
-        regionCode: null,
-        regionName: "Texas",
-        secondaryGeoName: "United States",
-      }),
-    });
-
-    const result = await resolveKeywordLocation({
-      city: "Austin",
-      country: "United States",
-      projectId: "p1",
-    });
-
-    expect(result.degraded).toBe(false);
-    expect(result.location).toMatchObject({
-      canonicalKey: "US/Texas/Austin",
-      cityName: "Austin",
-      kind: "city",
-      primaryGeoCode: 1026201,
-    });
-    expect(result.location.id).toBe("loc_US/Texas/Austin");
-  });
-
-  it("missing selection canonicalKey is parsed and resolved as a fresh candidate", async () => {
-    const findCity = vi.fn().mockResolvedValue({
-      cityName: "Austin",
-      displayName: "Austin,Texas,United States",
-      primaryGeoCode: 1026201,
-      primaryGeoName: "Austin,Texas,United States",
-      regionCode: null,
-      regionName: "Texas",
-      secondaryGeoName: "Austin,Texas,United States",
-    });
-    mocks.prisma.providerConnection.findMany.mockResolvedValue([
-      { credentialsEncrypted: "enc", provider: "serpapi" },
-    ]);
-    mocks.lookupConfigFromConnections.mockReturnValue({ serpApi: true });
-    mocks.createCityLocationLookup.mockReturnValue({ findCity });
-
+  it("does not retry a failed three-part city key as a different region", async () => {
     const result = await resolveKeywordLocation({
       projectId: "p1",
       selection: { canonicalKey: "US/Texas/Austin", kind: "city" },
     });
 
-    expect(findCity).toHaveBeenCalledWith({
-      cityName: "Austin",
+    expect(mocks.lookupFind).toHaveBeenCalledOnce();
+    expect(result).toMatchObject({
+      degraded: true,
+      location: { canonicalKey: "US", kind: "country" },
+    });
+  });
+
+  it("serves shared suggestions independently of project provider connections", async () => {
+    mocks.searchSharedLocations.mockResolvedValue([{ ...austin, canonicalKey: "US/Texas/Austin" }]);
+
+    await expect(
+      suggestKeywordLocations({ countryCode: "US", projectId: null, query: "Austin" }),
+    ).resolves.toEqual([expect.objectContaining({ canonicalKey: "US/Texas/Austin" })]);
+    expect(mocks.searchSharedLocations).toHaveBeenCalledWith({
       countryCode: "US",
-      regionCode: undefined,
-      regionName: "Texas",
+      limit: undefined,
+      query: "Austin",
     });
-    expect(result.location.canonicalKey).toBe("US/Texas/Austin");
-  });
-
-  it("unsupported city degrades to the country row with a warning (non-fatal)", async () => {
-    mocks.prisma.providerConnection.findMany.mockResolvedValue([
-      { credentialsEncrypted: "enc", provider: "serpapi" },
-    ]);
-    mocks.lookupConfigFromConnections.mockReturnValue({ serpApi: true });
-    mocks.createCityLocationLookup.mockReturnValue({
-      findCity: vi.fn().mockResolvedValue(null),
-    });
-
-    const result = await resolveKeywordLocation({
-      city: "Nowheresville",
-      country: "United States",
-      projectId: "p1",
-    });
-
-    expect(result.degraded).toBe(true);
-    expect(result.warning).toContain("Nowheresville");
-    expect(result.location).toMatchObject({ canonicalKey: "US", kind: "country" });
-  });
-
-  it("throws on an unsupported country (create/edit-time, correctable)", async () => {
-    await expect(resolveKeywordLocation({ country: "Atlantis", projectId: "p1" })).rejects.toThrow(
-      /Unsupported country/,
-    );
-  });
-
-  it("resolves a city offline when no provider is configured (degrades to country)", async () => {
-    // No connections -> no lookup built -> city cannot resolve -> country fallback.
-    const result = await resolveKeywordLocation({
-      city: "Austin",
-      country: "United States",
-      projectId: "p1",
-    });
-
-    expect(result.degraded).toBe(true);
-    expect(result.location).toMatchObject({ canonicalKey: "US", kind: "country" });
-    expect(mocks.createCityLocationLookup).not.toHaveBeenCalled();
   });
 });

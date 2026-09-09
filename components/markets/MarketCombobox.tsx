@@ -1,8 +1,13 @@
 "use client";
 
 import { CountryFlag } from "@/components/keywords/CountryFlag";
-import { MenuSelect, type MenuSelectOption, type MenuSelectOptionGroup } from "@/components/ui";
+import {
+  MenuSelect,
+  type MenuSelectOption,
+  type MenuSelectOptionGroup,
+} from "@/components/ui/MenuSelect";
 import type { ReactNode } from "react";
+import { MARKET_PICKER_SEARCH_THRESHOLD } from "./market-picker-constants";
 
 export type MarketComboboxOption<T> = {
   ariaLabel?: string;
@@ -80,6 +85,7 @@ export function MarketCombobox<T>({
 }: Readonly<MarketComboboxProps<T>>) {
   const trackedValues = new Set(trackedMarkets.map((market) => market.value));
   const dedupedCatalog = catalogMarkets.filter((market) => !trackedValues.has(market.value));
+  const allMarkets = [...trackedMarkets, ...dedupedCatalog];
   const groups: MenuSelectOptionGroup[] = [];
   if (trackedMarkets.length > 0) {
     groups.push({
@@ -93,10 +99,17 @@ export function MarketCombobox<T>({
       id: "catalog",
       label: catalogLabel,
       options: dedupedCatalog.map(toMenuSelectOption),
-      searchOnly: catalogSearchOnly,
+      searchOnly: catalogSearchOnly && allMarkets.length > MARKET_PICKER_SEARCH_THRESHOLD,
     });
   }
-  const allMarkets = [...trackedMarkets, ...dedupedCatalog];
+  const searchable = allMarkets.length > MARKET_PICKER_SEARCH_THRESHOLD;
+  const onlyGroup = groups[0];
+  const menuInput =
+    groups.length === 1 && onlyGroup?.searchOnly
+      ? { groups: [{ ...onlyGroup, hideHeading: true }] }
+      : groups.length === 1
+        ? { options: onlyGroup?.options ?? [] }
+        : { groups };
 
   function handleChange(nextValue: string) {
     const market = allMarkets.find((market) => market.value === nextValue);
@@ -108,7 +121,7 @@ export function MarketCombobox<T>({
       ariaLabel={ariaLabel}
       disabled={disabled}
       emptyMessage={emptyMessage}
-      groups={groups}
+      {...menuInput}
       leadingIcon={
         selectedCountryCode ? (
           <CountryFlag
@@ -124,7 +137,7 @@ export function MarketCombobox<T>({
       noResultsMessage={noResultsMessage}
       onChange={handleChange}
       searchPlaceholder="Search markets..."
-      searchable
+      searchable={searchable}
       triggerClassName={triggerClassName}
       triggerTitle={triggerTitle}
       triggerWrapperClassName={triggerWrapperClassName}

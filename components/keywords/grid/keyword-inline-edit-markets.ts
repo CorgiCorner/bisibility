@@ -27,14 +27,16 @@ export function drawerMarketOptions(
     ...legacy,
     ...markets.map((m) => ({
       countryCode: m.countryCode,
-      disabled: m.status !== "active",
+      disabled: false,
       languageCode: m.languageCode,
       languageLabel: m.languageLabel,
       locationLabel: m.displayName,
       payload: m.canonicalKey,
       secondary: m.status !== "active" ? "paused" : undefined,
       tooltip:
-        m.status !== "active" ? "Enable this market in Settings before selecting it." : undefined,
+        m.status !== "active"
+          ? "Keywords can be added now. Rank checks start after the market is resumed."
+          : undefined,
       value: m.canonicalKey,
     })),
   ];

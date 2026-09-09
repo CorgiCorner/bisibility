@@ -2,7 +2,10 @@
 
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { UsageCard } from "@/components/settings/usage/UsageCard";
-import { Button, FieldLabel, Input, StatusPill } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Input } from "@/components/ui/Input";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { WaitlistFailureResult } from "@/lib/landing/waitlist-result";
 import {
@@ -10,7 +13,8 @@ import {
   hostedPricingFeedbackSchema,
 } from "@/lib/schemas/usage-settings";
 import { actionErrorMessage, waitlistFailureMessage } from "@/lib/ui/action-error";
-import { CheckIcon as Check, PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 

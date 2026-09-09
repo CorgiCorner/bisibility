@@ -36,10 +36,14 @@ import {
 } from "./cache";
 
 describe("domain overview cache", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubEnv("READ_ONLY_DEMO", "0");
+    vi.stubEnv("DOMAIN_OVERVIEW_CACHE_TTL_SECONDS", "");
+  });
   afterEach(() => vi.unstubAllEnvs());
 
-  it("builds versioned market-aware keys with optional pagination", () => {
+  it("builds versioned country-language keys with optional pagination", () => {
     const base = {
       languageCode: "en",
       locationCode: 2840,
@@ -69,6 +73,16 @@ describe("domain overview cache", () => {
 
   it("computes cached until from fetched at", () => {
     expect(domainOverviewCachedUntil("2026-08-11T10:00:00.000Z")).toBe("2026-08-11T22:00:00.000Z");
+  });
+
+  it("keeps demo results for 30 days even when the installation has a shorter TTL", async () => {
+    vi.stubEnv("READ_ONLY_DEMO", "1");
+    vi.stubEnv("DOMAIN_OVERVIEW_CACHE_TTL_SECONDS", "43200");
+    expect(domainOverviewCacheTtlSeconds()).toBe(2_592_000);
+    expect(domainOverviewCachedUntil("2026-08-11T10:00:00.000Z")).toBe("2026-09-10T10:00:00.000Z");
+    const load = vi.fn();
+    await withDomainOverviewCache({ key: "demo-key", load });
+    expect(mocks.withCache).toHaveBeenCalledWith({ key: "demo-key", load, ttlSeconds: 2_592_000 });
   });
 
   it("delegates reads and writes with the configured TTL", async () => {

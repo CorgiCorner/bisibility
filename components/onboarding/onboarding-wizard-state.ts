@@ -1,3 +1,4 @@
+import type { LocationFieldValue } from "@/components/keywords/location-picker-data";
 import {
   DEFAULT_ONBOARDING_DEVICE,
   DEFAULT_ONBOARDING_FREQUENCY,
@@ -8,10 +9,10 @@ import type { AddKeywordsForm } from "@/components/onboarding/steps/StepAddKeywo
 import type { OnboardingConnectProviderInput } from "@/components/onboarding/steps/StepConnectProvider";
 import type { CreateProjectFormValues } from "@/components/onboarding/steps/StepCreateProject";
 import type { OnboardingTrackingDefaultsInput } from "@/components/onboarding/steps/step-schedule-model";
-import { DEFAULT_SERP_DEVICE, DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEVICE, type SerpDepth } from "@/lib/serp/constants";
 // Restore ownership matching with issue #863:
 // import { defaultMatchingScopeValues } from "./MatchingScopeFields";
-import { countryNameForLocationValue, locationValuesForKeys } from "./onboarding-location-field";
+import { countryNameForLocationValue, locationValueForKey } from "./onboarding-location-field";
 import { DEFAULT_ONBOARDING_LOCATION_KEY } from "./onboarding-locations";
 
 export type OnboardingProject = {
@@ -22,7 +23,11 @@ export type OnboardingProject = {
   publicId: string;
   device?: "desktop" | "mobile";
   frequency?: OnboardingTrackingDefaultsInput["frequency"];
+  cronExpression?: string | null;
+  jitterMinutes?: number;
+  serpDepth?: SerpDepth;
   timezone?: string;
+  trackingStartedAt?: string | null;
 };
 
 export type OnboardingDraft = {
@@ -40,19 +45,25 @@ export function initialOnboardingDraft(
   project: OnboardingProject | null,
   flowState: OnboardingFlowState,
   initialWebsite = "",
+  storedSelections: readonly LocationFieldValue[] = [],
+  initialKeywordDraft = "",
 ): OnboardingDraft {
   const projectId = projectIdFor(project, flowState);
   const locations = [...(flowState.locations ?? [DEFAULT_ONBOARDING_LOCATION_KEY])];
-  const locationSelections = locationValuesForKeys(locations);
-  const defaultCountry = locationSelections[0]
-    ? countryNameForLocationValue(locationSelections[0])
-    : DEFAULT_SERP_MARKET;
+  const locationSelections = locations.map(
+    (key) =>
+      storedSelections.find((selection) => selection.canonicalKey === key) ??
+      locationValueForKey(key),
+  );
+  const defaultCountry = countryNameForLocationValue(
+    locationSelections[0] ?? locationValueForKey(DEFAULT_ONBOARDING_LOCATION_KEY),
+  );
   const devices = [...(flowState.devices ?? [project?.device ?? DEFAULT_ONBOARDING_DEVICE])];
   return {
     addKeywords: {
       device: devices[0] ?? DEFAULT_SERP_DEVICE,
       devices,
-      keywords: "",
+      keywords: initialKeywordDraft,
       locations,
       projectId,
     },
@@ -69,11 +80,12 @@ export function initialOnboardingDraft(
     },
     schedule: {
       country: defaultCountry,
-      cronExpression: "0 6 * * *",
+      cronExpression: project?.cronExpression ?? "0 6 * * *",
       device: devices[0] ?? DEFAULT_SERP_DEVICE,
       devices,
       frequency: project?.frequency ?? DEFAULT_ONBOARDING_FREQUENCY,
-      jitterMinutes: 60,
+      jitterMinutes: project?.jitterMinutes ?? 60,
+      serpDepth: project?.serpDepth ?? flowState.serpDepth,
       locationSelections,
       locations,
       projectId,

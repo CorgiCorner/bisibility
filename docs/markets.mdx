@@ -8,9 +8,15 @@ one keyword can have separate desktop and mobile targets for each market.
 Google is the current search engine.
 
 Position tracking accepts every country and language listed below. The app
-suggests the languages commonly used in a selected country first, but **More
-languages** exposes the complete language list. Suggestions are a convenience,
+suggests the languages commonly used in a selected country first, and searching the language menu exposes the complete language list. Suggestions are a convenience,
 not a validation limit.
+
+The same location catalog is used in onboarding, market creation, keyword entry,
+and the Locations API. Country and language choices come from the intersection
+of both providers' published support lists. City and region entries are matched
+by their shared Google location ID and retain both providers' targeting handles.
+Ambiguous matches are excluded. The bundled catalog is searched without provider
+credentials or a live provider request; rank checks still require a provider.
 
 ## Location key syntax
 
@@ -37,33 +43,215 @@ when a location key has no `@language` qualifier.
 {/* supported-market-catalog:start */}
 | Country | ISO code | Default language |
 | - | - | - |
-| United States | `US` | English (`en`) |
-| United Kingdom | `GB` | English (`en`) |
-| Canada | `CA` | English (`en`) |
-| Australia | `AU` | English (`en`) |
-| Germany | `DE` | German (`de`) |
-| France | `FR` | French (`fr`) |
-| Spain | `ES` | Spanish (`es`) |
-| Italy | `IT` | Italian (`it`) |
-| Netherlands | `NL` | Dutch (`nl`) |
-| Sweden | `SE` | Swedish (`sv`) |
-| Poland | `PL` | Polish (`pl`) |
-| Ireland | `IE` | English (`en`) |
-| Portugal | `PT` | Portuguese (`pt`) |
-| Belgium | `BE` | Dutch (`nl`) |
-| Switzerland | `CH` | German (`de`) |
-| Austria | `AT` | German (`de`) |
-| Denmark | `DK` | Danish (`da`) |
-| Norway | `NO` | Norwegian (`no`) |
-| Finland | `FI` | Finnish (`fi`) |
-| Brazil | `BR` | Portuguese (`pt`) |
-| Mexico | `MX` | Spanish (`es`) |
-| India | `IN` | English (`en`) |
-| Japan | `JP` | Japanese (`ja`) |
-| Singapore | `SG` | English (`en`) |
-| New Zealand | `NZ` | English (`en`) |
-| South Africa | `ZA` | English (`en`) |
+| Andorra | `AD` | Catalan (`ca`) |
 | United Arab Emirates | `AE` | English (`en`) |
+| Afghanistan | `AF` | Farsi (`fa`) |
+| Antigua and Barbuda | `AG` | English (`en`) |
+| Albania | `AL` | Albanian (`sq`) |
+| Armenia | `AM` | Armenian (`hy`) |
+| Angola | `AO` | Portuguese (`pt`) |
+| Antarctica | `AQ` | English (`en`) |
+| Argentina | `AR` | Spanish (`es`) |
+| American Samoa | `AS` | English (`en`) |
+| Austria | `AT` | German (`de`) |
+| Australia | `AU` | English (`en`) |
+| Azerbaijan | `AZ` | Azeri (`az`) |
+| Bosnia and Herzegovina | `BA` | Bosnian (`bs`) |
+| Barbados | `BB` | English (`en`) |
+| Bangladesh | `BD` | Bengali (`bn`) |
+| Belgium | `BE` | Dutch (`nl`) |
+| Burkina Faso | `BF` | French (`fr`) |
+| Bulgaria | `BG` | Bulgarian (`bg`) |
+| Bahrain | `BH` | Arabic (`ar`) |
+| Burundi | `BI` | Kirundi (`rn`) |
+| Benin | `BJ` | French (`fr`) |
+| Brunei | `BN` | Malay (`ms`) |
+| Bolivia | `BO` | Spanish (`es`) |
+| Brazil | `BR` | Portuguese (`pt`) |
+| The Bahamas | `BS` | English (`en`) |
+| Bhutan | `BT` | Nepali (`ne`) |
+| Botswana | `BW` | English (`en`) |
+| Belize | `BZ` | English (`en`) |
+| Canada | `CA` | English (`en`) |
+| Cocos (Keeling) Islands | `CC` | English (`en`) |
+| Democratic Republic of the Congo | `CD` | French (`fr`) |
+| Central African Republic | `CF` | French (`fr`) |
+| Republic of the Congo | `CG` | French (`fr`) |
+| Switzerland | `CH` | German (`de`) |
+| Cote d'Ivoire | `CI` | French (`fr`) |
+| Cook Islands | `CK` | English (`en`) |
+| Chile | `CL` | Spanish (`es`) |
+| Cameroon | `CM` | French (`fr`) |
+| China | `CN` | Chinese (Simplified) (`zh-cn`) |
+| Colombia | `CO` | Spanish (`es`) |
+| Costa Rica | `CR` | Spanish (`es`) |
+| Cabo Verde | `CV` | Portuguese (`pt`) |
+| Christmas Island | `CX` | English (`en`) |
+| Cyprus | `CY` | Greek (`el`) |
+| Czechia | `CZ` | Czech (`cs`) |
+| Germany | `DE` | German (`de`) |
+| Djibouti | `DJ` | French (`fr`) |
+| Denmark | `DK` | Danish (`da`) |
+| Dominica | `DM` | English (`en`) |
+| Dominican Republic | `DO` | Spanish (`es`) |
+| Algeria | `DZ` | Arabic (`ar`) |
+| Ecuador | `EC` | Spanish (`es`) |
+| Estonia | `EE` | Estonian (`et`) |
+| Egypt | `EG` | Arabic (`ar`) |
+| Eritrea | `ER` | English (`en`) |
+| Spain | `ES` | Spanish (`es`) |
+| Ethiopia | `ET` | Amharic (`am`) |
+| Finland | `FI` | Finnish (`fi`) |
+| Fiji | `FJ` | English (`en`) |
+| Micronesia | `FM` | English (`en`) |
+| France | `FR` | French (`fr`) |
+| Gabon | `GA` | French (`fr`) |
+| United Kingdom | `GB` | English (`en`) |
+| Grenada | `GD` | English (`en`) |
+| Georgia | `GE` | Georgian (`ka`) |
+| Guernsey | `GG` | English (`en`) |
+| Ghana | `GH` | Akan (`ak`) |
+| The Gambia | `GM` | English (`en`) |
+| Guinea | `GN` | French (`fr`) |
+| Equatorial Guinea | `GQ` | Spanish (`es`) |
+| Greece | `GR` | Greek (`el`) |
+| South Georgia and the South Sandwich Islands | `GS` | English (`en`) |
+| Guatemala | `GT` | Spanish (`es`) |
+| Guam | `GU` | English (`en`) |
+| Guinea-Bissau | `GW` | Portuguese (`pt`) |
+| Guyana | `GY` | English (`en`) |
+| Heard Island and McDonald Islands | `HM` | English (`en`) |
+| Honduras | `HN` | Spanish (`es`) |
+| Croatia | `HR` | Croatian (`hr`) |
+| Haiti | `HT` | Haitian (`ht`) |
+| Hungary | `HU` | Hungarian (`hu`) |
+| Indonesia | `ID` | Indonesian (`id`) |
+| Ireland | `IE` | English (`en`) |
+| Israel | `IL` | Hebrew (`he`) |
+| Isle of Man | `IM` | English (`en`) |
+| India | `IN` | English (`en`) |
+| Iraq | `IQ` | Arabic (`ar`) |
+| Iceland | `IS` | Icelandic (`is`) |
+| Italy | `IT` | Italian (`it`) |
+| Jersey | `JE` | English (`en`) |
+| Jamaica | `JM` | English (`en`) |
+| Jordan | `JO` | Arabic (`ar`) |
+| Japan | `JP` | Japanese (`ja`) |
+| Kenya | `KE` | Swahili (`sw`) |
+| Kyrgyzstan | `KG` | Kyrgyz (`ky`) |
+| Cambodia | `KH` | Khmer (`km`) |
+| Kiribati | `KI` | English (`en`) |
+| Comoros | `KM` | Arabic (`ar`) |
+| Saint Kitts and Nevis | `KN` | English (`en`) |
+| South Korea | `KR` | Korean (`ko`) |
+| Kuwait | `KW` | Arabic (`ar`) |
+| Kazakhstan | `KZ` | Russian (`ru`) |
+| Laos | `LA` | Lao (`lo`) |
+| Lebanon | `LB` | Arabic (`ar`) |
+| Saint Lucia | `LC` | English (`en`) |
+| Liechtenstein | `LI` | German (`de`) |
+| Sri Lanka | `LK` | Sinhalese (`si`) |
+| Liberia | `LR` | English (`en`) |
+| Lesotho | `LS` | Sesotho (`st`) |
+| Lithuania | `LT` | Lithuanian (`lt`) |
+| Luxembourg | `LU` | French (`fr`) |
+| Latvia | `LV` | Latvian (`lv`) |
+| Libya | `LY` | Arabic (`ar`) |
+| Morocco | `MA` | Arabic (`ar`) |
+| Monaco | `MC` | French (`fr`) |
+| Moldova | `MD` | Romanian (`ro`) |
+| Montenegro | `ME` | Albanian (`sq`) |
+| Madagascar | `MG` | Malagasy (`mg`) |
+| Marshall Islands | `MH` | English (`en`) |
+| North Macedonia | `MK` | Macedonian (`mk`) |
+| Mali | `ML` | French (`fr`) |
+| Myanmar (Burma) | `MM` | Burmese (`my`) |
+| Mongolia | `MN` | Mongolian (`mn`) |
+| Northern Mariana Islands | `MP` | English (`en`) |
+| Mauritania | `MR` | Arabic (`ar`) |
+| Malta | `MT` | Maltese (`mt`) |
+| Mauritius | `MU` | French (`fr`) |
+| Maldives | `MV` | English (`en`) |
+| Malawi | `MW` | English (`en`) |
+| Mexico | `MX` | Spanish (`es`) |
+| Malaysia | `MY` | Malay (`ms`) |
+| Mozambique | `MZ` | Portuguese (`pt`) |
+| Namibia | `NA` | English (`en`) |
+| New Caledonia | `NC` | French (`fr`) |
+| Niger | `NE` | French (`fr`) |
+| Norfolk Island | `NF` | English (`en`) |
+| Nigeria | `NG` | English (`en`) |
+| Nicaragua | `NI` | Spanish (`es`) |
+| Netherlands | `NL` | Dutch (`nl`) |
+| Norway | `NO` | Norwegian (`no`) |
+| Nepal | `NP` | Nepali (`ne`) |
+| Nauru | `NR` | English (`en`) |
+| Niue | `NU` | English (`en`) |
+| New Zealand | `NZ` | English (`en`) |
+| Oman | `OM` | Arabic (`ar`) |
+| Panama | `PA` | Spanish (`es`) |
+| Peru | `PE` | Spanish (`es`) |
+| French Polynesia | `PF` | French (`fr`) |
+| Papua New Guinea | `PG` | English (`en`) |
+| Philippines | `PH` | English (`en`) |
+| Pakistan | `PK` | Urdu (`ur`) |
+| Poland | `PL` | Polish (`pl`) |
+| Saint Pierre and Miquelon | `PM` | French (`fr`) |
+| Pitcairn Islands | `PN` | English (`en`) |
+| Portugal | `PT` | Portuguese (`pt`) |
+| Palau | `PW` | English (`en`) |
+| Paraguay | `PY` | Spanish (`es`) |
+| Qatar | `QA` | Arabic (`ar`) |
+| Romania | `RO` | Romanian (`ro`) |
+| Serbia | `RS` | Serbian (`sr`) |
+| Rwanda | `RW` | Kinyarwanda (`rw`) |
+| Saudi Arabia | `SA` | Arabic (`ar`) |
+| Solomon Islands | `SB` | English (`en`) |
+| Seychelles | `SC` | French (`fr`) |
+| Sweden | `SE` | Swedish (`sv`) |
+| Singapore | `SG` | English (`en`) |
+| Saint Helena, Ascension and Tristan da Cunha | `SH` | English (`en`) |
+| Slovenia | `SI` | Slovenian (`sl`) |
+| Slovakia | `SK` | Slovak (`sk`) |
+| Sierra Leone | `SL` | English (`en`) |
+| San Marino | `SM` | Italian (`it`) |
+| Senegal | `SN` | French (`fr`) |
+| Somalia | `SO` | Somali (`so`) |
+| Suriname | `SR` | Dutch (`nl`) |
+| Sao Tome and Principe | `ST` | Portuguese (`pt`) |
+| El Salvador | `SV` | Spanish (`es`) |
+| Eswatini | `SZ` | English (`en`) |
+| Chad | `TD` | Arabic (`ar`) |
+| French Southern and Antarctic Lands | `TF` | French (`fr`) |
+| Togo | `TG` | French (`fr`) |
+| Thailand | `TH` | Thai (`th`) |
+| Tajikistan | `TJ` | Tajik (`tg`) |
+| Tokelau | `TK` | English (`en`) |
+| Timor-Leste | `TL` | Portuguese (`pt`) |
+| Turkmenistan | `TM` | Turkmen (`tk`) |
+| Tunisia | `TN` | Arabic (`ar`) |
+| Tonga | `TO` | Tonga (Tonga Islands) (`to`) |
+| Turkiye | `TR` | Turkish (`tr`) |
+| Trinidad and Tobago | `TT` | English (`en`) |
+| Tuvalu | `TV` | English (`en`) |
+| Tanzania | `TZ` | Swahili (`sw`) |
+| Ukraine | `UA` | Ukrainian (`uk`) |
+| Uganda | `UG` | Swahili (`sw`) |
+| United States Minor Outlying Islands | `UM` | English (`en`) |
+| United States | `US` | English (`en`) |
+| Uruguay | `UY` | Spanish (`es`) |
+| Uzbekistan | `UZ` | Uzbek (`uz`) |
+| Vatican City | `VA` | Italian (`it`) |
+| Saint Vincent and the Grenadines | `VC` | English (`en`) |
+| Venezuela | `VE` | Spanish (`es`) |
+| Vietnam | `VN` | Vietnamese (`vi`) |
+| Vanuatu | `VU` | English (`en`) |
+| Wallis and Futuna | `WF` | French (`fr`) |
+| Samoa | `WS` | English (`en`) |
+| Yemen | `YE` | Arabic (`ar`) |
+| South Africa | `ZA` | English (`en`) |
+| Zambia | `ZM` | English (`en`) |
+| Zimbabwe | `ZW` | Shona (`sn`) |
 {/* supported-market-catalog:end */}
 
 ## Supported languages
@@ -112,34 +300,38 @@ Nepali (`ne`) · Dutch (`nl`) · Norwegian (`no`) · Northern Sotho (`nso`)
 
 Chichewa (`ny`) · Nyankole (`nyn`) · Oromo (`om`) · Punjabi (`pa`)
 
-Pidgin (`pcm`) · Polish (`pl`) · Pashto (`ps`) · Portuguese (`pt`) · Portuguese (Brazil) (`pt-br`) · Portuguese (Portugal) (`pt-pt`)
+Pidgin (`pcm`) · Polish (`pl`) · Pashto (`ps`) · Portuguese (`pt`)
 
-Quechua (`qu`) · Romansh (`rm`) · Kirundi (`rn`) · Romanian (`ro`)
+Portuguese (Brazil) (`pt-br`) · Portuguese (Portugal) (`pt-pt`) · Quechua (`qu`) · Romansh (`rm`)
 
-Russian (`ru`) · Kinyarwanda (`rw`) · Sindhi (`sd`) · Sinhalese (`si`)
+Kirundi (`rn`) · Romanian (`ro`) · Russian (`ru`) · Kinyarwanda (`rw`)
 
-Slovak (`sk`) · Slovenian (`sl`) · Shona (`sn`) · Somali (`so`)
+Sindhi (`sd`) · Sinhalese (`si`) · Slovak (`sk`) · Slovenian (`sl`)
 
-Albanian (`sq`) · Serbian (`sr`) · Montenegro (`sr-me`) · Sesotho (`st`) · Swedish (`sv`)
+Shona (`sn`) · Somali (`so`) · Albanian (`sq`) · Serbian (`sr`)
 
-Swahili (`sw`) · Tamil (`ta`) · Telugu (`te`) · Tajik (`tg`)
+Montenegro (`sr-me`) · Sesotho (`st`) · Swedish (`sv`) · Swahili (`sw`)
 
-Thai (`th`) · Tigrinya (`ti`) · Turkmen (`tk`) · Tagalog (`tl`)
+Tamil (`ta`) · Telugu (`te`) · Tajik (`tg`) · Thai (`th`)
 
-Tswana (`tn`) · Tonga (Tonga Islands) (`to`) · Turkish (`tr`) · Tumbuka (`tum`)
+Tigrinya (`ti`) · Turkmen (`tk`) · Tagalog (`tl`) · Tswana (`tn`)
 
-Ukrainian (`uk`) · Urdu (`ur`) · Uzbek (`uz`) · Vietnamese (`vi`)
+Tonga (Tonga Islands) (`to`) · Turkish (`tr`) · Tumbuka (`tum`) · Ukrainian (`uk`)
 
-Wolof (`wo`) · Xhosa (`xh`) · Yoruba (`yo`) · Chinese (Simplified) (`zh-cn`) · Chinese (Traditional) (`zh-tw`) · Zulu (`zu`)
+Urdu (`ur`) · Uzbek (`uz`) · Vietnamese (`vi`) · Wolof (`wo`)
+
+Xhosa (`xh`) · Yoruba (`yo`) · Chinese (Simplified) (`zh-cn`) · Chinese (Traditional) (`zh-tw`)
+
+Zulu (`zu`)
 {/* supported-language-catalog:end */}
 
 ## Research capability
 
 Rank checks and Research do not have the same availability boundary. Position
-tracking accepts every supported country-language pair above. Research metrics
-use DataForSEO Labs, whose catalog supports a smaller set of pairs and works at
-country scope. A city or region market is therefore translated to its country
-while retaining its language for Research.
+tracking accepts every supported country-language pair above. Research runs on a
+country and a language. When a market uses a city or region, Research uses its
+country and keeps its language. The picker on Research screens offers countries
+only.
 
 If Labs does not support that country-language pair, bisibility does not
 substitute another country's data. The app keeps position tracking available and

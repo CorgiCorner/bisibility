@@ -1,4 +1,5 @@
-import { FieldLabel, Input } from "@/components/ui";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/ui/cn";
 import { type InputHTMLAttributes, useId } from "react";
 

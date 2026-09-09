@@ -1,13 +1,14 @@
 "use client";
 
-import { Button, Checkbox, InfoTooltip } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { ExternalLink } from "@/components/ui/ExternalLink";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import type { RankedKeywordsPage } from "@/lib/providers/types";
-import {
-  BookmarkSimpleIcon as BookmarkSimple,
-  DownloadSimpleIcon as DownloadSimple,
-  PlusIcon as Plus,
-} from "@phosphor-icons/react";
+import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useState } from "react";
 import type { SaveDomainKeywords } from "./domain-overview-keyword-tracking";
 import {
@@ -53,11 +54,6 @@ const keywordValue = {
   KeywordSort,
   (row: RankedKeywordsPage["rows"][number]) => number | string | null
 >;
-
-function intentLabel(value: string | null) {
-  if (!value) return "-";
-  return value.slice(0, 4).toUpperCase();
-}
 
 function delta(value: number | null) {
   if (value == null) return { label: "-", tone: "text-fg-muted" };
@@ -250,11 +246,19 @@ export function DomainOverviewKeywordsTable({
                   {row.cpcCents == null ? "-" : currency.format(row.cpcCents / 100)}
                 </span>
                 <span className="w-fit rounded-full border border-border px-2 py-0.5 font-sans tabular-nums text-[9.5px] text-fg-muted">
-                  {intentLabel(row.intent)}
+                  {row.intent?.slice(0, 4).toUpperCase() || "-"}
                 </span>
-                <span className="truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
-                  {row.rankingUrl ?? "-"}
-                </span>
+                {row.rankingUrl ? (
+                  <ExternalLink
+                    className="min-w-0 font-sans tabular-nums text-[11.5px] text-link hover:underline"
+                    href={row.rankingUrl}
+                    title={row.rankingUrl}
+                  >
+                    <span className="truncate">{row.rankingUrl}</span>
+                  </ExternalLink>
+                ) : (
+                  <span className="text-fg-muted">-</span>
+                )}
                 <span
                   className={`${change.tone} text-right font-sans tabular-nums text-[12px] font-semibold`}
                 >

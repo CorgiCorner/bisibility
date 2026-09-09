@@ -1,7 +1,13 @@
 "use client";
 
 import { actionErrorMessage } from "@/components/keywords/action-utils";
-import { menuSelectTriggerClass, Tooltip, useToast } from "@/components/ui";
+import { Divider } from "@/components/ui/Divider";
+import { IconButton } from "@/components/ui/IconButton";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
+import { menuSelectTriggerClass } from "@/components/ui/MenuSelect";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { useToast } from "@/components/ui/toast-context";
 import {
   type CreateSavedViewInput,
   type DeleteSavedViewInput,
@@ -10,17 +16,11 @@ import {
   savedViewHref,
 } from "@/lib/keywords/saved-view-model";
 import { cn } from "@/lib/ui/cn";
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import {
-  BookmarkSimpleIcon as BookmarkSimple,
-  CaretDownIcon as CaretDown,
-  CheckIcon as Check,
-  PlusIcon as Plus,
-  TrashIcon as Trash,
-} from "@phosphor-icons/react";
+import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { SaveViewModal } from "./SaveViewModal";
@@ -103,7 +103,7 @@ export function SavedViewsControl({
         id="keyword-saved-views-menu"
         onClose={() => setAnchorEl(null)}
         open={open}
-        slotProps={{ paper: { sx: { border: "1px solid var(--border)", minWidth: 240 } } }}
+        contentProps={{ style: { border: "1px solid var(--border)", minWidth: 240 } }}
       >
         <div className="px-4 pb-1 pt-2 font-sans tabular-nums text-[10px] uppercase tracking-[0.6px] text-fg-muted">
           Saved views
@@ -136,7 +136,7 @@ export function SavedViewsControl({
                       deleteView(view.id);
                     }}
                     size="small"
-                    sx={{ color: "var(--fg-muted)", ml: 1 }}
+                    style={{ "--control-color": "var(--fg-muted)", marginLeft: 8 }}
                   >
                     <Trash weight="regular" size={13} />
                   </IconButton>

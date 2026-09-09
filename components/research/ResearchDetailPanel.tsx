@@ -1,17 +1,17 @@
 "use client";
 
+import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
 import {
   TrackingConfigurationFields,
   type TrackingConfigurationValue,
 } from "@/components/keywords/add/TrackingConfigurationFields";
-import { Button, Card } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { appPath } from "@/lib/routing/app-path";
-import { chartColors } from "@/lib/theme/chart-colors";
-import { LineChart } from "@mui/x-charts/LineChart";
-import { PlusIcon as Plus } from "@phosphor-icons/react";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import Link from "next/link";
 import { useState } from "react";
 import { ResearchDetailSaveAction } from "./ResearchDetailSaveAction";
@@ -35,13 +35,6 @@ type ResearchDetailPanelProps = {
   seed: string;
   costContext: ProjectCostContext;
   trackingMarketCount?: number;
-};
-
-const axisTextStyle = {
-  fill: "var(--fg-muted)",
-  fontFamily: "var(--font-sans), system-ui, sans-serif",
-  fontVariantNumeric: "tabular-nums",
-  fontSize: 10,
 };
 
 function metric(value: number | null, formatter = (item: number) => String(item)) {
@@ -132,38 +125,25 @@ export function ResearchDetailPanel({
                   <ResearchUnavailableMetric label="Search trend unavailable" />
                 </div>
               ) : availableTrend.length > 1 ? (
-                <LineChart
+                <TimeSeriesChart
                   height={190}
-                  hideLegend
-                  margin={{ top: 4, right: 6, bottom: 18, left: 6 }}
+                  labels={labels}
                   series={[
                     {
-                      area: true,
-                      color: chartColors.accent,
-                      connectNulls: false,
-                      curve: "monotoneX",
-                      data: trend,
                       label: "Search volume",
-                      showMark: false,
+                      values: trend,
+                      color: "var(--accent)",
+                      fill: true,
+                      curve: "monotoneX",
                     },
                   ]}
-                  skipAnimation
-                  sx={{
-                    "& .MuiAreaElement-root": { fill: "var(--accent)", fillOpacity: 0.12 },
-                    "& .MuiLineElement-root": { stroke: "var(--accent)", strokeWidth: 2 },
-                    "& .MuiChartsAxis-tickLabel": axisTextStyle,
-                  }}
-                  xAxis={[
-                    {
-                      data: labels,
-                      disableLine: true,
-                      disableTicks: true,
-                      scaleType: "point",
-                      tickInterval: (_, index) => index % 2 === 0,
-                      tickLabelStyle: axisTextStyle,
-                    },
-                  ]}
-                  yAxis={[{ max: trendMax, min: 0, position: "none" }]}
+                  max={trendMax}
+                  areaOpacity={0.12}
+                  strokeWidth={2}
+                  showGrid={false}
+                  showYAxis={false}
+                  xTickIndexes={labels.flatMap((_, index) => (index % 2 === 0 ? [index] : []))}
+                  margin={{ top: 4, right: 6, bottom: 0, left: 6 }}
                 />
               ) : (
                 <div className="grid h-full place-items-center rounded-control bg-bg-sunken text-[12px] text-fg-muted">
@@ -238,7 +218,7 @@ export function ResearchDetailPanel({
             <Button
               onClick={() => onAdd({ device, keywords: [keyword], location, scheduleFrequency })}
               startIcon={<Plus weight="regular" size={14} />}
-              sx={{ width: "100%" }}
+              style={{ width: "100%" }}
             >
               Add to tracking
             </Button>

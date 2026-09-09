@@ -2,7 +2,9 @@
 
 import { permissionLabel } from "@/components/integrations/ConnectDrawerScopes";
 import { ConnectedGoogleAccountFooter } from "@/components/integrations/ConnectedGoogleAccountFooter";
-import { Button, MenuSelect, type MenuSelectOption, PillBadge } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
+import { PillBadge } from "@/components/ui/Pill";
 import { googlePropertyDisplayName } from "@/lib/integrations/google-property-grouping";
 import type { GoogleOAuthSetup, GooglePropertyOption } from "@/lib/integrations/types";
 import {

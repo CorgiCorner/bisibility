@@ -15,7 +15,7 @@ export function checkMarketsContract(root, docsRoot) {
   }
 
   const marketsDocs = readFileSync(join(docsRoot, "markets.mdx"), "utf8");
-  const marketsSource = readFileSync(join(root, "lib/serp/markets.ts"), "utf8");
+  const countries = JSON.parse(readFileSync(join(root, "scripts/generate/sources/markets/countries.json"), "utf8"));
   const languageCatalogSource = readFileSync(
     join(root, "lib/serp/generated/serp-language-catalog.ts"),
     "utf8",
@@ -24,13 +24,8 @@ export function checkMarketsContract(root, docsRoot) {
     ([, code, label]) => ({ code, label }),
   );
   const languageLabels = new Map(languageCatalog.map(({ code, label }) => [code, label]));
-  const expectedMarkets = [
-    ...marketsSource.matchAll(/market\("([^"]+)", "([a-z]{2})", "([^"]+)"/g),
-  ].map(([, country, countryCode, languageCode]) => ({
-    country,
-    countryCode: countryCode.toUpperCase(),
-    languageCode,
-    languageLabel: languageLabels.get(languageCode),
+  const expectedMarkets = countries.map(({ displayName, countryCode, languageCode }) => ({
+    country: displayName, countryCode, languageCode, languageLabel: languageLabels.get(languageCode),
   }));
   const marketSection = markedSection(
     marketsDocs,
@@ -40,7 +35,7 @@ export function checkMarketsContract(root, docsRoot) {
   );
   const documentedMarkets = [
     ...marketSection.matchAll(
-      /^\| ([^|]+) \| `([A-Z]{2})` \| ([^(|]+) \(`([^`]+)`\) \|$/gm,
+      /^\| ([^|]+) \| `([A-Z]{2})` \| ([^|]+) \(`([^`]+)`\) \|$/gm,
     ),
   ].map(([, country, countryCode, languageLabel, languageCode]) => ({
     country: country.trim(),
@@ -49,7 +44,7 @@ export function checkMarketsContract(root, docsRoot) {
     languageLabel: languageLabel.trim(),
   }));
   if (JSON.stringify(documentedMarkets) !== JSON.stringify(expectedMarkets)) {
-    failures.push("markets.mdx supported countries and defaults do not match lib/serp/markets.ts.");
+    failures.push("markets.mdx supported countries and defaults do not match the country catalog.");
   }
 
   const languageSection = markedSection(

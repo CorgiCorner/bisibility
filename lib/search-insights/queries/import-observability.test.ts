@@ -1,4 +1,5 @@
 import { addDays } from "@/lib/search-insights/dates";
+import { selectSearchImportCoverage } from "@/lib/search-insights/sync/control-model";
 import { describe, expect, it } from "vitest";
 import { selectImportObservabilityFacts } from "./import-observability";
 
@@ -38,6 +39,43 @@ function facts(rows: ReturnType<typeof day>[], overrides: Record<string, unknown
 }
 
 describe("selectImportObservabilityFacts", () => {
+  it("keeps first-view readiness separate from full planned history progress", () => {
+    const selected = facts(consecutive(56), { earliestTargetDate: addDays(boundary, -487) });
+    expect(selected.qualifyingDays).toBe(28);
+    expect(selected.targetDays).toBe(28);
+    expect(selected.readyThrough.d28.current).toBe(true);
+    expect(selectSearchImportCoverage({ observability: selected })).toEqual({
+      completed: 56,
+      total: 488,
+      unit: "days",
+    });
+  });
+
+  it("counts only complete, unique days inside the frozen import range", () => {
+    const rows = [
+      ...consecutive(3),
+      day(boundary),
+      day(addDays(boundary, -3)).slice(0, 2),
+      day(addDays(boundary, -10)),
+      day(addDays(boundary, 1)),
+    ];
+    const selected = facts(rows, { daysTotal: 7, earliestTargetDate: addDays(boundary, -6) });
+    expect(selectSearchImportCoverage({ observability: selected })).toEqual({
+      completed: 3,
+      total: 7,
+      unit: "days",
+    });
+  });
+
+  it("does not turn a first-view readiness target into an unknown import total", () => {
+    const selected = facts(consecutive(28), { daysTotal: 0, earliestTargetDate: null });
+    expect(selectSearchImportCoverage({ observability: selected })).toEqual({
+      completed: null,
+      total: null,
+      unit: "days",
+    });
+  });
+
   it("keeps a 28-day gate closed for a gap, even with 29 imported days", () => {
     const rows = Array.from({ length: 30 }, (_, index) => day(addDays(boundary, -index))).filter(
       (_, index) => index !== 10,
@@ -196,6 +234,7 @@ describe("selectImportObservabilityFacts", () => {
     expect(Object.keys(selected).sort()).toEqual([
       "consecutiveDays",
       "deepHistoryMonths",
+      "importCoverage",
       "lastActivityAt",
       "lastProbeAt",
       "qualifyingDays",

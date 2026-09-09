@@ -8,10 +8,22 @@ import {
   type TargetedDepthKeyword,
 } from "@/lib/alerts/depth-conflict";
 import { privateNetworkAllowed } from "@/lib/alerts/webhook-target";
-import { listAlertRuleViews, listTriggeredAlertViews } from "@/lib/api/alert-list";
+import {
+  type AlertFeedQuery,
+  listAlertRuleViews,
+  listTriggeredAlertViews,
+} from "@/lib/api/alert-list";
 import { listWebhookEndpointsWithHistory } from "@/lib/api/webhook-service";
 import { prisma } from "@/lib/db/prisma";
 import { type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
+import {
+  type FeedFacet,
+  type FeedFacetOptions,
+  type FeedFacetSearch,
+  feedFacetValues,
+  parseFeedFacets,
+} from "@/lib/feeds/facets";
+import type { AlertSeverity, Prisma } from "@/lib/generated/prisma/client";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
 
@@ -20,6 +32,67 @@ function requiredPublicId(value: string | null, prefix: PublicIdPrefix, resource
     throw new Error(`${resource} public ID is not available.`);
   }
   return value;
+}
+
+type FeedMarket = { id: string; label: string; language: string; locationId: string };
+
+function marketScopeLabel(marketIds: readonly string[], markets: AlertTargetOptions["markets"]) {
+  if (!marketIds.length) return "All markets";
+  const labels = marketIds
+    .map((marketId) => markets.find((market) => market.id === marketId)?.label)
+    .filter((label): label is string => Boolean(label));
+  return labels.length === 1 ? labels[0] : `${marketIds.length} markets`;
+}
+
+function alertFacetOptions(markets: readonly FeedMarket[]): FeedFacetOptions {
+  return {
+    engine: [{ label: "Google", value: "google" }],
+    language: Array.from(new Set(markets.map((market) => market.language))).map((language) => ({
+      label: language,
+      value: language,
+    })),
+    market: markets.map(({ id, label }) => ({ label, value: id })),
+    module: [{ label: "Rank", value: "rank" }],
+    severity: ["urgent", "warning", "info"].map((severity) => ({
+      label: severity[0].toUpperCase() + severity.slice(1),
+      value: severity,
+    })),
+  };
+}
+
+function alertFacetQuery(
+  facets: readonly FeedFacet[],
+  markets: readonly FeedMarket[],
+): AlertFeedQuery {
+  const marketLocationIds = new Map(markets.map((market) => [market.id, market.locationId]));
+  const languageLabels = new Map(
+    markets.map((market) => [market.language.toLocaleLowerCase("en-US"), market.language]),
+  );
+  const where: Prisma.TriggeredAlertWhereInput[] = [];
+  const marketIds = feedFacetValues(facets, "market");
+  const language = feedFacetValues(facets, "language");
+  const severity = feedFacetValues(facets, "severity");
+
+  if (marketIds.length) {
+    where.push({
+      keyword: { locationId: { in: marketIds.flatMap((id) => marketLocationIds.get(id) ?? []) } },
+    });
+  }
+  if (language.length) {
+    where.push({
+      keyword: {
+        locationRef: {
+          languageLabel: { in: language.flatMap((value) => languageLabels.get(value) ?? []) },
+        },
+      },
+    });
+  }
+  if (severity.length) where.push({ rule: { severity: { in: severity as AlertSeverity[] } } });
+
+  return {
+    marketsByLocation: new Map(markets.map((market) => [market.locationId, market])),
+    where,
+  };
 }
 
 async function loadTargets(projectId: string) {
@@ -94,23 +167,34 @@ async function loadTargets(projectId: string) {
       ),
       webhookPrivateNetworkAllowed: privateNetworkAllowed({}),
     } satisfies AlertTargetOptions,
+    feedMarkets: markets.map((market) => ({
+      id: requiredPublicId(market.publicId, "pmkt", "Project market"),
+      label: `${market.location.displayName} / ${market.location.languageLabel}`,
+      language: market.location.languageLabel,
+      locationId: market.locationId,
+    })) satisfies FeedMarket[],
   };
 }
 
-export async function getAlertsView(projectId: string) {
+export async function getAlertsView(projectId: string, searchParams: FeedFacetSearch = {}) {
   const { project } = await requireReadableProject(projectId);
-  const [rules, alerts, targets] = await Promise.all([
+  const targets = await loadTargets(project.id);
+  const facetOptions = alertFacetOptions(targets.feedMarkets);
+  const { facets } = parseFeedFacets(searchParams, facetOptions);
+  const [rules, alerts] = await Promise.all([
     listAlertRuleViews(project.id),
-    listTriggeredAlertViews(project.id),
-    loadTargets(project.id),
+    listTriggeredAlertViews(project.id, alertFacetQuery(facets, targets.feedMarkets)),
   ]);
 
   return {
     alerts,
+    facetOptions,
+    facets,
     project: { ...project, id: project.publicId },
     rules: rules.map((rule) => ({
       ...rule,
       depthConflict: alertDepthConflict(rule, minimumTargetedDepth(rule, targets.depthKeywords)),
+      marketScope: marketScopeLabel(rule.marketIds, targets.options.markets),
     })),
     targets: { ...targets.options, projectDomain: trackedProjectDomain(project.domain) ?? "" },
   };

@@ -1,18 +1,16 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth/client";
 import { loginErrorReturnTo, returnToOrDefault } from "@/lib/auth/return-to";
 import { SIGNED_IN_HOME_PATH } from "@/lib/auth/two-factor-routes";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Button from "@mui/material/Button";
-import {
-  CaretRightIcon as CaretRight,
-  CircleNotchIcon as CircleNotch,
-  KeyIcon as Key,
-  ShieldCheckIcon as ShieldCheck,
-} from "@phosphor-icons/react";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { CircleNotchIcon as CircleNotch } from "@phosphor-icons/react/dist/csr/CircleNotch";
+import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
+import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/csr/ShieldCheck";
 import { useRouter } from "next/navigation";
 import { type KeyboardEvent, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -35,18 +33,16 @@ const challengeSchema = z.discriminatedUnion("method", [
 type ChallengeValues = z.infer<typeof challengeSchema>;
 type ChallengeMethod = ChallengeValues["method"];
 
-const methodButtonSx = {
-  borderColor: "var(--border-control)",
+const methodButtonStyle = {
+  "--control-border-color": "var(--border-control)",
   borderRadius: UI_RADIUS_ROLES.control,
-  color: "var(--fg-muted)",
+  "--control-color": "var(--fg-muted)",
   fontSize: "13px",
   fontWeight: 600,
   padding: "8px 12px",
-  "&[aria-pressed='true']": {
-    backgroundColor: "var(--accent-soft)",
-    borderColor: "var(--accent)",
-    color: "var(--accent-text)",
-  },
+  "--control-selected-background-color": "var(--accent-soft)",
+  "--control-selected-border-color": "var(--accent)",
+  "--control-selected-color": "var(--accent-text)",
 } as const;
 
 type TwoFactorChallengeFormProps = {
@@ -120,9 +116,9 @@ export function TwoFactorChallengeForm({
           disabled={submitting}
           onClick={() => selectMethod("totp")}
           startIcon={<ShieldCheck aria-hidden size={16} weight="regular" />}
-          sx={methodButtonSx}
+          style={methodButtonStyle}
           type="button"
-          variant="outlined"
+          variant="secondary"
         >
           Authenticator
         </Button>
@@ -131,9 +127,9 @@ export function TwoFactorChallengeForm({
           disabled={submitting}
           onClick={() => selectMethod("backup")}
           startIcon={<Key aria-hidden size={16} weight="regular" />}
-          sx={methodButtonSx}
+          style={methodButtonStyle}
           type="button"
-          variant="outlined"
+          variant="secondary"
         >
           Backup code
         </Button>
@@ -182,7 +178,7 @@ export function TwoFactorChallengeForm({
           }
           fullWidth
           onClick={() => void submitChallenge()}
-          sx={{
+          style={{
             borderRadius: UI_RADIUS_ROLES.control,
             fontSize: "14.5px",
             fontWeight: 600,
@@ -190,7 +186,7 @@ export function TwoFactorChallengeForm({
             padding: "12px",
           }}
           type="button"
-          variant="contained"
+          variant="primary"
         >
           {submitting ? "Verifying..." : "Verify and continue"}
         </Button>

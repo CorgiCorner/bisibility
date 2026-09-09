@@ -13,6 +13,7 @@ import type { CheckScheduleMembershipInput } from "@/lib/schemas/check-schedule"
 import { createId } from "@paralleldrive/cuid2";
 
 export type CheckScheduleRow = {
+  archivedAt?: Date | null;
   cronExpression: string | null;
   enabled: boolean;
   frequency: RankCheckFrequency;
@@ -28,6 +29,7 @@ export type CheckScheduleRow = {
 };
 
 export const checkScheduleSelect = {
+  archivedAt: true,
   cronExpression: true,
   enabled: true,
   frequency: true,
@@ -46,6 +48,7 @@ const CADENCE_MIRROR_BATCH_SIZE = 500;
 
 export function checkScheduleAudit(schedule: CheckScheduleRow) {
   return {
+    archivedAt: schedule.archivedAt?.toISOString() ?? null,
     cronExpression: schedule.cronExpression,
     enabled: schedule.enabled,
     frequency: schedule.frequency,
@@ -126,7 +129,7 @@ export async function mirrorScheduleToKeywords(
   await refreshKeywordDispatchStates({ keywordIds }, tx);
 }
 
-async function mirrorManualToKeywords(
+export async function mirrorManualToKeywords(
   tx: Prisma.TransactionClient,
   projectId: string,
   keywordIds: string[],
@@ -151,7 +154,7 @@ async function mirrorManualToKeywords(
 async function requireSchedule(tx: Prisma.TransactionClient, projectId: string, publicId: string) {
   const schedule = await tx.checkSchedule.findFirst({
     select: checkScheduleSelect,
-    where: { projectId, publicId },
+    where: { archivedAt: null, projectId, publicId },
   });
   if (!schedule) throw new ApiNotFoundError("Check schedule not found.");
   return schedule;

@@ -54,6 +54,15 @@ describe("OperationRow", () => {
     expect(screen.getByText("Waiting for the first check to start.")).toBeInTheDocument();
   });
 
+  it("does not claim a worker pickup interval when worker status is delayed", () => {
+    renderOperation({ state: "worker" });
+
+    expect(
+      screen.getByText("Import worker status is delayed. Refresh to check again."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/60 seconds|pick this up|polls every/i)).not.toBeInTheDocument();
+  });
+
   it("keeps the future spread state distinct from the provider queue", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-02T10:00:00.000Z"));
@@ -106,6 +115,21 @@ describe("OperationRow", () => {
       "href",
       "/runs/rcr_123",
     );
+  });
+
+  it("renders Reconnect as a navigation action, not an operation mutation", () => {
+    const onAction = vi.fn();
+    renderOperation({
+      action: "reconnect",
+      actionHref: "/api/integrations/google/install?projectId=prj_example",
+      onAction,
+    });
+
+    expect(screen.getByRole("link", { name: "Reconnect Manual rank check" })).toHaveAttribute(
+      "href",
+      "/api/integrations/google/install?projectId=prj_example",
+    );
+    expect(onAction).not.toHaveBeenCalled();
   });
 
   it("hydrates a ticking relative value from the server instant without a warning", async () => {

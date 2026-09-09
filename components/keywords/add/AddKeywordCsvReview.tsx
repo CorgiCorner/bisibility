@@ -1,8 +1,9 @@
 "use client";
 
 import type { CsvKeywordReviewItem } from "@/components/keywords/AddKeywordCsvReviewModel";
-import { Button } from "@/components/ui";
-import { ArrowLeftIcon as ArrowLeft, CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 
 type AddKeywordCsvReviewProps = {
   items: CsvKeywordReviewItem[];
@@ -91,7 +92,11 @@ export function AddKeywordCsvReview({ items, onEdit }: Readonly<AddKeywordCsvRev
         onClick={onEdit}
         size="sm"
         startIcon={<ArrowLeft size={13} weight="regular" />}
-        sx={{ alignSelf: "flex-start", color: "var(--fg-muted)", width: "max-content" }}
+        style={{
+          alignSelf: "flex-start",
+          "--control-color": "var(--fg-muted)",
+          width: "max-content",
+        }}
         type="button"
         variant="secondary"
       >

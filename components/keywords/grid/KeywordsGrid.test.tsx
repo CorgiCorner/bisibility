@@ -5,7 +5,6 @@ import { stubBlobDownload } from "@/tests/blob-download";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { stubResizeObserver } from "@/tests/observers";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { pendingRows, renderPendingGrid } from "./KeywordsGrid.test-helpers";
 
@@ -15,15 +14,6 @@ vi.mock("@/lib/actions/keyword-export-action", () => ({ exportKeywords: mocks.ex
 vi.mock("@/components/keywords/import/ImportCsvWizard", () => ({
   ImportCsvWizard: () => null,
 }));
-vi.mock("./DeferredDataGrid", async () => {
-  const { MuiDataGrid } = await import("./MuiDataGrid");
-  return {
-    DeferredDataGrid: (props: Omit<ComponentProps<typeof MuiDataGrid>, "onReady">) => (
-      <MuiDataGrid {...props} onReady={() => undefined} />
-    ),
-  };
-});
-
 beforeEach(() => {
   vi.clearAllMocks();
   setNavigationState({ pathname: "/app/rank-tracker" });
@@ -58,9 +48,14 @@ describe("KeywordsGrid pending state", () => {
       queries: ["open source rank tracker", "rank tracking for agencies"],
       suggestions: [{ query: "open source rank tracker" }, { query: "rank tracking for agencies" }],
     }));
-    renderPendingGrid({ importTopQueriesAction, rows: [], searchConsoleConnected: true });
+    renderPendingGrid({
+      importTopQueriesAction,
+      rows: [],
+      searchConsoleConnected: true,
+      totalCount: 0,
+    });
 
-    fireEvent.click(screen.getByRole("button", { name: "Find Search Console queries" }));
+    fireEvent.click(screen.getByRole("button", { name: "From Search Console" }));
 
     await waitFor(() =>
       expect(importTopQueriesAction).toHaveBeenCalledWith({ limit: 50, projectId: "prj_1" }),
@@ -102,9 +97,15 @@ describe("KeywordsGrid pending state", () => {
     expect(screen.getByRole("button", { name: /add keyword/i })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /device/i })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /schedule/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sort Position descending" }));
+    expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/dir=desc.*page=1/));
+    expect(screen.getByRole("columnheader", { name: /Position/ })).toHaveAttribute(
+      "aria-sort",
+      "ascending",
+    );
     expect(await screen.findByText(keywordRows[0].keyword)).toBeInTheDocument();
     expect(
-      await screen.findAllByRole("gridcell", { name: "Not checked" }, { timeout: 10_000 }),
+      await screen.findAllByRole("cell", { name: "Not checked" }, { timeout: 10_000 }),
     ).toHaveLength(2);
     expect(screen.queryByText("No data")).not.toBeInTheDocument();
   }, 15_000);
@@ -116,30 +117,6 @@ describe("KeywordsGrid pending state", () => {
     });
 
     expect(await screen.findByText("Not found in top 100")).toBeInTheDocument();
-  });
-
-  it("keeps filter clearing in the toolbar when visible rows are empty", async () => {
-    renderPendingGrid({
-      initialViewConfig: {
-        filters: { ...emptyKeywordFilters, contains: "missing keyword" },
-        lens: { device: "desktop", locationId: null },
-        search: "",
-        surface: "keywords",
-        version: 1,
-      },
-      lens: { device: "desktop", locationId: null },
-    });
-
-    expect(
-      await screen.findByText("No keywords match Desktop with 1 active filter"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Active filters")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /clear all/i })).toHaveLength(1);
-    fireEvent.click(screen.getByRole("button", { name: /show all locations & devices/i }));
-
-    expect(routerMock.push).toHaveBeenCalledWith(`${appPath("prj_1", "rank-tracker")}?device=all`);
-    fireEvent.click(screen.getByRole("button", { name: /clear all search and filters/i }));
-    expect(await screen.findByText(keywordRows[0].keyword)).toBeInTheDocument();
   });
 
   it("refreshes RSC data without navigating or clearing table search state", () => {
@@ -158,22 +135,21 @@ describe("KeywordsGrid pending state", () => {
   it("passes the supplied initial density to the grid", () => {
     renderPendingGrid({ initialDensity: "compact" });
 
-    expect(screen.getByRole("radio", { name: "Compact" })).toBeChecked();
-    expect(screen.getByRole("radio", { name: "Standard" })).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "Table density" })).toHaveTextContent("Compact");
   });
 
   it("persists density changes to a cookie and keeps the selection", () => {
     renderPendingGrid({ initialDensity: "standard" });
 
-    fireEvent.click(screen.getByRole("radio", { name: "Compact" }));
+    fireEvent.click(screen.getByRole("button", { name: "Table density" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Compact" }));
 
     expect(document.cookie).toContain("pref_density=compact");
-    expect(screen.getByRole("radio", { name: "Compact" })).toBeChecked();
+    expect(screen.getByRole("button", { name: "Table density" })).toHaveTextContent("Compact");
   });
 
-  it("commits flat search on Enter without navigating on each keystroke", () => {
+  it("commits server search on Enter without navigating on each keystroke", () => {
     renderPendingGrid({
-      listMode: "flat-server",
       matchedTargetCount: 100,
       page: 3,
       pageCount: 3,
@@ -214,7 +190,6 @@ describe("KeywordsGrid pending state", () => {
       sort: { direction: "asc" as const, field: "position" as const },
     };
     renderPendingGrid({
-      listMode: "flat-server",
       matchedTargetCount: 80,
       page: 3,
       pageCount: 4,
@@ -242,7 +217,6 @@ describe("KeywordsGrid pending state", () => {
 
   it("pushes consecutive deliberate search and lens transitions", () => {
     renderPendingGrid({
-      listMode: "flat-server",
       matchedTargetCount: 100,
       page: 3,
       pageCount: 4,

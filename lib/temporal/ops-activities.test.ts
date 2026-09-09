@@ -109,6 +109,8 @@ describe("ops heartbeat activity", () => {
       expect.objectContaining({
         database: expect.objectContaining({
           bootstrapErrors: ["Database heartbeat collection failed."],
+          collectionAvailable: false,
+          dispatch: null,
         }),
         temporal: expect.objectContaining({ inspectionErrors: 1 }),
       }),

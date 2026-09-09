@@ -1,4 +1,4 @@
-import { type StatusKind, StatusPill } from "@/components/ui";
+import { type StatusKind, StatusPill } from "@/components/ui/StatusPill";
 import type { AuditOperation } from "@/lib/queries/audit";
 
 const operationToStatusKind = {

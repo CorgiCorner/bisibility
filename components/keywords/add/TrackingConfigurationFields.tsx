@@ -1,9 +1,10 @@
 "use client";
 
 import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
-import { MenuSelect, SegmentedControl } from "@/components/ui";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { fieldClass } from "@/lib/keywords/add-keyword-drawer-shared";
-import { type SerpDevice, serpDeviceOptions } from "@/lib/serp/markets";
+import { type SerpDevice, serpDeviceOptions } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 
 export type TrackingScheduleSelection = RankCheckFrequency | "project_default";

@@ -13,14 +13,12 @@ import {
   useRegisteredCommands,
 } from "@/components/shell/command-registry";
 import { useKeywordSearch } from "@/components/shell/use-keyword-search";
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { navContextFromPathname } from "@/lib/nav/nav-items";
 import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
-import { useColorScheme } from "@mui/material/styles";
-import {
-  CursorIcon as Cursor,
-  MagnifyingGlassIcon as MagnifyingGlass,
-} from "@phosphor-icons/react";
+import { applyTheme } from "@/lib/theme/browser-theme";
+import { CursorIcon as Cursor } from "@phosphor-icons/react/dist/csr/Cursor";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
 
@@ -151,7 +149,6 @@ function CommandPalette({
 }: Readonly<CommandPaletteProps>) {
   const pathname = usePathname();
   const router = useRouter();
-  const { setMode } = useColorScheme();
   const { keywordHits, search } = useKeywordSearch(projectId);
   const registeredCommands = useRegisteredCommands();
 
@@ -177,7 +174,7 @@ function CommandPalette({
       ...commandGroups(
         projectRef,
         router.push,
-        setMode,
+        applyTheme,
         keywordHits,
         markets,
         navContextFromPathname(pathname),

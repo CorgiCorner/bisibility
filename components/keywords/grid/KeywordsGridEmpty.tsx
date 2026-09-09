@@ -14,6 +14,7 @@ type Props = Pick<
   | "importTopQueriesAction"
   | "providerConnected"
   | "projectId"
+  | "projectMarkets"
   | "searchConsoleConnected"
 > & {
   dialogs: ReactNode;
@@ -34,6 +35,7 @@ export function KeywordsGridEmpty(props: Props) {
         canCreateKeyword={props.canCreateKeyword}
         dialogs={props.dialogs}
         marketLabel={props.marketScope.label}
+        paused={props.marketScope.status === "paused"}
         onAddKeyword={() => props.openAddDrawer()}
         projectRef={props.projectId}
       />
@@ -50,6 +52,7 @@ export function KeywordsGridEmpty(props: Props) {
       onImportCsv={props.onImportCsv}
       openAddDrawer={props.openAddDrawer}
       projectId={props.projectId}
+      hasMarkets={props.projectMarkets === undefined || props.projectMarkets.markets.length > 0}
       searchConsoleConnected={props.searchConsoleConnected}
     />
   );

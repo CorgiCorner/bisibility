@@ -1,16 +1,11 @@
 import { AdminAccountLookup } from "@/components/admin/AdminAccountLookup";
-import { Card, IdChip, SectionTitle } from "@/components/ui";
+import { AdminAdministrationConsumptionTable } from "@/components/admin/admin-administration-tables";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { InstanceAdminAdministration } from "@/lib/queries/instance-admin-administration";
 import { DOCS_URL, docsLinkProps } from "@/lib/site/site";
 
 const count = new Intl.NumberFormat("en-US");
-const money = new Intl.NumberFormat("en-US", {
-  currency: "USD",
-  maximumFractionDigits: 4,
-  minimumFractionDigits: 2,
-  style: "currency",
-});
-
 type GrowthMetric = InstanceAdminAdministration["growth"]["users"];
 
 const growthCards = [
@@ -111,89 +106,10 @@ function TopConsumption({
       {boundedRows.length === 0 ? (
         <p className="mt-4 text-xs text-fg-muted">No completed SERP checks recorded this month.</p>
       ) : (
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[880px] table-fixed text-left">
-            <caption className="sr-only">Top project and provider consumption this month</caption>
-            <colgroup>
-              <col className="w-[23%]" />
-              <col className="w-[15%]" />
-              <col className="w-[12%]" />
-              <col className="w-[14%]" />
-              <col className="w-[15%]" />
-              <col className="w-[21%]" />
-            </colgroup>
-            <thead>
-              <tr className="border-b border-border text-[10px] uppercase tracking-[0.4px] text-fg-muted">
-                <th className="px-0.5 pb-2 font-medium" scope="col">
-                  Project ID
-                </th>
-                <th className="px-2 pb-2 font-medium" scope="col">
-                  Provider
-                </th>
-                <th className="px-2 pb-2 font-medium" scope="col">
-                  Checks
-                </th>
-                <th className="px-2 pb-2 font-medium" scope="col">
-                  Requests / units
-                </th>
-                <th className="px-2 pb-2 font-medium" scope="col">
-                  Reference cost
-                </th>
-                <th className="px-2 pb-2 font-medium" scope="col">
-                  Share of instance
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {boundedRows.map((row) => {
-                const share = Math.min(100, Math.max(0, row.sharePercent));
-                return (
-                  <tr className="border-b border-border last:border-0" key={row.projectId}>
-                    <td className="px-0.5 py-2">
-                      <IdChip
-                        className="max-w-full"
-                        copyLabel={`Copy project ID ${row.projectId}`}
-                        size="sm"
-                        value={row.projectId}
-                      />
-                    </td>
-                    <td className="px-2 py-2">
-                      <span className="block text-xs font-semibold">{row.providerLabel}</span>
-                      <span className="mt-0.5 block text-[10px] text-fg-muted">
-                        {row.rateBasis}
-                      </span>
-                    </td>
-                    <td className="px-2 py-2 text-xs font-semibold tabular-nums">
-                      {count.format(row.checks)}
-                    </td>
-                    <td className="px-2 py-2 text-xs tabular-nums">
-                      {count.format(row.billableUnits)}
-                    </td>
-                    <td className="px-2 py-2 text-xs tabular-nums">
-                      {row.referenceCostKnown ? money.format(row.referenceCostCents / 100) : "-"}
-                    </td>
-                    <td className="px-2 py-2">
-                      <span className="flex items-center gap-2">
-                        <span
-                          aria-label={`${row.sharePercent.toFixed(1)}% of instance reference cost`}
-                          className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-bg-sunken"
-                          role="img"
-                        >
-                          <span
-                            className="block h-full rounded-full bg-accent"
-                            style={{ width: `${share}%` }}
-                          />
-                        </span>
-                        <span className="min-w-10 text-right text-[10.5px] tabular-nums text-fg-muted">
-                          {row.sharePercent.toFixed(1)}%
-                        </span>
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="mt-3">
+          <div className="[&>[role=table]]:border-0">
+            <AdminAdministrationConsumptionTable rows={boundedRows} />
+          </div>
           <p className="mb-0 mt-2 text-[11px] leading-relaxed text-fg-muted">
             Reference costs use maintained provider rates and recorded request units. Provider
             invoices remain authoritative.

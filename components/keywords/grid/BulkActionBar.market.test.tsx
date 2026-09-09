@@ -63,8 +63,8 @@ describe("BulkActionBar inside one market", () => {
     const onRunChecks = renderBar([inMarket, outsideMarket], germanMarket);
 
     const crossMarket = screen.getByRole("button", { name: "Run checks in all markets" });
-    expect(crossMarket).toHaveClass("MuiButton-text");
-    expect(crossMarket).not.toHaveClass("MuiButton-contained");
+    expect(crossMarket).toHaveAttribute("data-variant", "ghost");
+    expect(crossMarket).not.toHaveAttribute("data-variant", "primary");
 
     fireEvent.click(crossMarket);
     expect(onRunChecks).toHaveBeenLastCalledWith(["kw_de", "kw_us"]);

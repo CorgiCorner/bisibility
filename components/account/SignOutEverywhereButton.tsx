@@ -2,7 +2,7 @@
 
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
-import { SignOutIcon as SignOut } from "@phosphor-icons/react";
+import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { feedbackClass, ghostButtonClass } from "./account-ui";

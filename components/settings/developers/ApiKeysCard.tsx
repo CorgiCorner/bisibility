@@ -10,14 +10,17 @@ import {
   developerListClassName,
   developerRowClassName,
 } from "@/components/settings/developers/developer-settings-layout";
-import { Button, ConfirmModal, ExternalLink, StatusPill } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { ExternalLink } from "@/components/ui/ExternalLink";
+import { StatusPill } from "@/components/ui/StatusPill";
 import {
   type IssueApiKeyInput,
   type RegenerateApiKeyInput,
   revokeApiKeySchema,
 } from "@/lib/schemas/apiKey";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { PlusIcon as Plus } from "@phosphor-icons/react";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { z } from "zod";

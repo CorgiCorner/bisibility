@@ -4,6 +4,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import { requiredPublicAuditId, writeAudit } from "../auth/audit";
 import { prisma } from "../db/prisma";
 import { makePublicId } from "../db/public-id";
+import { resolveExpectedUrlForKeyword } from "../expected-url/keyword";
 import { publishOperationChanged } from "../notifications/realtime";
 import { loadProviderRateContext } from "../provider-rates/connection-context";
 import { LIST_PROVIDER_RATE_CONTEXT } from "../provider-rates/resolver";
@@ -22,7 +23,7 @@ import {
 } from "../rank-check/runs/items";
 import { rankCheckWorkflowId } from "../rank-check/workflow-id";
 import { trackedProjectDomain } from "../schemas/project";
-import { resolveEffectiveSerpDepth } from "../serp/markets";
+import { resolveEffectiveSerpDepth } from "../serp/constants";
 import type {
   CreateRunningRankCheckActivityInput,
   DiscardRankCheckActivityInput,
@@ -58,13 +59,14 @@ async function runningReservation(input: RankCheckActivityInput) {
             providerAllocationsInitializedAt: true,
           },
         },
+        checkSchedule: { select: { serpDepth: true } },
         schedule: { select: { serpDepth: true } },
       },
       where: { id: input.keywordId },
     }),
   ]);
   // biome-ignore format: compact call keeps this activity module under the line cap.
-  const depth = resolveEffectiveSerpDepth({ projectDepth: keyword?.project.defaults?.serpDepth, requestedDepth: input.depth, scheduleDepth: keyword?.schedule?.serpDepth });
+  const depth = resolveEffectiveSerpDepth({ projectDepth: keyword?.project.defaults?.serpDepth, requestedDepth: input.depth, checkScheduleDepth: keyword?.checkSchedule?.serpDepth, scheduleDepth: keyword?.schedule?.serpDepth });
   if (!keyword) throw new Error("Keyword not found.");
   const rateContext = connection
     ? await loadProviderRateContext(connection.id, "rank_check")
@@ -259,7 +261,7 @@ export async function failRankCheckActivity(
         project: { select: { defaults: { select: { serpDepth: true } }, domain: true } },
         projectId: true, publicId: true,
         rankChecks: { orderBy: { checkedAt: "desc" }, select: { position: true }, take: 1, where: { status: "completed" } },
-        schedule: { select: { serpDepth: true } }, text: true,
+        checkSchedule: { select: { serpDepth: true } }, schedule: { select: { serpDepth: true } }, text: true,
       },
       where: { id: input.keywordId },
     }),
@@ -273,16 +275,17 @@ export async function failRankCheckActivity(
   // biome-ignore format: compact ternary keeps this activity module under the line cap.
   const storedAttempts = Array.isArray(running?.attempts) && running.attempts.length > 0
     ? (running.attempts as { provider: string; message: string }[]) : undefined;
+  const expectedUrl = await resolveExpectedUrlForKeyword(keyword.id);
   // biome-ignore format: compact call keeps this activity module under the line cap.
   const rankCheck = await persistFailedRankCheck({
     error: input.message,
     errorCode: isProviderErrorCode(running?.errorCode) ? running.errorCode : undefined,
-    attempts: storedAttempts, existingRankCheckId: input.rankCheckId, keywordId: keyword.id,
+    attempts: storedAttempts, existingRankCheckId: input.rankCheckId, expectedUrlAtCheck: expectedUrl.url, keywordId: keyword.id,
     keywordPublicId: keyword.publicId, keywordText: keyword.text,
     previousPosition: keyword.rankChecks[0]?.position ?? null,
     projectDomain: trackedProjectDomain(keyword.project.domain) ?? "", projectId: keyword.projectId,
     provider: input.providerId ?? "primary",
-    requestedDepth: resolveEffectiveSerpDepth({ projectDepth: keyword.project.defaults?.serpDepth, scheduleDepth: keyword.schedule?.serpDepth }),
+    requestedDepth: resolveEffectiveSerpDepth({ projectDepth: keyword.project.defaults?.serpDepth, checkScheduleDepth: keyword.checkSchedule?.serpDepth, scheduleDepth: keyword.schedule?.serpDepth }),
   }).catch((error) => {
     if (error instanceof RankCheckClosedBeforePersistenceError) return null;
     throw error;

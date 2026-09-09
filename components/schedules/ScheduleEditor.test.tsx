@@ -1,4 +1,4 @@
-import { rankTrackerSchedulesPath } from "@/lib/routing/rank-tracker-schedules-path";
+import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { routerMock } from "@/tests/next-navigation";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -133,7 +133,18 @@ describe("ScheduleEditor", () => {
   it("implements default toggle names the schedule losing the flag", () => {
     renderEditor();
 
-    expect(screen.getByText(/Turning this on removes the default from Daily 06:00/)).toBeVisible();
+    expect(screen.getByText(/Replaces Daily 06:00 for new keywords/)).toBeVisible();
+  });
+
+  it("lets users undo choosing a default before saving", async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    const toggle = screen.getByRole("switch", { name: /default for new keywords/i });
+    await user.click(toggle);
+    expect(toggle).toBeChecked();
+    expect(toggle).toBeEnabled();
+    await user.click(toggle);
+    expect(toggle).not.toBeChecked();
   });
 
   it("keeps the current default selected until another schedule replaces it", () => {
@@ -148,11 +159,10 @@ describe("ScheduleEditor", () => {
       />,
     );
 
-    expect(screen.getByRole("switch", { name: /Default for new keywords/ })).toBeDisabled();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    expect(screen.getByText("Default for new keywords")).toBeVisible();
     expect(
-      screen.getByText(
-        "This is the default schedule. Choose another schedule and make it default to replace it.",
-      ),
+      screen.getByText("New keywords use this schedule unless you choose another."),
     ).toBeVisible();
   });
 
@@ -252,11 +262,11 @@ describe("ScheduleEditor", () => {
       "/api/check-schedules/sch_created/keywords",
     ]);
     expect(routerMock.replace).toHaveBeenCalledWith(
-      rankTrackerSchedulesPath("prj_story", "sch_created"),
+      projectSchedulesPath("prj_story", "sch_created"),
     );
   });
 
-  it("keeps the first schedule as the disabled default and saves that default", async () => {
+  it("shows the first schedule as the default and saves that default", async () => {
     const user = userEvent.setup();
     const fetchMock = vi
       .fn()
@@ -278,9 +288,8 @@ describe("ScheduleEditor", () => {
 
     expect(screen.getByText("0 keywords")).toBeVisible();
     expect(screen.getByText("No keywords yet. Add some to start scheduled checks.")).toBeVisible();
-    expect(screen.getByRole("switch", { name: /Default for new keywords/ })).toBeChecked();
-    expect(screen.getByRole("switch", { name: /Default for new keywords/ })).toBeDisabled();
-    expect(screen.getByText("The only schedule is the default.")).toBeVisible();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    expect(screen.getByText("Default for new keywords")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Save schedule" }));
 

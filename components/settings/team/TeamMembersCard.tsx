@@ -7,11 +7,13 @@ import {
   TeamMemberActionsMenu,
 } from "@/components/settings/team/TeamMemberActionsMenu";
 import { teamCardGeometryClassNames } from "@/components/settings/team/team-card-layout";
-import { Avatar, Button, StatusPill } from "@/components/ui";
+import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
+import { StatusPill } from "@/components/ui/StatusPill";
 import type { TeamMemberData } from "@/lib/queries/team";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
-import { UserPlusIcon as UserPlus } from "@phosphor-icons/react";
+import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/csr/UserPlus";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

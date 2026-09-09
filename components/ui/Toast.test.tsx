@@ -1,10 +1,11 @@
 import { MOTION_TOAST_ENTER, MOTION_TOAST_EXIT } from "@/lib/ui/motion";
-import useMediaQuery from "@mui/material/useMediaQuery";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ToastProvider, useToast } from "./Toast";
+import { ToastProvider } from "./Toast";
+import { useToast } from "./toast-context";
 
-vi.mock("@mui/material/useMediaQuery", () => ({ default: vi.fn(() => false) }));
+vi.mock("@/lib/ui/use-media-query", () => ({ useMediaQuery: vi.fn(() => false) }));
 
 const BUFFER = 50;
 const ENTRY_MS = MOTION_TOAST_ENTER + BUFFER;

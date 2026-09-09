@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getKeywordResearchPageContext } from "./keyword-research";
 
 const mocks = vi.hoisted(() => ({
+  defaultResearch: vi.fn(),
   connectionResources: vi.fn(),
-  defaultMarket: vi.fn(),
+  defaultScope: vi.fn(),
   eligible: vi.fn(),
   pageProject: vi.fn(),
   readable: vi.fn(),
@@ -14,22 +15,9 @@ vi.mock("@/lib/keyword-research/context", () => ({
   eligibleResearchConnections: mocks.eligible,
   keywordResearchPageProject: mocks.pageProject,
 }));
-vi.mock("@/lib/keyword-research/default-market", () => ({
-  keywordResearchDefaultMarket: mocks.defaultMarket,
-}));
-vi.mock("@/lib/serp/location", () => ({
-  countrySeed: () => ({ countryCode: "US", hl: "en", languageLabel: "English" }),
-  locationLanguage: (_countryCode: string, languageCode?: string) => ({
-    code: languageCode ?? "en",
-    label: languageCode === "es" ? "Spanish" : "English",
-  }),
-  normalizeCanonicalLocationKey: (locationKey: string) => {
-    const [countryCode, languageCode] = locationKey.split("@");
-    return {
-      canonicalKey: locationKey,
-      selector: { countryCode, kind: "country", languageCode },
-    };
-  },
+vi.mock("@/lib/keyword-research/default-scope", () => ({
+  keywordResearchDefault: mocks.defaultResearch,
+  keywordResearchDefaultScope: mocks.defaultScope,
 }));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.readable }));
 
@@ -45,9 +33,24 @@ describe("keyword research page connection IDs", () => {
       },
     });
     mocks.pageProject.mockResolvedValue({ id: "project_1", providerConnections: [] });
-    mocks.defaultMarket.mockResolvedValue({
-      locationRef: null,
-      market: { city: null, displayName: "United States", locationKey: "US" },
+    mocks.defaultScope.mockResolvedValue({
+      countryCode: "US",
+      countryName: "United States",
+      languageCode: "en",
+      languageLabel: "English",
+      providerLocationCode: 2840,
+      researchAvailable: true,
+    });
+    mocks.defaultResearch.mockResolvedValue({
+      device: "desktop",
+      scope: {
+        countryCode: "US",
+        countryName: "United States",
+        languageCode: "en",
+        languageLabel: "English",
+        providerLocationCode: 2840,
+        researchAvailable: true,
+      },
     });
     mocks.eligible.mockReturnValue([]);
   });
@@ -68,18 +71,47 @@ describe("keyword research page connection IDs", () => {
     });
   });
 
-  it("preserves a qualified default market instead of replacing its language", async () => {
-    mocks.defaultMarket.mockResolvedValue({
-      locationRef: null,
-      market: { city: null, displayName: "Spain - English", locationKey: "ES@en" },
+  it("returns the default country and language pair", async () => {
+    mocks.defaultResearch.mockResolvedValue({
+      device: "desktop",
+      scope: {
+        countryCode: "ES",
+        countryName: "Spain",
+        languageCode: "en",
+        languageLabel: "English",
+        providerLocationCode: 2724,
+        researchAvailable: false,
+      },
     });
 
     await expect(
       getKeywordResearchPageContext("prj_a00000000000000000000000"),
     ).resolves.toMatchObject({
-      language: { code: "en", label: "English" },
-      location: { canonicalKey: "ES@en", countryCode: "ES", hl: "en" },
+      defaultScope: { countryCode: "ES", languageCode: "en", languageLabel: "English" },
     });
+  });
+
+  it("keeps the most-tracked device when no default is configured", async () => {
+    mocks.pageProject.mockResolvedValue({
+      defaults: null,
+      id: "project_1",
+      providerConnections: [],
+    });
+    mocks.defaultResearch.mockResolvedValue({
+      device: "mobile",
+      scope: {
+        countryCode: "ES",
+        countryName: "Spain",
+        languageCode: "es",
+        languageLabel: "Spanish",
+        providerLocationCode: 2724,
+        researchAvailable: true,
+      },
+    });
+
+    await expect(
+      getKeywordResearchPageContext("prj_a00000000000000000000000"),
+    ).resolves.toMatchObject({ defaultDevice: "mobile" });
   });
 
   it.each(["connection_1", "key_a00000000000000000000000"])(

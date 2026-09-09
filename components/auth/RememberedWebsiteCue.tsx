@@ -1,4 +1,5 @@
-import { buildDomainIconUrl, DomainIconLayer, domainIconHost } from "@/components/ui";
+import { DomainIconLayer } from "@/components/ui/DomainIconLayer";
+import { buildDomainIconUrl, domainIconHost } from "@/components/ui/domain-icon-url";
 
 type RememberedWebsiteCueProps = {
   website: string;

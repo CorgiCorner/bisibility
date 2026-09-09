@@ -3,6 +3,7 @@
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { formatDateTime } from "@/lib/dates/format";
 import { appPath } from "@/lib/routing/app-path";
+import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
 
 type Props = {
@@ -24,7 +25,7 @@ export function StepFirstCheckCompletion({
 }: Readonly<Props>) {
   const dateFormat = useDateFormat();
   const rankTrackerHref = appPath(projectId, "rank-tracker");
-  const settingsHref = appPath(projectId, "settings", "tracking");
+  const settingsHref = projectSchedulesPath(projectId);
   const singular = keywordCount === 1;
   const keywordsLabel = `${keywordCount} ${singular ? "keyword" : "keywords"}`;
   const be = singular ? "is" : "are";
@@ -34,14 +35,13 @@ export function StepFirstCheckCompletion({
     return (
       <p className="mt-4 text-[13px] leading-relaxed text-fg-muted">
         Your {keywordsLabel} {be} ready. Nothing runs - or spends - until you say so: run{" "}
-        {objectPronoun}
-        anytime from the{" "}
+        {objectPronoun} anytime from the{" "}
         <a className="underline" href={rankTrackerHref}>
           Rank Tracker
         </a>
         , or switch to a schedule in{" "}
         <a className="underline" href={settingsHref}>
-          settings
+          Schedules
         </a>{" "}
         for hands-off tracking.
       </p>
@@ -51,7 +51,7 @@ export function StepFirstCheckCompletion({
       <p className="mt-4 text-[13px] leading-relaxed text-fg-muted">
         Your {keywordsLabel} {be} paused. No scheduled checks run until you resume tracking in{" "}
         <a className="underline" href={settingsHref}>
-          settings
+          Schedules
         </a>
         . You can still run {objectPronoun} from the{" "}
         <a className="underline" href={rankTrackerHref}>

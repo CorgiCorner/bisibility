@@ -1,7 +1,9 @@
 "use client";
 
-import { Button, Sheet } from "@/components/ui";
-import { ArrowLeftIcon as ArrowLeft, ArrowRightIcon as ArrowRight } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { Sheet } from "@/components/ui/Sheet";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { CheckStep } from "./MigrateToCloudCheck";
 import { DoneStep } from "./MigrateToCloudHandoff";
 import { TransferStep } from "./MigrateToCloudTransferPanels";
@@ -80,9 +82,10 @@ export function MigrateToCloudWizard({
                 onClick={wizard.handleBack}
                 size="lg"
                 startIcon={<ArrowLeft aria-hidden size={15} weight="regular" />}
-                sx={{
-                  color: "var(--fg-muted)",
-                  "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
+                style={{
+                  "--control-color": "var(--fg-muted)",
+                  "--control-hover-border-color": "var(--accent)",
+                  "--control-hover-color": "var(--accent-text)",
                 }}
                 type="button"
                 variant="secondary"
@@ -97,7 +100,7 @@ export function MigrateToCloudWizard({
               }
               onClick={wizard.handleNext}
               size="lg"
-              sx={{ flex: 1 }}
+              style={{ flex: 1 }}
               type="button"
               variant="primary"
             >

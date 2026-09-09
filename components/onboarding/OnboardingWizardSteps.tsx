@@ -1,5 +1,4 @@
 "use client";
-
 import {
   buildOnboardingStepHref,
   type OnboardingFlowState,
@@ -19,6 +18,7 @@ import { StepConnectProvider } from "@/components/onboarding/steps/StepConnectPr
 import type { ConnectedProviderMap } from "@/components/onboarding/steps/StepConnectProvider.fields";
 import { StepCreateProject } from "@/components/onboarding/steps/StepCreateProject";
 import { StepFirstCheck } from "@/components/onboarding/steps/StepFirstCheck";
+import type { FirstCheckCandidate } from "@/lib/actions/rank-check-preview-result";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
 
@@ -37,6 +37,7 @@ export type OnboardingWizardStepsProps = {
   hasConnectedProvider: boolean;
   initialSerpConnections?: ConnectedProviderMap;
   initialKeywordText?: string | null;
+  initialFirstCheckCandidates?: FirstCheckCandidate[];
   keywordCount: number;
   monthlyCapCents: number;
   nextCheckAt?: string | null;
@@ -44,6 +45,7 @@ export type OnboardingWizardStepsProps = {
   projectedCostPerCheckCents: number | null;
   rankedKeywordConnections: RankedKeywordConnection[];
   onCreateProjectComplete: NonNullable<Parameters<typeof StepCreateProject>[0]["onComplete"]>;
+  onKeywordsSavingChange?: (saving: boolean) => void;
   onKeywordsChange: NonNullable<Parameters<typeof StepAddKeywords>[0]["onKeywordsChange"]>;
   onMarketsChange: NonNullable<Parameters<typeof StepAddKeywords>[0]["onMarketsChange"]>;
   onKeywordsComplete: NonNullable<Parameters<typeof StepAddKeywords>[0]["onComplete"]>;
@@ -71,6 +73,7 @@ export function OnboardingWizardSteps({
   hasConnectedProvider,
   initialSerpConnections,
   initialKeywordText,
+  initialFirstCheckCandidates,
   keywordCount,
   monthlyCapCents,
   nextCheckAt,
@@ -79,6 +82,7 @@ export function OnboardingWizardSteps({
   rankedKeywordConnections,
   onCreateProjectComplete,
   onKeywordsChange,
+  onKeywordsSavingChange,
   onMarketsChange,
   onKeywordsComplete,
   onProviderComplete,
@@ -96,6 +100,7 @@ export function OnboardingWizardSteps({
           */}
           <StepCreateProject
             createProjectAction={actions.createProjectAction}
+            updateProjectAction={actions.updateProjectAction}
             dataResidencyMessage={dataResidencyMessage}
             defaultValues={draft.createProject}
             deriveWebsiteAction={actions.deriveWebsiteAction}
@@ -133,8 +138,8 @@ export function OnboardingWizardSteps({
       {currentStep === 3 ? (
         <StepAddKeywords
           addKeywordsAction={actions.addKeywordsAction}
-          awaitingPropertySelection={Boolean(gscGoogleOAuth)}
           costPerCheckCents={projectedCostPerCheckCents}
+          createMarketAction={actions.createMarketAction}
           defaultValues={draft.addKeywords}
           fetchRankedKeywordSuggestionsAction={actions.fetchRankedKeywordSuggestionsAction}
           flowState={flowState}
@@ -143,6 +148,7 @@ export function OnboardingWizardSteps({
           monthlyCapCents={monthlyCapCents}
           onComplete={onKeywordsComplete}
           onKeywordsChange={onKeywordsChange}
+          onSavingChange={onKeywordsSavingChange}
           onMarketsChange={onMarketsChange}
           projectDomain={project?.domain ?? undefined}
           rankedKeywordConnections={rankedKeywordConnections}
@@ -163,6 +169,7 @@ export function OnboardingWizardSteps({
           keywordDraft={draft.addKeywords.keywords}
           initialConnections={initialSerpConnections}
           initialKeywordText={initialKeywordText}
+          initialFirstCheckCandidates={initialFirstCheckCandidates}
           nextCheckAt={nextCheckAt}
           onProviderConnected={onInlineProviderComplete}
           providerDefaultValues={draft.connectProvider}

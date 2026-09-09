@@ -13,7 +13,11 @@ import {
 } from "@/lib/provider-lookups/cache";
 import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
 import type { KeywordMetrics, ResearchKeywordRow } from "@/lib/providers/types";
-import { researchProviderRankLocation, supportsResearchMarket } from "@/lib/serp/market-capability";
+import {
+  researchProviderRankLocation,
+  researchScopeForLocation,
+  supportsResearchScope,
+} from "@/lib/serp/research-capability";
 import {
   type KeywordMetricsCacheEntry,
   keywordMetricsCacheKey,
@@ -134,7 +138,7 @@ export async function fetchKeywordMetrics(input: {
     : eligible[0];
   if (!selected?.provider.fetchKeywordMetrics) return { ok: false, reason: "no_source" };
   const location = await researchLocation(project);
-  if (!supportsResearchMarket(location.value.gl, location.value.hl)) {
+  if (!supportsResearchScope(location.value.gl, location.value.hl)) {
     return { ok: false, reason: "unsupported_location" };
   }
   const rateContext = await loadProviderRateContext(selected.connection.id, "keyword_metrics");
@@ -207,7 +211,7 @@ export async function fetchKeywordMetrics(input: {
           selected.provider.fetchKeywordMetrics?.(credentials, {
             includeClickstream: input.includeClickstream,
             keywords: chunk.map((item) => item.keyword),
-            location: researchProviderRankLocation(location.value),
+            location: researchProviderRankLocation(researchScopeForLocation(location.value)),
             attribution: usage,
             tag: usage?.tag,
           }) ?? Promise.resolve({ costCents: 0, rows: [] }),

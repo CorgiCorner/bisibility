@@ -5,7 +5,8 @@ import {
   cacheTimeRemaining,
   type RecentKeywordResearch,
 } from "@/lib/keyword-research/recent-searches";
-import { ClockCounterClockwiseIcon as Clock, XIcon as X } from "@phosphor-icons/react";
+import { ClockCounterClockwiseIcon as Clock } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 
 type RecentResearchSearchesProps = {
   disabled?: boolean;
@@ -52,7 +53,7 @@ export function RecentResearchSearches({
                 {search.seed}
               </strong>
               <span className="font-sans tabular-nums text-[10px] text-fg-muted">
-                {search.market} - {relativePast(new Date(search.createdAt), now)}
+                {search.scopeLabel} - {relativePast(new Date(search.createdAt), now)}
               </span>
               <span className="rounded-full bg-accent-soft px-2 py-0.5 font-sans tabular-nums text-[9.5px] text-accent-text">
                 {freeFor(search.cachedUntil)}

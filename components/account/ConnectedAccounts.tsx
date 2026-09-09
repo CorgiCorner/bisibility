@@ -1,9 +1,7 @@
 import { ENABLED_SOCIAL_PROVIDERS } from "@/lib/auth/runtime-config";
 import type { ConnectedAccount } from "@/lib/queries/account";
-import {
-  GithubLogoIcon as GithubLogo,
-  GoogleLogoIcon as GoogleLogo,
-} from "@phosphor-icons/react/dist/ssr";
+import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/ssr/GithubLogo";
+import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/ssr/GoogleLogo";
 import { AccountSection } from "./AccountSection";
 import { rowListClass } from "./account-ui";
 import { ConnectAccountButton } from "./ConnectAccountButton";

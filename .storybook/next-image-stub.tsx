@@ -6,6 +6,11 @@ type ImageProps = {
   [key: string]: unknown;
 };
 
-export default function Image({ alt = "", src = "", ...props }: ImageProps) {
+export default function Image({
+  alt = "",
+  src = "",
+  unoptimized: _unoptimized,
+  ...props
+}: ImageProps) {
   return React.createElement("img", { ...props, alt, src });
 }

@@ -20,6 +20,20 @@ describe("AppHeaderTitle", () => {
     expect(screen.queryByText("Project, providers, team and preferences.")).not.toBeInTheDocument();
   });
 
+  it.each(["runs/rank-checks", "rank-tracker/runs"])(
+    "shows a compact, copyable run ID at %s",
+    (path) => {
+      const id = "rcr_abcdefghijklmnopqrstuvwx";
+      setNavigationState({ pathname: `/app/prj_7Kd2Qf9m/${path}/${id}` });
+      render(<AppHeaderTitle />);
+
+      expect(screen.getByRole("heading", { name: "Run" })).toBeVisible();
+      expect(screen.getByText("rcr_abcdef").parentElement).toHaveAttribute("title", id);
+      expect(screen.queryByText(id)).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Copy run ID" })).toBeVisible();
+    },
+  );
+
   it("omits the Rank Tracker subtitle", () => {
     setNavigationState({ pathname: "/app/prj_7Kd2Qf9m/rank-tracker" });
 

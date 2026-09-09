@@ -41,20 +41,14 @@ const nextConfig: NextConfig = {
   // run overwrote it.
   agentRules: false,
   experimental: {
+    useTypeScriptCli: true,
     // Keep managed 8 GB builds below their process limit. More workers made page-data
     // collection fail with spawn ENOMEM and forced the 2.5x compute rate as a workaround.
     // The cap is a build-time constraint, so a dev run keeps the full worker pool.
     cpus: resolveNextBuildCpus(process.env),
-    // Next already optimizes a default barrel list that covers `@mui/material`, but not
-    // these. Phosphor is the expensive one: 57 MB and ~4.5k modules behind a barrel that
-    // 322 files import, and dev builds never tree-shake it away. The `/dist/ssr` subpath
-    // needs its own entry because the option does not accept wildcards.
-    optimizePackageImports: [
-      "@phosphor-icons/react",
-      "@phosphor-icons/react/dist/ssr",
-      "@mui/x-data-grid",
-      "@mui/x-charts",
-    ],
+    // Keep icon and chart imports scoped to the components each page uses.
+    // The server icon subpath needs its own entry; this option has no wildcards.
+    optimizePackageImports: ["@phosphor-icons/react", "@phosphor-icons/react/dist/ssr", "recharts"],
   },
   // Turbopack infers the project root from the nearest lockfile and finds one in the parent
   // workspace directory, outside this repository, which makes it warn and widen the file
@@ -64,7 +58,11 @@ const nextConfig: NextConfig = {
   },
   distDir: resolveNextDistDir(process.env.NEXT_DIST_DIR),
   outputFileTracingIncludes: {
-    "/*": ["./prisma/migrations/**/*", "./prisma/rds-ca.pem"],
+    "/*": [
+      "./lib/serp/generated/shared-location-catalog.json.gz",
+      "./prisma/migrations/**/*",
+      "./prisma/rds-ca.pem",
+    ],
   },
   async headers() {
     // The CSP deliberately leaves script/style/img unrestricted so the Next runtime,

@@ -1,5 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AdminAuditTable } from "./AdminAuditTable";
 
 const entries = [
@@ -33,6 +33,8 @@ const entries = [
 ] as const;
 
 describe("AdminAuditTable", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("renders URL filters and the prototype-aligned audit columns", () => {
     render(<AdminAuditTable entries={entries} filter="account" nextCursor={null} />);
 
@@ -59,7 +61,9 @@ describe("AdminAuditTable", () => {
 
     const table = screen.getByRole("table", { name: "Instance administrator activity" });
     for (const heading of ["Time", "Actor", "Action", "Target", "Result"]) {
-      expect(within(table).getByRole("columnheader", { name: heading })).toBeInTheDocument();
+      expect(
+        within(table).getByRole("columnheader", { name: new RegExp(`^${heading}`) }),
+      ).toBeInTheDocument();
     }
   });
 
@@ -68,10 +72,10 @@ describe("AdminAuditTable", () => {
 
     expect(screen.getByText("admin@example.com")).toBeInTheDocument();
     expect(screen.getByText("instance_admin.account_viewed")).toBeInTheDocument();
-    expect(screen.getByText("user:usr_abcdefghijklmnopqrstuvwx")).toHaveClass("font-mono");
+    expect(screen.getByText("usr_abcdef")).toHaveClass("font-mono");
     expect(
       screen.getByRole("button", {
-        name: "Copy audit target user:usr_abcdefghijklmnopqrstuvwx",
+        name: "Copy audit target ID usr_abcdefghijklmnopqrstuvwx",
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("instance_ops:unavailable")).toBeInTheDocument();
@@ -79,6 +83,27 @@ describe("AdminAuditTable", () => {
       screen.queryByRole("button", { name: "Copy audit target instance_ops:unavailable" }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("-")).toBeInTheDocument();
+  });
+
+  it("sorts the visible audit entries in the client", () => {
+    render(<AdminAuditTable entries={entries} filter="all" nextCursor={null} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Sort Time ascending" }));
+
+    const table = screen.getByRole("table", { name: "Instance administrator activity" });
+    const rows = within(table).getAllByRole("row").slice(1);
+    expect(
+      within(rows[0] as HTMLElement).getByText("instance_admin.ops_test.send"),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps complete timestamps readable and fills a wide table container", () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1_200);
+    render(<AdminAuditTable entries={entries} filter="all" nextCursor={null} />);
+
+    const table = screen.getByRole("table", { name: "Instance administrator activity" });
+    expect(table.style.getPropertyValue("--dt-table-width")).toBe("1200px");
+    expect(table.style.getPropertyValue("--dt-col-time")).toBe("156px");
   });
 
   it("renders every result state through the shared neutral StatusPill chip and dot", () => {

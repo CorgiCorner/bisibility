@@ -2,15 +2,12 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AppFooter } from "./AppFooter";
 
-vi.mock("@/components/ui", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/components/ui")>();
-  return {
-    ...actual,
-    ThemeSegments: ({ size }: { size?: "sm" | "md" }) => (
-      <span data-size={size} data-testid="theme-segments" />
-    ),
-  };
-});
+vi.mock("@/components/ui/ThemeSegments", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/ui/ThemeSegments")>()),
+  ThemeSegments: ({ size }: { size?: "sm" | "md" }) => (
+    <span data-size={size} data-testid="theme-segments" />
+  ),
+}));
 
 function expectAdminLink(name: string) {
   const link = screen.getByRole("link", { name });
@@ -114,6 +111,7 @@ describe("AppFooter", () => {
     expect(screen.getByTestId("theme-segments")).toHaveAttribute("data-size", "sm");
     expect(screen.queryByRole("link", { name: /Instance admin/ })).not.toBeInTheDocument();
     expect(document.querySelector('[style*="var(--green)"]')).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Privacy choices" })).toBeVisible();
   });
 
   it("mounts the theme switch beside the instance status for instance admins", () => {

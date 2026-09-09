@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, Modal } from "@/components/ui";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { DeployHookRevealContent } from "./DeployHookReveal";
 import type { IssuedDeployHook } from "./deploy-hook-model";
 

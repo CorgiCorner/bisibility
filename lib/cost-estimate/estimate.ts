@@ -1,4 +1,4 @@
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 
 export type EstimateFrequency = "daily" | "weekly" | "monthly";
 
@@ -202,9 +202,10 @@ export function estimateCost(
   volume: CheckVolumeInput,
   rate: ProviderRate,
   selection: EstimateSelection = {},
+  runsPerMonth: number = RUNS_PER_MONTH[volume.frequency],
 ): CostEstimate {
   const runChecks = checksPerRun(volume);
-  const checkCount = runChecks * RUNS_PER_MONTH[volume.frequency];
+  const checkCount = runChecks * runsPerMonth;
   const billingUnitsPerCheck = pagesPerCheck(volume.depth);
 
   if (rate.pricingModel === "flat") {

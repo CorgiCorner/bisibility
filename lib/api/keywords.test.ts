@@ -304,9 +304,8 @@ describe("keyword API list filters", () => {
     );
     expect(response.status).toBe(200);
     expect(mocks.resolveLocation).toHaveBeenCalledWith({
-      city: "Austin",
-      country: "United States",
       projectId: "project_1",
+      selection: { cityName: "Austin", countryCode: "US", kind: "city" },
     });
     expect(mocks.deleteMany).toHaveBeenCalled();
     expect(mocks.addTags).toHaveBeenCalled();

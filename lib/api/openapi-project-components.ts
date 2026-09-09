@@ -1,12 +1,16 @@
-import { serpDeviceValues, serpMarketOptions } from "@/lib/serp/markets";
+import { serpDeviceValues } from "@/lib/serp/constants";
 import { VISIBILITY_DESCRIPTION } from "@/lib/visibility/definition";
+import {
+  deprecatedLegacyMarketField,
+  legacyMarketNameOpenApiSchema,
+  primaryLocationKeyDescription,
+} from "./legacy-market-input";
 import { publicIdSchema } from "./openapi-public-id";
 import {
   jitterMinutesContractSchema,
   scheduleTimezoneContractSchema,
 } from "./openapi-schedule-schema";
 
-const serpMarketSchema = { enum: serpMarketOptions, example: "United States", type: "string" };
 const serpDeviceSchema = { enum: serpDeviceValues, type: "string" };
 const locationKeySchema = { example: "ES/Andalusia/Malaga@en", type: "string" };
 
@@ -27,8 +31,9 @@ export const projectSchemas = {
     properties: {
       city: { type: ["string", "null"] },
       country: {
-        ...serpMarketSchema,
         description: "Persisted default country for new keywords.",
+        example: "United States",
+        type: "string",
       },
       cron_expression: { type: ["string", "null"] },
       device: {
@@ -80,12 +85,13 @@ export const projectSchemas = {
   },
   ProjectDefaultsPatch: {
     properties: {
-      city: { type: ["string", "null"] },
-      country: {
-        ...serpMarketSchema,
-        description:
-          "Optional country selector when location_key is omitted. Provide together with device.",
-      },
+      city: deprecatedLegacyMarketField(
+        "Optional city name resolved within country when location_key is omitted.",
+        { type: ["string", "null"] },
+      ),
+      country: legacyMarketNameOpenApiSchema(
+        "Optional country selector when location_key is omitted. Provide together with device.",
+      ),
       cron_expression: { type: ["string", "null"] },
       device: {
         ...serpDeviceSchema,
@@ -99,8 +105,9 @@ export const projectSchemas = {
       jitter_minutes: jitterMinutesContractSchema,
       location_key: {
         ...locationKeySchema,
-        description:
+        description: primaryLocationKeyDescription(
           "Updates the default market from a canonical location key. Country and city are resolved from the location catalog; device defaults to the current default device when omitted.",
+        ),
       },
       serp_stop_on_match: {
         description: "Set false to fetch the full configured depth for competitor snapshots.",

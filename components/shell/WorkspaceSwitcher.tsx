@@ -1,6 +1,6 @@
 "use client";
 
-import { MENU_ROW_SX, WorkspaceRow } from "@/components/shell/WorkspaceRow";
+import { MENU_ROW_STYLE, WorkspaceRow } from "@/components/shell/WorkspaceRow";
 import {
   WorkspaceSwitcherTrigger,
   type WorkspaceTriggerVariant,
@@ -13,18 +13,18 @@ import {
   type WorkspaceMenuPlacement,
   workspaceMenuOrigins,
 } from "@/components/shell/workspace-menu-placement";
+import { Divider } from "@/components/ui/Divider";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Divider from "@mui/material/Divider";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import { PlusIcon as Plus } from "@phosphor-icons/react";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 
 const MENU_ID = "workspace-switcher-menu";
 
-const PAPER_SX = {
+const PAPER_STYLE = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border-control)",
   borderRadius: UI_RADIUS_ROLES.card,
@@ -35,7 +35,13 @@ const PAPER_SX = {
   width: WORKSPACE_MENU_WIDTH,
 } as const;
 
-const DIVIDER_SX = { borderColor: "var(--border)", marginX: "-6px", marginY: "4px" } as const;
+const DIVIDER_STYLE = {
+  borderColor: "var(--border)",
+  marginLeft: "-6px",
+  marginRight: "-6px",
+  marginTop: "4px",
+  marginBottom: "4px",
+} as const;
 
 type WorkspaceSearchHeaderProps = {
   inputRef: (node: HTMLInputElement | null) => void;
@@ -51,6 +57,7 @@ function WorkspaceSearchHeader({
   return (
     <div className="-mx-1.5 -mt-1.5 mb-1.5 flex h-10 items-center gap-2 border-border border-b px-3">
       <input
+        data-menu-search
         aria-label="Find project"
         className="min-w-0 flex-1 bg-transparent text-[12px] text-fg outline-none placeholder:text-fg-muted [&::-webkit-search-cancel-button]:hidden"
         onChange={(event) => onSearchChange(event.target.value)}
@@ -68,7 +75,6 @@ function WorkspaceSearchHeader({
     </div>
   );
 }
-WorkspaceSearchHeader.muiSkipListHighlight = true;
 
 export type WorkspaceSwitcherProps = {
   activeProjectId: string;
@@ -141,7 +147,7 @@ export function WorkspaceSwitcher({
     }
   }
 
-  const { anchorOrigin, offset, transformOrigin } = workspaceMenuOrigins(false, placement);
+  const { anchorOrigin, offset } = workspaceMenuOrigins(false, placement);
   const sublabel = compact || !active ? null : workspaceSublabel(active);
   const normalizedSearch = search.trim().toLocaleLowerCase();
   const visibleWorkspaces = normalizedSearch
@@ -169,22 +175,18 @@ export function WorkspaceSwitcher({
       />
       <Menu
         anchorEl={anchorEl}
-        anchorOrigin={anchorOrigin}
+        align="start"
+        side={anchorOrigin.vertical === "top" ? "top" : "bottom"}
         // Don't restore focus to the trigger on close: a mouse-opened menu otherwise
         // leaves a lingering focus-visible ring on the switcher after it closes.
         autoFocus={false}
-        disableAutoFocusItem
-        disableRestoreFocus
+        instant
+        restoreFocus={false}
         id={MENU_ID}
         onClose={close}
         open={open}
-        slotProps={{
-          list: { "aria-label": "Projects", dense: true, sx: { padding: 0 } },
-          paper: { ref: measureMenu, sx: { ...PAPER_SX, ...offset } },
-        }}
-        transformOrigin={transformOrigin}
-        // Instant: Slide/Grow reads as the menu flying out of the rail.
-        transitionDuration={0}
+        listProps={{ "aria-label": "Projects", style: { padding: 0 } }}
+        contentProps={{ ref: measureMenu, style: { ...PAPER_STYLE, ...offset } }}
       >
         <WorkspaceSearchHeader inputRef={focusSearch} onSearchChange={setSearch} search={search} />
         {visibleWorkspaces.map((workspace) => (
@@ -202,14 +204,14 @@ export function WorkspaceSwitcher({
         ) : null}
         {/* No settings row: the rail already has Settings, and it points at the same screen.
             The switcher is for changing workspace, not a second way into the same page. */}
-        {canCreateWorkspace ? <Divider sx={DIVIDER_SX} /> : null}
+        {canCreateWorkspace ? <Divider style={DIVIDER_STYLE} /> : null}
         {canCreateWorkspace ? (
           <MenuItem
             aria-label="Create project"
             component={Link}
             href="/onboarding?new=1"
             onClick={close}
-            sx={MENU_ROW_SX}
+            style={MENU_ROW_STYLE}
           >
             <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control text-fg-muted">
               <Plus aria-hidden size={14} weight="regular" />

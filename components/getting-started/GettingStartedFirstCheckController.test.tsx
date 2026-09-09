@@ -38,19 +38,36 @@ vi.mock("@/components/getting-started/GettingStartedChecklist", () => ({
           ? `${context.inFlightBatch.completed} of ${context.inFlightBatch.total}`
           : "idle"}
       </output>
+      <output aria-label="competitor suggestion evidence">
+        {context.competitorSuggestions
+          .map(
+            (suggestion) =>
+              `seen on ${suggestion.seenOn} of ${suggestion.of} keywords / best #${suggestion.bestPosition}`,
+          )
+          .join(", ")}
+      </output>
     </div>
   ),
 }));
 
 const statusMocks = vi.hoisted(() => ({ getRankCheckStatuses: vi.fn() }));
+const competitorActionMocks = vi.hoisted(() => ({
+  addManualCompetitor: vi.fn(),
+  confirmSuggestedCompetitor: vi.fn(),
+  dismissCompetitorSuggestion: vi.fn(),
+  skipCompetitorSetup: vi.fn(),
+}));
 vi.mock("@/lib/actions/rank-check-status", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/actions/rank-check-status")>()),
   getRankCheckStatuses: statusMocks.getRankCheckStatuses,
 }));
+vi.mock("@/lib/actions/competitor-set", () => competitorActionMocks);
 
 function context(inFlightBatch: SetupContext["inFlightBatch"] = null): SetupContext {
   return {
     completedCheckCount: 0,
+    competitorSetupOutcome: null,
+    competitorSuggestions: [],
     inFlightBatch,
     keywordCount: 2,
     keywordIds: [...KEYWORD_IDS],
@@ -130,6 +147,22 @@ describe("GettingStartedFirstCheckController", () => {
       rankCheckIds: [CHECK_ID],
     });
     expect(screen.getByLabelText("checklist progress")).toHaveTextContent("2 of 2");
+  });
+
+  it("passes server-supplied competitor evidence through the controller boundary", () => {
+    setup({
+      context: {
+        ...context(),
+        completedCheckCount: 1,
+        competitorSuggestions: [
+          { bestPosition: 3, domain: "first.example.org", of: 12, seenOn: 9 },
+        ],
+      },
+    });
+
+    expect(screen.getByLabelText("competitor suggestion evidence")).toHaveTextContent(
+      "seen on 9 of 12 keywords / best #3",
+    );
   });
   it("adopts a batch that appears after the controller mounts", async () => {
     statusMocks.getRankCheckStatuses.mockResolvedValue([]);

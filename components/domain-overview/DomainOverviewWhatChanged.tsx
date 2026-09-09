@@ -1,12 +1,11 @@
-import { Card, InfoTooltip } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { DateFormat } from "@/lib/dates/format";
 import type { DomainRankMetrics } from "@/lib/providers/types";
-import {
-  ArrowDownIcon as ArrowDown,
-  ArrowUpIcon as ArrowUp,
-  MinusCircleIcon as MinusCircle,
-  PlusCircleIcon as PlusCircle,
-} from "@phosphor-icons/react";
+import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
+import { ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/csr/ArrowUp";
+import { MinusCircleIcon as MinusCircle } from "@phosphor-icons/react/dist/csr/MinusCircle";
+import { PlusCircleIcon as PlusCircle } from "@phosphor-icons/react/dist/csr/PlusCircle";
 import styles from "./DomainOverviewWhatChanged.module.css";
 import { sourceDateLabel } from "./domain-overview-metrics";
 

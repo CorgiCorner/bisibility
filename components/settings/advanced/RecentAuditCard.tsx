@@ -1,10 +1,11 @@
 import { AdvancedCardFrame } from "@/components/settings/advanced/AdvancedCardFrame";
 import { advancedCardGeometryClassNames } from "@/components/settings/advanced/advanced-settings-layout";
-import { Avatar, Button } from "@/components/ui";
+import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
 import type { AuditEntry } from "@/lib/queries/audit";
 import { appPath } from "@/lib/routing/app-path";
 import { cn } from "@/lib/ui/cn";
-import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 
 type RecentAuditCardProps = {
   entries: readonly AuditEntry[];

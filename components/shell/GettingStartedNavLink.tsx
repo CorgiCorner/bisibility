@@ -5,7 +5,7 @@ import {
   gettingStartedProgressAriaLabel,
 } from "@/components/getting-started/getting-started-copy";
 import { SetupProgressRing } from "@/components/getting-started/SetupProgressRing";
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { appPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 
@@ -23,7 +23,7 @@ export type GettingStartedNavLinkProps = Readonly<{
 export function GettingStartedNavLink({
   collapsed = false,
   currentHref,
-  doneCount,
+  doneCount: _doneCount,
   onNavigate,
   projectRef,
   setupComplete: _setupComplete = false,
@@ -54,7 +54,7 @@ export function GettingStartedNavLink({
         onClick={onNavigate}
       >
         <span className="grid h-[30px] w-[30px] flex-none place-items-center">
-          <SetupProgressRing doneCount={doneCount} size={20} totalCount={totalCount} />
+          <SetupProgressRing settledCount={settledCount} size={20} totalCount={totalCount} />
         </span>
         {collapsed ? null : (
           <span className="min-w-0 flex-1 truncate">{GETTING_STARTED_LABEL}</span>

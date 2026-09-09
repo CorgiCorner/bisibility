@@ -1,10 +1,12 @@
 "use client";
 
-import { Button, CopyButton, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { Modal } from "@/components/ui/Modal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
-import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react";
+import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";

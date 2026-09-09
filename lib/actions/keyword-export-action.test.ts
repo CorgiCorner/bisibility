@@ -30,7 +30,7 @@ const query = {
   ...defaultRankTrackerQueryState,
   filters: { ...defaultRankTrackerQueryState.filters, wrongUrl: true },
   page: 3,
-  pageSize: 10 as const,
+  pageSize: 25 as const,
 };
 
 describe("query-backed keyword export action", () => {

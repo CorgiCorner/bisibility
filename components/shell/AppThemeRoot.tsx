@@ -1,6 +1,6 @@
 "use client";
 
-import { ThemeRoot } from "@/components/ui";
+import { ThemeRoot } from "@/components/ui/ThemeRoot";
 import { readTheme, subscribeTheme, type ThemeMode } from "@/lib/theme/browser-theme";
 import { isSidebarCollapsed } from "@/lib/ui/sidebar-collapsed";
 import { type ComponentPropsWithoutRef, useSyncExternalStore } from "react";

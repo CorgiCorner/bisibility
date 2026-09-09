@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/ui/cn";
-import { CaretDownIcon as CaretDown } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import type { ReactNode } from "react";
 import { COLLAPSE_TITLE } from "./search-insights-copy";
 import {
@@ -68,9 +68,7 @@ export function SearchInsightsRowsCard({
       {empty ? (
         <p className="m-0 px-4 py-5 text-ui-body text-fg-muted">{emptyReason}</p>
       ) : (
-        <div className={showFooter ? undefined : "[&_tbody_tr:last-child]:border-b-0"}>
-          {children}
-        </div>
+        <div className="[&_[role=table]]:border-0">{children}</div>
       )}
       {showFooter ? (
         <div className="flex items-center gap-3 px-4 py-2.5">

@@ -1,13 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/ui/cn";
-import {
-  CheckCircleIcon as CheckCircle,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import type { UseFormRegisterReturn } from "react-hook-form";
 import { CredentialFieldInput } from "./CredentialFieldInput";
+import { ProviderSetupVideo } from "./ProviderSetupVideo";
 import type { CredentialField, OnboardingSerpProviderId } from "./StepConnectProvider.fields";
 
 type ProviderTestResult = {
@@ -96,11 +95,16 @@ export function ProviderCredentialForm({
 }: Readonly<ProviderCredentialFormProps>) {
   const saveHint = "Test the credentials and save.";
   return (
-    <section className="mt-4 rounded-card border border-border bg-bg-elev p-4">
+    <section className="mt-4 rounded-card border border-border bg-bg-elev p-4" data-analytics-block>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <h3 className="m-0 text-[13px] font-semibold">API credentials</h3>
+        <ProviderSetupVideo key={providerId} providerId={providerId} />
+      </div>
       <div className={cn("grid gap-4", fields.length > 1 && "sm:grid-cols-2")}>
         {fields.map((field) => (
           <CredentialFieldInput
             disabled={busy}
+            description={field.description}
             error={errors[field.name]}
             id={`onboarding-${providerId}-${field.name}`}
             key={field.name}
@@ -123,7 +127,7 @@ export function ProviderCredentialForm({
             disabled={busy || testDisabled}
             loading={testing}
             onClick={onTest}
-            sx={{ fontWeight: 400 }}
+            style={{ fontWeight: 400 }}
             type="button"
             variant="secondary"
           >
@@ -133,11 +137,11 @@ export function ProviderCredentialForm({
             <Button
               disabled={busy || saveDisabled}
               onClick={onSave}
-              sx={{ fontWeight: 400 }}
+              style={{ fontWeight: 400 }}
               type="button"
               variant="secondary"
             >
-              Save {providerLabel}
+              Save connection
             </Button>
           ) : null}
         </div>

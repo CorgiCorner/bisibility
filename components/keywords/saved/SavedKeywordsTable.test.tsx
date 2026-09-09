@@ -103,6 +103,30 @@ afterEach(() => {
 });
 
 describe("SavedKeywordsTable", () => {
+  it("uses the DataTable header checkbox for the visible saved-keyword page", () => {
+    renderTable();
+
+    expect(screen.getByRole("table", { name: "Saved keywords" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select visible rows" }));
+
+    expect(screen.getByText("3 selected")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Select visible rows" })).toBeChecked();
+  });
+
+  it("keeps the selected-row accent visible on the pinned selection cell", () => {
+    renderTable();
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select standing desk mat" }));
+
+    const selectedRow = screen.getByRole("row", { name: /standing desk mat/i });
+    expect(selectedRow).toHaveAttribute("data-selected", "true");
+    expect(selectedRow).toHaveClass(
+      "shadow-[inset_2px_0_0_var(--accent)]",
+      "[&>[data-column-id=selection]]:shadow-[inset_2px_0_0_var(--accent)]",
+    );
+    expect(selectedRow.querySelector('[data-column-id="selection"]')).not.toBeNull();
+  });
+
   it("selects rows into the priced bulk bar and tracks through the prefilled drawer", async () => {
     const { onCountChange } = renderTable({ projectMarkets: projectMarketsFixture });
     for (const row of rows) {

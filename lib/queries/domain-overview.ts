@@ -1,13 +1,13 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import {
-  domainOverviewCatalogMarkets,
-  domainOverviewCountryMarket,
-  domainOverviewTrackedMarkets,
-} from "@/lib/domain-overview/market-options";
 import { recentDomainOverviewTargets } from "@/lib/domain-overview/recent";
+import {
+  domainOverviewCatalogScopes,
+  domainOverviewTrackedScopes,
+} from "@/lib/domain-overview/scope-options";
 import { serpProviderCapabilities } from "@/lib/providers/registry";
+import { researchScopeForLocation, researchScopeKey } from "@/lib/research/scope";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
 import { getProjectCostContext } from "./cost-calculator";
@@ -23,50 +23,18 @@ function providerStatus(
   return "no_provider";
 }
 
-const domainOverviewMarketSelect = {
-  canonicalKey: true,
-  cityName: true,
+const domainOverviewLocationSelect = {
   countryCode: true,
-  displayName: true,
-  hl: true,
-  kind: true,
   languageCode: true,
   languageLabel: true,
-  primaryGeoCode: true,
 } as const;
 
-function marketView(location: {
-  canonicalKey: string;
-  cityName: string | null;
+function scopeForLocation(location: {
   countryCode: string;
-  displayName: string;
-  hl: string;
-  kind: "country" | "region" | "city";
   languageCode: string;
   languageLabel: string;
-  primaryGeoCode: number | null;
 }) {
-  const market = domainOverviewCountryMarket(location);
-  return {
-    canonicalKey: market.canonicalKey,
-    cityName: market.cityName,
-    countryCode: market.countryCode,
-    displayName: market.displayName,
-    kind: market.kind,
-    languageCode: market.languageCode,
-    languageLabel: market.languageLabel,
-    locationCode: market.researchAvailable ? market.locationCode : null,
-    regionName: market.regionName,
-  };
-}
-
-export async function getDomainOverviewMarket(projectId: string, canonicalKey: string) {
-  await requireReadableProject(projectId);
-  const location = await prisma.location.findUnique({
-    select: domainOverviewMarketSelect,
-    where: { canonicalKey },
-  });
-  return location ? marketView(location) : null;
+  return researchScopeForLocation(location);
 }
 
 export async function getDomainOverviewPageContext(projectId: string) {
@@ -78,13 +46,13 @@ export async function getDomainOverviewPageContext(projectId: string) {
         defaults: {
           select: {
             locationRef: {
-              select: domainOverviewMarketSelect,
+              select: domainOverviewLocationSelect,
             },
           },
         },
         markets: {
           orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-          select: { location: { select: domainOverviewMarketSelect } },
+          select: { location: { select: domainOverviewLocationSelect } },
           where: { status: { in: ["active", "paused"] } },
         },
         providerConnections: {
@@ -96,7 +64,7 @@ export async function getDomainOverviewPageContext(projectId: string) {
       where: { id: project.id },
     }),
     prisma.location.findUnique({
-      select: domainOverviewMarketSelect,
+      select: domainOverviewLocationSelect,
       where: { canonicalKey: "US" },
     }),
     recentDomainOverviewTargets(project.id),
@@ -104,21 +72,19 @@ export async function getDomainOverviewPageContext(projectId: string) {
   ]);
   if (!details) throw new Error("Project not found.");
   const location = details.defaults?.locationRef ?? fallbackLocation;
-  const trackedMarkets = domainOverviewTrackedMarkets(
-    details.markets.map((market) => market.location),
-  );
-  const trackedKeys = new Set(trackedMarkets.map((market) => market.canonicalKey));
+  const trackedScopes = domainOverviewTrackedScopes(details.markets.map((entry) => entry.location));
+  const trackedKeys = new Set(trackedScopes.map(researchScopeKey));
 
   return {
-    catalogMarkets: domainOverviewCatalogMarkets().filter(
-      (market) => !trackedKeys.has(market.canonicalKey),
+    catalogScopes: domainOverviewCatalogScopes().filter(
+      (scope) => !trackedKeys.has(researchScopeKey(scope)),
     ),
     competitorDomains: details.competitors.map((competitor) => competitor.domain),
     costContext,
-    defaultMarket: location ? marketView(location) : null,
+    defaultScope: location ? scopeForLocation(location) : null,
     defaultTarget: trackedProjectDomain(project.domain) ?? "",
     providerStatus: providerStatus(details.providerConnections),
     recentTargets,
-    trackedMarkets,
+    trackedScopes,
   };
 }

@@ -1,10 +1,11 @@
+import type { FeedRowMetadata } from "@/lib/feeds/facets";
 import {
   createUserDateTimeFormatter,
   type DateTimeFormatContext,
 } from "@/lib/format/user-datetime";
 import type { Device, SignalSeverity, SignalSource } from "@/lib/generated/prisma/client";
 import type { TimelineFilterKey, TimelineSignalRow, TimelineView } from "@/lib/queries/timeline";
-import { DEFAULT_SERP_DEPTH } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 import { SIGNAL_TYPES } from "@/lib/signals/types";
 
 export type TimelineItemIcon = "api" | "deploys" | "notes" | "pages" | "rankings" | "status";
@@ -25,6 +26,7 @@ export type TimelineItem = {
   badge?: TimelineBadge;
   date: string;
   details?: TimelineItemDetail[];
+  feedMeta?: FeedRowMetadata;
   id: string;
   icon: TimelineItemIcon;
   meta: string;
@@ -78,6 +80,18 @@ const sourceLabel = {
   search_engine_status: "Search status",
   sitemap: "Sitemap",
   url_inspection: "URL inspection",
+} satisfies Record<SignalSource, string>;
+
+const sourceTag = {
+  api: "API",
+  cms: "CMS",
+  deploy: "DEPLOY",
+  manual: "NOTE",
+  rank_tracker: "RANK",
+  search_analytics: "SEARCH",
+  search_engine_status: "STATUS",
+  sitemap: "SITEMAP",
+  url_inspection: "PAGES",
 } satisfies Record<SignalSource, string>;
 
 function asObject(value: TimelineSignalRow["payload"]): JsonObject {
@@ -187,7 +201,8 @@ function deployDetails(row: TimelineSignalRow, payload: JsonObject) {
   return details.length ? details : undefined;
 }
 
-function metaFor(row: TimelineSignalRow): Pick<TimelineItem, "marketMeta" | "meta"> {
+function metaFor(row: TimelineSignalRow): Pick<TimelineItem, "feedMeta" | "marketMeta" | "meta"> {
+  const feedMeta = { ...row.feedMeta, source: sourceTag[row.source] };
   const isRankingSignal =
     row.type === SIGNAL_TYPES.rankingChanged || row.type === SIGNAL_TYPES.rankingUrlChanged;
   if (isRankingSignal && row.keyword?.locationRef) {
@@ -199,13 +214,14 @@ function metaFor(row: TimelineSignalRow): Pick<TimelineItem, "marketMeta" | "met
     ];
     const deviceLabel = row.keyword.device === "mobile" ? "Mobile" : "Desktop";
     return {
+      feedMeta,
       marketMeta: { device: row.keyword.device, segments },
       meta: [...segments.slice(0, 3), deviceLabel, segments[3]].join(" / "),
     };
   }
   const keyword = row.keyword?.text ? `Keyword: ${row.keyword.text}` : null;
   const actor = row.type === SIGNAL_TYPES.note ? `by ${actorLabel(row)}` : null;
-  return { meta: [keyword, sourceLabel[row.source], actor].filter(Boolean).join(" · ") };
+  return { feedMeta, meta: [keyword, sourceLabel[row.source], actor].filter(Boolean).join(" · ") };
 }
 
 function safeHref(value: string | null | undefined) {

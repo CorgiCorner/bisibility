@@ -50,6 +50,13 @@ describe("TimelineRow", () => {
         canDelete={false}
         item={{
           date: "2026-08-14",
+          feedMeta: {
+            engine: "Google",
+            language: "Spanish",
+            market: { id: "pmkt_malaga", label: "Malaga core" },
+            severity: "info",
+            source: "RANK",
+          },
           icon: "rankings",
           id: "sig_market",
           marketMeta: {
@@ -67,19 +74,12 @@ describe("TimelineRow", () => {
     );
 
     expect(screen.getByText("architect malaga")).toBeVisible();
-    expect(screen.getByText("Malaga, Spain")).toBeVisible();
+    expect(screen.queryByText("Malaga, Spain")).toBeNull();
     expect(screen.getByText("Spanish")).toBeVisible();
-    const deviceIcon = screen.getByRole("img", { name: "Mobile" });
-    expect(deviceIcon).toHaveAttribute("title", "Mobile");
-    expect(deviceIcon).toHaveClass(
-      "inline-flex",
-      "size-3",
-      "shrink-0",
-      "items-center",
-      "justify-center",
-      "align-middle",
-      "leading-none",
-    );
+    expect(screen.getByText("RANK")).toBeVisible();
+    expect(screen.getByText("Malaga core")).toBeVisible();
+    expect(screen.queryByText("/", { exact: true })).toBeNull();
+    expect(screen.getByText("Mobile")).toBeVisible();
     expect(screen.queryByText(/Keyword:/)).not.toBeInTheDocument();
   });
 

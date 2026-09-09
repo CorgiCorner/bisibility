@@ -1,5 +1,5 @@
 import { cn } from "@/lib/ui/cn";
-import { CaretLeftIcon as CaretLeft } from "@phosphor-icons/react/ssr";
+import { CaretLeftIcon as CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 import Link from "next/link";
 import type { ReactNode } from "react";
 

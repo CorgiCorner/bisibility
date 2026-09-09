@@ -64,8 +64,8 @@ describe("OtpStep resend action", () => {
     const resend = screen.getByRole("button", { name: "Resend code" });
     const reservation = screen.getByText("Code sent Resend again in 1:00").parentElement;
 
-    expect(resend.style.backgroundColor).toBe("transparent");
-    expect(resend).toHaveStyle({ borderStyle: "none" });
+    expect(resend.style.getPropertyValue("--control-background-color")).toBe("transparent");
+    expect(resend).toHaveStyle("--control-border: none");
     expect(resend).toHaveStyle({
       minHeight: "36px",
       padding: "0",
@@ -87,9 +87,9 @@ describe("OtpStep resend action", () => {
     const resend = screen.getByRole("button", { name: "Resend in 0:56" });
 
     expect(resend).toBeDisabled();
-    expect(resend.style.backgroundColor).toBe("transparent");
-    expect(resend).toHaveStyle({ borderStyle: "none" });
-    expect(resend).toHaveStyle({ opacity: "1" });
+    expect(resend.style.getPropertyValue("--control-background-color")).toBe("transparent");
+    expect(resend).toHaveStyle("--control-border: none");
+    expect(resend).toHaveStyle("--control-disabled-opacity: 1");
     expect(resend).not.toHaveStyle({
       backgroundColor: "var(--bg-sunken)",
       paddingInline: "11px",
@@ -102,13 +102,12 @@ describe("OtpStep resend action", () => {
 
     const resend = screen.getByRole("button", { name: "Resend code" });
 
-    expect(resend).toHaveStyle({ color: "var(--fg)", textDecoration: "none" });
+    expect(resend).toHaveStyle("--control-color: var(--fg); --control-text-decoration: none");
     view.rerender(<Harness cooldownRemaining={56} />);
 
-    expect(screen.getByRole("button", { name: "Resend in 0:56" })).toHaveStyle({
-      color: "var(--fg-muted)",
-      textDecoration: "none",
-    });
+    expect(screen.getByRole("button", { name: "Resend in 0:56" })).toHaveStyle(
+      "--control-disabled-color: var(--fg-muted); --control-disabled-text-decoration: none",
+    );
   });
 
   it("shows the resent confirmation and exact countdown without layout shifts", () => {

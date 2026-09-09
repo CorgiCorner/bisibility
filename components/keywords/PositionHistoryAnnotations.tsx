@@ -1,7 +1,5 @@
 import { positionTargetAnnotation } from "@/lib/keywords/position-history";
-import { chartColors } from "@/lib/theme/chart-colors";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
+import { ReferenceLine, usePlotArea, useXAxisScale, useYAxisScale } from "recharts";
 
 export function historyAnnotationTop({
   bottom,
@@ -30,30 +28,23 @@ export function historyAnnotationTop({
 }
 
 export function TargetReferenceLine({ target }: Readonly<{ target: number }>) {
-  const { top } = useDrawingArea();
-  const yScale = useYScale();
+  const area = usePlotArea();
+  const yScale = useYAxisScale();
+  if (!area || !yScale) return null;
   const position = yScale(target);
-  const labelBelow = typeof position === "number" && position - top < 14;
-
+  const labelBelow = typeof position === "number" && position - area.y < 14;
   return (
-    <ChartsReferenceLine
-      label={`TARGET #${target}`}
-      labelAlign="start"
-      labelStyle={{
+    <ReferenceLine
+      y={target}
+      stroke="var(--green)"
+      strokeDasharray="4 3"
+      label={{
+        value: `TARGET #${target}`,
+        position: labelBelow ? "insideBottomLeft" : "insideTopLeft",
         fill: "var(--fg-muted)",
-        fontFamily: "var(--font-sans), system-ui, sans-serif",
-        fontVariantNumeric: "tabular-nums",
         fontSize: 10,
         fontWeight: 600,
-        letterSpacing: "0.5px",
       }}
-      lineStyle={{
-        stroke: chartColors.green,
-        strokeDasharray: "4 3",
-        strokeWidth: 1,
-      }}
-      spacing={{ x: 0, y: labelBelow ? -14 : 4 }}
-      y={target}
     />
   );
 }
@@ -63,13 +54,15 @@ export function LatestPositionAnnotation({
   positions,
   target,
 }: Readonly<{ labels: string[]; positions: number[]; target: number }>) {
-  const { height, left, top, width } = useDrawingArea();
-  const xScale = useXScale<"point">();
-  const yScale = useYScale<"linear">();
+  const area = usePlotArea();
+  const xScale = useXAxisScale();
+  const yScale = useYAxisScale();
+  if (!area || !xScale || !yScale) return null;
+  const { height, x: left, y: top, width } = area;
   const position = positions.at(-1);
   const label = labels.at(-1);
   if (position === undefined || label === undefined) return null;
-  const markerX = xScale(label);
+  const markerX = xScale(labels.length - 1);
   const markerY = yScale(position);
   const previousPosition = positions.at(-2);
   const previousY = previousPosition === undefined ? null : yScale(previousPosition);

@@ -158,6 +158,27 @@ describe("PUT /api/v1/cloud/import/sessions/{sessionId}/chunks/{index}", () => {
     });
   });
 
+  it("requires canonical keys for v7 session chunks while retaining v6 chunk compatibility", async () => {
+    mocks.prisma.cloudImportJob.findFirst.mockResolvedValue(job({ manifest: { version: 7 } }));
+
+    const missingKey = await put(request(chunk()));
+
+    expect(missingKey.status).toBe(400);
+    await expect(missingKey.json()).resolves.toMatchObject({
+      detail: "Version 7 chunks require location_key for every keyword identity.",
+    });
+    expect(mocks.prisma.migrationImportChunk.create).not.toHaveBeenCalled();
+
+    const v7Keywords = keywords.map((keyword) => ({ ...keyword, location_key: "US" }));
+    const v7Checksum = importChunkChecksum({ kind: "keywords", keywords: v7Keywords });
+    const version7 = await put(
+      request({ checksum: v7Checksum, keywords: v7Keywords, kind: "keywords" }),
+    );
+
+    expect(version7.status).toBe(200);
+    expect(mocks.prisma.migrationImportChunk.create).toHaveBeenCalledOnce();
+  });
+
   it("replays the same checksum without re-storing", async () => {
     mocks.prisma.migrationImportChunk.findUnique.mockResolvedValue({ checksum });
 

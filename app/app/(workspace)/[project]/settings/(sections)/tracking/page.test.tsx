@@ -5,11 +5,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  archivedProps: undefined as unknown,
-  getArchivedProjectMarkets: vi.fn(),
   getSettings: vi.fn(),
-  getProjectMarkets: vi.fn(),
-  marketProps: undefined as unknown,
   requireReadableProject: vi.fn(),
   sectionProps: undefined as unknown,
 }));
@@ -23,29 +19,7 @@ vi.mock("@/components/settings/tracking/TrackingSettingsSection", () => ({
     return <div data-tracking-section-test="" />;
   },
 }));
-vi.mock("@/components/settings/markets/TrackedMarketsContent", () => ({
-  TrackedMarketsContent: (props: unknown) => {
-    mocks.marketProps = props;
-    return <div data-markets-content-test="" />;
-  },
-}));
-vi.mock("@/components/settings/markets/ArchivedMarketsCard", () => ({
-  ArchivedMarketsCard: (props: unknown) => {
-    mocks.archivedProps = props;
-    return <div data-archived-markets-test="" />;
-  },
-}));
-vi.mock("@/lib/actions/project-markets", () => ({
-  addProjectMarkets: vi.fn(),
-  removeProjectMarketFromProject: vi.fn(),
-  restoreProjectMarketFromProject: vi.fn(),
-  setProjectMarketEnabled: vi.fn(),
-}));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
-vi.mock("@/lib/queries/project-markets", () => ({
-  getArchivedProjectMarkets: mocks.getArchivedProjectMarkets,
-  getProjectMarkets: mocks.getProjectMarkets,
-}));
 vi.mock("@/lib/queries/settings", () => ({ getSettings: mocks.getSettings }));
 
 const defaults = {
@@ -70,12 +44,12 @@ function mockPage(
     },
     project: { id: "project_1", publicId: "prj_1" },
   });
-  mocks.getProjectMarkets.mockResolvedValue({ markets: [], maxMarkets: 5, projectId: "prj_1" });
-  mocks.getArchivedProjectMarkets.mockResolvedValue({ markets: [], projectId: "prj_1" });
 }
 
 describe("TrackingSettingsPage", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it("uses the project membership role for the server-side capability check", async () => {
     mockPage("member");
@@ -83,37 +57,9 @@ describe("TrackingSettingsPage", () => {
 
     expect(mocks.getSettings).toHaveBeenCalledWith("prj_1");
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
-    expect(mocks.getProjectMarkets).toHaveBeenCalledWith("prj_1");
     expect(mocks.sectionProps).toEqual(
       expect.objectContaining({ canEdit: true, domain: "example.com", projectId: "prj_1" }),
     );
-    expect(mocks.marketProps).toEqual(expect.objectContaining({ canEdit: true, canRemove: false }));
-  });
-
-  it("offers restore on the same capability that governs archiving a market", async () => {
-    mockPage("admin");
-    render(await TrackingSettingsPage({ params: Promise.resolve({ project: "prj_1" }) }));
-
-    expect(mocks.getArchivedProjectMarkets).toHaveBeenCalledWith("prj_1");
-    expect(mocks.archivedProps).toEqual(
-      expect.objectContaining({ canEdit: true, markets: { markets: [], projectId: "prj_1" } }),
-    );
-    expect(mocks.marketProps).toEqual(expect.objectContaining({ canRemove: true }));
-  });
-
-  it("does not offer restore to a member who cannot archive a market", async () => {
-    mockPage("member");
-    render(await TrackingSettingsPage({ params: Promise.resolve({ project: "prj_1" }) }));
-
-    expect(mocks.archivedProps).toEqual(expect.objectContaining({ canEdit: false }));
-    expect(mocks.marketProps).toEqual(expect.objectContaining({ canEdit: true }));
-  });
-
-  it("keeps restore disabled for a read-only project", async () => {
-    mockPage("admin", "migration_hold");
-    render(await TrackingSettingsPage({ params: Promise.resolve({ project: "prj_1" }) }));
-
-    expect(mocks.archivedProps).toEqual(expect.objectContaining({ canEdit: false }));
   });
 
   it("does not grant edits from a stronger global role", async () => {

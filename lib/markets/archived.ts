@@ -1,6 +1,6 @@
 /** One wording for every surface that refuses a market this project does not track. */
 export function untrackedMarketMessage(marketName: string) {
-  return `Market ${marketName} is not tracked by this project. Add it in Settings > Markets first.`;
+  return `Market ${marketName} is not tracked by this project. Add it in Markets first.`;
 }
 
 /**

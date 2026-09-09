@@ -1,18 +1,18 @@
 "use client";
 
 import { ActionNotice } from "@/components/integrations/ConnectDrawerControls";
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button, ConfirmModal } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import type { ProviderActionHandlers } from "@/lib/integrations/types";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { type Notice, providerActionErrorNotice } from "./ConnectDrawerSchema";
 
 type ProviderDisconnectActionProps = {
   disconnectProvider?: ProviderActionHandlers["disconnectProvider"];
   onDisconnected: () => void;
+  renderTrigger?: (props: { disabled: boolean; onOpen: () => void }) => ReactNode;
   onNotice: (notice: Notice | null) => void;
   projectId: string;
   providerId: Parameters<ProviderActionHandlers["testProviderConnection"]>[0]["providerId"];
@@ -24,6 +24,7 @@ export function ProviderDisconnectAction({
   onNotice,
   projectId,
   providerId,
+  renderTrigger,
 }: Readonly<ProviderDisconnectActionProps>) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -48,29 +49,34 @@ export function ProviderDisconnectAction({
     }
   }
 
+  function openConfirmation() {
+    if (readOnly) return;
+    setFailureNotice(null);
+    onNotice(null);
+    setOpen(true);
+  }
+
   return (
     <>
-      <ProjectReadOnlyTooltip className="flex flex-1 sm:inline-flex sm:flex-initial">
-        <Button
-          disabled={readOnly}
-          onClick={() => {
-            setFailureNotice(null);
-            onNotice(null);
-            setOpen(true);
-          }}
-          size="xs"
-          sx={{
-            color: "var(--red)",
-            width: "100%",
-            "&:hover": { color: "var(--red)" },
-            "@media (min-width:640px)": { width: "auto" },
-          }}
-          type="button"
-          variant="ghost"
-        >
-          Disconnect
-        </Button>
-      </ProjectReadOnlyTooltip>
+      {renderTrigger ? (
+        renderTrigger({ disabled: readOnly, onOpen: openConfirmation })
+      ) : (
+        <ProjectReadOnlyTooltip className="inline-flex">
+          <Button
+            disabled={readOnly}
+            onClick={openConfirmation}
+            size="xs"
+            style={{
+              "--control-color": "var(--red)",
+              "--control-hover-color": "var(--red)",
+            }}
+            type="button"
+            variant="ghost"
+          >
+            Disconnect
+          </Button>
+        </ProjectReadOnlyTooltip>
+      )}
       <ConfirmModal
         busy={busy}
         failureDetail={failureNotice ? <ActionNotice notice={failureNotice} /> : undefined}

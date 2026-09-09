@@ -12,7 +12,7 @@ describe("SearchInsightsSessionsCard", () => {
     expect(screen.getByText(SESSIONS_CONNECT_BODY)).toBeInTheDocument();
     const connect = screen.getByRole("link", { name: "Connect" });
     expect(connect).toHaveAttribute("href", expect.stringContaining("provider=ga4"));
-    expect(connect).toHaveClass("MuiButton-outlined");
+    expect(connect).toHaveAttribute("data-variant", "secondary");
     expect(connect).toHaveClass("shrink-0");
 
     const row = connect.parentElement;

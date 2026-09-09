@@ -1,6 +1,6 @@
 import { docsLinkProps } from "@/lib/site/site";
 import { cn } from "@/lib/ui/cn";
-import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
 import type { ComponentProps } from "react";
 
 export type ExternalLinkProps = Omit<ComponentProps<"a">, "href" | "rel" | "target"> & {

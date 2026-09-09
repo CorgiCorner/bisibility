@@ -2,6 +2,7 @@ import "server-only";
 
 import type { ApiContext } from "@/lib/api/context";
 import { createKeywords } from "@/lib/api/keyword-create";
+import { legacyMarketLocationKey } from "@/lib/api/legacy-market-input";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { HistoryImportCounts } from "./history-counts";
@@ -18,16 +19,30 @@ export type SourceKeywordIds = Record<
   {
     device: NonNullable<ImportKeyword["device"]>;
     location: ImportKeyword["location"];
+    location_key: ImportKeyword["location_key"];
     text: string;
   }
 >;
 
-export function keywordKey(input: Pick<ImportKeyword, "device" | "keyword" | "location">) {
-  return `${input.keyword}\u0000${input.location}\u0000${input.device}`;
+type LocationIdentity = Pick<ImportKeyword, "location" | "location_key">;
+
+export function importedLocationKey(input: LocationIdentity) {
+  return input.location_key ?? legacyMarketLocationKey({ country: input.location });
+}
+
+export function keywordKey(
+  input: Pick<ImportKeyword, "device" | "keyword" | "location" | "location_key">,
+) {
+  return `${input.keyword}\u0000${importedLocationKey(input)}\u0000${input.device}`;
 }
 
 function keywordCreateItems(keywords: ImportKeyword[]) {
-  return keywords.map(({ id: _id, rankingHistory: _history, ...keyword }) => keyword);
+  return keywords.map(
+    ({ id: _id, location, location_key, rankingHistory: _history, ...keyword }) => ({
+      ...keyword,
+      location_key: importedLocationKey({ location, location_key }),
+    }),
+  );
 }
 
 function createContext(project: Project, url: URL, keywords: ImportKeyword[]): ApiContext {
@@ -82,11 +97,11 @@ export async function loadKeywordMaps(
   if (keywords.length === 0) return empty;
 
   const rows = await client.keyword.findMany({
-    select: { device: true, id: true, location: true, text: true },
+    select: { device: true, id: true, locationRef: { select: { canonicalKey: true } }, text: true },
     where: {
       OR: keywords.map((keyword) => ({
         device: keyword.device,
-        location: keyword.location,
+        locationRef: { canonicalKey: importedLocationKey(keyword) },
         text: keyword.keyword,
       })),
       projectId,
@@ -94,10 +109,22 @@ export async function loadKeywordMaps(
   });
   const byKey = new Map(
     rows.map((row) => [
-      keywordKey({ device: row.device, keyword: row.text, location: row.location }),
+      keywordKey({
+        device: row.device,
+        keyword: row.text,
+        location: row.locationRef.canonicalKey,
+        location_key: row.locationRef.canonicalKey,
+      }),
       row.id,
     ]),
   );
+  for (const keyword of keywords) {
+    if (!byKey.has(keywordKey(keyword))) {
+      throw new Error(
+        `Imported location key ${importedLocationKey(keyword)} could not be resolved exactly.`,
+      );
+    }
+  }
   const bySource = new Map(
     keywords.flatMap((keyword) => {
       const id = keyword.id ? byKey.get(keywordKey(keyword)) : null;
@@ -113,19 +140,29 @@ export async function loadKeywordMapsForProject(
   sourceKeywordIds: SourceKeywordIds = {},
 ): Promise<KeywordMaps> {
   const rows = await client.keyword.findMany({
-    select: { device: true, id: true, location: true, text: true },
+    select: { device: true, id: true, locationRef: { select: { canonicalKey: true } }, text: true },
     where: { projectId },
   });
   const byKey = new Map(
     rows.map((row) => [
-      keywordKey({ device: row.device, keyword: row.text, location: row.location }),
+      keywordKey({
+        device: row.device,
+        keyword: row.text,
+        location: row.locationRef.canonicalKey,
+        location_key: row.locationRef.canonicalKey,
+      }),
       row.id,
     ]),
   );
   const bySource = new Map(
     Object.entries(sourceKeywordIds).flatMap(([sourceId, source]) => {
       const id = byKey.get(
-        keywordKey({ device: source.device, keyword: source.text, location: source.location }),
+        keywordKey({
+          device: source.device,
+          keyword: source.text,
+          location: source.location,
+          location_key: source.location_key,
+        }),
       );
       return id ? [[sourceId, id] as const] : [];
     }),

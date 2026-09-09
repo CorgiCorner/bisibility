@@ -1,6 +1,8 @@
-import { ToastProvider, type ToastSeverity, useToast } from "@/components/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
+import { ToastProvider } from "./Toast";
+import { useToast } from "./toast-context";
+import type { ToastSeverity } from "./toast-presentation";
 
 function ToastDemo({ severity }: Readonly<{ severity: ToastSeverity }>) {
   const { showToast } = useToast();

@@ -55,6 +55,20 @@ function packageV6() {
   };
 }
 
+function packageV7() {
+  return {
+    ...packageV6(),
+    keywords: [
+      {
+        ...packageV6().keywords[0],
+        location: "Madrid, Community of Madrid, Spain",
+        location_key: "ES/Community of Madrid/Madrid@en",
+      },
+    ],
+    version: 7,
+  };
+}
+
 describe("cloud import package versions", () => {
   it("accepts an explicit null requested depth but requires the field", () => {
     const withUnknownDepth = packageV6();
@@ -90,6 +104,38 @@ describe("cloud import package versions", () => {
     expect(
       cloudImportPackageSchema.safeParse({ ...packageV5(), projectId: ids.project }).success,
     ).toBe(false);
+  });
+
+  it("requires v7 location keys while retaining v6 name compatibility", () => {
+    const v6 = cloudImportPackageSchema.parse(packageV6());
+    const v7 = cloudImportPackageSchema.parse(packageV7());
+
+    expect(v6.keywords[0]).toMatchObject({ location: "United States", location_key: undefined });
+    expect(v7.keywords[0]).toMatchObject({
+      location: "Madrid, Community of Madrid, Spain",
+      location_key: "ES/Community of Madrid/Madrid@en",
+    });
+    expect(
+      cloudImportPackageSchema.safeParse({
+        ...packageV7(),
+        keywords: [{ ...packageV7().keywords[0], location_key: undefined }],
+      }).success,
+    ).toBe(false);
+    expect(
+      cloudImportPackageSchema.safeParse({
+        ...packageV6(),
+        keywords: [{ ...packageV6().keywords[0], location_key: "US" }],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("normalizes an explicit default language key before it reaches identity matching", () => {
+    const parsed = cloudImportPackageSchema.parse({
+      ...packageV7(),
+      keywords: [{ ...packageV7().keywords[0], location_key: "ES@es" }],
+    });
+
+    expect(parsed.keywords[0]?.location_key).toBe("ES");
   });
 
   it("rejects v5 packages with ambiguous ranking history", () => {

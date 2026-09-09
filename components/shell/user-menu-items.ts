@@ -1,15 +1,13 @@
 import { DISCORD_URL, DOCS_URL, FEEDBACK_URL, GITHUB_URL, MARKETING_URL } from "@/lib/site/site";
-import {
-  BookOpenTextIcon as BookOpenText,
-  ChatCircleDotsIcon as ChatCircleDots,
-  DiscordLogoIcon as DiscordLogo,
-  GithubLogoIcon as GithubLogo,
-  HouseIcon as House,
-  SignOutIcon as SignOut,
-  UserCircleIcon as UserCircle,
-} from "@phosphor-icons/react";
+import { BookOpenTextIcon as BookOpenText } from "@phosphor-icons/react/dist/csr/BookOpenText";
+import { ChatCircleDotsIcon as ChatCircleDots } from "@phosphor-icons/react/dist/csr/ChatCircleDots";
+import { DiscordLogoIcon as DiscordLogo } from "@phosphor-icons/react/dist/csr/DiscordLogo";
+import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/csr/GithubLogo";
+import { HouseIcon as House } from "@phosphor-icons/react/dist/csr/House";
+import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
+import { UserCircleIcon as UserCircle } from "@phosphor-icons/react/dist/csr/UserCircle";
 
-export { ArrowUpRightIcon as trailingExternalIcon } from "@phosphor-icons/react";
+export { ArrowUpRightIcon as trailingExternalIcon } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 
 import type { Icon } from "@phosphor-icons/react/lib";
 

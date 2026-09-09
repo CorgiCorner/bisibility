@@ -1,4 +1,4 @@
-import { TooltipProvider } from "@/components/ui";
+import { TooltipProvider } from "@/components/ui/Tooltip";
 import { appPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
 import { act, fireEvent, render, screen } from "@testing-library/react";
@@ -45,8 +45,8 @@ describe("SidebarNav tooltip collapse transition", () => {
     }
 
     const { rerender } = render(subject(false));
-    fireEvent.mouseOver(screen.getByRole("link", { name: "Dashboard" }));
-    fireEvent.mouseOver(screen.getByRole("link", { name: "Rank Tracker" }));
+    fireEvent.pointerMove(screen.getByRole("link", { name: "Dashboard" }));
+    fireEvent.pointerMove(screen.getByRole("link", { name: "Rank Tracker" }));
     act(() => vi.advanceTimersByTime(500));
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
 
@@ -55,11 +55,11 @@ describe("SidebarNav tooltip collapse transition", () => {
     expect(screen.queryAllByRole("tooltip")).toHaveLength(0);
 
     const dashboard = screen.getByRole("link", { name: "Dashboard" });
-    fireEvent.mouseOver(dashboard);
+    fireEvent.pointerMove(dashboard);
     act(() => vi.advanceTimersByTime(500));
     expect(screen.getByRole("tooltip")).toHaveTextContent("Dashboard");
 
-    fireEvent.mouseLeave(dashboard);
+    fireEvent.pointerLeave(dashboard);
     act(() => vi.runAllTimers());
     const rankTracker = screen.getByRole("link", { name: "Rank Tracker" });
     const realMatches = rankTracker.matches.bind(rankTracker);

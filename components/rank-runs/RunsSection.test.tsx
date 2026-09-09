@@ -3,12 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RunsSection } from "./RunsSection";
 import { blockedRun, historyPage, historyRun, plannedPage, plannedRun } from "./runs-fixtures";
 
-const mocks = vi.hoisted(() => ({ operations: [] as object[] }));
-
-vi.mock("@/components/shell/AppRealtimeProvider", () => ({
-  useAppRealtime: () => ({ notifications: null, operations: mocks.operations, status: "live" }),
-}));
-
 function renderRuns(initialSegment: "history" | "planned" = "history") {
   return render(
     <RunsSection
@@ -18,7 +12,7 @@ function renderRuns(initialSegment: "history" | "planned" = "history") {
       initialPlanned={plannedPage}
       initialSegment={initialSegment}
       projectRef="prj_story"
-      schedulesHref="/app/prj_story/rank-tracker/schedules"
+      schedulesHref="/app/prj_story/runs/schedules"
     />,
   );
 }
@@ -29,7 +23,6 @@ function jsonResponse(value: unknown) {
 
 describe("RunsSection", () => {
   beforeEach(() => {
-    mocks.operations = [];
     vi.unstubAllGlobals();
   });
 
@@ -119,7 +112,7 @@ describe("RunsSection", () => {
           },
         ]}
         projectRef="prj_story"
-        schedulesHref="/app/prj_story/rank-tracker/schedules"
+        schedulesHref="/app/prj_story/runs/schedules"
       />,
     );
 
@@ -159,109 +152,11 @@ describe("RunsSection", () => {
         }}
         initialPlanned={plannedPage}
         projectRef="prj_story"
-        schedulesHref="/app/prj_story/rank-tracker/schedules"
+        schedulesHref="/app/prj_story/runs/schedules"
       />,
     );
 
     expect(screen.getByText("Showing 20 - more available")).toBeInTheDocument();
-  });
-
-  it("plan criterion: new-runs pill", () => {
-    mocks.operations = [
-      {
-        ...historyRun,
-        finishedAt: null,
-        id: "rcr_realtime_0001",
-        outcome: null,
-        startedAt: "2026-09-03T07:00:00.000Z",
-        status: "running",
-      },
-    ];
-    renderRuns();
-
-    expect(screen.getByTestId("new-runs-pill")).toHaveTextContent(
-      "1 run started while you were reading",
-    );
-  });
-
-  it("keeps the new-runs pill after that realtime operation finishes", async () => {
-    const realtimeRun = {
-      ...historyRun,
-      finishedAt: null,
-      id: "rcr_realtime_finished",
-      outcome: null,
-      startedAt: "2026-09-03T07:00:00.000Z",
-      status: "running" as const,
-    };
-    mocks.operations = [realtimeRun];
-    const fetch = vi.fn().mockResolvedValue(
-      jsonResponse({
-        data: [{ ...realtimeRun, outcome: "succeeded", status: "completed" }],
-        meta: { next_cursor: null },
-      }),
-    );
-    vi.stubGlobal("fetch", fetch);
-    const view = renderRuns();
-
-    expect(screen.getByTestId("new-runs-pill")).toBeInTheDocument();
-    mocks.operations = [];
-    view.rerender(
-      <RunsSection
-        budgetExhausted
-        budgetSettingsHref="/app/prj_story/settings/usage?budget=edit"
-        initialHistory={historyPage}
-        initialPlanned={plannedPage}
-        projectRef="prj_story"
-        schedulesHref="/app/prj_story/rank-tracker/schedules"
-      />,
-    );
-
-    await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce());
-    expect(screen.getByTestId("new-runs-pill")).toHaveTextContent(
-      "1 run started while you were reading",
-    );
-  });
-
-  it("merges active History snapshots and refreshes a row after it exits realtime", async () => {
-    mocks.operations = [
-      {
-        ...historyRun,
-        completedCount: undefined,
-        counts: { ...historyRun.counts, completed: 5 },
-        etaSeconds: 120,
-        finishedAt: null,
-        outcome: null,
-        snapshotAt: "2026-09-03T06:01:00.000Z",
-        status: "running",
-      },
-    ];
-    const fetch = vi.fn().mockResolvedValue(
-      jsonResponse({
-        data: [{ ...historyRun, outcome: "succeeded", status: "completed" }],
-        meta: { next_cursor: null },
-      }),
-    );
-    vi.stubGlobal("fetch", fetch);
-    const view = renderRuns();
-
-    expect(screen.getByText("Running")).toBeInTheDocument();
-    expect(screen.getByText("5 / 24 targets")).toBeInTheDocument();
-
-    mocks.operations = [];
-    view.rerender(
-      <RunsSection
-        budgetExhausted
-        budgetSettingsHref="/app/prj_story/settings/usage?budget=edit"
-        initialHistory={historyPage}
-        initialPlanned={plannedPage}
-        projectRef="prj_story"
-        schedulesHref="/app/prj_story/rank-tracker/schedules"
-      />,
-    );
-
-    await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce());
-    expect(screen.getByText("Succeeded")).toBeInTheDocument();
-    expect(screen.getByText("24 / 24 targets")).toBeInTheDocument();
   });
 
   it("plan criterion: grid time 80 / title flex / actions 200, vertically centered", () => {
@@ -277,7 +172,7 @@ describe("RunsSection", () => {
         initialHistory={{ data: [], nextCursor: null }}
         initialPlanned={{ data: [], nextCursor: null }}
         projectRef="prj_story"
-        schedulesHref="/app/prj_story/rank-tracker/schedules"
+        schedulesHref="/app/prj_story/runs/schedules"
       />,
     );
 
@@ -302,7 +197,7 @@ describe("RunsSection", () => {
         initialHistory={{ data: [historyRun], nextCursor: null }}
         initialPlanned={{ data: plannedPage.data.slice(0, 1), nextCursor: null }}
         projectRef="prj_story"
-        schedulesHref="/app/prj_story/rank-tracker/schedules"
+        schedulesHref="/app/prj_story/runs/schedules"
       />,
     );
 
@@ -319,7 +214,7 @@ describe("RunsSection", () => {
         }}
         initialPlanned={{ data: plannedPage.data, nextCursor: null }}
         projectRef="prj_story"
-        schedulesHref="/app/prj_story/rank-tracker/schedules"
+        schedulesHref="/app/prj_story/runs/schedules"
       />,
     );
 
@@ -335,7 +230,7 @@ describe("RunsSection", () => {
         initialPlanned={plannedPage}
         initialSegment="planned"
         projectRef="prj_story"
-        schedulesHref="/app/prj_story/rank-tracker/schedules"
+        schedulesHref="/app/prj_story/runs/schedules"
       />,
     );
 

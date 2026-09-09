@@ -85,6 +85,7 @@ describe("DataForSEO queued tasks", () => {
     expect(body[0]).toMatchObject({
       depth: 100,
       priority: 2,
+      search_param: "&nfpr=1",
       tag: "app=bisibility;stage=dev;src=worker;trg=scheduled;f=rank_check;p=project_1;c=correlation_1",
     });
   });

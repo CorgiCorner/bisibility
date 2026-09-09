@@ -7,7 +7,7 @@ import {
   KEYWORD_IMPORT_MAX,
   KEYWORD_TEXT_MAX,
 } from "@/lib/schemas/keyword";
-import { DEFAULT_SERP_DEVICE } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEVICE } from "@/lib/serp/constants";
 import { z } from "zod";
 
 type KeywordPreview = {

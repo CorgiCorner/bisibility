@@ -12,12 +12,14 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/actions/saved-views", () => ({ createSavedView: mocks.createSavedView }));
-vi.mock("@/lib/queries/saved-views", () => ({ listSavedViews: mocks.listSavedViews }));
+vi.mock("@/lib/saved-views/service", () => ({ createSavedViewFor: mocks.createSavedView }));
+vi.mock("@/lib/queries/saved-views", () => ({ listSavedViewsFor: mocks.listSavedViews }));
 
 function context(method: string, body?: unknown) {
   const url = new URL(`https://example.test/api/v1/projects/${projectPublicId}/saved-views`);
   return {
+    actor: { id: rawUserId, memberships: [{ projectId: "project_db_1", role: "member" }] },
+    actorId: rawUserId,
     auth: { project: { id: "project_db_1", publicId: projectPublicId } },
     headers: new Headers(),
     instance: "urn:test",

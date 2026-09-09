@@ -1,20 +1,19 @@
+import { LEGACY_DEFAULT_MARKET_NAME, legacyMarketNameSchema } from "@/lib/api/legacy-market-input";
 import { CANONICAL_KEY_MAX } from "@/lib/api/locations-search-contract";
 import { MAX_PROJECT_MARKETS } from "@/lib/markets/limits";
+import { DEFAULT_SERP_DEVICE, serpDeviceValues } from "@/lib/serp/constants";
 import { normalizeCanonicalLocationKey } from "@/lib/serp/location";
-import {
-  DEFAULT_SERP_DEVICE,
-  DEFAULT_SERP_MARKET,
-  normalizeSerpMarketName,
-  serpDeviceValues,
-  serpMarketNames,
-} from "@/lib/serp/markets";
 import { isSupportedProjectTimezone } from "@/lib/settings/timezones";
 import { z } from "zod";
 import { serpDepthSchema } from "./serp-depth";
 import { tagNameSchema } from "./tag";
 
 const idSchema = z.string().trim().min(1).max(120);
-const unsupportedSerpMarketMessage = "Choose a supported SERP country.";
+/** A project schedule is addressed by its public id, never by a database row id. */
+const checkScheduleIdSchema = z
+  .string()
+  .trim()
+  .regex(/^sch_[a-z][a-z0-9]{23}$/, "Schedule is invalid.");
 export const KEYWORD_IMPORT_MAX = 500;
 export const KEYWORD_IMPORT_LIMIT_MESSAGE = "Add up to 500 keywords per import.";
 export const KEYWORD_TEXT_MAX = 180;
@@ -27,12 +26,10 @@ export function keywordImportFileLimitMessage(received: number) {
 }
 
 const emptyToNull = (value: unknown) => (value === "" ? null : value);
-const normalizeSerpMarketInput = (value: unknown) => normalizeSerpMarketName(value) ?? value;
 
-export const serpMarketNameSchema = z.preprocess(
-  normalizeSerpMarketInput,
-  z.enum(serpMarketNames, { error: unsupportedSerpMarketMessage }),
-);
+// Legacy market-name input kept for existing callers and translated to a location key
+// server-side; locationKey is the primary location reference.
+export const serpMarketNameSchema = legacyMarketNameSchema;
 
 export const canonicalKeySchema = z
   .string()
@@ -141,7 +138,7 @@ export const addKeywordSchema = z.object({
     .trim()
     .min(1)
     .max(KEYWORD_TEXT_MAX, `String must contain at most ${KEYWORD_TEXT_MAX} character(s)`),
-  location: serpMarketNameSchema.default(DEFAULT_SERP_MARKET),
+  location: serpMarketNameSchema.default(LEGACY_DEFAULT_MARKET_NAME),
   locationKey: canonicalKeySchema.optional(),
   projectId: idSchema,
   schedule: keywordScheduleSchema.optional(),
@@ -159,6 +156,7 @@ export const addKeywordsRowSchema = addKeywordSchema.omit({
 export const addKeywordsSchema = addKeywordSchema
   .omit({ keyword: true })
   .extend({
+    checkScheduleId: checkScheduleIdSchema.nullable().optional(),
     consumeSavedIds: z.array(idSchema).max(500).optional(),
     keywords: z.array(addKeywordSchema.shape.keyword).min(1).max(KEYWORD_IMPORT_MAX).optional(),
     rows: z
@@ -188,6 +186,7 @@ export const addKeywordsSchema = addKeywordSchema
 
 export const addKeywordsMatrixSchema = z
   .object({
+    checkScheduleId: checkScheduleIdSchema.nullable().optional(),
     consumeSavedIds: z.array(idSchema).max(500).optional(),
     devices: z.array(deviceSchema).min(1),
     keywords: z
@@ -256,6 +255,7 @@ export const runCheckNowSchema = z.object({
 });
 
 export const listFirstCheckCandidatesSchema = z.object({
+  includeExisting: z.boolean().optional(),
   keywordText: z.string().trim().min(1).max(KEYWORD_TEXT_MAX).optional(),
   limit: z.coerce
     .number()

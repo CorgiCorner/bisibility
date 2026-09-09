@@ -273,4 +273,52 @@ describe("getAlertsView", () => {
     expect(mocks.prisma.keyword.findMany).toHaveBeenCalledOnce();
     expect(mocks.prisma.projectDefaults.findUnique).toHaveBeenCalledOnce();
   });
+
+  it("applies trusted market and severity facets before loading alert rows", async () => {
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      {
+        location: { canonicalKey: "ES@es", displayName: "Malaga core", languageLabel: "Spanish" },
+        locationId: "location_malaga",
+        publicId: "pmkt_abcdefghijklmnopqrstuvwx",
+      },
+    ]);
+
+    await getAlertsView("prj_abcdefghijklmnopqrstuvwx", {
+      f: ["market:pmkt_abcdefghijklmnopqrstuvwx", "severity:urgent"],
+    });
+
+    expect(mocks.prisma.triggeredAlert.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            { keyword: { locationId: { in: ["location_malaga"] } } },
+            { rule: { severity: { in: ["urgent"] } } },
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it("does not reflect a removed or cross-project market as a selected feed scope", async () => {
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([
+      {
+        location: { canonicalKey: "ES@es", displayName: "Malaga core", languageLabel: "Spanish" },
+        locationId: "location_malaga",
+        publicId: "pmkt_abcdefghijklmnopqrstuvwx",
+      },
+    ]);
+
+    const view = await getAlertsView("prj_abcdefghijklmnopqrstuvwx", {
+      f: ["market:pmkt_other_project", "severity:urgent"],
+    });
+
+    expect(view.facets).toEqual([{ axis: "severity", value: "urgent" }]);
+    expect(mocks.prisma.triggeredAlert.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.not.arrayContaining([{ keyword: expect.anything() }]),
+        }),
+      }),
+    );
+  });
 });

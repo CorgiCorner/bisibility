@@ -1,16 +1,14 @@
 "use client";
 
 import { feedbackClass } from "@/components/onboarding/onboarding-form-utils";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { rankObservationState } from "@/lib/serp/rank-depth";
-import {
-  ArrowClockwiseIcon as ArrowClockwise,
-  CheckCircleIcon as CheckCircle,
-  CircleNotchIcon as CircleNotch,
-  DesktopIcon as Desktop,
-  DeviceMobileIcon as DeviceMobile,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { CircleNotchIcon as CircleNotch } from "@phosphor-icons/react/dist/csr/CircleNotch";
+import { DesktopIcon as Desktop } from "@phosphor-icons/react/dist/csr/Desktop";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import type { FirstCheckResultRow, FirstCheckRunState } from "./use-first-check-run";
 
 type FirstCheckResultsProps = {
@@ -18,8 +16,8 @@ type FirstCheckResultsProps = {
   state: FirstCheckRunState;
 };
 
-function rankingLabel(position: number | null, rankingUrl: string | null) {
-  const observation = rankObservationState({ completedChecks: 1, position });
+function rankingLabel(position: number | null, rankingUrl: string | null, trackedDepth?: number) {
+  const observation = rankObservationState({ completedChecks: 1, position, trackedDepth });
   if (observation.kind !== "ranked") return observation.label;
   if (!rankingUrl) return `#${position}`;
 
@@ -32,7 +30,8 @@ function rankingLabel(position: number | null, rankingUrl: string | null) {
 }
 
 function ResultIcon({ row }: Readonly<{ row: FirstCheckResultRow }>) {
-  if (row.status === "pending") {
+  if (row.status === "ready") return null;
+  if (row.status === "pending" || row.status === "running") {
     return (
       <CircleNotch aria-hidden className="bv-spin text-accent-text" size={16} weight="regular" />
     );
@@ -48,12 +47,15 @@ function ResultIcon({ row }: Readonly<{ row: FirstCheckResultRow }>) {
 
 function resultText(row: FirstCheckResultRow) {
   switch (row.status) {
+    case "ready":
+      return "Not checked yet";
     case "pending":
+    case "running":
       return "Checking...";
     case "queued":
       return "Queued";
     case "completed":
-      return rankingLabel(row.position, row.rankingUrl);
+      return rankingLabel(row.position, row.rankingUrl, row.requestedDepth);
     case "failed":
       return row.message;
   }
@@ -91,20 +93,23 @@ function resultsNote(state: FirstCheckRunState) {
   if (failed > 0) {
     return `${failed} of ${state.rows.length} checks failed. Successful results are kept.`;
   }
-  return "Not in Top 100 is a valid result for a market and device.";
+  return "Run a sample check for the remaining targets whenever you are ready.";
 }
 
 export function FirstCheckResults({ onRetryFailed, state }: Readonly<FirstCheckResultsProps>) {
   if (state.rows.length === 0 && !state.message) return null;
   const hasFailed = state.rows.some((row) => row.status === "failed");
+  const unknownCost = state.rows.some(
+    (row) => row.status === "completed" && row.recordedCostCents === null,
+  );
   const completed = state.rows.filter((row) => row.status === "completed").length;
   const recordedCostCents = state.rows.reduce(
-    (total, row) => total + (row.status === "completed" ? row.recordedCostCents : 0),
+    (total, row) => total + (row.status === "completed" ? (row.recordedCostCents ?? 0) : 0),
     0,
   );
 
   return (
-    <div className="mt-4">
+    <div className="mt-4" data-analytics-mask>
       {state.rows.length > 0 ? (
         <div className="overflow-hidden rounded-card border border-border">
           {state.rows.map((row, index) => (
@@ -131,11 +136,12 @@ export function FirstCheckResults({ onRetryFailed, state }: Readonly<FirstCheckR
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2.5">
           <p className={`m-0 ${feedbackClass} font-medium text-fg-muted`}>
             {state.status === "completed"
-              ? `${completed}${completed === state.rows.length ? "" : ` of ${state.rows.length}`} ${state.rows.length === 1 ? "check" : "checks"} · $${(recordedCostCents / 100).toFixed(4)} recorded cost`
+              ? `${completed}${completed === state.rows.length ? "" : ` of ${state.rows.length}`} ${state.rows.length === 1 ? "check" : "checks"} · ${unknownCost ? "Recorded cost unavailable" : `$${(recordedCostCents / 100).toFixed(4)} recorded cost`}`
               : resultsNote(state)}
           </p>
           {hasFailed && onRetryFailed ? (
             <Button
+              disabled={state.status === "queued" || state.status === "running"}
               onClick={onRetryFailed}
               size="sm"
               startIcon={<ArrowClockwise aria-hidden size={12} weight="regular" />}

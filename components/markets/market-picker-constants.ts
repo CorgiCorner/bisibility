@@ -1,0 +1,1 @@
+export const MARKET_PICKER_SEARCH_THRESHOLD = 6;

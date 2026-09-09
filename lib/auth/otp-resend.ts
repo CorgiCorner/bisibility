@@ -1,8 +1,9 @@
 "use server";
 
+import "@/lib/deployment/runtime-env.generated";
+
 import { createHash } from "node:crypto";
 import { consume } from "@/lib/api/ratelimit";
-import { auth } from "@/lib/auth/auth";
 import { withVerifiedLoginCodeRequest } from "@/lib/auth/login-code-request-context";
 import { EMAIL_CAPACITY_EXHAUSTED } from "@/lib/auth/signin-capacity-types";
 import { deploymentMode } from "@/lib/deployment/deployment";
@@ -84,6 +85,7 @@ export async function resendSignInOtp(input: unknown): Promise<ResendOtpResult> 
     return { code: "rate_limited", ok: false, retryAfter };
   }
 
+  const { auth } = await import("@/lib/auth/auth");
   try {
     await withVerifiedLoginCodeRequest(() =>
       auth.api.sendVerificationOTP({

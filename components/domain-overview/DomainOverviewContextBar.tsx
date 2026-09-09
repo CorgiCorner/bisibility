@@ -1,7 +1,7 @@
 import type { DateFormat } from "@/lib/dates/format";
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
 import { relativePast } from "@/lib/format/relative-time";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { sourceDateLabel } from "./domain-overview-metrics";
 import { cacheHoursRemaining } from "./domain-overview-workspace-model";
 

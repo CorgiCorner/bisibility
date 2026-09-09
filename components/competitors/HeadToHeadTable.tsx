@@ -1,8 +1,9 @@
 "use client";
 
-import { Card, SectionTitle } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { CompetitorMarket } from "@/lib/competitors/types";
-import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react";
+import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
 import { useState } from "react";
 
 type HeadToHeadTableProps = {

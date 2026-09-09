@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { UpcomingSection, type UpcomingSectionProps } from "./UpcomingSection";
 import {
@@ -94,7 +95,7 @@ describe("UpcomingSection", () => {
       "2 will never run · 1 on hold · 4 over budget",
     );
 
-    fireEvent.click(within(strip).getByRole("button", { name: /Today, 214 checks/ }));
+    await userEvent.click(within(strip).getByRole("button", { name: /Today, 214 checks/ }));
 
     const dialog = screen.getByRole("dialog", { name: "Today" });
     expect(within(dialog).getByText("flow dictation app")).toBeInTheDocument();
@@ -102,6 +103,7 @@ describe("UpcomingSection", () => {
       within(dialog).getByRole("link", { name: "Manage schedules in Keywords" }),
     ).toHaveAttribute("href", "/app/rank-tracker");
 
+    fireEvent.pointerDown(screen.getByLabelText("Close upcoming details"));
     fireEvent.click(screen.getByLabelText("Close upcoming details"));
     await waitFor(() =>
       expect(screen.queryByRole("dialog", { name: "Today" })).not.toBeInTheDocument(),

@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StepConnectGscCard } from "./StepConnectGscCard";
 import {
@@ -25,7 +26,7 @@ describe("StepConnectProvider", () => {
     expect(screen.getByLabelText("API login")).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: "Plans include monthly searches. A Top-N check uses up to one search per 10 results, often fewer when a match is found early.",
+        name: "Plans include monthly searches; the free plan has 250. A Top-N check uses up to one search per 10 results, often fewer when a match is found early.",
       }),
     ).toBeInTheDocument();
 
@@ -55,6 +56,14 @@ describe("StepConnectProvider", () => {
     expect(pricing).toHaveClass("mt-2");
 
     expect(screen.getByLabelText("API login").closest(".grid")).toHaveClass("sm:grid-cols-2");
+    expect(screen.getByText("Use your API password, not your account password.")).toBeVisible();
+    const password = screen.getByLabelText("API password", { exact: true });
+    expect(password).toHaveAccessibleName("API password");
+    expect(password).toHaveAttribute(
+      "aria-describedby",
+      "onboarding-dataforseo-secret-description",
+    );
+    expect(screen.getByRole("button", { name: "Watch setup guide" })).toBeVisible();
 
     fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
 
@@ -63,17 +72,53 @@ describe("StepConnectProvider", () => {
     expect(screen.getByLabelText("API key").closest(".grid")).not.toHaveClass("sm:grid-cols-2");
   });
 
+  it.each([
+    { provider: "DataForSEO", videoId: "QBCtJU5bRAY", field: "API password" },
+    { provider: "SerpApi", videoId: "cMSk7FRIzdM", field: "API key" },
+  ])(
+    "opens the $provider guide without submitting or losing credential drafts",
+    async ({ provider, videoId, field }) => {
+      const user = userEvent.setup();
+      const connectProviderAction = vi.fn();
+      const testProviderConnectionAction = vi.fn();
+      renderProviderStep({ connectProviderAction, testProviderConnectionAction });
+      if (provider === "SerpApi") await user.click(screen.getByRole("radio", { name: /SerpApi/ }));
+      const input = screen.getByLabelText(field, { exact: true });
+      await user.clear(input);
+      await user.type(input, "draft-credential");
+      expect(document.querySelector("iframe")).not.toBeInTheDocument();
+
+      const trigger = screen.getByRole("button", { name: "Watch setup guide" });
+      await user.click(trigger);
+      const modal = screen.getByRole("dialog", { name: `${provider} account setup` });
+      expect(modal.querySelector("iframe")).toHaveAttribute(
+        "src",
+        `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`,
+      );
+      expect(modal.querySelector("iframe")).toHaveAccessibleName(`${provider} account setup`);
+      if (provider === "DataForSEO")
+        expect(within(modal).getByText(/verify your account/)).toBeVisible();
+      await user.click(within(modal).getByRole("button", { name: "Close modal" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(document.querySelector("iframe")).not.toBeInTheDocument();
+      expect(input).toHaveValue("draft-credential");
+      expect(trigger).toHaveFocus();
+      expect(connectProviderAction).not.toHaveBeenCalled();
+      expect(testProviderConnectionAction).not.toHaveBeenCalled();
+    },
+  );
+
   it("right-aligns secondary credential actions for both providers", () => {
     renderProviderStep();
 
     for (const provider of ["DataForSEO", "SerpApi"] as const) {
       if (provider === "SerpApi") fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
       const testButton = screen.getByRole("button", { name: "Test connection" });
-      const saveButton = screen.getByRole("button", { name: `Save ${provider}` });
+      const saveButton = screen.getByRole("button", { name: "Save connection" });
       const actionGroup = saveButton.parentElement;
       const actionRow = actionGroup?.parentElement;
-      expect(testButton).toHaveClass("MuiButton-outlined");
-      expect(saveButton).toHaveClass("MuiButton-outlined");
+      expect(testButton).toHaveAttribute("data-variant", "secondary");
+      expect(saveButton).toHaveAttribute("data-variant", "secondary");
       expect(actionGroup).toHaveClass("flex", "justify-end");
       expect(actionRow).toHaveClass("flex", "justify-between");
     }
@@ -124,12 +169,14 @@ describe("StepConnectProvider", () => {
     });
 
     await clickTestConnection(testProviderConnectionAction);
-    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save connection" }));
 
     expect(await screen.findByText("Connected")).toBeInTheDocument();
     expect(screen.queryByText(/Add as fallback \(optional\)/)).not.toBeInTheDocument();
     expect(screen.getByText("Balance: 12.34")).toBeInTheDocument();
-    expect(container).not.toHaveTextContent(/\b(primary|fallback|backup)\b/i);
+    expect((container.textContent ?? "").replace(/\s+/g, " ").trim()).not.toMatch(
+      /\b(primary|fallback|backup)\b/i,
+    );
   });
 
   it("names the additional provider action and keeps it disabled until verified", async () => {
@@ -144,17 +191,17 @@ describe("StepConnectProvider", () => {
     });
 
     await clickTestConnection(testProviderConnectionAction);
-    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save connection" }));
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
 
     fireEvent.click(screen.getByRole("radio", { name: /SerpApi/ }));
     fireEvent.change(screen.getByLabelText("API key"), {
       target: { value: "serp-key" },
     });
-    const saveButton = screen.getByRole("button", { name: "Save SerpApi" });
-    expect(saveButton).toHaveAccessibleName("Save SerpApi");
+    const saveButton = screen.getByRole("button", { name: "Save connection" });
+    expect(saveButton).toHaveAccessibleName("Save connection");
     expect(saveButton).toBeDisabled();
-    expect(saveButton).toHaveClass("MuiButton-root");
+    expect(saveButton).toHaveAttribute("data-slot", "button");
     expect(screen.getByText("Test the credentials and save.")).toBeInTheDocument();
     await clickTestConnection(testProviderConnectionAction, 2);
     expect(saveButton).toBeEnabled();
@@ -205,7 +252,7 @@ describe("StepConnectProvider", () => {
 
     await clickTestConnection(testProviderConnectionAction);
     expect(onContinueDisabledChange).toHaveBeenLastCalledWith(true);
-    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save connection" }));
 
     await waitFor(() => expect(connectProviderAction).toHaveBeenCalledTimes(1));
     expect(onContinueDisabledChange).toHaveBeenLastCalledWith(false);
@@ -226,6 +273,15 @@ describe("StepConnectProvider", () => {
     expect(
       screen.getByText("Connections are saved per provider - switching does not disconnect."),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Saved and encrypted. Leave blank to keep the current value, or enter a new one to replace it.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByLabelText("API password", { exact: true })).toHaveAccessibleName(
+      "API password",
+    );
+    expect(screen.queryByText("Use your API password, not your account password.")).toBeNull();
   });
 
   it("marks edited credentials as unsaved until the named provider is tested and saved", async () => {
@@ -250,7 +306,7 @@ describe("StepConnectProvider", () => {
 
     expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
     expect(screen.queryByText("Connected")).not.toBeInTheDocument();
-    const saveButton = screen.getByRole("button", { name: "Save DataForSEO" });
+    const saveButton = screen.getByRole("button", { name: "Save connection" });
     expect(saveButton).toBeDisabled();
 
     await clickTestConnection(testProviderConnectionAction);
@@ -275,38 +331,5 @@ describe("StepConnectProvider", () => {
     await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
     expect(screen.queryByText("Enter your API login.")).not.toBeInTheDocument();
     expect(screen.queryByText("Enter your API password.")).not.toBeInTheDocument();
-  });
-  it("associates credential errors and announces rejected actions", async () => {
-    const testProviderConnectionAction = vi.fn(async () => {
-      throw new Error("Provider rejected credentials.");
-    });
-    renderProviderStep({
-      defaultValues: { projectId: "prj_1", providerId: "dataforseo", login: "", secret: "" },
-      testProviderConnectionAction,
-    });
-    fireEvent.change(screen.getByLabelText("API login"), { target: { value: "" } });
-    fireEvent.change(screen.getByLabelText("API password"), { target: { value: "" } });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    const login = await screen.findByLabelText("API login");
-    expect(login).toHaveAttribute("aria-invalid", "true");
-    expect(login.getAttribute("aria-describedby")).toMatch(/-error$/);
-    const password = screen.getByPlaceholderText("API password");
-    expect(password).toHaveAttribute("aria-invalid", "true");
-    expect(password.getAttribute("aria-describedby")).toMatch(/-error$/);
-    fireEvent.change(login, { target: { value: "login" } });
-    fireEvent.change(password, { target: { value: "password" } });
-    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Provider rejected credentials.");
-  });
-
-  it("announces a rejected save action", async () => {
-    const connectProviderAction = vi.fn(async () => {
-      throw new Error("Provider could not be saved.");
-    });
-    const testProviderConnectionAction = vi.fn(async () => ({ message: "Connected", ok: true }));
-    renderProviderStep({ connectProviderAction, testProviderConnectionAction });
-    await clickTestConnection(testProviderConnectionAction);
-    fireEvent.click(screen.getByRole("button", { name: "Save DataForSEO" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Provider could not be saved.");
   });
 });

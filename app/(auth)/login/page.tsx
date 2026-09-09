@@ -1,6 +1,7 @@
+import { ExploreDemo } from "@/components/auth/ExploreDemo";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RememberedWebsiteCue } from "@/components/auth/RememberedWebsiteCue";
-import { BrandLockup } from "@/components/ui";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import { isEmailSignInUnavailable } from "@/lib/auth/email-sign-in-availability";
 import { isFirstRun } from "@/lib/auth/first-run";
 import { onboardingWebsiteFromReturnTo, returnToOrDefault } from "@/lib/auth/return-to";
@@ -16,16 +17,15 @@ import {
   GOOGLE_CAPACITY_EXHAUSTED,
   type SignInCapacityMiss,
 } from "@/lib/auth/signin-capacity-types";
+import { readOnlyDemoConfig } from "@/lib/demo/config";
 import { dataResidencyMessage, isCloud } from "@/lib/deployment/deployment";
 import { legalConsentLinks } from "@/lib/deployment/legal";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { getGitHubStars } from "@/lib/site/github-stars";
 import { LICENSE } from "@/lib/site/site";
-import {
-  GithubLogoIcon as GithubLogo,
-  LockKeyIcon as LockKey,
-  ShieldCheckIcon as ShieldCheck,
-} from "@phosphor-icons/react/dist/ssr";
+import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/ssr/GithubLogo";
+import { LockKeyIcon as LockKey } from "@phosphor-icons/react/dist/ssr/LockKey";
+import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/ssr/ShieldCheck";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -58,6 +58,16 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
   // navigation can stay static: "Sign in" is always safe to click.
   if (!switchingAccount && (await getSession())) {
     return redirect(returnTo);
+  }
+
+  if (readOnlyDemoConfig()) {
+    return (
+      <main className="grid min-h-dvh place-items-center bg-bg p-6 text-fg">
+        <div className="w-full max-w-sm">
+          <ExploreDemo />
+        </div>
+      </main>
+    );
   }
 
   const capacityMiss: SignInCapacityMiss =

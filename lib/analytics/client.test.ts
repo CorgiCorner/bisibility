@@ -1,4 +1,4 @@
-import { type AnalyticsEvent, track } from "@/lib/analytics/client";
+import { type AnalyticsEvent, setPersonProperties, track } from "@/lib/analytics/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("analytics client", () => {
@@ -36,6 +36,18 @@ describe("analytics client", () => {
     expect(window.bisibilityAnalyticsQueue).toHaveLength(2);
   });
 
+  it("forwards neutral quiz person properties only when a sink is installed", () => {
+    const sink = { setPersonProperties: vi.fn(), track: vi.fn() };
+    window.bisibilityAnalytics = sink;
+
+    setPersonProperties({ quiz_role: "founder", quiz_targets: ["seo", "reporting"] });
+
+    expect(sink.setPersonProperties).toHaveBeenCalledWith({
+      quiz_role: "founder",
+      quiz_targets: ["seo", "reporting"],
+    });
+  });
+
   it("routes every event through the sink and never creates a queue once the sink is installed", () => {
     const sink = { track: vi.fn() };
     window.bisibilityAnalytics = sink;
@@ -49,6 +61,8 @@ describe("analytics client", () => {
 
   it("pins all existing and new typed event names", () => {
     const events = [
+      "getting_started_cta_clicked",
+      "onboarding_step_skipped",
       "search_insights_chip_opened",
       "search_insights_comparison_changed",
       "search_insights_csv_exported",
@@ -56,6 +70,8 @@ describe("analytics client", () => {
       "search_insights_module_viewed",
       "search_insights_period_changed",
       "search_insights_track_clicked",
+      "setup_video_opened",
+      "ui_option_selected",
     ] as const satisfies readonly AnalyticsEvent[];
 
     for (const event of events) {

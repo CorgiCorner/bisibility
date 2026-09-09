@@ -32,6 +32,7 @@ export default async function TimelinePage({
   const role = getProjectRole(actor, access.projectId);
   const timeline = await getTimelineView(access.publicId, {
     filter: params?.filter,
+    f: params?.f,
     page: params?.page,
     q: params?.q,
   });

@@ -1,27 +1,25 @@
 "use client";
 
-import {
-  compactInputGeometryClassName,
-  FieldLabel,
-  Input,
-  MenuSelect,
-  SegmentedControl,
-  Switch,
-} from "@/components/ui";
-import { timezoneSelectOptions } from "@/lib/settings/timezones";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { Input } from "@/components/ui/Input";
+import { compactInputGeometryClassName } from "@/components/ui/input-styles";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Switch } from "@/components/ui/Switch";
+import { monthDays, weekdays } from "@/lib/rank-check/schedule-calendar";
+import { scheduleTimezoneOptions } from "@/lib/schedules/form-defaults";
+import { scheduleNameAfterChange } from "@/lib/schedules/suggested-name";
 import { cn } from "@/lib/ui/cn";
-import type { UseFormReturn } from "react-hook-form";
+import type { PathValue, UseFormReturn } from "react-hook-form";
 import {
   cronPreview,
   defaultScheduleNote,
-  monthDays,
   type ScheduleEditorProjectDefaults,
   type ScheduleEditorProvider,
   type ScheduleEditorValues,
   scheduleDepthOptions,
   scheduleOverrideHelp,
   scheduleOverrideOptions,
-  weekdays,
 } from "./ScheduleEditorModel";
 
 type ScheduleEditorFieldsProps = {
@@ -61,16 +59,22 @@ export function ScheduleEditorFields({
   const timezone = watch("timezone");
   const cronExpression = watch("cronExpression");
   const isDefault = watch("isDefault");
-  const isOnlySchedule = defaultScheduleName === null;
-  const name = watch("name");
+  const savedDefault = form.formState.defaultValues?.isDefault === true;
+  function setCadenceValue<
+    K extends "frequency" | "weekday" | "dayOfMonth" | "timeOfDay" | "cronExpression",
+  >(field: K, value: ScheduleEditorValues[K]) {
+    const before = form.getValues();
+    setValue("name", scheduleNameAfterChange(before.name, before, { ...before, [field]: value }));
+    setValue(field, value as PathValue<ScheduleEditorValues, K>, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }
   const preview =
     frequency === "custom_cron"
       ? cronPreview(cronExpression, timezone || projectTimezone, referenceIso)
       : null;
-  const timezoneOptions = [
-    { label: `Uses project time zone - ${projectTimezone}`, value: "" },
-    ...timezoneSelectOptions(timezone || projectTimezone),
-  ];
+  const timezoneOptions = scheduleTimezoneOptions(projectTimezone, timezone);
 
   return (
     <div className="flex flex-col gap-3.5 p-4">
@@ -86,9 +90,7 @@ export function ScheduleEditorFields({
         <SegmentedControl
           ariaLabel="Frequency"
           fitContent
-          onChange={(value) =>
-            setValue("frequency", value, { shouldDirty: true, shouldValidate: true })
-          }
+          onChange={(value) => setCadenceValue("frequency", value)}
           options={[
             { label: "Daily", value: "daily" },
             { label: "Weekly", value: "weekly" },
@@ -108,6 +110,7 @@ export function ScheduleEditorFields({
             className={cn(fieldClass, "font-mono")}
             id="schedule-cron"
             {...register("cronExpression")}
+            onChange={(event) => setCadenceValue("cronExpression", event.currentTarget.value)}
           />
           <span className="text-[11.5px] leading-5 text-fg-muted">{preview?.detail}</span>
           {preview?.next ? (
@@ -125,10 +128,7 @@ export function ScheduleEditorFields({
             <MenuSelect
               ariaLabel="Day of week"
               onChange={(value) =>
-                setValue("weekday", value as ScheduleEditorValues["weekday"], {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                })
+                setCadenceValue("weekday", value as ScheduleEditorValues["weekday"])
               }
               options={weekdays.map((value) => ({ label: value, value }))}
               triggerClassName={triggerClass}
@@ -143,10 +143,7 @@ export function ScheduleEditorFields({
             <MenuSelect
               ariaLabel="Day of month"
               onChange={(value) =>
-                setValue("dayOfMonth", value as ScheduleEditorValues["dayOfMonth"], {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                })
+                setCadenceValue("dayOfMonth", value as ScheduleEditorValues["dayOfMonth"])
               }
               options={monthDays.map((value) => ({ label: value, value }))}
               triggerClassName={triggerClass}
@@ -164,6 +161,7 @@ export function ScheduleEditorFields({
               inputMode="numeric"
               placeholder="No fixed time"
               {...register("timeOfDay")}
+              onChange={(event) => setCadenceValue("timeOfDay", event.currentTarget.value)}
             />
             <span className="text-[11px] text-fg-muted">
               {watch("timeOfDay")
@@ -227,18 +225,26 @@ export function ScheduleEditorFields({
         />
       </div>
 
-      <Switch
-        checked={isOnlySchedule || isDefault}
-        description={defaultScheduleNote(name, defaultScheduleName, isDefault)}
-        disabled={isOnlySchedule || isDefault}
-        label="Default for new keywords"
-        onChange={(event) =>
-          setValue("isDefault", event.currentTarget.checked, {
-            shouldDirty: true,
-            shouldValidate: true,
-          })
-        }
-      />
+      {savedDefault ? (
+        <div className="flex flex-col gap-1 text-[12px]">
+          <span className="font-semibold text-fg">Default for new keywords</span>
+          <span className="text-fg-muted">
+            New keywords use this schedule unless you choose another.
+          </span>
+        </div>
+      ) : (
+        <Switch
+          checked={isDefault}
+          description={defaultScheduleNote(defaultScheduleName)}
+          label="Use as default for new keywords"
+          onChange={(event) =>
+            setValue("isDefault", event.currentTarget.checked, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
+        />
+      )}
     </div>
   );
 }

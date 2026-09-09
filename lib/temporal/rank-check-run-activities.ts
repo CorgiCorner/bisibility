@@ -3,7 +3,7 @@ import "server-only";
 import { prisma } from "../db/prisma";
 import { reconcileRankCheckRuns } from "../rank-check/runs/reconcile";
 import { plannerOwnsAutomaticChecks } from "../rank-check/scheduler-mode";
-import { resolveEffectiveSerpDepth, type SerpDepth, serpDepthValues } from "../serp/markets";
+import { resolveEffectiveSerpDepth, type SerpDepth, serpDepthValues } from "../serp/constants";
 import { rankCheckRunWorkflowGateway } from "./rank-check-run-workflow-gateway";
 
 export type ReconcileRankCheckRunsActivityInput = {
@@ -90,7 +90,12 @@ export async function loadRankCheckRunItemsActivity(
     orderBy: [{ notBefore: { nulls: "first", sort: "asc" } }, { id: "asc" }],
     select: {
       id: true,
-      keyword: { select: { schedule: { select: { serpDepth: true } } } },
+      keyword: {
+        select: {
+          checkSchedule: { select: { serpDepth: true } },
+          schedule: { select: { serpDepth: true } },
+        },
+      },
       keywordId: true,
       notBefore: true,
     },
@@ -101,6 +106,7 @@ export async function loadRankCheckRunItemsActivity(
     depth: resolveEffectiveSerpDepth({
       projectDepth: run.project.defaults?.serpDepth,
       requestedDepth: spec.depth,
+      checkScheduleDepth: row.keyword.checkSchedule?.serpDepth,
       scheduleDepth: row.keyword.schedule?.serpDepth,
     }),
     id: row.id,

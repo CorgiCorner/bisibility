@@ -1,6 +1,9 @@
+import { ReplaySurface } from "@/components/analytics/ReplaySurface";
 import { OnboardingLogoutButton } from "@/components/onboarding/OnboardingLogoutButton";
 import { shellUserEmail } from "@/components/shell/types";
-import { Avatar, BrandLockup, ThemeSegments } from "@/components/ui";
+import { Avatar } from "@/components/ui/Avatar";
+import { BrandLockup } from "@/components/ui/BrandLockup";
+import { ThemeSegments } from "@/components/ui/ThemeSegments";
 import { redirectToSetupIfFirstRun } from "@/lib/auth/first-run";
 import { requireSession } from "@/lib/auth/session";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
@@ -32,7 +35,7 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
         <header className="flex flex-wrap items-center justify-between gap-3">
           <BrandLockup />
           <div className="inline-flex items-center gap-3 text-[12.5px] text-fg-muted">
-            <span className="inline-flex items-center gap-1.5">
+            <span data-analytics-block className="inline-flex items-center gap-1.5">
               <Avatar
                 alt=""
                 className="h-[22px] w-[22px] rounded-control bg-accent-solid text-[9px] font-semibold text-accent-on-solid"
@@ -46,7 +49,7 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
             <OnboardingLogoutButton />
           </div>
         </header>
-        {children}
+        <ReplaySurface kind="onboarding">{children}</ReplaySurface>
         <div className="mt-auto pt-14">
           <footer className="flex flex-wrap items-center justify-between gap-3 border-border border-t pt-6 text-xs text-fg-muted">
             <span>© 2026 bisibility</span>

@@ -1,4 +1,32 @@
 @layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    margin: 0;
+    color: var(--fg);
+    background-color: var(--bg);
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  button,
+  input,
+  textarea {
+    font: inherit;
+  }
+  strong,
+  b {
+    font-weight: 700;
+  }
+  @media print {
+    body {
+      background-color: #fff;
+    }
+  }
+
   *,
   ::before,
   ::after {
@@ -29,7 +57,7 @@
   }
 
   /* Tailwind preflight is off (layout-only), so bare <button>s would otherwise paint the
-   browser's grey ButtonFace background. Reset it; MUI and bg-* utilities still override. */
+   browser's grey ButtonFace background. Reset it; component styles and bg-* utilities still override. */
   button {
     background-color: transparent;
     background-image: none;

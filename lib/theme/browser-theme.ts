@@ -1,5 +1,3 @@
-import type { StorageManager } from "@mui/system";
-
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 const THEME_COOKIE = "theme";
 const THEME_CHANGE_EVENT = "themechange";
@@ -145,21 +143,3 @@ export function subscribeThemePreference(listener: ThemePreferenceListener) {
   // An OS change never changes the stored preference, so this only tracks our own event.
   return subscribeThemeEvent(() => listener(readThemePreference()));
 }
-
-export const themeCookieStorageManager: StorageManager = ({ key }) => ({
-  get(defaultValue) {
-    if (key !== THEME_COOKIE || typeof document === "undefined") {
-      return defaultValue;
-    }
-    return preferenceFromCookie(document.cookie);
-  },
-  set(value) {
-    if (key === THEME_COOKIE && (value === "light" || value === "dark" || value === "system")) {
-      // biome-ignore lint/suspicious/noDocumentCookie: MUI mode changes must be synchronous.
-      document.cookie = `${THEME_COOKIE}=${value}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
-    }
-  },
-  subscribe(handler) {
-    return key === THEME_COOKIE ? subscribeThemePreference(handler) : () => undefined;
-  },
-});

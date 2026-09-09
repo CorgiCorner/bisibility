@@ -1,4 +1,4 @@
-import { CheckIcon as Check } from "@phosphor-icons/react/dist/ssr";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/ssr/Check";
 
 export type SetupStep = "account" | "done" | "verify";
 

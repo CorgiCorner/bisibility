@@ -6,10 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type ScheduleListRow, SchedulesList } from "./SchedulesList";
 
 const mocks = vi.hoisted(() => ({ showToast: vi.fn() }));
-vi.mock("@/components/ui", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/components/ui")>();
-  return { ...actual, useToast: () => ({ showToast: mocks.showToast }) };
-});
+vi.mock("@/components/ui/toast-context", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/ui/toast-context")>()),
+  useToast: () => ({ showToast: mocks.showToast }),
+}));
 
 const schedules: ScheduleListRow[] = [
   {
@@ -79,6 +79,8 @@ const schedules: ScheduleListRow[] = [
   },
 ];
 
+const resizeColumnLabels = ["Schedule", "Cadence", "Members", "Per run", "Next"] as const;
+
 function renderList(overrides: Partial<ComponentProps<typeof SchedulesList>> = {}) {
   return render(
     <SchedulesList
@@ -89,6 +91,18 @@ function renderList(overrides: Partial<ComponentProps<typeof SchedulesList>> = {
       {...overrides}
     />,
   );
+}
+
+async function tabPastScheduleResizeControls(user: ReturnType<typeof userEvent.setup>) {
+  await user.tab();
+  expect(screen.getByRole("button", { name: "Schedule status" })).toHaveFocus();
+  await user.tab();
+  expect(screen.getByRole("link", { name: "New schedule" })).toHaveFocus();
+
+  for (const label of resizeColumnLabels) {
+    await user.tab();
+    expect(screen.getByRole("separator", { name: `Resize ${label} column` })).toHaveFocus();
+  }
 }
 
 describe("SchedulesList", () => {
@@ -126,7 +140,7 @@ describe("SchedulesList", () => {
     expect(within(pausedRow).getByText("~$0.48")).toBeVisible();
   });
 
-  it("renders the schedule empty state without the card title", () => {
+  it("keeps the status filter available in the empty state", () => {
     renderList({ schedules: [] });
 
     expect(screen.getByRole("heading", { name: "No schedules yet" })).toBeVisible();
@@ -136,7 +150,7 @@ describe("SchedulesList", () => {
       ),
     ).toBeVisible();
     expect(screen.getByRole("link", { name: "New schedule" })).toBeVisible();
-    expect(screen.queryByText("0 schedules")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Schedule status" })).toBeVisible();
     expect(screen.queryByRole("table", { name: "Schedules" })).not.toBeInTheDocument();
   });
 
@@ -153,18 +167,36 @@ describe("SchedulesList", () => {
 
     fireEvent.click(screen.getByRole("row", { name: /Daily 06:00/ }));
 
-    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_story/rank-tracker/schedules/sch_daily");
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_story/runs/schedules/sch_daily");
   });
 
-  it("opens the schedule link with Tab and Enter", async () => {
+  it("opens the editor when a row is activated with the keyboard", async () => {
     const user = userEvent.setup();
     renderList();
 
+    await tabPastScheduleResizeControls(user);
+    const row = screen.getByRole("row", { name: /Daily 06:00/ });
     await user.tab();
+    expect(row).toHaveFocus();
+
+    await user.keyboard("{Enter}");
+
+    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_story/runs/schedules/sch_daily");
+  });
+
+  it("opens the schedule link with Tab and Enter without triggering the row callback", async () => {
+    const user = userEvent.setup();
+    renderList();
+
+    await tabPastScheduleResizeControls(user);
+    const row = screen.getByRole("row", { name: /Daily 06:00/ });
+    await user.tab();
+    expect(row).toHaveFocus();
+
     await user.tab();
     const link = screen.getByRole("link", { name: "Daily 06:00" });
     expect(link).toHaveFocus();
-    expect(link).toHaveAttribute("href", "/app/prj_story/rank-tracker/schedules/sch_daily");
+    expect(link).toHaveAttribute("href", "/app/prj_story/runs/schedules/sch_daily");
 
     const click = vi.fn((event: MouseEvent) => event.preventDefault());
     link.addEventListener("click", click);
@@ -172,6 +204,7 @@ describe("SchedulesList", () => {
     link.removeEventListener("click", click);
 
     expect(click).toHaveBeenCalledOnce();
+    expect(routerMock.push).not.toHaveBeenCalled();
   });
 
   it("offers inline Pause and Resume controls", async () => {

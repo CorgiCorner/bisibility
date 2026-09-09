@@ -1,11 +1,8 @@
-import "server-only";
+"use server";
 
 import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
-
-export { createNotification } from "@/lib/notifications/create";
-
 import { notificationFeedWhere } from "@/lib/notifications/scope";
 import { getNotificationBellData } from "@/lib/queries/notifications";
 import { revalidatePath } from "next/cache";
@@ -24,8 +21,6 @@ function revalidateNotificationViews() {
 }
 
 export async function refreshNotificationFeed(projectId: string, dateFormat?: DateFormat) {
-  "use server";
-
   const parsedProjectId = projectIdSchema.parse(projectId);
   return dateFormat
     ? getNotificationBellData(parsedProjectId, { dateFormat })
@@ -33,8 +28,6 @@ export async function refreshNotificationFeed(projectId: string, dateFormat?: Da
 }
 
 export async function markNotificationRead(input: unknown) {
-  "use server";
-
   const { notificationId } = parseActionInput(markNotificationReadSchema, input);
   if (parsePublicId(notificationId)?.prefix !== "ntf") {
     return { updated: 0 };
@@ -54,8 +47,6 @@ export async function markNotificationRead(input: unknown) {
 }
 
 export async function markAllNotificationsRead(projectId: string, input?: unknown) {
-  "use server";
-
   parseActionInput(markAllNotificationsReadSchema, input ?? {});
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "read", projectIdSchema.parse(projectId), {

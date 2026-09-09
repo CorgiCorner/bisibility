@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
 type MockItem = { label: string; hint?: string; icon?: unknown; id?: string; run?: () => void };
 type MockGroup = { items: MockItem[]; title: string };
 
-vi.mock("@mui/material/styles", () => ({ useColorScheme: () => ({ setMode: mocks.setMode }) }));
+vi.mock("@/lib/theme/browser-theme", () => ({ applyTheme: mocks.setMode }));
 vi.mock("@/components/ui/Tooltip", () => ({
   Tooltip: ({ children, content }: { children: ReactNode; content: string }) => (
     <span data-tooltip={content}>{children}</span>

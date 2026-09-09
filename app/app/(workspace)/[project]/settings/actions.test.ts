@@ -19,7 +19,7 @@ vi.mock("@/lib/actions/_shared", () => ({
   requireProjectScope: mocks.requireProjectScope,
   revalidateSettingsViews: vi.fn(),
 }));
-vi.mock("@/lib/actions/project", () => ({
+vi.mock("@/lib/projects/settings-store", () => ({
   deleteProjectById: mocks.deleteProjectById,
   readActorProjects: mocks.readActorProjects,
   readProjectDeleteSnapshot: mocks.readProjectDeleteSnapshot,

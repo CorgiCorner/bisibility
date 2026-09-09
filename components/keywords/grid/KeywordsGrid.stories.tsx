@@ -2,6 +2,7 @@ import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendPro
 import { KeywordImportProvider } from "@/components/keywords/import/KeywordImportProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
+import { aggregateMarketGridRows, groupRow } from "@/lib/keywords/market-grid-model";
 import type { Meta, StoryObj } from "@storybook/react";
 import { KeywordsGrid } from "./KeywordsGrid";
 
@@ -42,6 +43,27 @@ const actionArgs = {
   updateKeywordAction: async () => undefined,
 };
 
+const serverListArgs = {
+  facets: { intents: [], positions: [], tags: [], topics: [] },
+  lens: { device: "all" as const, locationId: null },
+  locations: [],
+  matchedTargetCount: keywordRows.length,
+  page: 1,
+  pageCount: 1,
+  pageSize: 25 as const,
+  query: {
+    filters: emptyKeywordFilters,
+    grouped: false,
+    lens: { device: "all" as const, locationId: null },
+    page: 1,
+    pageSize: 25 as const,
+    savedViewId: null,
+    search: "",
+    sort: { direction: "asc" as const, field: "position" as const },
+  },
+  totalCount: keywordRows.length,
+};
+
 const meta = {
   title: "Keywords/Workspace",
   component: KeywordsGrid,
@@ -64,11 +86,50 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { ...actionArgs, projectId: "prj_7Kd2Qf9m", rows: keywordRows },
+  args: { ...actionArgs, ...serverListArgs, projectId: "prj_7Kd2Qf9m", rows: keywordRows },
+};
+
+export const Flat: Story = {
+  args: {
+    ...actionArgs,
+    ...serverListArgs,
+    matchedTargetCount: 124,
+    page: 1,
+    pageCount: 5,
+    pageSize: 25,
+    projectId: "prj_7Kd2Qf9m",
+    query: {
+      filters: emptyKeywordFilters,
+      grouped: false,
+      lens: { device: "all", locationId: null },
+      page: 1,
+      pageSize: 25,
+      savedViewId: null,
+      search: "",
+      sort: { direction: "asc", field: "position" },
+    },
+    rows: keywordRows,
+    totalCount: 124,
+  },
+};
+
+export const FilteredEmpty: Story = {
+  args: {
+    ...actionArgs,
+    ...serverListArgs,
+    matchedTargetCount: 0,
+    projectId: "prj_7Kd2Qf9m",
+    query: {
+      ...serverListArgs.query,
+      filters: { ...emptyKeywordFilters, position: ["top3"] },
+      grouped: true,
+    },
+    rows: [],
+  },
 };
 
 export const Empty: Story = {
-  args: { ...actionArgs, projectId: "prj_7Kd2Qf9m", rows: [] },
+  args: { ...actionArgs, ...serverListArgs, projectId: "prj_7Kd2Qf9m", rows: [] },
 };
 
 // No-data workspace: keywords are queued but none has a first check, so every row
@@ -92,6 +153,7 @@ const pendingRows = keywordRows.slice(0, 12).map((row) => ({
 export const Pending: Story = {
   args: {
     ...actionArgs,
+    ...serverListArgs,
     projectId: "prj_7Kd2Qf9m",
     providerConnected: false,
     rows: pendingRows,
@@ -101,6 +163,7 @@ export const Pending: Story = {
 export const PendingReady: Story = {
   args: {
     ...actionArgs,
+    ...serverListArgs,
     projectId: "prj_7Kd2Qf9m",
     providerConnected: true,
     rows: pendingRows,
@@ -110,6 +173,7 @@ export const PendingReady: Story = {
 export const PendingFilteredEmpty: Story = {
   args: {
     ...actionArgs,
+    ...serverListArgs,
     initialViewConfig: {
       filters: { ...emptyKeywordFilters, change: "up", position: ["11-50"] },
       lens: { device: "desktop", locationId: null },
@@ -124,25 +188,17 @@ export const PendingFilteredEmpty: Story = {
   },
 };
 
-export const Truncated: Story = {
-  args: {
-    ...actionArgs,
-    projectId: "prj_7Kd2Qf9m",
-    rows: keywordRows,
-    totalKeywordCount: 1240,
-  },
-};
-
 export const TargetUrlStates: Story = {
   args: {
     ...actionArgs,
+    ...serverListArgs,
     projectId: "prj_7Kd2Qf9m",
     rows: [
       { ...keywordRows[0], targetUrl: null },
       {
         ...keywordRows[1],
         rankingPath: "/blog/google-analytics",
-        rankingUrl: "https://acme.dev/blog/google-analytics",
+        rankingUrl: "https://example.com/blog/google-analytics",
       },
       {
         ...keywordRows[2],
@@ -160,6 +216,7 @@ export const TargetUrlStates: Story = {
 export const CityLens: Story = {
   args: {
     ...actionArgs,
+    ...serverListArgs,
     lens: { device: "desktop", locationId: "loc_us_austin" },
     projectId: "prj_7Kd2Qf9m",
     rows: keywordRows,
@@ -222,10 +279,18 @@ const groupedMarketRows = keywordRows.slice(0, 2).flatMap((source, keywordIndex)
   ),
 );
 
+const groupedServerRows = aggregateMarketGridRows(groupedMarketRows).map((aggregate) =>
+  groupRow(aggregate, aggregate.children),
+);
+
 export const GroupedMarkets: Story = {
   args: {
     ...actionArgs,
+    ...serverListArgs,
+    matchedGroupCount: groupedServerRows.length,
+    matchedTargetCount: groupedMarketRows.length,
     projectId: "prj_7Kd2Qf9m",
-    rows: groupedMarketRows,
+    query: { ...serverListArgs.query, grouped: true },
+    rows: groupedServerRows,
   },
 };

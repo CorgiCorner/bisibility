@@ -1,6 +1,6 @@
 "use client";
 
-import { MenuSelect } from "@/components/ui";
+import { MenuSelect } from "@/components/ui/MenuSelect";
 import { ruleSeverityMeta } from "@/lib/alerts/new-rule-data";
 import { type AlertSeverity, alertSeverities } from "@/lib/alerts/severity";
 

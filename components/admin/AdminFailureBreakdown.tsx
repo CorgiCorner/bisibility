@@ -1,4 +1,4 @@
-import { IdChip } from "@/components/ui";
+import { IdChip } from "@/components/ui/IdChip";
 import type { FailureBreakdown } from "@/lib/ops/instance-admin-health";
 
 const countFormat = new Intl.NumberFormat("en-US");

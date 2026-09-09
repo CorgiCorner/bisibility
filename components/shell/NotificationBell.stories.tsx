@@ -1,4 +1,4 @@
-import { NotificationBellClient } from "@/lib/notifications/NotificationBellClient";
+import { NotificationBellClient } from "@/components/shell/NotificationBellClient";
 import type { NotificationFeed } from "@/lib/queries/notifications";
 import { appPath } from "@/lib/routing/app-path";
 import type { Meta, StoryObj } from "@storybook/react";

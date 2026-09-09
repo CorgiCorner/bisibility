@@ -1,35 +1,40 @@
 "use client";
 
+import { Menu } from "@/components/ui/Menu";
 import { MenuGroupHeading } from "@/components/ui/MenuGroupHeading";
 import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
-import { menuTransitionDuration, useMenuExitLifecycle } from "@/components/ui/menu-exit-lifecycle";
+import { useMenuExitLifecycle } from "@/components/ui/menu-exit-lifecycle";
 import {
   filterFlatOptions,
   filterGroupedGroups,
   MenuSearchField,
   type MenuSelectInput,
   menuSelectInputClass,
-  menuSelectPaperSx,
+  menuSelectPaperStyle,
   menuSelectTriggerClass,
   resolveSelectedOption,
 } from "@/components/ui/menu-select-support";
+import { track } from "@/lib/analytics/client";
+import { type AnalyticsControlId, analyticsControlModule } from "@/lib/analytics/controls";
 import { cn } from "@/lib/ui/cn";
-import Menu from "@mui/material/Menu";
-import type { SxProps, Theme } from "@mui/material/styles";
-import { CaretDownIcon as CaretDown } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import type { CSSProperties } from "react";
 import { type ReactNode, useState } from "react";
 import { Tooltip } from "./Tooltip";
 
 export type { MenuSelectOption, MenuSelectOptionGroup } from "@/components/ui/menu-select-support";
-export { menuSelectPaperSx, menuSelectTriggerClass } from "@/components/ui/menu-select-support";
+export { menuSelectPaperStyle, menuSelectTriggerClass } from "@/components/ui/menu-select-support";
 
 type MenuSelectBaseProps = {
+  analytics?: { control: AnalyticsControlId };
   ariaDescribedBy?: string;
   ariaInvalid?: boolean;
   ariaLabel: string;
   compact?: boolean;
   disabled?: boolean;
   emptyMessage?: string;
+  /** Off for options a remote source already narrowed to the search text; the list shows them as given. */
+  filterOptions?: boolean;
   leadingIcon?: ReactNode;
   leadingLabel?: ReactNode;
   menuMaxHeight?: string;
@@ -37,7 +42,10 @@ type MenuSelectBaseProps = {
   menuWidth?: number;
   noResultsMessage?: string;
   onChange: (value: string) => void;
+  /** Receives the search field's text as it changes and "" when the menu closes, for remote sources. */
+  onSearchChange?: (value: string) => void;
   pinCaret?: boolean;
+  searchHint?: string;
   searchPlaceholder?: string;
   searchable?: boolean;
   selectedContent?: (option: ReturnType<typeof resolveSelectedOption>) => ReactNode;
@@ -51,12 +59,14 @@ type MenuSelectBaseProps = {
 export type MenuSelectProps = MenuSelectBaseProps & MenuSelectInput;
 
 export function MenuSelect({
+  analytics,
   ariaDescribedBy,
   ariaInvalid,
   ariaLabel,
   compact = false,
   disabled,
   emptyMessage,
+  filterOptions = true,
   leadingIcon,
   leadingLabel,
   menuMaxHeight,
@@ -64,7 +74,9 @@ export function MenuSelect({
   menuWidth,
   noResultsMessage,
   onChange,
-  pinCaret = false,
+  onSearchChange,
+  pinCaret = true,
+  searchHint,
   searchPlaceholder = "Search...",
   searchable = false,
   selectedContent,
@@ -77,35 +89,57 @@ export function MenuSelect({
 }: Readonly<MenuSelectProps>) {
   const [search, setSearch] = useState("");
   const { anchorEl, closeMenu, handleExited, open, openMenu } = useMenuExitLifecycle(() =>
-    setSearch(""),
+    changeSearch(""),
   );
+
+  function changeSearch(next: string) {
+    setSearch(next);
+    onSearchChange?.(next);
+  }
   const isGrouped = "groups" in input && input.groups != null;
   const selected = resolveSelectedOption(input, value);
-  const flatFiltered = isGrouped ? [] : filterFlatOptions(input.options ?? [], search);
+  const flatFiltered = isGrouped
+    ? []
+    : filterOptions
+      ? filterFlatOptions(input.options ?? [], search)
+      : (input.options ?? []);
   const groupedFiltered = isGrouped ? filterGroupedGroups(input.groups, search) : [];
   const hasResults = isGrouped ? groupedFiltered.length > 0 : flatFiltered.length > 0;
+  const hasHiddenOptions =
+    isGrouped && input.groups.some((group) => group.searchOnly && group.options.length > 0);
+  const searchHelp = search.trim()
+    ? undefined
+    : (searchHint ?? (hasHiddenOptions ? "More options available. Type to search." : undefined));
 
-  const resolvedMenuWidth = menuWidth ?? anchorEl?.getBoundingClientRect().width;
-  const paperSx = {
-    ...menuSelectPaperSx,
-    ...(menuMinWidth !== undefined
-      ? {
-          maxWidth: "calc(100vw - 32px)",
-          minWidth: `min(${menuMinWidth}px, calc(100vw - 32px))`,
-          width: "max-content",
-        }
-      : compact
-        ? {
-            maxWidth: "calc(100vw - 32px)",
-            minWidth: menuSelectPaperSx.minWidth,
-            width: "max-content",
-          }
-        : resolvedMenuWidth === undefined
-          ? {}
-          : { maxWidth: resolvedMenuWidth, minWidth: resolvedMenuWidth }),
+  const minimumMenuWidth =
+    menuWidth ??
+    menuMinWidth ??
+    Math.max(
+      compact ? 0 : (anchorEl?.getBoundingClientRect().width ?? 0),
+      menuSelectPaperStyle.minWidth,
+    );
+  const paperStyle: CSSProperties = {
+    ...menuSelectPaperStyle,
+    boxSizing: "border-box",
+    maxWidth: "calc(100vw - 32px)",
+    minWidth: `min(${minimumMenuWidth}px, calc(100vw - 32px))`,
+    width: menuWidth ?? "max-content",
     maxHeight: menuMaxHeight ?? "min(360px, calc(100dvh - 84px))",
+    overflowX: "hidden",
     overflowY: "auto",
-  } satisfies SxProps<Theme>;
+  };
+
+  function selectValue(nextValue: string) {
+    onChange(nextValue);
+    if (analytics) {
+      track("ui_option_selected", {
+        control: analytics.control,
+        module: analyticsControlModule(analytics.control),
+        value: nextValue,
+      });
+    }
+    closeMenu();
+  }
 
   const triggerButton = (
     <button
@@ -172,45 +206,42 @@ export function MenuSelect({
       )}
       <Menu
         anchorEl={anchorEl}
-        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+        align="start"
+        side="bottom"
         autoFocus={!searchable}
-        disableAutoFocusItem={searchable}
-        disablePortal={false}
-        marginThreshold={16}
         onClose={closeMenu}
         open={open}
-        slotProps={{
-          list: { "aria-label": ariaLabel, dense: true, sx: { padding: 0 } },
-          paper: {
-            elevation: 0,
-            sx: paperSx,
-          },
-          transition: { onExited: handleExited },
+        listProps={{ "aria-label": ariaLabel, style: { padding: 0 } }}
+        contentProps={{
+          style: paperStyle,
         }}
-        transformOrigin={{ horizontal: "left", vertical: "top" }}
-        transitionDuration={menuTransitionDuration}
+        onExited={handleExited}
       >
         {searchable ? (
-          <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
+          <MenuSearchField
+            hint={searchHelp}
+            onChange={changeSearch}
+            placeholder={searchPlaceholder}
+            value={search}
+          />
         ) : null}
-        {!hasResults ? (
+        {!hasResults && (search.trim() || emptyMessage || !hasHiddenOptions || !searchable) ? (
           <div className="px-2 py-2 text-[12px] text-fg-muted">
             {search.trim() ? (noResultsMessage ?? "No results") : (emptyMessage ?? "No results")}
           </div>
         ) : null}
         {isGrouped
           ? groupedFiltered.flatMap((group, groupIndex) => [
-              <MenuGroupHeading first={groupIndex === 0} key={`${group.id}-heading`}>
-                {group.label}
-              </MenuGroupHeading>,
+              group.hideHeading ? null : (
+                <MenuGroupHeading first={groupIndex === 0} key={`${group.id}-heading`}>
+                  {group.label}
+                </MenuGroupHeading>
+              ),
               ...group.options.map((option) => (
                 <MenuSelectOptionItem
                   current={option.value === value}
                   key={option.value}
-                  onSelect={() => {
-                    onChange(option.value);
-                    closeMenu();
-                  }}
+                  onSelect={() => selectValue(option.value)}
                   option={option}
                 />
               )),
@@ -219,10 +250,7 @@ export function MenuSelect({
               <MenuSelectOptionItem
                 current={option.value === value}
                 key={option.value}
-                onSelect={() => {
-                  onChange(option.value);
-                  closeMenu();
-                }}
+                onSelect={() => selectValue(option.value)}
                 option={option}
               />
             ))}

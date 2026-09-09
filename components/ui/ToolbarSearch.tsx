@@ -1,7 +1,8 @@
 "use client";
 
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
-import { MagnifyingGlassIcon as MagnifyingGlass, XIcon as X } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { clsx } from "clsx";
 import type { Ref } from "react";
 import styles from "./ToolbarSearch.module.css";

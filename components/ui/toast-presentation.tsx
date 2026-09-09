@@ -1,13 +1,11 @@
 "use client";
 
-import {
-  CheckCircleIcon,
-  CircleNotchIcon,
-  InfoIcon,
-  PlugsIcon,
-  WarningIcon,
-  XCircleIcon,
-} from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { CircleNotchIcon } from "@phosphor-icons/react/dist/csr/CircleNotch";
+import { InfoIcon } from "@phosphor-icons/react/dist/csr/Info";
+import { PlugsIcon } from "@phosphor-icons/react/dist/csr/Plugs";
+import { WarningIcon } from "@phosphor-icons/react/dist/csr/Warning";
+import { XCircleIcon } from "@phosphor-icons/react/dist/csr/XCircle";
 
 export type ToastSeverity = "success" | "error" | "warning" | "info" | "connection" | "progress";
 

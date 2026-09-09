@@ -1,12 +1,12 @@
-import { EmptyState, ModuleMark } from "@/components/ui";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ModuleMark } from "@/components/ui/ModuleMark";
+import type { FeedFacet } from "@/lib/feeds/facets";
 import { pluralize } from "@/lib/format/pluralize";
 import { appPath } from "@/lib/routing/app-path";
-import {
-  BellIcon as Bell,
-  BellRingingIcon as BellRinging,
-  CheckCircleIcon as CheckCircle,
-  PlusIcon as Plus,
-} from "@phosphor-icons/react/dist/ssr";
+import { BellIcon as Bell } from "@phosphor-icons/react/dist/ssr/Bell";
+import { BellRingingIcon as BellRinging } from "@phosphor-icons/react/dist/ssr/BellRinging";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/ssr/Plus";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -83,6 +83,17 @@ export function AlertsCaughtUp({ snoozedCount }: Readonly<{ snoozedCount: number
       icon={<BellRinging aria-hidden size={27} weight="regular" />}
       title="All caught up"
       tone="positive"
+    />
+  );
+}
+
+export function AlertsFilteredEmpty({ facets }: Readonly<{ facets: readonly FeedFacet[] }>) {
+  return (
+    <EmptyState
+      description="Remove a filter or add another one to widen the alert feed."
+      icon={<BellRinging aria-hidden size={27} weight="regular" />}
+      title="No alerts match these filters"
+      footnote={`${facets.length} active filter${facets.length === 1 ? "" : "s"}`}
     />
   );
 }

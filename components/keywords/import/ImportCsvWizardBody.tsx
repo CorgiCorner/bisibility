@@ -13,6 +13,7 @@ type ImportResult = Awaited<ReturnType<typeof importKeywordsFromCsv>>;
 type ImportReview = Awaited<ReturnType<typeof reviewKeywordImport>>;
 
 type ImportCsvWizardBodyProps = {
+  templateCsv?: string;
   actionError: string | null;
   csvText: string;
   errorMessage?: string;
@@ -33,6 +34,7 @@ type ImportCsvWizardBodyProps = {
 };
 
 export function ImportCsvWizardBody({
+  templateCsv,
   actionError,
   csvText,
   errorMessage,
@@ -53,7 +55,7 @@ export function ImportCsvWizardBody({
 }: Readonly<ImportCsvWizardBodyProps>) {
   return (
     <>
-      {step === 1 ? <TemplateStep /> : null}
+      {step === 1 ? <TemplateStep templateCsv={templateCsv} /> : null}
       {step === 2 ? (
         <UploadStep
           csvText={csvText}

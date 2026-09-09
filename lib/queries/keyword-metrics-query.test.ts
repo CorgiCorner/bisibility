@@ -110,6 +110,17 @@ describe("keyword metrics raw query", () => {
     ]);
   });
 
+  it("aliases local pack and local-results raw feature labels to local", async () => {
+    mocks.prisma.$queryRaw.mockResolvedValue([
+      {
+        checks: [{ serp_features: ["local pack"] }, { serp_features: ["local_results"] }],
+        keywordId: "keyword_1",
+      },
+    ]);
+
+    expect((await fetchKeywordMetrics("keyword_1")).serpFeatures).toEqual(["local"]);
+  });
+
   it("returns empty metrics when a keyword has no checks", async () => {
     mocks.prisma.$queryRaw.mockResolvedValue([{ checks: null, keywordId: "keyword_1" }]);
 

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import {
   activeMarketLocationIds,
   isRunnableKeyword,
@@ -11,6 +12,7 @@ import {
   runSelectionKeywordInProgress,
   runSelectionKeywordSelect,
 } from "@/lib/rank-check/runs/selection";
+import { completeWithoutItems } from "./complete-without-items";
 import { reserveScheduledRunAllocation } from "./launch-reservation";
 import { itemNotBefore, plannedOccurrenceForKey, selectionOccurrenceKey } from "./occurrence";
 import { scheduleAdmission } from "./plan";
@@ -28,42 +30,12 @@ function boundedLimit(value?: number) {
   return Math.min(MAX_LAUNCH_LIMIT, Math.max(1, Math.floor(value ?? DEFAULT_LAUNCH_LIMIT)));
 }
 
-async function completeWithoutItems(input: {
-  keywordCount: number;
-  now: Date;
-  requestedCount: number;
-  runId: string;
-  selectionHash: string;
-  status: string;
-}) {
-  return prisma.$transaction(async (tx) => {
-    const completed = await tx.rankCheckRun.updateMany({
-      data: {
-        blockedReason: null,
-        estimatedCostCents: 0,
-        finishedAt: input.now,
-        keywordCount: input.keywordCount,
-        launchedAt: input.now,
-        outcome: "deferred",
-        requestedCount: input.requestedCount,
-        selectionHash: input.selectionHash,
-        skippedCount: input.requestedCount,
-        startedAt: null,
-        status: "completed",
-        targetCount: 0,
-        totalCount: 0,
-      },
-      where: { id: input.runId, status: input.status },
-    });
-    return completed.count > 0 ? ("deferred" as const) : ("not_ready" as const);
-  });
-}
-
 async function materializePlannedRun(runId: string, now: Date) {
   const run = await prisma.rankCheckRun.findUnique({
     select: {
       checkSchedule: {
         select: {
+          archivedAt: true,
           cronExpression: true,
           enabled: true,
           frequency: true,
@@ -97,7 +69,7 @@ async function materializePlannedRun(runId: string, now: Date) {
   const schedule = run.checkSchedule;
   const key = selectionOccurrenceKey(run.selectionSpec);
   const occurrence =
-    schedule.enabled && key
+    !schedule.archivedAt && schedule.enabled && key
       ? plannedOccurrenceForKey(
           { ...schedule, timezone: schedule.timezone ?? run.project.defaults?.timezone ?? "UTC" },
           key,
@@ -182,6 +154,17 @@ async function materializePlannedRun(runId: string, now: Date) {
   }
 
   const materialized = await prisma.$transaction(async (tx) => {
+    await lockProjectForProviderMutation(tx, run.projectId);
+    const current = await tx.checkSchedule.findFirst({
+      where: {
+        projectId: run.projectId,
+        publicId: schedule.publicId,
+        archivedAt: null,
+        enabled: true,
+      },
+      select: { id: true },
+    });
+    if (!current) return "not_ready" as const;
     const lockedRows = await lockRunSelectionKeywords(tx, run.projectId, keywordIds);
     const lockedActiveLocationIds = await activeMarketLocationIds(run.projectId, tx);
     if (

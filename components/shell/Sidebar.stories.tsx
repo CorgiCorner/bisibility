@@ -59,7 +59,7 @@ export const Expanded: Story = {
     if (!searchConsole) {
       throw new Error("Search Console navigation link is missing.");
     }
-    await expect(within(searchConsole).getByText("alpha")).toBeVisible();
+    await expect(within(searchConsole).getByText("beta")).toBeVisible();
   },
 };
 

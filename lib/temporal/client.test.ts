@@ -74,6 +74,17 @@ describe("Temporal client lifecycle", () => {
     expect(mocks.close).toHaveBeenCalledTimes(2);
   });
 
+  it("shares SDK loading and connection setup across concurrent callers", async () => {
+    const { closeTemporalClient, getTemporalClient } = await import("./client");
+
+    const clients = await Promise.all([getTemporalClient(), getTemporalClient()]);
+
+    expect(clients[0]).toBe(clients[1]);
+    expect(mocks.connect).toHaveBeenCalledTimes(1);
+    await closeTemporalClient();
+    expect(mocks.close).toHaveBeenCalledTimes(1);
+  });
+
   it("rejects with the same error during cooldown and reconnects after it elapses", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2000-01-01T00:00:00.000Z"));

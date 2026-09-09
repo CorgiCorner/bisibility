@@ -1,8 +1,11 @@
 "use client";
 
+import { ReplaySurface } from "@/components/analytics/ReplaySurface";
 import { KeywordsScopeLocationSelect } from "@/components/keywords/KeywordsScopeControls";
 import { useMarketContext } from "@/components/markets/MarketContextProvider";
-import { Button, Sheet } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Sheet } from "@/components/ui/Sheet";
+import { Slider } from "@/components/ui/Slider";
 import {
   type ChangeFilter,
   changeOptions,
@@ -19,21 +22,18 @@ import type {
   RankTrackerQueryState,
 } from "@/lib/keywords/rank-tracker-query-types";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import Slider from "@mui/material/Slider";
-import {
-  ChartLineUpIcon as ChartLineUp,
-  ImageIcon as Image,
-  LinkSimpleIcon as LinkSimple,
-  ListBulletsIcon as ListBullets,
-  MagnifyingGlassIcon as MagnifyingGlass,
-  MapPinIcon as MapPin,
-  PlayCircleIcon as PlayCircle,
-  QuestionIcon as Question,
-  QuotesIcon as Quotes,
-  SparkleIcon as Sparkle,
-  TagIcon as Tag,
-  TextAaIcon as TextAa,
-} from "@phosphor-icons/react";
+import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/csr/ChartLineUp";
+import { ImageIcon as Image } from "@phosphor-icons/react/dist/csr/Image";
+import { LinkSimpleIcon as LinkSimple } from "@phosphor-icons/react/dist/csr/LinkSimple";
+import { ListBulletsIcon as ListBullets } from "@phosphor-icons/react/dist/csr/ListBullets";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
+import { PlayCircleIcon as PlayCircle } from "@phosphor-icons/react/dist/csr/PlayCircle";
+import { QuestionIcon as Question } from "@phosphor-icons/react/dist/csr/Question";
+import { QuotesIcon as Quotes } from "@phosphor-icons/react/dist/csr/Quotes";
+import { SparkleIcon as Sparkle } from "@phosphor-icons/react/dist/csr/Sparkle";
+import { TagIcon as Tag } from "@phosphor-icons/react/dist/csr/Tag";
+import { TextAaIcon as TextAa } from "@phosphor-icons/react/dist/csr/TextAa";
 import {
   FilterCheckTile,
   type FilterIcon,
@@ -105,18 +105,18 @@ export function FiltersDrawer({
   return (
     <Sheet
       footer={
-        <div className="flex items-center gap-2.5">
+        <ReplaySurface kind="rank-tracker" className="flex items-center gap-2.5">
           <Button onClick={() => onChange(emptyKeywordFilters)} type="button" variant="secondary">
             Reset
           </Button>
           <Button
             onClick={() => (onApply ? onApply(filters) : onClose())}
-            sx={{ flex: 1 }}
+            style={{ flex: 1 }}
             type="button"
           >
             Show results
           </Button>
-        </div>
+        </ReplaySurface>
       }
       heightVariant="filters"
       onClose={onClose}
@@ -133,7 +133,7 @@ export function FiltersDrawer({
       }
       widthVariant="filters"
     >
-      <div className="-mt-1">
+      <ReplaySurface kind="rank-tracker" className="-mt-1">
         {lens && !market ? (
           <div className="lg:hidden">
             <FilterSection icon={MapPin} title="Scope">
@@ -194,12 +194,11 @@ export function FiltersDrawer({
           <Slider
             max={50}
             min={0}
-            onChange={(_, value) => {
+            onValueChange={(value) => {
               const [volMin, volMax] = value as number[];
               patch({ volMax, volMin });
             }}
-            size="small"
-            sx={{ color: "var(--accent)", mx: 0.5 }}
+            style={{ color: "var(--accent)", marginLeft: 4, marginRight: 4 }}
             value={[filters.volMin, filters.volMax]}
           />
           <div className="flex justify-between font-sans tabular-nums text-[10px] text-fg-muted">
@@ -273,7 +272,7 @@ export function FiltersDrawer({
             />
           </div>
         </FilterSection>
-      </div>
+      </ReplaySurface>
     </Sheet>
   );
 }

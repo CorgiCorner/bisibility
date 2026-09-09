@@ -1,11 +1,12 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import ts from "typescript";
+import ts from "@typescript/typescript6";
 
 const REQUEST_ROOTS = ["app", "lib/actions", "lib/api", "lib/auth"];
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"];
 const SOURCE_EXTENSION_SET = new Set(SOURCE_EXTENSIONS);
+const TEST_HELPER_SOURCE_SUFFIX = /\.test-helpers\.[cm]?[jt]sx?$/u;
 export const MAX_PATH_LENGTH = 50;
 export const MAX_PATHS_PER_ROOT = 10_000;
 
@@ -19,13 +20,17 @@ function isProductionSource(fileName) {
   return !/(?:\.d|\.test|\.spec|\.stories)\.[cm]?[jt]sx?$/u.test(fileName);
 }
 
-function sourceFiles(directory) {
+function isRequestEntrypointSource(fileName) {
+  return isProductionSource(fileName) && !TEST_HELPER_SOURCE_SUFFIX.test(fileName);
+}
+
+function sourceFiles(directory, includeSource = isProductionSource) {
   if (!existsSync(directory)) return [];
   const files = [];
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const entryPath = path.join(directory, entry.name);
-    if (entry.isDirectory()) files.push(...sourceFiles(entryPath));
-    else if (entry.isFile() && isProductionSource(entryPath)) files.push(entryPath);
+    if (entry.isDirectory()) files.push(...sourceFiles(entryPath, includeSource));
+    else if (entry.isFile() && includeSource(entryPath)) files.push(entryPath);
   }
   return files;
 }
@@ -218,7 +223,7 @@ export function inspectRepository(root = process.cwd(), dispositions = new Map()
   const clients = engineClients(absoluteRoot);
   const sinks = new Set(clients);
   const roots = REQUEST_ROOTS.flatMap((requestRoot) =>
-    sourceFiles(path.join(absoluteRoot, requestRoot)),
+    sourceFiles(path.join(absoluteRoot, requestRoot), isRequestEntrypointSource),
   ).sort();
   const paths = reachablePaths(absoluteRoot, roots, sinks);
   const pathKeys = new Set(paths.map(({ key }) => key));

@@ -7,7 +7,7 @@ const search = {
   connectionId: "conn_a00000000000000000000000",
   createdAt: "2026-07-22T08:00:00.000Z",
   includeClickstream: false,
-  market: "United States",
+  scopeLabel: "United States / English",
   mode: "auto" as const,
   resultLimit: 100 as const,
   seed: "rank tracker",
@@ -108,7 +108,7 @@ describe("RecentResearchSearches", () => {
             cachedUntil: "2026-07-24T00:00:00.000Z",
             createdAt: "2026-07-22T10:00:00.000Z",
             includeClickstream: false,
-            market: "United States",
+            scopeLabel: "United States / English",
             mode: "auto",
             resultLimit: 100,
             seed: "rank tracker",
@@ -117,7 +117,7 @@ describe("RecentResearchSearches", () => {
             cachedUntil: "2026-07-24T00:00:00.000Z",
             createdAt: "2026-07-23T16:00:00.000Z",
             includeClickstream: false,
-            market: "Germany",
+            scopeLabel: "Germany / German",
             mode: "ideas",
             resultLimit: 100,
             seed: "seo tool",
@@ -126,8 +126,43 @@ describe("RecentResearchSearches", () => {
       />,
     );
 
-    expect(screen.getByText("United States - yesterday")).toBeInTheDocument();
-    expect(screen.getByText("Germany - just now")).toBeInTheDocument();
+    expect(screen.getByText("United States / English - yesterday")).toBeInTheDocument();
+    expect(screen.getByText("Germany / German - just now")).toBeInTheDocument();
+  });
+
+  it.each([
+    {
+      cachedUntil: "2026-07-24T00:00:00.000Z",
+      expectedCacheLabel: "cached, free for 8h",
+      expectedScopeLabel: "Spain / Spanish - just now",
+      name: "displays a live country-language scope",
+      scopeLabel: "Spain / Spanish",
+    },
+    {
+      cachedUntil: "2026-07-23T15:00:00.000Z",
+      expectedCacheLabel: "cache expired",
+      expectedScopeLabel: "Spain / Spanish - just now",
+      name: "displays a derived legacy country-language scope after expiry",
+      scopeLabel: "Spain / Spanish",
+    },
+  ])("$name", ({ cachedUntil, expectedCacheLabel, expectedScopeLabel, scopeLabel }) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-23T16:00:00.000Z"));
+
+    render(
+      <RecentResearchSearches
+        onOpen={vi.fn()}
+        onRemove={vi.fn()}
+        searches={[{ ...search, cachedUntil, createdAt: new Date().toISOString(), scopeLabel }]}
+      />,
+    );
+
+    expect(JSON.stringify({ cacheLabel: expectedCacheLabel, scopeLabel: expectedScopeLabel })).toBe(
+      JSON.stringify({
+        cacheLabel: screen.getByText(expectedCacheLabel).textContent,
+        scopeLabel: screen.getByText(expectedScopeLabel).textContent,
+      }),
+    );
   });
 
   it("shows when the cache window has expired", () => {

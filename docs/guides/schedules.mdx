@@ -4,11 +4,14 @@ description: "Create recurring rank-check schedules and manage their members."
 ---
 
 A schedule defines when its member keywords receive rank checks. It creates
-planned runs that you can review in **Runs** before they start.
+upcoming runs that you can review in **Runs** before they start. Runs includes
+all executions, with **Upcoming**, **Active**, **Needs attention**, and **Finished**
+filters. The **Schedules** tab is where you create, edit, or pause the recurring
+rules and see their next execution times.
 
 ## Create a schedule
 
-Open **Rank tracker**, then **Schedules**, and select **New schedule**. Give
+Open **Runs**, then the **Schedules** tab, and select **New schedule**. Give
 the schedule a name, choose a cadence, and add the keywords that should belong
 to it. You can also set its start window, check depth, and provider policy.
 
@@ -51,10 +54,10 @@ to manual checking rather than adding it to another schedule automatically.
 **Pause** stops future runs for the schedule. Resuming starts the cadence from
 the current time and does not backfill missed occurrences.
 
-Use **Skip once** in **Runs** > **Planned** when you only want to cancel one
+Use **Skip once** in **Runs** with the **Upcoming** filter when you only want to cancel one
 future occurrence. It cancels that planned run and its queued targets without
 pausing the schedule.
 
-Use **Run now** in **Runs** > **Planned** to bring one planned or blocked run
+Use **Run now** in **Runs** with the **Upcoming** filter to bring one planned or blocked run
 forward immediately. It starts the existing planned occurrence instead of
 creating a separate recurring schedule.

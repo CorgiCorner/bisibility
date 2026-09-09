@@ -1,7 +1,7 @@
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import { runSelectionSpecSchema } from "@/lib/rank-check/runs/selection";
-import { serpDepthValues } from "@/lib/serp/markets";
+import { serpDepthValues } from "@/lib/serp/constants";
 import { z } from "zod";
 
 export const previewRankCheckRunActionSchema = z

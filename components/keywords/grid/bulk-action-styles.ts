@@ -1,18 +1,16 @@
-import { buttonXsSx } from "@/components/ui";
+import { buttonXsStyle } from "@/components/ui/Button";
 
-export const outlinedSplitChromeSx = {
-  backgroundColor: "var(--bg-elev)",
-  border: "1px solid var(--border-control)",
-  color: "var(--fg)",
+export const outlinedSplitChromeStyle = {
+  "--control-background-color": "var(--bg-elev)",
+  "--control-border": "1px solid var(--border-control)",
+  "--control-color": "var(--fg)",
   fontWeight: 600,
   textTransform: "none",
-  "&:hover": {
-    backgroundColor: "var(--bg-sunken)",
-    border: "1px solid var(--border-control)",
-  },
+  "--control-hover-background-color": "var(--bg-sunken)",
+  "--control-hover-border-color": "var(--border-control)",
 } as const;
 
-export const bulkBarButtonSx = {
-  ...buttonXsSx,
-  ...outlinedSplitChromeSx,
+export const bulkBarButtonStyle = {
+  ...buttonXsStyle,
+  ...outlinedSplitChromeStyle,
 } as const;

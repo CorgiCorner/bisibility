@@ -1,12 +1,13 @@
-import { countrySeed } from "./location";
+import type { SerpDevice } from "./constants";
+import { countrySeed, type LocationSelection } from "./location";
 import { resolveKeywordLocation } from "./location-service";
-import type { SerpDevice } from "./markets";
 
 export type ProjectDefaultMarketInput = {
   city?: string | null;
   country: string;
   device: SerpDevice;
   locationKey?: string | null;
+  selection?: LocationSelection;
   projectId: string;
 };
 
@@ -30,9 +31,14 @@ export async function resolveProjectDefaultMarket(
   input: ProjectDefaultMarketInput,
 ): Promise<ResolvedProjectDefaultMarket> {
   const resolved = await resolveKeywordLocation(
-    input.locationKey
-      ? { projectId: input.projectId, selection: { canonicalKey: input.locationKey, kind: "city" } }
-      : { city: input.city, country: input.country, projectId: input.projectId },
+    input.selection
+      ? { projectId: input.projectId, selection: input.selection }
+      : input.locationKey
+        ? {
+            projectId: input.projectId,
+            selection: { canonicalKey: input.locationKey, kind: "city" },
+          }
+        : { city: input.city, country: input.country, projectId: input.projectId },
   );
   const location = resolved.location;
 

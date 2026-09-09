@@ -1,14 +1,14 @@
 import "server-only";
 
-import { createSavedView, deleteSavedView } from "@/lib/actions/saved-views";
-import { listSavedViews } from "@/lib/queries/saved-views";
+import { listSavedViewsFor } from "@/lib/queries/saved-views";
 import {
   createProjectSavedViewSchema,
   inferSavedViewSurface,
   type SavedViewResource,
   savedViewSurfaceSchema,
 } from "@/lib/saved-views/model";
-import type { ApiContext } from "./context";
+import { createSavedViewFor, deleteSavedViewFor } from "@/lib/saved-views/service";
+import { type ApiContext, apiMutationContext, requireApiActor } from "./context";
 import { paginateArray } from "./pagination";
 import { listResponse, resourceResponse } from "./responses";
 import {
@@ -34,8 +34,8 @@ export async function listProjectSavedViews(ctx: ApiContext, projectId: string) 
   const surface = savedViewSurfaceSchema.parse(ctx.url.searchParams.get("surface") ?? "keywords");
   const views: SavedViewResource[] =
     surface === "competitors"
-      ? await runDomain(() => listSavedViews(projectId, "competitors"))
-      : await runDomain(() => listSavedViews(projectId, "keywords"));
+      ? await runDomain(() => listSavedViewsFor(requireApiActor(ctx), projectId, "competitors"))
+      : await runDomain(() => listSavedViewsFor(requireApiActor(ctx), projectId, "keywords"));
   const { nextCursor, page } = paginateArray(ctx.url, views);
 
   return listResponse(page.map(savedViewApiResource).map(snakeizeKeys), nextCursor, {
@@ -61,7 +61,7 @@ export async function createProjectSavedView(ctx: ApiContext, projectId: string)
       : object.config,
     project_id: projectId,
   });
-  const view = await runDomain(() => createSavedView(input));
+  const view = await runDomain(() => createSavedViewFor(input, apiMutationContext(ctx)));
 
   return resourceResponse(snakeizeKeys(savedViewApiResource(view)), {
     headers: ctx.headers,
@@ -76,7 +76,10 @@ export async function deleteProjectSavedView(ctx: ApiContext, viewId: string, pr
   }
 
   const result = await runDomain(() =>
-    deleteSavedView({ projectId: projectId ?? ctx.auth.project.id, viewId }),
+    deleteSavedViewFor(
+      { projectId: projectId ?? ctx.auth.project.publicId, viewId },
+      apiMutationContext(ctx),
+    ),
   );
 
   return resourceResponse(snakeizeKeys(result), { headers: ctx.headers });

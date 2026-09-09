@@ -8,10 +8,18 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { MarketArchivedError } from "@/lib/markets/archived";
 import { ProjectMarketLimitExceededError } from "@/lib/markets/limits";
 import { projectDefaultSerpMarket } from "@/lib/serp/default-market";
+import { resolveSerpLanguage } from "@/lib/serp/language-catalog";
+import {
+  canonicalKey,
+  LocationInputError,
+  type LocationSelection,
+  normalizeCanonicalLocationKey,
+} from "@/lib/serp/location";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { type ApiContext, forbidden, projectMatches } from "./context";
 import { scheduleFromCreate } from "./keyword-utils";
+import { legacyMarketLocationKey, legacyMarketLocationSelection } from "./legacy-market-input";
 import { KeywordLimitExceededError } from "./resource-limits";
 import { keywordInclude, keywordResource } from "./resources";
 import { errorResponse, resourceResponse } from "./responses";
@@ -36,12 +44,12 @@ function normalizeCreateBody(body: unknown) {
   return [body];
 }
 
+// Every create item ends as a location key; legacy names pass through the translator.
 type CreateMarket = {
-  city: string | null | undefined;
-  country: string;
   device: "desktop" | "mobile";
-  language?: string | null;
-  locationKey?: string | null;
+  locationKey: string;
+  selection: LocationSelection;
+  source: "canonical" | "legacy";
 };
 type KeywordCreateTransaction = Pick<
   Prisma.TransactionClient,
@@ -70,6 +78,16 @@ async function loadCreateDefaultMarket(projectId: string, client: KeywordCreateC
   return projectDefaultSerpMarket(defaults, keywords);
 }
 
+function defaultLocationKeyWithLanguage(locationKey: string, language: string | null | undefined) {
+  if (!language) return locationKey;
+  const languageCode = resolveSerpLanguage(language)?.code;
+  if (!languageCode) {
+    throw new LocationInputError("languageCode", `Unsupported language: ${language}`);
+  }
+  const { selector } = normalizeCanonicalLocationKey(locationKey);
+  return canonicalKey({ ...selector, languageCode });
+}
+
 function createMarket(
   item: {
     city?: string | null;
@@ -81,47 +99,70 @@ function createMarket(
   },
   defaults: Awaited<ReturnType<typeof loadCreateDefaultMarket>>,
 ): CreateMarket {
+  const device = item.device ?? defaults.device;
   if (item.location_key) {
     return {
-      city: item.city,
-      country: item.location ?? item.country ?? defaults.country,
-      device: item.device ?? defaults.device,
+      device,
       locationKey: item.location_key,
+      selection: { canonicalKey: item.location_key, kind: "city" },
+      source: "canonical",
     };
   }
   const country = item.location ?? item.country;
   if (country) {
-    return {
+    const legacyInput = {
       city: item.city,
       country,
-      device: item.device ?? defaults.device,
       language: item.language,
     };
+    return {
+      device,
+      locationKey: legacyMarketLocationKey(legacyInput),
+      selection: legacyMarketLocationSelection(legacyInput),
+      source: "legacy",
+    };
   }
-  return {
+  if (item.city) {
+    const legacyInput = {
+      city: item.city,
+      country: defaults.country,
+      language: item.language,
+    };
+    return {
+      device,
+      locationKey: legacyMarketLocationKey(legacyInput),
+      selection: legacyMarketLocationSelection(legacyInput),
+      source: "legacy",
+    };
+  }
+  if (defaults.locationKey) {
+    const locationKey = defaultLocationKeyWithLanguage(defaults.locationKey, item.language);
+    return {
+      device,
+      locationKey,
+      selection: { canonicalKey: locationKey, kind: "city" },
+      source: "canonical",
+    };
+  }
+  const legacyInput = {
     city: defaults.city,
     country: defaults.country,
-    device: item.device ?? defaults.device,
     language: item.language,
-    locationKey: item.language ? undefined : defaults.locationKey,
+  };
+  return {
+    device,
+    locationKey: legacyMarketLocationKey(legacyInput),
+    selection: legacyMarketLocationSelection(legacyInput),
+    source: "legacy",
   };
 }
 
 function locationInput(market: CreateMarket, projectId: string) {
-  return market.locationKey
-    ? { projectId, selection: { canonicalKey: market.locationKey, kind: "city" as const } }
-    : {
-        city: market.city,
-        country: market.country,
-        language: market.language,
-        projectId,
-      };
+  return { projectId, selection: market.selection };
 }
 
 function marketKey(market: CreateMarket) {
-  return [market.locationKey ?? "", market.country, market.city ?? "", market.language ?? ""].join(
-    "\u0000",
-  );
+  return `${market.source}\u0000${market.locationKey}`;
 }
 
 export async function createKeywords(

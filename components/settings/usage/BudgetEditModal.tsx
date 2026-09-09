@@ -9,7 +9,9 @@ import {
   providerUsageContextLine,
   validateBudgetField,
 } from "@/components/settings/usage/budget-edit-modal-model";
-import { Button, Modal, StatusPill } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { StatusPill } from "@/components/ui/StatusPill";
 import type { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
 import { appPath } from "@/lib/routing/app-path";

@@ -5,7 +5,7 @@ import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { PositionHistoryCard } from "@/components/keywords/PositionHistoryCard";
 import { RankingUrlHistory } from "@/components/keywords/RankingUrlHistory";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordTrafficDetail, PageTrafficSnapshotLike } from "@/lib/queries/keyword-traffic";
 import type { Meta, StoryObj } from "@storybook/react";

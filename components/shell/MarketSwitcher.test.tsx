@@ -2,12 +2,12 @@ import type { HeaderContextMarket } from "@/lib/markets/header-context";
 import { MARKET_SEARCH_THRESHOLD } from "@/lib/markets/header-context";
 import { appPath, asMarketRef, asProjectRef, marketPath } from "@/lib/routing/app-path";
 import { routerMock } from "@/tests/next-navigation";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MarketSwitcher } from "./MarketSwitcher";
 
-vi.mock("@/components/ui/Tooltip", () => import("@/tests/mui-tooltip"));
+vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 
 // jsdom has no layout and therefore no `scrollIntoView` at all. Standing one up is what lets a
 // test see whether the list actually follows the active row; without it the switcher would
@@ -83,23 +83,16 @@ describe("MarketSwitcher trigger", () => {
     expect(button).toHaveClass("h-8");
     expect(button).toHaveAttribute("aria-haspopup", "dialog");
     expect(button).toHaveAttribute("aria-expanded", "false");
-    expect(button.querySelector("[data-market-name]")).toHaveClass("max-w-[240px]", "truncate");
+    expect(button.querySelector("[data-market-name]")).toHaveClass("sm:max-w-[240px]", "truncate");
     expect(button.querySelector("svg")).toBeInTheDocument();
     expect(button.closest("[data-tooltip]")).toHaveAttribute("data-tooltip", "United States");
   });
 
-  it("offers a way back out whose name says where it goes", () => {
-    renderSwitcher();
-
-    expect(screen.getByRole("button", { name: "Back to all markets" })).toBeInTheDocument();
-  });
-
-  it("leaves the market on the same page when the x is pressed", async () => {
+  it("leaves the market through All markets in the selector", async () => {
     const user = userEvent.setup();
     renderSwitcher();
-
-    await user.click(screen.getByRole("button", { name: "Back to all markets" }));
-
+    await openMenu(user);
+    await user.click(screen.getByRole("option", { name: /All markets/ }));
     expect(routerMock.push).toHaveBeenCalledWith(appPath(PROJECT, "rank-tracker"));
   });
 });
@@ -116,6 +109,9 @@ describe("MarketSwitcher menu", () => {
     expect(partsOf(options[1])).toEqual({ count: "12 kw", name: "United States", pair: "US-en" });
     expect(partsOf(options[2])).toEqual({ count: "empty", name: "Spain", pair: "ES-es" });
     expect(options).toHaveLength(3);
+    expect(options[1].querySelector('[data-country-flag="US"]')).toBeInTheDocument();
+    expect(options[2].querySelector('[data-country-flag="ES"]')).toBeInTheDocument();
+    expect(options[0].querySelector("[data-country-flag]")).toBeNull();
     expect(options[1]).toHaveAttribute("aria-selected", "true");
     expect(options[0]).toHaveAttribute("aria-selected", "false");
     expect(options[2]).toHaveAttribute("aria-selected", "false");
@@ -158,14 +154,14 @@ describe("MarketSwitcher menu", () => {
     }
   });
 
-  it("sends Add market to where markets are managed today", async () => {
+  it("sends Add market to the single page-owned market sheet", async () => {
     const user = userEvent.setup();
     renderSwitcher();
 
     const dialog = await openMenu(user);
     await user.click(within(dialog).getByRole("button", { name: "Add market" }));
 
-    expect(routerMock.push).toHaveBeenCalledWith(appPath(PROJECT, "markets"));
+    expect(routerMock.push).toHaveBeenCalledWith(`${appPath(PROJECT, "markets")}?new-market=1`);
   });
 
   it("grows a search field past six markets and not at six", async () => {
@@ -287,12 +283,81 @@ describe("MarketSwitcher keyboard", () => {
     renderSwitcher();
 
     await openMenu(user);
-    // The popover's own backdrop is what a click outside actually lands on; clicking `body`
-    // never reaches it and would pass against a switcher that cannot be dismissed at all.
-    const backdrop = document.querySelector<HTMLElement>(".MuiBackdrop-root");
-    expect(backdrop).not.toBeNull();
-    await user.click(backdrop as HTMLElement);
+    fireEvent.pointerDown(document.body);
+    fireEvent.click(document.body);
 
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
+});
+
+it("offers the only paused market from All markets and shows its location and name", async () => {
+  const user = userEvent.setup();
+  const paused = {
+    ...MARKETS[0],
+    name: "US launch",
+    description: "United States / English",
+    status: "paused" as const,
+  };
+  render(
+    <MarketSwitcher
+      markets={[paused]}
+      pathname={appPath(PROJECT, "rank-tracker")}
+      projectRef={PROJECT}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "All markets" }));
+  expect(screen.getByRole("option", { name: /All markets/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  const option = screen.getByRole("option", { name: /US launch/ });
+  expect(option).toHaveTextContent("United States / English");
+  expect(option).toHaveTextContent("Paused");
+  await user.click(option);
+  expect(routerMock.push).toHaveBeenCalledWith(RANK_TRACKER);
+});
+it("explains an empty registry and opens the standard New market flow", async () => {
+  const user = userEvent.setup();
+  render(
+    <MarketSwitcher
+      markets={[]}
+      pathname={appPath(PROJECT, "rank-tracker")}
+      projectRef={PROJECT}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "No markets" }));
+  expect(screen.getByText(/Add your first market to choose/)).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Add market" }));
+  expect(routerMock.push).toHaveBeenCalledWith(`${appPath(PROJECT, "markets")}?new-market=1`);
+});
+
+it("supports a keyword menu without project navigation, including an empty search", async () => {
+  const user = userEvent.setup();
+  const select = vi.fn();
+  const markets = manyMarkets(MARKET_SEARCH_THRESHOLD + 1);
+  render(
+    <MarketSwitcher
+      market={markets[0]}
+      markets={markets}
+      onAddMarket={null}
+      onSelectMarket={select}
+      pathname={appPath(PROJECT, "rank-tracker", "kw_example")}
+      projectRef={PROJECT}
+      showAllMarkets={false}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Market 0" }));
+  expect(screen.queryByRole("option", { name: /All markets/ })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Add market" })).toBeNull();
+  const list = screen.getByRole("listbox", { name: "Markets" });
+  list.focus();
+  await user.keyboard("{Home}{ArrowDown}{Enter}");
+  expect(select).toHaveBeenCalledWith(markets[1].ref);
+  await user.click(screen.getByRole("button", { name: "Market 0" }));
+  await user.type(screen.getByRole("searchbox", { name: "Find market" }), "missing market");
+  expect(screen.queryAllByRole("option")).toHaveLength(0);
+  expect(screen.getByText("No market matches that.")).toBeVisible();
+  screen.getByRole("listbox", { name: "Markets" }).focus();
+  await user.keyboard("{ArrowDown}{Enter}");
+  expect(select).toHaveBeenCalledOnce();
 });

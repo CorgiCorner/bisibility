@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui";
-import { UserCircleIcon as UserCircle } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { UserCircleIcon as UserCircle } from "@phosphor-icons/react/dist/csr/UserCircle";
 
 type ConnectedGoogleAccountFooterProps = {
   accountEmail?: string;
@@ -52,9 +52,9 @@ export function ConnectedGoogleAccountFooter({
           disabled={disconnectDisabled}
           onClick={onDisconnect}
           size="xs"
-          sx={{
-            "&:hover": { color: "var(--red)" },
-            "&.Mui-focusVisible": { color: "var(--red)" },
+          style={{
+            "--control-hover-color": "var(--red)",
+            "--control-focus-color": "var(--red)",
           }}
           type="button"
           variant="ghost"

@@ -30,8 +30,11 @@ class MockEventSource {
 
 const activeOperations = [
   {
+    capabilities: { pause: true, resume: false, retry: false },
     id: "import_1",
     kind: "gsc_import",
+    presentation: { action: "pause", supportingText: "Import is running.", title: "Importing" },
+    property: "sc-domain:example.com",
     progress: { done: 2, total: 4 },
     state: "running",
   },
@@ -110,6 +113,18 @@ describe("useAppRealtimeState", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
     await act(async () => vi.advanceTimersByTimeAsync(30_000));
     expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("keeps the cached active snapshot after a fallback failure", async () => {
+    vi.mocked(fetch).mockRejectedValue(new Error("offline"));
+    const { result, source } = renderRealtime();
+    source.readyState = MockEventSource.CLOSED;
+    act(() => source.onerror?.(new Event("error")));
+
+    await act(async () => vi.advanceTimersByTimeAsync(5_000));
+
+    expect(result.current.operations).toEqual(activeOperations);
+    expect(result.current.status).toBe("offline");
   });
 
   it("refreshes immediately when the hidden document becomes visible", async () => {

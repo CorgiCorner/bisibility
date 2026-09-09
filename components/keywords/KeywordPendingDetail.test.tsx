@@ -1,5 +1,5 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,9 +11,18 @@ vi.mock("./KeywordMarketsDrawer", () => ({
   KeywordMarketsDrawer: () => null,
 }));
 vi.mock("./KeywordHeaderActions", () => ({
-  KeywordHeaderActions: ({ effectiveDepth }: { effectiveDepth: number }) => (
+  KeywordHeaderActions: ({
+    effectiveDepth,
+    onToggleEdit,
+  }: {
+    effectiveDepth: number;
+    onToggleEdit: () => void;
+  }) => (
     <div>
       <button type="button">Run check</button>
+      <button type="button" onClick={onToggleEdit}>
+        Edit
+      </button>
       <output>Selected depth {effectiveDepth}</output>
     </div>
   ),
@@ -116,5 +125,14 @@ describe("KeywordPendingDetail", () => {
     expect(screen.getByText("Not ranked")).toBeInTheDocument();
     expect(screen.getByText(/Not in top 50/)).toBeInTheDocument();
     expect(screen.getByText("Selected depth 50")).toBeInTheDocument();
+  });
+  it("opens keyword details including the target URL without requiring market management actions", async () => {
+    renderDetail();
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(await screen.findByLabelText("Target URL")).toHaveDisplayValue("/self-host");
+    expect(screen.getByRole("heading", { name: /Edit keyword/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Save markets and devices" }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -30,6 +30,17 @@ export async function getOnboardingSampleKeyword(projectId: string) {
   return keyword?.text ?? null;
 }
 
+export async function getOnboardingKeywordTexts(projectId: string) {
+  const { project } = await requireReadableProject(projectId);
+  const rows = await prisma.keyword.findMany({
+    distinct: ["textNormalized"],
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { text: true },
+    where: { projectId: project.id, archivedAt: null },
+  });
+  return rows.map((row) => row.text);
+}
+
 export async function getOnboardingKeywordCount(projectId: string) {
   const { project } = await requireReadableProject(projectId);
   const [result] = await prisma.$queryRaw<Array<{ count: number }>>`
@@ -38,6 +49,16 @@ export async function getOnboardingKeywordCount(projectId: string) {
     WHERE "projectId" = ${project.id}
   `;
   return result?.count ?? 0;
+}
+
+export async function getOnboardingTrackingStartedAt(projectId: string) {
+  const { project } = await requireReadableProject(projectId);
+  const check = await prisma.rankCheck.findFirst({
+    where: { keyword: { projectId: project.id } },
+    orderBy: { checkedAt: "asc" },
+    select: { checkedAt: true },
+  });
+  return check?.checkedAt.toISOString() ?? null;
 }
 
 export async function getOnboardingNextCheckAt(projectId: string) {
@@ -102,13 +123,32 @@ export async function hasActiveOnboardingApiKey(projectId: string | null) {
   return Boolean(apiKey);
 }
 
-export async function existingOnboardingCityLocationKeys(cityKeys: readonly string[]) {
+export async function existingOnboardingPlaceLocationKeys(cityKeys: readonly string[]) {
   if (cityKeys.length === 0) {
     return new Set<string>();
   }
   const rows = await prisma.location.findMany({
     select: { canonicalKey: true },
-    where: { canonicalKey: { in: [...cityKeys] }, kind: "city" },
+    where: { canonicalKey: { in: [...cityKeys] }, kind: { in: ["city", "region"] } },
   });
   return new Set(rows.map((row) => row.canonicalKey));
+}
+
+/** Stored metadata keeps region/city kind and display text intact when onboarding resumes. */
+export async function getOnboardingLocationDetails(keys: readonly string[]) {
+  if (keys.length === 0) return [];
+  return prisma.location.findMany({
+    select: {
+      id: true,
+      canonicalKey: true,
+      countryCode: true,
+      cityName: true,
+      displayName: true,
+      kind: true,
+      gl: true,
+      hl: true,
+      languageLabel: true,
+    },
+    where: { canonicalKey: { in: [...keys] } },
+  });
 }

@@ -10,8 +10,8 @@ export const runtime = "nodejs";
 
 const INSTANCE = "urn:bisibility:api:locations:search";
 
-// Global locations are readable by any authenticated user; provider cache-miss
-// resolution requires membership in the optional `project`.
+// The shared reference catalog is readable by any authenticated user.
+// The optional project reference is still checked against membership.
 export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session) {

@@ -103,7 +103,7 @@ describe("OpenAPI document", () => {
       additionalProperties: false,
       properties: {
         source_project_id: { pattern: "^prj_[a-z][a-z0-9]{23}$" },
-        version: { const: 5 },
+        version: { enum: [7, 6] },
       },
       required: ["version", "chunk_count", "source_project_id"],
     });

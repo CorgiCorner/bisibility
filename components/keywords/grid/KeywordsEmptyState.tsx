@@ -5,22 +5,24 @@ import {
   type SuggestionCostContext,
 } from "@/components/keywords/import/KeywordSuggestionDrawer";
 import type { ImportTopQueriesAction } from "@/components/onboarding/steps/KeywordTopQueryImport";
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { DataTable } from "@/components/ui/data-table/DataTable";
+import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { TopQuerySuggestion } from "@/lib/keyword-suggest/sanitize-top-queries";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { appPath } from "@/lib/routing/app-path";
-import { DEFAULT_SERP_DEPTH } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 
 type KeywordsEmptyStateProps = {
   canCreateKeyword: boolean;
+  hasMarkets?: boolean;
   canManageProviders: boolean;
   costContext?: ProjectCostContext;
   importTopQueriesAction?: ImportTopQueriesAction;
@@ -34,11 +36,25 @@ type KeywordsEmptyStateProps = {
 
 type DrawerData = { hidden: TopQuerySuggestion[]; suggestions: TopQuerySuggestion[] };
 
-const EMPTY_HEADERS = ["Keyword", "Pos", "Change", "Volume", "Tags"] as const;
-const CARD_ACTIONS = "mt-auto flex w-full flex-wrap items-center justify-end gap-2 pt-4";
+const emptyColumns: readonly DataTableColumn<{ id: string }>[] = (
+  [
+    ["keyword", "Keyword", 2.2, 100],
+    ["position", "Pos", 1, 56],
+    ["change", "Change", 1, 80],
+    ["volume", "Volume", 1, 80],
+    ["tags", "Tags", 1.4, 80],
+  ] as const
+).map(([id, header, flex, minSize]) => ({
+  id,
+  header,
+  meta: { flex, lockResize: true, sortable: false },
+  minSize,
+  size: minSize,
+}));
 
 export function KeywordsEmptyState({
   canCreateKeyword,
+  hasMarkets = true,
   canManageProviders,
   costContext,
   importTopQueriesAction,
@@ -110,130 +126,117 @@ export function KeywordsEmptyState({
     }
   }
 
-  // Keep the table chrome + column headers; replace the body with the first-keyword prompt.
   return (
-    <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
-      <div className="grid grid-cols-[minmax(0,2.2fr)_repeat(3,1fr)_1.4fr] gap-x-2.5 border-b border-border bg-bg-sunken px-4.5 py-[11px] font-sans tabular-nums text-[10px] uppercase tracking-[0.6px] text-fg-muted">
-        {EMPTY_HEADERS.map((header) => (
-          <span key={header}>{header}</span>
-        ))}
-      </div>
-      <div className="flex flex-col items-center px-6 py-10 text-center">
-        <span className="grid h-[54px] w-[54px] place-items-center rounded-card bg-accent-soft text-accent-solid">
-          <MagnifyingGlass size={27} weight="regular" />
-        </span>
-        <h3 className="mt-4.5 text-lg font-semibold tracking-[-0.4px] text-fg">
-          Choose what to track
-        </h3>
-        <p className="mt-[7px] max-w-[420px] text-[13.5px] leading-[1.55] text-fg-muted">
-          Start from queries your site already earns, or add a focused list of your own.
-        </p>
-
-        {canCreateKeyword ? (
-          <div className="mt-6 grid w-full max-w-[780px] items-stretch gap-3 text-left md:grid-cols-2">
-            <section className="flex h-full flex-col rounded-card border border-border bg-bg-sunken p-5">
-              <h4 className="m-0 text-[14px] font-semibold text-fg">
-                Find opportunities in Search Console
-              </h4>
-              <p className="mt-2 text-[12.5px] leading-[1.55] text-fg-muted">
-                Import observed queries live, then pick the ones to track in the review picker.
-              </p>
-              <div className={CARD_ACTIONS}>
-                {searchConsoleConnected ? (
-                  <ProjectReadOnlyTooltip>
-                    <Button
-                      disabled={readOnly || !importTopQueriesAction}
-                      loading={importPending}
-                      loadingLabel="Importing queries..."
-                      onClick={() => void handleSearchConsoleImport()}
-                      sx={{ minHeight: 40 }}
-                      type="button"
-                      variant="primary"
-                    >
-                      Find Search Console queries
-                    </Button>
-                  </ProjectReadOnlyTooltip>
-                ) : (
-                  <Button
-                    component={Link}
-                    href={appPath(projectId, "integrations")}
-                    sx={{ minHeight: 40 }}
-                  >
-                    Connect Search Console
-                  </Button>
-                )}
-              </div>
-              {importFeedback ? (
-                <p
-                  className={`mt-3 text-[11.5px] leading-[1.5] ${
-                    importFeedback.kind === "error" ? "text-red-text" : "text-fg-muted"
-                  }`}
-                  role="status"
-                >
-                  {importFeedback.message}
-                  {importFeedback.kind === "no_source" || importFeedback.kind === "needs_reauth" ? (
-                    <>
-                      {" "}
-                      <Link
-                        className="font-semibold text-accent-text"
-                        href={appPath(projectId, "integrations")}
+    <>
+      <Card className="min-w-0 overflow-hidden p-0">
+        <DataTable
+          ariaLabel="Rank tracker keywords"
+          bordered={false}
+          columns={emptyColumns}
+          id="rank-tracker-keywords-empty"
+          onSortingChange={() => undefined}
+          rows={[]}
+          sorting={null}
+          emptyState={
+            <EmptyState
+              compact
+              title={hasMarkets ? "No keywords yet" : "Start with your first market"}
+              description={
+                hasMarkets
+                  ? "Add keywords to start tracking your Google rankings."
+                  : "A market defines the country, location and language of your rankings. Create one when adding your first keywords. Adding another market later keeps existing keywords and their history in the original market."
+              }
+              action={
+                canCreateKeyword ? (
+                  <div className="flex max-w-full flex-wrap items-center justify-center gap-3">
+                    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+                      <ProjectReadOnlyTooltip>
+                        <Button
+                          disabled={readOnly}
+                          onClick={onImportCsv}
+                          size="sm"
+                          style={{ minHeight: 40, paddingLeft: 12, paddingRight: 12 }}
+                          type="button"
+                          variant="ghost"
+                        >
+                          Import CSV
+                        </Button>
+                      </ProjectReadOnlyTooltip>
+                      {searchConsoleConnected ? (
+                        <ProjectReadOnlyTooltip>
+                          <Button
+                            disabled={readOnly || !importTopQueriesAction}
+                            loading={importPending}
+                            loadingLabel="Finding queries..."
+                            onClick={() => void handleSearchConsoleImport()}
+                            size="sm"
+                            style={{ minHeight: 40, paddingLeft: 12, paddingRight: 12 }}
+                            type="button"
+                            variant="ghost"
+                          >
+                            From Search Console
+                          </Button>
+                        </ProjectReadOnlyTooltip>
+                      ) : null}
+                    </div>
+                    <ProjectReadOnlyTooltip>
+                      <Button
+                        disabled={readOnly}
+                        onClick={onAddKeyword}
+                        style={{ minHeight: 40 }}
+                        type="button"
                       >
-                        {importFeedback.kind === "needs_reauth"
-                          ? "Reconnect your Google account"
-                          : "Open Integrations"}
-                      </Link>
-                    </>
-                  ) : null}
-                </p>
-              ) : null}
-            </section>
-
-            <section className="flex h-full flex-col rounded-card border border-border bg-bg-sunken p-5">
-              <h4 className="m-0 text-[14px] font-semibold text-fg">Add keywords</h4>
-              <p className="mt-2 text-[12.5px] leading-[1.55] text-fg-muted">
-                Add a focused list of your own, or import a prepared CSV.
-              </p>
-              <div className={CARD_ACTIONS}>
-                <ProjectReadOnlyTooltip>
-                  <Button
-                    disabled={readOnly}
-                    onClick={onAddKeyword}
-                    sx={{ minHeight: 40 }}
-                    type="button"
-                  >
-                    Add manually
-                  </Button>
-                </ProjectReadOnlyTooltip>
-                <ProjectReadOnlyTooltip>
-                  <Button
-                    disabled={readOnly}
-                    onClick={onImportCsv}
-                    sx={{ minHeight: 40 }}
-                    type="button"
-                    variant="secondary"
-                  >
-                    Import CSV
-                  </Button>
-                </ProjectReadOnlyTooltip>
-              </div>
-            </section>
-          </div>
-        ) : null}
-
-        {providerConnected === false && canManageProviders ? (
-          <p className="mt-4 max-w-[520px] text-[12px] leading-[1.5] text-fg-muted">
-            Rank checks need a connected SERP provider. You can add keywords now - they start
-            checking once you{" "}
-            <Link
-              className="font-semibold text-accent-text"
-              href={appPath(projectId, "integrations")}
-            >
-              connect one
-            </Link>
-            .
-          </p>
-        ) : null}
-      </div>
+                        Add keywords
+                      </Button>
+                    </ProjectReadOnlyTooltip>
+                  </div>
+                ) : undefined
+              }
+              footnote={
+                importFeedback || (providerConnected === false && canManageProviders) ? (
+                  <div className="max-w-[440px] space-y-2 text-[12px] leading-[1.5]">
+                    {importFeedback ? (
+                      <p
+                        className={`m-0 ${importFeedback.kind === "error" ? "text-red-text" : "text-fg-muted"}`}
+                        role="status"
+                      >
+                        {importFeedback.message}
+                        {importFeedback.kind === "no_source" ||
+                        importFeedback.kind === "needs_reauth" ? (
+                          <>
+                            {" "}
+                            <Link
+                              className="font-semibold text-accent-text"
+                              href={appPath(projectId, "integrations")}
+                            >
+                              {importFeedback.kind === "needs_reauth"
+                                ? "Reconnect your Google account"
+                                : "Open Integrations"}
+                            </Link>
+                          </>
+                        ) : null}
+                      </p>
+                    ) : null}
+                    {providerConnected === false && canManageProviders ? (
+                      <p className="m-0 text-fg-muted">
+                        Rank checks need a connected SERP provider. You can add keywords now - they
+                        start checking once you{" "}
+                        <Link
+                          className="font-semibold text-accent-text"
+                          href={appPath(projectId, "integrations")}
+                        >
+                          connect one
+                        </Link>
+                        .
+                      </p>
+                    ) : null}
+                  </div>
+                ) : undefined
+              }
+            />
+          }
+        />
+      </Card>
       {drawer ? (
         <KeywordSuggestionDrawer
           costContext={suggestionCostContext}
@@ -249,6 +252,6 @@ export function KeywordsEmptyState({
           suggestions={drawer.suggestions}
         />
       ) : null}
-    </div>
+    </>
   );
 }

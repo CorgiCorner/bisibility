@@ -3,13 +3,13 @@
 import { SpendBar } from "@/components/cost-estimate/SpendBar";
 import { spendTone, spendToneTextClass } from "@/components/cost-estimate/spend-tone";
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { StatusPill } from "@/components/ui";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import { formatMoneyCents } from "@/lib/format/money";
 import { relativePast } from "@/lib/format/relative-time";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
 import { metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
-import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/ssr";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown";
 
 function resetCopy(connection: ProviderSpendConnection, now: string, dateFormat: DateFormat) {
   if (connection.quotaReset === "none") return "does not expire";

@@ -1,8 +1,9 @@
 "use client";
 
-import { ZonedTime } from "@/components/ui";
+import { ZonedTime } from "@/components/ui/ZonedTime";
 import type { UpcomingDayGroup } from "@/lib/checks/contract";
-import { CaretDownIcon as CaretDown, CaretRightIcon as CaretRight } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCheckCount, formatEstimatedCost } from "./upcoming-format";

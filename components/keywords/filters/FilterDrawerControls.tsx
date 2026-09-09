@@ -1,5 +1,5 @@
-import { SegmentedControl } from "@/components/ui";
-import { CheckIcon as Check } from "@phosphor-icons/react";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import type { ComponentType, ReactNode } from "react";
 
 export type FilterIcon = ComponentType<{
@@ -22,7 +22,10 @@ export function FilterSection({
 }>) {
   return (
     <section className="border-b border-border py-4.5 last:border-b-0 last:pb-1">
-      <div className="font-sans tabular-nums text-[11px] uppercase tracking-[0.6px] text-fg-muted">
+      <div
+        data-replay-label
+        className="font-sans tabular-nums text-[11px] uppercase tracking-[0.6px] text-fg-muted"
+      >
         {title}
       </div>
       {children}

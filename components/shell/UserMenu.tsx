@@ -7,15 +7,16 @@ import {
   resourceLinksForDeployment,
   signOutLink,
 } from "@/components/shell/user-menu-items";
-import { Avatar, useToast } from "@/components/ui";
+import { Avatar } from "@/components/ui/Avatar";
+import { Divider } from "@/components/ui/Divider";
+import { Menu } from "@/components/ui/Menu";
+import { useToast } from "@/components/ui/toast-context";
 import { authClient } from "@/lib/auth/client";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Divider from "@mui/material/Divider";
-import Menu from "@mui/material/Menu";
 import { useState } from "react";
 
-const PAPER_SX = {
+const PAPER_STYLE = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border)",
   borderRadius: UI_RADIUS_ROLES.card,
@@ -27,7 +28,13 @@ const PAPER_SX = {
   width: 248,
 } as const;
 
-const DIVIDER_SX = { borderColor: "var(--border)", marginX: "-6px", marginY: "6px" } as const;
+const DIVIDER_STYLE = {
+  borderColor: "var(--border)",
+  marginLeft: "-6px",
+  marginRight: "-6px",
+  marginTop: "6px",
+  marginBottom: "6px",
+} as const;
 
 export type UserMenuProps = {
   anchorEl: HTMLElement | null;
@@ -78,15 +85,13 @@ export function UserMenu({
   return (
     <Menu
       anchorEl={anchorEl}
-      anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      align="end"
+      side="bottom"
       id="sidebar-user-menu"
       onClose={onClose}
       open={Boolean(anchorEl)}
-      slotProps={{
-        list: { "aria-label": "Account menu", dense: true, sx: { padding: 0 } },
-        paper: { sx: PAPER_SX },
-      }}
-      transformOrigin={{ horizontal: "right", vertical: "top" }}
+      listProps={{ "aria-label": "Account menu", style: { padding: 0 } }}
+      contentProps={{ style: PAPER_STYLE }}
     >
       <div className="flex items-center gap-2.5 px-[9px] pb-[11px] pt-[9px]">
         <Avatar
@@ -103,19 +108,19 @@ export function UserMenu({
           </span>
         </span>
       </div>
-      <Divider sx={{ ...DIVIDER_SX, marginTop: "2px" }} />
+      <Divider style={{ ...DIVIDER_STYLE, marginTop: "2px" }} />
       {accountLinks.map((item) => (
         <UserMenuRow item={item} key={item.label} onClose={closeAfterNavigate} />
       ))}
-      <Divider sx={DIVIDER_SX} />
+      <Divider style={DIVIDER_STYLE} />
       {resourceLinksForDeployment(showHostedLinks).map((item) => (
         <UserMenuRow item={item} key={item.label} onClose={closeAfterNavigate} />
       ))}
-      <Divider sx={DIVIDER_SX} />
+      <Divider style={DIVIDER_STYLE} />
       {communityLinks.map((item) => (
         <UserMenuRow item={item} key={item.label} onClose={closeAfterNavigate} />
       ))}
-      <Divider sx={DIVIDER_SX} />
+      <Divider style={DIVIDER_STYLE} />
       <UserMenuRow disabled={pending} item={signOutLink} onSelect={() => void handleSignOut()} />
     </Menu>
   );

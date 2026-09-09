@@ -1,18 +1,37 @@
+import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
+import type { KeywordRow } from "@/lib/queries/keywords";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordsToolbarActions } from "./KeywordsToolbarActions";
 
 const mocks = vi.hoisted(() => ({ useMediaQuery: vi.fn() }));
-vi.mock("@mui/material/useMediaQuery", () => ({ default: mocks.useMediaQuery }));
+vi.mock("@/lib/ui/use-media-query", () => ({ useMediaQuery: mocks.useMediaQuery }));
 
+const columns: readonly DataTableColumn<KeywordRow>[] = [
+  {
+    accessorKey: "keyword",
+    header: "Keyword",
+    meta: { lockVisible: true, title: "Keyword" },
+  },
+  { accessorKey: "position", header: "Pos", meta: { title: "Position" } },
+  { header: "", id: "actions", meta: { lockVisible: true } },
+];
 const props = {
-  columnVisibilityModel: {},
+  columnSizing: {},
+  columns,
+  columnVisibility: {},
   filterCount: 0,
+  id: "toolbar-table",
+  onColumnSizingChange: vi.fn(),
   onColumnVisibilityChange: vi.fn(),
   onDensityChange: vi.fn(),
   onOpenExport: vi.fn(),
   onOpenFilters: vi.fn(),
 };
+
+function expectCompactWidth(button: HTMLElement) {
+  expect(button).toHaveClass("max-xl:min-w-10", "max-xl:gap-0");
+}
 
 describe("KeywordsToolbarActions", () => {
   beforeEach(() => {
@@ -37,17 +56,22 @@ describe("KeywordsToolbarActions", () => {
     ).toBeInTheDocument();
   });
 
-  it("matches the labeled secondary toolbar typography contract", () => {
+  it("keeps the shared columns menu functional on mobile with locked columns omitted", () => {
+    mocks.useMediaQuery.mockReturnValue(true);
     render(<KeywordsToolbarActions {...props} density="compact" />);
 
-    const columns = screen.getByRole("button", { name: "Columns" });
-    const style = getComputedStyle(columns);
-    expect(style.color).toBe("var(--fg)");
-    expect(style.fontSize).toBe("12.5px");
-    expect(style.fontWeight).toBe("400");
+    const trigger = screen.getByRole("button", { name: "Columns" });
+    expect(trigger.parentElement).not.toHaveClass("hidden");
+    fireEvent.click(trigger);
+    expect(screen.getByRole("menuitem", { name: /Position/ })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Keyword/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Actions/ })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("menuitem", { name: /Position/ }));
+    expect(props.onColumnVisibilityChange).toHaveBeenCalledWith({ position: false });
   });
 
-  it("keeps secondary toolbar action icons on the muted foreground contract", () => {
+  it("keeps secondary transfer action icons on the muted foreground contract", () => {
     render(
       <KeywordsToolbarActions
         {...props}
@@ -58,41 +82,26 @@ describe("KeywordsToolbarActions", () => {
       />,
     );
 
-    for (const label of ["Columns", "Import or export", "Export", "Import"]) {
+    for (const label of ["Import or export", "Export", "Import"]) {
       for (const action of screen.getAllByRole("button", { name: label })) {
-        const startIcon = action.querySelector(".MuiButton-startIcon");
-        const icon = action.querySelector(".MuiButton-startIcon svg");
-        expect(startIcon, `${label} action icon`).toHaveStyle({ color: "var(--fg-muted)" });
-        expect(icon, `${label} action icon svg`).toHaveClass("text-fg-muted");
+        expect(action).toHaveClass("[&_[data-button-start-icon]]:text-fg-muted");
+        expect(action.querySelector("[data-button-start-icon] svg")).toHaveClass("text-fg-muted");
       }
     }
-
-    const filters = screen.getByRole("button", { name: "Filters" });
-    expect(filters.querySelector(".MuiButton-startIcon")).not.toHaveStyle({
-      color: "var(--fg-muted)",
-    });
-
-    const addKeyword = screen.getByRole("button", { name: "Add keyword" });
-    const addIcon = addKeyword.querySelector(".MuiButton-startIcon");
-    expect(addIcon).not.toHaveStyle({ color: "var(--fg-muted)" });
+    expect(screen.getByRole("button", { name: "Filters" })).toHaveStyle({ color: "var(--fg)" });
+    expect(screen.getByRole("button", { name: "Add keyword" })).toBeInTheDocument();
   });
 
-  it("renders density as a radiogroup with the active option checked", () => {
+  it("uses the shared density menu and emits its selected value", () => {
     render(<KeywordsToolbarActions {...props} density="compact" />);
-    const compact = screen.getByRole("radio", { name: "Compact" });
-    const standard = screen.getByRole("radio", { name: "Standard" });
-    expect(compact).toBeChecked();
-    expect(standard).not.toBeChecked();
-    expect(compact).toHaveAttribute("name", standard.getAttribute("name"));
-  });
 
-  it("changes density when arrow keys are pressed", () => {
-    render(<KeywordsToolbarActions {...props} density="compact" />);
-    const compact = screen.getByRole("radio", { name: "Compact" });
-    compact.focus();
-    fireEvent.keyDown(compact, { key: "ArrowRight" });
+    const density = screen.getByRole("button", { name: "Table density" });
+    expect(density).toHaveTextContent("Compact");
+    fireEvent.click(density);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Standard" }));
     expect(props.onDensityChange).toHaveBeenCalledWith("standard");
   });
+
   it("renders one mobile transfer icon and exposes import and export menu items", () => {
     const onImportCsv = vi.fn();
     render(<KeywordsToolbarActions {...props} density="compact" onImportCsv={onImportCsv} />);
@@ -120,17 +129,14 @@ describe("KeywordsToolbarActions", () => {
       ["export", "Export"],
       ["import", "Import"],
     ] as const) {
-      const actionContainer = screen.getByTestId(`keywords-${action}-action`);
-      expect(actionContainer).toHaveClass("hidden", "lg:inline-flex");
-
+      expect(screen.getByTestId(`keywords-${action}-action`)).toHaveClass(
+        "hidden",
+        "lg:inline-flex",
+      );
       const button = screen.getByRole("button", { name: label });
       expect(button).toHaveTextContent(label);
       expect(button.querySelectorAll("svg")).toHaveLength(1);
-      expect(button).toHaveStyle({ minWidth: 40 });
-      expect(button.closest('[data-toolbar-tooltip="true"]')).toHaveAttribute(
-        "data-tooltip-label",
-        label,
-      );
+      expectCompactWidth(button);
     }
   });
 
@@ -138,7 +144,7 @@ describe("KeywordsToolbarActions", () => {
     render(<KeywordsToolbarActions {...props} density="compact" onAddKeyword={vi.fn()} />);
 
     const addKeyword = screen.getByRole("button", { name: "Add keyword" });
-    expect(addKeyword).toHaveStyle({ minWidth: 40 });
+    expectCompactWidth(addKeyword);
     expect(addKeyword.closest('[data-toolbar-tooltip="true"]')).toHaveAttribute(
       "data-tooltip-label",
       "Add keyword",

@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { appRootPath } from "@/lib/routing/app-path";
-import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 
 export function AdminRefresh() {
   return (

@@ -3,9 +3,12 @@ import { fileURLToPath } from "node:url";
 import nodeResolver from "eslint-import-resolver-node";
 import importPlugin from "eslint-plugin-import";
 import * as espree from "espree";
+import { assertResearchTerminology } from "./lib/research/terminology-guard.mjs";
 
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 const importExtensions = [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".json"];
+
+assertResearchTerminology(repoRoot);
 
 const originalNodeResolve = nodeResolver.resolve.bind(nodeResolver);
 nodeResolver.resolve = (source, file, config) => {
@@ -136,10 +139,9 @@ const importGuardFiles = [
   "lib/**/*.{ts,tsx}",
 ];
 
-const uiDeepImportPattern = {
-  group: ["@/components/ui/*"],
-  message:
-    "Use the @/components/ui barrel import outside components/ui instead of deep UI component paths.",
+const uiBarrelImportPattern = {
+  regex: "^@/components/ui(?:/index)?$",
+  message: "Import the specific components/ui module so unrelated controls are not initialized.",
 };
 
 const parentRelativeImportPattern = {
@@ -157,6 +159,27 @@ const libComponentImportPattern = {
 const appPrismaImportPattern = {
   group: ["@/lib/db/prisma", "@/lib/db/prisma/*"],
   message: "App files must not import Prisma directly; use lib/queries or lib/actions instead.",
+};
+
+const dataTableLibraryImportPattern = {
+  group: [
+    "@tanstack/react-table",
+    "@tanstack/react-table/*",
+    "@tanstack/table-core",
+    "@tanstack/table-core/*",
+    "@tanstack/react-virtual",
+    "@tanstack/react-virtual/*",
+    "@tanstack/virtual-core",
+    "@tanstack/virtual-core/*",
+  ],
+  message:
+    "Table and virtual libraries are internal to components/ui/data-table; use the shared DataTable primitive.",
+};
+
+const dataTableFeatureImportPattern = {
+  regex: "^@/components/(?!ui(?:/|$))",
+  message:
+    "Data table primitives must not import feature components; pass feature behavior through the primitive API.",
 };
 
 const featureComponentNames = [
@@ -267,7 +290,11 @@ export default [
       "no-restricted-imports": [
         "error",
         {
-          patterns: [parentRelativeImportPattern, libComponentImportPattern],
+          patterns: [
+            parentRelativeImportPattern,
+            libComponentImportPattern,
+            dataTableLibraryImportPattern,
+          ],
         },
       ],
     },
@@ -278,7 +305,7 @@ export default [
       "no-restricted-imports": [
         "error",
         {
-          patterns: [libComponentImportPattern],
+          patterns: [libComponentImportPattern, dataTableLibraryImportPattern],
         },
       ],
     },
@@ -289,30 +316,66 @@ export default [
       "no-restricted-imports": [
         "error",
         {
-          patterns: [parentRelativeImportPattern, appPrismaImportPattern, uiDeepImportPattern],
+          patterns: [
+            parentRelativeImportPattern,
+            appPrismaImportPattern,
+            uiBarrelImportPattern,
+            dataTableLibraryImportPattern,
+          ],
         },
       ],
     },
   },
   {
-    files: ["components/**/*.{ts,tsx}", "hooks/**/*.{ts,tsx}"],
+    files: ["components/**/*.{ts,tsx}"],
     ignores: ["components/ui/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
         {
-          patterns: [parentRelativeImportPattern, uiDeepImportPattern],
+          patterns: [
+            parentRelativeImportPattern,
+            uiBarrelImportPattern,
+            dataTableLibraryImportPattern,
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["hooks/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            parentRelativeImportPattern,
+            uiBarrelImportPattern,
+            dataTableLibraryImportPattern,
+          ],
         },
       ],
     },
   },
   {
     files: ["components/ui/**/*.{ts,tsx}"],
+    ignores: ["components/ui/data-table/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
         {
-          patterns: [parentRelativeImportPattern],
+          patterns: [parentRelativeImportPattern, dataTableLibraryImportPattern],
+        },
+      ],
+    },
+  },
+  {
+    files: ["components/ui/data-table/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [parentRelativeImportPattern, dataTableFeatureImportPattern],
         },
       ],
     },
@@ -326,7 +389,8 @@ export default [
           patterns: [
             parentRelativeImportPattern,
             productComponentImportPattern,
-            uiDeepImportPattern,
+            uiBarrelImportPattern,
+            dataTableLibraryImportPattern,
           ],
         },
       ],
@@ -341,7 +405,8 @@ export default [
           patterns: [
             parentRelativeImportPattern,
             marketingComponentImportPattern,
-            uiDeepImportPattern,
+            uiBarrelImportPattern,
+            dataTableLibraryImportPattern,
           ],
         },
       ],
@@ -357,7 +422,8 @@ export default [
             parentRelativeImportPattern,
             appPrismaImportPattern,
             productComponentImportPattern,
-            uiDeepImportPattern,
+            uiBarrelImportPattern,
+            dataTableLibraryImportPattern,
           ],
         },
       ],
@@ -373,7 +439,8 @@ export default [
             parentRelativeImportPattern,
             appPrismaImportPattern,
             marketingComponentImportPattern,
-            uiDeepImportPattern,
+            uiBarrelImportPattern,
+            dataTableLibraryImportPattern,
           ],
         },
       ],

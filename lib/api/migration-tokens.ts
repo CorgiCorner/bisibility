@@ -5,9 +5,9 @@ import {
   mintMigrationTokenForProject,
   revokeMigrationTokenForProject,
 } from "@/lib/migration/token-service";
-import { getCloudImportView } from "@/lib/queries/cloud";
+import { getCloudImportViewFor } from "@/lib/queries/cloud";
 import { z } from "zod";
-import type { ApiContext } from "./context";
+import { type ApiContext, requireApiActor } from "./context";
 import { listResponse, resourceResponse } from "./responses";
 import {
   objectBody,
@@ -35,7 +35,7 @@ export async function listMigrationTokens(ctx: ApiContext, projectId: string) {
   const scoped = scopedProject(ctx, projectId);
   if (scoped) return scoped;
 
-  const view = await runDomain(() => getCloudImportView(projectId));
+  const view = await runDomain(() => getCloudImportViewFor(requireApiActor(ctx), projectId));
   const tokens = view.activeToken ? [view.activeToken] : [];
 
   return listResponse(tokens.map(snakeizeKeys), null, {

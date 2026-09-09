@@ -1,8 +1,9 @@
 import type { SetupStepId, SetupStepState } from "@/lib/getting-started/setup-steps";
 
 type WalkthroughCopy = { body: string; heading: string };
+type WalkthroughStepId = Exclude<SetupStepId, "confirm_competitors">;
 
-const activeCopy: Record<SetupStepId, WalkthroughCopy> = {
+const activeCopy: Record<WalkthroughStepId, WalkthroughCopy> = {
   create_project: {
     body: "Name the project you want to track. You can update its details later in Project settings.",
     heading: "Create a project for your search tracking",
@@ -21,7 +22,7 @@ const activeCopy: Record<SetupStepId, WalkthroughCopy> = {
   },
 };
 
-const doneCopy: Record<SetupStepId, WalkthroughCopy> = {
+const doneCopy: Record<WalkthroughStepId, WalkthroughCopy> = {
   create_project: {
     body: "This happened when you created the project: one domain, with every check and import scoped to it. The name and domain live in Project settings.",
     heading: "Your project was created",
@@ -40,6 +41,6 @@ const doneCopy: Record<SetupStepId, WalkthroughCopy> = {
   },
 };
 
-export function walkthroughCopy(id: SetupStepId, state: SetupStepState): WalkthroughCopy {
+export function walkthroughCopy(id: WalkthroughStepId, state: SetupStepState): WalkthroughCopy {
   return state.family === "done" ? doneCopy[id] : activeCopy[id];
 }

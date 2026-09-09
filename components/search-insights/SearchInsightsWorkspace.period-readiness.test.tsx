@@ -1,4 +1,4 @@
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { setNavigationState } from "@/tests/next-navigation";
 import { render, screen, within } from "@testing-library/react";

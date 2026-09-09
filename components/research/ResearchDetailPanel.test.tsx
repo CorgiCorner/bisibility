@@ -6,8 +6,8 @@ import { ResearchDetailPanel } from "./ResearchDetailPanel";
 
 const mocks = vi.hoisted(() => ({ lineChart: vi.fn() }));
 
-vi.mock("@mui/x-charts/LineChart", () => ({
-  LineChart: (props: unknown) => {
+vi.mock("@/components/charts/TimeSeriesChart", () => ({
+  TimeSeriesChart: (props: unknown) => {
     mocks.lineChart(props);
     return <div data-testid="line-chart" />;
   },
@@ -144,7 +144,7 @@ describe("ResearchDetailPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("prices the active project-market matrix that the tracking drawer selects by default", () => {
+  it("prices the active tracking matrix that the drawer selects by default", () => {
     render(
       <ResearchDetailPanel
         active={active}
@@ -207,11 +207,11 @@ describe("ResearchDetailPanel", () => {
       expect.objectContaining({
         series: [
           expect.objectContaining({
-            connectNulls: false,
-            data: [100, null, 40],
+            values: [100, null, 40],
           }),
         ],
-        yAxis: [{ max: 110.00000000000001, min: 0, position: "none" }],
+        max: 110.00000000000001,
+        showYAxis: false,
       }),
     );
   });

@@ -7,23 +7,9 @@ const mocks = vi.hoisted(() => ({
   writeText: vi.fn(),
 }));
 
-vi.mock("./Toast", () => ({ useToast: () => ({ showToast: mocks.showToast }) }));
+vi.mock("./toast-context", () => ({ useToast: () => ({ showToast: mocks.showToast }) }));
 
 const RESET_DELAY = 1200;
-
-function copyPressRules(button: Element) {
-  const css = Array.from(document.querySelectorAll("style[data-emotion]"))
-    .map((style) => style.textContent ?? "")
-    .join("\n");
-
-  const classes = Array.from(button.classList).filter((className) => className.startsWith("css-"));
-
-  return Array.from(css.matchAll(/[^{}]+\{[^{}]*\}/g))
-    .map((match) => match[0])
-    .filter((rule) =>
-      classes.some((className) => rule.includes(`${className}:active:not(:focus-visible)`)),
-    );
-}
 
 describe("CopyButton", () => {
   beforeEach(() => {
@@ -38,15 +24,6 @@ describe("CopyButton", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
-  });
-
-  it("uses tokenized pointer press feedback with focus and disabled guards", () => {
-    render(<CopyButton label="Copy ID" text="abc123" />);
-
-    const rules = copyPressRules(screen.getByRole("button", { name: "Copy ID" }));
-    expect(rules.some((rule) => rule.includes("scale(0.97)"))).toBe(true);
-    expect(rules.every((rule) => rule.includes(":not(.Mui-disabled)"))).toBe(true);
-    expect(document.head.textContent).toContain("@media (prefers-reduced-motion: no-preference)");
   });
 
   it("does not show Copied before the clipboard promise resolves, then does after", async () => {
@@ -202,7 +179,7 @@ describe("CopyButton", () => {
     render(<CopyButton label="Copy ID" text="abc123" />);
 
     const button = screen.getByRole("button", { name: "Copy ID" });
-    fireEvent.mouseOver(button);
+    fireEvent.pointerMove(button);
     act(() => {
       vi.advanceTimersByTime(500);
     });
@@ -219,7 +196,7 @@ describe("CopyButton", () => {
     render(<CopyButton label="Copy ID" text="abc123" />);
 
     const button = screen.getByRole("button", { name: "Copy ID" });
-    fireEvent.mouseOver(button);
+    fireEvent.pointerMove(button);
     act(() => {
       vi.advanceTimersByTime(500);
     });

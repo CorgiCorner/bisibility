@@ -1,27 +1,18 @@
 "use client";
 
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { quietChipVariants } from "@/components/ui";
-import {
-  DEFAULT_SERP_DEPTH,
-  SERP_ENGINE,
-  serpDeviceOptions,
-  serpMarketOptions,
-} from "@/lib/serp/markets";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
+import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
+import { DEFAULT_SERP_DEPTH, SERP_ENGINE, serpDeviceOptions } from "@/lib/serp/constants";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import {
-  ArrowUpRightIcon as ArrowUpRight,
-  CaretDownIcon as CaretDown,
-  CheckIcon as Check,
-  DeviceMobileIcon as DeviceMobile,
-  MonitorIcon as Monitor,
-} from "@phosphor-icons/react";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import { type ReactNode, useState } from "react";
 
 export type DimensionKind = "device" | "engine" | "location";
@@ -50,7 +41,8 @@ export function buildGoogleSerpUrl(keyword: string, location: SerpLocaleLocation
 const DIMENSION_VALUES: Record<DimensionKind, string[]> = {
   device: serpDeviceOptions.map((option) => option.label),
   engine: [SERP_ENGINE.label],
-  location: [...serpMarketOptions],
+  // Locations must come from tracked Location refs. This component has no such source.
+  location: [],
 };
 
 const DIMENSION_META: Record<DimensionKind, { lower: boolean; name: string; noun: string }> = {
@@ -87,10 +79,7 @@ export function DimensionSwitcher({
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const { readOnly } = useProjectWriteMode();
   const meta = DIMENSION_META[kind];
-  const values =
-    kind === "location" && !DIMENSION_VALUES.location.includes(value)
-      ? [value, ...DIMENSION_VALUES.location]
-      : DIMENSION_VALUES[kind];
+  const values = kind === "location" ? [value] : DIMENSION_VALUES[kind];
   const normalizedValue = meta.lower ? value.toLowerCase() : value;
   const addable = values.filter(
     (item) => (meta.lower ? item.toLowerCase() : item) !== normalizedValue,
@@ -167,13 +156,11 @@ export function DimensionSwitcher({
           id={menuId}
           onClose={() => setAnchorEl(null)}
           open={open}
-          slotProps={{
-            paper: {
-              sx: {
-                border: "1px solid var(--border)",
-                maxWidth: "calc(100vw - 24px)",
-                width: 290,
-              },
+          contentProps={{
+            style: {
+              border: "1px solid var(--border)",
+              maxWidth: "calc(100vw - 24px)",
+              width: 290,
             },
           }}
         >
@@ -185,14 +172,16 @@ export function DimensionSwitcher({
             aria-label={`${label}, currently shown`}
             onClick={() => setAnchorEl(null)}
             selected
-            sx={{
+            style={{
               borderRadius: UI_RADIUS_ROLES.control,
-              gap: 1.125,
-              marginX: "5px",
+              gap: 9,
+              marginLeft: "5px",
+              marginRight: "5px",
               minHeight: "36px",
-              paddingX: "9px",
-              "&.Mui-selected": { backgroundColor: "var(--accent-soft)" },
-              "&.Mui-selected:hover": { backgroundColor: "var(--bg-sunken)" },
+              paddingLeft: "9px",
+              paddingRight: "9px",
+              "--control-selected-background-color": "var(--accent-soft)",
+              "--control-selected-hover-background-color": "var(--bg-sunken)",
             }}
           >
             <span className="inline-flex shrink-0 items-center text-fg-muted">{icon}</span>
@@ -214,13 +203,15 @@ export function DimensionSwitcher({
               key={item}
               onClick={() => handleTrack(item)}
               title={`Add ${item}`}
-              sx={{
+              style={{
                 borderRadius: UI_RADIUS_ROLES.control,
-                gap: 1.125,
+                gap: 9,
                 justifyContent: "space-between",
-                marginX: "5px",
+                marginLeft: "5px",
+                marginRight: "5px",
                 minHeight: "34px",
-                paddingX: "9px",
+                paddingLeft: "9px",
+                paddingRight: "9px",
               }}
             >
               {kind === "device" ? (

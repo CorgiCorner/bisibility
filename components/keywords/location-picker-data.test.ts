@@ -1,6 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { resetInvalidSearchResponseReport, useLocationSearch } from "./location-picker-data";
+import {
+  countryOptions,
+  countryValueForCode,
+  resetInvalidSearchResponseReport,
+  useLocationSearch,
+} from "./location-picker-data";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
@@ -66,5 +71,53 @@ describe("useLocationSearch invalid responses", () => {
     await search(result, "Dallas");
 
     expect(warning).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps a cached region from the search contract as a selectable suggestion", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            canonical_key: "ES/Andalusia",
+            city_name: null,
+            country_code: "ES",
+            display_name: "Andalusia, Spain",
+            hl: "es",
+            id: "location:region:ES/Andalusia",
+            kind: "region",
+            language_code: "es",
+            language_label: "Spanish",
+            region_code: null,
+            region_name: "Andalusia",
+          },
+        ],
+      }),
+    } as Response);
+    const { result } = renderHook(() => useLocationSearch(null));
+
+    await search(result, "Andalusia");
+
+    expect(result.current.suggestions).toEqual([
+      expect.objectContaining({ canonicalKey: "ES/Andalusia", kind: "region" }),
+    ]);
+  });
+});
+
+describe("offline country picker data", () => {
+  it("exposes the expanded Google SERP country catalog", () => {
+    expect(countryOptions).toEqual(
+      expect.arrayContaining(
+        ["CZ", "SK", "HU", "RO", "UA", "GR", "KR", "ID", "AR"].map((code) =>
+          expect.objectContaining({ code }),
+        ),
+      ),
+    );
+    expect(countryValueForCode("CZ")).toMatchObject({
+      canonicalKey: "CZ",
+      displayName: "Czechia",
+      hl: "cs",
+      kind: "country",
+    });
   });
 });

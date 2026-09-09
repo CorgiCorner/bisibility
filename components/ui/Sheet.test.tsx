@@ -5,8 +5,8 @@ import { Sheet } from "./Sheet";
 
 let lastDrawerProps: Record<string, unknown> = {};
 
-vi.mock("@mui/material/Drawer", () => ({
-  default: ({ children, ...props }: { children: React.ReactNode }) => {
+vi.mock("@/components/ui/DialogSurface", () => ({
+  DialogSurface: ({ children, ...props }: { children: React.ReactNode }) => {
     lastDrawerProps = props;
     return <div data-testid="mock-drawer">{children}</div>;
   },
@@ -99,14 +99,14 @@ describe("Sheet dialog semantics", () => {
     setMediaQueries(true, false);
   });
 
-  it("exposes the Paper slot as role=dialog with aria-labelledby matching the heading id", () => {
+  it("exposes the dialog surface as role=dialog with aria-labelledby matching the heading id", () => {
     render(
       <Sheet onClose={vi.fn()} open title="Dialog title">
         <button type="button">content</button>
       </Sheet>,
     );
-    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    const paper = slotProps.paper as Record<string, unknown>;
+    const slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    const paper = slotProps.contentProps as Record<string, unknown>;
     expect(paper).toHaveProperty("role", "dialog");
     const labelledBy = paper["aria-labelledby"] as string;
     expect(typeof labelledBy).toBe("string");
@@ -122,58 +122,64 @@ describe("Sheet transition props", () => {
     lastDrawerProps = {};
   });
 
-  it("uses motion-token durations for transitionDuration under normal motion", () => {
+  it("uses motion-token durations for duration under normal motion", () => {
     setMediaQueries(true, false);
     render(
       <Sheet onClose={vi.fn()} open title="Normal">
         <button type="button">content</button>
       </Sheet>,
     );
-    expect(lastDrawerProps.transitionDuration).toEqual({
+    expect(lastDrawerProps.duration).toEqual({
       enter: MOTION_DRAWER_ENTER,
       exit: MOTION_DRAWER_EXIT,
     });
   });
 
-  it("zeros the Slide transition timeout under reduced-motion", () => {
+  it("zeros the transition durations under reduced-motion", () => {
     const media = setMediaQueries(true, false);
     render(
       <Sheet onClose={vi.fn()} open title="Reduced">
         <button type="button">content</button>
       </Sheet>,
     );
-    let slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.transition).not.toHaveProperty("timeout");
+    let _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(lastDrawerProps.duration).toEqual({
+      enter: MOTION_DRAWER_ENTER,
+      exit: MOTION_DRAWER_EXIT,
+    });
 
     act(() => {
       media.setReducedMotion(true);
     });
-    slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.transition).toHaveProperty("timeout", 0);
+    _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(lastDrawerProps.duration).toEqual({ enter: 0, exit: 0 });
   });
 
-  it("keeps the backdrop fade intact under reduced-motion", () => {
+  it("disables transitions under reduced motion", () => {
     setMediaQueries(true, true);
     render(
       <Sheet onClose={vi.fn()} open title="Reduced backdrop">
         <button type="button">content</button>
       </Sheet>,
     );
-    expect(lastDrawerProps.transitionDuration).toEqual({
-      enter: MOTION_DRAWER_ENTER,
-      exit: MOTION_DRAWER_EXIT,
+    expect(lastDrawerProps.duration).toEqual({
+      enter: 0,
+      exit: 0,
     });
   });
 
-  it("does not zero the Slide timeout under normal motion", () => {
+  it("does not zero the transition durations under normal motion", () => {
     setMediaQueries(true, false);
     render(
       <Sheet onClose={vi.fn()} open title="Normal timeout">
         <button type="button">content</button>
       </Sheet>,
     );
-    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.transition).not.toHaveProperty("timeout");
+    const _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(lastDrawerProps.duration).toEqual({
+      enter: MOTION_DRAWER_ENTER,
+      exit: MOTION_DRAWER_EXIT,
+    });
   });
 });
 
@@ -184,15 +190,15 @@ describe("Sheet exit lifecycle", () => {
     setMediaQueries(true, false);
   });
 
-  it("passes onExited to the Drawer transition slot", () => {
+  it("passes onExited to the dialog exit lifecycle", () => {
     const onExited = vi.fn();
     render(
       <Sheet onClose={vi.fn()} onExited={onExited} open title="Exit test">
         <button type="button">content</button>
       </Sheet>,
     );
-    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.transition).toHaveProperty("onExited", onExited);
+    const _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(lastDrawerProps.onExited).toBe(onExited);
   });
 
   it("does not pass onExited when not provided", () => {
@@ -201,8 +207,8 @@ describe("Sheet exit lifecycle", () => {
         <button type="button">content</button>
       </Sheet>,
     );
-    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.transition).not.toHaveProperty("onExited");
+    const _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(lastDrawerProps.onExited).toBeUndefined();
   });
 });
 
@@ -219,7 +225,7 @@ describe("Sheet anchors", () => {
         <button type="button">content</button>
       </Sheet>,
     );
-    expect(lastDrawerProps.anchor).toBe("right");
+    expect(lastDrawerProps.side).toBe("right");
   });
 
   it("uses a bottom anchor on mobile (< 1024px)", () => {
@@ -229,6 +235,6 @@ describe("Sheet anchors", () => {
         <button type="button">content</button>
       </Sheet>,
     );
-    expect(lastDrawerProps.anchor).toBe("bottom");
+    expect(lastDrawerProps.side).toBe("bottom");
   });
 });

@@ -1,12 +1,11 @@
 "use client";
 
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button, EmptyState } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { appPath } from "@/lib/routing/app-path";
-import { MapPinIcon as MapPin } from "@phosphor-icons/react";
+import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -14,6 +13,7 @@ type Props = {
   canCreateKeyword: boolean;
   dialogs: ReactNode;
   marketLabel: string;
+  paused?: boolean;
   onAddKeyword: () => void;
   projectRef: string;
 };
@@ -28,6 +28,7 @@ export function KeywordsGridMarketEmpty({
   canCreateKeyword,
   dialogs,
   marketLabel,
+  paused = false,
   onAddKeyword,
   projectRef,
 }: Readonly<Props>) {
@@ -50,7 +51,11 @@ export function KeywordsGridMarketEmpty({
             </Button>
           </div>
         }
-        description={`Nothing is tracked in ${marketLabel} yet. Everything you add here is checked in this market only.`}
+        description={
+          paused
+            ? `Prepare keywords in ${marketLabel}. Rank checks will not start until you resume this market.`
+            : `Nothing is tracked in ${marketLabel} yet. Everything you add here is checked in this market only.`
+        }
         icon={<MapPin size={22} weight="regular" />}
         title={`No keywords in ${marketLabel} yet`}
       />

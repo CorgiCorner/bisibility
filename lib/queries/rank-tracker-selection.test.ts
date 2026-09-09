@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   resolveAuthorizedRankTrackerExportKeywordIds,
   resolveRankTrackerExportKeywordIds,
+  selectRankTrackerKeywords,
 } from "./rank-tracker-selection";
 
 const mocks = vi.hoisted(() => ({
@@ -46,7 +47,7 @@ describe("rank tracker export membership", () => {
   });
 
   it.each([
-    { page: 1, pageSize: 10 as const },
+    { page: 1, pageSize: 25 as const },
     { page: 10_000, pageSize: 50 as const },
   ])("ignores valid pagination for complete membership", async ({ page, pageSize }) => {
     await expect(
@@ -208,6 +209,16 @@ describe("rank tracker export membership", () => {
     await resolveRankTrackerExportKeywordIds("prj_public", defaultRankTrackerQueryState);
     expect(mocks.read).toHaveBeenCalledOnce();
     expect(mocks.read).toHaveBeenCalledWith("prj_public");
+  });
+
+  it("allows grouped callers through the shared authorized selection boundary", async () => {
+    await selectRankTrackerKeywords("prj_public", {
+      ...defaultRankTrackerQueryState,
+      grouped: true,
+    });
+
+    expect(mocks.read).toHaveBeenCalledWith("prj_public");
+    expect(mocks.queryRaw).toHaveBeenCalledOnce();
   });
 
   it("blocks foreign project access before SQL resolution", async () => {

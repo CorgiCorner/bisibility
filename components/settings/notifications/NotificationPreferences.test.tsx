@@ -67,11 +67,9 @@ describe("NotificationPreferences", () => {
 
     const manageEmailAction = within(cardActions).getByRole("link", { name: "Manage email" });
     expect(manageEmailAction).toHaveAttribute("href", "/app/account");
-    expect(manageEmailAction).toHaveClass(
-      "MuiButton-root",
-      "MuiButton-outlined",
-      "MuiButton-sizeSmall",
-    );
+    expect(manageEmailAction).toHaveAttribute("data-slot", "button");
+    expect(manageEmailAction).toHaveAttribute("data-variant", "secondary");
+    expect(manageEmailAction).toHaveAttribute("data-size", expect.stringMatching(/^(xs|sm)$/));
   });
 
   it("renders the reference three-column matrix with Weekly report email-only", () => {

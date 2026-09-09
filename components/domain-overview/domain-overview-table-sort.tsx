@@ -1,4 +1,5 @@
-import { CaretDownIcon as CaretDown, CaretUpIcon as CaretUp } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CaretUpIcon as CaretUp } from "@phosphor-icons/react/dist/csr/CaretUp";
 import type { ReactNode } from "react";
 
 export type SortDirection = "asc" | "desc";

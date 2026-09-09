@@ -1,4 +1,5 @@
-import type { SerpRankLocation } from "@/lib/serp/location";
+import type { Location } from "@/lib/generated/prisma/client";
+import { type SerpRankLocation, serpRankLocation } from "@/lib/serp/location";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProviderCallError } from "../call-error";
 import { dataForSeoProvider } from "./dataforseo";
@@ -69,15 +70,33 @@ describe("dataForSeoProvider", () => {
     vi.clearAllMocks();
   });
 
-  it.each([10, 20, 50] as const)("sends the requested top-%i depth", async (depth) => {
+  it.each([10, 20, 50, 100] as const)("sends the requested top-%i depth", async (depth) => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(serpEnvelope([])));
     vi.stubGlobal("fetch", fetchMock);
 
     await dataForSeoProvider.fetchRank(rankInput({ depth }));
 
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual([
-      expect.objectContaining({ depth }),
+      expect.objectContaining({ depth, search_param: "&nfpr=1" }),
     ]);
+  });
+
+  it("records the billable no-search-results status as an empty SERP", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        cost: 0.002,
+        status_code: 20000,
+        tasks: [{ status_code: 40102, cost: 0.002, result: [{ items: null }] }],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(dataForSeoProvider.fetchRank(rankInput({ depth: 20 }))).resolves.toMatchObject({
+      position: null,
+      rankingUrl: null,
+      costCents: 0.2,
+      raw: { organic_results: [], normalization: { outcome: "no_match" } },
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 
   it("keeps the existing manual and legacy adapter on the Live endpoint", async () => {
@@ -123,11 +142,13 @@ describe("dataForSeoProvider", () => {
 
     const result = await dataForSeoProvider.fetchRank(
       rankInput({
-        location: location({
+        location: serpRankLocation({
+          gl: "de",
           hl: "de",
+          primaryGeoCode: null,
           primaryGeoName: "Germany",
           secondaryGeoName: "Germany",
-        }),
+        } as Location),
       }),
     );
 
@@ -159,6 +180,7 @@ describe("dataForSeoProvider", () => {
         depth: 100,
         device: "desktop",
         keyword: "rank tracker",
+        search_param: "&nfpr=1",
         language_code: "de",
         location_name: "Germany",
         ...stopOnMatchParams,
@@ -186,11 +208,13 @@ describe("dataForSeoProvider", () => {
       dataForSeoProvider.fetchRank(
         rankInput({
           depth: 50,
-          location: location({
+          location: serpRankLocation({
+            gl: "us",
+            hl: "en",
             primaryGeoCode: 1026339,
             primaryGeoName: "Austin,Texas,United States",
             secondaryGeoName: "Austin, Texas, United States",
-          }),
+          } as Location),
         }),
       ),
     ).resolves.toMatchObject({ position: 12 });
@@ -201,6 +225,7 @@ describe("dataForSeoProvider", () => {
         depth: 50,
         device: "desktop",
         keyword: "rank tracker",
+        search_param: "&nfpr=1",
         language_code: "en",
         location_code: 1026339,
         ...stopOnMatchParams,
@@ -286,6 +311,7 @@ describe("dataForSeoProvider", () => {
         depth: 50,
         device: "desktop",
         keyword: "rank tracker",
+        search_param: "&nfpr=1",
         language_code: "en",
         location_name: "United Kingdom",
         ...stopOnMatchParams,
@@ -736,6 +762,7 @@ describe("dataForSeoProvider", () => {
                   {
                     keyword_data: {
                       keyword: "rank tracker",
+                      search_param: "&nfpr=1",
                       keyword_info: { search_volume: 500 },
                       serp_info: { serp_item_types: ["organic", "ai_overview"] },
                     },
@@ -1062,6 +1089,79 @@ describe("dataForSeoProvider", () => {
   });
 });
 
+describe("DataForSEO observation capture", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it("records complete local-pack observations from the requested scope", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          serpEnvelope([
+            {
+              domain: "local.example.com",
+              rank_absolute: 3,
+              title: "Local business",
+              type: "local_pack",
+            },
+            {
+              domain: "competitor.example.com",
+              rank_group: 1,
+              type: "organic",
+              url: "https://competitor.example.com",
+            },
+          ]),
+        ),
+      ),
+    );
+
+    const result = await dataForSeoProvider.fetchRank(rankInput({ stopOnMatch: false }));
+
+    expect(result.observation).toMatchObject({
+      completeness: "complete",
+      configuredScope: { device: "desktop", language: "en", location: "United States" },
+      effectiveScope: null,
+      engine: "google",
+      items: [expect.objectContaining({ resultKind: "local_pack", title: "Local business" })],
+      provider: "dataforseo",
+      requestPolicy: {
+        depth: 100,
+        findTargetsIn: null,
+        forcedAiOverview: false,
+        stopOnMatch: false,
+      },
+      surface: "web_serp",
+    });
+    expect(result.observation?.executedAt).toBe(result.checkedAt);
+  });
+
+  it("marks provider-side organic matching as a potentially truncated observation", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          serpEnvelope([
+            {
+              domain: "competitor.example.com",
+              rank_group: 1,
+              type: "organic",
+              url: "https://competitor.example.com",
+            },
+          ]),
+        ),
+      ),
+    );
+
+    const result = await dataForSeoProvider.fetchRank(rankInput({ stopOnMatch: true }));
+
+    expect(result.observation?.completeness).toBe("truncated_by_stop_on_match");
+    expect(result.observation?.requestPolicy.findTargetsIn).toBe("with_subdomains");
+  });
+});
+
 describe("dataForSeoProvider error classification", () => {
   afterEach(() => vi.unstubAllGlobals());
 
@@ -1216,5 +1316,81 @@ describe("dataForSeoProvider error classification", () => {
     await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
       code: "provider_transient",
     });
+  });
+});
+
+describe("DataForSEO observation completeness and policy", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it("records a fired stop-on-match policy with its provider match type", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          serpEnvelope([
+            {
+              domain: "example.com",
+              rank_group: 1,
+              type: "organic",
+              url: "https://example.com/first",
+            },
+          ]),
+        ),
+      ),
+    );
+
+    const result = await dataForSeoProvider.fetchRank(rankInput({ stopOnMatch: true }));
+
+    expect(result.observation?.completeness).toBe("truncated_by_stop_on_match");
+    expect(result.observation?.requestPolicy.findTargetsIn).toBe("with_subdomains");
+  });
+
+  it("keeps an armed but unfired stop-on-match policy unknown", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          serpEnvelope([
+            {
+              domain: "competitor.example.org",
+              rank_group: 1,
+              type: "organic",
+              url: "https://competitor.example.org/first",
+            },
+          ]),
+        ),
+      ),
+    );
+
+    const result = await dataForSeoProvider.fetchRank(rankInput({ stopOnMatch: true }));
+
+    expect(result.observation?.completeness).toBe("unknown");
+    expect(result.observation?.requestPolicy.findTargetsIn).toBe("with_subdomains");
+  });
+
+  it("records a complete observation without a stop-on-match policy", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          serpEnvelope([
+            {
+              domain: "competitor.example.org",
+              rank_group: 1,
+              type: "organic",
+              url: "https://competitor.example.org/first",
+            },
+          ]),
+        ),
+      ),
+    );
+
+    const result = await dataForSeoProvider.fetchRank(rankInput({ stopOnMatch: false }));
+
+    expect(result.observation?.completeness).toBe("complete");
+    expect(result.observation?.requestPolicy.findTargetsIn).toBeNull();
   });
 });

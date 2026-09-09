@@ -30,7 +30,7 @@ export const Expanded: Story = {
     if (!searchConsole) {
       throw new Error("Search Console navigation link is missing.");
     }
-    await expect(within(searchConsole).getByText("alpha")).toBeVisible();
+    await expect(within(searchConsole).getByText("beta")).toBeVisible();
   },
 };
 
@@ -59,7 +59,7 @@ export const Collapsed: Story = {
     // A row drops its visible label and its badge, and the aria-label is the only thing left
     // naming it. Without that the whole rail would announce as a column of bare "link".
     await expect(canvas.queryByText("Search Console")).not.toBeInTheDocument();
-    await expect(canvas.queryByText("alpha")).not.toBeInTheDocument();
+    await expect(canvas.queryByText("beta")).not.toBeInTheDocument();
     await expect(canvas.getByRole("link", { name: "Search Console" })).toBeVisible();
     await expect(canvas.getByRole("link", { name: "Dashboard" })).toBeVisible();
     await expect(canvas.getByRole("link", { name: "Settings" })).toBeVisible();

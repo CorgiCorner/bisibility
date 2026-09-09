@@ -5,7 +5,7 @@ import { AGENTS, API_VERSION, curlExample } from "./install-catalog";
 
 const mocks = vi.hoisted(() => ({ copyButton: vi.fn() }));
 
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/CopyButton", () => ({
   CopyButton: ({ label, text }: { label?: string; text: string }) => {
     mocks.copyButton({ label, text });
     return <button aria-label={label} type="button" />;

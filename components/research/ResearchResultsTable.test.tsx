@@ -1,76 +1,36 @@
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import type { ReactNode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ResearchResultsTable } from "./ResearchResultsTable";
-
-vi.mock("@/components/keywords/grid/DataGrid", () => ({
-  DataGrid: (props: {
-    columns: Array<{
-      field: string;
-      renderCell?: (input: { row: GroupedResearchRow }) => ReactNode;
-    }>;
-    isRowSelectable: (input: { row: GroupedResearchRow }) => boolean;
-    onRowClick: (input: { row: GroupedResearchRow }) => void;
-    onRowSelectionModelChange: (model: { ids: Set<string> }) => void;
-    rows: GroupedResearchRow[];
-  }) => {
-    return (
-      <div>
-        <output aria-label="tracked selectable">
-          {String(props.isRowSelectable({ row: props.rows[1] as GroupedResearchRow }))}
-        </output>
-        <table>
-          <tbody>
-            {props.rows.map((row) => (
-              <tr
-                data-testid={`row-${row.keyword}`}
-                key={row.keyword}
-                onClick={() => props.onRowClick({ row })}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") props.onRowClick({ row });
-                }}
-                tabIndex={0}
-              >
-                {props.columns.map((column) => (
-                  <td key={column.field}>{column.renderCell?.({ row })}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <button
-          onClick={() => props.onRowClick({ row: props.rows[0] as GroupedResearchRow })}
-          type="button"
-        >
-          Open detail
-        </button>
-        <button
-          onClick={() => props.onRowSelectionModelChange({ ids: new Set(["seo tool"]) })}
-          type="button"
-        >
-          Select bulk
-        </button>
-      </div>
-    );
-  },
-}));
+import {
+  researchResultsSelectedKeywords,
+  researchResultsSelectionIds,
+  researchResultsTableRows,
+} from "./research-results-table-state";
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
-function row(keyword: string, alreadyTracked = false, alreadySaved = false): GroupedResearchRow {
+beforeEach(() => {
+  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(620);
+});
+
+function row(
+  keyword: string,
+  options: { alreadySaved?: boolean; alreadyTracked?: boolean; searchVolume?: number } = {},
+): GroupedResearchRow {
   const value = {
-    alreadySaved,
-    alreadyTracked,
+    alreadySaved: options.alreadySaved ?? false,
+    alreadyTracked: options.alreadyTracked ?? false,
     competition: null,
     cpcCents: null,
     difficulty: 20,
     intent: "commercial" as const,
     keyword,
     monthlyTrend: [],
-    searchVolume: 500,
+    searchVolume: options.searchVolume ?? 500,
     source: "related" as const,
   };
   return { ...value, variants: [value] };
@@ -95,7 +55,7 @@ function renderTable(overrides: Partial<Parameters<typeof ResearchResultsTable>[
       fetchedCount={2}
       filterCount={0}
       onOpenFilters={vi.fn()}
-      rows={[row("seo tool"), row("tracked", true)]}
+      rows={[row("seo tool"), row("tracked", { alreadyTracked: true })]}
       seed="seo"
       selectedKeywords={[]}
       totalCount={2}
@@ -106,18 +66,61 @@ function renderTable(overrides: Partial<Parameters<typeof ResearchResultsTable>[
   return handlers;
 }
 
+function resultRows() {
+  return within(screen.getByTestId("research-results-table-body")).getAllByRole("row");
+}
+
 describe("ResearchResultsTable", () => {
+  it("uses normalized stable IDs while retaining keyword-string selections", () => {
+    const rows = researchResultsTableRows([row("SEO-tool")]);
+    const reformatted = researchResultsTableRows([row("seo tool")]);
+
+    expect(rows[0]?.id).toBe(reformatted[0]?.id);
+    const selection = researchResultsSelectionIds(rows, ["SEO-tool"]);
+    expect(researchResultsSelectedKeywords(rows, selection, ["hidden keyword"])).toEqual([
+      "hidden keyword",
+      "SEO-tool",
+    ]);
+  });
+
   it("keeps detail activation separate from bulk selection and excludes tracked rows", () => {
     const { onActiveChange, onSelectionChange } = renderTable();
+    const researchRow = screen.getByRole("row", { name: /seo tool/i });
 
-    expect(screen.getByLabelText("tracked selectable")).toHaveTextContent("false");
-    fireEvent.click(screen.getByRole("button", { name: "Open detail" }));
+    expect(screen.queryByRole("checkbox", { name: "Select tracked" })).not.toBeInTheDocument();
+    fireEvent.click(researchRow);
     expect(onActiveChange).toHaveBeenCalledWith(expect.objectContaining({ keyword: "seo tool" }));
     expect(onSelectionChange).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Select bulk" }));
+    fireEvent.click(within(researchRow).getByRole("checkbox", { name: "Select seo tool" }));
     expect(onSelectionChange).toHaveBeenCalledWith(["seo tool"]);
     expect(onActiveChange).toHaveBeenCalledOnce();
+  });
+
+  it("uses client sorting with volume descending as the default", () => {
+    renderTable({ rows: [row("high", { searchVolume: 900 }), row("low", { searchVolume: 100 })] });
+
+    expect(resultRows()[0]).toHaveTextContent("high");
+    fireEvent.click(screen.getByRole("button", { name: "Sort Volume ascending" }));
+    expect(resultRows()[0]).toHaveTextContent("low");
+    fireEvent.click(screen.getByRole("button", { name: "Clear Volume sorting" }));
+    expect(resultRows()[0]).toHaveTextContent("high");
+  });
+
+  it("paginates client rows with the T3 page-size contract", () => {
+    const rows = Array.from({ length: 51 }, (_, index) =>
+      row(`keyword ${index + 1}`, { searchVolume: 51 - index }),
+    );
+    renderTable({ deeper: null, fetchedCount: rows.length, rows, totalCount: rows.length });
+
+    expect(screen.getByText("1-50 of 51")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getByText("51-51 of 51")).toBeInTheDocument();
+    expect(screen.getByText("keyword 51")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Rows per page" }));
+    fireEvent.click(within(screen.getByRole("menu")).getByText("25"));
+    expect(screen.getByText("1-25 of 51")).toBeInTheDocument();
   });
 
   it("shows the priced deeper-run footer and triggers the deeper lookup", () => {
@@ -125,32 +128,22 @@ describe("ResearchResultsTable", () => {
 
     const deeperButton = screen.getByRole("button", { name: /run with 500 results/ });
     expect(deeperButton).toHaveTextContent("~$0.06");
-    expect(deeperButton).toHaveClass("cursor-pointer", "p-0");
     expect(screen.getByText(/Showing all 2 fetched/)).toBeInTheDocument();
     fireEvent.click(deeperButton);
     expect(onDeeper).toHaveBeenCalledOnce();
     expect(screen.getByRole("button", { name: "Export" })).toBeInTheDocument();
   });
 
-  it("summarizes the header meta line without the provider segment", () => {
-    renderTable();
-
-    const meta = screen.getByText(/of 2 keywords/);
-    expect(meta).toHaveTextContent(/keywords - cached/);
-    expect(meta.textContent).not.toContain("via");
-  });
-
-  it("uses the shared relative-time label for older results", () => {
+  it("summarizes fetched results with the shared relative-time label", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-23T16:00:00.000Z"));
-
     renderTable({ fetchedAt: "2026-07-22T10:00:00.000Z" });
 
-    expect(screen.getByText(/cached yesterday/)).toBeInTheDocument();
+    expect(screen.getByText(/of 2 keywords - cached yesterday/)).toBeInTheDocument();
   });
 
-  it("shows the persisted matrix cost in checks per run before the add action", () => {
-    const { onAddSelected } = renderTable({
+  it("keeps selected bulk actions and their matrix check count", () => {
+    const { onAddSelected, onSaveSelected } = renderTable({
       selectedKeywords: ["seo tool"],
       trackingMarketCount: 3,
     });
@@ -159,103 +152,117 @@ describe("ResearchResultsTable", () => {
     const addButton = screen.getByRole("button", { name: /Add 1 to tracking/ });
     expect(addButton).toHaveTextContent("+3 checks per run");
     expect(addButton).not.toHaveTextContent("$");
-    expect(addButton).not.toHaveTextContent("/mo");
     fireEvent.click(addButton);
     expect(onAddSelected).toHaveBeenCalledOnce();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save 1 for later" }));
+    expect(onSaveSelected).toHaveBeenCalledWith([expect.objectContaining({ keyword: "seo tool" })]);
   });
 
-  it("keeps the default single-market cost free of dollar and monthly estimates", () => {
-    const selectedKeywords = ["seo tool", "rank tracker", "keyword research"];
-    renderTable({
-      rows: selectedKeywords.map((keyword) => row(keyword)),
-      selectedKeywords,
-      totalCount: selectedKeywords.length,
-    });
-
-    const addButton = screen.getByRole("button", { name: /Add 3 to tracking/ });
-    expect(addButton).toHaveTextContent("+3 checks per run");
-    expect(addButton).not.toHaveTextContent("$");
-    expect(addButton).not.toHaveTextContent("/mo");
-  });
-
-  it("renders unavailable keyword-overview metrics as accessible n/a values", () => {
-    renderTable({ metricsAvailable: false });
-
+  it("renders unavailable metrics, active state, and an empty filtered result", () => {
+    const { rerender } = render(
+      <ResearchResultsTable
+        activeKeyword="seo tool"
+        cached
+        canRemoveSaved
+        deeper={null}
+        fetchedAt="2026-07-22T10:00:00.000Z"
+        fetchedCount={1}
+        filterCount={0}
+        metricsAvailable={false}
+        onActiveChange={vi.fn()}
+        onAddSelected={vi.fn()}
+        onDeeper={vi.fn()}
+        onOpenFilters={vi.fn()}
+        onSaveSelected={vi.fn()}
+        onSelectionChange={vi.fn()}
+        onToggleSave={vi.fn()}
+        rows={[row("seo tool")]}
+        seed="seo"
+        selectedKeywords={[]}
+        totalCount={1}
+      />,
+    );
+    const activeRow = screen.getByRole("row", { name: /seo tool/i });
+    expect(activeRow).toHaveClass(
+      "!bg-accent-soft",
+      "![--dt-row-background:var(--accent-soft)]",
+      "shadow-[inset_2px_0_0_var(--accent)]",
+      "[&_[data-column-id=selection]]:shadow-[inset_2px_0_0_var(--accent)]",
+    );
+    const selectionCell = within(activeRow)
+      .getByRole("checkbox", { name: "Select seo tool" })
+      .closest('[data-column-id="selection"]');
+    expect(selectionCell).toHaveAttribute("data-column-id", "selection");
+    expect(activeRow.querySelector('[data-column-id="keyword"]')).toBeInTheDocument();
     for (const label of [
       "Search volume unavailable",
       "Search trend unavailable",
       "KD unavailable",
       "CPC unavailable",
     ]) {
-      expect(screen.getAllByLabelText(label)).toHaveLength(2);
-      for (const value of screen.getAllByLabelText(label)) expect(value).toHaveTextContent("n/a");
+      expect(screen.getByLabelText(label)).toHaveTextContent("n/a");
     }
+
+    rerender(
+      <ResearchResultsTable
+        activeKeyword={null}
+        cached
+        canRemoveSaved
+        deeper={null}
+        fetchedAt="2026-07-22T10:00:00.000Z"
+        fetchedCount={0}
+        filterCount={1}
+        onActiveChange={vi.fn()}
+        onAddSelected={vi.fn()}
+        onDeeper={vi.fn()}
+        onOpenFilters={vi.fn()}
+        onSaveSelected={vi.fn()}
+        onSelectionChange={vi.fn()}
+        onToggleSave={vi.fn()}
+        rows={[]}
+        seed="seo"
+        selectedKeywords={[]}
+        totalCount={1}
+      />,
+    );
+    expect(screen.getByText("No keywords match these filters.")).toBeInTheDocument();
   });
 
-  it("groups the selection summary and bulk actions for responsive layout", () => {
+  it("preserves saved affordances and prevents the bookmark from opening a row", () => {
+    const { onActiveChange, onToggleSave } = renderTable({
+      rows: [
+        row("saved keyword", { alreadySaved: true }),
+        row("tracked keyword", { alreadySaved: true, alreadyTracked: true }),
+      ],
+    });
+    const savedRow = screen.getByRole("row", { name: /saved keyword/i });
+    const trackedRow = screen.getByRole("row", { name: /tracked keyword/i });
+
+    expect(within(savedRow).getByText("Saved")).toBeInTheDocument();
+    expect(within(savedRow).getByRole("button", { name: "Remove from saved" })).toBeInTheDocument();
+    expect(within(trackedRow).getByText("Tracked")).toBeInTheDocument();
+    expect(within(trackedRow).queryByText("Saved")).not.toBeInTheDocument();
+
+    fireEvent.click(within(savedRow).getByRole("button", { name: "Remove from saved" }));
+    expect(onToggleSave).toHaveBeenCalledWith(
+      expect.objectContaining({ keyword: "saved keyword" }),
+    );
+    expect(onActiveChange).not.toHaveBeenCalled();
+  });
+
+  it("keeps responsive selection groups and the card-owned table frame", () => {
     renderTable({ selectedKeywords: ["seo tool"] });
 
     expect(screen.getByTestId("research-selection-toolbar")).toHaveClass("@container", "grid");
-    expect(
-      within(screen.getByTestId("research-selection-summary")).getByRole("button", {
-        name: "Clear",
-      }),
-    ).toBeInTheDocument();
-
-    const actions = within(screen.getByTestId("research-selection-actions"));
-    expect(actions.getByRole("button", { name: "Save 1 for later" })).toBeInTheDocument();
-    expect(actions.getByRole("button", { name: /Add 1 to tracking/ })).toBeInTheDocument();
     expect(screen.getByTestId("research-selection-actions")).toHaveClass(
       "grid",
       "@lg:grid-cols-2",
       "@4xl:flex",
     );
-  });
-
-  it("saves eight selected rows with one bulk callback", () => {
-    const rows = Array.from({ length: 8 }, (_, index) => row(`keyword ${index + 1}`));
-    const selectedKeywords = rows.map((item) => item.keyword);
-    const { onSaveSelected } = renderTable({ rows, selectedKeywords, totalCount: rows.length });
-
-    fireEvent.click(screen.getByRole("button", { name: "Save 8 for later" }));
-
-    expect(onSaveSelected).toHaveBeenCalledOnce();
-    expect(onSaveSelected).toHaveBeenCalledWith(rows);
-  });
-
-  it("shows saved affordances but lets the tracked badge take precedence", () => {
-    renderTable({
-      rows: [row("saved keyword", false, true), row("tracked keyword", true, true)],
-    });
-
-    const savedRow = within(screen.getByTestId("row-saved keyword"));
-    expect(savedRow.getByText("Saved")).toBeInTheDocument();
-    expect(savedRow.getByRole("button", { name: "Remove from saved" })).toBeInTheDocument();
-
-    const trackedRow = within(screen.getByTestId("row-tracked keyword"));
-    expect(trackedRow.getByText("Tracked")).toBeInTheDocument();
-    expect(trackedRow.queryByText("Saved")).not.toBeInTheDocument();
-    expect(trackedRow.queryByRole("button")).not.toBeInTheDocument();
-  });
-
-  it("keeps the saved badge read-only without remove permission", () => {
-    renderTable({
-      canRemoveSaved: false,
-      rows: [row("saved keyword", false, true), row("tracked keyword", true, true)],
-    } as never);
-
-    const savedRow = within(screen.getByTestId("row-saved keyword"));
-    expect(savedRow.getByText("Saved")).toBeInTheDocument();
-    expect(savedRow.queryByRole("button", { name: "Remove from saved" })).not.toBeInTheDocument();
-  });
-
-  it("toggles the hover bookmark without activating the row", () => {
-    const { onActiveChange, onToggleSave } = renderTable();
-    const unsaved = within(screen.getByTestId("row-seo tool"));
-
-    fireEvent.click(unsaved.getByRole("button", { name: "Save for later" }));
-
-    expect(onToggleSave).toHaveBeenCalledWith(expect.objectContaining({ keyword: "seo tool" }));
-    expect(onActiveChange).not.toHaveBeenCalled();
+    expect(screen.getByTestId("research-results-viewport")).toHaveClass(
+      "min-w-0",
+      "[&>[role=table]]:border-0",
+    );
   });
 });

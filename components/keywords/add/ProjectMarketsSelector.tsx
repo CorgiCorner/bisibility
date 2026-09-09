@@ -1,13 +1,14 @@
 "use client";
 
 import { MarketPicker, type MarketPickerChoice } from "@/components/markets/MarketPicker";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { addProjectMarkets, type ProjectMarketChoice } from "@/lib/actions/project-markets";
 import { fieldLabelClass, fieldMetaClass } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import { type SerpDevice, serpDeviceOptions } from "@/lib/serp/markets";
+import { type SerpDevice, serpDeviceOptions } from "@/lib/serp/constants";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { CheckIcon as Check, PlusIcon as Plus } from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useState } from "react";
 
 type ProjectMarketsSelectorProps = {
@@ -126,7 +127,6 @@ export function ProjectMarketsSelector({
                 className={`inline-flex min-h-[30px] max-w-full items-center gap-1.5 rounded-full border border-border px-2.5 text-[12px] font-medium outline-offset-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${
                   selected ? "bg-bg-sunken text-fg" : "bg-bg-elev text-fg-muted hover:bg-bg-sunken"
                 } ${active ? "" : "opacity-60"}`}
-                disabled={!active}
                 key={market.id}
                 onClick={() => toggleMarket(market.canonicalKey)}
                 type="button"
@@ -158,25 +158,21 @@ export function ProjectMarketsSelector({
         onClick={() => setPickerOpen(true)}
         size="xs"
         startIcon={<Plus aria-hidden size={11} weight="regular" />}
-        sx={{
+        style={{
           alignSelf: "start",
-          backgroundColor: "transparent",
-          border: 0,
-          color: "var(--fg-muted)",
+          "--control-background-color": "transparent",
+          "--control-border": "0px",
+          "--control-color": "var(--fg-muted)",
           justifySelf: "start",
           minHeight: 34,
           padding: 0,
-          "&:hover": {
-            backgroundColor: "transparent",
-            border: 0,
-            color: "var(--accent-text)",
-          },
-          "&.Mui-disabled": {
-            backgroundColor: "transparent",
-            border: 0,
-            color: "var(--fg-muted)",
-            opacity: 0.55,
-          },
+          "--control-hover-background-color": "transparent",
+          "--control-hover-border": "0px",
+          "--control-hover-color": "var(--accent-text)",
+          "--control-disabled-background-color": "transparent",
+          "--control-disabled-border": "0px",
+          "--control-disabled-color": "var(--fg-muted)",
+          "--control-disabled-opacity": 0.55,
         }}
         type="button"
         variant="ghost"

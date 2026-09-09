@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
+import { resolveExpectedUrlForKeyword } from "@/lib/expected-url/keyword";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
@@ -18,7 +19,7 @@ import {
   resolveEffectiveSerpDepth,
   resolveSerpStopOnMatch,
   type SerpDepth,
-} from "@/lib/serp/markets";
+} from "@/lib/serp/constants";
 import { assertRankCheckConnectionAllocation } from "./allocation-enforcement";
 import { assertBudgetAvailable } from "./budget";
 import { findComparablePredecessor } from "./comparable-history";
@@ -191,6 +192,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
       locationRef: true,
       project: { include: { defaults: true } },
       _count: { select: { rankChecks: { where: { status: "completed" } } } },
+      checkSchedule: { select: { serpDepth: true } },
       schedule: true,
     },
     where: { id: input.keywordId },
@@ -203,6 +205,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
   const depth = resolveEffectiveSerpDepth({
     projectDepth: keyword.project.defaults?.serpDepth,
     requestedDepth: input.depth,
+    checkScheduleDepth: keyword.checkSchedule?.serpDepth,
     scheduleDepth: keyword.schedule?.serpDepth,
   });
   const stopOnMatch = resolveSerpStopOnMatch(keyword.project.defaults?.serpStopOnMatch);
@@ -225,7 +228,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     requestedDepth: depth,
   });
   const comparisonAllowed = previous !== null;
-  const { handles, granular } = keywordRankLocation(keyword.locationRef, keyword.location);
+  const { handles, granular } = keywordRankLocation(keyword.locationRef);
   const existing =
     input.rankCheckId && "findUnique" in prisma.rankCheck
       ? await prisma.rankCheck.findUnique({
@@ -267,6 +270,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     select: { id: true },
     where: { kind: "serp", projectId: keyword.projectId, provider: outcome.provider },
   });
+  const expectedUrl = await resolveExpectedUrlForKeyword(keyword.id);
 
   const rankCheck = await persistRankCheck(
     {
@@ -277,6 +281,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
       hasSchedule: Boolean(keyword.schedule),
       keywordId: keyword.id,
       keywordPublicId: keyword.publicId,
+      expectedUrlAtCheck: expectedUrl.url,
       keywordTargetUrl: keyword.targetUrl ?? null,
       previousRaw: previous?.raw ?? null,
       previousRankingUrl: previous?.rankingUrl ?? null,

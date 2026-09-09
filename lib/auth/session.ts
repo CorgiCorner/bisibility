@@ -1,6 +1,5 @@
 import "server-only";
 
-import { auth } from "@/lib/auth/auth";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import {
   loginErrorReturnTo,
@@ -9,6 +8,8 @@ import {
 } from "@/lib/auth/return-to";
 import { retryTransientSessionDatabaseRead } from "@/lib/auth/session-retry";
 import { prisma } from "@/lib/db/prisma";
+import { readOnlyDemoConfig } from "@/lib/demo/config";
+import { loadDemoIdentity } from "@/lib/demo/identity";
 import type { Role } from "@/lib/generated/prisma/client";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -31,6 +32,7 @@ const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn)
 // authorization must revalidate the referenced user.
 export const getSessionReference = perRequestCache(async () => {
   const requestHeaders = await headers();
+  const { auth } = await import("@/lib/auth/auth");
   const resolved = await retryTransientSessionDatabaseRead(() =>
     auth.api.getSession({ headers: requestHeaders }),
   );
@@ -50,6 +52,10 @@ export async function enforceActiveSession<T extends { user: { id: string } }>(
 ): Promise<T | null> {
   if (!session) {
     return null;
+  }
+
+  if (readOnlyDemoConfig()) {
+    return (await loadDemoIdentity())?.id === session.user.id ? session : null;
   }
 
   const resolved = await retryTransientSessionDatabaseRead(() =>

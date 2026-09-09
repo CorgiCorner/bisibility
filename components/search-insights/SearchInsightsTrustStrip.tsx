@@ -1,7 +1,7 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { Tooltip } from "@/components/ui";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { SearchInsightsImportAction } from "@/lib/actions/search-insights";
 import type { WorkerTemporalStatus } from "@/lib/ops/worker-temporal-identity";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
@@ -16,7 +16,6 @@ import {
   type SearchSyncControlFacts,
 } from "@/lib/search-insights/sync/control-model";
 import type { ReactNode } from "react";
-import { SearchImportPauseControl } from "./SearchImportPauseControl";
 import { SearchInsightsRefresh } from "./SearchInsightsRefresh";
 import { SearchInsightsWaitingStrip } from "./SearchInsightsWaitingStrip";
 import { SearchSyncStatusControl } from "./SearchSyncStatusControl";
@@ -105,10 +104,7 @@ function ImportLine({
   hideRefresh = false,
   facts,
   importState,
-  pauseAction = unavailablePauseAction,
   projectId = "",
-  resumeAction = unavailablePauseAction,
-  retryAction = unavailablePauseAction,
   statusFacts,
 }: Readonly<{
   hideRefresh?: boolean;
@@ -124,19 +120,13 @@ function ImportLine({
   const progress = importProgress(importState, facts);
   if (progress.state === "none") return null;
   const model = resolveSearchSyncControl(statusFacts, dateFormat);
+  const displayModel =
+    model.action === "reconnect" ? model : { ...model, action: null, actionLabel: null };
   const reconnectHref = googleInstallUrl({
     projectId,
     provider: "gsc",
     returnPath: searchConsolePath(asProjectRef(projectId)),
   });
-  const action =
-    model.action && model.action !== "reconnect"
-      ? model.action === "resume"
-        ? resumeAction
-        : model.action === "retry"
-          ? retryAction
-          : pauseAction
-      : null;
   const refresh = hideRefresh ? null : <SearchInsightsRefresh active={false} />;
   return (
     <div
@@ -144,23 +134,13 @@ function ImportLine({
       data-testid="search-import-line"
     >
       <SearchSyncStatusControl
-        actionNode={
-          action && model.action && model.action !== "reconnect" ? (
-            <SearchImportPauseControl action={action} intent={model.action} projectId={projectId} />
-          ) : undefined
-        }
         leadingActionNode={refresh}
-        model={model}
+        model={displayModel}
         reconnectHref={reconnectHref}
       />
     </div>
   );
 }
-const unavailablePauseAction: SearchInsightsImportAction = async () => ({
-  message: "Search data sync action is unavailable.",
-  ok: false,
-});
-
 export function SearchInsightsTrustStrip({
   coverage,
   deploymentMode,
@@ -172,7 +152,6 @@ export function SearchInsightsTrustStrip({
   pauseAction,
   projectId,
   resumeAction,
-  retryAction,
   statusFacts,
   workerStatus,
 }: Readonly<SearchInsightsTrustStripProps>) {
@@ -196,6 +175,7 @@ export function SearchInsightsTrustStrip({
         pauseAction={pauseAction}
         projectId={projectId}
         resumeAction={resumeAction}
+        statusFacts={statusFacts}
         workerStatus={workerStatus}
       />
     );
@@ -257,10 +237,7 @@ export function SearchInsightsTrustStrip({
           <ImportLine
             facts={facts}
             importState={importState}
-            pauseAction={pauseAction}
             projectId={projectId}
-            resumeAction={resumeAction}
-            retryAction={retryAction}
             statusFacts={statusFacts}
           />
         </div>

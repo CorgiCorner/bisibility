@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { ReactNode } from "react";
 
 export type KeywordDetailFreeActionButtonProps = {

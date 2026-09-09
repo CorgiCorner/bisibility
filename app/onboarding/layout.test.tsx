@@ -9,13 +9,17 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/components/onboarding/OnboardingLogoutButton", () => ({
   OnboardingLogoutButton: () => <span data-testid="logout-button">Log out</span>,
 }));
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/Avatar", () => ({
   Avatar: ({ initials, src }: { initials: string; src?: string | null }) => (
     <span data-src={src ?? ""} data-testid="onboarding-avatar">
       {initials}
     </span>
   ),
+}));
+vi.mock("@/components/ui/BrandLockup", () => ({
   BrandLockup: () => <span data-testid="brand-lockup">bisibility</span>,
+}));
+vi.mock("@/components/ui/ThemeSegments", () => ({
   ThemeSegments: ({ size }: { size?: "sm" | "md" }) => (
     <span data-size={size} data-testid="theme-segments" />
   ),

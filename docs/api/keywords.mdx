@@ -66,7 +66,8 @@ Query parameters:
 | `cursor` | Pagination cursor. |
 | `search` or `q` | Case-insensitive keyword text search. |
 | `filter[device]` or `device` | `desktop` or `mobile`. |
-| `filter[country]` or `country` | Matches canonical country names and country-name aliases case-insensitively. |
+| `filter[location_key]` or `location_key` | Matches the exact canonical location key, optionally qualified with `@language`. |
+| `filter[country]` or `country` | Matches canonical country names and country-name aliases case-insensitively. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
 | `filter[tag]` or `tag` | Case-insensitive exact tag match. |
 | `filter[topic]` or `topic` | Case-insensitive exact topic match. |
 | `filter[intent]` or `intent` | Case-insensitive exact intent match. |
@@ -173,10 +174,10 @@ Request fields:
 | `topic` | Optional topic label, 1 to 80 characters, `null`, or omitted. |
 | `intent` | Optional intent label, 1 to 80 characters, `null`, or omitted. |
 | `device` | Optional. Defaults to `desktop`. |
-| `country` | Optional supported SERP country. Defaults to the project's default market, which falls back to United States for new projects. |
-| `city` | Optional city name resolved against the selected country. Unresolved cities fall back to country-level tracking with a warning. |
-| `location_key` | Optional canonical country, region, or city key, optionally qualified with `@language`, such as `ES/Andalusia/Malaga@en`. Takes precedence over `country`, `location`, and `city`. |
-| `location` | Alias for `country`; prefer `country`. When both are sent, `location` wins. |
+| `location_key` | Primary location reference: canonical country, region, or city key, optionally qualified with `@language`, such as `ES/Andalusia/Malaga@en`. Defaults to the project's default market. Takes precedence over the deprecated `country`, `language`, `location`, and `city` fields. |
+| `country` | Legacy supported SERP country name. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
+| `city` | Legacy city name resolved against `country`; unresolved cities fall back to country-level tracking with a warning. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
+| `location` | Legacy alias for `country`; when both are sent, `location` wins. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
 | `tags` | Optional. Up to 12 tags, each 1 to 48 characters. |
 | `schedule` | Optional schedule object. |
 
@@ -265,10 +266,10 @@ Patch fields are optional:
 | `topic` | Topic label, 1 to 80 characters, `null`, or omitted. |
 | `intent` | Intent label, 1 to 80 characters, `null`, or omitted. |
 | `device` | Identity field. Must match the stored `desktop` or `mobile` device. |
-| `country` | Identity field. Must resolve to the stored SERP market. |
-| `city` | Identity field. Must resolve to the stored city in the selected country. |
-| `location_key` | Identity field. Canonical country, region, or city key, optionally qualified with `@language`; must resolve to the stored market. |
-| `location` | Identity field and alias for `country`; prefer `country`. When both are sent, `location` wins and must resolve to the stored market. |
+| `location_key` | Identity field and primary location reference. Canonical country, region, or city key, optionally qualified with `@language`; must resolve to the stored market. |
+| `country` | Identity field. Legacy country name that must resolve to the stored SERP market. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
+| `city` | Identity field. Legacy city name that must resolve to the stored city in the selected country. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
+| `location` | Identity field and legacy alias for `country`; when both are sent, `location` wins. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
 | `tags` | Replaces the full tag set. |
 | `frequency` | Sets a default schedule with timezone `UTC`, jitter `60`, and no cron expression. |
 | `schedule` | Full schedule object. Overrides `frequency` if present. |

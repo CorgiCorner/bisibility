@@ -1,10 +1,10 @@
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { languageForLocationValue } from "@/components/onboarding/onboarding-location-field";
-import { FieldLabel, MenuSelect, type MenuSelectOption } from "@/components/ui";
-import { type SerpDepth, serpDepthValues } from "@/lib/serp/markets";
-import { FIELD_HELP } from "@/lib/settings/field-help";
-import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
+import type { AnalyticsControlId } from "@/lib/analytics/controls";
+import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
+import { VISIBILITY_HORIZON } from "@/lib/visibility/definition";
 import type { ReactNode } from "react";
 
 const boxClass =
@@ -27,17 +27,25 @@ export function languagesForLocations(locations: readonly LocationFieldValue[]) 
 }
 
 export function SerpDepthField({
+  analytics,
   depth,
   onChange,
   triggerClassName,
 }: Readonly<{
+  analytics?: { control: AnalyticsControlId };
   depth: SerpDepth;
   onChange: (depth: SerpDepth) => void;
   triggerClassName: string;
 }>) {
+  const help =
+    `Checks the first ${depth} results. Lower rankings are reported as not found and do not trigger alerts.` +
+    (depth < VISIBILITY_HORIZON
+      ? ` Choose Top ${VISIBILITY_HORIZON} or deeper to update Visibility.`
+      : "");
   return (
-    <MenuField help={FIELD_HELP.serpDepth} label="SERP depth">
+    <MenuField help={help} label="SERP depth">
       <MenuSelect
+        analytics={analytics}
         ariaLabel="SERP depth"
         onChange={(value) => onChange(Number(value) as SerpDepth)}
         options={depthOptions}
@@ -45,31 +53,6 @@ export function SerpDepthField({
         value={String(depth)}
       />
     </MenuField>
-  );
-}
-
-export function SerpDepthWarning({
-  currentDepth,
-  initialDepth,
-}: Readonly<{ currentDepth: SerpDepth; initialDepth: SerpDepth }>) {
-  if (currentDepth >= initialDepth && currentDepth >= VISIBILITY_HORIZON) {
-    return null;
-  }
-  return (
-    <p className="m-0 mt-2 flex items-start gap-1.5 text-[11.5px] font-medium leading-[1.45] text-fg-muted">
-      <WarningCircle
-        aria-hidden
-        className="mt-[1px] shrink-0 text-yellow-text"
-        size={13}
-        weight="regular"
-      />
-      <span>
-        {currentDepth < initialDepth
-          ? `Rankings below Top ${currentDepth} report as not found and skip alerts. `
-          : ""}
-        {currentDepth < VISIBILITY_HORIZON ? VISIBILITY_SHALLOW_CHECK_COPY : ""}
-      </span>
-    </p>
   );
 }
 

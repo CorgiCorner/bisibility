@@ -1,12 +1,11 @@
 "use client";
 
-import { Button, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { type RegenerateApiKeyInput, regenerateApiKeySchema } from "@/lib/schemas/apiKey";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  CheckCircleIcon as CheckCircle,
-} from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { useState } from "react";
 import { ApiKeyRevealContent } from "./ApiKeyReveal";
 import type { ApiKeyData, IssuedApiKey } from "./api-key-model";

@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import * as ts from "typescript";
+import * as ts from "@typescript/typescript6";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();

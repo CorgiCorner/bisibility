@@ -20,8 +20,15 @@ describe("AppRealtimeProvider", () => {
       notifications: null,
       operations: [
         {
+          capabilities: { pause: true, resume: false, retry: false },
           id: "import_1",
           kind: "gsc_import",
+          presentation: {
+            action: "pause",
+            supportingText: "Import is running.",
+            title: "Importing",
+          },
+          property: "sc-domain:example.com",
           progress: { done: 1, total: 2 },
           state: "running",
         },

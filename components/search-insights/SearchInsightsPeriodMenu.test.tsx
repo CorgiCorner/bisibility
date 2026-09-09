@@ -1,24 +1,12 @@
 import { type FinalizedWindow, finalizedWindow } from "@/lib/search-insights/dates";
 import type { SearchInsightsContext } from "@/lib/search-insights/queries/context";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
-import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { TransitionStartFunction } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const mocks = vi.hoisted(() => ({ track: vi.fn() }));
-const transition = vi.hoisted(() => ({ pending: false, start: vi.fn() }));
-vi.mock("@/lib/analytics/client", () => ({ track: mocks.track }));
-vi.mock("react", async () => {
-  const actual = await vi.importActual<typeof import("react")>("react");
-  return {
-    ...actual,
-    useTransition: (): [boolean, TransitionStartFunction] => [transition.pending, transition.start],
-  };
-});
-
 import { SearchInsightsPeriodMenu } from "./SearchInsightsPeriodMenu";
+
+const onPeriodChange = vi.fn();
 
 const period = {
   comparison: "previous_period" as const,
@@ -54,15 +42,14 @@ function renderMenu(
   menuPeriod: SearchInsightsContext["period"] = period,
   menuWindow: FinalizedWindow | null = window,
   dateFormat: "iso" | "month_first" = "month_first",
+  pending = false,
 ) {
-  setNavigationState({
-    pathname: "/app/prj_1/search-console",
-    searchParams: { google: "select", period: "7" },
-  });
   render(
     <SearchInsightsPeriodMenu
       dateFormat={dateFormat}
       importFacts={facts}
+      onPeriodChange={onPeriodChange}
+      pending={pending}
       period={menuPeriod}
       window={menuWindow}
     />,
@@ -71,10 +58,7 @@ function renderMenu(
 
 describe("SearchInsightsPeriodMenu", () => {
   beforeEach(() => {
-    mocks.track.mockReset();
-    transition.pending = false;
-    transition.start.mockReset();
-    transition.start.mockImplementation((callback) => callback());
+    onPeriodChange.mockReset();
   });
 
   it("labels the trigger with only the finalized window", () => {
@@ -104,7 +88,8 @@ describe("SearchInsightsPeriodMenu", () => {
       "max-w-80",
       "text-left",
     );
-    expect(tooltip).toHaveAttribute("data-popper-placement", "bottom-start");
+    expect(tooltip.closest("[data-ui-tooltip]")).toHaveAttribute("data-side", "bottom");
+    expect(tooltip.closest("[data-ui-tooltip]")).toHaveAttribute("data-align", "start");
   });
 
   it("keeps a deliberately wide ISO tooltip independent from the chip width", async () => {
@@ -123,46 +108,21 @@ describe("SearchInsightsPeriodMenu", () => {
     );
   });
 
-  it("replaces only the period and keeps the other parameters", async () => {
+  it("reports the selected period to the workspace", async () => {
     renderMenu();
-
     await userEvent.click(screen.getByRole("button", { name: /^Comparison window:/ }));
     await userEvent.click(await screen.findByText("90 finalized days"));
-
-    expect(routerMock.replace).toHaveBeenCalledWith(
-      "/app/prj_1/search-console?google=select&period=90",
-      { scroll: false },
-    );
-    expect(mocks.track).toHaveBeenCalledWith("search_insights_period_changed", { window: "90" });
+    expect(onPeriodChange).toHaveBeenCalledExactlyOnceWith("90");
   });
 
-  it("issues the period navigation from inside a transition", async () => {
-    let insideTransition = false;
-    transition.start.mockImplementation((callback) => {
-      insideTransition = true;
-      callback();
-      insideTransition = false;
-    });
-    routerMock.replace.mockImplementation(() => {
-      expect(insideTransition).toBe(true);
-    });
-    renderMenu();
-
-    await userEvent.click(screen.getByRole("button", { name: /^Comparison window:/ }));
-    await userEvent.click(await screen.findByText("90 finalized days"));
-
-    expect(transition.start).toHaveBeenCalledOnce();
-  });
-
-  it("keeps one calendar icon slot while the period navigation is pending", () => {
-    transition.pending = true;
-    renderMenu();
+  it("keeps the calendar still while the period navigation is pending", () => {
+    renderMenu(importFacts, period, window, "month_first", true);
 
     const trigger = screen.getByRole("button", { name: /^Comparison window:/ });
     expect(trigger).toBeDisabled();
-    expect(trigger).toHaveAttribute("aria-busy", "true");
+    expect(trigger).not.toHaveAttribute("aria-busy", "true");
     expect(trigger.querySelectorAll("svg")).toHaveLength(2);
-    expect(trigger.querySelectorAll("svg.animate-spin")).toHaveLength(1);
+    expect(trigger.querySelectorAll("svg.animate-spin")).toHaveLength(0);
   });
 
   it("does not report a period event when the active window is picked again", async () => {
@@ -171,8 +131,7 @@ describe("SearchInsightsPeriodMenu", () => {
     await userEvent.click(screen.getByRole("button", { name: /^Comparison window:/ }));
     await userEvent.click(await screen.findByRole("option", { name: /7 finalized days/ }));
 
-    expect(mocks.track).not.toHaveBeenCalled();
-    expect(routerMock.replace).not.toHaveBeenCalled();
+    expect(onPeriodChange).not.toHaveBeenCalled();
   });
 
   it("names and selects the first look without navigating", async () => {
@@ -199,8 +158,7 @@ describe("SearchInsightsPeriodMenu", () => {
     expect(firstLook).not.toHaveTextContent("first look");
     await userEvent.click(firstLook);
 
-    expect(mocks.track).not.toHaveBeenCalled();
-    expect(routerMock.replace).not.toHaveBeenCalled();
+    expect(onPeriodChange).not.toHaveBeenCalled();
   });
 
   it("disables a period that the readiness selector has not unlocked", async () => {

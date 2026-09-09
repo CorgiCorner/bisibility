@@ -5,6 +5,7 @@ import {
 import { appSectionPath } from "@/lib/routing/app-path";
 
 export type HeaderMeta = {
+  id?: string;
   headerVariant?: "settings";
   subtitle?: string;
   /** Heading shown in the app header. */
@@ -54,19 +55,28 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
     return sectionMeta("Instance administration", "Worker health and operator diagnostics.");
   }
 
-  if (matches(sectionPath, "/rank-tracker/schedules")) {
-    return { title: "Schedules" };
+  const projectRunMatch = /^\/runs\/rank-checks\/(rcr_[^/]+)$/u.exec(sectionPath);
+  if (projectRunMatch?.[1]) {
+    return { id: projectRunMatch[1], title: "Run" };
   }
 
-  const runMatch = /^\/rank-tracker\/runs\/(rcr_[^/]+)$/u.exec(sectionPath);
-  if (runMatch?.[1]) {
-    return { title: `Run · ${runMatch[1]}` };
+  if (matches(sectionPath, "/runs")) {
+    return sectionMeta("Runs", "Rank checks and Search Console imports for this project.");
+  }
+
+  if (matches(sectionPath, "/rank-tracker/schedules")) {
+    return sectionMeta("Runs", "Rank checks and Search Console imports for this project.");
+  }
+
+  const legacyRunMatch = /^\/rank-tracker\/runs\/(rcr_[^/]+)$/u.exec(sectionPath);
+  if (legacyRunMatch?.[1]) {
+    return { id: legacyRunMatch[1], title: "Run" };
   }
 
   // The detail page for one keyword. "Keyword" alone sat one letter away from the list it
   // was opened from, so the header read as a truncation rather than a different screen.
   if (matches(sectionPath, "/rank-tracker") && sectionPath !== "/rank-tracker") {
-    return sectionMeta("Keyword details", "Position history, ranking URL and schedule.");
+    return { title: "Keyword details" };
   }
 
   if (matches(sectionPath, "/dashboard") || matches(sectionPath, "/overview")) {
@@ -99,7 +109,7 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
   // deliberately does not import the nav model, so a new rail destination needs its title added
   // here by hand or the header falls back to "Overview".
   if (matches(sectionPath, "/markets")) {
-    return sectionMeta("Markets", "The navigation level your tracked keywords are measured in.");
+    return sectionMeta("Markets", "Manage locations, keyword defaults, and market lifecycle.");
   }
 
   if (matches(sectionPath, "/integrations")) {

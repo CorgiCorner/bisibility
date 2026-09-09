@@ -2,7 +2,8 @@
 
 import { downloadWorkspacePackage } from "@/components/cloud/workspace-package-download";
 import { exportActiveCloudImportPackage } from "@/components/settings/migration/MigrateToCloudExportPackage";
-import { Button, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { relativePast } from "@/lib/format/relative-time";
 import {
   CLOUD_BACKUP_SECTIONS,
@@ -10,10 +11,8 @@ import {
 } from "@/lib/migration/cloud-backup-sections";
 import type { CloudPackageExportSummary } from "@/lib/queries/cloud-beta-export";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import {
-  CheckSquareIcon as CheckSquare,
-  DownloadSimpleIcon as DownloadSimple,
-} from "@phosphor-icons/react";
+import { CheckSquareIcon as CheckSquare } from "@phosphor-icons/react/dist/csr/CheckSquare";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { useState } from "react";
 
 type CloudBackupModalProps = {
@@ -80,7 +79,7 @@ export function CloudBackupModal({
           <Button
             disabled={isSubmitting}
             onClick={onClose}
-            sx={{ flexShrink: 0 }}
+            style={{ flexShrink: 0 }}
             type="button"
             variant="ghost"
           >
@@ -91,7 +90,7 @@ export function CloudBackupModal({
             loading={isSubmitting}
             loadingLabel="Exporting..."
             startIcon={<DownloadSimple aria-hidden size={15} weight="regular" />}
-            sx={{ flexShrink: 0, whiteSpace: "nowrap" }}
+            style={{ flexShrink: 0, whiteSpace: "nowrap" }}
             type="submit"
           >
             Export package

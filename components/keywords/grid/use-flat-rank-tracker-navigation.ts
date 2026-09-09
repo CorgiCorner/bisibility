@@ -1,7 +1,6 @@
 "use client";
 
 import { BASE_KEYWORD_LENS } from "@/components/keywords/grid/keyword-scope-summary";
-import { lensHref } from "@/lib/keywords/lens-model";
 import {
   rankTrackerMutationPresence,
   rankTrackerNavigationHref,
@@ -16,17 +15,13 @@ import type { Dispatch, SetStateAction } from "react";
 import { useRef } from "react";
 
 type Input = {
-  activeViewId: string | null;
-  flatServer: boolean;
   keywordsPath: string;
-  query?: RankTrackerQueryState;
+  query: RankTrackerQueryState;
   searchValue: string;
   setSearchValue: Dispatch<SetStateAction<string>>;
 };
 
-export function useFlatRankTrackerNavigation({
-  activeViewId,
-  flatServer,
+export function useRankTrackerNavigation({
   keywordsPath,
   query,
   searchValue,
@@ -39,13 +34,12 @@ export function useFlatRankTrackerNavigation({
   const markSearchCommitted = () => {
     committedSearchRef.current = searchValueRef.current;
   };
-  const navigateQuery = (
-    next: RankTrackerQueryState | undefined,
-    present: RankTrackerQueryField[],
-  ) => {
-    if (!next) return;
+  const navigateQuery = (next: RankTrackerQueryState, present: RankTrackerQueryField[]) => {
+    const requestedSearch = present.includes("search") ? next.search : searchValueRef.current;
+    searchValueRef.current = requestedSearch;
+    if (requestedSearch !== searchValue) setSearchValue(requestedSearch);
     markSearchCommitted();
-    const rebased = { ...next, search: searchValueRef.current };
+    const rebased = { ...next, search: requestedSearch };
     router.push(
       rankTrackerNavigationHref({
         basePath: keywordsPath,
@@ -62,23 +56,18 @@ export function useFlatRankTrackerNavigation({
       searchValueRef.current = value;
       setSearchValue(value);
     },
-    onSearchCommit:
-      flatServer && query
-        ? () => {
-            if (committedSearchRef.current === searchValueRef.current) return;
-            navigateQuery(resetRankTrackerPage({ ...query, search: searchValueRef.current }), [
-              "search",
-              "page",
-            ]);
-          }
-        : undefined,
+    onSearchCommit: () => {
+      if (committedSearchRef.current === searchValueRef.current) return;
+      navigateQuery(resetRankTrackerPage({ ...query, search: searchValueRef.current }), [
+        "search",
+        "page",
+      ]);
+    },
     resetScope: () =>
-      flatServer && query
-        ? navigateQuery(resetRankTrackerPage({ ...query, lens: BASE_KEYWORD_LENS }), [
-            "device",
-            "location",
-            "page",
-          ])
-        : router.push(lensHref(keywordsPath, BASE_KEYWORD_LENS, activeViewId)),
+      navigateQuery(resetRankTrackerPage({ ...query, lens: BASE_KEYWORD_LENS }), [
+        "device",
+        "location",
+        "page",
+      ]),
   };
 }

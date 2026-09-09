@@ -3,11 +3,16 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { CLOUD_MIGRATION_PACKAGE_VERSION } from "@/lib/migration/package-version";
 import { DEFAULT_STALE_IMPORT_JOB_MINUTES } from "@/lib/migration/stale-jobs";
 import { writeCloudImportSessionCreateAudit } from "./audit";
 import type { VerifiedMigrationToken } from "./jobs";
 import { assertNotSelfImport, beginJob, CloudImportTokenError } from "./jobs";
-import type { ImportSessionChunk, ImportSessionCreate } from "./session-schemas";
+import {
+  type ImportSessionChunk,
+  type ImportSessionCreate,
+  sessionChunkHasCanonicalLocationKeys,
+} from "./session-schemas";
 
 export const MAX_BUFFERED_BYTES = 268_435_456;
 export const MAX_CHUNK_KEYWORDS = 500;
@@ -36,6 +41,12 @@ function staleCutoff() {
 
 function jsonValue(value: unknown): Prisma.InputJsonValue {
   return structuredClone(value) as Prisma.InputJsonValue;
+}
+
+function manifestVersion(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as { version?: unknown }).version
+    : null;
 }
 
 function isSerializationConflict(error: unknown) {
@@ -140,6 +151,12 @@ export async function receiveImportSessionChunk(
           throw badRequest("Chunk index is out of range.");
         }
         if (job.state !== "receiving") throw conflict("Import session is not accepting chunks.");
+        if (
+          manifestVersion(job.manifest) === CLOUD_MIGRATION_PACKAGE_VERSION &&
+          !sessionChunkHasCanonicalLocationKeys(chunk)
+        ) {
+          throw badRequest("Version 7 chunks require location_key for every keyword identity.");
+        }
 
         const existing = await tx.migrationImportChunk.findUnique({
           where: { jobId_index: { index, jobId: job.id } },

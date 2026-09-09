@@ -4,7 +4,7 @@ import {
   type EstimateFrequency,
   frequencyFromRankCheckFrequency,
 } from "@/lib/cost-estimate/estimate";
-import { resolveSerpDepth, type SerpDepth } from "@/lib/serp/markets";
+import { resolveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 import { requireReadableProject } from "./_auth";
 import {

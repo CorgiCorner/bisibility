@@ -1,12 +1,10 @@
 "use client";
 
 import type { PendingAction } from "@/components/integrations/ConnectDrawerSchema";
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 
 type ConnectDrawerFooterProps = {
   busy: boolean;

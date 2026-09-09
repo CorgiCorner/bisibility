@@ -1,10 +1,14 @@
+import { DrawerBackButton } from "@/components/ui/DrawerBackButton";
+import type { SheetProps } from "@/components/ui/Sheet";
+import { createProjectMarket } from "@/lib/actions/project-market-create";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ButtonHTMLAttributes, ComponentProps, ReactNode } from "react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { ButtonHTMLAttributes, ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordMarketsDrawer } from "./KeywordMarketsDrawer";
 
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/Button", () => ({
   Button: ({
     children,
     loading: _loading,
@@ -13,52 +17,22 @@ vi.mock("@/components/ui", () => ({
   }: ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean; loadingLabel?: string }) => (
     <button {...props}>{children}</button>
   ),
-  Sheet: ({
-    children,
-    footer,
-    title,
-  }: {
-    children: ReactNode;
-    footer: ReactNode;
-    title: ReactNode;
-  }) => (
-    <div>
-      <h2>{title}</h2>
+}));
+vi.mock("@/components/ui/Sheet", () => ({
+  Sheet: ({ backAction, children, footer, title }: SheetProps) => (
+    <section role="dialog">
+      <header>
+        {backAction ? <DrawerBackButton {...backAction} /> : null}
+        <h2>{title}</h2>
+      </header>
       {children}
       {footer}
-    </div>
+    </section>
   ),
-  useToast: () => ({ showToast: vi.fn() }),
 }));
-vi.mock("@/components/keywords/add/ProjectMarketsSelector", () => ({
-  ProjectMarketsSelector: ({
-    onChange,
-  }: {
-    onChange: (value: { devices: ("desktop" | "mobile")[]; locationKeys: string[] }) => void;
-  }) => (
-    <div>
-      <button
-        onClick={() => onChange({ devices: ["mobile"], locationKeys: ["country:NL:lang:nl"] })}
-        type="button"
-      >
-        Keep Netherlands mobile
-      </button>
-      <button
-        onClick={() =>
-          onChange({
-            devices: ["desktop", "mobile"],
-            locationKeys: ["country:US:lang:en", "country:NL:lang:nl"],
-          })
-        }
-        type="button"
-      >
-        Add Netherlands
-      </button>
-      <button onClick={() => onChange({ devices: ["desktop"], locationKeys: [] })} type="button">
-        Clear markets
-      </button>
-    </div>
-  ),
+vi.mock("@/lib/actions/project-market-create", () => ({ createProjectMarket: vi.fn() }));
+vi.mock("@/components/ui/toast-context", () => ({
+  useToast: () => ({ showToast: vi.fn() }),
 }));
 
 function target(id: string, locationKey: string, device: "Desktop" | "Mobile") {
@@ -85,12 +59,35 @@ function target(id: string, locationKey: string, device: "Desktop" | "Mobile") {
   } as never;
 }
 
+const projectId = `prj_${"a".repeat(24)}`;
 const projectMarkets = {
-  markets: [],
+  marketCreation: { registry: [], schedules: [], sources: [] },
+  markets: [
+    {
+      canonicalKey: "country:US:lang:en",
+      countryCode: "US",
+      displayName: "United States",
+      id: "pmkt_us",
+      languageCode: "en",
+      languageLabel: "English",
+      researchAvailable: true,
+      status: "active",
+    },
+    {
+      canonicalKey: "country:NL:lang:nl",
+      countryCode: "NL",
+      displayName: "Netherlands",
+      id: "pmkt_nl",
+      languageCode: "nl",
+      languageLabel: "Dutch",
+      researchAvailable: true,
+      status: "active",
+    },
+  ],
   maxMarkets: 5,
   monthlyCostCents: 0,
   perMarketChecks: 4,
-  projectId: "prj_test",
+  projectId,
 };
 
 function setup(
@@ -110,20 +107,33 @@ function setup(
   const addKeywordsMatrixAction =
     actions.addKeywordsMatrixAction ?? vi.fn(async () => ({ keywords: [] }));
   const bulkDeleteAction = actions.bulkDeleteAction ?? vi.fn(async () => ({ deleted: 0 }));
+  const onClose = vi.fn();
   render(
     <KeywordMarketsDrawer
       addKeywordsMatrixAction={addKeywordsMatrixAction}
       bulkDeleteAction={bulkDeleteAction}
       canCreateKeyword
       keyword={targets[0]}
-      onClose={vi.fn()}
+      onClose={onClose}
       open
-      projectId="prj_test"
+      projectId={projectId}
       projectMarkets={projectMarkets as never}
       targets={targets}
     />,
   );
-  return { addKeywordsMatrixAction, bulkDeleteAction };
+  return { addKeywordsMatrixAction, bulkDeleteAction, onClose };
+}
+
+function keepNetherlandsMobile() {
+  for (const [name, selected] of [
+    ["United States / English", false],
+    ["Netherlands / Dutch", true],
+    ["Mobile", true],
+    ["Desktop", false],
+  ] as const) {
+    const button = screen.getByRole("button", { name });
+    if ((button.getAttribute("aria-pressed") === "true") !== selected) fireEvent.click(button);
+  }
 }
 
 describe("KeywordMarketsDrawer", () => {
@@ -134,10 +144,10 @@ describe("KeywordMarketsDrawer", () => {
   it("removes only deselected target IDs and routes away from a deleted current target", async () => {
     const actions = setup();
 
-    expect(screen.getByRole("heading", { name: /Edit/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Markets and devices/ })).toBeInTheDocument();
     expect(screen.queryByText("Details")).not.toBeInTheDocument();
     expect(screen.queryByText("Schedule")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Keep Netherlands mobile" }));
+    keepNetherlandsMobile();
     expect(screen.getByLabelText("Keyword target change")).toHaveTextContent(
       "1 markets x 1 device = 1 checks per run",
     );
@@ -146,11 +156,11 @@ describe("KeywordMarketsDrawer", () => {
     await waitFor(() =>
       expect(actions.bulkDeleteAction).toHaveBeenCalledWith({
         keywordIds: ["kw_us_desktop", "kw_us_mobile", "kw_nl_desktop"],
-        projectId: "prj_test",
+        projectId,
       }),
     );
     expect(actions.addKeywordsMatrixAction).not.toHaveBeenCalled();
-    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_test/rank-tracker/kw_nl_mobile");
+    expect(routerMock.push).toHaveBeenCalledWith(`/app/${projectId}/rank-tracker/kw_nl_mobile`);
   });
 
   it("adds the selected market-device matrix without deleting retained targets", async () => {
@@ -159,7 +169,7 @@ describe("KeywordMarketsDrawer", () => {
       target("kw_us_mobile", "country:US:lang:en", "Mobile"),
     ]);
 
-    fireEvent.click(screen.getByRole("button", { name: "Add Netherlands" }));
+    fireEvent.click(screen.getByRole("button", { name: "Netherlands / Dutch" }));
     fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
 
     await waitFor(() => expect(actions.addKeywordsMatrixAction).toHaveBeenCalledOnce());
@@ -168,7 +178,7 @@ describe("KeywordMarketsDrawer", () => {
         devices: ["desktop", "mobile"],
         keywords: ["rank tracker"],
         locations: [{ locationKey: "country:US:lang:en" }, { locationKey: "country:NL:lang:nl" }],
-        projectId: "prj_test",
+        projectId,
       }),
     );
     expect(actions.bulkDeleteAction).not.toHaveBeenCalled();
@@ -177,7 +187,11 @@ describe("KeywordMarketsDrawer", () => {
   it("blocks an empty market selection before either mutation runs", () => {
     const actions = setup();
 
-    fireEvent.click(screen.getByRole("button", { name: "Clear markets" }));
+    for (const button of within(screen.getByRole("region", { name: "Markets" })).getAllByRole(
+      "button",
+      { pressed: true },
+    ))
+      fireEvent.click(button);
     expect(screen.getByRole("button", { name: "Save markets and devices" })).toBeDisabled();
     expect(screen.getByText("Select at least one market and device.")).toBeInTheDocument();
     expect(actions.addKeywordsMatrixAction).not.toHaveBeenCalled();
@@ -187,7 +201,7 @@ describe("KeywordMarketsDrawer", () => {
   it("keeps the current target when its replacement was not returned", async () => {
     const actions = setup([target("kw_us_desktop", "country:US:lang:en", "Desktop")]);
 
-    fireEvent.click(screen.getByRole("button", { name: "Keep Netherlands mobile" }));
+    keepNetherlandsMobile();
     fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
 
     expect(
@@ -219,7 +233,7 @@ describe("KeywordMarketsDrawer", () => {
       bulkDeleteAction,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Keep Netherlands mobile" }));
+    keepNetherlandsMobile();
     fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
 
     expect(
@@ -234,6 +248,96 @@ describe("KeywordMarketsDrawer", () => {
 
     await waitFor(() => expect(bulkDeleteAction).toHaveBeenCalledTimes(2));
     expect(addKeywordsMatrixAction).toHaveBeenCalledOnce();
-    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_test/rank-tracker/kw_nl_mobile");
+    expect(routerMock.push).toHaveBeenCalledWith(`/app/${projectId}/rank-tracker/kw_nl_mobile`);
+  });
+  it("opens the shared creator in the same drawer and keeps selections when going back", () => {
+    const { onClose } = setup();
+    keepNetherlandsMobile();
+    const drawer = screen.getByRole("dialog");
+    fireEvent.click(screen.getByRole("button", { name: "New market" }));
+
+    expect(screen.getAllByRole("dialog")).toEqual([drawer]);
+    expect(screen.getByRole("heading", { name: "New market" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Country" })).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Start empty" })).not.toBeInTheDocument();
+    const back = screen.getByRole("button", { name: "Back to keyword" });
+    expect(back.closest("header")).toBeInTheDocument();
+    fireEvent.click(back);
+
+    expect(screen.getByRole("dialog")).toBe(drawer);
+    expect(screen.getByRole("heading", { name: /Markets and devices/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Netherlands / Dutch" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "United States / English" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    expect(screen.getByRole("button", { name: "Mobile" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Desktop" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("creates an empty market, selects it on return, and adds the keyword only when saved", async () => {
+    const user = userEvent.setup();
+    vi.mocked(createProjectMarket).mockResolvedValue({
+      canonicalKey: "ES",
+      countryCode: "ES",
+      displayName: "Spain",
+      keywordCount: 0,
+      kind: "country",
+      languageCode: "es",
+      languageLabel: "Spanish",
+      publicId: `pmkt_${"b".repeat(24)}`,
+    });
+    const actions = setup();
+    await user.click(screen.getByRole("button", { name: "Desktop" }));
+    const drawer = screen.getByRole("dialog");
+    await user.click(screen.getByRole("button", { name: "New market" }));
+    await user.click(screen.getByRole("button", { name: "Country" }));
+    await user.type(screen.getByRole("textbox", { name: "Search countries" }), "Spain");
+    await user.click(screen.getByRole("menuitem", { name: "Spain" }));
+    await user.click(screen.getByRole("button", { name: "Language" }));
+    await user.click(screen.getByRole("menuitem", { name: "Spanish" }));
+    await user.click(screen.getByRole("button", { name: "Create market" }));
+
+    expect(createProjectMarket).toHaveBeenCalledWith(
+      expect.objectContaining({
+        canonicalKey: "ES",
+        devices: ["mobile"],
+        method: { kind: "empty" },
+        projectId,
+      }),
+    );
+    expect(await screen.findByRole("heading", { name: /Markets and devices/ })).toBeInTheDocument();
+    expect(screen.getAllByRole("dialog")).toEqual([drawer]);
+    expect(screen.getByRole("button", { name: "Spain / Spanish" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Mobile" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Desktop" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    expect(actions.addKeywordsMatrixAction).not.toHaveBeenCalled();
+    expect(actions.onClose).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Save markets and devices" }));
+    expect(actions.addKeywordsMatrixAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        devices: ["mobile"],
+        keywords: ["rank tracker"],
+        locations: [
+          { locationKey: "country:US:lang:en" },
+          { locationKey: "country:NL:lang:nl" },
+          { locationKey: "ES" },
+        ],
+      }),
+    );
   });
 });

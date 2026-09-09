@@ -86,7 +86,7 @@ vi.mock("@/lib/team/service", () => ({
   resendTeamInvite: vi.fn(),
   revokeTeamInvite: mocks.actions.revokeInvite,
 }));
-vi.mock("@/lib/queries/team", () => ({ getTeamAccess: mocks.queries.getTeamAccess }));
+vi.mock("@/lib/queries/team", () => ({ getTeamAccessFor: mocks.queries.getTeamAccess }));
 vi.mock("@/lib/actions/providers", () => ({
   connectProvider: mocks.actions.connectProvider,
   disconnectProvider: mocks.actions.disconnectProvider,

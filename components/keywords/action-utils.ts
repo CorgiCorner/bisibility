@@ -7,7 +7,7 @@ import type {
   RunCheckNowInput,
   UpdateKeywordInput,
 } from "@/lib/schemas/keyword";
-import type { SerpDevice } from "@/lib/serp/markets";
+import type { SerpDevice } from "@/lib/serp/constants";
 
 export type KeywordAction<TInput> = (input: TInput) => Promise<unknown>;
 export type { AddKeywordsInput };

@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getPurposeSecretKeys } from "@/lib/providers/crypto";
-import { type SerpDepth, serpDepthValues } from "@/lib/serp/markets";
+import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
 import { z } from "zod";
 
 const TOKEN_PURPOSE = "rank-check-run-preview";

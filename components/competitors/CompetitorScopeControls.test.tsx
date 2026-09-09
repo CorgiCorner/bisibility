@@ -7,6 +7,15 @@ import { describe, expect, it } from "vitest";
 import { CompetitorScopeControls } from "./CompetitorScopeControls";
 import { competitorRegistryOptions } from "./competitor-market-mapping";
 
+const COUNTRY_NAMES: Record<string, string> = {
+  BE: "Belgium",
+  DE: "Germany",
+  ES: "Spain",
+  FR: "France",
+  IT: "Italy",
+  PT: "Portugal",
+};
+
 function option(
   canonicalKey: string,
   countryCode: string,
@@ -26,7 +35,7 @@ function option(
     key: `${locationId}::desktop::google`,
     keywordCount: 4,
     languageLabel,
-    location: countryCode === "ES" ? "Spain" : "Belgium",
+    location: COUNTRY_NAMES[countryCode] ?? countryCode,
     locationId,
     locationKind: "country",
     regionName: null,
@@ -81,6 +90,33 @@ const mappingProjectMarkets = {
   projectId: "prj_1",
 } satisfies ProjectMarketsView;
 
+// The shared market combobox only renders its search field once a project has more markets
+// than MARKET_PICKER_SEARCH_THRESHOLD, so searching needs a larger fixture than the
+// mapping cases above.
+const searchableMarkets = [
+  ...mappingMarkets,
+  option("DE", "DE", "de", "German", "loc_de_de"),
+  option("FR", "FR", "fr", "French", "loc_fr_fr"),
+  option("IT", "IT", "it", "Italian", "loc_it_it"),
+  option("PT", "PT", "pt", "Portuguese", "loc_pt_pt"),
+];
+
+const searchableProjectMarkets = {
+  ...mappingProjectMarkets,
+  markets: searchableMarkets.map((market, index) => ({
+    canonicalKey: market.canonicalKey,
+    countryCode: market.countryCode,
+    displayName: market.location,
+    id: `pmkt_s_${index}`,
+    languageCode: market.hl,
+    languageLabel: market.languageLabel,
+    monthlyCostCents: null,
+    researchAvailable: market.canonicalKey !== "BE@ar",
+    status: "active" as const,
+  })),
+  maxMarkets: 10,
+} satisfies ProjectMarketsView;
+
 describe("CompetitorScopeControls", () => {
   it("preserves the saved-view ID when the market chip changes", async () => {
     const user = userEvent.setup();
@@ -120,8 +156,8 @@ describe("CompetitorScopeControls", () => {
     const user = userEvent.setup();
     render(
       <CompetitorScopeControls
-        markets={mappingMarkets}
-        projectMarkets={mappingProjectMarkets}
+        markets={searchableMarkets}
+        projectMarkets={searchableProjectMarkets}
         projectRef="prj_1"
         scope={{ device: "desktop", engine: "google", locationId: "loc_es_es" }}
         viewId="view_2"

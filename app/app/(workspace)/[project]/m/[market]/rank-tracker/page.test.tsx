@@ -61,7 +61,7 @@ vi.mock("@/components/keywords/grid/KeywordsGrid", () => ({
 vi.mock("@/components/rank-tracker/RankTrackerTabs", () => ({
   RankTrackerTabs: () => <button type="button">Tracked</button>,
 }));
-vi.mock("@/components/ui/Tooltip", () => import("@/tests/mui-tooltip"));
+vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 vi.mock("@/lib/auth/authorize", () => ({ getProjectRole: () => "owner" }));
 vi.mock("@/lib/auth/capabilities", () => ({ canProjectAction: () => true }));
 vi.mock("@/lib/markets/market-context", () => ({
@@ -94,9 +94,9 @@ vi.mock("./../../../rank-tracker/rank-tracker-page-data", () => ({
   resolveRankTrackerPageQuery: mocks.resolveRankTrackerPageQuery,
 }));
 
-import HeaderContextRoute from "../../../@context/m/[market]/[...page]/page";
-import ProjectLayout from "../../../layout";
-import MarketLayout from "../layout";
+import HeaderContextRoute from "@/app/app/(workspace)/[project]/@context/m/[market]/[...page]/page";
+import ProjectLayout from "@/app/app/(workspace)/[project]/layout";
+import MarketLayout from "@/app/app/(workspace)/[project]/m/[market]/layout";
 import MarketRankTrackerPage from "./page";
 
 const PROJECT = asProjectRef(`prj_${"a".repeat(24)}`);
@@ -182,6 +182,7 @@ describe("market Rank Tracker route composition", () => {
     mocks.resolveProjectAccess.mockResolvedValue({ projectId: "project_1", publicId: PROJECT });
     mocks.resolveRankTrackerPageQuery.mockResolvedValue({
       activeView: null,
+      groupedWasSpecified: false,
       malformedDevice: false,
       query: pageQuery(null),
       staleView: false,
@@ -200,6 +201,7 @@ describe("market Rank Tracker route composition", () => {
     expect(mocks.loadRankTrackerPageList).toHaveBeenCalledWith(
       PROJECT,
       expect.objectContaining({ lens: { device: "all", locationId: MARKET_LOCATION_KEY } }),
+      false,
     );
     expect(capturedGridProps.lens).toEqual({ device: "all", locationId: MARKET_LOCATION_KEY });
   });

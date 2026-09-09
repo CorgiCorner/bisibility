@@ -1,8 +1,10 @@
 "use client";
 
-import { Button, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/toast-context";
 import { runOpsSweepNow, sendTestSlackNotification } from "@/lib/actions/instance-admin";
-import { PaperPlaneTiltIcon as PaperPlaneTilt, WrenchIcon as Wrench } from "@phosphor-icons/react";
+import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
+import { WrenchIcon as Wrench } from "@phosphor-icons/react/dist/csr/Wrench";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

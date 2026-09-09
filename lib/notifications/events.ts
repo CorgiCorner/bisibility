@@ -2,6 +2,7 @@ import "server-only";
 
 import type { AlertExternalDeliveryPayload } from "@/lib/alerts/alert-delivery-payload";
 import { prisma } from "@/lib/db/prisma";
+import { isPublicIdOfType } from "@/lib/db/public-id";
 import { NotificationType, type Prisma } from "@/lib/generated/prisma/client";
 import { migrationImportCountSummary } from "@/lib/migration/import-counts";
 import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
@@ -184,7 +185,7 @@ export async function notifyRankCheckCompleted(input: {
 }
 
 function checksHrefSegments(rankCheckId: string): string[] {
-  return [`rank-tracker?tab=runs&run=${encodeURIComponent(rankCheckId)}`];
+  return isPublicIdOfType(rankCheckId, "rcr") ? ["runs", "rank-checks", rankCheckId] : ["runs"];
 }
 
 export async function notifyRankCheckFailed(input: RankFailureInput) {

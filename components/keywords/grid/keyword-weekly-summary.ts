@@ -1,4 +1,4 @@
-import type { SummaryStripTone } from "@/components/ui";
+import type { SummaryStripTone } from "@/components/ui/SummaryStrip";
 import { weeklyPositionComparison } from "@/lib/keywords/position-history";
 import type { KeywordRow } from "@/lib/queries/keywords";
 

@@ -1,10 +1,9 @@
 import { Toolbar } from "@/components/shell/Toolbar";
-import { Button, Pill } from "@/components/ui";
-import {
-  CalendarBlankIcon as CalendarBlank,
-  MonitorIcon as Monitor,
-  PlusIcon as Plus,
-} from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { Pill } from "@/components/ui/Pill";
+import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {

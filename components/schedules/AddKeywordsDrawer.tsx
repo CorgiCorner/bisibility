@@ -1,6 +1,10 @@
 "use client";
 
-import { AppDrawer, Button, MenuSelect, SegmentedControl, ToolbarSearch } from "@/components/ui";
+import { AppDrawer } from "@/components/ui/AppDrawer";
+import { Button } from "@/components/ui/Button";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

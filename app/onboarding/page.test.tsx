@@ -4,15 +4,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import OnboardingPage from "./page";
 
 const mocks = vi.hoisted(() => ({
-  existingOnboardingCityLocationKeys: vi.fn(),
+  existingOnboardingPlaceLocationKeys: vi.fn(),
   getIntegrationCategories: vi.fn(),
+  getInstanceAdminSession: vi.fn(),
   getKeywordCount: vi.fn(),
   getOnboardingNextCheckAt: vi.fn(),
+  getOnboardingTrackingStartedAt: vi.fn(async () => null as string | null),
   getOnboardingProjectMarketKeys: vi.fn(),
-  getOnboardingSampleKeyword: vi.fn(),
+  getOnboardingKeywordTexts: vi.fn(),
   getProjectCostContext: vi.fn(),
   getRequestProjectDefaults: vi.fn(),
   listWorkspaces: vi.fn(),
+  listFirstCheckCandidates: vi.fn(async () => ({ candidates: [] as unknown[] })),
   completeProjectOnboarding: vi.fn(),
   prisma: {
     apiKey: { findFirst: vi.fn() },
@@ -26,9 +29,18 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/components/onboarding/OnboardingWizard", () => ({
   OnboardingWizard: (props: unknown) => mocks.wizard(props),
 }));
+vi.mock("@/lib/auth/instance-admin", () => ({
+  getInstanceAdminSession: mocks.getInstanceAdminSession,
+}));
 vi.mock("@/lib/actions/competitors", () => ({ addManagedCompetitor: vi.fn() }));
+vi.mock("@/lib/actions/rank-check-preview", () => ({
+  listFirstCheckCandidates: mocks.listFirstCheckCandidates,
+  getObservedPositions: vi.fn(),
+  runFirstCheckPreview: vi.fn(),
+}));
 vi.mock("@/lib/actions/keyword", () => ({ addKeywordsMatrix: vi.fn() }));
 vi.mock("@/lib/actions/keyword-suggest", () => ({ importTopQueries: vi.fn() }));
+vi.mock("@/lib/actions/project-market-create", () => ({ createProjectMarket: vi.fn() }));
 vi.mock("@/lib/actions/project", () => ({
   completeProjectOnboarding: mocks.completeProjectOnboarding,
 }));
@@ -61,12 +73,14 @@ vi.mock("@/lib/queries/integrations", () => ({
   getIntegrationCategories: mocks.getIntegrationCategories,
 }));
 vi.mock("@/lib/queries/onboarding", () => ({
-  existingOnboardingCityLocationKeys: mocks.existingOnboardingCityLocationKeys,
+  existingOnboardingPlaceLocationKeys: mocks.existingOnboardingPlaceLocationKeys,
   getOnboardingGscPropertyLabel: vi.fn(async () => null),
+  getOnboardingLocationDetails: vi.fn(async () => []),
   getOnboardingKeywordCount: mocks.getKeywordCount,
   getOnboardingNextCheckAt: mocks.getOnboardingNextCheckAt,
+  getOnboardingTrackingStartedAt: mocks.getOnboardingTrackingStartedAt,
   getOnboardingProjectMarketKeys: mocks.getOnboardingProjectMarketKeys,
-  getOnboardingSampleKeyword: mocks.getOnboardingSampleKeyword,
+  getOnboardingKeywordTexts: mocks.getOnboardingKeywordTexts,
 }));
 vi.mock("@/lib/queries/workspaces", () => ({ listWorkspaces: mocks.listWorkspaces }));
 vi.mock("@/lib/queries/workspace-request-data", () => ({
@@ -76,6 +90,7 @@ vi.mock("@/lib/rank-check/budget", () => ({ DEFAULT_MONTHLY_COST_CAP_CENTS: 5_00
 vi.mock("@/lib/ranked-keywords/service", () => ({
   listEligibleRankedKeywordConnections: mocks.listEligibleRankedKeywordConnections,
 }));
+vi.mock("./update-project", () => ({ updateOnboardingProject: vi.fn() }));
 vi.mock("./actions", () => ({
   createOnboardingProject: vi.fn(),
   deriveOnboardingWebsite: vi.fn(),
@@ -91,8 +106,21 @@ const project = {
 };
 
 describe("OnboardingPage", () => {
+  it.each([false, true])(
+    "exposes the sample action only with instance-admin access (%s)",
+    async (isAdmin) => {
+      mocks.getInstanceAdminSession.mockResolvedValue(isAdmin ? { user: { id: "user_1" } } : null);
+      render(await OnboardingPage({ searchParams: Promise.resolve({ new: "1" }) }));
+      const props = mocks.wizard.mock.calls[0][0] as {
+        actions: { installSampleDataAction?: unknown };
+      };
+      if (isAdmin) expect(props.actions.installSampleDataAction).toBeTypeOf("function");
+      else expect(props.actions.installSampleDataAction).toBeUndefined();
+    },
+  );
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getInstanceAdminSession.mockResolvedValue(null);
     redirect.mockImplementation((href: string) => {
       throw new Error(`redirect:${href}`);
     });
@@ -100,14 +128,64 @@ describe("OnboardingPage", () => {
     mocks.requireReadableProject.mockResolvedValue({ project });
     mocks.getIntegrationCategories.mockResolvedValue([]);
     mocks.getProjectCostContext.mockResolvedValue({ costPerCheckCents: null });
-    mocks.existingOnboardingCityLocationKeys.mockResolvedValue(new Set<string>());
+    mocks.existingOnboardingPlaceLocationKeys.mockResolvedValue(new Set<string>());
     mocks.getOnboardingNextCheckAt.mockResolvedValue(null);
     mocks.getOnboardingProjectMarketKeys.mockResolvedValue([]);
-    mocks.getOnboardingSampleKeyword.mockResolvedValue(null);
+    mocks.getOnboardingKeywordTexts.mockResolvedValue([]);
     mocks.getRequestProjectDefaults.mockResolvedValue(null);
     mocks.prisma.apiKey.findFirst.mockResolvedValue(null);
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(null);
     mocks.listEligibleRankedKeywordConnections.mockResolvedValue([]);
+  });
+
+  it("restores saved keyword text and tracking defaults on the keyword step", async () => {
+    mocks.getKeywordCount.mockResolvedValue(2);
+    mocks.getOnboardingKeywordTexts.mockResolvedValue(["rank tracker", "seo api"]);
+    mocks.getRequestProjectDefaults.mockResolvedValue({
+      frequency: "daily",
+      device: "mobile",
+      serpDepth: 50,
+      jitterMinutes: 15,
+      cronExpression: "30 8 * * *",
+      timezone: "Europe/Warsaw",
+    });
+    render(
+      await OnboardingPage({ searchParams: Promise.resolve({ step: "3", projectId: "prj_1" }) }),
+    );
+    expect(mocks.wizard.mock.calls[0]?.[0]).toMatchObject({
+      initialKeywordCount: 2,
+      initialKeywordDraft: "rank tracker\nseo api",
+      initialKeywordText: "rank tracker",
+      initialProject: {
+        frequency: "daily",
+        serpDepth: 50,
+        jitterMinutes: 15,
+        cronExpression: "30 8 * * *",
+        timezone: "Europe/Warsaw",
+      },
+    });
+  });
+
+  it("loads existing first-check results before rendering a resumed final step", async () => {
+    mocks.getKeywordCount.mockResolvedValue(2);
+    mocks.getOnboardingKeywordTexts.mockResolvedValue(["rank tracker"]);
+    const saved = {
+      publicId: "kw_saved",
+      text: "rank tracker",
+      previousResult: { status: "completed" },
+    };
+    mocks.listFirstCheckCandidates.mockResolvedValueOnce({ candidates: [saved] });
+    render(
+      await OnboardingPage({ searchParams: Promise.resolve({ step: "4", projectId: "prj_1" }) }),
+    );
+    expect(mocks.listFirstCheckCandidates).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        projectId: "prj_1",
+        keywordText: "rank tracker",
+        includeExisting: true,
+      }),
+    );
+    expect(mocks.wizard.mock.calls[0]?.[0]).toMatchObject({ initialFirstCheckCandidates: [saved] });
   });
 
   it("resolves the actor's first project by public id when the URL has no project", async () => {
@@ -262,7 +340,7 @@ describe("OnboardingPage", () => {
     });
     render(page);
 
-    expect(mocks.existingOnboardingCityLocationKeys).toHaveBeenCalledWith(["US/Nowhere"]);
+    expect(mocks.existingOnboardingPlaceLocationKeys).toHaveBeenCalledWith(["US/Nowhere"]);
     expect(mocks.getOnboardingProjectMarketKeys).toHaveBeenCalledWith("prj_1");
     expect(mocks.wizard).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -287,7 +365,7 @@ describe("OnboardingPage", () => {
 
   it("normalizes loc keys, verifies city rows, and keeps country as a legacy alias", async () => {
     mocks.getKeywordCount.mockResolvedValue(0);
-    mocks.existingOnboardingCityLocationKeys.mockResolvedValue(new Set(["US/Texas/Austin"]));
+    mocks.existingOnboardingPlaceLocationKeys.mockResolvedValue(new Set(["US/Texas/Austin"]));
 
     await expect(
       OnboardingPage({

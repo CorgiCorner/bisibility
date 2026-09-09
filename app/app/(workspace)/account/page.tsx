@@ -1,8 +1,11 @@
 import { AccountEmailCard } from "@/components/account/AccountEmailCard";
+import { AccountSection } from "@/components/account/AccountSection";
 import { AccountShell } from "@/components/account/AccountShell";
 import { ConnectedAccounts } from "@/components/account/ConnectedAccounts";
 import { DeleteAccount } from "@/components/account/DeleteAccount";
+import { DemoAccountNotice } from "@/components/account/DemoAccountNotice";
 import { ProfileSection } from "@/components/account/ProfileSection";
+import { PrivacyChoicesLink } from "@/components/analytics/PrivacyChoicesLink";
 import {
   confirmAccountEmailChange,
   confirmCurrentAccountEmailVerification,
@@ -10,10 +13,12 @@ import {
   requestAccountEmailChangeCode,
   requestCurrentAccountEmailVerification,
 } from "@/lib/actions/account-email";
+import { readOnlyDemoConfig } from "@/lib/demo/config";
 import { getAccount } from "@/lib/queries/account";
 import { deleteAccount, updateProfile } from "./actions";
 
 export default async function AccountPage() {
+  if (readOnlyDemoConfig()) return <DemoAccountNotice section="profile" />;
   const account = await getAccount();
 
   return (
@@ -38,6 +43,12 @@ export default async function AccountPage() {
           requestCurrentAccountEmailVerification={requestCurrentAccountEmailVerification}
         />
         <ConnectedAccounts accounts={account.connectedAccounts} />
+        <AccountSection
+          description="Review or change the optional analytics and setup replay choices stored in this browser."
+          title="Privacy choices"
+        >
+          <PrivacyChoicesLink />
+        </AccountSection>
         <DeleteAccount deleteAccount={deleteAccount} email={account.email} />
       </div>
     </AccountShell>

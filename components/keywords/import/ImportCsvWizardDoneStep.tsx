@@ -1,4 +1,4 @@
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 
 export function DoneStep() {
   return (

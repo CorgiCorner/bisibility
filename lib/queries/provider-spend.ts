@@ -14,7 +14,7 @@ import {
   primaryProviderConnection,
   providerChainOrderBy,
 } from "@/lib/rank-check/provider-chain-order";
-import { resolveSerpDepth } from "@/lib/serp/markets";
+import { resolveSerpDepth } from "@/lib/serp/constants";
 import type { ProviderAvailabilityData, ProviderUsageStat } from "@/lib/settings/options";
 import { loadProviderAvailability } from "./provider-availability";
 import { loadProviderSpendUsage } from "./provider-spend-usage";

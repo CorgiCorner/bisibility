@@ -100,6 +100,29 @@ describe("check schedule service", () => {
     expect(result).toEqual({ publicId: scheduleId });
   });
 
+  it("keeps project timezone inheritance when creating a schedule", async () => {
+    mocks.tx.project.findUnique.mockResolvedValue({ defaults: { timezone: "Europe/Warsaw" } });
+    await createSchedule("user_1", "project_1", {
+      cronExpression: "0 6 * * 1",
+      frequency: "weekly",
+      jitterMinutes: 15,
+      name: "Weekly · Mon 06:00",
+      projectId: `prj_${"p".repeat(24)}`,
+      timeOfDay: "06:00",
+      timezone: null,
+    });
+    expect(mocks.tx.checkSchedule.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          timezone: null,
+          jitterMinutes: 15,
+          timeOfDay: "06:00",
+          cronExpression: "0 6 * * 1",
+        }),
+      }),
+    );
+  });
+
   it("preserves calendar cron cadence when creating a weekly schedule", async () => {
     await createSchedule("user_1", "project_1", {
       cronExpression: "0 6 * * 5",
@@ -127,7 +150,7 @@ describe("check schedule service", () => {
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.tx.checkSchedule.updateMany).toHaveBeenCalledWith({
       data: { isDefault: false },
-      where: { isDefault: true, projectId: "project_1" },
+      where: { archivedAt: null, isDefault: true, projectId: "project_1" },
     });
     expect(mocks.tx.checkSchedule.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { isDefault: true }, where: { id: "schedule_1" } }),

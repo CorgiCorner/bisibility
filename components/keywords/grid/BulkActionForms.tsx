@@ -7,7 +7,9 @@ import {
   keywordCountLabel,
   splitTagInput,
 } from "@/components/keywords/action-utils";
-import { Button, inputClassName, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { inputClassName } from "@/components/ui/input-styles";
+import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { type BulkKeywordTagInput, bulkKeywordTagSchema } from "@/lib/schemas/keyword";
 import { useState } from "react";
@@ -87,7 +89,7 @@ export function BulkTagForm({
         {tagMessage ? <span className="text-red-text">{tagMessage}</span> : null}
       </label>
       {hideSubmit ? null : (
-        <Button disabled={isSubmitting} size="sm" sx={{ minHeight: 40 }} type="submit">
+        <Button disabled={isSubmitting} size="sm" style={{ minHeight: 40 }} type="submit">
           {isSubmitting ? "Adding..." : "Apply tag"}
         </Button>
       )}

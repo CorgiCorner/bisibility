@@ -1,10 +1,10 @@
 import { normalizeSchedule } from "@/lib/actions/_schedule";
 import type { KeywordScheduleInput } from "@/lib/schemas/keyword";
-import { DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
+import { LEGACY_DEFAULT_MARKET_NAME } from "./legacy-market-input";
 import type { ApiKeywordBulk, ApiKeywordCreateItem, ApiKeywordPatch } from "./schemas";
 
 export function keywordLocation(input: { country?: string; location?: string }) {
-  return input.location ?? input.country ?? DEFAULT_SERP_MARKET;
+  return input.location ?? input.country ?? LEGACY_DEFAULT_MARKET_NAME;
 }
 
 export function scheduleFromCreate(input: ApiKeywordCreateItem) {

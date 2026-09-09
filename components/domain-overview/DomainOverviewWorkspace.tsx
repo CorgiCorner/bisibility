@@ -1,8 +1,8 @@
 "use client";
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
-import type { DomainOverviewMarketOption } from "@/lib/domain-overview/market-options";
 import type { DomainOverviewScope, DomainRecentTarget } from "@/lib/domain-overview/types";
+import { researchScopeKey } from "@/lib/research/scope";
 import { appPath } from "@/lib/routing/app-path";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,7 +21,7 @@ import {
   failureState,
   reportFrom,
   reportUrl,
-  supportedMarket,
+  supportedResearchScope,
 } from "./domain-overview-workspace-model";
 import { useDomainOverviewEstimate } from "./useDomainOverviewEstimate";
 import { useDomainOverviewHistory } from "./useDomainOverviewHistory";
@@ -37,28 +37,27 @@ export function DomainOverviewWorkspace({
   loadHistoryAction,
   loadKeywordsPageAction,
   loadPagesPageAction,
-  market,
   projectId,
   projectRef,
-  selectMarketAction,
+  researchScope,
   saveSelectedKeywordsAction,
 }: Readonly<DomainOverviewWorkspaceProps>) {
   const router = useRouter();
   const { addSpend } = useSessionSpend();
-  const activeMarket = supportedMarket(market);
+  const activeResearchScope = supportedResearchScope(researchScope);
   const [target, setTarget] = useState(initialTarget);
-  const [scopeOverride, setScopeOverride] = useState<DomainOverviewScope | undefined>(
+  const [domainScopeOverride, setDomainScopeOverride] = useState<DomainOverviewScope | undefined>(
     detectedDomainScope(initialTarget) === "root" ? undefined : initialScope,
   );
   const [outcome, setOutcome] = useState<DomainOverviewUiOutcome | null>(initialOutcome);
   const [submitting, setSubmitting] = useState(false);
   const report = reportFrom(outcome);
-  const requestInput = (nextTarget: string, nextScope = scopeOverride) =>
-    activeMarket
+  const requestInput = (nextTarget: string, nextScope = domainScopeOverride) =>
+    activeResearchScope
       ? estimateInput({
-          market: activeMarket,
+          domainScope: nextScope,
           projectId,
-          scopeOverride: nextScope,
+          researchScope: activeResearchScope,
           target: nextTarget,
         })
       : { estimateOnly: true, projectId, target: nextTarget };
@@ -69,7 +68,7 @@ export function DomainOverviewWorkspace({
   );
   const { loadMore, loadingTable, tableError, tableFetchedCount, tableHasMore } =
     useDomainOverviewTablePages({
-      activeMarket,
+      activeResearchScope,
       addSpend,
       estimate,
       loadKeywordsPageAction,
@@ -80,7 +79,7 @@ export function DomainOverviewWorkspace({
     });
   const { history, historyError, historyLoading, loadHistory, resetHistory } =
     useDomainOverviewHistory({
-      activeMarket,
+      activeResearchScope,
       addSpend,
       estimate,
       loadHistoryAction,
@@ -89,57 +88,42 @@ export function DomainOverviewWorkspace({
     });
   const recentTargets = context.recentTargets.filter(
     (recent) =>
-      activeMarket &&
-      recent.locationCode === activeMarket.locationCode &&
-      recent.languageCode === activeMarket.languageCode,
+      activeResearchScope &&
+      recent.locationCode === activeResearchScope.providerLocationCode &&
+      recent.languageCode === activeResearchScope.languageCode,
   );
 
   function updateTarget(nextTarget: string) {
-    const nextScope = detectedDomainScope(nextTarget) === "root" ? undefined : scopeOverride;
+    const nextScope = detectedDomainScope(nextTarget) === "root" ? undefined : domainScopeOverride;
     setTarget(nextTarget);
-    if (nextScope !== scopeOverride) setScopeOverride(nextScope);
-    if (activeMarket) scheduleEstimate(nextTarget, nextScope);
+    if (nextScope !== domainScopeOverride) setDomainScopeOverride(nextScope);
+    if (activeResearchScope) scheduleEstimate(nextTarget, nextScope);
   }
 
-  async function changeMarket(next: DomainOverviewMarketOption) {
-    if (next.canonicalKey === market?.canonicalKey) return;
-    setSubmitting(true);
-    try {
-      const selected = await selectMarketAction({
-        canonicalKey: next.canonicalKey,
-        projectId,
-      });
-      if (selected.canonicalKey === market?.canonicalKey) {
-        setSubmitting(false);
-        return;
-      }
-      const params = new URLSearchParams({ market: selected.canonicalKey });
-      if (target.trim()) params.set("domain", target.trim());
-      if (scopeOverride) params.set("scope", scopeOverride);
-      router.push(`${appPath(projectRef, "domain-overview")}?${params.toString()}`);
-    } catch {
-      setOutcome((current) =>
-        reportFrom(current) ? current : { charged: null, ok: false, reason: "lookup_failed" },
-      );
-      setSubmitting(false);
-    }
+  function changeResearchScope(next: NonNullable<typeof researchScope>) {
+    if (!researchScope || researchScopeKey(next) === researchScopeKey(researchScope)) return;
+    const params = new URLSearchParams({ researchScope: researchScopeKey(next) });
+    if (target.trim()) params.set("domain", target.trim());
+    if (domainScopeOverride) params.set("scope", domainScopeOverride);
+    router.push(`${appPath(projectRef, "domain-overview")}?${params.toString()}`);
   }
 
   async function analyze(
     nextTarget = target,
     fresh = false,
     maxCostCents = Math.ceil(estimate.costCents ?? 0),
-    nextScope = scopeOverride,
+    nextScope = domainScopeOverride,
   ) {
-    if (!activeMarket) return;
+    if (!activeResearchScope) return;
     setSubmitting(true);
     resetHistory();
     try {
       const result = await analyzeAction({
+        countryCode: activeResearchScope.countryCode,
         estimateOnly: false,
         fresh,
-        languageCode: activeMarket.languageCode,
-        locationCode: activeMarket.locationCode,
+        languageCode: activeResearchScope.languageCode,
+        locationCode: activeResearchScope.providerLocationCode,
         maxCostCents,
         projectId,
         scopeOverride: nextScope,
@@ -152,14 +136,14 @@ export function DomainOverviewWorkspace({
       }
       if (result.ok && !("estimate" in result)) {
         setTarget(result.target);
-        setScopeOverride(result.scope === "root" ? undefined : result.scope);
+        setDomainScopeOverride(result.scope === "root" ? undefined : result.scope);
         window.history.replaceState(
           null,
           "",
           reportUrl({
-            market: activeMarket,
+            domainScope: result.scope,
             projectRef,
-            scope: result.scope,
+            researchScope: activeResearchScope,
             target: result.target,
           }),
         );
@@ -174,10 +158,15 @@ export function DomainOverviewWorkspace({
   }
 
   function openRecent(recent: DomainRecentTarget) {
-    if (!activeMarket) return;
+    if (!activeResearchScope) return;
     setSubmitting(true);
     router.push(
-      reportUrl({ market: activeMarket, projectRef, scope: recent.scope, target: recent.target }),
+      reportUrl({
+        domainScope: recent.scope,
+        projectRef,
+        researchScope: activeResearchScope,
+        target: recent.target,
+      }),
     );
   }
 
@@ -186,21 +175,20 @@ export function DomainOverviewWorkspace({
       ? "no_provider"
       : context.providerStatus === "needs_reauth"
         ? "needs_reauth"
-        : !market || !activeMarket
+        : !researchScope || !researchScope.researchAvailable || !activeResearchScope
           ? "unsupported_location"
           : failureState(outcome);
 
   return (
     <section aria-label="Domain Overview" className="grid min-w-0 gap-4">
-      {market ? (
+      {researchScope ? (
         <DomainOverviewAnalyzeCard
-          catalogMarkets={context.catalogMarkets}
+          catalogScopes={context.catalogScopes}
           estimate={estimate}
-          market={market}
-          onMarketChange={(next) => void changeMarket(next)}
+          onResearchScopeChange={changeResearchScope}
           onScopeChange={(next) => {
-            setScopeOverride(next);
-            if (activeMarket) scheduleEstimate(target, next);
+            setDomainScopeOverride(next);
+            if (activeResearchScope) scheduleEstimate(target, next);
           }}
           onSubmit={(next, fresh) =>
             void analyze(
@@ -210,11 +198,12 @@ export function DomainOverviewWorkspace({
             )
           }
           onTargetChange={updateTarget}
-          scopeOverride={scopeOverride}
+          report={report}
+          researchScope={researchScope}
+          scopeOverride={domainScopeOverride}
           submitting={submitting}
           target={target}
-          trackedMarkets={context.trackedMarkets}
-          report={report}
+          trackedScopes={context.trackedScopes}
         />
       ) : null}
       <DomainOverviewRecentTargets
@@ -224,18 +213,19 @@ export function DomainOverviewWorkspace({
       />
       {submitting && !report ? (
         <DomainOverviewResultsLoading />
-      ) : report && activeMarket ? (
+      ) : report && activeResearchScope ? (
         <DomainOverviewResults
           history={history?.data ?? null}
           historyError={historyError}
           historyEstimateCents={estimate.historyCostCents}
           historyLoading={historyLoading}
-          market={activeMarket}
           onLoadHistory={() => void loadHistory()}
           onLoadMoreKeywords={() => void loadMore("keywords")}
           onLoadMorePages={() => void loadMore("pages")}
           projectRef={projectRef}
           report={report}
+          researchScope={activeResearchScope}
+          saveSelectedKeywordsAction={saveSelectedKeywordsAction}
           tableEstimateCents={{
             keywords: estimate.keywordPageCostCents,
             pages: estimate.pagePageCostCents,
@@ -244,16 +234,17 @@ export function DomainOverviewWorkspace({
           tableFetchedCount={tableFetchedCount}
           tableHasMore={tableHasMore}
           tableLoading={loadingTable}
-          saveSelectedKeywordsAction={saveSelectedKeywordsAction}
         />
       ) : (
         <DomainOverviewStatePanel
           charged={failureCharge(outcome)}
-          market={market?.displayName}
           onRetry={
-            activeMarket && blockedState === "lookup_failed" ? () => void analyze() : undefined
+            activeResearchScope && blockedState === "lookup_failed"
+              ? () => void analyze()
+              : undefined
           }
           projectRef={projectRef}
+          researchScope={researchScope}
           resetAt={failureResetAt(outcome)}
           state={blockedState ?? "idle"}
           target={target}

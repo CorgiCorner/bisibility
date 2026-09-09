@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, userEvent, within } from "storybook/test";
 import { AddKeywordDrawer } from "./AddKeywordDrawer";
 
 function installFetchStub() {
@@ -117,5 +118,36 @@ export const TrackingConfiguration: Story = {
     ...Open.args,
     initialKeyword: "open source rank tracker\nseo monitoring tool",
     showSchedule: true,
+  },
+};
+
+export const SharedMarketCreator: Story = {
+  ...Open,
+  args: {
+    ...Open.args,
+    initialKeyword: "open source rank tracker",
+    projectId: `prj_${"b".repeat(24)}`,
+    projectMarkets: {
+      ...projectMarkets,
+      marketCreation: {
+        registry: projectMarkets.markets.map((market) => ({
+          canonicalKey: market.canonicalKey,
+          id: market.id,
+          status: "active" as const,
+        })),
+        schedules: [{ id: `sch_${"a".repeat(24)}`, name: "Weekly Monday", frequency: "weekly" }],
+        sources: [{ id: `pmkt_${"c".repeat(24)}`, keywordCount: 12, name: "Spain core" }],
+      },
+    },
+  },
+};
+
+export const Suggestions: Story = {
+  ...Open,
+  args: { ...Open.args, initialKeyword: "my existing draft" },
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(page.getByRole("radio", { name: "Suggestions" }));
+    await expect(await page.findByRole("button", { name: "Choose queries" })).toBeVisible();
   },
 };

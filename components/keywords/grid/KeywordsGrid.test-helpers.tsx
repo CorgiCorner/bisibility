@@ -5,13 +5,29 @@ import {
 import { KeywordImportProvider } from "@/components/keywords/import/KeywordImportProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { MarketContextProvider } from "@/components/markets/MarketContextProvider";
+import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
+import { aggregateMarketGridRows, groupRow } from "@/lib/keywords/market-grid-model";
 import type { MarketContextValue } from "@/lib/markets/market-context-value";
 import { render } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
 import { KeywordsGrid } from "./KeywordsGrid";
 
 type KeywordsGridProps = ComponentProps<typeof KeywordsGrid>;
+const viewportSpies: Array<{ mockRestore: () => void }> = [];
+
+function stubKeywordTableViewport() {
+  if (viewportSpies.length > 0) return;
+  viewportSpies.push(
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1200),
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(1200),
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(650),
+  );
+}
+
+afterEach(() => {
+  for (const spy of viewportSpies.splice(0)) spy.mockRestore();
+});
 
 export function SessionSpendProbe() {
   const { sessionCents } = useSessionSpend();
@@ -35,10 +51,37 @@ export function pendingRows(count = 2): KeywordsGridProps["rows"] {
   }));
 }
 
+export function groupedPendingRows(): KeywordsGridProps["rows"] {
+  const [row] = pendingRows(1);
+  if (!row) return [];
+  const targets = [
+    row,
+    {
+      ...row,
+      device: "Mobile",
+      id: `${row.id}-es-mobile`,
+      location: {
+        ...row.location,
+        canonicalKey: "country:es@es",
+        countryCode: "ES",
+        displayName: "Spain",
+        gl: "es",
+        hl: "es",
+        id: "country:es@es",
+        languageLabel: "Spanish",
+      },
+      locationName: "Spain / Spanish",
+    },
+  ];
+  const aggregate = aggregateMarketGridRows(targets)[0];
+  return aggregate ? [groupRow(aggregate, aggregate.children)] : [];
+}
+
 export function renderPendingGrid(
   overrides: Partial<KeywordsGridProps> = {},
   market: MarketContextValue["market"] = null,
 ) {
+  stubKeywordTableViewport();
   const actions = {
     addKeywordsAction: vi.fn().mockResolvedValue({ created: 1, keywords: [] }),
     bulkClearTargetAction: vi.fn().mockResolvedValue({ updated: 1 }),
@@ -78,11 +121,29 @@ export function renderPendingGrid(
         <KeywordImportProvider activeProjectId="project_1">
           <KeywordsGrid
             {...actions}
+            facets={{ intents: [], positions: [], tags: [], topics: [] }}
+            lens={{ device: "all", locationId: null }}
+            locations={[]}
+            matchedTargetCount={2}
+            page={1}
+            pageCount={1}
+            pageSize={25}
             projectId="prj_1"
             providerConnected={false}
+            query={{
+              filters: emptyKeywordFilters,
+              grouped: false,
+              lens: { device: "all", locationId: null },
+              page: 1,
+              pageSize: 25,
+              savedViewId: null,
+              search: "",
+              sort: { direction: "asc", field: "position" },
+            }}
             rows={pendingRows()}
             savedViews={[]}
             tagSuggestions={[]}
+            totalCount={2}
             {...overrides}
           />
         </KeywordImportProvider>

@@ -51,6 +51,9 @@ hand.
 | - | - |
 | `DEMO_FIXED_OTP` | Set to `1` to enable the throwaway [demo login](/quickstart#demo-login) on local installs. |
 | `DEMO_INSTANCE_INSECURE_AUTH_ACK` | Required acknowledgement when `DEMO_FIXED_OTP=1` runs in the production Docker image. Never set it for real users or data. |
+| `READ_ONLY_DEMO` | Set to `1` only on a separate, sanitized demo installation. Enables one-click access to one existing viewer account, locks account changes, and disables email delivery. Never combine with fixed-OTP flags. |
+| `DEMO_USER_ID` | Public ID of the demo's verified, non-admin viewer. It must belong to exactly the configured demo project. Demo sessions expire after two hours. |
+| `DEMO_PROJECT_ID` | Public ID of the sole project accessible through the demo identity. Project writes and paid checks are denied by the existing viewer role. |
 | `INTERNAL_PROBE_TOKEN` | Optional Bearer token for detailed `/api/v1/health` diagnostics before database-backed credentials exist. Generate at least 32 random bytes and share it only with deployment health checks. |
 | `SELF_HOSTED_ALLOW_INDEXING` | Self-hosted instances serve restrictive `robots.txt` and no `sitemap.xml` or `llms.txt` by default. Set to `true` to serve `Allow: /` and omit `X-Robots-Tag: noindex`; `false` keeps the restrictive policy. Values are case-insensitive, and missing or malformed values fail closed to the restrictive policy. |
 | `NEXT_PUBLIC_DOCS_URL` | Public documentation origin compiled into navigation and footer links. Defaults to `https://bisibility.com/docs`. Override during a custom-domain cutover. |
@@ -159,6 +162,7 @@ hand.
 | `NEXT_PUBLIC_DOMAIN_ICONS` | Optional domain-icon opt-out. Domain favicons are on by default; set this to `off` to suppress third-party domain icon requests for project and competitor tiles. |
 | `NEXT_PUBLIC_LOGODEV_TOKEN` | Optional logo.dev token for provider and marketing brand logos only. Project and competitor tiles do not use it. |
 | `NEXT_PUBLIC_PLAUSIBLE_URL`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional privacy-first site analytics. Set both values to load the tracker; the Stats API token is server-side only. |
+| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | Optional consent-gated product analytics and setup replays. Set the key and the EU Cloud host to enable it; leave the key unset to disable the provider and consent banner. See [Product analytics](/self-hosting/analytics). |
 | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`, `NEXT_PUBLIC_SENTRY_RELEASE`, `SENTRY_TRACES_SAMPLE_RATE`, `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` | Optional Sentry error monitoring. The auth token and org are build-time only and enable source map uploads to the configured project slug (`bisibility` by default; change `next.config.ts` if you use a different slug). |
 | `GITHUB_API_TOKEN` | Optional server-side token for authenticated GitHub repository metadata requests. The repository link remains visible when this is unset or GitHub is unavailable. |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub social sign-in. |
@@ -169,7 +173,7 @@ hand.
 | `KEYWORD_RESEARCH_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached keyword-research results. Defaults to `43200` (12h). |
 | `RANKED_KEYWORDS_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached ranked-keyword results. Defaults to `43200` (12h). |
 | `BACKLINKS_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached backlink results. Defaults to `86400` (24h). |
-| `DOMAIN_OVERVIEW_CACHE_TTL_SECONDS` | Redis TTL (seconds) for cached domain-overview results. Defaults to `43200` (12h). |
+| `DOMAIN_OVERVIEW_CACHE_TTL_SECONDS` | Cache TTL (seconds) for domain-overview results in Redis and stored snapshots. Defaults to `43200` (12h). With `READ_ONLY_DEMO=1`, results remain valid for 30 days from retrieval, including existing snapshots, regardless of this setting. |
 | `AUDIT_RETENTION_DAYS`, `AUDIT_IP_HMAC_SECRET`, `APP_VERSION` | Audit retention, optional source-IP HMAC hashing, and an audit version label. |
 | `DATA_REGION` | Optional data-residency label shown in auth and onboarding surfaces. |
 

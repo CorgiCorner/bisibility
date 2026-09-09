@@ -7,7 +7,8 @@ import {
   keywordCountLabel,
 } from "@/components/keywords/action-utils";
 import { TargetUrlField } from "@/components/keywords/TargetUrlField";
-import { Button, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { type BulkKeywordTargetInput, bulkKeywordTargetSchema } from "@/lib/schemas/keyword";
@@ -92,7 +93,7 @@ export function BulkTargetForm({
             className="w-full shrink-0 sm:w-auto sm:min-w-[140px]"
             disabled={isSubmitting || !isDirty || !isValid}
             size="sm"
-            sx={{ minHeight: 40 }}
+            style={{ minHeight: 40 }}
             type="submit"
           >
             {isSubmitting ? "Saving..." : view.submitLabel}

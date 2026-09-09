@@ -4,12 +4,15 @@ import type {
   ResearchPage,
   SerpRawPayload,
 } from "@/lib/providers/types";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import {
   decideOrganicResult,
   type OrganicResultDecision,
   organicResultNormalization,
 } from "./organic-result-decision";
+
+// The engine processed the request successfully but returned an empty SERP.
+export const DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS = 40102;
 
 export type DataForSeoItem = {
   domain?: string;

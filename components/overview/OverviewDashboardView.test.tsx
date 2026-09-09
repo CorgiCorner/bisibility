@@ -62,6 +62,43 @@ describe("OverviewDashboardView", () => {
     );
   });
 
+  it("shows competitor data inside the populated dashboard without an experimental module", () => {
+    render(
+      <OverviewDashboardView
+        checkHealth={healthyChecks}
+        isSample={false}
+        overview={{ ...overviewFixture, state: "populated" }}
+        competitors={{
+          limited: false,
+          rows: [
+            {
+              id: "cmp_rival",
+              domain: "rival.test",
+              label: "Rival",
+              found: 5,
+              checked: 8,
+              above: 2,
+              paired: 4,
+              averagePosition: 3.4,
+            },
+          ],
+        }}
+      />,
+    );
+    expect(screen.getByRole("table", { name: "Competitor summary" })).toHaveTextContent("Rival");
+    expect(screen.getByRole("link", { name: /Rival rival.test/ })).toHaveAttribute(
+      "href",
+      "https://rival.test",
+    );
+    expect(screen.getByRole("link", { name: /Rival rival.test/ })).toHaveAttribute(
+      "target",
+      "_blank",
+    );
+    expect(screen.getByText("5 / 8")).toBeVisible();
+    expect(screen.getByText("2 / 4")).toBeVisible();
+    expect(screen.queryByRole("link", { name: "View comparison" })).not.toBeInTheDocument();
+  });
+
   it("shows safe billing copy without leaking the raw provider error", () => {
     const rawProviderError = "All SERP providers failed: dataforseo (Ok.)";
     const failedChecks = {

@@ -1,10 +1,12 @@
 "use client";
 
+import { Input } from "@/components/ui/Input";
 import { compactInputClassName, inputClassName } from "@/components/ui/input-styles";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { type ReactNode, useCallback } from "react";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { type ReactNode, useCallback, useId } from "react";
 
 export type MenuSelectOption = {
   ariaLabel?: string;
@@ -20,6 +22,7 @@ export type MenuSelectOption = {
 };
 
 export type MenuSelectOptionGroup = {
+  hideHeading?: boolean;
   id: string;
   label: string;
   options: readonly MenuSelectOption[];
@@ -38,7 +41,7 @@ export type GroupedInput = {
 
 export type MenuSelectInput = FlatInput | GroupedInput;
 
-export const menuSelectPaperSx = {
+export const menuSelectPaperStyle = {
   backgroundColor: "var(--bg-elev)",
   border: "1px solid var(--border)",
   borderRadius: UI_RADIUS_ROLES.card,
@@ -119,31 +122,64 @@ export function selectedSummary(
 }
 
 type MenuSearchFieldProps = {
+  hint?: string;
   onChange: (value: string) => void;
   placeholder: string;
   value: string;
 };
 
-export function MenuSearchField({ onChange, placeholder, value }: Readonly<MenuSearchFieldProps>) {
+export function MenuSearchField({
+  hint,
+  onChange,
+  placeholder,
+  value,
+}: Readonly<MenuSearchFieldProps>) {
+  const hintId = useId();
   const focusInput = useCallback((input: HTMLInputElement | null) => input?.focus(), []);
   return (
     <div className="px-1 pb-1">
-      <input
-        aria-label={placeholder}
-        className={cn(
-          compactInputClassName,
-          "min-h-8 w-full rounded-control border border-border-control bg-transparent px-2.5 text-fg outline-none focus:border-accent",
-        )}
-        onChange={(event) => onChange(event.target.value)}
-        onKeyDown={(event) => {
-          if (!["ArrowDown", "ArrowUp", "Escape", "Tab"].includes(event.key)) {
-            event.stopPropagation();
-          }
-        }}
-        placeholder={placeholder}
-        ref={focusInput}
-        value={value}
-      />
+      <div className="relative">
+        <MagnifyingGlass
+          weight="regular"
+          aria-hidden
+          className="pointer-events-none absolute left-2.5 top-2 text-fg-muted"
+          size={16}
+        />
+        <Input
+          data-menu-search
+          aria-describedby={hint ? hintId : undefined}
+          aria-label={placeholder}
+          className={cn(
+            compactInputClassName,
+            "min-h-8 w-full rounded-control border border-border-control bg-bg-elev pl-8 pr-2.5 text-fg outline-none focus:border-accent",
+          )}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+              const items = event.currentTarget
+                .closest('[role="menu"], [role="listbox"]')
+                ?.querySelectorAll<HTMLElement>("[data-menu-item]:not([data-disabled])");
+              const item = event.key === "ArrowDown" ? items?.[0] : items?.[items.length - 1];
+              if (item) {
+                event.preventDefault();
+                event.stopPropagation();
+                item.focus();
+              }
+            }
+            if (!["ArrowDown", "ArrowUp", "Escape", "Tab"].includes(event.key)) {
+              event.stopPropagation();
+            }
+          }}
+          placeholder={placeholder}
+          ref={focusInput}
+          value={value}
+        />
+      </div>
+      {hint ? (
+        <p className="m-0 max-w-64 px-1 pt-1.5 text-ui-micro text-fg-muted" id={hintId}>
+          {hint}
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -1,12 +1,16 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
+import { legacyMarketNameSchema } from "@/lib/api/legacy-market-input";
 import { keywordCreateItemSchema } from "@/lib/api/schemas";
 import { parsePublicId } from "@/lib/db/public-id";
 import {
+  CLOUD_MIGRATION_CHECKSUM_VERSIONS,
   CLOUD_MIGRATION_PACKAGE_VERSION,
-  LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION,
+  PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION,
 } from "@/lib/migration/package-version";
+import { canonicalKeySchema } from "@/lib/schemas/keyword";
+import { normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { z } from "zod";
 import { cloudImportBodySchema, importKeywordSchema } from "./schemas";
 
@@ -40,7 +44,7 @@ type ChunkChecksumPayload = {
   sections?: unknown;
 };
 
-function importChunkChecksumForVersion(payload: ChunkChecksumPayload, version: 5 | 6) {
+function importChunkChecksumForVersion(payload: ChunkChecksumPayload, version: 5 | 6 | 7) {
   return `sha256:${createHash("sha256")
     .update(canonicalJson({ version, ...payload }))
     .digest("hex")}`;
@@ -60,7 +64,7 @@ function checksumMatches(input: unknown) {
         ? { kind: body.kind, sections: body.sections }
         : null;
   if (payload === null) return false;
-  return [CLOUD_MIGRATION_PACKAGE_VERSION, LEGACY_CLOUD_MIGRATION_PACKAGE_VERSION].some(
+  return CLOUD_MIGRATION_CHECKSUM_VERSIONS.some(
     (version) => body.checksum === importChunkChecksumForVersion(payload, version),
   );
 }
@@ -88,7 +92,10 @@ export const importSessionCreateSchema = z
       .strict()
       .partial()
       .optional(),
-    version: z.literal(CLOUD_MIGRATION_PACKAGE_VERSION),
+    version: z.union([
+      z.literal(CLOUD_MIGRATION_PACKAGE_VERSION),
+      z.literal(PREVIOUS_CLOUD_MIGRATION_PACKAGE_VERSION),
+    ]),
   })
   .strict()
   .transform((value) => ({
@@ -100,10 +107,31 @@ export const importSessionCreateSchema = z
 const sourceKeywordSchema = z
   .object({
     device: keywordCreateItemSchema.shape.device.unwrap(),
-    location: keywordCreateItemSchema.shape.location.unwrap(),
+    location: z.string().trim().min(1).max(240),
+    location_key: canonicalKeySchema.optional(),
     text: keywordCreateItemSchema.shape.keyword,
   })
-  .strict();
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.location_key !== undefined) return;
+    const parsed = legacyMarketNameSchema.safeParse(value.location);
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        ctx.addIssue({ ...issue, path: ["location", ...issue.path] });
+      }
+    }
+  })
+  .transform((value) => ({
+    device: value.device,
+    location:
+      value.location_key === undefined
+        ? legacyMarketNameSchema.parse(value.location)
+        : value.location,
+    location_key: value.location_key
+      ? normalizeCanonicalLocationKey(value.location_key).canonicalKey
+      : undefined,
+    text: value.text,
+  }));
 const sourceKeywordIdsSchema = z.record(strictKeywordId, sourceKeywordSchema).default({});
 
 function sourceKeywordIds(input: unknown) {
@@ -182,6 +210,21 @@ export const importSessionChunkSchema = z.preprocess(
   },
   z.union([keywordChunkSchema, sectionsChunkSchema]),
 );
+
+/** Version 7 sessions never recover a location identity from a display label. */
+export function sessionChunkHasCanonicalLocationKeys(chunk: ImportSessionChunk) {
+  if (chunk.kind === "keywords") {
+    return chunk.keywords.every((keyword) => keyword.location_key !== undefined);
+  }
+  return (
+    Object.values(chunk.sections.sourceKeywordIds).every(
+      (keyword) => keyword.location_key !== undefined,
+    ) &&
+    chunk.sections.alertRules.every((rule) =>
+      rule.targets.every((target) => target.type === "tag" || target.location_key !== undefined),
+    )
+  );
+}
 
 export type ImportSessionChunk = z.infer<typeof importSessionChunkSchema>;
 export type ImportSessionCreate = z.infer<typeof importSessionCreateSchema>;

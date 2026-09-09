@@ -2,18 +2,20 @@
 
 import { ApiKeyRevealContent } from "@/components/settings/api-keys/ApiKeyReveal";
 import { apiKeyScopeLabel, apiKeyScopeOptions } from "@/components/settings/api-keys/api-key-model";
-import { Button, ConfirmModal, ExpiryChoiceGroup, inputClassName, Modal } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { ExpiryChoiceGroup } from "@/components/ui/ExpiryChoiceGroup";
+import { inputClassName } from "@/components/ui/input-styles";
+import { Modal } from "@/components/ui/Modal";
 import type { DateFormatPreference } from "@/lib/format/user-datetime";
 import type { PersonalTokenData } from "@/lib/queries/personal-tokens";
 import type { IssuePersonalTokenInput } from "@/lib/schemas/personalToken";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
-import {
-  CheckCircleIcon as CheckCircle,
-  PlusIcon as Plus,
-  TrashIcon as Trash,
-  UserGearIcon as UserGear,
-} from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
+import { UserGearIcon as UserGear } from "@phosphor-icons/react/dist/csr/UserGear";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AccountSection } from "./AccountSection";
@@ -152,7 +154,7 @@ export function PersonalTokensSection({
             onClick={() => setCreateOpen(true)}
             size="sm"
             startIcon={<Plus aria-hidden size={14} weight="regular" />}
-            sx={{ marginTop: "16px" }}
+            style={{ marginTop: "16px" }}
             type="button"
           >
             Create your first token

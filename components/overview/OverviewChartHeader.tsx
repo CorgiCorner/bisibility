@@ -1,4 +1,5 @@
-import { ConclusionSubtitle, SectionTitle } from "@/components/ui";
+import { ConclusionSubtitle } from "@/components/ui/ConclusionSubtitle";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { ReactNode } from "react";
 
 type OverviewChartHeaderProps = {

@@ -1,17 +1,19 @@
 "use client";
 
 import { RankCheckRunModal } from "@/components/keywords/RankCheckRunModal";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import {
   type CostRateInfo,
   formatEstimateCents,
   runCostCents,
 } from "@/lib/cost-estimate/project-estimate";
+import { isPublicIdOfType } from "@/lib/db/public-id";
 import { dominantErrorCode, isProviderErrorCode } from "@/lib/providers/provider-error-code";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
-import { appPath, rankTrackerTabPath } from "@/lib/routing/app-path";
-import type { SerpDepth } from "@/lib/serp/markets";
+import { appPath } from "@/lib/routing/app-path";
+import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-runs-path";
+import type { SerpDepth } from "@/lib/serp/constants";
 import Link from "next/link";
 import { effectiveRowDepth, selectionDepthLabel } from "./run-check-depth";
 
@@ -101,9 +103,11 @@ export function RunChecksConfirmationModal({
   const firstFailure = flow?.failures[0];
   const providerCode = flow ? dominantProviderCode(flow.failures) : null;
   const failurePresentation = providerFailurePresentation(providerCode);
-  const failureDetailsHref = firstFailure?.rankCheckId
-    ? `${rankTrackerTabPath(projectId, "runs")}&run=${encodeURIComponent(firstFailure.rankCheckId)}`
-    : rankTrackerTabPath(projectId, "runs");
+  const failureRunId = firstFailure?.rankCheckId ?? null;
+  const detailRunId = failureRunId && isPublicIdOfType(failureRunId, "rcr") ? failureRunId : null;
+  const failureDetailsHref = detailRunId
+    ? projectRunRankCheckPath(projectId, detailRunId)
+    : projectRunsPath(projectId);
 
   let footer: React.ReactNode = null;
   if (flow?.step === "confirm" || flow?.step === "starting") {

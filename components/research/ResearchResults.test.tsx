@@ -127,7 +127,7 @@ describe("ResearchResults diagnostics", () => {
     expect(screen.getByLabelText("detail metrics available")).toHaveTextContent("false");
     expect(
       screen.getByText(
-        "No search volume or difficulty data for this market - positions are tracked normally.",
+        "No search volume or difficulty data for this country and language. Rank tracking is unaffected.",
       ),
     ).toBeInTheDocument();
   });

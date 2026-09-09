@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, relative, resolve } from "node:path";
-import ts from "typescript";
+import ts from "@typescript/typescript6";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { type AuditClient, writeAudit } from "./audit";
 import { hasDeclaredAuditAction } from "./audit-field-declarations";
@@ -215,6 +215,21 @@ describe("audit redaction canaries", () => {
     expect(undeclared).toEqual([]);
   });
 
+  it("retains reviewed competitor details and drops unrelated edit payload fields", async () => {
+    const details = {
+      id: "cmp_aaaaaaaaaaaaaaaaaaaaaaaa",
+      domain: "docs.example.com",
+      aliases: ["Brand"],
+      source: "manual",
+    };
+    const data = await writeCanary(
+      { ...details, unreviewed: "do not persist" },
+      undefined,
+      "competitor.details.update",
+    );
+    expect(data.after).toEqual(details);
+  });
+
   it("drops undeclared sensitive keys at any depth", async () => {
     const secret = "audit-canary-secret-redaction-0001";
     const data = await writeCanary({
@@ -229,6 +244,44 @@ describe("audit redaction canaries", () => {
     expect(JSON.stringify(data)).not.toContain(secret);
     expect(data.after).toBeUndefined();
   });
+
+  it.each(["archive", "restore", "update"])(
+    "retains schedule %s details without unrelated payload fields",
+    async (operation) => {
+      const before = { archivedAt: null, enabled: true, isDefault: true };
+      const after = {
+        archivedAt: operation === "restore" ? null : "2026-09-09T00:00:00.000Z",
+        enabled: false,
+        isDefault: false,
+        keywordIds: ["kw_abcdefghijklmnopqrstuvwx"],
+        movedTo: "sch_bcdefghijklmnopqrstuvwxy",
+      };
+      const { client, data } = auditClient();
+      await writeAudit(
+        {
+          action: `check_schedule.${operation}`,
+          actorId: null,
+          before: { ...before, unreviewed: "do not persist" },
+          after: { ...after, unreviewed: "do not persist" },
+          requestContext,
+          targetId: "sch_abcdefghijklmnopqrstuvwx",
+          targetType: "check_schedule",
+        },
+        client as unknown as AuditClient,
+      );
+      expect(data().before).toEqual(before);
+      expect(data().after).toEqual(after);
+    },
+  );
+
+  it.each([null, "sch_abcdefghijklmnopqrstuvwx"])(
+    "retains the selected schedule %s when keywords are added",
+    async (checkScheduleId) => {
+      const after = { checkScheduleId, keywordIds: ["kw_abcdefghijklmnopqrstuvwx"] };
+      const data = await writeCanary(after, undefined, "keyword.batch_add");
+      expect(data.after).toEqual(after);
+    },
+  );
 
   it.each([
     [

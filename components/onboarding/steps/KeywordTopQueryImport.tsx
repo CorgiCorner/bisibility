@@ -9,10 +9,10 @@ import {
   feedbackClass,
   keywordLines,
 } from "@/components/onboarding/onboarding-form-utils";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import type { TopQuerySuggestion } from "@/lib/keyword-suggest/sanitize-top-queries";
 import { appPath } from "@/lib/routing/app-path";
-import { ArrowLineDownIcon as ArrowLineDown } from "@phosphor-icons/react";
+import { ArrowLineDownIcon as ArrowLineDown } from "@phosphor-icons/react/dist/csr/ArrowLineDown";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
@@ -27,9 +27,8 @@ export type ImportTopQueriesAction = (input: { limit?: number; projectId: string
 >;
 
 type KeywordTopQueryImportProps = {
-  /** Google is connected on this step but no property is chosen yet. */
-  awaitingPropertySelection?: boolean;
-  costContext: SuggestionCostContext;
+  compact?: boolean;
+  costContext?: SuggestionCostContext;
   currentKeywords: string;
   hasAnalyticsSource: boolean;
   importTopQueriesAction?: ImportTopQueriesAction;
@@ -51,7 +50,7 @@ function emptyImportMessage() {
 }
 
 export function KeywordTopQueryImport({
-  awaitingPropertySelection = false,
+  compact = false,
   costContext,
   currentKeywords,
   hasAnalyticsSource,
@@ -110,32 +109,29 @@ export function KeywordTopQueryImport({
     showFeedback(importedMessage(queries.length));
   }
 
-  if (!hasAnalyticsSource) {
-    return (
-      <p className={`m-0 mt-4.5 ${feedbackClass} text-fg-muted`}>
-        {awaitingPropertySelection
-          ? "Select a Search Console property above, then import your queries."
-          : "Connect Search Console above to import your real queries."}
-      </p>
-    );
-  }
+  if (!hasAnalyticsSource) return null;
 
   return (
-    <div className="mt-4.5 flex flex-wrap items-center gap-2">
+    <div className={`${compact ? "" : "mt-4.5 "}flex flex-wrap items-center gap-2`}>
       <Button
         disabled={!importTopQueriesAction}
         loading={isPending}
         loadingLabel="Importing top queries..."
         onClick={handleImport}
-        startIcon={<ArrowLineDown aria-hidden size={14} weight="regular" />}
-        sx={{
-          color: "var(--fg-muted)",
-          "&:hover": { borderColor: "var(--accent)", color: "var(--accent-text)" },
-        }}
+        startIcon={compact ? undefined : <ArrowLineDown aria-hidden size={14} weight="regular" />}
+        style={
+          compact
+            ? undefined
+            : {
+                "--control-color": "var(--fg-muted)",
+                "--control-hover-border-color": "var(--accent)",
+                "--control-hover-color": "var(--accent-text)",
+              }
+        }
         type="button"
         variant="secondary"
       >
-        Import top queries from Search Console
+        {compact ? "Choose queries" : "Import top queries from Search Console"}
       </Button>
       {feedback ? (
         <span className={`${feedbackClass} text-fg-muted`}>
@@ -156,6 +152,7 @@ export function KeywordTopQueryImport({
       {drawer ? (
         <KeywordSuggestionDrawer
           costContext={costContext}
+          selectionOnly={compact}
           existingKeywords={keywordLines(currentKeywords)}
           hidden={drawer.hidden}
           key={drawerNonce}

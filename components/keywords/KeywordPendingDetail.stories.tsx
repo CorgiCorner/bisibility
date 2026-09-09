@@ -2,7 +2,7 @@ import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/sto
 import { KeywordPendingDetail } from "@/components/keywords/KeywordPendingDetail";
 import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row-types";
 import type { KeywordRow } from "@/lib/queries/keywords";

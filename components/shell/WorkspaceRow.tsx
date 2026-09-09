@@ -2,30 +2,29 @@
 
 import { WorkspaceTile } from "@/components/shell/WorkspaceTile";
 import { workspaceRowMeta } from "@/components/shell/workspace-labels";
+import { MenuItem } from "@/components/ui/MenuItem";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { menuItemRowHoverSx } from "@/lib/ui/menu-item-row-styles";
-import MenuItem from "@mui/material/MenuItem";
-import { CheckIcon as Check } from "@phosphor-icons/react";
+import { menuItemRowHoverStyle } from "@/lib/ui/menu-item-row-styles";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import Link from "next/link";
 
 /** Shared by workspace rows and the settings/create actions below the separator. */
-export const MENU_ROW_SX = {
+export const MENU_ROW_STYLE = {
   alignItems: "center",
   borderRadius: UI_RADIUS_ROLES.control,
   fontSize: "13px",
   fontWeight: 500,
   gap: "10px",
-  // Rows are rounded, so without a gap their hover fills butt against each other and read
-  // as one block with seams rather than separate targets. All 4px sit on one side: the rows
-  // are block-level list items, so a 2px/2px split would collapse back to 2px.
   marginBottom: "4px",
   minHeight: 0,
-  paddingX: "9px",
-  paddingY: "8px",
+  paddingLeft: "9px",
+  paddingRight: "9px",
+  paddingTop: "8px",
+  paddingBottom: "8px",
   // The fill belongs to the pointer alone; selection is the check glyph, never a fill.
-  ...menuItemRowHoverSx,
+  ...menuItemRowHoverStyle,
 } as const;
 
 export type WorkspaceRowProps = {
@@ -41,7 +40,7 @@ export function WorkspaceRow({ workspace, active, onSelect }: Readonly<Workspace
       component={Link}
       href={appPath(workspace.publicId, "dashboard")}
       onClick={onSelect}
-      sx={MENU_ROW_SX}
+      style={MENU_ROW_STYLE}
     >
       <WorkspaceTile domain={workspace.domain} />
       <span className="min-w-0 flex-1">

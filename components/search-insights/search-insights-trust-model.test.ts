@@ -30,6 +30,7 @@ function importState(overrides: Partial<SearchInsightsImportState> = {}) {
   } satisfies SearchInsightsImportState;
 }
 const observabilityFacts = {
+  importCoverage: { completed: 93, total: 488 },
   consecutiveDays: 93,
   deepHistoryMonths: { completed: 3, target: 16 },
   lastActivityAt: isoFromFrozenNow({ hours: -7, minutes: -5 }),
@@ -243,12 +244,12 @@ describe("importObservabilityProgress", () => {
         tooltip:
           "Last checked Jul 9, 15:55 Pacific. Google may adjust recent data until it finalizes.",
       },
-      percent: 70,
-      qualifyingCounter: "7 of 10 finalized days",
+      percent: 19,
+      qualifyingCounter: "93 of 488 finalized days",
     });
   });
 
-  it("announces the first look until the seven-day view is finalized", () => {
+  it("uses qualifying coverage even before the first visible window is ready", () => {
     const firstLookFacts = {
       ...observabilityFacts,
       consecutiveDays: 2,
@@ -258,49 +259,23 @@ describe("importObservabilityProgress", () => {
         d7: { current: false, previous: false },
       },
       stall: { ...observabilityFacts.stall, expectedDayMs: 300_000 },
+      importCoverage: { completed: 7, total: 488 },
       targetDays: 28,
     } satisfies ImportObservabilityFacts;
 
     expect(importObservabilityProgress(firstLookFacts)?.qualifyingCounter).toBe(
-      "First look ready · 7-day view in ~25 min",
+      "7 of 488 finalized days",
     );
+    expect(importObservabilityProgress(firstLookFacts)?.percent).toBe(1);
+  });
+
+  it("keeps coverage indeterminate when its target is unknown", () => {
     expect(
-      importObservabilityProgress({
-        ...firstLookFacts,
-        consecutiveDays: 1,
-        stall: { ...firstLookFacts.stall, expectedDayMs: 900_000 },
-      })?.qualifyingCounter,
-    ).toBe("First look ready · 7-day view in ~2 hr");
-    expect(
-      importObservabilityProgress({
-        ...firstLookFacts,
-        consecutiveDays: 7,
-      })?.qualifyingCounter,
-    ).toBe("First look ready · 7-day view once its days finalize");
-    expect(
-      importObservabilityProgress({
-        ...firstLookFacts,
-        consecutiveDays: 10,
-      })?.qualifyingCounter,
-    ).toBe("First look ready · 7-day view once its days finalize");
-    expect(
-      importObservabilityProgress({
-        ...firstLookFacts,
-        readyThrough: {
-          ...firstLookFacts.readyThrough,
-          d7: { current: true, previous: true },
-        },
-      })?.qualifyingCounter,
-    ).toBe("7 of 28 finalized days");
-    expect(
-      importObservabilityProgress({
-        ...firstLookFacts,
-        readyThrough: {
-          ...firstLookFacts.readyThrough,
-          d1: { current: false, previous: false },
-        },
-      })?.qualifyingCounter,
-    ).toBe("7 of 28 finalized days");
+      importObservabilityProgress({ ...observabilityFacts, importCoverage: null }),
+    ).toMatchObject({
+      percent: null,
+      qualifyingCounter: "Finalized import coverage is not available.",
+    });
   });
 
   it("changes deep-history progress when the selector target changes", () => {

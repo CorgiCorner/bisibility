@@ -1,11 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { loadCloudBackupCounts } from "@/lib/actions/cloud";
 import type { CloudBackupCounts } from "@/lib/migration/cloud-backup-sections";
 import type { CloudPackageExportSummary } from "@/lib/queries/cloud-beta-export";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { WarningCircleIcon as WarningCircle, XIcon as X } from "@phosphor-icons/react";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useState } from "react";
 import { CloudBackupModal } from "./CloudBackupModal";
 import { CloudBetaCoverageModal } from "./CloudBetaCoverageModal";
@@ -33,20 +34,20 @@ type CloudBetaBannerProps = {
  * own weight so neither competes with the page's primary action.
  */
 const quietAction = {
-  color: "var(--fg)",
+  "--control-color": "var(--fg)",
   fontSize: "11.5px",
   fontWeight: 400,
   minHeight: 20,
-  paddingX: 0,
-  paddingY: 0,
-  textDecorationLine: "none",
-  textUnderlineOffset: "3px",
-  "&:hover": {
-    backgroundColor: "transparent",
-    color: "var(--fg)",
-    textDecorationColor: "var(--fg)",
-    textDecorationLine: "underline",
-  },
+  paddingLeft: 0,
+  paddingRight: 0,
+  paddingTop: 0,
+  paddingBottom: 0,
+  "--control-text-decoration": "none",
+  "--control-text-underline-offset": "3px",
+  "--control-hover-background-color": "transparent",
+  "--control-hover-color": "var(--fg)",
+  "--control-hover-text-decoration-color": "var(--fg)",
+  "--control-hover-text-decoration": "underline",
 };
 
 function persistDismissal() {
@@ -156,7 +157,7 @@ export function CloudBetaBanner({
               className="no-underline hover:underline"
               onClick={() => setActiveModal("coverage")}
               size="sm"
-              sx={quietAction}
+              style={quietAction}
               variant="ghost"
             >
               What beta covers
@@ -167,7 +168,7 @@ export function CloudBetaBanner({
               loadingLabel="Loading..."
               onClick={() => void openBackup()}
               size="sm"
-              sx={quietAction}
+              style={quietAction}
               variant="ghost"
             >
               Export data

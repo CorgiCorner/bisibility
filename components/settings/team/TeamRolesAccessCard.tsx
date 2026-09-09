@@ -3,7 +3,8 @@ import { teamCardGeometryClassNames } from "@/components/settings/team/team-card
 import { canProjectAction, canReadProjectAudit } from "@/lib/auth/capabilities";
 import type { Role } from "@/lib/generated/prisma/client";
 import { cn } from "@/lib/ui/cn";
-import { CheckCircleIcon as CheckCircle, MinusIcon as Minus } from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
+import { MinusIcon as Minus } from "@phosphor-icons/react/dist/ssr/Minus";
 
 const displayedRoles = [
   { label: "Owner", value: "owner" },

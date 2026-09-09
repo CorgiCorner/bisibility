@@ -1,11 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen } from "@testing-library/react";
+import Link from "next/link";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Button } from "./Button";
 import { Checkbox } from "./Checkbox";
 import { Kbd } from "./Kbd";
-import { Pill } from "./Pill";
 import { SegmentedControl } from "./SegmentedControl";
 import { Switch } from "./Switch";
 import { Textarea } from "./Textarea";
@@ -203,21 +202,6 @@ describe("form primitives", () => {
     expect(daily.nextElementSibling?.className).not.toContain("bg-accent");
   });
 
-  it("aligns extra-small segmented controls with extra-small buttons", () => {
-    render(
-      <>
-        <SegmentedHarness size="xs" />
-        <Button size="xs">Export</Button>
-      </>,
-    );
-
-    const daily = screen.getByRole("radio", { name: "Daily" });
-    expect(daily.parentElement?.parentElement).toHaveClass("min-h-[30px]");
-    expect(screen.getByRole("button", { name: "Export" })).toHaveStyle({
-      minHeight: "30px",
-    });
-  });
-
   it("disables segmented controls as a group", () => {
     render(<SegmentedHarness disabled />);
 
@@ -272,196 +256,21 @@ describe("form primitives", () => {
     const button = screen.getByRole("button", { name: "Saving" });
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute("aria-busy", "true");
-    expect(button).toHaveStyle({
-      color: "var(--fg)",
-      opacity: "0.65",
-    });
+    expect(button).toHaveAttribute("data-loading", "true");
   });
 
-  it("separates pointer focus from keyboard-visible ghost focus", async () => {
-    const user = userEvent.setup();
-    render(<Button variant="ghost">Ghost</Button>);
-    const button = screen.getByRole("button", { name: "Ghost" });
-    const realMatches = button.matches.bind(button);
-    let focusVisible = false;
-    button.matches = ((selector: string) =>
-      selector === ":focus-visible"
-        ? focusVisible
-        : realMatches(selector)) as typeof button.matches;
-
-    await user.click(button);
-    await user.unhover(button);
-
-    expect(button).toHaveFocus();
-    expect(button).not.toHaveClass("Mui-focusVisible");
-
-    button.blur();
-    focusVisible = true;
-    await user.tab();
-
-    expect(button).toHaveFocus();
-    await waitFor(() => expect(button).toHaveClass("Mui-focusVisible"));
-  });
-
-  it("uses hover-capable hover and MUI focus-visible selectors for ghost fill", () => {
-    render(<Button variant="ghost">Ghost</Button>);
-    const button = screen.getByRole("button", { name: "Ghost" });
-    const generatedClass = Array.from(button.classList).find((className) =>
-      className.endsWith("-MuiButton-root"),
-    );
-    expect(generatedClass).toBeDefined();
-
-    const topRules = Array.from(document.styleSheets).flatMap((sheet) =>
-      Array.from(sheet.cssRules),
-    );
-    const hoverRules = topRules
-      .filter(
-        (rule): rule is CSSMediaRule =>
-          rule instanceof CSSMediaRule && rule.conditionText === "(hover: hover)",
-      )
-      .flatMap((rule) => Array.from(rule.cssRules, (nestedRule) => nestedRule.cssText));
-    const directRules = topRules.map((rule) => rule.cssText);
-
-    expect(
-      hoverRules.some(
-        (rule) =>
-          rule.includes(`.${generatedClass}:hover:not(.Mui-disabled)`) &&
-          rule.includes("background-color: var(--bg-sunken)"),
-      ),
-    ).toBe(true);
-    expect(
-      directRules.some(
-        (rule) =>
-          rule.includes(`.${generatedClass}.Mui-focusVisible:not(.Mui-disabled)`) &&
-          rule.includes("background-color: var(--bg-sunken)"),
-      ),
-    ).toBe(true);
-    expect(directRules.some((rule) => rule.includes(`.${generatedClass}:focus {`))).toBe(false);
-  });
-
-  it("preserves borderless ghost button dimensions while loading", () => {
-    const rect = vi
-      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
-      .mockImplementation(function (this: HTMLElement) {
-        const style = getComputedStyle(this);
-        const horizontal =
-          Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight);
-        const vertical =
-          Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom);
-        const borderWidth =
-          style.borderStyle === "none" ? 0 : Number.parseFloat(style.borderLeftWidth);
-        const borderX = borderWidth * 2;
-        const borderY = borderWidth * 2;
-        return {
-          bottom: vertical + borderY,
-          height: vertical + borderY,
-          left: 0,
-          right: horizontal + borderX,
-          toJSON: () => ({}),
-          top: 0,
-          width: horizontal + borderX,
-          x: 0,
-          y: 0,
-        };
-      });
-    const { rerender } = render(<Button variant="ghost">Ghost</Button>);
-    const idle = screen.getByRole("button", { name: "Ghost" }).getBoundingClientRect();
-
-    rerender(
-      <Button loading variant="ghost">
-        Ghost
-      </Button>,
-    );
-    const loading = screen.getByRole("button", { name: "Ghost" }).getBoundingClientRect();
-
-    expect(loading.width).toBe(idle.width);
-    expect(loading.height).toBe(idle.height);
-    rect.mockRestore();
-  });
-
-  it("keeps pointer-focused ghost buttons borderless and transparent after hover leaves", async () => {
-    const user = userEvent.setup();
-    render(<Button variant="ghost">Ghost</Button>);
-    const button = screen.getByRole("button", { name: "Ghost" });
-
-    await user.click(button);
-    await user.unhover(button);
-
-    const style = getComputedStyle(button);
-    expect(button).toHaveFocus();
-    expect(button).not.toHaveClass("Mui-focusVisible");
-    expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
-    expect(style.borderStyle).toBe("none");
-    expect(style.boxShadow).toBe("none");
-    expect(button.querySelector(".MuiTouchRipple-root")).toBeNull();
-  });
-
-  it("retains loading borders for bordered variants", () => {
+  it("keeps a framework link valid while disabled and blocks activation", () => {
+    const onClick = vi.fn();
     render(
-      <>
-        <Button loading variant="primary">
-          Primary
-        </Button>
-        <Button loading variant="secondary">
-          Secondary
-        </Button>
-        <Button loading variant="destructive">
-          Destructive
-        </Button>
-      </>,
-    );
-
-    const buttonRules = Array.from(document.styleSheets).flatMap((sheet) =>
-      Array.from(sheet.cssRules, (rule) => rule.cssText),
-    );
-    for (const name of ["Primary", "Secondary", "Destructive"]) {
-      const button = screen.getByRole("button", { name });
-      const generatedClass = Array.from(button.classList).find((className) =>
-        className.endsWith("-MuiButton-root"),
-      );
-      expect(generatedClass).toBeDefined();
-      expect(
-        buttonRules.some(
-          (rule) =>
-            rule.startsWith(`.${generatedClass}.Mui-disabled`) &&
-            rule.includes("border: 1px solid"),
-        ),
-      ).toBe(true);
-    }
-  });
-
-  it("keeps idle, loading, and disabled ghost border behavior intentional", () => {
-    const view = render(<Button variant="ghost">Ghost</Button>);
-    let style = getComputedStyle(screen.getByRole("button", { name: "Ghost" }));
-    expect(style.borderStyle).toBe("none");
-
-    view.rerender(
-      <Button loading variant="ghost">
-        Ghost
+      <Button component={Link} href="/settings" disabled onClick={onClick}>
+        Settings
       </Button>,
     );
-    style = getComputedStyle(screen.getByRole("button", { name: "Ghost" }));
-    expect(style.borderStyle).toBe("none");
-
-    view.rerender(
-      <Button disabled variant="ghost">
-        Ghost
-      </Button>,
-    );
-    style = getComputedStyle(screen.getByRole("button", { name: "Ghost" }));
-    expect(style.borderStyle).toBe("none");
-  });
-
-  it("uses the theme contrast foreground for primary links at the default 36px height", () => {
-    render(<Button href="/connect">Connect free</Button>);
-
-    const link = screen.getByRole("link", { name: "Connect free" });
-    expect(link).toHaveClass("MuiButton-sizeMedium");
-    expect(link).toHaveStyle({
-      backgroundColor: "var(--accent-solid)",
-      color: "var(--accent-on-solid)",
-      "--variant-containedBg": "var(--accent-solid)",
-    });
+    const link = screen.getByRole("link", { name: "Settings" });
+    expect(link).toHaveAttribute("aria-disabled", "true");
+    expect(link).toHaveAttribute("tabindex", "-1");
+    expect(fireEvent.click(link)).toBe(false);
+    expect(onClick).not.toHaveBeenCalled();
   });
 
   it("forwards download attributes to link buttons", () => {
@@ -475,22 +284,6 @@ describe("form primitives", () => {
       "download",
       "competitors.csv",
     );
-  });
-
-  it("keeps pill spacing and rounded shape above the MUI ButtonBase reset", () => {
-    render(
-      <Pill active size="sm">
-        Change: Improved
-      </Pill>,
-    );
-
-    expect(screen.getByRole("button", { name: "Change: Improved" })).toHaveStyle({
-      borderRadius: "9999px",
-      fontSize: "11px",
-      minHeight: "28px",
-      paddingLeft: "10px",
-      paddingRight: "10px",
-    });
   });
 
   it("renders textarea states with matching value and placeholder typography", () => {

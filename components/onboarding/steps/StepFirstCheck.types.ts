@@ -1,6 +1,7 @@
 import type { OnboardingFlowState } from "@/components/onboarding/onboarding-fixtures";
+import type { FirstCheckCandidate } from "@/lib/actions/rank-check-preview-result";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
-import type { SaveOnboardingMarketsAction } from "./OnboardingMarkets";
+import type { SaveOnboardingMarketsAction } from "./onboarding-market-actions";
 import type {
   ConnectedProviderMap,
   OnboardingConnectProviderInput,
@@ -23,6 +24,7 @@ export type StepFirstCheckProps = FirstCheckRunActions & {
   hasAnalyticsSource?: boolean;
   initialConnections?: ConnectedProviderMap;
   initialKeywordText?: string | null;
+  initialFirstCheckCandidates?: FirstCheckCandidate[];
   keywordCount?: number;
   keywordDraft?: string;
   nextCheckAt?: string | null;

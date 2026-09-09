@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   findKeywords: vi.fn(),
   findMany: vi.fn(),
   findUnique: vi.fn(),
+  currentSchedule: vi.fn(),
   findUniqueOrThrow: vi.fn(),
   isBudgetExhausted: vi.fn(),
   loadChain: vi.fn(),
@@ -124,9 +125,11 @@ describe("planned run launching", () => {
     mocks.status.clear();
     mocks.updateMany.mockImplementation(updateStatus);
     mocks.txUpdateMany.mockImplementation(updateStatus);
+    mocks.currentSchedule.mockResolvedValue({ id: "schedule" });
     mocks.transaction.mockImplementation(async (callback) =>
       callback({
         $queryRaw: mocks.queryRaw,
+        checkSchedule: { findFirst: mocks.currentSchedule },
         keyword: { findMany: mocks.findKeywords },
         projectMarket: { findMany: mocks.findMarkets },
         rankCheckRun: { updateMany: mocks.txUpdateMany },
@@ -159,6 +162,21 @@ describe("planned run launching", () => {
     ]);
     mocks.assertBudget.mockResolvedValue({ capCents: 100, spentCents: 0 });
     mocks.isBudgetExhausted.mockReturnValue(false);
+  });
+
+  it("rejects a run whose schedule is archived during launch admission", async () => {
+    mocks.status.set("run_1", "planned");
+    mocks.members.set("run_1", [{ id: "keyword_1" }]);
+    mocks.currentSchedule.mockResolvedValue(null);
+    const start = vi.fn();
+    await launchPlannedRun("run_1", start, new Date("2026-09-02T08:00:00.000Z"));
+    expect(start).not.toHaveBeenCalled();
+    expect(mocks.createMany).not.toHaveBeenCalled();
+    expect(mocks.currentSchedule).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ archivedAt: null, enabled: true, projectId: "project_1" }),
+      }),
+    );
   });
 
   it("replaces old planned items with the members remaining at launch", async () => {

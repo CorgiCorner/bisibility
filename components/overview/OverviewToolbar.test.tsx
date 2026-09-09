@@ -24,11 +24,17 @@ const selected = {
 } satisfies OverviewView["toolbar"];
 
 describe("OverviewToolbar", () => {
+  it("keeps read filters but hides keyword creation for a viewer", () => {
+    render(
+      <OverviewToolbar canCreateKeyword={false} initialSelected={selected} projectRef="prj_1" />,
+    );
+    expect(screen.queryByRole("link", { name: /Add keyword/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Last 28 days" })).toBeInTheDocument();
+  });
   it("uses the compact 37px primary action", () => {
     render(<OverviewToolbar initialSelected={selected} projectRef="prj_1" />);
 
     const action = screen.getByRole("link", { name: /Add keyword/ });
-    expect(action).toHaveClass("MuiButton-sizeSmall");
     expect(action).toHaveStyle({ height: "37px", minHeight: "37px" });
   });
 
@@ -71,10 +77,9 @@ describe("OverviewToolbar", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Tag: Docs" })).toHaveStyle({
-      backgroundColor: "var(--bg-elev)",
-      color: "var(--fg-muted)",
-    });
+    expect(screen.getByRole("button", { name: "Tag: Docs" })).toHaveStyle(
+      "--control-background-color: var(--bg-elev); --control-color: var(--fg-muted)",
+    );
   });
 
   it("shows the registry-backed market selector and writes repeated market scope params", () => {

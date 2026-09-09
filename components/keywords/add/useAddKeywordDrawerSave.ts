@@ -5,7 +5,7 @@ import { actionErrorMessage, actionWarningMessage } from "@/components/keywords/
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { addKeywordsMatrix } from "@/lib/actions/keyword";
 import type { AddKeywordDrawerForm, AddKeywordTab } from "@/lib/keywords/add-keyword-drawer-shared";
-import type { SerpDevice } from "@/lib/serp/markets";
+import type { SerpDevice } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import type { DrawerCsvKeywordRow } from "./AddKeywordCsvRows";
@@ -17,6 +17,7 @@ type UseAddKeywordDrawerSaveArgs = Pick<
   "addKeywordsAction" | "consumeSavedIds" | "onAdded"
 > & {
   activeTab: AddKeywordTab;
+  checkScheduleId?: string | null;
   csvRows?: DrawerCsvKeywordRow[];
   csvText: string;
   devices: SerpDevice[];
@@ -31,6 +32,7 @@ type UseAddKeywordDrawerSaveArgs = Pick<
 export function useAddKeywordDrawerSave({
   activeTab,
   addKeywordsAction,
+  checkScheduleId,
   consumeSavedIds,
   csvRows,
   csvText,
@@ -50,6 +52,7 @@ export function useAddKeywordDrawerSave({
       setActionWarning(null);
       const pending = addKeywordDrawerInput({
         activeTab,
+        checkScheduleId,
         csvRows,
         csvText,
         devices,
@@ -83,6 +86,7 @@ export function useAddKeywordDrawerSave({
     [
       activeTab,
       addKeywordsAction,
+      checkScheduleId,
       consumeSavedIds,
       csvRows,
       csvText,

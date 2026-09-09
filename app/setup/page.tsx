@@ -1,4 +1,5 @@
-import { BrandLockup, Card } from "@/components/ui";
+import { BrandLockup } from "@/components/ui/BrandLockup";
+import { Card } from "@/components/ui/Card";
 import { isFirstRun, isFirstRunAdministratorPending } from "@/lib/auth/first-run";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { requireSession } from "@/lib/auth/session";

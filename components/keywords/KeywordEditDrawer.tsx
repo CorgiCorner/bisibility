@@ -1,7 +1,9 @@
 "use client";
 
 import { KeywordInlineEdit } from "@/components/keywords/grid/KeywordInlineEdit";
-import { Button, SegmentedControl, Sheet } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Sheet } from "@/components/ui/Sheet";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
@@ -109,6 +111,7 @@ export function KeywordEditDrawer({
             hideSubmit
             keyword={keyword}
             layout="drawer"
+            lockIdentity
             onSaved={handleSaved}
             onSavingChange={setSaving}
             projectId={projectId}

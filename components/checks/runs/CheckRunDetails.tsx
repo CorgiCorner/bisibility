@@ -1,12 +1,13 @@
-import { Tooltip } from "@/components/ui";
+"use client";
+
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { CheckAttempt, CheckRunRow } from "@/lib/checks/contract";
-import {
-  CheckCircleIcon as CheckCircle,
-  WarningCircleIcon as WarningCircle,
-  XCircleIcon as XCircle,
-} from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
+import { XCircleIcon as XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
 import type { ReactNode } from "react";
-import { CheckRunStoredResults } from "./CheckRunStoredResults";
+import { CheckRunDetailsRow, splitCheckRunDetailLine } from "./CheckRunDetailsRow";
+import { checkRunStoredResultLines } from "./CheckRunStoredResults";
 import {
   formatAttemptOutcome,
   formatDuration,
@@ -74,11 +75,7 @@ function fallbackOutcome(run: CheckRunRow, index: number) {
   return `via backup (${attempt.providerLabel}) - ${primary.providerLabel} ${reason}${position}`;
 }
 
-function AttemptRow({
-  attempt,
-  index,
-  run,
-}: Readonly<{ attempt: CheckAttempt; index: number; run: CheckRunRow }>) {
+function attemptRows(attempt: CheckAttempt, index: number, run: CheckRunRow): CheckRunDetailLine[] {
   const failedRun = run.status === "failed";
   const attemptOutcome = formatAttemptOutcome(attempt, failedRun);
   const outcome = failedRun
@@ -89,53 +86,28 @@ function AttemptRow({
             typeof run.requestedDepth === "number" ? ` of top ${run.requestedDepth}` : ""
           }`
         : attemptOutcome));
-  return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 py-1.5 text-[11.5px]">
-      <AttemptTone attempt={attempt} failedRun={failedRun} />
-      <span className="w-[clamp(76px,16vw,140px)] truncate font-semibold text-fg">
-        {attempt.providerLabel}
-      </span>
-      <span className="flex min-w-[120px] flex-1 flex-wrap items-center gap-1.5 text-fg-muted">
-        <span>{outcome}</span>
-        {attempt.degradedToCountry ? <CountryLevelBadge /> : null}
-      </span>
-      <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
-        {typeof attempt.costCents === "number" ? formatMoney(attempt.costCents) : "-"}
-      </span>
-      <span className="min-w-9 text-right font-sans tabular-nums text-[10.5px] text-fg-muted">
-        {formatDuration(attempt.durationMs) ?? "-"}
-      </span>
-    </div>
-  );
-}
-
-type HiddenMetaProps = {
-  columns: RunTableColumns;
-  now: Date;
-  run: CheckRunRow;
-};
-
-function HiddenMeta({ columns, now, run }: Readonly<HiddenMetaProps>) {
-  const items: ReactNode[] = [];
-  if (!columns.depth) {
-    items.push(
-      <span key="depth">
-        Depth · {typeof run.requestedDepth === "number" ? `Top ${run.requestedDepth}` : "-"}
-      </span>,
-    );
-  }
-  if (!columns.cost) {
-    items.push(<span key="cost">Cost · {formatRunCost(run)}</span>);
-  }
-  if (!columns.when) {
-    items.push(<span key="when">When · {formatWhen(run, now)}</span>);
-  }
-  if (items.length === 0) return null;
-  return (
-    <div className="flex flex-wrap gap-x-3 gap-y-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
-      {items}
-    </div>
-  );
+  return splitCheckRunDetailLine(outcome).map((line, lineIndex) => ({
+    content:
+      lineIndex === 0 ? (
+        <CheckRunDetailsRow>
+          <AttemptTone attempt={attempt} failedRun={failedRun} />
+          <strong className="w-36 shrink-0 truncate font-semibold text-fg">
+            {attempt.providerLabel}
+          </strong>
+          <span>{line}</span>
+          {attempt.degradedToCountry ? <CountryLevelBadge /> : null}
+          <span className="ml-auto">
+            {typeof attempt.costCents === "number" ? formatMoney(attempt.costCents) : "-"}
+          </span>
+          <span>{formatDuration(attempt.durationMs) ?? "-"}</span>
+        </CheckRunDetailsRow>
+      ) : (
+        <CheckRunDetailsRow>
+          <span className="ml-44">{line}</span>
+        </CheckRunDetailsRow>
+      ),
+    id: `${run.id}-attempt-${index}-${lineIndex}`,
+  }));
 }
 
 type DetailsProps = {
@@ -145,43 +117,74 @@ type DetailsProps = {
   run: CheckRunRow;
 };
 
-export function CheckRunDetails({ columns, keywordHref, now, run }: Readonly<DetailsProps>) {
+export type CheckRunDetailLine = {
+  content: ReactNode;
+  id: string;
+};
+
+function hiddenMetaRows({ columns, now, run }: Readonly<DetailsProps>): CheckRunDetailLine[] {
+  const items: CheckRunDetailLine[] = [];
+  if (!columns.depth) {
+    items.push({
+      content: (
+        <CheckRunDetailsRow>
+          Depth · {typeof run.requestedDepth === "number" ? `Top ${run.requestedDepth}` : "-"}
+        </CheckRunDetailsRow>
+      ),
+      id: `${run.id}-meta-depth`,
+    });
+  }
+  if (!columns.cost) {
+    items.push({
+      content: <CheckRunDetailsRow>Cost · {formatRunCost(run)}</CheckRunDetailsRow>,
+      id: `${run.id}-meta-cost`,
+    });
+  }
+  if (!columns.when) {
+    items.push({
+      content: <CheckRunDetailsRow>When · {formatWhen(run, now)}</CheckRunDetailsRow>,
+      id: `${run.id}-meta-when`,
+    });
+  }
+  return items;
+}
+
+export function checkRunDetailLines({ columns, keywordHref, now, run }: Readonly<DetailsProps>) {
   const duration =
     run.status === "failed" && /timed out|stale running/i.test(run.error ?? "")
       ? "Timed out after 15 min"
       : formatDuration(run.durationMs);
-  return (
-    <div className="bg-bg-sunken px-4 py-3">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
-        <strong className="font-semibold text-fg">
-          {run.attempts.length > 0 ? "Provider chain" : "Run details"}
-        </strong>
-        {run.trigger ? <span className="capitalize">· {run.trigger}</span> : null}
-        {run.status === "failed" ? <span>· All providers failed</span> : null}
-        {duration ? <span>· {duration}</span> : null}
-      </div>
-      <HiddenMeta columns={columns} now={now} run={run} />
-      {run.status === "failed" && run.error && isInternalErrorString(run.error) ? (
-        <p
-          className="mt-2 line-clamp-3 whitespace-pre-wrap break-words rounded-control bg-bg-inset px-2.5 py-2 font-sans tabular-nums text-[10.5px] leading-relaxed text-fg-muted"
-          title={run.error}
-        >
-          {run.error}
-        </p>
-      ) : null}
-      {run.attempts.length > 0 ? (
-        <div className="mt-2 divide-y divide-border">
-          {run.attempts.map((attempt, index) => (
-            <AttemptRow
-              attempt={attempt}
-              index={index}
-              key={`${attempt.provider}-${index}`}
-              run={run}
-            />
-          ))}
-        </div>
-      ) : null}
-      <CheckRunStoredResults keywordHref={keywordHref} run={run} />
-    </div>
-  );
+  const lines: CheckRunDetailLine[] = [
+    {
+      content: (
+        <CheckRunDetailsRow>
+          <strong className="font-semibold text-fg">
+            {run.attempts.length > 0 ? "Provider chain" : "Run details"}
+          </strong>
+          {run.trigger ? <span className="capitalize">· {run.trigger}</span> : null}
+          {run.status === "failed" ? <span>· All providers failed</span> : null}
+          {duration ? <span>· {duration}</span> : null}
+        </CheckRunDetailsRow>
+      ),
+      id: `${run.id}-summary`,
+    },
+    ...hiddenMetaRows({ columns, keywordHref, now, run }),
+  ];
+  if (run.status === "failed" && run.error && isInternalErrorString(run.error)) {
+    lines.push(
+      ...splitCheckRunDetailLine(run.error).map((line, index) => ({
+        content: (
+          <CheckRunDetailsRow className="rounded-control bg-bg-inset px-2.5">
+            {line}
+          </CheckRunDetailsRow>
+        ),
+        id: `${run.id}-error-${index}`,
+      })),
+    );
+  }
+  for (const [index, attempt] of run.attempts.entries()) {
+    lines.push(...attemptRows(attempt, index, run));
+  }
+  lines.push(...checkRunStoredResultLines({ keywordHref, run }));
+  return lines;
 }

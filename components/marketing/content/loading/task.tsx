@@ -1,4 +1,4 @@
-import { BrandLockup } from "@/components/ui";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import Link from "next/link";
 import { FeatureCardSkeleton, SkeletonBlock, skeletonKeys, TextStack } from "./primitives";
 

@@ -11,14 +11,14 @@ export type FirstCheckResultRow =
   | (FirstCheckTarget & {
       keywordId: string;
       publicId: string;
-      status: "pending";
+      status: "pending" | "ready";
       text: string;
     })
   | (FirstCheckTarget & {
       keywordId: string;
       publicId: string;
       runId: string;
-      status: "queued";
+      status: "queued" | "running";
       text: string;
     })
   | (FirstCheckTarget & {
@@ -26,7 +26,8 @@ export type FirstCheckResultRow =
       provider: string;
       publicId: string;
       position: number | null;
-      recordedCostCents: number;
+      recordedCostCents: number | null;
+      requestedDepth?: number;
       rankingUrl: string | null;
       status: "completed";
       text: string;
@@ -88,6 +89,7 @@ export function previewRow(
       position: result.position,
       provider: result.provider,
       recordedCostCents: result.recordedCostCents,
+      requestedDepth: result.requestedDepth,
       publicId: candidate.publicId,
       rankingUrl: result.rankingUrl,
       status: "completed",

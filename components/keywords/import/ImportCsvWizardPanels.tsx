@@ -2,7 +2,8 @@
 
 import { actionWarningMessage } from "@/components/keywords/action-utils";
 import { LocationActionWarning } from "@/components/keywords/LocationActionWarning";
-import { Button, CopyButton } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { CopyButton } from "@/components/ui/CopyButton";
 import type {
   KeywordImportColumnMapping,
   KeywordImportField,
@@ -10,11 +11,9 @@ import type {
 } from "@/lib/keywords/import-csv-parser";
 import { keywordImportTemplateCsv } from "@/lib/keywords/import-csv-template";
 import { downloadTextFile } from "@/lib/ui/download";
-import {
-  CheckCircleIcon as CheckCircle,
-  CircleNotchIcon as CircleNotch,
-  DownloadSimpleIcon as DownloadSimple,
-} from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { CircleNotchIcon as CircleNotch } from "@phosphor-icons/react/dist/csr/CircleNotch";
+import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { ImportColumnMapping } from "./ImportColumnMapping";
 import { KeywordImportDropzone } from "./KeywordImportDropzone";
 import { type KeywordImportPreviewRow, ParsedRowsPreview } from "./ParsedRowsPreview";
@@ -39,38 +38,38 @@ type UploadStepProps = {
   parsedCount: number;
 };
 
-const csvExample = `keyword,target_url,tags,country,language,device
-open source analytics,/vs/ga,"Comparison",US,en,desktop
-self hosted seo tool,/self-host,"Product",ES,es,desktop`;
+const csvExample = keywordImportTemplateCsv;
 
 const codeDarkCopy = {
-  color: "var(--code-faint)",
-  "&:hover": {
-    backgroundColor: "color-mix(in srgb, var(--code-fg) 8%, transparent)",
-    color: "var(--code-fg)",
-  },
+  "--control-color": "var(--code-faint)",
+  "--control-hover-background-color": "color-mix(in srgb, var(--code-fg) 8%, transparent)",
+  "--control-hover-color": "var(--code-fg)",
 } as const;
 
-function downloadTemplate() {
-  downloadTextFile(
-    keywordImportTemplateCsv,
-    "bisibility-keywords-template.csv",
-    "text/csv;charset=utf-8",
-  );
+function downloadTemplate(templateCsv: string) {
+  downloadTextFile(templateCsv, "bisibility-keywords-template.csv", "text/csv;charset=utf-8");
 }
 
-export function TemplateStep() {
+export function TemplateStep({
+  templateCsv = keywordImportTemplateCsv,
+}: Readonly<{ templateCsv?: string }>) {
   return (
     <div>
       <h3 className="m-0 text-[15px] font-semibold">Start from the template</h3>
       <p className="m-0 mt-1.5 text-[13px] leading-[1.55] text-fg-muted">
-        Fill in your keywords, then upload the CSV on the next step. Only{" "}
-        <code className="font-mono text-[12px] text-accent-text">keyword</code> is required.
+        Select a market above, then fill in your keywords and upload CSV or XLSX. With a selected
+        market, only <code className="font-mono text-[12px] text-accent-text">keyword</code> is
+        required.
+      </p>
+      <p className="m-0 mt-2 text-[12px] leading-[1.5] text-fg-muted">
+        Create your markets before importing. Each row must match an active or paused market in this
+        project. Keywords in paused markets can be imported, but rank checks wait until you resume
+        the market.
       </p>
       <Button
-        onClick={downloadTemplate}
+        onClick={() => downloadTemplate(templateCsv)}
         startIcon={<DownloadSimple size={15} weight="regular" />}
-        sx={{ marginTop: "16px" }}
+        style={{ marginTop: "16px" }}
         type="button"
         variant="secondary"
       >
@@ -87,15 +86,10 @@ export function TemplateStep() {
           >
             csv
           </div>
-          <CopyButton
-            label="Copy template"
-            size="sm"
-            sx={codeDarkCopy}
-            text={keywordImportTemplateCsv}
-          />
+          <CopyButton label="Copy template" size="sm" style={codeDarkCopy} text={templateCsv} />
         </div>
         <pre className="m-0 overflow-x-auto px-[15px] py-[13px] font-mono text-[11.5px] leading-[1.75] text-code-fg">
-          {keywordImportTemplateCsv}
+          {templateCsv}
         </pre>
       </div>
     </div>
@@ -171,8 +165,11 @@ export function MapStep({
       <h3 className="m-0 text-[15px] font-semibold">Map columns</h3>
       <p className="m-0 mt-1.5 text-[13px] text-fg-muted">{label}</p>
       <p className="m-0 mt-2 text-[12px] leading-[1.5] text-fg-muted">
-        Only Keyword is required. Optional tracking fields use your project defaults when omitted;
-        other optional fields stay empty.
+        Keyword is required. Missing location fields use the market selected above. Without a
+        selected market, each row needs Country or Location key. Language selects the search-result
+        language. Device uses the project default when omitted; other optional fields stay empty.
+        Country, location and language must match a market you have already created. Importing does
+        not move existing keywords between markets.
       </p>
       {hasHeader ? (
         <ImportColumnMapping
@@ -230,10 +227,25 @@ export function ReviewStep({
         Existing project duplicates are checked again when you confirm.
       </p>
       <ParsedRowsPreview rows={review?.rows ?? []} />
+      {review?.rows.some((row) => row.marketStatus === "paused") ? (
+        <p className="mt-3 text-[12px] text-fg-muted" role="status">
+          Keywords in paused markets will not be checked until those markets are resumed.
+        </p>
+      ) : null}
       {review?.errors.length ? (
         <div className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-3 text-[12px] leading-[1.5] text-red-text">
           {review.errors.length} {review.errors.length === 1 ? "row was" : "rows were"} excluded
           during validation. Fix the file or its project markets, then go back to include them.
+          <ul
+            className="m-0 mt-2 max-h-40 list-none overflow-auto p-0"
+            aria-label="Import validation errors"
+          >
+            {review.errors.map((error) => (
+              <li key={`${error.row}-${error.message}`}>
+                Row {error.row}: {error.message}
+              </li>
+            ))}
+          </ul>
         </div>
       ) : null}
       <div className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-3 font-sans tabular-nums text-[12px] text-fg-muted">

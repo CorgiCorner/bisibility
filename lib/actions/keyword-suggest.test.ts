@@ -33,8 +33,17 @@ const mocks = vi.hoisted(() => {
     provider,
     providerWithoutCapability,
     requireProjectScope: vi.fn(),
+    readAnalyticsSurfaceFromHeaders: vi.fn(),
+    readConsentFromCookies: vi.fn(),
+    trackServerEvent: vi.fn(),
   };
 });
+
+vi.mock("@/lib/analytics/server", () => ({
+  readAnalyticsSurfaceFromHeaders: mocks.readAnalyticsSurfaceFromHeaders,
+  readConsentFromCookies: mocks.readConsentFromCookies,
+  trackServerEvent: mocks.trackServerEvent,
+}));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/providers/auth-state", () => ({
@@ -76,6 +85,13 @@ describe("keyword suggestions", () => {
       success: true,
     });
     mocks.markProviderNeedsReauth.mockResolvedValue(true);
+    mocks.readAnalyticsSurfaceFromHeaders.mockResolvedValue("onboarding");
+    mocks.readConsentFromCookies.mockResolvedValue({
+      analytics: true,
+      decidedAt: 1,
+      replay: false,
+      status: "decided",
+    });
   });
 
   it("authorizes project read scope before loading top queries", async () => {
@@ -118,6 +134,16 @@ describe("keyword suggestions", () => {
         { clicks: 12, impressions: 100, query: "Rank Tracker" },
         { clicks: 8, impressions: 80, query: "SEO API" },
       ],
+    });
+    expect(mocks.trackServerEvent).toHaveBeenCalledWith("keywords_added", {
+      consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
+      distinctId: "user_1",
+      properties: {
+        keyword_count: 2,
+        market_count: 0,
+        source: "search_console",
+        surface: "onboarding",
+      },
     });
     expect(mocks.consumeProviderLimit).toHaveBeenCalledWith(
       "query-source",

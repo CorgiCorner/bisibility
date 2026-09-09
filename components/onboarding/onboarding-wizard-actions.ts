@@ -1,4 +1,4 @@
-import type { SaveOnboardingMarketsAction } from "@/components/onboarding/steps/OnboardingMarkets";
+import type { SaveOnboardingMarketsAction } from "@/components/onboarding/steps/onboarding-market-actions";
 import type { StepAddKeywords } from "@/components/onboarding/steps/StepAddKeywords";
 import type { StepConnectGscCard } from "@/components/onboarding/steps/StepConnectGscCard";
 import type { StepConnectProvider } from "@/components/onboarding/steps/StepConnectProvider";
@@ -18,10 +18,12 @@ export type OnboardingWizardActions = {
   completeOnboardingAction: NonNullable<
     Parameters<typeof StepFirstCheck>[0]["completeOnboardingAction"]
   >;
+  createMarketAction: NonNullable<Parameters<typeof StepAddKeywords>[0]["createMarketAction"]>;
   createProjectAction: NonNullable<Parameters<typeof StepCreateProject>[0]["createProjectAction"]>;
   deriveWebsiteAction: NonNullable<Parameters<typeof StepCreateProject>[0]["deriveWebsiteAction"]>;
+  updateProjectAction?: Parameters<typeof StepCreateProject>[0]["updateProjectAction"];
   // Sample-data loader mounted in the wizard footer (step 1), not on a step component.
-  installSampleDataAction: () => Promise<{ destination: string }>;
+  installSampleDataAction?: () => Promise<{ destination: string }>;
   loadStoredGooglePropertiesAction: NonNullable<
     Parameters<typeof StepConnectGscCard>[0]["loadStoredProperties"]
   >;

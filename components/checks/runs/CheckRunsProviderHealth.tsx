@@ -6,10 +6,8 @@ import type {
   CheckRunsView,
   ProviderHealthEntry,
 } from "@/lib/checks/contract";
-import {
-  CaretRightIcon as CaretRight,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import Link from "next/link";
 import { rangeCopy } from "./check-runs-format";
 

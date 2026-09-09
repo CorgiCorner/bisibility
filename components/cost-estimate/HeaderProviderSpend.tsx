@@ -7,7 +7,8 @@ import {
 } from "@/components/cost-estimate/header-spend-cap-copy";
 import { formatProviderBudgetUsedLabel } from "@/components/cost-estimate/provider-spend-label";
 import { spendFillClass, spendTone } from "@/components/cost-estimate/spend-tone";
-import { quietChipVariants, Tooltip } from "@/components/ui";
+import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import { cn } from "@/lib/ui/cn";
 import Link from "next/link";

@@ -123,6 +123,38 @@ function renderCard(
 }
 
 describe("RetrievedResultsCard", () => {
+  it("compares managed competitors inside the selected SERP and labels their result rows", () => {
+    render(
+      <RetrievedResultsCard
+        competitors={[
+          { publicId: "cmp_rival", domain: "sub0.example.org", label: "Rival" },
+          { publicId: "cmp_absent", domain: "absent.test", label: "Absent" },
+        ]}
+        ownDomain="example.com"
+        entries={[entry()]}
+        initialResults={fullResults()}
+        loadResults={async () => []}
+        rankingUrl={null}
+        retentionDays={90}
+        timeZone="UTC"
+      />,
+    );
+    const table = screen.getByRole("table", { name: "Competitor positions" });
+    expect(within(table).getByRole("link", { name: /Rival/ })).toHaveAttribute(
+      "href",
+      "https://sub0.example.org",
+    );
+    expect(within(table).getByRole("link", { name: /Rival/ })).toHaveAttribute("target", "_blank");
+    expect(within(table).getByRole("row", { name: /Rival/ })).toHaveTextContent("#1");
+    expect(within(table).getByRole("row", { name: /Rival/ })).toHaveTextContent("21 above you");
+    expect(within(table).getByRole("row", { name: /Absent/ })).toHaveTextContent(
+      "Not in saved results",
+    );
+    expect(
+      within(screen.getByRole("region", { name: "Retrieved results" })).getByText("Competitor"),
+    ).toBeInTheDocument();
+  });
+
   it("distinguishes the project stop setting from what this check retrieved", () => {
     renderCard([entry()], fullResults());
 
@@ -337,8 +369,8 @@ describe("RetrievedResultsCard", () => {
   it("uses one outer card outline without an enclosing header border", () => {
     renderCard([entry()], fullResults());
     const card = screen.getByTestId("retrieved-results-card");
-    expect(card).toHaveClass("MuiCard-root");
-    expect(card.querySelectorAll(".MuiCard-root")).toHaveLength(0);
+    expect(card).toHaveAttribute("data-slot", "card");
+    expect(card.querySelectorAll("[data-slot='card']")).toHaveLength(0);
     const header = screen.getByTestId("retrieved-header");
     expect(header).toHaveClass("border-b");
     expect(header).not.toHaveClass("border", "rounded-card");

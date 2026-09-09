@@ -9,7 +9,7 @@ import {
 } from "./provider-call";
 import {
   domainOverviewPageLimit,
-  normalizeDomainOverviewMarket,
+  normalizeDomainOverviewResearchScope,
   normalizeDomainOverviewTarget,
 } from "./target";
 import type {
@@ -28,7 +28,7 @@ async function loadDomainPage<T extends "keywords" | "pages">(
 ): Promise<DomainModuleOutcome<DomainPageData[T]>> {
   try {
     const input = {
-      ...normalizeDomainOverviewMarket(options),
+      ...normalizeDomainOverviewResearchScope(options),
       ...normalizeDomainOverviewTarget(options.target, options.scopeOverride),
       limit: domainOverviewPageLimit(options.limit, 1_000),
       offset: Math.max(0, Math.trunc(options.offset)),

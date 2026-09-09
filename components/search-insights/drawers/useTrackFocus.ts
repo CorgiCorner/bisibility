@@ -41,7 +41,10 @@ export function useTrackFocus(body: RefObject<HTMLElement | null>) {
     capture() {
       const active = document.activeElement;
       const node = active instanceof HTMLElement ? active : null;
-      opener.current = { node, row: node?.closest<HTMLElement>("tr[tabindex]") ?? null };
+      opener.current = {
+        node,
+        row: node?.closest<HTMLElement>('tr[tabindex], [role="row"][tabindex]') ?? null,
+      };
     },
     restore() {
       // Deferred by one task: the label the add produces is committed by React after the handler

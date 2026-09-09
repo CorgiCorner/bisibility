@@ -20,6 +20,7 @@ const inputSchema = z.object({
 async function loadKeywords(projectId: string) {
   return prisma.keyword.findMany({
     include: {
+      locationRef: { select: { canonicalKey: true } },
       rankChecks: { orderBy: { checkedAt: "desc" }, where: whereCompletedChecks() },
       tags: { include: { tag: true } },
     },
@@ -34,6 +35,7 @@ function packageKeywords(keywords: Awaited<ReturnType<typeof loadKeywords>>) {
     id: requirePublicId(keyword.publicId, "kw"),
     keyword: keyword.text,
     location: keyword.location,
+    location_key: keyword.locationRef.canonicalKey,
     rankingHistory: keyword.rankChecks.map((check) => ({
       checkedAt: check.checkedAt.toISOString(),
       normalizationVersion: requireRankNormalizationVersion(check.normalizationVersion),

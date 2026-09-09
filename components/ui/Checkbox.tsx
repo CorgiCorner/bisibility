@@ -1,9 +1,18 @@
 "use client";
 
+import { track } from "@/lib/analytics/client";
+import { type AnalyticsControlId, analyticsControlModule } from "@/lib/analytics/controls";
 import { cn } from "@/lib/ui/cn";
-import { forwardRef, type InputHTMLAttributes, type ReactNode, useId } from "react";
+import {
+  type ChangeEvent,
+  forwardRef,
+  type InputHTMLAttributes,
+  type ReactNode,
+  useId,
+} from "react";
 
 export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size" | "type"> & {
+  analytics?: { control: AnalyticsControlId };
   containerClassName?: string;
   controlClassName?: string;
   description?: ReactNode;
@@ -21,6 +30,7 @@ const inputClass =
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
   {
+    analytics,
     className,
     containerClassName,
     controlClassName,
@@ -30,12 +40,23 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     inputClassName,
     label,
     labelClassName,
+    onChange,
     ...props
   },
   ref,
 ) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    onChange?.(event);
+    if (analytics) {
+      track("ui_option_selected", {
+        control: analytics.control,
+        module: analyticsControlModule(analytics.control),
+        value: event.currentTarget.checked,
+      });
+    }
+  }
   const input = (
     <span
       className={cn(
@@ -48,6 +69,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         className={cn(inputClass, inputClassName)}
         disabled={disabled}
         id={inputId}
+        onChange={handleChange}
         ref={ref}
         type="checkbox"
         {...props}

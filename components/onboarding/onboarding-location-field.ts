@@ -1,37 +1,39 @@
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
-import {
-  countryNameForCode,
-  countryValueForCode,
-} from "@/components/keywords/location-picker-data";
+import { countryValueForCode } from "@/components/keywords/location-picker-data";
+import { allMarketLanguages } from "@/components/markets/market-picker-model";
+import { type ProjectDefaultsInput, projectDefaultsSchema } from "@/lib/schemas/project";
 import { parseCanonicalKey } from "@/lib/serp/location";
-import {
-  DEFAULT_SERP_MARKET,
-  languageForSerpMarket,
-  normalizeSerpMarketName,
-  type SerpMarketName,
-  serpMarketLanguages,
-} from "@/lib/serp/markets";
-import { countryNameForLocationKey, DEFAULT_ONBOARDING_LOCATION_KEY } from "./onboarding-locations";
-
-function defaultLocationValue() {
-  const value = countryValueForCode(DEFAULT_ONBOARDING_LOCATION_KEY);
-  if (!value) {
-    throw new Error("Default onboarding location is missing from the location catalog.");
-  }
-  return value;
-}
 
 function cityDisplayName({
   cityName,
-  countryCode,
+  countryName,
   region,
 }: {
   cityName: string;
-  countryCode: string;
+  countryName: string;
   region: string | null;
 }) {
-  const country = countryNameForCode(countryCode) ?? countryCode;
-  return [cityName, region, country].filter(Boolean).join(", ");
+  return [cityName, region, countryName].filter(Boolean).join(", ");
+}
+
+function countryValueOrThrow(countryCode: string) {
+  const country = countryValueForCode(countryCode);
+  if (!country) {
+    throw new Error(`Country ${countryCode} is missing from the location catalog.`);
+  }
+  return country;
+}
+
+function languageLabel(
+  countryCode: string,
+  languageCode: string | null | undefined,
+  fallback: string,
+) {
+  if (!languageCode) return fallback;
+  return (
+    allMarketLanguages({ countryCode }).find((language) => language.code === languageCode)?.label ??
+    languageCode
+  );
 }
 
 export function locationValueForKey(key: string): LocationFieldValue {
@@ -41,19 +43,20 @@ export function locationValueForKey(key: string): LocationFieldValue {
   }
   const selector = parseCanonicalKey(key);
   if (!selector) {
-    return defaultLocationValue();
+    throw new Error(`Unsupported onboarding location key: ${key}`);
   }
-  const countryValue = countryValueForCode(selector.countryCode);
+  const countryValue = countryValueOrThrow(selector.countryCode);
   if (!selector.cityName) {
-    const language = serpMarketLanguages(selector.countryCode).find(
-      (item) => item.code === selector.languageCode,
-    );
     return {
-      ...(countryValue ?? defaultLocationValue()),
+      ...countryValue,
       canonicalKey: key,
       countryCode: selector.countryCode,
-      languageCode: selector.languageCode ?? countryValue?.languageCode,
-      languageLabel: language?.label ?? countryValue?.languageLabel,
+      languageCode: selector.languageCode ?? countryValue.languageCode,
+      languageLabel: languageLabel(
+        selector.countryCode,
+        selector.languageCode,
+        countryValue.languageLabel ?? countryValue.languageCode ?? selector.countryCode,
+      ),
     };
   }
   const region = selector.regionName ?? selector.regionCode ?? null;
@@ -63,12 +66,17 @@ export function locationValueForKey(key: string): LocationFieldValue {
     countryCode: selector.countryCode,
     displayName: cityDisplayName({
       cityName: selector.cityName,
-      countryCode: selector.countryCode,
+      countryName: countryValue.displayName,
       region,
     }),
-    hl: countryValue?.hl,
+    hl: countryValue.hl,
     kind: "city",
-    languageLabel: countryValue?.languageLabel,
+    languageCode: selector.languageCode ?? countryValue.languageCode,
+    languageLabel: languageLabel(
+      selector.countryCode,
+      selector.languageCode,
+      countryValue.languageLabel ?? countryValue.languageCode ?? selector.countryCode,
+    ),
     regionName: region,
   };
 }
@@ -77,18 +85,26 @@ export function locationValuesForKeys(keys: readonly string[]) {
   return keys.map(locationValueForKey);
 }
 
-export function countryNameForLocationValue(value: LocationFieldValue): SerpMarketName {
-  const fromCode = normalizeSerpMarketName(countryNameForCode(value.countryCode));
-  return fromCode ?? countryNameForLocationKey(value.canonicalKey) ?? DEFAULT_SERP_MARKET;
+/** Project defaults still serialize the country name for the legacy server input. */
+export function countryNameForLocationValue(
+  value: LocationFieldValue,
+): ProjectDefaultsInput["country"] {
+  const country = projectDefaultsSchema.shape.country.safeParse(
+    countryValueOrThrow(value.countryCode).displayName,
+  );
+  if (!country.success) {
+    throw new Error(`Country ${value.countryCode} cannot be stored in project defaults.`);
+  }
+  return country.data;
 }
 
 export function languageForLocationValue(value: LocationFieldValue) {
-  return value.languageLabel ?? languageForSerpMarket(countryNameForLocationValue(value));
+  return value.languageLabel ?? value.languageCode ?? value.countryCode;
 }
 
 export function displayLocationValues(values: readonly LocationFieldValue[]) {
   if (values.length <= 2) {
     return values.map((value) => value.displayName).join(", ");
   }
-  return `${values[0]?.displayName ?? DEFAULT_SERP_MARKET} +${values.length - 1}`;
+  return `${values[0]?.displayName ?? ""} +${values.length - 1}`;
 }

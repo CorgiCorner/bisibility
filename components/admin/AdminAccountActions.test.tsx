@@ -11,10 +11,12 @@ vi.mock("@/lib/actions/instance-admin-account-actions", () => ({
   resetInstanceAdminAccountLimits: mocks.resetLimits,
   setInstanceAdminAccountDeactivated: mocks.changeState,
 }));
-vi.mock("@/components/ui", () => ({
+vi.mock("@/components/ui/Button", () => ({
   Button: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button {...props}>{children}</button>
   ),
+}));
+vi.mock("@/components/ui/ConfirmModal", () => ({
   ConfirmModal: ({
     kind,
     onConfirm,
@@ -29,6 +31,8 @@ vi.mock("@/components/ui", () => ({
         Confirm {kind}
       </button>
     ) : null,
+}));
+vi.mock("@/components/ui/toast-context", () => ({
   useToast: () => ({ showToast: mocks.showToast }),
 }));
 

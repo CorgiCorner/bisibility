@@ -4,45 +4,32 @@ import { ConnectDrawer } from "@/components/integrations/ConnectDrawer";
 import { ProviderCredentialWarning } from "@/components/integrations/ProviderCredentialWarning";
 import { ProviderDisconnectAction } from "@/components/integrations/ProviderDisconnectAction";
 import { ProviderSyncFailureAlert } from "@/components/integrations/ProviderSyncFailureAlert";
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button, Card, ProviderLogo, SectionTitle, StatusPill } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { ProviderLogo } from "@/components/ui/ProviderLogo";
+import { SectionTitle } from "@/components/ui/SectionTitle";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { testConnection as testConnectionAction } from "@/lib/actions/providers";
-import type {
-  IntegrationProviderData,
-  ProviderActionHandlers,
-  ProviderTestResult,
-  ProviderTrafficSyncResult,
-} from "@/lib/integrations/types";
-import type { ProjectRef } from "@/lib/routing/app-path";
-import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
+import type { ProviderActionHandlers, ProviderTestResult } from "@/lib/integrations/types";
 import { useState } from "react";
 import type { Notice } from "./ConnectDrawerSchema";
+import type { ProviderCardProps } from "./ProviderCard.types";
 import { ProviderCardFeedback } from "./ProviderCardFeedback";
+import { ProviderCardMeta } from "./ProviderCardMeta";
 import { ProviderConsumerRows } from "./ProviderConsumerRows";
 
-export type ProviderCardProps = {
-  actions?: ProviderActionHandlers;
-  canManageProviders: boolean;
-  canUpdateProject: boolean;
-  deploymentMode?: "cloud" | "self-host";
-  initialOpen?: boolean;
-  noProvidersYet?: boolean;
-  projectId?: string;
-  projectRef?: ProjectRef;
-  provider: IntegrationProviderData;
-  searchSyncPlan?: SearchSyncPreflightPlan;
-  timeZone: string;
-};
+export type { ProviderCardProps } from "./ProviderCard.types";
 
+import { DeveloperActionsMenu } from "@/components/settings/developers/DeveloperActionsMenu";
 import {
   actionLabels,
-  outlineActionSx,
+  outlineActionStyle,
+  providerConsumerStatuses,
   reauthCopy,
-  responsiveActionSx,
 } from "./provider-card-config";
+import { useProviderTrafficSync } from "./useProviderTrafficSync";
 
 type ProviderId = Parameters<ProviderActionHandlers["testProviderConnection"]>[0]["providerId"];
 const demoTestConnection = async (): Promise<ProviderTestResult> => ({
@@ -50,16 +37,11 @@ const demoTestConnection = async (): Promise<ProviderTestResult> => ({
   message: "Connection OK",
   ok: true,
 });
-const demoTrafficSync = async (): Promise<ProviderTrafficSyncResult> => ({
-  connections: 1,
-  keywordSnapshots: 12,
-  pageSnapshots: 4,
-  runs: [{ status: "succeeded_with_data" }],
-});
 export function ProviderCard({
   actions,
   canManageProviders,
   canUpdateProject,
+  consumerDetails = "inline",
   deploymentMode,
   initialOpen = false,
   projectId,
@@ -71,48 +53,25 @@ export function ProviderCard({
   const [drawerOpen, setDrawerOpen] = useState(initialOpen && canManageProviders);
   const [testPending, setTestPending] = useState(false);
   const [testResult, setTestResult] = useState<ProviderTestResult | null>(null);
-  const [syncPending, setSyncPending] = useState(false);
-  const [syncResult, setSyncResult] = useState<ProviderTestResult | null>(null);
   const [disconnectNotice, setDisconnectNotice] = useState<Notice | null>(null);
   const { readOnly } = useProjectWriteMode();
   const primaryAction = provider.status !== "connected";
   const actionVariant = primaryAction ? "primary" : "secondary";
-  const actionSx = primaryAction ? responsiveActionSx : outlineActionSx;
+  const actionStyle = primaryAction ? undefined : outlineActionStyle;
   const actionDisabled = readOnly && primaryAction;
   const managementActionLabel =
     provider.id === "gsc" && provider.status === "connected" ? "Connection settings" : "Manage";
   const canSync =
     provider.kind === "analytics" && provider.status === "connected" && provider.enabled !== false;
-  const consumerStatuses = provider.id === "gsc" ? provider.consumerStatuses : undefined;
+  const consumerStatuses = providerConsumerStatuses(provider);
   const hasConsumerRows = Boolean(consumerStatuses);
   const testProviderConnection =
     actions?.testProviderConnection ?? (projectId ? testConnectionAction : demoTestConnection);
-  const syncProjectTraffic = actions?.syncProjectTraffic ?? demoTrafficSync;
-  async function handleTrafficSync() {
-    if (readOnly) {
-      return;
-    }
-    setSyncPending(true);
-    setSyncResult(null);
-    try {
-      const result = await syncProjectTraffic({ projectId: projectId ?? "prj_storybook" });
-      const failures = result.runs.filter((run) => run.status === "failed").length;
-      setSyncResult({
-        message:
-          failures > 0 && result.connections === 0
-            ? "No analytics source completed. Check the provider credentials and worker logs."
-            : `${result.keywordSnapshots} keyword and ${result.pageSnapshots} page snapshots updated.`,
-        ok: failures === 0 || result.connections > 0,
-      });
-    } catch (error) {
-      setSyncResult({
-        message: error instanceof Error ? error.message : "Traffic sync failed.",
-        ok: false,
-      });
-    } finally {
-      setSyncPending(false);
-    }
-  }
+  const { handleTrafficSync, syncPending, syncResult } = useProviderTrafficSync({
+    projectId,
+    readOnly,
+    syncProjectTraffic: actions?.syncProjectTraffic,
+  });
   async function handleSecondaryAction() {
     if (readOnly) {
       return;
@@ -144,20 +103,21 @@ export function ProviderCard({
     <>
       <Card
         id={`provider-${provider.id}`}
-        className="grid grid-cols-1 px-5 py-4.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-x-3.5"
+        className="flex min-w-0 flex-col p-4"
         size="md"
-        sx={{ opacity: provider.status === "planned" ? 0.92 : 1 }}
+        style={{ opacity: provider.status === "planned" ? 0.92 : 1 }}
       >
-        <div className="flex min-w-0 items-start gap-3.5 sm:col-start-1 sm:row-start-1">
+        <div className="flex min-w-0 items-center gap-2.5">
           <ProviderLogo
             alt={`${provider.name} logo`}
             domain={provider.logoDomain}
             fallbackIcon={provider.icon}
+            size="sm"
             tint={provider.tint}
           />
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-[7px]">
-              <SectionTitle component="h3" size="md">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <SectionTitle component="h3" size="sm">
                 {provider.name}
               </SectionTitle>
               {provider.status === "optional" || provider.status === "ready" ? null : (
@@ -168,13 +128,11 @@ export function ProviderCard({
                 <StatusPill size="sm" status="disabled" />
               ) : null}
             </div>
-            <p className="m-0 mt-[5px] text-[12.5px] leading-[1.5] text-fg-muted">
-              {provider.description}
-            </p>
           </div>
         </div>
+        <p className="m-0 mt-2 text-[12px] leading-5 text-fg-muted">{provider.description}</p>
 
-        {consumerStatuses ? (
+        {consumerStatuses && consumerDetails === "inline" ? (
           <ProviderConsumerRows
             canSync={canSync && canUpdateProject}
             onSync={() => void handleTrafficSync()}
@@ -187,20 +145,22 @@ export function ProviderCard({
             timeZone={timeZone}
           />
         ) : (
-          <dl className="-mx-5 -mb-4.5 mt-3.5 flex flex-wrap gap-x-9 gap-y-3 border-border border-t bg-bg-sunken/25 px-5 py-3.5 sm:col-span-2 sm:row-start-2">
-            {provider.meta.map((row) => (
-              <div key={row.label}>
-                <dt className="text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
-                  {row.label}
-                </dt>
-                <dd className="m-0 mt-[3px] text-[12.5px] text-fg-muted">{row.value}</dd>
-              </div>
-            ))}
-          </dl>
+          <ProviderCardMeta
+            provider={
+              consumerStatuses
+                ? {
+                    ...provider,
+                    meta: consumerStatuses.searchModule.detail
+                      ? [{ label: "Property", value: consumerStatuses.searchModule.detail }]
+                      : [],
+                  }
+                : provider
+            }
+          />
         )}
         {provider.status === "needs_reauth" ? (
           <p
-            className="m-0 mt-3 rounded-control border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red-text sm:col-span-2"
+            className="m-0 mt-3 rounded-control border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red-text"
             role="alert"
           >
             {reauthCopy[provider.id as string] ??
@@ -215,79 +175,103 @@ export function ProviderCard({
             timeZone={timeZone}
           />
         ) : null}
-        <div className="mt-3.5 flex shrink-0 items-center gap-[7px] border-border border-t pt-3.5 sm:col-start-2 sm:row-start-1 sm:mt-0 sm:flex-wrap sm:justify-end sm:border-t-0 sm:pt-0">
-          {provider.status === "connected" && canManageProviders ? (
-            <ProviderDisconnectAction
-              disconnectProvider={actions?.disconnectProvider}
-              projectId={projectId ?? "prj_storybook"}
-              providerId={provider.id as ProviderId}
-              onDisconnected={() => setDrawerOpen(false)}
-              onNotice={setDisconnectNotice}
-            />
-          ) : null}
-          {provider.secondaryAction && canManageProviders ? (
-            <ProjectReadOnlyTooltip className="flex flex-1 sm:inline-flex sm:flex-initial">
-              <Button
-                disabled={readOnly || testPending}
-                onClick={() => {
-                  void handleSecondaryAction();
-                }}
-                size="xs"
-                sx={outlineActionSx}
-                type="button"
-                variant="secondary"
-              >
-                {testPending ? "Testing..." : provider.secondaryAction}
-              </Button>
-            </ProjectReadOnlyTooltip>
-          ) : null}
-          {canSync && canUpdateProject && !hasConsumerRows ? (
-            <ProjectReadOnlyTooltip className="flex flex-1 sm:inline-flex sm:flex-initial">
-              <Button
-                disabled={readOnly || syncPending}
-                onClick={() => {
-                  void handleTrafficSync();
-                }}
-                size="xs"
-                sx={outlineActionSx}
-                type="button"
-                variant="secondary"
-              >
-                {syncPending ? "Syncing..." : "Sync now"}
-              </Button>
-            </ProjectReadOnlyTooltip>
-          ) : null}
-          {canManageProviders && actionDisabled ? (
-            <ProjectReadOnlyTooltip className="flex flex-1 sm:inline-flex sm:flex-initial">
-              <Button disabled size="xs" sx={actionSx} type="button" variant={actionVariant}>
-                {provider.status === "connected"
-                  ? managementActionLabel
-                  : actionLabels[provider.status]}
-              </Button>
-            </ProjectReadOnlyTooltip>
-          ) : canManageProviders ? (
-            <Button
-              onClick={() => setDrawerOpen(true)}
-              size="xs"
-              sx={[
-                actionSx,
-                { flex: 1, "@media (min-width:640px)": { flex: "0 1 auto", width: "auto" } },
-              ]}
-              type="button"
-              variant={actionVariant}
-            >
-              {provider.status === "connected"
-                ? managementActionLabel
-                : actionLabels[provider.status]}
-            </Button>
+        <div className="mt-auto">
+          <ProviderCardFeedback
+            disconnectNotice={disconnectNotice}
+            neverSynced={!hasConsumerRows && Boolean(provider.neverSynced)}
+            syncResult={hasConsumerRows ? null : syncResult}
+            testResult={testResult}
+          />
+          {canManageProviders || (canSync && canUpdateProject && !hasConsumerRows) ? (
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              {provider.secondaryAction && canManageProviders && provider.status !== "connected" ? (
+                <ProjectReadOnlyTooltip className="inline-flex">
+                  <Button
+                    disabled={readOnly || testPending}
+                    onClick={() => {
+                      void handleSecondaryAction();
+                    }}
+                    size="xs"
+                    style={outlineActionStyle}
+                    type="button"
+                    variant="secondary"
+                  >
+                    {testPending ? "Testing..." : provider.secondaryAction}
+                  </Button>
+                </ProjectReadOnlyTooltip>
+              ) : null}
+              {canSync && canUpdateProject && !hasConsumerRows ? (
+                <ProjectReadOnlyTooltip className="inline-flex">
+                  <Button
+                    disabled={readOnly || syncPending}
+                    onClick={() => {
+                      void handleTrafficSync();
+                    }}
+                    size="xs"
+                    style={outlineActionStyle}
+                    type="button"
+                    variant="secondary"
+                  >
+                    {syncPending ? "Syncing..." : "Sync now"}
+                  </Button>
+                </ProjectReadOnlyTooltip>
+              ) : null}
+              {canManageProviders && actionDisabled ? (
+                <ProjectReadOnlyTooltip className="inline-flex">
+                  <Button
+                    disabled
+                    size="xs"
+                    style={actionStyle}
+                    type="button"
+                    variant={actionVariant}
+                  >
+                    {provider.status === "connected"
+                      ? managementActionLabel
+                      : actionLabels[provider.status]}
+                  </Button>
+                </ProjectReadOnlyTooltip>
+              ) : canManageProviders ? (
+                <Button
+                  onClick={() => setDrawerOpen(true)}
+                  size="xs"
+                  style={actionStyle}
+                  type="button"
+                  variant={actionVariant}
+                >
+                  {provider.status === "connected"
+                    ? managementActionLabel
+                    : actionLabels[provider.status]}
+                </Button>
+              ) : null}
+              {provider.status === "connected" && canManageProviders ? (
+                <ProviderDisconnectAction
+                  disconnectProvider={actions?.disconnectProvider}
+                  projectId={projectId ?? "prj_storybook"}
+                  providerId={provider.id as ProviderId}
+                  onDisconnected={() => setDrawerOpen(false)}
+                  onNotice={setDisconnectNotice}
+                  renderTrigger={({ disabled, onOpen }) => (
+                    <DeveloperActionsMenu
+                      ariaLabel={`Actions for ${provider.name}`}
+                      items={[
+                        ...(provider.secondaryAction
+                          ? [
+                              {
+                                label: testPending ? "Testing..." : provider.secondaryAction,
+                                disabled: readOnly || testPending,
+                                onSelect: () => void handleSecondaryAction(),
+                              },
+                            ]
+                          : []),
+                        { label: "Disconnect", danger: true, disabled, onSelect: onOpen },
+                      ]}
+                    />
+                  )}
+                />
+              ) : null}
+            </div>
           ) : null}
         </div>
-        <ProviderCardFeedback
-          disconnectNotice={disconnectNotice}
-          neverSynced={!hasConsumerRows && Boolean(provider.neverSynced)}
-          syncResult={hasConsumerRows ? null : syncResult}
-          testResult={testResult}
-        />
       </Card>
 
       {canManageProviders ? (

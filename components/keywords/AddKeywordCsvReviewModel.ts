@@ -1,6 +1,6 @@
 import type { DrawerCsvKeywordRow } from "@/components/keywords/add/AddKeywordCsvRows";
 import type { AddKeywordsRowInput } from "@/lib/schemas/keyword";
-import type { SerpDevice } from "@/lib/serp/markets";
+import type { SerpDevice } from "@/lib/serp/constants";
 
 export type ExistingKeyword = {
   device: SerpDevice;

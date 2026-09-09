@@ -7,7 +7,7 @@ import type {
   SerpProvider,
   SerpRankInput,
 } from "@/lib/providers/types";
-import { resolveSerpStopOnMatch } from "@/lib/serp/markets";
+import { resolveSerpStopOnMatch } from "@/lib/serp/constants";
 import { createDataForSeoBacklinksMethods } from "./dataforseo-backlinks";
 import {
   DATA_FOR_SEO_OK_STATUS,
@@ -32,12 +32,14 @@ import {
 } from "./dataforseo-errors";
 import { createDataForSeoLabsClient } from "./dataforseo-labs-client";
 import {
+  DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS,
   dataForSeoOrganicDecision,
   dataForSeoRankedKeywordsPage,
   dataForSeoRawPayload,
   dataForSeoResponseCostCents,
 } from "./dataforseo-payload";
 import { createDataForSeoResearchMethods } from "./dataforseo-research";
+import { dataForSeoObservationRun } from "./observation-extract-dataforseo";
 import { requireDeterminateOrganicResult } from "./payload-contract-error";
 
 const USER_DATA_URL = "https://api.dataforseo.com/v3/appendix/user_data";
@@ -45,6 +47,7 @@ const SERP_URL = "https://api.dataforseo.com/v3/serp/google/organic/live/advance
 const RANKED_KEYWORDS_URL =
   "https://api.dataforseo.com/v3/dataforseo_labs/google/ranked_keywords/live";
 const LABS_STATUS_URL = "https://api.dataforseo.com/v3/dataforseo_labs/status";
+const STOP_ON_MATCH_TYPE = "with_subdomains";
 // The synchronous SERP endpoint is slower than other calls; give it more headroom.
 const SERP_REQUEST_TIMEOUT_MS = 30_000;
 
@@ -92,16 +95,18 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
     depth: input.depth,
     location: input.location,
   });
+  const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
   const stopTarget = normalizeDomain(input.domain) ?? input.domain;
   const payload = {
     ...requestParams,
     keyword: input.keyword,
+    search_param: "&nfpr=1",
     device: input.device,
     ...(input.tag ? { tag: input.tag } : {}),
-    ...(resolveSerpStopOnMatch(input.stopOnMatch)
+    ...(stopOnMatch
       ? {
           find_targets_in: ["organic"],
-          stop_crawl_on_match: [{ match_type: "with_subdomains", match_value: stopTarget }],
+          stop_crawl_on_match: [{ match_type: STOP_ON_MATCH_TYPE, match_value: stopTarget }],
         }
       : {}),
   };
@@ -120,7 +125,10 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
   );
   const task = data.tasks?.[0];
 
-  if (!task || !envelopeOk(data)) {
+  const noSearchResults =
+    data.status_code === DATA_FOR_SEO_OK_STATUS &&
+    task?.status_code === DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS;
+  if (!task || (!envelopeOk(data) && !noSearchResults)) {
     const billingStatusCode = dataForSeoBillingStatusCode(data);
     const rawMessage =
       !task && data.status_code === DATA_FOR_SEO_OK_STATUS
@@ -134,19 +142,44 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
     throw new DataForSeoError(message, false, undefined, costCents);
   }
 
-  const items = Array.isArray(task.result)
-    ? task.result.flatMap((result) => result.items ?? [])
-    : [null];
+  const items = noSearchResults
+    ? []
+    : Array.isArray(task.result)
+      ? task.result.flatMap((result) => result.items ?? [])
+      : [null];
   // biome-ignore format: keep the provider module under its enforced line cap.
   const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, input.domain, requestParams.depth));
+  const checkedAt = new Date();
 
   return {
     billingUnits: 1,
-    checkedAt: new Date(),
+    checkedAt,
     costCents: dataForSeoResponseCostCents(data),
     position: decision.position,
     rankingUrl: decision.rankingUrl,
     raw: dataForSeoRawPayload(items, decision),
+    observation: dataForSeoObservationRun({
+      completeness:
+        stopOnMatch && decision.outcome === "match"
+          ? "truncated_by_stop_on_match"
+          : stopOnMatch
+            ? "unknown"
+            : "complete",
+      configuredScope: {
+        device: input.device,
+        language: input.location.hl,
+        location: input.location.primaryGeoName,
+      },
+      effectiveScope: null,
+      executedAt: checkedAt,
+      items,
+      requestPolicy: {
+        depth: requestParams.depth,
+        findTargetsIn: stopOnMatch ? STOP_ON_MATCH_TYPE : null,
+        forcedAiOverview: false,
+        stopOnMatch,
+      },
+    }),
   };
 }
 

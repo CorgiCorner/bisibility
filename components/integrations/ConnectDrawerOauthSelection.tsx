@@ -1,6 +1,9 @@
 "use client";
 
-import { Button, FieldLabel, MenuSelect, type MenuSelectOption, PillBadge } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
+import { PillBadge } from "@/components/ui/Pill";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   googlePropertyDisplayName,
@@ -17,10 +20,10 @@ import {
   searchSyncPreflightEstimate,
   searchSyncRetentionLabel,
 } from "@/lib/settings/search-sync-config";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
-import { permissionLabel } from "./ConnectDrawerScopes";
+import { GooglePropertyDetails } from "./ConnectDrawerScopes";
 import { Ga4PropertyManualEntry } from "./Ga4PropertyManualEntry";
 
 type SearchSyncSelection = Pick<SearchSyncPreflightPlan, "pace" | "retentionMonths">;
@@ -226,13 +229,7 @@ export function ConnectDrawerOauthSelection({
               {estimate ? (
                 <p className="m-0 text-[11.5px] leading-5 text-fg-muted">{estimate}</p>
               ) : null}
-              {selectedProperty ? (
-                <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted">
-                  {isGa4
-                    ? `Property ID ${selectedProperty.value}`
-                    : `${permissionLabel(selectedProperty.permissionLevel)} · ${selectedProperty.kind === "domain" ? "Domain property" : "URL prefix property"}`}
-                </p>
-              ) : null}
+              {selectedProperty ? <GooglePropertyDetails property={selectedProperty} /> : null}
               {ga4ManualEntry}
               <div className="flex w-full flex-wrap items-center justify-end gap-2">
                 {onCancel || footerAction ? (

@@ -6,7 +6,7 @@ import {
 } from "@/lib/cost-estimate/project-estimate";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 
 export type TrackMarketOption = {

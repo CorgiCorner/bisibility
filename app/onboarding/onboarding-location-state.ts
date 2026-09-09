@@ -6,7 +6,7 @@ import {
   uniqueLocationCandidates,
 } from "@/components/onboarding/onboarding-locations";
 import {
-  existingOnboardingCityLocationKeys,
+  existingOnboardingPlaceLocationKeys,
   getOnboardingProjectMarketKeys,
 } from "@/lib/queries/onboarding";
 
@@ -18,7 +18,7 @@ async function validatedLocations(locValues: readonly string[], countryValues: r
   const cityKeys = candidates
     .filter((candidate) => candidate.kind === "city")
     .map((candidate) => candidate.key);
-  const existingCityKeys = await existingOnboardingCityLocationKeys(cityKeys);
+  const existingCityKeys = await existingOnboardingPlaceLocationKeys(cityKeys);
   return candidates.flatMap((candidate) => {
     if (candidate.kind === "country" || existingCityKeys.has(candidate.key)) {
       return [candidate.key];

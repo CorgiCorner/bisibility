@@ -1,11 +1,10 @@
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
-import { serpMarkets } from "@/lib/serp/markets";
 import { describe, expect, it } from "vitest";
 import {
   domainOverviewLocationCode,
   domainOverviewPageLimit,
   normalizeDomainOverviewAnalysis,
-  normalizeDomainOverviewMarket,
+  normalizeDomainOverviewResearchScope,
   normalizeDomainOverviewTarget,
   UnsupportedDomainOverviewTargetError,
 } from "./target";
@@ -30,17 +29,13 @@ describe("domain overview target", () => {
     ).toBeNull();
   });
 
-  it("has a Labs country handle for every supported SERP market", () => {
-    for (const market of serpMarkets) {
-      expect(
-        domainOverviewLocationCode({
-          countryCode: market.google.gl,
-          kind: "country",
-          primaryGeoCode: null,
-        }),
-        market.name,
-      ).not.toBeNull();
-    }
+  it("does not invent Labs country handles outside the pinned Labs coverage", () => {
+    expect(
+      domainOverviewLocationCode({ countryCode: "AQ", kind: "country", primaryGeoCode: null }),
+    ).toBeNull();
+    expect(
+      domainOverviewLocationCode({ countryCode: "ZZ", kind: "country", primaryGeoCode: null }),
+    ).toBeNull();
   });
 
   it("normalizes root domains and strips www", () => {
@@ -100,8 +95,10 @@ describe("domain overview target", () => {
     },
   );
 
-  it("normalizes market and page limits without vendor-specific defaults", () => {
-    expect(normalizeDomainOverviewMarket({ languageCode: " EN ", locationCode: 2840 })).toEqual({
+  it("normalizes country-language and page limits without vendor-specific defaults", () => {
+    expect(
+      normalizeDomainOverviewResearchScope({ languageCode: " EN ", locationCode: 2840 }),
+    ).toEqual({
       languageCode: "en",
       locationCode: 2840,
     });
@@ -119,12 +116,22 @@ describe("domain overview target", () => {
 
   it("validates an explicit Labs country-language pair but preserves numeric compatibility", () => {
     expect(
-      normalizeDomainOverviewMarket({ countryCode: "ES", languageCode: "es", locationCode: 2724 }),
+      normalizeDomainOverviewResearchScope({
+        countryCode: "ES",
+        languageCode: "es",
+        locationCode: 2724,
+      }),
     ).toEqual({ countryCode: "ES", languageCode: "es", locationCode: 2724 });
     expect(() =>
-      normalizeDomainOverviewMarket({ countryCode: "ES", languageCode: "en", locationCode: 2724 }),
+      normalizeDomainOverviewResearchScope({
+        countryCode: "ES",
+        languageCode: "en",
+        locationCode: 2724,
+      }),
     ).toThrow(ProviderLookupSignal);
-    expect(normalizeDomainOverviewMarket({ languageCode: "en", locationCode: 2724 })).toEqual({
+    expect(
+      normalizeDomainOverviewResearchScope({ languageCode: "en", locationCode: 2724 }),
+    ).toEqual({
       languageCode: "en",
       locationCode: 2724,
     });

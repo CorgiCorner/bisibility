@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, EmptyState } from "@/components/ui";
-import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 
 export type KeywordNoRowsState = {
   description: string;

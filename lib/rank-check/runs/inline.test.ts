@@ -1,24 +1,51 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  actualRun:
+    undefined as unknown as typeof import("@/lib/temporal/rank-check-activities").runRankCheckActivity,
   createRunning: vi.fn(),
   fail: vi.fn(),
+  paidProvider: vi.fn(),
   prisma: {
     $transaction: vi.fn(),
+    $executeRaw: vi.fn(),
+    keyword: { findUnique: vi.fn() },
     projectMarket: { findMany: vi.fn() },
+    rankCheck: { updateMany: vi.fn() },
     rankCheckRun: { update: vi.fn(), updateMany: vi.fn() },
-    rankCheckRunItem: { findFirst: vi.fn(), groupBy: vi.fn(), updateMany: vi.fn() },
+    rankCheckRunItem: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      groupBy: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
   run: vi.fn(),
+  writeAudit: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/temporal/rank-check-activities", () => ({
-  createRunningRankCheckActivity: mocks.createRunning,
-  failRankCheckActivity: mocks.fail,
-  runRankCheckActivity: mocks.run,
+vi.mock("@/lib/auth/audit", () => ({
+  requiredPublicAuditId: (value: string) => value,
+  writeAudit: mocks.writeAudit,
 }));
+vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/rank-check/fallback", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/rank-check/fallback")>(
+    "@/lib/rank-check/fallback",
+  );
+  return { ...actual, runKeywordCheckWithFallback: mocks.paidProvider };
+});
+vi.mock("@/lib/temporal/rank-check-activities", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/temporal/rank-check-activities")>();
+  mocks.actualRun = actual.runRankCheckActivity;
+  return {
+    ...actual,
+    createRunningRankCheckActivity: mocks.createRunning,
+    failRankCheckActivity: mocks.fail,
+    runRankCheckActivity: mocks.run,
+  };
+});
 
 import { runInlineRankCheck, UnrunnableInlineRankCheckError } from "./inline";
 
@@ -38,7 +65,7 @@ function item(keyword: { archivedAt: Date | null; locationId: string }) {
 
 describe("runInlineRankCheck", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     mocks.prisma.rankCheckRunItem.findFirst.mockResolvedValue(
       item({ archivedAt: null, locationId: "location_active" }),
     );
@@ -57,6 +84,7 @@ describe("runInlineRankCheck", () => {
     ]);
     mocks.prisma.rankCheckRun.update.mockResolvedValue({ id: "run_1" });
     mocks.prisma.rankCheckRun.updateMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
     mocks.createRunning.mockResolvedValue({ rankCheckId: "rank_check_1" });
     mocks.fail.mockResolvedValue(undefined);
     mocks.run.mockResolvedValue({ attempts: [], position: 3, provider: "provider-a" });
@@ -84,9 +112,89 @@ describe("runInlineRankCheck", () => {
       keywordId: "keyword_1",
       providerId: "provider-a",
       rankCheckId: "rank_check_1",
+      runItemId: "run_item_1",
       source: "manual",
     });
     expect(mocks.fail).not.toHaveBeenCalled();
+  });
+
+  it("cancels a linked manual item when its market pauses after the inline predicate", async () => {
+    vi.stubEnv("SCHEDULER_DRIVER", "none");
+    const runItem = {
+      actualCostCents: null as number | null,
+      blockedReason: null as string | null,
+      rankCheckId: null as string | null,
+      status: "queued",
+    };
+    let marketActive = true;
+    mocks.prisma.keyword.findUnique.mockResolvedValue({
+      archivedAt: null,
+      locationId: "location_active",
+      projectId: "project_1",
+    });
+    mocks.prisma.projectMarket.findMany.mockImplementation(async () =>
+      marketActive ? [{ locationId: "location_active" }] : [],
+    );
+    mocks.createRunning.mockImplementation(async () => {
+      runItem.rankCheckId = "rank_check_1";
+      runItem.status = "running";
+      marketActive = false;
+      return { rankCheckId: "rank_check_1" };
+    });
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue({
+      id: "run_item_1",
+      keyword: { publicId: "kw_abcdefghijklmnopqrstuvwx" },
+      run: {
+        id: "run_1",
+        projectId: "project_1",
+        publicId: "rcr_abcdefghijklmnopqrstuvwx",
+        requestedCount: 1,
+        status: "running",
+      },
+    });
+    mocks.prisma.rankCheckRunItem.updateMany.mockImplementation(async ({ data, where }) => {
+      if (where.rankCheckId !== runItem.rankCheckId || where.status !== runItem.status) {
+        return { count: 0 };
+      }
+      Object.assign(runItem, data);
+      return { count: 1 };
+    });
+    mocks.paidProvider.mockResolvedValue({
+      attempts: [],
+      provider: "provider-a",
+      rankCheck: {
+        checkedAt: new Date("2026-09-06T00:00:00.000Z"),
+        costCents: 25,
+        id: "rank_check_1",
+        keywordId: "keyword_1",
+        position: 3,
+        rankingUrl: null,
+      },
+    });
+    mocks.run.mockImplementation(mocks.actualRun);
+
+    await expect(runInlineRankCheck(input)).rejects.toMatchObject({ message: "market_inactive" });
+
+    expect(mocks.run).toHaveBeenCalledWith({
+      depth: undefined,
+      keywordId: "keyword_1",
+      providerId: "provider-a",
+      rankCheckId: "rank_check_1",
+      runItemId: "run_item_1",
+      source: "manual",
+    });
+    expect(runItem).toMatchObject({
+      actualCostCents: 0,
+      blockedReason: "market_inactive",
+      status: "cancelled",
+    });
+    expect(mocks.paidProvider).not.toHaveBeenCalled();
+    expect(mocks.fail).toHaveBeenCalledWith({
+      keywordId: "keyword_1",
+      message: "market_inactive",
+      providerId: "provider-a",
+      rankCheckId: "rank_check_1",
+    });
   });
 
   it("refuses a keyword whose market is paused before any activity runs", async () => {

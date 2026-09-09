@@ -1,10 +1,8 @@
-import { iconWellClassName } from "@/components/ui";
+import { iconWellClassName } from "@/components/ui/icon-well-styles";
 import { docsLinkProps } from "@/lib/site/site";
-import {
-  CaretRightIcon as CaretRight,
-  PuzzlePieceIcon as PuzzlePiece,
-  RankingIcon as Ranking,
-} from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
+import { PuzzlePieceIcon as PuzzlePiece } from "@phosphor-icons/react/dist/ssr/PuzzlePiece";
+import { RankingIcon as Ranking } from "@phosphor-icons/react/dist/ssr/Ranking";
 import Link from "next/link";
 import type { ReactNode } from "react";
 

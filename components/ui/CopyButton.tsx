@@ -1,18 +1,15 @@
 "use client";
 
+import { IconButton, type IconButtonProps } from "@/components/ui/IconButton";
 import { cn } from "@/lib/ui/cn";
 import { MOTION_PRESS } from "@/lib/ui/motion";
-import { sxArray } from "@/lib/ui/mui-sx";
-import IconButton, { type IconButtonProps } from "@mui/material/IconButton";
-import {
-  CheckIcon as Check,
-  CopyIcon as Copy,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { CopyIcon as Copy } from "@phosphor-icons/react/dist/csr/Copy";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { cva } from "class-variance-authority";
 import { type MouseEvent, useCallback, useRef, useState } from "react";
-import { useToast } from "./Toast";
 import { Tooltip } from "./Tooltip";
+import { useToast } from "./toast-context";
 
 export type CopyButtonProps = Omit<IconButtonProps, "children" | "onClick" | "ref" | "size"> & {
   text: string;
@@ -34,7 +31,7 @@ const copyButtonVariants = cva("", {
   },
 });
 
-const iconButtonMuiSizeBySize = {
+const iconButtonSizeBySize = {
   xs: "small",
   sm: "small",
   md: "medium",
@@ -57,7 +54,7 @@ export function CopyButton({
   text,
   label = "Copy",
   size = "md",
-  sx,
+  style,
   ...props
 }: CopyButtonProps) {
   const [state, setState] = useState<CopyState>("idle");
@@ -126,25 +123,22 @@ export function CopyButton({
     <Tooltip content={tooltipTitle} semantics="label">
       <IconButton
         aria-label={tooltipTitle}
-        className={cn(copyButtonVariants({ size }), className)}
+        className={cn(
+          copyButtonVariants({ size }),
+          "motion-safe:active:not-focus-visible:not-disabled:scale-[0.97]",
+          className,
+        )}
         onClick={handleCopy}
         ref={setNodeRef}
-        size={iconButtonMuiSizeBySize[size]}
-        sx={[
-          {
-            color,
-            ...(size === "xs" ? { minHeight: 12, minWidth: 12, padding: 0 } : {}),
-            transition: `background-color ${MOTION_PRESS}ms ease, color ${MOTION_PRESS}ms ease, transform ${MOTION_PRESS}ms ease`,
-            "&:hover": {
-              backgroundColor: hoverBg,
-              color: hoverColor,
-            },
-            "@media (prefers-reduced-motion: no-preference)": {
-              "&:active:not(:focus-visible):not(.Mui-disabled)": { transform: "scale(0.97)" },
-            },
-          },
-          ...sxArray(sx),
-        ]}
+        size={iconButtonSizeBySize[size]}
+        style={{
+          "--control-color": color,
+          "--control-hover-color": hoverColor,
+          "--control-hover-background-color": hoverBg,
+          ...(size === "xs" ? { minHeight: 12, minWidth: 12, padding: 0 } : {}),
+          transition: `background-color ${MOTION_PRESS}ms ease, color ${MOTION_PRESS}ms ease, transform ${MOTION_PRESS}ms ease`,
+          ...style,
+        }}
         {...props}
       >
         {copied ? (

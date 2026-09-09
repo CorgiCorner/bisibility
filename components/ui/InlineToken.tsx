@@ -1,6 +1,6 @@
 "use client";
 
-import { XIcon as X } from "@phosphor-icons/react";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { clsx } from "clsx";
 
 export type InlineTokenProps = {

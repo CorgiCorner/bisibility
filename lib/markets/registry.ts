@@ -11,6 +11,7 @@ import {
 } from "./project-market-add-result";
 
 export type ProjectMarketRef = {
+  name?: string;
   projectId: string;
   locationId: string;
 };
@@ -71,12 +72,14 @@ function assertNoArchivedMarket(
 
 /** Creates a market once or restores the existing market to active. */
 export function ensureActiveProjectMarket(
-  { projectId, locationId }: ProjectMarketRef,
+  { locationId, name, projectId }: ProjectMarketRef,
   client: ProjectMarketClient = prisma,
 ) {
   return client.projectMarket.upsert({
     where: { projectId_locationId: { projectId, locationId } },
     create: {
+      futureKeywordDevices: ["desktop", "mobile"],
+      name: name ?? locationId,
       publicId: makePublicId("pmkt"),
       projectId,
       locationId,
@@ -94,7 +97,7 @@ type EnsureProjectMarketsOptions = {
 /** Adds or revives a set without letting API/import writes bypass the registry cap. */
 async function ensureProjectMarkets(
   projectId: string,
-  locations: readonly { locationId: string }[],
+  locations: readonly { locationId: string; name?: string }[],
   client: ProjectMarketClient,
   { preserveVisibleStatus, refuseArchived }: EnsureProjectMarketsOptions,
 ): Promise<AddProjectMarketsResult> {
@@ -112,8 +115,8 @@ async function ensureProjectMarkets(
     ? unique.filter(({ locationId }) => !visibleByLocation.has(locationId))
     : unique;
   const stored = await Promise.all(
-    locationsToActivate.map(({ locationId }) =>
-      ensureActiveProjectMarket({ locationId, projectId }, client),
+    locationsToActivate.map(({ locationId, name }) =>
+      ensureActiveProjectMarket({ locationId, name, projectId }, client),
     ),
   );
   const storedByLocation = new Map(
@@ -168,9 +171,19 @@ export function pauseProjectMarket(
   { projectId, locationId }: ProjectMarketRef,
   client: ProjectMarketClient = prisma,
 ) {
-  return client.projectMarket.update({
-    where: { projectId_locationId: { projectId, locationId } },
+  return client.projectMarket.updateMany({
+    where: { locationId, projectId, status: ProjectMarketStatus.active },
     data: { status: ProjectMarketStatus.paused },
+  });
+}
+
+export function resumeProjectMarket(
+  { projectId, locationId }: ProjectMarketRef,
+  client: ProjectMarketClient = prisma,
+) {
+  return client.projectMarket.updateMany({
+    where: { locationId, projectId, status: ProjectMarketStatus.paused },
+    data: { status: ProjectMarketStatus.active },
   });
 }
 
@@ -179,8 +192,12 @@ export function removeProjectMarket(
   { projectId, locationId }: ProjectMarketRef,
   client: ProjectMarketClient = prisma,
 ) {
-  return client.projectMarket.update({
-    where: { projectId_locationId: { projectId, locationId } },
+  return client.projectMarket.updateMany({
+    where: {
+      locationId,
+      projectId,
+      status: { in: [ProjectMarketStatus.active, ProjectMarketStatus.paused] },
+    },
     data: { status: ProjectMarketStatus.removed },
   });
 }

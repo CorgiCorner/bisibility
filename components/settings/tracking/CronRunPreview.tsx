@@ -1,5 +1,6 @@
 import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
-import { CheckCircleIcon as CheckCircle, WarningIcon as Warning } from "@phosphor-icons/react";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { WarningIcon as Warning } from "@phosphor-icons/react/dist/csr/Warning";
 
 export function CronRunPreview({
   pending,

@@ -1,6 +1,6 @@
 import { GITHUB_URL } from "@/lib/site/site";
 import { cn } from "@/lib/ui/cn";
-import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/ssr";
+import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/ssr/GithubLogo";
 import { cva } from "class-variance-authority";
 
 export type GithubStarsSize = "lg" | "md" | "sm";

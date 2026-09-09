@@ -21,7 +21,7 @@ vi.mock("next/link", () => ({
 }));
 vi.mock("@/components/shell/SidebarFooter", () => ({ SidebarFooter: () => null }));
 vi.mock("@/components/shell/WorkspaceSwitcher", () => ({ WorkspaceSwitcher: () => null }));
-vi.mock("@/components/ui/Tooltip", () => import("@/tests/mui-tooltip"));
+vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 
 const projectRef = "prj_abcdefghijklmnopqrstuvwx";
 

@@ -154,6 +154,26 @@ enum ProjectMarketStatus {
   removed
 }
 
+enum CompetitorSource {
+  suggested
+  manual
+}
+
+enum CompetitorScopePolicy {
+  all_markets
+  selected_markets
+}
+
+enum CompetitorMarketOverrideMode {
+  added
+  excluded
+}
+
+enum CompetitorSetupOutcome {
+  confirmed
+  skipped
+}
+
 enum SignalSource {
   rank_tracker
   search_analytics
@@ -495,6 +515,8 @@ model Project {
   writeModeChangedById             String?
   writeModeChangedBy               User?                            @relation("ProjectWriteModeChangedBy", fields: [writeModeChangedById], references: [id], onDelete: SetNull)
   onboardingCompletedAt            DateTime?
+  competitorSetupOutcome           CompetitorSetupOutcome?
+  competitorSetupDecidedAt         DateTime?
   ownerId                          String
   owner                            User                             @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members                          Membership[]
@@ -503,6 +525,7 @@ model Project {
   savedKeywords                    SavedKeyword[]
   tags                             Tag[]
   competitors                      Competitor[]
+  competitorSuggestionDismissals   CompetitorSuggestionDismissal[]
   defaults                         ProjectDefaults?
   providerConnections              ProviderConnection[]
   providerCostEntries              ProviderCostEntry[]
@@ -518,6 +541,7 @@ model Project {
   searchAnalyticsQueryPageDaily    SearchAnalyticsQueryPageDaily[]
   searchAnalyticsImports           SearchAnalyticsImport[]
   searchAnalyticsSyncPartitions    SearchAnalyticsSyncPartition[]
+  observationRuns                  ObservationRun[]
   searchAnalyticsRequestUsage      SearchAnalyticsRequestUsage[]
   searchInsightsPropertyRegistry   SearchInsightsPropertyRegistry[]
   searchInsightsWindowFacts        SearchInsightsWindowFacts[]
@@ -624,16 +648,19 @@ model ProjectDefaults {
 }
 
 model ProjectMarket {
-  id               String              @id @default(cuid())
-  publicId         String              @unique
-  projectId        String
-  locationId       String
-  status           ProjectMarketStatus @default(active)
-  project          Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  location         Location            @relation(fields: [locationId], references: [id], onDelete: Restrict)
-  alertRuleMarkets AlertRuleMarket[]
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  id                   String                     @id @default(cuid())
+  publicId             String                     @unique
+  projectId            String
+  locationId           String
+  name                 String                     @default("Market")
+  futureKeywordDevices Device[]                   @default([desktop, mobile])
+  status               ProjectMarketStatus        @default(active)
+  project              Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  location             Location                   @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  alertRuleMarkets     AlertRuleMarket[]
+  competitorOverrides  CompetitorMarketOverride[]
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
 
   @@unique([projectId, locationId])
   @@index([projectId, status, createdAt, id])
@@ -641,13 +668,14 @@ model ProjectMarket {
   @@map("project_markets")
 }
 
-// Migration-only expression index: keywords_projectId_normalized_text_idx
-// (20260727064500_keyword_match_index) uses lower(btrim(text)), which Prisma cannot model.
+// The legacy expression index remains for its existing consumers. textNormalized is a
+// migration-owned stored generated column, represented with dbgenerated for Prisma 7.
 model Keyword {
   id                   String                   @id @default(cuid())
   publicId             String                   @unique
   projectId            String
   text                 String
+  textNormalized       String?                  @default(dbgenerated("lower((regexp_replace(text, '^[\t\n\u000b\u000c\r    -     　﻿]+|[\t\n\u000b\u000c\r    -     　﻿]+$'::text, ''::text, 'g'::text) COLLATE \"en-US-x-icu\"))"))
   location             String
   locationId           String
   device               Device                   @default(desktop)
@@ -674,6 +702,7 @@ model Keyword {
 
   @@unique([projectId, text, locationId, device])
   @@index([projectId])
+  @@index([projectId, textNormalized])
   @@index([projectId, topic])
   @@index([locationId])
   @@index([checkScheduleId])
@@ -747,18 +776,50 @@ model Tag {
 }
 
 model Competitor {
-  id        String   @id @default(cuid())
-  publicId  String   @unique
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  domain    String
-  label     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String                     @id @default(cuid())
+  publicId        String                     @unique
+  projectId       String
+  project         Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  domain          String
+  label           String?
+  aliases         String[]                   @default([])
+  source          CompetitorSource           @default(manual)
+  evidence        Json?
+  scopePolicy     CompetitorScopePolicy      @default(all_markets)
+  marketOverrides CompetitorMarketOverride[]
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
 
   @@unique([projectId, domain])
   @@index([projectId])
   @@map("competitors")
+}
+
+model CompetitorMarketOverride {
+  id              String                       @id @default(cuid())
+  competitorId    String
+  projectMarketId String
+  mode            CompetitorMarketOverrideMode
+  competitor      Competitor                   @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  projectMarket   ProjectMarket                @relation(fields: [projectMarketId], references: [id], onDelete: Cascade)
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+
+  @@unique([competitorId, projectMarketId])
+  @@index([projectMarketId])
+  @@map("competitor_market_overrides")
+}
+
+model CompetitorSuggestionDismissal {
+  id        String   @id @default(cuid())
+  projectId String
+  domain    String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, domain])
+  @@index([projectId, createdAt])
+  @@map("competitor_suggestion_dismissals")
 }
 
 model KeywordTag {
@@ -798,6 +859,7 @@ model CheckSchedule {
   projectId      String
   project        Project            @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   name           String
+  archivedAt     DateTime?
   frequency      RankCheckFrequency
   cronExpression String?
   /// Local time in 24-hour HH:mm format.
@@ -817,6 +879,7 @@ model CheckSchedule {
   updatedAt      DateTime           @updatedAt
 
   @@index([projectId])
+  @@index([projectId, archivedAt])
   @@map("check_schedules")
 }
 
@@ -837,6 +900,7 @@ model RankCheck {
   position             Int?
   previousPosition     Int?
   rankingUrl           String?
+  expectedUrlAtCheck   String?
   /// Allowed values: "running", "completed", "failed", "deferred".
   status               String               @default("completed")
   error                String?
@@ -869,6 +933,7 @@ model RankCheck {
   attemptCount         Int                  @default(1)
   triggeredAlerts      TriggeredAlert[]
   queuedTask           QueuedRankCheckTask?
+  observationRun       ObservationRun?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
@@ -973,6 +1038,65 @@ model RankCheckRunItem {
   // Migration-only partial unique index: keywordId WHERE status = 'running'.
   @@index([status, notBefore])
   @@map("rank_check_run_items")
+}
+
+model ObservationRun {
+  id              String            @id @default(cuid())
+  rankCheckId     String            @unique
+  rankCheck       RankCheck         @relation(fields: [rankCheckId], references: [id], onDelete: Cascade)
+  projectId       String
+  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  provider        String
+  /// Allowed values: "web_serp".
+  surface         String
+  /// Allowed values: "google".
+  engine          String
+  /// Request as sent: { depth, stopOnMatch, findTargetsIn, forcedAiOverview }.
+  requestPolicy   Json
+  /// Allowed values: "complete", "truncated_by_stop_on_match", "unknown".
+  completeness    String
+  /// Requested scope as { location, language, device }.
+  configuredScope Json
+  /// Provider-effective scope, set only when it differed from the configured one.
+  effectiveScope  Json?
+  executedAt      DateTime
+  items           ObservationItem[]
+  createdAt       DateTime          @default(now())
+
+  @@index([projectId, executedAt(sort: Desc)])
+  @@map("observation_runs")
+}
+
+model ObservationItem {
+  id               String         @id @default(cuid())
+  observationRunId String
+  observationRun   ObservationRun @relation(fields: [observationRunId], references: [id], onDelete: Cascade)
+  /// Allowed values: "organic_result", "local_pack", "ai_overview".
+  resultKind       String
+  /// Order of the item within the run as emitted by the provider adapter.
+  ordinal          Int
+  rankGroup        Int?
+  rankAbsolute     Int?
+  /// Position of the feature block on the page (1-based) when the provider supplies it.
+  blockPosition    Int?
+  /// Position of this item inside its block (1-based).
+  positionInBlock  Int?
+  title            String?
+  url              String?
+  domain           String?
+  businessName     String?
+  placeId          String?
+  /// Opaque provider identifier; never parsed as a number.
+  cid              String?
+  mapsUrl          String?
+  /// Rating as { value, count }.
+  rating           Json?
+  /// Provider fragment for this item only, never the whole page.
+  rawFragment      Json
+  createdAt        DateTime       @default(now())
+
+  @@index([observationRunId, resultKind])
+  @@map("observation_items")
 }
 
 model RankCheckRawPurgeProgress {

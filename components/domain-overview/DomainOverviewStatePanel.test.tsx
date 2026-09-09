@@ -17,7 +17,7 @@ const expected: Array<[DomainOverviewUiState, RegExp]> = [
   ["needs_reauth", /needs to be reconnected/i],
   ["budget_exhausted", /monthly provider budget reached/i],
   ["lookup_failed", /lookup did not go through/i],
-  ["unsupported_location", /market is not supported/i],
+  ["unsupported_location", /^research is not available for this country and language$/i],
 ];
 
 describe("DomainOverviewStatePanel", () => {
@@ -35,6 +35,28 @@ describe("DomainOverviewStatePanel", () => {
 
     rerender(<DomainOverviewStatePanel projectRef="prj_1" state="unsupported_location" />);
     expect(container.querySelector("[data-module-mark]")).toBeNull();
+  });
+
+  it("names an unavailable country-language pair without changing rank tracking", () => {
+    render(
+      <DomainOverviewStatePanel
+        projectRef="prj_1"
+        researchScope={{
+          countryCode: "ES",
+          countryName: "Spain",
+          languageCode: "eu",
+          languageLabel: "Basque",
+          providerLocationCode: 2724,
+          researchAvailable: false,
+        }}
+        state="unsupported_location"
+      />,
+    );
+    expect(
+      screen.getByText(
+        "Research is not available for Spain / Basque. Rank tracking is unaffected.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it.each(["no_provider", "needs_reauth"] as const)(

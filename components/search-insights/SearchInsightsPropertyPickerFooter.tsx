@@ -1,4 +1,5 @@
-import { Button, MenuActionFooter } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { MenuActionFooter } from "@/components/ui/MenuActionFooter";
 import { propertyConnectionSettingsHref } from "./SearchInsightsPropertyPickerGrouping";
 
 export function SearchInsightsPropertyPickerFooter({ projectId }: { projectId: string }) {

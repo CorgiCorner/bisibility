@@ -1,5 +1,5 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider } from "@/components/ui/Toast";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -90,7 +90,7 @@ describe("SetScheduleModal", () => {
 
     expect(screen.getAllByTestId("schedule-choice-skeleton")).toHaveLength(2);
     expect(screen.queryByText("Daily 06:00")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Move 1 target" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
   });
 
   it("keeps the static choices usable when schedules fail to load", () => {
@@ -102,7 +102,7 @@ describe("SetScheduleModal", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("Could not load schedules. Try again.");
     expect(screen.getByRole("button", { name: /^New schedule/ })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Remove 1 target from schedule" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Remove" })).toBeEnabled();
   });
 
   it('"Remove from schedule" under a divider', () => {
@@ -114,9 +114,83 @@ describe("SetScheduleModal", () => {
   it("CTA from choice", () => {
     renderModal();
     fireEvent.click(screen.getByRole("radio", { name: /Weekly Mon/ }));
-    expect(screen.getByRole("button", { name: "Move 1 target" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Apply" })).toBeEnabled();
     fireEvent.click(screen.getByRole("radio", { name: /Remove from schedule/ }));
-    expect(screen.getByRole("button", { name: "Remove 1 target from schedule" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Remove" })).toBeEnabled();
+  });
+
+  it("disables removal when the selection has no schedule", () => {
+    renderModal({ currentScheduleId: null });
+    expect(screen.getByRole("radio", { name: /Remove from schedule/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
+    expect(screen.queryByText(/move from their current schedule/)).not.toBeInTheDocument();
+  });
+
+  it("explains why removal is unavailable for targets from different schedules", () => {
+    renderModal({
+      currentScheduleId: null,
+      selectedRows: [
+        {
+          ...rows[0],
+          checkSchedule: { name: "Daily 06:00", publicId: "sch_daily", nextCheckAt: null },
+        },
+        {
+          ...rows[0],
+          id: "kw_2",
+          checkSchedule: { name: "Weekly Mon", publicId: "sch_weekly", nextCheckAt: null },
+        },
+      ],
+    });
+    expect(screen.getByRole("radio", { name: /Remove from schedule/ })).toBeDisabled();
+    expect(
+      screen.getByText("Select targets from one schedule to remove them."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/already run on request/)).not.toBeInTheDocument();
+  });
+
+  it("removes assigned targets through their current schedule membership route", async () => {
+    const fetchMock = vi.fn(async () => ({
+      json: async () => ({ data: { updated: 1 } }),
+      ok: true,
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    const onDone = vi.fn();
+    renderModal({ onDone });
+    fireEvent.click(screen.getByRole("radio", { name: /Remove from schedule/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    await waitFor(() => expect(onDone).toHaveBeenCalledOnce());
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/check-schedules/sch_daily/keywords",
+      expect.objectContaining({
+        method: "DELETE",
+        body: JSON.stringify({ keywordIds: rows.map((row) => row.id), projectId }),
+      }),
+    );
+  });
+
+  it("keeps an initial removal choice disabled without an assigned schedule", () => {
+    renderModal({ currentScheduleId: null, initialChoice: "remove" });
+    expect(screen.getByRole("button", { name: "Remove" })).toBeDisabled();
+  });
+
+  it("returns from a new schedule to the previous choice and can apply it", async () => {
+    const fetchMock = vi.fn(async () => ({
+      json: async () => ({ data: { updated: 1 } }),
+      ok: true,
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    renderModal();
+    fireEvent.click(screen.getByRole("radio", { name: /Weekly Mon/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^New schedule/ }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Name" }), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("radio", { name: /Weekly Mon/ })).toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/check-schedules/sch_weekly/keywords",
+      expect.objectContaining({ method: "POST" }),
+    );
   });
 
   it("title counts keywords and targets", () => {
@@ -144,8 +218,13 @@ describe("SetScheduleModal", () => {
 
     expect(screen.getByText("New cadence for these 2 targets.")).toBeInTheDocument();
     expect(
-      screen.getByRole("radio", { name: /Remove from schedule/ }).closest("label"),
-    ).toHaveTextContent(/-\$.*\/ month/);
+      (
+        screen.getByRole("radio", { name: /Remove from schedule/ }).closest("label")?.textContent ??
+        ""
+      )
+        .replace(/\s+/g, " ")
+        .trim(),
+    ).toMatch(/-\$.*\/ month/);
   });
 
   it("uses singular target grammar for a new schedule", () => {

@@ -1,19 +1,17 @@
 import { getOAuthConsentCopy } from "@/lib/auth/oauth-consent-copy";
 import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
 import { cn } from "@/lib/ui/cn";
-import {
-  ArrowsClockwiseIcon as ArrowsClockwise,
-  CrownSimpleIcon as CrownSimple,
-  EnvelopeSimpleIcon as EnvelopeSimple,
-  EyeIcon as Eye,
-  IdentificationBadgeIcon as IdentificationBadge,
-  KeyIcon as Key,
-  PencilSimpleIcon as PencilSimple,
-  PlugsConnectedIcon as PlugsConnected,
-  QuestionIcon as Question,
-  UserIcon as User,
-  UserCircleIcon as UserCircle,
-} from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
+import { CrownSimpleIcon as CrownSimple } from "@phosphor-icons/react/dist/csr/CrownSimple";
+import { EnvelopeSimpleIcon as EnvelopeSimple } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
+import { EyeIcon as Eye } from "@phosphor-icons/react/dist/csr/Eye";
+import { IdentificationBadgeIcon as IdentificationBadge } from "@phosphor-icons/react/dist/csr/IdentificationBadge";
+import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
+import { PencilSimpleIcon as PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
+import { PlugsConnectedIcon as PlugsConnected } from "@phosphor-icons/react/dist/csr/PlugsConnected";
+import { QuestionIcon as Question } from "@phosphor-icons/react/dist/csr/Question";
+import { UserIcon as User } from "@phosphor-icons/react/dist/csr/User";
+import { UserCircleIcon as UserCircle } from "@phosphor-icons/react/dist/csr/UserCircle";
 import type { ComponentType } from "react";
 
 type ScopeItem = {

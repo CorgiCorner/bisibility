@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Tooltip } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { SearchSyncControlModel } from "@/lib/search-insights/sync/control-model";
 import type React from "react";
 

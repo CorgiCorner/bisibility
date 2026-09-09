@@ -1,12 +1,6 @@
-import { ThemeSegments, TooltipProvider } from "@/components/ui";
-import {
-  initializeThemeFromCookie,
-  readTheme,
-  themeCookieStorageManager,
-} from "@/lib/theme/browser-theme";
-import { theme } from "@/lib/theme/theme";
-import CssBaseline from "@mui/material/CssBaseline";
-import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
+import { ThemeSegments } from "@/components/ui/ThemeSegments";
+import { TooltipProvider } from "@/components/ui/Tooltip";
+import { initializeThemeFromCookie, readTheme } from "@/lib/theme/browser-theme";
 import type { Decorator, Preview } from "@storybook/nextjs-vite";
 import "../app/globals.css";
 import "./preview-fonts.css";
@@ -43,39 +37,29 @@ if (typeof window !== "undefined") {
   initializeThemeFromCookie();
 }
 
-const withMuiTheme: Decorator = (Story, context) => {
+const withAppTheme: Decorator = (Story, context) => {
   const activeTheme = typeof document === "undefined" ? "light" : readTheme();
 
   return (
-    <StyledEngineProvider injectFirst>
-      <ThemeProvider
-        defaultMode="system"
-        modeStorageKey="theme"
-        storageManager={themeCookieStorageManager}
-        theme={theme}
-      >
-        <div
-          className="min-h-screen bg-bg font-sans text-fg"
-          data-app-theme-root
-          data-theme={activeTheme}
-        >
-          <CssBaseline />
-          <TooltipProvider>
-            <Story />
-            {context.viewMode === "story" ? (
-              <div className="fixed right-4 bottom-4 z-[1400]">
-                <ThemeSegments size="sm" />
-              </div>
-            ) : null}
-          </TooltipProvider>
-        </div>
-      </ThemeProvider>
-    </StyledEngineProvider>
+    <div
+      className="min-h-screen bg-bg font-sans text-fg"
+      data-app-theme-root
+      data-theme={activeTheme}
+    >
+      <TooltipProvider>
+        <Story />
+        {context.viewMode === "story" ? (
+          <div className="fixed right-4 bottom-4 z-[1400]">
+            <ThemeSegments size="sm" />
+          </div>
+        ) : null}
+      </TooltipProvider>
+    </div>
   );
 };
 
 const preview: Preview = {
-  decorators: [withMuiTheme],
+  decorators: [withAppTheme],
   parameters: {
     backgrounds: { disabled: true },
     controls: { expanded: true },

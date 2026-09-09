@@ -10,7 +10,6 @@ import {
   serverThemeMode,
   subscribeTheme,
   subscribeThemePreference,
-  themeCookieStorageManager,
   themeInitScript,
 } from "./browser-theme";
 
@@ -197,30 +196,5 @@ describe("browser theme", () => {
     unsubscribe();
 
     expect(preferences).toEqual(["system"]);
-  });
-
-  it("keeps MUI mode storage on the shared theme cookie", () => {
-    setThemeCookie("dark");
-    const storage = themeCookieStorageManager({ key: "theme", storageWindow: window });
-
-    expect(storage.get("light")).toBe("dark");
-    storage.set("light");
-
-    expect(storage.get("dark")).toBe("light");
-    expect(document.cookie).toContain("theme=light");
-
-    storage.set("system");
-    expect(storage.get("light")).toBe("system");
-  });
-
-  it("leaves MUI color-scheme storage keys at their defaults", () => {
-    const storage = themeCookieStorageManager({
-      key: "mui-color-scheme-dark",
-      storageWindow: window,
-    });
-
-    expect(storage.get("dark")).toBe("dark");
-    storage.set("light");
-    expect(document.cookie).not.toContain("mui-color-scheme-dark");
   });
 });

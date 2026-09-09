@@ -1,6 +1,7 @@
 "use client";
 
-import { AppDrawer, Button } from "@/components/ui";
+import { AppDrawer } from "@/components/ui/AppDrawer";
+import { Button } from "@/components/ui/Button";
 import {
   formatEstimateCents,
   monthlyChecksFor,
@@ -20,9 +21,9 @@ import {
   toggleKey,
   topByClicksKeys,
 } from "@/lib/keyword-suggest/top-query-selection";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
-import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useMemo, useState } from "react";
 
 export type SuggestionCostContext = {
@@ -36,7 +37,8 @@ export type SuggestionCostContext = {
 };
 
 type KeywordSuggestionDrawerProps = {
-  costContext: SuggestionCostContext;
+  costContext?: SuggestionCostContext;
+  selectionOnly?: boolean;
   existingKeywords: readonly string[];
   hidden: readonly TopQuerySuggestion[];
   onClose: () => void;
@@ -47,11 +49,12 @@ type KeywordSuggestionDrawerProps = {
 
 const FILTER_THRESHOLD = 25;
 const metricCell = "w-16 shrink-0 text-right font-sans text-[11.5px] tabular-nums text-fg-muted";
-const bulkButtonSx = {
-  color: "var(--fg-muted)",
+const bulkButtonStyle = {
+  "--control-color": "var(--fg-muted)",
   fontWeight: 400,
   minHeight: 30,
-  paddingX: 1.25,
+  paddingLeft: 10,
+  paddingRight: 10,
 };
 
 function metric(value: number | undefined) {
@@ -80,10 +83,12 @@ function costLine(count: number, context: SuggestionCostContext) {
 }
 
 function SuggestionRow({
+  existingLabel,
   onToggle,
   selected,
   suggestion,
 }: Readonly<{
+  existingLabel: string;
   onToggle: (query: string) => void;
   selected: boolean;
   suggestion: SelectableSuggestion;
@@ -106,7 +111,7 @@ function SuggestionRow({
       <span className="min-w-0 flex-1 truncate text-fg">{suggestion.query}</span>
       {disabled ? (
         <span className="shrink-0 rounded-full border border-border bg-bg-sunken px-2 py-0.5 font-sans tabular-nums text-[9.5px] uppercase tracking-[0.3px] text-fg-muted">
-          Tracked
+          {existingLabel}
         </span>
       ) : null}
       <span className={metricCell}>{metric(suggestion.clicks)}</span>
@@ -117,6 +122,7 @@ function SuggestionRow({
 
 export function KeywordSuggestionDrawer({
   costContext,
+  selectionOnly = false,
   existingKeywords,
   hidden,
   onClose,
@@ -156,12 +162,12 @@ export function KeywordSuggestionDrawer({
       footer={
         <div className="flex flex-col gap-2">
           <span className="font-sans tabular-nums text-[11.5px] text-fg-muted">
-            {costLine(confirmed.length, costContext)}
+            {costContext ? costLine(confirmed.length, costContext) : `${confirmed.length} selected`}
           </span>
           <div className="flex items-center justify-end gap-2.5">
             <Button
               onClick={onClose}
-              sx={{ color: "var(--fg-muted)" }}
+              style={{ "--control-color": "var(--fg-muted)" }}
               type="button"
               variant="secondary"
             >
@@ -173,7 +179,8 @@ export function KeywordSuggestionDrawer({
               type="button"
               variant="primary"
             >
-              Add {confirmed.length} {confirmed.length === 1 ? "keyword" : "keywords"}
+              {selectionOnly ? "Use" : "Add"} {confirmed.length}{" "}
+              {confirmed.length === 1 ? "keyword" : "keywords"}
             </Button>
           </div>
         </div>
@@ -187,7 +194,7 @@ export function KeywordSuggestionDrawer({
           <Button
             onClick={() => setSelected(new Set(selectable))}
             size="xs"
-            sx={bulkButtonSx}
+            style={bulkButtonStyle}
             type="button"
             variant="secondary"
           >
@@ -198,7 +205,7 @@ export function KeywordSuggestionDrawer({
           <Button
             onClick={() => setSelected(new Set())}
             size="xs"
-            sx={bulkButtonSx}
+            style={bulkButtonStyle}
             type="button"
             variant="secondary"
           >
@@ -208,7 +215,7 @@ export function KeywordSuggestionDrawer({
         <Button
           onClick={() => setSelected(new Set(topByClicksKeys(decorated, DEFAULT_PRESELECT_TOP_N)))}
           size="xs"
-          sx={bulkButtonSx}
+          style={bulkButtonStyle}
           type="button"
           variant="secondary"
         >
@@ -240,9 +247,10 @@ export function KeywordSuggestionDrawer({
         <span className="w-16 shrink-0 text-right">Clicks</span>
         <span className="w-16 shrink-0 text-right">Impr.</span>
       </div>
-      <div className="mt-0">
+      <div className="mt-0" data-analytics-mask>
         {filtered.map((suggestion) => (
           <SuggestionRow
+            existingLabel={selectionOnly ? "In draft" : "Tracked"}
             key={queryKey(suggestion.query)}
             onToggle={toggle}
             selected={selected.has(queryKey(suggestion.query))}
@@ -251,6 +259,7 @@ export function KeywordSuggestionDrawer({
         ))}
         {hiddenFiltered.map((suggestion) => (
           <SuggestionRow
+            existingLabel={selectionOnly ? "In draft" : "Tracked"}
             key={`hidden-${queryKey(suggestion.query)}`}
             onToggle={toggle}
             selected={selected.has(queryKey(suggestion.query))}

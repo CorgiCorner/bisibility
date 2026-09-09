@@ -1,4 +1,5 @@
-import { InfoIcon as Info, TerminalWindowIcon as TerminalWindow } from "@phosphor-icons/react";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { TerminalWindowIcon as TerminalWindow } from "@phosphor-icons/react/dist/csr/TerminalWindow";
 import type { ReactNode } from "react";
 
 export function StepLabel({ index, title }: Readonly<{ index: number; title: string }>) {

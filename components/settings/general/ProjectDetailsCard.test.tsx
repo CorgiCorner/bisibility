@@ -107,6 +107,9 @@ describe("ProjectDetailsCard", () => {
 
     const changeDomain = screen.getByRole("button", { name: "Change domain" });
     await user.click(changeDomain);
+    expect(screen.getByRole("button", { name: "Close modal" })).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole("button", { name: "Close modal" })).toHaveFocus();
 

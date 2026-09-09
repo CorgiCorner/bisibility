@@ -10,11 +10,12 @@ import {
 } from "@/components/alerts/NewRuleDrawerControls";
 import { NewRuleMarketFields, RulePreview } from "@/components/alerts/NewRuleMarketFields";
 import { newRuleFormDefaults } from "@/components/alerts/new-rule-form-defaults";
-import {
-  ProjectReadOnlyTooltip,
-  useProjectWriteMode,
-} from "@/components/shell/ProjectWriteModeProvider";
-import { Button, inputClassName, MenuSelect, Sheet } from "@/components/ui";
+import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
+import { inputClassName } from "@/components/ui/input-styles";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { Sheet } from "@/components/ui/Sheet";
 import type {
   AlertActionHandlers,
   AlertRuleView,
@@ -28,12 +29,10 @@ import {
 } from "@/lib/alerts/new-rule-data";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import {
-  BellRingingIcon as BellRinging,
-  ClockCountdownIcon as ClockCountdown,
-  WarningCircleIcon as WarningCircle,
-  XIcon as X,
-} from "@phosphor-icons/react";
+import { BellRingingIcon as BellRinging } from "@phosphor-icons/react/dist/csr/BellRinging";
+import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/csr/ClockCountdown";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";

@@ -1,16 +1,17 @@
 "use client";
 
-import { MarketCombobox, type MarketComboboxOption } from "@/components/markets/MarketCombobox";
-import { Button, Card, compactInputClassName, Kbd, pricingTriggerClassName } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { compactInputClassName } from "@/components/ui/input-styles";
+import { Kbd } from "@/components/ui/Kbd";
+import { pricingTriggerClassName } from "@/components/ui/PricingPopover";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
-import {
-  DOMAIN_OVERVIEW_UNAVAILABLE_TOOLTIP,
-  type DomainOverviewMarketOption,
-} from "@/lib/domain-overview/market-options";
 import type { DomainOverviewReport, DomainOverviewScope } from "@/lib/domain-overview/types";
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { GlobeIcon as Globe, InfoIcon as Info } from "@phosphor-icons/react";
+import type { ResearchScope } from "@/lib/research/scope";
+import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/csr/Globe";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -18,43 +19,25 @@ import { DomainOverviewPricingPopover } from "./DomainOverviewPricingPopover";
 import { domainOverviewControlHeight } from "./domain-overview-control-styles";
 import {
   type DomainOverviewEstimateView,
-  type DomainOverviewMarketSelection,
   detectedDomainScope,
 } from "./domain-overview-workspace-model";
-
-export function toMarketOption(
-  market: DomainOverviewMarketOption,
-): MarketComboboxOption<DomainOverviewMarketOption> {
-  return {
-    countryCode: market.countryCode,
-    disabled: !market.researchAvailable,
-    languageCode: market.languageCode,
-    languageLabel: market.languageLabel,
-    locationLabel: market.displayName,
-    payload: market,
-    secondary: !market.researchAvailable ? "unavailable" : undefined,
-    tooltip: !market.researchAvailable
-      ? DOMAIN_OVERVIEW_UNAVAILABLE_TOOLTIP
-      : (market.provenance ?? undefined),
-    value: market.canonicalKey,
-  };
-}
+import { ResearchScopePicker } from "./ResearchScopePicker";
 
 const formSchema = z.object({ target: z.string().trim().min(1).max(253) });
 type FormValues = z.infer<typeof formSchema>;
 
 type DomainOverviewAnalyzeCardProps = {
-  catalogMarkets: readonly DomainOverviewMarketOption[];
+  catalogScopes: readonly ResearchScope[];
   estimate: DomainOverviewEstimateView;
-  market: DomainOverviewMarketSelection;
-  onMarketChange: (market: DomainOverviewMarketOption) => void;
+  onResearchScopeChange: (scope: ResearchScope) => void;
   onScopeChange: (scope: DomainOverviewScope | undefined) => void;
   onSubmit: (target: string, fresh: boolean) => void;
   onTargetChange: (target: string) => void;
   scopeOverride?: DomainOverviewScope;
   submitting: boolean;
   target: string;
-  trackedMarkets: readonly DomainOverviewMarketOption[];
+  researchScope: ResearchScope;
+  trackedScopes: readonly ResearchScope[];
   report?: DomainOverviewReport | null;
 };
 
@@ -72,17 +55,17 @@ function submitLabel(estimate: DomainOverviewEstimateView, fresh: boolean, submi
 }
 
 export function DomainOverviewAnalyzeCard({
-  catalogMarkets,
+  catalogScopes,
   estimate,
-  market,
-  onMarketChange,
+  onResearchScopeChange,
   onScopeChange,
   onSubmit,
   onTargetChange,
   scopeOverride,
   submitting,
   target,
-  trackedMarkets,
+  researchScope,
+  trackedScopes,
   report,
 }: Readonly<DomainOverviewAnalyzeCardProps>) {
   const [pricingAnchor, setPricingAnchor] = useState<HTMLElement | null>(null);
@@ -97,7 +80,13 @@ export function DomainOverviewAnalyzeCard({
     report && normalizeDomain(target) === report.target && resolvedScope === report.scope,
   );
   const actionCost = matchesReport ? estimate.freshCostCents : estimate.costCents;
-  const valid = Boolean(detected && estimate.valid && actionCost != null);
+  const valid = Boolean(
+    detected &&
+      estimate.valid &&
+      actionCost != null &&
+      researchScope.researchAvailable &&
+      researchScope.providerLocationCode != null,
+  );
   const descriptionIds = ["domain-overview-scope-help"];
   if (report && !matchesReport) descriptionIds.push("domain-overview-report-target-note");
 
@@ -137,21 +126,16 @@ export function DomainOverviewAnalyzeCard({
             ) : null}
           </div>
           <div className="md:w-[230px]">
-            <MarketCombobox
-              ariaLabel={`Market: ${market.displayName} / ${market.languageLabel}`}
-              catalogMarkets={catalogMarkets.map(toMarketOption)}
-              catalogSearchOnly
+            <ResearchScopePicker
+              ariaLabel={`Country and language: ${researchScope.countryName} / ${researchScope.languageLabel}`}
+              catalogScopes={catalogScopes}
               disabled={submitting}
-              emptyMessage="Type to search the catalog."
-              menuWidth={340}
-              noResultsMessage="No market matches this search."
-              onChange={onMarketChange}
-              selectedCountryCode={market.countryCode}
-              trackedMarkets={trackedMarkets.map(toMarketOption)}
+              onChange={onResearchScopeChange}
+              researchScope={researchScope}
+              trackedScopes={trackedScopes}
               triggerClassName={`${domainOverviewControlHeight()} w-full bg-bg-elev px-3 text-[13px] disabled:opacity-55`}
-              triggerTitle="Change market - location and language"
+              triggerTitle="Change country and language"
               triggerWrapperClassName="w-full"
-              value={market.canonicalKey}
             />
           </div>
         </div>
@@ -172,7 +156,7 @@ export function DomainOverviewAnalyzeCard({
             loadingLabel={submitLabel(estimate, matchesReport, true)}
             size="sm"
             startIcon={<Globe aria-hidden size={14} weight="regular" />}
-            sx={{ height: 37, minHeight: 37, minWidth: 200 }}
+            style={{ height: 37, minHeight: 37, minWidth: 200 }}
             title={!valid ? "Enter a valid domain and wait for its price" : undefined}
             type="submit"
           >

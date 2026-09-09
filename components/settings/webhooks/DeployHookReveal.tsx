@@ -1,7 +1,7 @@
 "use client";
 
-import { CopyButton } from "@/components/ui";
-import { KeyIcon as Key } from "@phosphor-icons/react";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
 import type { IssuedDeployHook } from "./deploy-hook-model";
 
 type DeployHookRevealContentProps = {

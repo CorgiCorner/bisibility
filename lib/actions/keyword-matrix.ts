@@ -17,6 +17,7 @@ import {
   publicKeywordView,
   revalidateKeywords,
 } from "./keyword-helpers";
+import { linkCheckSchedule, resolveCheckSchedule } from "./keyword-schedule-assignment";
 
 type CreatedKeyword = { id: string; publicId: string };
 type MatrixLocationInput = AddKeywordsMatrixInput["locations"][number];
@@ -78,6 +79,7 @@ export async function addKeywordsMatrix(input: unknown) {
   );
 
   const result = await prisma.$transaction(async (tx) => {
+    const assigned = await resolveCheckSchedule(tx, project.id, data.checkScheduleId);
     const rows = locations.flatMap(({ resolved }) =>
       devices.flatMap((device) =>
         keywords.map((keyword) => ({
@@ -102,6 +104,7 @@ export async function addKeywordsMatrix(input: unknown) {
       return key ? promotedSavedKeywordPairs([keyword], key) : [];
     });
     const created: CreatedKeyword[] = persisted.created;
+    if (assigned) await linkCheckSchedule(tx, project.id, assigned, created);
     const skippedDuplicates = rows.length - created.length;
     const [keywordCountRow] = await tx.$queryRaw<Array<{ count: number }>>`
       SELECT COUNT(DISTINCT lower(btrim("text")))::int AS "count"
@@ -114,6 +117,7 @@ export async function addKeywordsMatrix(input: unknown) {
         action: "keyword.matrix_add",
         actorId: actor.id,
         after: {
+          checkScheduleId: assigned?.publicId ?? null,
           keywordIds: created.map((keyword) => keyword.publicId),
           intent: data.intent ?? null,
           skippedDuplicates,

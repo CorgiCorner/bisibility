@@ -1,20 +1,15 @@
 "use client";
 
-import {
-  AppDrawer,
-  Button,
-  InlineCallout,
-  InlineCode,
-  MenuSelect,
-  StatusPill,
-} from "@/components/ui";
+import { AppDrawer } from "@/components/ui/AppDrawer";
+import { Button } from "@/components/ui/Button";
+import { InlineCallout, InlineCode } from "@/components/ui/InlineCallout";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { StatusPill } from "@/components/ui/StatusPill";
 import type { GoogleOAuthSetup, GooglePropertySaveResult } from "@/lib/integrations/types";
 import { gscInstallUrl } from "@/lib/providers/analytics/gsc-install-url";
 import { docsLinkProps } from "@/lib/site/site";
-import {
-  ArrowUpRightIcon as ArrowUpRight,
-  WarningCircleIcon as WarningCircle,
-} from "@phosphor-icons/react";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -138,7 +133,10 @@ export function StepConnectGscCard({
   }
 
   return (
-    <section className="flex h-full w-full flex-col rounded-card border border-border-strong bg-transparent p-4">
+    <section
+      data-analytics-block
+      className="flex h-full w-full flex-col rounded-card border border-border-strong bg-transparent p-4"
+    >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex flex-col items-start gap-2">
@@ -211,7 +209,7 @@ export function StepConnectGscCard({
           title="Select a Search Console property"
         >
           {setup.properties.length > 0 ? (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3" data-analytics-block>
               <MenuSelect
                 ariaLabel="Search Console property"
                 onChange={setProperty}

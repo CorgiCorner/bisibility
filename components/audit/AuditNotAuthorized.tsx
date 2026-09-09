@@ -1,5 +1,5 @@
-import { EmptyState } from "@/components/ui";
-import { ShieldWarningIcon as ShieldWarning } from "@phosphor-icons/react/dist/ssr";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ShieldWarningIcon as ShieldWarning } from "@phosphor-icons/react/dist/ssr/ShieldWarning";
 
 export function AuditNotAuthorized() {
   return (

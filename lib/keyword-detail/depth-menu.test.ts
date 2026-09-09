@@ -5,7 +5,7 @@ import {
 import type { ResolveProviderRateInput } from "@/lib/provider-rates/resolver";
 import type { KeywordRow } from "@/lib/queries/keyword-row-types";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
-import { serpDepthValues } from "@/lib/serp/markets";
+import { serpDepthValues } from "@/lib/serp/constants";
 import { describe, expect, it } from "vitest";
 
 const measuredRateContext = {

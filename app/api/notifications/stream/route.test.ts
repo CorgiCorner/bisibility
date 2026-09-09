@@ -6,6 +6,8 @@ import { GET } from "./route";
 const mocks = vi.hoisted(() => ({
   getNotificationFeedForScope: vi.fn(),
   getQueryActor: vi.fn(),
+  getQuerySession: vi.fn(),
+  canReadStream: vi.fn(),
   notificationRealtimeRedisConfigured: vi.fn(),
   readOperationSnapshot: vi.fn(),
   resolveProjectAccess: vi.fn(),
@@ -13,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   subscribeToOperationEvents: vi.fn(),
 }));
 
+vi.mock("@/lib/realtime/stream-access", () => ({ canReadStream: mocks.canReadStream }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/dates/request", () => ({
   getResolvedDateFormat: vi.fn().mockResolvedValue({ preference: "auto", resolved: "month_first" }),
@@ -28,6 +31,7 @@ vi.mock("@/lib/notifications/realtime", () => ({
 }));
 vi.mock("@/lib/queries/_auth", () => ({
   getQueryActor: mocks.getQueryActor,
+  getQuerySession: mocks.getQuerySession,
   resolveProjectAccess: mocks.resolveProjectAccess,
 }));
 vi.mock("@/lib/rank-check/runs/snapshot", () => ({
@@ -48,6 +52,8 @@ describe("notification stream route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    mocks.getQuerySession.mockResolvedValue({ session: { id: "session" }, user: { id: "user_1" } });
+    mocks.canReadStream.mockResolvedValue(true);
     mocks.getQueryActor.mockResolvedValue({ id: "user_1" });
     mocks.resolveProjectAccess.mockResolvedValue({
       mode: "member",

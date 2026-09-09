@@ -5,9 +5,26 @@ import type { Plugin } from "vite";
 
 const runtimeStubs = fileURLToPath(new URL("./browser-runtime-stubs.tsx", import.meta.url));
 const temporalRuntimeStubs = fileURLToPath(new URL("./temporal-runtime-stubs.ts", import.meta.url));
+const keywordActionStub = fileURLToPath(new URL("./keyword-action-stubs.ts", import.meta.url));
+const keywordSuggestionStub = fileURLToPath(
+  new URL("./keyword-suggestion-action-stubs.ts", import.meta.url),
+);
+const rankRunActionStub = fileURLToPath(new URL("./rank-run-action-stubs.ts", import.meta.url));
 const prismaRuntimeStub = fileURLToPath(new URL("./prisma-runtime-stub.ts", import.meta.url));
 const imageStub = fileURLToPath(new URL("./next-image-stub.tsx", import.meta.url));
 const fontStub = fileURLToPath(new URL("./next-font-stub.ts", import.meta.url));
+export const rankRunActionBoundaries = {
+  "@/lib/actions/rank-check-run-launch": rankRunActionStub,
+} as const;
+export const keywordActionBoundaries = {
+  "@/lib/actions/keyword-suggest": keywordSuggestionStub,
+  "@/lib/actions/keyword-suggestion-sources": keywordSuggestionStub,
+  "@/lib/actions/ranked-keywords": keywordSuggestionStub,
+  "@/lib/actions/keyword-export-action": keywordActionStub,
+  "@/lib/actions/keyword-import-refresh": keywordActionStub,
+  "@/lib/actions/project-markets": keywordActionStub,
+} as const;
+const rankRunActionPrefix = "@/lib/actions/rank-check-run-";
 const serverActionAliases = [
   "@/app/app/account/actions",
   "@/app/app/account/preferences/actions",
@@ -18,6 +35,7 @@ const serverActionAliases = [
   "@/lib/actions/account",
   "@/lib/actions/alert-feed",
   "@/lib/actions/alerts",
+  "@/lib/actions/analytics-consent",
   "@/lib/actions/apiKey",
   "@/lib/actions/cloud",
   "@/lib/actions/competitors",
@@ -27,6 +45,7 @@ const serverActionAliases = [
   "@/lib/actions/notification-prefs",
   "@/lib/actions/notifications",
   "@/lib/actions/project",
+  "@/lib/actions/project-market-create",
   "@/lib/actions/providers",
   "@/lib/actions/rankCheck",
   "@/lib/actions/saved-views",
@@ -44,7 +63,7 @@ const serverActionAliases = [
   "@/lib/actions/workspace",
 ];
 const serverActionPattern =
-  /^@\/(?:app\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|alert-feed|alerts|apiKey|cloud|competitors|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|providers|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
+  /^@\/(?:app\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
 const runtimeStubPatterns = [
   /^@\/components\/shell\/keyword-search$/,
   /^@\/lib\/api\/ratelimit$/,
@@ -64,7 +83,12 @@ const prismaRuntimeStubPatterns = [
 const nodeRuntimeStubPattern = /^node:(async_hooks|crypto|dns\/promises|net|tls)$/;
 
 const runtimeAliases = {
+  "@/components/cost-estimate/useCostEstimate": fileURLToPath(
+    new URL("../tests/cost-estimate.ts", import.meta.url),
+  ),
   ...Object.fromEntries(serverActionAliases.map((name) => [name, runtimeStubs])),
+  ...keywordActionBoundaries,
+  ...rankRunActionBoundaries,
   "@/components/shell/keyword-search": runtimeStubs,
   "@/lib/auth/auth": runtimeStubs,
   "@/lib/auth/client": runtimeStubs,
@@ -122,11 +146,32 @@ function matchesAny(patterns: RegExp[], candidates: string[]): boolean {
   return patterns.some((pattern) => candidates.some((candidate) => pattern.test(candidate)));
 }
 
+export function resolveRankRunActionBoundary(source: string): string | null {
+  if (!source.startsWith(rankRunActionPrefix)) return null;
+  if (source in rankRunActionBoundaries) {
+    return rankRunActionBoundaries[source as keyof typeof rankRunActionBoundaries];
+  }
+  throw new Error(`Missing Storybook rank-run action boundary mapping for "${source}".`);
+}
+
+function resolveKeywordActionBoundary(source: string): string | null {
+  if (source in keywordActionBoundaries) {
+    return keywordActionBoundaries[source as keyof typeof keywordActionBoundaries];
+  }
+  return null;
+}
+
 const runtimeStubPlugin = {
   name: "storybook-runtime-stubs",
   enforce: "pre",
   resolveId(source, importer) {
     const candidates = candidateModuleIds(source, importer);
+    const cleanSource = source.split("?", 1)[0] ?? source;
+    const keywordActionBoundary = resolveKeywordActionBoundary(cleanSource);
+    const rankRunBoundary = resolveRankRunActionBoundary(cleanSource);
+
+    if (keywordActionBoundary) return keywordActionBoundary;
+    if (rankRunBoundary) return rankRunBoundary;
 
     if (
       serverActionPattern.test(source) ||

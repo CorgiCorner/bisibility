@@ -15,12 +15,14 @@ import {
 } from "@/components/keywords/location-field-value";
 import { TargetUrlField } from "@/components/keywords/TargetUrlField";
 import { MarketCombobox } from "@/components/markets/MarketCombobox";
-import { Button, FieldLabel, MenuSelect } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { MenuSelect } from "@/components/ui/MenuSelect";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { type UpdateKeywordInput, updateKeywordSchema } from "@/lib/schemas/keyword";
-import { normalizeSerpMarketName, serpDeviceOptions } from "@/lib/serp/markets";
+import { serpDeviceOptions } from "@/lib/serp/constants";
 import { FIELD_HELP } from "@/lib/settings/field-help";
 import { cn } from "@/lib/ui/cn";
 import { useRouter } from "next/navigation";
@@ -37,6 +39,7 @@ type KeywordInlineEditProps = Pick<KeywordDetailActions, "updateKeywordAction"> 
   hideSubmit?: boolean;
   keyword: KeywordRow;
   layout?: "drawer" | "inline";
+  lockIdentity?: boolean;
   onSaved: () => void;
   onSavingChange?: (saving: boolean) => void;
   projectId?: string;
@@ -69,6 +72,7 @@ export function KeywordInlineEdit({
   hideSubmit = false,
   keyword,
   layout = "inline",
+  lockIdentity = false,
   onSaved,
   onSavingChange,
   projectId,
@@ -116,8 +120,12 @@ export function KeywordInlineEdit({
   async function save(values: InlineEditInput) {
     setActionError(null);
     setActionWarning(null);
-    const { city: cityValue, location, locationKey, targetUrl, ...rest } = values;
+    const { city: _cityValue, location: _location, locationKey, targetUrl, ...rest } = values;
     const payload: UpdateKeywordInput = { ...rest, tags: values.tags ?? [] };
+    if (lockIdentity) {
+      delete payload.keyword;
+      delete payload.device;
+    }
     const nextTargetUrl = targetUrl ?? null;
     if (nextTargetUrl !== (keyword.targetUrl ?? null)) {
       payload.targetUrl = nextTargetUrl;
@@ -126,18 +134,12 @@ export function KeywordInlineEdit({
       Boolean(dirtyFields.locationKey) ||
       Boolean(dirtyFields.location) ||
       Boolean(dirtyFields.city);
-    if (locationChanged) {
-      if (locationKey) {
-        payload.locationKey = locationKey;
-      } else {
-        const nextCountry = normalizeSerpMarketName(location);
-        if (!nextCountry) {
-          setActionError("Choose a supported SERP country.");
-          return;
-        }
-        payload.location = nextCountry;
-        payload.city = cityValue?.trim() ? cityValue.trim() : null;
+    if (locationChanged && !lockIdentity) {
+      if (!locationKey) {
+        setActionError("Choose a supported location.");
+        return;
       }
+      payload.locationKey = locationKey;
     }
 
     onSavingChange?.(true);
@@ -161,7 +163,7 @@ export function KeywordInlineEdit({
     setLocationValue(next);
     setValue("location", countryForLocationFieldValue(next), dirty);
     setValue("city", next.kind === "city" ? (next.cityName ?? null) : null, dirty);
-    setValue("locationKey", next.kind === "city" ? next.canonicalKey : undefined, dirty);
+    setValue("locationKey", next.canonicalKey, dirty);
   }
 
   function handleDrawerMarketChange(canonicalKey: string) {
@@ -192,6 +194,7 @@ export function KeywordInlineEdit({
         error={errors.keyword?.message}
         help={FIELD_HELP.keyword}
         label="Keyword"
+        readOnly={lockIdentity}
         {...register("keyword")}
       />
       <TargetUrlField
@@ -199,49 +202,62 @@ export function KeywordInlineEdit({
         error={errors.targetUrl?.message}
         {...register("targetUrl")}
       />
-      <div className="flex flex-col gap-1.5 font-sans tabular-nums text-[11px] uppercase tracking-[0.5px] text-fg-muted">
-        <FieldLabel help={FIELD_HELP.device} label="Device" />
-        <input type="hidden" {...register("device")} />
-        <MenuSelect
-          ariaLabel="Device"
-          onChange={handleDeviceChange}
-          options={deviceOptions}
-          triggerClassName="min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal"
-          value={selectedDevice}
-        />
-      </div>
-      <div
-        className={cn(
-          "flex flex-col gap-1.5 font-sans tabular-nums text-[11px] uppercase tracking-[0.5px] text-fg-muted",
-          layout === "inline" && "md:col-span-3",
-        )}
-      >
-        {layout === "drawer" ? (
-          <>
-            <span>Market</span>
-            <MarketCombobox
-              ariaLabel="Market"
-              catalogMarkets={[]}
-              onChange={handleDrawerMarketChange}
-              trackedMarkets={drawerMarketList}
-              triggerClassName="min-h-10 w-full rounded-control px-3 text-[13px] normal-case tracking-normal"
-              value={selectedLocationKey}
+      {lockIdentity ? (
+        <p className="m-0 text-[12px] text-fg-muted">
+          {keyword.location.displayName} / {keyword.location.languageLabel ?? keyword.location.hl} ·{" "}
+          {keyword.device}
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-col gap-1.5 font-sans tabular-nums text-[11px] uppercase tracking-[0.5px] text-fg-muted">
+            <FieldLabel help={FIELD_HELP.device} label="Device" />
+            <input type="hidden" {...register("device")} />
+            <MenuSelect
+              ariaLabel="Device"
+              onChange={handleDeviceChange}
+              options={deviceOptions}
+              triggerClassName="min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal"
+              value={selectedDevice}
             />
-            {drawerMarketError ? (
-              <span className="normal-case tracking-normal text-red-text">{drawerMarketError}</span>
-            ) : null}
-          </>
-        ) : (
-          <LocationField
-            error={errors.locationKey?.message ?? errors.location?.message ?? errors.city?.message}
-            idPrefix={`inline-${keyword.id}`}
-            help={FIELD_HELP.location}
-            onChange={handleLocationChange}
-            projectId={projectId ?? null}
-            value={locationValue}
-          />
-        )}
-      </div>
+          </div>
+          <div
+            className={cn(
+              "flex flex-col gap-1.5 font-sans tabular-nums text-[11px] uppercase tracking-[0.5px] text-fg-muted",
+              layout === "inline" && "md:col-span-3",
+            )}
+          >
+            {layout === "drawer" ? (
+              <>
+                <span>Market</span>
+                <MarketCombobox
+                  ariaLabel="Market"
+                  catalogMarkets={[]}
+                  onChange={handleDrawerMarketChange}
+                  trackedMarkets={drawerMarketList}
+                  triggerClassName="min-h-10 w-full rounded-control px-3 text-[13px] normal-case tracking-normal"
+                  value={selectedLocationKey}
+                />
+                {drawerMarketError ? (
+                  <span className="normal-case tracking-normal text-red-text">
+                    {drawerMarketError}
+                  </span>
+                ) : null}
+              </>
+            ) : (
+              <LocationField
+                error={
+                  errors.locationKey?.message ?? errors.location?.message ?? errors.city?.message
+                }
+                idPrefix={`inline-${keyword.id}`}
+                help={FIELD_HELP.location}
+                onChange={handleLocationChange}
+                projectId={projectId ?? null}
+                value={locationValue}
+              />
+            )}
+          </div>
+        </>
+      )}
       <KeywordInlineEditTextField
         error={errors.topic?.message}
         help={FIELD_HELP.topic}
@@ -269,7 +285,12 @@ export function KeywordInlineEdit({
           className={cn("flex flex-col justify-end gap-2", layout === "inline" && "md:col-span-3")}
         >
           {!hideSubmit ? (
-            <Button disabled={isSubmitting} sx={{ minHeight: 40 }} type="submit" variant="primary">
+            <Button
+              disabled={isSubmitting}
+              style={{ minHeight: 40 }}
+              type="submit"
+              variant="primary"
+            >
               {isSubmitting ? "Saving..." : "Save"}
             </Button>
           ) : null}

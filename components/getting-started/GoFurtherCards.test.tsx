@@ -1,11 +1,17 @@
 import { settingsSectionHref } from "@/components/settings/shell/settings-sections";
+import { track } from "@/lib/analytics/client";
 import { appPath } from "@/lib/routing/app-path";
 import { GITHUB_URL } from "@/lib/site/site";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GoFurtherCards } from "./GoFurtherCards";
 
 const projectRef = "prj_abcdefghijklmnopqrstuvwx";
+
+vi.mock("@/lib/analytics/client", () => ({ track: vi.fn() }));
+
+beforeEach(() => vi.mocked(track).mockClear());
 
 describe("GoFurtherCards", () => {
   it("renders the approved copy and real destinations", () => {
@@ -72,5 +78,17 @@ describe("GoFurtherCards", () => {
   it("keeps user-visible copy free of U+2014", () => {
     const { container } = render(<GoFurtherCards projectRef={projectRef} />);
     expect(container.textContent).not.toContain("\u2014");
+  });
+
+  it("tracks a go-further card with stable ids", async () => {
+    render(<GoFurtherCards projectRef={projectRef} />);
+
+    await userEvent.click(screen.getByRole("link", { name: /Connect an AI assistant/ }));
+
+    expect(track).toHaveBeenCalledWith("getting_started_cta_clicked", {
+      card: "ai",
+      cta: "go_further",
+      step: "first_check",
+    });
   });
 });

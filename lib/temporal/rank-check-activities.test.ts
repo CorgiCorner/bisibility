@@ -32,12 +32,13 @@ const mocks = vi.hoisted(() => ({
   persistProviderResult: vi.fn(),
   persistFailedRankCheck: vi.fn(),
   publishOperationChanged: vi.fn(() => Promise.resolve()),
+  resolveExpectedUrlForKeyword: vi.fn(),
   prisma: {
     $executeRaw: vi.fn(),
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
-    keyword: { findUnique: vi.fn() },
+    keyword: { findMany: vi.fn(), findUnique: vi.fn() },
     projectMarket: { findMany: vi.fn() },
     providerConnection: { findFirst: vi.fn() },
     rankCheck: {
@@ -56,6 +57,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("../expected-url/keyword", () => ({
+  resolveExpectedUrlForKeyword: mocks.resolveExpectedUrlForKeyword,
+}));
 vi.mock("../notifications/realtime", () => ({
   publishOperationChanged: mocks.publishOperationChanged,
 }));
@@ -110,6 +114,8 @@ describe("rank-check activities", () => {
       publicId: "kw_a00000000000000000000000",
       schedule: null,
     });
+    mocks.prisma.keyword.findMany.mockResolvedValue([]);
+    mocks.resolveExpectedUrlForKeyword.mockResolvedValue({ source: null, url: null });
     mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: "location_1" }]);
     mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
     mocks.prisma.rankCheck.findUnique.mockResolvedValue(null);
@@ -238,6 +244,33 @@ describe("rank-check activities", () => {
     [{ project: { defaults: { serpDepth: 100 } }, schedule: { serpDepth: 10 } }, undefined, 1],
     [{ project: { defaults: { serpDepth: 100 } }, schedule: null }, undefined, 10],
     [{ project: { defaults: { serpDepth: 100 } }, schedule: { serpDepth: 10 } }, 20, 2],
+    [
+      {
+        project: { defaults: { serpDepth: 20 } },
+        checkSchedule: { serpDepth: null },
+        schedule: { serpDepth: 10 },
+      },
+      undefined,
+      2,
+    ],
+    [
+      {
+        project: { defaults: { serpDepth: 20 } },
+        checkSchedule: { serpDepth: 50 },
+        schedule: { serpDepth: 10 },
+      },
+      undefined,
+      5,
+    ],
+    [
+      {
+        project: { defaults: { serpDepth: 20 } },
+        checkSchedule: { serpDepth: 50 },
+        schedule: { serpDepth: 10 },
+      },
+      100,
+      10,
+    ],
   ] as const)("reserves the depth-aware SerpApi estimate", async (keyword, depth, expected) => {
     mocks.prisma.rankCheck.create.mockResolvedValue({
       id: "rank_running_1",
@@ -274,6 +307,7 @@ describe("rank-check activities", () => {
             providerAllocationsInitializedAt: true,
           },
         },
+        checkSchedule: { select: { serpDepth: true } },
         schedule: { select: { serpDepth: true } },
       },
       where: { id: "keyword_1" },
@@ -676,6 +710,7 @@ describe("rank-check activities", () => {
       errorCode: "provider_billing",
       attempts: [{ message: "Payment Required", provider: "primary" }],
       existingRankCheckId: "rank_running_1",
+      expectedUrlAtCheck: null,
       keywordId: "keyword_1",
       keywordPublicId: "kw_a00000000000000000000000",
       keywordText: "rank tracker",

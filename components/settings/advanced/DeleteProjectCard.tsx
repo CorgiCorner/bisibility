@@ -6,7 +6,7 @@ import {
   type DeleteProjectAction,
   DeleteProjectConfirmation,
 } from "@/components/settings/advanced/DeleteProjectConfirmation";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 
 export type { DeleteProjectAction } from "@/components/settings/advanced/DeleteProjectConfirmation";

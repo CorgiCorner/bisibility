@@ -1,4 +1,6 @@
 "use client";
+
+import { ReplaySurface } from "@/components/analytics/ReplaySurface";
 import {
   type KeywordExportTarget,
   keywordExportTarget,
@@ -13,11 +15,10 @@ import {
   RANK_TRACKER_FILTER_FIELDS,
   resetRankTrackerPage,
 } from "@/lib/keywords/rank-tracker-navigation";
-import { emptySavedViewConfig } from "@/lib/keywords/saved-view-model";
 import { marketRunPartition, resolveMarketScope } from "@/lib/markets/market-scope";
 import type { RunSelectionSpec } from "@/lib/rank-check/runs/selection";
 import { appPath, marketPath } from "@/lib/routing/app-path";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { useState } from "react";
 import { KeywordDataTable } from "./KeywordDataTable";
 import { KeywordsGridDialogBundle } from "./KeywordsGridDialogBundle";
@@ -28,11 +29,12 @@ import { KeywordsGridNoticeBlock } from "./KeywordsGridNoticeBlock";
 import { KeywordsGridScopeView } from "./KeywordsGridScopeView";
 import { KeywordsGridServerFilters } from "./KeywordsGridServerFilters";
 import { emptyCheckStates } from "./keyword-empty-check-states";
-import { flatKeywordNoRowsState } from "./keyword-scope-summary";
+import { keywordNoRowsState } from "./keyword-scope-summary";
 import { initialAddKeywordDraft } from "./keywords-grid-initial-state";
 import type { KeywordsGridProps } from "./keywords-grid-types";
-import { useFlatRankTrackerNavigation } from "./use-flat-rank-tracker-navigation";
+import { useRankTrackerNavigation } from "./use-flat-rank-tracker-navigation";
 import { useKeywordsGridViewState } from "./use-keywords-grid-view-state";
+
 export function KeywordsGrid(props: KeywordsGridProps) {
   const {
     activeViewId = null,
@@ -48,26 +50,17 @@ export function KeywordsGrid(props: KeywordsGridProps) {
     deletableSavedViewIds,
     deleteSavedViewAction,
     facets,
-    getFirstCheckRunPlanAction,
     initialAddOpen = false,
-    initialViewConfig,
-    lens,
-    listMode = "grouped-client",
     locations,
+    matchedGroupCount,
     matchedTargetCount,
-    page,
-    pageSize,
     projectId,
     query,
-    queueFirstChecksAction,
-    runCheckNowAction,
     rows,
     savedViews = [],
     totalCount,
-    totalKeywordCount,
     updateKeywordAction,
   } = props;
-  const flatServer = listMode === "flat-server" && query !== undefined;
   const { openKeywordImport } = useKeywordImport();
   // The URL, never a cookie, decides which market this page stands in; an unnameable market
   // resolves to null so no surface labels a spend with a guess.
@@ -76,28 +69,14 @@ export function KeywordsGrid(props: KeywordsGridProps) {
   const [addDraft, setAddDraft] = useState(() =>
     initialAddKeywordDraft(canCreateKeyword, initialAddOpen),
   );
+  const [draftFilters, setDraftFilters] = useState(query.filters);
   const [exportTarget, setExportTarget] = useState<KeywordExportTarget | null>(null);
-  const initialConfig = initialViewConfig ?? emptySavedViewConfig;
-  const [filters, setFilters] = useState(flatServer ? query.filters : initialConfig.filters);
-  const [draftFilters, setDraftFilters] = useState(
-    flatServer ? query.filters : initialConfig.filters,
-  );
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState(flatServer ? query.search : initialConfig.search);
+  const [searchValue, setSearchValue] = useState(query.search);
   const preflight = useRunPreflight({ projectId, providerId: costContext?.providerId });
-  const {
-    activeLens,
-    capturedFilters,
-    currentViewConfig,
-    filterChips,
-    filteredRows,
-    lensRows,
-    locationOptions,
-  } = useKeywordsGridViewState({
-    activeLens: lens,
-    filters,
-    flatServer,
-    initialViewConfig,
+  const { capturedFilters, currentViewConfig, filterChips, targetRows } = useKeywordsGridViewState({
+    activeLens: query.lens,
+    filters: query.filters,
     locations,
     rows,
     searchValue,
@@ -105,26 +84,16 @@ export function KeywordsGrid(props: KeywordsGridProps) {
   const keywordsPath = marketContext.market
     ? marketPath(projectId, marketContext.market.ref, "rank-tracker")
     : appPath(projectId, "rank-tracker");
+  const { markSearchCommitted, navigateQuery, onSearchChange, onSearchCommit, resetScope } =
+    useRankTrackerNavigation({ keywordsPath, query, searchValue, setSearchValue });
   const openAddDrawer = (keyword = "", tab: AddKeywordDraft["tab"] = "manual") =>
     setAddDraft({ keyword, open: true, tab });
-  const { markSearchCommitted, navigateQuery, onSearchChange, onSearchCommit, resetScope } =
-    useFlatRankTrackerNavigation({
-      activeViewId,
-      flatServer,
-      keywordsPath,
-      query,
-      searchValue,
-      setSearchValue,
-    });
-  const clearFilters = () => {
-    if (flatServer && query)
-      return navigateQuery(
-        resetRankTrackerPage({ ...query, filters: emptyKeywordFilters, search: "" }),
-        ["search", ...RANK_TRACKER_FILTER_FIELDS, "page"],
-      );
-    setFilters(emptyKeywordFilters);
-    setSearchValue("");
-  };
+  const clearFilters = () =>
+    navigateQuery(resetRankTrackerPage({ ...query, filters: emptyKeywordFilters, search: "" }), [
+      "search",
+      ...RANK_TRACKER_FILTER_FIELDS,
+      "page",
+    ]);
   const scopeView = KeywordsGridScopeView({
     activeFiltersSummary: capturedFilters,
     activeViewId,
@@ -133,25 +102,25 @@ export function KeywordsGrid(props: KeywordsGridProps) {
     deletableSavedViewIds,
     deleteSavedViewAction,
     keywordsPath,
-    lens: activeLens,
-    locationOptions,
+    lens: query.lens,
+    locationOptions: locations,
     projectId,
     onQueryNavigation: markSearchCommitted,
-    query: flatServer && query ? { ...query, search: searchValue } : undefined,
+    query: { ...query, search: searchValue },
     savedViews,
   });
   const buildExportTarget = (selectedIds: string[] = []) =>
     keywordExportTarget({
       filterChips,
-      filteredRows,
-      flatServerQuery: flatServer ? query : undefined,
+      filteredRows: targetRows,
+      flatServerQuery: query,
       matchedTargetCount,
-      rows,
+      rows: targetRows,
       searchValue,
       selectedIds,
     });
   const requestRunChecks = (keywordIds: string[], depth?: SerpDepth) => {
-    const selectedRows = rows.filter((row) => keywordIds.includes(row.id));
+    const selectedRows = targetRows.filter((row) => keywordIds.includes(row.id));
     if (selectedRows.length === 0) return;
     const first = selectedRows[0];
     const resolvedDepth = manualPreflightDepth(selectedRows, depth, costContext?.depth);
@@ -165,9 +134,7 @@ export function KeywordsGrid(props: KeywordsGridProps) {
           };
     void preflight.request({ depth: resolvedDepth, rows: selectedRows, spec });
   };
-  // The palette command runs the FILTERED page rows; inside a market that means the filtered
-  // rows OF THAT MARKET, which is also what its label now claims.
-  const filteredRunIds = marketRunPartition(filteredRows, marketScope).inMarketIds;
+  const scopedRunIds = marketRunPartition(targetRows, marketScope).inMarketIds;
   const dialogs = (
     <KeywordsGridDialogBundle
       {...props}
@@ -175,56 +142,71 @@ export function KeywordsGrid(props: KeywordsGridProps) {
       exportTarget={exportTarget}
       marketScope={marketScope}
       onExport={() => setExportTarget(buildExportTarget())}
-      onFilter={() => setFiltersOpen(true)}
-      onImport={() => openKeywordImport(projectId)}
-      onRunChecks={() => requestRunChecks(filteredRunIds)}
+      onFilter={() => {
+        setDraftFilters(query.filters);
+        setFiltersOpen(true);
+      }}
+      onImport={() =>
+        openKeywordImport(projectId, {
+          markets: props.projectMarkets?.markets ?? [],
+          initialMarketKey: marketScope?.canonicalKey,
+        })
+      }
+      onRunChecks={() => requestRunChecks(scopedRunIds)}
       openAddDrawer={openAddDrawer}
-      pendingRows={filteredRows.length}
+      pendingRows={targetRows.length}
       preflightDialog={preflight.dialog}
-      requestRows={rows}
-      scopedRows={filteredRunIds.length}
+      requestRows={targetRows}
+      scopedRows={scopedRunIds.length}
       setAddDraft={setAddDraft}
       setExportTarget={setExportTarget}
     />
   );
-  if ((totalCount ?? rows.length) === 0) {
+  const marketKeywordCount = marketScope
+    ? locations.find((location) => location.id === marketScope.canonicalKey)?.count
+    : undefined;
+  if ((marketKeywordCount ?? totalCount) === 0) {
     return (
       <KeywordsGridEmpty
         {...props}
         dialogs={dialogs}
         marketScope={marketScope}
-        onImportCsv={() => openKeywordImport(projectId)}
+        onImportCsv={() =>
+          openKeywordImport(projectId, {
+            markets: props.projectMarkets?.markets ?? [],
+            initialMarketKey: marketScope?.canonicalKey,
+          })
+        }
         openAddDrawer={openAddDrawer}
       />
     );
   }
-  const emptyRankCheckStates = emptyCheckStates(rows);
-  const noRowsState = flatKeywordNoRowsState({
-    activeLens,
-    filterChips,
-    flatServer,
-    hasNoRankData: emptyRankCheckStates.length > 0,
-    locationOptions,
-    onResetScope: resetScope,
-    page,
-    rowsEmpty: filteredRows.length === 0,
-    searchValue,
-  });
+  const emptyRankCheckStates = emptyCheckStates(targetRows);
+  const noRowsState =
+    props.page > 1 && rows.length === 0
+      ? {
+          description: "This page is beyond the available filtered results.",
+          title: "Page no longer available",
+        }
+      : rows.length === 0
+        ? keywordNoRowsState({
+            filterChips,
+            hasNoRankData: emptyRankCheckStates.length > 0,
+            hasSearch: Boolean(searchValue.trim()),
+            lens: query.lens,
+            onResetScope: resetScope,
+            options: locations,
+          })
+        : undefined;
   return (
-    <section className="grid w-full min-w-0 gap-4">
+    <ReplaySurface kind="rank-tracker" className="grid w-full min-w-0 gap-4">
       {dialogs}
       <KeywordsGridNoticeBlock
         {...props}
-        checkHealth={checkHealth}
         emptyRankCheckStates={emptyRankCheckStates}
-        flatServer={flatServer}
         marketScope={marketScope}
-        getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
-        projectId={projectId}
-        queueFirstChecksAction={queueFirstChecksAction}
-        rows={rows}
-        runCheckNowAction={runCheckNowAction}
-        totalKeywordCount={totalKeywordCount}
+        rows={targetRows}
+        runCheckNowAction={props.canUpdateKeyword ? props.runCheckNowAction : undefined}
       />
       <KeywordDataTable
         {...props}
@@ -237,44 +219,49 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         checkHealth={checkHealth}
         filterChips={filterChips}
         filterCount={filterChips.length}
+        matchedGroupCount={matchedGroupCount}
         noRowsState={noRowsState}
         savedViewControl={scopeView.savedView}
         onAddKeyword={canCreateKeyword ? () => openAddDrawer() : undefined}
         onClearFilters={clearFilters}
         onDismissFailure={() => undefined}
-        onImportCsv={canCreateKeyword ? () => openKeywordImport(projectId) : undefined}
+        onImportCsv={
+          canCreateKeyword
+            ? () =>
+                openKeywordImport(projectId, {
+                  markets: props.projectMarkets?.markets ?? [],
+                  initialMarketKey: marketScope?.canonicalKey,
+                })
+            : undefined
+        }
         onOpenExport={(selectedIds) => setExportTarget(buildExportTarget(selectedIds))}
-        onOpenFilters={() => setFiltersOpen(true)}
+        onOpenFilters={() => {
+          setDraftFilters(query.filters);
+          setFiltersOpen(true);
+        }}
         onQueryNavigation={markSearchCommitted}
         onRemoveFilter={(key) => {
-          const next = removeFilterChip(filters, key);
-          if (flatServer && query)
-            navigateQuery(patchRankTrackerFilters(query, next), [
-              ...filterFieldsForChip(key),
-              "page",
-            ]);
-          else setFilters(next);
+          const filters = removeFilterChip(query.filters, key);
+          navigateQuery(patchRankTrackerFilters(query, filters), [
+            ...filterFieldsForChip(key),
+            "page",
+          ]);
         }}
         onRunChecks={requestRunChecks}
         onSearchChange={onSearchChange}
         onSearchCommit={onSearchCommit}
         pendingCheckIds={new Set<string>()}
-        projectId={projectId}
-        listMode={listMode}
         marketScope={marketScope}
-        matchedTargetCount={matchedTargetCount}
-        page={page}
-        pageSize={pageSize}
-        query={query}
-        rows={filteredRows}
+        rankTrackerPath={keywordsPath}
+        rows={rows}
         searchValue={searchValue}
         scopeChip={
           <KeywordsGridScopeChip
             activeViewId={activeViewId}
             keywordsPath={keywordsPath}
-            lens={activeLens}
-            locationOptions={locationOptions}
-            query={flatServer ? query : undefined}
+            lens={query.lens}
+            locationOptions={locations}
+            query={query}
           />
         }
         scopeControl={scopeView.control}
@@ -284,19 +271,16 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         activeViewId={activeViewId}
         draftFilters={draftFilters}
         facets={facets}
-        filters={filters}
-        flatServer={flatServer}
         keywordsPath={keywordsPath}
-        lens={activeLens}
-        locationOptions={locationOptions}
+        lens={query.lens}
+        locationOptions={locations}
         navigateQuery={navigateQuery}
         onClose={() => setFiltersOpen(false)}
         open={filtersOpen}
         query={query}
-        rows={lensRows}
+        rows={targetRows}
         setDraftFilters={setDraftFilters}
-        setFilters={setFilters}
       />
-    </section>
+    </ReplaySurface>
   );
 }

@@ -1,4 +1,7 @@
-import { itemStatusChipPresentation, runStatusChipPresentation } from "@/components/ui";
+import {
+  itemStatusChipPresentation,
+  runStatusChipPresentation,
+} from "@/components/ui/status-chip-mapping";
 import { relativeFuture } from "@/lib/format/relative-time";
 import type {
   ItemStatus,

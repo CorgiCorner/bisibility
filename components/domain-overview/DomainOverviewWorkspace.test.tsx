@@ -1,68 +1,18 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
-import type { DomainOverviewMarketOption } from "@/lib/domain-overview/market-options";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainOverviewWorkspace } from "./DomainOverviewWorkspace";
-import { domainOverviewMarketFixture, domainOverviewReportFixture } from "./fixtures";
-
-vi.mock("@/components/markets/MarketCombobox", () => ({
-  MarketCombobox: ({
-    onChange,
-  }: {
-    onChange: (value: DomainOverviewMarketOption) => void;
-    value: string;
-  }) => (
-    <>
-      <button
-        aria-label="Market"
-        onClick={() =>
-          onChange({
-            ...domainOverviewMarketFixture,
-            cityName: null,
-            kind: "country",
-            provenance: null,
-            regionName: null,
-            researchAvailable: true,
-          })
-        }
-        type="button"
-      >
-        Market
-      </button>
-      <button
-        aria-label="Other market"
-        onClick={() =>
-          onChange({
-            canonicalKey: "GB",
-            cityName: null,
-            countryCode: "GB",
-            displayName: "United Kingdom",
-            kind: "country",
-            languageCode: "en",
-            languageLabel: "English",
-            locationCode: 2826,
-            provenance: null,
-            regionName: null,
-            researchAvailable: true,
-          })
-        }
-        type="button"
-      >
-        United Kingdom
-      </button>
-    </>
-  ),
-}));
+import { domainOverviewReportFixture, domainOverviewScopeFixture } from "./fixtures";
 
 const context = {
-  catalogMarkets: [],
+  catalogScopes: [],
   competitorDomains: ["competitor.example.com"],
   costContext: { capCents: 5000, spentCents: 100 },
   defaultTarget: "example.com",
   providerStatus: "connected" as const,
   recentTargets: [],
-  trackedMarkets: [],
+  trackedScopes: [],
 };
 const initialEstimate = {
   cached: false,
@@ -94,15 +44,14 @@ describe("DomainOverviewWorkspace", () => {
           loadHistoryAction={vi.fn()}
           loadKeywordsPageAction={vi.fn()}
           loadPagesPageAction={vi.fn()}
-          market={domainOverviewMarketFixture}
+          researchScope={domainOverviewScopeFixture}
           projectId="prj_1"
           projectRef="prj_1"
-          selectMarketAction={vi.fn()}
         />
       </SessionSpendProvider>,
     );
     const analyzeButton = screen.getByRole("button", { name: /analyze domain/i });
-    expect(analyzeButton).toHaveClass("MuiButton-sizeSmall");
+    expect(analyzeButton).toHaveAttribute("data-size", expect.stringMatching(/^(xs|sm)$/));
     expect(analyzeButton).toHaveStyle({ height: "37px", minHeight: "37px" });
     fireEvent.click(analyzeButton);
     await waitFor(() => expect(analyzeAction).toHaveBeenCalledTimes(1));
@@ -111,7 +60,7 @@ describe("DomainOverviewWorkspace", () => {
     );
     await waitFor(() =>
       expect(window.location.pathname + window.location.search).toBe(
-        "/app/prj_1/domain-overview?domain=example.com&market=US%2FUS-TX%2FAustin&scope=root",
+        "/app/prj_1/domain-overview?domain=example.com&researchScope=US%3Aen&scope=root",
       ),
     );
     expect(routerMock.push).not.toHaveBeenCalled();
@@ -130,10 +79,9 @@ describe("DomainOverviewWorkspace", () => {
           loadHistoryAction={vi.fn()}
           loadKeywordsPageAction={vi.fn()}
           loadPagesPageAction={vi.fn()}
-          market={domainOverviewMarketFixture}
+          researchScope={domainOverviewScopeFixture}
           projectId="prj_1"
           projectRef="prj_1"
-          selectMarketAction={vi.fn()}
         />
       </SessionSpendProvider>,
     );
@@ -160,10 +108,9 @@ describe("DomainOverviewWorkspace", () => {
           loadHistoryAction={vi.fn()}
           loadKeywordsPageAction={vi.fn()}
           loadPagesPageAction={vi.fn()}
-          market={domainOverviewMarketFixture}
+          researchScope={domainOverviewScopeFixture}
           projectId="prj_1"
           projectRef="prj_1"
-          selectMarketAction={vi.fn()}
         />
       </SessionSpendProvider>,
     );
@@ -193,10 +140,9 @@ describe("DomainOverviewWorkspace", () => {
           loadHistoryAction={vi.fn()}
           loadKeywordsPageAction={vi.fn()}
           loadPagesPageAction={vi.fn()}
-          market={domainOverviewMarketFixture}
+          researchScope={domainOverviewScopeFixture}
           projectId="prj_1"
           projectRef="prj_1"
-          selectMarketAction={vi.fn()}
         />
       </SessionSpendProvider>,
     );
@@ -232,10 +178,9 @@ describe("DomainOverviewWorkspace", () => {
           loadHistoryAction={vi.fn()}
           loadKeywordsPageAction={loadKeywordsPageAction}
           loadPagesPageAction={vi.fn()}
-          market={domainOverviewMarketFixture}
+          researchScope={domainOverviewScopeFixture}
           projectId="prj_1"
           projectRef="prj_1"
-          selectMarketAction={vi.fn()}
         />
       </SessionSpendProvider>,
     );
@@ -262,10 +207,9 @@ describe("DomainOverviewWorkspace", () => {
           loadHistoryAction={vi.fn()}
           loadKeywordsPageAction={vi.fn()}
           loadPagesPageAction={vi.fn()}
-          market={domainOverviewMarketFixture}
+          researchScope={domainOverviewScopeFixture}
           projectId="prj_1"
           projectRef="prj_1"
-          selectMarketAction={vi.fn()}
         />
       </SessionSpendProvider>,
     );

@@ -1,6 +1,7 @@
-import { AlertBanner, AlertBannerStack } from "@/components/ui";
-import { rankTrackerTabPath } from "@/lib/routing/app-path";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import type { Meta, StoryObj } from "@storybook/react";
+import { AlertBanner } from "./AlertBanner";
+import { AlertBannerStack } from "./AlertBannerStack";
 
 const meta = {
   title: "UI/AlertBanner",
@@ -33,7 +34,7 @@ export const Default: Story = {
       />
       <AlertBanner
         action={{
-          href: rankTrackerTabPath("prj_story", "runs"),
+          href: projectRunsPath("prj_story"),
           icon: "arrow",
           label: "View check runs",
         }}
@@ -64,7 +65,7 @@ export const YellowTint: Story = {
 export const WithActionArrow: Story = {
   args: {
     action: {
-      href: rankTrackerTabPath("prj_story", "runs"),
+      href: projectRunsPath("prj_story"),
       icon: "arrow",
       label: "View check runs",
     },

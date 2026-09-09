@@ -5,7 +5,7 @@ import {
   accountSectionHref,
   accountSections,
 } from "@/components/account/account-sections";
-import { MenuSelect } from "@/components/ui";
+import { MenuSelect } from "@/components/ui/MenuSelect";
 import { useRouter } from "next/navigation";
 
 type AccountMobileMenuProps = {

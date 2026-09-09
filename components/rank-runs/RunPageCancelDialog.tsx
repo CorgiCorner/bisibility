@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, Modal, OperationRow } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { OperationRow } from "@/components/ui/OperationRow";
 import type { RunPageData } from "./RunPageTypes";
 
 type RunPageCancelDialogProps = {

@@ -1,9 +1,8 @@
-import { BrandLockup, Button, type ButtonProps } from "@/components/ui";
+import { BrandLockup } from "@/components/ui/BrandLockup";
+import { Button, type ButtonProps } from "@/components/ui/Button";
 import { DOCS_URL } from "@/lib/site/site";
-import {
-  ArrowUpRightIcon as ArrowUpRight,
-  BinocularsIcon as Binoculars,
-} from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
+import { BinocularsIcon as Binoculars } from "@phosphor-icons/react/dist/ssr/Binoculars";
 import type { ReactNode } from "react";
 
 type SystemPageProps = {
@@ -26,7 +25,7 @@ type TerminalBlockProps = {
 // Same metrics as the marketing body CTA; radius comes from the shared Button (6px).
 const ctaClassName = "bv-landing-cta";
 
-const ctaSx = {
+const ctaStyle = {
   fontSize: "14px",
   height: 40,
   minHeight: 40,
@@ -34,11 +33,11 @@ const ctaSx = {
 } as const;
 
 export function SystemPrimaryAction(props: ButtonProps) {
-  return <Button className={ctaClassName} sx={ctaSx} variant="primary" {...props} />;
+  return <Button className={ctaClassName} style={ctaStyle} variant="primary" {...props} />;
 }
 
 export function SystemSecondaryAction(props: ButtonProps) {
-  return <Button className={ctaClassName} sx={ctaSx} variant="secondary" {...props} />;
+  return <Button className={ctaClassName} style={ctaStyle} variant="secondary" {...props} />;
 }
 
 export function SystemPage({

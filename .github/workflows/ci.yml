@@ -1,5 +1,5 @@
 # GENERATED - do not edit directly.
-# Source hash: 4f83be6e2aac7ed4a241207f7998bca3a9ef1c9f53268d2a26bf8e31484248fd
+# Source hash: faaa51827d5fec78f6aa040dd1d0442cbd70dd45e03b082a51b8cc7e7a5af24f
 name: CI
 
 on:
@@ -91,15 +91,15 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: blob-report-${{ matrix.shard }}
-          path: .vitest-reports/
+          path: .vitest/blob/
           if-no-files-found: error
           include-hidden-files: true
       - name: Upload failed blob report
-        if: failure() && env.RUN_COVERAGE == 'true' && hashFiles('.vitest-reports/**') != ''
+        if: failure() && env.RUN_COVERAGE == 'true' && hashFiles('.vitest/blob/**') != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: failed-blob-report-${{ matrix.shard }}
-          path: .vitest-reports/
+          path: .vitest/blob/
           if-no-files-found: error
           include-hidden-files: true
 
@@ -121,7 +121,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: blob-report-*
-          path: .vitest-reports
+          path: .vitest/blob
           merge-multiple: true
       - run: npm run ci:coverage:merge
 

@@ -1,4 +1,4 @@
-import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react";
+import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/csr/ChartLineUp";
 import type { Icon } from "@phosphor-icons/react/lib";
 
 type ChartNoDataOverlayProps = {

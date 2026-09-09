@@ -6,7 +6,7 @@ import {
   type UnrunnableReason,
 } from "@/lib/rank-check/runnable-reasons";
 import { isSampleProject } from "@/lib/sample-data/marker";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type { ParentRelation, RunStatus } from "./contract";
 import type { RunSelectionSpec } from "./selection";
 

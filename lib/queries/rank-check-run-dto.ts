@@ -18,6 +18,7 @@ export const rankCheckRunSelect = {
   cancelledCount: true,
   checkSchedule: {
     select: {
+      archivedAt: true,
       id: true,
       frequency: true,
       timeOfDay: true,
@@ -118,6 +119,7 @@ export function rankCheckRunDto(
   };
   return {
     ...operation,
+    checkScheduleArchived: Boolean(row.checkSchedule?.archivedAt),
     checkScheduleName: row.checkSchedule?.name ?? null,
     checkSchedulePublicId: row.checkSchedule?.publicId ?? null,
     launchedAt: iso(row.launchedAt),

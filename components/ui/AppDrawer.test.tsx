@@ -5,8 +5,8 @@ import { AppDrawer } from "./AppDrawer";
 
 let lastDrawerProps: Record<string, unknown> = {};
 
-vi.mock("@mui/material/Drawer", () => ({
-  default: ({ children, ...props }: { children: React.ReactNode }) => {
+vi.mock("@/components/ui/DialogSurface", () => ({
+  DialogSurface: ({ children, ...props }: { children: React.ReactNode }) => {
     lastDrawerProps = props;
     return <div data-testid="mock-drawer">{children}</div>;
   },
@@ -123,8 +123,8 @@ describe("AppDrawer dialog semantics", () => {
         <button type="button">content</button>
       </AppDrawer>,
     );
-    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    const paper = slotProps.paper as Record<string, unknown>;
+    const slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    const paper = slotProps.contentProps as Record<string, unknown>;
     expect(paper).toHaveProperty("role", "dialog");
     expect(paper).not.toHaveProperty("aria-label");
     expect(paper).toHaveProperty("aria-modal", true);
@@ -149,49 +149,55 @@ describe("AppDrawer motion", () => {
         <button type="button">content</button>
       </AppDrawer>,
     );
-    expect(lastDrawerProps.transitionDuration).toEqual({
+    expect(lastDrawerProps.duration).toEqual({
       enter: MOTION_DRAWER_ENTER,
       exit: MOTION_DRAWER_EXIT,
     });
   });
 
-  it("does not zero the Slide timeout under normal motion", () => {
+  it("does not zero the transition durations under normal motion", () => {
     render(
       <AppDrawer onClose={vi.fn()} open title="Normal timeout">
         <button type="button">content</button>
       </AppDrawer>,
     );
-    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.transition).not.toHaveProperty("timeout");
+    const _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(lastDrawerProps.duration).toEqual({
+      enter: MOTION_DRAWER_ENTER,
+      exit: MOTION_DRAWER_EXIT,
+    });
   });
 
-  it("zeros only the Slide transition timeout under reduced-motion", () => {
+  it("zeros the transition durations under reduced-motion", () => {
     const media = setMediaQuery(false);
     render(
       <AppDrawer onClose={vi.fn()} open title="Reduced">
         <button type="button">content</button>
       </AppDrawer>,
     );
-    let slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.transition).not.toHaveProperty("timeout");
+    let _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(lastDrawerProps.duration).toEqual({
+      enter: MOTION_DRAWER_ENTER,
+      exit: MOTION_DRAWER_EXIT,
+    });
 
     act(() => {
       media.setReducedMotion(true);
     });
-    slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.transition).toHaveProperty("timeout", 0);
+    _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(lastDrawerProps.duration).toEqual({ enter: 0, exit: 0 });
   });
 
-  it("keeps the normal transitionDuration under reduced-motion (backdrop fade intact)", () => {
+  it("disables all movement under reduced motion", () => {
     setMediaQuery(true);
     render(
       <AppDrawer onClose={vi.fn()} open title="Reduced backdrop">
         <button type="button">content</button>
       </AppDrawer>,
     );
-    expect(lastDrawerProps.transitionDuration).toEqual({
-      enter: MOTION_DRAWER_ENTER,
-      exit: MOTION_DRAWER_EXIT,
+    expect(lastDrawerProps.duration).toEqual({
+      enter: 0,
+      exit: 0,
     });
   });
 });
@@ -203,15 +209,15 @@ describe("AppDrawer exit lifecycle", () => {
     setMediaQuery(false);
   });
 
-  it("passes onExited to the Drawer transition slot", () => {
+  it("passes onExited to the dialog exit lifecycle", () => {
     const onExited = vi.fn();
     render(
       <AppDrawer onClose={vi.fn()} onExited={onExited} open title="Exit test">
         <button type="button">content</button>
       </AppDrawer>,
     );
-    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.transition).toHaveProperty("onExited", onExited);
+    const _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(lastDrawerProps.onExited).toBe(onExited);
   });
 
   it("keeps onExited wired under reduced-motion", () => {
@@ -222,9 +228,9 @@ describe("AppDrawer exit lifecycle", () => {
         <button type="button">content</button>
       </AppDrawer>,
     );
-    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.transition).toHaveProperty("onExited", onExited);
-    expect(slotProps.transition).toHaveProperty("timeout", 0);
+    const _slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(lastDrawerProps.onExited).toBe(onExited);
+    expect(lastDrawerProps.duration).toEqual({ enter: 0, exit: 0 });
   });
 });
 
@@ -291,9 +297,9 @@ describe("AppDrawer stacked panels", () => {
       </AppDrawer>,
     );
 
-    expect(lastDrawerProps.anchor).toBe("bottom");
-    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.paper.sx).toMatchObject({ maxHeight: "88vh", width: "100%" });
+    expect(lastDrawerProps.side).toBe("bottom");
+    const slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(slotProps.contentProps.style).toMatchObject({ maxHeight: "88vh", width: "100%" });
   });
 
   it("stays a side panel on a wide screen", () => {
@@ -303,8 +309,8 @@ describe("AppDrawer stacked panels", () => {
       </AppDrawer>,
     );
 
-    expect(lastDrawerProps.anchor).toBe("right");
-    const slotProps = lastDrawerProps.slotProps as Record<string, Record<string, unknown>>;
-    expect(slotProps.paper.sx).toMatchObject({ width: 560 });
+    expect(lastDrawerProps.side).toBe("right");
+    const slotProps = lastDrawerProps as Record<string, Record<string, unknown>>;
+    expect(slotProps.contentProps.style).toMatchObject({ width: 560 });
   });
 });

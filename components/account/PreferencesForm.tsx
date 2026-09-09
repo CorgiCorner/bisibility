@@ -1,6 +1,7 @@
 "use client";
 
-import { MenuSelect, SegmentedControl, type SegmentedControlOption } from "@/components/ui";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/SegmentedControl";
 import {
   dateFormatOptions,
   densityOptions,
@@ -13,14 +14,12 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import { applyTheme } from "@/lib/theme/browser-theme";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
-import {
-  ListIcon as List,
-  ListDashesIcon as ListDashes,
-  MonitorIcon as Monitor,
-  MoonStarsIcon as MoonStars,
-  RowsIcon as Rows,
-  SunIcon as Sun,
-} from "@phosphor-icons/react";
+import { ListIcon as List } from "@phosphor-icons/react/dist/csr/List";
+import { ListDashesIcon as ListDashes } from "@phosphor-icons/react/dist/csr/ListDashes";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
+import { MoonStarsIcon as MoonStars } from "@phosphor-icons/react/dist/csr/MoonStars";
+import { RowsIcon as Rows } from "@phosphor-icons/react/dist/csr/Rows";
+import { SunIcon as Sun } from "@phosphor-icons/react/dist/csr/Sun";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { type UseFormSetValue, useForm } from "react-hook-form";

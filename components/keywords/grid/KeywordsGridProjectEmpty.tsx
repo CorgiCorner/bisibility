@@ -15,6 +15,7 @@ type Props = Pick<
   | "searchConsoleConnected"
 > & {
   dialogs: ReactNode;
+  hasMarkets?: boolean;
   onAddKeyword: () => void;
   onImportCsv: () => void;
   openAddDrawer: (keyword?: string, tab?: AddKeywordDraft["tab"]) => void;
@@ -32,6 +33,7 @@ export function KeywordsGridProjectEmpty(props: Props) {
         onImportQueries={(queries) => props.openAddDrawer(queries.join("\n"))}
         providerConnected={props.providerConnected}
         projectId={props.projectId}
+        hasMarkets={props.hasMarkets}
         searchConsoleConnected={props.searchConsoleConnected}
       />
       {props.dialogs}

@@ -1,11 +1,12 @@
 "use client";
 
-import { type ConfirmKind, ConfirmModal, Tooltip } from "@/components/ui";
+import { type ConfirmKind, ConfirmModal } from "@/components/ui/ConfirmModal";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { menuItemRowHoverSx } from "@/lib/ui/menu-item-row-styles";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react";
+import { menuItemRowHoverStyle } from "@/lib/ui/menu-item-row-styles";
+import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react/dist/csr/DotsThree";
 import { useState } from "react";
 
 export type AssignableTeamRole = "admin" | "member" | "viewer";
@@ -31,7 +32,7 @@ type TeamMemberActionsMenuProps = {
 
 type MenuView = "actions" | "roles";
 
-const memberMenuPaperSx = {
+const memberMenuPaperStyle = {
   backgroundColor: "var(--color-bg-elev)",
   border: "1px solid var(--color-border)",
   borderRadius: UI_RADIUS_ROLES.card,
@@ -42,11 +43,11 @@ const memberMenuPaperSx = {
   padding: "6px",
 };
 
-const memberMenuRowSx = {
+const memberMenuRowStyle = {
   borderRadius: UI_RADIUS_ROLES.control,
   fontSize: "12.5px",
   minHeight: 34,
-  ...menuItemRowHoverSx,
+  ...menuItemRowHoverStyle,
 };
 
 export function TeamMemberActionsMenu({
@@ -107,10 +108,8 @@ export function TeamMemberActionsMenu({
         anchorEl={anchor}
         onClose={closeMenu}
         open={open}
-        slotProps={{
-          list: { "aria-label": `Actions for ${memberName}`, dense: true, sx: { padding: 0 } },
-          paper: { sx: memberMenuPaperSx },
-        }}
+        listProps={{ "aria-label": `Actions for ${memberName}`, style: { padding: 0 } }}
+        contentProps={{ style: memberMenuPaperStyle }}
       >
         {view === "actions"
           ? [
@@ -124,7 +123,11 @@ export function TeamMemberActionsMenu({
                 </li>
               ) : null,
               canChangeRole ? (
-                <MenuItem key="change-role" onClick={() => setView("roles")} sx={memberMenuRowSx}>
+                <MenuItem
+                  key="change-role"
+                  onClick={() => setView("roles")}
+                  style={memberMenuRowStyle}
+                >
                   Change role
                 </MenuItem>
               ) : null,
@@ -132,7 +135,7 @@ export function TeamMemberActionsMenu({
                 <MenuItem
                   key="transfer-ownership"
                   onClick={() => requestConfirmation("transferProjectOwnership")}
-                  sx={memberMenuRowSx}
+                  style={memberMenuRowStyle}
                 >
                   Transfer ownership
                 </MenuItem>
@@ -141,14 +144,14 @@ export function TeamMemberActionsMenu({
                 <MenuItem
                   key="remove-member"
                   onClick={() => requestConfirmation("removeTeamMember")}
-                  sx={memberMenuRowSx}
+                  style={memberMenuRowStyle}
                 >
                   Remove from project
                 </MenuItem>
               ) : null,
             ]
           : [
-              <MenuItem key="back" onClick={() => setView("actions")} sx={memberMenuRowSx}>
+              <MenuItem key="back" onClick={() => setView("actions")} style={memberMenuRowStyle}>
                 Back to actions
               </MenuItem>,
               ...roleOptions.map((role) => (
@@ -158,7 +161,7 @@ export function TeamMemberActionsMenu({
                     closeMenu();
                     onChangeRole(role.value);
                   }}
-                  sx={memberMenuRowSx}
+                  style={memberMenuRowStyle}
                 >
                   <span className="flex min-w-0 flex-col">
                     <span>{role.label}</span>

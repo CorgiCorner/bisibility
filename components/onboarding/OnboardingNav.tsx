@@ -7,11 +7,13 @@ import {
   totalOnboardingSteps,
 } from "@/components/onboarding/onboarding-fixtures";
 import { onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
-import { Button } from "@/components/ui";
-import { ArrowLeftIcon as ArrowLeft, ArrowRightIcon as ArrowRight } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/Button";
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import type { ReactNode } from "react";
 
 type OnboardingNavProps = {
+  busy?: boolean;
   continueDisabled?: boolean;
   continueLabel?: string;
   currentStep: OnboardingStepNumber;
@@ -25,6 +27,7 @@ type OnboardingNavProps = {
 };
 
 export function OnboardingNav({
+  busy = false,
   continueDisabled = false,
   continueLabel,
   currentStep,
@@ -36,15 +39,16 @@ export function OnboardingNav({
 }: Readonly<OnboardingNavProps>) {
   const previousStep = Math.max(1, currentStep - 1) as OnboardingStepNumber;
   const isLastStep = currentStep === totalOnboardingSteps;
-  const label = continueLabel ?? (isLastStep ? "Open dashboard" : "Continue");
+  const label = continueLabel ?? (isLastStep ? "View dashboard" : "Continue");
   let backAction: ReactNode = leadingAction ?? <span />;
   if (currentStep > 1 && onBack) {
     backAction = (
       <Button
+        disabled={busy}
         onClick={onBack}
         size="lg"
         startIcon={<ArrowLeft aria-hidden size={15} weight="regular" />}
-        sx={{ color: "var(--fg-muted)" }}
+        style={{ "--control-color": "var(--fg-muted)" }}
         type="button"
         variant="secondary"
       >
@@ -54,10 +58,11 @@ export function OnboardingNav({
   } else if (currentStep > 1) {
     backAction = (
       <Button
+        disabled={busy}
         href={buildOnboardingStepHref(previousStep, flowState)}
         size="lg"
         startIcon={<ArrowLeft aria-hidden size={15} weight="regular" />}
-        sx={{ color: "var(--fg-muted)" }}
+        style={{ "--control-color": "var(--fg-muted)" }}
         variant="secondary"
       >
         Back
@@ -72,7 +77,8 @@ export function OnboardingNav({
         {secondaryAction}
         <Button
           disabled={continueDisabled}
-          endIcon={<ArrowRight aria-hidden size={15} weight="regular" />}
+          endIcon={busy ? undefined : <ArrowRight aria-hidden size={15} weight="regular" />}
+          loading={busy}
           form={onContinue ? undefined : onboardingFormId}
           onClick={onContinue}
           size="lg"

@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, Modal, useToast } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/toast-context";
 import {
   type CostRateInfo,
   formatEstimateCents,
@@ -8,7 +10,8 @@ import {
 } from "@/lib/cost-estimate/project-estimate";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { rankTrackerSchedulesPath } from "@/lib/routing/rank-tracker-schedules-path";
+import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
+import { newScheduleDefaults } from "@/lib/schedules/form-defaults";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 import Link from "next/link";
 import { useState } from "react";
@@ -20,6 +23,7 @@ import {
   type CheckScheduleSummary,
   type ModalView,
   type NewScheduleValues,
+  newScheduleRequest,
   newScheduleSchema,
   type ScheduleChoice,
   type ScheduleLoadState,
@@ -99,42 +103,28 @@ export function SetScheduleModal({
   const selectedCount = selectedRows.length;
   const form = useForm<NewScheduleValues>({
     defaultValues: {
+      ...newScheduleDefaults,
       choice: initialChoice ?? currentScheduleId,
       cronExpression: "0 6 * * *",
       day: "Monday",
-      frequency: "daily",
-      jitterMinutes: 60,
+      dayOfMonth: "1st",
       mode: initialView,
-      name: "Daily 06:00",
-      timeOfDay: "06:00",
-      timezone: "UTC",
+      timezone: newScheduleDefaults.timezone ?? "",
     },
     resolver: zodResolver(newScheduleSchema),
   });
   const choice = form.watch("choice");
   const schedulesLoading = scheduleLoadState === "loading";
-  const selectedSchedule = schedules.find((schedule) => schedule.publicId === choice) ?? null;
-  const moveCount = choice === currentScheduleId ? 0 : selectedCount;
   const title =
     view === "new"
       ? "New schedule from selection"
       : `Set schedule for ${keywordLabel(selectedCount)} / ${targetLabel(selectedCount)}`;
-  const cta =
-    view === "new"
-      ? "Create schedule"
-      : choice === "remove"
-        ? moveCount === 0
-          ? "Already on no schedule"
-          : `Remove ${targetLabel(moveCount)} from schedule`
-        : choice
-          ? moveCount === 0
-            ? `Already on ${selectedSchedule?.name ?? "this schedule"}`
-            : `Move ${targetLabel(moveCount)}`
-          : `Move ${targetLabel(selectedCount)}`;
+  const cta = view === "new" ? "Create schedule" : choice === "remove" ? "Remove" : "Apply";
   const disabled =
     schedulesLoading ||
     form.formState.isSubmitting ||
-    (view === "choose" && (!choice || moveCount === 0));
+    (view === "choose" &&
+      (!choice || choice === currentScheduleId || (choice === "remove" && !currentScheduleId)));
 
   function choose(nextChoice: ScheduleChoice) {
     setError(null);
@@ -147,8 +137,15 @@ export function SetScheduleModal({
     form.setValue("mode", "new");
   }
 
+  function backToChoices() {
+    setError(null);
+    setView("choose");
+    form.reset({ ...form.formState.defaultValues, choice, mode: "choose" });
+  }
+
   function monthlyDelta(schedule: CheckScheduleSummary | null) {
-    if (!schedule && !currentSchedule) return "No scheduled spend";
+    if (!schedule && !currentScheduleId && !selectedRows.some((row) => row.checkSchedule))
+      return "No scheduled spend";
     if (!providerRate) return "Estimate unavailable";
     const destinationFrequency = schedule ? scheduleFrequency(schedule) : "manual";
     const delta = selectedRows
@@ -185,17 +182,7 @@ export function SetScheduleModal({
       let scheduleId = values.choice;
       if (values.mode === "new") {
         const created = await requestApi<{ publicId: string }>("/api/check-schedules", {
-          body: JSON.stringify({
-            cronExpression: values.frequency === "custom_cron" ? values.cronExpression : null,
-            frequency: values.frequency,
-            jitterMinutes: values.jitterMinutes,
-            name: values.name,
-            projectId,
-            providerPolicy: null,
-            serpDepth: null,
-            timeOfDay: values.timeOfDay,
-            timezone: values.timezone,
-          }),
+          body: JSON.stringify(newScheduleRequest(values, projectId)),
           method: "POST",
         });
         scheduleId = created.publicId;
@@ -227,16 +214,29 @@ export function SetScheduleModal({
     <Modal
       footer={
         <>
-          <Link
-            className="mr-auto text-[11.5px] font-semibold text-fg-muted hover:text-fg"
-            href={rankTrackerSchedulesPath(projectId)}
-          >
-            Manage schedules
-          </Link>
+          {view === "new" ? (
+            <Button
+              className="mr-auto"
+              disabled={form.formState.isSubmitting}
+              onClick={backToChoices}
+              type="button"
+              variant="ghost"
+            >
+              Back
+            </Button>
+          ) : (
+            <Link
+              className="mr-auto text-[11.5px] font-semibold text-fg-muted hover:text-fg"
+              href={projectSchedulesPath(projectId)}
+            >
+              Manage schedules
+            </Link>
+          )}
           <Button onClick={onClose} type="button" variant="ghost">
             Cancel
           </Button>
           <Button
+            className="shrink-0 whitespace-nowrap"
             disabled={disabled}
             form={formId}
             loading={form.formState.isSubmitting}
@@ -264,6 +264,9 @@ export function SetScheduleModal({
             choice={choice}
             currentSchedule={currentSchedule}
             currentScheduleId={currentScheduleId}
+            hasScheduledTargets={
+              Boolean(currentScheduleId) || selectedRows.some((row) => Boolean(row.checkSchedule))
+            }
             loadError={scheduleLoadError}
             loading={schedulesLoading}
             monthlyDelta={monthlyDelta}
@@ -275,6 +278,8 @@ export function SetScheduleModal({
         ) : (
           <NewScheduleFromSelection
             errors={form.formState.errors}
+            projectDepth={selectedRows[0]?.projectSerpDepth}
+            projectTimezone={selectedRows[0]?.projectTimezone}
             register={form.register}
             selectedCount={selectedCount}
             setValue={form.setValue}

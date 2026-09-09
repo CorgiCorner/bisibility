@@ -12,12 +12,13 @@ import {
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
 import { cancelRunItemsForKeywordDeletion } from "@/lib/rank-check/runs/cancel";
 import { intentSchema, topicSchema } from "@/lib/schemas/keyword";
+import { LocationInputError, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
-import { serpMarketLocationValues } from "@/lib/serp/markets";
 import { type ApiContext, forbidden, notFound, projectMatches } from "./context";
 import { ApiConflictError, ApiInputError } from "./errors";
 import { scheduleFromPatch } from "./keyword-utils";
+import { legacyMarketFilterValues, legacyMarketLocationSelection } from "./legacy-market-input";
 import {
   decodeCursor,
   decodeOffsetCursor,
@@ -69,11 +70,29 @@ function metadataParam(
   return parsed.data;
 }
 
+function locationKeyParam(url: URL) {
+  const raw = textParam(url, "filter[location_key]", "location_key");
+  if (!raw) {
+    return null;
+  }
+  try {
+    return normalizeCanonicalLocationKey(raw).canonicalKey;
+  } catch (error) {
+    if (error instanceof LocationInputError) {
+      throw new ApiInputError(
+        "location_key must be a canonical location key such as US or US/Texas/Austin.",
+      );
+    }
+    throw error;
+  }
+}
+
 function keywordWhere(ctx: ApiContext) {
   const where: Prisma.KeywordWhereInput = { projectId: ctx.auth.project.id };
   const and: Prisma.KeywordWhereInput[] = [];
   const device = textParam(ctx.url, "filter[device]", "device");
   const country = textParam(ctx.url, "filter[country]", "country");
+  const locationKey = locationKeyParam(ctx.url);
   const intent = metadataParam(ctx.url, intentSchema, "intent", "filter[intent]", "intent");
   const search = textParam(ctx.url, "search", "q");
   const tag = textParam(ctx.url, "filter[tag]", "tag");
@@ -89,10 +108,13 @@ function keywordWhere(ctx: ApiContext) {
   }
   if (country) {
     and.push({
-      OR: serpMarketLocationValues(country).map((location) => ({
+      OR: legacyMarketFilterValues(country).map((location) => ({
         location: { equals: location, mode: "insensitive" },
       })),
     });
+  }
+  if (locationKey) {
+    where.locationRef = { canonicalKey: locationKey };
   }
   if (search) {
     where.text = { contains: search, mode: "insensitive" };
@@ -197,19 +219,18 @@ export async function patchKeyword(ctx: ApiContext, keywordId: string) {
 
   const schedule = scheduleFromPatch(data, keyword.id);
   const country = data.location ?? data.country;
-  let resolved = null;
-  if (data.location_key) {
-    resolved = await resolveKeywordLocation({
-      projectId: ctx.auth.project.id,
-      selection: { canonicalKey: data.location_key, kind: "city" },
-    });
-  } else if (country || data.city) {
-    resolved = await resolveKeywordLocation({
-      city: data.city,
-      country: country ?? keyword.location,
-      projectId: ctx.auth.project.id,
-    });
-  }
+  // Legacy city input stays structured so the resolver can supply the city's region.
+  const selection = data.location_key
+    ? { canonicalKey: data.location_key, kind: "city" as const }
+    : country || data.city
+      ? legacyMarketLocationSelection({ city: data.city, country: country ?? keyword.location })
+      : null;
+  const resolved = selection
+    ? await resolveKeywordLocation({
+        projectId: ctx.auth.project.id,
+        selection,
+      })
+    : null;
   try {
     assertKeywordIdentityUnchanged(keyword, {
       device: data.device,
@@ -225,7 +246,7 @@ export async function patchKeyword(ctx: ApiContext, keywordId: string) {
   const updated = await prisma.keyword.update({
     data: {
       device: data.device,
-      location: resolved ? denormalizedLocationLabel(resolved.location) : country,
+      location: resolved ? denormalizedLocationLabel(resolved.location) : undefined,
       locationId: resolved?.location.id,
       targetUrl: data.target_url,
       text: data.keyword,

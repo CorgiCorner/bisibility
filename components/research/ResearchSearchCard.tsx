@@ -1,23 +1,18 @@
 "use client";
 
-import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
-import {
-  Button,
-  Card,
-  compactInputTypographyClassName,
-  InfoTooltip,
-  InlineToken,
-  MenuSelect,
-  pricingTriggerClassName,
-  Switch,
-} from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { InlineToken } from "@/components/ui/InlineToken";
+import { compactInputTypographyClassName } from "@/components/ui/input-styles";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { pricingTriggerClassName } from "@/components/ui/PricingPopover";
+import { Switch } from "@/components/ui/Switch";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
-import {
-  GlobeSimpleIcon as GlobeSimple,
-  MagnifyingGlassIcon as MagnifyingGlass,
-} from "@phosphor-icons/react";
+import type { ResearchScope } from "@/lib/research/scope";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import type { KeyboardEvent } from "react";
 import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -27,6 +22,7 @@ import {
   researchFallbackCostCents,
   researchPricingRows,
 } from "./ResearchPricingPopover";
+import { ResearchScopePicker } from "./ResearchScopePicker";
 
 const formSchema = z.object({ seed: z.string().trim().max(80) });
 type FormValues = z.infer<typeof formSchema>;
@@ -56,17 +52,16 @@ type ResearchSearchCardProps = {
   estimate: ResearchEstimateView;
   includeClickstream: boolean;
   lookupDisabled?: boolean;
-  location: LocationFieldValue;
-  metricsScope?: { country: string; language: string };
+  scope: ResearchScope;
+  scopes: readonly ResearchScope[];
   mode: KeywordResearchMode;
   onConnectionChange: (value: string) => void;
   onIncludeClickstreamChange: (value: boolean) => void;
   onLimitChange: (value: 100 | 300 | 500) => void;
-  onLocationChange: (value: LocationFieldValue) => void;
+  onScopeChange: (scope: ResearchScope) => void;
   onModeChange: (value: KeywordResearchMode) => void;
   onSeedsChange: (seeds: string[]) => void;
   onSubmit: (seeds: string[]) => void;
-  projectId: string;
   resultLimit: 100 | 300 | 500;
   researching: boolean;
   seeds: string[];
@@ -86,29 +81,20 @@ function researchButtonLabel(
   return `${prefix} ~${formatEstimateCents(costCents)}`;
 }
 
-function researchLanguageLabel(location: LocationFieldValue) {
-  return location.languageLabel?.trim() || location.hl?.trim() || "English";
-}
-
-function researchMarketLabel(location: LocationFieldValue) {
-  return `${location.displayName} / ${researchLanguageLabel(location)}`;
-}
-
 export function ResearchSearchCard({
   disabled = false,
   estimate,
   includeClickstream,
   lookupDisabled = false,
-  location,
-  metricsScope,
+  scope,
+  scopes,
   mode,
   onIncludeClickstreamChange,
   onLimitChange,
-  onLocationChange,
+  onScopeChange,
   onModeChange,
   onSeedsChange,
   onSubmit,
-  projectId,
   resultLimit,
   researching,
   seeds,
@@ -152,8 +138,6 @@ export function ResearchSearchCard({
 
   const pricingRows = researchPricingRows(mode, resultLimit, includeClickstream);
   const fallbackCostCents = researchFallbackCostCents(pricingRows, seeds.length);
-  const marketLabel = researchMarketLabel(location);
-
   return (
     <Card className="w-full p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(submit)}>
@@ -178,16 +162,11 @@ export function ResearchSearchCard({
             />
           </div>
           <div className="md:w-[230px]">
-            <LocationField
-              disabled={disabled || researching}
-              variant="research"
-              help="Defaults to the project market."
-              idPrefix="research"
-              label="Market"
-              labelHidden
-              onChange={onLocationChange}
-              projectId={projectId}
-              value={{ ...location, displayName: marketLabel }}
+            <ResearchScopePicker
+              disabled={researching}
+              onChange={onScopeChange}
+              scopes={scopes}
+              value={scope}
             />
           </div>
           <MenuSelect
@@ -235,7 +214,7 @@ export function ResearchSearchCard({
                 loading={researching}
                 loadingLabel={researchButtonLabel(true, estimate, fallbackCostCents)}
                 startIcon={<MagnifyingGlass size={15} weight="regular" />}
-                sx={{ minWidth: 216 }}
+                style={{ minWidth: 216 }}
                 type="submit"
               >
                 {researchButtonLabel(false, estimate, fallbackCostCents)}
@@ -248,18 +227,6 @@ export function ResearchSearchCard({
             </span>
           </div>
         </div>
-        {metricsScope ? (
-          <div
-            aria-label={`Metrics scope: ${metricsScope.country} - ${metricsScope.language}`}
-            className="-mx-4 -mb-4 mt-1 flex items-center gap-2 rounded-b-[12px] border-t border-border bg-bg-sunken px-4 py-2.5 font-sans tabular-nums text-[11.5px] text-fg-muted sm:-mx-5 sm:-mb-5 sm:px-5"
-            role="status"
-          >
-            <GlobeSimple weight="regular" aria-hidden size={14} />
-            <span>
-              Metrics scope: {metricsScope.country} - {metricsScope.language}
-            </span>
-          </div>
-        ) : null}
       </form>
       <ResearchPricingPopover
         anchor={pricingAnchor}

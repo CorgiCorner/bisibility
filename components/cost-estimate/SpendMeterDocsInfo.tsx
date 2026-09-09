@@ -1,9 +1,9 @@
 "use client";
 
+import { Popup as Popover } from "@/components/ui/Popup";
 import { formatMoneyCents } from "@/lib/format/money";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import Popover from "@mui/material/Popover";
-import { InfoIcon as Info } from "@phosphor-icons/react";
+import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -28,18 +28,17 @@ export function SpendMeterDocsInfo({ action, sessionCents }: Readonly<SpendMeter
       </button>
       <Popover
         anchorEl={anchor}
-        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+        align="start"
+        side="bottom"
         onClose={() => setAnchor(null)}
         open={Boolean(anchor)}
-        slotProps={{
-          paper: {
-            sx: {
-              bgcolor: "var(--bg-elev)",
-              border: "1px solid var(--border)",
-              borderRadius: UI_RADIUS_ROLES.card,
-              boxShadow: "none",
-              overflow: "hidden",
-            },
+        contentProps={{
+          style: {
+            backgroundColor: "var(--bg-elev)",
+            border: "1px solid var(--border)",
+            borderRadius: UI_RADIUS_ROLES.card,
+            boxShadow: "none",
+            overflow: "hidden",
           },
         }}
       >

@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.22.0] - 2026-09-09
+
+- Refined Rank Tracker tables and shared controls with saved layouts, resizing, grouping, bulk actions, keyword suggestions and clearer market navigation.
+
+- Added market management and project competitors, with setup suggestions, SERP comparisons and filtered dashboard results.
+
+- Improved manual checks and schedules, restored interrupted dispatch, and made operational digests clearer about backlog and upcoming work.
+
+- Fixed Search Console imports and period loading; added local pack and AI overview observations to rank checks.
+
+- Added optional read-only demos, setup walkthroughs and consent controls; strengthened project permissions and improved self-hosting security.
+
 ## [0.21.0] - 2026-09-05
 
 - Added scheduled rank-check runs with clear recovery, API correlation IDs, fast pickup, and worker-owned launches.

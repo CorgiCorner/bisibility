@@ -18,10 +18,11 @@ import type {
   RotateDeployHookAction,
   SendDeployHookTestAction,
 } from "@/components/settings/webhooks/deploy-hook-model";
-import { Button, StatusPill } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { mutateIngestHookSchema } from "@/lib/schemas/ingestHook";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { PlusIcon as Plus } from "@phosphor-icons/react";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";

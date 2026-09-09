@@ -1,27 +1,33 @@
 "use client";
 
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
 import { MenuMultiSelectOption } from "@/components/ui/MenuMultiSelectOption";
-import { menuSelectRowSx } from "@/components/ui/MenuSelectOptionItem";
-import { menuTransitionDuration, useMenuExitLifecycle } from "@/components/ui/menu-exit-lifecycle";
+import { menuSelectRowStyle } from "@/components/ui/MenuSelectOptionItem";
+import { useMenuExitLifecycle } from "@/components/ui/menu-exit-lifecycle";
 import {
   MenuSearchField,
   type MenuSelectOption,
-  menuSelectPaperSx,
+  menuSelectPaperStyle,
   menuSelectTriggerClass,
   selectedSummary,
 } from "@/components/ui/menu-select-support";
+import { track } from "@/lib/analytics/client";
+import { type AnalyticsControlId, analyticsControlModule } from "@/lib/analytics/controls";
 import { cn } from "@/lib/ui/cn";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import { CaretDownIcon as CaretDown, CheckIcon as Check } from "@phosphor-icons/react";
+import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { type ReactNode, useState } from "react";
 
 export type MenuMultiSelectProps = {
+  analytics?: { control: AnalyticsControlId };
   allLabel?: string;
+  allSelected?: boolean;
   ariaLabel: string;
   leadingIcon?: ReactNode;
   minSelected?: number;
   onChange: (values: string[]) => void;
+  onSelectAll?: () => void;
   options: readonly MenuSelectOption[];
   placeholder?: string;
   searchPlaceholder?: string;
@@ -33,11 +39,14 @@ export type MenuMultiSelectProps = {
 };
 
 export function MenuMultiSelect({
+  analytics,
   allLabel,
+  allSelected,
   ariaLabel,
   leadingIcon,
   minSelected = 1,
   onChange,
+  onSelectAll,
   options,
   placeholder = ariaLabel,
   searchPlaceholder = "Search...",
@@ -74,6 +83,25 @@ export function MenuMultiSelect({
       : [...values, value];
     if (next.length < minSelected) return;
     onChange(next);
+    if (analytics) {
+      track("ui_option_selected", {
+        control: analytics.control,
+        module: analyticsControlModule(analytics.control),
+        value: next,
+      });
+    }
+  }
+
+  function selectAll() {
+    if (onSelectAll) onSelectAll();
+    else onChange([]);
+    if (analytics) {
+      track("ui_option_selected", {
+        control: analytics.control,
+        module: analyticsControlModule(analytics.control),
+        value: [],
+      });
+    }
   }
 
   return (
@@ -91,35 +119,51 @@ export function MenuMultiSelect({
         <span className={cn("min-w-0 truncate text-fg", summaryClassName)}>
           {selectedSummary(selected, placeholder, summary)}
         </span>
-        <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
+        <CaretDown
+          aria-hidden
+          className="ml-auto shrink-0 text-fg-muted"
+          size={11}
+          weight="regular"
+        />
       </button>
       <Menu
         anchorEl={anchorEl}
         autoFocus={!searchable}
-        disableAutoFocusItem={searchable}
         onClose={closeMenu}
         open={open}
-        slotProps={{
-          list: { "aria-label": ariaLabel, dense: true, sx: { padding: 0 } },
-          paper: { sx: { ...menuSelectPaperSx, minWidth: Math.max(menuWidth ?? 0, 180) } },
-          transition: { onExited: handleExited },
+        listProps={{ "aria-label": ariaLabel, style: { padding: 0 } }}
+        contentProps={{
+          style: {
+            ...menuSelectPaperStyle,
+            boxSizing: "border-box",
+            maxWidth: "calc(100vw - 32px)",
+            minWidth: `min(${Math.max(menuWidth ?? 0, 180)}px, calc(100vw - 32px))`,
+            overflowX: "hidden",
+            width: "max-content",
+          },
         }}
-        transitionDuration={menuTransitionDuration}
+        onExited={handleExited}
       >
         {searchable ? (
           <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
         ) : null}
         {allLabel ? (
           <MenuItem
-            aria-checked={values.length === 0}
-            onClick={() => onChange([])}
+            aria-checked={allSelected ?? values.length === 0}
+            onClick={selectAll}
             role="menuitemradio"
-            sx={menuSelectRowSx}
+            style={menuSelectRowStyle}
           >
-            <span className={values.length === 0 ? "text-fg" : undefined}>{allLabel}</span>
-            {values.length === 0 ? (
-              <Check aria-hidden className="text-accent-text" size={15} weight="regular" />
-            ) : null}
+            <span
+              className={cn("min-w-0 flex-1", (allSelected ?? values.length === 0) && "text-fg")}
+            >
+              {allLabel}
+            </span>
+            <span className="grid size-[15px] shrink-0 place-items-center">
+              {(allSelected ?? values.length === 0) ? (
+                <Check aria-hidden className="text-accent-text" size={15} weight="regular" />
+              ) : null}
+            </span>
           </MenuItem>
         ) : null}
         {filteredOptions.length === 0 ? (

@@ -2,7 +2,7 @@ import {
   EmptyModuleCard,
   EmptyModuleLabel,
 } from "@/components/keyword-detail/empty/empty-state-primitives";
-import { WarningIcon as Warning } from "@phosphor-icons/react/ssr";
+import { WarningIcon as Warning } from "@phosphor-icons/react/dist/ssr/Warning";
 
 export type TargetMismatchCannibalizationProps = {
   expectedPath?: string;

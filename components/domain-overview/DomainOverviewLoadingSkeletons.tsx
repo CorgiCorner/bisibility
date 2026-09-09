@@ -111,10 +111,10 @@ function AnalyzeCardLoading() {
             className="h-[34px] flex-1 rounded-control border border-border md:min-w-[320px]"
             data-skeleton="target-control"
           />
-          <div className="md:w-[230px]" data-skeleton="market-wrapper">
+          <div className="md:w-[230px]" data-skeleton="scope-wrapper">
             <Bar
               className="h-[34px] w-full rounded-control border border-border"
-              data-skeleton="market-control"
+              data-skeleton="scope-control"
             />
           </div>
         </div>

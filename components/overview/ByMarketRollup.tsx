@@ -1,20 +1,17 @@
 "use client";
 
-import { Sparkline } from "@/components/charts/Sparkline";
-import { MarketChip } from "@/components/markets/MarketChip";
-import { Card, MenuSelect, SectionTitle, Tooltip, tableHeaderClassName } from "@/components/ui";
+import { Card } from "@/components/ui/Card";
+import { DataTable } from "@/components/ui/data-table/DataTable";
+import { MenuSelect } from "@/components/ui/MenuSelect";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import { lensHref } from "@/lib/keywords/lens-model";
 import type { OverviewDevice } from "@/lib/queries/overview-filters";
 import type { OverviewMarketRow } from "@/lib/queries/overview-markets";
 import { appPath } from "@/lib/routing/app-path";
-import {
-  ArrowDownIcon as ArrowDown,
-  ArrowUpIcon as ArrowUp,
-  CaretRightIcon as CaretRight,
-  ArrowsDownUpIcon as Sort,
-} from "@phosphor-icons/react";
-import Link from "next/link";
+import { ArrowsDownUpIcon as Sort } from "@phosphor-icons/react/dist/csr/ArrowsDownUp";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { type ByMarketTableRow, byMarketTableColumns } from "./by-market-table-columns";
 
 type MarketSort = "worst" | "alphabetical";
 
@@ -29,49 +26,35 @@ const sortOptions = [
   { label: "Sort: A-Z", value: "alphabetical" },
 ] as const;
 
-const rowGrid =
-  "grid min-w-[772px] grid-cols-[200px_96px_92px_168px_88px_72px_16px] items-center gap-3 px-5";
-
 function pairLabel(row: OverviewMarketRow) {
   return `${row.locationLabel} / ${row.languageLabel}`;
 }
 
-const OFF_CATALOG_TOOLTIP =
-  "No search volume or difficulty data for this market - positions are tracked normally.";
-
-function sortedRows(rows: OverviewMarketRow[], sort: MarketSort) {
-  return [...rows].sort((left, right) => {
-    const alphabetical = pairLabel(left).localeCompare(pairLabel(right));
-    return sort === "alphabetical"
-      ? alphabetical
-      : left.deltaPoints - right.deltaPoints || alphabetical;
-  });
-}
-
-function Delta({ row }: Readonly<{ row: OverviewMarketRow }>) {
-  const Icon = row.deltaPoints > 0 ? ArrowUp : row.deltaPoints < 0 ? ArrowDown : null;
-  const tone =
-    row.deltaPoints > 0
-      ? "text-green-text"
-      : row.deltaPoints < 0
-        ? "text-red-text"
-        : "text-fg-muted";
-  const value = `${row.deltaPoints > 0 ? "+" : ""}${row.deltaPoints}pp`;
-
-  return (
-    <Tooltip content={row.deltaTooltip}>
-      <span
-        className={`inline-flex items-center justify-end gap-[3px] whitespace-nowrap font-sans tabular-nums text-xs font-semibold ${tone}`}
-      >
-        {Icon ? <Icon aria-hidden size={11} weight="regular" /> : null}
-        {value}
-      </span>
-    </Tooltip>
-  );
+function tableRows(
+  rows: OverviewMarketRow[],
+  device: OverviewDevice,
+  projectRef: string,
+  sort: MarketSort,
+): ByMarketTableRow[] {
+  return rows
+    .map((row) => ({
+      ...row,
+      href: lensHref(appPath(projectRef, "rank-tracker"), { device, locationId: row.locationId }),
+      id: row.locationId,
+      label: pairLabel(row),
+    }))
+    .sort((left, right) => {
+      const alphabetical = pairLabel(left).localeCompare(pairLabel(right));
+      return sort === "alphabetical"
+        ? alphabetical
+        : left.deltaPoints - right.deltaPoints || alphabetical;
+    });
 }
 
 export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRollupProps>) {
+  const router = useRouter();
   const [sort, setSort] = useState<MarketSort>("worst");
+  const tableData = tableRows(rows, device, projectRef, sort);
 
   if (rows.length < 2) {
     return null;
@@ -98,64 +81,19 @@ export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRo
           value={sort}
         />
       </div>
-      <div className="overflow-x-auto">
-        <div className={`${rowGrid} py-2 ${tableHeaderClassName}`}>
-          <span>Market</span>
-          <span aria-hidden />
-          <span className="text-right">Targets</span>
-          <span>In top 10</span>
-          <span className="text-right">Change</span>
-          <span>Trend</span>
-          <span aria-hidden />
-        </div>
-        {sortedRows(rows, sort).map((row, index) => (
-          <Link
-            className={`${rowGrid} min-h-[57px] ${index > 0 ? "border-t border-border" : ""} py-3 hover:bg-bg-sunken`}
-            href={lensHref(appPath(projectRef, "rank-tracker"), {
-              device,
-              locationId: row.locationId,
-            })}
-            key={row.locationId}
-          >
-            <span className="min-w-0 overflow-hidden">
-              <MarketChip languageLabel={row.languageLabel} locationLabel={row.locationLabel} />
-            </span>
-            <span className="min-w-0">
-              {!row.researchAvailable ? (
-                <Tooltip content={OFF_CATALOG_TOOLTIP}>
-                  <span className="whitespace-nowrap font-sans tabular-nums text-[9.5px] tracking-[0.3px] text-fg-muted">
-                    no volume/KD
-                  </span>
-                </Tooltip>
-              ) : null}
-            </span>
-            <span className="whitespace-nowrap text-right font-sans tabular-nums text-xs text-fg-muted">
-              {row.targetCount} targets
-            </span>
-            <Tooltip content={row.top10Tooltip}>
-              <span className="flex items-baseline gap-[7px] whitespace-nowrap font-sans tabular-nums">
-                <span className="text-[13px] font-semibold text-fg">{row.top10Share}%</span>
-                <span className="text-[11.5px] text-fg-muted">
-                  {row.top10Count} of {row.targetCount} in top 10
-                </span>
-              </span>
-            </Tooltip>
-            <span className="text-right">
-              <Delta row={row} />
-            </span>
-            <span>
-              <Sparkline
-                ariaLabel={`Top-10 share for ${pairLabel(row)} over the last ${row.rangeDays} days: ${row.trend.join("%, ")}%`}
-                color="var(--fg-muted)"
-                data={row.trend}
-                height={20}
-                valueFormatter={(value) => (value == null ? "" : `${value}%`)}
-                width={72}
-              />
-            </span>
-            <CaretRight aria-hidden className="text-fg-muted" size={13} weight="regular" />
-          </Link>
-        ))}
+      <div className="min-w-0 [&>[role=table]]:border-0">
+        <DataTable
+          ariaLabel="By market rollup"
+          columns={byMarketTableColumns()}
+          density="compact"
+          id="by-market-rollup"
+          layout="auto"
+          onRowClick={(row) => router.push(row.href)}
+          onSortingChange={() => undefined}
+          rows={tableData}
+          sorting={null}
+          sortingMode="client"
+        />
       </div>
     </Card>
   );

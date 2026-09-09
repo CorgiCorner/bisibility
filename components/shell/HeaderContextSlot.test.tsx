@@ -5,7 +5,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { HEADER_CONTEXT_LABEL, HeaderContextSlot } from "./HeaderContextSlot";
 
-vi.mock("@/components/ui/Tooltip", () => import("@/tests/mui-tooltip"));
+vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 
 const PROJECT = asProjectRef("prj_example");
 
@@ -34,19 +34,17 @@ describe("HeaderContextSlot", () => {
     expect(HEADER_CONTEXT_LABEL).toBe("Change context");
   });
 
-  it("renders the switcher and the hairline inside a market", () => {
+  it("renders one context control inside a market", () => {
     renderSlot(marketPath(PROJECT, asMarketRef("pmkt_us"), "rank-tracker"));
 
     const group = slot();
     expect(group).not.toBeNull();
     expect(screen.getByRole("button", { name: "United States" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Back to all markets" })).toBeInTheDocument();
-    const hairline = group?.querySelector("[data-context-hairline]");
-    expect(hairline).toHaveClass("h-5", "w-px");
+    expect(screen.queryByRole("button", { name: "Back to all markets" })).not.toBeInTheDocument();
   });
 
   it("renders no element and no hairline on a project-scoped page", () => {
-    const { container } = renderSlot(appPath(PROJECT, "rank-tracker"));
+    const { container } = renderSlot(appPath(PROJECT, "settings"));
 
     expect(slot()).toBeNull();
     expect(container.querySelector("[data-context-hairline]")).toBeNull();
@@ -81,3 +79,16 @@ describe("HeaderContextSlot", () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+it.each([0, 1, 3])(
+  "keeps market context available at project level with %i markets",
+  async (count) => {
+    renderSlot(
+      appPath(PROJECT, "rank-tracker"),
+      Array.from({ length: count }, (_, i) => ({ ...MARKETS[0], ref: asMarketRef(`pmkt_${i}`) })),
+    );
+    expect(
+      screen.getByRole("button", { name: count ? "All markets" : "No markets" }),
+    ).toBeInTheDocument();
+  },
+);

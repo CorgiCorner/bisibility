@@ -1,10 +1,11 @@
 import "server-only";
 
 import { isDeepStrictEqual } from "node:util";
+import { LEGACY_DEFAULT_MARKET_NAME } from "@/lib/api/legacy-market-input";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { normalizeProjectSavedView } from "@/lib/saved-views/model";
-import { DEFAULT_SERP_DEVICE, DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEVICE } from "@/lib/serp/constants";
 import type { KeywordMaps } from "./importers";
 import { keywordKey } from "./importers";
 import type { Project, VerifiedMigrationToken } from "./jobs";
@@ -156,7 +157,8 @@ function alertTargets(rule: ImportAlertRule, keywords: KeywordMaps, tags: Map<st
           keywordKey({
             device: target.device ?? DEFAULT_SERP_DEVICE,
             keyword: target.keyword,
-            location: target.location ?? DEFAULT_SERP_MARKET,
+            location: target.location ?? LEGACY_DEFAULT_MARKET_NAME,
+            location_key: target.location_key,
           }),
         )
       : null;

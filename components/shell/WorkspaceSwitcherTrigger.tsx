@@ -1,8 +1,8 @@
 "use client";
 
 import { WorkspaceTile } from "@/components/shell/WorkspaceTile";
-import { Tooltip } from "@/components/ui";
-import { CaretUpDownIcon as CaretUpDown } from "@phosphor-icons/react";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { CaretUpDownIcon as CaretUpDown } from "@phosphor-icons/react/dist/csr/CaretUpDown";
 import type { MouseEvent } from "react";
 
 /** `ghost` is what the rail uses: the workspace is context, not a control to hunt for. */

@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, ChartRegion } from "@/components/ui";
-import { chartColors } from "@/lib/theme/chart-colors";
-import { LineChart } from "@mui/x-charts/LineChart";
+import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
+import { Card } from "@/components/ui/Card";
+import { ChartRegion } from "@/components/ui/ChartRegion";
 import { ChartNoDataOverlay } from "./ChartNoDataOverlay";
 import { OverviewChartHeader } from "./OverviewChartHeader";
 import type { TrendPoint } from "./types";
@@ -13,13 +13,6 @@ export type PositionTrendCardProps = {
   seriesLabel?: string;
   takeaway?: string | null;
   takeawayLoading?: boolean;
-};
-
-const axisTextStyle = {
-  fill: "var(--fg-muted)",
-  fontFamily: "var(--font-sans), system-ui, sans-serif",
-  fontVariantNumeric: "tabular-nums",
-  fontSize: 11,
 };
 
 const positionTrendDefinition =
@@ -80,67 +73,26 @@ export function PositionTrendCard({
           className="relative mt-3 h-[250px]"
           label={`Position trend chart.${renderedTakeaway ? ` ${renderedTakeaway}` : ""}`}
         >
-          <LineChart
-            axisHighlight={{ x: "none", y: "none" }}
-            disableAxisListener
-            disableLineItemHighlight
-            grid={{ horizontal: true }}
+          <TimeSeriesChart
             height={250}
-            hideLegend
-            // Reserve only enough inset for the centered first date label while the
-            // compact y-axis still shares the card's left gutter.
-            margin={{ top: 12, right: 16, bottom: 28, left: 16 }}
+            labels={data.map((point) => point.label)}
             series={[
               {
-                area: true,
-                baseline: maxPosition,
-                color: chartColors.accent,
-                curve: "linear",
-                data: data.map((point) => point.value),
                 label: seriesLabel,
-                showMark: false,
+                values: data.map((point) => point.value),
+                color: "var(--accent)",
+                fill: true,
+                baseline: maxPosition,
               },
             ]}
-            skipAnimation
-            slotProps={{ tooltip: { trigger: "none" } }}
-            sx={{
-              "& .MuiAreaElement-root": {
-                fill: "var(--accent)",
-                fillOpacity: 0.09,
-              },
-              "& .MuiChartsGrid-line": { stroke: "var(--border)" },
-              "& .MuiLineElement-root": {
-                stroke: "var(--accent)",
-                strokeLinecap: "round",
-                strokeLinejoin: "round",
-                strokeWidth: 2.8,
-              },
-              "& .MuiChartsAxis-tickLabel": axisTextStyle,
-            }}
-            xAxis={[
-              {
-                data: data.map((point) => point.label),
-                disableLine: true,
-                disableTicks: true,
-                scaleType: "point",
-                tickLabelInterval: (_value: unknown, index: number) =>
-                  [0, 3, 7, data.length - 1].includes(index),
-                tickLabelStyle: axisTextStyle,
-              },
-            ]}
-            yAxis={[
-              {
-                disableLine: true,
-                disableTicks: true,
-                domainLimit: "strict",
-                max: maxPosition,
-                min: 1,
-                reverse: true,
-                tickLabelStyle: axisTextStyle,
-                tickNumber: 5,
-                width: yAxisWidth,
-              },
-            ]}
+            min={1}
+            max={maxPosition}
+            reversed
+            yWidth={yAxisWidth}
+            tooltip={false}
+            areaOpacity={0.09}
+            xTickIndexes={[0, 3, 7, data.length - 1].filter((index) => index < data.length)}
+            margin={{ top: 12, right: 16, bottom: 0, left: 16 }}
           />
         </ChartRegion>
       )}

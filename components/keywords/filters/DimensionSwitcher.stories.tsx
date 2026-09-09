@@ -1,10 +1,8 @@
 import { DimensionSwitcher } from "@/components/keywords/filters/DimensionSwitcher";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
-import {
-  DeviceMobileIcon as DeviceMobile,
-  FlagIcon as Flag,
-  MonitorIcon as Monitor,
-} from "@phosphor-icons/react";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
+import { FlagIcon as Flag } from "@phosphor-icons/react/dist/csr/Flag";
+import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
 

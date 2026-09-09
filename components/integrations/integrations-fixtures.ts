@@ -6,7 +6,7 @@ import type {
   IntegrationCategoryData,
   IntegrationProviderData,
 } from "@/lib/integrations/types";
-import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_MARKET } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 
 const iconNames = ["chart", "database", "globe", "link", "magnifier", "table", "trend"] as const;
 export type ProviderIconName = (typeof iconNames)[number];
@@ -32,7 +32,7 @@ const baseDrawerDefaults: DrawerDefaults = {
   device: "Desktop",
   endpoint: "",
   language: "English",
-  location: DEFAULT_SERP_MARKET,
+  locationKey: "US",
   login: "",
   secret: "",
 };

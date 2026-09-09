@@ -78,8 +78,15 @@ export const OpsmodalAttention: Story = {
   args: {
     operations: [
       {
+        capabilities: { pause: false, resume: false, retry: false },
         id: "import_story",
         kind: "gsc_import",
+        presentation: {
+          action: null,
+          supportingText: "Google has not reported finalized search data for this property yet.",
+          title: "Waiting for data",
+        },
+        property: "sc-domain:example.com",
         progress: { done: 12, total: 31 },
         state: "waiting_for_first_data",
       },
@@ -102,4 +109,34 @@ export const OpsidleDark: Story = {
 export const OpsmodalEmpty: Story = {
   args: { operations: [], status: "offline" },
   name: "opsmodal-empty",
+};
+
+const historyImport = {
+  capabilities: { pause: true, resume: false, retry: false },
+  id: "import_history_story",
+  kind: "gsc_import",
+  presentation: { action: "pause", supportingText: "Import is running.", title: "Importing" },
+  progress: { done: 56, total: 488 },
+  property: "sc-domain:example.com",
+  state: "running",
+} satisfies OperationSnapshot;
+
+export const ImportingFullHistory: Story = {
+  args: { defaultOpen: true, operations: [historyImport] },
+};
+
+export const AllDaysImportedStillRunning: Story = {
+  args: {
+    defaultOpen: true,
+    operations: [
+      {
+        ...historyImport,
+        progress: { done: 488, total: 488 },
+        presentation: {
+          ...historyImport.presentation,
+          supportingText: "All planned days are imported. Import is still running.",
+        },
+      },
+    ],
+  },
 };

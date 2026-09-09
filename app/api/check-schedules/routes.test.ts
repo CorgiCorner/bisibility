@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   actor: { id: "user_1" },
+  archive: vi.fn(),
+  restore: vi.fn(),
   assign: vi.fn(),
   audit: vi.fn(),
   create: vi.fn(),
@@ -45,7 +47,14 @@ vi.mock("@/lib/rank-check/schedules/service-membership", () => ({
   removeKeywordsFromSchedule: mocks.remove,
 }));
 
+vi.mock("@/lib/rank-check/schedules/archive", () => ({
+  archiveSchedule: mocks.archive,
+  restoreSchedule: mocks.restore,
+}));
+
+import { POST as archiveScheduleRoute } from "./[publicId]/archive/route";
 import { POST as assignKeywords, DELETE as removeKeywords } from "./[publicId]/keywords/route";
+import { POST as restoreScheduleRoute } from "./[publicId]/restore/route";
 import { DELETE as deleteScheduleRoute, GET as getSchedule, PATCH } from "./[publicId]/route";
 import { POST as setDefault } from "./[publicId]/set-default/route";
 import { POST as createScheduleRoute, GET as listSchedules } from "./route";
@@ -68,6 +77,8 @@ describe("check schedule app routes", () => {
     vi.clearAllMocks();
     mocks.requireScope.mockResolvedValue({ id: "project_1", publicId: projectId });
     for (const service of [
+      mocks.archive,
+      mocks.restore,
       mocks.assign,
       mocks.create,
       mocks.delete,
@@ -79,6 +90,36 @@ describe("check schedule app routes", () => {
     }
     mocks.list.mockResolvedValue([]);
     mocks.get.mockResolvedValue({ publicId: scheduleId });
+  });
+
+  it("authorizes lifecycle changes at manage scope before mutation", async () => {
+    await archiveScheduleRoute(
+      jsonRequest("POST", { projectId, destinationScheduleId: null }),
+      context,
+    );
+    expect(mocks.requireScope).toHaveBeenLastCalledWith(mocks.actor, "manage", projectId, {
+      type: "check_schedule",
+    });
+    expect(mocks.archive).toHaveBeenCalledWith("user_1", "project_1", {
+      projectId,
+      scheduleId,
+      destinationScheduleId: null,
+    });
+    await restoreScheduleRoute(jsonRequest("POST", { projectId }), context);
+    expect(mocks.restore).toHaveBeenCalledWith("user_1", "project_1", scheduleId);
+  });
+  it("rejects malformed lifecycle inputs and denies unauthorized restoration", async () => {
+    const response = await archiveScheduleRoute(
+      jsonRequest("POST", { projectId, destinationScheduleId: "internal_id" }),
+      context,
+    );
+    expect(response.status).toBe(400);
+    expect(mocks.archive).not.toHaveBeenCalled();
+    mocks.requireScope.mockRejectedValueOnce(new Error("Forbidden"));
+    await expect(restoreScheduleRoute(jsonRequest("POST", { projectId }), context)).rejects.toThrow(
+      "Forbidden",
+    );
+    expect(mocks.restore).not.toHaveBeenCalled();
   });
 
   it("uses read scope and query functions for list and detail", async () => {

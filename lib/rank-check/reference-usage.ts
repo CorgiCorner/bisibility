@@ -1,6 +1,6 @@
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { rateForProvider } from "@/lib/cost-estimate/provider-rates";
-import { DEFAULT_SERP_DEPTH, resolveSerpDepth, type SerpDepth } from "@/lib/serp/markets";
+import { DEFAULT_SERP_DEPTH, resolveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
 import { defaultCostPerBillingUnitCents, defaultCostPerCheckCents } from "./default-cost";
 
 export type ReferenceUsageGroup = {

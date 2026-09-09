@@ -1,8 +1,9 @@
 "use client";
 
-import { AppDrawer, Button } from "@/components/ui";
+import { AppDrawer } from "@/components/ui/AppDrawer";
+import { Button } from "@/components/ui/Button";
 import type { CompetitorFilter, CompetitorMarketData } from "@/lib/competitors/types";
-import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useState } from "react";
 
 type ComparisonScopeDrawerProps = {

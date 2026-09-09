@@ -2,7 +2,7 @@
 
 import type { GetRankCheckStatusResult } from "@/lib/actions/rank-check-status";
 import type { RunCheckNowInput } from "@/lib/schemas/keyword";
-import type { SerpDepth } from "@/lib/serp/markets";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { useCallback, useState } from "react";
 import { actionErrorMessage, type KeywordAction } from "./action-utils";
 import {

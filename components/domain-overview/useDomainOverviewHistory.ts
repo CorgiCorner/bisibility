@@ -2,25 +2,23 @@
 
 import type { LoadDomainHistoryAction } from "@/lib/actions/domain-overview";
 import type { DomainHistoryOutcome, DomainOverviewReport } from "@/lib/domain-overview/types";
+import type { ResearchScope } from "@/lib/research/scope";
 import { useRef, useState } from "react";
-import type {
-  DomainOverviewEstimateView,
-  DomainOverviewMarketView,
-} from "./domain-overview-workspace-model";
+import type { DomainOverviewEstimateView } from "./domain-overview-workspace-model";
 import { domainOverviewReportIdentity } from "./domain-overview-workspace-model";
 
 type HistoryRequest = { id: number; identity: string };
 type HistoryState = HistoryRequest & { result: Extract<DomainHistoryOutcome, { ok: true }> };
 
 export function useDomainOverviewHistory({
-  activeMarket,
+  activeResearchScope,
   addSpend,
   estimate,
   loadHistoryAction,
   projectId,
   report,
 }: Readonly<{
-  activeMarket: DomainOverviewMarketView | null;
+  activeResearchScope: (ResearchScope & { providerLocationCode: number }) | null;
   addSpend: (costCents: number) => void;
   estimate: DomainOverviewEstimateView;
   loadHistoryAction: LoadDomainHistoryAction;
@@ -36,15 +34,16 @@ export function useDomainOverviewHistory({
   const [historyError, setHistoryError] = useState<HistoryRequest | null>(null);
 
   async function loadHistory() {
-    if (!activeMarket || !report) return;
+    if (!activeResearchScope || !report) return;
     const request = { id: ++requestSequence.current, identity };
     setHistoryLoading(request);
     setHistoryError(null);
     try {
       const result = await loadHistoryAction({
         fresh: false,
-        languageCode: activeMarket.languageCode,
-        locationCode: activeMarket.locationCode,
+        countryCode: activeResearchScope.countryCode,
+        languageCode: activeResearchScope.languageCode,
+        locationCode: activeResearchScope.providerLocationCode,
         maxCostCents: Math.ceil(estimate.historyCostCents ?? 0),
         projectId,
         scopeOverride: report.scope,

@@ -94,6 +94,19 @@ describe("ShellSkeleton", () => {
     }
   });
 
+  it("reserves Dashboard before the headed rail groups", () => {
+    const { container } = render(
+      <ShellSkeleton>
+        <div>content</div>
+      </ShellSkeleton>,
+    );
+
+    const dashboard = container.querySelector(".h-9.gap-2\\.5.pl-\\[1px\\]");
+    const modules = screen.getAllByTestId("shell-skeleton-nav-heading")[0];
+
+    expect(dashboard?.compareDocumentPosition(modules)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
   it("keeps utilities in the scrolling rail and leaves only the footer pinned", () => {
     const { container } = render(
       <ShellSkeleton collapsed>

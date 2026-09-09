@@ -1,17 +1,12 @@
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
-import { Button, itemStatusChipPresentation, StatusChip } from "@/components/ui";
-import { deviceLabel } from "@/lib/queries/keyword-row-format";
-import { isUnrunnableReason } from "@/lib/rank-check/runnable-reasons";
-import {
-  blockedRunPresentation,
-  type ClientDeploymentMode,
-} from "@/lib/rank-check/runs/blocked-presentation";
-import { appPath, type ProjectRef } from "@/lib/routing/app-path";
-import Link from "next/link";
-import type { RunItemFilter, RunPageSummary } from "./RunPageModel";
-import { runFilters } from "./RunPageModel";
+import { Button } from "@/components/ui/Button";
+import { DataTable } from "@/components/ui/data-table/DataTable";
+import { itemStatusChipPresentation } from "@/components/ui/status-chip-mapping";
+import type { ProjectRef } from "@/lib/routing/app-path";
+import { type RunItemFilter, type RunPageSummary, runFilters } from "./RunPageModel";
 import { RunPageTargetActions } from "./RunPageTargetActions";
 import type { RunPageData, RunPageItem } from "./RunPageTypes";
+import { runTargetNote, runTargetTableColumns } from "./run-target-table-columns";
 
 type RunPageTargetsProps = {
   busy: string | null;
@@ -28,29 +23,7 @@ type RunPageTargetsProps = {
   summary: RunPageSummary;
 };
 
-function money(value: number | null): string {
-  if (value === null) return "-";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value / 100);
-}
-
-function note(item: RunPageItem, run: RunPageData, deploymentMode: ClientDeploymentMode) {
-  // A cancelled item carries a machine reason code, so map it before branching on status; the
-  // raw code must never reach the reader, whatever status the item ended on.
-  if (isUnrunnableReason(item.blockedReason)) {
-    return blockedRunPresentation({ deploymentMode, reason: item.blockedReason }).compact;
-  }
-  if (item.status === "skipped" || item.status === "blocked") {
-    return item.blockedReason ?? "Skipped before start";
-  }
-  if (run.status === "blocked" && item.status === "queued") {
-    return blockedRunPresentation({
-      budget: run.budget,
-      deploymentMode,
-      reason: run.blockedReason,
-    }).compact;
-  }
-  return item.rankCheck?.errorCode ?? "";
-}
+const ignoreSorting = () => undefined;
 
 function RunPageFilters({
   filter,
@@ -105,14 +78,12 @@ export function RunPageTargets({
 }: Readonly<RunPageTargetsProps>) {
   const deploymentMode = useDeploymentMode();
   const live = summary.active && filter === "all";
-  const headings = ["Keyword", "Status", "Market", "Device", "Position", "Cost"];
   const showNotes =
-    run.status === "blocked" || items.some((item) => note(item, run, deploymentMode));
-  if (showNotes) headings.push("Note");
+    run.status === "blocked" || items.some((item) => runTargetNote(item, run, deploymentMode));
   return (
     <section
       aria-labelledby="run-targets-title"
-      className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev"
+      className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev [&>[role=table]]:border-0"
     >
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3.5">
         <div>
@@ -138,83 +109,17 @@ export function RunPageTargets({
           />
         </div>
       </header>
-      <div className="overflow-x-auto">
-        <table
-          aria-label="Targets in this run"
-          className="w-full min-w-[860px] table-fixed border-collapse"
-        >
-          <thead className="text-left text-[11px] uppercase tracking-[0.5px] text-fg-muted">
-            <tr>
-              {headings.map((heading) => (
-                <th
-                  className="border-b border-border px-3 py-2.5 font-semibold"
-                  key={heading}
-                  scope="col"
-                >
-                  {heading}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {items.length === 0 ? (
-              <tr>
-                <td
-                  className="px-3 py-8 text-center text-[12px] text-fg-muted"
-                  colSpan={headings.length}
-                >
-                  Nothing was sent.
-                </td>
-              </tr>
-            ) : (
-              items.map((item) => {
-                const status = itemStatusChipPresentation(
-                  run.status === "blocked" && item.status === "queued" ? "blocked" : item.status,
-                );
-                const itemNote = note(item, run, deploymentMode);
-                return (
-                  <tr className="border-t border-border text-[12px]" key={item.id}>
-                    <td className="px-3 py-[11px]">
-                      <Link
-                        className="block truncate font-semibold text-fg no-underline hover:text-accent-text"
-                        href={appPath(projectRef, "rank-tracker", item.keyword.publicId)}
-                      >
-                        {item.keyword.text}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-[11px]">
-                      <StatusChip label={status.label} tone={status.tone} />
-                    </td>
-                    <td className="px-3 py-[11px] font-semibold text-fg">
-                      {item.keyword.location}
-                      {item.keyword.languageLabel ? ` / ${item.keyword.languageLabel}` : ""}
-                    </td>
-                    <td className="px-3 py-[11px] text-[11px] text-fg-muted">
-                      {deviceLabel(item.keyword.device)}
-                    </td>
-                    <td className="px-3 py-[11px] font-semibold tabular-nums text-fg">
-                      {item.rankCheck?.position ?? "-"}
-                    </td>
-                    <td className="px-3 py-[11px] text-[11px] tabular-nums text-fg-muted">
-                      {money(item.actualCostCents ?? item.estimatedCostCents)}
-                    </td>
-                    {showNotes ? (
-                      <td className="px-3 py-[11px]">
-                        <span
-                          className="block truncate text-[11.5px] text-fg-muted"
-                          title={itemNote}
-                        >
-                          {itemNote}
-                        </span>
-                      </td>
-                    ) : null}
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        ariaLabel="Targets in this run"
+        columns={runTargetTableColumns({ deploymentMode, projectRef, run, showNotes })}
+        density="compact"
+        emptyState={<span className="text-[12px] text-fg-muted">Nothing was sent.</span>}
+        id="run-page-targets-table"
+        layout="auto"
+        onSortingChange={ignoreSorting}
+        rows={items}
+        sorting={null}
+      />
       <footer className="flex flex-wrap items-center gap-2.5 px-4 py-3">
         <span
           className="min-w-0 text-[11.5px] leading-[1.5] text-fg-muted"
