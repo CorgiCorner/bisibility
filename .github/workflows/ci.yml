@@ -1,13 +1,13 @@
 # GENERATED - do not edit directly.
-# Source hash: faaa51827d5fec78f6aa040dd1d0442cbd70dd45e03b082a51b8cc7e7a5af24f
+# Source hash: f915b4681442aa49401f74c7e367fc55154e8b4d5c61b4b7750edb412fd57ea3
 name: CI
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
   push:
-    branches:
-      - main
+    tags:
+      - "v*.*.*-rc.*"
 
 # Cancel superseded runs on the same PR. Non-PR runs (pushes to main) get a
 # unique group per run so they neither cancel nor queue behind each other.

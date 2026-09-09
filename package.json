@@ -1,6 +1,6 @@
 {
   "name": "bisibility",
-  "version": "0.22.0",
+  "version": "0.22.1",
   "private": true,
   "description": "Self-hostable open-source keyword rank tracker with keyword and backlink research, MCP, and bring-your-own providers.",
   "license": "AGPL-3.0-only",
@@ -88,7 +88,7 @@
     "test:e2e:first-run-schema": "node scripts/smoke/first-run-schema-e2e.mjs",
     "test:data-migration-runner-postgres": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/smoke/data-migration-runner-postgres.ts",
     "test:baseline-catalog": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/smoke/baseline-catalog.ts",
-    "test:ci-runtime": "node --test scripts/ci/node-memory-limit.test.mjs scripts/ci/run-build.test.mjs scripts/ci/verify-required-jobs.test.mjs scripts/ci/verify-public-release-source.test.mjs",
+    "test:ci-runtime": "node --test scripts/ci/node-memory-limit.test.mjs scripts/ci/run-build.test.mjs scripts/ci/verify-required-jobs.test.mjs scripts/ci/verify-public-release-source.test.mjs scripts/ci/verify-image-publication.test.mjs",
     "smoke:visual": "node scripts/smoke/smoke-visual.mjs",
     "smoke:docker": "node scripts/smoke/smoke-docker.mjs",
     "sonar:up": "docker compose -f docker-compose.sonar.yml up -d sonarqube",

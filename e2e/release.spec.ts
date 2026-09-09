@@ -150,6 +150,10 @@ async function verifyWorkspaceWidths(page: Page, keywordDetailPath: string, proj
     await page.setViewportSize({ height: 1000, width });
     for (const path of analyticsPaths) {
       await page.goto(path);
+      if (path.endsWith("?tab=checks")) {
+        // The legacy route streams a redirect; measure only its final document.
+        await page.waitForURL(`/app/${projectRef}/runs?source=rank_checks`);
+      }
       const main = page.locator("main:visible").last();
       await expect(main).toBeVisible();
       await expect

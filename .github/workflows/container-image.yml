@@ -1,11 +1,11 @@
 name: Container Image
 
 on:
-  # Release commits skip the ordinary main build. Tagged releases arrive through
-  # repository_dispatch while exact-SHA public CI is verified after publication.
+  # Final tag pushes select the workflow from the verified candidate commit.
+  # RC tags never build or publish images.
   push:
-    branches:
-      - main
+    tags:
+      - "v*.*.*"
   repository_dispatch:
     types:
       - container-image
@@ -29,7 +29,7 @@ env:
 jobs:
   prepare:
     name: Prepare image metadata
-    if: github.repository == 'CorgiCorner/bisibility' && (github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore(release):'))
+    if: github.repository == 'CorgiCorner/bisibility' && (github.event_name != 'push' || !contains(github.ref_name, '-rc.'))
     runs-on: ${{ github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_SELF_HOSTED == 'true' && 'bisibility-ci' || github.repository != 'CorgiCorner/bisibility' && vars.CI_USE_DEPOT == 'true' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 10
     permissions:
@@ -101,20 +101,12 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
 
-      - name: Verify published public release source
-        if: github.event_name == 'repository_dispatch'
+      - name: Verify native public CI before image publication
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          ORIGIN_SHA: ${{ github.event.client_payload.origin_sha }}
           PUBLIC_SHA: ${{ steps.version.outputs.source_sha }}
           RELEASE_TAG: v${{ steps.version.outputs.version }}
-        run: >-
-          node scripts/ci/verify-public-release-source.mjs
-          --repo "$GITHUB_REPOSITORY"
-          --sha "$PUBLIC_SHA"
-          --tag "$RELEASE_TAG"
-          --origin-sha "$ORIGIN_SHA"
-          --source-only
+        run: node scripts/ci/verify-image-publication.mjs
 
       - name: Select registries
         id: registries
@@ -139,7 +131,7 @@ jobs:
             && [ -n "${DOCKERHUB_USERNAME}" ] && [ -n "${DOCKERHUB_TOKEN}" ]; then
             echo "dockerhub_enabled=true" >> "$GITHUB_OUTPUT"
           elif [ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ] || [ "${PUSH_DOCKERHUB_INPUT}" != "false" ]; then
-            if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ]; then
+            if [ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ]; then
               echo "::error::Docker Hub credentials are required for release publication."
               exit 1
             fi
@@ -181,7 +173,7 @@ jobs:
 
   build:
     name: Build ${{ matrix.image.registry }} ${{ matrix.image.runtime }} ${{ matrix.platform.arch }}
-    if: github.repository == 'CorgiCorner/bisibility'
+    if: "!cancelled() && github.repository == 'CorgiCorner/bisibility' && needs.prepare.result == 'success'"
     needs: prepare
     strategy:
       fail-fast: false
@@ -277,7 +269,7 @@ jobs:
 
   merge:
     name: Publish ${{ matrix.image.registry }} ${{ matrix.image.runtime }} manifest
-    if: github.repository == 'CorgiCorner/bisibility'
+    if: "!cancelled() && github.repository == 'CorgiCorner/bisibility' && needs.prepare.result == 'success' && needs.build.result == 'success'"
     needs:
       - prepare
       - build
@@ -337,14 +329,12 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         env:
           IMAGE_NAME: ${{ matrix.image.image }}
-          RELEASE_VERSION: ${{ github.event.client_payload.version }}
-          RELEASE_MINOR: ${{ github.event.client_payload.minor }}
-          RELEASE_MAJOR: ${{ github.event.client_payload.major }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
           SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
         run: |
           tag_names=()
-          if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ]; then
-            tag_names+=("${RELEASE_VERSION}" "${RELEASE_MINOR}" "${RELEASE_MAJOR}" "latest" "edge")
+          if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ] || [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag_names+=("${RELEASE_VERSION}" "${RELEASE_VERSION%.*}" "${RELEASE_VERSION%%.*}" "latest" "edge")
           elif [ "${GITHUB_REF}" = "refs/heads/main" ]; then
             tag_names+=("edge")
           fi
@@ -392,8 +382,8 @@ jobs:
   verify-release:
     name: Verify release distribution
     if: >-
-      github.repository == 'CorgiCorner/bisibility' &&
-      github.event_name == 'repository_dispatch' &&
+      !cancelled() && github.repository == 'CorgiCorner/bisibility' &&
+      (github.event_name == 'repository_dispatch' || startsWith(github.ref, 'refs/tags/')) &&
       needs.prepare.result == 'success' &&
       needs.build.result == 'success' &&
       needs.merge.result == 'success'
@@ -433,8 +423,8 @@ jobs:
   publish-release:
     name: Publish immutable release assets
     if: >-
-      github.repository == 'CorgiCorner/bisibility' &&
-      github.event_name == 'repository_dispatch' &&
+      !cancelled() && github.repository == 'CorgiCorner/bisibility' &&
+      (github.event_name == 'repository_dispatch' || startsWith(github.ref, 'refs/tags/')) &&
       needs.verify-release.result == 'success'
     needs:
       - prepare
@@ -470,7 +460,7 @@ jobs:
       - name: Publish immutable release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: v${{ github.event.client_payload.version }}
+          RELEASE_TAG: v${{ needs.prepare.outputs.version }}
         run: |
           set -euo pipefail
           node scripts/distribution/release-notes.mjs --tag "$RELEASE_TAG" \
@@ -514,8 +504,8 @@ jobs:
   sync-dockerhub-descriptions:
     name: Sync Docker Hub descriptions
     if: >-
-      github.repository == 'CorgiCorner/bisibility' &&
-      github.event_name == 'repository_dispatch' &&
+      !cancelled() && github.repository == 'CorgiCorner/bisibility' &&
+      (github.event_name == 'repository_dispatch' || startsWith(github.ref, 'refs/tags/')) &&
       needs.prepare.outputs.dockerhub_enabled == 'true' &&
       needs.publish-release.result == 'success'
     needs:
@@ -545,5 +535,5 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_TAG: v${{ github.event.client_payload.version }}
+          RELEASE_TAG: v${{ needs.prepare.outputs.version }}
         run: node .github/scripts/sync-dockerhub-descriptions.mjs --version "$RELEASE_TAG"

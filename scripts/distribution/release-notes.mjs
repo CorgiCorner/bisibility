@@ -25,7 +25,8 @@ function releaseNotes(tag) {
   }
   const next = headings[headings.indexOf(heading) + 1];
   const body = normalizeBody(changelog.slice(heading.index + heading[0].length, next?.index));
-  if (!/^- \S/m.test(body.replace(/<!--[\s\S]*?-->/g, ""))) {
+  const maintenance = "Maintenance release. Application behavior is unchanged.";
+  if (body !== maintenance && !/^- \S/m.test(body.replace(/<!--[\s\S]*?-->/g, ""))) {
     throw new Error(`CHANGELOG.md section for ${tag} has no release notes.`);
   }
   return body;

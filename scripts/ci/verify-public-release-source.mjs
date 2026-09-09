@@ -30,7 +30,7 @@ export async function verifyOriginRevision(api, publicSha, originSha) {
   }
 }
 
-function apiClient({ repo, token }) {
+export function apiClient({ repo, token }) {
   return async (path) => {
     const response = await fetch(`https://api.github.com/repos/${repo}${path}`, {
       headers: {
@@ -55,18 +55,23 @@ export async function resolveTagCommit(api, tag) {
   return annotated.object.sha;
 }
 
-export async function inspectPublicCi(api, sha) {
+export async function inspectPublicCi(api, sha, ref = "main") {
   const query = new URLSearchParams({ event: "push", head_sha: sha, per_page: "20" });
   const runs = await api(`/actions/workflows/${workflow}/runs?${query}`);
-  const candidates = (runs.workflow_runs ?? []).sort((left, right) => right.id - left.id);
+  const candidates = (runs.workflow_runs ?? [])
+    .filter((run) => run.head_sha === sha && run.event === "push" &&
+      run.path === ".github/workflows/ci.yml" && run.head_branch === ref)
+    .sort((left, right) => right.id - left.id);
   const run = candidates[0];
   if (!run) return { state: "missing" };
   if (run.status !== "completed") return { run, state: "pending" };
   if (run.conclusion !== "success") return { run, state: "failed" };
 
-  const jobs = await api(`/actions/runs/${run.id}/jobs?per_page=100`);
+  if (!Number.isSafeInteger(run.run_attempt) || run.run_attempt < 1) return { run, state: "failed" };
+  const jobs = await api(`/actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100`);
   const gate = (jobs.jobs ?? []).find((job) => job.name === "ci-ok");
-  if (!gate || gate.status !== "completed" || gate.conclusion !== "success") {
+  if (!gate || gate.head_sha !== sha || gate.run_attempt !== run.run_attempt ||
+    gate.status !== "completed" || gate.conclusion !== "success") {
     return { gate, run, state: "failed" };
   }
   return { gate, run, state: "success" };
@@ -75,6 +80,10 @@ export async function inspectPublicCi(api, sha) {
 export async function verifyPublicReleaseSource({
   allowMissingOrigin = false,
   api,
+  candidateOnly = false,
+  candidateTag,
+  expectedRunId,
+  expectedRunAttempt,
   originSha,
   pause: waitFor = pause,
   sha,
@@ -83,9 +92,16 @@ export async function verifyPublicReleaseSource({
   wait,
 }) {
   assertSha(sha);
+  if (candidateTag && !/^v\d+\.\d+\.\d+-rc\.(0|[1-9]\d*)$/.test(candidateTag)) {
+    throw new Error("Invalid public candidate tag.");
+  }
+  if (candidateOnly && (!candidateTag || sourceOnly)) throw new Error("Candidate validation requires native public CI.");
+  if (candidateTag && tag && candidateTag.split("-rc.")[0] !== tag) {
+    throw new Error("Public candidate version does not match final tag.");
+  }
   if (!originSha && !allowMissingOrigin) throw new Error("origin SHA is required.");
   const deadline = Date.now() + (wait ? 30 * 60_000 : 0);
-  for (;;) {
+  for (; !candidateOnly;) {
     const main = await api("/git/ref/heads/main");
     if (main.object?.sha === sha) break;
     if (!wait || Date.now() >= deadline) {
@@ -96,6 +112,9 @@ export async function verifyPublicReleaseSource({
     );
     await waitFor(pollIntervalMs);
   }
+  if (candidateTag && await resolveTagCommit(api, candidateTag) !== sha) {
+    throw new Error(`Public candidate ${candidateTag} does not match ${sha}.`);
+  }
   if (tag) {
     const tagCommit = await resolveTagCommit(api, tag);
     if (tagCommit !== sha) throw new Error(`Public tag ${tag} does not match ${sha}.`);
@@ -104,8 +123,14 @@ export async function verifyPublicReleaseSource({
   if (sourceOnly) return { state: "source-only" };
 
   for (;;) {
-    const status = await inspectPublicCi(api, sha);
-    if (status.state === "success") return status;
+    const status = await inspectPublicCi(api, sha, candidateTag ?? "main");
+    if (status.state === "success") {
+      if ((expectedRunId !== undefined && status.run.id !== expectedRunId) ||
+        (expectedRunAttempt !== undefined && status.run.run_attempt !== expectedRunAttempt)) {
+        throw new Error("Public CI no longer matches the candidate receipt.");
+      }
+      return status;
+    }
     if (status.state === "failed") {
       throw new Error(`Public CI failed for ${sha}: ${status.run?.html_url ?? "run unavailable"}`);
     }
@@ -122,10 +147,12 @@ function options(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const item = argv[index];
     if (item === "--wait") parsed.wait = true;
+    else if (item === "--candidate-only") parsed.candidateOnly = true;
+    else if (item === "--publication") parsed.publication = true;
     else if (item === "--source-only") parsed.sourceOnly = true;
     else if (item === "--allow-missing-origin") parsed.allowMissingOrigin = true;
-    else if (["--repo", "--sha", "--tag", "--origin-sha"].includes(item)) {
-      parsed[item.slice(2).replace("-", "_")] = argv[++index];
+    else if (["--repo", "--sha", "--tag", "--origin-sha", "--candidate-tag", "--ci-run-id", "--ci-run-attempt"].includes(item)) {
+      parsed[item.slice(2).replaceAll("-", "_")] = argv[++index];
     }
     else throw new Error(`Unknown argument: ${item}`);
   }
@@ -137,9 +164,18 @@ async function main() {
   const repo = required(parsed.repo, "--repo");
   const sha = required(parsed.sha, "--sha");
   const token = required(process.env.GITHUB_TOKEN, "GITHUB_TOKEN");
+  if (parsed.publication) {
+    required(parsed.candidate_tag, "--candidate-tag");
+    required(parsed.tag, "--tag");
+    if (parsed.sourceOnly || parsed.allowMissingOrigin || parsed.candidateOnly) throw new Error("Publication requires complete source and native CI proof.");
+  }
   const result = await verifyPublicReleaseSource({
     allowMissingOrigin: parsed.allowMissingOrigin,
     api: apiClient({ repo, token }),
+    candidateOnly: parsed.candidateOnly,
+    candidateTag: parsed.candidate_tag,
+    expectedRunId: parsed.ci_run_id ? Number(parsed.ci_run_id) : undefined,
+    expectedRunAttempt: parsed.ci_run_attempt ? Number(parsed.ci_run_attempt) : undefined,
     originSha: parsed.origin_sha,
     sha,
     sourceOnly: parsed.sourceOnly,

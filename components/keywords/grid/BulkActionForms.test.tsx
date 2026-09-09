@@ -53,7 +53,15 @@ function renderForm() {
   );
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+function mockTimezoneCatalogue() {
+  // Full IANA coverage lives in lib/settings/timezones.test.ts; these cases test form interactions.
+  vi.spyOn(Intl, "supportedValuesOf").mockReturnValue(["America/New_York", "Europe/Warsaw", "UTC"]);
+}
 
 describe("New schedule from selection", () => {
   it("uses the selected cadence for the name and inherits project depth, not keyword depth", async () => {
@@ -97,6 +105,7 @@ describe("New schedule from selection", () => {
 
   it("can return from an explicit zone to the project zone before saving", async () => {
     const user = userEvent.setup();
+    mockTimezoneCatalogue();
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({ json: async () => ({ data: { publicId: "sch_new" } }), ok: true })
@@ -128,6 +137,7 @@ describe("New schedule from selection", () => {
 
   it("selects a validated timezone from the searchable catalogue", async () => {
     const user = userEvent.setup();
+    mockTimezoneCatalogue();
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({ json: async () => ({ data: { publicId: "sch_new" } }), ok: true })

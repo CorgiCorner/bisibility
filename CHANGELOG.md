@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.22.1] - 2026-09-09
+
+Maintenance release. Application behavior is unchanged.
+
 ## [0.22.0] - 2026-09-09
 
 - Refined Rank Tracker tables and shared controls with saved layouts, resizing, grouping, bulk actions, keyword suggestions and clearer market navigation.
