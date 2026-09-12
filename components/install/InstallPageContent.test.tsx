@@ -151,14 +151,14 @@ describe("InstallPageContent", () => {
   it("renders the no-key settings link inline without a bordered action", () => {
     render(<InstallPageContent {...props} apiKey={null} />);
 
-    const link = screen.getByRole("link", { name: "Create one in Settings, Developers." });
-
-    expect(link).toHaveAttribute("href", "/app/prj_abcdefghijklmnopqrstuvwx/settings/developers");
-    expect(link).toHaveClass("text-accent-text", "hover:underline");
-    expect(link).not.toHaveClass("border", "border-border-control", "rounded-control");
-    expect(link.parentElement).toHaveTextContent(
-      "No API key yet. Create one in Settings, Developers.",
-    );
+    expect(
+      screen.getByText(
+        "No API key yet. Project admins can create one under Settings → Developers.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Create one in Settings, Developers." }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Manage in Settings, Developers/ })).toBeNull();
   });
 

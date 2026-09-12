@@ -13,6 +13,14 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ showToast: vi.fn() }));
+vi.mock("@/lib/actions/presence-settings", () => ({
+  updateSearchSyncSettings: vi.fn(),
+}));
+vi.mock("@/lib/actions/search-insights", () => ({
+  pauseSearchInsightsImport: vi.fn(),
+  resumeSearchInsightsImport: vi.fn(),
+  retrySearchInsightsImport: vi.fn(),
+}));
 vi.mock("@/components/ui/toast-context", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/components/ui/toast-context")>()),
   useToast: () => ({ showToast: mocks.showToast }),
@@ -85,6 +93,28 @@ describe("SearchDataSyncCard", () => {
     expect(
       screen.queryByRole("button", { name: /Pause Search Console sync/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("does not offer an active Search Console connect action to a read-only viewer", () => {
+    render(
+      <SearchDataSyncCard
+        canEdit={false}
+        metrics={{ ...metrics, connectionStatus: "not_connected", state: null }}
+        pace="normal"
+        projectId="prj_1"
+        retentionMonths={16}
+        updateSettings={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Reconnect required")).toBeInTheDocument();
+    expect(screen.getByText("Read-only")).toBeInTheDocument();
+    expect(screen.getByText("16 months")).toBeInTheDocument();
+    expect(screen.getByText("Standard")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Connect Search Console" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Connect Search Console")).not.toBeInTheDocument();
+    expect(screen.getByText("Ask a project admin to connect")).toBeInTheDocument();
   });
 
   it("renders the same title and supporting text as the shared resolver", () => {

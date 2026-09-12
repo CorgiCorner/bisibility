@@ -1,4 +1,5 @@
 import { WorkspaceShell } from "@/app/app/(workspace)/workspace-shell";
+import { RankTrackerSearchDraftProvider } from "@/components/keywords/RankTrackerSearchDraft";
 import { MarketContextProvider } from "@/components/markets/MarketContextProvider";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
 import type { ReactNode } from "react";
@@ -29,13 +30,15 @@ export default async function ProjectLayout({
     // could not read the context at all. A market route nests its own provider inside this one,
     // around the page body it renders.
     <MarketContextProvider market={null} projectRef={access.publicId}>
-      <WorkspaceShell
-        activeProjectId={access.projectId}
-        context={context}
-        projectRef={access.publicId}
-      >
-        {children}
-      </WorkspaceShell>
+      <RankTrackerSearchDraftProvider>
+        <WorkspaceShell
+          activeProjectId={access.projectId}
+          context={context}
+          projectRef={access.publicId}
+        >
+          {children}
+        </WorkspaceShell>
+      </RankTrackerSearchDraftProvider>
     </MarketContextProvider>
   );
 }

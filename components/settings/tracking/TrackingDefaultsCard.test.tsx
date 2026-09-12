@@ -2,6 +2,7 @@ import { TrackingDefaultsCard } from "@/components/settings/tracking/TrackingDef
 import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import type { DefaultsData } from "@/lib/settings/options";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const defaults: DefaultsData = {
@@ -205,13 +206,37 @@ describe("TrackingDefaultsCard", () => {
     );
   });
 
-  it("explains that a Top-10 default does not update Visibility", () => {
+  it("shows Top-10 guidance on hover without an inline warning", async () => {
     renderCard({ serpDepth: 10 });
 
-    expect(
-      screen.getByText(
-        "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
-      ),
-    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Default SERP depth" })).toHaveAccessibleDescription(
+      "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
+    );
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    await userEvent.setup().hover(screen.getByRole("button", { name: "Default SERP depth" }));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Top 10 checks do not update Visibility",
+    );
+  });
+
+  it("shows check defaults as text for a read-only viewer", () => {
+    render(
+      <TrackingDefaultsCard
+        canEdit={false}
+        defaults={defaults}
+        initialCronPreview={readyPreview}
+        previewCron={vi.fn(async () => readyPreview)}
+        projectId="prj_1"
+        updateDefaults={vi.fn(async () => ({}))}
+      />,
+    );
+
+    expect(screen.getByText("Read-only")).toBeInTheDocument();
+    expect(screen.getByText("Monthly")).toBeInTheDocument();
+    expect(screen.getByText("Europe/Warsaw")).toBeInTheDocument();
+    expect(screen.getByText("Top 100")).toBeInTheDocument();
+    expect(screen.getByText("Desktop")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Timezone" })).not.toBeInTheDocument();
   });
 });

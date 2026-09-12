@@ -234,29 +234,6 @@ describe("KeywordsGrid actions", () => {
     ).toBeInTheDocument();
   }, 10_000);
 
-  it("opens the same preflight from Retry", async () => {
-    const rows = pendingRows(2);
-    renderPendingGrid({
-      checkHealth: {
-        budget: { capCents: 5000, exhausted: false, spentCents: 1250 },
-        failed24h: { count: 1, latest: null },
-        providerRate: { overrideCents: 2, providerId: "dataforseo" },
-      },
-      providerConnected: true,
-      rows,
-    });
-
-    await screen.findByText(rows[0].keyword);
-    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
-
-    expect(
-      await screen.findByRole("dialog", { name: /Check 2 selected keywords in United States/ }),
-    ).toBeInTheDocument();
-    expect(JSON.parse(String(mocks.fetch.mock.calls[0]?.[1]?.body))).toMatchObject({
-      spec: { keywordIds: rows.map((row) => row.id), kind: "selected", v: 1 },
-    });
-  }, 15_000);
-
   it("exports searched server results as a query selection", async () => {
     const rows = pendingRows(2);
     renderPendingGrid({ rows });

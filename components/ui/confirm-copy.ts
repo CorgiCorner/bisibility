@@ -14,6 +14,7 @@ export type ConfirmKind =
   | "deleteWebhookEndpoint"
   | "deleteBulk"
   | "deleteKeyword"
+  | "deleteRun"
   | "clearTargetUrls"
   | "reactivateAccount"
   | "resetAccountLimits"
@@ -60,6 +61,13 @@ export const CONFIRM: Record<ConfirmKind, ConfirmConfig> = {
     icon: Trash,
     toastMessage: "Selected keywords deleted",
     title: "Delete selected keywords",
+  },
+  deleteRun: {
+    body: "Delete this run from history? Keyword positions and recorded provider spend are retained. This cannot be undone.",
+    dangerLabel: "Delete run",
+    icon: Trash,
+    toastMessage: "Run deleted",
+    title: "Delete run",
   },
   deleteKeyword: {
     body: "Stop tracking this keyword and remove its position history. This cannot be undone.",

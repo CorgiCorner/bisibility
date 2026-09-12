@@ -5,7 +5,7 @@ const savedViewSurface = { enum: savedViewSurfaces, type: "string" };
 
 export const savedViewSchema = {
   properties: {
-    config: { type: "object" },
+    config: { additionalProperties: true, type: "object" },
     id: publicIdSchema("viw"),
     name: { type: "string" },
     surface: savedViewSurface,
@@ -16,7 +16,7 @@ export const savedViewSchema = {
 
 export const savedViewInputSchema = {
   properties: {
-    config: { type: "object" },
+    config: { additionalProperties: true, type: "object" },
     name: { maxLength: 48, minLength: 1, type: "string" },
     surface: savedViewSurface,
   },

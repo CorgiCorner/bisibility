@@ -1,6 +1,6 @@
 ---
-title: "Quickstart"
-description: "Run a throwaway local demo of bisibility with seeded data, then run your first manual rank check."
+title: "Local demo quickstart"
+description: "Run a disposable bisibility demo locally and verify the app works."
 ---
 
 This page runs a throwaway local evaluation of bisibility with synthetic seeded
@@ -86,11 +86,29 @@ demo on `localhost` and never expose it on a public address.
 
 ## 4. Confirm the seeded data
 
-After sign-in, open the tracking table. The seeded demo project, search terms,
-and synthetic rank history are visible. This data is not real and exists only
-so you can explore the UI without connecting a provider first.
+After sign-in, open the tracking table. The seeded project, search terms,
+and synthetic rank history are ready to explore.
 
-## 5. Run the first check
+**Your local demo is now working. You can stop here.**
+
+Connecting a SERP provider is optional and only required when you want to
+fetch live ranking data.
+
+## Success
+
+Your local evaluation is working when:
+
+1. The liveness endpoint returns `{ "status": "ok" }`.
+2. Demo sign-in succeeds.
+3. The seeded project and search terms are visible.
+
+A live provider check is optional and is not required to complete this
+quickstart.
+
+## Optional: run a live rank check
+
+To fetch real ranking data, connect one of the supported SERP providers.
+Provider usage is billed by that provider.
 
 bisibility ships without a data source, so a live rank check needs your own
 supported SERP provider credentials first.
@@ -109,17 +127,7 @@ select **Run check**.
 Manual checks run on the core stack. Scheduled checks require the worker and
 Temporal overlays from step 2.
 
-### Success
-
-You have a working local evaluation when:
-
-1. The liveness endpoint returns `{ "status": "ok" }`.
-2. Sign-in with `demo@acme.dev` and code `000000` succeeds.
-3. The seeded demo project and search terms are visible in the tracking table.
-4. After connecting your own SERP provider, a manual first check starts and
-   returns ranking data.
-
-## 6. Stop and clean up
+## 5. Stop and clean up
 
 Stop the core stack, keeping the data for a later restart:
 

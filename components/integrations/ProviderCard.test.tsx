@@ -113,6 +113,7 @@ describe("ProviderCard", () => {
       `Running · ${searchImportProgress.qualifyingDays} of ${searchImportProgress.targetDays} finalized days`,
     );
     expect(within(searchRow).getByRole("heading", { name: "Search Console" })).toBeVisible();
+    expect(screen.getByText("Read-only")).toBeVisible();
     expect(within(searchRow).getByTitle("corgitocoin.com")).toHaveTextContent("corgitocoin.com");
     expect(searchRow).not.toHaveTextContent("sc-domain:");
     expect(within(searchRow).getByRole("link", { name: "Open Search Console" })).toHaveAttribute(

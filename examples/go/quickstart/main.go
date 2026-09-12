@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	bisibility "github.com/bisibility/bisibility-sdk-go"
+	bisibility "bisibility.com/sdk-go"
 )
 
 const exampleID = "go-quickstart"

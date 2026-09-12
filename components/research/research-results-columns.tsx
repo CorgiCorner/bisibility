@@ -10,7 +10,7 @@ import type { ResearchResultsTableRow } from "./research-results-table-state";
 export function researchResultsColumns(input: {
   canRemoveSaved: boolean;
   metricsAvailable: boolean;
-  onToggleSave: (row: GroupedResearchRow) => void;
+  onToggleSave?: (row: GroupedResearchRow) => void;
 }): DataTableColumn<ResearchResultsTableRow>[] {
   return [
     {

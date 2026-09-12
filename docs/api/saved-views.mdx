@@ -26,3 +26,12 @@ Saved views store presentation state; deleting one does not mutate keywords.
 The generated
 [OpenAPI JSON](https://bisibility.com/api/v1/openapi.json) remains the
 machine-readable source of truth for request and response schemas.
+
+## Related operations
+
+- [`GET /projects/{project_id}/saved-views`](/api-reference/saved-views/list-saved-views) (`listSavedViews`)
+- [`POST /projects/{project_id}/saved-views`](/api-reference/saved-views/create-a-saved-view) (`createSavedView`)
+- [`DELETE /projects/{project_id}/saved-views/{view_id}`](/api-reference/saved-views/delete-a-project-saved-view) (`deleteProjectSavedView`)
+- [`DELETE /saved-views/{view_id}`](/api-reference/saved-views/delete-a-saved-view-by-id) (`deleteSavedView`)
+
+Exact request and response schemas live in the generated API Reference.

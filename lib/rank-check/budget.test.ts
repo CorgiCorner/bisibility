@@ -174,6 +174,17 @@ describe("rank check budget", () => {
     });
   });
 
+  it("treats a zero legacy cap as no cap when enforcing a rank-check launch", async () => {
+    mocks.prisma.project.findUnique.mockResolvedValue({ budgetCapCents: 0 });
+    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 25 } });
+
+    await expect(
+      assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), {
+        estimatedCostCents: 25,
+      }),
+    ).resolves.toEqual({ capCents: 0, spentCents: 25 });
+  });
+
   it("skips the cap query when a precomputed cap is provided", async () => {
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 9.5 } });
 

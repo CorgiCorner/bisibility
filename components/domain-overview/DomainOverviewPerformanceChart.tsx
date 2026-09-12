@@ -52,12 +52,14 @@ export function DomainOverviewPerformanceChart({
   history,
   loading,
   onLoad,
+  readOnly = false,
 }: Readonly<{
-  estimateCents: number | null;
+  estimateCents?: number | null;
   failed?: boolean;
   history: HistoricalOverviewRow[] | null;
   loading: boolean;
-  onLoad: () => void;
+  onLoad?: () => void;
+  readOnly?: boolean;
 }>) {
   const [metric, setMetric] = useState<HistoryMetric>("traffic");
   const [range, setRange] = useState<Range>("12m");
@@ -119,16 +121,22 @@ export function DomainOverviewPerformanceChart({
             <span className="grid h-11 w-11 place-items-center rounded-control bg-bg-sunken text-fg-muted">
               <ChartLineUp aria-hidden size={22} weight="regular" />
             </span>
-            <strong className="text-sm">Load monthly organic history</strong>
+            <strong className="text-sm">
+              {readOnly ? "History was not collected" : "Load monthly organic history"}
+            </strong>
             <span className="max-w-[360px] font-sans tabular-nums text-[11px] leading-relaxed text-fg-muted">
               {failed
                 ? "History could not be loaded. The overview report is still available."
-                : "History is cached for 12 hours. Switching metrics and ranges after loading is free."}
+                : readOnly
+                  ? "This saved result does not include monthly history."
+                  : "History is cached for 12 hours. Switching metrics and ranges after loading is free."}
             </span>
-            <Button loading={loading} onClick={onLoad} size="sm" variant="secondary">
-              Load history
-              {estimateCents == null ? null : ` ~${formatEstimateCents(estimateCents)}`}
-            </Button>
+            {!readOnly && onLoad ? (
+              <Button loading={loading} onClick={onLoad} size="sm" variant="secondary">
+                Load history
+                {estimateCents == null ? null : ` ~${formatEstimateCents(estimateCents)}`}
+              </Button>
+            ) : null}
           </div>
         </div>
       )}

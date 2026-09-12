@@ -60,9 +60,43 @@ export function checkSdkContract(root, docsRoot) {
     }
   }
 
+  const goModule = "bisibility.com/sdk-go";
+  const legacyGoModule = "github.com/bisibility/bisibility-sdk-go";
+  const goDocs = readFileSync(join(docsRoot, "sdks/go.mdx"), "utf8");
+  if (!goDocs.includes(`go get ${goModule}`)) {
+    failures.push(`sdks/go.mdx must install the published module with go get ${goModule}.`);
+  }
+  for (const [label, source] of [
+    ["examples/go/go.mod", readFileSync(join(root, "examples/go/go.mod"), "utf8")],
+    ["examples/go/quickstart/main.go", readFileSync(join(root, "examples/go/quickstart/main.go"), "utf8")],
+    [
+      "examples/go/error-handling/main.go",
+      readFileSync(join(root, "examples/go/error-handling/main.go"), "utf8"),
+    ],
+    ["examples/README.md", readFileSync(join(root, "examples/README.md"), "utf8")],
+  ]) {
+    if (source.includes(legacyGoModule)) {
+      failures.push(`${label} still depends on ${legacyGoModule}; use ${goModule}.`);
+    }
+    if (!source.includes(goModule)) {
+      failures.push(`${label} must use the published Go module ${goModule}.`);
+    }
+  }
+
   const canonicalMcpContract = JSON.parse(
     readFileSync(join(root, "lib/mcp/canonical-contract.json"), "utf8"),
   );
+  const sdkMethodsDocs = existsSync(sdkMethodsPath)
+    ? readFileSync(sdkMethodsPath, "utf8")
+    : "";
+  if (!sdkMethodsDocs.includes("## MCP tool index")) {
+    failures.push("sdks/methods.mdx must include an MCP tool index.");
+  }
+  for (const { name } of canonicalMcpContract) {
+    if (!sdkMethodsDocs.includes(`\`${name}\``)) {
+      failures.push(`sdks/methods.mdx is missing MCP tool ${name}.`);
+    }
+  }
   const mcpFacingFiles = [
     join(root, "README.md"),
     join(docsRoot, "sdks/mcp.mdx"),

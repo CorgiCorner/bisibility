@@ -36,7 +36,7 @@ function CheckHealthBanners({
 }: Readonly<{ checkHealth: CheckHealth; projectRef: string }>) {
   const latest = checkHealth.failed24h.latest;
   const failureDetail = latest
-    ? `${latest.keyword}: ${providerFailurePresentation(latest.errorCode).message}`
+    ? `${latest.keyword}: ${providerFailurePresentation(latest.errorCode, latest.error).message}`
     : null;
 
   return (
@@ -124,18 +124,26 @@ function OverviewSections({
             />
           ))}
         </section>
-        <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]">
-          <PositionTrendCard
-            data={trend}
-            empty={trend.length === 0}
-            seriesLabel={overview.domain}
-            takeaway={overview.trendTakeaway}
-          />
+        <PositionTrendCard
+          data={trend}
+          empty={trend.length === 0}
+          seriesLabel={overview.domain}
+          takeaway={overview.trendTakeaway}
+        />
+        <section
+          className="grid min-w-0 gap-4 lg:grid-cols-2"
+          data-testid="overview-secondary-cards"
+        >
           <PositionDistributionCard
             buckets={distribution}
             empty={distribution.every((bucket) => bucket.count === 0)}
           />
+          <HighlightLists
+            lists={highlights.filter((list) => list.kind === "recentlyAdded")}
+            projectRef={projectRef}
+          />
         </section>
+        <DataSourcePanel checkHealth={checkHealth} health={dataSource} />
         <ByMarketRollup
           device={overview.toolbar.deviceValue}
           projectRef={projectRef}
@@ -144,8 +152,10 @@ function OverviewSections({
         {competitors ? (
           <OverviewCompetitorsCard data={competitors} projectRef={projectRef} />
         ) : null}
-        <DataSourcePanel checkHealth={checkHealth} health={dataSource} />
-        <HighlightLists lists={highlights} projectRef={projectRef} />
+        <HighlightLists
+          lists={highlights.filter((list) => list.kind !== "recentlyAdded")}
+          projectRef={projectRef}
+        />
         <ViewAllKeywordsButton projectRef={projectRef} />
       </div>
     </>
@@ -154,6 +164,8 @@ function OverviewSections({
 
 export type OverviewDashboardViewProps = {
   canCreateKeyword?: boolean;
+  canManageProviders?: boolean;
+  canRunChecks?: boolean;
   checkHealth: CheckHealth;
   isSample: boolean;
   competitors?: OverviewCompetitorComparison | null;
@@ -162,6 +174,8 @@ export type OverviewDashboardViewProps = {
 
 export function OverviewDashboardView({
   canCreateKeyword = true,
+  canManageProviders = true,
+  canRunChecks = true,
   checkHealth,
   competitors,
   isSample,
@@ -185,6 +199,9 @@ export function OverviewDashboardView({
           {sampleBanner}
           <OverviewNoData
             budgetExhausted={checkHealth.budget.exhausted}
+            canCreateKeyword={canCreateKeyword}
+            canManageProviders={canManageProviders}
+            canRunChecks={canRunChecks}
             getFirstCheckRunPlanAction={getFirstCheckRunPlan}
             overview={overview}
             projectId={overview.publicId}

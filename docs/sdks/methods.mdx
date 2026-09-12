@@ -18,6 +18,13 @@ methods, options, and types.
 Creating a project requires a personal access token. Project API keys can use
 the project-scoped methods in the remaining rows.
 
+The TypeScript SDK prefers resource namespaces such as `projects.list()`. The
+table lists the current method names, including the deprecated flat
+compatibility form still used by the longer repository examples.
+
+For version-specific Domain Overview methods and Python project creation, see
+[released client support](/compatibility).
+
 ## Client pages
 
 - [Python SDK](/sdks/python)
@@ -27,3 +34,105 @@ the project-scoped methods in the remaining rows.
 
 Use the **API Reference** tab when you need the underlying HTTP route, payload
 fields, status codes, or response shape.
+
+## MCP tool index
+
+{/* Generated from the application's canonical MCP contract. */}
+
+These tools describe the application contract in this documentation snapshot.
+The separately published MCP package is versioned independently; see
+[released client support](/compatibility) for inspected package versions.
+
+| Tool | Title |
+| - | - |
+| `get_health` | Get API health |
+| `get_capabilities` | Get API capabilities |
+| `get_cloud_import_compatibility` | Get cloud import compatibility |
+| `get_provider_rates` | Get provider rates |
+| `get_cost_estimate` | Get cost estimate |
+| `get_me` | Get authenticated user |
+| `update_me` | Update authenticated user |
+| `list_projects` | List projects |
+| `create_project` | Create project |
+| `get_project` | Get project |
+| `search_locations` | Search locations |
+| `update_project` | Update project |
+| `delete_project` | Delete project |
+| `get_project_defaults` | Get project defaults |
+| `update_project_defaults` | Update project defaults |
+| `list_keywords` | List project keywords |
+| `list_ranked_keyword_suggestions` | List ranked keyword suggestions |
+| `research_keywords` | Research keywords |
+| `analyze_backlinks` | Analyze backlinks |
+| `load_more_backlink_rows` | Load more backlink rows |
+| `analyze_domain_overview` | Analyze domain overview |
+| `load_domain_overview_history` | Load domain overview history |
+| `load_domain_overview_keywords` | Load domain overview keywords |
+| `load_domain_overview_pages` | Load domain overview pages |
+| `get_keyword_metrics` | Get keyword metrics |
+| `add_keywords` | Add keywords |
+| `get_keyword` | Get keyword |
+| `update_keyword` | Update keyword |
+| `set_keyword_target_url` | Set keyword target URL |
+| `delete_keyword` | Delete keyword |
+| `bulk_update_keywords` | Bulk update keywords |
+| `run_rank_check` | Run rank check |
+| `get_rank_history` | Get rank history |
+| `export_rank_history` | Export project rank history |
+| `list_sitemap_monitors` | List sitemap monitors |
+| `enable_sitemap_monitor` | Enable sitemap monitor |
+| `disable_sitemap_monitor` | Disable sitemap monitor |
+| `get_rank_check_result` | Get rank check result |
+| `create_signal` | Create signal |
+| `list_signals` | List signals |
+| `list_traffic_snapshots` | List traffic snapshots |
+| `list_search_performance_query_stats` | List search-performance query stats |
+| `sync_project_traffic` | Synchronize project traffic |
+| `list_api_keys` | List API keys |
+| `create_api_key` | Create API key |
+| `revoke_api_key` | Revoke API key |
+| `list_project_api_keys` | List project API keys |
+| `create_project_api_key` | Create project API key |
+| `list_personal_tokens` | List personal tokens |
+| `create_personal_token` | Create personal token |
+| `revoke_personal_token` | Revoke personal token |
+| `list_webhooks` | List webhooks |
+| `create_webhook` | Create webhook |
+| `update_webhook` | Update webhook |
+| `delete_webhook` | Delete webhook |
+| `list_alert_rules` | List alert rules |
+| `create_alert_rule` | Create alert rule |
+| `update_alert_rule` | Update alert rule |
+| `delete_alert_rule` | Delete alert rule |
+| `list_triggered_alerts` | List triggered alerts |
+| `mute_triggered_alert` | Mute triggered alert |
+| `mark_project_alerts_read` | Mark project alerts read |
+| `list_team_members` | List team members |
+| `list_team_invites` | List team invites |
+| `create_team_invite` | Create team invite |
+| `revoke_team_invite` | Revoke team invite |
+| `resend_team_invite` | Resend team invite |
+| `update_team_member_role` | Update team member role |
+| `remove_team_member` | Remove team member |
+| `list_providers` | List providers |
+| `connect_provider` | Connect provider |
+| `test_provider_connection` | Test provider connection |
+| `update_provider_settings` | Update provider settings |
+| `set_provider_enabled` | Set provider enabled |
+| `set_provider_priority` | Set provider priority |
+| `set_primary_provider` | Set primary provider |
+| `disconnect_provider` | Disconnect provider |
+| `list_saved_keywords` | List saved keywords |
+| `create_saved_keywords` | Create saved keywords |
+| `delete_saved_keyword` | Delete saved keyword |
+| `list_saved_views` | List saved views |
+| `create_saved_view` | Create saved view |
+| `delete_saved_view` | Delete saved view |
+| `list_competitors` | List competitors |
+| `add_competitor` | Add competitor |
+| `remove_competitor` | Remove competitor |
+| `get_notification_preferences` | Get notification preferences |
+| `update_notification_preferences` | Update notification preferences |
+| `list_migration_tokens` | List migration tokens |
+| `mint_migration_token` | Mint migration token |
+| `revoke_migration_token` | Revoke migration token |

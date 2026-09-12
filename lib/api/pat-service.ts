@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
-import { assertDemoAccountMutable } from "@/lib/demo/config";
+import { assertEditableDemoAccountMutable } from "@/lib/demo/identity";
 import { hashApiKey } from "@/lib/providers/crypto";
 import type { ApiKeyScope } from "@/lib/schemas/apiKey";
 import { personalTokenAuditResource } from "./audit-resources";
@@ -48,7 +48,7 @@ export async function issuePersonalToken(
   input: IssuePersonalTokenInput,
   audit: { action?: "pat.exchange_login" | "pat.issue"; viaClientId?: string | null } = {},
 ) {
-  assertDemoAccountMutable();
+  await assertEditableDemoAccountMutable(userId);
   const raw = newRawPersonalToken();
   const publicId = makePublicId("pat");
   const expiresAt = input.expiresInDays
@@ -87,7 +87,7 @@ export async function listPersonalTokens(userId: string) {
 }
 
 export async function revokePersonalToken(userId: string, tokenId: string) {
-  assertDemoAccountMutable();
+  await assertEditableDemoAccountMutable(userId);
   const before = await prisma.personalAccessToken.findFirst({
     select: tokenSelect,
     where: { publicId: tokenId, userId },

@@ -46,6 +46,69 @@ Errors use `application/problem+json`.
 | <span id="provider_unavailable"></span>`provider_unavailable` | 400, 404, 422, or 502 | Provider is not connected, needs authorization, rejects the request, or fails the lookup. |
 | <span id="scheduler_unavailable"></span>`scheduler_unavailable` | 503 | Async rank-check scheduler is unavailable. |
 
+## Diagnose common errors
+
+The table above is the contract dictionary. Use the rows below when you need
+the likely cause and the next action.
+
+### 401 unauthorized
+
+| Field | Value |
+| - | - |
+| What happened | The request did not present a valid bearer credential. |
+| Most likely cause | Missing `Authorization` header, expired personal access token, or a project API key copied incorrectly. |
+| Retry? | No, until you replace the credential. |
+| Fix | Create a new [project API key](/api/api-keys) or [personal access token](/api/personal-access-tokens), then retry. |
+| HTTP | `401` |
+| Problem type | `unauthorized` |
+| Related guide | [Authentication](/authentication) |
+
+### 403 forbidden
+
+| Field | Value |
+| - | - |
+| What happened | The credential is valid but does not have permission for this operation. |
+| Most likely cause | A project API key used for a user-level operation, or a personal access token whose scope is too narrow. |
+| Retry? | No |
+| Fix | Use a personal access token with the required scope, or a project API key against that project's routes. |
+| HTTP | `403` |
+| Problem type | `forbidden` |
+| Related guide | [Authentication](/authentication#project-selection) |
+
+### 404 not_found
+
+| Field | Value |
+| - | - |
+| What happened | The route or resource does not exist for this credential. |
+| Most likely cause | Wrong public id, or a PAT that is not a member of the project. |
+| Retry? | No, until you correct the id or credential. |
+| HTTP | `404` |
+| Problem type | `not_found` |
+
+### 429 rate_limited or budget_exhausted
+
+| Field | Value |
+| - | - |
+| What happened | The API or the project's monthly provider budget refused the request. |
+| Most likely cause | Burst traffic, or the project cap in **Settings > Provider usage**. |
+| Retry? | Yes after `Retry-After`, unless the problem type is `budget_exhausted`. |
+| HTTP | `429` |
+| Problem type | `rate_limited` or `budget_exhausted` |
+
+### 422 cost_limit_exceeded
+
+| Field | Value |
+| - | - |
+| What happened | The estimated provider cost is above the request's `max_cost_cents`. |
+| Most likely cause | A research or Domain Overview call without an estimate-first dry run. |
+| Retry? | Yes with `estimate_only: true`, then a higher explicit cap. |
+| HTTP | `422` |
+| Problem type | `cost_limit_exceeded` |
+
+For other status codes, start from the table above, then see
+[Authentication](/authentication#troubleshoot-the-first-request) or
+[self-hosting troubleshooting](/self-hosting/troubleshooting).
+
 ## Validation details
 
 Validation errors include an `errors` member with the flattened Zod error

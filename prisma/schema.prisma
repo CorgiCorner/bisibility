@@ -534,6 +534,7 @@ model Project {
   checkSchedules                   CheckSchedule[]
   backlinkSnapshots                BacklinkSnapshot[]
   domainOverviewSnapshots          DomainOverviewSnapshot[]
+  keywordResearchSnapshots         KeywordResearchSnapshot[]
   pageTrafficSnapshots             PageTrafficSnapshot[]
   searchAnalyticsDaily             SearchAnalyticsDaily[]
   searchAnalyticsQueryDaily        SearchAnalyticsQueryDaily[]
@@ -952,6 +953,8 @@ model RankCheck {
 }
 
 model RankCheckRun {
+  /// Removed from user-facing history; retained for scheduler idempotency and accounting.
+  deletedAt               DateTime?
   id                      String                 @id @default(cuid())
   publicId                String                 @unique
   projectId               String
@@ -1258,6 +1261,30 @@ model BacklinkSnapshot {
 
   @@index([projectId, target, targetScope, includeSubdomains, fetchedAt])
   @@map("backlink_snapshots")
+}
+
+model KeywordResearchSnapshot {
+  id                 String   @id @default(cuid())
+  projectId          String
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  requestKey         String
+  seed               String
+  normalizedSeed     String
+  countryCode        String
+  languageCode       String
+  mode               String
+  includeClickstream Boolean
+  resultLimit        Int
+  provider           String
+  rows               Json
+  sources            Json
+  fetchedAt          DateTime
+  freshUntil         DateTime
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([projectId, requestKey])
+  @@map("keyword_research_snapshots")
 }
 
 model BacklinkRow {

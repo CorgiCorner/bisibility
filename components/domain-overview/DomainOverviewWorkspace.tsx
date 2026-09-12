@@ -175,7 +175,7 @@ export function DomainOverviewWorkspace({
       ? "no_provider"
       : context.providerStatus === "needs_reauth"
         ? "needs_reauth"
-        : !researchScope || !researchScope.researchAvailable || !activeResearchScope
+        : !researchScope?.researchAvailable || !activeResearchScope
           ? "unsupported_location"
           : failureState(outcome);
 

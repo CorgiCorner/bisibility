@@ -3,31 +3,27 @@ import "server-only";
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import type { ResearchPage } from "@/lib/providers/types";
-import type { SerpRankLocation } from "@/lib/serp/location";
 import { supportsResearchScope } from "@/lib/serp/research-capability";
+import { keywordResearchCachedUntil, withKeywordResearchCache } from "./cache";
 import {
-  keywordResearchCachedUntil,
-  keywordResearchCacheKey,
-  readKeywordResearchCache,
-  withKeywordResearchCache,
-} from "./cache";
-import {
+  connectionResources,
   eligibleResearchConnections,
   keywordResearchProject,
-  normalizeResearchKeyword,
   researchLocation,
 } from "./context";
+import {
+  estimateKeywordResearch,
+  keywordResearchSourceKey,
+  remainingResearchDiagnostics,
+} from "./execution";
+import { normalizeResearchKeyword } from "./request-key";
 import { annotateResearchResult } from "./result-annotation";
+import { maybePersistKeywordResearchSnapshot } from "./snapshot";
 
 export { fetchKeywordMetrics } from "./metrics";
 
 import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
-import {
-  callResearchSource,
-  type ResearchSelection,
-  sourceEstimate,
-  sourcesForMode,
-} from "./source-call";
+import { callResearchSource, sourceEstimate, sourcesForMode } from "./source-call";
 import type {
   KeywordResearchMode,
   KeywordResearchOutcome,
@@ -35,85 +31,6 @@ import type {
   KeywordResearchSourceDiagnostic,
   KeywordResearchSourceReason,
 } from "./types";
-
-function sourceKey(input: {
-  connectionId: string;
-  includeClickstream: boolean;
-  limit: number;
-  location: SerpRankLocation;
-  projectId: string;
-  seed: string;
-  source: KeywordResearchSource;
-}) {
-  return keywordResearchCacheKey({
-    connectionId: input.connectionId,
-    includeClickstream: input.includeClickstream,
-    location: input.location,
-    normalizedSeed: normalizeResearchKeyword(input.seed),
-    projectId: input.projectId,
-    resultLimit: input.limit,
-    source: input.source,
-  });
-}
-
-function remainingDiagnostics(
-  sources: KeywordResearchSource[],
-  from: number,
-  reason: KeywordResearchSourceReason,
-): KeywordResearchSourceDiagnostic[] {
-  return sources.slice(from).map((source) => ({
-    cached: false,
-    costCents: 0,
-    reason,
-    returned: 0,
-    source,
-    status: "skipped",
-  }));
-}
-
-async function estimateResearch(input: {
-  context: Awaited<ReturnType<typeof loadProviderRateContext>>;
-  fresh?: boolean;
-  includeClickstream: boolean;
-  limit: number;
-  location: SerpRankLocation;
-  mode: KeywordResearchMode;
-  projectId: string;
-  seed: string;
-  selected: ResearchSelection;
-}): Promise<{ cached: boolean; costCents: number; sources: KeywordResearchSourceDiagnostic[] }> {
-  const sources = sourcesForMode(input.mode);
-  const diagnostics = await Promise.all(
-    sources.map(async (source) => {
-      const cachedEntry = input.fresh
-        ? null
-        : await readKeywordResearchCache(
-            sourceKey({
-              connectionId: input.selected.connection.id,
-              includeClickstream: input.includeClickstream,
-              limit: input.limit,
-              location: input.location,
-              projectId: input.projectId,
-              seed: input.seed,
-              source,
-            }),
-          );
-      const cached = Boolean(cachedEntry);
-      return {
-        cached,
-        costCents: cached ? 0 : sourceEstimate({ ...input, source }),
-        returned: 0,
-        source,
-        status: "ok" as const,
-      };
-    }),
-  );
-  return {
-    cached: diagnostics.every((source) => source.cached),
-    costCents: diagnostics.reduce((sum, source) => sum + source.costCents, 0),
-    sources: diagnostics,
-  };
-}
 
 export async function researchKeywords(input: {
   actorId?: string | null;
@@ -145,7 +62,7 @@ export async function researchKeywords(input: {
   const rateContext = await loadProviderRateContext(selected.connection.id, "keyword_research");
   const fetchedAt = new Date().toISOString();
   if (input.estimateOnly) {
-    const estimate = await estimateResearch({
+    const estimate = await estimateKeywordResearch({
       ...input,
       context: rateContext,
       limit: input.resultLimit,
@@ -161,8 +78,8 @@ export async function researchKeywords(input: {
         rows: [],
       },
       project,
-      selected,
-      eligible,
+      selected.provider.label,
+      connectionResources(eligible),
       location.key,
     );
   }
@@ -177,10 +94,10 @@ export async function researchKeywords(input: {
   for (let index = 0; index < plannedSources.length; index += 1) {
     const source = plannedSources[index];
     if (rows.length >= input.resultLimit) {
-      diagnostics.push(...remainingDiagnostics(plannedSources, index, "result_limit"));
+      diagnostics.push(...remainingResearchDiagnostics(plannedSources, index, "result_limit"));
       break;
     }
-    const key = sourceKey({
+    const key = keywordResearchSourceKey({
       connectionId: selected.connection.id,
       includeClickstream: input.includeClickstream,
       limit: input.resultLimit,
@@ -267,7 +184,7 @@ export async function researchKeywords(input: {
         status: isCostLimit ? "skipped" : "failed",
       });
       diagnostics.push(
-        ...remainingDiagnostics(
+        ...remainingResearchDiagnostics(
           plannedSources,
           index + 1,
           isCostLimit ? "cost_limit" : "previous_source_failed",
@@ -276,7 +193,7 @@ export async function researchKeywords(input: {
       break;
     }
   }
-  return annotateResearchResult(
+  const outcome = annotateResearchResult(
     {
       cached:
         diagnostics.length > 0 &&
@@ -294,8 +211,24 @@ export async function researchKeywords(input: {
       sources: diagnostics,
     },
     project,
-    selected,
-    eligible,
+    selected.provider.label,
+    connectionResources(eligible),
     location.key,
   );
+  try {
+    await maybePersistKeywordResearchSnapshot({
+      connectionPublicId: requestedConnectionId,
+      includeClickstream: input.includeClickstream,
+      location: location.value,
+      mode: input.mode,
+      outcome,
+      project,
+      resultLimit: input.resultLimit,
+      seed: input.seed,
+      successfulFetchedAts,
+    });
+  } catch (error) {
+    console.error("[keyword-research] Failed to persist a demo snapshot.", error);
+  }
+  return outcome;
 }

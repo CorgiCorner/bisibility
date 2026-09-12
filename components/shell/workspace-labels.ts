@@ -6,6 +6,13 @@ import type { WorkspaceDataState } from "@/lib/queries/workspace-state";
 
 const KEYWORD_FORMAT = new Intl.NumberFormat("en-US");
 
+export const PROJECT_NAME_MAX_CHARS = 14;
+
+export function truncateProjectName(name: string, maxChars = PROJECT_NAME_MAX_CHARS): string {
+  if (name.length <= maxChars) return name;
+  return `${name.slice(0, maxChars)}…`;
+}
+
 export type WorkspaceDisplayFacts = {
   keywordCount: number;
   latestCompletedRankCheckAt?: Date | null;

@@ -7,6 +7,7 @@ import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
+import { monthlyBudgetExhausted } from "@/lib/rank-check/budget-contract";
 import { requireReadableProject } from "./_auth";
 import {
   getRequestMonthlySpendCents,
@@ -63,7 +64,7 @@ export async function getUpcomingView(
     ? "migration_hold"
     : providerChain.length === 0
       ? "no_provider"
-      : spentCents >= project.budgetCapCents
+      : monthlyBudgetExhausted(project.budgetCapCents, spentCents)
         ? "budget_exhausted"
         : null;
 

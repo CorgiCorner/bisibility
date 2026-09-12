@@ -85,4 +85,18 @@ describe("upcoming checks view", () => {
 
     expect(view.blocked).toEqual([]);
   });
+
+  it("does not forecast a cap exhaustion date when the legacy cap is zero", () => {
+    const view = buildUpcomingView({
+      blockedReason: null,
+      budgetCapCents: 0,
+      now: NOW,
+      projectTimezone: "UTC",
+      providers: [{ provider: "dataforseo", providerLabel: "DataForSEO" }],
+      schedules: [schedule("1", "2026-07-25T10:00:00.000Z")],
+      spentCents: 25,
+    });
+
+    expect(view.forecast).toMatchObject({ capCents: 0, capLastsUntil: null, spentCents: 25 });
+  });
 });

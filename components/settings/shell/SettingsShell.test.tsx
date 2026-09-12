@@ -27,7 +27,6 @@ import {
 } from "@/components/settings/shell/settings-sections";
 import { TeamSettingsLoading } from "@/components/settings/team/TeamSettingsLoading";
 import { TrackingSettingsRouteLoading } from "@/components/settings/tracking/TrackingSettingsLoading";
-import { UsageLoading } from "@/components/settings/usage/UsageLoading";
 import { routerMock } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -62,7 +61,6 @@ const loadingBoundaries = [
     render: () => <NotificationsRouteLoading />,
   },
   { activeSection: "developers", name: "Developers", render: () => <DevelopersLoading /> },
-  { activeSection: "usage", name: "Usage and billing", render: () => <UsageLoading /> },
   { activeSection: "team", name: "Team", render: () => <TeamSettingsLoading /> },
   { activeSection: "advanced", name: "Advanced", render: () => <AdvancedSettingsLoading /> },
   {
@@ -313,7 +311,7 @@ describe("SettingsShell", () => {
       "#api-keys": "developers",
       "#migration": "advanced",
       "#provider-usage": "usage",
-      "#usage-billing": "usage",
+      "#usage-billing": "billing",
     });
     expect(resolveLegacySettingsHash("#api-keys")).toBe("developers");
     expect(resolveLegacySettingsHash("#unknown")).toBeUndefined();
@@ -325,7 +323,11 @@ describe("SettingsShell", () => {
       window.history.replaceState({}, "", `/app/${projectRef}/settings/general${hash}`);
       render(<LegacySettingsHashRedirect projectRef={projectRef} />);
 
-      expect(routerMock.replace).toHaveBeenCalledWith(`/app/${projectRef}/settings/${section}`);
+      expect(routerMock.replace).toHaveBeenCalledWith(
+        section === "usage"
+          ? `/app/${projectRef}/integrations?tab=usage`
+          : `/app/${projectRef}/settings/${section}`,
+      );
     },
   );
 });

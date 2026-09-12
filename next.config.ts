@@ -106,6 +106,17 @@ const nextConfig: NextConfig = {
         ],
         source: "/sitemap.xml",
       },
+      {
+        // One generated sprite serves every country flag, and it only changes with the country
+        // catalog, so it is worth caching well past a deployment.
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800",
+          },
+        ],
+        source: "/flags.svg",
+      },
     ];
   },
   async redirects() {

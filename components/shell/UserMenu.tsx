@@ -12,6 +12,7 @@ import { Divider } from "@/components/ui/Divider";
 import { Menu } from "@/components/ui/Menu";
 import { useToast } from "@/components/ui/toast-context";
 import { authClient } from "@/lib/auth/client";
+import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { useState } from "react";
@@ -71,6 +72,7 @@ export function UserMenu({
     setPending(true);
     try {
       await authClient.signOut();
+      notifyAuthenticatedSessionEnd();
     } catch {
       // The session is still live, and /login would redirect straight back into the app,
       // so surface the failure here instead of navigating into a no-op.

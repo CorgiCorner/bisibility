@@ -110,6 +110,14 @@ export const keywordMatchSchemas = {
 };
 
 export function keywordPaths({ bearer, keywordListParameters, list, ref }: KeywordPathHelpers) {
+  const keywordMutationResult = {
+    additionalProperties: true,
+    description: "Created, skipped, and updated keyword rows for a write.",
+    properties: {
+      created: { items: ref("Keyword"), type: "array" },
+    },
+    type: "object",
+  };
   const matchOperation = bearer(
     "Match exact tracked keyword texts across project markets",
     "matchProjectKeywords",
@@ -124,7 +132,7 @@ export function keywordPaths({ bearer, keywordListParameters, list, ref }: Keywo
       patch: bearer("Set keyword target URL or metadata", "setKeywordTargetUrl", ref("Keyword")),
     },
     "/keywords/bulk": {
-      post: bearer("Bulk mutate keywords", "bulkUpdateKeywords", { type: "object" }),
+      post: bearer("Bulk mutate keywords", "bulkUpdateKeywords", keywordMutationResult),
     },
     "/projects/{project_id}/keyword-matches": {
       post: withRequiredBody(matchOperation),
@@ -137,7 +145,7 @@ export function keywordPaths({ bearer, keywordListParameters, list, ref }: Keywo
         undefined,
         keywordListParameters,
       ),
-      post: bearer("Add one or more keywords", "addKeywords", { type: "object" }),
+      post: bearer("Add one or more keywords", "addKeywords", keywordMutationResult),
     },
   };
 }

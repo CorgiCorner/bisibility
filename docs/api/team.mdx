@@ -30,3 +30,16 @@ permanent and clients should confirm the user's intent before calling it.
 The generated
 [OpenAPI JSON](https://bisibility.com/api/v1/openapi.json) remains the
 machine-readable source of truth for request and response schemas.
+
+## Related operations
+
+- [`GET /projects/{project_id}/team/members`](/api-reference/team/list-team-members) (`listTeamMembers`)
+- [`PATCH /projects/{project_id}/team/members/{member_id}`](/api-reference/team/change-a-non-owner-team-member-role) (`updateTeamMemberRole`)
+- [`DELETE /projects/{project_id}/team/members/{member_id}`](/api-reference/team/remove-a-non-owner-team-member) (`removeTeamMember`)
+- [`GET /projects/{project_id}/team/invites`](/api-reference/team/list-team-invites) (`listTeamInvites`)
+- [`POST /projects/{project_id}/team/invites`](/api-reference/team/create-a-team-invite) (`createTeamInvite`)
+- [`POST /projects/{project_id}/team/invites/{invite_id}/resend`](/api-reference/team/resend-a-pending-team-invite) (`resendTeamInvite`)
+- [`DELETE /projects/{project_id}/team/invites/{invite_id}`](/api-reference/team/revoke-a-project-team-invite) (`revokeProjectTeamInvite`)
+- [`DELETE /team/invites/{invite_id}`](/api-reference/team/revoke-a-team-invite-by-id) (`revokeTeamInvite`)
+
+Exact request and response schemas live in the generated API Reference.

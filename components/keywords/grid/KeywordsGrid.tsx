@@ -215,7 +215,6 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         bulkSetTargetAction={bulkSetTargetAction}
         bulkTagAction={bulkTagAction}
         canDeleteKeyword={canDeleteKeyword}
-        checkFailed={false}
         checkHealth={checkHealth}
         filterChips={filterChips}
         filterCount={filterChips.length}
@@ -224,7 +223,6 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         savedViewControl={scopeView.savedView}
         onAddKeyword={canCreateKeyword ? () => openAddDrawer() : undefined}
         onClearFilters={clearFilters}
-        onDismissFailure={() => undefined}
         onImportCsv={
           canCreateKeyword
             ? () =>

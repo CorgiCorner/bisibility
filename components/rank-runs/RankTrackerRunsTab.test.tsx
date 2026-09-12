@@ -99,7 +99,7 @@ describe("RankTrackerRunsTab", () => {
     expect(mocks.loadWorkspaceBudgetSummary).toHaveBeenCalledWith("project_1");
     expect(capturedRunsProps).toMatchObject({
       budgetExhausted: true,
-      budgetSettingsHref: "/app/prj_1/settings/usage?budget=edit",
+      budgetSettingsHref: "/app/prj_1/integrations?tab=usage&budget=edit",
       notices: [expect.objectContaining({ kind: "budget-exhausted" })],
       projectRef: "prj_1",
     });

@@ -6,6 +6,7 @@ import { moveSummary, type ScheduleEditorMember } from "./ScheduleEditorModel";
 import { scheduleMemberTableColumns } from "./schedule-members-table-columns";
 
 type ScheduleEditorMembersProps = {
+  canEdit?: boolean;
   memberCount: number;
   memberSummary?: string;
   onOpenDrawer: () => void;
@@ -15,6 +16,7 @@ type ScheduleEditorMembersProps = {
 };
 
 export function ScheduleEditorMembers({
+  canEdit = true,
   memberCount,
   memberSummary,
   onOpenDrawer,
@@ -35,9 +37,11 @@ export function ScheduleEditorMembers({
             {memberSummary ?? `${memberCount} keywords`}
           </span>
         </span>
-        <Button onClick={onOpenDrawer} size="sm" type="button" variant="secondary">
-          Add keywords
-        </Button>
+        {canEdit ? (
+          <Button onClick={onOpenDrawer} size="sm" type="button" variant="secondary">
+            Add keywords
+          </Button>
+        ) : null}
       </header>
 
       {members.length ? (

@@ -127,14 +127,14 @@ export function DomainOverviewAnalyzeCard({
           </div>
           <div className="md:w-[230px]">
             <ResearchScopePicker
-              ariaLabel={`Country and language: ${researchScope.countryName} / ${researchScope.languageLabel}`}
+              ariaLabel={`Country: ${researchScope.countryName}`}
               catalogScopes={catalogScopes}
               disabled={submitting}
               onChange={onResearchScopeChange}
               researchScope={researchScope}
               trackedScopes={trackedScopes}
               triggerClassName={`${domainOverviewControlHeight()} w-full bg-bg-elev px-3 text-[13px] disabled:opacity-55`}
-              triggerTitle="Change country and language"
+              triggerTitle="Change country"
               triggerWrapperClassName="w-full"
             />
           </div>

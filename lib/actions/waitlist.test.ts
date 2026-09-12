@@ -84,10 +84,6 @@ describe("joinWaitlist", () => {
     process.env.EMAIL_FROM = "bisibility <notifications@example.com>";
     process.env.SES_REGION = "";
     process.env.RESEND_API_KEY = "resend_test";
-    process.env.RESEND_CONTACTS_API_KEY = "resend_contacts_test";
-    process.env.RESEND_SEGMENT_CLOUD = "segment_cloud";
-    process.env.RESEND_SEGMENT_EARLY_ADOPTERS = "segment_early_adopters";
-    process.env.RESEND_SEGMENT_GENERAL = "segment_general";
     process.env.WAITLIST_NOTIFY_EMAIL = "owner@example.com";
     globalThis.fetch = vi.fn(() => Promise.resolve(new Response(null, { status: 202 })));
     mocks.prisma.waitlist.upsert.mockResolvedValue(storedWaitlist());
@@ -260,10 +256,6 @@ describe("joinWaitlist", () => {
         update: expect.objectContaining({ cloudPrice: undefined }),
       }),
     );
-    expect(fetch).toHaveBeenCalledWith(
-      "https://api.resend.com/contacts",
-      expect.objectContaining({ method: "POST" }),
-    );
     expect(
       vi.mocked(fetch).mock.calls.some(([url]) => url === "https://api.resend.com/emails"),
     ).toBe(false);
@@ -291,31 +283,9 @@ describe("joinWaitlist", () => {
         create: expect.objectContaining({ cloudPrice: "$25/mo", source: "settings_notify" }),
       }),
     );
-    const contactCall = vi
-      .mocked(fetch)
-      .mock.calls.find(([url]) => url === "https://api.resend.com/contacts");
-    const payload = JSON.parse(String(contactCall?.[1]?.body));
-    expect(payload).toMatchObject({ segments: [{ id: "segment_cloud" }] });
     expect(
       vi.mocked(fetch).mock.calls.some(([url]) => url === "https://api.resend.com/emails"),
     ).toBe(true);
-  });
-
-  it("syncs featured companies into the early-adopters segment", async () => {
-    mocks.prisma.waitlist.upsert.mockResolvedValue(
-      storedWaitlist({ email: "founder@company.com", source: "featured_company" }),
-    );
-
-    await joinWaitlist({ email: "founder@company.com", source: "featured_company" });
-
-    const contactCall = vi
-      .mocked(fetch)
-      .mock.calls.find(([url]) => url === "https://api.resend.com/contacts");
-    const payload = JSON.parse(String(contactCall?.[1]?.body));
-    expect(payload).toMatchObject({
-      properties: { source: "featured_company" },
-      segments: [{ id: "segment_early_adopters" }],
-    });
   });
 
   it("rejects personal email for featured-company submissions before writing", async () => {
@@ -439,34 +409,6 @@ describe("joinWaitlist", () => {
     );
   });
 
-  it("skips marketing contact sync for cloud_pricing", async () => {
-    mocks.prisma.waitlist.upsert.mockResolvedValue(
-      storedWaitlist({
-        cloudPrice: "$19/mo",
-        email: "pricing@example.com",
-        source: "cloud_pricing",
-      }),
-    );
-
-    await joinWaitlist({ cloudPrice: "19", email: "pricing@example.com", source: "cloud_pricing" });
-
-    expect(
-      vi.mocked(fetch).mock.calls.some(([url]) => url === "https://api.resend.com/contacts"),
-    ).toBe(false);
-  });
-
-  it("keeps marketing contact sync for landing_capture", async () => {
-    mocks.prisma.waitlist.upsert.mockResolvedValue(
-      storedWaitlist({ email: "landing@example.com", source: "landing_capture" }),
-    );
-
-    await joinWaitlist({ email: "landing@example.com", source: "landing_capture" });
-
-    expect(
-      vi.mocked(fetch).mock.calls.some(([url]) => url === "https://api.resend.com/contacts"),
-    ).toBe(true);
-  });
-
   it("rejects before any DB operation when rate limits are exceeded", async () => {
     mocks.protection.enforceWaitlistRateLimits.mockRejectedValueOnce(
       new Error("Too many requests. Please try again later."),
@@ -525,9 +467,6 @@ describe("joinWaitlist", () => {
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
     expect(
       vi.mocked(fetch).mock.calls.some(([url]) => url === "https://api.resend.com/emails"),
-    ).toBe(false);
-    expect(
-      vi.mocked(fetch).mock.calls.some(([url]) => url === "https://api.resend.com/contacts"),
     ).toBe(false);
   });
 

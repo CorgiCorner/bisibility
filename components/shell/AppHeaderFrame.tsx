@@ -70,11 +70,9 @@ export function AppHeaderFrame({
           version={version}
           workspaces={workspaces}
         />
-        <div className="contents sm:flex sm:min-w-0 sm:flex-wrap sm:items-center sm:gap-3">
-          <div className="col-span-3 row-start-2 min-w-0 empty:hidden sm:contents">{context}</div>
-          <div className="col-start-2 row-start-1 min-w-0 sm:contents">
-            <AppHeaderTitle setupCompleted={setupCompleted} setupTotalCount={setupTotalCount} />
-          </div>
+        <div className="col-start-2 row-start-1 flex min-w-0 items-center gap-2 sm:gap-3">
+          <AppHeaderTitle setupCompleted={setupCompleted} setupTotalCount={setupTotalCount} />
+          <div className="min-w-0 flex-none empty:hidden">{context}</div>
         </div>
       </div>
       {/* Right cluster: spend pill and account utilities share one rhythm. */}

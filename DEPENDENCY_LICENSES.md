@@ -5,7 +5,7 @@ This report includes root production dependencies and installed transitive runti
 Optional dependencies that are not installed on this platform are skipped.
 
 Root production dependencies: 50
-Installed packages listed: 617
+Installed packages listed: 627
 
 | Package | Version | Scope | License | Source |
 | --- | --- | --- | --- | --- |
@@ -67,6 +67,10 @@ Installed packages listed: 617
 | `@img/colour` | 1.1.0 | transitive | MIT | git+https://github.com/lovell/colour.git |
 | `@img/sharp-darwin-arm64` | 0.35.4 | transitive | Apache-2.0 | git+https://github.com/lovell/sharp.git |
 | `@img/sharp-libvips-darwin-arm64` | 1.3.3 | transitive | LGPL-3.0-or-later | git+https://github.com/lovell/sharp-libvips.git |
+| `@img/sharp-libvips-linux-arm64` | 1.3.3 | transitive | LGPL-3.0-or-later | git+https://github.com/lovell/sharp-libvips.git |
+| `@img/sharp-libvips-linuxmusl-arm64` | 1.3.3 | transitive | LGPL-3.0-or-later | git+https://github.com/lovell/sharp-libvips.git |
+| `@img/sharp-linux-arm64` | 0.35.4 | transitive | Apache-2.0 | git+https://github.com/lovell/sharp.git |
+| `@img/sharp-linuxmusl-arm64` | 0.35.4 | transitive | Apache-2.0 | git+https://github.com/lovell/sharp.git |
 | `@jridgewell/gen-mapping` | 0.3.13 | transitive | MIT | git+https://github.com/jridgewell/sourcemaps.git |
 | `@jridgewell/remapping` | 2.3.5 | transitive | MIT | git+https://github.com/jridgewell/sourcemaps.git |
 | `@jridgewell/resolve-uri` | 3.1.2 | transitive | MIT | https://github.com/jridgewell/resolve-uri |
@@ -97,6 +101,8 @@ Installed packages listed: 617
 | `@modelcontextprotocol/sdk` | 1.30.0 | direct | MIT | git+https://github.com/modelcontextprotocol/typescript-sdk.git |
 | `@next/env` | 16.3.4 | transitive | MIT | https://github.com/vercel/next.js |
 | `@next/swc-darwin-arm64` | 16.3.4 | transitive | MIT | https://github.com/vercel/next.js |
+| `@next/swc-linux-arm64-gnu` | 16.3.4 | transitive | MIT | https://github.com/vercel/next.js |
+| `@next/swc-linux-arm64-musl` | 16.3.4 | transitive | MIT | https://github.com/vercel/next.js |
 | `@noble/ciphers` | 2.2.0 | transitive | MIT | git+https://github.com/paulmillr/noble-ciphers.git |
 | `@noble/hashes` | 2.2.0 | direct | MIT | git+https://github.com/paulmillr/noble-hashes.git |
 | `@opentelemetry/api` | 1.9.1 | transitive | Apache-2.0 | open-telemetry/opentelemetry-js |
@@ -167,12 +173,15 @@ Installed packages listed: 617
 | `@rollup/plugin-commonjs` | 28.0.1 | transitive | MIT | rollup/plugins |
 | `@rollup/pluginutils` | 5.4.0 | transitive | MIT | rollup/plugins |
 | `@rollup/rollup-darwin-arm64` | 4.62.0 | transitive | MIT | git+https://github.com/rollup/rollup.git |
+| `@rollup/rollup-linux-arm64-gnu` | 4.62.0 | transitive | MIT | git+https://github.com/rollup/rollup.git |
+| `@rollup/rollup-linux-arm64-musl` | 4.62.0 | transitive | MIT | git+https://github.com/rollup/rollup.git |
 | `@sentry/babel-plugin-component-annotate` | 5.3.0 | transitive | MIT | git://github.com/getsentry/sentry-javascript-bundler-plugins.git |
 | `@sentry/browser` | 10.67.0 | transitive | MIT | git://github.com/getsentry/sentry-javascript.git |
 | `@sentry/browser-utils` | 10.67.0 | transitive | MIT | git://github.com/getsentry/sentry-javascript.git |
 | `@sentry/bundler-plugin-core` | 5.3.0 | transitive | MIT | git://github.com/getsentry/sentry-javascript-bundler-plugins.git |
 | `@sentry/cli` | 2.58.6 | transitive | FSL-1.1-MIT | git://github.com/getsentry/sentry-cli.git |
 | `@sentry/cli-darwin` | 2.58.6 | transitive | FSL-1.1-MIT | https://github.com/getsentry/sentry-cli |
+| `@sentry/cli-linux-arm64` | 2.58.6 | transitive | FSL-1.1-MIT | https://github.com/getsentry/sentry-cli |
 | `@sentry/conventions` | 0.16.0 | transitive | MIT | git+https://github.com/getsentry/sentry-conventions.git |
 | `@sentry/core` | 10.67.0 | transitive | MIT | git://github.com/getsentry/sentry-javascript.git |
 | `@sentry/feedback` | 10.67.0 | transitive | MIT | git://github.com/getsentry/sentry-javascript.git |
@@ -196,6 +205,8 @@ Installed packages listed: 617
 | `@standard-schema/utils` | 0.3.0 | transitive | MIT | https://github.com/standard-schema/standard-schema |
 | `@swc/core` | 1.15.43 | transitive | Apache-2.0 | git+https://github.com/swc-project/swc.git |
 | `@swc/core-darwin-arm64` | 1.15.43 | transitive | Apache-2.0 AND MIT | git+https://github.com/swc-project/swc.git |
+| `@swc/core-linux-arm64-gnu` | 1.15.43 | transitive | Apache-2.0 AND MIT | git+https://github.com/swc-project/swc.git |
+| `@swc/core-linux-arm64-musl` | 1.15.43 | transitive | Apache-2.0 AND MIT | git+https://github.com/swc-project/swc.git |
 | `@swc/counter` | 0.1.3 | transitive | Apache-2.0 | git+https://github.com/swc-project/pkgs.git |
 | `@swc/helpers` | 0.5.23 | transitive | Apache-2.0 | git+https://github.com/swc-project/swc.git |
 | `@swc/types` | 0.1.27 | transitive | Apache-2.0 | git+https://github.com/swc-project/swc.git |
@@ -309,7 +320,6 @@ Installed packages listed: 617
 | `core-js` | 3.50.0 | transitive | MIT | git+https://github.com/zloirock/core-js.git |
 | `core-util-is` | 1.0.3 | transitive | MIT | git://github.com/isaacs/core-util-is |
 | `cors` | 2.8.6 | transitive | MIT | expressjs/cors |
-| `country-flag-icons` | 1.6.20 | direct | MIT | git+https://gitlab.com/catamphetamine/country-flag-icons.git |
 | `crc-32` | 1.2.2 | transitive | Apache-2.0 | git://github.com/SheetJS/js-crc32.git |
 | `crc32-stream` | 4.0.3 | transitive | MIT | https://github.com/archiverjs/node-crc32-stream.git |
 | `cron-parser` | 5.6.2 | direct | MIT | https://github.com/harrisiirak/cron-parser.git |
@@ -416,7 +426,7 @@ Installed packages listed: 617
 | `isarray` | 1.0.0 | transitive | MIT | git://github.com/juliangruber/isarray.git |
 | `isexe` | 2.0.0 | transitive | ISC | git+https://github.com/isaacs/isexe.git |
 | `jest-worker` | 27.5.1 | transitive | MIT | https://github.com/facebook/jest.git |
-| `jose` | 6.2.3 | transitive | MIT | panva/jose |
+| `jose` | 6.2.3 | direct | MIT | panva/jose |
 | `js-tokens` | 4.0.0 | transitive | MIT | lydell/js-tokens |
 | `jsesc` | 3.1.0 | transitive | MIT | https://github.com/mathiasbynens/jsesc.git |
 | `json-schema-traverse` | 1.0.0 | transitive | MIT | git+https://github.com/epoberezkin/json-schema-traverse.git |

@@ -1,6 +1,6 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { appPath } from "@/lib/routing/app-path";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordsEmptyState } from "./KeywordsEmptyState";
@@ -36,16 +36,9 @@ describe("KeywordsEmptyState", () => {
   it("keeps Add keywords primary and both import paths secondary", () => {
     const props = renderEmpty(true);
 
-    const table = screen.getByRole("table", { name: "Rank tracker keywords" });
-    expect(
-      within(table)
-        .getAllByRole("columnheader")
-        .map((header) => header.textContent),
-    ).toEqual(["Keyword", "Pos", "Change", "Volume", "Tags"]);
-    const emptyCell = within(table).getByRole("cell");
-    expect(emptyCell).toHaveAttribute("aria-colspan", "5");
-    expect(within(emptyCell).getByRole("heading", { name: "No keywords yet" })).toBeInTheDocument();
-    expect(within(table).queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "No keywords yet" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Rank tracker" })).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
     const findQueries = screen.getByRole("button", { name: "From Search Console" });
     expect(findQueries).toBeEnabled();
     expect(findQueries.querySelector("[data-button-start-icon]")).toBeNull();
@@ -65,6 +58,21 @@ describe("KeywordsEmptyState", () => {
     fireEvent.click(importCsv);
     expect(props.onAddKeyword).toHaveBeenCalledOnce();
     expect(props.onImportCsv).toHaveBeenCalledOnce();
+  });
+
+  it("uses the shared empty-state mark and a short market prompt", () => {
+    renderEmpty(true, { hasMarkets: false });
+
+    expect(screen.getByRole("heading", { name: "Start with your first market" })).toHaveClass(
+      "text-[18px]",
+    );
+    expect(screen.getByRole("img", { name: "Rank tracker" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "A market is the country, location and language you rank in. Add one with your first keywords.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/adding another market later/i)).not.toBeInTheDocument();
   });
 
   it("hides create paths below member", () => {

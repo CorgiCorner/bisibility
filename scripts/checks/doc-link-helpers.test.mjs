@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { collectNavigationPageIds, findNavigationGroup } from "./doc-navigation.mjs";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import { classifyDocsHref, deploymentDocsPath } from "./doc-link-helpers.mjs";
@@ -8,7 +9,25 @@ const docsRoot = join(root, "docs");
 
 // The pages a hermetic fixture site publishes. `api/discovery` is the real case that
 // reviewers misread as the application's /api namespace.
-const publishedPages = new Set(["/api/discovery", "/api/quickstart", "/quickstart", "/index"]);
+const publishedPages = new Set([
+  "/api/discovery",
+  "/api/quickstart",
+  "/api-reference/projects/list-projects-visible-to-this-api-key",
+  "/quickstart",
+  "/index",
+]);
+
+describe("nested documentation navigation", () => {
+  it("finds workflows and validates leaf pages below a journey group", () => {
+    const workflows = { group: "API workflows", pages: ["api/checks", "missing-page"] };
+    const tab = { groups: [{ group: "Build and automate", pages: ["authentication", workflows] }] };
+    assert.equal(findNavigationGroup(tab, "API workflows"), workflows);
+    assert.equal(findNavigationGroup(tab, "Absent"), undefined);
+    assert.deepEqual([...collectNavigationPageIds({ tabs: [tab] })], [
+      "authentication", "api/checks", "missing-page",
+    ]);
+  });
+});
 
 function classify(href, { source = join(docsRoot, "quickstart.mdx"), files = [] } = {}) {
   const present = new Set(files);
@@ -62,6 +81,13 @@ describe("classifyDocsHref inside documentation content", () => {
     assert.equal(
       classify("/api/v1/liveness"),
       "docs/quickstart.mdx: application API links must use an absolute URL when docs are mounted at /docs /api/v1/liveness",
+    );
+  });
+
+  it("accepts generated API reference pages without treating them as application API routes", () => {
+    assert.equal(
+      classify("/api-reference/projects/list-projects-visible-to-this-api-key"),
+      null,
     );
   });
 

@@ -8,6 +8,9 @@ import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provi
 import { normalizeCanonicalLocationKey, serpRankLocation } from "@/lib/serp/location";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { keywordResearchDefault } from "./default-scope";
+
+export { normalizeResearchKeyword } from "./request-key";
+
 import type { KeywordResearchConnection } from "./types";
 
 export async function keywordResearchProject(projectId: string) {
@@ -109,8 +112,4 @@ export async function researchLocation(project: KeywordResearchProject, override
         },
   });
   return { key: resolved.location.canonicalKey, value: serpRankLocation(resolved.location) };
-}
-
-export function normalizeResearchKeyword(value: string) {
-  return value.trim().replace(/\s+/g, " ").toLowerCase();
 }

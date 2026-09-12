@@ -1,0 +1,62 @@
+{
+  "api_contract": "v1",
+  "verified_on": "2026-09-12",
+  "clients": {
+    "application": {
+      "component": "Application",
+      "distribution": "bisibility",
+      "version_from": "package.json",
+      "runtime": "Node 22",
+      "artifact": "package.json",
+      "maturity": "pre-1.0"
+    },
+    "rest": {
+      "component": "REST API",
+      "distribution": "/api/v1",
+      "version": "v1",
+      "runtime": "HTTP",
+      "artifact": "docs/openapi.snapshot.json",
+      "maturity": "current contract"
+    },
+    "typescript": {
+      "component": "TypeScript SDK",
+      "distribution": "@bisibility/sdk",
+      "version": "0.12.0",
+      "runtime": "Node 18+",
+      "artifact": "examples/ts/package.json",
+      "maturity": "independently versioned"
+    },
+    "python": {
+      "component": "Python SDK",
+      "distribution": "bisibility",
+      "version": "0.9.0",
+      "runtime": "Python 3",
+      "artifact": "examples/python/requirements.txt",
+      "maturity": "independently versioned; package metadata may mark it Alpha"
+    },
+    "go": {
+      "component": "Go SDK",
+      "distribution": "bisibility.com/sdk-go",
+      "version": "v0.10.0",
+      "runtime": "Go 1.22+",
+      "artifact": "examples/go/go.mod",
+      "maturity": "independently versioned"
+    },
+    "cli": {
+      "component": "CLI",
+      "distribution": "@bisibility/cli",
+      "version": "0.7.0",
+      "runtime": "Node 18+",
+      "artifact": "examples/cli/README.md",
+      "maturity": "independently versioned"
+    },
+    "mcp": {
+      "component": "MCP",
+      "distribution": "@bisibility/mcp",
+      "version": "0.10.0",
+      "runtime": "Node 18+",
+      "artifact": "examples/mcp/quickstart.mjs",
+      "maturity": "independently versioned"
+    }
+  }
+}

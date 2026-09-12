@@ -3,23 +3,14 @@
 import { useMarketContext } from "@/components/markets/MarketContextProvider";
 import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
 import { Pill } from "@/components/ui/Pill";
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import {
-  type ActiveLens,
-  type LensDevice,
-  type LensLocationOption,
-  lensHref,
-} from "@/lib/keywords/lens-model";
+import { type ActiveLens, type LensLocationOption, lensHref } from "@/lib/keywords/lens-model";
 import {
   rankTrackerNavigationHref,
   resetRankTrackerPage,
 } from "@/lib/keywords/rank-tracker-navigation";
 import type { RankTrackerQueryState } from "@/lib/keywords/rank-tracker-query-types";
-import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
-import { DevicesIcon as Devices } from "@phosphor-icons/react/dist/csr/Devices";
 import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
-import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -40,12 +31,6 @@ type LocationSelectProps = ScopeNavigationProps & {
 type KeywordsScopeControlsProps = ScopeNavigationProps & {
   locationOptions: LensLocationOption[];
 };
-
-const deviceTabs: { value: LensDevice; label: string; icon: typeof Monitor }[] = [
-  { icon: Devices, label: "All", value: "all" },
-  { icon: Monitor, label: "Desktop", value: "desktop" },
-  { icon: DeviceMobile, label: "Mobile", value: "mobile" },
-];
 
 function locationMenuOptions(locationOptions: LensLocationOption[]): MenuSelectOption[] {
   return [
@@ -117,42 +102,6 @@ export function KeywordsScopeLocationSelect({
   );
 }
 
-export function KeywordsDeviceScope({
-  basePath,
-  lens,
-  onQueryNavigation,
-  query,
-  viewId,
-}: Readonly<ScopeNavigationProps>) {
-  const go = useScopeNavigation({ basePath, lens, onQueryNavigation, query, viewId });
-
-  return (
-    <SegmentedControl
-      activeVariant="neutral"
-      ariaLabel="Device scope"
-      className="m-0 shrink-0"
-      fitContent
-      onChange={(device) => go({ ...lens, device })}
-      optionClassName="min-w-8 sm:min-w-0"
-      options={deviceTabs.map((tab) => {
-        const Icon = tab.icon;
-        return {
-          ariaLabel: `${tab.label} device scope`,
-          label: (
-            <>
-              <Icon aria-hidden size={13} weight="regular" />
-              <span className="hidden sm:inline lg:hidden xl:inline">{tab.label}</span>
-            </>
-          ),
-          value: tab.value,
-        };
-      })}
-      size="toolbar"
-      value={lens.device}
-    />
-  );
-}
-
 export function KeywordsScopeControls({
   basePath,
   lens,
@@ -178,13 +127,6 @@ export function KeywordsScopeControls({
           />
         </div>
       ) : null}
-      <KeywordsDeviceScope
-        basePath={basePath}
-        lens={lens}
-        onQueryNavigation={onQueryNavigation}
-        query={query}
-        viewId={viewId}
-      />
     </div>
   );
 }

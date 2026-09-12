@@ -1,7 +1,7 @@
 "use client";
 
 import { WorkspaceTile } from "@/components/shell/WorkspaceTile";
-import { workspaceRowMeta } from "@/components/shell/workspace-labels";
+import { truncateProjectName, workspaceRowMeta } from "@/components/shell/workspace-labels";
 import { MenuItem } from "@/components/ui/MenuItem";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";
@@ -45,7 +45,7 @@ export function WorkspaceRow({ workspace, active, onSelect }: Readonly<Workspace
       <WorkspaceTile domain={workspace.domain} />
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium leading-tight text-fg">
-          <span className="truncate">{workspace.name}</span>
+          <span className="truncate">{truncateProjectName(workspace.name)}</span>
           {workspace.isSample ? (
             <span className="rounded-full border border-border px-1.5 py-px text-[9px] uppercase text-fg-muted">
               Sample

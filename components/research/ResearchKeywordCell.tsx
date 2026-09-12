@@ -4,7 +4,7 @@ import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist
 
 type ResearchKeywordCellProps = {
   canRemoveSaved: boolean;
-  onToggleSave: (row: GroupedResearchRow) => void;
+  onToggleSave?: (row: GroupedResearchRow) => void;
   row: GroupedResearchRow;
 };
 
@@ -53,16 +53,16 @@ export function ResearchKeywordCell({
         </span>
       ) : (
         <>
-          {!row.alreadySaved || canRemoveSaved ? (
+          {onToggleSave && (!row.alreadySaved || canRemoveSaved) ? (
             <SaveToggle onToggleSave={() => onToggleSave(row)} row={row} />
-          ) : (
+          ) : row.alreadySaved ? (
             <BookmarkSimple
               aria-hidden
               className="shrink-0 text-accent-text"
               size={13}
               weight="regular"
             />
-          )}
+          ) : null}
           {row.alreadySaved ? (
             <span
               className="rounded-full border px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] text-accent-text"

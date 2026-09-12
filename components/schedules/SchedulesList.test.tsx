@@ -114,6 +114,10 @@ describe("SchedulesList", () => {
   it("renders the Schedule, Cadence, Members, Per run, and Next columns", () => {
     renderList();
 
+    expect(screen.getByRole("heading", { name: "4 schedules" }).closest("header")).toHaveClass(
+      "border-b",
+      "border-border",
+    );
     const table = screen.getByRole("table", { name: "Schedules" });
     expect(
       within(table)
@@ -152,6 +156,13 @@ describe("SchedulesList", () => {
     expect(screen.getByRole("link", { name: "New schedule" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Schedule status" })).toBeVisible();
     expect(screen.queryByRole("table", { name: "Schedules" })).not.toBeInTheDocument();
+  });
+
+  it("hides New schedule when the viewer cannot create one", () => {
+    renderList({ canUpdate: false, schedules: [] });
+
+    expect(screen.queryByRole("link", { name: "New schedule" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Schedule status" })).toBeVisible();
   });
 
   it("shows states only for exceptions", () => {

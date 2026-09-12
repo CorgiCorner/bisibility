@@ -58,7 +58,7 @@ export function classifyDocsHref({ source, href, root, docsRoot, docsPageExists,
   if (isDocsContent && withoutAnchor.startsWith("/")) {
     if (docsPageExists(withoutAnchor)) return null;
     return fail(
-      withoutAnchor.startsWith("/api/")
+      withoutAnchor.startsWith("/api/") && !withoutAnchor.startsWith("/api-reference/")
         ? `application API links must use an absolute URL when docs are mounted at /docs ${href}`
         : `missing docs page ${href}`,
     );

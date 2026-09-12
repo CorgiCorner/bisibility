@@ -27,13 +27,14 @@ import type { ResearchAddDraft } from "./research-workspace-model";
 
 type ResearchDetailPanelProps = {
   active: GroupedResearchRow | null;
-  defaultTracking: TrackingConfigurationValue;
+  defaultTracking?: TrackingConfigurationValue;
   metricsAvailable?: boolean;
-  onAdd: (draft: ResearchAddDraft) => void;
+  onAdd?: (draft: ResearchAddDraft) => void;
   onSave?: (row: GroupedResearchRow) => void;
-  projectId: string;
+  projectId?: string;
+  readOnly?: boolean;
   seed: string;
-  costContext: ProjectCostContext;
+  costContext?: ProjectCostContext;
   trackingMarketCount?: number;
 };
 
@@ -57,15 +58,26 @@ export function ResearchDetailPanel({
   onAdd,
   onSave,
   projectId,
+  readOnly = false,
   seed,
   trackingMarketCount = 1,
 }: Readonly<ResearchDetailPanelProps>) {
-  const [device, setDevice] = useState(defaultTracking.device);
-  const [location, setLocation] = useState(defaultTracking.location);
-  const [scheduleFrequency, setScheduleFrequency] = useState(defaultTracking.scheduleFrequency);
+  const [device, setDevice] = useState(defaultTracking?.device ?? "desktop");
+  const [location, setLocation] = useState(defaultTracking?.location);
+  const [scheduleFrequency, setScheduleFrequency] = useState(
+    defaultTracking?.scheduleFrequency ?? "project_default",
+  );
   const keyword = active?.keyword ?? seed;
-  const cost = researchTrackingCost(costContext, scheduleFrequency, trackingMarketCount);
-  const line = researchTrackingCostLine(costContext, scheduleFrequency, cost, trackingMarketCount);
+  const cost = costContext
+    ? researchTrackingCost(costContext, scheduleFrequency, trackingMarketCount)
+    : null;
+  const line = costContext
+    ? researchTrackingCostLine(costContext, scheduleFrequency, cost, trackingMarketCount)
+    : null;
+  const management =
+    !readOnly && costContext && defaultTracking && line && location && onAdd && projectId
+      ? { costContext, line, location, onAdd, projectId }
+      : null;
   const points = chronologicalTrend(active?.monthlyTrend ?? []);
   const labels = points.map((point) => MONTH_LABELS[point.month - 1] ?? String(point.month));
   const trend = points.map((point) => point.searchVolume);
@@ -181,53 +193,68 @@ export function ResearchDetailPanel({
         </p>
       )}
 
-      <div className="mt-5 border-t border-border pt-4">
-        <Eyebrow>Add to tracking</Eyebrow>
-        {active?.alreadyTracked ? (
-          <p className="mb-0 mt-2 text-[12.5px] text-fg-muted">
-            Already tracked.{" "}
-            <Link
-              className="font-semibold text-accent-text hover:underline"
-              href={appPath(projectId, "rank-tracker")}
-            >
-              Open in the keyword grid
-            </Link>
-          </p>
-        ) : (
-          <>
-            <div className="mt-3">
-              <TrackingConfigurationFields
-                device={device}
-                idPrefix="research-detail-tracking"
-                labelsHidden
-                location={location}
-                onDeviceChange={setDevice}
-                onLocationChange={setLocation}
-                onScheduleChange={setScheduleFrequency}
-                projectDefaultFrequency={costContext.rawFrequency}
-                projectId={projectId}
-                scheduleFrequency={scheduleFrequency}
-                showSchedule
-              />
-            </div>
-            <p className="mb-3 mt-2 font-sans tabular-nums text-[11.5px] leading-5 text-fg-muted">
-              {line.lead}
-              {line.emphasis ? <span className="text-fg">{line.emphasis}</span> : null}
-              {line.tail}
+      {management ? (
+        <div className="mt-5 border-t border-border pt-4">
+          <Eyebrow>Add to tracking</Eyebrow>
+          {active?.alreadyTracked ? (
+            <p className="mb-0 mt-2 text-[12.5px] text-fg-muted">
+              Already tracked.{" "}
+              <Link
+                className="font-semibold text-accent-text hover:underline"
+                href={appPath(management.projectId, "rank-tracker")}
+              >
+                Open in the keyword grid
+              </Link>
             </p>
-            <Button
-              onClick={() => onAdd({ device, keywords: [keyword], location, scheduleFrequency })}
-              startIcon={<Plus weight="regular" size={14} />}
-              style={{ width: "100%" }}
-            >
-              Add to tracking
-            </Button>
-            {active ? (
-              <ResearchDetailSaveAction onSave={onSave} projectRef={projectId} row={active} />
-            ) : null}
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <div className="mt-3">
+                <TrackingConfigurationFields
+                  device={device}
+                  idPrefix="research-detail-tracking"
+                  labelsHidden
+                  location={management.location}
+                  onDeviceChange={setDevice}
+                  onLocationChange={setLocation}
+                  onScheduleChange={setScheduleFrequency}
+                  projectDefaultFrequency={management.costContext.rawFrequency}
+                  projectId={management.projectId}
+                  scheduleFrequency={scheduleFrequency}
+                  showSchedule
+                />
+              </div>
+              <p className="mb-3 mt-2 font-sans tabular-nums text-[11.5px] leading-5 text-fg-muted">
+                {management.line.lead}
+                {management.line.emphasis ? (
+                  <span className="text-fg">{management.line.emphasis}</span>
+                ) : null}
+                {management.line.tail}
+              </p>
+              <Button
+                onClick={() =>
+                  management.onAdd({
+                    device,
+                    keywords: [keyword],
+                    location: management.location,
+                    scheduleFrequency,
+                  })
+                }
+                startIcon={<Plus weight="regular" size={14} />}
+                style={{ width: "100%" }}
+              >
+                Add to tracking
+              </Button>
+              {active ? (
+                <ResearchDetailSaveAction
+                  onSave={onSave}
+                  projectRef={management.projectId}
+                  row={active}
+                />
+              ) : null}
+            </>
+          )}
+        </div>
+      ) : null}
     </Card>
   );
 }

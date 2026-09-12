@@ -3,7 +3,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { configuredEmailFrom } from "@/lib/email/from";
 import { isEmailConfigured } from "@/lib/email/registry";
-import { syncWaitlistContact } from "@/lib/email/resend-contacts";
 import { sendEmail } from "@/lib/email/send";
 import {
   enforceDistinctNewEmailLimit,
@@ -38,12 +37,6 @@ const htmlEscapes: Record<string, string> = {
 };
 
 const settingsFeedbackSources = new Set<WaitlistSource>(["settings_feedback"]);
-
-// Sources whose submissions skip marketing contact sync. Settings feedback
-// is a product-internal answer, not a signup that belongs in Resend; a pricing
-// vote is covered by a narrower promise on the page ("one email when pricing
-// is announced"), so it must not be added to a marketing contact list either.
-const contactSyncExcludedSources = new Set<WaitlistSource>(["cloud_pricing", "settings_feedback"]);
 
 function inputFromFormData(input: unknown) {
   if (!(input instanceof FormData)) {
@@ -249,13 +242,6 @@ export async function joinWaitlist(input: unknown): Promise<WaitlistActionResult
     hostedPrice: isFeedback ? cloudPrice : persisted.hostedPrice,
     source: parsed.source,
   };
-
-  // Settings feedback and cloud_pricing skip marketing contact sync: feedback
-  // is a product-internal answer, and a pricing vote is covered by a narrower
-  // promise on the page. Other sources still sync to Resend.
-  if (!contactSyncExcludedSources.has(parsed.source)) {
-    await syncWaitlistContact(submission);
-  }
 
   if (parsed.source !== "cloud_waitlist") {
     await notifyOwner(submission);

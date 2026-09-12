@@ -503,6 +503,36 @@ describe("SearchInsightsTrustStrip", () => {
       "data-variant",
       "secondary",
     );
+
+    rerender(
+      <SearchInsightsTrustStrip
+        canManageProviders={false}
+        coverage={{ calculable: true, capHitDays: 0, clicksShare: 62, impressionsShare: 41 }}
+        deploymentMode="self-host"
+        providerAvailabilitySource="metadata"
+        providerAvailableThrough="2026-07-08"
+        importState={{
+          ...importState,
+          pausedReason: "needs_reauth",
+          safeError: "Reconnect Google",
+          state: "paused",
+        }}
+        incidents={[]}
+        localViewReady
+        projectId="prj_test"
+        statusFacts={{
+          ...runningStatusFacts,
+          connectionStatus: "needs_reauth",
+          pausedReason: "needs_reauth",
+          state: "paused",
+        }}
+        workerStatus={matchedWorker}
+      />,
+    );
+    expect(
+      screen.queryByRole("link", { name: "Reconnect Search Console" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Ask a project admin to connect")).toBeInTheDocument();
   });
 
   it("shows exact user pause takeover and freshness copy without polling", () => {

@@ -75,8 +75,8 @@ export function HeaderProviderSpend({
     );
   }
 
-  const usageHref = appPath(projectRef, "settings", "usage");
-  const setCapHref = `${usageHref}?budget=edit`;
+  const usageHref = `${appPath(projectRef, "integrations")}?tab=usage`;
+  const setCapHref = `${usageHref}&budget=edit`;
   const spentCents = recorded.cents;
 
   if (action === "set_budget" || usedPercent == null) {

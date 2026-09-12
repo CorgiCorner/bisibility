@@ -1,7 +1,7 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainOverviewWorkspace } from "./DomainOverviewWorkspace";
 import { domainOverviewReportFixture, domainOverviewScopeFixture } from "./fixtures";
 
@@ -26,6 +26,7 @@ const initialEstimate = {
 };
 
 describe("DomainOverviewWorkspace", () => {
+  afterEach(() => vi.useRealTimers());
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.replaceState(null, "", "/");
@@ -194,8 +195,9 @@ describe("DomainOverviewWorkspace", () => {
     expect(screen.getAllByTestId("domain-keyword-row")).toHaveLength(101);
   });
 
-  it("keeps the current report visible while pricing a new draft", () => {
-    const analyzeAction = vi.fn();
+  it("keeps the current report visible while pricing a new draft", async () => {
+    vi.useFakeTimers();
+    const analyzeAction = vi.fn().mockResolvedValue(domainOverviewReportFixture);
     render(
       <SessionSpendProvider>
         <DomainOverviewWorkspace
@@ -227,5 +229,10 @@ describe("DomainOverviewWorkspace", () => {
     fireEvent.submit(form);
     expect(analyzeAction).not.toHaveBeenCalled();
     expect(screen.queryByLabelText("Recent domain analyses")).not.toBeInTheDocument();
+    // Finish the scheduled estimate before jsdom teardown; it must remain estimate-only.
+    await act(() => vi.advanceTimersByTimeAsync(320));
+    expect(analyzeAction).toHaveBeenCalledWith(
+      expect.objectContaining({ estimateOnly: true, target: "other.example.com" }),
+    );
   });
 });

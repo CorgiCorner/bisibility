@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 1,
+  "contractSha256": "3b03b04993be57e9586b39ad8ae367799f2521dd9d384f5f00237659a540cc77",
+  "evidence": [
+    {
+      "id": "typescript",
+      "sourceSha256": "dd8076df7cf7145d073e90fd47d9eebaa7c9a4038f9b3a6948c66f5f3b5a42ba",
+      "operations": [
+        "analyzeDomainOverview",
+        "loadDomainOverviewHistory",
+        "loadDomainOverviewKeywords",
+        "loadDomainOverviewPages"
+      ]
+    },
+    {
+      "id": "python",
+      "sourceSha256": "6b83428bf88b97469df4c686aa1f05a8d52fe0a083c475aeff086b9921604be0",
+      "operations": [
+        "analyze_domain_overview",
+        "load_domain_overview_history",
+        "load_domain_overview_keywords",
+        "load_domain_overview_pages",
+        "create_project"
+      ]
+    },
+    {
+      "id": "go",
+      "sourceSha256": "22235edef5319e8c622fedb543d4e2f5db2248343415d277eed8e6a1f6737cee",
+      "operations": [
+        "AnalyzeDomainOverview",
+        "LoadDomainOverviewHistory",
+        "LoadDomainOverviewKeywords",
+        "LoadDomainOverviewPages"
+      ]
+    },
+    {
+      "id": "cli",
+      "sourceSha256": "d1e99988dd0e234dc14b1ba8b189b40cc65c4936f37d5a6075feabe38e2e59f4",
+      "operations": [
+        "domain-overview analyze",
+        "domain-overview history",
+        "domain-overview keywords",
+        "domain-overview pages"
+      ]
+    },
+    {
+      "id": "mcp",
+      "sourceSha256": "e66a0f1f71b823c71d42ed1d12975f411e6dd03081cb135458d311d1e746b5c4",
+      "operations": [
+        "analyze_domain_overview",
+        "load_domain_overview_history",
+        "load_domain_overview_keywords",
+        "load_domain_overview_pages"
+      ]
+    }
+  ],
+  "cliHelp": [
+    {
+      "title": "Commands and global options",
+      "text": "bisibility 0.7.0\n\nUsage:\n  bisibility <command> [options]\n\nCommands:\n  backlinks analyze <target>  Analyze backlinks for a site or page\n  backlinks more <target>     Load more rows into a backlinks snapshot\n  domain-overview ...         Analyze domain-wide organic visibility\n  keywords add <keyword...>    Add one or more keywords\n  keywords list                List keywords for a project\n  keywords get <keyword-id>    Show one keyword\n  keywords update <keyword-id> Update a keyword\n  keywords delete <keyword-id> Delete a keyword\n  keywords bulk <operation>    Bulk update keywords\n  keywords match <text...>     Check whether texts are already tracked\n  keywords research <seed>     Research related keyword opportunities\n  keywords metrics             Fetch metrics for keyword lists\n  keywords suggest-ranked      Discover ranked keyword suggestions\n  locations search <query>     Search canonical location keys\n  analytics ...                Read and synchronize traffic analytics\n  check <keyword-id>           Run one rank check\n  check get <check-id>         Show one rank check result\n  check list <keyword-id>      List rank checks for a keyword\n  signals create               Record a deploy, CMS, or API signal\n  signals list                 List signals for a project\n  cost estimate                Estimate monthly rank check cost, no API key needed\n  cost provider-rates          Show provider rate cards, no API key needed\n  projects ...                 Manage projects and project defaults\n  link [project-id]            Link the current directory to a project\n  unlink                       Remove the nearest directory project link\n  api-keys ...                 Manage account or project API keys\n  alerts ...                   Manage alert rules and triggered alerts\n  sitemaps ...                 Manage sitemap monitors\n  team ...                     Manage team members and invites\n  providers ...                Manage provider connections\n  saved list|add|delete        Manage saved keyword ideas\n  views ...                    Manage saved views\n  competitors ...              Manage competitors\n  notifications prefs          Manage notification preferences\n  tokens ...                   Manage migration tokens\n  upgrade                      Check for and install CLI updates\n  me show|update|tokens        Manage your profile and personal access tokens\n  capabilities                 List machine-readable API capabilities, no API key needed\n  openapi                      Print the OpenAPI document, no API key needed\n  llms-txt                     Print the llms.txt discovery file, no API key needed\n  export                       Export keywords and rank history\n  cloud import <file>          Push an export to Bisibility Cloud\n  cloud compat                 Show cloud import compatibility, no API key needed\n  config get|set|unset|path    Manage local CLI config\n  auth login|logout|status     Sign in with OAuth PKCE or inspect local auth\n\nGlobal options:\n  --api-key <key>              API key, defaults to BISIBILITY_API_KEY or config\n  --base-url <url>             API v1 base URL, defaults to BISIBILITY_BASE_URL or config\n  --cloud-url <url>            Cloud host, defaults to BISIBILITY_CLOUD_URL or config\n  --project <id>, -p <id>      Project ID: flag > env > local link > global config\n  --config <path>, -c <path>   Config file path\n  --json                       Print JSON where supported\n  --help, -h                   Show help\n  --version, -v                Show version"
+    },
+    {
+      "title": "keywords",
+      "text": "Usage:\n  bisibility keywords add <keyword...> [options]\n  bisibility keywords list [options]\n  bisibility keywords get <keyword-id> [options]\n  bisibility keywords update <keyword-id> [options]\n  bisibility keywords delete <keyword-id> [options]\n  bisibility keywords bulk <operation> [options]\n  bisibility keywords match <text...> [options]\n  bisibility keywords research <seed> [options]\n  bisibility keywords metrics [options]\n  bisibility keywords suggest-ranked [options]\n\nRun \"bisibility keywords <subcommand> --help\" for details."
+    },
+    {
+      "title": "backlinks",
+      "text": "Usage:\n  bisibility backlinks analyze <target> [options]\n  bisibility backlinks more <target> [options]\n\nAnalyze options:\n  --project <id>, -p <id>      Project ID\n  --page                       Analyze the exact target page instead of the site\n  --no-subdomains              Exclude subdomains from a site analysis\n  --limit <n>                  Row depth: 100, 300, 500, or 1000; defaults to 100\n  --mode <mode>                as-is or one-per-domain; defaults to as-is\n  --view <view>                links, domains, pages, or anchors; defaults to links\n  --fresh                      Skip the unexpired snapshot and fetch new data\n  --estimate                   Print a free estimate envelope without spending\n  --max-cost <cents>           Best-effort maximum provider cost for this request\n  --csv                        Print the selected view as CSV\n  --json                       Print the API envelope\n\nMore options:\n  --project <id>, -p <id>      Project ID\n  --page                       Use the page-scoped snapshot\n  --no-subdomains              Use the site snapshot that excludes subdomains\n  --limit <n>                  Rows to fetch, a multiple of 100 through 1000\n  --json                       Print the API envelope\n\nThese write-scope commands can make paid lookups on the project's DataForSEO\naccount. Analyze snapshots are cached for 24 hours. Domains, pages, and anchors\nare aggregated locally within the fetched rows."
+    },
+    {
+      "title": "domain overview",
+      "text": "Usage:\n  bisibility domain-overview analyze <target> [options]\n  bisibility domain-overview history <target> [options]\n  bisibility domain-overview keywords <target> [options]\n  bisibility domain-overview pages <target> [options]\n\nRequired market options:\n  --location-code <code>       Positive DataForSEO location code\n  --language-code <code>       DataForSEO language code, for example en\n\nCommon options:\n  --project <id>, -p <id>      Project ID\n  --scope <scope>              root or subdomain; omitted means auto-detect\n  --fresh                      Skip an unexpired cache entry\n  --max-cost <cents>           Explicit non-negative provider-spend cap\n  --json                       Print the SDK data object without reshaping\n\nAnalyze options:\n  --estimate                   Stop after the free estimate\n  --keyword-limit <n>          Initial keyword rows, 1 through 100; defaults to 100\n  --page-limit <n>             Initial page rows, 1 through 1000; defaults to 100\n\nHistory, keywords, and pages options:\n  --csv                        Print row data as CSV\n\nKeywords and pages options:\n  --limit <n>                  Rows: keywords 1-100, pages 1-1000; defaults to 100\n  --offset <n>                 Non-negative provider page offset; defaults to 0\n\nEvery operation runs a free estimate first. A positive estimate requires an\nexplicit --max-cost cap before the CLI starts the paid request. A zero estimate\nis sent with a zero cap, so a cache miss cannot spend unexpectedly. JSON output\ncontains only the SDK data object; pricing notices are written to stderr."
+    },
+    {
+      "title": "keywords add",
+      "text": "Usage:\n  bisibility keywords add <keyword...> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --device <desktop|mobile>    Device type, defaults to desktop\n  --country <country>          Market country name, for example \"United States\"\n  --location <country>         Alias for the market country name. The API treats\n                               location as the country and it takes precedence over\n                               --country. It is NOT a city; use --city or\n                               --location-key for city-level targeting.\n  --city <city>                City inside the market country\n  --location-key <key>         Canonical location key; append @language for a non-default pair\n                               (for example ES@en); overrides country and city\n  --intent <intent>            Search intent label\n  --topic <topic>              Topic label\n  --target-url <url>           Target URL for every keyword\n  --file <path|->              Read one keyword per line; - reads stdin\n  --tag <tag>                  Add a tag, can be repeated\n  --tags <a,b,c>               Add comma separated tags\n  --json                       Print the raw API response"
+    },
+    {
+      "title": "keywords get",
+      "text": "Usage:\n  bisibility keywords get <keyword-id> [options]\n\nOptions:\n  --json                       Print JSON"
+    },
+    {
+      "title": "keywords update",
+      "text": "Usage:\n  bisibility keywords update <keyword-id> [options]\n\nOptions:\n  --keyword <text>             New keyword text\n  --device <desktop|mobile>    Device type\n  --country <country>          Market country name\n  --location <country>         Alias for the market country name; takes precedence\n                               over --country (not a city)\n  --city <city>                City inside the market country\n  --clear-city                 Clear the city\n  --location-key <key>         Canonical location key; append @language for a non-default pair\n                               (for example ES@en); overrides country and city\n  --intent <intent>            Search intent label\n  --clear-intent               Clear the intent\n  --topic <topic>              Topic label\n  --clear-topic                Clear the topic\n  --frequency <frequency>      paused, manual, daily, weekly, monthly, or custom_cron\n  --target-url <url>           Target URL\n  --clear-target-url           Clear the target URL\n  --tag <tag>                  Replace tags, can be repeated\n  --tags <a,b,c>               Replace tags with comma separated values\n  --json                       Print JSON"
+    },
+    {
+      "title": "keywords delete",
+      "text": "Usage:\n  bisibility keywords delete <keyword-id> [options]\n\nOptions:\n  --json                       Print JSON"
+    },
+    {
+      "title": "keywords bulk",
+      "text": "Usage:\n  bisibility keywords bulk <operation> [options]\n  bisibility keywords bulk --input-json <json>\n\nOperations:\n  add_tags                     Add tags to keywords, requires --tag or --tags\n  remove_tags                  Remove tags from keywords, requires --tag or --tags\n  delete                       Delete keywords\n  set_frequency                Set check frequency, requires --frequency\n  set_target_url               Set the target URL, --target-url optional (clears when omitted)\n\nOptions:\n  --id <keyword-id>            Keyword ID, can be repeated\n  --ids <a,b,c>                Comma separated keyword IDs\n  --tag <tag>                  Tag for tag operations, can be repeated\n  --tags <a,b,c>               Comma separated tags for tag operations\n  --frequency <frequency>      paused, manual, daily, weekly, monthly, or custom_cron\n  --target-url <url>           Target URL for set_target_url\n  --input-json <json>          Full request body JSON, overrides other flags\n  --json                       Print JSON"
+    },
+    {
+      "title": "keywords list",
+      "text": "Usage:\n  bisibility keywords list [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages\n  --search <text>              Filter by keyword text\n  --tag <tag>                  Filter by tag\n  --country <country>          Filter by country or location\n  --device <desktop|mobile>    Filter by device\n  --intent <intent>            Filter by search intent label\n  --topic <topic>              Filter by topic label\n  --sort <field>               Sort field accepted by the API\n  --json                       Print JSON"
+    },
+    {
+      "title": "keywords suggest ranked",
+      "text": "Usage:\n  bisibility keywords suggest-ranked [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --connection <id>            Eligible DataForSEO connection ID\n  --offset <n>                 Page offset, multiple of 100 from 0 through 900\n  --limit <n>                  Page size, defaults to 100, maximum 100\n  --fresh                      Skip the shared cache read and fetch new data\n  --all                        Fetch pages until total count, an empty page, or offset 900\n  --json                       Print the API envelope\n\nPaid lookup on a cache miss uses your DataForSEO account, about $0.02 per\n100-keyword page. Results are cached for 12 hours and shared with the app,\nREST API, and MCP. already_tracked marks keywords the project tracks."
+    },
+    {
+      "title": "keywords research",
+      "text": "Usage:\n  bisibility keywords research <seed> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --mode <mode>                auto, related, suggestions, or ideas; defaults to auto\n  --limit <n>                  Result depth: 100, 300, or 500; defaults to 100\n  --connection <id>            Eligible DataForSEO connection ID\n  --clickstream                Use clickstream-refined volumes, roughly doubles cost\n  --fresh                      Skip the shared cache read and fetch new data\n  --estimate                   Print a free estimate envelope without spending\n  --max-cost <cents>           Best-effort maximum provider cost for this request\n  --json                       Print the API envelope\n\nThis write-scope command makes an opt-in paid lookup on the project's DataForSEO account.\nThe price depends on the selected source, clickstream roughly doubles the cost,\nand the actual charge is reported after the lookup. Results are cached for 12\nhours and shared with the API, MCP, and app. Use --estimate first when cost matters.\nEstimates come from the rates table and actual provider cost may differ slightly.\nThe monthly provider budget remains the hard stop. One seed is accepted per call."
+    },
+    {
+      "title": "keywords metrics",
+      "text": "Usage:\n  bisibility keywords metrics --keywords <a,b,c> [options]\n  bisibility keywords metrics --file <path|-> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --keywords <a,b,c>           Comma separated keywords, maximum 700\n  --file <path|->              Read one keyword per line; - reads stdin\n  --connection <id>            Eligible DataForSEO connection ID\n  --clickstream                Use clickstream-refined volumes, roughly doubles cost\n  --fresh                      Skip per-keyword cache reads and fetch new data\n  --estimate                   Print a free estimate envelope without spending\n  --max-cost <cents>           Best-effort maximum provider cost for this request\n  --json                       Print the API envelope\n\nThis write-scope command makes an opt-in paid lookup on the project's DataForSEO account\nonly for uncached keywords. Metrics are cached per keyword for 12 hours and\nshared with the API, MCP, and app. Use --estimate first when cost matters.\nEstimates come from the rates table and actual provider cost may differ slightly.\nThe monthly provider budget remains the hard stop."
+    },
+    {
+      "title": "keywords match",
+      "text": "Usage:\n  bisibility keywords match <text...> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --json                       Print match rows and unmatched texts as JSON\n\nChecks whether each text is already tracked in the project. Up to 50 texts are\naccepted, each 1 to 180 characters after trimming. Human output shows the\nnormalized requested text separately from stored keyword text and includes every\nmatching market. A partial warning means the text matched more than 100 markets."
+    },
+    {
+      "title": "locations",
+      "text": "Usage:\n  bisibility locations search <query> [options]\n\nOptions:\n  --country <country>          Optional ISO code or supported country name\n  --limit <n>                  Result limit, defaults to 20, maximum 100\n  --json                       Print the raw API response\n\nAn unqualified location key selects its default language. Append @language to\nselect another supported pair, for example ES@en."
+    },
+    {
+      "title": "analytics",
+      "text": "Usage:\n  bisibility analytics traffic-snapshots [options]\n  bisibility analytics query-stats [options]\n  bisibility analytics sync [options]\n\nRead options:\n  --project <id>, -p <id>      Project ID\n  --start-date <YYYY-MM-DD>    Inclusive start date, required\n  --end-date <YYYY-MM-DD>      Inclusive end date, required\n  --path <path>                Traffic path filter, can be repeated\n  --paths <a,b,c>              Comma separated traffic path filters\n  --connection <id>            Search-performance connection ID\n  --query <text>               Search-performance query filter\n  --offset <n>                 Traffic snapshot offset, defaults to 0\n  --limit <n>                  Result limit\n  --json                       Print the raw API response\n\nSync options:\n  --project <id>, -p <id>      Project ID\n  --idempotency-key <key>      Optional retry-safe synchronization key\n  --json                       Print the raw API response"
+    },
+    {
+      "title": "check",
+      "text": "Usage:\n  bisibility check <keyword-id> [options]\n  bisibility check run <keyword-id> [options]\n  bisibility check get <check-id> [options]\n  bisibility check list <keyword-id> [options]\n\nRun options:\n  --provider-id <id>           SERP provider ID\n  --async                      Queue the check and return immediately with status running\n  --json                       Print JSON\n\nList options:\n  --status <status>            completed, failed, or running\n  --since <iso-date>           Only checks at or after this ISO-8601 date-time\n  --until <iso-date>           Only checks at or before this ISO-8601 date-time\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages\n  --json                       Print JSON"
+    },
+    {
+      "title": "signals",
+      "text": "Usage:\n  bisibility signals create [options]\n  bisibility signals list [options]\n\nCreate options:\n  --source <api|cms|deploy>    Signal source, required\n  --type <type>                Dot separated signal type such as deploy.completed, required\n  --severity <severity>        info, warning, or critical, defaults to info\n  --keyword-id <id>            Related keyword ID\n  --url <url>                  Related URL\n  --payload <json>             JSON object payload, rejected above 8KB serialized\n  --happened-at <iso-date>     ISO-8601 date-time, defaults to now on the server\n  --json                       Print JSON\n\nList options:\n  --project <id>, -p <id>      Project ID\n  --source <source>            Filter by source: api, cms, deploy, manual, rank_tracker,\n                               search_analytics, search_engine_status, sitemap, url_inspection\n  --type <type>                Filter by signal type\n  --from <iso-date>            Only signals at or after this ISO-8601 date-time\n  --to <iso-date>              Only signals at or before this ISO-8601 date-time\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages\n  --json                       Print JSON"
+    },
+    {
+      "title": "cost",
+      "text": "Usage:\n  bisibility cost estimate --keywords <count> [options]\n  bisibility cost provider-rates [options]\n\nCost commands call anonymous endpoints and work without an API key.\n\nEstimate options:\n  --keywords <count>           Keyword count, required\n  --devices <n>                Devices per keyword, 1 or 2, defaults to 1\n  --locations <n>              Locations per keyword, defaults to 1\n  --frequency <freq>           daily, weekly, or monthly, defaults to daily\n  --provider <id>              dataforseo or serpapi, defaults to dataforseo\n  --option <key>               Flat-rate provider option key, for example standard or live\n  --plan <key>                 Plan-model provider plan key\n  --json                       Print JSON"
+    },
+    {
+      "title": "projects",
+      "text": "Usage:\n  bisibility projects create --name <name> --domain <domain> [options]\n  bisibility projects list [options]\n  bisibility projects current [options]\n  bisibility projects use [project-id|name|domain] [options]\n  bisibility projects get [project-id] [options]\n  bisibility projects update <project-id> [options]\n  bisibility projects delete <project-id> [options]\n  bisibility projects defaults <project-id> [options]\n\nShared options:\n  --project <id>, -p <id>      Project ID fallback when the positional ID is omitted\n  --json                       Print JSON\n\nCreate options (projects create):\n  --name <name>                New project name, required\n  --domain <domain>            New project domain, required\n  --tracking-scope <scope>     country or city, defaults to country\n  --use                        Make a newly created project the global default\n\nUpdate options (projects update):\n  --name <name>                Rename the project\n  --domain <domain>            Change the project domain\n\nDefaults (GET or PATCH /projects/{id}/defaults):\nWith no defaults option, prints current project defaults.\nPassing any defaults option below updates them.\n\n  --country <country>          Default market country name\n  --city <city>                Default city inside the market country\n  --clear-city                 Clear the default city\n  --location-key <key>         Canonical location key; append @language for a non-default pair\n                               (for example ES@en); overrides country and city\n  --device <desktop|mobile>    Default device\n  --frequency <frequency>      paused, manual, daily, weekly, monthly, or custom_cron\n  --cron-expression <cron>     Cron expression for custom_cron\n  --clear-cron-expression      Clear the default cron expression\n  --jitter-minutes <n>         Schedule jitter in minutes\n  --timezone <tz>              IANA timezone name"
+    },
+    {
+      "title": "link",
+      "text": "Usage:\n  bisibility link [project-id|name|domain] [options]\n  bisibility unlink [options]\n\nLink writes .bisibility/project.json in the current directory and adds\n.bisibility/ to .gitignore. A local link overrides the global project config.\nWith no project argument, the CLI selects the only available project or opens\nan interactive picker. Non-interactive scripts must pass a project explicitly.\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --json                       Print JSON"
+    },
+    {
+      "title": "api keys",
+      "text": "Usage:\n  bisibility api-keys list [options]\n  bisibility api-keys create --name <name> [options]\n  bisibility api-keys revoke <key-id> [options]\n\nOptions:\n  --name <name>                API key name for create\n  --project <id>, -p <id>      Scope list and create to a project's API keys\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages for list\n  --json                       Print JSON\n\nWithout --project (and no configured project) the commands manage account-wide\nAPI keys. Revoke always targets a key by ID. The create command prints the raw\ntoken once. Store it securely."
+    },
+    {
+      "title": "alerts",
+      "text": "Usage:\n  bisibility alerts list [options]\n  bisibility alerts triggered [options]\n  bisibility alerts mute <alert-id> [options]\n  bisibility alerts mark-read [options]\n  bisibility alerts create [options]\n  bisibility alerts update <rule-id> [options]\n  bisibility alerts delete <rule-id> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages for list commands\n  --input-json <json>          Full alert rule input JSON for create or update\n  --name <name>                Alert rule name\n  --condition <type>           threshold, change_pct, enters_top_n, exits_top_n, competitor_overtake, serp_feature\n  --condition-type <type>      Alias for --condition\n  --target-type <type>         all, keyword, or tag\n  --target-id <id>             Target keyword or tag ID, can be repeated\n  --target-ids <a,b,c>         Comma separated target IDs\n  --channel <channel>          email, slack, or webhook, can be repeated\n  --channels <a,b,c>           Comma separated channels\n  --threshold-position <n>     Threshold position\n  --top-n <n>                  Top N boundary\n  --change-pct <n>             Percent change threshold\n  --competitor-domain <domain> Competitor domain\n  --serp-feature <feature>     SERP feature name\n  --enabled <true|false>       Enable or pause the rule\n  --disabled                   Shortcut for --enabled false\n  --json                       Print JSON\n\nMute and mark-read change alert state for the whole project team."
+    },
+    {
+      "title": "sitemaps",
+      "text": "Usage:\n  bisibility sitemaps list [options]\n  bisibility sitemaps enable [monitor-id] [options]\n  bisibility sitemaps disable [monitor-id] [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --json                       Print JSON\n\nWhen monitor-id is omitted, the project ID is used as the monitor ID."
+    },
+    {
+      "title": "team",
+      "text": "Usage:\n  bisibility team members [options]\n  bisibility team invites [options]\n  bisibility team invite <email> [options]\n  bisibility team revoke <invite-id> [options]\n  bisibility team set-role <member-id> --role <role> [options]\n  bisibility team remove <member-id> [options]\n  bisibility team resend-invite <invite-id> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages for list commands\n  --role <admin|member|viewer> Invite or member role, invite defaults to member\n  --email <address>            Invite email when it is not positional\n  --global                     Revoke by top-level invite ID without project scope\n  --json                       Print JSON"
+    },
+    {
+      "title": "providers",
+      "text": "Usage:\n  bisibility providers list [options]\n  bisibility providers connect <provider-id> [options]\n  bisibility providers test <provider-id> [options]\n  bisibility providers enable <provider-id> [options]\n  bisibility providers disable <provider-id> [options]\n  bisibility providers priority <provider-id> <priority> [options]\n  bisibility providers primary <provider-id> [options]\n  bisibility providers disconnect <provider-id> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages for list commands\n  --login <value>              Provider login credential\n  --secret <value>             Provider secret credential\n  --provider-api-key <key>     Provider API key credential\n  --endpoint <url>             Provider endpoint credential, for example a self-hosted\n                               Plausible URL\n  --credential <name=value>    Extra provider credential, can be repeated\n  --cost-per-check <n>         Provider cost per check\n  --priority <n>               Priority used by connect\n  --enabled <true|false>       Enabled state used by connect\n  --primary                    Legacy true value promotes priority 0 during connect\n  --off                        Legacy no-op when used with providers primary\n  --json                       Print JSON"
+    },
+    {
+      "title": "views",
+      "text": "Usage:\n  bisibility views list [options]\n  bisibility views create [options]\n  bisibility views delete <view-id> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages for list commands\n  --name <name>                Saved view name for create\n  --config-json <json>         Saved view config JSON for create\n  --config-file <path>         File containing saved view config JSON\n  --global                     Delete by top-level view ID without project scope\n  --json                       Print JSON"
+    },
+    {
+      "title": "saved",
+      "text": "Usage:\n  bisibility saved list [options]\n  bisibility saved add <keyword...> [options]\n  bisibility saved delete <saved-keyword-id> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages for list commands\n  --json                       Print JSON"
+    },
+    {
+      "title": "competitors",
+      "text": "Usage:\n  bisibility competitors list [options]\n  bisibility competitors add <domain> [options]\n  bisibility competitors remove <competitor-id> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages for list commands\n  --label <label>              Competitor display label\n  --global                     Remove by top-level competitor ID without project scope\n  --json                       Print JSON"
+    },
+    {
+      "title": "notifications",
+      "text": "Usage:\n  bisibility notifications prefs [options]\n  bisibility notifications prefs set [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --alert-email <true|false>\n  --alert-in-app <true|false>\n  --alert-slack <true|false>\n  --alert-webhook <true|false>\n  --check-email <true|false>\n  --check-in-app <true|false>\n  --import-email <true|false>\n  --import-in-app <true|false>\n  --invite-email <true|false>\n  --invite-in-app <true|false>\n  --json                       Print JSON"
+    },
+    {
+      "title": "tokens",
+      "text": "Usage:\n  bisibility tokens list [options]\n  bisibility tokens mint [options]\n  bisibility tokens revoke <token-id> [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --limit <n>                  Page size, defaults to 50\n  --cursor <cursor>            API pagination cursor\n  --all                        Fetch all pages for list commands\n  --scope <full|keywords>      Migration token scope\n  --global                     Revoke by top-level token ID without project scope\n  --json                       Print JSON"
+    },
+    {
+      "title": "export",
+      "text": "Usage:\n  bisibility export [options]\n  bisibility export rank-history [options]\n\nOptions:\n  --project <id>, -p <id>      Project ID\n  --format <json|csv>, -f      Output format, defaults to json\n  --output <file>, -o          Write output to a file instead of stdout\n  --history-limit <n>          Rank check page size per request, defaults to 200\n  --no-history                 Export keywords without rank history\n\nRank history options:\n  --range <30|90|all>          History window\n  --granularity <daily|weekly> Export granularity\n  --keyword-id <id>            Filter by keyword ID, can be repeated\n  --keyword-ids <a,b,c>        Comma separated keyword IDs\n  --out <file>, -o <file>      Write output to a file instead of stdout\n  --json                       Return the API JSON envelope instead of CSV\n  --limit <n>                  JSON page size, defaults to 50, maximum 200\n  --cursor <cursor>            JSON pagination cursor\n\nCSV rank-history exports include checked_at timestamps."
+    },
+    {
+      "title": "cloud import",
+      "text": "Usage:\n  bisibility cloud import <file> [options]\n  bisibility cloud compat [options]\n\nOptions:\n  --token <token>              Migration token, defaults to BISIBILITY_MIGRATION_TOKEN\n  --cloud-url <url>            Cloud host, defaults to BISIBILITY_CLOUD_URL or config\n  --dry-run                    Validate and print the request summary without sending\n  --json                       Print JSON\n\nImport posts the JSON export package to POST /cloud/import on the cloud host,\nauthenticating the migration token as Authorization: Bearer. The compat command\nreads GET /cloud/import/compatibility and needs no migration token."
+    },
+    {
+      "title": "me",
+      "text": "Usage:\n  bisibility me [show]\n  bisibility me update --name <name>\n  bisibility me tokens list [options]\n  bisibility me tokens create --name <name> [options]\n  bisibility me tokens revoke <token-id> [options]\n\nOptions:\n  --name <name>                New display name, or token name for tokens create\n  --scope <read|write|admin>   Personal access token scope, defaults to read\n  --expires <30|90|365|never>  Token lifetime in days, defaults to server default\n  --json                       Print JSON\n\nThe tokens create command prints the raw personal access token once. Store it\nsecurely. Pass \"current\" as the token ID to revoke the token in use."
+    },
+    {
+      "title": "capabilities",
+      "text": "Usage:\n  bisibility capabilities [options]\n\nOptions:\n  --json                       Print JSON\n\nLists the machine-readable API capabilities from GET /capabilities. No API key\nis required."
+    },
+    {
+      "title": "openapi",
+      "text": "Usage:\n  bisibility openapi [options]\n\nOptions:\n  --output <file>, -o          Write the OpenAPI document to a file instead of stdout\n  --json                       Ignored; the document is always printed as JSON\n\nPrints the OpenAPI document from GET /openapi.json. No API key is required."
+    },
+    {
+      "title": "llms text",
+      "text": "Usage:\n  bisibility llms-txt [options]\n\nOptions:\n  --output <file>, -o          Write the llms.txt file to a file instead of stdout\n\nPrints the llms.txt discovery file from GET /llms.txt. No API key is required."
+    },
+    {
+      "title": "config",
+      "text": "Usage:\n  bisibility config get\n  bisibility config set <apiKey|baseUrl|cloudUrl|projectId> <value>\n  bisibility config unset <apiKey|baseUrl|cloudUrl|projectId>\n  bisibility config path"
+    },
+    {
+      "title": "auth",
+      "text": "Usage:\n  bisibility auth login [options]\n  bisibility auth logout [options]\n  bisibility auth status [options]\n\nOptions:\n  --name <name>                Personal-token name, defaults to CLI on <hostname>\n  --scope <tier>               read, write, or admin; defaults to admin\n  --expires <duration>         30, 90, 365, or never; defaults to 90\n  --revoke                     Revoke the active PAT during logout\n  --offline                    Do not call the API\n  --json                       Print JSON\n\nLogin opens the Bisibility authorization page, completes OAuth Authorization\nCode with PKCE on a loopback callback, and stores the resulting bsb_pat_live_ token\nas plaintext JSON in the config file. On POSIX systems, the default config\ndirectory uses mode 0700 and the file uses mode 0600; Windows relies on inherited\nuser-profile ACLs. On a headless machine, create a token at\nhttps://bisibility.com/app/account/security and run\nbisibility config set apiKey bsb_pat_live_....\n\nLogout removes a credential stored in the config without revoking it. Pass\n--revoke to revoke the active personal access token on the server as well."
+    },
+    {
+      "title": "upgrade",
+      "text": "Usage:\n  bisibility upgrade [options]\n\nOptions:\n  --check                       Check for updates without installing\n  --json                        Print machine-readable update information\n\nThe command detects npm, pnpm, or Bun from the running CLI path and delegates\nthe global package update to that manager. Yarn Classic and installations with\ninconclusive detection receive manual commands and remain unchanged."
+    }
+  ]
+}

@@ -21,6 +21,8 @@ type ProjectRunAction = (input: { projectRef: string; runId: string }) => Promis
 
 type ProjectRunsContentProps = {
   canMutate: boolean;
+  canDelete?: boolean;
+  deleteAction?: ProjectRunAction;
   operations: readonly OperationSnapshot[];
   page: ProjectRunsApiResponse;
   projectRef: string;
@@ -154,6 +156,8 @@ export function ProjectRunsLoadError({
 
 export function ProjectRunsContent({
   canMutate,
+  canDelete = false,
+  deleteAction,
   operations,
   page,
   projectRef,
@@ -175,12 +179,14 @@ export function ProjectRunsContent({
       <ProjectRunsTabs active="runs" projectRef={projectRef} query={query} />
       <Card className="min-w-0 overflow-hidden p-0 [&_[role=table]]:border-0" size="sm">
         <TableCardHeader
+          className="border-b border-border"
           titleId="runs-list-title"
           title={`${page.counts.total.toLocaleString("en-US")} ${page.counts.total === 1 ? "run" : "runs"}`}
           actions={<ProjectRunsFilters projectRef={projectRef} query={query} />}
         />
         <ProjectRunsTable
           canMutate={canMutate}
+          onDelete={canDelete ? deleteAction : undefined}
           emptyState={<EmptyRuns projectRef={projectRef} query={query} />}
           onRunNow={runNowAction}
           onSkip={skipAction}

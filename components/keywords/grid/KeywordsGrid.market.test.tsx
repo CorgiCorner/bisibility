@@ -169,5 +169,7 @@ it("explains market identity before any keywords exist", () => {
     totalCount: 0,
   });
   expect(screen.getByRole("heading", { name: "Start with your first market" })).toBeVisible();
-  expect(screen.getByText(/Adding another market later keeps existing keywords/)).toBeVisible();
+  expect(
+    screen.getByText(/A market is the country, location and language you rank in/),
+  ).toBeVisible();
 });

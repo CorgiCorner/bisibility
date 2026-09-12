@@ -1,6 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth/client";
+import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
 import { useState } from "react";
 
@@ -10,6 +11,7 @@ export function InviteSignOutButton({ returnTo }: Readonly<{ returnTo: string }>
   async function handleSignOut() {
     setPending(true);
     await authClient.signOut();
+    notifyAuthenticatedSessionEnd();
     window.location.href = returnTo;
   }
 

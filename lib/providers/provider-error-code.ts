@@ -1,6 +1,7 @@
 export const PROVIDER_ERROR_CODES = [
   "provider_billing",
   "provider_auth",
+  "provider_account_restricted",
   "provider_rate_limited",
   "provider_transient",
 ] as const;
@@ -10,6 +11,7 @@ export type ProviderErrorCode = (typeof PROVIDER_ERROR_CODES)[number];
 const CODE_PRIORITY: Record<ProviderErrorCode, number> = {
   provider_billing: 0,
   provider_auth: 1,
+  provider_account_restricted: 1,
   provider_rate_limited: 2,
   provider_transient: 3,
 };

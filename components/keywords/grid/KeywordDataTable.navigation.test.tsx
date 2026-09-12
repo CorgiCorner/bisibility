@@ -31,13 +31,24 @@ function setup() {
       bulkTagAction={vi.fn()}
       canDeleteKeyword={false}
       canUpdateKeyword={false}
-      checkFailed={false}
+      checkHealth={{
+        budget: { capCents: 5000, exhausted: false, spentCents: 0 },
+        failed24h: {
+          count: 1,
+          latest: {
+            error: null,
+            errorCode: "provider_billing",
+            keyword: "test",
+            provider: "dataforseo",
+          },
+        },
+        providerRate: { overrideCents: null, providerId: "dataforseo" },
+      }}
       filterChips={[]}
       filterCount={0}
       matchedTargetCount={100}
       pageCount={4}
       onClearFilters={vi.fn()}
-      onDismissFailure={vi.fn()}
       onOpenExport={vi.fn()}
       onOpenFilters={vi.fn()}
       onRemoveFilter={vi.fn()}
@@ -59,6 +70,13 @@ describe("KeywordDataTable query history", () => {
   beforeEach(() => {
     setNavigationState({ pathname: "/app/prj_1/rank-tracker", searchParams: { page: "2" } });
     stubResizeObserver();
+  });
+
+  it("does not show historical check failures or their retry action above keywords", () => {
+    setup();
+    expect(screen.queryByText(/failed in the last 24 hours/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/insufficient funds/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
   });
 
   it("pushes pagination as a separate history entry", () => {

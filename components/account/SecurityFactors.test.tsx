@@ -125,6 +125,8 @@ describe("SecurityFactors", () => {
   });
 
   it("accepts a backup code for disable and signs out every session", async () => {
+    const sessionEnd = vi.fn();
+    window.addEventListener("bisibility:auth-session-end", sessionEnd);
     render(<SecurityFactors hasPasswordCredential={false} initiallyEnabled />);
     fireEvent.click(screen.getByRole("button", { name: "Disable" }));
     fireEvent.click(screen.getByRole("button", { name: "Backup code" }));
@@ -140,8 +142,10 @@ describe("SecurityFactors", () => {
         password: "",
       }),
     );
+    expect(sessionEnd).toHaveBeenCalledOnce();
     expect(routerMock.replace).toHaveBeenCalledWith("/login");
     expect(routerMock.refresh).toHaveBeenCalled();
+    window.removeEventListener("bisibility:auth-session-end", sessionEnd);
   });
 
   it("keeps 2FA enabled when the protected action rejects verification", async () => {

@@ -3,10 +3,10 @@ import { ConclusionSubtitle } from "@/components/ui/ConclusionSubtitle";
 import { cn } from "@/lib/ui/cn";
 
 // Shared pulsing skeleton for the dashboard. Mirrors OverviewSections: the
-// full-bleed toolbar (filter pills + add action), four KPI cards with label /
-// value / delta internals, the position trend + distribution chart row, the
-// by-market rollup, the data-source panel, four highlight-list cards, and the
-// final "View all keywords" action spacing. Used by both the route loading
+// full-bleed toolbar (range/tag selects + add action), four KPI cards, a
+// full-width position trend, the distribution and recently-added pair, the
+// data-source panel, the by-market rollup, remaining highlight-list cards, and
+// the final "View all keywords" action. Used by both the route loading
 // boundary and the dashboard page's in-page Suspense fallback so cold loads
 // and in-page data resolution look identical.
 
@@ -16,7 +16,7 @@ function Bar({ className }: Readonly<{ className?: string }>) {
 
 const kpiKeys = ["k1", "k2", "k3", "k4"] as const;
 const metricKeys = ["m1", "m2", "m3", "m4"] as const;
-const highlightKeys = ["h1", "h2", "h3", "h4"] as const;
+const highlightKeys = ["h1", "h2", "h3"] as const;
 const marketRowKeys = ["mr1", "mr2", "mr3"] as const;
 const highlightRowKeys = ["hr1", "hr2", "hr3"] as const;
 const distBars = [
@@ -38,9 +38,8 @@ export function OverviewSkeleton() {
       <div className="-mx-4 -mt-4 mb-5.5 sm:-mx-5 lg:-mx-7 lg:-mt-5.5">
         <div className="flex items-center justify-between gap-3 border-b border-border bg-bg px-4 py-[11px] sm:px-5 lg:px-7">
           <div className="flex min-w-0 items-center gap-2">
-            <Bar className="h-9 w-[132px] rounded-full" />
-            <Bar className="h-9 w-[118px] rounded-full" />
-            <Bar className="h-9 w-[104px] rounded-full" />
+            <Bar className="h-9 w-[148px]" />
+            <Bar className="h-9 w-[132px]" />
           </div>
           <Bar className="h-10 w-[124px] flex-none" />
         </div>
@@ -65,19 +64,22 @@ export function OverviewSkeleton() {
           ))}
         </section>
 
-        <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]">
-          <div className={cn(chartCardClass, "flex min-w-0 flex-col")}>
-            <div className="flex min-h-[69px] items-start justify-between gap-3">
-              <div className="min-w-0">
-                <Bar className="h-4 w-[120px]" />
-                <ConclusionSubtitle loading />
-                <Bar className="mt-2 h-3 w-[230px]" />
-              </div>
-              <Bar className="h-3 w-[92px] flex-none" />
+        <div className={cn(chartCardClass, "flex min-w-0 flex-col")} data-testid="overview-trend">
+          <div className="flex min-h-[69px] items-start justify-between gap-3">
+            <div className="min-w-0">
+              <Bar className="h-4 w-[120px]" />
+              <ConclusionSubtitle loading />
+              <Bar className="mt-2 h-3 w-[230px]" />
             </div>
-            <Bar className="mt-3 h-[250px] w-full rounded-card" />
+            <Bar className="h-3 w-[92px] flex-none" />
           </div>
+          <Bar className="mt-3 h-[250px] w-full rounded-card" />
+        </div>
 
+        <section
+          className="grid min-w-0 gap-4 lg:grid-cols-2"
+          data-testid="overview-secondary-cards"
+        >
           <div className={cn(chartCardClass, "flex min-w-0 flex-col")}>
             <Bar className="h-4 w-[150px]" />
             <Bar className="mt-2 h-3 w-[180px]" />
@@ -87,7 +89,51 @@ export function OverviewSkeleton() {
               ))}
             </div>
           </div>
+          <div
+            className="flex min-w-0 flex-col overflow-hidden rounded-card border border-border bg-bg-elev p-0"
+            data-testid="overview-recently-added"
+          >
+            <div className="flex-none px-4.5 pb-3 pt-[15px]">
+              <Bar className="h-4 w-[120px]" />
+              <Bar className="mt-[3px] h-3 w-[160px]" />
+            </div>
+            {highlightRowKeys.map((rowKey) => (
+              <div
+                className="flex min-h-[68px] items-center justify-between gap-2.5 border-t border-border px-4.5 py-2.5"
+                key={rowKey}
+              >
+                <div className="min-w-0">
+                  <Bar className="h-3 w-[100px]" />
+                  <Bar className="mt-1 h-2.5 w-[120px] rounded-full" />
+                  <Bar className="mt-1 h-2 w-[140px]" />
+                </div>
+                <Bar className="h-3 w-8" />
+              </div>
+            ))}
+          </div>
         </section>
+
+        <div className={chartCardClass} data-testid="overview-data-source">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <Bar className="h-4 w-[120px]" />
+              <Bar className="mt-2 h-3 w-[260px]" />
+            </div>
+            <Bar className="h-7 w-[96px] flex-none rounded-full" />
+          </div>
+          <div className="mt-4.5 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-4.5 gap-y-3.5">
+            {metricKeys.map((key) => (
+              <div className="min-w-0" key={key}>
+                <Bar className="h-2.5 w-[72px]" />
+                <Bar className="mt-[5px] h-3.5 w-[96px]" />
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-start gap-[9px] border-t border-border pt-3.5">
+            <Bar className="h-5 w-5 shrink-0 rounded-control" />
+            <Bar className="h-3 w-full max-w-[440px]" />
+          </div>
+        </div>
 
         <div
           data-testid="by-market-rollup"
@@ -121,28 +167,6 @@ export function OverviewSkeleton() {
                 <Bar className="h-3 w-3" />
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className={chartCardClass}>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <Bar className="h-4 w-[120px]" />
-              <Bar className="mt-2 h-3 w-[260px]" />
-            </div>
-            <Bar className="h-7 w-[96px] flex-none rounded-full" />
-          </div>
-          <div className="mt-4.5 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-4.5 gap-y-3.5">
-            {metricKeys.map((key) => (
-              <div className="min-w-0" key={key}>
-                <Bar className="h-2.5 w-[72px]" />
-                <Bar className="mt-[5px] h-3.5 w-[96px]" />
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 flex items-start gap-[9px] border-t border-border pt-3.5">
-            <Bar className="h-5 w-5 shrink-0 rounded-control" />
-            <Bar className="h-3 w-full max-w-[440px]" />
           </div>
         </div>
 

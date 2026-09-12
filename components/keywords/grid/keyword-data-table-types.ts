@@ -10,14 +10,13 @@ import type { MarketScope } from "@/lib/markets/market-scope";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { SerpDepth } from "@/lib/serp/constants";
 import type { ReactNode } from "react";
-import type { CheckHealthView } from "./KeywordGridHealthNotices";
 import type { KeywordNoRowsState } from "./KeywordTableStatus";
+import type { CheckHealthView } from "./keywords-grid-types";
 
 export type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAction"> &
   Pick<KeywordDetailActions, "updateKeywordAction"> & {
     canDeleteKeyword: boolean;
     canUpdateKeyword: boolean;
-    checkFailed: boolean;
     checkHealth?: CheckHealthView;
     filterChips: KeywordFilterChip[];
     filterCount: number;
@@ -31,7 +30,6 @@ export type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAc
     query: RankTrackerQueryState;
     onAddKeyword?: () => void;
     onClearFilters: () => void;
-    onDismissFailure: () => void;
     onImportCsv?: () => void;
     onOpenExport: (selectedIds: string[]) => void;
     onOpenFilters: () => void;

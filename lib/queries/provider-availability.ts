@@ -70,13 +70,21 @@ async function cachedAvailability(connection: AvailabilityConnection) {
   return value;
 }
 
-export async function loadProviderAvailability(connections: readonly AvailabilityConnection[]) {
+export async function loadProviderAvailability(
+  connections: readonly AvailabilityConnection[],
+  refreshConnectionId?: string,
+) {
   const entries: Array<readonly [string, ProviderAvailabilityData | null]> = await Promise.all(
     connections.map(async (connection) => {
       if (connection.kind !== "serp" || !BALANCE_PROVIDERS.has(connection.provider)) {
         return [connection.id, null] as const;
       }
-      return [connection.id, await cachedAvailability(connection)] as const;
+      return [
+        connection.id,
+        await (connection.id === refreshConnectionId
+          ? queryAvailability(connection)
+          : cachedAvailability(connection)),
+      ] as const;
     }),
   );
   return new Map(entries);

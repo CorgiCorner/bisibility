@@ -24,7 +24,7 @@ function serverLaunch() {
   if (bin) {
     return { args: [bin], command: process.execPath };
   }
-  return { args: ["-y", "@bisibility/mcp"], command: "npx" };
+  return { args: ["-y", "@bisibility/mcp@0.10.0"], command: "npx" };
 }
 
 function textContent(result) {

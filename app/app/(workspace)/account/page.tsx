@@ -13,12 +13,16 @@ import {
   requestAccountEmailChangeCode,
   requestCurrentAccountEmailVerification,
 } from "@/lib/actions/account-email";
-import { readOnlyDemoConfig } from "@/lib/demo/config";
+import { requireSession } from "@/lib/auth/session";
+import { resolveDemoAccountView } from "@/lib/demo/account-view";
 import { getAccount } from "@/lib/queries/account";
 import { deleteAccount, updateProfile } from "./actions";
 
 export default async function AccountPage() {
-  if (readOnlyDemoConfig()) return <DemoAccountNotice section="profile" />;
+  const session = await requireSession();
+  if ((await resolveDemoAccountView(session.user.id)) === "locked") {
+    return <DemoAccountNotice section="profile" />;
+  }
   const account = await getAccount();
 
   return (

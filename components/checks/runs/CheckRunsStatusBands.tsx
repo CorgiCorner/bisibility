@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import type { CheckRunsView, UpcomingView } from "@/lib/checks/contract";
 import { zonedDateInputValue } from "@/lib/checks/date-boundary";
 import { type DateFormat, formatDateRange } from "@/lib/dates/format";
+import { monthlyBudgetExhausted } from "@/lib/rank-check/budget-contract";
 import { ArrowClockwiseIcon as Retry } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { ClockCountdownIcon as Clock } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
@@ -40,8 +41,7 @@ function budgetStatus(budget: CheckRunsBudget, view: CheckRunsView) {
   if (
     blocked ||
     (budget.forecast &&
-      budget.forecast.capCents > 0 &&
-      budget.forecast.spentCents >= budget.forecast.capCents)
+      monthlyBudgetExhausted(budget.forecast.capCents, budget.forecast.spentCents))
   ) {
     return { kind: "exhausted" as const, skipped: skipped ?? blocked?.keywordCount ?? 0 };
   }

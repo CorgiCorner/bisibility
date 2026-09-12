@@ -5,6 +5,7 @@ import { writeAudit } from "@/lib/auth/audit";
 import { revokeOtherSessions } from "@/lib/auth/session-revocation";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
+import { assertEditableDemoIdentityPreserved } from "@/lib/demo/identity";
 import { requireMutableAccountSession as requireSession } from "@/lib/demo/mutable-account-session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -168,6 +169,7 @@ const deleteAccountSchema = z.object({
 export async function deleteAccount(input: unknown) {
   const data = deleteAccountSchema.parse(input);
   const session = await requireSession();
+  await assertEditableDemoIdentityPreserved(session.user.id);
 
   if (data.email.trim().toLowerCase() !== session.user.email.trim().toLowerCase()) {
     throw new Error("Email confirmation does not match this account.");

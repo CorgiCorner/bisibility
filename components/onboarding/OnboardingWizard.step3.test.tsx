@@ -12,6 +12,37 @@ describe("OnboardingWizard keyword step", () => {
     });
 
     expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    const skipButton = screen.getByRole("button", {
+      name: "Skip adding keywords and open first check",
+    });
+    expect(skipButton).toHaveTextContent("Skip for now");
+    expect(skipButton).toBeEnabled();
+  });
+
+  it("shows one footer Skip for now immediately before Continue and opens first check", () => {
+    renderWizard({
+      initialFlowState: { locations: ["US"], projectId: "prj_1", providerId: null },
+      initialProject: project,
+      initialStep: 3,
+    });
+
+    const skipButton = screen.getByRole("button", {
+      name: "Skip adding keywords and open first check",
+    });
+    const continueButton = screen.getByRole("button", { name: "Continue" });
+    expect(skipButton.parentElement).toBe(continueButton.parentElement);
+    expect(skipButton.nextElementSibling).toBe(continueButton);
+    expect(screen.getByRole("button", { name: "Keywords" })).not.toContainElement(skipButton);
+    fireEvent.click(skipButton);
+
+    expect(screen.getAllByRole("heading", { name: "First check" }).length).toBeGreaterThan(0);
+    expect(window.location.search).toContain("step=4");
+    expect(window.location.search).toContain("projectId=prj_1");
+    expect(
+      screen.queryByRole("button", {
+        name: "Skip adding keywords and open first check",
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("disables step 3 Continue with no markets and re-enables it after adding one", async () => {

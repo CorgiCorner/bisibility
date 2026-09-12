@@ -76,6 +76,8 @@ function MarketIdentity({ row }: Readonly<{ row: HighlightRow }>) {
 }
 
 export function HighlightLists({ lists, projectRef, rowHref }: Readonly<HighlightListsProps>) {
+  if (lists.length === 0) return null;
+
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
       {lists.map((list) => {

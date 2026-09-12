@@ -1,9 +1,9 @@
 "use client";
 
-import { CountryFlag } from "@/components/keywords/CountryFlag";
-import { MenuSelect, type MenuSelectOptionGroup } from "@/components/ui/MenuSelect";
+import { CountrySelect, type CountrySelectOption } from "@/components/locations/CountrySelect";
 import { domainOverviewUnavailableMessage } from "@/lib/domain-overview/scope-options";
-import { type ResearchScope, researchScopeKey } from "@/lib/research/scope";
+import type { ResearchScope } from "@/lib/research/scope";
+import { countryScopes, resolveCountryScope } from "@/lib/research/scope-country";
 
 type ResearchScopePickerProps = {
   ariaLabel: string;
@@ -17,24 +17,20 @@ type ResearchScopePickerProps = {
   triggerWrapperClassName?: string;
 };
 
-function scopeOption(scope: ResearchScope) {
+function countryOption(scope: ResearchScope): CountrySelectOption {
   return {
+    code: scope.countryCode,
     disabled: !scope.researchAvailable,
-    icon: (
-      <CountryFlag
-        className="h-3 w-4 flex-none rounded-[2px] shadow-sm"
-        code={scope.countryCode}
-        fallback="globe"
-      />
-    ),
-    label: `${scope.countryName} / ${scope.languageLabel}`,
+    label: scope.countryName,
     secondary: scope.researchAvailable ? undefined : "unavailable",
-    searchText: `${scope.countryName} ${scope.countryCode} ${scope.languageLabel} ${scope.languageCode}`,
     tooltip: scope.researchAvailable ? undefined : domainOverviewUnavailableMessage(scope),
-    value: researchScopeKey(scope),
   };
 }
 
+/**
+ * The country a report is run for. The provider's catalogs are country level, so the language is
+ * resolved from the tracked scope or the country default and never asked for here.
+ */
 export function ResearchScopePicker({
   ariaLabel,
   catalogScopes,
@@ -46,53 +42,35 @@ export function ResearchScopePicker({
   triggerTitle,
   triggerWrapperClassName,
 }: Readonly<ResearchScopePickerProps>) {
-  const trackedKeys = new Set(trackedScopes.map(researchScopeKey));
-  const catalogOnly = catalogScopes.filter((scope) => !trackedKeys.has(researchScopeKey(scope)));
-  const allScopes = [...trackedScopes, ...catalogOnly];
-  const groups: MenuSelectOptionGroup[] = [];
-  if (trackedScopes.length > 0) {
-    groups.push({
-      id: "tracked",
-      label: "Tracked countries and languages",
-      options: trackedScopes.map(scopeOption),
-    });
-  }
-  if (catalogOnly.length > 0) {
-    groups.push({
-      id: "catalog",
-      label: "Countries and languages",
-      options: catalogOnly.map(scopeOption),
-      searchOnly: true,
-    });
-  }
+  const tracked = countryScopes(trackedScopes);
+  const trackedCodes = tracked.map((scope) => scope.countryCode);
+  const catalog = countryScopes(catalogScopes).filter(
+    (scope) => !trackedCodes.includes(scope.countryCode),
+  );
+  const selectable = [...tracked, ...catalog];
+  const countries = (
+    selectable.some((scope) => scope.countryCode === researchScope.countryCode)
+      ? selectable
+      : [...selectable, researchScope]
+  ).map(countryOption);
 
-  function handleChange(value: string) {
-    const next = allScopes.find((scope) => researchScopeKey(scope) === value);
+  function handleChange(countryCode: string) {
+    const next = resolveCountryScope(countryCode, [...trackedScopes, ...catalogScopes]);
     if (next) onChange(next);
   }
 
   return (
-    <MenuSelect
+    <CountrySelect
       ariaLabel={ariaLabel}
+      countries={countries}
       disabled={disabled}
-      emptyMessage="Type to search countries and languages."
-      groups={groups}
-      leadingIcon={
-        <CountryFlag
-          className="h-3 w-4 flex-none rounded-[2px] shadow-sm"
-          code={researchScope.countryCode}
-          fallback="globe"
-        />
-      }
       menuWidth={340}
-      noResultsMessage="No country and language matches this search."
       onChange={handleChange}
-      searchPlaceholder="Search countries and languages..."
-      searchable
+      trackedCodes={trackedCodes}
       triggerClassName={triggerClassName}
       triggerTitle={triggerTitle}
       triggerWrapperClassName={triggerWrapperClassName}
-      value={researchScopeKey(researchScope)}
+      value={researchScope.countryCode}
     />
   );
 }

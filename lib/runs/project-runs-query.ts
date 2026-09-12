@@ -52,7 +52,7 @@ function rankWhere(
   const membership = launched
     ? { launchedAt: { not: null } }
     : { finishedAt: { not: null }, launchedAt: null, status: "cancelled" };
-  return { AND: [{ projectId }, membership, rankStatusWhere(query.status)] };
+  return { AND: [{ projectId, deletedAt: null }, membership, rankStatusWhere(query.status)] };
 }
 
 function plannedWhere(projectId: string, status: ProjectRunsStatus): Prisma.RankCheckRunWhereInput {
@@ -62,6 +62,7 @@ function plannedWhere(projectId: string, status: ProjectRunsStatus): Prisma.Rank
     AND: [
       {
         projectId,
+        deletedAt: null,
         launchedAt: null,
         plannedFor: { not: null },
         status: { in: ["planned", "blocked"] },

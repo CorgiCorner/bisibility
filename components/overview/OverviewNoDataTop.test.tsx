@@ -33,9 +33,11 @@ function renderBanner(
   }) => Promise<unknown> = vi.fn().mockResolvedValue({ queued: 1 }),
   keywordCount = 2,
   keywordId: string | null = "kw_pending",
+  canManageProviders = true,
 ) {
   render(
     <NoDataBanner
+      canManageProviders={canManageProviders}
       getFirstCheckRunPlanAction={vi.fn().mockResolvedValue(readyPlan)}
       keywordCount={keywordCount}
       keywordId={keywordId}
@@ -63,6 +65,18 @@ describe("NoDataBanner", () => {
       "/app/prj_1/integrations#all-providers",
     );
     expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
+  });
+
+  it("asks a viewer to wait for an admin instead of offering Connect", () => {
+    renderBanner("missing", vi.fn(), vi.fn(), 0, null, false);
+
+    expect(screen.getByText("SERP provider required")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Ask a project admin to connect DataForSEO or SerpApi before rank tracking can start.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Connect" })).not.toBeInTheDocument();
   });
 
   it("omits keyword readiness when a SERP provider is missing", () => {
@@ -126,6 +140,48 @@ describe("NoDataBanner", () => {
     );
     expect(screen.queryByRole("link", { name: "View keywords" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Run first check" })).not.toBeInTheDocument();
+  });
+
+  it("removes ready-state write actions for viewers while keeping the keyword list readable", () => {
+    const { rerender } = render(
+      <NoDataBanner
+        canCreateKeyword={false}
+        canManageProviders={false}
+        canRunChecks={false}
+        getFirstCheckRunPlanAction={vi.fn().mockResolvedValue(readyPlan)}
+        keywordCount={2}
+        keywordId="kw_pending"
+        projectId="prj_1"
+        projectRef="prj_1"
+        queueFirstChecksAction={vi.fn().mockResolvedValue({ queued: 1 })}
+        runCheckNowAction={vi.fn()}
+        state="ready"
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Run first check" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View keywords" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/rank-tracker",
+    );
+
+    rerender(
+      <NoDataBanner
+        canCreateKeyword={false}
+        canManageProviders={false}
+        canRunChecks={false}
+        getFirstCheckRunPlanAction={vi.fn().mockResolvedValue(readyPlan)}
+        keywordCount={0}
+        keywordId={null}
+        projectId="prj_1"
+        projectRef="prj_1"
+        queueFirstChecksAction={vi.fn().mockResolvedValue({ queued: 1 })}
+        runCheckNowAction={vi.fn()}
+        state="ready"
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Add keywords" })).not.toBeInTheDocument();
   });
 
   it("takes precedence over provider and running states during a migration hold", () => {

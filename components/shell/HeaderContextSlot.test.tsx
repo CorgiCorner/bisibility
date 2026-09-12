@@ -1,7 +1,8 @@
+import { RankTrackerHeaderContext } from "@/components/keywords/RankTrackerHeaderContext";
 import type { HeaderContextMarket } from "@/lib/markets/header-context";
 import { appPath, asMarketRef, asProjectRef, marketPath } from "@/lib/routing/app-path";
-import { setNavigationState } from "@/tests/next-navigation";
-import { render, screen } from "@testing-library/react";
+import { routerMock, setNavigationState } from "@/tests/next-navigation";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { HEADER_CONTEXT_LABEL, HeaderContextSlot } from "./HeaderContextSlot";
 
@@ -41,6 +42,29 @@ describe("HeaderContextSlot", () => {
     expect(group).not.toBeNull();
     expect(screen.getByRole("button", { name: "United States" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Back to all markets" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the rank tracker device control beside the market and preserves its URL state", () => {
+    setNavigationState({
+      pathname: marketPath(PROJECT, asMarketRef("pmkt_us"), "rank-tracker"),
+      searchParams: new URLSearchParams(
+        "q=boots&location=loc_us&device=mobile&tags=Docs&page=3&grouped=1&view=weekly&action=add",
+      ),
+    });
+    render(<RankTrackerHeaderContext contexts={MARKETS} projectRef={PROJECT} />);
+
+    const group = screen.getByRole("group", { name: HEADER_CONTEXT_LABEL });
+    const device = screen.getByRole("button", { name: "Device scope" });
+    expect(group).toContainElement(device);
+    expect(group).toContainElement(screen.getByRole("button", { name: "United States" }));
+    expect(device.querySelector("[data-context-switcher-caret]")).toBeInTheDocument();
+
+    fireEvent.click(device);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Desktop" }));
+
+    expect(routerMock.push).toHaveBeenCalledWith(
+      "/app/prj_example/m/pmkt_us/rank-tracker?q=boots&location=loc_us&device=desktop&change=any&tags=Docs&lastCheck=any&page=1&grouped=1&view=weekly&action=add",
+    );
   });
 
   it("renders no element and no hairline on a project-scoped page", () => {
@@ -87,8 +111,11 @@ it.each([0, 1, 3])(
       appPath(PROJECT, "rank-tracker"),
       Array.from({ length: count }, (_, i) => ({ ...MARKETS[0], ref: asMarketRef(`pmkt_${i}`) })),
     );
-    expect(
-      screen.getByRole("button", { name: count ? "All markets" : "No markets" }),
-    ).toBeInTheDocument();
+    if (count) {
+      expect(screen.getByRole("button", { name: "All markets" })).toBeInTheDocument();
+    } else {
+      expect(screen.getByText("No markets")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "No markets" })).not.toBeInTheDocument();
+    }
   },
 );

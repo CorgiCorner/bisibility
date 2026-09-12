@@ -13,18 +13,19 @@ import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/ssr/UserPlu
 
 export const settingsSections = [
   { icon: SlidersHorizontal, id: "general", label: "General" },
+  { icon: Database, id: "data-sources", label: "Data sources" },
   { icon: Crosshair, id: "tracking", label: "Tracking" },
   { icon: Flag, id: "competitors", label: "Competitors" },
-  { icon: Flask, id: "experimental", label: "Experimental" },
-  { icon: Database, id: "data-sources", label: "Data sources" },
   { icon: PaperPlaneTilt, id: "notifications", label: "Notifications" },
-  { icon: Code, id: "developers", label: "Developers" },
-  { icon: CreditCard, id: "usage", label: "Usage and billing" },
   { icon: UserPlus, id: "team", label: "Team" },
+  { icon: CreditCard, id: "billing", label: "Billing" },
+  { icon: Code, id: "developers", label: "Developers" },
+  { icon: Flask, id: "experimental", label: "Experimental" },
   { icon: ShieldWarning, id: "advanced", label: "Advanced" },
 ] as const satisfies ReadonlyArray<{ icon: Icon; id: string; label: string }>;
 
-export type SettingsSectionId = (typeof settingsSections)[number]["id"];
+// Keep the old usage id valid for links into the new integrations section.
+export type SettingsSectionId = (typeof settingsSections)[number]["id"] | "usage";
 
 export type SettingsSection = (typeof settingsSections)[number];
 
@@ -34,7 +35,7 @@ export const legacySettingsHashMap = {
   "#api-keys": "developers",
   "#migration": "advanced",
   "#provider-usage": "usage",
-  "#usage-billing": "usage",
+  "#usage-billing": "billing",
 } as const satisfies Record<string, SettingsSectionId>;
 
 export function getSettingsSection(id: string): SettingsSection | undefined {
@@ -42,7 +43,9 @@ export function getSettingsSection(id: string): SettingsSection | undefined {
 }
 
 export function settingsSectionHref(projectRef: ProjectRef, section: SettingsSectionId) {
-  return appPath(projectRef, "settings", section);
+  return section === "usage"
+    ? `${appPath(projectRef, "integrations")}?tab=usage`
+    : appPath(projectRef, "settings", section);
 }
 
 export function resolveLegacySettingsHash(hash: string): SettingsSectionId | undefined {

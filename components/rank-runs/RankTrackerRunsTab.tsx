@@ -43,7 +43,7 @@ export async function RankTrackerRunsTab({
             hasAllocation: budgetSummary?.hasAllocation ?? false,
             maxUsedPercent: budgetSummary?.maxUsedPercent ?? null,
           })}
-          budgetSettingsHref={`/app/${projectRef}/settings/usage?budget=edit`}
+          budgetSettingsHref={`/app/${projectRef}/integrations?tab=usage&budget=edit`}
           initialHistory={history}
           initialPlanned={planned}
           notices={exhaustedBudgetNotices({

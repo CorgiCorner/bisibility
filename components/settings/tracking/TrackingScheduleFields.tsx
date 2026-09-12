@@ -43,7 +43,7 @@ export function TrackingScheduleFields({
 
   return (
     <div className="space-y-4">
-      <SettingsField width="field">
+      <SettingsField className="scroll-mt-6" id="tracking-frequency" tabIndex={-1} width="field">
         <FieldLabel className={labelClass} label="Frequency" />
         <input type="hidden" {...form.register("frequency")} />
         <MenuSelect
@@ -78,7 +78,7 @@ export function TrackingScheduleFields({
         </SettingsField>
       ) : null}
 
-      <SettingsField width="field">
+      <SettingsField className="scroll-mt-6" id="tracking-timezone" tabIndex={-1} width="field">
         <FieldLabel className={labelClass} label="Timezone" />
         <input type="hidden" {...form.register("timezone")} />
         <MenuSelect

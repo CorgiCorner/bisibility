@@ -8,11 +8,13 @@ import {
   trackingFormDefaults,
 } from "@/components/settings/tracking/tracking-form";
 import { trackingCardGeometryClassNames } from "@/components/settings/tracking/tracking-settings-layout";
+import { StatusChip } from "@/components/ui/StatusChip";
 import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { projectDefaultsSchema } from "@/lib/schemas/project";
-import type { DefaultsData } from "@/lib/settings/options";
+import { type DefaultsData, frequencyOptions } from "@/lib/settings/options";
 import { actionErrorMessage } from "@/lib/ui/action-error";
+import { VIEWER_READ_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -61,6 +63,48 @@ export function TrackingDefaultsCard({
         setPreview({ message: "The next runs could not be checked.", runs: [], status: "invalid" });
       }
     });
+  }
+
+  if (!canEdit) {
+    const frequencyLabel =
+      frequencyOptions.find((option) => option.value === defaults.schedule.frequency)?.label ??
+      defaults.schedule.frequency;
+    return (
+      <SettingsCard
+        action={<StatusChip label={VIEWER_READ_ONLY_LABEL} tone="neutral" />}
+        className={trackingCardGeometryClassNames.checkDefaults}
+        description="What every keyword is checked with, unless it has its own setting."
+        showSave={false}
+        title="Check defaults"
+      >
+        <dl className="m-0 grid grid-cols-1 gap-3 text-[13px]">
+          <div>
+            <dt className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+              Frequency
+            </dt>
+            <dd className="m-0 mt-1 font-medium text-fg">{frequencyLabel}</dd>
+          </div>
+          <div>
+            <dt className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+              Timezone
+            </dt>
+            <dd className="m-0 mt-1 font-medium text-fg">{defaults.schedule.timezone}</dd>
+          </div>
+          <div>
+            <dt className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+              Depth
+            </dt>
+            <dd className="m-0 mt-1 font-medium text-fg">Top {defaults.serpDepth ?? 100}</dd>
+          </div>
+          <div>
+            <dt className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+              Device
+            </dt>
+            <dd className="m-0 mt-1 font-medium text-fg">{defaults.device}</dd>
+          </div>
+        </dl>
+      </SettingsCard>
+    );
   }
 
   async function saveDefaults() {

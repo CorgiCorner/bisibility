@@ -6,6 +6,7 @@ import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { useToast } from "@/components/ui/toast-context";
 import { updateSearchSyncSettings } from "@/lib/actions/presence-settings";
 import {
@@ -26,6 +27,7 @@ import {
 import { searchSyncRequestSetsPerHour } from "@/lib/search-insights/sync/plan";
 import { searchSyncPreflightEstimate } from "@/lib/settings/search-sync-config";
 import { actionErrorMessage } from "@/lib/ui/action-error";
+import { VIEWER_READ_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -143,9 +145,11 @@ export function SearchDataSyncCard({
   }
   return (
     <SettingsCard
+      action={canEdit ? undefined : <StatusChip label={VIEWER_READ_ONLY_LABEL} tone="neutral" />}
       contentClassName="mt-3"
       description="Control historical Search Console import depth and import speed."
       onSave={save}
+      showSave={canEdit}
       title="Search data sync"
     >
       {({ markDirty }) => (
@@ -153,51 +157,66 @@ export function SearchDataSyncCard({
           <fieldset className="grid grid-cols-1 gap-4 px-4" disabled={!canEdit}>
             <SettingsField className="max-w-none" width="field">
               <FieldLabel label="Import depth" />
-              <Controller
-                control={form.control}
-                name="retentionMonths"
-                render={({ field }) => (
-                  <MenuSelect
-                    ariaLabel="Import depth"
-                    disabled={!canEdit}
-                    onChange={(value) => {
-                      field.onChange(Number(value));
-                      markDirty();
-                    }}
-                    options={depthOptions}
-                    triggerClassName="mt-1.5 w-full justify-between"
-                    value={String(field.value)}
-                  />
-                )}
-              />
+              {canEdit ? (
+                <Controller
+                  control={form.control}
+                  name="retentionMonths"
+                  render={({ field }) => (
+                    <MenuSelect
+                      ariaLabel="Import depth"
+                      disabled={!canEdit}
+                      onChange={(value) => {
+                        field.onChange(Number(value));
+                        markDirty();
+                      }}
+                      options={depthOptions}
+                      triggerClassName="mt-1.5 w-full justify-between"
+                      value={String(field.value)}
+                    />
+                  )}
+                />
+              ) : (
+                <p className="m-0 mt-1.5 text-[13px] font-medium text-fg">
+                  {retentionMonths} months
+                </p>
+              )}
               {historyHelp ? (
                 <p className="m-0 mt-1.5 text-[11px] leading-[1.45] text-fg-muted">{historyHelp}</p>
               ) : null}
             </SettingsField>
             <SettingsField className="max-w-none" width="field">
               <FieldLabel label="Import speed" />
-              <Controller
-                control={form.control}
-                name="pace"
-                render={({ field }) => (
-                  <div>
-                    <MenuSelect
-                      ariaLabel="Import speed"
-                      disabled={!canEdit}
-                      onChange={(value) => {
-                        field.onChange(value);
-                        markDirty();
-                      }}
-                      options={paceOptions}
-                      triggerClassName="mt-1.5 w-full justify-between"
-                      value={field.value}
-                    />
-                    <p className="m-0 mt-1.5 text-[11px] leading-[1.45] text-fg-muted">
-                      {estimate}
-                    </p>
-                  </div>
-                )}
-              />
+              {canEdit ? (
+                <Controller
+                  control={form.control}
+                  name="pace"
+                  render={({ field }) => (
+                    <div>
+                      <MenuSelect
+                        ariaLabel="Import speed"
+                        disabled={!canEdit}
+                        onChange={(value) => {
+                          field.onChange(value);
+                          markDirty();
+                        }}
+                        options={paceOptions}
+                        triggerClassName="mt-1.5 w-full justify-between"
+                        value={field.value}
+                      />
+                      <p className="m-0 mt-1.5 text-[11px] leading-[1.45] text-fg-muted">
+                        {estimate}
+                      </p>
+                    </div>
+                  )}
+                />
+              ) : (
+                <div>
+                  <p className="m-0 mt-1.5 text-[13px] font-medium text-fg">
+                    {pace === "gentle" ? "Reduced" : "Standard"}
+                  </p>
+                  <p className="m-0 mt-1.5 text-[11px] leading-[1.45] text-fg-muted">{estimate}</p>
+                </div>
+              )}
             </SettingsField>
           </fieldset>
           <div className="mt-4 px-4">

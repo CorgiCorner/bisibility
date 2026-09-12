@@ -8,7 +8,7 @@ describe("budget notices model", () => {
     expect(isBudgetExhausted(input)).toBe(true);
     expect(exhaustedBudgetNotices(input)).toMatchObject([
       {
-        budgetSettingsHref: "/app/prj_1/settings/usage?budget=edit",
+        budgetSettingsHref: "/app/prj_1/integrations?tab=usage&budget=edit",
         kind: "budget-exhausted",
       },
     ]);

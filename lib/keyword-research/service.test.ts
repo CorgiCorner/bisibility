@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   rateContext: vi.fn(),
   related: vi.fn(),
   readCache: vi.fn(),
+  snapshot: vi.fn(),
   suggestions: vi.fn(),
   withCache: vi.fn(),
 }));
@@ -59,6 +60,7 @@ vi.mock("./paid-call", async (importOriginal) => ({
   paidProviderCall: mocks.paidCall,
 }));
 vi.mock("./metrics", () => ({ fetchKeywordMetrics: vi.fn() }));
+vi.mock("./snapshot", () => ({ maybePersistKeywordResearchSnapshot: mocks.snapshot }));
 
 const provider = {
   fetchKeywordIdeas: mocks.ideas,
@@ -80,6 +82,7 @@ const project = {
     },
   ],
   id: "project_1",
+  publicId: "prj_abcdefghijklmnopqrstuvwx",
   keywords: [{ locationRef: { canonicalKey: "US" }, text: "tracked keyword" }],
   savedKeywords: [],
 };
@@ -142,6 +145,47 @@ describe("keyword research service", () => {
       ],
     });
     expect(mocks.ideas).not.toHaveBeenCalled();
+  });
+
+  it("persists successful partial and zero-row results only after the paid outcome", async () => {
+    mocks.paidCall
+      .mockImplementationOnce(({ call }: { call: (credentials: object) => Promise<unknown> }) =>
+        call({}),
+      )
+      .mockRejectedValueOnce(new Error("provider unavailable"));
+    await run();
+    expect(mocks.snapshot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: expect.objectContaining({
+          sources: expect.arrayContaining([expect.objectContaining({ status: "failed" })]),
+        }),
+        successfulFetchedAts: [expect.any(String)],
+      }),
+    );
+
+    mocks.snapshot.mockClear();
+    mocks.ideas.mockResolvedValue({ costCents: 1, rows: [] });
+    await run({ mode: "ideas" });
+    expect(mocks.snapshot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: expect.objectContaining({ rows: [] }),
+        successfulFetchedAts: [expect.any(String)],
+      }),
+    );
+  });
+
+  it("still returns a paid outcome when snapshot persistence fails", async () => {
+    mocks.snapshot.mockRejectedValueOnce(new Error("unique constraint"));
+    await expect(run()).resolves.toMatchObject({ costCents: 3, ok: true });
+  });
+
+  it("never asks the snapshot writer to save estimates or all-failed work", async () => {
+    await run({ estimateOnly: true });
+    mocks.paidCall.mockRejectedValueOnce(
+      new ProviderLookupSignal({ ok: false, reason: "no_source" }),
+    );
+    await run({ mode: "ideas" });
+    expect(mocks.snapshot).not.toHaveBeenCalled();
   });
 
   it("keys on the resolved SerpRankLocation, not the city-level canonical key", async () => {

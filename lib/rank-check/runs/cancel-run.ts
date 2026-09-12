@@ -8,6 +8,7 @@ import { skipPlannedRun } from "@/lib/rank-check/planner/skip-run-now";
 import { runItemRankCheckWorkflowId } from "@/lib/temporal/client";
 import { getSchedulerTemporalClient } from "@/lib/temporal/scheduler-client";
 import { cancelRankCheckRun, closeRankCheckAsCancelled } from "./cancel";
+import { TERMINAL_RUN_STATUSES } from "./contract";
 
 const transactionOptions = { maxWait: 10_000, timeout: 60_000 } as const;
 
@@ -132,4 +133,41 @@ export async function skipRankCheckRunCommand(input: {
       tx,
     );
   }, transactionOptions);
+}
+
+export async function deleteRankCheckRunCommand(input: {
+  actorId: string;
+  projectId: string;
+  publicId: string;
+}) {
+  await prisma.$transaction(async (tx) => {
+    const run = await tx.rankCheckRun.findFirst({
+      select: { id: true, status: true },
+      where: { projectId: input.projectId, publicId: input.publicId },
+    });
+    if (!run) throw new ApiNotFoundError("Rank-check run not found.");
+    const removed = await tx.rankCheckRun.updateMany({
+      data: { deletedAt: new Date() },
+      where: {
+        id: run.id,
+        projectId: input.projectId,
+        deletedAt: null,
+        status: { in: [...TERMINAL_RUN_STATUSES] },
+      },
+    });
+    if (removed.count !== 1)
+      throw new ApiConflictError("Only completed or cancelled runs can be deleted.");
+    await writeAudit(
+      {
+        action: "rank_check_run.delete",
+        actorId: input.actorId,
+        before: { status: run.status },
+        projectId: input.projectId,
+        targetId: requiredPublicAuditId(input.publicId, "rcr", "Rank-check run"),
+        targetType: "rank_check_run",
+      },
+      tx,
+    );
+  }, transactionOptions);
+  await publishOperationChanged({ projectId: input.projectId }).catch(() => undefined);
 }

@@ -1,3 +1,4 @@
+import { EditableDemoLogin } from "@/components/auth/EditableDemoLogin";
 import { ExploreDemo } from "@/components/auth/ExploreDemo";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RememberedWebsiteCue } from "@/components/auth/RememberedWebsiteCue";
@@ -17,7 +18,7 @@ import {
   GOOGLE_CAPACITY_EXHAUSTED,
   type SignInCapacityMiss,
 } from "@/lib/auth/signin-capacity-types";
-import { readOnlyDemoConfig } from "@/lib/demo/config";
+import { readDemoConfig } from "@/lib/demo/config";
 import { dataResidencyMessage, isCloud } from "@/lib/deployment/deployment";
 import { legalConsentLinks } from "@/lib/deployment/legal";
 import { isEmailConfigured } from "@/lib/email/registry";
@@ -36,6 +37,7 @@ type LoginPageProps = {
   searchParams?: Promise<{
     error?: string | string[];
     next?: string | string[];
+    owner?: string | string[];
     switch?: string | string[];
   }>;
 };
@@ -48,6 +50,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
   const params = await searchParams;
   const error = firstParam(params?.error);
   const next = firstParam(params?.next);
+  const ownerSignIn = firstParam(params?.owner) === "1";
   // An explicit switch keeps the form reachable while signed in; the app-scoped
   // recovery page links here when the session is the wrong account.
   const switchingAccount = firstParam(params?.switch) === "1";
@@ -60,11 +63,22 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
     return redirect(returnTo);
   }
 
-  if (readOnlyDemoConfig()) {
+  const demo = readDemoConfig();
+  const editableOwnerSignIn = demo.kind === "editable" && ownerSignIn;
+  if (demo.kind === "legacy-read-only") {
     return (
       <main className="grid min-h-dvh place-items-center bg-bg p-6 text-fg">
         <div className="w-full max-w-sm">
           <ExploreDemo />
+        </div>
+      </main>
+    );
+  }
+  if (demo.kind === "editable" && !editableOwnerSignIn) {
+    return (
+      <main className="grid min-h-dvh place-items-center bg-bg p-6 text-fg">
+        <div className="w-full max-w-sm">
+          <EditableDemoLogin />
         </div>
       </main>
     );
@@ -125,15 +139,25 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
           <LoginForm
             capacity={capacity}
             capacityMiss={capacityMiss}
-            demoEmail={DEV_DEMO_EMAIL}
-            devOtpCode={DEV_FIXED_OTP_CODE}
+            demoEmail={editableOwnerSignIn ? null : DEV_DEMO_EMAIL}
+            devOtpCode={editableOwnerSignIn ? null : DEV_FIXED_OTP_CODE}
             dataResidencyMessage={dataResidencyMessage()}
             emailSignInUnavailable={emailSignInUnavailable}
-            enabledProviders={ENABLED_SOCIAL_PROVIDERS}
+            enabledProviders={editableOwnerSignIn ? undefined : ENABLED_SOCIAL_PROVIDERS}
             humanVerificationRequired={isCloud}
             legalConsentLinks={legalConsentLinks()}
             returnTo={returnTo}
           />
+          {editableOwnerSignIn ? (
+            <p className="mt-5 mb-0 text-center text-sm text-fg-muted">
+              <Link
+                className="font-medium text-fg underline underline-offset-4"
+                href="/login?switch=1"
+              >
+                Explore demo
+              </Link>
+            </p>
+          ) : null}
         </div>
       </section>
     </main>

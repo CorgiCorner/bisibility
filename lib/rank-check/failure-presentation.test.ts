@@ -3,6 +3,7 @@ import { providerFailurePresentation } from "./failure-presentation";
 
 describe("providerFailurePresentation", () => {
   it.each([
+    ["provider_account_restricted", "restricted access", false, true],
     ["provider_billing", "insufficient funds", true, true],
     ["provider_auth", "credentials were rejected", false, true],
     ["provider_rate_limited", "temporarily rate limited", true, false],
@@ -15,4 +16,13 @@ describe("providerFailurePresentation", () => {
     expect(presentation.showRetry).toBe(retry);
     expect(presentation.showOpenIntegrations).toBe(integrations);
   });
+});
+
+it("corrects legacy billing labels for recorded account restrictions", () => {
+  expect(
+    providerFailurePresentation(
+      "provider_billing",
+      "We noticed some unusual activity in your DataForSEO account, so we’ve temporarily paused access as a precaution.",
+    ),
+  ).toMatchObject({ code: "provider_account_restricted", showRetry: false });
 });

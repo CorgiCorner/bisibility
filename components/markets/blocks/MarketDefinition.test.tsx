@@ -68,7 +68,7 @@ function props(overrides: Partial<MarketDefinitionProps> = {}): MarketDefinition
 }
 
 describe("MarketDefinition", () => {
-  it("suggests distinct countries from existing markets and the current selection", async () => {
+  it("pins the countries of existing markets above the rest of the catalog", async () => {
     const user = userEvent.setup();
     render(
       <MarketDefinition
@@ -82,11 +82,22 @@ describe("MarketDefinition", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: "Country" }));
-    expect(screen.getByText("Suggested")).toBeVisible();
+    expect(screen.getByText("Tracked countries")).toBeVisible();
+    expect(screen.getByText("All countries")).toBeVisible();
     expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
       "Spain",
       "Belgium",
     ]);
+  });
+
+  it("shows the whole country catalog with flags before anything is typed", async () => {
+    const user = userEvent.setup();
+    render(<MarketDefinition {...props()} />);
+
+    await user.click(screen.getByRole("button", { name: "Country" }));
+    const items = screen.getAllByRole("menuitem");
+    expect(items.map((item) => item.textContent)).toEqual(["Belgium", "Spain"]);
+    expect(items[1]?.querySelector("[data-country-flag='ES']")).toBeInTheDocument();
   });
 
   it("starts with every creation choice empty and keeps dependent controls inert", () => {

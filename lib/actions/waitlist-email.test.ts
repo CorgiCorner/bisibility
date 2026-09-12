@@ -77,10 +77,6 @@ describe("joinWaitlist email delivery", () => {
     process.env.EMAIL_FROM = "bisibility <notifications@example.com>";
     process.env.SES_REGION = "";
     process.env.RESEND_API_KEY = "resend_test";
-    process.env.RESEND_CONTACTS_API_KEY = "resend_contacts_test";
-    process.env.RESEND_SEGMENT_CLOUD = "segment_cloud";
-    process.env.RESEND_SEGMENT_EARLY_ADOPTERS = "segment_early_adopters";
-    process.env.RESEND_SEGMENT_GENERAL = "segment_general";
     process.env.WAITLIST_NOTIFY_EMAIL = "owner@example.com";
     globalThis.fetch = vi.fn(() => Promise.resolve(new Response(null, { status: 202 })));
     mocks.prisma.waitlist.upsert.mockResolvedValue(storedWaitlist());
@@ -96,7 +92,6 @@ describe("joinWaitlist email delivery", () => {
   it("persists without email delivery when no provider is configured", async () => {
     process.env.EMAIL_PROVIDER = "";
     process.env.RESEND_API_KEY = "";
-    process.env.RESEND_CONTACTS_API_KEY = "";
     mocks.prisma.waitlist.upsert.mockResolvedValue(
       storedWaitlist({ email: "log@example.com", source: "landing_capture" }),
     );
@@ -132,32 +127,6 @@ describe("joinWaitlist email delivery", () => {
     ).toBe(false);
   });
 
-  it("keeps syncing waitlist contacts to Resend segments when SES delivers email", async () => {
-    process.env.EMAIL_PROVIDER = "ses";
-    process.env.SES_REGION = "eu-central-1";
-    mocks.sesSend.mockResolvedValue({});
-    mocks.prisma.waitlist.upsert.mockResolvedValue(
-      storedWaitlist({
-        cloudPrice: "$19/mo",
-        email: "person@example.com",
-        source: "settings_notify",
-      }),
-    );
-
-    await joinWaitlist({
-      cloudPrice: "19",
-      email: "person@example.com",
-      source: "settings_notify",
-    });
-
-    const contactsCall = vi
-      .mocked(fetch)
-      .mock.calls.find(([url]) => url === "https://api.resend.com/contacts");
-    expect(contactsCall).toBeDefined();
-    expect(JSON.parse(String(contactsCall?.[1]?.body)).segments).toEqual([{ id: "segment_cloud" }]);
-    expect(mocks.sesSend).toHaveBeenCalledOnce();
-  });
-
   it("derives the notify recipient from EMAIL_FROM when no explicit recipient is set", async () => {
     process.env.WAITLIST_NOTIFY_EMAIL = "";
     mocks.prisma.waitlist.upsert.mockResolvedValue(
@@ -171,21 +140,6 @@ describe("joinWaitlist email delivery", () => {
       .mock.calls.find(([url]) => url === "https://api.resend.com/emails");
     expect(notifyCall).toBeDefined();
     expect(JSON.parse(String(notifyCall?.[1]?.body)).to).toEqual(["notifications@example.com"]);
-  });
-
-  it("keeps contact sync for landing_capture", async () => {
-    mocks.prisma.waitlist.upsert.mockResolvedValue(
-      storedWaitlist({
-        email: "user@example.com",
-        source: "landing_capture",
-      }),
-    );
-
-    await joinWaitlist({ email: "user@example.com", source: "landing_capture" });
-
-    expect(
-      vi.mocked(fetch).mock.calls.some(([url]) => url === "https://api.resend.com/contacts"),
-    ).toBe(true);
   });
 
   it("keeps the cloud-price detail for non-feedback notifications", async () => {

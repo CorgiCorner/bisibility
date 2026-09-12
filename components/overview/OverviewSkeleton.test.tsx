@@ -8,12 +8,12 @@ describe("OverviewSkeleton", () => {
     expect(container.firstElementChild?.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("renders the full-bleed toolbar with filter pills and add action", () => {
+  it("renders the full-bleed toolbar with range/tag selects and add action", () => {
     const { container } = render(<OverviewSkeleton />);
     const toolbar = container.querySelector(".-mx-4.-mt-4");
     expect(toolbar).not.toBeNull();
-    const pills = toolbar?.querySelectorAll(".rounded-full");
-    expect(pills?.length).toBeGreaterThanOrEqual(3);
+    const selects = toolbar?.querySelectorAll(".h-9");
+    expect(selects?.length).toBe(2);
     const action = toolbar?.querySelector(".flex-none");
     expect(action).not.toBeNull();
   });
@@ -29,18 +29,13 @@ describe("OverviewSkeleton", () => {
     }
   });
 
-  it("mirrors the trend and distribution chart row", () => {
-    const { container } = render(<OverviewSkeleton />);
-    const chartSection = container.querySelector(
-      ".lg\\:grid-cols-\\[minmax\\(0\\,1\\.85fr\\)_minmax\\(0\\,1fr\\)\\]",
-    );
-    expect(chartSection).not.toBeNull();
-    const chartCards = chartSection?.querySelectorAll(":scope > .rounded-card");
-    expect(chartCards).toHaveLength(2);
-    const trendChart = chartCards?.[0]?.querySelector(".h-\\[250px\\]");
-    expect(trendChart).not.toBeNull();
-    const distBars = chartCards?.[1]?.querySelectorAll(".items-end > .animate-pulse");
-    expect(distBars?.length).toBe(6);
+  it("mirrors the full-width trend and the distribution plus recently-added row", () => {
+    render(<OverviewSkeleton />);
+    expect(screen.getByTestId("overview-trend").querySelector(".h-\\[250px\\]")).not.toBeNull();
+    const split = screen.getByTestId("overview-secondary-cards");
+    expect(split.querySelectorAll(":scope > .rounded-card")).toHaveLength(2);
+    expect(split.querySelectorAll(".items-end > .animate-pulse")).toHaveLength(6);
+    expect(split).toContainElement(screen.getByTestId("overview-recently-added"));
   });
 
   it("mirrors the by-market rollup with header and table rows", () => {
@@ -51,26 +46,27 @@ describe("OverviewSkeleton", () => {
   });
 
   it("mirrors the data-source panel with metrics and note footer", () => {
-    const { container } = render(<OverviewSkeleton />);
-    const panels = container.querySelectorAll(".px-5.py-4\\.5");
-    const dataSourcePanel = panels[panels.length - 1];
-    expect(dataSourcePanel).not.toBeUndefined();
+    render(<OverviewSkeleton />);
+    const dataSourcePanel = screen.getByTestId("overview-data-source");
     const metrics = dataSourcePanel.querySelectorAll(
       ".grid-cols-\\[repeat\\(auto-fit\\,minmax\\(140px\\,1fr\\)\\)\\] > div",
     );
     expect(metrics).toHaveLength(4);
-    const footer = dataSourcePanel.querySelector(".border-t.border-border");
-    expect(footer).not.toBeNull();
+    expect(dataSourcePanel.querySelector(".border-t.border-border")).not.toBeNull();
   });
 
-  it("mirrors four highlight-list cards with header and rows", () => {
-    const { container } = render(<OverviewSkeleton />);
-    const highlightGrid = container.querySelector(
-      ".grid-cols-\\[repeat\\(auto-fit\\,minmax\\(300px\\,1fr\\)\\)\\]",
-    );
+  it("mirrors recently added beside distribution and the remaining highlight-list cards later", () => {
+    render(<OverviewSkeleton />);
+    const recentlyAdded = screen.getByTestId("overview-recently-added");
+    expect(recentlyAdded.querySelectorAll(".min-h-\\[68px\\]")).toHaveLength(3);
+    const highlightGrid = screen
+      .getByTestId("by-market-rollup")
+      .parentElement?.querySelector(
+        ".grid-cols-\\[repeat\\(auto-fit\\,minmax\\(300px\\,1fr\\)\\)\\]",
+      );
     expect(highlightGrid).not.toBeNull();
     const cards = highlightGrid?.querySelectorAll(".rounded-card");
-    expect(cards).toHaveLength(4);
+    expect(cards).toHaveLength(3);
     for (const card of cards ?? []) {
       const header = card.querySelector(".px-4\\.5");
       expect(header).not.toBeNull();

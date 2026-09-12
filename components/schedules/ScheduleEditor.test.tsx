@@ -2,6 +2,7 @@ import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { routerMock } from "@/tests/next-navigation";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ScheduleEditor } from "./ScheduleEditor";
 import { type ScheduleEditorProjectDefaults, scheduleEditorSchema } from "./ScheduleEditorModel";
@@ -27,7 +28,10 @@ const projectDefaults: ScheduleEditorProjectDefaults = {
   serpDepth: 20,
 };
 
-function renderEditor(defaults = projectDefaults) {
+function renderEditor(
+  defaults = projectDefaults,
+  overrides: Partial<ComponentProps<typeof ScheduleEditor>> = {},
+) {
   return render(
     <ScheduleEditor
       connectedProviders={connectedProviders}
@@ -38,6 +42,7 @@ function renderEditor(defaults = projectDefaults) {
       projectTimezone="Europe/Madrid"
       referenceIso="2026-09-03T10:00:00.000Z"
       schedule={schedule}
+      {...overrides}
     />,
   );
 }
@@ -363,5 +368,14 @@ describe("ScheduleEditor", () => {
         weekday: "Monday",
       }).success,
     ).toBe(false);
+  });
+
+  it("keeps the editor as preview-only when the viewer cannot save", () => {
+    renderEditor(projectDefaults, { canEdit: false });
+
+    expect(screen.getByText("Preview only")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save schedule" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add keywords" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Add keywords" })).not.toBeInTheDocument();
   });
 });

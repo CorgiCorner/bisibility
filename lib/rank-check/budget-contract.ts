@@ -14,6 +14,14 @@ export function budgetExhaustedResult(message: string): BudgetExhaustedResult {
   };
 }
 
+export function hasMonthlyBudgetCap(capCents: number) {
+  return capCents > 0;
+}
+
+export function monthlyBudgetExhausted(capCents: number, spentCents: number) {
+  return hasMonthlyBudgetCap(capCents) && spentCents >= capCents;
+}
+
 export function isBudgetExhaustedResult(value: unknown): value is BudgetExhaustedResult {
   if (!value || typeof value !== "object") return false;
   const result = value as Partial<BudgetExhaustedResult>;

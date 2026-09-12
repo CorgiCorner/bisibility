@@ -86,7 +86,7 @@ describe("ProviderUsageCard", () => {
     expect(screen.getByRole("dialog", { name: "Budget setup" })).toHaveTextContent("Budget setup");
   });
 
-  it("extends the future-cost divider to the card edges", () => {
+  it("does not render the future-cost link", () => {
     render(
       <ProviderUsageCard
         canEditBudget={false}
@@ -97,10 +97,7 @@ describe("ProviderUsageCard", () => {
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Estimate future cost" }).parentElement).toHaveClass(
-      "-mx-5",
-      "px-5",
-    );
+    expect(screen.queryByRole("link", { name: "Estimate future cost" })).not.toBeInTheDocument();
   });
 
   it("renders the attention banner message with semibold weight", () => {

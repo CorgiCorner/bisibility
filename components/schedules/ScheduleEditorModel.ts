@@ -118,6 +118,7 @@ export function scheduleOverrideOptions(
 }
 
 export type ScheduleEditorProps = {
+  canEdit?: boolean;
   candidates?: readonly ScheduleEditorCandidate[];
   defaultScheduleName?: string | null;
   isNew?: boolean;

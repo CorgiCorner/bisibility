@@ -44,7 +44,7 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
           startIcon={<MagnifyingGlass size={13} weight="regular" />}
           style={{ marginTop: "22px", minHeight: 40, paddingInline: "18px" }}
         >
-          Find keywords in Research
+          Browse Keyword Research
         </Button>
       </div>
     </Card>

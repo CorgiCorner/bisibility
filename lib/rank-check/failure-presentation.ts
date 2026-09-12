@@ -15,6 +15,12 @@ const PRESENTATIONS: Record<ProviderErrorCode, Omit<ProviderFailurePresentation,
     showOpenIntegrations: true,
     showRetry: true,
   },
+  provider_account_restricted: {
+    message:
+      "The provider has restricted access to this account. Review the account in the provider dashboard or contact their support, then try again.",
+    showOpenIntegrations: true,
+    showRetry: false,
+  },
   provider_auth: {
     message:
       "The rank check could not run because the provider credentials were rejected. Reconnect the provider, then try again.",
@@ -42,7 +48,17 @@ const FALLBACK: Omit<ProviderFailurePresentation, "code"> = {
   showRetry: true,
 };
 
-export function providerFailurePresentation(code: unknown): ProviderFailurePresentation {
+export function providerFailurePresentation(
+  code: unknown,
+  error?: string | null,
+): ProviderFailurePresentation {
+  // Older checks incorrectly stored account restrictions as billing failures.
+  if (
+    code === "provider_billing" &&
+    /unusual activity|temporarily paused access/i.test(error ?? "")
+  ) {
+    return { code: "provider_account_restricted", ...PRESENTATIONS.provider_account_restricted };
+  }
   if (!isProviderErrorCode(code)) return { code: null, ...FALLBACK };
   return { code, ...PRESENTATIONS[code] };
 }

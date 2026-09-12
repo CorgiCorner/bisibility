@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  ContextSwitcherCaret,
+  contextSwitcherTriggerClassName,
+} from "@/components/shell/ContextSwitcherTrigger";
 import { MarketSwitcher } from "@/components/shell/MarketSwitcher";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { HeaderContextMarket } from "@/lib/markets/header-context";
@@ -76,22 +80,22 @@ export function TargetSwitcher({
         />
       ) : null}
       <MenuSelect
-        ariaLabel="Device"
-        leadingIcon={
-          keyword.device.toLowerCase() === "mobile" ? (
-            <DeviceMobile aria-hidden size={14} weight="regular" />
-          ) : (
-            <Monitor aria-hidden size={14} weight="regular" />
-          )
-        }
+        ariaLabel="Device scope"
         onChange={(value) => {
           if (value !== keyword.id) router.push(appPath(projectId, "rank-tracker", value));
         }}
         options={sameMarket.map((target) => ({
+          icon:
+            target.device.toLowerCase() === "mobile" ? (
+              <DeviceMobile aria-hidden size={14} weight="regular" />
+            ) : (
+              <Monitor aria-hidden size={14} weight="regular" />
+            ),
           label: deviceLabel(target.device),
           value: target.id,
         }))}
-        triggerClassName="h-8 min-h-8 rounded-control border-border-control bg-bg-elev px-2.5 text-[13px] font-medium text-fg"
+        trailingIcon={<ContextSwitcherCaret />}
+        triggerClassName={contextSwitcherTriggerClassName}
         value={keyword.id}
       />
     </>

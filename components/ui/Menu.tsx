@@ -67,7 +67,9 @@ export function Menu({
             if (!autoFocus) {
               event.preventDefault();
               if (event.target instanceof HTMLElement) {
-                event.target.querySelector<HTMLElement>("[data-menu-search]")?.focus();
+                event.target
+                  .querySelector<HTMLElement>("[data-menu-search]")
+                  ?.focus({ preventScroll: true });
               }
             }
           }}

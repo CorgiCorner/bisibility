@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { FirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
+import { hasMonthlyBudgetCap } from "@/lib/rank-check/budget-contract";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -84,7 +85,9 @@ function FirstCheckRunPlanRows({
   }
   rows.push({
     label: "Budget",
-    value: `${formatEstimateCents(plan.budget.spentCents)} of ${formatEstimateCents(plan.budget.capCents)}`,
+    value: hasMonthlyBudgetCap(plan.budget.capCents)
+      ? `${formatEstimateCents(plan.budget.spentCents)} of ${formatEstimateCents(plan.budget.capCents)}`
+      : `${formatEstimateCents(plan.budget.spentCents)} this month`,
   });
 
   return (

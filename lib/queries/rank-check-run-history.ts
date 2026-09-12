@@ -63,6 +63,7 @@ export async function findHistoryRunRows(
     SELECT "publicId"
     FROM "rank_check_runs"
     WHERE "projectId" = ${projectId}
+      AND "deletedAt" IS NULL
       AND ("launchedAt" IS NOT NULL OR ("status" = 'cancelled' AND "finishedAt" IS NOT NULL))
       ${statusFilter}
       ${cursorFilter}
@@ -73,7 +74,7 @@ export async function findHistoryRunRows(
 
   const rows = await prisma.rankCheckRun.findMany({
     select: rankCheckRunSelect,
-    where: { projectId, publicId: { in: ids.map(({ publicId }) => publicId) } },
+    where: { projectId, deletedAt: null, publicId: { in: ids.map(({ publicId }) => publicId) } },
   });
   const byPublicId = new Map(rows.map((row) => [row.publicId, row]));
   return ids.flatMap(({ publicId }) => {

@@ -1,4 +1,6 @@
 import { IntegrationCategory } from "@/components/integrations/IntegrationCategory";
+import { IntegrationsTabs } from "@/components/integrations/IntegrationsTabs";
+import { IntegrationUsagePanel } from "@/components/integrations/IntegrationUsagePanel";
 import { PageContent } from "@/components/shell/PageContent";
 import {
   completeGooglePropertySelection,
@@ -57,6 +59,19 @@ export default async function IntegrationsPage({
   const { project } = await routeParams;
   const { publicId } = await resolveProjectAccess(project);
   const params = await searchParams;
+  if (readParam(params, "tab") === "usage") {
+    return (
+      <PageContent className="flex flex-col gap-5">
+        <IntegrationsTabs active="usage" projectRef={publicId} />
+        <div aria-labelledby="integrations-panel-usage-tab" id="integrations-panel" role="tabpanel">
+          <IntegrationUsagePanel
+            editBudget={readParam(params, "budget") === "edit"}
+            projectRef={publicId}
+          />
+        </div>
+      </PageContent>
+    );
+  }
   const googleStatus = readParam(params, "google");
   const googleProvider = readParam(params, "provider");
   const initialConnectProviderId = readParam(params, "connect") ?? googleProvider;
@@ -90,23 +105,30 @@ export default async function IntegrationsPage({
 
   return (
     <PageContent className="flex flex-col gap-5">
-      <div className="flex flex-col gap-5 scroll-mt-6" id="all-providers">
-        {categories.map((category) => (
-          <IntegrationCategory
-            actions={providerActions}
-            canManageProviders={canManageProviders}
-            canUpdateProject={canUpdateProject}
-            category={category}
-            deploymentMode={deploymentMode()}
-            initialConnectProviderId={canManageProviders ? initialConnectProviderId : undefined}
-            key={category.id}
-            noProvidersYet={noProvidersYet}
-            projectId={publicId}
-            projectRef={publicId}
-            searchSyncPlan={searchSyncPlan}
-            timeZone={timeZone}
-          />
-        ))}
+      <IntegrationsTabs active="connections" projectRef={publicId} />
+      <div
+        aria-labelledby="integrations-panel-connections-tab"
+        id="integrations-panel"
+        role="tabpanel"
+      >
+        <div className="flex flex-col gap-5 scroll-mt-6" id="all-providers">
+          {categories.map((category) => (
+            <IntegrationCategory
+              actions={providerActions}
+              canManageProviders={canManageProviders}
+              canUpdateProject={canUpdateProject}
+              category={category}
+              deploymentMode={deploymentMode()}
+              initialConnectProviderId={canManageProviders ? initialConnectProviderId : undefined}
+              key={category.id}
+              noProvidersYet={noProvidersYet}
+              projectId={publicId}
+              projectRef={publicId}
+              searchSyncPlan={searchSyncPlan}
+              timeZone={timeZone}
+            />
+          ))}
+        </div>
       </div>
     </PageContent>
   );

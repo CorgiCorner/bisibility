@@ -102,7 +102,7 @@ describe("AppHeader", () => {
     expect(trigger.parentElement).toHaveClass("lg:hidden");
     expect(trigger).toHaveAttribute("data-variant", "header");
   });
-  it("puts the context slot immediately left of the page title", () => {
+  it("puts the context selects immediately after the page title", () => {
     render(
       <AppHeader
         activeProjectId="proj_example"
@@ -113,10 +113,10 @@ describe("AppHeader", () => {
       />,
     );
 
+    const title = screen.getByTestId("header-title");
     const slot = screen.getByTestId("context-slot");
-    expect(slot.compareDocumentPosition(screen.getByTestId("header-title"))).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
+    expect(title.compareDocumentPosition(slot)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(title.parentElement).toContainElement(slot);
   });
 
   it("renders no context slot when the route matched none", () => {

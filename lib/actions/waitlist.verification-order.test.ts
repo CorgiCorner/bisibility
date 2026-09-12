@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
   resolveClientIp: vi.fn(),
   sendEmail: vi.fn(),
-  syncWaitlistContact: vi.fn(),
   verifyHumanChallenge: vi.fn(),
 }));
 
@@ -21,9 +20,6 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/deployment/deployment", () => ({ deploymentMode: () => "cloud" }));
 vi.mock("@/lib/email/from", () => ({ configuredEmailFrom: () => "sender@example.com" }));
 vi.mock("@/lib/email/registry", () => ({ isEmailConfigured: () => true }));
-vi.mock("@/lib/email/resend-contacts", () => ({
-  syncWaitlistContact: mocks.syncWaitlistContact,
-}));
 vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("@/lib/http/client-ip", () => ({ resolveClientIp: mocks.resolveClientIp }));
 vi.mock("@/lib/verification/human-verification", () => ({
@@ -65,7 +61,6 @@ describe("joinWaitlist verification order", () => {
     expect(mocks.consume).not.toHaveBeenCalled();
     expect(mocks.prisma.waitlist.findUnique).not.toHaveBeenCalled();
     expect(mocks.prisma.waitlist.upsert).not.toHaveBeenCalled();
-    expect(mocks.syncWaitlistContact).not.toHaveBeenCalled();
     expect(mocks.sendEmail).not.toHaveBeenCalled();
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });

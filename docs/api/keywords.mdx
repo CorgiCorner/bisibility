@@ -1,46 +1,15 @@
 ---
 title: "Keywords"
-description: "Create, list, update, delete, and bulk mutate tracked keywords."
+description: "Markets, identity fields, matching, and bulk mutation rules for tracked keywords."
 ---
 
-Keywords belong to a project and identify a search phrase, market, device, and
-target URL. A market is a location and language pair.
-
-## Keyword resource
-
-```json
-{
-  "id": "kw_a00000000000000000000000",
-  "project_id": "prj_a00000000000000000000000",
-  "text": "rank tracker api",
-  "country": "United States",
-  "location": "United States",
-  "location_key": "US",
-  "language_code": "en",
-  "language_label": "English",
-  "device": "desktop",
-  "target_url": "https://example.com/rank-tracker",
-  "topic": "API",
-  "intent": "commercial",
-  "latest_position": 4,
-  "previous_position": 7,
-  "ranking_url": "https://example.com/rank-tracker",
-  "tags": ["api"],
-  "schedule": {
-    "frequency": "daily",
-    "cron_expression": null,
-    "timezone": "UTC",
-    "jitter_minutes": 60,
-    "last_checked_at": "2026-06-28T10:00:00.000Z",
-    "next_check_at": "2026-06-29T10:00:00.000Z"
-  },
-  "created_at": "2026-06-28T09:00:00.000Z",
-  "updated_at": "2026-06-28T10:00:00.000Z"
-}
-```
+A keyword belongs to a project and identifies a search phrase, market, device,
+and target URL. A market is a location and language pair. Exact request and
+response schemas live in the **API Reference** tab.
 
 `device` is `desktop` or `mobile`. `frequency` is `paused`, `manual`, `daily`,
-`weekly`, `monthly`, or `custom_cron`.
+`weekly`, `monthly`, or `custom_cron`. Every keyword resource reports
+`language_code` and `language_label` alongside the canonical `location_key`.
 
 `location_key` accepts an optional `@language` qualifier such as
 `ES/Andalusia/Malaga@en`. An unqualified key uses the country's default
@@ -48,55 +17,26 @@ language. Supplying the default explicitly is an alias of the unqualified key,
 so `ES` and `ES@es` resolve to the same canonical market. Use the codes listed
 under [Markets and languages](/markets).
 
-Every keyword resource reports `language_code` and `language_label` alongside
-the canonical `location_key`.
+## List filters
 
-## List project keywords
-
-```http
-GET /api/v1/projects/{project_id}/keywords
-Authorization: Bearer <api_key>
-```
-
-Query parameters:
+`listKeywords` pages with `limit` (default `50`, maximum `200`) and `cursor`.
+`search` or `q` is a case-insensitive text search.
 
 | Query | Description |
 | - | - |
-| `limit` | Page size. Defaults to `50`, maximum `200`. |
-| `cursor` | Pagination cursor. |
-| `search` or `q` | Case-insensitive keyword text search. |
 | `filter[device]` or `device` | `desktop` or `mobile`. |
-| `filter[location_key]` or `location_key` | Matches the exact canonical location key, optionally qualified with `@language`. |
-| `filter[country]` or `country` | Matches canonical country names and country-name aliases case-insensitively. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
+| `filter[location_key]` or `location_key` | Exact canonical location key, optionally qualified with `@language`. |
+| `filter[country]` or `country` | Canonical country names and aliases, case-insensitive. Deprecated: send `location_key` instead. Accepted until bisibility 0.24.0, then removed. |
 | `filter[tag]` or `tag` | Case-insensitive exact tag match. |
 | `filter[topic]` or `topic` | Case-insensitive exact topic match. |
 | `filter[intent]` or `intent` | Case-insensitive exact intent match. |
-| `filter[position_gt]` or `position_gt` | Match keywords with a rank check position greater than this number. |
-| `filter[position_lt]` or `position_lt` | Match keywords with a rank check position less than this number. |
+| `filter[position_gt]` or `position_gt` | Rank-check position greater than this number. |
+| `filter[position_lt]` or `position_lt` | Rank-check position less than this number. |
 | `sort` | `created_at`, `-created_at`, `keyword`, `-keyword`, `text`, `-text`, `updated_at`, `-updated_at`. |
 
-Response:
+## Match texts across markets
 
-```json
-{
-  "data": [],
-  "meta": { "next_cursor": null }
-}
-```
-
-## Match project keyword texts
-
-```http
-POST /api/v1/projects/{project_id}/keyword-matches
-Authorization: Bearer <api_key>
-Content-Type: application/json
-
-{
-  "texts": [" Headless CMS ", "seo tooling"]
-}
-```
-
-Use this read-shaped POST to look up up to 50 exact tracked texts across their
+`matchProjectKeywords` looks up up to 50 exact tracked texts across their
 markets. Each request text is trimmed and lowercased before matching.
 `matched_text` contains that normalized value, so use it to join each response
 row to the normalized request. `text` remains the stored keyword text and can
@@ -106,205 +46,48 @@ At most 100 market rows are returned for each `matched_text`. The response
 always includes `meta.truncated_texts`; a normalized text listed there has more
 matching markets and its returned rows are partial.
 
-```json
-{
-  "data": [
-    {
-      "keyword_id": "kw_a00000000000000000000000",
-      "matched_text": "headless cms",
-      "text": "Headless CMS",
-      "market": {
-        "country_code": "US",
-        "location": "Austin, Texas, United States",
-        "location_key": "US/Texas/Austin",
-        "language_code": "en",
-        "language_label": "English",
-        "device": "desktop"
-      },
-      "latest_position": 3,
-      "previous_position": 5
-    }
-  ],
-  "meta": { "truncated_texts": [] }
-}
-```
+## Create keywords
 
-## Add keywords
-
-```http
-POST /api/v1/projects/{project_id}/keywords
-Authorization: Bearer <api_key>
-Content-Type: application/json
-Idempotency-Key: add-keywords-001
-```
-
-The request body may be one keyword object, an array of keyword objects, or an
+`addKeywords` accepts one keyword object, an array of keyword objects, or an
 object with a `keywords` array. String entries in `keywords` are converted to
 `{ "keyword": "..." }`.
 
-```json
-{
-  "keywords": [
-    {
-      "keyword": "rank tracker api",
-      "target_url": "https://example.com/rank-tracker",
-      "topic": "API",
-      "intent": "commercial",
-      "device": "desktop",
-      "country": "Spain",
-      "location_key": "ES/Andalusia/Malaga@en",
-      "tags": ["api"],
-      "schedule": {
-        "frequency": "daily",
-        "cron_expression": null,
-        "timezone": "UTC",
-        "jitter_minutes": 60
-      }
-    }
-  ]
-}
-```
+`keyword` is required (1 to 180 characters). `location_key` is the primary
+location reference and takes precedence over the deprecated `country`,
+`language`, `location`, and `city` fields. Those legacy selectors are accepted
+until bisibility 0.24.0, then removed. Unresolved cities fall back to
+country-level tracking with a warning.
 
-Request fields:
+`tags` accepts up to 12 tags, each 1 to 48 characters. Within `schedule`,
+`jitter_minutes` must be a whole number from `0` to `120`. Omitting it uses
+`60`; `0` disables jitter. Use `cron_expression` with `frequency: "custom_cron"`.
+Daily and weekly schedules use a stable, keyword-specific interval phase, so
+`timezone` does not move their phase. `timezone` anchors monthly and custom
+cron schedules to wall-clock time.
 
-| Field | Description |
-| - | - |
-| `keyword` | Required. Search phrase, 1 to 180 characters. |
-| `target_url` | Absolute URL, path, `null`, or omitted. |
-| `topic` | Optional topic label, 1 to 80 characters, `null`, or omitted. |
-| `intent` | Optional intent label, 1 to 80 characters, `null`, or omitted. |
-| `device` | Optional. Defaults to `desktop`. |
-| `location_key` | Primary location reference: canonical country, region, or city key, optionally qualified with `@language`, such as `ES/Andalusia/Malaga@en`. Defaults to the project's default market. Takes precedence over the deprecated `country`, `language`, `location`, and `city` fields. |
-| `country` | Legacy supported SERP country name. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
-| `city` | Legacy city name resolved against `country`; unresolved cities fall back to country-level tracking with a warning. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
-| `location` | Legacy alias for `country`; when both are sent, `location` wins. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
-| `tags` | Optional. Up to 12 tags, each 1 to 48 characters. |
-| `schedule` | Optional schedule object. |
+The response status is `201` when at least one keyword is created. Duplicate
+keyword, location, and device combinations are skipped. If location resolution
+degrades, the response includes per-result `warning` values and a top-level
+`warnings` array with unique warning messages.
 
-Within `schedule`, `jitter_minutes` must be a whole number from `0` to `120`.
-Omitting it uses `60`; `0` disables jitter. Use `cron_expression` with
-`frequency: "custom_cron"`. Daily and weekly schedules use a stable,
-keyword-specific interval phase, so `timezone` does not move their phase.
-`timezone` anchors monthly and custom cron schedules to wall-clock time.
+## Update and identity
 
-Response status is `201` when at least one keyword is created. Duplicate keyword,
-location, and device combinations are skipped. If location resolution degrades,
-the response includes per-result `warning` values and a top-level `warnings` array
-with unique warning messages.
+`getKeyword` returns one keyword or `404`. `setKeywordTargetUrl` patches
+optional fields. Identity fields (`keyword`, `device`, `location_key`, and the
+deprecated `country` / `city` / `location`) are accepted only when they match
+the stored term, market, and device. A differing identity value returns `409`.
+To track a different term, market, or device, add it as its own keyword and
+archive the old keyword.
 
-```json
-{
-  "created": 1,
-  "skipped": 0,
-  "results": [
-    {
-      "status": "created",
-      "keyword": {
-        "id": "kw_a00000000000000000000000",
-        "project_id": "prj_a00000000000000000000000",
-        "text": "rank tracker api",
-        "country": "United States",
-        "location": "United States",
-        "location_key": "US",
-        "language_code": "en",
-        "language_label": "English",
-        "device": "desktop",
-        "target_url": "https://example.com/rank-tracker",
-        "topic": "API",
-        "intent": "commercial",
-        "latest_position": null,
-        "previous_position": null,
-        "ranking_url": null,
-        "tags": ["api"],
-        "schedule": null,
-        "created_at": "2026-06-28T10:00:00.000Z",
-        "updated_at": "2026-06-28T10:00:00.000Z"
-      },
-      "warning": "Could not resolve \"Austin\" in United States; tracking at country level."
-    }
-  ],
-  "warnings": ["Could not resolve \"Austin\" in United States; tracking at country level."]
-}
-```
+`tags` replaces the full tag set. `frequency` sets a default schedule with
+timezone `UTC`, jitter `60`, and no cron expression. `schedule` overrides
+`frequency` when both are sent.
 
-## Get keyword
+`deleteKeyword` deletes the keyword and returns the deleted resource.
 
-```http
-GET /api/v1/keywords/{id}
-Authorization: Bearer <api_key>
-```
+## Bulk mutate
 
-Returns one keyword resource or `404`.
-
-## Update keyword
-
-```http
-PATCH /api/v1/keywords/{id}
-Authorization: Bearer <api_key>
-Content-Type: application/json
-Idempotency-Key: update-keyword-001
-```
-
-Request body:
-
-```json
-{
-  "target_url": "https://example.com/docs/rank-tracker",
-  "topic": "Docs",
-  "intent": "informational",
-  "tags": ["docs", "api"],
-  "frequency": "weekly"
-}
-```
-
-Patch fields are optional:
-
-| Field | Description |
-| - | - |
-| `keyword` | Identity field. Must match the stored keyword text. |
-| `target_url` | Absolute URL, path, `null`, or omitted. |
-| `topic` | Topic label, 1 to 80 characters, `null`, or omitted. |
-| `intent` | Intent label, 1 to 80 characters, `null`, or omitted. |
-| `device` | Identity field. Must match the stored `desktop` or `mobile` device. |
-| `location_key` | Identity field and primary location reference. Canonical country, region, or city key, optionally qualified with `@language`; must resolve to the stored market. |
-| `country` | Identity field. Legacy country name that must resolve to the stored SERP market. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
-| `city` | Identity field. Legacy city name that must resolve to the stored city in the selected country. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
-| `location` | Identity field and legacy alias for `country`; when both are sent, `location` wins. Deprecated: send `location_key` instead. Accepted until Bisibility 0.24.0, then removed. |
-| `tags` | Replaces the full tag set. |
-| `frequency` | Sets a default schedule with timezone `UTC`, jitter `60`, and no cron expression. |
-| `schedule` | Full schedule object. Overrides `frequency` if present. |
-
-Within `schedule`, `jitter_minutes` accepts the inclusive range `0` to `120`.
-Custom schedules use `cron_expression`. Daily and weekly schedules use a stable,
-keyword-specific interval phase independent of `timezone`; monthly and custom
-cron schedules use `timezone` as their wall-clock anchor.
-
-Identity fields are accepted when they match the stored term, market, and device.
-A differing identity value returns `409`. To track a different term, market, or
-device, add it as its own keyword and archive the old keyword.
-
-Returns the updated keyword resource.
-
-## Delete keyword
-
-```http
-DELETE /api/v1/keywords/{id}
-Authorization: Bearer <api_key>
-Idempotency-Key: delete-keyword-001
-```
-
-Deletes the keyword and returns the deleted keyword resource.
-
-## Bulk mutate keywords
-
-```http
-POST /api/v1/keywords/bulk
-Authorization: Bearer <api_key>
-Content-Type: application/json
-Idempotency-Key: bulk-keywords-001
-```
-
-Supported operations:
+`bulkUpdateKeywords` supports:
 
 | Operation | Required fields |
 | - | - |
@@ -314,24 +97,14 @@ Supported operations:
 | `set_frequency` | `keyword_ids`, `frequency` or `schedule` |
 | `delete` | `keyword_ids` |
 
-Example:
+## Related operations
 
-```json
-{
-  "operation": "add_tags",
-  "keyword_ids": ["kw_a00000000000000000000000", "kw_b00000000000000000000000"],
-  "tags": ["launch"]
-}
-```
+- [`GET /projects/{project_id}/keywords`](/api-reference/keywords/list-project-keywords) (`listKeywords`)
+- [`POST /projects/{project_id}/keywords`](/api-reference/keywords/add-one-or-more-keywords) (`addKeywords`)
+- [`GET /keywords/{id}`](/api-reference/keywords/get-one-keyword) (`getKeyword`)
+- [`PATCH /keywords/{id}`](/api-reference/keywords/set-keyword-target-url-or-metadata) (`setKeywordTargetUrl`)
+- [`DELETE /keywords/{id}`](/api-reference/keywords/delete-one-keyword) (`deleteKeyword`)
+- [`POST /keywords/bulk`](/api-reference/keywords/bulk-mutate-keywords) (`bulkUpdateKeywords`)
+- [`POST /projects/{project_id}/keyword-matches`](/api-reference/keywords/match-tracked-keywords) (`matchProjectKeywords`)
 
-Response:
-
-```json
-{
-  "operation": "add_tags",
-  "results": [
-    { "keyword_id": "kw_a00000000000000000000000", "status": "updated" },
-    { "keyword_id": "kw_b00000000000000000000000", "status": "updated" }
-  ]
-}
-```
+Exact request and response schemas live in the generated API Reference.

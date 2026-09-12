@@ -39,7 +39,10 @@ vi.mock("@/lib/queries/provider-spend", () => ({
   loadProjectProviderSpend: mocks.providerSpend,
 }));
 
-import { updateProviderConnectionAllocationAction } from "./provider-allocation";
+import {
+  refreshProviderConnectionBudgetAction,
+  updateProviderConnectionAllocationAction,
+} from "./provider-allocation";
 
 const project = { id: "project_1", publicId: "prj_abcdefghijklmnopqrstuvwx" };
 const actor = { id: "user_1", memberships: [], role: "admin" as const };
@@ -122,5 +125,30 @@ describe("updateProviderConnectionAllocationAction", () => {
     expect(mocks.providerSpend).toHaveBeenCalledWith(
       expect.objectContaining({ catalog: expect.any(Array), projectId: "project_1" }),
     );
+  });
+});
+
+describe("refreshProviderConnectionBudgetAction", () => {
+  it("requires provider management permission before refreshing the balance", async () => {
+    vi.clearAllMocks();
+    mocks.actor.mockResolvedValue(actor);
+    mocks.requireProject.mockRejectedValueOnce(new Error("Forbidden"));
+    await expect(
+      refreshProviderConnectionBudgetAction(project.publicId, connectionId),
+    ).rejects.toThrow("Forbidden");
+    expect(mocks.providerSpend).not.toHaveBeenCalled();
+  });
+  it("refreshes only the selected connection in the authorized project without saving a budget", async () => {
+    vi.clearAllMocks();
+    mocks.actor.mockResolvedValue(actor);
+    mocks.requireProject.mockResolvedValue(project);
+    mocks.providerSpend.mockResolvedValue({ connections: [{ connectionId }] });
+    await expect(
+      refreshProviderConnectionBudgetAction(project.publicId, connectionId),
+    ).resolves.toEqual({ connectionId });
+    expect(mocks.providerSpend).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: project.id, refreshConnectionPublicId: connectionId }),
+    );
+    expect(mocks.setAllocation).not.toHaveBeenCalled();
   });
 });

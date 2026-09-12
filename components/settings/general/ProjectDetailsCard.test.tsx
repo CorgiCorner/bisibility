@@ -187,4 +187,22 @@ describe("ProjectDetailsCard", () => {
     );
     expect(updateProject).not.toHaveBeenCalled();
   });
+
+  it("shows domain and name as plain text without Save or Change domain", () => {
+    render(
+      <ProjectDetailsCard
+        canEdit={false}
+        project={project}
+        requestDomainChange={vi.fn()}
+        updateProject={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Read-only")).toBeInTheDocument();
+    expect(screen.getByText("Example")).toBeInTheDocument();
+    expect(screen.getByText("example.com")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Change domain" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Project name")).not.toBeInTheDocument();
+  });
 });

@@ -32,3 +32,10 @@ Content-Type: application/json
 Updates require write scope and honor project read-only mode. Existing snapshots
 are retained when monitoring is disabled. See [Sitemap monitoring](/guides/sitemap-monitoring)
 for fetch limits, scheduling, signals, and retention.
+
+## Related operations
+
+- [`GET /projects/{project_id}/sitemap-monitors`](/api-reference/sitemap-monitoring/get-sitemap-monitor-status) (`listSitemapMonitors`)
+- [`PATCH /projects/{project_id}/sitemap-monitors/{monitor_id}`](/api-reference/sitemap-monitoring/update-sitemap-monitor) (`updateSitemapMonitor`)
+
+Exact request and response schemas live in the generated API Reference.

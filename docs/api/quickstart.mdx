@@ -35,6 +35,35 @@ curl --fail-with-body "$BISIBILITY_BASE_URL/projects" \
   -H "Authorization: Bearer $BISIBILITY_TOKEN"
 ```
 
+The same first request in JavaScript:
+
+```javascript
+const baseUrl = process.env.BISIBILITY_BASE_URL;
+const token = process.env.BISIBILITY_TOKEN;
+
+if (!baseUrl || !token) {
+  throw new Error(
+    "Set BISIBILITY_BASE_URL and BISIBILITY_TOKEN before running this example.",
+  );
+}
+
+const response = await fetch(`${baseUrl}/projects`, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
+
+if (!response.ok) {
+  throw new Error(`${response.status} ${await response.text()}`);
+}
+
+const body = await response.json();
+
+for (const project of body.data) {
+  console.log(project.id, project.name);
+}
+```
+
 A successful request returns `200 OK` with a `data` array of projects and
 pagination metadata. A project API key returns its one project; a personal
 access token returns the projects available through the user's memberships.

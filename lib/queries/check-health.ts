@@ -2,6 +2,7 @@ import "server-only";
 
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
+import { monthlyBudgetExhausted } from "@/lib/rank-check/budget-contract";
 import { requireReadableProject } from "./_auth";
 import {
   getRequestMonthlySpendCents,
@@ -87,7 +88,7 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
   return {
     budget: {
       capCents,
-      exhausted: spentCents >= capCents,
+      exhausted: monthlyBudgetExhausted(capCents, spentCents),
       spentCents,
     },
     failed24h: {

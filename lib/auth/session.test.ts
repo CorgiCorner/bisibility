@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   findUnique: vi.fn(),
   getAuthSession: vi.fn(),
   headers: vi.fn(),
+  demoActor: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -17,6 +18,7 @@ vi.mock("@/lib/db/prisma", () => ({
     user: { findUnique: mocks.findUnique },
   },
 }));
+vi.mock("@/lib/demo/identity", () => ({ loadConfiguredDemoActor: mocks.demoActor }));
 vi.mock("next/headers", () => ({ headers: mocks.headers }));
 vi.mock("next/server", () => ({ connection: mocks.connection }));
 
@@ -45,6 +47,20 @@ describe("enforceActiveSession", () => {
     await expect(enforceActiveSession(session)).resolves.toBe(session);
 
     expect(mocks.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("revalidates the configured editable actor instead of trusting a stale session", async () => {
+    vi.stubEnv("DEMO_MODE", "editable");
+    vi.stubEnv("DEMO_OWNER_ID", "usr_zyxwvutsrqponmlkjihgfedc");
+    vi.stubEnv("DEMO_USER_ID", "usr_abcdefghijklmnopqrstuvwx");
+    vi.stubEnv("DEMO_PROJECT_ID", "prj_abcdefghijklmnopqrstuvwx");
+    mocks.demoActor.mockResolvedValue({ id: "user_1", kind: "owner" });
+
+    await expect(enforceActiveSession(session)).resolves.toBe(session);
+    mocks.demoActor.mockResolvedValue(null);
+    await expect(enforceActiveSession(session)).resolves.toBeNull();
+    expect(mocks.findUnique).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
   });
 
   it("retries the active-account lookup after a transient database timeout", async () => {

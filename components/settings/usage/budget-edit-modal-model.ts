@@ -64,3 +64,24 @@ export function budgetFieldChanged(connection: ProviderSpendConnection, rawValue
   if (!hadAllocation) return true;
   return trimmed !== budgetInitialValue(connection);
 }
+
+export function budgetFromProviderAvailability(connection: ProviderSpendConnection): string {
+  const available = connection.availableAtProvider;
+  if (
+    available?.status !== "available" ||
+    !Number.isFinite(available.amount) ||
+    available.amount <= 0
+  ) {
+    throw new Error("A positive provider balance is unavailable. Enter a budget manually.");
+  }
+  const remaining =
+    connection.unit === "cents" && available.unit === "usd"
+      ? Math.floor(available.amount * 100 + 1e-8)
+      : connection.unit === "units" && available.unit === "searches"
+        ? Math.floor(available.amount)
+        : null;
+  if (remaining === null || remaining <= 0)
+    throw new Error("This provider does not report a compatible balance.");
+  const total = Math.ceil(connection.used) + remaining;
+  return connection.unit === "cents" ? (total / 100).toFixed(2) : String(total);
+}

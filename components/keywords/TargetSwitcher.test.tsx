@@ -95,7 +95,7 @@ describe("keyword market navigation", () => {
 
   it("keeps device switching and market management separate from keyword editing", async () => {
     const onAddMarket = setup();
-    fireEvent.click(screen.getByRole("button", { name: "Device" }));
+    fireEvent.click(screen.getByRole("button", { name: "Device scope" }));
     expect((await screen.findAllByRole("menuitem")).map((item) => item.textContent)).toEqual([
       "Desktop",
       "Mobile",

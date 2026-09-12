@@ -6,9 +6,12 @@ import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  demo: { value: null as object | null },
+  deployment: { isCloud: true },
   deploymentModeProvider: vi.fn(),
   firstRunGate: vi.fn(),
   renderOnboardingQuizSlot: vi.fn(),
+  renderSupportWidget: vi.fn(() => <aside data-testid="support-extension" />),
   requireSession: vi.fn(),
   toastProvider: vi.fn(),
 }));
@@ -38,9 +41,17 @@ vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/dates/request", () => ({
   getResolvedDateFormat: vi.fn().mockResolvedValue({ preference: "auto", resolved: "month_first" }),
 }));
-vi.mock("@/lib/deployment/deployment", () => ({ isCloud: true }));
+vi.mock("@/lib/deployment/deployment", () => ({
+  get isCloud() {
+    return mocks.deployment.isCloud;
+  },
+}));
+vi.mock("@/lib/demo/config", () => ({ readDemoConfig: () => mocks.demo.value }));
 vi.mock("@/lib/app-extensions", () => ({
-  appExtensions: { renderOnboardingQuizSlot: mocks.renderOnboardingQuizSlot },
+  appExtensions: {
+    renderOnboardingQuizSlot: mocks.renderOnboardingQuizSlot,
+    renderSupportWidget: mocks.renderSupportWidget,
+  },
 }));
 vi.mock("@/lib/seo/noindex", () => ({ createNoindexMetadata: () => ({}) }));
 
@@ -74,6 +85,8 @@ function setActEnvironment(enabled: boolean) {
 describe("shared app layout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.demo.value = { kind: "disabled" };
+    mocks.deployment.isCloud = true;
     mocks.firstRunGate.mockResolvedValue(undefined);
     mocks.renderOnboardingQuizSlot.mockImplementation(async (children: ReactNode) => (
       <>
@@ -81,7 +94,10 @@ describe("shared app layout", () => {
         <div data-quiz-slot>Quiz slot</div>
       </>
     ));
-    mocks.requireSession.mockResolvedValue({ user: { id: "admin_1" } });
+    mocks.requireSession.mockResolvedValue({
+      session: { expiresAt: new Date("2026-09-10T12:00:00.000Z") },
+      user: { id: "admin_1" },
+    });
   });
 
   afterEach(() => {
@@ -98,6 +114,7 @@ describe("shared app layout", () => {
     );
     expect(mocks.firstRunGate).toHaveBeenCalledOnce();
     expect(mocks.renderOnboardingQuizSlot).not.toHaveBeenCalled();
+    expect(mocks.renderSupportWidget).not.toHaveBeenCalled();
   });
 
   it("does not invoke authentication or the quiz slot when setup redirects", async () => {
@@ -109,6 +126,7 @@ describe("shared app layout", () => {
 
     expect(mocks.requireSession).not.toHaveBeenCalled();
     expect(mocks.renderOnboardingQuizSlot).not.toHaveBeenCalled();
+    expect(mocks.renderSupportWidget).not.toHaveBeenCalled();
   });
 
   it("passes the exact children to the decorator once after both gates succeed", async () => {
@@ -119,12 +137,33 @@ describe("shared app layout", () => {
     expect(mocks.requireSession).toHaveBeenCalledOnce();
     expect(mocks.renderOnboardingQuizSlot).toHaveBeenCalledOnce();
     expect(mocks.renderOnboardingQuizSlot.mock.calls[0][0]).toBe(children);
+    expect(mocks.renderSupportWidget).toHaveBeenCalledWith({
+      expiresAt: new Date("2026-09-10T12:00:00.000Z"),
+      userId: "admin_1",
+    });
     expect(mocks.firstRunGate.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.requireSession.mock.invocationCallOrder[0],
     );
     expect(mocks.requireSession.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.renderOnboardingQuizSlot.mock.invocationCallOrder[0],
     );
+  });
+
+  it.each([
+    ["self-host", false, { kind: "disabled" }],
+    ["legacy demo", true, { kind: "legacy-read-only" }],
+    ["editable demo", true, { kind: "editable" }],
+  ])("does not render support or recording for %s", async (_name, isCloud, demo) => {
+    mocks.deployment.isCloud = isCloud;
+    mocks.demo.value = demo;
+
+    const result = await AppLayout({ children: <div>Nested route layout</div> });
+
+    expect(renderToStaticMarkup(result)).not.toContain('data-testid="support-extension"');
+    expect(mocks.renderSupportWidget).not.toHaveBeenCalled();
+    if (demo.kind !== "disabled") {
+      expect(mocks.renderOnboardingQuizSlot).not.toHaveBeenCalled();
+    }
   });
 
   it("renders the decorated result inside both providers", async () => {
@@ -136,6 +175,7 @@ describe("shared app layout", () => {
     expect(markup).toContain("Nested route layout");
     expect(markup).toContain("Quiz slot");
     expect(markup).toContain("data-app-modal-background");
+    expect(markup).toContain('data-testid="support-extension"');
     expect(markup.indexOf("Nested route layout")).toBeLessThan(markup.indexOf("Quiz slot"));
   });
 
@@ -145,7 +185,9 @@ describe("shared app layout", () => {
     const result = await AppLayout({ children: <div>Nested route layout</div> });
     const markup = renderToStaticMarkup(result);
 
-    expect(markup).toBe("<div>Nested route layout</div>");
+    expect(markup).toBe(
+      '<aside data-testid="support-extension"></aside><div>Nested route layout</div>',
+    );
   });
 
   it("gives MUI a stable modal background instead of mutating the hydrated shell", async () => {

@@ -6,7 +6,6 @@ const response = (schema: object, description = "JSON response") => ({
   content: json(schema),
   description,
 });
-const obj = { type: "object" };
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 const envelope = (schema: object) => ({
   properties: { data: schema },
@@ -37,7 +36,7 @@ const capabilitiesResponse = {
       minItems: 1,
       type: "array",
     },
-    data: { items: obj, type: "array" },
+    data: { items: ref("Capability"), type: "array" },
     rank_check_scheduler_mode: rankCheckSchedulerMode,
     scheduler_driver: schedulerDriver,
   },
@@ -57,7 +56,7 @@ export const publicPaths = {
       operationId: "getCostEstimate",
       parameters: costEstimateParameters,
       responses: {
-        "200": response(envelope(obj)),
+        "200": response(envelope(ref("CostEstimate"))),
         "400": response(ref("Problem"), "Bad request"),
         "404": response(ref("Problem"), "Not found"),
         "429": response(ref("Problem"), "Rate limited"),
@@ -94,13 +93,13 @@ export const publicPaths = {
     },
   },
   "/openapi.json": {
-    get: { operationId: "getOpenApi", responses: { "200": response(obj) } },
+    get: { operationId: "getOpenApi", responses: { "200": response(ref("OpenApiDocument")) } },
   },
   "/provider-rates": {
     get: {
       operationId: "getProviderRates",
       responses: {
-        "200": response(envelope({ items: obj, type: "array" })),
+        "200": response(envelope({ items: ref("ProviderRateCard"), type: "array" })),
         "429": response(ref("Problem"), "Rate limited"),
       },
       summary: "List public SERP provider rate cards",

@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { SearchSyncControlModel } from "@/lib/search-insights/sync/control-model";
+import { VIEWER_ASK_ADMIN_CONNECT } from "@/lib/ui/viewer-affordances";
 import type React from "react";
 
 export const SEARCH_SYNC_PAUSE_TOOLTIP =
@@ -30,7 +31,11 @@ export function SearchSyncStatusControl({
   variant?: "compact" | "full";
 }>) {
   const baseAction =
-    model.action === "reconnect" && reconnectHref ? (
+    model.action === "reconnect" && disabled ? (
+      <p className="m-0 max-w-[220px] text-right text-[11px] leading-[1.45] text-fg-muted">
+        {VIEWER_ASK_ADMIN_CONNECT}
+      </p>
+    ) : model.action === "reconnect" && reconnectHref ? (
       <Button
         className={variant === "full" ? "shrink-0" : undefined}
         href={reconnectHref}

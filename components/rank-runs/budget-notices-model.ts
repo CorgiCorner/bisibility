@@ -18,7 +18,7 @@ export function exhaustedBudgetNotices({
   if (!hasAllocation || maxUsedPercent === null || maxUsedPercent < 100) return [];
   return [
     {
-      budgetSettingsHref: `/app/${projectId}/settings/usage?budget=edit`,
+      budgetSettingsHref: `/app/${projectId}/integrations?tab=usage&budget=edit`,
       capPeriod: capPeriod(),
       kind: "budget-exhausted",
     },

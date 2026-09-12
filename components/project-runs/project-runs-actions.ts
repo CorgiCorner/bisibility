@@ -3,7 +3,10 @@
 import { getActionActor, requireProjectScope } from "@/lib/actions/_shared";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { getRankCheckRunCommand } from "@/lib/queries/rank-check-runs";
-import { skipRankCheckRunCommand } from "@/lib/rank-check/runs/cancel-run";
+import {
+  deleteRankCheckRunCommand,
+  skipRankCheckRunCommand,
+} from "@/lib/rank-check/runs/cancel-run";
 import { runRankCheckRunNowCommand } from "@/lib/rank-check/runs/run-now";
 import { asProjectRef } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
@@ -46,6 +49,19 @@ export async function skipPlannedProjectRun(input: unknown) {
     projectId: project.id,
     publicId: data.runId,
     runId: run.id,
+  });
+  revalidatePath(runsRoute, "page");
+}
+
+export async function deleteProjectRun(input: unknown) {
+  const data = inputSchema.parse(input);
+  if (!isPublicIdOfType(data.runId, "rcr")) throw new Error("Rank-check run not found.");
+  const actor = await getActionActor();
+  const project = await requireProjectScope(actor, "delete", data.projectRef, { type: "keyword" });
+  await deleteRankCheckRunCommand({
+    actorId: actor.id,
+    projectId: project.id,
+    publicId: data.runId,
   });
   revalidatePath(runsRoute, "page");
 }

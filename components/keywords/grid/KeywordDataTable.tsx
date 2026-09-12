@@ -27,7 +27,6 @@ import { useMemo, useState, useTransition } from "react";
 import { BulkActionBar } from "./BulkActionBar";
 import { keywordColumns } from "./grid-columns";
 import { persistKeywordGridDensity } from "./grid-density";
-import { KeywordGridHealthNotices } from "./KeywordGridHealthNotices";
 import { KeywordGridViewport } from "./KeywordGridViewport";
 import { KeywordsFilterBar } from "./KeywordsFilterBar";
 import { defaultKeywordColumnVisibility, KEYWORD_DATA_TABLE_ID } from "./keyword-data-table-config";
@@ -48,7 +47,7 @@ function leafRows(rows: KeywordDataTableProps["rows"]): KeywordRow[] {
 }
 
 // biome-ignore format: Compact parameter destructuring keeps this production module within 300 lines.
-export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkFailed, checkHealth, filterChips, filterCount, initialDensity, marketScope = null, matchedGroupCount, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onDismissFailure, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, providerConnected, projectId, projectMarkets, rankTrackerPath, rows, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
+export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkHealth, filterChips, filterCount, initialDensity, marketScope = null, matchedGroupCount, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, providerConnected, projectId, projectMarkets, rankTrackerPath, rows, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const layout = useDataTableLayout(KEYWORD_DATA_TABLE_ID);
@@ -198,14 +197,6 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
         providerConnected={providerConnected}
         providerRate={checkHealth?.providerRate}
         selectedRows={selectedRows}
-      />
-      <KeywordGridHealthNotices
-        checkFailed={checkFailed}
-        checkHealth={checkHealth}
-        onDismissFailure={onDismissFailure}
-        onRunChecks={onRunChecks}
-        projectRef={projectId}
-        rows={targetRows}
       />
       {rowActionError ? (
         <p className="m-0 border-b border-border px-4 py-2 font-sans tabular-nums text-[11.5px] text-red-text">

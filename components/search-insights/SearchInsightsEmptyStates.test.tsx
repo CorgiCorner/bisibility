@@ -54,6 +54,19 @@ describe("SearchInsightsNoPropertyState", () => {
     );
   });
 
+  it("replaces Connect with an ask-admin cue for viewers", () => {
+    render(
+      <SearchInsightsNoPropertyState
+        canManageProviders={false}
+        projectId="prj_abcdefghijklmnopqrstuvwx"
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Connect Search Console" })).not.toBeInTheDocument();
+    expect(screen.getByText("Ask a project admin to connect Search Console.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Search Console" })).toBeInTheDocument();
+  });
+
   it("asks for a reconnect rather than a first connection once consent lapsed", () => {
     render(<SearchInsightsNoPropertyState projectId="prj_abcdefghijklmnopqrstuvwx" reauth />);
 
@@ -156,6 +169,30 @@ describe("SearchInsightsNoDataState", () => {
 
     expect(screen.getByRole("heading", { name: "Reconnect required" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Refresh import status" })).not.toBeInTheDocument();
+  });
+
+  it("replaces reconnect with an ask-admin cue for viewers", () => {
+    render(
+      <SearchInsightsNoDataState
+        canManageProviders={false}
+        facts={{
+          ...facts,
+          connectionStatus: "needs_reauth",
+          observability: observabilityFacts,
+          pausedReason: null,
+          runtime,
+        }}
+        pauseAction={action}
+        projectId="prj_abcdefghijklmnopqrstuvwx"
+        resumeAction={action}
+        retryAction={action}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("link", { name: "Reconnect Search Console" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Ask a project admin to connect Search Console.")).toBeInTheDocument();
   });
 
   it("does not render an unsafe legacy pause control", () => {

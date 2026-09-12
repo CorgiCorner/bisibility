@@ -97,3 +97,12 @@ Relevant-page requests accept `limit` from 1 through 1000. All four operations
 return the standard `{ "data": ... }` response envelope. Top-level failures use
 RFC 9457 Problem Details and preserve `errors.reason`, actual
 `errors.cost_cents`, and `errors.reset_at` when available.
+
+## Related operations
+
+- [`POST /projects/{projectId}/domain-overview/analyze`](/api-reference/domain-overview/analyze-a-domain) (`analyzeDomainOverview`)
+- [`POST /projects/{projectId}/domain-overview/history`](/api-reference/domain-overview/load-domain-history) (`loadDomainOverviewHistory`)
+- [`POST /projects/{projectId}/domain-overview/keywords`](/api-reference/domain-overview/load-domain-keywords) (`loadDomainOverviewKeywords`)
+- [`POST /projects/{projectId}/domain-overview/pages`](/api-reference/domain-overview/load-domain-pages) (`loadDomainOverviewPages`)
+
+Exact request and response schemas live in the generated API Reference.

@@ -7,18 +7,20 @@ URL.
 ## 1. Install the CLI
 
 ```console
-npm install -g @bisibility/cli
+npm install -g @bisibility/cli@0.7.0
 bisibility --version
 ```
 
 ## 2. Connect your account
 
-Create an API key in Bisibility, then save it in the CLI config. Set the EU hosted region
-API URL explicitly so the active regional target is clear.
+Create an API key in bisibility, then save it in the CLI config. Use the API
+base URL shown for your project (`BISIBILITY_BASE_URL`).
 
 ```console
-bisibility config set baseUrl https://eu.bisibility.com/api/v1
-bisibility config set apiKey your-api-key
+export BISIBILITY_BASE_URL="https://<region-host>/api/v1"
+export BISIBILITY_API_KEY="your-api-key"
+bisibility config set baseUrl "$BISIBILITY_BASE_URL"
+bisibility config set apiKey "$BISIBILITY_API_KEY"
 bisibility auth status
 ```
 

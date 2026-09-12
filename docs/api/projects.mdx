@@ -1,117 +1,38 @@
 ---
 title: "Projects"
-description: "List, update, delete, and configure project defaults."
+description: "Choose credentials, understand 403 vs 404, and configure project defaults."
 ---
 
-Project API keys are scoped to one project, so `GET /projects` returns only that
-project and `POST /projects` remains forbidden for them. A personal access token
+A project is the unit of keywords, providers, and rank history. This page covers
+behavior that the generated API Reference does not: which credential can see or
+create a project, how missing projects are hidden, and how defaults move
+keywords.
+
+## Credentials
+
+<span id="list-projects"></span>
+
+Project API keys are scoped to one project, so `listProjects` returns only that
+project and `createProject` remains forbidden for them. A personal access token
 returns every project the user belongs to and can create a new one when its
 tier is at least `write`.
 
-## Create project
+`project_id` must be the public `prj_...` id. If the project does not match a
+project key, the API returns `403`. A PAT gets `404` when the user is not a
+member, so project existence is not disclosed.
 
-```http
-POST /api/v1/projects
-Authorization: Bearer <personal_token>
-Content-Type: application/json
+Only an owner's PAT can call `deleteProject`; project API keys receive `403`.
 
-{
-  "name": "Example",
-  "domain": "example.com",
-  "tracking_scope": "country"
-}
-```
+Self-hosters may cap the number of projects owned by one user with
+`BISIBILITY_MAX_PROJECTS_PER_USER`. Current hosted limits live in
+[Deployment options](/deployment-options).
 
-The response status is `201`. Self-hosters may cap the number of projects owned
-by one user with `BISIBILITY_MAX_PROJECTS_PER_USER`.
+## Project overview
 
-## List projects
-
-```http
-GET /api/v1/projects
-Authorization: Bearer <api_key>
-```
-
-Response:
-
-```json
-{
-  "data": [
-    {
-      "id": "prj_a00000000000000000000000",
-      "name": "Example",
-      "domain": "example.com",
-      "created_at": "2026-06-28T10:00:00.000Z",
-      "updated_at": "2026-06-28T10:00:00.000Z",
-      "write_mode": "active"
-    }
-  ],
-  "meta": { "next_cursor": null }
-}
-```
-
-## Get project
-
-```http
-GET /api/v1/projects/{project_id}
-Authorization: Bearer <api_key>
-```
-
-`project_id` must be the public `prj_...` id and must match the authenticated
-API key's project.
-
-Response:
-
-```json
-{
-  "id": "prj_a00000000000000000000000",
-  "name": "Example",
-  "domain": "example.com",
-  "created_at": "2026-06-28T10:00:00.000Z",
-  "updated_at": "2026-06-28T10:00:00.000Z",
-  "write_mode": "active"
-}
-```
-
-If the project does not match a project key, the API returns `403`. A PAT gets
-`404` when the user is not a member, so project existence is not disclosed.
-
-## Get project overview
-
-```http
-GET /api/v1/projects/{project_id}/overview?range=28d&device=all&tag=Docs
-Authorization: Bearer <api_key>
-```
-
-Returns numeric project health aggregates without requiring clients to paginate
-the keyword list. `range` defaults to `28d` and accepts `7d`, `28d`, or `90d`.
+`getProjectOverview` returns numeric health aggregates without paginating the
+keyword list. `range` defaults to `28d` and accepts `7d`, `28d`, or `90d`.
 `device` defaults to `all` and also accepts `desktop` or `mobile`. `tag` is an
 optional exact tag name.
-
-```json
-{
-  "project_id": "prj_a00000000000000000000000",
-  "tracked_keyword_count": 42,
-  "keywords_added_this_month": 3,
-  "average_position": 12.4,
-  "average_position_delta": 1.8,
-  "top_3_count": 4,
-  "top_10_count": 11,
-  "top_10_delta": 2,
-  "top_100_count": 37,
-  "visibility": 24.7,
-  "visibility_delta": 3.1,
-  "position_distribution": [
-    { "min": 1, "max": 3, "count": 4 },
-    { "min": 4, "max": 10, "count": 7 },
-    { "min": 11, "max": 20, "count": 8 },
-    { "min": 21, "max": 50, "count": 10 },
-    { "min": 51, "max": 100, "count": 8 }
-  ],
-  "last_check_at": "2026-06-28T10:00:00.000Z",
-  "next_check_at": "2026-06-29T06:00:00.000Z"
-}
-```
 
 Positive `average_position_delta` means the average rank improved. Visibility
 measures volume-weighted ranking strength in Google's Top 20. A value of 100
@@ -121,107 +42,41 @@ and shallow or failed checks are not treated as lost rankings.
 distribution counts are `null` before the project has check data; a completed
 check with no keyword in a bucket returns the real count `0`.
 
-## Update project
+## Project defaults
 
-```http
-PATCH /api/v1/projects/{project_id}
-Authorization: Bearer <api_key>
-Content-Type: application/json
-```
+`getProjectDefaults` returns the effective market and schedule. Projects without
+a stored defaults row return schema-defined schedule defaults and a market
+inferred from existing keywords, without creating a row. The `source` field is
+`explicit`, `derived`, or `fallback`.
 
-Request body may include `name`, `domain`, or both.
-
-## Get project defaults
-
-```http
-GET /api/v1/projects/{project_id}/defaults
-Authorization: Bearer <api_key>
-```
-
-Returns the effective market and schedule. Projects without a stored defaults
-row return the schema-defined schedule defaults and a market inferred from existing
-keywords, without creating a row. The `source` field is `explicit`, `derived`,
-or `fallback` and identifies how the effective market was selected.
-
-## Update project defaults
-
-```http
-PATCH /api/v1/projects/{project_id}/defaults
-Authorization: Bearer <api_key>
-Content-Type: application/json
-```
-
-Project defaults store scheduling intent. `country` and `device` in this
+`updateProjectDefaults` stores scheduling intent. `country` and `device` in this
 endpoint represent the project's current default keyword market, derived from
 existing keywords. `location_key` is the primary location reference and can
 point at a country, region, or city; send it with `device` to move eligible
-keywords from the current default market to the new market. The legacy
-`country` and `city` selectors still resolve to the same location, but they are
-deprecated: send `location_key` instead. They are accepted until Bisibility
-0.24.0, then removed. Omitting market fields updates only the schedule and does
-not move keywords.
+keywords from the current default market to the new market.
+
+The legacy `country` and `city` selectors still resolve to the same location,
+but they are deprecated: send `location_key` instead. They are accepted until
+bisibility 0.24.0, then removed. Omitting market fields updates only the
+schedule and does not move keywords.
 
 `country` and `device` must be supplied together unless `location_key` is
-provided.
-
-`jitter_minutes` must be a whole number from `0` to `120`. Omitting it uses
-`60`; `0` disables jitter.
+provided. `jitter_minutes` must be a whole number from `0` to `120`. Omitting
+it uses `60`; `0` disables jitter.
 
 Daily and weekly defaults give each keyword a stable interval phase, and
 `timezone` does not move that phase. Monthly and custom cron schedules use
 `timezone` as their wall-clock anchor.
 
-```json
-{
-  "frequency": "weekly",
-  "cron_expression": null,
-  "timezone": "Europe/Warsaw",
-  "jitter_minutes": 60,
-  "country": "Poland",
-  "city": "Warsaw",
-  "location_key": "PL/Masovian Voivodeship/Warsaw",
-  "device": "mobile"
-}
-```
+## Related operations
 
-Schedule-only update:
+- [`GET /projects`](/api-reference/projects/list-projects-visible-to-this-api-key) (`listProjects`)
+- [`POST /projects`](/api-reference/projects/create-a-project) (`createProject`)
+- [`GET /projects/{project_id}`](/api-reference/projects/get-one-project) (`getProject`)
+- [`PATCH /projects/{project_id}`](/api-reference/projects/update-a-project) (`updateProject`)
+- [`DELETE /projects/{project_id}`](/api-reference/projects/delete-a-project) (`deleteProject`)
+- [`GET /projects/{project_id}/defaults`](/api-reference/projects/get-project-defaults) (`getProjectDefaults`)
+- [`PATCH /projects/{project_id}/defaults`](/api-reference/projects/update-project-defaults) (`updateProjectDefaults`)
+- [`GET /projects/{project_id}/overview`](/api-reference/analytics/get-a-numeric-project-overview) (`getProjectOverview`)
 
-```json
-{
-  "frequency": "daily",
-  "timezone": "UTC",
-  "jitter_minutes": 60
-}
-```
-
-Response:
-
-```json
-{
-  "project_id": "prj_a00000000000000000000000",
-  "frequency": "daily",
-  "cron_expression": null,
-  "timezone": "UTC",
-  "jitter_minutes": 60,
-  "serp_depth": 100,
-  "serp_stop_on_match": true,
-  "country": "United States",
-  "city": null,
-  "location_key": "US",
-  "device": "desktop",
-  "source": "explicit",
-  "last_checked_at": null,
-  "next_check_at": null,
-  "updated_at": "2026-06-28T10:00:00.000Z"
-}
-```
-
-## Delete project
-
-```http
-DELETE /api/v1/projects/{project_id}
-Authorization: Bearer <api_key>
-```
-
-Deletes the scoped project and returns the deleted project resource. Only an
-owner's PAT can delete a project; project API keys receive 403.
+Exact request and response schemas live in the generated API Reference.

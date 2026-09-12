@@ -1,6 +1,7 @@
 "use client";
 
 import { BASE_KEYWORD_LENS } from "@/components/keywords/grid/keyword-scope-summary";
+import { useRankTrackerSearchDraft } from "@/components/keywords/RankTrackerSearchDraft";
 import {
   rankTrackerMutationPresence,
   rankTrackerNavigationHref,
@@ -31,8 +32,10 @@ export function useRankTrackerNavigation({
   const searchParams = useSearchParams();
   const searchValueRef = useRef(searchValue);
   const committedSearchRef = useRef(searchValue);
+  const searchDraft = useRankTrackerSearchDraft();
   const markSearchCommitted = () => {
     committedSearchRef.current = searchValueRef.current;
+    searchDraft?.commit(searchValueRef.current);
   };
   const navigateQuery = (next: RankTrackerQueryState, present: RankTrackerQueryField[]) => {
     const requestedSearch = present.includes("search") ? next.search : searchValueRef.current;
@@ -54,10 +57,16 @@ export function useRankTrackerNavigation({
     navigateQuery,
     onSearchChange: (value: string) => {
       searchValueRef.current = value;
+      searchDraft?.write(value);
       setSearchValue(value);
     },
     onSearchCommit: () => {
-      if (committedSearchRef.current === searchValueRef.current) return;
+      if (
+        searchDraft
+          ? searchDraft.wasCommitted(searchValueRef.current, query.search)
+          : committedSearchRef.current === searchValueRef.current
+      )
+        return;
       navigateQuery(resetRankTrackerPage({ ...query, search: searchValueRef.current }), [
         "search",
         "page",

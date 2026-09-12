@@ -3,7 +3,6 @@
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
-import { RowActionsMenu } from "@/components/ui/RowActionsMenu";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { runStatusChipPresentation } from "@/components/ui/status-chip-mapping";
 import { formatDateTime } from "@/lib/dates/format";
@@ -11,6 +10,7 @@ import type { ProjectRun } from "@/lib/runs/project-run";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useCallback, useMemo, useState, useTransition } from "react";
+import { RunActions } from "./ProjectRunActions";
 import type { ProjectRunWithOperationSnapshot } from "./project-runs-presentation";
 
 type ProjectRunAction = (input: { projectRef: string; runId: string }) => Promise<void>;
@@ -19,6 +19,7 @@ type ProjectRunsTableRow = { id: string; run: ProjectRunWithOperationSnapshot; t
 
 type ProjectRunsTableProps = {
   canMutate: boolean;
+  onDelete?: ProjectRunAction;
   emptyState: ReactNode;
   onRunNow: ProjectRunAction;
   onSkip: ProjectRunAction;
@@ -58,45 +59,9 @@ function startedAt(run: ProjectRun) {
   return run.kind === "rank_check" ? run.timestamps.startedAt : run.timestamps.syncStartedAt;
 }
 
-function isRunnable(run: ProjectRun) {
-  return run.kind === "rank_check" && run.details.status === "planned";
-}
-
-function RunActions({
-  canMutate,
-  onRunNow,
-  onSkip,
-  pendingRunId,
-  run,
-}: Readonly<{
-  canMutate: boolean;
-  onRunNow: (run: ProjectRun) => void;
-  onSkip: (run: ProjectRun) => void;
-  pendingRunId: string | null;
-  run: ProjectRun;
-}>) {
-  const router = useRouter();
-  const pending = pendingRunId === run.id;
-  const items = [
-    ...(run.capabilities.viewDetails
-      ? [{ label: "View details", onSelect: () => router.push(run.href) }]
-      : []),
-    ...(canMutate && isRunnable(run)
-      ? [
-          { disabled: pending, label: "Run now", onSelect: () => onRunNow(run) },
-          { disabled: pending, label: "Skip once", onSelect: () => onSkip(run) },
-        ]
-      : []),
-  ];
-  return items.length ? (
-    <RowActionsMenu ariaLabel={`Actions for ${run.title}`} items={items} />
-  ) : (
-    <span className="text-fg-muted">-</span>
-  );
-}
-
 export function ProjectRunsTable({
   canMutate,
+  onDelete,
   emptyState,
   onRunNow,
   onSkip,
@@ -228,6 +193,14 @@ export function ProjectRunsTable({
         cell: ({ row }) => (
           <RunActions
             canMutate={canMutate}
+            onDelete={
+              onDelete
+                ? async (run) => {
+                    await onDelete({ projectRef, runId: run.id });
+                    router.refresh();
+                  }
+                : undefined
+            }
             onRunNow={(run) => mutate(run, onRunNow)}
             onSkip={(run) => mutate(run, onSkip)}
             pendingRunId={pendingRunId}
@@ -241,7 +214,7 @@ export function ProjectRunsTable({
         size: 48,
       },
     ],
-    [canMutate, dateFormat, mutate, onRunNow, onSkip, pendingRunId],
+    [canMutate, dateFormat, mutate, onRunNow, onSkip, pendingRunId, onDelete, projectRef, router],
   );
 
   return (

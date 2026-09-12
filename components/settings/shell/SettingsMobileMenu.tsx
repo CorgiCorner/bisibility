@@ -1,5 +1,6 @@
 "use client";
 
+import { SettingsSearch } from "@/components/settings/shell/SettingsSearch";
 import {
   type SettingsSectionId,
   settingsSectionHref,
@@ -22,15 +23,17 @@ export function SettingsMobileMenu({
 
   return (
     <div className="mb-5 lg:hidden">
-      <MenuSelect
-        ariaLabel="Settings section"
-        onChange={(section) =>
-          router.push(settingsSectionHref(projectRef, section as SettingsSectionId))
-        }
-        options={settingsSections.map((section) => ({ label: section.label, value: section.id }))}
-        triggerClassName="w-full justify-between"
-        value={activeSection}
-      />
+      <SettingsSearch projectRef={projectRef}>
+        <MenuSelect
+          ariaLabel="Settings section"
+          onChange={(section) =>
+            router.push(settingsSectionHref(projectRef, section as SettingsSectionId))
+          }
+          options={settingsSections.map((section) => ({ label: section.label, value: section.id }))}
+          triggerClassName="w-full justify-between"
+          value={activeSection}
+        />
+      </SettingsSearch>
     </div>
   );
 }

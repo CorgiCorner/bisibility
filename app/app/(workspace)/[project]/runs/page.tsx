@@ -3,6 +3,7 @@ import {
   ProjectRunsLoadError,
 } from "@/components/project-runs/ProjectRunsContent";
 import {
+  deleteProjectRun,
   runPlannedProjectRunNow,
   skipPlannedProjectRun,
 } from "@/components/project-runs/project-runs-actions";
@@ -70,6 +71,15 @@ export default async function RunsPage({ params, searchParams }: Readonly<RunsPa
       <PageContent>
         <ProjectRunsContent
           canMutate={canMutate}
+          canDelete={
+            canMutate &&
+            canProjectAction(
+              getProjectRole(readable.actor, readable.project.id),
+              "delete",
+              "keyword",
+            )
+          }
+          deleteAction={deleteProjectRun}
           operations={operations}
           page={page}
           projectRef={access.publicId}

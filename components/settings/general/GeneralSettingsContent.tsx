@@ -49,7 +49,12 @@ export function GeneralSettingsContent({
           updateProject={updateProject}
         />
       </div>
-      <div data-general-settings-settled-frame="tags-segments">
+      <div
+        className="scroll-mt-6"
+        id="tags-segments"
+        tabIndex={-1}
+        data-general-settings-settled-frame="tags-segments"
+      >
         <TagsSegmentsCard
           canCreate={canCreateTags}
           canDelete={canDeleteTags}

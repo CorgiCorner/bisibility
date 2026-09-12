@@ -1,33 +1,34 @@
 import type { ResearchPage } from "@/lib/providers/types";
-import { researchScopeForLocationKey, researchScopeKey } from "@/lib/research/scope";
 import {
-  connectionResources,
-  type eligibleResearchConnections,
-  type keywordResearchProject,
-  normalizeResearchKeyword,
-} from "./context";
-import type { ResearchSelection } from "./source-call";
+  type ResearchScope,
+  researchScopeForLocation,
+  researchScopeForLocationKey,
+  researchScopeKey,
+} from "@/lib/research/scope";
+import { normalizeResearchKeyword } from "./request-key";
 import type {
+  KeywordResearchConnection,
   KeywordResearchOutcome,
   KeywordResearchSource,
   KeywordResearchSuccess,
 } from "./types";
 
-export function annotateResearchResult(
-  result: Omit<KeywordResearchSuccess, "connections" | "ok" | "provider" | "rows"> & {
-    rows: Array<ResearchPage["rows"][number] & { source: KeywordResearchSource }>;
-  },
-  project: NonNullable<Awaited<ReturnType<typeof keywordResearchProject>>>,
-  selected: ResearchSelection,
-  eligible: ReturnType<typeof eligibleResearchConnections>,
-  locationKey: string,
-): KeywordResearchOutcome {
-  const scope = researchScopeForLocationKey(locationKey);
+export type ResearchAnnotationProject = {
+  keywords: Array<{ locationRef: { canonicalKey: string } | null; text: string }>;
+  savedKeywords: Array<{ countryCode: string; languageCode: string; normalizedText: string }>;
+};
+
+export function annotateResearchRows(
+  rows: Array<ResearchPage["rows"][number] & { source: KeywordResearchSource }>,
+  project: ResearchAnnotationProject,
+  scope: Pick<ResearchScope, "countryCode" | "languageCode">,
+) {
   const scopeKey = researchScopeKey(scope);
   const tracked = new Set(
     project.keywords
       .filter(
         (row) =>
+          row.locationRef !== null &&
           researchScopeKey(researchScopeForLocationKey(row.locationRef.canonicalKey)) === scopeKey,
       )
       .map((row) => normalizeResearchKeyword(row.text)),
@@ -39,15 +40,31 @@ export function annotateResearchResult(
       )
       .map((row) => row.normalizedText),
   );
+  return rows.map((row) => ({
+    ...row,
+    alreadySaved: saved.has(normalizeResearchKeyword(row.keyword)),
+    alreadyTracked: tracked.has(normalizeResearchKeyword(row.keyword)),
+  }));
+}
+
+export function annotateResearchResult(
+  result: Omit<KeywordResearchSuccess, "connections" | "ok" | "provider" | "rows"> & {
+    rows: Array<ResearchPage["rows"][number] & { source: KeywordResearchSource }>;
+  },
+  project: ResearchAnnotationProject,
+  provider: string,
+  connections: KeywordResearchConnection[],
+  locationKey: string,
+): KeywordResearchOutcome {
   return {
     ...result,
-    connections: connectionResources(eligible),
+    connections,
     ok: true,
-    provider: selected.provider.label,
-    rows: result.rows.map((row) => ({
-      ...row,
-      alreadySaved: saved.has(normalizeResearchKeyword(row.keyword)),
-      alreadyTracked: tracked.has(normalizeResearchKeyword(row.keyword)),
-    })),
+    provider,
+    rows: annotateResearchRows(result.rows, project, researchScopeForLocationKey(locationKey)),
   };
+}
+
+export function researchAnnotationScope(countryCode: string, languageCode: string) {
+  return researchScopeForLocation({ countryCode, languageCode, languageLabel: languageCode });
 }

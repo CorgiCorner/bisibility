@@ -9,6 +9,7 @@ export function registerRankCheckRunAuditDeclarations(declare: Declare) {
       ...f.strings("publicId", "selectionKind", "trigger"),
     },
   });
+  declare(["rank_check_run.delete"], { before: f.strings("status") });
   declare(["rank_check_run.cancel"], {
     after: f.strings("status"),
   });

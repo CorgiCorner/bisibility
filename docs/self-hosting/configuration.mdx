@@ -52,6 +52,8 @@ hand.
 | `DEMO_FIXED_OTP` | Set to `1` to enable the throwaway [demo login](/quickstart#demo-login) on local installs. |
 | `DEMO_INSTANCE_INSECURE_AUTH_ACK` | Required acknowledgement when `DEMO_FIXED_OTP=1` runs in the production Docker image. Never set it for real users or data. |
 | `READ_ONLY_DEMO` | Set to `1` only on a separate, sanitized demo installation. Enables one-click access to one existing viewer account, locks account changes, and disables email delivery. Never combine with fixed-OTP flags. |
+| `DEMO_MODE` | Set to `editable` only on an isolated demo installation with existing Owner and Viewer accounts. Owner uses ordinary email authentication; public code `000000` admits only Viewer. Never combine with `READ_ONLY_DEMO` or fixed-OTP flags. Saved research stays readable after its 30-day freshness window; only Owner can explicitly request new results. |
+| `DEMO_OWNER_ID` | Public ID of the verified Owner in editable mode, distinct from `DEMO_USER_ID`. Owner must own the configured project. Owner changes are visible to demo visitors; do not store private data in this project. |
 | `DEMO_USER_ID` | Public ID of the demo's verified, non-admin viewer. It must belong to exactly the configured demo project. Demo sessions expire after two hours. |
 | `DEMO_PROJECT_ID` | Public ID of the sole project accessible through the demo identity. Project writes and paid checks are denied by the existing viewer role. |
 | `INTERNAL_PROBE_TOKEN` | Optional Bearer token for detailed `/api/v1/health` diagnostics before database-backed credentials exist. Generate at least 32 random bytes and share it only with deployment health checks. |

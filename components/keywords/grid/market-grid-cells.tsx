@@ -6,6 +6,7 @@ import * as rankDepth from "@/lib/serp/rank-depth";
 import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/csr/ClockCountdown";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import Link from "next/link";
+import { rankTrackerKeywordLinkClassName } from "./keyword-link-styles";
 
 const noDataClassName = "font-sans tabular-nums text-xs font-semibold text-fg-muted";
 
@@ -65,7 +66,7 @@ export function MarketKeywordCell({
   return (
     <Tooltip content={row.keyword} wrapperClassName="w-full min-w-0">
       <Link
-        className="bv-keyword-title block w-full min-w-0 truncate text-[13.5px] font-medium text-fg group-hover:text-accent-text group-hover:underline"
+        className={`bv-keyword-title block w-full min-w-0 truncate text-[13.5px] ${rankTrackerKeywordLinkClassName} group-hover:text-accent-text group-hover:underline`}
         href={appPath(projectRef, "rank-tracker", row.id)}
         onClick={(event) => event.stopPropagation()}
       >

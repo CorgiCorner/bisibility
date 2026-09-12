@@ -24,3 +24,13 @@ Connections use a priority-only fallback contract. On connect, the server derive
 The generated
 [OpenAPI JSON](https://bisibility.com/api/v1/openapi.json) remains the
 machine-readable source of truth for request and response schemas.
+
+## Related operations
+
+- [`GET /projects/{project_id}/providers`](/api-reference/providers/list-providers) (`listProviders`)
+- [`POST /projects/{project_id}/providers/{provider_id}/connect`](/api-reference/providers/connect-a-provider) (`connectProvider`)
+- [`POST /projects/{project_id}/providers/{provider_id}/test`](/api-reference/providers/test-a-provider-connection) (`testProviderConnection`)
+- [`PATCH /projects/{project_id}/providers/{provider_id}`](/api-reference/providers/update-provider-settings) (`updateProviderSettings`)
+- [`DELETE /projects/{project_id}/providers/{provider_id}`](/api-reference/providers/disconnect-a-provider) (`disconnectProvider`)
+
+Exact request and response schemas live in the generated API Reference.

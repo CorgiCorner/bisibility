@@ -1,5 +1,6 @@
 import { formatChecks } from "@/components/marketing/calculator/calculator-shared";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
+import { hasMonthlyBudgetCap } from "@/lib/rank-check/budget-contract";
 import { cn } from "@/lib/ui/cn";
 
 export type CostEstimateLineProps = {
@@ -35,8 +36,10 @@ export function CostEstimateLine({
       {budget ? (
         <>
           {" "}
-          · {formatEstimateCents(budget.spentCents)} of {formatEstimateCents(budget.capCents)} this
-          month
+          {"·"}{" "}
+          {hasMonthlyBudgetCap(budget.capCents)
+            ? `${formatEstimateCents(budget.spentCents)} of ${formatEstimateCents(budget.capCents)} this month`
+            : `${formatEstimateCents(budget.spentCents)} this month`}
         </>
       ) : null}
     </p>

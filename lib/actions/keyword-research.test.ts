@@ -94,6 +94,14 @@ describe("researchKeywordsAction", () => {
     expect(mocks.research).not.toHaveBeenCalled();
   });
 
+  it("denies a Viewer create request before provider work", async () => {
+    mocks.requireScope.mockRejectedValueOnce(new Error("Forbidden"));
+    await expect(researchKeywordsAction({ projectId: "prj_1", seed: "seo" })).rejects.toThrow(
+      "Forbidden",
+    );
+    expect(mocks.research).not.toHaveBeenCalled();
+  });
+
   it.each(["connection_1", "key_a00000000000000000000000"])(
     "rejects connection ID %s before authorization",
     async (invalidId) => {

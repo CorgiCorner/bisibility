@@ -77,7 +77,7 @@ export function checkDomainOverviewContract(readmeSource) {
     "requires a bring-your-own DataForSEO connection",
     "metered",
     "The app and REST API are available",
-    "SDK, CLI, and MCP parity is still in progress",
+    "https://bisibility.com/docs/compatibility",
   ]) {
     if (!normalized.includes(term)) {
       failures.push(`README.md Domain Overview bullet is missing settled contract: ${term}`);

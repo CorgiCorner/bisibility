@@ -24,6 +24,12 @@ const baseTestAliases = [
 ];
 const browserTestAliases = [
   {
+    find: "@/lib/actions/provider-allocation",
+    replacement: fileURLToPath(
+      new URL("./.storybook/provider-allocation-stubs.ts", import.meta.url),
+    ),
+  },
+  {
     find: "@/lib/actions/competitor-set-input",
     replacement: fileURLToPath(new URL("./lib/actions/competitor-set-input.ts", import.meta.url)),
   },

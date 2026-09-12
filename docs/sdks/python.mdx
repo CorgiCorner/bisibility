@@ -9,6 +9,9 @@ description: "Install and authenticate the Python SDK, then list projects."
 pip install bisibility
 ```
 
+The current docs-tested package is `bisibility==0.9.0`. See
+[Versioning and support](/versioning).
+
 ## Authenticate
 
 Keep the API root and credential in environment variables:
@@ -23,24 +26,36 @@ The client accepts project API keys and
 
 ## List projects
 
-The runnable quickstart constructs the client and begins with a real read against
-`GET /projects`:
+This copyable quickstart constructs the client and lists projects. Paste it
+into a fresh file after the install and environment steps above:
 
 {/* docs-example:start python-client-usage */}
-{/* Generated from examples/python/quickstart.py (region client-usage). Do not edit. */}
+{/* Generated from examples/python/list_projects.py. Do not edit. */}
 ```python
-with BisibilityClient(
-    api_key=required_env("BISIBILITY_API_KEY"),
-    base_url=required_env("BISIBILITY_BASE_URL"),
-) as client:
-    try:
-        print("Listing projects")
-        projects = client.list_projects()
+import os
+
+from bisibility import BisibilityClient
+
+api_key = os.environ["BISIBILITY_API_KEY"]
+base_url = os.environ["BISIBILITY_BASE_URL"]
+
+with BisibilityClient(api_key=api_key, base_url=base_url) as client:
+    projects = client.list_projects()
+
+    for project in projects.data:
+        print(project.id, project.name)
+
+print("OK python-list-projects")
 ```
 {/* docs-example:end python-client-usage */}
 
-See [Projects](/api/projects#list-projects) for the request and response
-contract.
+A successful run prints each project id and name, then `OK python-list-projects`.
+
+See [`GET /projects`](/api-reference/projects/list-projects-visible-to-this-api-key)
+for the request and response contract.
+
+The [complete Python example](https://github.com/CorgiCorner/bisibility/blob/main/examples/python/quickstart.py)
+also creates a keyword, runs a rank check, and cleans up.
 
 ## Use the async client
 
@@ -49,13 +64,14 @@ retry delays, and cursor iteration. Use `async with` when the client owns its
 HTTP transport:
 
 ```python
+import os
+
 from bisibility import AsyncBisibilityClient
 
+api_key = os.environ["BISIBILITY_API_KEY"]
+base_url = os.environ["BISIBILITY_BASE_URL"]
 
-async with AsyncBisibilityClient(
-    api_key=required_env("BISIBILITY_API_KEY"),
-    base_url=required_env("BISIBILITY_BASE_URL"),
-) as client:
+async with AsyncBisibilityClient(api_key=api_key, base_url=base_url) as client:
     projects = await client.list_projects()
     async for keyword in client.iter_keywords(projects.data[0].id):
         print(keyword.text)

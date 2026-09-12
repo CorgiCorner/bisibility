@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ExternalLink } from "@/components/ui/ExternalLink";
@@ -10,6 +9,7 @@ import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useState } from "react";
+import { type KeywordSort, keywordValue } from "./domain-overview-keyword-table-model";
 import type { SaveDomainKeywords } from "./domain-overview-keyword-tracking";
 import {
   formatDomainCount,
@@ -32,29 +32,6 @@ const currency = new Intl.NumberFormat("en-US", {
 });
 const header =
   "font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted";
-
-type KeywordSort =
-  | "cpc"
-  | "difficulty"
-  | "estimatedTraffic"
-  | "keyword"
-  | "position"
-  | "rankAbsoluteDelta"
-  | "searchVolume";
-
-const keywordValue = {
-  cpc: (row: RankedKeywordsPage["rows"][number]) => row.cpcCents,
-  difficulty: (row: RankedKeywordsPage["rows"][number]) => row.difficulty,
-  estimatedTraffic: (row: RankedKeywordsPage["rows"][number]) => row.estimatedTraffic,
-  keyword: (row: RankedKeywordsPage["rows"][number]) => row.keyword,
-  position: (row: RankedKeywordsPage["rows"][number]) => row.position,
-  rankAbsoluteDelta: (row: RankedKeywordsPage["rows"][number]) => row.rankAbsoluteDelta,
-  searchVolume: (row: RankedKeywordsPage["rows"][number]) => row.searchVolume,
-} satisfies Record<
-  KeywordSort,
-  (row: RankedKeywordsPage["rows"][number]) => number | string | null
->;
-
 function delta(value: number | null) {
   if (value == null) return { label: "-", tone: "text-fg-muted" };
   if (value === 0) return { label: "0", tone: "text-fg-muted" };
@@ -63,7 +40,6 @@ function delta(value: number | null) {
     tone: value > 0 ? "text-green-text" : "text-red-text",
   };
 }
-
 export function DomainOverviewKeywordsTable({
   estimateCents,
   fetchedCount,
@@ -73,6 +49,7 @@ export function DomainOverviewKeywordsTable({
   onLoadMore,
   onSaveSelected,
   page,
+  readOnly = false,
 }: Readonly<{
   estimateCents?: number | null;
   fetchedCount?: number;
@@ -82,17 +59,17 @@ export function DomainOverviewKeywordsTable({
   onLoadMore?: () => void;
   onSaveSelected?: SaveDomainKeywords;
   page: RankedKeywordsPage;
+  readOnly?: boolean;
 }>) {
   const [sort, setSort] = useState<KeywordSort>("estimatedTraffic");
   const [direction, setDirection] = useState<SortDirection>("desc");
   const rows = sortFetchedRows(page.rows, keywordValue[sort], direction);
-  const selection = useDomainKeywordSelection(page.rows, onSaveSelected);
+  const selection = useDomainKeywordSelection(page.rows, readOnly ? undefined : onSaveSelected);
   const providerFetchedCount = fetchedCount ?? page.rows.length;
   const remaining =
     page.totalCount == null ? null : Math.max(0, page.totalCount - providerFetchedCount);
   const canLoadMore =
     hasMore ?? (page.totalCount == null ? page.rows.length >= 100 : (remaining ?? 0) > 0);
-
   function selectSort(next: KeywordSort) {
     if (next === sort) {
       setDirection((current) => (current === "asc" ? "desc" : "asc"));
@@ -116,28 +93,32 @@ export function DomainOverviewKeywordsTable({
         >
           Export
         </Button>
-        <Button
-          disabled={!onSaveSelected || selection.selectedRows.length === 0}
-          loading={selection.saving}
-          onClick={() => void selection.saveSelected()}
-          size="xs"
-          startIcon={<BookmarkSimple weight="regular" size={13} />}
-        >
-          Add{" "}
-          {selection.selectedRows.length > 0
-            ? `${selection.selectedRows.length} selected to`
-            : "to"}{" "}
-          saved keywords
-        </Button>
+        {!readOnly ? (
+          <Button
+            disabled={!onSaveSelected || selection.selectedRows.length === 0}
+            loading={selection.saving}
+            onClick={() => void selection.saveSelected()}
+            size="xs"
+            startIcon={<BookmarkSimple weight="regular" size={13} />}
+          >
+            Add{" "}
+            {selection.selectedRows.length > 0
+              ? `${selection.selectedRows.length} selected to`
+              : "to"}{" "}
+            saved keywords
+          </Button>
+        ) : null}
       </header>
       <div className="max-h-[640px] overflow-auto">
         <div className="min-w-[1140px]">
           <div className="sticky top-0 z-1 grid grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border bg-bg-sunken px-4 py-2.5">
-            <Checkbox
-              aria-label="Select all fetched keywords"
-              checked={selection.allSelected}
-              onChange={selection.toggleAll}
-            />
+            {!readOnly ? (
+              <Checkbox
+                aria-label="Select all fetched keywords"
+                checked={selection.allSelected}
+                onChange={selection.toggleAll}
+              />
+            ) : null}
             <SortableColumnHeader
               active={sort === "keyword"}
               direction={direction}
@@ -217,11 +198,13 @@ export function DomainOverviewKeywordsTable({
                 data-testid="domain-keyword-row"
                 key={`${row.keyword}:${row.rankingUrl ?? ""}`}
               >
-                <Checkbox
-                  aria-label={`Select keyword ${row.keyword}`}
-                  checked={selection.isSelected(row)}
-                  onChange={() => selection.toggleRow(row)}
-                />
+                {!readOnly ? (
+                  <Checkbox
+                    aria-label={`Select keyword ${row.keyword}`}
+                    checked={selection.isSelected(row)}
+                    onChange={() => selection.toggleRow(row)}
+                  />
+                ) : null}
                 <strong className="truncate text-[13.5px] font-medium">{row.keyword}</strong>
                 <span className="text-right font-sans tabular-nums text-[12.5px]">
                   {row.position ?? "-"}

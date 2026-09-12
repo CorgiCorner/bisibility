@@ -91,6 +91,7 @@ export async function resendSignInOtp(input: unknown): Promise<ResendOtpResult> 
       auth.api.sendVerificationOTP({
         body: { email, type: "sign-in" },
         headers: requestHeaders,
+        method: "POST",
       }),
     );
     return { ok: true, retryAfter: WINDOW_SECONDS };

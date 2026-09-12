@@ -10,15 +10,15 @@ describe("DataForSEO task failures", () => {
   const taskFailure = {
     status_code: 20000,
     status_message: "Ok.",
-    tasks: [{ status_code: 40201, status_message: "Insufficient funds" }],
+    tasks: [{ status_code: 40210, status_message: "Insufficient funds" }],
   };
 
   it("uses a non-OK task message ahead of the successful envelope", () => {
     expect(envelopeMessage(taskFailure)).toBe("Insufficient funds");
   });
 
-  it("classifies task status 40201 as billing", () => {
-    expect(dataForSeoBillingStatusCode(taskFailure)).toBe(40201);
+  it("classifies task status 40210 as billing", () => {
+    expect(dataForSeoBillingStatusCode(taskFailure)).toBe(40210);
   });
 
   it("falls back to the envelope when failed tasks have no message", () => {

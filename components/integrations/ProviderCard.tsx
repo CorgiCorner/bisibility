@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProviderLogo } from "@/components/ui/ProviderLogo";
 import { SectionTitle } from "@/components/ui/SectionTitle";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { testConnection as testConnectionAction } from "@/lib/actions/providers";
 import type { ProviderActionHandlers, ProviderTestResult } from "@/lib/integrations/types";
+import { VIEWER_READ_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
 import { useState } from "react";
 import type { Notice } from "./ConnectDrawerSchema";
 import type { ProviderCardProps } from "./ProviderCard.types";
@@ -124,6 +126,9 @@ export function ProviderCard({
                 <StatusPill size="sm" status={provider.status} />
               )}
               {provider.primary ? <StatusPill size="sm" status="primary" /> : null}
+              {canManageProviders ? null : (
+                <StatusChip label={VIEWER_READ_ONLY_LABEL} size="sm" tone="neutral" />
+              )}
               {provider.status === "connected" && provider.enabled === false ? (
                 <StatusPill size="sm" status="disabled" />
               ) : null}

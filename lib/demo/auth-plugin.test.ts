@@ -4,8 +4,12 @@ import { emailOTP } from "better-auth/plugins";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { readOnlyDemoPlugin } from "./auth-plugin";
 
-const identity = vi.hoisted(() => vi.fn());
-vi.mock("./identity", () => ({ loadDemoIdentity: identity }));
+const identities = vi.hoisted(() => ({ owner: vi.fn(), viewer: vi.fn(), legacy: vi.fn() }));
+vi.mock("./identity", () => ({
+  loadDemoIdentity: identities.legacy,
+  loadEditableDemoOwner: identities.owner,
+  loadEditableDemoViewer: identities.viewer,
+}));
 
 const origin = "http://localhost:3456";
 const projectId = "prj_abcdefghijklmnopqrstuvwx";
@@ -15,7 +19,9 @@ beforeEach(() => {
   vi.stubEnv("DEMO_PROJECT_ID", projectId);
   vi.stubEnv("DEMO_FIXED_OTP", "0");
   vi.stubEnv("ALLOW_INSECURE_FIXED_OTP", "0");
-  identity.mockReset();
+  identities.legacy.mockReset();
+  identities.owner.mockReset();
+  identities.viewer.mockReset();
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -34,7 +40,7 @@ async function fixture() {
     name: "Demo",
     emailVerified: true,
   });
-  identity.mockResolvedValue(user);
+  identities.legacy.mockResolvedValue(user);
   const request = (path: string, body: object, requestOrigin = origin) =>
     auth.handler(
       new Request(`${origin}/api/auth${path}`, {
@@ -75,7 +81,7 @@ describe("public demo authentication boundary", () => {
     expect(
       (await request("/demo/sign-in", { code: "000000" }, "https://outside.example.com")).status,
     ).toBe(403);
-    identity.mockResolvedValue(null);
+    identities.legacy.mockResolvedValue(null);
     expect((await request("/demo/sign-in", { code: "000000" })).status).toBe(503);
   });
 
@@ -103,5 +109,85 @@ describe("public demo authentication boundary", () => {
     const { request } = await fixture();
     vi.stubEnv("READ_ONLY_DEMO", "0");
     expect((await request("/demo/sign-in", { code: "000000" })).status).toBe(404);
+  });
+
+  it("selects only the viewer publicly, while permitting the current owner email OTP", async () => {
+    vi.stubEnv("READ_ONLY_DEMO", "0");
+    vi.stubEnv("DEMO_MODE", "editable");
+    vi.stubEnv("DEMO_OWNER_ID", "usr_zyxwvutsrqponmlkjihgfedc");
+    const sendVerificationOTP = vi.fn();
+    const auth = betterAuth({
+      baseURL: origin,
+      secret: "test-only-demo-auth-secret-at-least-32-characters",
+      advanced: { disableOriginCheck: false, disableCSRFCheck: false },
+      plugins: [readOnlyDemoPlugin(), emailOTP({ sendVerificationOTP })],
+      rateLimit: { enabled: false },
+    });
+    const context = await auth.$context;
+    const owner = await context.internalAdapter.createUser({
+      email: "owner@example.com",
+      name: "Owner",
+      emailVerified: true,
+    });
+    const viewer = await context.internalAdapter.createUser({
+      email: "viewer@example.com",
+      name: "Viewer",
+      emailVerified: true,
+    });
+    identities.owner.mockResolvedValue(owner);
+    identities.viewer.mockResolvedValue(viewer);
+    const request = (path: string, body: object) =>
+      auth.handler(
+        new Request(`${origin}/api/auth${path}`, {
+          method: "POST",
+          headers: { "content-type": "application/json", origin },
+          body: JSON.stringify(body),
+        }),
+      );
+
+    const entry = await request("/demo/sign-in", { code: "000000" });
+    expect(entry.status).toBe(200);
+    const entryCookie = entry.headers.get("set-cookie")?.split(";")[0] ?? "";
+    expect(
+      (await auth.api.getSession({ headers: new Headers({ cookie: entryCookie }) }))?.user.email,
+    ).toBe("viewer@example.com");
+    expect(sendVerificationOTP).not.toHaveBeenCalled();
+
+    expect(
+      (
+        await request("/email-otp/send-verification-otp", {
+          email: "OWNER@example.com",
+          type: "sign-in",
+        })
+      ).status,
+    ).toBe(200);
+    expect(sendVerificationOTP).toHaveBeenCalledOnce();
+    expect(
+      (
+        await request("/email-otp/send-verification-otp", {
+          email: "viewer@example.com",
+          type: "sign-in",
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await request("/email-otp/send-verification-otp", {
+          email: "other@example.com",
+          type: "sign-in",
+        })
+      ).status,
+    ).toBe(200);
+    expect(sendVerificationOTP).toHaveBeenCalledOnce();
+    expect(
+      (await request("/sign-in/email-otp", { email: "other@example.com", otp: "123456" })).status,
+    ).toBe(400);
+
+    for (const path of ["/sign-up/email", "/sign-in/social", "/link-social"]) {
+      expect(
+        (await request(path, { email: "other@example.com", name: "Other" })).status,
+        path,
+      ).toBe(403);
+    }
   });
 });

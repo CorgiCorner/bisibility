@@ -200,10 +200,10 @@ export async function runRankCheckActivity(
         });
       }
       const { dominantCode } = error;
-      if (dominantCode === "provider_billing" || dominantCode === "provider_auth") {
+      if (dominantCode === "provider_billing" || dominantCode === "provider_auth" || dominantCode === "provider_account_restricted") {
         throw ApplicationFailure.create({
           message: error.message, nonRetryable: true,
-          type: dominantCode === "provider_billing" ? PROVIDER_BILLING_FAILURE : PROVIDER_AUTH_FAILURE,
+          type: dominantCode,
         });
       }
       throw error;
