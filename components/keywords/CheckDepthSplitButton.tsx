@@ -12,6 +12,7 @@ import { Menu } from "@/components/ui/Menu";
 import { MenuActionFooter } from "@/components/ui/MenuActionFooter";
 import { menuSelectPaperStyle } from "@/components/ui/MenuSelect";
 import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
 import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
 import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
@@ -58,36 +59,45 @@ export function CheckDepthSplitButton({
 
   return (
     <span className="inline-flex items-center gap-2">
-      <ButtonGroup variant="secondary" style={compact ? { height: 30 } : undefined}>
-        <Button
-          variant="secondary"
-          size={size}
-          className={heightClass}
-          disabled={disabled}
-          onClick={onAction}
-          startIcon={
-            <ArrowsClockwise
-              weight="regular"
-              className={spinning ? "animate-spin" : ""}
-              size={15}
-            />
-          }
-          style={buttonStyle}
-        >
-          {actionLabel}
-        </Button>
-        <Button
-          aria-label={caretAriaLabel}
-          variant="secondary"
-          size={size}
-          className={heightClass}
-          disabled={disabled}
-          onClick={(event) => setMenuAnchor(event.currentTarget)}
-          style={{ ...buttonStyle, ...caretStyle }}
-        >
-          <CaretDown aria-hidden size={13} weight="regular" />
-        </Button>
-      </ButtonGroup>
+      <Tooltip
+        content={
+          currentDepth !== null && currentDepth < VISIBILITY_HORIZON
+            ? VISIBILITY_SHALLOW_CHECK_COPY
+            : null
+        }
+        semantics="description"
+      >
+        <ButtonGroup variant="secondary" style={compact ? { height: 30 } : undefined}>
+          <Button
+            variant="secondary"
+            size={size}
+            className={heightClass}
+            disabled={disabled}
+            onClick={onAction}
+            startIcon={
+              <ArrowsClockwise
+                weight="regular"
+                className={spinning ? "animate-spin" : ""}
+                size={15}
+              />
+            }
+            style={buttonStyle}
+          >
+            {actionLabel}
+          </Button>
+          <Button
+            aria-label={caretAriaLabel}
+            variant="secondary"
+            size={size}
+            className={heightClass}
+            disabled={disabled}
+            onClick={(event) => setMenuAnchor(event.currentTarget)}
+            style={{ ...buttonStyle, ...caretStyle }}
+          >
+            <CaretDown aria-hidden size={13} weight="regular" />
+          </Button>
+        </ButtonGroup>
+      </Tooltip>
       <Menu
         anchorEl={menuAnchor}
         onClose={() => setMenuAnchor(null)}
@@ -119,11 +129,6 @@ export function CheckDepthSplitButton({
           </MenuActionFooter>
         ) : null}
       </Menu>
-      {currentDepth !== null && currentDepth < VISIBILITY_HORIZON ? (
-        <span className="max-w-56 text-xs leading-relaxed text-yellow-text">
-          {VISIBILITY_SHALLOW_CHECK_COPY}
-        </span>
-      ) : null}
     </span>
   );
 }

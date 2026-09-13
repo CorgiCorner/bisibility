@@ -1,6 +1,7 @@
 "use client";
 
 import { WorkspaceTile } from "@/components/shell/WorkspaceTile";
+import { truncateProjectName } from "@/components/shell/workspace-labels";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { CaretUpDownIcon as CaretUpDown } from "@phosphor-icons/react/dist/csr/CaretUpDown";
 import type { MouseEvent } from "react";
@@ -93,7 +94,9 @@ export function WorkspaceSwitcherTrigger({
         {collapsed ? null : (
           <>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px] font-semibold leading-tight">{name}</span>
+              <span className="block truncate text-[13px] font-semibold leading-tight">
+                {truncateProjectName(name)}
+              </span>
               {/* The sublabel describes state ("New project", "12 keywords"). A brand new
                   project is also NAMED "New project", so the two collide and the second line
                   becomes noise. Drop it rather than print the same words twice. */}

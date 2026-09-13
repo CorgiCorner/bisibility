@@ -1,5 +1,12 @@
 [
   {
+    "id": "ts-list-projects-syntax",
+    "language": "ts",
+    "cwd": "examples/ts",
+    "command": "sh syntax.sh",
+    "timeout_ms": 5000
+  },
+  {
     "id": "ts-quickstart",
     "language": "ts",
     "cwd": "examples/ts",
@@ -42,6 +49,13 @@
     "timeout_ms": 180000
   },
   {
+    "id": "python-list-projects-syntax",
+    "language": "python",
+    "cwd": "examples/python",
+    "command": "sh syntax.sh",
+    "timeout_ms": 5000
+  },
+  {
     "id": "python-quickstart",
     "language": "python",
     "cwd": "examples/python",
@@ -54,5 +68,19 @@
     "cwd": "examples/python",
     "command": "python error_handling.py",
     "timeout_ms": 120000
+  },
+  {
+    "id": "cli-quickstart-syntax",
+    "language": "sh",
+    "cwd": "examples/cli",
+    "command": "sh syntax.sh",
+    "timeout_ms": 5000
+  },
+  {
+    "id": "deploy-webhook-curl-syntax",
+    "language": "sh",
+    "cwd": "examples/deploy-webhooks",
+    "command": "sh syntax.sh",
+    "timeout_ms": 5000
   }
 ]

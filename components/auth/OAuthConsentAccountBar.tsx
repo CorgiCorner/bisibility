@@ -3,6 +3,7 @@
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth/client";
+import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import { useState } from "react";
 
 type OAuthConsentAccountBarProps = {
@@ -22,6 +23,7 @@ export function OAuthConsentAccountBar({
     setSwitching(true);
     try {
       await authClient.signOut();
+      notifyAuthenticatedSessionEnd();
       window.location.reload();
     } finally {
       setSwitching(false);

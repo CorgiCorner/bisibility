@@ -11,6 +11,7 @@ describe("PROVIDER_ERROR_CODES", () => {
     expect(PROVIDER_ERROR_CODES).toEqual([
       "provider_billing",
       "provider_auth",
+      "provider_account_restricted",
       "provider_rate_limited",
       "provider_transient",
     ]);

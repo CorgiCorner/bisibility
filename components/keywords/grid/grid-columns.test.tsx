@@ -21,6 +21,14 @@ describe("KeywordCell", () => {
       `/app/prj_1/rank-tracker/${row.id}`,
     );
     expect(screen.getByText(row.keyword)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: row.keyword })).toHaveClass(
+      "font-medium",
+      "text-fg",
+      "hover:text-accent-text",
+      "hover:underline",
+      "focus-visible:text-accent-text",
+      "focus-visible:underline",
+    );
     expect(screen.queryByRole("button", { name: "Copy keyword ID" })).not.toBeInTheDocument();
     expect(screen.queryByText(row.id)).not.toBeInTheDocument();
   });

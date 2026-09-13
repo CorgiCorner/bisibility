@@ -50,6 +50,33 @@ code misbehaves, for example [bisibility-sdk-ts][sdk-ts] or
 [sdk-ts]: https://github.com/CorgiCorner/bisibility-sdk-ts
 [cli]: https://github.com/CorgiCorner/bisibility-cli
 
+## Documentation reports
+
+Author-facing page conventions live in the
+[docs style guide](https://bisibility.com/docs/style-guide). That page is for
+contributors, not product users.
+
+This repository does not accept documentation pull requests. Report the
+discrepancy; the maintained source example or page should be fixed instead of
+copied into an issue.
+
+Before reporting a docs issue:
+
+1. Give the affected docs URL.
+2. State the observed behavior or incorrect claim.
+3. Link the source-of-truth code or schema when known.
+4. Include the command or request needed to reproduce it.
+5. Say whether the issue affects:
+   - product docs
+   - API reference
+   - SDK, CLI, or MCP
+   - self-hosting
+   - security or versioning
+
+Do not paste a new implementation of an existing canonical snippet. If a
+documented example disagrees with runnable code in `examples/`, report that
+gap so the source example can be fixed.
+
 ## Feature Requests
 
 A feature request describes observable behavior, not implementation; the core

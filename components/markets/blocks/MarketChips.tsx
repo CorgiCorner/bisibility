@@ -39,7 +39,7 @@ export function MarketChips({
             <button
               aria-label={market.label}
               aria-pressed={selectedMarket}
-              className="inline-flex min-h-[30px] items-center gap-1.5 rounded-full border border-border px-2.5 text-[12px] font-medium text-fg-muted"
+              className={`inline-flex min-h-[30px] items-center gap-1.5 rounded-full border border-border px-2.5 text-[12px] font-medium outline-offset-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${selectedMarket ? "bg-bg-sunken text-fg" : "bg-bg-elev text-fg-muted hover:bg-bg-sunken"}`}
               key={market.id}
               onClick={() => toggle(market.id)}
               type="button"

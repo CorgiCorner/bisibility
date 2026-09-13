@@ -25,6 +25,7 @@ import { Suspense } from "react";
  * lane is read once without holding the tables behind the signal counts.
  */
 export async function SearchInsightsTrustStripSection({
+  canManageProviders,
   importState,
   pauseAction,
   projectId,
@@ -33,6 +34,7 @@ export async function SearchInsightsTrustStripSection({
   status,
   view,
 }: Readonly<{
+  canManageProviders: boolean;
   importState: SearchInsightsImportState | null;
   pauseAction: SearchInsightsImportAction;
   resumeAction: SearchInsightsImportAction;
@@ -44,6 +46,7 @@ export async function SearchInsightsTrustStripSection({
   const [data, runtime] = await Promise.all([view, status]);
   return (
     <SearchInsightsTrustStrip
+      canManageProviders={canManageProviders}
       coverage={data.coverage}
       deploymentMode={data.deploymentMode}
       localViewReady={importState?.facts?.readyThrough.d1.current === true}
@@ -62,12 +65,14 @@ export async function SearchInsightsTrustStripSection({
 }
 
 export async function SearchInsightsNoDataSection({
+  canManageProviders,
   pauseAction,
   projectId,
   resumeAction,
   retryAction,
   status,
 }: Readonly<{
+  canManageProviders: boolean;
   pauseAction: SearchInsightsImportAction;
   projectId: string;
   resumeAction: SearchInsightsImportAction;
@@ -77,6 +82,7 @@ export async function SearchInsightsNoDataSection({
   const runtime = await status;
   return (
     <SearchInsightsNoDataState
+      canManageProviders={canManageProviders}
       facts={runtime.facts}
       pauseAction={pauseAction}
       projectId={projectId}

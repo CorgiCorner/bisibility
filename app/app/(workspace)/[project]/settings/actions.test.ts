@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   deleteProjectById: vi.fn(),
   getActionActor: vi.fn(),
   joinWaitlist: vi.fn(),
+  preserveProject: vi.fn(),
   readActorProjects: vi.fn(),
   readProjectDeleteSnapshot: vi.fn(),
   requireProjectScope: vi.fn(),
@@ -26,6 +27,9 @@ vi.mock("@/lib/projects/settings-store", () => ({
   readProjectSettingsSnapshot: vi.fn(),
   updateProjectSettingsSnapshot: vi.fn(),
 }));
+vi.mock("@/lib/demo/identity", () => ({
+  assertEditableDemoProjectPreserved: mocks.preserveProject,
+}));
 vi.mock("@/lib/actions/waitlist", () => ({ joinWaitlist: mocks.joinWaitlist }));
 vi.mock("@/lib/auth/audit", () => ({
   requiredPublicAuditId: (value: string) => value,
@@ -35,6 +39,7 @@ vi.mock("@/lib/auth/audit", () => ({
 describe("settings actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.preserveProject.mockReset();
     mocks.getActionActor.mockResolvedValue({ id: "user_1" });
     mocks.readActorProjects.mockResolvedValue([]);
     mocks.readProjectDeleteSnapshot.mockResolvedValue({
@@ -89,6 +94,17 @@ describe("settings actions", () => {
       id: "prj_a00000000000000000000000",
       nextProjectPublicId: null,
     });
+  });
+
+  it("does not delete the configured demo project", async () => {
+    mocks.preserveProject.mockImplementation(() => {
+      throw new Error("The demo Owner, Viewer, and project cannot be deleted.");
+    });
+
+    await expect(
+      deleteWorkspace({ confirmText: "example.com", projectId: "prj_a00000000000000000000000" }),
+    ).rejects.toThrow("cannot be deleted");
+    expect(mocks.deleteProjectById).not.toHaveBeenCalled();
   });
 
   it("does not record a successful delete when deletion fails", async () => {

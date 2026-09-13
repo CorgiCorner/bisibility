@@ -1,0 +1,122 @@
+---
+title: "Versioning and support"
+description: "How bisibility app, REST API, and client package versions relate, and what is supported."
+---
+
+The application version, the REST API contract, and the SDK, CLI, and MCP
+packages version independently. Do not treat an app release such as `0.23.0`
+as the TypeScript, Python, Go, CLI, or MCP version.
+
+application version ≠ REST API contract ≠ OpenAPI document version ≠
+client-package version
+
+## Version axes
+
+| Axis | What it identifies | How to read it |
+| - | - | - |
+| Application | The self-hosted or hosted product release | Root `package.json` and the [changelog](https://github.com/CorgiCorner/bisibility/blob/main/CHANGELOG.md) |
+| REST API | The HTTP contract served at `/api/v1` | `GET /capabilities` `apiVersions`, optional `Bisibility-API-Version: v1` |
+| OpenAPI document | The machine-readable API contract label | `info.version` in `/api/v1/openapi.json` (`1.0.0` today). This is not the app version. |
+| Client packages | Language SDKs, CLI, and MCP | Each package's own registry version and changelog |
+
+bisibility is a pre-1.0 product. Core workflows are available, but breaking
+changes can still land before 1.0. Public behavior changes are listed in the
+changelog of the component that changed.
+
+## API compatibility
+
+REST API v1 is the current public HTTP contract. Clients may send
+`Bisibility-API-Version: v1`. The header is optional; an undeclared request
+uses the same authentication, validation, and routing path.
+
+An unsupported declared version returns `409 Conflict` with problem type
+`unsupported_api_version`. See [API errors](/api/errors) and
+[API version declarations](/api/overview#api-version-declarations).
+
+Until 1.0:
+
+- Additive changes (new fields, new endpoints, new optional parameters) can
+  appear in a minor app release without a new API version.
+- Breaking API changes are announced in the public changelog and, when a
+  migration is required, in the affected guide.
+- There is no long-term parallel-version window yet. Plan to follow the latest
+  documented v1 contract.
+
+## Tested client versions
+
+The packages below version independently.
+
+See [released client support](/compatibility) for the exact inspected SDK,
+CLI, and MCP releases and their Domain Overview entry points. Package inspection
+and the example integration versions below are different checks.
+
+"Docs-tested version" means the exact package version used by the runnable
+examples that generated or validated this documentation. It does not mean that
+newer releases are incompatible.
+
+All listed clients target REST API v1 unless a row says otherwise.
+
+| Component | Distribution | Docs-tested version | API contract | Runtime | Test artifact | Last verified | Support |
+| - | - | - | - | - | - | - | - |
+| Application | bisibility | `0.23.0` | `v1` | Node 22 | `package.json` | 2026-09-12 | pre-1.0 |
+| REST API | `/api/v1` | `v1` | `v1` | HTTP | `docs/openapi.snapshot.json` | 2026-09-12 | current contract |
+| TypeScript SDK | `@bisibility/sdk` | `0.12.0` | `v1` | Node 18+ | `examples/ts/package.json` | 2026-09-12 | independently versioned |
+| Python SDK | `bisibility` | `0.9.0` | `v1` | Python 3 | `examples/python/requirements.txt` | 2026-09-12 | independently versioned; package metadata may mark it Alpha |
+| Go SDK | `bisibility.com/sdk-go` | `v0.10.0` | `v1` | Go 1.22+ | `examples/go/go.mod` | 2026-09-12 | independently versioned |
+| CLI | `@bisibility/cli` | `0.7.0` | `v1` | Node 18+ | `examples/cli/README.md` | 2026-09-12 | independently versioned |
+| MCP | `@bisibility/mcp` | `0.10.0` | `v1` | Node 18+ | `examples/mcp/quickstart.mjs` | 2026-09-12 | independently versioned |
+
+Install the client version you intend to run. The examples in this repository
+are the versions the documentation snippets are checked against; they are not
+a promise that every later client release is already documented here.
+
+The Python example pin is `bisibility==0.9.0`. The Go example pin is
+`bisibility.com/sdk-go v0.10.0`.
+
+Shared client behavior (retries, errors, pagination, headers) lives in the
+[SDK behavior contract](/sdks/behavior). Language-specific install steps live
+on the [SDK pages](/sdks/overview).
+
+## API base URL
+
+Use the API base URL shown for your project. Keep it in
+`BISIBILITY_BASE_URL` for the API, SDKs, CLI, and examples:
+
+```bash
+export BISIBILITY_BASE_URL="https://<region-host>/api/v1"
+```
+
+Call the regional host directly instead of relying on a redirect from the
+marketing domain. See [API overview](/api/overview) for the current hosted
+regional example and the self-hosted pattern.
+
+## Breaking changes and deprecations
+
+A breaking change removes or changes documented public behavior: a request
+field, response field, status code, permission, or client method that callers
+already depend on.
+
+When a breaking change is required:
+
+1. It is listed in the public changelog of the component that changed.
+2. The affected guide or API reference describes the replacement.
+3. Deprecated compatibility behavior stays available for the window documented
+   with that change.
+
+There is no separate sunset HTTP header contract yet. Watch the changelog and
+this page.
+
+## Self-hosting support
+
+Only the latest application release is supported for security fixes. See
+[SECURITY.md](https://github.com/CorgiCorner/bisibility/blob/main/SECURITY.md).
+Upgrade through the [self-hosting upgrades](/self-hosting/upgrades) guide.
+The one-time [v0.1.0 to v0.2.0](/self-hosting/legacy-upgrades/v0-1-to-v0-2)
+procedure is a historical operator path, not the current product version.
+
+## Next step
+
+- [API overview](/api/overview) for the HTTP contract.
+- [SDK overview](/sdks/overview) to pick a client.
+- [Changelog](https://github.com/CorgiCorner/bisibility/blob/main/CHANGELOG.md)
+  for application releases.

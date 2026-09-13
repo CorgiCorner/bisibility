@@ -1,9 +1,14 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import type { StoredResultFreshness } from "@/components/demo-research/StoredResultFreshness";
 import type { SaveSelectedKeywordsAction } from "@/lib/actions/domain-overview";
-import type { DomainOverviewReport } from "@/lib/domain-overview/types";
-import type { HistoricalOverviewRow } from "@/lib/providers/types";
+import type { DomainModuleOutcome, DomainOverviewReport } from "@/lib/domain-overview/types";
+import type {
+  HistoricalOverviewRow,
+  RankedKeywordsPage,
+  RelevantPagesResult,
+} from "@/lib/providers/types";
 import type { ResearchScope } from "@/lib/research/scope";
 import { DomainOverviewBacklinksTeaser } from "./DomainOverviewBacklinksTeaser";
 import { DomainOverviewContextBar } from "./DomainOverviewContextBar";
@@ -19,15 +24,22 @@ import { saveDomainKeywords } from "./domain-overview-keyword-tracking";
 type DomainOverviewResultsProps = {
   history: HistoricalOverviewRow[] | null;
   historyError: boolean;
-  historyEstimateCents: number | null;
+  historyEstimateCents?: number | null;
   historyLoading: boolean;
-  onLoadHistory: () => void;
-  onLoadMoreKeywords: () => void;
-  onLoadMorePages: () => void;
+  onLoadHistory?: () => void;
+  onLoadMoreKeywords?: () => void;
+  onLoadMorePages?: () => void;
   projectRef: string;
-  report: DomainOverviewReport;
-  researchScope: ResearchScope & { providerLocationCode: number };
-  tableEstimateCents: { keywords: number | null; pages: number | null };
+  readOnly?: boolean;
+  report: Omit<DomainOverviewReport, "cachedUntil" | "historyMode" | "keywords" | "pages"> & {
+    historyMode?: "lazy";
+    keywords?: DomainModuleOutcome<RankedKeywordsPage>;
+    pages?: DomainModuleOutcome<RelevantPagesResult>;
+  };
+  researchScope?: ResearchScope & { providerLocationCode: number };
+  storedFreshness?: StoredResultFreshness;
+  storedModules?: { keywords: RankedKeywordsPage | null; pages: RelevantPagesResult | null };
+  tableEstimateCents?: { keywords: number | null; pages: number | null };
   tableError: "keywords" | "pages" | null;
   tableFetchedCount: { keywords: number; pages: number };
   tableHasMore: { keywords: boolean; pages: boolean };
@@ -44,8 +56,11 @@ export function DomainOverviewResults({
   onLoadMoreKeywords,
   onLoadMorePages,
   projectRef,
+  readOnly = false,
   report,
   researchScope,
+  storedFreshness,
+  storedModules,
   tableEstimateCents,
   tableError,
   tableFetchedCount,
@@ -55,9 +70,23 @@ export function DomainOverviewResults({
 }: Readonly<DomainOverviewResultsProps>) {
   const dateFormat = useDateFormat();
   const metrics = report.overview;
+  const keywords = readOnly
+    ? (storedModules?.keywords ?? null)
+    : report.keywords?.ok
+      ? report.keywords.data
+      : null;
+  const pages = readOnly
+    ? (storedModules?.pages ?? null)
+    : report.pages?.ok
+      ? report.pages.data
+      : null;
   return (
     <div aria-live="polite" className="grid min-w-0 gap-4.5">
-      <DomainOverviewContextBar dateFormat={dateFormat} report={report} />
+      <DomainOverviewContextBar
+        dateFormat={dateFormat}
+        report={report}
+        storedFreshness={storedFreshness}
+      />
       {report.state === "no_data" || !metrics ? (
         <>
           <DomainOverviewKpiRow
@@ -72,12 +101,14 @@ export function DomainOverviewResults({
             sectionTitle="Organic performance"
             title="No index history to display"
           />
-          <DomainOverviewStatePanel
-            projectRef={projectRef}
-            researchScope={researchScope}
-            state="no_data"
-            target={report.target}
-          />
+          {readOnly ? null : (
+            <DomainOverviewStatePanel
+              projectRef={projectRef}
+              researchScope={researchScope}
+              state="no_data"
+              target={report.target}
+            />
+          )}
         </>
       ) : (
         <>
@@ -95,6 +126,7 @@ export function DomainOverviewResults({
               history={history}
               loading={historyLoading}
               onLoad={onLoadHistory}
+              readOnly={readOnly}
             />
             <DomainOverviewWhatChanged
               dateFormat={dateFormat}
@@ -103,46 +135,57 @@ export function DomainOverviewResults({
             />
           </div>
           <DomainOverviewDistribution metrics={metrics} />
-          {report.keywords.ok ? (
+          {keywords ? (
             <DomainOverviewKeywordsTable
-              estimateCents={tableEstimateCents.keywords}
+              estimateCents={tableEstimateCents?.keywords}
               fetchedCount={tableFetchedCount.keywords}
               hasMore={tableHasMore.keywords}
               key={`${report.target}:${report.scope}:${report.fetchedAt}:keywords`}
               loadMoreError={tableError === "keywords"}
               loadingMore={tableLoading === "keywords"}
-              onLoadMore={onLoadMoreKeywords}
+              onLoadMore={readOnly ? undefined : onLoadMoreKeywords}
               onSaveSelected={
-                saveSelectedKeywordsAction
+                !readOnly && saveSelectedKeywordsAction && researchScope
                   ? (rows) =>
                       saveDomainKeywords(saveSelectedKeywordsAction, {
                         researchScope,
                         projectId: projectRef,
-                        report,
+                        report: report as DomainOverviewReport,
                         rows,
                       })
                   : undefined
               }
-              page={report.keywords.data}
+              page={keywords}
+              readOnly={readOnly}
             />
           ) : (
-            <DomainOverviewStatePanel projectRef={projectRef} state="partial" />
+            <DomainOverviewNoDataCard
+              description="Keyword rows were not collected with this saved result."
+              sectionTitle="Top organic keywords"
+              title="Keyword rows not collected"
+            />
           )}
-          {report.pages.ok ? (
+          {pages ? (
             <DomainOverviewPagesTable
-              estimateCents={tableEstimateCents.pages}
+              estimateCents={tableEstimateCents?.pages}
               fetchedCount={tableFetchedCount.pages}
               hasMore={tableHasMore.pages}
               key={`${report.target}:${report.scope}:${report.fetchedAt}:pages`}
               loadMoreError={tableError === "pages"}
               loadingMore={tableLoading === "pages"}
-              onLoadMore={onLoadMorePages}
-              result={report.pages.data}
+              onLoadMore={readOnly ? undefined : onLoadMorePages}
+              result={pages}
             />
           ) : (
-            <DomainOverviewStatePanel projectRef={projectRef} state="partial" />
+            <DomainOverviewNoDataCard
+              description="Page rows were not collected with this saved result."
+              sectionTitle="Top pages"
+              title="Page rows not collected"
+            />
           )}
-          <DomainOverviewBacklinksTeaser projectRef={projectRef} target={report.target} />
+          {!readOnly ? (
+            <DomainOverviewBacklinksTeaser projectRef={projectRef} target={report.target} />
+          ) : null}
         </>
       )}
     </div>

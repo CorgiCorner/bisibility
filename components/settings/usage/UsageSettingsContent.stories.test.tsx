@@ -42,7 +42,21 @@ describe("UsageSettingsContent provider spend stories", () => {
       screen.getByText("DataForSEO needs a top up before checks can continue."),
     ).toBeInTheDocument();
     expect(screen.getByText("top up required")).toBeInTheDocument();
+    const list = screen.getByText("top up required").closest("ul");
+    expect(list).toHaveClass("border-t");
+    expect(list).not.toHaveClass("border-y", "border-b");
   });
+
+  it.each(["prj_story", "prj_another"])(
+    "links provider attention to connection settings for %s",
+    (projectRef) => {
+      render(<TopUpRequired projectRef={projectRef} />);
+      expect(screen.getByRole("link", { name: "Connection settings" })).toHaveAttribute(
+        "href",
+        `/app/${projectRef}/integrations`,
+      );
+    },
+  );
 
   it("renders recorded usage with no budgets", () => {
     render(<NoBudgets />);

@@ -54,6 +54,8 @@ const SERP_REQUEST_TIMEOUT_MS = 30_000;
 export { DataForSeoUnsupportedLocationError } from "./dataforseo-errors";
 
 function classifyDataForSeoError(error: unknown): ProviderErrorCode {
+  if (error instanceof ProviderCallError && error.code === "provider_account_restricted")
+    return error.code;
   if (error instanceof DataForSeoBillingError) return "provider_billing";
   if (error instanceof DataForSeoError) {
     const status = error.httpStatus;
@@ -138,6 +140,9 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
       ? messageWithSentParameters(rawMessage, payload, credentials)
       : redactedMessage(rawMessage, credentials);
     const costCents = dataForSeoResponseCostCents(data);
+    if (data.status_code === 40201 || task?.status_code === 40201) {
+      throw new ProviderCallError(message, costCents, "provider_account_restricted");
+    }
     if (billingStatusCode !== undefined) throw new DataForSeoBillingError(message, costCents);
     throw new DataForSeoError(message, false, undefined, costCents);
   }

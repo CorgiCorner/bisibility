@@ -106,6 +106,7 @@ export default async function SearchInsightsPage({
   );
   const role = getProjectRole(readable.actor, readable.project.id);
   const canCreateKeyword = canProjectAction(role, "create", "keyword");
+  const canManageProviders = canProjectAction(role, "manage", "provider_connection");
   // Started once from the same authorized scope and not awaited: the strip and body share the
   // view, while the chips resolve independently without repeating any stored-row lane.
   const view = scope.property
@@ -189,6 +190,7 @@ export default async function SearchInsightsPage({
           view ? (
             <Suspense key={viewKey} fallback={<SearchInsightsTrustStripLoading />}>
               <SearchInsightsTrustStripSection
+                canManageProviders={canManageProviders}
                 importState={context.importState}
                 pauseAction={pauseSearchInsightsImport}
                 resumeAction={resumeSearchInsightsImport}
@@ -223,6 +225,7 @@ export default async function SearchInsightsPage({
         {view && !context.window ? (
           <Suspense key={viewKey} fallback={<SearchInsightsBodyLoading />}>
             <SearchInsightsNoDataSection
+              canManageProviders={canManageProviders}
               pauseAction={pauseSearchInsightsImport}
               projectId={publicId}
               resumeAction={resumeSearchInsightsImport}
@@ -233,6 +236,7 @@ export default async function SearchInsightsPage({
         ) : null}
         {view || oauth.setup ? null : (
           <SearchInsightsNoPropertyState
+            canManageProviders={canManageProviders}
             projectId={publicId}
             propertyName={context.connection.property?.displayName}
             reauth={context.connection.status === "needs_reauth"}

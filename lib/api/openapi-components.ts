@@ -14,6 +14,7 @@ import { migrationSchemas } from "./openapi-migration-components";
 import { personalAccessSchemas } from "./openapi-pat-components";
 import { projectSchemas } from "./openapi-project-components";
 import { publicIdSchema } from "./openapi-public-id";
+import { resourceSchemas } from "./openapi-resource-components";
 import {
   jitterMinutesContractSchema,
   scheduleInputContractSchema,
@@ -76,6 +77,7 @@ export const schemas = {
   ...personalAccessSchemas,
   ...signalSchemas,
   ...alertRuleSchemas,
+  ...resourceSchemas,
   ...apiKeySchemas,
   Keyword: {
     properties: {

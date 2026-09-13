@@ -43,6 +43,8 @@ OK ts-quickstart
 
 ## Included Examples
 
+- `ts/list-projects.ts`: complete copyable list-projects program used by the
+  TypeScript SDK page.
 - `ts/quickstart.ts`: list projects, create a keyword, run a rank check, read
   rank history, and clean up.
 - `ts/error-handling.ts`: handle typed SDK API errors for authentication,
@@ -51,9 +53,13 @@ OK ts-quickstart
 - `cli/README.md`: install and use the `bisibility` command line interface.
 - `mcp/quickstart.mjs`: connect to the Bisibility MCP stdio server, inspect
   tools, and call `list_projects`.
+- `go/list-projects`: complete copyable list-projects program used by the Go
+  SDK page.
 - `go/quickstart`: run the quickstart flow with the Go SDK.
 - `go/error-handling`: assert typed Go SDK API errors for authentication,
   missing resources, and validation failures.
+- `python/list_projects.py`: complete copyable list-projects program used by
+  the Python SDK page.
 - `python/quickstart.py`: run the quickstart flow with the Python SDK.
 - `python/error_handling.py`: assert typed Python SDK API errors for
   authentication, missing resources, and validation failures.
@@ -79,7 +85,7 @@ authenticate, add a keyword, run a rank check, and export the results.
 ## MCP
 
 Install the example dependencies and run the MCP quickstart. The example starts
-the published `@bisibility/mcp` stdio server with `npx -y @bisibility/mcp`.
+the published `@bisibility/mcp` stdio server with `npx -y @bisibility/mcp@0.10.0`.
 
 ```sh
 cd examples/mcp
@@ -89,12 +95,12 @@ npm run quickstart
 
 ## Go
 
-The Go examples use the published `github.com/bisibility/bisibility-sdk-go`
+The Go examples use the published `bisibility.com/sdk-go`
 module.
 
 ```sh
 cd examples/go
-go get github.com/bisibility/bisibility-sdk-go@v0.10.0
+go get bisibility.com/sdk-go@v0.10.0
 go run ./quickstart
 go run ./error-handling
 ```

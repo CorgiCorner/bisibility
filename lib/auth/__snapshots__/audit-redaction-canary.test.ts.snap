@@ -1733,6 +1733,16 @@ exports[`audit redaction canaries > enumerates every application audit payload p
     "writer": "writeAudit",
   },
   {
+    "action": ""rank_check_run.delete"",
+    "after": null,
+    "before": "{ status: run.status }",
+    "input": "{ action: "rank_check_run.delete", actorId: input.actorId, before: { status: run.status }, projectId: input.projectId, targetId: requiredPublicAuditId(input.publicId, "rcr", "Rank-check run"), targetType: "rank_check_run", }",
+    "occurrence": 1,
+    "path": "lib/rank-check/runs/cancel-run.ts",
+    "statusReason": null,
+    "writer": "writeAudit",
+  },
+  {
     "action": ""rank_check_run.skip"",
     "after": "{ plannedFor: run.plannedFor?.toISOString() ?? null, publicId: run.publicId, schedule: run.checkSchedule?.name ?? "Schedule", status: "cancelled", }",
     "before": null,

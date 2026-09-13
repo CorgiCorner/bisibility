@@ -138,6 +138,11 @@ const routeCases = [
     title: "Audit log",
   },
   {
+    path: appPath("prj_1", "settings", "billing"),
+    pattern: appPath("[project]", "settings", "billing"),
+    title: "Settings",
+  },
+  {
     path: appPath("prj_1", "settings", "competitors"),
     pattern: appPath("[project]", "settings", "competitors"),
     title: "Settings",

@@ -6,7 +6,9 @@ const mocks = vi.hoisted(() => ({
   AccountEmailCard: vi.fn(),
   confirmAccountEmailChange: vi.fn(),
   confirmCurrentAccountEmailVerification: vi.fn(),
+  demoAccountView: vi.fn(),
   getAccount: vi.fn(),
+  requireSession: vi.fn(),
   requestAccountEmailChange: vi.fn(),
   requestAccountEmailChangeCode: vi.fn(),
   requestCurrentAccountEmailVerification: vi.fn(),
@@ -33,6 +35,10 @@ vi.mock("@/components/analytics/PrivacyChoicesLink", () => ({
 vi.mock("@/lib/queries/account", () => ({
   getAccount: mocks.getAccount,
 }));
+vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
+vi.mock("@/lib/demo/account-view", () => ({
+  resolveDemoAccountView: mocks.demoAccountView,
+}));
 vi.mock("@/lib/actions/account-email", () => ({
   confirmAccountEmailChange: mocks.confirmAccountEmailChange,
   confirmCurrentAccountEmailVerification: mocks.confirmCurrentAccountEmailVerification,
@@ -51,6 +57,8 @@ describe("AccountPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.AccountEmailCard.mockImplementation(() => <div data-testid="account-email-card" />);
+    mocks.demoAccountView.mockResolvedValue("normal");
+    mocks.requireSession.mockResolvedValue({ user: { id: "owner_1" } });
     mocks.getAccount.mockResolvedValue({
       connectedAccounts: [],
       email: "owner@example.com",
@@ -91,5 +99,24 @@ describe("AccountPage", () => {
     expect(screen.getByTestId("profile-section")).toBeInTheDocument();
     expect(screen.getByTestId("connected-accounts")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Privacy choices" })).toBeVisible();
+  });
+
+  it("stops an editable Viewer before profile and account queries", async () => {
+    mocks.requireSession.mockResolvedValue({ user: { id: "viewer_1" } });
+    mocks.demoAccountView.mockResolvedValue("locked");
+
+    render(await AccountPage());
+
+    expect(screen.getByRole("heading", { name: "Demo account" })).toBeVisible();
+    expect(mocks.demoAccountView).toHaveBeenCalledWith("viewer_1");
+    expect(mocks.getAccount).not.toHaveBeenCalled();
+  });
+
+  it("keeps the normal profile screen for a revalidated Owner", async () => {
+    render(await AccountPage());
+
+    expect(mocks.demoAccountView).toHaveBeenCalledWith("owner_1");
+    expect(mocks.getAccount).toHaveBeenCalledOnce();
+    expect(screen.getByTestId("profile-section")).toBeVisible();
   });
 });

@@ -1,8 +1,8 @@
+import { RankTrackerHeaderContext } from "@/components/keywords/RankTrackerHeaderContext";
 import type { HeaderContextMarket } from "@/lib/markets/header-context";
 import { AppRealtimeContext } from "@/lib/realtime/useAppRealtime";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AppHeaderFrame } from "./AppHeaderFrame";
-import { HeaderContextSlot } from "./HeaderContextSlot";
 
 const markets: HeaderContextMarket[] = [
   {
@@ -43,7 +43,7 @@ function MarketContextStory({ contexts }: { contexts: HeaderContextMarket[] }) {
           workspaces={[]}
           canCreateWorkspace={false}
           notificationControl={null}
-          context={<HeaderContextSlot contexts={contexts} projectRef="prj_story" />}
+          context={<RankTrackerHeaderContext contexts={contexts} projectRef="prj_story" />}
         />
       </div>
     </AppRealtimeContext.Provider>
@@ -68,6 +68,17 @@ export const AllPaused: Story = {
 export const LongName: Story = {
   args: { contexts: markets },
   parameters: { nextjs: { navigation: { pathname: "/app/prj_story/m/pmkt_malaga/rank-tracker" } } },
+};
+export const MobileDevice: Story = {
+  args: { contexts: markets },
+  parameters: {
+    nextjs: {
+      navigation: {
+        pathname: "/app/prj_story/m/pmkt_us/rank-tracker",
+        query: { device: "mobile", q: "running shoes" },
+      },
+    },
+  },
 };
 export const Search: Story = {
   args: {

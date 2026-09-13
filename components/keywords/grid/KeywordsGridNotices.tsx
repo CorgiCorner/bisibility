@@ -12,7 +12,7 @@ import type { KeywordCheckState } from "@/lib/queries/keyword-row";
 import { appPath } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import type { ReactNode } from "react";
-import type { CheckHealthView } from "./KeywordGridHealthNotices";
+import type { CheckHealthView } from "./keywords-grid-types";
 
 type KeywordsGridNoticesProps = {
   canManageProviders: boolean;
@@ -138,7 +138,8 @@ export function KeywordsGridNotices({
                 href={appPath(projectId, "integrations")}
                 label="Connect provider"
               />
-            ) : firstPendingKeywordId && runCheckNowAction ? (
+            ) : rankNotice.connectProvider ? undefined : firstPendingKeywordId &&
+              runCheckNowAction ? (
               <FirstCheckBannerAction
                 getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
                 keywordId={firstPendingKeywordId}

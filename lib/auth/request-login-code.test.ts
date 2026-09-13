@@ -44,6 +44,7 @@ describe("requestLoginCode", () => {
     expect(mocks.sendVerificationOTP).toHaveBeenCalledWith({
       body: { email: "person@example.com", type: "sign-in" },
       headers: expect.any(Headers),
+      method: "POST",
     });
     expect(mocks.verifyHumanChallenge.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.sendVerificationOTP.mock.invocationCallOrder[0] ?? 0,

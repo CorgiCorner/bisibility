@@ -146,7 +146,7 @@ export const OffCatalogMetricsUnavailable: Story = {
   args: {
     ...CachedPartialResult.args,
     defaultTracking: {
-      ...CachedPartialResult.args.defaultTracking,
+      device: "desktop",
       location: {
         canonicalKey: "ES@en",
         countryCode: "ES",
@@ -155,6 +155,7 @@ export const OffCatalogMetricsUnavailable: Story = {
         kind: "country",
         languageLabel: "English",
       },
+      scheduleFrequency: "project_default",
     },
     metricsAvailable: false,
     trackingMarketCount: 3,

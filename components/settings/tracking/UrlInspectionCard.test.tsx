@@ -1,3 +1,7 @@
+vi.mock("@/lib/actions/presence-settings", () => ({
+  updatePresenceInspectionBudget: vi.fn(),
+}));
+
 import { UrlInspectionCard } from "@/components/settings/tracking/UrlInspectionCard";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -47,5 +51,21 @@ describe("UrlInspectionCard", () => {
         projectId: "prj_1",
       }),
     );
+  });
+
+  it("shows a read-only inspection limit without Save", () => {
+    render(
+      <UrlInspectionCard
+        canEdit={false}
+        dailyLimit={200}
+        projectId="prj_1"
+        updateInspectionBudget={vi.fn(async () => ({}))}
+      />,
+    );
+
+    expect(screen.getByText("Read-only")).toBeInTheDocument();
+    expect(screen.getByText("200")).toBeInTheDocument();
+    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
   });
 });

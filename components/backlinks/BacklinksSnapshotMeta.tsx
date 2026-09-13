@@ -1,3 +1,7 @@
+import {
+  StoredResultFreshness,
+  type StoredResultFreshness as StoredResultFreshnessData,
+} from "@/components/demo-research/StoredResultFreshness";
 import type { BacklinksSnapshot } from "@/lib/backlinks/types";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { relativePast } from "@/lib/format/relative-time";
@@ -6,9 +10,10 @@ import { GlobeSimpleIcon as GlobeSimple } from "@phosphor-icons/react/dist/csr/G
 
 type BacklinksSnapshotMetaProps = {
   estimateCents: number | null;
-  onRefresh: () => void;
-  refreshing: boolean;
-  snapshot: BacklinksSnapshot;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  snapshot: Omit<BacklinksSnapshot, "cachedUntil"> & { cachedUntil?: string };
+  storedFreshness?: StoredResultFreshnessData;
 };
 
 function cacheLabel(cachedUntil: string, now: Date) {
@@ -24,6 +29,7 @@ export function BacklinksSnapshotMeta({
   onRefresh,
   refreshing,
   snapshot,
+  storedFreshness,
 }: Readonly<BacklinksSnapshotMetaProps>) {
   const now = new Date();
   const scope =
@@ -39,21 +45,27 @@ export function BacklinksSnapshotMeta({
       <span className="text-[12.5px] text-fg-muted">
         {scope} - snapshot {relativePast(new Date(snapshot.fetchedAt), now)}
       </span>
-      <span className="inline-flex items-center gap-1 rounded-full bg-green/10 px-2 py-0.5 text-[11px] font-medium text-green-text">
-        <Clock weight="regular" aria-hidden size={11} />
-        {cacheLabel(snapshot.cachedUntil, now)}
-      </span>
-      <button
-        className="ml-auto cursor-pointer border-0 bg-transparent p-1 text-[12.5px] font-medium text-accent-text hover:text-accent-text focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
-        disabled={refreshing}
-        onClick={onRefresh}
-        type="button"
-      >
-        {refreshing ? "Refreshing..." : "Refresh now"}{" "}
-        {estimateCents == null ? null : (
-          <span className="font-sans tabular-nums">~{formatEstimateCents(estimateCents)}</span>
-        )}
-      </button>
+      {storedFreshness ? (
+        <StoredResultFreshness {...storedFreshness} />
+      ) : snapshot.cachedUntil ? (
+        <span className="inline-flex items-center gap-1 rounded-full bg-green/10 px-2 py-0.5 text-[11px] font-medium text-green-text">
+          <Clock weight="regular" aria-hidden size={11} />
+          {cacheLabel(snapshot.cachedUntil, now)}
+        </span>
+      ) : null}
+      {onRefresh ? (
+        <button
+          className="ml-auto cursor-pointer border-0 bg-transparent p-1 text-[12.5px] font-medium text-accent-text hover:text-accent-text focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
+          disabled={refreshing}
+          onClick={onRefresh}
+          type="button"
+        >
+          {refreshing ? "Refreshing..." : "Refresh now"}{" "}
+          {estimateCents == null ? null : (
+            <span className="font-sans tabular-nums">~{formatEstimateCents(estimateCents)}</span>
+          )}
+        </button>
+      ) : null}
     </div>
   );
 }

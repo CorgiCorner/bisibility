@@ -1,60 +1,47 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "bisibility",
-  "description": "Self-hostable, open-source keyword rank tracker. Bring your own SERP and analytics providers, track positions over time, and get alerts.",
+  "description": "Self-hostable, open-source SEO research and search visibility application. Bring your own SERP and analytics providers, track rankings, research keywords and backlinks, and automate through REST, CLI, and MCP.",
   "favicon": "/favicon.svg",
   "theme": "mint",
   "fonts": {
     "family": "Geist"
   },
   "colors": {
-    "primary": "#F1511C",
+    "primary": "#CE4215",
     "light": "#F36A3F",
     "dark": "#D94818"
   },
   "navigation": {
     "tabs": [
       {
-        "tab": "Docs",
+        "tab": "Start",
         "groups": [
           {
             "group": "Get started",
             "pages": [
               "index",
+              "hosted-quickstart",
               "quickstart",
               "deployment-options",
-              "api/quickstart",
-              "authentication"
+              "api/quickstart"
             ]
           },
           {
-            "group": "Build and automate",
-            "pages": ["cli", "integrations"]
+            "group": "Reference and support",
+            "pages": ["versioning", "compatibility", "project-support", "sdks/methods"]
           },
           {
-            "group": "Concepts",
-            "pages": ["architecture", "markets", "audit-log"]
-          },
+            "group": "Contribute",
+            "pages": ["style-guide"]
+          }
+        ]
+      },
+      {
+        "tab": "Use Bisibility",
+        "groups": [
           {
-            "group": "Self-hosting",
-            "pages": [
-              "self-hosting",
-              "self-hosting/docker",
-              "self-hosting/upgrades",
-              "self-hosting/legacy-upgrades/v0-1-to-v0-2",
-              "self-hosting/railway",
-              "self-hosting/temporal",
-              "self-hosting/configuration",
-              "self-hosting/analytics",
-              "self-hosting/email",
-              "self-hosting/security",
-              "self-hosting/backup-restore",
-              "self-hosting/operations",
-              "self-hosting/troubleshooting"
-            ]
-          },
-          {
-            "group": "Product guides",
+            "group": "Use Bisibility",
             "pages": [
               "guides/choose-first-keywords",
               "guides/alerts",
@@ -71,6 +58,19 @@
             ]
           },
           {
+            "group": "Understand",
+            "pages": ["architecture", "markets", "serp-observations", "audit-log"]
+          }
+        ]
+      },
+      {
+        "tab": "Build and automate",
+        "groups": [
+          {
+            "group": "Connect",
+            "pages": ["authentication", "integrations"]
+          },
+          {
             "group": "API workflows",
             "pages": [
               "api/overview",
@@ -84,7 +84,7 @@
             ]
           },
           {
-            "group": "REST resource guides",
+            "group": "Resource workflows",
             "pages": [
               "api/discovery",
               "api/projects",
@@ -111,19 +111,15 @@
           },
           {
             "group": "SDKs",
-            "pages": [
-              "sdks/overview",
-              "sdks/behavior",
-              "sdks/methods",
-              "sdks/python",
-              "sdks/typescript",
-              "sdks/go",
-              "sdks/mcp"
-            ]
+            "pages": ["sdks/overview", "sdks/behavior", "sdks/python", "sdks/typescript", "sdks/go"]
           },
           {
-            "group": "AI / Agents",
-            "pages": ["agents"]
+            "group": "CLI",
+            "pages": ["cli", "cli/reference"]
+          },
+          {
+            "group": "MCP and agents",
+            "pages": ["sdks/mcp", "agents"]
           }
         ]
       },
@@ -329,14 +325,52 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Self-hosting",
+        "groups": [
+          {
+            "group": "Install and operate",
+            "pages": [
+              "self-hosting",
+              "self-hosting/docker",
+              "self-hosting/upgrades",
+              {
+                "group": "Legacy upgrades",
+                "pages": ["self-hosting/legacy-upgrades/v0-1-to-v0-2"]
+              },
+              "self-hosting/railway",
+              "self-hosting/temporal",
+              "self-hosting/configuration",
+              "self-hosting/analytics",
+              "self-hosting/email",
+              "self-hosting/security",
+              "self-hosting/backup-restore",
+              "self-hosting/operations",
+              "self-hosting/troubleshooting"
+            ]
+          }
+        ]
       }
     ]
   },
   "navbar": {
     "links": [
       {
+        "label": "Releases",
+        "href": "https://github.com/CorgiCorner/bisibility/releases"
+      },
+      {
         "label": "GitHub",
         "href": "https://github.com/CorgiCorner/bisibility"
+      },
+      {
+        "label": "Discord",
+        "href": "https://discord.gg/HcYpvfn79w"
+      },
+      {
+        "label": "YouTube",
+        "href": "https://www.youtube.com/@bisibility"
       }
     ],
     "primary": {
@@ -347,7 +381,9 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/CorgiCorner/bisibility"
+      "github": "https://github.com/CorgiCorner/bisibility",
+      "discord": "https://discord.gg/HcYpvfn79w",
+      "youtube": "https://www.youtube.com/@bisibility"
     }
   },
   "redirects": [
@@ -361,9 +397,9 @@
     }
   ],
   "seo": {
-    "indexing": "all",
-    "metatags": {
-      "canonical": "https://bisibility.com/docs"
-    }
+    "indexing": "navigable"
+  },
+  "metadata": {
+    "timestamp": true
   }
 }

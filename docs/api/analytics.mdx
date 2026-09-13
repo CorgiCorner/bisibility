@@ -42,3 +42,12 @@ Idempotency-Key: analytics-sync-001
 This runs the same audited project synchronization used by the app and returns
 per-connection run status plus fetched, matched, and upserted row counts. A
 project in read-only migration mode cannot start a sync.
+
+## Related operations
+
+- [`GET /projects/{project_id}/overview`](/api-reference/analytics/get-a-numeric-project-overview) (`getProjectOverview`)
+- [`GET /projects/{project_id}/analytics/query-stats`](/api-reference/analytics/list-search-query-statistics) (`listSearchPerformanceQueryStats`)
+- [`POST /projects/{project_id}/analytics/sync`](/api-reference/analytics/sync-analytics-traffic) (`syncProjectTraffic`)
+- [`GET /projects/{project_id}/analytics/traffic-snapshots`](/api-reference/analytics/list-stored-page-traffic-snapshots) (`listTrafficSnapshots`)
+
+Exact request and response schemas live in the generated API Reference.

@@ -110,9 +110,11 @@ export function savedKeywordPaths(
       ),
     },
     "/projects/{project_id}/saved-keywords/{saved_keyword_id}": {
-      delete: bearerOperation("Delete a saved keyword", "deleteProjectSavedKeyword", {
-        type: "object",
-      }),
+      delete: bearerOperation(
+        "Delete a saved keyword",
+        "deleteProjectSavedKeyword",
+        savedKeywordSchema,
+      ),
     },
   };
 }

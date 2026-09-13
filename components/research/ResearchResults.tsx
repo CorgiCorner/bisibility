@@ -1,5 +1,6 @@
 "use client";
 
+import type { StoredResultFreshness } from "@/components/demo-research/StoredResultFreshness";
 import type { TrackingConfigurationValue } from "@/components/keywords/add/TrackingConfigurationFields";
 import { type GroupedResearchRow, groupResearchRows } from "@/lib/keyword-research/grouping";
 import type {
@@ -25,21 +26,23 @@ import { rowsForResearchScope } from "./research-scope-capability";
 import type { ResearchAddDraft, ResearchSaveDraft } from "./research-workspace-model";
 
 type ResearchResultsProps = {
-  costContext: ProjectCostContext;
-  defaultTracking: TrackingConfigurationValue;
+  costContext?: ProjectCostContext;
+  defaultTracking?: TrackingConfigurationValue;
   deeperEstimate?: { cached: boolean; costCents: number };
-  onAdd: (draft: ResearchAddDraft) => void;
-  onDeeper: () => void;
+  onAdd?: (draft: ResearchAddDraft) => void;
+  onDeeper?: () => void;
   onRemoveSaved?: (draft: ResearchSaveDraft) => void;
   onSave?: (draft: ResearchSaveDraft) => void;
   metricsAvailable?: boolean;
-  projectId: string;
-  requestedLimit: 100 | 300 | 500;
-  result: KeywordResearchSuccess;
+  projectId?: string;
+  readOnly?: boolean;
+  requestedLimit: number;
+  result: Pick<KeywordResearchSuccess, "cached" | "fetchedAt" | "rows" | "sources"> &
+    Partial<Pick<KeywordResearchSuccess, "connections">>;
   seed: string;
+  storedFreshness?: StoredResultFreshness;
   trackingMarketCount?: number;
 };
-
 const sourceLabels: Record<KeywordResearchSource, string> = {
   idea: "ideas",
   related: "related",
@@ -47,19 +50,16 @@ const sourceLabels: Record<KeywordResearchSource, string> = {
 };
 const RESEARCH_SCOPE_UNAVAILABLE_TOOLTIP =
   "No search volume or difficulty data for this country and language. Rank tracking is unaffected.";
-
 function joinLabels(labels: string[]) {
   if (labels.length <= 1) return labels[0] ?? "";
   return `${labels.slice(0, -1).join(", ")} and ${labels.at(-1)}`;
 }
-
 function isInfoSkip(source: KeywordResearchSourceDiagnostic) {
   return (
     source.status === "skipped" &&
     (source.reason === "cost_limit" || source.reason === "result_limit")
   );
 }
-
 function skipNote(input: {
   okLabels: string[];
   reason: "cost_limit" | "result_limit";
@@ -79,13 +79,11 @@ function skipNote(input: {
       : `${single ? "was" : "were"} skipped to stay within the cost cap`;
   return `${origin} - ${subject} ${outcome}, so ${single ? "it was" : "they were"} not charged.`;
 }
-
 function warningLabel(source: KeywordResearchSourceDiagnostic) {
   const reason = (source.reason ?? "provider_error").replaceAll("_", " ");
   const verb = source.status === "failed" ? "failed" : "was skipped";
   return `The ${sourceLabels[source.source]} source ${verb} (${reason}) - results may be incomplete.`;
 }
-
 function DiagnosticsBanner({
   children,
   onDismiss,
@@ -132,9 +130,11 @@ export function ResearchResults({
   onSave,
   metricsAvailable = true,
   projectId,
+  readOnly = false,
   requestedLimit,
   result,
   seed,
+  storedFreshness,
   trackingMarketCount = 1,
 }: Readonly<ResearchResultsProps>) {
   const [activeKeyword, setActiveKeyword] = useState<string | null>(null);
@@ -149,7 +149,9 @@ export function ResearchResults({
   const rows = useMemo(() => applyResearchFilters(grouped, filters), [filters, grouped]);
   const active = grouped.find((row) => row.keyword === activeKeyword) ?? null;
   const infoSkips = result.sources.filter(isInfoSkip);
-  const warnings = result.sources.filter((source) => source.status !== "ok" && !isInfoSkip(source));
+  const warnings = result.sources.filter(
+    (source) => source.status !== "ok" && (readOnly || !isInfoSkip(source)),
+  );
   const okLabels = result.sources
     .filter((source) => source.status === "ok" && source.returned > 0)
     .map((source) => sourceLabels[source.source]);
@@ -179,18 +181,25 @@ export function ResearchResults({
   }, [grouped]);
   const nextLimit = requestedLimit === 100 ? 300 : 500;
   const deeper =
-    result.rows.length === requestedLimit && requestedLimit < 500
+    !readOnly && result.rows.length === requestedLimit && requestedLimit < 500
       ? {
           cached: deeperEstimate?.cached ?? false,
-          costCents: deeperResearchCostCents(result, nextLimit, deeperEstimate),
+          costCents: deeperResearchCostCents(
+            { connections: result.connections ?? [], sources: result.sources },
+            nextLimit,
+            deeperEstimate,
+          ),
           nextLimit,
         }
       : null;
-  const saveDraft = (saveRows: GroupedResearchRow[]): ResearchSaveDraft => ({
-    location: defaultTracking.location.canonicalKey,
-    rows: saveRows,
-    sourceSeed: seed,
-  });
+  const saveDraft = (saveRows: GroupedResearchRow[]): ResearchSaveDraft | null =>
+    defaultTracking
+      ? {
+          location: defaultTracking.location.canonicalKey,
+          rows: saveRows,
+          sourceSeed: seed,
+        }
+      : null;
 
   return (
     <section className="grid gap-3">
@@ -201,7 +210,7 @@ export function ResearchResults({
           ))}
         </DiagnosticsBanner>
       ) : null}
-      {skipNotes.length > 0 && !isDismissed("note") ? (
+      {!readOnly && skipNotes.length > 0 && !isDismissed("note") ? (
         <DiagnosticsBanner onDismiss={() => dismiss("note")} tone="note">
           {skipNotes.map((note) => (
             <span key={note}>{note}</span>
@@ -219,18 +228,37 @@ export function ResearchResults({
           filterCount={activeResearchFilterCount(filters)}
           metricsAvailable={metricsAvailable}
           onActiveChange={(row) => setActiveKeyword(row.keyword)}
-          onAddSelected={() => onAdd({ ...defaultTracking, keywords: selectedKeywords })}
+          onAddSelected={
+            !readOnly && defaultTracking && onAdd
+              ? () => onAdd({ ...defaultTracking, keywords: selectedKeywords })
+              : undefined
+          }
           onDeeper={onDeeper}
           onOpenFilters={() => setFiltersOpen(true)}
-          onSaveSelected={(saveRows) => onSave?.(saveDraft(saveRows))}
-          onSelectionChange={setSelectedKeywords}
-          onToggleSave={(row) =>
-            row.alreadySaved ? onRemoveSaved?.(saveDraft([row])) : onSave?.(saveDraft([row]))
+          onSaveSelected={
+            readOnly
+              ? undefined
+              : (saveRows) => {
+                  const draft = saveDraft(saveRows);
+                  if (draft) onSave?.(draft);
+                }
           }
+          onSelectionChange={readOnly ? undefined : setSelectedKeywords}
+          onToggleSave={
+            readOnly
+              ? undefined
+              : (row) => {
+                  const draft = saveDraft([row]);
+                  if (!draft) return;
+                  row.alreadySaved ? onRemoveSaved?.(draft) : onSave?.(draft);
+                }
+          }
+          readOnly={readOnly}
           rows={rows}
           seed={seed}
           selectedKeywords={selectedKeywords}
           totalCount={result.rows.length}
+          storedFreshness={storedFreshness}
           trackingMarketCount={trackingMarketCount}
         />
         <ResearchDetailPanel
@@ -239,8 +267,16 @@ export function ResearchResults({
           defaultTracking={defaultTracking}
           metricsAvailable={metricsAvailable}
           onAdd={onAdd}
-          onSave={onSave ? (row) => onSave(saveDraft([row])) : undefined}
+          onSave={
+            readOnly || !onSave
+              ? undefined
+              : (row) => {
+                  const draft = saveDraft([row]);
+                  if (draft) onSave(draft);
+                }
+          }
           projectId={projectId}
+          readOnly={readOnly}
           seed={seed}
           trackingMarketCount={trackingMarketCount}
         />

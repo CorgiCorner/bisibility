@@ -135,9 +135,15 @@ export function MenuSearchField({
   value,
 }: Readonly<MenuSearchFieldProps>) {
   const hintId = useId();
-  const focusInput = useCallback((input: HTMLInputElement | null) => input?.focus(), []);
+  // preventScroll: focusing the field must not move the page behind the open menu.
+  const focusInput = useCallback(
+    (input: HTMLInputElement | null) => input?.focus({ preventScroll: true }),
+    [],
+  );
   return (
-    <div className="px-1 pb-1">
+    // Pinned to the menu's top edge: a long catalog scrolls under the field instead of taking it
+    // out of reach. The negative offset cancels the menu's own padding so nothing shows above it.
+    <div className="sticky -top-1.5 z-20 -mx-1.5 -mt-1.5 bg-bg-elev px-2.5 pb-1 pt-1.5">
       <div className="relative">
         <MagnifyingGlass
           weight="regular"

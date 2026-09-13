@@ -71,7 +71,7 @@ To compare the demo against hosted and production deployments, see
 - Competitor benchmarking with Share of Voice
 - Domain overview: estimated organic visibility, ranked keywords, and top pages
   for any domain (requires a bring-your-own DataForSEO connection; metered). The
-  app and REST API are available; SDK, CLI, and MCP parity is still in progress.
+  app and REST API are available. See [released client support](https://bisibility.com/docs/compatibility).
 - Manual, daily, weekly, monthly, and custom cron schedules
 - Rank alerts in-app and by email, plus weekly email digests
 - Keyword tags and saved views
@@ -164,11 +164,13 @@ Self-hosting remains available without an application subscription.
 
 ## Documentation
 
+- [Hosted quickstart](https://bisibility.com/docs/hosted-quickstart)
 - [Local demo quickstart](https://bisibility.com/docs/quickstart)
 - [Self-hosting guide](https://bisibility.com/docs/self-hosting)
 - [Deployment options](https://bisibility.com/docs/deployment-options)
 - [API quickstart](https://bisibility.com/docs/api/quickstart)
 - [API reference][api-ref]
+- [Versioning and support](https://bisibility.com/docs/versioning)
 - [Agent documentation](https://bisibility.com/docs/agents)
 - [FAQ](https://bisibility.com/faq)
 

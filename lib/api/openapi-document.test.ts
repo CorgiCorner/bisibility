@@ -144,4 +144,28 @@ describe("OpenAPI document", () => {
       required: ["apiVersions", "data", "rank_check_scheduler_mode", "scheduler_driver"],
     });
   });
+
+  it("does not publish bare object schemas on public operations", () => {
+    const found: string[] = [];
+    const visit = (value: unknown, path: string) => {
+      if (!value || typeof value !== "object") return;
+      const record = value as Record<string, unknown>;
+      const isBareObject =
+        record.type === "object" &&
+        record.properties === undefined &&
+        record.additionalProperties === undefined &&
+        record.$ref === undefined &&
+        record.allOf === undefined &&
+        record.oneOf === undefined &&
+        record.anyOf === undefined;
+      if (isBareObject) found.push(path);
+      for (const [key, child] of Object.entries(record)) {
+        if (key === "example") continue;
+        visit(child, `${path}.${key}`);
+      }
+    };
+
+    visit(getOpenApiDocument().paths, "paths");
+    expect(found).toEqual([]);
+  });
 });

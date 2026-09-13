@@ -77,6 +77,39 @@ describe("DomainOverviewResults", () => {
     expect(screen.queryByText("Top organic keywords")).not.toBeInTheDocument();
   });
 
+  it("keeps stored modules readable without provider loading or mutation controls", () => {
+    const keywords = domainOverviewReportFixture.keywords;
+    const pages = domainOverviewReportFixture.pages;
+    if (!keywords.ok || !pages.ok) throw new Error("Fixture modules must be available");
+    render(
+      <DomainOverviewResults
+        history={null}
+        historyError={false}
+        historyLoading={false}
+        projectRef="prj_1"
+        readOnly
+        report={domainOverviewReportFixture}
+        storedFreshness={{
+          fetchedAt: "2026-08-01T10:00:00.000Z",
+          freshUntil: "2026-08-31T10:00:00.000Z",
+          stale: true,
+        }}
+        storedModules={{ keywords: keywords.data, pages: pages.data }}
+        tableError={null}
+        tableFetchedCount={{ keywords: 100, pages: 100 }}
+        tableHasMore={{ keywords: false, pages: false }}
+        tableLoading={null}
+      />,
+    );
+
+    expect(screen.getByTestId("stored-result-freshness")).toHaveTextContent("Past refresh window");
+    expect(screen.getByRole("button", { name: "Export fetched keywords as CSV" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: /add .*saved keywords/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /load history/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /load next/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /analyze backlinks/i })).not.toBeInTheDocument();
+  });
+
   it("renders and sorts every fetched keyword row before offering the next paid page", () => {
     const onLoadMore = vi.fn();
     const base = domainOverviewReportFixture.keywords;

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ResearchSearchCard } from "./ResearchSearchCard";
 
@@ -30,7 +31,8 @@ const baseProps = {
 };
 
 describe("ResearchSearchCard", () => {
-  it("allows country selection when lookup is blocked but locks it during research", () => {
+  it("allows country selection when lookup is blocked but locks it during research", async () => {
+    const user = userEvent.setup();
     const onScopeChange = vi.fn();
     const { rerender } = render(
       <ResearchSearchCard
@@ -41,14 +43,15 @@ describe("ResearchSearchCard", () => {
         seeds={["seo"]}
       />,
     );
-    const country = screen.getByRole("combobox", { name: "Country and language" });
+    const country = screen.getByRole("button", { name: "Country" });
     expect(country).toBeEnabled();
-    fireEvent.change(country, { target: { value: "ger" } });
-    fireEvent.click(screen.getByRole("option", { name: "Germany / German" }));
+    await user.click(country);
+    await user.type(screen.getByRole("textbox", { name: "Search countries" }), "germany");
+    await user.click(screen.getByRole("menuitem", { name: "Germany" }));
     expect(onScopeChange).toHaveBeenCalledWith(expect.objectContaining({ countryCode: "DE" }));
     expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
     rerender(<ResearchSearchCard {...baseProps} researching />);
-    expect(screen.getByRole("combobox", { name: "Country and language" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Country" })).toBeDisabled();
   });
 
   it("fills the full-width tooltip wrapper", () => {
@@ -57,18 +60,17 @@ describe("ResearchSearchCard", () => {
     expect(container.querySelector("[data-slot='card']")).toHaveClass("w-full");
   });
 
-  it("portals the country and language listbox outside the card and keeps options selectable", async () => {
+  it("portals the country menu outside the card and keeps options selectable", async () => {
+    const user = userEvent.setup();
     const onScopeChange = vi.fn();
     render(<ResearchSearchCard {...baseProps} onScopeChange={onScopeChange} />);
 
-    const scopeInput = screen.getByRole("combobox", { name: "Country and language" });
-    fireEvent.change(scopeInput, { target: { value: "ger" } });
+    await user.click(screen.getByRole("button", { name: "Country" }));
+    const menu = await screen.findByRole("menu", { name: "Country" });
+    expect(menu.closest("[data-slot='card']")).toBeNull();
 
-    const listbox = await screen.findByRole("listbox");
-    expect(listbox.closest("[data-slot='card']")).toBeNull();
-
-    const germanyOption = await screen.findByText("Germany / German");
-    fireEvent.click(germanyOption);
+    await user.type(screen.getByRole("textbox", { name: "Search countries" }), "germany");
+    await user.click(screen.getByRole("menuitem", { name: "Germany" }));
     expect(onScopeChange).toHaveBeenCalledWith(expect.objectContaining({ countryCode: "DE" }));
   });
 
@@ -85,27 +87,22 @@ describe("ResearchSearchCard", () => {
     expect(screen.getByRole("button", { name: "Research free, cached" })).toBeInTheDocument();
   });
 
-  it("keeps the country and language label visible in the compact research control", () => {
+  it("names the country without its language in the compact research control", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
-    const scope = screen.getByRole("combobox", { name: "Country and language" });
-    expect(scope).toHaveValue("United States / English");
-    expect(scope).toHaveClass(
-      "min-h-[34px]",
-      "py-1",
-      "compact-text-13",
-      "text-[13px]",
-      "font-normal",
-      "bg-bg-elev",
-    );
-    expect(scope).not.toHaveClass("h-10", "min-h-10", "text-[12px]", "font-medium");
+    const scope = screen.getByRole("button", { name: "Country" });
+    expect(scope).toHaveTextContent("United States");
+    expect(scope).not.toHaveTextContent("English");
+    expect(scope.querySelector("[data-country-flag='US']")).toBeInTheDocument();
+    expect(scope).toHaveClass("min-h-[34px]", "text-[13px]", "bg-bg-elev");
+    expect(scope).not.toHaveClass("h-10", "min-h-10", "text-[12px]");
   });
 
   it("disables provider work for an unsupported pair but keeps the scope editable", () => {
     render(<ResearchSearchCard {...baseProps} lookupDisabled />);
 
     expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
-    expect(screen.getByRole("combobox", { name: "Country and language" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Country" })).toBeEnabled();
   });
 
   it("hides the provider control while only one provider supports research", () => {

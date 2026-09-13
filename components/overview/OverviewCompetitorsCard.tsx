@@ -21,7 +21,7 @@ const columns: readonly DataTableColumn<OverviewCompetitorRow>[] = [
     minSize: 180,
     meta: { flex: 1.5, sortable: false },
     cell: ({ row: { original: row } }) => (
-      <CompetitorDomainLink domain={row.domain} label={row.label} />
+      <CompetitorDomainLink domain={row.domain} label={row.label} variant="rank-tracker" />
     ),
   },
   {
@@ -72,7 +72,7 @@ export function OverviewCompetitorsCard({
       aria-label="Competitor summary"
       className="min-w-0 overflow-hidden p-0"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <SectionTitle>Competitors in your results</SectionTitle>
           <p className="m-0 mt-1 text-[12px] text-fg-muted">

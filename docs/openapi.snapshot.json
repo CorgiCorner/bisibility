@@ -21,6 +21,115 @@
       }
     },
     "schemas": {
+      "AlertRule": {
+        "properties": {
+          "change_pct": {
+            "maximum": 1000,
+            "minimum": 0.1,
+            "type": ["number", "null"]
+          },
+          "channels": {
+            "description": "Delivery channels for alert notifications. Slack tenant delivery is available as an API-only preview. Workspace installation and channel management are not yet exposed in the dashboard.",
+            "items": {
+              "enum": ["email", "slack", "webhook"],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "competitor_domain": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": ["string", "null"]
+          },
+          "condition_type": {
+            "enum": [
+              "threshold",
+              "change_pct",
+              "ctr_drop",
+              "position_drop",
+              "downtrend",
+              "enters_top_n",
+              "exits_top_n",
+              "competitor_overtake",
+              "serp_feature",
+              "url_mismatch"
+            ],
+            "type": "string"
+          },
+          "drop_positions": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": ["integer", "null"]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "example": "alr_a00000000000000000000000",
+            "pattern": "^alr_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "market_ids": {
+            "items": {
+              "pattern": "^pmkt_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 2,
+            "type": "string"
+          },
+          "recipient_ids": {
+            "items": {
+              "pattern": "^usr_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "serp_feature": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": ["string", "null"]
+          },
+          "severity": {
+            "enum": ["info", "warning", "urgent"],
+            "type": "string"
+          },
+          "target_ids": {
+            "items": {
+              "oneOf": [
+                {
+                  "pattern": "^kw_[a-z][a-z0-9]{23}$",
+                  "type": "string"
+                },
+                {
+                  "pattern": "^tag_[a-z][a-z0-9]{23}$",
+                  "type": "string"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "target_type": {
+            "enum": ["all", "keyword", "tag"],
+            "type": "string"
+          },
+          "threshold_position": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": ["integer", "null"]
+          },
+          "top_n": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": ["integer", "null"]
+          }
+        },
+        "required": ["id", "name", "condition_type"],
+        "type": "object"
+      },
       "AlertRuleInput": {
         "properties": {
           "change_pct": {
@@ -488,6 +597,19 @@
           "fetched_row_count",
           "total_rows_available"
         ],
+        "type": "object"
+      },
+      "Capability": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["id"],
         "type": "object"
       },
       "CloudImportAlertRule": {
@@ -1102,6 +1224,48 @@
             "type": "object"
           }
         ]
+      },
+      "Competitor": {
+        "properties": {
+          "domain": {
+            "type": "string"
+          },
+          "id": {
+            "example": "cmp_a00000000000000000000000",
+            "pattern": "^cmp_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "label": {
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["id", "domain"],
+        "type": "object"
+      },
+      "CompetitorCreate": {
+        "properties": {
+          "domain": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": ["domain"],
+        "type": "object"
+      },
+      "CostEstimate": {
+        "additionalProperties": true,
+        "description": "Estimated rank-check volume and provider spend for a keyword portfolio.",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "monthly_cost": {
+            "type": ["number", "null"]
+          }
+        },
+        "type": "object"
       },
       "DomainOverviewAnalyzeRequest": {
         "additionalProperties": false,
@@ -2961,6 +3125,81 @@
         "required": ["name"],
         "type": "object"
       },
+      "MigrationToken": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "example": "mig_a00000000000000000000000",
+            "pattern": "^mig_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "token": {
+            "description": "Returned only when the token is minted.",
+            "type": "string"
+          }
+        },
+        "required": ["id", "expires_at"],
+        "type": "object"
+      },
+      "NotificationPreferences": {
+        "properties": {
+          "alert_email": {
+            "type": "boolean"
+          },
+          "alert_in_app": {
+            "type": "boolean"
+          },
+          "alert_slack": {
+            "type": "boolean"
+          },
+          "alert_webhook": {
+            "type": "boolean"
+          },
+          "check_email": {
+            "type": "boolean"
+          },
+          "check_in_app": {
+            "type": "boolean"
+          },
+          "import_email": {
+            "type": "boolean"
+          },
+          "import_in_app": {
+            "type": "boolean"
+          },
+          "invite_email": {
+            "type": "boolean"
+          },
+          "invite_in_app": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "alert_email",
+          "alert_in_app",
+          "alert_slack",
+          "alert_webhook",
+          "check_email",
+          "check_in_app",
+          "import_email",
+          "import_in_app",
+          "invite_email",
+          "invite_in_app"
+        ],
+        "type": "object"
+      },
+      "OpenApiDocument": {
+        "additionalProperties": true,
+        "description": "OpenAPI 3 document for REST API v1.",
+        "type": "object"
+      },
       "PageTrafficSnapshot": {
         "properties": {
           "bounce_rate": {
@@ -3527,6 +3766,46 @@
         "required": ["category_id", "category_title", "id", "kind", "name", "status"],
         "type": "object"
       },
+      "ProviderConnect": {
+        "additionalProperties": true,
+        "properties": {
+          "credentials": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "primary": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderRateCard": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["id"],
+        "type": "object"
+      },
+      "ProviderTestResult": {
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": ["ok"],
+        "type": "object"
+      },
       "PublicIdV3": {
         "description": "Opaque v3 public resource ID. Internal database IDs are never accepted or returned.",
         "pattern": "^[a-z]+_[a-z][a-z0-9]{23}$",
@@ -3777,6 +4056,47 @@
         ],
         "type": "object"
       },
+      "SavedView": {
+        "properties": {
+          "config": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "id": {
+            "example": "viw_a00000000000000000000000",
+            "pattern": "^viw_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "surface": {
+            "enum": ["keywords", "competitors"],
+            "type": "string"
+          }
+        },
+        "required": ["config", "id", "name", "surface"],
+        "type": "object"
+      },
+      "SavedViewInput": {
+        "properties": {
+          "config": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "name": {
+            "maxLength": 48,
+            "minLength": 1,
+            "type": "string"
+          },
+          "surface": {
+            "enum": ["keywords", "competitors"],
+            "type": "string"
+          }
+        },
+        "required": ["config", "name"],
+        "type": "object"
+      },
       "SearchPerformanceQueryStat": {
         "properties": {
           "clicks": {
@@ -4012,6 +4332,43 @@
         "required": ["enabled"],
         "type": "object"
       },
+      "TeamInvite": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "example": "inv_a00000000000000000000000",
+            "pattern": "^inv_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "role": {
+            "enum": ["admin", "member", "viewer"],
+            "type": "string"
+          }
+        },
+        "required": ["id", "email", "role"],
+        "type": "object"
+      },
+      "TeamInviteCreate": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "role": {
+            "enum": ["admin", "member", "viewer"],
+            "type": "string"
+          }
+        },
+        "required": ["email", "role"],
+        "type": "object"
+      },
       "TeamInviteResendResult": {
         "properties": {
           "expires_at": {
@@ -4029,6 +4386,25 @@
           }
         },
         "required": ["id", "expires_at", "invite_link"],
+        "type": "object"
+      },
+      "TeamMember": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "id": {
+            "example": "mbr_a00000000000000000000000",
+            "pattern": "^mbr_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "role": {
+            "enum": ["admin", "member", "owner", "viewer"],
+            "type": "string"
+          }
+        },
+        "required": ["id", "email", "role"],
         "type": "object"
       },
       "TeamMemberMutationResult": {
@@ -4168,6 +4544,27 @@
           "runs",
           "skipped"
         ],
+        "type": "object"
+      },
+      "TriggeredAlert": {
+        "additionalProperties": true,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "example": "tal_a00000000000000000000000",
+            "pattern": "^tal_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "rule_id": {
+            "example": "alr_a00000000000000000000000",
+            "pattern": "^alr_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          }
+        },
+        "required": ["id"],
         "type": "object"
       },
       "TriggeredAlertMuteResult": {
@@ -4332,7 +4729,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/AlertRule"
                 }
               }
             },
@@ -4445,7 +4842,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/AlertRule"
                 }
               }
             },
@@ -4897,7 +5294,7 @@
                     },
                     "data": {
                       "items": {
-                        "type": "object"
+                        "$ref": "#/components/schemas/Capability"
                       },
                       "type": "array"
                     },
@@ -5598,7 +5995,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Competitor"
                 }
               }
             },
@@ -5788,7 +6185,7 @@
                 "schema": {
                   "properties": {
                     "data": {
-                      "type": "object"
+                      "$ref": "#/components/schemas/CostEstimate"
                     }
                   },
                   "required": ["data"],
@@ -6531,6 +6928,16 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
+                  "description": "Created, skipped, and updated keyword rows for a write.",
+                  "properties": {
+                    "created": {
+                      "items": {
+                        "$ref": "#/components/schemas/Keyword"
+                      },
+                      "type": "array"
+                    }
+                  },
                   "type": "object"
                 }
               }
@@ -7367,7 +7774,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/MigrationToken"
                 }
               }
             },
@@ -7466,7 +7873,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/OpenApiDocument"
                 }
               }
             },
@@ -8025,7 +8432,7 @@
                   "properties": {
                     "data": {
                       "items": {
-                        "type": "object"
+                        "$ref": "#/components/schemas/AlertRule"
                       },
                       "type": "array"
                     },
@@ -8147,7 +8554,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/AlertRule"
                 }
               }
             },
@@ -8875,7 +9282,7 @@
                   "properties": {
                     "data": {
                       "items": {
-                        "type": "object"
+                        "$ref": "#/components/schemas/Competitor"
                       },
                       "type": "array"
                     },
@@ -8982,12 +9389,22 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompetitorCreate"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Competitor"
                 }
               }
             },
@@ -9086,7 +9503,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Competitor"
                 }
               }
             },
@@ -10193,6 +10610,16 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
+                  "description": "Created, skipped, and updated keyword rows for a write.",
+                  "properties": {
+                    "created": {
+                      "items": {
+                        "$ref": "#/components/schemas/Keyword"
+                      },
+                      "type": "array"
+                    }
+                  },
                   "type": "object"
                 }
               }
@@ -10294,7 +10721,9 @@
                 "schema": {
                   "properties": {
                     "data": {
-                      "items": {},
+                      "items": {
+                        "$ref": "#/components/schemas/MigrationToken"
+                      },
                       "type": "array"
                     },
                     "meta": {
@@ -10405,7 +10834,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/MigrationToken"
                 }
               }
             },
@@ -10504,7 +10933,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/MigrationToken"
                 }
               }
             },
@@ -10603,7 +11032,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/NotificationPreferences"
                 }
               }
             },
@@ -10695,12 +11124,22 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationPreferences"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/NotificationPreferences"
                 }
               }
             },
@@ -11044,7 +11483,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Provider"
                 }
               }
             },
@@ -11136,12 +11575,22 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderConnect"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Provider"
                 }
               }
             },
@@ -11235,12 +11684,22 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderConnect"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Provider"
                 }
               }
             },
@@ -11334,12 +11793,22 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderConnect"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProviderTestResult"
                 }
               }
             },
@@ -11959,6 +12428,68 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "properties": {
+                    "cpc": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "difficulty": {
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "example": "svkw_a00000000000000000000000",
+                      "pattern": "^svkw_[a-z][a-z0-9]{23}$",
+                      "type": "string"
+                    },
+                    "intent": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "saved_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "source_seed": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "trend": {
+                      "items": {
+                        "properties": {
+                          "month": {
+                            "maximum": 12,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "search_volume": {
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "year": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": ["month", "search_volume", "year"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "variant_count": {
+                      "type": "integer"
+                    },
+                    "volume": {
+                      "nullable": true,
+                      "type": "integer"
+                    }
+                  },
+                  "required": ["id", "location", "saved_at", "text", "trend", "variant_count"],
                   "type": "object"
                 }
               }
@@ -12072,6 +12603,7 @@
                       "items": {
                         "properties": {
                           "config": {
+                            "additionalProperties": true,
                             "type": "object"
                           },
                           "id": {
@@ -12201,6 +12733,7 @@
               "schema": {
                 "properties": {
                   "config": {
+                    "additionalProperties": true,
                     "type": "object"
                   },
                   "name": {
@@ -12227,6 +12760,7 @@
                 "schema": {
                   "properties": {
                     "config": {
+                      "additionalProperties": true,
                       "type": "object"
                     },
                     "id": {
@@ -12342,7 +12876,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/SavedView"
                 }
               }
             },
@@ -12834,7 +13368,7 @@
                   "properties": {
                     "data": {
                       "items": {
-                        "type": "object"
+                        "$ref": "#/components/schemas/TeamInvite"
                       },
                       "type": "array"
                     },
@@ -12941,12 +13475,22 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamInviteCreate"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TeamInvite"
                 }
               }
             },
@@ -13045,7 +13589,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TeamInvite"
                 }
               }
             },
@@ -13246,7 +13790,7 @@
                   "properties": {
                     "data": {
                       "items": {
-                        "type": "object"
+                        "$ref": "#/components/schemas/TeamMember"
                       },
                       "type": "array"
                     },
@@ -13570,7 +14114,9 @@
                 "schema": {
                   "properties": {
                     "data": {
-                      "items": {},
+                      "items": {
+                        "$ref": "#/components/schemas/TriggeredAlert"
+                      },
                       "type": "array"
                     },
                     "meta": {
@@ -15116,7 +15662,7 @@
                   "properties": {
                     "data": {
                       "items": {
-                        "type": "object"
+                        "$ref": "#/components/schemas/ProviderRateCard"
                       },
                       "type": "array"
                     }
@@ -15349,7 +15895,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/SavedView"
                 }
               }
             },
@@ -15579,7 +16125,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TeamInvite"
                 }
               }
             },

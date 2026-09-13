@@ -44,7 +44,9 @@ export function TrackingSettingsContent({
         className={trackingCardGeometryClassNames.matchScope}
         data-tracking-settled-frame="matchScope"
       >
-        <MatchScopeCard domain={domain} />
+        <div className="scroll-mt-6" id="match-scope" tabIndex={-1}>
+          <MatchScopeCard domain={domain} />
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,12 @@ const mocks = vi.hoisted(() => ({
   budgetSummary: vi.fn(),
   cookies: vi.fn(),
   deployment: { isCloud: false },
+  demo: {
+    actor: vi.fn(),
+    banner: vi.fn(),
+    capturedAt: vi.fn(),
+    config: { kind: "disabled" } as { kind: "disabled" | "editable" | "legacy-read-only" },
+  },
   experimentalModules: vi.fn(),
   lastExport: vi.fn(),
   listWorkspaces: vi.fn(),
@@ -16,7 +22,6 @@ const mocks = vi.hoisted(() => ({
   projectMarkets: vi.fn(),
   querySession: vi.fn(),
   sidebarProps: vi.fn(),
-  supportWidget: vi.fn(() => <aside data-testid="support-extension" />),
   workerLiveness: vi.fn(),
 }));
 
@@ -70,6 +75,12 @@ vi.mock("@/components/shell/CloudBetaBanner", () => ({
       </aside>
     ) : null,
 }));
+vi.mock("@/components/shell/DemoBanner", () => ({
+  DemoBanner: (props: { actor: string; capturedAt: string | null; mode: string }) => {
+    mocks.demo.banner(props);
+    return <aside data-testid="demo-banner">{props.mode}</aside>;
+  },
+}));
 vi.mock("@/components/shell/CommandPalette", () => ({
   CommandPaletteProvider: (props: {
     children: ReactNode;
@@ -114,9 +125,9 @@ vi.mock("@/lib/deployment/deployment", () => ({
     return mocks.deployment.isCloud;
   },
 }));
-vi.mock("@/lib/app-extensions", () => ({
-  appExtensions: { renderSupportWidget: mocks.supportWidget },
-}));
+vi.mock("@/lib/demo/config", () => ({ readDemoConfig: () => mocks.demo.config }));
+vi.mock("@/lib/demo/identity", () => ({ loadConfiguredDemoActor: mocks.demo.actor }));
+vi.mock("@/lib/demo/snapshot", () => ({ demoSnapshotCapturedAt: mocks.demo.capturedAt }));
 vi.mock("@/lib/auth/instance-admin", () => ({
   getInstanceAdminSession: mocks.adminSession,
 }));
@@ -152,6 +163,9 @@ describe("workspace layout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.deployment.isCloud = false;
+    mocks.demo.config = { kind: "disabled" };
+    mocks.demo.actor.mockResolvedValue({ kind: "viewer" });
+    mocks.demo.capturedAt.mockResolvedValue(null);
     mocks.querySession.mockResolvedValue({
       user: { email: "admin@example.com", id: "user-1", name: "Admin" },
     });
@@ -269,32 +283,15 @@ describe("workspace layout", () => {
     expect(renderToStaticMarkup(result)).toContain('data-getting-started="false"');
   });
 
-  it("does not load support in a self-hosted workspace", async () => {
-    const result = await WorkspaceShell({
-      activeProjectId: "project_1",
-      children: <div>Workspace content</div>,
-      projectRef: "prj_f00000000000000000000000",
-    });
-
-    expect(renderToStaticMarkup(result)).not.toContain('data-testid="support-extension"');
-    expect(mocks.supportWidget).not.toHaveBeenCalled();
-  });
-
-  it("renders support for an authenticated Cloud workspace", async () => {
+  it("does not own a second support widget after support moved to the authenticated layout", async () => {
     mocks.deployment.isCloud = true;
-
     const result = await WorkspaceShell({
       activeProjectId: "project_1",
       children: <div>Workspace content</div>,
       projectRef: "prj_f00000000000000000000000",
     });
 
-    expect(renderToStaticMarkup(result)).toContain('data-testid="support-extension"');
-    expect(mocks.supportWidget).toHaveBeenCalledWith({
-      email: "admin@example.com",
-      id: "user-1",
-      name: "Admin",
-    });
+    expect(renderToStaticMarkup(result)).not.toContain("hosted-support-widget");
   });
 
   it.each([
@@ -400,6 +397,39 @@ describe("workspace layout", () => {
       markup.indexOf("<header"),
     );
   });
+
+  it.each([
+    ["legacy Viewer", { kind: "legacy-read-only" }, { kind: "viewer" }, "2026-09-06T12:00:00.000Z"],
+    ["editable Viewer", { kind: "editable" }, { kind: "viewer" }, null],
+    ["editable Owner", { kind: "editable" }, { kind: "owner" }, null],
+  ])(
+    "replaces the beta banner and disables workspace creation for %s",
+    async (_name, config, actor, capturedAt) => {
+      mocks.deployment.isCloud = true;
+      mocks.demo.config = config as typeof mocks.demo.config;
+      mocks.demo.actor.mockResolvedValue(actor);
+      mocks.demo.capturedAt.mockResolvedValue(capturedAt);
+
+      const result = await WorkspaceShell({
+        activeProjectId: "project_1",
+        children: <div>Demo workspace</div>,
+        projectRef: "prj_f00000000000000000000000",
+      });
+      const markup = renderToStaticMarkup(result);
+
+      expect(markup).toContain('data-testid="demo-banner"');
+      expect(markup).not.toContain('data-testid="cloud-beta-banner"');
+      expect(mocks.lastExport).not.toHaveBeenCalled();
+      expect(mocks.demo.banner).toHaveBeenCalledWith({
+        actor: actor.kind,
+        capturedAt,
+        mode: config.kind,
+      });
+      expect(mocks.sidebarProps).toHaveBeenCalledWith(
+        expect.objectContaining({ canCreateWorkspace: false, showGettingStarted: false }),
+      );
+    },
+  );
 
   it("loads and threads the latest package export only on Cloud", async () => {
     mocks.deployment.isCloud = true;

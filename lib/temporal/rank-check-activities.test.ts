@@ -903,6 +903,29 @@ describe("rank-check activities", () => {
     });
   });
 
+  it("makes restricted provider accounts non-retryable", async () => {
+    const chainError = new ProviderChainError([
+      {
+        provider: "primary",
+        message: "Account access paused",
+        code: "provider_account_restricted",
+      },
+    ]);
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chainError);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+
+    const promise = runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      source: "manual",
+    });
+
+    await expect(promise).rejects.toMatchObject({
+      nonRetryable: true,
+      type: "provider_account_restricted",
+    });
+  });
+
   it("makes all exhausted connection allocations non-retryable", async () => {
     const chainError = new ProviderChainError([
       {

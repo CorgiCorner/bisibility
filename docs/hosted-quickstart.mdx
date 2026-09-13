@@ -1,0 +1,87 @@
+---
+title: "Hosted quickstart"
+description: "Sign in to the hosted beta, create a project, and optionally verify live ranking data."
+---
+
+Use the hosted beta when you want bisibility to operate the runtime for you.
+A hosted workspace and project do not require a SERP provider. A live rank
+check does, and you pay that provider directly.
+
+This path is not a production uptime or restore guarantee. See
+[Deployment options](/deployment-options) for current hosted limits, who runs
+what, and how this compares to the local demo and production self-hosting.
+
+## Before you begin
+
+- A browser and an email address for the hosted beta.
+
+## 1. Sign in
+
+Open [bisibility.com](https://bisibility.com) and create an account or sign in.
+The hosted beta does not require a payment method.
+
+## 2. Create the project
+
+The hosted onboarding starts at **Website**. Enter the site name and domain you
+want to track, then continue.
+
+## Your hosted project is ready
+
+At this point you have a working hosted workspace and project. You can
+continue exploring project settings without connecting a provider.
+
+## Optional next milestone: verify live ranking data
+
+A live rank check requires your own supported SERP provider account.
+Provider usage is billed directly by that provider.
+
+### Connect a provider
+
+On **Provider**, connect a SERP provider and complete **Test connection**
+before saving. Credential-based, non-OAuth providers must pass the test.
+Provider billing stays between you and the provider. See
+[Integrations](/integrations) for supported providers and the budget cap.
+
+Optional Search Console or Google Analytics 4 connections can wait until after
+the first check.
+
+### Add keywords
+
+On **Keywords**, add the first search terms and tracking defaults. Start with a
+small set so the first check is cheap and easy to verify. See
+[Choose first keywords](/guides/choose-first-keywords) if you need a starting
+list.
+
+### Run the first check
+
+On **First check**, start the check and wait for it to complete. Open the
+dashboard when it finishes.
+
+## Success
+
+Your hosted project is ready when:
+
+1. Sign-in succeeds on the hosted app.
+2. The project shows the website you entered.
+
+Live ranking data is a second milestone. It is complete when:
+
+1. A SERP provider is connected.
+2. The first check returns ranking data for the keywords you added.
+
+## Troubleshoot
+
+- If the first check cannot start, confirm the provider connection passed
+  **Test connection** and that the project still has budget remaining. See
+  [Integrations](/integrations#budget-cap).
+- If you need a throwaway evaluation without a provider account, use the
+  [local demo quickstart](/quickstart) instead.
+
+## Next step
+
+- [Deployment options](/deployment-options) to compare hosting paths and read
+  current hosted limits.
+- [API quickstart](/api/quickstart) to verify a REST credential against the
+  same project.
+- [Versioning and support](/versioning) for how app, API, and client versions
+  relate.

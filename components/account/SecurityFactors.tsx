@@ -8,6 +8,7 @@ import {
 } from "@/lib/actions/two-factor";
 import { authClient } from "@/lib/auth/client";
 import { loginErrorReturnTo } from "@/lib/auth/return-to";
+import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import type { TwoFactorManagementInput } from "@/lib/auth/two-factor-management-schema";
 import { completeTwoFactorEnrollmentSchema } from "@/lib/auth/two-factor-management-schema";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -119,6 +120,7 @@ export function SecurityFactors({
         setMessage(result.error.message);
         return;
       }
+      notifyAuthenticatedSessionEnd();
       setEnabled(false);
       setMode(null);
       setMessage("Two-factor authentication disabled. Redirecting to sign in.");
@@ -131,6 +133,7 @@ export function SecurityFactors({
     setMessage(null);
     try {
       await authClient.signOut();
+      notifyAuthenticatedSessionEnd();
       router.replace(loginErrorReturnTo("/app/account/security"));
       router.refresh();
     } catch {
@@ -279,7 +282,6 @@ export function SecurityFactors({
             </div>
           </form>
         ) : null}
-
         <BackupCodes codes={backupCodes} />
         {reauthRequired ? (
           <button

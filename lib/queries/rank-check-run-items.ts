@@ -14,7 +14,7 @@ import { iso, statusCsv } from "./rank-check-run-query-helpers";
 export async function listRankCheckRunItems(projectId: string, publicId: string, url: URL) {
   const run = await prisma.rankCheckRun.findFirst({
     select: { id: true },
-    where: { projectId, publicId },
+    where: { projectId, publicId, deletedAt: null },
   });
   if (!run) throw new ApiNotFoundError("Rank-check run not found.");
   const limit = parseLimit(url, 50, 200);

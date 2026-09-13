@@ -130,7 +130,10 @@ function gscImportPresentation(
   const searchConsoleHref = `${searchConsolePath(projectRef)}?${new URLSearchParams({
     property: operation.property,
   }).toString()}`;
+  const canReconnect =
+    operation.capabilities.pause || operation.capabilities.resume || operation.capabilities.retry;
   const reconnectHref =
+    canReconnect &&
     operation.presentation.action === "reconnect" &&
     operation.presentation.title === "Reconnect required"
       ? googleInstallUrl({

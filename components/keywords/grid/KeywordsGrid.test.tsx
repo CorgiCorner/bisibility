@@ -16,7 +16,7 @@ vi.mock("@/components/keywords/import/ImportCsvWizard", () => ({
 }));
 beforeEach(() => {
   vi.clearAllMocks();
-  setNavigationState({ pathname: "/app/rank-tracker" });
+  setNavigationState({ pathname: "/app/prj_1/rank-tracker" });
   mocks.exportKeywords.mockResolvedValue({
     content: "keyword\n",
     count: 1,
@@ -77,7 +77,7 @@ describe("KeywordsGrid pending state", () => {
   });
 
   it("renders pending keywords in the normal management grid", async () => {
-    renderPendingGrid();
+    renderPendingGrid({}, null, true);
 
     expect(screen.getByText("No rankings yet")).toBeInTheDocument();
     expect(screen.getByText("2 keywords are ready for the first rank check.")).toBeInTheDocument();
@@ -85,7 +85,8 @@ describe("KeywordsGrid pending state", () => {
       "href",
       appPath("prj_1", "integrations"),
     );
-    expect(screen.getByRole("radio", { name: /all device scope/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Device scope" })).toHaveTextContent("All devices");
+    expect(screen.queryByRole("radio", { name: /device scope/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /all keywords/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /columns/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /filters/i })).toBeInTheDocument();
@@ -149,27 +150,36 @@ describe("KeywordsGrid pending state", () => {
   });
 
   it("commits server search on Enter without navigating on each keystroke", () => {
-    renderPendingGrid({
-      matchedTargetCount: 100,
-      page: 3,
-      pageCount: 3,
-      pageSize: 25,
-      query: {
-        filters: { ...emptyKeywordFilters },
-        grouped: false,
-        lens: { device: "desktop", locationId: null },
-        page: 3,
-        pageSize: 25,
-        savedViewId: null,
-        search: "",
-        sort: { direction: "asc", field: "position" },
-      },
-      totalCount: 2,
+    setNavigationState({
+      pathname: "/app/prj_1/rank-tracker",
+      searchParams: { device: "desktop", page: "3" },
     });
+    renderPendingGrid(
+      {
+        matchedTargetCount: 100,
+        page: 3,
+        pageCount: 3,
+        pageSize: 25,
+        query: {
+          filters: { ...emptyKeywordFilters },
+          grouped: false,
+          lens: { device: "desktop", locationId: null },
+          page: 3,
+          pageSize: 25,
+          savedViewId: null,
+          search: "",
+          sort: { direction: "asc", field: "position" },
+        },
+        totalCount: 2,
+      },
+      null,
+      true,
+    );
     const search = screen.getByRole("searchbox", { name: "Search keywords" });
     fireEvent.change(search, { target: { value: "rank" } });
     expect(routerMock.push).not.toHaveBeenCalledWith(expect.stringContaining("q=rank"));
-    fireEvent.click(screen.getByRole("radio", { name: /mobile device scope/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Device scope" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Mobile" }));
     expect(routerMock.push).toHaveBeenLastCalledWith(
       expect.stringMatching(/q=rank.*device=mobile.*page=1/),
     );
@@ -216,31 +226,41 @@ describe("KeywordsGrid pending state", () => {
   });
 
   it("pushes consecutive deliberate search and lens transitions", () => {
-    renderPendingGrid({
-      matchedTargetCount: 100,
-      page: 3,
-      pageCount: 4,
-      pageSize: 25,
-      totalCount: 100,
-      query: {
-        filters: { ...emptyKeywordFilters },
-        grouped: false,
-        lens: { device: "desktop", locationId: null },
-        page: 3,
-        pageSize: 25,
-        savedViewId: null,
-        search: "",
-        sort: { direction: "asc", field: "position" },
-      },
+    setNavigationState({
+      pathname: "/app/prj_1/rank-tracker",
+      searchParams: { device: "desktop", page: "3" },
     });
+    renderPendingGrid(
+      {
+        matchedTargetCount: 100,
+        page: 3,
+        pageCount: 4,
+        pageSize: 25,
+        totalCount: 100,
+        query: {
+          filters: { ...emptyKeywordFilters },
+          grouped: false,
+          lens: { device: "desktop", locationId: null },
+          page: 3,
+          pageSize: 25,
+          savedViewId: null,
+          search: "",
+          sort: { direction: "asc", field: "position" },
+        },
+      },
+      null,
+      true,
+    );
     const search = screen.getByRole("searchbox", { name: "Search keywords" });
     fireEvent.change(search, { target: { value: "first" } });
     fireEvent.keyDown(search, { key: "Enter" });
-    fireEvent.click(screen.getByRole("radio", { name: /mobile device scope/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Device scope" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Mobile" }));
 
     expect(routerMock.push).toHaveBeenCalledTimes(2);
     expect(routerMock.push.mock.calls[0]?.[0]).toContain("q=first");
     expect(routerMock.push.mock.calls[1]?.[0]).toContain("device=mobile");
+    expect(routerMock.push.mock.calls[1]?.[0]).toContain("q=first");
     expect(routerMock.replace).not.toHaveBeenCalled();
   });
 });

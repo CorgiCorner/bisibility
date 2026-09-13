@@ -1,4 +1,5 @@
 import { type DateFormat, formatDateRange } from "@/lib/dates/format";
+import { hasMonthlyBudgetCap } from "@/lib/rank-check/budget-contract";
 import { defaultCostPerCheckCents } from "@/lib/rank-check/default-cost";
 import { resolveSerpDepth } from "@/lib/serp/constants";
 import type { UpcomingBlockReason, UpcomingDayGroup, UpcomingView } from "./contract";
@@ -150,9 +151,10 @@ function observedDailySpend(input: UpcomingViewInput) {
 export function buildUpcomingView(input: UpcomingViewInput): UpcomingView {
   const next48h = next48hCents(input);
   const dailyRate = observedDailySpend(input);
-  const remaining = Math.max(0, input.budgetCapCents - input.spentCents);
+  const hasBudgetCap = hasMonthlyBudgetCap(input.budgetCapCents);
+  const remaining = hasBudgetCap ? Math.max(0, input.budgetCapCents - input.spentCents) : 0;
   const capLastsUntil =
-    dailyRate > 0
+    hasBudgetCap && dailyRate > 0
       ? new Date(input.now.getTime() + (remaining / dailyRate) * DAY_MS).toISOString()
       : null;
 

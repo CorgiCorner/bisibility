@@ -7,15 +7,15 @@ import { BudgetEditModal } from "@/components/settings/usage/BudgetEditModal";
 import { ProviderUsageRow } from "@/components/settings/usage/ProviderUsageRow";
 import { UsageCard } from "@/components/settings/usage/UsageCard";
 import { Button } from "@/components/ui/Button";
-import { ExternalLink } from "@/components/ui/ExternalLink";
 import type { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
 import { formatMoneyCents } from "@/lib/format/money";
 import { createUserDateTimeFormatter } from "@/lib/format/user-datetime";
 import type { ProjectProviderSpend } from "@/lib/queries/provider-spend";
+import { appPath } from "@/lib/routing/app-path";
 import type { ProviderUsageData } from "@/lib/settings/options";
-import { MARKETING_URL } from "@/lib/site/site";
 import { metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import Link from "next/link";
 import { useState } from "react";
 
 type ProviderUsageCardProps = {
@@ -137,9 +137,12 @@ export function ProviderUsageCard({
           <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={16} weight="regular" />
           <span>
             <span className="font-semibold">{banner}</span>{" "}
-            <a className="font-medium underline hover:no-underline" href="#provider-connections">
+            <Link
+              className="font-medium underline hover:no-underline"
+              href={appPath(projectRef, "integrations")}
+            >
               Connection settings
-            </a>
+            </Link>
           </span>
         </div>
       ) : null}
@@ -174,7 +177,7 @@ export function ProviderUsageCard({
         <Kpi label="Projected spend" value={projectionKpi(usage)} />
       </div>
       {connections.length ? (
-        <ul className="m-0 mt-4 list-none border-y border-border p-0">
+        <ul className="m-0 mt-4 list-none border-t border-border p-0">
           {connections.map((connection) => (
             <ProviderUsageRow
               connection={connection}
@@ -188,14 +191,6 @@ export function ProviderUsageCard({
           Usage appears once a provider is connected.
         </p>
       )}
-      <div className="-mx-5 mt-5 border-t border-border px-5 pt-4">
-        <ExternalLink
-          className="text-[12px] font-medium text-accent-text hover:underline"
-          href={`${MARKETING_URL}/rank-tracking-cost-calculator`}
-        >
-          Estimate future cost
-        </ExternalLink>
-      </div>
       {editOpen ? (
         <BudgetEditModal
           connections={connections}

@@ -18,6 +18,7 @@ import {
 } from "@/components/onboarding/onboarding-wizard-state";
 import { useState } from "react";
 import { OnboardingProjectOptions } from "./OnboardingProjectOptions";
+import { OnboardingWizardSkipAction } from "./OnboardingWizardSkipAction";
 import { readCurrentProviderValues } from "./onboarding-provider-values";
 import {
   type ConnectedProviderMap,
@@ -25,7 +26,6 @@ import {
   type OnboardingConnectProviderInput,
   providerOptions,
 } from "./steps/StepConnectProvider.fields";
-import { StepConnectProviderSkip } from "./steps/StepConnectProviderSkip";
 import { useOnboardingSources } from "./use-onboarding-sources";
 // biome-ignore format: Compact initial props keep this production component within its line limit.
 export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMessage,
@@ -157,6 +157,12 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
     setProjectedCostPerCheckCents(null);
     updateFlowAndStep(3, { ...flowState, providerId: null });
   };
+  const handleKeywordsSkip = () => {
+    setKeywordCount(0);
+    setFirstCheckCandidates([]);
+    // biome-ignore format: keep skip payload on one line
+    updateFlowAndStep(4, { ...flowState, devices: draft.addKeywords.devices, locations: draft.addKeywords.locations, projectId: draft.addKeywords.projectId });
+  };
   function continueWithConnectedDataSource() {
     handleProviderSkip(currentProviderValues());
   }
@@ -283,15 +289,8 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
             onContinue={
               canContinueWithConnectedDataSource ? continueWithConnectedDataSource : undefined
             }
-            secondaryAction={
-              currentStep === 2 ? (
-                <StepConnectProviderSkip
-                  flowState={flowState}
-                  getValues={currentProviderValues}
-                  onSkip={handleProviderSkip}
-                />
-              ) : undefined
-            }
+            // biome-ignore format: keep skip action compact
+            secondaryAction={<OnboardingWizardSkipAction currentStep={currentStep} flowState={flowState} getProviderValues={currentProviderValues} onKeywordsSkip={handleKeywordsSkip} onProviderSkip={handleProviderSkip} />}
           />
         ) : null}
       </section>

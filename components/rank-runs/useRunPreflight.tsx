@@ -145,7 +145,7 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
       ) : null}
       {active ? (
         <PreflightDialog
-          budgetHref={`/app/${projectId}/settings/usage?budget=edit`}
+          budgetHref={`/app/${projectId}/integrations?tab=usage&budget=edit`}
           duplicateRunHref={projectRunsPath(projectId)}
           initialDepth={active.depth}
           initialPreview={active.preview}

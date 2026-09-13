@@ -2,9 +2,12 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { extname, join, relative } from "node:path";
 import { classifyDocsHref } from "./doc-link-helpers.mjs";
+import { expectedDocsInventory } from "./docs-inventory.mjs";
 import {
   analyzeDocsNavigation,
+  collectNavigationPageIds,
   docsNavigationExclusions,
+  findNavigationGroup,
   loadPublishedDocsPages,
 } from "./doc-navigation.mjs";
 
@@ -19,8 +22,12 @@ function walk(directory) {
   });
 }
 
+const generatedReferencePages = new Set(expectedDocsInventory({ docsRoot: DOCS_ROOT }).reference);
+
 function docsPageExists(page) {
+  if (typeof page !== "string") return false;
   const clean = page.replace(/^\/+|\/$/g, "");
+  if (generatedReferencePages.has(clean)) return true;
   return [
     join(DOCS_ROOT, `${clean || "index"}.md`),
     join(DOCS_ROOT, `${clean || "index"}.mdx`),
@@ -78,8 +85,8 @@ for (const missing of docsNavigation.missingFragments) {
     `${relative(ROOT, missing.sourceFile)}: missing fragment target ${missing.href}`,
   );
 }
-const docsTab = config.navigation?.tabs?.find((tab) => tab.tab === "Docs");
-const apiWorkflowGroup = docsTab?.groups?.find((group) => group.group === "API workflows");
+const docsTab = config.navigation?.tabs?.find((tab) => tab.tab === "Build and automate");
+const apiWorkflowGroup = findNavigationGroup(docsTab, "API workflows");
 const expectedApiWorkflows = [
   "api/overview",
   "api/checks",
@@ -153,13 +160,8 @@ if (apiReferenceTab?.openapi !== "openapi.snapshot.json") {
   }
 }
 
-for (const tab of config.navigation?.tabs ?? []) {
-  for (const group of tab.groups ?? []) {
-    for (const page of group.pages ?? []) {
-      if (/^(?:DELETE|GET|PATCH|POST|PUT) \//.test(page)) continue;
-      if (!docsPageExists(page)) failures.push(`docs/docs.json: missing navigation page ${page}`);
-    }
-  }
+for (const page of collectNavigationPageIds(config.navigation)) {
+  if (!docsPageExists(page)) failures.push(`docs/docs.json: missing navigation page ${page}`);
 }
 
 for (const [index, redirect] of (config.redirects ?? []).entries()) {

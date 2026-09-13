@@ -1,9 +1,10 @@
 import { deferred } from "@/tests/deferred";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  notifySessionEnd: vi.fn(),
   showToast: vi.fn(),
   signOut: vi.fn(),
 }));
@@ -16,6 +17,9 @@ vi.mock("@/components/ui/toast-context", () => ({
   useToast: () => ({ showToast: mocks.showToast }),
 }));
 vi.mock("@/lib/auth/client", () => ({ authClient: { signOut: mocks.signOut } }));
+vi.mock("@/lib/auth/session-end", () => ({
+  notifyAuthenticatedSessionEnd: mocks.notifySessionEnd,
+}));
 vi.mock("@/components/ui/Divider", () => ({
   Divider: ({ style }: { style?: Record<string, string> }) => (
     <div data-divider-margin-x={style?.marginLeft} data-testid="user-menu-divider" />
@@ -130,6 +134,7 @@ describe("UserMenu", () => {
       }),
     );
     expect(window.location.href).toBe(hrefBefore);
+    expect(mocks.notifySessionEnd).not.toHaveBeenCalled();
   });
 
   it("navigates to sign in on success", async () => {
@@ -139,10 +144,11 @@ describe("UserMenu", () => {
 
     await clickSignOut();
     interceptLocation();
-    signOut.resolve({});
-    await Promise.resolve();
-    await Promise.resolve();
+    await act(async () => {
+      signOut.resolve({});
+    });
 
     expect(assignedHref).toBe("/login");
+    expect(mocks.notifySessionEnd).toHaveBeenCalledOnce();
   });
 });

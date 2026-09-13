@@ -2,7 +2,11 @@ import "server-only";
 
 import { whereExecutedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
-import { BUDGET_EXHAUSTED_CODE } from "./budget-contract";
+import {
+  BUDGET_EXHAUSTED_CODE,
+  hasMonthlyBudgetCap,
+  monthlyBudgetExhausted,
+} from "./budget-contract";
 import { positiveCostCents } from "./cost";
 
 export const DEFAULT_MONTHLY_COST_CAP_CENTS = 5_000;
@@ -165,7 +169,10 @@ export async function assertBudgetAvailable(
       : await projectBudgetCapCents(projectId, options);
   const spentCents = await monthlySpendCents(projectId, now, options);
   const estimatedCostCents = positiveCostCents(options.estimatedCostCents);
-  if (spentCents >= capCents || spentCents + estimatedCostCents > capCents) {
+  if (
+    monthlyBudgetExhausted(capCents, spentCents) ||
+    (hasMonthlyBudgetCap(capCents) && spentCents + estimatedCostCents > capCents)
+  ) {
     throw new BudgetExhaustedError({ capCents, projectId, spentCents });
   }
 

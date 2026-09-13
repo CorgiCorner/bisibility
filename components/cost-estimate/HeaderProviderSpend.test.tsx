@@ -18,7 +18,7 @@ describe("HeaderProviderSpend", () => {
     );
 
     const link = screen.getByRole("link", { name: "Monthly cap 62% used" });
-    expect(link).toHaveAttribute("href", "/app/prj_example/settings/usage");
+    expect(link).toHaveAttribute("href", "/app/prj_example/integrations?tab=usage");
     expect(link).toHaveTextContent("62% used");
     expect(screen.queryByText("BUDGET")).not.toBeInTheDocument();
     expect(screen.queryByText("SerpApi")).not.toBeInTheDocument();
@@ -39,7 +39,7 @@ describe("HeaderProviderSpend", () => {
 
     expect(screen.getByRole("link", { name: "No budget, set one" })).toHaveAttribute(
       "href",
-      "/app/prj_example/settings/usage?budget=edit",
+      "/app/prj_example/integrations?tab=usage&budget=edit",
     );
     expect(screen.getByText("No budget · Set one")).toBeInTheDocument();
   });

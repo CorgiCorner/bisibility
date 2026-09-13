@@ -34,6 +34,7 @@ export type MenuMultiSelectProps = {
   searchable?: boolean;
   summary?: (selected: readonly MenuSelectOption[]) => string;
   summaryClassName?: string;
+  trailingIcon?: ReactNode;
   triggerClassName?: string;
   values: readonly string[];
 };
@@ -53,6 +54,7 @@ export function MenuMultiSelect({
   searchable = false,
   summary,
   summaryClassName,
+  trailingIcon,
   triggerClassName,
   values,
 }: Readonly<MenuMultiSelectProps>) {
@@ -111,6 +113,7 @@ export function MenuMultiSelect({
         aria-haspopup="menu"
         aria-label={ariaLabel}
         className={cn(menuSelectTriggerClass, triggerClassName)}
+        data-state={open ? "open" : "closed"}
         onClick={(event) => openMenuWithWidth(event.currentTarget)}
         style={open && menuWidth ? { width: menuWidth } : undefined}
         type="button"
@@ -119,12 +122,14 @@ export function MenuMultiSelect({
         <span className={cn("min-w-0 truncate text-fg", summaryClassName)}>
           {selectedSummary(selected, placeholder, summary)}
         </span>
-        <CaretDown
-          aria-hidden
-          className="ml-auto shrink-0 text-fg-muted"
-          size={11}
-          weight="regular"
-        />
+        {trailingIcon ?? (
+          <CaretDown
+            aria-hidden
+            className="ml-auto shrink-0 text-fg-muted"
+            size={11}
+            weight="regular"
+          />
+        )}
       </button>
       <Menu
         anchorEl={anchorEl}

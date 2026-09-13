@@ -59,6 +59,12 @@ export default async function SchedulePage({
   }));
   if (!isNew && !schedule) notFound();
   const editorSchedule = schedule ?? newEditorSchedule;
+  const canEdit = canProjectAction(
+    getProjectRole(readable.actor, projectId),
+    isNew ? "create" : "update",
+    "check_schedule",
+  );
+  if (isNew && !canEdit) notFound();
   const history = schedule?.archivedAt
     ? await scheduleRunHistory(projectId, scheduleId, (await searchParams)?.cursor)
     : null;
@@ -104,6 +110,7 @@ export default async function SchedulePage({
         />
       ) : (
         <ScheduleEditor
+          canEdit={canEdit}
           candidates={candidates}
           connectedProviders={connectedProviders}
           defaultScheduleName={schedules.find((item) => item.isDefault)?.name ?? null}

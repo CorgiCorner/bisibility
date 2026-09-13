@@ -1,8 +1,9 @@
-import { UsageCardsLoading, UsageLoading } from "@/components/settings/usage/UsageLoading";
-import {
-  UsageSettingsContent,
-  type UsageSettingsContentProps,
-} from "@/components/settings/usage/UsageSettingsContent";
+import { BillingLoading, UsageCardsLoading } from "@/components/settings/usage/UsageLoading";
+import type { ComponentProps } from "react";
+import { ProviderUsageCard } from "./ProviderUsageCard";
+
+type UsageSettingsContentProps = ComponentProps<typeof ProviderUsageCard>;
+
 import type { ProviderSpendConnection, ProviderSpendSummary } from "@/lib/queries/provider-spend";
 import type { Meta, StoryObj } from "@storybook/react";
 
@@ -81,21 +82,19 @@ function providerSpend(connections: ProviderSpendConnection[], summary: Provider
   return { connections, summary };
 }
 const meta = {
-  component: UsageSettingsContent,
+  component: ProviderUsageCard,
   args: {
     canEditBudget: true,
-    canSubmitPricingFeedback: true,
-    deployment: "cloud",
     projectId: "prj_story",
     projectRef: "prj_story",
-    submitPricingFeedback: async () => ({ answered: true as const }),
     updateProviderAllocation: async () => {
       throw new Error("Story action");
     },
     usage: usage as unknown as UsageSettingsContentProps["usage"],
   },
   title: "Settings/Usage and billing",
-} satisfies Meta<typeof UsageSettingsContent>;
+  parameters: { nextjs: { appDirectory: true } },
+} satisfies Meta<typeof ProviderUsageCard>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const LegacyProject: Story = {
@@ -399,4 +398,4 @@ export const NoProviders: Story = {
   name: "Provider spend/No providers",
 };
 export const Loading: Story = { args: {}, render: () => <UsageCardsLoading /> };
-export const RouteLoading: Story = { args: {}, render: () => <UsageLoading /> };
+export const RouteLoading: Story = { args: {}, render: () => <BillingLoading /> };

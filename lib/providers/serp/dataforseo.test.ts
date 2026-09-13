@@ -1222,6 +1222,32 @@ describe("dataForSeoProvider error classification", () => {
     });
   });
 
+  it.each(["envelope", "task"])(
+    "maps restricted account status 40201 in the %s without claiming insufficient funds",
+    async (level) => {
+      const failure = {
+        status_code: 40201,
+        status_message: "Account access temporarily paused. Contact support.",
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi
+          .fn()
+          .mockResolvedValue(
+            jsonResponse(
+              level === "envelope"
+                ? { ...failure, tasks: [] }
+                : { status_code: 20000, tasks: [failure] },
+            ),
+          ),
+      );
+      await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+        code: "provider_account_restricted",
+        message: failure.status_message,
+      });
+    },
+  );
+
   it("maps an internal insufficient-funds task code to provider_billing", async () => {
     vi.stubGlobal(
       "fetch",

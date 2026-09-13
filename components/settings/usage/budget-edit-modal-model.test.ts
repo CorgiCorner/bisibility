@@ -2,6 +2,7 @@ import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
 import { describe, expect, it } from "vitest";
 import {
   budgetFieldChanged,
+  budgetFromProviderAvailability,
   budgetInitialValue,
   buildProviderAllocationPayload,
   providerUsageContextLine,
@@ -45,5 +46,48 @@ describe("budget-edit-modal-model", () => {
 
   it("keeps the stored allocation as the initial value", () => {
     expect(budgetInitialValue(centsConnection)).toBe("30.00");
+  });
+});
+
+describe("budgetFromProviderAvailability", () => {
+  it("adds recorded usage to the current cash balance without rounding up the remaining funds", () => {
+    expect(
+      budgetFromProviderAvailability({
+        ...centsConnection,
+        used: 14,
+        availableAtProvider: {
+          status: "available",
+          amount: 0.869,
+          unit: "usd",
+          checkedAt: "2026-09-09T00:00:00Z",
+        },
+      }),
+    ).toBe("1.00");
+  });
+  it("matches remaining searches after accounting for monthly usage", () => {
+    expect(
+      budgetFromProviderAvailability({
+        ...unitsConnection,
+        availableAtProvider: {
+          status: "available",
+          amount: 222,
+          unit: "searches",
+          checkedAt: "2026-09-09T00:00:00Z",
+        },
+      }),
+    ).toBe("634");
+  });
+  it.each([
+    null,
+    { status: "unreachable" },
+    { status: "available", amount: 0, unit: "usd" },
+    { status: "available", amount: -1, unit: "usd" },
+  ])("rejects an unavailable or empty balance", (availableAtProvider) => {
+    expect(() =>
+      budgetFromProviderAvailability({
+        ...centsConnection,
+        availableAtProvider,
+      } as ProviderSpendConnection),
+    ).toThrow();
   });
 });

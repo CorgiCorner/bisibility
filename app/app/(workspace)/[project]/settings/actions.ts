@@ -8,6 +8,7 @@ import {
 } from "@/lib/actions/_shared";
 import { joinWaitlist } from "@/lib/actions/waitlist";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
+import { assertEditableDemoProjectPreserved } from "@/lib/demo/identity";
 import { waitlistSchema } from "@/lib/landing/waitlist-schema";
 import {
   deleteProjectById,
@@ -76,6 +77,7 @@ export async function deleteWorkspace(input: unknown) {
   const data = parseActionInput(deleteWorkspaceSchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "delete", data.projectId, { type: "project" });
+  assertEditableDemoProjectPreserved(project.publicId);
   const before = await readProjectDeleteSnapshot(project.id);
 
   if (!before) {

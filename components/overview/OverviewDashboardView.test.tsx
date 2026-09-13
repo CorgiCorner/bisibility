@@ -85,14 +85,25 @@ describe("OverviewDashboardView", () => {
         }}
       />,
     );
-    expect(screen.getByRole("table", { name: "Competitor summary" })).toHaveTextContent("Rival");
-    expect(screen.getByRole("link", { name: /Rival rival.test/ })).toHaveAttribute(
+    expect(screen.getByRole("table", { name: "Competitor summary" })).toHaveTextContent(
+      "https://rival.test",
+    );
+    expect(screen.queryByText("Rival")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "https://rival.test" })).toHaveAttribute(
       "href",
       "https://rival.test",
     );
-    expect(screen.getByRole("link", { name: /Rival rival.test/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "https://rival.test" })).toHaveAttribute(
       "target",
       "_blank",
+    );
+    expect(screen.getByRole("link", { name: "https://rival.test" })).toHaveClass(
+      "font-medium",
+      "text-fg",
+      "hover:text-accent-text",
+      "hover:underline",
+      "focus-visible:text-accent-text",
+      "focus-visible:underline",
     );
     expect(screen.getByText("5 / 8")).toBeVisible();
     expect(screen.getByText("2 / 4")).toBeVisible();

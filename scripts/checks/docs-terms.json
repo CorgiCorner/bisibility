@@ -1,0 +1,13 @@
+{
+  "forbidden": [
+    { "pattern": "click here", "message": "use a descriptive link label" },
+    { "pattern": "seamless", "message": "avoid marketing filler in docs" },
+    { "pattern": "powerful", "message": "avoid marketing filler in docs" },
+    { "pattern": "revolutionary", "message": "avoid marketing filler in docs" }
+  ],
+  "prefer": [
+    { "term": "hosted beta", "insteadOf": ["Bisibility Cloud", "the Cloud"] },
+    { "term": "project API key", "insteadOf": ["API token"] },
+    { "term": "personal access token", "insteadOf": ["user API key"] }
+  ]
+}

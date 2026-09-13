@@ -164,7 +164,13 @@ describe("TrackQueryDialog", () => {
     await user.click(screen.getByRole("menuitem", { name: "Weekly" }));
     await user.click(screen.getByRole("button", { name: "Search depth" }));
     await user.click(screen.getByRole("menuitem", { name: "Top 10" }));
-    expect(screen.getByText(/Top 10 checks do not update Visibility/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Search depth" })).toHaveAccessibleDescription(
+      "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
+    );
+    await user.hover(screen.getByRole("button", { name: "Search depth" }));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Top 10 checks do not update Visibility",
+    );
     await user.click(screen.getByRole("button", { name: "Start tracking weekly" }));
 
     expect(onConfirm).toHaveBeenCalledTimes(1);

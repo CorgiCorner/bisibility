@@ -79,3 +79,13 @@ that route for `bisibility auth logout`.
 
 PATs default to 120 requests per minute. Self-hosters can change this with
 `BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE`.
+
+## Related operations
+
+- [`GET /me`](/api-reference/account-access/get-the-authenticated-user) (`getMe`)
+- [`PATCH /me`](/api-reference/account-access/update-the-authenticated-user) (`updateMe`)
+- [`GET /me/tokens`](/api-reference/account-access/list-personal-access-tokens) (`listPersonalAccessTokens`)
+- [`POST /me/tokens`](/api-reference/account-access/create-a-personal-access-token) (`createPersonalAccessToken`)
+- [`DELETE /me/tokens/{token_id}`](/api-reference/account-access/revoke-a-personal-access-token) (`revokePersonalAccessToken`)
+
+Exact request and response schemas live in the generated API Reference.

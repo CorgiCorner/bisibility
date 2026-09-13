@@ -4,10 +4,13 @@ import { shellUserEmail } from "@/components/shell/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { ThemeSegments } from "@/components/ui/ThemeSegments";
+import { appExtensions } from "@/lib/app-extensions";
 import { redirectToSetupIfFirstRun } from "@/lib/auth/first-run";
 import { requireSession } from "@/lib/auth/session";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
+import { readDemoConfig } from "@/lib/demo/config";
+import { isCloud } from "@/lib/deployment/deployment";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -28,9 +31,18 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
   const email = shellUserEmail(session.user);
   const initials = avatarInitials(session.user.name ?? "", email);
   const avatarSrc = gravatarUrl(email, 22);
+  const isDemo = readDemoConfig().kind !== "disabled";
+  const supportWidget =
+    isCloud && !isDemo
+      ? await appExtensions.renderSupportWidget({
+          expiresAt: session.session.expiresAt,
+          userId: session.user.id,
+        })
+      : null;
 
   return (
     <main className="flex min-h-dvh flex-col items-center bg-bg px-4 py-[46px] text-fg sm:px-6">
+      {supportWidget}
       <div className="flex w-full max-w-[940px] flex-1 flex-col">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <BrandLockup />
@@ -49,7 +61,7 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
             <OnboardingLogoutButton />
           </div>
         </header>
-        <ReplaySurface kind="onboarding">{children}</ReplaySurface>
+        {isDemo ? children : <ReplaySurface kind="onboarding">{children}</ReplaySurface>}
         <div className="mt-auto pt-14">
           <footer className="flex flex-wrap items-center justify-between gap-3 border-border border-t pt-6 text-xs text-fg-muted">
             <span>© 2026 bisibility</span>

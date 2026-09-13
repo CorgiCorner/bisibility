@@ -1,12 +1,19 @@
-import {
-  UsageSettingsContent,
-  type UsageSettingsContentProps,
-} from "@/components/settings/usage/UsageSettingsContent";
+import type { ComponentProps } from "react";
+import { PlanCard } from "./PlanCard";
+import { ProviderUsageCard } from "./ProviderUsageCard";
+
+type UsageSettingsContentProps = ComponentProps<typeof ProviderUsageCard>;
+
 import { appPath } from "@/lib/routing/app-path";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+
+const refreshBalance = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/actions/provider-allocation", () => ({
+  refreshProviderConnectionBudgetAction: refreshBalance,
+}));
 
 const usage = {
   budget: { capCents: 5000, spentCents: 10 },
@@ -103,15 +110,21 @@ const actions = {
 };
 function renderUsage(next = usage) {
   return render(
-    <UsageSettingsContent
-      {...actions}
-      canEditBudget
-      canSubmitPricingFeedback
-      deployment="cloud"
-      projectId="prj_story"
-      projectRef="prj_story"
-      usage={next}
-    />,
+    <>
+      <PlanCard
+        canSubmitPricingFeedback
+        deployment="cloud"
+        projectId="prj_story"
+        submitPricingFeedback={actions.submitPricingFeedback}
+      />
+      <ProviderUsageCard
+        {...actions}
+        canEditBudget
+        projectId="prj_story"
+        projectRef="prj_story"
+        usage={next}
+      />
+    </>,
   );
 }
 
@@ -274,4 +287,20 @@ describe("UsageSettingsContent", () => {
     expect(routerMock.refresh).toHaveBeenCalledOnce();
     fireEvent.click(screen.getByRole("button", { name: "Edit budget" }));
   });
+});
+
+it("fills the monthly budget from a fresh provider balance and leaves saving to the user", async () => {
+  const user = userEvent.setup();
+  actions.updateProviderAllocation.mockClear();
+  refreshBalance.mockResolvedValue({
+    ...usage.providerSpend.connections[1],
+    used: 14,
+    availableAtProvider: { status: "available", amount: 0.86, unit: "usd" },
+  });
+  renderUsage();
+  await user.click(screen.getByRole("button", { name: "Edit budget" }));
+  await user.click(screen.getAllByRole("button", { name: "Use provider balance" })[1]);
+  expect(refreshBalance).toHaveBeenCalledWith("prj_story", "conn_data");
+  expect(screen.getByLabelText("DataForSEO monthly budget")).toHaveValue("1.00");
+  expect(actions.updateProviderAllocation).not.toHaveBeenCalled();
 });

@@ -6,13 +6,15 @@ import { SecurityFactors } from "@/components/account/SecurityFactors";
 import { SessionsSection } from "@/components/account/SessionsSection";
 import { issuePersonalTokenAction, revokePersonalTokenAction } from "@/lib/actions/personalToken";
 import { requireSession } from "@/lib/auth/session";
-import { readOnlyDemoConfig } from "@/lib/demo/config";
+import { resolveDemoAccountView } from "@/lib/demo/account-view";
 import { getAccount, getPreferences } from "@/lib/queries/account";
 import { getPersonalTokens } from "@/lib/queries/personal-tokens";
 
 export default async function SecurityPage() {
-  if (readOnlyDemoConfig()) return <DemoAccountNotice section="security" />;
   const session = await requireSession();
+  if ((await resolveDemoAccountView(session.user.id)) === "locked") {
+    return <DemoAccountNotice section="security" />;
+  }
   const [account, preferences] = await Promise.all([getAccount(), getPreferences()]);
   const personalTokens = await getPersonalTokens(session.user.id);
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.23.0] - 2026-09-12
+
+- Made provider budgets and account errors clearer, added settings search and Usage, and let you remove completed runs without losing history.
+
+- Refined dashboard and Runs layouts with header market and device controls, clearer tables and links, and a skippable onboarding keyword step.
+
+- Added editable demos with Owner and Viewer roles, durable saved research, and reliable Backlinks and Domain Overview pages.
+
+- Improved OpenAPI schemas, docs inventory and examples, with hosted, versioning, and Domain Overview guides.
+
+- Unified country and select menus across research and markets; **Breaking:** waitlist signups no longer sync Resend contacts or segments.
+
+- Clarified local and hosted quickstart success, made SDK first examples copyable, and linked REST guides to generated API reference pages.
+
+- Simplified documentation navigation and added generated client references, SERP observation guidance, and project support links.
+
 ## [0.22.1] - 2026-09-09
 
 Maintenance release. Application behavior is unchanged.

@@ -1,5 +1,5 @@
-import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { setNavigationState } from "@/tests/next-navigation";
+import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { OverviewToolbar } from "./OverviewToolbar";
 import type { OverviewView } from "./types";
@@ -29,7 +29,7 @@ describe("OverviewToolbar", () => {
       <OverviewToolbar canCreateKeyword={false} initialSelected={selected} projectRef="prj_1" />,
     );
     expect(screen.queryByRole("link", { name: /Add keyword/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Last 28 days" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Date range" })).toHaveTextContent("Last 28 days");
   });
   it("uses the compact 37px primary action", () => {
     render(<OverviewToolbar initialSelected={selected} projectRef="prj_1" />);
@@ -38,30 +38,18 @@ describe("OverviewToolbar", () => {
     expect(action).toHaveStyle({ height: "37px", minHeight: "37px" });
   });
 
-  it("uses one pill variant for every interactive toolbar filter", () => {
+  it("keeps only period and tag filters in the toolbar", () => {
     render(<OverviewToolbar initialSelected={selected} projectRef="prj_1" />);
 
     const filters = [
-      screen.getByRole("button", { name: "Markets" }),
-      screen.getByRole("button", { name: "Last 28 days" }),
-      screen.getByRole("button", { name: "All devices" }),
-      screen.getByRole("button", { name: "Tag: All tags" }),
+      screen.getByRole("button", { name: "Date range" }),
+      screen.getByRole("button", { name: "Tag" }),
     ];
 
     for (const filter of filters) {
       expect(filter).toHaveClass("overview-toolbar-filter");
     }
-    expect(filters[0]?.querySelector("span.min-w-0.truncate")).toHaveClass("!text-fg-muted");
-    expect(filters[0]).toHaveClass(
-      "!rounded-full",
-      "!bg-bg-elev",
-      "!text-xs",
-      "!font-semibold",
-      "!text-fg-muted",
-      "hover:!border-accent",
-      "hover:!bg-bg-sunken",
-      "hover:!text-accent",
-    );
+    expect(screen.queryByRole("button", { name: "All devices" })).not.toBeInTheDocument();
   });
 
   it("keeps a selected tag in the same neutral filter variant", () => {
@@ -77,25 +65,12 @@ describe("OverviewToolbar", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Tag: Docs" })).toHaveStyle(
-      "--control-background-color: var(--bg-elev); --control-color: var(--fg-muted)",
-    );
+    expect(screen.getByRole("button", { name: "Tag" })).toHaveTextContent("Docs");
   });
 
-  it("shows the registry-backed market selector and writes repeated market scope params", () => {
+  it("leaves market selection to the top header", () => {
     render(<OverviewToolbar initialSelected={selected} projectRef="prj_1" />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Markets" }));
-    expect(screen.getByRole("menuitemradio", { name: "All markets" })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
-    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: /Spain.*Spanish/ }));
-
-    expect(routerMock.push).toHaveBeenCalledWith("/app/prj_1/dashboard?market=loc_es_es");
-
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "All markets" }));
-    expect(routerMock.push).toHaveBeenLastCalledWith("/app/prj_1/dashboard");
+    expect(screen.queryByRole("button", { name: "Markets" })).not.toBeInTheDocument();
   });
 
   it("never renders the refresh chip for any schedule mix", () => {

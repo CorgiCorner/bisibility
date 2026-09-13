@@ -59,6 +59,7 @@ export async function requestLoginCode(input: unknown): Promise<RequestLoginCode
       auth.api.sendVerificationOTP({
         body: { email: parsed.data.email.toLowerCase(), type: "sign-in" },
         headers: requestHeaders,
+        method: "POST",
       }),
     );
     return { ok: true };

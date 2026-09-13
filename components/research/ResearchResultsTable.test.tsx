@@ -134,6 +134,31 @@ describe("ResearchResultsTable", () => {
     expect(screen.getByRole("button", { name: "Export" })).toBeInTheDocument();
   });
 
+  it("keeps stored rows sortable, paginated and exportable without mutation controls", () => {
+    const rows = Array.from({ length: 51 }, (_, index) => row(`keyword ${index + 1}`));
+    renderTable({
+      deeper: null,
+      fetchedCount: rows.length,
+      readOnly: true,
+      rows,
+      storedFreshness: {
+        fetchedAt: "2026-08-01T10:00:00.000Z",
+        freshUntil: "2026-08-31T10:00:00.000Z",
+        stale: true,
+      },
+      totalCount: rows.length,
+    });
+
+    expect(screen.getByTestId("stored-result-freshness")).toHaveTextContent("Past refresh window");
+    expect(screen.getByRole("button", { name: "Export" })).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Add .*to tracking/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Save .*for later/)).not.toBeInTheDocument();
+    expect(screen.getByText("1-50 of 51")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getByText("51-51 of 51")).toBeInTheDocument();
+  });
+
   it("summarizes fetched results with the shared relative-time label", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-23T16:00:00.000Z"));

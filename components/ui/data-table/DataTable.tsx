@@ -142,7 +142,11 @@ export function DataTable<TRow extends DataTableRowBase>({
       className={cn(
         dataTableRootClassName,
         !bordered && "border-0",
-        layout === "fill" ? "flex h-full flex-col overflow-auto" : "overflow-x-auto",
+        layout === "fill"
+          ? "flex h-full flex-col overflow-auto"
+          : rowCount > 0
+            ? "overflow-x-auto"
+            : undefined,
       )}
       data-layout={layout}
       data-scrolled="false"

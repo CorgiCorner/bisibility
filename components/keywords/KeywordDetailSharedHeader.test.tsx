@@ -85,10 +85,10 @@ describe("keyword detail shared header", () => {
 
     expect(screen.getAllByRole("button", { name: /United States/ })).toHaveLength(1);
     expect(screen.getAllByRole("button", { name: "change" })).toHaveLength(2);
-    expect(screen.getAllByRole("button", { name: "Device" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Device scope" })).toHaveLength(1);
     const header = within(screen.getByRole("banner"));
     expect(header.getByRole("button", { name: /United States/ })).toBeInTheDocument();
-    expect(header.getByRole("button", { name: "Device" })).toBeInTheDocument();
+    expect(header.getByRole("button", { name: "Device scope" })).toBeInTheDocument();
     expect(header.getByRole("heading", { name: "Keyword details" })).toBeInTheDocument();
     fireEvent.click(header.getByRole("button", { name: /United States/ }));
     fireEvent.click(await screen.findByRole("button", { name: "Add market" }));

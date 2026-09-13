@@ -19,7 +19,7 @@ import { type AnalyticsControlId, analyticsControlModule } from "@/lib/analytics
 import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import type { CSSProperties } from "react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useCallback, useRef, useState } from "react";
 import { Tooltip } from "./Tooltip";
 
 export type { MenuSelectOption, MenuSelectOptionGroup } from "@/components/ui/menu-select-support";
@@ -50,6 +50,7 @@ type MenuSelectBaseProps = {
   searchable?: boolean;
   selectedContent?: (option: ReturnType<typeof resolveSelectedOption>) => ReactNode;
   size?: "input" | "toolbar";
+  trailingIcon?: ReactNode;
   triggerClassName?: string;
   triggerTitle?: string;
   triggerWrapperClassName?: string;
@@ -81,6 +82,7 @@ export function MenuSelect({
   searchable = false,
   selectedContent,
   size = "toolbar",
+  trailingIcon,
   triggerClassName,
   triggerTitle,
   triggerWrapperClassName,
@@ -88,13 +90,29 @@ export function MenuSelect({
   ...input
 }: Readonly<MenuSelectProps>) {
   const [search, setSearch] = useState("");
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const { anchorEl, closeMenu, handleExited, open, openMenu } = useMenuExitLifecycle(() =>
     changeSearch(""),
   );
 
+  // Runs once per open, when the menu's element mounts: a long catalog opens on the current
+  // value instead of on its first row. Scrolling the container keeps the page where it is.
+  const attachContent = useCallback((node: HTMLDivElement | null) => {
+    contentRef.current = node;
+    const current = node?.querySelector<HTMLElement>("[data-current]");
+    if (!node || !current) return;
+    node.scrollTop = Math.max(
+      0,
+      current.offsetTop - node.clientHeight / 2 + current.offsetHeight / 2,
+    );
+  }, []);
+
   function changeSearch(next: string) {
     setSearch(next);
     onSearchChange?.(next);
+    // A filtered list is read from its first match, so the menu never keeps a scroll offset
+    // that belonged to the previous result set.
+    if (contentRef.current) contentRef.current.scrollTop = 0;
   }
   const isGrouped = "groups" in input && input.groups != null;
   const selected = resolveSelectedOption(input, value);
@@ -154,6 +172,7 @@ export function MenuSelect({
         triggerClassName,
       )}
       disabled={disabled}
+      data-state={open ? "open" : "closed"}
       onClick={(event) => openMenu(event.currentTarget)}
       type="button"
     >
@@ -180,14 +199,16 @@ export function MenuSelect({
           )}
         </>
       )}
-      <CaretDown
-        aria-hidden
-        className={cn("shrink-0 text-fg-muted", pinCaret && "ml-auto")}
-        data-menu-select-caret
-        data-pinned={pinCaret || undefined}
-        size={11}
-        weight="regular"
-      />
+      {trailingIcon ?? (
+        <CaretDown
+          aria-hidden
+          className={cn("shrink-0 text-fg-muted", pinCaret && "ml-auto")}
+          data-menu-select-caret
+          data-pinned={pinCaret || undefined}
+          size={11}
+          weight="regular"
+        />
+      )}
     </button>
   );
 
@@ -213,6 +234,7 @@ export function MenuSelect({
         open={open}
         listProps={{ "aria-label": ariaLabel, style: { padding: 0 } }}
         contentProps={{
+          ref: attachContent,
           style: paperStyle,
         }}
         onExited={handleExited}

@@ -23,6 +23,9 @@ export const keywordActionBoundaries = {
   "@/lib/actions/keyword-export-action": keywordActionStub,
   "@/lib/actions/keyword-import-refresh": keywordActionStub,
   "@/lib/actions/project-markets": keywordActionStub,
+  "@/lib/actions/provider-allocation": fileURLToPath(
+    new URL("./provider-allocation-stubs.ts", import.meta.url),
+  ),
 } as const;
 const rankRunActionPrefix = "@/lib/actions/rank-check-run-";
 const serverActionAliases = [

@@ -5,6 +5,7 @@ import { unitCostCentsFor } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
 import { firstCheckTargets } from "@/lib/queries/first-check-targets";
 import { monthlySpendCents, projectBudgetCapCents } from "@/lib/rank-check/budget";
+import { monthlyBudgetExhausted } from "@/lib/rank-check/budget-contract";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { launchSingleRankCheckRun } from "@/lib/rank-check/runs/launch-single";
 import {
@@ -181,7 +182,7 @@ export async function getFirstCheckRunPlan(input: unknown): Promise<FirstCheckRu
   );
   return {
     budget: { capCents, spentCents },
-    budgetExhausted: spentCents >= capCents,
+    budgetExhausted: monthlyBudgetExhausted(capCents, spentCents),
     estimatedCostPerCheckCents,
     isSampleProject: false,
     providerReady: providers.length > 0,

@@ -11,6 +11,9 @@ import type { OverviewView } from "./types";
 
 export type OverviewNoDataProps = {
   budgetExhausted: boolean;
+  canCreateKeyword?: boolean;
+  canManageProviders?: boolean;
+  canRunChecks?: boolean;
   getFirstCheckRunPlanAction: GetFirstCheckRunPlanAction;
   projectId: string;
   projectRef: ProjectRef;
@@ -22,6 +25,9 @@ export type OverviewNoDataProps = {
 
 export function OverviewNoData({
   budgetExhausted,
+  canCreateKeyword = true,
+  canManageProviders = true,
+  canRunChecks = true,
   getFirstCheckRunPlanAction,
   overview,
   projectId,
@@ -42,6 +48,9 @@ export function OverviewNoData({
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <NoDataBanner
+        canCreateKeyword={canCreateKeyword}
+        canManageProviders={canManageProviders}
+        canRunChecks={canRunChecks}
         getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
         keywordCount={keywordCount}
         keywordId={overview.firstPendingKeywordId}
@@ -62,15 +71,15 @@ export function OverviewNoData({
       <NoDataCharts
         distribution={overview.distribution}
         domain={overview.domain}
+        source={<RecentlyAddedCard projectRef={projectRef} rows={recentlyAddedRows} />}
         trend={overview.trend}
       />
+      <DataSourceNoDataPanel health={overview.dataSource} />
       <ByMarketRollup
         device={overview.toolbar.deviceValue}
         projectRef={projectRef}
         rows={overview.byMarket}
       />
-      <DataSourceNoDataPanel health={overview.dataSource} />
-      <RecentlyAddedCard projectRef={projectRef} rows={recentlyAddedRows} />
     </div>
   );
 }

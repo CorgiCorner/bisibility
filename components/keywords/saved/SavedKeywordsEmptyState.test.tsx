@@ -15,7 +15,7 @@ describe("SavedKeywordsEmptyState", () => {
         "Save ideas from Research to build a shortlist before you commit to tracking. Saving is free and runs no checks.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Find keywords in Research" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Browse Keyword Research" })).toHaveAttribute(
       "href",
       "/app/prj_1/keyword-research",
     );

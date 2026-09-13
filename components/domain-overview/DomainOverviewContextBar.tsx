@@ -1,3 +1,7 @@
+import {
+  StoredResultFreshness,
+  type StoredResultFreshness as StoredResultFreshnessData,
+} from "@/components/demo-research/StoredResultFreshness";
 import type { DateFormat } from "@/lib/dates/format";
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
 import { relativePast } from "@/lib/format/relative-time";
@@ -7,15 +11,18 @@ import { cacheHoursRemaining } from "./domain-overview-workspace-model";
 
 type DomainOverviewContextBarProps = {
   dateFormat: DateFormat;
-  report: DomainOverviewReport;
+  report: Pick<DomainOverviewReport, "fetchedAt" | "provider" | "sourceSnapshotAt"> &
+    Partial<Pick<DomainOverviewReport, "cachedUntil">>;
+  storedFreshness?: StoredResultFreshnessData;
 };
 
 export function DomainOverviewContextBar({
   dateFormat,
   report,
+  storedFreshness,
 }: Readonly<DomainOverviewContextBarProps>) {
   const now = new Date();
-  const hours = cacheHoursRemaining(report.cachedUntil, now);
+  const cacheHours = report.cachedUntil ? cacheHoursRemaining(report.cachedUntil, now) : 0;
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-1.5 rounded-control border border-border bg-bg-elev px-3.5 py-2.5 font-sans tabular-nums text-[11px] text-fg-muted">
@@ -28,10 +35,14 @@ export function DomainOverviewContextBar({
         ·
       </span>
       <span>fetched {relativePast(new Date(report.fetchedAt), now)}</span>
-      <span className="ml-0.5 inline-flex items-center gap-1 rounded-full border border-green/40 bg-green/10 px-2 py-0.5 text-[10.5px] font-semibold text-green-text">
-        <CheckCircle aria-hidden size={11} weight="regular" />
-        cached, free for {hours}h
-      </span>
+      {storedFreshness ? (
+        <StoredResultFreshness {...storedFreshness} />
+      ) : (
+        <span className="ml-0.5 inline-flex items-center gap-1 rounded-full border border-green/40 bg-green/10 px-2 py-0.5 text-[10.5px] font-semibold text-green-text">
+          <CheckCircle aria-hidden size={11} weight="regular" />
+          cached, free for {cacheHours}h
+        </span>
+      )}
     </div>
   );
 }

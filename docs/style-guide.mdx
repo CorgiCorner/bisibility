@@ -1,0 +1,84 @@
+---
+title: "Docs style guide"
+description: "Voice, page templates, and English conventions for bisibility documentation."
+---
+
+Use this page when writing or reviewing documentation. Canonical English stays
+the source language. Do not add translations until there is evidence of demand.
+
+## Voice
+
+Write in second person (`you`). Use the imperative for steps: Create, Run,
+Copy, Verify. Keep one action or claim per sentence. Stay factual. Do not use marketing filler.
+
+The product name in prose is lowercase **bisibility**. Keep protocol names
+literal: `Bisibility-API-Version`, `X-Bisibility-Signature`. Package names stay
+exactly as published (`@bisibility/sdk`, `bisibility.com/sdk-go`).
+
+Call the managed service the **hosted beta** during beta. Keep `cloud` only
+where it is a literal CLI or API identifier, such as `cloud import`.
+
+## Dates and global English
+
+Use unambiguous dates (`9 September 2026` or `2026-09-09`). Avoid idioms,
+humor, and culture-specific examples. Link with descriptive labels such as
+[Authentication](/authentication). Do not use generic here-links.
+
+## How-to template
+
+```mdx
+---
+title: "Run a scheduled rank check"
+description: "Schedule recurring rank checks for a project."
+---
+
+One sentence explaining when to use this guide.
+
+## Before you begin
+
+State only the required permissions, services, and credentials.
+
+## Configure the schedule
+
+1. Do the first action.
+2. Do the second action.
+
+## Verify
+
+Explain exactly what successful completion looks like.
+
+## Troubleshoot
+
+Cover the one or two failures specific to this task.
+
+## Next step
+
+Link to the single most likely follow-up task.
+```
+
+## Reference template
+
+Purpose, then syntax or schema, then fields, then constraints, then a minimal
+example, then related reference. Do not hide a tutorial inside reference.
+
+## Code samples
+
+Snippets come from runnable `examples/` source or generated schema. Show 10-30
+lines for one goal. Keep secrets in environment variables, especially
+`BISIBILITY_BASE_URL` and `BISIBILITY_API_KEY`. After a sample, say what
+success looks like.
+
+Treat rendered samples as one of four classes:
+
+- **Copyable quickstart:** complete imports, setup, operation, and output. The
+  block must run from a fresh file after the immediately preceding setup
+  steps.
+- **Runnable repository example:** a longer program with helpers, cleanup, or
+  assertions. Link it as a complete example.
+- **Excerpt:** intentionally partial. Label it `Excerpt` and do not present it
+  as a standalone program.
+- **Generated API sample:** generated from OpenAPI and validated against the
+  contract.
+
+See [Versioning and support](/versioning) for app versus API versus client
+versions.

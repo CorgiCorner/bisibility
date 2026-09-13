@@ -2,8 +2,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  demo: { value: null as object | null },
+  deployment: { isCloud: true },
   firstRunGate: vi.fn(),
   requireSession: vi.fn(),
+  supportWidget: vi.fn(() => <aside data-testid="support-extension" />),
 }));
 
 vi.mock("@/components/onboarding/OnboardingLogoutButton", () => ({
@@ -38,6 +41,15 @@ vi.mock("@/lib/auth/first-run", () => ({
   redirectToSetupIfFirstRun: mocks.firstRunGate,
 }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
+vi.mock("@/lib/app-extensions", () => ({
+  appExtensions: { renderSupportWidget: mocks.supportWidget },
+}));
+vi.mock("@/lib/deployment/deployment", () => ({
+  get isCloud() {
+    return mocks.deployment.isCloud;
+  },
+}));
+vi.mock("@/lib/demo/config", () => ({ readDemoConfig: () => mocks.demo.value }));
 vi.mock("@/lib/seo/noindex", () => ({ createNoindexMetadata: () => ({}) }));
 
 import OnboardingLayout from "./layout";
@@ -45,8 +57,13 @@ import OnboardingLayout from "./layout";
 describe("onboarding setup-first gate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.demo.value = { kind: "disabled" };
+    mocks.deployment.isCloud = true;
     mocks.firstRunGate.mockResolvedValue(undefined);
-    mocks.requireSession.mockResolvedValue({ user: { email: "admin@example.com", id: "user_1" } });
+    mocks.requireSession.mockResolvedValue({
+      session: { expiresAt: new Date("2026-09-10T12:00:00.000Z") },
+      user: { email: "admin@example.com", id: "user_1" },
+    });
   });
 
   it("renders onboarding after setup is complete", async () => {
@@ -54,6 +71,11 @@ describe("onboarding setup-first gate", () => {
 
     expect(renderToStaticMarkup(result)).toContain("Onboarding content");
     expect(mocks.firstRunGate).toHaveBeenCalledOnce();
+    expect(mocks.supportWidget).toHaveBeenCalledOnce();
+    expect(mocks.supportWidget).toHaveBeenCalledWith({
+      expiresAt: new Date("2026-09-10T12:00:00.000Z"),
+      userId: "user_1",
+    });
   });
 
   it("places the theme switch in a content-column footer after the signed-in header", async () => {
@@ -84,6 +106,23 @@ describe("onboarding setup-first gate", () => {
     );
 
     expect(mocks.requireSession).not.toHaveBeenCalled();
+    expect(mocks.supportWidget).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["self-host", false, { kind: "disabled" }],
+    ["legacy demo", true, { kind: "legacy-read-only" }],
+    ["editable demo", true, { kind: "editable" }],
+  ])("does not render support or recording for %s", async (_name, isCloud, demo) => {
+    mocks.deployment.isCloud = isCloud;
+    mocks.demo.value = demo;
+
+    const result = await OnboardingLayout({ children: <div>Onboarding content</div> });
+
+    const markup = renderToStaticMarkup(result);
+    expect(markup).not.toContain('data-testid="support-extension"');
+    expect(mocks.supportWidget).not.toHaveBeenCalled();
+    if (demo.kind !== "disabled") expect(markup).not.toContain("data-replay-surface");
   });
 
   it("uses normal sign-in after setup when the session is absent or stale", async () => {

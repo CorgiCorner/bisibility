@@ -1,10 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { calendarCronExpression } from "@/lib/rank-check/schedule-calendar";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
+import { VIEWER_PREVIEW_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -48,6 +50,7 @@ function payload(values: ScheduleEditorValues, projectId: string) {
 }
 
 export function ScheduleEditor({
+  canEdit = true,
   candidates = [],
   connectedProviders,
   defaultScheduleName,
@@ -93,6 +96,7 @@ export function ScheduleEditor({
   }));
 
   function stageMembers(keywordIds: readonly string[]) {
+    if (!canEdit) return;
     const additions = candidates
       .filter((candidate) => keywordIds.includes(candidate.publicId))
       .map((candidate) => ({ ...candidate, pending: true }));
@@ -148,7 +152,11 @@ export function ScheduleEditor({
     <form
       className="grid gap-[18px]"
       noValidate
-      onSubmit={form.handleSubmit((values) => void save(values))}
+      onSubmit={
+        canEdit
+          ? form.handleSubmit((values) => void save(values))
+          : (event) => event.preventDefault()
+      }
     >
       <div
         className={
@@ -161,19 +169,22 @@ export function ScheduleEditor({
           <header className="border-b border-border px-4 py-3.5">
             <h2 className="m-0 text-[15px] font-semibold text-fg">Schedule</h2>
           </header>
-          <ScheduleEditorFields
-            connectedProviders={connectedProviders}
-            defaultScheduleName={defaultScheduleName}
-            form={form}
-            projectDefaults={projectDefaults}
-            projectTimezone={projectTimezone}
-            referenceIso={referenceIso}
-          />
+          <fieldset className="contents" disabled={!canEdit}>
+            <ScheduleEditorFields
+              connectedProviders={connectedProviders}
+              defaultScheduleName={defaultScheduleName}
+              form={form}
+              projectDefaults={projectDefaults}
+              projectTimezone={projectTimezone}
+              referenceIso={referenceIso}
+            />
+          </fieldset>
         </section>
         {embedded ? (
           <p className="m-0 text-[12px] text-fg-muted">{memberSummary}</p>
         ) : (
           <ScheduleEditorMembers
+            canEdit={canEdit}
             memberCount={storedMembers.length + pendingMembers.length}
             memberSummary={memberSummary}
             onOpenDrawer={() => setPickerOpen(true)}
@@ -185,6 +196,7 @@ export function ScheduleEditor({
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2.5">
         {message ? <span className="mr-auto text-[12px] text-fg-muted">{message}</span> : null}
+        {canEdit ? null : <StatusChip label={VIEWER_PREVIEW_ONLY_LABEL} tone="neutral" />}
         {!embedded ? (
           <Button
             onClick={() =>
@@ -196,24 +208,29 @@ export function ScheduleEditor({
             Cancel
           </Button>
         ) : null}
-        <Button loading={formState.isSubmitting} loadingLabel="Saving..." type="submit">
-          Save schedule
-        </Button>
+        {canEdit ? (
+          <Button loading={formState.isSubmitting} loadingLabel="Saving..." type="submit">
+            Save schedule
+          </Button>
+        ) : null}
       </div>
-      <AddKeywordsDrawer
-        candidates={drawerCandidates.map((candidate) => ({
-          ...candidate,
-          assigned:
-            candidate.assigned || pendingMembers.some((member) => member.publicId === candidate.id),
-        }))}
-        onAssigned={() => router.refresh()}
-        onClose={() => setPickerOpen(false)}
-        onSelect={isNew ? stageMembers : undefined}
-        open={pickerOpen}
-        projectId={projectId}
-        scheduleId={schedule.publicId}
-        scheduleName={form.watch("name") || "this schedule"}
-      />
+      {canEdit ? (
+        <AddKeywordsDrawer
+          candidates={drawerCandidates.map((candidate) => ({
+            ...candidate,
+            assigned:
+              candidate.assigned ||
+              pendingMembers.some((member) => member.publicId === candidate.id),
+          }))}
+          onAssigned={() => router.refresh()}
+          onClose={() => setPickerOpen(false)}
+          onSelect={isNew ? stageMembers : undefined}
+          open={pickerOpen}
+          projectId={projectId}
+          scheduleId={schedule.publicId}
+          scheduleName={form.watch("name") || "this schedule"}
+        />
+      ) : null}
     </form>
   );
 }

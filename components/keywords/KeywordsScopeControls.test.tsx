@@ -8,11 +8,7 @@ import { routerMock } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  KeywordsDeviceScope,
-  KeywordsScopeControls,
-  KeywordsScopeLocationSelect,
-} from "./KeywordsScopeControls";
+import { KeywordsScopeControls, KeywordsScopeLocationSelect } from "./KeywordsScopeControls";
 
 const locationOptions = [
   { count: 1, displayName: "United States", id: "loc_us", kind: "country" },
@@ -40,69 +36,21 @@ function ScopeSurfaces({ market }: Readonly<{ market: MarketContextValue["market
   );
 }
 
-describe("KeywordsDeviceScope", () => {
+describe("KeywordsScopeControls", () => {
   beforeEach(() => routerMock.push.mockClear());
 
-  it("gives inactive device options a visible hover state", () => {
+  it("leaves device selection to the contextual header", () => {
     render(
-      <KeywordsDeviceScope
+      <KeywordsScopeControls
         basePath="/app/prj_1/rank-tracker"
         lens={{ device: "all", locationId: null }}
+        locationOptions={locationOptions}
       />,
     );
 
-    expect(
-      screen.getByRole("radio", { name: "All device scope" }).nextElementSibling,
-    ).not.toHaveClass("hover:bg-bg-elev");
-    expect(
-      screen.getByRole("radio", { name: "Desktop device scope" }).nextElementSibling,
-    ).toHaveClass("hover:bg-bg-sunken");
-    expect(
-      screen.getByRole("radio", { name: "Mobile device scope" }).nextElementSibling,
-    ).toHaveClass("hover:bg-bg-sunken");
+    expect(screen.queryAllByRole("radio", { name: /device scope/ })).toHaveLength(0);
   });
 
-  it("uses the quiet select-sized toolbar treatment", () => {
-    render(
-      <KeywordsDeviceScope
-        basePath="/app/prj_1/rank-tracker"
-        lens={{ device: "all", locationId: null }}
-      />,
-    );
-
-    const selected = screen.getByRole("radio", { name: "All device scope" });
-    expect(selected.parentElement?.parentElement).toHaveClass(
-      "inline-flex",
-      "min-h-[34px]",
-      "bg-transparent",
-      "text-[12.5px]",
-    );
-    expect(selected.parentElement).toHaveClass("flex-none");
-    expect(selected.nextElementSibling).toHaveClass("bg-bg-sunken", "border-border-control");
-    expect(selected.nextElementSibling).toHaveClass("font-normal", "text-fg");
-    expect(selected.nextElementSibling?.className).not.toContain("shadow-");
-    expect(selected.nextElementSibling).not.toHaveClass("bg-accent");
-  });
-
-  it("hides device labels between lg and xl when the location select is visible", () => {
-    render(
-      <KeywordsDeviceScope
-        basePath="/app/prj_1/rank-tracker"
-        lens={{ device: "all", locationId: null }}
-      />,
-    );
-
-    const allLabel = screen.getByRole("radio", { name: "All device scope" }).nextElementSibling;
-    expect(allLabel?.querySelector("span")).toHaveClass(
-      "hidden",
-      "sm:inline",
-      "lg:hidden",
-      "xl:inline",
-    );
-  });
-});
-
-describe("KeywordsScopeControls", () => {
   it("hides location selectors in a market and leaves them enabled at project level", () => {
     const { rerender } = render(
       <ScopeSurfaces market={{ locationId: "loc_us", ref: asMarketRef("pmkt_us") }} />,

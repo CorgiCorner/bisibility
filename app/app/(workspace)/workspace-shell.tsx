@@ -11,11 +11,11 @@ import { DemoBanner } from "@/components/shell/DemoBanner";
 import { ProjectWriteModeBanner } from "@/components/shell/ProjectWriteModeNotices";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { Sidebar } from "@/components/shell/Sidebar";
-import { appExtensions } from "@/lib/app-extensions";
 import { appVersion } from "@/lib/app-version";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
-import { readOnlyDemoConfig } from "@/lib/demo/config";
+import { readDemoConfig } from "@/lib/demo/config";
+import { loadConfiguredDemoActor } from "@/lib/demo/identity";
 import { demoSnapshotCapturedAt } from "@/lib/demo/snapshot";
 import { isCloud } from "@/lib/deployment/deployment";
 import { workspaceRoleLine } from "@/lib/format/workspace-role-line";
@@ -59,8 +59,11 @@ export async function WorkspaceShell({
   projectRef,
 }: Readonly<WorkspaceShellProps>) {
   const session = await getQuerySession();
-  const demo = readOnlyDemoConfig();
-  const demoCapturedAt = demo ? await demoSnapshotCapturedAt() : null;
+  const demo = readDemoConfig();
+  const isDemo = demo.kind !== "disabled";
+  const demoActor = isDemo ? await loadConfiguredDemoActor(session.user.id) : null;
+  if (isDemo && !demoActor) notFound();
+  const demoCapturedAt = demo.kind === "legacy-read-only" ? await demoSnapshotCapturedAt() : null;
 
   const now = new Date();
   // Workspace chrome reads are independent. Self-host skips the Cloud-only audit query.
@@ -69,7 +72,6 @@ export async function WorkspaceShell({
     budgetSummary,
     lastCloudExport,
     instanceAdminSession,
-    supportWidget,
     setupContext,
     setupAcknowledgedAt,
     markets,
@@ -77,15 +79,8 @@ export async function WorkspaceShell({
   ] = await Promise.all([
     listWorkspaces(),
     loadWorkspaceBudgetSummary(activeProjectId, now),
-    isCloud && !demo ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
+    isCloud && !isDemo ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
     getInstanceAdminSession(),
-    isCloud && !demo
-      ? appExtensions.renderSupportWidget({
-          email: session.user.email,
-          id: session.user.id,
-          name: session.user.name,
-        })
-      : Promise.resolve(null),
     loadSetupContext(projectRef),
     loadSetupAcknowledgedAt(session.user.id, projectRef),
     listProjectMarketOptions(projectRef),
@@ -99,7 +94,7 @@ export async function WorkspaceShell({
   if (!active) {
     notFound();
   }
-  const canCreateWorkspace = !demo && Boolean(session.user.id);
+  const canCreateWorkspace = !isDemo && Boolean(session.user.id);
 
   const cookieStore = await cookies();
   const theme = normalizeThemePreference(cookieStore.get("theme")?.value);
@@ -110,7 +105,7 @@ export async function WorkspaceShell({
   const setupProgress = resolveSetupProgress(setupContext);
   const setupCompleted = setupProgress.completed;
   const showGettingStarted =
-    !demo && (!setupCompleted || !isSetupAcknowledgedAt(setupAcknowledgedAt));
+    !isDemo && (!setupCompleted || !isSetupAcknowledgedAt(setupAcknowledgedAt));
 
   // Header meta + user role line follow the active workspace.
   const roleLine = workspaceRoleLine(active.role, active.name, active.domain);
@@ -130,7 +125,6 @@ export async function WorkspaceShell({
       className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[270px_minmax(0,1fr)] data-[collapsed=true]:lg:grid-cols-[80px_minmax(0,1fr)]"
     >
       <ProjectWriteModeProvider projectRef={projectRef} writeMode={active.writeMode}>
-        {supportWidget}
         <SessionSpendProvider key={active.publicId}>
           <CommandPaletteProvider
             markets={markets}
@@ -155,8 +149,12 @@ export async function WorkspaceShell({
                 workspaces={workspaces}
               />
               <div className="flex min-w-0 flex-col">
-                {demo ? (
-                  <DemoBanner capturedAt={demoCapturedAt} />
+                {isDemo ? (
+                  <DemoBanner
+                    actor={demoActor?.kind ?? notFound()}
+                    capturedAt={demoCapturedAt}
+                    mode={demo.kind}
+                  />
                 ) : (
                   <CloudBetaBanner
                     dismissed={cloudBetaDismissed}

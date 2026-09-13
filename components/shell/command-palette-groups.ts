@@ -3,6 +3,7 @@
 import type { KeywordHit } from "@/components/shell/keyword-search";
 import { applyTheme, readTheme } from "@/components/shell/set-theme";
 import { authClient } from "@/lib/auth/client";
+import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import { rankTrackerActionHref } from "@/lib/keywords/rank-tracker-command";
 import { hasMarketRoute, sectionPathOf } from "@/lib/markets/market-route-sections";
 import { docsNavItem, type NavContext, navItems } from "@/lib/nav/nav-items";
@@ -165,6 +166,7 @@ function actionItems(
       hint: "Account",
       run: async () => {
         await authClient.signOut();
+        notifyAuthenticatedSessionEnd();
         window.location.href = "/login";
       },
     },

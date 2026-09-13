@@ -1,0 +1,44 @@
+---
+title: "SERP positions and observations"
+description: "Understand organic rankings, local-pack results, and AI Overview observations without confusing them with AI citation tracking."
+---
+
+A rank check measures an organic position. The same provider response can also
+contain search-result features, recorded as separate observations.
+
+| Result | What it tells you | What it does not tell you |
+| - | - | - |
+| Organic position | The best matching organic result within the requested depth | An absolute screen position that counts ads and other blocks |
+| Local-pack observation | A business result returned inside a Google web-search local pack | Rankings across a Maps geographic grid |
+| AI Overview observation | An AI Overview block returned in the checked Google results | Whether an answer engine cites your brand across prompts or conversations |
+
+## Read a completed check
+
+The keyword fixes the market, language, and device. Its organic `position`
+does not move just because the provider includes a local pack or AI Overview.
+`position: null` means no matching organic result was found within the checked
+depth when the check completed successfully. It does not mean a provider failed.
+
+See [Checks](/api/checks) for completion, queued runs, and failure handling.
+
+## Understand observation coverage
+
+DataForSEO and SerpApi adapters can record local-pack and AI Overview data when
+their response includes it. Coverage depends on the provider response, requested
+scope, and completeness. Missing data is not proof that a feature never appeared
+or that a brand is absent from every AI answer.
+
+An AI Overview observation can preserve a block title and provider fragment.
+It does not establish a normalized citation, citation share, sentiment score,
+or cross-engine AI visibility measurement. Dedicated AI visibility and LLM
+citation tracking remain separate from this capability.
+
+Storage support does not imply that every observation field is exposed by every
+client. Consult the generated **API Reference** for response fields and
+[released client support](/compatibility) for inspected client versions.
+
+## Related workflows
+
+- [Markets and languages](/markets)
+- [Rank history](/api/rank-history)
+- [Domain Overview](/api/domain-overview), which measures organic-search visibility for a domain

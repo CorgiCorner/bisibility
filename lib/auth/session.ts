@@ -8,8 +8,8 @@ import {
 } from "@/lib/auth/return-to";
 import { retryTransientSessionDatabaseRead } from "@/lib/auth/session-retry";
 import { prisma } from "@/lib/db/prisma";
-import { readOnlyDemoConfig } from "@/lib/demo/config";
-import { loadDemoIdentity } from "@/lib/demo/identity";
+import { readDemoConfig } from "@/lib/demo/config";
+import { loadConfiguredDemoActor } from "@/lib/demo/identity";
 import type { Role } from "@/lib/generated/prisma/client";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -54,8 +54,8 @@ export async function enforceActiveSession<T extends { user: { id: string } }>(
     return null;
   }
 
-  if (readOnlyDemoConfig()) {
-    return (await loadDemoIdentity())?.id === session.user.id ? session : null;
+  if (readDemoConfig().kind !== "disabled") {
+    return (await loadConfiguredDemoActor(session.user.id)) ? session : null;
   }
 
   const resolved = await retryTransientSessionDatabaseRead(() =>

@@ -76,10 +76,6 @@ x-app-env: &app-env
   REDIS_TLS_CA_B64: ${REDIS_TLS_CA_B64:-}
   REDIS_URL: ${REDIS_URL:-redis://redis:6379}
   RESEND_API_KEY: ${RESEND_API_KEY:-}
-  RESEND_CONTACTS_API_KEY: ${RESEND_CONTACTS_API_KEY:-}
-  RESEND_SEGMENT_CLOUD: ${RESEND_SEGMENT_CLOUD:-}
-  RESEND_SEGMENT_EARLY_ADOPTERS: ${RESEND_SEGMENT_EARLY_ADOPTERS:-}
-  RESEND_SEGMENT_GENERAL: ${RESEND_SEGMENT_GENERAL:-}
   SCHEDULER_DRIVER: none
   SERPAPI_API_KEY: ${SERPAPI_API_KEY:-}
   SES_CONFIGURATION_SET: ${SES_CONFIGURATION_SET:-}
@@ -94,7 +90,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.22.1}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.23.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate
@@ -105,7 +101,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.22.1}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.23.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:

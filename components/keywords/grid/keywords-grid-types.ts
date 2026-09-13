@@ -2,6 +2,7 @@ import type * as KeywordActions from "@/components/keywords/action-utils";
 import type { ImportTopQueriesAction } from "@/components/onboarding/steps/KeywordTopQueryImport";
 import type * as FirstCheckActions from "@/components/rank-check/FirstCheckBannerAction";
 import type { DataTableDensity } from "@/components/ui/data-table/data-table-types";
+import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { ActiveLens, LensLocationOption } from "@/lib/keywords/lens-model";
 import type { MarketGridViewRow } from "@/lib/keywords/market-grid-model";
 import type { RankTrackerAction } from "@/lib/keywords/rank-tracker-command";
@@ -18,7 +19,20 @@ import type {
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { ProjectDefaultMarket } from "@/lib/serp/default-market";
-import type { CheckHealthView } from "./KeywordGridHealthNotices";
+
+export type CheckHealthView = {
+  budget: { capCents: number; exhausted: boolean; spentCents: number };
+  failed24h: {
+    count: number;
+    latest: {
+      error: string | null;
+      errorCode: string | null;
+      keyword: string;
+      provider: string;
+    } | null;
+  };
+  providerRate: CostRateInfo;
+};
 
 export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   activeViewId?: string | null;

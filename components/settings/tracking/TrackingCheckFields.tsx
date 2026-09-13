@@ -93,7 +93,7 @@ export function TrackingCheckFields({
       <input type="hidden" {...form.register("city")} />
       <input type="hidden" {...form.register("country")} />
       <input type="hidden" {...form.register("locationKey")} />
-      <SettingsField width="field">
+      <SettingsField className="scroll-mt-6" id="tracking-location" tabIndex={-1} width="field">
         <LocationField
           disabled={!canEdit}
           help="One project-wide default. Typing filters countries and available city locations."
@@ -105,7 +105,7 @@ export function TrackingCheckFields({
         />
       </SettingsField>
 
-      <SettingsField width="field">
+      <SettingsField className="scroll-mt-6" id="tracking-device" tabIndex={-1} width="field">
         <FieldLabel className={labelClass} label="Device" />
         <input type="hidden" {...form.register("device")} />
         <MenuSelect
@@ -120,7 +120,7 @@ export function TrackingCheckFields({
         </p>
       </SettingsField>
 
-      <SettingsField width="field">
+      <SettingsField className="scroll-mt-6" id="tracking-depth" tabIndex={-1} width="field">
         <FieldLabel className={labelClass} label="Default SERP depth" />
         <input type="hidden" {...form.register("serpDepth", { valueAsNumber: true })} />
         <MenuSelect
@@ -128,16 +128,13 @@ export function TrackingCheckFields({
           onChange={setDepth}
           options={depthOptions}
           triggerClassName={`${triggerClass} mt-1.5`}
+          triggerTitle={depth < VISIBILITY_HORIZON ? VISIBILITY_SHALLOW_CHECK_COPY : undefined}
+          triggerWrapperClassName="w-full"
           value={String(depth)}
         />
         <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted">
           How far down each result page a check reads.
         </p>
-        {depth < VISIBILITY_HORIZON ? (
-          <p className="m-0 mt-2 text-[11.5px] leading-5 text-yellow-text">
-            {VISIBILITY_SHALLOW_CHECK_COPY}
-          </p>
-        ) : null}
         {depth < defaults.serpDepth ? (
           <p className="m-0 mt-2 text-[11.5px] leading-5 text-yellow-text">
             From the next check, keywords ranking past {depth} record as not found instead of their
@@ -146,7 +143,7 @@ export function TrackingCheckFields({
         ) : null}
       </SettingsField>
 
-      <SettingsField width="full">
+      <SettingsField className="scroll-mt-6" id="tracking-stop-on-match" tabIndex={-1} width="full">
         <Controller
           control={form.control}
           name="serpStopOnMatch"

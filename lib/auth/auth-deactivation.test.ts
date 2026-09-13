@@ -66,6 +66,30 @@ describe("deactivated account session creation", () => {
     expect(options.databaseHooks?.user?.update?.before).toBe(revokeOtherSessionsBeforeEmailChange);
   });
 
+  it("supplies Better Auth's absolute-session option only in editable demo mode", async () => {
+    const standardOptions = auth.options as BetterAuthOptions;
+    expect(standardOptions.session?.disableSessionRefresh).toBeUndefined();
+
+    vi.stubEnv("DEMO_MODE", "editable");
+    vi.stubEnv("DEMO_OWNER_ID", "usr_zyxwvutsrqponmlkjihgfedc");
+    vi.stubEnv("DEMO_PROJECT_ID", "prj_abcdefghijklmnopqrstuvwx");
+    vi.stubEnv("DEMO_USER_ID", "usr_abcdefghijklmnopqrstuvwx");
+    try {
+      vi.resetModules();
+      const { auth: editableAuth } = await import("./auth");
+      const editableOptions = editableAuth.options as BetterAuthOptions;
+
+      expect(editableOptions.session).toMatchObject({
+        disableSessionRefresh: true,
+        expiresIn: 60 * 60 * 24 * 30,
+        updateAge: 60 * 60 * 24,
+      });
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
   it("wires the email OTP two-factor bridge before the cookie integration", () => {
     const options = auth.options as BetterAuthOptions;
     const pluginIds = options.plugins?.map((plugin) => plugin.id);

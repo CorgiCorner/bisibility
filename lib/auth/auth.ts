@@ -34,8 +34,8 @@ import { prepareUserCreation } from "@/lib/auth/user-creation";
 import { handleCreatedUser } from "@/lib/auth/welcome-signup";
 import { prisma } from "@/lib/db/prisma";
 import { readOnlyDemoPlugin } from "@/lib/demo/auth-plugin";
-import { readOnlyDemoConfig } from "@/lib/demo/config";
-import { loadDemoIdentity } from "@/lib/demo/identity";
+import { readDemoConfig, readOnlyDemoConfig } from "@/lib/demo/config";
+import { prepareDemoSessionCreation } from "@/lib/demo/session-policy";
 import {
   normalizeAuthorizationServerOrigin,
   resolveMcpResourceUrl,
@@ -83,13 +83,11 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   };
 }
 
-type SessionCreationInput = { userId: string };
+type SessionCreationInput = { expiresAt: Date; userId: string };
 async function prepareSessionCreation(session: SessionCreationInput) {
-  if (readOnlyDemoConfig() && (await loadDemoIdentity())?.id !== session.userId) {
-    throw new APIError("FORBIDDEN", { message: "Demo identity is unavailable." });
-  }
-  await preventDeactivatedSessionCreation(session);
-  return addAuthPublicId(session, "sid");
+  const demoSession = await prepareDemoSessionCreation(session);
+  await preventDeactivatedSessionCreation(demoSession);
+  return addAuthPublicId(demoSession, "sid");
 }
 
 // Throw instead of returning false because some provider routes would still set cookies;
@@ -222,6 +220,7 @@ export const auth = betterAuth({
     },
     expiresIn: SESSION_TTL_SECONDS,
     updateAge: 60 * 60 * 24,
+    ...(readDemoConfig().kind === "editable" ? { disableSessionRefresh: true } : {}),
     // Cache sessions in a signed cookie for 60s to reduce RSC database reads while
     // keeping revocation latency low.
     cookieCache: {
@@ -256,6 +255,7 @@ export const auth = betterAuth({
     readOnlyDemoPlugin(),
     emailOTP({
       changeEmail: { enabled: true, verifyCurrentEmail: true },
+      disableSignUp: readDemoConfig().kind !== "disabled",
       otpLength: 6,
       expiresIn: 5 * 60,
       storeOTP: "hashed",

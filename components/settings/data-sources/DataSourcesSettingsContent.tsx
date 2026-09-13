@@ -23,14 +23,24 @@ export function DataSourcesSettingsContent({ canEdit, defaults, projectId }: Rea
   };
   return (
     <div className="max-w-[760px] space-y-5" data-data-sources-settings-content="">
-      <div data-testid="url-inspection-card">
+      <div
+        className="scroll-mt-6"
+        id="url-inspection"
+        tabIndex={-1}
+        data-testid="url-inspection-card"
+      >
         <UrlInspectionCard
           canEdit={canEdit}
           dailyLimit={defaults.inspectionDailyLimit}
           projectId={projectId}
         />
       </div>
-      <div data-testid="search-data-sync-card">
+      <div
+        className="scroll-mt-6"
+        id="search-data-sync"
+        tabIndex={-1}
+        data-testid="search-data-sync-card"
+      >
         <SearchDataSyncCard
           canEdit={canEdit}
           metrics={searchSync}

@@ -22,4 +22,13 @@ describe("CostEstimateLine", () => {
     render(<CostEstimateLine checksPerMonth={30} costCents={null} />);
     expect(screen.getByText("~30 checks/mo")).toBeInTheDocument();
   });
+
+  it("describes a zero legacy cap as month-to-date spend instead of a zero limit", () => {
+    render(<CostEstimateLine budget={{ capCents: 0, spentCents: 1250 }} checksPerMonth={1200} />);
+
+    expect(screen.getByText(/~1,200 checks\/mo/)).toHaveTextContent(
+      "~1,200 checks/mo · $12.50 this month",
+    );
+    expect(screen.queryByText(/of \$0\.00/)).not.toBeInTheDocument();
+  });
 });

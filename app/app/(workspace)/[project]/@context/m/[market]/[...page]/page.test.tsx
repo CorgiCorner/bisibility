@@ -1,3 +1,4 @@
+import { RankTrackerHeaderContext } from "@/components/keywords/RankTrackerHeaderContext";
 import { HEADER_CONTEXT_LABEL } from "@/components/shell/HeaderContextSlot";
 import { asMarketRef, asProjectRef, marketPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
@@ -51,6 +52,14 @@ describe("header context slot route", () => {
     expect(mocks.listHeaderMarkets).toHaveBeenCalledWith(PROJECT);
     expect(screen.getByRole("group", { name: HEADER_CONTEXT_LABEL })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "United States" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Device scope" })).toBeInTheDocument();
+  });
+
+  it("registers the device control only for the rank tracker list", async () => {
+    const element = await HeaderContextRoute({
+      params: Promise.resolve({ market: MARKET, page: ["domain-overview"], project: PROJECT }),
+    });
+    expect(element?.type).not.toBe(RankTrackerHeaderContext);
   });
 
   it("covers a deeper market page through the same catch-all", async () => {

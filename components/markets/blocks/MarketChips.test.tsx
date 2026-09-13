@@ -19,6 +19,17 @@ function props(overrides: Partial<MarketChipsProps> = {}): MarketChipsProps {
 }
 
 describe("MarketChips", () => {
+  it("highlights selected markets like device chips and clears the highlight on deselection", () => {
+    const { rerender } = render(<MarketChips {...props()} />);
+    const market = screen.getByRole("button", { name: "Spain / Spanish" });
+    expect(market).toHaveAttribute("aria-pressed", "true");
+    expect(market).toHaveClass("bg-bg-sunken", "text-fg");
+    rerender(<MarketChips {...props({ selected: [] })} />);
+    expect(market).toHaveAttribute("aria-pressed", "false");
+    expect(market).not.toHaveClass("bg-bg-sunken");
+    expect(market).toHaveClass("bg-bg-elev", "text-fg-muted");
+  });
+
   it("changes selection and renders the capability badge from research availability", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

@@ -10,6 +10,9 @@ import {
 import { checkMarketsContract } from "./doc-content-markets.mjs";
 import { checkSelfHostingContract } from "./doc-content-self-hosting.mjs";
 import { checkSdkContract } from "./doc-content-sdks.mjs";
+import { checkDocsSnippetContract } from "./docs-snippet-contract.mjs";
+import { checkDocsVersionContract } from "./docs-version-contract.mjs";
+import { checkRestGuideOperations } from "./rest-guide-links.mjs";
 
 const root = process.cwd();
 const docsRoot = join(root, "docs");
@@ -33,21 +36,7 @@ for (const file of findContractSourceReferences(root, unversionedCloudImportPath
   failures.push(`${file} references forbidden unversioned path ${unversionedCloudImportPath}.`);
 }
 
-function normalizedApiPath(value) {
-  return value.replace(/^\/api\/v1/, "").replaceAll(/\{[^}]+\}/g, "{param}");
-}
-
-const documentedApiPaths = new Set(
-  [...docsText.matchAll(/(\/(?:api\/v1\/)?[A-Za-z0-9_./{}-]+)/g)].map((match) =>
-    normalizedApiPath(match[1]),
-  ),
-);
-
-for (const apiPath of Object.keys(openapi.paths)) {
-  if (!documentedApiPaths.has(normalizedApiPath(apiPath))) {
-    failures.push(`OpenAPI path is not covered in docs: ${apiPath}`);
-  }
-}
+failures.push(...checkRestGuideOperations({ docsRoot, openapi }));
 
 for (const file of docsFiles) {
   const source = readFileSync(file, "utf8");
@@ -198,6 +187,56 @@ for (const failure of checkDomainOverviewContract(readmeSource)) {
 }
 
 const docsConfig = JSON.parse(readFileSync(join(docsRoot, "docs.json"), "utf8"));
+if (docsConfig.seo?.metatags?.canonical) {
+  failures.push(
+    "docs/docs.json must not set a global canonical; Mintlify already emits a page-specific canonical.",
+  );
+}
+if (docsConfig.seo?.indexing !== "navigable") {
+  failures.push('docs/docs.json seo.indexing must be "navigable".');
+}
+if (docsConfig.metadata?.timestamp !== true) {
+  failures.push("docs/docs.json must enable metadata.timestamp.");
+}
+
+const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+const versioningDocs = readFileSync(join(docsRoot, "versioning.mdx"), "utf8");
+for (const term of [
+  `\`${packageJson.version}\``,
+  "`v1`",
+  "bisibility.com/sdk-go",
+  "BISIBILITY_BASE_URL",
+  "pre-1.0",
+]) {
+  if (!versioningDocs.includes(term)) {
+    failures.push(`versioning.mdx is missing required coverage: ${term}`);
+  }
+}
+failures.push(...checkDocsVersionContract(root, docsRoot));
+failures.push(...checkDocsSnippetContract(root, docsRoot));
+
+for (const example of [
+  "examples/ts/quickstart.ts",
+  "examples/ts/list-projects.ts",
+  "examples/python/quickstart.py",
+  "examples/python/list_projects.py",
+  "examples/go/quickstart/main.go",
+  "examples/go/list-projects/main.go",
+  "examples/cli/quickstart.sh",
+]) {
+  const source = readFileSync(join(root, example), "utf8");
+  if (!source.includes("BISIBILITY_BASE_URL")) {
+    failures.push(`${example} must use BISIBILITY_BASE_URL`);
+  }
+}
+
+const hostedQuickstartDocs = readFileSync(join(docsRoot, "hosted-quickstart.mdx"), "utf8");
+for (const term of ["Website", "Provider", "Keywords", "First check", "/quickstart", "/deployment-options"]) {
+  if (!hostedQuickstartDocs.includes(term)) {
+    failures.push(`hosted-quickstart.mdx is missing required coverage: ${term}`);
+  }
+}
+
 for (const redirect of docsConfig.redirects ?? []) {
   const redirectsSdk = redirect.source === "/sdks" || redirect.source.startsWith("/sdks/");
   const targetsApi = redirect.destination === "/api" || redirect.destination.startsWith("/api/");

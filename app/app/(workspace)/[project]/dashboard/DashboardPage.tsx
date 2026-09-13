@@ -34,15 +34,14 @@ async function OverviewData({
     isSample ? Promise.resolve(null) : getOverviewCompetitors(projectRef, filters, now),
   ]);
   const state = overview.state ?? (overview.isEmpty ? "empty" : "populated");
+  const role = getProjectRole(readable.actor, readable.project.id);
 
   return (
     <OverviewDashboardView
       competitors={competitors}
-      canCreateKeyword={canProjectAction(
-        getProjectRole(readable.actor, readable.project.id),
-        "create",
-        "keyword",
-      )}
+      canCreateKeyword={canProjectAction(role, "create", "keyword")}
+      canManageProviders={canProjectAction(role, "manage", "provider_connection")}
+      canRunChecks={canProjectAction(role, "update", "keyword")}
       checkHealth={checkHealth}
       isSample={isSample}
       overview={{ ...overview, state }}

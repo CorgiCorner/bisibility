@@ -33,7 +33,7 @@ describe("DataForSEO fallback attempts", () => {
           JSON.stringify({
             status_code: 20000,
             status_message: "Ok.",
-            tasks: [{ status_code: 40201, status_message: "Insufficient funds" }],
+            tasks: [{ status_code: 40210, status_message: "Insufficient funds" }],
           }),
           { status: 200 },
         ),

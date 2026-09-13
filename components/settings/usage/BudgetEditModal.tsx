@@ -4,6 +4,7 @@ import { BudgetAmountField } from "@/components/settings/usage/BudgetAmountField
 import {
   BUDGET_MODAL_CONSEQUENCE_COPY,
   budgetFieldChanged,
+  budgetFromProviderAvailability,
   budgetInitialValue,
   buildProviderAllocationPayload,
   providerUsageContextLine,
@@ -12,7 +13,10 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { StatusPill } from "@/components/ui/StatusPill";
-import type { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
+import {
+  refreshProviderConnectionBudgetAction,
+  type updateProviderConnectionAllocationAction,
+} from "@/lib/actions/provider-allocation";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
 import { appPath } from "@/lib/routing/app-path";
 import type { ProviderAllocationInput } from "@/lib/schemas/usage-settings";
@@ -45,6 +49,7 @@ export function BudgetEditModal({
     Object.fromEntries(connections.map((item) => [item.connectionId, budgetInitialValue(item)])),
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [refreshing, setRefreshing] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const showPrimaryChip = connections.length > 1;
 
@@ -62,6 +67,23 @@ export function BudgetEditModal({
     const message = validateBudgetField(connection, values[connection.connectionId] ?? "");
     setFieldError(connection.connectionId, message);
     return message === null;
+  }
+
+  async function applyProviderBalance(connection: ProviderSpendConnection) {
+    setRefreshing(connection.connectionId);
+    setFieldError(connection.connectionId, null);
+    try {
+      const fresh = await refreshProviderConnectionBudgetAction(
+        projectRef,
+        connection.connectionId,
+      );
+      const value = budgetFromProviderAvailability(fresh);
+      setValues((current) => ({ ...current, [connection.connectionId]: value }));
+    } catch (error) {
+      setFieldError(connection.connectionId, actionErrorMessage(error));
+    } finally {
+      setRefreshing(null);
+    }
   }
 
   async function submit() {
@@ -107,12 +129,12 @@ export function BudgetEditModal({
     <Modal
       footer={
         <>
-          <Button disabled={saving} onClick={onClose} variant="secondary">
+          <Button disabled={saving || refreshing !== null} onClick={onClose} variant="secondary">
             Cancel
           </Button>
           {connections.length ? (
             <Button
-              disabled={saving}
+              disabled={saving || refreshing !== null}
               loading={saving}
               loadingLabel="Saving"
               onClick={submit}
@@ -131,7 +153,8 @@ export function BudgetEditModal({
       {connections.length ? (
         <>
           <p className="m-0 text-[12.5px] leading-[1.55] text-fg-muted">
-            Set a monthly budget for each provider.
+            Set a monthly budget for each provider. Using the provider balance includes this month’s
+            usage so the remaining budget matches the available balance.
           </p>
           <div className="mt-4 hidden sm:grid sm:grid-cols-[minmax(0,1fr)_180px] sm:gap-3">
             <span />
@@ -171,6 +194,19 @@ export function BudgetEditModal({
                     }
                     value={values[connection.connectionId] ?? ""}
                   />
+                  {connection.providerId === "dataforseo" || connection.providerId === "serpapi" ? (
+                    <Button
+                      className="mt-1"
+                      disabled={saving || refreshing !== null}
+                      size="xs"
+                      variant="ghost"
+                      onClick={() => void applyProviderBalance(connection)}
+                    >
+                      {refreshing === connection.connectionId
+                        ? "Refreshing..."
+                        : "Use provider balance"}
+                    </Button>
+                  ) : null}
                 </div>
                 {errors[connection.connectionId] ? (
                   <p className="m-0 text-[11.5px] text-red-text sm:col-span-2">

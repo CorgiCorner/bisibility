@@ -15,7 +15,9 @@ import type { ProjectRef } from "@/lib/routing/app-path";
 import { appPath } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { VIEWER_ASK_ADMIN_SERP } from "@/lib/ui/viewer-affordances";
 import { VISIBILITY_DESCRIPTION, visibilityCoverageCopy } from "@/lib/visibility/definition";
+import type { ReactNode } from "react";
 import { PositionDistributionCard } from "./PositionDistributionCard";
 import { PositionTrendCard } from "./PositionTrendCard";
 import type { DistributionBucket, OverviewView, TrendPoint } from "./types";
@@ -61,6 +63,9 @@ function bannerText(state: Exclude<NoDataBannerState, "ready">, keywordCount: nu
 }
 
 export function NoDataBanner({
+  canCreateKeyword = true,
+  canManageProviders = true,
+  canRunChecks = true,
   getFirstCheckRunPlanAction,
   keywordCount,
   keywordId,
@@ -70,6 +75,9 @@ export function NoDataBanner({
   runCheckNowAction,
   state,
 }: Readonly<{
+  canCreateKeyword?: boolean;
+  canManageProviders?: boolean;
+  canRunChecks?: boolean;
   getFirstCheckRunPlanAction: GetFirstCheckRunPlanAction;
   keywordCount: number;
   keywordId: string | null;
@@ -81,21 +89,24 @@ export function NoDataBanner({
 }>) {
   if (state === "ready") {
     const needsKeywords = !keywordId && keywordCount === 0;
-    const action = keywordId ? (
-      <FirstCheckBannerAction
-        getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
-        keywordId={keywordId}
-        projectId={projectId}
-        projectRef={projectRef}
-        queueFirstChecksAction={queueFirstChecksAction}
-        runCheckNowAction={runCheckNowAction}
-      />
-    ) : (
-      <FirstCheckBannerLink
-        href={appPath(projectRef, needsKeywords ? "rank-tracker?add=1" : "rank-tracker")}
-        label={needsKeywords ? "Add keywords" : "View keywords"}
-      />
-    );
+    const action =
+      keywordId && canRunChecks ? (
+        <FirstCheckBannerAction
+          getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
+          keywordId={keywordId}
+          projectId={projectId}
+          projectRef={projectRef}
+          queueFirstChecksAction={queueFirstChecksAction}
+          runCheckNowAction={runCheckNowAction}
+        />
+      ) : needsKeywords && canCreateKeyword ? (
+        <FirstCheckBannerLink
+          href={appPath(projectRef, needsKeywords ? "rank-tracker?add=1" : "rank-tracker")}
+          label={needsKeywords ? "Add keywords" : "View keywords"}
+        />
+      ) : !needsKeywords ? (
+        <FirstCheckBannerLink href={appPath(projectRef, "rank-tracker")} label="View keywords" />
+      ) : null;
     return (
       <FirstCheckBanner
         action={action}
@@ -106,13 +117,16 @@ export function NoDataBanner({
   }
 
   const copy = bannerText(state, keywordCount);
-  let action = (
+  const viewerBlocked = !canManageProviders && (state === "missing" || state === "needs_attention");
+  let action: ReactNode = (
     <FirstCheckBannerLink
       href={appPath(projectRef, "integrations#all-providers")}
       label="Connect"
     />
   );
-  if (state === "migration_hold") {
+  if (viewerBlocked) {
+    action = undefined;
+  } else if (state === "migration_hold") {
     action = (
       <FirstCheckBannerLink href={appPath(projectRef, "rank-tracker")} label="View keywords" />
     );
@@ -127,7 +141,13 @@ export function NoDataBanner({
     action = <FirstCheckBannerLink href={projectRunsPath(projectRef)} label="View check runs" />;
   }
 
-  return <FirstCheckBanner action={action} detail={copy.detail} title={copy.title} />;
+  return (
+    <FirstCheckBanner
+      action={action}
+      detail={viewerBlocked && state === "missing" ? VIEWER_ASK_ADMIN_SERP : copy.detail}
+      title={copy.title}
+    />
+  );
 }
 
 type NoDataKpiRowProps = {
@@ -203,12 +223,21 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
 export function NoDataCharts({
   distribution,
   domain,
+  source,
   trend,
-}: Readonly<{ distribution: DistributionBucket[]; domain: string; trend: TrendPoint[] }>) {
+}: Readonly<{
+  distribution: DistributionBucket[];
+  domain: string;
+  source: ReactNode;
+  trend: TrendPoint[];
+}>) {
   return (
-    <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]">
+    <>
       <PositionTrendCard data={trend} empty seriesLabel={domain} />
-      <PositionDistributionCard buckets={distribution} empty />
-    </section>
+      <section className="grid min-w-0 gap-4 lg:grid-cols-2">
+        <PositionDistributionCard buckets={distribution} empty />
+        {source}
+      </section>
+    </>
   );
 }

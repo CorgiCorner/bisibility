@@ -12,6 +12,7 @@ import {
   type SearchBackfillFacts,
   type SearchBackfillKind,
 } from "@/lib/search-insights/sync/control-model";
+import { VIEWER_ASK_ADMIN_GSC } from "@/lib/ui/viewer-affordances";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/csr/GoogleLogo";
 import { SearchInsightsRefresh } from "./SearchInsightsRefresh";
@@ -26,6 +27,7 @@ import {
 } from "./search-insights-copy";
 
 export type SearchInsightsNoPropertyStateProps = {
+  canManageProviders?: boolean;
   projectId: string;
   propertyName?: string;
   /** The connection exists but the provider stopped accepting the stored authorization. */
@@ -37,6 +39,7 @@ export function searchInsightsModulePath(projectId: string) {
 }
 
 export function SearchInsightsNoPropertyState({
+  canManageProviders = true,
   projectId,
   propertyName,
   reauth = false,
@@ -59,9 +62,13 @@ export function SearchInsightsNoPropertyState({
           >
             Open Search Console
           </Button>
-          <Button href={href} variant="primary">
-            {reauth ? REAUTH_CTA : NO_PROPERTY_CTA}
-          </Button>
+          {canManageProviders ? (
+            <Button href={href} variant="primary">
+              {reauth ? REAUTH_CTA : NO_PROPERTY_CTA}
+            </Button>
+          ) : (
+            <p className="m-0 self-center text-[13px] text-fg-muted">{VIEWER_ASK_ADMIN_GSC}</p>
+          )}
         </div>
       }
       description={reauth ? REAUTH_BODY : NO_PROPERTY_BODY}
@@ -90,6 +97,7 @@ const SELF_RESOLVING: ReadonlySet<SearchBackfillKind> = new Set([
 ]);
 
 export type SearchInsightsNoDataStateProps = {
+  canManageProviders?: boolean;
   facts: SearchBackfillFacts;
   projectId: string;
   pauseAction: SearchInsightsImportAction;
@@ -98,6 +106,7 @@ export type SearchInsightsNoDataStateProps = {
 };
 
 export function SearchInsightsNoDataState({
+  canManageProviders = true,
   facts,
   projectId,
 }: Readonly<SearchInsightsNoDataStateProps>) {
@@ -108,8 +117,9 @@ export function SearchInsightsNoDataState({
     provider: "gsc",
     returnPath: searchInsightsModulePath(projectId),
   });
+  const reconnectBlocked = model.action === "reconnect" && !canManageProviders;
   const primary =
-    model.action === "reconnect" ? (
+    model.action === "reconnect" && canManageProviders ? (
       <Button href={reconnectHref} variant="primary">
         Reconnect Search Console
       </Button>
@@ -117,10 +127,13 @@ export function SearchInsightsNoDataState({
   const watching = SELF_RESOLVING.has(model.kind);
   const importRunning = model.kind === "running";
   const action =
-    primary || watching ? (
+    primary || watching || reconnectBlocked ? (
       <div className="flex flex-wrap items-center justify-center gap-2.5">
         {primary}
         {watching ? <SearchInsightsRefresh active={importRunning} /> : null}
+        {reconnectBlocked ? (
+          <p className="m-0 self-center text-[13px] text-fg-muted">{VIEWER_ASK_ADMIN_GSC}</p>
+        ) : null}
       </div>
     ) : null;
   return (

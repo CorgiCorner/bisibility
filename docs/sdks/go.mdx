@@ -9,6 +9,9 @@ description: "Install and authenticate the Go SDK, then list projects."
 go get bisibility.com/sdk-go
 ```
 
+The current docs-tested module is `bisibility.com/sdk-go v0.10.0`. See
+[Versioning and support](/versioning).
+
 ## Authenticate
 
 Keep the API root and credential in environment variables:
@@ -23,51 +26,61 @@ The client accepts project API keys and
 
 ## List projects
 
-The runnable quickstart constructs the client and begins with a real read against
-`GET /projects`:
+This copyable quickstart constructs the client and lists projects. Paste it
+into a fresh file after the install and environment steps above:
 
 {/* docs-example:start go-client-usage */}
-{/* Generated from examples/go/quickstart/main.go (region client-usage). Do not edit. */}
+{/* Generated from examples/go/list-projects/main.go. Do not edit. */}
 ```go
-apiKey, err := requiredEnv("BISIBILITY_API_KEY")
-if err != nil {
-	return err
-}
-baseURL, err := requiredEnv("BISIBILITY_BASE_URL")
-if err != nil {
-	return err
-}
+package main
 
-client, err := bisibility.NewClient(
-	bisibility.WithAPIKey(apiKey),
-	bisibility.WithBaseURL(baseURL),
+import (
+	"context"
+	"fmt"
+	"os"
+
+	bisibility "bisibility.com/sdk-go"
 )
-if err != nil {
-	return err
-}
 
-ctx := context.Background()
-var keywordID string
-defer func() {
-	if keywordID == "" {
-		return
+func main() {
+	apiKey := os.Getenv("BISIBILITY_API_KEY")
+	baseURL := os.Getenv("BISIBILITY_BASE_URL")
+	if apiKey == "" || baseURL == "" {
+		fmt.Fprintln(os.Stderr, "Set BISIBILITY_API_KEY and BISIBILITY_BASE_URL before running this example.")
+		os.Exit(1)
 	}
-	fmt.Printf("Deleting keyword %s\n", keywordID)
-	if _, deleteErr := client.DeleteKeyword(ctx, keywordID); deleteErr != nil && err == nil {
-		err = deleteErr
-	}
-}()
 
-fmt.Println("Listing projects")
-projects, err := client.ListProjects(ctx)
-if err != nil {
-	return err
+	client, err := bisibility.NewClient(
+		bisibility.WithAPIKey(apiKey),
+		bisibility.WithBaseURL(baseURL),
+	)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	projects, err := client.ListProjects(context.Background())
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	for _, project := range projects.Data {
+		fmt.Println(project.ID, project.Domain)
+	}
+
+	fmt.Println("OK go-list-projects")
 }
 ```
 {/* docs-example:end go-client-usage */}
 
-See [Projects](/api/projects#list-projects) for the request and response
-contract.
+A successful run prints each project id and domain, then `OK go-list-projects`.
+
+See [`GET /projects`](/api-reference/projects/list-projects-visible-to-this-api-key)
+for the request and response contract.
+
+The [complete Go example](https://github.com/CorgiCorner/bisibility/blob/main/examples/go/quickstart/main.go)
+also creates a keyword, runs a rank check, and cleans up.
 
 ## Next steps
 

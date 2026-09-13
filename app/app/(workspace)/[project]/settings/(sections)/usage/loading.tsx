@@ -1,1 +1,3 @@
-export { UsageLoading as default } from "@/components/settings/usage/UsageLoading";
+export default function UsageRedirectLoading() {
+  return null;
+}

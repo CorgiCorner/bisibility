@@ -36,6 +36,7 @@ import {
 } from "./search-insights-trust-model";
 
 export type SearchInsightsTrustStripProps = {
+  canManageProviders?: boolean;
   coverage: SearchInsightsCoverage;
   deploymentMode: "cloud" | "self-host";
   localViewReady: boolean;
@@ -101,12 +102,14 @@ function IncidentPill({ incidents }: Readonly<{ incidents: readonly DataIncident
   );
 }
 function ImportLine({
+  canManageProviders,
   hideRefresh = false,
   facts,
   importState,
   projectId = "",
   statusFacts,
 }: Readonly<{
+  canManageProviders: boolean;
   hideRefresh?: boolean;
   facts: ImportObservabilityFacts | null;
   importState: SearchInsightsImportState | null;
@@ -134,6 +137,7 @@ function ImportLine({
       data-testid="search-import-line"
     >
       <SearchSyncStatusControl
+        disabled={!canManageProviders}
         leadingActionNode={refresh}
         model={displayModel}
         reconnectHref={reconnectHref}
@@ -142,6 +146,7 @@ function ImportLine({
   );
 }
 export function SearchInsightsTrustStrip({
+  canManageProviders = true,
   coverage,
   deploymentMode,
   localViewReady,
@@ -235,6 +240,7 @@ export function SearchInsightsTrustStrip({
       {localViewReady && statusFacts ? (
         <div className="col-span-full border-t border-border px-4 py-2.5">
           <ImportLine
+            canManageProviders={canManageProviders}
             facts={facts}
             importState={importState}
             projectId={projectId}

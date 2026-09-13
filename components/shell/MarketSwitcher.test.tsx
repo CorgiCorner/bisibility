@@ -83,8 +83,16 @@ describe("MarketSwitcher trigger", () => {
     expect(button).toHaveClass("h-8");
     expect(button).toHaveAttribute("aria-haspopup", "dialog");
     expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(button).toHaveClass(
+      "border-transparent",
+      "bg-transparent",
+      "hover:border-transparent",
+      "hover:bg-bg-sunken",
+      "active:bg-bg-inset",
+      "focus-visible:outline-accent-solid",
+    );
     expect(button.querySelector("[data-market-name]")).toHaveClass("sm:max-w-[240px]", "truncate");
-    expect(button.querySelector("svg")).toBeInTheDocument();
+    expect(button.querySelector("[data-context-switcher-caret]")).toBeInTheDocument();
     expect(button.closest("[data-tooltip]")).toHaveAttribute("data-tooltip", "United States");
   });
 

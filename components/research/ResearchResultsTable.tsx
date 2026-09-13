@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  StoredResultFreshness,
+  type StoredResultFreshness as StoredResultFreshnessData,
+} from "@/components/demo-research/StoredResultFreshness";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/data-table/DataTable";
@@ -35,16 +39,18 @@ type ResearchResultsTableProps = {
   filterCount: number;
   metricsAvailable?: boolean;
   onActiveChange: (row: GroupedResearchRow) => void;
-  onAddSelected: () => void;
-  onDeeper: () => void;
+  onAddSelected?: () => void;
+  onDeeper?: () => void;
   onOpenFilters: () => void;
-  onSaveSelected: (rows: GroupedResearchRow[]) => void;
-  onSelectionChange: (keywords: string[]) => void;
-  onToggleSave: (row: GroupedResearchRow) => void;
+  onSaveSelected?: (rows: GroupedResearchRow[]) => void;
+  onSelectionChange?: (keywords: string[]) => void;
+  onToggleSave?: (row: GroupedResearchRow) => void;
+  readOnly?: boolean;
   rows: GroupedResearchRow[];
   seed: string;
   selectedKeywords: string[];
   totalCount: number;
+  storedFreshness?: StoredResultFreshnessData;
   trackingMarketCount?: number;
 };
 
@@ -64,9 +70,11 @@ export function ResearchResultsTable({
   onSelectionChange,
   onToggleSave,
   rows,
+  readOnly = false,
   seed,
   selectedKeywords,
   totalCount,
+  storedFreshness,
   trackingMarketCount = 1,
   metricsAvailable = true,
 }: Readonly<ResearchResultsTableProps>) {
@@ -92,7 +100,7 @@ export function ResearchResultsTable({
 
   return (
     <Card className="min-w-0 overflow-hidden p-0" size="md">
-      {selectedKeywords.length > 0 ? (
+      {!readOnly && selectedKeywords.length > 0 ? (
         <div
           className="@container grid gap-2 border-b border-border bg-accent-soft px-4 py-2.5 @4xl:grid-cols-[minmax(0,1fr)_auto] @4xl:items-center"
           data-testid="research-selection-toolbar"
@@ -103,7 +111,7 @@ export function ResearchResultsTable({
           >
             <strong className="text-[12.5px] text-fg">{selectedKeywords.length} selected</strong>
             <Button
-              onClick={() => onSelectionChange([])}
+              onClick={() => onSelectionChange?.([])}
               size="sm"
               startIcon={<X weight="regular" size={13} />}
               variant="ghost"
@@ -119,7 +127,7 @@ export function ResearchResultsTable({
               className="w-full @4xl:w-auto"
               onClick={() => {
                 const selected = new Set(selectedKeywords);
-                onSaveSelected(rows.filter((row) => selected.has(row.keyword)));
+                onSaveSelected?.(rows.filter((row) => selected.has(row.keyword)));
               }}
               size="sm"
               startIcon={<BookmarkSimple weight="regular" size={14} />}
@@ -162,9 +170,10 @@ export function ResearchResultsTable({
         </Button>
         <p className="m-0 min-w-0 flex-1 text-[12px] text-fg-muted">
           Showing <strong className="text-fg">{rows.length}</strong> of {totalCount} keywords
-          {cached ? ` - cached ${fetchedAge}` : ` - fetched ${fetchedAge}`}
+          {storedFreshness ? null : cached ? ` - cached ${fetchedAge}` : ` - fetched ${fetchedAge}`}
         </p>
         <ResearchExportMenu rows={rows} seed={seed} />
+        {storedFreshness ? <StoredResultFreshness {...storedFreshness} /> : null}
       </div>
       <div
         className="h-[620px] min-w-0 [&>[role=table]]:border-0 [&_.bv-research-save-toggle]:opacity-0 [&_.bv-research-save-toggle]:transition-[opacity,color] [&_[role=row]:hover_.bv-research-save-toggle]:opacity-100 [&_.bv-research-save-toggle:focus-visible]:opacity-100"
@@ -180,8 +189,13 @@ export function ResearchResultsTable({
           layout="fill"
           onPaginationChange={setPagination}
           onRowClick={onActiveChange}
-          onSelectionChange={(next) =>
-            onSelectionChange(researchResultsSelectedKeywords(tableRows, next, selectedKeywords))
+          onSelectionChange={
+            readOnly
+              ? undefined
+              : (next) =>
+                  onSelectionChange?.(
+                    researchResultsSelectedKeywords(tableRows, next, selectedKeywords),
+                  )
           }
           onSortingChange={setSorting}
           pagination={{
@@ -196,13 +210,13 @@ export function ResearchResultsTable({
               : undefined
           }
           rows={tableRows}
-          selectable={(row) => !row.alreadyTracked}
-          selection={selection}
+          selectable={readOnly ? undefined : (row) => !row.alreadyTracked}
+          selection={readOnly ? undefined : selection}
           sorting={sorting}
           sortingMode="client"
         />
       </div>
-      {deeper ? (
+      {deeper && onDeeper ? (
         <p className="m-0 border-t border-border px-4 py-3 text-[12px] text-fg-muted">
           Showing all {fetchedCount} fetched -{" "}
           <button

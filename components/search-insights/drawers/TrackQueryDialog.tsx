@@ -220,13 +220,12 @@ export function TrackQueryDialog({
               options={depthOptions}
               pinCaret
               triggerClassName={SELECT}
+              triggerTitle={
+                serpDepth < VISIBILITY_HORIZON ? VISIBILITY_SHALLOW_CHECK_COPY : undefined
+              }
+              triggerWrapperClassName="w-full"
               value={String(serpDepth)}
             />
-            {serpDepth < VISIBILITY_HORIZON ? (
-              <span className="mt-1 text-ui-caption leading-normal text-yellow-text">
-                {VISIBILITY_SHALLOW_CHECK_COPY}
-              </span>
-            ) : null}
           </section>
         </div>
         <section className="flex flex-col gap-1.5 rounded-card border border-border bg-bg-sunken px-3.5 py-3">

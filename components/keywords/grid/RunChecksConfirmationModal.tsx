@@ -53,9 +53,10 @@ const SAFE_IMMEDIATE_BLOCK_CODES = new Set([
 ]);
 
 function dominantProviderCode(failures: RunChecksFailure[]) {
-  const recognized = failures.flatMap((failure) =>
-    isProviderErrorCode(failure.code) ? [failure.code] : [],
-  );
+  const recognized = failures.flatMap((failure) => {
+    const code = providerFailurePresentation(failure.code, failure.message).code;
+    return isProviderErrorCode(code) ? [code] : [];
+  });
   return recognized.length > 0 ? dominantErrorCode(recognized) : null;
 }
 

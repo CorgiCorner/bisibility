@@ -132,6 +132,16 @@ describe("check health query", () => {
     });
   });
 
+  it("does not treat a zero cap as exhausted", async () => {
+    mocks.requireReadableProject.mockResolvedValue({
+      project: { ...project, budgetCapCents: 0 },
+    });
+
+    await expect(getCheckHealth("prj_1", { now })).resolves.toMatchObject({
+      budget: { capCents: 0, exhausted: false, spentCents: 0 },
+    });
+  });
+
   it("keeps budget available when monthly spend is below the cap", async () => {
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 125 } });
 

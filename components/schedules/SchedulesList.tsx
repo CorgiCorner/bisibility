@@ -108,6 +108,7 @@ export function SchedulesList({
     <Card className="min-w-0 overflow-hidden p-0" size="sm">
       <section aria-labelledby="schedules-list-title">
         <TableCardHeader
+          className="border-b border-border"
           titleId="schedules-list-title"
           title={`${schedules.length} ${schedules.length === 1 ? "schedule" : "schedules"}`}
           actions={
@@ -126,9 +127,15 @@ export function SchedulesList({
                   )
                 }
               />
-              <Button href={projectSchedulesPath(projectRef, "new")} size="sm" variant="secondary">
-                New schedule
-              </Button>
+              {canUpdate ? (
+                <Button
+                  href={projectSchedulesPath(projectRef, "new")}
+                  size="sm"
+                  variant="secondary"
+                >
+                  New schedule
+                </Button>
+              ) : null}
             </>
           }
         />

@@ -13,6 +13,7 @@ export async function scheduleRunHistory(
     select: { ...rankCheckRunSelect, createdAt: true },
     where: {
       projectId,
+      deletedAt: null,
       checkSchedule: { publicId: scheduleId },
       AND: [
         { OR: [{ launchedAt: { not: null } }, { status: "cancelled", finishedAt: { not: null } }] },

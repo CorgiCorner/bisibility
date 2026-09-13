@@ -201,7 +201,7 @@ export const featureStatus = {
     docs: "/docs/guides/alerts",
   },
   aiVisibilityTracking: {
-    label: "AI Overview and LLM visibility tracking",
+    label: "dedicated AI visibility and LLM citation tracking",
     status: "exploring",
     docs: "/roadmap",
   },
@@ -211,7 +211,11 @@ export const featureStatus = {
     docs: "/docs/integrations",
     scope: "self-host",
   },
-  hostedCloud: { label: "the hosted service", status: "open-beta", docs: "/roadmap" },
+  hostedCloud: {
+    label: "the hosted service",
+    status: "open-beta",
+    docs: "/docs/hosted-quickstart",
+  },
 } as const satisfies Record<string, FeatureStatusEntry>;
 
 export type FeatureKey = keyof typeof featureStatus;

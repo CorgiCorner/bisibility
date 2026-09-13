@@ -116,13 +116,7 @@ export function InstallPageContent({
               </>
             ) : (
               <p className="m-0 text-[12.5px] text-fg-muted">
-                No API key yet.{" "}
-                <Link
-                  className="text-accent-text no-underline hover:underline"
-                  href={appPath(projectRef, "settings", "developers")}
-                >
-                  Create one in Settings, Developers.
-                </Link>
+                No API key yet. Project admins can create one under Settings → Developers.
               </p>
             )}
             <CodeBlock label="Copy curl example" text={curl} />

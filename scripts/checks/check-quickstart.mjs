@@ -103,8 +103,16 @@ try {
     "docs/quickstart.mdx is missing the 'Demo login' heading anchor",
   );
   assert(
-    /#{1,6}\s*5\.\s*Run the first check/.test(quickstart),
-    "docs/quickstart.mdx is missing the '5. Run the first check' heading anchor",
+    /#{1,6}\s*Optional:\s*run a live rank check/.test(quickstart),
+    "docs/quickstart.mdx is missing the optional live-check heading",
+  );
+  assert(
+    quickstart.includes("You can stop here"),
+    "docs/quickstart.mdx must end the core demo before a provider account is required",
+  );
+  assert(
+    !/4\.\s*After connecting your own SERP provider/.test(quickstart),
+    "docs/quickstart.mdx must not treat a live provider check as core Success",
   );
 
   console.log("Public quickstart generates every required value and validates Docker Compose.");

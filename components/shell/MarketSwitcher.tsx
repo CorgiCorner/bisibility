@@ -1,5 +1,6 @@
 "use client";
 
+import { ContextSwitcherTrigger } from "@/components/shell/ContextSwitcherTrigger";
 import { ALL_MARKETS_VALUE, MarketSwitcherMenu } from "@/components/shell/MarketSwitcherMenu";
 import { Popup as Popover } from "@/components/ui/Popup";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -8,7 +9,6 @@ import { marketSwitchDestination } from "@/lib/markets/header-context";
 import { MARKETS_SECTION } from "@/lib/markets/market-routes";
 import { appPath, contextFreePathname, type ProjectRef } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { CaretUpDownIcon as CaretUpDown } from "@phosphor-icons/react/dist/csr/CaretUpDown";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { flushSync } from "react-dom";
@@ -87,21 +87,19 @@ export function MarketSwitcher({
   return (
     <>
       <Tooltip content={label} semantics="description">
-        <button
+        <ContextSwitcherTrigger
           aria-expanded={open}
           aria-haspopup="dialog"
           aria-label={label}
-          className="flex h-8 min-w-0 flex-none items-center gap-1.5 rounded-control border border-border-control bg-bg-elev px-2.5 text-[13px] font-medium text-fg outline-none transition-colors hover:border-border-control hover:bg-bg-sunken focus-visible:border-accent"
           // While the popover is open its own backdrop covers the trigger, so this cannot fire
           // as a second toggle: a click there closes through `onClose` and never reaches here.
           onClick={(event) => setAnchorEl(event.currentTarget)}
-          type="button"
+          open={open}
         >
           <span className="max-w-[100px] min-w-0 truncate sm:max-w-[240px]" data-market-name>
             {label}
           </span>
-          <CaretUpDown aria-hidden className="flex-none text-fg-muted" size={14} weight="regular" />
-        </button>
+        </ContextSwitcherTrigger>
       </Tooltip>
       <Popover
         anchorEl={anchorEl}

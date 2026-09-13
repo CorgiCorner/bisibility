@@ -44,6 +44,14 @@ function failureCopy(errorCode: string | null): FailureCopy {
       showViewCheckDetails: true,
     };
   }
+  if (errorCode === "provider_account_restricted") {
+    return {
+      body: providerFailurePresentation(errorCode).message,
+      showOpenIntegrations: true,
+      showTryAgain: false,
+      showViewCheckDetails: true,
+    };
+  }
   if (errorCode === "provider_auth") {
     return {
       body: "The rank data provider rejected the credentials. Reconnect the provider and run the check again.",
@@ -135,7 +143,7 @@ function FailedBody({
   const safeMessage =
     message && SAFE_IMMEDIATE_BLOCK_CODES.has(errorCode ?? "")
       ? message
-      : providerFailurePresentation(errorCode).message;
+      : providerFailurePresentation(errorCode, message).message;
   return (
     <div role="alert">
       <p className="m-0 text-[13px] leading-5 text-fg-muted">{safeMessage}</p>
@@ -165,7 +173,9 @@ export function KeywordFirstCheckModal({
   const isFailed = step === "failed";
   const isConfirm = step === "confirm";
   const modalOnClose = step === "success" ? onContinue : onClose;
-  const failedCopy = failureCopy(errorCode);
+  const failedCopy = failureCopy(
+    providerFailurePresentation(errorCode, confirmError).code ?? errorCode,
+  );
   const detailRunId = rankCheckId && isPublicIdOfType(rankCheckId, "rcr") ? rankCheckId : null;
   const checksHref = detailRunId
     ? projectRunRankCheckPath(projectRef, detailRunId)

@@ -75,13 +75,11 @@ function renderCard(
   return onResearchScopeChange;
 }
 
-describe("DomainOverviewAnalyzeCard country and language picker", () => {
+describe("DomainOverviewAnalyzeCard country picker", () => {
   it("fills the desktop picker wrapper and shows the selected country flag", () => {
     renderCard([domainOverviewScopeFixture]);
 
-    const trigger = screen.getByRole("button", {
-      name: "Country and language: United States / English",
-    });
+    const trigger = screen.getByRole("button", { name: "Country: United States" });
     expect(trigger).toHaveClass("h-[34px]", "min-h-[34px]", "w-full");
     expect(trigger).not.toHaveClass("h-10", "min-h-10");
     expect(trigger.parentElement).toHaveClass("w-full");
@@ -92,12 +90,10 @@ describe("DomainOverviewAnalyzeCard country and language picker", () => {
   it("uses the exact change tooltip", async () => {
     const user = userEvent.setup();
     renderCard([domainOverviewScopeFixture]);
-    const trigger = screen.getByRole("button", {
-      name: "Country and language: United States / English",
-    });
+    const trigger = screen.getByRole("button", { name: "Country: United States" });
 
     await user.hover(trigger);
-    expect(await screen.findByText("Change country and language")).toBeInTheDocument();
+    expect(await screen.findByText("Change country")).toBeInTheDocument();
   });
 
   it("keeps the domain target within the exact compact control height", () => {
@@ -134,22 +130,17 @@ describe("DomainOverviewAnalyzeCard country and language picker", () => {
       vi.fn(),
       searchableCatalogScopes,
     );
-    const trigger = screen.getByRole("button", {
-      name: "Country and language: United States / English",
-    });
+    const trigger = screen.getByRole("button", { name: "Country: United States" });
 
     await user.click(trigger);
-    const germany = screen.getByRole("menuitem", { name: /Germany \/ German/ });
+    const germany = screen.getByRole("menuitem", { name: /Germany/ });
     expect(germany).not.toHaveAttribute("title");
     await user.click(germany);
     expect(onResearchScopeChange).toHaveBeenCalledWith(germanyScope);
 
     await user.click(trigger);
-    await user.type(
-      screen.getByRole("textbox", { name: "Search countries and languages..." }),
-      "spain",
-    );
-    const unavailable = screen.getByRole("menuitem", { name: /Spain \/ Basque/ });
+    await user.type(screen.getByRole("textbox", { name: "Search countries" }), "spain");
+    const unavailable = screen.getByRole("menuitem", { name: /Spain/ });
     expect(unavailable).toHaveAttribute("aria-disabled", "true");
     expect(unavailable).not.toHaveAttribute("title");
     const unavailableDescId = unavailable.getAttribute("aria-describedby");
@@ -162,18 +153,28 @@ describe("DomainOverviewAnalyzeCard country and language picker", () => {
     expect(onResearchScopeChange).toHaveBeenCalledTimes(1);
   });
 
-  it("hides the catalog until search and uses the exact empty-state messages", async () => {
+  it("lists the whole catalog without typing and uses the exact no-results message", async () => {
     const user = userEvent.setup();
     renderCard([], vi.fn(), searchableCatalogScopes);
 
-    await user.click(
-      screen.getByRole("button", { name: "Country and language: United States / English" }),
-    );
-    expect(screen.queryByText("Countries and languages")).not.toBeInTheDocument();
-    expect(screen.getByText("Type to search countries and languages.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Country: United States" }));
+    expect(screen.getByRole("menuitem", { name: /France/ })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Sweden/ })).toBeInTheDocument();
 
-    const search = screen.getByRole("textbox", { name: "Search countries and languages..." });
+    const search = screen.getByRole("textbox", { name: "Search countries" });
     await user.type(search, "missing");
-    expect(screen.getByText("No country and language matches this search.")).toBeInTheDocument();
+    expect(screen.getByText("No country matches this search.")).toBeInTheDocument();
+  });
+
+  it("separates tracked countries from the rest of the catalog", async () => {
+    const user = userEvent.setup();
+    renderCard([domainOverviewScopeFixture, germanyScope], vi.fn(), searchableCatalogScopes);
+
+    await user.click(screen.getByRole("button", { name: "Country: United States" }));
+    expect(screen.getByText("Tracked countries")).toBeVisible();
+    expect(screen.getByText("All countries")).toBeVisible();
+    const names = screen.getAllByRole("menuitem").map((item) => item.textContent);
+    expect(names.slice(0, 2)).toEqual(["Germany", "United States"]);
+    expect(names.slice(2, 5)).toEqual(["Belgium", "France", "Italy"]);
   });
 });

@@ -20,6 +20,7 @@ import * as personalAccess from "./openapi-pat";
 import { projectOverviewPaths } from "./openapi-project-overview";
 import { publicPaths } from "./openapi-public";
 import { rankedKeywordSuggestionPaths } from "./openapi-ranked-keywords";
+import { resourcePaths } from "./openapi-resource-paths";
 import { savedKeywordPaths } from "./openapi-saved-keywords";
 import { savedViewOperations } from "./openapi-saved-views";
 import { createSignalOperation, runRankCheckOperation } from "./openapi-special-operations";
@@ -46,7 +47,6 @@ function list(schema: object) {
     type: "object",
   };
 }
-const obj = { type: "object" };
 const problemResponses = {
   "400": response(ref("Problem"), "Bad request"),
   "401": response(ref("Problem"), "Unauthorized"),
@@ -117,22 +117,15 @@ export function getOpenApiDocument() {
           list,
           ref: (name) => ref(name as keyof typeof schemas),
         }),
-        "/alert-rules/{rule_id}": {
-          delete: bearerOperation("Delete an alert rule", "deleteAlertRule", obj),
-          patch: bearerOperation(
-            "Update an alert rule",
-            "updateAlertRule",
-            obj,
-            ref("AlertRuleInput"),
-          ),
-        },
+        ...resourcePaths({
+          bearer: bearerOperation,
+          list,
+          ref: (name) => ref(name as keyof typeof schemas),
+        }),
         ...publicPaths,
         ...locationSearchPaths({ bearer: bearerOperation, ref }),
         ...keywordResearchPaths({ bearer: bearerOperation, ref }),
         ...loopClosurePaths({ bearer: bearerOperation, ref }),
-        "/competitors/{competitor_id}": {
-          delete: bearerOperation("Remove a competitor", "removeCompetitor", obj),
-        },
         ...migrationPaths,
         "/keywords/{id}/checks": {
           post: runRankCheckOperation({
@@ -150,9 +143,6 @@ export function getOpenApiDocument() {
             undefined,
             rankCheckListParameters,
           ),
-        },
-        "/migration-tokens/{token_id}": {
-          delete: bearerOperation("Revoke a migration token", "revokeMigrationToken", obj),
         },
         "/projects": {
           get: bearerOperation(
@@ -194,53 +184,9 @@ export function getOpenApiDocument() {
         }),
         ...projectOverviewPaths({ bearer: bearerOperation, ref }),
         ...rankedKeywordSuggestionPaths({ bearer: bearerOperation, ref }),
-        "/projects/{project_id}/alert-rules": {
-          get: bearerOperation("List alert rules", "listAlertRules", list(obj)),
-          post: bearerOperation(
-            "Create an alert rule",
-            "createAlertRule",
-            obj,
-            ref("AlertRuleInput"),
-          ),
-        },
         ...analyticsPaths({ bearer: bearerOperation, ref }),
         ...backlinksPaths({ bearer: bearerOperation }),
         ...domainOverviewPaths({ bearer: bearerOperation }),
-        "/projects/{project_id}/competitors": {
-          get: bearerOperation("List competitors", "listCompetitors", list(obj)),
-          post: bearerOperation("Add a competitor", "addCompetitor", obj),
-        },
-        "/projects/{project_id}/competitors/{competitor_id}": {
-          delete: bearerOperation("Remove a competitor", "removeProjectCompetitor", obj),
-        },
-        "/projects/{project_id}/migration-tokens": {
-          get: bearerOperation("List migration tokens", "listMigrationTokens", list({})),
-          post: bearerOperation("Mint a migration token", "mintMigrationToken", obj),
-        },
-        "/projects/{project_id}/migration-tokens/{token_id}": {
-          delete: bearerOperation("Revoke a migration token", "revokeProjectMigrationToken", obj),
-        },
-        "/projects/{project_id}/notification-preferences": {
-          get: bearerOperation("Get notification preferences", "getNotificationPreferences", obj),
-          patch: bearerOperation(
-            "Update notification preferences",
-            "updateNotificationPreferences",
-            obj,
-          ),
-        },
-        "/projects/{project_id}/providers": {
-          get: bearerOperation("List providers", "listProviders", list(ref("Provider"))),
-        },
-        "/projects/{project_id}/providers/{provider_id}": {
-          delete: bearerOperation("Disconnect a provider", "disconnectProvider", obj),
-          patch: bearerOperation("Update provider settings", "updateProviderSettings", obj),
-        },
-        "/projects/{project_id}/providers/{provider_id}/connect": {
-          post: bearerOperation("Connect a provider", "connectProvider", obj),
-        },
-        "/projects/{project_id}/providers/{provider_id}/test": {
-          post: bearerOperation("Test a provider connection", "testProviderConnection", obj),
-        },
         ...savedKeywordPaths(list, bearerOperation, createdBearerOperation),
         "/projects/{project_id}/saved-views": savedViewOperations(
           list,
@@ -256,37 +202,15 @@ export function getOpenApiDocument() {
             signalListParameters,
           ),
         },
-        "/projects/{project_id}/saved-views/{view_id}": {
-          delete: bearerOperation("Delete a saved view", "deleteProjectSavedView", obj),
-        },
-        "/projects/{project_id}/team/invites": {
-          get: bearerOperation("List team invites", "listTeamInvites", list(obj)),
-          post: bearerOperation("Create a team invite", "createTeamInvite", obj),
-        },
-        "/projects/{project_id}/team/invites/{invite_id}": {
-          delete: bearerOperation("Revoke a team invite", "revokeProjectTeamInvite", obj),
-        },
         ...teamMutationPaths({ bearer: bearerOperation, ref }),
-        "/projects/{project_id}/team/members": {
-          get: bearerOperation("List team members", "listTeamMembers", list(obj)),
-        },
-        "/projects/{project_id}/triggered-alerts": {
-          get: bearerOperation("List triggered alerts", "listTriggeredAlerts", list({})),
-        },
         "/rank-checks/{check_id}": {
           get: bearerOperation("Get one rank check", "getRankCheckResult", ref("RankCheck")),
-        },
-        "/saved-views/{view_id}": {
-          delete: bearerOperation("Delete a saved view", "deleteSavedView", obj),
         },
         "/signals": {
           post: createSignalOperation({
             problemResponses,
             security: personalAccess.apiCredentialSecurity,
           }),
-        },
-        "/team/invites/{invite_id}": {
-          delete: bearerOperation("Revoke a team invite", "revokeTeamInvite", obj),
         },
       }),
     ),

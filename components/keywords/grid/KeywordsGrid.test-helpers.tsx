@@ -4,6 +4,8 @@ import {
 } from "@/components/cost-estimate/SessionSpendProvider";
 import { KeywordImportProvider } from "@/components/keywords/import/KeywordImportProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { RankTrackerDeviceHeaderControl } from "@/components/keywords/RankTrackerDeviceHeaderControl";
+import { RankTrackerSearchDraftProvider } from "@/components/keywords/RankTrackerSearchDraft";
 import { MarketContextProvider } from "@/components/markets/MarketContextProvider";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import { aggregateMarketGridRows, groupRow } from "@/lib/keywords/market-grid-model";
@@ -80,6 +82,7 @@ export function groupedPendingRows(): KeywordsGridProps["rows"] {
 export function renderPendingGrid(
   overrides: Partial<KeywordsGridProps> = {},
   market: MarketContextValue["market"] = null,
+  withHeader = false,
 ) {
   stubKeywordTableViewport();
   const actions = {
@@ -116,38 +119,41 @@ export function renderPendingGrid(
 
   render(
     <MarketContextProvider market={market} projectRef="prj_1">
-      <SessionSpendProvider>
-        <SessionSpendProbe />
-        <KeywordImportProvider activeProjectId="project_1">
-          <KeywordsGrid
-            {...actions}
-            facets={{ intents: [], positions: [], tags: [], topics: [] }}
-            lens={{ device: "all", locationId: null }}
-            locations={[]}
-            matchedTargetCount={2}
-            page={1}
-            pageCount={1}
-            pageSize={25}
-            projectId="prj_1"
-            providerConnected={false}
-            query={{
-              filters: emptyKeywordFilters,
-              grouped: false,
-              lens: { device: "all", locationId: null },
-              page: 1,
-              pageSize: 25,
-              savedViewId: null,
-              search: "",
-              sort: { direction: "asc", field: "position" },
-            }}
-            rows={pendingRows()}
-            savedViews={[]}
-            tagSuggestions={[]}
-            totalCount={2}
-            {...overrides}
-          />
-        </KeywordImportProvider>
-      </SessionSpendProvider>
+      <RankTrackerSearchDraftProvider>
+        <SessionSpendProvider>
+          {withHeader ? <RankTrackerDeviceHeaderControl /> : null}
+          <SessionSpendProbe />
+          <KeywordImportProvider activeProjectId="project_1">
+            <KeywordsGrid
+              {...actions}
+              facets={{ intents: [], positions: [], tags: [], topics: [] }}
+              lens={{ device: "all", locationId: null }}
+              locations={[]}
+              matchedTargetCount={2}
+              page={1}
+              pageCount={1}
+              pageSize={25}
+              projectId="prj_1"
+              providerConnected={false}
+              query={{
+                filters: emptyKeywordFilters,
+                grouped: false,
+                lens: { device: "all", locationId: null },
+                page: 1,
+                pageSize: 25,
+                savedViewId: null,
+                search: "",
+                sort: { direction: "asc", field: "position" },
+              }}
+              rows={pendingRows()}
+              savedViews={[]}
+              tagSuggestions={[]}
+              totalCount={2}
+              {...overrides}
+            />
+          </KeywordImportProvider>
+        </SessionSpendProvider>
+      </RankTrackerSearchDraftProvider>
     </MarketContextProvider>,
   );
 

@@ -109,6 +109,7 @@ function isAttention(
 }
 
 export async function loadProjectProviderSpend(input: {
+  refreshConnectionPublicId?: string;
   catalog: readonly ProviderCatalogEntry[];
   now: Date;
   projectId: string;
@@ -135,7 +136,10 @@ export async function loadProjectProviderSpend(input: {
       "billable",
   );
   const [availability, rateContexts, rankChecks, lookups, recordedCents] = await Promise.all([
-    loadProviderAvailability(connections),
+    loadProviderAvailability(
+      connections,
+      connections.find((connection) => connection.publicId === input.refreshConnectionPublicId)?.id,
+    ),
     loadProviderRateContexts(
       connections.map((connection) => connection.id),
       ["rank_check"],

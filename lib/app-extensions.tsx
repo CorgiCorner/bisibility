@@ -1,11 +1,8 @@
 import "@/lib/deployment/runtime-env.generated";
+import type { SupportWidgetPayload, SupportWidgetSession } from "@/lib/support/widget-contract";
 import type { ReactNode } from "react";
 
-export type SupportWidgetUser = Readonly<{
-  email: string;
-  id: string;
-  name: string;
-}>;
+export type { SupportWidgetPayload, SupportWidgetSession } from "@/lib/support/widget-contract";
 
 function plausibleScriptSource(baseUrl: string) {
   try {
@@ -36,7 +33,13 @@ function renderHead(): ReactNode {
   return <script async data-domain={config.domain} src={config.src} />;
 }
 
-function renderSupportWidget(_user: SupportWidgetUser): Promise<ReactNode> {
+function getSupportWidgetPayload(
+  _session: SupportWidgetSession,
+): Promise<SupportWidgetPayload | null> {
+  return Promise.resolve(null);
+}
+
+function renderSupportWidget(_session: SupportWidgetSession): Promise<ReactNode> {
   return Promise.resolve(null);
 }
 
@@ -45,6 +48,7 @@ async function renderOnboardingQuizSlot(children: ReactNode): Promise<ReactNode>
 }
 
 export const appExtensions = {
+  getSupportWidgetPayload,
   renderHead,
   renderSupportWidget,
   renderOnboardingQuizSlot,

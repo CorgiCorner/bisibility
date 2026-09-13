@@ -109,6 +109,7 @@ export async function listRankCheckRuns(projectId: string, url: URL) {
         take: limit + 1,
         where: {
           projectId,
+          deletedAt: null,
           status,
           launchedAt: null,
           plannedFor: { not: null },
@@ -142,13 +143,15 @@ export async function listRankCheckRuns(projectId: string, url: URL) {
 }
 
 export async function getRankCheckRunCount(projectId: string) {
-  return prisma.rankCheckRun.count({ where: { launchedAt: { not: null }, projectId } });
+  return prisma.rankCheckRun.count({
+    where: { launchedAt: { not: null }, projectId, deletedAt: null },
+  });
 }
 
 export async function getRankCheckRun(projectId: string, publicId: string) {
   const row = await prisma.rankCheckRun.findFirst({
     select: rankCheckRunSelect,
-    where: { projectId, publicId },
+    where: { projectId, publicId, deletedAt: null },
   });
   if (!row) throw new ApiNotFoundError("Rank-check run not found.");
   const skippedBy = await skippedByRunPublicId([row]);
@@ -165,7 +168,7 @@ export async function getRankCheckRun(projectId: string, publicId: string) {
 export async function getRankCheckRunCommand(projectId: string, publicId: string) {
   const row = await prisma.rankCheckRun.findFirst({
     select: { id: true, orchestrationWorkflowId: true, publicId: true, status: true },
-    where: { projectId, publicId },
+    where: { projectId, publicId, deletedAt: null },
   });
   if (!row) throw new ApiNotFoundError("Rank-check run not found.");
   return row;
@@ -182,7 +185,7 @@ export async function getRetryParentRun(projectId: string, publicId: string) {
       publicId: true,
       status: true,
     },
-    where: { projectId, publicId },
+    where: { projectId, publicId, deletedAt: null },
   });
   if (!row) throw new ApiNotFoundError("Rank-check run not found.");
   return row;

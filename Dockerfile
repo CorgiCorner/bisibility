@@ -77,6 +77,9 @@ RUN addgroup --system --gid 1001 nodejs \
 
 COPY --from=builder --chown=nextjs:nodejs /workspace/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /workspace/.next/static ./.next/static
+# Next standalone does not carry public/, so static assets served by the app itself
+# (the flag sprite, setup media, brand files) have to be copied in explicitly.
+COPY --from=builder --chown=nextjs:nodejs /workspace/public ./public
 # Next standalone's package manifest does not retain operator scripts. Railway
 # and Fly invoke npm run db:migrate in this image, so keep the repository
 # manifest that defines the frozen entrypoint.

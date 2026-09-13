@@ -59,6 +59,16 @@ export function collectNavigationPageIds(navigation) {
   return pages;
 }
 
+export function findNavigationGroup(node, name) {
+  if (!node || typeof node !== "object") return undefined;
+  if (node.group === name) return node;
+  const children = Array.isArray(node) ? node : [...(node.groups ?? []), ...(node.pages ?? [])];
+  for (const child of children) {
+    const found = findNavigationGroup(child, name);
+    if (found) return found;
+  }
+}
+
 export function extractDocHrefs(source, includePlainUrls = false) {
   const matches = [
     ...source.matchAll(/\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g),

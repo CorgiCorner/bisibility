@@ -9,7 +9,7 @@ import {
 const acceptedBullet = [
   "- Domain overview: estimated organic visibility, ranked keywords, and top pages",
   "  for any domain (requires a bring-your-own DataForSEO connection; metered). The",
-  "  app and REST API are available; SDK, CLI, and MCP parity is still in progress.",
+  "  app and REST API are available. See [released client support](https://bisibility.com/docs/compatibility).",
   "- Manual, daily, weekly, monthly, and custom cron schedules",
 ].join("\n");
 
@@ -23,7 +23,7 @@ describe("checkDomainOverviewContract", () => {
   });
 
   it("rejects a bullet missing app/API availability", () => {
-    const readme = acceptedBullet.replace("The\n  app and REST API are available; ", "");
+    const readme = acceptedBullet.replace("The\n  app and REST API are available. ", "");
     const failures = failuresFor(readme);
     assert.ok(
       failures.some((f) => f.includes("The app and REST API are available")),
@@ -49,15 +49,15 @@ describe("checkDomainOverviewContract", () => {
     );
   });
 
-  it("rejects planned/not-yet wording on a continuation line", () => {
+  it("rejects an unqualified client parity claim instead of the versioned reference", () => {
     const readme = acceptedBullet.replace(
+      "See [released client support](https://bisibility.com/docs/compatibility).",
       "SDK, CLI, and MCP parity is still in progress.",
-      "SDK, CLI, and MCP parity is planned but not yet shipped.",
     );
     const failures = failuresFor(readme);
     assert.ok(
-      failures.some((f) => f.includes("planned or not yet")),
-      `expected planned/not-yet failure, got ${JSON.stringify(failures)}`,
+      failures.some((f) => f.includes("compatibility")),
+      `expected versioned reference failure, got ${JSON.stringify(failures)}`,
     );
   });
 });

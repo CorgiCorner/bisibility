@@ -349,7 +349,7 @@ describe("OperationsTray", () => {
     vi.clearAllMocks();
     renderTray([
       {
-        capabilities: { pause: false, resume: false, retry: false },
+        capabilities: { pause: true, resume: false, retry: false },
         id: "import_1",
         kind: "gsc_import",
         presentation: {
@@ -374,5 +374,27 @@ describe("OperationsTray", () => {
     expect(actions.pause).not.toHaveBeenCalled();
     expect(actions.resume).not.toHaveBeenCalled();
     expect(actions.retry).not.toHaveBeenCalled();
+  });
+
+  it("does not offer GSC reconnect when the viewer cannot manage the import", () => {
+    renderTray([
+      {
+        capabilities: { pause: false, resume: false, retry: false },
+        id: "import_1",
+        kind: "gsc_import",
+        presentation: {
+          action: "reconnect",
+          supportingText: "Reconnect Search Console to continue importing.",
+          title: "Reconnect required",
+        },
+        progress: { done: 2, total: 16 },
+        property: "sc-domain:example.com",
+        state: "paused",
+      },
+    ]);
+
+    expect(
+      screen.queryByRole("link", { name: "Reconnect Search Console import" }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -27,6 +27,7 @@ it("paginates only this project's schedule history, retaining the link after arc
     expect.objectContaining({
       where: {
         projectId: "project",
+        deletedAt: null,
         checkSchedule: { publicId: "sch_archived" },
         AND: expect.arrayContaining([
           expect.objectContaining({
@@ -36,6 +37,20 @@ it("paginates only this project's schedule history, retaining the link after arc
       },
       orderBy: [{ createdAt: "desc" }, { publicId: "desc" }],
       take: 51,
+    }),
+  );
+});
+
+it("excludes deleted runs from archived schedule history before pagination", async () => {
+  mocks.findMany.mockResolvedValue([]);
+  await scheduleRunHistory("project", "sch_archived");
+  expect(mocks.findMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: expect.objectContaining({
+        projectId: "project",
+        deletedAt: null,
+        checkSchedule: { publicId: "sch_archived" },
+      }),
     }),
   );
 });

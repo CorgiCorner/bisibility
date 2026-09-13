@@ -1,5 +1,6 @@
 "use client";
 
+import { CountrySelect } from "@/components/locations/CountrySelect";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
 import { MenuSelect, type MenuSelectOptionGroup } from "@/components/ui/MenuSelect";
@@ -96,28 +97,11 @@ export function MarketDefinition({
 }: Readonly<MarketDefinitionProps>) {
   const country = source.countries.find((entry) => entry.code === value.countryCode) ?? null;
   const languages = country ? source.languagesFor(country.code) : { all: [], suggested: [] };
-  const suggestedCodes = new Set([
-    ...registry.flatMap((entry) => {
-      const selector = parseCanonicalKey(entry.canonicalKey);
-      return selector ? [selector.countryCode] : [];
-    }),
-    ...(value.countryCode ? [value.countryCode] : []),
-  ]);
-  const countryOptions = source.countries.map((entry) => ({
-    label: entry.label,
-    value: entry.code,
-  }));
-  const suggestedCountries = countryOptions.filter((entry) => suggestedCodes.has(entry.value));
-  const countryGroups = [
-    { id: "suggested", label: "Suggested", options: suggestedCountries },
-    {
-      hideHeading: suggestedCountries.length === 0,
-      id: "all",
-      label: "All countries",
-      options: countryOptions.filter((entry) => !suggestedCodes.has(entry.value)),
-      searchOnly: suggestedCountries.length > 0,
-    },
-  ];
+  const trackedCodes = registry.flatMap((entry) => {
+    const selector = parseCanonicalKey(entry.canonicalKey);
+    return selector ? [selector.countryCode] : [];
+  });
+  const countries = source.countries.map((entry) => ({ code: entry.code, label: entry.label }));
   const currentDuplicate = duplicateFor(duplicate, registry, marketDefinitionSelection(value));
 
   function change(partial: Partial<MarketDefinitionValue>) {
@@ -128,9 +112,9 @@ export function MarketDefinition({
     <section aria-label="Market definition" className="grid gap-4">
       <div className="grid gap-1.5">
         <FieldLabel label="Country" />
-        <MenuSelect
+        <CountrySelect
           ariaLabel="Country"
-          groups={countryGroups}
+          countries={countries}
           onChange={(countryCode) => {
             const selected = source.countries.find((entry) => entry.code === countryCode);
             change({
@@ -139,9 +123,8 @@ export function MarketDefinition({
               location: selected ? countryLocation(selected) : null,
             });
           }}
-          searchable
-          searchPlaceholder="Search countries"
           size="input"
+          trackedCodes={trackedCodes}
           value={value.countryCode ?? ""}
         />
       </div>

@@ -2,6 +2,7 @@ import "server-only";
 
 import { revokeOtherSessions } from "@/lib/auth/session-revocation";
 import { assertDemoAccountMutable } from "@/lib/demo/config";
+import { assertEditableDemoAccountMutable } from "@/lib/demo/identity";
 
 /** Better Auth hands the hook the whole update payload; only `email` matters here. */
 type UserUpdateInput = Record<string, unknown>;
@@ -24,9 +25,12 @@ export async function revokeOtherSessionsBeforeEmailChange(
   context: HookContext | null,
 ) {
   if (typeof data.email !== "string") return;
-  assertDemoAccountMutable();
   const current = context?.context.session;
-  if (!current) return;
+  if (!current) {
+    assertDemoAccountMutable();
+    return;
+  }
+  await assertEditableDemoAccountMutable(current.user.id);
   if (current.user.email.toLowerCase() === data.email.toLowerCase()) return;
 
   await revokeOtherSessions(current);

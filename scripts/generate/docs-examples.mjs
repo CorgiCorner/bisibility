@@ -10,25 +10,22 @@ const examples = [
     id: "python-client-usage",
     language: "python",
     page: "docs/sdks/python.mdx",
-    source: "examples/python/quickstart.py",
+    source: "examples/python/list_projects.py",
+    mode: "file",
   },
   {
     id: "typescript-client-usage",
     language: "typescript",
     page: "docs/sdks/typescript.mdx",
-    source: "examples/ts/quickstart.ts",
+    source: "examples/ts/list-projects.ts",
+    mode: "file",
   },
   {
     id: "go-client-usage",
     language: "go",
     page: "docs/sdks/go.mdx",
-    source: "examples/go/quickstart/main.go",
-  },
-  {
-    id: "mcp-client-usage",
-    language: "javascript",
-    page: "docs/sdks/mcp.mdx",
-    source: "examples/mcp/quickstart.mjs",
+    source: "examples/go/list-projects/main.go",
+    mode: "file",
   },
 ];
 
@@ -58,6 +55,13 @@ function extractRegion(source, sourcePath) {
   return dedent(lines.slice(starts[0] + 1, ends[0]));
 }
 
+function extractExampleSource(example, source) {
+  if (example.mode === "file") {
+    return source.replace(/\s+$/, "");
+  }
+  return extractRegion(source, example.source);
+}
+
 // Regions sit inside a function or a `with` block, so they carry the enclosing indentation.
 // Pasting that verbatim is a syntax error in Python, so strip the common prefix instead of
 // asking every example to live at column zero.
@@ -80,10 +84,13 @@ function dedent(lines) {
 }
 
 function blockFor(example, source) {
-  const excerpt = extractRegion(source, example.source);
+  const excerpt = extractExampleSource(example, source);
+  const origin = example.mode === "file"
+    ? `Generated from ${example.source}. Do not edit.`
+    : `Generated from ${example.source} (region ${region}). Do not edit.`;
   return [
     `{/* docs-example:start ${example.id} */}`,
-    `{/* Generated from ${example.source} (region ${region}). Do not edit. */}`,
+    `{/* ${origin} */}`,
     `\`\`\`${example.language}`,
     excerpt,
     "```",

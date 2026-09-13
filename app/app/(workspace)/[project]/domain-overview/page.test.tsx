@@ -5,6 +5,9 @@ import DomainOverviewPage from "./page";
 const mocks = vi.hoisted(() => ({
   analyze: vi.fn(),
   context: vi.fn(),
+  demo: vi.fn(),
+  listStored: vi.fn(),
+  readStored: vi.fn(),
   resolve: vi.fn(),
   workspace: vi.fn(),
 }));
@@ -14,6 +17,12 @@ vi.mock("@/components/domain-overview/DomainOverviewWorkspace", () => ({
     mocks.workspace(props);
     return <div data-testid="domain-overview-workspace" />;
   },
+}));
+vi.mock("@/components/demo-research/StoredDomainOverviewView", () => ({
+  StoredDomainOverviewView: () => <div data-testid="stored-domain-overview" />,
+}));
+vi.mock("@/components/demo-research/StoredResultSelector", () => ({
+  StoredResultSelector: () => <div data-testid="stored-selector" />,
 }));
 vi.mock("@/components/shell/PageContent", () => ({
   PageContent: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
@@ -25,6 +34,11 @@ vi.mock("@/lib/actions/domain-overview", () => ({
   loadDomainPagesPageAction: vi.fn(),
   saveSelectedKeywordsAction: vi.fn(),
 }));
+vi.mock("@/lib/actions/demo-research", () => ({
+  listDemoDomainOverviewsAction: mocks.listStored,
+  readDemoDomainOverviewAction: mocks.readStored,
+}));
+vi.mock("@/lib/queries/demo-research", () => ({ getDemoResearchAccess: mocks.demo }));
 vi.mock("@/lib/queries/_auth", () => ({ resolveProjectAccess: mocks.resolve }));
 vi.mock("@/lib/queries/domain-overview", () => ({
   getDomainOverviewPageContext: mocks.context,
@@ -51,6 +65,7 @@ describe("DomainOverviewPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.resolve.mockResolvedValue({ publicId: "prj_1" });
+    mocks.demo.mockResolvedValue(null);
     mocks.context.mockResolvedValue({
       catalogScopes: [],
       competitorDomains: [],
@@ -157,5 +172,45 @@ describe("DomainOverviewPage", () => {
     expect(mocks.workspace).toHaveBeenCalledWith(
       expect.objectContaining({ researchScope: defaultScope }),
     );
+  });
+
+  it("uses only a stored selection for a disconnected Viewer URL", async () => {
+    mocks.demo.mockResolvedValue({
+      actorKind: "viewer",
+      project: { id: "project_1", publicId: "prj_1" },
+    });
+    mocks.listStored.mockResolvedValue([
+      {
+        freshUntil: "2026-10-10T00:00:00.000Z",
+        languageCode: "en",
+        locationCode: 2840,
+        savedAt: "2026-09-10T00:00:00.000Z",
+        scope: "root",
+        stale: true,
+        target: "saved.example",
+      },
+    ]);
+    mocks.readStored.mockResolvedValue({ target: "saved.example" });
+    mocks.analyze.mockRejectedValueOnce(new Error("stored mode must not estimate or analyze"));
+    mocks.context.mockRejectedValueOnce(new Error("stored mode must not load provider context"));
+    mocks.resolve.mockRejectedValueOnce(new Error("stored mode must not resolve normal access"));
+
+    render(
+      await DomainOverviewPage({
+        params: Promise.resolve({ project: "prj_1" }),
+        searchParams: Promise.resolve({ demoManage: "1", domain: "paid.example", scope: "root" }),
+      }),
+    );
+
+    expect(screen.getByTestId("stored-domain-overview")).toBeInTheDocument();
+    expect(mocks.readStored).toHaveBeenCalledWith({
+      languageCode: "en",
+      locationCode: 2840,
+      projectId: "prj_1",
+      scope: "root",
+      target: "saved.example",
+    });
+    expect(mocks.analyze).not.toHaveBeenCalled();
+    expect(mocks.context).not.toHaveBeenCalled();
   });
 });

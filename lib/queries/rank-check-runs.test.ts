@@ -363,7 +363,7 @@ describe("rank-check run queries", () => {
 
     await expect(getRankCheckRunCount("project_1")).resolves.toBe(7);
     expect(mocks.runCount).toHaveBeenCalledWith({
-      where: { launchedAt: { not: null }, projectId: "project_1" },
+      where: { launchedAt: { not: null }, projectId: "project_1", deletedAt: null },
     });
   });
 
@@ -528,7 +528,7 @@ describe("rank-check run queries", () => {
     });
     expect(mocks.runFindFirst).toHaveBeenCalledWith({
       select: { id: true },
-      where: { projectId: "project_1", publicId: runIds[0] },
+      where: { projectId: "project_1", publicId: runIds[0], deletedAt: null },
     });
     expect(mocks.itemFindMany).toHaveBeenCalledWith(
       expect.objectContaining({

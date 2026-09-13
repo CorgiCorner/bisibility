@@ -3,10 +3,12 @@
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { FieldLabel } from "@/components/ui/FieldLabel";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { updatePresenceInspectionBudget } from "@/lib/actions/presence-settings";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { projectInspectionBudgetSchema } from "@/lib/schemas/project";
 import { actionErrorMessage } from "@/lib/ui/action-error";
+import { VIEWER_READ_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -54,8 +56,10 @@ export function UrlInspectionCard({
 
   return (
     <SettingsCard
+      action={canEdit ? undefined : <StatusChip label={VIEWER_READ_ONLY_LABEL} tone="neutral" />}
       description="Daily Search Console index-status checks for tracked target URLs."
       onSave={saveInspectionBudget}
+      showSave={canEdit}
       title="URL inspection"
     >
       <form onSubmit={(event) => event.preventDefault()}>
@@ -66,15 +70,19 @@ export function UrlInspectionCard({
               htmlFor="inspection-daily-limit"
               label="Daily inspection limit"
             />
-            <input
-              aria-invalid={Boolean(form.formState.errors.inspectionDailyLimit)}
-              className="mt-1.5 min-h-10 w-full rounded-control border border-border-control bg-transparent px-3 text-[13px] font-medium text-fg outline-none focus:border-accent"
-              id="inspection-daily-limit"
-              max={1000}
-              min={0}
-              type="number"
-              {...form.register("inspectionDailyLimit", { valueAsNumber: true })}
-            />
+            {canEdit ? (
+              <input
+                aria-invalid={Boolean(form.formState.errors.inspectionDailyLimit)}
+                className="mt-1.5 min-h-10 w-full rounded-control border border-border-control bg-transparent px-3 text-[13px] font-medium text-fg outline-none focus:border-accent"
+                id="inspection-daily-limit"
+                max={1000}
+                min={0}
+                type="number"
+                {...form.register("inspectionDailyLimit", { valueAsNumber: true })}
+              />
+            ) : (
+              <p className="m-0 mt-1.5 text-[13px] font-medium text-fg">{dailyLimit}</p>
+            )}
             {form.formState.errors.inspectionDailyLimit ? (
               <p className="m-0 mt-1 text-[11.5px] text-red-text">
                 {form.formState.errors.inspectionDailyLimit.message}

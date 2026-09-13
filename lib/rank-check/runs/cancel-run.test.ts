@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   publishOperationChanged: vi.fn(() => Promise.resolve()),
   skipRun: vi.fn(),
   tx: {
-    rankCheckRun: { findFirst: vi.fn() },
+    rankCheckRun: { findFirst: vi.fn(), updateMany: vi.fn() },
   },
   transaction: vi.fn(),
   writeAudit: vi.fn(),
@@ -40,7 +40,11 @@ vi.mock("@/lib/temporal/scheduler-client", () => ({
   getSchedulerTemporalClient: vi.fn(async () => ({ workflow: { getHandle: mocks.getHandle } })),
 }));
 
-import { cancelRankCheckRunCommand, skipRankCheckRunCommand } from "./cancel-run";
+import {
+  cancelRankCheckRunCommand,
+  deleteRankCheckRunCommand,
+  skipRankCheckRunCommand,
+} from "./cancel-run";
 
 const publicId = "rcr_a00000000000000000000000";
 
@@ -154,5 +158,49 @@ describe("rank-check run commands", () => {
         runId: "run_1",
       }),
     ).rejects.toThrow("Only planned runs");
+  });
+});
+
+describe("deleteRankCheckRunCommand", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.transaction.mockImplementation(
+      async (callback: (tx: typeof mocks.tx) => Promise<unknown>) => callback(mocks.tx),
+    );
+    mocks.tx.rankCheckRun.findFirst.mockResolvedValue({ id: "run_1", status: "completed" });
+    mocks.tx.rankCheckRun.updateMany.mockResolvedValue({ count: 1 });
+  });
+  it("scopes deletion to the project and terminal states, and audits it", async () => {
+    await deleteRankCheckRunCommand({ actorId: "user_1", projectId: "project_1", publicId });
+    expect(mocks.tx.rankCheckRun.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { projectId: "project_1", publicId } }),
+    );
+    expect(mocks.tx.rankCheckRun.updateMany).toHaveBeenCalledWith({
+      data: { deletedAt: expect.any(Date) },
+      where: {
+        id: "run_1",
+        projectId: "project_1",
+        deletedAt: null,
+        status: { in: ["completed", "cancelled"] },
+      },
+    });
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "rank_check_run.delete", targetId: publicId }),
+      mocks.tx,
+    );
+  });
+  it("rejects an active run or a concurrent status change without writing an audit", async () => {
+    mocks.tx.rankCheckRun.updateMany.mockResolvedValue({ count: 0 });
+    await expect(
+      deleteRankCheckRunCommand({ actorId: "user_1", projectId: "project_1", publicId }),
+    ).rejects.toThrow("Only completed or cancelled");
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+  it("does not delete a run outside the project", async () => {
+    mocks.tx.rankCheckRun.findFirst.mockResolvedValue(null);
+    await expect(
+      deleteRankCheckRunCommand({ actorId: "user_1", projectId: "project_1", publicId }),
+    ).rejects.toThrow("not found");
+    expect(mocks.tx.rankCheckRun.updateMany).not.toHaveBeenCalled();
   });
 });

@@ -1,10 +1,10 @@
 import "server-only";
 
 import { requireSession } from "@/lib/auth/session";
-import { assertDemoAccountMutable } from "./config";
+import { assertEditableDemoAccountMutable } from "./identity";
 
 export async function requireMutableAccountSession() {
   const session = await requireSession();
-  assertDemoAccountMutable();
+  await assertEditableDemoAccountMutable(session.user.id);
   return session;
 }

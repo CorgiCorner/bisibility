@@ -65,7 +65,12 @@ describe("Plausible head extension", () => {
 
 describe("app extension registry", () => {
   it("preserves the exact private and public registry shape", () => {
-    const expectedKeys = ["renderHead", "renderSupportWidget", "renderOnboardingQuizSlot"];
+    const expectedKeys = [
+      "getSupportWidgetPayload",
+      "renderHead",
+      "renderSupportWidget",
+      "renderOnboardingQuizSlot",
+    ];
     const publicRegistryBody = readSnapshotRegistrySource().match(
       /export const appExtensions = \{(?<body>[\s\S]*?)\};/,
     )?.groups?.body;
@@ -92,7 +97,11 @@ describe("app extension registry", () => {
       ...publicSource.matchAll(/import(?:\s+type)?(?:\s+\{[^}]*\}\s+from)?\s+"([^"]+)";/g),
     ].map((match) => match[1]);
 
-    expect(importedModules).toEqual(["@/lib/deployment/runtime-env.generated", "react"]);
+    expect(importedModules).toEqual([
+      "@/lib/deployment/runtime-env.generated",
+      "@/lib/support/widget-contract",
+      "react",
+    ]);
     expect(publicSource).toMatch(
       /async function renderOnboardingQuizSlot\(children: ReactNode\): Promise<ReactNode> \{\s+return children;\s+\}/,
     );

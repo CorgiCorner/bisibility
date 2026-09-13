@@ -322,3 +322,49 @@ describe("ProjectRunsContent", () => {
     expect(screen.getByRole("link", { name: "Schedules" })).toBeVisible();
   });
 });
+
+describe("run history deletion", () => {
+  const completedRun = {
+    ...plannedRankRun,
+    lifecycle: "completed",
+    details: { ...plannedRankRun.details, status: "completed", outcome: "failed" },
+    timestamps: {
+      ...plannedRankRun.timestamps,
+      launchedAt: "2026-09-06T09:00:00Z",
+      finishedAt: "2026-09-06T09:01:00Z",
+    },
+  } as ProjectRunsApiResponse["runs"][number];
+  const page = {
+    counts: { rankChecks: 1, searchConsole: 0, total: 1 },
+    nextCursor: null,
+    runs: [completedRun],
+  };
+  it("confirms a completed run deletion before invoking the action", async () => {
+    const deleteAction = vi.fn(async () => undefined);
+    renderContent({ canDelete: true, deleteAction, page });
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Scheduled rank check" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete run" }));
+    expect(deleteAction).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(/Keyword positions and recorded provider spend are retained/),
+    ).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Delete run" }));
+    await waitFor(() =>
+      expect(deleteAction).toHaveBeenCalledWith({ projectRef, runId: completedRun.id }),
+    );
+  });
+  it("does not offer deletion without delete permission", () => {
+    renderContent({ canDelete: false, deleteAction: vi.fn(), page });
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Scheduled rank check" }));
+    expect(screen.queryByRole("menuitem", { name: "Delete run" })).not.toBeInTheDocument();
+  });
+  it("does not offer deletion for a planned run", () => {
+    renderContent({
+      canDelete: true,
+      deleteAction: vi.fn(),
+      page: { ...page, runs: [plannedRankRun] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Scheduled rank check" }));
+    expect(screen.queryByRole("menuitem", { name: "Delete run" })).not.toBeInTheDocument();
+  });
+});

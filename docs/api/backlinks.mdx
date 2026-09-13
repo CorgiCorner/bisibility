@@ -71,3 +71,10 @@ the rows you already hold and use the updated `fetched_row_count` and
 `cost_cents`. When the snapshot has expired or does not exist, the endpoint
 returns the `snapshot_expired` problem with status `409`; run the analyze
 request again to pay for a fresh snapshot.
+
+## Related operations
+
+- [`GET /projects/{projectId}/backlinks`](/api-reference/backlinks/analyze-backlinks) (`analyzeBacklinks`)
+- [`POST /projects/{projectId}/backlinks/rows`](/api-reference/backlinks/load-more-backlink-rows) (`loadMoreBacklinkRows`)
+
+Exact request and response schemas live in the generated API Reference.

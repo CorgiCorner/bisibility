@@ -88,7 +88,7 @@ describe("CheckDepthSplitButton", () => {
     expect(onDepthChange).toHaveBeenCalledOnce();
   });
 
-  it("warns when the selected one-off check cannot update Visibility", () => {
+  it("shows shallow check guidance in a tooltip without an inline warning", async () => {
     function DepthHarness() {
       const [depth, setDepth] = useState<10 | 20 | 50 | 100>(50);
       return (
@@ -106,7 +106,15 @@ describe("CheckDepthSplitButton", () => {
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 10" }));
 
-    expect(screen.getByText(/Top 10 checks do not update Visibility/)).toBeInTheDocument();
+    const group = screen.getByRole("group");
+    expect(group).toHaveAccessibleDescription(
+      "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
+    );
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    fireEvent.pointerMove(screen.getByRole("button", { name: "Choose check depth" }));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Top 10 checks do not update Visibility",
+    );
     expect(screen.queryByRole("menu", { name: "Check depth" })).not.toBeInTheDocument();
   });
 });

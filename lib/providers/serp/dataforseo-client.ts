@@ -118,7 +118,7 @@ export function envelopeMessage(data: DataForSeoResponse) {
 }
 
 export function dataForSeoBillingStatusCode(data: DataForSeoResponse) {
-  const billingCodes = new Set([40200, 40201, 40210]);
+  const billingCodes = new Set([40200, 40210]);
   return (
     data.tasks?.find((task) => billingCodes.has(task.status_code ?? 0))?.status_code ??
     (billingCodes.has(data.status_code ?? 0) ? data.status_code : undefined)

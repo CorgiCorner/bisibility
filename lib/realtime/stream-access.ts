@@ -1,14 +1,16 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { readOnlyDemoConfig } from "@/lib/demo/config";
-import { loadDemoIdentity } from "@/lib/demo/identity";
+import { readDemoConfig } from "@/lib/demo/config";
+import { loadConfiguredDemoActor } from "@/lib/demo/identity";
 
 type StreamSession = { session: { id: string }; user: { id: string } };
 
 // Never use React request caches here: a stream may outlive its session or membership.
 export async function canReadStream(session: StreamSession, projectId: string) {
-  if (readOnlyDemoConfig() && (await loadDemoIdentity())?.id !== session.user.id) return false;
+  if (readDemoConfig().kind !== "disabled" && !(await loadConfiguredDemoActor(session.user.id))) {
+    return false;
+  }
   const active = await prisma.session.findFirst({
     select: { id: true },
     where: {

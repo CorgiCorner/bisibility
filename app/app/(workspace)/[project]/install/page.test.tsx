@@ -73,12 +73,14 @@ describe("InstallPage", () => {
 
     await renderPage();
 
-    const createKeyLink = screen.getByRole("link", {
-      name: "Create one in Settings, Developers.",
-    });
-    expect(createKeyLink.parentElement).toHaveTextContent(
-      "No API key yet. Create one in Settings, Developers.",
-    );
+    expect(
+      screen.getByText(
+        "No API key yet. Project admins can create one under Settings → Developers.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Create one in Settings, Developers." }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("bsk_example_******")).not.toBeInTheDocument();
   }, 15_000);
 
