@@ -34,7 +34,39 @@ export type CredentialField = {
   type?: "password" | "text";
 };
 
-export type ProviderMetaRow = { label: string; value: string };
+export type ProviderMetaLabelKey =
+  | "account"
+  | "apiService"
+  | "connectionUpdated"
+  | "fallbackState"
+  | "lastRankCheck"
+  | "lastSync"
+  | "lastUsed"
+  | "property"
+  | "siteDomain"
+  | "state";
+
+export type ProviderMetaValueKey =
+  | "disabled"
+  | "enabled"
+  | "never"
+  | "notConnected"
+  | "notSelected"
+  | "ready";
+
+/**
+ * A meta row never carries display copy. The label is always a catalog key, and the value is
+ * either a catalog key, a timestamp rendered as relative time in the viewer's locale, or a
+ * literal the reader supplied (an account, an endpoint, a number).
+ */
+export type ProviderMetaRow = {
+  labelKey: ProviderMetaLabelKey;
+  /** The instant the relative time is measured from, so server and client agree. */
+  relativeTo?: string;
+  value?: string;
+  valueAt?: string;
+  valueKey?: ProviderMetaValueKey;
+};
 
 export type ProviderConsumerStatus = {
   detail?: string;

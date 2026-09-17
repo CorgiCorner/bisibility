@@ -1,5 +1,6 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { RetrievedResults } from "@/lib/checks/contract";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { RetrievedResultsCompare } from "./RetrievedResultsCompare";
 
@@ -64,26 +65,26 @@ describe("RetrievedResultsCompare", () => {
       />,
     );
 
-    expect(screen.getByText("Entered")).toBeInTheDocument();
-    expect(screen.getByText("Moved up")).toBeInTheDocument();
-    expect(screen.getByText("Moved down")).toBeInTheDocument();
-    expect(screen.getByText("Unchanged")).toBeInTheDocument();
-    expect(screen.getByText("Dropped out")).toBeInTheDocument();
+    expect(screen.getAllByText("Entered")).not.toHaveLength(0);
+    expect(screen.getAllByText("Moved up")).not.toHaveLength(0);
+    expect(screen.getAllByText("Moved down")).not.toHaveLength(0);
+    expect(screen.getAllByText("Unchanged")).not.toHaveLength(0);
+    expect(screen.getAllByText("Dropped out")).not.toHaveLength(0);
 
     expect(screen.getByText("blog.example.com")).toBeInTheDocument();
     expect(screen.getByText("new.example.org")).toBeInTheDocument();
     expect(screen.getByText("docs.example.org")).toBeInTheDocument();
 
-    const enteredChip = screen.getByText("entered");
+    const enteredChip = screen.getAllByText("Entered").at(-1);
     expect(enteredChip).toHaveAttribute(
       "title",
       expect.stringContaining("Was not in positions 1-"),
     );
-    const upChip = screen.getByText("up 2");
+    const upChip = screen.getByText("Moved up 2");
     expect(upChip).toHaveAttribute("title", "Moved up 2 positions.");
-    const downChip = screen.getByText("down 2");
+    const downChip = screen.getByText("Moved down 2");
     expect(downChip).toHaveAttribute("title", "Moved down 2 positions.");
-    const droppedChip = screen.getByText("dropped out");
+    const droppedChip = screen.getAllByText("Dropped out").at(-1);
     expect(droppedChip).toHaveAttribute(
       "title",
       expect.stringContaining("No longer in positions 1-"),
@@ -150,7 +151,7 @@ describe("RetrievedResultsCompare", () => {
       screen.getByText(/Comparison stays available between checks that both hold full detail/),
     ).toBeInTheDocument();
 
-    const button = screen.getByRole("button", { name: "Compare 1 Jan with 8 Jul" });
+    const button = screen.getByRole("button", { name: "Compare 2025-01-01 with 2025-07-08" });
     fireEvent.click(button);
     expect(onPickFullPair).toHaveBeenCalledWith("c-old", "c2");
   });
@@ -214,7 +215,7 @@ describe("RetrievedResultsCompare", () => {
     );
     const statsLabel = screen.getByText("Entered");
     const notice = screen.getByText(
-      /These checks used different providers: DataForSEO \(1 Jul\) and BrightLocal \(8 Jul\)/,
+      /These checks used different providers: DataForSEO \(2025-07-01\) and BrightLocal \(2025-07-08\)/,
     );
     const firstRow = screen.getByText("example.com");
     expect(statsLabel.compareDocumentPosition(notice)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);

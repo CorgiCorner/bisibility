@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.24.0] - 2026-09-16
+
+- Added Spanish, Japanese and Polish interface languages with typed catalogs and account preferences; Spanish marketing uses `/es` redirects, `hreflang` and localized sitemaps.
+
+- Split hosted, API and self-host documentation into audience guides, and added a dismissible ChatGPT connection guide, app icon and context-aware starter prompt to Install.
+
+- Simplified OAuth approval with app-specific actions, plain-language permissions, explicit API-token risks and optional technical details.
+
+- Documented Concept, Alpha and Beta roadmap maturity stages and added a purple status-text token with the same contrast guarantee as other status colors.
+
+- Let release-asset upgrades run without a git checkout when verify.mjs and manifest.mjs sit next to upgrade.sh.
+
 ## [0.23.0] - 2026-09-12
 
 - Made provider budgets and account errors clearer, added settings search and Usage, and let you remove completed runs without losing history.

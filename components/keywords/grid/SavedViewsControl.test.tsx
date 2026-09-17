@@ -1,6 +1,7 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { emptySavedViewConfig, type KeywordSavedView } from "@/lib/keywords/saved-view-model";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SavedViewsControl } from "./SavedViewsControl";
 

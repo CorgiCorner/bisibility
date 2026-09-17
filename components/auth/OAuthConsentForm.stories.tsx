@@ -1,11 +1,16 @@
 import { OAuthConsentForm } from "@/components/auth/OAuthConsentForm";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
   component: OAuthConsentForm,
+  parameters: { layout: "fullscreen" },
   decorators: [
     (Story) => (
-      <div className="grid min-h-[720px] place-items-center bg-bg-sunken p-6 text-fg">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-bg-sunken px-4 py-8 text-fg sm:px-6">
+        <div className="mb-7">
+          <BrandLockup />
+        </div>
         <Story />
       </div>
     ),
@@ -23,8 +28,8 @@ export const DynamicClient: Story = {
     client: {
       dynamic: true,
       id: "dUAIRyHbYXXojTidPmdiiaXwmSzXIZjY",
-      name: "Codex",
-      redirectUri: "127.0.0.1:51008/callback/request",
+      name: "ChatGPT",
+      redirectUri: "chatgpt.com/connector/oauth/callback",
     },
     expiresAt: Date.now() + 300_000,
     scopes: [
@@ -39,4 +44,22 @@ export const DynamicClient: Story = {
     ],
   },
   render: (args) => <OAuthConsentForm {...args} expiresAt={Date.now() + 300_000} />,
+};
+
+export const ReadOnly: Story = {
+  ...DynamicClient,
+  args: { ...DynamicClient.args, scopes: ["openid", "email", "read"] },
+};
+
+export const LongAppName: Story = {
+  ...DynamicClient,
+  args: {
+    ...DynamicClient.args,
+    client: {
+      dynamic: true,
+      id: "long-client",
+      name: "A very long application name that should still fit on a small phone screen",
+      redirectUri: "example.com/callback",
+    },
+  },
 };

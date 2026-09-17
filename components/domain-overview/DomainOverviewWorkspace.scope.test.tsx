@@ -1,7 +1,8 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
+import { renderWithDomainOverviewMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ResearchScope } from "@/lib/research/scope";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainOverviewWorkspace } from "./DomainOverviewWorkspace";

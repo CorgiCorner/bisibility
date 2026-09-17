@@ -1,0 +1,478 @@
+{
+  "onboarding": {
+    "errors": {
+      "google": {
+        "actorMismatch": "別の bisibility アカウントにサインインした状態で Google のサインインを完了しました。接続を開始したアカウントでサインインし直してから、再試行してください。",
+        "credentialsDecrypt": "Google のサインインは成功しましたが、保存された接続を完了できませんでした。Google アカウントでアプリのアクセス権を削除してから再接続してください。",
+        "denied": "Google から接続が拒否されたと報告されました。",
+        "generic": "Google の接続が完了しませんでした。プロパティを所有するアカウントで再試行してください。",
+        "noRefreshToken": "Google がリフレッシュトークンを返しませんでした。アプリのアクセス権を削除してから再接続してください。",
+        "stateExpired": "サインインフローの有効期限が切れたか、やり直されました。1つのタブで一度だけ再試行してください。",
+        "storeFailed": "Google のサインインは成功しましたが、サーバー側で接続を完了できませんでした。こちらの問題です。再試行し、繰り返す場合はお問い合わせください。"
+      },
+      "searchConsoleSync": "Search Console の同期が完了しませんでした。実測データの反映には少し時間がかかる場合があります。連携から再試行できます。"
+    },
+    "firstCheck": {
+      "back": "戻る",
+      "connect": "接続",
+      "completion": {
+        "manual": "{keywords, plural, other {キーワード#件}}の準備が完了しました。指示するまでは実行も課金もされません。<tracker>順位トラッカー</tracker>からいつでも{objectPronoun}を実行できます。手放しで追跡したい場合は<schedules>スケジュール</schedules>から定期実行に切り替えてください。",
+        "paused": "{keywords, plural, other {キーワード#件}}が一時停止中です。<schedules>スケジュール</schedules>で追跡を再開するまで、定期チェックは実行されません。<tracker>順位トラッカー</tracker>から{objectPronoun}を手動で実行することはできます。",
+        "scheduled": "{keywords, plural, other {キーワード#件}}が{frequency}のスケジュールで自動的に実行されます{nextRun, select, none {} other {。次回の実行は {nextRun}}}。<tracker>順位トラッカー</tracker>からいつでも{objectPronoun}を実行することもできます。",
+        "it": "それ",
+        "them": "それら"
+      },
+      "dataSource": "データソース",
+      "device": {
+        "desktop": "デスクトップ",
+        "mobile": "モバイル"
+      },
+      "description": {
+        "completed": "最初の結果が揃いました。",
+        "manual": "準備が整いました。最初のチェックはいつでも実行できます。開始するまで何も実行されません。",
+        "noProvider": "あと少しです。設定は完了しています。チェックを実行したくなったらデータプロバイダーを接続してください。",
+        "paused": "準備が整いました。スケジュールを再開するまでチェックは一時停止中です。",
+        "scheduled": "スケジュールは{frequency}に設定されています。今すぐサンプルチェックを実行することもできます。"
+      },
+      "errors": {
+        "complete": "オンボーディングを完了できませんでした。再試行してください。",
+        "keyword": "サンプルキーワードを読み込めませんでした。再試行してください。",
+        "preview": "サンプルチェックを開始できませんでした。再試行してください。",
+        "previewUnavailable": "このビルドでは最初のチェックのプレビューを利用できません。",
+        "retryKeyword": "キーワードの読み込みを再試行",
+        "sampleProject": "サンプルプロジェクトでは実際のチェックは実行されません。",
+        "selectKeyword": "サンプルチェック用にキーワードを1件選択してください。",
+        "statusUnavailable": "チェックのステータスを更新できませんでした。自動的に再試行しています。完了を待つ間、アプリを開いても問題ありません。",
+        "timezone": "タイムゾーンを保存できませんでした。再試行してください。",
+        "unavailableKeyword": "このキーワードは利用できなくなりました。戻ってキーワードを選び直してください。",
+        "waitingForProvider": "チェックを実行する前に SERP プロバイダーを接続してください。"
+      },
+      "footer": {
+        "hint": "任意: 今すぐキーワード1件をチェックできます。スケジュールは変更されません。",
+        "openApp": "アプリを開く",
+        "queued": "キュー済み",
+        "run": "チェックを実行",
+        "running": "{count, plural, other {サンプルチェック#件を実行中}}",
+        "viewDashboard": "ダッシュボードを表示"
+      },
+      "frequency": {
+        "customCron": "カスタム cron",
+        "daily": "毎日",
+        "manual": "手動",
+        "monthly": "毎月",
+        "paused": "一時停止",
+        "weekly": "毎週"
+      },
+      "matrix": "キーワード1件 · {markets, plural, other {市場#件}} · {devices} · {checks, plural, other {チェック#件}}",
+      "notConnected": "未接続",
+      "queue": {
+        "completed": "サンプル{checks, plural, other {チェック}}が完了しました。これ以降、すべてのキーワードは{frequency}のスケジュールに従います。",
+        "completedWithFailures": "サンプル{checks, plural, other {チェック}}は問題が発生した状態で完了しました。失敗した{checks, plural, other {チェック}}は下で再試行できます。すべてのキーワードは引き続き{frequency}のスケジュールに従います。",
+        "initial": "{checks, plural, other {動作を確認できるように、今すぐチェック#件を1回だけ実行します。}}それ以外はすべて{frequency}のスケジュールに従います。",
+        "manual": "手動プレビューは今すぐ実行できます。定期チェックは一時停止のままです。",
+        "queued": "サンプルチェックをキューに追加しました。ワーカーが開始する間、ダッシュボードを開いても問題ありません。",
+        "running": "サンプルチェックを実行中です。完了を待つ間、ダッシュボードを開いても問題ありません。",
+        "sample": "サンプルプロジェクトは合成された順位データの履歴を保持します。"
+      },
+      "results": {
+        "checking": "チェック中...",
+        "completed": "{total, number}件中{completed, number}件の{total, plural, other {チェック}} · 記録された費用 ${cost, number, ::.0000}",
+        "completedUnavailable": "{total, number}件中{completed, number}件の{total, plural, other {チェック}} · 記録された費用は利用できません",
+        "completedWithOutcomes": "{total, number}件中{completed, number}件の{total, plural, other {チェック}}が完了しました。残りの結果ステータスを確認してください。",
+        "device": "{device}デバイス",
+        "failed": "{failed, plural, other {チェック{total, number}件中#件が失敗しました。成功した結果は保持されます。}}",
+        "failure": {
+          "budgetExhausted": "月間の順位チェック予算に達しました。",
+          "blocked": "このチェックはブロックされています。",
+          "cancelled": "このチェックはキャンセルされました。",
+          "client": "サンプルチェックを開始できませんでした。再試行してください。",
+          "deferred": "このチェックは延期されました。",
+          "failed": "このチェックを実行できませんでした。しばらくしてから再試行してください。",
+          "noProvider": "チェックを実行する前に SERP プロバイダーを接続してください。",
+          "projectReadOnly": "このプロジェクトは現在読み取り専用です。",
+          "rateLimited": "プロバイダーのレート制限に達しました。しばらくしてから再試行してください。",
+          "sampleProject": "サンプルプロジェクトでは実際のチェックは実行されません。",
+          "sendUnconfirmed": "このチェックが送信されたか確認できなかったため、再試行していません。必要であればもう一度実行してください。",
+          "skipped": "このチェックはスキップされました。",
+          "unexpected": "サーバー側でチェックが失敗しました。しばらくしてから再試行してください。"
+        },
+        "live": "ライブチェックは通常1分以内に結果が返ります。",
+        "notChecked": "未チェック",
+        "notRanked": "上位{depth, number}位圏外",
+        "queued": "キュー済み",
+        "queuedNote": "キュー済みのチェックは、ワーカーが実行を引き受けた時点で開始されます。",
+        "retry": "失敗分を再試行",
+        "retryNote": "残りの対象のサンプルチェックは、準備ができ次第いつでも実行できます。"
+      },
+      "review": {
+        "dataSourceWaiting": "プロバイダーを接続するとチェックが始まります。",
+        "bothDevices": "両方のデバイス",
+        "devices": "{count, plural, other {デバイス#件}}",
+        "manual": "手動: 開始したときにチェックが実行されます",
+        "paused": "一時停止中: 定期チェックは予定されていません",
+        "projectTimezone": "プロジェクトのタイムゾーン",
+        "schedule": "スケジュール",
+        "searchTimezone": "都市または地域",
+        "tracking": "追跡",
+        "trackingSummary": "{keywords, plural, other {キーワード#件}} · {engine} · {markets} · {devices}"
+      },
+      "title": "最初のチェック"
+    },
+    "layout": {
+      "copyright": "© 2026 bisibility",
+      "notYou": "本人ではありませんか？"
+    },
+    "matchingScope": {
+      "includeSubdomains": {
+        "description": "docs.{rootDomain}、app.{rootDomain}、blog.{rootDomain} など、その他のサブドメインもすべて対象になります。",
+        "title": "すべてのサブドメイン"
+      },
+      "rootAndWww": {
+        "description": "HTTP と HTTPS の両方で {domains} を対象にします。その他のサブドメインは別として扱われます。",
+        "title": "メインドメイン + www"
+      },
+      "urlPrefix": {
+        "description": "特定のパス配下のページのみを対象にします（例: {example}）。",
+        "title": "URL プレフィックスのみ"
+      }
+    },
+    "keywordSummary": {
+      "estimate": "プロバイダー費用を試算",
+      "monthlyLine": "{schedule, select, manual {上位{depth, number}位で手動チェック} paused {上位{depth, number}位でチェックを一時停止中} custom {上位{depth, number}位のカスタム cron スケジュールは除外} other {上位{depth, number}位で{pages, plural, other {月あたり結果ページ約#件}}}}",
+      "perRun": "1回の実行あたり最大で結果ページ{pages, plural, other {#件}} · {markets, plural, other {市場#件}}"
+    },
+    "keywords": {
+      "approachingLimit": "キーワード500件のインポート上限に近づいています。",
+      "description": "キーワードを貼り付けるか、接続済みのデータソースから候補をインポートしてください。",
+      "empty": "キーワードを1件以上追加してください。",
+      "import": {
+        "added": "{count, plural, other {クエリ#件を追加しました}}",
+        "choose": "クエリを選択",
+        "drawer": {
+          "add": "{count, plural, other {キーワード#件}}を追加",
+          "cancel": "キャンセル",
+          "clear": "クリア",
+          "clicks": "クリック数",
+          "description": "サニタイズ済みの Search Console クエリです。追跡するものを選択してください。",
+          "filterAria": "候補をフィルター",
+          "filterPlaceholder": "クエリをフィルター",
+          "hidden": "{count, plural, other {低品質なクエリ#件を非表示にしました。}}",
+          "hide": "非表示",
+          "impressions": "表示",
+          "inDraft": "下書き",
+          "metric": "{value, number}",
+          "metricUnavailable": "-",
+          "monthlyChecks": "+{count, plural, other {キーワード#件}} = チェック +{checks, number}件/月",
+          "monthlyChecksCostBelowCent": "+{count, plural, other {キーワード#件}} = チェック +{checks, number}件/月 ~ < {minimum, number, ::currency/USD}/月",
+          "monthlyChecksCost": "+{count, plural, other {キーワード#件}} = チェック +{checks, number}件/月 ~ {cost, number, ::currency/USD}/月",
+          "query": "クエリ",
+          "selected": "{count, plural, other {#件を選択中}}",
+          "selectionCount": "+{count, plural, other {キーワード#件}}",
+          "selectAll": "すべて選択",
+          "show": "それでも表示",
+          "title": "Search Console からインポート",
+          "top": "クリック数の上位{count, number}件",
+          "tracked": "追跡中",
+          "use": "{count, plural, other {キーワード#件}}を使用"
+        },
+        "empty": "まだクエリが計測されていません。新しい Search Console プロパティでは数日かかることがあります。",
+        "expiredAuthorization": "Google の認可の有効期限が切れました。",
+        "import": "Search Console から上位クエリをインポート",
+        "importing": "上位クエリをインポート中...",
+        "loadError": "クエリを読み込めませんでした。再試行してください。",
+        "noSource": "分析データソースが接続されていません。",
+        "rateLimited": "Search Console が混み合っています。しばらくしてから再試行してください。",
+        "reconnect": "Google アカウントを再接続"
+      },
+      "limit": "1回のインポートで追加できるキーワードは{maximum, number}件までです。",
+      "marketRequired": "続行するには市場を1件以上追加してください。",
+      "ranked": {
+        "added": "{count, plural, other {キーワード#件を追加しました}}",
+        "add": "{count, plural, other {キーワード#件}}を追加",
+        "alreadyTracked": "追跡中",
+        "aboutPage": "（1ページあたり約 {cost, number, ::currency/USD}）",
+        "budgetExhausted": "月間の順位チェック予算に達しました。",
+        "cancel": "キャンセル",
+        "choose": "キーワードを選択",
+        "clear": "クリア",
+        "connection": "接続",
+        "connectionLabel": "DataForSEO の接続",
+        "description": "ご自身の DataForSEO アカウントを使用します。結果は12時間キャッシュされます。",
+        "drawerDescription": "サイトがすでに順位を獲得しているキーワードを、推定トラフィック順に表示します。",
+        "drawerTitle": "DataForSEO からインポート",
+        "estimatedTraffic": "推定トラフィック",
+        "import": "DataForSEO からインポート",
+        "importFor": "{domain} が順位を獲得しているキーワードをインポート",
+        "inDraft": "下書き",
+        "keyword": "キーワード",
+        "load": "次の100件を読み込む",
+        "lookupFailed": "順位獲得キーワードを取得できませんでした。再試行してください。",
+        "needsReauth": "DataForSEO の認可の有効期限が切れました。",
+        "noDomain": "順位獲得キーワードを検索する前に、有効なプロジェクトドメインを追加してください。",
+        "noSource": "利用可能な DataForSEO の接続がありません。",
+        "position": "順位",
+        "rateLimited": "プロバイダーのレート制限に達しました。しばらくしてから再試行してください。",
+        "raiseBudget": "予算を引き上げ",
+        "reconnect": "DataForSEO を再接続",
+        "remaining": "{available, number}件中{selected, number}件を選択中",
+        "select": "{keyword} を選択",
+        "selectAll": "すべて選択",
+        "selectKeyword": "キーワードを選択",
+        "spent": "このセッションの利用額: {cost, number, ::currency/USD}{cached, select, yes {。{page, number}ページ目はキャッシュ済みです。} other {}}",
+        "table": "順位獲得キーワードの候補",
+        "top": "トラフィックの上位3件",
+        "tracked": "追跡中",
+        "unsupportedLocation": "DataForSEO ではこのロケーションの順位獲得キーワード検索を利用できません。",
+        "use": "{count, plural, other {キーワード#件}}を使用",
+        "variants": "+{count, number}件のバリエーション",
+        "volume": "ボリューム"
+      },
+      "placeholder": "1行に1キーワード",
+      "saveError": "キーワードを保存できませんでした。再試行してください。",
+      "summary": "{keywords, plural, other {重複のないキーワード#件}}{duplicates, plural, =0 {} other { · 重複行#件を無視}}",
+      "tooLong": "{count, plural, other {#行}}がキーワードの{maximum, number}文字上限を超えています。",
+      "skip": "キーワードの追加をスキップして最初のチェックを開く",
+      "skipLabel": "今はスキップ",
+      "title": "キーワード"
+    },
+    "logout": "サインアウト",
+    "navigation": {
+      "back": "戻る",
+      "continue": "続行",
+      "savingKeywords": "キーワードを保存中...",
+      "viewDashboard": "ダッシュボードを表示"
+    },
+    "metadata": {
+      "description": "bisibility プロジェクトをセットアップします。",
+      "title": "オンボーディング"
+    },
+    "markets": {
+      "add": "市場を追加",
+      "another": "別の市場",
+      "drawer": {
+        "active": "{market} はすでに有効です。",
+        "allLanguages": "すべての言語",
+        "archived": "{market} はアーカイブ済みです。使用する前に市場から復元してください。",
+        "cancel": "キャンセル",
+        "country": "国",
+        "create": "市場を作成",
+        "createFailed": "市場を作成できませんでした。",
+        "customName": "カスタム名（任意）",
+        "description": "一緒に追跡するロケーションと言語の組み合わせです。",
+        "language": "言語",
+        "location": "ロケーション",
+        "locationHint": "既定では国全体が選択されます。都市や地域を追跡するには検索してください。",
+        "marketDefinition": "市場の定義",
+        "marketName": "市場名",
+        "newMarket": "新しい市場",
+        "newSchedule": "新しいスケジュール",
+        "noLocationResults": "一致する地域や都市がありません。別の名前で検索するか、国全体を選択してください。",
+        "searchAllLanguages": "すべての言語を検索",
+        "searchLocations": "地域や都市を検索",
+        "searchingLocations": "地域や都市を検索中...",
+        "suggested": "おすすめ",
+        "backToMarket": "市場に戻る"
+      },
+      "errors": {
+        "createProjectFirst": "市場を追加する前にプロジェクトを作成してください。"
+      },
+      "maximum": "選択できる市場は最大{count, number}件です。",
+      "remove": "{market} / {language} を削除",
+      "title": "市場"
+    },
+    "page": {
+      "description": "数ステップでウェブサイトの追跡を開始できます。",
+      "title": "プロジェクトをセットアップ"
+    },
+    "projectOptions": {
+      "importError": "プロジェクトのインポートを開けませんでした。",
+      "openingImport": "インポートを起動中...",
+      "restoreProject": "プロジェクトを復元",
+      "restoreProjectTooltip": "別の bisibility インスタンスからプロジェクトパッケージをインポートします。ローカルにプロジェクトを1つ作成してデータを復元します。プロバイダーの認証情報と API キーは含まれません。",
+      "sampleProject": "サンプルプロジェクトを読み込む",
+      "sampleHelp": "一時的なサンプルプロジェクトを読み込み、残りのセットアップをスキップします。"
+    },
+    "provider": {
+      "cards": {
+        "affiliate": "アフィリエイトリンク",
+        "balance": "残高: {balance, number}",
+        "dataforseo": {
+          "capability": "キーワードリサーチと難易度にも対応します。",
+          "costCaption": "チェックごとの従量課金 · 約 $0.002 から",
+          "costDetail": "設定した取得深度に応じて USD で課金されます。上位10位で約 $0.002、上位100位で約 $0.02 です。新規アカウントには $1 のトライアルクレジットが付き、チャージは $50 から、月額料金ではありません。",
+          "label": "DataForSEO"
+        },
+        "getCredentials": "API 認証情報を取得",
+        "group": "SERP プロバイダー",
+        "label": "順位データ / 順位チェックに使用",
+        "notice": "接続はプロバイダーごとに保存されます。切り替えても切断されません。",
+        "serpapi": {
+          "capability": "順位チェックのみ対応します。",
+          "costCaption": "プラン制 · 月間の検索クォータ、無料枠は月250検索",
+          "costDetail": "各プランには月間の検索回数が含まれ、無料プランは250回です。上位 N 位のチェックは結果10件ごとに最大1検索を消費し、早く一致が見つかった場合はより少なくなります。",
+          "label": "SerpApi"
+        },
+        "status": {
+          "connected": "接続済み",
+          "dirty": "未保存の変更",
+          "failed": "テスト失敗",
+          "idle": "未接続",
+          "tested": "確認済み"
+        },
+        "tooltip": "Google には公式の順位 API がないため、チェックは SERP プロバイダー経由で実行されます。bisibility はご自身のプロバイダーアカウントを使用し、費用はチェックごとにプロバイダーへ直接支払います。ここをスキップして後から連携で接続することもできます。キーワードは今追加できますが、プロバイダーを接続するまでチェックは一時停止のままです。"
+      },
+      "credentials": {
+        "connected": "{provider} を接続しました",
+        "fields": {
+          "apiKey": "API キー",
+          "apiLogin": "API ログイン",
+          "apiPassword": "API パスワード",
+          "apiPasswordDescription": "アカウントのパスワードではなく、API パスワードを入力してください。",
+          "apiPasswordPlaceholder": "API パスワード",
+          "apiKeyPlaceholder": "プライベート API キー",
+          "loginPlaceholder": "you@company.com",
+          "savedDescription": "保存済みで暗号化されています。現在の値を保持するには空欄のままにし、置き換えるには新しい値を入力してください。",
+          "savedPlaceholder": "••••••••"
+        },
+        "keepStored": "保存済みの接続を保持するには、認証情報を空欄のままにしてください。",
+        "save": "接続を保存",
+        "saveHint": "認証情報をテストして保存してください。",
+        "test": "接続をテスト",
+        "failed": "接続テストに失敗しました。認証情報を確認して再試行してください。",
+        "title": "API 認証情報",
+        "verified": "{provider} を確認しました"
+      },
+      "errors": {
+        "costPrecision": "小数点以下4桁まで入力できます。",
+        "credentialTooLong": "認証情報は{maximum, number}文字以内で入力してください。",
+        "loginRequired": "API ログインを入力してください。",
+        "save": "プロバイダーの接続を保存できませんでした。再試行してください。",
+        "saveBeforeContinue": "続行する前にプロバイダーを保存してください。",
+        "secretRequired": "API パスワードを入力してください。",
+        "test": "プロバイダーの接続をテストできませんでした。再試行してください。",
+        "testBeforeConnect": "接続する前に {provider} をテストしてください。"
+      },
+      "modal": {
+        "cancel": "キャンセル",
+        "save": "接続を保存",
+        "title": "プロバイダーを接続"
+      },
+      "searchConsole": {
+        "label": "サイトのデータ / 任意、無料",
+        "tooltip": "Search Console では、サイトがすでに順位を獲得しているクエリを確認できます。キーワード候補を無料でインポートできますが、順位のチェックはできません。"
+      },
+      "title": "プロバイダー",
+      "skip": "プロバイダーの接続をスキップしてキーワードを一時停止状態で追加",
+      "skipLabel": "今はスキップ",
+      "video": {
+        "dataforseo": {
+          "description": "アカウントを作成し、API 認証情報を確認して、アカウントを認証します。",
+          "title": "DataForSEO アカウントの設定"
+        },
+        "serpapi": {
+          "description": "アカウントを作成し、API キーを確認します。",
+          "title": "SerpApi アカウントの設定"
+        },
+        "watch": "設定ガイドを見る"
+      }
+    },
+    "residency": {
+      "message": "データは {region} で保存・処理されます。"
+    },
+    "searchConsole": {
+      "actions": {
+        "change": "プロパティを変更",
+        "connect": "接続",
+        "connecting": "接続中...",
+        "loading": "プロパティを読み込み中...",
+        "otherAccount": "別のアカウントを使用",
+        "select": "プロパティを選択",
+        "useSelected": "選択したプロパティを使用"
+      },
+      "description": "無料で実際のクエリ、クリック数、表示回数をインポートできます。API キーは不要です。",
+      "drawer": {
+        "description": "接続済みの Google アカウントで取得したプロパティを選択してください。",
+        "noProperties": "このアカウントには確認済みの Search Console プロパティがありません。プロパティを確認するか、別の Google アカウントを接続してください。",
+        "property": "Search Console プロパティ",
+        "title": "Search Console プロパティを選択"
+      },
+      "errors": {
+        "connectionFailed": "Search Console に接続できませんでした。",
+        "propertiesLoad": "プロパティを読み込めませんでした。再試行するか、アカウントを再接続してください。",
+        "reconnect": "プロパティを変更するには Google アカウントを再接続してください。",
+        "selectionUnavailable": "プロパティの選択は利用できません。"
+      },
+      "name": "Search Console",
+      "notConfigured": {
+        "after": "をご覧ください。",
+        "before": "このインスタンスでは Search Console の OAuth が設定されていません。次を設定してください:",
+        "guide": "設定ガイド",
+        "guideBefore": "作成方法については",
+        "message": "このインスタンスでは Search Console の OAuth が設定されていません。<clientId>GOOGLE_CLIENT_ID</clientId> と <clientSecret>GOOGLE_CLIENT_SECRET</clientSecret> を設定してください。作成方法については <guide>設定ガイド</guide> をご覧ください。"
+      },
+      "status": {
+        "connected": "接続済み",
+        "ready": "接続の準備完了"
+      }
+    },
+    "steps": {
+      "firstCheck": {
+        "description": "実行してダッシュボードを開く",
+        "title": "最初のチェック"
+      },
+      "keywords": {
+        "description": "キーワードと追跡の既定値",
+        "title": "キーワード"
+      },
+      "provider": {
+        "description": "SERP プロバイダーと検索インサイト",
+        "title": "プロバイダー"
+      },
+      "website": {
+        "description": "名前とドメイン",
+        "title": "ウェブサイト"
+      }
+    },
+    "stepper": {
+      "completed": "{title}、完了",
+      "steps": "オンボーディングの手順",
+      "progress": "オンボーディングの進捗",
+      "stepCount": "ステップ{currentStep, number}/{totalSteps, number}"
+    },
+    "video": {
+      "fallbackTitle": "セットアップ",
+      "watchProviderSetup": "プロバイダーの設定動画を見る",
+      "watchSetup": "設定動画を見る"
+    },
+    "tracking": {
+      "bothDevices": "デスクトップ、モバイル",
+      "depth": "SERP の取得深度",
+      "depthHelp": "上位{depth, number}件の結果をチェックします。それより下の順位は未検出として扱われ、アラートは発生しません。{visibilityDepth, plural, =0 {} other {可視性を更新するには上位#位以上の深度を選択してください。}}",
+      "depthOption": "上位{depth, number}位",
+      "description": "これらのキーワードに適用されます。各キーワードの設定は後から変更できます。",
+      "devices": "デバイス",
+      "frequency": "頻度",
+      "moreChecks": "ロケーションやデバイスを増やすと、プロバイダーへのチェック数も増えます。",
+      "title": "追跡の既定値"
+    },
+    "website": {
+      "checking": "ウェブサイトを確認中...",
+      "description": "追跡するウェブサイトを入力してください。",
+      "errors": {
+        "invalid": "example.com のような形式でウェブサイトを入力してください。",
+        "required": "ウェブサイトを入力してください。",
+        "tooLong": "より短いウェブサイトの URL を入力してください。",
+        "updateUnavailable": "ウェブサイトの変更は利用できません。再試行してください。"
+      },
+      "label": "ウェブサイト",
+      "matchingHint": "www とドメインのすべてのサブドメインが自サイトとして扱われます。現在この照合ルールは固定で、スコープごとの設定は今後の予定です。",
+      "placeholder": "https://example.com",
+      "projectName": "プロジェクト名: {name}",
+      "projectNameFallback": "ウェブサイトをプロジェクト名として使用します。",
+      "saving": "プロジェクトを保存中...",
+      "trackingStarted": "{date} から {domain} を追跡中",
+      "trackingStartedDescription": "このウェブサイトには順位チェックがあります。別のウェブサイトを追跡するには、新しいプロジェクトを作成してください。",
+      "title": "ウェブサイト"
+    }
+  }
+}

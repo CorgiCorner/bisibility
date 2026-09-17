@@ -1,7 +1,8 @@
-import type { AlertActionHandlers, TriggeredAlertView } from "@/lib/alerts/alert-data";
+import { renderWithAlertMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import type { AlertActionHandlers, TriggeredAlertFeedView } from "@/lib/alerts/alert-data";
 import { canProjectAction, canReadProjectAudit } from "@/lib/auth/capabilities";
 import type { Role } from "@/lib/generated/prisma/client";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { AnchorHTMLAttributes } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AlertsPageContent } from "./AlertsPageContent";
@@ -37,32 +38,36 @@ const actions: AlertActionHandlers = {
   updateAlertRuleAction: vi.fn(),
 };
 
-const alerts: TriggeredAlertView[] = [
+const alerts: TriggeredAlertFeedView[] = [
   {
-    action: "Investigate the changed SERP.",
-    ctas: ["Open keyword"],
-    current: "#8",
+    afterPosition: 8,
+    beforePosition: 3,
+    condition: {
+      changePct: null,
+      competitorDomain: null,
+      dropPositions: 5,
+      serpFeature: null,
+      thresholdPosition: null,
+      topN: null,
+    },
+    conditionType: "position_drop",
     deliveryAttempts: [
       {
+        attemptedAt: new Date(Date.now() - 4 * 60_000).toISOString(),
         channel: "email",
         error: "Email delivery has no enabled recipients.",
         status: "failed",
-        webhookEndpointId: null,
-        webhookEndpointLabel: null,
-        when: "4m ago",
+        webhookEndpoint: null,
       },
     ],
     deliveryState: "dead_letter",
-    headline: "Ranking dropped",
+    firedAt: new Date(Date.now() - 5 * 60_000).toISOString(),
     id: "al_abcdefghijklmnopqrstuvwx",
     keyword: "rank tracker",
-    location: "United States",
     device: "desktop",
-    previous: "#3",
     rule: "Slipped",
     severity: "urgent",
     unread: true,
-    when: "5m ago",
   },
 ];
 
@@ -81,7 +86,7 @@ function renderAlerts({
 }: {
   firedInWindowCount?: number;
   gscConnected?: boolean;
-  initialAlerts?: TriggeredAlertView[];
+  initialAlerts?: TriggeredAlertFeedView[];
   canCreate?: boolean;
   canDelete?: boolean;
   canManage?: boolean;
@@ -148,7 +153,6 @@ describe("AlertsPageContent optimistic rollback", () => {
         {
           ...alerts[0],
           keyword: "rank tracker",
-          location: "Warsaw, Poland",
           device: "mobile",
           feedMeta: {
             engine: "Google",
@@ -160,7 +164,7 @@ describe("AlertsPageContent optimistic rollback", () => {
       ],
     });
 
-    expect(screen.getByText("RANK")).toBeInTheDocument();
+    expect(screen.getByText("Rank tracking")).toBeInTheDocument();
     expect(screen.getByText("Warsaw, Poland")).toBeInTheDocument();
     expect(screen.getByText("Mobile")).toBeInTheDocument();
     expect(screen.queryByText("/", { exact: true })).toBeNull();
@@ -173,7 +177,6 @@ describe("AlertsPageContent optimistic rollback", () => {
           ...alerts[0],
           id: "al_aaaaaaaaaaaaaaaaaaaaaaaa",
           keyword: "rank tracker",
-          location: "Warsaw, Poland",
           device: "mobile",
           feedMeta: {
             engine: "Google",
@@ -186,7 +189,6 @@ describe("AlertsPageContent optimistic rollback", () => {
           ...alerts[0],
           id: "al_bbbbbbbbbbbbbbbbbbbbbbbb",
           keyword: "best CRM",
-          location: "London, United Kingdom",
           device: "desktop",
           feedMeta: {
             engine: "Google",
@@ -208,7 +210,7 @@ describe("AlertsPageContent optimistic rollback", () => {
 
     expect(screen.getByText("Delivery: Failed / dead letter")).toBeInTheDocument();
     expect(
-      screen.getByText("Email failed: Email delivery has no enabled recipients. / 4m ago"),
+      screen.getByText("Email Failed: Email delivery has no enabled recipients. / 4m ago"),
     ).toBeInTheDocument();
   });
 
@@ -219,19 +221,18 @@ describe("AlertsPageContent optimistic rollback", () => {
           ...alerts[0],
           deliveryAttempts: [
             {
+              attemptedAt: new Date(Date.now() - 4 * 60_000).toISOString(),
               channel: "webhook",
               error: null,
               status: "sent",
-              webhookEndpointId: "we_abcdefghijklmnopqrstuvwx",
-              webhookEndpointLabel: "Primary alerts",
-              when: "4m ago",
+              webhookEndpoint: { id: "we_abcdefghijklmnopqrstuvwx", label: "Primary alerts" },
             },
           ],
         },
       ],
     });
 
-    expect(screen.getByText("Webhook sent (Primary alerts) / 4m ago")).toBeInTheDocument();
+    expect(screen.getByText("Webhook Sent (Primary alerts) / 4m ago")).toBeInTheDocument();
   });
 
   it("labels a removed webhook endpoint without exposing its former id", () => {
@@ -241,12 +242,11 @@ describe("AlertsPageContent optimistic rollback", () => {
           ...alerts[0],
           deliveryAttempts: [
             {
+              attemptedAt: new Date(Date.now() - 4 * 60_000).toISOString(),
               channel: "webhook",
               error: "Endpoint removed after delivery.",
               status: "failed",
-              webhookEndpointId: null,
-              webhookEndpointLabel: "Deleted endpoint",
-              when: "4m ago",
+              webhookEndpoint: null,
             },
           ],
         },
@@ -255,7 +255,7 @@ describe("AlertsPageContent optimistic rollback", () => {
 
     expect(
       screen.getByText(
-        "Webhook failed (Deleted endpoint): Endpoint removed after delivery. / 4m ago",
+        "Webhook Failed (Deleted endpoint): Endpoint removed after delivery. / 4m ago",
       ),
     ).toBeInTheDocument();
   });
@@ -269,7 +269,7 @@ describe("AlertsPageContent optimistic rollback", () => {
     await waitFor(() =>
       expect(screen.getByText("Could not snooze alert. Try again.")).toBeInTheDocument(),
     );
-    expect(screen.getByText("Ranking dropped")).toBeInTheDocument();
+    expect(screen.getByText("rank tracker dropped 5 positions")).toBeInTheDocument();
   });
 
   it("does not report all clear after the last visible alert is snoozed", async () => {

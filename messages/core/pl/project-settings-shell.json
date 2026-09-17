@@ -1,0 +1,123 @@
+{
+  "projectSettingsShell": {
+    "card": {
+      "save": "Zapisz",
+      "saved": "Zapisano"
+    },
+    "mobileSectionLabel": "Sekcja ustawień",
+    "navigationLabel": "Sekcje ustawień",
+    "search": {
+      "empty": "Nie znaleziono ustawień. Spróbuj wpisać: strefa czasowa, klucz API lub budżet.",
+      "label": "Szukaj w ustawieniach",
+      "placeholder": "Szukaj w ustawieniach…",
+      "results": "Znaleziono {count, plural, one {# ustawienie} few {# ustawienia} many {# ustawień} other {# ustawienia}}",
+      "resultsLabel": "Pasujące ustawienia",
+      "sections": {
+        "providerConnections": "Integracje / Połączenia",
+        "providerUsage": "Integracje / Zużycie"
+      },
+      "entries": {
+        "apiKeys": {
+          "label": "Klucze API",
+          "keywords": "api klucz token dostęp dane uwierzytelniające"
+        },
+        "applicationPlan": {
+          "label": "Plan aplikacji",
+          "keywords": "rozliczenia cena subskrypcja hostowana beta self-hosting własna instancja"
+        },
+        "checkFrequency": {
+          "label": "Częstotliwość sprawdzeń",
+          "keywords": "harmonogram ręcznie codziennie tygodniowo miesięcznie cron automatycznie"
+        },
+        "competitors": {
+          "label": "Konkurenci i aliasy marki",
+          "keywords": "konkurencyjność wzmianki cytowania"
+        },
+        "defaultDevice": {
+          "label": "Domyślne urządzenie",
+          "keywords": "telefon komputer mobile desktop"
+        },
+        "defaultLocation": {
+          "label": "Domyślna lokalizacja",
+          "keywords": "kraj miasto rynek region język"
+        },
+        "defaultSerpDepth": {
+          "label": "Domyślna głębokość SERP",
+          "keywords": "top 10 20 50 100 pozycja sprawdzenie wyniki"
+        },
+        "deployWebhooks": {
+          "label": "Webhooki wdrożeń",
+          "keywords": "punkt końcowy sekret wdrożenie hook"
+        },
+        "domainMatching": {
+          "label": "Dopasowanie domeny",
+          "keywords": "subdomena dokładne domena główna url zakres"
+        },
+        "experimentalFeatures": {
+          "label": "Funkcje eksperymentalne",
+          "keywords": "moduły podgląd beta alfa funkcje"
+        },
+        "members": {
+          "label": "Członkowie i zaproszenia",
+          "keywords": "użytkownicy zaproszenie rola dostęp uprawnienia"
+        },
+        "notificationChannels": {
+          "label": "Kanały powiadomień",
+          "keywords": "e-mail slack webhook alerty podsumowanie"
+        },
+        "projectManagement": {
+          "label": "Zarządzanie projektem",
+          "keywords": "kopia zapasowa eksport migracja self-hosting usuwanie projektu dziennik audytu historia"
+        },
+        "projectName": {
+          "label": "Nazwa projektu",
+          "keywords": "zmiana nazwy projekt przestrzeń robocza"
+        },
+        "providerBudgets": {
+          "label": "Budżety i zużycie u dostawców",
+          "keywords": "przydział wydatki koszt saldo limit kredyty wyszukiwania"
+        },
+        "providerConnections": {
+          "label": "Połączenia z dostawcami",
+          "keywords": "połącz odłącz dane uwierzytelniające dataforseo serpapi google search console analytics"
+        },
+        "scheduleTimezone": {
+          "label": "Strefa czasowa harmonogramu",
+          "keywords": "strefa czasowa zegar utc"
+        },
+        "searchDataSync": {
+          "label": "Synchronizacja danych wyszukiwania",
+          "keywords": "gsc przechowywanie danych miesiące import wstrzymanie tempo"
+        },
+        "stopOnMatch": {
+          "label": "Zatrzymanie sprawdzeń po pierwszym trafieniu",
+          "keywords": "domena pierwszy wynik głębokość koszt"
+        },
+        "tagsAndSegments": {
+          "label": "Tagi i segmenty",
+          "keywords": "porządkowanie słowa kluczowe etykiety"
+        },
+        "urlInspectionLimit": {
+          "label": "Limit sprawdzeń adresu URL",
+          "keywords": "dzienny limit indeksowanie google search console"
+        },
+        "websiteDomain": {
+          "label": "Domena witryny",
+          "keywords": "witryna url zmiana domeny"
+        }
+      }
+    },
+    "sections": {
+      "advanced": "Zaawansowane",
+      "billing": "Rozliczenia",
+      "competitors": "Konkurenci",
+      "dataSources": "Źródła danych",
+      "developers": "Deweloperzy",
+      "experimental": "Eksperymentalne",
+      "general": "Ogólne",
+      "notifications": "Powiadomienia",
+      "team": "Zespół",
+      "tracking": "Monitorowanie"
+    }
+  }
+}

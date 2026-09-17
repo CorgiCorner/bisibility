@@ -13,6 +13,7 @@ import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist
 import { RankingIcon as Ranking } from "@phosphor-icons/react/dist/ssr/Ranking";
 import { SpinnerGapIcon as SpinnerGap } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
+import { useTranslations } from "next-intl";
 import type { EmptyRankCopy } from "./KeywordPendingEmptyState";
 
 type KeywordPendingModulesProps = {
@@ -31,6 +32,7 @@ function PendingChart({
   copy,
   state,
 }: Readonly<{ copy: EmptyRankCopy; state: KeywordPendingModulesProps["state"] }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.pending");
   const running = state === "running";
   const Icon =
     state === "never_checked"
@@ -43,7 +45,7 @@ function PendingChart({
 
   return (
     <Card radius="card" size="lg">
-      <SectionTitle>Position history</SectionTitle>
+      <SectionTitle>{t("history")}</SectionTitle>
       <div className="mt-3 grid min-h-[176px] place-items-center rounded-card px-5 text-center">
         <div>
           <span
@@ -59,8 +61,26 @@ function PendingChart({
               weight="regular"
             />
           </span>
-          <p className="m-0 mt-3 text-[15px] font-semibold leading-[1.35] text-fg">{copy.title}</p>
-          <p className="m-0 mt-1.5 text-[12px] leading-[1.45] text-fg-muted">{copy.body}</p>
+          <p className="m-0 mt-3 text-[15px] font-semibold leading-[1.35] text-fg">
+            {state === "running"
+              ? t("runningTitle")
+              : state === "failed"
+                ? t("failedTitle")
+                : state === "not_ranked"
+                  ? t("notRankedTitle", { depth: copy.depth })
+                  : t("firstTitle")}
+          </p>
+          <p className="m-0 mt-1.5 text-[12px] leading-[1.45] text-fg-muted">
+            {state === "running"
+              ? t("runningBody")
+              : state === "failed"
+                ? t("failedBody")
+                : state === "not_ranked"
+                  ? t("notRankedBody")
+                  : copy.action === "connect_provider"
+                    ? t("firstBodyNoProvider")
+                    : t("firstBody")}
+          </p>
         </div>
       </div>
     </Card>

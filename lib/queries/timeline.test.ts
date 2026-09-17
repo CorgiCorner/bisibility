@@ -1,4 +1,7 @@
 import { timelineGroups } from "@/lib/timeline/timeline-data";
+import { createTimelinePresentation } from "@/lib/timeline/timeline-presentation";
+import projectTimelineMessages from "@/messages/core/en/project-timeline.json";
+import { createTranslator } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTimelineView } from "./timeline";
 
@@ -28,6 +31,13 @@ vi.mock("./workspace-request-data", () => ({
 }));
 
 const now = new Date("2026-07-04T12:00:00.000Z");
+const presentation = createTimelinePresentation(
+  createTranslator({
+    locale: "en",
+    messages: projectTimelineMessages,
+    namespace: "projectTimeline.data",
+  }),
+);
 
 function signalRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -89,7 +99,12 @@ describe("getTimelineView", () => {
     });
     expect(view.timeZone).toBe("Europe/Madrid");
     expect(
-      timelineGroups(view.rows, view.now, { dateFormat: "iso", timezone: view.timeZone }),
+      timelineGroups(
+        view.rows,
+        view.now,
+        { dateFormat: "iso", locale: "en", timeZone: view.timeZone },
+        presentation,
+      ),
     ).toEqual([
       {
         day: "Today",

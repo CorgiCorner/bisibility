@@ -2,13 +2,35 @@ import { Sparkline } from "@/components/charts/Sparkline";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
+import { ResearchIntentChip } from "./ResearchIntentChip";
 import { ResearchKeywordCell } from "./ResearchKeywordCell";
 import { ResearchUnavailableMetric } from "./ResearchUnavailableMetric";
-import { chronologicalTrend, difficultyPillStyle, IntentChip } from "./research-results-model";
+import { chronologicalTrend, difficultyPillStyle } from "./research-results-model";
 import type { ResearchResultsTableRow } from "./research-results-table-state";
+
+type ResearchResultsColumnMessages = {
+  columns: {
+    cpc: string;
+    cpcTitle: string;
+    cpcUnavailable: string;
+    difficulty: string;
+    difficultyShort: string;
+    difficultyUnavailable: string;
+    intent: string;
+    keyword: string;
+    source: string;
+    trend: string;
+    trendAria: (values: { keyword: string }) => string;
+    trendUnavailable: string;
+    volume: string;
+    volumeUnavailable: string;
+  };
+  formatNumber: (value: number) => string;
+};
 
 export function researchResultsColumns(input: {
   canRemoveSaved: boolean;
+  messages: ResearchResultsColumnMessages;
   metricsAvailable: boolean;
   onToggleSave?: (row: GroupedResearchRow) => void;
 }): DataTableColumn<ResearchResultsTableRow>[] {
@@ -22,9 +44,15 @@ export function researchResultsColumns(input: {
           row={row.original}
         />
       ),
-      header: "Keyword",
+      header: input.messages.columns.keyword,
       id: "keyword",
-      meta: { flex: 1.5, lockVisible: true, pin: "left", sortable: false, title: "Keyword" },
+      meta: {
+        flex: 1.5,
+        lockVisible: true,
+        pin: "left",
+        sortable: false,
+        title: input.messages.columns.keyword,
+      },
       minSize: 212,
       size: 212,
     },
@@ -35,14 +63,14 @@ export function researchResultsColumns(input: {
           <span className="font-sans tabular-nums text-[12px]">
             {row.original.searchVolume == null
               ? "-"
-              : row.original.searchVolume.toLocaleString("en-US")}
+              : input.messages.formatNumber(row.original.searchVolume)}
           </span>
         ) : (
-          <ResearchUnavailableMetric label="Search volume unavailable" />
+          <ResearchUnavailableMetric label={input.messages.columns.volumeUnavailable} />
         ),
-      header: "Volume",
+      header: input.messages.columns.volume,
       id: "searchVolume",
-      meta: { align: "end", title: "Volume" },
+      meta: { align: "end", title: input.messages.columns.volume },
       minSize: 92,
       size: 92,
       sortDescFirst: true,
@@ -51,15 +79,15 @@ export function researchResultsColumns(input: {
       cell: ({ row }) =>
         input.metricsAvailable ? (
           <Sparkline
-            ariaLabel={`Monthly volume trend for ${row.original.keyword}`}
+            ariaLabel={input.messages.columns.trendAria({ keyword: row.original.keyword })}
             data={chronologicalTrend(row.original.monthlyTrend).map((point) => point.searchVolume)}
           />
         ) : (
-          <ResearchUnavailableMetric label="Search trend unavailable" />
+          <ResearchUnavailableMetric label={input.messages.columns.trendUnavailable} />
         ),
-      header: "Trend",
+      header: input.messages.columns.trend,
       id: "trend",
-      meta: { sortable: false, title: "Trend" },
+      meta: { sortable: false, title: input.messages.columns.trend },
       minSize: 104,
       size: 104,
     },
@@ -73,11 +101,11 @@ export function researchResultsColumns(input: {
             {row.original.difficulty ?? "-"}
           </span>
         ) : (
-          <ResearchUnavailableMetric label="KD unavailable" />
+          <ResearchUnavailableMetric label={input.messages.columns.difficultyUnavailable} />
         ),
-      header: "KD",
+      header: input.messages.columns.difficultyShort,
       id: "difficulty",
-      meta: { sortable: false, title: "Keyword difficulty" },
+      meta: { sortable: false, title: input.messages.columns.difficulty },
       minSize: 68,
       size: 68,
     },
@@ -88,19 +116,19 @@ export function researchResultsColumns(input: {
             {row.original.cpcCents == null ? "-" : formatEstimateCents(row.original.cpcCents)}
           </span>
         ) : (
-          <ResearchUnavailableMetric label="CPC unavailable" />
+          <ResearchUnavailableMetric label={input.messages.columns.cpcUnavailable} />
         ),
-      header: "CPC",
+      header: input.messages.columns.cpc,
       id: "cpcCents",
-      meta: { align: "end", sortable: false, title: "Cost per click" },
+      meta: { align: "end", sortable: false, title: input.messages.columns.cpcTitle },
       minSize: 80,
       size: 80,
     },
     {
-      cell: ({ row }) => <IntentChip intent={row.original.intent} />,
-      header: "Intent",
+      cell: ({ row }) => <ResearchIntentChip intent={row.original.intent} />,
+      header: input.messages.columns.intent,
       id: "intent",
-      meta: { sortable: false, title: "Intent" },
+      meta: { sortable: false, title: input.messages.columns.intent },
       minSize: 96,
       size: 96,
     },
@@ -110,9 +138,9 @@ export function researchResultsColumns(input: {
           {row.original.source}
         </code>
       ),
-      header: "Source",
+      header: input.messages.columns.source,
       id: "source",
-      meta: { sortable: false, title: "Source" },
+      meta: { sortable: false, title: input.messages.columns.source },
       minSize: 104,
       size: 104,
     },

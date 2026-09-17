@@ -7,6 +7,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { menuItemRowHoverStyle } from "@/lib/ui/menu-item-row-styles";
 import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react/dist/csr/DotsThree";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type AssignableTeamRole = "admin" | "member" | "viewer";
@@ -62,6 +63,7 @@ export function TeamMemberActionsMenu({
   pending,
   roleOptions,
 }: Readonly<TeamMemberActionsMenuProps>) {
+  const t = useTranslations("projectSettingsTeam.memberActions");
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [confirmation, setConfirmation] = useState<Extract<
     ConfirmKind,
@@ -91,11 +93,11 @@ export function TeamMemberActionsMenu({
 
   return (
     <>
-      <Tooltip content={`Actions for ${memberName}`}>
+      <Tooltip content={t("actionsFor", { name: memberName })}>
         <button
           aria-expanded={open}
           aria-haspopup="menu"
-          aria-label={`Actions for ${memberName}`}
+          aria-label={t("actionsFor", { name: memberName })}
           className="grid h-[30px] w-[30px] place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted hover:border-accent hover:text-accent-text disabled:cursor-wait disabled:opacity-60"
           disabled={pending}
           onClick={(event) => setAnchor(event.currentTarget)}
@@ -108,7 +110,7 @@ export function TeamMemberActionsMenu({
         anchorEl={anchor}
         onClose={closeMenu}
         open={open}
-        listProps={{ "aria-label": `Actions for ${memberName}`, style: { padding: 0 } }}
+        listProps={{ "aria-label": t("actionsFor", { name: memberName }), style: { padding: 0 } }}
         contentProps={{ style: memberMenuPaperStyle }}
       >
         {view === "actions"
@@ -118,8 +120,7 @@ export function TeamMemberActionsMenu({
                   className="px-3 pb-1 pt-2 text-[11.5px] leading-5 text-fg-muted"
                   key="audit-explanation"
                 >
-                  Viewer / audit is a managed audit role and cannot be represented as a normal
-                  assignable role.
+                  {t("auditExplanation")}
                 </li>
               ) : null,
               canChangeRole ? (
@@ -128,7 +129,7 @@ export function TeamMemberActionsMenu({
                   onClick={() => setView("roles")}
                   style={memberMenuRowStyle}
                 >
-                  Change role
+                  {t("changeRole")}
                 </MenuItem>
               ) : null,
               canTransferOwnership ? (
@@ -137,7 +138,7 @@ export function TeamMemberActionsMenu({
                   onClick={() => requestConfirmation("transferProjectOwnership")}
                   style={memberMenuRowStyle}
                 >
-                  Transfer ownership
+                  {t("transferOwnership")}
                 </MenuItem>
               ) : null,
               canRemove ? (
@@ -146,13 +147,13 @@ export function TeamMemberActionsMenu({
                   onClick={() => requestConfirmation("removeTeamMember")}
                   style={memberMenuRowStyle}
                 >
-                  Remove from project
+                  {t("removeFromProject")}
                 </MenuItem>
               ) : null,
             ]
           : [
               <MenuItem key="back" onClick={() => setView("actions")} style={memberMenuRowStyle}>
-                Back to actions
+                {t("backToActions")}
               </MenuItem>,
               ...roleOptions.map((role) => (
                 <MenuItem

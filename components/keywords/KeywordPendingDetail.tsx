@@ -1,13 +1,14 @@
 "use client";
 
 import { AccentCtaLink } from "@/components/ui/AccentCtaLink";
-import { formatEstimateCents, runCostCents } from "@/lib/cost-estimate/project-estimate";
+import { runCostCents } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { resolveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { KeywordDetailActions } from "./action-utils";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
@@ -35,13 +36,17 @@ type KeywordPendingDetailProps = KeywordDetailActions & {
   searchConsoleConnected?: boolean;
 };
 
-function checkCostLabel(depth: SerpDepth, costContext?: ProjectCostContext) {
+function checkCostLabel(
+  depth: SerpDepth,
+  costContext: ProjectCostContext | undefined,
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordDetail.firstCheck">>,
+) {
   if (!costContext) return null;
   const costCents = runCostCents([depth], {
     overrideCents: costContext.costPerCheckCents,
     providerId: costContext.providerId,
   });
-  return costCents == null ? null : `~${formatEstimateCents(costCents)}`;
+  return costCents == null ? null : t("estimatedCostValue", { cost: costCents / 100 });
 }
 
 export function KeywordPendingDetail({
@@ -59,6 +64,8 @@ export function KeywordPendingDetail({
   searchConsoleConnected = false,
   updateKeywordAction,
 }: Readonly<KeywordPendingDetailProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.actions");
+  const firstCheckT = useTranslations("projectRankTracker.keywordDetail.firstCheck");
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const {
@@ -111,7 +118,7 @@ export function KeywordPendingDetail({
     <KeywordHeaderActions {...sharedActions} />
   ) : (
     <div className="flex flex-wrap justify-end gap-2">
-      <AccentCtaLink href={copy.href}>Connect a provider</AccentCtaLink>
+      <AccentCtaLink href={copy.href}>{t("connectProvider")}</AccentCtaLink>
       <KeywordHeaderActions {...sharedActions} showCheck={false} />
     </div>
   );
@@ -145,7 +152,7 @@ export function KeywordPendingDetail({
         <KeywordFirstCheckModal
           confirmError={modal.error}
           confirming={confirming}
-          costLabel={checkCostLabel(modal.depth, costContext)}
+          costLabel={checkCostLabel(modal.depth, costContext, firstCheckT)}
           depth={modal.depth}
           errorCode={modal.errorCode}
           onClose={closeCheckModal}

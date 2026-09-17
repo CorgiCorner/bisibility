@@ -12,17 +12,12 @@ restore commands, and restore rehearsal - lives on the Self-host page:
 
 ## Upgrade Docker Compose
 
-<Warning>
-v0.5.0 is a fresh-install reset with one squashed Prisma baseline. Existing
-v0.4.1 and earlier databases do not have a supported upgrade path to v0.5.0,
-and the v0.5.0 `upgrade.sh` refuses before changing Compose or the database.
-</Warning>
-
 The canonical upgrade procedure - prerequisites, backup as rollback, release
 asset verification, migration, restart, readiness validation, failure paths,
 and restore - lives on the Self-host page:
 [Self-hosted upgrades](/self-hosting/upgrades). Never enable demo OTP or demo
-seeding on a real deployment.
+seeding on a real deployment. Historical one-time procedures live under
+[Legacy upgrades](/self-hosting/legacy-upgrades).
 
 ## Keep web and worker on the same version
 

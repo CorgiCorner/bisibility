@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { renderWithInstanceAdminMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { appRootPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/admin/AdminRefresh", () => ({
@@ -63,9 +64,9 @@ const ownedRoots = [
   "components/integrations",
   "components/admin",
   "components/audit",
-  "app/app/admin",
-  "app/app/(workspace)/[project]/integrations",
-  "app/app/(workspace)/[project]/settings/(sections)/data-sources",
+  "app/(regional)/app/admin",
+  "app/(regional)/app/(workspace)/[project]/integrations",
+  "app/(regional)/app/(workspace)/[project]/settings/(sections)/data-sources",
 ] as const;
 
 function sourceFiles(root: string): string[] {
@@ -90,7 +91,7 @@ function forbiddenMonoUsages(path: string) {
 describe("owned typography semantics", () => {
   it("uses Mono only for the diagnostics digest and raw stack trace", () => {
     const violations = ownedRoots.flatMap(sourceFiles).flatMap(forbiddenMonoUsages);
-    const diagnosticsPath = "app/app/AppErrorDiagnostics.tsx";
+    const diagnosticsPath = "app/(regional)/app/AppErrorDiagnostics.tsx";
     const diagnostics = forbiddenMonoUsages(diagnosticsPath);
     const diagnosticsSource = readFileSync(diagnosticsPath, "utf8");
 
@@ -100,7 +101,7 @@ describe("owned typography semantics", () => {
     ]);
     expect(diagnosticsSource).not.toContain("MonoText");
     expect(diagnosticsSource).toMatch(
-      /<span\s+className=\{cn\([\s\S]*?details\.digest && "font-mono",[\s\S]*?\)\}\s*>\s*\{details\.digest \?\? "no reference"\}\s*<\/span>/u,
+      /<span\s+className=\{cn\([\s\S]*?details\.digest && "font-mono",[\s\S]*?\)\}\s*>\s*\{details\.digest \?\? t\("noReference"\)\}\s*<\/span>/u,
     );
   });
 });

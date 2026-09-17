@@ -1,3 +1,4 @@
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, it } from "vitest";
@@ -14,7 +15,11 @@ it("shows markets in the header context and preserves the other dashboard filter
     pathname: "/app/prj_1/dashboard",
     searchParams: { range: "7d", device: "mobile", tag: "Docs" },
   });
-  render(<OverviewHeaderContext options={options} />);
+  render(
+    <ProjectDashboardMessages>
+      <OverviewHeaderContext options={options} />
+    </ProjectDashboardMessages>,
+  );
   const markets = screen.getByRole("button", { name: "Markets" });
   expect(screen.getByRole("group", { name: "Change context" })).toContainElement(markets);
   expect(markets).toHaveClass(
@@ -44,7 +49,11 @@ it("keeps the device selector in the header and preserves dashboard filters", ()
       "range=7d&device=mobile&tag=Docs&market=loc_es_es&market=loc_be_nl",
     ),
   });
-  render(<OverviewHeaderContext options={options} />);
+  render(
+    <ProjectDashboardMessages>
+      <OverviewHeaderContext options={options} />
+    </ProjectDashboardMessages>,
+  );
 
   const group = screen.getByRole("group", { name: "Change context" });
   const device = screen.getByRole("button", { name: "Device scope" });
@@ -73,7 +82,11 @@ it("reflects multiple markets from direct navigation", () => {
     pathname: "/app/prj_1/dashboard",
     searchParams: new URLSearchParams("market=loc_es_es&market=loc_be_nl"),
   });
-  render(<OverviewHeaderContext options={options} />);
+  render(
+    <ProjectDashboardMessages>
+      <OverviewHeaderContext options={options} />
+    </ProjectDashboardMessages>,
+  );
   expect(screen.getByRole("button", { name: "Markets" })).toHaveTextContent("2 markets");
   fireEvent.click(screen.getByRole("button", { name: "Markets" }));
   expect(screen.getByRole("menuitemcheckbox", { name: /Spain.*Spanish/ })).toHaveAttribute(
@@ -87,6 +100,10 @@ it("reflects multiple markets from direct navigation", () => {
 });
 
 it("omits an empty market selector", () => {
-  render(<OverviewHeaderContext options={[]} />);
+  render(
+    <ProjectDashboardMessages>
+      <OverviewHeaderContext options={[]} />
+    </ProjectDashboardMessages>,
+  );
   expect(screen.queryByRole("button", { name: "Markets" })).not.toBeInTheDocument();
 });

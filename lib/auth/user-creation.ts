@@ -1,4 +1,6 @@
 import "server-only";
+
+import { localeFieldsForNewUser } from "@/i18n/locale-preference.server";
 import { assertDemoAccountMutable } from "@/lib/demo/config";
 import { prepareFirstRunUserCreation } from "./first-run";
 import { addAuthPublicId } from "./public-id-hooks";
@@ -10,6 +12,8 @@ type UserCreationContext = Parameters<typeof prepareFirstRunUserCreation>[1];
 export async function prepareUserCreation(user: UserCreationInput, context: UserCreationContext) {
   assertDemoAccountMutable();
   const prepared = await prepareFirstRunUserCreation(user, context);
-  const identified = addAuthPublicId(user, "usr", prepared);
+  const identified = addAuthPublicId(user, "usr", {
+    data: { ...prepared?.data, ...localeFieldsForNewUser(context) },
+  });
   return (await sendCloudWelcomeSequence(identified.data)) ?? identified;
 }

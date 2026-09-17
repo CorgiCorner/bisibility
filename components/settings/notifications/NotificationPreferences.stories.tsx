@@ -1,3 +1,4 @@
+import { withNotificationSettingsMessages } from "@/.storybook/notification-settings-messages";
 import {
   NotificationPreferences,
   type NotificationPreferencesProps,
@@ -47,6 +48,7 @@ function NotificationPreferencesStory({
 const meta = {
   component: NotificationPreferences,
   decorators: [
+    withNotificationSettingsMessages,
     (Story) => (
       <main className="min-h-screen bg-bg p-4 text-fg sm:p-6">
         <Story />

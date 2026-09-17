@@ -11,6 +11,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { cn } from "@/lib/ui/cn";
 import { DotsThreeVerticalIcon as DotsThreeVertical } from "@phosphor-icons/react/dist/csr/DotsThreeVertical";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type SidebarUserButtonProps = {
@@ -26,8 +27,9 @@ export function SidebarUserButton({
   showHostedLinks = false,
   user,
 }: Readonly<SidebarUserButtonProps>) {
+  const t = useTranslations("shell.userMenu");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const name = shellUserName(user);
+  const name = shellUserName(user, t("fallbackName"));
   const email = shellUserEmail(user);
   const initials = avatarInitials(name, email);
   // With no name set, `name` falls back to the email; don't print the email twice.
@@ -44,7 +46,7 @@ export function SidebarUserButton({
         aria-controls={open ? "sidebar-user-menu" : undefined}
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label="Account menu"
+        aria-label={t("accountMenu")}
         className={[
           "group flex items-center rounded-control text-left text-fg transition-colors",
           collapsed ? "" : "hover:bg-bg-sunken",

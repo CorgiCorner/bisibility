@@ -21,24 +21,48 @@ export type OnboardingStep = {
   optional?: boolean;
 };
 
-export const onboardingSteps = [
-  { n: 1, title: "Website", desc: "Name and domain", icon: "folder" },
-  {
-    n: 2,
-    title: "Provider",
-    desc: "SERP provider and search insights",
-    icon: "database",
-  },
-  {
-    n: 3,
-    title: "Keywords",
-    desc: "Keywords and tracking defaults",
-    icon: "search",
-  },
-  { n: 4, title: "First check", desc: "Run it and open your dashboard", icon: "lightning" },
-] satisfies OnboardingStep[];
+type OnboardingStepTranslationKey =
+  | "steps.website.title"
+  | "steps.website.description"
+  | "steps.provider.title"
+  | "steps.provider.description"
+  | "steps.keywords.title"
+  | "steps.keywords.description"
+  | "steps.firstCheck.title"
+  | "steps.firstCheck.description";
 
-export const totalOnboardingSteps = onboardingSteps.length;
+export function onboardingSteps(
+  t: (key: OnboardingStepTranslationKey) => string,
+): OnboardingStep[] {
+  return [
+    {
+      n: 1,
+      title: t("steps.website.title"),
+      desc: t("steps.website.description"),
+      icon: "folder",
+    },
+    {
+      n: 2,
+      title: t("steps.provider.title"),
+      desc: t("steps.provider.description"),
+      icon: "database",
+    },
+    {
+      n: 3,
+      title: t("steps.keywords.title"),
+      desc: t("steps.keywords.description"),
+      icon: "search",
+    },
+    {
+      n: 4,
+      title: t("steps.firstCheck.title"),
+      desc: t("steps.firstCheck.description"),
+      icon: "lightning",
+    },
+  ];
+}
+
+export const totalOnboardingSteps = 4;
 
 export type OnboardingFlowState = {
   devices?: readonly SerpDevice[];

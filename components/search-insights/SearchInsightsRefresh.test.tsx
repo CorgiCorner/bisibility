@@ -1,5 +1,10 @@
+import {
+  renderWithSearchInsightsMessages as render,
+  renderWithFeatureMessages,
+  searchInsightsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import type { TransitionStartFunction } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -71,7 +76,7 @@ describe("SearchInsightsRefresh", () => {
   });
   it("does not start another refresh while the transition is pending", () => {
     const view = render(<SearchInsightsRefresh active />);
-    fireEvent.click(screen.getByRole("button", { name: "Refresh import status" }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh stored insights" }));
     expect(routerMock.refresh).toHaveBeenCalledTimes(1);
 
     transition.pending = true;
@@ -85,14 +90,14 @@ describe("SearchInsightsRefresh", () => {
     transition.pending = true;
     render(<SearchInsightsRefresh active={false} />);
 
-    const button = screen.getByRole("button", { name: "Refresh import status" });
+    const button = screen.getByRole("button", { name: "Refresh stored insights" });
     expect(button).toHaveAttribute("aria-busy", "true");
     expect(button.querySelector("svg")).toHaveClass("animate-spin");
   });
   it("returns from pending to one idle transparent refresh icon", () => {
     transition.pending = true;
     const view = render(<SearchInsightsRefresh active={false} />);
-    let button = screen.getByRole("button", { name: "Refresh import status" });
+    let button = screen.getByRole("button", { name: "Refresh stored insights" });
 
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute("aria-busy", "true");
@@ -101,7 +106,7 @@ describe("SearchInsightsRefresh", () => {
 
     transition.pending = false;
     view.rerender(<SearchInsightsRefresh active={false} />);
-    button = screen.getByRole("button", { name: "Refresh import status" });
+    button = screen.getByRole("button", { name: "Refresh stored insights" });
 
     expect(button).toBeEnabled();
     expect(button).not.toHaveAttribute("aria-busy", "true");
@@ -112,8 +117,26 @@ describe("SearchInsightsRefresh", () => {
 
   it("keeps manual refresh available while polling is inactive", () => {
     render(<SearchInsightsRefresh active={false} />);
-    fireEvent.click(screen.getByRole("button", { name: "Refresh import status" }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh stored insights" }));
     expect(routerMock.refresh).toHaveBeenCalledTimes(1);
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("renders the localized action and accessible name without changing its polling behavior", () => {
+    const messages = structuredClone(searchInsightsFeatureTestMessages);
+    messages.projectSearchInsights.copy.refresh = "Odswiez";
+    messages.projectSearchInsights.copy.refreshAriaLabel = "Odswiez stan importu";
+
+    renderWithFeatureMessages(<SearchInsightsRefresh active={false} />, {
+      locale: "pl",
+      messages,
+    });
+
+    expect(screen.getByRole("button", { name: "Odswiez stan importu" })).toHaveTextContent(
+      "Odswiez",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Refresh stored insights" }),
+    ).not.toBeInTheDocument();
   });
 });

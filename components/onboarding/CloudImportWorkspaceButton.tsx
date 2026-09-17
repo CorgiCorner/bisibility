@@ -1,14 +1,14 @@
 "use client";
 
-import { actionErrorMessage, feedbackClass } from "@/components/onboarding/onboarding-form-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { feedbackClass } from "@/components/onboarding/onboarding-form-utils";
 import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { createCloudImportWorkspace } from "@/lib/actions/cloud";
+import { presentActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { type FormEvent, useState, useTransition } from "react";
-
-export const RESTORE_PROJECT_TOOLTIP =
-  "Import a project package from another bisibility instance. We'll create one local project and restore its data. Provider credentials and API keys are not included.";
 
 function resolvedBrowserTimezone(): string {
   try {
@@ -22,6 +22,8 @@ function resolvedBrowserTimezone(): string {
 export function CloudImportWorkspaceButton({
   browserTimezone,
 }: Readonly<{ browserTimezone?: string }>) {
+  const t = useTranslations("onboarding.projectOptions");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -36,22 +38,22 @@ export function CloudImportWorkspaceButton({
         );
         router.push(destination, { scroll: true });
       } catch (cause) {
-        setError(actionErrorMessage(cause, "Import project could not be opened."));
+        setError(presentActionError(cause, sharedErrors, t("importError")));
       }
     });
   }
 
   return (
     <form className="m-0 inline-flex items-end" onSubmit={handleSubmit}>
-      <Tooltip content={RESTORE_PROJECT_TOOLTIP} placement="top" semantics="description">
+      <Tooltip content={t("restoreProjectTooltip")} placement="top" semantics="description">
         <Button
           loading={pending}
-          loadingLabel="Opening import..."
+          loadingLabel={t("openingImport")}
           size="lg"
           type="submit"
           variant="secondary"
         >
-          Restore project
+          {t("restoreProject")}
         </Button>
       </Tooltip>
       {error ? (

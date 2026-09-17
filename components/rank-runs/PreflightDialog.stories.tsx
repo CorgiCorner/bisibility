@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -93,6 +94,7 @@ function CheckAllStory(args: PreflightDialogProps) {
 const meta = {
   args: baseArgs,
   component: PreflightDialog,
+  decorators: [withSharedMessages],
   parameters: { layout: "fullscreen" },
   title: "dashboard-runs",
 } satisfies Meta<typeof PreflightDialog>;

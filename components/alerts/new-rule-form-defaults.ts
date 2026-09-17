@@ -31,3 +31,14 @@ export function newRuleFormDefaults(
     topN: rule?.topN ?? template.defaults.topN,
   };
 }
+
+export function localizedNewRuleFormDefaults(
+  projectId: string,
+  templateId: RuleTemplateId,
+  templateName: string,
+  rule?: AlertRuleView,
+  availableMarketIds?: readonly string[],
+) {
+  const defaults = newRuleFormDefaults(projectId, templateId, rule, availableMarketIds);
+  return rule ? defaults : { ...defaults, name: templateName };
+}

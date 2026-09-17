@@ -1,8 +1,20 @@
+import {
+  authFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { appRootPath } from "@/lib/routing/app-path";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TwoFactorChallengeForm } from "./TwoFactorChallengeForm";
+
+function render(
+  ui: ReactElement,
+  options: Parameters<typeof renderWithFeatureMessages>[1] = { messages: authFeatureTestMessages },
+) {
+  return renderWithFeatureMessages(ui, options);
+}
 
 const mocks = vi.hoisted(() => ({
   verifyBackupCode: vi.fn(),
@@ -120,5 +132,36 @@ describe("TwoFactorChallengeForm", () => {
     ).toBeInTheDocument();
     expect(routerMock.replace).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Backup code")).toHaveValue("");
+  });
+
+  it("keeps empty and too-long backup-code validation distinct", async () => {
+    render(<TwoFactorChallengeForm />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Backup code" }));
+    fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
+    expect(await screen.findByText("Enter a backup code.")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Backup code"), {
+      target: { value: "x".repeat(129) },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
+    expect(await screen.findByText("Enter a valid backup code.")).toBeInTheDocument();
+  });
+
+  it("uses injected non-English messages for distinct backup-code validation", async () => {
+    const messages = structuredClone(authFeatureTestMessages);
+    messages.auth.twoFactor.validation.backupInvalid = "Wpisz poprawny kod zapasowy.";
+    messages.auth.twoFactor.validation.backupRequired = "Wpisz kod zapasowy.";
+    render(<TwoFactorChallengeForm />, { locale: "pl", messages });
+
+    fireEvent.click(screen.getByRole("button", { name: "Backup code" }));
+    fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
+    expect(await screen.findByText("Wpisz kod zapasowy.")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Backup code"), {
+      target: { value: "x".repeat(129) },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
+    expect(await screen.findByText("Wpisz poprawny kod zapasowy.")).toBeInTheDocument();
   });
 });

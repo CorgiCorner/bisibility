@@ -27,7 +27,15 @@ type DrawerInputArgs = {
   values: AddKeywordDrawerForm;
 };
 
-type DrawerInputResult = { input: AddKeywordsInput | AddKeywordsMatrixInput } | { warning: string };
+export type AddKeywordDrawerWarning =
+  | "alreadyTrackedRows"
+  | "invalidCsvRows"
+  | "invalidTargetLine"
+  | "perLineTargetMarkets";
+
+type DrawerInputResult =
+  | { input: AddKeywordsInput | AddKeywordsMatrixInput }
+  | { warning: AddKeywordDrawerWarning };
 
 function scheduleFor(values: AddKeywordDrawerForm, checkScheduleId?: string | null) {
   if (checkScheduleId) return undefined;
@@ -48,16 +56,15 @@ function manualInput({
   values,
 }: DrawerInputArgs): DrawerInputResult {
   const parsed = parseKeywordTargetLines(values.keywords);
-  const lineError = keywordTargetLineError(parsed);
-  if (lineError) {
-    return { warning: lineError };
+  if (keywordTargetLineError(parsed)) {
+    return { warning: "invalidTargetLine" };
   }
   const entries = parsed.filter((entry) => entry.keyword);
 
   // Any per-line "keyword | url" override routes through the per-row path so each
   // keyword keeps its own target; the batch target URL is the fallback.
   if (hasPerLineTarget(parsed)) {
-    return { warning: "Per-line target URLs cannot be combined with multiple markets." };
+    return { warning: "perLineTargetMarkets" };
   }
 
   return {
@@ -86,11 +93,11 @@ function csvInput({
 }: DrawerInputArgs): DrawerInputResult {
   const rows = csvRows ?? buildDrawerCsvKeywordRowsForForm(csvText, values, locationValue);
   if (rows.some((row) => row.issues.length > 0)) {
-    return { warning: "Fix invalid CSV rows before confirming." };
+    return { warning: "invalidCsvRows" };
   }
   const newRows = newCsvKeywordRows(rows, existingKeywords);
   if (newRows.length === 0) {
-    return { warning: "All parsed keywords are already tracked for their location and device." };
+    return { warning: "alreadyTrackedRows" };
   }
   return {
     input: {

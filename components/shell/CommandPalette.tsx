@@ -1,6 +1,7 @@
 "use client";
 
 import { handleShellKeyDown } from "@/components/shell/command-keyboard";
+import { commandPaletteCopy } from "@/components/shell/command-palette-copy";
 import {
   type CommandGroup,
   type CommandItem,
@@ -20,6 +21,7 @@ import { applyTheme } from "@/lib/theme/browser-theme";
 import { CursorIcon as Cursor } from "@phosphor-icons/react/dist/csr/Cursor";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
 
 type CommandPaletteContextValue = {
@@ -43,6 +45,7 @@ type CommandPaletteTriggerProps = {
 };
 
 export function CommandPaletteTrigger({ variant }: Readonly<CommandPaletteTriggerProps>) {
+  const t = useTranslations("shell.commandPalette");
   const { openPalette } = useCommandPalette();
   const className =
     variant === "sidebar"
@@ -52,8 +55,8 @@ export function CommandPaletteTrigger({ variant }: Readonly<CommandPaletteTrigge
         : "grid h-8 w-8 flex-none place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid";
 
   return (
-    <Tooltip content="Search (⌘K)">
-      <button aria-label="Search" className={className} onClick={openPalette} type="button">
+    <Tooltip content={t("searchTooltip", { shortcut: "⌘K" })}>
+      <button aria-label={t("search")} className={className} onClick={openPalette} type="button">
         <MagnifyingGlass aria-hidden size={17} weight="regular" />
       </button>
     </Tooltip>
@@ -147,6 +150,8 @@ function CommandPalette({
   query,
   setQuery,
 }: Readonly<CommandPaletteProps>) {
+  const t = useTranslations("shell.commandPalette");
+  const navigation = useTranslations("shell.navigation");
   const pathname = usePathname();
   const router = useRouter();
   const { keywordHits, search } = useKeywordSearch(projectId);
@@ -156,7 +161,7 @@ function CommandPalette({
     registeredCommands.length > 0
       ? [
           {
-            title: "On this page",
+            title: t("groups.onThisPage"),
             items: registeredCommands.map((cmd) => ({
               id: cmd.id,
               icon: Cursor,
@@ -175,6 +180,7 @@ function CommandPalette({
         projectRef,
         router.push,
         applyTheme,
+        commandPaletteCopy(t, navigation),
         keywordHits,
         markets,
         navContextFromPathname(pathname),
@@ -202,7 +208,7 @@ function CommandPalette({
   return (
     <div className="fixed inset-0 z-90 flex items-start justify-center px-3 pb-3 pt-14 sm:px-6 sm:pb-6 sm:pt-20">
       <button
-        aria-label="Close command palette"
+        aria-label={t("closeAriaLabel")}
         aria-hidden
         className="absolute inset-0 touch-none overscroll-none bg-[rgba(20,16,8,.42)]"
         onClick={onClose}
@@ -210,7 +216,7 @@ function CommandPalette({
         type="button"
       />
       <dialog
-        aria-label="Command palette"
+        aria-label={t("dialogAriaLabel")}
         className="relative m-0 flex max-h-[calc(100dvh-4.5rem)] w-full max-w-[600px] flex-col overflow-hidden rounded-card border border-border bg-bg-elev p-0 text-fg sm:max-h-[70vh]"
         onKeyDown={(event) => {
           if (event.key === "Escape") onClose();
@@ -229,7 +235,7 @@ function CommandPalette({
               className="min-w-0 flex-1 bg-transparent py-2 text-[16px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus-visible:outline-none sm:text-[15px]"
               data-cmdk-input
               onChange={(event) => handleQueryChange(event.target.value)}
-              placeholder="Search keywords, views and actions…"
+              placeholder={t("placeholder")}
               ref={(node) => node?.focus()}
               value={query}
             />
@@ -271,16 +277,18 @@ function CommandPalette({
           {hasResults ? null : (
             <div className="flex flex-col items-center gap-[7px] px-4 py-[34px] text-fg-muted">
               <MagnifyingGlass aria-hidden size={20} weight="regular" />
-              <span className="text-[13px]">No matches</span>
+              <span className="text-[13px]">{t("noMatches")}</span>
             </div>
           )}
         </div>
         <div className="flex items-center gap-3.5 border-t border-border px-4 py-[9px] text-[10.5px] text-fg-muted">
           <span className="inline-flex items-center gap-1.5">
-            <span className="rounded-control bg-bg-sunken px-[5px] py-px">↵</span>open
+            <span className="rounded-control bg-bg-sunken px-[5px] py-px">↵</span>
+            {t("open")}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="rounded-control bg-bg-sunken px-[5px] py-px">esc</span>close
+            <span className="rounded-control bg-bg-sunken px-[5px] py-px">esc</span>
+            {t("close")}
           </span>
         </div>
       </dialog>

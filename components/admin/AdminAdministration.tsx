@@ -1,21 +1,23 @@
+"use client";
+
 import { AdminAccountLookup } from "@/components/admin/AdminAccountLookup";
 import { AdminAdministrationConsumptionTable } from "@/components/admin/admin-administration-tables";
 import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { InstanceAdminAdministration } from "@/lib/queries/instance-admin-administration";
 import { DOCS_URL, docsLinkProps } from "@/lib/site/site";
+import { useFormatter, useTranslations } from "next-intl";
 
-const count = new Intl.NumberFormat("en-US");
 type GrowthMetric = InstanceAdminAdministration["growth"]["users"];
 
 const growthCards = [
-  { key: "users", label: "Users" },
-  { key: "projects", label: "Projects" },
-  { key: "keywords", label: "Keywords" },
-  { key: "rankChecks", label: "Rank checks" },
+  { key: "users", messageKey: "users" },
+  { key: "projects", messageKey: "projects" },
+  { key: "keywords", messageKey: "keywords" },
+  { key: "rankChecks", messageKey: "rankChecks" },
 ] as const satisfies readonly {
   key: keyof InstanceAdminAdministration["growth"];
-  label: string;
+  messageKey: "users" | "projects" | "keywords" | "rankChecks";
 }[];
 
 function sparklinePath(metric: GrowthMetric) {
@@ -32,21 +34,37 @@ function sparklinePath(metric: GrowthMetric) {
     .join(" ");
 }
 
-function deltaLabel(metric: GrowthMetric) {
-  if (metric.deltaPercent === null) return "No prior-period comparison";
-  const prefix = metric.deltaPercent > 0 ? "+" : "";
-  return `${prefix}${metric.deltaPercent.toFixed(1)}% vs prior 30 days`;
+function deltaLabel(
+  metric: GrowthMetric,
+  t: ReturnType<typeof useTranslations<"instanceAdmin.administration.growth">>,
+) {
+  if (metric.deltaPercent === null) return t("noComparison");
+
+  return t("delta", {
+    direction:
+      metric.deltaPercent > 0 ? "positive" : metric.deltaPercent < 0 ? "negative" : "other",
+    value: Math.abs(metric.deltaPercent),
+  });
 }
 
-function GrowthCard({ label, metric }: Readonly<{ label: string; metric: GrowthMetric }>) {
+function GrowthCard({
+  label,
+  metric,
+}: Readonly<{
+  label: string;
+  metric: GrowthMetric;
+}>) {
+  const format = useFormatter();
+  const t = useTranslations("instanceAdmin.administration.growth");
+
   return (
     <div className="flex min-w-0 flex-col rounded-card border border-border bg-bg-sunken px-3 py-2.5">
       <div className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">{label}</div>
       <div className="mt-auto pt-1 text-xl font-semibold tabular-nums tracking-[-0.4px] text-fg">
-        {count.format(metric.total)}
+        {format.number(metric.total)}
       </div>
       <svg
-        aria-label={`${label} daily count trend`}
+        aria-label={t("trend", { label })}
         className="mt-2 block h-[26px] w-full"
         preserveAspectRatio="none"
         role="img"
@@ -60,31 +78,32 @@ function GrowthCard({ label, metric }: Readonly<{ label: string; metric: GrowthM
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <div className="mt-1.5 text-[10px] text-fg-muted">{deltaLabel(metric)}</div>
+      <div className="mt-1.5 text-[10px] text-fg-muted">{deltaLabel(metric, t)}</div>
     </div>
   );
 }
 
 function Growth({ data }: Readonly<{ data: InstanceAdminAdministration }>) {
+  const format = useFormatter();
+  const t = useTranslations("instanceAdmin.administration.growth");
+
   return (
     <Card component="section" size="lg" aria-labelledby="admin-growth-heading">
-      <SectionTitle id="admin-growth-heading">Growth</SectionTitle>
-      <p className="mt-1 text-xs text-fg-muted">
-        30-day UTC aggregates. No behavioral analytics or tenant content.
-      </p>
+      <SectionTitle id="admin-growth-heading">{t("title")}</SectionTitle>
+      <p className="mt-1 text-xs text-fg-muted">{t("description")}</p>
       <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5">
         {growthCards.map((card) => (
-          <GrowthCard key={card.key} label={card.label} metric={data.growth[card.key]} />
+          <GrowthCard key={card.key} label={t(card.messageKey)} metric={data.growth[card.key]} />
         ))}
         <div className="flex min-w-0 flex-col rounded-card border border-border bg-bg-sunken px-3 py-2.5">
           <div className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">
-            Active accounts (approx.)
+            {t("activeAccounts")}
           </div>
           <div className="pt-1 text-xl font-semibold tabular-nums tracking-[-0.4px] text-fg">
-            {count.format(data.activeAccountsApprox)}
+            {format.number(data.activeAccountsApprox)}
           </div>
           <p className="mb-0 mt-auto pt-2 text-[10px] leading-relaxed text-fg-muted">
-            Distinct accounts with session activity in the last 7 days.
+            {t("activeAccountsDescription")}
           </p>
         </div>
       </div>
@@ -95,25 +114,21 @@ function Growth({ data }: Readonly<{ data: InstanceAdminAdministration }>) {
 function TopConsumption({
   rows,
 }: Readonly<{ rows: InstanceAdminAdministration["topConsumption"] }>) {
+  const t = useTranslations("instanceAdmin.administration.consumption");
   const boundedRows = rows.slice(0, 10);
 
   return (
     <Card component="section" size="lg" aria-labelledby="admin-consumption-heading">
-      <SectionTitle id="admin-consumption-heading">Top consumption</SectionTitle>
-      <p className="mt-1 text-xs text-fg-muted">
-        Top 10 project/provider rows by reference cost this month. User-entered rates are ignored.
-      </p>
+      <SectionTitle id="admin-consumption-heading">{t("title")}</SectionTitle>
+      <p className="mt-1 text-xs text-fg-muted">{t("description")}</p>
       {boundedRows.length === 0 ? (
-        <p className="mt-4 text-xs text-fg-muted">No completed SERP checks recorded this month.</p>
+        <p className="mt-4 text-xs text-fg-muted">{t("empty")}</p>
       ) : (
         <div className="mt-3">
           <div className="[&>[role=table]]:border-0">
             <AdminAdministrationConsumptionTable rows={boundedRows} />
           </div>
-          <p className="mb-0 mt-2 text-[11px] leading-relaxed text-fg-muted">
-            Reference costs use maintained provider rates and recorded request units. Provider
-            invoices remain authoritative.
-          </p>
+          <p className="mb-0 mt-2 text-[11px] leading-relaxed text-fg-muted">{t("note")}</p>
         </div>
       )}
     </Card>
@@ -124,22 +139,21 @@ export function AdminAdministration({
   data,
   showMailerWarning = false,
 }: Readonly<{ data: InstanceAdminAdministration; showMailerWarning?: boolean }>) {
+  const t = useTranslations("instanceAdmin.administration.mailer");
+
   return (
     <div className="flex flex-col gap-4">
       {showMailerWarning ? (
         <Card component="section" size="lg" aria-labelledby="admin-mailer-warning-heading">
-          <SectionTitle id="admin-mailer-warning-heading">
-            Email provider not configured
-          </SectionTitle>
-          <p className="mt-2 mb-0 text-xs leading-relaxed text-fg-muted">
-            Email sign-in is unavailable because this instance cannot send sign-in codes. Set
-            EMAIL_PROVIDER and its required credentials to restore email delivery.
+          <SectionTitle id="admin-mailer-warning-heading">{t("title")}</SectionTitle>
+          <p className="mb-0 mt-2 text-xs leading-relaxed text-fg-muted">
+            {t("description", { provider: "EMAIL_PROVIDER" })}
           </p>
           <a
             className="mt-3 inline-flex text-xs font-semibold text-accent-text hover:underline"
             {...docsLinkProps(`${DOCS_URL}/self-hosting/email`)}
           >
-            Configure email delivery
+            {t("link")}
           </a>
         </Card>
       ) : null}

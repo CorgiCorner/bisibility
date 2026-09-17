@@ -1,9 +1,11 @@
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
   title: "UI/ConfirmModal",
   component: ConfirmModal,
+  decorators: [withSharedMessages],
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof ConfirmModal>;
 

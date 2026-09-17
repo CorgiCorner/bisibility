@@ -1,9 +1,9 @@
 "use client";
 
-import { KEY_EVENTS_NOT_CONFIGURED } from "@/components/search-insights/search-insights-copy";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { SearchInsightsBandRow } from "@/lib/search-insights/queries/band-list";
 import type { SearchInsightsOverlapRow } from "@/lib/search-insights/queries/overlap-list";
+import { useLocale, useTranslations } from "next-intl";
 import { drawerFrameKey } from "./drawer-model";
 import {
   type DrawerBandDataTableRow,
@@ -31,36 +31,46 @@ function queryRowClassName(seen: ReadonlySet<string>, query: string) {
 
 export type DrawerSliceRowsProps = {
   keyEventsConfigured?: boolean | null;
+  isPageRows: boolean;
   label: string;
   pageMetricsReadable?: boolean;
   rows: readonly DrawerRow[];
   seen: ReadonlySet<string>;
-  textHeader: "Page" | "Query";
+  textHeader: string;
 };
 
 export function DrawerSliceRows({
   keyEventsConfigured = null,
+  isPageRows,
   label,
   pageMetricsReadable = false,
   rows,
   seen,
   textHeader,
 }: Readonly<DrawerSliceRowsProps>) {
-  const showPageMetrics = textHeader === "Page" && pageMetricsReadable;
+  const t = useTranslations("projectSearchInsights.copy");
+  const locale = useLocale();
+  const showPageMetrics = isPageRows && pageMetricsReadable;
   const dataRows: DrawerSliceDataTableRow[] = rows.map((row) => ({ ...row, id: row.key }));
   return (
     <>
       {showPageMetrics && keyEventsConfigured === false ? (
         <p className="m-0 mb-2.25 text-ui-caption leading-normal text-fg-muted">
-          {KEY_EVENTS_NOT_CONFIGURED}
+          {t("keyEventsNotConfigured")}
         </p>
       ) : null}
       <div className="overflow-hidden rounded-card">
         <DataTable
           ariaLabel={label}
-          columns={drawerSliceColumns({ keyEventsConfigured, showPageMetrics, textHeader })}
+          columns={drawerSliceColumns({
+            keyEventsConfigured,
+            locale,
+            showPageMetrics,
+            textHeader,
+            t,
+          })}
           density="compact"
-          id={`search-insights-drawer-slice-${textHeader.toLowerCase()}${showPageMetrics ? "-metrics" : ""}`}
+          id={`search-insights-drawer-slice-${isPageRows ? "page" : "query"}${showPageMetrics ? "-metrics" : ""}`}
           layout="auto"
           onRowClick={(row) => row.onOpen()}
           onSortingChange={NOOP_SORT}
@@ -81,12 +91,14 @@ export type DrawerBandRowsProps = {
 };
 
 export function DrawerBandRows({ label, onOpen, rows, seen }: Readonly<DrawerBandRowsProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectSearchInsights.copy");
   const dataRows: DrawerBandDataTableRow[] = rows.map((row) => ({ ...row, id: row.query }));
   return (
     <div className="overflow-hidden rounded-card">
       <DataTable
         ariaLabel={label}
-        columns={drawerBandColumns}
+        columns={drawerBandColumns({ locale, t })}
         density="compact"
         id="search-insights-drawer-band"
         layout="auto"
@@ -108,12 +120,14 @@ export type DrawerOverlapRowsProps = {
 };
 
 export function DrawerOverlapRows({ label, onOpen, rows, seen }: Readonly<DrawerOverlapRowsProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectSearchInsights.copy");
   const dataRows: DrawerOverlapDataTableRow[] = drawerOverlapRows(rows);
   return (
     <div className="overflow-hidden rounded-card [&>[role=table]>div>[role=rowgroup]:first-child]:hidden">
       <DataTable
         ariaLabel={label}
-        columns={drawerOverlapColumns}
+        columns={drawerOverlapColumns({ locale, t })}
         defaultExpanded="all"
         density="compact"
         id="search-insights-drawer-overlap"

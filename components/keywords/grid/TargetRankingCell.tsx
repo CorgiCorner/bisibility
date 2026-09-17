@@ -4,6 +4,7 @@ import { hasUrlMismatch } from "@/lib/alerts/url-mismatch";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import { pathFromUrl } from "@/lib/queries/keyword-row-format";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { useTranslations } from "next-intl";
 
 type TargetRankingCellProps = {
   row: KeywordRow;
@@ -35,12 +36,13 @@ function MatchStatus({ row }: Readonly<{ row: KeywordRow }>) {
 }
 
 export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const parent = marketGridParent(row);
   if (parent && parent.aggregate.rankingUrls.length > 1) {
     return (
       <Tooltip content={parent.aggregate.rankingUrls.join("\n")}>
         <span className="font-sans tabular-nums text-[11.5px] text-fg-muted">
-          {parent.aggregate.rankingUrls.length} URLs
+          {t("targetCount", { count: parent.aggregate.rankingUrls.length })}
         </span>
       </Tooltip>
     );
@@ -48,9 +50,8 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
   const rankingLabel = row.rankingUrl
     ? pathFromUrl(row.rankingUrl)
     : row.checkState === "never_checked"
-      ? "Not checked yet"
-      : "Not found";
-  const expectedSource = row.expectedUrlSource ? ` (${row.expectedUrlSource})` : "";
+      ? t("notCheckedYet")
+      : t("notFound");
   const expectedUrl = row.expectedUrl ?? row.targetUrl;
 
   return (
@@ -58,28 +59,28 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
       <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="w-[48px] shrink-0 font-sans tabular-nums text-[9.5px] uppercase text-fg-muted">
-            Target
+            {t("target")}
           </span>
           {expectedUrl ? (
             <span className="min-w-0">
               <UrlPath value={expectedUrl} />
               <span className="sr-only">
-                Expected for this market: {pathFromUrl(expectedUrl)}
-                {expectedSource}
+                {t("expectedForMarket", { path: pathFromUrl(expectedUrl) })}
+                {row.expectedUrlSource ? ` (${row.expectedUrlSource})` : ""}
               </span>
             </span>
           ) : (
-            <span className="font-sans tabular-nums text-[11px] text-fg-muted">Not set</span>
+            <span className="font-sans tabular-nums text-[11px] text-fg-muted">{t("notSet")}</span>
           )}
           {row.expectedUrlFallbackCurrent ? (
-            <span className="sr-only" title="judged against the current target URL">
-              judged against the current target URL
+            <span className="sr-only" title={t("expectedCurrentTarget")}>
+              {t("expectedCurrentTarget")}
             </span>
           ) : null}
         </div>
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="w-[48px] shrink-0 font-sans tabular-nums text-[9.5px] uppercase text-fg-muted">
-            Ranking
+            {t("ranking")}
           </span>
           {row.rankingUrl ? (
             <a

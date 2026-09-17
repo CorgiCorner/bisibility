@@ -1,17 +1,12 @@
 "use client";
 
-import {
-  HEADER_SPEND_CAP_TOOLTIP,
-  headerNoCapAriaLabel,
-  headerNoCapLabel,
-} from "@/components/cost-estimate/header-spend-cap-copy";
-import { formatProviderBudgetUsedLabel } from "@/components/cost-estimate/provider-spend-label";
 import { spendFillClass, spendTone } from "@/components/cost-estimate/spend-tone";
 import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import { cn } from "@/lib/ui/cn";
 import Link from "next/link";
+import { useFormatter, useTranslations } from "next-intl";
 
 export type HeaderProviderSpendProps = {
   action: "details" | "set_budget" | null | undefined;
@@ -63,6 +58,8 @@ export function HeaderProviderSpend({
   projectRef,
   usedPercent,
 }: Readonly<HeaderProviderSpendProps>) {
+  const format = useFormatter();
+  const t = useTranslations("projectCostEstimate.providerSpend");
   if (action === null) {
     return null;
   }
@@ -70,7 +67,7 @@ export function HeaderProviderSpend({
   if (recorded == null || action === undefined) {
     return (
       <div className="hidden self-center md:flex md:items-center">
-        <span className={cn(pillClassName, "text-fg-muted")}>Spend unavailable</span>
+        <span className={cn(pillClassName, "text-fg-muted")}>{t("headerUnavailable")}</span>
       </div>
     );
   }
@@ -78,38 +75,36 @@ export function HeaderProviderSpend({
   const usageHref = `${appPath(projectRef, "integrations")}?tab=usage`;
   const setCapHref = `${usageHref}&budget=edit`;
   const spentCents = recorded.cents;
+  const spent = format.number(spentCents / 100, { currency: "USD", style: "currency" });
 
   if (action === "set_budget" || usedPercent == null) {
     return (
       <div className="hidden self-center md:flex md:items-center">
-        <Tooltip
-          content={HEADER_SPEND_CAP_TOOLTIP}
-          placement="bottom"
-          wrapperClassName="items-center"
-        >
+        <Tooltip content={t("headerCapTooltip")} placement="bottom" wrapperClassName="items-center">
           <Link
-            aria-label={headerNoCapAriaLabel(spentCents)}
+            aria-label={
+              spentCents > 0 ? t("headerNoCapAriaWithSpend", { spent }) : t("headerNoCapAria")
+            }
             className={cn(linkPillClassName, "gap-1.5")}
             href={setCapHref}
           >
             <WarningDot />
-            <span>{headerNoCapLabel(spentCents)}</span>
+            <span>{spentCents > 0 ? t("headerNoCapWithSpend", { spent }) : t("headerNoCap")}</span>
           </Link>
         </Tooltip>
       </div>
     );
   }
 
-  const usedLabel = formatProviderBudgetUsedLabel(usedPercent);
+  const usedLabel =
+    usedPercent > 0 && usedPercent < 1
+      ? t("headerUnderOnePercent")
+      : t("headerUsed", { percent: Math.round(usedPercent) });
   return (
     <div className="hidden self-center md:flex md:items-center">
-      <Tooltip
-        content={HEADER_SPEND_CAP_TOOLTIP}
-        placement="bottom"
-        wrapperClassName="items-center"
-      >
+      <Tooltip content={t("headerCapTooltip")} placement="bottom" wrapperClassName="items-center">
         <Link
-          aria-label={`Monthly cap ${usedLabel}`}
+          aria-label={t("headerCapAria", { used: usedLabel })}
           className={cn(linkPillClassName, "gap-2")}
           href={usageHref}
         >

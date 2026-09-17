@@ -9,6 +9,7 @@ import {
   type AddKeywordTab,
 } from "@/lib/keywords/add-keyword-drawer-shared";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import { AddKeywordApiPanel } from "./AddKeywordApiPanel";
@@ -69,15 +70,22 @@ export function AddKeywordDrawerPanels({
   tagsText,
   tracking,
 }: Readonly<AddKeywordDrawerPanelsProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
+  const tabLabels: Record<AddKeywordTab, string> = {
+    api: t("api"),
+    csv: t("csv"),
+    manual: t("manual"),
+    suggestions: t("suggestions"),
+  };
   return (
     <>
       <SegmentedControl
-        ariaLabel="Add keyword method"
+        ariaLabel={t("methodAria")}
         className="m-0 shrink-0"
         fitContent
         onChange={onTabChange}
         options={ADD_KEYWORD_TABS.map((tab) => ({
-          label: tab.label,
+          label: tabLabels[tab.id],
           value: tab.id,
         }))}
         size="toolbar"

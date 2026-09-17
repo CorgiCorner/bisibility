@@ -1,9 +1,13 @@
+"use client";
+
+import type { CoreMessages } from "@/i18n/core-messages.generated";
 import { cn } from "@/lib/ui/cn";
 import type { Icon } from "@phosphor-icons/react";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
-import { PauseIcon as Pause } from "@phosphor-icons/react/dist/ssr/Pause";
-import { SealCheckIcon as SealCheck } from "@phosphor-icons/react/dist/ssr/SealCheck";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { PauseIcon as Pause } from "@phosphor-icons/react/dist/csr/Pause";
+import { SealCheckIcon as SealCheck } from "@phosphor-icons/react/dist/csr/SealCheck";
+import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { useTranslations } from "next-intl";
 
 export type StatusChipTone =
   | "neutral"
@@ -19,6 +23,7 @@ export type StatusChipShape = "pill" | "square";
 
 export type StatusChipProps = {
   label: string;
+  messageKey?: keyof CoreMessages["shared"]["controls"]["status"];
   tone?: StatusChipTone;
   variant?: StatusChipVariant;
   size?: StatusChipSize;
@@ -114,6 +119,7 @@ function iconFor(name: string): Icon {
 
 export function StatusChip({
   label,
+  messageKey,
   tone = "positive",
   variant = "soft",
   size = "sm",
@@ -123,10 +129,11 @@ export function StatusChip({
   icon = "",
   live = false,
 }: Readonly<StatusChipProps>) {
+  const t = useTranslations("shared.controls.status");
   const toneStyle = TONE_STYLES[tone];
   const solid = variant === "solid";
   const StatusIcon = icon ? iconFor(icon) : null;
-  const renderedLabel = label || "Status";
+  const renderedLabel = messageKey ? t(messageKey) : label || t("fallback");
   const backgroundColor = solid
     ? toneStyle.hue
     : variant === "outline"

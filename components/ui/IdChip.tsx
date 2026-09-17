@@ -1,6 +1,6 @@
 import { cn } from "@/lib/ui/cn";
 import { cva } from "class-variance-authority";
-import { CopyButton } from "./CopyButton";
+import { IdChipCopyButton } from "./IdChipCopyButton";
 
 export type IdChipProps = {
   copyLabel?: string;
@@ -38,7 +38,7 @@ export function shortId(value: string) {
 
 export function IdChip({
   value,
-  copyLabel = "Copy ID",
+  copyLabel,
   size = "sm",
   className,
   copyClassName,
@@ -55,9 +55,9 @@ export function IdChip({
       <span className={cn("font-mono leading-[1.45]", idTextSizeByIdChipSize[size])}>
         {shortId(value)}
       </span>
-      <CopyButton
+      <IdChipCopyButton
         className={cn("shrink-0", copyClassName)}
-        label={copyLabel}
+        copyLabel={copyLabel}
         size={size}
         text={value}
       />

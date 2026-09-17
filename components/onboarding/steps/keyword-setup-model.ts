@@ -2,14 +2,33 @@ import type { ProjectDefaultsInput } from "@/lib/schemas/project";
 import { DEFAULT_SERP_DEVICE } from "@/lib/serp/constants";
 import type { z } from "zod";
 import type { AddKeywordsForm } from "./step-add-keywords-model";
-import { addKeywordsFormSchema } from "./step-add-keywords-model";
+import {
+  addKeywordsFormSchema,
+  addKeywordsFormSchemaFor,
+  type KeywordDraftMessages,
+} from "./step-add-keywords-model";
 import type { OnboardingTrackingDefaultsInput } from "./step-schedule-model";
-import { onboardingTrackingDefaultsSchema } from "./step-schedule-model";
+import {
+  onboardingTrackingDefaultsSchema,
+  onboardingTrackingDefaultsSchemaFor,
+  type TrackingDefaultsMessages,
+} from "./step-schedule-model";
 
 export const keywordSetupFormSchema = onboardingTrackingDefaultsSchema.extend({
   device: addKeywordsFormSchema.shape.device,
   keywords: addKeywordsFormSchema.shape.keywords,
 });
+
+export function keywordSetupFormSchemaFor(
+  keywordMessages: KeywordDraftMessages,
+  trackingMessages: TrackingDefaultsMessages,
+) {
+  const keywordSchema = addKeywordsFormSchemaFor(keywordMessages);
+  return onboardingTrackingDefaultsSchemaFor(trackingMessages).extend({
+    device: keywordSchema.shape.device,
+    keywords: keywordSchema.shape.keywords,
+  });
+}
 
 export type KeywordSetupForm = z.infer<typeof keywordSetupFormSchema>;
 

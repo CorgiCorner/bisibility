@@ -1,10 +1,12 @@
 import { CopyButton } from "@/components/ui/CopyButton";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
   title: "UI/CopyButton",
   component: CopyButton,
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="bg-bg p-6 text-fg">
         <Story />

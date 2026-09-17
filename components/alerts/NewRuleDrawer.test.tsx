@@ -1,10 +1,11 @@
+import { renderWithAlertMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type {
   AlertActionHandlers,
   AlertRuleView,
   AlertTargetOptions,
 } from "@/lib/alerts/alert-data";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NewRuleDrawer } from "./NewRuleDrawer";
@@ -203,21 +204,19 @@ describe("NewRuleDrawer", () => {
 
   it("uses the persisted severity when editing an existing rule", () => {
     const initialRule: AlertRuleView = {
-      channel: "In-app",
       channels: [],
       changePct: null,
-      condition: "rank enters top 3",
       conditionType: "enters_top_n",
       competitorDomain: null,
       dropPositions: null,
       enabled: true,
-      fires: "0 this week",
+      firedThisWeek: 0,
       id: "alr_a00000000000000000000000",
       marketIds: [],
       name: "Top three",
-      period: "Each check",
+      period: "each_check",
       recipientIds: [],
-      scope: "All keywords",
+      scope: { labels: [], targetType: "all" },
       serpFeature: null,
       severity: "warning",
       status: "active",

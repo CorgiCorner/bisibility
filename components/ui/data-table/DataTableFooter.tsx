@@ -4,6 +4,7 @@ import { MenuSelect } from "@/components/ui/MenuSelect";
 import { cn } from "@/lib/ui/cn";
 import { CaretLeftIcon as CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { DataTablePagination } from "./data-table-types";
 
@@ -16,8 +17,6 @@ type DataTableFooterProps = {
   rowCount: number;
 };
 
-const number = new Intl.NumberFormat("en-US");
-
 export function DataTableFooter({
   footerStart,
   layout,
@@ -26,6 +25,7 @@ export function DataTableFooter({
   pagination,
   rowCount,
 }: Readonly<DataTableFooterProps>) {
+  const t = useTranslations("shared.controls.dataTable");
   if (!pagination && !(layout === "fill" && footerStart)) return null;
   const pageSize = pagination?.pageSize ?? 1;
   const pageCount = Math.max(1, Math.ceil(rowCount / pageSize));
@@ -50,25 +50,25 @@ export function DataTableFooter({
       {pagination ? (
         <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-x-4 gap-y-2">
           <MenuSelect
-            ariaLabel="Rows per page"
+            ariaLabel={t("rowsPerPage")}
             compact
-            leadingLabel="Rows"
+            leadingLabel={t("rows")}
             onChange={(value) =>
               onPaginationChange?.({ page: 1, pageSize: Number.parseInt(value, 10) })
             }
             options={pageSizeOptions.map((value) => ({
-              label: number.format(value),
+              label: t("number", { value }),
               value: String(value),
             }))}
             triggerClassName="border-0 bg-transparent px-0 font-sans tabular-nums"
             value={String(pagination.pageSize)}
           />
           <span className="whitespace-nowrap font-sans tabular-nums text-[12px] text-fg-muted">
-            {number.format(start)}-{number.format(end)} of {number.format(rowCount)}
+            {t("pageRange", { end, start, total: rowCount })}
           </span>
           <div className="flex gap-1">
             <button
-              aria-label="Previous page"
+              aria-label={t("previousPage")}
               className="grid size-[30px] place-items-center rounded-full border border-border-control bg-transparent text-fg hover:bg-bg-sunken disabled:cursor-not-allowed disabled:text-fg-muted disabled:hover:bg-transparent"
               disabled={page <= 1 || !onPaginationChange}
               onClick={() => onPaginationChange?.({ page: page - 1, pageSize })}
@@ -77,7 +77,7 @@ export function DataTableFooter({
               <CaretLeft aria-hidden size={12} weight="regular" />
             </button>
             <button
-              aria-label="Next page"
+              aria-label={t("nextPage")}
               className="grid size-[30px] place-items-center rounded-full border border-border-control bg-transparent text-fg hover:bg-bg-sunken disabled:cursor-not-allowed disabled:text-fg-muted disabled:hover:bg-transparent"
               disabled={page >= pageCount || !onPaginationChange}
               onClick={() => onPaginationChange?.({ page: page + 1, pageSize })}

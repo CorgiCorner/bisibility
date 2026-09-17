@@ -1,12 +1,14 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { appPath } from "@/lib/routing/app-path";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { classifyActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -29,12 +31,25 @@ type DeleteProjectConfirmationProps = {
   projectId: string;
 };
 
-function confirmationSchema(expected: string) {
+function confirmationSchema(expected: string, message: string) {
   return z.object({
     confirmText: z.string().refine((value) => value === expected, {
-      message: "Confirmation text does not match this project.",
+      message,
     }),
   });
+}
+
+function deleteProjectError(
+  error: unknown,
+  t: ReturnType<typeof useTranslations<"projectSettingsAdvanced.danger">>,
+  sharedErrors: ReturnType<typeof useSharedErrorMessages>,
+) {
+  const classified = classifyActionError(error);
+  if (classified.kind === "staleDeployment") return sharedErrors.staleDeployment();
+  if (classified.kind === "serverComponentDigest") {
+    return sharedErrors.serverComponentDigest({ digest: classified.digest });
+  }
+  return t("deleteError");
 }
 
 export function DeleteProjectConfirmation({
@@ -44,12 +59,14 @@ export function DeleteProjectConfirmation({
   open,
   projectId,
 }: Readonly<DeleteProjectConfirmationProps>) {
+  const t = useTranslations("projectSettingsAdvanced.danger");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const expected = domain || projectId;
   const form = useForm<{ confirmText: string }>({
     defaultValues: { confirmText: "" },
     mode: "onChange",
-    resolver: zodResolver(confirmationSchema(expected)),
+    resolver: zodResolver(confirmationSchema(expected, t("mismatch"))),
   });
   const confirmation = form.watch("confirmText");
 
@@ -70,7 +87,7 @@ export function DeleteProjectConfirmation({
       router.refresh();
     } catch (error) {
       form.setError("root", {
-        message: actionErrorMessage(error, "Project could not be deleted."),
+        message: deleteProjectError(error, t, sharedErrors),
         type: "server",
       });
     }
@@ -81,18 +98,18 @@ export function DeleteProjectConfirmation({
       footer={
         <>
           <Button onClick={close} size="sm" type="button" variant="ghost">
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             disabled={confirmation !== expected}
             form="delete-project-confirmation-form"
             loading={form.formState.isSubmitting}
-            loadingLabel="Deleting..."
+            loadingLabel={t("deleting")}
             size="sm"
             type="submit"
             variant="destructive"
           >
-            Delete project
+            {t("delete")}
           </Button>
         </>
       }
@@ -100,25 +117,23 @@ export function DeleteProjectConfirmation({
       onClose={close}
       open={open}
       size="md"
-      title="Confirm project deletion"
+      title={t("confirmTitle")}
     >
       <form
         className="space-y-4"
         id="delete-project-confirmation-form"
         onSubmit={form.handleSubmit(submit)}
       >
-        <p className="m-0 text-[12.5px] leading-[1.55] text-fg-muted">
-          Delete this project and all of its tracked data. This cannot be undone.
-        </p>
+        <p className="m-0 text-[12.5px] leading-[1.55] text-fg-muted">{t("confirmDescription")}</p>
         <div>
           <label
             className="block font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
             htmlFor="delete-project-confirmation"
           >
-            Type {expected} to confirm deletion
+            {t("typeToConfirm", { expected })}
           </label>
           <Input
-            aria-label={`Type ${expected} to confirm deletion`}
+            aria-label={t("typeToConfirm", { expected })}
             autoComplete="off"
             className="mt-1.5 font-sans tabular-nums"
             id="delete-project-confirmation"
@@ -126,9 +141,7 @@ export function DeleteProjectConfirmation({
             spellCheck={false}
             {...form.register("confirmText")}
           />
-          <p className="m-0 mt-1.5 text-[11.5px] text-fg-muted">
-            Delete stays unavailable until the text matches.
-          </p>
+          <p className="m-0 mt-1.5 text-[11.5px] text-fg-muted">{t("unavailable")}</p>
         </div>
         {form.formState.errors.root?.message ? (
           <p className="m-0 text-[12px] text-red-text" role="alert">

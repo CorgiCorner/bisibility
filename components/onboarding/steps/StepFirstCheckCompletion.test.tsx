@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { StepFirstCheckCompletion } from "./StepFirstCheckCompletion";
 

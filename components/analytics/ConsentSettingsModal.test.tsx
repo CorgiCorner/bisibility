@@ -1,11 +1,51 @@
 import { ConsentSettingsModal } from "@/components/analytics/ConsentSettingsModal";
+import {
+  renderWithSharedMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { pendingConsent } from "@/lib/analytics/consent";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import sharedMessages from "@/messages/core/en/shared.json";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ applyAnalyticsConsent: vi.fn(), setAnalyticsReplay: vi.fn() }));
 
 vi.mock("@/lib/analytics/client", () => mocks);
+
+const polishConsentMessages = {
+  shared: {
+    ...sharedMessages.shared,
+    analyticsConsent: {
+      ...sharedMessages.shared.analyticsConsent,
+      actions: {
+        acceptAll: "Zaakceptuj wszystkie",
+        rejectAll: "Odrzuc wszystkie",
+        save: "Zapisz",
+        settings: "Ustawienia",
+      },
+      banner: {
+        ...sharedMessages.shared.analyticsConsent.banner,
+        ariaLabel: "Zgoda na analityke",
+        body: "Liczymy wizyty bez plikow cookie.",
+        saveError: "Nie mozna zapisac wyboru. Wylaczone opcje pozostaja wylaczone.",
+        update: "Nagrania moga obejmowac ekrany aplikacji.",
+      },
+      modal: {
+        ...sharedMessages.shared.analyticsConsent.modal,
+        alwaysOn: "Zawsze wlaczone",
+        essential: { body: "Wymagane dla bezpieczenstwa.", title: "Niezbedne" },
+        footer: "Wybor jest zapisany przez 6 miesiecy.",
+        intro: "Wybierz analityke i nagrania osobno.",
+        privacyPolicy: "Polityka prywatnosci",
+        replay: { body: "Opcjonalne nagrania pomagaja nam ulepszac aplikacje.", title: "Nagrania" },
+        saveError: "Nie mozna zapisac zmian. Wylaczone opcje pozostaja wylaczone.",
+        usage: { body: "Strony i kroki konfiguracji, ktorych uzywasz.", title: "Analityka uzycia" },
+        visitCounts: "Nadal liczymy wizyty bez trwalego profilu.",
+      },
+      title: "Ustawienia prywatnosci",
+    },
+  },
+};
 
 describe("ConsentSettingsModal", () => {
   it("allows replay independently from usage analytics", () => {
@@ -86,5 +126,28 @@ describe("ConsentSettingsModal", () => {
     expect(mocks.applyAnalyticsConsent).toHaveBeenCalledWith(saved);
     expect(mocks.setAnalyticsReplay).toHaveBeenCalledWith(true);
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("renders every consent control from the supplied shared message scope", () => {
+    renderWithFeatureMessages(
+      <ConsentSettingsModal
+        initialConsent={pendingConsent()}
+        onClose={vi.fn()}
+        open
+        saveConsent={vi.fn()}
+      />,
+      { locale: "pl", messages: polishConsentMessages },
+    );
+
+    expect(screen.getByRole("dialog", { name: "Ustawienia prywatnosci" })).toBeVisible();
+    expect(screen.getByText("Zawsze wlaczone")).toBeVisible();
+    expect(screen.getByRole("switch", { name: /Analityka uzycia/ })).toBeVisible();
+    expect(screen.getByRole("switch", { name: /Nagrania/ })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Polityka prywatnosci" })).toHaveAttribute(
+      "href",
+      "/privacy",
+    );
+    expect(screen.getByRole("button", { name: "Zapisz" })).toBeVisible();
+    expect(screen.queryByText("Always on")).not.toBeInTheDocument();
   });
 });

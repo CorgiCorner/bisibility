@@ -7,6 +7,7 @@ import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/Car
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   type CSSProperties,
   type ReactNode,
@@ -67,6 +68,7 @@ export function AlertBanner({
   tint,
   title,
 }: Readonly<AlertBannerProps>) {
+  const t = useTranslations("shared.controls.alert");
   const style = tintStyles[tint];
   const [exiting, setExiting] = useState(false);
   const fallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -165,7 +167,7 @@ export function AlertBanner({
       ) : null}
       {onDismiss ? (
         <button
-          aria-label="Dismiss alert"
+          aria-label={t("dismiss")}
           className="grid h-7 w-7 place-items-center rounded-control text-fg-muted hover:bg-[var(--alert-dismiss-hover)] focus-visible:bg-[var(--alert-dismiss-hover)]"
           onClick={handleDismiss}
           style={{ "--alert-dismiss-hover": style.hover } as CSSProperties}

@@ -1,11 +1,13 @@
 import type { MarketComboboxOption } from "@/components/markets/MarketCombobox";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
+import type { useTranslations } from "next-intl";
 
 export function drawerMarketOptions(
   markets: ProjectMarketsView["markets"],
   selectedKey: string,
   keyword: KeywordRow,
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordImport.management.grid">>,
 ): MarketComboboxOption<string>[] {
   const inRegistry = markets.some((m) => m.canonicalKey === selectedKey);
   const legacy: MarketComboboxOption<string>[] = inRegistry
@@ -18,8 +20,8 @@ export function drawerMarketOptions(
           languageLabel: keyword.location.languageLabel ?? "",
           locationLabel: keyword.locationName,
           payload: selectedKey,
-          secondary: "no longer in registry",
-          tooltip: "This market is no longer available in the project registry.",
+          secondary: t("inlineLegacyMarket"),
+          tooltip: t("inlineLegacyMarketDetail"),
           value: selectedKey,
         },
       ];
@@ -32,11 +34,8 @@ export function drawerMarketOptions(
       languageLabel: m.languageLabel,
       locationLabel: m.displayName,
       payload: m.canonicalKey,
-      secondary: m.status !== "active" ? "paused" : undefined,
-      tooltip:
-        m.status !== "active"
-          ? "Keywords can be added now. Rank checks start after the market is resumed."
-          : undefined,
+      secondary: m.status !== "active" ? t("inlinePausedMarket") : undefined,
+      tooltip: m.status !== "active" ? t("inlinePausedMarketDetail") : undefined,
       value: m.canonicalKey,
     })),
   ];

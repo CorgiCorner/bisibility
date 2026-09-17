@@ -5,8 +5,9 @@ import type { UpcomingDayGroup } from "@/lib/checks/contract";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { formatCheckCount, formatEstimatedCost } from "./upcoming-format";
+import { formatEstimatedAmount } from "./upcoming-format";
 
 export type UpcomingDayRollupsProps = {
   days: UpcomingDayGroup[];
@@ -20,16 +21,21 @@ const manageLinkClassName =
   "inline-flex items-center gap-1 text-xs font-semibold text-accent-text outline-none hover:underline focus-visible:underline";
 
 function DaySummary({ day }: Readonly<{ day: UpcomingDayGroup }>) {
+  const locale = useLocale();
+  const t = useTranslations("projectRankTracker.checks");
   return (
     <>
       <span className="min-w-0 flex-1 text-left">
         <span className="block text-[13px] font-semibold text-fg">{day.label}</span>
         <span className="mt-0.5 block font-sans tabular-nums text-[10.5px] text-fg-muted">
-          {formatCheckCount(day.count)}
+          {t("checks", { count: day.count })}
         </span>
       </span>
       <span className="shrink-0 font-sans tabular-nums text-[11px] font-semibold text-fg-muted">
-        {formatEstimatedCost(day.estimatedCostCents)} est.
+        {t("estimated", {
+          amount: formatEstimatedAmount(day.estimatedCostCents, locale),
+          isLessThanCent: String(day.estimatedCostCents > 0 && day.estimatedCostCents < 1),
+        })}
       </span>
     </>
   );
@@ -60,11 +66,12 @@ export function UpcomingDayRollups({
   schedulesHref,
   timeZone,
 }: Readonly<UpcomingDayRollupsProps>) {
+  const t = useTranslations("projectRankTracker.checks");
   const [expandedDayKey, setExpandedDayKey] = useState(initialExpandedDayKey ?? null);
 
   if (mode === "slim") {
     return (
-      <section aria-label="Upcoming days">
+      <section aria-label={t("upcomingDays")}>
         <div className="grid grid-cols-2 gap-2">
           {days.map((day) => (
             <article
@@ -76,7 +83,7 @@ export function UpcomingDayRollups({
           ))}
         </div>
         <Link className={`${manageLinkClassName} mt-3`} href={schedulesHref}>
-          Manage schedules in Keywords
+          {t("manageSchedulesInKeywords")}
           <CaretRight aria-hidden size={12} weight="regular" />
         </Link>
       </section>
@@ -84,7 +91,7 @@ export function UpcomingDayRollups({
   }
 
   return (
-    <section aria-label="Upcoming days" className="space-y-2">
+    <section aria-label={t("upcomingDays")} className="space-y-2">
       {days.map((day) => {
         const expanded = day.key === expandedDayKey;
         const detailsId = `upcoming-day-${day.key}`;
@@ -115,7 +122,7 @@ export function UpcomingDayRollups({
                 <SampleRows day={day} timeZone={timeZone} />
                 <div className="border-border border-t px-3.5 py-2.5">
                   <Link className={manageLinkClassName} href={schedulesHref}>
-                    Manage schedules in Keywords
+                    {t("manageSchedulesInKeywords")}
                     <CaretRight aria-hidden size={12} weight="regular" />
                   </Link>
                 </div>

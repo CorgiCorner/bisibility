@@ -1,6 +1,7 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { KeywordImportProvider } from "@/components/keywords/import/KeywordImportProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import type { FirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import { aggregateMarketGridRows, groupRow } from "@/lib/keywords/market-grid-model";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -18,7 +19,7 @@ const actionArgs = {
   canManageProviders: true,
   canUpdateKeyword: true,
   deletableSavedViewIds: [],
-  getFirstCheckRunPlanAction: async () => ({
+  getFirstCheckRunPlanAction: async (): Promise<FirstCheckRunPlan> => ({
     budget: { capCents: 5000, spentCents: 1250 },
     budgetExhausted: false,
     estimatedCostPerCheckCents: 0.1,
@@ -27,10 +28,10 @@ const actionArgs = {
     providers: ["dataforseo", "serpapi"],
     readyCount: 12,
     scope: {
-      depth: "Top 100",
-      device: "Desktop",
-      engine: "Google",
-      frequency: "Daily",
+      depth: 100,
+      device: "desktop",
+      engine: "google",
+      frequency: "daily",
       location: "United States",
     },
   }),

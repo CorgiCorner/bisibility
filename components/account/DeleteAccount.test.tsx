@@ -1,5 +1,6 @@
 import { DeleteAccount } from "@/components/account/DeleteAccount";
-import { render, screen } from "@testing-library/react";
+import { renderWithAccountMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 describe("DeleteAccount", () => {

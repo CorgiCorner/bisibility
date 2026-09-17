@@ -1,10 +1,15 @@
 import { NotificationPreferences } from "@/components/settings/notifications/NotificationPreferences";
 import { NotificationsLoading } from "@/components/settings/notifications/NotificationsLoading";
+import {
+  notificationSettingsFeatureTestMessages,
+  renderWithNotificationSettingsMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import type { Role } from "@/lib/generated/prisma/client";
 import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -32,6 +37,24 @@ const preferences: NotificationPreferencesView = {
   reportEmail: true,
   slackAvailable: true,
   webhookAvailable: true,
+};
+const polishNotificationMessages = {
+  ...notificationSettingsFeatureTestMessages,
+  projectSettingsNotifications: {
+    channels: {
+      ...notificationSettingsFeatureTestMessages.projectSettingsNotifications.channels,
+      alertFired: "Wysłany alert",
+      email: "E-mail",
+      inApp: "W aplikacji",
+      title: "Kanały",
+      unavailable: "{label} jest niedostępny",
+    },
+    delivery: {
+      ...notificationSettingsFeatureTestMessages.projectSettingsNotifications.delivery,
+      deliveredTo: "Powiadomienia są dostarczane na <address>{email}</address>.",
+      title: "Adres dostawy",
+    },
+  },
 };
 
 describe("NotificationPreferences", () => {
@@ -135,8 +158,25 @@ describe("NotificationPreferences", () => {
     fireEvent.click(checkEmail);
 
     await waitFor(() => expect(mocks.updateNotificationPreferences).toHaveBeenCalled());
-    expect(await screen.findByText("write failed")).toBeInTheDocument();
+    expect(await screen.findByText("Preferences could not be saved.")).toBeInTheDocument();
     expect(screen.getByLabelText("Check complete Email")).not.toBeChecked();
+  });
+
+  it("uses the injected locale for event labels, unavailable cells, and the delivery sentence", () => {
+    renderWithFeatureMessages(<NotificationPreferences canEdit preferences={preferences} />, {
+      locale: "pl",
+      messages: polishNotificationMessages,
+    });
+
+    expect(screen.getByRole("heading", { name: "Kanały" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Wysłany alert E-mail")).toBeChecked();
+    expect(screen.getByLabelText("Weekly report W aplikacji jest niedostępny")).toHaveTextContent(
+      "–",
+    );
+    expect(screen.getByText("Adres dostawy")).toBeInTheDocument();
+    expect(screen.getByText("owner@example.com").closest("p")).toHaveTextContent(
+      "Powiadomienia są dostarczane na owner@example.com.",
+    );
   });
 
   it("uses the same geometry marker for the channels card and its loader", () => {

@@ -1,8 +1,9 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { renderWithGettingStartedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { SetupContext, SetupCta } from "@/lib/getting-started/setup-steps";
 import { routerMock } from "@/tests/next-navigation";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -21,16 +22,10 @@ vi.mock("@/components/getting-started/GettingStartedChecklist", () => ({
     onCta: (cta: SetupCta) => void;
   }) => (
     <div>
-      <button
-        onClick={() => onCta({ id: "run_first_check", label: "Run first check" })}
-        type="button"
-      >
+      <button onClick={() => onCta({ id: "run_first_check" })} type="button">
         Run first check
       </button>
-      <button
-        onClick={() => onCta({ id: "run_first_check", label: "Run it now instead" })}
-        type="button"
-      >
+      <button onClick={() => onCta({ id: "run_first_check" })} type="button">
         Run it now instead
       </button>
       <output aria-label="checklist progress">

@@ -1,7 +1,8 @@
 import { MENU_ROW_STYLE, WorkspaceRow } from "@/components/shell/WorkspaceRow";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
 import { Menu, MenuContent } from "@/components/ui/primitives/menu";
-import { render as renderDom, screen } from "@testing-library/react";
+import { renderWithShellMessages as renderDom } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -50,5 +51,38 @@ describe("WorkspaceRow", () => {
     renderRow(false);
 
     expect(screen.getByText("a")).toBeInTheDocument();
+  });
+
+  it("keeps ICU counts and queued/empty states at the localized display boundary", () => {
+    const rows = [
+      { keywordCount: 0, name: "Łódź", state: "populated" as const },
+      { keywordCount: 1, name: "One", state: "populated" as const },
+      { keywordCount: 2, name: "Two", state: "populated" as const },
+      { keywordCount: 5, name: "Five", state: "populated" as const },
+      { keywordCount: 0, name: "Queued", state: "no-data" as const },
+      { keywordCount: 0, name: "Empty", state: "empty" as const },
+    ];
+    render(
+      rows.map((row, index) => (
+        <WorkspaceRow
+          active={false}
+          key={row.name}
+          onSelect={vi.fn()}
+          workspace={{
+            ...mockWorkspaces[0],
+            ...row,
+            id: `project-${index}`,
+            publicId: `prj_${index}`,
+          }}
+        />
+      )),
+    );
+
+    for (const label of ["0 keywords", "1 keyword", "2 keywords", "5 keywords"]) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    expect(screen.getByText("0 queued - no data")).toBeInTheDocument();
+    expect(screen.getByText("New project")).toBeInTheDocument();
+    expect(screen.getByText("Łódź")).toBeInTheDocument();
   });
 });

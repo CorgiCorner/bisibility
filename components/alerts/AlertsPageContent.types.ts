@@ -3,13 +3,13 @@ import type {
   AlertRuleView,
   AlertTargetOptions,
   AlertTemplate,
-  TriggeredAlertView,
+  TriggeredAlertFeedView,
 } from "@/lib/alerts/alert-data";
 import type { FeedFacet, FeedFacetOptions } from "@/lib/feeds/facets";
 
 export type AlertsPageContentProps = {
   actions: AlertActionHandlers;
-  alerts: TriggeredAlertView[];
+  alerts: TriggeredAlertFeedView[];
   canCreate: boolean;
   canDelete: boolean;
   canManage: boolean;

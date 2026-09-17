@@ -15,9 +15,10 @@ import type {
   AccountEmailChangeRequested,
 } from "@/lib/actions/account-email";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { type FieldError, useForm } from "react-hook-form";
+import { useAccountActionError } from "./useAccountActionError";
 
 export type RequestAccountEmailChangeCode = () => Promise<AccountEmailChangeCodeRequested>;
 
@@ -43,12 +44,16 @@ type Step = "current" | "details" | "new";
 
 const labelClass = "font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 
-function FieldMessage({ error, id }: Readonly<{ error?: FieldError; id: string }>) {
+function FieldMessage({
+  error,
+  id,
+  message,
+}: Readonly<{ error?: FieldError; id: string; message: string }>) {
   if (!error) return null;
 
   return (
     <p className="m-0 mt-1 text-[11.5px] text-red-text" id={id} role="alert">
-      {error.message}
+      {message}
     </p>
   );
 }
@@ -60,6 +65,9 @@ export function AccountEmailChangeSteps({
   requestAccountEmailChange,
   requestAccountEmailChangeCode,
 }: Readonly<AccountEmailChangeStepsProps>) {
+  const t = useTranslations("account.email.change");
+  const emailT = useTranslations("account.email");
+  const accountErrors = useAccountActionError();
   const detailsForm = useForm<AccountEmailChangeForm>({
     defaultValues: { currentCode: "", newEmail: "" },
     mode: "onSubmit",
@@ -75,13 +83,13 @@ export function AccountEmailChangeSteps({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function run(work: () => Promise<void>, fallback: string) {
+  async function run(work: () => Promise<void>, fallback: "sendError" | "confirmError") {
     setErrorMessage(null);
     setBusy(true);
     try {
       await work();
     } catch (error: unknown) {
-      setErrorMessage(actionErrorMessage(error, fallback));
+      setErrorMessage(accountErrors.email(error, t(fallback)));
     } finally {
       setBusy(false);
     }
@@ -99,7 +107,7 @@ export function AccountEmailChangeSteps({
       await requestAccountEmailChangeCode();
       detailsForm.reset({ currentCode: "", newEmail: "" });
       setStep("details");
-    }, "Verification code could not be sent.");
+    }, "sendError");
   }
 
   async function requestChange(values: AccountEmailChangeForm) {
@@ -108,7 +116,7 @@ export function AccountEmailChangeSteps({
       confirmForm.reset({ code: "" });
       setPendingEmail(result.pendingEmail);
       setStep("new");
-    }, "Verification code could not be sent.");
+    }, "sendError");
   }
 
   async function confirmChange({ code }: VerificationCodeForm) {
@@ -116,7 +124,7 @@ export function AccountEmailChangeSteps({
       const result = await confirmAccountEmailChange({ code, newEmail: pendingEmail });
       restart();
       onChanged(result.email);
-    }, "Account email could not be confirmed.");
+    }, "confirmError");
   }
 
   return (
@@ -130,7 +138,7 @@ export function AccountEmailChangeSteps({
             type="button"
             variant="secondary"
           >
-            Change email
+            {t("start")}
           </Button>
         </div>
       ) : null}
@@ -141,7 +149,7 @@ export function AccountEmailChangeSteps({
             <FieldLabel
               className={labelClass}
               htmlFor="account-email-current-code"
-              label="Code from your current email"
+              label={t("currentCode")}
             />
             <Input
               aria-describedby="account-email-current-code-error"
@@ -153,14 +161,11 @@ export function AccountEmailChangeSteps({
             <FieldMessage
               error={detailsForm.formState.errors.currentCode}
               id="account-email-current-code-error"
+              message={emailT("invalidCode")}
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <FieldLabel
-              className={labelClass}
-              htmlFor="account-email-new"
-              label="New email address"
-            />
+            <FieldLabel className={labelClass} htmlFor="account-email-new" label={t("newEmail")} />
             <Input
               aria-describedby="account-email-new-error"
               aria-invalid={Boolean(detailsForm.formState.errors.newEmail)}
@@ -170,14 +175,15 @@ export function AccountEmailChangeSteps({
             <FieldMessage
               error={detailsForm.formState.errors.newEmail}
               id="account-email-new-error"
+              message={emailT("invalidEmail")}
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button disabled={busy} onClick={restart} size="sm" type="button" variant="secondary">
-              Cancel
+              {t("cancel")}
             </Button>
             <Button className="ml-auto" loading={busy} size="sm" type="submit">
-              Send code to the new address
+              {t("sendNewCode")}
             </Button>
           </div>
         </form>
@@ -186,13 +192,13 @@ export function AccountEmailChangeSteps({
       {step === "new" ? (
         <form className="space-y-3" onSubmit={confirmForm.handleSubmit(confirmChange)}>
           <p className="m-0 text-[12px] leading-5 text-fg-muted">
-            {`Enter the code sent to ${pendingEmail} to finish the change.`}
+            {t("finishDescription", { email: pendingEmail })}
           </p>
           <div className="flex flex-col gap-1.5">
             <FieldLabel
               className={labelClass}
               htmlFor="account-email-new-code"
-              label="Code from your new email"
+              label={t("newCode")}
             />
             <Input
               aria-describedby="account-email-new-code-error"
@@ -204,14 +210,15 @@ export function AccountEmailChangeSteps({
             <FieldMessage
               error={confirmForm.formState.errors.code}
               id="account-email-new-code-error"
+              message={emailT("invalidCode")}
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button loading={busy} size="sm" type="submit">
-              Confirm email change
+              {t("confirm")}
             </Button>
             <Button disabled={busy} onClick={restart} size="sm" type="button" variant="secondary">
-              Start over
+              {t("restart")}
             </Button>
           </div>
         </form>

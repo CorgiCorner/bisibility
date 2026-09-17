@@ -12,6 +12,17 @@ export const DATAFORSEO_LIVE_RANK_CHECK_COST = `$${centsToDollars(
 export const DATAFORSEO_TRIAL_CREDIT = `$${centsToDollars(DATAFORSEO_TRIAL_CREDIT_CENTS).toFixed(0)}`;
 export const DATAFORSEO_MINIMUM_TOP_UP = `$${centsToDollars(DATAFORSEO_MINIMUM_TOP_UP_CENTS).toFixed(0)}`;
 
+/**
+ * The same amounts as numbers. A localized surface passes these into an ICU
+ * `::currency/USD` placeholder so the amount is formatted in the reader's locale; the
+ * pre-formatted strings above remain for the English-only surfaces.
+ */
+export const DATAFORSEO_LIVE_RANK_CHECK_COST_DOLLARS = centsToDollars(
+  DATAFORSEO_LIVE_RANK_CHECK_COST_CENTS,
+);
+export const DATAFORSEO_TRIAL_CREDIT_DOLLARS = centsToDollars(DATAFORSEO_TRIAL_CREDIT_CENTS);
+export const DATAFORSEO_MINIMUM_TOP_UP_DOLLARS = centsToDollars(DATAFORSEO_MINIMUM_TOP_UP_CENTS);
+
 export function dataForSeoLiveRankCheckCostAtDepth(depth: 10 | 20 | 50 | 100) {
   const rate = rateForProvider("dataforseo");
   if (rate?.pricingModel !== "flat") {

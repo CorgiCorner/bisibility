@@ -1,12 +1,13 @@
 "use client";
 
-import { relativePast } from "@/lib/format/relative-time";
 import {
   cacheTimeRemaining,
   type RecentKeywordResearch,
 } from "@/lib/keyword-research/recent-searches";
 import { ClockCounterClockwiseIcon as Clock } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
+import { researchRelativePast } from "./research-relative-time";
 
 type RecentResearchSearchesProps = {
   disabled?: boolean;
@@ -16,9 +17,9 @@ type RecentResearchSearchesProps = {
   searches: RecentKeywordResearch[];
 };
 
-function freeFor(value: string) {
+function freeFor(value: string, t: ReturnType<typeof useTranslations<"projectResearch.recent">>) {
   const hours = Math.ceil(cacheTimeRemaining(value) / 3_600_000);
-  return hours > 0 ? `cached, free for ${hours}h` : "cache expired";
+  return hours > 0 ? t("freeFor", { hours }) : t("expired");
 }
 
 export function RecentResearchSearches({
@@ -28,13 +29,15 @@ export function RecentResearchSearches({
   onRemove,
   searches,
 }: Readonly<RecentResearchSearchesProps>) {
+  const t = useTranslations("projectResearch.recent");
+  const relativeTimeT = useTranslations("projectResearch.time");
   if (searches.length === 0) return null;
   const hintId = disabled && disabledHint ? "recent-research-disabled-hint" : undefined;
   const now = new Date();
   return (
-    <section aria-label="Recent searches">
+    <section aria-label={t("section")}>
       <div className="mb-2 flex items-center gap-1.5 font-sans tabular-nums text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
-        <Clock weight="regular" size={13} /> Recent searches
+        <Clock weight="regular" size={13} /> {t("section")}
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {searches.map((search) => (
@@ -53,14 +56,21 @@ export function RecentResearchSearches({
                 {search.seed}
               </strong>
               <span className="font-sans tabular-nums text-[10px] text-fg-muted">
-                {search.scopeLabel} - {relativePast(new Date(search.createdAt), now)}
+                {search.scopeLabel} -{" "}
+                {researchRelativePast(new Date(search.createdAt), now, {
+                  daysAgo: ({ count }) => relativeTimeT("daysAgo", { count }),
+                  hoursAgo: ({ count }) => relativeTimeT("hoursAgo", { count }),
+                  justNow: () => relativeTimeT("justNow"),
+                  minutesAgo: ({ count }) => relativeTimeT("minutesAgo", { count }),
+                  yesterday: () => relativeTimeT("yesterday"),
+                })}
               </span>
               <span className="rounded-full bg-accent-soft px-2 py-0.5 font-sans tabular-nums text-[9.5px] text-accent-text">
-                {freeFor(search.cachedUntil)}
+                {freeFor(search.cachedUntil, t)}
               </span>
             </button>
             <button
-              aria-label={`Remove ${search.seed} from recent searches`}
+              aria-label={t("remove", { seed: search.seed })}
               className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-fg-muted transition-colors hover:text-fg"
               onClick={() => onRemove(search)}
               type="button"

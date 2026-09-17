@@ -78,8 +78,8 @@ describe("overview markets", () => {
       range: "28d",
     });
     expect(row?.trend).toHaveLength(8);
-    expect(row?.top10Tooltip).toContain("out of 1 active targets");
-    expect(row?.deltaTooltip).toBe("Top-10 share +100pp vs May 4 - May 31, the previous 28 days.");
+    expect(row?.previousPeriod).toEqual({ end: "2026-05-31", start: "2026-05-04" });
+    expect(row?.deltaPoints).toBe(100);
     expect(row?.rangeDays).toBe(28);
   });
 

@@ -37,14 +37,13 @@ export const emptyBacklinksFilters: BacklinksFilters = {
 export const backlinksLinkTypeOptions: readonly {
   flag?: BacklinkFlag;
   id: BacklinksLinkType;
-  label: string;
 }[] = [
-  { id: "dofollow", label: "Dofollow" },
-  { flag: "nofollow", id: "nofollow", label: "Nofollow" },
-  { flag: "ugc", id: "ugc", label: "UGC" },
-  { flag: "sponsored", id: "sponsored", label: "Sponsored" },
-  { flag: "image", id: "image", label: "Image links" },
-  { flag: "sitewide", id: "sitewide", label: "Sitewide" },
+  { id: "dofollow" },
+  { flag: "nofollow", id: "nofollow" },
+  { flag: "ugc", id: "ugc" },
+  { flag: "sponsored", id: "sponsored" },
+  { flag: "image", id: "image" },
+  { flag: "sitewide", id: "sitewide" },
 ];
 
 const DAY_MS = 86_400_000;

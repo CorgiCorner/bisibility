@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { ChartRegion } from "@/components/ui/ChartRegion";
 import { rankBucketCssVars } from "@/lib/theme/chart-colors";
 import { ChartBarIcon as ChartBar } from "@phosphor-icons/react/dist/csr/ChartBar";
+import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import {
   Bar,
@@ -31,32 +32,13 @@ const axisTextStyle = {
   fontSize: 10,
 };
 
-const countFormatter = new Intl.NumberFormat("en-US");
-const percentFormatter = new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 1,
-});
-const positionDistributionDefinition =
-  "Ranked keywords grouped by current position. Keywords outside the top 100 are not shown.";
-
 function bucketFill(index: number) {
   return rankBucketCssVars[index % rankBucketCssVars.length];
 }
 
-function keywordCountLabel(count: number) {
-  return `${countFormatter.format(count)} ${count === 1 ? "keyword" : "keywords"}`;
-}
-
-function bucketRangeLabel(label: string) {
+function bucketRange(label: string) {
   const [start, end] = label.match(/\d+/g) ?? [];
-  return start && end ? `Positions ${start} to ${end}` : label;
-}
-
-function bucketPercentLabel(count: number, total: number) {
-  if (total <= 0) {
-    return "0% of total";
-  }
-
-  return `${percentFormatter.format((count / total) * 100)}% of total`;
+  return start && end ? { end: Number(end), start: Number(start) } : null;
 }
 
 function bucketMax(buckets: DistributionBucket[]) {
@@ -65,6 +47,7 @@ function bucketMax(buckets: DistributionBucket[]) {
 }
 
 function DistributionLabels({ buckets }: { buckets: DistributionBucket[] }) {
+  const format = useFormatter();
   const xScale = useXAxisScale();
   const yScale = useYAxisScale();
   if (!xScale || !yScale) return null;
@@ -82,7 +65,7 @@ function DistributionLabels({ buckets }: { buckets: DistributionBucket[] }) {
             fill="var(--fg-muted)"
             fontSize={11}
           >
-            {countFormatter.format(bucket.count)}
+            {format.number(bucket.count)}
           </text>
         );
       })}
@@ -101,6 +84,7 @@ function BarInteractionLayer({
   onHover: (index: number | null) => void;
   total: number;
 }>) {
+  const t = useTranslations("projectDashboard.distribution");
   return (
     <div
       className="absolute bottom-7 left-2 right-2 top-5.5 grid"
@@ -108,10 +92,16 @@ function BarInteractionLayer({
     >
       {buckets.map((bucket, index) => {
         const isHovered = hoveredIndex === index;
+        const range = bucketRange(bucket.label);
+        const rangeLabel = range ? t("positionRange", range) : bucket.label;
 
         return (
           <button
-            aria-label={`${bucketRangeLabel(bucket.label)}: ${bucket.count} keywords`}
+            aria-label={
+              range
+                ? t("bucketAriaLabel", { ...range, count: bucket.count })
+                : t("keywordCount", { count: bucket.count })
+            }
             className="relative min-w-0 cursor-default border-0 bg-transparent p-0"
             key={bucket.label}
             onBlur={() => onHover(null)}
@@ -123,10 +113,11 @@ function BarInteractionLayer({
             {isHovered ? (
               <span className="pointer-events-none absolute left-1/2 top-0 z-10 flex -translate-x-1/2 flex-col items-center gap-px whitespace-nowrap rounded-control bg-code-bg px-[9px] py-1.5 text-code-fg">
                 <span className="font-sans tabular-nums text-[11px] font-semibold">
-                  {keywordCountLabel(bucket.count)}
+                  {t("keywordCount", { count: bucket.count })}
                 </span>
                 <span className="font-sans tabular-nums text-[9.5px] text-code-faint">
-                  {bucket.label} · {bucketPercentLabel(bucket.count, total)}
+                  {rangeLabel} ·{" "}
+                  {t("ofTotal", { percent: total <= 0 ? 0 : (bucket.count / total) * 100 })}
                 </span>
               </span>
             ) : null}
@@ -141,6 +132,7 @@ export function PositionDistributionCard({
   buckets,
   empty = false,
 }: Readonly<PositionDistributionCardProps>) {
+  const t = useTranslations("projectDashboard.distribution");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const max = bucketMax(buckets);
   const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
@@ -151,10 +143,7 @@ export function PositionDistributionCard({
       size="md"
       style={{ containerType: "inline-size" }}
     >
-      <OverviewChartHeader
-        definition={positionDistributionDefinition}
-        title="Position distribution"
-      />
+      <OverviewChartHeader definition={t("definition")} title={t("title")} />
       {empty ? (
         <div className="relative mt-3 min-w-0 flex-1 pt-1.5">
           <div aria-hidden className="h-[244px]" />
@@ -164,9 +153,17 @@ export function PositionDistributionCard({
         <div className="relative mt-3 min-w-0 pt-1.5">
           <ChartRegion
             className="relative h-[244px]"
-            label={`Position distribution chart. ${buckets
-              .map((bucket) => `${bucketRangeLabel(bucket.label)}: ${bucket.count} keywords`)
-              .join("; ")}`}
+            label={t("chartAriaLabel", {
+              summary: buckets
+                .map((bucket) => {
+                  const range = bucketRange(bucket.label);
+                  return t("summaryItem", {
+                    count: bucket.count,
+                    range: range ? t("positionRange", range) : bucket.label,
+                  });
+                })
+                .join("; "),
+            })}
           >
             <ResponsiveContainer
               width="100%"

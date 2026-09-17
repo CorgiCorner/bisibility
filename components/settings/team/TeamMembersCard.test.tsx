@@ -2,12 +2,18 @@ import {
   TeamMembersCard,
   type TeamMembersCardProps,
 } from "@/components/settings/team/TeamMembersCard";
+import {
+  renderWithTeamSettingsMessages as render,
+  renderWithFeatureMessages,
+  teamSettingsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type { TeamMemberData } from "@/lib/queries/team";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const owner: TeamMemberData = {
+  accessSince: "2025-02-04",
   accessLabel: "Project access since 4 Feb 2025",
   avatarUrl: null,
   canChangeRole: false,
@@ -25,6 +31,7 @@ const owner: TeamMemberData = {
 };
 
 const auditor: TeamMemberData = {
+  accessSince: "2026-01-15",
   accessLabel: "Project access since 15 Jan 2026",
   avatarUrl: null,
   canChangeRole: true,
@@ -52,8 +59,20 @@ const editor: TeamMemberData = {
   roleValue: "member",
 };
 
-function renderCard(overrides: Partial<TeamMembersCardProps> = {}) {
-  const props: TeamMembersCardProps = {
+const nonEnglishTeamMessages = {
+  ...teamSettingsFeatureTestMessages,
+  projectSettingsTeam: {
+    ...teamSettingsFeatureTestMessages.projectSettingsTeam,
+    members: {
+      ...teamSettingsFeatureTestMessages.projectSettingsTeam.members,
+      inviteMember: "Zaproś osobę",
+      title: "Członkowie zespołu",
+    },
+  },
+};
+
+function cardProps(overrides: Partial<TeamMembersCardProps> = {}) {
+  const props = {
     canAssignAdmin: true,
     canManageTeam: true,
     changeMemberRole: vi.fn().mockResolvedValue({}),
@@ -64,7 +83,12 @@ function renderCard(overrides: Partial<TeamMembersCardProps> = {}) {
     removeMember: vi.fn().mockResolvedValue({}),
     transferOwnership: vi.fn().mockResolvedValue({}),
     ...overrides,
-  };
+  } satisfies TeamMembersCardProps;
+  return props;
+}
+
+function renderCard(overrides: Partial<TeamMembersCardProps> = {}) {
+  const props = cardProps(overrides);
   render(<TeamMembersCard {...props} />);
   return props;
 }
@@ -213,9 +237,11 @@ describe("TeamMembersCard", () => {
   });
 
   it("renders a structured invite action error as an accessible alert", async () => {
-    const message = "Configure EMAIL_PROVIDER (resend, ses, smtp) to send team invites.";
     renderCard({
-      inviteMember: vi.fn().mockResolvedValue({ message, status: "error" }),
+      inviteMember: vi.fn().mockResolvedValue({
+        message: "Configure EMAIL_PROVIDER (resend, ses, smtp) to send team invites.",
+        status: "error",
+      }),
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Invite member" }));
@@ -226,8 +252,42 @@ describe("TeamMembersCard", () => {
     await waitFor(() => expect(submit).toBeEnabled());
     fireEvent.click(submit);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Email delivery is not configured for team invites.",
+    );
     expect(screen.queryByText("Invitation sent")).not.toBeInTheDocument();
+  });
+
+  it("uses injected non-English feature copy without changing a member identity", () => {
+    renderWithFeatureMessages(<TeamMembersCard {...cardProps({ members: [editor] })} />, {
+      messages: nonEnglishTeamMessages,
+    });
+
+    expect(screen.getByRole("region", { name: "Członkowie zespołu" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Zaproś osobę" })).toBeVisible();
+    expect(screen.getByText("Editor Example")).toBeVisible();
+    expect(screen.getByText("editor@example.com")).toBeVisible();
+  });
+
+  it("keeps the shared stale-deployment remedy instead of exposing a raw action failure", async () => {
+    const props = renderCard({
+      changeMemberRole: vi
+        .fn()
+        .mockRejectedValue(new Error("Failed to find Server Action while applying this role.")),
+      members: [owner, editor],
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Editor Example" }));
+    const menu = await screen.findByRole("menu", { name: "Actions for Editor Example" });
+    fireEvent.click(within(menu).getByText("Change role"));
+    fireEvent.click(within(menu).getByText("Viewer"));
+
+    expect(props.changeMemberRole).toHaveBeenCalledWith({
+      memberId: "mbr_editor",
+      projectId: "prj_test",
+      role: "viewer",
+    });
+    expect(await screen.findByRole("alert")).toHaveTextContent("Refresh the app to continue.");
   });
 
   it.each([

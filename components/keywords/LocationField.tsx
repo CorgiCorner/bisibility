@@ -15,13 +15,20 @@ import {
 import { AnchoredList as Popper } from "@/components/ui/AnchoredList";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
+import { regionDisplayName } from "@/lib/i18n/display-names";
 import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
+import { useLocale } from "next-intl";
 import { type FocusEvent, useId, useRef, useState } from "react";
 import { CountryFlag } from "./CountryFlag";
-import { LocationResults, locationOptionDomId } from "./location-field-results";
+import {
+  type LocationFieldMessages,
+  LocationResults,
+  locationOptionDomId,
+} from "./location-field-results";
 
+export type { LocationFieldMessages } from "./location-field-results";
 export type { LocationFieldValue };
 
 type LocationFieldProps = {
@@ -39,6 +46,8 @@ type LocationFieldProps = {
   /** "form" is the drawer/form field look; "toolbar" is compact; "research" matches its market control. */
   variant?: "form" | "toolbar" | "research";
   controlClassName?: string;
+  /** Feature-owned copy for the shared location search control. */
+  messages: LocationFieldMessages;
 };
 
 export function LocationField({
@@ -52,9 +61,11 @@ export function LocationField({
   label = "Location",
   labelHidden = false,
   placeholder = "Search country, region, or city",
+  messages,
   variant = "form",
   controlClassName,
 }: Readonly<LocationFieldProps>) {
+  const locale = useLocale();
   const fieldClass = locationFieldClassByVariant[variant];
   const reactId = useId();
   const prefix = idPrefix ?? reactId;
@@ -67,7 +78,9 @@ export function LocationField({
   const places = suggestions.filter((suggestion) => suggestion.kind !== "country");
   const countries = suggestions.filter((suggestion) => suggestion.kind === "country");
   const options = [...countries, ...places];
-  const currentInput = draft ?? value.displayName;
+  // A persisted country label is the English display name; the viewer reads their own.
+  const selectedName = regionDisplayName(value.countryCode, value.displayName, locale);
+  const currentInput = draft ?? selectedName;
   const hasOptions = options.length > 0;
   const listId = `${prefix}-location-list`;
   const visible = expanded && (hasOptions || loading || Boolean(lastCompletedTerm));
@@ -177,7 +190,9 @@ export function LocationField({
             role="combobox"
             value={currentInput}
           />
-          {draft !== null ? <LocationClearButton onClick={clearDraft} /> : null}
+          {draft !== null ? (
+            <LocationClearButton ariaLabel={messages.clearSearch} onClick={clearDraft} />
+          ) : null}
           {draft === null && variant === "research" ? (
             <CaretDown
               aria-hidden
@@ -197,6 +212,7 @@ export function LocationField({
             hasOptions={hasOptions}
             listId={listId}
             loading={loading}
+            messages={messages}
             onPick={selectOption}
             showEmpty={showEmpty}
             visible={visible}

@@ -1,0 +1,478 @@
+{
+  "onboarding": {
+    "errors": {
+      "google": {
+        "actorMismatch": "Logowanie Google zostało ukończone na innym koncie bisibility. Zaloguj się ponownie na konto, które rozpoczęło łączenie, i spróbuj jeszcze raz.",
+        "credentialsDecrypt": "Logowanie Google się powiodło, ale nie udało się dokończyć zapisanego połączenia. Cofnij dostęp aplikacji na koncie Google i połącz ponownie.",
+        "denied": "Google zgłosiło odrzucenie połączenia.",
+        "generic": "Połączenie z Google nie zostało ukończone. Spróbuj ponownie na koncie, które jest właścicielem usługi.",
+        "noRefreshToken": "Google nie zwróciło tokena odświeżania. Cofnij dostęp aplikacji i połącz ponownie.",
+        "stateExpired": "Proces logowania wygasł lub został uruchomiony od nowa. Spróbuj jeszcze raz, w jednej karcie.",
+        "storeFailed": "Logowanie Google się powiodło, ale nasz serwer nie zdołał dokończyć połączenia. To problem po naszej stronie – ponów próbę, a jeśli się powtórzy, skontaktuj się z nami."
+      },
+      "searchConsoleSync": "Synchronizacja z Search Console nie została ukończona. Dane obserwowane mogą pojawić się z opóźnieniem. Możesz ponowić próbę w Integracjach."
+    },
+    "firstCheck": {
+      "back": "Wstecz",
+      "connect": "Połącz",
+      "completion": {
+        "manual": "{keywords, plural, one {# słowo kluczowe jest gotowe} few {# słowa kluczowe są gotowe} many {# słów kluczowych jest gotowych} other {# słowa kluczowego jest gotowe}}. Nic się nie uruchomi – ani nie wygeneruje kosztów – dopóki nie zdecydujesz: uruchom {objectPronoun} w dowolnej chwili w <tracker>Monitorze pozycji</tracker> albo przełącz się na harmonogram w <schedules>Harmonogramach</schedules>, aby śledzenie działało bez Twojego udziału.",
+        "paused": "{keywords, plural, one {# słowo kluczowe jest wstrzymane} few {# słowa kluczowe są wstrzymane} many {# słów kluczowych jest wstrzymanych} other {# słowa kluczowego jest wstrzymane}}. Żadne zaplanowane sprawdzenia nie działają, dopóki nie wznowisz monitorowania w <schedules>Harmonogramach</schedules>. Nadal możesz uruchomić {objectPronoun} w <tracker>Monitorze pozycji</tracker>.",
+        "scheduled": "{keywords, plural, one {# słowo kluczowe jest sprawdzane automatycznie} few {# słowa kluczowe są sprawdzane automatycznie} many {# słów kluczowych jest sprawdzanych automatycznie} other {# słowa kluczowego jest sprawdzane automatycznie}}. Harmonogram: {frequency}{nextRun, select, none {} other { – następny przebieg {nextRun}}}. Możesz też uruchomić {objectPronoun} w dowolnej chwili w <tracker>Monitorze pozycji</tracker>.",
+        "it": "je",
+        "them": "je"
+      },
+      "dataSource": "Źródło danych",
+      "device": {
+        "desktop": "Komputer",
+        "mobile": "Telefon"
+      },
+      "description": {
+        "completed": "Pierwsze wyniki są gotowe.",
+        "manual": "Wszystko gotowe. Uruchom pierwsze sprawdzenie, kiedy zechcesz – nic nie ruszy, dopóki tego nie zrobisz.",
+        "noProvider": "Prawie gotowe. Wszystko jest skonfigurowane – połącz dostawcę danych, gdy zechcesz uruchamiać sprawdzenia.",
+        "paused": "Wszystko gotowe. Sprawdzenia są wstrzymane, dopóki nie wznowisz harmonogramu.",
+        "scheduled": "Harmonogram: {frequency}. Możesz też uruchomić teraz przykładowe sprawdzenie."
+      },
+      "errors": {
+        "complete": "Nie udało się ukończyć konfiguracji. Spróbuj ponownie.",
+        "keyword": "Nie udało się wczytać przykładowego słowa kluczowego. Spróbuj ponownie.",
+        "preview": "Nie udało się uruchomić przykładowego sprawdzenia. Spróbuj ponownie.",
+        "previewUnavailable": "Podgląd pierwszego sprawdzenia nie jest dostępny w tej kompilacji.",
+        "retryKeyword": "Ponów wczytywanie słowa kluczowego",
+        "sampleProject": "Projekty przykładowe nie wykonują prawdziwych sprawdzeń.",
+        "selectKeyword": "Wybierz jedno słowo kluczowe do przykładowych sprawdzeń.",
+        "statusUnavailable": "Nie udało się odświeżyć statusu sprawdzenia. Ponawiamy automatycznie. Możesz otworzyć aplikację, zanim to się zakończy.",
+        "timezone": "Nie udało się zapisać strefy czasowej. Spróbuj ponownie.",
+        "unavailableKeyword": "To słowo kluczowe nie jest już dostępne. Wróć, aby wybrać inne.",
+        "waitingForProvider": "Połącz dostawcę SERP, zanim uruchomisz sprawdzenia."
+      },
+      "footer": {
+        "hint": "Opcjonalnie: sprawdź teraz 1 słowo kluczowe. Harmonogram pozostanie bez zmian.",
+        "openApp": "Otwórz aplikację",
+        "queued": "W kolejce",
+        "run": "Uruchom sprawdzenie",
+        "running": "{count, plural, one {Trwa # przykładowe sprawdzenie} few {Trwają # przykładowe sprawdzenia} many {Trwa # przykładowych sprawdzeń} other {Trwa # przykładowego sprawdzenia}}",
+        "viewDashboard": "Otwórz pulpit"
+      },
+      "frequency": {
+        "customCron": "Własny cron",
+        "daily": "Codziennie",
+        "manual": "Ręcznie",
+        "monthly": "Co miesiąc",
+        "paused": "Wstrzymano",
+        "weekly": "Co tydzień"
+      },
+      "matrix": "1 słowo kluczowe · {markets, plural, one {# rynek} few {# rynki} many {# rynków} other {# rynku}} · {devices} · {checks, plural, one {# sprawdzenie} few {# sprawdzenia} many {# sprawdzeń} other {# sprawdzenia}}",
+      "notConnected": "Nie połączono",
+      "queue": {
+        "completed": "Przykładowe {checks, plural, one {sprawdzenie zostało ukończone} few {sprawdzenia zostały ukończone} many {sprawdzenia zostały ukończone} other {sprawdzenia zostały ukończone}}. Od teraz każde słowo kluczowe działa zgodnie z harmonogramem: {frequency}.",
+        "completedWithFailures": "Przykładowe {checks, plural, one {sprawdzenie zakończyło się problemem} few {sprawdzenia zakończyły się problemem} many {sprawdzenia zakończyły się problemem} other {sprawdzenia zakończyły się problemem}}. Poniżej możesz ponowić nieudane {checks, plural, one {sprawdzenie} few {sprawdzenia} many {sprawdzenia} other {sprawdzenia}}. Każde słowo kluczowe nadal działa zgodnie z harmonogramem: {frequency}.",
+        "initial": "{checks, plural, one {# sprawdzenie wykona się teraz raz, aby pokazać, jak to działa.} few {# sprawdzenia wykonają się teraz raz, aby pokazać, jak to działa.} many {# sprawdzeń wykona się teraz raz, aby pokazać, jak to działa.} other {# sprawdzenia wykona się teraz raz, aby pokazać, jak to działa.}} Wszystko inne działa zgodnie z harmonogramem: {frequency}.",
+        "manual": "Podgląd ręczny możesz uruchomić teraz. Zaplanowane sprawdzenia pozostają wstrzymane.",
+        "queued": "Przykładowe sprawdzenia czekają w kolejce. Możesz otworzyć pulpit, zanim worker je uruchomi.",
+        "running": "Przykładowe sprawdzenia są w toku. Możesz otworzyć pulpit, zanim się zakończą.",
+        "sample": "Projekty przykładowe zachowują swoją syntetyczną historię pozycji."
+      },
+      "results": {
+        "checking": "Sprawdzanie…",
+        "completed": "{completed, number} z {total, number} {total, plural, one {sprawdzenia} few {sprawdzeń} many {sprawdzeń} other {sprawdzenia}} · zarejestrowany koszt {cost, number, ::.0000} USD",
+        "completedUnavailable": "{completed, number} z {total, number} {total, plural, one {sprawdzenia} few {sprawdzeń} many {sprawdzeń} other {sprawdzenia}} · zarejestrowany koszt niedostępny",
+        "completedWithOutcomes": "Ukończono {completed, number} z {total, number} {total, plural, one {sprawdzenia} few {sprawdzeń} many {sprawdzeń} other {sprawdzenia}}. Sprawdź statusy pozostałych wyników.",
+        "device": "Urządzenie: {device}",
+        "failed": "{failed, plural, one {Przykładowe sprawdzenie nie powiodło się. Ponów je poniżej.} few {# z {total, number} sprawdzeń nie powiodły się. Udane wyniki zostają zachowane.} many {# z {total, number} sprawdzeń nie powiodło się. Udane wyniki zostają zachowane.} other {# z {total, number} sprawdzeń nie powiodło się. Udane wyniki zostają zachowane.}}",
+        "failure": {
+          "budgetExhausted": "Osiągnięto miesięczny budżet sprawdzeń pozycji.",
+          "blocked": "To sprawdzenie jest zablokowane.",
+          "cancelled": "To sprawdzenie zostało anulowane.",
+          "client": "Nie udało się uruchomić przykładowego sprawdzenia. Spróbuj ponownie.",
+          "deferred": "To sprawdzenie zostało odroczone.",
+          "failed": "Nie udało się wykonać tego sprawdzenia. Spróbuj ponownie za chwilę.",
+          "noProvider": "Połącz dostawcę SERP, zanim uruchomisz sprawdzenia.",
+          "projectReadOnly": "Ten projekt jest teraz tylko do odczytu.",
+          "rateLimited": "Osiągnięto limit zapytań u dostawcy. Spróbuj ponownie za chwilę.",
+          "sampleProject": "Projekty przykładowe nie wykonują prawdziwych sprawdzeń.",
+          "sendUnconfirmed": "Nie udało się potwierdzić wysłania tego sprawdzenia, więc nie zostało ponowione. Uruchom je jeszcze raz, jeśli go potrzebujesz.",
+          "skipped": "To sprawdzenie zostało pominięte.",
+          "unexpected": "Sprawdzenie nie powiodło się po naszej stronie. Ponów za chwilę."
+        },
+        "live": "Sprawdzenia na żywo zwykle kończą się w ciągu minuty.",
+        "notChecked": "Jeszcze nie sprawdzono",
+        "notRanked": "Poza Top {depth, number}",
+        "queued": "W kolejce",
+        "queuedNote": "Sprawdzenia z kolejki ruszą, gdy worker przejmie przebieg.",
+        "retry": "Ponów nieudane",
+        "retryNote": "Uruchom przykładowe sprawdzenie dla pozostałych celów, kiedy zechcesz."
+      },
+      "review": {
+        "dataSourceWaiting": "Sprawdzenia ruszą, gdy połączysz dostawcę.",
+        "bothDevices": "oba urządzenia",
+        "devices": "{count, plural, one {# urządzenie} few {# urządzenia} many {# urządzeń} other {# urządzenia}}",
+        "manual": "Ręcznie – sprawdzenia ruszają, gdy je uruchomisz",
+        "paused": "Wstrzymano – żadne sprawdzenia nie są zaplanowane",
+        "projectTimezone": "Strefa czasowa projektu",
+        "schedule": "Harmonogram",
+        "searchTimezone": "Miasto lub region",
+        "tracking": "Monitorowanie",
+        "trackingSummary": "{keywords, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} · {engine} · {markets} · {devices}"
+      },
+      "title": "Pierwsze sprawdzenie"
+    },
+    "layout": {
+      "copyright": "© 2026 bisibility",
+      "notYou": "To nie Ty?"
+    },
+    "matchingScope": {
+      "includeSubdomains": {
+        "description": "Liczy też docs.{rootDomain}, app.{rootDomain}, blog.{rootDomain} i każdą inną subdomenę.",
+        "title": "Wszystkie subdomeny"
+      },
+      "rootAndWww": {
+        "description": "Liczy {domains} w HTTP i HTTPS. Pozostałe subdomeny są liczone osobno.",
+        "title": "Domena główna + www"
+      },
+      "urlPrefix": {
+        "description": "Liczy tylko strony w konkretnej ścieżce, na przykład {example}.",
+        "title": "Tylko prefiks adresu URL"
+      }
+    },
+    "keywordSummary": {
+      "estimate": "Oszacuj koszt dostawcy",
+      "monthlyLine": "{schedule, select, manual {Sprawdzenia ręczne dla Top {depth, number}} paused {Sprawdzenia wstrzymane dla Top {depth, number}} custom {bez własnego harmonogramu cron dla Top {depth, number}} other {≈ {pages, plural, one {# strona wyników/mies.} few {# strony wyników/mies.} many {# stron wyników/mies.} other {# strony wyników/mies.}} dla Top {depth, number}}}",
+      "perRun": "Do {pages, plural, one {# strony wyników} few {# stron wyników} many {# stron wyników} other {# strony wyników}} na przebieg · {markets, plural, one {# rynek} few {# rynki} many {# rynków} other {# rynku}}"
+    },
+    "keywords": {
+      "approachingLimit": "Zbliżasz się do limitu 500 słów kluczowych na import",
+      "description": "Wklej słowa kluczowe lub zaimportuj propozycje z połączonych źródeł danych.",
+      "empty": "Dodaj co najmniej jedno słowo kluczowe.",
+      "import": {
+        "added": "Dodano {count, plural, one {# zapytanie} few {# zapytania} many {# zapytań} other {# zapytania}}",
+        "choose": "Wybierz zapytania",
+        "drawer": {
+          "add": "Dodaj {count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
+          "cancel": "Anuluj",
+          "clear": "Wyczyść",
+          "clicks": "Kliknięcia",
+          "description": "Oczyszczone zapytania z Search Console. Wybierz te, które chcesz śledzić.",
+          "filterAria": "Filtruj propozycje",
+          "filterPlaceholder": "Filtruj zapytania",
+          "hidden": "Ukryto {count, plural, one {# zapytanie niskiej jakości} few {# zapytania niskiej jakości} many {# zapytań niskiej jakości} other {# zapytania niskiej jakości}}.",
+          "hide": "Ukryj",
+          "impressions": "Wyśw.",
+          "inDraft": "W szkicu",
+          "metric": "{value, number}",
+          "metricUnavailable": "-",
+          "monthlyChecks": "+{count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} = +{checks, number} sprawdzeń/mies.",
+          "monthlyChecksCostBelowCent": "+{count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} = +{checks, number} sprawdzeń/mies. ~ < {minimum, number, ::currency/USD}/mies.",
+          "monthlyChecksCost": "+{count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} = +{checks, number} sprawdzeń/mies. ~ {cost, number, ::currency/USD}/mies.",
+          "query": "Zapytanie",
+          "selected": "{count, plural, one {# wybrane} few {# wybrane} many {# wybranych} other {# wybranego}}",
+          "selectionCount": "+{count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
+          "selectAll": "Zaznacz wszystko",
+          "show": "Pokaż mimo to",
+          "title": "Import z Search Console",
+          "top": "Top {count, number} według kliknięć",
+          "tracked": "Śledzone",
+          "use": "Użyj {count, plural, one {# słowa kluczowego} few {# słów kluczowych} many {# słów kluczowych} other {# słowa kluczowego}}"
+        },
+        "empty": "Nie zaobserwowano jeszcze żadnych zapytań – nowe usługi w Search Console potrzebują kilku dni.",
+        "expiredAuthorization": "Autoryzacja Google wygasła.",
+        "import": "Importuj najlepsze zapytania z Search Console",
+        "importing": "Importowanie najlepszych zapytań…",
+        "loadError": "Nie udało się wczytać zapytań. Spróbuj ponownie.",
+        "noSource": "Nie połączono żadnego źródła analityki.",
+        "rateLimited": "W Search Console jest teraz duży ruch. Spróbuj ponownie za chwilę.",
+        "reconnect": "Połącz ponownie konto Google"
+      },
+      "limit": "Dodaj maksymalnie {maximum, number} słów kluczowych w jednym imporcie.",
+      "marketRequired": "Dodaj co najmniej jeden rynek, aby przejść dalej.",
+      "ranked": {
+        "added": "Dodano {count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
+        "add": "Dodaj {count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
+        "alreadyTracked": "Już śledzone",
+        "aboutPage": "(około {cost, number, ::currency/USD} za stronę)",
+        "budgetExhausted": "Osiągnięto miesięczny budżet sprawdzeń pozycji.",
+        "cancel": "Anuluj",
+        "choose": "Wybierz słowa kluczowe",
+        "clear": "Wyczyść",
+        "connection": "Połączenie",
+        "connectionLabel": "Połączenie z DataForSEO",
+        "description": "Korzysta z Twojego konta DataForSEO. Wyniki są zapisywane w pamięci podręcznej na 12 godzin.",
+        "drawerDescription": "Słowa kluczowe, na które Twoja witryna już zajmuje pozycje, uszeregowane według szacowanego ruchu.",
+        "drawerTitle": "Import z DataForSEO",
+        "estimatedTraffic": "Szac. ruch",
+        "import": "Importuj z DataForSEO",
+        "importFor": "Importuj słowa kluczowe, na które zajmuje pozycje domena {domain}",
+        "inDraft": "W szkicu",
+        "keyword": "Słowo kluczowe",
+        "load": "Wczytaj kolejne 100",
+        "lookupFailed": "Nie udało się wyszukać słów kluczowych z pozycjami. Spróbuj ponownie.",
+        "needsReauth": "Autoryzacja DataForSEO wygasła.",
+        "noDomain": "Podaj prawidłową domenę projektu, zanim wyszukasz słowa kluczowe z pozycjami.",
+        "noSource": "Brak odpowiedniego połączenia z DataForSEO.",
+        "position": "Pozycja",
+        "rateLimited": "Osiągnięto limit zapytań u dostawcy. Spróbuj ponownie za chwilę.",
+        "raiseBudget": "Zwiększ budżet",
+        "reconnect": "Połącz ponownie DataForSEO",
+        "remaining": "Wybrano {selected, number} z {available, number}",
+        "select": "Wybierz słowo kluczowe {keyword}",
+        "selectAll": "Zaznacz wszystko",
+        "selectKeyword": "Wybierz słowo kluczowe",
+        "spent": "Wydano w tej sesji: {cost, number, ::currency/USD}{cached, select, yes {. Strona {page, number} z pamięci podręcznej.} other {}}",
+        "table": "Propozycje słów kluczowych z pozycjami",
+        "top": "Top 3 według ruchu",
+        "tracked": "Już śledzone",
+        "unsupportedLocation": "Wyszukiwanie słów kluczowych z pozycjami nie jest dostępne dla tej lokalizacji w DataForSEO.",
+        "use": "Użyj {count, plural, one {# słowa kluczowego} few {# słów kluczowych} many {# słów kluczowych} other {# słowa kluczowego}}",
+        "variants": "warianty: +{count, number}",
+        "volume": "Wolumen"
+      },
+      "placeholder": "Jedno słowo kluczowe w wierszu",
+      "saveError": "Nie udało się zapisać słów kluczowych. Spróbuj ponownie.",
+      "summary": "{keywords, plural, one {# unikalne słowo kluczowe} few {# unikalne słowa kluczowe} many {# unikalnych słów kluczowych} other {# unikalnego słowa kluczowego}}{duplicates, plural, =0 {} one { · pominięto # zduplikowany wiersz} few { · pominięto # zduplikowane wiersze} many { · pominięto # zduplikowanych wierszy} other { · pominięto # zduplikowanego wiersza}}",
+      "tooLong": "{count, plural, one {# wiersz przekracza} few {# wiersze przekraczają} many {# wierszy przekracza} other {# wiersza przekracza}} limit {maximum, number} znaków na słowo kluczowe.",
+      "skip": "Pomiń dodawanie słów kluczowych i przejdź do pierwszego sprawdzenia",
+      "skipLabel": "Pomiń na razie",
+      "title": "Słowa kluczowe"
+    },
+    "logout": "Wyloguj się",
+    "navigation": {
+      "back": "Wstecz",
+      "continue": "Dalej",
+      "savingKeywords": "Zapisywanie słów kluczowych…",
+      "viewDashboard": "Otwórz pulpit"
+    },
+    "metadata": {
+      "description": "Skonfiguruj projekt w bisibility.",
+      "title": "Pierwsze kroki"
+    },
+    "markets": {
+      "add": "Dodaj rynek",
+      "another": "Kolejny rynek",
+      "drawer": {
+        "active": "Rynek {market} jest już aktywny.",
+        "allLanguages": "Wszystkie języki",
+        "archived": "Rynek {market} został zarchiwizowany. Przywróć go w Rynkach, zanim go użyjesz.",
+        "cancel": "Anuluj",
+        "country": "Kraj",
+        "create": "Utwórz rynek",
+        "createFailed": "Nie udało się utworzyć rynku.",
+        "customName": "Własna nazwa (opcjonalnie)",
+        "description": "Lokalizacja i język, które śledzisz razem.",
+        "language": "Język",
+        "location": "Lokalizacja",
+        "locationHint": "Domyślnie wybrany jest cały kraj. Wyszukaj, aby śledzić miasto lub region.",
+        "marketDefinition": "Definicja rynku",
+        "marketName": "Nazwa rynku",
+        "newMarket": "Nowy rynek",
+        "newSchedule": "Nowy harmonogram",
+        "noLocationResults": "Brak pasującego regionu lub miasta. Spróbuj innej nazwy albo wybierz cały kraj.",
+        "searchAllLanguages": "Szukaj we wszystkich językach",
+        "searchLocations": "Szukaj regionów i miast",
+        "searchingLocations": "Wyszukiwanie regionów i miast…",
+        "suggested": "Sugerowane",
+        "backToMarket": "Wróć do rynku"
+      },
+      "errors": {
+        "createProjectFirst": "Utwórz projekt, zanim dodasz rynki."
+      },
+      "maximum": "Wybrano maksymalną liczbę rynków: {count, number}.",
+      "remove": "Usuń rynek {market} / {language}",
+      "title": "Rynki"
+    },
+    "page": {
+      "description": "Kilka szybkich kroków, aby zacząć śledzić swoją witrynę.",
+      "title": "Skonfiguruj projekt"
+    },
+    "projectOptions": {
+      "importError": "Nie udało się otworzyć importu projektu.",
+      "openingImport": "Otwieranie importu…",
+      "restoreProject": "Przywróć projekt",
+      "restoreProjectTooltip": "Zaimportuj pakiet projektu z innej instancji bisibility. Utworzymy jeden lokalny projekt i przywrócimy jego dane. Dane uwierzytelniające dostawców i klucze API nie są dołączane.",
+      "sampleProject": "Wczytaj projekt przykładowy",
+      "sampleHelp": "Wczytuje tymczasowy projekt przykładowy i pomija resztę konfiguracji."
+    },
+    "provider": {
+      "cards": {
+        "affiliate": "link afiliacyjny",
+        "balance": "Saldo: {balance, number}",
+        "dataforseo": {
+          "capability": "Zasila też analizę słów kluczowych i trudność.",
+          "costCaption": "Płatność za sprawdzenie – od ~0,002 USD",
+          "costDetail": "Rozliczenie w USD według ustawionej głębokości – około 0,002 USD przy Top 10 i 0,02 USD przy Top 100. Nowe konta dostają 1 USD kredytu próbnego; doładowania zaczynają się od 50 USD i nie są opłatą miesięczną.",
+          "label": "DataForSEO"
+        },
+        "getCredentials": "Pobierz dane uwierzytelniające API",
+        "group": "Dostawca SERP",
+        "label": "Dane o pozycjach / zasila sprawdzenia pozycji",
+        "notice": "Połączenia są zapisywane osobno dla każdego dostawcy – przełączenie nie rozłącza.",
+        "serpapi": {
+          "capability": "Tylko sprawdzenia pozycji.",
+          "costCaption": "Według planu – miesięczny limit wyszukiwań, 250 wyszukiwań/mies. bezpłatnie",
+          "costDetail": "Plany obejmują miesięczną pulę wyszukiwań; plan bezpłatny ma 250. Sprawdzenie Top N zużywa maksymalnie jedno wyszukiwanie na 10 wyników, a często mniej, gdy dopasowanie znajdzie się wcześnie.",
+          "label": "SerpApi"
+        },
+        "status": {
+          "connected": "Połączono",
+          "dirty": "Niezapisane zmiany",
+          "failed": "Test nieudany",
+          "idle": "Nie połączono",
+          "tested": "Zweryfikowano"
+        },
+        "tooltip": "Google nie ma oficjalnego API pozycji, więc sprawdzenia przechodzą przez dostawcę SERP. bisibility korzysta z Twojego własnego konta u dostawcy, a płacisz mu bezpośrednio, za każde sprawdzenie. Możesz to pominąć i połączyć dostawcę później w Integracjach – słowa kluczowe dodasz już teraz, ale sprawdzenia pozostaną wstrzymane, dopóki nie połączysz dostawcy."
+      },
+      "credentials": {
+        "connected": "Połączono z dostawcą {provider}",
+        "fields": {
+          "apiKey": "Klucz API",
+          "apiLogin": "Login API",
+          "apiPassword": "Hasło API",
+          "apiPasswordDescription": "Użyj hasła API, nie hasła do konta.",
+          "apiPasswordPlaceholder": "Hasło API",
+          "apiKeyPlaceholder": "Twój prywatny klucz API",
+          "loginPlaceholder": "ty@firma.com",
+          "savedDescription": "Zapisane i zaszyfrowane. Zostaw puste, aby zachować obecną wartość, albo wpisz nową, aby ją zastąpić.",
+          "savedPlaceholder": "••••••••"
+        },
+        "keepStored": "Zostaw dane uwierzytelniające puste, aby zachować zapisane połączenie.",
+        "save": "Zapisz połączenie",
+        "saveHint": "Przetestuj dane uwierzytelniające i zapisz.",
+        "test": "Przetestuj połączenie",
+        "failed": "Test połączenia nie powiódł się. Sprawdź dane uwierzytelniające i spróbuj ponownie.",
+        "title": "Dane uwierzytelniające API",
+        "verified": "Zweryfikowano dostawcę {provider}"
+      },
+      "errors": {
+        "costPrecision": "Podaj maksymalnie 4 miejsca po przecinku.",
+        "credentialTooLong": "Dane uwierzytelniające mogą mieć maksymalnie {maximum, number} znaków.",
+        "loginRequired": "Podaj login API.",
+        "save": "Nie udało się zapisać połączenia z dostawcą. Spróbuj ponownie.",
+        "saveBeforeContinue": "Zapisz dostawcę, zanim przejdziesz dalej.",
+        "secretRequired": "Podaj hasło API.",
+        "test": "Nie udało się przetestować połączenia z dostawcą. Spróbuj ponownie.",
+        "testBeforeConnect": "Przetestuj dostawcę {provider}, zanim go połączysz."
+      },
+      "modal": {
+        "cancel": "Anuluj",
+        "save": "Zapisz połączenie",
+        "title": "Połącz dostawcę"
+      },
+      "searchConsole": {
+        "label": "Dane Twojej witryny / opcjonalne, bezpłatne",
+        "tooltip": "Search Console pokazuje zapytania, na które Twoja witryna już zajmuje pozycje. Bezpłatny import propozycji słów kluczowych; nie sprawdza pozycji."
+      },
+      "title": "Dostawca",
+      "skip": "Pomiń łączenie dostawcy i dodaj słowa kluczowe jako wstrzymane",
+      "skipLabel": "Pomiń na razie",
+      "video": {
+        "dataforseo": {
+          "description": "Załóż konto, znajdź dane uwierzytelniające API i zweryfikuj konto.",
+          "title": "Zakładanie konta DataForSEO"
+        },
+        "serpapi": {
+          "description": "Załóż konto i znajdź swój klucz API.",
+          "title": "Zakładanie konta SerpApi"
+        },
+        "watch": "Obejrzyj przewodnik konfiguracji"
+      }
+    },
+    "residency": {
+      "message": "Twoje dane są przechowywane i przetwarzane w regionie {region}."
+    },
+    "searchConsole": {
+      "actions": {
+        "change": "Zmień usługę",
+        "connect": "Połącz",
+        "connecting": "Łączenie…",
+        "loading": "Wczytywanie usług…",
+        "otherAccount": "Użyj innego konta",
+        "select": "Wybierz usługę",
+        "useSelected": "Użyj wybranej usługi"
+      },
+      "description": "Bezpłatnie – importuj prawdziwe zapytania, kliknięcia i wyświetlenia. Klucz API nie jest potrzebny.",
+      "drawer": {
+        "description": "Wybierz usługę zwróconą przez połączone konto Google.",
+        "noProperties": "To konto nie ma zweryfikowanych usług w Search Console. Zweryfikuj usługę albo połącz inne konto Google.",
+        "property": "Usługa w Search Console",
+        "title": "Wybierz usługę w Search Console"
+      },
+      "errors": {
+        "connectionFailed": "Nie udało się połączyć z Search Console.",
+        "propertiesLoad": "Nie udało się wczytać usług. Spróbuj ponownie albo połącz konto ponownie.",
+        "reconnect": "Połącz ponownie konto Google, aby zmienić jego usługę.",
+        "selectionUnavailable": "Wybór usługi jest niedostępny."
+      },
+      "name": "Search Console",
+      "notConfigured": {
+        "after": "aby dowiedzieć się, jak je utworzyć.",
+        "before": "OAuth dla Search Console nie jest skonfigurowany w tej instancji. Ustaw",
+        "guide": "przewodnik konfiguracji",
+        "guideBefore": "Zobacz",
+        "message": "OAuth dla Search Console nie jest skonfigurowany w tej instancji. Ustaw <clientId>GOOGLE_CLIENT_ID</clientId> i <clientSecret>GOOGLE_CLIENT_SECRET</clientSecret>. Zobacz <guide>przewodnik konfiguracji</guide>, aby dowiedzieć się, jak je utworzyć."
+      },
+      "status": {
+        "connected": "Połączono",
+        "ready": "Gotowe do połączenia"
+      }
+    },
+    "steps": {
+      "firstCheck": {
+        "description": "Uruchom je i otwórz pulpit",
+        "title": "Pierwsze sprawdzenie"
+      },
+      "keywords": {
+        "description": "Słowa kluczowe i domyślne ustawienia monitorowania",
+        "title": "Słowa kluczowe"
+      },
+      "provider": {
+        "description": "Dostawca SERP i statystyki wyszukiwania",
+        "title": "Dostawca"
+      },
+      "website": {
+        "description": "Nazwa i domena",
+        "title": "Witryna"
+      }
+    },
+    "stepper": {
+      "completed": "{title}, ukończono",
+      "steps": "Kroki konfiguracji",
+      "progress": "Postęp konfiguracji",
+      "stepCount": "Krok {currentStep, number} z {totalSteps, number}"
+    },
+    "video": {
+      "fallbackTitle": "Konfiguracja",
+      "watchProviderSetup": "Obejrzyj konfigurację dostawcy",
+      "watchSetup": "Obejrzyj film o konfiguracji"
+    },
+    "tracking": {
+      "bothDevices": "Komputer, Telefon",
+      "depth": "Głębokość SERP",
+      "depthHelp": "Sprawdza pierwsze {depth, number} wyników. Dalsze pozycje są raportowane jako nieznalezione i nie uruchamiają alertów. {visibilityDepth, plural, =0 {} one {Wybierz Top # lub głębiej, aby aktualizować widoczność.} few {Wybierz Top # lub głębiej, aby aktualizować widoczność.} many {Wybierz Top # lub głębiej, aby aktualizować widoczność.} other {Wybierz Top # lub głębiej, aby aktualizować widoczność.}}",
+      "depthOption": "Top {depth, number}",
+      "description": "Stosowane do tych słów kluczowych. Każde słowo kluczowe zmienisz później.",
+      "devices": "Urządzenia",
+      "frequency": "Częstotliwość",
+      "moreChecks": "Więcej lokalizacji lub urządzeń to więcej sprawdzeń u dostawcy.",
+      "title": "Domyślne ustawienia monitorowania"
+    },
+    "website": {
+      "checking": "Sprawdzanie witryny…",
+      "description": "Podaj witrynę, którą chcesz śledzić.",
+      "errors": {
+        "invalid": "Podaj witrynę w formacie example.com.",
+        "required": "Podaj swoją witrynę.",
+        "tooLong": "Podaj krótszy adres URL witryny.",
+        "updateUnavailable": "Zmiana witryny jest niedostępna. Spróbuj ponownie."
+      },
+      "label": "Twoja witryna",
+      "matchingHint": "www i każda subdomena Twojej domeny liczą się jako Twoje – dopasowanie jest dziś stałe, sterowanie zakresem jest w planach.",
+      "placeholder": "https://example.com",
+      "projectName": "Nazwa projektu: {name}",
+      "projectNameFallback": "Jako nazwy projektu użyjemy adresu witryny.",
+      "saving": "Zapisywanie projektu…",
+      "trackingStarted": "Śledzenie domeny {domain} od {date}",
+      "trackingStartedDescription": "Ta witryna ma już sprawdzenia pozycji. Aby śledzić inną witrynę, utwórz nowy projekt.",
+      "title": "Witryna"
+    }
+  }
+}

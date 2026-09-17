@@ -2,19 +2,16 @@
 
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
-import { type SerpDepth, type SerpDevice, serpDeviceOptions } from "@/lib/serp/constants";
+import { type SerpDepth, type SerpDevice, serpDeviceValues } from "@/lib/serp/constants";
 import { FIELD_HELP } from "@/lib/settings/field-help";
 import { frequencyOptions, type RankCheckFrequency } from "@/lib/settings/options";
+import { useTranslations } from "next-intl";
 import { OnboardingMarketDefinition } from "./OnboardingMarketDefinition";
 import type { CreateOnboardingMarketAction } from "./onboarding-market-actions";
 import { deviceSummary, MenuField, SerpDepthField } from "./StepScheduleFields";
 
 const selectTriggerClass =
   "min-h-0 min-w-0 justify-end border-0 bg-transparent px-0 text-right text-sm hover:border-transparent focus-visible:border-transparent";
-const deviceOptions = serpDeviceOptions.map((option) => ({
-  label: option.label,
-  value: option.value,
-}));
 const refreshOptions = frequencyOptions
   .filter((option) => option.value !== "custom_cron")
   .map((option) => ({ label: option.label, value: option.value }));
@@ -46,12 +43,16 @@ export function TrackingDefaultsFields({
   projectId,
   serpDepth,
 }: Readonly<TrackingDefaultsFieldsProps>) {
+  const t = useTranslations("onboarding.tracking");
+  const deviceNames = useTranslations("shared.markets");
+  const deviceOptions = serpDeviceValues.map((device) => ({
+    label: deviceNames(device),
+    value: device,
+  }));
   return (
     <section className="mt-6 border-border border-t pt-5" data-analytics-mask>
-      <h3 className="m-0 text-[15px] font-semibold text-fg">Tracking defaults</h3>
-      <p className="m-0 mt-1 text-[12.5px] text-fg-muted">
-        Applied to these keywords. You can change each keyword later.
-      </p>
+      <h3 className="m-0 text-[15px] font-semibold text-fg">{t("title")}</h3>
+      <p className="m-0 mt-1 text-[12.5px] text-fg-muted">{t("description")}</p>
       <div className="mt-4 max-w-[560px]">
         <OnboardingMarketDefinition
           createMarketAction={createMarketAction}
@@ -62,13 +63,13 @@ export function TrackingDefaultsFields({
           values={locations}
         />
         <div className="mt-3 grid items-start gap-3 sm:grid-cols-2">
-          <MenuField help={FIELD_HELP.device} label="Devices">
+          <MenuField help={FIELD_HELP.device} label={t("devices")}>
             <MenuMultiSelect
               analytics={{ control: "onboarding.tracking_devices" }}
-              ariaLabel="Devices"
+              ariaLabel={t("devices")}
               onChange={(values) => onDevicesChange(values as SerpDevice[])}
               options={deviceOptions}
-              summary={deviceSummary}
+              summary={(selected) => deviceSummary(selected, t)}
               triggerClassName={selectTriggerClass}
               values={devices}
             />
@@ -79,10 +80,10 @@ export function TrackingDefaultsFields({
             onChange={onDepthChange}
             triggerClassName={selectTriggerClass}
           />
-          <MenuField help={FIELD_HELP.frequency} label="Frequency">
+          <MenuField help={FIELD_HELP.frequency} label={t("frequency")}>
             <MenuSelect
               analytics={{ control: "onboarding.tracking_frequency" }}
-              ariaLabel="Frequency"
+              ariaLabel={t("frequency")}
               onChange={(value) => onFrequencyChange(value as RankCheckFrequency)}
               options={refreshOptions}
               triggerClassName={selectTriggerClass}
@@ -91,9 +92,7 @@ export function TrackingDefaultsFields({
           </MenuField>
         </div>
       </div>
-      <p className="m-0 mt-3 text-[11.5px] text-fg-muted">
-        More locations or devices create more provider checks.
-      </p>
+      <p className="m-0 mt-3 text-[11.5px] text-fg-muted">{t("moreChecks")}</p>
       {errors?.devices ? (
         <p className="m-0 mt-2 text-[12px] text-red-text">{errors.devices}</p>
       ) : null}

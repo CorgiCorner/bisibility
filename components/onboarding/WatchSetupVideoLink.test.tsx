@@ -1,6 +1,7 @@
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { track } from "@/lib/analytics/client";
 import { SETUP_VIDEO_MANIFEST } from "@/lib/getting-started/video-manifest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { WatchSetupVideoLink } from "./WatchSetupVideoLink";

@@ -4,7 +4,7 @@ import {
   FIRST_LOOK_WINDOW,
   incidentsOverlapping,
   KNOWN_DATA_INCIDENTS,
-  positionBandLabel,
+  positionBandRange,
   SEARCH_ANALYTICS_ROW_LIMIT,
   WINDOW_PRESETS,
   YEAR_OVER_YEAR_COMPARISON,
@@ -42,7 +42,7 @@ describe("window presets", () => {
 
 describe("thresholds", () => {
   it("labels the opportunity band numerically", () => {
-    expect(positionBandLabel()).toBe("positions 4-20");
+    expect(positionBandRange()).toBe("4-20");
   });
 });
 

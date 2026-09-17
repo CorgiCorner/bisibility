@@ -25,7 +25,7 @@ import {
   providerAuthMode,
   providerCredentialFields,
   providerMode,
-  testSuccessCopy,
+  testSuccessPresentation,
 } from "@/components/integrations/provider-auth";
 import {
   credentialFieldsSignature,
@@ -41,6 +41,7 @@ import type {
 } from "@/lib/integrations/types";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -55,6 +56,16 @@ export type ConnectDrawerProps = {
   searchSyncPlan?: SearchSyncPreflightPlan;
 };
 
+function drawerNoticeCopy(t: ReturnType<typeof useTranslations>) {
+  return {
+    appUpdateRequired: t("appUpdateRequired"),
+    connectionTestFailed: t("connectionTestFailed"),
+    connectionTestPassed: t("connectionTestPassed"),
+    providerActionFailed: t("providerActionFailed"),
+    providerActionFailedMessage: t("providerActionFailedMessage"),
+  };
+}
+
 export function ConnectDrawer({
   actions,
   deploymentMode = "self-host",
@@ -65,11 +76,31 @@ export function ConnectDrawer({
   provider,
   searchSyncPlan,
 }: Readonly<ConnectDrawerProps>) {
+  const t = useTranslations("projectIntegrations.drawer");
   const [notice, setNotice] = useState<Notice | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [testedCredentialSignature, setTestedCredentialSignature] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<ProviderTestResult | null>(null);
   const [testState, setTestState] = useState<"idle" | "ok" | "testing">("idle");
+  const successPresentation = testSuccessPresentation(provider.id, testResult);
+  const successMessage =
+    successPresentation.kind === "verified"
+      ? t("connectionVerified")
+      : successPresentation.kind === "application_connection"
+        ? t("connectionVerifiedWithDetail", { detail: successPresentation.message ?? "" })
+        : (successPresentation.message ?? "");
+  const testSuccessMessage =
+    successPresentation.balance?.kind === "currency"
+      ? t("testResultBalance", {
+          balance: successPresentation.balance.value,
+          message: successMessage,
+        })
+      : successPresentation.balance?.kind === "searches"
+        ? t("testResultSearches", {
+            count: successPresentation.balance.value,
+            message: successMessage,
+          })
+        : successMessage;
   const { readOnly } = useProjectWriteMode();
   const formId = `connect-${provider.id}`;
   const mode = providerMode(provider);
@@ -121,7 +152,7 @@ export function ConnectDrawer({
     try {
       setNotice(await work());
     } catch (error) {
-      setNotice(providerActionErrorNotice(error));
+      setNotice(providerActionErrorNotice(error, drawerNoticeCopy(t)));
     } finally {
       setPendingAction(null);
     }
@@ -131,9 +162,9 @@ export function ConnectDrawer({
     runAction("save", async () => {
       if (saveDisabled) {
         return {
-          message: "Test connection before saving.",
+          message: t("testRequiredMessage"),
           ok: false,
-          title: "Connection test required",
+          title: t("testRequiredTitle"),
         };
       }
       await activeActions.connectProvider(connectInput(values));
@@ -167,17 +198,17 @@ export function ConnectDrawer({
             return;
           }
           setTestedCredentialSignature(null);
-          setNotice(testNotice(result));
+          setNotice(testNotice(result, drawerNoticeCopy(t)));
           setTestState("idle");
         } catch (error) {
           setTestedCredentialSignature(null);
-          setNotice(providerActionErrorNotice(error));
+          setNotice(providerActionErrorNotice(error, drawerNoticeCopy(t)));
           setTestState("idle");
         } finally {
           setPendingAction(null);
         }
       })()
-      .catch((error) => setNotice(providerActionErrorNotice(error)));
+      .catch((error) => setNotice(providerActionErrorNotice(error, drawerNoticeCopy(t))));
   }
 
   const footer =
@@ -197,8 +228,10 @@ export function ConnectDrawer({
 
   const titleCopy =
     authMode === "oauth"
-      ? `Sign in with Google, read-only. Tokens are stored encrypted in your ${deploymentMode === "cloud" ? "workspace" : "instance"}.`
-      : "Use your own provider account. Credentials are stored encrypted in your instance.";
+      ? deploymentMode === "cloud"
+        ? t("oauthTitleCloud")
+        : t("oauthTitleSelfHost")
+      : t("keyTitle");
 
   const title = (
     <span className="block">
@@ -234,7 +267,7 @@ export function ConnectDrawer({
           </>
         )}
         {requiresSuccessfulTest && hasCurrentSuccessfulTest && testState === "ok" ? (
-          <ConnectionOkBanner message={testSuccessCopy(provider.id, testResult)} />
+          <ConnectionOkBanner message={testSuccessMessage} />
         ) : null}
         {provider.kind === "serp" && provider.drawer.rates ? (
           <ProviderRates

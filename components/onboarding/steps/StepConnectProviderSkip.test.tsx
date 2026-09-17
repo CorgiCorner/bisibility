@@ -1,5 +1,6 @@
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { track } from "@/lib/analytics/client";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StepConnectProviderSkip } from "./StepConnectProviderSkip";

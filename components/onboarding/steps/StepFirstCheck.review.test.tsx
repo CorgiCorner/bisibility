@@ -34,7 +34,7 @@ describe("StepFirstCheck", () => {
 
     expect(screen.getByText("First check")).toBeInTheDocument();
     expect(
-      screen.getByText("Your daily schedule is set. You can also run a sample check now."),
+      screen.getByText("Your schedule is set to Daily. You can also run a sample check now."),
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText("Tracking: 3 keywords · Google · United States (English) · 2 devices"),

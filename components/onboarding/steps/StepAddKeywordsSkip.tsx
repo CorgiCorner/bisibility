@@ -5,6 +5,7 @@ import {
   type OnboardingFlowState,
 } from "@/components/onboarding/onboarding-fixtures";
 import { track } from "@/lib/analytics/client";
+import { useTranslations } from "next-intl";
 import { OnboardingStepSkip } from "./OnboardingStepSkip";
 
 type StepAddKeywordsSkipProps = {
@@ -13,6 +14,7 @@ type StepAddKeywordsSkipProps = {
 };
 
 export function StepAddKeywordsSkip({ flowState, onSkip }: Readonly<StepAddKeywordsSkipProps>) {
+  const t = useTranslations("onboarding.keywords");
   const skipHref = buildOnboardingStepHref(4, flowState);
   function recordSkip() {
     track("onboarding_step_skipped", { reason: null, step: "add_keywords" });
@@ -20,7 +22,7 @@ export function StepAddKeywordsSkip({ flowState, onSkip }: Readonly<StepAddKeywo
 
   return (
     <OnboardingStepSkip
-      ariaLabel="Skip adding keywords and open first check"
+      ariaLabel={t("skip")}
       className="shrink-0"
       {...(onSkip
         ? {
@@ -31,7 +33,7 @@ export function StepAddKeywordsSkip({ flowState, onSkip }: Readonly<StepAddKeywo
           }
         : { href: skipHref, onClick: recordSkip })}
     >
-      Skip for now
+      {t("skipLabel")}
     </OnboardingStepSkip>
   );
 }

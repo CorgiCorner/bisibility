@@ -1,13 +1,34 @@
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import {
+  renderWithOnboardingMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type { NewMarketCreateInput } from "@/lib/markets/create-input";
 import { KEYWORD_IMPORT_LIMIT_MESSAGE } from "@/lib/schemas/keyword";
 import { MARKETING_URL } from "@/lib/site/site";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import onboardingMessages from "@/messages/core/en/onboarding.json";
+import sharedMessages from "@/messages/core/en/shared.json";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import type { AddKeywordsForm, AddKeywordsInput } from "./StepAddKeywords";
 import { StepAddKeywords } from "./StepAddKeywords";
+
+const polishKeywordMessages = mergeMessageCatalogs(sharedMessages, {
+  onboarding: {
+    ...onboardingMessages.onboarding,
+    keywords: {
+      ...onboardingMessages.onboarding.keywords,
+      empty: "Dodaj co najmniej jedno slowo kluczowe.",
+      limit: "Dodaj najwyzej {maximum, number} slow kluczowych na import.",
+      marketRequired: "Dodaj co najmniej jeden rynek, aby kontynuowac.",
+      tooLong:
+        "{count, plural, one {# wiersz przekracza} other {# wiersze przekraczaja}} limit {maximum, number} znakow.",
+    },
+  },
+});
 
 function keywordBox() {
   return screen.getByPlaceholderText("One keyword per line");
@@ -208,6 +229,30 @@ describe("StepAddKeywords", () => {
     expect(keywordBox()).toHaveAttribute("required");
     expect(addKeywordsAction).not.toHaveBeenCalled();
     expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it("uses the feature locale for keyword and market validation", async () => {
+    renderWithFeatureMessages(
+      <>
+        <StepAddKeywords flowState={{ projectId: "prj_1" }} />
+        <button form="onboarding-step-form" type="submit">
+          Continue
+        </button>
+      </>,
+      { locale: "pl", messages: polishKeywordMessages },
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByText("Dodaj co najmniej jedno slowo kluczowe.")).toBeInTheDocument();
+    expect(screen.queryByText("Add at least one keyword.")).not.toBeInTheDocument();
+
+    fireEvent.change(keywordBox(), { target: { value: "rank tracker" } });
+    fireEvent.click(screen.getByRole("button", { name: "Remove United States / English" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(
+      await screen.findByText("Dodaj co najmniej jeden rynek, aby kontynuowac."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Add at least one market to continue.")).not.toBeInTheDocument();
   });
 
   it("shows the long-line limit warning exactly once, before and after submit", () => {

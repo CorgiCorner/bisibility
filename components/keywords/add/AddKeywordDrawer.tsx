@@ -11,11 +11,13 @@ import {
   parseCsvKeywordsResult,
   parseKeywordLines,
 } from "@/lib/keywords/add-keyword-drawer-shared";
+import type { CsvParseErrorCode } from "@/lib/keywords/import-csv-parser";
 import { DEFAULT_SERP_DEVICE, type SerpDevice } from "@/lib/serp/constants";
+import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { buildDrawerCsvKeywordRowsForTracking } from "./AddKeywordCsvRows";
-import { type AddKeywordDrawerProps, addKeywordDrawerCtaLabel } from "./AddKeywordDrawerExtensions";
+import type { AddKeywordDrawerProps } from "./AddKeywordDrawerExtensions";
 import { AddKeywordDrawerFeedback } from "./AddKeywordDrawerFeedback";
 import { AddKeywordDrawerFooter } from "./AddKeywordDrawerFooter";
 import { drawerFormDefaults } from "./AddKeywordDrawerFormDefaults";
@@ -29,6 +31,19 @@ import { useAddKeywordDrawerSave } from "./useAddKeywordDrawerSave";
 import { useKeywordSuggestionSources } from "./useKeywordSuggestionSources";
 
 type MatrixSelection = { devices: SerpDevice[]; locationKeys: string[] };
+
+function csvParseErrorMessage(
+  code: CsvParseErrorCode,
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordImport.management.add">>,
+) {
+  const keys = {
+    invalid_encoding: "csvInvalidEncoding",
+    malformed_csv: "csvMalformed",
+    missing_required_column: "csvMissingKeywordColumn",
+    unsupported_delimiter: "csvUnsupportedDelimiter",
+  } as const;
+  return t(keys[code]);
+}
 
 export function AddKeywordDrawer({
   addKeywordsAction,
@@ -52,6 +67,7 @@ export function AddKeywordDrawer({
   projectMarkets,
   tagSuggestions = [],
 }: AddKeywordDrawerProps) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
   const suggestionSources = useKeywordSuggestionSources(projectId);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
@@ -101,7 +117,7 @@ export function AddKeywordDrawer({
   const targetUrl = watch("targetUrl");
   const parsedKeywords = useMemo(() => parseKeywordLines(keywordsValue ?? ""), [keywordsValue]);
   const csvParseResult = useMemo(() => parseCsvKeywordsResult(csvText), [csvText]);
-  const csvParseError = csvParseResult.error;
+  const csvParseError = csvParseResult.error ? csvParseErrorMessage(csvParseResult.error, t) : null;
   const csvRows = useMemo(
     () =>
       buildDrawerCsvKeywordRowsForTracking(csvText, {
@@ -128,7 +144,8 @@ export function AddKeywordDrawer({
       (matrixSelection.locationKeys.length === 0 || matrixSelection.devices.length === 0)) ||
     hasCsvRowErrors ||
     Boolean(activeTab === "csv" && csvParseError);
-  const ctaLabel = addKeywordDrawerCtaLabel(activeTab, csvReviewOpen, false);
+  const ctaLabel =
+    activeTab === "csv" ? (csvReviewOpen ? t("confirm") : t("reviewKeywords")) : t("addKeywords");
 
   const handleMatrixChange = useCallback((next: MatrixSelection) => setMatrixSelection(next), []);
 

@@ -7,7 +7,9 @@ import {
 
 describe("DomainOverviewLoadingSkeletons", () => {
   it("mirrors the common route page with analyze and idle panel geometry", () => {
-    const { container } = render(<DomainOverviewPageLoading />);
+    const { container } = render(
+      <DomainOverviewPageLoading ariaLabel="Domain Overview page loading" />,
+    );
     const route = screen.getByLabelText("Domain Overview page loading");
     const analyzeCard = route.querySelector('[data-skeleton="analyze-card"]');
     const target = route.querySelector('[data-skeleton="target-control"]');
@@ -59,7 +61,9 @@ describe("DomainOverviewLoadingSkeletons", () => {
   });
 
   it("keeps the complete results hierarchy and busy region", () => {
-    const { container } = render(<DomainOverviewResultsLoading />);
+    const { container } = render(
+      <DomainOverviewResultsLoading ariaLabel="Domain Overview loading" />,
+    );
 
     expect(screen.getByLabelText("Domain Overview loading")).toHaveAttribute("aria-busy", "true");
     expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(30);

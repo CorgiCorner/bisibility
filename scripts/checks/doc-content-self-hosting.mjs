@@ -23,6 +23,8 @@ export function checkSelfHostingContract(root, docsRoot) {
     "self-hosting/railway.mdx",
     "self-hosting/temporal.mdx",
     "self-hosting/configuration.mdx",
+    "self-hosting/google-oauth.mdx",
+    "self-hosting/legacy-upgrades.mdx",
     "self-hosting/email.mdx",
     "self-hosting/security.mdx",
     "self-hosting/backup-restore.mdx",
@@ -210,10 +212,19 @@ function checkUpgradesContract(selfHostingPages) {
     "INTERNAL_PROBE_TOKEN",
     "prisma migrate status",
     "Never enable demo OTP",
+    "verify.mjs",
+    "manifest.mjs",
+    "versioned distribution manifest",
   ]) {
     if (!upgrades.includes(term)) {
       failures.push(`self-hosting/upgrades.mdx is missing required coverage: ${term}`);
     }
+  }
+
+  if (upgrades.includes("signed distribution")) {
+    failures.push(
+      "self-hosting/upgrades.mdx must not call the distribution manifest signed; it is versioned and checksummed.",
+    );
   }
 
   if (/`\/api\/v1\/readiness`[^.]*public liveness check/s.test(upgrades)) {

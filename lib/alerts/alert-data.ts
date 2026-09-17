@@ -53,6 +53,43 @@ export type TriggeredAlertView = {
   when: string;
 };
 
+/**
+ * Data consumed by the localized project alert feed. This deliberately avoids
+ * the durable notification payload strings used by email, webhooks, and the
+ * REST resource. The client presentation adapter owns human-readable copy.
+ */
+export type TriggeredAlertFeedView = {
+  afterPosition: number | null;
+  beforePosition: number | null;
+  condition: {
+    changePct: number | null;
+    competitorDomain: string | null;
+    dropPositions: number | null;
+    serpFeature: string | null;
+    thresholdPosition: number | null;
+    topN: number | null;
+  };
+  conditionType: AlertConditionTypeInput;
+  deliveryAttempts: {
+    attemptedAt: string;
+    channel: AlertChannelInput;
+    error: string | null;
+    status: string;
+    webhookEndpoint: { id: string; label: string } | null;
+  }[];
+  deliveryState: AlertDeliveryStateView;
+  device: Device;
+  feedMeta?: FeedRowMetadata;
+  firedAt: string;
+  id: string;
+  keyword: string | null;
+  rankingUrl?: string | null;
+  rule: string;
+  severity: AlertSeverity;
+  targetUrl?: string | null;
+  unread: boolean;
+};
+
 export type AlertTemplate = {
   id: string;
   label: string;
@@ -85,23 +122,21 @@ export type WebhookEndpointView = {
 };
 
 export type AlertRuleView = {
-  channel: string;
   channels: AlertChannelInput[];
   changePct: number | null;
-  condition: string;
   conditionType: AlertConditionTypeInput;
   competitorDomain: string | null;
   dropPositions: number | null;
   depthConflict?: { threshold: number; trackedDepth: number } | null;
   enabled: boolean;
-  fires: string;
+  firedThisWeek: number;
   id: string;
   marketIds: string[];
-  marketScope?: string;
+  marketScope?: { count: number; label?: string };
   name: string;
-  period: string;
+  period: "ctr_baseline" | "each_check";
   recipientIds: string[];
-  scope: string;
+  scope: { labels: string[]; targetType: AlertTargetTypeInput };
   serpFeature: string | null;
   severity: AlertSeverity;
   status: AlertRuleStatus;

@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StepAddKeywords } from "./StepAddKeywords";
 import type { OnboardingTrackingDefaultsInput } from "./step-schedule-model";
@@ -48,8 +49,8 @@ describe("StepAddKeywords schedule summary", () => {
       target: { value: Array.from({ length: 450 }, (_, index) => `keyword ${index}`).join("\n") },
     });
     expect(screen.getByText("approaching the 500-keyword import limit")).toBeInTheDocument();
-    expect(screen.getByText("Up to 3600 result pages per run · 2 markets")).toBeInTheDocument();
-    expect(screen.getByText("≈ 108000 result pages/month at Top 20")).toBeInTheDocument();
+    expect(screen.getByText("Up to 3,600 result pages per run · 2 markets")).toBeInTheDocument();
+    expect(screen.getByText("≈ 108,000 result pages/month at Top 20")).toBeInTheDocument();
   });
 
   it("projects weekly result pages from the tracking draft", () => {

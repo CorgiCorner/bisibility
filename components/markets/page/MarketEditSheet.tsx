@@ -7,9 +7,10 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
 import {
   type ProjectMarketEditInput,
-  projectMarketEditSchema,
+  projectMarketEditSchemaFor,
 } from "@/lib/markets/project-market-edit";
 import { actionErrorMessage } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -20,12 +21,6 @@ type MarketEditSheetProps = {
   onSave: (input: ProjectMarketEditInput) => Promise<void>;
   projectId: string;
 };
-
-const deviceOptions = [
-  { label: "Desktop", value: "desktop" },
-  { label: "Mobile", value: "mobile" },
-  { label: "Both", value: "both" },
-];
 
 function selectedDevice(devices: readonly string[]) {
   if (devices.length === 2) return "both";
@@ -39,6 +34,7 @@ export function MarketEditSheet({
   onSave,
   projectId,
 }: Readonly<MarketEditSheetProps>) {
+  const t = useTranslations("projectMarkets");
   const [error, setError] = useState<string | null>(null);
   const values = {
     futureKeywordDevices: market?.futureKeywordDevices ?? ["desktop", "mobile"],
@@ -47,7 +43,12 @@ export function MarketEditSheet({
     projectId,
   } satisfies ProjectMarketEditInput;
   const form = useForm<ProjectMarketEditInput>({
-    resolver: zodResolver(projectMarketEditSchema),
+    resolver: zodResolver(
+      projectMarketEditSchemaFor({
+        nameRequired: t("marketNameRequired"),
+        nameTooLong: t("marketNameTooLong"),
+      }),
+    ),
     values,
   });
   const futureKeywordDevices = form.watch("futureKeywordDevices");
@@ -59,7 +60,7 @@ export function MarketEditSheet({
       await onSave(input);
       onClose();
     } catch (cause) {
-      setError(actionErrorMessage(cause, "Market could not be updated."));
+      setError(actionErrorMessage(cause, t("updateMarketFailed")));
     }
   }
 
@@ -73,7 +74,7 @@ export function MarketEditSheet({
             size="sm"
             variant="ghost"
           >
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             form="market-edit-form"
@@ -81,19 +82,19 @@ export function MarketEditSheet({
             size="sm"
             type="submit"
           >
-            Save changes
+            {t("save")}
           </Button>
         </div>
       }
       onClose={onClose}
       open={market !== null}
-      title={market ? `Edit ${market.name}` : "Edit market"}
+      title={t("editTitle", { market: market?.name ?? t("market") })}
     >
       <form className="grid gap-5" id="market-edit-form" onSubmit={form.handleSubmit(submit)}>
         <input type="hidden" {...form.register("projectId")} />
         <input type="hidden" {...form.register("marketId")} />
         <label className="grid gap-1.5">
-          <span className="text-[12px] font-medium text-fg">Market name</span>
+          <span className="text-[12px] font-medium text-fg">{t("marketName")}</span>
           <input
             aria-invalid={Boolean(form.formState.errors.name)}
             className="h-10 rounded-control border border-border-control bg-bg-elev px-3 text-[13px] text-fg outline-none focus:border-accent disabled:bg-bg-sunken"
@@ -105,9 +106,9 @@ export function MarketEditSheet({
           ) : null}
         </label>
         <div className="grid gap-1.5">
-          <span className="text-[12px] font-medium text-fg">Defaults for future keywords</span>
+          <span className="text-[12px] font-medium text-fg">{t("defaultsForFutureKeywords")}</span>
           <MenuSelect
-            ariaLabel="Default devices for future keywords"
+            ariaLabel={t("defaultDevices")}
             disabled={!canEdit}
             onChange={(value) =>
               form.setValue(
@@ -119,19 +120,26 @@ export function MarketEditSheet({
                 },
               )
             }
-            options={deviceOptions}
+            options={[
+              { label: t("desktop"), value: "desktop" },
+              { label: t("mobile"), value: "mobile" },
+              { label: t("both"), value: "both" },
+            ]}
             size="input"
             value={selectedDevice(futureKeywordDevices)}
           />
           <span className="text-[12px] leading-[1.45] text-fg-muted">
-            These defaults apply only to future keywords.
+            {t("futureKeywordsHint")}
           </span>
         </div>
         <div className="rounded-control border border-border bg-bg-sunken px-3 py-3">
-          <p className="m-0 text-[12px] font-medium text-fg">Location and language</p>
+          <p className="m-0 text-[12px] font-medium text-fg">{t("locationAndLanguage")}</p>
           <p className="m-0 mt-1 text-[12px] leading-[1.45] text-fg-muted">
-            {market ? `${market.displayName} / ${market.languageLabel}` : ""} cannot be changed
-            after creation.
+            {market
+              ? t("locationAndLanguageFixed", {
+                  market: `${market.displayName} / ${market.languageLabel}`,
+                })
+              : null}
           </p>
         </div>
         {error ? <p className="m-0 text-[12px] text-red-text">{error}</p> : null}

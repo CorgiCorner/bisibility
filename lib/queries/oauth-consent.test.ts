@@ -1,8 +1,6 @@
 import {
-  OAUTH_ACCESS_TOKEN_TTL_LABEL,
   OAUTH_ACCESS_TOKEN_TTL_SECONDS,
   OAUTH_AUTHORIZATION_TTL_SECONDS,
-  OAUTH_REFRESH_TOKEN_TTL_LABEL,
   OAUTH_REFRESH_TOKEN_TTL_SECONDS,
 } from "@/lib/auth/oauth-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -75,7 +73,5 @@ describe("OAuth consent policy", () => {
     expect(OAUTH_AUTHORIZATION_TTL_SECONDS).toBe(300);
     expect(OAUTH_ACCESS_TOKEN_TTL_SECONDS).toBe(3_600);
     expect(OAUTH_REFRESH_TOKEN_TTL_SECONDS).toBe(2_592_000);
-    expect(OAUTH_ACCESS_TOKEN_TTL_LABEL).toBe("1 hour");
-    expect(OAUTH_REFRESH_TOKEN_TTL_LABEL).toBe("30 days");
   });
 });

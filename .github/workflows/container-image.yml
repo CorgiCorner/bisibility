@@ -415,6 +415,8 @@ jobs:
           cp .env.example "$RUNNER_TEMP/release-assets/bisibility.env.example"
           cp scripts/self-host/generate-env.mjs "$RUNNER_TEMP/release-assets/generate-self-host-env.mjs"
           cp upgrade.sh "$RUNNER_TEMP/release-assets/"
+          cp scripts/distribution/verify.mjs "$RUNNER_TEMP/release-assets/verify.mjs"
+          cp scripts/distribution/manifest.mjs "$RUNNER_TEMP/release-assets/manifest.mjs"
           node scripts/distribution/verify.mjs \
             --manifest distribution-manifest.json \
             --artifacts-dir "$RUNNER_TEMP/release-assets" \
@@ -455,6 +457,8 @@ jobs:
           cp .env.example "$RUNNER_TEMP/release-assets/bisibility.env.example"
           cp scripts/self-host/generate-env.mjs "$RUNNER_TEMP/release-assets/generate-self-host-env.mjs"
           cp upgrade.sh "$RUNNER_TEMP/release-assets/"
+          cp scripts/distribution/verify.mjs "$RUNNER_TEMP/release-assets/verify.mjs"
+          cp scripts/distribution/manifest.mjs "$RUNNER_TEMP/release-assets/manifest.mjs"
           cp distribution-manifest.json "$RUNNER_TEMP/release-assets/"
 
       - name: Publish immutable release assets
@@ -473,6 +477,8 @@ jobs:
             bisibility.env.example
             generate-self-host-env.mjs
             upgrade.sh
+            verify.mjs
+            manifest.mjs
             distribution-manifest.json
           )
           if gh release view "$RELEASE_TAG" --json tagName,body > "$RUNNER_TEMP/published-release.json"; then
@@ -496,6 +502,8 @@ jobs:
             "$RUNNER_TEMP/release-assets/bisibility.env.example" \
             "$RUNNER_TEMP/release-assets/generate-self-host-env.mjs" \
             "$RUNNER_TEMP/release-assets/upgrade.sh" \
+            "$RUNNER_TEMP/release-assets/verify.mjs" \
+            "$RUNNER_TEMP/release-assets/manifest.mjs" \
             "$RUNNER_TEMP/release-assets/distribution-manifest.json" \
             --verify-tag \
             --notes-file "$RUNNER_TEMP/release-notes.md" \

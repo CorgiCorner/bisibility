@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithInstanceAdminMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -45,7 +46,7 @@ describe("AdminAccountActions", () => {
     const onStatusChange = vi.fn();
     mocks.changeState.mockResolvedValue({
       accountStatus: "deactivated",
-      message: "Account deactivated.",
+      message: "untrusted server English",
       status: "completed",
     });
     render(<AdminAccountActions onStatusChange={onStatusChange} status="active" userId="user_1" />);
@@ -57,7 +58,10 @@ describe("AdminAccountActions", () => {
       expect(mocks.changeState).toHaveBeenCalledWith({ deactivated: true, userId: "user_1" }),
     );
     expect(onStatusChange).toHaveBeenCalledWith("deactivated");
-    expect(mocks.showToast).toHaveBeenCalledWith("Account deactivated.", { severity: "success" });
+    expect(mocks.showToast).toHaveBeenCalledWith(
+      "Account deactivated. Sessions and personal access tokens were revoked; scheduled checks pause on reconciliation.",
+      { severity: "success" },
+    );
   });
 
   it("renders the reactivation path for a deactivated account", () => {
@@ -70,7 +74,7 @@ describe("AdminAccountActions", () => {
   it("confirms the reset and preserves the rolling-spend message", async () => {
     mocks.resetLimits.mockResolvedValue({
       clearedBuckets: 2,
-      message: "Rate limits reset; monthly spend is a rolling window and cannot be reset",
+      message: "untrusted server English",
       status: "completed",
     });
     render(<AdminAccountActions onStatusChange={vi.fn()} status="active" userId="user_1" />);

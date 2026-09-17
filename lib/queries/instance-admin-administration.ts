@@ -6,6 +6,7 @@ import { isEmailConfigured } from "@/lib/email/registry";
 import {
   aggregateProviderReferenceUsage,
   type ReferenceUsageGroup,
+  type ReferenceUsageRateBasis,
 } from "@/lib/rank-check/reference-usage";
 import { notFound } from "next/navigation";
 
@@ -27,7 +28,7 @@ export type TopProjectConsumption = {
   projectId: string;
   provider: string;
   providerLabel: string;
-  rateBasis: string;
+  rateBasis: ReferenceUsageRateBasis;
   referenceCostCents: number;
   referenceCostKnown: boolean;
   sharePercent: number;

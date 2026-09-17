@@ -1,0 +1,51 @@
+import type { CoreFragmentLoaders } from "./contract";
+
+/** One static import per pl catalog fragment, so each namespace stays a separate chunk. */
+export const coreFragments: CoreFragmentLoaders = {
+  "account-preferences": () => import("@/messages/core/pl/account-preferences.json"),
+  account: () => import("@/messages/core/pl/account.json"),
+  auth: () => import("@/messages/core/pl/auth.json"),
+  "cloud-import": () => import("@/messages/core/pl/cloud-import.json"),
+  "email-preferences": () => import("@/messages/core/pl/email-preferences.json"),
+  "instance-admin": () => import("@/messages/core/pl/instance-admin.json"),
+  invite: () => import("@/messages/core/pl/invite.json"),
+  onboarding: () => import("@/messages/core/pl/onboarding.json"),
+  "project-alerts": () => import("@/messages/core/pl/project-alerts.json"),
+  "project-audit": () => import("@/messages/core/pl/project-audit.json"),
+  "project-backlinks": () => import("@/messages/core/pl/project-backlinks.json"),
+  "project-competitors": () => import("@/messages/core/pl/project-competitors.json"),
+  "project-cost-estimate": () => import("@/messages/core/pl/project-cost-estimate.json"),
+  "project-dashboard": () => import("@/messages/core/pl/project-dashboard.json"),
+  "project-domain-overview": () => import("@/messages/core/pl/project-domain-overview.json"),
+  "project-getting-started": () => import("@/messages/core/pl/project-getting-started.json"),
+  "project-install": () => import("@/messages/core/pl/project-install.json"),
+  "project-integrations": () => import("@/messages/core/pl/project-integrations.json"),
+  "project-markets": () => import("@/messages/core/pl/project-markets.json"),
+  "project-rank-tracker-keyword-detail": () =>
+    import("@/messages/core/pl/project-rank-tracker-keyword-detail.json"),
+  "project-rank-tracker-keyword-import": () =>
+    import("@/messages/core/pl/project-rank-tracker-keyword-import.json"),
+  "project-rank-tracker": () => import("@/messages/core/pl/project-rank-tracker.json"),
+  "project-research": () => import("@/messages/core/pl/project-research.json"),
+  "project-runs-rank-runs": () => import("@/messages/core/pl/project-runs-rank-runs.json"),
+  "project-runs-schedules": () => import("@/messages/core/pl/project-runs-schedules.json"),
+  "project-runs": () => import("@/messages/core/pl/project-runs.json"),
+  "project-search-insights": () => import("@/messages/core/pl/project-search-insights.json"),
+  "project-settings-advanced": () => import("@/messages/core/pl/project-settings-advanced.json"),
+  "project-settings-developers": () =>
+    import("@/messages/core/pl/project-settings-developers.json"),
+  "project-settings-experimental": () =>
+    import("@/messages/core/pl/project-settings-experimental.json"),
+  "project-settings-general": () => import("@/messages/core/pl/project-settings-general.json"),
+  "project-settings-migration": () => import("@/messages/core/pl/project-settings-migration.json"),
+  "project-settings-notifications": () =>
+    import("@/messages/core/pl/project-settings-notifications.json"),
+  "project-settings-shell": () => import("@/messages/core/pl/project-settings-shell.json"),
+  "project-settings-team": () => import("@/messages/core/pl/project-settings-team.json"),
+  "project-settings-tracking": () => import("@/messages/core/pl/project-settings-tracking.json"),
+  "project-settings-usage": () => import("@/messages/core/pl/project-settings-usage.json"),
+  "project-timeline": () => import("@/messages/core/pl/project-timeline.json"),
+  setup: () => import("@/messages/core/pl/setup.json"),
+  shared: () => import("@/messages/core/pl/shared.json"),
+  shell: () => import("@/messages/core/pl/shell.json"),
+};

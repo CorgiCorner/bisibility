@@ -1,11 +1,15 @@
 "use client";
 
 import { CountryLevelBadge } from "@/components/checks/runs/CheckRunDetails";
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Card } from "@/components/ui/Card";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
 import type { TrackedCompetitor } from "@/lib/competitors/serp-comparison";
-import { type DateFormat, formatDate, formatDateTime } from "@/lib/dates/format";
+import { formatDisplayDate, formatDisplayDateTime } from "@/lib/dates/format";
+import { calendarDayKey } from "@/lib/keywords/position-history";
+import { classifyActionError, presentActionError } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { RetrievedResultsCompare } from "./RetrievedResultsCompare";
 import { RetrievedResultsHeader } from "./RetrievedResultsHeader";
@@ -24,16 +28,6 @@ type CardProps = {
   timeZone: string;
 };
 
-function dateFormatter(timeZone: string, dateFormat: DateFormat) {
-  return {
-    date: (iso: string) => {
-      const key = formatDateTime(new Date(iso), "iso", timeZone).slice(0, 10);
-      return formatDate(key, dateFormat);
-    },
-    dateTime: (iso: string) => formatDateTime(new Date(iso), dateFormat, timeZone),
-  };
-}
-
 export function RetrievedResultsCard({
   competitors = [],
   ownDomain = "",
@@ -44,7 +38,9 @@ export function RetrievedResultsCard({
   retentionDays,
   timeZone,
 }: Readonly<CardProps>) {
-  const dateFormat = useDateFormat();
+  const t = useTranslations("projectRankTracker.keywordDetail.results");
+  const sharedErrors = useSharedErrorMessages();
+  const dateDisplay = useDateDisplay();
   const [mode, setMode] = useState<"one" | "compare">("one");
   const [selected, setSelected] = useState(entries[0]?.checkId ?? "");
   const [compareFrom, setCompareFrom] = useState(entries[1]?.checkId ?? "");
@@ -52,7 +48,11 @@ export function RetrievedResultsCard({
   const [loaded, setLoaded] = useState<Record<string, RetrievedResults>>(
     initialResults ? { [initialResults.checkId]: initialResults } : {},
   );
-  const format = dateFormatter(timeZone, dateFormat);
+  const format = {
+    date: (iso: string) =>
+      formatDisplayDate(calendarDayKey(new Date(iso), timeZone), { ...dateDisplay, timeZone }),
+    dateTime: (iso: string) => formatDisplayDateTime(new Date(iso), { ...dateDisplay, timeZone }),
+  };
   const compareEnabled = entries.filter((entry) => entry.tier !== "none").length >= 2;
   if (entries.length === 0) return null;
 
@@ -66,8 +66,13 @@ export function RetrievedResultsCard({
         ...Object.fromEntries(fetched.map((entry) => [entry.checkId, entry])),
       }));
       setError(null);
-    } catch {
-      setError("Stored results could not be loaded. Try again.");
+    } catch (error) {
+      const classified = classifyActionError(error);
+      setError(
+        classified.kind === "staleDeployment" || classified.kind === "serverComponentDigest"
+          ? presentActionError(error, sharedErrors, t("loadFailed"))
+          : t("loadFailed"),
+      );
     }
   }
 
@@ -102,14 +107,18 @@ export function RetrievedResultsCard({
       />
       {degraded ? (
         <div className="border-b border-border px-5 py-2">
-          <CountryLevelBadge />
+          <CountryLevelBadge
+            ariaLabel={t("countryLevelAria", { tooltip: t("countryLevelTooltip") })}
+            label={t("countryLevel")}
+            tooltip={t("countryLevelTooltip")}
+          />
         </div>
       ) : null}
       {mode === "compare" && earlier && current ? (
         <RetrievedResultsCompare
           competitors={competitors}
           from={earlier}
-          dateFormat={dateFormat}
+          formatDate={format.date}
           fullCheckDates={fullEntries.map((entry) => entry.checkedAt)}
           fullPair={
             fullEntries.length >= 2
@@ -147,7 +156,7 @@ export function RetrievedResultsCard({
         </p>
       ) : null}
       {!current && !error ? (
-        <p className="m-0 p-5 text-[12.5px] text-fg-muted">Loading stored results...</p>
+        <p className="m-0 p-5 text-[12.5px] text-fg-muted">{t("loading")}</p>
       ) : null}
     </Card>
   );

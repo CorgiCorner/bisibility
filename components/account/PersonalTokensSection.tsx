@@ -1,7 +1,6 @@
 "use client";
 
-import { ApiKeyRevealContent } from "@/components/settings/api-keys/ApiKeyReveal";
-import { apiKeyScopeLabel, apiKeyScopeOptions } from "@/components/settings/api-keys/api-key-model";
+import { ApiKeySecretReveal } from "@/components/settings/api-keys/ApiKeyReveal";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { ExpiryChoiceGroup } from "@/components/ui/ExpiryChoiceGroup";
@@ -10,34 +9,26 @@ import { Modal } from "@/components/ui/Modal";
 import type { DateFormatPreference } from "@/lib/format/user-datetime";
 import type { PersonalTokenData } from "@/lib/queries/personal-tokens";
 import type { IssuePersonalTokenInput } from "@/lib/schemas/personalToken";
-import { actionErrorMessage } from "@/lib/ui/action-error";
-import { cn } from "@/lib/ui/cn";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { UserGearIcon as UserGear } from "@phosphor-icons/react/dist/csr/UserGear";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { AccountSection } from "./AccountSection";
 import { PersonalTokenDateLabels } from "./PersonalTokenDateLabels";
+import { PersonalTokenScopeOptions } from "./PersonalTokenScopeOptions";
+import { personalTokenScopeValues } from "./personal-token-model";
+import { useAccountActionError } from "./useAccountActionError";
 
-export type IssuedPersonalToken = {
-  maskedValue: string;
-  name: string;
-  raw: string;
-};
+export type IssuedPersonalToken = { maskedValue: string; name: string; raw: string };
 export type PersonalTokensSectionProps = {
   dateFormat: DateFormatPreference;
   issueToken: (input: IssuePersonalTokenInput) => Promise<IssuedPersonalToken>;
   revokeToken: (input: { tokenId: string }) => Promise<unknown>;
   tokens: readonly PersonalTokenData[];
 };
-const expiryOptions = [
-  { days: 30, label: "30 days" },
-  { days: 90, label: "90 days" },
-  { days: 365, label: "1 year" },
-  { days: null, label: "No expiry" },
-] as const;
 const inputClass = `${inputClassName} mt-[7px] min-h-11 w-full rounded-control px-[13px] font-sans tabular-nums text-[13.5px] font-medium`;
 const labelClass = "font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 export function PersonalTokensSection({
@@ -47,6 +38,19 @@ export function PersonalTokensSection({
   tokens,
 }: Readonly<PersonalTokensSectionProps>) {
   const router = useRouter();
+  const t = useTranslations("account.security.personalTokens");
+  const accountErrors = useAccountActionError();
+  const expiryOptions = [
+    { days: 30, label: t("expiry.30") },
+    { days: 90, label: t("expiry.90") },
+    { days: 365, label: t("expiry.365") },
+    { days: null, label: t("expiry.never") },
+  ] as const;
+  const scopeOptions = personalTokenScopeValues.map((value) => ({
+    desc: t(`scope.${value}.description`),
+    label: t(`scope.${value}.label`),
+    value,
+  }));
   const [isPending, startTransition] = useTransition();
   const [revokePending, setRevokePending] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -68,15 +72,14 @@ export function PersonalTokensSection({
 
   function onCreate() {
     setMessage(null);
-    startTransition(() => {
-      void issueToken({ expiresInDays, name: name.trim(), scope })
-        .then((token) => {
-          setIssued(token);
-          router.refresh();
-        })
-        .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "Personal token could not be created.")),
-        );
+    startTransition(async () => {
+      try {
+        const token = await issueToken({ expiresInDays, name: name.trim(), scope });
+        setIssued(token);
+        router.refresh();
+      } catch (error: unknown) {
+        setMessage(accountErrors.generic(error, t("createError")));
+      }
     });
   }
 
@@ -86,10 +89,10 @@ export function PersonalTokensSection({
     try {
       await revokeToken({ tokenId });
       setRevokeTarget(null);
-      setMessage("Personal access token revoked.");
+      setMessage(t("revoked"));
       router.refresh();
     } catch (error: unknown) {
-      setMessage(actionErrorMessage(error, "Personal token could not be revoked."));
+      setMessage(accountErrors.generic(error, t("revokeError")));
       throw error;
     } finally {
       setRevokePending(false);
@@ -106,11 +109,11 @@ export function PersonalTokensSection({
           type="button"
           variant="secondary"
         >
-          Create token
+          {t("create")}
         </Button>
       }
-      description="Account-wide API tokens (bsb_pat_) that act as you across every project you belong to. Also issued by `bisibility auth login`."
-      title="Personal access tokens"
+      description={t("description")}
+      title={t("title")}
     >
       {tokens.length > 0 ? (
         <div className="divide-y divide-border rounded-control border border-border bg-bg-elev">
@@ -120,7 +123,7 @@ export function PersonalTokensSection({
                 <span className="block text-[13px] font-semibold">
                   {token.name}
                   <span className="ml-2 rounded-control border border-border px-1.5 py-0.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-                    {apiKeyScopeLabel(token.scope)}
+                    {t(`scope.${token.scope}.label`)}
                   </span>
                 </span>
                 <span className="mt-0.5 truncate">{token.maskedValue}</span>
@@ -129,7 +132,7 @@ export function PersonalTokensSection({
                 </span>
               </span>
               <button
-                aria-label={`Revoke ${token.name} token`}
+                aria-label={t("revokeAriaLabel", { name: token.name })}
                 className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control border border-border-control bg-bg-elev text-red-text hover:border-red disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
                 disabled={isPending}
                 onClick={() => setRevokeTarget(token)}
@@ -145,10 +148,9 @@ export function PersonalTokensSection({
           <span className="grid h-12 w-12 place-items-center rounded-card bg-bg-sunken text-fg-muted">
             <UserGear aria-hidden size={23} weight="regular" />
           </span>
-          <div className="mt-3 text-[14.5px] font-semibold">No personal tokens yet</div>
+          <div className="mt-3 text-[14.5px] font-semibold">{t("empty.title")}</div>
           <p className="m-0 mt-1.5 max-w-[400px] text-[12.5px] leading-[1.55] text-fg-muted">
-            Personal tokens unlock account-level automation: create projects, mint project API keys
-            and manage webhooks from the CLI, SDKs and MCP.
+            {t("empty.description")}
           </p>
           <Button
             onClick={() => setCreateOpen(true)}
@@ -157,7 +159,7 @@ export function PersonalTokensSection({
             style={{ marginTop: "16px" }}
             type="button"
           >
-            Create your first token
+            {t("empty.action")}
           </Button>
         </div>
       )}
@@ -171,22 +173,22 @@ export function PersonalTokensSection({
               startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
               type="button"
             >
-              Done
+              {t("done")}
             </Button>
           ) : (
             <>
               <Button onClick={closeCreate} size="sm" type="button" variant="ghost">
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 disabled={!name.trim() || isPending}
                 loading={isPending}
-                loadingLabel="Creating"
+                loadingLabel={t("creating")}
                 onClick={onCreate}
                 startIcon={<Plus aria-hidden size={15} weight="regular" />}
                 type="button"
               >
-                Create token
+                {t("create")}
               </Button>
             </>
           )
@@ -197,82 +199,46 @@ export function PersonalTokensSection({
         size="md"
         title={
           <span className="block">
-            <span className="block">{issued ? "New personal token" : "Create personal token"}</span>
+            <span className="block">{issued ? t("newTitle") : t("createTitle")}</span>
             <span className="mt-1 block text-[12.5px] font-normal tracking-normal text-fg-muted">
-              {issued
-                ? "The full secret is available one time."
-                : "The token acts as you in every project, capped by your role there."}
+              {issued ? t("oneTimeSecret") : t("createDescription")}
             </span>
           </span>
         }
       >
         {issued ? (
-          <ApiKeyRevealContent issuedKey={issued} />
+          <ApiKeySecretReveal
+            copy={{
+              copyKey: (name) => t("copyKey", { name }),
+              key: t("key"),
+              revealStorage: t("revealStorage"),
+              revealWarning: t("revealWarning"),
+              revealedOnce: t("revealedOnce"),
+              storedPrefix: (prefix) => t("storedPrefix", { prefix }),
+            }}
+            issuedKey={issued}
+          />
         ) : (
           <div className="space-y-4.5">
             <div>
               <label className={labelClass} htmlFor="personal-token-name">
-                Token name
+                {t("name")}
               </label>
               <input
                 autoComplete="off"
                 className={inputClass}
                 id="personal-token-name"
                 onChange={(event) => setName(event.target.value)}
-                placeholder="CI automation"
+                placeholder={t("namePlaceholder")}
                 value={name}
               />
             </div>
             <div>
-              <div className={labelClass}>Scope</div>
-              <div className="mt-[9px] grid gap-[7px]">
-                {apiKeyScopeOptions.map((option) => {
-                  const active = scope === option.value;
-                  return (
-                    <label
-                      className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-control border-[1.5px] px-[13px] py-[11px]",
-                        active
-                          ? "border-accent bg-accent-soft"
-                          : "border-border-control bg-bg-elev",
-                      )}
-                      key={option.value}
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[13.5px] font-semibold text-fg">
-                          {option.label}
-                        </span>
-                        <span className="mt-px block text-[11.5px] text-fg-muted">
-                          {option.desc}
-                        </span>
-                      </span>
-                      <input
-                        checked={active}
-                        className="sr-only"
-                        name="personal-token-scope"
-                        onChange={() => setScope(option.value)}
-                        type="radio"
-                        value={option.value}
-                      />
-                      <span
-                        className={cn(
-                          "grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-[1.5px]",
-                          active ? "border-accent" : "border-border",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "h-[9px] w-[9px] rounded-full bg-accent",
-                            !active && "invisible",
-                          )}
-                        />
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
+              <div className={labelClass}>{t("scopeLabel")}</div>
+              <PersonalTokenScopeOptions onSelect={setScope} options={scopeOptions} scope={scope} />
             </div>
             <ExpiryChoiceGroup
+              label={t("expiry.label")}
               onChange={setExpiresInDays}
               options={expiryOptions}
               value={expiresInDays}

@@ -24,6 +24,12 @@ export type CheckScheduleSummary = Readonly<{
 export type ModalView = "choose" | "new";
 export type ScheduleChoice = string | "remove" | null;
 export type ScheduleLoadState = "error" | "loaded" | "loading";
+export type ScheduleLoadProblem =
+  | "forbidden"
+  | "notFound"
+  | "unauthorized"
+  | "unknown"
+  | "validation";
 
 export const newScheduleSchema = z
   .object({

@@ -1,7 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RunPage } from "./RunPage";
 import { runPageFixture } from "./RunPageFixtures";
+import type { RunPageData } from "./RunPageTypes";
 
 vi.mock("@/components/shell/AppRealtimeProvider", () => ({
   useAppRealtime: () => ({ operations: [], status: "live" }),
@@ -24,14 +26,14 @@ const queuedRun = {
   keywordCount: 1,
   launchedAt: "2026-09-04T00:00:00.000Z",
   nextCheckAt: "2026-09-04T14:00:00.000Z",
-  scheduleTiming: "spread across the day",
+  scheduleTiming: { kind: "spread_across_day" },
   startedAt: null,
   startedTargets: 0,
   hasRunningTargets: false,
   status: "queued" as const,
   targetCount: 1,
   trigger: "scheduled" as const,
-};
+} satisfies RunPageData;
 
 describe("run starts at the first target, not schedule materialization", () => {
   afterEach(() => vi.useRealTimers());

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { useTranslations } from "next-intl";
 
 type ImportCsvWizardFooterProps = {
   hasMarkets?: boolean;
@@ -25,11 +26,12 @@ export function ImportCsvWizardFooter({
   setStep,
   step,
 }: Readonly<ImportCsvWizardFooterProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.csvWizard");
   if (step === 5) {
     return (
       <div className="flex items-center gap-2.5">
         <Button disabled={isSubmitting} onClick={startOver} type="button" variant="secondary">
-          Start over
+          {t("startOver")}
         </Button>
         <Button
           disabled={isSubmitting}
@@ -37,12 +39,12 @@ export function ImportCsvWizardFooter({
           style={{ flex: 1 }}
           type="button"
         >
-          Done
+          {t("steps.done")}
         </Button>
       </div>
     );
   }
-  const primaryLabel = step === 4 ? "Import keywords" : "Continue";
+  const primaryLabel = step === 4 ? t("importKeywords") : t("continue");
   return (
     <div className="flex items-center gap-2.5">
       {step > 1 && step < 5 ? (
@@ -53,7 +55,7 @@ export function ImportCsvWizardFooter({
           type="button"
           variant="secondary"
         >
-          Back
+          {t("back")}
         </Button>
       ) : null}
       {step === 4 ? (
@@ -64,7 +66,7 @@ export function ImportCsvWizardFooter({
           style={{ flex: 1 }}
           type="button"
         >
-          {isSubmitting ? "Importing..." : primaryLabel}
+          {isSubmitting ? t("importing") : primaryLabel}
         </Button>
       ) : (
         <Button
@@ -75,7 +77,7 @@ export function ImportCsvWizardFooter({
           style={{ flex: 1 }}
           type="button"
         >
-          {isReviewing ? "Checking..." : isSubmitting ? "Importing..." : primaryLabel}
+          {isReviewing ? t("checking") : isSubmitting ? t("importing") : primaryLabel}
         </Button>
       )}
     </div>

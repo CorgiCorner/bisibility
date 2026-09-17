@@ -56,7 +56,17 @@ export function demoAuthRequestAllowed(path: string, method: string) {
 }
 
 export function editableDemoAuthRequestAllowed(path: string, method: string) {
-  if (path === "/get-session") return method === "GET";
+  // The provider resumes its GET authorization endpoint inside the sign-in POST hook.
+  if (path === "/oauth2/authorize") return method === "GET" || method === "POST";
+  if (
+    [
+      "/get-session",
+      "/jwks",
+      "/.well-known/oauth-authorization-server",
+      "/.well-known/openid-configuration",
+    ].includes(path)
+  )
+    return method === "GET";
   if (method !== "POST") return false;
   return [
     "/demo/sign-in",
@@ -68,5 +78,10 @@ export function editableDemoAuthRequestAllowed(path: string, method: string) {
     "/email-otp/verify-email",
     "/two-factor/verify-totp",
     "/two-factor/verify-backup-code",
+    "/oauth2/register",
+    "/oauth2/consent",
+    "/oauth2/continue",
+    "/oauth2/token",
+    "/oauth2/revoke",
   ].includes(path);
 }

@@ -211,6 +211,8 @@ model User {
   deactivatedAt                DateTime?
   marketingEmailUnsubscribedAt DateTime?
   dateFormat                   String                   @default("auto")
+  uiLocale                     String                   @default("en")
+  uiLocaleSelectedAt           DateTime?
   welcomeFollowupRequestedAt   DateTime?
   welcomeFollowupStartedAt     DateTime?
   welcomeFollowupFinishedAt    DateTime?
@@ -621,28 +623,28 @@ model Membership {
 }
 
 model ProjectDefaults {
-  id                     String             @id @default(cuid())
-  projectId              String             @unique
-  project                Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  locationKey            String?
-  locationRef            Location?          @relation("ProjectDefaultLocation", fields: [locationKey], references: [canonicalKey], onDelete: Restrict)
-  country                String?
-  city                   String?
-  device                 Device?
-  serpDepth              Int                @default(100)
-  serpStopOnMatch        Boolean            @default(true)
-  frequency              RankCheckFrequency @default(daily)
-  cronExpression         String?
-  timezone               String             @default("UTC")
-  jitterMinutes          Int                @default(60)
-  inspectionDailyLimit   Int                @default(50)
-  searchSyncImportMonths Int?
-  searchSyncPace         String?
-  enabledExperimentalModules String[] @default([])
-  lastCheckedAt          DateTime?
-  nextCheckAt            DateTime?
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
+  id                         String             @id @default(cuid())
+  projectId                  String             @unique
+  project                    Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  locationKey                String?
+  locationRef                Location?          @relation("ProjectDefaultLocation", fields: [locationKey], references: [canonicalKey], onDelete: Restrict)
+  country                    String?
+  city                       String?
+  device                     Device?
+  serpDepth                  Int                @default(100)
+  serpStopOnMatch            Boolean            @default(true)
+  frequency                  RankCheckFrequency @default(daily)
+  cronExpression             String?
+  timezone                   String             @default("UTC")
+  jitterMinutes              Int                @default(60)
+  inspectionDailyLimit       Int                @default(50)
+  searchSyncImportMonths     Int?
+  searchSyncPace             String?
+  enabledExperimentalModules String[]           @default([])
+  lastCheckedAt              DateTime?
+  nextCheckAt                DateTime?
+  createdAt                  DateTime           @default(now())
+  updatedAt                  DateTime           @updatedAt
 
   @@index([locationKey])
   @@map("project_defaults")
@@ -2295,4 +2297,153 @@ model SearchAnalyticsSyncPartition {
   @@unique([projectId, property, source, searchType, date, dimensions, dataState], map: "search_analytics_sync_partition_key")
   @@index([projectId, property, date], map: "search_analytics_sync_partitions_property_date_idx")
   @@map("search_analytics_sync_partitions")
+}
+
+enum RoadmapSubscriptionState {
+  pending
+  confirmed
+  unsubscribed
+  suppressed
+}
+
+enum RoadmapTokenPurpose {
+  confirm
+  unsubscribe
+}
+
+enum RoadmapAnnouncementState {
+  draft
+  approved
+  published
+  cancelled
+}
+
+enum RoadmapDeliveryKind {
+  confirmation
+  availability
+}
+
+enum RoadmapDeliveryState {
+  pending
+  sending
+  accepted
+  delivered
+  delivery_unknown
+  failed
+  skipped
+}
+
+/// Interest in ONE future milestone of ONE roadmap feature. Consent, transport and
+/// delivery are separate states on purpose: confirmed is not delivered, and a
+/// provider that accepted a message has not yet delivered it.
+model RoadmapSubscription {
+  id                     String                   @id @default(cuid())
+  /// Keyed HMAC of the normalized address, for deduplication and rate limiting.
+  emailHmac              String
+  /// Key version the HMAC was written with, so the secret can be rotated.
+  emailHmacVersion       Int                      @default(0)
+  email                  String
+  featureId              String
+  milestoneId            String
+  consentVersion         String
+  state                  RoadmapSubscriptionState @default(pending)
+  suppressionReason      String?
+  requestedAt            DateTime                 @default(now())
+  confirmedAt            DateTime?
+  unsubscribedAt         DateTime?
+  lastConfirmationSentAt DateTime?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  deliveries             RoadmapDelivery[]
+  tokens                 RoadmapToken[]
+
+  @@unique([emailHmac, featureId, milestoneId])
+  @@index([milestoneId, state])
+  @@index([state, requestedAt])
+  @@map("roadmap_subscriptions")
+}
+
+/// Purpose-scoped, single-use link secret. Only the hash is stored.
+model RoadmapToken {
+  id             String              @id @default(cuid())
+  tokenHash      String              @unique
+  subscriptionId String
+  subscription   RoadmapSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  purpose        RoadmapTokenPurpose
+  expiresAt      DateTime
+  usedAt         DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime            @default(now())
+
+  @@index([subscriptionId, purpose])
+  @@index([expiresAt])
+  @@map("roadmap_tokens")
+}
+
+/// An operator-approved availability announcement. Publishing is an explicit act:
+/// a copy edit, a build, or a stage change never sends one.
+model RoadmapAnnouncement {
+  id                String                   @id @default(cuid())
+  featureId         String
+  milestoneId       String
+  headline          String
+  body              String
+  availabilityScope String
+  ctaHref           String
+  state             RoadmapAnnouncementState @default(draft)
+  approvedBy        String?
+  approvedAt        DateTime?
+  publishedAt       DateTime?
+  cancelledAt       DateTime?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  deliveries        RoadmapDelivery[]
+
+  @@index([milestoneId, state])
+  @@map("roadmap_announcements")
+}
+
+/// Transactional outbox row for one message to one subscriber. Availability rows
+/// carry an announcement and are unique per (announcement, subscription);
+/// confirmation rows carry none and are bounded by the subscription cooldown.
+model RoadmapDelivery {
+  id                String               @id @default(cuid())
+  kind              RoadmapDeliveryKind
+  announcementId    String?
+  announcement      RoadmapAnnouncement? @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  subscriptionId    String
+  subscription      RoadmapSubscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  tokenId           String?
+  state             RoadmapDeliveryState @default(pending)
+  attempts          Int                  @default(0)
+  nextAttemptAt     DateTime?
+  claimedAt         DateTime?
+  claimToken        String?
+  providerMessageId String?
+  acceptedAt        DateTime?
+  deliveredAt       DateTime?
+  lastErrorCode     String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@unique([announcementId, subscriptionId])
+  @@index([state, nextAttemptAt])
+  @@index([subscriptionId, kind])
+  @@map("roadmap_deliveries")
+}
+
+/// Private feedback from the roadmap. Never listed publicly and never mirrored to
+/// a public tracker automatically.
+model RoadmapFeedback {
+  id           String   @id @default(cuid())
+  featureId    String?
+  body         String
+  email        String?
+  language     String?
+  reviewStatus String   @default("new")
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([featureId, createdAt])
+  @@map("roadmap_feedback")
 }

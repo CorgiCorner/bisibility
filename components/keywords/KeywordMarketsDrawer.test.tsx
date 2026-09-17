@@ -1,8 +1,9 @@
 import { DrawerBackButton } from "@/components/ui/DrawerBackButton";
 import type { SheetProps } from "@/components/ui/Sheet";
+import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { createProjectMarket } from "@/lib/actions/project-market-create";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ButtonHTMLAttributes, ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -149,7 +150,7 @@ describe("KeywordMarketsDrawer", () => {
     expect(screen.queryByText("Schedule")).not.toBeInTheDocument();
     keepNetherlandsMobile();
     expect(screen.getByLabelText("Keyword target change")).toHaveTextContent(
-      "1 markets x 1 device = 1 checks per run",
+      "1 market x 1 device = 1 checks per run",
     );
     fireEvent.click(screen.getByRole("button", { name: "Save markets and devices" }));
 

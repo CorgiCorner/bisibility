@@ -70,23 +70,36 @@ export const homeMetadata: Metadata = buildPageMetadata({
 export const roadmapMetadata: Metadata = buildPageMetadata({
   title: "Roadmap",
   description:
-    "Follow the bisibility roadmap for SEO observability: signals, visibility timelines, Search Console data, alerts, and self-hosting improvements.",
+    "Explore the bisibility roadmap: feature concepts, early releases, beta capabilities, and ways to help shape what comes next.",
   path: "/roadmap",
   socialTitle: "bisibility roadmap",
   socialDescription:
-    "Follow planned improvements for signals, visibility timelines, provider connections, API access, and alerts.",
+    "See what is taking shape, what is in early use, and what is available in beta, with the availability of each feature spelled out.",
 });
 
-export const loginMetadata: Metadata = createNoindexMetadata({
-  title: "Sign in",
-  description:
-    "Sign in to bisibility with a one-time email code to manage self-hosted SEO observability projects.",
-  openGraph: {
-    title: "Sign in to bisibility",
-    description: "Access your bisibility projects and manage self-hosted SEO observability.",
-    url: "/login",
-  },
-});
+export type LoginMetadataCopy = {
+  description: string;
+  socialDescription: string;
+  socialTitle: string;
+  title: string;
+};
+
+/**
+ * The sign-in document is noindex, so this is a tab-title and share-preview concern rather
+ * than an SEO one - but the tab must still speak the language the page body speaks, so the
+ * route resolves the copy per request instead of exporting a static English object.
+ */
+export function createLoginMetadata(copy: LoginMetadataCopy): Metadata {
+  return createNoindexMetadata({
+    title: copy.title,
+    description: copy.description,
+    openGraph: {
+      title: copy.socialTitle,
+      description: copy.socialDescription,
+      url: "/login",
+    },
+  });
+}
 
 type JsonLdPrimitive = boolean | number | string | null;
 export type JsonLdValue = JsonLdObject | JsonLdPrimitive | readonly JsonLdValue[];
@@ -142,7 +155,27 @@ export function createWebSiteJsonLd(origin = resolveSiteUrl()): JsonLdObject {
   };
 }
 
-export function createSoftwareApplicationJsonLd(origin = resolveSiteUrl()): JsonLdObject {
+export type HomeJsonLdCopy = {
+  featureList: readonly [string, string, string, string, string];
+  softwareDescription: string;
+};
+
+export const englishHomeJsonLdCopy: HomeJsonLdCopy = {
+  featureList: [
+    "Google keyword rank tracking",
+    "Intended URL monitoring",
+    "SEO signal timelines",
+    "Bring-your-own SERP provider credentials",
+    "Self-hostable REST API",
+  ],
+  softwareDescription:
+    "Open-source, self-hostable SEO observability for developers: Google rank tracking, intended URLs, signal timelines, BYO SERP providers, and REST API access.",
+};
+
+export function createSoftwareApplicationJsonLd(
+  copy: HomeJsonLdCopy,
+  origin = resolveSiteUrl(),
+): JsonLdObject {
   const url = absoluteSiteUrl("/", origin);
 
   return {
@@ -150,15 +183,8 @@ export function createSoftwareApplicationJsonLd(origin = resolveSiteUrl()): Json
     "@type": "SoftwareApplication",
     applicationCategory: "BusinessApplication",
     applicationSubCategory: "SEO software",
-    description:
-      "Open-source, self-hostable SEO observability for developers: Google rank tracking, intended URLs, signal timelines, BYO SERP providers, and REST API access.",
-    featureList: [
-      "Google keyword rank tracking",
-      "Intended URL monitoring",
-      "SEO signal timelines",
-      "Bring-your-own SERP provider credentials",
-      "Self-hostable REST API",
-    ],
+    description: copy.softwareDescription,
+    featureList: copy.featureList,
     license: "https://www.gnu.org/licenses/agpl-3.0.en.html",
     name: siteName,
     offers: {
@@ -190,35 +216,56 @@ export function createFaqPageJsonLd(faqs: readonly FaqEntry[]): JsonLdObject | n
   };
 }
 
-export function createHomeJsonLd(origin = resolveSiteUrl()): JsonLdGraph {
+export function createHomeJsonLd(copy: HomeJsonLdCopy, origin = resolveSiteUrl()): JsonLdGraph {
   return {
     "@context": "https://schema.org",
     "@graph": [
       createOrganizationJsonLd(origin),
       createWebSiteJsonLd(origin),
-      createSoftwareApplicationJsonLd(origin),
+      createSoftwareApplicationJsonLd(copy, origin),
     ],
   };
 }
 
-export function createIntegrationsJsonLd(origin = resolveSiteUrl()): JsonLdGraph {
-  const url = absoluteSiteUrl("/integrations", origin);
+export type IntegrationsJsonLdCopy = {
+  description: string;
+  inLanguage: string;
+  name: string;
+  path: string;
+  software: HomeJsonLdCopy;
+};
+
+export const englishIntegrationsJsonLdCopy: IntegrationsJsonLdCopy = {
+  description:
+    "Bring-your-own SERP providers and read-only analytics sources for rank positions, traffic context, signals, alerts, MCP, and REST API access.",
+  inLanguage: "en",
+  name: "bisibility rank tracking integrations",
+  path: "/integrations",
+  software: englishHomeJsonLdCopy,
+};
+
+export function createIntegrationsJsonLd(
+  copyOrOrigin: IntegrationsJsonLdCopy | string = englishIntegrationsJsonLdCopy,
+  origin = resolveSiteUrl(),
+): JsonLdGraph {
+  const copy = typeof copyOrOrigin === "string" ? englishIntegrationsJsonLdCopy : copyOrOrigin;
+  const resolvedOrigin = typeof copyOrOrigin === "string" ? copyOrOrigin : origin;
+  const url = absoluteSiteUrl(copy.path, resolvedOrigin);
 
   return {
     "@context": "https://schema.org",
     "@graph": [
-      createOrganizationJsonLd(origin),
-      createWebSiteJsonLd(origin),
-      createSoftwareApplicationJsonLd(origin),
+      createOrganizationJsonLd(resolvedOrigin),
+      createWebSiteJsonLd(resolvedOrigin),
+      createSoftwareApplicationJsonLd(copy.software, resolvedOrigin),
       {
         "@id": `${url}#webpage`,
         "@type": "WebPage",
-        about: { "@id": `${absoluteSiteUrl("/", origin)}#software` },
-        description:
-          "Bring-your-own SERP providers and read-only analytics sources for rank positions, traffic context, signals, alerts, MCP, and REST API access.",
-        inLanguage: "en",
-        isPartOf: { "@id": `${absoluteSiteUrl("/", origin)}#website` },
-        name: "bisibility rank tracking integrations",
+        about: { "@id": `${absoluteSiteUrl("/", resolvedOrigin)}#software` },
+        description: copy.description,
+        inLanguage: copy.inLanguage,
+        isPartOf: { "@id": `${absoluteSiteUrl("/", resolvedOrigin)}#website` },
+        name: copy.name,
         url,
       },
     ],

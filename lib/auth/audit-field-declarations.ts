@@ -111,6 +111,7 @@ declare(["settings.project_tracking_scope.update"], { after: project, before: pr
 declare(["onboarding.matching_scope.set"], {
   after: { ...f.booleans("includeSubdomains", "rootAndWww"), ...f.urls("urlPrefix") },
 });
+declare(["user.ui_locale.update"], { after: strings("uiLocale"), before: strings("uiLocale") });
 
 declare(["instance_admin.delete_blocked"], { before: f.booleans("isInstanceAdmin") });
 

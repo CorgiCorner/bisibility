@@ -1,22 +1,20 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button, type ButtonProps } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { installSampleData } from "@/lib/actions/sample-data";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { presentActionError } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-
-export const SAMPLE_DATA_BUTTON_TOOLTIP =
-  "Loads a temporary sample project and skips the rest of setup.";
 
 type SampleDataButtonProps = {
   action?: () => Promise<{ destination: string }>;
   className?: string;
   fullWidth?: boolean;
   help?: string;
-  label?: string;
+  label: string;
   size?: ButtonProps["size"];
   style?: ButtonProps["style"];
   variant?: ButtonProps["variant"];
@@ -27,11 +25,12 @@ export function SampleDataButton({
   className,
   fullWidth = false,
   help,
-  label = "Load sample project",
+  label,
   size = "sm",
   style,
   variant = "primary",
 }: Readonly<SampleDataButtonProps>) {
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -45,7 +44,7 @@ export function SampleDataButton({
           router.refresh();
         })
         .catch((error_: unknown) => {
-          setError(actionErrorMessage(error_, "Sample project could not be loaded."));
+          setError(presentActionError(error_, sharedErrors));
         });
     });
   }

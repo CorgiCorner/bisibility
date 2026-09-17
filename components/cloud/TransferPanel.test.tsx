@@ -1,4 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import {
+  cloudImportFeatureTestMessages,
+  renderWithCloudImportMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { CloudImportJobData } from "./cloud-token";
 import { TransferPanel } from "./TransferPanel";
@@ -129,8 +134,71 @@ describe("TransferPanel", () => {
     expect(screen.getByText("Restored with notes")).toBeVisible();
     expect(screen.getByText("Notes")).toBeVisible();
     const description = screen.getByText(/Imported 0 new keywords/i);
-    expect(description).toHaveTextContent("6 keywords, 20 history rows skipped");
+    expect(description).toHaveTextContent("6 keywords and 20 history rows skipped");
     expect(description).not.toHaveTextContent("Imported 0 history, 6 keywords");
+  });
+
+  it("keeps equal imported and skipped tiles distinct without duplicate keys", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    renderPanel("done", {
+      job: {
+        counts: { history: 2, history_skipped: 2 },
+        progress: 100,
+      },
+    });
+
+    expect(screen.getByText("2 imported history rows")).toBeVisible();
+    expect(screen.getByText("2 history rows skipped")).toBeVisible();
+    expect(error).not.toHaveBeenCalledWith(expect.stringContaining("same key"));
+    error.mockRestore();
+  });
+
+  it.each([1, 2, 5])("formats injected Polish standalone count %i through ICU", (count) => {
+    const messages = structuredClone(cloudImportFeatureTestMessages);
+    messages.cloudImport.transfer.tiles.history =
+      "{count, plural, one {# rekord zaimportowany} few {# rekordy zaimportowane} other {# rekordow zaimportowanych}}";
+
+    renderWithFeatureMessages(
+      <TransferPanel
+        hasToken
+        job={job("done", { counts: { history: count }, progress: 100 })}
+        onNewToken={vi.fn()}
+        projectRef={projectRef}
+      />,
+      { locale: "pl", messages },
+    );
+
+    const expected =
+      count === 1
+        ? "1 rekord zaimportowany"
+        : count === 2
+          ? "2 rekordy zaimportowane"
+          : "5 rekordow zaimportowanych";
+    expect(screen.getByText(expected)).toBeVisible();
+  });
+
+  it("formats a terminal import date through the injected locale and date preference", () => {
+    renderWithFeatureMessages(
+      <TransferPanel
+        hasToken
+        job={job("failed", {
+          error: "Import timed out.",
+          finishedAt: "2026-07-20T12:01:00.000Z",
+          progress: 40,
+        })}
+        onNewToken={vi.fn()}
+        projectRef={projectRef}
+      />,
+      {
+        dateFormat: "day_first",
+        locale: "pl",
+        messages: cloudImportFeatureTestMessages,
+        timeZone: "UTC",
+      },
+    );
+
+    expect(screen.getByText("20 lipca 2026, 12:01")).toBeVisible();
   });
 
   it("shows transfer failure without claiming the project is unchanged", () => {
@@ -146,8 +214,16 @@ describe("TransferPanel", () => {
     renderPanel("failed", { job: { error: "Package rejected.", progress: 40 } });
 
     expect(screen.getByText("Transfer failed")).toBeVisible();
-    expect(screen.getByText("Package rejected.")).toBeVisible();
+    expect(
+      screen.getByText("The import could not be completed. Generate a new token and push again."),
+    ).toBeVisible();
+    expect(screen.queryByText("Package rejected.")).not.toBeInTheDocument();
     expect(screen.getByText(/Anything already imported stays in this project/)).toBeVisible();
     expect(screen.getByRole("button", { name: "New token" })).toBeVisible();
+    expect(
+      decodeURIComponent(
+        screen.getByRole("link", { name: "Download error log" }).getAttribute("href") ?? "",
+      ),
+    ).toContain("message=Package rejected.");
   });
 });

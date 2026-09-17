@@ -1,0 +1,101 @@
+{
+  "projectSettingsTeam": {
+    "members": {
+      "title": "Miembros",
+      "description": "Todas las personas con acceso a {domain}.",
+      "thisProject": "este proyecto",
+      "accessSince": "Acceso al proyecto desde el {date}.",
+      "you": "tú",
+      "updatingRole": "Actualizando el rol…",
+      "inviteMember": "Invitar a un miembro",
+      "viewerAudit": "Lector / auditoría",
+      "role": {
+        "admin": "Administrador",
+        "editor": "Editor",
+        "owner": "Propietario",
+        "viewer": "Lector"
+      },
+      "roleDescription": {
+        "admin": "Ajustes, miembros y claves",
+        "editor": "Palabras clave, alertas y vistas",
+        "viewer": "Paneles y exportaciones"
+      }
+    },
+    "memberActions": {
+      "actionsFor": "Acciones para {name}",
+      "auditExplanation": "«Lector / auditoría» es un rol de auditoría gestionado y no se puede representar como un rol asignable normal.",
+      "changeRole": "Cambiar el rol",
+      "transferOwnership": "Transferir la propiedad",
+      "removeFromProject": "Quitar del proyecto",
+      "backToActions": "Volver a las acciones"
+    },
+    "invite": {
+      "done": "Hecho",
+      "cancel": "Cancelar",
+      "sending": "Enviando",
+      "send": "Enviar invitación",
+      "title": "Invitar a alguien al equipo",
+      "description": "Esa persona tendrá acceso a {domain}.",
+      "sentTitle": "Invitación enviada",
+      "sentDescription": "Hemos enviado una invitación por correo a {email}. También puedes compartir este enlace directamente.",
+      "copyLink": "Copiar el enlace",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "teammate@acme.dev",
+      "emailInvalid": "Introduce el correo de la persona que quieres invitar.",
+      "role": "Rol",
+      "roleDescription": {
+        "admin": "Puede gestionar los ajustes, los miembros del equipo y las claves.",
+        "editor": "Puede gestionar las palabras clave, las etiquetas y las reglas de alerta.",
+        "viewer": "Puede ver los paneles, las exportaciones y los informes."
+      }
+    },
+    "pending": {
+      "title": "Invitaciones pendientes",
+      "description": "Enviadas y todavía sin aceptar.",
+      "empty": "No hay invitaciones pendientes.",
+      "details": "{role} · {invited} · {expires}",
+      "invitedBy": "Invitación enviada por {inviter}",
+      "expired": "Caducada",
+      "resend": "Reenviar",
+      "revokeFor": "Revocar la invitación de {email}",
+      "resendSuccess": "Se ha enviado una nueva invitación a {email}.",
+      "expiresIn": "{unit, select, hour {caduca dentro de {count, plural, one {# hora} other {# horas}}} day {caduca dentro de {count, plural, one {# día} other {# días}}} other {caduca pronto}}",
+      "expiredAgo": "{unit, select, hour {caducada hace {count, plural, one {# hora} other {# horas}}} day {caducada hace {count, plural, one {# día} other {# días}}} other {caducada}}",
+      "invitedAgo": "{unit, select, hour {enviada hace {count, plural, one {# hora} other {# horas}}} day {enviada hace {count, plural, one {# día} other {# días}}} other {enviada}}",
+      "invitedNow": "enviada ahora mismo"
+    },
+    "roles": {
+      "title": "Roles y acceso",
+      "description": "Lo que puede hacer cada rol; el rol se cambia en la fila del miembro.",
+      "capability": "Permiso",
+      "view": "Ver paneles, palabras clave y exportaciones",
+      "edit": "Añadir y editar palabras clave, alertas y vistas",
+      "delete": "Eliminar palabras clave, alertas y competidores",
+      "keys": "Crear y revocar claves de API y webhooks",
+      "manage": "Invitar y gestionar miembros",
+      "audit": "Leer el registro de auditoría",
+      "billing": "Facturación",
+      "ownership": "Transferir la propiedad, eliminar el proyecto",
+      "permission": "{role}: {capability}: {allowed, select, true {permitido} other {no permitido}}",
+      "footnote": "Solo puede haber un propietario y es quien puede transferir la propiedad. Todos los cambios de rol se anotan en el registro de auditoría. Los permisos de auditoría existentes se muestran en la fila de cada miembro y no se pueden asignar aquí."
+    },
+    "errors": {
+      "teamChange": "No se ha podido aplicar el cambio en el equipo.",
+      "roleChange": "No se ha podido cambiar el rol.",
+      "inviteSend": "No se ha podido enviar la invitación.",
+      "inviteUnavailable": "Las invitaciones no están disponibles en este proyecto.",
+      "inviteMailer": "El envío de correo no está configurado para las invitaciones del equipo.",
+      "memberExists": "Este usuario ya es miembro del proyecto.",
+      "memberNotEditable": "Este miembro no se puede editar.",
+      "inviteNotFound": "No se ha encontrado la invitación.",
+      "lastManager": "El proyecto debe conservar al menos un administrador o propietario.",
+      "chooseNewOwner": "Elige a otro miembro del proyecto para que sea el propietario.",
+      "inviteTemporarilyUnavailable": "Las invitaciones no están disponibles temporalmente. Inténtalo de nuevo en unos instantes.",
+      "inviteRateLimitedSeconds": "Se han enviado demasiadas invitaciones. Inténtalo de nuevo dentro de {count, plural, one {# segundo} other {# segundos}}.",
+      "inviteRateLimitedMinutes": "Se han enviado demasiadas invitaciones. Inténtalo de nuevo dentro de {count, plural, one {# minuto} other {# minutos}}.",
+      "inviteRecentlySentSeconds": "Esta invitación se ha enviado hace poco. Inténtalo de nuevo dentro de {count, plural, one {# segundo} other {# segundos}}.",
+      "inviteRecentlySentMinutes": "Esta invitación se ha enviado hace poco. Inténtalo de nuevo dentro de {count, plural, one {# minuto} other {# minutos}}.",
+      "action": "No se ha podido completar la acción sobre el equipo."
+    }
+  }
+}

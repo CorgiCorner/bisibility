@@ -2,6 +2,7 @@
 
 import { useSuggestionSearch } from "@/components/keywords/location-picker-data";
 import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
+import type { MarketDefinitionMessages } from "./MarketDefinition";
 import {
   countryLocation,
   locationKindLabel,
@@ -12,6 +13,7 @@ import type { MarketDefinitionLocationSource } from "./market-definition-source"
 
 type MarketDefinitionLocationPickerProps = {
   country: MarketDefinitionCountry;
+  messages: MarketDefinitionMessages;
   onChange: (location: MarketDefinitionLocation) => void;
   source: MarketDefinitionLocationSource;
   value: MarketDefinitionLocation | null;
@@ -35,6 +37,7 @@ function option(location: MarketDefinitionLocation): MenuSelectOption {
  */
 export function MarketDefinitionLocationPicker({
   country,
+  messages,
   onChange,
   source,
   value,
@@ -55,12 +58,12 @@ export function MarketDefinitionLocationPicker({
 
   return (
     <MenuSelect
-      ariaLabel="Location"
+      ariaLabel={messages.location}
       filterOptions={false}
       noResultsMessage={
         loading || lastCompletedTerm === null
-          ? "Searching regions and cities..."
-          : "No matching region or city. Try another name or select the whole country."
+          ? messages.searchingLocations
+          : messages.noLocationResults
       }
       onChange={(key) => {
         const picked = places.find((place) => place.canonicalKey === key);
@@ -69,8 +72,8 @@ export function MarketDefinitionLocationPicker({
       onSearchChange={search}
       options={places.map(option)}
       searchable
-      searchHint="The whole country is selected by default. Search to track a city or region instead."
-      searchPlaceholder="Search regions and cities"
+      searchHint={messages.locationHint}
+      searchPlaceholder={messages.searchLocations}
       size="input"
       value={value?.canonicalKey ?? ""}
     />

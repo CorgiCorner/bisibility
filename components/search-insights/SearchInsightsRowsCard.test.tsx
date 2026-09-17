@@ -1,4 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
+import {
+  renderWithSearchInsightsMessages as render,
+  renderWithFeatureMessages,
+  searchInsightsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SearchInsightsPagesTable } from "./SearchInsightsPagesTable";
 import { SearchInsightsRowsCard, type SearchInsightsRowsCardProps } from "./SearchInsightsRowsCard";
@@ -27,6 +32,18 @@ function section(title = "Top queries") {
 }
 
 describe("SearchInsightsRowsCard", () => {
+  it("uses the scoped catalog for visible row controls and counters", () => {
+    const messages = structuredClone(searchInsightsFeatureTestMessages);
+    messages.projectSearchInsights.copy.rowsShownCounter = "{shown, number} z {total, number}";
+    messages.projectSearchInsights.copy.showMore = "Pokaz wiecej";
+
+    renderWithFeatureMessages(card(), { locale: "pl", messages });
+
+    expect(screen.getByRole("button", { name: "Pokaz wiecej" })).toBeInTheDocument();
+    expect(screen.getByText("10 z 184")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Show more" })).toBeNull();
+  });
+
   it("shows the capped row count without promising the whole property", () => {
     render(card({ show: "all", shown: 5_000, total: 120_000 }));
     expect(screen.getByText("5,000 of 120,000")).toBeInTheDocument();

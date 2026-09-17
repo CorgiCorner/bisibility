@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { appPath } from "@/lib/routing/app-path";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -32,6 +33,7 @@ export function KeywordsGridMarketEmpty({
   onAddKeyword,
   projectRef,
 }: Readonly<Props>) {
+  const t = useTranslations("projectRankTracker.list.marketEmpty");
   const { readOnly } = useProjectWriteMode();
 
   return (
@@ -42,22 +44,22 @@ export function KeywordsGridMarketEmpty({
             {canCreateKeyword ? (
               <ProjectReadOnlyTooltip>
                 <Button disabled={readOnly} onClick={onAddKeyword} type="button">
-                  Add keywords to {marketLabel}
+                  {t("addKeywords", { market: marketLabel })}
                 </Button>
               </ProjectReadOnlyTooltip>
             ) : null}
             <Button component={Link} href={appPath(projectRef, "rank-tracker")} variant="secondary">
-              Copy keywords from another market
+              {t("copyKeywords")}
             </Button>
           </div>
         }
         description={
           paused
-            ? `Prepare keywords in ${marketLabel}. Rank checks will not start until you resume this market.`
-            : `Nothing is tracked in ${marketLabel} yet. Everything you add here is checked in this market only.`
+            ? t("pausedDescription", { market: marketLabel })
+            : t("description", { market: marketLabel })
         }
         icon={<MapPin size={22} weight="regular" />}
-        title={`No keywords in ${marketLabel} yet`}
+        title={t("title", { market: marketLabel })}
       />
       {dialogs}
     </section>

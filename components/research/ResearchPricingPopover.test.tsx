@@ -1,7 +1,14 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { useState } from "react";
+import {
+  renderWithFeatureMessages,
+  researchFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
+import { type ReactElement, useState } from "react";
 import { describe, expect, it } from "vitest";
 import { ResearchPricingPopover } from "./ResearchPricingPopover";
+
+const render = (ui: ReactElement) =>
+  renderWithFeatureMessages(ui, { messages: researchFeatureTestMessages });
 
 function PopoverHarness(
   props: Omit<React.ComponentProps<typeof ResearchPricingPopover>, "anchor" | "onClose">,

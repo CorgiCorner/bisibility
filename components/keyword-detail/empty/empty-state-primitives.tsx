@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/Card";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 const ranges = ["7d", "30d", "90d"] as const;
@@ -30,9 +31,10 @@ type StaticRangeTabsProps = {
 };
 
 export function StaticRangeTabs({ selected }: Readonly<StaticRangeTabsProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.empty");
   return (
     <SegmentedControl
-      ariaLabel="Position history range"
+      ariaLabel={t("positionHistoryRange")}
       className="bg-bg-elev font-sans tabular-nums"
       fitContent
       onChange={() => {}}
@@ -54,14 +56,15 @@ export function EmptyChartShell({
   height,
   selectedRange,
 }: Readonly<EmptyChartShellProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.empty");
   return (
     <EmptyModuleCard>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <EmptyModuleTitle>Position history</EmptyModuleTitle>
+        <EmptyModuleTitle>{t("positionHistory")}</EmptyModuleTitle>
         <StaticRangeTabs selected={selectedRange} />
       </div>
       <div
-        aria-label="Position history empty chart"
+        aria-label={t("positionHistoryChart")}
         className={`relative mt-4 overflow-hidden rounded-card border border-border bg-bg-elev ${
           height === 180 ? "h-[180px]" : "h-[280px]"
         }`}

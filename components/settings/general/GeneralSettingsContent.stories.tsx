@@ -10,6 +10,12 @@ import type {
   DeleteTagAction,
 } from "@/components/settings/general/TagsSegmentsCard";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import { DEFAULT_LOCALE } from "@/i18n/config";
+import { DEFAULT_TIME_ZONE } from "@/i18n/formats";
+import projectSettingsGeneralMessages from "@/messages/core/en/project-settings-general.json";
+import projectSettingsShellMessages from "@/messages/core/en/project-settings-shell.json";
+import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
 
@@ -35,14 +41,25 @@ const requestDomainChange = async (_input: DomainChangeRequest) => ({
   projectId: project.projectId,
 });
 const updateProject: UpdateProjectDetails = async (input) => ({ name: input.name });
+const generalSettingsMessages = mergeMessageCatalogs(
+  sharedMessages,
+  projectSettingsShellMessages,
+  projectSettingsGeneralMessages,
+);
 
 function GeneralStoryShell({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <main className="min-h-screen bg-bg p-4 text-fg sm:p-6">
-      <SettingsShell activeSection="general" projectRef={project.projectId}>
-        {children}
-      </SettingsShell>
-    </main>
+    <FeatureMessagesProvider
+      locale={DEFAULT_LOCALE}
+      messages={generalSettingsMessages}
+      timeZone={DEFAULT_TIME_ZONE}
+    >
+      <main className="min-h-screen bg-bg p-4 text-fg sm:p-6">
+        <SettingsShell activeSection="general" projectRef={project.projectId}>
+          {children}
+        </SettingsShell>
+      </main>
+    </FeatureMessagesProvider>
   );
 }
 
@@ -108,3 +125,5 @@ export const RouteLoading: Story = {
     </main>
   ),
 };
+
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";

@@ -1,7 +1,8 @@
 import { ToastProvider } from "@/components/ui/Toast";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { setNavigationState } from "@/tests/next-navigation";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { SearchInsightsWorkspace } from "./SearchInsightsWorkspace";

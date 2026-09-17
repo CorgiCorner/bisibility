@@ -9,8 +9,9 @@ export const RETENTION_MONTHS = 16;
 // The opportunity band is labeled numerically, never with vendor jargon.
 export const POSITION_BAND = { max: 20, min: 4 } as const;
 
-export function positionBandLabel() {
-  return `positions ${POSITION_BAND.min}-${POSITION_BAND.max}`;
+/** The numeric range only: the catalog message owns the noun that introduces it. */
+export function positionBandRange() {
+  return `${POSITION_BAND.min}-${POSITION_BAND.max}`;
 }
 
 // A query with a handful of clicks, or a page holding one, is noise in the overlap count.

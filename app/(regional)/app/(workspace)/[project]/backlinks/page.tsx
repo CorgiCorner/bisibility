@@ -1,0 +1,167 @@
+import { BacklinksMessagesBoundary } from "@/components/backlinks/BacklinksMessagesBoundary";
+import { StoredBacklinksView } from "@/components/demo-research/StoredBacklinksView";
+import { StoredResultSelector } from "@/components/demo-research/StoredResultSelector";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { PageContent } from "@/components/shell/PageContent";
+import { loadCoreMessages } from "@/i18n/catalog-loader.server";
+import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
+import { createIntlTranslator } from "@/i18n/translator.server";
+import { listDemoBacklinksAction, readDemoBacklinksAction } from "@/lib/actions/demo-research";
+import { getDemoResearchAccess } from "@/lib/queries/demo-research";
+import Link from "next/link";
+
+type BacklinksPageProps = {
+  params: Promise<{ project: string }>;
+  searchParams: Promise<{
+    demoManage?: string | string[];
+    saved?: string | string[];
+    target?: string | string[];
+  }>;
+};
+
+function first(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function savedKey(item: {
+  includeSubdomains: boolean;
+  mode: string;
+  target: string;
+  targetScope: string;
+}) {
+  return [item.target, item.targetScope, item.mode, item.includeSubdomains ? "1" : "0"].join("|");
+}
+
+export default async function BacklinksPage({
+  params,
+  searchParams,
+}: Readonly<BacklinksPageProps>) {
+  const [{ project }, query, runtime] = await Promise.all([
+    params,
+    searchParams,
+    resolveRegionalDocumentLocale(),
+  ]);
+  const messages = await loadCoreMessages(runtime.locale, [
+    "shared",
+    "projectBacklinks",
+    "projectResearch",
+  ]);
+  const t = createIntlTranslator(runtime.locale, messages, { timeZone: runtime.timeZone });
+  const demo = await getDemoResearchAccess(project);
+  const demoManage = first(query.demoManage) === "1";
+
+  if (demo && !(demo.actorKind === "owner" && demoManage)) {
+    const saved = await listDemoBacklinksAction({ projectId: demo.project.publicId });
+    const selected =
+      saved.find((item) => savedKey(item) === first(query.saved)) ??
+      saved.find((item) => item.target === first(query.target)?.trim().toLowerCase()) ??
+      saved[0];
+    const result = selected
+      ? await readDemoBacklinksAction({
+          includeSubdomains: selected.includeSubdomains,
+          mode: selected.mode,
+          projectId: demo.project.publicId,
+          target: selected.target,
+          targetScope: selected.targetScope,
+        })
+      : null;
+
+    return (
+      <FeatureMessagesProvider
+        locale={runtime.locale}
+        messages={messages}
+        timeZone={runtime.timeZone}
+      >
+        <PageContent>
+          <section className="grid min-w-0 gap-4">
+            <StoredResultSelector
+              actorKind={demo.actorKind}
+              module="backlinks"
+              options={saved.map((item) => ({
+                label: t("projectResearch.demo.savedBacklinksOption", {
+                  includeSubdomains: String(item.includeSubdomains),
+                  scope:
+                    item.targetScope === "site"
+                      ? t("projectBacklinks.workspace.analyze.wholeSite")
+                      : t("projectBacklinks.workspace.analyze.exactPage"),
+                  target: item.target,
+                }),
+                value: savedKey(item),
+              }))}
+              selectedValue={selected ? savedKey(selected) : undefined}
+            />
+            <StoredBacklinksView result={result} />
+          </section>
+        </PageContent>
+      </FeatureMessagesProvider>
+    );
+  }
+
+  const [
+    { BacklinksWorkspace },
+    { analyzeBacklinksAction, loadMoreBacklinkRowsAction },
+    { resolveProjectAccess },
+    { getBacklinksPageContext },
+  ] = await Promise.all([
+    import("@/components/backlinks/BacklinksWorkspace"),
+    import("@/lib/actions/backlinks"),
+    import("@/lib/queries/_auth"),
+    import("@/lib/queries/backlinks"),
+  ]);
+  const { publicId } = await resolveProjectAccess(project);
+  const context = await getBacklinksPageContext(publicId);
+  const initialTarget = first(query.target)?.trim() ?? "";
+  const initialEstimateOutcome = initialTarget
+    ? await analyzeBacklinksAction({
+        estimateOnly: true,
+        includeSubdomains: true,
+        mode: "as_is",
+        projectId: publicId,
+        resultLimit: 100,
+        target: initialTarget,
+        targetScope: "site",
+      }).catch(() => null)
+    : null;
+  const initialEstimateCents =
+    initialEstimateOutcome?.ok === true
+      ? (initialEstimateOutcome.estimatedCostCents ?? initialEstimateOutcome.costCents)
+      : null;
+
+  return (
+    <FeatureMessagesProvider
+      locale={runtime.locale}
+      messages={messages}
+      timeZone={runtime.timeZone}
+    >
+      <PageContent>
+        {demo ? (
+          <Link
+            className="mb-3 inline-flex font-semibold text-accent-text hover:underline"
+            href="?"
+          >
+            {t("projectResearch.page.backToSaved")}
+          </Link>
+        ) : null}
+        <BacklinksMessagesBoundary>
+          <BacklinksWorkspace
+            analyzeAction={analyzeBacklinksAction}
+            context={context}
+            initialEstimate={
+              initialTarget
+                ? {
+                    cached: initialEstimateOutcome?.ok === true && initialEstimateOutcome.cached,
+                    costCents: initialEstimateCents,
+                    loading: false,
+                    valid: initialEstimateOutcome?.ok === true,
+                  }
+                : undefined
+            }
+            initialTarget={initialTarget}
+            loadMoreAction={loadMoreBacklinkRowsAction}
+            projectId={publicId}
+          />
+        </BacklinksMessagesBoundary>
+      </PageContent>
+    </FeatureMessagesProvider>
+  );
+}

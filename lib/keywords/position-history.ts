@@ -32,8 +32,16 @@ export function positionHistoryAriaLabel(
     : `Position history for ${keyword}. Currently #${position}, target #${target}, target reached.`;
 }
 
-export function calendarDayKey(date: Date) {
-  return date.toISOString().slice(0, 10);
+export function calendarDayKey(date: Date, timeZone = "UTC") {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone,
+    year: "numeric",
+  }).formatToParts(date);
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  return `${value("year")}-${value("month")}-${value("day")}`;
 }
 
 export function positionDateLabel(

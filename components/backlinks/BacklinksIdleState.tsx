@@ -5,12 +5,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleMark } from "@/components/ui/ModuleMark";
 import { appPath } from "@/lib/routing/app-path";
 import { LinkIcon as Link } from "@phosphor-icons/react/dist/csr/Link";
-
-const bullets = [
-  "Runs on your own DataForSEO key, price shown before every run",
-  "Snapshots cached for 24 hours - reopening and re-slicing is free",
-  "Every refresh diffs against the last snapshot: new and lost links flagged",
-] as const;
+import { useTranslations } from "next-intl";
 
 export function BacklinksIdleState({
   projectRef,
@@ -19,14 +14,16 @@ export function BacklinksIdleState({
   projectRef: string;
   state?: "idle" | "needs_reauth" | "no_provider";
 }>) {
+  const t = useTranslations("projectBacklinks.workspace.idle");
+  const bullets = [t("bullets.price"), t("bullets.cache"), t("bullets.diff")];
   const providerBlocked = state !== "idle";
   return (
-    <section aria-label="Backlinks introduction">
+    <section aria-label={t("aria")}>
       <EmptyState
         action={
           providerBlocked ? (
             <AccentCtaLink href={appPath(projectRef, "integrations")}>
-              {state === "needs_reauth" ? "Reconnect DataForSEO" : "Connect DataForSEO"}
+              {state === "needs_reauth" ? t("reconnect") : t("connect")}
             </AccentCtaLink>
           ) : undefined
         }
@@ -34,17 +31,17 @@ export function BacklinksIdleState({
         description={
           providerBlocked
             ? state === "needs_reauth"
-              ? "Reconnect this project's DataForSEO credentials to resume backlink analysis."
-              : "Backlinks requires a provider with backlink intelligence support. Lookups run on your own key."
+              ? t("reauthDescription")
+              : t("noProviderDescription")
             : undefined
         }
         mark={<ModuleMark bordered icon={Link} />}
         title={
           providerBlocked
             ? state === "needs_reauth"
-              ? "DataForSEO needs to be reconnected"
-              : "Connect DataForSEO to analyze backlinks"
-            : "Point it at any domain"
+              ? t("reauthTitle")
+              : t("noProviderTitle")
+            : t("idleTitle")
         }
       />
     </section>

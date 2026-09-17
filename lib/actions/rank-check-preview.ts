@@ -120,8 +120,6 @@ export async function listFirstCheckCandidates(
   };
 }
 
-// biome-ignore format: compact label table keeps this file under the project line cap.
-const frequencyLabels: Record<string, string> = { custom_cron: "Custom cron", daily: "Daily", manual: "Manual", monthly: "Monthly", paused: "Paused", weekly: "Weekly" };
 const samplePreviewCountry = (() => {
   const country = serpCountryByCode("US");
   if (!country) throw new Error("The default country is missing from the country catalog.");
@@ -150,10 +148,10 @@ export async function getFirstCheckRunPlan(input: unknown): Promise<FirstCheckRu
       providers: [],
       readyCount: 0,
       scope: {
-        depth: `Top ${DEFAULT_SERP_DEPTH}`,
-        device: "Desktop",
-        engine: SERP_ENGINE.label,
-        frequency: "Daily",
+        depth: DEFAULT_SERP_DEPTH,
+        device: "desktop",
+        engine: SERP_ENGINE.id,
+        frequency: "daily",
         location: samplePreviewCountry.displayName,
       },
     };
@@ -189,10 +187,10 @@ export async function getFirstCheckRunPlan(input: unknown): Promise<FirstCheckRu
     providers,
     readyCount,
     scope: {
-      depth: `Top ${depth}`,
-      device: market.device === "mobile" ? "Mobile" : "Desktop",
-      engine: SERP_ENGINE.label,
-      frequency: frequencyLabels[defaults?.frequency ?? "daily"] ?? "Daily",
+      depth,
+      device: market.device,
+      engine: SERP_ENGINE.id,
+      frequency: defaults?.frequency ?? "daily",
       location: market.displayName,
     },
   };

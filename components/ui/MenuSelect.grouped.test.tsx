@@ -1,5 +1,6 @@
 import { MenuSelect, type MenuSelectOptionGroup } from "@/components/ui/MenuSelect";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -28,6 +29,8 @@ const groupedOptions: MenuSelectOptionGroup[] = [
     ],
   },
 ];
+
+const render = renderWithSharedMessages;
 
 describe("MenuSelect grouped", () => {
   it("renders non-sticky opaque full-bleed group headers", async () => {

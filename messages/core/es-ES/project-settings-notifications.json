@@ -1,0 +1,26 @@
+{
+  "projectSettingsNotifications": {
+    "channels": {
+      "title": "Canales",
+      "description": "Adónde se envía una alerta cuando se activa. Las condiciones de las alertas se configuran en la pantalla Alertas.",
+      "eventsAndChannels": "Eventos y canales",
+      "event": "Evento",
+      "inApp": "En la app",
+      "email": "Correo",
+      "alertFired": "Alerta activada",
+      "checkComplete": "Comprobación finalizada",
+      "importFinished": "Importación finalizada",
+      "invite": "Invitación",
+      "weeklyReport": "Informe semanal",
+      "unavailable": "{label} no está disponible",
+      "unavailableHelp": "Un guion indica que el canal no existe para ese evento: el informe semanal es un correo y solo se envía una vez a la semana.",
+      "saveError": "No se han podido guardar las preferencias."
+    },
+    "delivery": {
+      "title": "Dirección de entrega",
+      "description": "La dirección que recibe los correos de notificación.",
+      "manageEmail": "Gestionar el correo",
+      "deliveredTo": "Las notificaciones se envían a <address>{email}</address>."
+    }
+  }
+}

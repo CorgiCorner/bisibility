@@ -1,7 +1,15 @@
+import {
+  renderWithFeatureMessages,
+  sharedControlTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { MOTION_MODAL_EXIT } from "@/lib/ui/motion";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Modal } from "./Modal";
+
+function render(ui: React.ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: sharedControlTestMessages });
+}
 
 function renderModal(
   overrides: { onPrimaryAction?: () => void; primaryActionDisabled?: boolean } = {},

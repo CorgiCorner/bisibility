@@ -16,6 +16,50 @@ function productionSources(directory: string): string[] {
   });
 }
 
+function showToastWithoutExplicitSeverity(source: string): boolean {
+  let searchFrom = 0;
+  while (searchFrom < source.length) {
+    const nameStart = source.indexOf("showToast", searchFrom);
+    if (nameStart < 0) return false;
+    let open = nameStart + "showToast".length;
+    while (/\s/.test(source[open] ?? "")) open += 1;
+    if (source[open] !== "(") {
+      searchFrom = open;
+      continue;
+    }
+    let depth = 0;
+    let quote: '"' | "'" | "`" | null = null;
+    let close = -1;
+    for (let index = open; index < source.length; index += 1) {
+      const character = source[index];
+      if (quote) {
+        if (character === "\\") {
+          index += 1;
+        } else if (character === quote) {
+          quote = null;
+        }
+        continue;
+      }
+      if (character === '"' || character === "'" || character === "`") {
+        quote = character;
+      } else if (character === "(") {
+        depth += 1;
+      } else if (character === ")") {
+        depth -= 1;
+        if (depth === 0) {
+          close = index;
+          break;
+        }
+      }
+    }
+    if (close < 0) return true;
+    const argumentsSource = source.slice(open + 1, close);
+    if (!/,[\s\S]*?\bseverity\s*:/.test(argumentsSource)) return true;
+    searchFrom = close + 1;
+  }
+  return false;
+}
+
 describe("toast API contract", () => {
   const sources = productionRoots.flatMap(productionSources);
 
@@ -39,8 +83,7 @@ describe("toast API contract", () => {
   it("requires explicit severity at every production invocation", () => {
     const violations = sources.flatMap((path) => {
       const source = readFileSync(path, "utf8");
-      const calls = source.match(/showToast\s*\([\s\S]{0,500}?\)(?=;|\)|\n)/g) ?? [];
-      return calls.some((call) => !call.includes("severity")) ? [relative(root, path)] : [];
+      return showToastWithoutExplicitSeverity(source) ? [relative(root, path)] : [];
     });
     expect(violations).toEqual([]);
   });

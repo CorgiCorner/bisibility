@@ -1,6 +1,8 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { fireEvent, render, screen } from "@testing-library/react";
+import messages from "@/messages/core/en/project-rank-tracker-keyword-import.json";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
   KeywordCell,
@@ -9,6 +11,19 @@ import {
   scheduleTargetsForRow,
   TagsCell,
 } from "./grid-columns";
+import { trafficColumns } from "./grid-columns-traffic";
+
+const columnMessages = messages.projectRankTracker.keywordImport.management.columns;
+const keywordColumnLabels = {
+  ...columnMessages,
+  noRankLabel: () => "No ranking data",
+  noTrafficDataLabel: "Connect Search Console to see traffic",
+  formatNumber: (value: number) => value.toString(),
+  formatPercent: (value: number) => `${value * 100}%`,
+  formatPosition: (value: number) => `#${value}`,
+  positionTrend: ({ keyword }: { keyword: string }) =>
+    columnMessages.positionTrend.replace("{keyword}", keyword),
+};
 
 const row = keywordRows[0] as KeywordRow;
 
@@ -76,6 +91,50 @@ describe("TagsCell", () => {
 });
 
 describe("keywordColumns", () => {
+  it("uses the supplied localized no-traffic label in an actual list column", () => {
+    const [clicksColumn] = trafficColumns({
+      clickThroughRate: "Współczynnik klikalności",
+      clicks: "Kliknięcia",
+      ctr: "CTR",
+      formatNumber: (value) => value.toLocaleString("pl-PL"),
+      formatPercent: (value) => `${value * 100}%`,
+      impressions: "Wyświetlenia",
+      noTrafficDataLabel: "Połącz Search Console, aby zobaczyć ruch",
+    });
+    if (typeof clicksColumn?.cell !== "function") throw new Error("Expected a cell renderer.");
+
+    render(clicksColumn.cell({ getValue: () => null } as never));
+
+    expect(screen.getByLabelText("Połącz Search Console, aby zobaczyć ruch")).toBeVisible();
+  });
+
+  it("passes numeric traffic values to the locale formatter contracts", () => {
+    const columns = trafficColumns({
+      clickThroughRate: "Współczynnik klikalności",
+      clicks: "Kliknięcia",
+      ctr: "CTR",
+      formatNumber: (value) => `liczba:${value}`,
+      formatPercent: (value) => `procent:${value}`,
+      impressions: "Wyświetlenia",
+      noTrafficDataLabel: "Połącz Search Console, aby zobaczyć ruch",
+    });
+    const clicksColumn = columns.find((column) => column.id === "clicks");
+    const ctrColumn = columns.find((column) => column.id === "ctr");
+    if (typeof clicksColumn?.cell !== "function" || typeof ctrColumn?.cell !== "function") {
+      throw new Error("Expected traffic cell renderers.");
+    }
+
+    render(
+      <>
+        {clicksColumn.cell({ getValue: () => 1_234 } as never)}
+        {ctrColumn.cell({ getValue: () => 0.125 } as never)}
+      </>,
+    );
+
+    expect(screen.getByText("liczba:1234")).toBeVisible();
+    expect(screen.getByText("procent:0.125")).toBeVisible();
+  });
+
   it("sorts the Change column by the earlier-day baseline", () => {
     const columns = keywordColumns(
       {
@@ -86,6 +145,8 @@ describe("keywordColumns", () => {
         onRunCheck: vi.fn(),
       },
       "prj_1",
+      undefined,
+      keywordColumnLabels,
     );
     const column = columns.find((candidate) => candidate.id === "change");
     const getter = column && "accessorFn" in column ? column.accessorFn : undefined;
@@ -103,6 +164,8 @@ describe("keywordColumns", () => {
         onRunCheck: vi.fn(),
       },
       "prj_1",
+      undefined,
+      keywordColumnLabels,
     );
     const scheduleColumn = columns.find((column) => column.id === "frequency");
     const scheduleRow = {
@@ -133,6 +196,8 @@ describe("keywordColumns", () => {
         onRunCheck: vi.fn(),
       },
       "prj_1",
+      undefined,
+      keywordColumnLabels,
     );
 
     expect(columns.find((column) => column.id === "keyword")?.meta).toMatchObject({
@@ -156,6 +221,8 @@ describe("keywordColumns", () => {
         onRunCheck: vi.fn(),
       },
       "prj_1",
+      undefined,
+      keywordColumnLabels,
     );
     const sizing = Object.fromEntries(
       columns.map((column) => [column.id, { minSize: column.minSize, size: column.size }]),

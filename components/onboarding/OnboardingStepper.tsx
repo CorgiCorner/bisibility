@@ -4,6 +4,7 @@ import { OnboardingWizardVideoAction } from "@/components/onboarding/OnboardingW
 import {
   buildOnboardingStepHref,
   type OnboardingFlowState,
+  type OnboardingStep,
   type OnboardingStepNumber,
   onboardingSteps,
   totalOnboardingSteps,
@@ -13,6 +14,7 @@ import type { StepDotState } from "@/components/ui/StepDots";
 import { cn } from "@/lib/ui/cn";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 type OnboardingStepperProps = {
@@ -23,8 +25,8 @@ type OnboardingStepperProps = {
   onStepChange?: (step: OnboardingStepNumber) => void;
 };
 
-function stepAccessibleName(title: string, done: boolean) {
-  return done ? `${title}, completed` : title;
+function stepAccessibleName(title: string, done: boolean, completed: (title: string) => string) {
+  return done ? completed(title) : title;
 }
 
 function onboardingNavStepStateClass(state: StepDotState) {
@@ -40,19 +42,24 @@ export function OnboardingStepper({
   maxReachableStep = currentStep,
   onStepChange,
 }: Readonly<OnboardingStepperProps>) {
+  const t = useTranslations("onboarding");
+  const steps = onboardingSteps(t);
   const progress = (currentStep / totalOnboardingSteps) * 100;
-  const activeStep = onboardingSteps[currentStep - 1];
+  const activeStep = steps[currentStep - 1];
 
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between" data-testid="onboarding-step-header">
         <span className="text-xs text-fg-muted tabular-nums">
-          Step {currentStep} of {totalOnboardingSteps}
+          {t("stepper.stepCount", {
+            currentStep,
+            totalSteps: totalOnboardingSteps,
+          })}
         </span>
         <OnboardingWizardVideoAction currentStep={currentStep} />
       </div>
       <div
-        aria-label="Onboarding progress"
+        aria-label={t("stepper.progress")}
         aria-valuemax={totalOnboardingSteps}
         aria-valuemin={1}
         aria-valuenow={currentStep}
@@ -69,8 +76,8 @@ export function OnboardingStepper({
         <div className="lg:hidden">
           <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{activeStep.title}</h2>
         </div>
-        <nav aria-label="Onboarding steps" className="hidden flex-col gap-2 lg:flex">
-          {onboardingSteps.map((step) => (
+        <nav aria-label={t("stepper.steps")} className="hidden flex-col gap-2 lg:flex">
+          {steps.map((step) => (
             <StepRailItem
               currentStep={currentStep}
               flowState={flowState}
@@ -78,6 +85,7 @@ export function OnboardingStepper({
               maxReachableStep={maxReachableStep}
               onStepChange={onStepChange}
               step={step}
+              completed={(title) => t("stepper.completed", { title })}
             />
           ))}
         </nav>
@@ -93,12 +101,14 @@ function StepRailItem({
   maxReachableStep,
   onStepChange,
   step,
+  completed,
 }: Readonly<{
   currentStep: OnboardingStepNumber;
   flowState?: OnboardingFlowState;
   maxReachableStep: OnboardingStepNumber;
   onStepChange?: (step: OnboardingStepNumber) => void;
-  step: (typeof onboardingSteps)[number];
+  step: OnboardingStep;
+  completed: (title: string) => string;
 }>) {
   // Forward rail jumps skip the current step's Continue / Skip, including
   // required ones. Only completed steps (and the current one) stay clickable.
@@ -147,7 +157,7 @@ function StepRailItem({
 
   return (
     <StepRailNavigation
-      accessibleName={stepAccessibleName(step.title, done)}
+      accessibleName={stepAccessibleName(step.title, done, completed)}
       active={active}
       className={className}
       content={content}
@@ -176,7 +186,7 @@ function StepRailNavigation({
   flowState?: OnboardingFlowState;
   locked: boolean;
   onStepChange?: (step: OnboardingStepNumber) => void;
-  step: (typeof onboardingSteps)[number];
+  step: OnboardingStep;
 }>) {
   if (onStepChange) {
     return (

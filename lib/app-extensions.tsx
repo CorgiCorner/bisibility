@@ -1,4 +1,6 @@
 import "@/lib/deployment/runtime-env.generated";
+import type { AppLocale } from "@/i18n/config";
+import { COST_CALCULATOR_PATH } from "@/lib/cost-estimate/calculator-query";
 import type { SupportWidgetPayload, SupportWidgetSession } from "@/lib/support/widget-contract";
 import type { ReactNode } from "react";
 
@@ -47,9 +49,14 @@ async function renderOnboardingQuizSlot(children: ReactNode): Promise<ReactNode>
   return children;
 }
 
+function onboardingCostCalculatorPath(_locale: AppLocale) {
+  return COST_CALCULATOR_PATH;
+}
+
 export const appExtensions = {
   getSupportWidgetPayload,
   renderHead,
   renderSupportWidget,
   renderOnboardingQuizSlot,
+  onboardingCostCalculatorPath,
 };

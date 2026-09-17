@@ -63,7 +63,7 @@ describe("account queries", () => {
     ]);
   });
 
-  it("builds the account view with provider and session labels", async () => {
+  it("builds locale-neutral provider and session presentation data", async () => {
     const account = await getAccount();
 
     expect(account).toMatchObject({
@@ -77,28 +77,27 @@ describe("account queries", () => {
       twoFactorEnabled: true,
     });
     expect(account.connectedAccounts).toEqual([
-      { connected: true, detail: "Connected to GitHub", provider: "github" },
-      {
-        connected: false,
-        detail: "Not connected. Sign-in is by email code today.",
-        provider: "google",
-      },
+      { connected: true, provider: "github" },
+      { connected: false, provider: "google" },
     ]);
     expect(account.sessions).toEqual([
       expect.objectContaining({
-        createdLabel: "active just now",
+        browser: "Chrome",
         current: true,
-        device: "Chrome on macOS",
-        location: "127.0.0.1",
+        ipAddress: "127.0.0.1",
+        lastActiveAt: dateFromFrozenNow({ hours: 12, minutes: 59, seconds: 45 }),
+        operatingSystem: "macOS",
       }),
       expect.objectContaining({
-        createdLabel: "active 2h ago",
-        device: "Firefox on Windows",
-        location: "Unknown location",
+        browser: "Firefox",
+        ipAddress: null,
+        lastActiveAt: dateFromFrozenNow({ hours: 11, minutes: 30 }),
+        operatingSystem: "Windows",
       }),
       expect.objectContaining({
-        createdLabel: "active 2d ago",
-        device: "Unknown device",
+        browser: null,
+        lastActiveAt: new Date("2026-07-09T12:00:00.000Z"),
+        operatingSystem: null,
       }),
     ]);
   });

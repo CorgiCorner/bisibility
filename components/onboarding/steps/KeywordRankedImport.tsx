@@ -15,9 +15,11 @@ import {
   normalizeRankedKeyword,
   type RankedKeywordError,
   type RankedKeywordsPage,
-  rankedKeywordErrorCopy,
 } from "./keyword-ranked-model";
-import { RankedKeywordSuggestionDrawer } from "./RankedKeywordSuggestionDrawer";
+import {
+  RankedKeywordSuggestionDrawer,
+  type RankedKeywordSuggestionDrawerMessages,
+} from "./RankedKeywordSuggestionDrawer";
 
 export type { FetchRankedKeywordSuggestionsAction } from "./keyword-ranked-model";
 
@@ -28,8 +30,29 @@ type Props = {
   currentKeywords: string;
   domain: string;
   fetchAction?: FetchRankedKeywordSuggestionsAction;
+  messages: KeywordRankedImportMessages;
   onAppendQueries: (queries: string[]) => void;
   projectId: string;
+};
+
+export type KeywordRankedImportMessages = {
+  added: (values: { count: number }) => string;
+  budgetExhausted: string;
+  choose: string;
+  connection: string;
+  connectionLabel: string;
+  description: string;
+  drawer: RankedKeywordSuggestionDrawerMessages;
+  import: string;
+  importFor: (values: { domain: string }) => string;
+  lookupFailed: string;
+  needsReauth: string;
+  noDomain: string;
+  noSource: string;
+  rateLimited: string;
+  raiseBudget: string;
+  reconnect: string;
+  unsupportedLocation: string;
 };
 
 export function KeywordRankedImport({
@@ -39,6 +62,7 @@ export function KeywordRankedImport({
   currentKeywords,
   domain,
   fetchAction,
+  messages,
   onAppendQueries,
   projectId,
 }: Readonly<Props>) {
@@ -60,7 +84,7 @@ export function KeywordRankedImport({
   const selectedConnection =
     connections.find((connection) => connection.id === connectionId) ?? connections[0];
   const rate = rankedKeywordPageRate(selectedConnection?.provider ?? "");
-  const pageCost = rate ? `$${(rate.costCents / 100).toFixed(2)}` : null;
+  const pageCostCents = rate?.costCents ?? null;
   const canLoad = Boolean(
     lastPage &&
       lastPage.offset < 900 &&
@@ -91,7 +115,7 @@ export function KeywordRankedImport({
       setPages((existing) => (offset === 0 ? [result] : [...existing, result]));
       setDrawerOpen(true);
     } catch {
-      showFeedback("Ranked-keyword lookup failed. Try again.");
+      showFeedback(messages.lookupFailed);
     } finally {
       setPending(false);
     }
@@ -105,7 +129,7 @@ export function KeywordRankedImport({
   function appendSelected(queries: string[]) {
     setDrawerOpen(false);
     onAppendQueries(queries);
-    showFeedback(`${queries.length} ${queries.length === 1 ? "keyword" : "keywords"} added`);
+    showFeedback(messages.added({ count: queries.length }));
   }
 
   if (connections.length === 0) return null;
@@ -116,17 +140,15 @@ export function KeywordRankedImport({
     >
       {!compact ? (
         <>
-          <h3 className="m-0 text-[13.5px] font-semibold">Import keywords {domain} ranks for</h3>
-          <p className="m-0 mt-1 text-[12.5px] leading-5 text-fg-muted">
-            Uses your DataForSEO account. Results are cached for 12 hours.
-          </p>
+          <h3 className="m-0 text-[13.5px] font-semibold">{messages.importFor({ domain })}</h3>
+          <p className="m-0 mt-1 text-[12.5px] leading-5 text-fg-muted">{messages.description}</p>
         </>
       ) : null}
       {connections.length > 1 ? (
         <div className="mt-3 flex items-center gap-2">
-          <span className="text-[12px] font-medium text-fg-muted">Connection</span>
+          <span className="text-[12px] font-medium text-fg-muted">{messages.connection}</span>
           <MenuSelect
-            ariaLabel="DataForSEO connection"
+            ariaLabel={messages.connectionLabel}
             onChange={(id) => {
               setConnectionId(id);
               setPages([]);
@@ -145,11 +167,13 @@ export function KeywordRankedImport({
           type="button"
           variant="secondary"
         >
-          {compact ? "Choose keywords" : "Import from DataForSEO"}
-          {pageCost ? ` (about ${pageCost}/page)` : ""}
+          {compact ? messages.choose : messages.import}
+          {pageCostCents == null
+            ? ""
+            : ` ${messages.drawer.aboutPage({ cost: pageCostCents / 100 })}`}
         </Button>
       </div>
-      {error ? <ErrorMessage projectRef={projectId} reason={error} /> : null}
+      {error ? <ErrorMessage messages={messages} projectRef={projectId} reason={error} /> : null}
       {feedback ? <p className={`m-0 mt-2 ${feedbackClass} text-fg-muted`}>{feedback}</p> : null}
       {pages.length > 0 ? (
         <RankedKeywordSuggestionDrawer
@@ -164,11 +188,12 @@ export function KeywordRankedImport({
           onLoadMore={() => void load((lastPage?.offset ?? 0) + 100)}
           open={drawerOpen}
           pageCount={pages.length}
-          pageCost={pageCost}
+          pageCostCents={pageCostCents}
           pending={pending}
           remaining={remaining}
           spentCents={spent}
           lastPageCached={lastPage?.cached ?? false}
+          messages={messages.drawer}
         />
       ) : null}
     </section>
@@ -176,18 +201,31 @@ export function KeywordRankedImport({
 }
 
 function ErrorMessage({
+  messages,
   projectRef,
   reason,
-}: Readonly<{ projectRef: string; reason: RankedKeywordError }>) {
+}: Readonly<{
+  messages: KeywordRankedImportMessages;
+  projectRef: string;
+  reason: RankedKeywordError;
+}>) {
+  const message = {
+    budget_exhausted: messages.budgetExhausted,
+    needs_reauth: messages.needsReauth,
+    no_domain: messages.noDomain,
+    no_source: messages.noSource,
+    rate_limited: messages.rateLimited,
+    unsupported_location: messages.unsupportedLocation,
+  }[reason];
   return (
     <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>
-      {rankedKeywordErrorCopy(reason)}
+      {message}
       {reason === "needs_reauth" ? (
         <Link
           className="ml-1 font-semibold text-accent-text"
           href={appPath(projectRef, "integrations")}
         >
-          Reconnect DataForSEO
+          {messages.reconnect}
         </Link>
       ) : null}
       {reason === "budget_exhausted" ? (
@@ -195,7 +233,7 @@ function ErrorMessage({
           className="ml-1 font-semibold text-accent-text"
           href={`${appPath(projectRef, "settings")}#provider-usage`}
         >
-          Raise the budget
+          {messages.raiseBudget}
         </Link>
       ) : null}
     </p>

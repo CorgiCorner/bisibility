@@ -1,8 +1,37 @@
-import { render, screen } from "@testing-library/react";
+import {
+  renderWithShellMessages as render,
+  renderWithFeatureMessages,
+  shellFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { DemoBanner } from "./DemoBanner";
 
+const preparedPolishShellMessages = {
+  ...shellFeatureTestMessages,
+  shell: {
+    ...shellFeatureTestMessages.shell,
+    demo: {
+      ...shellFeatureTestMessages.shell.demo,
+      editableOwner: {
+        message: "Twoje zmiany widzą odwiedzający demo.",
+        title: "Przestrzeń demonstracyjna.",
+      },
+    },
+  },
+};
+
 describe("demo banner", () => {
+  it.each(["owner", "viewer"] as const)(
+    "links %s visitors to registration outside the demo",
+    (actor) => {
+      render(<DemoBanner actor={actor} capturedAt={null} mode="editable" />);
+      expect(screen.getByRole("link", { name: "Create your account" })).toHaveAttribute(
+        "href",
+        "https://bisibility.com/login",
+      );
+    },
+  );
   it("names read-only access and the real snapshot date instead of beta or live freshness", () => {
     render(
       <DemoBanner actor="viewer" capturedAt="2026-09-06T12:00:00.000Z" mode="legacy-read-only" />,
@@ -37,5 +66,15 @@ describe("demo banner", () => {
       "Changes you make here are visible to demo visitors.",
     );
     expect(screen.queryByText(/Snapshot:/)).not.toBeInTheDocument();
+  });
+
+  it("uses a prepared non-English shell payload without activating that locale", () => {
+    renderWithFeatureMessages(<DemoBanner actor="owner" capturedAt={null} mode="editable" />, {
+      locale: "pl",
+      messages: preparedPolishShellMessages,
+    });
+
+    expect(screen.getByRole("status")).toHaveTextContent("Przestrzeń demonstracyjna.");
+    expect(screen.getByRole("status")).toHaveTextContent("Twoje zmiany widzą odwiedzający demo.");
   });
 });

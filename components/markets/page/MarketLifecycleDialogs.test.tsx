@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ArchiveMarketDialog } from "./ArchiveMarketDialog";
 import { RestoreMarketDialog } from "./RestoreMarketDialog";

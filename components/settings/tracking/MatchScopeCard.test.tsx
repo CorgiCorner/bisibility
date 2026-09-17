@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { MatchScopeCard } from "@/components/settings/tracking/MatchScopeCard";
-import { render, screen, within } from "@testing-library/react";
+import {
+  renderWithTrackingSettingsMessages as render,
+  renderWithFeatureMessages,
+  trackingSettingsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 describe("MatchScopeCard", () => {
@@ -29,6 +34,28 @@ describe("MatchScopeCard", () => {
 
     expect(screen.getByText("Set a domain first")).toBeInTheDocument();
     expect(screen.queryByText("Current")).not.toBeInTheDocument();
+  });
+
+  it("uses the injected Polish feature payload without changing the tracked domain", () => {
+    renderWithFeatureMessages(<MatchScopeCard domain="example.com" />, {
+      locale: "pl",
+      messages: {
+        ...trackingSettingsFeatureTestMessages,
+        projectSettingsTracking: {
+          ...trackingSettingsFeatureTestMessages.projectSettingsTracking,
+          matchScope: {
+            ...trackingSettingsFeatureTestMessages.projectSettingsTracking.matchScope,
+            description: "Kryteria wyniku SERP dla tego projektu.",
+            primaryDescription:
+              "Uwzględnia {domain} oraz www.{domain} przez HTTP i HTTPS. Pozostałe subdomeny są oddzielne.",
+            title: "Zakres dopasowania",
+          },
+        },
+      },
+    });
+
+    expect(screen.getByText("Zakres dopasowania")).toBeInTheDocument();
+    expect(screen.getByText(/Uwzględnia example\.com oraz www\.example\.com/)).toBeInTheDocument();
   });
 
   it("cites the rank-check result matcher that establishes the current scope", () => {

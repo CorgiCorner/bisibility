@@ -1,19 +1,21 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { ChunkedTransferError } from "@/components/settings/migration/useChunkedTransfer";
 import { Button } from "@/components/ui/Button";
 import type { MigrationImportCompletion } from "@/lib/migration/result";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { classifyActionError } from "@/lib/ui/action-error";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { CloudArrowUpIcon as CloudArrowUp } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { FileArrowUpIcon as FileArrowUp } from "@phosphor-icons/react/dist/csr/FileArrowUp";
 import { FileJsIcon as FileJs } from "@phosphor-icons/react/dist/csr/FileJs";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { CloudImportPackageFile } from "./cloud-token";
+import { type PackageTransferProgress, PackageTransferStatus } from "./PackageTransferStatus";
 import { assertPackageFileSize, parsePackageContent, parsePackageUpload } from "./package-content";
-import { packageCountSummary, postImportPackage } from "./package-transfer-helpers";
+import { postImportPackage } from "./package-transfer-helpers";
 import { downloadWorkspacePackage } from "./workspace-package-download";
 
 type ExportPackageAction = (input: { projectId: string }) => Promise<CloudImportPackageFile>;
@@ -27,7 +29,6 @@ type ServerTransferAction = (input: { projectId: string; token: string }) => Pro
   completion: MigrationImportCompletion;
   file?: CloudImportPackageFile;
 }>;
-type TransferProgress = { message: string; sentChunks: number; totalChunks: number };
 type PackageTransferPanelProps = {
   disabled?: boolean;
   exportPackageAction: ExportPackageAction;
@@ -38,74 +39,46 @@ type PackageTransferPanelProps = {
   onTransferStart?: () => boolean | Promise<boolean>;
   onTransferSuccess?: (completion: MigrationImportCompletion) => void;
   packageSource?: "selected" | "server";
-  progress?: TransferProgress | null;
+  progress?: PackageTransferProgress | null;
   projectId: string;
   rawToken: string | null;
   serverTransferAction?: ServerTransferAction;
   transferPackageAction?: TransferPackageAction;
 };
-function errorMessage(error: unknown) {
-  return actionErrorMessage(error, "Package transfer failed.");
-}
-function TransferStatus({
-  displayedFilename,
-  file,
-  hasToken,
-  message,
-  missingTokenMessage,
-  progress,
-}: Readonly<{
-  displayedFilename: string | null;
-  file: CloudImportPackageFile | null;
-  hasToken: boolean;
-  message: string | null;
-  missingTokenMessage: string;
-  progress: PackageTransferPanelProps["progress"];
-}>) {
-  return (
-    <>
-      {file ? (
-        <div className="mx-5 mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
-          <CheckCircle aria-hidden className="text-green-text" size={15} weight="regular" />
-          <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
-            {displayedFilename ?? file.filename}
-          </span>
-          <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-            {packageCountSummary(file)}
-          </span>
-        </div>
-      ) : null}
-      {progress ? (
-        <div className="mx-5 mb-4 rounded-control border border-border bg-bg px-3.5 py-3">
-          <div className="flex items-center justify-between gap-3 text-[12px]">
-            <span className="font-medium text-fg-muted">{progress.message}</span>
-            {progress.totalChunks > 0 ? (
-              <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-                {progress.sentChunks} of {progress.totalChunks}
-              </span>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-      {!hasToken ? (
-        <div className="mx-5 mb-4 flex items-start gap-2.5 rounded-control border border-border bg-bg px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
-          {/* biome-ignore format: Keep this icon compact for the file line limit. */}
-          <WarningCircle aria-hidden className="mt-px flex-none text-accent-text" size={15} weight="regular" />
-          {missingTokenMessage}
-        </div>
-      ) : null}
-      {message ? (
-        <div className="border-border border-t px-5 py-3 text-[12.5px] text-fg-muted">
-          {message}
-        </div>
-      ) : null}
-    </>
-  );
+type PackageTranslator = ReturnType<typeof useTranslations<"projectSettingsMigration.package">>;
+
+function errorMessage(
+  error: unknown,
+  t: PackageTranslator,
+  sharedErrors: ReturnType<typeof useSharedErrorMessages>,
+) {
+  const classified = classifyActionError(error);
+  if (classified.kind === "staleDeployment") return sharedErrors.staleDeployment();
+  if (classified.kind === "serverComponentDigest") {
+    return sharedErrors.serverComponentDigest({ digest: classified.digest });
+  }
+  if (error instanceof ChunkedTransferError) {
+    return error.reason === "unreachable" ? t("error.unreachable") : t("error.sessionsUnsupported");
+  }
+  const message = error instanceof Error ? error.message : "";
+  if (message === "Package must contain valid JSON.") return t("error.invalidJson");
+  if (message === "Package must use the strict v5 transfer format.") {
+    return t("error.unsupportedVersion");
+  }
+  if (message === "Package must contain a strict prj_ v3 project ID.") {
+    return t("error.invalidProject");
+  }
+  if (message === "Upload a JSON export package with at least one keyword.") {
+    return t("error.missingKeyword");
+  }
+  if (message === "Archive is invalid or truncated.") return t("error.archive");
+  if (message.includes("maximum") || message.includes("too large")) return t("error.tooLarge");
+  return t("error.generic");
 }
 export function PackageTransferPanel({
   disabled,
   exportPackageAction,
-  missingTokenMessage = "Generate a new token above before transferring. Existing tokens cannot be shown again.",
+  missingTokenMessage,
   onExportSuccess,
   onStatusRefresh,
   onTransferEnd,
@@ -118,6 +91,8 @@ export function PackageTransferPanel({
   serverTransferAction,
   transferPackageAction,
 }: Readonly<PackageTransferPanelProps>) {
+  const t = useTranslations("projectSettingsMigration.package");
+  const sharedErrors = useSharedErrorMessages();
   const [file, setFile] = useState<CloudImportPackageFile | null>(null);
   const [displayedFilename, setDisplayedFilename] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -131,9 +106,9 @@ export function PackageTransferPanel({
       setFile(next);
       setDisplayedFilename(downloadedFilename);
       onExportSuccess?.();
-      setMessage("Package exported and downloaded. You can transfer this package now.");
+      setMessage(t("exported"));
     } catch (error) {
-      setMessage(errorMessage(error));
+      setMessage(errorMessage(error, t, sharedErrors));
     } finally {
       setBusy(null);
     }
@@ -156,9 +131,9 @@ export function PackageTransferPanel({
         filename: upload.name,
         mimeType: upload.type || "application/json",
       });
-      setMessage("Package loaded. Review the counts, then transfer it to the destination.");
+      setMessage(t("loaded"));
     } catch (error) {
-      setMessage(errorMessage(error));
+      setMessage(errorMessage(error, t, sharedErrors));
     } finally {
       setBusy(null);
     }
@@ -171,7 +146,10 @@ export function PackageTransferPanel({
     let started = false;
     try {
       const canTransfer = await onTransferStart?.();
-      if (canTransfer === false) throw new Error("Read-only mode could not be enabled.");
+      if (canTransfer === false) {
+        setMessage(t("error.readOnly"));
+        return;
+      }
       started = true;
       if (serverExport && serverTransferAction) {
         const result = await serverTransferAction({ projectId, token: rawToken });
@@ -182,7 +160,7 @@ export function PackageTransferPanel({
         }
         onTransferSuccess?.(result.completion);
         await onStatusRefresh();
-        setMessage("Import complete. The destination committed the transferred package.");
+        setMessage(t("complete"));
         return;
       }
       const activeFile = file ?? (await exportPackageAction({ projectId }));
@@ -205,9 +183,9 @@ export function PackageTransferPanel({
       }
       onTransferSuccess?.(completion);
       await onStatusRefresh();
-      setMessage("Import complete. The destination committed the transferred package.");
+      setMessage(t("complete"));
     } catch (error) {
-      setMessage(errorMessage(error));
+      setMessage(errorMessage(error, t, sharedErrors));
       await onStatusRefresh().catch(() => undefined);
     } finally {
       setBusy(null);
@@ -226,11 +204,9 @@ export function PackageTransferPanel({
           <FileJs aria-hidden size={20} weight="regular" />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-[13.5px] font-semibold">Package and transfer</div>
+          <div className="text-[13.5px] font-semibold">{t("title")}</div>
           <div className="mt-0.5 text-[12px] text-fg-muted">
-            {serverExport
-              ? "Export this instance server-side and send it with the token."
-              : "Export this instance or upload a JSON or zip export, then send it with the token."}
+            {serverExport ? t("serverDescription") : t("selectedDescription")}
           </div>
         </div>
       </div>
@@ -243,14 +219,14 @@ export function PackageTransferPanel({
             <Button
               disabled={isBusy}
               loading={busy === "export"}
-              loadingLabel="Exporting..."
+              loadingLabel={t("exporting")}
               onClick={handleExport}
               size="lg"
               startIcon={<DownloadSimple aria-hidden size={15} weight="regular" />}
               type="button"
               variant="secondary"
             >
-              Export package
+              {t("export")}
             </Button>
             <label
               className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-border-control bg-bg-elev px-3.5 font-medium text-[13px] text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-solid ${
@@ -258,7 +234,7 @@ export function PackageTransferPanel({
               }`}
             >
               <FileArrowUp aria-hidden size={15} weight="regular" />
-              {busy === "upload" ? "Reading..." : "Upload JSON or ZIP"}
+              {busy === "upload" ? t("reading") : t("upload")}
               <input
                 accept="application/json,application/zip,.json,.zip"
                 className="sr-only"
@@ -273,23 +249,23 @@ export function PackageTransferPanel({
           disabled={isBusy || !hasToken || (!serverExport && !file)}
           endIcon={<CaretRight aria-hidden size={12} weight="regular" />}
           loading={busy === "transfer"}
-          loadingLabel="Transferring..."
+          loadingLabel={t("transferring")}
           onClick={handleTransfer}
           size="lg"
           startIcon={<CloudArrowUp aria-hidden size={15} weight="regular" />}
           type="button"
           variant="primary"
         >
-          Transfer
+          {t("transfer")}
         </Button>
       </div>
 
-      <TransferStatus
+      <PackageTransferStatus
         displayedFilename={displayedFilename}
         file={file}
         hasToken={hasToken}
         message={message}
-        missingTokenMessage={missingTokenMessage}
+        missingTokenMessage={missingTokenMessage ?? t("missingToken")}
         progress={progress}
       />
     </div>

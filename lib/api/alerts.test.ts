@@ -192,6 +192,29 @@ describe("alert API routes", () => {
     );
   });
 
+  it("keeps the pre-localization alert-rule resource contract for list and mutation responses", async () => {
+    const list = await call(
+      authedRequest("GET", `/projects/${projectPublicId}/alert-rules`),
+      `/projects/${projectPublicId}/alert-rules`,
+    );
+    const update = await call(
+      authedRequest("PATCH", `/alert-rules/${rulePublicId}`, validRuleBody),
+      `/alert-rules/${rulePublicId}`,
+    );
+
+    for (const resource of [(await list.json()).data[0], await update.json()]) {
+      expect(resource).toMatchObject({
+        channel: "Email",
+        condition: "rank crosses below #10",
+        fires: "0 this week",
+        period: "Each check",
+        scope: "All keywords",
+      });
+      expect(resource).not.toHaveProperty("fired_this_week");
+      expect(resource).not.toHaveProperty("market_scope");
+    }
+  });
+
   it("creates alert rules as API-owned records", async () => {
     const response = await call(
       authedRequest("POST", `/projects/${projectPublicId}/alert-rules`, validRuleBody),

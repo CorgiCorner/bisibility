@@ -1,10 +1,12 @@
 import { AppDrawer } from "@/components/ui/AppDrawer";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useRef, useState } from "react";
 
 const meta = {
   title: "UI/AppDrawer",
   component: AppDrawer,
+  decorators: [withSharedMessages],
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof AppDrawer>;
 

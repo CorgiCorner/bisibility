@@ -10,11 +10,12 @@ import type { NavItem, NavItemGroupDescriptor } from "@/lib/nav/nav-items";
 import { navItemGroups, RAIL_ICON_SIZE } from "@/lib/nav/nav-items";
 import { FlaskIcon as Flask } from "@phosphor-icons/react/dist/ssr/Flask";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export type SidebarRailRowProps = {
   collapsed: boolean;
   currentHref: string;
-  item: NavItem;
+  item: LocalizedNavItem;
   onNavigate?: () => void;
 };
 
@@ -95,7 +96,7 @@ export function SidebarRailRow({
         {collapsed ? null : (
           <>
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
-            <SidebarRailBadge badge={item.badge} />
+            <SidebarRailBadge badge={item.badge} label={item.badgeLabel} />
           </>
         )}
       </Link>
@@ -103,12 +104,15 @@ export function SidebarRailRow({
   );
 }
 
-function SidebarRailBadge({ badge }: Readonly<{ badge?: NavItem["badge"] }>) {
+function SidebarRailBadge({
+  badge,
+  label,
+}: Readonly<{ badge?: NavItem["badge"]; label?: string }>) {
   if (badge === "experimental") {
     return (
-      <Tooltip content="Experimental" placement="top" semantics="description">
+      <Tooltip content={label ?? ""} placement="top" semantics="description">
         <span
-          aria-label="Experimental"
+          aria-label={label}
           className="grid h-[30px] w-[30px] shrink-0 place-items-center text-fg-muted transition-colors hover:text-fg"
           role="img"
         >
@@ -137,7 +141,7 @@ function SidebarRailBadge({ badge }: Readonly<{ badge?: NavItem["badge"] }>) {
         badge === "new" ? "bg-accent-soft text-accent-text" : "bg-bg-sunken text-fg-muted",
       ].join(" ")}
     >
-      {badge}
+      {label}
     </span>
   );
 }
@@ -181,6 +185,39 @@ export type SidebarRailGroupsProps = {
   onNavigate?: () => void;
 };
 
+type LocalizedNavItem = NavItem & { badgeLabel?: string };
+
+const navigationItemKeys = {
+  Alerts: "items.alerts",
+  Backlinks: "items.backlinks",
+  Competitors: "items.competitors",
+  Dashboard: "items.dashboard",
+  "Domain Overview": "items.domainOverview",
+  Install: "items.install",
+  Integrations: "items.integrations",
+  "Keyword Research": "items.keywordResearch",
+  Markets: "items.markets",
+  "Rank Tracker": "items.rankTracker",
+  Runs: "items.runs",
+  "Search Console": "items.searchConsole",
+  Settings: "items.settings",
+} as const;
+
+function localizedItem(t: ReturnType<typeof useTranslations>, item: NavItem): LocalizedNavItem {
+  const key = navigationItemKeys[item.label as keyof typeof navigationItemKeys];
+  if (!key) throw new Error(`Missing shell navigation key for ${item.label}`);
+  return { ...item, badgeLabel: item.badge ? t(`badges.${item.badge}`) : undefined, label: t(key) };
+}
+
+function localizedGroup(t: ReturnType<typeof useTranslations>, group: NavItemGroupDescriptor) {
+  return {
+    ...group,
+    label: t(`groups.${group.id}.label`),
+    tag: t(`groups.${group.id}.tag`),
+    tooltip: t(`groups.${group.id}.tooltip`),
+  };
+}
+
 /**
  * Dashboard is a standalone top row. The headed groups below it stay in model order.
  */
@@ -190,9 +227,11 @@ export function SidebarRailGroups({
   items,
   onNavigate,
 }: Readonly<SidebarRailGroupsProps>) {
+  const t = useTranslations("shell.navigation");
+  const localizedItems = items.map((item) => localizedItem(t, item));
   return (
     <>
-      {items
+      {localizedItems
         .filter((item) => item.group === null)
         .map((item) => (
           <SidebarRailRow
@@ -203,24 +242,27 @@ export function SidebarRailGroups({
             onNavigate={onNavigate}
           />
         ))}
-      {navItemGroups.map((group) => (
-        <div className="flex flex-col gap-0.5" key={group.id}>
-          <SidebarRailGroupHeading collapsed={collapsed} group={group} />
-          {items
-            .filter((item) => item.group === group.id)
-            .map((item) => (
-              <SidebarRailRow
-                collapsed={collapsed}
-                currentHref={currentHref}
-                item={item}
-                // Collapsing remounts the row rather than re-rendering it, so a tooltip that was
-                // warm in the other state cannot open without fresh pointer or focus input.
-                key={`${item.href}:${collapsed ? "collapsed" : "expanded"}`}
-                onNavigate={onNavigate}
-              />
-            ))}
-        </div>
-      ))}
+      {navItemGroups.map((group) => {
+        const localized = localizedGroup(t, group);
+        return (
+          <div className="flex flex-col gap-0.5" key={group.id}>
+            <SidebarRailGroupHeading collapsed={collapsed} group={localized} />
+            {localizedItems
+              .filter((item) => item.group === group.id)
+              .map((item) => (
+                <SidebarRailRow
+                  collapsed={collapsed}
+                  currentHref={currentHref}
+                  item={item}
+                  // Collapsing remounts the row rather than re-rendering it, so a tooltip that was
+                  // warm in the other state cannot open without fresh pointer or focus input.
+                  key={`${item.href}:${collapsed ? "collapsed" : "expanded"}`}
+                  onNavigate={onNavigate}
+                />
+              ))}
+          </div>
+        );
+      })}
     </>
   );
 }

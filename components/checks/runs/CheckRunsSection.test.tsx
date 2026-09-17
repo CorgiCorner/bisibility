@@ -1,7 +1,8 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import keywordDetailMessages from "@/messages/core/en/project-rank-tracker-keyword-detail.json";
 import { stubIntersectionObserver, stubResizeObserver } from "@/tests/observers";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { countryLevelTooltip } from "./CheckRunDetails";
 import { CheckRunsSection, type CheckRunsSectionProps } from "./CheckRunsSection";
 import {
   checkRunsFixtureView,
@@ -10,6 +11,9 @@ import {
   completedRunFixture,
   staleRunFixture,
 } from "./check-runs-fixtures";
+
+const countryLevelTooltip =
+  keywordDetailMessages.projectRankTracker.keywordDetail.results.countryLevelRunTooltip;
 
 function props(overrides: Partial<CheckRunsSectionProps> = {}): CheckRunsSectionProps {
   return {

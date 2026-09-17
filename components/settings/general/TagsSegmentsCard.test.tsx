@@ -1,13 +1,34 @@
 import { TagsSegmentsCard } from "@/components/settings/general/TagsSegmentsCard";
+import {
+  generalSettingsFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const tags = [
   { color: "var(--blue)", keywordCount: 0, label: "product", segmentCount: 0 },
   { color: "var(--green)", keywordCount: 3, label: "guides", segmentCount: 1 },
 ];
+
+const reorderedUsageMessages = {
+  ...generalSettingsFeatureTestMessages,
+  projectSettingsGeneral: {
+    ...generalSettingsFeatureTestMessages.projectSettingsGeneral,
+    tags: {
+      ...generalSettingsFeatureTestMessages.projectSettingsGeneral.tags,
+      usageBothManyKeywords:
+        "{segmentCount, plural, one {# segmento antes de {keywordCount, number} palabras lo usa.} other {# segmentos antes de {keywordCount, number} palabras lo usan.}}",
+    },
+  },
+};
+
+function render(ui: ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: generalSettingsFeatureTestMessages });
+}
 
 describe("TagsSegmentsCard", () => {
   beforeEach(() => {
@@ -126,6 +147,53 @@ describe("TagsSegmentsCard", () => {
     await waitFor(() =>
       expect(deleteTag).toHaveBeenCalledWith({ name: "guides", projectId: "prj_7Kd2Qf9m" }),
     );
+  });
+
+  it.each([
+    [0, 1, "1 segment uses it."],
+    [1, 0, "1 keyword uses it."],
+    [3, 0, "3 keywords use it."],
+    [3, 1, "3 keywords and 1 segment use it."],
+  ])(
+    "renders a complete usage sentence for %i keywords and %i segments",
+    async (keywordCount, segmentCount, expectedUsage) => {
+      const user = userEvent.setup();
+      render(
+        <TagsSegmentsCard
+          canCreate
+          canDelete
+          createTag={vi.fn()}
+          deleteTag={vi.fn()}
+          projectId="prj_7Kd2Qf9m"
+          tags={[{ color: "var(--green)", keywordCount, label: "guides", segmentCount }]}
+        />,
+      );
+
+      await user.click(screen.getByRole("button", { name: "Remove guides" }));
+
+      expect(screen.getByRole("dialog", { name: "Remove guides?" })).toHaveTextContent(
+        expectedUsage,
+      );
+    },
+  );
+
+  it("passes raw counts to a reordered non-English usage message", async () => {
+    const user = userEvent.setup();
+    renderWithFeatureMessages(
+      <TagsSegmentsCard
+        canCreate
+        canDelete
+        createTag={vi.fn()}
+        deleteTag={vi.fn()}
+        projectId="prj_7Kd2Qf9m"
+        tags={[{ color: "var(--green)", keywordCount: 3, label: "guides", segmentCount: 2 }]}
+      />,
+      { locale: "es-ES", messages: reorderedUsageMessages },
+    );
+
+    await user.click(screen.getByRole("button", { name: "Remove guides" }));
+
+    expect(screen.getByText("2 segmentos antes de 3 palabras lo usan.")).toBeVisible();
   });
 
   it("renders a deletion error for an unused tag without rejecting the click handler", async () => {

@@ -70,6 +70,7 @@ describe("app extension registry", () => {
       "renderHead",
       "renderSupportWidget",
       "renderOnboardingQuizSlot",
+      "onboardingCostCalculatorPath",
     ];
     const publicRegistryBody = readSnapshotRegistrySource().match(
       /export const appExtensions = \{(?<body>[\s\S]*?)\};/,
@@ -99,6 +100,8 @@ describe("app extension registry", () => {
 
     expect(importedModules).toEqual([
       "@/lib/deployment/runtime-env.generated",
+      "@/i18n/config",
+      "@/lib/cost-estimate/calculator-query",
       "@/lib/support/widget-contract",
       "react",
     ]);

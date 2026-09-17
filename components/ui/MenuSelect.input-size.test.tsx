@@ -1,10 +1,11 @@
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { render, screen } from "@testing-library/react";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 describe("MenuSelect input size", () => {
   it("uses the standard input control size when requested", () => {
-    render(
+    renderWithSharedMessages(
       <MenuSelect
         ariaLabel="Schedule day"
         onChange={() => undefined}

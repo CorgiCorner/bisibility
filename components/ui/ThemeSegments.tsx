@@ -10,6 +10,7 @@ import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import { MoonStarsIcon as MoonStars } from "@phosphor-icons/react/dist/csr/MoonStars";
 import { PaletteIcon as Palette } from "@phosphor-icons/react/dist/csr/Palette";
 import { SunIcon as Sun } from "@phosphor-icons/react/dist/csr/Sun";
+import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
 import { SegmentedControl, type SegmentedControlSize } from "./SegmentedControl";
 
@@ -21,12 +22,6 @@ export type ThemeSegmentsProps = {
   defaultPreference?: ThemePreference;
   size?: ThemeSegmentsSize;
 };
-
-const segments = [
-  { preference: "light" as const, label: "Light", Icon: Sun },
-  { preference: "dark" as const, label: "Dark", Icon: MoonStars },
-  { preference: "system" as const, label: "System", Icon: Monitor },
-];
 
 const iconSizeBySize = { sm: 13, md: 15 } as const;
 
@@ -45,6 +40,7 @@ export function ThemeSegments({
   defaultPreference = "system",
   size = "sm",
 }: Readonly<ThemeSegmentsProps>) {
+  const t = useTranslations("shared.controls.theme");
   const preference = useSyncExternalStore(
     subscribeThemePreference,
     readThemePreference,
@@ -54,13 +50,17 @@ export function ThemeSegments({
 
   return (
     <SegmentedControl
-      ariaLabel="Theme"
+      ariaLabel={t("label")}
       className={className}
       fitContent
       onChange={(value) => applyTheme(value as ThemePreference)}
       activeClassName="bg-bg-elev"
       optionClassName={optionClassNameBySize[size]}
-      options={segments.map(({ preference: mode, label, Icon }) => ({
+      options={[
+        { preference: "light" as const, label: t("light"), Icon: Sun },
+        { preference: "dark" as const, label: t("dark"), Icon: MoonStars },
+        { preference: "system" as const, label: t("system"), Icon: Monitor },
+      ].map(({ preference: mode, label, Icon }) => ({
         ariaLabel: label,
         label: <Icon aria-hidden size={iconSize} weight="regular" />,
         tooltip: label,
@@ -74,11 +74,12 @@ export function ThemeSegments({
 
 /** The user-menu row: a labelled line with the control pinned to the right. */
 export function ThemeSegmentsRow({ defaultPreference }: Readonly<ThemeSegmentsProps>) {
+  const t = useTranslations("shared.controls.theme");
   return (
     <div className="flex items-center justify-between gap-2 px-[9px] py-1.5">
       <span className="inline-flex items-center gap-[9px] text-[13px] text-fg">
         <Palette aria-hidden className="text-fg-muted" size={16} weight="regular" />
-        Theme
+        {t("label")}
       </span>
       <ThemeSegments defaultPreference={defaultPreference} size="sm" />
     </div>

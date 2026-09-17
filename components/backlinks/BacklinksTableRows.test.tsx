@@ -1,6 +1,7 @@
 import { DateFormatProvider } from "@/components/dates/DateFormatProvider";
+import { renderWithBacklinksMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { BacklinksRow } from "@/lib/backlinks/types";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
 import { BacklinksRows } from "./BacklinksTableRows";

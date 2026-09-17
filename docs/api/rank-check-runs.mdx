@@ -29,43 +29,6 @@ row whose `run_id` equals that ID. The matching row includes the final position
 and rank-check ID. `run_id` is `null` only for legacy history rows that predate
 runs.
 
-## Operations snapshot
-
-`GET /api/operations?project=prj_...` returns active rank-check runs and active
-Search Console imports for the app header. A rank-check operation includes
-`provider`, a nullable SERP provider catalogue ID, and `providerLabel`, its
-nullable catalogue label. The label is present only when the run's recorded
-launch policy names a known provider; otherwise both fields are `null`.
-`nextCheckAt` is the earliest queued check for a queued or running run, or `null`
-while a target is in flight or no queued check has a start time.
-`firstNotBefore` exposes that time before the first target starts, otherwise `null`.
-`startedTargets` counts targets with execution evidence, excluding unstarted
-queued, skipped, and cancelled targets. `hasRunningTargets` reports whether a
-target is currently in flight. `scheduleTiming` explains the schedule's spread
-or start window, or is `null` for a run without a schedule.
-`launchedAt` records materialization; `startedAt` is `null` until the first target
-is claimed or started, and is not reset by subsequent checks. A run completed
-without materializing targets has equal `startedAt` and `finishedAt`.
-`etaSeconds` is a nullable server-side throughput estimate:
-it is available only after at least three completed targets and 30 seconds of
-elapsed execution. `snapshotAt` is the server time used for relative operation copy.
-
-```json
-{
-  "operations": [
-    {
-      "kind": "rank_check",
-      "id": "rcr_a00000000000000000000000",
-      "provider": "serpapi",
-      "providerLabel": "SerpApi",
-      "etaSeconds": 240,
-      "snapshotAt": "2026-09-03T10:00:30.000Z",
-      "status": "running"
-    }
-  ]
-}
-```
-
 ## Selection payload
 
 `POST /api/rank-check-runs/preview` and `POST /api/rank-check-runs` both take a
@@ -356,7 +319,26 @@ schedule; deleting it from this membership returns it to manual checking.
 GET /api/operations?project=prj_a00000000000000000000000
 ```
 
-This endpoint is session-authenticated and returns an unwrapped snapshot:
+This session-authenticated endpoint returns active rank-check runs and active
+Search Console imports for the app header. A rank-check operation includes
+`provider`, a nullable SERP provider catalogue ID, and `providerLabel`, its
+nullable catalogue label. The label is present only when the run's recorded
+launch policy names a known provider; otherwise both fields are `null`.
+`nextCheckAt` is the earliest queued check for a queued or running run, or `null`
+while a target is in flight or no queued check has a start time.
+`firstNotBefore` exposes that time before the first target starts, otherwise `null`.
+`startedTargets` counts targets with execution evidence, excluding unstarted
+queued, skipped, and cancelled targets. `hasRunningTargets` reports whether a
+target is currently in flight. `scheduleTiming` explains the schedule's spread
+or start window, or is `null` for a run without a schedule.
+`launchedAt` records materialization; `startedAt` is `null` until the first target
+is claimed or started, and is not reset by subsequent checks. A run completed
+without materializing targets has equal `startedAt` and `finishedAt`.
+`etaSeconds` is a nullable server-side throughput estimate: it is available only
+after at least three completed targets and 30 seconds of elapsed execution.
+`snapshotAt` is the server time used for relative operation copy.
+
+The response is an unwrapped snapshot:
 
 ```json
 {
@@ -364,6 +346,8 @@ This endpoint is session-authenticated and returns an unwrapped snapshot:
     {
       "kind": "rank_check",
       "id": "rcr_a00000000000000000000000",
+      "provider": "serpapi",
+      "providerLabel": "SerpApi",
       "status": "running",
       "outcome": null,
       "trigger": "scheduled",

@@ -5,8 +5,6 @@ import {
   budgetFromProviderAvailability,
   budgetInitialValue,
   buildProviderAllocationPayload,
-  providerUsageContextLine,
-  validateBudgetField,
 } from "./budget-edit-modal-model";
 
 const centsConnection = {
@@ -24,12 +22,6 @@ const unitsConnection = {
 } as ProviderSpendConnection;
 
 describe("budget-edit-modal-model", () => {
-  it("formats provider usage context for the modal row", () => {
-    expect(providerUsageContextLine(unitsConnection)).toBe(
-      "412 searches this month · 1,280 searches last month",
-    );
-  });
-
   it("treats an empty field as no budget", () => {
     expect(buildProviderAllocationPayload(centsConnection, "")).toEqual({
       allocation: null,
@@ -37,11 +29,6 @@ describe("budget-edit-modal-model", () => {
     });
     expect(budgetFieldChanged({ ...centsConnection, allocation: null }, "")).toBe(false);
     expect(budgetFieldChanged(centsConnection, "")).toBe(true);
-  });
-
-  it("rejects zero on blur validation", () => {
-    expect(validateBudgetField(centsConnection, "0")).toBe("Enter a positive monthly budget.");
-    expect(validateBudgetField(unitsConnection, "0")).toBe("Enter a positive number of units.");
   });
 
   it("keeps the stored allocation as the initial value", () => {

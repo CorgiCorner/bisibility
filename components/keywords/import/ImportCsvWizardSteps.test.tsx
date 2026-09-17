@@ -1,5 +1,6 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { parseKeywordImportCsvRows } from "@/lib/keywords/import-csv-parser";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ImportStepper, TemplateStep } from "./ImportCsvWizardSteps";
 

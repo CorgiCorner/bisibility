@@ -18,8 +18,8 @@ import {
   type SearchInsightsSortKey,
 } from "@/lib/search-insights/queries/top-rows-sort";
 import { actionErrorMessage } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { ROWS_FAILED } from "./search-insights-copy";
 import {
   nextShow,
   nextSort,
@@ -111,6 +111,7 @@ export function useSearchInsightsRows({
   view,
 }: UseSearchInsightsRowsInput) {
   const { showToast } = useToast();
+  const t = useTranslations("projectSearchInsights.copy");
   const [snapshot, setSnapshot] = useState<RowsSnapshot>(() => seedRows(view, property));
   const [loading, setLoading] = useState<RowsLoading>(IDLE);
   // A newer read owns its table: an old expansion cannot replace a newer sort or clear its spinner.
@@ -209,7 +210,7 @@ export function useSearchInsightsRows({
       });
     } catch (error) {
       if (isLatestRequest(kind, revision)) {
-        showToast(actionErrorMessage(error, ROWS_FAILED), { severity: "error" });
+        showToast(actionErrorMessage(error, t("rowsFailed")), { severity: "error" });
       }
     } finally {
       setLoading((current) =>
@@ -255,7 +256,7 @@ export function useSearchInsightsRows({
           : current,
       );
       if (isLatestRequest(kind, revision)) {
-        showToast(actionErrorMessage(error, ROWS_FAILED), { severity: "error" });
+        showToast(actionErrorMessage(error, t("rowsFailed")), { severity: "error" });
       }
     } finally {
       setLoading((current) =>

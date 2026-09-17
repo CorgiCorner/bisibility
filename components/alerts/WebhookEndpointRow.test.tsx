@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithAlertMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WebhookEndpointRow } from "./WebhookEndpointRow";
 
@@ -155,8 +156,8 @@ describe("WebhookEndpointRow", () => {
     );
 
     expect(screen.getByText(/last successful delivery/i)).toBeInTheDocument();
-    expect(screen.getByText("alert.fired failed")).toBeInTheDocument();
-    expect(screen.getByText("alert.fired sent")).toBeInTheDocument();
+    expect(screen.getByText("alert.fired Failed")).toBeInTheDocument();
+    expect(screen.getByText("alert.fired Sent")).toBeInTheDocument();
     expect(screen.getByText("Webhook failed with status 500.")).toBeInTheDocument();
   });
 

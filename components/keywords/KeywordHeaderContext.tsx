@@ -3,6 +3,7 @@
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { AddKeywordsMatrixInput, BulkKeywordIdsInput } from "@/lib/schemas/keyword";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { KeywordAction } from "./action-utils";
 import { KeywordMarketsDrawer } from "./KeywordMarketsDrawer";
@@ -29,12 +30,13 @@ export function KeywordHeaderContext({
   projectMarkets,
   targets,
 }: Readonly<KeywordHeaderContextProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.empty");
   const [editingMarkets, setEditingMarkets] = useState(false);
   return (
     <>
       {/* biome-ignore lint/a11y/useSemanticElements: navigation context, not form fields */}
       <div
-        aria-label="Keyword context"
+        aria-label={t("keywordContext")}
         className="flex min-w-0 max-w-full flex-wrap items-center gap-2"
         role="group"
       >

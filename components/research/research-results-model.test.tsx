@@ -23,11 +23,11 @@ describe("chronologicalTrend", () => {
 });
 
 describe("intentChipMeta", () => {
-  it("maps intents to the short design labels and skips unknown values", () => {
-    expect(intentChipMeta("commercial")?.label).toBe("Comm");
-    expect(intentChipMeta("informational")?.label).toBe("Info");
-    expect(intentChipMeta("navigational")?.label).toBe("Nav");
-    expect(intentChipMeta("transactional")?.label).toBe("Trans");
+  it("maps intents to their design colors and skips unknown values", () => {
+    expect(intentChipMeta("commercial")?.color).toBe("var(--yellow-text)");
+    expect(intentChipMeta("informational")?.color).toBe("var(--blue)");
+    expect(intentChipMeta("navigational")?.color).toBe("var(--purple)");
+    expect(intentChipMeta("transactional")?.color).toBe("var(--green-text)");
     expect(intentChipMeta("unknown")).toBeNull();
     expect(intentChipMeta(null)).toBeNull();
   });

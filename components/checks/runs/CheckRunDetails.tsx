@@ -5,10 +5,12 @@ import type { CheckAttempt, CheckRunRow } from "@/lib/checks/contract";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import { XCircleIcon as XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { CheckRunDetailsRow, splitCheckRunDetailLine } from "./CheckRunDetailsRow";
 import { checkRunStoredResultLines } from "./CheckRunStoredResults";
 import {
+  type CheckRunsTranslations,
   formatAttemptOutcome,
   formatDuration,
   formatMoney,
@@ -18,18 +20,24 @@ import {
 } from "./check-runs-format";
 import type { RunTableColumns } from "./use-run-table-width";
 
-export const countryLevelTooltip =
-  "Fallback provider doesn't support city-level locations - this check ran at country level, so the position may not be comparable with your city history.";
-
-export function CountryLevelBadge() {
+export function CountryLevelBadge({
+  ariaLabel,
+  label,
+  tooltip,
+}: Readonly<{ ariaLabel?: string; label?: string; tooltip?: string }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.results");
+  const badgeLabel = label ?? t("countryLevelShort");
+  const badgeTooltip = tooltip ?? t("countryLevelRunTooltip");
   return (
-    <Tooltip content={countryLevelTooltip}>
+    <Tooltip content={badgeTooltip}>
       <button
-        aria-label={`country-level: ${countryLevelTooltip}`}
+        aria-label={
+          ariaLabel ?? t("countryLevelRunAria", { label: badgeLabel, tooltip: badgeTooltip })
+        }
         className="inline-flex cursor-help rounded-full border border-dashed border-yellow/55 bg-yellow/10 px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] font-semibold text-yellow-text"
         type="button"
       >
-        country-level
+        {badgeLabel}
       </button>
     </Tooltip>
   );
@@ -48,7 +56,7 @@ function AttemptTone({
   return <XCircle aria-hidden className="text-red-text" size={15} weight="regular" />;
 }
 
-function fallbackOutcome(run: CheckRunRow, index: number) {
+function fallbackOutcome(run: CheckRunRow, index: number, t: CheckRunsTranslations) {
   const attempt = run.attempts[index];
   if (!run.viaFallback || attempt?.outcome !== "ok" || index === 0) return null;
   let primary: CheckAttempt | undefined;
@@ -60,31 +68,47 @@ function fallbackOutcome(run: CheckRunRow, index: number) {
   }
   if (!primary) return null;
   const reasons: Record<Exclude<CheckAttempt["outcome"], "ok">, string> = {
-    credentials_unavailable: "credentials unavailable",
-    provider_failed: "failed",
-    rate_limited: "rate-limited",
+    credentials_unavailable: t("credentialsUnavailableLower"),
+    provider_failed: t("failedLower"),
+    rate_limited: t("rateLimitedLower"),
   };
   if (primary.outcome === "ok") return null;
   const reason = reasons[primary.outcome];
   const position =
     typeof run.position === "number"
-      ? ` · #${run.position}${
-          typeof run.requestedDepth === "number" ? ` of top ${run.requestedDepth}` : ""
-        }`
+      ? t("fallbackPosition", {
+          depth: run.requestedDepth ?? 0,
+          hasDepth: String(typeof run.requestedDepth === "number"),
+          position: run.position,
+        })
       : "";
-  return `via backup (${attempt.providerLabel}) - ${primary.providerLabel} ${reason}${position}`;
+  return t("viaBackup", {
+    attemptProvider: attempt.providerLabel,
+    position,
+    primaryProvider: primary.providerLabel,
+    reason,
+  });
 }
 
-function attemptRows(attempt: CheckAttempt, index: number, run: CheckRunRow): CheckRunDetailLine[] {
+function attemptRows(
+  attempt: CheckAttempt,
+  index: number,
+  run: CheckRunRow,
+  locale: string,
+  t: CheckRunsTranslations,
+): CheckRunDetailLine[] {
   const failedRun = run.status === "failed";
-  const attemptOutcome = formatAttemptOutcome(attempt, failedRun);
+  const attemptOutcome = formatAttemptOutcome(attempt, { t }, failedRun);
   const outcome = failedRun
     ? attemptOutcome
-    : (fallbackOutcome(run, index) ??
+    : (fallbackOutcome(run, index, t) ??
       (attempt.outcome === "ok" && typeof run.position === "number"
-        ? `${attemptOutcome} · #${run.position}${
-            typeof run.requestedDepth === "number" ? ` of top ${run.requestedDepth}` : ""
-          }`
+        ? t("attemptPosition", {
+            depth: run.requestedDepth ?? 0,
+            hasDepth: String(typeof run.requestedDepth === "number"),
+            outcome: attemptOutcome,
+            position: run.position,
+          })
         : attemptOutcome));
   return splitCheckRunDetailLine(outcome).map((line, lineIndex) => ({
     content:
@@ -97,9 +121,11 @@ function attemptRows(attempt: CheckAttempt, index: number, run: CheckRunRow): Ch
           <span>{line}</span>
           {attempt.degradedToCountry ? <CountryLevelBadge /> : null}
           <span className="ml-auto">
-            {typeof attempt.costCents === "number" ? formatMoney(attempt.costCents) : "-"}
+            {typeof attempt.costCents === "number"
+              ? formatMoney(attempt.costCents, { locale })
+              : t("notAvailable")}
           </span>
-          <span>{formatDuration(attempt.durationMs) ?? "-"}</span>
+          <span>{formatDuration(attempt.durationMs, { t }) ?? t("notAvailable")}</span>
         </CheckRunDetailsRow>
       ) : (
         <CheckRunDetailsRow>
@@ -113,8 +139,10 @@ function attemptRows(attempt: CheckAttempt, index: number, run: CheckRunRow): Ch
 type DetailsProps = {
   columns: RunTableColumns;
   keywordHref: string;
+  locale: string;
   now: Date;
   run: CheckRunRow;
+  t: CheckRunsTranslations;
 };
 
 export type CheckRunDetailLine = {
@@ -122,13 +150,22 @@ export type CheckRunDetailLine = {
   id: string;
 };
 
-function hiddenMetaRows({ columns, now, run }: Readonly<DetailsProps>): CheckRunDetailLine[] {
+function hiddenMetaRows({
+  columns,
+  locale,
+  now,
+  run,
+  t,
+}: Readonly<DetailsProps>): CheckRunDetailLine[] {
   const items: CheckRunDetailLine[] = [];
   if (!columns.depth) {
     items.push({
       content: (
         <CheckRunDetailsRow>
-          Depth · {typeof run.requestedDepth === "number" ? `Top ${run.requestedDepth}` : "-"}
+          {t("detailDepth", {
+            depth: run.requestedDepth ?? 0,
+            hasDepth: String(typeof run.requestedDepth === "number"),
+          })}
         </CheckRunDetailsRow>
       ),
       id: `${run.id}-meta-depth`,
@@ -136,39 +173,54 @@ function hiddenMetaRows({ columns, now, run }: Readonly<DetailsProps>): CheckRun
   }
   if (!columns.cost) {
     items.push({
-      content: <CheckRunDetailsRow>Cost · {formatRunCost(run)}</CheckRunDetailsRow>,
+      content: (
+        <CheckRunDetailsRow>
+          {t("detailCost", { cost: formatRunCost(run, { locale, t }) })}
+        </CheckRunDetailsRow>
+      ),
       id: `${run.id}-meta-cost`,
     });
   }
   if (!columns.when) {
     items.push({
-      content: <CheckRunDetailsRow>When · {formatWhen(run, now)}</CheckRunDetailsRow>,
+      content: (
+        <CheckRunDetailsRow>
+          {t("detailWhen", { when: formatWhen(run, now, { t }) })}
+        </CheckRunDetailsRow>
+      ),
       id: `${run.id}-meta-when`,
     });
   }
   return items;
 }
 
-export function checkRunDetailLines({ columns, keywordHref, now, run }: Readonly<DetailsProps>) {
+export function checkRunDetailLines({
+  columns,
+  keywordHref,
+  locale,
+  now,
+  run,
+  t,
+}: Readonly<DetailsProps>) {
   const duration =
     run.status === "failed" && /timed out|stale running/i.test(run.error ?? "")
-      ? "Timed out after 15 min"
-      : formatDuration(run.durationMs);
+      ? t("timedOut", { count: 15 })
+      : formatDuration(run.durationMs, { t });
   const lines: CheckRunDetailLine[] = [
     {
       content: (
         <CheckRunDetailsRow>
           <strong className="font-semibold text-fg">
-            {run.attempts.length > 0 ? "Provider chain" : "Run details"}
+            {run.attempts.length > 0 ? t("providerChain") : t("runDetails")}
           </strong>
-          {run.trigger ? <span className="capitalize">· {run.trigger}</span> : null}
-          {run.status === "failed" ? <span>· All providers failed</span> : null}
+          {run.trigger ? <span>· {t(run.trigger)}</span> : null}
+          {run.status === "failed" ? <span>· {t("allProvidersFailed")}</span> : null}
           {duration ? <span>· {duration}</span> : null}
         </CheckRunDetailsRow>
       ),
       id: `${run.id}-summary`,
     },
-    ...hiddenMetaRows({ columns, keywordHref, now, run }),
+    ...hiddenMetaRows({ columns, keywordHref, locale, now, run, t }),
   ];
   if (run.status === "failed" && run.error && isInternalErrorString(run.error)) {
     lines.push(
@@ -183,8 +235,8 @@ export function checkRunDetailLines({ columns, keywordHref, now, run }: Readonly
     );
   }
   for (const [index, attempt] of run.attempts.entries()) {
-    lines.push(...attemptRows(attempt, index, run));
+    lines.push(...attemptRows(attempt, index, run, locale, t));
   }
-  lines.push(...checkRunStoredResultLines({ keywordHref, run }));
+  lines.push(...checkRunStoredResultLines({ keywordHref, run, t }));
   return lines;
 }

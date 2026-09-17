@@ -1,0 +1,101 @@
+{
+  "projectSettingsTeam": {
+    "members": {
+      "title": "Members",
+      "description": "Everyone with access to {domain}.",
+      "thisProject": "this project",
+      "accessSince": "Project access since {date}.",
+      "you": "you",
+      "updatingRole": "Updating role...",
+      "inviteMember": "Invite member",
+      "viewerAudit": "Viewer / audit",
+      "role": {
+        "admin": "Admin",
+        "editor": "Editor",
+        "owner": "Owner",
+        "viewer": "Viewer"
+      },
+      "roleDescription": {
+        "admin": "Settings, members and keys",
+        "editor": "Keywords, alerts and views",
+        "viewer": "Dashboards and exports"
+      }
+    },
+    "memberActions": {
+      "actionsFor": "Actions for {name}",
+      "auditExplanation": "Viewer / audit is a managed audit role and cannot be represented as a normal assignable role.",
+      "changeRole": "Change role",
+      "transferOwnership": "Transfer ownership",
+      "removeFromProject": "Remove from project",
+      "backToActions": "Back to actions"
+    },
+    "invite": {
+      "done": "Done",
+      "cancel": "Cancel",
+      "sending": "Sending",
+      "send": "Send invite",
+      "title": "Invite teammate",
+      "description": "They'll get access to {domain}.",
+      "sentTitle": "Invitation sent",
+      "sentDescription": "We emailed an invite to {email}. You can also share this link directly.",
+      "copyLink": "Copy invite link",
+      "email": "Email address",
+      "emailPlaceholder": "teammate@acme.dev",
+      "emailInvalid": "Enter a teammate email.",
+      "role": "Role",
+      "roleDescription": {
+        "admin": "Can manage settings, team members and keys.",
+        "editor": "Can manage keywords, tags and alert rules.",
+        "viewer": "Can view dashboards, exports and reports."
+      }
+    },
+    "pending": {
+      "title": "Pending invites",
+      "description": "Sent and not yet accepted.",
+      "empty": "No pending invites.",
+      "details": "{role} · {invited} · {expires}",
+      "invitedBy": "Invited by {inviter}",
+      "expired": "Expired",
+      "resend": "Resend",
+      "revokeFor": "Revoke invite for {email}",
+      "resendSuccess": "A new invitation was sent to {email}.",
+      "expiresIn": "{unit, select, hour {expires in {count, plural, one {# hour} other {# hours}}} day {expires in {count, plural, one {# day} other {# days}}} other {expires soon}}",
+      "expiredAgo": "{unit, select, hour {expired {count, plural, one {# hour} other {# hours}} ago} day {expired {count, plural, one {# day} other {# days}} ago} other {expired}}",
+      "invitedAgo": "{unit, select, hour {invited {count, plural, one {# hour} other {# hours}} ago} day {invited {count, plural, one {# day} other {# days}} ago} other {invited}}",
+      "invitedNow": "invited just now"
+    },
+    "roles": {
+      "title": "Roles and access",
+      "description": "What each role can do; a role is changed on the member's row.",
+      "capability": "Capability",
+      "view": "View dashboards, keywords and exports",
+      "edit": "Add and edit keywords, alerts, views",
+      "delete": "Delete keywords, alerts, competitors",
+      "keys": "Create and revoke API keys and hooks",
+      "manage": "Invite and manage members",
+      "audit": "Read the audit log",
+      "billing": "Billing",
+      "ownership": "Transfer ownership, delete project",
+      "permission": "{role}: {capability}: {allowed, select, true {allowed} other {not allowed}}",
+      "footnote": "Owner is unique and can transfer ownership. Every role change is written to the audit log. Existing audit grants are shown on member rows and cannot be assigned here."
+    },
+    "errors": {
+      "teamChange": "Team change failed.",
+      "roleChange": "Role could not be changed.",
+      "inviteSend": "Invite could not be sent.",
+      "inviteUnavailable": "Invites are unavailable for this project.",
+      "inviteMailer": "Email delivery is not configured for team invites.",
+      "memberExists": "This user is already a member.",
+      "memberNotEditable": "This member cannot be edited.",
+      "inviteNotFound": "Invite not found.",
+      "lastManager": "At least one admin or owner must remain on the project.",
+      "chooseNewOwner": "Choose another project member to become owner.",
+      "inviteTemporarilyUnavailable": "Invitations are temporarily unavailable. Try again shortly.",
+      "inviteRateLimitedSeconds": "Too many invitations have been sent. Try again in {count, plural, one {# second} other {# seconds}}.",
+      "inviteRateLimitedMinutes": "Too many invitations have been sent. Try again in {count, plural, one {# minute} other {# minutes}}.",
+      "inviteRecentlySentSeconds": "This invitation was sent recently. Try again in {count, plural, one {# second} other {# seconds}}.",
+      "inviteRecentlySentMinutes": "This invitation was sent recently. Try again in {count, plural, one {# minute} other {# minutes}}.",
+      "action": "The team action could not be completed."
+    }
+  }
+}

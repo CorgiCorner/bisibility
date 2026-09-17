@@ -16,10 +16,30 @@ export const projectMarketActionSchema = z.object({
   projectId: projectIdSchema,
 });
 
+export type ProjectMarketEditValidationMessages = {
+  nameRequired: string;
+  nameTooLong: string;
+};
+
+function projectMarketNameSchema(messages?: ProjectMarketEditValidationMessages) {
+  return messages
+    ? z.string().trim().min(1, messages.nameRequired).max(120, messages.nameTooLong)
+    : z.string().trim().min(1, "Market name is required.").max(120);
+}
+
 export const projectMarketEditSchema = projectMarketActionSchema.extend({
   futureKeywordDevices: futureKeywordDevicesSchema,
   locationId: projectIdSchema.optional(),
-  name: z.string().trim().min(1, "Market name is required.").max(120),
+  name: projectMarketNameSchema(),
 });
+
+/** Builds a localized form projection without changing update action validation. */
+export function projectMarketEditSchemaFor(messages: ProjectMarketEditValidationMessages) {
+  return projectMarketActionSchema.extend({
+    futureKeywordDevices: futureKeywordDevicesSchema,
+    locationId: projectIdSchema.optional(),
+    name: projectMarketNameSchema(messages),
+  });
+}
 
 export type ProjectMarketEditInput = z.infer<typeof projectMarketEditSchema>;

@@ -6,29 +6,16 @@ description: "Create rank-change rules with in-app, email, and signed webhook de
 Alerts are evaluated after a completed rank check. Creating a rule does not
 immediately query a SERP provider or evaluate historical checks.
 
-## Create and verify a webhook endpoint
-
-1. Open **Alerts**, select **New rule**, and choose **Webhook** under Delivery.
-2. Enter an HTTP or HTTPS endpoint URL.
-3. Select **Generate** to create a strong HMAC secret, then copy and store it.
-   The encrypted secret cannot be read back after the endpoint is saved.
-4. Save the enabled endpoint.
-5. Select **Send test event** in its endpoint row.
-6. Confirm that the inline result shows the receiver's HTTP status and latency.
-7. Verify `X-Bisibility-Signature` against the raw request body with the
-   [copy-pasteable verifier](/api/webhooks#verify-signatures).
-
-The test is a real signed `webhook.test` envelope; see [Event envelopes](/api/webhooks#event-envelopes).
-After it succeeds, create a webhook-channel rule. Every enabled project endpoint
-receives every webhook event; endpoints are not filtered by rule or event name.
-
 ## Create a rule
 
 1. Open **Alerts** and select **New rule**.
 2. Choose all keywords, one keyword, or one tag as the scope.
 3. Select a condition and enter its threshold when required.
-4. Select one or more delivery channels.
+4. Keep the always-on in-app feed and optionally select email or webhook delivery.
 5. Save the rule and leave it enabled.
+
+Start here even if you will add a webhook later. The webhook signing contract
+is documented once under [Webhook endpoints](/api/webhooks).
 
 | Condition | Fires when |
 | - | - |
@@ -64,6 +51,23 @@ Webhook targets resolving to loopback, link-local, or private networks are
 blocked by default. `WEBHOOK_ALLOW_PRIVATE_NETWORK=1` is limited to trusted
 self-hosted networks.
 
+## Add a webhook endpoint
+
+1. Open **Alerts**, select **New rule**, and choose **Webhook** under Delivery,
+   or add an endpoint from the webhook list.
+2. Enter an HTTP or HTTPS endpoint URL.
+3. Select **Generate** to create a strong HMAC secret, then copy and store it.
+   The encrypted secret cannot be read back after the endpoint is saved.
+4. Save the enabled endpoint and select **Send test event**.
+5. Confirm the receiver's HTTP status, then verify
+   `X-Bisibility-Signature` with the
+   [copy-pasteable verifier](/api/webhooks#verify-signatures).
+
+The test is a real signed `webhook.test` envelope. Every enabled project
+endpoint receives every webhook event; endpoints are not filtered by rule or
+event name. Field-level event shapes live under
+[Event envelopes](/api/webhooks#event-envelopes).
+
 Delivery attempts are recorded for every channel. A failed channel does not
 prevent the remaining selected channels from being attempted.
 
@@ -90,7 +94,7 @@ delivered to each configured channel and enabled webhook endpoint. This means a
 consumer can receive one `alert.digest` containing multiple alerts for a
 rule-and-endpoint pair during a flush.
 
-`alert.digest` has the same version-2, snake_case contract. `data.alerts`
+`alert.digest` uses the same schemaVersion 3, snake_case contract. `data.alerts`
 contains the complete batch, and every item has the same shape as
 `alert.fired.data`. Its aggregate fields are `alert_count`, `project_id`,
 `rule_id`, and `suppressed_today_count`.

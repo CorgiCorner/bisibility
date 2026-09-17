@@ -5,7 +5,7 @@ import type {
 } from "@/components/rank-check/FirstCheckBannerAction";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { ByMarketRollup } from "./ByMarketRollup";
-import { DataSourceNoDataPanel, RecentlyAddedCard } from "./OverviewNoDataBottom";
+import { DataSourceNoDataPanel } from "./OverviewNoDataBottom";
 import { NoDataBanner, NoDataCharts, NoDataKpiRow } from "./OverviewNoDataTop";
 import type { OverviewView } from "./types";
 
@@ -71,7 +71,8 @@ export function OverviewNoData({
       <NoDataCharts
         distribution={overview.distribution}
         domain={overview.domain}
-        source={<RecentlyAddedCard projectRef={projectRef} rows={recentlyAddedRows} />}
+        projectRef={projectRef}
+        recentlyAddedRows={recentlyAddedRows}
         trend={overview.trend}
       />
       <DataSourceNoDataPanel health={overview.dataSource} />

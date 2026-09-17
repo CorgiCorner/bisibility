@@ -82,13 +82,9 @@ function TableCardLoading() {
   );
 }
 
-export function SearchInsightsBodyLoading() {
+export function SearchInsightsBodyLoading({ ariaLabel }: Readonly<{ ariaLabel: string }>) {
   return (
-    <section
-      aria-busy="true"
-      aria-label="Search Console data loading"
-      className="flex flex-col gap-2.5"
-    >
+    <section aria-busy="true" aria-label={ariaLabel} className="flex flex-col gap-2.5">
       <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
         {SKELETON_CARDS.map((card) => (
           <div
@@ -124,16 +120,15 @@ export function SearchInsightsBodyLoading() {
   );
 }
 
-export function SearchInsightsPageLoading() {
+export function SearchInsightsPageLoading({
+  bodyAriaLabel,
+  pageAriaLabel,
+}: Readonly<{ bodyAriaLabel: string; pageAriaLabel: string }>) {
   return (
     <PageContent>
-      <section
-        aria-busy="true"
-        aria-label="Search Console page loading"
-        className="flex min-w-0 flex-col gap-3"
-      >
+      <section aria-busy="true" aria-label={pageAriaLabel} className="flex min-w-0 flex-col gap-3">
         <SearchInsightsContextLoading />
-        <SearchInsightsBodyLoading />
+        <SearchInsightsBodyLoading ariaLabel={bodyAriaLabel} />
       </section>
     </PageContent>
   );

@@ -10,6 +10,18 @@ export const tagNameSchema = z
 
 export const tagNameFormSchema = z.object({ name: tagNameSchema });
 
+export type TagNameValidationMessages = {
+  required: string;
+  tooLong: string;
+};
+
+/** Keeps the server schema stable while a rendered control supplies its own copy. */
+export function tagNameFormSchemaFor(messages: TagNameValidationMessages) {
+  return z.object({
+    name: z.string().trim().min(1, messages.required).max(48, messages.tooLong),
+  });
+}
+
 export type TagNameFormValues = z.infer<typeof tagNameFormSchema>;
 
 export const createTagSchema = z.object({ name: tagNameSchema, projectId: projectIdSchema });

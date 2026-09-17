@@ -1,9 +1,14 @@
 import { Button } from "@/components/ui/Button";
 import { ButtonGroup } from "@/components/ui/ButtonGroup";
 import { Divider } from "@/components/ui/Divider";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 
-const meta = { title: "UI/ButtonGroup", component: ButtonGroup } satisfies Meta<typeof ButtonGroup>;
+const meta = {
+  title: "UI/ButtonGroup",
+  component: ButtonGroup,
+  decorators: [withSharedMessages],
+} satisfies Meta<typeof ButtonGroup>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Variants: Story = {

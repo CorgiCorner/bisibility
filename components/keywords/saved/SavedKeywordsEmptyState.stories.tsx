@@ -17,4 +17,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Empty: Story = { args: { projectRef: "prj_1" } };
+export const Empty: Story = {
+  args: {
+    copy: {
+      browseResearch: "Browse Keyword Research",
+      cpc: "CPC",
+      difficulty: "KD",
+      emptyDescription:
+        "Save ideas from Research to build a shortlist before you commit to tracking. Saving is free and runs no checks.",
+      emptyTitle: "Nothing saved yet",
+      intent: "Intent",
+      keyword: "Keyword",
+      volume: "Volume",
+    },
+    projectRef: "prj_1",
+  },
+};

@@ -7,7 +7,7 @@ import { StoredResearchEmpty } from "./StoredResearchEmpty";
 export function StoredKeywordResearchView({
   result,
 }: Readonly<{ result: StoredKeywordResearchResult | null }>) {
-  if (!result) return <StoredResearchEmpty title="Keyword Research" />;
+  if (!result) return <StoredResearchEmpty module="keywordResearch" />;
   return (
     <ResearchResults
       readOnly

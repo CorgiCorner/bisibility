@@ -18,9 +18,20 @@ type LocationResultsProps = {
   hasOptions: boolean;
   listId: string;
   loading: boolean;
+  messages: LocationFieldMessages;
   onPick: (option: LocationSuggestion) => void;
   showEmpty: boolean;
   visible: boolean;
+};
+
+export type LocationFieldMessages = {
+  city: string;
+  clearSearch: string;
+  countries: string;
+  noMatching: string;
+  regionsAndCities: string;
+  region: string;
+  searching: string;
 };
 
 export function LocationResults({
@@ -30,6 +41,7 @@ export function LocationResults({
   hasOptions,
   listId,
   loading,
+  messages,
   onPick,
   showEmpty,
   visible,
@@ -45,8 +57,9 @@ export function LocationResults({
       {countries.length > 0 ? (
         <LocationGroup
           activeOption={activeOption}
-          label="Countries"
+          label={messages.countries}
           listId={listId}
+          messages={messages}
           onPick={onPick}
           options={countries}
           startIndex={0}
@@ -55,20 +68,19 @@ export function LocationResults({
       {places.length > 0 ? (
         <LocationGroup
           activeOption={activeOption}
-          label="Regions and cities"
+          label={messages.regionsAndCities}
           listId={listId}
+          messages={messages}
           onPick={onPick}
           options={places}
           startIndex={countries.length}
         />
       ) : null}
       {loading && !hasOptions ? (
-        <span className="block px-3 py-2 normal-case text-fg-muted">Searching locations...</span>
+        <span className="block px-3 py-2 normal-case text-fg-muted">{messages.searching}</span>
       ) : null}
       {showEmpty ? (
-        <span className="block px-3 py-2 normal-case text-fg-muted">
-          No matching locations. Try another name or select the country.
-        </span>
+        <span className="block px-3 py-2 normal-case text-fg-muted">{messages.noMatching}</span>
       ) : null}
     </div>
   );
@@ -76,8 +88,9 @@ export function LocationResults({
 
 type LocationGroupProps = {
   activeOption: LocationSuggestion | undefined;
-  label: "Countries" | "Regions and cities";
+  label: string;
   listId: string;
+  messages: Pick<LocationFieldMessages, "city" | "region">;
   onPick: (option: LocationSuggestion) => void;
   options: LocationSuggestion[];
   startIndex: number;
@@ -87,6 +100,7 @@ function LocationGroup({
   activeOption,
   label,
   listId,
+  messages,
   onPick,
   options,
   startIndex,
@@ -131,7 +145,8 @@ function LocationGroup({
               </span>
               {option.kind !== "country" ? (
                 <span className="block truncate text-[11.5px] text-fg-muted">
-                  {option.kind === "region" ? "Region" : "City"} · {cityCaption(option)}
+                  {option.kind === "region" ? messages.region : messages.city} ·{" "}
+                  {cityCaption(option)}
                 </span>
               ) : null}
             </span>

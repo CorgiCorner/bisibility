@@ -1,0 +1,30 @@
+---
+title: "Legacy upgrades"
+description: "Historical self-hosted upgrade limits and one-time source-tree procedures."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+Use [Self-hosted upgrades](/self-hosting/upgrades) for the current Compose
+procedure. This page keeps retired limits and one-time source upgrades so they
+do not sit in the daily operator path.
+
+The current `upgrade.sh` still refuses a target of `v0.5.0` before it changes
+Compose or PostgreSQL. That guard is historical and stays in the script. Do not
+treat a later application version as a replacement for that refuse rule.
+
+## v0.5.0 baseline reset
+
+v0.5.0 resets the Prisma migration history to one final-schema baseline and is
+for fresh installations only. Existing v0.4.1 and earlier databases do not have
+a supported upgrade path to v0.5.0. Keep those installations on their current
+release.
+
+The supported source for a current upgrade is the target release's
+`distribution-manifest.json` plus the matching `upgrade.sh`, `verify.mjs`, and
+`manifest.mjs` assets. Do not point a current install at a v0.5.0 manifest.
+
+## Upgrade from v0.1.0 to v0.2.0
+
+The one-time source-tree procedure is documented separately:
+[Upgrade from v0.1.0 to v0.2.0](/self-hosting/legacy-upgrades/v0-1-to-v0-2).

@@ -8,6 +8,7 @@ import { appPath } from "@/lib/routing/app-path";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { RunChecksSplitButton } from "./RunChecksSplitButton";
 
 type Props = {
@@ -38,6 +39,7 @@ export function BulkRunChecksControls({
   readOnly,
   selectedRows,
 }: Readonly<Props>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.runChecks");
   if (!providerConnected) {
     return (
       <Button
@@ -46,7 +48,7 @@ export function BulkRunChecksControls({
         href={appPath(projectId, "integrations")}
         size="xs"
       >
-        Connect a SERP provider
+        {t("connectProvider")}
       </Button>
     );
   }
@@ -78,7 +80,7 @@ export function BulkRunChecksControls({
             size="xs"
             variant="ghost"
           >
-            Run checks in all markets
+            {t("runAllMarkets")}
           </Button>
         </ProjectReadOnlyTooltip>
       ) : null}

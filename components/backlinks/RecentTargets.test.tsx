@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  backlinksFeatureTestMessages,
+  renderWithBacklinksMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { RecentBacklinksTarget } from "./backlinks-workspace-model";
@@ -46,6 +51,23 @@ describe("RecentTargets", () => {
 
     expect(screen.getByText("cached, free for 24h")).toBeInTheDocument();
     expect(screen.getAllByText(/cached, free for/)).toHaveLength(1);
+  });
+
+  it("projects relative freshness through the scoped catalog", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-24T10:00:00.000Z"));
+    const messages = structuredClone(backlinksFeatureTestMessages);
+    messages.projectBacklinks.workspace.snapshot.relative.hoursAgo = "{count} godziny temu";
+
+    renderWithFeatureMessages(
+      <RecentTargets onOpen={vi.fn()} onRemove={vi.fn()} targets={[targets[0]]} />,
+      { locale: "pl", messages },
+    );
+
+    expect(screen.getAllByRole("button", { name: /example\.com/ })[0]).toHaveTextContent(
+      "2 godziny temu",
+    );
+    expect(screen.queryByText("2h ago")).toBeNull();
   });
 
   it("removes a recent target with its revealed X action", () => {

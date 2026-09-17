@@ -1,7 +1,10 @@
+"use client";
+
 import { GITHUB_URL } from "@/lib/site/site";
 import { cn } from "@/lib/ui/cn";
-import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/ssr/GithubLogo";
+import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/csr/GithubLogo";
 import { cva } from "class-variance-authority";
+import { useFormatter, useTranslations } from "next-intl";
 
 export type GithubStarsSize = "lg" | "md" | "sm";
 /** `chip` stands alone on a surface; `nav` sits among nav links and borrows their shape. */
@@ -51,14 +54,10 @@ const glyphSize = { lg: 16, md: 15, sm: 14 } as const;
  * Four figures and up collapse to one decimal - "1.2k" stays the same width as the repo grows,
  * which matters in a header row that must not reflow.
  */
-function formatStars(count: string) {
+function finiteStarCount(count: string | null | undefined) {
+  if (!count) return null;
   const value = Number(count);
-
-  if (!Number.isFinite(value) || value < 1000) {
-    return count;
-  }
-
-  return `${(value / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return Number.isFinite(value) && value >= 0 ? value : null;
 }
 
 export function GithubStars({
@@ -68,11 +67,22 @@ export function GithubStars({
   size = "md",
   variant = "chip",
 }: Readonly<GithubStarsProps>) {
-  const formattedCount = count ? formatStars(count) : null;
+  const format = useFormatter();
+  const t = useTranslations("shared.tokens");
+  const starCount = finiteStarCount(count);
+  const formattedCount =
+    starCount === null
+      ? null
+      : format.number(starCount, {
+          maximumFractionDigits: 1,
+          notation: starCount >= 1_000 ? "compact" : "standard",
+        });
 
   return (
     <a
-      aria-label={formattedCount ? `${formattedCount} stars on GitHub` : "GitHub repository"}
+      aria-label={
+        starCount === null ? t("githubRepository") : t("githubStars", { count: starCount })
+      }
       className={cn(starsVariants({ size, variant }), className)}
       href={href}
       rel="noreferrer noopener"

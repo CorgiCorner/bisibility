@@ -1,5 +1,6 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { StoredResultsIndexEntry } from "@/lib/checks/contract";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { RetrievedResultsPicker, storedCheckLabel } from "./RetrievedResultsPicker";
 
@@ -51,15 +52,15 @@ const formatDate = (iso: string) =>
 
 describe("RetrievedResultsPicker", () => {
   it("labels full, compact and none entries in retained-data language", () => {
-    expect(storedCheckLabel(entries[1] as StoredResultsIndexEntry, formatDateTime)).toBe(
-      "5 Mar 2026, 06:00 · top 8 kept",
-    );
-    expect(storedCheckLabel(entries[3] as StoredResultsIndexEntry, formatDateTime)).toBe(
-      "4 Jan 2026, 06:00 · top 3 kept",
-    );
-    expect(storedCheckLabel(entries[4] as StoredResultsIndexEntry, formatDateTime)).toBe(
-      "12 Dec 2025, 06:00 · not kept",
-    );
+    expect(
+      storedCheckLabel(entries[1] as StoredResultsIndexEntry, formatDateTime, "top 8 kept"),
+    ).toBe("5 Mar 2026, 06:00 · top 8 kept");
+    expect(
+      storedCheckLabel(entries[3] as StoredResultsIndexEntry, formatDateTime, "top 3 kept"),
+    ).toBe("4 Jan 2026, 06:00 · top 3 kept");
+    expect(
+      storedCheckLabel(entries[4] as StoredResultsIndexEntry, formatDateTime, "not kept"),
+    ).toBe("12 Dec 2025, 06:00 · not kept");
   });
 
   it("renders TO recent checks with disabled reasons, selection, and constrained jump", () => {

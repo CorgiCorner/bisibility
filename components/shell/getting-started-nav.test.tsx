@@ -3,9 +3,10 @@ import {
   gettingStartedProgressAriaLabel,
 } from "@/components/getting-started/getting-started-copy";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { appPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AppThemeRoot } from "./AppThemeRoot";

@@ -3,12 +3,7 @@
 import { appRootPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const tabs = [
-  { href: appRootPath("admin"), label: "Operations" },
-  { href: appRootPath("admin", "administration"), label: "Administration" },
-  { href: appRootPath("admin", "audit"), label: "Audit" },
-] as const;
+import { useTranslations } from "next-intl";
 
 function isActiveTab(pathname: string, href: string) {
   if (href === appRootPath("admin")) return pathname === href;
@@ -17,12 +12,15 @@ function isActiveTab(pathname: string, href: string) {
 
 export function AdminTabs() {
   const pathname = usePathname() ?? appRootPath("admin");
+  const t = useTranslations("instanceAdmin.navigation");
+  const tabs = [
+    { href: appRootPath("admin"), label: t("operations") },
+    { href: appRootPath("admin", "administration"), label: t("administration") },
+    { href: appRootPath("admin", "audit"), label: t("audit") },
+  ] as const;
 
   return (
-    <nav
-      aria-label="Instance administration sections"
-      className="flex items-center gap-0.5 border-b border-border"
-    >
+    <nav aria-label={t("label")} className="flex items-center gap-0.5 border-b border-border">
       {tabs.map((tab) => {
         const active = isActiveTab(pathname, tab.href);
         const className = [

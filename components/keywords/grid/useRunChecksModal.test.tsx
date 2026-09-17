@@ -1,13 +1,47 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
-import { act, renderHook } from "@testing-library/react";
+import type { RankCheckBatchPollAction } from "@/components/keywords/use-rank-check-batch-poll";
+import {
+  featureMessagesElement,
+  projectRankTrackerFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { act, fireEvent, renderHook, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { RunChecksConfirmationModal } from "./RunChecksConfirmationModal";
 import { useRunChecksModal } from "./useRunChecksModal";
 
 const CHECK_ID = "check_abcdefghijklmnopqrstuvwx";
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <SessionSpendProvider>{children}</SessionSpendProvider>
-);
+const wrapper = ({ children }: { children: ReactNode }) =>
+  featureMessagesElement(<SessionSpendProvider>{children}</SessionSpendProvider>, {
+    messages: projectRankTrackerFeatureTestMessages,
+  });
+
+function RunChecksModalProbe({ pollAction }: { pollAction: RankCheckBatchPollAction }) {
+  const modal = useRunChecksModal({
+    onSettled: vi.fn(),
+    pollAction,
+    projectId: "prj_abcdefghijklmnopqrstuvwx",
+    rows: [],
+    runCheckNowAction: vi.fn().mockResolvedValue({ ok: true, rankCheckId: CHECK_ID }),
+  });
+
+  return (
+    <>
+      <button onClick={() => modal.request(["kw_abcdefghijklmnopqrstuvwx"])} type="button">
+        Start
+      </button>
+      <RunChecksConfirmationModal
+        flow={modal.flow}
+        onClose={modal.close}
+        onConfirm={modal.confirm}
+        onRetry={modal.retry}
+        projectId="prj_abcdefghijklmnopqrstuvwx"
+        rows={[]}
+      />
+    </>
+  );
+}
 
 describe("useRunChecksModal", () => {
   beforeEach(() => vi.useFakeTimers());
@@ -124,5 +158,111 @@ describe("useRunChecksModal", () => {
       ],
       step: "failed",
     });
+  });
+
+  it("normalizes a legacy provider restriction before localized polling state reaches the modal", async () => {
+    const messages = structuredClone(projectRankTrackerFeatureTestMessages);
+    messages.projectRankTracker.keywordImport.management.runConfirmation.providerAccountRestricted =
+      "Dostawca ograniczył dostęp do tego konta.";
+    messages.projectRankTracker.keywordImport.management.runConfirmation.providerBilling =
+      "Dostawca nie ma wystarczających środków.";
+    const rawLegacyDetail = "Access was temporarily paused because of unusual activity.";
+    const pollAction = vi.fn().mockResolvedValue([
+      {
+        error: rawLegacyDetail,
+        errorCode: "provider_billing",
+        finishedAt: "2026-09-13T16:00:00.000Z",
+        position: null,
+        rankCheckId: CHECK_ID,
+        requestedDepth: 20,
+        status: "failed",
+      },
+    ]);
+
+    renderWithFeatureMessages(
+      <SessionSpendProvider>
+        <RunChecksModalProbe pollAction={pollAction} />
+      </SessionSpendProvider>,
+      { locale: "pl", messages },
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Confirm and run" })));
+    await act(async () => vi.advanceTimersByTimeAsync(2000));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Dostawca ograniczył dostęp do tego konta.",
+    );
+    expect(screen.queryByText(rawLegacyDetail)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open integrations" })).toBeInTheDocument();
+  });
+
+  it("keeps an ordinary billing terminal failure retryable without rendering provider detail", async () => {
+    const messages = structuredClone(projectRankTrackerFeatureTestMessages);
+    messages.projectRankTracker.keywordImport.management.runConfirmation.providerBilling =
+      "Dostawca nie ma wystarczających środków.";
+    const rawProviderDetail = "The billing account needs additional provider funds.";
+    const pollAction = vi.fn().mockResolvedValue([
+      {
+        error: rawProviderDetail,
+        errorCode: "provider_billing",
+        finishedAt: "2026-09-13T16:00:00.000Z",
+        position: null,
+        rankCheckId: CHECK_ID,
+        requestedDepth: 20,
+        status: "failed",
+      },
+    ]);
+
+    renderWithFeatureMessages(
+      <SessionSpendProvider>
+        <RunChecksModalProbe pollAction={pollAction} />
+      </SessionSpendProvider>,
+      { locale: "pl", messages },
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Confirm and run" })));
+    await act(async () => vi.advanceTimersByTimeAsync(2000));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Dostawca nie ma wystarczających środków.");
+    expect(screen.queryByText(rawProviderDetail)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open integrations" })).toBeInTheDocument();
+  });
+
+  it("keeps unknown terminal provider details out of the localized modal", async () => {
+    const messages = structuredClone(projectRankTrackerFeatureTestMessages);
+    messages.projectRankTracker.keywordImport.management.runConfirmation.providerUnknown =
+      "Wystąpił nieznany błąd dostawcy.";
+    const rawProviderDetail = "Account secret: provider-token-should-not-render.";
+    const pollAction = vi.fn().mockResolvedValue([
+      {
+        error: rawProviderDetail,
+        errorCode: "provider_future_code",
+        finishedAt: "2026-09-13T16:00:00.000Z",
+        position: null,
+        rankCheckId: CHECK_ID,
+        requestedDepth: 20,
+        status: "failed",
+      },
+    ]);
+
+    renderWithFeatureMessages(
+      <SessionSpendProvider>
+        <RunChecksModalProbe pollAction={pollAction} />
+      </SessionSpendProvider>,
+      { locale: "pl", messages },
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Confirm and run" })));
+    await act(async () => vi.advanceTimersByTimeAsync(2000));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Wystąpił nieznany błąd dostawcy.");
+    expect(screen.queryByText(rawProviderDetail)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open integrations" })).not.toBeInTheDocument();
   });
 });

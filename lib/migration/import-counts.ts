@@ -48,6 +48,17 @@ function label(value: number, labels: CountLabel) {
 
 type CountEntryStyle = "label-value" | "value-label";
 
+export type MigrationImportCountValue = { key: string; value: number };
+
+export type MigrationImportPresentation = {
+  entries: MigrationImportCountValue[];
+  imported: MigrationImportCountValue[];
+  keywordsCreated: number;
+  reportsKeywordCreations: boolean;
+  skipped: MigrationImportCountValue[];
+  unknownDepth: number;
+};
+
 function countEntry(key: string, value: number, style: CountEntryStyle) {
   if (key === "history_unknown_depth") {
     return label(value, {
@@ -75,6 +86,31 @@ export function migrationImportCountEntries(
   return Object.entries(record)
     .filter((entry): entry is [string, number] => typeof entry[1] === "number" && entry[1] > 0)
     .map(([key, value]) => countEntry(key, value, style));
+}
+
+function values(
+  record: Record<string, unknown>,
+  labels: CountLabel[],
+): MigrationImportCountValue[] {
+  return labels.flatMap((item) => {
+    const value = count(record, item.key);
+    return value > 0 ? [{ key: item.key, value }] : [];
+  });
+}
+
+/** Preserves machine count keys while letting each UI feature localize its own labels. */
+export function migrationImportPresentation(counts: unknown): MigrationImportPresentation {
+  const record = countRecord(counts);
+  return {
+    entries: Object.entries(record)
+      .filter((entry): entry is [string, number] => typeof entry[1] === "number" && entry[1] > 0)
+      .map(([key, value]) => ({ key, value })),
+    imported: values(record, importedLabels),
+    keywordsCreated: count(record, "keywords_created"),
+    reportsKeywordCreations: Object.hasOwn(record, "keywords_created"),
+    skipped: values(record, skippedLabels),
+    unknownDepth: count(record, "history_unknown_depth"),
+  };
 }
 
 export function migrationImportCountSummary(counts: unknown) {

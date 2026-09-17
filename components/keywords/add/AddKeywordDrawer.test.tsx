@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithKeywordManagementMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -504,12 +505,12 @@ describe("AddKeywordDrawer", () => {
     [
       "semicolon",
       "keyword;target_url;tags;country;device\nrank tracker;/rank;Core;US;desktop",
-      "This file appears to use semicolons (;) as separators. Export it as comma-separated CSV and try again.",
+      "This CSV uses an unsupported delimiter. Export it as comma-separated CSV and try again.",
     ],
     [
       "tab",
       "keyword\ttarget_url\ttags\tcountry\tdevice\nrank tracker\t/rank\tCore\tUS\tdesktop",
-      "This file appears to use tabs as separators. Export it as comma-separated CSV and try again.",
+      "This CSV uses an unsupported delimiter. Export it as comma-separated CSV and try again.",
     ],
   ])("shows %s CSV parser guidance and blocks review", async (_separator, csv, message) => {
     const { addKeywordsAction } = renderDrawer({ initialTab: "csv" });
@@ -582,7 +583,7 @@ describe("AddKeywordDrawer", () => {
     });
 
     expect(
-      await screen.findByText("Malformed CSV: quoted field is missing a closing quote."),
+      await screen.findByText("The CSV file is malformed. Check quoted fields and try again."),
     ).toBeInTheDocument();
     expect(screen.getByText("0 keywords parsed")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /review keywords/i })).toBeDisabled();
@@ -627,7 +628,7 @@ describe("AddKeywordDrawer", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("reports created keywords when the action also returns a warning", async () => {
+  it("reports created keywords with a localized safe location warning", async () => {
     const onAdded = vi.fn();
     renderDrawer({
       initialKeyword: "rank tracker",
@@ -646,8 +647,11 @@ describe("AddKeywordDrawer", () => {
       locationKeys: ["US"],
     });
     expect(
-      screen.getByText("Austin was not found; tracking United States instead."),
+      screen.getByText("The selected location was tracked at country level."),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Austin was not found; tracking United States instead."),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -794,7 +798,7 @@ it("copies from the same market sources with an explicitly chosen schedule and d
   await user.click(screen.getByRole("menuitem", { name: "Both" }));
   await user.click(screen.getByRole("radio", { name: "Copy from market" }));
   await user.click(screen.getByRole("button", { name: "Copy from" }));
-  await user.click(screen.getByRole("menuitem", { name: "US core - 4 keywords (largest)" }));
+  await user.click(screen.getByRole("menuitem", { name: "US core - Keywords: 4 (largest)" }));
   expect(screen.getByText("8 prospective keywords")).toBeVisible();
   expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent("Manual");
   await user.click(screen.getByRole("button", { name: "Schedule" }));

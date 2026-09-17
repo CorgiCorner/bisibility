@@ -1,0 +1,101 @@
+{
+  "projectSettingsTeam": {
+    "members": {
+      "title": "Członkowie",
+      "description": "Wszyscy z dostępem do {domain}.",
+      "thisProject": "tego projektu",
+      "accessSince": "Dostęp do projektu od {date}.",
+      "you": "Ty",
+      "updatingRole": "Zmienianie roli…",
+      "inviteMember": "Zaproś członka",
+      "viewerAudit": "Przeglądający / audyt",
+      "role": {
+        "admin": "Administrator",
+        "editor": "Edytor",
+        "owner": "Właściciel",
+        "viewer": "Przeglądający"
+      },
+      "roleDescription": {
+        "admin": "Ustawienia, członkowie i klucze",
+        "editor": "Słowa kluczowe, alerty i widoki",
+        "viewer": "Pulpity i eksporty"
+      }
+    },
+    "memberActions": {
+      "actionsFor": "Akcje – {name}",
+      "auditExplanation": "Przeglądający / audyt to zarządzana rola audytowa, której nie można przypisać jak zwykłej roli.",
+      "changeRole": "Zmień rolę",
+      "transferOwnership": "Przenieś własność",
+      "removeFromProject": "Usuń z projektu",
+      "backToActions": "Wróć do akcji"
+    },
+    "invite": {
+      "done": "Gotowe",
+      "cancel": "Anuluj",
+      "sending": "Wysyłanie",
+      "send": "Wyślij zaproszenie",
+      "title": "Zaproś współpracownika",
+      "description": "Ta osoba otrzyma dostęp do {domain}.",
+      "sentTitle": "Wysłano zaproszenie",
+      "sentDescription": "Zaproszenie zostało wysłane na adres {email}. Możesz też udostępnić ten link bezpośrednio.",
+      "copyLink": "Kopiuj link zaproszenia",
+      "email": "Adres e-mail",
+      "emailPlaceholder": "wspolpracownik@acme.dev",
+      "emailInvalid": "Podaj adres e-mail współpracownika.",
+      "role": "Rola",
+      "roleDescription": {
+        "admin": "Może zarządzać ustawieniami, członkami zespołu i kluczami.",
+        "editor": "Może zarządzać słowami kluczowymi, tagami i regułami alertów.",
+        "viewer": "Może przeglądać pulpity, eksporty i raporty."
+      }
+    },
+    "pending": {
+      "title": "Oczekujące zaproszenia",
+      "description": "Wysłane i jeszcze niezaakceptowane.",
+      "empty": "Brak oczekujących zaproszeń.",
+      "details": "{role} · {invited} · {expires}",
+      "invitedBy": "Zaproszenie od: {inviter}",
+      "expired": "Wygasło",
+      "resend": "Wyślij ponownie",
+      "revokeFor": "Unieważnij zaproszenie dla {email}",
+      "resendSuccess": "Nowe zaproszenie zostało wysłane na adres {email}.",
+      "expiresIn": "{unit, select, hour {wygasa za {count, plural, one {# godzinę} few {# godziny} many {# godzin} other {# godziny}}} day {wygasa za {count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}} other {wygasa wkrótce}}",
+      "expiredAgo": "{unit, select, hour {wygasło {count, plural, one {# godzinę} few {# godziny} many {# godzin} other {# godziny}} temu} day {wygasło {count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}} temu} other {wygasło}}",
+      "invitedAgo": "{unit, select, hour {zaproszono {count, plural, one {# godzinę} few {# godziny} many {# godzin} other {# godziny}} temu} day {zaproszono {count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}} temu} other {zaproszono}}",
+      "invitedNow": "zaproszono przed chwilą"
+    },
+    "roles": {
+      "title": "Role i dostęp",
+      "description": "Co może każda rola; rolę zmieniasz w wierszu członka.",
+      "capability": "Uprawnienie",
+      "view": "Przeglądanie pulpitów, słów kluczowych i eksportów",
+      "edit": "Dodawanie i edytowanie słów kluczowych, alertów, widoków",
+      "delete": "Usuwanie słów kluczowych, alertów, konkurentów",
+      "keys": "Tworzenie i unieważnianie kluczy API oraz hooków",
+      "manage": "Zapraszanie członków i zarządzanie nimi",
+      "audit": "Odczyt dziennika audytu",
+      "billing": "Rozliczenia",
+      "ownership": "Przeniesienie własności, usunięcie projektu",
+      "permission": "{role}: {capability}: {allowed, select, true {dozwolone} other {niedozwolone}}",
+      "footnote": "Właściciel jest tylko jeden i może przenieść własność. Każda zmiana roli trafia do dziennika audytu. Istniejące uprawnienia audytowe są widoczne w wierszach członków i nie można ich tu przypisać."
+    },
+    "errors": {
+      "teamChange": "Nie udało się wprowadzić zmiany w zespole.",
+      "roleChange": "Nie udało się zmienić roli.",
+      "inviteSend": "Nie udało się wysłać zaproszenia.",
+      "inviteUnavailable": "Zaproszenia są niedostępne w tym projekcie.",
+      "inviteMailer": "Wysyłka e-maili nie jest skonfigurowana dla zaproszeń do zespołu.",
+      "memberExists": "Ten użytkownik jest już członkiem projektu.",
+      "memberNotEditable": "Tego członka nie można edytować.",
+      "inviteNotFound": "Nie znaleziono zaproszenia.",
+      "lastManager": "W projekcie musi pozostać co najmniej jeden administrator lub właściciel.",
+      "chooseNewOwner": "Wybierz innego członka projektu, który zostanie właścicielem.",
+      "inviteTemporarilyUnavailable": "Zaproszenia są chwilowo niedostępne. Spróbuj ponownie za chwilę.",
+      "inviteRateLimitedSeconds": "Wysłano zbyt wiele zaproszeń. Spróbuj ponownie za {count, plural, one {# sekundę} few {# sekundy} many {# sekund} other {# sekundy}}.",
+      "inviteRateLimitedMinutes": "Wysłano zbyt wiele zaproszeń. Spróbuj ponownie za {count, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}.",
+      "inviteRecentlySentSeconds": "To zaproszenie zostało wysłane niedawno. Spróbuj ponownie za {count, plural, one {# sekundę} few {# sekundy} many {# sekund} other {# sekundy}}.",
+      "inviteRecentlySentMinutes": "To zaproszenie zostało wysłane niedawno. Spróbuj ponownie za {count, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}.",
+      "action": "Nie udało się wykonać tej akcji w zespole."
+    }
+  }
+}

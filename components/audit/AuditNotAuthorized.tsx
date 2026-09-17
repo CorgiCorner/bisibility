@@ -1,13 +1,18 @@
+"use client";
+
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ShieldWarningIcon as ShieldWarning } from "@phosphor-icons/react/dist/ssr/ShieldWarning";
+import { ShieldWarningIcon as ShieldWarning } from "@phosphor-icons/react/dist/csr/ShieldWarning";
+import { useTranslations } from "next-intl";
 
 export function AuditNotAuthorized() {
+  const t = useTranslations("projectAudit.empty");
+
   return (
     <div className="max-w-[720px]">
       <EmptyState
-        description="Audit records are restricted to Admin and Auditor roles for this project."
+        description={t("restrictedDescription")}
         icon={<ShieldWarning aria-hidden size={30} weight="regular" />}
-        title="Audit log restricted"
+        title={t("restrictedTitle")}
       />
     </div>
   );

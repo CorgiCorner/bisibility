@@ -7,6 +7,7 @@ import {
 import { FileCsvIcon as FileCsv } from "@phosphor-icons/react/dist/csr/FileCsv";
 import { FileXlsIcon as FileXls } from "@phosphor-icons/react/dist/csr/FileXls";
 import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
+import { useTranslations } from "next-intl";
 
 const importAccept = [
   ".csv",
@@ -47,13 +48,14 @@ export function KeywordImportDropzone({
   parsedCount,
   selectedFileName,
 }: Readonly<KeywordImportDropzoneProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.csvWizard.dropzone");
   async function handleFile(file: File) {
     const kind = fileKind(file);
     if (kind === "csv") {
       try {
         onCsvTextChange(decodeKeywordImportCsv(await file.arrayBuffer()), file);
       } catch (error) {
-        onCsvFileError(error instanceof Error ? error.message : "Could not read the CSV file.");
+        onCsvFileError(error instanceof Error ? error.message : t("readError"));
       }
       return;
     }
@@ -82,10 +84,9 @@ export function KeywordImportDropzone({
   }
 
   const Icon = selectedFileName?.match(/\.xlsx$/i) ? FileXls : FileCsv;
-  const keywordNoun = parsedCount === 1 ? "keyword" : "keywords";
-  let status = "CSV or XLSX";
+  let status = t("accept");
   if (selectedFileName) status = selectedFileName;
-  else if (parsedCount > 0) status = `${parsedCount} ${keywordNoun} parsed`;
+  else if (parsedCount > 0) status = t("parsed", { count: parsedCount });
 
   return (
     <label
@@ -100,10 +101,10 @@ export function KeywordImportDropzone({
           <UploadSimple weight="regular" size={23} />
         )}
       </span>
-      <span className="text-[13.5px] font-semibold text-fg">Drop CSV or XLSX here</span>
+      <span className="text-[13.5px] font-semibold text-fg">{t("drop")}</span>
       <span className="text-[11.5px] text-fg-muted">{status}</span>
       <span className="max-w-[360px] text-[11.5px] leading-[1.5] text-fg-muted">
-        Files are parsed in memory for import and never stored.
+        {t("inMemory")}
       </span>
       <input
         accept={importAccept}

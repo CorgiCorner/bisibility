@@ -26,6 +26,13 @@ const REASON_COPY: Partial<Record<GoogleOAuthFailureReason, string>> = {
     "Google sign-in worked but our server could not finish the connection. This is on us - retry, and contact us if it repeats.",
 };
 
+/** Stable UI-display key for callers that render their own localized copy. */
+export function googleOAuthErrorKey(
+  reason: string | null | undefined,
+): GoogleOAuthFailureReason | "generic" {
+  return isGoogleOAuthFailureReason(reason) ? reason : "generic";
+}
+
 export function googleOAuthErrorCopy(reason: string | null | undefined, fallback: string) {
   if (!isGoogleOAuthFailureReason(reason)) {
     return fallback;

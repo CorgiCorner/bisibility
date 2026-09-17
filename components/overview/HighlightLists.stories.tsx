@@ -1,5 +1,6 @@
 import { HighlightLists } from "@/components/overview/HighlightLists";
 import { overviewFixture } from "@/components/overview/overview-fixtures";
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
@@ -8,9 +9,11 @@ const meta = {
   component: HighlightLists,
   decorators: [
     (Story) => (
-      <div className="min-h-[520px] bg-bg p-6 text-fg">
-        <Story />
-      </div>
+      <ProjectDashboardMessages>
+        <div className="min-h-[520px] bg-bg p-6 text-fg">
+          <Story />
+        </div>
+      </ProjectDashboardMessages>
     ),
   ],
 } satisfies Meta<typeof HighlightLists>;

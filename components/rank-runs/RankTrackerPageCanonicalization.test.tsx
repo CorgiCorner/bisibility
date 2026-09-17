@@ -1,7 +1,9 @@
+import KeywordsPage from "@/app/(regional)/app/(workspace)/[project]/rank-tracker/page";
+import { RankTrackerFeatureBoundary } from "@/components/rank-tracker/RankTrackerFeatureBoundary";
 import { redirect } from "@/tests/next-navigation";
 import { render } from "@testing-library/react";
+import { cloneElement, type ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import KeywordsPage from "../../app/app/(workspace)/[project]/rank-tracker/page";
 
 const mocks = vi.hoisted(() => ({
   getCheckHealth: vi.fn(),
@@ -26,6 +28,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 const state = vi.hoisted(() => ({ initialAddOpen: undefined as boolean | undefined }));
+
+vi.mock("@/i18n/document-locale.server", () => ({
+  resolveRegionalDocumentLocale: vi.fn(async () => ({ locale: "en", timeZone: "UTC" })),
+}));
 
 vi.mock("@/components/keywords/grid/KeywordsGrid", () => ({
   KeywordsGrid: ({ initialAddOpen }: { initialAddOpen?: boolean }) => {
@@ -82,12 +88,16 @@ vi.mock("@/lib/queries/workspace-budget-summary", () => ({
 }));
 
 async function renderPage(searchParams: Record<string, string | string[] | undefined>) {
-  render(
-    await KeywordsPage({
-      params: Promise.resolve({ project: "prj_1" }),
-      searchParams: Promise.resolve(searchParams),
-    }),
-  );
+  const page = (await KeywordsPage({
+    params: Promise.resolve({ project: "prj_1" }),
+    searchParams: Promise.resolve(searchParams),
+  })) as ReactElement<{ children: ReactElement }>;
+  const boundary = page.props.children as ReactElement<
+    Parameters<typeof RankTrackerFeatureBoundary>[0]
+  >;
+
+  expect(boundary.type).toBe(RankTrackerFeatureBoundary);
+  render(cloneElement(page, undefined, await RankTrackerFeatureBoundary(boundary.props)));
 }
 
 describe("KeywordsPage canonicalization", () => {

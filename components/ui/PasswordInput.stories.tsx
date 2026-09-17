@@ -1,10 +1,12 @@
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
   title: "UI/PasswordInput",
   component: PasswordInput,
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="max-w-md bg-bg p-6 text-fg">
         <Story />

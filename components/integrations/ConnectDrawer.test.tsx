@@ -1,6 +1,11 @@
+import {
+  integrationsFeatureTestMessages,
+  renderWithIntegrationMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { providerCredentialFieldsFor } from "@/lib/integrations/credential-fields";
 import type { IntegrationProviderData, ProviderActionHandlers } from "@/lib/integrations/types";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -39,9 +44,17 @@ function connectedDataForSeo(): IntegrationProviderData {
     drawer: {
       ...provider.drawer,
       activities: [
-        { label: "Last used", value: "12 min ago" },
-        { label: "Connection updated", value: "1 day ago" },
-        { label: "Fallback state", value: "Enabled" },
+        {
+          labelKey: "lastUsed" as const,
+          relativeTo: "2026-02-02T12:00:00.000Z",
+          valueAt: "2026-02-02T11:48:00.000Z",
+        },
+        {
+          labelKey: "connectionUpdated" as const,
+          relativeTo: "2026-02-02T12:00:00.000Z",
+          valueAt: "2026-02-01T12:00:00.000Z",
+        },
+        { labelKey: "fallbackState" as const, valueKey: "enabled" as const },
       ],
       defaults: { ...provider.drawer.defaults, secret: "" },
     },
@@ -412,6 +425,34 @@ describe("ConnectDrawer", () => {
         providerId: "plausible",
       }),
     );
+  });
+
+  it("localizes the known application success prefix in the key-mode banner", async () => {
+    const messages = structuredClone(integrationsFeatureTestMessages);
+    messages.projectIntegrations.drawer.connectionVerifiedWithDetail =
+      "Połączenie zweryfikowane: {detail}";
+    actions.testProviderConnection.mockResolvedValueOnce({
+      message: "Connection OK · example.com.",
+      ok: true,
+    });
+
+    renderWithFeatureMessages(
+      <ConnectDrawer
+        actions={actions}
+        onClose={vi.fn()}
+        open
+        projectId="prj_1"
+        provider={connectablePlausible()}
+      />,
+      { locale: "pl", messages },
+    );
+
+    fireEvent.change(screen.getByLabelText("Site domain"), { target: { value: "example.com" } });
+    fireEvent.change(screen.getByLabelText("API token"), { target: { value: "stats-token" } });
+    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+
+    expect(await screen.findByText("Połączenie zweryfikowane: example.com.")).toBeInTheDocument();
+    expect(screen.queryByText("Connection OK · example.com.")).not.toBeInTheDocument();
   });
 
   it.each([

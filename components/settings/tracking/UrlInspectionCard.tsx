@@ -1,5 +1,6 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { FieldLabel } from "@/components/ui/FieldLabel";
@@ -7,9 +8,9 @@ import { StatusChip } from "@/components/ui/StatusChip";
 import { updatePresenceInspectionBudget } from "@/lib/actions/presence-settings";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { projectInspectionBudgetSchema } from "@/lib/schemas/project";
-import { actionErrorMessage } from "@/lib/ui/action-error";
-import { VIEWER_READ_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
+import { presentActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -31,6 +32,8 @@ export function UrlInspectionCard({
   updateInspectionBudget = updatePresenceInspectionBudget,
 }: Readonly<UrlInspectionCardProps>) {
   const router = useRouter();
+  const sharedErrors = useSharedErrorMessages();
+  const t = useTranslations("projectSettingsTracking.inspection");
   const [saveError, setSaveError] = useState<string | null>(null);
   const form = useForm<InspectionBudgetForm>({
     defaultValues: { inspectionDailyLimit: dailyLimit, projectId },
@@ -40,7 +43,7 @@ export function UrlInspectionCard({
 
   async function saveInspectionBudget() {
     if (!canEdit || !(await form.trigger())) {
-      throw new Error("Check the highlighted settings before saving.");
+      throw new Error(t("saveValidation"));
     }
     const values = form.getValues();
     setSaveError(null);
@@ -49,18 +52,18 @@ export function UrlInspectionCard({
       form.reset(values);
       router.refresh();
     } catch (error: unknown) {
-      setSaveError(actionErrorMessage(error, "URL inspection limit could not be saved."));
+      setSaveError(presentActionError(error, sharedErrors, t("saveError")));
       throw error;
     }
   }
 
   return (
     <SettingsCard
-      action={canEdit ? undefined : <StatusChip label={VIEWER_READ_ONLY_LABEL} tone="neutral" />}
-      description="Daily Search Console index-status checks for tracked target URLs."
+      action={canEdit ? undefined : <StatusChip label={t("readOnly")} tone="neutral" />}
+      description={t("description")}
       onSave={saveInspectionBudget}
       showSave={canEdit}
-      title="URL inspection"
+      title={t("title")}
     >
       <form onSubmit={(event) => event.preventDefault()}>
         <fieldset className="contents" disabled={!canEdit}>
@@ -68,7 +71,7 @@ export function UrlInspectionCard({
             <FieldLabel
               className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
               htmlFor="inspection-daily-limit"
-              label="Daily inspection limit"
+              label={t("dailyLimit")}
             />
             {canEdit ? (
               <input
@@ -90,11 +93,7 @@ export function UrlInspectionCard({
             ) : null}
           </SettingsField>
         </fieldset>
-        <p className="m-0 mt-4 text-[12px] leading-[1.55] text-fg-muted">
-          Google allows 2,000 inspections per day per property, shared across every tool using it.
-          bisibility caps this at 1,000 to leave room for other tools sharing the property quota.
-          URLs over the limit wait for the next day.
-        </p>
+        <p className="m-0 mt-4 text-[12px] leading-[1.55] text-fg-muted">{t("help")}</p>
         {saveError ? <p className="m-0 mt-3 text-[12px] text-red-text">{saveError}</p> : null}
       </form>
     </SettingsCard>

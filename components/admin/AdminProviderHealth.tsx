@@ -1,10 +1,12 @@
+"use client";
+
 import {
   type HealthTone,
   healthToneForRate,
   type ProviderHealthRow,
 } from "@/lib/ops/instance-admin-health";
-
-const countFormat = new Intl.NumberFormat("en-US");
+import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 const pillToneClasses: Record<HealthTone, string> = {
   failed: "bg-red/10 text-red-text",
@@ -20,32 +22,36 @@ const barToneClasses: Record<HealthTone, string> = {
   unknown: "bg-fg-muted",
 };
 
-function countPill(label: string, count: number, tone: HealthTone) {
+type ProviderHealthTranslations = ReturnType<
+  typeof useTranslations<"instanceAdmin.providerHealth">
+>;
+
+function CountPill({ children, tone }: Readonly<{ children: ReactNode; tone: HealthTone }>) {
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold tabular-nums ${pillToneClasses[tone]}`}
     >
-      {label} {countFormat.format(count)}
+      {children}
     </span>
   );
 }
 
-function ageLabel(ageMs: number | null): string {
-  if (ageMs === null) return "-";
+function ageLabel(ageMs: number | null, t: ProviderHealthTranslations): string {
+  if (ageMs === null) return t("unknown");
   const hours = ageMs / 3_600_000;
-  if (hours < 1) return `${Math.max(1, Math.round(ageMs / 60_000))} min`;
-  if (hours < 48) return `${Math.round(hours)} h`;
-  return `${Math.round(hours / 24)} d`;
+  if (hours < 1) return t("ageMinutes", { count: Math.max(1, Math.round(ageMs / 60_000)) });
+  if (hours < 48) return t("ageHours", { count: Math.round(hours) });
+  return t("ageDays", { count: Math.round(hours / 24) });
 }
 
-function rateLabel(rate: number | null): string {
-  if (rate === null) return "unknown";
-  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(rate)}% failed`;
+function rateLabel(rate: number | null, t: ProviderHealthTranslations): string {
+  return rate === null ? t("failureRateUnknown") : t("failureRate", { value: rate });
 }
 
 export function AdminProviderHealth({ rows }: Readonly<{ rows: readonly ProviderHealthRow[] }>) {
+  const t = useTranslations("instanceAdmin.providerHealth");
   if (rows.length === 0) {
-    return <p className="text-xs text-fg-muted">No connected analytics sources.</p>;
+    return <p className="text-xs text-fg-muted">{t("empty")}</p>;
   }
 
   return (
@@ -62,13 +68,13 @@ export function AdminProviderHealth({ rows }: Readonly<{ rows: readonly Provider
               {row.provider}
             </span>
             <span className="inline-flex flex-wrap items-center gap-1.5">
-              {countPill("ok", row.ok, "ok")}
-              {countPill("stale", row.stale, "stale")}
-              {countPill("failed", row.failed, "failed")}
-              {countPill("not run", row.notRun, "unknown")}
+              <CountPill tone="ok">{t("ok", { count: row.ok })}</CountPill>
+              <CountPill tone="stale">{t("stale", { count: row.stale })}</CountPill>
+              <CountPill tone="failed">{t("failed", { count: row.failed })}</CountPill>
+              <CountPill tone="unknown">{t("notRun", { count: row.notRun })}</CountPill>
             </span>
             <span className="text-[11px] tabular-nums text-fg-muted">
-              p95 last success: {ageLabel(row.p95AgeMs)}
+              {t("p95LastSuccess", { age: ageLabel(row.p95AgeMs, t) })}
             </span>
             <span className="ml-auto inline-flex min-w-[9.5rem] items-center gap-2">
               <span className="h-1.5 min-w-[4.5rem] flex-1 overflow-hidden rounded-full bg-bg-sunken">
@@ -81,7 +87,7 @@ export function AdminProviderHealth({ rows }: Readonly<{ rows: readonly Provider
               <span
                 className={`whitespace-nowrap text-[11px] font-bold tabular-nums ${pillToneClasses[tone]}`}
               >
-                {rateLabel(row.failureRatePercent)}
+                {rateLabel(row.failureRatePercent, t)}
               </span>
             </span>
           </div>

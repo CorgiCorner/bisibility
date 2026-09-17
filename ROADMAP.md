@@ -1,17 +1,27 @@
 # Roadmap
 
 The live roadmap is published at
-[bisibility.com/roadmap](https://bisibility.com/roadmap). It tracks every
-notable capability with an honest status: `Available`, `Preview`, `Open beta`,
-`In progress`, `Planned`, or `Exploring`.
+[bisibility.com/roadmap](https://bisibility.com/roadmap). A featured board shows
+the maturity of the work in focus, and an index below it keeps every other
+capability and direction discoverable.
 
 This file explains how that roadmap is steered and how to influence it.
 
-## Status Legend
+## Maturity Stages
+
+Stages describe how settled a feature is, not a release date, and never replace
+the availability note published with each entry. A feature can be in `Alpha` and
+usable today, and a feature in `Beta` can still require configuration.
+
+- `Concept`: Direction and scope are being shaped.
+- `Alpha`: Early versions with a limited scope.
+- `Beta`: Available to try, with ongoing improvements.
+
+## Capability Index Legend
+
+The index below the board reports current activity rather than maturity:
 
 - `Available`: Released and ready to use, within the early-release caveats.
-- `Preview`: Released for early use and feedback; behavior or contracts may change.
-- `Open beta`: Broadly accessible for beta use, but not generally available.
 - `In progress`: Actively being implemented and not yet released.
 - `Planned`: Committed to the roadmap, but implementation has not started.
 - `Exploring`: Under evaluation and not yet committed.

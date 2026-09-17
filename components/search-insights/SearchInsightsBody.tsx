@@ -8,6 +8,7 @@ import type {
   SearchInsightsQueryRow,
 } from "@/lib/search-insights/queries/top-rows-model";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useSearchInsightsDrawerHandlers } from "./drawers/useDrawerHandlers";
 import { SearchInsightsKpiRow } from "./SearchInsightsKpiRow";
@@ -19,13 +20,6 @@ import {
 } from "./SearchInsightsPagesTable";
 import { SearchInsightsRowsCard } from "./SearchInsightsRowsCard";
 import { SearchInsightsQueriesTable } from "./SearchInsightsRowsTable";
-import {
-  KEY_EVENTS_NOT_CONFIGURED,
-  MANAGE_SESSIONS_LABEL,
-  TABLE_CAPTIONS,
-  TABLE_TITLES,
-  TABLES_FOOTNOTE,
-} from "./search-insights-copy";
 import { visibleRows } from "./search-insights-rows-model";
 import { organicSessionsPendingPresentation } from "./search-insights-sessions-model";
 import { moduleTablesLayout } from "./search-insights-table-columns";
@@ -56,6 +50,7 @@ export function SearchInsightsBody({
 }: Readonly<SearchInsightsBodyProps>) {
   const drawers = useSearchInsightsDrawerHandlers();
   const searchParams = useSearchParams();
+  const t = useTranslations("projectSearchInsights");
   const rows = useSearchInsightsRows({ loadRowsAction, period, projectId, property, view });
   // A query added in this session is tracked before the server view says so, so the two sets are
   // read together rather than waiting for the refresh to land.
@@ -78,13 +73,12 @@ export function SearchInsightsBody({
   const firstViewReady = importState?.facts?.readyThrough.d1.current === true;
   const hasQueries = rows.queries.total > 0;
   const hasPages = rows.pages.total > 0;
-  const waitingReason =
-    "Waiting for the first finalized days. Rows appear here after finalized days are imported.";
-  const noTrafficReason = "Google reported no search traffic for this property in this window.";
+  const waitingReason = t("body.waitingForDays");
+  const noTrafficReason = t("body.noTraffic");
   const queriesEmptyReason = !firstViewReady
     ? waitingReason
     : hasPages
-      ? "Google named no queries in this window. The traffic in Top pages is real - its query text is withheld for privacy."
+      ? t("body.queriesWithheld")
       : noTrafficReason;
   const pagesEmptyReason = firstViewReady ? noTrafficReason : waitingReason;
   const manageGa4Link = (
@@ -92,15 +86,15 @@ export function SearchInsightsBody({
       className="font-sans tabular-nums text-ui-caption text-fg-muted no-underline underline-offset-3 hover:text-fg hover:underline focus-visible:underline"
       href={`${appPath(asProjectRef(projectId), "integrations")}?connect=ga4`}
     >
-      {MANAGE_SESSIONS_LABEL}
+      {t("copy.manageGa4")}
     </a>
   );
   const trafficMode = pagesLens === "traffic";
   const pagesCaption = (
     <span>
-      {TABLE_CAPTIONS.pages}
+      {t("copy.pagesCaption")}
       {trafficMode && view.organicSessions.keyEventsConfigured === false ? (
-        <> {KEY_EVENTS_NOT_CONFIGURED}</>
+        <> {t("copy.keyEventsNotConfigured")}</>
       ) : null}
     </span>
   );
@@ -116,14 +110,14 @@ export function SearchInsightsBody({
           stack, each keeping its own horizontal scroll rather than shrinking a column. */}
       <div className={moduleTablesLayout}>
         <SearchInsightsRowsCard
-          caption={TABLE_CAPTIONS.queries}
+          caption={t("copy.queriesCaption")}
           emptyReason={queriesEmptyReason}
           loading={rows.loading.queries}
           onCollapse={() => rows.collapse("queries")}
           onMore={() => rows.expand("queries")}
           show={rows.queries.show}
           shown={shownQueries.length}
-          title={TABLE_TITLES.queries}
+          title={t("copy.topQueries")}
           total={rows.queries.total}
         >
           <SearchInsightsQueriesTable
@@ -153,7 +147,7 @@ export function SearchInsightsBody({
           onMore={() => rows.expand("pages")}
           show={rows.pages.show}
           shown={shownPages.length}
-          title={TABLE_TITLES.pages}
+          title={t("copy.topPages")}
           total={rows.pages.total}
         >
           <SearchInsightsPagesTable
@@ -169,7 +163,7 @@ export function SearchInsightsBody({
       </div>
       {hasQueries && hasPages ? (
         <p className="m-0 max-w-content px-0.5 pt-1 text-ui-caption text-fg-muted">
-          {TABLES_FOOTNOTE}
+          {t("copy.tablesFootnote")}
         </p>
       ) : null}
     </div>

@@ -1,8 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useId } from "react";
 import type { MigrationDirection, MigrationTokenFormApi } from "./MigrateToCloudWizard.types";
-import { MigrationReachabilityHint } from "./MigrationReachabilityHint";
+import { LocalizedMigrationReachabilityHint } from "./MigrationReachabilityHint";
 
 export function MigrationDestinationField({
   destinationUnreachable = false,
@@ -13,6 +14,7 @@ export function MigrationDestinationField({
   direction: MigrationDirection;
   form: MigrationTokenFormApi;
 }>) {
+  const t = useTranslations("projectSettingsMigration.check");
   const inputId = useId();
   const targetOrigin = form.watch("targetOrigin") ?? "";
   const error = form.formState.errors.targetOrigin;
@@ -28,13 +30,13 @@ export function MigrationDestinationField({
         className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
         htmlFor={inputId}
       >
-        {direction === "to-cloud" ? "Destination URL" : "Self-host URL"}
+        {direction === "to-cloud" ? t("destinationUrl") : t("selfHostUrl")}
       </label>
       <input
         aria-describedby={describedBy || undefined}
         className="min-h-11 rounded-control border border-border-control bg-transparent px-[13px] font-sans tabular-nums text-[13px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
         id={inputId}
-        placeholder="https://rank.example.com"
+        placeholder={t("destinationPlaceholder")}
         {...form.register("targetOrigin")}
       />
       {direction === "to-cloud" ? (
@@ -42,8 +44,7 @@ export function MigrationDestinationField({
           className="font-sans tabular-nums text-[11.5px] normal-case tracking-normal text-fg-muted"
           id={helperId}
         >
-          Prefilled from this instance&apos;s configuration. You can change it before running the
-          check.
+          {t("destinationHelp")}
         </span>
       ) : null}
       {error ? (
@@ -54,7 +55,10 @@ export function MigrationDestinationField({
           {error.message}
         </span>
       ) : null}
-      <MigrationReachabilityHint targetOrigin={targetOrigin} unreachable={destinationUnreachable} />
+      <LocalizedMigrationReachabilityHint
+        targetOrigin={targetOrigin}
+        unreachable={destinationUnreachable}
+      />
     </div>
   );
 }

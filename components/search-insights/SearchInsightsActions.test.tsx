@@ -1,8 +1,12 @@
 import { ToastProvider } from "@/components/ui/Toast";
+import {
+  renderWithSearchInsightsMessages as render,
+  searchInsightsMessagesElement,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { SYNC_NOW_COOLDOWN_MS } from "@/lib/search-insights/constants";
 import { FROZEN_NOW_MS } from "@/tests/clock";
 import { routerMock } from "@/tests/next-navigation";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { SVGProps } from "react";
 import { hydrateRoot } from "react-dom/client";
@@ -155,7 +159,8 @@ describe("SearchInsightsActions", () => {
           />
         </ToastProvider>
       );
-      const serverMarkup = renderToString(actions);
+      const tree = searchInsightsMessagesElement(actions);
+      const serverMarkup = renderToString(tree);
       const container = document.createElement("div");
       container.innerHTML = serverMarkup;
       document.body.appendChild(container);
@@ -174,7 +179,7 @@ describe("SearchInsightsActions", () => {
 
       try {
         await act(async () => {
-          root = hydrateRoot(container, actions, {
+          root = hydrateRoot(container, tree, {
             onRecoverableError: (error) => recoverable.push(error),
           });
         });

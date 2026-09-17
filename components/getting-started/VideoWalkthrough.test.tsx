@@ -1,6 +1,7 @@
+import { renderWithGettingStartedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { track } from "@/lib/analytics/client";
 import { SETUP_VIDEO_MANIFEST } from "@/lib/getting-started/video-manifest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VideoWalkthrough } from "./VideoWalkthrough";
 

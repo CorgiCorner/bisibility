@@ -2,6 +2,7 @@
 
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useRef, useState } from "react";
 import { CONFIRM, type ConfirmKind } from "./confirm-copy";
 import { dangerIconWellClassName } from "./icon-well-styles";
@@ -31,6 +32,7 @@ export function ConfirmModal({
   showConfirmationToast = true,
   typeWord,
 }: Readonly<ConfirmModalProps>) {
+  const t = useTranslations("shared.controls.confirmation");
   const [typed, setTyped] = useState("");
   const [pending, setPending] = useState(false);
   const [confirmationError, setConfirmationError] = useState<string | null>(null);
@@ -38,6 +40,10 @@ export function ConfirmModal({
   const { showToast } = useToast();
   const config = CONFIRM[kind];
   const Icon = config.icon;
+  const body = t(config.bodyKey);
+  const dangerLabel = t(config.dangerLabelKey);
+  const title = t(config.titleKey);
+  const toastMessage = t(config.toastMessageKey);
   const expectedWord = typeWord ?? config.typeWord ?? "";
   const needsType = Boolean(config.requireType);
   const isBusy = busy || pending;
@@ -58,13 +64,13 @@ export function ConfirmModal({
     try {
       await onConfirm();
       if (showConfirmationToast) {
-        showToast(config.toastMessage, {
+        showToast(toastMessage, {
           severity: "success",
           ...(onUndo ? { undo: onUndo } : {}),
         });
       }
     } catch {
-      setConfirmationError("The action could not be completed. Try again.");
+      setConfirmationError(t("failure"));
     } finally {
       pendingRef.current = false;
       setPending(false);
@@ -86,7 +92,7 @@ export function ConfirmModal({
             onClick={handleClose}
             type="button"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             className="rounded-control bg-red px-4 py-2.5 text-[13px] font-semibold text-error-contrast outline-none transition-[opacity,transform] duration-[var(--motion-press)] hover:opacity-90 focus-visible:opacity-90 motion-safe:active:not-focus-visible:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
@@ -94,7 +100,7 @@ export function ConfirmModal({
             onClick={handleConfirm}
             type="button"
           >
-            {isBusy ? "Working..." : config.dangerLabel}
+            {isBusy ? t("working") : dangerLabel}
           </button>
         </>
       }
@@ -105,7 +111,7 @@ export function ConfirmModal({
       open={open}
       primaryActionDisabled={disabled}
       size="sm"
-      title={config.title}
+      title={title}
     >
       <div className="flex items-center gap-3">
         <span
@@ -113,12 +119,15 @@ export function ConfirmModal({
         >
           <Icon aria-hidden size={21} weight="regular" />
         </span>
-        <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">{config.body}</p>
+        <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">{body}</p>
       </div>
       {needsType ? (
         <div className="mt-4">
           <label className="mb-[7px] block text-[12px] text-fg-muted" htmlFor="confirm-type-word">
-            Type <strong className="font-semibold text-fg">{expectedWord}</strong> to confirm
+            {t.rich("typeToConfirm", {
+              strong: (chunks) => <strong className="font-semibold text-fg">{chunks}</strong>,
+              word: expectedWord,
+            })}
           </label>
           <input
             className="w-full rounded-control border border-border-control bg-transparent px-3 py-2.5 text-[13px] font-medium text-fg outline-none transition-colors placeholder:text-[12px] placeholder:leading-4 focus:border-red"

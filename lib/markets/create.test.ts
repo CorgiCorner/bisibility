@@ -108,4 +108,14 @@ describe("new market input", () => {
     );
     expect(() => parseNewMarketPaste("\n \n")).toThrow(MarketPasteValidationError);
   });
+
+  it("keeps paste failures as stable reasons and line numbers for the localized form", () => {
+    try {
+      parseNewMarketPaste("SEO tool\n seo   tool ");
+      throw new Error("Expected duplicate paste validation to throw.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(MarketPasteValidationError);
+      expect(error).toMatchObject({ issue: "duplicate_keyword", line: 2 });
+    }
+  });
 });

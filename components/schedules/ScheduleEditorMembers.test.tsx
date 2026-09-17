@@ -1,6 +1,29 @@
-import { render, screen, within } from "@testing-library/react";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import {
+  renderWithProjectRunsMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import schedulesMessages from "@/messages/core/en/project-runs-schedules.json";
+import sharedMessages from "@/messages/core/en/shared.json";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ScheduleEditorMembers } from "./ScheduleEditorMembers";
+
+const polishScheduleMessages = mergeMessageCatalogs(sharedMessages, {
+  projectRuns: {
+    ...schedulesMessages.projectRuns,
+    schedules: {
+      ...schedulesMessages.projectRuns.schedules,
+      editor: {
+        ...schedulesMessages.projectRuns.schedules.editor,
+        moveCombined: "{scheduled} oraz {manual}",
+        moveManual: "{count, plural, one {# slowo reczne} other {# slowa reczne}}",
+        moveScheduled: "{count, plural, one {# slowo zaplanowane} other {# slowa zaplanowane}}",
+        moveSummary: "Zapisywanie przenosi {summary} do {name}.",
+      },
+    },
+  },
+});
 
 describe("ScheduleEditorMembers", () => {
   it("renders stored and pending members in the existing framed surface", () => {
@@ -51,5 +74,28 @@ describe("ScheduleEditorMembers", () => {
     expect(screen.getByText("No keywords yet. Add some to start scheduled checks.")).toBeVisible();
     screen.getByRole("button", { name: "Add keywords" }).click();
     expect(onOpenDrawer).toHaveBeenCalledOnce();
+  });
+
+  it("joins mixed pending-member consequences through the supplied locale message", () => {
+    renderWithFeatureMessages(
+      <ScheduleEditorMembers
+        memberCount={2}
+        onOpenDrawer={vi.fn()}
+        pendingMembers={[
+          { name: "one", publicId: "kw_one", sourceName: "Daily", targetCount: 1 },
+          { name: "two", publicId: "kw_two", targetCount: 1 },
+        ]}
+        scheduleName="Codzienny"
+        storedMembers={[]}
+      />,
+      { locale: "pl", messages: polishScheduleMessages },
+    );
+
+    expect(
+      screen.getByText(
+        "Zapisywanie przenosi 1 slowo zaplanowane oraz 1 slowo reczne do Codzienny.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByText(/ and /)).not.toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotic
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { useTranslations } from "next-intl";
 
 type ConnectDrawerFooterProps = {
   busy: boolean;
@@ -18,9 +19,12 @@ type ConnectDrawerFooterProps = {
   testState: "idle" | "ok" | "testing";
 };
 
-function testButtonPresentation(state: ConnectDrawerFooterProps["testState"]) {
-  if (state === "ok") return { Icon: CheckCircle, label: "Verified" };
-  return { Icon: null, label: "Test connection" };
+function testButtonPresentation(
+  state: ConnectDrawerFooterProps["testState"],
+  t: ReturnType<typeof useTranslations<"projectIntegrations.drawer">>,
+) {
+  if (state === "ok") return { Icon: CheckCircle, label: t("verified") };
+  return { Icon: null, label: t("testConnection") };
 }
 
 export function ConnectDrawerFooter({
@@ -34,8 +38,9 @@ export function ConnectDrawerFooter({
   testDisabled = false,
   testState,
 }: Readonly<ConnectDrawerFooterProps>) {
+  const t = useTranslations("projectIntegrations.drawer");
   const { readOnly } = useProjectWriteMode();
-  const { Icon: TestIcon, label: testButtonLabel } = testButtonPresentation(testState);
+  const { Icon: TestIcon, label: testButtonLabel } = testButtonPresentation(testState, t);
 
   if (oauthOnly) return null;
 
@@ -45,7 +50,7 @@ export function ConnectDrawerFooter({
         <Button
           disabled={readOnly || busy || testDisabled}
           loading={testState === "testing"}
-          loadingLabel="Testing…"
+          loadingLabel={t("testing")}
           onClick={onTest}
           startIcon={TestIcon ? <TestIcon aria-hidden size={16} weight="regular" /> : undefined}
           type="button"
@@ -60,10 +65,10 @@ export function ConnectDrawerFooter({
           disabled={readOnly || busy || saveDisabled}
           form={formId}
           loading={pendingAction === "save"}
-          loadingLabel="Saving…"
+          loadingLabel={t("saving")}
           type="submit"
         >
-          {isManage ? "Save changes" : "Connect provider"}
+          {isManage ? t("saveChanges") : t("connectProvider")}
         </Button>
       </ProjectReadOnlyTooltip>
     </div>

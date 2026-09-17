@@ -3,7 +3,14 @@ import type { CompetitorMarketOption } from "@/lib/competitors/types";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { supportsResearchScope } from "@/lib/serp/research-capability";
 
-const NO_VOLUME_TOOLTIP = "SOV needs search volume - this pair is outside the research catalog.";
+export type CompetitorMarketCopy = {
+  noDeviceKeywords: (values: { device: string }) => string;
+  noVolumeData: string;
+  noVolumeTooltip: string;
+  paused: string;
+  pausedTooltip: string;
+  trackDeviceKeywords: (values: { device: string }) => string;
+};
 
 type RegistryMarket = ProjectMarketsView["markets"][number];
 
@@ -44,6 +51,7 @@ function targetMarket(
 export function competitorRegistryOptions(
   markets: readonly CompetitorMarketOption[],
   currentDevice: "desktop" | "mobile",
+  copy: CompetitorMarketCopy,
   projectMarkets?: ProjectMarketsView,
 ): MarketComboboxOption<CompetitorMarketOption | null>[] {
   return registryMarkets(markets, projectMarkets).map((market) => {
@@ -52,19 +60,19 @@ export function competitorRegistryOptions(
     const paused = market.status !== "active";
     const disabled = !researchAvailable || paused || !target;
     const secondary = !researchAvailable
-      ? "no volume data"
+      ? copy.noVolumeData
       : paused
-        ? "paused"
+        ? copy.paused
         : target
           ? undefined
-          : `no ${currentDevice} keywords`;
+          : copy.noDeviceKeywords({ device: currentDevice });
     const tooltip = !researchAvailable
-      ? NO_VOLUME_TOOLTIP
+      ? copy.noVolumeTooltip
       : paused
-        ? "Enable this market in Settings before using it for SOV."
+        ? copy.pausedTooltip
         : target
           ? undefined
-          : `Track ${currentDevice} keywords in this market before using it for SOV.`;
+          : copy.trackDeviceKeywords({ device: currentDevice });
     return {
       countryCode: market.countryCode,
       disabled,

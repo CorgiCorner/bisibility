@@ -16,6 +16,7 @@ import type {
 } from "@/lib/checks/contract";
 import { checkedAtEndForDate, zonedDateInputValue } from "@/lib/checks/date-boundary";
 import { appPath } from "@/lib/routing/app-path";
+import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useUpcomingDisplayMode } from "./use-upcoming-display-mode";
 
@@ -62,6 +63,7 @@ export function ChecksWorkspace({
   providerOptions,
   upcoming,
 }: Readonly<ChecksWorkspaceProps>) {
+  const t = useTranslations("projectRankTracker.checks");
   const mode = useUpcomingDisplayMode();
   const nowDate = useMemo(() => new Date(now), [now]);
   const [filter, setFilter] = useState<CheckRunFilter>("all");
@@ -104,7 +106,7 @@ export function ChecksWorkspace({
         setCursor(next.nextCursor);
       } catch {
         if (requestIdRef.current === requestId) {
-          setError("Checks could not be refreshed. Try again.");
+          setError(t("refreshError"));
         }
       } finally {
         if (requestIdRef.current === requestId) loadingRef.current = false;

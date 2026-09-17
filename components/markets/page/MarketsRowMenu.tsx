@@ -2,6 +2,7 @@
 
 import { DeveloperActionsMenu } from "@/components/settings/developers/DeveloperActionsMenu";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
+import { useTranslations } from "next-intl";
 
 type MarketsRowMenuProps = {
   canAddKeywords: boolean;
@@ -22,24 +23,25 @@ export function MarketsRowMenu({
   onArchive,
   onEdit,
 }: Readonly<MarketsRowMenuProps>) {
+  const t = useTranslations("projectMarkets");
   return (
     <DeveloperActionsMenu
-      ariaLabel={`Actions for ${market.name}`}
+      ariaLabel={t("actionsFor", { market: market.name })}
       items={[
         ...(onAddKeywords
           ? [
               {
                 disabled: !canAddKeywords,
-                label: "Add keywords",
+                label: t("addKeywords"),
                 onSelect: () => onAddKeywords(market),
               },
             ]
           : []),
-        { disabled: !canEdit, label: "Edit market", onSelect: () => onEdit(market) },
+        { disabled: !canEdit, label: t("edit"), onSelect: () => onEdit(market) },
         {
           danger: true,
           disabled: !canArchive,
-          label: "Archive market",
+          label: t("archive"),
           onSelect: () => onArchive(market),
         },
       ]}

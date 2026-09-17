@@ -10,17 +10,25 @@ import { monthDays, weekdays } from "@/lib/rank-check/schedule-calendar";
 import { scheduleTimezoneOptions } from "@/lib/schedules/form-defaults";
 import { scheduleNameAfterChange } from "@/lib/schedules/suggested-name";
 import { cn } from "@/lib/ui/cn";
+import { useLocale, useTranslations } from "next-intl";
 import type { PathValue, UseFormReturn } from "react-hook-form";
 import {
+  ScheduleEditorErrorText,
+  ScheduleEditorSelectField,
+} from "./ScheduleEditorFieldPrimitives";
+import {
   cronPreview,
-  defaultScheduleNote,
   type ScheduleEditorProjectDefaults,
   type ScheduleEditorProvider,
   type ScheduleEditorValues,
-  scheduleDepthOptions,
-  scheduleOverrideHelp,
-  scheduleOverrideOptions,
 } from "./ScheduleEditorModel";
+import {
+  cronPreviewDetail,
+  cronPreviewRuns,
+  depthSelectOptions,
+  providerSelectOptions,
+} from "./schedule-editor-field-options";
+import { useScheduleNameLabels } from "./useScheduleNameLabels";
 
 type ScheduleEditorFieldsProps = {
   defaultScheduleName?: string | null;
@@ -32,14 +40,9 @@ type ScheduleEditorFieldsProps = {
 };
 
 const labelClass = "text-[12px] font-semibold text-fg";
-const errorClass = "text-[11px] leading-5 text-red-text";
 const fieldClass = cn(compactInputGeometryClassName, "px-2.5 text-[12.5px] font-normal");
 const triggerClass =
   "min-h-[34px] w-full justify-between rounded-control border-border-control bg-transparent px-2.5 py-[7px] text-[12.5px] font-normal normal-case tracking-normal";
-
-function ErrorText({ text }: Readonly<{ text?: string }>) {
-  return text ? <span className={errorClass}>{text}</span> : null;
-}
 
 export function ScheduleEditorFields({
   defaultScheduleName,
@@ -49,6 +52,9 @@ export function ScheduleEditorFields({
   projectTimezone,
   referenceIso,
 }: Readonly<ScheduleEditorFieldsProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectRuns.schedules");
+  const scheduleNames = useScheduleNameLabels();
   const {
     formState: { errors },
     register,
@@ -64,7 +70,10 @@ export function ScheduleEditorFields({
     K extends "frequency" | "weekday" | "dayOfMonth" | "timeOfDay" | "cronExpression",
   >(field: K, value: ScheduleEditorValues[K]) {
     const before = form.getValues();
-    setValue("name", scheduleNameAfterChange(before.name, before, { ...before, [field]: value }));
+    setValue(
+      "name",
+      scheduleNameAfterChange(before.name, before, { ...before, [field]: value }, scheduleNames),
+    );
     setValue(field, value as PathValue<ScheduleEditorValues, K>, {
       shouldDirty: true,
       shouldValidate: true,
@@ -74,28 +83,40 @@ export function ScheduleEditorFields({
     frequency === "custom_cron"
       ? cronPreview(cronExpression, timezone || projectTimezone, referenceIso)
       : null;
-  const timezoneOptions = scheduleTimezoneOptions(projectTimezone, timezone);
+  const timezoneOptions = scheduleTimezoneOptions(
+    projectTimezone,
+    timezone,
+    projectTimezone
+      ? t("useProjectTimeZoneNamed", { timezone: projectTimezone })
+      : t("useProjectTimeZone"),
+  );
+  const previewDetail = cronPreviewDetail(preview, t);
+  const previewRuns = cronPreviewRuns(preview, locale);
+  const previewTimeZone = preview?.timeZone ?? projectTimezone;
+  const overrideHelp = t("editor.overrideHelp");
+  const providerOptions = providerSelectOptions(t, projectDefaults, connectedProviders);
+  const depthOptions = depthSelectOptions(t, projectDefaults);
 
   return (
     <div className="flex flex-col gap-3.5 p-4">
       <div className="flex flex-col gap-1.5">
-        <FieldLabel className={labelClass} htmlFor="schedule-name" label="Name" />
+        <FieldLabel className={labelClass} htmlFor="schedule-name" label={t("name")} />
         <Input className={fieldClass} id="schedule-name" {...register("name")} />
-        <ErrorText text={errors.name?.message} />
+        <ScheduleEditorErrorText text={errors.name?.message} />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <FieldLabel className={labelClass} label="Frequency" />
+        <FieldLabel className={labelClass} label={t("frequency")} />
         <input type="hidden" {...register("frequency")} />
         <SegmentedControl
-          ariaLabel="Frequency"
+          ariaLabel={t("frequency")}
           fitContent
           onChange={(value) => setCadenceValue("frequency", value)}
           options={[
-            { label: "Daily", value: "daily" },
-            { label: "Weekly", value: "weekly" },
-            { label: "Monthly", value: "monthly" },
-            { label: "Custom cron", value: "custom_cron" },
+            { label: t("frequencyDaily"), value: "daily" },
+            { label: t("frequencyWeekly"), value: "weekly" },
+            { label: t("frequencyMonthly"), value: "monthly" },
+            { label: t("editor.customCron"), value: "custom_cron" },
           ]}
           size="toolbar"
           value={frequency}
@@ -104,33 +125,41 @@ export function ScheduleEditorFields({
 
       {frequency === "custom_cron" ? (
         <div className="flex flex-col gap-1.5">
-          <FieldLabel className={labelClass} htmlFor="schedule-cron" label="Cron expression" />
+          <FieldLabel
+            className={labelClass}
+            htmlFor="schedule-cron"
+            label={t("editor.cronExpression")}
+          />
           <Input
-            aria-label="Cron expression"
+            aria-label={t("editor.cronExpression")}
             className={cn(fieldClass, "font-mono")}
             id="schedule-cron"
             {...register("cronExpression")}
             onChange={(event) => setCadenceValue("cronExpression", event.currentTarget.value)}
           />
-          <span className="text-[11.5px] leading-5 text-fg-muted">{preview?.detail}</span>
-          {preview?.next ? (
-            <span className="text-[11.5px] leading-5 text-fg">{preview.next}</span>
+          {previewDetail ? (
+            <span className="text-[11.5px] leading-5 text-fg-muted">{previewDetail}</span>
           ) : null}
-          <ErrorText text={errors.cronExpression?.message} />
+          {previewRuns ? (
+            <span className="text-[11.5px] leading-5 text-fg">
+              {t("editor.nextThree", { runs: previewRuns.join(", "), timeZone: previewTimeZone })}
+            </span>
+          ) : null}
+          <ScheduleEditorErrorText text={errors.cronExpression?.message} />
         </div>
       ) : null}
 
       <div className="flex flex-wrap gap-3.5">
         {frequency === "weekly" ? (
           <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
-            <FieldLabel className={labelClass} label="Day of week" />
+            <FieldLabel className={labelClass} label={t("weekday")} />
             <input type="hidden" {...register("weekday")} />
             <MenuSelect
-              ariaLabel="Day of week"
+              ariaLabel={t("weekday")}
               onChange={(value) =>
                 setCadenceValue("weekday", value as ScheduleEditorValues["weekday"])
               }
-              options={weekdays.map((value) => ({ label: value, value }))}
+              options={weekdays.map((value) => ({ label: t(`weekdays.${value}`), value }))}
               triggerClassName={triggerClass}
               value={watch("weekday")}
             />
@@ -138,10 +167,10 @@ export function ScheduleEditorFields({
         ) : null}
         {frequency === "monthly" ? (
           <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
-            <FieldLabel className={labelClass} label="Day of month" />
+            <FieldLabel className={labelClass} label={t("dayOfMonth")} />
             <input type="hidden" {...register("dayOfMonth")} />
             <MenuSelect
-              ariaLabel="Day of month"
+              ariaLabel={t("dayOfMonth")}
               onChange={(value) =>
                 setCadenceValue("dayOfMonth", value as ScheduleEditorValues["dayOfMonth"])
               }
@@ -153,90 +182,95 @@ export function ScheduleEditorFields({
         ) : null}
         {frequency !== "custom_cron" ? (
           <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
-            <FieldLabel className={labelClass} htmlFor="schedule-time" label="Time" />
+            <FieldLabel className={labelClass} htmlFor="schedule-time" label={t("time")} />
             <Input
-              aria-label="Time, 24-hour"
+              aria-label={t("editor.time24")}
               className={fieldClass}
               id="schedule-time"
               inputMode="numeric"
-              placeholder="No fixed time"
+              placeholder={t("editor.noFixedTime")}
               {...register("timeOfDay")}
               onChange={(event) => setCadenceValue("timeOfDay", event.currentTarget.value)}
             />
             <span className="text-[11px] text-fg-muted">
               {watch("timeOfDay")
-                ? "30-minute steps"
+                ? t("editor.thirtyMinuteSteps")
                 : frequency === "daily"
-                  ? "No fixed time - checks are spread across the day."
-                  : "No fixed time - checks are spread across the interval."}
+                  ? t("editor.noFixedDaily")
+                  : t("editor.noFixedInterval")}
             </span>
-            <ErrorText text={errors.timeOfDay?.message} />
+            <ScheduleEditorErrorText text={errors.timeOfDay?.message} />
           </div>
         ) : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <FieldLabel className={labelClass} label="Time zone" />
+        <FieldLabel className={labelClass} label={t("timeZone")} />
         <input type="hidden" {...register("timezone")} />
         <MenuSelect
-          ariaLabel="Time zone"
+          ariaLabel={t("timeZone")}
           onChange={(value) =>
             setValue("timezone", value, { shouldDirty: true, shouldValidate: true })
           }
           options={timezoneOptions}
           searchable
-          searchPlaceholder="Search time zones"
+          searchPlaceholder={t("timezoneSearch")}
           triggerClassName={triggerClass}
           value={timezone}
         />
       </div>
 
       <div className="flex flex-wrap gap-3.5">
-        <SelectField
-          ariaLabel="Start window"
+        <ScheduleEditorSelectField
+          ariaLabel={t("editor.startWindow")}
           form={form}
-          label="Start window"
+          label={t("editor.startWindow")}
+          labelClass={labelClass}
           name="jitterMinutes"
           options={[
-            { label: "Up to 15 minutes", value: "15" },
-            { label: "None - start exactly on time", value: "0" },
-            { label: "Up to 60 minutes", value: "60" },
+            { label: t("editor.jitterFifteen"), value: "15" },
+            { label: t("editor.jitterExact"), value: "0" },
+            { label: t("editor.jitterSixty"), value: "60" },
           ]}
-          help="Spreads the start so schedules firing at the same time do not hit the provider at once."
+          triggerClassName={triggerClass}
+          help={t("editor.startWindowHelp")}
         />
-        <SelectField
-          ariaLabel="Depth"
+        <ScheduleEditorSelectField
+          ariaLabel={t("editor.depth")}
           form={form}
-          help={scheduleOverrideHelp}
-          label="Depth"
+          help={overrideHelp}
+          label={t("editor.depth")}
+          labelClass={labelClass}
           name="serpDepth"
-          options={scheduleDepthOptions(projectDefaults.serpDepth)}
+          options={depthOptions}
+          triggerClassName={triggerClass}
         />
-        <SelectField
-          ariaLabel="Provider"
+        <ScheduleEditorSelectField
+          ariaLabel={t("provider")}
           form={form}
-          help={scheduleOverrideHelp}
-          label="Provider"
+          help={overrideHelp}
+          label={t("provider")}
+          labelClass={labelClass}
           name="providerPolicy"
-          options={scheduleOverrideOptions(
-            projectDefaults.provider?.label ?? null,
-            connectedProviders,
-          )}
+          options={providerOptions}
+          triggerClassName={triggerClass}
         />
       </div>
 
       {savedDefault ? (
         <div className="flex flex-col gap-1 text-[12px]">
-          <span className="font-semibold text-fg">Default for new keywords</span>
-          <span className="text-fg-muted">
-            New keywords use this schedule unless you choose another.
-          </span>
+          <span className="font-semibold text-fg">{t("editor.defaultExisting")}</span>
+          <span className="text-fg-muted">{t("editor.defaultExistingDescription")}</span>
         </div>
       ) : (
         <Switch
           checked={isDefault}
-          description={defaultScheduleNote(defaultScheduleName)}
-          label="Use as default for new keywords"
+          description={
+            defaultScheduleName
+              ? t("editor.defaultReplacement", { name: defaultScheduleName })
+              : t("editor.defaultEnabled")
+          }
+          label={t("editor.useAsDefault")}
           onChange={(event) =>
             setValue("isDefault", event.currentTarget.checked, {
               shouldDirty: true,
@@ -245,38 +279,6 @@ export function ScheduleEditorFields({
           }
         />
       )}
-    </div>
-  );
-}
-
-type SelectFieldProps = {
-  ariaLabel: string;
-  form: UseFormReturn<ScheduleEditorValues>;
-  help?: string;
-  label: string;
-  name: "jitterMinutes" | "providerPolicy" | "serpDepth";
-  options: { label: string; value: string }[];
-};
-
-function SelectField({ ariaLabel, form, help, label, name, options }: Readonly<SelectFieldProps>) {
-  const { register, setValue, watch } = form;
-  return (
-    <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
-      <FieldLabel className={labelClass} label={label} />
-      <input type="hidden" {...register(name)} />
-      <MenuSelect
-        ariaLabel={ariaLabel}
-        onChange={(value) =>
-          setValue(name, value as ScheduleEditorValues[typeof name], {
-            shouldDirty: true,
-            shouldValidate: true,
-          })
-        }
-        options={options}
-        triggerClassName={triggerClass}
-        value={watch(name)}
-      />
-      {help ? <span className="text-[11px] leading-5 text-fg-muted">{help}</span> : null}
     </div>
   );
 }

@@ -1,0 +1,45 @@
+---
+title: "Keyword research"
+description: "Run a paid keyword research lookup in the app, read the result, and save phrases to track later."
+---
+
+Keyword Research looks up related phrases, suggestions, and ideas from one seed
+through the project's connected DataForSEO account. It does not start rank
+checks. The page is project-level; it does not follow the header market
+switcher.
+
+## What you need
+
+- A connected DataForSEO account on [Integrations](/integrations).
+- Remaining monthly provider budget. Fresh lookups spend that budget. Cached
+  repeats are free.
+
+## Run research
+
+1. Open **Keyword Research**.
+2. Choose a country and language in the module. Options come from the project
+   default and from [markets](/guides/manage-markets) you already created. A
+   city or region is translated to its country while keeping the language.
+3. Enter one seed phrase. Choose **Auto**, **Related**, **Suggestions**, or
+   **Ideas**, and how many unique results you want (100, 300, or 500).
+4. Review the cost on **Research**. The button shows `~$X` before a paid
+   lookup, or **Research free, cached** when the same result is already stored.
+5. Run the lookup. Rows show Keyword, Volume, Trend, Keyword difficulty (KD),
+   Cost per click (CPC), Intent, and Source.
+
+Clickstream-refined volumes cost more. If the monthly provider budget is
+exhausted, fresh lookups are disabled until it resets; cached recent searches
+remain available.
+
+An estimate-only dry run is available from the
+[Keyword research API](/api/keyword-research) if you want the cost without
+rows.
+
+## What to do with the result
+
+Select phrases and **Save for later**, or open the add-keyword flow to start
+tracking. Saved phrases also appear on
+[Saved keywords](/guides/saved-keywords). Research rows are not tracked until
+you add them as keywords. Already-tracked phrases are marked **Tracked**.
+
+API request shapes stay on [Keyword research](/api/keyword-research).

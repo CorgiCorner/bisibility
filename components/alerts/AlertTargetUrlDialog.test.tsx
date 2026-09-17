@@ -1,5 +1,6 @@
+import { renderWithAlertMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AlertTargetUrlDialog } from "./AlertTargetUrlDialog";
 
@@ -28,6 +29,11 @@ describe("AlertTargetUrlDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save target URL" }));
     expect(await screen.findByText("Enter a target URL.")).toBeInTheDocument();
     expect(mocks.setTarget).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", {
+        name: "The page you expect to rank. Used to highlight when a different URL ranks instead.",
+      }),
+    ).toBeInTheDocument();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Target URL" }), {
       target: { value: "/features/rank-tracking" },

@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { renderWithSharedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { describe, expect, it } from "vitest";
 import { AlertBanner } from "./AlertBanner";
 import { AlertBannerStack } from "./AlertBannerStack";

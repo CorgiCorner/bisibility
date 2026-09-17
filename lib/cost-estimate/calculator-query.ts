@@ -37,6 +37,8 @@ export type CalculatorInputOverrides = Partial<
   >
 >;
 
+export const COST_CALCULATOR_PATH = "/rank-tracking-cost-calculator";
+
 const supportedFrequencies = new Set<EstimateFrequency>(["daily", "weekly", "monthly"]);
 const supportedDevices = new Set<CalculatorDevices>(["desktop", "mobile", "both"]);
 
@@ -101,7 +103,12 @@ export function buildCostCalculatorHref(input: CostCalculatorLinkInput) {
   });
   if (provider) params.set("provider", provider.providerId);
   if (input.flatOptionKey) params.set("option", input.flatOptionKey);
-  return `/rank-tracking-cost-calculator?${params.toString()}`;
+  return `${COST_CALCULATOR_PATH}?${params.toString()}`;
+}
+
+/** Replaces only the calculator route while preserving validated query overrides. */
+export function withCostCalculatorPath(href: string, calculatorPath: string): string {
+  return `${calculatorPath}${href.slice(COST_CALCULATOR_PATH.length)}`;
 }
 
 export function calculatorInputOverridesFromSearchParams(

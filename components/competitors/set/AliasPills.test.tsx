@@ -1,5 +1,6 @@
+import { renderWithCompetitorsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { deferred } from "@/tests/deferred";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AliasPills } from "./AliasPills";
@@ -81,7 +82,9 @@ describe("AliasPills", () => {
 
     await user.click(screen.getByRole("button", { name: "Remove alias Contentful CMS" }));
 
-    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Denied"));
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("Aliases could not be updated."),
+    );
     expect(screen.getByText("Contentful CMS")).toBeVisible();
   });
 
@@ -131,7 +134,9 @@ describe("AliasPills", () => {
     await user.click(screen.getByRole("button", { name: "Remove alias Contentful Platform" }));
     firstSave.reject(new Error("Denied"));
 
-    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Denied"));
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("Aliases could not be updated."),
+    );
     expect(mocks.updateCompetitorAliases).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Contentful CMS")).toBeVisible();
     expect(screen.getByText("Contentful Platform")).toBeVisible();

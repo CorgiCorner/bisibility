@@ -1,6 +1,7 @@
+import { renderWithExperimentalSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { deferred } from "@/tests/deferred";
 import { routerMock } from "@/tests/next-navigation";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ExperimentalModulesForm } from "./ExperimentalModulesForm";

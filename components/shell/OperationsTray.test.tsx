@@ -1,9 +1,10 @@
 import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { OperationSnapshot } from "@/lib/rank-check/runs/contract";
 import { AppRealtimeContext, type AppRealtimeValue } from "@/lib/realtime/useAppRealtime";
 import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-runs-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   OperationsTray,
@@ -125,7 +126,7 @@ describe("OperationsTray", () => {
         <OperationsTray defaultOpen={false} projectRef="prj_example" />
       </AppRealtimeContext.Provider>,
     );
-    expect(screen.getByRole("button", { name: "1 running operations, open activity" })).toHaveClass(
+    expect(screen.getByRole("button", { name: "1 running operation, open activity" })).toHaveClass(
       "h-[22px]",
     );
     expect(operationsTrayPaperStyle).toMatchObject({
@@ -183,11 +184,11 @@ describe("OperationsTray", () => {
       </AppRealtimeContext.Provider>,
     );
     expect(
-      screen.getByRole("button", { hidden: true, name: "1 running operations, open activity" }),
+      screen.getByRole("button", { hidden: true, name: "1 running operation, open activity" }),
     ).toHaveTextContent("1running");
     expect(
       screen
-        .getByRole("button", { hidden: true, name: "1 running operations, open activity" })
+        .getByRole("button", { hidden: true, name: "1 running operation, open activity" })
         .querySelector(".bg-blue"),
     ).toBeInTheDocument();
 
@@ -203,7 +204,7 @@ describe("OperationsTray", () => {
       </AppRealtimeContext.Provider>,
     );
     expect(
-      screen.getByRole("button", { hidden: true, name: "1 waiting operations, open activity" }),
+      screen.getByRole("button", { hidden: true, name: "1 waiting operation, open activity" }),
     ).toHaveTextContent("1waiting");
   });
 
@@ -242,7 +243,7 @@ describe("OperationsTray", () => {
     expect(badge).toHaveAttribute("data-status-chip-tone", tone);
   });
 
-  it("pluralizes rank-check scope and omits the repeating single-keyword selection", () => {
+  it("keeps rank-check scope structural until the tray applies its feature catalog", () => {
     const single = operationPresentationFor(
       {
         ...rankCheck,
@@ -253,9 +254,10 @@ describe("OperationsTray", () => {
     );
     const multiple = operationPresentationFor({ ...rankCheck, keywordCount: 2 }, "prj_example");
 
-    expect(single.meta).toBe("1 keyword");
-    expect(single.meta).not.toContain("one keyword");
-    expect(multiple.meta).toBe("2 keywords by filter");
+    expect(single.rankCheck).toMatchObject({ keywordCount: 1, selectionKind: "single" });
+    expect(multiple.rankCheck).toMatchObject({ keywordCount: 2, selectionKind: "filter" });
+    expect(single.meta).toBeNull();
+    expect(multiple.meta).toBeNull();
   });
 
   it("shows when a running run is waiting for its next check", () => {
@@ -263,7 +265,7 @@ describe("OperationsTray", () => {
     vi.setSystemTime(new Date("2026-09-02T10:00:00.000Z"));
     renderTray([{ ...rankCheck, nextCheckAt: "2026-09-02T12:00:00.000Z" }]);
 
-    expect(screen.getByText("Next check in 2h")).toBeInTheDocument();
+    expect(screen.getByText("Next check in 2 hours")).toBeInTheDocument();
   });
 
   it("closes the tray when its trigger is removed after operations drain", () => {
@@ -309,8 +311,10 @@ describe("OperationsTray", () => {
     expect(presentation).toMatchObject({
       action,
       state: operationState,
-      title: "Search Console import",
-      unit: "days",
+      gscImport: { presentationTitle: gscImport(state).presentation.title },
+      title: "",
+      unit: "",
+      unitKind: "days",
     });
   });
 

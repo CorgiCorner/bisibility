@@ -1,17 +1,17 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { renderWithGettingStartedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { GettingStartedCompletion } from "./GettingStartedCompletion";
-import {
-  ALL_STEPS_COMPLETE,
-  FINISH_SETUP_CTA,
-  FINISH_SETUP_HELPER,
-  SETUP_ACK_CHECKLIST_ERROR,
-  SETUP_ACK_WRITE_ERROR,
-  WHATS_NEXT_HEADING,
-} from "./getting-started-copy";
 
 const projectRef = "prj_abcdefghijklmnopqrstuvwx";
+const allComplete = "All setup steps complete";
+const checklistError = "Complete every setup step before finishing.";
+const finish = "Finish setup";
+const helper =
+  "Confirm the setup when you are ready. Your project keeps its existing data and settings.";
+const heading = "What's next";
+const writeError = "Could not save setup completion. Try again.";
 
 describe("GettingStartedCompletion", () => {
   it("renders state A with the finish action on the right", () => {
@@ -22,11 +22,11 @@ describe("GettingStartedCompletion", () => {
         projectRef={projectRef}
       />,
     );
-    expect(screen.getByText(ALL_STEPS_COMPLETE)).toBeVisible();
-    expect(screen.getByText(WHATS_NEXT_HEADING)).toBeVisible();
+    expect(screen.getByText(allComplete)).toBeVisible();
+    expect(screen.getByText(heading)).toBeVisible();
     expect(container.querySelector(".size-10")).toBeNull();
-    expect(screen.getByRole("button", { name: FINISH_SETUP_CTA })).toBeVisible();
-    expect(screen.getByText(FINISH_SETUP_HELPER)).toBeVisible();
+    expect(screen.getByRole("button", { name: finish })).toBeVisible();
+    expect(screen.getByText(helper)).toBeVisible();
     expect(container.querySelector(".sm\\:flex-row.sm\\:justify-between")).not.toBeNull();
     expect(screen.queryByRole("link")).toBeNull();
     expect(container.textContent).not.toMatch(/keyword|schedule|run|position count/i);
@@ -43,7 +43,7 @@ describe("GettingStartedCompletion", () => {
         projectRef={projectRef}
       />,
     );
-    await user.click(screen.getByRole("button", { name: FINISH_SETUP_CTA }));
+    await user.click(screen.getByRole("button", { name: finish }));
     expect(onAcknowledge).toHaveBeenCalledWith({ projectRef });
   });
 
@@ -58,9 +58,9 @@ describe("GettingStartedCompletion", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: FINISH_SETUP_CTA }));
+    await user.click(screen.getByRole("button", { name: finish }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(SETUP_ACK_CHECKLIST_ERROR);
+    expect(await screen.findByRole("alert")).toHaveTextContent(checklistError);
     await waitFor(() => expect(onAcknowledge).toHaveBeenCalledOnce());
   });
 
@@ -75,18 +75,18 @@ describe("GettingStartedCompletion", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: FINISH_SETUP_CTA }));
+    await user.click(screen.getByRole("button", { name: finish }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(SETUP_ACK_WRITE_ERROR);
+    expect(await screen.findByRole("alert")).toHaveTextContent(writeError);
   });
 
   it("renders state B without a finish action or dashboard link", () => {
     render(
       <GettingStartedCompletion acknowledged onAcknowledge={vi.fn()} projectRef={projectRef} />,
     );
-    expect(screen.getByText(ALL_STEPS_COMPLETE)).toBeVisible();
-    expect(screen.getByText(WHATS_NEXT_HEADING)).toBeVisible();
-    expect(screen.queryByRole("button", { name: FINISH_SETUP_CTA })).toBeNull();
+    expect(screen.getByText(allComplete)).toBeVisible();
+    expect(screen.getByText(heading)).toBeVisible();
+    expect(screen.queryByRole("button", { name: finish })).toBeNull();
     expect(screen.queryByRole("link")).toBeNull();
   });
 });

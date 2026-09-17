@@ -3,6 +3,7 @@ import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { DateFormat } from "@/lib/dates/format";
 import type { DomainRankMetrics } from "@/lib/providers/types";
 import { cn } from "@/lib/ui/cn";
+import { useLocale, useTranslations } from "next-intl";
 import {
   domainOverviewKpis,
   emptyDomainOverviewKpis,
@@ -28,12 +29,19 @@ export function DomainOverviewKpiRow({
   previousSourceSnapshotAt: string | null;
   sourceSnapshotAt: string | null;
 }>) {
+  const locale = useLocale();
+  const t = useTranslations("projectDomainOverview.workspace.ui");
   const definition = metrics
     ? previousSourceSnapshotAt
-      ? `Estimated from the DataForSEO index snapshot of ${sourceDateLabel(sourceSnapshotAt, dateFormat)}, compared with ${sourceDateLabel(previousSourceSnapshotAt, dateFormat)}. Not tracked ranking data.`
-      : `Estimated from the DataForSEO index snapshot of ${sourceDateLabel(sourceSnapshotAt, dateFormat)}. No prior source snapshot is available yet.`
-    : "No indexed organic metrics are available for this domain, country and language.";
-  const kpis = metrics ? domainOverviewKpis(metrics, previous) : emptyDomainOverviewKpis();
+      ? t("kpiCompared", {
+          current: sourceDateLabel(sourceSnapshotAt, dateFormat, t),
+          previous: sourceDateLabel(previousSourceSnapshotAt, dateFormat, t),
+        })
+      : t("kpiNoPrevious", { current: sourceDateLabel(sourceSnapshotAt, dateFormat, t) })
+    : t("kpiUnavailable");
+  const kpis = metrics
+    ? domainOverviewKpis(metrics, previous, locale, t)
+    : emptyDomainOverviewKpis(t);
 
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">

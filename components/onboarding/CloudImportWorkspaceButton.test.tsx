@@ -1,7 +1,11 @@
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CloudImportWorkspaceButton, RESTORE_PROJECT_TOOLTIP } from "./CloudImportWorkspaceButton";
+import { CloudImportWorkspaceButton } from "./CloudImportWorkspaceButton";
+
+const restoreProjectTooltip =
+  "Import a project package from another bisibility instance. We'll create one local project and restore its data. Provider credentials and API keys are not included.";
 
 const createCloudImportWorkspace = vi.hoisted(() => vi.fn());
 
@@ -30,8 +34,8 @@ describe("CloudImportWorkspaceButton", () => {
     expect(button).toHaveAttribute("data-variant", "secondary");
     const describedBy = button.getAttribute("aria-describedby");
     expect(describedBy).toBeTruthy();
-    expect(document.getElementById(describedBy ?? "")).toHaveTextContent(RESTORE_PROJECT_TOOLTIP);
-    expect(screen.queryByRole("button", { name: RESTORE_PROJECT_TOOLTIP })).not.toBeInTheDocument();
+    expect(document.getElementById(describedBy ?? "")).toHaveTextContent(restoreProjectTooltip);
+    expect(screen.queryByRole("button", { name: restoreProjectTooltip })).not.toBeInTheDocument();
     fireEvent.click(button);
 
     expect(await screen.findByRole("button", { name: "Opening import..." })).toHaveAttribute(

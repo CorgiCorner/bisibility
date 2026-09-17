@@ -1,0 +1,394 @@
+{
+  "shell": {
+    "commandPalette": {
+      "actions": "アクション",
+      "actionItems": {
+        "addKeyword": "順位トラッカー: キーワードを追加",
+        "exportKeywords": "順位トラッカー: キーワードをエクスポート",
+        "importCsv": "順位トラッカー: CSV をインポート",
+        "signOut": "サインアウト",
+        "toggleTheme": "テーマを切り替え"
+      },
+      "close": "閉じる",
+      "closeAriaLabel": "コマンドパレットを閉じる",
+      "dialogAriaLabel": "コマンドパレット",
+      "groups": {
+        "keywords": "キーワード",
+        "markets": "市場",
+        "navigate": "移動",
+        "onThisPage": "このページ内"
+      },
+      "hints": {
+        "account": "アカウント",
+        "downloadFile": "ファイルをダウンロード",
+        "goTo": "移動",
+        "keyword": "キーワード",
+        "market": "市場",
+        "newKeyword": "新規キーワード",
+        "theme": "テーマ",
+        "uploadFile": "ファイルをアップロード"
+      },
+      "marketNavigation": "{market} の{section}",
+      "navigation": {
+        "docs": "ドキュメントとセルフホスティング"
+      },
+      "noMatches": "一致する項目はありません",
+      "open": "開く",
+      "placeholder": "キーワード、ビュー、アクションを検索...",
+      "search": "検索",
+      "searchTooltip": "検索 ({shortcut})"
+    },
+    "navigation": {
+      "collapseSidebar": "サイドバーを折りたたむ",
+      "expandSidebar": "サイドバーを展開",
+      "badges": {
+        "alpha": "alpha",
+        "beta": "beta",
+        "experimental": "実験的",
+        "new": "新機能"
+      },
+      "groups": {
+        "modules": {
+          "label": "モジュール",
+          "tag": "モジュール",
+          "tooltip": "市場モジュールは選択中の市場に連動します。その他は独自の軸を維持します。"
+        },
+        "project": {
+          "label": "プロジェクト",
+          "tag": "プロジェクト",
+          "tooltip": "プロジェクト全体の設定です。市場によって絞り込まれることはありません。"
+        }
+      },
+      "items": {
+        "alerts": "アラート",
+        "backlinks": "バックリンク",
+        "competitors": "競合",
+        "dashboard": "ダッシュボード",
+        "domainOverview": "ドメイン概要",
+        "install": "インストール",
+        "integrations": "連携",
+        "keywordResearch": "キーワードリサーチ",
+        "markets": "市場",
+        "rankTracker": "順位トラッカー",
+        "runs": "実行",
+        "searchConsole": "Search Console",
+        "settings": "設定"
+      },
+      "menu": "メニュー"
+    },
+    "notifications": {
+      "empty": "通知はありません",
+      "markAllRead": "すべて既読",
+      "markReadError": "通知を既読にできませんでした。再試行してください。",
+      "title": "通知"
+    },
+    "operations": {
+      "actionError": "この処理を更新できませんでした。再読み込みして再試行してください。",
+      "activity": "アクティビティ",
+      "closeActivity": "アクティビティを閉じる",
+      "gsc": {
+        "states": {
+          "completed": "完了",
+          "delayed": "遅延",
+          "failed": "失敗",
+          "importing": "インポート中",
+          "paused": "一時停止中",
+          "queued": "キュー済み",
+          "reconnectRequired": "要再接続",
+          "statusUnavailable": "ステータス不明",
+          "waitingForData": "データ待ち",
+          "waitingForGoogle": "Google の応答待ち"
+        },
+        "title": "Search Console のインポート"
+      },
+      "rank": {
+        "blocked": {
+          "budgetWithAmounts": "今月は {cap} のうち {spent} を利用しました。予算がリセットされるとチェックが再開します。",
+          "budgetWithoutAmounts": "予算がリセットされるとチェックが再開します。",
+          "keywordArchived": "このキーワードはチェック開始前にアーカイブされたため、費用が発生する前に停止しました。",
+          "marketInactive": "このキーワードの市場が一時停止中のため、費用が発生する前にチェックを停止しました。",
+          "noProvider": "この実行を開始するには、プロバイダーを接続または再接続してください。",
+          "providerUnavailable": "現在プロバイダーに接続できません。再接続されると実行は自動的に開始されます。",
+          "waiting": "この実行は開始待ちです。可能になり次第、自動的に続行されます。",
+          "workerCloud": "現在バックグラウンドワーカーに接続できません。再接続されると実行は自動的に開始されます。",
+          "workerSelfHost": "バックグラウンドワーカーが動作していません。再起動すると実行は自動的に開始されます。"
+        },
+        "keywordCount": "{count, plural, other {#件のキーワード}}",
+        "scope": "{selection}から{keywords}",
+        "selectionKinds": {
+          "all": "追跡中のすべてのキーワード",
+          "filter": "フィルター",
+          "legacy_schedule": "スケジュール",
+          "rerun": "再実行の選択対象",
+          "retry_failed": "失敗したターゲット",
+          "scheduled_due": "実行予定のスケジュール対象",
+          "selected": "選択したキーワード",
+          "single": "1件のキーワード"
+        },
+        "targetUnit": "{count, plural, other {ターゲット}}",
+        "titles": {
+          "api": "API 実行",
+          "manual": "手動実行",
+          "retry": "再試行実行",
+          "scheduled": "スケジュール実行"
+        }
+      },
+      "emptyDescription": "進行中の順位チェックやインポートはありません。完了した順位チェックの記録は実行履歴に、インポートの記録は Search Console に残ります。",
+      "emptyTitle": "実行中の処理はありません",
+      "pillAria": "{count, plural, =0 {処理はありません} other {{state}の処理#件、アクティビティを開く}}",
+      "pillTitle": "{count, plural, =0 {処理はありません} other {{state}の処理#件}}",
+      "runs": "実行",
+      "stale": "リアルタイム更新を利用できません。最後に取得した処理を表示しています。",
+      "states": {
+        "blocked": "ブロック済み",
+        "failed": "失敗",
+        "running": "実行中",
+        "waiting": "待機中"
+      },
+      "viewAll": "すべての実行を表示"
+    },
+    "userMenu": {
+      "accountMenu": "アカウントメニュー",
+      "accountSettings": "アカウント設定",
+      "discord": "Discord",
+      "docs": "ドキュメントとセルフホスティング",
+      "feedback": "フィードバックを送信",
+      "homepage": "ホームページ",
+      "github": "GitHub",
+      "roleInProject": "{project} の{role}",
+      "roles": {
+        "admin": "管理者",
+        "auditor": "監査者",
+        "member": "メンバー",
+        "owner": "所有者",
+        "viewer": "閲覧者"
+      },
+      "signOut": "サインアウト",
+      "signOutError": "サインアウトできませんでした。再試行してください。",
+      "fallbackName": "アカウント",
+      "opensInNewTab": "{label}（新しいタブで開きます）"
+    },
+    "market": {
+      "add": "市場を追加",
+      "all": "すべての市場",
+      "count": "{count, plural, =0 {キーワードなし} other {#件のキーワード}}",
+      "dialog": "市場を切り替え",
+      "empty": "最初の市場を追加すると、どの地域・どの言語でキーワードを追跡するかを選べます。",
+      "find": "市場を検索",
+      "findPlaceholder": "市場を検索...",
+      "list": "市場",
+      "noMatches": "該当する市場はありません。",
+      "noMarkets": "市場はありません",
+      "paused": "一時停止中"
+    },
+    "header": {
+      "changeContext": "コンテキストを変更",
+      "copyRunId": "実行 ID をコピー",
+      "gettingStartedProgress": "セットアップ、{settled} / {total, plural, other {# ステップ}} 完了",
+      "noMarkets": "市場はありません",
+      "subtitles": {
+        "account": "プロジェクト設定とは別に、bisibility のユーザーを管理します。",
+        "alerts": "順位が変動したときに通知を受け取ります。",
+        "audit": "プロジェクトの変更とセキュリティイベントを確認します。",
+        "backlinks": "サイトへのリンク元、変更点、実行前の費用を確認できます。",
+        "competitors": "追跡中のキーワードで競合ドメインを比較します。",
+        "docs": "bisibility のインストール、設定、セルフホスティングの方法です。",
+        "domainOverview": "任意のドメインの推定オーガニック可視性を分析できます。",
+        "gettingStartedComplete": "完了しました。以下はすべて任意です。",
+        "gettingStartedIncomplete": "4つの手順で最初の順位を確認できます。",
+        "integrations": "データプロバイダーと分析ソースを接続します。",
+        "install": "AI エージェント、エディター、スクリプトからここと同じデータを利用できます。",
+        "importFromAnotherInstance": "一度きりの移行トークンでこのプロジェクトにデータを移します。",
+        "instanceAdministration": "成長状況、利用状況、アカウント管理です。",
+        "instanceAdministrationAudit": "インスタンス管理者の操作と結果です。",
+        "instanceAdministrationOverview": "ワーカーの稼働状況と運用診断です。",
+        "keywordResearch": "追跡する価値のあるフレーズを、検索前に費用を確認しながら探せます。",
+        "markets": "ロケーション、キーワードの既定値、市場のライフサイクルを管理します。",
+        "preferences": "テーマと個人の既定値です。",
+        "runs": "このプロジェクトの順位チェックと Search Console インポートです。",
+        "searchConsole": "Google が報告したデータ、非開示のデータ、保持するデータを確認できます。",
+        "security": "パスワード、セッション、アカウント保護です。",
+        "timeline": "プロジェクトのシグナル、ページの変更、メモを時系列で表示します。"
+      },
+      "titles": {
+        "account": "アカウント設定",
+        "alerts": "アラート",
+        "audit": "監査ログ",
+        "backlinks": "バックリンク",
+        "competitors": "競合",
+        "dashboard": "ダッシュボード",
+        "docs": "ドキュメント",
+        "domainOverview": "ドメイン概要",
+        "gettingStarted": "セットアップ",
+        "integrations": "連携",
+        "install": "インストール",
+        "importFromAnotherInstance": "別のインスタンスからインポート",
+        "instanceAdministration": "インスタンス管理",
+        "keywordDetails": "キーワード詳細",
+        "keywordResearch": "キーワードリサーチ",
+        "markets": "市場",
+        "overview": "概要",
+        "preferences": "環境設定",
+        "rankTracker": "順位トラッカー",
+        "run": "実行",
+        "runs": "実行",
+        "searchConsole": "Search Console",
+        "security": "セキュリティ",
+        "settings": "設定",
+        "timeline": "タイムライン"
+      }
+    },
+    "footer": {
+      "instanceStatus": {
+        "healthy": "インスタンス管理者",
+        "manualMode": "インスタンス管理者 · 手動モード",
+        "schemaDrift": "インスタンス管理者 · スキーマ不一致",
+        "workerDifferentQueues": "インスタンス管理者 · ワーカーが別のキューで稼働",
+        "workerDown": "インスタンス管理者 · ワーカー停止"
+      },
+      "privacyChoices": "プライバシー設定"
+    },
+    "workspace": {
+      "create": "プロジェクトを作成",
+      "createDescription": "新しいプロジェクトで他のメンバーと共同作業",
+      "empty": "作成または参加したプロジェクトがここに表示され、すばやく切り替えられます。",
+      "find": "プロジェクトを検索",
+      "findPlaceholder": "プロジェクトを検索...",
+      "newProject": "新規プロジェクト",
+      "noData": "{count, number}件キュー済み、データなし",
+      "project": "プロジェクト",
+      "projects": "プロジェクト",
+      "sample": "サンプル",
+      "switch": "プロジェクトを切り替え",
+      "keywordCount": "{count, plural, =0 {#件のキーワード} other {#件のキーワード}}"
+    },
+    "writeMode": {
+      "migrationSettings": "移行設定",
+      "reasons": {
+        "migrated": "プロジェクトは移行済みで無効",
+        "migrationHold": "移行保留中は読み取り専用"
+      },
+      "migrated": {
+        "detail": "このプロジェクトは別の bisibility インスタンスに移動しました。設定で再有効化するまで、書き込みと順位チェックは停止したままです。",
+        "title": "プロジェクトは移行済みです。このインスタンスでは無効です。"
+      },
+      "migrationHold": {
+        "detail": "読み取りは引き続き可能です。書き込み、インポート、プロバイダーの変更、順位チェックの開始は一時停止中です。書き込みを再開するには、設定で移行をキャンセルしてください。詳細設定では保留が自動解除の対象になる時刻を確認でき、毎時実行のワーカーがその直後に解除します。",
+        "title": "プロジェクトは読み取り専用です。移行が進行中です。"
+      }
+    },
+    "demo": {
+      "createAccount": "アカウントを作成",
+      "editableOwner": {
+        "message": "ここでの変更はデモの閲覧者にも表示されます。",
+        "title": "デモワークスペースです。"
+      },
+      "editableViewer": {
+        "message": "保存済みデータを読み取り専用で閲覧できます。変更と新しいチェックは無効です。"
+      },
+      "legacy": {
+        "message": "保存済みの順位データを確認できます。変更と新しいチェックは無効です。"
+      },
+      "readOnlyTitle": "読み取り専用のデモです。",
+      "snapshot": "スナップショット: {date} UTC"
+    },
+    "betaBanner": {
+      "backupLoadError": "プロジェクトのバックアップ件数を読み込めませんでした。",
+      "coverage": "ベータの対象範囲",
+      "detail": "データの復旧はまだ保証されていません。最新のエクスポートを保管してください。",
+      "dismiss": "ホスト型ベータのバナーを閉じる",
+      "exportData": "データをエクスポート",
+      "lead": "ホスト型ベータ:",
+      "loading": "読み込み中..."
+    },
+    "betaCoverage": {
+      "close": "閉じる",
+      "covered": "対象",
+      "coveredItems": {
+        "export": "エクスポートはいつでも、完全な内容で利用できます。",
+        "history": "履歴はベータ期間中すべて保持され、削除されることはありません。",
+        "providerOwnership": "プロバイダーのキーとクォータはご自身のものです。上乗せ料金も再販もありません。",
+        "scheduled": "順位チェックはスケジュールどおりに、セルフホストと同じエンジンで実行されます。"
+      },
+      "end": {
+        "detail": "課金開始の30日前に通知します。確認なしに請求されることはありません。セルフホストは引き続き利用できます。",
+        "title": "ベータ終了時"
+      },
+      "exportData": "データをエクスポート",
+      "notYet": "対象外",
+      "notYetItems": {
+        "migration": "ホスト型リージョン間の移行経路は保証されません。",
+        "restore": "復元は保証されません。データが失われた場合、元に戻すことはできません。",
+        "support": "サポートはメールでのベストエフォート対応で、応答時間の目標はありません。",
+        "uptime": "稼働率の SLA はありません。メンテナンスにより予告なくチェックが中断される場合があります。"
+      },
+      "responsibilities": {
+        "ours": {
+          "detail": "夜間のスナップショットはベストエフォートで7日間保持します。このオープンベータは少人数のチームで運営しているため、オンコール体制も、頼りにできる障害通知もありません。障害には運営側より先に気づくものとお考えください。",
+          "title": "運営側の対応"
+        },
+        "title": "役割分担",
+        "yours": {
+          "detail": "最新のエクスポートを保管してください。完全にご自身の管理下にあるコピーであり、セルフホストに復元できます。",
+          "title": "ご自身の対応"
+        }
+      },
+      "subtitle": "ホスト型ベータのポリシー",
+      "title": "ホスト型ベータの対象範囲"
+    },
+    "backup": {
+      "cancel": "キャンセル",
+      "duration": "通常は1分以内",
+      "errors": {
+        "keywordLimit": "このパッケージに含められるキーワードは最大{limit, number}件です。",
+        "rankCheckLimit": "このパッケージに含められる順位チェックはキーワードごとに最大{limit, number}件です。",
+        "unsupportedHistory": "このパッケージにはエクスポートできない履歴が含まれています。"
+      },
+      "exportError": "インスタンスインポート用パッケージをエクスポートできませんでした。",
+      "exporting": "エクスポート中...",
+      "exportPackage": "パッケージをエクスポート",
+      "included": "含まれる内容",
+      "lastExport": {
+        "days": "直近のエクスポート: {count, number}日前",
+        "hours": "直近のエクスポート: {count, number}時間前",
+        "justNow": "直近のエクスポート: たった今",
+        "minutes": "直近のエクスポート: {count, number}分前",
+        "never": "エクスポート履歴なし",
+        "yesterday": "直近のエクスポート: 昨日"
+      },
+      "sections": {
+        "alert_rules": {
+          "description": "しきい値、対象、配信チャネル",
+          "label": "アラートルール"
+        },
+        "competitors": {
+          "description": "追跡中のドメインとそのラベル",
+          "label": "競合"
+        },
+        "keywords": {
+          "description": "名前、タグ、対象 URL",
+          "label": "キーワードとタグ"
+        },
+        "notification_preferences": {
+          "description": "プロジェクトの通知の選択内容",
+          "label": "通知の環境設定"
+        },
+        "projects": {
+          "description": "名前、ドメイン、インポートのメタデータ",
+          "label": "プロジェクト詳細"
+        },
+        "rank_checks": {
+          "description": "保持されているすべての順位と順位取得 URL",
+          "label": "順位履歴"
+        },
+        "saved_views": {
+          "description": "名前とプロジェクトのフィルター設定",
+          "label": "保存済みビュー"
+        }
+      },
+      "subtitle": "セルフホストに復元できる {projectName} の完全なコピー",
+      "success": "パッケージをエクスポートしてダウンロードしました。",
+      "title": "プロジェクトデータをエクスポート"
+    }
+  }
+}

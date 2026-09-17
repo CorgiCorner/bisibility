@@ -1,13 +1,15 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { TagChip } from "@/components/ui/TagChip";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -28,7 +30,9 @@ export type UpdateAliasesAction = (input: {
   projectId: string;
 }) => Promise<unknown>;
 
-const aliasSchema = z.object({ alias: z.string().trim().min(1, "Aliases cannot be empty.") });
+function aliasSchema(emptyMessage: string) {
+  return z.object({ alias: z.string().trim().min(1, emptyMessage) });
+}
 export function AliasPills({
   aliases,
   canEdit,
@@ -37,6 +41,8 @@ export function AliasPills({
   projectId,
   updateAliases,
 }: Readonly<AliasPillsProps>) {
+  const t = useTranslations("projectCompetitors.ui");
+  const sharedErrors = useSharedErrorMessages();
   const [currentAliases, setCurrentAliases] = useState(aliases);
   const [editing, setEditing] = useState(initiallyEditing);
   const [message, setMessage] = useState<string | null>(null);
@@ -49,7 +55,10 @@ export function AliasPills({
     register,
     reset,
     setError,
-  } = useForm<AliasForm>({ defaultValues: { alias: "" }, resolver: zodResolver(aliasSchema) });
+  } = useForm<AliasForm>({
+    defaultValues: { alias: "" },
+    resolver: zodResolver(aliasSchema(t("aliasesEmpty"))),
+  });
 
   function saveAliases(nextAliases: string[]) {
     const aliasesSnapshot = [...nextAliases];
@@ -66,7 +75,7 @@ export function AliasPills({
       } catch (error: unknown) {
         changeRevision.current += 1;
         setCurrentAliases([...confirmedAliases.current]);
-        setMessage(actionErrorMessage(error, "Aliases could not be updated."));
+        setMessage(presentSafeActionError(error, sharedErrors, t("aliasesUpdateError")));
       }
     };
 
@@ -76,7 +85,7 @@ export function AliasPills({
   function addAlias({ alias }: AliasForm) {
     const normalized = alias.trim();
     if (currentAliases.some((item) => item.toLowerCase() === normalized.toLowerCase())) {
-      setError("alias", { message: "Aliases must be unique.", type: "validate" });
+      setError("alias", { message: t("aliasesUnique"), type: "validate" });
       return;
     }
     saveAliases([...currentAliases, normalized]);
@@ -95,7 +104,7 @@ export function AliasPills({
           key={alias}
           label={alias}
           onRemove={canEdit ? () => removeAlias(alias) : undefined}
-          removeLabel={`Remove alias ${alias}`}
+          removeLabel={t("removeAlias", { alias })}
         />
       ))}
       {canEdit && !editing ? (
@@ -105,18 +114,18 @@ export function AliasPills({
           startIcon={<Plus aria-hidden size={13} weight="regular" />}
           variant="ghost"
         >
-          Add alias
+          {t("addAlias")}
         </Button>
       ) : null}
       {canEdit && editing ? (
         <form className="flex w-full min-w-0 items-center gap-1" onSubmit={handleSubmit(addAlias)}>
           <Input
-            aria-label="New brand alias"
+            aria-label={t("newBrandAlias")}
             className="h-8 min-h-8 min-w-0 flex-1 px-2 py-1 text-[12px]"
             {...register("alias")}
           />
           <Button
-            aria-label="Save alias"
+            aria-label={t("saveAlias")}
             size="xs"
             style={{ minWidth: 32, padding: 0, width: 32 }}
             variant="secondary"
@@ -125,7 +134,7 @@ export function AliasPills({
             <Check aria-hidden size={14} weight="regular" />
           </Button>
           <Button
-            aria-label="Cancel alias"
+            aria-label={t("cancelAlias")}
             size="xs"
             style={{ minWidth: 32, padding: 0, width: 32 }}
             variant="ghost"

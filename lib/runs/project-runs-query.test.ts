@@ -26,7 +26,7 @@ function rank(
     lifecycle: status,
     progress: { completed: 1, total: 1, unit: "targets" },
     project,
-    scope: { description: null, label: "1 keyword" },
+    scope: { description: null, keywordCount: 1, kind: "rank_check" },
     timestamps: {
       createdAt: launchedAt,
       finishedAt: launchedAt,
@@ -34,7 +34,7 @@ function rank(
       plannedFor: null,
       startedAt: launchedAt,
     },
-    title: "Manual rank check",
+    title: { kind: "rank_check", trigger: "manual" },
   };
 }
 
@@ -69,7 +69,7 @@ function gsc(
       unit: "days",
     },
     project,
-    scope: { description: "sc-domain:example.com", label: "Search Console" },
+    scope: { description: "sc-domain:example.com", kind: "gsc_import" },
     timestamps: {
       createdAt,
       lastProbeAt: null,
@@ -77,7 +77,7 @@ function gsc(
       lastSyncStartedAt: null,
       syncStartedAt: null,
     },
-    title: "Search Console import",
+    title: { kind: "gsc_import" },
   };
 }
 
@@ -98,7 +98,7 @@ function plannedRank(id: string, plannedFor: string): ProjectRun {
     lifecycle: "planned",
     progress: { completed: 0, total: 1, unit: "targets" },
     project,
-    scope: { description: null, label: "1 keyword" },
+    scope: { description: null, keywordCount: 1, kind: "rank_check" },
     timestamps: {
       createdAt: plannedFor,
       finishedAt: null,
@@ -106,7 +106,7 @@ function plannedRank(id: string, plannedFor: string): ProjectRun {
       plannedFor,
       startedAt: null,
     },
-    title: "Scheduled rank check",
+    title: { kind: "rank_check", trigger: "scheduled" },
   };
 }
 

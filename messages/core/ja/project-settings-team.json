@@ -1,0 +1,101 @@
+{
+  "projectSettingsTeam": {
+    "members": {
+      "title": "メンバー",
+      "description": "{domain} へのアクセス権を持つ全員です。",
+      "thisProject": "このプロジェクト",
+      "accessSince": "プロジェクトへのアクセス開始: {date}",
+      "you": "自分",
+      "updatingRole": "ロールを更新中...",
+      "inviteMember": "メンバーを招待",
+      "viewerAudit": "閲覧者 · 監査",
+      "role": {
+        "admin": "管理者",
+        "editor": "編集者",
+        "owner": "所有者",
+        "viewer": "閲覧者"
+      },
+      "roleDescription": {
+        "admin": "設定、メンバー、キー",
+        "editor": "キーワード、アラート、ビュー",
+        "viewer": "ダッシュボードとエクスポート"
+      }
+    },
+    "memberActions": {
+      "actionsFor": "{name} の操作",
+      "auditExplanation": "閲覧者 · 監査はシステムが管理する監査ロールであり、通常の割り当て可能なロールとしては扱えません。",
+      "changeRole": "ロールを変更",
+      "transferOwnership": "所有権を移譲",
+      "removeFromProject": "プロジェクトから削除",
+      "backToActions": "操作に戻る"
+    },
+    "invite": {
+      "done": "完了",
+      "cancel": "キャンセル",
+      "sending": "送信中",
+      "send": "招待を送信",
+      "title": "チームメンバーを招待",
+      "description": "{domain} へのアクセス権が付与されます。",
+      "sentTitle": "招待を送信しました",
+      "sentDescription": "{email} に招待メールを送信しました。このリンクを直接共有することもできます。",
+      "copyLink": "招待リンクをコピー",
+      "email": "メールアドレス",
+      "emailPlaceholder": "teammate@acme.dev",
+      "emailInvalid": "チームメンバーのメールアドレスを入力してください。",
+      "role": "ロール",
+      "roleDescription": {
+        "admin": "設定、チームメンバー、キーを管理できます。",
+        "editor": "キーワード、タグ、アラートルールを管理できます。",
+        "viewer": "ダッシュボード、エクスポート、レポートを閲覧できます。"
+      }
+    },
+    "pending": {
+      "title": "保留中の招待",
+      "description": "送信済みでまだ承諾されていない招待です。",
+      "empty": "保留中の招待はありません。",
+      "details": "{role} · {invited} · {expires}",
+      "invitedBy": "招待者: {inviter}",
+      "expired": "期限切れ",
+      "resend": "再送",
+      "revokeFor": "{email} の招待を取り消す",
+      "resendSuccess": "{email} に新しい招待を送信しました。",
+      "expiresIn": "{unit, select, hour {{count, plural, other {#時間}}後に期限切れ} day {{count, plural, other {#日}}後に期限切れ} other {まもなく期限切れ}}",
+      "expiredAgo": "{unit, select, hour {{count, plural, other {#時間}}前に期限切れ} day {{count, plural, other {#日}}前に期限切れ} other {期限切れ}}",
+      "invitedAgo": "{unit, select, hour {{count, plural, other {#時間}}前に招待} day {{count, plural, other {#日}}前に招待} other {招待済み}}",
+      "invitedNow": "たった今招待"
+    },
+    "roles": {
+      "title": "ロールとアクセス権",
+      "description": "各ロールでできることです。ロールはメンバーの行で変更できます。",
+      "capability": "権限",
+      "view": "ダッシュボード、キーワード、エクスポートの閲覧",
+      "edit": "キーワード、アラート、ビューの追加と編集",
+      "delete": "キーワード、アラート、競合ドメインの削除",
+      "keys": "API キーとフックの作成と取り消し",
+      "manage": "メンバーの招待と管理",
+      "audit": "監査ログの閲覧",
+      "billing": "請求",
+      "ownership": "所有権の移譲、プロジェクトの削除",
+      "permission": "{role}: {capability}: {allowed, select, true {許可あり} other {許可なし}}",
+      "footnote": "所有者はプロジェクトに1人のみで、所有権を移譲できます。ロールの変更はすべて監査ログに記録されます。既存の監査権限はメンバーの行に表示され、ここでは割り当てられません。"
+    },
+    "errors": {
+      "teamChange": "チームの変更ができませんでした。",
+      "roleChange": "ロールを変更できませんでした。",
+      "inviteSend": "招待を送信できませんでした。",
+      "inviteUnavailable": "このプロジェクトでは招待を利用できません。",
+      "inviteMailer": "チーム招待のメール配信が設定されていません。",
+      "memberExists": "このユーザーはすでにメンバーです。",
+      "memberNotEditable": "このメンバーは編集できません。",
+      "inviteNotFound": "招待が見つかりません。",
+      "lastManager": "プロジェクトには管理者または所有者が少なくとも1人必要です。",
+      "chooseNewOwner": "所有者にする別のプロジェクトメンバーを選択してください。",
+      "inviteTemporarilyUnavailable": "招待を一時的に利用できません。しばらくしてから再試行してください。",
+      "inviteRateLimitedSeconds": "招待の送信が多すぎます。{count, plural, other {#秒}}後に再試行してください。",
+      "inviteRateLimitedMinutes": "招待の送信が多すぎます。{count, plural, other {#分}}後に再試行してください。",
+      "inviteRecentlySentSeconds": "この招待は先ほど送信されました。{count, plural, other {#秒}}後に再試行してください。",
+      "inviteRecentlySentMinutes": "この招待は先ほど送信されました。{count, plural, other {#分}}後に再試行してください。",
+      "action": "チームの操作を完了できませんでした。"
+    }
+  }
+}

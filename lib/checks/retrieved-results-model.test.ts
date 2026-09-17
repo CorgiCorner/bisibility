@@ -34,7 +34,7 @@ function fullResults(
 const fmt = (iso: string) => iso.slice(0, 10);
 
 describe("retrieved-results-model", () => {
-  it("featureChips maps a DataForSEO ai overview and an answer-box label to the expected labels, deduplicates local, and passes unknown through capitalized", () => {
+  it("featureChips maps typed provider features, deduplicates known features, and preserves unknown raw values", () => {
     const chips = featureChips([
       "ai overview",
       "answer box",
@@ -42,12 +42,12 @@ describe("retrieved-results-model", () => {
       "local pack",
       "some weird thing",
     ]);
-    const labels = chips.map((c) => c.label);
-    expect(labels).toContain("AI overview");
-    expect(labels).toContain("Featured snippet");
-    const local = labels.filter((l) => l === "Local pack");
+    const known = chips.map((chip) => chip.known);
+    expect(known).toContain("aiOverview");
+    expect(known).toContain("featuredSnippet");
+    const local = known.filter((value) => value === "localPack");
     expect(local).toHaveLength(1);
-    expect(labels).toContain("Some weird thing");
+    expect(chips).toContainEqual({ known: null, raw: "some weird thing" });
   });
 
   it("aiOverviewState returns true, false, and null for the three cases", () => {
@@ -78,22 +78,14 @@ describe("retrieved-results-model", () => {
       retrievedPositions: 5,
       stoppedAtResult: true,
     });
-    expect(stopped).toEqual({
-      heading: "Positions 6-10",
-      count: "5 not retrieved",
-      reason:
-        "The check stopped at your result, so these positions were never requested and never billed. They are unknown for this check, not empty.",
-    });
+    expect(stopped).toEqual({ count: 5, end: 10, kind: "stopped", start: 6 });
 
     const notStopped = gapBlock({
       requestedDepth: 10,
       retrievedPositions: 5,
       stoppedAtResult: false,
     });
-    expect(notStopped?.reason).toBe(
-      "These positions were not retrieved for this check. They are unknown, not empty.",
-    );
-    expect(notStopped?.reason).not.toContain("The check stopped at your result");
+    expect(notStopped).toEqual({ count: 5, end: 10, kind: "unknown", start: 6 });
   });
 
   it("retentionFooter produces the unlimited sentence for a null date and interpolates the injected formatter and day count otherwise", () => {
@@ -109,7 +101,7 @@ describe("retrieved-results-model", () => {
     expect(text).toContain("31 days after it ran");
   });
 
-  it("compareChecks refuses when either side is compact, with the compact body, and when a side is none, with the none body", () => {
+  it("compareChecks returns typed refusal data for compact and unavailable checks", () => {
     const compact = {
       checkId: "c2",
       checkedAt: "2024-06-01T00:00:00Z",
@@ -126,12 +118,7 @@ describe("retrieved-results-model", () => {
     });
     expect(result.kind).toBe("refused");
     if (result.kind !== "refused") return;
-    expect(result.body).toBe(
-      "The earlier check kept only its top 0, so its titles, URLs and page features below that are gone.",
-    );
-    expect(result.rule).toContain(
-      "Comparison stays available between checks that both hold full detail.",
-    );
+    expect(result).toMatchObject({ kept: 0, relation: "earlier", tier: "compact" });
 
     const none = {
       checkId: "c3",
@@ -146,19 +133,19 @@ describe("retrieved-results-model", () => {
     });
     expect(result2.kind).toBe("refused");
     if (result2.kind !== "refused") return;
-    expect(result2.body).toContain("no stored results at all");
+    expect(result2).toMatchObject({ tier: "none" });
   });
 
-  it("compareChecks returns the degenerate note when overlap is below 3", () => {
+  it("compareChecks returns a typed degenerate state when overlap is below 3", () => {
     const from = fullResults({ retrievedPositions: 2, rows: [] });
     const to = fullResults({ retrievedPositions: 2, rows: [] });
     const result = compareChecks(from, to, { formatDate: fmt, fullCheckDates: [] });
     expect(result.kind).toBe("degenerate");
     if (result.kind !== "degenerate") return;
-    expect(result.note).toContain("fewer than three positions");
+    expect(result).toMatchObject({ reason: "insufficient_overlap" });
   });
 
-  it("compareChecks over a fixture where the tracked domain moves from #12 to #5 with overlap 5 produces the five stat counts and the Compared over positions 1-5 note", () => {
+  it("compareChecks keeps comparison state and bounds as typed data", () => {
     const fromRows = [
       { position: 1, domain: "a.example.org", url: null, title: null, tracked: false },
       { position: 2, domain: "b.example.org", url: null, title: null, tracked: false },
@@ -192,12 +179,7 @@ describe("retrieved-results-model", () => {
     expect(result.kind).toBe("list");
     if (result.kind !== "list") return;
     expect(result.overlap).toBe(5);
-    expect(result.overlapNote).toBe(
-      "Compared over positions 1-5, the depth both checks retrieved.",
-    );
-    expect(result.tailNote).toBe(
-      "Below #5 there is nothing to compare: The later check stopped at your result, so deeper positions were not retrieved.",
-    );
+    expect(result.bound).toEqual({ kind: "stopped", overlap: 5, relation: "later" });
     expect(result.stats.entered).toBe(2);
     expect(result.stats.up).toBe(1);
     expect(result.stats.down).toBe(1);
@@ -241,10 +223,9 @@ describe("retrieved-results-model", () => {
     const result = compareChecks(from, to, { formatDate: (iso) => iso, fullCheckDates: [] });
 
     if (result.kind !== "list") throw new Error("expected a list");
-    expect(result.tailNote).toContain("The earlier check stopped at your result");
+    expect(result.bound).toEqual({ kind: "stopped", overlap: 5, relation: "earlier" });
     const dropped = result.rows.find((row) => row.state === "dropped_out");
-    expect(dropped?.tip).toContain("No longer in positions 1-5");
-    expect(dropped?.tip).not.toContain("the later check stopped");
+    expect(dropped).toMatchObject({ from: 5, state: "dropped_out", to: null });
   });
 
   it("keys a domain by its best position when it ranks twice", () => {

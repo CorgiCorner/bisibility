@@ -1,6 +1,7 @@
 "use client";
 
-import { actionErrorMessage } from "@/components/keywords/action-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import {
   importKeywordsFromCsv,
   previewKeywordImportFile,
@@ -11,33 +12,27 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import { parseCsvKeywordsResult } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { KeywordImportColumnMapping } from "@/lib/keywords/import-csv-parser";
 import { keywordImportTemplateForMarkets } from "@/lib/keywords/import-csv-template";
-import {
-  initialImportMarketKey,
-  type KeywordImportMarketContext,
-} from "@/lib/keywords/import-market-context";
+import { initialImportMarketKey } from "@/lib/keywords/import-market-context";
 import {
   keywordImportWizardInput,
   updateKeywordImportMapping,
 } from "@/lib/keywords/import-wizard-input";
 import { KEYWORD_IMPORT_MAX, keywordImportFileLimitMessage } from "@/lib/schemas/keyword";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { ImportCsvWizardBody } from "./ImportCsvWizardBody";
 import { ImportCsvWizardFooter } from "./ImportCsvWizardFooter";
 import { ImportCsvWizardFrame } from "./ImportCsvWizardFrame";
+import {
+  type ImportCsvWizardProps,
+  type ImportFilePreview,
+  type ImportResult,
+  type ImportReview,
+  previewErrorMessage,
+} from "./import-csv-wizard-model";
 import { type ImportWizardForm, importWizardSchema } from "./import-csv-wizard-schema";
-
-type ImportResult = Awaited<ReturnType<typeof importKeywordsFromCsv>>;
-type ImportReview = Awaited<ReturnType<typeof reviewKeywordImport>>;
-// biome-ignore format: compact server-action result type keeps the wizard under the file line cap.
-type ImportFilePreview = Extract<Awaited<ReturnType<typeof previewKeywordImportFile>>, { ok: true }>;
-type ImportCsvWizardProps = {
-  marketContext?: KeywordImportMarketContext;
-  onClose: () => void;
-  open: boolean;
-  projectId?: string;
-};
 
 export function ImportCsvWizard({
   marketContext,
@@ -45,6 +40,8 @@ export function ImportCsvWizard({
   open,
   projectId,
 }: Readonly<ImportCsvWizardProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.csvWizard");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [columnMapping, setColumnMapping] = useState<KeywordImportColumnMapping>({});
@@ -82,7 +79,11 @@ export function ImportCsvWizard({
   const csvReceivedCount = csvParseResult.rows.length;
   const csvLimitError =
     csvReceivedCount > KEYWORD_IMPORT_MAX ? keywordImportFileLimitMessage(csvReceivedCount) : null;
-  const csvParseError = importFile ? null : (csvParseResult.error ?? csvLimitError);
+  const csvParseError = importFile
+    ? null
+    : csvParseResult.error
+      ? previewErrorMessage(csvParseResult.error, t)
+      : csvLimitError;
   const importFileRows = importFilePreview?.rows ?? null;
   const parsedCount = importFile ? (importFileRows?.length ?? null) : csvParsedCount;
   const hasHeader = importFile ? (importFilePreview?.hasHeader ?? false) : csvParseResult.hasHeader;
@@ -133,7 +134,7 @@ export function ImportCsvWizard({
         return;
       }
       if (!canImport) {
-        setError("csv", { message: "Upload an XLSX workbook or paste CSV rows." });
+        setError("csv", { message: t("missingRows") });
         return;
       }
       if (!importFile && !(await trigger("csv"))) return;
@@ -153,7 +154,7 @@ export function ImportCsvWizard({
         });
         setReview(await reviewKeywordImport(input));
       } catch (error) {
-        setActionError(actionErrorMessage(error));
+        setActionError(presentSafeActionError(error, sharedErrors, t("reviewFailed")));
         return;
       } finally {
         setIsReviewing(false);
@@ -190,7 +191,7 @@ export function ImportCsvWizard({
       if (request !== workbookPreviewRequest.current) return;
       if (!preview.ok) {
         setImportFile(null);
-        setError("csv", { message: preview.error.message });
+        setError("csv", { message: previewErrorMessage(preview.error.code, t) });
         return;
       }
       setColumnMapping(preview.columnMapping ?? {});
@@ -198,7 +199,7 @@ export function ImportCsvWizard({
     } catch (error) {
       if (request !== workbookPreviewRequest.current) return;
       setImportFile(null);
-      setError("csv", { message: actionErrorMessage(error) });
+      setError("csv", { message: presentSafeActionError(error, sharedErrors, t("previewFailed")) });
     }
   }
 
@@ -208,7 +209,7 @@ export function ImportCsvWizard({
     setImportFilePreview(null);
     setColumnMapping({});
     setReview(null);
-    setError("csv", { message: "Choose a CSV or XLSX file. Save legacy .xls files as .xlsx." });
+    setError("csv", { message: t("unsupportedFile") });
   }
 
   function handleCsvFileError(message: string) {
@@ -232,7 +233,7 @@ export function ImportCsvWizard({
       );
       setStep(5);
     } catch (error) {
-      setActionError(actionErrorMessage(error));
+      setActionError(presentSafeActionError(error, sharedErrors, t("importFailed")));
     }
   }
   return (

@@ -4,6 +4,7 @@ import {
   EmptyChartShell,
 } from "@/components/keyword-detail/empty/empty-state-primitives";
 import { rankObservationState } from "@/lib/serp/rank-depth";
+import { useTranslations } from "next-intl";
 
 export type PositionHistoryNoChecksInRangeProps = {
   latestPosition?: number | null;
@@ -16,18 +17,21 @@ function latestRankLabel(position: number | null | undefined) {
 export function PositionHistoryNoChecksInRange({
   latestPosition = 3,
 }: Readonly<PositionHistoryNoChecksInRangeProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.empty");
   return (
     <EmptyChartShell height={280} selectedRange="7d">
       <ChartEmptyMessage
-        description="No checks in the last 7 days."
+        description={t("noChecksDays", { days: 7 })}
         footer={
           <>
-            <ChartFooterItem>Latest {latestRankLabel(latestPosition)}</ChartFooterItem>
+            <ChartFooterItem>
+              {t("latest", { position: latestRankLabel(latestPosition) })}
+            </ChartFooterItem>
             <span aria-hidden className="h-3 border-l border-border" />
-            <ChartFooterItem>Paused</ChartFooterItem>
+            <ChartFooterItem>{t("paused")}</ChartFooterItem>
           </>
         }
-        title="No checks in this range"
+        title={t("noChecksRange")}
       />
     </EmptyChartShell>
   );

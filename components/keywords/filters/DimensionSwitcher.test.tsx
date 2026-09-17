@@ -1,5 +1,6 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { buildGoogleSerpUrl, DimensionSwitcher, localeForLocation } from "./DimensionSwitcher";
 
@@ -29,7 +30,7 @@ describe("DimensionSwitcher", () => {
     const trigger = screen.getByRole("button", { name: /desktop/i });
     fireEvent.click(trigger);
 
-    const current = screen.getByRole("menuitem", { name: "desktop, currently shown" });
+    const current = screen.getByRole("menuitem", { name: "Desktop, currently shown" });
     const addMobile = screen.getByRole("menuitem", { name: "Add Mobile" });
     expect(current).toHaveAttribute("aria-current", "true");
     expect(current).toHaveAttribute("data-selected", "true");

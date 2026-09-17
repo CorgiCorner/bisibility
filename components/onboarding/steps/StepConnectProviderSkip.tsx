@@ -5,6 +5,7 @@ import {
   type OnboardingFlowState,
 } from "@/components/onboarding/onboarding-fixtures";
 import { track } from "@/lib/analytics/client";
+import { useTranslations } from "next-intl";
 import { OnboardingStepSkip } from "./OnboardingStepSkip";
 import type { OnboardingConnectProviderInput } from "./StepConnectProvider.fields";
 
@@ -19,6 +20,7 @@ export function StepConnectProviderSkip({
   getValues,
   onSkip,
 }: Readonly<StepConnectProviderSkipProps>) {
+  const t = useTranslations("onboarding.provider");
   const skipHref = buildOnboardingStepHref(3, {
     ...flowState,
     projectId: getValues().projectId,
@@ -29,7 +31,7 @@ export function StepConnectProviderSkip({
 
   return (
     <OnboardingStepSkip
-      ariaLabel="Skip provider connection and add keywords as paused"
+      ariaLabel={t("skip")}
       className="shrink-0"
       {...(onSkip
         ? {
@@ -40,7 +42,7 @@ export function StepConnectProviderSkip({
           }
         : { href: skipHref, onClick: recordSkip })}
     >
-      Skip for now
+      {t("skipLabel")}
     </OnboardingStepSkip>
   );
 }

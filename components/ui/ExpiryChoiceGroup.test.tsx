@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ExpiryChoiceGroup, type ExpiryChoiceOption } from "./ExpiryChoiceGroup";
 
@@ -19,7 +20,9 @@ function radio(name: string): HTMLElement {
 
 describe("ExpiryChoiceGroup", () => {
   it("renders a fieldset group with labeled native radios", () => {
-    render(<ExpiryChoiceGroup onChange={vi.fn()} options={projectOptions} value={30} />);
+    renderWithSharedMessages(
+      <ExpiryChoiceGroup onChange={vi.fn()} options={projectOptions} value={30} />,
+    );
     expect(group()).toBeInTheDocument();
     expect(radio("30 days")).toHaveAttribute("type", "radio");
     expect(radio("90 days")).toHaveAttribute("type", "radio");
@@ -27,21 +30,27 @@ describe("ExpiryChoiceGroup", () => {
   });
 
   it("reflects the controlled checked state on the matching radio", () => {
-    render(<ExpiryChoiceGroup onChange={vi.fn()} options={projectOptions} value={90} />);
+    renderWithSharedMessages(
+      <ExpiryChoiceGroup onChange={vi.fn()} options={projectOptions} value={90} />,
+    );
     expect(radio("90 days")).toBeChecked();
     expect(radio("30 days")).not.toBeChecked();
     expect(radio("No expiry")).not.toBeChecked();
   });
 
   it("shares one stable group name across radios", () => {
-    render(<ExpiryChoiceGroup onChange={vi.fn()} options={projectOptions} value={30} />);
+    renderWithSharedMessages(
+      <ExpiryChoiceGroup onChange={vi.fn()} options={projectOptions} value={30} />,
+    );
     const names = new Set(screen.getAllByRole("radio").map((r) => r.getAttribute("name")));
     expect(names.size).toBe(1);
   });
 
   it("calls onChange with the exact generic value, including null", () => {
     const onChange = vi.fn<(days: ProjectDays) => void>();
-    render(<ExpiryChoiceGroup onChange={onChange} options={projectOptions} value={30} />);
+    renderWithSharedMessages(
+      <ExpiryChoiceGroup onChange={onChange} options={projectOptions} value={30} />,
+    );
     fireEvent.click(radio("No expiry"));
     expect(onChange).toHaveBeenCalledWith(null);
     fireEvent.click(radio("90 days"));
@@ -49,7 +58,7 @@ describe("ExpiryChoiceGroup", () => {
   });
 
   it("applies a peer-focus-visible treatment on the visual option", () => {
-    const { container } = render(
+    const { container } = renderWithSharedMessages(
       <ExpiryChoiceGroup onChange={vi.fn()} options={projectOptions} value={30} />,
     );
     const spans = container.querySelectorAll("span");
@@ -61,7 +70,7 @@ describe("ExpiryChoiceGroup", () => {
   });
 
   it("uses the motion-press token for a short color transition only", () => {
-    const { container } = render(
+    const { container } = renderWithSharedMessages(
       <ExpiryChoiceGroup onChange={vi.fn()} options={projectOptions} value={30} />,
     );
     const visual = Array.from(container.querySelectorAll("span")).find((s) =>
@@ -72,7 +81,7 @@ describe("ExpiryChoiceGroup", () => {
   });
 
   it("contains no aria-pressed or transform-based markup", () => {
-    const { container } = render(
+    const { container } = renderWithSharedMessages(
       <ExpiryChoiceGroup onChange={vi.fn()} options={projectOptions} value={30} />,
     );
     expect(container.querySelector("[aria-pressed]")).toBeNull();

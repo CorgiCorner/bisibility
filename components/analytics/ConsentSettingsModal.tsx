@@ -1,6 +1,6 @@
 "use client";
 
-import { consentCopy } from "@/components/analytics/consent-copy";
+import { localizedConsentCopy } from "@/components/analytics/consent-copy";
 import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { Modal } from "@/components/ui/Modal";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/analytics/consent";
 import { restrictConsentImmediately } from "@/lib/analytics/consent-client";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 
@@ -34,6 +35,8 @@ export function ConsentSettingsModal({
   open,
   saveConsent = saveAnalyticsConsent,
 }: Readonly<ConsentSettingsModalProps>) {
+  const t = useTranslations("shared.analyticsConsent");
+  const consentCopy = localizedConsentCopy(t);
   const [saving, setSaving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const form = useForm<AnalyticsConsentValues>({
@@ -58,9 +61,7 @@ export function ConsentSettingsModal({
       onSaved?.(saved);
       onClose();
     } catch {
-      setActionError(
-        "Your changes could not be saved. Choices you turned off remain off. Try again.",
-      );
+      setActionError(t("modal.saveError"));
     } finally {
       setSaving(false);
     }
@@ -81,7 +82,7 @@ export function ConsentSettingsModal({
             type="button"
             variant="secondary"
           >
-            Reject all
+            {t("actions.rejectAll")}
           </Button>
           <Button
             className="whitespace-nowrap"
@@ -91,7 +92,7 @@ export function ConsentSettingsModal({
             type="button"
             variant="secondary"
           >
-            Accept all
+            {t("actions.acceptAll")}
           </Button>
           <Button
             className="whitespace-nowrap"
@@ -102,7 +103,7 @@ export function ConsentSettingsModal({
             style={{ marginLeft: "auto" }}
             type="submit"
           >
-            Save
+            {t("actions.save")}
           </Button>
         </>
       }
@@ -124,7 +125,9 @@ export function ConsentSettingsModal({
                 {consentCopy.modal.essential.body}
               </p>
             </div>
-            <span className="shrink-0 text-[11px] leading-5 text-fg-muted">Always on</span>
+            <span className="shrink-0 text-[11px] leading-5 text-fg-muted">
+              {t("modal.alwaysOn")}
+            </span>
           </div>
           <div>
             <Switch
@@ -158,7 +161,7 @@ export function ConsentSettingsModal({
         <p className="m-0 mt-3 text-[12px] leading-5 text-fg-muted">
           {consentCopy.modal.footer}{" "}
           <ExternalLink className="font-semibold text-accent hover:underline" href="/privacy">
-            Privacy policy
+            {t("modal.privacyPolicy")}
           </ExternalLink>
         </p>
         {actionError ? (

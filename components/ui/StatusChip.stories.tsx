@@ -1,4 +1,5 @@
 import { StatusChip, type StatusChipProps } from "@/components/ui/StatusChip";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const defaults = {
@@ -17,6 +18,7 @@ const meta = {
   component: StatusChip,
   args: defaults,
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="flex min-h-20 items-center bg-bg p-6 text-fg">
         <Story />

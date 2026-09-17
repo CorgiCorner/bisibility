@@ -4,7 +4,7 @@ import type {
   SelectSearchInsightsPropertyAction,
   SyncSearchInsightsNowAction,
 } from "@/lib/actions/search-insights";
-import type { DateFormat } from "@/lib/dates/format";
+import { type DateDisplayContext, formatDisplayDateRange } from "@/lib/dates/format";
 import {
   FIRST_LOOK_WINDOW,
   RETENTION_MONTHS,
@@ -12,11 +12,7 @@ import {
   type WindowPresetId,
   YEAR_OVER_YEAR_COMPARISON,
 } from "@/lib/search-insights/constants";
-import {
-  type FinalizedWindow,
-  finalizedWindow,
-  formatDateRangeLabel,
-} from "@/lib/search-insights/dates";
+import { type FinalizedWindow, finalizedWindow } from "@/lib/search-insights/dates";
 import type {
   SearchInsightsContext,
   SearchInsightsImportState,
@@ -26,6 +22,7 @@ import type {
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import type { SearchInsightsOauthReturn } from "@/lib/search-insights/queries/oauth-return";
 import type { SearchSyncPace, SearchSyncRetentionMonths } from "@/lib/search-insights/sync/plan";
+import type { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { SearchInsightsDrawerHostProps } from "./drawers/SearchInsightsDrawerHost";
 import type {
@@ -33,16 +30,8 @@ import type {
   CompleteGooglePropertySelectionAction,
   DisconnectGoogleSearchConsoleAction,
 } from "./SearchInsightsOauthReturn";
-import {
-  backfillSyncTitle,
-  DOMAIN_TIP,
-  PERIOD_MENU_LABEL,
-  PERIOD_PACIFIC_TOOLTIP,
-  PREFIX_TIP,
-  SYNC_LABEL,
-  SYNC_TITLES,
-} from "./search-insights-copy";
-import { etaLabel } from "./search-insights-trust-model";
+
+type Translate = ReturnType<typeof useTranslations<"projectSearchInsights.copy">>;
 
 export type SearchInsightsWorkspaceProps = {
   /** Module body: the streamed first view, or an empty state. */
@@ -83,13 +72,20 @@ export type SyncOutcome = "cooldown" | "idle" | "queued";
 export type YearOverYearOption = {
   checked: boolean;
   disabled: boolean;
-  reason: string | null;
+  reason: { imported: number; required: number; target: number } | null;
 };
 
 export type SyncView = {
   disabled: boolean;
-  label: string;
-  title: string;
+  title:
+    | "backfill"
+    | "cooldown"
+    | "paused_provider"
+    | "paused_reauth"
+    | "paused_retry"
+    | "paused_user"
+    | "ready"
+    | "requires_property";
 };
 
 const TRUNCATE_ABOVE = 16;
@@ -105,43 +101,59 @@ export function propertyTruncation(name: string) {
 }
 
 export function propertyTip(kind: SearchInsightsProperty["kind"]) {
-  return kind === "domain" ? DOMAIN_TIP : PREFIX_TIP;
+  return kind === "domain" ? "domain" : "url_prefix";
 }
 
 export function periodTriggerLabel(
   period: SearchInsightsPeriod,
   window: FinalizedWindow | null = null,
-  dateFormat: DateFormat = "month_first",
+  dateDisplay: DateDisplayContext,
+  t: Translate,
 ) {
   if (window) {
-    const current = formatDateRangeLabel(window.current, dateFormat);
-    if (period.id === FIRST_LOOK_WINDOW.id) return `First look · ${current}`;
+    const current = formatDisplayDateRange(window.current.start, window.current.end, dateDisplay);
+    if (period.id === FIRST_LOOK_WINDOW.id) return `${t("firstLook")} · ${current}`;
     return current;
   }
-  return period.id === FIRST_LOOK_WINDOW.id ? "First look" : period.label;
+  return period.id === FIRST_LOOK_WINDOW.id
+    ? t("firstLook")
+    : t("periodFinalizedDays", { days: period.days });
 }
 
 export function periodTriggerName(
   period: SearchInsightsPeriod,
   window: FinalizedWindow | null = null,
-  dateFormat: DateFormat = "month_first",
+  dateDisplay: DateDisplayContext,
+  t: Translate,
 ) {
-  if (!window) return PERIOD_MENU_LABEL;
-  const current = formatDateRangeLabel(window.current, dateFormat);
-  if (period.id === FIRST_LOOK_WINDOW.id) return `${PERIOD_MENU_LABEL}: First look, ${current}`;
-  return `${PERIOD_MENU_LABEL}: ${current}`;
+  if (!window) return t("periodMenuLabel");
+  const current = formatDisplayDateRange(window.current.start, window.current.end, dateDisplay);
+  const label = period.id === FIRST_LOOK_WINDOW.id ? `${t("firstLook")}, ${current}` : current;
+  return `${t("periodMenuLabel")}: ${label}`;
 }
 
 export function periodTooltipLines(
   period: SearchInsightsPeriod,
   window: FinalizedWindow,
-  dateFormat: DateFormat = "month_first",
+  dateDisplay: DateDisplayContext,
+  t: Translate,
 ) {
-  const lines = [`${formatDateRangeLabel(window.current, dateFormat)} · ${period.label}`];
+  const current = formatDisplayDateRange(window.current.start, window.current.end, dateDisplay);
+  const lines = [
+    `${current} · ${
+      period.id === FIRST_LOOK_WINDOW.id
+        ? t("firstLook")
+        : t("periodFinalizedDays", { days: period.days })
+    }`,
+  ];
   if (period.id !== FIRST_LOOK_WINDOW.id) {
-    lines.push(`compared with ${formatDateRangeLabel(window.previous, dateFormat)}`);
+    lines.push(
+      t("periodComparedWith", {
+        date: formatDisplayDateRange(window.previous.start, window.previous.end, dateDisplay),
+      }),
+    );
   }
-  lines.push(PERIOD_PACIFIC_TOOLTIP);
+  lines.push(t("periodPacificTooltip"));
   return lines;
 }
 
@@ -149,30 +161,39 @@ function periodReadiness(facts: ImportObservabilityFacts, id: "7" | "28" | "90")
   return facts.readyThrough[`d${id}`].current;
 }
 
+function etaLabel(milliseconds: number, t: Translate) {
+  const minutes = Math.ceil(Math.max(0, milliseconds) / 60_000);
+  return minutes < 60
+    ? t("syncDurationMinutes", { count: minutes })
+    : t("syncDurationHours", { count: Math.ceil(minutes / 60) });
+}
+
 export function periodOptions(
   facts: ImportObservabilityFacts | null = null,
   finalizedThrough: string | null = null,
   period: SearchInsightsPeriod | null = null,
-  dateFormat: DateFormat = "month_first",
+  dateDisplay: DateDisplayContext,
+  t: Translate,
 ): PeriodOption[] {
   const datesFor = (days: number) => {
     if (!finalizedThrough) return null;
     const window = finalizedWindow(finalizedThrough, days);
-    return formatDateRangeLabel(window.current, dateFormat);
+    return formatDisplayDateRange(window.current.start, window.current.end, dateDisplay);
   };
   const firstLook =
     period?.id === FIRST_LOOK_WINDOW.id
       ? [
           {
             dates: finalizedThrough
-              ? formatDateRangeLabel(
-                  finalizedWindow(finalizedThrough, FIRST_LOOK_WINDOW.days).current,
-                  dateFormat,
+              ? formatDisplayDateRange(
+                  finalizedWindow(finalizedThrough, FIRST_LOOK_WINDOW.days).current.start,
+                  finalizedWindow(finalizedThrough, FIRST_LOOK_WINDOW.days).current.end,
+                  dateDisplay,
                 )
               : null,
             disabled: false,
             id: FIRST_LOOK_WINDOW.id,
-            label: FIRST_LOOK_WINDOW.label,
+            label: t("firstLook"),
             sub: null,
           },
         ]
@@ -181,16 +202,19 @@ export function periodOptions(
     ...firstLook,
     ...WINDOW_PRESETS.map((preset) => {
       const ready = facts ? periodReadiness(facts, preset.id) : true;
-      const eta =
+      const etaMilliseconds =
         facts && !ready
-          ? etaLabel(Math.max(1, preset.days - facts.consecutiveDays) * facts.stall.expectedDayMs)
+          ? Math.max(1, preset.days - facts.consecutiveDays) * facts.stall.expectedDayMs
           : null;
       return {
         dates: datesFor(preset.days),
         disabled: !ready,
         id: preset.id,
-        label: preset.label,
-        sub: ready ? null : `ready in ~${eta}`,
+        label: t("periodFinalizedDays", { days: preset.days }),
+        sub:
+          ready || etaMilliseconds === null
+            ? null
+            : t("periodReadyIn", { eta: etaLabel(etaMilliseconds, t) }),
       };
     }),
   ];
@@ -207,19 +231,17 @@ export function yearOverYearOption(
   return {
     checked: period.comparison === YEAR_OVER_YEAR_COMPARISON.mode,
     disabled,
-    reason: disabled
-      ? `Needs ${yoy.required} months of history · ${imported} of ${target} imported`
-      : null,
+    reason: disabled ? { imported, required: yoy.required, target } : null,
   };
 }
 
 const BUSY_IMPORT_STATES = new Set(["paused", "queued", "running"]);
 
-function pausedSyncTitle(reason: string | null) {
-  if (reason === "user") return SYNC_TITLES.pausedUser;
-  if (reason === "rate_limited") return SYNC_TITLES.pausedProvider;
-  if (reason === "needs_reauth") return SYNC_TITLES.pausedReauth;
-  return SYNC_TITLES.pausedRetry;
+function pausedSyncTitle(reason: string | null): Extract<SyncView["title"], `paused_${string}`> {
+  if (reason === "user") return "paused_user";
+  if (reason === "rate_limited") return "paused_provider";
+  if (reason === "needs_reauth") return "paused_reauth";
+  return "paused_retry";
 }
 
 export function syncView(
@@ -228,24 +250,17 @@ export function syncView(
   hasProperty = true,
 ): SyncView {
   if (!hasProperty) {
-    return { disabled: true, label: SYNC_LABEL, title: SYNC_TITLES.requiresProperty };
+    return { disabled: true, title: "requires_property" };
   }
   if (importState && BUSY_IMPORT_STATES.has(importState.state)) {
     return {
       disabled: true,
-      label: SYNC_LABEL,
       title:
-        importState.state === "paused"
-          ? pausedSyncTitle(importState.pausedReason)
-          : backfillSyncTitle(importState.plannedRetentionMonths ?? RETENTION_MONTHS),
+        importState.state === "paused" ? pausedSyncTitle(importState.pausedReason) : "backfill",
     };
   }
   if (outcome === "queued" || outcome === "cooldown") {
-    return { disabled: true, label: SYNC_LABEL, title: SYNC_TITLES.cooldown };
+    return { disabled: true, title: "cooldown" };
   }
-  return { disabled: false, label: SYNC_LABEL, title: SYNC_TITLES.ready };
-}
-
-export function exportLabel(rows: number) {
-  return `Export CSV (${rows.toLocaleString("en-US")} rows)`;
+  return { disabled: false, title: "ready" };
 }

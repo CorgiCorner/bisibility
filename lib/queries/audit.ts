@@ -8,9 +8,8 @@ import { parsePublicId } from "@/lib/db/public-id";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { getQueryActor } from "./_auth";
 import { type AuditDiff, diffFor } from "./audit-diff";
-import { auditEventName } from "./audit-event-name";
 import { publicAuditTargetIdOrNull, redactAuditIds, requiredPublicId } from "./audit-public-values";
-import { formatAuditTimestamp } from "./audit-timestamp";
+import { type RankCheckRunSkip, rankCheckRunSkipFor } from "./audit-rank-check-run-skip";
 
 export type { AuditDiff } from "./audit-diff";
 export type AuditOperation = "CREATE" | "DELETE" | "EXPORT" | "IMPORT" | "LOGIN" | "UPDATE";
@@ -18,36 +17,41 @@ export type AuditStatus = "failed" | "success";
 export type AuditEventType = "auth" | "data" | "export" | "import" | "permissions" | "system";
 export type AuditDateRange = "7d" | "30d" | "90d" | "all";
 export type AuditEntry = {
+  /** Stable stored action code used by scoped UI presentation and exports. */
+  action?: string;
+  /** Safe structured values used only for the localized skipped-occurrence presentation. */
+  rankCheckRunSkip?: RankCheckRunSkip;
   id: string;
   timestamp: string;
-  timestampLabel: string;
-  eventName: string;
+  /** Legacy fixture fields are ignored by the production presentation adapter. */
+  eventName?: string;
+  timestampLabel?: string;
   eventType: AuditEventType;
   actor: {
     avatarUrl?: string | null;
     id: string;
-    name: string;
+    name: string | null;
     email: string;
     initials: string;
   };
   resource: {
     id: string | null;
     type: "api_key" | "auth_session" | "export" | "keyword" | "project" | "provider" | "team";
-    name: string;
+    name: string | null;
   };
   operation: AuditOperation;
   status: AuditStatus;
   statusReason?: string;
   source: {
     channel: "api" | "oauth" | "ui";
-    ip: string;
+    ip: string | null;
   };
   diff: AuditDiff[];
   metadata: {
     event_id: string;
-    correlation_id: string;
-    user_agent: string;
-    app_version: string;
+    correlation_id: string | null;
+    user_agent: string | null;
+    app_version: string | null;
   };
 };
 export type AuditProject = {
@@ -56,12 +60,7 @@ export type AuditProject = {
   domain: string;
   name: string;
 };
-type AuditProjectRecord = {
-  id: string;
-  publicId: string;
-  domain: string | null;
-  name: string;
-};
+type AuditProjectRecord = { id: string; publicId: string; domain: string | null; name: string };
 // biome-ignore format: compact view union keeps this module under the line cap.
 export type AuditLogView = | { authorized: false; project: AuditProject | null } | { authorized: true; dateRange: AuditDateRange; entries: readonly AuditEntry[]; entryLimit: number; project: AuditProject; retentionDays: number; truncated: boolean };
 const AUDIT_ENTRY_LIMIT = 200;
@@ -156,12 +155,9 @@ type AuditRow = {
 function statusFor(status: string): AuditStatus {
   return status === "failed" ? "failed" : "success";
 }
-function recorded(value: string | null) {
-  return value?.trim() || "Not recorded";
-}
 function safeMetadataId(value: string | null) {
   const redacted = redactAuditIds(value, "correlation_id");
-  return typeof redacted === "string" ? recorded(redacted) : "Not recorded";
+  return typeof redacted === "string" && redacted.trim() ? redacted : null;
 }
 // AuditLog has no source-channel column, so derive it from the recorded user agent:
 // browser engines mean the action came through the UI, anything else is a programmatic API caller.
@@ -172,37 +168,38 @@ function channelFor(userAgent: string | null): AuditEntry["source"]["channel"] {
   return /mozilla|gecko|webkit|chrome|safari|firefox|edg/i.test(userAgent) ? "ui" : "api";
 }
 function mapAuditRow(row: AuditRow): AuditEntry {
-  const name = row.actor?.name?.trim() || (row.actor ? row.actor.email : "System");
-  const email = row.actor?.email ?? "system@bisibility";
+  const name = row.actor?.name?.trim() || row.actor?.email || null;
+  const email = row.actor?.email ?? "";
+  const redactedAfter = redactAuditIds(row.after);
   return {
+    action: row.action,
     actor: {
       avatarUrl: row.actor?.image ?? null,
       email,
       id: row.actor ? requiredPublicId(row.actor.publicId, "Audit actor", "usr") : "system",
-      initials: avatarInitials(name, email),
+      initials: avatarInitials(name ?? "", email),
       name,
     },
-    diff: diffFor(redactAuditIds(row.before), redactAuditIds(row.after)),
-    eventName: auditEventName(row.action, row.after),
+    diff: diffFor(redactAuditIds(row.before), redactedAfter),
     eventType: eventTypeFor(row.action),
     id: requiredPublicId(row.publicId, "Audit log", "audit"),
     metadata: {
-      app_version: recorded(row.appVersion),
+      app_version: row.appVersion?.trim() || null,
       correlation_id: safeMetadataId(row.correlationId),
       event_id: requiredPublicId(row.publicId, "Audit log", "audit"),
-      user_agent: recorded(row.userAgent),
+      user_agent: row.userAgent?.trim() || null,
     },
     operation: operationFor(row.action),
     resource: {
       id: publicAuditTargetIdOrNull(row.targetId, row.targetType),
-      name: publicAuditTargetIdOrNull(row.targetId, row.targetType) ?? "Resource unavailable",
+      name: publicAuditTargetIdOrNull(row.targetId, row.targetType),
       type: resourceTypeFor(row.targetType),
     },
-    source: { channel: channelFor(row.userAgent), ip: recorded(row.sourceIpMasked) },
+    rankCheckRunSkip: rankCheckRunSkipFor(row.action, redactedAfter),
+    source: { channel: channelFor(row.userAgent), ip: row.sourceIpMasked?.trim() || null },
     status: statusFor(row.status),
     statusReason: row.statusReason ?? undefined,
     timestamp: row.createdAt.toISOString(),
-    timestampLabel: formatAuditTimestamp(row.createdAt),
   };
 }
 const DATE_RANGE_DAYS = { "7d": 7, "30d": 30, "90d": 90 } satisfies Record<

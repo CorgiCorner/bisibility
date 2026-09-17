@@ -1,6 +1,7 @@
 import { countryValueForCode } from "@/components/keywords/location-picker-data";
+import { renderWithSharedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { serpLanguageCatalog } from "@/lib/serp/generated/serp-language-catalog";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MarketPicker } from "./MarketPicker";
 import { recommendedMarketLanguages } from "./market-picker-model";
@@ -73,15 +74,15 @@ function showEnglish() {
 describe("MarketPicker language list", () => {
   it("labels both groups and never heads the full list with the suggested label", () => {
     renderPicker();
-    expect(screen.getByText("SUGGESTED LANGUAGES")).toBeVisible();
-    expect(screen.queryByText("ALL LANGUAGES")).not.toBeInTheDocument();
+    expect(screen.getByText("Suggested languages")).toBeVisible();
+    expect(screen.queryByText("All languages")).not.toBeInTheDocument();
 
     expand();
 
     const headings = screen
-      .getAllByText(/^(SUGGESTED|ALL) LANGUAGES$/)
+      .getAllByText(/^(Suggested|All) languages$/)
       .map((heading) => heading.textContent);
-    expect(headings).toEqual(["SUGGESTED LANGUAGES", "ALL LANGUAGES"]);
+    expect(headings).toEqual(["Suggested languages", "All languages"]);
   });
 
   it("names each group for assistive technology, not only visually", () => {
@@ -90,8 +91,8 @@ describe("MarketPicker language list", () => {
 
     // A styled label reaches sighted users only. Without the grouping element and its
     // aria-labelledby, "suggested" is a fact a screen-reader user cannot obtain.
-    const suggested = screen.getByRole("group", { name: "SUGGESTED LANGUAGES" });
-    const all = screen.getByRole("group", { name: "ALL LANGUAGES" });
+    const suggested = screen.getByRole("group", { name: "Suggested languages" });
+    const all = screen.getByRole("group", { name: "All languages" });
 
     expect(within(suggested).getByRole("button", { name: /^Spanish/ })).toBeVisible();
     expect(within(all).getByRole("button", { name: /^Vietnamese/ })).toBeVisible();
@@ -142,11 +143,11 @@ describe("MarketPicker language list", () => {
 
     fireEvent.click(toggle());
     expect(toggle()).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText("ALL LANGUAGES")).toBeVisible();
+    expect(screen.getByText("All languages")).toBeVisible();
 
     fireEvent.click(toggle());
     expect(toggle()).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByText("ALL LANGUAGES")).not.toBeInTheDocument();
+    expect(screen.queryByText("All languages")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("textbox", { name: "Search more languages" }),
     ).not.toBeInTheDocument();
@@ -158,16 +159,16 @@ describe("MarketPicker language list", () => {
     showEnglish();
 
     expect(rowLabels()).toEqual(["English"]);
-    expect(screen.queryByText("SUGGESTED LANGUAGES")).not.toBeInTheDocument();
-    expect(screen.getByText("ALL LANGUAGES")).toBeVisible();
+    expect(screen.queryByText("Suggested languages")).not.toBeInTheDocument();
+    expect(screen.getByText("All languages")).toBeVisible();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Search more languages" }), {
       target: { value: "Catal" },
     });
 
     expect(rowLabels()).toEqual(["Catalan"]);
-    expect(screen.getByText("SUGGESTED LANGUAGES")).toBeVisible();
-    expect(screen.queryByText("ALL LANGUAGES")).not.toBeInTheDocument();
+    expect(screen.getByText("Suggested languages")).toBeVisible();
+    expect(screen.queryByText("All languages")).not.toBeInTheDocument();
   });
 
   it("says so when nothing matches instead of showing empty group labels", () => {
@@ -178,8 +179,8 @@ describe("MarketPicker language list", () => {
     });
 
     expect(screen.getByText("No supported language matches that search.")).toBeVisible();
-    expect(screen.queryByText("SUGGESTED LANGUAGES")).not.toBeInTheDocument();
-    expect(screen.queryByText("ALL LANGUAGES")).not.toBeInTheDocument();
+    expect(screen.queryByText("Suggested languages")).not.toBeInTheDocument();
+    expect(screen.queryByText("All languages")).not.toBeInTheDocument();
   });
 
   it("sticks the group headers exactly below the pinned search row", () => {
@@ -190,7 +191,7 @@ describe("MarketPicker language list", () => {
     // height the search row is pinned to. Asserted so an edit to one has to touch both.
     const search = screen.getByRole("textbox", { name: "Search more languages" });
     const searchRow = search.closest("div");
-    const header = screen.getByText("ALL LANGUAGES").closest("div");
+    const header = screen.getByText("All languages").closest("div");
 
     expect(searchRow).toHaveClass("sticky", "top-0", "h-12");
     expect(header).toHaveClass("sticky", "top-12");
@@ -202,6 +203,6 @@ describe("MarketPicker language list", () => {
     // The offset is conditional, so the collapsed branch needs its own assertion:
     // hardcoding top-12 would otherwise leave rows scrolling above a floating header.
     expect(screen.queryByRole("textbox", { name: "Search more languages" })).toBeNull();
-    expect(screen.getByText("SUGGESTED LANGUAGES").closest("div")).toHaveClass("sticky", "top-0");
+    expect(screen.getByText("Suggested languages").closest("div")).toHaveClass("sticky", "top-0");
   });
 });

@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import type { RankedKeywordGroup } from "./keyword-ranked-model";
-import { RankedKeywordSuggestionDrawer } from "./RankedKeywordSuggestionDrawer";
+import {
+  RankedKeywordSuggestionDrawer,
+  type RankedKeywordSuggestionDrawerMessages,
+} from "./RankedKeywordSuggestionDrawer";
 
 const groups: RankedKeywordGroup[] = [
   {
@@ -53,6 +56,31 @@ const groups: RankedKeywordGroup[] = [
   },
 ];
 
+const messages = {
+  aboutPage: ({ cost }) => `About ${cost} per page`,
+  add: ({ count }) => `Add ${count}`,
+  cancel: "Cancel",
+  clear: "Clear",
+  drawerDescription: "Choose ranked keywords to add.",
+  drawerTitle: "Ranked keywords",
+  estimatedTraffic: "Traffic",
+  inDraft: "In draft",
+  keyword: "Keyword",
+  load: "Load more",
+  position: "Position",
+  remaining: ({ available, selected }) => `${selected} of ${available} selected`,
+  select: ({ keyword }) => `Select ${keyword}`,
+  selectAll: "Select all",
+  selectKeyword: "Select keyword",
+  spent: ({ cached, cost, page }) => `Page ${page}: ${cost}, cached ${cached}`,
+  table: "Ranked keywords",
+  top: "Top",
+  tracked: "Tracked",
+  use: ({ count }) => `Use ${count}`,
+  variants: ({ count }) => `${count} variants`,
+  volume: "Volume",
+} satisfies RankedKeywordSuggestionDrawerMessages;
+
 const meta = {
   component: RankedKeywordSuggestionDrawer,
   parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
@@ -71,11 +99,12 @@ const args = {
   onConfirm: () => undefined,
   onLoadMore: () => undefined,
   open: true,
-  pageCost: "$0.02",
+  pageCostCents: 2,
   pageCount: 2,
   pending: false,
   remaining: 3,
   spentCents: 2,
+  messages,
 };
 
 export const Open: Story = { args };

@@ -1,7 +1,8 @@
 import { RankTrackerDeviceHeaderControl } from "@/components/keywords/RankTrackerDeviceHeaderControl";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { emptySavedViewConfig } from "@/lib/keywords/saved-view-model";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
   RankTrackerSearchDraftProvider,

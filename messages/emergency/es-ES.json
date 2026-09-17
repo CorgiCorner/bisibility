@@ -1,0 +1,24 @@
+{
+  "shared": {
+    "globalError": {
+      "description": "La aplicación no ha podido renderizar esta página. Recarga para volver a intentarlo.",
+      "retry": "Recargar la aplicación",
+      "title": "Se ha producido un error"
+    },
+    "emergencyRecovery": {
+      "error": {
+        "backToApp": "Volver a la aplicación",
+        "description": "El seguimiento no ha podido completar esta petición. Inténtalo de nuevo o vuelve a la aplicación mientras se recupera esta ruta.",
+        "retry": "Reintentar",
+        "status": "500: error del servidor",
+        "title": "El seguimiento ha dado un error"
+      },
+      "notFound": {
+        "backToApp": "Volver a la aplicación",
+        "description": "Puede que esta página se haya movido o que nunca haya existido.",
+        "status": "404: no encontrada",
+        "title": "Esta página no está disponible"
+      }
+    }
+  }
+}

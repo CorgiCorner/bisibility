@@ -1,13 +1,26 @@
 import type { StoredResultsIndexEntry } from "@/lib/checks/contract";
 
 export type PickerRole = "one" | "from" | "to";
-export type PickerRow = { entry: StoredResultsIndexEntry; disabledReason: string | null };
-export type PickerPreset = { entry: StoredResultsIndexEntry; label: string };
+export type PickerDisabledReason =
+  | "earlier_than_from"
+  | "later_than_to"
+  | "purged"
+  | "selected_as_from"
+  | "selected_as_to";
+export type PickerRow = {
+  entry: StoredResultsIndexEntry;
+  disabledReason: PickerDisabledReason | null;
+};
+export type PickerPreset =
+  | { entry: StoredResultsIndexEntry; kind: "previous" }
+  | { days: number; entry: StoredResultsIndexEntry; kind: "daysAgo" };
 
-export function retainedLabel(entry: StoredResultsIndexEntry): string {
+export function retainedState(
+  entry: StoredResultsIndexEntry,
+): { kind: "notKept" } | { count: number; kind: "retained" } {
   return entry.tier === "none" || entry.retrievedPositions === null
-    ? "not kept"
-    : `top ${entry.retrievedPositions} kept`;
+    ? { kind: "notKept" }
+    : { count: entry.retrievedPositions, kind: "retained" };
 }
 
 export function pickerRows(
@@ -21,14 +34,14 @@ export function pickerRows(
   return [...entries]
     .sort((a, b) => b.checkedAt.localeCompare(a.checkedAt))
     .map((entry) => {
-      let disabledReason: string | null = null;
-      if (entry.tier === "none") disabledReason = "purged by retention";
-      else if (role === "to" && entry.checkId === selectedFrom) disabledReason = "selected as From";
+      let disabledReason: PickerDisabledReason | null = null;
+      if (entry.tier === "none") disabledReason = "purged";
+      else if (role === "to" && entry.checkId === selectedFrom) disabledReason = "selected_as_from";
       else if (role === "to" && from && entry.checkedAt < from.checkedAt)
-        disabledReason = "earlier than From";
-      else if (role === "from" && entry.checkId === selectedTo) disabledReason = "selected as To";
+        disabledReason = "earlier_than_from";
+      else if (role === "from" && entry.checkId === selectedTo) disabledReason = "selected_as_to";
       else if (role === "from" && to && entry.checkedAt > to.checkedAt)
-        disabledReason = "later than To";
+        disabledReason = "later_than_to";
       return { entry, disabledReason };
     });
 }
@@ -57,20 +70,20 @@ export function fromPresets(
     entry.tier !== "none" &&
     new Date(entry.checkedAt).getTime() <= toTime;
   const targets = [
-    { label: "Previous check", time: toTime - 1 },
-    { label: "30 days ago", time: toTime - 30 * 864e5 },
-    { label: "90 days ago", time: toTime - 90 * 864e5 },
+    { kind: "previous" as const, time: toTime - 1 },
+    { days: 30, kind: "daysAgo" as const, time: toTime - 30 * 864e5 },
+    { days: 90, kind: "daysAgo" as const, time: toTime - 90 * 864e5 },
   ];
   const used = new Set<string>();
-  return targets.flatMap(({ label, time }) => {
+  return targets.flatMap((target) => {
     const entry = closestAtOrBefore(
       entries.filter((item) => !used.has(item.checkId)),
-      time,
+      target.time,
       comparable,
     );
     if (!entry) return [];
     used.add(entry.checkId);
-    return [{ entry, label }];
+    return [{ ...target, entry }];
   });
 }
 

@@ -1,4 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import {
+  renderWithSharedMessages as render,
+  renderWithSettingsShellMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 
 const loads = vi.hoisted(() => ({
@@ -35,7 +39,9 @@ it("loads form helpers and settings cards without unrelated tables, overlays, or
   const { keywordLines } = await import("@/components/onboarding/onboarding-form-utils");
   const { SettingsCard } = await import("@/components/settings/shell/SettingsCard");
   expect(keywordLines("alpha\n\n beta ")).toEqual(["alpha", "beta"]);
-  render(<SettingsCard title="Preferences">Settings content</SettingsCard>);
+  renderWithSettingsShellMessages(
+    <SettingsCard title="Preferences">Settings content</SettingsCard>,
+  );
   expect(screen.getByRole("heading", { name: "Preferences" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
   for (const load of Object.values(loads)) expect(load).not.toHaveBeenCalled();

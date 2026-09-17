@@ -1,5 +1,6 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { MarketArchivedError } from "@/lib/markets/archived";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProjectMarketsSelector } from "./ProjectMarketsSelector";
 
@@ -124,7 +125,7 @@ describe("ProjectMarketsSelector", () => {
 
     const paused = within(section).getByRole("button", { name: "Belgium / Arabic" });
     expect(paused).toBeEnabled();
-    expect(within(paused).getByText("PAUSED")).toHaveStyle({ fontSize: "9px" });
+    expect(within(paused).getByText("Paused")).toHaveStyle({ fontSize: "9px" });
   });
 
   it("preserves market and device matrix selection", () => {

@@ -3,21 +3,19 @@ import type { AlertRuleView } from "@/lib/alerts/alert-data";
 export function makeAlertRule(overrides: Partial<AlertRuleView> = {}): AlertRuleView {
   return {
     changePct: null,
-    channel: "In-app",
     channels: [],
-    condition: "rank crosses below #10",
     conditionType: "threshold",
     competitorDomain: null,
     depthConflict: null,
     dropPositions: null,
     enabled: true,
-    fires: "0 this week",
+    firedThisWeek: 0,
     id: "alr_abcdefghijklmnopqrstuvwx",
     marketIds: [],
     name: "Ranking drop",
-    period: "Each check",
+    period: "each_check",
     recipientIds: [],
-    scope: "All keywords",
+    scope: { labels: [], targetType: "all" },
     serpFeature: null,
     severity: "urgent",
     status: "active",
@@ -31,7 +29,7 @@ export function makeAlertRule(overrides: Partial<AlertRuleView> = {}): AlertRule
 
 export const keywordScopedAlertRule: AlertRuleView = makeAlertRule({
   depthConflict: { threshold: 50, trackedDepth: 10 },
-  scope: "Selected keywords",
+  scope: { labels: [], targetType: "keyword" },
   targetIds: ["keyword_1"],
   targetType: "keyword",
 });

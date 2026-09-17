@@ -85,11 +85,11 @@ describe("getAuditLogView", () => {
       throw new Error("expected authorized audit view");
     }
     expect(result.entries[0]).toMatchObject({
+      action: "provider.test",
       metadata: { app_version: "1.2.3", correlation_id: "[redacted]", user_agent: "Vitest" },
       source: { ip: "203.0.113.0" },
       status: "failed",
       statusReason: "provider unavailable",
-      timestampLabel: "2026-01-10 12:00:00 UTC",
     });
   });
 
@@ -107,11 +107,11 @@ describe("getAuditLogView", () => {
     const result = await getAuditLogView(project.publicId);
     if (!result.authorized) throw new Error("expected authorized audit view");
 
-    expect(result.entries[0]?.resource).toMatchObject({ id: null, name: "Resource unavailable" });
+    expect(result.entries[0]?.resource).toMatchObject({ id: null, name: null });
     expect(JSON.stringify(result.entries[0])).not.toContain(RAW_CUID);
   });
 
-  it("formats timestamp labels with sortable UTC date parts and seconds", async () => {
+  it("preserves the raw timestamp for scoped display formatting", async () => {
     mocks.prisma.auditLog.findMany.mockResolvedValue([
       { ...auditRow(), createdAt: new Date("2026-06-19T14:42:08.987Z") },
     ]);
@@ -122,11 +122,10 @@ describe("getAuditLogView", () => {
     if (!result.authorized) {
       throw new Error("expected authorized audit view");
     }
-    expect(result.entries[0]?.timestampLabel).toBe("2026-06-19 14:42:08 UTC");
     expect(result.entries[0]?.timestamp).toBe("2026-06-19T14:42:08.987Z");
   });
 
-  it("renders skipped occurrences with their schedule and planned date", async () => {
+  it("preserves skipped-occurrence inputs for scoped presentation", async () => {
     mocks.prisma.auditLog.findMany.mockResolvedValue([
       {
         ...auditRow(),
@@ -146,8 +145,12 @@ describe("getAuditLogView", () => {
     if (!result.authorized) throw new Error("expected authorized audit view");
 
     expect(result.entries[0]).toMatchObject({
+      action: "rank_check_run.skip",
       actor: { name: "Auditor User" },
-      eventName: "Skipped the Daily 06:00 occurrence planned for Sep 5",
+      rankCheckRunSkip: {
+        plannedFor: "2026-09-05T06:00:00.000Z",
+        schedule: "Daily 06:00",
+      },
       resource: { id: "rcr_abcdefghijklmnopqrstuvwx" },
     });
   });
@@ -255,7 +258,7 @@ describe("getAuditLogView", () => {
     if (!result.authorized) throw new Error("expected authorized audit view");
 
     expect(result.entries[0]?.actor.avatarUrl).toBeNull();
-    expect(result.entries[0]?.actor.name).toBe("System");
+    expect(result.entries[0]?.actor.name).toBeNull();
   });
 });
 

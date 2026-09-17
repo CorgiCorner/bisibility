@@ -1,4 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -97,6 +98,7 @@ describe("SearchInsightsDrawer rows", () => {
     const onOpen = vi.fn();
     render(
       <DrawerSliceRows
+        isPageRows={false}
         label="Queries landing here"
         rows={[
           {

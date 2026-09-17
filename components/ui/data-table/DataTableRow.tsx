@@ -4,6 +4,7 @@ import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { flexRender, type Row } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 import type { CSSProperties, ReactNode, SyntheticEvent } from "react";
 import { DataTableCell } from "./DataTableCell";
 import { DataTableSelectionCheckbox } from "./DataTableSelectionCheckbox";
@@ -58,6 +59,7 @@ export function DataTableRow<TRow extends DataTableRowBase>({
   selection,
   virtualStyle,
 }: Readonly<DataTableRowProps<TRow>>) {
+  const t = useTranslations("shared.controls.dataTable");
   const original = row.original;
   const kind = dataTableRowKind(original);
   const selectionState = dataTableSelectionState(original, selection ?? new Set(), selectable);
@@ -150,7 +152,7 @@ export function DataTableRow<TRow extends DataTableRowBase>({
             >
               <DataTableSelectionCheckbox
                 {...selectionState}
-                ariaLabel={`Select ${dataTableRowLabel(original)}`}
+                ariaLabel={t("selectRow", { row: dataTableRowLabel(original) })}
                 onChange={
                   onSelectionChange
                     ? (checked) =>
@@ -185,7 +187,11 @@ export function DataTableRow<TRow extends DataTableRowBase>({
                 <button
                   aria-controls={groupControlsId(original.id)}
                   aria-expanded={row.getIsExpanded()}
-                  aria-label={`${row.getIsExpanded() ? "Collapse" : "Expand"} ${dataTableRowLabel(original)}`}
+                  aria-label={
+                    row.getIsExpanded()
+                      ? t("collapseRow", { row: dataTableRowLabel(original) })
+                      : t("expandRow", { row: dataTableRowLabel(original) })
+                  }
                   className="grid size-6 shrink-0 place-items-center rounded-control text-fg-muted hover:bg-bg-sunken hover:text-fg"
                   onClick={(event) => {
                     event.stopPropagation();

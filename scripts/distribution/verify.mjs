@@ -1,10 +1,19 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { normalizeVersion, parseDistributionManifest } from "./manifest.mjs";
+
+function isCliEntry(modulePath) {
+  if (!modulePath) return false;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(modulePath)).href;
+  } catch {
+    return import.meta.url === pathToFileURL(modulePath).href;
+  }
+}
 
 const REQUIRED_PLATFORMS = ["linux/amd64", "linux/arm64"];
 const REVISION_LABEL = "org.opencontainers.image.revision";
@@ -141,7 +150,7 @@ function runCli() {
   console.log(`worker: ${manifest.images.worker}@${result.workerDigest}`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isCliEntry(process.argv[1])) {
   try {
     runCli();
   } catch (error) {

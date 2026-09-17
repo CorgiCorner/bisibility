@@ -19,7 +19,6 @@ export type CompetitorSuggestionEvidence = {
 
 export type SetupCta = {
   id: "add_keywords" | "connect_source" | "create_project" | "run_first_check";
-  label: string;
 };
 
 export type SetupStepState =
@@ -33,7 +32,11 @@ export type SetupStepState =
       when: { nextRunAt: Date; timezone: string };
     }
   | { family: "running"; progress: { completed: number; total: number } }
-  | { family: "blocked"; reason: string; unblockedBy: SetupStepId };
+  | {
+      family: "blocked";
+      reason: "needs_data_source" | "needs_first_check" | "needs_keywords";
+      unblockedBy: SetupStepId;
+    };
 
 export type SetupContext = {
   completedCheckCount: number;
@@ -57,14 +60,13 @@ export type SetupContext = {
 
 export type StepDefinition = {
   id: SetupStepId;
-  title: string;
   videoRef: SetupVideoRef;
   resolve(ctx: SetupContext): SetupStepState;
 };
 
 const done = (): SetupStepState => ({ family: "done" });
-const action = (id: SetupCta["id"], label: string): SetupStepState => ({
-  cta: { id, label },
+const action = (id: SetupCta["id"]): SetupStepState => ({
+  cta: { id },
   family: "action",
 });
 
@@ -73,7 +75,7 @@ function resolveFirstCheck(ctx: SetupContext): SetupStepState {
   if (!ctx.providerExists) {
     return {
       family: "blocked",
-      reason: "Needs a data source first",
+      reason: "needs_data_source",
       unblockedBy: "connect_source",
     };
   }
@@ -86,13 +88,13 @@ function resolveFirstCheck(ctx: SetupContext): SetupStepState {
   if (ctx.keywordCount === 0) {
     return {
       family: "blocked",
-      reason: "Needs keywords first",
+      reason: "needs_keywords",
       unblockedBy: "add_keywords",
     };
   }
-  if (ctx.schedule.mode === "manual") return action("run_first_check", "Run first check");
+  if (ctx.schedule.mode === "manual") return action("run_first_check");
   return {
-    accelerate: { id: "run_first_check", label: "Run it now instead" },
+    accelerate: { id: "run_first_check" },
     family: "waiting",
     when: { nextRunAt: ctx.schedule.nextRunAt, timezone: ctx.schedule.timezone },
   };
@@ -102,7 +104,7 @@ function resolveCompetitorConfirmation(ctx: SetupContext): SetupStepState {
   if (ctx.completedCheckCount === 0) {
     return {
       family: "blocked",
-      reason: "Needs first check results",
+      reason: "needs_first_check",
       unblockedBy: "first_check",
     };
   }
@@ -114,33 +116,27 @@ function resolveCompetitorConfirmation(ctx: SetupContext): SetupStepState {
 export const SETUP_STEP_DEFINITIONS = [
   {
     id: "create_project",
-    resolve: (ctx) => (ctx.project.exists ? done() : action("create_project", "Create project")),
-    title: "Create your project",
+    resolve: (ctx) => (ctx.project.exists ? done() : action("create_project")),
     videoRef: "create-project",
   },
   {
     id: "connect_source",
-    resolve: (ctx) =>
-      ctx.providerExists ? done() : action("connect_source", "Connect data source"),
-    title: "Connect a data source",
+    resolve: (ctx) => (ctx.providerExists ? done() : action("connect_source")),
     videoRef: "connect-source",
   },
   {
     id: "add_keywords",
-    resolve: (ctx) => (ctx.keywordCount > 0 ? done() : action("add_keywords", "Add keywords")),
-    title: "Track your first keywords",
+    resolve: (ctx) => (ctx.keywordCount > 0 ? done() : action("add_keywords")),
     videoRef: "add-keywords",
   },
   {
     id: "first_check",
     resolve: resolveFirstCheck,
-    title: "Run your first rank check",
     videoRef: "first-check",
   },
   {
     id: "confirm_competitors",
     resolve: resolveCompetitorConfirmation,
-    title: "Confirm competitors",
     videoRef: "confirm-competitors",
   },
 ] as const satisfies readonly StepDefinition[];

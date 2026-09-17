@@ -1,0 +1,55 @@
+"use client";
+
+// `setup.stepper` exists only in the setup layout's client message boundary.
+
+import { CheckIcon as Check } from "@phosphor-icons/react/dist/ssr/Check";
+import { useTranslations } from "next-intl";
+
+export type SetupStep = "account" | "done" | "verify";
+
+const steps: SetupStep[] = ["account", "verify", "done"];
+
+export function SetupStepper({ current }: Readonly<{ current: SetupStep }>) {
+  const currentIndex = steps.indexOf(current);
+  const t = useTranslations("setup.stepper");
+
+  return (
+    <div className="flex items-center gap-2" aria-label={t("progress")}>
+      {steps.map((step, index) => {
+        const state =
+          index < currentIndex ? "complete" : index === currentIndex ? "current" : "upcoming";
+
+        return (
+          <div className="contents" key={step}>
+            <span
+              aria-current={state === "current" ? "step" : undefined}
+              className={
+                state === "current"
+                  ? "grid h-6 w-6 place-items-center rounded-full bg-accent-solid text-[11px] font-semibold text-accent-on-solid tabular-nums"
+                  : "grid h-6 w-6 place-items-center rounded-full bg-bg-sunken text-[11px] font-semibold text-fg-muted tabular-nums"
+              }
+              data-step-state={state}
+            >
+              {state === "complete" ? (
+                <Check aria-hidden className="text-fg-muted" size={12} weight="regular" />
+              ) : (
+                index + 1
+              )}
+            </span>
+            {index < steps.length - 1 ? (
+              <span
+                aria-hidden
+                className={`h-0.5 w-[26px] rounded-control ${
+                  index < currentIndex ? "bg-border" : "bg-border"
+                }`}
+              />
+            ) : null}
+          </div>
+        );
+      })}
+      <span className="ml-auto text-[10px] uppercase tracking-[0.09em] text-fg-muted">
+        {t("label")}
+      </span>
+    </div>
+  );
+}

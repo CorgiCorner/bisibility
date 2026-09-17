@@ -6,24 +6,19 @@ export function secretFromTotpUri(totpURI: string) {
   }
 }
 
-export function factorStatusLabel(enabled: boolean) {
-  return enabled ? "Enabled" : "Not enabled";
+export function factorStatusKey(enabled: boolean) {
+  return enabled ? "enabled" : "notEnabled";
 }
 
-export function passwordActionLabel(pending: boolean, mode: string | null) {
-  if (pending) return "Working";
-  return mode === "setup" ? "Continue" : "Confirm";
+export function passwordActionKey(pending: boolean, mode: string | null) {
+  if (pending) return "working";
+  return mode === "setup" ? "continue" : "confirm";
 }
 
-export function twoFactorErrorMessage(error: unknown) {
+export function twoFactorErrorKey(error: unknown) {
   if (error && typeof error === "object" && "message" in error) {
     const message = (error as { message?: unknown }).message;
-    if (typeof message === "string") {
-      if (message === "No password credential found") {
-        return "This account does not have a password credential yet.";
-      }
-      return message;
-    }
+    if (message === "No password credential found") return "passwordUnavailable";
   }
-  return "Two-factor authentication could not be updated.";
+  return "updateError";
 }

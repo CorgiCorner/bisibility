@@ -3,9 +3,11 @@
 import { authClient } from "@/lib/auth/client";
 import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export function InviteSignOutButton({ returnTo }: Readonly<{ returnTo: string }>) {
+  const t = useTranslations("invite");
   const [pending, setPending] = useState(false);
 
   async function handleSignOut() {
@@ -23,7 +25,7 @@ export function InviteSignOutButton({ returnTo }: Readonly<{ returnTo: string }>
       type="button"
     >
       <SignOut aria-hidden size={14} weight="regular" />
-      Sign out
+      {t("signOut")}
     </button>
   );
 }

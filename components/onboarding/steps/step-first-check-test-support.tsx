@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { vi } from "vitest";
 import { StepFirstCheck } from "./StepFirstCheck";
 

@@ -1,0 +1,39 @@
+{
+  "projectCostEstimate": {
+    "providerSpend": {
+      "docs": "Cómo funcionan los presupuestos",
+      "eyebrow": "PRESUPUESTO MENSUAL",
+      "noCapAmount": "{spent} este mes",
+      "meterAria": "Gasto de proveedores: {spent} de {cap} este mes{session, select, none {} other {, {session} en esta sesión}}",
+      "segmentedAmount": "{spent} de {cap} usados",
+      "cardCap": "sobre un tope de {cap}",
+      "thisMonth": "este mes",
+      "capReached": "tope alcanzado",
+      "session": "{spent} en esta sesión",
+      "pace": "a este ritmo, ~{spent}/mes",
+      "left": "quedan {spent}",
+      "otherProvider": "Otros",
+      "headerUnavailable": "Gasto no disponible",
+      "headerCapTooltip": "Presupuesto mensual de proveedores.",
+      "headerNoCap": "Sin presupuesto · Definir uno",
+      "headerNoCapWithSpend": "{spent} · sin presupuesto · Definir uno",
+      "headerNoCapAria": "Sin presupuesto, definir uno",
+      "headerNoCapAriaWithSpend": "{spent} gastados sin presupuesto, definir uno",
+      "headerUnderOnePercent": "<1 % usado",
+      "headerUsed": "{percent, number} % usado",
+      "headerCapAria": "Tope mensual, {used}"
+    },
+    "status": {
+      "unavailable": "Estimación no disponible.",
+      "retry": "Reintentar",
+      "updating": "Actualizando la estimación…"
+    },
+    "spendInfo": {
+      "aria": "Información sobre el gasto de proveedores",
+      "description": "Tu límite mensual de proveedores y el uso actual.",
+      "session": "{spent} en esta sesión",
+      "details": "Detalles",
+      "setBudget": "Definir presupuesto"
+    }
+  }
+}

@@ -7,6 +7,7 @@ import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { RankTrackerDeviceHeaderControl } from "@/components/keywords/RankTrackerDeviceHeaderControl";
 import { RankTrackerSearchDraftProvider } from "@/components/keywords/RankTrackerSearchDraft";
 import { MarketContextProvider } from "@/components/markets/MarketContextProvider";
+import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import { aggregateMarketGridRows, groupRow } from "@/lib/keywords/market-grid-model";
 import type { MarketContextValue } from "@/lib/markets/market-context-value";
@@ -106,10 +107,10 @@ export function renderPendingGrid(
       providers: ["dataforseo"],
       readyCount: 2,
       scope: {
-        depth: "Top 100",
-        device: "Desktop",
-        engine: "Google",
-        frequency: "Daily",
+        depth: 100,
+        device: "desktop",
+        engine: "google",
+        frequency: "daily",
         location: "United States",
       },
     }),
@@ -118,43 +119,45 @@ export function renderPendingGrid(
   };
 
   render(
-    <MarketContextProvider market={market} projectRef="prj_1">
-      <RankTrackerSearchDraftProvider>
-        <SessionSpendProvider>
-          {withHeader ? <RankTrackerDeviceHeaderControl /> : null}
-          <SessionSpendProbe />
-          <KeywordImportProvider activeProjectId="project_1">
-            <KeywordsGrid
-              {...actions}
-              facets={{ intents: [], positions: [], tags: [], topics: [] }}
-              lens={{ device: "all", locationId: null }}
-              locations={[]}
-              matchedTargetCount={2}
-              page={1}
-              pageCount={1}
-              pageSize={25}
-              projectId="prj_1"
-              providerConnected={false}
-              query={{
-                filters: emptyKeywordFilters,
-                grouped: false,
-                lens: { device: "all", locationId: null },
-                page: 1,
-                pageSize: 25,
-                savedViewId: null,
-                search: "",
-                sort: { direction: "asc", field: "position" },
-              }}
-              rows={pendingRows()}
-              savedViews={[]}
-              tagSuggestions={[]}
-              totalCount={2}
-              {...overrides}
-            />
-          </KeywordImportProvider>
-        </SessionSpendProvider>
-      </RankTrackerSearchDraftProvider>
-    </MarketContextProvider>,
+    <ProjectRankTrackerMessages>
+      <MarketContextProvider market={market} projectRef="prj_1">
+        <RankTrackerSearchDraftProvider>
+          <SessionSpendProvider>
+            {withHeader ? <RankTrackerDeviceHeaderControl /> : null}
+            <SessionSpendProbe />
+            <KeywordImportProvider activeProjectId="project_1">
+              <KeywordsGrid
+                {...actions}
+                facets={{ intents: [], positions: [], tags: [], topics: [] }}
+                lens={{ device: "all", locationId: null }}
+                locations={[]}
+                matchedTargetCount={2}
+                page={1}
+                pageCount={1}
+                pageSize={25}
+                projectId="prj_1"
+                providerConnected={false}
+                query={{
+                  filters: emptyKeywordFilters,
+                  grouped: false,
+                  lens: { device: "all", locationId: null },
+                  page: 1,
+                  pageSize: 25,
+                  savedViewId: null,
+                  search: "",
+                  sort: { direction: "asc", field: "position" },
+                }}
+                rows={pendingRows()}
+                savedViews={[]}
+                tagSuggestions={[]}
+                totalCount={2}
+                {...overrides}
+              />
+            </KeywordImportProvider>
+          </SessionSpendProvider>
+        </RankTrackerSearchDraftProvider>
+      </MarketContextProvider>
+    </ProjectRankTrackerMessages>,
   );
 
   return actions;

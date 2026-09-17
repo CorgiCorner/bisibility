@@ -1,5 +1,6 @@
 import { overviewFixture } from "@/components/overview/overview-fixtures";
 import { PositionDistributionCard } from "@/components/overview/PositionDistributionCard";
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
@@ -7,11 +8,13 @@ const meta = {
   component: PositionDistributionCard,
   decorators: [
     (Story) => (
-      <div className="min-h-[320px] bg-bg p-6 text-fg">
-        <div className="max-w-md">
-          <Story />
+      <ProjectDashboardMessages>
+        <div className="min-h-[320px] bg-bg p-6 text-fg">
+          <div className="max-w-md">
+            <Story />
+          </div>
         </div>
-      </div>
+      </ProjectDashboardMessages>
     ),
   ],
 } satisfies Meta<typeof PositionDistributionCard>;

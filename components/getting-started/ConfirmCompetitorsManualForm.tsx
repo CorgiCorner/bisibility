@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -16,12 +17,14 @@ type ConfirmCompetitorsManualFormProps = Readonly<{
   projectId: string;
 }>;
 
-const manualCompetitorFormSchema = z.object({
-  aliases: z.string(),
-  domain: z.string().trim().min(1, "Enter a domain."),
-});
+type ManualCompetitorForm = { aliases: string; domain: string };
 
-type ManualCompetitorForm = z.infer<typeof manualCompetitorFormSchema>;
+function manualCompetitorFormSchema(domainError: string) {
+  return z.object({
+    aliases: z.string(),
+    domain: z.string().trim().min(1, domainError),
+  });
+}
 
 function aliasesFromInput(value: string) {
   return value
@@ -37,6 +40,8 @@ export function ConfirmCompetitorsManualForm({
   cancelLabel,
   projectId,
 }: ConfirmCompetitorsManualFormProps) {
+  const t = useTranslations("projectGettingStarted.competitors.manual");
+  const schema = manualCompetitorFormSchema(t("domainError"));
   const [actionError, setActionError] = useState<string | null>(null);
   const {
     formState: { errors, isSubmitting },
@@ -44,14 +49,14 @@ export function ConfirmCompetitorsManualForm({
     register,
   } = useForm<ManualCompetitorForm>({
     defaultValues: { aliases: "", domain: "" },
-    resolver: zodResolver(manualCompetitorFormSchema),
+    resolver: zodResolver(schema),
   });
 
   async function saveManualCompetitor(values: ManualCompetitorForm) {
     setActionError(null);
-    const parsed = manualCompetitorFormSchema.safeParse(values);
+    const parsed = schema.safeParse(values);
     if (!parsed.success) {
-      setActionError(parsed.error.issues[0]?.message ?? "Enter a valid competitor domain.");
+      setActionError(parsed.error.issues[0]?.message ?? t("domainInvalid"));
       return;
     }
     try {
@@ -62,18 +67,18 @@ export function ConfirmCompetitorsManualForm({
       });
       onClose();
     } catch (error) {
-      setActionError(actionErrorMessage(error, "Competitor could not be added."));
+      setActionError(actionErrorMessage(error, t("addError")));
     }
   }
 
   return (
     <form className="grid gap-3" onSubmit={handleSubmit(saveManualCompetitor)}>
       <label className="grid gap-1.5 text-[12px] font-semibold text-fg" htmlFor="competitor-domain">
-        Domain
+        {t("domain")}
         <Input
           disabled={isSubmitting}
           id="competitor-domain"
-          placeholder="competitor.example.org"
+          placeholder={t("domainPlaceholder")}
           {...register("domain")}
         />
         {errors.domain ? <span className="text-red-text">{errors.domain.message}</span> : null}
@@ -82,16 +87,14 @@ export function ConfirmCompetitorsManualForm({
         className="grid gap-1.5 text-[12px] font-semibold text-fg"
         htmlFor="competitor-aliases"
       >
-        Brand aliases (optional)
+        {t("aliases")}
         <Input
           disabled={isSubmitting}
           id="competitor-aliases"
-          placeholder="Brand names, comma separated"
+          placeholder={t("aliasesPlaceholder")}
           {...register("aliases")}
         />
-        <span className="text-[11px] font-normal leading-5 text-fg-muted">
-          Other brand names to match in citations, separated by commas.
-        </span>
+        <span className="text-[11px] font-normal leading-5 text-fg-muted">{t("aliasesHelp")}</span>
       </label>
       <div className="mt-1 flex justify-end gap-2">
         <Button
@@ -104,7 +107,7 @@ export function ConfirmCompetitorsManualForm({
           {cancelLabel}
         </Button>
         <Button disabled={isSubmitting} size="sm" type="submit">
-          {isSubmitting ? "Adding..." : "Add competitor"}
+          {isSubmitting ? t("adding") : t("add")}
         </Button>
       </div>
       {actionError ? (

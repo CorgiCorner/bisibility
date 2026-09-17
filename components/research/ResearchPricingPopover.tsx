@@ -10,14 +10,9 @@ import {
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { docsLinkProps } from "@/lib/site/site";
+import { useTranslations } from "next-intl";
 
 export type ResearchPricingRow = { cost: number | null; source: KeywordResearchSource };
-
-const sourceLabels: Record<KeywordResearchSource, string> = {
-  ideas: "Keyword ideas",
-  related: "Related keywords",
-  suggestions: "Keyword suggestions",
-};
 
 const pricingDocsHref = "/docs/api/keyword-research#research-keywords";
 
@@ -72,32 +67,28 @@ export function ResearchPricingPopover({
   resultLimit,
   seedCount,
 }: Readonly<ResearchPricingPopoverProps>) {
+  const t = useTranslations("projectResearch.pricing");
   const rows = researchPricingRows(mode, resultLimit, includeClickstream);
 
   const pricingRows: PricingRow[] = rows.map((row) => ({
-    label: sourceLabels[row.source],
-    value: row.cost == null ? "price unavailable" : formatEstimateCents(row.cost),
+    label: t(row.source),
+    value: row.cost == null ? t("unavailable") : formatEstimateCents(row.cost),
   }));
-  pricingRows.push({ label: "Repeat within 12 hours", value: "free from cache" });
-
-  let footerText = "Charged by DataForSEO to your own account. Prices are per seed keyword.";
-  if (seedCount > 1) {
-    footerText += ` ${seedCount} seeds are charged ${seedCount} times.`;
-  }
+  pricingRows.push({ label: t("cache"), value: t("free") });
 
   return (
     <PricingPopover
       anchor={anchor}
       footer={
         <p className="mb-0">
-          {footerText}
+          {t("footer", { seedCount })}
           <br />
           <a
             className="underline decoration-border underline-offset-4 hover:text-fg"
             href={pricingDocsHref}
             {...docsLinkProps(pricingDocsHref)}
           >
-            Read the pricing docs
+            {t("docs")}
           </a>
         </p>
       }

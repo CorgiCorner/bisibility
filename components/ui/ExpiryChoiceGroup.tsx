@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
+import { useTranslations } from "next-intl";
 import { useId } from "react";
 
 export type ExpiryChoiceOption<TDays extends number | null = number | null> = {
@@ -25,15 +26,16 @@ const labelClass = "text-[10px] uppercase tracking-[0.5px] text-fg-muted";
  * so the options stay a prop while the control, its styling and its accessibility do not.
  */
 export function ExpiryChoiceGroup<TDays extends number | null>({
-  label = "Expires",
+  label,
   onChange,
   options,
   value,
 }: Readonly<ExpiryChoiceGroupProps<TDays>>) {
+  const t = useTranslations("shared.controls.expiryChoice");
   const groupName = useId();
   return (
     <fieldset className="m-0 min-w-0 border-0 p-0">
-      <legend className={labelClass}>{label}</legend>
+      <legend className={labelClass}>{label ?? t("label")}</legend>
       <div className="mt-[9px] flex gap-[7px]">
         {options.map((option) => {
           const active = value === option.days;

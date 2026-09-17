@@ -1,5 +1,6 @@
+import { renderWithUsageSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { composeStories } from "@storybook/react";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import * as stories from "./UsageSettingsContent.stories";
 

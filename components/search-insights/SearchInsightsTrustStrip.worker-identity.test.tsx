@@ -1,5 +1,6 @@
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { SearchInsightsTrustStrip } from "./SearchInsightsTrustStrip";
 

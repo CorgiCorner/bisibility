@@ -1,5 +1,6 @@
+import { renderWithResearchMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ResearchResultsTable } from "./ResearchResultsTable";
 import {

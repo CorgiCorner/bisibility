@@ -4,6 +4,7 @@ import { Calendar } from "@/components/ui/Calendar";
 import { Popup as Popover } from "@/components/ui/Popup";
 import { zonedDateInputValue } from "@/lib/checks/date-boundary";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { useTranslations } from "next-intl";
 
 type AsOfDatePopoverProps = {
   anchorEl: HTMLElement | null;
@@ -22,6 +23,7 @@ export function AsOfDatePopover({
   selectedDate,
   timeZone,
 }: Readonly<AsOfDatePopoverProps>) {
+  const t = useTranslations("projectRankTracker.checks");
   const maxDate = zonedDateInputValue(now, timeZone);
 
   function selectDate(date: string) {
@@ -37,7 +39,7 @@ export function AsOfDatePopover({
       onClose={onClose}
       open={Boolean(anchorEl)}
       contentProps={{
-        "aria-label": "As of date",
+        "aria-label": t("asOfDate"),
         role: "dialog",
         style: {
           backgroundColor: "var(--bg-elev)",
@@ -51,13 +53,13 @@ export function AsOfDatePopover({
     >
       <div className="w-[292px] bg-bg-elev p-3.5 text-fg">
         <Calendar
-          ariaLabel="Choose as of date"
+          ariaLabel={t("chooseAsOfDate")}
           max={maxDate}
           onChange={selectDate}
           value={selectedDate}
         />
         <p className="mb-0 mt-4 border-border border-t pt-3 font-sans tabular-nums text-[10.5px] leading-relaxed text-fg-muted">
-          Dates use the project timezone ({timeZone}).
+          {t("projectTimezone", { timeZone })}
         </p>
       </div>
     </Popover>

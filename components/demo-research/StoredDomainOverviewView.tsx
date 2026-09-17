@@ -7,7 +7,7 @@ import { StoredResearchEmpty } from "./StoredResearchEmpty";
 export function StoredDomainOverviewView({
   result,
 }: Readonly<{ result: StoredDomainOverviewResult | null }>) {
-  if (!result) return <StoredResearchEmpty title="Domain Overview" />;
+  if (!result) return <StoredResearchEmpty module="domainOverview" />;
   const { history, keywords, pages, ...report } = result;
   return (
     <DomainOverviewResults

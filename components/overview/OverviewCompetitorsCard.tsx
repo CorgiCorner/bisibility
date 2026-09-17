@@ -12,81 +12,87 @@ import type {
   OverviewCompetitorRow,
 } from "@/lib/competitors/overview-comparison";
 import { appPath } from "@/lib/routing/app-path";
+import { useTranslations } from "next-intl";
 
-const columns: readonly DataTableColumn<OverviewCompetitorRow>[] = [
-  {
-    id: "domain",
-    header: "Competitor",
-    size: 250,
-    minSize: 180,
-    meta: { flex: 1.5, sortable: false },
-    cell: ({ row: { original: row } }) => (
-      <CompetitorDomainLink domain={row.domain} label={row.label} variant="rank-tracker" />
-    ),
-  },
-  {
-    id: "found",
-    header: () => (
-      <span className="flex items-center gap-1">
-        Found{" "}
-        <InfoTooltip text="Targets where this domain appears, out of saved SERPs in its selected markets. Each market and device is a separate target." />
-      </span>
-    ),
-    size: 130,
-    minSize: 110,
-    meta: { sortable: false },
-    cell: ({ row }) => `${row.original.found} / ${row.original.checked}`,
-  },
-  {
-    id: "above",
-    header: () => (
-      <span className="flex items-center gap-1">
-        Above you{" "}
-        <InfoTooltip text="Targets where this competitor ranks above you, out of targets where both sites have a known position in the same check." />
-      </span>
-    ),
-    size: 150,
-    minSize: 130,
-    meta: { sortable: false },
-    cell: ({ row }) =>
-      row.original.paired ? `${row.original.above} / ${row.original.paired}` : "-",
-  },
-  {
-    id: "average",
-    header: "Avg. position",
-    size: 150,
-    minSize: 130,
-    meta: { sortable: false },
-    cell: ({ row }) =>
-      row.original.averagePosition === null ? "-" : `#${row.original.averagePosition}`,
-  },
-];
+function columns(
+  t: ReturnType<typeof useTranslations<"projectDashboard.competitors">>,
+): readonly DataTableColumn<OverviewCompetitorRow>[] {
+  return [
+    {
+      id: "domain",
+      header: t("competitor"),
+      size: 250,
+      minSize: 180,
+      meta: { flex: 1.5, sortable: false },
+      cell: ({ row: { original: row } }) => (
+        <CompetitorDomainLink domain={row.domain} label={row.label} variant="rank-tracker" />
+      ),
+    },
+    {
+      id: "found",
+      header: () => (
+        <span className="flex items-center gap-1">
+          {t("found")} <InfoTooltip text={t("foundDescription")} />
+        </span>
+      ),
+      size: 130,
+      minSize: 110,
+      meta: { sortable: false },
+      cell: ({ row }) => t("counts", { left: row.original.found, right: row.original.checked }),
+    },
+    {
+      id: "above",
+      header: () => (
+        <span className="flex items-center gap-1">
+          {t("aboveYou")} <InfoTooltip text={t("aboveYouDescription")} />
+        </span>
+      ),
+      size: 150,
+      minSize: 130,
+      meta: { sortable: false },
+      cell: ({ row }) =>
+        row.original.paired
+          ? t("counts", { left: row.original.above, right: row.original.paired })
+          : "-",
+    },
+    {
+      id: "average",
+      header: t("averagePosition"),
+      size: 150,
+      minSize: 130,
+      meta: { sortable: false },
+      cell: ({ row }) =>
+        row.original.averagePosition === null
+          ? "-"
+          : t("position", { value: row.original.averagePosition }),
+    },
+  ];
+}
 
 export function OverviewCompetitorsCard({
   data,
   projectRef,
 }: Readonly<{ data: OverviewCompetitorComparison; projectRef: string }>) {
+  const t = useTranslations("projectDashboard.competitors");
   return (
     <Card
       component="section"
-      aria-label="Competitor summary"
+      aria-label={t("summaryAriaLabel")}
       className="min-w-0 overflow-hidden p-0"
     >
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
-          <SectionTitle>Competitors in your results</SectionTitle>
-          <p className="m-0 mt-1 text-[12px] text-fg-muted">
-            Latest completed check per target within the selected period, markets, devices and tags.
-          </p>
+          <SectionTitle>{t("title")}</SectionTitle>
+          <p className="m-0 mt-1 text-[12px] text-fg-muted">{t("description")}</p>
         </div>
         <Button href={appPath(projectRef, "settings/competitors")} size="sm" variant="ghost">
-          Manage competitors
+          {t("manage")}
         </Button>
       </div>
       <DataTable
-        ariaLabel="Competitor summary"
+        ariaLabel={t("summaryAriaLabel")}
         bordered={false}
-        columns={columns}
+        columns={columns(t)}
         density="compact"
         id="overview-competitors"
         layout="auto"
@@ -96,10 +102,8 @@ export function OverviewCompetitorsCard({
       />
       <p className="m-0 border-t border-border px-5 py-3 text-[12px] text-fg-muted">
         {data.rows.every((row) => row.checked === 0)
-          ? "No saved SERPs for these competitors in the selected period. "
-          : null}
-        Missing domains are not treated as losses. Average position uses found results only.
-        {data.limited ? " Showing the 2,000 most recently added targets." : null}
+          ? t("footerWithNoSavedSerps", { limited: data.limited ? "true" : "false" })
+          : t("footer", { limited: data.limited ? "true" : "false" })}
       </p>
     </Card>
   );

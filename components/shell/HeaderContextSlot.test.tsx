@@ -1,8 +1,13 @@
 import { RankTrackerHeaderContext } from "@/components/keywords/RankTrackerHeaderContext";
+import {
+  renderWithShellProjectRankTrackerMessages as render,
+  renderWithFeatureMessages,
+  shellProjectRankTrackerFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type { HeaderContextMarket } from "@/lib/markets/header-context";
 import { appPath, asMarketRef, asProjectRef, marketPath } from "@/lib/routing/app-path";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { HEADER_CONTEXT_LABEL, HeaderContextSlot } from "./HeaderContextSlot";
 
@@ -19,6 +24,17 @@ const MARKETS: HeaderContextMarket[] = [
     ref: asMarketRef("pmkt_us"),
   },
 ];
+
+const preparedPolishShellMessages = {
+  ...shellProjectRankTrackerFeatureTestMessages,
+  shell: {
+    ...shellProjectRankTrackerFeatureTestMessages.shell,
+    header: {
+      ...shellProjectRankTrackerFeatureTestMessages.shell.header,
+      changeContext: "Zmień kontekst",
+    },
+  },
+};
 
 function renderSlot(pathname: string, contexts: HeaderContextMarket[] = MARKETS) {
   setNavigationState({ pathname });
@@ -42,6 +58,16 @@ describe("HeaderContextSlot", () => {
     expect(group).not.toBeNull();
     expect(screen.getByRole("button", { name: "United States" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Back to all markets" })).not.toBeInTheDocument();
+  });
+
+  it("uses the outer shell payload for a prepared non-English context label", () => {
+    setNavigationState({ pathname: marketPath(PROJECT, asMarketRef("pmkt_us"), "rank-tracker") });
+    renderWithFeatureMessages(<HeaderContextSlot contexts={MARKETS} projectRef={PROJECT} />, {
+      locale: "pl",
+      messages: preparedPolishShellMessages,
+    });
+
+    expect(screen.getByRole("group", { name: "Zmień kontekst" })).toBeInTheDocument();
   });
 
   it("keeps the rank tracker device control beside the market and preserves its URL state", () => {

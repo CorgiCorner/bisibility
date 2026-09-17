@@ -1,8 +1,20 @@
+import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render as renderDom, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordsToolbarActions } from "./KeywordsToolbarActions";
+
+function render(children: ReactNode) {
+  const result = renderDom(<ProjectRankTrackerMessages>{children}</ProjectRankTrackerMessages>);
+  return {
+    ...result,
+    rerender(nextChildren: ReactNode) {
+      result.rerender(<ProjectRankTrackerMessages>{nextChildren}</ProjectRankTrackerMessages>);
+    },
+  };
+}
 
 const mocks = vi.hoisted(() => ({ useMediaQuery: vi.fn() }));
 vi.mock("@/lib/ui/use-media-query", () => ({ useMediaQuery: mocks.useMediaQuery }));

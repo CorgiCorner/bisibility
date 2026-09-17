@@ -1,8 +1,10 @@
 "use client";
 
-import { actionErrorMessage } from "@/components/onboarding/onboarding-form-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { appPath, appRootPath } from "@/lib/routing/app-path";
+import { presentActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { type SyntheticEvent, useRef, useState } from "react";
 import type { SaveOnboardingMarketsAction } from "./onboarding-market-actions";
 
@@ -19,6 +21,8 @@ export function useFirstCheckSubmit({
   navigationProjectId,
   saveMarketsAction,
 }: FirstCheckSubmitInput) {
+  const t = useTranslations("onboarding.firstCheck");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -40,7 +44,7 @@ export function useFirstCheckSubmit({
         navigationProjectId ? appPath(navigationProjectId, "getting-started") : appRootPath(),
       );
     } catch (error) {
-      setSubmitError(actionErrorMessage(error, "Onboarding could not be completed. Try again."));
+      setSubmitError(presentActionError(error, sharedErrors, t("errors.complete")));
       submittingRef.current = false;
       setSubmitting(false);
     }

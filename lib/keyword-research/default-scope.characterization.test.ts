@@ -1,6 +1,7 @@
 import { RecentResearchSearches } from "@/components/research/RecentResearchSearches";
+import { renderWithResearchMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { locationLanguage, normalizeCanonicalLocationKey } from "@/lib/serp/location";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { researchLocation } from "./context";

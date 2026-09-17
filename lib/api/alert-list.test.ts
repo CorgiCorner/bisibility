@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getAlertFeedStats, listTriggeredAlertViews } from "./alert-list";
+import {
+  getAlertFeedStats,
+  listTriggeredAlertFeedViews,
+  listTriggeredAlertViews,
+} from "./alert-list";
 
 const mocks = vi.hoisted(() => ({
   cacheEntries: new Map<unknown, Map<string, unknown>>(),
@@ -128,6 +132,47 @@ describe("alert feed window", () => {
         }),
       }),
     );
+  });
+
+  it("keeps a triggered event's stored severity after its rule is later edited", async () => {
+    mocks.prisma.triggeredAlert.findMany.mockResolvedValue([
+      {
+        afterPosition: 14,
+        beforePosition: 8,
+        deliveryAttempts: [],
+        deliveryState: "delivered",
+        firedAt: new Date("2026-07-15T11:54:00.000Z"),
+        id: "alert_1",
+        keyword: {
+          device: "desktop",
+          locationId: "location_1",
+          locationRef: { displayName: "United States", languageLabel: null },
+        },
+        keywordId: "keyword_1",
+        payload: { severity: "urgent" },
+        publicId: "al_abcdefghijklmnopqrstuvwx",
+        rule: {
+          changePct: null,
+          competitorDomain: null,
+          conditionType: "threshold",
+          dropPositions: null,
+          name: "Threshold",
+          projectId: "project_1",
+          serpFeature: null,
+          severity: "warning",
+          thresholdPosition: 10,
+          topN: null,
+        },
+        status: "firing",
+      },
+    ]);
+
+    await expect(listTriggeredAlertFeedViews("project_1")).resolves.toEqual([
+      expect.objectContaining({
+        feedMeta: expect.objectContaining({ severity: "urgent" }),
+        severity: "urgent",
+      }),
+    ]);
   });
 
   it("uses the endpoint URL and deleted fallback when no description is available", async () => {

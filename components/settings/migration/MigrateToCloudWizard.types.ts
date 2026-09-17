@@ -29,7 +29,6 @@ export type MigrationTargetPreflight = Exclude<
 
 export type MigrationBlocker = {
   code: string;
-  message: string;
 };
 
 export type MigrationCompatibilityResult = {

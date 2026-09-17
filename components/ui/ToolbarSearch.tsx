@@ -4,6 +4,7 @@ import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles"
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { clsx } from "clsx";
+import { useTranslations } from "next-intl";
 import type { Ref } from "react";
 import styles from "./ToolbarSearch.module.css";
 
@@ -40,6 +41,7 @@ export function ToolbarSearch({
   value,
   variant = "toolbar",
 }: Readonly<ToolbarSearchProps>) {
+  const t = useTranslations("shared.controls.toolbarSearch");
   const isToolbar = variant === "toolbar";
   return (
     <label
@@ -85,7 +87,7 @@ export function ToolbarSearch({
       />
       {value ? (
         <button
-          aria-label={`Clear ${label}`}
+          aria-label={t("clear", { label })}
           className="inline-flex size-6 shrink-0 items-center justify-center text-fg-muted hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-solid"
           onClick={() => onChange("")}
           onMouseDown={(event) => event.preventDefault()}

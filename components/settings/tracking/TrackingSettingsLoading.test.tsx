@@ -1,7 +1,7 @@
 import { TrackingSettingsContent } from "@/components/settings/tracking/TrackingSettingsContent";
 import { TrackingSettingsLoading } from "@/components/settings/tracking/TrackingSettingsLoading";
 import { trackingCardGeometryClassNames } from "@/components/settings/tracking/tracking-settings-layout";
-import { render } from "@testing-library/react";
+import { renderWithSharedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { describe, expect, it, vi } from "vitest";
 
 const defaults = {
@@ -36,7 +36,7 @@ describe("TrackingSettingsLoading", () => {
           canEdit
           defaults={defaults}
           domain="example.com"
-          initialCronPreview={{ message: "", runs: [], status: "idle" }}
+          initialCronPreview={{ message: null, runs: [], status: "idle", timezone: null }}
           previewCron={vi.fn()}
           projectId="prj_1"
           updateDefaults={vi.fn()}
@@ -61,7 +61,7 @@ describe("TrackingSettingsLoading", () => {
         canEdit
         defaults={defaults}
         domain="example.com"
-        initialCronPreview={{ message: "", runs: [], status: "idle" }}
+        initialCronPreview={{ message: null, runs: [], status: "idle", timezone: null }}
         previewCron={vi.fn()}
         projectId="prj_1"
         updateDefaults={vi.fn()}
@@ -78,7 +78,7 @@ describe("TrackingSettingsLoading", () => {
           canEdit
           defaults={defaults}
           domain="example.com"
-          initialCronPreview={{ message: "", runs: [], status: "idle" }}
+          initialCronPreview={{ message: null, runs: [], status: "idle", timezone: null }}
           previewCron={vi.fn()}
           projectId="prj_1"
           updateDefaults={vi.fn()}

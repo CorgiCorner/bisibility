@@ -1,0 +1,119 @@
+{
+  "projectGettingStarted": {
+    "header": {
+      "label": "Get set up",
+      "progress": "{settled, number} of {total, number} {total, plural, one {step} other {steps}}"
+    },
+    "steps": {
+      "create_project": "Create your project",
+      "connect_source": "Connect a data source",
+      "add_keywords": "Track your first keywords",
+      "first_check": "Run your first rank check",
+      "confirm_competitors": "Confirm competitors"
+    },
+    "cta": {
+      "create_project": "Create project",
+      "connect_source": "Connect data source",
+      "add_keywords": "Add keywords",
+      "run_first_check": "Run first check",
+      "run_first_check_now": "Run it now instead"
+    },
+    "state": {
+      "needs_data_source": "Needs a data source first",
+      "needs_keywords": "Needs keywords first",
+      "needs_first_check": "Needs first check results",
+      "running": "Running - {completed, number} of {total, number} checked",
+      "scheduledToday": "Scheduled - runs today at {time} ({timezone})",
+      "scheduledTomorrow": "Scheduled - runs tomorrow at {time} ({timezone})",
+      "scheduledInDays": "Scheduled - runs in {days, number} {days, plural, one {day} other {days}} at {time} ({timezone})"
+    },
+    "walkthrough": {
+      "create_project": {
+        "active": "Name the project you want to track. You can update its details later in Project settings.",
+        "done": "This happened when you created the project: one domain, with every check and import scoped to it. The name and domain live in Project settings."
+      },
+      "add_keywords": {
+        "active": "Type or paste your keywords, one per line. We dedupe against what you already track.",
+        "done": "This happened when you added your first keywords. Each keyword carries its own market and device - edit them on the keyword's row in Rank Tracker."
+      },
+      "connect_source": {
+        "active": "Search Console is free and takes two clicks. A SERP provider adds live position checks with your own key.",
+        "done": "This happened when you connected a data source. Rank checks run through it, and the provider bills you directly. Manage or swap it in Integrations."
+      },
+      "first_check": {
+        "active": "Run the first check to collect positions for the tracked keywords. Check settings live in the project's tracking settings.",
+        "done": "This happened when your first check completed: every keyword it covered now has a position and a ranking URL, and history builds from here. Checks follow the project's default schedule - any keyword can override it with its own. Both live in Rank Tracker."
+      }
+    },
+    "competitors": {
+      "blocked": "Suggestions use your completed rank checks. This step opens after your first check.",
+      "ready": "Choose competitors to track. You can change this later in Settings.",
+      "skipped": "Skipped. Nothing is tracked as a competitor, and share of voice stays off until you confirm a set.",
+      "confirmed": "Confirmed. Your selected competitors are now tracked.",
+      "none": "No suggestions yet. Add a competitor or do this later in Settings.",
+      "review": "Review competitors",
+      "addOwn": "Add your own",
+      "skip": "Skip for now",
+      "modalAdd": "Add competitor",
+      "modalReview": "Review competitors",
+      "trackSelected": "Track selected",
+      "trackCount": "Track {count, number} {count, plural, one {competitor} other {competitors}}",
+      "saving": "Saving...",
+      "select": "Select the domains you want to track.",
+      "noneLeft": "No suggestions left. You can add your own competitor.",
+      "back": "Back",
+      "cancel": "Cancel",
+      "confirmError": "Could not confirm every selected competitor. Try again.",
+      "dismissError": "Competitor could not be removed.",
+      "skipError": "Competitor setup could not be skipped.",
+      "manual": {
+        "domain": "Domain",
+        "domainError": "Enter a domain.",
+        "domainInvalid": "Enter a valid competitor domain.",
+        "domainPlaceholder": "competitor.example.org",
+        "aliases": "Brand aliases (optional)",
+        "aliasesPlaceholder": "Brand names, comma separated",
+        "aliasesHelp": "Other brand names to match in citations, separated by commas.",
+        "adding": "Adding...",
+        "add": "Add competitor",
+        "addError": "Competitor could not be added."
+      },
+      "suggestions": {
+        "suggestedTitle": "Suggested competitors",
+        "suggestedDescription": "Appear on at least two different non-branded keywords.",
+        "otherTitle": "Other domains in results",
+        "otherDescription": "These results alone do not establish competition. Add a domain only if it competes with your site.",
+        "evidence": "seen on {seenOn, number} of {of, number} keywords / best #{bestPosition, number}",
+        "platform": "{coverage} - Platform or directory",
+        "limited": "{coverage} - Limited evidence",
+        "remove": "Remove"
+      }
+    },
+    "completion": {
+      "allComplete": "All setup steps complete",
+      "heading": "What's next",
+      "acknowledged": "Your setup is complete. You can return here whenever you need a reminder of how the project is connected.",
+      "helper": "Confirm the setup when you are ready. Your project keeps its existing data and settings.",
+      "finish": "Finish setup",
+      "checklistError": "Complete every setup step before finishing.",
+      "writeError": "Could not save setup completion. Try again."
+    },
+    "goFurther": {
+      "heading": "Go further",
+      "ai": {
+        "title": "Connect an AI assistant",
+        "description": "Connect Claude, ChatGPT or any MCP client."
+      },
+      "github": {
+        "title": "Star bisibility on GitHub",
+        "description": "Free and open source - a star helps."
+      },
+      "team": { "title": "Invite teammates", "description": "Invite teammates and assign roles." }
+    },
+    "video": {
+      "aria": "Video walkthrough",
+      "heading": "Video walkthroughs",
+      "description": "Each step opens with its written version. Clips appear here as they are published."
+    }
+  }
+}

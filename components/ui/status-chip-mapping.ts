@@ -1,37 +1,39 @@
+import type { CoreMessages } from "@/i18n/core-messages.generated";
 import type { ItemStatus, RunOutcome, RunStatus } from "@/lib/rank-check/runs/contract";
 import type { StatusChipTone } from "./StatusChip";
 
 export type StatusChipPresentation = {
   label: string;
+  messageKey: keyof CoreMessages["shared"]["controls"]["status"];
   tone: StatusChipTone;
 };
 
 const RUN_STATUS_PRESENTATIONS = {
-  planned: { label: "Planned", tone: "planned" },
-  blocked: { label: "Blocked", tone: "attention" },
-  queued: { label: "Queued", tone: "info" },
-  running: { label: "Running", tone: "info" },
-  cancelling: { label: "Cancelling", tone: "neutral" },
-  completed: { label: "Not confirmed", tone: "neutral" },
-  cancelled: { label: "Cancelled", tone: "neutral" },
+  planned: { label: "Planned", messageKey: "planned", tone: "planned" },
+  blocked: { label: "Blocked", messageKey: "blocked", tone: "attention" },
+  queued: { label: "Queued", messageKey: "queued", tone: "info" },
+  running: { label: "Running", messageKey: "running", tone: "info" },
+  cancelling: { label: "Cancelling", messageKey: "cancelling", tone: "neutral" },
+  completed: { label: "Not confirmed", messageKey: "notConfirmed", tone: "neutral" },
+  cancelled: { label: "Cancelled", messageKey: "cancelled", tone: "neutral" },
 } as const satisfies Record<RunStatus, StatusChipPresentation>;
 
 const RUN_OUTCOME_PRESENTATIONS = {
-  succeeded: { label: "Succeeded", tone: "positive" },
-  partial: { label: "Partial", tone: "attention" },
-  failed: { label: "Failed", tone: "critical" },
-  deferred: { label: "Deferred", tone: "attention" },
+  succeeded: { label: "Succeeded", messageKey: "succeeded", tone: "positive" },
+  partial: { label: "Partial", messageKey: "partial", tone: "attention" },
+  failed: { label: "Failed", messageKey: "failed", tone: "critical" },
+  deferred: { label: "Deferred", messageKey: "deferred", tone: "attention" },
 } as const satisfies Record<RunOutcome, StatusChipPresentation>;
 
 const ITEM_STATUS_PRESENTATIONS = {
-  queued: { label: "Queued", tone: "info" },
-  running: { label: "Running", tone: "info" },
-  completed: { label: "Completed", tone: "positive" },
-  failed: { label: "Failed", tone: "critical" },
-  deferred: { label: "Deferred", tone: "attention" },
-  cancelled: { label: "Cancelled", tone: "neutral" },
-  skipped: { label: "Skipped", tone: "neutral" },
-  blocked: { label: "Blocked", tone: "attention" },
+  queued: { label: "Queued", messageKey: "queued", tone: "info" },
+  running: { label: "Running", messageKey: "running", tone: "info" },
+  completed: { label: "Completed", messageKey: "completed", tone: "positive" },
+  failed: { label: "Failed", messageKey: "failed", tone: "critical" },
+  deferred: { label: "Deferred", messageKey: "deferred", tone: "attention" },
+  cancelled: { label: "Cancelled", messageKey: "cancelled", tone: "neutral" },
+  skipped: { label: "Skipped", messageKey: "skipped", tone: "neutral" },
+  blocked: { label: "Blocked", messageKey: "blocked", tone: "attention" },
 } as const satisfies Record<ItemStatus, StatusChipPresentation>;
 
 function presentationFrom<T extends string>(

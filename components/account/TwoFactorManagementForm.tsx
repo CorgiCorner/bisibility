@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth/two-factor-management-schema";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { cn } from "@/lib/ui/cn";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { feedbackClass, fieldInputClass, fieldLabelClass } from "./account-ui";
@@ -33,6 +34,7 @@ export function TwoFactorManagementForm({
   submitLabel,
   variant = "primary",
 }: Readonly<TwoFactorManagementFormProps>) {
+  const t = useTranslations("account.security.twoFactor");
   const [pending, setPending] = useState(false);
   const form = useForm<TwoFactorManagementInput>({
     defaultValues: { code: "", method: "totp", password: "" },
@@ -57,7 +59,7 @@ export function TwoFactorManagementForm({
     try {
       await onSubmit(values);
     } catch {
-      onError("Two-factor authentication could not be updated. Try again.");
+      onError(t("updateError"));
     } finally {
       setPending(false);
     }
@@ -68,7 +70,7 @@ export function TwoFactorManagementForm({
       <p className="text-[11.5px] text-fg-muted">{description}</p>
       {hasPasswordCredential ? (
         <label className={fieldLabelClass}>
-          {"Account password "}
+          {t("password")}
           <input
             autoComplete="current-password"
             className={fieldInputClass}
@@ -76,16 +78,14 @@ export function TwoFactorManagementForm({
             {...form.register("password")}
           />
           {form.formState.errors.password ? (
-            <span className={cn(feedbackClass, "text-red-text")}>
-              {form.formState.errors.password.message}
-            </span>
+            <span className={cn(feedbackClass, "text-red-text")}>{t("invalidInput")}</span>
           ) : null}
         </label>
       ) : null}
       {factorRequired ? (
         <>
           <fieldset className="flex flex-wrap gap-2">
-            <legend className="sr-only">Verification method</legend>
+            <legend className="sr-only">{t("verificationMethod")}</legend>
             <Button
               aria-pressed={method === "totp"}
               onClick={() => selectMethod("totp")}
@@ -93,7 +93,7 @@ export function TwoFactorManagementForm({
               type="button"
               variant={method === "totp" ? "primary" : "secondary"}
             >
-              Authenticator code
+              {t("authenticatorCode")}
             </Button>
             <Button
               aria-pressed={method === "backup_code"}
@@ -102,11 +102,11 @@ export function TwoFactorManagementForm({
               type="button"
               variant={method === "backup_code" ? "primary" : "secondary"}
             >
-              Backup code
+              {t("backupCode")}
             </Button>
           </fieldset>
           <label className={fieldLabelClass}>
-            {method === "totp" ? "Current authenticator code " : "Current backup code "}
+            {method === "totp" ? t("currentAuthenticatorCode") : t("currentBackupCode")}
             <input
               autoComplete="one-time-code"
               className={fieldInputClass}
@@ -115,19 +115,23 @@ export function TwoFactorManagementForm({
               {...form.register("code")}
             />
             {form.formState.errors.code ? (
-              <span className={cn(feedbackClass, "text-red-text")}>
-                {form.formState.errors.code.message}
-              </span>
+              <span className={cn(feedbackClass, "text-red-text")}>{t("invalidInput")}</span>
             ) : null}
           </label>
         </>
       ) : null}
       <div className="flex flex-wrap items-center gap-2">
-        <Button loading={pending} loadingLabel="Working" size="sm" type="submit" variant={variant}>
+        <Button
+          loading={pending}
+          loadingLabel={t("working")}
+          size="sm"
+          type="submit"
+          variant={variant}
+        >
           {submitLabel}
         </Button>
         <Button disabled={pending} onClick={onCancel} size="sm" type="button" variant="secondary">
-          Cancel
+          {t("cancel")}
         </Button>
       </div>
     </form>

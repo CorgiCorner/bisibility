@@ -3,6 +3,7 @@
 import { compactInputTypographyClassName, inputClassName } from "@/components/ui/input-styles";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
 import { cn } from "@/lib/ui/cn";
+import { useTranslations } from "next-intl";
 import { forwardRef, type InputHTMLAttributes } from "react";
 
 type BudgetAmountFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "className"> & {
@@ -21,6 +22,7 @@ const adornmentClassName = "shrink-0 font-sans tabular-nums text-[12px] text-fg-
 export const BudgetAmountField = forwardRef<HTMLInputElement, BudgetAmountFieldProps>(
   function BudgetAmountField({ connection, error, ...props }, ref) {
     const isMoney = connection.unit === "cents";
+    const t = useTranslations("projectSettingsUsage.provider.budgetDialog");
     return (
       <div className="min-w-0">
         <div
@@ -35,10 +37,12 @@ export const BudgetAmountField = forwardRef<HTMLInputElement, BudgetAmountFieldP
             aria-invalid={error ? true : undefined}
             className={fieldClassName}
             inputMode={isMoney ? "decimal" : "numeric"}
-            placeholder="No budget"
+            placeholder={t("placeholder")}
             ref={ref}
           />
-          {!isMoney ? <span className={cn(adornmentClassName, "pl-1.5")}>searches</span> : null}
+          {!isMoney ? (
+            <span className={cn(adornmentClassName, "pl-1.5")}>{t("searchesAdornment")}</span>
+          ) : null}
         </div>
       </div>
     );

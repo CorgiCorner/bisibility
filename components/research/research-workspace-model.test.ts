@@ -3,10 +3,10 @@ import {
   actualResearchCostCents,
   mapWithConcurrency,
   markTabsSaved,
-  nextBudgetResetLabel,
+  nextBudgetResetAt,
   recentSearchReplay,
   researchFailureState,
-  researchRetryLabel,
+  researchRetryPresentation,
   researchSaveInput,
   researchScopeLocationKey,
   researchTabRequest,
@@ -97,12 +97,12 @@ describe("research workspace model", () => {
     expect(researchFailureState({ ok: false, reason: "rate_limited" })).toBe("lookup_failed");
   });
 
-  it("formats the next monthly reset in the project timezone", () => {
-    expect(nextBudgetResetLabel("America/New_York", new Date("2026-07-22T12:00:00Z"))).toBe(
-      "Aug 1, 2026, 00:00",
+  it("returns the next monthly reset instant in the project timezone", () => {
+    expect(nextBudgetResetAt("America/New_York", new Date("2026-07-22T12:00:00Z"))).toEqual(
+      new Date("2026-08-01T04:00:00.000Z"),
     );
-    expect(nextBudgetResetLabel("Europe/Warsaw", new Date("2026-07-31T23:00:00Z"))).toBe(
-      "Sep 1, 2026, 00:00",
+    expect(nextBudgetResetAt("Europe/Warsaw", new Date("2026-07-31T23:00:00Z"))).toEqual(
+      new Date("2026-08-31T22:00:00.000Z"),
     );
   });
 
@@ -125,14 +125,17 @@ describe("research workspace model", () => {
     ).toBe(3);
   });
 
-  it("formats paid, cached, and unknown retry labels", () => {
-    expect(researchRetryLabel({ cached: false, costCents: 3, loading: false })).toBe(
-      "Retry ~$0.03",
-    );
-    expect(researchRetryLabel({ cached: true, costCents: 0, loading: false })).toBe(
-      "Retry free, cached",
-    );
-    expect(researchRetryLabel({ cached: false, costCents: null, loading: false })).toBe("Retry");
+  it("keeps retry costs structured until the client presents them", () => {
+    expect(researchRetryPresentation({ cached: false, costCents: 3, loading: false })).toEqual({
+      costCents: 3,
+      kind: "cost",
+    });
+    expect(researchRetryPresentation({ cached: true, costCents: 0, loading: false })).toEqual({
+      kind: "cached",
+    });
+    expect(researchRetryPresentation({ cached: false, costCents: null, loading: false })).toEqual({
+      kind: "plain",
+    });
   });
 
   it("maps with bounded concurrency and preserves input order", async () => {

@@ -1,21 +1,18 @@
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { IdChip } from "@/components/ui/IdChip";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { API_KEY_EXPIRY_DAYS } from "@/lib/api/api-key-policy";
+import { canCreateOAuthApiTokens, getOAuthConsentCopy } from "@/lib/auth/oauth-consent-copy";
 import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
 import {
-  OAUTH_ACCESS_TOKEN_TTL_LABEL,
-  OAUTH_REFRESH_TOKEN_TTL_LABEL,
+  OAUTH_ACCESS_TOKEN_TTL_SECONDS,
+  OAUTH_REFRESH_TOKEN_TTL_SECONDS,
 } from "@/lib/auth/oauth-policy";
-import { ArrowUDownLeftIcon as ArrowUDownLeft } from "@phosphor-icons/react/dist/csr/ArrowUDownLeft";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
-import { ClockIcon as Clock } from "@phosphor-icons/react/dist/csr/Clock";
-import { HourglassIcon as Hourglass } from "@phosphor-icons/react/dist/csr/Hourglass";
-import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
-import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/csr/ShieldCheck";
+import { useTranslations } from "next-intl";
 import { OAuthConsentScopes } from "./OAuthConsentScopes";
 import { formatOAuthConsentCountdown } from "./useOAuthConsentCountdown";
+
+const ACCESS_TOKEN_TTL_HOURS = OAUTH_ACCESS_TOKEN_TTL_SECONDS / (60 * 60);
+const REFRESH_TOKEN_TTL_DAYS = OAUTH_REFRESH_TOKEN_TTL_SECONDS / (24 * 60 * 60);
 
 type OAuthConsentRequestProps = {
   client: OAuthConsentClient;
@@ -27,85 +24,66 @@ type OAuthConsentRequestProps = {
   scopes: string[];
 };
 
-const API_TOKEN_EXPIRY_LABEL = `${API_KEY_EXPIRY_DAYS.join(", ")} days, or never`;
-
-function ClientBox({ client }: Readonly<{ client: OAuthConsentClient }>) {
-  return (
-    <div className="mt-4 rounded-control bg-bg-inset px-[13px] py-[11px]">
-      <div className="flex items-center gap-2">
-        <span className="text-[10.5px] uppercase tracking-[0.5px] text-fg-muted">Client</span>
-        {client.dynamic ? (
-          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-bg-elev px-2 py-0.5 text-[10px] font-semibold text-fg-muted">
-            DCR
-            <InfoTooltip text="Registered dynamically, so the id is random. Only approve one you just triggered yourself." />
-          </span>
-        ) : null}
-      </div>
-      <p className="mt-1.5 mb-0 text-[13px] font-semibold text-fg">{client.name}</p>
-      <p className="mt-0.5 mb-0 break-all text-[11.5px] font-semibold text-fg-muted">
-        {client.id ? (
-          <IdChip copyLabel="Copy client ID" size="xs" value={client.id} />
-        ) : (
-          "Unknown client"
-        )}
-      </p>
-      {client.redirectUri ? (
-        <p className="mt-1.5 mb-0 flex items-start gap-2 break-all text-[10.5px] text-fg-muted">
-          <ArrowUDownLeft aria-hidden className="mt-0.5 shrink-0" size={13} weight="regular" />
-          {client.redirectUri}
-        </p>
-      ) : null}
-    </div>
-  );
+function redirectDomain(label: string | null) {
+  if (!label) return null;
+  try {
+    return new URL(`https://${label}`).hostname;
+  } catch {
+    return null;
+  }
 }
 
-function TokenLifetime({
-  canCreateApiTokens,
-  refresh,
-}: Readonly<{ canCreateApiTokens: boolean; refresh: boolean }>) {
+function TechnicalDetails({
+  client,
+  scopes,
+}: Readonly<{ client: OAuthConsentClient; scopes: string[] }>) {
+  const t = useTranslations("auth.oauthConsent");
+  const renewsAccess = scopes.includes("offline_access");
+  const createsApiTokens = canCreateOAuthApiTokens(scopes);
   return (
-    <dl className="mt-4 mb-0 border-border border-t pt-3">
-      <div className="flex items-center gap-2 text-[12.5px]">
-        <Clock aria-hidden className="text-fg-muted" size={14} weight="regular" />
-        <dt className="flex items-center gap-1.5 text-fg-muted">
-          Access token
-          <InfoTooltip text="The short-lived credential this client uses to call bisibility. It expires after 1 hour." />
-        </dt>
-        <dd className="ml-auto font-semibold text-fg tabular-nums">
-          {OAUTH_ACCESS_TOKEN_TTL_LABEL}
-        </dd>
-      </div>
-      {refresh ? (
-        <div className="mt-2 flex items-center gap-2 text-[12.5px]">
-          <Hourglass aria-hidden className="text-fg-muted" size={14} weight="regular" />
-          <dt className="flex items-center gap-1.5 text-fg-muted">
-            Refresh access
-            <InfoTooltip text="Allows this client to obtain new access tokens for up to 30 days without asking you to approve every hour." />
-          </dt>
-          <dd className="ml-auto font-semibold text-fg tabular-nums">
-            {OAUTH_REFRESH_TOKEN_TTL_LABEL}
-          </dd>
+    <details className="mt-5 text-[12px] text-fg-muted">
+      <summary className="w-fit cursor-pointer rounded-control underline decoration-border underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-solid">
+        {t("technical.summary")}
+      </summary>
+      <dl className="mt-3 mb-0 space-y-3 rounded-control bg-bg-inset p-3 [&_dd]:m-0 [&_dd]:break-all [&_dd]:text-fg [&_dt]:mb-0.5">
+        <div>
+          <dt>{t("technical.clientId")}</dt>
+          <dd>{client.id || t("technical.unavailable")}</dd>
         </div>
-      ) : null}
-      {canCreateApiTokens ? (
-        <div className="mt-2">
-          <div className="flex items-center gap-2 text-[12.5px]">
-            <Key aria-hidden className="text-fg-muted" size={14} weight="regular" />
-            <dt className="text-fg-muted">API token</dt>
-            <dd className="ml-auto font-semibold text-fg tabular-nums">{API_TOKEN_EXPIRY_LABEL}</dd>
+        {client.redirectUri ? (
+          <div>
+            <dt>{t("technical.redirectUri")}</dt>
+            <dd>{client.redirectUri}</dd>
           </div>
-          <p className="mt-2 mb-0 text-[12px] leading-[1.5] text-fg-muted">
-            Approval lets this client create a personal API token for your account. The client
-            chooses its expiry.
-          </p>
+        ) : null}
+        <div>
+          <dt>{t("technical.requestedScopes")}</dt>
+          <dd>{scopes.length ? [...new Set(scopes)].join(", ") : t("technical.noScopes")}</dd>
         </div>
-      ) : null}
-    </dl>
+        <div>
+          <dt>{t("technical.accessExpiry")}</dt>
+          <dd>{t("accessTokenLifetime", { hours: ACCESS_TOKEN_TTL_HOURS })}</dd>
+        </div>
+        {renewsAccess ? (
+          <div>
+            <dt>{t("technical.refreshExpiry")}</dt>
+            <dd>{t("technical.refreshLifetime", { days: REFRESH_TOKEN_TTL_DAYS })}</dd>
+          </div>
+        ) : null}
+        {createsApiTokens ? (
+          <div>
+            <dt>{t("technical.apiExpiry")}</dt>
+            <dd>
+              {t.rich("technical.apiLifetime", {
+                days: API_KEY_EXPIRY_DAYS.join(", "),
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+    </details>
   );
-}
-
-function loopbackRedirectHost(redirectUri: string | null) {
-  return /^(127\.0\.0\.1|localhost|\[::1\]|::1)(?=[:/]|$)/.exec(redirectUri ?? "")?.[1];
 }
 
 export function OAuthConsentRequest({
@@ -117,73 +95,71 @@ export function OAuthConsentRequest({
   scopes,
   secondsLeft,
 }: Readonly<OAuthConsentRequestProps>) {
-  const expiring = secondsLeft <= 60;
-  const redirectHost = loopbackRedirectHost(client.redirectUri);
+  const t = useTranslations("auth.oauthConsent");
+  const { clientName } = getOAuthConsentCopy(client);
+  const domain = redirectDomain(client.redirectUri);
+  const renewsAccess = scopes.includes("offline_access");
   return (
-    <Card className="w-full max-w-[520px] p-5 sm:p-6" size="lg">
-      <div className="flex flex-wrap items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-accent-soft text-accent-solid">
-          <ShieldCheck aria-hidden size={21} weight="regular" />
-        </span>
-        <div>
-          <p className="m-0 text-[10.5px] uppercase tracking-[0.5px] text-fg-muted">
-            Authorization request
-          </p>
-          <h2 className="mt-1 mb-0 text-[19px] font-semibold tracking-[-0.6px] text-fg">
-            Allow this client?
-          </h2>
-        </div>
-        <span
-          className={`ml-auto inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold tabular-nums ${
-            expiring ? "border-red/40 text-red-text" : "border-border text-fg-muted"
-          }`}
-        >
-          <Clock aria-hidden size={13} weight="regular" />
-          expires in {formatOAuthConsentCountdown(secondsLeft)}
-        </span>
-      </div>
-
-      <ClientBox client={client} />
-      <OAuthConsentScopes client={client} scopes={scopes} />
-      <TokenLifetime
-        canCreateApiTokens={scopes.includes("tokens:write")}
-        refresh={scopes.includes("offline_access")}
-      />
-
-      {redirectHost ? (
-        <p className="mt-4 mb-0 text-[12.5px] leading-[1.5] text-fg-muted">
-          After approving you will be redirected to {redirectHost}; you can close the tab.
+    <Card className="w-full min-w-0 max-w-[520px] p-5 sm:p-7" size="lg">
+      <h1 className="m-0 break-words text-[24px] font-semibold leading-[1.25] tracking-[-0.7px] [overflow-wrap:anywhere]">
+        <bdi>{clientName ? t("headingNamed", { client: clientName }) : t("headingGeneric")}</bdi>
+      </h1>
+      <p className="mt-3 mb-0 text-[12px] leading-[1.6] text-fg-muted">
+        {domain ? (
+          <>
+            <bdi className="break-all font-medium text-fg">{domain}</bdi>
+            {" · "}
+          </>
+        ) : null}
+        {client.dynamic ? t("originDynamic") : t("originFirstParty")}
+      </p>
+      <OAuthConsentScopes scopes={scopes} />
+      <p className="mt-5 mb-0 text-[12.5px] leading-[1.6] text-fg-muted">
+        {renewsAccess
+          ? t("accessRenews", { hours: ACCESS_TOKEN_TTL_HOURS })
+          : t("accessLasts", { hours: ACCESS_TOKEN_TTL_HOURS })}
+      </p>
+      <TechnicalDetails client={client} scopes={scopes} />
+      <p className="mt-5 mb-0 break-words text-[13px] leading-[1.6] [overflow-wrap:anywhere]">
+        <bdi>
+          {clientName ? t("descriptionNamed", { client: clientName }) : t("descriptionGeneric")}
+        </bdi>
+      </p>
+      {error ? (
+        <p role="alert" className="mt-4 mb-0 text-[13px] text-red-text">
+          {error}
         </p>
       ) : null}
-
-      {error ? <p className="mt-4 mb-0 text-[13px] text-red-text">{error}</p> : null}
-
-      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
         <Button
           className="w-full"
           disabled={disabled}
           loading={pendingChoice === "deny"}
-          loadingLabel="Denying"
+          loadingLabel={t("denying")}
           onClick={() => onChoose(false)}
           size="lg"
           type="button"
           variant="secondary"
         >
-          Deny
+          {t("deny")}
         </Button>
         <Button
-          className="w-full"
+          className="h-auto min-h-11 w-full whitespace-normal py-2 [overflow-wrap:anywhere]"
           disabled={disabled}
-          endIcon={<CaretRight aria-hidden size={16} weight="regular" />}
           loading={pendingChoice === "accept"}
-          loadingLabel="Approving"
+          loadingLabel={t("approving")}
           onClick={() => onChoose(true)}
           size="lg"
           type="button"
         >
-          Allow
+          <bdi>{clientName ? t("allowNamed", { client: clientName }) : t("allowGeneric")}</bdi>
         </Button>
       </div>
+      <p
+        className={`mt-3 mb-0 text-center text-[11px] tabular-nums ${secondsLeft <= 60 ? "text-red-text" : "text-fg-muted"}`}
+      >
+        {t("requestExpiresIn", { time: formatOAuthConsentCountdown(secondsLeft) })}
+      </p>
     </Card>
   );
 }

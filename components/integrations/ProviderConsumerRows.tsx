@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { ProviderConsumerStatuses, ProviderTestResult } from "@/lib/integrations/types";
 import { type ProjectRef, searchConsolePath } from "@/lib/routing/app-path";
+import { useTranslations } from "next-intl";
 import { ProviderSyncFailureAlert } from "./ProviderSyncFailureAlert";
 
 type Props = {
@@ -57,10 +58,8 @@ function ConsumerCopy({
   );
 }
 
-const trafficBenefitCopy =
-  "Adds clicks, impressions, and CTR to matching keywords in Rank Tracker.";
-
 export function ProviderConsumerRows(props: Readonly<Props>) {
+  const t = useTranslations("projectIntegrations.provider");
   const trafficNeverSynced = props.statuses.trafficEnrichment.state === "never_synced";
 
   return (
@@ -71,8 +70,8 @@ export function ProviderConsumerRows(props: Readonly<Props>) {
           : "mt-3 grid gap-3 border-border border-t pt-3"
       }
     >
-      <fieldset aria-label="Search Console" className={rowClass}>
-        <ConsumerCopy label="Search Console" status={props.statuses.searchModule} />
+      <fieldset aria-label={t("searchConsole")} className={rowClass}>
+        <ConsumerCopy label={t("searchConsole")} status={props.statuses.searchModule} />
         {props.projectRef ? (
           <div className="mt-auto pt-3">
             <Button
@@ -81,17 +80,17 @@ export function ProviderConsumerRows(props: Readonly<Props>) {
               style={consumerActionStyle}
               variant="secondary"
             >
-              Open Search Console
+              {t("openSearchConsole")}
             </Button>
           </div>
         ) : null}
       </fieldset>
-      <fieldset aria-label="Traffic enrichment" className={rowClass}>
+      <fieldset aria-label={t("trafficEnrichment")} className={rowClass}>
         <ConsumerCopy
-          label="Traffic enrichment"
+          label={t("trafficEnrichment")}
           status={props.statuses.trafficEnrichment}
-          summary={trafficNeverSynced ? "Not synced yet" : undefined}
-          help={trafficBenefitCopy}
+          summary={trafficNeverSynced ? t("notSynced") : undefined}
+          help={t("trafficBenefit")}
         />
         {props.canSync ? (
           <ProjectReadOnlyTooltip className="mt-auto inline-flex pt-3">
@@ -103,7 +102,7 @@ export function ProviderConsumerRows(props: Readonly<Props>) {
               type="button"
               variant="secondary"
             >
-              {props.syncPending ? "Syncing keyword traffic..." : "Sync keyword traffic"}
+              {props.syncPending ? t("syncingTraffic") : t("syncTraffic")}
             </Button>
           </ProjectReadOnlyTooltip>
         ) : null}
@@ -111,7 +110,7 @@ export function ProviderConsumerRows(props: Readonly<Props>) {
           <div>
             <ProviderSyncFailureAlert
               failure={props.syncFailure}
-              managementActionLabel="Connection settings"
+              managementActionLabel={t("connectionSettings")}
               timeZone={props.timeZone}
             />
           </div>
@@ -122,9 +121,7 @@ export function ProviderConsumerRows(props: Readonly<Props>) {
             role={props.syncResult.ok ? "status" : "alert"}
           >
             <strong>
-              {props.syncResult.ok
-                ? "Keyword traffic sync finished."
-                : "Keyword traffic sync failed."}
+              {props.syncResult.ok ? t("trafficKeywordFinished") : t("trafficFailed")}
             </strong>{" "}
             {props.syncResult.message}
           </p>

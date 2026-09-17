@@ -1,6 +1,7 @@
 "use client";
 
 import type { Header } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 import { type MouseEvent, type TouchEvent, useCallback, useRef } from "react";
 import { DATA_TABLE_KEYBOARD_RESIZE_STEP, normalizeDataTableSize } from "./data-table-sizing";
 import type { DataTableRowBase } from "./data-table-types";
@@ -16,6 +17,7 @@ export function DataTableResizeHandle<TRow extends DataTableRowBase>({
   label,
   userSize,
 }: Readonly<DataTableResizeHandleProps<TRow>>) {
+  const t = useTranslations("shared.controls.dataTable");
   const focusSize = useRef<{ size: number; userSize?: number } | null>(null);
   const stopListening = useRef<() => void>(() => {});
   const { column } = header;
@@ -94,7 +96,7 @@ export function DataTableResizeHandle<TRow extends DataTableRowBase>({
 
   return (
     <hr
-      aria-label={`Resize ${label} column`}
+      aria-label={t("resizeColumn", { column: label })}
       aria-orientation="vertical"
       aria-valuemax={column.columnDef.maxSize ?? Number.MAX_SAFE_INTEGER}
       aria-valuemin={column.columnDef.minSize ?? 64}
@@ -138,7 +140,7 @@ export function DataTableResizeHandle<TRow extends DataTableRowBase>({
       }}
       ref={handleRef}
       tabIndex={0}
-      title="Drag to resize. Double-click to reset."
+      title={t("resizeInstructions")}
     />
   );
 }

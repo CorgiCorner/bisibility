@@ -1,9 +1,11 @@
 import { Sheet } from "@/components/ui/Sheet";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
   title: "UI/Sheet",
   component: Sheet,
+  decorators: [withSharedMessages],
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof Sheet>;
 

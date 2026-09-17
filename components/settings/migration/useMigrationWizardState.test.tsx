@@ -1,3 +1,7 @@
+import {
+  advancedSettingsFeatureTestMessages,
+  featureMessagesElement,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -20,7 +24,11 @@ function renderWizard(overrides: Partial<Options> = {}) {
     projectId: defaultPublicProjectId,
     ...overrides,
   };
-  const rendered = renderHook(useMigrationWizardState, { initialProps: options });
+  const rendered = renderHook(useMigrationWizardState, {
+    initialProps: options,
+    wrapper: ({ children }) =>
+      featureMessagesElement(children, { messages: advancedSettingsFeatureTestMessages }),
+  });
   function markChecked(compatible = true) {
     act(() =>
       rendered.result.current.setCheckedCompatibility({

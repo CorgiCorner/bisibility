@@ -7,6 +7,7 @@ import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles"
 import type { StoredResultsIndexEntry } from "@/lib/checks/contract";
 import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { RetrievedResultsPickerMenu } from "./RetrievedResultsPickerMenu";
@@ -15,7 +16,7 @@ import {
   fromPresets,
   type PickerRole,
   pickerRows,
-  retainedLabel,
+  retainedState,
 } from "./retrieved-results-picker-model";
 
 export type RetrievedResultsPickerProps = {
@@ -33,8 +34,9 @@ export type RetrievedResultsPickerProps = {
 export function storedCheckLabel(
   entry: StoredResultsIndexEntry,
   formatDateTime: (iso: string) => string,
+  retained = "",
 ) {
-  return `${formatDateTime(entry.checkedAt)} · ${retainedLabel(entry)}`;
+  return `${formatDateTime(entry.checkedAt)} · ${retained}`;
 }
 export function RetrievedResultsPicker({
   ariaLabel,
@@ -48,11 +50,16 @@ export function RetrievedResultsPicker({
   selectedTo,
   value,
 }: Readonly<RetrievedResultsPickerProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.results");
   const [jumpDate, setJumpDate] = useState("");
   const { anchorEl, closeMenu, handleExited, open, openMenu } = useMenuExitLifecycle(() =>
     setJumpDate(""),
   );
   const selected = entries.find((entry) => entry.checkId === value);
+  const localizedRetainedLabel = (entry: StoredResultsIndexEntry) => {
+    const state = retainedState(entry);
+    return state.kind === "notKept" ? t("notKept") : t("retained", { count: state.count });
+  };
   const to = entries.find((entry) => entry.checkId === selectedTo);
   const choose = (entry: StoredResultsIndexEntry) => {
     onChange(entry.checkId);
@@ -75,7 +82,9 @@ export function RetrievedResultsPicker({
       >
         {leadingIcon}
         <span className="truncate">
-          {selected ? storedCheckLabel(selected, formatDateTime) : ariaLabel}
+          {selected
+            ? storedCheckLabel(selected, formatDateTime, localizedRetainedLabel(selected))
+            : ariaLabel}
         </span>
         <CaretDown aria-hidden size={11} weight="regular" />
       </button>
@@ -103,6 +112,7 @@ export function RetrievedResultsPicker({
           formatDateTime={formatDateTime}
           onSelect={choose}
           presets={presets}
+          retainedLabel={localizedRetainedLabel}
           rows={rows}
           selectedTo={pickerRole === "from" ? to : undefined}
           value={value}
@@ -112,10 +122,10 @@ export function RetrievedResultsPicker({
             className="block font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-fg-muted"
             htmlFor={`${ariaLabel}-jump-date`}
           >
-            Jump to date
+            {t("jumpToDate")}
           </label>
           <input
-            aria-label="Jump to date"
+            aria-label={t("jumpToDate")}
             className="mt-2 min-h-[42px] w-full rounded-control border border-border-control bg-transparent px-3 font-sans tabular-nums text-[12px] text-fg"
             id={`${ariaLabel}-jump-date`}
             onChange={(event) => {
@@ -128,7 +138,7 @@ export function RetrievedResultsPicker({
             value={jumpDate}
           />
           <p className="m-0 mt-2 font-sans tabular-nums text-[10.5px] leading-4 text-fg-muted">
-            Picks the closest comparable loaded check.
+            {t("pickerClosest")}
           </p>
         </div>
       </Menu>

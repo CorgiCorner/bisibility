@@ -1,60 +1,34 @@
 import type { UpcomingBlockedGroup, UpcomingBlockReason } from "@/lib/checks/contract";
-import { type DateFormat, formatDateRange } from "@/lib/dates/format";
+import type { DateDisplayContext } from "@/lib/dates/format";
+import { formatDisplayDateRange } from "@/lib/dates/format";
 import { centsToDollars } from "@/lib/format/currency";
 
-const countFormatter = new Intl.NumberFormat("en-US");
-const moneyFormatter = new Intl.NumberFormat("en-US", {
-  currency: "USD",
-  maximumFractionDigits: 2,
-  minimumFractionDigits: 2,
-  style: "currency",
-});
-const capFormatter = new Intl.NumberFormat("en-US", {
-  currency: "USD",
-  maximumFractionDigits: 2,
-  minimumFractionDigits: 0,
-  style: "currency",
-});
-
-export function formatCount(count: number) {
-  return countFormatter.format(count);
+export function formatCount(count: number, locale: string) {
+  return new Intl.NumberFormat(locale).format(count);
 }
 
-export function formatCheckCount(count: number) {
-  return `${formatCount(count)} ${count === 1 ? "check" : "checks"}`;
+function formatCurrency(cents: number, locale: string, minimumFractionDigits: number) {
+  return new Intl.NumberFormat(locale, {
+    currency: "USD",
+    maximumFractionDigits: 2,
+    minimumFractionDigits,
+    style: "currency",
+  }).format(centsToDollars(cents));
 }
 
-export function formatKeywordCount(count: number) {
-  return `${formatCount(count)} ${count === 1 ? "keyword" : "keywords"}`;
+export function formatEstimatedAmount(cents: number, locale: string) {
+  return formatCurrency(cents > 0 && cents < 1 ? 1 : cents, locale, 2);
 }
 
-export function formatEstimatedCost(cents: number) {
-  if (cents > 0 && cents < 1) return "<$0.01";
-  return `~${moneyFormatter.format(centsToDollars(cents))}`;
+export function formatCap(cents: number, locale: string) {
+  return formatCurrency(cents, locale, 0);
 }
 
-export function formatCap(cents: number) {
-  return capFormatter.format(centsToDollars(cents));
-}
-
-export function formatForecastDate(isoDate: string, dateFormat: DateFormat) {
+export function formatForecastDate(isoDate: string, dateDisplay: DateDisplayContext) {
   const key = isoDate.slice(0, 10);
-  return formatDateRange(key, key, dateFormat);
+  return formatDisplayDateRange(key, key, dateDisplay);
 }
 
 export function findBlockedGroup(blocked: UpcomingBlockedGroup[], reason: UpcomingBlockReason) {
   return blocked.find((group) => group.reason === reason);
-}
-
-export function blockedChipLabel(blocked: UpcomingBlockedGroup[]) {
-  const labels: string[] = [];
-  const noProvider = findBlockedGroup(blocked, "no_provider");
-  const migrationHold = findBlockedGroup(blocked, "migration_hold");
-  const budgetExhausted = findBlockedGroup(blocked, "budget_exhausted");
-
-  if (noProvider) labels.push(`${formatCount(noProvider.keywordCount)} will never run`);
-  if (migrationHold) labels.push(`${formatCount(migrationHold.keywordCount)} on hold`);
-  if (budgetExhausted) labels.push(`${formatCount(budgetExhausted.keywordCount)} over budget`);
-
-  return labels.join(" · ");
 }

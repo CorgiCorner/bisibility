@@ -1,11 +1,12 @@
 "use client";
 
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { feedbackClass } from "./account-ui";
+import { useAccountActionError } from "./useAccountActionError";
 
 export type DeleteAccountInput = {
   email: string;
@@ -20,13 +21,15 @@ const dangerButtonClass =
   "inline-flex min-h-9 items-center gap-2 rounded-control border border-red bg-bg-elev px-3.5 text-[13px] font-semibold text-red-text hover:bg-red hover:text-error-contrast disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted";
 
 export function DeleteAccount({ deleteAccount, email }: Readonly<DeleteAccountProps>) {
+  const t = useTranslations("account.delete");
+  const accountErrors = useAccountActionError();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
   async function onConfirm() {
     if (!deleteAccount) {
-      setMessage("Delete account is not available.");
+      setMessage(t("unavailable"));
       return;
     }
     setMessage(null);
@@ -34,7 +37,7 @@ export function DeleteAccount({ deleteAccount, email }: Readonly<DeleteAccountPr
     try {
       await deleteAccount({ email });
     } catch (error: unknown) {
-      setMessage(actionErrorMessage(error, "Account could not be deleted."));
+      setMessage(accountErrors.generic(error, t("error")));
       throw error;
     } finally {
       setIsPending(false);
@@ -45,16 +48,15 @@ export function DeleteAccount({ deleteAccount, email }: Readonly<DeleteAccountPr
     <section>
       <div className="rounded-card border border-red bg-bg-elev px-5 py-4.5">
         <div className="min-w-0">
-          <div className="text-[14.5px] font-semibold text-red-text">Danger zone</div>
+          <div className="text-[14.5px] font-semibold text-red-text">{t("title")}</div>
           <p className="m-0 mt-[3px] max-w-[560px] text-[12.5px] leading-normal text-fg-muted">
-            Permanently delete your account, owned projects and all tracked data. This cannot be
-            undone.
+            {t("description")}
           </p>
         </div>
         <div className="mt-3 flex flex-wrap justify-end gap-3.5">
           <button className={dangerButtonClass} onClick={() => setOpen(true)} type="button">
             <Trash size={14} weight="regular" />
-            Delete account
+            {t("action")}
           </button>
         </div>
         {message ? (

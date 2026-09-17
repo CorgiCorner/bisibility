@@ -1,6 +1,6 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay, useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { SearchInsightsImportAction } from "@/lib/actions/search-insights";
 import type { WorkerTemporalStatus } from "@/lib/ops/worker-temporal-identity";
@@ -13,9 +13,10 @@ import {
 } from "@/lib/search-insights/sync/control-model";
 import { cn } from "@/lib/ui/cn";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { useTranslations } from "next-intl";
 import { SearchInsightsRefresh } from "./SearchInsightsRefresh";
-import { TRUST_LABELS } from "./search-insights-copy";
-import { progressWidthClass } from "./search-insights-trust-model";
+import { progressWidthClass } from "./search-insights-import-progress";
+import { formatSearchSyncCalendarDay, presentSearchSync } from "./search-sync-presentation";
 
 const LABEL = "font-sans tabular-nums text-ui-micro uppercase tracking-wide text-fg-muted";
 const FACT = "text-ui-body text-fg";
@@ -54,12 +55,17 @@ function factsForWaitingStrip({
  */
 export function SearchInsightsWaitingStrip(props: Readonly<WaitingStripProps>) {
   const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
+  const t = useTranslations("projectSearchInsights.copy");
   const facts = factsForWaitingStrip(props);
   const model = resolveSearchBackfillPresentation(facts, dateFormat);
+  const localizedModel = presentSearchSync(model, t, (value) =>
+    formatSearchSyncCalendarDay(value, dateDisplay),
+  );
   const coverage = selectSearchImportCoverage(facts);
   const hasCoverage = coverage.completed !== null && coverage.total !== null && coverage.total > 0;
   const coverageLabel = hasCoverage
-    ? `${coverage.completed} of ${coverage.total} finalized days`
+    ? t("syncCoverageDays", { completed: coverage.completed, total: coverage.total })
     : null;
   const coveragePercent =
     coverage.completed !== null && coverage.total !== null && coverage.total > 0
@@ -75,10 +81,10 @@ export function SearchInsightsWaitingStrip(props: Readonly<WaitingStripProps>) {
 
   return (
     <section
-      aria-label="Data provenance"
+      aria-label={t("dataProvenanceAria")}
       className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border bg-bg-elev px-4 py-3"
     >
-      <span className={LABEL}>{TRUST_LABELS.freshness}</span>
+      <span className={LABEL}>{t("trustFreshness")}</span>
       {showProgress ? (
         <span
           className="h-1 w-16 shrink-0 overflow-hidden rounded-full bg-bg-inset"
@@ -88,11 +94,11 @@ export function SearchInsightsWaitingStrip(props: Readonly<WaitingStripProps>) {
         </span>
       ) : null}
       <span className={FACT} data-startup-segment="fact">
-        <span data-startup-segment="status">{model.title}</span>
+        <span data-startup-segment="status">{localizedModel.status}</span>
         {coverageLabel ? ` · ${coverageLabel}` : ""}
       </span>
-      {model.supportingText ? (
-        <Tooltip content={model.supportingText} semantics="description">
+      {localizedModel.supportingText ? (
+        <Tooltip content={localizedModel.supportingText} semantics="description">
           <span className="inline-flex" data-startup-segment="detail">
             <Info aria-hidden className="shrink-0 text-fg-muted" size={13} weight="regular" />
           </span>

@@ -10,9 +10,9 @@ import {
   spendToneTextClass,
 } from "@/components/cost-estimate/spend-tone";
 import { projectedMonthlySpendCents } from "@/lib/cost-estimate/spend-pace";
-import { formatMoneyCents } from "@/lib/format/money";
 import { docsLinkProps } from "@/lib/site/site";
 import { cn } from "@/lib/ui/cn";
+import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 export type { ProviderSpendInput } from "@/components/cost-estimate/provider-spend-segments";
@@ -45,18 +45,33 @@ const toneSegmentColor: Record<Exclude<SpendTone, "normal">, string> = {
   warning: "var(--yellow)",
 };
 
-function amountsText(spentCents: number, capCents: number | null) {
+function amountsText(
+  spentCents: number,
+  capCents: number | null,
+  formatMoney: (cents: number) => string,
+  t: ReturnType<typeof useTranslations<"projectCostEstimate.providerSpend">>,
+) {
   if (capCents == null || capCents <= 0) {
-    return `${formatMoneyCents(spentCents)} this month`;
+    return t("noCapAmount", { spent: formatMoney(spentCents) });
   }
-  return `${formatMoneyCents(spentCents)} / ${formatMoneyCents(capCents)}`;
+  return `${formatMoney(spentCents)} / ${formatMoney(capCents)}`;
 }
 
-function meterAria(spentCents: number, capCents: number, sessionCents: number | undefined) {
+function meterAria(
+  spentCents: number,
+  capCents: number,
+  sessionCents: number | undefined,
+  formatMoney: (cents: number) => string,
+  t: ReturnType<typeof useTranslations<"projectCostEstimate.providerSpend">>,
+) {
   // Only called with a positive cap; the no-cap state renders without meter semantics.
-  const session = sessionCents == null ? "" : `, ${formatMoneyCents(sessionCents)} this session`;
+  const session = sessionCents == null ? "none" : formatMoney(sessionCents);
   return {
-    "aria-label": `Provider spend: ${formatMoneyCents(spentCents)} of ${formatMoneyCents(capCents)} this month${session}`,
+    "aria-label": t("meterAria", {
+      cap: formatMoney(capCents),
+      session,
+      spent: formatMoney(spentCents),
+    }),
     "aria-valuemax": capCents / 100,
     "aria-valuemin": 0,
     "aria-valuenow": spentCents / 100,
@@ -65,6 +80,7 @@ function meterAria(spentCents: number, capCents: number, sessionCents: number | 
 }
 
 function DocsLink({ className, href }: Readonly<{ className?: string; href: string }>) {
+  const t = useTranslations("projectCostEstimate.providerSpend");
   return (
     <a
       className={cn(
@@ -74,7 +90,7 @@ function DocsLink({ className, href }: Readonly<{ className?: string; href: stri
       href={href}
       {...docsLinkProps(href)}
     >
-      How budgets work
+      {t("docs")}
     </a>
   );
 }
@@ -107,7 +123,7 @@ function MeterBar({
           {segments.map((segment) => (
             <div
               className="h-full flex-none"
-              key={segment.label}
+              key={segment.kind === "other" ? segment.kind : segment.label}
               style={{
                 backgroundColor: segment.color,
                 minWidth: segment.spentCents > 0 ? "2px" : 0,
@@ -131,10 +147,15 @@ function totalSpend(segments: readonly SpendSegment[]) {
 }
 
 function Legend({ segments, tone }: Readonly<{ segments: SpendSegment[]; tone: SpendTone }>) {
+  const format = useFormatter();
+  const t = useTranslations("projectCostEstimate.providerSpend");
   return (
     <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
       {segments.map((segment) => (
-        <span className="flex items-center gap-[5px] whitespace-nowrap" key={segment.label}>
+        <span
+          className="flex items-center gap-[5px] whitespace-nowrap"
+          key={segment.kind === "other" ? segment.kind : segment.label}
+        >
           <span
             aria-hidden
             className="h-[7px] w-[7px] flex-none rounded-control"
@@ -143,7 +164,8 @@ function Legend({ segments, tone }: Readonly<{ segments: SpendSegment[]; tone: S
             }}
           />
           <span className="font-sans text-[10px] text-fg-muted tabular-nums">
-            {segment.label} {formatMoneyCents(segment.spentCents)}
+            {segment.kind === "other" ? t("otherProvider") : segment.label}{" "}
+            {format.number(segment.spentCents / 100, { currency: "USD", style: "currency" })}
           </span>
         </span>
       ))}
@@ -152,9 +174,10 @@ function Legend({ segments, tone }: Readonly<{ segments: SpendSegment[]; tone: S
 }
 
 function MeterEyebrow() {
+  const t = useTranslations("projectCostEstimate.providerSpend");
   return (
     <span className="font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">
-      MONTHLY BUDGET
+      {t("eyebrow")}
     </span>
   );
 }
@@ -170,17 +193,22 @@ export function ProviderSpendMeter({
   spentCents,
   variant,
 }: Readonly<ProviderSpendMeterProps>) {
+  const format = useFormatter();
+  const t = useTranslations("projectCostEstimate.providerSpend");
+  const formatMoney = (cents: number) =>
+    format.number(cents / 100, { currency: "USD", style: "currency" });
   const cap = capCents ?? 0;
   const percent = spendPercent(spentCents, capCents);
   const hasCap = cap > 0;
   const tone = spendTone(percent, hasCap);
   const segments =
     providers != null && providers.length > 1 ? buildSpendSegments(providers, cap) : null;
-  const aria = hasCap && cap > 0 ? meterAria(spentCents, cap, sessionCents) : undefined;
+  const aria =
+    hasCap && cap > 0 ? meterAria(spentCents, cap, sessionCents, formatMoney, t) : undefined;
   const amounts =
     variant === "segmented" && hasCap
-      ? `${formatMoneyCents(spentCents)} of ${formatMoneyCents(cap)} used`
-      : amountsText(spentCents, capCents);
+      ? t("segmentedAmount", { cap: formatMoney(cap), spent: formatMoney(spentCents) })
+      : amountsText(spentCents, capCents, formatMoney, t);
   const remaining = Math.max(0, cap - spentCents);
   const amountToneClass = tone === "normal" ? null : spendToneTextClass[tone];
   const meterProps = { aria, percent, tone };
@@ -198,10 +226,10 @@ export function ProviderSpendMeter({
               amountToneClass ?? "text-fg",
             )}
           >
-            {formatMoneyCents(spentCents)}
+            {formatMoney(spentCents)}
           </span>
           <span className="text-[13px] text-fg-muted">
-            {hasCap ? `of ${formatMoneyCents(cap)} cap` : "this month"}
+            {hasCap ? t("cardCap", { cap: formatMoney(cap) }) : t("thisMonth")}
           </span>
         </div>
         {hasCap ? (
@@ -215,14 +243,14 @@ export function ProviderSpendMeter({
           </div>
         )}
         <div className="mt-2.5 flex flex-col gap-1 font-sans text-xs tabular-nums">
-          {tone === "exhausted" ? <span className="text-red-text">cap reached</span> : null}
+          {tone === "exhausted" ? <span className="text-red-text">{t("capReached")}</span> : null}
           {sessionCents == null ? null : (
             <span className={cn(tone === "normal" ? "text-fg-muted" : spendToneTextClass[tone])}>
-              {formatMoneyCents(sessionCents)} this session
+              {t("session", { spent: formatMoney(sessionCents) })}
             </span>
           )}
           {paceCents == null ? null : (
-            <span className="text-fg-muted">on pace ~{formatMoneyCents(paceCents)}/mo</span>
+            <span className="text-fg-muted">{t("pace", { spent: formatMoney(paceCents) })}</span>
           )}
         </div>
         <DocsLink className="mt-2 inline-flex" href={docsHref} />
@@ -245,7 +273,7 @@ export function ProviderSpendMeter({
       {hasCap ? (
         <div className="flex justify-end">
           <span className="font-sans text-[10px] text-fg-muted tabular-nums">
-            {formatMoneyCents(remaining)} left
+            {t("left", { spent: formatMoney(remaining) })}
           </span>
         </div>
       ) : null}
@@ -253,3 +281,4 @@ export function ProviderSpendMeter({
     </div>
   );
 }
+("use client");

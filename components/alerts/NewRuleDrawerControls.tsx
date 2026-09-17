@@ -6,6 +6,7 @@ import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
 import type { AlertTargetOptions } from "@/lib/alerts/alert-data";
 import type { NewRuleForm, RuleTemplateId } from "@/lib/alerts/new-rule-data";
 import { ruleSeverityMeta, ruleTemplates } from "@/lib/alerts/new-rule-data";
+import { useTranslations } from "next-intl";
 import type {
   FieldErrors,
   UseFormRegister,
@@ -18,23 +19,20 @@ const labelClass =
 const fieldClass = `${inputClassName} rounded-control px-3 py-2.5 text-[13px] font-medium`;
 const selectTriggerClass =
   "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
-const scopeOptions = [
-  { label: "All keywords", value: "all" },
-  { label: "Keyword", value: "keyword" },
-  { label: "Tag", value: "tag" },
-] as const;
-export const conditionOptions = [
-  { label: "Position drop", value: "position_drop" },
-  { label: "CTR drop (GSC)", value: "ctr_drop" },
-  { label: "Sustained downtrend", value: "downtrend" },
-  { label: "Exits top N", value: "exits_top_n" },
-  { label: "Enters top N", value: "enters_top_n" },
-  { label: "Crosses threshold", value: "threshold" },
-  { label: "Percent change", value: "change_pct" },
-  { label: "Competitor overtakes", value: "competitor_overtake" },
-  { label: "SERP feature appears", value: "serp_feature" },
-  { label: "Ranking URL mismatch", value: "url_mismatch" },
-] as const;
+export function conditionOptions(t: ReturnType<typeof useTranslations<"projectAlerts.drawer">>) {
+  return [
+    { label: t("conditionPositionDrop"), value: "position_drop" },
+    { label: t("conditionCtrDrop"), value: "ctr_drop" },
+    { label: t("conditionDowntrend"), value: "downtrend" },
+    { label: t("conditionExitsTopN"), value: "exits_top_n" },
+    { label: t("conditionEntersTopN"), value: "enters_top_n" },
+    { label: t("conditionThreshold"), value: "threshold" },
+    { label: t("conditionChangePct"), value: "change_pct" },
+    { label: t("conditionCompetitor"), value: "competitor_overtake" },
+    { label: t("conditionSerpFeature"), value: "serp_feature" },
+    { label: t("conditionUrlMismatch"), value: "url_mismatch" },
+  ] as const;
+}
 export function TemplatePicker({
   selectedId,
   onSelect,
@@ -42,10 +40,12 @@ export function TemplatePicker({
   onSelect: (templateId: RuleTemplateId) => void;
   selectedId: RuleTemplateId;
 }>) {
+  const t = useTranslations("projectAlerts.drawer");
+
   return (
     <section>
       <div className="mb-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        Template
+        {t("template")}
       </div>
       <div className="flex flex-wrap gap-2">
         {Object.entries(ruleTemplates).map(([id, item]) => {
@@ -75,7 +75,7 @@ export function TemplatePicker({
                 className="h-[7px] w-[7px] rounded-full"
                 style={{ backgroundColor: ruleSeverityMeta[item.severity].color }}
               />
-              {item.label}
+              {t("templateLabel", { template: templateId })}
             </Button>
           );
         })}
@@ -99,9 +99,15 @@ export function ScopeFields({
   targets: AlertTargetOptions;
   targetType: NewRuleForm["targetType"];
 }>) {
+  const t = useTranslations("projectAlerts.drawer");
+  const scopeOptions = [
+    { label: t("scopeAll"), value: "all" },
+    { label: t("scopeKeyword"), value: "keyword" },
+    { label: t("scopeTag"), value: "tag" },
+  ] as const;
   const targetChoices = targetType === "tag" ? targets.tags : targets.keywords;
   const targetOptions = [
-    { label: "Choose target", value: "" },
+    { label: t("chooseTarget"), value: "" },
     ...targetChoices.map((target) => ({ label: target.label, value: target.id })),
   ];
 
@@ -113,10 +119,10 @@ export function ScopeFields({
   return (
     <div className="grid gap-3.5 sm:grid-cols-2">
       <div className={targetType === "all" ? `${labelClass} sm:col-span-2` : labelClass}>
-        <span>Scope</span>
+        <span>{t("scope")}</span>
         <input type="hidden" {...register("targetType")} />
         <MenuSelect
-          ariaLabel="Scope"
+          ariaLabel={t("scope")}
           onChange={(value) => updateTargetType(value as NewRuleForm["targetType"])}
           options={scopeOptions}
           triggerClassName={selectTriggerClass}
@@ -125,9 +131,9 @@ export function ScopeFields({
       </div>
       {targetType !== "all" ? (
         <div className={labelClass}>
-          <span>Target</span>
+          <span>{t("target")}</span>
           <MenuSelect
-            ariaLabel="Target"
+            ariaLabel={t("target")}
             onChange={(value) =>
               setValue("targetIds", value ? [value] : [], {
                 shouldDirty: true,
@@ -156,19 +162,21 @@ export function RecipientFields({
   setValue: UseFormSetValue<NewRuleForm>;
   targets: AlertTargetOptions;
 }>) {
+  const t = useTranslations("projectAlerts.drawer");
+
   return (
     <div className="mt-3 flex flex-col gap-[7px]">
       <span className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        Recipients
+        {t("recipients")}
       </span>
       <MenuMultiSelect
-        ariaLabel="Alert email recipients"
+        ariaLabel={t("recipientsAria")}
         minSelected={0}
         onChange={(values) =>
           setValue("recipientIds", values, { shouldDirty: true, shouldValidate: true })
         }
         options={targets.members.map((member) => ({ label: member.label, value: member.id }))}
-        placeholder="Creator (default)"
+        placeholder={t("creatorDefault")}
         searchable
         triggerClassName={selectTriggerClass}
         values={recipientIds}
@@ -186,11 +194,13 @@ export function ConditionFields({
   errors: FieldErrors<NewRuleForm>;
   register: UseFormRegister<NewRuleForm>;
 }>) {
+  const t = useTranslations("projectAlerts.drawer");
+
   if (conditionType === "change_pct" || conditionType === "ctr_drop") {
     return (
       <NumberField
         error={errors.changePct?.message}
-        label={conditionType === "ctr_drop" ? "CTR drop %" : "Change %"}
+        label={conditionType === "ctr_drop" ? t("ctrDrop") : t("changePct")}
         max={conditionType === "ctr_drop" ? 100 : undefined}
         register={register("changePct")}
         step={0.1}
@@ -201,7 +211,7 @@ export function ConditionFields({
     return (
       <NumberField
         error={errors.thresholdPosition?.message}
-        label="Threshold position"
+        label={t("thresholdPosition")}
         register={register("thresholdPosition")}
       />
     );
@@ -210,7 +220,7 @@ export function ConditionFields({
     return (
       <NumberField
         error={errors.dropPositions?.message}
-        label="Drop positions"
+        label={t("dropPositions")}
         register={register("dropPositions")}
       />
     );
@@ -219,7 +229,7 @@ export function ConditionFields({
     return (
       <TextField
         error={errors.competitorDomain?.message}
-        label="Competitor domain"
+        label={t("competitorDomain")}
         register={register("competitorDomain")}
       />
     );
@@ -228,7 +238,7 @@ export function ConditionFields({
     return (
       <TextField
         error={errors.serpFeature?.message}
-        label="SERP feature"
+        label={t("serpFeature")}
         register={register("serpFeature")}
       />
     );
@@ -236,7 +246,7 @@ export function ConditionFields({
   if (conditionType === "url_mismatch" || conditionType === "downtrend") {
     return null;
   }
-  return <NumberField error={errors.topN?.message} label="Top N" register={register("topN")} />;
+  return <NumberField error={errors.topN?.message} label={t("topN")} register={register("topN")} />;
 }
 
 function NumberField({

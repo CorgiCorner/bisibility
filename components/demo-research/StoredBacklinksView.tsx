@@ -8,7 +8,7 @@ import type { StoredResultFreshness } from "./StoredResultFreshness";
 type StoredBacklinks = Omit<BacklinksSnapshot, "cachedUntil"> & StoredResultFreshness;
 
 export function StoredBacklinksView({ result }: Readonly<{ result: StoredBacklinks | null }>) {
-  if (!result) return <StoredResearchEmpty title="Backlinks" />;
+  if (!result) return <StoredResearchEmpty module="backlinks" />;
   return (
     <BacklinksResults estimateCents={null} readOnly snapshot={result} storedFreshness={result} />
   );

@@ -3,9 +3,9 @@ import { z } from "zod";
 const codeSchema = z
   .string()
   .trim()
-  .regex(/^\d{6}$/, "Enter the 6-digit verification code.");
+  .regex(/^\d{6}$/, "invalidCode");
 
-const emailSchema = z.string().trim().email("Enter a valid account email.").max(320);
+const emailSchema = z.string().trim().email("invalidEmail").max(320);
 
 export const accountEmailSchema = z.object({
   email: emailSchema,

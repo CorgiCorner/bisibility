@@ -1,7 +1,12 @@
 import { ProjectDetailsCard } from "@/components/settings/general/ProjectDetailsCard";
+import {
+  generalSettingsFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const project = {
@@ -9,6 +14,10 @@ const project = {
   name: "Example",
   projectId: "prj_7Kd2Qf9m",
 };
+
+function render(ui: ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: generalSettingsFeatureTestMessages });
+}
 
 describe("ProjectDetailsCard", () => {
   beforeEach(() => {
@@ -46,6 +55,24 @@ describe("ProjectDetailsCard", () => {
     );
     expect(await screen.findByText("Saved")).toBeVisible();
     expect(routerMock.refresh).toHaveBeenCalledOnce();
+  });
+
+  it("renders a scoped project-name validation message instead of Zod's default English", async () => {
+    const user = userEvent.setup();
+    render(
+      <ProjectDetailsCard
+        canEdit
+        project={project}
+        requestDomainChange={vi.fn()}
+        updateProject={vi.fn()}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Project name"));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.getByText("Enter a project name.")).toBeVisible();
+    expect(screen.queryByText(/Too small/i)).not.toBeInTheDocument();
   });
 
   it("renders the wired domain confirmation action separately from the name action", async () => {
@@ -151,6 +178,68 @@ describe("ProjectDetailsCard", () => {
       }),
     );
     expect(updateProject).not.toHaveBeenCalled();
+  });
+
+  it("renders a scoped domain validation message instead of the schema's default copy", async () => {
+    const user = userEvent.setup();
+    render(
+      <ProjectDetailsCard
+        canEdit
+        project={project}
+        requestDomainChange={vi.fn()}
+        updateProject={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Change domain" }));
+    await user.clear(screen.getByLabelText("New domain"));
+    await user.type(screen.getByLabelText("New domain"), "not a domain");
+
+    expect(screen.getByText("Enter a domain such as example.com.")).toBeVisible();
+    expect(screen.queryByText(/Invalid input/i)).not.toBeInTheDocument();
+  });
+
+  it("renders the scoped maximum-domain validation message", async () => {
+    const user = userEvent.setup();
+    render(
+      <ProjectDetailsCard
+        canEdit
+        project={project}
+        requestDomainChange={vi.fn()}
+        updateProject={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Change domain" }));
+    await user.clear(screen.getByLabelText("New domain"));
+    await user.type(screen.getByLabelText("New domain"), `${"a".repeat(250)}.com`);
+
+    expect(screen.getByText("Domains can be at most 253 characters.")).toBeVisible();
+  });
+
+  it("preserves a rejected domain-change action message for a syntactically valid domain", async () => {
+    const user = userEvent.setup();
+    const requestDomainChange = vi
+      .fn()
+      .mockRejectedValue(new Error("Project ownership changed. Refresh and try again."));
+    render(
+      <ProjectDetailsCard
+        canEdit
+        project={project}
+        requestDomainChange={requestDomainChange}
+        updateProject={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Change domain" }));
+    await user.clear(screen.getByLabelText("New domain"));
+    await user.type(screen.getByLabelText("New domain"), "next.example.com");
+    await user.type(screen.getByLabelText("Type example.com to confirm"), "example.com");
+    await user.click(screen.getByRole("button", { name: "Confirm domain change" }));
+
+    await waitFor(() => expect(requestDomainChange).toHaveBeenCalledOnce());
+    expect(screen.getByText("Project ownership changed. Refresh and try again.")).toBeVisible();
+    expect(screen.queryByText("Enter a domain such as example.com.")).not.toBeInTheDocument();
   });
 
   it("allows setting the first domain only while the confirmation stays blank", async () => {

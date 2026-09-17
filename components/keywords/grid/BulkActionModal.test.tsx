@@ -1,6 +1,7 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BulkActionModal, type BulkMode } from "./BulkActionModal";
 

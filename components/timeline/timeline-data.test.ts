@@ -1,8 +1,18 @@
 import type { TimelineSignalRow } from "@/lib/queries/timeline";
 import { timelineGroups } from "@/lib/timeline/timeline-data";
+import { createTimelinePresentation } from "@/lib/timeline/timeline-presentation";
+import projectTimelineMessages from "@/messages/core/en/project-timeline.json";
+import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 
 const now = new Date("2026-07-04T12:00:00.000Z");
+const presentation = createTimelinePresentation(
+  createTranslator({
+    locale: "en",
+    messages: projectTimelineMessages,
+    namespace: "projectTimeline.data",
+  }),
+);
 
 function signalRow(overrides: Partial<TimelineSignalRow> = {}): TimelineSignalRow {
   return {
@@ -31,7 +41,12 @@ function signalRow(overrides: Partial<TimelineSignalRow> = {}): TimelineSignalRo
 }
 
 function firstItem(row: TimelineSignalRow) {
-  return timelineGroups([row], now, { dateFormat: "iso", timezone: "UTC" })[0]?.items[0];
+  return timelineGroups(
+    [row],
+    now,
+    { dateFormat: "iso", locale: "en", timeZone: "UTC" },
+    presentation,
+  )[0]?.items[0];
 }
 
 describe("timeline data mapping", () => {

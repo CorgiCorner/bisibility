@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { DeleteDeployHookModal } from "@/components/settings/developers/DeleteDeployHookModal";
 import { DeveloperActionsMenu } from "@/components/settings/developers/DeveloperActionsMenu";
 import { DeveloperCardFrame } from "@/components/settings/developers/DeveloperCardFrame";
@@ -8,6 +9,7 @@ import {
   developerListClassName,
   developerRowClassName,
 } from "@/components/settings/developers/developer-settings-layout";
+import { useDeveloperActionError } from "@/components/settings/developers/useDeveloperActionError";
 import { DeployHookCreateModal } from "@/components/settings/webhooks/DeployHookCreateModal";
 import { DeployHookRotationModal } from "@/components/settings/webhooks/DeployHookRotationModal";
 import type {
@@ -20,11 +22,12 @@ import type {
 } from "@/components/settings/webhooks/deploy-hook-model";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { formatDisplayDateTime } from "@/lib/dates/format";
 import { mutateIngestHookSchema } from "@/lib/schemas/ingestHook";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 type DeployWebhooksCardProps = {
@@ -54,7 +57,10 @@ export function DeployWebhooksCard({
   rotateHook,
   sendTestHook,
 }: Readonly<DeployWebhooksCardProps>) {
+  const dateDisplay = useDateDisplay();
   const router = useRouter();
+  const presentActionError = useDeveloperActionError();
+  const t = useTranslations("projectSettingsDevelopers.webhooks");
   const [isPending, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<DeployHookData | null>(null);
@@ -77,7 +83,7 @@ export function DeployWebhooksCard({
           router.refresh();
         })
         .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "Deploy hook could not be updated.")),
+          setMessage(presentActionError.webhook(error, t("errors.update"))),
         );
     });
   }
@@ -92,7 +98,7 @@ export function DeployWebhooksCard({
           router.refresh();
         })
         .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "Deploy hook could not be rotated.")),
+          setMessage(presentActionError.webhook(error, t("errors.rotate"))),
         );
     });
   }
@@ -100,21 +106,21 @@ export function DeployWebhooksCard({
   function sendTest(hook: DeployHookData) {
     if (!sendTestHook) return;
     const input = mutateIngestHookSchema.parse({ hookId: hook.id, projectId });
-    setTestResult({ hookId: hook.id, message: "Sending test event..." });
+    setTestResult({ hookId: hook.id, message: t("sending") });
     startTransition(() => {
       void sendTestHook(input)
         .then((result) => {
           setTestResult({
             hookId: hook.id,
             href: result.signalHref,
-            message: "Test event created.",
+            message: t("testCreated"),
           });
           router.refresh();
         })
         .catch((error: unknown) =>
           setTestResult({
             hookId: hook.id,
-            message: actionErrorMessage(error, "Deploy hook test event failed."),
+            message: presentActionError.webhook(error, t("errors.test")),
           }),
         );
     });
@@ -125,12 +131,8 @@ export function DeployWebhooksCard({
       className={developerCardGeometryClassNames.deployWebhooks}
       description={
         <>
-          <p className="m-0">
-            Inbound: your CI calls bisibility after a deploy and the call becomes a timeline signal.
-          </p>
-          <p className="m-0 mt-1">
-            The outbound webhook is the alert channel on Notifications, not this.
-          </p>
+          <p className="m-0">{t("inbound")}</p>
+          <p className="m-0 mt-1">{t("outbound")}</p>
         </>
       }
       footer={
@@ -141,12 +143,12 @@ export function DeployWebhooksCard({
             startIcon={<Plus aria-hidden size={14} weight="regular" />}
             type="button"
           >
-            Add deploy hook
+            {t("add")}
           </Button>
         ) : null
       }
       id="deploy-webhooks"
-      title="Deploy webhooks"
+      title={t("title")}
     >
       <div className={developerListClassName}>
         {hooks.length ? (
@@ -155,12 +157,18 @@ export function DeployWebhooksCard({
               <span className="min-w-0 flex-1">
                 <span className="block text-[13.5px] font-semibold">{hook.label}</span>
                 <span className="mt-0.5 block text-[11.5px] text-fg-muted">
-                  {hook.createdLabel} · {hook.lastUsedLabel}
+                  {t("created", {
+                    date: formatDisplayDateTime(new Date(hook.createdAt), dateDisplay),
+                  })}{" "}
+                  ·{" "}
+                  {hook.lastUsedAt
+                    ? t("lastUsed", {
+                        date: formatDisplayDateTime(new Date(hook.lastUsedAt), dateDisplay),
+                      })
+                    : t("lastUsedNever")}
                 </span>
                 <span className="mt-0.5 block text-[11.5px] text-fg-muted">
-                  {hook.disabled
-                    ? "Disabled: the row and the token stay."
-                    : "Send test posts a real signal and links to it."}
+                  {hook.disabled ? t("disabledDescription") : t("sendTestDescription")}
                 </span>
                 {testResult?.hookId === hook.id ? (
                   <span className="mt-1 block text-[11.5px] text-fg-muted">
@@ -170,7 +178,7 @@ export function DeployWebhooksCard({
                         className="font-medium text-accent-text hover:underline"
                         href={testResult.href}
                       >
-                        View signal
+                        {t("viewSignal")}
                       </Link>
                     ) : null}
                   </span>
@@ -178,29 +186,29 @@ export function DeployWebhooksCard({
               </span>
               <span className="flex flex-wrap items-center justify-end gap-2">
                 {hook.disabled ? (
-                  <StatusPill label="Disabled" showDot={false} status="optional" />
+                  <StatusPill label={t("disabled")} showDot={false} status="optional" />
                 ) : null}
                 {sendTestHook && !hook.disabled ? (
                   <Button
-                    aria-label={`Send ${hook.label} test event`}
+                    aria-label={t("sendTestFor", { label: hook.label })}
                     disabled={isPending}
                     onClick={() => sendTest(hook)}
                     size="xs"
                     type="button"
                     variant="secondary"
                   >
-                    Send test
+                    {t("sendTest")}
                   </Button>
                 ) : null}
                 {rotateHook || disableHook || deleteHook ? (
                   <DeveloperActionsMenu
-                    ariaLabel={`${hook.label} hook actions`}
+                    ariaLabel={t("actionsFor", { label: hook.label })}
                     items={[
                       ...(!hook.disabled && rotateHook
                         ? [
                             {
                               disabled: isPending,
-                              label: "Rotate token",
+                              label: t("rotate"),
                               onSelect: () => rotate(hook),
                             },
                           ]
@@ -209,8 +217,8 @@ export function DeployWebhooksCard({
                         ? [
                             {
                               disabled: isPending,
-                              label: "Disable hook",
-                              onSelect: () => mutate(hook, disableHook, "Deploy hook disabled."),
+                              label: t("disable"),
+                              onSelect: () => mutate(hook, disableHook, t("disabledSuccess")),
                             },
                           ]
                         : []),
@@ -219,7 +227,7 @@ export function DeployWebhooksCard({
                             {
                               danger: true,
                               disabled: isPending,
-                              label: "Delete hook",
+                              label: t("delete"),
                               onSelect: () => setDeleteTarget(hook),
                             },
                           ]
@@ -234,10 +242,10 @@ export function DeployWebhooksCard({
           <div className={developerRowClassName}>
             <span className="min-w-0 flex-1">
               <span className="block text-[13.5px] font-semibold text-fg-muted">
-                No deploy hooks yet
+                {t("emptyTitle")}
               </span>
               <span className="mt-0.5 block text-[11.5px] text-fg-muted">
-                Add a hook to turn deploy events into timeline signals.
+                {t("emptyDescription")}
               </span>
             </span>
           </div>
@@ -262,7 +270,7 @@ export function DeployWebhooksCard({
           busy={isPending}
           hookLabel={deleteTarget.label}
           onClose={() => setDeleteTarget(null)}
-          onConfirm={() => mutate(deleteTarget, deleteHook, "Deploy hook deleted.")}
+          onConfirm={() => mutate(deleteTarget, deleteHook, t("deletedSuccess"))}
           open
         />
       ) : null}

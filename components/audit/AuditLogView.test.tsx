@@ -1,6 +1,7 @@
+import { renderWithAuditMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { AuditEntry } from "@/lib/queries/audit";
 import { setNavigationState } from "@/tests/next-navigation";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuditLogView } from "./AuditLogView";
@@ -11,9 +12,14 @@ import {
   AUDIT_TABLE_PAGE_SIZE_OPTIONS,
 } from "./audit-table-state";
 
+const mocks = vi.hoisted(() => ({ downloadAuditEntries: vi.fn() }));
+
+vi.mock("./audit-export", () => ({ downloadAuditEntries: mocks.downloadAuditEntries }));
+
 function auditEntry(index: number): AuditEntry {
   const sequence = String(index).padStart(2, "0");
   return {
+    action: `test.${sequence}`,
     actor: {
       email: `auditor-${sequence}@example.com`,
       id: `usr_${sequence}`,
@@ -42,6 +48,7 @@ function auditEntry(index: number): AuditEntry {
 function renderAudit(entries: readonly AuditEntry[] = []) {
   return render(
     <AuditLogView
+      dateDisplay={{ dateFormat: "day_first", locale: "en", timeZone: "UTC" }}
       dateRange="30d"
       entries={entries}
       entryLimit={200}
@@ -52,6 +59,7 @@ function renderAudit(entries: readonly AuditEntry[] = []) {
 }
 
 beforeEach(() => {
+  mocks.downloadAuditEntries.mockClear();
   setNavigationState({ pathname: "/app/settings/audit" });
   vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(614);
   vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(1_000);
@@ -96,27 +104,49 @@ describe("AuditLogView", () => {
       "aria-sort",
       "descending",
     );
-    expect(body.getAllByRole("row")[0]).toHaveTextContent("Audit event 11");
-    expect(screen.queryByText("Audit event 01")).not.toBeInTheDocument();
+    expect(body.getAllByRole("row")[0]).toHaveTextContent("Recorded action: test.11");
+    expect(screen.queryByText("Recorded action: test.01")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
-    expect(screen.getByText("Audit event 01")).toBeVisible();
+    expect(screen.getByText("Recorded action: test.01")).toBeVisible();
 
     fireEvent.change(screen.getByRole("searchbox", { name: "Search audit events" }), {
-      target: { value: "Audit event 11" },
+      target: { value: "test.11" },
     });
-    expect(screen.getByText("Audit event 11")).toBeVisible();
-    expect(screen.queryByText("Audit event 01")).not.toBeInTheDocument();
+    expect(screen.getByText("Recorded action: test.11")).toBeVisible();
+    expect(screen.queryByText("Recorded action: test.01")).not.toBeInTheDocument();
   }, 10_000);
 
   it("opens detail from the title-cell keyboard control", async () => {
     renderAudit([auditEntry(1)]);
 
-    const open = screen.getByRole("button", { name: "Open audit event Audit event 01" });
+    const open = screen.getByRole("button", { name: "Open audit event Recorded action: test.01" });
     open.focus();
     await userEvent.keyboard("{Enter}");
 
     expect(screen.getByRole("button", { name: "Close" })).toBeVisible();
-    expect(screen.getByRole("dialog")).toHaveTextContent("Audit event 01");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Recorded action: test.01");
+  });
+
+  it("exports the selected raw records instead of their localized presentation", () => {
+    const raw = {
+      ...auditEntry(1),
+      actor: { ...auditEntry(1).actor, email: "", name: null },
+      eventName: undefined,
+      metadata: {
+        app_version: null,
+        correlation_id: null,
+        event_id: "audit_01",
+        user_agent: null,
+      },
+      source: { channel: "api" as const, ip: null },
+      timestampLabel: undefined,
+    } satisfies AuditEntry;
+    renderAudit([raw]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Export" }));
+    fireEvent.click(screen.getByText("CSV"));
+
+    expect(mocks.downloadAuditEntries).toHaveBeenCalledWith([raw], "csv");
   });
 });

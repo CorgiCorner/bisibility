@@ -1,8 +1,9 @@
 "use client";
 
 import type { DomainRecentTarget } from "@/lib/domain-overview/types";
-import { relativePast } from "@/lib/format/relative-time";
 import { ClockCounterClockwiseIcon as Clock } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
+import { useTranslations } from "next-intl";
+import { relativePastLabel } from "./domain-overview-metrics";
 import { cacheHoursRemaining } from "./domain-overview-workspace-model";
 
 type DomainOverviewRecentTargetsProps = {
@@ -11,9 +12,13 @@ type DomainOverviewRecentTargetsProps = {
   targets: DomainRecentTarget[];
 };
 
-function cacheLabel(target: DomainRecentTarget, now: Date) {
+function cacheLabel(
+  target: DomainRecentTarget,
+  now: Date,
+  t: ReturnType<typeof useTranslations<"projectDomainOverview.workspace.ui">>,
+) {
   const hours = cacheHoursRemaining(target.cachedUntil, now);
-  return hours > 0 ? `cached, free for ${hours}h` : "cache expired";
+  return hours > 0 ? t("cacheAvailable", { hours }) : t("cacheExpired");
 }
 
 export function DomainOverviewRecentTargets({
@@ -21,14 +26,15 @@ export function DomainOverviewRecentTargets({
   onOpen,
   targets,
 }: Readonly<DomainOverviewRecentTargetsProps>) {
+  const t = useTranslations("projectDomainOverview.workspace.ui");
   const visible = targets.filter((target) => target.target !== currentTarget).slice(0, 5);
   if (visible.length === 0) return null;
   const now = new Date();
 
   return (
-    <section aria-label="Recent searches">
+    <section aria-label={t("recentSearches")}>
       <div className="mb-2 flex items-center gap-1.5 font-sans tabular-nums text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
-        <Clock weight="regular" aria-hidden size={13} /> Recent searches
+        <Clock weight="regular" aria-hidden size={13} /> {t("recentSearches")}
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {visible.map((target) => (
@@ -42,11 +48,11 @@ export function DomainOverviewRecentTargets({
               {target.target}
             </strong>
             <span className="font-sans tabular-nums text-[10px] text-fg-muted">
-              {target.scope === "subdomain" ? "Subdomain" : "Whole domain"} -{" "}
-              {relativePast(new Date(target.fetchedAt), now)}
+              {target.scope === "subdomain" ? t("subdomain") : t("wholeDomain")} -{" "}
+              {relativePastLabel(new Date(target.fetchedAt), now, t)}
             </span>
             <span className="rounded-full bg-accent-soft px-2 py-0.5 font-sans tabular-nums text-[9.5px] text-accent-text">
-              {cacheLabel(target, now)}
+              {cacheLabel(target, now, t)}
             </span>
           </button>
         ))}

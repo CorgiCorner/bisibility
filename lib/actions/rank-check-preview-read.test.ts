@@ -236,7 +236,7 @@ describe("rank check preview read actions", () => {
     const result = await getFirstCheckRunPlan({ projectId: PROJECT_PUBLIC_ID });
 
     // biome-ignore format: compact assertion keeps this test under the project line cap.
-    expect(result).toMatchObject({ budget: { capCents: 100, spentCents: 0 }, estimatedCostPerCheckCents: 0.25, providerReady: true, providers: ["dataforseo", "secondary"], readyCount: 2, scope: { depth: "Top 50", device: "Mobile", engine: "Google", frequency: "Weekly", location: "Poland" } });
+    expect(result).toMatchObject({ budget: { capCents: 100, spentCents: 0 }, estimatedCostPerCheckCents: 0.25, providerReady: true, providers: ["dataforseo", "secondary"], readyCount: 2, scope: { depth: 50, device: "mobile", engine: "google", frequency: "weekly", location: "Poland" } });
     expect(mocks.prisma.keyword.count).toHaveBeenCalledWith({
       where: { projectId: "project_1", rankChecks: { none: { status: "completed" } } },
     });
@@ -260,9 +260,7 @@ describe("rank check preview read actions", () => {
 
   it("falls back to the default preview depth for an unsupported stored value", async () => {
     mocks.prisma.projectDefaults.findUnique.mockResolvedValueOnce({ serpDepth: 30 });
-    expect((await getFirstCheckRunPlan({ projectId: PROJECT_PUBLIC_ID })).scope.depth).toBe(
-      "Top 100",
-    );
+    expect((await getFirstCheckRunPlan({ projectId: PROJECT_PUBLIC_ID })).scope.depth).toBe(100);
   });
 
   it("short-circuits run plans for sample projects", async () => {
@@ -271,7 +269,7 @@ describe("rank check preview read actions", () => {
     mocks.monthlySpendCents.mockResolvedValueOnce(42);
     const result = await getFirstCheckRunPlan({ projectId: SAMPLE_PROJECT_PUBLIC_ID });
     // biome-ignore format: compact assertion keeps this test under the project line cap.
-    expect(result).toMatchObject({ budget: { capCents: 100, spentCents: 42 }, budgetExhausted: false, estimatedCostPerCheckCents: null, isSampleProject: true, providerReady: false, providers: [], readyCount: 0, scope: { depth: "Top 100" } });
+    expect(result).toMatchObject({ budget: { capCents: 100, spentCents: 42 }, budgetExhausted: false, estimatedCostPerCheckCents: null, isSampleProject: true, providerReady: false, providers: [], readyCount: 0, scope: { depth: 100 } });
     expect(mocks.prisma.keyword.count).not.toHaveBeenCalled();
   });
 

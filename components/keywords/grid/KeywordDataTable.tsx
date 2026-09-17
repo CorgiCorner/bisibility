@@ -1,6 +1,6 @@
 "use client";
 
-import { actionErrorMessage } from "@/components/keywords/action-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Card } from "@/components/ui/Card";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useDataTableLayout } from "@/components/ui/data-table/data-table-layout-store";
@@ -23,15 +23,19 @@ import { appPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useFormatter, useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 import { BulkActionBar } from "./BulkActionBar";
-import { keywordColumns } from "./grid-columns";
+import { presentBulkActionError } from "./bulk-action-error";
+import { type KeywordColumnLabels, keywordColumns } from "./grid-columns";
 import { persistKeywordGridDensity } from "./grid-density";
 import { KeywordGridViewport } from "./KeywordGridViewport";
 import { KeywordsFilterBar } from "./KeywordsFilterBar";
 import { defaultKeywordColumnVisibility, KEYWORD_DATA_TABLE_ID } from "./keyword-data-table-config";
 import type { KeywordDataTableProps } from "./keyword-data-table-types";
 import { buildKeywordWeeklySummary } from "./keyword-weekly-summary";
+import { weeklySummarySentence } from "./keyword-weekly-summary-copy";
+import { noRankLabel } from "./market-grid-cells";
 
 const keywordTableCardStyle = {
   borderRadius: UI_RADIUS_ROLES.card,
@@ -48,6 +52,11 @@ function leafRows(rows: KeywordDataTableProps["rows"]): KeywordRow[] {
 
 // biome-ignore format: Compact parameter destructuring keeps this production module within 300 lines.
 export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkHealth, filterChips, filterCount, initialDensity, marketScope = null, matchedGroupCount, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, providerConnected, projectId, projectMarkets, rankTrackerPath, rows, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
+  const columnT = useTranslations("projectRankTracker.keywordImport.management.columns");
+  const marketCellsT = useTranslations("projectRankTracker.keywordImport.management.marketCells");
+  const format = useFormatter();
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const searchParams = useSearchParams();
   const layout = useDataTableLayout(KEYWORD_DATA_TABLE_ID);
@@ -67,6 +76,38 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
   const weeklySummary = useMemo(() => buildKeywordWeeklySummary(targetRows), [targetRows]);
   const selectedIds = [...selection];
   const selectedRows = targetRows.filter((row) => selection.has(row.id));
+  const columnLabels = useMemo<KeywordColumnLabels>(
+    () => ({
+      change: columnT("change"),
+      clickThroughRate: columnT("clickThroughRate"),
+      clicks: columnT("clicks"),
+      ctr: columnT("ctr"),
+      device: columnT("device"),
+      difficulty: columnT("difficulty"),
+      formatNumber: (value) =>
+        format.number(value, { maximumFractionDigits: 1, notation: "compact" }),
+      formatPercent: (value) => format.number(value, { maximumFractionDigits: 1, style: "percent" }),
+      formatPosition: (value) => columnT("positionValue", { position: value }),
+      impressions: columnT("impressions"),
+      intent: columnT("intent"),
+      keyword: columnT("keyword"),
+      lastChecked: columnT("lastChecked"),
+      location: columnT("location"),
+      noRankLabel: (row) => noRankLabel(row, marketCellsT),
+      noTrafficDataLabel: columnT("trafficUnavailable"),
+      position: columnT("position"),
+      positionShort: columnT("positionShort"),
+      positionTrend: ({ keyword }) => columnT("positionTrend", { keyword }),
+      schedule: columnT("schedule"),
+      tags: columnT("tags"),
+      targetAndRanking: columnT("targetAndRanking"),
+      topic: columnT("topic"),
+      trend: columnT("trend"),
+      trendTitle: columnT("trendTitle"),
+      volume: columnT("volume"),
+    }),
+    [columnT, format, marketCellsT],
+  );
   const columns = useMemo(
     () =>
       keywordColumns(
@@ -79,8 +120,9 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
         },
         projectId,
         pendingCheckIds,
+        columnLabels,
       ),
-    [canDeleteKeyword, canUpdateKeyword, onRunChecks, pendingCheckIds, projectId],
+    [canDeleteKeyword, canUpdateKeyword, columnLabels, onRunChecks, pendingCheckIds, projectId],
   );
   const pagination = {
     page,
@@ -116,7 +158,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
       setDeletingKeyword(null);
       router.refresh();
     } catch (error) {
-      setRowActionError(actionErrorMessage(error, "The keyword could not be deleted."));
+      setRowActionError(presentBulkActionError(error, sharedErrors, t("deleteFailed")));
       throw error;
     } finally {
       setDeleting(false);
@@ -149,7 +191,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
         groupingControl={
           <SegmentedControl
             activeVariant="neutral"
-            ariaLabel="Keyword grouping"
+            ariaLabel={t("grouping")}
             fitContent
             onChange={(value) => {
               const grouped = value === "grouped";
@@ -157,8 +199,8 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
                 navigate(resetRankTrackerPage({ ...query, grouped }), ["grouped", "page"]);
             }}
             options={[
-              { label: "Grouped", value: "grouped" },
-              { label: "Flat", value: "flat" },
+              { label: t("grouped"), value: "grouped" },
+              { label: t("flat"), value: "flat" },
             ]}
             size="toolbar"
             value={query.grouped ? "grouped" : "flat"}
@@ -206,7 +248,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
       {weeklySummary ? (
         <SummaryStrip
           className="rounded-none border-b border-border px-4"
-          sentence={`Current page: ${weeklySummary.sentence}`}
+          sentence={t("currentPage", { summary: weeklySummarySentence(weeklySummary, t) })}
           tone={weeklySummary.tone}
         />
       ) : null}
@@ -217,7 +259,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
         columnVisibility={columnVisibility}
         density={density}
         footerStart={
-          query.grouped ? <span>{matchedTargetCount.toLocaleString()} matching targets</span> : undefined
+          query.grouped ? <span>{t("matchingTargets", { count: matchedTargetCount })}</span> : undefined
         }
         id={KEYWORD_DATA_TABLE_ID}
         noRowsState={noRowsState}

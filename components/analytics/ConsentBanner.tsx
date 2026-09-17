@@ -4,7 +4,7 @@ import {
   ConsentSettingsModal,
   type SaveConsent,
 } from "@/components/analytics/ConsentSettingsModal";
-import { consentCopy } from "@/components/analytics/consent-copy";
+import { localizedConsentCopy } from "@/components/analytics/consent-copy";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Portal } from "@/components/ui/Portal";
@@ -12,6 +12,7 @@ import { saveAnalyticsConsent } from "@/lib/actions/analytics-consent";
 import { applyAnalyticsConsent, setAnalyticsReplay } from "@/lib/analytics/client";
 import { type ConsentState, pendingConsent } from "@/lib/analytics/consent";
 import { restrictConsentImmediately } from "@/lib/analytics/consent-client";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type ConsentBannerProps = {
@@ -23,6 +24,8 @@ export function ConsentBanner({
   saveConsent = saveAnalyticsConsent,
   initialConsent = pendingConsent(),
 }: Readonly<ConsentBannerProps>) {
+  const t = useTranslations("shared.analyticsConsent");
+  const consentCopy = localizedConsentCopy(t);
   const [visible, setVisible] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -38,9 +41,7 @@ export function ConsentBanner({
       setAnalyticsReplay(consent.replay);
       setVisible(false);
     } catch {
-      setActionError(
-        "Your choice could not be saved. Choices you turned off remain off. Try again.",
-      );
+      setActionError(t("banner.saveError"));
     } finally {
       setSaving(false);
     }
@@ -52,7 +53,7 @@ export function ConsentBanner({
     <>
       <Portal>
         <Card
-          aria-label="Analytics consent"
+          aria-label={t("banner.ariaLabel")}
           style={{ zIndex: 1299 }}
           className="fixed bottom-4 left-4 w-[calc(100%-2rem)] max-w-[430px] p-4 sm:bottom-5 sm:left-5"
         >
@@ -70,7 +71,7 @@ export function ConsentBanner({
               size="sm"
               variant="secondary"
             >
-              Reject all
+              {t("actions.rejectAll")}
             </Button>
             <Button
               className="w-full whitespace-nowrap"
@@ -79,7 +80,7 @@ export function ConsentBanner({
               size="sm"
               variant="secondary"
             >
-              Accept all
+              {t("actions.acceptAll")}
             </Button>
             <Button
               className="w-full whitespace-nowrap"
@@ -87,7 +88,7 @@ export function ConsentBanner({
               onClick={() => setSettingsOpen(true)}
               size="sm"
             >
-              Settings
+              {t("actions.settings")}
             </Button>
           </div>
           {actionError ? (

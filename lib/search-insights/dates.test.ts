@@ -7,6 +7,7 @@ import {
   formatDateLabel,
   formatDateRangeLabel,
   formatPacificTimestamp,
+  formatPacificTimestampDisplayValue,
   monthsBefore,
   pacificToday,
 } from "@/lib/search-insights/dates";
@@ -133,5 +134,15 @@ describe("formatPacificTimestamp", () => {
 
   it("pads the hour to two digits", () => {
     expect(formatPacificTimestamp(dateFromFrozenNow({ hours: 15 }))).toBe("Jul 11, 07:00 Pacific");
+  });
+
+  it("keeps the Pacific observation while using the reader locale and date order", () => {
+    expect(
+      formatPacificTimestampDisplayValue(dateFromFrozenNow({ hours: 15 }), {
+        dateFormat: "day_first",
+        locale: "pl",
+        timeZone: "UTC",
+      }),
+    ).toBe("11 lipca, 07:00");
   });
 });

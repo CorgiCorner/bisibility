@@ -1,9 +1,18 @@
+import {
+  authFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type { LoginFormValues } from "@/lib/auth/login-schema";
 import { emptyOtpDigits } from "@/lib/auth/login-schema";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
 import { OtpStep } from "./OtpStep";
+
+function render(ui: ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: authFeatureTestMessages });
+}
 
 function Harness({
   cooldownRemaining,

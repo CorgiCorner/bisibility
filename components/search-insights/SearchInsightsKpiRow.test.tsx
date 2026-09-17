@@ -1,18 +1,44 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SearchInsightsKpiRow } from "./SearchInsightsKpiRow";
 
 const kpis = [
-  { delta: "+1%", dir: "up" as const, label: "Clicks", prev: "9", source: "GSC", value: "10" },
-  { delta: "+1%", dir: "up" as const, label: "Impressions", prev: "9", source: "GSC", value: "10" },
-  { delta: "+1%", dir: "up" as const, label: "CTR", prev: "9", source: "GSC", value: "10" },
   {
-    delta: "+1%",
+    delta: { kind: "changed" as const, unit: "percent_change" as const, value: 0.1 },
     dir: "up" as const,
-    label: "Average position",
-    prev: "9",
-    source: "GSC",
-    value: "10",
+    metric: "clicks" as const,
+    previous: 9,
+    source: "gsc" as const,
+    value: 10,
+    valueKind: "count" as const,
+  },
+  {
+    delta: { kind: "changed" as const, unit: "percent_change" as const, value: 0.1 },
+    dir: "up" as const,
+    metric: "impressions" as const,
+    previous: 9,
+    source: "gsc" as const,
+    value: 10,
+    valueKind: "count" as const,
+  },
+  {
+    delta: { kind: "changed" as const, unit: "percent_change" as const, value: 0.1 },
+    dir: "up" as const,
+    metric: "ctr" as const,
+    previous: 0.09,
+    source: "gsc" as const,
+    value: 0.1,
+    valueKind: "percentage" as const,
+  },
+  {
+    delta: { kind: "changed" as const, unit: "position" as const, value: 1 },
+    dir: "up" as const,
+    metric: "position" as const,
+    previous: 9,
+    source: "gsc" as const,
+    value: 10,
+    valueKind: "position" as const,
   },
 ];
 
@@ -22,12 +48,13 @@ describe("SearchInsightsKpiRow", () => {
       <SearchInsightsKpiRow
         kpis={[
           {
-            delta: "new",
+            delta: { kind: "new" },
             dir: "flat",
-            label: "Clicks",
-            prev: "no data",
-            source: "GSC",
-            value: "10",
+            metric: "clicks",
+            previous: null,
+            source: "gsc",
+            value: 10,
+            valueKind: "count",
           },
         ]}
       />,
@@ -44,12 +71,13 @@ describe("SearchInsightsKpiRow", () => {
         extra={{
           kind: "visible",
           kpi: {
-            delta: "+4.00 pp",
+            delta: { kind: "changed", unit: "percentage_points", value: 0.04 },
             dir: "up",
-            label: "Clicks to sessions",
-            prev: "88.00%",
-            source: "GSC",
-            value: "92.00%",
+            metric: "clicks_to_sessions",
+            previous: 0.88,
+            source: "gsc",
+            value: 0.92,
+            valueKind: "percentage",
           },
         }}
         kpis={kpis}
@@ -67,12 +95,13 @@ describe("SearchInsightsKpiRow", () => {
         extra={{
           kind: "visible",
           kpi: {
-            delta: "new",
+            delta: { kind: "new" },
             dir: "flat",
-            label: "Clicks to sessions",
-            prev: "no data",
-            source: "GSC",
-            value: "92.00%",
+            metric: "clicks_to_sessions",
+            previous: null,
+            source: "gsc",
+            value: 0.92,
+            valueKind: "percentage",
           },
         }}
         kpis={kpis}
@@ -87,7 +116,7 @@ describe("SearchInsightsKpiRow", () => {
   it("replaces a hidden click-to-session card with its reconciliation reason", () => {
     render(
       <SearchInsightsKpiRow
-        extra={{ kind: "hidden", reason: "zero_clicks", source: "GSC" }}
+        extra={{ kind: "hidden", reason: "zero_clicks", source: "gsc" }}
         kpis={kpis}
       />,
     );

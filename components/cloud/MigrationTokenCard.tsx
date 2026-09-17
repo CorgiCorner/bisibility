@@ -1,6 +1,5 @@
 "use client";
 
-import { MigrationReachabilityHint } from "@/components/settings/migration/MigrationReachabilityHint";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
@@ -9,8 +8,10 @@ import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/Loc
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { WarningOctagonIcon as WarningOctagon } from "@phosphor-icons/react/dist/csr/WarningOctagon";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
+import { LocalizedCloudDestinationReachabilityHint } from "./LocalizedCloudDestinationReachabilityHint";
 import { TokenMeta } from "./MigrationTokenMeta";
 import { MigrationTokenTransferDetails } from "./MigrationTokenTransferDetails";
 
@@ -47,6 +48,7 @@ function TokenActions({
   onRevoke: () => void;
   pendingAction?: MigrationTokenPendingAction | null;
 }>) {
+  const t = useTranslations("cloudImport.token");
   const [confirmKind, setConfirmKind] = useState<
     "revokeMigrationToken" | "rollMigrationToken" | null
   >(null);
@@ -59,25 +61,25 @@ function TokenActions({
         <Button
           disabled={disabled && !revoking}
           loading={revoking}
-          loadingLabel="Revoking"
+          loadingLabel={t("revoking")}
           onClick={() => setConfirmKind("revokeMigrationToken")}
           size="sm"
           style={{ "--control-color": "var(--red-text)" }}
           type="button"
           variant="secondary"
         >
-          Revoke token
+          {t("revoke")}
         </Button>
         <Button
           disabled={disabled && !regenerating}
           loading={regenerating}
-          loadingLabel="Rolling token"
+          loadingLabel={t("regenerating")}
           onClick={() => setConfirmKind("rollMigrationToken")}
           size="sm"
           type="button"
           variant="ghost"
         >
-          Roll token
+          {t("roll")}
         </Button>
       </div>
       <ConfirmModal
@@ -108,6 +110,7 @@ function TokenGenerateButton({
   onGenerate: () => void;
   retry?: boolean;
 }>) {
+  const t = useTranslations("cloudImport.token");
   const Icon = retry || creating ? ArrowsClockwise : Plus;
 
   return (
@@ -123,7 +126,7 @@ function TokenGenerateButton({
         size={15}
         weight="regular"
       />
-      {creating ? "Creating token" : label}
+      {creating ? t("creating") : label}
     </button>
   );
 }
@@ -133,17 +136,18 @@ export function MigrationTokenCard({
   disabled,
   destinationUrl,
   errorMessage,
-  errorTitle = "Couldn't create token",
+  errorTitle,
   issuedToken,
   onGenerate,
   onRegenerate,
   onRevoke,
   pendingAction,
-  sourceLabel = "self-hosted instance",
+  sourceLabel,
   status,
   tokenSecurityNote,
   workspaceName,
 }: Readonly<MigrationTokenCardProps>) {
+  const t = useTranslations("cloudImport.token");
   const visibleToken = issuedToken ?? activeToken;
   const creating = pendingAction === "create";
 
@@ -154,10 +158,13 @@ export function MigrationTokenCard({
           <Key aria-hidden size={21} weight="regular" />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-[15px] font-semibold">Migration token</div>
+          <div className="text-[15px] font-semibold">{t("header")}</div>
           <div className="mt-0.5 text-[12.5px] text-fg-muted">
-            Authorizes one {sourceLabel} to push its export into{" "}
-            <strong className="font-semibold text-fg">{workspaceName}</strong>.
+            {t.rich("authorizes", {
+              project: workspaceName,
+              source: sourceLabel ?? t("defaultSource"),
+              workspace: (chunks) => <strong className="font-semibold text-fg">{chunks}</strong>,
+            })}
           </div>
         </div>
       </div>
@@ -168,18 +175,20 @@ export function MigrationTokenCard({
             <span className="grid h-[50px] w-[50px] place-items-center rounded-card bg-red/10 text-red-text">
               <WarningOctagon aria-hidden size={26} weight="regular" />
             </span>
-            <div className="mt-3.5 text-[14.5px] font-semibold">{errorTitle}</div>
+            <div className="mt-3.5 text-[14.5px] font-semibold">
+              {errorTitle ?? t("error.create")}
+            </div>
             <p className="mt-1.5 max-w-[400px] text-[13px] leading-[1.55] text-fg-muted">
-              {errorMessage ?? "No token was issued. Nothing was exposed."}
+              {errorMessage ?? t("noTokenIssued")}
             </p>
             <div className="mt-3.5 inline-flex items-center gap-[7px] rounded-control bg-bg-sunken px-[11px] py-[5px] font-sans tabular-nums text-[11px] text-fg-muted">
               <WarningCircle aria-hidden className="text-red-text" size={13} weight="regular" />
-              token_action_failed
+              {t("actionFailedCode")}
             </div>
             <TokenGenerateButton
               creating={creating}
               disabled={disabled}
-              label="Try again"
+              label={t("tryAgain")}
               onGenerate={onGenerate}
               retry
             />
@@ -190,24 +199,23 @@ export function MigrationTokenCard({
             <span className="grid h-[50px] w-[50px] place-items-center rounded-card bg-bg-sunken text-fg-muted">
               <Key aria-hidden size={26} weight="regular" />
             </span>
-            <div className="mt-3.5 text-[14.5px] font-semibold">No active token</div>
+            <div className="mt-3.5 text-[14.5px] font-semibold">{t("noneTitle")}</div>
             <p className="mt-1.5 max-w-[400px] text-[13px] leading-[1.55] text-fg-muted">
-              Create a token to start an import. It is shown once, expires in 60 minutes, and is
-              consumed after a successful import.
+              {t("noneDescription")}
             </p>
             <TokenGenerateButton
               creating={creating}
               disabled={disabled}
-              label="Create migration token"
+              label={t("create")}
               onGenerate={onGenerate}
             />
           </div>
         ) : null}
         {status === "active" && visibleToken ? (
           <div>
-            <div className="text-[14.5px] font-semibold">Active token exists</div>
+            <div className="text-[14.5px] font-semibold">{t("activeTitle")}</div>
             <p className="mt-1.5 text-[13px] leading-[1.55] text-fg-muted">
-              Its value is hidden. Roll the token if you need to copy one.
+              {t("activeDescription")}
             </p>
             <TokenMeta token={visibleToken} workspaceName={workspaceName} />
             <TokenActions
@@ -235,7 +243,10 @@ export function MigrationTokenCard({
         ) : null}
         {destinationUrl && status !== "error" && status !== "created" ? (
           <div className="mt-4.5">
-            <MigrationReachabilityHint surface="destination" targetOrigin={destinationUrl} />
+            <LocalizedCloudDestinationReachabilityHint
+              surface="destination"
+              targetOrigin={destinationUrl}
+            />
           </div>
         ) : null}
       </div>

@@ -16,17 +16,17 @@ import {
 } from "@/components/cloud/MigrationTokenCard";
 import { TransferPanel } from "@/components/cloud/TransferPanel";
 import { useCloudImportJobPoll } from "@/components/cloud/use-cloud-import-job";
+import { useCloudImportActionError } from "@/components/cloud/useCloudImportActionError";
 import { type ActionResult, unwrapActionResult } from "@/lib/actions/action-result";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 type CloudImportProps = {
   activeToken: ActiveMigrationToken | null;
   canManage: boolean;
-  copy?: CloudImportCopy;
   destinationUrl?: string;
   importJob: CloudImportJobData;
   mintMigrationTokenAction: (
@@ -39,19 +39,11 @@ type CloudImportProps = {
     input: MintMigrationTokenForm,
   ) => Promise<ActionResult<IssuedMigrationToken>>;
   revokeMigrationTokenAction: (input: RevokeMigrationTokenForm) => Promise<ActionResult<unknown>>;
+  source?: CloudImportSource;
   workspaceName: string;
 };
 
-export type CloudImportCopy = {
-  sourceLabel: string;
-  tokenSecurityNote: string;
-};
-
-const defaultCopy: CloudImportCopy = {
-  sourceLabel: "self-hosted instance",
-  tokenSecurityNote:
-    "The token grants import access to this project only, never your providers or billing. It expires automatically and can be revoked any time before use.",
-};
+export type CloudImportSource = "instance" | "selfHost";
 
 function migrationTokenStatus(
   message: string | null,
@@ -66,7 +58,6 @@ function migrationTokenStatus(
 export function CloudImport({
   activeToken,
   canManage,
-  copy = defaultCopy,
   destinationUrl,
   importJob,
   mintMigrationTokenAction,
@@ -75,9 +66,12 @@ export function CloudImport({
   projectReadOnly = false,
   regenerateMigrationTokenAction,
   revokeMigrationTokenAction,
+  source = "selfHost",
   workspaceName,
 }: Readonly<CloudImportProps>) {
   const router = useRouter();
+  const t = useTranslations("cloudImport");
+  const presentActionError = useCloudImportActionError();
   const [issuedToken, setIssuedToken] = useState<IssuedMigrationToken | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [tokensInvalidated, setTokensInvalidated] = useState(false);
@@ -108,17 +102,19 @@ export function CloudImport({
   const status = migrationTokenStatus(message, visibleIssuedToken, visibleActiveToken);
   const errorTitle =
     failedAction === "revoke"
-      ? "Couldn't revoke token"
+      ? t("token.error.revoke")
       : failedAction === "regenerate"
-        ? "Couldn't regenerate token"
-        : "Couldn't create token";
+        ? t("token.error.regenerate")
+        : t("token.error.create");
+  const sourceLabel = t(source === "selfHost" ? "source.selfHost" : "source.instance");
+  const tokenSecurityNote = t(
+    source === "selfHost" ? "token.security.cloud" : "token.security.instance",
+  );
 
   if (!canManage) {
     return (
       <section className="mt-5 rounded-card border border-border bg-bg-elev px-5 py-4">
-        <p className="m-0 text-[13px] text-fg-muted">
-          Migration controls are available to project admins and owners.
-        </p>
+        <p className="m-0 text-[13px] text-fg-muted">{t("token.readOnlyRole")}</p>
       </section>
     );
   }
@@ -143,7 +139,7 @@ export function CloudImport({
         setJob(result.importJob);
       } catch (error) {
         setFailedAction(actionType);
-        setMessage(actionErrorMessage(error, "Migration action failed."));
+        setMessage(presentActionError(error));
       } finally {
         setPendingAction(null);
       }
@@ -168,7 +164,7 @@ export function CloudImport({
         router.refresh();
       } catch (error) {
         setFailedAction("revoke");
-        setMessage(actionErrorMessage(error, "Migration action failed."));
+        setMessage(presentActionError(error));
       } finally {
         setPendingAction(null);
       }
@@ -188,15 +184,14 @@ export function CloudImport({
         onRegenerate={() => runMint(regenerateMigrationTokenAction, "regenerate")}
         onRevoke={handleRevoke}
         pendingAction={pendingAction}
-        sourceLabel={copy.sourceLabel}
+        sourceLabel={sourceLabel}
         status={status}
-        tokenSecurityNote={copy.tokenSecurityNote}
+        tokenSecurityNote={tokenSecurityNote}
         workspaceName={workspaceName}
       />
       {projectReadOnly ? (
         <p className="m-0 mt-3 text-[12px] leading-normal text-yellow-text" role="status">
-          Migration token controls are unavailable while this project is read-only. Return to
-          Migration settings to finish or cancel the migration first.
+          {t("token.error.writeLocked")}
         </p>
       ) : null}
       <TransferPanel
@@ -204,7 +199,7 @@ export function CloudImport({
         job={job}
         onNewToken={() => runMint(regenerateMigrationTokenAction, "regenerate")}
         projectRef={projectId}
-        sourceLabel={copy.sourceLabel}
+        sourceLabel={sourceLabel}
       />
     </section>
   );

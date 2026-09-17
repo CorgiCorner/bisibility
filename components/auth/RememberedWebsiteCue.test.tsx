@@ -1,6 +1,15 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  authFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import { RememberedWebsiteCue } from "./RememberedWebsiteCue";
+
+function render(ui: ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: authFeatureTestMessages });
+}
 
 describe("RememberedWebsiteCue", () => {
   it("shows a safe host label over the verified favicon layer", () => {

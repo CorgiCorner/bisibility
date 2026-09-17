@@ -1,0 +1,122 @@
+{
+  "projectGettingStarted": {
+    "header": {
+      "label": "セットアップ",
+      "progress": "{settled, number}/{total, plural, other {#ステップ}}"
+    },
+    "steps": {
+      "create_project": "プロジェクトを作成",
+      "connect_source": "データソースを接続",
+      "add_keywords": "最初のキーワードを追跡",
+      "first_check": "最初の順位チェックを実行",
+      "confirm_competitors": "競合を確定"
+    },
+    "cta": {
+      "create_project": "プロジェクトを作成",
+      "connect_source": "データソースを接続",
+      "add_keywords": "キーワードを追加",
+      "run_first_check": "最初のチェックを実行",
+      "run_first_check_now": "今すぐ実行"
+    },
+    "state": {
+      "needs_data_source": "先にデータソースが必要です",
+      "needs_keywords": "先にキーワードが必要です",
+      "needs_first_check": "最初のチェック結果が必要です",
+      "running": "実行中: {total, number}件中{completed, number}件をチェック済み",
+      "scheduledToday": "予定: 本日 {time} ({timezone}) に実行",
+      "scheduledTomorrow": "予定: 明日 {time} ({timezone}) に実行",
+      "scheduledInDays": "予定: {days, plural, other {#日後}}の {time} ({timezone}) に実行"
+    },
+    "walkthrough": {
+      "create_project": {
+        "active": "追跡するプロジェクトの名前を入力してください。詳細は後からプロジェクト設定で変更できます。",
+        "done": "プロジェクトを作成したときに行われたことです。ドメインを1件設定し、すべてのチェックとインポートがその範囲に限定されます。名前とドメインはプロジェクト設定にあります。"
+      },
+      "add_keywords": {
+        "active": "キーワードを1行に1件ずつ入力または貼り付けてください。すでに追跡中のキーワードとの重複は自動で除外されます。",
+        "done": "最初のキーワードを追加したときに行われたことです。各キーワードは固有の市場とデバイスを持ち、順位トラッカーのキーワード行で変更できます。"
+      },
+      "connect_source": {
+        "active": "Search Console は無料で、2クリックで接続できます。SERP プロバイダーを使うと、ご自身のキーでリアルタイムの順位チェックを追加できます。",
+        "done": "データソースを接続したときに行われたことです。順位チェックはこのデータソース経由で実行され、料金はプロバイダーから直接請求されます。管理や切り替えは連携で行えます。"
+      },
+      "first_check": {
+        "active": "最初のチェックを実行すると、追跡中のキーワードの順位を取得します。チェックの設定はプロジェクトの追跡設定にあります。",
+        "done": "最初のチェックが完了したときに行われたことです。対象となった各キーワードに順位と順位取得 URL が記録され、ここから履歴が蓄積されます。チェックはプロジェクトの既定のスケジュールに従い、キーワードごとに個別のスケジュールで上書きできます。どちらも順位トラッカーで設定できます。"
+      }
+    },
+    "competitors": {
+      "blocked": "候補は完了した順位チェックから生成されます。このステップは最初のチェックの完了後に利用できます。",
+      "ready": "追跡する競合ドメインを選択してください。設定で後から変更できます。",
+      "skipped": "スキップしました。競合ドメインは追跡されず、選択を確定するまでシェアオブボイスは無効のままです。",
+      "confirmed": "確定しました。選択した競合ドメインの追跡を開始しました。",
+      "none": "候補はまだありません。競合ドメインを追加するか、後から設定で行ってください。",
+      "review": "競合を確認",
+      "addOwn": "自分で追加",
+      "skip": "今はスキップ",
+      "modalAdd": "競合を追加",
+      "modalReview": "競合を確認",
+      "trackSelected": "選択項目を追跡",
+      "trackCount": "{count, plural, other {競合#件}}を追跡",
+      "saving": "保存中...",
+      "select": "追跡するドメインを選択してください。",
+      "noneLeft": "候補はもうありません。自分で競合ドメインを追加できます。",
+      "back": "戻る",
+      "cancel": "キャンセル",
+      "confirmError": "選択したすべての競合を確定できませんでした。再試行してください。",
+      "dismissError": "競合を削除できませんでした。",
+      "skipError": "競合の設定をスキップできませんでした。",
+      "manual": {
+        "domain": "ドメイン",
+        "domainError": "ドメインを入力してください。",
+        "domainInvalid": "有効な競合ドメインを入力してください。",
+        "domainPlaceholder": "competitor.example.org",
+        "aliases": "ブランドエイリアス（任意）",
+        "aliasesPlaceholder": "ブランド名をカンマ区切りで入力",
+        "aliasesHelp": "言及の照合に使用する他のブランド名をカンマ区切りで入力します。",
+        "adding": "追加中...",
+        "add": "競合を追加",
+        "addError": "競合を追加できませんでした。"
+      },
+      "suggestions": {
+        "suggestedTitle": "競合ドメインの候補",
+        "suggestedDescription": "非ブランドキーワード2件以上に出現しています。",
+        "otherTitle": "結果に含まれるその他のドメイン",
+        "otherDescription": "この結果だけでは競合とは判断できません。自社サイトと競合する場合のみ追加してください。",
+        "evidence": "{of, number}件中{seenOn, number}件のキーワードで検出 / 最高{bestPosition, number}位",
+        "platform": "{coverage}、プラットフォームまたはディレクトリ",
+        "limited": "{coverage}、根拠が限定的",
+        "remove": "削除"
+      }
+    },
+    "completion": {
+      "allComplete": "セットアップのすべてのステップが完了",
+      "heading": "次にできること",
+      "acknowledged": "セットアップは完了しました。プロジェクトの接続状況を確認したいときは、いつでもこのページに戻れます。",
+      "helper": "準備ができたらセットアップを確定してください。プロジェクトの既存のデータと設定はそのまま保持されます。",
+      "finish": "セットアップを完了",
+      "checklistError": "セットアップを完了するには、すべてのステップを終えてください。",
+      "writeError": "セットアップの完了を保存できませんでした。再試行してください。"
+    },
+    "goFurther": {
+      "heading": "さらに活用する",
+      "ai": {
+        "title": "AI アシスタントを接続",
+        "description": "Claude、ChatGPT などの MCP クライアントを接続します。"
+      },
+      "github": {
+        "title": "GitHub で bisibility にスターを付ける",
+        "description": "無料のオープンソースです。スターが励みになります。"
+      },
+      "team": {
+        "title": "チームメンバーを招待",
+        "description": "チームメンバーを招待してロールを割り当てます。"
+      }
+    },
+    "video": {
+      "aria": "動画チュートリアル",
+      "heading": "動画チュートリアル",
+      "description": "各ステップにはテキスト版が用意されています。動画は公開され次第ここに表示されます。"
+    }
+  }
+}

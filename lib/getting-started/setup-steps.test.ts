@@ -34,17 +34,14 @@ function stateFor(id: (typeof SETUP_STEP_DEFINITIONS)[number]["id"], ctx: SetupC
 }
 
 describe("setup step definitions", () => {
-  it("keeps five stable ids, display order, titles, and video references", () => {
-    expect(
-      SETUP_STEP_DEFINITIONS.map(({ id, title, videoRef }) => ({ id, title, videoRef })),
-    ).toEqual([
-      { id: "create_project", title: "Create your project", videoRef: "create-project" },
-      { id: "connect_source", title: "Connect a data source", videoRef: "connect-source" },
-      { id: "add_keywords", title: "Track your first keywords", videoRef: "add-keywords" },
-      { id: "first_check", title: "Run your first rank check", videoRef: "first-check" },
+  it("keeps five stable ids, display order, and video references", () => {
+    expect(SETUP_STEP_DEFINITIONS.map(({ id, videoRef }) => ({ id, videoRef }))).toEqual([
+      { id: "create_project", videoRef: "create-project" },
+      { id: "connect_source", videoRef: "connect-source" },
+      { id: "add_keywords", videoRef: "add-keywords" },
+      { id: "first_check", videoRef: "first-check" },
       {
         id: "confirm_competitors",
-        title: "Confirm competitors",
         videoRef: "confirm-competitors",
       },
     ]);
@@ -58,7 +55,7 @@ describe("setup step definitions", () => {
         context({ project: { exists: false, name: null, publicRef: null } }),
       ),
     ).toEqual({
-      cta: { id: "create_project", label: "Create project" },
+      cta: { id: "create_project" },
       family: "action",
     });
   });
@@ -66,7 +63,7 @@ describe("setup step definitions", () => {
   it("resolves add_keywords from the authoritative count", () => {
     expect(stateFor("add_keywords", context({ keywordCount: 1 }))).toEqual({ family: "done" });
     expect(stateFor("add_keywords", context())).toEqual({
-      cta: { id: "add_keywords", label: "Add keywords" },
+      cta: { id: "add_keywords" },
       family: "action",
     });
   });
@@ -76,7 +73,7 @@ describe("setup step definitions", () => {
       family: "done",
     });
     expect(stateFor("connect_source", context())).toEqual({
-      cta: { id: "connect_source", label: "Connect data source" },
+      cta: { id: "connect_source" },
       family: "action",
     });
   });
@@ -116,7 +113,7 @@ describe("setup step definitions", () => {
       ),
     ).toEqual({
       family: "blocked",
-      reason: "Needs a data source first",
+      reason: "needs_data_source",
       unblockedBy: "connect_source",
     });
   });
@@ -153,14 +150,14 @@ describe("setup step definitions", () => {
   it("blocks a first check until keywords exist", () => {
     expect(stateFor("first_check", context({ providerExists: true }))).toEqual({
       family: "blocked",
-      reason: "Needs keywords first",
+      reason: "needs_keywords",
       unblockedBy: "add_keywords",
     });
   });
 
   it("offers a manual first check action", () => {
     expect(stateFor("first_check", context({ keywordCount: 1, providerExists: true }))).toEqual({
-      cta: { id: "run_first_check", label: "Run first check" },
+      cta: { id: "run_first_check" },
       family: "action",
     });
   });
@@ -176,7 +173,7 @@ describe("setup step definitions", () => {
         }),
       ),
     ).toEqual({
-      accelerate: { id: "run_first_check", label: "Run it now instead" },
+      accelerate: { id: "run_first_check" },
       family: "waiting",
       when: { nextRunAt: scheduledAt, timezone: "Europe/Warsaw" },
     });
@@ -185,7 +182,7 @@ describe("setup step definitions", () => {
   it("blocks competitor confirmation before the first completed check", () => {
     expect(stateFor("confirm_competitors", context())).toEqual({
       family: "blocked",
-      reason: "Needs first check results",
+      reason: "needs_first_check",
       unblockedBy: "first_check",
     });
   });
@@ -247,7 +244,7 @@ describe("setup step definitions", () => {
     expect(
       isSetupComplete([
         ...steps.slice(0, 4),
-        { state: { family: "blocked", reason: "x", unblockedBy: "first_check" } },
+        { state: { family: "blocked", reason: "needs_first_check", unblockedBy: "first_check" } },
       ]),
     ).toBe(false);
   });
@@ -263,7 +260,7 @@ describe("setup step definitions", () => {
       }),
     ];
     const authored = [
-      ...SETUP_STEP_DEFINITIONS.flatMap((step) => [step.id, step.title, step.videoRef]),
+      ...SETUP_STEP_DEFINITIONS.flatMap((step) => [step.id, step.videoRef]),
       ...contexts.flatMap((ctx) =>
         resolveSetupProgress(ctx).steps.flatMap(({ state }) => JSON.stringify(state)),
       ),

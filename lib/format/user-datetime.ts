@@ -1,8 +1,9 @@
 import {
   type DateFormatPreference as BaseDateFormatPreference,
   type DateFormat,
-  formatDate as formatCalendarDate,
   formatDateTime as formatCalendarDateTime,
+  formatDisplayDate,
+  formatDisplayDateTime,
 } from "@/lib/dates/format";
 import { resolveDateFormat } from "@/lib/dates/resolve";
 
@@ -11,24 +12,11 @@ export type DateFormatPreference = BaseDateFormatPreference | "eu" | "long";
 
 export type DateTimeFormatContext = {
   dateFormat?: DateFormatPreference;
+  locale?: string;
   timezone: string;
 };
 
 const DEFAULT_DATE_FORMAT = "iso" satisfies DateFormat;
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
 
 function partsFor(date: Date, timeZone: string) {
   const [key, time = "00:00"] = formatCalendarDateTime(date, "iso", timeZone).split(", ");
@@ -53,28 +41,43 @@ function resolvePreference(dateFormat: DateFormatPreference): DateFormat {
 
 export function createUserDateTimeFormatter({
   dateFormat = DEFAULT_DATE_FORMAT,
+  locale = "en-US",
   timezone,
 }: DateTimeFormatContext) {
   const resolved = resolvePreference(dateFormat);
 
   function formatDate(date: Date) {
-    return formatCalendarDate(dayKey(date, timezone), resolved);
+    return formatDisplayDate(dayKey(date, timezone), {
+      dateFormat: resolved,
+      locale,
+      timeZone: "UTC",
+    });
   }
 
   function formatRelativeDay(date: Date, now: Date) {
     const diff = dayOrdinal(now, timezone) - dayOrdinal(date, timezone);
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Yesterday";
+    if (diff === 0 || diff === 1) {
+      const relative = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
+        diff === 0 ? 0 : -1,
+        "day",
+      );
+      return `${relative.at(0)?.toLocaleUpperCase(locale) ?? ""}${relative.slice(1)}`;
+    }
     return formatDate(date);
   }
 
   return {
     dateFormat: resolved,
     formatDate,
-    formatDateTime: (date: Date) => formatCalendarDateTime(date, resolved, timezone),
+    formatDateTime: (date: Date) =>
+      formatDisplayDateTime(date, { dateFormat: resolved, locale, timeZone: timezone }),
     formatMonthYear: (date: Date) => {
       const { month, year } = partsFor(date, timezone);
-      return `${MONTHS[month - 1] ?? ""} ${year}`;
+      return new Intl.DateTimeFormat(locale, {
+        month: "long",
+        timeZone: "UTC",
+        year: "numeric",
+      }).format(new Date(Date.UTC(year, month - 1, 1)));
     },
     formatRelativeDay,
     formatTime: (date: Date) => partsFor(date, timezone).time,

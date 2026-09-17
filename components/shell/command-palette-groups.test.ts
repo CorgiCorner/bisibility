@@ -3,10 +3,67 @@ import { navItems } from "@/lib/nav/nav-items";
 import { appSectionPath } from "@/lib/routing/app-path";
 import { DOCS_URL } from "@/lib/site/site";
 import { describe, expect, it, vi } from "vitest";
-import { commandGroups, filterGroups, type PaletteMarket } from "./command-palette-groups";
+import {
+  commandGroups as buildCommandGroups,
+  type CommandPaletteCopy,
+  filterGroups,
+  type PaletteMarket,
+} from "./command-palette-groups";
 
 const malaga: PaletteMarket = { label: "Malaga core", ref: "pmkt_malagacore000000000000" };
 const lisbon: PaletteMarket = { label: "Lisbon core", ref: "pmkt_lisboncore000000000000" };
+
+const englishCopy = {
+  actionItems: {
+    addKeyword: "Rank Tracker: Add keyword",
+    exportKeywords: "Rank Tracker: Export keywords",
+    importCsv: "Rank Tracker: Import CSV",
+    signOut: "Sign out",
+    toggleTheme: "Toggle theme",
+  },
+  groups: { actions: "Actions", keywords: "Keywords", markets: "Markets", navigate: "Navigate" },
+  hints: {
+    account: "Account",
+    downloadFile: "Download file",
+    goTo: "Go to",
+    keyword: "Keyword",
+    market: "Market",
+    newKeyword: "New keyword",
+    theme: "Theme",
+    uploadFile: "Upload file",
+  },
+  marketNavigation: (section: string, market: string) => `${section} in ${market}`,
+  navigation: {
+    ...Object.fromEntries(
+      [...navItems("prj_1").map((item) => item.label), "Docs and self-hosting"].map((label) => [
+        label,
+        label,
+      ]),
+    ),
+    Competitors: "Competitors",
+  },
+} satisfies CommandPaletteCopy;
+
+function commandGroups(
+  projectRef: string,
+  push: (href: string) => void,
+  setMode: (mode: "dark" | "light") => void,
+  keywordHits: Parameters<typeof buildCommandGroups>[4],
+  markets?: Parameters<typeof buildCommandGroups>[5],
+  context?: Parameters<typeof buildCommandGroups>[6],
+  enabledExperimentalModules?: Parameters<typeof buildCommandGroups>[7],
+) {
+  return buildCommandGroups(
+    projectRef,
+    push,
+    setMode,
+    englishCopy,
+    keywordHits,
+    markets,
+    context,
+    enabledExperimentalModules,
+  );
+}
 
 function marketsGroup(markets: readonly PaletteMarket[], push = vi.fn()) {
   return commandGroups("prj_1", push, vi.fn(), [], markets).find(
@@ -230,5 +287,26 @@ describe("commandGroups markets", () => {
 
     expect(withoutMarkets).toEqual(["Navigate", "Keywords", "Actions"]);
     expect(emptyMarkets).toEqual(["Navigate", "Keywords", "Actions"]);
+  });
+
+  it("searches localized generated rows and keeps duplicate market names on distinct IDs", () => {
+    const copy: CommandPaletteCopy = {
+      ...englishCopy,
+      groups: { ...englishCopy.groups, markets: "Rynki", navigate: "Nawigacja" },
+      marketNavigation: (section, market) => `${section} w ${market}`,
+      navigation: { ...englishCopy.navigation, "Rank Tracker": "Śledzenie pozycji" },
+    };
+    const duplicateMarkets: PaletteMarket[] = [
+      { label: "Warszawa", ref: "pmkt_warszawaone000000000000" },
+      { label: "Warszawa", ref: "pmkt_warszawatwo000000000000" },
+    ];
+    const groups = buildCommandGroups("prj_1", vi.fn(), vi.fn(), copy, [], duplicateMarkets);
+    const marketRows = groups.find((group) => group.title === "Rynki")?.items ?? [];
+    const matches = filterGroups(groups, "śledzenie pozycji").find(
+      (group) => group.title === "Rynki",
+    )?.items;
+
+    expect(matches?.map((item) => item.label)).toContain("Śledzenie pozycji w Warszawa");
+    expect(new Set(marketRows.map((item) => item.id)).size).toBe(marketRows.length);
   });
 });

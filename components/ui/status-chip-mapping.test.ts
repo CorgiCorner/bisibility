@@ -5,21 +5,21 @@ import { itemStatusChipPresentation, runStatusChipPresentation } from "./status-
 describe("status chip closed vocabulary", () => {
   it("maps every run status", () => {
     expect(RUN_STATUSES.map((status) => runStatusChipPresentation(status, null))).toEqual([
-      { label: "Planned", tone: "planned" },
-      { label: "Blocked", tone: "attention" },
-      { label: "Queued", tone: "info" },
-      { label: "Running", tone: "info" },
-      { label: "Cancelling", tone: "neutral" },
-      { label: "Not confirmed", tone: "neutral" },
-      { label: "Cancelled", tone: "neutral" },
+      { label: "Planned", messageKey: "planned", tone: "planned" },
+      { label: "Blocked", messageKey: "blocked", tone: "attention" },
+      { label: "Queued", messageKey: "queued", tone: "info" },
+      { label: "Running", messageKey: "running", tone: "info" },
+      { label: "Cancelling", messageKey: "cancelling", tone: "neutral" },
+      { label: "Not confirmed", messageKey: "notConfirmed", tone: "neutral" },
+      { label: "Cancelled", messageKey: "cancelled", tone: "neutral" },
     ]);
   });
 
   it.each([
-    ["succeeded", { label: "Succeeded", tone: "positive" }],
-    ["partial", { label: "Partial", tone: "attention" }],
-    ["failed", { label: "Failed", tone: "critical" }],
-    ["deferred", { label: "Deferred", tone: "attention" }],
+    ["succeeded", { label: "Succeeded", messageKey: "succeeded", tone: "positive" }],
+    ["partial", { label: "Partial", messageKey: "partial", tone: "attention" }],
+    ["failed", { label: "Failed", messageKey: "failed", tone: "critical" }],
+    ["deferred", { label: "Deferred", messageKey: "deferred", tone: "attention" }],
   ] as const)("uses the terminal outcome %s as the one run badge", (outcome, expected) => {
     expect(runStatusChipPresentation("completed", outcome)).toEqual(expected);
   });
@@ -30,15 +30,16 @@ describe("status chip closed vocabulary", () => {
         runStatusChipPresentation(status, null),
       ),
     ).toEqual([
-      { label: "Queued", tone: "info" },
-      { label: "Running", tone: "info" },
-      { label: "Cancelling", tone: "neutral" },
+      { label: "Queued", messageKey: "queued", tone: "info" },
+      { label: "Running", messageKey: "running", tone: "info" },
+      { label: "Cancelling", messageKey: "cancelling", tone: "neutral" },
     ]);
   });
 
   it("uses a neutral badge when a completed run has no confirmed outcome", () => {
     expect(runStatusChipPresentation("completed", null)).toEqual({
       label: "Not confirmed",
+      messageKey: "notConfirmed",
       tone: "neutral",
     });
   });
@@ -46,6 +47,7 @@ describe("status chip closed vocabulary", () => {
   it("keeps a cancelled run terminal even if it has stale outcome data", () => {
     expect(runStatusChipPresentation("cancelled", "succeeded")).toEqual({
       label: "Cancelled",
+      messageKey: "cancelled",
       tone: "neutral",
     });
   });
@@ -53,20 +55,21 @@ describe("status chip closed vocabulary", () => {
   it("does not expose a standalone outcome mapping", () => {
     expect(runStatusChipPresentation("completed", "succeeded")).toEqual({
       label: "Succeeded",
+      messageKey: "succeeded",
       tone: "positive",
     });
   });
 
   it("maps every item status", () => {
     expect(ITEM_STATUSES.map(itemStatusChipPresentation)).toEqual([
-      { label: "Queued", tone: "info" },
-      { label: "Running", tone: "info" },
-      { label: "Completed", tone: "positive" },
-      { label: "Failed", tone: "critical" },
-      { label: "Deferred", tone: "attention" },
-      { label: "Cancelled", tone: "neutral" },
-      { label: "Skipped", tone: "neutral" },
-      { label: "Blocked", tone: "attention" },
+      { label: "Queued", messageKey: "queued", tone: "info" },
+      { label: "Running", messageKey: "running", tone: "info" },
+      { label: "Completed", messageKey: "completed", tone: "positive" },
+      { label: "Failed", messageKey: "failed", tone: "critical" },
+      { label: "Deferred", messageKey: "deferred", tone: "attention" },
+      { label: "Cancelled", messageKey: "cancelled", tone: "neutral" },
+      { label: "Skipped", messageKey: "skipped", tone: "neutral" },
+      { label: "Blocked", messageKey: "blocked", tone: "attention" },
     ]);
   });
 

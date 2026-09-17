@@ -12,6 +12,7 @@ import { cn } from "@/lib/ui/cn";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { GlobeHemisphereWestIcon as Globe } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { useTranslations } from "next-intl";
 import { type KeyboardEvent as ReactKeyboardEvent, useCallback, useId, useState } from "react";
 
 /**
@@ -61,6 +62,7 @@ type MarketOptionProps = Readonly<{
  * nested in an option is announced as a second, nameless stop and breaks the listbox contract.
  */
 function MarketOption({ active, domId, onSelect, row, selected }: MarketOptionProps) {
+  const t = useTranslations("shell.market");
   return (
     <button
       aria-selected={selected}
@@ -95,7 +97,7 @@ function MarketOption({ active, domId, onSelect, row, selected }: MarketOptionPr
         ) : null}
       </span>
       {row.paused ? (
-        <span className="flex-none text-[10px] font-normal text-fg-muted">Paused</span>
+        <span className="flex-none text-[10px] font-normal text-fg-muted">{t("paused")}</span>
       ) : null}
       <span className="ml-auto flex-none tabular-nums text-[11px] text-fg-muted" data-market-count>
         {row.countLabel}
@@ -128,17 +130,23 @@ export function MarketSwitcherMenu({
   selectedValue,
   showAllMarkets = true,
 }: MarketSwitcherMenuProps) {
+  const t = useTranslations("shell.market");
   const listId = useId();
   const [search, setSearch] = useState("");
   const [requestedValue, setRequestedValue] = useState(selectedValue);
 
   const allMarketsRow: MarketRow = {
     countLabel: String(markets.length),
-    name: "All markets",
+    name: t("all"),
     pair: "",
     value: ALL_MARKETS_VALUE,
   };
-  const filteredMarkets = marketRows(markets, search);
+  const filteredMarkets = marketRows(markets, search).map((row) => ({
+    ...row,
+    countLabel: t("count", {
+      count: markets.find((market) => market.ref === row.value)?.keywordCount ?? 0,
+    }),
+  }));
   // Project pages keep the unfiltered way back; keyword details only switch tracked targets.
   const rows = showAllMarkets ? [allMarketsRow, ...filteredMarkets] : filteredMarkets;
   const values = rows.map((row) => row.value);
@@ -192,7 +200,7 @@ export function MarketSwitcherMenu({
 
   return (
     <div
-      aria-label="Switch market"
+      aria-label={t("dialog")}
       className="flex w-[360px] max-w-[calc(100vw-32px)] flex-col p-1.5 outline-none"
       onKeyDown={handleDialogKeyDown}
       ref={focusDialog}
@@ -201,17 +209,17 @@ export function MarketSwitcherMenu({
     >
       {marketSearchVisible(markets.length) ? (
         <input
-          aria-label="Find market"
+          aria-label={t("find")}
           className="mb-1.5 h-8 flex-none rounded-control border border-border-control bg-transparent px-2 text-[13px] text-fg outline-none placeholder:text-fg-muted focus-visible:border-accent"
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Find market..."
+          placeholder={t("findPlaceholder")}
           type="search"
           value={search}
         />
       ) : null}
       <div
         aria-activedescendant={activeValue ? domIdOf(activeValue) : undefined}
-        aria-label="Markets"
+        aria-label={t("list")}
         className={listClassName}
         onKeyDown={handleListKeyDown}
         role="listbox"
@@ -241,9 +249,7 @@ export function MarketSwitcherMenu({
         ))}
         {filteredMarkets.length === 0 ? (
           <p className="m-0 px-2 py-3 text-[12px] text-fg-muted">
-            {markets.length
-              ? "No market matches that."
-              : "Add your first market to choose where and in which language to track keywords."}
+            {markets.length ? t("noMatches") : t("empty")}
           </p>
         ) : null}
       </div>
@@ -257,7 +263,7 @@ export function MarketSwitcherMenu({
             startIcon={<Plus aria-hidden size={14} weight="regular" />}
             variant="secondary"
           >
-            Add market
+            {t("add")}
           </Button>
         </>
       ) : null}

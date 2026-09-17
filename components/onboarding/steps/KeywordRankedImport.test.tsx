@@ -1,13 +1,30 @@
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import {
+  renderWithOnboardingMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type { RankedKeywordsSuccess } from "@/lib/ranked-keywords/service";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import onboardingMessages from "@/messages/core/en/onboarding.json";
+import sharedMessages from "@/messages/core/en/shared.json";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { useTranslations } from "next-intl";
+import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordRankedImport } from "./KeywordRankedImport";
+import { rankedImportMessages } from "./keyword-import-messages";
 
 const connection = {
   id: "conn_a00000000000000000000000",
   label: "DataForSEO",
   provider: "dataforseo",
 };
+
+function LocalizedRankedImport(
+  props: Omit<ComponentProps<typeof KeywordRankedImport>, "messages">,
+) {
+  const t = useTranslations("onboarding.keywords");
+  return <KeywordRankedImport {...props} messages={rankedImportMessages(t)} />;
+}
 
 function page(
   rows: RankedKeywordsSuccess["rows"],
@@ -46,11 +63,11 @@ function renderCard(
   fetchAction: NonNullable<Parameters<typeof KeywordRankedImport>[0]["fetchAction"]> = vi.fn(
     async () => page([]),
   ),
-  overrides: Partial<Parameters<typeof KeywordRankedImport>[0]> = {},
+  overrides: Partial<Omit<Parameters<typeof KeywordRankedImport>[0], "messages">> = {},
 ) {
   const onAppendQueries = vi.fn();
   render(
-    <KeywordRankedImport
+    <LocalizedRankedImport
       connections={[connection]}
       currentKeywords=""
       domain="example.com"
@@ -73,7 +90,7 @@ describe("KeywordRankedImport", () => {
   it("is hidden without capability and never requests before opt-in", () => {
     const fetchAction = vi.fn();
     const { rerender } = render(
-      <KeywordRankedImport
+      <LocalizedRankedImport
         connections={[]}
         currentKeywords=""
         domain="example.com"
@@ -86,7 +103,7 @@ describe("KeywordRankedImport", () => {
       screen.queryByRole("button", { name: /Import from DataForSEO/ }),
     ).not.toBeInTheDocument();
     rerender(
-      <KeywordRankedImport
+      <LocalizedRankedImport
         connections={[connection]}
         currentKeywords=""
         domain="example.com"
@@ -114,6 +131,42 @@ describe("KeywordRankedImport", () => {
 
     expect(screen.queryByText(/about \$/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Import from DataForSEO" })).toBeInTheDocument();
+  });
+
+  it("uses numeric Polish USD clauses for page cost, session spend, and cache state", async () => {
+    const messages = mergeMessageCatalogs(sharedMessages, {
+      onboarding: {
+        ...onboardingMessages.onboarding,
+        keywords: {
+          ...onboardingMessages.onboarding.keywords,
+          ranked: {
+            ...onboardingMessages.onboarding.keywords.ranked,
+            aboutPage: "(ok. {cost, number, ::currency/USD}/strona)",
+            spent:
+              "Wydano w sesji: {cost, number, ::currency/USD}{cached, select, yes {. Strona {page, number} z cache.} other {}}",
+          },
+        },
+      },
+    });
+    renderWithFeatureMessages(
+      <LocalizedRankedImport
+        connections={[connection]}
+        currentKeywords=""
+        domain="example.com"
+        fetchAction={vi.fn(async () => page([row("alpha", 10)], { cached: true, costCents: 2 }))}
+        onAppendQueries={vi.fn()}
+        projectId="prj_1"
+      />,
+      { locale: "pl", messages },
+    );
+
+    const action = screen.getByRole("button", {
+      name: /Import from DataForSEO \(ok\. 0,02\sUSD\/strona\)/,
+    });
+    fireEvent.click(action);
+
+    expect(await screen.findByText(/Wydano w sesji: 0,00\sUSD\. Strona 1 z cache\./)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Add 1 keyword" })).toBeEnabled();
   });
 
   it("groups variants, disables tracked rows, and preselects within remaining capacity", async () => {

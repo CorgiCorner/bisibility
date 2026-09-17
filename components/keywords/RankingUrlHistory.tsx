@@ -1,21 +1,16 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Card } from "@/components/ui/Card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import type { KeywordRow, RankingUrlEvent } from "@/lib/queries/keywords";
 import { rankObservationState } from "@/lib/serp/rank-depth";
 import { MinusIcon as Minus } from "@phosphor-icons/react/dist/ssr/Minus";
 import { WarningIcon as Warning } from "@phosphor-icons/react/dist/ssr/Warning";
+import { useLocale, useTranslations } from "next-intl";
 import { RankingUrlExternalLink } from "./RankingUrlExternalLink";
 
 type TimelineEvent = RankingUrlEvent & { changed: boolean };
-
-const POSITION_EXPLANATION = "#N is the position at that period's last check.";
-const HISTORY_EXPLANATION =
-  "A change means Google now ranks a different page of yours. Often fine; check if it dropped. The rank shown for each period is the position recorded at that period's last check.";
 
 function pathFromUrl(value: string) {
   if (value.startsWith("/")) {
@@ -39,11 +34,17 @@ function buildTimeline(history: RankingUrlEvent[]): TimelineEvent[] {
     .reverse();
 }
 
-function periodDateRange(event: RankingUrlEvent, dateFormat: DateFormat) {
+function periodDateRange(event: RankingUrlEvent, locale: string) {
   const startAt = event.startAt.slice(0, 10);
-  return event.isCurrent
-    ? `${formatDateRange(startAt, startAt, dateFormat)} - now`
-    : formatDateRange(startAt, event.endAt.slice(0, 10), dateFormat);
+  const formatDay = (day: string) =>
+    new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" }).format(
+      new Date(`${day}T00:00:00.000Z`),
+    );
+  return {
+    current: event.isCurrent,
+    end: event.isCurrent ? null : formatDay(event.endAt.slice(0, 10)),
+    start: formatDay(startAt),
+  };
 }
 
 function positionLabel(event: RankingUrlEvent) {
@@ -57,14 +58,9 @@ function positionLabel(event: RankingUrlEvent) {
   }).label;
 }
 
-function periodNote(event: TimelineEvent, index: number, total: number) {
-  if (event.isCurrent) return "Current page";
-  if (index === total - 1) return "First indexed for this query";
-  return event.changed && event.note === "URL switched" ? event.note : null;
-}
-
 export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>) {
-  const dateFormat = useDateFormat();
+  const t = useTranslations("projectRankTracker.keywordDetail.rankingUrl");
+  const locale = useLocale();
   const timeline = buildTimeline(keyword.rankingUrlHistory);
   const urlChanges = timeline.filter((event) => event.changed).length;
   const changeState = timeline.length < 2 ? "first_check" : urlChanges > 0 ? "diff" : "no_change";
@@ -74,23 +70,23 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
       <div className="border-b border-border px-5 py-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <SectionTitle>Ranking URL history</SectionTitle>
-            <InfoTooltip text={HISTORY_EXPLANATION} />
+            <SectionTitle>{t("title")}</SectionTitle>
+            <InfoTooltip text={t("historyTip")} />
             {changeState === "diff" ? (
               <span className="inline-flex h-6 items-center gap-1 rounded-full border border-yellow px-2 font-sans tabular-nums text-[10.5px] font-semibold text-yellow-text">
                 <Warning size={11} weight="regular" />
-                URL changed
+                {t("urlChanged")}
               </span>
             ) : null}
             {changeState === "no_change" ? (
               <span className="inline-flex items-center gap-1 font-sans tabular-nums text-[10.5px] text-fg-muted">
                 <Minus size={12} weight="regular" />
-                No change
+                {t("noChange")}
               </span>
             ) : null}
           </div>
           <p className="m-0 mt-1 text-[12px] text-fg-muted">
-            Which of your pages Google ranks for this keyword. {POSITION_EXPLANATION}
+            {t("description", { positionTip: t("positionTip") })}
           </p>
         </div>
       </div>
@@ -112,14 +108,25 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
                 />
               </span>
               <span className="col-start-2 row-start-1 w-[108px] text-fg-muted">
-                {periodDateRange(event, dateFormat)}
+                {(() => {
+                  const period = periodDateRange(event, locale);
+                  return period.current
+                    ? t("currentPeriod", { now: t("now"), start: period.start })
+                    : t("period", { end: period.end ?? period.start, start: period.start });
+                })()}
               </span>
               <div className="col-span-2 col-start-2 row-start-2 min-w-0 sm:col-span-1 sm:col-start-3 sm:row-start-1">
                 <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">
                   <RankingUrlExternalLink href={event.url} path={pathFromUrl(event.url)} />
-                  {periodNote(event, index, timeline.length) ? (
+                  {event.isCurrent ||
+                  index === timeline.length - 1 ||
+                  (event.changed && event.note === "URL switched") ? (
                     <span className="max-w-[200px] truncate text-[11.5px] text-fg-muted">
-                      {periodNote(event, index, timeline.length)}
+                      {event.isCurrent
+                        ? t("currentPage")
+                        : index === timeline.length - 1
+                          ? t("firstIndexed")
+                          : t("urlSwitched")}
                     </span>
                   ) : null}
                 </div>
@@ -133,10 +140,8 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
           ))
         ) : (
           <div className="px-5 py-8 text-center">
-            <p className="m-0 text-[13px] font-semibold text-fg">No ranking URL observed yet</p>
-            <p className="m-0 mt-1 text-[12px] text-fg-muted">
-              Completed checks have not returned a ranking page for this keyword.
-            </p>
+            <p className="m-0 text-[13px] font-semibold text-fg">{t("emptyTitle")}</p>
+            <p className="m-0 mt-1 text-[12px] text-fg-muted">{t("emptyDescription")}</p>
           </div>
         )}
       </div>

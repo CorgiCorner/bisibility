@@ -7,11 +7,11 @@ export type ProviderSpendInput = {
 
 export type SpendSegment = {
   color: string;
-  label: string;
+  kind: "other" | "provider";
+  label?: string;
   spentCents: number;
 };
 
-export const OTHER_SEGMENT_LABEL = "Other";
 export const OTHER_SEGMENT_COLOR = "var(--fg-muted)";
 
 function segmentColor(index: number): string {
@@ -32,11 +32,15 @@ export function buildSpendSegments(
   const main = sorted.filter((provider) => provider.spentCents >= groupingThresholdCents);
   const grouped = sorted.filter((provider) => provider.spentCents < groupingThresholdCents);
 
-  const segments = main.map((provider, index) => ({ ...provider, color: segmentColor(index) }));
+  const segments: SpendSegment[] = main.map((provider, index) => ({
+    ...provider,
+    color: segmentColor(index),
+    kind: "provider" as const,
+  }));
   if (grouped.length > 0) {
     segments.push({
       color: OTHER_SEGMENT_COLOR,
-      label: OTHER_SEGMENT_LABEL,
+      kind: "other",
       spentCents: grouped.reduce((total, provider) => total + provider.spentCents, 0),
     });
   }

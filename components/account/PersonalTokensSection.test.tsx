@@ -1,4 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import {
+  accountFeatureTestMessages,
+  featureMessagesElement,
+  renderWithAccountMessages as render,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { act } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
@@ -56,7 +61,11 @@ describe("PersonalTokensSection", () => {
     try {
       // @ts-expect-error: simulate server environment for SSR
       globalThis.window = undefined;
-      markup = renderToString(<PersonalTokenDateLabels {...props} />);
+      markup = renderToString(
+        featureMessagesElement(<PersonalTokenDateLabels {...props} />, {
+          messages: accountFeatureTestMessages,
+        }),
+      );
     } finally {
       globalThis.window = savedWindow;
     }
@@ -64,7 +73,12 @@ describe("PersonalTokensSection", () => {
     container.innerHTML = markup;
     document.body.append(container);
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-    const root = hydrateRoot(container, <PersonalTokenDateLabels {...props} />);
+    const root = hydrateRoot(
+      container,
+      featureMessagesElement(<PersonalTokenDateLabels {...props} />, {
+        messages: accountFeatureTestMessages,
+      }),
+    );
 
     expect(container).toHaveTextContent("created Jun 20, 2026");
     await act(async () => undefined);

@@ -33,7 +33,7 @@ function RunsNavigation({ active }: Readonly<{ active: "runs" | "upcoming" | "sc
                   publicId: "sch_daily",
                   timeOfDay: "06:00",
                   timezone: "Europe/Warsaw",
-                  nextRunLabel: "tomorrow 06:00",
+                  nextRunAt: "2030-01-02T05:00:00.000Z",
                 },
               ]}
             />

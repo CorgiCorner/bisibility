@@ -1,4 +1,4 @@
-import { updatePreferences } from "@/app/app/(workspace)/account/preferences/actions";
+import { updatePreferences } from "@/app/(regional)/app/(workspace)/account/preferences/actions";
 import {
   deleteAccount,
   revokeSession,

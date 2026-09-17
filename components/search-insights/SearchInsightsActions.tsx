@@ -8,7 +8,10 @@ import type {
   SyncSearchInsightsNowAction,
 } from "@/lib/actions/search-insights";
 import { track } from "@/lib/analytics/client";
-import { SYNC_NOW_COOLDOWN_MS } from "@/lib/search-insights/constants";
+import {
+  SEARCH_INSIGHTS_EXPORT_ROW_CAP,
+  SYNC_NOW_COOLDOWN_MS,
+} from "@/lib/search-insights/constants";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { downloadTextFile } from "@/lib/ui/download";
@@ -16,9 +19,9 @@ import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist
 import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useState, useSyncExternalStore, useTransition } from "react";
-import { EXPORT_FAILED, EXPORT_TRUNCATED, SYNC_FAILED, SYNC_TOASTS } from "./search-insights-copy";
-import { exportLabel, syncView } from "./search-insights-workspace-model";
+import { type SyncView, syncView } from "./search-insights-workspace-model";
 
 type ActionsProps = {
   exportAction: ExportSearchInsightsCsvAction;
@@ -58,6 +61,7 @@ export function SearchInsightsActions({
   readOnly = false,
   syncAction,
 }: Readonly<ActionsProps>) {
+  const t = useTranslations("projectSearchInsights.copy");
   const { showToast } = useToast();
   const router = useRouter();
   const [exporting, setExporting] = useState(false);
@@ -73,9 +77,13 @@ export function SearchInsightsActions({
       downloadTextFile(result.csv, result.filename, "text/csv;charset=utf-8");
       track("search_insights_csv_exported", { rows: result.rows });
       // The button names the window's real query count, so a capped file has to say it stopped.
-      if (result.truncated) showToast(EXPORT_TRUNCATED, { severity: "warning" });
+      if (result.truncated) {
+        showToast(t("exportTruncated", { count: SEARCH_INSIGHTS_EXPORT_ROW_CAP }), {
+          severity: "warning",
+        });
+      }
     } catch (error) {
-      showToast(actionErrorMessage(error, EXPORT_FAILED), { severity: "error" });
+      showToast(actionErrorMessage(error, t("exportFailed")), { severity: "error" });
     } finally {
       setExporting(false);
     }
@@ -95,7 +103,7 @@ export function SearchInsightsActions({
         );
         return;
       }
-      showToast(SYNC_TOASTS[result.status], {
+      showToast(syncToast(result.status, t), {
         severity:
           result.status === "no_connection"
             ? "connection"
@@ -104,7 +112,7 @@ export function SearchInsightsActions({
               : "info",
       });
     } catch (error) {
-      showToast(actionErrorMessage(error, SYNC_FAILED), { severity: "error" });
+      showToast(actionErrorMessage(error, t("syncFailed")), { severity: "error" });
     }
   }
 
@@ -120,10 +128,10 @@ export function SearchInsightsActions({
         startIcon={<DownloadSimple weight="regular" size={14} />}
         variant="secondary"
       >
-        {exportLabel(queryCount)}
+        {t("exportCsv", { count: queryCount })}
       </Button>
       <Button
-        aria-label="Refresh stored insights"
+        aria-label={t("refreshAriaLabel")}
         loading={refreshing}
         loadingIndicator={
           <ArrowClockwise weight="regular" aria-hidden className="animate-spin" size={14} />
@@ -133,10 +141,13 @@ export function SearchInsightsActions({
         startIcon={<ArrowClockwise weight="regular" aria-hidden size={14} />}
         variant="secondary"
       >
-        Refresh
+        {t("refresh")}
       </Button>
       {readOnly ? null : (
-        <Tooltip content={sync.title} semantics="description">
+        <Tooltip
+          content={syncTitle(sync, t, importState?.plannedRetentionMonths ?? 16)}
+          semantics="description"
+        >
           <span>
             <Button
               disabled={sync.disabled}
@@ -145,11 +156,45 @@ export function SearchInsightsActions({
               startIcon={<ArrowsClockwise weight="regular" size={14} />}
               variant="secondary"
             >
-              {sync.label}
+              {t("syncNow")}
             </Button>
           </span>
         </Tooltip>
       )}
     </>
   );
+}
+
+function syncToast(
+  status: "already_running" | "no_connection" | "unavailable",
+  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>,
+) {
+  if (status === "already_running") return t("syncToastAlreadyRunning");
+  if (status === "no_connection") return t("syncToastNoConnection");
+  return t("syncToastUnavailable");
+}
+
+function syncTitle(
+  sync: SyncView,
+  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>,
+  months: number,
+) {
+  switch (sync.title) {
+    case "backfill":
+      return t("syncTitleBackfill", { months });
+    case "cooldown":
+      return t("syncTitleCooldown");
+    case "paused_provider":
+      return t("syncTitlePausedProvider");
+    case "paused_reauth":
+      return t("syncTitlePausedReauth");
+    case "paused_retry":
+      return t("syncTitlePausedRetry");
+    case "paused_user":
+      return t("syncTitlePausedUser");
+    case "ready":
+      return t("syncTitleReady");
+    case "requires_property":
+      return t("syncTitleRequiresProperty");
+  }
 }

@@ -1,5 +1,6 @@
+import { renderWithCompetitorsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CompetitorSetTable } from "./CompetitorSetTable";
 
@@ -143,7 +144,7 @@ describe("competitor row actions", () => {
     fireEvent.click(screen.getByRole("button", { name: `Actions for ${rows[0].domain}` }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Remove" }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Remove" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Could not remove competitor.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Competitor could not be removed.");
     expect(screen.getByRole("dialog")).toBeVisible();
     unmount();
     renderTable({ canDelete: false });

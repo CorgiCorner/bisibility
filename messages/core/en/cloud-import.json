@@ -1,0 +1,159 @@
+{
+  "cloudImport": {
+    "metadata": {
+      "cloudDescription": "Create a one-time migration token that authorizes a self-hosted instance to push its data into this hosted project.",
+      "cloudLayoutDescription": "The hosted beta: focused setup and import tasks for your project.",
+      "cloudLayoutTitle": "Hosted beta",
+      "cloudTitle": "Instance import",
+      "instanceDescription": "Create a one-time migration token that authorizes another bisibility instance to push its data into this project.",
+      "instanceTitle": "Import from another instance"
+    },
+    "screen": {
+      "backToSetup": "Back to setup",
+      "cloudSubtitle": "Create a one-time token that lets a self-hosted instance push its data into this project.",
+      "cloudTitle": "Import from self-host",
+      "instanceSubtitle": "Create a one-time token that lets another instance push its data into this project.",
+      "instanceTitle": "Import from another instance",
+      "onboardSubtitle": "This becomes your new hosted project.",
+      "onboardTitle": "Import your self-hosted data",
+      "settings": "Settings"
+    },
+    "source": {
+      "instance": "source instance",
+      "selfHost": "self-hosted instance"
+    },
+    "topBar": {
+      "beta": "Beta",
+      "fallbackWorkspace": "Project",
+      "setupProgress": "Setup / {current, number} of {total, number}"
+    },
+    "token": {
+      "activeDescription": "Its value is hidden. Roll the token if you need to copy one.",
+      "activeTitle": "Active token exists",
+      "actionFailedCode": "token_action_failed",
+      "authorizes": "Authorizes one {source} to push its export into <workspace>{project}</workspace>.",
+      "copy": "Copy {label}",
+      "createdBy": "Created by {email}",
+      "createdTitle": "Token created",
+      "create": "Create migration token",
+      "creating": "Creating token",
+      "defaultSource": "self-hosted instance",
+      "destinationUrl": "Destination URL",
+      "error": {
+        "create": "Couldn't create token",
+        "generic": "Migration token action failed. Try again.",
+        "notActive": "This migration token is no longer active. Create a new token to continue.",
+        "rateLimited": "Too many migration token requests. Try again shortly.",
+        "regenerate": "Couldn't regenerate token",
+        "revoke": "Couldn't revoke token",
+        "tokenUsed": "This migration token has already been used. Create a new token to continue.",
+        "writeLocked": "Migration token controls are unavailable while this project is read-only. Return to Migration settings to finish or cancel the migration first."
+      },
+      "expires": "Expires",
+      "expiryDetails": "{remaining} · {kind}",
+      "expiresIn": "{count, plural, =0 {Expires now} one {Expires in # minute} other {Expires in # minutes}}",
+      "header": "Migration token",
+      "noneDescription": "Create a token to start an import. It is shown once, expires in 60 minutes, and is consumed after a successful import.",
+      "noneTitle": "No active token",
+      "noTokenIssued": "No token was issued. Nothing was exposed.",
+      "readOnlyRole": "Migration controls are available to project admins and owners.",
+      "regenerating": "Rolling token",
+      "remaining": "{count, plural, =0 {expires now} one {# minute remaining} other {# minutes remaining}}",
+      "reusable": "Reusable",
+      "reusableDetails": "reusable",
+      "revoke": "Revoke token",
+      "revoking": "Revoking",
+      "roll": "Roll token",
+      "scope": "Scope {scope}",
+      "scopeFull": "Full project",
+      "scopeKeywords": "Keywords",
+      "security": {
+        "cloud": "The token grants import access to this project only, never your providers or billing. It expires automatically and can be revoked any time before use.",
+        "instance": "The token grants import access to this project only, never provider credentials. It expires automatically and can be revoked any time before use."
+      },
+      "singleUse": "Single-use",
+      "singleUseDetails": "single use",
+      "scopeLabel": "Scope",
+      "targetProject": "Target project",
+      "tryAgain": "Try again",
+      "valueHidden": "Copy this token now. For security, it cannot be shown again after you refresh or leave this page."
+    },
+    "reachability": {
+      "copy": "Copy command",
+      "destinationFollowUp": "Use the generated HTTPS URL as the Destination URL on the source, and keep the command running until the transfer finishes. <learnMore>Learn more</learnMore>.",
+      "intro": "This address is only reachable on this machine. Publish it temporarily with a Quick Tunnel.",
+      "runningLocal": "Running locally?",
+      "sourceFollowUp": "Paste the generated HTTPS URL here, then run the compatibility check again. <learnMore>Learn more</learnMore>.",
+      "unreachable": "If the destination is not reachable from this instance, use a temporary Cloudflare Tunnel or import a ZIP package instead."
+    },
+    "transfer": {
+      "completion": {
+        "empty": "Transfer completed. {visibility, select, none {} other {{visibility} }}Reconnect providers to resume checks.",
+        "imported": "Imported {items}. {visibility, select, none {} other {{visibility} }}Reconnect providers to resume checks.",
+        "importedWithSkipped": "Imported {items}. {skipped} skipped. {visibility, select, none {} other {{visibility} }}Reconnect providers to resume checks.",
+        "visibilityNote": "{count, plural, one {# received history row has an unknown depth.} other {# received history rows have an unknown depth.}} Checks with unknown depth do not update Visibility. Affected keywords still count toward its coverage total."
+      },
+      "counts": {
+        "alertRules": "{count, plural, one {# alert rule} other {# alert rules}}",
+        "alertRulesSkipped": "{count, plural, one {# alert rule} other {# alert rules}}",
+        "competitors": "{count, plural, one {# competitor} other {# competitors}}",
+        "competitorsSkipped": "{count, plural, one {# competitor} other {# competitors}}",
+        "history": "{count, plural, one {# history row} other {# history rows}}",
+        "historySkipped": "{count, plural, one {# history row} other {# history rows}}",
+        "historyUnknownDepth": "{count, plural, one {# received history row with unknown depth} other {# received history rows with unknown depth}}",
+        "keywords": "{count, plural, one {# keyword} other {# keywords}}",
+        "keywordsCreated": "{count, plural, one {# new keyword} other {# new keywords}}",
+        "keywordsSkipped": "{count, plural, one {# keyword} other {# keywords}}",
+        "notificationPreferences": "{count, plural, one {# notification preference} other {# notification preferences}}",
+        "notificationPreferencesSkipped": "{count, plural, one {# notification preference} other {# notification preferences}}",
+        "savedViews": "{count, plural, one {# saved view} other {# saved views}}",
+        "savedViewsSkipped": "{count, plural, one {# saved view} other {# saved views}}",
+        "unknown": "{count, number} {key}"
+      },
+      "tiles": {
+        "alertRules": "{count, plural, one {# imported alert rule} other {# imported alert rules}}",
+        "alertRulesSkipped": "{count, plural, one {# alert rule skipped} other {# alert rules skipped}}",
+        "competitors": "{count, plural, one {# imported competitor} other {# imported competitors}}",
+        "competitorsSkipped": "{count, plural, one {# competitor skipped} other {# competitors skipped}}",
+        "history": "{count, plural, one {# imported history row} other {# imported history rows}}",
+        "historySkipped": "{count, plural, one {# history row skipped} other {# history rows skipped}}",
+        "historyUnknownDepth": "{count, plural, one {# received history row with unknown depth} other {# received history rows with unknown depth}}",
+        "keywords": "{count, plural, one {# imported keyword} other {# imported keywords}}",
+        "keywordsCreated": "{count, plural, one {# new keyword created} other {# new keywords created}}",
+        "keywordsSkipped": "{count, plural, one {# keyword skipped} other {# keywords skipped}}",
+        "notificationPreferences": "{count, plural, one {# imported notification preference} other {# imported notification preferences}}",
+        "notificationPreferencesSkipped": "{count, plural, one {# notification preference skipped} other {# notification preferences skipped}}",
+        "savedViews": "{count, plural, one {# imported saved view} other {# imported saved views}}",
+        "savedViewsSkipped": "{count, plural, one {# saved view skipped} other {# saved views skipped}}",
+        "unknown": "{count, number} {key}"
+      },
+      "downloadErrorLog": "Download error log",
+      "failed": {
+        "fallback": "The import could not be completed. Generate a new token and push again.",
+        "followUp": "Anything already imported stays in this project.",
+        "stopped": "Transfer stopped at {progress, number}%.",
+        "timedOut": "The import timed out. Generate a new token and push again."
+      },
+      "importingDescription": "Transferring keywords, ranking history, tags and alert rules into this project.",
+      "importingPill": "Transferring",
+      "importingTitle": "Transfer in progress",
+      "importJob": "Import job",
+      "newToken": "New token",
+      "notesPill": "Notes",
+      "notesTitle": "Restored with notes",
+      "openProject": "Open project",
+      "pending": "pending",
+      "readyDescription": "Share the one-time token with the source instance to start the transfer.",
+      "readyPill": "Ready",
+      "readyTitle": "Ready to receive",
+      "receivingDescription": "Receiving the export package from the {source}.",
+      "receivingPill": "Receiving",
+      "receivingTitle": "Receiving package",
+      "retryFromSource": "Then push again from the source.",
+      "successPill": "Done",
+      "successTitle": "Transfer complete",
+      "failedPill": "Failed",
+      "failedTitle": "Transfer failed"
+    }
+  }
+}

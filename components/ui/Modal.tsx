@@ -6,6 +6,7 @@ import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { MOTION_MODAL_ENTER, MOTION_MODAL_EXIT } from "@/lib/ui/motion";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { cva } from "class-variance-authority";
+import { useTranslations } from "next-intl";
 import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useId } from "react";
 
 export type ModalSize = "sm" | "md" | "lg";
@@ -60,6 +61,7 @@ export function Modal({
   title,
   width,
 }: Readonly<ModalProps>) {
+  const t = useTranslations("shared.controls.modal");
   const titleId = useId();
   const descriptionId = useId();
   const hasHeader = title || description || showClose;
@@ -148,7 +150,7 @@ export function Modal({
             </div>
             {showClose ? (
               <button
-                aria-label="Close modal"
+                aria-label={t("close")}
                 className="grid h-7.5 w-7.5 shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-[color,background-color,transform] duration-(--motion-press) hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
                 disabled={dismissDisabled}
                 onClick={onClose}

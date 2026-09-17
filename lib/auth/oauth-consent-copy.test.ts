@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getOAuthConsentCopy } from "./oauth-consent-copy";
 
 describe("OAuth consent copy", () => {
-  it("uses CLI guidance for the first-party client id", () => {
+  it("names the first-party client and selects CLI retry guidance", () => {
     expect(
       getOAuthConsentCopy({
         dynamic: false,
@@ -11,13 +11,12 @@ describe("OAuth consent copy", () => {
         redirectUri: "127.0.0.1:8976/callback",
       }),
     ).toMatchObject({
-      heading: "Sign in to Bisibility CLI",
-      persona: "cli",
+      clientName: "Bisibility CLI",
       retryCommand: "bisibility auth login",
     });
   });
 
-  it("uses agent guidance for a dynamically registered Codex client", () => {
+  it("names a dynamically registered Codex client and selects agent retry guidance", () => {
     expect(
       getOAuthConsentCopy({
         dynamic: true,
@@ -26,13 +25,12 @@ describe("OAuth consent copy", () => {
         redirectUri: "127.0.0.1:51008/callback/request",
       }),
     ).toMatchObject({
-      heading: "Review agent access.",
-      persona: "agent",
+      clientName: "Codex",
       retryCommand: "codex mcp login bisibility",
     });
   });
 
-  it("uses generic guidance without a command for unknown clients", () => {
+  it("reports no name and no command for an unidentified client", () => {
     expect(
       getOAuthConsentCopy({
         dynamic: true,
@@ -41,8 +39,7 @@ describe("OAuth consent copy", () => {
         redirectUri: null,
       }),
     ).toMatchObject({
-      heading: "Review client access.",
-      persona: "generic",
+      clientName: null,
       retryCommand: null,
     });
   });

@@ -57,7 +57,14 @@ export async function loadOverviewMetricData(
         createdAt: true,
         device: true,
         id: true,
-        locationRef: { select: { displayName: true, languageLabel: true } },
+        locationRef: {
+          select: {
+            countryCode: true,
+            displayName: true,
+            languageCode: true,
+            languageLabel: true,
+          },
+        },
         publicId: true,
         rankChecks: {
           orderBy: { checkedAt: "desc" },
@@ -93,7 +100,14 @@ export async function loadOverviewMetricData(
           select: {
             id: true,
             locationId: true,
-            locationRef: { select: { displayName: true, languageLabel: true } },
+            locationRef: {
+              select: {
+                countryCode: true,
+                displayName: true,
+                languageCode: true,
+                languageLabel: true,
+              },
+            },
             schedule: { select: { frequency: true } },
           },
           take: OVERVIEW_KEYWORD_MAX,

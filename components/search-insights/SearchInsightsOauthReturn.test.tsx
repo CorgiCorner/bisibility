@@ -1,6 +1,7 @@
 import { ToastProvider } from "@/components/ui/Toast";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { SearchInsightsOauthReturn } from "./SearchInsightsOauthReturn";

@@ -7,6 +7,10 @@ import { MenuMultiSelect } from "@/components/ui/MenuMultiSelect";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Modal } from "@/components/ui/Modal";
 import { Sheet } from "@/components/ui/Sheet";
+import {
+  sharedMessagesElement,
+  shellMessagesElement,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -44,7 +48,7 @@ describe("Overlay interaction contracts", () => {
         </>
       );
     }
-    render(<Harness />);
+    render(sharedMessagesElement(<Harness />));
     await userEvent.click(screen.getByRole("button", { name: "Open modal" }));
     const overlay = document.querySelector('[data-slot="dialog-overlay"]') as HTMLElement;
     const rect = overlay.getBoundingClientRect();
@@ -68,11 +72,13 @@ describe("Overlay interaction contracts", () => {
 
   it("shows an opaque project menu instantly and closes after an outside click", async () => {
     render(
-      <WorkspaceSwitcher
-        activeProjectId={mockWorkspaces[0].id}
-        canCreateWorkspace
-        workspaces={mockWorkspaces}
-      />,
+      shellMessagesElement(
+        <WorkspaceSwitcher
+          activeProjectId={mockWorkspaces[0].id}
+          canCreateWorkspace
+          workspaces={mockWorkspaces}
+        />,
+      ),
     );
     await userEvent.click(screen.getByRole("button", { name: "Switch project" }));
     const menu = screen.getByRole("menu", { name: "Projects" });
@@ -89,15 +95,17 @@ describe("Overlay interaction contracts", () => {
     const changed = vi.fn();
     const closed = vi.fn();
     render(
-      <Modal open title="Filters" onClose={closed}>
-        <MenuSelect
-          ariaLabel="City"
-          options={options}
-          onChange={changed}
-          value="london"
-          searchable
-        />
-      </Modal>,
+      sharedMessagesElement(
+        <Modal open title="Filters" onClose={closed}>
+          <MenuSelect
+            ariaLabel="City"
+            options={options}
+            onChange={changed}
+            value="london"
+            searchable
+          />
+        </Modal>,
+      ),
     );
     const trigger = screen.getByRole("button", { name: "City" });
     await userEvent.click(trigger);
@@ -130,7 +138,7 @@ describe("Overlay interaction contracts", () => {
         />
       );
     }
-    render(<Harness />);
+    render(sharedMessagesElement(<Harness />));
     const trigger = screen.getByRole("button", { name: "Cities" });
     await userEvent.click(trigger);
     const menu = screen.getByRole("menu");
@@ -157,9 +165,16 @@ describe("Overlay interaction contracts", () => {
   it("portals a menu outside a clipping parent and exposes the disabled-option explanation", async () => {
     await page.viewport(375, 700);
     render(
-      <div style={{ height: 36, width: 200, overflow: "hidden" }}>
-        <MenuSelect ariaLabel="City" options={options} onChange={() => undefined} value="london" />
-      </div>,
+      sharedMessagesElement(
+        <div style={{ height: 36, width: 200, overflow: "hidden" }}>
+          <MenuSelect
+            ariaLabel="City"
+            options={options}
+            onChange={() => undefined}
+            value="london"
+          />
+        </div>,
+      ),
     );
     const trigger = screen.getByRole("button", { name: "City" });
     await userEvent.click(trigger);
@@ -193,7 +208,7 @@ describe("Overlay interaction contracts", () => {
         </>
       );
     }
-    render(<Harness />);
+    render(sharedMessagesElement(<Harness />));
     await userEvent.click(screen.getByRole("button", { name: "Open sheet" }));
     const sheet = screen.getByRole("dialog", { name: "Edit keyword" });
     expect(sheet.dataset.side).toBe("bottom");

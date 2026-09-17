@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 const SECRET_BYTES = 32;
@@ -25,6 +26,7 @@ export function WebhookSecretField({
   onChange,
   value,
 }: Readonly<WebhookSecretFieldProps>) {
+  const t = useTranslations("projectAlerts.webhook");
   const [copied, setCopied] = useState(false);
   const [generated, setGenerated] = useState(false);
   const revealsGeneratedSecret = generated && value.length > 0;
@@ -43,7 +45,7 @@ export function WebhookSecretField({
   return (
     <div className="grid gap-2">
       <label className={labelClassName} htmlFor="alert-webhook-hmac-secret">
-        HMAC secret
+        {t("hmacSecret")}
         {revealsGeneratedSecret ? (
           <input
             className={fieldClassName}
@@ -63,24 +65,22 @@ export function WebhookSecretField({
             minLength={16}
             name="hmacSecret"
             onChange={(event) => onChange(event.target.value)}
-            placeholder="At least 16 characters"
+            placeholder={t("secretPlaceholder")}
             value={value}
           />
         )}
       </label>
       <div className="flex flex-wrap gap-2">
         <Button onClick={generate} size="sm" type="button" variant="secondary">
-          Generate
+          {t("generate")}
         </Button>
         {revealsGeneratedSecret ? (
           <Button onClick={() => void copy()} size="sm" type="button" variant="secondary">
-            {copied ? "Copied" : "Copy secret"}
+            {copied ? t("copied") : t("copySecret")}
           </Button>
         ) : null}
       </div>
-      <p className="m-0 text-[10.5px] leading-relaxed text-fg-muted">
-        Generated secrets use 32 random bytes. Copy it now; it cannot be read back after saving.
-      </p>
+      <p className="m-0 text-[10.5px] leading-relaxed text-fg-muted">{t("secretHelp")}</p>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { useTranslations } from "next-intl";
 
 export type MarketChip = {
   id: string;
@@ -25,12 +26,13 @@ export function MarketChips({
   onNew,
   selected,
 }: Readonly<MarketChipsProps>) {
+  const t = useTranslations("shared.markets");
   function toggle(id: string) {
     onChange(selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id]);
   }
 
   return (
-    <section aria-label="Markets" className="flex flex-wrap gap-2">
+    <section aria-label={t("markets")} className="flex flex-wrap gap-2">
       {markets
         .filter((market) => market.status !== "removed")
         .map((market) => {
@@ -46,7 +48,9 @@ export function MarketChips({
             >
               {selectedMarket ? <Check aria-hidden size={10} weight="regular" /> : null}
               <span>{market.label}</span>
-              {!market.researchAvailable ? <span className="text-[10px]">no volume/KD</span> : null}
+              {!market.researchAvailable ? (
+                <span className="text-[10px]">{t("noVolume")}</span>
+              ) : null}
               {market.status === "paused" ? (
                 <span className="text-[9px]">{market.status.toUpperCase()}</span>
               ) : null}
@@ -59,7 +63,7 @@ export function MarketChips({
           onClick={onNew}
           type="button"
         >
-          <Plus aria-hidden size={11} weight="regular" /> New market
+          <Plus aria-hidden size={11} weight="regular" /> {t("newMarket")}
         </button>
       ) : null}
     </section>

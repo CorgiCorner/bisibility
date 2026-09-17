@@ -5,18 +5,17 @@ import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
 import type { AnalyticsControlId } from "@/lib/analytics/controls";
 import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
 import { VISIBILITY_HORIZON } from "@/lib/visibility/definition";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 const boxClass =
   "flex items-center justify-between gap-2 rounded-control border border-border-control bg-transparent px-[13px] py-[11px] transition-colors";
 const labelClass = "text-[10px] uppercase tracking-[0.4px] text-fg-muted";
-const depthOptions = serpDepthValues.map((depth) => ({
-  label: `Top ${depth}`,
-  value: String(depth),
-}));
-
-export function deviceSummary(selected: readonly MenuSelectOption[]) {
-  if (selected.length === 2) return "Desktop, Mobile";
+export function deviceSummary(
+  selected: readonly MenuSelectOption[],
+  t: ReturnType<typeof useTranslations<"onboarding.tracking">>,
+) {
+  if (selected.length === 2) return t("bothDevices");
   return selected.map((option) => option.label).join(", ");
 }
 
@@ -37,16 +36,20 @@ export function SerpDepthField({
   onChange: (depth: SerpDepth) => void;
   triggerClassName: string;
 }>) {
-  const help =
-    `Checks the first ${depth} results. Lower rankings are reported as not found and do not trigger alerts.` +
-    (depth < VISIBILITY_HORIZON
-      ? ` Choose Top ${VISIBILITY_HORIZON} or deeper to update Visibility.`
-      : "");
+  const t = useTranslations("onboarding.tracking");
+  const help = t("depthHelp", {
+    depth,
+    visibilityDepth: depth < VISIBILITY_HORIZON ? VISIBILITY_HORIZON : 0,
+  });
+  const depthOptions = serpDepthValues.map((option) => ({
+    label: t("depthOption", { depth: option }),
+    value: String(option),
+  }));
   return (
-    <MenuField help={help} label="SERP depth">
+    <MenuField help={help} label={t("depth")}>
       <MenuSelect
         analytics={analytics}
-        ariaLabel="SERP depth"
+        ariaLabel={t("depth")}
         onChange={(value) => onChange(Number(value) as SerpDepth)}
         options={depthOptions}
         triggerClassName={triggerClassName}

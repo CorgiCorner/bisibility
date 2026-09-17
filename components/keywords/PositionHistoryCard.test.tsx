@@ -1,5 +1,10 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  projectRankTrackerFeatureTestMessages,
+  renderWithProjectRankTrackerMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { historyAnnotationTop, PositionHistoryCard } from "./PositionHistoryCard";
@@ -73,7 +78,7 @@ describe("PositionHistoryCard", () => {
     expect(screen.getByText("Google rank over time, closer to #1 is better")).toBeInTheDocument();
     expect(screen.getByText(/^Latest #3/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("radio", { name: "7d" }));
+    fireEvent.click(screen.getByRole("radio", { name: "7 days" }));
     expect(
       screen.queryByText("Comparison restarted after a ranking normalization change."),
     ).not.toBeInTheDocument();
@@ -117,6 +122,31 @@ describe("PositionHistoryCard", () => {
     expect(screen.getByText(/^Latest #3 · Jul 19/)).toBeInTheDocument();
   });
 
+  it("uses the project calendar day instead of the client UTC day for the range and Today", () => {
+    vi.setSystemTime(new Date("2026-07-20T01:00:00.000Z"));
+    render(
+      <PositionHistoryCard
+        keyword={{
+          ...keywordRows[0],
+          positionHistory: [
+            { checkedAt: "2026-07-20T00:30:00.000Z", label: "UTC Jul 20", position: 3 },
+            { checkedAt: "2026-07-18T08:00:00.000Z", label: "UTC Jul 18", position: 5 },
+          ],
+        }}
+        timeZone="America/Los_Angeles"
+      />,
+    );
+
+    expect(screen.getByTestId("line-chart")).toHaveAttribute(
+      "data-labels",
+      JSON.stringify(["Jul 18", "Today"]),
+    );
+    expect(screen.getByTestId("line-chart")).toHaveAttribute(
+      "data-positions",
+      JSON.stringify([5, 3]),
+    );
+  });
+
   it("filters by elapsed days and keeps only the latest check from each day", () => {
     render(
       <PositionHistoryCard
@@ -143,7 +173,7 @@ describe("PositionHistoryCard", () => {
       JSON.stringify([9, 6, 5]),
     );
 
-    fireEvent.click(screen.getByRole("radio", { name: "7d" }));
+    fireEvent.click(screen.getByRole("radio", { name: "7 days" }));
 
     expect(screen.getByTestId("line-chart")).toHaveAttribute(
       "data-labels",
@@ -275,5 +305,77 @@ describe("PositionHistoryCard", () => {
       screen.getByRole("region", { name: /All-market position history:.*Belgium \/ Dutch #9/ }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Compared markets")).toHaveTextContent("Belgium / Dutch #9");
+  });
+
+  it("uses a prepared non-English payload for actual single and all-market chart controls", () => {
+    const messages = structuredClone(projectRankTrackerFeatureTestMessages) as Record<
+      string,
+      unknown
+    >;
+    const detail = (
+      messages.projectRankTracker as { keywordDetail: { position: Record<string, string> } }
+    ).keywordDetail.position;
+    detail.allMarkets = "Wszystkie rynki";
+    detail.rangeDays = "{count} dni";
+    detail.thisMarket = "Ten rynek";
+    detail.today = "Dzisiaj";
+    detail.currentPosition = "Pozycja #{position}";
+    detail.nextCheckLabel = "Następne sprawdzenie";
+    const belgium = {
+      ...keywordRows[0],
+      id: "kw_be",
+      location: { ...keywordRows[0].location, canonicalKey: "country:BE:lang:nl" },
+    };
+
+    renderWithFeatureMessages(
+      <PositionHistoryCard
+        keyword={keywordRows[0]}
+        marketTargets={[keywordRows[0], belgium]}
+        timeZone="UTC"
+      />,
+      { locale: "pl", messages: messages as never },
+    );
+
+    expect(screen.getByRole("radio", { name: "Ten rynek" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "7 dni" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "Wszystkie rynki" }));
+    expect(lineChart.mock.calls.at(-1)?.[0].labels).toContain("26 czerwca");
+  });
+
+  it("keeps single and all-market series on their persisted UTC days across a project-local midnight", () => {
+    vi.setSystemTime(new Date("2026-09-13T12:00:00.000Z"));
+    const belgium = {
+      ...keywordRows[0],
+      id: "kw_be",
+      location: { ...keywordRows[0].location, canonicalKey: "country:BE:lang:nl" },
+      position: 7,
+      positionHistory: [
+        { checkedAt: "2026-09-12T23:30:00.000Z", label: "UTC Sep 12", position: 7 },
+      ],
+    };
+    const active = {
+      ...keywordRows[0],
+      positionHistory: [
+        { checkedAt: "2026-09-12T23:30:00.000Z", label: "UTC Sep 12", position: 5 },
+        { checkedAt: "2026-09-13T00:30:00.000Z", label: "UTC Sep 13", position: 3 },
+      ],
+    };
+    render(
+      <PositionHistoryCard
+        keyword={active}
+        marketTargets={[active, belgium]}
+        timeZone="America/Los_Angeles"
+      />,
+    );
+
+    expect(lineChart.mock.calls.at(-1)?.[0].labels).toEqual(["Sep 12", "Today"]);
+    fireEvent.click(screen.getByRole("radio", { name: "All markets" }));
+    expect(lineChart.mock.calls.at(-1)?.[0].labels).toEqual(["Sep 12", "Today"]);
+    expect(
+      lineChart.mock.calls.at(-1)?.[0].series.map((series: { values: unknown[] }) => series.values),
+    ).toEqual([
+      [5, 3],
+      [7, null],
+    ]);
   });
 });

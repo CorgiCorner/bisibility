@@ -1,3 +1,4 @@
+import { useLocale, useTranslations } from "next-intl";
 import type { RunPageSummary } from "./RunPageModel";
 import type { RunPageData } from "./RunPageTypes";
 
@@ -12,11 +13,13 @@ function width(value: number, total: number): string {
 }
 
 export function RunPageCounters({ onShowSkipped, run, summary }: Readonly<RunPageCountersProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectRuns.rankRuns");
   if (summary.planned) return null;
 
   return (
     <section
-      aria-label="Run counters"
+      aria-label={t("runCounters")}
       className="min-w-0 rounded-card border border-border bg-bg-elev p-4"
     >
       {summary.skipped ? (
@@ -36,13 +39,13 @@ export function RunPageCounters({ onShowSkipped, run, summary }: Readonly<RunPag
                   title={summary.skippedLine}
                   type="button"
                 >
-                  {run.counts.skipped.toLocaleString("en-US")} skipped before start
+                  {t("counters.skippedBeforeStart", { count: run.counts.skipped })}
                 </button>
               </>
             ) : null}
           </p>
           <div
-            aria-label={`Run progress: ${summary.progressLabel}`}
+            aria-label={t("progressAria", { progress: summary.progressLabel })}
             aria-valuemax={run.counts.total}
             aria-valuemin={0}
             aria-valuenow={summary.processed}
@@ -76,7 +79,7 @@ export function RunPageCounters({ onShowSkipped, run, summary }: Readonly<RunPag
                   {counter.label}
                 </span>
                 <span className="mt-1 block text-xl font-semibold leading-none tabular-nums text-fg">
-                  {counter.count.toLocaleString("en-US")}
+                  {new Intl.NumberFormat(locale).format(counter.count)}
                 </span>
                 <span className="mt-[5px] block truncate text-[10px] leading-[1.5] text-fg-muted">
                   {counter.note}

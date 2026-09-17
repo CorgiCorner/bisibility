@@ -1,10 +1,11 @@
 "use client";
 
+import { formatResearchEstimateCents } from "@/components/research/research-money";
 import { PricingPopover, type PricingRow } from "@/components/ui/PricingPopover";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { backlinksRates, estimatedFeatureCostCents } from "@/lib/cost-estimate/provider-rates";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
+import { useFormatter, useTranslations } from "next-intl";
 import type { BacklinksLimit } from "./backlinks-workspace-model";
 
 // TODO(1105): thread the real provider id once AnalyzeCard takes a connection.
@@ -17,8 +18,12 @@ type AnalyzePricingPopoverProps = {
   scope: BacklinkTargetScope;
 };
 
-function estimateLabel(cents: number | null): string {
-  return cents == null ? "price unavailable" : formatEstimateCents(cents);
+function estimateLabel(
+  cents: number | null,
+  formatNumber: ReturnType<typeof useFormatter>["number"],
+  t: ReturnType<typeof useTranslations<"projectBacklinks.workspace.pricing">>,
+): string {
+  return cents == null ? t("unavailable") : formatResearchEstimateCents(cents, formatNumber);
 }
 
 export function AnalyzePricingPopover({
@@ -27,6 +32,8 @@ export function AnalyzePricingPopover({
   resultLimit,
   scope,
 }: Readonly<AnalyzePricingPopoverProps>) {
+  const format = useFormatter();
+  const t = useTranslations("projectBacklinks.workspace.pricing");
   const summaryCents = estimatedFeatureCostCents(
     rates.summary,
     1,
@@ -53,27 +60,28 @@ export function AnalyzePricingPopover({
   );
 
   const rows: PricingRow[] = [
-    { label: "Profile summary, new and lost", value: estimateLabel(summaryCents) },
+    { label: t("profileSummary"), value: estimateLabel(summaryCents, format.number, t) },
   ];
   if (scope === "site") {
-    rows.push({ label: "12-month history", value: estimateLabel(historyCents) });
+    rows.push({ label: t("history"), value: estimateLabel(historyCents, format.number, t) });
   }
-  rows.push({ label: `Link rows (${resultLimit})`, value: estimateLabel(rowsCents) });
   rows.push({
-    label: "Loading more rows later",
+    label: t("linkRows", { count: resultLimit }),
+    value: estimateLabel(rowsCents, format.number, t),
+  });
+  rows.push({
+    label: t("loadMore"),
     value:
-      moreRowsCents == null ? "price unavailable" : `${formatEstimateCents(moreRowsCents)} / 100`,
+      moreRowsCents == null
+        ? t("unavailable")
+        : t("perHundred", { price: formatResearchEstimateCents(moreRowsCents, format.number) }),
   });
 
   return (
     <PricingPopover
       anchor={anchor}
-      footer={
-        <>
-          Charged by DataForSEO to your own account. A snapshot stays cached for 24 hours -
-          reopening or switching tabs within it is free.
-        </>
-      }
+      eyebrow={t("eyebrow")}
+      footer={t("description")}
       onClose={onClose}
       rows={rows}
     />

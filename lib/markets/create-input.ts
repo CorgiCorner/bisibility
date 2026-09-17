@@ -109,11 +109,21 @@ export type NewMarketCreateResult = {
   publicId: string;
 };
 
+export type MarketPasteIssue =
+  | "duplicate_keyword"
+  | "empty"
+  | "invalid_target_url"
+  | "keyword_too_long"
+  | "missing_keyword";
+
 export class MarketPasteValidationError extends Error {
   readonly code = "market_paste_invalid";
 
-  constructor(message: string) {
-    super(message);
+  constructor(
+    readonly issue: MarketPasteIssue,
+    readonly line: number | null = null,
+  ) {
+    super("Market paste is invalid.");
     this.name = "MarketPasteValidationError";
   }
 }
@@ -131,23 +141,20 @@ export function parseNewMarketPaste(value: string): MarketPasteRow[] {
     const pipe = line.indexOf("|");
     const text = (pipe === -1 ? line : line.slice(0, pipe)).trim();
     const targetUrl = pipe === -1 ? "" : line.slice(pipe + 1).trim();
-    if (!text)
-      throw new MarketPasteValidationError(`Line ${index + 1}: add a keyword before the URL.`);
+    if (!text) throw new MarketPasteValidationError("missing_keyword", index + 1);
     if (text.length > KEYWORD_TEXT_MAX) {
-      throw new MarketPasteValidationError(`Line ${index + 1}: a keyword is too long.`);
+      throw new MarketPasteValidationError("keyword_too_long", index + 1);
     }
     if (targetUrl && !validTargetUrl(targetUrl)) {
-      throw new MarketPasteValidationError(`Line ${index + 1}: URL or path is invalid.`);
+      throw new MarketPasteValidationError("invalid_target_url", index + 1);
     }
     const normalized = normalizeKeyword(text);
     if (seen.has(normalized)) {
-      throw new MarketPasteValidationError(
-        `Line ${index + 1}: duplicate keyword after normalization.`,
-      );
+      throw new MarketPasteValidationError("duplicate_keyword", index + 1);
     }
     seen.add(normalized);
     rows.push({ targetUrl: targetUrl || null, text });
   }
-  if (rows.length === 0) throw new MarketPasteValidationError("Paste at least one keyword.");
+  if (rows.length === 0) throw new MarketPasteValidationError("empty");
   return rows;
 }

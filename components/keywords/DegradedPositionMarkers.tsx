@@ -1,15 +1,10 @@
 import type { KeywordLocation, PositionPoint } from "@/lib/queries/keywords";
+import { useLocale, useTranslations } from "next-intl";
 import { useXAxisScale, useYAxisScale } from "recharts";
 
-function countryName(countryCode: string) {
-  if (!countryCode) return "the country";
-  return new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode) ?? countryCode;
-}
-
-export function degradedPositionCopy(location: KeywordLocation) {
-  const country = countryName(location.countryCode);
-  const requested = location.cityName ?? location.displayName;
-  return `Checked at country level - the provider had no handle for this city. Position measured for ${country}, not ${requested}.`;
+function countryName(countryCode: string, locale: string) {
+  if (!countryCode) return countryCode;
+  return new Intl.DisplayNames([locale], { type: "region" }).of(countryCode) ?? countryCode;
 }
 
 export function DegradedPositionMarkers({
@@ -23,10 +18,15 @@ export function DegradedPositionMarkers({
   location: KeywordLocation;
   points: readonly PositionPoint[];
 }>) {
+  const locale = useLocale();
+  const t = useTranslations("projectRankTracker.keywordDetail.position");
   const xScale = useXAxisScale();
   const yScale = useYAxisScale();
   if (!xScale || !yScale) return null;
-  const copy = degradedPositionCopy(location);
+  const copy = t("degradedMarker", {
+    country: countryName(location.countryCode, locale),
+    requested: location.cityName ?? location.displayName,
+  });
   return points.flatMap((point) => {
     if (!point.degradedToCountry) return [];
     const x = xScale(labels.indexOf(point.label));

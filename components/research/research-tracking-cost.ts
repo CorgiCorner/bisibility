@@ -1,5 +1,5 @@
 import type { TrackingScheduleSelection } from "@/components/keywords/add/TrackingConfigurationFields";
-import { formatEstimateCents, monthlyCostCentsFor } from "@/lib/cost-estimate/project-estimate";
+import { monthlyCostCentsFor } from "@/lib/cost-estimate/project-estimate";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 
 export function researchTrackingCost(
@@ -21,31 +21,36 @@ export function researchTrackingCost(
   );
 }
 
+export type ResearchTrackingCostFact =
+  | { frequency: "manual" | "paused"; kind: "zero"; projectDefault: boolean }
+  | { frequency: "custom_cron"; kind: "custom_cron"; projectDefault: boolean }
+  | {
+      frequency: Exclude<TrackingScheduleSelection, "project_default">;
+      kind: "unavailable";
+      locationCount: number;
+      projectDefault: boolean;
+    }
+  | {
+      costCents: number;
+      frequency: Exclude<TrackingScheduleSelection, "project_default">;
+      kind: "estimated";
+      projectDefault: boolean;
+    };
+
 export function researchTrackingCostLine(
   context: ProjectCostContext,
   schedule: TrackingScheduleSelection,
   cost: number | null,
   locationCount = 1,
-): { emphasis: string | null; lead: string; tail: string } {
+): ResearchTrackingCostFact {
   const frequency = schedule === "project_default" ? context.rawFrequency : schedule;
+  const projectDefault = schedule === "project_default";
   if (frequency === "manual" || frequency === "paused") {
-    return { emphasis: "$0/mo", lead: "Tracking cost: scheduled spend ", tail: "." };
+    return { frequency, kind: "zero", projectDefault };
   }
   if (cost == null) {
-    return {
-      emphasis: null,
-      lead:
-        frequency === "custom_cron"
-          ? "Tracking cost excludes the custom cron schedule."
-          : `Tracking estimate: 1 keyword, ${locationCount} ${locationCount === 1 ? "location" : "locations"}, ${frequency.replace("_", " ")}.`,
-      tail: "",
-    };
+    if (frequency === "custom_cron") return { frequency, kind: "custom_cron", projectDefault };
+    return { frequency, kind: "unavailable", locationCount, projectDefault };
   }
-  const frequencyLabel =
-    schedule === "project_default" ? `project default, ${frequency}` : frequency;
-  return {
-    emphasis: `~${formatEstimateCents(cost)}`,
-    lead: "Tracking cost: ",
-    tail: `/month at ${frequencyLabel.replace("_", " ")} checks, billed to your own account.`,
-  };
+  return { costCents: cost, frequency, kind: "estimated", projectDefault };
 }

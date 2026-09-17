@@ -2,65 +2,42 @@ import type { KeywordCheckState } from "@/lib/queries/keyword-row";
 import { appPath } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import type { SerpDepth } from "@/lib/serp/constants";
-import { notRankedLabel } from "@/lib/serp/rank-depth";
-
 export type EmptyRankCopy = {
-  badge: string;
-  body: string;
+  action: "check_top" | "connect_provider" | "refresh" | "retry" | "run_first_check";
+  depth: SerpDepth;
   href: string;
-  link: string | ((depth: SerpDepth) => string);
-  position: string;
-  title: string;
 };
-
-export function checkTopDepthLabel(depth: SerpDepth): string {
-  return `Check top ${depth}`;
-}
 
 export function emptyRankCopy(
   state: Exclude<KeywordCheckState, "ranked">,
   projectRef: string,
-  trackedDepth = 100,
+  trackedDepth: SerpDepth = 100,
   providerConnected = true,
 ): EmptyRankCopy {
   if (state === "running") {
     return {
-      badge: "No data",
-      body: "The provider is fetching results for this keyword. The page updates as soon as the check completes.",
+      action: "refresh",
+      depth: trackedDepth,
       href: projectRunsPath(projectRef),
-      link: "Refresh",
-      position: "No data",
-      title: "Rank check in progress",
     };
   }
   if (state === "failed") {
     return {
-      badge: "No data",
-      body: "The last check returned an error.",
+      action: "retry",
+      depth: trackedDepth,
       href: projectRunsPath(projectRef),
-      link: "Retry check",
-      position: "No data",
-      title: "No position from the latest check",
     };
   }
   if (state === "not_ranked") {
     return {
-      badge: notRankedLabel(trackedDepth),
-      body: "Outside the tracked depth on the last check.",
+      action: "check_top",
+      depth: trackedDepth,
       href: projectRunsPath(projectRef),
-      link: checkTopDepthLabel,
-      position: `outside top ${trackedDepth}`,
-      title: `Not ranked in the top ${trackedDepth}`,
     };
   }
   return {
-    badge: "No data",
-    body: providerConnected
-      ? "First check has not run yet."
-      : "First check has not run yet. Connect a SERP provider to run it.",
+    action: providerConnected ? "run_first_check" : "connect_provider",
+    depth: trackedDepth,
     href: appPath(projectRef, "integrations"),
-    link: providerConnected ? "Run first check" : "Connect a SERP provider",
-    position: "No data",
-    title: "No ranking data yet",
   };
 }

@@ -12,7 +12,7 @@ export { ArrowUpRightIcon as trailingExternalIcon } from "@phosphor-icons/react/
 import type { Icon } from "@phosphor-icons/react/lib";
 
 export type UserMenuLink = {
-  label: string;
+  key: "accountSettings" | "discord" | "docs" | "feedback" | "github" | "homepage" | "signOut";
   icon: Icon;
   hostedOnly?: boolean;
   href?: string;
@@ -21,20 +21,20 @@ export type UserMenuLink = {
 
 // Account / personal section (HANDOFF-2 §6). Project config stays in Settings.
 export const accountLinks = [
-  { label: "Account settings", href: "/app/account", icon: UserCircle },
+  { key: "accountSettings", href: "/app/account", icon: UserCircle },
 ] satisfies UserMenuLink[];
 
 export const resourceLinks = [
-  { label: "Docs and self-hosting", href: DOCS_URL, icon: BookOpenText, external: true },
+  { key: "docs", href: DOCS_URL, icon: BookOpenText, external: true },
   // Hosted builds link back to the vendor site without relying on the regional app host.
   {
-    label: "Homepage",
+    key: "homepage",
     href: MARKETING_URL,
     icon: House,
     external: true,
     hostedOnly: true,
   },
-  { label: "Send feedback", href: FEEDBACK_URL, icon: ChatCircleDots, external: true },
+  { key: "feedback", href: FEEDBACK_URL, icon: ChatCircleDots, external: true },
 ] satisfies UserMenuLink[];
 
 export function resourceLinksForDeployment(showHostedLinks: boolean) {
@@ -42,8 +42,8 @@ export function resourceLinksForDeployment(showHostedLinks: boolean) {
 }
 
 export const communityLinks = [
-  { label: "GitHub", href: GITHUB_URL, icon: GithubLogo, external: true },
-  { label: "Discord", href: DISCORD_URL, icon: DiscordLogo, external: true },
+  { key: "github", href: GITHUB_URL, icon: GithubLogo, external: true },
+  { key: "discord", href: DISCORD_URL, icon: DiscordLogo, external: true },
 ] satisfies UserMenuLink[];
 
-export const signOutLink = { label: "Sign out", icon: SignOut } satisfies UserMenuLink;
+export const signOutLink = { key: "signOut", icon: SignOut } satisfies UserMenuLink;

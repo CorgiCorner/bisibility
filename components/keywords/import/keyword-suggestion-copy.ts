@@ -1,0 +1,31 @@
+export type SuggestionDrawerMessages = {
+  add: (values: { count: number }) => string;
+  cancel: string;
+  clear: string;
+  clicks: string;
+  description: string;
+  filterAria: string;
+  filterPlaceholder: string;
+  hidden: (values: { count: number }) => string;
+  hide: string;
+  impressions: string;
+  inDraft: string;
+  metric: (values: { value: number }) => string;
+  metricUnavailable: string;
+  monthlyChecks: (values: { checks: number; count: number }) => string;
+  monthlyChecksCostBelowCent: (values: {
+    checks: number;
+    count: number;
+    minimum: number;
+  }) => string;
+  monthlyChecksCost: (values: { checks: number; cost: number; count: number }) => string;
+  query: string;
+  selected: (values: { count: number }) => string;
+  selectionCount: (values: { count: number }) => string;
+  selectAll: string;
+  show: string;
+  title: string;
+  top: (values: { count: number }) => string;
+  tracked: string;
+  use: (values: { count: number }) => string;
+};

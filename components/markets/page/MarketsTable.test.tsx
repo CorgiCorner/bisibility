@@ -1,5 +1,6 @@
+import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MarketsTable } from "./MarketsTable";
 

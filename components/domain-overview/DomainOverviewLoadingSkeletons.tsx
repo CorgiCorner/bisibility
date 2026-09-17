@@ -79,9 +79,9 @@ function TableLoading({ pages = false }: Readonly<{ pages?: boolean }>) {
   );
 }
 
-export function DomainOverviewResultsLoading() {
+export function DomainOverviewResultsLoading({ ariaLabel }: Readonly<{ ariaLabel: string }>) {
   return (
-    <div aria-busy="true" aria-label="Domain Overview loading" className="grid min-w-0 gap-4.5">
+    <div aria-busy="true" aria-label={ariaLabel} className="grid min-w-0 gap-4.5">
       <ContextLoading />
       <KpisLoading />
       <ChartLoading />
@@ -156,14 +156,10 @@ function IdlePanelLoading() {
   );
 }
 
-export function DomainOverviewPageLoading() {
+export function DomainOverviewPageLoading({ ariaLabel }: Readonly<{ ariaLabel: string }>) {
   return (
     <PageContent aria-hidden>
-      <section
-        aria-busy="true"
-        aria-label="Domain Overview page loading"
-        className="grid min-w-0 gap-4"
-      >
+      <section aria-busy="true" aria-label={ariaLabel} className="grid min-w-0 gap-4">
         <AnalyzeCardLoading />
         <IdlePanelLoading />
       </section>

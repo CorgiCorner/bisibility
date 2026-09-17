@@ -1,3 +1,4 @@
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { setNavigationState } from "@/tests/next-navigation";
 import * as r from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -52,7 +53,7 @@ v.describe("SearchInsightsBody", () => {
         keyEvents: 7,
         sessions: 84,
       };
-      r.render(
+      render(
         <SearchInsightsPagesTable
           keyEventsConfigured={keyEventsConfigured}
           lens={lens}
@@ -74,7 +75,7 @@ v.describe("SearchInsightsBody", () => {
   );
 
   v.it("shows null GA4 funnel metrics as tracked-later values", () => {
-    r.render(
+    render(
       <SearchInsightsPagesTable
         keyEventsConfigured
         lens="traffic"
@@ -92,7 +93,7 @@ v.describe("SearchInsightsBody", () => {
   });
 
   v.it("renders zero sessions with no engagement percentage", () => {
-    r.render(
+    render(
       <SearchInsightsPagesTable
         keyEventsConfigured
         lens="traffic"
@@ -109,7 +110,7 @@ v.describe("SearchInsightsBody", () => {
   });
 
   v.it("leaves engagement and key events as plain headers", () => {
-    r.render(
+    render(
       <SearchInsightsPagesTable
         keyEventsConfigured
         lens="traffic"
@@ -253,7 +254,7 @@ v.describe("SearchInsightsBody", () => {
   v.it("keeps the page link independent of the GA4 funnel", async () => {
     const onOpen = v.vi.fn();
     const row = { ...t.pageRows(1)[0], engagementRate: 0.625, keyEvents: 7, sessions: 84 };
-    r.render(
+    render(
       <SearchInsightsPagesTable
         keyEventsConfigured
         lens="traffic"
@@ -273,7 +274,7 @@ v.describe("SearchInsightsBody", () => {
 
   v.it("offers no outbound link for a stored value that is not a web address", () => {
     const stored = "android-app://com.example";
-    r.render(
+    render(
       <SearchInsightsPagesTable rows={[{ ...t.pageRows(1)[0], path: stored, url: stored }]} />,
     );
 
@@ -282,7 +283,7 @@ v.describe("SearchInsightsBody", () => {
   });
 
   v.it("still explains a missing landing-page match", () => {
-    r.render(<SearchInsightsPagesTable lens="traffic" rows={[t.pageRows(1)[0]]} showSessions />);
+    render(<SearchInsightsPagesTable lens="traffic" rows={[t.pageRows(1)[0]]} showSessions />);
 
     v.expect(
       t.pageColumnHeader(

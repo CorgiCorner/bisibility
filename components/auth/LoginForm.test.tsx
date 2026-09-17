@@ -1,7 +1,19 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import {
+  authFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LoginForm } from "./LoginForm";
+
+function render(
+  ui: ReactElement,
+  options: Parameters<typeof renderWithFeatureMessages>[1] = { messages: authFeatureTestMessages },
+) {
+  return renderWithFeatureMessages(ui, options);
+}
 
 const mocks = vi.hoisted(() => ({
   emailOtpSignIn: vi.fn(),
@@ -120,6 +132,76 @@ describe("LoginForm capacity errors", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "This instance has no email provider configured, so sign-in codes cannot be sent. The instance admin needs to set EMAIL_PROVIDER.",
     );
+  });
+
+  it("uses configured non-English fixtures for validation and social errors", async () => {
+    const upstreamDiagnostic = "provider outage details";
+    mocks.socialSignIn
+      .mockResolvedValueOnce({ error: { code: "PROVIDER_NOT_FOUND" } })
+      .mockResolvedValueOnce({ error: { code: "EMAIL_NOT_VERIFIED" } })
+      .mockResolvedValueOnce({ error: { message: upstreamDiagnostic } });
+    const messages = structuredClone(authFeatureTestMessages);
+    messages.auth.login.status.genericError = "Coś poszło nie tak. Spróbuj ponownie.";
+    messages.auth.login.status.methodUnavailable = "Ta metoda logowania nie jest skonfigurowana.";
+    messages.auth.login.status.providerEmailUnverified =
+      "Potwierdź adres email u dostawcy logowania, a następnie spróbuj ponownie.";
+    messages.auth.login.validation.email = "Podaj prawidłowy adres email.";
+    const user = userEvent.setup();
+    render(
+      <LoginForm
+        dataResidencyMessage=""
+        enabledProviders={{ github: false, google: true }}
+        legalConsentLinks={null}
+      />,
+      { locale: "pl", messages },
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send login code" }));
+    expect(await screen.findByText("Podaj prawidłowy adres email.")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Continue with Google" }));
+    expect(
+      await screen.findByText("Ta metoda logowania nie jest skonfigurowana."),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Continue with Google" }));
+    expect(
+      await screen.findByText(
+        "Potwierdź adres email u dostawcy logowania, a następnie spróbuj ponownie.",
+      ),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Continue with Google" }));
+    expect(await screen.findByText("Coś poszło nie tak. Spróbuj ponownie.")).toBeInTheDocument();
+    expect(screen.queryByText(upstreamDiagnostic)).toBeNull();
+  });
+
+  // A malformed address used to fall through to Chrome's own constraint bubble, which speaks
+  // the browser UI language rather than the chosen interface locale.
+  it("answers a malformed address in the page locale rather than the browser's", async () => {
+    const messages = structuredClone(authFeatureTestMessages);
+    messages.auth.login.validation.email = "Podaj prawidlowy adres email.";
+    const user = userEvent.setup();
+    render(
+      <LoginForm
+        dataResidencyMessage=""
+        enabledProviders={{ github: false, google: true }}
+        legalConsentLinks={null}
+      />,
+      { locale: "pl", messages },
+    );
+
+    const field = screen.getByLabelText("Email");
+    expect(field.closest("form")).toHaveAttribute("novalidate");
+
+    await user.type(field, "not-an-email");
+    await user.click(screen.getByRole("button", { name: "Send login code" }));
+
+    const error = await screen.findByRole("alert");
+    expect(error).toHaveTextContent("Podaj prawidlowy adres email.");
+    expect(field).toHaveAttribute("aria-invalid", "true");
+    expect(field).toHaveAttribute("aria-describedby", error.id);
+    expect(mocks.requestLoginCode).not.toHaveBeenCalled();
   });
 
   it("passes the return destination into the email OTP redirect decision", async () => {

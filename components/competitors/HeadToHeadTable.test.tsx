@@ -1,9 +1,10 @@
+import { renderWithCompetitorsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import {
   buildCompetitorMarket,
   emptyCompetitorFilter,
 } from "@/lib/competitors/competitor-market-model";
 import type { CompetitorMarketData } from "@/lib/competitors/types";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { HeadToHeadTable } from "./HeadToHeadTable";
 

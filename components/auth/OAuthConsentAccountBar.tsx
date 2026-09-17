@@ -4,6 +4,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth/client";
 import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type OAuthConsentAccountBarProps = {
@@ -17,6 +18,7 @@ export function OAuthConsentAccountBar({
   email,
   initials,
 }: Readonly<OAuthConsentAccountBarProps>) {
+  const t = useTranslations("auth.oauthConsent");
   const [switching, setSwitching] = useState(false);
 
   async function switchAccount() {
@@ -38,12 +40,16 @@ export function OAuthConsentAccountBar({
         initials={initials}
         src={avatarUrl}
       />
-      <p className="ml-2.5 mr-3 min-w-0 flex-1 truncate text-[12.5px] text-fg-muted">
-        Approving as <strong className="font-semibold text-fg">{email}</strong>
+      <p className="ml-2.5 mr-3 min-w-0 flex-1 break-words text-[12.5px] [overflow-wrap:anywhere] text-fg-muted">
+        {t.rich("approvingAs", {
+          email,
+          strong: (chunks) => <strong className="font-semibold text-fg">{chunks}</strong>,
+        })}
       </p>
       <Button
+        className="shrink-0"
         loading={switching}
-        loadingLabel="switching"
+        loadingLabel={t("switching")}
         onClick={() => void switchAccount()}
         size="xs"
         style={{
@@ -55,7 +61,7 @@ export function OAuthConsentAccountBar({
         type="button"
         variant="ghost"
       >
-        switch account
+        {t("switchAccount")}
       </Button>
     </div>
   );

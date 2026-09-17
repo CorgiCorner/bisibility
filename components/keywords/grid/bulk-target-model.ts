@@ -1,12 +1,16 @@
 import type { KeywordRow } from "@/lib/queries/keywords";
 
 export type BulkTargetView = {
-  actionLabel: string;
+  actionKey:
+    | "targetChangeAction"
+    | "targetReplaceAction"
+    | "targetSetAction"
+    | "targetSetSameAction";
   hasTargets: boolean;
   initialValue: string;
   mixed: boolean;
-  modalTitle: string;
-  submitLabel: string;
+  submitKey: "targetChangeSubmit" | "targetReplaceSubmit" | "targetSetSubmit";
+  titleKey: "targetChangeTitle" | "targetReplaceTitle" | "targetSetSameTitle" | "targetSetTitle";
 };
 
 export function bulkTargetView(rows: readonly KeywordRow[]): BulkTargetView {
@@ -19,38 +23,38 @@ export function bulkTargetView(rows: readonly KeywordRow[]): BulkTargetView {
   if (rows.length === 1) {
     return hasTargets
       ? {
-          actionLabel: "Change target URL",
+          actionKey: "targetChangeAction",
           hasTargets,
           initialValue,
           mixed,
-          modalTitle: "Change target URL",
-          submitLabel: "Change target",
+          submitKey: "targetChangeSubmit",
+          titleKey: "targetChangeTitle",
         }
       : {
-          actionLabel: "Set target URL",
+          actionKey: "targetSetAction",
           hasTargets,
           initialValue,
           mixed,
-          modalTitle: "Set target URL",
-          submitLabel: "Set target",
+          submitKey: "targetSetSubmit",
+          titleKey: "targetSetTitle",
         };
   }
 
   return hasTargets
     ? {
-        actionLabel: "Replace target URLs...",
+        actionKey: "targetReplaceAction",
         hasTargets,
         initialValue,
         mixed,
-        modalTitle: "Replace target URLs",
-        submitLabel: "Replace targets",
+        submitKey: "targetReplaceSubmit",
+        titleKey: "targetReplaceTitle",
       }
     : {
-        actionLabel: "Set same target URL...",
+        actionKey: "targetSetSameAction",
         hasTargets,
         initialValue,
         mixed,
-        modalTitle: "Set same target URL",
-        submitLabel: "Set target",
+        submitKey: "targetSetSubmit",
+        titleKey: "targetSetSameTitle",
       };
 }

@@ -1,3 +1,4 @@
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { Calendar } from "./Calendar";
@@ -6,6 +7,7 @@ const meta = {
   args: { onChange: () => undefined, value: "2026-07-20" },
   component: Calendar,
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="min-h-[360px] bg-bg p-6 text-fg">
         <div className="w-[280px] rounded-card border border-border bg-bg-elev p-4">

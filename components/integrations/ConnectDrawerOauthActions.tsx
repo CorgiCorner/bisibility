@@ -1,5 +1,6 @@
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { Button } from "@/components/ui/Button";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { ConnectedGoogleAccountFooter } from "./ConnectedGoogleAccountFooter";
 
@@ -45,6 +46,7 @@ export function ConnectDrawerOauthActions({
   ready,
   setupActive,
 }: Readonly<ConnectDrawerOauthActionsProps>) {
+  const t = useTranslations("projectIntegrations.oauth");
   if (!isConnected || setupActive) {
     return ready && href ? (
       <Button
@@ -54,31 +56,29 @@ export function ConnectDrawerOauthActions({
         variant={setupActive ? "ghost" : "secondary"}
       >
         {setupActive
-          ? "Use a different Google account"
+          ? t("useDifferentAccount")
           : needsReauth
-            ? "Reconnect Google account"
-            : "Connect Google account"}
+            ? t("reconnectAccount")
+            : t("connectAccount")}
       </Button>
     ) : (
-      <DisabledButton>
-        {needsReauth ? "Reconnect Google account" : "Connect Google account"}
-      </DisabledButton>
+      <DisabledButton>{needsReauth ? t("reconnectAccount") : t("connectAccount")}</DisabledButton>
     );
   }
-  if (!ready || !href) return <DisabledButton>Change property</DisabledButton>;
+  if (!ready || !href) return <DisabledButton>{t("changeProperty")}</DisabledButton>;
   return (
     <>
       {loadStoredProperties ? (
         <Button
           fullWidth
           loading={pending}
-          loadingLabel="Loading properties…"
+          loadingLabel={t("loadingProperties")}
           onClick={loadStoredProperties}
           style={oauthButtonStyle}
           type="button"
           variant="secondary"
         >
-          Change property
+          {t("changeProperty")}
         </Button>
       ) : null}
       <ConnectedGoogleAccountFooter

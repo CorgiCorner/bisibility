@@ -1,12 +1,18 @@
 import type { CheckRunRow } from "@/lib/checks/contract";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { CheckRunDetailsRow, splitCheckRunDetailLine } from "./CheckRunDetailsRow";
+import type { CheckRunsTranslations } from "./check-runs-format";
 
 type Props = {
   keywordHref: string;
   run: CheckRunRow;
+};
+
+type StoredResultLinesProps = Props & {
+  t: CheckRunsTranslations;
 };
 
 export type CheckRunStoredResultLine = {
@@ -17,7 +23,8 @@ export type CheckRunStoredResultLine = {
 export function checkRunStoredResultLines({
   keywordHref,
   run,
-}: Readonly<Props>): CheckRunStoredResultLine[] {
+  t,
+}: Readonly<StoredResultLinesProps>): CheckRunStoredResultLine[] {
   const stored = run.storedResults;
   if (!stored || stored.tier === "none") return [];
 
@@ -28,19 +35,21 @@ export function checkRunStoredResultLines({
   const summary =
     stored.tier === "full"
       ? typeof run.position === "number"
-        ? `Your result at #${run.position}`
+        ? t("yourResult", { position: run.position })
         : depth != null
-          ? `Not in the top ${depth} at this check`
-          : "Not found at this check"
-      : "Compact record. One row per domain with its best position survived; titles, URLs and page features did not.";
+          ? t("notInTop", { depth })
+          : t("notFoundAtCheck")
+      : t("compactRecord");
   const lines: CheckRunStoredResultLine[] = [
     {
       content: (
         <CheckRunDetailsRow>
-          <strong className="font-semibold text-fg">Retrieved results</strong>
+          <strong className="font-semibold text-fg">{t("retrievedResults")}</strong>
           {retrieved != null ? (
             <span>
-              {depth != null ? `${retrieved} of ${depth} retrieved` : `${retrieved} retrieved`}
+              {depth != null
+                ? t("retrievedOfDepth", { depth, retrieved })
+                : t("retrieved", { retrieved })}
             </span>
           ) : null}
         </CheckRunDetailsRow>
@@ -57,14 +66,14 @@ export function checkRunStoredResultLines({
     lines.push(
       {
         content: (
-          <CheckRunDetailsRow>{`Positions ${retrieved + 1}-${depth} not retrieved`}</CheckRunDetailsRow>
+          <CheckRunDetailsRow>
+            {t("positionsNotRetrieved", { end: depth, start: retrieved + 1 })}
+          </CheckRunDetailsRow>
         ),
         id: `${prefix}-gap`,
       },
       ...splitCheckRunDetailLine(
-        stored.stoppedAtResult
-          ? "The check stopped at your result, so these were never requested and never billed."
-          : "These positions were not retrieved for this check. They are unknown, not empty.",
+        stored.stoppedAtResult ? t("stoppedAtResult") : t("positionsUnknown"),
       ).map((line, index) => ({
         content: <CheckRunDetailsRow>{line}</CheckRunDetailsRow>,
         id: `${prefix}-gap-copy-${index}`,
@@ -79,7 +88,7 @@ export function checkRunStoredResultLines({
           className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-accent-text hover:underline"
           href={keywordHref}
         >
-          Open full results
+          {t("openFullResults")}
           <ArrowRight aria-hidden size={11} weight="regular" />
         </Link>
       </CheckRunDetailsRow>
@@ -89,8 +98,9 @@ export function checkRunStoredResultLines({
   return lines;
 }
 
-export function CheckRunStoredResults(props: Readonly<Props>) {
-  const lines = checkRunStoredResultLines(props);
+export function CheckRunStoredResults({ keywordHref, run }: Readonly<Props>) {
+  const t = useTranslations("projectRankTracker.checks");
+  const lines = checkRunStoredResultLines({ keywordHref, run, t });
   if (lines.length === 0) return null;
   return (
     <div className="mt-2 border-t border-border pt-2">

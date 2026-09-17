@@ -1,11 +1,17 @@
+import { searchInsightsMessagesElement } from "@/i18n/test-support/render-with-feature-messages";
 import type { SearchInsightsRowsRequest } from "@/lib/actions/search-insights-rows";
 import { ROWS_PAGE_LIMIT, SEARCH_INSIGHTS_ROWS_CAP } from "@/lib/search-insights/constants";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
 import { deferred, pageRows, queryRows, view } from "./search-insights-row-test-fixtures";
 import { type UseSearchInsightsRowsInput, useSearchInsightsRows } from "./useSearchInsightsRows";
 
 vi.mock("@/components/ui/toast-context", () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+
+function SearchInsightsMessages({ children }: Readonly<{ children: ReactNode }>) {
+  return searchInsightsMessagesElement(children);
+}
 
 function input(overrides: Partial<UseSearchInsightsRowsInput> = {}): UseSearchInsightsRowsInput {
   return {
@@ -32,7 +38,10 @@ it("drops loaded rows when the canonical property changes with the same view ide
     view: view({ pages: { rows: pageRows(50), total: 59 } }),
     loadRowsAction: vi.fn(async () => ({ kind: "pages" as const, rows: pageRows(9), total: 59 })),
   });
-  const { result, rerender } = renderHook(useSearchInsightsRows, { initialProps: initial });
+  const { result, rerender } = renderHook(useSearchInsightsRows, {
+    initialProps: initial,
+    wrapper: SearchInsightsMessages,
+  });
 
   await expandAll(result, "pages");
   expect(result.current.pages).toMatchObject({ show: "all", total: 59 });
@@ -46,7 +55,10 @@ it("shows the new window's rows after a period switch, not the previous window's
   const initial = input({
     view: view({ queries: { rows: queryRows(50, "twentyeight"), total: 1_284 } }),
   });
-  const { result, rerender } = renderHook(useSearchInsightsRows, { initialProps: initial });
+  const { result, rerender } = renderHook(useSearchInsightsRows, {
+    initialProps: initial,
+    wrapper: SearchInsightsMessages,
+  });
   await act(async () => result.current.expand("queries"));
   expect(result.current.queries.show).toBe(50);
   expect(result.current.queries.rows[0].query).toBe("twentyeight 0");
@@ -81,6 +93,7 @@ it("stops a saturated window at the cap instead of paging the whole property in"
       loadRowsAction,
       view: view({ queries: { rows: queryRows(50), total: 120_000 } }),
     }),
+    wrapper: SearchInsightsMessages,
   });
 
   await expandAll(result, "queries");
@@ -99,7 +112,10 @@ it("ignores a page that finishes after the canonical property changes", async ()
     loadRowsAction: vi.fn(() => pending.promise),
     view: view({ queries: { rows: queryRows(50, "old"), total: 51 } }),
   });
-  const { result, rerender } = renderHook(useSearchInsightsRows, { initialProps: initial });
+  const { result, rerender } = renderHook(useSearchInsightsRows, {
+    initialProps: initial,
+    wrapper: SearchInsightsMessages,
+  });
   await act(async () => result.current.expand("queries"));
   act(() => result.current.expand("queries"));
   expect(result.current.loading.queries).toBe(true);
@@ -127,6 +143,7 @@ it("keeps the sorted rows when an earlier Show all response settles afterwards",
       loadRowsAction,
       view: view({ queries: { rows: queryRows(50, "initial query"), total: 80 } }),
     }),
+    wrapper: SearchInsightsMessages,
   });
   await act(async () => result.current.expand("queries"));
   act(() => result.current.expand("queries"));
@@ -171,6 +188,7 @@ it("flips the direction when the active column is asked for again", async () => 
       loadRowsAction,
       view: view({ queries: { rows: queryRows(10), total: 80 } }),
     }),
+    wrapper: SearchInsightsMessages,
   });
   for (const direction of ["asc", "desc"] as const) {
     await act(async () => result.current.sortBy("queries", "clicks"));

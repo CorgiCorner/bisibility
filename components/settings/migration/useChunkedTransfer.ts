@@ -15,7 +15,7 @@ import {
   transferSectionsChunk,
 } from "@/lib/actions/instance-migration";
 import type { MigrationImportCompletion } from "@/lib/migration/result";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type ChunkedTransferProgress = {
@@ -37,6 +37,12 @@ type TransferResult = {
   mode: "single" | "sessions";
 };
 
+export class ChunkedTransferError extends Error {
+  constructor(readonly reason: "sessionsUnsupported" | "unreachable") {
+    super(reason);
+  }
+}
+
 function projectInput(projectId: string) {
   return { projectId };
 }
@@ -46,11 +52,12 @@ function transferProgress(sentChunks: number, totalChunks: number, message: stri
 }
 
 export function useChunkedTransfer() {
+  const t = useTranslations("projectSettingsMigration.transfer");
   const [progress, setProgress] = useState<ChunkedTransferProgress | null>(null);
 
   async function runSingleShotTransfer({ projectId, targetOrigin, token }: RunTransferInput) {
     const file = await exportCloudImportPackage(projectInput(projectId));
-    setProgress(transferProgress(0, 1, "Transferring package."));
+    setProgress(transferProgress(0, 1, t("progress.single")));
     const completion = unwrapActionResult(
       await transferCloudImportPackage({
         ...projectInput(projectId),
@@ -60,7 +67,7 @@ export function useChunkedTransfer() {
         token,
       }),
     );
-    setProgress({ message: "Transfer accepted.", sentChunks: 1, stage: "done", totalChunks: 1 });
+    setProgress({ message: t("progress.accepted"), sentChunks: 1, stage: "done", totalChunks: 1 });
     return { completion, file, mode: "single" as const };
   }
 
@@ -70,7 +77,7 @@ export function useChunkedTransfer() {
     token,
   }: RunTransferInput): Promise<TransferResult> {
     setProgress({
-      message: "Planning transfer.",
+      message: t("progress.planning"),
       sentChunks: 0,
       stage: "planning",
       totalChunks: 0,
@@ -82,18 +89,14 @@ export function useChunkedTransfer() {
           unwrapActionFailureResult,
         ),
       ]);
-      if (!target.reachable)
-        throw new Error(target.reason ?? "Target instance could not be reached.");
+      if (!target.reachable) throw new ChunkedTransferError("unreachable");
       if (!target.supportsSessions && plan.useSessions) {
-        throw new Error(
-          target.reason ??
-            "Target instance does not support chunked sessions. Upgrade it before transferring this project.",
-        );
+        throw new ChunkedTransferError("sessionsUnsupported");
       }
       if (!plan.useSessions) return await runSingleShotTransfer({ projectId, targetOrigin, token });
 
       const totalChunks = plan.chunkCount;
-      setProgress(transferProgress(0, totalChunks, "Creating import session."));
+      setProgress(transferProgress(0, totalChunks, t("progress.creatingSession")));
       const session = unwrapActionResult(
         await createRemoteImportSession({
           ...projectInput(projectId),
@@ -118,7 +121,7 @@ export function useChunkedTransfer() {
             }),
           );
         cursor = result.nextCursor;
-        setProgress(transferProgress(index + 1, totalChunks, "Transferring keyword chunks."));
+        setProgress(transferProgress(index + 1, totalChunks, t("progress.transferringKeywords")));
       }
       unwrapActionResult(
         await transferSectionsChunk({
@@ -129,9 +132,9 @@ export function useChunkedTransfer() {
           token,
         }),
       );
-      setProgress(transferProgress(totalChunks, totalChunks, "Transferred sections."));
+      setProgress(transferProgress(totalChunks, totalChunks, t("progress.transferredSections")));
       setProgress({
-        message: "Finalizing import session.",
+        message: t("progress.finalizing"),
         sentChunks: totalChunks,
         stage: "finalizing",
         totalChunks,
@@ -145,14 +148,19 @@ export function useChunkedTransfer() {
         }),
       );
       setProgress({
-        message: "Transfer complete.",
+        message: t("progress.complete"),
         sentChunks: totalChunks,
         stage: "done",
         totalChunks,
       });
       return { completion, mode: "sessions" };
     } catch (error) {
-      const message = actionErrorMessage(error, "Chunked transfer failed.");
+      const message =
+        error instanceof ChunkedTransferError
+          ? error.reason === "unreachable"
+            ? t("error.unreachable")
+            : t("error.sessionsUnsupported")
+          : t("error.generic");
       setProgress((current) => ({
         message,
         sentChunks: current?.sentChunks ?? 0,

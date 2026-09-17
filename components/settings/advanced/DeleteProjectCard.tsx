@@ -7,6 +7,7 @@ import {
   DeleteProjectConfirmation,
 } from "@/components/settings/advanced/DeleteProjectConfirmation";
 import { Button } from "@/components/ui/Button";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type { DeleteProjectAction } from "@/components/settings/advanced/DeleteProjectConfirmation";
@@ -22,13 +23,14 @@ export function DeleteProjectCard({
   domain,
   projectId,
 }: Readonly<DeleteProjectCardProps>) {
+  const t = useTranslations("projectSettingsAdvanced.danger");
   const [confirmationOpen, setConfirmationOpen] = useState(false);
 
   return (
     <>
       <AdvancedCardFrame
         className={advancedCardGeometryClassNames.danger}
-        description="Permanently delete this project, its tracked data and project API keys. This cannot be undone."
+        description={t("description")}
         footer={
           <Button
             aria-haspopup="dialog"
@@ -36,11 +38,11 @@ export function DeleteProjectCard({
             type="button"
             variant="destructive"
           >
-            Delete project
+            {t("delete")}
           </Button>
         }
         id="danger"
-        title="Danger zone"
+        title={t("title")}
         tone="danger"
       >
         {null}

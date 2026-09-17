@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { useTranslations } from "next-intl";
 
 type FirstCheckErrorsProps = {
   keywordError: string | null;
@@ -23,6 +24,7 @@ export function FirstCheckErrors({
   submitError,
   timezoneError,
 }: Readonly<FirstCheckErrorsProps>) {
+  const t = useTranslations("onboarding.firstCheck");
   return (
     <>
       {timezoneError ? <ErrorText>{timezoneError}</ErrorText> : null}
@@ -30,7 +32,7 @@ export function FirstCheckErrors({
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <ErrorText inRow>{keywordError}</ErrorText>
           <Button onClick={onRetryKeyword} size="sm" type="button" variant="secondary">
-            Retry loading keyword
+            {t("errors.retryKeyword")}
           </Button>
         </div>
       ) : null}

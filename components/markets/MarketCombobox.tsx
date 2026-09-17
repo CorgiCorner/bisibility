@@ -6,6 +6,7 @@ import {
   type MenuSelectOption,
   type MenuSelectOptionGroup,
 } from "@/components/ui/MenuSelect";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { MARKET_PICKER_SEARCH_THRESHOLD } from "./market-picker-constants";
 
@@ -66,7 +67,7 @@ function toMenuSelectOption<T>(market: MarketComboboxOption<T>): MenuSelectOptio
 
 export function MarketCombobox<T>({
   ariaLabel,
-  catalogLabel = "Catalog",
+  catalogLabel,
   catalogMarkets,
   catalogSearchOnly = true,
   disabled,
@@ -76,13 +77,14 @@ export function MarketCombobox<T>({
   noResultsMessage,
   onChange,
   selectedCountryCode,
-  trackedLabel = "Tracked markets",
+  trackedLabel,
   trackedMarkets,
   triggerClassName,
   triggerWrapperClassName,
   triggerTitle,
   value,
 }: Readonly<MarketComboboxProps<T>>) {
+  const t = useTranslations("shared.markets");
   const trackedValues = new Set(trackedMarkets.map((market) => market.value));
   const dedupedCatalog = catalogMarkets.filter((market) => !trackedValues.has(market.value));
   const allMarkets = [...trackedMarkets, ...dedupedCatalog];
@@ -90,14 +92,14 @@ export function MarketCombobox<T>({
   if (trackedMarkets.length > 0) {
     groups.push({
       id: "tracked",
-      label: trackedLabel,
+      label: trackedLabel ?? t("trackedMarkets"),
       options: trackedMarkets.map(toMenuSelectOption),
     });
   }
   if (dedupedCatalog.length > 0) {
     groups.push({
       id: "catalog",
-      label: catalogLabel,
+      label: catalogLabel ?? t("catalog"),
       options: dedupedCatalog.map(toMenuSelectOption),
       searchOnly: catalogSearchOnly && allMarkets.length > MARKET_PICKER_SEARCH_THRESHOLD,
     });
@@ -136,7 +138,7 @@ export function MarketCombobox<T>({
       menuWidth={menuWidth}
       noResultsMessage={noResultsMessage}
       onChange={handleChange}
-      searchPlaceholder="Search markets..."
+      searchPlaceholder={t("searchMarkets")}
       searchable={searchable}
       triggerClassName={triggerClassName}
       triggerTitle={triggerTitle}

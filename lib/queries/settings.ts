@@ -182,10 +182,13 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
   const segmentCounts = segmentCountByTag(savedViews);
   return {
     apiKeys: fullProject.apiKeys.map((apiKey) => ({
+      createdAt: apiKey.createdAt.toISOString(),
       createdLabel: labelFromDate("created", apiKey.createdAt, dateTime),
+      expiresAt: iso(apiKey.expiresAt),
       expiresLabel: apiKeyExpiryLabel(apiKey.expiresAt, now, dateTime),
       id: requiredPublicId(apiKey.publicId, "key", "API key"),
       isExpired: Boolean(apiKey.expiresAt && apiKey.expiresAt <= now),
+      lastUsedAt: iso(apiKey.lastUsedAt),
       lastUsedLabel: labelFromDate("last used", apiKey.lastUsedAt, dateTime),
       maskedValue: `${apiKey.prefix}******`,
       name: apiKey.name,

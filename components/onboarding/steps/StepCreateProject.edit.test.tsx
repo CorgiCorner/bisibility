@@ -1,5 +1,6 @@
 import { onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StepCreateProject } from "./StepCreateProject";
 

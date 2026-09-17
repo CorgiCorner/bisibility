@@ -1,5 +1,6 @@
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { TransitionStartFunction } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -14,7 +15,6 @@ vi.mock("react", async () => {
 });
 
 import { SearchInsightsPagesLens } from "./SearchInsightsPagesTable";
-import { PAGE_LENS_CONTROL_LABEL, PAGE_LENS_TRAFFIC_LABEL } from "./search-insights-copy";
 
 describe("SearchInsightsPagesLens", () => {
   beforeEach(() => {
@@ -39,7 +39,7 @@ describe("SearchInsightsPagesLens", () => {
     });
     render(<SearchInsightsPagesLens lens="search" showSessions />);
 
-    await userEvent.click(screen.getByRole("radio", { name: PAGE_LENS_TRAFFIC_LABEL }));
+    await userEvent.click(screen.getByRole("radio", { name: "Traffic" }));
 
     expect(transition.start).toHaveBeenCalledOnce();
   });
@@ -48,7 +48,7 @@ describe("SearchInsightsPagesLens", () => {
     transition.pending = true;
     render(<SearchInsightsPagesLens lens="search" showSessions />);
 
-    const control = screen.getByRole("group", { name: PAGE_LENS_CONTROL_LABEL });
+    const control = screen.getByRole("group", { name: "Top pages lens" });
     expect(control).toHaveAttribute("aria-busy", "true");
     for (const option of screen.getAllByRole("radio")) expect(option).toBeDisabled();
     expect(control.querySelector("[data-spinner]")).toBeInTheDocument();

@@ -105,9 +105,9 @@ function RankingHistoryPanel() {
   );
 }
 
-export function KeywordDetailPageSkeleton() {
+export function KeywordDetailPageSkeleton({ ariaLabel }: Readonly<{ ariaLabel: string }>) {
   return (
-    <section aria-busy="true" aria-label="Loading keyword detail" className="grid min-w-0 gap-4">
+    <section aria-busy="true" aria-label={ariaLabel} className="grid min-w-0 gap-4">
       <Panel className="p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">

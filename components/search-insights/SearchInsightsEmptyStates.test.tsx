@@ -1,6 +1,7 @@
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { routerMock } from "@/tests/next-navigation";
-import { act, render, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@phosphor-icons/react/dist/csr/ChartBar", () => ({
@@ -149,7 +150,7 @@ describe("SearchInsightsNoDataState", () => {
   ])("offers a refresh control while %s", (_name, overrides) => {
     renderNoData(overrides);
 
-    expect(screen.getByRole("button", { name: "Refresh import status" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh stored insights" })).toBeInTheDocument();
   });
 
   it("does not schedule refreshes while the import is queued", () => {
@@ -157,7 +158,9 @@ describe("SearchInsightsNoDataState", () => {
     renderNoData({ pausedReason: null, state: "queued" });
 
     expect(
-      screen.getByRole("button", { name: "Refresh import status" }).closest("[data-auto-refresh]"),
+      screen
+        .getByRole("button", { name: "Refresh stored insights" })
+        .closest("[data-auto-refresh]"),
     ).toHaveAttribute("data-auto-refresh", "inactive");
     expect(vi.getTimerCount()).toBe(0);
     act(() => vi.advanceTimersByTime(90_000));
@@ -168,7 +171,9 @@ describe("SearchInsightsNoDataState", () => {
     renderNoData({ connectionStatus: "needs_reauth", pausedReason: null });
 
     expect(screen.getByRole("heading", { name: "Reconnect required" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Refresh import status" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Refresh stored insights" }),
+    ).not.toBeInTheDocument();
   });
 
   it("replaces reconnect with an ask-admin cue for viewers", () => {
@@ -254,7 +259,7 @@ describe("SearchInsightsNoDataState", () => {
     renderNoData({ pausedReason: null, runtime: undefined, state: "running" });
 
     expect(screen.getByRole("heading", { name: "Status unavailable" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Refresh import status" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh stored insights" })).toBeInTheDocument();
   });
 
   it.each([

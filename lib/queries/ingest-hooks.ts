@@ -6,9 +6,11 @@ import { requireReadableProject } from "./_auth";
 import { getRequestProjectDefaults } from "./workspace-request-data";
 
 export type IngestHookListItem = {
+  createdAt: string;
   createdLabel: string;
   disabled: boolean;
   id: string;
+  lastUsedAt: string | null;
   label: string;
   lastUsedLabel: string;
 };
@@ -49,9 +51,11 @@ export async function getIngestHooks(
   });
 
   return hooks.map((hook) => ({
+    createdAt: hook.createdAt.toISOString(),
     createdLabel: labelFromDate("created", hook.createdAt, dateTime),
     disabled: hook.disabled,
     id: hook.publicId,
+    lastUsedAt: hook.lastUsedAt?.toISOString() ?? null,
     label: hook.label,
     lastUsedLabel: labelFromDate("last used", hook.lastUsedAt, dateTime),
   }));

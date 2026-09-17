@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { useForm } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
 import { ProviderCredentialForm } from "./steps/ProviderCredentialForm";
@@ -33,10 +34,11 @@ describe("rendered sensitive recording boundaries", () => {
     for (const element of [
       screen.getByDisplayValue("person@example.com"),
       screen.getByDisplayValue("private-fixture"),
-      screen.getByText("private provider response"),
+      screen.getByText("Connection test failed. Check the credentials and try again."),
     ]) {
       expect(element.closest("[data-analytics-block]")).not.toBeNull();
     }
+    expect(screen.queryByText("private provider response")).not.toBeInTheDocument();
   });
   it("blocks the connected Google property rendered in onboarding", () => {
     render(

@@ -1,6 +1,7 @@
 "use client";
 
-import { actionErrorMessage } from "@/components/keywords/action-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { Button } from "@/components/ui/Button";
 import { Menu } from "@/components/ui/Menu";
 import { MenuItem } from "@/components/ui/MenuItem";
@@ -22,6 +23,7 @@ import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/Caret
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { SaveCompetitorViewModal } from "./SaveCompetitorViewModal";
 
@@ -52,6 +54,8 @@ export function CompetitorSavedViewsControl({
   projectRef,
   savedViews,
 }: Readonly<CompetitorSavedViewsControlProps>) {
+  const t = useTranslations("projectCompetitors.ui");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const { showToast } = useToast();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -66,13 +70,17 @@ export function CompetitorSavedViewsControl({
     startTransition(() => {
       void deleteSavedViewAction({ projectId, viewId: view.id })
         .then(() => {
-          showToast("View deleted", { severity: "success" });
+          showToast(t("viewDeleted"), { severity: "success" });
           if (view.id === activeViewId) {
             router.push(competitorScopeHref(projectRef, config.scope));
           }
           router.refresh();
         })
-        .catch((error) => showToast(actionErrorMessage(error), { severity: "error" }));
+        .catch((error) =>
+          showToast(presentSafeActionError(error, sharedErrors, t("deleteViewError")), {
+            severity: "error",
+          }),
+        );
     });
   }
 
@@ -85,22 +93,22 @@ export function CompetitorSavedViewsControl({
           startIcon={<BookmarkSimple weight="regular" aria-hidden size={14} />}
           variant="secondary"
         >
-          {active?.name ?? "Comparison views"}
+          {active?.name ?? t("comparisonViews")}
           <CaretDown weight="regular" aria-hidden size={11} />
         </Button>
         {modified ? (
           <span className="rounded-full bg-accent-soft px-2.5 py-1 font-sans tabular-nums text-[10px] font-semibold text-accent-text">
-            Unsaved changes
+            {t("unsavedChanges")}
           </span>
         ) : null}
         {createSavedViewAction ? (
           <Button onClick={() => setSaveOpen(true)} size="sm" variant="secondary">
-            Save view
+            {t("saveView")}
           </Button>
         ) : null}
         {modified ? (
           <Button onClick={onDiscard} size="sm" variant="ghost">
-            Discard
+            {t("discard")}
           </Button>
         ) : null}
       </div>
@@ -117,7 +125,7 @@ export function CompetitorSavedViewsControl({
             <span className="min-w-0 flex-1 truncate">{view.name}</span>
             {deleteSavedViewAction && deletableSavedViewIdSet.has(view.id) ? (
               <button
-                aria-label={`Delete ${view.name}`}
+                aria-label={t("deleteView", { name: view.name })}
                 className="ml-3 text-fg-muted hover:text-red-text"
                 onClick={(event) => {
                   event.stopPropagation();
@@ -130,7 +138,7 @@ export function CompetitorSavedViewsControl({
             ) : null}
           </MenuItem>
         ))}
-        {savedViews.length === 0 ? <MenuItem disabled>No saved views yet</MenuItem> : null}
+        {savedViews.length === 0 ? <MenuItem disabled>{t("noSavedViews")}</MenuItem> : null}
       </Menu>
       {saveOpen ? (
         <SaveCompetitorViewModal

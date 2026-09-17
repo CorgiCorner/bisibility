@@ -2,8 +2,8 @@ import {
   CommandRegistryProvider,
   useRegisteredCommands,
 } from "@/components/shell/command-registry";
+import { renderWithProjectRankTrackerMessages } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { render } from "@testing-library/react";
 import { StrictMode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useRankTrackerCommands } from "./useRankTrackerCommands";
@@ -60,6 +60,8 @@ function Harness({ input }: { input: Input }) {
     </CommandRegistryProvider>
   );
 }
+
+const render = renderWithProjectRankTrackerMessages;
 
 function getCmd(id: string) {
   return {

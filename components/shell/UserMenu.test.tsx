@@ -1,5 +1,6 @@
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { deferred } from "@/tests/deferred";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -49,7 +50,7 @@ import { UserMenu } from "./UserMenu";
 
 let assignedHref: string | null = null;
 
-function renderMenu() {
+function renderMenu(roleLine = "Member") {
   render(
     <UserMenu
       anchorEl={document.createElement("button")}
@@ -57,7 +58,7 @@ function renderMenu() {
       email="member@example.com"
       name="Member Example"
       onClose={vi.fn()}
-      roleLine="Member"
+      roleLine={roleLine}
     />,
   );
 }
@@ -117,6 +118,12 @@ describe("UserMenu", () => {
 
     expect(roleLine).toHaveClass("text-fg-muted");
     expect(roleLine).not.toHaveClass("text-accent-text");
+  });
+
+  it("renders the server-localized role line without rewriting its project name", () => {
+    renderMenu("Właściciel w Projekt Example");
+
+    expect(screen.getByText("Właściciel w Projekt Example")).toBeInTheDocument();
   });
 
   it("keeps the user informed when sign out fails", async () => {

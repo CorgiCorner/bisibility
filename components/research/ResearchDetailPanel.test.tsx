@@ -1,6 +1,7 @@
+import { renderWithResearchMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { rankTrackerTabPath } from "@/lib/routing/app-path";
 import { makeCostContext } from "@/tests/factories/cost-context";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ResearchDetailPanel } from "./ResearchDetailPanel";
 
@@ -61,7 +62,7 @@ describe("ResearchDetailPanel", () => {
 
     for (const label of [
       "KD unavailable",
-      "Volume unavailable",
+      "Search volume unavailable",
       "CPC unavailable",
       "Competition unavailable",
       "Search trend unavailable",
@@ -87,7 +88,7 @@ describe("ResearchDetailPanel", () => {
 
     fireEvent.click(screen.getByRole("radio", { name: "Mobile" }));
     expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent(
-      "Project default, daily",
+      "Project default, Daily",
     );
     fireEvent.click(screen.getByRole("button", { name: "Add to tracking" }));
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
+import { formatDisplayDate, formatDisplayMonthYear } from "@/lib/dates/format";
 import type { ReactNode } from "react";
 import {
   Area,
@@ -22,6 +24,9 @@ export type TimeSeries = {
   formatValue?: (value: number) => string;
 };
 export type TimeSeriesChartProps = {
+  /** Exact calendar-day keys for locale-aware axes and tooltips. */
+  dateKeys?: readonly string[];
+  dateLabelStyle?: "date" | "month_year";
   labels: readonly string[];
   series: readonly TimeSeries[];
   height: number;
@@ -49,6 +54,8 @@ const axisStyle = {
 const defaultMargin = { top: 12, right: 16, bottom: 0, left: 0 };
 
 export function TimeSeriesChart({
+  dateKeys,
+  dateLabelStyle = "date",
   labels,
   series,
   height,
@@ -67,6 +74,14 @@ export function TimeSeriesChart({
   margin = defaultMargin,
   children,
 }: TimeSeriesChartProps) {
+  const dateDisplay = useDateDisplay();
+  const labelAt = (index: number) => {
+    const key = dateKeys?.[index];
+    if (!key) return labels[index] ?? "";
+    return dateLabelStyle === "month_year"
+      ? formatDisplayMonthYear(key, dateDisplay)
+      : formatDisplayDate(key, dateDisplay);
+  };
   const data = labels.map((label, index) => ({
     index,
     label,
@@ -89,7 +104,7 @@ export function TimeSeriesChart({
           tickLine={false}
           height={28}
           tick={axisStyle}
-          tickFormatter={(index) => labels[Number(index)] ?? ""}
+          tickFormatter={(index) => labelAt(Number(index))}
           ticks={xTickIndexes}
           minTickGap={16}
         />
@@ -111,7 +126,7 @@ export function TimeSeriesChart({
           <Tooltip
             isAnimationActive={false}
             cursor={{ stroke: "var(--border-control)", strokeDasharray: "3 3" }}
-            labelFormatter={(index) => labels[Number(index)] ?? ""}
+            labelFormatter={(index) => labelAt(Number(index))}
             contentStyle={{
               background: "var(--bg-elev)",
               border: "1px solid var(--border)",

@@ -9,6 +9,7 @@ import { DOCS_URL } from "@/lib/site/site";
 import { HardDrivesIcon as HardDrives } from "@phosphor-icons/react/dist/csr/HardDrives";
 import { HourglassLowIcon as HourglassLow } from "@phosphor-icons/react/dist/csr/HourglassLow";
 import { MoonStarsIcon as MoonStars } from "@phosphor-icons/react/dist/csr/MoonStars";
+import { useTranslations } from "next-intl";
 
 const SELF_HOSTING_URL = `${DOCS_URL}/self-hosting`;
 
@@ -53,23 +54,18 @@ export function CapacityMeter({
 }
 
 export function GoogleCapacityNote({ justMissed }: Readonly<{ justMissed: boolean }>) {
+  const t = useTranslations("auth.capacity");
   return (
     <p
       className={`mt-1.5 mb-0 px-0.5 text-center text-xs leading-[1.55] ${
         justMissed ? "text-red-text" : "text-fg-muted"
       }`}
     >
-      {justMissed ? (
-        <>
-          <strong className="font-semibold">Just missed it.</strong> The last Google sign-up spots
-          were taken a moment ago. Existing Google accounts still work - or use email below.
-        </>
-      ) : (
-        <>
-          New Google sign-ups are full while Google reviews our verification request. Existing
-          Google accounts still work - or use email below.
-        </>
-      )}
+      {justMissed
+        ? t.rich("googleJustMissed", {
+            strong: (chunks) => <strong className="font-semibold">{chunks}</strong>,
+          })
+        : t("googleFull")}
     </p>
   );
 }
@@ -78,6 +74,7 @@ export function EmailCapacityPanel({
   binding,
   justMissed,
 }: Readonly<{ binding: EmailCapacityConstraint; justMissed: boolean }>) {
+  const t = useTranslations("auth.capacity");
   const monthly = binding === "monthly";
   return (
     <>
@@ -90,8 +87,9 @@ export function EmailCapacityPanel({
             weight="regular"
           />
           <p className="m-0 text-[12.5px] leading-[1.55] text-red-text">
-            <strong className="font-semibold">Just missed it.</strong> The last login codes went out
-            while you were on this page - nothing was sent to your address.
+            {t.rich("wasNotSent", {
+              strong: (chunks) => <strong className="font-semibold">{chunks}</strong>,
+            })}
           </p>
         </div>
       ) : null}
@@ -105,13 +103,9 @@ export function EmailCapacityPanel({
           />
           <p className="m-0 text-[13px] leading-[1.6] text-fg-muted">
             <strong className="font-semibold text-fg">
-              {monthly
-                ? "All of this month's login codes are used up."
-                : "All of today's login codes are used up."}
+              {monthly ? t("emailFullMonthly") : t("emailFullDaily")}
             </strong>{" "}
-            {monthly
-              ? "More free up at the start of next month (UTC) - come back later, or run bisibility yourself. It's open source."
-              : "More free up within 24 hours - come back later, or run bisibility yourself. It's open source."}
+            {monthly ? t("emailPanelMonthly") : t("emailPanelDaily")}
           </p>
         </div>
         <a
@@ -121,7 +115,7 @@ export function EmailCapacityPanel({
           target="_blank"
         >
           <HardDrives aria-hidden size={16} weight="regular" />
-          Self-hosting guide
+          {t("selfHostingGuide")}
         </a>
       </div>
     </>
@@ -131,6 +125,7 @@ export function EmailCapacityPanel({
 export function FullCapacityCard({
   emailBinding,
 }: Readonly<{ emailBinding: EmailCapacityConstraint }>) {
+  const t = useTranslations("auth.capacity");
   const monthly = emailBinding === "monthly";
   return (
     <div className="flex flex-col items-center gap-4 text-center">
@@ -139,12 +134,10 @@ export function FullCapacityCard({
       </span>
       <div>
         <h1 className="m-0 text-[25px] font-semibold tracking-[-0.7px]">
-          {monthly ? "We're at capacity this month" : "We're at capacity today"}
+          {monthly ? t("fullMonthlyTitle") : t("fullDailyTitle")}
         </h1>
         <p className="mt-2.5 mb-0 text-[14px] leading-[1.6] text-fg-muted">
-          {monthly
-            ? "We've hit our current sign-up limits: Google sign-up spots are taken and this month's login codes are used up. More codes free up at the start of next month (UTC)."
-            : "We've hit our current sign-up limits: Google sign-up spots are taken and today's login codes are used up. More codes free up within 24 hours."}
+          {monthly ? t("fullMonthlyDescription") : t("fullDailyDescription")}
         </p>
       </div>
       <div className="mt-1 flex w-full flex-col gap-[9px]">
@@ -155,13 +148,13 @@ export function FullCapacityCard({
           target="_blank"
         >
           <HardDrives aria-hidden size={16} weight="regular" />
-          Self-host bisibility - it&apos;s open source
+          {t("selfHost")}
         </a>
         <a
           className="flex items-center justify-center rounded-control border border-border-control bg-transparent p-[11px] text-[13.5px] font-semibold text-fg-muted no-underline hover:bg-bg-sunken"
           href="/login"
         >
-          Come back later
+          {t("comeBackLater")}
         </a>
       </div>
     </div>
@@ -170,12 +163,13 @@ export function FullCapacityCard({
 
 // A zero count is worse than no line at all: it advertises a dead sign-up day.
 export function JoinedToday({ count }: Readonly<{ count: number }>) {
+  const t = useTranslations("auth.capacity");
   if (count <= 0) {
     return null;
   }
   return (
     <p className="mt-3.5 mb-0 text-center text-[11.5px] tabular-nums text-fg-muted">
-      {count === 1 ? "1 person joined today" : `${count} people joined today`}
+      {t("joinedToday", { count })}
     </p>
   );
 }

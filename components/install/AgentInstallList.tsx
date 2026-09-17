@@ -7,6 +7,7 @@ import { CubeIcon as Cube } from "@phosphor-icons/react/dist/csr/Cube";
 import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react/dist/csr/DotsThree";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import { TerminalIcon as Terminal } from "@phosphor-icons/react/dist/csr/Terminal";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { HighlightedInstallCode } from "./CommandHighlight";
 import { AGENTS, type AgentInstall } from "./install-catalog";
@@ -25,6 +26,7 @@ function AgentIcon({ icon }: Readonly<Pick<AgentInstall, "icon">>) {
 }
 
 export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
+  const t = useTranslations("projectInstall.agents");
   const [openId, setOpenId] = useState<AgentInstall["id"] | null>("claude-code");
 
   return (
@@ -34,6 +36,7 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
         const command = agent.command(mcpUrl);
         const Caret = expanded ? CaretUp : CaretDown;
         const panelId = `install-agent-${agent.id}`;
+        const label = t(`${agent.id}.label`);
 
         return (
           <div className="border-t border-border" key={agent.id}>
@@ -45,8 +48,10 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
               type="button"
             >
               <AgentIcon icon={agent.icon} />
-              <span className="font-medium">{agent.label}</span>
-              <span className="ml-auto font-sans text-[10.5px] text-fg-muted">{agent.hint}</span>
+              <span className="font-medium">{label}</span>
+              <span className="ml-auto font-sans text-[10.5px] text-fg-muted">
+                {t(`${agent.id}.hint`)}
+              </span>
               <Caret aria-hidden className="shrink-0 text-fg-muted" size={12} weight="regular" />
             </button>
             <div
@@ -68,7 +73,7 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
                       <CopyButton
                         aria-hidden={!expanded}
                         className="!h-7 !min-h-7 !min-w-7 !w-7 !rounded-control !bg-transparent !p-0 text-code-faint"
-                        label={expanded ? `Copy ${agent.label} command` : undefined}
+                        label={expanded ? t("copyCommand", { agent: label }) : undefined}
                         tabIndex={expanded ? undefined : -1}
                         size="sm"
                         style={{ "--control-color": "var(--code-faint)" }}
@@ -76,7 +81,7 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
                       />
                     </span>
                   </div>
-                  <p className="m-0 mt-2 text-[11.5px] text-fg-muted">{agent.note}</p>
+                  <p className="m-0 mt-2 text-[11.5px] text-fg-muted">{t(`${agent.id}.note`)}</p>
                 </div>
               </div>
             </div>

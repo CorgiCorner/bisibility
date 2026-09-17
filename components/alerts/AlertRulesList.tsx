@@ -1,6 +1,7 @@
 "use client";
 
 import { useRuleEnabledQueue } from "@/components/alerts/alert-rule-enabled-queue";
+import { presentAlertRule } from "@/components/alerts/alert-rule-presentation";
 import { NewRuleDrawer } from "@/components/alerts/NewRuleDrawer";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
@@ -26,6 +27,7 @@ import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { WebhooksLogoIcon as WebhooksLogo } from "@phosphor-icons/react/dist/csr/WebhooksLogo";
 import type { Icon } from "@phosphor-icons/react/lib";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type AlertRulesListProps = {
@@ -39,10 +41,10 @@ export type AlertRulesListProps = {
   targets: AlertTargetOptions;
 };
 
-const channelIcons: Record<string, Icon> = {
-  Email: EnvelopeSimple,
-  Slack: SlackLogo,
-  Webhook: WebhooksLogo,
+const channelIcons: Record<AlertRuleView["channels"][number], Icon> = {
+  email: EnvelopeSimple,
+  slack: SlackLogo,
+  webhook: WebhooksLogo,
 };
 
 function AlertRuleEnabledSwitch({
@@ -56,17 +58,22 @@ function AlertRuleEnabledSwitch({
   readOnly: boolean;
   rule: AlertRuleView;
 }>) {
+  const t = useTranslations("projectAlerts.rules");
   const router = useRouter();
-  const toggle = useRuleEnabledQueue(rule.enabled, async (enabled) => {
-    await actions.setAlertRuleEnabledAction({ enabled, projectId, ruleId: rule.id });
-    router.refresh();
-  });
+  const toggle = useRuleEnabledQueue(
+    rule.enabled,
+    async (enabled) => {
+      await actions.setAlertRuleEnabledAction({ enabled, projectId, ruleId: rule.id });
+      router.refresh();
+    },
+    t("updateError"),
+  );
 
   return (
     <div className="flex flex-col items-end gap-1">
       <Switch
         aria-busy={toggle.pending || undefined}
-        aria-label={toggle.enabled ? "Pause rule" : "Enable rule"}
+        aria-label={toggle.enabled ? t("pauseRule") : t("enableRule")}
         checked={toggle.enabled}
         className="shrink-0 border-0 bg-transparent p-0"
         disabled={readOnly}
@@ -81,6 +88,35 @@ function AlertRuleEnabledSwitch({
   );
 }
 
+function channelLabel(
+  channel: AlertRuleView["channels"][number] | undefined,
+  t: ReturnType<typeof useTranslations<"projectAlerts.drawer">>,
+) {
+  if (channel === "email") return t("email");
+  if (channel === "slack") return t("slack");
+  if (channel === "webhook") return t("webhook");
+  return t("inAppFeed");
+}
+
+function severityLabel(
+  severity: AlertRuleView["severity"],
+  t: ReturnType<typeof useTranslations<"projectAlerts.feed">>,
+) {
+  if (severity === "urgent") return t("severityUrgent");
+  if (severity === "warning") return t("severityWarning");
+  return t("severityInfo");
+}
+
+function statusLabel(
+  status: AlertRuleView["status"],
+  t: ReturnType<typeof useTranslations<"projectAlerts.rules">>,
+) {
+  if (status === "active") return t("statusActive");
+  if (status === "paused") return t("statusPaused");
+  if (status === "learning") return t("statusLearning");
+  return t("statusSetup");
+}
+
 export function AlertRulesList({
   actions,
   canDelete,
@@ -91,6 +127,9 @@ export function AlertRulesList({
   rules,
   targets,
 }: Readonly<AlertRulesListProps>) {
+  const t = useTranslations("projectAlerts.rules");
+  const feedT = useTranslations("projectAlerts.feed");
+  const drawerT = useTranslations("projectAlerts.drawer");
   const router = useRouter();
   const [editRule, setEditRule] = useState<AlertRuleView | null>(null);
   const { readOnly } = useProjectWriteMode();
@@ -99,17 +138,17 @@ export function AlertRulesList({
     <>
       <Card className="overflow-hidden p-0" size="md">
         <div className="border-border border-b px-4.5 py-3.5">
-          <SectionTitle>Alert rules</SectionTitle>
+          <SectionTitle>{t("title")}</SectionTitle>
           <p className="m-0 mt-1 font-sans tabular-nums text-[11px] leading-normal text-fg-muted">
-            Rules are evaluated after rank checks. Each rule allows{" "}
-            {MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY} delivery batches per UTC day, and one batch can
-            fan out across every selected destination.
+            {t("description", { limit: MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY })}
           </p>
         </div>
         {rules.map((rule) => {
           const severity = severityMeta[rule.severity];
           const status = ruleStatusMeta[rule.status];
-          const ChannelIcon = channelIcons[rule.channel] ?? BellRinging;
+          const channel = rule.channels[0];
+          const ChannelIcon = channel ? channelIcons[channel] : BellRinging;
+          const presentation = presentAlertRule(rule, t);
 
           return (
             <article
@@ -127,36 +166,36 @@ export function AlertRulesList({
                     className="rounded-full px-2 py-0.5 font-sans tabular-nums text-[10px] font-semibold"
                     style={{ backgroundColor: severity.background, color: severity.color }}
                   >
-                    {severity.label}
+                    {severityLabel(rule.severity, feedT)}
                   </span>
                   <span
                     className="rounded-full px-2 py-0.5 font-sans tabular-nums text-[10px] font-semibold"
                     style={{ backgroundColor: status.background, color: status.color }}
                   >
-                    {status.label}
+                    {statusLabel(rule.status, t)}
                   </span>
                   {rule.depthConflict ? (
                     <span className="rounded-full bg-yellow/15 px-2 py-0.5 font-sans tabular-nums text-[10px] font-semibold text-yellow-text">
-                      won't fire below top {rule.depthConflict.trackedDepth}
+                      {t("depthConflict", { depth: rule.depthConflict.trackedDepth })}
                     </span>
                   ) : null}
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1.5 font-sans tabular-nums text-[11.5px] text-fg-muted">
-                  <span className="text-fg-muted">{rule.condition}</span>
+                  <span className="text-fg-muted">{presentation.condition}</span>
                   <span className="inline-flex items-center gap-1">
                     <FunnelSimple weight="regular" aria-hidden size={12} />
-                    {rule.scope}
+                    {presentation.scope}
                   </span>
-                  <span>{rule.marketScope ?? "All markets"}</span>
+                  <span>{presentation.marketScope}</span>
                   <span className="inline-flex items-center gap-1">
                     <ClockCountdown weight="regular" aria-hidden size={12} />
-                    {rule.period}
+                    {presentation.period}
                   </span>
                   <span className="inline-flex items-center gap-1">
                     <ChannelIcon aria-hidden size={12} weight="regular" />
-                    {rule.channel}
+                    {channelLabel(channel, drawerT)}
                   </span>
-                  <span>{rule.fires}</span>
+                  <span>{presentation.fires}</span>
                 </div>
               </div>
               {canUpdate ? (
@@ -172,7 +211,7 @@ export function AlertRulesList({
               {canUpdate ? (
                 <ProjectReadOnlyTooltip>
                   <Button
-                    aria-label={`Edit ${rule.name}`}
+                    aria-label={t("edit", { name: rule.name })}
                     disabled={readOnly}
                     onClick={() => setEditRule(rule)}
                     size="sm"
@@ -187,7 +226,7 @@ export function AlertRulesList({
               {canDelete ? (
                 <ProjectReadOnlyTooltip>
                   <Button
-                    aria-label={`Delete ${rule.name}`}
+                    aria-label={t("delete", { name: rule.name })}
                     disabled={readOnly}
                     onClick={() =>
                       void actions
@@ -215,7 +254,7 @@ export function AlertRulesList({
         })}
         <p className="m-0 flex items-center gap-2 px-4.5 py-3 text-xs text-fg-muted">
           <Info weight="regular" aria-hidden className="shrink-0 text-accent-text" size={14} />
-          Trend-style rules start after enough completed checks to compare changes.
+          {t("trendInfo")}
         </p>
       </Card>
       {editRule ? (

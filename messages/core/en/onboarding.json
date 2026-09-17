@@ -1,0 +1,476 @@
+{
+  "onboarding": {
+    "errors": {
+      "google": {
+        "actorMismatch": "You finished the Google sign-in while signed in to a different bisibility account. Sign back in to the account that started the connection, then try again.",
+        "credentialsDecrypt": "Google sign-in worked but we could not finish the saved connection. Remove app access in your Google account and reconnect.",
+        "denied": "Google reported the connection was declined.",
+        "generic": "Google connection wasn't completed. Try again with the account that owns the property.",
+        "noRefreshToken": "Google did not return a refresh token. Remove app access and reconnect.",
+        "stateExpired": "The sign-in flow expired or was restarted. Try again once, in a single tab.",
+        "storeFailed": "Google sign-in worked but our server could not finish the connection. This is on us - retry, and contact us if it repeats."
+      },
+      "searchConsoleSync": "Search Console sync did not finish. Observed data may take a moment. You can retry from Integrations."
+    },
+    "firstCheck": {
+      "back": "Back",
+      "connect": "Connect",
+      "completion": {
+        "manual": "Your {keywords, plural, one {# keyword is} other {# keywords are}} ready. Nothing runs - or spends - until you say so: run {objectPronoun} anytime from the <tracker>Rank Tracker</tracker>, or switch to a schedule in <schedules>Schedules</schedules> for hands-off tracking.",
+        "paused": "Your {keywords, plural, one {# keyword is} other {# keywords are}} paused. No scheduled checks run until you resume tracking in <schedules>Schedules</schedules>. You can still run {objectPronoun} from the <tracker>Rank Tracker</tracker>.",
+        "scheduled": "Your {keywords, plural, one {# keyword runs} other {# keywords run}} automatically on your {frequency} schedule{nextRun, select, none {} other { - next run {nextRun}}}. Or run {objectPronoun} anytime from the <tracker>Rank Tracker</tracker>.",
+        "it": "it",
+        "them": "them"
+      },
+      "dataSource": "Data source",
+      "device": {
+        "desktop": "Desktop",
+        "mobile": "Mobile"
+      },
+      "description": {
+        "completed": "Your first results are ready.",
+        "manual": "Everything's ready. Run your first check whenever you like - nothing runs until you start it.",
+        "noProvider": "Almost ready. Everything is set - connect a data provider whenever you want to run checks.",
+        "paused": "Everything's ready. Checks are paused until you resume the schedule.",
+        "scheduled": "Your schedule is set to {frequency}. You can also run a sample check now."
+      },
+      "errors": {
+        "complete": "Onboarding could not be completed. Try again.",
+        "keyword": "The sample keyword could not be loaded. Try again.",
+        "preview": "The sample check could not be started. Try again.",
+        "previewUnavailable": "First-check preview is not available in this build.",
+        "retryKeyword": "Retry loading keyword",
+        "sampleProject": "Sample projects don't run real checks.",
+        "selectKeyword": "Select one keyword for the sample checks.",
+        "statusUnavailable": "Could not refresh the check status. Retrying automatically. You can open the app while it finishes.",
+        "timezone": "Timezone could not be saved. Try again.",
+        "unavailableKeyword": "This keyword is no longer available. Go back to choose a keyword.",
+        "waitingForProvider": "Connect a SERP provider before running checks."
+      },
+      "footer": {
+        "hint": "Optional: check 1 keyword now. Your schedule stays unchanged.",
+        "openApp": "Open app",
+        "queued": "Queued",
+        "run": "Run check",
+        "running": "{count, plural, one {Running # sample check} other {Running # sample checks}}",
+        "viewDashboard": "View dashboard"
+      },
+      "frequency": {
+        "customCron": "Custom cron",
+        "daily": "Daily",
+        "manual": "Manual",
+        "monthly": "Monthly",
+        "paused": "Paused",
+        "weekly": "Weekly"
+      },
+      "matrix": "1 keyword · {markets, plural, one {# market} other {# markets}} · {devices} · {checks, plural, one {# check} other {# checks}}",
+      "notConnected": "Not connected",
+      "queue": {
+        "completed": "Sample {checks, plural, one {check} other {checks}} finished. Every keyword follows your {frequency} schedule from here.",
+        "completedWithFailures": "The sample {checks, plural, one {check} other {checks}} finished with an issue. You can retry the failed {checks, plural, one {check} other {checks}} below. Every keyword still follows your {frequency} schedule.",
+        "initial": "{checks, plural, one {# check runs once now so you can see it working.} other {# checks run once now so you can see them working.}} Everything else follows your {frequency} schedule.",
+        "manual": "Manual preview can run now. Scheduled checks stay paused.",
+        "queued": "Sample checks are queued. You can open the dashboard while the worker starts them.",
+        "running": "Sample checks are running. You can open the dashboard while they finish.",
+        "sample": "Sample projects keep their synthetic ranking history."
+      },
+      "results": {
+        "checking": "Checking...",
+        "completed": "{completed, number} of {total, number} {total, plural, one {check} other {checks}} · ${cost, number, ::.0000} recorded cost",
+        "completedUnavailable": "{completed, number} of {total, number} {total, plural, one {check} other {checks}} · Recorded cost unavailable",
+        "completedWithOutcomes": "{completed, number} of {total, number} {total, plural, one {check} other {checks}} completed. Review the remaining result statuses.",
+        "device": "{device} device",
+        "failed": "{failed, plural, one {The sample check failed. Retry it below.} other {# of {total, number} checks failed. Successful results are kept.}}",
+        "failure": {
+          "budgetExhausted": "Monthly rank-check budget reached.",
+          "blocked": "This check is blocked.",
+          "cancelled": "This check was cancelled.",
+          "client": "The sample check could not be started. Try again.",
+          "deferred": "This check was deferred.",
+          "failed": "We couldn't run this check. Try again in a moment.",
+          "noProvider": "Connect a SERP provider before running checks.",
+          "projectReadOnly": "This project is read-only right now.",
+          "rateLimited": "Provider rate limit reached. Try again shortly.",
+          "sampleProject": "Sample projects don't run real checks.",
+          "sendUnconfirmed": "We could not confirm this check was sent, so it was not retried. Run it again if you need it.",
+          "skipped": "This check was skipped.",
+          "unexpected": "Check failed on our side. Retry in a moment."
+        },
+        "live": "Live checks usually return within a minute.",
+        "notChecked": "Not checked yet",
+        "notRanked": "Not in top {depth, number}",
+        "queued": "Queued",
+        "queuedNote": "Queued checks start when the worker claims the run.",
+        "retry": "Retry failed",
+        "retryNote": "Run a sample check for the remaining targets whenever you are ready."
+      },
+      "review": {
+        "dataSourceWaiting": "Checks start once a provider is connected.",
+        "bothDevices": "both devices",
+        "devices": "{count, plural, one {# device} other {# devices}}",
+        "manual": "Manual - checks run when you start them",
+        "paused": "Paused - no checks are scheduled",
+        "projectTimezone": "Project timezone",
+        "schedule": "Schedule",
+        "searchTimezone": "City or region",
+        "tracking": "Tracking",
+        "trackingSummary": "{keywords, plural, one {# keyword} other {# keywords}} · {engine} · {markets} · {devices}"
+      },
+      "title": "First check"
+    },
+    "layout": {
+      "copyright": "© 2026 bisibility",
+      "notYou": "Not you?"
+    },
+    "matchingScope": {
+      "includeSubdomains": {
+        "description": "Also counts docs.{rootDomain}, app.{rootDomain}, blog.{rootDomain}, and any other subdomain.",
+        "title": "All subdomains"
+      },
+      "rootAndWww": {
+        "description": "Counts {domains} across HTTP and HTTPS. Other subdomains stay separate.",
+        "title": "Primary domain + www"
+      },
+      "urlPrefix": {
+        "description": "Only counts pages under a specific path, for example {example}.",
+        "title": "URL prefix only"
+      }
+    },
+    "keywordSummary": {
+      "estimate": "Estimate provider cost",
+      "monthlyLine": "{schedule, select, manual {Manual checks at Top {depth, number}} paused {Checks paused at Top {depth, number}} custom {excludes custom cron schedule at Top {depth, number}} other {≈ {pages, plural, one {# result page/month} other {# result pages/month}} at Top {depth, number}}}",
+      "perRun": "Up to {pages, plural, one {# result page} other {# result pages}} per run · {markets, plural, one {# market} other {# markets}}"
+    },
+    "keywords": {
+      "approachingLimit": "approaching the 500-keyword import limit",
+      "description": "Paste keywords or import suggestions from the data sources you connected.",
+      "empty": "Add at least one keyword.",
+      "import": {
+        "added": "{count, plural, one {# query added} other {# queries added}}",
+        "choose": "Choose queries",
+        "drawer": {
+          "add": "Add {count, plural, one {# keyword} other {# keywords}}",
+          "cancel": "Cancel",
+          "clear": "Clear",
+          "clicks": "Clicks",
+          "description": "Sanitized Search Console queries. Pick the ones to track.",
+          "filterAria": "Filter suggestions",
+          "filterPlaceholder": "Filter queries",
+          "hidden": "{count, plural, one {# low-quality query hidden.} other {# low-quality queries hidden.}}",
+          "hide": "Hide",
+          "impressions": "Impr.",
+          "inDraft": "In draft",
+          "metric": "{value, number}",
+          "metricUnavailable": "-",
+          "monthlyChecks": "+{count, plural, one {# keyword} other {# keywords}} = +{checks, number} checks/mo",
+          "monthlyChecksCostBelowCent": "+{count, plural, one {# keyword} other {# keywords}} = +{checks, number} checks/mo ~ < {minimum, number, ::currency/USD}/mo",
+          "monthlyChecksCost": "+{count, plural, one {# keyword} other {# keywords}} = +{checks, number} checks/mo ~ {cost, number, ::currency/USD}/mo",
+          "query": "Query",
+          "selected": "{count, plural, one {# selected} other {# selected}}",
+          "selectionCount": "+{count, plural, one {# keyword} other {# keywords}}",
+          "selectAll": "Select all",
+          "show": "Show anyway",
+          "title": "Import from Search Console",
+          "top": "Top {count, number} by clicks",
+          "tracked": "Tracked",
+          "use": "Use {count, plural, one {# keyword} other {# keywords}}"
+        },
+        "empty": "No queries observed yet - new Search Console properties can take a few days.",
+        "expiredAuthorization": "Google authorization has expired.",
+        "import": "Import top queries from Search Console",
+        "importing": "Importing top queries...",
+        "loadError": "Queries could not be loaded. Try again.",
+        "noSource": "No analytics source connected.",
+        "rateLimited": "Search Console is busy. Try again shortly.",
+        "reconnect": "Reconnect your Google account"
+      },
+      "limit": "Add up to {maximum, number} keywords per import.",
+      "marketRequired": "Add at least one market to continue.",
+      "ranked": {
+        "added": "{count, plural, one {# keyword added} other {# keywords added}}",
+        "add": "Add {count, plural, one {# keyword} other {# keywords}}",
+        "alreadyTracked": "Already tracked",
+        "aboutPage": "(about {cost, number, ::currency/USD}/page)",
+        "budgetExhausted": "Monthly rank-check budget reached.",
+        "cancel": "Cancel",
+        "choose": "Choose keywords",
+        "clear": "Clear",
+        "connection": "Connection",
+        "connectionLabel": "DataForSEO connection",
+        "description": "Uses your DataForSEO account. Results are cached for 12 hours.",
+        "drawerDescription": "Keywords your site already ranks for, ordered by estimated traffic.",
+        "drawerTitle": "Import from DataForSEO",
+        "estimatedTraffic": "Est. traffic",
+        "import": "Import from DataForSEO",
+        "importFor": "Import keywords {domain} ranks for",
+        "inDraft": "In draft",
+        "keyword": "Keyword",
+        "load": "Load next 100",
+        "lookupFailed": "Ranked-keyword lookup failed. Try again.",
+        "needsReauth": "DataForSEO authorization has expired.",
+        "noDomain": "Add a valid project domain before looking up ranked keywords.",
+        "noSource": "No eligible DataForSEO connection is available.",
+        "position": "Position",
+        "rateLimited": "Provider rate limit reached. Try again shortly.",
+        "raiseBudget": "Raise the budget",
+        "reconnect": "Reconnect DataForSEO",
+        "remaining": "{selected, number} of {available, number} selected",
+        "select": "Select {keyword}",
+        "selectAll": "Select all",
+        "selectKeyword": "Select keyword",
+        "spent": "Spent this session: {cost, number, ::currency/USD}{cached, select, yes {. Page {page, number} cached.} other {}}",
+        "table": "Ranked keyword suggestions",
+        "top": "Top 3 by traffic",
+        "tracked": "Already tracked",
+        "unsupportedLocation": "Ranked-keyword lookup is not available for this location on DataForSEO.",
+        "use": "Use {count, plural, one {# keyword} other {# keywords}}",
+        "variants": "+{count, number} variants",
+        "volume": "Volume"
+      },
+      "placeholder": "One keyword per line",
+      "saveError": "Keywords could not be saved. Try again.",
+      "summary": "{keywords, plural, one {# unique keyword} other {# unique keywords}}{duplicates, plural, =0 {} one { · # duplicate line ignored} other { · # duplicate lines ignored}}",
+      "tooLong": "{count, plural, one {# line exceeds} other {# lines exceed}} the {maximum, number}-character keyword limit.",
+      "skip": "Skip adding keywords and open first check",
+      "skipLabel": "Skip for now",
+      "title": "Keywords"
+    },
+    "logout": "Log out",
+    "navigation": {
+      "back": "Back",
+      "continue": "Continue",
+      "savingKeywords": "Saving keywords...",
+      "viewDashboard": "View dashboard"
+    },
+    "metadata": {
+      "description": "Set up a bisibility project.",
+      "title": "Onboarding"
+    },
+    "markets": {
+      "add": "Add market",
+      "another": "Another market",
+      "drawer": {
+        "active": "{market} is already active.",
+        "allLanguages": "All languages",
+        "archived": "{market} was archived. Restore it from Markets before using it.",
+        "cancel": "Cancel",
+        "country": "Country",
+        "create": "Create market",
+        "createFailed": "Market could not be created.",
+        "customName": "Custom name (optional)",
+        "description": "A location and a language you track together.",
+        "language": "Language",
+        "location": "Location",
+        "locationHint": "The whole country is selected by default. Search to track a city or region instead.",
+        "marketDefinition": "Market definition",
+        "marketName": "Market name",
+        "newMarket": "New market",
+        "newSchedule": "New schedule",
+        "noLocationResults": "No matching region or city. Try another name or select the whole country.",
+        "searchAllLanguages": "Search all languages",
+        "searchLocations": "Search regions and cities",
+        "searchingLocations": "Searching regions and cities...",
+        "suggested": "Suggested",
+        "backToMarket": "Back to market"
+      },
+      "errors": { "createProjectFirst": "Create the project before adding markets." },
+      "maximum": "Maximum {count, number} markets selected.",
+      "remove": "Remove {market} / {language}",
+      "title": "Markets"
+    },
+    "page": {
+      "description": "A few quick steps to start tracking your website.",
+      "title": "Set up your project"
+    },
+    "projectOptions": {
+      "importError": "Import project could not be opened.",
+      "openingImport": "Opening import...",
+      "restoreProject": "Restore project",
+      "restoreProjectTooltip": "Import a project package from another bisibility instance. We'll create one local project and restore its data. Provider credentials and API keys are not included.",
+      "sampleProject": "Load sample project",
+      "sampleHelp": "Loads a temporary sample project and skips the rest of setup."
+    },
+    "provider": {
+      "cards": {
+        "affiliate": "affiliate link",
+        "balance": "Balance: {balance, number}",
+        "dataforseo": {
+          "capability": "Also powers keyword research and difficulty.",
+          "costCaption": "Pay per check - from ~$0.002",
+          "costDetail": "Billed in USD at your configured depth - about $0.002 at Top 10 and $0.02 at Top 100. New accounts get $1 of trial credit; top-ups start at $50 and are not a monthly fee.",
+          "label": "DataForSEO"
+        },
+        "getCredentials": "Get API credentials",
+        "group": "SERP provider",
+        "label": "Rank data / powers rank checks",
+        "notice": "Connections are saved per provider - switching does not disconnect.",
+        "serpapi": {
+          "capability": "Rank checks only.",
+          "costCaption": "Plan-based - monthly search quota, 250 searches/mo free",
+          "costDetail": "Plans include monthly searches; the free plan has 250. A Top-N check uses up to one search per 10 results, often fewer when a match is found early.",
+          "label": "SerpApi"
+        },
+        "status": {
+          "connected": "Connected",
+          "dirty": "Unsaved changes",
+          "failed": "Test failed",
+          "idle": "Not connected",
+          "tested": "Verified"
+        },
+        "tooltip": "Google has no official rankings API, so checks run through a SERP provider. Bisibility uses your own provider account and you pay the provider directly, per check. You can skip this and connect later in Integrations - keywords can be added now, but checks stay paused until a provider is connected."
+      },
+      "credentials": {
+        "connected": "{provider} connected",
+        "fields": {
+          "apiKey": "API key",
+          "apiLogin": "API login",
+          "apiPassword": "API password",
+          "apiPasswordDescription": "Use your API password, not your account password.",
+          "apiPasswordPlaceholder": "API password",
+          "apiKeyPlaceholder": "Your private API key",
+          "loginPlaceholder": "you@company.com",
+          "savedDescription": "Saved and encrypted. Leave blank to keep the current value, or enter a new one to replace it.",
+          "savedPlaceholder": "••••••••"
+        },
+        "keepStored": "Leave credentials blank to keep the stored connection.",
+        "save": "Save connection",
+        "saveHint": "Test the credentials and save.",
+        "test": "Test connection",
+        "failed": "Connection test failed. Check the credentials and try again.",
+        "title": "API credentials",
+        "verified": "{provider} verified"
+      },
+      "errors": {
+        "costPrecision": "Use up to 4 decimals.",
+        "credentialTooLong": "Credentials must be {maximum, number} characters or fewer.",
+        "loginRequired": "Enter your API login.",
+        "save": "The provider connection could not be saved. Try again.",
+        "saveBeforeContinue": "Save a provider before continuing.",
+        "secretRequired": "Enter your API password.",
+        "test": "The provider connection could not be tested. Try again.",
+        "testBeforeConnect": "Test {provider} before connecting it."
+      },
+      "modal": {
+        "cancel": "Cancel",
+        "save": "Save connection",
+        "title": "Connect a provider"
+      },
+      "searchConsole": {
+        "label": "Your site's data / optional, free",
+        "tooltip": "Search Console shows the queries your site already ranks for. Free import for keyword suggestions; it cannot check rankings."
+      },
+      "title": "Provider",
+      "skip": "Skip provider connection and add keywords as paused",
+      "skipLabel": "Skip for now",
+      "video": {
+        "dataforseo": {
+          "description": "Create an account, find your API credentials, and verify your account.",
+          "title": "DataForSEO account setup"
+        },
+        "serpapi": {
+          "description": "Create an account and find your API key.",
+          "title": "SerpApi account setup"
+        },
+        "watch": "Watch setup guide"
+      }
+    },
+    "residency": {
+      "message": "Your data is stored and processed in the {region}."
+    },
+    "searchConsole": {
+      "actions": {
+        "change": "Change property",
+        "connect": "Connect",
+        "connecting": "Connecting...",
+        "loading": "Loading properties...",
+        "otherAccount": "Use another account",
+        "select": "Select property",
+        "useSelected": "Use selected property"
+      },
+      "description": "Free - import real queries, clicks, and impressions. No API key is needed.",
+      "drawer": {
+        "description": "Choose a property returned by your connected Google account.",
+        "noProperties": "This account has no verified Search Console properties. Verify one or connect a different Google account.",
+        "property": "Search Console property",
+        "title": "Select a Search Console property"
+      },
+      "errors": {
+        "connectionFailed": "Search Console connection failed.",
+        "propertiesLoad": "Properties could not be loaded. Try again or reconnect the account.",
+        "reconnect": "Reconnect the Google account to change its property.",
+        "selectionUnavailable": "Property selection is unavailable."
+      },
+      "name": "Search Console",
+      "notConfigured": {
+        "after": "for how to create them.",
+        "before": "Search Console OAuth is not configured on this instance. Set",
+        "guide": "setup guide",
+        "guideBefore": "See the",
+        "message": "Search Console OAuth is not configured on this instance. Set <clientId>GOOGLE_CLIENT_ID</clientId> and <clientSecret>GOOGLE_CLIENT_SECRET</clientSecret>. See the <guide>setup guide</guide> for how to create them."
+      },
+      "status": {
+        "connected": "Connected",
+        "ready": "Ready to connect"
+      }
+    },
+    "steps": {
+      "firstCheck": {
+        "description": "Run it and open your dashboard",
+        "title": "First check"
+      },
+      "keywords": {
+        "description": "Keywords and tracking defaults",
+        "title": "Keywords"
+      },
+      "provider": {
+        "description": "SERP provider and search insights",
+        "title": "Provider"
+      },
+      "website": {
+        "description": "Name and domain",
+        "title": "Website"
+      }
+    },
+    "stepper": {
+      "completed": "{title}, completed",
+      "steps": "Onboarding steps",
+      "progress": "Onboarding progress",
+      "stepCount": "Step {currentStep, number} of {totalSteps, number}"
+    },
+    "video": {
+      "fallbackTitle": "Setup",
+      "watchProviderSetup": "Watch provider setup",
+      "watchSetup": "Watch setup video"
+    },
+    "tracking": {
+      "bothDevices": "Desktop, Mobile",
+      "depth": "SERP depth",
+      "depthHelp": "Checks the first {depth, number} results. Lower rankings are reported as not found and do not trigger alerts. {visibilityDepth, plural, =0 {} other {Choose Top # or deeper to update Visibility.}}",
+      "depthOption": "Top {depth, number}",
+      "description": "Applied to these keywords. You can change each keyword later.",
+      "devices": "Devices",
+      "frequency": "Frequency",
+      "moreChecks": "More locations or devices create more provider checks.",
+      "title": "Tracking defaults"
+    },
+    "website": {
+      "checking": "Checking website...",
+      "description": "Enter the website you want to track.",
+      "errors": {
+        "invalid": "Enter a website like example.com.",
+        "required": "Enter your website.",
+        "tooLong": "Enter a shorter website URL.",
+        "updateUnavailable": "Website changes are unavailable. Try again."
+      },
+      "label": "Your website",
+      "matchingHint": "www and every subdomain of your domain count as yours - matching is fixed today, per-scope control is on the roadmap.",
+      "placeholder": "https://example.com",
+      "projectName": "Project name: {name}",
+      "projectNameFallback": "We will use the website as the project name.",
+      "saving": "Saving project...",
+      "trackingStarted": "Tracking {domain} since {date}",
+      "trackingStartedDescription": "This website has rank checks. To track a different website, create a new project.",
+      "title": "Website"
+    }
+  }
+}

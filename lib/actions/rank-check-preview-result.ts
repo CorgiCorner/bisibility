@@ -3,6 +3,8 @@ import { redactOpsText } from "@/lib/ops/redact-text";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { RankCheckRunnerError } from "@/lib/rank-check/runner-error";
+import type { SerpDevice } from "@/lib/serp/constants";
+import type { RankCheckFrequency } from "@/lib/settings/options";
 
 export type FirstCheckCandidate = {
   previousResult?: Exclude<RunFirstCheckPreviewResult, { status: "failed" }>;
@@ -28,7 +30,13 @@ export type FirstCheckRunPlan = {
   estimatedCostPerCheckCents: number | null;
   readyCount: number;
   providers: string[];
-  scope: { depth: string; device: string; engine: string; frequency: string; location: string };
+  scope: {
+    depth: number;
+    device: SerpDevice;
+    engine: "google";
+    frequency: RankCheckFrequency;
+    location: string;
+  };
   providerReady: boolean;
   isSampleProject: boolean;
   budgetExhausted: boolean;

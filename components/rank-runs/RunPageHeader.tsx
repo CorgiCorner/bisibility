@@ -1,15 +1,15 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { IdChip } from "@/components/ui/IdChip";
 import { StatusChip } from "@/components/ui/StatusChip";
-import { formatDateTime } from "@/lib/dates/format";
-import { relativeFuture } from "@/lib/format/relative-time";
+import { formatDisplayDateTime } from "@/lib/dates/format";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { RunPageSummary } from "./RunPageModel";
 import type { RunPageData } from "./RunPageTypes";
 
@@ -22,12 +22,6 @@ type RunPageHeaderProps = {
   summary: RunPageSummary;
 };
 
-function titleForTrigger(trigger: RunPageData["trigger"]): string {
-  if (trigger === "scheduled") return "Scheduled run";
-  if (trigger === "retry") return "Retry run";
-  return "Manual run";
-}
-
 export function RunPageHeader({
   canMutate,
   onCancel,
@@ -36,11 +30,31 @@ export function RunPageHeader({
   run,
   summary,
 }: Readonly<RunPageHeaderProps>) {
-  const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
+  const t = useTranslations("projectRuns.rankRuns");
   const launchedIso = run.launchedAt ?? run.plannedFor;
   const launchedLabel = launchedIso
-    ? formatDateTime(new Date(launchedIso), dateFormat)
-    : "Not started";
+    ? formatDisplayDateTime(new Date(launchedIso), dateDisplay)
+    : t("notStarted");
+  const title =
+    run.trigger === "scheduled"
+      ? t("scheduledRun")
+      : run.trigger === "retry"
+        ? t("retryRun")
+        : run.trigger === "api"
+          ? t("api")
+          : t("manualRun");
+  const nextCheckRelative = run.nextCheckAt
+    ? (() => {
+        const minutes = Math.ceil(
+          (new Date(run.nextCheckAt).getTime() - new Date(now).getTime()) / 60_000,
+        );
+        if (minutes <= 0) return t("relative.dueNow");
+        if (minutes < 60) return t("relative.minutes", { count: minutes });
+        if (minutes < 1_440) return t("relative.hours", { count: Math.ceil(minutes / 60) });
+        return t("relative.days", { count: Math.ceil(minutes / 1_440) });
+      })()
+    : t("relative.notScheduled");
 
   return (
     <>
@@ -49,42 +63,38 @@ export function RunPageHeader({
         href={projectRunsPath(projectRef)}
       >
         <ArrowLeft aria-hidden size={12} weight="regular" />
-        All runs
+        {t("allRuns")}
       </Link>
       <section className="min-w-0 rounded-card border border-border bg-bg-elev">
         <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border p-4">
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h1 className="m-0 text-[17px] font-semibold leading-[1.3] tracking-[-0.3px] text-fg">
-                {titleForTrigger(run.trigger)}
+                {title}
               </h1>
-              <StatusChip
-                label={summary.runPresentation.label}
-                live
-                tone={summary.runPresentation.tone}
-              />
+              <StatusChip {...summary.runPresentation} live />
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-fg-muted">
               <IdChip
                 className="border-border bg-transparent"
-                copyLabel={`Copy run ID ${run.id}`}
+                copyLabel={t("copyRunId", { id: run.id })}
                 size="xs"
                 value={run.id}
               />
               {run.requestedBy?.name ? (
                 <span className="text-[12.5px] text-fg">{run.requestedBy.name}</span>
               ) : (
-                <span className="font-mono">schedule</span>
+                <span className="font-mono">{t("scheduled")}</span>
               )}
               <span>{launchedLabel}</span>
               {run.status === "running" && run.nextCheckAt ? (
-                <span>Next check {relativeFuture(new Date(run.nextCheckAt), new Date(now))}</span>
+                <span>{t("nextCheck", { relative: nextCheckRelative })}</span>
               ) : null}
             </div>
           </div>
           {canMutate && summary.cancellable ? (
             <Button onClick={onCancel} size="xs" variant="secondary">
-              Cancel run
+              {t("cancelRun")}
             </Button>
           ) : null}
         </header>

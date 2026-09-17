@@ -1,0 +1,63 @@
+---
+title: "Search Console"
+description: "Connect Google Search Console, import history, watch sync progress, and know when to reconnect."
+---
+
+Search Console adds clicks, impressions, index status, and sitemap context. It
+never sets SERP rank positions. The page is project-level.
+
+Hosted users connect from **Search Console** in the app. Self-hosted instances
+also need a Google OAuth client configured by an administrator; see
+[Google OAuth and traffic sync](/self-hosting/google-oauth).
+
+## Connect and choose a property
+
+1. Open **Search Console**.
+2. Select **Connect Search Console**. Google shows one read-only consent
+   screen, then returns you to this page (not to Integrations).
+3. Under **Pick the property to read**, choose the **Search Console
+   property**. Choosing it starts the history import.
+
+The property picker stays on the page after connect. Switching property keeps
+prior history stored. Use **Open in Search Console** when you need the Google
+UI.
+
+If the page shows **Reconnect required**, select **Reconnect Search Console**.
+Nothing already imported is affected; reconnecting resumes the import where it
+stopped.
+
+## What is imported
+
+Google only keeps 16 months of Search Analytics history. The first connect
+copies that window: the first finalized day opens first, the 7-day view
+follows, and older months keep loading in the background. When the backfill
+finishes, the status is **16 months imported, growing daily**.
+
+**Sync now** fetches anything Google has finalized since the last run. It is
+not another full 16-month pull. The button stays disabled during backfill,
+cooldown, pause, or when no property is connected. **Refresh** reloads stored
+rows and does not call Google.
+
+Export CSV downloads the stored query rows for the selected **Comparison
+window**.
+
+These numbers describe different stored sets:
+
+| Data | Source | How it refreshes | How long it is kept |
+| - | - | - | - |
+| Daily Search Console history | Search Analytics | 16 months imported on first connect, then daily incremental sync | Kept in the workspace as imported history |
+| Rolling traffic windows | The same Search Console sync | 28-day and 7-day aggregates, with a three-day lag for finalized days | Recomputed on each sync |
+
+Scheduled sync on a self-hosted instance needs the Temporal worker. That setup
+is on [Google OAuth and traffic sync](/self-hosting/google-oauth), not on this
+page.
+
+## Watch progress and reconnect
+
+Open **Search Console** to read freshness and coverage. Broken Google
+authorization changes the connection to **Reconnect required** and stops new
+imports until you reconnect. If a long stall needs a connection change, manage
+it from Integrations after the Search Console page says so.
+
+Quota and worker details for instance administrators stay on
+[Google OAuth and traffic sync](/self-hosting/google-oauth).

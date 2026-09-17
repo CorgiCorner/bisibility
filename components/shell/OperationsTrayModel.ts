@@ -1,19 +1,15 @@
-import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { runStatusChipPresentation } from "@/components/ui/status-chip-mapping";
 import {
   pauseSearchInsightsImport,
   resumeSearchInsightsImport,
   retrySearchInsightsImport,
 } from "@/lib/actions/search-insights";
-import { pluralize } from "@/lib/format/pluralize";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
-import { blockedRunPresentation } from "@/lib/rank-check/runs/blocked-presentation";
 import type {
   GscImportOperation,
   OperationSnapshot,
   RankCheckOperation,
 } from "@/lib/rank-check/runs/contract";
-import { selectionSummarySuffix } from "@/lib/rank-check/runs/selection-label";
 import { type ProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import { projectRunRankCheckPath } from "@/lib/routing/project-runs-path";
 import type { TrayOperation } from "./OperationsTrayModel.types";
@@ -30,17 +26,9 @@ export function isTrayOperation(operation: OperationSnapshot) {
   );
 }
 
-function rankCheckMeta(operation: RankCheckOperation): string {
-  const keywords = pluralize(operation.keywordCount, "keyword");
-  return operation.selectionKind === "single" || operation.trigger === "scheduled"
-    ? keywords
-    : `${keywords} ${selectionSummarySuffix(operation.selectionKind)}`;
-}
-
 function rankCheckPresentation(
   operation: RankCheckOperation,
   projectRef: ProjectRef,
-  deploymentMode: ClientDeploymentMode,
 ): TrayOperation {
   const status = runStatusChipPresentation(operation.status, operation.outcome);
   // Older snapshots omit target activity, but an announced next check always means waiting.
@@ -83,6 +71,7 @@ function rankCheckPresentation(
     failed: operation.counts.failed,
     href: projectRunRankCheckPath(projectRef, operation.id),
     id: operation.id,
+    gscImport: null,
     kind: operation.kind,
     lifecycle:
       running || cancellingWithActiveTarget
@@ -93,33 +82,26 @@ function rankCheckPresentation(
             operation.status === "cancelling"
           ? "waiting"
           : "terminal",
-    meta: rankCheckMeta(operation),
+    meta: null,
     nextCheckAt: operation.nextCheckAt,
     now: operation.snapshotAt ?? null,
     provider: operation.providerLabel ?? null,
     property: null,
+    rankCheck: {
+      blockedReason: operation.blockedReason,
+      budget: operation.budget,
+      keywordCount: operation.keywordCount,
+      selectionKind: operation.selectionKind,
+      trigger: operation.trigger,
+    },
     resumeDate: null,
     showBar: true,
     state,
     status,
-    stateLine:
-      operation.status === "blocked"
-        ? blockedRunPresentation({
-            budget: operation.budget,
-            deploymentMode,
-            reason: operation.blockedReason,
-          }).compact
-        : null,
-    title:
-      operation.trigger === "scheduled"
-        ? "Scheduled run"
-        : operation.trigger === "retry"
-          ? "Retry run"
-          : operation.trigger === "api"
-            ? "API run"
-            : "Manual run",
+    stateLine: null,
+    title: "",
     total: operation.counts.total,
-    unit: "targets",
+    unit: "",
   };
 }
 
@@ -182,13 +164,18 @@ function gscImportPresentation(
     failed: 0,
     href: searchConsoleHref,
     id: operation.id,
+    gscImport: {
+      presentationTitle: operation.presentation.title,
+      supportingText: operation.presentation.supportingText,
+    },
     kind: operation.kind,
     lifecycle: running ? "executing" : queued ? "waiting" : terminal ? "terminal" : "attention",
-    meta: title,
+    meta: null,
     nextCheckAt: null,
     now: null,
     provider: null,
     property: operation.property,
+    rankCheck: null,
     resumeDate: null,
     showBar:
       operation.progress.done !== null &&
@@ -196,21 +183,21 @@ function gscImportPresentation(
       operation.progress.total > 0 &&
       (terminal || operation.progress.done < operation.progress.total),
     state,
-    stateLine: operation.presentation.supportingText,
+    stateLine: null,
     status: null,
-    title: "Search Console import",
+    title: "",
     total: operation.progress.total ?? 0,
-    unit: "days",
+    unit: "",
+    unitKind: "days",
   };
 }
 
 export function operationPresentationFor(
   operation: OperationSnapshot,
   projectRef: ProjectRef,
-  deploymentMode: ClientDeploymentMode = "cloud",
 ): TrayOperation {
   return operation.kind === "rank_check"
-    ? rankCheckPresentation(operation, projectRef, deploymentMode)
+    ? rankCheckPresentation(operation, projectRef)
     : gscImportPresentation(operation, projectRef);
 }
 

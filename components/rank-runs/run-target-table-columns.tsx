@@ -1,55 +1,82 @@
+import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { itemStatusChipPresentation } from "@/components/ui/status-chip-mapping";
 import { deviceLabel } from "@/lib/queries/keyword-row-format";
 import { isUnrunnableReason } from "@/lib/rank-check/runnable-reasons";
-import {
-  blockedRunPresentation,
-  type ClientDeploymentMode,
-} from "@/lib/rank-check/runs/blocked-presentation";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import Link from "next/link";
+import type { useTranslations } from "next-intl";
 import type { RunPageData, RunPageItem } from "./RunPageTypes";
+import { localizedBlockedRunCopy } from "./rank-run-copy";
 
 type RunTargetTableColumnsOptions = {
   deploymentMode: ClientDeploymentMode;
+  locale: string;
   projectRef: ProjectRef;
   run: RunPageData;
   showNotes: boolean;
+  statusT: ReturnType<typeof useTranslations<"shared.controls.status">>;
+  t: ReturnType<typeof useTranslations<"projectRuns.rankRuns">>;
 };
-
-function money(value: number | null): string {
-  if (value === null) return "-";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value / 100);
-}
 
 export function runTargetNote(
   item: RunPageItem,
   run: RunPageData,
   deploymentMode: ClientDeploymentMode,
+  t: ReturnType<typeof useTranslations<"projectRuns.rankRuns">>,
+  locale: string,
 ) {
+  if (
+    item.blockedReason === "target_paused" ||
+    item.blockedReason === "location_language_unavailable"
+  ) {
+    return localizedBlockedRunCopy({ deploymentMode, reason: item.blockedReason }, t, locale)
+      .compact;
+  }
   if (isUnrunnableReason(item.blockedReason)) {
-    return blockedRunPresentation({ deploymentMode, reason: item.blockedReason }).compact;
+    return localizedBlockedRunCopy({ deploymentMode, reason: item.blockedReason }, t, locale)
+      .compact;
   }
   if (item.status === "skipped" || item.status === "blocked") {
-    return item.blockedReason ?? "Skipped before start";
+    return t("targetPresentation.skippedBeforeStart");
   }
   if (run.status === "blocked" && item.status === "queued") {
-    return blockedRunPresentation({
-      budget: run.budget,
-      deploymentMode,
-      reason: run.blockedReason,
-    }).compact;
+    return localizedBlockedRunCopy(
+      {
+        budget: run.budget,
+        deploymentMode,
+        reason: run.blockedReason,
+      },
+      t,
+      locale,
+    ).compact;
   }
-  return item.rankCheck?.errorCode ?? "";
+  if (item.rankCheck?.errorCode === "provider_billing")
+    return t("targetPresentation.providerBilling");
+  if (item.rankCheck?.errorCode === "provider_account_restricted")
+    return t("targetPresentation.providerRestricted");
+  if (item.rankCheck?.errorCode === "provider_auth") return t("targetPresentation.providerAuth");
+  if (item.rankCheck?.errorCode === "provider_rate_limited")
+    return t("targetPresentation.providerRateLimited");
+  if (item.rankCheck?.errorCode === "provider_transient")
+    return t("targetPresentation.providerTransient");
+  return item.rankCheck?.errorCode ? t("targetPresentation.providerUnknown") : "";
 }
 
 export function runTargetTableColumns({
   deploymentMode,
+  locale,
   projectRef,
   run,
   showNotes,
+  statusT,
+  t,
 }: RunTargetTableColumnsOptions): readonly DataTableColumn<RunPageItem>[] {
+  const money = (value: number | null) =>
+    value === null
+      ? t("unavailable")
+      : new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(value / 100);
   const columns: DataTableColumn<RunPageItem>[] = [
     {
       accessorFn: (item) => item.keyword.text,
@@ -62,9 +89,9 @@ export function runTargetTableColumns({
         </Link>
       ),
       enableSorting: false,
-      header: "Keyword",
+      header: t("keyword"),
       id: "keyword",
-      meta: { flex: 1.4, lockResize: true, title: "Keyword" },
+      meta: { flex: 1.4, lockResize: true, title: t("keyword") },
       minSize: 192,
       size: 248,
     },
@@ -76,12 +103,12 @@ export function runTargetTableColumns({
             ? "blocked"
             : row.original.status,
         );
-        return <StatusChip label={status.label} tone={status.tone} />;
+        return <StatusChip {...status} label={statusT(status.messageKey)} />;
       },
       enableSorting: false,
-      header: "Status",
+      header: t("status"),
       id: "status",
-      meta: { lockResize: true, title: "Status" },
+      meta: { lockResize: true, title: t("status") },
       minSize: 112,
       size: 120,
     },
@@ -94,9 +121,9 @@ export function runTargetTableColumns({
         </span>
       ),
       enableSorting: false,
-      header: "Market",
+      header: t("table.market"),
       id: "market",
-      meta: { flex: 0.6, lockResize: true, title: "Market" },
+      meta: { flex: 0.6, lockResize: true, title: t("table.market") },
       minSize: 168,
       size: 184,
     },
@@ -104,19 +131,19 @@ export function runTargetTableColumns({
       accessorFn: (item) => deviceLabel(item.keyword.device),
       cell: ({ row }) => deviceLabel(row.original.keyword.device),
       enableSorting: false,
-      header: "Device",
+      header: t("table.device"),
       id: "device",
-      meta: { lockResize: true, title: "Device" },
+      meta: { lockResize: true, title: t("table.device") },
       minSize: 100,
       size: 108,
     },
     {
       accessorFn: (item) => item.rankCheck?.position ?? null,
-      cell: ({ row }) => row.original.rankCheck?.position ?? "-",
+      cell: ({ row }) => row.original.rankCheck?.position ?? t("unavailable"),
       enableSorting: false,
-      header: "Position",
+      header: t("table.position"),
       id: "position",
-      meta: { align: "end", lockResize: true, title: "Position" },
+      meta: { align: "end", lockResize: true, title: t("table.position") },
       minSize: 104,
       size: 112,
     },
@@ -124,18 +151,18 @@ export function runTargetTableColumns({
       accessorFn: (item) => item.actualCostCents ?? item.estimatedCostCents,
       cell: ({ row }) => money(row.original.actualCostCents ?? row.original.estimatedCostCents),
       enableSorting: false,
-      header: "Cost",
+      header: t("cost"),
       id: "cost",
-      meta: { align: "end", lockResize: true, title: "Cost" },
+      meta: { align: "end", lockResize: true, title: t("cost") },
       minSize: 88,
       size: 96,
     },
   ];
   if (showNotes) {
     columns.push({
-      accessorFn: (item) => runTargetNote(item, run, deploymentMode),
+      accessorFn: (item) => runTargetNote(item, run, deploymentMode, t, locale),
       cell: ({ row }) => {
-        const itemNote = runTargetNote(row.original, run, deploymentMode);
+        const itemNote = runTargetNote(row.original, run, deploymentMode, t, locale);
         return (
           <span className="block truncate text-[11.5px] text-fg-muted" title={itemNote}>
             {itemNote}
@@ -143,9 +170,9 @@ export function runTargetTableColumns({
         );
       },
       enableSorting: false,
-      header: "Note",
+      header: t("targetPresentation.note"),
       id: "note",
-      meta: { flex: 0.9, lockResize: true, title: "Note" },
+      meta: { flex: 0.9, lockResize: true, title: t("targetPresentation.note") },
       minSize: 176,
       size: 200,
     });

@@ -19,7 +19,7 @@ const rankRun: ProjectRun = {
   lifecycle: "running",
   progress: { completed: 2, total: 10, unit: "targets" },
   project: { name: "Example", publicId: "prj_example" },
-  scope: { description: null, label: "10 keywords" },
+  scope: { description: null, keywordCount: 10, kind: "rank_check" },
   timestamps: {
     createdAt: "2026-09-06T10:00:00.000Z",
     finishedAt: null,
@@ -27,7 +27,7 @@ const rankRun: ProjectRun = {
     plannedFor: null,
     startedAt: "2026-09-06T10:00:00.000Z",
   },
-  title: "Manual rank check",
+  title: { kind: "rank_check", trigger: "manual" },
 };
 
 const importRun: ProjectRun = {
@@ -45,7 +45,7 @@ const importRun: ProjectRun = {
   lifecycle: "running",
   progress: { completed: null, total: null, unit: "days" },
   project: { name: "Example", publicId: "prj_example" },
-  scope: { description: "sc-domain:example.com", label: "Search Console" },
+  scope: { description: "sc-domain:example.com", kind: "gsc_import" },
   timestamps: {
     createdAt: "2026-09-06T09:00:00.000Z",
     lastProbeAt: null,
@@ -53,7 +53,7 @@ const importRun: ProjectRun = {
     lastSyncStartedAt: "2026-09-06T09:10:00.000Z",
     syncStartedAt: "2026-09-06T09:10:00.000Z",
   },
-  title: "Search Console import",
+  title: { kind: "gsc_import" },
 };
 
 const activeImport: OperationSnapshot = {
@@ -73,7 +73,7 @@ describe("applyOperationSnapshotToRuns", () => {
       {
         ...importRun,
         progress: { completed: 28, total: 488, unit: "days" },
-        snapshotPresentationTitle: "Importing",
+        snapshotState: "Importing",
         snapshotPresentationTone: "info",
       },
     ]);
@@ -100,7 +100,7 @@ describe("applyOperationSnapshotToRuns", () => {
         ...importRun,
         lifecycle: "waiting_to_resume",
         progress: { completed: 28, total: 488, unit: "days" },
-        snapshotPresentationTitle: "Waiting for Google",
+        snapshotState: "Waiting for Google",
         snapshotPresentationTone: "attention",
       },
     ]);
@@ -117,9 +117,7 @@ describe("applyOperationSnapshotToRuns", () => {
           },
         ],
       ),
-    ).toMatchObject([
-      { snapshotPresentationTitle: "Delayed", snapshotPresentationTone: "attention" },
-    ]);
+    ).toMatchObject([{ snapshotState: "Delayed", snapshotPresentationTone: "attention" }]);
   });
 
   it("does not infer coverage for another durable import row", () => {

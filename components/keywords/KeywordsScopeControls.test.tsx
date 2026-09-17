@@ -1,11 +1,12 @@
 import { FiltersDrawer } from "@/components/keywords/filters/FiltersDrawer";
 import { MarketContextProvider } from "@/components/markets/MarketContextProvider";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import type { LensLocationOption } from "@/lib/keywords/lens-model";
 import type { MarketContextValue } from "@/lib/markets/market-context-value";
 import { asMarketRef } from "@/lib/routing/app-path";
 import { routerMock } from "@/tests/next-navigation";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { KeywordsScopeControls, KeywordsScopeLocationSelect } from "./KeywordsScopeControls";
@@ -106,7 +107,7 @@ describe("KeywordsScopeLocationSelect", () => {
     expect(container).not.toContainElement(paper);
     expect(document.body).toContainElement(paper);
     expect(
-      screen.getByRole("menuitem", { name: /^United States\s*1 keyword · country$/ }),
+      screen.getByRole("menuitem", { name: /^United States\s*1 keyword · Country$/ }),
     ).toBeVisible();
     expect(screen.getByText("United States")).toHaveAttribute("title", "United States");
   });

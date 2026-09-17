@@ -12,13 +12,9 @@ import {
 } from "@/lib/settings/experimental-modules";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-
-const moduleLabels = {
-  competitors: "Competitors",
-  timeline: "Timeline",
-} satisfies Record<ExperimentalModuleKey, string>;
 
 export type UpdateExperimentalModules = (
   input: ExperimentalModulesInput,
@@ -38,6 +34,7 @@ export function ExperimentalModulesForm({
   updateExperimentalModules,
 }: Readonly<ExperimentalModulesFormProps>) {
   const router = useRouter();
+  const t = useTranslations("projectSettingsExperimental");
   const [saveError, setSaveError] = useState<string | null>(null);
   const changeRevision = useRef(0);
   const confirmedValues = useRef<ExperimentalModulesInput>({
@@ -74,7 +71,7 @@ export function ExperimentalModulesForm({
       } catch (error: unknown) {
         changeRevision.current += 1;
         form.reset(confirmedValues.current);
-        setSaveError(actionErrorMessage(error, "Experimental modules could not be saved."));
+        setSaveError(actionErrorMessage(error, t("saveError")));
       }
     };
 
@@ -100,24 +97,21 @@ export function ExperimentalModulesForm({
   }
 
   const enabled = form.watch("enabledExperimentalModules");
+  const moduleLabel = (key: ExperimentalModuleKey) => t(`module.${key}`);
 
   return (
-    <SettingsCard
-      description="Enable an experimental module for this project. Disabled modules are not available in navigation."
-      showSave={false}
-      title="Experimental modules"
-    >
+    <SettingsCard description={t("description")} showSave={false} title={t("title")}>
       <form onSubmit={(event) => event.preventDefault()}>
         <fieldset className="contents" disabled={!canEdit}>
           <input type="hidden" {...form.register("projectId")} />
           <div className="flex flex-col gap-2">
             {experimentalModuleKeys.map((key) => (
               <Switch
-                aria-label={moduleLabels[key]}
+                aria-label={moduleLabel(key)}
                 checked={enabled.includes(key)}
                 disabled={!canEdit}
                 key={key}
-                label={moduleLabels[key]}
+                label={moduleLabel(key)}
                 onChange={(event) => toggleModule(key, event.currentTarget.checked)}
               />
             ))}

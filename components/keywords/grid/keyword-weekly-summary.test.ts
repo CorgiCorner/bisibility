@@ -30,25 +30,31 @@ describe("buildKeywordWeeklySummary", () => {
         ]),
       ]),
     ).toEqual({
-      sentence: "1 of 2 keywords improved this week · biggest drop: react data grid (-2)",
+      improved: 1,
+      kind: "mixed",
+      keyword: "react data grid",
+      positionDelta: -2,
       tone: "improved",
+      total: 2,
     });
   });
 
   it.each([
     {
       expected: {
-        sentence: "No keywords improved this week · biggest drop: docs (-2)",
+        kind: "dropped",
+        keyword: "docs",
+        positionDelta: -2,
         tone: "dropped",
       },
       positions: [[6, 8]],
     },
     {
-      expected: { sentence: "1 of 1 keywords improved this week · no drops", tone: "improved" },
+      expected: { improved: 1, kind: "improved", tone: "improved", total: 1 },
       positions: [[8, 6]],
     },
     {
-      expected: { sentence: "Positions held steady this week", tone: "steady" },
+      expected: { kind: "steady", tone: "steady" },
       positions: [[6, 6]],
     },
   ])("renders every zero-state copy variant", ({ expected, positions }) => {
@@ -74,12 +80,8 @@ describe("buildKeywordWeeklySummary", () => {
         ],
         clicks,
       );
-    expect(buildKeywordWeeklySummary([tied("alpha", 10), tied("zulu", 20)])?.sentence).toContain(
-      "zulu (-2)",
-    );
-    expect(buildKeywordWeeklySummary([tied("alpha", 20), tied("zulu", 20)])?.sentence).toContain(
-      "alpha (-2)",
-    );
+    expect(buildKeywordWeeklySummary([tied("alpha", 10), tied("zulu", 20)])?.keyword).toBe("zulu");
+    expect(buildKeywordWeeklySummary([tied("alpha", 20), tied("zulu", 20)])?.keyword).toBe("alpha");
     expect(
       buildKeywordWeeklySummary([row("first week", [{ checkedAt: ago(0), position: 3 }])]),
     ).toBeNull();

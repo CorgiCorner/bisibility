@@ -1,5 +1,7 @@
 import "server-only";
 
+import { type AppLocale, resolveViewerLocale } from "@/i18n/config";
+import { readLocaleCookie } from "@/i18n/locale-preference.server";
 import {
   PREFERENCE_COOKIES,
   parsePreferences,
@@ -11,20 +13,21 @@ import { gravatarUrl } from "@/lib/avatar/gravatar";
 import type { DateFormatPreference } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { cache } from "react";
 
 export type ConnectedAccount = {
   connected: boolean;
-  detail: string;
   provider: "github" | "google";
 };
 
 export type ActiveSession = {
-  createdLabel: string;
+  browser: "Edge" | "Chrome" | "Firefox" | "Safari" | null;
   current: boolean;
-  device: string;
   id: string;
-  location: string;
+  ipAddress: string | null;
+  lastActiveAt: Date;
+  operatingSystem: "macOS" | "Windows" | "Android" | "iOS" | "Linux" | null;
 };
 
 export type AccountView = {
@@ -40,43 +43,28 @@ export type AccountView = {
   twoFactorEnabled: boolean;
 };
 
-function relativeLabel(date: Date): string {
-  const minutes = Math.round((Date.now() - date.getTime()) / 60000);
-  if (minutes < 1) {
-    return "active just now";
-  }
-  if (minutes < 60) {
-    return `active ${minutes}m ago`;
-  }
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) {
-    return `active ${hours}h ago`;
-  }
-  const days = Math.round(hours / 24);
-  return `active ${days}d ago`;
-}
-
-// Tiny user-agent reduction: enough to label a session row, no UA-parsing dependency.
-function deviceFromUserAgent(userAgent: string | null): string {
-  if (!userAgent) {
-    return "Unknown device";
-  }
-  const os =
-    [
-      { label: "macOS", pattern: /Mac OS X|Macintosh/ },
-      { label: "Windows", pattern: /Windows/ },
-      { label: "Android", pattern: /Android/ },
-      { label: "iOS", pattern: /iPhone|iPad|iOS/ },
-      { label: "Linux", pattern: /Linux/ },
-    ].find(({ pattern }) => pattern.test(userAgent))?.label ?? "Unknown";
+// Tiny user-agent reduction: enough to describe a session row, no UA-parsing dependency.
+function deviceFromUserAgent(
+  userAgent: string | null,
+): Pick<ActiveSession, "browser" | "operatingSystem"> {
+  const operatingSystems = [
+    { label: "macOS", pattern: /Mac OS X|Macintosh/ },
+    { label: "Windows", pattern: /Windows/ },
+    { label: "Android", pattern: /Android/ },
+    { label: "iOS", pattern: /iPhone|iPad|iOS/ },
+    { label: "Linux", pattern: /Linux/ },
+  ] as const;
+  const browsers = [
+    { label: "Edge", pattern: /Edg\// },
+    { label: "Chrome", pattern: /Chrome\// },
+    { label: "Firefox", pattern: /Firefox\// },
+    { label: "Safari", pattern: /Safari\// },
+  ] as const;
+  const operatingSystem =
+    operatingSystems.find(({ pattern }) => userAgent && pattern.test(userAgent))?.label ?? null;
   const browser =
-    [
-      { label: "Edge", pattern: /Edg\// },
-      { label: "Chrome", pattern: /Chrome\// },
-      { label: "Firefox", pattern: /Firefox\// },
-      { label: "Safari", pattern: /Safari\// },
-    ].find(({ pattern }) => pattern.test(userAgent))?.label ?? "Browser";
-  return `${browser} on ${os}`;
+    browsers.find(({ pattern }) => userAgent && pattern.test(userAgent))?.label ?? null;
+  return { browser, operatingSystem };
 }
 
 function requiredPublicId(value: string | null, prefix: "sid" | "usr", resource: string) {
@@ -85,8 +73,6 @@ function requiredPublicId(value: string | null, prefix: "sid" | "usr", resource:
   }
   return value;
 }
-
-const PROVIDER_LABEL = { github: "GitHub", google: "Google" } as const;
 
 export async function getAccount(): Promise<AccountView> {
   const session = await requireSession();
@@ -123,9 +109,6 @@ export async function getAccount(): Promise<AccountView> {
   const linked = new Set(accounts.map((account) => account.providerId));
   const connectedAccounts: ConnectedAccount[] = (["github", "google"] as const).map((provider) => ({
     connected: linked.has(provider),
-    detail: linked.has(provider)
-      ? `Connected to ${PROVIDER_LABEL[provider]}`
-      : "Not connected. Sign-in is by email code today.",
     provider,
   }));
 
@@ -145,11 +128,11 @@ export async function getAccount(): Promise<AccountView> {
     name: user?.name ?? session.user.name ?? "",
     publicId: requiredPublicId(user.publicId, "usr", "User"),
     sessions: sessions.map((row) => ({
-      createdLabel: relativeLabel(row.updatedAt),
       current: row.id === session.session.id,
-      device: deviceFromUserAgent(row.userAgent),
+      ...deviceFromUserAgent(row.userAgent),
       id: requiredPublicId(row.publicId, "sid", "Session"),
-      location: row.ipAddress?.trim() || "Unknown location",
+      ipAddress: row.ipAddress?.trim() || null,
+      lastActiveAt: row.updatedAt,
     })),
     twoFactorEnabled: user?.twoFactorEnabled ?? false,
   };
@@ -202,4 +185,54 @@ export async function persistDateFormatPreference(
     where: { id: userId },
   });
   return { changed: true, publicId: existing.publicId, previousFormat };
+}
+
+export async function getLocalePreference() {
+  const session = await requireSession();
+  return getLocalePreferenceForUser(session.user.id);
+}
+
+const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn) => fn;
+
+/** Resolves a signed-in locale once for every request that needs it. */
+export const getLocalePreferenceForUser = perRequestCache(async (userId: string) => {
+  const [cookieLocale, requestHeaders, user] = await Promise.all([
+    readLocaleCookie(),
+    headers(),
+    prisma.user.findUnique({
+      select: { uiLocale: true, uiLocaleSelectedAt: true },
+      where: { id: userId },
+    }),
+  ]);
+
+  const acceptLanguage = requestHeaders.get("accept-language");
+  return {
+    ...resolveViewerLocale({
+      acceptLanguage,
+      cookieLocale,
+      persistedLocale: user?.uiLocale,
+      persistedLocaleSelectedAt: user?.uiLocaleSelectedAt,
+    }),
+    acceptLanguage,
+  };
+});
+
+export async function persistUiLocalePreference(userId: string, uiLocale: AppLocale) {
+  const existing = await prisma.user.findUnique({
+    select: { publicId: true, uiLocale: true, uiLocaleSelectedAt: true },
+    where: { id: userId },
+  });
+  if (!existing?.publicId) {
+    throw new Error("User public ID is not available.");
+  }
+
+  const changed = existing.uiLocale !== uiLocale || !existing.uiLocaleSelectedAt;
+  if (changed) {
+    await prisma.user.update({
+      data: { uiLocale, uiLocaleSelectedAt: new Date() },
+      where: { id: userId },
+    });
+  }
+
+  return { changed, previousLocale: existing.uiLocale, publicId: existing.publicId };
 }

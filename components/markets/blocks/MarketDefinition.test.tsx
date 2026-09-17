@@ -5,7 +5,8 @@ import {
   type MarketDefinitionValue,
 } from "@/components/markets/blocks/MarketDefinition";
 import { marketDefinitionSelection } from "@/components/markets/blocks/market-definition-selection";
-import { render, screen, waitFor } from "@testing-library/react";
+import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -142,9 +143,9 @@ describe("MarketDefinition", () => {
       "Dutch",
       "French",
     ]);
-    await user.type(screen.getByRole("textbox", { name: "Search all languages" }), "eng");
+    await user.type(screen.getByRole("textbox", { name: "Search all supported languages" }), "eng");
     expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["English"]);
-    await user.clear(screen.getByRole("textbox", { name: "Search all languages" }));
+    await user.clear(screen.getByRole("textbox", { name: "Search all supported languages" }));
     await user.click(screen.getByRole("menuitem", { name: "Dutch" }));
 
     expect(onChange).toHaveBeenCalledWith(empty({ countryCode: "BE", languageCode: "nl" }));

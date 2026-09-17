@@ -3,6 +3,7 @@
 import { AlertBanner } from "@/components/ui/AlertBanner";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { appPath } from "@/lib/routing/app-path";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useProjectWriteMode } from "./ProjectWriteModeProvider";
 
@@ -17,11 +18,11 @@ export function ProjectReadOnlyTooltip({
   // Always render the wrapper span so callers can rely on it for layout (flex
   // containers, flex-1 sizing) in both the writable and read-only states.
   const wrapped = (
-    <span aria-label={readOnly ? readOnlyReason : undefined} className={className}>
+    <span aria-label={readOnly ? (readOnlyReason ?? undefined) : undefined} className={className}>
       {children}
     </span>
   );
-  if (!readOnly) {
+  if (!readOnly || !readOnlyReason) {
     return wrapped;
   }
 
@@ -30,6 +31,7 @@ export function ProjectReadOnlyTooltip({
 
 export function ProjectWriteModeBanner() {
   const { projectRef, readOnly, writeMode } = useProjectWriteMode();
+  const t = useTranslations("shell.writeMode");
   if (!readOnly) {
     return null;
   }
@@ -40,11 +42,11 @@ export function ProjectWriteModeBanner() {
         action={{
           href: projectRef ? `${appPath(projectRef, "settings")}#migration` : undefined,
           icon: "arrow",
-          label: "Migration settings",
+          label: t("migrationSettings"),
         }}
-        detail="This project moved to another bisibility instance. Writes and rank checks stay off until you reactivate it in settings."
+        detail={t("migrated.detail")}
         tint="yellow"
-        title="Project migrated - disabled on this instance."
+        title={t("migrated.title")}
       />
     );
   }
@@ -54,11 +56,11 @@ export function ProjectWriteModeBanner() {
       action={{
         href: projectRef ? `${appPath(projectRef, "settings")}#migration` : undefined,
         icon: "arrow",
-        label: "Migration settings",
+        label: t("migrationSettings"),
       }}
-      detail="Reads still work. Writes, imports, provider changes, and rank-check starts are paused. Cancel the migration in settings to resume writes. Advanced shows when the hold becomes eligible for automatic release; the hourly worker releases it shortly afterward."
+      detail={t("migrationHold.detail")}
       tint="yellow"
-      title="Project is read-only - migration in progress."
+      title={t("migrationHold.title")}
     />
   );
 }

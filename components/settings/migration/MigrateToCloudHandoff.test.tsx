@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithAdvancedSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HandoffPanel } from "./MigrateToCloudHandoff";
 import { ImportCompletionSummary } from "./MigrateToCloudImportCompletion";
@@ -55,7 +56,7 @@ describe("migration handoff panel", () => {
       <HandoffPanel direction="to-cloud" handoff={null} onHandoff={vi.fn()} />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Generate" }));
-    expect(await screen.findByText("Handoff unavailable")).toBeInTheDocument();
+    expect(await screen.findByText("Migration handoff generation failed.")).toBeInTheDocument();
     rerender(<HandoffPanel direction="to-cloud" handoff={handoff} onHandoff={vi.fn()} />);
     expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
   });

@@ -1,7 +1,15 @@
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
+import messages from "@/messages/core/en/project-rank-tracker-keyword-import.json";
+import { createTranslator } from "use-intl/core";
 import { describe, expect, it } from "vitest";
 import { drawerMarketOptions } from "./keyword-inline-edit-markets";
+
+const t = createTranslator({
+  locale: "en",
+  messages,
+  namespace: "projectRankTracker.keywordImport.management.grid",
+});
 
 type RegistryMarket = ProjectMarketsView["markets"][number];
 
@@ -95,7 +103,7 @@ describe("drawerMarketOptions", () => {
       },
       locationName: "Spain",
     });
-    const options = drawerMarketOptions([market()], "ES@ca", kw);
+    const options = drawerMarketOptions([market()], "ES@ca", kw, t);
     const legacy = options[0];
     expect(legacy).toMatchObject({
       disabled: true,
@@ -119,7 +127,7 @@ describe("drawerMarketOptions", () => {
       languageLabel: "French",
       status: "paused",
     });
-    const options = drawerMarketOptions([paused], "BE@fr", keyword());
+    const options = drawerMarketOptions([paused], "BE@fr", keyword(), t);
     const option = options[0];
     expect(option).toMatchObject({
       disabled: false,
@@ -142,7 +150,7 @@ describe("drawerMarketOptions", () => {
       languageCode: "es",
       languageLabel: "Spanish",
     });
-    const options = drawerMarketOptions([active], "ES", keyword());
+    const options = drawerMarketOptions([active], "ES", keyword(), t);
     expect(options[0]).toMatchObject({
       countryCode: "ES",
       disabled: false,

@@ -28,15 +28,25 @@ const trackingScheduleSchema = z.object({
   timezone: projectDefaultsSchema.shape.timezone,
 });
 
-export const onboardingTrackingDefaultsSchema = trackingScheduleSchema.extend({
-  devices: z.array(deviceSchema).min(1),
-  locations: z
-    .array(canonicalKeySchema)
-    .min(1, "Add at least one market to continue.")
-    .max(MAX_ONBOARDING_LOCATIONS),
-  projectId: z.string().trim().min(1).max(120),
-  serpDepth: serpDepthSchema.default(DEFAULT_ONBOARDING_SERP_DEPTH),
-});
+export type TrackingDefaultsMessages = { marketRequired: string };
+
+const defaultTrackingDefaultsMessages: TrackingDefaultsMessages = {
+  marketRequired: "Add at least one market to continue.",
+};
+
+export function onboardingTrackingDefaultsSchemaFor(messages = defaultTrackingDefaultsMessages) {
+  return trackingScheduleSchema.extend({
+    devices: z.array(deviceSchema).min(1),
+    locations: z
+      .array(canonicalKeySchema)
+      .min(1, messages.marketRequired)
+      .max(MAX_ONBOARDING_LOCATIONS),
+    projectId: z.string().trim().min(1).max(120),
+    serpDepth: serpDepthSchema.default(DEFAULT_ONBOARDING_SERP_DEPTH),
+  });
+}
+
+export const onboardingTrackingDefaultsSchema = onboardingTrackingDefaultsSchemaFor();
 
 export type TrackingDefaultsForm = z.infer<typeof onboardingTrackingDefaultsSchema>;
 

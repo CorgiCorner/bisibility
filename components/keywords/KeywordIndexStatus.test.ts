@@ -1,5 +1,6 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { UrlPresenceView } from "@/lib/queries/keywords";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { createElement } from "react";
 import { describe, expect, it } from "vitest";
 import { indexStatusDisplay, KeywordIndexStatus } from "./KeywordIndexStatus";
@@ -20,12 +21,10 @@ function presence(overrides: Partial<UrlPresenceView> = {}): UrlPresenceView {
 describe("indexStatusDisplay", () => {
   it("maps supported presence fields to the index status footer", () => {
     expect(indexStatusDisplay(presence())).toEqual({
-      fields: [
-        { label: "Indexed", value: "Yes" },
-        { label: "Canonical", value: "Self" },
-        { label: "Crawled", value: "Jul 1, 2026" },
-        { label: "Last inspected", value: "Jul 4, 2026" },
-      ],
+      canonicalOk: true,
+      checkedAt: "Jul 4, 2026",
+      crawledAt: "Jul 1, 2026",
+      indexed: true,
     });
 
     render(createElement(KeywordIndexStatus, { presence: presence() }));
@@ -54,12 +53,10 @@ describe("indexStatusDisplay", () => {
         }),
       ),
     ).toEqual({
-      fields: [
-        { label: "Indexed", value: "No" },
-        { label: "Canonical", value: "Mismatch" },
-        { label: "Crawled", value: "Not crawled" },
-        { label: "Last inspected", value: "Jul 4, 2026" },
-      ],
+      canonicalOk: false,
+      checkedAt: "Jul 4, 2026",
+      crawledAt: null,
+      indexed: false,
     });
   });
 

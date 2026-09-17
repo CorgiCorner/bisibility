@@ -1,6 +1,7 @@
 "use client";
 
 import { EASE_OUT, MOTION_TOAST_ENTER, MOTION_TOAST_EXIT } from "@/lib/ui/motion";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useCallback } from "react";
 import { type ToastSeverity, toastIcon, toastPresentations } from "./toast-presentation";
@@ -84,6 +85,7 @@ export function ToastItem({
   onPauseFocus,
   onResumeFocus,
 }: Readonly<ToastItemProps>) {
+  const t = useTranslations("shared.controls.toast");
   const setRootRef = useCallback(
     (node: HTMLElement | null) => {
       if (!node) return undefined;
@@ -178,7 +180,7 @@ export function ToastItem({
           style={{ color: style.color }}
           type="button"
         >
-          Undo
+          {t("undo")}
         </button>
       ) : null}
     </output>

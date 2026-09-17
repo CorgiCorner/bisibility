@@ -22,13 +22,25 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const RoutePage: Story = {};
-export const ContextCard: Story = { render: () => <SearchInsightsContextLoading /> };
-export const TrustStrip: Story = { render: () => <SearchInsightsTrustStripLoading /> };
+export const RoutePage: Story = {
+  args: {
+    bodyAriaLabel: "Search Console data loading",
+    pageAriaLabel: "Search Console page loading",
+  },
+};
+export const ContextCard: Story = {
+  args: RoutePage.args,
+  render: () => <SearchInsightsContextLoading />,
+};
+export const TrustStrip: Story = {
+  args: RoutePage.args,
+  render: () => <SearchInsightsTrustStripLoading />,
+};
 export const StreamedBody: Story = {
+  args: RoutePage.args,
   render: () => (
     <div className="p-4">
-      <SearchInsightsBodyLoading />
+      <SearchInsightsBodyLoading ariaLabel="Search Console data loading" />
     </div>
   ),
 };

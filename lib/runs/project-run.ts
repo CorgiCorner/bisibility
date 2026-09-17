@@ -8,10 +8,20 @@ export type ProjectRunProject = Readonly<{
   publicId: PublicIdForPrefix<"prj">;
 }>;
 
-export type ProjectRunScope = Readonly<{
-  description: string | null;
-  label: string;
-}>;
+export type ProjectRunScope =
+  | Readonly<{
+      description: null;
+      keywordCount: number;
+      kind: "rank_check";
+    }>
+  | Readonly<{
+      description: string;
+      kind: "gsc_import";
+    }>;
+
+export type ProjectRunTitle =
+  | Readonly<{ kind: "gsc_import" }>
+  | Readonly<{ kind: "rank_check"; trigger: RunTrigger }>;
 
 export type ProjectRunLifecycle =
   | "planned"
@@ -97,7 +107,7 @@ type ProjectRunBase<
   project: ProjectRunProject;
   scope: ProjectRunScope;
   timestamps: Timestamps;
-  title: string;
+  title: ProjectRunTitle;
 }>;
 
 export type ProjectRunRankCheck = ProjectRunBase<

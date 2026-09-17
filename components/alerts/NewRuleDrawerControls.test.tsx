@@ -1,5 +1,6 @@
+import { renderWithAlertMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import type { UseFormRegister } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
 import { ConditionFields } from "./NewRuleDrawerControls";

@@ -115,10 +115,7 @@ describe("topic and intent filters", () => {
   it("adds and removes topic and intent chips", () => {
     const filters = { ...emptyKeywordFilters, intents: ["commercial"], topics: ["Product"] };
     expect(getFilterChips(filters)).toEqual(
-      expect.arrayContaining([
-        { key: "topic:Product", label: "Topic: Product" },
-        { key: "intent:commercial", label: "Intent: commercial" },
-      ]),
+      expect.arrayContaining([{ key: "topic:Product" }, { key: "intent:commercial" }]),
     );
     expect(removeFilterChip(filters, "topic:Product").topics).toEqual([]);
     expect(removeFilterChip(filters, "intent:commercial").intents).toEqual([]);
@@ -146,7 +143,7 @@ describe("last check status filter", () => {
   it("adds and removes a last-check chip", () => {
     const filters = { ...emptyKeywordFilters, lastCheck: "failed" } as const;
     const chips = getFilterChips(filters);
-    expect(chips).toContainEqual({ key: "lastCheck", label: "Last check: Failed" });
+    expect(chips).toContainEqual({ key: "lastCheck" });
     const cleared = removeFilterChip(filters, "lastCheck");
     expect(cleared.lastCheck).toBe("any");
   });

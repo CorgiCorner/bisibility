@@ -1,4 +1,5 @@
-import type { AuditDateRange, AuditEntry, AuditEventType, AuditStatus } from "@/lib/queries/audit";
+import type { AuditDateRange, AuditEventType, AuditStatus } from "@/lib/queries/audit";
+import type { PresentedAuditEntry } from "./audit-presentation";
 
 export type { AuditDateRange };
 
@@ -18,23 +19,7 @@ export const defaultAuditFilters = {
   status: "all",
 } satisfies AuditFilterState;
 
-export const eventTypeLabels = {
-  auth: "Auth",
-  data: "Data",
-  export: "Export",
-  import: "Import",
-  permissions: "Permissions",
-  system: "System",
-} satisfies Record<AuditEventType, string>;
-
-export const dateRangeLabels = {
-  "7d": "Last 7 days",
-  "30d": "Last 30 days",
-  "90d": "Last 90 days",
-  all: "All time",
-} satisfies Record<AuditDateRange, string>;
-
-function searchableText(row: AuditEntry) {
+function searchableText(row: PresentedAuditEntry) {
   return [
     row.actor.id,
     row.actor.name,
@@ -55,9 +40,9 @@ function searchableText(row: AuditEntry) {
 // The date range is applied server-side (URL-driven, see getAuditLogView), so the rows passed
 // in are already windowed; this only handles the in-page facets (actor, event, status, search).
 export function applyAuditFilters(
-  rows: readonly AuditEntry[],
+  rows: readonly PresentedAuditEntry[],
   filters: AuditFilterState,
-): AuditEntry[] {
+): PresentedAuditEntry[] {
   const query = filters.search.trim().toLowerCase();
   return rows.filter((row) => {
     const actorMatch = filters.actor === "all" || row.actor.email === filters.actor;
@@ -68,10 +53,10 @@ export function applyAuditFilters(
   });
 }
 
-export function actorOptions(rows: readonly AuditEntry[]) {
+export function actorOptions(rows: readonly PresentedAuditEntry[]) {
   return Array.from(new Map(rows.map((row) => [row.actor.email, row.actor])).values());
 }
 
-export function eventTypeOptions(rows: readonly AuditEntry[]) {
+export function eventTypeOptions(rows: readonly PresentedAuditEntry[]) {
   return Array.from(new Set(rows.map((row) => row.eventType))).sort((a, b) => a.localeCompare(b));
 }

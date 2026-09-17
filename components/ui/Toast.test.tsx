@@ -1,6 +1,7 @@
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
 import { MOTION_TOAST_ENTER, MOTION_TOAST_EXIT } from "@/lib/ui/motion";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider } from "./Toast";
 import { useToast } from "./toast-context";
@@ -57,7 +58,7 @@ function deferredUndo() {
 }
 
 function renderToast(undoFn?: () => Promise<void> | void) {
-  return render(
+  return renderWithSharedMessages(
     <ToastProvider>
       <ToastTriggers undoFn={undoFn} />
     </ToastProvider>,

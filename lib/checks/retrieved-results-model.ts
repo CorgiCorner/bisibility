@@ -1,86 +1,95 @@
 import type { RetrievedResults, RetrievedRow } from "@/lib/checks/contract";
 
-export type FeatureChip = { label: string; description: string };
+export type KnownFeature =
+  | "ads"
+  | "aiOverview"
+  | "discussions"
+  | "events"
+  | "featuredSnippet"
+  | "images"
+  | "knowledgePanel"
+  | "localPack"
+  | "news"
+  | "peopleAlsoAsk"
+  | "recipes"
+  | "relatedSearches"
+  | "shopping"
+  | "sitelinks"
+  | "topStories"
+  | "video";
 
-const FEATURE_MAP: Record<string, string> = {
-  "ai overview": "AI overview",
-  "answer box": "Featured snippet",
-  "featured snippet": "Featured snippet",
-  "people also ask": "People also ask",
-  "related questions": "People also ask",
-  "knowledge graph": "Knowledge panel",
-  "local pack": "Local pack",
-  "local results": "Local pack",
-  "places results": "Local pack",
-  "inline images": "Images",
-  "images results": "Images",
-  images: "Images",
-  "video results": "Video",
-  "inline videos": "Video",
-  video: "Video",
-  sitelinks: "Sitelinks",
-  "top stories": "Top stories",
-  "news results": "News",
-  shopping: "Shopping",
-  "shopping results": "Shopping",
-  "discussions and forums": "Discussions",
-  perspectives: "Discussions",
-  recipes: "Recipes",
-  "recipes results": "Recipes",
-  "events results": "Events",
-  events: "Events",
-  "related searches": "Related searches",
-  "top ads": "Ads",
-  "bottom ads": "Ads",
-  ads: "Ads",
-  paid: "Ads",
+export type FeatureChip = { known: KnownFeature | null; raw: string };
+
+const FEATURE_MAP: Record<string, KnownFeature> = {
+  "ai overview": "aiOverview",
+  "answer box": "featuredSnippet",
+  "featured snippet": "featuredSnippet",
+  "people also ask": "peopleAlsoAsk",
+  "related questions": "peopleAlsoAsk",
+  "knowledge graph": "knowledgePanel",
+  "local pack": "localPack",
+  "local results": "localPack",
+  "places results": "localPack",
+  "inline images": "images",
+  "images results": "images",
+  images: "images",
+  "video results": "video",
+  "inline videos": "video",
+  video: "video",
+  sitelinks: "sitelinks",
+  "top stories": "topStories",
+  "news results": "news",
+  shopping: "shopping",
+  "shopping results": "shopping",
+  "discussions and forums": "discussions",
+  perspectives: "discussions",
+  recipes: "recipes",
+  "recipes results": "recipes",
+  "events results": "events",
+  events: "events",
+  "related searches": "relatedSearches",
+  "top ads": "ads",
+  "bottom ads": "ads",
+  ads: "ads",
+  paid: "ads",
 };
 
-const FEATURE_CATALOG: Array<[string, string]> = [
-  ["AI overview", "An AI-generated summary shown above organic results."],
-  ["Featured snippet", "A highlighted answer box shown above organic results."],
-  ["People also ask", "Expandable questions related to the query."],
-  ["Knowledge panel", "A knowledge-graph info box about the subject."],
-  ["Local pack", "A map-based local business results block."],
-  ["Images", "An image results block on the results page."],
-  ["Sitelinks", "Additional links from the same result shown beneath it."],
-  ["Video", "A video results block on the results page."],
-  ["Top stories", "A news headlines block on the results page."],
-  ["News", "A news results block on the results page."],
-  ["Shopping", "A shopping or product listings block on the results page."],
-  ["Discussions", "A discussions and forums block on the results page."],
-  ["Recipes", "A recipe results block on the results page."],
-  ["Events", "An events results block on the results page."],
-  ["Related searches", "Related search queries shown at the bottom."],
-  ["Ads", "Sponsored ad placements on the results page."],
+const FEATURE_ORDER: KnownFeature[] = [
+  "aiOverview",
+  "featuredSnippet",
+  "peopleAlsoAsk",
+  "knowledgePanel",
+  "localPack",
+  "images",
+  "sitelinks",
+  "video",
+  "topStories",
+  "news",
+  "shopping",
+  "discussions",
+  "recipes",
+  "events",
+  "relatedSearches",
+  "ads",
 ];
 
-const FEATURE_ORDER = FEATURE_CATALOG.map(([label]) => label);
-const FEATURE_DESCRIPTIONS: Record<string, string> = Object.fromEntries(FEATURE_CATALOG);
-
-function capitalize(s: string): string {
-  if (!s) return s;
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 export function featureChips(features: readonly string[]): FeatureChip[] {
-  const seen = new Map<string, string>();
+  const seen = new Map<KnownFeature, string>();
+  const unknown: FeatureChip[] = [];
   for (const raw of features) {
-    const key = raw.toLowerCase();
-    const label = FEATURE_MAP[key] ?? capitalize(raw);
-    if (!seen.has(label)) seen.set(label, FEATURE_DESCRIPTIONS[label] ?? "");
+    const known = FEATURE_MAP[raw.toLowerCase()];
+    if (known) seen.set(known, raw);
+    else unknown.push({ known: null, raw });
   }
   const ordered: FeatureChip[] = [];
-  for (const label of FEATURE_ORDER) {
-    if (seen.has(label)) {
-      ordered.push({ label, description: seen.get(label) as string });
-      seen.delete(label);
+  for (const known of FEATURE_ORDER) {
+    const raw = seen.get(known);
+    if (raw) {
+      ordered.push({ known, raw });
+      seen.delete(known);
     }
   }
-  for (const [label, description] of seen) {
-    ordered.push({ label, description });
-  }
-  return ordered;
+  return [...ordered, ...unknown];
 }
 
 export const AI_OVERVIEW_REPORTING_PROVIDERS: readonly string[] = ["dataforseo"];
@@ -102,15 +111,14 @@ export function gapBlock(input: {
   requestedDepth: number | null;
   retrievedPositions: number;
   stoppedAtResult: boolean;
-}): { heading: string; count: string; reason: string } | null {
+}): { count: number; end: number; kind: "stopped" | "unknown"; start: number } | null {
   const { requestedDepth: depth, retrievedPositions: got, stoppedAtResult } = input;
   if (depth === null || got >= depth) return null;
   return {
-    heading: `Positions ${got + 1}-${depth}`,
-    count: `${depth - got} not retrieved`,
-    reason: stoppedAtResult
-      ? "The check stopped at your result, so these positions were never requested and never billed. They are unknown for this check, not empty."
-      : "These positions were not retrieved for this check. They are unknown, not empty.",
+    count: depth - got,
+    end: depth,
+    kind: stoppedAtResult ? "stopped" : "unknown",
+    start: got + 1,
   };
 }
 
@@ -134,8 +142,12 @@ export type CompareRow = {
   delta: number;
   from: number | null;
   to: number | null;
-  chip: string;
-  tip: string;
+};
+
+export type ComparisonBound = {
+  kind: "retrieved" | "stopped";
+  overlap: number;
+  relation: "earlier" | "later";
 };
 
 export type CompareResult =
@@ -144,11 +156,17 @@ export type CompareResult =
       overlap: number;
       rows: CompareRow[];
       stats: Record<CompareState, number>;
-      overlapNote: string;
-      tailNote: string;
+      bound: ComparisonBound;
     }
-  | { kind: "degenerate"; note: string }
-  | { kind: "refused"; eyebrow: string; title: string; body: string; rule: string };
+  | { from: number; kind: "degenerate"; reason: "moved_up_limited"; to: number }
+  | { kind: "degenerate"; reason: "insufficient_overlap" }
+  | {
+      checkedAt: string;
+      kind: "refused";
+      kept: number;
+      relation: "earlier" | "later";
+      tier: "compact" | "none";
+    };
 
 /** A site can hold two organic results; the domain-keyed view uses its best, as the compact tier does. */
 function keepBest(map: Map<string, number>, row: RetrievedRow) {
@@ -159,13 +177,8 @@ function keepBest(map: Map<string, number>, row: RetrievedRow) {
 export function compareChecks(
   from: RetrievedResults,
   to: RetrievedResults,
-  options: {
-    formatDate: (iso: string) => string;
-    fullCheckDates: readonly string[];
-  },
+  _options: { formatDate?: (iso: string) => string; fullCheckDates: readonly string[] },
 ): CompareResult {
-  const { formatDate } = options;
-
   if (from.tier !== "full" || to.tier !== "full") {
     const offender = from.tier !== "full" ? from : to;
     const earlier = from.checkedAt <= to.checkedAt ? from : to;
@@ -174,17 +187,12 @@ export function compareChecks(
       offender.tier === "compact"
         ? Math.max(0, ...offender.domains.map((entry) => entry.bestPosition))
         : 0;
-    const body =
-      offender.tier === "compact"
-        ? `The ${relation} check kept only its top ${kept}, so its titles, URLs and page features below that are gone.`
-        : `The ${formatDate(offender.checkedAt)} check has no stored results at all, so there is nothing to line up against the other one.`;
-    const rule = "Comparison stays available between checks that both hold full detail.";
     return {
+      checkedAt: offender.checkedAt,
+      kept,
       kind: "refused",
-      eyebrow: "COMPARISON NOT POSSIBLE",
-      title: "These two checks cannot be compared",
-      body,
-      rule,
+      relation,
+      tier: offender.tier === "compact" ? "compact" : "none",
     };
   }
 
@@ -195,13 +203,15 @@ export function compareChecks(
     const tp = to.trackedPosition;
     if (fp !== null && tp !== null && tp < fp) {
       return {
+        from: fp,
         kind: "degenerate",
-        note: `You moved up from #${fp} to #${tp}. The later check stopped there, so the positions you passed were not retrieved again and their movement cannot be shown.`,
+        reason: "moved_up_limited",
+        to: tp,
       };
     }
     return {
       kind: "degenerate",
-      note: "The two checks overlap over fewer than three positions, so there is nothing to compare.",
+      reason: "insufficient_overlap",
     };
   }
 
@@ -222,10 +232,11 @@ export function compareChecks(
   // Saying "the later check stopped at your result" when the earlier one was shallower, or
   // when neither stopped, is a causal claim the data does not support.
   const bounding = to.retrievedPositions <= from.retrievedPositions ? to : from;
-  const boundingLabel = bounding === to ? "later" : "earlier";
-  const boundReason = bounding.stoppedAtResult
-    ? `The ${boundingLabel} check stopped at your result, so deeper positions were not retrieved.`
-    : `The ${boundingLabel} check retrieved only ${overlap} positions.`;
+  const bound: ComparisonBound = {
+    kind: bounding.stoppedAtResult ? "stopped" : "retrieved",
+    overlap,
+    relation: bounding === to ? "later" : "earlier",
+  };
 
   for (const [domain, toPos] of toMap) {
     const fromPos = fromMap.get(domain);
@@ -236,8 +247,6 @@ export function compareChecks(
         delta: 0,
         from: null,
         to: toPos,
-        chip: "entered",
-        tip: `Was not in positions 1-${overlap} at the earlier check.`,
       });
       stats.entered++;
     } else if (toPos < fromPos) {
@@ -248,8 +257,6 @@ export function compareChecks(
         delta,
         from: fromPos,
         to: toPos,
-        chip: `up ${delta}`,
-        tip: `Moved up ${delta} positions.`,
       });
       stats.up++;
     } else if (toPos > fromPos) {
@@ -260,8 +267,6 @@ export function compareChecks(
         delta,
         from: fromPos,
         to: toPos,
-        chip: `down ${delta}`,
-        tip: `Moved down ${delta} positions.`,
       });
       stats.down++;
     } else {
@@ -271,8 +276,6 @@ export function compareChecks(
         delta: 0,
         from: fromPos,
         to: toPos,
-        chip: "unchanged",
-        tip: "Held the same position.",
       });
       stats.unchanged++;
     }
@@ -286,8 +289,6 @@ export function compareChecks(
         delta: 0,
         from: fromPos,
         to: null,
-        chip: "dropped out",
-        tip: `No longer in positions 1-${overlap}. ${boundReason}`,
       });
       stats.dropped_out++;
     }
@@ -307,7 +308,6 @@ export function compareChecks(
     overlap,
     rows,
     stats,
-    overlapNote: `Compared over positions 1-${overlap}, the depth both checks retrieved.`,
-    tailNote: `Below #${overlap} there is nothing to compare: ${boundReason}`,
+    bound,
   };
 }

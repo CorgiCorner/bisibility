@@ -2,10 +2,11 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/ui/cn";
 import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
-
-const steps = ["Check", "Transfer", "Done"] as const;
+import { useTranslations } from "next-intl";
 
 export function MigrateStepper({ step }: Readonly<{ step: number }>) {
+  const t = useTranslations("projectSettingsMigration.wizard.step");
+  const steps = [t("check"), t("transfer"), t("done")];
   return (
     <div className="flex items-center">
       {steps.map((label, index) => {
@@ -52,14 +53,11 @@ export function ReadOnlyBanner({
   onCancelMigration?: () => void;
   pending?: boolean;
 }>) {
+  const t = useTranslations("projectSettingsMigration.hold");
   return (
     <div className="mt-3.5 flex items-center gap-2 rounded-control border border-yellow bg-yellow/10 px-[13px] py-[9px] text-xs font-medium text-yellow-text">
       <LockSimple aria-hidden className="flex-none" size={15} weight="regular" />
-      <span className="min-w-0 flex-1">
-        Read-only mode is on. Writes and rank checks stay paused while this migration is in
-        progress. It releases only when you cancel the migration, or automatically after 24 hours of
-        inactivity.
-      </span>
+      <span className="min-w-0 flex-1">{t("banner")}</span>
       {onCancelMigration ? (
         <button
           className="flex-none rounded-control border border-yellow/40 bg-bg-elev px-2 py-1 font-semibold text-yellow-text disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
@@ -67,7 +65,7 @@ export function ReadOnlyBanner({
           onClick={onCancelMigration}
           type="button"
         >
-          Cancel migration
+          {t("cancel")}
         </button>
       ) : null}
     </div>
@@ -87,6 +85,7 @@ export function EnableReadOnlyConfirmModal({
   onConfirm: () => void;
   open: boolean;
 }>) {
+  const t = useTranslations("projectSettingsMigration.hold");
   return (
     <Modal
       footer={
@@ -97,32 +96,26 @@ export function EnableReadOnlyConfirmModal({
             onClick={onClose}
             type="button"
           >
-            Keep writes active
+            {t("enableKeep")}
           </button>
           <Button
             loading={busy}
-            loadingLabel="Enabling read-only..."
+            loadingLabel={t("enabling")}
             onClick={onConfirm}
             style={{ minHeight: 40 }}
             type="button"
             variant="primary"
           >
-            Pause writes and continue
+            {t("enableConfirm")}
           </Button>
         </>
       }
       onClose={onClose}
       open={open}
-      title="Pause writes and rank checks?"
+      title={t("enableTitle")}
     >
-      <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">
-        Continuing puts this project into read-only mode for everyone. Writes and scheduled rank
-        checks are paused so the data cannot change while it transfers.
-      </p>
-      <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">
-        Read-only mode stays on until you cancel the migration - it cannot be switched off from the
-        next steps. If nothing happens for 24 hours it releases automatically.
-      </p>
+      <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">{t("enableBody")}</p>
+      <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">{t("enableNote")}</p>
       {error ? (
         <p className="m-0 mt-3 font-sans tabular-nums text-[11.5px] text-red-text">{error}</p>
       ) : null}
@@ -143,6 +136,7 @@ export function MarkMigratedConfirmModal({
   onConfirm: () => void;
   open: boolean;
 }>) {
+  const t = useTranslations("projectSettingsMigration.hold");
   return (
     <Modal
       footer={
@@ -153,31 +147,26 @@ export function MarkMigratedConfirmModal({
             onClick={onClose}
             type="button"
           >
-            Not yet
+            {t("notYet")}
           </button>
           <Button
             loading={busy}
-            loadingLabel="Marking..."
+            loadingLabel={t("marking")}
             onClick={onConfirm}
             style={{ minHeight: 40 }}
             type="button"
             variant="primary"
           >
-            Mark as migrated
+            {t("mark")}
           </Button>
         </>
       }
       onClose={onClose}
       open={open}
-      title="Mark this project as migrated?"
+      title={t("migratedTitle")}
     >
-      <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">
-        This disables the source project for good: writes and rank checks stay off and the state
-        does not auto-release. Do this once you've verified the destination project.
-      </p>
-      <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">
-        You can reactivate the project later from Settings if you ever need it again.
-      </p>
+      <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">{t("migratedBody")}</p>
+      <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">{t("migratedNote")}</p>
       {error ? (
         <p className="m-0 mt-3 font-sans tabular-nums text-[11.5px] text-red-text">{error}</p>
       ) : null}
@@ -203,6 +192,7 @@ export function CancelMigrationConfirmModal({
   open: boolean;
 }>) {
   const closeMode = mode === "close";
+  const t = useTranslations("projectSettingsMigration.hold");
   return (
     <Modal
       footer={
@@ -214,7 +204,7 @@ export function CancelMigrationConfirmModal({
               onClick={onConfirm}
               type="button"
             >
-              {busy ? "Cancelling..." : "Cancel migration and resume writes"}
+              {busy ? t("cancelling") : t("cancelAndResume")}
             </button>
             <Button
               disabled={busy}
@@ -223,7 +213,7 @@ export function CancelMigrationConfirmModal({
               type="button"
               variant="primary"
             >
-              Keep read-only and close
+              {t("keepReadOnlyClose")}
             </Button>
           </>
         ) : (
@@ -234,33 +224,29 @@ export function CancelMigrationConfirmModal({
               onClick={onClose}
               type="button"
             >
-              Keep migrating
+              {t("keepMigrating")}
             </button>
             <Button
               loading={busy}
-              loadingLabel="Cancelling..."
+              loadingLabel={t("cancelling")}
               onClick={onConfirm}
               style={{ minHeight: 40 }}
               type="button"
               variant="destructive"
             >
-              Cancel migration
+              {t("cancel")}
             </Button>
           </>
         )
       }
       onClose={onClose}
       open={open}
-      title={closeMode ? "Migration in progress" : "Cancel this migration?"}
+      title={closeMode ? t("progressTitle") : t("cancelTitle")}
     >
       <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">
-        {closeMode
-          ? "This project stays read-only while the migration is in progress. You can close this window and come back later - or cancel the migration to resume writes."
-          : "This releases the migration hold and resumes writes and rank checks on this project. If any data already reached the destination, the two instances will drift apart from this point."}
+        {closeMode ? t("progressBody") : t("cancelBody")}
       </p>
-      <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">
-        Migration holds also auto-release after 24 hours of inactivity.
-      </p>
+      <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">{t("autoRelease")}</p>
       {error ? (
         <p className="m-0 mt-3 font-sans tabular-nums text-[11.5px] text-red-text">{error}</p>
       ) : null}

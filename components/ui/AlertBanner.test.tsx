@@ -1,7 +1,15 @@
+import {
+  renderWithFeatureMessages,
+  sharedControlTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { MOTION_MENU_EXIT } from "@/lib/ui/motion";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AlertBanner } from "./AlertBanner";
+
+function render(ui: React.ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: sharedControlTestMessages });
+}
 
 const FALLBACK_MS = MOTION_MENU_EXIT + 50;
 

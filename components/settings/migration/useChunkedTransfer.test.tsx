@@ -1,3 +1,7 @@
+import {
+  advancedSettingsFeatureTestMessages,
+  featureMessagesElement,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { deferred } from "@/tests/deferred";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
@@ -62,6 +66,12 @@ function Harness() {
   );
 }
 
+function renderHarness() {
+  return render(
+    featureMessagesElement(<Harness />, { messages: advancedSettingsFeatureTestMessages }),
+  );
+}
+
 describe("useChunkedTransfer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -107,7 +117,7 @@ describe("useChunkedTransfer", () => {
     mocks.transferSectionsChunk.mockReturnValue(sections.promise);
     mocks.finalizeRemoteImportSession.mockReturnValue(finalize.promise);
 
-    render(<Harness />);
+    renderHarness();
     fireEvent.click(screen.getByRole("button", { name: "Run" }));
 
     expect(screen.getByTestId("stage")).toHaveTextContent("planning");
@@ -188,7 +198,7 @@ describe("useChunkedTransfer", () => {
       },
     });
 
-    render(<Harness />);
+    renderHarness();
     fireEvent.click(screen.getByRole("button", { name: "Run" }));
 
     await waitFor(() => expect(screen.getByTestId("stage")).toHaveTextContent("done"));
@@ -221,12 +231,12 @@ describe("useChunkedTransfer", () => {
       ok: false,
     });
 
-    render(<Harness />);
+    renderHarness();
     fireEvent.click(screen.getByRole("button", { name: "Run" }));
 
     await waitFor(() => expect(screen.getByTestId("stage")).toHaveTextContent("error"));
     expect(screen.getByTestId("message")).toHaveTextContent(
-      "Migration token is invalid or expired.",
+      "Chunked transfer failed. Try again, or use the manual download flow.",
     );
     expect(screen.getByTestId("error")).toHaveTextContent("Migration token is invalid or expired.");
   });
@@ -251,7 +261,7 @@ describe("useChunkedTransfer", () => {
       ok: false,
     });
 
-    render(<Harness />);
+    renderHarness();
     fireEvent.click(screen.getByRole("button", { name: "Run" }));
 
     await waitFor(() => expect(screen.getByTestId("stage")).toHaveTextContent("error"));
@@ -276,13 +286,11 @@ describe("useChunkedTransfer", () => {
       supportsSessions: false,
     });
 
-    render(<Harness />);
+    renderHarness();
     fireEvent.click(screen.getByRole("button", { name: "Run" }));
 
     await waitFor(() => expect(screen.getByTestId("stage")).toHaveTextContent("error"));
-    expect(screen.getByTestId("error")).toHaveTextContent(
-      "Target instance is too old for chunked sessions - upgrade it.",
-    );
+    expect(screen.getByTestId("error")).toHaveTextContent("sessionsUnsupported");
     expect(mocks.createRemoteImportSession).not.toHaveBeenCalled();
     expect(mocks.transferCloudImportPackage).not.toHaveBeenCalled();
   });

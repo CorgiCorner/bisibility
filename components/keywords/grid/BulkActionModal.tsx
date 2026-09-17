@@ -4,6 +4,7 @@ import type { KeywordWorkspaceActions } from "@/components/keywords/action-utils
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { BulkTagForm } from "./BulkActionForms";
 import { BulkTargetForm } from "./BulkTargetForm";
@@ -12,10 +13,6 @@ import { bulkTargetView } from "./bulk-target-model";
 export type BulkMode = "tag" | "target" | null;
 
 const BULK_KEYWORD_FORM_ID = "bulk-keyword-action";
-
-const staticTitles = { tag: "Add tag" } as const;
-
-const submitCopy = { tag: { label: "Apply tag", loading: "Adding..." } } as const;
 
 type BulkActionModalProps = Pick<
   KeywordWorkspaceActions,
@@ -43,14 +40,13 @@ export function BulkActionModal({
   projectId,
   selectedRows,
 }: Readonly<BulkActionModalProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.bulk");
   const [busy, setBusy] = useState(false);
   const selectedIds = selectedRows.map((row) => row.id);
   const targetView = bulkTargetView(selectedRows);
-  const title = mode === "target" ? targetView.modalTitle : mode && staticTitles[mode];
-  const submitLabel =
-    mode === "target" ? targetView.submitLabel : mode ? submitCopy[mode].label : "";
-  const loadingLabel =
-    mode === "target" ? "Saving..." : mode ? submitCopy[mode].loading : undefined;
+  const title = mode === "target" ? t(targetView.titleKey) : mode ? t("addTag") : null;
+  const submitLabel = mode === "target" ? t(targetView.submitKey) : mode ? t("applyTag") : "";
+  const loadingLabel = mode === "target" ? t("saving") : mode ? t("adding") : undefined;
 
   function handleClose() {
     setBusy(false);
@@ -74,7 +70,7 @@ export function BulkActionModal({
         mode ? (
           <>
             <Button disabled={busy} onClick={handleClose} type="button" variant="ghost">
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               form={BULK_KEYWORD_FORM_ID}
@@ -97,7 +93,7 @@ export function BulkActionModal({
     >
       <div className="grid gap-3">
         <p className="m-0 font-sans tabular-nums text-[11.5px] text-fg-muted">
-          Applies to {selectedRows.length} selected keyword{selectedRows.length === 1 ? "" : "s"}.
+          {t("appliesTo", { count: selectedRows.length })}
         </p>
         {mode === "tag" ? (
           <BulkTagForm

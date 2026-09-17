@@ -1,4 +1,7 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import messages from "@/messages/core/en/project-dashboard.json";
 import { render, screen } from "@testing-library/react";
+import type { ComponentProps, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { PositionTrendCard } from "./PositionTrendCard";
 
@@ -11,16 +14,28 @@ vi.mock("@/components/charts/TimeSeriesChart", () => ({
   },
 }));
 
+function withMessages(children: ReactNode) {
+  return (
+    <FeatureMessagesProvider locale="en" messages={messages} timeZone="UTC">
+      {children}
+    </FeatureMessagesProvider>
+  );
+}
+
+function renderTrend(props: ComponentProps<typeof PositionTrendCard>) {
+  return render(withMessages(<PositionTrendCard {...props} />));
+}
+
 describe("PositionTrendCard", () => {
   it("retains the chart-line-up icon for its empty state", () => {
-    const { container } = render(<PositionTrendCard data={[]} empty />);
+    const { container } = renderTrend({ data: [], empty: true });
 
     expect(container.querySelector('[data-icon="ChartLineUpIcon"]')).toBeInTheDocument();
     expect(container.querySelector('[data-icon="ChartBarIcon"]')).not.toBeInTheDocument();
   });
 
   it("shows an explicit next-check state for a single trend point", () => {
-    render(<PositionTrendCard data={[{ label: "now", value: 1 }]} />);
+    renderTrend({ data: [{ label: null, value: 1 }] });
 
     expect(screen.getByText("Trend appears after the next check")).toBeInTheDocument();
     expect(screen.getByText("complete one more check to compare positions")).toBeInTheDocument();
@@ -28,34 +43,46 @@ describe("PositionTrendCard", () => {
   });
 
   it("shows the definition and a separate takeaway below the title", () => {
-    const takeaway = "Avg position slipped 0.8 in the first 21 days of tracking";
-    render(
-      <PositionTrendCard
-        data={[
-          { label: "2026-07-16", value: 3 },
-          { label: "now", value: 2 },
-        ]}
-        takeaway={takeaway}
-      />,
-    );
+    const takeaway: NonNullable<ComponentProps<typeof PositionTrendCard>["takeaway"]> = {
+      days: 21,
+      kind: "slipped",
+      value: 0.8,
+      window: "firstTrackedDays",
+    };
+    renderTrend({
+      data: [
+        { dateKey: "2026-07-16", label: "2026-07-16", value: 3 },
+        { dateKey: "2026-07-17", label: null, value: 2 },
+      ],
+      takeaway,
+    });
 
     expect(lineChart).toHaveBeenLastCalledWith(
       expect.objectContaining({
+        dateKeys: ["2026-07-16", ""],
+        labels: ["2026-07-16", "now"],
         margin: { top: 12, right: 16, bottom: 0, left: 16 },
         yWidth: 20,
       }),
     );
     expect(
       screen.getByRole("region", {
-        name: `Position trend chart. ${takeaway}`,
+        name: "Position trend chart. Average position slipped 0.8 in the first 21 days of tracking.",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText(takeaway, { selector: "p" })).toBeVisible();
+    expect(
+      screen.getByText("Average position slipped 0.8 in the first 21 days of tracking.", {
+        selector: "p",
+      }),
+    ).toBeVisible();
     const definition = screen.getByText(
       "Daily average position of ranked keywords. Lower is better - #1 is the top.",
       { selector: "p" },
     );
-    const renderedTakeaway = screen.getByText(takeaway, { selector: "p" });
+    const renderedTakeaway = screen.getByText(
+      "Average position slipped 0.8 in the first 21 days of tracking.",
+      { selector: "p" },
+    );
     expect(definition).toBeVisible();
     expect(renderedTakeaway).toBeVisible();
     expect(definition).not.toBe(renderedTakeaway);
@@ -73,14 +100,12 @@ describe("PositionTrendCard", () => {
   });
 
   it("renders no takeaway line without a takeaway or enough history", () => {
-    const { container, rerender } = render(
-      <PositionTrendCard
-        data={[
-          { label: "2026-07-16", value: 3 },
-          { label: "now", value: 2 },
-        ]}
-      />,
-    );
+    const { container, rerender } = renderTrend({
+      data: [
+        { label: "2026-07-16", value: 3 },
+        { label: null, value: 2 },
+      ],
+    });
 
     expect(container.querySelectorAll("p")).toHaveLength(1);
     expect(
@@ -90,10 +115,12 @@ describe("PositionTrendCard", () => {
     ).toHaveClass("min-h-[96px]");
 
     rerender(
-      <PositionTrendCard
-        data={[{ label: "now", value: 2 }]}
-        takeaway="Avg position slipped 0.8 in the first 21 days of tracking"
-      />,
+      withMessages(
+        <PositionTrendCard
+          data={[{ label: null, value: 2 }]}
+          takeaway={{ days: 21, kind: "slipped", value: 0.8, window: "firstTrackedDays" }}
+        />,
+      ),
     );
 
     expect(container.querySelectorAll("p")).toHaveLength(1);
@@ -101,15 +128,13 @@ describe("PositionTrendCard", () => {
   });
 
   it("renders the takeaway loading treatment below the title", () => {
-    const { container } = render(
-      <PositionTrendCard
-        data={[
-          { label: "2026-07-16", value: 3 },
-          { label: "now", value: 2 },
-        ]}
-        takeawayLoading
-      />,
-    );
+    const { container } = renderTrend({
+      data: [
+        { label: "2026-07-16", value: 3 },
+        { label: "now", value: 2 },
+      ],
+      takeawayLoading: true,
+    });
 
     expect(container.querySelector("div[aria-hidden].animate-pulse")).toBeInTheDocument();
   });

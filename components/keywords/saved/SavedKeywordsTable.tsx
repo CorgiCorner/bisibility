@@ -11,6 +11,7 @@ import type { AddKeywordsInput } from "@/lib/schemas/keyword";
 import type { RemoveSavedKeywordsInput } from "@/lib/schemas/saved-keyword";
 import type { SerpDevice } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { SavedKeywordsEmptyState } from "./SavedKeywordsEmptyState";
 import {
@@ -53,6 +54,7 @@ export function SavedKeywordsTable({
   rows: initialRows,
   total,
 }: Readonly<SavedKeywordsTableProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.saved");
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
@@ -106,7 +108,7 @@ export function SavedKeywordsTable({
       updateRows(publicIds);
       router.refresh();
     } catch {
-      setActionError("Could not remove saved keywords. Try again.");
+      setActionError(t("removeFailed"));
     }
   }
 
@@ -118,7 +120,23 @@ export function SavedKeywordsTable({
     );
   }
 
-  if (rows.length === 0) return <SavedKeywordsEmptyState projectRef={projectId} />;
+  if (rows.length === 0) {
+    return (
+      <SavedKeywordsEmptyState
+        copy={{
+          browseResearch: t("browseResearch"),
+          cpc: t("cpc"),
+          difficulty: t("difficulty"),
+          emptyDescription: t("emptyDescription"),
+          emptyTitle: t("emptyTitle"),
+          intent: t("intent"),
+          keyword: t("keyword"),
+          volume: t("volume"),
+        }}
+        projectRef={projectId}
+      />
+    );
+  }
 
   return (
     <>
@@ -164,10 +182,8 @@ export function SavedKeywordsTable({
           </div>
         ) : (
           <div className="px-6 py-16 text-center">
-            <h2 className="m-0 text-[15px] font-semibold">No saved keywords match</h2>
-            <p className="mb-0 mt-1 text-[12.5px] text-fg-muted">
-              Try another keyword or clear the filter.
-            </p>
+            <h2 className="m-0 text-[15px] font-semibold">{t("noMatchTitle")}</h2>
+            <p className="mb-0 mt-1 text-[12.5px] text-fg-muted">{t("noMatchDescription")}</p>
           </div>
         )}
         <SavedKeywordsFooter

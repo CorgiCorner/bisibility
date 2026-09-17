@@ -3,6 +3,7 @@
 import { track } from "@/lib/analytics/client";
 import type { SetupStepId } from "@/lib/getting-started/setup-steps";
 import { SETUP_VIDEO_MANIFEST, type SetupVideoRef } from "@/lib/getting-started/video-manifest";
+import { useTranslations } from "next-intl";
 import { SetupVideoPlayer } from "./SetupVideoPlayer";
 
 type VideoWalkthroughProps = {
@@ -11,11 +12,12 @@ type VideoWalkthroughProps = {
 };
 
 export function VideoWalkthrough({ step, videoRef }: Readonly<VideoWalkthroughProps>) {
+  const t = useTranslations("projectGettingStarted.video");
   const video = SETUP_VIDEO_MANIFEST[videoRef];
 
   return (
     <section
-      aria-label="Video walkthrough"
+      aria-label={t("aria")}
       className={
         video
           ? "min-w-0 w-full overflow-hidden rounded-card border border-border bg-bg-sunken"
@@ -30,10 +32,8 @@ export function VideoWalkthrough({ step, videoRef }: Readonly<VideoWalkthroughPr
         />
       ) : (
         <div className="mx-auto max-w-[440px]">
-          <h3 className="m-0 text-[16px] font-semibold text-fg">Video walkthroughs</h3>
-          <p className="m-0 mt-2 text-[13px] leading-[1.55] text-fg-muted">
-            Each step opens with its written version. Clips appear here as they are published.
-          </p>
+          <h3 className="m-0 text-[16px] font-semibold text-fg">{t("heading")}</h3>
+          <p className="m-0 mt-2 text-[13px] leading-[1.55] text-fg-muted">{t("description")}</p>
         </div>
       )}
     </section>

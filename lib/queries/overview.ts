@@ -2,9 +2,6 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
-import { centsToDollars } from "@/lib/format/currency";
-import { relativeFuture, relativePast } from "@/lib/format/relative-time";
-import { createUserDateTimeFormatter, type DateFormatPreference } from "@/lib/format/user-datetime";
 import {
   resolveEffectiveSchedule,
   summarizeEffectiveSchedules,
@@ -31,10 +28,8 @@ import {
 import { loadOverviewMetricData } from "./overview-data";
 import {
   normalizeOverviewFilters,
-  type OverviewDevice,
   type OverviewFilters,
   overviewKeywordWhere,
-  overviewRangeLabels,
   overviewRangeStart,
 } from "./overview-filters";
 import { buildOverviewMarkets } from "./overview-markets";
@@ -43,27 +38,19 @@ import { deriveWorkspaceState } from "./workspace-state";
 export type { OverviewFilters } from "./overview-filters";
 export { parseOverviewFilters } from "./overview-filters";
 export type SerpProviderState = "missing" | "needs_attention" | "ready";
+export type DataSourceStatus =
+  | "failed"
+  | "healthy"
+  | "migrationHold"
+  | "needsAttention"
+  | "notConnected";
 
-const numberFormatter = new Intl.NumberFormat("en-US");
 function nextMonthStartUtc(now: Date) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 }
 
-function deviceLabelForFilter(device: OverviewDevice) {
-  if (device === "desktop") {
-    return "Desktop";
-  }
-  if (device === "mobile") {
-    return "Mobile";
-  }
-  return "All devices";
-}
-
-// biome-ignore format: compact label helpers keep this file under the line cap.
-function providerLabel(provider: string) { if (provider === "dataforseo") { return "DataForSEO"; } if (provider === "serpapi") { return "SerpApi"; } return provider.split(/[-_]/).map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`).join(" "); }
-
 // biome-ignore format: dense query assembly keeps this file under the project line cap.
-export async function getOverview(projectId: string, options: { dateFormat?: DateFormatPreference; filters?: Partial<OverviewFilters>; now?: Date } = {}) {
+export async function getOverview(projectId: string, options: { filters?: Partial<OverviewFilters>; now?: Date } = {}) {
   const now = options.now ?? new Date();
   const filters = normalizeOverviewFilters(options.filters);
   const trendStart = overviewRangeStart(now, filters.range);
@@ -90,10 +77,6 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
     projectMarkets,
     projectDefaults,
   } = metricData;
-  const dateTime = createUserDateTimeFormatter({
-    dateFormat: options.dateFormat,
-    timezone: projectDefaults?.timezone ?? "UTC",
-  });
   const totalKeywordCount = unfilteredKeywordCount ?? filteredKeywordCount;
   const serpProviders = providerConnections.filter((connection) => connection.kind === "serp");
   const snapshots = keywords.map((keyword) => snapshotFor(keyword, keywordVolumes.get(keyword.id) ?? null));
@@ -117,22 +100,21 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
   const state = totalKeywordCount === 0 ? "empty" : deriveWorkspaceState({ hasEverChecked, keywordCount: Math.max(1, keywords.length) });
   const observedUsage = aggregateObservedUsage(monthChecks);
   const checksThisMonth = observedUsage.checkCount;
-  const estimatedProviderCost = `$${centsToDollars(observedUsage.totalCostCents).toFixed(2)}`;
-  let providerStatus = "Provider not connected";
-  if (projectReadOnly) providerStatus = "Migration hold active";
-  else if (providerConnected) providerStatus = "Provider healthy";
-  else if (serpProviders.length > 0) providerStatus = "Provider needs attention";
+  const providerStatus: DataSourceStatus = projectReadOnly
+    ? "migrationHold"
+    : providerConnected
+      ? "healthy"
+      : serpProviders.length > 0
+        ? "needsAttention"
+        : "notConnected";
   const dataSource = {
-    description: "How rankings are collected for this project",
-    metrics: [
-      { label: "Primary provider", value: configuredPrimary ? providerLabel(configuredPrimary.provider) : "Not configured" },
-      { label: "Last check via", value: latestCheck ? providerLabel(latestCheck.provider) : "Never" },
-      { label: "Last check", value: lastCheckEverAt ? relativePast(lastCheckEverAt, now) : "Never" },
-      { label: "Next check", value: projectReadOnly ? "Paused - migration hold" : upcoming ? relativeFuture(upcoming, now) : "No scheduled checks" },
-      { label: "Checks this month", value: numberFormatter.format(checksThisMonth) },
-      { label: "Est. provider cost", value: estimatedProviderCost },
-    ],
-    note: "Provider billing remains direct between you and the provider.",
+    checksThisMonth,
+    lastCheckAt: lastCheckEverAt?.toISOString() ?? null,
+    lastCheckProvider: latestCheck?.provider ?? null,
+    nextCheckAt: projectReadOnly ? null : upcoming?.toISOString() ?? null,
+    now: now.toISOString(),
+    primaryProvider: configuredPrimary?.provider ?? null,
+    providerCostCents: observedUsage.totalCostCents,
     status: providerStatus,
   };
   return {
@@ -143,7 +125,6 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
         (market) => filters.marketIds.length === 0 || filters.marketIds.includes(market.locationId),
       ),
       {
-      dateFormat: dateTime.dateFormat,
       defaultFrequency: projectDefaults?.frequency,
       now,
       range: filters.range,
@@ -153,7 +134,7 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
     dataSource,
     distribution: buildDistribution(positions),
     domain: trackedProjectDomain(project.domain) ?? "",
-    estimatedProviderCost,
+    estimatedProviderCostCents: observedUsage.totalCostCents,
     firstPendingKeywordId: state === "no-data" ? (keywords[0]?.publicId ?? null) : null,
     gettingStarted: { gscOAuthConfigured: isGoogleOAuthConfigured(), hasAnalyticsSource, hasCheck: hasEverChecked, hasKeywords: totalKeywordCount > 0, projectId: project.publicId, projectRef: asProjectRef(project.publicId), providerConnected } as { gscOAuthConfigured: boolean; hasAnalyticsSource: boolean; hasCheck: boolean; hasKeywords: boolean; projectId: string; projectRef?: import("@/lib/routing/app-path").ProjectRef; providerConnected: boolean },
     hasEverChecked,
@@ -170,7 +151,6 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
     state,
     toolbar: {
       availableTags: tags.map((tag) => tag.name),
-      device: deviceLabelForFilter(filters.device),
       deviceValue: filters.device,
       marketOptions: projectMarkets.map((market) => ({
         label: market.location.displayName,
@@ -178,9 +158,7 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
         value: market.locationId,
       })),
       marketValues: filters.marketIds,
-      range: overviewRangeLabels[filters.range],
       rangeValue: filters.range,
-      tag: filters.tag ?? "All tags",
       tagValue: filters.tag,
     },
     trackedKeywordCount: filteredKeywordCount,
@@ -189,7 +167,7 @@ export async function getOverview(projectId: string, options: { dateFormat?: Dat
       measured: overviewMetrics.visibilityMeasuredKeywordCount,
       total: keywords.length,
     },
-    trend: buildTrend(keywords, dateTime, trendStart),
+    trend: buildTrend(keywords, trendStart),
     trendTakeaway: buildTrendTakeaway(keywords, now, keywordVolumes),
     workspaceName: project.name,
   };

@@ -1,6 +1,7 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { TargetRankingCell } from "./TargetRankingCell";
 

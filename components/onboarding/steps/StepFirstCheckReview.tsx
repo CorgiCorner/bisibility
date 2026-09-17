@@ -6,6 +6,7 @@ import { languageForLocationValue } from "@/components/onboarding/onboarding-loc
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
 import { timezoneSelectOptions } from "@/lib/settings/timezones";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 type StepFirstCheckReviewProps = {
@@ -61,23 +62,28 @@ function SummaryRow({
 }
 
 function trackingSummary(
+  t: ReturnType<typeof useTranslations<"onboarding.firstCheck">>,
   keywordCount: number,
   markets: readonly LocationFieldValue[],
   devices: readonly unknown[],
 ) {
-  const keywords = `${keywordCount} ${keywordCount === 1 ? "keyword" : "keywords"}`;
   const marketSummary = markets
     .map((market) => `${market.displayName} (${languageForLocationValue(market)})`)
     .join(" · ");
-  const deviceSummary = `${devices.length} ${devices.length === 1 ? "device" : "devices"}`;
-  return [keywords, trackingDefaults.engine, marketSummary, deviceSummary]
-    .filter(Boolean)
-    .join(" · ");
+  return t("review.trackingSummary", {
+    devices: t("review.devices", { count: devices.length }),
+    engine: trackingDefaults.engine,
+    keywords: keywordCount,
+    markets: marketSummary,
+  });
 }
 
-function scheduleSummary(frequency: ProjectDefaultsInput["frequency"] | undefined) {
-  if (frequency === "manual") return "Manual - checks run when you start them";
-  if (frequency === "paused") return "Paused - no checks are scheduled";
+function scheduleSummary(
+  t: ReturnType<typeof useTranslations<"onboarding.firstCheck">>,
+  frequency: ProjectDefaultsInput["frequency"] | undefined,
+) {
+  if (frequency === "manual") return t("review.manual");
+  if (frequency === "paused") return t("review.paused");
   return null;
 }
 
@@ -93,29 +99,34 @@ export function StepFirstCheckReview({
   providerReady,
   timezone,
 }: Readonly<StepFirstCheckReviewProps>) {
-  const manualSchedule = scheduleSummary(frequency);
+  const t = useTranslations("onboarding.firstCheck");
+  const manualSchedule = scheduleSummary(t, frequency);
   const scheduledValue = frequencyLabel;
 
   return (
     <div className="mt-5 rounded-card border border-border" data-analytics-mask>
       <SummaryRow
         index={0}
-        label="Tracking"
-        value={trackingSummary(keywordCount, markets, devices)}
+        label={t("review.tracking")}
+        value={trackingSummary(t, keywordCount, markets, devices)}
       />
       {manualSchedule ? (
-        <SummaryRow index={1} label="Schedule" value={manualSchedule} />
+        <SummaryRow index={1} label={t("review.schedule")} value={manualSchedule} />
       ) : (
-        <SummaryRow index={1} label="Schedule" value={`${scheduledValue} · ${timezone}`}>
+        <SummaryRow
+          index={1}
+          label={t("review.schedule")}
+          value={`${scheduledValue} · ${timezone}`}
+        >
           <span aria-hidden className="text-border-strong">
             ·
           </span>
           <MenuSelect
-            ariaLabel="Project timezone"
+            ariaLabel={t("review.projectTimezone")}
             onChange={onTimezoneChange}
             options={timezoneSelectOptions(timezone)}
             searchable
-            searchPlaceholder="City or region"
+            searchPlaceholder={t("review.searchTimezone")}
             triggerClassName="min-h-0 min-w-0 border-0 bg-transparent px-0 text-xs text-fg-muted hover:border-0 focus-visible:border-0"
             value={timezone}
           />
@@ -123,8 +134,8 @@ export function StepFirstCheckReview({
       )}
       <SummaryRow
         index={2}
-        label="Data source"
-        subline={providerReady ? undefined : "Checks start once a provider is connected."}
+        label={t("dataSource")}
+        subline={providerReady ? undefined : t("review.dataSourceWaiting")}
         value={providerLabel}
       >
         {providerAction}

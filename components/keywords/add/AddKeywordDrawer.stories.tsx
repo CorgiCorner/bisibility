@@ -1,3 +1,4 @@
+import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
 import { AddKeywordDrawer } from "./AddKeywordDrawer";
@@ -21,7 +22,11 @@ const meta = {
   decorators: [
     (Story) => {
       installFetchStub();
-      return <Story />;
+      return (
+        <ProjectRankTrackerMessages>
+          <Story />
+        </ProjectRankTrackerMessages>
+      );
     },
   ],
 } satisfies Meta<typeof AddKeywordDrawer>;

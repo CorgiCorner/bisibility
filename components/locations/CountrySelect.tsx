@@ -2,6 +2,7 @@
 
 import { CountryFlag } from "@/components/keywords/CountryFlag";
 import { MenuSelect, type MenuSelectOptionGroup } from "@/components/ui/MenuSelect";
+import { useLocale, useTranslations } from "next-intl";
 
 // One country control for every surface that picks a country: research, domain overview and the
 // market sheet. Countries the project already tracks sit in their own group above the catalog;
@@ -37,6 +38,8 @@ export type CountrySelectProps = {
   value: string;
 };
 
+const ENGLISH_LOCALE = "en";
+
 function flagIcon(code: string) {
   return (
     <CountryFlag
@@ -47,65 +50,87 @@ function flagIcon(code: string) {
   );
 }
 
-function menuOption(country: CountrySelectOption) {
+function displayNameForLocale(country: CountrySelectOption, locale: string): string {
+  const code = country.code.trim().toUpperCase();
+  try {
+    const english = new Intl.DisplayNames([ENGLISH_LOCALE], { type: "region" }).of(code);
+    if (!english || english === code || country.label !== english) return country.label;
+    return new Intl.DisplayNames([locale], { type: "region" }).of(code) ?? country.label;
+  } catch {
+    return country.label;
+  }
+}
+
+function menuOption(country: CountrySelectOption, locale: string) {
+  const label = displayNameForLocale(country, locale);
   return {
     disabled: country.disabled,
     icon: flagIcon(country.code),
-    label: country.label,
+    label,
     noWrap: true,
     secondary: country.secondary,
-    searchText: `${country.label} ${country.code}`,
+    searchText: `${label} ${country.label} ${country.code}`,
     tooltip: country.tooltip,
     value: country.code,
   };
-}
-
-function byLabel(left: CountrySelectOption, right: CountrySelectOption) {
-  return left.label.localeCompare(right.label, "en");
 }
 
 export function countrySelectGroups(
   countries: readonly CountrySelectOption[],
   trackedCodes: readonly string[],
   labels: Readonly<{ catalog: string; tracked: string }>,
+  locale = "en",
 ): MenuSelectOptionGroup[] {
   const tracked = new Set(trackedCodes.map((code) => code.trim().toUpperCase()));
   const isTracked = (country: CountrySelectOption) =>
     tracked.has(country.code.trim().toUpperCase());
+  const byLabel = (left: CountrySelectOption, right: CountrySelectOption) =>
+    displayNameForLocale(left, locale).localeCompare(displayNameForLocale(right, locale), locale);
   const trackedCountries = countries.filter(isTracked).sort(byLabel);
   const catalogCountries = countries.filter((country) => !isTracked(country)).sort(byLabel);
   return [
-    { id: "tracked", label: labels.tracked, options: trackedCountries.map(menuOption) },
+    {
+      id: "tracked",
+      label: labels.tracked,
+      options: trackedCountries.map((country) => menuOption(country, locale)),
+    },
     {
       hideHeading: trackedCountries.length === 0,
       id: "catalog",
       label: labels.catalog,
-      options: catalogCountries.map(menuOption),
+      options: catalogCountries.map((country) => menuOption(country, locale)),
     },
   ].filter((group) => group.options.length > 0);
 }
 
 export function CountrySelect({
   ariaLabel,
-  catalogLabel = "All countries",
+  catalogLabel,
   countries,
   disabled,
   menuWidth,
-  noResultsMessage = "No country matches this search.",
+  noResultsMessage,
   onChange,
-  searchPlaceholder = "Search countries",
+  searchPlaceholder,
   size = "toolbar",
   trackedCodes = [],
-  trackedLabel = "Tracked countries",
+  trackedLabel,
   triggerClassName,
   triggerTitle,
   triggerWrapperClassName,
   value,
 }: Readonly<CountrySelectProps>) {
-  const groups = countrySelectGroups(countries, trackedCodes, {
-    catalog: catalogLabel,
-    tracked: trackedLabel,
-  });
+  const locale = useLocale();
+  const t = useTranslations("shared.controls.countrySelect");
+  const groups = countrySelectGroups(
+    countries,
+    trackedCodes,
+    {
+      catalog: catalogLabel ?? t("catalog"),
+      tracked: trackedLabel ?? t("tracked"),
+    },
+    locale,
+  );
 
   return (
     <MenuSelect
@@ -114,9 +139,9 @@ export function CountrySelect({
       groups={groups}
       leadingIcon={value ? flagIcon(value) : undefined}
       menuWidth={menuWidth}
-      noResultsMessage={noResultsMessage}
+      noResultsMessage={noResultsMessage ?? t("noResults")}
       onChange={onChange}
-      searchPlaceholder={searchPlaceholder}
+      searchPlaceholder={searchPlaceholder ?? t("searchPlaceholder")}
       searchable
       size={size}
       triggerClassName={triggerClassName}

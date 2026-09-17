@@ -1,6 +1,14 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
+import messages from "@/messages/core/en/project-rank-tracker.json";
+import { fireEvent, render as renderDom, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordsFilterBar } from "./KeywordsFilterBar";
+
+function render(children: ReactNode) {
+  return renderDom(<ProjectRankTrackerMessages>{children}</ProjectRankTrackerMessages>);
+}
 
 const baseProps = {
   columnSizing: {},
@@ -23,6 +31,30 @@ const baseProps = {
 };
 
 describe("KeywordsFilterBar", () => {
+  it("uses an injected non-English scoped message instead of an English fallback", () => {
+    const nonEnglishMessages = {
+      ...messages,
+      projectRankTracker: {
+        ...messages.projectRankTracker,
+        list: {
+          ...messages.projectRankTracker.list,
+          filterBar: {
+            ...messages.projectRankTracker.list.filterBar,
+            activeFilters: "Filtros activos",
+          },
+        },
+      },
+    };
+
+    renderDom(
+      <FeatureMessagesProvider locale="en" messages={nonEnglishMessages} timeZone="UTC">
+        <KeywordsFilterBar {...baseProps} filterCount={1} />
+      </FeatureMessagesProvider>,
+    );
+
+    expect(screen.getByText("Filtros activos")).toBeInTheDocument();
+  });
+
   it("renders the search via shared ToolbarSearch (type=search, toolbar control surface)", () => {
     render(<KeywordsFilterBar {...baseProps} />);
 

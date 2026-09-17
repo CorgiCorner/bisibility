@@ -3,6 +3,7 @@ import { ChartLineIcon as ChartLine } from "@phosphor-icons/react/dist/csr/Chart
 import { FileCsvIcon as FileCsv } from "@phosphor-icons/react/dist/csr/FileCsv";
 import { FileXlsIcon as FileXls } from "@phosphor-icons/react/dist/csr/FileXls";
 import { TargetIcon as Target } from "@phosphor-icons/react/dist/csr/Target";
+import { useTranslations } from "next-intl";
 import type { ComponentType, ReactNode } from "react";
 
 export const exportFormats = ["csv", "xlsx", "json"] as const;
@@ -21,69 +22,87 @@ export type ExportFormat = (typeof exportFormats)[number];
 export type ExportScope = (typeof exportScopes)[number];
 export type ExportColumn = (typeof exportColumns)[number];
 
-export const formatOptions: {
-  desc: string;
-  ext: string;
-  icon: ComponentType<{ size?: number; weight?: "fill" | "regular" }>;
-  id: ExportFormat;
-  name: string;
-  tint: string;
-}[] = [
-  {
-    desc: "Universal, re-imports anywhere",
-    ext: ".csv",
-    icon: FileCsv,
-    id: "csv",
-    name: "CSV",
-    tint: "green",
-  },
-  {
-    desc: "Formatted workbook with headers",
-    ext: ".xlsx",
-    icon: FileXls,
-    id: "xlsx",
-    name: "Excel",
-    tint: "green",
-  },
-  {
-    desc: "Structured data with ranking history",
-    ext: ".json",
-    icon: BracketsCurly,
-    id: "json",
-    name: "JSON",
-    tint: "blue",
-  },
-];
-
-export const scopeOptions: {
-  desc: string;
-  icon: ComponentType<{ className?: string; size?: number; weight?: "regular" }>;
-  id: ExportScope;
-  name: string;
-}[] = [
-  {
-    desc: "One row per keyword, latest rank",
-    icon: Target,
-    id: "current",
-    name: "Current positions",
-  },
-  {
-    desc: "Position over time, one row per day",
-    icon: ChartLine,
-    id: "history",
-    name: "Ranking history",
-  },
-];
-
-export const columnLabels: Record<ExportColumn, string> = {
-  change: "Change",
-  country: "Country",
-  device: "Device",
-  intent: "Intent",
-  tags: "Tags",
-  topic: "Topic",
-  url: "Target URL",
+export const exportFormatIcons: Record<
+  ExportFormat,
+  ComponentType<{ size?: number; weight?: "fill" | "regular" }>
+> = {
+  csv: FileCsv,
+  json: BracketsCurly,
+  xlsx: FileXls,
 };
+
+export const exportScopeIcons: Record<
+  ExportScope,
+  ComponentType<{ className?: string; size?: number; weight?: "regular" }>
+> = {
+  current: Target,
+  history: ChartLine,
+};
+
+export function useExportModalPresentation() {
+  const t = useTranslations("projectRankTracker.keywordImport.management.export");
+  return {
+    columnLabels: {
+      change: t("columnChange"),
+      country: t("columnCountry"),
+      device: t("columnDevice"),
+      intent: t("columnIntent"),
+      tags: t("columnTags"),
+      topic: t("columnTopic"),
+      url: t("columnUrl"),
+    } as const,
+    formatOptions: [
+      {
+        desc: t("formatCsvDescription"),
+        ext: ".csv",
+        icon: exportFormatIcons.csv,
+        id: "csv" as const,
+        name: "CSV",
+        tint: "green",
+      },
+      {
+        desc: t("formatExcelDescription"),
+        ext: ".xlsx",
+        icon: exportFormatIcons.xlsx,
+        id: "xlsx" as const,
+        name: "Excel",
+        tint: "green",
+      },
+      {
+        desc: t("formatJsonDescription"),
+        ext: ".json",
+        icon: exportFormatIcons.json,
+        id: "json" as const,
+        name: "JSON",
+        tint: "blue",
+      },
+    ],
+    granularityOptions: [
+      { label: t("daily"), value: "daily" },
+      { label: t("weekly"), value: "weekly" },
+    ] as const,
+    rangeOptions: [
+      { label: t("last30Days"), value: "30" },
+      { label: t("last90Days"), value: "90" },
+      { label: t("allHistory"), value: "all" },
+    ] as const,
+    scopeOptions: [
+      {
+        desc: t("currentPositionsDescription"),
+        icon: exportScopeIcons.current,
+        id: "current" as const,
+        name: t("currentPositions"),
+      },
+      {
+        desc: t("rankingHistoryDescription"),
+        icon: exportScopeIcons.history,
+        id: "history" as const,
+        name: t("rankingHistory"),
+      },
+    ],
+    t,
+  };
+}
 
 export function ExportOptionRow({
   active,

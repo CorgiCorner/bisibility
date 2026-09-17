@@ -1,0 +1,281 @@
+{
+  "account": {
+    "connected": {
+      "connect": "Połącz",
+      "connectError": "Nie udało się rozpocząć łączenia.",
+      "connectProvider": "Połącz dostawcę {provider}",
+      "connected": "Połączono",
+      "connectedDetail": "Połączono z dostawcą {provider}",
+      "connecting": "Łączenie",
+      "description": "Połącz dostawcę, aby logować się jednym kliknięciem. Obecnie logowanie odbywa się kodem z e-maila, a OAuth jest opcjonalny.",
+      "notConnectedDetail": "Brak połączenia. Obecnie logujesz się kodem z e-maila.",
+      "providerUnavailable": "Logowanie przez dostawcę {provider} nie jest skonfigurowane.",
+      "title": "Połączone konta"
+    },
+    "delete": {
+      "action": "Usuń konto",
+      "description": "Trwale usuń swoje konto, projekty, których jesteś właścicielem, i wszystkie śledzone dane. Tej operacji nie można cofnąć.",
+      "error": "Nie udało się usunąć konta.",
+      "title": "Strefa niebezpieczna",
+      "unavailable": "Usuwanie konta jest niedostępne."
+    },
+    "demo": {
+      "description": "To konto współdzielone jest tylko do odczytu. Nie można zmienić e-maila, profilu ani ustawień bezpieczeństwa.",
+      "title": "Konto demonstracyjne"
+    },
+    "email": {
+      "codeSent": "Jeśli tego adresu można użyć, dotrze na niego kod weryfikacyjny.",
+      "confirm": "Potwierdź e-mail",
+      "confirmDescription": "Wpisz kod wysłany na adres {email}, aby zweryfikować e-mail konta.",
+      "confirmError": "Nie udało się potwierdzić e-maila konta.",
+      "description": "Adres e-mail używany do logowania i odbierania kodów weryfikacyjnych.",
+      "errors": {
+        "alreadyVerified": "Ten e-mail jest już zweryfikowany. Odśwież stronę, aby przejść dalej.",
+        "currentCodeExpired": "Kod z obecnego e-maila jest nieprawidłowy lub wygasł. Poproś o nowy.",
+        "differentAddress": "Podaj inny adres e-mail.",
+        "newCodeInvalidOrUnavailable": "Kod weryfikacyjny nowego e-maila jest nieprawidłowy lub wygasł albo ten adres jest niedostępny.",
+        "verificationCodeInvalidOrExpired": "Kod weryfikacyjny jest nieprawidłowy lub wygasł. Poproś o nowy."
+      },
+      "invalidCode": "Podaj 6-cyfrowy kod weryfikacyjny.",
+      "invalidEmail": "Podaj prawidłowy e-mail konta.",
+      "label": "E-mail konta",
+      "sendCode": "Wyślij kod",
+      "sendError": "Nie udało się wysłać kodu weryfikacyjnego.",
+      "title": "E-mail konta",
+      "unverified": "Niezweryfikowany",
+      "unverifiedFallback": "Dla tego adresu nie potwierdzono jeszcze żadnego kodu.",
+      "verificationCode": "Kod weryfikacyjny",
+      "verified": "Zweryfikowany",
+      "verifiedFallback": "Zweryfikowany kodem logowania. Zmiana adresu spowoduje wysłanie nowego kodu.",
+      "change": {
+        "cancel": "Anuluj",
+        "confirm": "Potwierdź zmianę e-maila",
+        "confirmError": "Nie udało się potwierdzić e-maila konta.",
+        "currentCode": "Kod z obecnego e-maila",
+        "finishDescription": "Wpisz kod wysłany na adres {email}, aby dokończyć zmianę.",
+        "newCode": "Kod z nowego e-maila",
+        "newEmail": "Nowy adres e-mail",
+        "restart": "Zacznij od nowa",
+        "sendError": "Nie udało się wysłać kodu weryfikacyjnego.",
+        "sendNewCode": "Wyślij kod na nowy adres",
+        "start": "Zmień e-mail"
+      }
+    },
+    "navigation": {
+      "ariaLabel": "Sekcja konta",
+      "preferences": "Preferencje",
+      "profile": "Profil",
+      "security": "Bezpieczeństwo"
+    },
+    "profile": {
+      "copyUserId": "Kopiuj ID użytkownika",
+      "description": "Tak widzą Cię inni w bisibility. E-mail to Twoja tożsamość przy logowaniu.",
+      "displayName": "Wyświetlana nazwa",
+      "email": "E-mail",
+      "nameRequired": "Nazwa jest wymagana.",
+      "nameTooLong": "Nazwa jest za długa.",
+      "save": "Zapisz",
+      "saveError": "Nie udało się zapisać profilu.",
+      "saved": "Zapisano profil.",
+      "saving": "Zapisywanie",
+      "title": "Profil",
+      "unverified": "Niezweryfikowany",
+      "userId": "ID użytkownika",
+      "verified": "Zweryfikowany kodem jednorazowym"
+    },
+    "privacy": {
+      "action": "Wybory prywatności",
+      "description": "Sprawdź lub zmień opcjonalne zgody na analitykę i nagrania konfiguracji zapisane w tej przeglądarce.",
+      "title": "Wybory prywatności"
+    },
+    "security": {
+      "backupCodes": {
+        "description": "Zapisz te kody teraz. Nie zostaną pokazane ponownie.",
+        "download": "Pobierz .txt",
+        "downloadAriaLabel": "Pobierz kody odzyskiwania",
+        "title": "Kody zapasowe"
+      },
+      "twoFactor": {
+        "authenticatorApp": "Aplikacja uwierzytelniająca",
+        "authenticatorCode": "Kod z aplikacji uwierzytelniającej",
+        "backupCode": "Kod zapasowy",
+        "backupCodes": "Kody zapasowe",
+        "backupCodesGenerated": "Wygenerowano nowe kody zapasowe. Zapisz je teraz.",
+        "cancel": "Anuluj",
+        "currentAuthenticatorCode": "Bieżący kod z aplikacji uwierzytelniającej",
+        "currentBackupCode": "Bieżący kod zapasowy",
+        "description": "Dodaj drugi krok po kodzie logowania z e-maila.",
+        "disable": "Wyłącz",
+        "disabledRedirecting": "Wyłączono uwierzytelnianie dwuskładnikowe. Przekierowanie do logowania.",
+        "enable": "Włącz",
+        "enabled": "Włączono uwierzytelnianie dwuskładnikowe. Zapisz kody zapasowe.",
+        "invalidInput": "Podaj prawidłową wartość i spróbuj ponownie.",
+        "notEnabled": "Nieaktywne",
+        "newCode": "Nowy kod z aplikacji uwierzytelniającej",
+        "password": "Hasło do konta",
+        "qrAlt": "Kod QR aplikacji uwierzytelniającej",
+        "qrUnavailable": "Kod QR niedostępny",
+        "reauthRequired": "Wyloguj się i zaloguj ponownie, zanim włączysz uwierzytelnianie dwuskładnikowe.",
+        "replaced": "Wymieniono aplikację uwierzytelniającą. Zapisz nowe kody zapasowe.",
+        "replaceAuthenticator": "Wymień aplikację",
+        "scanAndVerify": "Zeskanuj kod QR i zweryfikuj nową aplikację uwierzytelniającą.",
+        "secret": "Klucz tajny",
+        "signInAgain": "Zaloguj się ponownie",
+        "signOutError": "Nie udało się wylogować. Odśwież stronę i spróbuj ponownie.",
+        "signingOut": "Wylogowywanie",
+        "title": "Uwierzytelnianie dwuskładnikowe",
+        "updateError": "Nie udało się zaktualizować uwierzytelniania dwuskładnikowego. Spróbuj ponownie.",
+        "verificationMethod": "Metoda weryfikacji",
+        "verificationFailed": "Weryfikacja nie powiodła się. Spróbuj ponownie.",
+        "verify": "Zweryfikuj",
+        "verifyError": "Nie udało się zweryfikować aplikacji uwierzytelniającej. Spróbuj ponownie.",
+        "verifying": "Weryfikowanie",
+        "working": "Przetwarzanie",
+        "manage": {
+          "backup": {
+            "description": "Zweryfikuj bieżący składnik, zanim zastąpisz wszystkie dotychczasowe kody zapasowe.",
+            "label": "Wygeneruj nowe kody zapasowe"
+          },
+          "disable": {
+            "description": "Zweryfikuj bieżący składnik, zanim wyłączysz 2FA. Nastąpi wylogowanie na wszystkich urządzeniach.",
+            "label": "Wyłącz uwierzytelnianie dwuskładnikowe"
+          },
+          "replace": {
+            "description": "Zweryfikuj bieżący składnik, zanim wymienisz aplikację uwierzytelniającą.",
+            "label": "Dalej"
+          },
+          "setup": {
+            "description": "Ze względów bezpieczeństwa pierwsza konfiguracja wymaga logowania z ostatnich pięciu minut.",
+            "label": "Dalej"
+          }
+        }
+      },
+      "personalTokens": {
+        "cancel": "Anuluj",
+        "copyKey": "Kopiuj token {name}",
+        "create": "Utwórz token",
+        "createDescription": "Wybierz zakres dostępu dla tego tokena. Możesz go unieważnić w dowolnej chwili.",
+        "createError": "Nie udało się utworzyć tokena osobistego.",
+        "createTitle": "Utwórz osobisty token dostępu",
+        "creating": "Tworzenie",
+        "dates": {
+          "created": "utworzono {date}",
+          "expired": "wygasł {date}",
+          "expires": "wygasa {date}",
+          "lastUsed": "ostatnio użyto {date}",
+          "neverExpires": "bez terminu ważności",
+          "neverUsed": "nigdy nie użyto"
+        },
+        "description": "Tokeny API na poziomie konta (bsb_pat_), które działają w Twoim imieniu we wszystkich projektach, do których należysz. Wydaje je także `bisibility auth login`.",
+        "done": "Gotowe",
+        "empty": {
+          "action": "Utwórz pierwszy token",
+          "description": "Utwórz token dla CI lub innej zaufanej integracji.",
+          "title": "Brak tokenów osobistych"
+        },
+        "expiry": {
+          "30": "30 dni",
+          "90": "90 dni",
+          "365": "1 rok",
+          "label": "Termin ważności",
+          "never": "Nigdy"
+        },
+        "key": "Token",
+        "name": "Nazwa tokena",
+        "namePlaceholder": "Automatyzacja CI",
+        "newTitle": "Osobisty token dostępu",
+        "oneTimeSecret": "Skopiuj ten token teraz. Nie zostanie pokazany ponownie.",
+        "revealStorage": "Zapisz go w menedżerze haseł lub w bezpiecznym magazynie sekretów CI.",
+        "revealWarning": "Każdy, kto ma ten token, może działać w Twoim imieniu. Nie udostępniaj go.",
+        "revealedOnce": "Ten token został pokazany jeden raz.",
+        "revokeAriaLabel": "Unieważnij token {name}",
+        "revokeError": "Nie udało się unieważnić tokena osobistego.",
+        "revoked": "Unieważniono token osobisty.",
+        "scope": {
+          "admin": {
+            "description": "Pełny dostęp do konta i projektów.",
+            "label": "Administrator"
+          },
+          "read": {
+            "description": "Odczyt projektów i ich danych.",
+            "label": "Odczyt"
+          },
+          "write": {
+            "description": "Odczyt i zmiana danych projektu.",
+            "label": "Zapis"
+          }
+        },
+        "scopeLabel": "Zakres",
+        "storedPrefix": "Zapisano jako {prefix}",
+        "title": "Osobiste tokeny dostępu"
+      },
+      "sessions": {
+        "activeDays": "aktywna {count, number}d temu",
+        "activeHours": "aktywna {count, number}h temu",
+        "activeJustNow": "aktywna przed chwilą",
+        "activeMinutes": "aktywna {count, number}m temu",
+        "browserUnknown": "Przeglądarka",
+        "description": "Urządzenia zalogowane obecnie na Twoim koncie.",
+        "device": "{browser} · {operatingSystem}",
+        "locationUnknown": "Nieznana lokalizacja",
+        "none": "Nie było innych aktywnych sesji.",
+        "operatingSystemUnknown": "Nieznany",
+        "revoke": "Unieważnij",
+        "revokeAriaLabel": "Unieważnij sesję",
+        "revokeError": "Nie udało się unieważnić sesji.",
+        "retry": "Ponów",
+        "retryRevokeAriaLabel": "Ponów unieważnienie sesji",
+        "revoking": "Unieważnianie",
+        "signedOut": "{count, plural, =0 {Nie wylogowano żadnej innej sesji} one {Wylogowano # inną sesję} few {Wylogowano # inne sesje} many {Wylogowano # innych sesji} other {Wylogowano # innej sesji}}.",
+        "signOutError": "Nie udało się wylogować innych sesji.",
+        "signOutEverywhere": "Wyloguj się wszędzie",
+        "signingOut": "Wylogowywanie",
+        "thisDevice": "To urządzenie",
+        "title": "Aktywne sesje"
+      }
+    },
+    "preferences": {
+      "date": {
+        "ariaLabel": "Format daty",
+        "auto": "Automatycznie – {date}",
+        "label": "Format daty"
+      },
+      "density": {
+        "ariaLabel": "Domyślna gęstość tabeli",
+        "comfortable": "Komfortowa",
+        "compact": "Kompaktowa",
+        "label": "Domyślna gęstość tabeli",
+        "standard": "Standardowa",
+        "subtitle": "Wysokość wiersza w tabeli słów kluczowych"
+      },
+      "description": "Ustawienia osobiste, <emphasis>stosowane na każdym urządzeniu, z którego się logujesz.</emphasis>",
+      "landing": {
+        "ariaLabel": "Domyślna strona startowa",
+        "backlinks": "Linki zwrotne",
+        "competitors": "Konkurenci",
+        "dashboard": "Pulpit",
+        "domain-overview": "Przegląd domeny",
+        "keyword-research": "Analiza słów kluczowych",
+        "label": "Domyślna strona startowa",
+        "rank-tracker": "Monitor pozycji",
+        "search-console": "Search Console",
+        "timeline": "Oś czasu"
+      },
+      "language": {
+        "description": "Kolejne języki są w przygotowaniu. Teraz aktywny jest angielski.",
+        "english": "Angielski",
+        "label": "Język"
+      },
+      "saveError": "Nie udało się zapisać preferencji.",
+      "theme": {
+        "ariaLabel": "Motyw",
+        "dark": "Ciemny",
+        "label": "Motyw",
+        "light": "Jasny",
+        "subtitle": "Jasny, ciemny lub zgodny z systemem",
+        "system": "Systemowy"
+      },
+      "title": "Preferencje"
+    }
+  }
+}

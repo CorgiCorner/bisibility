@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { type TagNameFormValues, tagNameFormSchema } from "@/lib/schemas/tag";
+import { type TagNameFormValues, tagNameFormSchemaFor } from "@/lib/schemas/tag";
 import { cn } from "@/lib/ui/cn";
 import { MOTION_MENU_EXIT } from "@/lib/ui/motion";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
 import { type TransitionEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Kbd } from "./Kbd";
@@ -32,6 +33,7 @@ function prefersReducedMotion() {
 }
 
 export function TagAdder({ disabled = false, onAdd }: Readonly<TagAdderProps>) {
+  const t = useTranslations("shared.controls.tagAdder");
   const [editing, setEditing] = useState(false);
   const [entered, setEntered] = useState(false);
   const [exiting, setExiting] = useState(false);
@@ -45,7 +47,12 @@ export function TagAdder({ disabled = false, onAdd }: Readonly<TagAdderProps>) {
     watch,
   } = useForm<TagNameFormValues>({
     defaultValues: { name: "" },
-    resolver: zodResolver(tagNameFormSchema),
+    resolver: zodResolver(
+      tagNameFormSchemaFor({
+        required: t("validation.required"),
+        tooLong: t("validation.tooLong", { maximum: 48 }),
+      }),
+    ),
   });
   const value = watch("name");
   const { ref: formRef, ...nameInput } = register("name");
@@ -155,7 +162,7 @@ export function TagAdder({ disabled = false, onAdd }: Readonly<TagAdderProps>) {
     >
       <button
         aria-hidden={!showIdleLabel}
-        aria-label="Add tag"
+        aria-label={t("action")}
         className={cn(
           "inline-flex items-center gap-1 font-medium text-inherit outline-none transition-opacity duration-[var(--motion-menu-exit)] ease-[var(--ease-out)] motion-reduce:transition-none",
           showIdleLabel ? "relative opacity-100" : "pointer-events-none absolute opacity-0",
@@ -167,7 +174,7 @@ export function TagAdder({ disabled = false, onAdd }: Readonly<TagAdderProps>) {
         type="button"
       >
         <Plus aria-hidden size={12} weight="regular" />
-        Add tag
+        {t("action")}
       </button>
 
       {showEditor ? (
@@ -179,7 +186,7 @@ export function TagAdder({ disabled = false, onAdd }: Readonly<TagAdderProps>) {
           onTransitionEnd={handleEditorTransitionEnd}
         >
           <input
-            aria-label="New tag name"
+            aria-label={t("input")}
             autoComplete="off"
             className={cn(
               tagAdderInputMotionClassName,
@@ -226,10 +233,10 @@ export function TagAdder({ disabled = false, onAdd }: Readonly<TagAdderProps>) {
             data-entered={showAffordances ? "" : undefined}
           >
             <span aria-hidden>↵</span>
-            <span className="sr-only">Enter</span>
+            <span className="sr-only">{t("enter")}</span>
           </Kbd>
           <button
-            aria-label="Cancel adding tag"
+            aria-label={t("cancel")}
             className={cn(
               tagAdderAffordanceMotionClassName,
               tagAdderAffordanceEnterDelayCancelClassName,

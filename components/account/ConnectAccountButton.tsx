@@ -2,8 +2,10 @@
 
 import { Tooltip } from "@/components/ui/Tooltip";
 import { authClient } from "@/lib/auth/client";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ghostButtonClass } from "./account-ui";
+import { useAccountActionError } from "./useAccountActionError";
 
 export type ConnectAccountButtonProps = {
   configured: boolean;
@@ -18,13 +20,15 @@ export function ConnectAccountButton({
   label,
   provider,
 }: Readonly<ConnectAccountButtonProps>) {
+  const t = useTranslations("account.connected");
+  const accountErrors = useAccountActionError();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (connected) {
     return (
       <button className={ghostButtonClass} disabled type="button">
-        Connected
+        {t("connected")}
       </button>
     );
   }
@@ -36,16 +40,18 @@ export function ConnectAccountButton({
       // Links the provider to the signed-in user, then redirects into the OAuth flow.
       const result = await authClient.linkSocial({ callbackURL: "/app/account", provider });
       if (result.error) {
-        setError(result.error.message ?? "Could not start connection.");
+        setError(accountErrors.generic(result.error, t("connectError")));
         setPending(false);
       }
-    } catch {
-      setError("Could not start connection.");
+    } catch (error: unknown) {
+      setError(accountErrors.generic(error, t("connectError")));
       setPending(false);
     }
   }
 
-  const tooltip = configured ? `Connect ${label}` : `${label} sign-in is not configured.`;
+  const tooltip = configured
+    ? t("connectProvider", { provider: label })
+    : t("providerUnavailable", { provider: label });
 
   return (
     <span className="flex flex-none flex-col items-end gap-1">
@@ -57,7 +63,7 @@ export function ConnectAccountButton({
             onClick={connect}
             type="button"
           >
-            {pending ? "Connecting" : "Connect"}
+            {pending ? t("connecting") : t("connect")}
           </button>
         </span>
       </Tooltip>

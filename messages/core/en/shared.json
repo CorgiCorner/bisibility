@@ -1,0 +1,546 @@
+{
+  "shared": {
+    "language": {
+      "english": "English",
+      "label": "Language"
+    },
+    "analyticsConsent": {
+      "actions": {
+        "acceptAll": "Accept all",
+        "rejectAll": "Reject all",
+        "save": "Save",
+        "settings": "Settings"
+      },
+      "banner": {
+        "ariaLabel": "Analytics consent",
+        "body": "We count visits without cookies. Optional analytics cookies and replays help us improve bisibility.",
+        "saveError": "Your choice could not be saved. Choices you turned off remain off. Try again.",
+        "update": "Replays can include app screens. Review your choice. Analytics stays unchanged."
+      },
+      "modal": {
+        "alwaysOn": "Always on",
+        "essential": {
+          "body": "Required for sign-in, security and your saved settings.",
+          "title": "Essential"
+        },
+        "footer": "Your choice is saved for 6 months. Change it anytime from Privacy choices in the footer.",
+        "intro": "Choose analytics and replays separately. Essential cookies stay on.",
+        "privacyPolicy": "Privacy policy",
+        "replay": {
+          "body": "Optional recordings help us improve the website and setup. In the app, recordings may include the first check and rank tracker. Inputs and project data are masked. Sign-in, account and billing screens, credentials and Google data are excluded.",
+          "title": "Replays"
+        },
+        "saveError": "Your changes could not be saved. Choices you turned off remain off. Try again.",
+        "usage": {
+          "body": "Pages and setup steps you use, linked across visits with an analytics cookie.",
+          "title": "Usage analytics"
+        },
+        "visitCounts": "If you reject optional analytics, we still count visits without cookies or a persistent profile."
+      },
+      "title": "Privacy choices"
+    },
+    "errors": {
+      "genericFallback": "The action could not be completed.",
+      "rateLimited": "Too many requests. Please try again later.",
+      "serverComponentDigest": "Check failed on our side (ref {digest}). Retry in a moment.",
+      "staleDeployment": "bisibility was updated while this page was open. Refresh the app to continue. Any unsaved changes will be lost.",
+      "verificationFailed": "Verification failed. Please try again."
+    },
+    "emergencyRecovery": {
+      "error": {
+        "backToApp": "Back to app",
+        "description": "The tracker could not finish this request. Try again, or return to the app while this route recovers.",
+        "retry": "Try again",
+        "status": "500 - server error",
+        "title": "The tracker hit an error"
+      },
+      "notFound": {
+        "backToApp": "Back to app",
+        "description": "This page may have moved, or it may never have existed.",
+        "status": "404 - not found",
+        "title": "This page is not available"
+      }
+    },
+    "appError": {
+      "cloudMessage": "The app kept running, so your data is safe. Try the view again - if it keeps failing, share the error reference with <support>support</support>.",
+      "copied": "Copied",
+      "copyUrl": "Copy URL",
+      "diagnostics": {
+        "copied": "Copied",
+        "copyDetails": "Copy details",
+        "hideTrace": "Hide trace",
+        "noReference": "no reference",
+        "publicReview": "These details can include your project path. Review them before posting publicly.",
+        "showTrace": "Show trace",
+        "stackTrace": "Stack trace"
+      },
+      "goToOverview": "Go to Overview",
+      "retrying": "Retrying",
+      "selfHostMessage": "The app kept running, so your data is safe. Try the view again - if it keeps failing, copy the details and <issue>open an issue</issue>.",
+      "title": "This view stopped rendering",
+      "tryAgain": "Try again",
+      "urlCopied": "URL copied",
+      "viewError": "View error"
+    },
+    "rankPreflight": {
+      "budget": "Budget",
+      "budgetBlocked": "This run is paused because the budget was reached.",
+      "cancel": "Cancel",
+      "configuredProvider": "{provider} is set as the primary provider.",
+      "couldNotLoad": "Could not load the run estimate. Try again.",
+      "couldNotRefresh": "Could not update the estimate. Try again.",
+      "couldNotStart": "Could not start this run. Try again.",
+      "depth": "Depth",
+      "depthAria": "Result depth",
+      "devices": "{count, plural, one {# device} other {# devices}}",
+      "duplicate": "A run over this scope is already running. Starting now would pay twice for the same positions.",
+      "editBudget": "Edit budget",
+      "noProvider": "No provider",
+      "noProviderBlocked": "No provider connected, so there is nowhere to send these targets. Your own key, billed to you directly.",
+      "openIntegrations": "Open Integrations",
+      "openRun": "Open run",
+      "pricePerTarget": "price per target",
+      "primaryProvider": "Primary provider",
+      "primaryProviderAria": "Primary provider",
+      "previewChanged": "Run details changed. Refresh to review the current estimate.",
+      "runInProgress": "Run in progress",
+      "runOptions": "Run options",
+      "runScope": "Run scope",
+      "markets": "{count, plural, one {# market} other {# markets}}",
+      "startRun": "Start run",
+      "sampleProject": "Sample projects do not run real checks.",
+      "scopeDescription": "Checks {count, plural, one {# keyword} other {# keywords}} across {market} before anything is sent to the provider.",
+      "scopeEquation": "{keywords, plural, one {# keyword} other {# keywords}} · {market} · {devices} = {targets, plural, one {# target} other {# targets}}",
+      "scopeMany": "Check {count, plural, one {# selected keyword} other {# selected keywords}} in {market}",
+      "scopeOne": "Check {keyword} in {market}",
+      "scopeSubtitle": "Review the {market} scope before starting.",
+      "starting": "Starting...",
+      "topDepth": "Top {depth, number}"
+    },
+    "globalError": {
+      "description": "The app could not render this page. Reload to try again.",
+      "retry": "Reload the app",
+      "title": "Something went wrong"
+    },
+    "markets": {
+      "add": "Add {count, plural, one {market} other {# markets}}",
+      "addMarkets": "Add markets",
+      "allLanguages": "All languages",
+      "cancel": "Cancel",
+      "catalog": "Catalog",
+      "desktop": "Desktop",
+      "estimateProviderCost": "Estimate provider cost",
+      "languages": "Languages",
+      "location": "Location",
+      "locationCity": "City",
+      "locationClearSearch": "Clear location search",
+      "locationCountries": "Countries",
+      "locationNoMatching": "No matching locations. Try another name or select the country.",
+      "locationRegion": "Region",
+      "locationRegionsAndCities": "Regions and cities",
+      "locationSearching": "Searching locations...",
+      "markets": "Markets",
+      "mobile": "Mobile",
+      "moreLanguages": "More languages",
+      "newMarket": "New market",
+      "noMatchingLanguages": "No supported language matches that search.",
+      "noVolume": "no volume/KD",
+      "researchUnavailable": "{language}: no search volume or difficulty data for this market - positions are tracked normally.",
+      "searchAllLanguages": "Search all supported languages",
+      "searchMarkets": "Search markets...",
+      "searchMoreLanguages": "Search more languages",
+      "selected": "{count, plural, one {# market selected} other {# markets selected}}",
+      "suggestedLanguages": "Suggested languages",
+      "suggestedOnly": "Suggested only",
+      "tracked": "Tracked",
+      "trackedMarkets": "Tracked markets"
+    },
+    "humanVerification": {
+      "ariaLabel": "Human verification challenge",
+      "complete": "Verification complete.",
+      "expired": "Verification expired. Please complete it again.",
+      "failed": "Verification failed. Please try again.",
+      "unavailable": "Human verification is unavailable right now."
+    },
+    "scheduleName": {
+      "custom": "Custom \u00b7 {expression}",
+      "daily": "Daily {time}",
+      "monthly": "Monthly \u00b7 {day} {time}",
+      "noFixedTime": "No fixed time",
+      "weekly": "Weekly \u00b7 {weekday} {time}"
+    },
+    "operationRow": {
+      "days": "{count, plural, one {day} other {days}}",
+      "actions": {
+        "cancel": {
+          "label": "Cancel",
+          "tip": "Stops checks that have not been sent yet. Checks already with the provider finish and are billed."
+        },
+        "pause": {
+          "label": "Pause",
+          "tip": "Pauses the import after the current month. Nothing already imported is discarded."
+        },
+        "reconnect": { "label": "Reconnect", "tip": "Reconnect Search Console for this property." },
+        "resume": { "label": "Resume", "tip": "Returns this import to its saved queue." },
+        "retry": { "label": "Retry", "tip": "Retries this exact operation from its saved state." }
+      },
+      "etaMinutes": "~{count, plural, one {# min left} other {# min left}}",
+      "etaSeconds": "~{count, plural, one {# s left} other {# s left}}",
+      "items": "items",
+      "nextCheck": "{kind} check {when}",
+      "nextCheckFirst": "First",
+      "nextCheckNext": "Next",
+      "provider": "Provider",
+      "relative": {
+        "dueNow": "due now",
+        "inDays": "in {count, plural, one {# day} other {# days}}",
+        "inHours": "in {count, plural, one {# hour} other {# hours}}",
+        "inMinutes": "in {count, plural, one {# minute} other {# minutes}}"
+      },
+      "progress": "{title}: {processed, number} of {total, number} {unit} processed, {completed, number} completed, {failed, number} failed, {deferred, number} deferred",
+      "states": {
+        "budget": "Monthly cap reached{hasResumeDate, select, no { - remaining items are skipped.} other { - the rest is skipped until {resumeDate}.}}",
+        "cancelled": "{hasActor, select, no {Cancelled - what completed first is kept.} other {Cancelled by {actor} - what completed first is kept.}}",
+        "cancelling": "Cancelling - checks already sent to the provider will still finish.",
+        "deferred": "Deferred by provider rate limits - they retry on the next scheduled run.",
+        "failed": "Nothing completed - {provider} rejected every request.",
+        "notConfirmed": "The run finished, but its outcome was not confirmed.",
+        "partial": "Finished with {failed, plural, one {# failure} other {# failures}} - a retry sends those and nothing else.",
+        "queued": "Waiting for the first check to start.",
+        "quota": "{provider} quota reached. The import resumes automatically when allowed.",
+        "retrying": "Retrying failed checks{hasEta, select, no {.} other { - {eta}.}}",
+        "running": "{provider} is returning results{hasEta, select, no {.} other { - {eta}.}}",
+        "succeeded": "Every item completed.",
+        "worker": "Import worker status is delayed. Refresh to check again."
+      }
+    },
+    "tokens": {
+      "githubRepository": "GitHub repository",
+      "githubStars": "{count, number} stars on GitHub",
+      "remove": "Remove {value}"
+    },
+    "appNotFound": {
+      "backToProjects": "Back to your projects",
+      "description": "This project either does not exist or your account is not a member of it.",
+      "descriptionSignedIn": "Signed in as {email}. This project either does not exist or that account is not a member of it. If a teammate sent the link, they may be on a different account than the one you are using here.",
+      "footnote": "404 - Not found",
+      "pageTitle": "This page is not available",
+      "signInDifferentAccount": "Sign in with a different account",
+      "title": "Page not available"
+    },
+    "projectItemNotFound": {
+      "backToProjects": "Back to your projects",
+      "description": "This project is open, but the page the link points to is not part of it. The item may have been deleted, or the address may be out of date.",
+      "footnote": "404 - Not found",
+      "pageTitle": "We could not find that page",
+      "title": "Page not found"
+    },
+    "siteNotFound": {
+      "backToApp": "Back to app",
+      "description": "We tracked every URL we could find and this one didn't rank. It may have moved, or never existed.",
+      "docsLink": "Still stuck? Read the docs",
+      "goToHomepage": "Go to homepage",
+      "goToSignIn": "Go to sign in",
+      "kicker": "404 - NOT FOUND",
+      "statusLabel": "HTTP 404",
+      "terminalNote": "try one of these instead",
+      "title": "This page isn't in the index"
+    },
+    "setupVideo": {
+      "fallback": "Your browser does not support video.",
+      "open": "Open the video"
+    },
+    "firstCheck": {
+      "action": "Run first check",
+      "cancel": "Cancel",
+      "confirm": "Confirm and run",
+      "loading": "Loading run details...",
+      "manualRunDescription": "This manual run starts checks now, outside the schedule.",
+      "providerOrder": "Provider fallback order",
+      "providerOrderAriaLabel": "SERP provider fallback order",
+      "retry": "Retry",
+      "starting": "Starting...",
+      "title": "Run first check",
+      "unavailable": "Run details are unavailable.",
+      "errors": {
+        "checkInProgress": "A rank check is already in progress for this keyword.",
+        "keywordArchived": "This keyword is no longer available for a rank check.",
+        "loadPlan": "Run details could not be loaded.",
+        "marketInactive": "This market is inactive and cannot run rank checks.",
+        "start": "The first rank check could not be started."
+      },
+      "notices": {
+        "budgetExhausted": "Monthly rank-check budget reached.",
+        "noneReady": "No keywords are ready for a first check.",
+        "providerMissing": "Connect a SERP provider before running checks.",
+        "raiseBudget": "Raise the budget",
+        "sampleProject": "Sample projects don't run real checks."
+      },
+      "scope": {
+        "allReady": "All ready ({count, number})",
+        "budget": "Budget",
+        "depth": "Depth",
+        "depthValue": "Top {value, number}",
+        "desktop": "Desktop",
+        "device": "Device",
+        "engine": "Engine",
+        "google": "Google",
+        "firstKeyword": "First keyword",
+        "frequency": "Frequency",
+        "location": "Location",
+        "mobile": "Mobile",
+        "runAriaLabel": "Run scope - {count, number} {count, plural, one {keyword} other {keywords}} ready",
+        "title": "Check scope",
+        "queueDetail": "The first keyword runs immediately; the remaining {count, number} {count, plural, one {keyword joins} other {keywords join}} the check queue."
+      },
+      "frequency": {
+        "custom_cron": "Custom cron",
+        "daily": "Daily",
+        "manual": "Manual",
+        "monthly": "Monthly",
+        "paused": "Paused",
+        "weekly": "Weekly"
+      },
+      "cost": {
+        "budgetWithCap": "{spent} of {cap}",
+        "budgetWithoutCap": "{spent} this month",
+        "estimated": "Estimated cost",
+        "estimatedValue": "~{amount}",
+        "lessThanOneCent": "< {amount}"
+      }
+    },
+    "controls": {
+      "alert": { "dismiss": "Dismiss alert" },
+      "confirmation": {
+        "cancel": "Cancel",
+        "failure": "The action could not be completed. Try again.",
+        "typeToConfirm": "Type <strong>{word}</strong> to confirm",
+        "working": "Working...",
+        "clearTargetUrlsBody": "Remove the configured target URL from the selected keywords. Ranking history is not affected.",
+        "clearTargetUrlsDangerLabel": "Clear target URLs",
+        "clearTargetUrlsTitle": "Clear target URLs",
+        "clearTargetUrlsToastMessage": "Target URLs cleared",
+        "deactivateAccountBody": "Deactivation will block sign-in and revoke every session. It will pause scheduled checks owned by this account. Every personal access token belonging to it will be permanently revoked. Instance administrators are protected.",
+        "deactivateAccountDangerLabel": "Deactivate account",
+        "deactivateAccountTitle": "Deactivate account",
+        "deactivateAccountToastMessage": "Account action requested",
+        "deleteAccountBody": "This permanently deletes your account, your projects, and everything tracked in them. This cannot be undone.",
+        "deleteAccountDangerLabel": "Delete account",
+        "deleteAccountTitle": "Delete account",
+        "deleteAccountToastMessage": "Account deleted",
+        "deleteBulkBody": "Remove the selected keywords and their history. This cannot be undone.",
+        "deleteBulkDangerLabel": "Delete keywords",
+        "deleteBulkTitle": "Delete selected keywords",
+        "deleteBulkToastMessage": "Selected keywords deleted",
+        "deleteKeywordBody": "Stop tracking this keyword and remove its position history. This cannot be undone.",
+        "deleteKeywordDangerLabel": "Delete keyword",
+        "deleteKeywordTitle": "Delete keyword",
+        "deleteKeywordToastMessage": "Keyword deleted",
+        "deleteProjectBody": "This permanently deletes this project and all tracked keywords, history and API keys. This cannot be undone.",
+        "deleteProjectDangerLabel": "Delete project",
+        "deleteProjectTitle": "Delete project",
+        "deleteProjectToastMessage": "Project deleted",
+        "deleteRunBody": "Delete this run from history? Keyword positions and recorded provider spend are retained. This cannot be undone.",
+        "deleteRunDangerLabel": "Delete run",
+        "deleteRunTitle": "Delete run",
+        "deleteRunToastMessage": "Run deleted",
+        "deleteWebhookEndpointBody": "Stop future deliveries to this endpoint and remove its delivery history association. This cannot be undone.",
+        "deleteWebhookEndpointDangerLabel": "Delete endpoint",
+        "deleteWebhookEndpointTitle": "Delete webhook endpoint",
+        "deleteWebhookEndpointToastMessage": "Webhook endpoint deleted",
+        "reactivateAccountBody": "Allow sign-in again. Previously revoked personal access tokens stay revoked and must be recreated. Scheduled checks will reconverge through the schedule reconciler.",
+        "reactivateAccountDangerLabel": "Reactivate account",
+        "reactivateAccountTitle": "Reactivate account",
+        "reactivateAccountToastMessage": "Account action requested",
+        "removeIntegrationBody": "Rank checks will stop until another SERP provider is connected. Stored credentials are removed from this instance.",
+        "removeIntegrationDangerLabel": "Disconnect provider",
+        "removeIntegrationTitle": "Disconnect provider",
+        "removeIntegrationToastMessage": "Provider disconnected",
+        "removeSampleDataBody": "This deletes the sample project and its generated demo data. Your other projects are not affected.",
+        "removeSampleDataDangerLabel": "Remove sample data",
+        "removeSampleDataTitle": "Remove sample data",
+        "removeSampleDataToastMessage": "Sample data removed",
+        "removeSearchConsoleConnectionBody": "This removes the saved connection and authorization tokens from this project. Already imported Search Console metrics remain available.",
+        "removeSearchConsoleConnectionDangerLabel": "Disconnect Search Console",
+        "removeSearchConsoleConnectionTitle": "Disconnect Search Console",
+        "removeSearchConsoleConnectionToastMessage": "Search Console disconnected",
+        "removeTeamMemberBody": "Remove this member from the project. Their account and access to other projects are not affected.",
+        "removeTeamMemberDangerLabel": "Remove member",
+        "removeTeamMemberTitle": "Remove project member",
+        "removeTeamMemberToastMessage": "Project member removed",
+        "resetAccountLimitsBody": "Clear this account's rate-limit buckets. Monthly spend is a rolling window and cannot be reset.",
+        "resetAccountLimitsDangerLabel": "Reset rate limits",
+        "resetAccountLimitsTitle": "Reset rate limits",
+        "resetAccountLimitsToastMessage": "Rate-limit reset requested",
+        "revokeKeyBody": "Any app or script using this key will stop working immediately. Generate a new key to restore access.",
+        "revokeKeyDangerLabel": "Revoke key",
+        "revokeKeyTitle": "Revoke API key",
+        "revokeKeyToastMessage": "API key revoked",
+        "revokeMigrationTokenBody": "This invalidates the current token. Any transfer using it will no longer work.",
+        "revokeMigrationTokenDangerLabel": "Revoke token",
+        "revokeMigrationTokenTitle": "Revoke migration token",
+        "revokeMigrationTokenToastMessage": "Migration token revoked",
+        "rollMigrationTokenBody": "This invalidates the current token. Any transfer using it will no longer work.",
+        "rollMigrationTokenDangerLabel": "Roll token",
+        "rollMigrationTokenTitle": "Roll token",
+        "rollMigrationTokenToastMessage": "Token rolled",
+        "transferProjectOwnershipBody": "Make this member the project owner. Your project role changes to admin, and only the new owner can transfer ownership again.",
+        "transferProjectOwnershipDangerLabel": "Transfer ownership",
+        "transferProjectOwnershipTitle": "Transfer project ownership",
+        "transferProjectOwnershipToastMessage": "Project ownership transferred"
+      },
+      "copy": {
+        "action": "Copy",
+        "copied": "Copied!",
+        "failed": "Copy failed",
+        "id": "Copy ID"
+      },
+      "calendar": {
+        "april": "April",
+        "august": "August",
+        "chooseDate": "Choose a date",
+        "december": "December",
+        "february": "February",
+        "friday": "Fr",
+        "january": "January",
+        "july": "July",
+        "june": "June",
+        "march": "March",
+        "may": "May",
+        "monthYear": "{month} {year}",
+        "monday": "Mo",
+        "nextMonth": "Next month",
+        "november": "November",
+        "october": "October",
+        "previousMonth": "Previous month",
+        "saturday": "Sa",
+        "september": "September",
+        "sunday": "Su",
+        "thursday": "Th",
+        "tuesday": "Tu",
+        "wednesday": "We"
+      },
+      "zonedTime": {
+        "plain": "{time}",
+        "timeZone": "{time} ({timeZone})",
+        "yourTime": "{time} (your time)"
+      },
+      "checkStatus": {
+        "completed": "Completed",
+        "failed": "Failed",
+        "pending": "Pending",
+        "running": "Running"
+      },
+      "countrySelect": {
+        "catalog": "All countries",
+        "noResults": "No country matches this search.",
+        "searchPlaceholder": "Search countries",
+        "tracked": "Tracked countries"
+      },
+      "dataTable": {
+        "clearSort": "Clear {column} sorting",
+        "column": "Column",
+        "columns": "Columns",
+        "compact": "Compact",
+        "comfortable": "Comfortable",
+        "density": "Table density",
+        "hideColumn": "Hide {column} column",
+        "nextPage": "Next page",
+        "number": "{value, number}",
+        "pageRange": "{start, number}-{end, number} of {total, number}",
+        "previousPage": "Previous page",
+        "resizeColumn": "Resize {column} column",
+        "resizeInstructions": "Drag to resize. Double-click to reset.",
+        "resetLayout": "Reset layout",
+        "rows": "Rows",
+        "rowsPerPage": "Rows per page",
+        "selectRow": "Select {row}",
+        "selectVisibleRows": "Select visible rows",
+        "collapseRow": "Collapse {row}",
+        "expandRow": "Expand {row}",
+        "showColumn": "Show {column} column",
+        "sortAscending": "Sort {column} ascending",
+        "sortDescending": "Sort {column} descending",
+        "standard": "Standard",
+        "toggleColumns": "Toggle columns"
+      },
+      "drawer": { "close": "Close drawer" },
+      "emailCapture": {
+        "emailAddress": "Email address",
+        "joining": "Joining...",
+        "submitFailed": "Unable to join right now.",
+        "validation": {
+          "emailInvalid": "Enter a valid email address.",
+          "emailTooLong": "Enter an email address under {maximum, number} characters.",
+          "workEmail": "Use your work email."
+        }
+      },
+      "expiryChoice": { "label": "Expires" },
+      "menuMultiSelect": {
+        "noResults": "No results",
+        "searchPlaceholder": "Search...",
+        "selected": "{count, plural, one {# selected} other {# selected}}"
+      },
+      "menuSelect": {
+        "moreOptionsHint": "More options available. Type to search.",
+        "noResults": "No results",
+        "searchPlaceholder": "Search..."
+      },
+      "modal": { "close": "Close modal" },
+      "password": { "hide": "Hide password", "show": "Show password" },
+      "sheet": { "close": "Close sheet" },
+      "status": {
+        "blocked": "Blocked",
+        "cancelled": "Cancelled",
+        "cancelling": "Cancelling",
+        "completed": "Completed",
+        "deferred": "Deferred",
+        "fallback": "Status",
+        "notConfirmed": "Not confirmed",
+        "partial": "Partial",
+        "primary": "Primary",
+        "queued": "Queued",
+        "running": "Running",
+        "skipped": "Skipped",
+        "succeeded": "Succeeded",
+        "connected": "Connected",
+        "needsReauth": "Reconnect required",
+        "ready": "Ready",
+        "planned": "Planned",
+        "optional": "Optional",
+        "success": "Success",
+        "failed": "Failed",
+        "matches": "Matches",
+        "wrongUrl": "Wrong URL",
+        "disabled": "Disabled",
+        "create": "Create",
+        "update": "Update",
+        "delete": "Delete",
+        "import": "Import",
+        "export": "Export",
+        "login": "Login"
+      },
+      "tagAdder": {
+        "action": "Add tag",
+        "cancel": "Cancel adding tag",
+        "enter": "Enter",
+        "input": "New tag name",
+        "validation": {
+          "required": "Enter a tag name.",
+          "tooLong": "Tag names are up to {maximum, number} characters."
+        }
+      },
+      "theme": {
+        "dark": "Dark",
+        "label": "Theme",
+        "light": "Light",
+        "system": "System"
+      },
+      "toast": {
+        "undo": "Undo",
+        "undoFailed": "Undo failed. Please try again."
+      },
+      "toolbarSearch": { "clear": "Clear {label}" }
+    }
+  }
+}

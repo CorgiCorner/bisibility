@@ -1,13 +1,10 @@
 import { onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  type CreateProjectFormValues,
-  StepCreateProject,
-  WEBSITE_MATCHING_HINT,
-} from "./StepCreateProject";
+import { type CreateProjectFormValues, StepCreateProject } from "./StepCreateProject";
 
 const project = {
   domain: "example.com",
@@ -50,7 +47,11 @@ describe("StepCreateProject", () => {
     );
     expect(screen.getByLabelText("Your website")).toHaveAttribute("required");
     expect(screen.getByLabelText("Your website")).toHaveAttribute("aria-required", "true");
-    expect(screen.getByRole("button", { name: WEBSITE_MATCHING_HINT })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "www and every subdomain of your domain count as yours - matching is fixed today, per-scope control is on the roadmap.",
+      }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Your website" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Project name")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Domain")).not.toBeInTheDocument();
@@ -88,7 +89,7 @@ describe("StepCreateProject", () => {
     });
     fireEvent.blur(website);
 
-    expect(await screen.findByText("example")).toBeInTheDocument();
+    expect(await screen.findByText("Project name: example")).toBeInTheDocument();
     expect(deriveWebsiteAction).toHaveBeenCalledWith({
       website: "https://www.example.co.uk/products?source=onboarding",
     });
@@ -132,6 +133,19 @@ describe("StepCreateProject", () => {
     expect(screen.getByLabelText("Your website")).toHaveFocus();
     expect(createProjectAction).not.toHaveBeenCalled();
     expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it("renders the localized maximum-length website error before creating a project", async () => {
+    const createProjectAction = vi.fn();
+    renderCreateProjectStep({ createProjectAction });
+
+    fireEvent.change(screen.getByLabelText("Your website"), {
+      target: { value: "x".repeat(2049) },
+    });
+    submitProject();
+
+    expect(await screen.findByText("Enter a shorter website URL.")).toBeInTheDocument();
+    expect(createProjectAction).not.toHaveBeenCalled();
   });
 
   it("renders an invalid website error once and associates it with the field", async () => {

@@ -15,6 +15,7 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import type { RunSelectionSpec } from "@/lib/rank-check/runs/selection";
 import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
+import { useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -25,7 +26,6 @@ import {
   type PreflightBlockCode,
   type PreflightProvider,
   type PreflightScope,
-  preflightBlockPresentation,
 } from "./preflight-presentation";
 
 const preflightFormSchema = z
@@ -104,6 +104,7 @@ export function PreflightDialog({
   scope,
   spec,
 }: Readonly<PreflightDialogProps>) {
+  const t = useTranslations("shared.rankPreflight");
   const formId = useId();
   const form = useForm<PreflightFormInput>({
     defaultValues: {
@@ -120,7 +121,28 @@ export function PreflightDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const blockCode = blockCodeFor(preview, actionBlock);
-  const block = blockCode ? preflightBlockPresentation[blockCode] : null;
+  const block = blockCode
+    ? {
+        budget_exhausted: {
+          cta: t("editBudget"),
+          label: t("budget"),
+          message: t("budgetBlocked"),
+          tone: "attention" as const,
+        },
+        duplicate: {
+          cta: t("openRun"),
+          label: t("runInProgress"),
+          message: duplicateDetail ?? t("duplicate"),
+          tone: "attention" as const,
+        },
+        no_provider: {
+          cta: t("openIntegrations"),
+          label: t("noProvider"),
+          message: t("noProviderBlocked"),
+          tone: "critical" as const,
+        },
+      }[blockCode]
+    : null;
   const disabled = Boolean(block) || refreshing || submitting;
 
   async function refreshPreview(next: Partial<PreflightFormInput>) {
@@ -137,8 +159,7 @@ export function PreflightDialog({
         setPreview(nextPreview);
       }
     } catch {
-      if (request === requestNumber.current)
-        setPreviewError("Could not update the estimate. Try again.");
+      if (request === requestNumber.current) setPreviewError(t("couldNotRefresh"));
     } finally {
       if (request === requestNumber.current) setRefreshing(false);
     }
@@ -160,7 +181,13 @@ export function PreflightDialog({
         if (result.code === "no_provider" || result.code === "budget_exhausted") {
           setActionBlock(result.code);
         }
-        setPreviewError(result.message);
+        setPreviewError(
+          result.code === "preview_expired" || result.code === "preview_mismatch"
+            ? t("previewChanged")
+            : result.code === "sample_project"
+              ? t("sampleProject")
+              : t("couldNotStart"),
+        );
         return;
       }
       if ("outcome" in result) {
@@ -170,7 +197,7 @@ export function PreflightDialog({
       onStarted?.(result);
       onClose();
     } catch {
-      setPreviewError("Could not start this run. Try again.");
+      setPreviewError(t("couldNotStart"));
     } finally {
       setSubmitting(false);
     }
@@ -181,18 +208,18 @@ export function PreflightDialog({
   const footer = (
     <div className="flex w-full flex-wrap items-center justify-between gap-2.5">
       <p className="m-0 min-w-0 text-[11.5px] tabular-nums text-fg-muted">
-        {decisionLine(preview, leftAfterLabel)}
+        {decisionLine(preview, t("budgetBlocked"), leftAfterLabel)}
       </p>
       <div className="flex items-center gap-2">
         <Button disabled={submitting} onClick={onClose} type="button" variant="secondary">
-          Cancel
+          {t("cancel")}
         </Button>
         <Button
           disabled={disabled}
           form={formId}
           loading={submitting}
-          loadingLabel="Starting..."
-          title={block ? block.message(preview, duplicateDetail) : undefined}
+          loadingLabel={t("starting")}
+          title={block?.message}
           type="submit"
         >
           {scope.startLabel}
@@ -225,9 +252,7 @@ export function PreflightDialog({
           >
             <StatusChip dot label={block.label} tone={block.tone} />
             <div className="min-w-0">
-              <p className="m-0 text-[12.5px] leading-5 text-fg">
-                {block.message(preview, duplicateDetail)}
-              </p>
+              <p className="m-0 text-[12.5px] leading-5 text-fg">{block.message}</p>
               <a
                 className="mt-2 inline-block text-[11.5px] font-semibold text-fg underline-offset-3 hover:underline"
                 href={actionHref(blockCode as PreflightBlockCode, {
@@ -244,7 +269,7 @@ export function PreflightDialog({
 
         <section
           className="rounded-card border border-border px-4 py-[13px]"
-          aria-label="Run scope"
+          aria-label={t("runScope")}
         >
           <p className="m-0 text-[13.5px] font-semibold tabular-nums text-fg">{scope.equation}</p>
           <p className="m-0 mt-1 text-[11.5px] leading-[1.55] text-fg-muted">{scope.description}</p>

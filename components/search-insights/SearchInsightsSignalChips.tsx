@@ -1,15 +1,15 @@
 "use client";
 
 import { track } from "@/lib/analytics/client";
-import { positionBandLabel } from "@/lib/search-insights/constants";
+import { positionBandRange } from "@/lib/search-insights/constants";
 import type { SearchInsightsSignals } from "@/lib/search-insights/queries/signals";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { IntersectIcon as Intersect } from "@phosphor-icons/react/dist/csr/Intersect";
 import { TargetIcon as Target } from "@phosphor-icons/react/dist/csr/Target";
 import type { Icon } from "@phosphor-icons/react/lib";
+import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, use } from "react";
 import { useSearchInsightsDrawerHandlers } from "./drawers/useDrawerHandlers";
-import { SIGNAL_COPY } from "./search-insights-copy";
 
 export type SearchInsightsSignalChipsProps = {
   /** Slot for the optional second-source card, which is not a peer of the two chips. */
@@ -42,6 +42,8 @@ function Chip({
   title: string;
   which: "band" | "overlap";
 }>) {
+  const format = useFormatter();
+  const t = useTranslations("projectSearchInsights.copy");
   return (
     <button
       className="flex items-center gap-3 rounded-card border border-border bg-bg-elev px-4 py-3 text-left hover:border-border-control"
@@ -68,11 +70,10 @@ function Chip({
                 className="h-3.5 w-full animate-pulse rounded-control bg-bg-sunken"
               />
             ) : null}
-            {state === "ready" ? count?.toLocaleString("en-US") : null}
+            {state === "ready" && count !== undefined ? format.number(count) : null}
           </span>
           <span className="text-ui-body font-semibold">
-            {state === "error" ? `${SIGNAL_COPY.failed}: ` : null}
-            {title}
+            {state === "error" ? t("signalFailedTitle", { title }) : title}
           </span>
         </span>
         <span className="text-ui-caption text-fg-muted">{sub}</span>
@@ -91,6 +92,7 @@ export function SearchInsightsSignalChips({
   signals,
 }: Readonly<SearchInsightsSignalChipsProps>) {
   const drawers = useSearchInsightsDrawerHandlers();
+  const t = useTranslations("projectSearchInsights.copy");
   const bandCount = signals?.bandCount;
   const overlapCount = signals?.overlapCount;
   return (
@@ -106,8 +108,8 @@ export function SearchInsightsSignalChips({
             : () => drawers.openList("band", bandCount, namedQueryCount))
         }
         state={state}
-        sub={SIGNAL_COPY.bandSub}
-        title={`queries at ${positionBandLabel()}`}
+        sub={t("signalBandSub")}
+        title={t("queriesAtPositions", { range: positionBandRange() })}
         which="band"
       />
       <Chip
@@ -120,8 +122,8 @@ export function SearchInsightsSignalChips({
             : () => drawers.openList("overlap", overlapCount, namedQueryCount))
         }
         state={state}
-        sub={SIGNAL_COPY.overlapSub}
-        title={SIGNAL_COPY.overlapTitle}
+        sub={t("signalOverlapSub")}
+        title={t("signalOverlapTitle")}
         which="overlap"
       />
       {ga4Card ? <div className="md:col-span-2">{ga4Card}</div> : null}

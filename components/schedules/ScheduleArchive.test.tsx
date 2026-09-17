@@ -1,5 +1,6 @@
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ArchiveScheduleModal } from "./ArchiveScheduleModal";
 import { type ScheduleListRow, SchedulesList } from "./SchedulesList";
@@ -79,7 +80,7 @@ describe("schedule archive UI", () => {
         onClose={vi.fn()}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Move keywords to" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move 3 keywords to" }));
     expect(screen.queryByRole("menuitem", { name: schedule.name })).not.toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Old" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("menuitem", { name: other.name }));

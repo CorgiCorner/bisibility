@@ -1,14 +1,17 @@
-import type { AuditEntry } from "@/lib/queries/audit";
-import { render, screen } from "@testing-library/react";
+import { renderWithAuditMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AuditDetailSheet } from "./AuditDetailSheet";
+import type { PresentedAuditEntry } from "./audit-presentation";
 
-const entry: AuditEntry = {
+const entry: PresentedAuditEntry = {
   actor: { email: "auditor@example.com", id: "user_1", initials: "AU", name: "Auditor" },
   diff: [],
   eventName: "Provider test",
   eventType: "system",
   id: "audit_1",
+  hasRecordedIp: false,
+  hasRecordedUserAgent: false,
   metadata: {
     app_version: "Not recorded",
     correlation_id: "corr_1",
@@ -40,6 +43,8 @@ describe("AuditDetailSheet", () => {
           ...entry,
           diff: [{ after: "Renamed", before: "Original", field: "name" }],
           metadata: { ...entry.metadata, user_agent: userAgent },
+          hasRecordedIp: true,
+          hasRecordedUserAgent: true,
           source: { ...entry.source, ip: "203.0.113.0" },
           status: "failed",
           statusReason: "Provider unavailable",

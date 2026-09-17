@@ -24,6 +24,7 @@ import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
 
 export type OnboardingWizardStepsProps = {
   actions: OnboardingWizardActions;
+  costCalculatorPath?: string;
   currentStep: OnboardingStepNumber;
   connectedProviderId?: string | null;
   dataResidencyMessage: string;
@@ -60,6 +61,7 @@ export type OnboardingWizardStepsProps = {
 
 export function OnboardingWizardSteps({
   actions,
+  costCalculatorPath,
   currentStep,
   connectedProviderId,
   dataResidencyMessage,
@@ -138,6 +140,7 @@ export function OnboardingWizardSteps({
       {currentStep === 3 ? (
         <StepAddKeywords
           addKeywordsAction={actions.addKeywordsAction}
+          calculatorPath={costCalculatorPath}
           costPerCheckCents={projectedCostPerCheckCents}
           createMarketAction={actions.createMarketAction}
           defaultValues={draft.addKeywords}

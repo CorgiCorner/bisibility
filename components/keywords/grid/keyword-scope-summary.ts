@@ -1,13 +1,18 @@
-import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
+import type { LocalizedKeywordFilterChip } from "@/components/keywords/filters/keyword-filter-presentation";
 import type { ActiveLens, LensDevice, LensLocationOption } from "@/lib/keywords/lens-model";
+import type { useTranslations } from "next-intl";
+
+type GridTranslations = ReturnType<
+  typeof useTranslations<"projectRankTracker.keywordImport.management.grid">
+>;
 
 export const BASE_KEYWORD_LENS = { device: "all", locationId: null } satisfies ActiveLens;
 
-const deviceLabels: Record<LensDevice, string> = {
-  all: "All devices",
-  desktop: "Desktop",
-  mobile: "Mobile",
-};
+function deviceLabel(device: LensDevice, t: GridTranslations) {
+  return t(
+    device === "all" ? "allDevices" : device === "desktop" ? "deviceDesktop" : "deviceMobile",
+  );
+}
 
 const rankDataFilterKeys = new Set(["change", "position", "urlChanged", "wrongUrl"]);
 
@@ -15,17 +20,28 @@ export function hasActiveKeywordScope(lens: ActiveLens) {
   return Boolean(lens.locationId) || lens.device !== "all";
 }
 
-export function activeLocationLabel(lens: ActiveLens, options: LensLocationOption[]) {
+export function activeLocationLabel(
+  lens: ActiveLens,
+  options: LensLocationOption[],
+  t: GridTranslations,
+) {
   if (!lens.locationId) {
-    return "All locations";
+    return t("allLocations");
   }
   return (
-    options.find((option) => option.id === lens.locationId)?.displayName ?? "Selected location"
+    options.find((option) => option.id === lens.locationId)?.displayName ?? t("selectedLocation")
   );
 }
 
-export function keywordScopeSummary(lens: ActiveLens, options: LensLocationOption[]) {
-  return `Scope: ${activeLocationLabel(lens, options)}, ${deviceLabels[lens.device]}`;
+export function keywordScopeSummary(
+  lens: ActiveLens,
+  options: LensLocationOption[],
+  t: GridTranslations,
+) {
+  return t("scopeSummary", {
+    device: deviceLabel(lens.device, t),
+    location: activeLocationLabel(lens, options, t),
+  });
 }
 
 export function capturedKeywordFiltersSummary({
@@ -33,22 +49,24 @@ export function capturedKeywordFiltersSummary({
   lens,
   options,
   search,
+  t,
 }: {
-  filterChips: KeywordFilterChip[];
+  filterChips: LocalizedKeywordFilterChip[];
   lens: ActiveLens;
   options: LensLocationOption[];
   search: string;
+  t: GridTranslations;
 }) {
   return [
-    keywordScopeSummary(lens, options),
-    search ? `Search: "${search}"` : null,
+    keywordScopeSummary(lens, options, t),
+    search ? t("searchSummary", { search }) : null,
     ...filterChips.map((chip) => chip.label),
   ]
     .filter(Boolean)
     .join(" / ");
 }
 
-function keywordFiltersNeedRankData(chips: KeywordFilterChip[]) {
+function keywordFiltersNeedRankData(chips: LocalizedKeywordFilterChip[]) {
   return chips.some((chip) => rankDataFilterKeys.has(chip.key) || chip.key.startsWith("serp:"));
 }
 
@@ -58,46 +76,47 @@ export function keywordNoRowsCopy({
   lens,
   needsRankData,
   options,
+  t,
 }: {
   filterCount: number;
   hasSearch: boolean;
   lens: ActiveLens;
   needsRankData: boolean;
   options: LensLocationOption[];
+  t: GridTranslations;
 }) {
   const context: string[] = [];
-  if (lens.locationId) context.push(activeLocationLabel(lens, options));
-  if (lens.device !== "all") context.push(deviceLabels[lens.device]);
+  if (lens.locationId) context.push(activeLocationLabel(lens, options, t));
+  if (lens.device !== "all") context.push(deviceLabel(lens.device, t));
   const activeFilterCount = filterCount + Number(hasSearch);
-  const filterContext = `${activeFilterCount} active filter${activeFilterCount === 1 ? "" : "s"}`;
+  const filterContext = t("activeFilters", { count: activeFilterCount });
   const scopeContext = context.join(" / ");
   const noRowsContext =
     scopeContext && activeFilterCount > 0
-      ? `${scopeContext} with ${filterContext}`
-      : scopeContext || (activeFilterCount > 0 ? filterContext : "the current view");
+      ? t("scopeWithFilters", { filters: filterContext, scope: scopeContext })
+      : scopeContext || (activeFilterCount > 0 ? filterContext : t("currentView"));
 
   if (needsRankData) {
     return {
-      description:
-        "Some active filters need ranking data. Remove the ranking filters to see keywords awaiting their first check.",
-      title: `No keywords match ${noRowsContext}`,
+      description: t("noRowsNeedRanking"),
+      title: t("noKeywordsMatch", { context: noRowsContext }),
     };
   }
   if (activeFilterCount > 0 && hasActiveKeywordScope(lens)) {
     return {
-      description: "Adjust the active filters or show keywords from all locations and devices.",
-      title: `No keywords match ${noRowsContext}`,
+      description: t("noRowsAdjustScope"),
+      title: t("noKeywordsMatch", { context: noRowsContext }),
     };
   }
   if (activeFilterCount > 0) {
     return {
-      description: "Adjust or clear the active filters to show the full keyword list.",
-      title: `No keywords match ${noRowsContext}`,
+      description: t("noRowsAdjustFilters"),
+      title: t("noKeywordsMatch", { context: noRowsContext }),
     };
   }
   return {
-    description: "Show keywords from all locations and devices.",
-    title: `No keywords match ${noRowsContext}`,
+    description: t("noRowsShowAll"),
+    title: t("noKeywordsMatch", { context: noRowsContext }),
   };
 }
 
@@ -108,13 +127,15 @@ export function keywordNoRowsState({
   lens,
   onResetScope,
   options,
+  t,
 }: {
-  filterChips: KeywordFilterChip[];
+  filterChips: LocalizedKeywordFilterChip[];
   hasNoRankData: boolean;
   hasSearch: boolean;
   lens: ActiveLens;
   onResetScope: () => void;
   options: LensLocationOption[];
+  t: GridTranslations;
 }) {
   return {
     ...keywordNoRowsCopy({
@@ -123,6 +144,7 @@ export function keywordNoRowsState({
       lens,
       needsRankData: hasNoRankData && keywordFiltersNeedRankData(filterChips),
       options,
+      t,
     }),
     onResetScope: hasActiveKeywordScope(lens) ? onResetScope : undefined,
   };
@@ -130,7 +152,7 @@ export function keywordNoRowsState({
 
 export function flatKeywordNoRowsState(input: {
   activeLens: ActiveLens;
-  filterChips: KeywordFilterChip[];
+  filterChips: LocalizedKeywordFilterChip[];
   flatServer: boolean;
   hasNoRankData: boolean;
   locationOptions: LensLocationOption[];
@@ -138,11 +160,12 @@ export function flatKeywordNoRowsState(input: {
   page?: number;
   rowsEmpty: boolean;
   searchValue: string;
+  t: GridTranslations;
 }) {
   if (input.flatServer && input.page && input.page > 1 && input.rowsEmpty)
     return {
-      description: "This page is beyond the available filtered results.",
-      title: "Page no longer available",
+      description: input.t("pageUnavailableDescription"),
+      title: input.t("pageUnavailableTitle"),
     };
   if (!input.rowsEmpty) return undefined;
   return keywordNoRowsState({
@@ -152,5 +175,6 @@ export function flatKeywordNoRowsState(input: {
     lens: input.activeLens,
     onResetScope: input.onResetScope,
     options: input.locationOptions,
+    t: input.t,
   });
 }

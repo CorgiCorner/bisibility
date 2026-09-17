@@ -1,14 +1,19 @@
+"use client";
+
 import { type AccountSectionId, accountSections } from "@/components/account/account-sections";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 type AccountSubnavProps = {
   activeSection: AccountSectionId;
 };
 
 export function AccountSubnav({ activeSection }: Readonly<AccountSubnavProps>) {
+  const t = useTranslations("account.navigation");
+
   return (
     <nav
-      aria-label="Account sections"
+      aria-label={t("ariaLabel")}
       className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-3.5 lg:flex"
       data-account-subnav=""
     >
@@ -41,7 +46,7 @@ export function AccountSubnav({ activeSection }: Readonly<AccountSubnavProps>) {
                 >
                   <Icon aria-hidden className="text-current" size={16} weight="regular" />
                 </span>
-                <span>{section.label}</span>
+                <span>{t(section.id)}</span>
               </Link>
             </li>
           );

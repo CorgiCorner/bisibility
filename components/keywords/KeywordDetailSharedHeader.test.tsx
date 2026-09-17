@@ -2,8 +2,9 @@ import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendPro
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { AppHeaderFrame } from "@/components/shell/AppHeaderFrame";
 import { ToastProvider } from "@/components/ui/Toast";
+import { renderWithShellProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordHeaderCard } from "./KeywordHeaderCard";
 import { KeywordHeaderContext } from "./KeywordHeaderContext";

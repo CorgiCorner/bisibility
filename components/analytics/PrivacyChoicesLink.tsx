@@ -3,6 +3,7 @@
 import { ConsentSettingsModal } from "@/components/analytics/ConsentSettingsModal";
 import { Button } from "@/components/ui/Button";
 import { CONSENT_COOKIE, parseConsentCookie } from "@/lib/analytics/consent";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 function readConsentCookie() {
@@ -15,13 +16,14 @@ function readConsentCookie() {
   return parseConsentCookie(value ? decodeURIComponent(value) : undefined);
 }
 
-export function PrivacyChoicesLink() {
+export function PrivacyChoicesLink({ label }: Readonly<{ label?: string }>) {
+  const t = useTranslations("shared.analyticsConsent");
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Button onClick={() => setOpen(true)} size="xs" type="button" variant="ghost">
-        Privacy choices
+        {label ?? t("title")}
       </Button>
       {open ? (
         <ConsentSettingsModal

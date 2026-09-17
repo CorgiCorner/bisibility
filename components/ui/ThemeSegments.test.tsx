@@ -1,5 +1,6 @@
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
 import { applyTheme } from "@/lib/theme/browser-theme";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { ThemeSegments } from "./ThemeSegments";
 
@@ -17,7 +18,7 @@ describe("ThemeSegments", () => {
   });
 
   it("follows a theme change made outside the control", () => {
-    render(<ThemeSegments defaultPreference="light" />);
+    renderWithSharedMessages(<ThemeSegments defaultPreference="light" />);
 
     act(() => applyTheme("dark"));
 
@@ -26,7 +27,7 @@ describe("ThemeSegments", () => {
   });
 
   it("stores system as the preference and paints the resolved theme", () => {
-    render(<ThemeSegments defaultPreference="light" />);
+    renderWithSharedMessages(<ThemeSegments defaultPreference="light" />);
 
     fireEvent.click(segment("System"));
 
@@ -37,7 +38,7 @@ describe("ThemeSegments", () => {
   });
 
   it("gives each segment exactly one accessible name and no native title while the house tooltip supplies the description", () => {
-    render(<ThemeSegments />);
+    renderWithSharedMessages(<ThemeSegments />);
 
     for (const name of ["Light", "Dark", "System"] as const) {
       const radio = segment(name);
@@ -54,13 +55,13 @@ describe("ThemeSegments", () => {
     // biome-ignore lint/suspicious/noDocumentCookie: jsdom cookie cleanup mirrors the browser contract.
     document.cookie = "theme=; path=/; max-age=0";
 
-    render(<ThemeSegments />);
+    renderWithSharedMessages(<ThemeSegments />);
 
     expect(segment("System")).toBeChecked();
   });
 
   it("keeps every segment at or above the 24px minimum target in both sizes", () => {
-    const { rerender } = render(<ThemeSegments size="sm" />);
+    const { rerender } = renderWithSharedMessages(<ThemeSegments size="sm" />);
 
     expect(segment("Light").nextElementSibling).toHaveClass("h-6");
     expect(segment("Light").nextElementSibling).toHaveClass("w-[26px]");
@@ -72,7 +73,7 @@ describe("ThemeSegments", () => {
   });
 
   it("marks the active segment with the unified neutral treatment, not accent", () => {
-    render(<ThemeSegments defaultPreference="light" />);
+    renderWithSharedMessages(<ThemeSegments defaultPreference="light" />);
 
     expect(segment("Light").nextElementSibling).toHaveClass("bg-bg-elev");
     expect(segment("Light").nextElementSibling).not.toHaveClass("bg-nav-active");
@@ -80,7 +81,7 @@ describe("ThemeSegments", () => {
   });
 
   it("uses the control-border token on the track and the selected option", () => {
-    render(<ThemeSegments defaultPreference="light" />);
+    renderWithSharedMessages(<ThemeSegments defaultPreference="light" />);
 
     const selected = segment("Light");
     const track = selected.closest(".border-border-control");

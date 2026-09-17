@@ -156,7 +156,7 @@ describe("StepFirstCheck", () => {
     expect(await screen.findByText("#4 / example.com/page")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Sample checks finished. Every keyword follows your daily schedule from here.",
+        "Sample checks finished. Every keyword follows your Daily schedule from here.",
       ),
     ).toBeInTheDocument();
     expect(queueFirstChecksAction).not.toHaveBeenCalled();
@@ -179,10 +179,12 @@ describe("StepFirstCheck", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Run check" }));
 
-    expect(await screen.findByText(/0 of 1 check · \$0\.0000 recorded cost/)).toBeInTheDocument();
+    expect(
+      await screen.findByText("0 of 1 check completed. Review the remaining result statuses."),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "The sample check finished with an issue. You can retry the failed check below. Every keyword still follows your daily schedule.",
+        "The sample check finished with an issue. You can retry the failed check below. Every keyword still follows your Daily schedule.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("1 of 1 checks failed")).not.toBeInTheDocument();
@@ -212,7 +214,9 @@ describe("StepFirstCheck", () => {
 
     expect(await screen.findByText("Monthly rank-check budget reached.")).toBeInTheDocument();
     expect(screen.getByText("#2 / example.com/keyword_1")).toBeInTheDocument();
-    expect(screen.getByText(/1 of 2 checks · \$0\.0000 recorded cost/)).toBeInTheDocument();
+    expect(
+      screen.getByText("1 of 2 checks completed. Review the remaining result statuses."),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Retry failed" }));
 

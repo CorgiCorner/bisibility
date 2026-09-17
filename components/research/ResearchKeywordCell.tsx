@@ -1,6 +1,7 @@
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
+import { useTranslations } from "next-intl";
 
 type ResearchKeywordCellProps = {
   canRemoveSaved: boolean;
@@ -12,7 +13,8 @@ function SaveToggle({
   onToggleSave,
   row,
 }: Readonly<{ onToggleSave: () => void; row: GroupedResearchRow }>) {
-  const label = row.alreadySaved ? "Remove from saved" : "Save for later";
+  const t = useTranslations("projectResearch.saved");
+  const label = row.alreadySaved ? t("remove") : t("save");
   return (
     <Tooltip content={label}>
       <button
@@ -39,17 +41,18 @@ export function ResearchKeywordCell({
   onToggleSave,
   row,
 }: Readonly<ResearchKeywordCellProps>) {
+  const t = useTranslations("projectResearch.saved");
   return (
     <span className="flex min-w-0 items-center gap-1.5">
       <span className="truncate text-[13px] font-medium text-fg">{row.keyword}</span>
       {row.variants.length > 1 ? (
         <span className="whitespace-nowrap text-[10.5px] text-fg-muted">
-          +{row.variants.length - 1} variants
+          {t("variants", { count: row.variants.length - 1 })}
         </span>
       ) : null}
       {row.alreadyTracked ? (
         <span className="rounded-full border border-border px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] text-fg-muted">
-          Tracked
+          {t("tracked")}
         </span>
       ) : (
         <>
@@ -70,7 +73,7 @@ export function ResearchKeywordCell({
                 borderColor: "color-mix(in srgb, var(--accent) 32%, var(--border))",
               }}
             >
-              Saved
+              {t("saved")}
             </span>
           ) : null}
         </>

@@ -1,3 +1,4 @@
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { OverviewNoData } from "./OverviewNoData";
@@ -7,17 +8,15 @@ import type { OverviewView } from "./types";
 function row(locationId: string, locationLabel: string, languageLabel: string) {
   return {
     deltaPoints: 0,
-    deltaTooltip: "Top-10 share 0pp vs Jul 17 - Aug 13, the previous 28 days.",
     languageLabel,
     locationId,
     locationLabel,
+    previousPeriod: { end: "2026-08-13", start: "2026-07-17" },
     rangeDays: 28,
     researchAvailable: true,
     targetCount: 1,
     top10Count: 0,
     top10Share: 0,
-    top10Tooltip:
-      "Targets of this market currently ranking in positions 1 to 10, out of 1 active targets.",
     trend: [0, 0, 0, 0, 0, 0, 0, 0],
   };
 }
@@ -31,8 +30,6 @@ describe("OverviewNoData market rollup", () => {
           ...row("loc_be_ar", "Belgium", "Arabic"),
           researchAvailable: false,
           targetCount: 0,
-          top10Tooltip:
-            "Targets of this market currently ranking in positions 1 to 10, out of 0 active targets.",
         },
         row("loc_es_en", "Spain", "English"),
         row("loc_es_es", "Spain", "Spanish"),
@@ -41,16 +38,18 @@ describe("OverviewNoData market rollup", () => {
     } satisfies OverviewView;
 
     render(
-      <OverviewNoData
-        budgetExhausted={false}
-        getFirstCheckRunPlanAction={vi.fn()}
-        overview={overview}
-        projectId="prj_1"
-        projectRef="prj_1"
-        queueFirstChecksAction={vi.fn()}
-        runningCheckCount={0}
-        runCheckNowAction={vi.fn()}
-      />,
+      <ProjectDashboardMessages>
+        <OverviewNoData
+          budgetExhausted={false}
+          getFirstCheckRunPlanAction={vi.fn()}
+          overview={overview}
+          projectId="prj_1"
+          projectRef="prj_1"
+          queueFirstChecksAction={vi.fn()}
+          runningCheckCount={0}
+          runCheckNowAction={vi.fn()}
+        />
+      </ProjectDashboardMessages>,
     );
 
     expect(screen.getByRole("heading", { name: "By market" })).toBeVisible();

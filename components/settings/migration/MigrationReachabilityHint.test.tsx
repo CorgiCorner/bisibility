@@ -1,7 +1,12 @@
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
-import { render, screen } from "@testing-library/react";
+import {
+  advancedSettingsFeatureTestMessages,
+  renderWithAdvancedSettingsMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { MigrationReachabilityHint } from "./MigrationReachabilityHint";
+import { LocalizedMigrationReachabilityHint } from "./MigrationReachabilityHint";
 
 vi.mock("@/components/ui/toast-context", () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 
@@ -11,7 +16,10 @@ function renderHint(
 ) {
   return render(
     <DeploymentModeProvider deploymentMode={options.deploymentMode ?? "self-host"}>
-      <MigrationReachabilityHint targetOrigin={targetOrigin} unreachable={options.unreachable} />
+      <LocalizedMigrationReachabilityHint
+        targetOrigin={targetOrigin}
+        unreachable={options.unreachable}
+      />
     </DeploymentModeProvider>,
   );
 }
@@ -31,7 +39,10 @@ describe("MigrationReachabilityHint", () => {
   it("tells the destination to hand the tunnel URL to the source", () => {
     render(
       <DeploymentModeProvider deploymentMode="self-host">
-        <MigrationReachabilityHint surface="destination" targetOrigin="http://localhost:3000" />
+        <LocalizedMigrationReachabilityHint
+          surface="destination"
+          targetOrigin="http://localhost:3000"
+        />
       </DeploymentModeProvider>,
     );
 
@@ -62,7 +73,7 @@ describe("MigrationReachabilityHint", () => {
 
     rerender(
       <DeploymentModeProvider deploymentMode="self-host">
-        <MigrationReachabilityHint targetOrigin="http://192.168.1.10:3000" unreachable />
+        <LocalizedMigrationReachabilityHint targetOrigin="http://192.168.1.10:3000" unreachable />
       </DeploymentModeProvider>,
     );
 
@@ -72,5 +83,28 @@ describe("MigrationReachabilityHint", () => {
         /If the destination is not reachable from this instance, use a temporary Cloudflare Tunnel or import a ZIP package/,
       ),
     ).toBeInTheDocument();
+  });
+
+  it("uses the migration route locale for the source hint", () => {
+    const messages = structuredClone(advancedSettingsFeatureTestMessages);
+    messages.projectSettingsMigration.reachability = {
+      copy: "Kopiuj polecenie",
+      destinationFollowUp: "Przekaz wygenerowany adres HTTPS do zrodla.",
+      intro: "Ten adres jest dostepny tylko na tym komputerze.",
+      runningLocal: "Uruchomione lokalnie?",
+      sourceFollowUp: "Wklej tutaj wygenerowany adres HTTPS.",
+      unreachable: "Cel nie jest dostepny z tej instancji.",
+    };
+
+    renderWithFeatureMessages(
+      <DeploymentModeProvider deploymentMode="self-host">
+        <LocalizedMigrationReachabilityHint targetOrigin="http://localhost:3000" />
+      </DeploymentModeProvider>,
+      { locale: "pl", messages },
+    );
+
+    expect(screen.getByText("Uruchomione lokalnie?")).toBeInTheDocument();
+    expect(screen.getByText("Wklej tutaj wygenerowany adres HTTPS.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Kopiuj polecenie" })).toBeInTheDocument();
   });
 });

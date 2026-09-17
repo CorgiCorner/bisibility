@@ -7,6 +7,7 @@ import {
   fieldLabelClass,
   fieldMetaClass,
 } from "@/lib/keywords/add-keyword-drawer-shared";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 
@@ -33,26 +34,25 @@ export function AddKeywordManualPanel({
   tagsText,
   trackingControls,
 }: Readonly<AddKeywordManualPanelProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
   return (
     <>
       <div>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <label className={fieldLabelClass} htmlFor="add-keywords-input">
-              Keywords
+              {t("keywords")}
             </label>
-            <span className={fieldMetaClass}>Required</span>
+            <span className={fieldMetaClass}>{t("required")}</span>
           </div>
           <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-            {count} {count === 1 ? "keyword" : "keywords"}
+            {t("keywordCount", { count })}
           </span>
         </div>
         <Textarea
           className="mt-2 min-h-[128px]"
           id="add-keywords-input"
-          placeholder={
-            "One keyword per line\nOptional per line: keyword | https://example.com/page"
-          }
+          placeholder={t("keywordPlaceholder")}
           {...register("keywords")}
         />
         {errors.keywords ? (
@@ -64,14 +64,14 @@ export function AddKeywordManualPanel({
 
       <div className="border-t border-border pt-4">
         <p className="m-0 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-          Options below apply to all keywords
+          {t("optionsApply")}
         </p>
       </div>
       {trackingControls}
 
       <div>
         <label className={fieldLabelClass} htmlFor="add-target-input">
-          Target URL
+          {t("targetUrl")}
         </label>
         <div className="mt-2 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-3 transition-colors focus-within:border-accent">
           {domain ? (
@@ -80,7 +80,7 @@ export function AddKeywordManualPanel({
           <input
             className="min-w-0 flex-1 border-none bg-transparent py-2.5 font-sans tabular-nums text-[13px] text-fg outline-none placeholder:text-[12px] placeholder:leading-4 placeholder:text-fg-muted focus-visible:outline-none"
             id="add-target-input"
-            placeholder="/page"
+            placeholder={t("targetPathPlaceholder")}
             {...register("targetUrl")}
           />
         </div>
@@ -89,43 +89,40 @@ export function AddKeywordManualPanel({
             {errors.targetUrl.message}
           </p>
         ) : null}
-        <p className="mt-[7px] text-[11.5px] text-fg-muted">
-          This URL applies to all keywords. You can overwrite it above with{" "}
-          <code className="font-mono text-fg-muted">| URL</code>.
-        </p>
+        <p className="mt-[7px] text-[11.5px] text-fg-muted">{t("targetHint")}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <MetadataField
           error={errors.topic}
-          label="Topic"
+          label={t("topic")}
           name="topic"
-          placeholder="e.g. Product"
+          placeholder={t("topicPlaceholder")}
           register={register}
         />
         <MetadataField
           error={errors.intent}
-          label="Intent"
+          label={t("intent")}
           name="intent"
-          placeholder="e.g. commercial"
+          placeholder={t("intentPlaceholder")}
           register={register}
         />
       </div>
 
       <div>
         <label className={fieldLabelClass} htmlFor="add-tags-input">
-          Tags
+          {t("tags")}
         </label>
         <input
           className={`${fieldClass} mt-2`}
           id="add-tags-input"
           onChange={(event) => onTagsChange(event.target.value)}
-          placeholder="Comma-separated, e.g. Product, High intent"
+          placeholder={t("tagsPlaceholder")}
           value={tagsText}
         />
         {tagSuggestions.length > 0 ? (
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-            <span className={fieldMetaClass}>In project</span>
+            <span className={fieldMetaClass}>{t("inProject")}</span>
             {tagSuggestions.map((tag) => (
               <button
                 className="rounded-full bg-bg-sunken px-2.5 py-1 text-[11.5px] text-fg-muted"

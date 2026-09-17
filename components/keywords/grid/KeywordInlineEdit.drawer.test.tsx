@@ -1,6 +1,7 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordInlineEdit } from "./KeywordInlineEdit";

@@ -2,7 +2,6 @@
 
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { SLACK_ALERT_CHANNEL_DASHBOARD_LABEL } from "@/lib/alerts/channel-availability";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
 import type { AlertChannelInput } from "@/lib/alerts/schema";
 import { BellIcon as Bell } from "@phosphor-icons/react/dist/csr/Bell";
@@ -11,6 +10,7 @@ import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/Loc
 import { SlackLogoIcon as SlackLogo } from "@phosphor-icons/react/dist/csr/SlackLogo";
 import { WebhooksLogoIcon as WebhooksLogo } from "@phosphor-icons/react/dist/csr/WebhooksLogo";
 import type { Icon } from "@phosphor-icons/react/lib";
+import { useTranslations } from "next-intl";
 import type { UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
 
 type DeliveryChannelsFieldProps = {
@@ -19,18 +19,18 @@ type DeliveryChannelsFieldProps = {
   watch: UseFormWatch<NewRuleForm>;
 };
 
-const deliveryChannels = [
-  { Icon: EnvelopeSimple, label: "Email", name: "email" },
-  { Icon: SlackLogo, label: "Slack", name: "slack" },
-  { Icon: WebhooksLogo, label: "Webhook", name: "webhook" },
-] satisfies { Icon: Icon; label: string; name: AlertChannelInput }[];
-
 export function DeliveryChannelsField({
   register,
   setValue,
   watch,
 }: Readonly<DeliveryChannelsFieldProps>) {
+  const t = useTranslations("projectAlerts.drawer");
   const channels = watch("channels") ?? [];
+  const deliveryChannels = [
+    { Icon: EnvelopeSimple, label: t("email"), name: "email" },
+    { Icon: SlackLogo, label: t("slack"), name: "slack" },
+    { Icon: WebhooksLogo, label: t("webhook"), name: "webhook" },
+  ] satisfies { Icon: Icon; label: string; name: AlertChannelInput }[];
 
   function toggleChannel(channel: AlertChannelInput) {
     const next = channels.includes(channel)
@@ -47,7 +47,7 @@ export function DeliveryChannelsField({
         htmlFor="delivery-channel-feed"
       >
         <Checkbox
-          aria-label="In-app feed"
+          aria-label={t("inAppFeed")}
           checked
           id="delivery-channel-feed"
           readOnly
@@ -60,8 +60,8 @@ export function DeliveryChannelsField({
           size={15}
           weight="regular"
         />
-        <span className="flex-1 text-[13px] font-semibold">In-app feed</span>
-        <span className="font-sans tabular-nums text-[10px] text-accent-text">always on</span>
+        <span className="flex-1 text-[13px] font-semibold">{t("inAppFeed")}</span>
+        <span className="font-sans tabular-nums text-[10px] text-accent-text">{t("alwaysOn")}</span>
       </label>
       {deliveryChannels.map(({ Icon, label, name }) => {
         const checked = channels.includes(name);
@@ -107,9 +107,9 @@ export function DeliveryChannelsField({
             />
             <span className="flex-1 text-[13px] font-semibold">{label}</span>
             {unavailable ? (
-              <Tooltip content={SLACK_ALERT_CHANNEL_DASHBOARD_LABEL}>
+              <Tooltip content={t("slackUnavailable")}>
                 <span
-                  aria-label={`${label} ${SLACK_ALERT_CHANNEL_DASHBOARD_LABEL}`}
+                  aria-label={`${label} ${t("slackUnavailable")}`}
                   className="inline-flex text-fg-muted"
                 >
                   <LockSimple aria-hidden size={13} weight="regular" />
@@ -119,7 +119,7 @@ export function DeliveryChannelsField({
               <span
                 className={`font-sans tabular-nums text-[10px] ${checked ? "text-accent-text" : "text-fg-muted"}`}
               >
-                {checked ? "selected" : "optional"}
+                {checked ? t("selected") : t("optional")}
               </span>
             )}
           </label>

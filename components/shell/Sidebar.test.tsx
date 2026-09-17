@@ -1,9 +1,10 @@
 import { applyTheme } from "@/components/shell/set-theme";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NavContext } from "@/lib/nav/nav-items";
 import { appPath, asMarketRef, marketPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppThemeRoot } from "./AppThemeRoot";
@@ -515,8 +516,10 @@ describe("Sidebar", () => {
       );
     }
 
-    function rankingIcon(view: ReturnType<typeof render>) {
-      return view.getByRole("link", { name: "Rank Tracker" }).querySelector("svg");
+    function rankingIcon(view: {
+      getByRole: (role: string, options: { name: string }) => HTMLElement;
+    }) {
+      return view.getByRole("link", { name: "Rank Tracker" }).querySelector("svg") as SVGElement;
     }
 
     const expandedActive = render(shell(false, "rank-tracker"));

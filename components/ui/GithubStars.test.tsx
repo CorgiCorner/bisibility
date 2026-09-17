@@ -1,4 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import {
+  renderWithSharedMessages as render,
+  sharedMessagesElement,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { GithubStars } from "./GithubStars";
 
@@ -27,15 +31,15 @@ describe("GithubStars", () => {
 
     expect(screen.getByRole("link", { name: "42 stars on GitHub" })).toHaveClass("font-normal");
 
-    rerender(<GithubStars count="42" variant="chip" />);
+    rerender(sharedMessagesElement(<GithubStars count="42" variant="chip" />));
     expect(screen.getByRole("link", { name: "42 stars on GitHub" })).toHaveClass("font-semibold");
   });
 
   it("keeps compact thousands formatting after the GitHub label", () => {
     render(<GithubStars count="1200" />);
 
-    expect(screen.getByRole("link", { name: "1.2k stars on GitHub" })).toHaveTextContent(
-      "GitHub1.2k",
+    expect(screen.getByRole("link", { name: "1,200 stars on GitHub" })).toHaveTextContent(
+      "GitHub1.2K",
     );
   });
 });

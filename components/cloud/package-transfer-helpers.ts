@@ -1,16 +1,12 @@
 import { migrationCompletionFromResponse } from "@/lib/migration/result";
+import type { useTranslations } from "next-intl";
 import type { CloudImportPackageFile } from "./cloud-token";
 
-export function packageCountSummary(file: CloudImportPackageFile) {
+type PackageTranslator = ReturnType<typeof useTranslations<"projectSettingsMigration.package">>;
+
+export function packageCountSummary(file: CloudImportPackageFile, t: PackageTranslator) {
   const counts = file.counts;
-  return [
-    `${counts.keywords} keywords`,
-    `${counts.rankChecks} rank checks`,
-    `${counts.alertRules} alert rules`,
-    `${counts.competitors} competitors`,
-    `${counts.notificationPreferences} notification preferences`,
-    `${counts.savedViews} saved views`,
-  ].join(" / ");
+  return t("counts", counts);
 }
 
 export async function postImportPackage(rawToken: string, parsed: unknown) {

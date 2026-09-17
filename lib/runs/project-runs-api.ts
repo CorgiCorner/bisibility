@@ -22,7 +22,12 @@ const attentionSchema = z
   })
   .strict()
   .nullable();
-const scopeSchema = z.object({ description: z.string().nullable(), label: z.string() }).strict();
+const rankCheckScopeSchema = z
+  .object({ description: z.null(), keywordCount: z.number().int(), kind: z.literal("rank_check") })
+  .strict();
+const gscImportScopeSchema = z
+  .object({ description: z.string(), kind: z.literal("gsc_import") })
+  .strict();
 
 const projectRunBase = {
   attention: attentionSchema,
@@ -43,8 +48,6 @@ const projectRunBase = {
     "status_unavailable",
   ]),
   project: projectSchema,
-  scope: scopeSchema,
-  title: z.string(),
 };
 
 const rankCheckRunSchema = z
@@ -61,6 +64,7 @@ const rankCheckRunSchema = z
       .strict(),
     id: z.string(),
     kind: z.literal("rank_check"),
+    scope: rankCheckScopeSchema,
     progress: z
       .object({
         completed: z.number().int().nullable(),
@@ -77,6 +81,7 @@ const rankCheckRunSchema = z
         startedAt: nullableIsoDateTime,
       })
       .strict(),
+    title: z.object({ kind: z.literal("rank_check"), trigger: z.enum(RUN_TRIGGERS) }).strict(),
   })
   .strict();
 
@@ -93,6 +98,7 @@ const gscImportSchema = z
       .strict(),
     id: z.string(),
     kind: z.literal("gsc_import"),
+    scope: gscImportScopeSchema,
     progress: z
       .object({
         completed: z.number().int().nullable(),
@@ -109,6 +115,7 @@ const gscImportSchema = z
         syncStartedAt: nullableIsoDateTime,
       })
       .strict(),
+    title: z.object({ kind: z.literal("gsc_import") }).strict(),
   })
   .strict();
 

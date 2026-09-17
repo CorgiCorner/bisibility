@@ -1,11 +1,12 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay, useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { InlineCallout } from "@/components/ui/InlineCallout";
 import { track } from "@/lib/analytics/client";
-import { formatDateLabel } from "@/lib/search-insights/dates";
+import { formatDisplayDate } from "@/lib/dates/format";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
 import { SearchInsightsDrawerHost } from "./drawers/SearchInsightsDrawerHost";
 import { SearchInsightsActions } from "./SearchInsightsActions";
@@ -41,9 +42,11 @@ export function SearchInsightsWorkspace({
   trustStrip,
 }: Readonly<SearchInsightsWorkspaceProps>) {
   const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("projectSearchInsights");
   const [periodPending, startPeriodTransition] = useTransition();
 
   function changePeriod(id: string) {
@@ -114,13 +117,14 @@ export function SearchInsightsWorkspace({
         <InlineCallout className="items-center" contentClassName="flex-1" tint="neutral">
           <span className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-2">
             <span className="min-w-0 flex-1">
-              Archived - not syncing. Data ends{" "}
-              {formatDateLabel(context.importState.finalizedThroughDate, dateFormat)}.
+              {t("workspace.archivedNotice", {
+                date: formatDisplayDate(context.importState.finalizedThroughDate, dateDisplay),
+              })}
             </span>
             <Button
               onClick={() =>
                 setActivationTarget({
-                  displayName: context.selectedProperty?.displayName ?? "this property",
+                  displayName: context.selectedProperty?.displayName ?? t("workspace.thisProperty"),
                   lastSyncedDate: context.importState?.finalizedThroughDate ?? "",
                   value: context.selectedProperty?.value ?? "",
                 })
@@ -129,13 +133,15 @@ export function SearchInsightsWorkspace({
               size="xs"
               variant="secondary"
             >
-              Change to active
+              {t("workspace.changeToActive")}
             </Button>
           </span>
         </InlineCallout>
       ) : null}
       <SearchInsightsArchivedActivation
-        currentDisplayName={context.connection.property?.displayName ?? "current property"}
+        currentDisplayName={
+          context.connection.property?.displayName ?? t("workspace.currentProperty")
+        }
         onClose={() => setActivationTarget(null)}
         projectId={projectId}
         selectPropertyAction={selectPropertyAction}
@@ -148,7 +154,7 @@ export function SearchInsightsWorkspace({
       ) : null}
       {/* The consent screen came back here, so the property choice is finished here. */}
       {periodPending ? (
-        <SearchInsightsBodyLoading />
+        <SearchInsightsBodyLoading ariaLabel={t("copy.searchInsightsDataLoading")} />
       ) : oauth.setup && oauth.provider !== "ga4" ? (
         <div className="flex min-h-[calc(100dvh-18rem)] items-center justify-center">
           <SearchInsightsOauthReturn

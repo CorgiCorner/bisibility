@@ -1,11 +1,14 @@
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { AdvancedCardFrame } from "@/components/settings/advanced/AdvancedCardFrame";
 import { advancedCardGeometryClassNames } from "@/components/settings/advanced/advanced-settings-layout";
+import { presentRecentAuditEntry } from "@/components/settings/advanced/recent-audit-presentation";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import type { AuditEntry } from "@/lib/queries/audit";
 import { appPath } from "@/lib/routing/app-path";
 import { cn } from "@/lib/ui/cn";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { useTranslations } from "next-intl";
 
 type RecentAuditCardProps = {
   entries: readonly AuditEntry[];
@@ -13,10 +16,12 @@ type RecentAuditCardProps = {
 };
 
 export function RecentAuditCard({ entries, projectId }: Readonly<RecentAuditCardProps>) {
+  const dateDisplay = useDateDisplay();
+  const t = useTranslations("projectSettingsAdvanced.audit");
   return (
     <AdvancedCardFrame
       className={advancedCardGeometryClassNames.audit}
-      description="The five most recent entries. Filtering, inspection and export are available on the full audit screen."
+      description={t("description")}
       footer={
         <Button
           endIcon={<ArrowRight aria-hidden size={13} weight="regular" />}
@@ -24,51 +29,54 @@ export function RecentAuditCard({ entries, projectId }: Readonly<RecentAuditCard
           size="sm"
           variant="secondary"
         >
-          Open audit log
+          {t("open")}
         </Button>
       }
       id="audit"
-      title="Audit log"
+      title={t("title")}
     >
       {entries.length ? (
         <div className="divide-y divide-border overflow-hidden rounded-control border border-border">
-          {entries.slice(0, 5).map((entry) => (
-            <div
-              className="grid grid-cols-[34px_minmax(0,1fr)] gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[34px_minmax(0,1fr)_auto] sm:items-center"
-              key={entry.id}
-            >
-              <Avatar
-                alt=""
-                className="row-span-2 h-8.5 w-[34px] rounded-control border border-border bg-bg-sunken font-sans tabular-nums text-[10px] font-semibold text-fg-muted sm:row-span-1"
-                initials={entry.actor.initials}
-                src={entry.actor.avatarUrl}
-              />
-              <div className="min-w-0">
-                <div className="truncate text-[12.5px] font-semibold text-fg">
-                  {entry.actor.name}
-                </div>
-                <div
-                  className={cn(
-                    "truncate text-[11.5px] text-fg-muted",
-                    entry.status === "failed" && "text-red-text",
-                  )}
-                >
-                  {entry.eventName}
-                  {entry.statusReason ? ` - ${entry.statusReason}` : ""}
-                </div>
-              </div>
-              <time
-                className="col-start-2 font-sans tabular-nums text-[10px] text-fg-muted sm:col-start-3"
-                dateTime={entry.timestamp}
+          {entries.slice(0, 5).map((entry) => {
+            const presentation = presentRecentAuditEntry(entry, dateDisplay, t);
+            return (
+              <div
+                className="grid grid-cols-[34px_minmax(0,1fr)] gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[34px_minmax(0,1fr)_auto] sm:items-center"
+                key={entry.id}
               >
-                {entry.timestampLabel}
-              </time>
-            </div>
-          ))}
+                <Avatar
+                  alt=""
+                  className="row-span-2 h-8.5 w-[34px] rounded-control border border-border bg-bg-sunken font-sans tabular-nums text-[10px] font-semibold text-fg-muted sm:row-span-1"
+                  initials={entry.actor.initials}
+                  src={entry.actor.avatarUrl}
+                />
+                <div className="min-w-0">
+                  <div className="truncate text-[12.5px] font-semibold text-fg">
+                    {presentation.actorName}
+                  </div>
+                  <div
+                    className={cn(
+                      "truncate text-[11.5px] text-fg-muted",
+                      entry.status === "failed" && "text-red-text",
+                    )}
+                  >
+                    {presentation.eventName}
+                    {entry.statusReason ? ` - ${entry.statusReason}` : ""}
+                  </div>
+                </div>
+                <time
+                  className="col-start-2 font-sans tabular-nums text-[10px] text-fg-muted sm:col-start-3"
+                  dateTime={entry.timestamp}
+                >
+                  {presentation.timestampLabel}
+                </time>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <p className="m-0 rounded-control border border-border bg-bg-sunken px-3 py-4 text-[12.5px] text-fg-muted">
-          No audit entries yet.
+          {t("empty")}
         </p>
       )}
     </AdvancedCardFrame>

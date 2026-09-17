@@ -4,10 +4,8 @@ import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { ClockCounterClockwiseIcon as History } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
+import { useTranslations } from "next-intl";
 import { RetrievedResultsPicker } from "./RetrievedResultsPicker";
-
-const TITLE_TIP =
-  "Checks may stop at the first tracked-domain match when that project setting is enabled. This card shows what this check kept and which positions it did not retrieve.";
 
 type Props = {
   compareFrom: string;
@@ -59,6 +57,7 @@ function Eyebrow({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 export function RetrievedResultsHeader(props: Readonly<Props>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.results");
   const { mode } = props;
   return (
     <header className="border-b border-border" data-testid="retrieved-header">
@@ -66,38 +65,32 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <h2 className="m-0 text-[17px] font-semibold leading-6 text-fg">
-              {mode === "compare" ? "SERP snapshots" : "SERP snapshot"}
+              {mode === "compare" ? t("snapshots") : t("snapshot")}
             </h2>
-            <InfoTooltip text={TITLE_TIP} />
+            <InfoTooltip text={t("titleTip")} />
           </div>
-          <p className="m-0 mt-0.5 text-[12.5px] leading-5 text-fg-muted">
-            What Google returned around your result, kept from the moment each check ran.
-          </p>
+          <p className="m-0 mt-0.5 text-[12.5px] leading-5 text-fg-muted">{t("description")}</p>
         </div>
         <div className="inline-flex self-start rounded-control border border-border p-0.5">
           <Segment active={mode === "one"} onClick={() => props.onMode("one")}>
-            One check
+            {t("oneCheck")}
           </Segment>
           <Segment
             active={mode === "compare"}
             disabled={!props.compareEnabled}
             onClick={() => props.onMode("compare")}
-            title={
-              !props.compareEnabled
-                ? "At least two stored checks are needed to compare."
-                : undefined
-            }
+            title={!props.compareEnabled ? t("needTwo") : undefined}
           >
-            Compare two
+            {t("compareTwo")}
           </Segment>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 px-4 pb-4 sm:px-5">
         {mode === "compare" ? (
           <>
-            <Eyebrow>From</Eyebrow>
+            <Eyebrow>{t("from")}</Eyebrow>
             <RetrievedResultsPicker
-              ariaLabel="Earlier check"
+              ariaLabel={t("earlierCheck")}
               entries={props.entries}
               formatDate={props.formatDate}
               formatDateTime={props.formatDateTime}
@@ -107,11 +100,11 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
               value={props.compareFrom}
             />
             <ArrowRight aria-hidden className="shrink-0 text-fg-muted" size={14} weight="regular" />
-            <Eyebrow>To</Eyebrow>
+            <Eyebrow>{t("to")}</Eyebrow>
           </>
         ) : null}
         <RetrievedResultsPicker
-          ariaLabel={mode === "compare" ? "Later check" : "Stored checks"}
+          ariaLabel={mode === "compare" ? t("laterCheck") : t("storedChecks")}
           entries={props.entries}
           formatDate={props.formatDate}
           formatDateTime={props.formatDateTime}
@@ -125,8 +118,10 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
         />
         {mode === "one" && props.current?.tier === "full" ? (
           <span className="rounded-full border border-border px-2.5 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
-            {props.current.retrievedPositions}
-            {props.current.requestedDepth ? ` of ${props.current.requestedDepth}` : ""} retrieved
+            {t("retrieved", {
+              requested: props.current.requestedDepth ? String(props.current.requestedDepth) : "",
+              retrieved: props.current.retrievedPositions,
+            })}
           </span>
         ) : null}
       </div>

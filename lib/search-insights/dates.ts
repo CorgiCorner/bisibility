@@ -1,4 +1,11 @@
-import { type DateFormat, formatDate, formatDateRange, formatDateTime } from "@/lib/dates/format";
+import {
+  type DateDisplayContext,
+  type DateFormat,
+  formatDate,
+  formatDateRange,
+  formatDateTime,
+  formatDisplayDateRange,
+} from "@/lib/dates/format";
 import type { SearchInsightsComparisonMode } from "@/lib/search-insights/constants";
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
@@ -137,6 +144,19 @@ export function finalizedWindow(
 export function formatPacificTimestampValue(value: Date, format: DateFormat = "month_first") {
   const key = pacificToday(value);
   const datePart = format === "iso" ? formatDate(key, format) : formatDateRange(key, key, format);
+  const full = formatDateTime(value, "iso", PACIFIC_TIME_ZONE);
+  const time = full.slice(full.lastIndexOf(", ") + 2);
+  return `${datePart}, ${time}`;
+}
+
+/**
+ * Formats the provider-observation instant in Pacific time while keeping the
+ * viewer's locale and selected date order. The time remains a 24-hour Pacific
+ * clock; only the reader-facing calendar words come from the locale.
+ */
+export function formatPacificTimestampDisplayValue(value: Date, context: DateDisplayContext) {
+  const key = pacificToday(value);
+  const datePart = formatDisplayDateRange(key, key, context);
   const full = formatDateTime(value, "iso", PACIFIC_TIME_ZONE);
   const time = full.slice(full.lastIndexOf(", ") + 2);
   return `${datePart}, ${time}`;

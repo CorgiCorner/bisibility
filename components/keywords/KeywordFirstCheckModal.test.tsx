@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordFirstCheckModal } from "./KeywordFirstCheckModal";
 
@@ -69,9 +70,7 @@ describe("KeywordFirstCheckModal", () => {
       />,
     );
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "A rank check is already queued or running.",
-    );
+    expect(screen.getByRole("alert")).toHaveTextContent("The rank check could not be started.");
   });
 
   it("shows the running step copy and a Close button", () => {

@@ -1,0 +1,97 @@
+{
+  "projectInstall": {
+    "agents": {
+      "heading": "AI agents",
+      "description": "Pick your tool, copy one command, paste it in your terminal. That is the whole setup.",
+      "copyCommand": "Copy {agent} command",
+      "claude-code": {
+        "label": "Claude Code",
+        "hint": "CLI",
+        "note": "Then run /mcp inside Claude Code to sign in."
+      },
+      "codex": {
+        "label": "Codex",
+        "hint": "CLI",
+        "note": "Codex signs in through the same OAuth flow."
+      },
+      "cursor": {
+        "label": "Cursor",
+        "hint": "editor",
+        "note": "Settings, MCP, then paste into mcp.json."
+      },
+      "claude-desktop": {
+        "label": "Claude Desktop",
+        "hint": "connector",
+        "note": "No terminal: Settings, Connectors, Add custom connector, then paste this URL and sign in."
+      },
+      "other": {
+        "label": "Any MCP client",
+        "hint": "manual",
+        "note": "Streamable HTTP with OAuth sign-in. No key in the URL."
+      }
+    },
+    "endpoint": {
+      "heading": "MCP endpoint",
+      "description": "Using a tool that is not on the list? Paste this address into it and sign in with your bisibility account.",
+      "copy": "Copy MCP URL",
+      "selfHosted": "self-hosting? use your own address instead: '<your-instance>'/api/mcp"
+    },
+    "apiKey": {
+      "heading": "API key",
+      "scope": "scope: {scope}",
+      "scopeRead": "Read only",
+      "scopeWrite": "Read and write",
+      "scopeAdmin": "Full access",
+      "description": "Use this when something has to run without you, like a nightly script.{created, select, none {} other { {created}.}}",
+      "created": "Created {date}",
+      "manage": "Manage in Settings, Developers",
+      "none": "No API key yet. Project admins can create one under Settings → Developers.",
+      "copyCurl": "Copy curl example"
+    },
+    "skills": {
+      "heading": "Skills",
+      "planned": "planned",
+      "description": "Ready-made SEO tasks your agent will be able to run for you. None are live yet, so this list is what is coming next.",
+      "footer": "the install command appears here once the first skill is ready",
+      "keyword-import": "Bulk add, dedupe",
+      "provider-setup": "Connect, verify keys",
+      "project-onboarding": "First project setup",
+      "weekly-report": "Digest of movements",
+      "keyword-clustering": "Group by intent",
+      "seo-audit": "Prioritized fixes"
+    },
+    "chatgptIcon": {
+      "copyUrl": "Copy icon URL",
+      "description": "Use this icon when adding bisibility as a custom MCP app.",
+      "download": "Download PNG",
+      "heading": "ChatGPT app icon",
+      "imageAlt": "bisibility app icon",
+      "meta": "PNG · {width, number} × {height, number} px · {kilobytes} KB ({bytes, number} bytes) · under 10 KB"
+    },
+    "gettingStarted": {
+      "addApp": {
+        "copyMcpUrl": "Copy ChatGPT MCP URL",
+        "description": "Open Plugins, select +, and add the MCP URL below. Use OAuth and sign in to bisibility. Upload the icon above if prompted.",
+        "title": "2. Add bisibility"
+      },
+      "description": "Connect bisibility to ChatGPT.",
+      "developerMode": {
+        "description": "In ChatGPT, open Settings → Security and login, then turn on Developer mode.",
+        "title": "1. Enable developer mode"
+      },
+      "dismiss": "Dismiss how to start",
+      "firstChat": {
+        "description": "Choose bisibility from the tools menu in a new chat. Try: \"{prompt}\"",
+        "prompt": {
+          "withChecks": "Which keywords lost positions this week?",
+          "withoutChecks": "Add my first keywords and run a rank check."
+        },
+        "title": "3. Start a conversation"
+      },
+      "guideLink": "ChatGPT setup guide",
+      "heading": "How to start",
+      "note": "Developer mode may depend on your account or workspace settings.",
+      "show": "Show how to start"
+    }
+  }
+}

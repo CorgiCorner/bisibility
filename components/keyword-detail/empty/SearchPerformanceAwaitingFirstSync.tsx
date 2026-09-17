@@ -2,6 +2,7 @@ import {
   EmptyModuleCard,
   EmptyModuleTitle,
 } from "@/components/keyword-detail/empty/empty-state-primitives";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 export type LandingPagePerformanceModuleProps = {
@@ -19,19 +20,20 @@ export function LandingPagePerformanceModule({
 }
 
 export function SearchPerformanceAwaitingFirstSync() {
+  const t = useTranslations("projectRankTracker.keywordDetail.empty");
   return (
     <EmptyModuleCard>
       <div className="flex flex-wrap items-center gap-2">
-        <EmptyModuleTitle>Search performance</EmptyModuleTitle>
+        <EmptyModuleTitle>{t("searchPerformance")}</EmptyModuleTitle>
         <span className="inline-flex h-6 items-center rounded-full border border-border bg-bg-sunken px-2.5 font-sans tabular-nums text-[10.5px] text-fg-muted">
-          Search Console
+          {t("searchConsole")}
         </span>
       </div>
-      <p className="m-0 mt-1 text-[12px] text-fg-muted">Trailing 28 days</p>
+      <p className="m-0 mt-1 text-[12px] text-fg-muted">{t("trailingDays", { days: 28 })}</p>
       <div className="mt-4 rounded-control border border-dashed border-border bg-bg-sunken px-4 py-5">
-        <p className="m-0 text-[13px] font-medium text-fg">Awaiting first traffic sync.</p>
+        <p className="m-0 text-[13px] font-medium text-fg">{t("awaitingSync")}</p>
         <p className="m-0 mt-2 text-[12px] leading-[1.5] text-fg-muted">
-          Search Console data arrives with an approximately 3-day reporting lag.
+          {t("reportingLag", { days: 3 })}
         </p>
       </div>
     </EmptyModuleCard>

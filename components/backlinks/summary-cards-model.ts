@@ -1,20 +1,5 @@
 import type { BacklinksHistoryMonth } from "@/lib/backlinks/types";
 
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
-
 type SummaryTrend = {
   backlinks: number[];
   referringDomains: number[];
@@ -59,11 +44,6 @@ export function latestHistoryDeltas(history: readonly BacklinksHistoryMonth[]) {
   };
 }
 
-function monthName(month: string) {
-  const index = Number(month.slice(5, 7)) - 1;
-  return MONTH_NAMES[index] ?? month;
-}
-
 export function historyFooter(history: readonly BacklinksHistoryMonth[]) {
   const net = history.reduce((sum, month) => sum + month.newLinks - month.lostLinks, 0);
   const biggestLoss = history.reduce<BacklinksHistoryMonth | null>(
@@ -72,11 +52,7 @@ export function historyFooter(history: readonly BacklinksHistoryMonth[]) {
   );
   return {
     biggestLoss: biggestLoss?.lostLinks ?? 0,
-    biggestLossMonth: biggestLoss ? monthName(biggestLoss.month) : "n/a",
+    biggestLossMonth: biggestLoss?.month ?? null,
     net,
   };
-}
-
-export function signedNumber(value: number) {
-  return `${value >= 0 ? "+" : ""}${value.toLocaleString("en-US")}`;
 }

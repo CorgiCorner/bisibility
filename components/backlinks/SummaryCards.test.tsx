@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithBacklinksMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { backlinksSnapshotFixture } from "./backlinks-fixtures";
 import { SummaryCards } from "./SummaryCards";
@@ -29,6 +30,6 @@ describe("SummaryCards", () => {
     );
 
     expect(screen.getByText("+257")).toBeInTheDocument();
-    expect(screen.getByText(/biggest loss: 14 in April/)).toBeInTheDocument();
+    expect(screen.getByText(/biggest loss: 14 in Apr/)).toBeInTheDocument();
   });
 });

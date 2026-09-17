@@ -1,6 +1,7 @@
 import { onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { expect, type vi } from "vitest";
 import { StepConnectProvider } from "./StepConnectProvider";

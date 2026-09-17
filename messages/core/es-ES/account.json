@@ -1,0 +1,281 @@
+{
+  "account": {
+    "connected": {
+      "connect": "Conectar",
+      "connectError": "No se ha podido iniciar la conexión.",
+      "connectProvider": "Conectar {provider}",
+      "connected": "Conectado",
+      "connectedDetail": "Conectado a {provider}",
+      "connecting": "Conectando",
+      "description": "Vincula un proveedor para iniciar sesión con un clic. Ahora se inicia sesión con el código de acceso por correo; OAuth es opcional.",
+      "notConnectedDetail": "Sin conectar. Ahora se inicia sesión con el código de acceso por correo.",
+      "providerUnavailable": "El inicio de sesión con {provider} no está configurado.",
+      "title": "Cuentas conectadas"
+    },
+    "delete": {
+      "action": "Eliminar la cuenta",
+      "description": "Elimina de forma permanente tu cuenta, los proyectos de los que eres propietario y todos los datos de seguimiento. Esta acción no se puede deshacer.",
+      "error": "No se ha podido eliminar la cuenta.",
+      "title": "Zona de peligro",
+      "unavailable": "La eliminación de la cuenta no está disponible."
+    },
+    "demo": {
+      "description": "Esta cuenta compartida es de solo lectura. No se pueden cambiar el correo, el perfil ni los ajustes de seguridad.",
+      "title": "Cuenta de demostración"
+    },
+    "email": {
+      "codeSent": "Si esta dirección se puede usar, recibirás un código de verificación.",
+      "confirm": "Confirmar el correo",
+      "confirmDescription": "Introduce el código enviado a {email} para verificar el correo de la cuenta.",
+      "confirmError": "No se ha podido confirmar el correo de la cuenta.",
+      "description": "La dirección de correo que usas para iniciar sesión y recibir códigos de verificación.",
+      "errors": {
+        "alreadyVerified": "Este correo ya está verificado. Actualiza la página para continuar.",
+        "currentCodeExpired": "El código de tu correo actual no es válido o ha caducado. Solicita uno nuevo.",
+        "differentAddress": "Introduce una dirección de correo distinta.",
+        "newCodeInvalidOrUnavailable": "El código de verificación del correo nuevo no es válido o ha caducado, o la dirección no está disponible.",
+        "verificationCodeInvalidOrExpired": "El código de verificación no es válido o ha caducado. Solicita uno nuevo."
+      },
+      "invalidCode": "Introduce el código de verificación de 6 dígitos.",
+      "invalidEmail": "Introduce un correo de cuenta válido.",
+      "label": "Correo de la cuenta",
+      "sendCode": "Enviar código",
+      "sendError": "No se ha podido enviar el código de verificación.",
+      "title": "Correo de la cuenta",
+      "unverified": "Sin verificar",
+      "unverifiedFallback": "Todavía no se ha confirmado ningún código para esta dirección.",
+      "verificationCode": "Código de verificación",
+      "verified": "Verificado",
+      "verifiedFallback": "Verificado con tu código de acceso. Si lo cambias, te enviaremos un código nuevo.",
+      "change": {
+        "cancel": "Cancelar",
+        "confirm": "Confirmar el cambio",
+        "confirmError": "No se ha podido confirmar el correo de la cuenta.",
+        "currentCode": "Código de tu correo actual",
+        "finishDescription": "Introduce el código enviado a {email} para finalizar el cambio.",
+        "newCode": "Código de tu correo nuevo",
+        "newEmail": "Nueva dirección de correo",
+        "restart": "Empezar de nuevo",
+        "sendError": "No se ha podido enviar el código de verificación.",
+        "sendNewCode": "Enviar el código a la nueva dirección",
+        "start": "Cambiar el correo"
+      }
+    },
+    "navigation": {
+      "ariaLabel": "Sección de cuenta",
+      "preferences": "Preferencias",
+      "profile": "Perfil",
+      "security": "Seguridad"
+    },
+    "profile": {
+      "copyUserId": "Copiar el ID de usuario",
+      "description": "Así apareces en bisibility. Tu correo es tu identidad de inicio de sesión.",
+      "displayName": "Nombre visible",
+      "email": "Correo electrónico",
+      "nameRequired": "El nombre es obligatorio.",
+      "nameTooLong": "El nombre es demasiado largo.",
+      "save": "Guardar",
+      "saveError": "No se ha podido guardar el perfil.",
+      "saved": "Se ha guardado el perfil.",
+      "saving": "Guardando",
+      "title": "Perfil",
+      "unverified": "Sin verificar",
+      "userId": "ID de usuario",
+      "verified": "Verificado con código de un solo uso"
+    },
+    "privacy": {
+      "action": "Opciones de privacidad",
+      "description": "Revisa o cambia en este navegador tus preferencias opcionales de analítica y de grabaciones de la configuración inicial.",
+      "title": "Opciones de privacidad"
+    },
+    "security": {
+      "backupCodes": {
+        "description": "Guarda estos códigos ahora. No se volverán a mostrar.",
+        "download": "Descargar .txt",
+        "downloadAriaLabel": "Descargar los códigos de recuperación",
+        "title": "Códigos de recuperación"
+      },
+      "twoFactor": {
+        "authenticatorApp": "Aplicación de autenticación",
+        "authenticatorCode": "Código de autenticación",
+        "backupCode": "Código de recuperación",
+        "backupCodes": "Códigos de recuperación",
+        "backupCodesGenerated": "Se han generado códigos de recuperación nuevos. Guárdalos ahora.",
+        "cancel": "Cancelar",
+        "currentAuthenticatorCode": "Código de autenticación actual",
+        "currentBackupCode": "Código de recuperación actual",
+        "description": "Añade un segundo paso después del código de acceso por correo.",
+        "disable": "Desactivar",
+        "disabledRedirecting": "Se ha desactivado la verificación en dos pasos. Te llevamos al inicio de sesión.",
+        "enable": "Activar",
+        "enabled": "Se ha activado la verificación en dos pasos. Guarda los códigos de recuperación.",
+        "invalidInput": "Introduce un valor válido e inténtalo de nuevo.",
+        "notEnabled": "Sin activar",
+        "newCode": "Código de autenticación nuevo",
+        "password": "Contraseña de la cuenta",
+        "qrAlt": "Código QR para la aplicación de autenticación",
+        "qrUnavailable": "QR no disponible",
+        "reauthRequired": "Cierra la sesión y vuelve a iniciarla antes de activar la verificación en dos pasos.",
+        "replaced": "Se ha sustituido la aplicación de autenticación. Guarda los códigos de recuperación nuevos.",
+        "replaceAuthenticator": "Sustituir la aplicación",
+        "scanAndVerify": "Escanea el código QR y verifica la nueva aplicación de autenticación.",
+        "secret": "Clave secreta",
+        "signInAgain": "Volver a iniciar sesión",
+        "signOutError": "No se ha podido cerrar la sesión. Actualiza la página e inténtalo de nuevo.",
+        "signingOut": "Cerrando sesión",
+        "title": "Verificación en dos pasos",
+        "updateError": "No se ha podido actualizar la verificación en dos pasos. Inténtalo de nuevo.",
+        "verificationMethod": "Método de verificación",
+        "verificationFailed": "No se ha podido verificar. Inténtalo de nuevo.",
+        "verify": "Verificar",
+        "verifyError": "No se ha podido verificar la aplicación de autenticación. Inténtalo de nuevo.",
+        "verifying": "Verificando",
+        "working": "Procesando",
+        "manage": {
+          "backup": {
+            "description": "Verifica un factor actual antes de sustituir todos los códigos de recuperación existentes.",
+            "label": "Generar códigos nuevos"
+          },
+          "disable": {
+            "description": "Verifica un factor actual antes de desactivar la verificación en dos pasos. Se cerrará la sesión en todos tus dispositivos.",
+            "label": "Desactivar la verificación en dos pasos"
+          },
+          "replace": {
+            "description": "Verifica un factor actual antes de sustituir la aplicación de autenticación.",
+            "label": "Continuar"
+          },
+          "setup": {
+            "description": "Por seguridad, el registro inicial requiere que hayas iniciado sesión en los últimos cinco minutos.",
+            "label": "Continuar"
+          }
+        }
+      },
+      "personalTokens": {
+        "cancel": "Cancelar",
+        "copyKey": "Copiar {name}",
+        "create": "Crear token",
+        "createDescription": "Elige el acceso que necesita este token. Puedes revocarlo cuando quieras.",
+        "createError": "No se ha podido crear el token personal.",
+        "createTitle": "Crear un token de acceso personal",
+        "creating": "Creando",
+        "dates": {
+          "created": "creado {date}",
+          "expired": "caducado {date}",
+          "expires": "caduca {date}",
+          "lastUsed": "último uso {date}",
+          "neverExpires": "no caduca nunca",
+          "neverUsed": "sin usar"
+        },
+        "description": "Tokens de API de toda la cuenta (bsb_pat_) que actúan en tu nombre en todos los proyectos a los que perteneces. También los emite `bisibility auth login`.",
+        "done": "Hecho",
+        "empty": {
+          "action": "Crear tu primer token",
+          "description": "Crea un token para CI o para otra integración de confianza.",
+          "title": "Todavía no hay tokens personales"
+        },
+        "expiry": {
+          "30": "30 días",
+          "90": "90 días",
+          "365": "1 año",
+          "label": "Caducidad",
+          "never": "Nunca"
+        },
+        "key": "Token",
+        "name": "Nombre del token",
+        "namePlaceholder": "Automatización de CI",
+        "newTitle": "Token de acceso personal",
+        "oneTimeSecret": "Copia este token ahora. No se volverá a mostrar.",
+        "revealStorage": "Guárdalo en tu gestor de contraseñas o en el almacén seguro de secretos de CI.",
+        "revealWarning": "Cualquiera que tenga este token puede actuar en tu nombre. No lo compartas.",
+        "revealedOnce": "Este token ya se ha mostrado una vez.",
+        "revokeAriaLabel": "Revocar el token {name}",
+        "revokeError": "No se ha podido revocar el token personal.",
+        "revoked": "Se ha revocado el token personal.",
+        "scope": {
+          "admin": {
+            "description": "Acceso completo a la cuenta y a los proyectos.",
+            "label": "Administración"
+          },
+          "read": {
+            "description": "Leer los proyectos y sus datos.",
+            "label": "Lectura"
+          },
+          "write": {
+            "description": "Leer y modificar los datos de los proyectos.",
+            "label": "Escritura"
+          }
+        },
+        "scopeLabel": "Ámbito",
+        "storedPrefix": "Guardado como {prefix}",
+        "title": "Tokens de acceso personal"
+      },
+      "sessions": {
+        "activeDays": "activa hace {count, number} d",
+        "activeHours": "activa hace {count, number} h",
+        "activeJustNow": "activa ahora mismo",
+        "activeMinutes": "activa hace {count, number} min",
+        "browserUnknown": "Navegador",
+        "description": "Dispositivos con la sesión iniciada en tu cuenta.",
+        "device": "{browser} · {operatingSystem}",
+        "locationUnknown": "Ubicación desconocida",
+        "none": "No había otras sesiones activas.",
+        "operatingSystemUnknown": "Desconocido",
+        "revoke": "Revocar",
+        "revokeAriaLabel": "Revocar la sesión",
+        "revokeError": "No se ha podido revocar la sesión.",
+        "retry": "Reintentar",
+        "retryRevokeAriaLabel": "Reintentar la revocación de la sesión",
+        "revoking": "Revocando",
+        "signedOut": "{count, plural, =0 {No había otras sesiones activas} one {Se ha cerrado # sesión más} other {Se han cerrado # sesiones más}}.",
+        "signOutError": "No se han podido cerrar las demás sesiones.",
+        "signOutEverywhere": "Cerrar las demás sesiones",
+        "signingOut": "Cerrando sesión",
+        "thisDevice": "Este dispositivo",
+        "title": "Sesiones activas"
+      }
+    },
+    "preferences": {
+      "date": {
+        "ariaLabel": "Formato de fecha",
+        "auto": "Automático: {date}",
+        "label": "Formato de fecha"
+      },
+      "density": {
+        "ariaLabel": "Densidad predeterminada de la tabla",
+        "comfortable": "Cómoda",
+        "compact": "Compacta",
+        "label": "Densidad predeterminada de la tabla",
+        "standard": "Estándar",
+        "subtitle": "Altura de fila en la tabla de palabras clave"
+      },
+      "description": "Son tuyas y <emphasis>se aplican en todos los dispositivos desde los que inicias sesión.</emphasis>",
+      "landing": {
+        "ariaLabel": "Página de inicio predeterminada",
+        "backlinks": "Backlinks",
+        "competitors": "Competidores",
+        "dashboard": "Panel",
+        "domain-overview": "Visión general del dominio",
+        "keyword-research": "Investigación de palabras clave",
+        "label": "Página de inicio predeterminada",
+        "rank-tracker": "Seguimiento de posiciones",
+        "search-console": "Search Console",
+        "timeline": "Cronología"
+      },
+      "language": {
+        "description": "Estamos preparando más idiomas. Ahora está activo el inglés.",
+        "english": "Inglés",
+        "label": "Idioma"
+      },
+      "saveError": "No se han podido guardar las preferencias.",
+      "theme": {
+        "ariaLabel": "Tema",
+        "dark": "Oscuro",
+        "label": "Tema",
+        "light": "Claro",
+        "subtitle": "Claro, oscuro o el del sistema",
+        "system": "Sistema"
+      },
+      "title": "Preferencias"
+    }
+  }
+}

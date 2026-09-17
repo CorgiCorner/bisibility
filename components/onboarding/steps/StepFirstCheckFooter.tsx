@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { useTranslations } from "next-intl";
 import type { ReactNode, RefCallback } from "react";
 import type { FirstCheckRunState } from "./use-first-check-run";
 
@@ -24,6 +25,7 @@ export function StepFirstCheckFooter({
   state,
   submitting,
 }: Readonly<Props>) {
+  const t = useTranslations("onboarding.firstCheck");
   const previewAvailable = canPreview && state.status !== "completed";
   const dashboardIsPrimary = !previewAvailable || state.status === "completed";
 
@@ -34,7 +36,7 @@ export function StepFirstCheckFooter({
           {matrixLabel ? <p className="m-0">{matrixLabel}</p> : null}
           {previewAvailable ? (
             <p className="m-0" id="onboarding-first-check-hint">
-              Optional: check 1 keyword now. Your schedule stays unchanged.
+              {t("footer.hint")}
             </p>
           ) : null}
         </div>
@@ -58,7 +60,7 @@ export function StepFirstCheckFooter({
             type="submit"
             variant={dashboardIsPrimary ? "primary" : "ghost"}
           >
-            {state.status === "completed" ? "View dashboard" : "Open app"}
+            {state.status === "completed" ? t("footer.viewDashboard") : t("footer.openApp")}
           </Button>
           {previewAvailable ? (
             <Button
@@ -67,13 +69,13 @@ export function StepFirstCheckFooter({
               disabled={previewDisabled || state.status === "queued" || state.status === "running"}
               loading={state.status === "running"}
               ref={runButtonRef}
-              loadingLabel={`Running ${sampleCount} sample ${sampleCount === 1 ? "check" : "checks"}`}
+              loadingLabel={t("footer.running", { count: sampleCount })}
               onClick={onPreview}
               size="lg"
               type="button"
               variant="primary"
             >
-              <span>{state.status === "queued" ? "Queued" : "Run check"}</span>
+              <span>{state.status === "queued" ? t("footer.queued") : t("footer.run")}</span>
             </Button>
           ) : null}
         </div>

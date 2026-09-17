@@ -1,20 +1,21 @@
 "use client";
 
+import { useDeveloperActionError } from "@/components/settings/developers/useDeveloperActionError";
 import { Button } from "@/components/ui/Button";
 import { ExpiryChoiceGroup } from "@/components/ui/ExpiryChoiceGroup";
 import { inputClassName } from "@/components/ui/input-styles";
 import { Modal } from "@/components/ui/Modal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { type IssueApiKeyInput, issueApiKeySchema } from "@/lib/schemas/apiKey";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { ApiKeyRevealContent } from "./ApiKeyReveal";
-import { apiKeyExpiryOptions, apiKeyScopeOptions, type IssuedApiKey } from "./api-key-model";
+import type { IssuedApiKey } from "./api-key-model";
 
 type IssueAction = (input: IssueApiKeyInput) => Promise<IssuedApiKey>;
 type IssueForm = z.infer<typeof issueApiKeySchema>;
@@ -39,6 +40,8 @@ export function ApiKeyCreateModal({
   open,
   projectId,
 }: Readonly<ApiKeyCreateModalProps>) {
+  const presentActionError = useDeveloperActionError();
+  const t = useTranslations("projectSettingsDevelopers.apiKeys");
   const [issuedKey, setIssuedKey] = useState<IssuedApiKey | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const canIssue = Boolean(issueKey && projectId);
@@ -55,6 +58,16 @@ export function ApiKeyCreateModal({
   const selectedScope = form.watch("scope");
   const selectedExpiry = form.watch("expiresInDays");
   const hasValidName = issueApiKeySchema.shape.name.safeParse(form.watch("name")).success;
+  const scopeOptions = [
+    { desc: t("scope.readDescription"), label: t("scope.read"), value: "read" },
+    { desc: t("scope.writeDescription"), label: t("scope.write"), value: "write" },
+    { desc: t("scope.adminDescription"), label: t("scope.admin"), value: "admin" },
+  ] as const;
+  const expiryOptions = [
+    { days: 30, label: t("expiry.30") },
+    { days: 90, label: t("expiry.90") },
+    { days: null, label: t("expiry.never") },
+  ] as const;
 
   function handleClose() {
     setIssuedKey(null);
@@ -70,7 +83,7 @@ export function ApiKeyCreateModal({
 
   async function onSubmit(values: IssueForm) {
     if (!issueKey || !projectId) {
-      setSubmitError("API key creation is unavailable for this project.");
+      setSubmitError(t("errors.createUnavailable"));
       return;
     }
 
@@ -80,7 +93,7 @@ export function ApiKeyCreateModal({
       setIssuedKey(key);
       onIssued?.();
     } catch (error) {
-      setSubmitError(actionErrorMessage(error, "API key could not be created."));
+      setSubmitError(presentActionError.apiKey(error, t("errors.create")));
     }
   }
 
@@ -94,22 +107,22 @@ export function ApiKeyCreateModal({
             startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
             type="button"
           >
-            Done
+            {t("done")}
           </Button>
         ) : (
           <>
             <Button onClick={handleClose} size="sm" type="button" variant="ghost">
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               disabled={!canIssue || !hasValidName}
               form="create-api-key-form"
               loading={form.formState.isSubmitting}
-              loadingLabel="Creating"
+              loadingLabel={t("creating")}
               startIcon={<Plus aria-hidden size={15} weight="regular" />}
               type="submit"
             >
-              Create key
+              {t("create")}
             </Button>
           </>
         )
@@ -121,11 +134,9 @@ export function ApiKeyCreateModal({
       size="md"
       title={
         <span className="block">
-          <span className="block">{issuedKey ? "New API key" : "Create API key"}</span>
+          <span className="block">{issuedKey ? t("newTitle") : t("createTitle")}</span>
           <span className="mt-1 block text-[12.5px] font-normal tracking-normal text-fg-muted">
-            {issuedKey
-              ? "The full secret is available one time."
-              : "Name the key and choose its access and expiry policy."}
+            {issuedKey ? t("newDescription") : t("createDescription")}
           </span>
         </span>
       }
@@ -141,25 +152,25 @@ export function ApiKeyCreateModal({
           <input type="hidden" {...form.register("projectId")} />
           <div>
             <label className={labelClass} htmlFor="api-key-name">
-              Key name
+              {t("keyName")}
             </label>
             <input
               autoComplete="off"
               className={inputClass}
               id="api-key-name"
-              placeholder="Production"
+              placeholder={t("keyNamePlaceholder")}
               {...form.register("name")}
             />
             {form.formState.errors.name ? (
               <div className="mt-1.5 text-[11.5px] font-medium text-red-text">
-                {form.formState.errors.name.message}
+                {t("validationName")}
               </div>
             ) : null}
           </div>
           <div>
-            <div className={labelClass}>Access</div>
+            <div className={labelClass}>{t("access")}</div>
             <div className="mt-[9px] grid gap-[7px]">
-              {apiKeyScopeOptions.map((scope) => {
+              {scopeOptions.map((scope) => {
                 const active = selectedScope === scope.value;
                 return (
                   <label
@@ -200,7 +211,7 @@ export function ApiKeyCreateModal({
             </div>
             {selectedScope === "admin" ? (
               <p className="m-0 mt-2 text-[12px] font-medium text-yellow-text">
-                Full access can perform admin operations for this project.
+                {t("adminWarning")}
               </p>
             ) : null}
           </div>
@@ -212,12 +223,12 @@ export function ApiKeyCreateModal({
                   shouldValidate: true,
                 })
               }
-              options={apiKeyExpiryOptions}
+              options={expiryOptions}
               value={selectedExpiry}
             />
             {selectedExpiry === null ? (
               <p className="m-0 mt-2 text-[12px] font-medium text-yellow-text">
-                This key never expires and must be rolled or revoked manually.
+                {t("expiry.neverWarning")}
               </p>
             ) : null}
           </div>

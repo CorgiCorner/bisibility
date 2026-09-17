@@ -2,8 +2,8 @@ import type {
   KeywordDetailActions,
   KeywordWorkspaceActions,
 } from "@/components/keywords/action-utils";
+import type { LocalizedKeywordFilterChip } from "@/components/keywords/filters/keyword-filter-presentation";
 import type { DataTableDensity } from "@/components/ui/data-table/data-table-types";
-import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
 import type { MarketGridViewRow } from "@/lib/keywords/market-grid-model";
 import type { RankTrackerQueryState } from "@/lib/keywords/rank-tracker-query-types";
 import type { MarketScope } from "@/lib/markets/market-scope";
@@ -18,7 +18,7 @@ export type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAc
     canDeleteKeyword: boolean;
     canUpdateKeyword: boolean;
     checkHealth?: CheckHealthView;
-    filterChips: KeywordFilterChip[];
+    filterChips: LocalizedKeywordFilterChip[];
     filterCount: number;
     initialDensity?: DataTableDensity;
     matchedGroupCount?: number;

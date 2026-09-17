@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -7,6 +8,7 @@ const meta = {
   title: "UI/Button",
   component: Button,
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="flex flex-wrap items-center gap-3 bg-bg p-6 text-fg">
         <Story />

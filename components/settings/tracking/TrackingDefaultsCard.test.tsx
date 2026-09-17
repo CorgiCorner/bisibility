@@ -1,7 +1,12 @@
 import { TrackingDefaultsCard } from "@/components/settings/tracking/TrackingDefaultsCard";
+import {
+  renderWithTrackingSettingsMessages as render,
+  renderWithFeatureMessages,
+  trackingSettingsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import type { DefaultsData } from "@/lib/settings/options";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -30,9 +35,24 @@ const defaults: DefaultsData = {
 };
 
 const readyPreview: CronPreviewResult = {
-  message: "Each keyword is scheduled at or after an anchor using deterministic jitter.",
-  runs: ["Aug 10, 06:00", "Aug 11, 06:00", "Aug 12, 06:00"],
+  message: "ready",
+  runs: ["2026-08-10T04:00:00.000Z", "2026-08-11T04:00:00.000Z", "2026-08-12T04:00:00.000Z"],
   status: "ready",
+  timezone: "Europe/Warsaw",
+};
+const polishTrackingMessages = {
+  ...trackingSettingsFeatureTestMessages,
+  projectSettingsTracking: {
+    ...trackingSettingsFeatureTestMessages.projectSettingsTracking,
+    checkDefaults: {
+      ...trackingSettingsFeatureTestMessages.projectSettingsTracking.checkDefaults,
+      previewInvalid: "Nie można odczytać wyrażenia cron.",
+      previewReady: "Każde słowo kluczowe jest planowane po kotwicy.",
+      previewTitle: "Następne kotwice cron",
+      readOnly: "Tylko do odczytu",
+      timezoneInvalid: "Wybierz prawidłową strefę czasową.",
+    },
+  },
 };
 
 function renderCard(
@@ -114,6 +134,23 @@ describe("TrackingDefaultsCard", () => {
     expect(updateDefaults).not.toHaveBeenCalled();
   });
 
+  it("localizes the stored timezone validation without changing the rejected value", () => {
+    renderWithFeatureMessages(
+      <TrackingDefaultsCard
+        canEdit
+        defaults={{ ...defaults, schedule: { ...defaults.schedule, timezone: "Etc/GMT+5" } }}
+        initialCronPreview={readyPreview}
+        previewCron={vi.fn(async () => readyPreview)}
+        projectId="prj_1"
+        updateDefaults={vi.fn(async () => ({}))}
+      />,
+      { locale: "pl", messages: polishTrackingMessages },
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Wybierz prawidłową strefę czasową.");
+    expect(screen.getByRole("button", { name: "Timezone" })).toHaveTextContent("Etc/GMT+5");
+  });
+
   it("labels Custom cron times as anchors before deterministic dispatcher jitter", () => {
     renderCard({
       schedule: {
@@ -164,9 +201,10 @@ describe("TrackingDefaultsCard", () => {
 
   it("keeps an invalid cron preview inside the cron field", () => {
     const invalidPreview: CronPreviewResult = {
-      message: "Cron expression could not be parsed.",
+      message: "invalid_expression",
       runs: [],
       status: "invalid",
+      timezone: null,
     };
     renderCard(
       {
@@ -182,13 +220,49 @@ describe("TrackingDefaultsCard", () => {
     const cronField = screen
       .getByLabelText("Cron expression")
       .closest("[data-settings-field-width]");
-    const invalidMessage = screen.getByText(invalidPreview.message);
+    const invalidMessage = screen.getByText("Cron expression could not be parsed.");
     const timezoneField = screen
       .getByRole("button", { name: "Timezone" })
       .closest("[data-settings-field-width]");
 
     expect(cronField).toContainElement(invalidMessage);
     expect(timezoneField).not.toContainElement(invalidMessage);
+  });
+
+  it("formats the structured cron response in the supplied locale for initial and refreshed previews", async () => {
+    const previewCron = vi.fn(async () => ({
+      message: "invalid_expression" as const,
+      runs: [],
+      status: "invalid" as const,
+      timezone: null,
+    }));
+    renderWithFeatureMessages(
+      <TrackingDefaultsCard
+        canEdit
+        defaults={{
+          ...defaults,
+          schedule: {
+            ...defaults.schedule,
+            cron_expression: "0 6 * * *",
+            frequency: "custom_cron",
+          },
+        }}
+        initialCronPreview={readyPreview}
+        previewCron={previewCron}
+        projectId="prj_1"
+        updateDefaults={vi.fn(async () => ({}))}
+      />,
+      { locale: "pl", messages: polishTrackingMessages, timeZone: "Europe/Warsaw" },
+    );
+
+    expect(screen.getByText("Następne kotwice cron")).toBeInTheDocument();
+    expect(screen.getByText("Każde słowo kluczowe jest planowane po kotwicy.")).toBeInTheDocument();
+    expect(screen.queryByText("2026-08-10T04:00:00.000Z")).not.toBeInTheDocument();
+
+    fireEvent.blur(screen.getByLabelText("Cron expression"));
+
+    await waitFor(() => expect(previewCron).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText("Nie można odczytać wyrażenia cron.")).toBeInTheDocument();
   });
 
   it("warns when depth is lowered and submits through the injected audited action", async () => {
@@ -238,5 +312,21 @@ describe("TrackingDefaultsCard", () => {
     expect(screen.getByText("Desktop")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Timezone" })).not.toBeInTheDocument();
+  });
+
+  it("localizes the read-only capability state", () => {
+    renderWithFeatureMessages(
+      <TrackingDefaultsCard
+        canEdit={false}
+        defaults={defaults}
+        initialCronPreview={readyPreview}
+        previewCron={vi.fn(async () => readyPreview)}
+        projectId="prj_1"
+        updateDefaults={vi.fn(async () => ({}))}
+      />,
+      { locale: "pl", messages: polishTrackingMessages },
+    );
+
+    expect(screen.getByText("Tylko do odczytu")).toBeInTheDocument();
   });
 });

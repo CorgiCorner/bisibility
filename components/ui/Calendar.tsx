@@ -1,10 +1,11 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { formatDate, formatDayOfMonth } from "@/lib/dates/format";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
+import { formatDayOfMonth, formatDisplayDate } from "@/lib/dates/format";
 import { cn } from "@/lib/ui/cn";
 import { CaretLeftIcon as CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
 export type CalendarProps = {
@@ -20,22 +21,6 @@ export type CalendarProps = {
 };
 
 type ViewMonth = { month: number; year: number };
-
-const WEEKDAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] as const;
-const MONTH_LABELS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
 
 function parseISO(iso: string) {
   const [year, month, day] = iso.split("-").map(Number);
@@ -76,7 +61,31 @@ export function Calendar({
   onChange,
   value,
 }: Readonly<CalendarProps>) {
-  const dateFormat = useDateFormat();
+  const t = useTranslations("shared.controls.calendar");
+  const weekdayLabels = [
+    t("sunday"),
+    t("monday"),
+    t("tuesday"),
+    t("wednesday"),
+    t("thursday"),
+    t("friday"),
+    t("saturday"),
+  ];
+  const monthLabels = [
+    t("january"),
+    t("february"),
+    t("march"),
+    t("april"),
+    t("may"),
+    t("june"),
+    t("july"),
+    t("august"),
+    t("september"),
+    t("october"),
+    t("november"),
+    t("december"),
+  ];
+  const dateDisplay = useDateDisplay();
   const base = value ?? max ?? todayISO();
   const [view, setView] = useState<ViewMonth>(() => monthOf(base));
   const [focused, setFocused] = useState(base);
@@ -156,22 +165,26 @@ export function Calendar({
   return (
     // biome-ignore lint/a11y/useSemanticElements: grouping wrapper for a date picker, not a fieldset form control
     <div
-      aria-label={ariaLabel ?? "Choose a date"}
+      aria-label={ariaLabel ?? t("chooseDate")}
       className={cn("w-full select-none", className)}
       role="group"
     >
       <div className="mb-2 flex items-center justify-between gap-2">
         <MonthNavButton
           disabled={min !== undefined && isoOf(firstOfMonth) <= min}
-          label="Previous month"
+          label={t("previousMonth")}
           onClick={() => changeMonth(-1)}
         >
           <CaretLeft aria-hidden size={15} weight="regular" />
         </MonthNavButton>
         <span aria-live="polite" className="text-[13px] font-semibold text-fg">
-          {MONTH_LABELS[view.month - 1]} {view.year}
+          {t("monthYear", { month: monthLabels[view.month - 1], year: String(view.year) })}
         </span>
-        <MonthNavButton disabled={nextDisabled} label="Next month" onClick={() => changeMonth(1)}>
+        <MonthNavButton
+          disabled={nextDisabled}
+          label={t("nextMonth")}
+          onClick={() => changeMonth(1)}
+        >
           <CaretRight aria-hidden size={15} weight="regular" />
         </MonthNavButton>
       </div>
@@ -179,7 +192,7 @@ export function Calendar({
         aria-hidden
         className="mb-1 grid grid-cols-7 gap-1 text-[10px] tabular-nums font-semibold uppercase tracking-[.04em] text-fg-muted"
       >
-        {WEEKDAY_LABELS.map((label) => (
+        {weekdayLabels.map((label) => (
           <span className="grid h-6 place-items-center" key={label}>
             {label}
           </span>
@@ -193,7 +206,7 @@ export function Calendar({
           return (
             <button
               aria-current={iso === today ? "date" : undefined}
-              aria-label={formatDate(iso, dateFormat)}
+              aria-label={formatDisplayDate(iso, dateDisplay)}
               aria-pressed={selected}
               className={cn(
                 "grid h-8 w-full place-items-center rounded-control text-[12.5px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid",
@@ -212,7 +225,7 @@ export function Calendar({
               tabIndex={iso === focused ? 0 : -1}
               type="button"
             >
-              {formatDayOfMonth(iso, dateFormat)}
+              {formatDayOfMonth(iso, dateDisplay.dateFormat)}
             </button>
           );
         })}

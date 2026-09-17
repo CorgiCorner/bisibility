@@ -1,5 +1,6 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
-import { render, screen } from "@testing-library/react";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
 
@@ -74,7 +75,7 @@ describe("KeywordDetailHeaderChrome", () => {
     expect(value).toHaveTextContent("Not ranked");
     expect(value).toHaveClass("text-[13px]", "text-fg-muted");
     expect(value).not.toHaveClass("text-[17px]", "font-semibold");
-    expect(screen.getByText("Not in top 50 · Tracked since 3 Sept")).toBeInTheDocument();
+    expect(screen.getByText("Not in top 50 · Tracked since 3 Sep")).toBeInTheDocument();
   });
 
   it("uses a quiet textual position state when ranking data is unavailable", () => {
@@ -131,7 +132,7 @@ describe("KeywordDetailHeaderChrome", () => {
       />,
     );
 
-    expect(screen.getByText("Topic: Product")).toBeInTheDocument();
+    expect(screen.getByText("Topic: product")).toBeInTheDocument();
     expect(screen.getByText("High intent")).toBeInTheDocument();
     expect(screen.queryByText("Intent: High intent")).not.toBeInTheDocument();
   });
@@ -155,7 +156,7 @@ describe("KeywordDetailHeaderChrome", () => {
 
   it.each([
     [false, true, "Search volume is unavailable for this keyword. Rank tracking is unaffected."],
-    [true, false, "Difficulty is unavailable for this keyword. Rank tracking is unaffected."],
+    [true, false, "difficulty is unavailable for this keyword. Rank tracking is unaffected."],
     [true, true, null],
   ])(
     "reports only the missing keyword metric with volumeKnown=%s and difficultyKnown=%s",
@@ -200,7 +201,7 @@ describe("KeywordDetailHeaderChrome", () => {
 
     expect(
       screen.getByText(
-        "No search volume or difficulty data for this market - positions are tracked normally.",
+        "Search volume and difficulty are unavailable for this tracking location. Rank tracking is unaffected.",
       ),
     ).toBeVisible();
     expect(screen.queryByText(/unavailable for this keyword/)).not.toBeInTheDocument();
@@ -260,7 +261,7 @@ describe("KeywordDetailHeaderChrome", () => {
   });
   it.each([
     ["/alternatives", "/alternatives"],
-    [null, "Not set"],
+    [null, "Not available"],
   ])(
     "shows the current target %s while retaining the historical ranking URL",
     (currentExpectedUrl, label) => {
@@ -277,9 +278,9 @@ describe("KeywordDetailHeaderChrome", () => {
           timeZone="UTC"
         />,
       );
-      expect(
-        screen.getByText((content) => content.includes(`Expected for this market: ${label}`)),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "View SERP" }).parentElement).toHaveTextContent(
+        `Expected for this market: ${label}`,
+      );
       expect(screen.getByRole("link", { name: "/actual-result" })).toHaveAttribute(
         "href",
         "https://example.com/actual-result",

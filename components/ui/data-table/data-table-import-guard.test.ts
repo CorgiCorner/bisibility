@@ -35,11 +35,13 @@ async function restrictedImportMessages(filePath: string, source: string) {
 describe("data table import boundaries", () => {
   beforeAll(async () => {
     // Load the lint configuration in suite setup instead of the first rule assertion.
-    await eslint.calculateConfigForFile(resolve(repoRoot, "app/app/table-consumer/page.tsx"));
+    await eslint.calculateConfigForFile(
+      resolve(repoRoot, "app/(regional)/app/table-consumer/page.tsx"),
+    );
   });
 
   it.each([
-    "app/app/table-consumer/page.tsx",
+    "app/(regional)/app/table-consumer/page.tsx",
     "components/overview/TableConsumer.tsx",
     "components/ui/TableConsumer.tsx",
     "hooks/use-table-consumer.ts",
@@ -97,7 +99,7 @@ describe("data table import boundaries", () => {
   it("rejects static, type, re-export, and dynamic imports even in fixtures", () => {
     const sources = [
       tableSource(
-        "app/app/report/page.tsx",
+        "app/(regional)/app/report/page.tsx",
         'import { useReactTable } from "@tanstack/react-table";',
       ),
       tableSource(
@@ -119,7 +121,7 @@ describe("data table import boundaries", () => {
     ];
 
     expect(findDataTableLibraryImportViolations(sources)).toEqual([
-      expect.objectContaining({ path: "app/app/report/page.tsx" }),
+      expect.objectContaining({ path: "app/(regional)/app/report/page.tsx" }),
       expect.objectContaining({ path: "lib/report-table.ts" }),
       expect.objectContaining({ path: "hooks/use-report-table.ts" }),
       expect.objectContaining({ path: "components/feature/ReportTable.test.tsx" }),

@@ -1,6 +1,7 @@
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NotificationFeed, NotificationFeedItem } from "@/lib/queries/notifications";
 import { dateFromFrozenNow, isoFromFrozenNow } from "@/tests/clock";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NotificationBellClient } from "./NotificationBellClient";
 

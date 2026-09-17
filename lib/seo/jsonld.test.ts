@@ -8,6 +8,7 @@ import {
   createSoftwareApplicationJsonLd,
   createWebSiteJsonLd,
   defaultSiteUrl,
+  englishHomeJsonLdCopy,
   githubUrl,
   linkedinUrl,
   resolveSiteUrl,
@@ -31,7 +32,7 @@ function findNode(graph: ReturnType<typeof createHomeJsonLd>, type: string) {
 
 describe("JSON-LD builders", () => {
   it("builds organization, website, and software application graph nodes", () => {
-    const graph = createHomeJsonLd(origin);
+    const graph = createHomeJsonLd(englishHomeJsonLdCopy, origin);
 
     expect(graph["@context"]).toBe("https://schema.org");
     expect(graph["@graph"].map((node) => node["@type"])).toEqual([
@@ -43,13 +44,13 @@ describe("JSON-LD builders", () => {
     expect(findNode(graph, "Organization")).toMatchObject(createOrganizationJsonLd(origin));
     expect(findNode(graph, "WebSite")).toMatchObject(createWebSiteJsonLd(origin));
     expect(findNode(graph, "SoftwareApplication")).toMatchObject(
-      createSoftwareApplicationJsonLd(origin),
+      createSoftwareApplicationJsonLd(englishHomeJsonLdCopy, origin),
     );
   });
 
   it("includes required organization fields without invented ratings", () => {
     const organization = createOrganizationJsonLd(origin);
-    const app = createSoftwareApplicationJsonLd(origin);
+    const app = createSoftwareApplicationJsonLd(englishHomeJsonLdCopy, origin);
 
     expect(organization).toMatchObject({
       "@type": "Organization",

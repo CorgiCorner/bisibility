@@ -95,9 +95,10 @@ describe("check schedule list query", () => {
     await expect(listCheckScheduleRows("project_1")).resolves.toEqual([
       expect.objectContaining({
         keywordCount: 1,
-        memberMeta: "2 markets x 1 device",
+        memberDeviceCount: 1,
+        memberMarketCount: 2,
         perRunCents: 24,
-        tagScope: "tag = commercial",
+        sharedTag: "commercial",
         targetCount: 2,
         weekday: "Monday",
       }),
@@ -260,7 +261,7 @@ describe("check schedule list query", () => {
 
     await expect(listCheckScheduleRows("project_1")).resolves.toEqual([
       expect.objectContaining({ weekday: "Friday" }),
-      expect.objectContaining({ dayOfMonth: "15th" }),
+      expect.objectContaining({ dayOfMonth: 15 }),
     ]);
   });
 });

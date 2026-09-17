@@ -7,6 +7,7 @@ export const SETUP_VIDEO_REFS = [
   "provider-dataforseo",
   "provider-serpapi",
   "dashboard-tour",
+  "connect-chatgpt",
 ] as const;
 
 export type SetupVideoRef = (typeof SETUP_VIDEO_REFS)[number];

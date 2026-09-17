@@ -1,5 +1,6 @@
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { render, screen } from "@testing-library/react";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
@@ -17,7 +18,7 @@ function TooltipMenu() {
 
 describe("MenuSelect tooltip", () => {
   it("exposes triggerTitle as a description with no native title", () => {
-    render(<TooltipMenu />);
+    renderWithSharedMessages(<TooltipMenu />);
 
     const trigger = screen.getByRole("button", { name: "Scope" });
     expect(trigger).not.toHaveAttribute("title");
@@ -30,7 +31,7 @@ describe("MenuSelect tooltip", () => {
 
   it("opens visually on hover", async () => {
     const user = userEvent.setup();
-    render(<TooltipMenu />);
+    renderWithSharedMessages(<TooltipMenu />);
 
     await user.hover(screen.getByRole("button", { name: "Scope" }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent("Choose a scope for this project");
@@ -38,7 +39,7 @@ describe("MenuSelect tooltip", () => {
 
   it("opens visually on keyboard focus", async () => {
     const user = userEvent.setup();
-    render(<TooltipMenu />);
+    renderWithSharedMessages(<TooltipMenu />);
 
     const trigger = screen.getByRole("button", { name: "Scope" });
     await user.tab();

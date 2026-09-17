@@ -9,11 +9,25 @@ import type React from "react";
 export const SEARCH_SYNC_PAUSE_TOOLTIP =
   "Pausing longer than Google's 16-month window permanently loses the oldest unimported days.";
 
+type SearchSyncStatusLabels = {
+  askAdminToConnect: string;
+  pauseTooltip: string;
+  actionAriaLabel: (action: Exclude<SearchSyncStatusControlModel["action"], null>) => string;
+};
+
+type SearchSyncStatusControlModel = Pick<
+  SearchSyncControlModel,
+  "action" | "actionLabel" | "supportingText"
+> & {
+  status: string;
+};
+
 export function SearchSyncStatusControl({
   actionNode,
   busy = false,
   disabled = false,
   leadingActionNode,
+  labels,
   model,
   onAction,
   reconnectHref,
@@ -24,7 +38,8 @@ export function SearchSyncStatusControl({
   busy?: boolean;
   disabled?: boolean;
   leadingActionNode?: React.ReactNode;
-  model: SearchSyncControlModel;
+  labels?: SearchSyncStatusLabels;
+  model: SearchSyncStatusControlModel;
   onAction?: () => void;
   reconnectHref?: string;
   suppressPauseTooltip?: boolean;
@@ -33,7 +48,7 @@ export function SearchSyncStatusControl({
   const baseAction =
     model.action === "reconnect" && disabled ? (
       <p className="m-0 max-w-[220px] text-right text-[11px] leading-[1.45] text-fg-muted">
-        {VIEWER_ASK_ADMIN_CONNECT}
+        {labels?.askAdminToConnect ?? VIEWER_ASK_ADMIN_CONNECT}
       </p>
     ) : model.action === "reconnect" && reconnectHref ? (
       <Button
@@ -46,7 +61,11 @@ export function SearchSyncStatusControl({
       </Button>
     ) : model.action ? (
       <Button
-        aria-label={`${model.action === "resume" ? "Resume" : model.actionLabel} Search Console sync`}
+        aria-label={
+          labels
+            ? labels.actionAriaLabel(model.action)
+            : `${model.action === "resume" ? "Resume" : model.actionLabel} Search Console sync`
+        }
         disabled={disabled}
         loading={busy}
         onClick={onAction}
@@ -60,7 +79,7 @@ export function SearchSyncStatusControl({
   const candidate = actionNode ?? baseAction;
   const action =
     !suppressPauseTooltip && model.action === "pause" && candidate ? (
-      <Tooltip content={SEARCH_SYNC_PAUSE_TOOLTIP}>{candidate}</Tooltip>
+      <Tooltip content={labels?.pauseTooltip ?? SEARCH_SYNC_PAUSE_TOOLTIP}>{candidate}</Tooltip>
     ) : (
       candidate
     );

@@ -1,6 +1,7 @@
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { OperationSnapshot } from "@/lib/rank-check/runs/contract";
 import { AppRealtimeContext } from "@/lib/realtime/useAppRealtime";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { OperationsTray } from "./OperationsTray";
 
@@ -66,9 +67,9 @@ describe("OperationsTray pill lifecycle", () => {
     ]);
 
     expect(
-      screen.getByRole("button", { name: "1 waiting operations, open activity" }),
+      screen.getByRole("button", { name: "1 waiting operation, open activity" }),
     ).toBeVisible();
-    expect(dotFor("1 waiting operations, open activity")).not.toHaveClass(
+    expect(dotFor("1 waiting operation, open activity")).not.toHaveClass(
       "motion-safe:animate-[operations-pill-breathe_1.6s_ease-in-out_infinite]",
     );
   });
@@ -77,9 +78,9 @@ describe("OperationsTray pill lifecycle", () => {
     renderTray([{ ...rankCheck, hasRunningTargets: true }]);
 
     expect(
-      screen.getByRole("button", { name: "1 running operations, open activity" }),
+      screen.getByRole("button", { name: "1 running operation, open activity" }),
     ).toBeVisible();
-    expect(dotFor("1 running operations, open activity")).toHaveClass(
+    expect(dotFor("1 running operation, open activity")).toHaveClass(
       "motion-safe:animate-[operations-pill-breathe_1.6s_ease-in-out_infinite]",
     );
   });
@@ -88,9 +89,9 @@ describe("OperationsTray pill lifecycle", () => {
     renderTray([{ ...rankCheck, hasRunningTargets: true, status: "cancelling" }]);
 
     expect(
-      screen.getByRole("button", { name: "1 running operations, open activity" }),
+      screen.getByRole("button", { name: "1 running operation, open activity" }),
     ).toBeVisible();
-    expect(dotFor("1 running operations, open activity")).toHaveClass(
+    expect(dotFor("1 running operation, open activity")).toHaveClass(
       "motion-safe:animate-[operations-pill-breathe_1.6s_ease-in-out_infinite]",
     );
   });
@@ -101,9 +102,9 @@ describe("OperationsTray pill lifecycle", () => {
       renderTray([{ ...rankCheck, hasRunningTargets, status: "cancelling" }]);
 
       expect(
-        screen.getByRole("button", { name: "1 waiting operations, open activity" }),
+        screen.getByRole("button", { name: "1 waiting operation, open activity" }),
       ).toBeVisible();
-      expect(dotFor("1 waiting operations, open activity")).not.toHaveClass(
+      expect(dotFor("1 waiting operation, open activity")).not.toHaveClass(
         "motion-safe:animate-[operations-pill-breathe_1.6s_ease-in-out_infinite]",
       );
     },
@@ -128,7 +129,7 @@ describe("OperationsTray pill lifecycle", () => {
     ]);
 
     expect(
-      screen.getByRole("button", { name: "1 running operations, open activity" }),
+      screen.getByRole("button", { name: "1 running operation, open activity" }),
     ).toBeVisible();
   });
 
@@ -142,9 +143,9 @@ describe("OperationsTray pill lifecycle", () => {
     ]);
 
     expect(
-      screen.getByRole("button", { name: "1 waiting operations, open activity" }),
+      screen.getByRole("button", { name: "1 waiting operation, open activity" }),
     ).toBeVisible();
-    expect(dotFor("1 waiting operations, open activity")).not.toHaveClass(
+    expect(dotFor("1 waiting operation, open activity")).not.toHaveClass(
       "motion-safe:animate-[operations-pill-breathe_1.6s_ease-in-out_infinite]",
     );
   });
@@ -163,7 +164,7 @@ describe("OperationsTray pill lifecycle", () => {
     ]);
 
     expect(
-      screen.getByRole("button", { name: "1 waiting operations, open activity" }),
+      screen.getByRole("button", { name: "1 waiting operation, open activity" }),
     ).toBeVisible();
     view.rerender(
       <AppRealtimeContext.Provider
@@ -192,9 +193,9 @@ describe("OperationsTray pill lifecycle", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "1 running operations, open activity" }),
+      screen.getByRole("button", { name: "1 running operation, open activity" }),
     ).toBeVisible();
-    expect(dotFor("1 running operations, open activity")).toHaveClass(
+    expect(dotFor("1 running operation, open activity")).toHaveClass(
       "motion-safe:animate-[operations-pill-breathe_1.6s_ease-in-out_infinite]",
     );
   });

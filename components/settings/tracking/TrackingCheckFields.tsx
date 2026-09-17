@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/Switch";
 import { type SerpDepth, serpDepthValues, serpDeviceOptions } from "@/lib/serp/constants";
 import type { DefaultsData } from "@/lib/settings/options";
 import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
@@ -18,12 +19,6 @@ import { Controller } from "react-hook-form";
 const labelClass = "font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
 const triggerClass =
   "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
-const deviceOptions = serpDeviceOptions.map((option) => ({ ...option }));
-const depthOptions = serpDepthValues.map((depth) => ({
-  label: `Top ${depth}`,
-  value: String(depth),
-}));
-
 type TrackingCheckFieldsProps = {
   canEdit: boolean;
   defaults: DefaultsData;
@@ -39,6 +34,7 @@ export function TrackingCheckFields({
   form,
   markDirty,
 }: Readonly<TrackingCheckFieldsProps>) {
+  const t = useTranslations("projectSettingsTracking.checkDefaults");
   const device = form.watch("device");
   const depth = form.watch("serpDepth") ?? defaults.serpDepth;
   const [location, setLocation] = useState<LocationFieldValue>(() =>
@@ -53,6 +49,14 @@ export function TrackingCheckFields({
         }
       : initialLocationValue(defaults.country),
   );
+  const deviceOptions = serpDeviceOptions.map((option) => ({
+    ...option,
+    label: option.value === "mobile" ? t("deviceMobile") : t("deviceDesktop"),
+  }));
+  const depthOptions = serpDepthValues.map((value) => ({
+    label: t("depthOption", { depth: value }),
+    value: String(value),
+  }));
 
   function setDefaultLocation(value: LocationFieldValue) {
     setLocation(value);
@@ -96,9 +100,18 @@ export function TrackingCheckFields({
       <SettingsField className="scroll-mt-6" id="tracking-location" tabIndex={-1} width="field">
         <LocationField
           disabled={!canEdit}
-          help="One project-wide default. Typing filters countries and available city locations."
+          help={t("locationHelp")}
           idPrefix="tracking-default"
-          label="Location"
+          label={t("location")}
+          messages={{
+            city: t("locationCity"),
+            clearSearch: t("locationClearSearch"),
+            countries: t("locationCountries"),
+            noMatching: t("locationNoMatching"),
+            region: t("locationRegion"),
+            regionsAndCities: t("locationRegionsAndCities"),
+            searching: t("locationSearching"),
+          }}
           onChange={setDefaultLocation}
           projectId={form.getValues("projectId")}
           value={location}
@@ -106,25 +119,23 @@ export function TrackingCheckFields({
       </SettingsField>
 
       <SettingsField className="scroll-mt-6" id="tracking-device" tabIndex={-1} width="field">
-        <FieldLabel className={labelClass} label="Device" />
+        <FieldLabel className={labelClass} label={t("device")} />
         <input type="hidden" {...form.register("device")} />
         <MenuSelect
-          ariaLabel="Device"
+          ariaLabel={t("device")}
           onChange={setDevice}
           options={deviceOptions}
           triggerClassName={`${triggerClass} mt-1.5`}
           value={device}
         />
-        <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted">
-          Desktop and mobile checks keep separate history.
-        </p>
+        <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted">{t("deviceHelp")}</p>
       </SettingsField>
 
       <SettingsField className="scroll-mt-6" id="tracking-depth" tabIndex={-1} width="field">
-        <FieldLabel className={labelClass} label="Default SERP depth" />
+        <FieldLabel className={labelClass} label={t("serpDepth")} />
         <input type="hidden" {...form.register("serpDepth", { valueAsNumber: true })} />
         <MenuSelect
-          ariaLabel="Default SERP depth"
+          ariaLabel={t("serpDepth")}
           onChange={setDepth}
           options={depthOptions}
           triggerClassName={`${triggerClass} mt-1.5`}
@@ -132,13 +143,10 @@ export function TrackingCheckFields({
           triggerWrapperClassName="w-full"
           value={String(depth)}
         />
-        <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted">
-          How far down each result page a check reads.
-        </p>
+        <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted">{t("serpDepthHelp")}</p>
         {depth < defaults.serpDepth ? (
           <p className="m-0 mt-2 text-[11.5px] leading-5 text-yellow-text">
-            From the next check, keywords ranking past {depth} record as not found instead of their
-            position. That gap stays in history.
+            {t("serpDepthWarning", { depth })}
           </p>
         ) : null}
       </SettingsField>
@@ -149,12 +157,12 @@ export function TrackingCheckFields({
           name="serpStopOnMatch"
           render={({ field }) => (
             <Switch
-              aria-label="Stop checks at first domain match"
+              aria-label={t("stopOnMatch")}
               checked={field.value}
               className="w-full"
-              description={`On stops reading when ${domain ?? "the project domain"} first appears, recording the best position. Off reads the full configured depth.`}
+              description={t("stopOnMatchDescription", { domain: domain ?? t("projectDomain") })}
               disabled={!canEdit}
-              label="Stop checks at first domain match"
+              label={t("stopOnMatch")}
               name={field.name}
               onBlur={field.onBlur}
               onChange={(event) => field.onChange(event.target.checked)}

@@ -1,0 +1,122 @@
+{
+  "projectGettingStarted": {
+    "header": {
+      "label": "Pierwsze kroki",
+      "progress": "{settled, number} z {total, number} {total, plural, one {kroku} few {kroków} many {kroków} other {kroku}}"
+    },
+    "steps": {
+      "create_project": "Utwórz projekt",
+      "connect_source": "Połącz źródło danych",
+      "add_keywords": "Zacznij śledzić pierwsze słowa kluczowe",
+      "first_check": "Uruchom pierwsze sprawdzenie pozycji",
+      "confirm_competitors": "Potwierdź konkurentów"
+    },
+    "cta": {
+      "create_project": "Utwórz projekt",
+      "connect_source": "Połącz źródło danych",
+      "add_keywords": "Dodaj słowa kluczowe",
+      "run_first_check": "Uruchom sprawdzenie",
+      "run_first_check_now": "Uruchom od razu"
+    },
+    "state": {
+      "needs_data_source": "Najpierw połącz źródło danych",
+      "needs_keywords": "Najpierw dodaj słowa kluczowe",
+      "needs_first_check": "Najpierw uruchom pierwsze sprawdzenie",
+      "running": "W toku – sprawdzono {completed, number} z {total, number}",
+      "scheduledToday": "Zaplanowano – uruchomi się dzisiaj o {time} ({timezone})",
+      "scheduledTomorrow": "Zaplanowano – uruchomi się jutro o {time} ({timezone})",
+      "scheduledInDays": "Zaplanowano – uruchomi się za {days, number} {days, plural, one {dzień} few {dni} many {dni} other {dnia}} o {time} ({timezone})"
+    },
+    "walkthrough": {
+      "create_project": {
+        "active": "Nazwij projekt, który chcesz śledzić. Szczegóły zmienisz później w ustawieniach projektu.",
+        "done": "To stało się w chwili utworzenia projektu: jedna domena, a każde sprawdzenie i każdy import są do niej ograniczone. Nazwa i domena znajdują się w ustawieniach projektu."
+      },
+      "add_keywords": {
+        "active": "Wpisz lub wklej słowa kluczowe, po jednym w wierszu. Duplikaty tego, co już śledzisz, pomijamy.",
+        "done": "To stało się w chwili dodania pierwszych słów kluczowych. Każde słowo kluczowe ma własny rynek i urządzenie – zmienisz je w wierszu słowa kluczowego w monitorze pozycji."
+      },
+      "connect_source": {
+        "active": "Search Console nic nie kosztuje i wymaga dwóch kliknięć. Dostawca SERP dodaje sprawdzanie pozycji na żywo przy użyciu Twojego własnego klucza.",
+        "done": "To stało się w chwili połączenia źródła danych. Przez nie przechodzą sprawdzenia pozycji, a dostawca rozlicza się z Tobą bezpośrednio. Zarządzaj tym źródłem lub wymień je w integracjach."
+      },
+      "first_check": {
+        "active": "Uruchom pierwsze sprawdzenie, aby zebrać pozycje śledzonych słów kluczowych. Ustawienia sprawdzeń znajdziesz w ustawieniach monitorowania projektu.",
+        "done": "To stało się po zakończeniu pierwszego sprawdzenia: każde objęte nim słowo kluczowe ma teraz pozycję i adres URL w wynikach, a od tego momentu buduje się historia. Sprawdzenia działają według domyślnego harmonogramu projektu – każde słowo kluczowe może go zastąpić własnym. Jedno i drugie znajdziesz w monitorze pozycji."
+      }
+    },
+    "competitors": {
+      "blocked": "Propozycje powstają na podstawie zakończonych sprawdzeń pozycji. Ten krok otworzy się po pierwszym sprawdzeniu.",
+      "ready": "Wybierz konkurentów, których chcesz śledzić. Zmienisz to później w ustawieniach.",
+      "skipped": "Pominięto. Żadna domena nie jest śledzona jako konkurent, a udział w widoczności pozostaje wyłączony, dopóki nie potwierdzisz zestawu.",
+      "confirmed": "Potwierdzono. Wybrani konkurenci są teraz śledzeni.",
+      "none": "Brak propozycji. Dodaj konkurenta lub wróć do tego później w ustawieniach.",
+      "review": "Sprawdź konkurentów",
+      "addOwn": "Dodaj własnego",
+      "skip": "Pomiń na razie",
+      "modalAdd": "Dodaj konkurenta",
+      "modalReview": "Sprawdź konkurentów",
+      "trackSelected": "Śledź wybranych",
+      "trackCount": "Śledź {count, number} {count, plural, one {konkurenta} few {konkurentów} many {konkurentów} other {konkurenta}}",
+      "saving": "Zapisywanie…",
+      "select": "Zaznacz domeny, które chcesz śledzić.",
+      "noneLeft": "Nie ma już propozycji. Możesz dodać własnego konkurenta.",
+      "back": "Wstecz",
+      "cancel": "Anuluj",
+      "confirmError": "Nie udało się potwierdzić wszystkich wybranych konkurentów. Spróbuj ponownie.",
+      "dismissError": "Nie udało się usunąć konkurenta.",
+      "skipError": "Nie udało się pominąć konfiguracji konkurentów.",
+      "manual": {
+        "domain": "Domena",
+        "domainError": "Podaj domenę.",
+        "domainInvalid": "Podaj prawidłową domenę konkurenta.",
+        "domainPlaceholder": "competitor.example.org",
+        "aliases": "Aliasy marki (opcjonalnie)",
+        "aliasesPlaceholder": "Nazwy marek oddzielone przecinkami",
+        "aliasesHelp": "Inne nazwy marek dopasowywane w cytowaniach, oddzielone przecinkami.",
+        "adding": "Dodawanie…",
+        "add": "Dodaj konkurenta",
+        "addError": "Nie udało się dodać konkurenta."
+      },
+      "suggestions": {
+        "suggestedTitle": "Proponowani konkurenci",
+        "suggestedDescription": "Pojawiają się przy co najmniej dwóch różnych słowach kluczowych bez nazwy marki.",
+        "otherTitle": "Inne domeny w wynikach",
+        "otherDescription": "Same wyniki nie przesądzają jeszcze o konkurencyjności. Dodaj domenę tylko wtedy, gdy rzeczywiście konkuruje z Twoją witryną.",
+        "evidence": "widoczna przy {seenOn, number} z {of, number} słów kluczowych / najlepsza poz. {bestPosition, number}",
+        "platform": "{coverage} – platforma lub katalog",
+        "limited": "{coverage} – ograniczone dane",
+        "remove": "Usuń z listy"
+      }
+    },
+    "completion": {
+      "allComplete": "Wszystkie kroki konfiguracji ukończone",
+      "heading": "Co dalej",
+      "acknowledged": "Konfiguracja jest ukończona. Możesz tu wrócić zawsze, gdy zechcesz przypomnieć sobie, jak projekt jest połączony.",
+      "helper": "Potwierdź konfigurację, gdy wszystko będzie gotowe. Projekt zachowa dotychczasowe dane i ustawienia.",
+      "finish": "Zakończ konfigurację",
+      "checklistError": "Ukończ wszystkie kroki konfiguracji, zanim ją zakończysz.",
+      "writeError": "Nie udało się oznaczyć konfiguracji jako ukończonej. Spróbuj ponownie."
+    },
+    "goFurther": {
+      "heading": "Zrób więcej",
+      "ai": {
+        "title": "Połącz asystenta AI",
+        "description": "Połącz Claude, ChatGPT lub dowolnego klienta MCP."
+      },
+      "github": {
+        "title": "Oznacz bisibility gwiazdką w serwisie GitHub",
+        "description": "Bezpłatne i open source – gwiazdka pomaga."
+      },
+      "team": {
+        "title": "Zaproś współpracowników",
+        "description": "Zaproś współpracowników i przypisz role."
+      }
+    },
+    "video": {
+      "aria": "Przewodnik wideo",
+      "heading": "Przewodniki wideo",
+      "description": "Każdy krok zaczyna się od wersji tekstowej. Filmy pojawią się tutaj po publikacji."
+    }
+  }
+}

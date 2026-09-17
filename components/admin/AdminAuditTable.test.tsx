@@ -1,4 +1,9 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  instanceAdminFeatureTestMessages,
+  renderWithInstanceAdminMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AdminAuditTable } from "./AdminAuditTable";
 
@@ -83,6 +88,31 @@ describe("AdminAuditTable", () => {
       screen.queryByRole("button", { name: "Copy audit target instance_ops:unavailable" }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("-")).toBeInTheDocument();
+  });
+
+  it("localizes a missing target in a prepared Polish catalog while retaining its raw type", () => {
+    const messages = structuredClone(instanceAdminFeatureTestMessages);
+    messages.instanceAdmin.audit.targetUnavailable = "Brak identyfikatora dla {targetType}";
+
+    renderWithFeatureMessages(
+      <AdminAuditTable entries={entries} filter="all" nextCursor={null} />,
+      {
+        locale: "pl",
+        messages,
+        timeZone: "Europe/Warsaw",
+      },
+    );
+
+    const row = screen
+      .getByText("instance_admin.ops_test.send")
+      .closest<HTMLElement>('[role="row"]');
+    expect(row).not.toBeNull();
+    expect(
+      within(row as HTMLElement).getByText("Brak identyfikatora dla instance_ops"),
+    ).toBeInTheDocument();
+    expect(
+      within(row as HTMLElement).queryByRole("button", { name: /Copy/u }),
+    ).not.toBeInTheDocument();
   });
 
   it("sorts the visible audit entries in the client", () => {

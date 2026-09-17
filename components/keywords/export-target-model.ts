@@ -47,13 +47,3 @@ export function keywordExportTarget(input: KeywordExportTargetInput): KeywordExp
   }
   return { count: input.rows.length, selection: { mode: "all" } };
 }
-
-function keywordLabel(count: number) {
-  return count === 1 ? "keyword" : "keywords";
-}
-
-export function keywordExportTargetLabel(target: KeywordExportTarget) {
-  if (target.selection.mode === "all") return "Export all keywords";
-  const mode = target.selection.mode === "query" ? "filtered" : "selected";
-  return `Export ${target.count} ${mode} ${keywordLabel(target.count)}`;
-}

@@ -1,4 +1,6 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { RankTrackerTabs } from "@/components/rank-tracker/RankTrackerTabs";
+import messages from "@/messages/core/en/project-rank-tracker.json";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
@@ -6,9 +8,11 @@ const meta = {
   component: RankTrackerTabs,
   decorators: [
     (Story) => (
-      <div className="min-h-[140px] bg-bg p-6 text-fg">
-        <Story />
-      </div>
+      <FeatureMessagesProvider locale="en" messages={messages} timeZone="UTC">
+        <div className="min-h-[140px] bg-bg p-6 text-fg">
+          <Story />
+        </div>
+      </FeatureMessagesProvider>
     ),
   ],
   args: {

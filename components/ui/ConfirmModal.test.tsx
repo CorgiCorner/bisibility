@@ -1,11 +1,20 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { coreMessages } from "@/i18n/core-messages";
+import {
+  renderWithFeatureMessages,
+  sharedControlTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CONFIRM, ConfirmModal, type ConfirmModalProps } from "./ConfirmModal";
+import { ConfirmModal, type ConfirmModalProps } from "./ConfirmModal";
 import { ToastProvider } from "./Toast";
 
 afterEach(() => {
   vi.useRealTimers();
 });
+
+function render(ui: React.ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: sharedControlTestMessages });
+}
 
 function renderConfirmModal(kind: ConfirmModalProps["kind"], onConfirm = vi.fn()) {
   render(
@@ -18,29 +27,32 @@ function renderConfirmModal(kind: ConfirmModalProps["kind"], onConfirm = vi.fn()
 
 describe("instance-admin confirmation copy", () => {
   it("documents account state and rolling-spend consequences", () => {
-    expect(CONFIRM.deactivateAccount.body).toContain("revoke every session");
-    expect(CONFIRM.deactivateAccount.body).toContain(
+    const confirmation = coreMessages.shared.controls.confirmation;
+    expect(confirmation.deactivateAccountBody).toContain("revoke every session");
+    expect(confirmation.deactivateAccountBody).toContain(
       "personal access token belonging to it will be permanently revoked",
     );
-    expect(CONFIRM.deactivateAccount.body).toContain("pause scheduled checks");
-    expect(CONFIRM.reactivateAccount.body).toContain("reconverge");
-    expect(CONFIRM.reactivateAccount.body).toContain("stay revoked and must be recreated");
-    expect(CONFIRM.resetAccountLimits.body).toContain(
+    expect(confirmation.deactivateAccountBody).toContain("pause scheduled checks");
+    expect(confirmation.reactivateAccountBody).toContain("reconverge");
+    expect(confirmation.reactivateAccountBody).toContain("stay revoked and must be recreated");
+    expect(confirmation.resetAccountLimitsBody).toContain(
       "Monthly spend is a rolling window and cannot be reset",
     );
   });
 
   it("warns that migration token revoke and roll invalidate the current token", () => {
+    const confirmation = coreMessages.shared.controls.confirmation;
     const warning =
       "This invalidates the current token. Any transfer using it will no longer work.";
-    expect(CONFIRM.revokeMigrationToken.body).toBe(warning);
-    expect(CONFIRM.rollMigrationToken.body).toBe(warning);
+    expect(confirmation.revokeMigrationTokenBody).toBe(warning);
+    expect(confirmation.rollMigrationTokenBody).toBe(warning);
   });
 
   it("describes sample-project removal without affecting other projects", () => {
-    expect(CONFIRM.removeSampleData.body).toContain("sample project");
-    expect(CONFIRM.removeSampleData.body).toContain("other projects are not affected");
-    expect(CONFIRM.removeSampleData.dangerLabel).toBe("Remove sample data");
+    const confirmation = coreMessages.shared.controls.confirmation;
+    expect(confirmation.removeSampleDataBody).toContain("sample project");
+    expect(confirmation.removeSampleDataBody).toContain("other projects are not affected");
+    expect(confirmation.removeSampleDataDangerLabel).toBe("Remove sample data");
   });
 });
 

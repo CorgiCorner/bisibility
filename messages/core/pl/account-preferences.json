@@ -1,0 +1,7 @@
+{
+  "account": {
+    "preferences": {
+      "savedCount": "{count, plural, =0 {Brak zapisanych preferencji} one {# zapisana preferencja} few {# zapisane preferencje} many {# zapisanych preferencji} other {# zapisanej preferencji}}"
+    }
+  }
+}

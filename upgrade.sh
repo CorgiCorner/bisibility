@@ -56,7 +56,29 @@ done
 command -v node >/dev/null || { echo "Node.js is required to verify the distribution." >&2; exit 1; }
 command -v "$DOCKER_COMMAND" >/dev/null || { echo "Docker is required to perform the upgrade." >&2; exit 1; }
 
-VERIFY_SCRIPT="$ROOT_DIR/scripts/distribution/verify.mjs"
+resolve_verify_script() {
+  local candidate helper_dir
+  for candidate in \
+    "$ROOT_DIR/scripts/distribution/verify.mjs" \
+    "$ROOT_DIR/verify.mjs"
+  do
+    [[ -r "$candidate" ]] || continue
+    helper_dir="$(cd "$(dirname "$candidate")" && pwd)"
+    if [[ ! -r "$helper_dir/manifest.mjs" ]]; then
+      echo "Upgrade helper is missing: $helper_dir/manifest.mjs" >&2
+      echo "Download verify.mjs and manifest.mjs from the same GitHub release as upgrade.sh." >&2
+      exit 1
+    fi
+    printf '%s\n' "$candidate"
+    return 0
+  done
+  echo "Upgrade helpers are missing." >&2
+  echo "Download verify.mjs and manifest.mjs from the same GitHub release as upgrade.sh" >&2
+  echo "and place them next to this script, or keep them at scripts/distribution/." >&2
+  exit 1
+}
+
+VERIFY_SCRIPT="$(resolve_verify_script)"
 MANIFEST_VERSION="$(node "$VERIFY_SCRIPT" --manifest "$MANIFEST" --get release)"
 if [[ "$MANIFEST_VERSION" != "$EXPECTED_VERSION" ]]; then
   echo "Upgrade refused: manifest release $MANIFEST_VERSION does not match requested $EXPECTED_VERSION." >&2

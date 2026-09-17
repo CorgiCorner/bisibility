@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   mintMigrationTokenFormSchema,
-  remainingMinutesLabel,
+  minutesUntilExpiry,
   revokeMigrationTokenFormSchema,
 } from "./cloud-token";
 
@@ -30,14 +30,10 @@ describe("cloud migration token form IDs", () => {
   });
 });
 
-describe("remainingMinutesLabel", () => {
-  it("describes remaining lifetime in minutes", () => {
-    expect(remainingMinutesLabel(new Date(Date.now() + 58 * 60_000).toISOString())).toBe(
-      "58 minutes remaining",
-    );
-    expect(remainingMinutesLabel(new Date(Date.now() + 45_000).toISOString())).toBe(
-      "1 minute remaining",
-    );
-    expect(remainingMinutesLabel(new Date(Date.now() - 1_000).toISOString())).toBe("expires now");
+describe("minutesUntilExpiry", () => {
+  it("retains expiry precision for the localized UI", () => {
+    expect(minutesUntilExpiry(new Date(Date.now() + 58 * 60_000).toISOString())).toBe(58);
+    expect(minutesUntilExpiry(new Date(Date.now() + 45_000).toISOString())).toBe(1);
+    expect(minutesUntilExpiry(new Date(Date.now() - 1_000).toISOString())).toBe(0);
   });
 });

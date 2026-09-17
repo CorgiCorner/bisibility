@@ -1,5 +1,6 @@
+import { renderWithAuditMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { AuditOperation } from "@/lib/queries/audit";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { OperationPill } from "./OperationPill";
 

@@ -1,6 +1,7 @@
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { routerMock } from "@/tests/next-navigation";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -182,6 +183,17 @@ describe("ScheduleEditor", () => {
     expect(await screen.findByText("Enter a time in 30-minute steps.")).toBeVisible();
   });
 
+  it("renders localized maximum-length validation for editable schedule fields", async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    await user.clear(screen.getByLabelText("Name"));
+    await user.type(screen.getByLabelText("Name"), "x".repeat(81));
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+
+    expect(await screen.findByText("Schedule names are 80 characters or fewer.")).toBeVisible();
+  });
+
   it("implements members with pending Moves from", async () => {
     const user = userEvent.setup();
     render(
@@ -254,7 +266,7 @@ describe("ScheduleEditor", () => {
 
     await user.click(screen.getByRole("button", { name: "Add keywords" }));
     await user.click(screen.getByRole("checkbox", { name: /api first cms/ }));
-    await user.click(screen.getByRole("button", { name: "Add 1 keywords" }));
+    await user.click(screen.getByRole("button", { name: "Add 1 keyword" }));
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(screen.getByText("Moves from Daily 06:00")).toBeVisible();

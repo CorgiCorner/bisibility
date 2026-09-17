@@ -2,12 +2,14 @@
 
 import type { CloudImportPackageFile } from "@/components/cloud/cloud-token";
 import { downloadWorkspacePackage } from "@/components/cloud/workspace-package-download";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { AdvancedCardFrame } from "@/components/settings/advanced/AdvancedCardFrame";
 import { advancedCardGeometryClassNames } from "@/components/settings/advanced/advanced-settings-layout";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/toast-context";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { classifyActionError } from "@/lib/ui/action-error";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type BackupExportAction = (input: { projectId: string }) => Promise<CloudImportPackageFile>;
@@ -17,7 +19,22 @@ type BackupExportCardProps = {
   projectId: string;
 };
 
+function backupExportError(
+  error: unknown,
+  t: ReturnType<typeof useTranslations<"projectSettingsAdvanced.backup">>,
+  sharedErrors: ReturnType<typeof useSharedErrorMessages>,
+) {
+  const classified = classifyActionError(error);
+  if (classified.kind === "staleDeployment") return sharedErrors.staleDeployment();
+  if (classified.kind === "serverComponentDigest") {
+    return sharedErrors.serverComponentDigest({ digest: classified.digest });
+  }
+  return t("error");
+}
+
 export function BackupExportCard({ exportBackup, projectId }: Readonly<BackupExportCardProps>) {
+  const t = useTranslations("projectSettingsAdvanced.backup");
+  const sharedErrors = useSharedErrorMessages();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
@@ -29,9 +46,9 @@ export function BackupExportCard({ exportBackup, projectId }: Readonly<BackupExp
     try {
       const packageFile = await exportBackup({ projectId });
       await downloadWorkspacePackage(packageFile);
-      showToast("Project data exported.", { severity: "success" });
+      showToast(t("success"), { severity: "success" });
     } catch (error) {
-      setError(actionErrorMessage(error, "Project data could not be exported."));
+      setError(backupExportError(error, t, sharedErrors));
     } finally {
       setBusy(false);
     }
@@ -40,32 +57,29 @@ export function BackupExportCard({ exportBackup, projectId }: Readonly<BackupExp
   return (
     <AdvancedCardFrame
       className={advancedCardGeometryClassNames.backup}
-      description="Download the supported project data in this package without starting a migration or changing project access."
+      description={t("description")}
       footer={
         exportBackup ? (
           <Button
             loading={busy}
-            loadingLabel="Exporting..."
+            loadingLabel={t("exporting")}
             onClick={handleExport}
             size="sm"
             startIcon={<DownloadSimple aria-hidden size={14} weight="regular" />}
             type="button"
             variant="secondary"
           >
-            Download data export
+            {t("download")}
           </Button>
         ) : null
       }
       id="backup"
-      title="Export project data"
+      title={t("title")}
     >
       <div className="rounded-control border border-border bg-bg-sunken px-3.5 py-3">
         <div className="min-w-0">
-          <div className="text-[12.5px] font-semibold text-fg">Project package</div>
-          <div className="mt-0.5 text-[11.5px] text-fg-muted">
-            Keywords, retained history, tags, competitors, alerts, saved views and notification
-            preferences.
-          </div>
+          <div className="text-[12.5px] font-semibold text-fg">{t("packageTitle")}</div>
+          <div className="mt-0.5 text-[11.5px] text-fg-muted">{t("packageDescription")}</div>
         </div>
       </div>
       {error ? (

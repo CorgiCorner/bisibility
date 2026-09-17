@@ -1,6 +1,7 @@
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { RUN_STATUSES } from "@/lib/rank-check/runs/contract";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -105,9 +106,7 @@ describe("RunPage", () => {
     renderPage();
     await user.click(screen.getByRole("button", { name: "6 skipped before start" }));
     expect(screen.getByText("Paused target - resumes when you unpause it")).toBeInTheDocument();
-    expect(
-      screen.getByText("Off-catalog pair - Arabic is not offered for Belgium"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Off-catalog language and location pair")).toBeInTheDocument();
   });
 
   it("uses live vs audit ordering", () => {

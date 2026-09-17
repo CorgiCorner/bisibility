@@ -4,17 +4,13 @@ import { DataTable } from "@/components/ui/data-table/DataTable";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { SearchInsightsPageRow } from "@/lib/search-insights/queries/top-rows-model";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useTransition } from "react";
 import {
   forwardSearchInsightsSort,
   type ModuleTableSort,
   searchInsightsDataTableSort,
 } from "./SearchInsightsRowsTable";
-import {
-  PAGE_LENS_CONTROL_LABEL,
-  PAGE_LENS_SEARCH_LABEL,
-  PAGE_LENS_TRAFFIC_LABEL,
-} from "./search-insights-copy";
 import {
   type SearchInsightsPageDataTableRow,
   searchInsightsPageColumns,
@@ -43,6 +39,7 @@ export function SearchInsightsPagesLens({
   lens,
   showSessions,
 }: Readonly<SearchInsightsPagesLensProps>) {
+  const t = useTranslations("projectSearchInsights.copy");
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,14 +58,14 @@ export function SearchInsightsPagesLens({
 
   return (
     <SegmentedControl<SearchInsightsPageLens>
-      ariaLabel={PAGE_LENS_CONTROL_LABEL}
+      ariaLabel={t("pageLensControl")}
       fitContent
       loading={pending}
       name="search-insights-pages-lens"
       onChange={pick}
       options={[
-        { label: PAGE_LENS_SEARCH_LABEL, value: "search" },
-        { label: PAGE_LENS_TRAFFIC_LABEL, value: "traffic" },
+        { label: t("pageLensSearch"), value: "search" },
+        { label: t("pageLensTraffic"), value: "traffic" },
       ]}
       size="xs"
       value={lens}
@@ -95,6 +92,8 @@ export function SearchInsightsPagesTable({
   showSessions = false,
   sort,
 }: Readonly<SearchInsightsPagesTableProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectSearchInsights.copy");
   const activeLens = pageLensFromQuery(lens, showSessions, keyEventsConfigured);
   const showTraffic = activeLens === "traffic";
   const dataRows = useMemo<SearchInsightsPageDataTableRow[]>(
@@ -102,12 +101,19 @@ export function SearchInsightsPagesTable({
     [rows],
   );
   const columns = useMemo(
-    () => searchInsightsPageColumns({ keyEventsConfigured, showTraffic, sortable: Boolean(sort) }),
-    [keyEventsConfigured, showTraffic, sort],
+    () =>
+      searchInsightsPageColumns({
+        keyEventsConfigured,
+        locale,
+        showTraffic,
+        sortable: Boolean(sort),
+        t,
+      }),
+    [keyEventsConfigured, locale, showTraffic, sort, t],
   );
   const table = (
     <DataTable
-      ariaLabel="Top pages"
+      ariaLabel={t("topPages")}
       columns={columns}
       density="compact"
       id="search-insights-pages"

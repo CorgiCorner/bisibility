@@ -1,7 +1,13 @@
+import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render as renderDom, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordsGridMarketEmpty } from "./KeywordsGridMarketEmpty";
+
+function render(children: ReactNode) {
+  return renderDom(<ProjectRankTrackerMessages>{children}</ProjectRankTrackerMessages>);
+}
 
 function renderEmpty(overrides: { canCreateKeyword?: boolean } = {}) {
   const onAddKeyword = vi.fn();

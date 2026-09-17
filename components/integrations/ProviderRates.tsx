@@ -8,6 +8,7 @@ import type { ProviderActionHandlers, ProviderRateData } from "@/lib/integration
 import type { ProviderRateFeature } from "@/lib/provider-rates/resolver";
 import { PROVIDER_RATE_COST_BOUNDS } from "@/lib/schemas/provider";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type ProviderRatesProps = {
@@ -20,15 +21,15 @@ type ProviderRatesProps = {
 
 type UpdateRateInput = Parameters<NonNullable<ProviderActionHandlers["updateProviderRate"]>>[0];
 
-function displayedAmount(rate: ProviderRateData) {
+function displayedAmount(rate: ProviderRateData, t: ReturnType<typeof useTranslations>) {
   return rate.amountCents === undefined
-    ? "Not set"
+    ? t("notSet")
     : `$${centsToDollars(rate.amountCents).toFixed(4)}`;
 }
 
-function fallbackLabel(rate: ProviderRateData) {
-  if (rate.fallbackSource === "measured") return "Use measured rate";
-  if (rate.fallbackSource === "list") return "Use list price";
+function fallbackLabel(rate: ProviderRateData, t: ReturnType<typeof useTranslations>) {
+  if (rate.fallbackSource === "measured") return t("useMeasured");
+  if (rate.fallbackSource === "list") return t("useList");
   return null;
 }
 
@@ -39,6 +40,7 @@ export function ProviderRates({
   rates,
   updateRate,
 }: Readonly<ProviderRatesProps>) {
+  const t = useTranslations("projectIntegrations.rates");
   const router = useRouter();
   const { readOnly } = useProjectWriteMode();
   const [editing, setEditing] = useState<ProviderRateFeature | null>(null);
@@ -78,7 +80,7 @@ export function ProviderRates({
       setDraft("");
       router.refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Rate could not be saved.");
+      setError(cause instanceof Error ? cause.message : t("saveError"));
     } finally {
       setPending(false);
     }
@@ -90,7 +92,7 @@ export function ProviderRates({
     const value = Number(normalized);
     const { maximum, minimum } = PROVIDER_RATE_COST_BOUNDS;
     if (!normalized || !Number.isFinite(value) || value < minimum || value > maximum) {
-      setError(`Enter a rate from ${minimum} to ${maximum}.`);
+      setError(t("invalidRate", { maximum, minimum }));
       return;
     }
     void save(rate, value);
@@ -99,10 +101,10 @@ export function ProviderRates({
   return (
     <section className="overflow-hidden rounded-control border border-border">
       <div className="bg-bg-sunken py-2 pr-2.5 pl-3.5 text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        Provider rates
+        {t("title")}
       </div>
       {rates.map((rate) => {
-        const clearLabel = rate.source === "manual" ? fallbackLabel(rate) : null;
+        const clearLabel = rate.source === "manual" ? fallbackLabel(rate, t) : null;
         const isEditing = editing === rate.feature;
         return (
           <div className="border-border border-t" key={rate.feature}>
@@ -111,13 +113,13 @@ export function ProviderRates({
               {rate.editable === false ? (
                 <span className="inline-flex items-center gap-[9px] px-2 py-1">
                   <span className="text-xs font-medium tabular-nums text-fg">
-                    {displayedAmount(rate)}
+                    {displayedAmount(rate, t)}
                   </span>
                   <RateSourceChip {...rate} />
                 </span>
               ) : (
                 <button
-                  aria-label={`Edit ${rate.label} rate`}
+                  aria-label={t("editRate", { label: rate.label })}
                   className={`inline-flex items-center gap-[9px] rounded-control border px-2 py-1 outline-none transition-colors hover:border-border-control hover:bg-bg-sunken focus-visible:border-accent disabled:cursor-default disabled:opacity-70 ${
                     rate.source === "manual" || isEditing
                       ? "border-accent bg-accent-soft"
@@ -132,7 +134,7 @@ export function ProviderRates({
                       rate.amountCents === undefined ? "text-fg-muted" : "text-fg"
                     }`}
                   >
-                    {displayedAmount(rate)}
+                    {displayedAmount(rate, t)}
                   </span>
                   <RateSourceChip {...rate} />
                 </button>
@@ -141,7 +143,7 @@ export function ProviderRates({
             {isEditing ? (
               <div className="flex items-center gap-[9px] px-3.5 pb-3">
                 <input
-                  aria-label={`${rate.label} rate in USD`}
+                  aria-label={t("rateUsd", { label: rate.label })}
                   className="min-w-0 flex-1 rounded-control border border-accent bg-transparent px-3 py-[9px] text-[13px] font-medium tabular-nums text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
                   disabled={pending}
                   inputMode="decimal"
@@ -163,7 +165,7 @@ export function ProviderRates({
                   type="button"
                   variant="primary"
                 >
-                  Save
+                  {t("save")}
                 </Button>
                 {clearLabel ? (
                   <Button
@@ -190,7 +192,7 @@ export function ProviderRates({
         </p>
       ) : null}
       <p className="m-0 border-border border-t bg-bg-sunken px-3.5 py-[11px] text-[10px] leading-[1.6] text-fg-muted">
-        Set a rate to override any of these. Providers bill you directly.
+        {t("help")}
       </p>
     </section>
   );

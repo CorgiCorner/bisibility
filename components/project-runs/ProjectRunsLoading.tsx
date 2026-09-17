@@ -1,3 +1,9 @@
+"use client";
+
+// A route-level loading.tsx renders this skeleton inside ProjectRunsFeatureBoundary, whose
+// messages are a client provider. Reading them from a Server Component would fall back to
+// the request config, which does not carry `projectRuns`.
+
 import { PageContent } from "@/components/shell/PageContent";
 import { Card } from "@/components/ui/Card";
 import {
@@ -7,6 +13,7 @@ import {
 import { TableCardHeader } from "@/components/ui/TableCardHeader";
 import { tableHeaderClassName } from "@/components/ui/table-header-styles";
 import { cn } from "@/lib/ui/cn";
+import { useTranslations } from "next-intl";
 
 const layouts = {
   runs: {
@@ -22,12 +29,10 @@ const layouts = {
       "Actions",
     ],
     grid: "min-w-[1496px] grid-cols-[260px_170px_230px_152px_140px_128px_184px_184px_48px]",
-    label: "runs",
   },
   schedules: {
     columns: ["Schedule", "Cadence", "Members", "Per run", "Next", "Actions"],
     grid: "min-w-[964px] grid-cols-[minmax(184px,2fr)_minmax(160px,1fr)_minmax(192px,2fr)_116px_140px_140px]",
-    label: "schedules",
   },
 } as const;
 const rowKeys = ["first", "second", "third", "fourth", "fifth"] as const;
@@ -43,11 +48,13 @@ function Bar({ className }: Readonly<{ className: string }>) {
 export function ProjectRunsLoading({
   active = "runs",
 }: Readonly<{ active?: keyof typeof layouts }>) {
+  const t = useTranslations("projectRuns.schedules.loading");
   const layout = layouts[active];
+  const label = active === "runs" ? t("loadingRuns") : t("loadingSchedules");
   return (
-    <PageContent aria-busy="true" aria-label={`Loading ${layout.label}`}>
+    <PageContent aria-busy="true" aria-label={label}>
       <span className="sr-only" role="status">
-        Loading {layout.label}
+        {label}
       </span>
       <div aria-hidden className="grid min-w-0 gap-4">
         <div className="flex min-w-0 gap-0.5 border-b border-border">
@@ -59,7 +66,7 @@ export function ProjectRunsLoading({
                 tab === active ? "border-accent text-fg" : "border-transparent text-fg-muted",
               )}
             >
-              {tab === "runs" ? "Runs" : "Schedules"}
+              {tab === "runs" ? t("runs") : t("schedules")}
             </span>
           ))}
         </div>

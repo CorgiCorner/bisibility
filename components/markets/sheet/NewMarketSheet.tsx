@@ -12,7 +12,7 @@ export function NewMarketSheet({ open, ...props }: Readonly<NewMarketSheetProps>
         <Sheet
           backAction={
             creator.creatingSchedule
-              ? { label: "Back to market", onClick: creator.onBack }
+              ? { label: creator.backLabel, onClick: creator.onBack }
               : undefined
           }
           footer={creator.footer}

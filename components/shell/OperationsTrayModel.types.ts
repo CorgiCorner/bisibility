@@ -1,6 +1,12 @@
 import type { OperationRowProps } from "@/components/ui/OperationRow";
 import type { StatusChipTone } from "@/components/ui/StatusChip";
-import type { OperationSnapshot } from "@/lib/rank-check/runs/contract";
+import type {
+  GscImportOperation,
+  OperationSnapshot,
+  RankCheckOperation,
+  RunTrigger,
+  SelectionKind,
+} from "@/lib/rank-check/runs/contract";
 
 export type TrayOperation = Pick<
   OperationRowProps,
@@ -25,13 +31,25 @@ export type TrayOperation = Pick<
   | "title"
   | "total"
   | "unit"
+  | "unitKind"
 > & {
   attention: Extract<StatusChipTone, "attention" | "critical"> | null;
   blocked: boolean;
   id: string;
+  gscImport: {
+    presentationTitle: GscImportOperation["presentation"]["title"];
+    supportingText: string | null;
+  } | null;
   kind: OperationSnapshot["kind"];
   lifecycle: "attention" | "executing" | "terminal" | "waiting";
   property: string | null;
+  rankCheck: {
+    blockedReason: string | null;
+    budget: RankCheckOperation["budget"];
+    keywordCount: number;
+    selectionKind: SelectionKind;
+    trigger: RunTrigger;
+  } | null;
 };
 
 export type OperationsTrayPill =

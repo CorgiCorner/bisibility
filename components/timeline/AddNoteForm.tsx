@@ -5,14 +5,16 @@ import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Textarea } from "@/components/ui/Textarea";
 import { addSignalNote } from "@/lib/actions/signals";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { type CreateSignalNoteInput, createSignalNoteSchema } from "@/lib/timeline/types";
+import type { CreateSignalNoteInput } from "@/lib/timeline/types";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { NotePencilIcon as NotePencil } from "@phosphor-icons/react/dist/csr/NotePencil";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
+import { useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { createTimelineNoteFormSchema } from "./timeline-note-form-schema";
 
 type AddNoteFormProps = {
   canCreate: boolean;
@@ -21,12 +23,6 @@ type AddNoteFormProps = {
 };
 
 const FORM_ID = "timeline-add-note-form";
-
-const severityOptions = [
-  { label: "Info", value: "info" },
-  { label: "Warning", value: "warning" },
-  { label: "Critical", value: "critical" },
-];
 
 const labelClass =
   "font-sans tabular-nums text-[10.5px] font-semibold uppercase tracking-[0.5px] text-fg-muted";
@@ -49,10 +45,17 @@ function AddNoteFormControls({
   compact,
   projectId,
 }: Readonly<{ compact: boolean; projectId: string }>) {
+  const t = useTranslations("projectTimeline.form");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const schema = useMemo(() => createTimelineNoteFormSchema(t), [t]);
+  const severityOptions = [
+    { label: t("severityInfo"), value: "info" },
+    { label: t("severityWarning"), value: "warning" },
+    { label: t("severityCritical"), value: "critical" },
+  ];
   const {
     formState: { errors },
     handleSubmit,
@@ -63,7 +66,7 @@ function AddNoteFormControls({
   } = useForm<CreateSignalNoteInput>({
     defaultValues: defaultValues(projectId),
     mode: "onChange",
-    resolver: zodResolver(createSignalNoteSchema),
+    resolver: zodResolver(schema),
   });
   const severity = watch("severity");
 
@@ -82,9 +85,7 @@ function AddNoteFormControls({
           setOpen(false);
           router.refresh();
         })
-        .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "Note could not be added.")),
-        );
+        .catch((error: unknown) => setMessage(actionErrorMessage(error, t("saveError"))));
     });
   }
 
@@ -96,10 +97,10 @@ function AddNoteFormControls({
         type="button"
       >
         <Plus aria-hidden size={14} weight="regular" />
-        Add note
+        {t("addNote")}
       </button>
       <AppDrawer
-        description="Attach context to the project timeline - a deploy, a page change, an experiment."
+        description={t("description")}
         footer={
           <div className="flex items-center justify-end gap-1.5">
             <button
@@ -108,7 +109,7 @@ function AddNoteFormControls({
               type="button"
             >
               <X weight="regular" aria-hidden size={13} />
-              Cancel
+              {t("cancel")}
             </button>
             <button
               className="inline-flex h-9 items-center gap-1 rounded-control border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
@@ -117,42 +118,42 @@ function AddNoteFormControls({
               type="submit"
             >
               <NotePencil weight="regular" aria-hidden size={13} />
-              {isPending ? "Saving..." : "Save note"}
+              {isPending ? t("saving") : t("save")}
             </button>
           </div>
         }
         onClose={close}
         open={open}
-        title="Add note"
+        title={t("title")}
       >
         <form className="grid gap-4" id={FORM_ID} onSubmit={handleSubmit(onSubmit)}>
           <input type="hidden" {...register("projectId")} />
           <label className="grid gap-1.5" htmlFor="timeline-note">
-            <span className={labelClass}>Note</span>
+            <span className={labelClass}>{t("note")}</span>
             <Textarea
               className="min-h-[110px]"
               id="timeline-note"
               invalid={Boolean(errors.note)}
-              placeholder="Add context for a ranking, URL, deploy, or page event."
+              placeholder={t("notePlaceholder")}
               resize="vertical"
               {...register("note")}
             />
           </label>
           <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_140px]">
             <label className="grid gap-1.5">
-              <span className={labelClass}>URL</span>
+              <span className={labelClass}>{t("url")}</span>
               <input
                 className="h-9 min-w-0 rounded-control border border-border-control bg-transparent px-3 font-sans tabular-nums text-[12px] text-fg outline-none focus:border-accent"
-                placeholder="https://example.com/page"
+                placeholder={t("urlPlaceholder")}
                 type="url"
                 {...register("url")}
               />
             </label>
             <label className="grid gap-1.5">
-              <span className={labelClass}>Severity</span>
+              <span className={labelClass}>{t("severity")}</span>
               <input type="hidden" {...register("severity")} />
               <MenuSelect
-                ariaLabel="Severity"
+                ariaLabel={t("severity")}
                 onChange={(value) =>
                   setValue("severity", value as CreateSignalNoteInput["severity"], {
                     shouldDirty: true,

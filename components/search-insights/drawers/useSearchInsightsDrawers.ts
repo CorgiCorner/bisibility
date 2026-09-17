@@ -26,6 +26,7 @@ export type SearchInsightsDrawerActions = {
 };
 
 export type UseSearchInsightsDrawersInput = SearchInsightsDrawerActions & {
+  labelFrame: (frame: SearchInsightsDrawerFrame) => string;
   comparison?: string;
   period: string;
   projectId: string;
@@ -80,7 +81,7 @@ export function useSearchInsightsDrawers(input: UseSearchInsightsDrawersInput) {
   // Two reads of the same frame can overlap - a retry, then Show all - and the slower one must
   // not land on top of the newer answer, so each frame keeps its own request number.
   const requests = useRef(new Map<string, number>());
-  const stack = useDrawerStack(bodyRef);
+  const stack = useDrawerStack(bodyRef, input.labelFrame);
   const visited = useVisitedMarks(input.projectId);
   const [entries, setEntries] = useState<Entries>({});
 

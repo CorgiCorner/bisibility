@@ -1,11 +1,14 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { actionErrorMessage, type KeywordWorkspaceActions } from "./action-utils";
+import type { KeywordWorkspaceActions } from "./action-utils";
+import { presentSafeActionError } from "./safe-action-error";
 
 type KeywordPendingDeleteButtonProps = {
   bulkDeleteAction: KeywordWorkspaceActions["bulkDeleteAction"];
@@ -22,6 +25,8 @@ export function KeywordPendingDeleteButton({
   projectId,
   projectRef,
 }: Readonly<KeywordPendingDeleteButtonProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.rowActions");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -36,7 +41,7 @@ export function KeywordPendingDeleteButton({
       router.push(appPath(projectRef, "rank-tracker"));
       router.refresh();
     } catch (error) {
-      setActionError(actionErrorMessage(error));
+      setActionError(presentSafeActionError(error, sharedErrors, t("deleteFailed")));
       throw error;
     } finally {
       setDeleting(false);
@@ -46,14 +51,14 @@ export function KeywordPendingDeleteButton({
   return (
     <span className="grid gap-2">
       <button
-        aria-label={`Delete ${keywordLabel}`}
+        aria-label={t("deleteAria", { name: keywordLabel })}
         className="inline-flex flex-none items-center justify-center gap-[7px] rounded-control border border-red px-4 py-2.5 text-[13px] font-semibold text-red-text outline-none hover:bg-bg-sunken focus-visible:bg-bg-sunken disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
         disabled={deleting}
         onClick={() => setConfirmOpen(true)}
         type="button"
       >
         <Trash aria-hidden size={14} weight="regular" />
-        Delete
+        {t("delete")}
       </button>
       <ConfirmModal
         busy={deleting}

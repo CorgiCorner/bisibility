@@ -2,12 +2,13 @@
 
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { Button } from "@/components/ui/Button";
-import { blockedRunPresentation } from "@/lib/rank-check/runs/blocked-presentation";
 import { appPath, appRootPath, type ProjectRef } from "@/lib/routing/app-path";
+import { useLocale, useTranslations } from "next-intl";
 import type { RunPageData } from "./RunPageTypes";
+import { localizedBlockedRunCopy } from "./rank-run-copy";
 
 function actionHref(
-  action: ReturnType<typeof blockedRunPresentation>["action"],
+  action: "connection_settings" | "edit_budget" | "worker_status" | null,
   projectRef: ProjectRef,
 ) {
   if (action === "connection_settings") return appPath(projectRef, "integrations");
@@ -16,10 +17,13 @@ function actionHref(
   return null;
 }
 
-function actionLabel(action: ReturnType<typeof blockedRunPresentation>["action"]) {
-  if (action === "connection_settings") return "Connection settings";
-  if (action === "edit_budget") return "Edit budget";
-  if (action === "worker_status") return "Worker status";
+function actionLabel(
+  action: "connection_settings" | "edit_budget" | "worker_status" | null,
+  t: ReturnType<typeof useTranslations<"projectRuns.rankRuns">>,
+) {
+  if (action === "connection_settings") return t("actions.connectionSettings");
+  if (action === "edit_budget") return t("actions.editBudget");
+  if (action === "worker_status") return t("actions.workerStatus");
   return null;
 }
 
@@ -28,19 +32,25 @@ export function RunPageBlockedBanner({
   run,
 }: Readonly<{ projectRef: ProjectRef; run: RunPageData }>) {
   const deploymentMode = useDeploymentMode();
+  const locale = useLocale();
+  const t = useTranslations("projectRuns.rankRuns");
   if (run.status !== "blocked") return null;
 
-  const presentation = blockedRunPresentation({
-    budget: run.budget,
-    deploymentMode,
-    reason: run.blockedReason,
-  });
-  const action = actionLabel(presentation.action);
+  const presentation = localizedBlockedRunCopy(
+    {
+      budget: run.budget,
+      deploymentMode,
+      reason: run.blockedReason,
+    },
+    t,
+    locale,
+  );
+  const action = actionLabel(presentation.action, t);
   const href = actionHref(presentation.action, projectRef);
 
   return (
     <section
-      aria-label="Blocked run guidance"
+      aria-label={t("blocked.guidance")}
       className="flex flex-wrap items-center gap-3 rounded-card border border-yellow/35 bg-yellow/10 px-4 py-3"
     >
       <div className="min-w-0 flex-1">

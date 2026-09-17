@@ -1,5 +1,6 @@
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { serpDepthSchema } from "@/lib/schemas/serp-depth";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
 import { describe, expect, it } from "vitest";

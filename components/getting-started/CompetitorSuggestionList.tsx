@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import type { CompetitorSuggestionEvidence } from "@/lib/getting-started/setup-steps";
+import { useTranslations } from "next-intl";
 
 type Props = {
   suggestions: readonly CompetitorSuggestionEvidence[];
@@ -12,13 +13,6 @@ type Props = {
   onDismiss: (domain: string) => void;
 };
 
-function evidenceLabel(suggestion: CompetitorSuggestionEvidence) {
-  const coverage = `seen on ${suggestion.seenOn} of ${suggestion.of} keywords / best #${suggestion.bestPosition}`;
-  if (suggestion.kind === "platform") return `${coverage} · Platform or directory`;
-  if (suggestion.kind === "other") return `${coverage} · Limited evidence`;
-  return coverage;
-}
-
 export function CompetitorSuggestionList({
   suggestions,
   selectedDomains,
@@ -26,16 +20,16 @@ export function CompetitorSuggestionList({
   onToggle,
   onDismiss,
 }: Readonly<Props>) {
+  const t = useTranslations("projectGettingStarted.competitors.suggestions");
   const groups = [
     {
-      title: "Suggested competitors",
-      description: "Appear on at least two different non-branded keywords.",
+      title: t("suggestedTitle"),
+      description: t("suggestedDescription"),
       rows: suggestions.filter((item) => !item.kind || item.kind === "competitor"),
     },
     {
-      title: "Other domains in results",
-      description:
-        "These results alone do not establish competition. Add a domain only if it competes with your site.",
+      title: t("otherTitle"),
+      description: t("otherDescription"),
       rows: suggestions.filter((item) => item.kind === "other" || item.kind === "platform"),
     },
   ];
@@ -62,7 +56,12 @@ export function CompetitorSuggestionList({
                       onChange={(event) => onToggle(suggestion.domain, event.target.checked)}
                     />
                     <p className="m-0 mt-1 pl-7 text-[11px] leading-4 text-fg-muted">
-                      {evidenceLabel(suggestion)}
+                      {(() => {
+                        const coverage = t("evidence", suggestion);
+                        if (suggestion.kind === "platform") return t("platform", { coverage });
+                        if (suggestion.kind === "other") return t("limited", { coverage });
+                        return coverage;
+                      })()}
                     </p>
                   </div>
                   <Button
@@ -72,7 +71,7 @@ export function CompetitorSuggestionList({
                     type="button"
                     variant="ghost"
                   >
-                    Remove
+                    {t("remove")}
                   </Button>
                 </div>
               ))}

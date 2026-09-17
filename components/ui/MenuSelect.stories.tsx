@@ -1,5 +1,6 @@
 import { DataTableDensityMenu } from "@/components/ui/data-table/DataTableDensityMenu";
 import { MenuMultiSelect, MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import { GlobeIcon } from "@phosphor-icons/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
@@ -74,6 +75,7 @@ const meta = {
   title: "UI/MenuSelect",
   parameters: { layout: "fullscreen" },
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="min-h-[520px] bg-bg p-8 text-fg">
         <Story />

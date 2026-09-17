@@ -1,7 +1,9 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { MenuMultiSelect } from "@/components/ui/MenuMultiSelect";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
 type Override = { marketId: string; marketLabel: string; mode: "added" | "excluded" };
@@ -33,6 +35,8 @@ export function OverrideCell({
   replaceMarkets,
   scopePolicy,
 }: Readonly<OverrideCellProps>) {
+  const t = useTranslations("projectCompetitors.ui");
+  const sharedErrors = useSharedErrorMessages();
   const [selection, setSelection] = useState<MarketSelection>({
     marketIds: overrides.map((override) => override.marketId),
     scopePolicy,
@@ -48,12 +52,12 @@ export function OverrideCell({
       : selection.marketIds.includes(market.id),
   );
   const label = allSelected
-    ? "All markets"
+    ? t("allMarkets")
     : includedMarkets.length === 0
-      ? "No markets"
+      ? t("noMarkets")
       : includedMarkets.length === 1
         ? includedMarkets[0].label
-        : `${includedMarkets.length} markets`;
+        : t("markets", { count: includedMarkets.length });
 
   function save(next: MarketSelection) {
     const snapshot = { ...next, marketIds: [...next.marketIds] };
@@ -68,7 +72,7 @@ export function OverrideCell({
       } catch (error: unknown) {
         changeRevision.current += 1;
         setSelection(confirmedSelection.current);
-        setMessage(actionErrorMessage(error, "Markets could not be updated."));
+        setMessage(presentSafeActionError(error, sharedErrors, t("marketsUpdateError")));
       }
     };
     saveQueue.current = saveQueue.current.then(persist, persist);
@@ -90,16 +94,16 @@ export function OverrideCell({
     <div className="flex min-w-0 flex-col gap-1.5" data-override-cell="">
       {canEdit ? (
         <MenuMultiSelect
-          allLabel="All markets"
+          allLabel={t("allMarkets")}
           allSelected={allSelected}
-          ariaLabel="Competitor markets"
+          ariaLabel={t("competitorMarkets")}
           minSelected={0}
           onChange={changeMarkets}
           onSelectAll={() => save({ marketIds: [], scopePolicy: "all_markets" })}
           options={availableMarkets.map((market) => ({ label: market.label, value: market.id }))}
           placeholder={label}
           searchable={availableMarkets.length > 6}
-          searchPlaceholder="Search markets..."
+          searchPlaceholder={t("searchMarkets")}
           summary={() => label}
           triggerClassName="h-8 w-full min-w-36 max-w-56 text-[12px]"
           values={includedMarkets.map((market) => market.id)}

@@ -11,6 +11,7 @@ import { AlertBannerStack } from "@/components/ui/AlertBannerStack";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
 import { appPath } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { CheckHealthView } from "./keywords-grid-types";
 
@@ -40,37 +41,41 @@ type EmptyRankNotice =
       title: string;
     };
 
+type NoticesTranslations = ReturnType<typeof useTranslations<"projectRankTracker.list.notices">>;
+
 function emptyRankNotice({
   checkStates,
   failedCount,
   providerConnected,
   projectRef,
   readOnly,
+  t,
 }: {
   checkStates: KeywordCheckState[];
   failedCount: number;
   providerConnected?: boolean;
   projectRef: string;
   readOnly: boolean;
+  t: NoticesTranslations;
 }): EmptyRankNotice | null {
   if (readOnly) {
     return {
-      detail: "Rank checks cannot start until the migration hold is released.",
+      detail: t("migrationHoldDetail"),
       kind: "alert",
       tint: "yellow",
-      title: "Rank checks paused - migration hold.",
+      title: t("migrationHoldTitle"),
     };
   }
   if (failedCount > 0 || checkStates.includes("failed")) {
     return {
       action: {
         href: projectRunsPath(projectRef),
-        label: "Review check runs",
+        label: t("reviewCheckRuns"),
       },
-      detail: "Some keyword positions could not be updated.",
+      detail: t("failedDetail"),
       kind: "alert",
       tint: "red",
-      title: "Rank checks failed to produce ranking data.",
+      title: t("failedTitle"),
     };
   }
   if (checkStates.includes("running")) {
@@ -78,12 +83,12 @@ function emptyRankNotice({
       action: {
         href: projectRunsPath(projectRef),
         icon: "arrow",
-        label: "View check runs",
+        label: t("viewCheckRuns"),
       },
-      detail: "Ranking data will appear after the running checks finish.",
+      detail: t("runningDetail"),
       kind: "alert",
       tint: "yellow",
-      title: "Rank checks are running.",
+      title: t("runningTitle"),
     };
   }
   if (checkStates.some((state) => state === "not_ranked")) {
@@ -91,12 +96,12 @@ function emptyRankNotice({
       action: {
         href: projectRunsPath(projectRef),
         icon: "arrow",
-        label: "View check runs",
+        label: t("viewCheckRuns"),
       },
-      detail: "Completed checks did not find these domains in the top 100 results.",
+      detail: t("notRankedDetail"),
       kind: "alert",
       tint: "yellow",
-      title: "No top-100 rankings found.",
+      title: t("notRankedTitle"),
     };
   }
   if (checkStates.length > 0 && checkStates.every((state) => state === "never_checked")) {
@@ -120,6 +125,7 @@ export function KeywordsGridNotices({
   runCheckNowAction,
   rowCount,
 }: Readonly<KeywordsGridNoticesProps>) {
+  const t = useTranslations("projectRankTracker.list.notices");
   const { readOnly } = useProjectWriteMode();
   const rankNotice = emptyRankNotice({
     checkStates,
@@ -127,6 +133,7 @@ export function KeywordsGridNotices({
     providerConnected,
     projectRef: projectId,
     readOnly,
+    t,
   });
   return (
     <>
@@ -136,7 +143,7 @@ export function KeywordsGridNotices({
             rankNotice.connectProvider && canManageProviders ? (
               <FirstCheckBannerLink
                 href={appPath(projectId, "integrations")}
-                label="Connect provider"
+                label={t("connectProvider")}
               />
             ) : rankNotice.connectProvider ? undefined : firstPendingKeywordId &&
               runCheckNowAction ? (

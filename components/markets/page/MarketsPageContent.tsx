@@ -17,6 +17,7 @@ import type { ProjectMarketEditInput } from "@/lib/markets/project-market-edit";
 import type { ArchivedProjectMarketsView, ProjectMarketsView } from "@/lib/queries/project-markets";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 
 type MarketsPageContentProps = Pick<KeywordWorkspaceActions, "addKeywordsAction"> & {
@@ -81,6 +82,7 @@ function NewMarketSeam({
   canCreate,
   onOpen,
 }: Readonly<{ canCreate: boolean; onOpen: () => void }>) {
+  const t = useTranslations("projectMarkets");
   return (
     <Button
       data-new-market-seam="b2"
@@ -89,7 +91,7 @@ function NewMarketSeam({
       size="sm"
       variant="secondary"
     >
-      New market
+      {t("newMarket")}
     </Button>
   );
 }
@@ -99,16 +101,13 @@ function MarketsEmptyState({
   canCreate,
   onOpen,
 }: Readonly<{ archived: boolean; canCreate: boolean; onOpen: () => void }>) {
+  const t = useTranslations("projectMarkets");
   return (
     <EmptyState
       action={<NewMarketSeam canCreate={canCreate} onOpen={onOpen} />}
-      description={
-        archived
-          ? "Archived markets appear here. Restore one when you are ready to resume its schedules."
-          : "Create a market to organize keyword tracking by location and language."
-      }
-      mark={<ModuleMark bordered icon={MapPin} label="Markets" />}
-      title={archived ? "No archived markets" : "Track your first market"}
+      description={archived ? t("restoreArchivedHint") : t("trackFirstDescription")}
+      mark={<ModuleMark bordered icon={MapPin} label={t("markets")} />}
+      title={archived ? t("noArchivedMarkets") : t("trackFirst")}
     />
   );
 }
@@ -129,6 +128,7 @@ export function MarketsPageContent({
   onStatusChange,
   openNewMarket = false,
 }: Readonly<MarketsPageContentProps>) {
+  const t = useTranslations("projectMarkets");
   const pathname = usePathname();
   const router = useRouter();
   const [archiveTarget, setArchiveTarget] = useState<MarketsPageRow | null>(null);
@@ -169,11 +169,11 @@ export function MarketsPageContent({
     <div className="grid gap-5" data-markets-page="">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border">
         <Tabs
-          ariaLabel="Market visibility"
+          ariaLabel={t("visibility")}
           onChange={(view) => setShowArchived(view === "archived")}
           options={[
-            { label: "Active and paused", value: "active" },
-            { label: "Archived", value: "archived" },
+            { label: t("activeAndPaused"), value: "active" },
+            { label: t("archived"), value: "archived" },
           ]}
           panelId={panelId}
           value={showArchived ? "archived" : "active"}
@@ -200,7 +200,8 @@ export function MarketsPageContent({
                   <div className="min-w-0 flex-1">
                     <p className="m-0 font-medium text-fg">{market.name}</p>
                     <p className="m-0 mt-0.5 text-[12px] text-fg-muted">
-                      {market.displayName} / {market.languageLabel} - {market.keywordCount} keywords
+                      {market.displayName} / {market.languageLabel} - {t("keywordCount")}:{" "}
+                      {market.keywordCount}
                     </p>
                   </div>
                   <Button
@@ -209,7 +210,7 @@ export function MarketsPageContent({
                     size="sm"
                     variant="secondary"
                   >
-                    Restore
+                    {t("restore")}
                   </Button>
                 </div>
               ))}
@@ -229,7 +230,7 @@ export function MarketsPageContent({
               onStatusConfirmed={router.refresh}
               projectId={markets.projectId}
               rows={visibleRows.filter((market) => market.status === "active")}
-              title="Active markets"
+              title={t("activeMarkets")}
             />
             {visibleRows.some((market) => market.status === "paused") ? (
               <MarketsTable
@@ -246,7 +247,7 @@ export function MarketsPageContent({
                 onStatusConfirmed={router.refresh}
                 projectId={markets.projectId}
                 rows={visibleRows.filter((market) => market.status === "paused")}
-                title="Paused markets"
+                title={t("pausedMarkets")}
               />
             ) : null}
           </div>

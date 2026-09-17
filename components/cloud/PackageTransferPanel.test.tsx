@@ -1,6 +1,8 @@
+import { renderWithAdvancedSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { buildCloudWorkspacePackage } from "@/lib/migration/workspace-package";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { ChunkedTransferError } from "../settings/migration/useChunkedTransfer";
 import { PackageTransferPanel } from "./PackageTransferPanel";
 
 const mocks = vi.hoisted(() => ({
@@ -120,7 +122,11 @@ describe("PackageTransferPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Transfer" }));
 
-    expect(await screen.findByText("Read-only mode could not be enabled.")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Read-only mode could not be enabled. Cancel the migration or retry the hold before transferring.",
+      ),
+    ).toBeInTheDocument();
     expect(actions.serverTransferAction).not.toHaveBeenCalled();
     expect(actions.onTransferEnd).not.toHaveBeenCalled();
   });
@@ -144,6 +150,23 @@ describe("PackageTransferPanel", () => {
 
     await waitFor(() => expect(onTransferEnd).toHaveBeenCalledOnce());
     expect(order).toEqual(["hold", "request", "release"]);
+  });
+
+  it("shows the localized unreachable destination state from the real transfer error", async () => {
+    const onTransferEnd = vi.fn(async () => undefined);
+    const serverTransferAction = vi.fn(async () => {
+      throw new ChunkedTransferError("unreachable");
+    });
+    renderServerTransfer({ onTransferEnd, serverTransferAction });
+
+    fireEvent.click(screen.getByRole("button", { name: "Transfer" }));
+
+    expect(
+      await screen.findByText(
+        "The destination instance could not be reached. Check the URL and retry.",
+      ),
+    ).toBeInTheDocument();
+    expect(onTransferEnd).toHaveBeenCalledOnce();
   });
 
   it("loads a zip manifest and transfers its JSON content", async () => {

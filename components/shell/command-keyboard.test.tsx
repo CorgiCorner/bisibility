@@ -1,5 +1,6 @@
 import { Modal } from "@/components/ui/Modal";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { renderWithSharedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { handleShellKeyDown } from "./command-keyboard";
 

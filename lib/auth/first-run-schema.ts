@@ -19,4 +19,21 @@ export const setupCompletionSchema = setupAccountSchema.extend({
   otp: z.array(otpDigitSchema).length(6, "Enter the 6-digit code."),
 });
 
+export type SetupValidationMessages = {
+  email: string;
+  nameLong: string;
+  nameRequired: string;
+  otp: string;
+};
+
+/** Builds request-local UI validation without changing server-side error defaults. */
+export function createSetupCompletionSchema(messages: SetupValidationMessages) {
+  const otp = z.string().regex(/^\d?$/, messages.otp);
+  return z.object({
+    email: z.email(messages.email),
+    name: z.string().trim().min(1, messages.nameRequired).max(100, messages.nameLong),
+    otp: z.array(otp).length(6, messages.otp),
+  });
+}
+
 export type SetupFormValues = z.infer<typeof setupCompletionSchema>;

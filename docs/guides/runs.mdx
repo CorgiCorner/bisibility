@@ -1,15 +1,53 @@
 ---
-title: "Runs"
-description: "Understand rank-check runs, their statuses, outcomes, and target results."
+title: "Run rank checks"
+description: "Start a rank check, find the result, and use the Upcoming, Active, Needs attention, and Finished filters."
 ---
 
 A rank-check run is one tracked execution over a selection of keyword targets. A
 run can be started manually, created by a schedule, retried, or started through
 the app API. It groups the work and its results in one place.
 
+## Start a check and find the result
+
+1. Open **Rank Tracker** and select the keywords to check.
+2. Select **Run checks** (or **Run check** for one keyword), review the selected
+   depth and estimated cost, then select **Start run**. From Overview you can
+   also select **Run first check**.
+3. Watch progress under **Runs → Active**.
+4. When the run finishes, open **Runs → Finished** and open the run to read
+   positions, ranking URLs, and per-target outcomes.
+
+To start one future occurrence immediately, or to skip it, open
+**Runs → Upcoming**. These controls change that one occurrence, not the
+schedule. Edit the [schedule](/guides/schedules) to change cadence or
+membership.
+
 A [single check](/api/checks) retrieves one current position for one keyword
 target. A run coordinates multiple checks, including the targets that are still
 waiting, the ones that finished, and the final result of the whole selection.
+
+## Filter runs
+
+**Runs** lists every execution. Use these filters:
+
+| Filter | What you see |
+| - | - |
+| Upcoming | Future schedule occurrences that have not started. |
+| Active | Runs that are queued, running, or cancelling. |
+| Needs attention | Blocked or otherwise stalled work. |
+| Finished | Terminal runs you can inspect or retry. |
+
+The Upcoming filter is the app label for occurrences whose backend status is
+still `planned` (or blocked before launch). The status table below keeps the
+contract names.
+
+**Rank Tracker → Runs** uses a different control: **Planned** and **History**,
+not Upcoming. Planned lists the next seven days, soonest first. Per-row labels
+there are **Scheduled** or **Planned**. Use the project **Runs** page when you
+need Upcoming, Active, Needs attention, and Finished.
+
+When a completed run is `partial`, you can retry its failed or deferred targets
+as a new run. The original run and its results are retained.
 
 ## Run status
 
@@ -68,14 +106,3 @@ Run the target again if you need a fresh result.
 
 A run containing a Not confirmed target can never finish with `succeeded`: the
 target remains unfinished for outcome calculation.
-
-## Planned runs
-
-The **Planned** view shows future schedule occurrences before they start. From
-there you can choose **Run now** to start that one occurrence immediately, or
-**Skip once** to cancel that one planned occurrence. These controls do not
-change the schedule itself. To change future cadence or membership, edit the
-[schedule](/guides/schedules).
-
-When a completed run is `partial`, you can retry its failed or deferred targets
-as a new run. The original run and its results are retained.

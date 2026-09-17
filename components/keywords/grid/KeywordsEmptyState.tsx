@@ -1,10 +1,12 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import {
   KeywordSuggestionDrawer,
   type SuggestionCostContext,
 } from "@/components/keywords/import/KeywordSuggestionDrawer";
 import type { ImportTopQueriesAction } from "@/components/onboarding/steps/KeywordTopQueryImport";
+import { useProjectKeywordImportMessages } from "@/components/rank-tracker/useProjectKeywordImportMessages";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
@@ -14,10 +16,11 @@ import type { TopQuerySuggestion } from "@/lib/keyword-suggest/sanitize-top-quer
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { appPath } from "@/lib/routing/app-path";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { RankingIcon as Ranking } from "@phosphor-icons/react/dist/csr/Ranking";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { presentBulkActionError } from "./bulk-action-error";
 
 type KeywordsEmptyStateProps = {
   canCreateKeyword: boolean;
@@ -34,6 +37,7 @@ type KeywordsEmptyStateProps = {
 };
 
 type DrawerData = { hidden: TopQuerySuggestion[]; suggestions: TopQuerySuggestion[] };
+const searchConsoleRateLimited = "Rate limited, try again shortly.";
 
 export function KeywordsEmptyState({
   canCreateKeyword,
@@ -48,6 +52,10 @@ export function KeywordsEmptyState({
   projectId,
   searchConsoleConnected = false,
 }: Readonly<KeywordsEmptyStateProps>) {
+  const t = useTranslations("projectRankTracker.list.empty");
+  const importT = useTranslations("projectRankTracker.keywordImport.topQueries");
+  const importMessages = useProjectKeywordImportMessages();
+  const sharedErrors = useSharedErrorMessages();
   const [importFeedback, setImportFeedback] = useState<{
     kind: "empty" | "error" | "needs_reauth" | "no_source";
     message: string;
@@ -79,9 +87,7 @@ export function KeywordsEmptyState({
         setImportFeedback({
           kind: result.reason,
           message:
-            result.reason === "no_source"
-              ? "No Search Console source is connected."
-              : "Google authorization has expired.",
+            result.reason === "no_source" ? t("noSource") : t("searchConsoleAuthorizationExpired"),
         });
         return;
       }
@@ -89,7 +95,7 @@ export function KeywordsEmptyState({
       if (suggestions.length === 0) {
         setImportFeedback({
           kind: "empty",
-          message: "No queries observed yet - new Search Console properties can take a few days.",
+          message: t("noQueries"),
         });
         return;
       }
@@ -99,10 +105,10 @@ export function KeywordsEmptyState({
     } catch (error) {
       setImportFeedback({
         kind: "error",
-        message: actionErrorMessage(
-          error,
-          "Could not import Search Console queries. Try again shortly.",
-        ),
+        message:
+          error instanceof Error && error.message === searchConsoleRateLimited
+            ? importT("rateLimited")
+            : presentBulkActionError(error, sharedErrors, t("importError")),
       });
     } finally {
       setImportPending(false);
@@ -125,7 +131,7 @@ export function KeywordsEmptyState({
                     type="button"
                     variant="ghost"
                   >
-                    Import CSV
+                    {t("importCsv")}
                   </Button>
                 </ProjectReadOnlyTooltip>
                 {searchConsoleConnected ? (
@@ -133,14 +139,14 @@ export function KeywordsEmptyState({
                     <Button
                       disabled={readOnly || !importTopQueriesAction}
                       loading={importPending}
-                      loadingLabel="Finding queries..."
+                      loadingLabel={t("findingQueries")}
                       onClick={() => void handleSearchConsoleImport()}
                       size="sm"
                       style={{ minHeight: 40, paddingLeft: 12, paddingRight: 12 }}
                       type="button"
                       variant="ghost"
                     >
-                      From Search Console
+                      {t("fromSearchConsole")}
                     </Button>
                   </ProjectReadOnlyTooltip>
                 ) : null}
@@ -152,17 +158,13 @@ export function KeywordsEmptyState({
                   style={{ minHeight: 40 }}
                   type="button"
                 >
-                  Add keywords
+                  {t("addKeywords")}
                 </Button>
               </ProjectReadOnlyTooltip>
             </div>
           ) : undefined
         }
-        description={
-          hasMarkets
-            ? "Add keywords to start tracking your Google rankings."
-            : "A market is the country, location and language you rank in. Add one with your first keywords."
-        }
+        description={hasMarkets ? t("noKeywordsDescription") : t("startMarketDescription")}
         footnote={
           importFeedback || (providerConnected === false && canManageProviders) ? (
             <div className="max-w-[440px] space-y-2 text-[12px] leading-[1.5]">
@@ -180,8 +182,8 @@ export function KeywordsEmptyState({
                         href={appPath(projectId, "integrations")}
                       >
                         {importFeedback.kind === "needs_reauth"
-                          ? "Reconnect your Google account"
-                          : "Open Integrations"}
+                          ? t("reconnectGoogle")
+                          : t("openIntegrations")}
                       </Link>
                     </>
                   ) : null}
@@ -189,22 +191,23 @@ export function KeywordsEmptyState({
               ) : null}
               {providerConnected === false && canManageProviders ? (
                 <p className="m-0 text-fg-muted">
-                  Rank checks need a connected SERP provider. You can add keywords now - they start
-                  checking once you{" "}
-                  <Link
-                    className="font-semibold text-accent-text"
-                    href={appPath(projectId, "integrations")}
-                  >
-                    connect one
-                  </Link>
-                  .
+                  {t.rich("providerMissing", {
+                    providerLink: (chunks) => (
+                      <Link
+                        className="font-semibold text-accent-text"
+                        href={appPath(projectId, "integrations")}
+                      >
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
                 </p>
               ) : null}
             </div>
           ) : undefined
         }
-        mark={<ModuleMark bordered icon={Ranking} label="Rank tracker" />}
-        title={hasMarkets ? "No keywords yet" : "Start with your first market"}
+        mark={<ModuleMark bordered icon={Ranking} label={t("moduleLabel")} />}
+        title={hasMarkets ? t("noKeywordsTitle") : t("startMarketTitle")}
       />
       {drawer ? (
         <KeywordSuggestionDrawer
@@ -212,6 +215,7 @@ export function KeywordsEmptyState({
           existingKeywords={[]}
           hidden={drawer.hidden}
           key={drawerNonce}
+          messages={importMessages.topQueries.drawer}
           onClose={() => setDrawerOpen(false)}
           onConfirm={(queries) => {
             setDrawerOpen(false);

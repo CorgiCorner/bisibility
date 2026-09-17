@@ -1,6 +1,5 @@
 import { comparableCompletedWindow } from "@/lib/checks/status";
 
-type DateFormatter = { formatDate(date: Date): string };
 export type Check = {
   checkedAt: Date;
   normalizationVersion: string | null;
@@ -15,13 +14,25 @@ export type Keyword = {
   createdAt: Date;
   device: string;
   id: string;
-  locationRef: { displayName: string; languageLabel: string };
+  locationRef: {
+    countryCode?: string | null;
+    displayName: string;
+    languageCode?: string | null;
+    languageLabel: string;
+  };
   publicId: string;
   rankChecks: Check[];
   schedule: { frequency: string; nextCheckAt: Date | null } | null;
   text: string;
 };
-export type Trend = { label: string; value: number };
+export type Trend = { dateKey?: string; label: string | null; value: number };
+export type TrendTakeaway = {
+  days: number;
+  kind: "improved" | "slipped" | "steady";
+  leader?: string;
+  value?: number;
+  window: "firstTrackedDays" | "lastThirtyDays";
+} | null;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -53,14 +64,11 @@ function dailyAverages(keywords: readonly Keyword[], start?: Date) {
     .map(({ date, positions }) => ({ date, value: average(positions) }));
 }
 
-export function buildTrend(
-  keywords: readonly Keyword[],
-  dateTime: DateFormatter,
-  start?: Date,
-): Trend[] {
+export function buildTrend(keywords: readonly Keyword[], start?: Date): Trend[] {
   const points = dailyAverages(keywords, start).slice(-12);
   return points.map((point, index) => ({
-    label: index === points.length - 1 ? "now" : dateTime.formatDate(point.date),
+    dateKey: point.date.toISOString().slice(0, 10),
+    label: index === points.length - 1 ? null : point.date.toISOString().slice(0, 10),
     value: Math.round(point.value * 10) / 10,
   }));
 }
@@ -103,7 +111,7 @@ export function buildTrendTakeaway(
   keywords: readonly Keyword[],
   now: Date,
   volumes: ReadonlyMap<string, number | null> = new Map(),
-) {
+): TrendTakeaway {
   const windowDays = 30;
   const windowStart = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - (windowDays - 1) * DAY_MS,
@@ -120,20 +128,30 @@ export function buildTrendTakeaway(
   const shortHistory = days < windowDays;
 
   if (delta < 0.1) {
-    return shortHistory
-      ? `Avg position held steady over the first ${days} days of tracking`
-      : `Avg position held steady over the last ${windowDays} days`;
+    return {
+      days: shortHistory ? days : windowDays,
+      kind: "steady",
+      window: shortHistory ? "firstTrackedDays" : "lastThirtyDays",
+    };
   }
 
-  const direction = signedDelta > 0 ? "improved" : "slipped";
   if (shortHistory) {
-    return `Avg position ${direction} ${delta.toFixed(1)} in the first ${days} days of tracking`;
+    return {
+      days,
+      kind: signedDelta > 0 ? "improved" : "slipped",
+      value: delta,
+      window: "firstTrackedDays",
+    };
   }
   const leader =
     leadKeyword(keywords, windowStart, signedDelta > 0, volumes) ??
     keywords.map((keyword) => keyword.text).sort()[0] ??
     "";
-  return signedDelta > 0
-    ? `Avg position improved ${delta.toFixed(1)} in the last 30 days, led by '${leader}'`
-    : `Avg position slipped ${delta.toFixed(1)} in the last 30 days · biggest drop: '${leader}'`;
+  return {
+    days: windowDays,
+    kind: signedDelta > 0 ? "improved" : "slipped",
+    leader,
+    value: delta,
+    window: "lastThirtyDays",
+  };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { actionErrorMessage } from "@/components/keywords/action-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
@@ -17,7 +17,9 @@ import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist
 import { FunnelSimpleIcon as FunnelSimple } from "@phosphor-icons/react/dist/csr/FunnelSimple";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
+import { presentBulkActionError } from "./bulk-action-error";
 
 type SaveViewModalProps = {
   activeFiltersSummary: string;
@@ -36,6 +38,8 @@ export function SaveViewModal({
   open,
   projectId,
 }: Readonly<SaveViewModalProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.saveView");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const { showToast } = useToast();
   const {
@@ -48,7 +52,7 @@ export function SaveViewModal({
     defaultValues: { name: "" },
     resolver: zodResolver(savedViewNameSchema),
   });
-  const previewName = watch("name").trim() || "New view";
+  const previewName = watch("name").trim() || t("fallbackName");
 
   async function submit(values: SavedViewFormValues) {
     if (!createSavedViewAction) {
@@ -57,12 +61,12 @@ export function SaveViewModal({
 
     try {
       const view = await createSavedViewAction({ config, name: values.name, projectId });
-      showToast("View saved", { severity: "success" });
+      showToast(t("saved"), { severity: "success" });
       onClose();
       router.push(savedViewHref(projectId, view.id, view.config.lens));
       router.refresh();
     } catch (error) {
-      setError("root", { message: actionErrorMessage(error) });
+      setError("root", { message: presentBulkActionError(error, sharedErrors, t("saveFailed")) });
     }
   }
 
@@ -75,18 +79,18 @@ export function SaveViewModal({
             onClick={onClose}
             type="button"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <Button
             disabled={!createSavedViewAction}
             form="save-keyword-view"
             loading={isSubmitting}
-            loadingLabel="Saving..."
+            loadingLabel={t("saving")}
             startIcon={<BookmarkSimple size={15} weight="regular" />}
             type="submit"
             variant="primary"
           >
-            Save view
+            {t("save")}
           </Button>
         </>
       }
@@ -95,9 +99,9 @@ export function SaveViewModal({
       size="sm"
       title={
         <span className="block">
-          <span className="block">Save view</span>
+          <span className="block">{t("save")}</span>
           <span className="mt-1 block text-[12.5px] font-normal tracking-normal text-fg-muted">
-            Save the current keyword scope and filters as a named view.
+            {t("description")}
           </span>
         </span>
       }
@@ -109,7 +113,7 @@ export function SaveViewModal({
       >
         <div className="flex items-center gap-2 rounded-control border border-dashed border-border bg-transparent px-3.5 py-3">
           <span className="font-sans tabular-nums text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
-            Preview
+            {t("preview")}
           </span>
           <span className="inline-flex min-w-0 items-center gap-1.5 truncate rounded-control border border-border bg-accent-soft px-3 py-1.5 text-[12px] font-semibold text-accent-text">
             <BookmarkSimple className="shrink-0" size={13} weight="regular" />
@@ -118,10 +122,10 @@ export function SaveViewModal({
         </div>
 
         <label className="grid gap-[7px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-          {"View name "}
+          {t("name")}
           <input
             className="rounded-control border border-border-control bg-transparent px-3 py-2.5 font-sans tabular-nums text-[13.5px] font-medium normal-case tracking-normal text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
-            placeholder="e.g. Product pages down"
+            placeholder={t("namePlaceholder")}
             {...register("name")}
           />
           {errors.name ? (
@@ -134,7 +138,8 @@ export function SaveViewModal({
             <FunnelSimple weight="regular" className="text-accent-text" size={14} />
           </span>
           <span className="text-[11.5px] leading-[1.45] text-fg-muted">
-            <strong className="font-semibold text-fg">Captured view:</strong> {activeFiltersSummary}
+            <strong className="font-semibold text-fg">{t("captured")}</strong>{" "}
+            {activeFiltersSummary}
           </span>
         </div>
 

@@ -5,6 +5,7 @@ import {
   type MarketDefinitionLocationSource,
   type MarketDefinitionRegistryEntry,
   type MarketDefinitionValue,
+  marketDefinitionMessages,
 } from "@/components/markets/blocks/MarketDefinition";
 import {
   emptyMarketDefinition,
@@ -21,7 +22,7 @@ import {
 } from "@/lib/markets/create-input";
 import type { MarketScheduleContext } from "@/lib/markets/schedule-context";
 import { DEFAULT_SERP_DEPTH, type SerpDevice } from "@/lib/serp/constants";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { NewMarketKeywordMethod, type NewMarketSource } from "./NewMarketKeywordMethod";
@@ -29,15 +30,19 @@ import { NewMarketSchedule, type NewMarketScheduleOption } from "./NewMarketSche
 import { NewMarketScheduleEditor } from "./NewMarketScheduleEditor";
 import { NewMarketSheetFooter } from "./NewMarketSheetFooter";
 import {
+  marketActionError,
+  type NewMarketCreatorMessages,
+  pasteErrorMessage,
+} from "./new-market-creator-copy";
+import {
   defaults,
-  deviceNote,
-  deviceOptions,
   expectedKeywordCount,
   pasteState,
   selectedDevice,
 } from "./new-market-creator-model";
 
 export type NewMarketCreatorFrame = {
+  backLabel: string;
   content: ReactNode;
   creatingSchedule: boolean;
   footer: ReactNode;
@@ -46,9 +51,12 @@ export type NewMarketCreatorFrame = {
   title: string;
 };
 
+export type { NewMarketCreatorMessages } from "./new-market-creator-copy";
+
 export type NewMarketCreatorProps = {
   /** Create an empty market when the host owns keywords and their tracking defaults. */
   definitionOnly?: { devices: readonly SerpDevice[] };
+  messages?: NewMarketCreatorMessages;
   children: (frame: NewMarketCreatorFrame) => ReactNode;
   onClose: () => void;
   onCreate: (input: NewMarketCreateInput) => Promise<NewMarketCreateResult>;
@@ -67,6 +75,7 @@ export type NewMarketCreatorProps = {
 export function NewMarketCreator({
   children,
   definitionOnly,
+  messages,
   onClose,
   onCreate,
   onCreated,
@@ -78,6 +87,19 @@ export function NewMarketCreator({
   source,
   sources,
 }: Readonly<NewMarketCreatorProps>) {
+  const t = useTranslations("projectMarkets");
+  const resolvedMessages =
+    messages ??
+    ({
+      actionError: (error: unknown) => marketActionError(error, t),
+      backToMarket: t("backToMarket"),
+      cancel: t("cancel"),
+      createMarket: t("create"),
+      description: t("newMarketDescription"),
+      marketDefinition: marketDefinitionMessages(t),
+      newMarket: t("newMarket"),
+      newSchedule: t("newSchedule"),
+    } satisfies NewMarketCreatorMessages);
   const [creatingSchedule, setCreatingSchedule] = useState(false);
   const [createdSchedules, setCreatedSchedules] = useState<NewMarketScheduleOption[]>([]);
   const [createdDefaultName, setCreatedDefaultName] = useState<string | null>(null);
@@ -113,12 +135,13 @@ export function NewMarketCreator({
     [projectId, source],
   );
   const paste = useMemo(() => pasteState(method), [method]);
+  const pasteError = pasteErrorMessage(paste.error, t);
   const prospectiveCount = expectedKeywordCount(method, sources, paste.count, devices);
   const baseValid = Boolean(canonicalKey && devices?.length);
   const methodValid =
     method?.kind === "empty" ||
     (method?.kind === "copy" && Boolean(method.sourceMarketId) && Boolean(schedule)) ||
-    (method?.kind === "paste" && paste.error === null && paste.count > 0 && Boolean(schedule));
+    (method?.kind === "paste" && pasteError === null && paste.count > 0 && Boolean(schedule));
   const duplicate = registry.some((entry) => entry.canonicalKey === canonicalKey);
   const createDisabled = form.formState.isSubmitting || !baseValid || !methodValid || duplicate;
 
@@ -169,21 +192,24 @@ export function NewMarketCreator({
       onCreated?.(created);
       close();
     } catch (cause) {
-      setActionError(actionErrorMessage(cause, "Market could not be created."));
+      setActionError(resolvedMessages.actionError(cause));
     }
   }
 
   return children({
+    backLabel: resolvedMessages.backToMarket,
     creatingSchedule,
     onBack: () => (creatingSchedule ? setCreatingSchedule(false) : close()),
     onClose: close,
-    title: creatingSchedule ? "New schedule" : "New market",
+    title: creatingSchedule ? resolvedMessages.newSchedule : resolvedMessages.newMarket,
     footer: creatingSchedule ? undefined : (
       <NewMarketSheetFooter
         createDisabled={createDisabled}
         onClose={close}
         pending={form.formState.isSubmitting}
         prospectiveCount={definitionOnly ? undefined : prospectiveCount}
+        cancelLabel={resolvedMessages.cancel}
+        createLabel={resolvedMessages.createMarket}
       />
     ),
     content: creatingSchedule ? (
@@ -224,12 +250,11 @@ export function NewMarketCreator({
           void form.handleSubmit(submit)(event);
         }}
       >
-        <p className="m-0 text-[13px] text-fg-muted">
-          A location and a language you track together.
-        </p>
+        <p className="m-0 text-[13px] text-fg-muted">{resolvedMessages.description}</p>
         <fieldset className="contents" disabled={form.formState.isSubmitting}>
           <MarketDefinition
             duplicate={null}
+            messages={resolvedMessages.marketDefinition}
             onChange={updateDefinition}
             registry={registry}
             source={locationSource}
@@ -237,21 +262,27 @@ export function NewMarketCreator({
           />
           {!definitionOnly ? (
             <div className="grid gap-1.5">
-              <FieldLabel label="Devices" />
+              <FieldLabel label={t("devices")} />
               <MenuSelect
-                ariaLabel="Devices"
+                ariaLabel={t("devices")}
                 onChange={updateDevices}
-                options={deviceOptions}
+                options={[
+                  { label: t("desktop"), value: "desktop" },
+                  { label: t("mobile"), value: "mobile" },
+                  { label: t("both"), value: "both" },
+                ]}
                 size="input"
                 value={selectedDevice(devices)}
               />
-              <p className="m-0 text-[12px] text-fg-muted">{deviceNote(devices)}</p>
+              <p className="m-0 text-[12px] text-fg-muted">
+                {t("deviceCountNote", { count: devices?.length ?? 0 })}
+              </p>
             </div>
           ) : null}
           {!definitionOnly ? (
             <NewMarketKeywordMethod
               onChange={updateMethod}
-              pasteError={paste.error}
+              pasteError={pasteError}
               sources={sources}
               value={method}
             />
@@ -267,9 +298,9 @@ export function NewMarketCreator({
             />
           ) : null}
         </fieldset>
-        {actionError || form.formState.errors.name?.message ? (
+        {actionError || form.formState.errors.name ? (
           <p className="m-0 text-[12px] text-red-text" role="alert">
-            {actionError ?? form.formState.errors.name?.message}
+            {actionError ?? t("marketNameTooLong")}
           </p>
         ) : null}
       </form>

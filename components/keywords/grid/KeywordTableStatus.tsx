@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { useTranslations } from "next-intl";
 
 export type KeywordNoRowsState = {
   description: string;
@@ -11,13 +12,13 @@ export type KeywordNoRowsState = {
 };
 
 export function KeywordNoRowsOverlay({ state }: Readonly<{ state?: KeywordNoRowsState }>) {
-  const title = state?.title ?? "No keywords match your filter";
-  const description =
-    state?.description ?? "Try another saved view or remove the active keyword filter.";
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
+  const title = state?.title ?? t("noRowsTitle");
+  const description = state?.description ?? t("noRowsDescription");
   const onResetScope = state?.onResetScope;
   const action = onResetScope ? (
     <Button onClick={onResetScope} size="sm" type="button" variant="secondary">
-      Show all locations &amp; devices
+      {t("showAllScope")}
     </Button>
   ) : undefined;
 

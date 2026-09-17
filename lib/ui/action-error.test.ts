@@ -2,9 +2,82 @@ import { describe, expect, it } from "vitest";
 import {
   actionErrorMessage,
   isStaleDeploymentError,
+  presentActionError,
+  presentWaitlistError,
+  presentWaitlistFailure,
+  type SharedErrorMessages,
   STALE_DEPLOYMENT_MESSAGE,
   waitlistErrorMessage,
 } from "./action-error";
+
+const localizedMessages = {
+  genericFallback: () => "Nie można ukończyć działania.",
+  rateLimited: () => "Zbyt wiele żądań. Spróbuj ponownie później.",
+  serverComponentDigest: ({ digest }: { digest: string }) =>
+    `Sprawdzenie nie powiodło się po naszej stronie (nr ${digest}). Spróbuj ponownie za chwilę.`,
+  staleDeployment: () =>
+    "bisibility zostało zaktualizowane, gdy ta strona była otwarta. Odśwież aplikację, aby kontynuować. Niezapisane zmiany zostaną utracone.",
+  verificationFailed: () => "Weryfikacja nie powiodła się. Spróbuj ponownie.",
+} satisfies SharedErrorMessages;
+
+describe("explicit shared error presentation", () => {
+  it("renders a stale deployment using the injected locale without mutable global state", () => {
+    expect(
+      presentActionError(
+        new Error("This request might be from an older or newer deployment."),
+        localizedMessages,
+      ),
+    ).toBe(localizedMessages.staleDeployment());
+  });
+
+  it("keeps the injected locale isolated across stale, digest, rate, and verification states", () => {
+    const digest = Object.assign(
+      new Error("An unexpected response was received from the server."),
+      {
+        digest: "4186352953",
+      },
+    );
+
+    expect(presentActionError(digest, localizedMessages)).toBe(
+      "Sprawdzenie nie powiodło się po naszej stronie (nr 4186352953). Spróbuj ponownie za chwilę.",
+    );
+    expect(
+      presentWaitlistError(
+        new Error("Too many requests. Please try again later."),
+        localizedMessages,
+        "Nie można wysłać formularza.",
+      ),
+    ).toBe("Zbyt wiele żądań. Spróbuj ponownie później.");
+    expect(presentWaitlistFailure("verification_failed", localizedMessages)).toBe(
+      "Weryfikacja nie powiodła się. Spróbuj ponownie.",
+    );
+  });
+
+  it("uses the feature fallback for empty and non-Error action values", () => {
+    expect(presentActionError(null, localizedMessages, "Nie można zapisać.")).toBe(
+      "Nie można zapisać.",
+    );
+    expect(presentActionError(new Error(""), localizedMessages, "Nie można zapisać.")).toBe(
+      "Nie można zapisać.",
+    );
+  });
+
+  it("does not hide a missing scoped message behind English text", () => {
+    const missingStaleMessage: SharedErrorMessages = {
+      ...localizedMessages,
+      staleDeployment: () => {
+        throw new Error("Missing message: shared.errors.staleDeployment");
+      },
+    };
+
+    expect(() =>
+      presentActionError(
+        new Error("This request might be from an older or newer deployment."),
+        missingStaleMessage,
+      ),
+    ).toThrow("Missing message: shared.errors.staleDeployment");
+  });
+});
 
 describe("actionErrorMessage", () => {
   it("maps production server-component digest errors to a friendly reference", () => {
@@ -118,5 +191,17 @@ describe("waitlistErrorMessage", () => {
   it("returns the fallback for non-Error values", () => {
     expect(waitlistErrorMessage("boom", "Unable to submit.")).toBe("Unable to submit.");
     expect(waitlistErrorMessage(null, "Unable to submit.")).toBe("Unable to submit.");
+  });
+
+  it("does not expose unknown provider, URL, or non-Error details through localized presentation", () => {
+    const fallback = "Nie można wysłać formularza.";
+    expect(
+      presentWaitlistError(
+        new Error("Provider failed at https://internal.example.com/private?token=secret"),
+        localizedMessages,
+        fallback,
+      ),
+    ).toBe(fallback);
+    expect(presentWaitlistError({ detail: "secret" }, localizedMessages, fallback)).toBe(fallback);
   });
 });

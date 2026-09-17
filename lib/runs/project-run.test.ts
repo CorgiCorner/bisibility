@@ -32,7 +32,7 @@ const rankRun = {
   lifecycle: "completed",
   progress: { completed: 2, total: 2, unit: "targets" },
   project,
-  scope: { description: null, label: "2 keywords" },
+  scope: { description: null, keywordCount: 2, kind: "rank_check" },
   timestamps: {
     createdAt: "2026-09-06T11:58:00.000Z",
     finishedAt: "2026-09-06T12:01:00.000Z",
@@ -40,7 +40,7 @@ const rankRun = {
     plannedFor: null,
     startedAt: "2026-09-06T12:00:05.000Z",
   },
-  title: "Manual rank check",
+  title: { kind: "rank_check", trigger: "manual" },
 } satisfies ProjectRun;
 
 describe("project run presentation contract", () => {
@@ -68,7 +68,7 @@ describe("project run presentation contract", () => {
       lifecycle: "completed",
       progress: { completed: 28, total: 28, unit: "days" },
       project,
-      scope: { description: "sc-domain:example.com", label: "Search Console" },
+      scope: { description: "sc-domain:example.com", kind: "gsc_import" },
       timestamps: {
         createdAt: "2026-09-06T11:00:00.000Z",
         lastProbeAt: null,
@@ -76,7 +76,7 @@ describe("project run presentation contract", () => {
         lastSyncStartedAt: null,
         syncStartedAt: null,
       },
-      title: "Search Console import",
+      title: { kind: "gsc_import" },
     } satisfies ProjectRun;
 
     expect(projectRunSortTuple(importRun)).toEqual({
@@ -154,7 +154,7 @@ describe("project run presentation contract", () => {
       lifecycle: "status_unavailable",
       progress: { completed: null, total: null, unit: "days" },
       project,
-      scope: { description: "sc-domain:example.com", label: "Search Console" },
+      scope: { description: "sc-domain:example.com", kind: "gsc_import" },
       timestamps: {
         createdAt: "2026-09-06T11:00:00.000Z",
         lastProbeAt: null,
@@ -162,7 +162,7 @@ describe("project run presentation contract", () => {
         lastSyncStartedAt: null,
         syncStartedAt: null,
       },
-      title: "Search Console import",
+      title: { kind: "gsc_import" },
     } satisfies ProjectRun;
 
     expect(importRun.details.state).toBe("legacy_in_progress");

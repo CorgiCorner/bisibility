@@ -1,32 +1,44 @@
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretUpIcon as CaretUp } from "@phosphor-icons/react/dist/csr/CaretUp";
+import type { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 export type SortDirection = "asc" | "desc";
 
 type SortValue = number | string | null;
 
-const collator = new Intl.Collator("en-US", { numeric: true, sensitivity: "base" });
-const number = new Intl.NumberFormat("en-US");
+type DomainOverviewTranslations = ReturnType<
+  typeof useTranslations<"projectDomainOverview.workspace.ui">
+>;
 
 export function fetchedRowsSummary(
   fetched: number,
   total: number | null,
   rowsLabel: "keywords" | "pages",
+  t: DomainOverviewTranslations,
 ) {
   if (total == null) {
-    return `${number.format(fetched)} fetched ${rowsLabel} · total unavailable · remaining unknown · provider requests remaining unknown`;
+    return t("fetchedRows", { fetched, rows: rowsLabel, total: "unknown" });
   }
   const remaining = Math.max(0, total - fetched);
   const requests = Math.ceil(remaining / 100);
-  return `${number.format(fetched)} fetched ${rowsLabel} · ${number.format(total)} total · ${number.format(remaining)} remaining · ${number.format(requests)} provider ${requests === 1 ? "request" : "requests"} remaining at up to 100 rows`;
+  return t("fetchedRows", {
+    fetched,
+    remaining,
+    requests,
+    rows: rowsLabel,
+    total: "known",
+    totalValue: total,
+  });
 }
 
 export function sortFetchedRows<T>(
   rows: readonly T[],
   value: (row: T) => SortValue,
   direction: SortDirection,
+  locale = "en",
 ) {
+  const collator = new Intl.Collator(locale, { numeric: true, sensitivity: "base" });
   return rows
     .map((row, index) => ({ index, row, value: value(row) }))
     .sort((left, right) => {
@@ -48,6 +60,7 @@ export function SortableColumnHeader({
   direction,
   nextDirection,
   onClick,
+  t,
 }: Readonly<{
   active: boolean;
   align?: "left" | "right";
@@ -55,12 +68,24 @@ export function SortableColumnHeader({
   direction: SortDirection;
   nextDirection: SortDirection;
   onClick: () => void;
+  t: DomainOverviewTranslations;
 }>) {
   const Icon = direction === "asc" ? CaretUp : CaretDown;
   return (
     <span className={align === "right" ? "block w-full text-right" : "block w-full"}>
       <button
-        aria-label={`Sort ${String(children)} ${active ? (direction === "asc" ? "descending" : "ascending") : nextDirection === "asc" ? "ascending" : "descending"}`}
+        aria-label={t("sort", {
+          column: String(children),
+          direction: t(
+            active
+              ? direction === "asc"
+                ? "sortDescending"
+                : "sortAscending"
+              : nextDirection === "asc"
+                ? "sortAscending"
+                : "sortDescending",
+          ),
+        })}
         aria-pressed={active}
         className={`inline-flex w-full items-center gap-2 whitespace-nowrap font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] transition-colors hover:text-fg ${
           align === "right" ? "justify-end text-right" : "text-left"

@@ -1,10 +1,16 @@
+import {
+  projectRankTrackerFeatureTestMessages,
+  renderWithProjectRankTrackerMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { appPath } from "@/lib/routing/app-path";
 import { makeCostContext } from "@/tests/factories/cost-context";
 import { projectMarketsFixture } from "@/tests/factories/project-markets";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SavedKeywordsTable } from "./SavedKeywordsTable";
+import { SavedKeywordsTableRows } from "./SavedKeywordsTableRows";
 
 const mocks = vi.hoisted(() => ({ addKeywordsMatrix: vi.fn() }));
 vi.mock("@/lib/actions/keyword", () => ({ addKeywordsMatrix: mocks.addKeywordsMatrix }));
@@ -134,8 +140,8 @@ describe("SavedKeywordsTable", () => {
     }
 
     expect(screen.getByText("3 selected")).toBeInTheDocument();
-    expect(screen.getByText("tracking all 3 adds ~$0.90/mo at daily checks")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Track 3 ~$0.90/mo" }));
+    expect(screen.getByText("tracking all 3 adds $0.90/mo at daily checks")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Track 3 $0.90/mo" }));
 
     expect(screen.getByRole("textbox", { name: "Keywords" })).toHaveValue(
       rows.map((row) => row.text).join("\n"),
@@ -200,7 +206,7 @@ describe("SavedKeywordsTable", () => {
       fireEvent.click(screen.getByRole("checkbox", { name: `Select ${row.text}` }));
     }
 
-    fireEvent.click(screen.getByRole("button", { name: "Track 2 ~$0.60/mo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Track 2 $0.60/mo" }));
     const us = screen.getByRole("button", { name: /United States \/ English/ });
     const es = screen.getByRole("button", { name: /Spain \/ English/ });
     expect(us).toHaveAttribute("aria-pressed", "true");
@@ -260,6 +266,32 @@ describe("SavedKeywordsTable", () => {
     );
     const freshRow = screen.getByRole("row", { name: /small standing desk/i });
     expect(within(freshRow).queryByLabelText("Saved snapshot is getting stale")).toBeNull();
+  });
+
+  it("renders saved ages through the localized table-column payload", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-24T12:00:00.000Z"));
+    const messages = structuredClone(projectRankTrackerFeatureTestMessages);
+    messages.projectRankTracker.keywordImport.management.saved.relative.daysAgo =
+      "{count} dni temu";
+
+    renderWithFeatureMessages(
+      <SavedKeywordsTableRows
+        canDelete
+        canTrack
+        onRemove={vi.fn()}
+        onSelectionChange={vi.fn()}
+        onToggle={vi.fn()}
+        onTrack={vi.fn()}
+        projectRef="prj_1"
+        rows={[{ ...rows[0], id: "row_1", keyword: rows[0].text }]}
+        selectedIds={new Set()}
+      />,
+      { locale: "pl", messages },
+    );
+
+    expect(screen.getByText("2 dni temu")).toBeInTheDocument();
+    expect(screen.queryByText("2d ago")).toBeNull();
   });
 
   it("links source chips to a prefilled Research search without selecting the row", () => {

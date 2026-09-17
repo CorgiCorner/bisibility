@@ -1,6 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import {
+  renderWithFeatureMessages,
+  sharedControlTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { StatusChip } from "./StatusChip";
+
+function render(ui: React.ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: sharedControlTestMessages });
+}
 
 function chipFor(label: string): HTMLElement {
   const chip = screen.getByText(label).closest<HTMLElement>("[data-status-chip-tone]");
@@ -73,6 +81,23 @@ describe("StatusChip", () => {
   it("uses the prototype fallback for an empty label", () => {
     render(<StatusChip label="" />);
     expect(screen.getByText("Status")).toBeInTheDocument();
+  });
+
+  it("localizes mapped status text at the client boundary while retaining caller labels", () => {
+    const { rerender } = renderWithFeatureMessages(
+      <StatusChip label="Running" live messageKey="running" />,
+      {
+        locale: "ja",
+        messages: { shared: { controls: { status: { running: "実行中" } } } },
+      },
+    );
+
+    expect(screen.getByRole("status", { name: "実行中" })).toHaveTextContent("実行中");
+
+    rerender(<StatusChip label="Caller status" live />);
+    expect(screen.getByRole("status", { name: "Caller status" })).toHaveTextContent(
+      "Caller status",
+    );
   });
 
   it("uses a live region only when a single changing status requests one", () => {

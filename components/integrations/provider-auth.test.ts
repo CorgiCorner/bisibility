@@ -1,32 +1,54 @@
 import { describe, expect, it } from "vitest";
 import { integrationCategories } from "./integrations-fixtures";
-import { oauthScopes, testSuccessCopy } from "./provider-auth";
+import { oauthScopes, testSuccessPresentation } from "./provider-auth";
 
 describe("oauthScopes", () => {
   it("describes the scopes actually requested by the Search Console flow", () => {
     expect(oauthScopes(integrationCategories[1].providers[0])).toEqual([
-      "webmasters.readonly (property list + search analytics + sitemap status)",
-      "openid email (account selection)",
+      "search_console_readonly",
+      "account_identity",
     ]);
   });
 });
 
-describe("testSuccessCopy", () => {
-  it("labels provider balances without inventing a usage forecast", () => {
-    expect(testSuccessCopy("serpapi", { balance: 41_200, message: "Connected.", ok: true })).toBe(
-      "Connection verified. · 41,200 searches remaining",
-    );
-    expect(testSuccessCopy("dataforseo", { balance: 4.5, message: "Ok.", ok: true })).toBe(
-      "Connection verified. · Account balance: $4.5",
-    );
+describe("testSuccessPresentation", () => {
+  it("keeps provider balances structured until the localized drawer renders them", () => {
+    expect(
+      testSuccessPresentation("serpapi", { balance: 41_200, message: "Connected.", ok: true }),
+    ).toEqual({ balance: { kind: "searches", value: 41_200 }, kind: "verified", message: null });
+    expect(
+      testSuccessPresentation("dataforseo", { balance: 4.5, message: "Ok.", ok: true }),
+    ).toEqual({ balance: { kind: "currency", value: 4.5 }, kind: "verified", message: null });
   });
 
-  it("uses the provider message when no balance is returned", () => {
-    expect(testSuccessCopy("dataforseo", { message: "Ok.", ok: true })).toBe(
-      "Connection verified.",
-    );
+  it("keeps external provider details while structuring known application success", () => {
+    expect(testSuccessPresentation("dataforseo", { message: "Ok.", ok: true })).toEqual({
+      balance: null,
+      kind: "verified",
+      message: null,
+    });
     expect(
-      testSuccessCopy("plausible", { message: "Connection OK · example.com.", ok: true }),
-    ).toBe("Connection OK · example.com.");
+      testSuccessPresentation("plausible", { message: "Connection OK · example.com.", ok: true }),
+    ).toEqual({ balance: null, kind: "application_connection", message: "example.com." });
+    expect(
+      testSuccessPresentation("gsc", {
+        message: "Connection OK · sc-domain:example.com (siteUnverifiedUser).",
+        ok: true,
+      }),
+    ).toEqual({
+      balance: null,
+      kind: "application_connection",
+      message: "sc-domain:example.com (siteUnverifiedUser).",
+    });
+    expect(
+      testSuccessPresentation("plausible", {
+        message: "Connection accepted with a warning.",
+        ok: true,
+      }),
+    ).toEqual({
+      balance: null,
+      kind: "provider_message",
+      message: "Connection accepted with a warning.",
+    });
   });
 });

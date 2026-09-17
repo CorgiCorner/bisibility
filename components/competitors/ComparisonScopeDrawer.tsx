@@ -4,6 +4,7 @@ import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
 import type { CompetitorFilter, CompetitorMarketData } from "@/lib/competitors/types";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type ComparisonScopeDrawerProps = {
@@ -21,6 +22,7 @@ export function ComparisonScopeDrawer({
   onClose,
   open,
 }: Readonly<ComparisonScopeDrawerProps>) {
+  const t = useTranslations("projectCompetitors.ui");
   const [search, setSearch] = useState("");
   const excluded = new Set(filter.excludedKeywordIds);
   const normalizedSearch = search.trim().toLowerCase();
@@ -39,27 +41,27 @@ export function ComparisonScopeDrawer({
 
   return (
     <AppDrawer
-      description="Choose the exact keyword set used by share of voice, head-to-head ranks, and CSV exports."
+      description={t("comparisonScopeDescription")}
       footer={
         <div className="flex items-center justify-between gap-3">
           <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-            {included.length} included · {excluded.size} excluded
+            {t("includedExcluded", { excluded: excluded.size, included: included.length })}
           </span>
-          <Button onClick={onClose}>Done</Button>
+          <Button onClick={onClose}>{t("done")}</Button>
         </div>
       }
       onClose={onClose}
       open={open}
-      title="Comparison scope"
+      title={t("comparisonScope")}
     >
       <div className="grid gap-4">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
-            ["Tracked", market.observations.length],
-            ["Included", included.length],
-            ["Completed", completed],
-            ["Pending", included.length - completed],
-          ].map(([label, value]) => (
+            { label: t("tracked"), value: market.observations.length },
+            { label: t("included"), value: included.length },
+            { label: t("completed"), value: completed },
+            { label: t("pending"), value: included.length - completed },
+          ].map(({ label, value }) => (
             <span className="rounded-control border border-border bg-bg-sunken p-3" key={label}>
               <span className="block font-sans tabular-nums text-[9px] uppercase text-fg-muted">
                 {label}
@@ -80,22 +82,22 @@ export function ComparisonScopeDrawer({
               size={14}
             />
             <input
-              aria-label="Search comparison keywords"
+              aria-label={t("searchComparisonKeywords")}
               className="min-h-9 w-full rounded-control border border-border-control bg-transparent pl-9 pr-3 text-[13px] outline-none focus:border-accent"
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search keywords or tags"
+              placeholder={t("searchKeywordsOrTags")}
               value={search}
             />
           </label>
           <Button onClick={() => setExcluded(new Set())} size="sm" variant="secondary">
-            Include all
+            {t("includeAll")}
           </Button>
           <Button
             onClick={() => setExcluded(new Set([...excluded, ...visible.map((item) => item.id)]))}
             size="sm"
             variant="secondary"
           >
-            Exclude visible
+            {t("excludeVisible")}
           </Button>
         </div>
 
@@ -123,7 +125,7 @@ export function ComparisonScopeDrawer({
                     {observation.keyword}
                   </span>
                   <span className="mt-1 flex flex-wrap items-center gap-1.5 font-sans tabular-nums text-[10px] text-fg-muted">
-                    <span>{observation.completed ? "Check completed" : "Check pending"}</span>
+                    <span>{observation.completed ? t("checkCompleted") : t("checkPending")}</span>
                     {observation.tags.map((tag) => (
                       <span className="rounded bg-bg-sunken px-1.5 py-0.5" key={tag}>
                         {tag}
@@ -135,7 +137,7 @@ export function ComparisonScopeDrawer({
             );
           })}
           {visible.length === 0 ? (
-            <p className="m-0 px-4 py-6 text-center text-[13px] text-fg-muted">No matches</p>
+            <p className="m-0 px-4 py-6 text-center text-[13px] text-fg-muted">{t("noMatches")}</p>
           ) : null}
         </div>
       </div>

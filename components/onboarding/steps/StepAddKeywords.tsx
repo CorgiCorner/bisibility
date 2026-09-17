@@ -1,97 +1,43 @@
 "use client";
 
-import type { LocationFieldValue } from "@/components/keywords/LocationField";
-import {
-  buildOnboardingStepHref,
-  type OnboardingFlowState,
-} from "@/components/onboarding/onboarding-fixtures";
-import {
-  actionErrorMessage,
-  feedbackClass,
-  onboardingFormId,
-} from "@/components/onboarding/onboarding-form-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { buildOnboardingStepHref } from "@/components/onboarding/onboarding-fixtures";
+import { feedbackClass, onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
 import { locationSelectionInputForKey } from "@/components/onboarding/onboarding-locations";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
-import { type AddKeywordsMatrixInput, KEYWORD_IMPORT_MAX } from "@/lib/schemas/keyword";
-import type { ProjectDefaultsInput } from "@/lib/schemas/project";
+import { KEYWORD_IMPORT_MAX, KEYWORD_TEXT_MAX } from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_DEVICE, type SerpDevice } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { KeywordImportSummary } from "./KeywordImportSummary";
-import {
-  type FetchRankedKeywordSuggestionsAction,
-  KeywordRankedImport,
-} from "./KeywordRankedImport";
-import { type ImportTopQueriesAction, KeywordTopQueryImport } from "./KeywordTopQueryImport";
+import { KeywordRankedImport } from "./KeywordRankedImport";
+import { KeywordTopQueryImport } from "./KeywordTopQueryImport";
+import { rankedImportMessages, topQueryImportMessages } from "./keyword-import-messages";
 import {
   type KeywordSetupForm,
   keywordFormValues,
-  keywordSetupFormSchema,
+  keywordSetupFormSchemaFor,
   projectDefaultsInput,
 } from "./keyword-setup-model";
-import type {
-  CreateOnboardingMarketAction,
-  SaveOnboardingMarketsAction,
-} from "./onboarding-market-actions";
+import { keywordSetupActionError, type StepAddKeywordsProps } from "./step-add-keywords-contract";
 import { focusFirstKeywordSetupError, keywordSetupDefaults } from "./step-add-keywords-defaults";
-import {
-  type AddKeywordsForm,
-  keywordDraftMessage,
-  keywordDraftPreview,
-  longKeywordMessage,
-  pausedKeywordSchedule,
-} from "./step-add-keywords-model";
+import { keywordDraftPreview, pausedKeywordSchedule } from "./step-add-keywords-model";
 import {
   completedTrackingDefaults,
   draftLocationSelections,
-  type OnboardingTrackingDefaultsInput,
   withTrackingDefaults,
 } from "./step-schedule-model";
 import { TrackingDefaultsFields } from "./TrackingDefaultsFields";
 
+export type { AddKeywordsInput } from "./step-add-keywords-contract";
 export type { AddKeywordsForm } from "./step-add-keywords-model";
-export type AddKeywordsInput = AddKeywordsMatrixInput;
-
-type CreatedKeyword = { id: string; publicId: string };
-type StepAddKeywordsProps = {
-  addKeywordsAction?: (input: AddKeywordsInput) => Promise<{
-    created: number;
-    persistedKeywordCount: number;
-    keywords: CreatedKeyword[];
-    skippedDuplicates: number;
-    warnings?: string[];
-  }>;
-  costPerCheckCents?: number | null;
-  /** Creates a market through the shared contract; absent until the project exists. */
-  createMarketAction?: CreateOnboardingMarketAction;
-  defaultValues?: AddKeywordsForm;
-  fetchRankedKeywordSuggestionsAction?: FetchRankedKeywordSuggestionsAction;
-  flowState?: OnboardingFlowState;
-  hasAnalyticsSource?: boolean;
-  importTopQueriesAction?: ImportTopQueriesAction;
-  monthlyCapCents?: number;
-  onComplete?: (
-    values: AddKeywordsForm,
-    defaults: OnboardingTrackingDefaultsInput,
-    keywordCount: number,
-    warning?: string | null,
-  ) => void | Promise<void>;
-  onKeywordsChange?: (keywords: string) => void;
-  onSavingChange?: (saving: boolean) => void;
-  /** The markets as the step tracks them, server names included, for the wizard's draft. */
-  onMarketsChange?: (locations: LocationFieldValue[]) => void;
-  projectDomain?: string;
-  rankedKeywordConnections?: RankedKeywordConnection[];
-  saveMarketsAction?: SaveOnboardingMarketsAction;
-  trackingDefaults?: OnboardingTrackingDefaultsInput;
-  updateProjectDefaultsAction?: (input: ProjectDefaultsInput) => Promise<unknown>;
-};
 
 export function StepAddKeywords({
   addKeywordsAction,
+  calculatorPath,
   costPerCheckCents,
   createMarketAction,
   defaultValues,
@@ -109,7 +55,11 @@ export function StepAddKeywords({
   trackingDefaults,
   updateProjectDefaultsAction,
 }: Readonly<StepAddKeywordsProps>) {
+  const t = useTranslations("onboarding.keywords");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
+  const topImportMessages = topQueryImportMessages(t);
+  const rankedMessages = rankedImportMessages(t);
   const scheduleDefaults = withTrackingDefaults(trackingDefaults, flowState);
   const formDefaults = keywordSetupDefaults(scheduleDefaults, defaultValues);
   const [selectedLocations, setSelectedLocations] = useState(() =>
@@ -126,7 +76,16 @@ export function StepAddKeywords({
     watch,
   } = useForm<KeywordSetupForm>({
     defaultValues: formDefaults,
-    resolver: zodResolver(keywordSetupFormSchema),
+    resolver: zodResolver(
+      keywordSetupFormSchemaFor(
+        {
+          empty: t("empty"),
+          limit: t("limit", { maximum: KEYWORD_IMPORT_MAX }),
+          tooLong: (values) => t("tooLong", values),
+        },
+        { marketRequired: t("marketRequired") },
+      ),
+    ),
   });
   const keywords = watch("keywords") ?? "";
   const projectId = watch("projectId") ?? flowState?.projectId ?? "";
@@ -136,7 +95,10 @@ export function StepAddKeywords({
   const serpDepth = watch("serpDepth");
   const preview = keywordDraftPreview(keywords);
   const keywordCount = preview.uniqueKeywords.length;
-  const longWarning = preview.longLines > 0 ? longKeywordMessage(preview.longLines) : null;
+  const longWarning =
+    preview.longLines > 0
+      ? t("tooLong", { count: preview.longLines, maximum: KEYWORD_TEXT_MAX })
+      : null;
   const costContext = {
     cronExpression: watch("cronExpression"),
     depth: serpDepth ?? DEFAULT_SERP_DEPTH,
@@ -193,7 +155,7 @@ export function StepAddKeywords({
       }
       if (!onComplete) router.push(buildOnboardingStepHref(4, { ...flowState, projectId }));
     } catch (cause) {
-      setActionError(actionErrorMessage(cause));
+      setActionError(keywordSetupActionError(cause, sharedErrors, t("saveError")));
     } finally {
       savingRef.current = false;
       onSavingChange?.(false);
@@ -213,16 +175,15 @@ export function StepAddKeywords({
       <input type="hidden" {...register("cronExpression")} />
       <input type="hidden" {...register("jitterMinutes")} />
       <input type="hidden" {...register("timezone")} />
-      <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">Keywords</h2>
-      <p className="m-0 mt-1 text-[13px] text-fg-muted">
-        Paste keywords or import suggestions from the data sources you connected.
-      </p>
+      <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{t("title")}</h2>
+      <p className="m-0 mt-1 text-[13px] text-fg-muted">{t("description")}</p>
       {projectId ? (
         <KeywordTopQueryImport
           costContext={costContext}
           currentKeywords={keywords}
           hasAnalyticsSource={hasAnalyticsSource}
           importTopQueriesAction={importTopQueriesAction}
+          messages={topImportMessages}
           onAppendQueries={appendQueries}
           projectId={projectId}
         />
@@ -232,6 +193,7 @@ export function StepAddKeywords({
         currentKeywords={keywords}
         domain={projectDomain}
         fetchAction={fetchRankedKeywordSuggestionsAction}
+        messages={rankedMessages}
         onAppendQueries={appendQueries}
         projectId={projectId}
       />
@@ -240,7 +202,7 @@ export function StepAddKeywords({
         aria-invalid={errors.keywords ? true : undefined}
         aria-required="true"
         className="mt-3 min-h-[150px] w-full resize-y rounded-control border border-border-control bg-transparent px-3.5 py-3 text-[13px] font-normal leading-[1.7] text-fg outline-none placeholder:font-normal placeholder:text-fg-muted focus:border-accent"
-        placeholder="One keyword per line"
+        placeholder={t("placeholder")}
         {...register("keywords", { onChange: (event) => onKeywordsChange?.(event.target.value) })}
         required
       />
@@ -249,14 +211,17 @@ export function StepAddKeywords({
           {errors.keywords.message}
         </p>
       ) : null}
-      <p className={`m-0 mt-2 ${feedbackClass} text-fg-muted`}>{keywordDraftMessage(preview)}</p>
+      <p className={`m-0 mt-2 ${feedbackClass} text-fg-muted`}>
+        {t("summary", {
+          duplicates: preview.duplicateLines,
+          keywords: preview.uniqueKeywords.length,
+        })}
+      </p>
       {longWarning ? (
         <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>{longWarning}</p>
       ) : null}
       {keywordCount >= 450 && keywordCount <= KEYWORD_IMPORT_MAX ? (
-        <p className={`m-0 mt-2 ${feedbackClass} text-yellow-text`}>
-          approaching the 500-keyword import limit
-        </p>
+        <p className={`m-0 mt-2 ${feedbackClass} text-yellow-text`}>{t("approachingLimit")}</p>
       ) : null}
       <TrackingDefaultsFields
         createMarketAction={createMarketAction}
@@ -283,6 +248,7 @@ export function StepAddKeywords({
         serpDepth={serpDepth}
       />
       <KeywordImportSummary
+        calculatorPath={calculatorPath}
         cronExpression={costContext.cronExpression}
         devices={devices}
         frequency={frequency}

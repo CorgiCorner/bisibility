@@ -25,13 +25,19 @@ export function deploymentDataRegionLabel(value = process.env.DATA_REGION) {
   return deploymentDataRegion(value).toUpperCase();
 }
 
+/** Returns a safe display value only when the runtime has an explicit region claim. */
+export function explicitDeploymentDataRegionLabel(value = process.env.DATA_REGION) {
+  return value?.trim() ? deploymentDataRegionLabel(value) : null;
+}
+
 export function dataResidencyMessage(value = process.env.DATA_REGION) {
   // Claim a region only when DATA_REGION is explicitly set (the regional cells
   // set it). The generic us-east deploy stays silent rather than claim a region.
-  if (!value?.trim()) {
+  const region = explicitDeploymentDataRegionLabel(value);
+  if (!region) {
     return "";
   }
-  return `Your data is stored and processed in the ${deploymentDataRegionLabel(value)}.`;
+  return `Your data is stored and processed in the ${region}.`;
 }
 
 export const isCloud = deploymentMode() === "cloud";

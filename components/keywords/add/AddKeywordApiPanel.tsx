@@ -8,6 +8,7 @@ import {
   tokenizeCurlSnippet,
 } from "@/lib/api/snippets";
 import { docsLinkProps } from "@/lib/site/site";
+import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
 
 type AddKeywordApiPanelProps = {
@@ -58,6 +59,7 @@ function HighlightedCurl({ snippet }: Readonly<{ snippet: string }>) {
 }
 
 export function AddKeywordApiPanel({ projectId }: Readonly<AddKeywordApiPanelProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
   const apiBaseUrl = useSyncExternalStore(
     subscribeApiBaseUrl,
     browserApiBaseUrl,
@@ -68,14 +70,8 @@ export function AddKeywordApiPanel({ projectId }: Readonly<AddKeywordApiPanelPro
 
   return (
     <div className="flex flex-col gap-2.5">
-      <p className="m-0 text-[12px] leading-5 text-fg-muted">
-        Each country, location and language combination belongs to a project market. The API creates
-        missing markets within your project limit. Adding keywords to a paused market keeps it
-        paused; existing keywords and rank history stay in their original markets.
-      </p>
-      <p className="m-0 text-[12.5px] text-fg-muted">
-        Batch-add keywords from your own scripts or CI. Authenticate with a project API key.
-      </p>
+      <p className="m-0 text-[12px] leading-5 text-fg-muted">{t("apiMarkets")}</p>
+      <p className="m-0 text-[12.5px] text-fg-muted">{t("apiDescription")}</p>
       <div className="min-w-0 overflow-hidden rounded-control border border-code-border bg-code-bg">
         <div className="flex items-center justify-between gap-2 border-b border-code-border px-3 pt-2">
           <div
@@ -87,12 +83,12 @@ export function AddKeywordApiPanel({ projectId }: Readonly<AddKeywordApiPanelPro
           >
             curl
           </div>
-          <CopyButton label="Copy curl snippet" size="sm" style={codeDarkCopy} text={snippet} />
+          <CopyButton label={t("copyCurl")} size="sm" style={codeDarkCopy} text={snippet} />
         </div>
         <HighlightedCurl snippet={snippet} />
       </div>
       <p className="m-0 text-[11.5px] text-fg-muted">
-        Full API reference at{" "}
+        {t("apiReference")}{" "}
         <a
           className="font-sans tabular-nums text-accent-text hover:underline"
           {...docsLinkProps(openapiHref, { external: true })}

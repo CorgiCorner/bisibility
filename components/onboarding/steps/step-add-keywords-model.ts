@@ -3,7 +3,6 @@ import { MAX_ONBOARDING_LOCATIONS } from "@/components/onboarding/onboarding-loc
 import {
   canonicalKeySchema,
   deviceSchema,
-  KEYWORD_IMPORT_LIMIT_MESSAGE,
   KEYWORD_IMPORT_MAX,
   KEYWORD_TEXT_MAX,
 } from "@/lib/schemas/keyword";
@@ -48,23 +47,47 @@ export function longKeywordMessage(count: number) {
   return `${count} ${line} the ${KEYWORD_TEXT_MAX}-character keyword limit.`;
 }
 
-const keywordDraftSchema = z.string().superRefine((value, ctx) => {
-  const preview = keywordDraftPreview(value);
-  if (preview.uniqueKeywords.length === 0)
-    ctx.addIssue({ code: "custom", message: "Add at least one keyword." });
-  if (preview.longLines > 0)
-    ctx.addIssue({ code: "custom", message: longKeywordMessage(preview.longLines) });
-  if (preview.uniqueKeywords.length > KEYWORD_IMPORT_MAX)
-    ctx.addIssue({ code: "custom", message: KEYWORD_IMPORT_LIMIT_MESSAGE });
-});
+export type KeywordDraftMessages = {
+  empty: string;
+  limit: string;
+  tooLong: (values: { count: number; maximum: number }) => string;
+};
 
-export const addKeywordsFormSchema = z.object({
-  device: deviceSchema.default(DEFAULT_SERP_DEVICE),
-  devices: z.array(deviceSchema).min(1),
-  keywords: keywordDraftSchema,
-  locations: z.array(canonicalKeySchema).min(1).max(MAX_ONBOARDING_LOCATIONS),
-  projectId: z.string().trim().min(1).max(120),
-});
+const defaultKeywordDraftMessages: KeywordDraftMessages = {
+  empty: "Add at least one keyword.",
+  limit: "Add up to 500 keywords per import.",
+  tooLong: ({ count, maximum }) => {
+    const line = count === 1 ? "line exceeds" : "lines exceed";
+    return `${count} ${line} the ${maximum}-character keyword limit.`;
+  },
+};
+
+export function keywordDraftSchemaFor(messages = defaultKeywordDraftMessages) {
+  return z.string().superRefine((value, ctx) => {
+    const preview = keywordDraftPreview(value);
+    if (preview.uniqueKeywords.length === 0)
+      ctx.addIssue({ code: "custom", message: messages.empty });
+    if (preview.longLines > 0)
+      ctx.addIssue({
+        code: "custom",
+        message: messages.tooLong({ count: preview.longLines, maximum: KEYWORD_TEXT_MAX }),
+      });
+    if (preview.uniqueKeywords.length > KEYWORD_IMPORT_MAX)
+      ctx.addIssue({ code: "custom", message: messages.limit });
+  });
+}
+
+export function addKeywordsFormSchemaFor(messages = defaultKeywordDraftMessages) {
+  return z.object({
+    device: deviceSchema.default(DEFAULT_SERP_DEVICE),
+    devices: z.array(deviceSchema).min(1),
+    keywords: keywordDraftSchemaFor(messages),
+    locations: z.array(canonicalKeySchema).min(1).max(MAX_ONBOARDING_LOCATIONS),
+    projectId: z.string().trim().min(1).max(120),
+  });
+}
+
+export const addKeywordsFormSchema = addKeywordsFormSchemaFor();
 
 export type AddKeywordsForm = z.infer<typeof addKeywordsFormSchema>;
 

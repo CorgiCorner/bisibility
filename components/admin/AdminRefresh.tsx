@@ -3,8 +3,10 @@
 import { Button } from "@/components/ui/Button";
 import { appRootPath } from "@/lib/routing/app-path";
 import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
+import { useTranslations } from "next-intl";
 
 export function AdminRefresh() {
+  const t = useTranslations("instanceAdmin.controls");
   return (
     <Button
       component="a"
@@ -13,7 +15,7 @@ export function AdminRefresh() {
       startIcon={<ArrowClockwise aria-hidden size={15} weight="regular" />}
       variant="secondary"
     >
-      Refresh
+      {t("refresh")}
     </Button>
   );
 }

@@ -1,11 +1,18 @@
+import {
+  renderWithFeatureMessages,
+  researchFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type {
   KeywordResearchSourceDiagnostic,
   KeywordResearchSuccess,
 } from "@/lib/keyword-research/types";
 import { makeCostContext } from "@/tests/factories/cost-context";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ResearchResults } from "./ResearchResults";
+
+const render = (ui: React.ReactElement) =>
+  renderWithFeatureMessages(ui, { messages: researchFeatureTestMessages });
 
 vi.mock("./ResearchDetailPanel", () => ({
   ResearchDetailPanel: ({ metricsAvailable }: { metricsAvailable: boolean }) => (

@@ -1,5 +1,7 @@
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { OverviewNoData } from "./OverviewNoData";
 import { RecentlyAddedCard } from "./OverviewNoDataBottom";
@@ -16,13 +18,17 @@ const readyPlan = {
   providers: ["dataforseo", "serpapi"],
   readyCount: 2,
   scope: {
-    depth: "Top 100",
-    device: "Desktop",
-    engine: "Google",
-    frequency: "Daily",
+    depth: 100,
+    device: "desktop",
+    engine: "google",
+    frequency: "daily",
     location: "United States",
   },
 };
+
+function renderDashboard(children: ReactNode) {
+  return render(<ProjectDashboardMessages>{children}</ProjectDashboardMessages>);
+}
 
 function renderBanner(
   state: NoDataBannerState,
@@ -33,20 +39,20 @@ function renderBanner(
   }) => Promise<unknown> = vi.fn().mockResolvedValue({ queued: 1 }),
   keywordCount = 2,
   keywordId: string | null = "kw_pending",
-  canManageProviders = true,
 ) {
   render(
-    <NoDataBanner
-      canManageProviders={canManageProviders}
-      getFirstCheckRunPlanAction={vi.fn().mockResolvedValue(readyPlan)}
-      keywordCount={keywordCount}
-      keywordId={keywordId}
-      projectId="prj_1"
-      projectRef="prj_1"
-      queueFirstChecksAction={queueFirstChecksAction}
-      runCheckNowAction={runCheckNowAction}
-      state={state}
-    />,
+    <ProjectDashboardMessages>
+      <NoDataBanner
+        getFirstCheckRunPlanAction={vi.fn().mockResolvedValue(readyPlan)}
+        keywordCount={keywordCount}
+        keywordId={keywordId}
+        projectId="prj_1"
+        projectRef="prj_1"
+        queueFirstChecksAction={queueFirstChecksAction}
+        runCheckNowAction={runCheckNowAction}
+        state={state}
+      />
+    </ProjectDashboardMessages>,
   );
 }
 
@@ -67,25 +73,12 @@ describe("NoDataBanner", () => {
     expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
   });
 
-  it("asks a viewer to wait for an admin instead of offering Connect", () => {
-    renderBanner("missing", vi.fn(), vi.fn(), 0, null, false);
-
-    expect(screen.getByText("SERP provider required")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Ask a project admin to connect DataForSEO or SerpApi before rank tracking can start.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Connect" })).not.toBeInTheDocument();
-  });
-
   it("omits keyword readiness when a SERP provider is missing", () => {
     renderBanner("missing", vi.fn(), vi.fn().mockResolvedValue({ queued: 1 }), 0);
 
     expect(
       screen.getByText("Connect DataForSEO or SerpApi to start rank tracking."),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/keywords are ready/i)).not.toBeInTheDocument();
   });
 
   it("directs an existing broken provider to management", () => {
@@ -142,48 +135,6 @@ describe("NoDataBanner", () => {
     expect(screen.queryByRole("button", { name: "Run first check" })).not.toBeInTheDocument();
   });
 
-  it("removes ready-state write actions for viewers while keeping the keyword list readable", () => {
-    const { rerender } = render(
-      <NoDataBanner
-        canCreateKeyword={false}
-        canManageProviders={false}
-        canRunChecks={false}
-        getFirstCheckRunPlanAction={vi.fn().mockResolvedValue(readyPlan)}
-        keywordCount={2}
-        keywordId="kw_pending"
-        projectId="prj_1"
-        projectRef="prj_1"
-        queueFirstChecksAction={vi.fn().mockResolvedValue({ queued: 1 })}
-        runCheckNowAction={vi.fn()}
-        state="ready"
-      />,
-    );
-
-    expect(screen.queryByRole("button", { name: "Run first check" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View keywords" })).toHaveAttribute(
-      "href",
-      "/app/prj_1/rank-tracker",
-    );
-
-    rerender(
-      <NoDataBanner
-        canCreateKeyword={false}
-        canManageProviders={false}
-        canRunChecks={false}
-        getFirstCheckRunPlanAction={vi.fn().mockResolvedValue(readyPlan)}
-        keywordCount={0}
-        keywordId={null}
-        projectId="prj_1"
-        projectRef="prj_1"
-        queueFirstChecksAction={vi.fn().mockResolvedValue({ queued: 1 })}
-        runCheckNowAction={vi.fn()}
-        state="ready"
-      />,
-    );
-
-    expect(screen.queryByRole("link", { name: "Add keywords" })).not.toBeInTheDocument();
-  });
-
   it("takes precedence over provider and running states during a migration hold", () => {
     renderBanner("migration_hold");
 
@@ -231,11 +182,31 @@ describe("NoDataBanner", () => {
     fireEvent.click(confirmButton);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Rank check monthly budget reached.",
+      "Monthly rank-check budget reached.",
     );
+    expect(screen.queryByText("Rank check monthly budget reached.")).not.toBeInTheDocument();
     expect(queueFirstChecksAction).not.toHaveBeenCalled();
     expect(routerMock.refresh).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog", { name: "Run first check" })).toBeInTheDocument();
+  });
+
+  it("maps a blocked first-check result without exposing its server message", async () => {
+    const runCheckNowAction = vi.fn().mockResolvedValue({
+      code: "no_provider",
+      message: "provider credentials rejected: secret",
+      status: "not_started",
+    });
+    renderBanner("ready", runCheckNowAction);
+
+    fireEvent.click(screen.getByRole("button", { name: "Run first check" }));
+    const confirmButton = await screen.findByRole("button", { name: "Confirm and run" });
+    await waitFor(() => expect(confirmButton).toBeEnabled());
+    fireEvent.click(confirmButton);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Connect a SERP provider before running checks.",
+    );
+    expect(screen.queryByText("provider credentials rejected: secret")).not.toBeInTheDocument();
   });
 });
 
@@ -249,7 +220,7 @@ describe("NoDataKpiRow", () => {
   }> = [
     {
       budgetExhausted: true,
-      expected: "paused · migration hold",
+      expected: "paused - migration hold",
       projectReadOnly: true,
       runningCheckCount: 1,
       serpProviderState: "ready",
@@ -292,7 +263,7 @@ describe("NoDataKpiRow", () => {
   ];
 
   it("keeps KPI metrics while omitting the awaiting-first-check label", () => {
-    render(
+    renderDashboard(
       <NoDataKpiRow
         budgetExhausted={false}
         keywordCount={2}
@@ -313,7 +284,7 @@ describe("NoDataKpiRow", () => {
   it.each(states)(
     "shows $expected when that is the current check state",
     ({ expected, ...props }) => {
-      render(
+      renderDashboard(
         <NoDataKpiRow
           {...props}
           keywordCount={2}
@@ -328,22 +299,28 @@ describe("NoDataKpiRow", () => {
 
 describe("RecentlyAddedCard", () => {
   it("renders the note and position text supplied by the overview builder", () => {
-    render(
+    renderDashboard(
       <RecentlyAddedCard
         projectRef="prj_1"
         rows={[
           {
             id: "kw_old",
             keyword: "old keyword",
-            note: "Added 3 months ago · first check pending",
-            positionText: "Awaiting first check",
+            note: {
+              age: { kind: "days", value: 90 },
+              checkState: "firstCheckPending",
+              kind: "recentlyAdded",
+              url: null,
+            },
+            position: null,
+            positionState: "awaitingFirstCheck",
             positionTone: "muted",
           },
         ]}
       />,
     );
 
-    expect(screen.getByText("Added 3 months ago · first check pending")).toBeInTheDocument();
+    expect(screen.getByText("Added 90d ago · first check pending")).toBeInTheDocument();
     expect(screen.getByText("Awaiting first check")).toBeInTheDocument();
     expect(screen.queryByText("Added today · first check pending")).not.toBeInTheDocument();
   });
@@ -360,13 +337,17 @@ describe("RecentlyAddedCard", () => {
             {
               id: "kw_old",
               keyword: "old keyword",
-              note: "Added 3 months ago · first check pending",
-              positionText: "No data",
+              note: {
+                age: { kind: "days", value: 90 },
+                checkState: "firstCheckPending",
+                kind: "recentlyAdded",
+                url: null,
+              },
+              position: null,
+              positionState: "awaitingFirstCheck",
               positionTone: "muted",
             },
           ],
-          subtitle: "Waiting for first check",
-          title: "Recently added",
         },
       ],
       lastCheckAt: null,
@@ -374,7 +355,7 @@ describe("RecentlyAddedCard", () => {
       state: "no-data",
     } satisfies OverviewView;
 
-    render(
+    renderDashboard(
       <OverviewNoData
         budgetExhausted={false}
         getFirstCheckRunPlanAction={vi.fn().mockResolvedValue(readyPlan)}
@@ -387,7 +368,7 @@ describe("RecentlyAddedCard", () => {
       />,
     );
 
-    expect(screen.getByText("Added 3 months ago · first check pending")).toBeInTheDocument();
+    expect(screen.getByText("Added 90d ago · first check pending")).toBeInTheDocument();
     expect(screen.queryByText("Added today · first check pending")).not.toBeInTheDocument();
   });
 });

@@ -1,3 +1,4 @@
+import { withTrackingSettingsMessages } from "@/.storybook/tracking-settings-messages";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { TrackingSettingsContent } from "@/components/settings/tracking/TrackingSettingsContent";
 import {
@@ -40,9 +41,10 @@ const locationFixture = [
   },
 ];
 const readyPreview: CronPreviewResult = {
-  message: "Each keyword is scheduled at or after an anchor using deterministic jitter.",
-  runs: ["Aug 10, 06:00", "Aug 11, 06:00", "Aug 12, 06:00"],
+  message: "ready",
+  runs: ["2026-08-10T04:00:00.000Z", "2026-08-11T04:00:00.000Z", "2026-08-12T04:00:00.000Z"],
   status: "ready",
+  timezone: "Europe/Warsaw",
 };
 const defaults: DefaultsData = {
   city: null,
@@ -91,6 +93,7 @@ function TrackingStoryShell({ children }: Readonly<{ children: ReactNode }>) {
 const meta = {
   component: TrackingSettingsContent,
   decorators: [
+    withTrackingSettingsMessages,
     (Story) => {
       const original = window.fetch;
       window.fetch = (async (input: RequestInfo | URL) =>
@@ -113,7 +116,7 @@ const args = {
   canEdit: true,
   defaults,
   domain: "example.com",
-  initialCronPreview: { message: "", runs: [], status: "idle" } as CronPreviewResult,
+  initialCronPreview: { message: null, runs: [], status: "idle", timezone: null },
   previewCron: fn(async () => readyPreview),
   projectId,
   updateDefaults: fn(async () => ({})),

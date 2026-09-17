@@ -1,0 +1,97 @@
+{
+  "projectInstall": {
+    "agents": {
+      "heading": "AI エージェント",
+      "description": "ツールを選び、コマンドをコピーしてターミナルに貼り付けてください。セットアップはこれだけです。",
+      "copyCommand": "{agent} のコマンドをコピー",
+      "claude-code": {
+        "label": "Claude Code",
+        "hint": "CLI",
+        "note": "その後、Claude Code で /mcp を実行してサインインしてください。"
+      },
+      "codex": {
+        "label": "Codex",
+        "hint": "CLI",
+        "note": "Codex は同じ OAuth フローでサインインします。"
+      },
+      "cursor": {
+        "label": "Cursor",
+        "hint": "エディター",
+        "note": "設定、MCP と進み、mcp.json に貼り付けてください。"
+      },
+      "claude-desktop": {
+        "label": "Claude Desktop",
+        "hint": "コネクター",
+        "note": "ターミナルは不要です。設定、コネクター、カスタムコネクターを追加と進み、この URL を貼り付けてサインインしてください。"
+      },
+      "other": {
+        "label": "任意の MCP クライアント",
+        "hint": "手動",
+        "note": "OAuth サインインに対応した Streamable HTTP です。URL にキーは含まれません。"
+      }
+    },
+    "endpoint": {
+      "heading": "MCP エンドポイント",
+      "description": "リストにないツールをお使いですか？このアドレスを貼り付けて、bisibility アカウントでサインインしてください。",
+      "copy": "MCP URL をコピー",
+      "selfHosted": "セルフホスティングの場合は、代わりにご自身のアドレスを使用してください: '<your-instance>'/api/mcp"
+    },
+    "apiKey": {
+      "heading": "API キー",
+      "scope": "スコープ: {scope}",
+      "scopeRead": "読み取り専用",
+      "scopeWrite": "読み取りと書き込み",
+      "scopeAdmin": "フルアクセス",
+      "description": "夜間スクリプトのように、操作なしで実行する処理に使用します。{created, select, none {} other {{created}。}}",
+      "created": "{date}に作成",
+      "manage": "設定、開発者で管理",
+      "none": "API キーはまだありません。プロジェクト管理者は設定 → 開発者で作成できます。",
+      "copyCurl": "curl の例をコピー"
+    },
+    "skills": {
+      "heading": "スキル",
+      "planned": "予定",
+      "description": "エージェントが代わりに実行できるようになる、既製の SEO タスクです。まだ利用できるものはないため、このリストは今後の予定です。",
+      "footer": "最初のスキルが準備できると、ここにインストールコマンドが表示されます",
+      "keyword-import": "一括追加、重複削除",
+      "provider-setup": "接続、キーの確認",
+      "project-onboarding": "最初のプロジェクト設定",
+      "weekly-report": "順位変動のダイジェスト",
+      "keyword-clustering": "検索意図でグループ化",
+      "seo-audit": "優先度順の修正"
+    },
+    "chatgptIcon": {
+      "copyUrl": "アイコン URL をコピー",
+      "description": "bisibility をカスタム MCP アプリとして追加するときは、このアイコンを使用してください。",
+      "download": "PNG をダウンロード",
+      "heading": "ChatGPT アプリアイコン",
+      "imageAlt": "bisibility のアプリアイコン",
+      "meta": "PNG · {width, number} × {height, number} px · {kilobytes} KB（{bytes, number}バイト） · 10 KB 未満"
+    },
+    "gettingStarted": {
+      "addApp": {
+        "copyMcpUrl": "ChatGPT の MCP URL をコピー",
+        "description": "プラグインを開き、+ を選択して、下の MCP URL を追加します。OAuth を選び、bisibility にサインインしてください。求められた場合は上のアイコンをアップロードしてください。",
+        "title": "2. bisibility を追加"
+      },
+      "description": "bisibility を ChatGPT に接続します。",
+      "developerMode": {
+        "description": "ChatGPT で設定 → セキュリティとログインを開き、開発者モードをオンにしてください。",
+        "title": "1. 開発者モードを有効化"
+      },
+      "dismiss": "開始方法の案内を閉じる",
+      "firstChat": {
+        "description": "新しいチャットのツールメニューから bisibility を選択します。例: 「{prompt}」",
+        "prompt": {
+          "withChecks": "今週、順位が下がったキーワードはどれですか？",
+          "withoutChecks": "最初のキーワードを追加して順位チェックを実行してください。"
+        },
+        "title": "3. 会話を開始"
+      },
+      "guideLink": "ChatGPT セットアップガイド",
+      "heading": "開始方法",
+      "note": "開発者モードの利用可否はアカウントまたはワークスペースの設定によって異なります。",
+      "show": "開始方法を表示"
+    }
+  }
+}

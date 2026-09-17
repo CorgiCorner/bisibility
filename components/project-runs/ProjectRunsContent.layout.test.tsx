@@ -1,5 +1,6 @@
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { PROJECT_RUNS_DEFAULT_QUERY } from "@/lib/runs/filters";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { ProjectRunsContent } from "./ProjectRunsContent";
 

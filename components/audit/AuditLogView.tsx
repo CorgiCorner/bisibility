@@ -4,10 +4,12 @@ import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { EmptyState } from "@/components/ui/EmptyState";
+import type { DateDisplayContext } from "@/lib/dates/format";
 import type { AuditDateRange, AuditEntry } from "@/lib/queries/audit";
 import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { AuditDetailSheet } from "./AuditDetailSheet";
 import { AuditFilters } from "./AuditFilters";
@@ -20,6 +22,7 @@ import {
   defaultAuditFilters,
   eventTypeOptions,
 } from "./audit-filtering";
+import { presentAuditEntry } from "./audit-presentation";
 import {
   AUDIT_TABLE_DEFAULT_PAGINATION,
   AUDIT_TABLE_DEFAULT_SORT,
@@ -30,6 +33,7 @@ import {
 } from "./audit-table-state";
 
 export type AuditLogViewProps = {
+  dateDisplay: DateDisplayContext;
   dateRange: AuditDateRange;
   entries: readonly AuditEntry[];
   entryLimit: number;
@@ -38,12 +42,14 @@ export type AuditLogViewProps = {
 };
 
 function AuditNoRows({ entryLimit }: Readonly<{ entryLimit: number }>) {
+  const t = useTranslations("projectAudit.empty");
+
   return (
     <div className="grid h-full place-items-center p-6">
       <EmptyState
-        description={`Adjust the filters to search up to the ${entryLimit} most recent events in this date range.`}
+        description={t("description", { entryLimit })}
         icon={<MagnifyingGlass aria-hidden size={28} weight="regular" />}
-        title="No audit events match"
+        title={t("title")}
       />
     </div>
   );
@@ -51,23 +57,52 @@ function AuditNoRows({ entryLimit }: Readonly<{ entryLimit: number }>) {
 
 export function AuditLogView({
   dateRange,
+  dateDisplay,
   entries,
   entryLimit,
   retentionDays,
   truncated,
 }: Readonly<AuditLogViewProps>) {
+  const columnsT = useTranslations("projectAudit.columns");
+  const logT = useTranslations("projectAudit.log");
+  const presentationT = useTranslations("projectAudit.presentation");
   const router = useRouter();
   const pathname = usePathname();
   const [filters, setFilters] = useState<AuditFilterState>(defaultAuditFilters);
   const [pagination, setPagination] = useState<AuditTablePaginationState>(
     AUDIT_TABLE_DEFAULT_PAGINATION,
   );
-  const [selectedEntry, setSelectedEntry] = useState<AuditEntry | null>(null);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [sorting, setSorting] = useState<DataTableSort | null>(AUDIT_TABLE_DEFAULT_SORT);
-  const filteredEntries = useMemo(() => applyAuditFilters(entries, filters), [entries, filters]);
-  const actors = useMemo(() => actorOptions(entries), [entries]);
-  const columns = useMemo(() => auditColumns({ onOpenEntry: setSelectedEntry }), []);
-  const eventTypes = useMemo(() => eventTypeOptions(entries), [entries]);
+  const presentedEntries = useMemo(
+    () => entries.map((entry) => presentAuditEntry(entry, dateDisplay, presentationT)),
+    [dateDisplay, entries, presentationT],
+  );
+  const filteredEntries = useMemo(
+    () => applyAuditFilters(presentedEntries, filters),
+    [filters, presentedEntries],
+  );
+  const exportEntries = useMemo(() => {
+    const entriesById = new Map(entries.map((entry) => [entry.id, entry]));
+    return filteredEntries.flatMap((entry) => {
+      const rawEntry = entriesById.get(entry.id);
+      return rawEntry ? [rawEntry] : [];
+    });
+  }, [entries, filteredEntries]);
+  const selectedEntry = useMemo(
+    () => presentedEntries.find((entry) => entry.id === selectedEntryId) ?? null,
+    [presentedEntries, selectedEntryId],
+  );
+  const selectedExportEntry = useMemo(
+    () => entries.find((entry) => entry.id === selectedEntryId) ?? null,
+    [entries, selectedEntryId],
+  );
+  const actors = useMemo(() => actorOptions(presentedEntries), [presentedEntries]);
+  const columns = useMemo(
+    () => auditColumns({ onOpenEntry: (entry) => setSelectedEntryId(entry.id), t: columnsT }),
+    [columnsT],
+  );
+  const eventTypes = useMemo(() => eventTypeOptions(presentedEntries), [presentedEntries]);
   const activeFilters = { ...filters, dateRange };
   const tablePagination = auditTablePagination(filteredEntries.length, pagination);
 
@@ -89,8 +124,8 @@ export function AuditLogView({
           eventTypes={eventTypes}
           filters={activeFilters}
           onChange={handleFilterChange}
-          onExport={(format) => downloadAuditEntries(filteredEntries, format)}
-          totalCount={entries.length}
+          onExport={(format) => downloadAuditEntries(exportEntries, format)}
+          totalCount={presentedEntries.length}
           truncated={truncated}
           visibleCount={filteredEntries.length}
         />
@@ -100,14 +135,14 @@ export function AuditLogView({
             data-testid="audit-grid-viewport"
           >
             <DataTable
-              ariaLabel="Audit log"
+              ariaLabel={logT("tableAria")}
               columns={columns}
               density={AUDIT_TABLE_DENSITY}
               emptyState={<AuditNoRows entryLimit={entryLimit} />}
               id={AUDIT_TABLE_ID}
               layout="fill"
               onPaginationChange={setPagination}
-              onRowClick={setSelectedEntry}
+              onRowClick={(entry) => setSelectedEntryId(entry.id)}
               onSortingChange={setSorting}
               pagination={tablePagination}
               paginationMode="client"
@@ -121,13 +156,15 @@ export function AuditLogView({
       <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] text-fg-muted">
         <span className="inline-flex items-center gap-2">
           <LockSimple aria-hidden className="text-green-text" size={14} weight="regular" />
-          Append-only / retained {retentionDays} days
+          {logT("appendOnly", { retentionDays })}
         </span>
-        <span>
-          Filters search up to {entryLimit} most recent events / Visible to Admin and Auditor roles
-        </span>
+        <span>{logT("scope", { entryLimit })}</span>
       </div>
-      <AuditDetailSheet entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
+      <AuditDetailSheet
+        entry={selectedEntry}
+        exportEntry={selectedExportEntry}
+        onClose={() => setSelectedEntryId(null)}
+      />
     </section>
   );
 }

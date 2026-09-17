@@ -1,14 +1,24 @@
 import type { CheckRunRow } from "@/lib/checks/contract";
+import projectRankTrackerMessages from "@/messages/core/en/project-rank-tracker.json";
+import { createTranslator } from "use-intl/core";
 import { describe, expect, it } from "vitest";
 import {
+  type CheckRunsTranslations,
   formatAttemptOutcome,
   formatResult,
-  INTERNAL_ERROR_LABEL,
   isInternalErrorString,
   presentCheckError,
 } from "./check-runs-format";
 
 const now = new Date("2026-07-24T14:45:00.000Z");
+
+const t: CheckRunsTranslations = createTranslator({
+  locale: "en",
+  messages: projectRankTrackerMessages,
+  namespace: "projectRankTracker.checks",
+});
+
+const context = { locale: "en-US", t };
 
 const prismaError =
   "Invalid `prisma.providerConnection.findMany()` invocation: The column " +
@@ -71,35 +81,42 @@ describe("isInternalErrorString", () => {
 
 describe("presentCheckError", () => {
   it("maps internal shapes to a neutral label", () => {
-    expect(presentCheckError(prismaError)).toBe(INTERNAL_ERROR_LABEL);
+    expect(presentCheckError(prismaError, t)).toBe("Internal error during check");
   });
 
   it("keeps concise messages verbatim (trimmed)", () => {
-    expect(presentCheckError("  All providers failed  ")).toBe("All providers failed");
+    expect(presentCheckError("  All providers failed  ", t)).toBe("All providers failed");
   });
 });
 
 describe("formatResult", () => {
   it("uses the terminal failure label for every failed run", () => {
-    expect(formatResult(failedRun(prismaError), now)).toBe("All providers failed");
-    expect(formatResult(failedRun("stale running check"), now)).toBe("All providers failed");
-    expect(formatResult(failedRun("All providers failed"), now)).toBe("All providers failed");
-    expect(formatResult(failedRun(null), now)).toBe("All providers failed");
+    expect(formatResult(failedRun(prismaError), now, context)).toBe("All providers failed");
+    expect(formatResult(failedRun("stale running check"), now, context)).toBe(
+      "All providers failed",
+    );
+    expect(formatResult(failedRun("All providers failed"), now, context)).toBe(
+      "All providers failed",
+    );
+    expect(formatResult(failedRun(null), now, context)).toBe("All providers failed");
   });
 });
 
 describe("formatAttemptOutcome", () => {
   it("replaces legacy success detail on a failed provider attempt", () => {
     expect(
-      formatAttemptOutcome({
-        costCents: null,
-        degradedToCountry: false,
-        detail: "  Ok. ",
-        durationMs: null,
-        outcome: "provider_failed",
-        provider: "provider",
-        providerLabel: "Provider",
-      }),
+      formatAttemptOutcome(
+        {
+          costCents: null,
+          degradedToCountry: false,
+          detail: "  Ok. ",
+          durationMs: null,
+          outcome: "provider_failed",
+          provider: "provider",
+          providerLabel: "Provider",
+        },
+        { t },
+      ),
     ).toBe("Provider error");
   });
 
@@ -115,6 +132,7 @@ describe("formatAttemptOutcome", () => {
           provider: "provider",
           providerLabel: "Provider",
         },
+        { t },
         true,
       ),
     ).toBe("Provider error");

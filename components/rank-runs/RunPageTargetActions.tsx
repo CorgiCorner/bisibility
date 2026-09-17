@@ -2,9 +2,9 @@
 
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { Button } from "@/components/ui/Button";
-import { blockedRunPresentation } from "@/lib/rank-check/runs/blocked-presentation";
-import type { RunPageSummary } from "./RunPageModel";
+import { useLocale, useTranslations } from "next-intl";
 import type { RunPageData } from "./RunPageTypes";
+import { localizedBlockedRunCopy } from "./rank-run-copy";
 
 type RunMutation = "run-now" | "skip" | "retry-failed" | "retry-deferred";
 
@@ -21,17 +21,23 @@ export function RunPageTargetActions({
   onCancel: () => void;
   onMutate: (mutation: RunMutation) => void;
   run: RunPageData;
-  summary: RunPageSummary;
+  summary: { planned: boolean };
 }>) {
   const deploymentMode = useDeploymentMode();
+  const locale = useLocale();
+  const t = useTranslations("projectRuns.rankRuns");
   if (!canMutate) return null;
 
   if (run.status === "blocked" && run.trigger === "manual") {
-    const presentation = blockedRunPresentation({
-      budget: run.budget,
-      deploymentMode,
-      reason: run.blockedReason,
-    });
+    const presentation = localizedBlockedRunCopy(
+      {
+        budget: run.budget,
+        deploymentMode,
+        reason: run.blockedReason,
+      },
+      t,
+      locale,
+    );
     return (
       <>
         <Button
@@ -40,10 +46,10 @@ export function RunPageTargetActions({
           size="sm"
           title={presentation.description}
         >
-          Retry now
+          {t("retryNow")}
         </Button>
         <Button disabled={busy !== null} onClick={onCancel} size="sm" variant="secondary">
-          Cancel run
+          {t("cancelRun")}
         </Button>
       </>
     );
@@ -53,7 +59,7 @@ export function RunPageTargetActions({
     return (
       <>
         <Button loading={busy === "run-now"} onClick={() => onMutate("run-now")} size="sm">
-          Run now
+          {t("startRun")}
         </Button>
         <Button
           disabled={busy !== null}
@@ -61,7 +67,7 @@ export function RunPageTargetActions({
           size="sm"
           variant="secondary"
         >
-          Skip once
+          {t("skipOnce")}
         </Button>
       </>
     );
@@ -78,7 +84,7 @@ export function RunPageTargetActions({
           onClick={() => onMutate("retry-failed")}
           size="sm"
         >
-          Retry {run.counts.failed.toLocaleString("en-US")} failed targets
+          {t("retryFailed", { count: run.counts.failed })}
         </Button>
       ) : null}
       {run.counts.deferred > 0 ? (
@@ -88,7 +94,7 @@ export function RunPageTargetActions({
           size="sm"
           variant="secondary"
         >
-          Retry {run.counts.deferred.toLocaleString("en-US")} deferred targets
+          {t("retryDeferred", { count: run.counts.deferred })}
         </Button>
       ) : null}
     </>

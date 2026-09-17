@@ -1,0 +1,39 @@
+{
+  "projectCostEstimate": {
+    "providerSpend": {
+      "docs": "Jak działają budżety",
+      "eyebrow": "Budżet miesięczny",
+      "noCapAmount": "{spent} w tym miesiącu",
+      "meterAria": "Wydatki u dostawcy: {spent} z {cap} w tym miesiącu{session, select, none {} other {, {session} w tej sesji}}",
+      "segmentedAmount": "Wykorzystano {spent} z {cap}",
+      "cardCap": "z limitu {cap}",
+      "thisMonth": "w tym miesiącu",
+      "capReached": "osiągnięto limit",
+      "session": "{spent} w tej sesji",
+      "pace": "w tempie ~{spent}/mies.",
+      "left": "pozostało {spent}",
+      "otherProvider": "Pozostali",
+      "headerUnavailable": "Wydatki niedostępne",
+      "headerCapTooltip": "Miesięczny budżet u dostawcy.",
+      "headerNoCap": "Brak budżetu · Ustaw",
+      "headerNoCapWithSpend": "{spent} · brak budżetu · Ustaw",
+      "headerNoCapAria": "Brak budżetu, ustaw go",
+      "headerNoCapAriaWithSpend": "Wydano {spent} bez budżetu, ustaw go",
+      "headerUnderOnePercent": "Wykorzystano <1%",
+      "headerUsed": "Wykorzystano {percent, number}%",
+      "headerCapAria": "Limit miesięczny: {used}"
+    },
+    "status": {
+      "unavailable": "Szacowany koszt jest niedostępny.",
+      "retry": "Ponów",
+      "updating": "Aktualizowanie szacowanego kosztu…"
+    },
+    "spendInfo": {
+      "aria": "O wydatkach u dostawcy",
+      "description": "Twój miesięczny limit u dostawcy i bieżące zużycie.",
+      "session": "{spent} w tej sesji",
+      "details": "Szczegóły",
+      "setBudget": "Ustaw budżet"
+    }
+  }
+}

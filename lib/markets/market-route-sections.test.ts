@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 import { hasMarketRoute, MARKET_ROUTE_SECTIONS, sectionPathOf } from "./market-route-sections";
 import { sectionScope } from "./page-scope";
 
-const MARKET_ROUTE_DIR = resolve(process.cwd(), "app/app/(workspace)/[project]/m/[market]");
+const MARKET_ROUTE_DIR = resolve(
+  process.cwd(),
+  "app/(regional)/app/(workspace)/[project]/m/[market]",
+);
 
 /**
  * The sections Next actually serves under `m/{market}`, read from the route files themselves so

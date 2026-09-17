@@ -1,6 +1,7 @@
+import { renderWithIntegrationMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { IntegrationProviderData, ProviderActionHandlers } from "@/lib/integrations/types";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { integrationCategories } from "./integrations-fixtures";
 import { SerpFallbackOrder } from "./SerpFallbackOrder";

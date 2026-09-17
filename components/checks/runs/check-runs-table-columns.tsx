@@ -4,13 +4,17 @@ import { CheckStatusChip } from "@/components/ui/CheckStatusChip";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CheckRunRow } from "@/lib/checks/contract";
-import { RESEARCH_METRICS_UNAVAILABLE_TOOLTIP } from "@/lib/serp/research-capability";
 import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/ssr/ArrowDown";
 import { ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/ssr/ArrowUp";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { type CheckRunDetailLine, CountryLevelBadge } from "./CheckRunDetails";
-import { formatResult, formatRunCost, formatWhen } from "./check-runs-format";
+import {
+  type CheckRunsTranslations,
+  formatResult,
+  formatRunCost,
+  formatWhen,
+} from "./check-runs-format";
 import type { RunTableColumns } from "./use-run-table-width";
 
 export type CheckRunsTableRow = {
@@ -26,10 +30,12 @@ export type CheckRunsTableRow = {
 type ColumnOptions = {
   columns: RunTableColumns;
   keywordHref: (keywordPublicId: string) => string;
+  locale: string;
   now: Date;
+  t: CheckRunsTranslations;
 };
 
-function PositionDelta({ run }: Readonly<{ run: CheckRunRow }>) {
+function PositionDelta({ run, t }: Readonly<{ run: CheckRunRow; t: CheckRunsTranslations }>) {
   if (run.previousPosition === null || run.position === null) return null;
   const delta = run.previousPosition - run.position;
   if (delta === 0) {
@@ -47,22 +53,22 @@ function PositionDelta({ run }: Readonly<{ run: CheckRunRow }>) {
       }`}
     >
       <Icon aria-hidden size={9} weight="regular" />
-      {Math.abs(delta)}
+      {t("number", { value: Math.abs(delta) })}
     </span>
   );
 }
 
-function ProviderCell({ run }: Readonly<{ run: CheckRunRow }>) {
+function ProviderCell({ run, t }: Readonly<{ run: CheckRunRow; t: CheckRunsTranslations }>) {
   const label =
     run.status === "failed" && run.attemptCount > 1
-      ? `${run.attemptCount} providers`
+      ? t("providers", { count: run.attemptCount })
       : run.providerLabel;
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-1">
       <span className="truncate">{label}</span>
       {run.viaFallback ? (
         <span className="rounded-full bg-yellow/10 px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] font-semibold text-yellow-text">
-          fallback
+          {t("fallbackBadge")}
         </span>
       ) : null}
       {run.degradedToCountry ? <CountryLevelBadge /> : null}
@@ -70,8 +76,13 @@ function ProviderCell({ run }: Readonly<{ run: CheckRunRow }>) {
   );
 }
 
-function ResultCell({ now, run }: Readonly<{ now: Date; run: CheckRunRow }>) {
-  const value = formatResult(run, now);
+function ResultCell({
+  locale,
+  now,
+  run,
+  t,
+}: Readonly<{ locale: string; now: Date; run: CheckRunRow; t: CheckRunsTranslations }>) {
+  const value = formatResult(run, now, { locale, t });
   return (
     <div className="flex min-w-0 items-center gap-1.5">
       <span
@@ -80,16 +91,20 @@ function ResultCell({ now, run }: Readonly<{ now: Date; run: CheckRunRow }>) {
       >
         {value}
       </span>
-      {run.status === "completed" ? <PositionDelta run={run} /> : null}
+      {run.status === "completed" ? <PositionDelta run={run} t={t} /> : null}
     </div>
   );
 }
 
-function CostCell({ run }: Readonly<{ run: CheckRunRow }>) {
-  if (run.status !== "failed") return <>{formatRunCost(run)}</>;
+function CostCell({
+  locale,
+  run,
+  t,
+}: Readonly<{ locale: string; run: CheckRunRow; t: CheckRunsTranslations }>) {
+  if (run.status !== "failed") return <>{formatRunCost(run, { locale, t })}</>;
   return (
-    <Tooltip content="Not billed - no attempt completed">
-      <span aria-label="Not billed - no attempt completed" className="cursor-help">
+    <Tooltip content={t("notBilledTooltip")}>
+      <span aria-label={t("notBilledTooltip")} className="cursor-help">
         -
       </span>
     </Tooltip>
@@ -117,15 +132,17 @@ function column(
 export function checkRunsTableColumns({
   columns,
   keywordHref,
+  locale,
   now,
+  t,
 }: Readonly<ColumnOptions>): readonly DataTableColumn<CheckRunsTableRow>[] {
   const definitions: DataTableColumn<CheckRunsTableRow>[] = [
-    column("status", "Status", 140, (run) => <CheckStatusChip kind={run.status} />, {
+    column("status", t("status"), 140, (run) => <CheckStatusChip kind={run.status} />, {
       minSize: 140,
     }),
     column(
       "keyword",
-      "Keyword",
+      t("keyword"),
       148,
       (run) => (
         <Link
@@ -139,7 +156,7 @@ export function checkRunsTableColumns({
     ),
     column(
       "location",
-      "Location",
+      t("location"),
       132,
       (run) => (
         <span className="block truncate text-fg" title={run.location}>
@@ -148,56 +165,66 @@ export function checkRunsTableColumns({
       ),
       { flex: 2, minSize: 128 },
     ),
-    column("language", "Language", 104, (run) => (
+    column("language", t("language"), 104, (run) => (
       <div className="min-w-0">
         <span className="block truncate text-fg-muted">{run.languageLabel ?? "-"}</span>
         {!run.researchMetricsAvailable ? (
-          <Tooltip content={RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}>
+          <Tooltip content={t("researchMetricsUnavailableTooltip")}>
             <button
-              aria-label={`no volume/KD: ${RESEARCH_METRICS_UNAVAILABLE_TOOLTIP}`}
+              aria-label={t("researchMetricsUnavailableAria", {
+                tooltip: t("researchMetricsUnavailableTooltip"),
+              })}
               className="mt-1 inline-flex cursor-help rounded-full border border-dashed border-border-control bg-bg-sunken px-1.5 py-0.5 font-sans tabular-nums text-[9.5px] font-semibold text-fg-muted"
               type="button"
             >
-              no volume/KD
+              {t("researchMetricsUnavailable")}
             </button>
           </Tooltip>
         ) : null}
       </div>
     )),
-    column("device", "Device", 72, (run) => (
-      <span className="text-fg-muted">{run.device === "mobile" ? "Mobile" : "Desktop"}</span>
+    column("device", t("device"), 72, (run) => (
+      <span className="text-fg-muted">{run.device === "mobile" ? t("mobile") : t("desktop")}</span>
     )),
-    column("result", "Result", 112, (run) => <ResultCell now={now} run={run} />, {
-      minSize: 108,
-    }),
-    column("provider", "Provider", 132, (run) => <ProviderCell run={run} />, {
+    column(
+      "result",
+      t("result"),
+      112,
+      (run) => <ResultCell locale={locale} now={now} run={run} t={t} />,
+      {
+        minSize: 108,
+      },
+    ),
+    column("provider", t("provider"), 132, (run) => <ProviderCell run={run} t={t} />, {
       flex: 1,
       minSize: 128,
     }),
   ];
   if (columns.depth) {
     definitions.push(
-      column("depth", "Depth", 76, (run) => (
+      column("depth", t("depth"), 76, (run) => (
         <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
-          {typeof run.requestedDepth === "number" ? `Top ${run.requestedDepth}` : "-"}
+          {typeof run.requestedDepth === "number"
+            ? t("top", { depth: run.requestedDepth })
+            : t("notAvailable")}
         </span>
       )),
     );
   }
   if (columns.cost) {
     definitions.push(
-      column("cost", "Cost", 76, (run) => (
+      column("cost", t("cost"), 76, (run) => (
         <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
-          <CostCell run={run} />
+          <CostCell locale={locale} run={run} t={t} />
         </span>
       )),
     );
   }
   if (columns.when) {
     definitions.push(
-      column("when", "When", 76, (run) => (
+      column("when", t("when"), 76, (run) => (
         <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
-          {formatWhen(run, now)}
+          {formatWhen(run, now, { t })}
         </span>
       )),
     );

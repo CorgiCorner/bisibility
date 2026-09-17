@@ -1,0 +1,570 @@
+{
+  "shared": {
+    "language": {
+      "english": "英語",
+      "label": "言語"
+    },
+    "analyticsConsent": {
+      "actions": {
+        "acceptAll": "すべて許可",
+        "rejectAll": "すべて拒否",
+        "save": "保存",
+        "settings": "設定"
+      },
+      "banner": {
+        "ariaLabel": "アナリティクスの同意",
+        "body": "訪問数の集計に Cookie は使用していません。任意のアナリティクス Cookie とリプレイは bisibility の改善に役立ちます。",
+        "saveError": "選択内容を保存できませんでした。オフにした項目はオフのままです。再試行してください。",
+        "update": "リプレイにはアプリの画面が含まれる場合があります。選択内容をご確認ください。アナリティクスの設定は変更されません。"
+      },
+      "modal": {
+        "alwaysOn": "常に有効",
+        "essential": {
+          "body": "サインイン、セキュリティ、保存済みの設定に必要です。",
+          "title": "必須"
+        },
+        "footer": "選択内容は6か月間保存されます。フッターの「プライバシー設定」からいつでも変更できます。",
+        "intro": "アナリティクスとリプレイは別々に選択できます。必須 Cookie は常に有効です。",
+        "privacyPolicy": "プライバシーポリシー",
+        "replay": {
+          "body": "任意の録画はウェブサイトとセットアップの改善に役立ちます。アプリでは、最初のチェックと順位トラッカーが録画に含まれる場合があります。入力内容とプロジェクトデータはマスクされます。サインイン、アカウント、請求の画面、認証情報、Google のデータは除外されます。",
+          "title": "リプレイ"
+        },
+        "saveError": "変更を保存できませんでした。オフにした項目はオフのままです。再試行してください。",
+        "usage": {
+          "body": "利用したページとセットアップ手順を、アナリティクス Cookie で訪問をまたいで関連付けます。",
+          "title": "利用状況アナリティクス"
+        },
+        "visitCounts": "任意のアナリティクスを拒否した場合も、Cookie や永続的なプロファイルを使わずに訪問数を集計します。"
+      },
+      "title": "プライバシー設定"
+    },
+    "errors": {
+      "genericFallback": "操作を完了できませんでした。",
+      "rateLimited": "リクエストが多すぎます。しばらくしてから再試行してください。",
+      "serverComponentDigest": "サーバー側でチェックに失敗しました（参照 ID: {digest}）。しばらくしてから再試行してください。",
+      "staleDeployment": "このページを開いている間に bisibility が更新されました。続行するにはアプリを再読み込みしてください。未保存の変更は失われます。",
+      "verificationFailed": "確認できませんでした。再試行してください。"
+    },
+    "emergencyRecovery": {
+      "error": {
+        "backToApp": "アプリに戻る",
+        "description": "トラッカーはこのリクエストを完了できませんでした。再試行するか、このルートが復旧するまでアプリに戻ってください。",
+        "retry": "再試行",
+        "status": "500 - サーバーエラー",
+        "title": "トラッカーでエラーが発生しました"
+      },
+      "notFound": {
+        "backToApp": "アプリに戻る",
+        "description": "このページは移動したか、もともと存在しなかった可能性があります。",
+        "status": "404 - 見つかりません",
+        "title": "このページは利用できません"
+      }
+    },
+    "appError": {
+      "cloudMessage": "アプリは動作を続けているため、データは安全です。もう一度この画面を開いてください。解決しない場合は、エラー参照 ID を<support>サポート</support>に共有してください。",
+      "copied": "コピーしました",
+      "copyUrl": "URL をコピー",
+      "diagnostics": {
+        "copied": "コピーしました",
+        "copyDetails": "詳細をコピー",
+        "hideTrace": "トレースを非表示",
+        "noReference": "参照 ID なし",
+        "publicReview": "この詳細にはプロジェクトのパスが含まれる場合があります。公開する前に内容をご確認ください。",
+        "showTrace": "トレースを表示",
+        "stackTrace": "スタックトレース"
+      },
+      "goToOverview": "概要へ移動",
+      "retrying": "再試行中",
+      "selfHostMessage": "アプリは動作を続けているため、データは安全です。もう一度この画面を開いてください。解決しない場合は、詳細をコピーして<issue>イシューを作成</issue>してください。",
+      "title": "この画面の表示が停止しました",
+      "tryAgain": "再試行",
+      "urlCopied": "URL をコピーしました",
+      "viewError": "表示エラー"
+    },
+    "rankPreflight": {
+      "budget": "予算",
+      "budgetBlocked": "予算の上限に達したため、この実行は一時停止しています。",
+      "cancel": "キャンセル",
+      "configuredProvider": "{provider} がプライマリプロバイダーに設定されています。",
+      "couldNotLoad": "実行の見積もりを読み込めませんでした。再試行してください。",
+      "couldNotRefresh": "見積もりを更新できませんでした。再試行してください。",
+      "couldNotStart": "この実行を開始できませんでした。再試行してください。",
+      "depth": "深度",
+      "depthAria": "結果の取得深度",
+      "devices": "{count, plural, other {デバイス#件}}",
+      "duplicate": "このスコープの実行はすでに進行中です。今すぐ開始すると、同じ順位に二重で料金が発生します。",
+      "editBudget": "予算を編集",
+      "noProvider": "プロバイダーなし",
+      "noProviderBlocked": "プロバイダーが接続されていないため、これらのターゲットの送信先がありません。ご自身のキーを使用し、料金は直接請求されます。",
+      "openIntegrations": "連携を開く",
+      "openRun": "実行を開く",
+      "pricePerTarget": "ターゲット単価",
+      "primaryProvider": "プライマリプロバイダー",
+      "primaryProviderAria": "プライマリプロバイダー",
+      "previewChanged": "実行内容が変更されました。更新して現在の見積もりを確認してください。",
+      "runInProgress": "実行中",
+      "runOptions": "実行オプション",
+      "runScope": "実行範囲",
+      "markets": "{count, plural, other {市場#件}}",
+      "startRun": "実行を開始",
+      "sampleProject": "サンプルプロジェクトでは実際のチェックは行われません。",
+      "scopeDescription": "プロバイダーに送信する前に、{market} の{count, plural, other {#件のキーワード}}をチェックします。",
+      "scopeEquation": "{keywords, plural, other {キーワード#件}} · {market} · {devices} = {targets, plural, other {ターゲット#件}}",
+      "scopeMany": "{market} で選択中の{count, plural, other {#件のキーワード}}をチェック",
+      "scopeOne": "{market} で {keyword} をチェック",
+      "scopeSubtitle": "開始する前に {market} のスコープを確認してください。",
+      "starting": "開始中...",
+      "topDepth": "上位{depth, number}位"
+    },
+    "globalError": {
+      "description": "アプリはこのページを表示できませんでした。再読み込みしてもう一度お試しください。",
+      "retry": "アプリを再読み込み",
+      "title": "問題が発生しました"
+    },
+    "markets": {
+      "add": "{count, plural, other {#件の市場を追加}}",
+      "addMarkets": "市場を追加",
+      "allLanguages": "すべての言語",
+      "cancel": "キャンセル",
+      "catalog": "カタログ",
+      "desktop": "デスクトップ",
+      "estimateProviderCost": "プロバイダー費用を試算",
+      "languages": "言語",
+      "location": "ロケーション",
+      "locationCity": "都市",
+      "locationClearSearch": "ロケーション検索をクリア",
+      "locationCountries": "国",
+      "locationNoMatching": "一致するロケーションがありません。別の名前で検索するか、国を選択してください。",
+      "locationRegion": "地域",
+      "locationRegionsAndCities": "地域と都市",
+      "locationSearching": "ロケーションを検索中...",
+      "markets": "市場",
+      "mobile": "モバイル",
+      "moreLanguages": "その他の言語",
+      "newMarket": "新しい市場",
+      "noMatchingLanguages": "その検索に一致する対応言語はありません。",
+      "noVolume": "ボリューム/KD なし",
+      "researchUnavailable": "{language}: この市場には検索ボリュームと難易度のデータがありません。順位は通常どおり追跡されます。",
+      "searchAllLanguages": "対応するすべての言語を検索",
+      "searchMarkets": "市場を検索...",
+      "searchMoreLanguages": "その他の言語を検索",
+      "selected": "{count, plural, other {#件の市場を選択中}}",
+      "suggestedLanguages": "おすすめの言語",
+      "suggestedOnly": "おすすめのみ",
+      "tracked": "追跡中",
+      "trackedMarkets": "追跡中の市場"
+    },
+    "humanVerification": {
+      "ariaLabel": "人間であることの確認",
+      "complete": "認証が完了しました。",
+      "expired": "認証の有効期限が切れました。もう一度完了してください。",
+      "failed": "認証に失敗しました。もう一度お試しください。",
+      "unavailable": "現在、人間であることの確認は利用できません。"
+    },
+    "scheduleName": {
+      "custom": "カスタム \u00b7 {expression}",
+      "daily": "毎日 {time}",
+      "monthly": "毎月 \u00b7 {day} {time}",
+      "noFixedTime": "時刻の指定なし",
+      "weekly": "毎週 \u00b7 {weekday} {time}"
+    },
+    "operationRow": {
+      "days": "{count, plural, other {日}}",
+      "actions": {
+        "cancel": {
+          "label": "キャンセル",
+          "tip": "まだ送信されていないチェックを停止します。プロバイダーに送信済みのチェックは完了し、課金されます。"
+        },
+        "pause": {
+          "label": "一時停止",
+          "tip": "処理中の月が完了した時点でインポートを一時停止します。インポート済みのデータは破棄されません。"
+        },
+        "reconnect": {
+          "label": "再接続",
+          "tip": "このプロパティの Search Console を再接続します。"
+        },
+        "resume": {
+          "label": "再開",
+          "tip": "このインポートを保存済みのキューに戻します。"
+        },
+        "retry": {
+          "label": "再試行",
+          "tip": "この操作を保存済みの状態から再試行します。"
+        }
+      },
+      "etaMinutes": "残り約{count, plural, other {#分}}",
+      "etaSeconds": "残り約{count, plural, other {#秒}}",
+      "items": "件",
+      "nextCheck": "{kind}のチェック: {when}",
+      "nextCheckFirst": "最初",
+      "nextCheckNext": "次回",
+      "provider": "プロバイダー",
+      "relative": {
+        "dueNow": "期限到来",
+        "inDays": "{count, plural, other {#日後}}",
+        "inHours": "{count, plural, other {#時間後}}",
+        "inMinutes": "{count, plural, other {#分後}}"
+      },
+      "progress": "{title}: {processed, number}/{total, number}{unit}を処理済み、完了{completed, number}件、失敗{failed, number}件、延期{deferred, number}件",
+      "states": {
+        "budget": "月間上限に達しました{hasResumeDate, select, no {。残りの項目はスキップされます。} other {。{resumeDate} まで残りはスキップされます。}}",
+        "cancelled": "{hasActor, select, no {キャンセルされました。先に完了した分は保持されます。} other {{actor} がキャンセルしました。先に完了した分は保持されます。}}",
+        "cancelling": "キャンセル中です。プロバイダーに送信済みのチェックは完了します。",
+        "deferred": "プロバイダーのレート制限により延期されました。次回のスケジュール実行で再試行されます。",
+        "failed": "完了した項目はありません。{provider} がすべてのリクエストを拒否しました。",
+        "notConfirmed": "実行は終了しましたが、結果を確認できませんでした。",
+        "partial": "{failed, plural, other {#件の失敗}}を残して終了しました。再試行では失敗した分だけが送信されます。",
+        "queued": "最初のチェックの開始を待っています。",
+        "quota": "{provider} のクォータに達しました。許可され次第、インポートは自動的に再開します。",
+        "retrying": "失敗したチェックを再試行しています{hasEta, select, no {。} other {。{eta}。}}",
+        "running": "{provider} は結果を返しています{hasEta, select, no {。} other {。{eta}。}}",
+        "succeeded": "すべての項目が完了しました。",
+        "worker": "インポートワーカーのステータス取得が遅延しています。更新して再確認してください。"
+      }
+    },
+    "tokens": {
+      "githubRepository": "GitHub リポジトリ",
+      "githubStars": "GitHub のスター{count, number}件",
+      "remove": "{value} を削除"
+    },
+    "appNotFound": {
+      "backToProjects": "プロジェクト一覧に戻る",
+      "description": "このプロジェクトは存在しないか、アカウントがメンバーではありません。",
+      "descriptionSignedIn": "{email} でサインインしています。このプロジェクトは存在しないか、そのアカウントがメンバーではありません。チームメンバーからリンクを受け取った場合、ここで使用しているものとは別のアカウントの可能性があります。",
+      "footnote": "404 - 見つかりません",
+      "pageTitle": "このページは利用できません",
+      "signInDifferentAccount": "別のアカウントでサインイン",
+      "title": "ページを利用できません"
+    },
+    "projectItemNotFound": {
+      "backToProjects": "プロジェクト一覧に戻る",
+      "description": "このプロジェクトは開いていますが、リンク先のページはこのプロジェクトの一部ではありません。項目が削除されたか、アドレスが古い可能性があります。",
+      "footnote": "404 - 見つかりません",
+      "pageTitle": "該当するページが見つかりませんでした",
+      "title": "ページが見つかりません"
+    },
+    "siteNotFound": {
+      "backToApp": "アプリに戻る",
+      "description": "検出できるすべての URL を追跡しましたが、このページは順位に現れませんでした。移動したか、もともと存在しなかった可能性があります。",
+      "docsLink": "解決しない場合はドキュメントをご覧ください",
+      "goToHomepage": "ホームページへ",
+      "goToSignIn": "サインインへ",
+      "kicker": "404 - 見つかりません",
+      "statusLabel": "HTTP 404",
+      "terminalNote": "代わりに次のいずれかをお試しください",
+      "title": "このページはインデックスに登録されていません"
+    },
+    "setupVideo": {
+      "fallback": "お使いのブラウザーは動画に対応していません。",
+      "open": "動画を開く"
+    },
+    "firstCheck": {
+      "action": "最初のチェックを実行",
+      "cancel": "キャンセル",
+      "confirm": "確認して実行",
+      "loading": "実行の詳細を読み込み中...",
+      "manualRunDescription": "この手動実行は、スケジュールとは別に今すぐチェックを開始します。",
+      "providerOrder": "プロバイダーのフォールバック順序",
+      "providerOrderAriaLabel": "SERP プロバイダーのフォールバック順序",
+      "retry": "再試行",
+      "starting": "開始中...",
+      "title": "最初のチェックを実行",
+      "unavailable": "実行の詳細を利用できません。",
+      "errors": {
+        "checkInProgress": "このキーワードの順位チェックはすでに進行中です。",
+        "keywordArchived": "このキーワードは順位チェックの対象ではなくなりました。",
+        "loadPlan": "実行の詳細を読み込めませんでした。",
+        "marketInactive": "この市場は無効のため、順位チェックを実行できません。",
+        "start": "最初の順位チェックを開始できませんでした。"
+      },
+      "notices": {
+        "budgetExhausted": "月間の順位チェック予算の上限に達しました。",
+        "noneReady": "最初のチェックの準備ができたキーワードはありません。",
+        "providerMissing": "チェックを実行する前に SERP プロバイダーを接続してください。",
+        "raiseBudget": "予算の引き上げ",
+        "sampleProject": "サンプルプロジェクトでは実際のチェックは行われません。"
+      },
+      "scope": {
+        "allReady": "すべて準備完了（{count, number}件）",
+        "budget": "予算",
+        "depth": "深度",
+        "depthValue": "上位{value, number}位",
+        "desktop": "デスクトップ",
+        "device": "デバイス",
+        "engine": "検索エンジン",
+        "google": "Google",
+        "firstKeyword": "最初のキーワード",
+        "frequency": "頻度",
+        "location": "ロケーション",
+        "mobile": "モバイル",
+        "runAriaLabel": "実行範囲: {count, number}{count, plural, other {件のキーワード}}が準備完了",
+        "title": "チェック範囲",
+        "queueDetail": "最初のキーワードはすぐに実行され、残りの{count, number}{count, plural, other {件のキーワード}}はチェックキューに追加されます。"
+      },
+      "frequency": {
+        "custom_cron": "カスタム cron",
+        "daily": "毎日",
+        "manual": "手動",
+        "monthly": "毎月",
+        "paused": "一時停止中",
+        "weekly": "毎週"
+      },
+      "cost": {
+        "budgetWithCap": "{spent} / {cap}",
+        "budgetWithoutCap": "今月 {spent}",
+        "estimated": "推定費用",
+        "estimatedValue": "約 {amount}",
+        "lessThanOneCent": "< {amount}"
+      }
+    },
+    "controls": {
+      "alert": {
+        "dismiss": "アラートを閉じる"
+      },
+      "confirmation": {
+        "cancel": "キャンセル",
+        "failure": "操作を完了できませんでした。再試行してください。",
+        "typeToConfirm": "確認するには <strong>{word}</strong> と入力",
+        "working": "処理中...",
+        "clearTargetUrlsBody": "選択したキーワードから設定済みの対象 URL を削除します。順位履歴には影響しません。",
+        "clearTargetUrlsDangerLabel": "対象 URL をクリア",
+        "clearTargetUrlsTitle": "対象 URL をクリア",
+        "clearTargetUrlsToastMessage": "対象 URL をクリアしました",
+        "deactivateAccountBody": "無効にするとサインインがブロックされ、すべてのセッションが取り消されます。このアカウントが所有するスケジュール済みチェックは一時停止します。このアカウントに紐づく個人アクセストークンはすべて完全に取り消されます。インスタンス管理者は保護されます。",
+        "deactivateAccountDangerLabel": "アカウントを無効化",
+        "deactivateAccountTitle": "アカウントを無効化",
+        "deactivateAccountToastMessage": "アカウント操作をリクエストしました",
+        "deleteAccountBody": "アカウント、プロジェクト、およびそこで追跡しているすべてのものを完全に削除します。この操作は元に戻せません。",
+        "deleteAccountDangerLabel": "アカウントを削除",
+        "deleteAccountTitle": "アカウントを削除",
+        "deleteAccountToastMessage": "アカウントを削除しました",
+        "deleteBulkBody": "選択したキーワードとその履歴を削除します。この操作は元に戻せません。",
+        "deleteBulkDangerLabel": "キーワードを削除",
+        "deleteBulkTitle": "選択したキーワードを削除",
+        "deleteBulkToastMessage": "選択したキーワードを削除しました",
+        "deleteKeywordBody": "このキーワードの追跡を停止し、順位履歴を削除します。この操作は元に戻せません。",
+        "deleteKeywordDangerLabel": "キーワードを削除",
+        "deleteKeywordTitle": "キーワードを削除",
+        "deleteKeywordToastMessage": "キーワードを削除しました",
+        "deleteProjectBody": "このプロジェクト、追跡中のすべてのキーワード、履歴、API キーを完全に削除します。この操作は元に戻せません。",
+        "deleteProjectDangerLabel": "プロジェクトを削除",
+        "deleteProjectTitle": "プロジェクトを削除",
+        "deleteProjectToastMessage": "プロジェクトを削除しました",
+        "deleteRunBody": "この実行を履歴から削除しますか？キーワードの順位と記録済みのプロバイダー利用額は保持されます。この操作は元に戻せません。",
+        "deleteRunDangerLabel": "実行を削除",
+        "deleteRunTitle": "実行を削除",
+        "deleteRunToastMessage": "実行を削除しました",
+        "deleteWebhookEndpointBody": "このエンドポイントへの今後の配信を停止し、配信履歴との関連を削除します。この操作は元に戻せません。",
+        "deleteWebhookEndpointDangerLabel": "エンドポイントを削除",
+        "deleteWebhookEndpointTitle": "Webhook エンドポイントを削除",
+        "deleteWebhookEndpointToastMessage": "Webhook エンドポイントを削除しました",
+        "reactivateAccountBody": "再びサインインを許可します。以前に取り消した個人アクセストークンは取り消されたままであり、再作成が必要です。スケジュール済みチェックはスケジュール調整処理により再び整合します。",
+        "reactivateAccountDangerLabel": "アカウントを再有効化",
+        "reactivateAccountTitle": "アカウントを再有効化",
+        "reactivateAccountToastMessage": "アカウント操作をリクエストしました",
+        "removeIntegrationBody": "別の SERP プロバイダーを接続するまで順位チェックは停止します。保存済みの認証情報はこのインスタンスから削除されます。",
+        "removeIntegrationDangerLabel": "プロバイダーを切断",
+        "removeIntegrationTitle": "プロバイダーを切断",
+        "removeIntegrationToastMessage": "プロバイダーを切断しました",
+        "removeSampleDataBody": "サンプルプロジェクトと生成されたデモデータを削除します。ほかのプロジェクトには影響しません。",
+        "removeSampleDataDangerLabel": "サンプルデータを削除",
+        "removeSampleDataTitle": "サンプルデータを削除",
+        "removeSampleDataToastMessage": "サンプルデータを削除しました",
+        "removeSearchConsoleConnectionBody": "このプロジェクトから保存済みの接続と認可トークンを削除します。すでにインポートした Search Console 指標は引き続き利用できます。",
+        "removeSearchConsoleConnectionDangerLabel": "Search Console を切断",
+        "removeSearchConsoleConnectionTitle": "Search Console を切断",
+        "removeSearchConsoleConnectionToastMessage": "Search Console を切断しました",
+        "removeTeamMemberBody": "このメンバーをプロジェクトから削除します。アカウントや他のプロジェクトへのアクセスには影響しません。",
+        "removeTeamMemberDangerLabel": "メンバーを削除",
+        "removeTeamMemberTitle": "プロジェクトメンバーを削除",
+        "removeTeamMemberToastMessage": "プロジェクトメンバーを削除しました",
+        "resetAccountLimitsBody": "このアカウントのレート制限バケットをクリアします。月間の利用額は移動ウィンドウのため、リセットできません。",
+        "resetAccountLimitsDangerLabel": "レート制限をリセット",
+        "resetAccountLimitsTitle": "レート制限をリセット",
+        "resetAccountLimitsToastMessage": "レート制限のリセットをリクエストしました",
+        "revokeKeyBody": "このキーを使用するアプリまたはスクリプトは直ちに動作しなくなります。アクセスを復元するには新しいキーを生成してください。",
+        "revokeKeyDangerLabel": "キーを取り消す",
+        "revokeKeyTitle": "API キーを取り消す",
+        "revokeKeyToastMessage": "API キーを取り消しました",
+        "revokeMigrationTokenBody": "現在のトークンを無効にします。これを使用する転送はすべて動作しなくなります。",
+        "revokeMigrationTokenDangerLabel": "トークンを取り消す",
+        "revokeMigrationTokenTitle": "移行トークンを取り消す",
+        "revokeMigrationTokenToastMessage": "移行トークンを取り消しました",
+        "rollMigrationTokenBody": "現在のトークンを無効にします。これを使用する転送はすべて動作しなくなります。",
+        "rollMigrationTokenDangerLabel": "トークンをローテーション",
+        "rollMigrationTokenTitle": "移行トークンをローテーション",
+        "rollMigrationTokenToastMessage": "トークンをローテーションしました",
+        "transferProjectOwnershipBody": "このメンバーをプロジェクト所有者にします。あなたのプロジェクトロールは管理者に変わり、再度所有権を移譲できるのは新しい所有者だけです。",
+        "transferProjectOwnershipDangerLabel": "所有権を移譲",
+        "transferProjectOwnershipTitle": "プロジェクトの所有権を移譲",
+        "transferProjectOwnershipToastMessage": "プロジェクトの所有権を移譲しました"
+      },
+      "copy": {
+        "action": "コピー",
+        "copied": "コピーしました！",
+        "failed": "コピーに失敗",
+        "id": "ID をコピー"
+      },
+      "calendar": {
+        "april": "4月",
+        "august": "8月",
+        "chooseDate": "日付を選択",
+        "december": "12月",
+        "february": "2月",
+        "friday": "金",
+        "january": "1月",
+        "july": "7月",
+        "june": "6月",
+        "march": "3月",
+        "may": "5月",
+        "monthYear": "{year}年{month}",
+        "monday": "月",
+        "nextMonth": "次の月",
+        "november": "11月",
+        "october": "10月",
+        "previousMonth": "前の月",
+        "saturday": "土",
+        "september": "9月",
+        "sunday": "日",
+        "thursday": "木",
+        "tuesday": "火",
+        "wednesday": "水"
+      },
+      "zonedTime": {
+        "plain": "{time}",
+        "timeZone": "{time} ({timeZone})",
+        "yourTime": "{time}（お使いのタイムゾーン）"
+      },
+      "checkStatus": {
+        "completed": "完了",
+        "failed": "失敗",
+        "pending": "保留中",
+        "running": "実行中"
+      },
+      "countrySelect": {
+        "catalog": "すべての国",
+        "noResults": "この検索に一致する国はありません。",
+        "searchPlaceholder": "国を検索",
+        "tracked": "追跡中の国"
+      },
+      "dataTable": {
+        "clearSort": "{column} の並べ替えを解除",
+        "column": "列",
+        "columns": "列",
+        "compact": "コンパクト",
+        "comfortable": "ゆったり",
+        "density": "表の密度",
+        "hideColumn": "{column} 列を非表示",
+        "nextPage": "次のページ",
+        "number": "{value, number}",
+        "pageRange": "{start, number}-{end, number} / {total, number}",
+        "previousPage": "前のページ",
+        "resizeColumn": "{column} 列の幅を変更",
+        "resizeInstructions": "ドラッグしてサイズを変更します。ダブルクリックでリセットします。",
+        "resetLayout": "レイアウトをリセット",
+        "rows": "行",
+        "rowsPerPage": "ページあたりの行数",
+        "selectRow": "{row} を選択",
+        "selectVisibleRows": "表示中の行を選択",
+        "collapseRow": "{row} を折りたたむ",
+        "expandRow": "{row} を展開",
+        "showColumn": "{column} 列を表示",
+        "sortAscending": "{column} を昇順で並べ替え",
+        "sortDescending": "{column} を降順で並べ替え",
+        "standard": "標準",
+        "toggleColumns": "列の表示を切り替え"
+      },
+      "drawer": {
+        "close": "ドロワーを閉じる"
+      },
+      "emailCapture": {
+        "emailAddress": "メールアドレス",
+        "joining": "参加中...",
+        "submitFailed": "現在参加できません。",
+        "validation": {
+          "emailInvalid": "有効なメールアドレスを入力してください。",
+          "emailTooLong": "{maximum, number}文字未満のメールアドレスを入力してください。",
+          "workEmail": "勤務先のメールアドレスを入力してください。"
+        }
+      },
+      "expiryChoice": {
+        "label": "有効期限"
+      },
+      "menuMultiSelect": {
+        "noResults": "結果はありません",
+        "searchPlaceholder": "検索...",
+        "selected": "{count, plural, other {#件を選択中}}"
+      },
+      "menuSelect": {
+        "moreOptionsHint": "さらに選択肢があります。入力して検索してください。",
+        "noResults": "結果はありません",
+        "searchPlaceholder": "検索..."
+      },
+      "modal": {
+        "close": "モーダルを閉じる"
+      },
+      "password": {
+        "hide": "パスワードを非表示",
+        "show": "パスワードを表示"
+      },
+      "sheet": {
+        "close": "シートを閉じる"
+      },
+      "status": {
+        "blocked": "ブロック済み",
+        "cancelled": "キャンセル済み",
+        "cancelling": "キャンセル中",
+        "completed": "完了",
+        "deferred": "延期",
+        "fallback": "ステータス",
+        "notConfirmed": "未確認",
+        "partial": "一部完了",
+        "primary": "プライマリ",
+        "queued": "キュー済み",
+        "running": "実行中",
+        "skipped": "スキップ済み",
+        "succeeded": "成功",
+        "connected": "接続済み",
+        "needsReauth": "要再接続",
+        "ready": "準備完了",
+        "planned": "予定",
+        "optional": "任意",
+        "success": "成功",
+        "failed": "失敗",
+        "matches": "一致",
+        "wrongUrl": "誤った URL",
+        "disabled": "無効",
+        "create": "作成",
+        "update": "更新",
+        "delete": "削除",
+        "import": "インポート",
+        "export": "エクスポート",
+        "login": "ログイン"
+      },
+      "tagAdder": {
+        "action": "タグを追加",
+        "cancel": "タグ追加をキャンセル",
+        "enter": "Enter",
+        "input": "新しいタグ名",
+        "validation": {
+          "required": "タグ名を入力してください。",
+          "tooLong": "タグ名は{maximum, number}文字までです。"
+        }
+      },
+      "theme": {
+        "dark": "ダーク",
+        "label": "テーマ",
+        "light": "ライト",
+        "system": "システム"
+      },
+      "toast": {
+        "undo": "元に戻す",
+        "undoFailed": "元に戻せませんでした。再試行してください。"
+      },
+      "toolbarSearch": {
+        "clear": "{label} をクリア"
+      }
+    }
+  }
+}

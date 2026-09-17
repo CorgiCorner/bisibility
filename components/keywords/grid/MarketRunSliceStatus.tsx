@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { appPath } from "@/lib/routing/app-path";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 type Props = {
@@ -25,6 +26,7 @@ type Props = {
  * different run still gets its own sentence.
  */
 export function MarketRunSliceStatus({ marketLabel, projectRef, runId }: Readonly<Props>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const identity = useMemo<RankRunNoticeIdentity>(() => ({ kind: "market-slice", runId }), [runId]);
   const notices = useMemo(() => [identity], [identity]);
   const snapshot = useRankRunNoticeDismissalSnapshot(notices);
@@ -40,10 +42,7 @@ export function MarketRunSliceStatus({ marketLabel, projectRef, runId }: Readonl
       key={runId}
       role="status"
     >
-      <span className="min-w-0">
-        You opened this run inside {marketLabel}. It also ran in other markets, which this page does
-        not show.
-      </span>
+      <span className="min-w-0">{t("marketRunSlice", { market: marketLabel })}</span>
       <span className="ml-auto flex flex-wrap items-center gap-2">
         <Button
           component={Link}
@@ -51,10 +50,10 @@ export function MarketRunSliceStatus({ marketLabel, projectRef, runId }: Readonl
           size="xs"
           variant="secondary"
         >
-          View all markets
+          {t("viewAllMarkets")}
         </Button>
         <Button onClick={() => dismissRankRunNotice(identity)} size="xs" variant="ghost">
-          Stay in {marketLabel}
+          {t("stayInMarket", { market: marketLabel })}
         </Button>
       </span>
     </div>

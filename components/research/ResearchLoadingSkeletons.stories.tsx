@@ -20,5 +20,5 @@ type Story = StoryObj<typeof meta>;
 export const Page: Story = {};
 
 export const Results: Story = {
-  render: () => <ResearchResultsLoading />,
+  render: () => <ResearchResultsLoading ariaLabel="Research loading" />,
 };

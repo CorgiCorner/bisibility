@@ -121,10 +121,10 @@ function ResultsDetailLoading() {
   );
 }
 
-export function ResearchResultsLoading() {
+export function ResearchResultsLoading({ ariaLabel }: Readonly<{ ariaLabel: string }>) {
   return (
     <div
-      aria-label="Research loading"
+      aria-label={ariaLabel}
       className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,1fr)]"
     >
       <ResultsTableLoading />

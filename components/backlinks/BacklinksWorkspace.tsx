@@ -4,6 +4,7 @@ import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider
 import type { AnalyzeBacklinksActionInput } from "@/lib/actions/backlinks";
 import type { BacklinksSnapshot } from "@/lib/backlinks/types";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AnalyzeCard } from "./AnalyzeCard";
 import { BacklinksIdleState } from "./BacklinksIdleState";
@@ -33,6 +34,7 @@ export function BacklinksWorkspace({
   loadMoreAction,
   projectId,
 }: Readonly<BacklinksWorkspaceProps>) {
+  const t = useTranslations("projectBacklinks.workspace");
   const { addSpend } = useSessionSpend();
   const [target, setTarget] = useState(initialTarget);
   const [scope, setScope] = useState<BacklinkTargetScope>("site");
@@ -166,7 +168,7 @@ export function BacklinksWorkspace({
   }
 
   return (
-    <section aria-label="Backlinks" className="grid min-w-0 gap-4">
+    <section aria-label={t("aria")} className="grid min-w-0 gap-4">
       <AnalyzeCard
         estimate={estimate}
         includeSubdomains={includeSubdomains}
@@ -204,7 +206,7 @@ export function BacklinksWorkspace({
       />
       {failure ? (
         <p className="m-0 text-center text-[13px] text-red-text" role="status">
-          Backlinks could not be loaded. Check the target, provider connection, and budget.
+          {t("loadFailed")}
         </p>
       ) : null}
       {submitting ? (

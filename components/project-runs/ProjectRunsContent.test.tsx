@@ -1,6 +1,7 @@
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ProjectRunsApiResponse } from "@/lib/runs/project-runs-api";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectRunsContent, ProjectRunsLoadError } from "./ProjectRunsContent";
 
@@ -23,7 +24,7 @@ const importRun: ProjectRunsApiResponse["runs"][number] = {
   lifecycle: "running",
   progress: { completed: null, total: null, unit: "days" },
   project: { name: "Example", publicId: projectRef },
-  scope: { description: "sc-domain:example.com", label: "Search Console" },
+  scope: { description: "sc-domain:example.com", kind: "gsc_import" },
   timestamps: {
     createdAt: "2026-09-06T09:00:00.000Z",
     lastProbeAt: null,
@@ -31,7 +32,7 @@ const importRun: ProjectRunsApiResponse["runs"][number] = {
     lastSyncStartedAt: "2026-09-06T09:10:00.000Z",
     syncStartedAt: "2026-09-06T09:10:00.000Z",
   },
-  title: "Search Console import",
+  title: { kind: "gsc_import" },
 };
 
 const plannedRankRun: ProjectRunsApiResponse["runs"][number] = {
@@ -50,7 +51,7 @@ const plannedRankRun: ProjectRunsApiResponse["runs"][number] = {
   lifecycle: "planned",
   progress: { completed: 0, total: 10, unit: "targets" },
   project: { name: "Example", publicId: projectRef },
-  scope: { description: null, label: "10 keywords" },
+  scope: { description: null, keywordCount: 10, kind: "rank_check" },
   timestamps: {
     createdAt: "2026-09-06T09:00:00.000Z",
     finishedAt: null,
@@ -58,7 +59,7 @@ const plannedRankRun: ProjectRunsApiResponse["runs"][number] = {
     plannedFor: "2026-09-07T09:00:00.000Z",
     startedAt: null,
   },
-  title: "Scheduled rank check",
+  title: { kind: "rank_check", trigger: "scheduled" },
 };
 
 function renderContent(overrides: Partial<React.ComponentProps<typeof ProjectRunsContent>> = {}) {

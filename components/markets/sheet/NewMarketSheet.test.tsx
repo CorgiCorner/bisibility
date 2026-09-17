@@ -1,8 +1,9 @@
 import type { MarketDefinitionProps } from "@/components/markets/blocks/MarketDefinition";
 import { DrawerBackButton } from "@/components/ui/DrawerBackButton";
 import type { SheetProps } from "@/components/ui/Sheet";
+import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NewMarketCreateInput } from "@/lib/markets/create-input";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NewMarketSheet } from "./NewMarketSheet";

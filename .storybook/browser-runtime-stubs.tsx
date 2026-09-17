@@ -71,6 +71,10 @@ export function revalidateSettingsViews() {
   return undefined;
 }
 
+export function revalidateExperimentalModuleViews() {
+  return undefined;
+}
+
 export async function loadCloudBackupCounts() {
   return {
     alertRules: 3,

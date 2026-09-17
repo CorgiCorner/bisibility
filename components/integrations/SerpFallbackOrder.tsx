@@ -11,6 +11,7 @@ import { ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/csr/ArrowUp";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { MinusCircleIcon as MinusCircle } from "@phosphor-icons/react/dist/csr/MinusCircle";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 type SerpFallbackOrderProps = {
@@ -54,18 +55,18 @@ function normalizedSettings(providers: readonly IntegrationProviderData[]) {
     });
 }
 
-function statusCopy(provider: IntegrationProviderData, activeIndex: number) {
-  if (provider.status !== "connected") return null;
-  if (provider.enabled === false) return "Paused · not used for rank checks";
-  return activeIndex === 0 ? "First provider" : `Fallback #${activeIndex + 1}`;
-}
-
 export function SerpFallbackOrder({
   actions,
   canManageProviders,
   projectId,
   providers,
 }: Readonly<SerpFallbackOrderProps>) {
+  const t = useTranslations("projectIntegrations.fallback");
+  const statusCopy = (provider: IntegrationProviderData, activeIndex: number) => {
+    if (provider.status !== "connected") return null;
+    if (provider.enabled === false) return t("paused");
+    return activeIndex === 0 ? t("first") : t("next", { position: activeIndex + 1 });
+  };
   const router = useRouter();
   const { readOnly } = useProjectWriteMode();
   const [items, setItems] = useState(() => orderedProviders(providers));
@@ -108,7 +109,7 @@ export function SerpFallbackOrder({
       router.refresh();
     } catch (cause) {
       setItems(previous);
-      setError(cause instanceof Error ? cause.message : "Could not update the fallback order.");
+      setError(cause instanceof Error ? cause.message : t("updateError"));
     } finally {
       setPending(false);
     }
@@ -154,14 +155,14 @@ export function SerpFallbackOrder({
             <span className="text-[12px] font-semibold text-fg">{provider.name}</span>
             {isEnabled ? (
               <CheckCircle
-                aria-label="Active"
+                aria-label={t("active")}
                 className="text-green-text"
                 size={15}
                 weight="regular"
               />
             ) : (
               <MinusCircle
-                aria-label={isConnected ? "Paused" : "Not connected"}
+                aria-label={isConnected ? t("pausedState") : t("notConnected")}
                 className="text-fg-muted"
                 size={15}
                 weight="regular"
@@ -179,10 +180,10 @@ export function SerpFallbackOrder({
             {isEnabled ? (
               <div
                 className="flex items-center gap-1"
-                aria-label={`${provider.name} order controls`}
+                aria-label={t("orderControls", { provider: provider.name })}
               >
                 <button
-                  aria-label={`Move ${provider.name} up`}
+                  aria-label={t("moveUp", { provider: provider.name })}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-border-control text-fg-muted transition-colors hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:opacity-35"
                   disabled={!canManage || activeIndex === 0}
                   onClick={() => move(provider.id, -1)}
@@ -191,7 +192,7 @@ export function SerpFallbackOrder({
                   <ArrowUp aria-hidden size={15} weight="regular" />
                 </button>
                 <button
-                  aria-label={`Move ${provider.name} down`}
+                  aria-label={t("moveDown", { provider: provider.name })}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-border-control text-fg-muted transition-colors hover:border-accent hover:text-accent-text disabled:cursor-not-allowed disabled:opacity-35"
                   disabled={!canManage || activeIndex === active.length - 1}
                   onClick={() => move(provider.id, 1)}
@@ -203,7 +204,11 @@ export function SerpFallbackOrder({
             ) : null}
             <ProjectReadOnlyTooltip>
               <Switch
-                aria-label={`${isEnabled ? "Pause" : "Activate"} ${provider.name}`}
+                aria-label={
+                  isEnabled
+                    ? t("pause", { provider: provider.name })
+                    : t("activate", { provider: provider.name })
+                }
                 checked={isEnabled}
                 className="border-0 bg-transparent p-1.5"
                 disabled={!canManage}
@@ -212,7 +217,7 @@ export function SerpFallbackOrder({
             </ProjectReadOnlyTooltip>
           </div>
         ) : canManageProviders ? (
-          <span className="text-[10px] uppercase text-fg-muted">Not connected</span>
+          <span className="text-[10px] uppercase text-fg-muted">{t("notConnected")}</span>
         ) : null}
       </li>
     );
@@ -222,15 +227,13 @@ export function SerpFallbackOrder({
     <Card className="overflow-hidden p-0" size="md">
       <div className="px-3 py-2.5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <span className="text-[12px] font-semibold text-fg">SERP fallback order</span>
+          <span className="text-[12px] font-semibold text-fg">{t("title")}</span>
           <span className="text-[11px] text-fg-muted">
-            {pending ? "Saving order…" : `${active.length} active`}
+            {pending ? t("saving") : t("activeCount", { count: active.length })}
           </span>
         </div>
         <p className="m-0 mt-1 text-[12px] leading-5 text-fg-muted">
-          {active.length + paused.length === 0
-            ? "Connect a SERP provider above to configure fallback order."
-            : "If a provider fails or is rate-limited, the next active provider is used."}
+          {active.length + paused.length === 0 ? t("empty") : t("description")}
         </p>
       </div>
       {active.length + paused.length > 0 ? (

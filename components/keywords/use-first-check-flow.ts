@@ -4,12 +4,8 @@ import type { GetRankCheckStatusResult } from "@/lib/actions/rank-check-status";
 import type { RunCheckNowInput } from "@/lib/schemas/keyword";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { useCallback, useState } from "react";
-import { actionErrorMessage, type KeywordAction } from "./action-utils";
-import {
-  keywordRunCheckBlockMessage,
-  keywordRunCheckId,
-  keywordRunCheckOutcome,
-} from "./keyword-run-check-result";
+import type { KeywordAction } from "./action-utils";
+import { keywordRunCheckId, keywordRunCheckOutcome } from "./keyword-run-check-result";
 import { type RankCheckPollAction, useRankCheckPoll } from "./use-rank-check-poll";
 
 export type FirstCheckStep = "confirm" | "running" | "success" | "failed";
@@ -151,7 +147,6 @@ export function useFirstCheckFlow({
       const result = await runCheckNowAction({ depth: modal.depth, keywordId });
       const outcome = keywordRunCheckOutcome(result);
       if (outcome === "blocked") {
-        const message = keywordRunCheckBlockMessage(result, "The rank check could not be started.");
         const code =
           result &&
           typeof result === "object" &&
@@ -163,7 +158,7 @@ export function useFirstCheckFlow({
           prev
             ? {
                 ...prev,
-                error: message,
+                error: "blocked",
                 errorCode: code,
                 step: code === "sample_project" ? "failed" : "confirm",
               }
@@ -188,20 +183,18 @@ export function useFirstCheckFlow({
       }
       const checkId = keywordRunCheckId(result);
       if (!checkId) {
-        setModal((prev) =>
-          prev ? { ...prev, error: "The rank check could not be started." } : prev,
-        );
+        setModal((prev) => (prev ? { ...prev, error: "not_started" } : prev));
         return;
       }
       setModal((prev) =>
         prev ? { ...prev, error: null, rankCheckId: checkId, step: "running" } : prev,
       );
-    } catch (error) {
+    } catch {
       setModal((prev) =>
         prev
           ? {
               ...prev,
-              error: actionErrorMessage(error, "The rank check could not be started."),
+              error: "request_failed",
               errorCode: null,
               step: "failed",
             }

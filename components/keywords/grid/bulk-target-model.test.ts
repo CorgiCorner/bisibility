@@ -10,25 +10,25 @@ function row(index: number, targetUrl: string | null): KeywordRow {
 describe("bulkTargetView", () => {
   it("offers Set for one keyword without a target", () => {
     expect(bulkTargetView([row(0, null)])).toMatchObject({
-      actionLabel: "Set target URL",
+      actionKey: "targetSetAction",
       initialValue: "",
       mixed: false,
-      submitLabel: "Set target",
+      submitKey: "targetSetSubmit",
     });
   });
 
   it("offers Change and prefills one existing target", () => {
     expect(bulkTargetView([row(0, "/rank-tracking")])).toMatchObject({
-      actionLabel: "Change target URL",
+      actionKey: "targetChangeAction",
       initialValue: "/rank-tracking",
       mixed: false,
-      submitLabel: "Change target",
+      submitKey: "targetChangeSubmit",
     });
   });
 
   it("offers one shared target for multiple empty values", () => {
     expect(bulkTargetView([row(0, null), row(1, null)])).toMatchObject({
-      actionLabel: "Set same target URL...",
+      actionKey: "targetSetSameAction",
       initialValue: "",
       mixed: false,
     });
@@ -36,10 +36,10 @@ describe("bulkTargetView", () => {
 
   it("does not prefill a mixed selection before replacing its targets", () => {
     expect(bulkTargetView([row(0, "/one"), row(1, "/two")])).toMatchObject({
-      actionLabel: "Replace target URLs...",
+      actionKey: "targetReplaceAction",
       initialValue: "",
       mixed: true,
-      submitLabel: "Replace targets",
+      submitKey: "targetReplaceSubmit",
     });
   });
 });

@@ -10,12 +10,15 @@ export type ReferenceUsageGroup = {
   requestedDepth: number | null;
 };
 
+/** Stable presentation code for a maintained provider-rate description. */
+export type ReferenceUsageRateBasis = "live_depth" | "production_plan" | "unavailable";
+
 export type ProviderReferenceUsage = {
   billableUnits: number;
   checks: number;
   provider: string;
   providerLabel: string;
-  rateBasis: string;
+  rateBasis: ReferenceUsageRateBasis;
   referenceCostCents: number;
   referenceCostKnown: boolean;
 };
@@ -43,10 +46,10 @@ function labelForProvider(provider: string) {
     .join(" ");
 }
 
-function rateBasis(provider: string) {
+function rateBasis(provider: string): ReferenceUsageRateBasis {
   const rate = rateForProvider(provider);
-  if (!rate) return "Rate unavailable";
-  return rate.pricingModel === "flat" ? "Live depth pricing" : "Production plan equivalent";
+  if (!rate) return "unavailable";
+  return rate.pricingModel === "flat" ? "live_depth" : "production_plan";
 }
 
 function usageForGroup(group: ReferenceUsageGroup): ProviderReferenceUsage {

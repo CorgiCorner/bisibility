@@ -2,6 +2,7 @@ import { isPublicIdOfType } from "@/lib/db/public-id";
 import { providerIdSchema } from "@/lib/schemas/provider";
 import { SEARCH_SYNC_STATUS_VOCABULARY } from "@/lib/search-insights/sync/control-model";
 import { z } from "zod";
+import type { RunScheduleTiming } from "./start-facts";
 
 export const RUN_TRIGGERS = ["manual", "scheduled", "api", "retry"] as const;
 export const runTriggerSchema = z.enum(RUN_TRIGGERS);
@@ -81,6 +82,12 @@ export const runCountsSchema = z.object({
 export type RunCounts = z.infer<typeof runCountsSchema>;
 
 const nullableIsoDatetimeSchema = z.iso.datetime().nullable();
+const runScheduleTimingSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("spread_across_day") }),
+  z.object({ kind: z.literal("spread_across_interval") }),
+  z.object({ kind: z.literal("starts_at_scheduled_time") }),
+  z.object({ kind: z.literal("starts_within_minutes"), minutes: nonNegativeIntegerSchema }),
+]) satisfies z.ZodType<RunScheduleTiming>;
 const nullableRankCheckRunIdSchema = z
   .string()
   .refine((value) => Boolean(isPublicIdOfType(value, "rcr")))
@@ -113,7 +120,7 @@ export const rankCheckOperationSchema = z.object({
   startedTargets: nonNegativeIntegerSchema.optional(),
   hasRunningTargets: z.boolean().optional(),
   firstNotBefore: nullableIsoDatetimeSchema.optional(),
-  scheduleTiming: z.string().nullable().optional(),
+  scheduleTiming: runScheduleTimingSchema.nullable().optional(),
   provider: rankCheckProviderSchema.nullable().optional(),
   providerLabel: z.string().min(1).nullable().optional(),
   estimatedCostCents: z.number().int(),

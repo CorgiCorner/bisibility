@@ -5,12 +5,15 @@ import { IdChip } from "@/components/ui/IdChip";
 import { Sheet } from "@/components/ui/Sheet";
 import type { AuditDiff, AuditEntry } from "@/lib/queries/audit";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { downloadAuditEntries } from "./audit-export";
+import type { PresentedAuditEntry } from "./audit-presentation";
 import { OperationPill } from "./OperationPill";
 
 export type AuditDetailSheetProps = {
-  entry: AuditEntry | null;
+  entry: PresentedAuditEntry | null;
+  exportEntry?: AuditEntry | null;
   onClose: () => void;
 };
 
@@ -58,13 +61,16 @@ function DiffRows({ diff }: Readonly<{ diff: readonly AuditDiff[] }>) {
   );
 }
 
-function UserAgentRow({ value }: Readonly<{ value: string }>) {
-  const recorded = value !== "Not recorded";
+function UserAgentRow({
+  copyLabel,
+  recorded,
+  value,
+}: Readonly<{ copyLabel: string; recorded: boolean; value: string }>) {
   return (
     <div className="min-w-0 border-border border-t pt-2.5">
       <div className="flex items-center justify-between gap-3">
         <span className="text-fg-muted">user_agent</span>
-        {recorded ? <CopyButton label="Copy user agent" size="sm" text={value} /> : null}
+        {recorded ? <CopyButton label={copyLabel} size="sm" text={value} /> : null}
       </div>
       <div className="mt-1.5 break-all whitespace-pre-wrap text-fg-muted">{value}</div>
     </div>
@@ -92,7 +98,9 @@ function MetadataRow({
   );
 }
 
-export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetProps>) {
+export function AuditDetailSheet({ entry, exportEntry, onClose }: Readonly<AuditDetailSheetProps>) {
+  const t = useTranslations("projectAudit.detail");
+
   if (!entry) {
     return null;
   }
@@ -106,15 +114,17 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
             onClick={onClose}
             type="button"
           >
-            Close
+            {t("close")}
           </button>
           <button
             className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-control bg-accent-solid px-4 text-[13px] font-semibold text-accent-on-solid hover:bg-accent-solid-hover"
-            onClick={() => downloadAuditEntries([entry], "json", entry.metadata.event_id)}
+            onClick={() =>
+              downloadAuditEntries([exportEntry ?? entry], "json", entry.metadata.event_id)
+            }
             type="button"
           >
             <DownloadSimple aria-hidden size={15} weight="regular" />
-            Export entry (JSON)
+            {t("exportEntry")}
           </button>
         </div>
       }
@@ -132,27 +142,27 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
     >
       <div className="flex flex-col gap-4">
         <div className="grid gap-3.5 sm:grid-cols-2">
-          <DetailField label="Actor">
+          <DetailField label={t("actor")}>
             <div className="text-[13px] font-semibold text-fg">{entry.actor.name}</div>
             <div className="mt-0.5 text-[12px] text-fg">{entry.actor.email}</div>
             <IdChip className="mt-2" size="sm" value={entry.actor.id} />
           </DetailField>
-          <DetailField label="Operation">
+          <DetailField label={t("operation")}>
             <OperationPill operation={entry.operation} />
           </DetailField>
-          <DetailField label="Resource">
+          <DetailField label={t("resource")}>
             <div className="text-xs text-fg">{entry.resource.name}</div>
             {entry.resource.id ? (
               <IdChip className="mt-2" size="sm" value={entry.resource.id} />
             ) : null}
           </DetailField>
-          <DetailField label="Source">
+          <DetailField label={t("source")}>
             <div className="flex min-w-0 items-center gap-1.5 text-xs text-fg">
               <span>{entry.source.channel.toUpperCase()}</span>
               <span className="text-fg-muted">·</span>
               <span className="truncate">{entry.source.ip}</span>
-              {entry.source.ip !== "Not recorded" ? (
-                <CopyButton label="Copy IP" size="sm" text={entry.source.ip} />
+              {entry.hasRecordedIp ? (
+                <CopyButton label={t("copyIp")} size="sm" text={entry.source.ip} />
               ) : null}
             </div>
           </DetailField>
@@ -164,7 +174,7 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
         ) : null}
         {entry.diff.length > 0 ? (
           <div>
-            <FieldLabel>Before -&gt; after</FieldLabel>
+            <FieldLabel>{t("beforeAfter")}</FieldLabel>
             <div className="mt-2">
               <DiffRows diff={entry.diff} />
             </div>
@@ -174,7 +184,11 @@ export function AuditDetailSheet({ entry, onClose }: Readonly<AuditDetailSheetPr
           <MetadataRow copyable label="event_id" value={entry.metadata.event_id} />
           <MetadataRow copyable label="correlation_id" value={entry.metadata.correlation_id} />
           <MetadataRow label="app_version" value={entry.metadata.app_version} />
-          <UserAgentRow value={entry.metadata.user_agent} />
+          <UserAgentRow
+            copyLabel={t("copyUserAgent")}
+            recorded={entry.hasRecordedUserAgent}
+            value={entry.metadata.user_agent}
+          />
         </div>
       </div>
     </Sheet>

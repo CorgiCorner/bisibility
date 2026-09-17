@@ -1,8 +1,8 @@
 "use client";
 
-import { relativeFuture } from "@/lib/format/relative-time";
 import { cn } from "@/lib/ui/cn";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { useFormatter, useTranslations } from "next-intl";
 import { Button } from "./Button";
 import { StatusChip } from "./StatusChip";
 import type { StatusChipPresentation } from "./status-chip-mapping";
@@ -49,6 +49,7 @@ export type OperationRowProps = {
   title: string;
   total: number;
   unit: string;
+  unitKind?: "days";
   variant: OperationRowVariant;
 };
 
@@ -56,97 +57,73 @@ type StateValues = {
   actor: string | null;
   eta: string | null;
   failed: number;
+  hasActor: "no" | "yes";
+  hasEta: "no" | "yes";
+  hasResumeDate: "no" | "yes";
   provider: string | null;
   resumeDate: string | null;
 };
 type StateDefinition = { copy: (values: StateValues) => string; tone: string };
 
-export function formatEtaSeconds(etaSeconds: number | null): string | null {
+function etaUnit(etaSeconds: number | null) {
   if (etaSeconds === null || !Number.isFinite(etaSeconds) || etaSeconds < 0) return null;
-  if (etaSeconds < 60) return `~${Math.max(1, Math.round(etaSeconds))} s left`;
-  return `~${Math.max(1, Math.round(etaSeconds / 60))} min left`;
+  return etaSeconds < 60
+    ? { count: Math.max(1, Math.round(etaSeconds)), unit: "seconds" as const }
+    : { count: Math.max(1, Math.round(etaSeconds / 60)), unit: "minutes" as const };
 }
 
-const STATE_DEFINITIONS = {
-  queued: {
-    tone: "var(--accent)",
-    copy: () => "Waiting for the first check to start.",
-  },
-  running: {
-    tone: "var(--accent)",
-    copy: ({ eta, provider }) =>
-      `${provider ?? "The provider"} is returning results${eta ? ` - ${eta}` : ""}.`,
-  },
-  retrying: {
-    tone: "var(--accent)",
-    copy: ({ eta }) => `Retrying failed checks${eta ? ` - ${eta}` : ""}.`,
-  },
-  cancelling: {
-    tone: "var(--fg-muted)",
-    copy: () => "Cancelling - checks already sent to the provider will still finish.",
-  },
-  worker: {
-    tone: "var(--yellow)",
-    copy: () => "Import worker status is delayed. Refresh to check again.",
-  },
-  quota: {
-    tone: "var(--yellow)",
-    copy: ({ provider }) =>
-      `${provider ?? "Provider"} quota reached. The import resumes automatically when allowed.`,
-  },
-  deferred: {
-    tone: "var(--yellow)",
-    copy: () => "Deferred by provider rate limits - they retry on the next scheduled run.",
-  },
-  budget: {
-    tone: "var(--yellow)",
-    copy: ({ resumeDate }) =>
-      resumeDate
-        ? `Monthly cap reached - the rest is skipped until ${resumeDate}.`
-        : "Monthly cap reached - remaining items are skipped.",
-  },
-  partial: {
-    tone: "var(--yellow)",
-    copy: ({ failed }) =>
-      `Finished with ${failed.toLocaleString("en-US")} failures - a retry sends those and nothing else.`,
-  },
-  failed: {
-    tone: "var(--red)",
-    copy: ({ provider }) =>
-      `Nothing completed - ${provider ?? "the provider"} rejected every request.`,
-  },
-  succeeded: { tone: "var(--green)", copy: () => "Every item completed." },
-  not_confirmed: {
-    tone: "var(--fg-muted)",
-    copy: () => "The run finished, but its outcome was not confirmed.",
-  },
-  cancelled: {
-    tone: "var(--fg-muted)",
-    copy: ({ actor }) =>
-      actor
-        ? `Cancelled by ${actor} - what completed first is kept.`
-        : "Cancelled - what completed first is kept.",
-  },
-} satisfies Record<OperationState, StateDefinition>;
+function stateDefinitions(
+  t: ReturnType<typeof useTranslations<"shared.operationRow">>,
+): Record<OperationState, StateDefinition> {
+  return {
+    queued: { tone: "var(--accent)", copy: () => t("states.queued") },
+    running: {
+      tone: "var(--accent)",
+      copy: ({ eta, hasEta, provider }) =>
+        t("states.running", { eta: eta ?? "", hasEta, provider: provider ?? t("provider") }),
+    },
+    retrying: {
+      tone: "var(--accent)",
+      copy: ({ eta, hasEta }) => t("states.retrying", { eta: eta ?? "", hasEta }),
+    },
+    cancelling: { tone: "var(--fg-muted)", copy: () => t("states.cancelling") },
+    worker: { tone: "var(--yellow)", copy: () => t("states.worker") },
+    quota: {
+      tone: "var(--yellow)",
+      copy: ({ provider }) => t("states.quota", { provider: provider ?? t("provider") }),
+    },
+    deferred: { tone: "var(--yellow)", copy: () => t("states.deferred") },
+    budget: {
+      tone: "var(--yellow)",
+      copy: ({ hasResumeDate, resumeDate }) =>
+        t("states.budget", { hasResumeDate, resumeDate: resumeDate ?? "" }),
+    },
+    partial: { tone: "var(--yellow)", copy: ({ failed }) => t("states.partial", { failed }) },
+    failed: {
+      tone: "var(--red)",
+      copy: ({ provider }) => t("states.failed", { provider: provider ?? t("provider") }),
+    },
+    succeeded: { tone: "var(--green)", copy: () => t("states.succeeded") },
+    not_confirmed: { tone: "var(--fg-muted)", copy: () => t("states.notConfirmed") },
+    cancelled: {
+      tone: "var(--fg-muted)",
+      copy: ({ actor, hasActor }) => t("states.cancelled", { actor: actor ?? "", hasActor }),
+    },
+  };
+}
 
-const ACTIONS = {
-  cancel: {
-    label: "Cancel",
-    tip: "Stops checks that have not been sent yet. Checks already with the provider finish and are billed.",
-  },
-  pause: {
-    label: "Pause",
-    tip: "Pauses the import after the current month. Nothing already imported is discarded.",
-  },
-  reconnect: {
-    label: "Reconnect",
-    tip: "Reconnect Search Console for this property.",
-  },
-  retry: { label: "Retry", tip: "Retries this exact operation from its saved state." },
-  resume: { label: "Resume", tip: "Returns this import to its saved queue." },
-} as const satisfies Record<Exclude<OperationAction, "">, { label: string; tip: string }>;
-
-const numberFormatter = new Intl.NumberFormat("en-US");
+function actionDefinition(
+  action: Exclude<OperationAction, "">,
+  t: ReturnType<typeof useTranslations<"shared.operationRow">>,
+) {
+  return {
+    cancel: { label: t("actions.cancel.label"), tip: t("actions.cancel.tip") },
+    pause: { label: t("actions.pause.label"), tip: t("actions.pause.tip") },
+    reconnect: { label: t("actions.reconnect.label"), tip: t("actions.reconnect.tip") },
+    retry: { label: t("actions.retry.label"), tip: t("actions.retry.tip") },
+    resume: { label: t("actions.resume.label"), tip: t("actions.resume.tip") },
+  }[action];
+}
 
 function nonNegativeInteger(value: number): number {
   return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
@@ -157,7 +134,23 @@ function countWithUnit(counts: string, unit: string): string {
   return value.toLocaleLowerCase().includes(unit.toLocaleLowerCase()) ? value : `${value} ${unit}`;
 }
 
+function relativeFutureMessage(
+  date: Date,
+  now: Date,
+  t: ReturnType<typeof useTranslations<"shared.operationRow">>,
+) {
+  const minutes = Math.ceil((date.getTime() - now.getTime()) / 60_000);
+  if (minutes <= 0) return t("relative.dueNow");
+  if (minutes < 60) return t("relative.inMinutes", { count: minutes });
+  const hours = Math.ceil(minutes / 60);
+  return hours < 24
+    ? t("relative.inHours", { count: hours })
+    : t("relative.inDays", { count: Math.ceil(hours / 24) });
+}
+
 export function OperationRow(props: Readonly<OperationRowProps>) {
+  const format = useFormatter();
+  const t = useTranslations("shared.operationRow");
   const normalizedTotal = nonNegativeInteger(props.total);
   const normalizedCompleted = Math.min(nonNegativeInteger(props.completed), normalizedTotal);
   const normalizedFailed = Math.min(
@@ -169,22 +162,36 @@ export function OperationRow(props: Readonly<OperationRowProps>) {
     normalizedTotal - normalizedCompleted - normalizedFailed,
   );
   const processed = normalizedCompleted + normalizedFailed + normalizedDeferred;
-  const normalizedUnit = props.unit.trim() || "items";
+  const normalizedUnit =
+    props.unitKind === "days"
+      ? t("days", { count: Math.max(1, normalizedTotal) })
+      : props.unit.trim() || t("items");
   const now = useLiveNow(
     props.now ?? props.nextCheckAt ?? "",
     Boolean(props.nextCheckAt && props.now),
   );
+  const nextCheckAt = props.nextCheckAt ? new Date(props.nextCheckAt) : null;
   const nextCheckLine =
-    (props.state === "running" || props.state === "queued") && props.nextCheckAt && props.now
-      ? `${props.state === "queued" ? "First" : "Next"} check ${relativeFuture(new Date(props.nextCheckAt), new Date(now))}`
+    (props.state === "running" || props.state === "queued") &&
+    nextCheckAt &&
+    props.now &&
+    !Number.isNaN(nextCheckAt.getTime())
+      ? t("nextCheck", {
+          kind: props.state === "queued" ? t("nextCheckFirst") : t("nextCheckNext"),
+          when: relativeFutureMessage(nextCheckAt, new Date(now), t),
+        })
       : null;
-  const definition = STATE_DEFINITIONS[props.state];
-  const eta = formatEtaSeconds(props.etaSeconds);
+  const definition = stateDefinitions(t)[props.state];
+  const etaValue = etaUnit(props.etaSeconds);
+  const eta = etaValue
+    ? etaValue.unit === "seconds"
+      ? t("etaSeconds", etaValue)
+      : t("etaMinutes", etaValue)
+    : null;
   const headline = props.meta ? `${props.title} · ${props.meta}` : props.title;
-  const actionDefinition = props.action ? ACTIONS[props.action] : null;
+  const currentAction = props.action ? actionDefinition(props.action, t) : null;
   const countLabel = countWithUnit(
-    props.counts?.trim() ||
-      `${numberFormatter.format(processed)} / ${numberFormatter.format(normalizedTotal)}`,
+    props.counts?.trim() || `${format.number(processed)} / ${format.number(normalizedTotal)}`,
     normalizedUnit,
   );
   const width = (value: number) =>
@@ -215,9 +222,9 @@ export function OperationRow(props: Readonly<OperationRowProps>) {
           </span>
         )}
         {props.status ? <StatusChip {...props.status} /> : null}
-        {actionDefinition ? (
+        {currentAction ? (
           <Button
-            aria-label={`${actionDefinition.label} ${props.title}`}
+            aria-label={`${currentAction.label} ${props.title}`}
             href={props.actionHref ?? undefined}
             onClick={props.actionHref ? undefined : props.onAction}
             size="xs"
@@ -231,10 +238,10 @@ export function OperationRow(props: Readonly<OperationRowProps>) {
               minWidth: 0,
               padding: "4px 9px",
             }}
-            title={actionDefinition.tip}
+            title={currentAction.tip}
             variant="ghost"
           >
-            {actionDefinition.label}
+            {currentAction.label}
           </Button>
         ) : null}
         {props.href ? (
@@ -250,7 +257,15 @@ export function OperationRow(props: Readonly<OperationRowProps>) {
       {props.showBar && normalizedTotal > 0 ? (
         <div className="flex min-w-0 items-center gap-4">
           <div
-            aria-label={`${props.title}: ${processed} of ${normalizedTotal} ${normalizedUnit} processed, ${normalizedCompleted} completed, ${normalizedFailed} failed, ${normalizedDeferred} deferred`}
+            aria-label={t("progress", {
+              completed: normalizedCompleted,
+              deferred: normalizedDeferred,
+              failed: normalizedFailed,
+              processed,
+              title: props.title,
+              total: normalizedTotal,
+              unit: normalizedUnit,
+            })}
             aria-valuemax={normalizedTotal}
             aria-valuemin={0}
             aria-valuenow={processed}
@@ -285,6 +300,9 @@ export function OperationRow(props: Readonly<OperationRowProps>) {
             actor: props.actor,
             eta,
             failed: normalizedFailed,
+            hasActor: props.actor ? "yes" : "no",
+            hasEta: eta ? "yes" : "no",
+            hasResumeDate: props.resumeDate ? "yes" : "no",
             provider: props.provider,
             resumeDate: props.resumeDate,
           })}

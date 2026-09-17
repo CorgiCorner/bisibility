@@ -7,6 +7,11 @@ export type CloudTopBarContext = "onboard" | "settings";
 export const CLOUD_ONBOARDING_TOTAL_STEPS = 3;
 
 type CloudTopBarProps = {
+  copy: {
+    beta: string;
+    fallbackWorkspace: string;
+    setupProgress: (values: { current: number; total: number }) => string;
+  };
   ctx: CloudTopBarContext;
   /** Current onboarding step (1-based) for the "onboard" stepper pill. */
   onboardStep?: number;
@@ -18,9 +23,10 @@ type CloudTopBarProps = {
  * shows the workspace and avatar.
  */
 export function CloudTopBar({
+  copy,
   ctx,
   onboardStep = 2,
-  workspaceName = "Project",
+  workspaceName = copy.fallbackWorkspace,
 }: Readonly<CloudTopBarProps>) {
   return (
     <nav className="flex h-16 items-center justify-between gap-3 border-border border-b">
@@ -28,12 +34,12 @@ export function CloudTopBar({
         <BrandLockup className="flex-none" />
         <span className="inline-flex flex-none items-center gap-1.5 rounded-full bg-accent-soft px-[9px] py-[3px] font-sans tabular-nums text-[10px] font-bold uppercase tracking-[0.4px] text-accent-text">
           <Cloud aria-hidden size={11} weight="regular" />
-          Beta
+          {copy.beta}
         </span>
       </div>
       <div className="flex flex-none items-center gap-3">
         {ctx === "onboard" ? (
-          <SetupPill step={onboardStep} />
+          <SetupPill copy={copy} step={onboardStep} />
         ) : (
           <WorkspaceChrome workspaceName={workspaceName} />
         )}
@@ -42,12 +48,18 @@ export function CloudTopBar({
   );
 }
 
-function SetupPill({ step }: Readonly<{ step: number }>) {
+function SetupPill({
+  copy,
+  step,
+}: Readonly<{
+  copy: CloudTopBarProps["copy"];
+  step: number;
+}>) {
   const current = Math.min(Math.max(step, 1), CLOUD_ONBOARDING_TOTAL_STEPS);
 
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-bg-sunken px-[11px] py-1.5 font-sans tabular-nums text-[10.5px] font-semibold text-fg-muted">
-      Setup / {current} of {CLOUD_ONBOARDING_TOTAL_STEPS}
+      {copy.setupProgress({ current, total: CLOUD_ONBOARDING_TOTAL_STEPS })}
     </span>
   );
 }

@@ -16,8 +16,6 @@ type TrackedRun = {
 };
 type Update = FirstCheckRunState | ((state: FirstCheckRunState) => FirstCheckRunState);
 const runKey = (row: TrackedFirstCheck) => `${row.runId}:${row.publicId}`;
-const statusUnavailable =
-  "Could not refresh the check status. Retrying automatically. You can open the app while it finishes.";
 
 export function firstCheckRowsStatus(
   rows: FirstCheckRunState["rows"],
@@ -30,6 +28,7 @@ export function firstCheckRowsStatus(
 export function createFirstCheckRunStore(
   candidates: FirstCheckCandidate[] = [],
   projectId?: string | null,
+  statusUnavailable = "",
 ) {
   const rows: FirstCheckRunState["rows"] = candidates.some((candidate) => candidate.previousResult)
     ? candidates.map((candidate) =>

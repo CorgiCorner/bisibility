@@ -1,0 +1,317 @@
+{
+  "instanceAdmin": {
+    "shell": {
+      "context": "Administrator instancji",
+      "backToApp": "Wróć do aplikacji",
+      "title": "Administracja instancją",
+      "description": "Diagnostyka operacyjna całej instancji. Dane klientów są reprezentowane wyłącznie przez identyfikatory."
+    },
+    "navigation": {
+      "label": "Sekcje administracji instancją",
+      "operations": "Operacje",
+      "administration": "Administracja",
+      "audit": "Dziennik audytu"
+    },
+    "controls": {
+      "refresh": "Odśwież",
+      "lookUp": "Wyszukaj",
+      "lookingUp": "Wyszukiwanie…",
+      "olderEntries": "Starsze wpisy",
+      "sendTestNotification": "Wyślij testowe powiadomienie",
+      "sending": "Wysyłanie…",
+      "runOutboxSweep": "Przetwórz kolejkę wysyłki",
+      "running": "Wykonywanie…",
+      "deactivateAccount": "Dezaktywuj konto",
+      "reactivateAccount": "Aktywuj konto ponownie",
+      "resetRateLimits": "Zresetuj limity zapytań"
+    },
+    "status": {
+      "active": "Aktywne",
+      "blocked": "Zablokowano",
+      "completed": "Zakończono",
+      "configured": "Skonfigurowano",
+      "deactivated": "Dezaktywowane",
+      "deferred": "Odroczono",
+      "deferredRateLimit": "Odroczono przez limit zapytań",
+      "delivered": "Dostarczono",
+      "disabled": "Wyłączono",
+      "error": "Błąd",
+      "failed": "Nie powiodło się",
+      "info": "Informacja",
+      "notConfigured": "Nie skonfigurowano",
+      "ok": "OK",
+      "stale": "Nieaktualne",
+      "succeededEmpty": "Powiodło się bez danych",
+      "succeededWithData": "Powiodło się z danymi",
+      "unknown": "Nieznane",
+      "undelivered": "Niedostarczone",
+      "warning": "Ostrzeżenie"
+    },
+    "values": {
+      "unavailable": "-",
+      "unknown": "nieznane",
+      "sectionUnavailable": "{message} Wartości są nieznane, a nie zerowe."
+    },
+    "duration": {
+      "milliseconds": "{value, number} ms",
+      "seconds": "{value, number, ::.0} s",
+      "minutes": "{value, number, ::.0} min"
+    },
+    "shellHealth": {
+      "label": "Kondycja operacji",
+      "worker": "Worker: {status}",
+      "checks": "Sprawdzenia: {value, number, ::.0}% nieudanych",
+      "checksUnknown": "Sprawdzenia: nieznane",
+      "provider": "{provider}: {value, number, ::.0}% nieudanych",
+      "providerUnknown": "{provider}: nieznane",
+      "deliveryUnknown": "Dostarczanie: nieznane",
+      "undelivered": "{count, plural, one {# niedostarczone} few {# niedostarczone} many {# niedostarczonych} other {# niedostarczonego}}"
+    },
+    "rankWindow": {
+      "scheduled": "Zaplanowane",
+      "succeeded": "Udane",
+      "failed": "Nieudane",
+      "deferred": "Odroczone",
+      "stuck": "Zawieszone",
+      "lagP50": "Opóźnienie p50",
+      "lagP95": "Opóźnienie p95"
+    },
+    "dashboard": {
+      "rankChecks": {
+        "title": "Sprawdzenia pozycji",
+        "description": "Łączna liczba wykonań oraz opóźnienie między planem a startem. Odroczone wiersze nigdy nie liczą się jako udane.",
+        "unavailable": "Diagnostyka sprawdzeń pozycji jest niedostępna.",
+        "last24Hours": "Ostatnie 24 godziny",
+        "last7Days": "Ostatnie 7 dni",
+        "failures": "Niepowodzenia (24 godz.)",
+        "failureDescription": "Sprawdzenia, które nie powiodły się po wyczerpaniu wszystkich dostawców. Pogrupowane według dostawcy i podsumowanej przyczyny.",
+        "fallbacks": "Przełączenia zapasowe (24 godz.)",
+        "fallbackDescription": "Sprawdzenia zakończone dopiero po niepowodzeniu dostawcy głównego. Pogrupowane według dostawcy, który zawiódł, i podsumowanej przyczyny.",
+        "fallbackEmpty": "Brak zapasowych sprawdzeń pozycji w ostatnich 24 godzinach."
+      },
+      "dataSources": {
+        "title": "Źródła danych",
+        "description": "Kondycja synchronizacji według dostawcy we wszystkich połączeniach. Szczegóły pojedynczego połączenia są dostępne tylko przez wyszukiwanie konta.",
+        "unavailable": "Diagnostyka źródeł danych jest niedostępna."
+      },
+      "presence": {
+        "title": "Obecność adresów URL",
+        "description": "Ostatnie odroczenie z powodu budżetu usługi w codziennym procesie sprawdzania obecności adresów URL. Budżet resetuje się automatycznie.",
+        "unavailable": "Diagnostyka obecności adresów URL jest niedostępna.",
+        "deferredUrls": "Odroczone adresy URL",
+        "affectedProjects": "Objęte projekty",
+        "lastBudgetExhaustion": "Ostatnie wyczerpanie budżetu"
+      },
+      "temporal": {
+        "title": "Temporal",
+        "description": "Inspekcja harmonogramów Temporal i zapisane błędy inicjalizacji.",
+        "asOf": "Stan na {time}",
+        "schedules": "Harmonogramy",
+        "recentActions": "Ostatnie akcje",
+        "missedCatchup": "Pominięte nadrobienia",
+        "skippedOverlap": "Pominięte nakładania",
+        "inspectionErrors": "Błędy inspekcji",
+        "nextAction": "Następna akcja",
+        "snapshotUnavailable": "Zrzut niedostępny – worker nie opublikował danych Temporal. Wartości powyżej są nieznane, a nie zerowe.",
+        "disabled": "Harmonogramy Temporal są wyłączone w tej topologii.",
+        "snapshotStale": "Nieaktualny zrzut Temporal"
+      },
+      "ops": {
+        "title": "Zdarzenia operacyjne",
+        "description": "Ostatnie zdarzenia operatora pokazują wyłącznie metadane dostarczania; pola z dowolną treścią nigdy nie są tu ujawniane.",
+        "deliveryUnavailable": "Diagnostyka dostarczania jest niedostępna.",
+        "historyUnavailable": "Historia zdarzeń operacyjnych jest niedostępna.",
+        "empty": "Nie zapisano żadnych zdarzeń operacyjnych."
+      },
+      "stats": {
+        "title": "Statystyki instancji",
+        "description": "Liczniki instancji oraz zakończone zużycie SERP w bieżącym miesiącu UTC.",
+        "unavailable": "Statystyki instancji są niedostępne.",
+        "users": "Użytkownicy",
+        "projects": "Projekty",
+        "keywords": "Słowa kluczowe",
+        "analytics": "Analityka",
+        "serp": "SERP",
+        "connections": "Połączenia: {kind}"
+      }
+    },
+    "worker": {
+      "title": "Worker",
+      "description": "Sygnał życia workera, tożsamość wdrożenia, zgodność schematu bazy danych i konfiguracja dostarczania do usługi Slack.",
+      "unavailable": "Diagnostyka workera jest niedostępna.",
+      "disabled": "Worker harmonogramu jest wyłączony w tej topologii.",
+      "status": "Status",
+      "lastHeartbeat": "Ostatni sygnał życia",
+      "release": "Wydanie",
+      "environment": "Środowisko",
+      "schedulerDriver": "Sterownik harmonogramu",
+      "schemaStatus": "Status schematu",
+      "bundledMigration": "Migracja w pakiecie",
+      "appliedMigration": "Zastosowana migracja",
+      "slackOps": "Operacje w usłudze Slack",
+      "schemaInSync": "Zsynchronizowany",
+      "schemaWorkerBehind": "Worker w tyle",
+      "schemaWorkerAhead": "Worker wyprzedza"
+    },
+    "failureBreakdown": {
+      "empty": "Brak nieudanych sprawdzeń pozycji w ostatnich 24 godzinach.",
+      "unavailable": "-",
+      "projectCount": "{count, plural, one {# projekt} few {# projekty} many {# projektów} other {# projektu}}",
+      "acrossProjects": "w {count, plural, one {# projekcie} few {# projektach} many {# projektach} other {# projektu}}",
+      "copyProjectId": "Kopiuj identyfikator projektu",
+      "justNow": "przed chwilą",
+      "minutesAgo": "{count, plural, one {#m temu} few {#m temu} many {#m temu} other {#m temu}}",
+      "hoursAgo": "{count, plural, one {#h temu} few {#h temu} many {#h temu} other {#h temu}}",
+      "daysAgo": "{count, plural, one {#d temu} few {#d temu} many {#d temu} other {#d temu}}",
+      "firstSeen": "pierwsze wystąpienie {time}",
+      "lastSeen": "ostatnie wystąpienie {time}",
+      "moreClasses": "Kolejne klasy: {count, number}"
+    },
+    "providerHealth": {
+      "empty": "Brak połączonych źródeł analitycznych.",
+      "ok": "ok {count, number}",
+      "stale": "nieaktualne {count, number}",
+      "failed": "nieudane {count, number}",
+      "notRun": "nieuruchomione {count, number}",
+      "p95LastSuccess": "p95 ostatniego sukcesu: {age}",
+      "unknown": "nieznane",
+      "ageMinutes": "{count, plural, one {# min} few {# min} many {# min} other {# min}}",
+      "ageHours": "{count, plural, one {# h} few {# h} many {# h} other {# h}}",
+      "ageDays": "{count, plural, one {# d} few {# d} many {# d} other {# d}}",
+      "failureRate": "{value, number, ::.0}% nieudanych",
+      "failureRateUnknown": "nieznane"
+    },
+    "providerUsage": {
+      "empty": "Brak zakończonych sprawdzeń SERP w tym miesiącu.",
+      "tableLabel": "Zużycie SERP w tym miesiącu według dostawcy",
+      "provider": "Dostawca",
+      "completedChecks": "Zakończone sprawdzenia",
+      "requestsUnits": "Zapytania / jednostki",
+      "referenceCost": "Koszt referencyjny",
+      "rateBasis": "Podstawa stawki",
+      "rateBasisLiveDepth": "Cennik live wg głębokości",
+      "rateBasisProductionPlan": "Odpowiednik planu produkcyjnego",
+      "rateBasisUnavailable": "Stawka niedostępna",
+      "referenceUnknown": "-",
+      "note": "Szacunki referencyjne opierają się na utrzymywanych stawkach dostawców i zapisanych jednostkach zapytań. Koszty wprowadzone przez użytkownika są pomijane; rozstrzygające pozostają faktury od dostawcy."
+    },
+    "opsTable": {
+      "tableLabel": "Ostatnie zdarzenia operacyjne",
+      "kind": "Rodzaj",
+      "severity": "Waga",
+      "created": "Utworzono",
+      "delivery": "Dostarczanie",
+      "attempts": "Próby"
+    },
+    "administration": {
+      "growth": {
+        "title": "Wzrost",
+        "description": "Agregaty z 30 dni UTC. Bez analityki behawioralnej i bez treści klientów.",
+        "users": "Użytkownicy",
+        "projects": "Projekty",
+        "keywords": "Słowa kluczowe",
+        "rankChecks": "Sprawdzenia pozycji",
+        "trend": "Trend dziennej liczby: {label}",
+        "delta": "{direction, select, positive {+{value, number, ::.0}% wobec poprzednich 30 dni} negative {-{value, number, ::.0}% wobec poprzednich 30 dni} other {0,0% wobec poprzednich 30 dni}}",
+        "noComparison": "Brak porównania z poprzednim okresem",
+        "activeAccounts": "Aktywne konta (ok.)",
+        "activeAccountsDescription": "Unikalne konta z aktywnością sesji w ostatnich 7 dniach."
+      },
+      "consumption": {
+        "title": "Największe zużycie",
+        "description": "10 wierszy projekt/dostawca o najwyższym koszcie referencyjnym w tym miesiącu. Stawki wprowadzone przez użytkownika są pomijane.",
+        "empty": "Nie zapisano żadnych zakończonych sprawdzeń SERP w tym miesiącu.",
+        "note": "Koszty referencyjne opierają się na utrzymywanych stawkach dostawców i zapisanych jednostkach zapytań. Rozstrzygające pozostają faktury od dostawcy.",
+        "tableLabel": "Największe zużycie według projektu i dostawcy w tym miesiącu",
+        "projectId": "ID projektu",
+        "copyProjectId": "Kopiuj identyfikator projektu {projectId}",
+        "provider": "Dostawca",
+        "checks": "Sprawdzenia",
+        "requestsUnits": "Zapytania / jednostki",
+        "referenceCost": "Koszt referencyjny",
+        "rateBasisLiveDepth": "Cennik live wg głębokości",
+        "rateBasisProductionPlan": "Odpowiednik planu produkcyjnego",
+        "rateBasisUnavailable": "Stawka niedostępna",
+        "referenceUnknown": "-",
+        "share": "Udział w instancji",
+        "shareAriaLabel": "{value, number, ::.0}% kosztu referencyjnego instancji",
+        "shareValue": "{value, number, ::.0}%"
+      },
+      "mailer": {
+        "title": "Nie skonfigurowano dostawcy poczty",
+        "description": "Logowanie e-mailem jest niedostępne, ponieważ ta instancja nie może wysyłać kodów logowania. Ustaw {provider} i wymagane dane uwierzytelniające, aby przywrócić wysyłkę e-maili.",
+        "link": "Skonfiguruj wysyłkę e-maili"
+      }
+    },
+    "account": {
+      "title": "Wyszukiwanie konta",
+      "description": "Wyszukiwanie dokładne zwracające wyłącznie metadane konta – nigdy treści klientów.",
+      "identifier": "Dokładny adres e-mail lub ID użytkownika",
+      "placeholder": "Dokładny adres e-mail lub ID użytkownika",
+      "validationIdentifier": "Podaj dokładny adres e-mail lub ID użytkownika.",
+      "auditNotice": "Wyszukiwania są zapisywane w dzienniku audytu administratora.",
+      "notFound": "Żadne konto nie pasuje do tego identyfikatora.",
+      "unavailable": "-",
+      "created": "Utworzono",
+      "lastActive": "Ostatnia aktywność",
+      "projects": "Projekty",
+      "keywords": "Słowa kluczowe",
+      "spendThisMonth": "Wydatki w tym miesiącu",
+      "connectionsByKind": "Połączenia według rodzaju",
+      "connection": "{kind}: {count, number}",
+      "lookup": {
+        "forbidden": "Ta akcja jest niedostępna.",
+        "invalidIdentifier": "Podaj dokładny adres e-mail lub ID użytkownika.",
+        "rateLimited": "Zbyt wiele wyszukiwań kont. Spróbuj ponownie za chwilę.",
+        "temporarilyUnavailable": "Wyszukiwanie konta jest chwilowo niedostępne.",
+        "failed": "Nie udało się wyszukać konta."
+      },
+      "actions": {
+        "deactivated": "Dezaktywowano konto. Sesje i osobiste tokeny dostępu zostały unieważnione; zaplanowane sprawdzenia zostaną wstrzymane przy najbliższym uzgodnieniu.",
+        "reactivated": "Ponownie aktywowano konto. Zaplanowane sprawdzenia wrócą do normy przy najbliższym uzgodnieniu.",
+        "blocked": "Nie można dezaktywować administratorów instancji.",
+        "forbidden": "Ta akcja jest niedostępna.",
+        "invalidTarget": "Wybierz prawidłowe konto.",
+        "rateLimited": "Ta akcja na koncie została ograniczona limitem zapytań. Spróbuj ponownie za chwilę.",
+        "temporarilyUnavailable": "Akcje na koncie są chwilowo niedostępne.",
+        "accountNotFound": "Nie znaleziono konta.",
+        "failed": "Nie udało się wykonać akcji na koncie.",
+        "limitsCompleted": "Zresetowano limity zapytań; miesięczne wydatki to okno kroczące i nie można ich zresetować",
+        "limitsFailed": "Nie udało się zresetować limitów zapytań."
+      }
+    },
+    "opsActions": {
+      "delivered": "Dostarczono testowe powiadomienie do usługi Slack.",
+      "notConfigured": "Powiadomienia operatora w usłudze Slack nie są skonfigurowane.",
+      "deliveryFailed": "Nie udało się dostarczyć testowego powiadomienia do usługi Slack.",
+      "forbidden": "Ta akcja jest niedostępna.",
+      "rateLimited": "Ta akcja administratora została ograniczona limitem zapytań. Spróbuj ponownie za chwilę.",
+      "temporarilyUnavailable": "Akcje administratora są chwilowo niedostępne.",
+      "sweepFailed": "Nie udało się przetworzyć kolejki wysyłki.",
+      "sweepCompleted": "Zakończono przetwarzanie kolejki wysyłki: dostarczono {delivered, number} z {attempted, number}.",
+      "failed": "Nie udało się ukończyć akcji operatora."
+    },
+    "audit": {
+      "title": "Aktywność administratorów",
+      "description": "Wpisy instance_admin.*. Widoczne tylko dla administratorów instancji; administratorzy nie są dla siebie anonimowi.",
+      "filterLabel": "Filtruj aktywność administratorów instancji",
+      "all": "Wszystko",
+      "account": "Konto",
+      "ops": "Operacje",
+      "setup": "Konfiguracja",
+      "selected": "– wybrany filtr",
+      "empty": "Żaden wpis audytu administratora instancji nie pasuje do tego filtra.",
+      "tableLabel": "Aktywność administratorów instancji",
+      "time": "Czas",
+      "actor": "Wykonawca",
+      "action": "Akcja",
+      "target": "Cel",
+      "result": "Wynik",
+      "resultOk": "OK",
+      "resultBlocked": "Zablokowano",
+      "statusFailed": "Nie powiodło się",
+      "copyTargetId": "Kopiuj identyfikator celu audytu {targetId}",
+      "targetUnavailable": "{targetType}:brak"
+    }
+  }
+}

@@ -6,7 +6,6 @@ import { MenuItem } from "@/components/ui/MenuItem";
 import { MenuSelect, menuSelectPaperStyle } from "@/components/ui/MenuSelect";
 import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
-import { pluralize } from "@/lib/format/pluralize";
 import type { AuditEntry, AuditEventType, AuditStatus } from "@/lib/queries/audit";
 import { cn } from "@/lib/ui/cn";
 import { BracketsCurlyIcon as BracketsCurly } from "@phosphor-icons/react/dist/csr/BracketsCurly";
@@ -16,14 +15,10 @@ import { FileCsvIcon as FileCsv } from "@phosphor-icons/react/dist/csr/FileCsv";
 import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
 import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
 import { UserIcon as User } from "@phosphor-icons/react/dist/csr/User";
+import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
 import type { AuditExportFormat } from "./audit-export";
-import {
-  type AuditDateRange,
-  type AuditFilterState,
-  dateRangeLabels,
-  eventTypeLabels,
-} from "./audit-filtering";
+import type { AuditDateRange, AuditFilterState } from "./audit-filtering";
 
 export type AuditFiltersProps = {
   actors: readonly AuditEntry["actor"][];
@@ -43,10 +38,34 @@ const toolbarButtonClass = cn(
   "inline-flex items-center gap-1.5 px-[11px] py-[7px] outline-none transition-colors hover:border-accent focus:border-accent",
 );
 
-function formatCount(visible: number, total: number, truncated: boolean) {
+type AuditFiltersTranslations = ReturnType<typeof useTranslations<"projectAudit.filters">>;
+
+function eventTypeLabel(type: AuditEventType, t: AuditFiltersTranslations) {
+  switch (type) {
+    case "auth":
+      return t("eventAuth");
+    case "data":
+      return t("eventData");
+    case "export":
+      return t("eventExport");
+    case "import":
+      return t("eventImport");
+    case "permissions":
+      return t("eventPermissions");
+    case "system":
+      return t("eventSystem");
+  }
+}
+
+function formatCount(
+  visible: number,
+  total: number,
+  truncated: boolean,
+  t: AuditFiltersTranslations,
+) {
   const count =
-    visible === total ? pluralize(total, "event") : `${visible} of ${pluralize(total, "event")}`;
-  return truncated ? `${count} / showing newest ${total} events` : count;
+    visible === total ? t("totalCount", { count: total }) : t("count", { total, visible });
+  return truncated ? t("truncatedCount", { count, total }) : count;
 }
 
 export function AuditFilters({
@@ -59,6 +78,7 @@ export function AuditFilters({
   truncated,
   visibleCount,
 }: Readonly<AuditFiltersProps>) {
+  const t = useTranslations("projectAudit.filters");
   const hasRows = visibleCount > 0;
   const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -67,23 +87,23 @@ export function AuditFilters({
     const cmds: RegisteredCommand[] = [
       {
         id: "audit-filter",
-        label: "Filter",
+        label: t("commandFilter"),
         scope: "audit",
-        hint: "Search audit events",
+        hint: t("commandFilterHint"),
         run: () => searchInputRef.current?.focus(),
       },
     ];
     if (hasRows) {
       cmds.push({
         id: "audit-export",
-        label: "Export",
+        label: t("commandExport"),
         scope: "audit",
-        hint: "Download CSV",
+        hint: t("commandExportHint"),
         run: () => onExport("csv"),
       });
     }
     return cmds;
-  }, [hasRows, onExport]);
+  }, [hasRows, onExport, t]);
   const auditRegisterRef = useRegisterCommands(auditCommands);
 
   function setFilter<Key extends keyof AuditFilterState>(key: Key, value: AuditFilterState[Key]) {
@@ -95,19 +115,24 @@ export function AuditFilters({
     onExport(format);
   }
 
-  const dateOptions = Object.entries(dateRangeLabels).map(([value, label]) => ({ label, value }));
+  const dateOptions = [
+    { label: t("date7d"), value: "7d" },
+    { label: t("date30d"), value: "30d" },
+    { label: t("date90d"), value: "90d" },
+    { label: t("dateAll"), value: "all" },
+  ];
   const eventTypeOptions = [
-    { label: "Event type", value: "all" },
-    ...eventTypes.map((type) => ({ label: eventTypeLabels[type], value: type })),
+    { label: t("eventAll"), value: "all" },
+    ...eventTypes.map((type) => ({ label: eventTypeLabel(type, t), value: type })),
   ];
   const actorOptions = [
-    { label: "Actor", value: "all" },
+    { label: t("actorAll"), value: "all" },
     ...actors.map((actor) => ({ label: actor.email, value: actor.email })),
   ];
   const statusOptions = [
-    { label: "Status", noWrap: true, value: "all" },
-    { label: "Success", noWrap: true, value: "success" },
-    { label: "Failed", noWrap: true, value: "failed" },
+    { label: t("statusAll"), noWrap: true, value: "all" },
+    { label: t("statusSuccess"), noWrap: true, value: "success" },
+    { label: t("statusFailed"), noWrap: true, value: "failed" },
   ];
 
   return (
@@ -121,34 +146,34 @@ export function AuditFilters({
             className="min-w-[200px] flex-1 sm:flex-none"
             id="audit-filter-search"
             inputRef={searchInputRef}
-            label="Search audit events"
+            label={t("searchLabel")}
             onChange={(value) => setFilter("search", value)}
-            placeholder="Search actor, event, resource ID…"
+            placeholder={t("searchPlaceholder")}
             value={filters.search}
           />
           <MenuSelect
-            ariaLabel="Date range"
+            ariaLabel={t("dateRange")}
             leadingIcon={<CalendarBlank aria-hidden size={14} weight="regular" />}
             onChange={(next) => setFilter("dateRange", next as AuditDateRange)}
             options={dateOptions}
             value={filters.dateRange}
           />
           <MenuSelect
-            ariaLabel="Event type"
+            ariaLabel={t("eventType")}
             leadingIcon={<Funnel aria-hidden size={14} weight="regular" />}
             onChange={(next) => setFilter("eventType", next as AuditFilterState["eventType"])}
             options={eventTypeOptions}
             value={filters.eventType}
           />
           <MenuSelect
-            ariaLabel="Actor"
+            ariaLabel={t("actor")}
             leadingIcon={<User aria-hidden size={14} weight="regular" />}
             onChange={(next) => setFilter("actor", next)}
             options={actorOptions}
             value={filters.actor}
           />
           <MenuSelect
-            ariaLabel="Status"
+            ariaLabel={t("status")}
             menuMinWidth={160}
             onChange={(next) => setFilter("status", next as AuditStatus | "all")}
             options={statusOptions}
@@ -164,7 +189,7 @@ export function AuditFilters({
             type="button"
           >
             <UploadSimple aria-hidden size={14} weight="regular" />
-            Export
+            {t("export")}
             <CaretDown aria-hidden size={12} weight="regular" />
           </button>
           <Menu
@@ -172,18 +197,18 @@ export function AuditFilters({
             id="audit-export-menu"
             onClose={() => setExportAnchor(null)}
             open={Boolean(exportAnchor)}
-            listProps={{ "aria-label": "Export audit events", style: { padding: 0 } }}
+            listProps={{ "aria-label": t("exportMenuAria"), style: { padding: 0 } }}
             contentProps={{ style: { ...menuSelectPaperStyle, minWidth: 232 } }}
           >
             <div className="px-3 pb-1 pt-2 text-[9.5px] uppercase tracking-[0.6px] text-fg-muted">
-              Export {pluralize(visibleCount, "event")}
+              {t("exportEvents", { count: visibleCount })}
             </div>
             <MenuItem onClick={() => runExport("csv")} style={{ gap: "10px" }}>
               <FileCsv aria-hidden className="text-green-text" size={16} weight="regular" />
               <span className="flex flex-col">
                 <span className="text-[13px] text-fg">CSV</span>
                 <span className="text-[11px] tabular-nums text-fg-muted">
-                  Spreadsheet-ready table
+                  {t("csvDescription")}
                 </span>
               </span>
             </MenuItem>
@@ -191,17 +216,19 @@ export function AuditFilters({
               <BracketsCurly aria-hidden className="text-blue-text" size={16} weight="regular" />
               <span className="flex flex-col">
                 <span className="text-[13px] text-fg">JSON</span>
-                <span className="text-[11px] tabular-nums text-fg-muted">Full event payloads</span>
+                <span className="text-[11px] tabular-nums text-fg-muted">
+                  {t("jsonDescription")}
+                </span>
               </span>
             </MenuItem>
             <div className="-mx-1.5 flex items-start gap-2 border-t border-border px-[18px] pb-2 pt-2 text-[10px] leading-[1.35] text-fg-muted">
               <Funnel aria-hidden className="mt-px shrink-0" size={12} weight="regular" />
-              Respects the current date and filter selection.
+              {t("exportScope")}
             </div>
           </Menu>
         </div>
         <span className="text-[11px] tabular-nums text-fg-muted">
-          {formatCount(visibleCount, totalCount, truncated)}
+          {formatCount(visibleCount, totalCount, truncated, t)}
         </span>
       </div>
       <span aria-hidden hidden ref={auditRegisterRef} />

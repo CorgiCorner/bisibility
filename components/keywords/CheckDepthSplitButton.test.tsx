@@ -1,5 +1,6 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { type ReactNode, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CheckDepthSplitButton } from "./CheckDepthSplitButton";
@@ -116,5 +117,40 @@ describe("CheckDepthSplitButton", () => {
       "Top 10 checks do not update Visibility",
     );
     expect(screen.queryByRole("menu", { name: "Check depth" })).not.toBeInTheDocument();
+  });
+
+  it("accepts feature-owned list copy without expanding the shared provider", async () => {
+    const onDepthChange = vi.fn();
+    render(
+      <CheckDepthSplitButton
+        actionLabel="Run checks (Top 10)"
+        caretAriaLabel="Choose check depth"
+        copy={{
+          changeDefault: "Change default",
+          depthMenu: "Check depth",
+          optionLabel: (depth) => `Top ${depth}`,
+          shallowVisibility:
+            "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
+        }}
+        currentDepth={10}
+        onAction={vi.fn()}
+        onDepthChange={onDepthChange}
+      />,
+      { wrapper: withProjectWriteMode },
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
+    expect(screen.getByRole("menu", { name: "Check depth" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Change default" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/settings/tracking",
+    );
+    fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
+    expect(onDepthChange).toHaveBeenCalledWith(20);
+
+    fireEvent.pointerMove(screen.getByRole("button", { name: "Choose check depth" }));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Top 10 checks do not update Visibility",
+    );
   });
 });

@@ -1,0 +1,24 @@
+{
+  "shared": {
+    "globalError": {
+      "description": "Aplikacja nie mogła wyrenderować tej strony. Odśwież, aby spróbować ponownie.",
+      "retry": "Odśwież aplikację",
+      "title": "Coś poszło nie tak"
+    },
+    "emergencyRecovery": {
+      "error": {
+        "backToApp": "Wróć do aplikacji",
+        "description": "Monitor pozycji nie zdołał dokończyć tego żądania. Spróbuj ponownie albo wróć do aplikacji na czas przywracania tej ścieżki.",
+        "retry": "Spróbuj ponownie",
+        "status": "500 – błąd serwera",
+        "title": "Monitor pozycji napotkał błąd"
+      },
+      "notFound": {
+        "backToApp": "Wróć do aplikacji",
+        "description": "Ta strona mogła zostać przeniesiona albo nigdy nie istniała.",
+        "status": "404 – nie znaleziono",
+        "title": "Ta strona jest niedostępna"
+      }
+    }
+  }
+}

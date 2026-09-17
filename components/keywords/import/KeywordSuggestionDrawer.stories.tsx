@@ -1,5 +1,16 @@
+import { topQueryImportMessages } from "@/components/onboarding/steps/keyword-import-messages";
+import onboardingMessages from "@/messages/core/en/onboarding.json";
 import type { Meta, StoryObj } from "@storybook/react";
+import { createTranslator } from "next-intl";
 import { KeywordSuggestionDrawer, type SuggestionCostContext } from "./KeywordSuggestionDrawer";
+
+const drawerMessages = topQueryImportMessages(
+  createTranslator({
+    locale: "en",
+    messages: onboardingMessages,
+    namespace: "onboarding.keywords",
+  }),
+).drawer;
 
 const costContext: SuggestionCostContext = {
   cronExpression: null,
@@ -35,6 +46,7 @@ export const Default: Story = {
     costContext,
     existingKeywords: ["rank tracker"],
     hidden: [{ query: "-site:reddit.com ai visibility" }, { query: "site:" }],
+    messages: drawerMessages,
     onClose: () => undefined,
     onConfirm: () => undefined,
     open: true,

@@ -1,6 +1,7 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
+import { renderWithBacklinksMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { AnalyzeBacklinksAction } from "@/lib/actions/backlinks";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BacklinksWorkspace } from "./BacklinksWorkspace";

@@ -4,6 +4,7 @@ import { DialogSurface as Drawer } from "@/components/ui/DialogSurface";
 import { MOTION_DRAWER_ENTER, MOTION_DRAWER_EXIT } from "@/lib/ui/motion";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
 import { useId } from "react";
 import { type DrawerBackAction, DrawerBackButton } from "./DrawerBackButton";
@@ -15,6 +16,8 @@ export type SheetProps = {
   open: boolean;
   onClose: () => void;
   title: ReactNode;
+  /** Overrides the close control's accessible name for a named panel. */
+  closeLabel?: string;
   backAction?: DrawerBackAction;
   headerAction?: ReactNode;
   footer?: ReactNode;
@@ -37,6 +40,7 @@ const sheetWidths: Record<SheetWidthVariant, number> = {
 export function Sheet({
   backAction,
   children,
+  closeLabel,
   footer,
   heightVariant = "form",
   headerAction,
@@ -46,6 +50,7 @@ export function Sheet({
   title,
   widthVariant,
 }: Readonly<SheetProps>) {
+  const t = useTranslations("shared.controls.sheet");
   const isDesktop = useMediaQuery("(min-width:1024px)");
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const titleId = useId();
@@ -102,7 +107,7 @@ export function Sheet({
           <div className="flex shrink-0 items-center gap-1.5">
             {headerAction}
             <button
-              aria-label="Close sheet"
+              aria-label={closeLabel ?? t("close")}
               className="grid h-8 w-8 shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-[color,background-color,transform] duration-[var(--motion-press)] hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
               onClick={onClose}
               type="button"

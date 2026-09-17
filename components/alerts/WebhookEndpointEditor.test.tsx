@@ -1,5 +1,6 @@
+import { renderWithAlertMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WebhookEndpointEditor } from "./WebhookEndpointEditor";
 
@@ -137,7 +138,7 @@ describe("WebhookEndpointEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Send test event" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "HTTP 500 in 21 ms: Webhook endpoint_1 failed with status 500.",
+      "HTTP 500 in 21 ms. Details: Webhook endpoint_1 failed with status 500.",
     );
   });
 });

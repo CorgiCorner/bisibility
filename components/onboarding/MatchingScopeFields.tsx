@@ -1,6 +1,7 @@
 import { Checkbox } from "@/components/ui/Checkbox";
 import type { AnalyticsControlId } from "@/lib/analytics/controls";
 import { cn } from "@/lib/ui/cn";
+import { useTranslations } from "next-intl";
 import type { FieldValues, Path, UseFormRegister } from "react-hook-form";
 import { z } from "zod";
 
@@ -41,7 +42,10 @@ function displayDomain(domain: string | undefined) {
   return domain?.trim() || "example.com";
 }
 
-function scopeOptionsFor(domain: string): ScopeOption[] {
+function scopeOptionsFor(
+  domain: string,
+  t: ReturnType<typeof useTranslations<"onboarding.matchingScope">>,
+): ScopeOption[] {
   const rootDomain = domain.replace(/^www\./, "");
   const wwwDomain = `www.${rootDomain}`;
   const primaryPair = domain.startsWith("www.")
@@ -50,19 +54,19 @@ function scopeOptionsFor(domain: string): ScopeOption[] {
 
   return [
     {
-      description: `Counts ${primaryPair} across HTTP and HTTPS. Other subdomains stay separate.`,
+      description: t("rootAndWww.description", { domains: primaryPair }),
       field: "rootAndWww",
-      title: "Primary domain + www",
+      title: t("rootAndWww.title"),
     },
     {
-      description: `Also counts docs.${rootDomain}, app.${rootDomain}, blog.${rootDomain}, and any other subdomain.`,
+      description: t("includeSubdomains.description", { rootDomain }),
       field: "includeSubdomains",
-      title: "All subdomains",
+      title: t("includeSubdomains.title"),
     },
     {
-      description: `Only counts pages under a specific path, for example ${domain}/docs/.`,
+      description: t("urlPrefix.description", { example: `${domain}/docs/` }),
       field: "urlPrefix",
-      title: "URL prefix only",
+      title: t("urlPrefix.title"),
     },
   ];
 }
@@ -78,9 +82,10 @@ export function MatchingScopeFields<T extends FieldValues>({
   register,
   values,
 }: Readonly<MatchingScopeFieldsProps<T>>) {
+  const t = useTranslations("onboarding.matchingScope");
   return (
     <div className="mt-3 flex flex-col gap-2.5" data-analytics-mask>
-      {scopeOptionsFor(displayDomain(domain)).map((option) => {
+      {scopeOptionsFor(displayDomain(domain), t).map((option) => {
         const selected = values[option.field];
         const inputId = `matching-scope-${option.field}`;
 

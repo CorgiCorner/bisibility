@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithDomainOverviewMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { DomainOverviewStatePanel } from "./DomainOverviewStatePanel";
 import type { DomainOverviewUiState } from "./domain-overview-workspace-model";

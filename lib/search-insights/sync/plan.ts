@@ -61,6 +61,17 @@ export function searchSyncPlanSummary(input: {
   };
 }
 
+/** Raw preflight facts keep numeric values available for locale-specific UI presentation. */
+export function searchSyncPreflightFacts(input: Parameters<typeof searchSyncPlanSummary>[0]) {
+  const daysTotal = PLAN_DAYS[input.retentionMonths];
+  const budget = plannedRemainingRequests({ daysDone: 0, daysTotal, planned: false });
+  return {
+    durationHours: budget.plannedRequestBudget / searchSyncRequestSetsPerHour(input.pace),
+    requests: roundedRequestLabel(budget.plannedRequestBudget),
+    retentionMonths: input.retentionMonths,
+  };
+}
+
 export function searchSyncPreflightCopy(input: Parameters<typeof searchSyncPlanSummary>[0]) {
   const summary = searchSyncPlanSummary(input);
   return `Importing ${summary.retentionMonths} months takes ${summary.requests} requests to Google, spread over ${summary.duration.startsWith("about ") ? summary.duration : `about ${summary.duration}`}.`;

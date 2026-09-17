@@ -1,0 +1,102 @@
+{
+  "projectSettingsShell": {
+    "card": {
+      "save": "Save",
+      "saved": "Saved"
+    },
+    "mobileSectionLabel": "Settings section",
+    "navigationLabel": "Settings sections",
+    "search": {
+      "empty": "No settings found. Try timezone, API key or budget.",
+      "label": "Search settings",
+      "placeholder": "Search settings...",
+      "results": "{count, plural, one {# setting found} other {# settings found}}",
+      "resultsLabel": "Matching settings",
+      "sections": {
+        "providerConnections": "Integrations / Connections",
+        "providerUsage": "Integrations / Usage"
+      },
+      "entries": {
+        "apiKeys": { "label": "API keys", "keywords": "api key token access credentials" },
+        "applicationPlan": {
+          "label": "Application plan",
+          "keywords": "billing price subscription hosted beta self hosted"
+        },
+        "checkFrequency": {
+          "label": "Check frequency",
+          "keywords": "schedule manual daily weekly monthly cron automatic"
+        },
+        "competitors": {
+          "label": "Competitors and brand aliases",
+          "keywords": "competition mentions citations"
+        },
+        "defaultDevice": { "label": "Default device", "keywords": "mobile desktop" },
+        "defaultLocation": {
+          "label": "Default location",
+          "keywords": "country city market region language"
+        },
+        "defaultSerpDepth": {
+          "label": "Default SERP depth",
+          "keywords": "top 10 20 50 100 rank check results"
+        },
+        "deployWebhooks": { "label": "Deploy webhooks", "keywords": "endpoint secret deploy hook" },
+        "domainMatching": {
+          "label": "Domain matching",
+          "keywords": "subdomain exact root url scope"
+        },
+        "experimentalFeatures": {
+          "label": "Experimental features",
+          "keywords": "modules preview beta alpha features"
+        },
+        "members": {
+          "label": "Members and invitations",
+          "keywords": "users invite role access permissions"
+        },
+        "notificationChannels": {
+          "label": "Notification channels",
+          "keywords": "email slack webhook alerts digest"
+        },
+        "projectManagement": {
+          "label": "Project management",
+          "keywords": "backup export migration self host delete project audit history"
+        },
+        "projectName": { "label": "Project name", "keywords": "rename project workspace" },
+        "providerBudgets": {
+          "label": "Provider budgets and usage",
+          "keywords": "allocation spending spend cost balance quota credits searches limit"
+        },
+        "providerConnections": {
+          "label": "Provider connections",
+          "keywords": "connect disconnect credentials dataforseo serpapi google search console analytics"
+        },
+        "scheduleTimezone": { "label": "Schedule timezone", "keywords": "time zone clock utc" },
+        "searchDataSync": {
+          "label": "Search data sync",
+          "keywords": "gsc retention months import pause pace"
+        },
+        "stopOnMatch": {
+          "label": "Stop checks at first match",
+          "keywords": "domain first result depth cost"
+        },
+        "tagsAndSegments": { "label": "Tags and segments", "keywords": "organize keywords labels" },
+        "urlInspectionLimit": {
+          "label": "URL inspection limit",
+          "keywords": "daily quota indexing google search console"
+        },
+        "websiteDomain": { "label": "Website domain", "keywords": "website url change domain" }
+      }
+    },
+    "sections": {
+      "advanced": "Advanced",
+      "billing": "Billing",
+      "competitors": "Competitors",
+      "dataSources": "Data sources",
+      "developers": "Developers",
+      "experimental": "Experimental",
+      "general": "General",
+      "notifications": "Notifications",
+      "team": "Team",
+      "tracking": "Tracking"
+    }
+  }
+}

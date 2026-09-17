@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { formatMoneyCents } from "@/lib/format/money";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
+import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 
 type RestoreMarketDialogProps = {
@@ -17,6 +17,8 @@ export function RestoreMarketDialog({
   onClose,
   onRestore,
 }: Readonly<RestoreMarketDialogProps>) {
+  const t = useTranslations("projectMarkets");
+  const format = useFormatter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,34 +30,35 @@ export function RestoreMarketDialog({
       await onRestore(market);
       onClose();
     } catch {
-      setError("Market could not be restored. Try again.");
+      setError(t("restoreFailed"));
     } finally {
       setPending(false);
     }
   }
 
-  const cost = market?.monthlyCostCents == null ? "-" : formatMoneyCents(market.monthlyCostCents);
+  const cost =
+    market?.monthlyCostCents == null
+      ? "-"
+      : format.number(market.monthlyCostCents / 100, { currency: "USD", style: "currency" });
   return (
     <Modal
       footer={
         <>
           <Button disabled={pending} onClick={onClose} size="sm" variant="ghost">
-            Cancel
+            {t("cancel")}
           </Button>
           <Button loading={pending} onClick={() => void confirm()} size="sm">
-            Restore market
+            {t("restoreMarket")}
           </Button>
         </>
       }
       onClose={onClose}
       open={market !== null}
       size="sm"
-      title={market ? `Restore ${market.name}?` : "Restore market"}
+      title={t("restoreTitle", { market: market?.name ?? t("market") })}
     >
       <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">
-        {market
-          ? `Restoring resumes ${market.keywordCount} keywords on their schedules - approx ${cost} a month.`
-          : null}
+        {market ? t("restoreBody", { cost, count: market.keywordCount }) : null}
       </p>
       {error ? <p className="m-0 mt-3 text-[12px] text-red-text">{error}</p> : null}
     </Modal>

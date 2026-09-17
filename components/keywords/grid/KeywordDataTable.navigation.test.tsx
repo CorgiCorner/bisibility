@@ -1,7 +1,8 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { stubResizeObserver } from "@/tests/observers";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordDataTable } from "./KeywordDataTable";
 import { pendingRows } from "./KeywordsGrid.test-helpers";

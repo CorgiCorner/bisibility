@@ -57,7 +57,6 @@ export function AlertTemplateButtons({
     <>
       {templates.map((item) => {
         const requiresGsc = item.id === "ctr" && !gscConnected;
-
         return (
           <span className="inline-flex items-center gap-1.5" key={item.id}>
             <ProjectReadOnlyTooltip>

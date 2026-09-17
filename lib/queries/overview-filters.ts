@@ -7,12 +7,6 @@ export type OverviewFilters = {
   tag: string | null;
 };
 
-export const overviewRangeLabels = {
-  "7d": "Last 7 days",
-  "28d": "Last 28 days",
-  "90d": "Last 90 days",
-} as const;
-
 const rangeDays = { "7d": 7, "28d": 28, "90d": 90 } as const;
 
 function dayStart(now: Date, days: number) {
@@ -39,7 +33,7 @@ function marketParams(value: string | string[] | undefined) {
 
 export function normalizeOverviewFilters(input: Partial<OverviewFilters> = {}): OverviewFilters {
   const device = input.device === "desktop" || input.device === "mobile" ? input.device : "all";
-  const range = input.range && input.range in overviewRangeLabels ? input.range : ("28d" as const);
+  const range: OverviewRange = input.range && input.range in rangeDays ? input.range : "28d";
   const tag = input.tag?.trim() ? input.tag.trim().slice(0, 48) : null;
   const marketIds = marketParams(input.marketIds);
   return { device, marketIds, range, tag };

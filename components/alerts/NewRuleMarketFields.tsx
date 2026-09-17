@@ -3,6 +3,7 @@
 import type { AlertTargetOptions } from "@/lib/alerts/alert-data";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { useTranslations } from "next-intl";
 import type { UseFormSetValue } from "react-hook-form";
 
 const chipClass =
@@ -11,12 +12,13 @@ const chipClass =
 export function ruleMarketScopeLabel(
   marketIds: readonly string[],
   markets: AlertTargetOptions["markets"],
+  messages: Readonly<{ allMarkets: string; marketCount: (count: number) => string }>,
 ) {
-  if (!marketIds.length) return "All markets";
-  const labels = marketIds
+  if (!marketIds.length) return messages.allMarkets;
+  const selectedLabels = marketIds
     .map((marketId) => markets.find((market) => market.id === marketId)?.label)
     .filter((label): label is string => Boolean(label));
-  return labels.length === 1 ? labels[0] : `${marketIds.length} markets`;
+  return selectedLabels.length === 1 ? selectedLabels[0] : messages.marketCount(marketIds.length);
 }
 
 export function NewRuleMarketFields({
@@ -28,6 +30,12 @@ export function NewRuleMarketFields({
   markets: AlertTargetOptions["markets"];
   setValue: UseFormSetValue<NewRuleForm>;
 }>) {
+  const t = useTranslations("projectAlerts.drawer");
+  const scopeLabel = ruleMarketScopeLabel(marketIds, markets, {
+    allMarkets: t("allMarkets"),
+    marketCount: (count) => t("marketCount", { count }),
+  });
+
   function toggle(id: string) {
     const next = marketIds.includes(id)
       ? marketIds.filter((marketId) => marketId !== id)
@@ -36,9 +44,9 @@ export function NewRuleMarketFields({
   }
 
   return (
-    <section aria-label="Markets">
+    <section aria-label={t("marketsAria")}>
       <div className="mb-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        Markets
+        {t("markets")}
       </div>
       <div className="flex flex-wrap gap-[7px]">
         <button
@@ -48,7 +56,7 @@ export function NewRuleMarketFields({
           type="button"
         >
           {marketIds.length === 0 ? <Check aria-hidden size={10} weight="regular" /> : null}
-          All markets
+          {t("allMarkets")}
         </button>
         {markets.map((market) => {
           const selected = marketIds.includes(market.id);
@@ -68,18 +76,19 @@ export function NewRuleMarketFields({
         })}
       </div>
       <p className="m-0 mt-[9px] font-sans tabular-nums text-[10.5px] leading-[1.5] text-fg-muted">
-        Scope: {ruleMarketScopeLabel(marketIds, markets)}. Rule fires only for checks in the
-        selected markets.
+        {t("marketScope", { scope: scopeLabel })}
       </p>
     </section>
   );
 }
 
 export function RulePreview({ children }: Readonly<{ children: string }>) {
+  const t = useTranslations("projectAlerts.drawer");
+
   return (
     <section>
       <div className="mb-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        Preview
+        {t("preview")}
       </div>
       <div className="rounded-control border border-border bg-bg-sunken px-[15px] py-3.5 text-[13.5px] leading-[1.55]">
         {children}

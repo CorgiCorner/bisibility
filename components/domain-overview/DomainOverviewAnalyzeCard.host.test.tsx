@@ -1,5 +1,6 @@
+import { renderWithDomainOverviewMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ResearchScope } from "@/lib/research/scope";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { DomainOverviewAnalyzeCard } from "./DomainOverviewAnalyzeCard";

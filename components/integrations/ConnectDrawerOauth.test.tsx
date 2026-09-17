@@ -1,6 +1,7 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
+import { renderWithIntegrationMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { searchSyncPlanSummary } from "@/lib/search-insights/sync/plan";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ConnectDrawerOauth } from "./ConnectDrawerOauth";
 import { ConnectDrawerOauthSelection } from "./ConnectDrawerOauthSelection";
@@ -548,7 +549,7 @@ describe("ConnectDrawerOauth", () => {
       drawer: {
         ...readyGsc().drawer,
         accountEmail: undefined,
-        activities: [{ label: "Settings changed", value: "just now" }],
+        activities: [{ labelKey: "connectionUpdated" as const, valueKey: "never" as const }],
         defaults: { ...readyGsc().drawer.defaults, login: "sc-domain:example.com" },
       },
       status: "connected" as const,
@@ -746,6 +747,36 @@ describe("ConnectDrawerOauth", () => {
     expect(
       primary.parentElement?.querySelector('[data-slot="selection-secondary-actions"]'),
     ).toBeNull();
+  });
+
+  it("uses the typed GA4 discovery failure class instead of provider error prose", () => {
+    render(
+      <ConnectDrawerOauthSelection
+        allowManualEntry={false}
+        isGa4
+        manualEntry={false}
+        onManualEntryChange={vi.fn()}
+        onPropertyChange={vi.fn()}
+        onPropertyErrorChange={vi.fn()}
+        onSelect={vi.fn()}
+        pending={false}
+        property=""
+        propertyError={null}
+        readOnly={false}
+        setup={{
+          error: "Provider said rate_limit but this untrusted sentence must not be rendered.",
+          failureClass: "rate_limit",
+          properties: [],
+          provider: "ga4",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Could not load your GA4 properties.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Google's request limit was reached. Try again shortly."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/untrusted sentence/)).not.toBeInTheDocument();
   });
 
   it("validates manual GA4 entry only after interaction with concise errors", () => {

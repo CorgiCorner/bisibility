@@ -2,7 +2,7 @@
 // client") so the RSC page, the server action, and the client form all use one source.
 // Date format lives on User; density, landing, and theme still use cookies.
 
-import { type DateFormat, type DateFormatPreference, formatDate } from "@/lib/dates/format";
+import { type DateFormat, type DateFormatPreference, formatDisplayDate } from "@/lib/dates/format";
 import { type LandingSegment, landingSegments, primaryNavEntries } from "@/lib/nav/nav-items";
 import { z } from "zod";
 
@@ -116,11 +116,24 @@ export const landingOptions = primaryNavEntries.map((entry) => ({
 export function dateFormatOptions(
   todayKey: string,
   autoExample: DateFormat,
+  locale: string,
 ): readonly { label: string; value: UserPreferences["dateFormat"] }[] {
+  const examples = dateFormatExamples(todayKey, autoExample, locale);
   return [
-    { label: `Auto · ${formatDate(todayKey, autoExample)}`, value: "auto" },
-    { label: formatDate(todayKey, "day_first"), value: "day_first" },
-    { label: formatDate(todayKey, "month_first"), value: "month_first" },
-    { label: formatDate(todayKey, "iso"), value: "iso" },
+    { label: `Auto · ${examples.auto}`, value: "auto" },
+    { label: examples.day_first, value: "day_first" },
+    { label: examples.month_first, value: "month_first" },
+    { label: examples.iso, value: "iso" },
   ];
+}
+
+/** Examples use the document locale but retain the separately selected date order. */
+export function dateFormatExamples(todayKey: string, autoExample: DateFormat, locale: string) {
+  const context = { locale, timeZone: "UTC" };
+  return {
+    auto: formatDisplayDate(todayKey, { ...context, dateFormat: autoExample }),
+    day_first: formatDisplayDate(todayKey, { ...context, dateFormat: "day_first" }),
+    iso: formatDisplayDate(todayKey, { ...context, dateFormat: "iso" }),
+    month_first: formatDisplayDate(todayKey, { ...context, dateFormat: "month_first" }),
+  } as const;
 }

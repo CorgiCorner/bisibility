@@ -13,6 +13,8 @@ export const waitlistCloudPrices = ["9", "19", "39", "custom"] as const;
 
 export type WaitlistSource = (typeof waitlistSources)[number];
 export type WaitlistCloudPrice = (typeof waitlistCloudPrices)[number];
+export const emailCaptureSources = ["featured_company", "landing_capture", "changelog"] as const;
+export type EmailCaptureSource = (typeof emailCaptureSources)[number];
 
 export const emailSchema = z
   .string()
@@ -26,6 +28,35 @@ export const verificationTokenSchema = z
   .min(1, "Verification token must not be empty.")
   .max(2048, "Verification token is too long.")
   .optional();
+
+export type EmailCaptureValidationMessages = {
+  emailInvalid: string;
+  emailTooLong: string;
+  workEmail: string;
+};
+
+/**
+ * The marketing widget only submits these three sources. Its schema projects the
+ * same email and work-domain constraints with request-local UI copy; the full
+ * server schema below remains unchanged for all action inputs.
+ */
+export function emailCaptureSchemaFor(messages: EmailCaptureValidationMessages) {
+  return z
+    .object({
+      email: z.string().trim().max(254, messages.emailTooLong).pipe(z.email(messages.emailInvalid)),
+      source: z.enum(emailCaptureSources),
+      verificationToken: verificationTokenSchema,
+    })
+    .superRefine((value, context) => {
+      if (value.source === "featured_company" && !isCompanyEmail(value.email)) {
+        context.addIssue({
+          code: "custom",
+          message: messages.workEmail,
+          path: ["email"],
+        });
+      }
+    });
+}
 
 const cloudPriceSchema = z.union([z.enum(waitlistCloudPrices), z.literal("")]).optional();
 

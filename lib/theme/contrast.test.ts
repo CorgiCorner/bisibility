@@ -30,7 +30,11 @@ const readableTextTokens = [
   "green-text",
   "yellow-text",
 ] as const satisfies readonly ColorTokenName[];
-const statusTextTokens = ["red-text", "blue-text"] as const satisfies readonly ColorTokenName[];
+const statusTextTokens = [
+  "red-text",
+  "blue-text",
+  "purple-text",
+] as const satisfies readonly ColorTokenName[];
 const statusTintTokens = [
   "red",
   "yellow",

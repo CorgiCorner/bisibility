@@ -7,6 +7,7 @@ import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { CopyIcon as Copy } from "@phosphor-icons/react/dist/csr/Copy";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { cva } from "class-variance-authority";
+import { useTranslations } from "next-intl";
 import { type MouseEvent, useCallback, useRef, useState } from "react";
 import { Tooltip } from "./Tooltip";
 import { useToast } from "./toast-context";
@@ -52,11 +53,13 @@ const COPY_RESET_MS = 1200;
 export function CopyButton({
   className,
   text,
-  label = "Copy",
+  label,
   size = "md",
   style,
   ...props
 }: CopyButtonProps) {
+  const t = useTranslations("shared.controls.copy");
+  const copyLabel = label ?? t("action");
   const [state, setState] = useState<CopyState>("idle");
   const { showToast } = useToast();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -104,13 +107,13 @@ export function CopyButton({
     } catch {
       if (!mountedRef.current) return;
       setState("error");
-      showToast("Copy failed", { severity: "error" });
+      showToast(t("failed"), { severity: "error" });
     }
   }
 
   const copied = state === "copied";
   const error = state === "error";
-  const tooltipTitle = copied ? "Copied!" : error ? "Copy failed" : label;
+  const tooltipTitle = copied ? t("copied") : error ? t("failed") : copyLabel;
   const color = copied ? "var(--green)" : error ? "var(--red)" : "var(--fg-muted)";
   const hoverColor = copied ? "var(--green)" : error ? "var(--red)" : "var(--accent)";
   const hoverBg = copied

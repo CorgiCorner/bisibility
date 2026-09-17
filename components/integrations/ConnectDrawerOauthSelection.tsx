@@ -21,8 +21,10 @@ import {
   searchSyncRetentionLabel,
 } from "@/lib/settings/search-sync-config";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
+import { ga4DiscoveryFailure } from "./ConnectDrawerOauthSelection.ga4-failure";
 import { GooglePropertyDetails } from "./ConnectDrawerScopes";
 import { Ga4PropertyManualEntry } from "./Ga4PropertyManualEntry";
 
@@ -61,6 +63,7 @@ function propertySelectionLabel(option: MenuSelectOption | undefined): ReactNode
     </span>
   );
 }
+
 type ConnectDrawerOauthSelectionBaseProps = {
   accountFooter?: ReactNode;
   allowManualEntry: boolean;
@@ -101,6 +104,7 @@ export function ConnectDrawerOauthSelection({
   setup,
   syncPlan,
 }: Readonly<ConnectDrawerOauthSelectionProps>) {
+  const t = useTranslations("projectIntegrations.oauth");
   const { pace = "normal", retentionMonths = 3 } = syncPlan ?? {};
   const form = useForm<SearchSyncSelection>({
     defaultValues: { pace, retentionMonths },
@@ -133,28 +137,28 @@ export function ConnectDrawerOauthSelection({
     ? [
         {
           id: "active",
-          label: "Active",
+          label: t("active"),
           options: grouped.active ? [menuOption(grouped.active)] : [],
         },
         {
           id: "archived",
-          label: "Archived",
+          label: t("archived"),
           options: grouped.archived.map((option) =>
             menuOption(
               option,
-              `${googlePropertyMatchesDomain(option.value, setup.projectDomain ?? "") ? "matches this project · " : ""}last synced ${option.lastSyncedDate}${option.available ? "" : " · Not available to this Google account"}`,
+              `${googlePropertyMatchesDomain(option.value, setup.projectDomain ?? "") ? `${t("matchesThisProject")} · ` : ""}${t("lastSynced", { date: option.lastSyncedDate })}${option.available ? "" : ` · ${t("unavailable")}`}`,
               !option.available,
             ),
           ),
         },
         {
           id: "matching",
-          label: "Matches this project",
+          label: t("matchesProject"),
           options: grouped.matching.map((option) => menuOption(option)),
         },
         {
           id: "other",
-          label: "Other properties",
+          label: t("otherProperties"),
           options: grouped.other.map((option) => menuOption(option)),
         },
       ]
@@ -180,19 +184,17 @@ export function ConnectDrawerOauthSelection({
       <div className="flex flex-col gap-3 p-3.5">
         <div>
           <p className="m-0 text-[12.5px] font-semibold text-fg">
-            {isGa4 ? "Select a Google Analytics 4 property" : "Select a verified property"}
+            {isGa4 ? t("selectGa4") : t("selectVerified")}
           </p>
           <p className="m-0 mt-1 text-[11.5px] leading-5 text-fg-muted">
-            {isGa4
-              ? "Choose a property returned by Google Analytics, or enter its numeric ID manually."
-              : "Domain properties cover all subdomains; URL prefixes cover one path."}
+            {isGa4 ? t("selectGa4Help") : t("selectGscHelp")}
           </p>
         </div>
         {propertyOptions.length > 0 ? (
           !manualEntry ? (
             <>
               <MenuSelect
-                ariaLabel={isGa4 ? "Google Analytics property" : "Search Console property"}
+                ariaLabel={isGa4 ? t("ga4Aria") : t("gscAria")}
                 onChange={(value) => {
                   onPropertyChange(value);
                   onPropertyErrorChange(null);
@@ -239,7 +241,7 @@ export function ConnectDrawerOauthSelection({
                   >
                     {onCancel ? (
                       <Button onClick={onCancel} type="button" variant="ghost">
-                        Cancel
+                        {t("cancel")}
                       </Button>
                     ) : null}
                     {footerAction}
@@ -249,12 +251,12 @@ export function ConnectDrawerOauthSelection({
                   className="w-auto"
                   disabled={!property || readOnly}
                   loading={pending}
-                  loadingLabel="Connecting…"
+                  loadingLabel={t("connecting")}
                   onClick={select}
                   type="button"
                   variant="primary"
                 >
-                  Use selected property
+                  {t("useSelectedProperty")}
                 </Button>
               </div>
             </>
@@ -268,16 +270,13 @@ export function ConnectDrawerOauthSelection({
               weight="regular"
             />
             <span>
-              {isGa4 && setup.error?.startsWith("Couldn't load your GA4 properties. ") ? (
+              {isGa4 && setup.failureClass ? (
                 <span className="flex flex-col gap-1">
-                  <span>Couldn't load your GA4 properties.</span>
-                  <span>{setup.error.slice("Couldn't load your GA4 properties. ".length)}</span>
+                  <span>{t("loadGa4Error")}</span>
+                  <span>{ga4DiscoveryFailure(setup.failureClass, t)}</span>
                 </span>
               ) : (
-                (setup.error ??
-                (isGa4
-                  ? "This Google account returned no Google Analytics 4 properties. Enter the numeric Property ID manually or use a different account."
-                  : "This Google account has no verified Search Console properties. Verify a property or connect a different account."))
+                (setup.error ?? (isGa4 ? t("emptyGa4") : t("emptyGsc")))
               )}
             </span>
           </div>

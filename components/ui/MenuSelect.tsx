@@ -18,6 +18,7 @@ import { track } from "@/lib/analytics/client";
 import { type AnalyticsControlId, analyticsControlModule } from "@/lib/analytics/controls";
 import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { useTranslations } from "next-intl";
 import type { CSSProperties } from "react";
 import { type ReactNode, useCallback, useRef, useState } from "react";
 import { Tooltip } from "./Tooltip";
@@ -78,7 +79,7 @@ export function MenuSelect({
   onSearchChange,
   pinCaret = true,
   searchHint,
-  searchPlaceholder = "Search...",
+  searchPlaceholder,
   searchable = false,
   selectedContent,
   size = "toolbar",
@@ -89,6 +90,7 @@ export function MenuSelect({
   value,
   ...input
 }: Readonly<MenuSelectProps>) {
+  const t = useTranslations("shared.controls.menuSelect");
   const [search, setSearch] = useState("");
   const contentRef = useRef<HTMLDivElement | null>(null);
   const { anchorEl, closeMenu, handleExited, open, openMenu } = useMenuExitLifecycle(() =>
@@ -127,7 +129,8 @@ export function MenuSelect({
     isGrouped && input.groups.some((group) => group.searchOnly && group.options.length > 0);
   const searchHelp = search.trim()
     ? undefined
-    : (searchHint ?? (hasHiddenOptions ? "More options available. Type to search." : undefined));
+    : (searchHint ?? (hasHiddenOptions ? t("moreOptionsHint") : undefined));
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t("searchPlaceholder");
 
   const minimumMenuWidth =
     menuWidth ??
@@ -243,13 +246,15 @@ export function MenuSelect({
           <MenuSearchField
             hint={searchHelp}
             onChange={changeSearch}
-            placeholder={searchPlaceholder}
+            placeholder={resolvedSearchPlaceholder}
             value={search}
           />
         ) : null}
         {!hasResults && (search.trim() || emptyMessage || !hasHiddenOptions || !searchable) ? (
           <div className="px-2 py-2 text-[12px] text-fg-muted">
-            {search.trim() ? (noResultsMessage ?? "No results") : (emptyMessage ?? "No results")}
+            {search.trim()
+              ? (noResultsMessage ?? t("noResults"))
+              : (emptyMessage ?? t("noResults"))}
           </div>
         ) : null}
         {isGrouped

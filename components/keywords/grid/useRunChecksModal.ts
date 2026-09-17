@@ -1,20 +1,22 @@
 "use client";
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
-import { actionErrorMessage, type KeywordDetailActions } from "@/components/keywords/action-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import type { KeywordDetailActions } from "@/components/keywords/action-utils";
 import {
-  keywordRunCheckBlockMessage,
   keywordRunCheckId,
   keywordRunCheckOutcome,
 } from "@/components/keywords/keyword-run-check-result";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import type { RankCheckBatchPollAction } from "@/components/keywords/use-rank-check-batch-poll";
 import { useRankCheckBatchProgress } from "@/components/keywords/use-rank-check-batch-progress";
 import type { GetRankCheckStatusesResult } from "@/lib/actions/rank-check-status";
 import { type CostRateInfo, runCostCents } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { neutralRankCheckFailurePresentation } from "@/lib/rank-check/failure-presentation";
+import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
 import { runCheckNowSchema } from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { mapWithConcurrency } from "./bounded-dispatch";
 import type { RunChecksFlow } from "./RunChecksConfirmationModal";
@@ -31,18 +33,38 @@ type Options = {
   runCheckNowAction?: KeywordDetailActions["runCheckNowAction"];
 };
 
-function terminalFailure(result: GetRankCheckStatusesResult) {
+type RunConfirmationMessages = ReturnType<
+  typeof useTranslations<"projectRankTracker.keywordImport.management.runConfirmation">
+>;
+
+function blockMessage(code: string | null, t: RunConfirmationMessages) {
+  if (code === "budget_exhausted") return t("budgetExhausted");
+  if (code === "check_in_progress") return t("checkInProgress");
+  if (code === "sample_project") return t("sampleProject");
+  return t("startFailed");
+}
+
+function terminalFailure(result: GetRankCheckStatusesResult, t: RunConfirmationMessages) {
   if (result.status === "deferred") {
-    const presentation = neutralRankCheckFailurePresentation("rank_check_deferred");
     return {
-      code: presentation.code,
-      message: presentation.message,
+      code: "rank_check_deferred",
+      message: t("deferred"),
       rankCheckId: null as string | null,
     };
   }
+  if (result.errorCode === "not_found") {
+    return {
+      code: result.errorCode,
+      message: t("runUnavailable"),
+      rankCheckId: null as string | null,
+    };
+  }
+  // Legacy billing rows need their stored detail to recover the durable restriction code
+  // before localized UI copy replaces that untrusted provider detail.
+  const providerCode = providerFailurePresentation(result.errorCode, result.error).code;
   return {
-    code: result.errorCode,
-    message: result.error ?? "The rank check failed.",
+    code: providerCode ?? result.errorCode,
+    message: t("runFailed"),
     rankCheckId: null as string | null,
   };
 }
@@ -56,6 +78,8 @@ export function useRunChecksModal({
   runCheckNowAction,
 }: Options) {
   const { addSpend } = useSessionSpend();
+  const sharedErrors = useSharedErrorMessages();
+  const t = useTranslations("projectRankTracker.keywordImport.management.runConfirmation");
   const [flow, setFlow] = useState<RunChecksFlow | null>(null);
   const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(() => new Set());
   const [activeRankCheckIds, setActiveRankCheckIds] = useState<string[]>([]);
@@ -102,7 +126,7 @@ export function useRunChecksModal({
       if (result.status === "rejected") {
         failures.push({
           code: null,
-          message: actionErrorMessage(result.reason),
+          message: presentSafeActionError(result.reason, sharedErrors, t("startFailed")),
           rankCheckId: null,
         });
         continue;
@@ -114,9 +138,11 @@ export function useRunChecksModal({
             "code" in (result.value as object)
               ? String((result.value as { code: unknown }).code)
               : null,
-          message: keywordRunCheckBlockMessage(
-            result.value,
-            "The rank check could not be started.",
+          message: blockMessage(
+            "code" in (result.value as object)
+              ? String((result.value as { code: unknown }).code)
+              : null,
+            t,
           ),
           rankCheckId: null,
         });
@@ -133,7 +159,7 @@ export function useRunChecksModal({
       else
         failures.push({
           code: null,
-          message: "The rank check could not be started.",
+          message: t("startFailed"),
           rankCheckId: null,
         });
     }
@@ -165,7 +191,10 @@ export function useRunChecksModal({
       const failures =
         result.status === "completed"
           ? previous.failures
-          : [...previous.failures, { ...terminalFailure(result), rankCheckId: result.rankCheckId }];
+          : [
+              ...previous.failures,
+              { ...terminalFailure(result, t), rankCheckId: result.rankCheckId },
+            ];
       const step = rankCheckIds.length > 0 ? "running" : failures.length > 0 ? "failed" : "success";
       return { ...previous, completed, failures, rankCheckIds, step };
     });

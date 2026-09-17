@@ -1,7 +1,11 @@
 "use client";
 
 import { WorkspaceTile } from "@/components/shell/WorkspaceTile";
-import { truncateProjectName, workspaceRowMeta } from "@/components/shell/workspace-labels";
+import {
+  truncateProjectName,
+  type WorkspaceLabelFormatter,
+  workspaceRowMeta,
+} from "@/components/shell/workspace-labels";
 import { MenuItem } from "@/components/ui/MenuItem";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";
@@ -9,6 +13,7 @@ import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { menuItemRowHoverStyle } from "@/lib/ui/menu-item-row-styles";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 /** Shared by workspace rows and the settings/create actions below the separator. */
 export const MENU_ROW_STYLE = {
@@ -34,6 +39,12 @@ export type WorkspaceRowProps = {
 };
 
 export function WorkspaceRow({ workspace, active, onSelect }: Readonly<WorkspaceRowProps>) {
+  const t = useTranslations("shell.workspace");
+  const labels: WorkspaceLabelFormatter = {
+    keywordCount: (count) => t("keywordCount", { count }),
+    newProject: () => t("newProject"),
+    noData: (count) => t("noData", { count }),
+  };
   return (
     <MenuItem
       aria-current={active ? "true" : undefined}
@@ -48,11 +59,13 @@ export function WorkspaceRow({ workspace, active, onSelect }: Readonly<Workspace
           <span className="truncate">{truncateProjectName(workspace.name)}</span>
           {workspace.isSample ? (
             <span className="rounded-full border border-border px-1.5 py-px text-[9px] uppercase text-fg-muted">
-              Sample
+              {t("sample")}
             </span>
           ) : null}
         </span>
-        <span className="mt-px block text-[10px] text-fg-muted">{workspaceRowMeta(workspace)}</span>
+        <span className="mt-px block text-[10px] text-fg-muted">
+          {workspaceRowMeta(workspace, labels)}
+        </span>
       </span>
       {/* Kept in the DOM on every row and toggled with visibility, so opening the menu never
           relayouts the rows. --accent-solid, not --accent: the check is a non-text indicator

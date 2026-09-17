@@ -14,7 +14,7 @@ describe("keywordExportTarget", () => {
       pageSize: 25 as const,
     };
     const target = keywordExportTarget({
-      filterChips: [{ key: "wrongUrl", label: "Wrong URL ranking" }],
+      filterChips: [{ key: "wrongUrl" }],
       filteredRows: [row("kw_current_page")],
       flatServerQuery: query,
       matchedTargetCount: 31,
@@ -35,7 +35,7 @@ describe("keywordExportTarget", () => {
     });
     expect(selected.selection).toEqual({ keywordIds: ["kw_selected"], mode: "selected" });
     const grouped = keywordExportTarget({
-      filterChips: [{ key: "contains", label: "Contains" }],
+      filterChips: [{ key: "contains" }],
       filteredRows: [row("kw_visible")],
       rows: [row("kw_visible"), row("kw_hidden")],
       searchValue: "",

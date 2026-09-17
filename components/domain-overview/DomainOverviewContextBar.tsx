@@ -4,9 +4,9 @@ import {
 } from "@/components/demo-research/StoredResultFreshness";
 import type { DateFormat } from "@/lib/dates/format";
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
-import { relativePast } from "@/lib/format/relative-time";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { sourceDateLabel } from "./domain-overview-metrics";
+import { useTranslations } from "next-intl";
+import { relativePastLabel, sourceDateLabel } from "./domain-overview-metrics";
 import { cacheHoursRemaining } from "./domain-overview-workspace-model";
 
 type DomainOverviewContextBarProps = {
@@ -21,6 +21,7 @@ export function DomainOverviewContextBar({
   report,
   storedFreshness,
 }: Readonly<DomainOverviewContextBarProps>) {
+  const t = useTranslations("projectDomainOverview.workspace.ui");
   const now = new Date();
   const cacheHours = report.cachedUntil ? cacheHoursRemaining(report.cachedUntil, now) : 0;
 
@@ -30,17 +31,21 @@ export function DomainOverviewContextBar({
       <span aria-hidden className="opacity-50">
         ·
       </span>
-      <span>index snapshot {sourceDateLabel(report.sourceSnapshotAt, dateFormat)}</span>
+      <span>
+        {t("providerSnapshot", { date: sourceDateLabel(report.sourceSnapshotAt, dateFormat, t) })}
+      </span>
       <span aria-hidden className="opacity-50">
         ·
       </span>
-      <span>fetched {relativePast(new Date(report.fetchedAt), now)}</span>
+      <span>
+        {t("fetched", { relative: relativePastLabel(new Date(report.fetchedAt), now, t) })}
+      </span>
       {storedFreshness ? (
         <StoredResultFreshness {...storedFreshness} />
       ) : (
         <span className="ml-0.5 inline-flex items-center gap-1 rounded-full border border-green/40 bg-green/10 px-2 py-0.5 text-[10.5px] font-semibold text-green-text">
           <CheckCircle aria-hidden size={11} weight="regular" />
-          cached, free for {cacheHours}h
+          {t("cacheAvailable", { hours: cacheHours })}
         </span>
       )}
     </div>

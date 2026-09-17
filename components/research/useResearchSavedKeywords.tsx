@@ -5,6 +5,7 @@ import type { removeSavedKeywords, saveKeywords } from "@/lib/actions/saved-keyw
 import { rankTrackerTabPath } from "@/lib/routing/app-path";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   type ResearchSaveDraft,
   researchKeywordIdentity,
@@ -24,11 +25,8 @@ function SavedToastMessage({
   count,
   projectRef,
 }: Readonly<{ alreadySaved: boolean; count: number; projectRef: string }>) {
-  const label = alreadySaved
-    ? count === 1
-      ? "Keyword already saved"
-      : `${count} keywords already saved`
-    : `Saved ${count} ${count === 1 ? "keyword" : "keywords"}`;
+  const t = useTranslations("projectResearch.saved");
+  const label = alreadySaved ? t("alreadySaved", { count }) : t("savedCount", { count });
   return (
     <>
       {label} /{" "}
@@ -36,7 +34,7 @@ function SavedToastMessage({
         className="font-semibold hover:underline"
         href={rankTrackerTabPath(projectRef, "saved")}
       >
-        View in Keywords / Saved
+        {t("viewSaved")}
       </Link>
     </>
   );

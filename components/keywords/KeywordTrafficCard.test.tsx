@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { KeywordTrafficCard } from "./KeywordTrafficCard";
 
@@ -26,6 +27,21 @@ describe("KeywordTrafficCard", () => {
     visitors: null,
     windowDays: 28,
   };
+
+  it("is an explicit client island beneath the actual detail route boundary", () => {
+    const source = readFileSync(
+      resolve(process.cwd(), "components/keywords/KeywordTrafficCard.tsx"),
+      "utf8",
+    );
+    const route = readFileSync(
+      resolve(process.cwd(), "app/(regional)/app/(workspace)/[project]/rank-tracker/[id]/page.tsx"),
+      "utf8",
+    );
+
+    expect(source).toMatch(/^"use client";/u);
+    expect(route).toContain("<KeywordTrafficCard");
+    expect(route).toContain("<KeywordManagementMessagesBoundary");
+  });
 
   it("keeps Search Console-only data separate from landing page performance", () => {
     const { rerender } = render(
@@ -142,3 +158,6 @@ describe("KeywordTrafficCard", () => {
     expect(screen.getByText("Pageviews")).toBeInTheDocument();
   });
 });
+
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";

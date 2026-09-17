@@ -1,0 +1,70 @@
+{
+  "setup": {
+    "account": {
+      "description": "This instance has no accounts yet. Create the administrator account to finish setting it up.",
+      "email": "Email address",
+      "name": "Your name",
+      "notice": "The first account becomes the instance administrator. Everyone else signs in normally after setup.",
+      "sendCode": "Continue",
+      "sendingCode": "Sending code...",
+      "title": "Welcome to bisibility"
+    },
+    "errors": {
+      "alreadyCompleted": "Administrator setup is already complete. Sign in to continue.",
+      "complete": "We could not finish setup. Try again.",
+      "expiredCode": "That code is incorrect or expired. Request a new code and try again.",
+      "requestCode": "We could not send a code. Check your server email configuration and try again."
+    },
+    "frame": {
+      "version": "self-hosted · v{version}"
+    },
+    "metadata": {
+      "description": "Create the administrator account for this bisibility installation.",
+      "title": "Set up bisibility"
+    },
+    "noMailer": {
+      "codeLog": "[auth] sign-in OTP for {email}: ******",
+      "description": "Email delivery isn't configured yet, so we printed your code in the server logs. Reading it there confirms you control this server.",
+      "title": "Grab the code from your logs"
+    },
+    "recovery": {
+      "complete": "Complete setup",
+      "completing": "Completing setup"
+    },
+    "status": {
+      "administratorExists": "This instance already has an administrator. If you need admin access, ask them - or a server operator can reassign the role from the command line.",
+      "complete": "Setup is complete",
+      "finish": "Finish administrator setup",
+      "goToApp": "Go to the app",
+      "pending": "This instance does not have an administrator. Your signed-in account can complete setup now.",
+      "switchAccount": "Switch account",
+      "switchAccountAria": "Sign out and switch account"
+    },
+    "stepper": {
+      "label": "Instance setup",
+      "progress": "Setup progress"
+    },
+    "success": {
+      "adminPanel": "Open the admin panel",
+      "continue": "Go to your project",
+      "description": "Setup is complete. This instance is yours to run - connect a data provider next and add your first keywords.",
+      "emailDescription": "Sign-in codes for other users need a working email provider - add one to your server configuration before inviting anyone.",
+      "emailTitle": "Next: configure email delivery.",
+      "title": "You're the administrator"
+    },
+    "verify": {
+      "changeEmail": "Use a different email",
+      "description": "We sent a 6-digit code to <recipient>{email}</recipient>. Enter it to verify the address.",
+      "resend": "Resend code",
+      "submit": "Verify and create account",
+      "submitting": "Creating administrator account...",
+      "title": "Check your inbox"
+    },
+    "validation": {
+      "email": "Enter a valid email address.",
+      "nameLong": "Keep your name under 100 characters.",
+      "nameRequired": "Enter your name.",
+      "otp": "Enter the 6-digit code."
+    }
+  }
+}

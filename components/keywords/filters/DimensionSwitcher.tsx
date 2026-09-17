@@ -13,6 +13,7 @@ import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/Caret
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 
 export type DimensionKind = "device" | "engine" | "location";
@@ -45,11 +46,27 @@ const DIMENSION_VALUES: Record<DimensionKind, string[]> = {
   location: [],
 };
 
-const DIMENSION_META: Record<DimensionKind, { lower: boolean; name: string; noun: string }> = {
-  device: { lower: true, name: "Device", noun: "devices" },
-  engine: { lower: false, name: "Search engine", noun: "search engines" },
-  location: { lower: false, name: "Location", noun: "locations" },
+const DIMENSION_META: Record<
+  DimensionKind,
+  {
+    lower: boolean;
+    nameKey: "dimensionDevice" | "dimensionEngine" | "dimensionLocation";
+    nounKey: "dimensionDeviceNoun" | "dimensionEngineNoun" | "dimensionLocationNoun";
+  }
+> = {
+  device: { lower: true, nameKey: "dimensionDevice", nounKey: "dimensionDeviceNoun" },
+  engine: { lower: false, nameKey: "dimensionEngine", nounKey: "dimensionEngineNoun" },
+  location: { lower: false, nameKey: "dimensionLocation", nounKey: "dimensionLocationNoun" },
 };
+
+function displayValue(
+  kind: DimensionKind,
+  value: string,
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordImport.management.grid">>,
+) {
+  if (kind !== "device") return value;
+  return value.toLowerCase() === "mobile" ? t("deviceMobile") : t("deviceDesktop");
+}
 
 function deviceIcon(value: string) {
   return value.toLowerCase() === "mobile" ? (
@@ -76,9 +93,12 @@ export function DimensionSwitcher({
   serpHref,
   value,
 }: Readonly<DimensionSwitcherProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const { readOnly } = useProjectWriteMode();
   const meta = DIMENSION_META[kind];
+  const dimensionName = t(meta.nameKey);
+  const dimensionNoun = t(meta.nounKey);
   const values = kind === "location" ? [value] : DIMENSION_VALUES[kind];
   const normalizedValue = meta.lower ? value.toLowerCase() : value;
   const addable = values.filter(
@@ -89,9 +109,12 @@ export function DimensionSwitcher({
   const open = Boolean(anchorEl);
   const menuId = `dimension-menu-${kind}`;
   const current = normalizedValue;
-  let suggestion = "another option";
-  if (addable[0]) suggestion = meta.lower ? addable[0].toLowerCase() : addable[0];
-  const explainer = `You're only tracking ${current}. Add ${suggestion} to compare rankings across ${meta.noun}.`;
+  const suggestion = addable[0] ? displayValue(kind, addable[0], t) : t("dimensionAnotherOption");
+  const explainer = t("dimensionSuggestion", {
+    current: displayValue(kind, current, t),
+    noun: dimensionNoun,
+    suggestion,
+  });
 
   function handleTrack(item: string) {
     setAnchorEl(null);
@@ -137,12 +160,12 @@ export function DimensionSwitcher({
         <span className="inline-flex items-center overflow-hidden rounded-full border border-border bg-bg-sunken">
           {guardedChip}
           <a
-            aria-label={`Open live Google results for ${value}`}
+            aria-label={t("dimensionOpenGoogle", { value: displayValue(kind, value, t) })}
             className="inline-flex items-center border-l border-border bg-bg-sunken p-1.5 text-fg-muted outline-none transition-colors hover:text-accent-text focus-visible:text-accent-text focus-visible:outline-none"
             href={serpHref}
             rel="noreferrer noopener"
             target="_blank"
-            title="Open live search results in a new tab"
+            title={t("dimensionOpenSearch")}
           >
             <ArrowUpRight size={12} weight="regular" />
           </a>
@@ -165,11 +188,11 @@ export function DimensionSwitcher({
           }}
         >
           <div className="px-3.5 pb-1 pt-2 font-sans tabular-nums text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
-            {meta.name}
+            {dimensionName}
           </div>
           <MenuItem
             aria-current="true"
-            aria-label={`${label}, currently shown`}
+            aria-label={t("dimensionCurrent", { label: displayValue(kind, label, t) })}
             onClick={() => setAnchorEl(null)}
             selected
             style={{
@@ -192,17 +215,17 @@ export function DimensionSwitcher({
           </MenuItem>
           <div aria-hidden className="mx-2 my-1 h-px bg-border" />
           <div className="px-3.5 pt-1 text-[11px] font-semibold text-fg">
-            Add a {meta.name.toLowerCase()}
+            {t("dimensionAddA", { name: dimensionName.toLowerCase() })}
           </div>
           <p className="m-0 px-3.5 pb-2 pt-1 text-[11.5px] leading-snug text-fg-muted">
             {explainer}
           </p>
           {addable.map((item) => (
             <MenuItem
-              aria-label={`Add ${item}`}
+              aria-label={t("dimensionAdd", { item: displayValue(kind, item, t) })}
               key={item}
               onClick={() => handleTrack(item)}
-              title={`Add ${item}`}
+              title={t("dimensionAdd", { item: displayValue(kind, item, t) })}
               style={{
                 borderRadius: UI_RADIUS_ROLES.control,
                 gap: 9,
@@ -219,11 +242,14 @@ export function DimensionSwitcher({
                   {deviceIcon(item)}
                 </span>
               ) : null}
-              <span className="min-w-0 flex-1 truncate text-[12.5px] text-fg-muted" title={item}>
-                {item}
+              <span
+                className="min-w-0 flex-1 truncate text-[12.5px] text-fg-muted"
+                title={displayValue(kind, item, t)}
+              >
+                {displayValue(kind, item, t)}
               </span>
               <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-accent px-2 py-0.5 text-[10.5px] font-semibold text-accent-text">
-                <span aria-hidden>+</span> Track
+                <span aria-hidden>+</span> {t("dimensionTrack")}
               </span>
             </MenuItem>
           ))}

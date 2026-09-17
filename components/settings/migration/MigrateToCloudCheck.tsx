@@ -1,11 +1,10 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { unwrapActionFailureResult } from "@/lib/actions/action-result";
 import { getCloudMigrationCompatibility, preflightMigrationTarget } from "@/lib/actions/cloud";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
@@ -13,6 +12,7 @@ import { CircleIcon as Circle } from "@phosphor-icons/react/dist/csr/Circle";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
   compatibilityBlockers,
@@ -42,9 +42,6 @@ type CheckStepProps = {
   projectId?: string;
 };
 
-const PREFLIGHT_AGAIN_HINT =
-  "Transfer runs the destination preflight again, so a target changed after this check is still rejected before import.";
-
 function isInvalidMigrationTarget(error: unknown) {
   return error instanceof Error && "code" in error && error.code === "invalid_migration_target";
 }
@@ -60,15 +57,16 @@ export function CheckStep({
   onCompatibilityChange,
   projectId,
 }: Readonly<CheckStepProps>) {
-  const dateFormat = useDateFormat();
+  const dateContext = useDateDisplay();
+  const t = useTranslations("projectSettingsMigration.check");
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  let checkLabel = "Run compatibility check";
-  if (busy) checkLabel = "Checking...";
-  else if (compatibility) checkLabel = "Refresh check";
-  let holdTitle = "Read-only mode is confirmed at the next step";
-  if (migrationHold) holdTitle = "Read-only mode is active";
-  else if (holdPending) holdTitle = "Enabling read-only mode";
+  const checkLabel = busy ? t("checking") : compatibility ? t("refresh") : t("run");
+  const holdTitle = migrationHold
+    ? t("holdActiveTitle")
+    : holdPending
+      ? t("holdEnablingTitle")
+      : t("holdPendingTitle");
 
   async function runCheck() {
     if (!(await form.trigger("targetOrigin"))) return;
@@ -100,11 +98,10 @@ export function CheckStep({
         target,
       });
     } catch (error) {
-      const nextMessage = actionErrorMessage(error, "Compatibility check failed.");
       if (isInvalidMigrationTarget(error)) {
-        form.setError("targetOrigin", { message: nextMessage, type: "server" });
+        form.setError("targetOrigin", { message: t("invalidTarget"), type: "server" });
       } else {
-        setMessage(nextMessage);
+        setMessage(t("failureFallback"));
       }
     } finally {
       setBusy(false);
@@ -113,11 +110,7 @@ export function CheckStep({
 
   return (
     <>
-      <StepHeading
-        body="Make sure the destination instance can accept this project before anything is paused or transferred."
-        hint={PREFLIGHT_AGAIN_HINT}
-        title="Check compatibility"
-      />
+      <StepHeading body={t("body")} hint={t("preflightHint")} title={t("title")} />
       <MigrationDestinationField
         destinationUnreachable={compatibility?.target.reachable === false}
         direction={direction}
@@ -127,16 +120,15 @@ export function CheckStep({
         {message ? (
           <StatusRow
             data={{
-              detail:
-                "The check itself didn't run - this is usually a network hiccup. Try again in a moment.",
-              status: "ERROR",
+              detail: t("failureDetail"),
+              status: t("failureStatus"),
               title: message,
               tone: "fail",
               variant: "status",
             }}
           />
         ) : null}
-        {(compatibility ? resultRows(compatibility, dateFormat) : pendingRows()).map((row) => (
+        {(compatibility ? resultRows(compatibility, dateContext, t) : pendingRows(t)).map((row) => (
           <StatusRow data={row} key={row.title} />
         ))}
       </div>
@@ -152,7 +144,7 @@ export function CheckStep({
           rel="noreferrer"
           target="_blank"
         >
-          Migration guide
+          {t("guide")}
           <ArrowUpRight aria-hidden size={13} weight="regular" />
         </a>
       </div>
@@ -160,10 +152,10 @@ export function CheckStep({
         <details className="mt-4 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
           <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12px] font-semibold text-fg-muted [&::-webkit-details-marker]:hidden">
             <CaretDown aria-hidden className="transition-transform" size={12} weight="regular" />
-            Technical details
+            {t("technical")}
           </summary>
           <div className="mt-2 flex flex-col gap-1">
-            {technicalDetails(compatibility).map((line) => (
+            {technicalDetails(compatibility, dateContext, t).map((line) => (
               <span
                 className="wrap-break-word font-sans tabular-nums text-[11px] text-fg-muted"
                 key={line}
@@ -183,9 +175,7 @@ export function CheckStep({
         />
         <span className="min-w-0 flex-1 text-[12.5px] leading-5 text-fg-muted">
           <span className="block font-semibold text-fg">{holdTitle}</span>
-          {migrationHold
-            ? "Writes and rank checks stay paused until you cancel the migration."
-            : "After all gates pass, Continue asks you to confirm pausing writes and rank checks before the transfer starts."}
+          {migrationHold ? t("holdActiveBody") : t("holdPendingBody")}
         </span>
       </div>
       {holdMessage ? <p className="m-0 mt-2.5 text-[12px] text-red-text">{holdMessage}</p> : null}

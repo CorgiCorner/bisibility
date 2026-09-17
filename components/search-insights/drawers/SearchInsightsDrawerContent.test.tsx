@@ -5,7 +5,8 @@ import {
   KEY_EVENTS_TIP,
   NEUTRAL_COPY,
 } from "@/components/search-insights/search-insights-copy";
-import { render, screen, within } from "@testing-library/react";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { storyPageDetail, storyQueryDetail } from "./drawer-story-fixtures";
 import { SearchInsightsDrawerContent } from "./SearchInsightsDrawerContent";
@@ -77,7 +78,7 @@ describe("SearchInsightsDrawerContent", () => {
 
     expect(screen.getAllByTitle("0 clicks")).toHaveLength(5);
     expect(screen.getAllByTitle("0 clicks")[0]).toHaveStyle({ height: "2%" });
-    expect(screen.getByTitle("1 clicks")).toHaveStyle({ height: "100%" });
+    expect(screen.getByTitle("1 click")).toHaveStyle({ height: "100%" });
   });
 
   it("keeps an empty query pivot separate from page privacy copy", () => {
@@ -89,7 +90,7 @@ describe("SearchInsightsDrawerContent", () => {
     expect(
       screen.queryByText(/Google hides low-volume query text for privacy/),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("0 page")).toBeInTheDocument();
+    expect(screen.getByText("0 pages")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Your page ranking for it" })).toBeInTheDocument();
   });
 

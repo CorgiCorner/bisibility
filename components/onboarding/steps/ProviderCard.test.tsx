@@ -1,4 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ProviderCard, type ProviderCardState } from "./ProviderCard";
 import { providerOptions } from "./StepConnectProvider.fields";
@@ -40,7 +41,7 @@ describe("onboarding ProviderCard", () => {
 
   it("discloses an affiliate destination beside, not inside, the credentials link", () => {
     renderCard("idle");
-    const link = screen.getByRole("link", { name: "Get API credentials ↗" });
+    const link = screen.getByRole("link", { name: "Get API credentials" });
     const suffix = screen.getByText("· affiliate link");
 
     expect(link).toHaveAttribute("href", provider.docsHref);
@@ -62,7 +63,7 @@ describe("onboarding ProviderCard", () => {
       />,
     );
 
-    const link = screen.getByRole("link", { name: "Get API credentials ↗" });
+    const link = screen.getByRole("link", { name: "Get API credentials" });
     expect(link).toHaveAttribute("href", providerOptions[1].docsHref);
     expect(link).toHaveAttribute("rel", "noreferrer");
     expect(link).not.toHaveAttribute("title");

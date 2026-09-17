@@ -1,47 +1,37 @@
-import {
-  SystemPage,
-  SystemPrimaryAction,
-  SystemSecondaryAction,
-  TerminalBlock,
-} from "@/components/marketing/system/SystemPage";
-import { deploymentMode } from "@/lib/deployment/deployment";
-import { appRootPath } from "@/lib/routing/app-path";
+import { EmergencyRecovery } from "@/components/i18n/EmergencyRecovery";
+import { loadCoreMessages } from "@/i18n/catalog-loader.server";
+import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
+import { EmergencyMessagesProvider } from "@/i18n/EmergencyMessagesProvider";
+import { resolvePathLocale } from "@/i18n/path-locale.server";
+import { createIntlTranslator } from "@/i18n/translator.server";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  alternates: { canonical: null },
-  robots: { follow: false, index: false },
-  title: "Page not found",
-};
+async function notFoundLocale() {
+  return (await resolvePathLocale()) ?? (await resolveRegionalDocumentLocale()).locale;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const runtime = await resolveRegionalDocumentLocale();
+  const locale = (await resolvePathLocale()) ?? runtime.locale;
+  const messages = await loadCoreMessages(locale, ["shared"]);
+  const t = createIntlTranslator(locale, messages, { timeZone: runtime.timeZone });
+  return {
+    alternates: { canonical: null },
+    robots: { follow: false, index: false },
+    title: t("shared.emergencyRecovery.notFound.title"),
+  };
+}
 
 // Rendered per-request so the secondary action reflects the runtime deployment mode:
 // the self-host build has no homepage - its root only redirects to the sign-in page.
 export const dynamic = "force-dynamic";
 
-export default function NotFound() {
-  const selfHost = deploymentMode() !== "cloud";
+export default async function NotFound() {
+  // A dead URL carrying an active locale prefix is served in that locale even with no cookie.
+  const locale = await notFoundLocale();
   return (
-    <SystemPage
-      actions={
-        <>
-          <SystemPrimaryAction href={appRootPath()}>Back to app</SystemPrimaryAction>
-          <SystemSecondaryAction href={selfHost ? "/login" : "/"}>
-            {selfHost ? "Go to sign in" : "Go to homepage"}
-          </SystemSecondaryAction>
-        </>
-      }
-      description="We tracked every URL we could find and this one didn't rank. It may have moved, or never existed."
-      kicker="404 - NOT FOUND"
-      statusLabel="HTTP 404"
-      terminal={
-        <TerminalBlock
-          note="try one of these instead"
-          path="/this-page"
-          routes={selfHost ? [appRootPath(), "/login"] : [appRootPath(), "/docs", "/"]}
-          status="404"
-        />
-      }
-      title="This page isn't in the index"
-    />
+    <EmergencyMessagesProvider initialLocale={locale}>
+      <EmergencyRecovery kind="notFound" />
+    </EmergencyMessagesProvider>
   );
 }

@@ -1,8 +1,9 @@
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { HeaderContextMarket } from "@/lib/markets/header-context";
 import { MARKET_SEARCH_THRESHOLD } from "@/lib/markets/header-context";
 import { appPath, asMarketRef, asProjectRef, marketPath } from "@/lib/routing/app-path";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MarketSwitcher } from "./MarketSwitcher";
@@ -114,7 +115,11 @@ describe("MarketSwitcher menu", () => {
     const options = within(dialog).getAllByRole("option");
 
     expect(partsOf(options[0])).toEqual({ count: "2", name: "All markets", pair: undefined });
-    expect(partsOf(options[1])).toEqual({ count: "12 kw", name: "United States", pair: "US-en" });
+    expect(partsOf(options[1])).toEqual({
+      count: "12 keywords",
+      name: "United States",
+      pair: "US-en",
+    });
     expect(partsOf(options[2])).toEqual({ count: "empty", name: "Spain", pair: "ES-es" });
     expect(options).toHaveLength(3);
     expect(options[1].querySelector('[data-country-flag="US"]')).toBeInTheDocument();

@@ -2,12 +2,21 @@ import { AdminAuditTable } from "@/components/admin/AdminAuditTable";
 import { AdminProviderUsageTable } from "@/components/admin/AdminProviderUsageTable";
 import { AdminAdministrationConsumptionTable } from "@/components/admin/admin-administration-tables";
 import { AdminDashboardOpsEventsTable } from "@/components/admin/admin-dashboard-tables";
+import { DateDisplayProvider, DateFormatProvider } from "@/components/dates/DateFormatProvider";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 import type { InstanceAdminAdministration } from "@/lib/queries/instance-admin-administration";
 import type { InstanceAdminAuditPage } from "@/lib/queries/instance-admin-audit";
+import instanceAdminMessages from "@/messages/core/en/instance-admin.json";
+import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
+import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
+
+const messages = mergeMessageCatalogs(sharedMessages, instanceAdminMessages);
 
 const auditEntries = [
   {
@@ -36,7 +45,7 @@ const providerUsage = [
     checks: 18,
     provider: "search",
     providerLabel: "Search provider",
-    rateBasis: "Recorded request units",
+    rateBasis: "production_plan",
     referenceCostCents: 156,
     referenceCostKnown: true,
   },
@@ -45,7 +54,7 @@ const providerUsage = [
     checks: 8,
     provider: "fallback",
     providerLabel: "Fallback provider",
-    rateBasis: "Live depth pricing",
+    rateBasis: "live_depth",
     referenceCostCents: 42,
     referenceCostKnown: true,
   },
@@ -58,7 +67,7 @@ const consumption = [
     projectId: "project_example",
     provider: "search",
     providerLabel: "Search provider",
-    rateBasis: "Recorded request units",
+    rateBasis: "production_plan",
     referenceCostCents: 612,
     referenceCostKnown: true,
     sharePercent: 61.2,
@@ -69,7 +78,7 @@ const consumption = [
     projectId: "project_secondary",
     provider: "fallback",
     providerLabel: "Fallback provider",
-    rateBasis: "Live depth pricing",
+    rateBasis: "live_depth",
     referenceCostCents: 388,
     referenceCostKnown: true,
     sharePercent: 38.8,
@@ -96,16 +105,42 @@ const opsEvents = [
 const meta = {
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-bg p-6 text-fg">
-        <div className="mx-auto max-w-5xl">
-          <Story />
-        </div>
-      </div>
+      <FeatureMessagesProvider locale="en" messages={messages} timeZone="UTC">
+        <DateFormatProvider value="month_first">
+          <DateDisplayProvider>
+            <div className="min-h-screen bg-bg p-6 text-fg">
+              <div className="mx-auto max-w-5xl">
+                <Story />
+              </div>
+            </div>
+          </DateDisplayProvider>
+        </DateFormatProvider>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
   title: "Admin/Tables",
 } satisfies Meta;
+
+function StoryTableCard({
+  children,
+  titleKey,
+}: Readonly<{ children: ReactNode; titleKey: "ops" | "providerUsage" | "topConsumption" }>) {
+  const t = useTranslations("instanceAdmin");
+  const title =
+    titleKey === "ops"
+      ? t("dashboard.ops.title")
+      : titleKey === "providerUsage"
+        ? t("providerUsage.tableLabel")
+        : t("administration.consumption.title");
+
+  return (
+    <Card size="lg">
+      <SectionTitle>{title}</SectionTitle>
+      {children}
+    </Card>
+  );
+}
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -116,31 +151,28 @@ export const AuditActivity: Story = {
 
 export const ProviderUsage: Story = {
   render: () => (
-    <Card size="lg">
-      <SectionTitle>SERP usage</SectionTitle>
+    <StoryTableCard titleKey="providerUsage">
       <AdminProviderUsageTable usage={providerUsage} />
-    </Card>
+    </StoryTableCard>
   ),
 };
 
 export const TopConsumption: Story = {
   render: () => (
-    <Card size="lg">
-      <SectionTitle>Top consumption</SectionTitle>
+    <StoryTableCard titleKey="topConsumption">
       <div className="mt-3 [&>[role=table]]:border-0">
         <AdminAdministrationConsumptionTable rows={consumption} />
       </div>
-    </Card>
+    </StoryTableCard>
   ),
 };
 
 export const OperationalEvents: Story = {
   render: () => (
-    <Card size="lg">
-      <SectionTitle>Ops events</SectionTitle>
+    <StoryTableCard titleKey="ops">
       <div className="mt-3 [&>[role=table]]:border-0">
-        <AdminDashboardOpsEventsTable dateFormat="day_first" events={opsEvents} />
+        <AdminDashboardOpsEventsTable events={opsEvents} />
       </div>
-    </Card>
+    </StoryTableCard>
   ),
 };

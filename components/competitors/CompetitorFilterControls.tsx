@@ -6,6 +6,7 @@ import { competitorPositionBuckets } from "@/lib/competitors/competitor-market-m
 import type { CompetitorFilter } from "@/lib/competitors/types";
 import { TagIcon as Tag } from "@phosphor-icons/react/dist/csr/Tag";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
 
 type CompetitorFilterControlsProps = {
   filter: CompetitorFilter;
@@ -21,8 +22,14 @@ export function CompetitorFilterControls({
   onFilterChange,
   tags,
 }: Readonly<CompetitorFilterControlsProps>) {
+  const t = useTranslations("projectCompetitors.ui");
+  const positionLabels = {
+    all: t("positionAllKeywords"),
+    top3: t("positionTop3"),
+    top10: t("positionTop10"),
+  } satisfies Record<CompetitorFilter["position"], string>;
   const tagOptions = [
-    { label: "All tags", value: "" },
+    { label: t("allTags"), value: "" },
     ...tags.map((tag) => ({ label: tag, value: tag })),
   ];
 
@@ -38,14 +45,14 @@ export function CompetitorFilterControls({
             onClick={() => onFilterChange({ ...filter, position: bucket.id })}
             type="button"
           >
-            {bucket.label}
+            {positionLabels[bucket.id]}
           </button>
         );
       })}
       {tags.length > 0 ? (
         <span className="inline-flex items-center gap-1">
           <MenuSelect
-            ariaLabel="Filter by tag"
+            ariaLabel={t("filterByTag")}
             leadingIcon={<Tag weight="regular" aria-hidden size={12} />}
             onChange={(value) => onFilterChange({ ...filter, tag: value || null })}
             options={tagOptions}
@@ -53,7 +60,7 @@ export function CompetitorFilterControls({
           />
           {filter.tag ? (
             <button
-              aria-label="Remove tag filter"
+              aria-label={t("removeTagFilter")}
               className="grid h-7 w-7 place-items-center rounded-control border border-border-control bg-bg-elev text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
               onClick={() => onFilterChange({ ...filter, tag: null })}
               type="button"

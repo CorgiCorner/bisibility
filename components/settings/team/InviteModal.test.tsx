@@ -1,7 +1,26 @@
 import { InviteModal } from "@/components/settings/team/InviteModal";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  renderWithTeamSettingsMessages as render,
+  renderWithFeatureMessages,
+  teamSettingsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+
+const nonEnglishInviteMessages = {
+  ...teamSettingsFeatureTestMessages,
+  projectSettingsTeam: {
+    ...teamSettingsFeatureTestMessages.projectSettingsTeam,
+    invite: {
+      ...teamSettingsFeatureTestMessages.projectSettingsTeam.invite,
+      email: "Adres e-mail",
+      emailInvalid: "Wpisz adres e-mail współpracownika.",
+      send: "Wyślij zaproszenie",
+      title: "Zaproś współpracownika",
+    },
+  },
+};
 
 function renderInviteModal(inviteMember = vi.fn()) {
   render(
@@ -34,6 +53,28 @@ describe("InviteModal", () => {
     expect(error).toHaveAttribute("id", "invite-email-error");
     expect(email).toHaveAttribute("aria-describedby", "invite-email-error");
     expect(email).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("uses a non-English fixture for validation while preserving the invite payload", async () => {
+    const inviteMember = vi.fn();
+    renderWithFeatureMessages(
+      <InviteModal
+        domain="Acme project"
+        inviteMember={inviteMember}
+        onClose={vi.fn()}
+        open
+        projectId="project_1"
+      />,
+      { messages: nonEnglishInviteMessages },
+    );
+
+    expect(screen.getByRole("heading", { name: /Zaproś współpracownika/ })).toBeVisible();
+    const email = screen.getByLabelText("Adres e-mail");
+    await userEvent.type(email, "not-an-email");
+    await userEvent.tab();
+
+    expect(await screen.findByText("Wpisz adres e-mail współpracownika.")).toBeVisible();
+    expect(inviteMember).not.toHaveBeenCalled();
   });
 
   it("names the invited address in the success confirmation", async () => {

@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { MarketEditSheet } from "./MarketEditSheet";
@@ -79,5 +80,26 @@ describe("MarketEditSheet interaction contract", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => expect(onSave).not.toHaveBeenCalled());
+  });
+
+  it("renders the localized required market-name error before saving", async () => {
+    const onSave = vi.fn(async () => undefined);
+    render(
+      <MarketEditSheet
+        canEdit
+        market={market}
+        onClose={vi.fn()}
+        onSave={onSave}
+        projectId="prj_abcdefghijklmnopqrstuvwx"
+      />,
+    );
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Market name" }), {
+      target: { value: "" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(await screen.findByText("Enter a market name.")).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
   });
 });

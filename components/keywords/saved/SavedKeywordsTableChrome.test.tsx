@@ -2,8 +2,9 @@ import {
   CommandRegistryProvider,
   useRegisteredCommands,
 } from "@/components/shell/command-registry";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SavedKeywordsToolbar } from "./SavedKeywordsTableChrome";
 

@@ -1,0 +1,52 @@
+{
+  "projectSettingsGeneral": {
+    "domainChange": {
+      "afterConfirmation": "確認後の動作",
+      "cancel": "キャンセル",
+      "competitorHistory": "競合ドメインの履歴は、各チェックの実行時に使用されたドメインに紐づいたままです。",
+      "confirmationFirst": "最初のドメインを設定するには空欄のまま",
+      "confirmationFirstError": "このプロジェクトの最初のドメインを設定するには、確認欄を空欄のままにしてください。",
+      "confirmationMustMatch": "確認欄は {domain} と一致する必要があります。",
+      "confirmationWithDomain": "確認するには {domain} と入力",
+      "confirm": "ドメイン変更を確認",
+      "confirming": "確認中",
+      "description": "このプロジェクトの該当結果を判定するために使うドメインを変更します。",
+      "error": "ドメインを変更できませんでした。",
+      "futureChecks": "既存のチェックは元の結果を保持します。今後のチェックは新しいドメインとそのサブドメインでプロジェクトの該当結果を判定します。",
+      "newDomain": "新しいドメイン",
+      "title": "新しいプロジェクトドメインの確認"
+    },
+    "projectDetails": {
+      "changeDomain": "ドメインを変更",
+      "copyProjectId": "プロジェクト ID をコピー",
+      "description": "このプロジェクトの名前、ドメイン、ID です。",
+      "domain": "ドメイン",
+      "domainHelp": "チェックでは、このドメインが含まれる結果をこのプロジェクトのものとして扱います。変更には確認が必要です。",
+      "name": "プロジェクト名",
+      "nameRequired": "プロジェクト名を入力してください。",
+      "nameTooLong": "プロジェクト名は120文字までです。",
+      "projectId": "プロジェクト ID",
+      "saveError": "プロジェクトの詳細を保存できませんでした。",
+      "title": "プロジェクトの詳細"
+    },
+    "validation": {
+      "confirmationTooLong": "確認欄は253文字までです。",
+      "domainTooLong": "ドメインは253文字までです。",
+      "invalidDomain": "example.com のようなドメインを入力してください。"
+    },
+    "tags": {
+      "cancel": "キャンセル",
+      "description": "タグはキーワードとページをグループ化します。保存済みビューでタグによる絞り込みができます。",
+      "duplicate": "{name} はすでに存在します。",
+      "remove": "タグを削除",
+      "removeError": "タグを削除できませんでした。",
+      "removeTitle": "{name} を削除しますか？",
+      "title": "タグ",
+      "usageBothManyKeywords": "{keywordCount, number}件のキーワードと{segmentCount, plural, other {#件のセグメントで使用されています。}}",
+      "usageBothOneKeyword": "{segmentCount, plural, other {1件のキーワードと#件のセグメントで使用されています。}}",
+      "usageKeywordOnly": "{count, plural, other {#件のキーワードで使用されています。}}",
+      "usageSegmentOnly": "{count, plural, other {#件のセグメントで使用されています。}}",
+      "writeError": "タグを追加できませんでした。"
+    }
+  }
+}

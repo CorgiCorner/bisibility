@@ -2,6 +2,7 @@ import type { StoredResultFreshness } from "@/components/demo-research/StoredRes
 import type { BacklinksOutcome, BacklinksSnapshot } from "@/lib/backlinks/types";
 import { backlinksRates, estimatedFeatureCostCents } from "@/lib/cost-estimate/provider-rates";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import { useTranslations } from "next-intl";
 import { BacklinksSnapshotMeta } from "./BacklinksSnapshotMeta";
 import { BacklinksTable, type BacklinksTableProps } from "./BacklinksTable";
 import { SummaryCards } from "./SummaryCards";
@@ -29,6 +30,7 @@ type BacklinksResultsProps = {
 };
 
 export function BacklinksResults(props: Readonly<BacklinksResultsProps>) {
+  const t = useTranslations("projectBacklinks.workspace.snapshot");
   const rowsEstimateCents = props.readOnly
     ? undefined
     : estimatedFeatureCostCents(
@@ -39,7 +41,7 @@ export function BacklinksResults(props: Readonly<BacklinksResultsProps>) {
       );
 
   return (
-    <section aria-label="Backlinks results" className="grid min-w-0 gap-4">
+    <section aria-label={t("resultsAria")} className="grid min-w-0 gap-4">
       <BacklinksSnapshotMeta {...props} />
       <SummaryCards history={props.snapshot.history} summary={props.snapshot.summary} />
       <BacklinksTable

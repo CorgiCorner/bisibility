@@ -15,13 +15,14 @@ import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/csr/GithubLogo";
 import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/csr/GoogleLogo";
+import { useTranslations } from "next-intl";
 import type { ReactNode, SyntheticEvent } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import { EmailSignInUnavailable } from "./EmailSignInUnavailable";
 
 const oauthProviders = [
-  { icon: GithubLogo, label: "Continue with GitHub", provider: "github" },
-  { icon: GoogleLogo, label: "Continue with Google", provider: "google" },
+  { icon: GithubLogo, provider: "github" },
+  { icon: GoogleLogo, provider: "google" },
 ] as const;
 
 export type OAuthProvider = (typeof oauthProviders)[number]["provider"];
@@ -51,7 +52,7 @@ type LoginEmailStepProps = {
   verificationReady?: boolean;
 };
 
-function ConsentLink({ href, label }: Readonly<{ href: string; label: string }>) {
+function ConsentLink({ children, href }: Readonly<{ children: ReactNode; href: string }>) {
   const external = /^https?:\/\//i.test(href);
 
   return (
@@ -60,7 +61,7 @@ function ConsentLink({ href, label }: Readonly<{ href: string; label: string }>)
       href={href}
       {...(external ? { rel: "noreferrer", target: "_blank" } : {})}
     >
-      {label}
+      {children}
     </a>
   );
 }
@@ -74,34 +75,30 @@ function LegalConsent({
   links,
   includeBetaEmails = false,
 }: Readonly<{ links: LegalConsentLinks | null; includeBetaEmails?: boolean }>) {
+  const t = useTranslations("auth.login.legal");
   if (!links || (!links.termsHref && !links.privacyHref)) {
     return null;
   }
-
-  const betaEmails = includeBetaEmails ? ", and to beta emails (updates, incidents, pricing)" : "";
+  const { privacyHref, termsHref } = links;
 
   return (
     <p className="mt-5.5 mb-0 text-center text-xs leading-[1.6] text-fg-muted">
-      {links.termsHref && links.privacyHref ? (
-        <>
-          By continuing you agree to the <ConsentLink href={links.termsHref} label="Terms" /> and{" "}
-          <ConsentLink href={links.privacyHref} label="Privacy Policy" />
-          {betaEmails}.
-        </>
-      ) : null}
-      {links.termsHref && !links.privacyHref ? (
-        <>
-          By continuing you agree to the <ConsentLink href={links.termsHref} label="Terms" />
-          {betaEmails}.
-        </>
-      ) : null}
-      {!links.termsHref && links.privacyHref ? (
-        <>
-          By continuing you agree to the{" "}
-          <ConsentLink href={links.privacyHref} label="Privacy Policy" />
-          {betaEmails}.
-        </>
-      ) : null}
+      {termsHref && privacyHref
+        ? t.rich(includeBetaEmails ? "withBetaEmails" : "withTermsAndPrivacy", {
+            privacy: (chunks) => <ConsentLink href={privacyHref}>{chunks}</ConsentLink>,
+            terms: (chunks) => <ConsentLink href={termsHref}>{chunks}</ConsentLink>,
+          })
+        : null}
+      {termsHref && !privacyHref
+        ? t.rich(includeBetaEmails ? "withTermsAndBetaEmails" : "withTerms", {
+            terms: (chunks) => <ConsentLink href={termsHref}>{chunks}</ConsentLink>,
+          })
+        : null}
+      {!termsHref && privacyHref
+        ? t.rich(includeBetaEmails ? "withPrivacyAndBetaEmails" : "withPrivacy", {
+            privacy: (chunks) => <ConsentLink href={privacyHref}>{chunks}</ConsentLink>,
+          })
+        : null}
     </p>
   );
 }
@@ -128,6 +125,7 @@ export function LoginEmailStep({
   socialProvider,
   verificationReady = true,
 }: Readonly<LoginEmailStepProps>) {
+  const t = useTranslations("auth");
   const enabledOAuthProviders = getEnabledOAuthProviders(enabledProviders);
   const hasOAuthSection = enabledOAuthProviders.length > 0;
   const googleFull =
@@ -152,18 +150,15 @@ export function LoginEmailStep({
   return (
     <div className="w-full max-w-[380px]">
       <h1 className="m-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
-        Sign in or create an account
+        {t("login.form.heading")}
       </h1>
-      <p className="mt-2 mb-0 text-[14px] text-fg-muted">
-        Use your work email. We&apos;ll send a one-time code, no password to remember. Make sure you
-        can open that inbox.
-      </p>
+      <p className="mt-2 mb-0 text-[14px] text-fg-muted">{t("login.form.description")}</p>
       <DataResidencyNote className="mt-4" message={dataResidencyMessage} />
 
       {hasOAuthSection ? (
         <>
           <div className="mt-[26px] flex flex-col gap-[9px]">
-            {enabledOAuthProviders.map(({ icon: Icon, label, provider }) => {
+            {enabledOAuthProviders.map(({ icon: Icon, provider }) => {
               const isDisabled = socialProvider !== null;
               const button = (
                 <Button
@@ -185,7 +180,7 @@ export function LoginEmailStep({
                   variant="secondary"
                   {...(provider === "google" && capacity ? { fullWidth: true } : {})}
                 >
-                  {label}
+                  {t(`login.oauth.${provider}`)}
                 </Button>
               );
 
@@ -201,9 +196,12 @@ export function LoginEmailStep({
                   ) : (
                     <CapacityMeter
                       compact
-                      label={`${capacity.googleSpots.left} of ${capacity.googleSpots.cap} Google sign-up spots left`}
+                      label={t("capacity.signUpSpotsRemaining", {
+                        cap: capacity.googleSpots.cap,
+                        left: capacity.googleSpots.left,
+                      })}
                       meter={capacity.googleSpots}
-                      tooltip="Google sign-in is limited while Google reviews our verification request."
+                      tooltip={t("capacity.signUpSpotsTooltip")}
                     />
                   )}
                 </div>
@@ -213,7 +211,7 @@ export function LoginEmailStep({
 
           <div className="my-5 flex items-center gap-3 text-[11px] text-fg-muted">
             <span className="h-px flex-1 bg-border" />
-            {"OR "}
+            {t("login.form.or")}
             <span className="h-px flex-1 bg-border" />
           </div>
         </>
@@ -225,25 +223,35 @@ export function LoginEmailStep({
         ) : emailFull ? (
           <EmailCapacityPanel binding={emailBinding} justMissed={capacityMiss === "email"} />
         ) : (
-          <form onSubmit={onSubmit}>
+          // The browser's own constraint bubble speaks the browser UI language, not the page
+          // locale, so noValidate hands every invalid address to the form's own validator.
+          <form noValidate onSubmit={onSubmit}>
             <label
               className="block text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
               htmlFor="login-email"
             >
-              Email
+              {t("login.email.label")}
             </label>
             <input
+              aria-describedby={errors.email ? "login-email-error" : undefined}
+              aria-invalid={errors.email ? true : undefined}
               autoComplete="email"
               className="mt-[7px] box-border w-full rounded-control border border-border-control bg-transparent px-[13px] py-3 text-[14.5px] font-medium text-fg outline-none focus:border-accent"
               disabled={isSubmitting}
               id="login-email"
               inputMode="email"
-              placeholder="you@company.com"
+              placeholder={t("login.email.placeholder")}
               type="email"
               {...register("email")}
             />
             {errors.email ? (
-              <p className="mt-2 mb-0 text-[13px] text-red-text">{errors.email.message}</p>
+              <p
+                className="mt-2 mb-0 text-[13px] text-red-text"
+                id="login-email-error"
+                role="alert"
+              >
+                {t("login.validation.email")}
+              </p>
             ) : null}
             {humanVerificationField ? <div className="mt-3">{humanVerificationField}</div> : null}
             {formError ? (
@@ -266,18 +274,24 @@ export function LoginEmailStep({
               type="submit"
               variant="primary"
             >
-              Send login code
+              {t("login.form.sendCode")}
             </Button>
             {capacity?.emailCodes ? (
               <CapacityMeter
-                label={`${capacity.emailCodes.left} of ${capacity.emailCodes.cap} login codes left ${
-                  capacity.emailCodes.binding === "monthly" ? "this month" : "today"
-                }`}
+                label={t("capacity.loginCodesRemaining", {
+                  cap: capacity.emailCodes.cap,
+                  left: capacity.emailCodes.left,
+                  period: t(
+                    capacity.emailCodes.binding === "monthly"
+                      ? "capacity.periodMonth"
+                      : "capacity.periodToday",
+                  ),
+                })}
                 meter={capacity.emailCodes}
                 tooltip={
                   capacity.emailCodes.binding === "monthly"
-                    ? "Monthly email volume is capped. Capacity resets at the start of next month (UTC)."
-                    : "Daily email volume is capped. Capacity frees up continuously over 24 hours."
+                    ? t("capacity.loginCodesMonthlyTooltip")
+                    : t("capacity.loginCodesDailyTooltip")
                 }
               />
             ) : null}
@@ -286,8 +300,8 @@ export function LoginEmailStep({
       </div>
       {demoEmail ? (
         <p className="mt-3.5 mb-0 text-center text-[11.5px] text-fg-muted">
-          <span className="font-semibold text-accent-text">Try the demo</span> &middot; {demoEmail}{" "}
-          &middot; code 000000
+          <span className="font-semibold text-accent-text">{t("login.tryDemo")}</span> &middot;{" "}
+          {demoEmail} &middot; {t("login.tryDemoCode")}
         </p>
       ) : null}
 

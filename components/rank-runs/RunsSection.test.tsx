@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RunsSection } from "./RunsSection";
 import { blockedRun, historyPage, historyRun, plannedPage, plannedRun } from "./runs-fixtures";

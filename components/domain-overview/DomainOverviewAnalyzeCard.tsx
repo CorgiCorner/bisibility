@@ -5,18 +5,19 @@ import { Card } from "@/components/ui/Card";
 import { compactInputClassName } from "@/components/ui/input-styles";
 import { Kbd } from "@/components/ui/Kbd";
 import { pricingTriggerClassName } from "@/components/ui/PricingPopover";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import type { DomainOverviewReport, DomainOverviewScope } from "@/lib/domain-overview/types";
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { ResearchScope } from "@/lib/research/scope";
 import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/csr/Globe";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { DomainOverviewPricingPopover } from "./DomainOverviewPricingPopover";
 import { domainOverviewControlHeight } from "./domain-overview-control-styles";
+import { formatDomainCost } from "./domain-overview-metrics";
 import {
   type DomainOverviewEstimateView,
   detectedDomainScope,
@@ -41,19 +42,6 @@ type DomainOverviewAnalyzeCardProps = {
   report?: DomainOverviewReport | null;
 };
 
-function submitLabel(estimate: DomainOverviewEstimateView, fresh: boolean, submitting: boolean) {
-  const prefix = fresh
-    ? submitting
-      ? "Refreshing domain"
-      : "Refresh now"
-    : submitting
-      ? "Analyzing domain"
-      : "Analyze domain";
-  const cost = fresh ? estimate.freshCostCents : estimate.costCents;
-  if (!fresh && estimate.cached) return `${prefix} free, cached`;
-  return cost == null ? prefix : `${prefix} ~${formatEstimateCents(cost)}`;
-}
-
 export function DomainOverviewAnalyzeCard({
   catalogScopes,
   estimate,
@@ -68,6 +56,20 @@ export function DomainOverviewAnalyzeCard({
   trackedScopes,
   report,
 }: Readonly<DomainOverviewAnalyzeCardProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectDomainOverview.workspace.analyze");
+  function submitLabel(fresh: boolean, submittingLabel: boolean) {
+    const action = fresh
+      ? submittingLabel
+        ? t("refreshing")
+        : t("refresh")
+      : submittingLabel
+        ? t("analyzing")
+        : t("submit");
+    const cost = fresh ? estimate.freshCostCents : estimate.costCents;
+    if (!fresh && estimate.cached) return t("cached", { action });
+    return cost == null ? action : t("priced", { action, cost: formatDomainCost(cost, locale) });
+  }
   const [pricingAnchor, setPricingAnchor] = useState<HTMLElement | null>(null);
   const { handleSubmit, register } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -106,7 +108,7 @@ export function DomainOverviewAnalyzeCard({
             <input
               {...targetField}
               aria-describedby={descriptionIds.join(" ")}
-              aria-label="Domain or subdomain"
+              aria-label={t("targetAria")}
               autoCapitalize="none"
               autoCorrect="off"
               className={`${compactInputClassName} h-full min-h-0 min-w-0 flex-1 bg-transparent text-fg outline-none`}
@@ -115,26 +117,26 @@ export function DomainOverviewAnalyzeCard({
                 targetField.onChange(event);
                 onTargetChange(event.currentTarget.value);
               }}
-              placeholder="Enter any domain or subdomain, e.g. blog.acme.example.com"
+              placeholder={t("targetPlaceholder")}
               spellCheck={false}
             />
             {valid ? (
               <Kbd>
                 <span aria-hidden>↵</span>
-                <span className="sr-only">Enter</span>
+                <span className="sr-only">{t("enter")}</span>
               </Kbd>
             ) : null}
           </div>
           <div className="md:w-[230px]">
             <ResearchScopePicker
-              ariaLabel={`Country: ${researchScope.countryName}`}
+              ariaLabel={t("countryAria", { country: researchScope.countryName })}
               catalogScopes={catalogScopes}
               disabled={submitting}
               onChange={onResearchScopeChange}
               researchScope={researchScope}
               trackedScopes={trackedScopes}
               triggerClassName={`${domainOverviewControlHeight()} w-full bg-bg-elev px-3 text-[13px] disabled:opacity-55`}
-              triggerTitle="Change country"
+              triggerTitle={t("changeCountry")}
               triggerWrapperClassName="w-full"
             />
           </div>
@@ -145,7 +147,7 @@ export function DomainOverviewAnalyzeCard({
             onClick={(event) => setPricingAnchor(event.currentTarget)}
             type="button"
           >
-            How is this priced?
+            {t("pricing")}
           </button>
           <Button
             aria-describedby={
@@ -153,14 +155,14 @@ export function DomainOverviewAnalyzeCard({
             }
             disabled={!valid || submitting}
             loading={submitting}
-            loadingLabel={submitLabel(estimate, matchesReport, true)}
+            loadingLabel={submitLabel(matchesReport, true)}
             size="sm"
             startIcon={<Globe aria-hidden size={14} weight="regular" />}
             style={{ height: 37, minHeight: 37, minWidth: 200 }}
-            title={!valid ? "Enter a valid domain and wait for its price" : undefined}
+            title={!valid ? t("needValid") : undefined}
             type="submit"
           >
-            {submitLabel(estimate, matchesReport, false)}
+            {submitLabel(matchesReport, false)}
           </Button>
         </div>
         <div className="-mx-4.5 -mb-4.5 border-t border-border px-4.5 py-3.5 sm:-mx-5 sm:-mb-5 sm:px-5">
@@ -170,7 +172,9 @@ export function DomainOverviewAnalyzeCard({
               id="domain-overview-scope-help"
             >
               <Info weight="regular" aria-hidden className="shrink-0 text-fg-muted" size={13} />
-              Detected: {resolvedScope === "subdomain" ? "subdomain" : "whole domain"}
+              {t("detected", {
+                scope: resolvedScope === "subdomain" ? t("subdomain") : t("wholeDomain"),
+              })}
               <span className="truncate font-sans tabular-nums text-[11.5px]">{target}</span>
               {detected === "subdomain" ? (
                 <button
@@ -180,7 +184,7 @@ export function DomainOverviewAnalyzeCard({
                   }
                   type="button"
                 >
-                  Change
+                  {t("change")}
                 </button>
               ) : null}
             </span>
@@ -190,14 +194,13 @@ export function DomainOverviewAnalyzeCard({
               id="domain-overview-scope-help"
             >
               <Info weight="regular" aria-hidden size={14} />
-              Scope is read from what you type - a subdomain analyzes that subdomain only.
+              {t("scopeHelp")}
             </span>
           )}
         </div>
         {report && !matchesReport ? (
           <p className="text-[12px] text-fg-muted" id="domain-overview-report-target-note">
-            Results below are still for{" "}
-            <span className="font-sans tabular-nums">{report.target}</span>.
+            {t("previousResult", { target: report.target })}
           </p>
         ) : null}
       </form>

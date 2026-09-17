@@ -1,3 +1,4 @@
+import { canonicalLocaleUrlSegment } from "@/i18n/config";
 import { unsupportedApiVersionResponse } from "@/lib/api/api-versions";
 import { selfHostedRobotsTag } from "@/lib/deployment/crawl-control";
 import {
@@ -37,6 +38,7 @@ const APP_SURFACE_PATHS = [
   "/cloud",
   "/invite",
   "/login",
+  "/locale",
   "/oauth",
   "/onboarding",
   "/setup",
@@ -166,6 +168,25 @@ function legacyKeywordPathRedirect(request: NextRequest) {
   return NextResponse.redirect(destination, 302);
 }
 
+// A locale prefix has exactly one canonical spelling: lowercase and language-only. Case variants
+// and the internal locale code keep their inbound links alive as permanent redirects rather than
+// competing with the canonical URL for the same content.
+function localePrefixRedirect(request: NextRequest) {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return null;
+  }
+
+  const [, segment = "", ...rest] = request.nextUrl.pathname.split("/");
+  const canonical = canonicalLocaleUrlSegment(segment);
+  if (!canonical || canonical === segment) {
+    return null;
+  }
+
+  const destination = request.nextUrl.clone();
+  destination.pathname = rest.length === 0 ? `/${canonical}` : `/${canonical}/${rest.join("/")}`;
+  return NextResponse.redirect(destination, 308);
+}
+
 // Middleware covers every app route and restores the anchor before rendering without a client effect.
 function appAnchorRedirect(request: NextRequest) {
   if (
@@ -252,6 +273,11 @@ export function proxy(request: NextRequest) {
   const legacyRedirect = legacyKeywordPathRedirect(request);
   if (legacyRedirect) {
     return withResponsePolicies(request, legacyRedirect);
+  }
+
+  const localeRedirect = localePrefixRedirect(request);
+  if (localeRedirect) {
+    return withResponsePolicies(request, localeRedirect);
   }
 
   const protectedPath =

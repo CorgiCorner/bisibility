@@ -1,5 +1,7 @@
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ByMarketRollup } from "./ByMarketRollup";
 
@@ -15,17 +17,15 @@ function market(
 ) {
   return {
     deltaPoints,
-    deltaTooltip: `Top-10 share ${deltaPoints}pp vs May 4 - May 31, the previous 28 days.`,
     languageLabel,
     locationId,
     locationLabel,
+    previousPeriod: { end: "2026-05-31", start: "2026-05-04" },
     rangeDays: 28,
     researchAvailable: true,
     targetCount: 4,
     top10Count: 2,
     top10Share: 50,
-    top10Tooltip:
-      "Targets of this market currently ranking in positions 1 to 10, out of 4 active targets.",
     trend: [25, 25, 50, 50, 75, 50, 50, 50],
   };
 }
@@ -40,12 +40,16 @@ function marketRows() {
   return screen.getAllByRole("row").slice(1);
 }
 
+function renderDashboard(children: ReactNode) {
+  return render(<ProjectDashboardMessages>{children}</ProjectDashboardMessages>);
+}
+
 describe("ByMarketRollup", () => {
   it("renders exact pair rows worst-first with denominators and scoped links", () => {
-    render(<ByMarketRollup device="mobile" projectRef="prj_test" rows={rows} />);
+    renderDashboard(<ByMarketRollup device="mobile" projectRef="prj_test" rows={rows} />);
 
     expect(screen.getByText("3 active markets / paused markets excluded")).toBeVisible();
-    expect(screen.getByRole("table", { name: "By market rollup" })).toBeVisible();
+    expect(screen.getByRole("table", { name: "By market" })).toBeVisible();
     expect(marketRows().map((row) => within(row).getByRole("link").textContent)).toEqual([
       "Belgium/ French",
       "Belgium/ Dutch",
@@ -66,13 +70,13 @@ describe("ByMarketRollup", () => {
     );
     expect(
       screen.getByRole("img", {
-        name: "Top-10 share for Belgium / Dutch over the last 28 days: 25%, 25%, 50%, 50%, 75%, 50%, 50%, 50%",
+        name: "Top-10 share for Belgium / Dutch over the last 28 days: 25%, 25%, 50%, 50%, 75%, 50%, 50%, and 50%",
       }),
     ).toBeInTheDocument();
   });
 
   it("offers an explicit alphabetical sort mode", () => {
-    render(<ByMarketRollup device="all" projectRef="prj_test" rows={rows} />);
+    renderDashboard(<ByMarketRollup device="all" projectRef="prj_test" rows={rows} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Sort markets" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Sort: A-Z" }));
@@ -86,7 +90,7 @@ describe("ByMarketRollup", () => {
   });
 
   it("keeps an off-catalog enabled market in the rollup with its availability suffix", () => {
-    render(
+    renderDashboard(
       <ByMarketRollup
         device="all"
         projectRef="prj_test"
@@ -98,7 +102,7 @@ describe("ByMarketRollup", () => {
   });
 
   it("hides a redundant one-market rollup", () => {
-    const { container } = render(
+    const { container } = renderDashboard(
       <ByMarketRollup device="desktop" projectRef="prj_test" rows={[rows[0]]} />,
     );
 

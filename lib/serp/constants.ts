@@ -7,6 +7,10 @@ export const serpDepthValues = [10, 20, 50, 100] as const;
 export type SerpDepth = (typeof serpDepthValues)[number];
 export type SerpDevice = "desktop" | "mobile";
 
+/**
+ * The label is the public API discovery label only. Reader-facing UI must read the device
+ * name from the `shared.markets` catalog instead, so it follows the viewer's locale.
+ */
 export const serpDeviceOptions = [
   { label: "Desktop", value: "desktop" },
   { label: "Mobile", value: "mobile" },

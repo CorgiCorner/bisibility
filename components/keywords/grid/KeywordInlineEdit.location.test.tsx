@@ -1,6 +1,7 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordLocation, KeywordRow } from "@/lib/queries/keywords";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeywordInlineEdit } from "./KeywordInlineEdit";
 
@@ -83,7 +84,9 @@ describe("KeywordInlineEdit location edge cases", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(await screen.findByText("Tracking at country level.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("The selected location was tracked at country level."),
+    ).toBeInTheDocument();
     expect(onSaved).not.toHaveBeenCalled();
   });
 });

@@ -1,18 +1,15 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import {
-  actionErrorMessage,
-  actionWarningMessage,
   deviceValue,
+  hasActionWarning,
   type KeywordDetailActions,
   splitTagInput,
 } from "@/components/keywords/action-utils";
 import { LocationActionWarning } from "@/components/keywords/LocationActionWarning";
-import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
-import {
-  countryForLocationFieldValue,
-  locationFieldValueFromKeywordLocation,
-} from "@/components/keywords/location-field-value";
+import type { LocationFieldValue } from "@/components/keywords/LocationField";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { TargetUrlField } from "@/components/keywords/TargetUrlField";
 import { MarketCombobox } from "@/components/markets/MarketCombobox";
 import { Button } from "@/components/ui/Button";
@@ -21,15 +18,24 @@ import { MenuSelect } from "@/components/ui/MenuSelect";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import { type UpdateKeywordInput, updateKeywordSchema } from "@/lib/schemas/keyword";
+import type { UpdateKeywordInput } from "@/lib/schemas/keyword";
 import { serpDeviceOptions } from "@/lib/serp/constants";
-import { FIELD_HELP } from "@/lib/settings/field-help";
 import { cn } from "@/lib/ui/cn";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { type FieldErrors, useForm } from "react-hook-form";
-import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { KeywordInlineEditLocationField } from "./KeywordInlineEditLocationField";
 import { KeywordInlineEditTextField } from "./KeywordInlineEditTextField";
+import {
+  countryForLocationFieldValue,
+  inlineEditDirty as dirty,
+  type InlineEditInput,
+  initialInlineEditLocation,
+  inlineEditFieldError,
+  inlineEditSchema,
+  inlineEditTagsError,
+} from "./keyword-inline-edit-form";
 import { drawerMarketOptions } from "./keyword-inline-edit-markets";
 
 type KeywordInlineEditProps = Pick<KeywordDetailActions, "updateKeywordAction"> & {
@@ -45,26 +51,6 @@ type KeywordInlineEditProps = Pick<KeywordDetailActions, "updateKeywordAction"> 
   projectId?: string;
 };
 
-const inlineEditSchema = updateKeywordSchema.extend({
-  city: z.string().nullable().optional(),
-  location: z.string().optional(),
-});
-type InlineEditInput = z.infer<typeof inlineEditSchema>;
-
-const dirty = { shouldDirty: true, shouldValidate: true } as const;
-
-function tagsError(errors: FieldErrors<InlineEditInput>) {
-  const error = errors.tags;
-  if (Array.isArray(error)) {
-    return error[0]?.message;
-  }
-  return error?.message;
-}
-
-function initialLocationValue(keyword: KeywordRow): LocationFieldValue {
-  return locationFieldValueFromKeywordLocation(keyword.location, keyword.locationName);
-}
-
 export function KeywordInlineEdit({
   formId,
   focusTargetUrl = false,
@@ -78,11 +64,13 @@ export function KeywordInlineEdit({
   projectId,
   updateKeywordAction,
 }: Readonly<KeywordInlineEditProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
   const [tagsText, setTagsText] = useState(keyword.tags.join(", "));
-  const [locationValue, setLocationValue] = useState(() => initialLocationValue(keyword));
+  const [locationValue, setLocationValue] = useState(() => initialInlineEditLocation(keyword));
   const {
     formState: { dirtyFields, errors, isSubmitting },
     handleSubmit,
@@ -104,18 +92,21 @@ export function KeywordInlineEdit({
     },
     resolver: zodResolver(inlineEditSchema),
   });
-  const tagMessage = tagsError(errors);
+  const tagMessage = inlineEditTagsError(errors, t);
   const device = watch("device");
   const selectedLocationKey = watch("locationKey") ?? keyword.location.canonicalKey;
   const selectedDevice = device ?? deviceValue(keyword.device);
   const deviceOptions = serpDeviceOptions.map((option) => ({
-    label: option.label,
+    label: t(option.value === "desktop" ? "deviceDesktop" : "deviceMobile"),
     value: option.value,
   }));
-  const drawerMarketError =
-    errors.locationKey?.message ?? errors.location?.message ?? errors.city?.message;
+  const drawerMarketError = inlineEditFieldError(
+    "location",
+    errors.locationKey ?? errors.location ?? errors.city,
+    t,
+  );
   const drawerMarketList =
-    layout === "drawer" ? drawerMarketOptions(drawerMarkets, selectedLocationKey, keyword) : [];
+    layout === "drawer" ? drawerMarketOptions(drawerMarkets, selectedLocationKey, keyword, t) : [];
 
   async function save(values: InlineEditInput) {
     setActionError(null);
@@ -136,7 +127,7 @@ export function KeywordInlineEdit({
       Boolean(dirtyFields.city);
     if (locationChanged && !lockIdentity) {
       if (!locationKey) {
-        setActionError("Choose a supported location.");
+        setActionError(t("inlineLocationRequired"));
         return;
       }
       payload.locationKey = locationKey;
@@ -145,15 +136,15 @@ export function KeywordInlineEdit({
     onSavingChange?.(true);
     try {
       const result = await updateKeywordAction(payload);
-      const warning = actionWarningMessage(result);
+      const hasWarning = hasActionWarning(result);
       router.refresh();
-      if (warning) {
-        setActionWarning(warning);
+      if (hasWarning) {
+        setActionWarning(t("inlineLocationDegraded"));
         return;
       }
       onSaved();
     } catch (error) {
-      setActionError(actionErrorMessage(error));
+      setActionError(presentSafeActionError(error, sharedErrors, t("inlineSaveFailed")));
     } finally {
       onSavingChange?.(false);
     }
@@ -191,29 +182,31 @@ export function KeywordInlineEdit({
     >
       <input type="hidden" {...register("keywordId")} />
       <KeywordInlineEditTextField
-        error={errors.keyword?.message}
-        help={FIELD_HELP.keyword}
-        label="Keyword"
+        error={inlineEditFieldError("keyword", errors.keyword, t)}
+        help={t("inlineKeywordHelp")}
+        label={t("inlineKeyword")}
         readOnly={lockIdentity}
         {...register("keyword")}
       />
       <TargetUrlField
         autoFocus={focusTargetUrl}
-        error={errors.targetUrl?.message}
+        error={inlineEditFieldError("targetUrl", errors.targetUrl, t)}
+        help={t("inlineTargetUrlHelp")}
+        label={t("inlineTargetUrl")}
         {...register("targetUrl")}
       />
       {lockIdentity ? (
         <p className="m-0 text-[12px] text-fg-muted">
           {keyword.location.displayName} / {keyword.location.languageLabel ?? keyword.location.hl} ·{" "}
-          {keyword.device}
+          {t(deviceValue(keyword.device) === "desktop" ? "deviceDesktop" : "deviceMobile")}
         </p>
       ) : (
         <>
           <div className="flex flex-col gap-1.5 font-sans tabular-nums text-[11px] uppercase tracking-[0.5px] text-fg-muted">
-            <FieldLabel help={FIELD_HELP.device} label="Device" />
+            <FieldLabel help={t("inlineDeviceHelp")} label={t("inlineDevice")} />
             <input type="hidden" {...register("device")} />
             <MenuSelect
-              ariaLabel="Device"
+              ariaLabel={t("inlineDevice")}
               onChange={handleDeviceChange}
               options={deviceOptions}
               triggerClassName="min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal"
@@ -228,9 +221,9 @@ export function KeywordInlineEdit({
           >
             {layout === "drawer" ? (
               <>
-                <span>Market</span>
+                <span>{t("inlineMarket")}</span>
                 <MarketCombobox
-                  ariaLabel="Market"
+                  ariaLabel={t("inlineMarket")}
                   catalogMarkets={[]}
                   onChange={handleDrawerMarketChange}
                   trackedMarkets={drawerMarketList}
@@ -244,12 +237,11 @@ export function KeywordInlineEdit({
                 ) : null}
               </>
             ) : (
-              <LocationField
+              <KeywordInlineEditLocationField
                 error={
                   errors.locationKey?.message ?? errors.location?.message ?? errors.city?.message
                 }
-                idPrefix={`inline-${keyword.id}`}
-                help={FIELD_HELP.location}
+                keywordId={keyword.id}
                 onChange={handleLocationChange}
                 projectId={projectId ?? null}
                 value={locationValue}
@@ -259,23 +251,23 @@ export function KeywordInlineEdit({
         </>
       )}
       <KeywordInlineEditTextField
-        error={errors.topic?.message}
-        help={FIELD_HELP.topic}
-        label="Topic"
+        error={inlineEditFieldError("topic", errors.topic, t)}
+        help={t("inlineTopicHelp")}
+        label={t("inlineTopic")}
         wide={layout === "inline"}
         {...register("topic")}
       />
       <KeywordInlineEditTextField
-        error={errors.intent?.message}
-        help={FIELD_HELP.intent}
-        label="Intent"
+        error={inlineEditFieldError("intent", errors.intent, t)}
+        help={t("inlineIntentHelp")}
+        label={t("inlineIntent")}
         wide={layout === "inline"}
         {...register("intent")}
       />
       <KeywordInlineEditTextField
         error={tagMessage}
-        help={FIELD_HELP.tags}
-        label="Tags"
+        help={t("inlineTagsHelp")}
+        label={t("inlineTags")}
         onChange={(event) => handleTagsChange(event.target.value)}
         value={tagsText}
         wide={layout === "inline"}
@@ -291,7 +283,7 @@ export function KeywordInlineEdit({
               type="submit"
               variant="primary"
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting ? t("inlineSaving") : t("inlineSave")}
             </Button>
           ) : null}
           {actionError ? (

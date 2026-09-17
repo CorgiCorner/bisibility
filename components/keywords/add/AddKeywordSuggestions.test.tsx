@@ -1,5 +1,12 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import rankTrackerMessages from "@/messages/core/en/project-rank-tracker.json";
+import rankTrackerKeywordImportMessages from "@/messages/core/en/project-rank-tracker-keyword-import.json";
+import sharedMessages from "@/messages/core/en/shared.json";
+import { fireEvent, render as renderDom, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AddKeywordDrawer } from "./AddKeywordDrawer";
 import AddKeywordSuggestionsPanel from "./AddKeywordSuggestionsPanel";
@@ -80,7 +87,7 @@ beforeEach(() => {
 });
 
 function renderDrawer() {
-  return render(
+  return renderProject(
     <AddKeywordDrawer
       addKeywordsAction={vi.fn()}
       onClose={vi.fn()}
@@ -91,6 +98,39 @@ function renderDrawer() {
       initialDevices={["mobile"]}
       initialScheduleFrequency="manual"
     />,
+  );
+}
+
+function renderProject(children: ReactNode) {
+  return renderDom(<ProjectRankTrackerMessages>{children}</ProjectRankTrackerMessages>);
+}
+
+function renderPolishKeywordImport(children: ReactNode) {
+  const messages = {
+    ...rankTrackerKeywordImportMessages,
+    projectRankTracker: {
+      ...rankTrackerKeywordImportMessages.projectRankTracker,
+      keywordImport: {
+        ...rankTrackerKeywordImportMessages.projectRankTracker.keywordImport,
+        suggestionDrawer: {
+          ...rankTrackerKeywordImportMessages.projectRankTracker.keywordImport.suggestionDrawer,
+          use: "Użyj {count, plural, one {# słowa kluczowego} few {# słów kluczowych} many {# słów kluczowych} other {# słowa kluczowego}}",
+        },
+        topQueries: {
+          ...rankTrackerKeywordImportMessages.projectRankTracker.keywordImport.topQueries,
+          choose: "Wybierz zapytania",
+        },
+      },
+    },
+  };
+  return renderDom(
+    <FeatureMessagesProvider
+      locale="pl"
+      messages={mergeMessageCatalogs(sharedMessages, rankTrackerMessages, messages)}
+      timeZone="UTC"
+    >
+      {children}
+    </FeatureMessagesProvider>,
   );
 }
 
@@ -137,7 +177,7 @@ describe("Add keyword suggestions", () => {
 
   it("requests DataForSEO only after its priced action and allows a phrase tracked in another market", async () => {
     const append = vi.fn();
-    render(<SuggestionsHarness onAppendQueries={append} />);
+    renderProject(<SuggestionsHarness onAppendQueries={append} />);
     fireEvent.click(screen.getByRole("button", { name: "Suggestions" }));
     const choose = await screen.findByRole("button", {
       name: "Choose keywords (about $0.02/page)",
@@ -154,9 +194,21 @@ describe("Add keyword suggestions", () => {
     expect(mocks.add).not.toHaveBeenCalled();
   });
 
+  it("injects its own non-English import messages into the normal keyword flow", async () => {
+    mocks.gsc.mockResolvedValueOnce({ queries: ["nowa fraza"] });
+    renderPolishKeywordImport(<SuggestionsHarness onAppendQueries={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Suggestions" }));
+    const choose = await screen.findByRole("button", { name: "Wybierz zapytania" });
+    fireEvent.click(choose);
+
+    expect(await screen.findByRole("button", { name: "Użyj 1 słowa kluczowego" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Choose queries" })).not.toBeInTheDocument();
+  });
+
   it("offers integration settings when neither source is connected", async () => {
     mocks.sources.mockResolvedValue({ ...sources, searchConsole: false, rankedConnections: [] });
-    render(<SuggestionsHarness onAppendQueries={vi.fn()} />);
+    renderProject(<SuggestionsHarness onAppendQueries={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Suggestions" }));
     expect(await screen.findByRole("link", { name: "Manage integrations" })).toHaveAttribute(
       "href",
@@ -169,7 +221,7 @@ describe("Add keyword suggestions", () => {
 
   it("can retry loading sources after a failure", async () => {
     mocks.sources.mockRejectedValueOnce(new Error("offline"));
-    render(<SuggestionsHarness onAppendQueries={vi.fn()} />);
+    renderProject(<SuggestionsHarness onAppendQueries={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Suggestions" }));
     fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
     expect(await screen.findByRole("button", { name: "Choose queries" })).toBeEnabled();
@@ -177,7 +229,7 @@ describe("Add keyword suggestions", () => {
   });
 
   it("keeps provider requests disabled for a read-only project", async () => {
-    render(
+    renderProject(
       <ProjectWriteModeProvider projectRef={projectId} writeMode="migration_hold">
         <SuggestionsHarness onAppendQueries={vi.fn()} />
       </ProjectWriteModeProvider>,

@@ -47,7 +47,7 @@ export const runPageFixture: RunPageInitialData = {
       status: "running",
     }),
     item({
-      blockedReason: "Paused target - resumes when you unpause it",
+      blockedReason: "target_paused",
       id: "skipped-paused",
       keyword: {
         device: "desktop",
@@ -60,7 +60,7 @@ export const runPageFixture: RunPageInitialData = {
       status: "skipped",
     }),
     item({
-      blockedReason: "Off-catalog pair - Arabic is not offered for Belgium",
+      blockedReason: "location_language_unavailable",
       id: "skipped-market",
       keyword: {
         device: "mobile",

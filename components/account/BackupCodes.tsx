@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { downloadTextFile } from "@/lib/ui/download";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
+import { useTranslations } from "next-intl";
 
 const RECOVERY_CODES_FILENAME = "bisibility_recovery_codes.txt";
 
@@ -12,6 +13,7 @@ function downloadRecoveryCodes(codes: readonly string[]) {
 }
 
 export function BackupCodes({ codes }: Readonly<{ codes: readonly string[] }>) {
+  const t = useTranslations("account.security.backupCodes");
   if (!codes.length) {
     return null;
   }
@@ -21,22 +23,20 @@ export function BackupCodes({ codes }: Readonly<{ codes: readonly string[] }>) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-[12.5px] font-semibold text-fg">
           <Key size={15} weight="regular" />
-          Backup codes
+          {t("title")}
         </div>
         <Button
-          aria-label="Download recovery codes"
+          aria-label={t("downloadAriaLabel")}
           onClick={() => downloadRecoveryCodes(codes)}
           size="sm"
           startIcon={<DownloadSimple size={14} weight="regular" />}
           type="button"
           variant="secondary"
         >
-          Download .txt
+          {t("download")}
         </Button>
       </div>
-      <p className="text-[11.5px] text-fg-muted">
-        Save these codes now. They will not be shown again.
-      </p>
+      <p className="text-[11.5px] text-fg-muted">{t("description")}</p>
       <div className="grid gap-1.5 sm:grid-cols-2">
         {codes.map((code) => (
           <code

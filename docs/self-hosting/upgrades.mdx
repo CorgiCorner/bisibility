@@ -1,18 +1,11 @@
 ---
 title: "Self-hosted upgrades"
-description: "Upgrade a self-hosted bisibility installation with the signed distribution manifest."
+description: "Upgrade a self-hosted bisibility installation with the versioned distribution manifest."
 ---
 
 [Production checklist](/self-hosting#production-checklist)
 
 ## Upgrade with a distribution manifest
-
-<Warning>
-v0.5.0 resets the Prisma migration history to one final-schema baseline and is
-for fresh installations only. Existing v0.4.1 and earlier databases do not have
-a supported upgrade path to v0.5.0. Keep those installations on their current
-release; the v0.5.0 `upgrade.sh` fails before changing Compose or PostgreSQL.
-</Warning>
 
 Releases whose `distribution-manifest.json` lists the `upgradeScript` artifact
 ship `upgrade.sh` as a versioned release asset alongside the manifest.
@@ -23,16 +16,25 @@ the script from the matching tagged source tree instead. The distribution
 manifest checksums `upgrade.sh` and the other listed release assets; the
 manifest plus its listed assets are verified before publication.
 
+`upgrade.sh` also needs `verify.mjs` and `manifest.mjs` from the same GitHub
+release. Those two helpers are not listed in the manifest artifact contract;
+download them next to `upgrade.sh`, or keep a repository checkout so they remain
+at `scripts/distribution/`. A directory that has only `upgrade.sh` and the
+manifest cannot run the documented command.
+
 The procedure below is the canonical current upgrade path. Migrations are
-forward-only; there is no automatic rollback.
+forward-only; there is no automatic rollback. Retired baseline-reset and
+source-tree upgrades live under [Legacy upgrades](/self-hosting/legacy-upgrades).
 
 ### Prerequisites
 
 Before starting, gather the exact target release assets and plan a maintenance
 window:
 
-- Download `distribution-manifest.json` and `upgrade.sh` from the GitHub release
-  assets for the matching tag.
+- Download `distribution-manifest.json`, `upgrade.sh`, `verify.mjs`, and
+  `manifest.mjs` from the GitHub release assets for the matching tag. Place the
+  two helpers next to `upgrade.sh` in the directory that already has your
+  Compose files.
 - Install Docker Compose v2 and Node.js on the operator host.
 - Read the changelog for the target release and note schema or environment
   changes. Review `.env.example` against the current `.env` and update
@@ -163,13 +165,7 @@ restore, and readiness validation.
 
 ### Legacy upgrades
 
-Older one-time source upgrades have their own pages and are kept for
-reference.
-
 <span id="upgrade-from-v010-to-v020"></span>
-
-## Upgrade from v0.1.0 to v0.2.0
-
 <span id="1-back-up-postgresql"></span>
 <span id="2-check-the-port-change"></span>
 <span id="3-fetch-v020"></span>
@@ -178,5 +174,6 @@ reference.
 <span id="6-verify-the-upgrade"></span>
 <span id="7-roll-back"></span>
 
-This one-time source upgrade has its own page:
-[Upgrade from v0.1.0 to v0.2.0](/self-hosting/legacy-upgrades/v0-1-to-v0-2).
+Historical procedures and retired upgrade limits live under
+[Legacy upgrades](/self-hosting/legacy-upgrades), including the one-time
+[v0.1.0 to v0.2.0](/self-hosting/legacy-upgrades/v0-1-to-v0-2) source upgrade.

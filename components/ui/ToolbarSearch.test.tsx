@@ -1,6 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ToolbarSearch } from "./ToolbarSearch";
+
+const render = renderWithSharedMessages;
 
 describe("ToolbarSearch", () => {
   describe("shared controlled API", () => {

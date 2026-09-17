@@ -9,6 +9,7 @@ import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { competitorRegistryOptions } from "./competitor-market-mapping";
 
 type CompetitorScopeControlsProps = {
@@ -26,6 +27,7 @@ export function CompetitorScopeControls({
   scope,
   viewId,
 }: Readonly<CompetitorScopeControlsProps>) {
+  const t = useTranslations("projectCompetitors.ui");
   const router = useRouter();
   const fallback = markets[0];
   const current =
@@ -38,15 +40,15 @@ export function CompetitorScopeControls({
   const navigate = (next: typeof current) =>
     router.push(competitorScopeHref(projectRef, next, viewId));
   const deviceOptions = [
-    { icon: Monitor, label: "Desktop", value: "desktop" as const },
-    { icon: DeviceMobile, label: "Mobile", value: "mobile" as const },
+    { icon: Monitor, label: t("desktop"), value: "desktop" as const },
+    { icon: DeviceMobile, label: t("mobile"), value: "mobile" as const },
   ].map((option) => {
     const available = markets.some(
       (market) => market.locationId === current.locationId && market.device === option.value,
     );
     const Icon = option.icon;
     return {
-      ariaLabel: `${option.label} competitor scope`,
+      ariaLabel: t("competitorScopeAria", { device: option.label }),
       disabled: !available,
       label: (
         <>
@@ -54,21 +56,33 @@ export function CompetitorScopeControls({
           {option.label}
         </>
       ),
-      tooltip: available ? undefined : `${option.label} is not tracked for the selected location.`,
+      tooltip: available ? undefined : t("deviceNotTracked", { device: option.label }),
       value: option.value,
     };
   });
 
   const currentMarket = markets.find((m) => m.locationId === current.locationId) ?? markets[0];
-  const options = competitorRegistryOptions(markets, current.device, projectMarkets);
+  const options = competitorRegistryOptions(
+    markets,
+    current.device,
+    {
+      noDeviceKeywords: (values) => t("noDeviceKeywords", values),
+      noVolumeData: t("noVolumeData"),
+      noVolumeTooltip: t("noVolumeTooltip"),
+      paused: t("paused"),
+      pausedTooltip: t("pausedMarketTooltip"),
+      trackDeviceKeywords: (values) => t("trackDeviceKeywords", values),
+    },
+    projectMarkets,
+  );
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-control border border-border bg-bg-sunken px-3 py-2.5">
       <span className="font-sans tabular-nums text-[11px] uppercase tracking-[0.5px] text-fg-muted">
-        Market
+        {t("market")}
       </span>
       <MarketCombobox
-        ariaLabel="Competitor market"
+        ariaLabel={t("competitorMarket")}
         catalogMarkets={[]}
         menuWidth={280}
         onChange={(payload) => {
@@ -85,7 +99,7 @@ export function CompetitorScopeControls({
         value={currentMarket?.canonicalKey ?? ""}
       />
       <SegmentedControl
-        ariaLabel="Competitor device"
+        ariaLabel={t("competitorDevice")}
         fitContent
         onChange={(device) => navigate({ ...current, device })}
         options={deviceOptions}
@@ -94,7 +108,7 @@ export function CompetitorScopeControls({
       />
       <span className="ml-auto flex items-center gap-1.5 font-sans tabular-nums text-[11px] text-fg-muted">
         <Info weight="regular" aria-hidden className="shrink-0 text-accent-text" size={13} />
-        SOV compares one market (location + language) + device at a time
+        {t("sovScopeHint")}
       </span>
     </div>
   );

@@ -1,5 +1,6 @@
 import { MobileNav } from "@/components/shell/MobileNav";
-import { render, screen } from "@testing-library/react";
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/shell/SidebarFooter", () => ({

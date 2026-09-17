@@ -1,4 +1,5 @@
 import { exhaustedBudgetNotices } from "@/components/rank-runs/budget-notices-model";
+import { RankTrackerFeatureBoundary } from "@/components/rank-tracker/RankTrackerFeatureBoundary";
 import { RankTrackerTabs } from "@/components/rank-tracker/RankTrackerTabs";
 import { PageContent } from "@/components/shell/PageContent";
 import { getKeywordCount } from "@/lib/queries/keywords";
@@ -27,34 +28,35 @@ export async function RankTrackerRunsTab({
     savedKeywordCount(projectRef),
     loadWorkspaceBudgetSummary(projectId),
   ]);
-
   return (
     <PageContent>
-      <section className="grid min-w-0 gap-4">
-        <RankTrackerTabs
-          activeTab="runs"
-          projectRef={projectRef}
-          runsCount={runsCount}
-          savedCount={savedCount}
-          trackedCount={trackedCount}
-        />
-        <RunsSection
-          budgetExhausted={isBudgetExhausted({
-            hasAllocation: budgetSummary?.hasAllocation ?? false,
-            maxUsedPercent: budgetSummary?.maxUsedPercent ?? null,
-          })}
-          budgetSettingsHref={`/app/${projectRef}/integrations?tab=usage&budget=edit`}
-          initialHistory={history}
-          initialPlanned={planned}
-          notices={exhaustedBudgetNotices({
-            hasAllocation: budgetSummary?.hasAllocation ?? false,
-            maxUsedPercent: budgetSummary?.maxUsedPercent ?? null,
-            projectId: projectRef,
-          })}
-          projectRef={projectRef}
-          schedulesHref={appPath(projectRef, "rank-tracker", "schedules")}
-        />
-      </section>
+      <RankTrackerFeatureBoundary>
+        <section className="grid min-w-0 gap-4">
+          <RankTrackerTabs
+            activeTab="runs"
+            projectRef={projectRef}
+            runsCount={runsCount}
+            savedCount={savedCount}
+            trackedCount={trackedCount}
+          />
+          <RunsSection
+            budgetExhausted={isBudgetExhausted({
+              hasAllocation: budgetSummary?.hasAllocation ?? false,
+              maxUsedPercent: budgetSummary?.maxUsedPercent ?? null,
+            })}
+            budgetSettingsHref={`/app/${projectRef}/integrations?tab=usage&budget=edit`}
+            initialHistory={history}
+            initialPlanned={planned}
+            notices={exhaustedBudgetNotices({
+              hasAllocation: budgetSummary?.hasAllocation ?? false,
+              maxUsedPercent: budgetSummary?.maxUsedPercent ?? null,
+              projectId: projectRef,
+            })}
+            projectRef={projectRef}
+            schedulesHref={appPath(projectRef, "rank-tracker", "schedules")}
+          />
+        </section>
+      </RankTrackerFeatureBoundary>
     </PageContent>
   );
 }

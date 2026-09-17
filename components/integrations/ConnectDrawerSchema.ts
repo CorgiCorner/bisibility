@@ -17,26 +17,42 @@ export type Notice = {
   tone?: "warning";
 };
 
+type DrawerNoticeCopy = {
+  appUpdateRequired: string;
+  connectionTestFailed: string;
+  connectionTestPassed: string;
+  providerActionFailed: string;
+  providerActionFailedMessage: string;
+};
+
+const defaultDrawerNoticeCopy: DrawerNoticeCopy = {
+  appUpdateRequired: "App update required",
+  connectionTestFailed: "Connection test failed",
+  connectionTestPassed: "Connection test passed",
+  providerActionFailed: "Provider action failed",
+  providerActionFailedMessage: "Provider action failed.",
+};
+
 export const drawerFormSchema = connectProviderSchema.extend({
   endpoint: providerCredentialsSchema.shape.endpoint,
 });
 
 export type ConnectFormValues = z.infer<typeof drawerFormSchema>;
 
-export function providerActionErrorNotice(error: unknown): Notice {
+export function providerActionErrorNotice(error: unknown, copy = defaultDrawerNoticeCopy): Notice {
   if (isStaleDeploymentError(error)) {
     return {
       action: "refresh",
       message: actionErrorMessage(error),
       ok: false,
-      title: "App update required",
+      title: copy.appUpdateRequired,
       tone: "warning",
     };
   }
   return {
-    message: actionErrorMessage(error, "Provider action failed."),
+    message: actionErrorMessage(error, copy.providerActionFailedMessage),
     ok: false,
-    title: "Provider action failed",
+    title: copy.providerActionFailed,
   };
 }
 
@@ -81,11 +97,11 @@ export function testInput(values: ConnectFormValues): TestProviderConnectionInpu
   };
 }
 
-export function testNotice(result: ProviderTestResult): Notice {
+export function testNotice(result: ProviderTestResult, copy = defaultDrawerNoticeCopy): Notice {
   return {
     balance: result.balance,
     message: result.message,
     ok: result.ok,
-    title: result.ok ? "Connection test passed" : "Connection test failed",
+    title: result.ok ? copy.connectionTestPassed : copy.connectionTestFailed,
   };
 }

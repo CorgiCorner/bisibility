@@ -1,6 +1,23 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  renderWithShellMessages as render,
+  renderWithFeatureMessages,
+  shellFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CloudBetaCoverageModal } from "./CloudBetaCoverageModal";
+
+const preparedPolishShellMessages = {
+  ...shellFeatureTestMessages,
+  shell: {
+    ...shellFeatureTestMessages.shell,
+    betaCoverage: {
+      ...shellFeatureTestMessages.shell.betaCoverage,
+      covered: "Objęte beta",
+      title: "Zakres wersji beta hostowanej",
+    },
+  },
+};
 
 describe("CloudBetaCoverageModal", () => {
   it("gives covered and not-yet policy equal sections", () => {
@@ -53,5 +70,15 @@ describe("CloudBetaCoverageModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Export data" }));
 
     expect(onExport).toHaveBeenCalledOnce();
+  });
+
+  it("uses its narrow prepared non-English shell payload", () => {
+    renderWithFeatureMessages(
+      <CloudBetaCoverageModal onClose={vi.fn()} onExport={vi.fn()} open projectRef="prj_1" />,
+      { locale: "pl", messages: preparedPolishShellMessages },
+    );
+
+    expect(screen.getByRole("heading", { name: "Objęte beta" })).toBeInTheDocument();
+    expect(screen.getByText("Zakres wersji beta hostowanej")).toBeInTheDocument();
   });
 });

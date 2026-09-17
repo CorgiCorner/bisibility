@@ -1,29 +1,25 @@
 "use client";
 
 import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Card } from "@/components/ui/Card";
 import { ChartRegion } from "@/components/ui/ChartRegion";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ZonedTime } from "@/components/ui/ZonedTime";
-import { formatDateRange, formatDateTime } from "@/lib/dates/format";
+import { formatDisplayDate, formatDisplayDateRange } from "@/lib/dates/format";
 import type { KeywordDetailChartState } from "@/lib/keyword-detail/state-model";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
 import {
-  comparisonAriaLabel,
   comparisonTargets,
   keywordMarketLabel,
   marketComparisonData,
 } from "@/lib/keywords/market-position-history";
-import {
-  dailyPositionPoints,
-  positionDateLabel,
-  positionHistoryAriaLabel,
-} from "@/lib/keywords/position-history";
+import { calendarDayKey, dailyPositionPoints } from "@/lib/keywords/position-history";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { chartColors } from "@/lib/theme/chart-colors";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { DegradedPositionMarkers } from "./DegradedPositionMarkers";
@@ -40,12 +36,22 @@ type PositionHistoryCardProps = {
 };
 
 const RANGES = [
-  { days: 7, label: "7d" },
-  { days: 30, label: "30d" },
-  { days: 90, label: "90d" },
+  { days: 7, value: "7d" },
+  { days: 30, value: "30d" },
+  { days: 90, value: "90d" },
 ] as const;
 
-type RangeLabel = (typeof RANGES)[number]["label"];
+type RangeLabel = (typeof RANGES)[number]["value"];
+
+function localizedDayLabel(
+  dayKey: string,
+  today: string,
+  t: (key: "today") => string,
+  dateDisplay: ReturnType<typeof useDateDisplay>,
+) {
+  if (dayKey === today) return t("today");
+  return formatDisplayDateRange(dayKey, dayKey, { ...dateDisplay, timeZone: "UTC" });
+}
 
 export function PositionHistoryCard({
   chartState,
@@ -53,29 +59,37 @@ export function PositionHistoryCard({
   marketTargets = [keyword],
   timeZone,
 }: Readonly<PositionHistoryCardProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.position");
   const [range, setRange] = useState<RangeLabel>("30d");
   const [scope, setScope] = useState<"all" | "single">("single");
-  const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
   const { readOnly } = useProjectWriteMode();
-  const activeRange = RANGES.find((option) => option.label === range) ?? RANGES[1];
-  const history = dailyPositionPoints(keyword.positionHistory, activeRange.days).map((point) => ({
-    ...point,
-    label:
-      point.label === "Today"
-        ? "Today"
-        : positionDateLabel(new Date(point.checkedAt), new Date(), dateFormat),
-  }));
+  const activeRange = RANGES.find((option) => option.value === range) ?? RANGES[1];
+  const now = new Date();
+  const today = calendarDayKey(now);
+  const history = dailyPositionPoints(keyword.positionHistory, activeRange.days, now).map(
+    (point) => ({
+      ...point,
+      label: localizedDayLabel(calendarDayKey(new Date(point.checkedAt)), today, t, dateDisplay),
+    }),
+  );
   const markets = comparisonTargets(marketTargets, keyword);
   const visibleMarkets = markets.slice(0, 6);
   const showComparison = markets.length > 1;
   const allMarkets = showComparison && scope === "all";
-  const comparison = marketComparisonData(visibleMarkets, activeRange.days, dateFormat);
+  const comparison = marketComparisonData(visibleMarkets, activeRange.days, now);
+  const comparisonLabels = comparison.labels.map((label) =>
+    localizedDayLabel(label, today, t, dateDisplay),
+  );
   const boundaryVisible =
     history.length > 0 &&
     Boolean(
       keyword.positionHistoryBoundaryAt &&
-        dailyPositionPoints([{ checkedAt: keyword.positionHistoryBoundaryAt }], activeRange.days)
-          .length,
+        dailyPositionPoints(
+          [{ checkedAt: keyword.positionHistoryBoundaryAt }],
+          activeRange.days,
+          now,
+        ).length,
     );
   const labels = history.map((point) => point.label);
   const positions = history.map((point) => point.position);
@@ -86,16 +100,39 @@ export function PositionHistoryCard({
   const maxPosition = Math.max(20, ...(allMarkets ? comparisonPositions : positions), target ?? 1);
   const rangeEmpty = positions.length === 0;
   const notEnough = chartState === "one_check" || (!chartState && positions.length < 2);
-  const chartLabels = allMarkets ? comparison.labels : labels;
+  const chartLabels = allMarkets ? comparisonLabels : labels;
   const chartPositions = positions;
-  const emptyStateTitle = rangeEmpty
-    ? `No checks in the last ${activeRange.days} days.`
-    : "Not enough history to chart yet.";
+  const emptyStateTitle = rangeEmpty ? t("noChecks", { days: activeRange.days }) : t("notEnough");
+  const latestForAria = positions.at(-1);
   const chartRegionLabel = notEnough
     ? `${keyword.keyword}: ${emptyStateTitle}`
     : allMarkets
-      ? comparisonAriaLabel(visibleMarkets)
-      : positionHistoryAriaLabel(keyword.keyword, positions.at(-1), target);
+      ? t("allMarketsAria", {
+          markets: visibleMarkets
+            .map((market) =>
+              market.hasRankData && market.position !== null
+                ? t("marketPosition", {
+                    market: keywordMarketLabel(market),
+                    position: market.position,
+                  })
+                : `${keywordMarketLabel(market)} ${t("positionUnavailable")}`,
+            )
+            .join(", "),
+        })
+      : latestForAria === undefined || target === null
+        ? t("historyAria", { keyword: keyword.keyword })
+        : latestForAria > target
+          ? t("historyAriaWithTarget", {
+              distance: latestForAria - target,
+              keyword: keyword.keyword,
+              position: latestForAria,
+              target,
+            })
+          : t("historyAriaTargetReached", {
+              keyword: keyword.keyword,
+              position: latestForAria,
+              target,
+            });
   const chartSeries = allMarkets
     ? comparison.values.map((series, index) => ({
         color: marketPositionPalette[index % marketPositionPalette.length],
@@ -110,26 +147,31 @@ export function PositionHistoryCard({
           color: chartColors.accent,
           curve: "linear" as const,
           values: chartPositions,
-          label: "Position",
+          label: t("positionSeries"),
         },
       ];
   const latestPosition = keyword.positionHistory.at(-1)?.position ?? null;
   const displayedPosition = positions.at(-1) ?? latestPosition;
   const latestCheckedAt = keyword.positionHistory.at(-1)?.checkedAt;
-  const latestDay = latestCheckedAt
-    ? formatDateTime(new Date(latestCheckedAt), "iso", timeZone).slice(0, 10)
-    : null;
   const latestChip =
     latestPosition !== null && latestPosition > 0
-      ? `Latest #${latestPosition} · ${latestDay ? formatDateRange(latestDay, latestDay, dateFormat) : "Today"}`
-      : "Latest unavailable";
+      ? t("latest", {
+          date: latestCheckedAt
+            ? formatDisplayDate(calendarDayKey(new Date(latestCheckedAt), timeZone), {
+                ...dateDisplay,
+                timeZone,
+              })
+            : t("today"),
+          position: latestPosition,
+        })
+      : t("latestUnavailable");
   const effectiveSchedule = resolveEffectiveSchedule(keyword.schedule);
   const nextCheckLabel: ReactNode = readOnly ? (
-    "Paused - migration hold"
+    t("pausedMigration")
   ) : effectiveSchedule.frequency === "paused" ? (
-    "Paused"
+    t("paused")
   ) : !effectiveSchedule.nextCheckAt ? (
-    "Not scheduled"
+    t("notScheduled")
   ) : (
     <ZonedTime timeZone={timeZone} value={effectiveSchedule.nextCheckAt.toISOString()} />
   );
@@ -138,25 +180,21 @@ export function PositionHistoryCard({
     <Card className="rounded-card" size="lg">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <SectionTitle>Position history</SectionTitle>
-          <p className="m-0 mt-0.5 text-[12px] text-fg-muted">
-            Google rank over time, closer to #1 is better
-          </p>
+          <SectionTitle>{t("title")}</SectionTitle>
+          <p className="m-0 mt-0.5 text-[12px] text-fg-muted">{t("description")}</p>
           {boundaryVisible ? (
-            <p className="mt-1 text-[11px] text-fg-muted">
-              Comparison restarted after a ranking normalization change.
-            </p>
+            <p className="mt-1 text-[11px] text-fg-muted">{t("normalization")}</p>
           ) : null}
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           {showComparison ? (
             <SegmentedControl
-              ariaLabel="Position history scope"
+              ariaLabel={t("scope")}
               fitContent
               onChange={setScope}
               options={[
-                { label: "This market", value: "single" },
-                { label: "All markets", value: "all" },
+                { label: t("thisMarket"), value: "single" },
+                { label: t("allMarkets"), value: "all" },
               ]}
               size="xs"
               value={scope}
@@ -164,16 +202,16 @@ export function PositionHistoryCard({
           ) : null}
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-3 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
             <span aria-hidden className="h-2 w-2 rounded-full bg-accent-solid" />
-            {allMarkets ? `${markets.length} markets` : latestChip}
+            {allMarkets ? t("markets", { count: markets.length }) : latestChip}
           </span>
           <SegmentedControl
-            ariaLabel="Position history range"
+            ariaLabel={t("range")}
             className="bg-bg-elev font-sans tabular-nums"
             fitContent
             onChange={(value) => setRange(value as RangeLabel)}
             options={RANGES.map((option) => ({
-              label: option.label,
-              value: option.label,
+              label: t("rangeDays", { count: option.days }),
+              value: option.value,
             }))}
             size="xs"
             value={range}
@@ -187,7 +225,8 @@ export function PositionHistoryCard({
               <p className="m-0 text-[13px] font-semibold text-fg">{emptyStateTitle}</p>
               {displayedPosition !== null ? (
                 <span className="inline-flex items-center gap-2 rounded-full bg-bg-sunken px-3 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
-                  Current #{displayedPosition} | Next check {nextCheckLabel}
+                  {t("currentPosition", { position: displayedPosition })} | {t("nextCheckLabel")}{" "}
+                  {nextCheckLabel}
                 </span>
               ) : null}
             </div>
@@ -201,7 +240,7 @@ export function PositionHistoryCard({
             max={maxPosition}
             reversed
             yTicks={[1, 10, 20]}
-            formatValue={(value) => `#${value}`}
+            formatValue={(value) => t("axisPosition", { position: value })}
             margin={{ top: 18, right: 18, bottom: 0, left: 0 }}
           >
             {!allMarkets && target !== null ? <TargetReferenceLine target={target} /> : null}

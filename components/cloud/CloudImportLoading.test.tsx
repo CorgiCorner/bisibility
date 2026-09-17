@@ -1,6 +1,6 @@
 import { CloudImportSettingsLoading } from "@/components/cloud/CloudImportLoading";
 import { MigrationTokenCard } from "@/components/cloud/MigrationTokenCard";
-import { render } from "@testing-library/react";
+import { renderWithCloudImportMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { describe, expect, it, vi } from "vitest";
 
 describe("CloudImportSettingsLoading", () => {

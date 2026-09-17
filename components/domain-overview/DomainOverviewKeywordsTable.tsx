@@ -3,17 +3,18 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import type { RankedKeywordsPage } from "@/lib/providers/types";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { type KeywordSort, keywordValue } from "./domain-overview-keyword-table-model";
 import type { SaveDomainKeywords } from "./domain-overview-keyword-tracking";
 import {
   formatDomainCount,
   formatDomainEstimate,
+  formatDomainEstimatedCost,
   formatDomainEstimateExact,
 } from "./domain-overview-metrics";
 import { downloadDomainOverviewKeywords } from "./domain-overview-table-export";
@@ -25,18 +26,13 @@ import {
 } from "./domain-overview-table-sort";
 import { useDomainKeywordSelection } from "./useDomainKeywordSelection";
 
-const currency = new Intl.NumberFormat("en-US", {
-  currency: "USD",
-  maximumFractionDigits: 2,
-  style: "currency",
-});
 const header =
   "font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted";
-function delta(value: number | null) {
+function delta(value: number | null, locale: string) {
   if (value == null) return { label: "-", tone: "text-fg-muted" };
-  if (value === 0) return { label: "0", tone: "text-fg-muted" };
+  if (value === 0) return { label: formatDomainCount(0, locale), tone: "text-fg-muted" };
   return {
-    label: `${value > 0 ? "+" : "−"}${Math.abs(value)}`,
+    label: `${value > 0 ? "+" : "−"}${formatDomainCount(Math.abs(value), locale)}`,
     tone: value > 0 ? "text-green-text" : "text-red-text",
   };
 }
@@ -63,8 +59,15 @@ export function DomainOverviewKeywordsTable({
 }>) {
   const [sort, setSort] = useState<KeywordSort>("estimatedTraffic");
   const [direction, setDirection] = useState<SortDirection>("desc");
-  const rows = sortFetchedRows(page.rows, keywordValue[sort], direction);
-  const selection = useDomainKeywordSelection(page.rows, readOnly ? undefined : onSaveSelected);
+  const locale = useLocale();
+  const t = useTranslations("projectDomainOverview.workspace.ui");
+  const currency = new Intl.NumberFormat(locale, {
+    currency: "USD",
+    maximumFractionDigits: 2,
+    style: "currency",
+  });
+  const rows = sortFetchedRows(page.rows, keywordValue[sort], direction, locale);
+  const selection = useDomainKeywordSelection(page.rows, t, readOnly ? undefined : onSaveSelected);
   const providerFetchedCount = fetchedCount ?? page.rows.length;
   const remaining =
     page.totalCount == null ? null : Math.max(0, page.totalCount - providerFetchedCount);
@@ -82,16 +85,16 @@ export function DomainOverviewKeywordsTable({
   return (
     <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
       <header className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-3">
-        <h3 className="m-0 text-[14.5px] font-semibold">Top organic keywords</h3>
-        <span className="ml-auto text-[12px] text-fg-muted">Preview of fetched rows</span>
+        <h3 className="m-0 text-[14.5px] font-semibold">{t("topOrganicKeywords")}</h3>
+        <span className="ml-auto text-[12px] text-fg-muted">{t("previewFetched")}</span>
         <Button
-          aria-label="Export fetched keywords as CSV"
+          aria-label={t("exportKeywords")}
           onClick={() => downloadDomainOverviewKeywords(page.rows)}
           size="xs"
           startIcon={<DownloadSimple weight="regular" size={14} />}
           variant="secondary"
         >
-          Export
+          {t("export")}
         </Button>
         {!readOnly ? (
           <Button
@@ -101,11 +104,7 @@ export function DomainOverviewKeywordsTable({
             size="xs"
             startIcon={<BookmarkSimple weight="regular" size={13} />}
           >
-            Add{" "}
-            {selection.selectedRows.length > 0
-              ? `${selection.selectedRows.length} selected to`
-              : "to"}{" "}
-            saved keywords
+            {t("addToSaved", { count: selection.selectedRows.length })}
           </Button>
         ) : null}
       </header>
@@ -114,7 +113,7 @@ export function DomainOverviewKeywordsTable({
           <div className="sticky top-0 z-1 grid grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border bg-bg-sunken px-4 py-2.5">
             {!readOnly ? (
               <Checkbox
-                aria-label="Select all fetched keywords"
+                aria-label={t("selectAllKeywords")}
                 checked={selection.allSelected}
                 onChange={selection.toggleAll}
               />
@@ -124,8 +123,9 @@ export function DomainOverviewKeywordsTable({
               direction={direction}
               nextDirection="asc"
               onClick={() => selectSort("keyword")}
+              t={t}
             >
-              Keyword
+              {t("columnKeyword")}
             </SortableColumnHeader>
             <SortableColumnHeader
               active={sort === "position"}
@@ -133,8 +133,9 @@ export function DomainOverviewKeywordsTable({
               direction={direction}
               nextDirection="desc"
               onClick={() => selectSort("position")}
+              t={t}
             >
-              Organic pos
+              {t("columnOrganicPosition")}
             </SortableColumnHeader>
             <SortableColumnHeader
               active={sort === "estimatedTraffic"}
@@ -142,8 +143,9 @@ export function DomainOverviewKeywordsTable({
               direction={direction}
               nextDirection="desc"
               onClick={() => selectSort("estimatedTraffic")}
+              t={t}
             >
-              Est. traffic
+              {t("columnEstimatedTraffic")}
             </SortableColumnHeader>
             <SortableColumnHeader
               active={sort === "searchVolume"}
@@ -151,8 +153,9 @@ export function DomainOverviewKeywordsTable({
               direction={direction}
               nextDirection="desc"
               onClick={() => selectSort("searchVolume")}
+              t={t}
             >
-              Volume
+              {t("columnVolume")}
             </SortableColumnHeader>
             <span className="inline-flex items-center justify-end gap-1">
               <SortableColumnHeader
@@ -161,10 +164,11 @@ export function DomainOverviewKeywordsTable({
                 direction={direction}
                 nextDirection="desc"
                 onClick={() => selectSort("difficulty")}
+                t={t}
               >
                 KD
               </SortableColumnHeader>
-              <InfoTooltip text="Keyword difficulty, 0 to 100." />
+              <InfoTooltip text={t("keywordDifficultyTooltip")} />
             </span>
             <SortableColumnHeader
               active={sort === "cpc"}
@@ -172,11 +176,12 @@ export function DomainOverviewKeywordsTable({
               direction={direction}
               nextDirection="desc"
               onClick={() => selectSort("cpc")}
+              t={t}
             >
               CPC
             </SortableColumnHeader>
-            <span className={header}>Intent</span>
-            <span className={header}>Ranking URL</span>
+            <span className={header}>{t("columnIntent")}</span>
+            <span className={header}>{t("columnRankingUrl")}</span>
             <span className="inline-flex items-center justify-end gap-1 text-right">
               <SortableColumnHeader
                 active={sort === "rankAbsoluteDelta"}
@@ -184,14 +189,15 @@ export function DomainOverviewKeywordsTable({
                 direction={direction}
                 nextDirection="desc"
                 onClick={() => selectSort("rankAbsoluteDelta")}
+                t={t}
               >
-                SERP Δ
+                {t("columnSerpChange")}
               </SortableColumnHeader>
-              <InfoTooltip text="Absolute SERP change, including non-organic results." />
+              <InfoTooltip text={t("serpChangeTooltip")} />
             </span>
           </div>
           {rows.map((row) => {
-            const change = delta(row.rankAbsoluteDelta);
+            const change = delta(row.rankAbsoluteDelta, locale);
             return (
               <div
                 className="grid min-h-[58px] grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border px-4 py-2 last:border-b-0"
@@ -200,30 +206,32 @@ export function DomainOverviewKeywordsTable({
               >
                 {!readOnly ? (
                   <Checkbox
-                    aria-label={`Select keyword ${row.keyword}`}
+                    aria-label={t("selectKeyword", { keyword: row.keyword })}
                     checked={selection.isSelected(row)}
                     onChange={() => selection.toggleRow(row)}
                   />
                 ) : null}
                 <strong className="truncate text-[13.5px] font-medium">{row.keyword}</strong>
                 <span className="text-right font-sans tabular-nums text-[12.5px]">
-                  {row.position ?? "-"}
+                  {row.position == null ? "-" : formatDomainCount(row.position, locale)}
                 </span>
                 <span
                   className="text-right font-sans tabular-nums text-[12.5px] font-semibold"
                   title={
                     row.estimatedTraffic == null
                       ? undefined
-                      : formatDomainEstimateExact(row.estimatedTraffic)
+                      : formatDomainEstimateExact(row.estimatedTraffic, locale)
                   }
                 >
-                  {row.estimatedTraffic == null ? "-" : formatDomainEstimate(row.estimatedTraffic)}
+                  {row.estimatedTraffic == null
+                    ? "-"
+                    : formatDomainEstimate(row.estimatedTraffic, locale)}
                 </span>
                 <span className="text-right font-sans tabular-nums text-[12.5px] text-fg-muted">
-                  {row.searchVolume == null ? "-" : formatDomainCount(row.searchVolume)}
+                  {row.searchVolume == null ? "-" : formatDomainCount(row.searchVolume, locale)}
                 </span>
                 <span className="text-right font-sans tabular-nums text-[12.5px]">
-                  {row.difficulty ?? "-"}
+                  {row.difficulty == null ? "-" : formatDomainCount(row.difficulty, locale)}
                 </span>
                 <span className="text-right font-sans tabular-nums text-[12px] text-fg-muted">
                   {row.cpcCents == null ? "-" : currency.format(row.cpcCents / 100)}
@@ -262,15 +270,15 @@ export function DomainOverviewKeywordsTable({
             startIcon={<Plus weight="regular" size={13} />}
             variant="secondary"
           >
-            Load next {remaining == null ? 100 : Math.min(100, remaining)} keywords
+            {t("loadNextKeywords", { count: remaining == null ? 100 : Math.min(100, remaining) })}
             {estimateCents == null ? null : (
               <span className="ml-1 font-sans tabular-nums">
-                ~{formatEstimateCents(estimateCents)}
+                {formatDomainEstimatedCost(estimateCents, locale, t)}
               </span>
             )}
           </Button>
           {loadMoreError ? (
-            <span className="text-[12px] text-red-text">The next keyword page did not load.</span>
+            <span className="text-[12px] text-red-text">{t("nextKeywordsFailed")}</span>
           ) : null}
         </div>
       ) : null}
@@ -283,8 +291,8 @@ export function DomainOverviewKeywordsTable({
         </div>
       ) : null}
       <footer className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-2.5 text-[12px] text-fg-muted">
-        {fetchedRowsSummary(providerFetchedCount, page.totalCount, "keywords")}
-        <span className="ml-auto">Sorting the fetched rows is free</span>
+        {fetchedRowsSummary(providerFetchedCount, page.totalCount, "keywords", t)}
+        <span className="ml-auto">{t("sortingFree")}</span>
       </footer>
     </section>
   );

@@ -65,6 +65,8 @@ describe("StepFirstCheck", () => {
     });
     expect(screen.getByText("1 keyword · 2 markets · both devices · 4 checks")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Run check" }));
-    expect(await screen.findByText(/3 of 4 checks · \$0\.0060 recorded cost/)).toBeInTheDocument();
+    expect(
+      await screen.findByText("3 of 4 checks completed. Review the remaining result statuses."),
+    ).toBeInTheDocument();
   });
 });

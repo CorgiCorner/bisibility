@@ -1,5 +1,4 @@
 import {
-  credentialFieldIssueMessage,
   credentialFieldsSignature,
   hasRequiredCredentialFields,
   missingCredentialFields,
@@ -21,7 +20,11 @@ import {
   DATAFORSEO_CREDENTIAL_FIELDS,
   SERPAPI_CREDENTIAL_FIELDS,
 } from "@/lib/integrations/credential-fields";
-import { connectProviderSchema, type TestProviderConnectionInput } from "@/lib/schemas/provider";
+import {
+  connectProviderSchema,
+  credentialSchemaFor,
+  type TestProviderConnectionInput,
+} from "@/lib/schemas/provider";
 import { z } from "zod";
 import { serpApiCostCaption } from "./StepConnectProvider.provider-pricing";
 
@@ -70,34 +73,53 @@ export const credentialFields = {
 export const connectionTestFailedMessage =
   "Connection test failed - fix the credentials, or skip and add keywords as paused.";
 const serpProviderIdSchema = z.enum(["dataforseo", "serpapi"]);
-const costPerCheckSchema = z.preprocess(
-  (value) =>
-    value === "" || (typeof value === "number" && Number.isNaN(value)) ? undefined : value,
-  z.coerce
-    .number()
-    .min(0)
-    .max(100)
-    .refine((value) => Number.isInteger(value * 10000), "Use up to 4 decimals.")
-    .optional(),
-);
-const onboardingConnectProviderBaseSchema = connectProviderSchema.extend({
-  costPerCheck: costPerCheckSchema,
+function costPerCheckSchema(costPrecision: string) {
+  return z.preprocess(
+    (value) =>
+      value === "" || (typeof value === "number" && Number.isNaN(value)) ? undefined : value,
+    z.coerce
+      .number()
+      .min(0)
+      .max(100)
+      .refine((value) => Number.isInteger(value * 10000), costPrecision)
+      .optional(),
+  );
+}
+
+const onboardingConnectProviderTypeSchema = connectProviderSchema.extend({
+  costPerCheck: z.number().optional(),
   providerId: serpProviderIdSchema,
 });
-export function onboardingConnectProviderSchemaForConnections(connections: ConnectedProviderMap) {
-  return onboardingConnectProviderBaseSchema.superRefine((value, ctx) => {
-    if (connections[value.providerId]) return;
-    for (const field of missingCredentialFields(credentialFields[value.providerId], value)) {
-      ctx.addIssue({
-        code: "custom",
-        message: credentialFieldIssueMessage(field),
-        path: [field.name],
-      });
-    }
-  });
+
+export type OnboardingConnectProviderInput = z.infer<typeof onboardingConnectProviderTypeSchema>;
+
+export function onboardingConnectProviderSchemaForConnections(
+  connections: ConnectedProviderMap,
+  messages: {
+    costPrecision: string;
+    credentialTooLong: string;
+    loginRequired: string;
+    secretRequired: string;
+  },
+) {
+  return connectProviderSchema
+    .extend({
+      costPerCheck: costPerCheckSchema(messages.costPrecision),
+      login: credentialSchemaFor({ tooLong: messages.credentialTooLong }),
+      providerId: serpProviderIdSchema,
+      secret: credentialSchemaFor({ tooLong: messages.credentialTooLong }),
+    })
+    .superRefine((value, ctx) => {
+      if (connections[value.providerId]) return;
+      for (const field of missingCredentialFields(credentialFields[value.providerId], value)) {
+        ctx.addIssue({
+          code: "custom",
+          message: field.name === "login" ? messages.loginRequired : messages.secretRequired,
+          path: [field.name],
+        });
+      }
+    });
 }
-export const onboardingConnectProviderSchema = onboardingConnectProviderSchemaForConnections({});
-export type OnboardingConnectProviderInput = z.infer<typeof onboardingConnectProviderSchema>;
 export type ProviderTestResult = {
   balance?: number;
   message: string;

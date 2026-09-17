@@ -1,9 +1,11 @@
 import type { CreateIngestHookInput, MutateIngestHookInput } from "@/lib/schemas/ingestHook";
 
 export type DeployHookData = {
+  createdAt: string;
   createdLabel: string;
   disabled: boolean;
   id: string;
+  lastUsedAt: string | null;
   label: string;
   lastUsedLabel: string;
 };

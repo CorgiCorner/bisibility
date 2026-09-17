@@ -1,8 +1,23 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ComponentProps } from "react";
+import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
+import {
+  projectRankTrackerFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, render as renderDom, screen, waitFor } from "@testing-library/react";
+import type { ComponentProps, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ProjectWriteModeProvider } from "../../shell/ProjectWriteModeProvider";
 import { KeywordsGridNotices } from "./KeywordsGridNotices";
+
+function render(children: ReactNode) {
+  const result = renderDom(<ProjectRankTrackerMessages>{children}</ProjectRankTrackerMessages>);
+  return {
+    ...result,
+    rerender(nextChildren: ReactNode) {
+      result.rerender(<ProjectRankTrackerMessages>{nextChildren}</ProjectRankTrackerMessages>);
+    },
+  };
+}
 
 const readyPlan = {
   budget: { capCents: 1000, spentCents: 100 },
@@ -13,10 +28,10 @@ const readyPlan = {
   providers: ["dataforseo"],
   readyCount: 2,
   scope: {
-    depth: "Top 100",
-    device: "Desktop",
-    engine: "Google",
-    frequency: "Daily",
+    depth: 100,
+    device: "desktop",
+    engine: "google",
+    frequency: "daily",
     location: "United States",
   },
 };
@@ -36,6 +51,29 @@ function renderNotices(props: Partial<ComponentProps<typeof KeywordsGridNotices>
 }
 
 describe("KeywordsGridNotices", () => {
+  it("localizes the first-check defaults when this host supplies only its action and count", () => {
+    const messages = structuredClone(projectRankTrackerFeatureTestMessages);
+    messages.projectRankTracker.list.notices.firstCheckDetail =
+      "{count, plural, =0 {Dodaj slowa kluczowe.} one {# slowo kluczowe czeka.} other {# slowa kluczowe czekaja.}}";
+    messages.projectRankTracker.list.notices.firstCheckTitle = "Brak pozycji";
+
+    renderWithFeatureMessages(
+      <KeywordsGridNotices
+        canManageProviders
+        checkStates={["never_checked"]}
+        getFirstCheckRunPlanAction={vi.fn().mockResolvedValue(readyPlan)}
+        projectId="prj_1"
+        queueFirstChecksAction={vi.fn().mockResolvedValue({ queued: 0 })}
+        rowCount={1}
+      />,
+      { locale: "pl", messages },
+    );
+
+    expect(screen.getByText("Brak pozycji")).toBeInTheDocument();
+    expect(screen.getByText("1 slowo kluczowe czeka.")).toBeInTheDocument();
+    expect(screen.queryByText("No rankings yet")).not.toBeInTheDocument();
+  });
+
   it("shows failed-check copy instead of a connect-provider cause when a provider is connected", () => {
     renderNotices({
       checkHealth: {

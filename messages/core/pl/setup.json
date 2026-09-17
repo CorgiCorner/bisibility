@@ -1,0 +1,70 @@
+{
+  "setup": {
+    "account": {
+      "description": "Ta instancja nie ma jeszcze żadnych kont. Utwórz konto administratora, aby dokończyć konfigurację.",
+      "email": "Adres e-mail",
+      "name": "Twoje imię i nazwisko",
+      "notice": "Pierwsze konto staje się administratorem instancji. Pozostałe osoby logują się normalnie po zakończeniu konfiguracji.",
+      "sendCode": "Dalej",
+      "sendingCode": "Wysyłanie kodu…",
+      "title": "Witaj w bisibility"
+    },
+    "errors": {
+      "alreadyCompleted": "Konfiguracja administratora jest już zakończona. Zaloguj się, aby kontynuować.",
+      "complete": "Nie udało się dokończyć konfiguracji. Spróbuj ponownie.",
+      "expiredCode": "Ten kod jest nieprawidłowy lub wygasł. Poproś o nowy kod i spróbuj ponownie.",
+      "requestCode": "Nie udało się wysłać kodu. Sprawdź konfigurację poczty na serwerze i spróbuj ponownie."
+    },
+    "frame": {
+      "version": "własna instancja · v{version}"
+    },
+    "metadata": {
+      "description": "Utwórz konto administratora dla tej instalacji bisibility.",
+      "title": "Konfiguracja bisibility"
+    },
+    "noMailer": {
+      "codeLog": "[auth] sign-in OTP for {email}: ******",
+      "description": "Wysyłka e-maili nie jest jeszcze skonfigurowana, więc kod trafił do logów serwera. Odczytanie go tam potwierdza, że masz kontrolę nad tym serwerem.",
+      "title": "Odczytaj kod z logów serwera"
+    },
+    "recovery": {
+      "complete": "Zakończ konfigurację",
+      "completing": "Kończenie konfiguracji"
+    },
+    "status": {
+      "administratorExists": "Ta instancja ma już administratora. Jeśli potrzebujesz uprawnień administratora, poproś go o dostęp – albo operator serwera może przypisać tę rolę z wiersza poleceń.",
+      "complete": "Konfiguracja zakończona",
+      "finish": "Dokończ konfigurację administratora",
+      "goToApp": "Przejdź do aplikacji",
+      "pending": "Ta instancja nie ma administratora. Twoje zalogowane konto może teraz dokończyć konfigurację.",
+      "switchAccount": "Zmień konto",
+      "switchAccountAria": "Wyloguj się i zmień konto"
+    },
+    "stepper": {
+      "label": "Konfiguracja instancji",
+      "progress": "Postęp konfiguracji"
+    },
+    "success": {
+      "adminPanel": "Otwórz panel administratora",
+      "continue": "Przejdź do projektu",
+      "description": "Konfiguracja zakończona. Ta instancja należy do Ciebie – teraz połącz dostawcę danych i dodaj pierwsze słowa kluczowe.",
+      "emailDescription": "Kody logowania dla innych osób wymagają działającej wysyłki e-maili – dodaj ją do konfiguracji serwera, zanim kogoś zaprosisz.",
+      "emailTitle": "Następny krok: skonfiguruj wysyłkę e-maili.",
+      "title": "Jesteś administratorem"
+    },
+    "verify": {
+      "changeEmail": "Użyj innego adresu e-mail",
+      "description": "Wysłaliśmy 6-cyfrowy kod na adres <recipient>{email}</recipient>. Wpisz go, aby zweryfikować adres.",
+      "resend": "Wyślij kod ponownie",
+      "submit": "Zweryfikuj i utwórz konto",
+      "submitting": "Tworzenie konta administratora…",
+      "title": "Sprawdź skrzynkę"
+    },
+    "validation": {
+      "email": "Podaj prawidłowy adres e-mail.",
+      "nameLong": "Imię i nazwisko mogą mieć maksymalnie 100 znaków.",
+      "nameRequired": "Podaj imię i nazwisko.",
+      "otp": "Podaj 6-cyfrowy kod."
+    }
+  }
+}

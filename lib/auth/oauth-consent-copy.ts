@@ -1,47 +1,27 @@
 import type { OAuthConsentClient } from "./oauth-consent-types";
 
-export type OAuthConsentPersona = "agent" | "cli" | "generic";
-
 export type OAuthConsentCopy = {
-  description: string;
-  heading: string;
-  persona: OAuthConsentPersona;
+  /** Display name when the client identified itself, otherwise null. */
+  clientName: string | null;
   retryCommand: string | null;
 };
 
-const genericCopy: OAuthConsentCopy = {
-  description:
-    "Approve only a client you just started yourself, and scopes that match what it needs.",
-  heading: "Review client access.",
-  persona: "generic",
-  retryCommand: null,
-};
+export function getOAuthConsentCopy(client: OAuthConsentClient): OAuthConsentCopy {
+  const name = client.name.trim();
+  // "Unknown client" is the query layer's sentinel for an unidentified client.
+  const named = Boolean(name && name !== "Unknown client");
+  return {
+    clientName: named ? name : null,
+    // A dynamic display name selects retry guidance, never a trust endorsement.
+    retryCommand:
+      client.id === "bisibility-cli"
+        ? "bisibility auth login"
+        : client.dynamic && name.toLowerCase() === "codex"
+          ? "codex mcp login bisibility"
+          : null,
+  };
+}
 
-const clientCopyById: Record<string, OAuthConsentCopy> = {
-  "bisibility-cli": {
-    description:
-      "Approve only if you just started bisibility auth login on this device and the requested scopes match what the CLI needs.",
-    heading: "Sign in to Bisibility CLI",
-    persona: "cli",
-    retryCommand: "bisibility auth login",
-  },
-};
-
-// Dynamic display names select copy only and must never imply that a client is trusted.
-const clientCopyByName: Record<string, OAuthConsentCopy> = {
-  codex: {
-    description:
-      "Approve only clients you just started yourself, and scopes that match the work they need to do.",
-    heading: "Review agent access.",
-    persona: "agent",
-    retryCommand: "codex mcp login bisibility",
-  },
-};
-
-export function getOAuthConsentCopy(client: OAuthConsentClient) {
-  return (
-    clientCopyById[client.id] ??
-    (client.dynamic ? clientCopyByName[client.name.trim().toLowerCase()] : undefined) ??
-    genericCopy
-  );
+export function canCreateOAuthApiTokens(scopes: readonly string[]) {
+  return scopes.includes("tokens:write") || scopes.includes("admin");
 }

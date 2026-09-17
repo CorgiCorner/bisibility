@@ -2,10 +2,11 @@
 
 import { CheckDepthSplitButton } from "@/components/keywords/CheckDepthSplitButton";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
-import { type MarketScope, scopedRunActionLabel } from "@/lib/markets/market-scope";
+import type { MarketScope } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { SerpDepth } from "@/lib/serp/constants";
-import { effectiveRowDepth, selectionDepthLabel } from "./run-check-depth";
+import { useTranslations } from "next-intl";
+import { effectiveRowDepth } from "./run-check-depth";
 
 type RunChecksSplitButtonProps = {
   checksRunning: boolean;
@@ -27,22 +28,38 @@ export function RunChecksSplitButton({
   readOnly,
   selectedRows,
 }: Readonly<RunChecksSplitButtonProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.runChecks");
   const selectedIds = selectedRows.map((row) => row.id);
   const selectionDepths = new Set(selectedRows.map(effectiveRowDepth));
   const uniformDepth = selectionDepths.size === 1 ? selectionDepths.values().next().value : null;
   const currentDepth = chosenDepth ?? uniformDepth ?? null;
   const selectionLabel =
-    chosenDepth != null ? `Top ${chosenDepth}` : selectionDepthLabel(selectedRows);
-  const actionLabel = scopedRunActionLabel(
-    selectedRows.length === 1 ? "Run check" : "Run checks",
-    marketScope,
-  );
+    chosenDepth != null
+      ? t("top", { depth: chosenDepth })
+      : uniformDepth != null
+        ? t("top", { depth: uniformDepth })
+        : t("keywordDefaults");
+  const baseAction = selectedRows.length === 1 ? t("runCheck") : t("runChecks");
+  const action = marketScope
+    ? selectedRows.length === 1
+      ? t("runCheckInMarket", { market: marketScope.label })
+      : t("runChecksInMarket", { market: marketScope.label })
+    : baseAction;
 
   return (
     <ProjectReadOnlyTooltip>
       <CheckDepthSplitButton
-        actionLabel={checksRunning ? "Starting..." : `${actionLabel} (${selectionLabel})`}
+        actionLabel={
+          checksRunning ? t("starting") : t("actionWithDepth", { action, depth: selectionLabel })
+        }
+        copy={{
+          changeDefault: t("changeDefault"),
+          depthMenu: t("depthMenu"),
+          optionLabel: (depth) => t("top", { depth }),
+          shallowVisibility: t("shallowVisibility"),
+        }}
         currentDepth={currentDepth}
+        caretAriaLabel={t("chooseDepth")}
         disabled={readOnly || checksRunning}
         onAction={() =>
           chosenDepth != null ? onRunChecks(selectedIds, chosenDepth) : onRunChecks(selectedIds)

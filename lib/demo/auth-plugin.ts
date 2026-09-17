@@ -108,13 +108,16 @@ export function readOnlyDemoPlugin(): BetterAuthPlugin {
         {
           method: "POST",
           use: [formCsrfMiddleware],
-          body: z.object({ code: z.literal(DEMO_ENTRY_CODE) }).strict(),
+          body: z
+            .object({ code: z.literal(DEMO_ENTRY_CODE), oauth_query: z.string().optional() })
+            .strict(),
         },
         async (ctx) => {
           const config = readDemoConfig();
           if (config.kind === "disabled") {
             throw new APIError("NOT_FOUND", { message: "Demo is not enabled." });
           }
+          if (config.kind === "legacy-read-only" && ctx.body.oauth_query) throw forbidden();
           const identity =
             config.kind === "legacy-read-only"
               ? await loadDemoIdentity()

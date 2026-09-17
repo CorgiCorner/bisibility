@@ -1,7 +1,12 @@
-import { parseKeywordTargetLines } from "@/lib/keywords/add-keyword-drawer-shared";
+import {
+  type KeywordTargetLineError,
+  parseKeywordTargetLines,
+} from "@/lib/keywords/add-keyword-drawer-shared";
+
+export type KeywordPasteError = KeywordTargetLineError | { code: "duplicate_keyword" };
 
 export type KeywordPasteRow = {
-  error: string | null;
+  error: KeywordPasteError | null;
   keyword: string;
   line: number;
   targetUrl: string | null;
@@ -18,7 +23,7 @@ export function parseKeywordPaste(value: string): KeywordPasteRow[] {
     if (key) seen.add(key);
     return {
       ...entry,
-      error: entry.error ?? (duplicate ? "Duplicate keyword." : null),
+      error: entry.error ?? (duplicate ? { code: "duplicate_keyword" } : null),
       line: sourceLineNumbers[index] ?? index + 1,
     };
   });

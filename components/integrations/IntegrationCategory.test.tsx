@@ -1,5 +1,6 @@
+import { renderWithIntegrationMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ProviderActionHandlers } from "@/lib/integrations/types";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { IntegrationCategory } from "./IntegrationCategory";
 import { integrationCategories } from "./integrations-fixtures";

@@ -1,0 +1,32 @@
+{
+  "invite": {
+    "accept": "招待を承諾",
+    "alreadyUsed": "この招待は使用済みです",
+    "alreadyUsedBody": "この招待はすでに承諾されたか、新しい招待に置き換えられました。",
+    "expires": "有効期限",
+    "expired": "この招待は期限切れです",
+    "expiredBody": "プロジェクト管理者に新しい招待の送信を依頼してください。",
+    "goToSignIn": "サインインへ移動",
+    "invalid": "招待が見つかりません",
+    "invalidBody": "リンクを確認するか、送信者に招待の再送を依頼してください。",
+    "invitedEmail": "招待先メール",
+    "join": "{project} に参加",
+    "metadataDescription": "bisibility のプロジェクト招待を承諾します。",
+    "mismatchedAccount": "現在 {current} としてサインインしています。この招待を承諾するには {invited} としてサインインしてください。",
+    "oneTimeCodeSent": "<address>{email}</address> にワンタイムコードを送信しました。",
+    "role": "ロール",
+    "roles": {
+      "admin": "管理者",
+      "member": "編集者",
+      "viewer": "閲覧者"
+    },
+    "sendSignInCode": "サインインコードを送信",
+    "signInCode": "サインインコード",
+    "signOut": "サインアウト",
+    "teamInvite": "チーム招待",
+    "validEmail": "有効なメールアドレスを入力してください。",
+    "verifyAndReturn": "確認して招待に戻る",
+    "verifyCode": "6桁のコードを入力してください。",
+    "verifyFailed": "問題が発生しました。再試行してください。"
+  }
+}

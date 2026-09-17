@@ -1,0 +1,23 @@
+{
+  "emailPreferences": {
+    "metadata": {
+      "title": "Preferencias de correo"
+    },
+    "page": {
+      "back": "Volver a bisibility",
+      "docsLink": "¿Sigues con dudas? Consulta la documentación",
+      "invalidDescription": "No se ha podido verificar el enlace. Responde al correo y actualizaremos la preferencia por ti.",
+      "invalidTitle": "Este enlace de baja no es válido",
+      "kicker": "PREFERENCIAS DE CORREO",
+      "successDescription": "Ya no te enviaremos mensajes de seguimiento de bienvenida ni otros correos de marketing. Los mensajes sobre tu cuenta y el servicio no se ven afectados.",
+      "successTitle": "Te has dado de baja",
+      "validDescription": "Dejarás de recibir los mensajes del fundador y otros correos de marketing. Los mensajes sobre tu cuenta y el servicio seguirán llegando.",
+      "validTitle": "¿Dejar de recibir los mensajes del fundador?"
+    },
+    "button": {
+      "error": "No se ha podido actualizar tu preferencia. Inténtalo de nuevo.",
+      "idle": "Darse de baja",
+      "pending": "Actualizando…"
+    }
+  }
+}

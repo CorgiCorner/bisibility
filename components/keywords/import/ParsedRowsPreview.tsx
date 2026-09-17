@@ -2,6 +2,7 @@
 
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import { dataTableRowHeight } from "@/components/ui/data-table/data-table-density";
+import { useTranslations } from "next-intl";
 import {
   importPreviewTableColumns,
   type KeywordImportPreviewRow,
@@ -24,6 +25,7 @@ function previewLayout(rows: readonly KeywordImportPreviewRow[]) {
 export function ParsedRowsPreview({
   rows,
 }: Readonly<{ rows: readonly KeywordImportPreviewRow[] }>) {
+  const t = useTranslations("projectRankTracker.keywordImport.csvWizard.table");
   if (rows.length === 0) return null;
   const layout = previewLayout(rows);
   return (
@@ -33,8 +35,8 @@ export function ParsedRowsPreview({
         style={layout === "fill" ? { height: previewViewportHeight } : undefined}
       >
         <DataTable
-          ariaLabel="Imported rows preview"
-          columns={importPreviewTableColumns}
+          ariaLabel={t("previewAria")}
+          columns={importPreviewTableColumns(t)}
           density={previewDensity}
           id="imported-rows-preview"
           layout={layout}

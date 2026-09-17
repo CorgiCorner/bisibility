@@ -4,6 +4,7 @@ import type { MarketScope } from "@/lib/markets/market-scope";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
+import { useTranslations } from "next-intl";
 import { KeywordsGridNotices } from "./KeywordsGridNotices";
 import type { KeywordsGridProps } from "./keywords-grid-types";
 import { MarketRunSliceStatus } from "./MarketRunSliceStatus";
@@ -25,13 +26,14 @@ type Props = Pick<
   rows: KeywordRow[];
 };
 export function KeywordsGridNoticeBlock(props: Props) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   if (props.marketScope?.status === "paused")
     return (
       <AlertBanner
         tint="yellow"
-        title="This market is paused"
-        detail="You can add and edit keywords. New rank checks will not start until you resume this market."
-        action={{ href: appPath(props.projectId, "markets"), label: "Manage markets" }}
+        title={t("marketPausedTitle")}
+        detail={t("marketPausedDetail")}
+        action={{ href: appPath(props.projectId, "markets"), label: t("manageMarkets") }}
       />
     );
   const firstPendingKeywordId =

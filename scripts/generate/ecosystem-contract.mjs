@@ -57,7 +57,7 @@ export function extractCliHelp(source, version) {
 export function renderCompatibility(artifacts) {
   const rows = artifacts.map((a) => `| ${a.label} | \`${a.package}\` | [\`${a.version}\`](${a.url}) |`);
   return `---
-title: "Released client support"
+title: "Domain Overview client support"
 description: "Published client versions and their Domain Overview entry points, verified from package artifacts."
 ---
 

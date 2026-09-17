@@ -11,10 +11,13 @@ import type { SettingsProviderSummary } from "./settings-provider-summaries";
 
 export type SettingsView = {
   apiKeys: {
+    createdAt: string;
     createdLabel: string;
+    expiresAt: string | null;
     expiresLabel: string;
     id: string;
     isExpired: boolean;
+    lastUsedAt: string | null;
     lastUsedLabel: string;
     maskedValue: string;
     name: string;

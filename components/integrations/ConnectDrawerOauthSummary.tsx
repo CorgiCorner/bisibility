@@ -4,7 +4,9 @@ import { ProviderLogo } from "@/components/ui/ProviderLogo";
 import { googlePropertyDisplayName } from "@/lib/integrations/google-property-grouping";
 import type { IntegrationProviderData } from "@/lib/integrations/types";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { useTranslations } from "next-intl";
 import { GoogleScopes } from "./ConnectDrawerScopes";
+import type { OAuthScope } from "./provider-auth";
 
 function kindBadge(property: string) {
   return property.startsWith("sc-domain:") ? "DOMAIN" : "URL PREFIX";
@@ -21,24 +23,25 @@ export function GoogleConnectionIntro({
   provider: IntegrationProviderData;
   selecting: boolean;
 }>) {
+  const t = useTranslations("projectIntegrations.oauth");
   const title = connected
-    ? "Google connection"
+    ? t("googleConnection")
     : needsReauth
-      ? "Reconnect your Google account"
-      : "Connect your Google account";
+      ? t("reconnectGoogle")
+      : t("connectGoogle");
   const subtitle =
     provider.id === "gsc"
       ? selecting
-        ? "Choose from the Search Console properties verified for that account."
-        : "Search Console property for this project"
+        ? t("gscSelecting")
+        : t("gscProject")
       : selecting
-        ? "Choose a Google Analytics property returned for that account."
-        : "Google Analytics property for this project";
+        ? t("ga4Selecting")
+        : t("ga4Project");
   return (
     <>
       <div className="flex items-center gap-[11px]">
         <ProviderLogo
-          alt="Google logo"
+          alt={t("googleLogo")}
           domain={provider.logoDomain ?? "google.com"}
           fallbackIcon={provider.icon}
           size="sm"
@@ -50,7 +53,7 @@ export function GoogleConnectionIntro({
         </div>
       </div>
       <InlineCallout className="py-2 text-[11.5px] leading-5" role="note" tint="neutral">
-        Google OAuth handles access for this connection. No API key is required.
+        {t("oauthHelp")}
       </InlineCallout>
     </>
   );
@@ -60,20 +63,25 @@ export function GoogleConnectedSummary({
   property,
   providerId,
 }: Readonly<{ property?: string; providerId: string }>) {
+  const t = useTranslations("projectIntegrations.oauth");
   const isGsc = providerId === "gsc";
   return (
     <div className="rounded-control border border-border bg-bg-elev p-3.5">
       <div className="flex items-center gap-2 text-[12.5px] font-semibold text-green-text">
-        <CheckCircle aria-hidden size={16} weight="regular" /> Connected
+        <CheckCircle aria-hidden size={16} weight="regular" /> {t("connected")}
       </div>
       <dl className="m-0 mt-3 grid gap-2">
         <div>
           <dt className="text-[9.5px] uppercase tracking-[0.5px] text-fg-muted">
-            Selected property
+            {t("selectedProperty")}
           </dt>
           <dd className="m-0 mt-1 flex min-w-0 items-center justify-between gap-2 text-[12.5px] text-fg">
             <span className="min-w-0 truncate">
-              {property ? (isGsc ? googlePropertyDisplayName(property) : property) : "Not selected"}
+              {property
+                ? isGsc
+                  ? googlePropertyDisplayName(property)
+                  : property
+                : t("notSelected")}
             </span>
             {property && isGsc ? <PillBadge size="xs">{kindBadge(property)}</PillBadge> : null}
           </dd>
@@ -92,8 +100,9 @@ export function GoogleSelectionResult({
   connected: boolean;
   error: string | null;
   savedProperty: string | null;
-  scopes: readonly string[];
+  scopes: readonly (OAuthScope | string)[];
 }>) {
+  const t = useTranslations("projectIntegrations.oauth");
   return (
     <>
       {savedProperty ? (
@@ -102,7 +111,7 @@ export function GoogleSelectionResult({
           role="status"
         >
           <CheckCircle aria-hidden size={16} weight="regular" />
-          Connected to {googlePropertyDisplayName(savedProperty)}
+          {t("connectedTo", { property: googlePropertyDisplayName(savedProperty) })}
         </p>
       ) : null}
       {error ? (

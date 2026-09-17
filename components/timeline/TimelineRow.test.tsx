@@ -1,5 +1,6 @@
+import { renderWithTimelineMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { TimelineItem } from "@/lib/timeline/timeline-data";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { TimelineRow } from "./TimelineRow";
 

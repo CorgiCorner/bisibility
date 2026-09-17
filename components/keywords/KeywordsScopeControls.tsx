@@ -13,6 +13,7 @@ import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const ALL_LOCATIONS = "__all__";
 type ScopeNavigationProps = {
@@ -32,18 +33,24 @@ type KeywordsScopeControlsProps = ScopeNavigationProps & {
   locationOptions: LensLocationOption[];
 };
 
-function locationMenuOptions(locationOptions: LensLocationOption[]): MenuSelectOption[] {
+function locationMenuOptions(
+  locationOptions: LensLocationOption[],
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordImport.management.grid">>,
+): MenuSelectOption[] {
   return [
     {
       icon: <GlobeHemisphereWest weight="regular" aria-hidden size={14} />,
-      label: "All locations",
+      label: t("allLocations"),
       value: ALL_LOCATIONS,
     },
     ...locationOptions.map((option) => ({
       icon: <MapPin aria-hidden size={14} weight="regular" />,
       label: option.displayName,
       noWrap: true,
-      secondary: `${option.count} keyword${option.count === 1 ? "" : "s"} · ${option.kind}`,
+      secondary: t("locationOption", {
+        count: option.count,
+        kind: option.kind === "city" ? t("locationCity") : t("locationCountry"),
+      }),
       value: option.id,
     })),
   ];
@@ -71,11 +78,18 @@ function useScopeNavigation({
   };
 }
 
-function locationLabel(lens: ActiveLens, locationOptions: LensLocationOption[]) {
+function locationLabel(
+  lens: ActiveLens,
+  locationOptions: LensLocationOption[],
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordImport.management.grid">>,
+) {
   if (!lens.locationId) {
     return null;
   }
-  return locationOptions.find((option) => option.id === lens.locationId)?.displayName ?? "Location";
+  return (
+    locationOptions.find((option) => option.id === lens.locationId)?.displayName ??
+    t("locationFallback")
+  );
 }
 
 export function KeywordsScopeLocationSelect({
@@ -87,15 +101,16 @@ export function KeywordsScopeLocationSelect({
   viewId,
   query,
 }: LocationSelectProps) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const go = useScopeNavigation({ basePath, lens, onQueryNavigation, query, viewId });
 
   return (
     <MenuSelect
-      ariaLabel="Location scope"
+      ariaLabel={t("locationScope")}
       leadingIcon={<MapPin weight="regular" className="text-fg-muted" size={13} />}
       menuMinWidth={280}
       onChange={(value) => go({ ...lens, locationId: value === ALL_LOCATIONS ? null : value })}
-      options={locationMenuOptions(locationOptions)}
+      options={locationMenuOptions(locationOptions, t)}
       triggerClassName={triggerClassName}
       value={lens.locationId ?? ALL_LOCATIONS}
     />
@@ -139,9 +154,10 @@ export function KeywordsScopeLocationChip({
   viewId,
   query,
 }: KeywordsScopeControlsProps) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const { market } = useMarketContext();
   const go = useScopeNavigation({ basePath, lens, onQueryNavigation, query, viewId });
-  const label = locationLabel(lens, locationOptions);
+  const label = locationLabel(lens, locationOptions, t);
 
   if (market || !label) {
     return null;
@@ -149,7 +165,7 @@ export function KeywordsScopeLocationChip({
 
   return (
     <Pill active className="lg:hidden" onClick={() => go({ ...lens, locationId: null })} size="sm">
-      Scope: {label}
+      {t("scopeChip", { location: label })}
       <X size={11} weight="regular" />
     </Pill>
   );

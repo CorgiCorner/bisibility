@@ -1,8 +1,16 @@
+import {
+  authFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type { HumanVerificationState } from "@/lib/verification/human-verification-client";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useState } from "react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { type ReactElement, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LoginForm } from "./LoginForm";
+
+function render(ui: ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: authFeatureTestMessages });
+}
 
 const mocks = vi.hoisted(() => ({
   requestLoginCode: vi.fn(),

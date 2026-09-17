@@ -1,6 +1,14 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+  renderWithFeatureMessages,
+  sharedControlTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { IdChip, shortId } from "./IdChip";
+
+function render(ui: React.ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: sharedControlTestMessages });
+}
 
 describe("IdChip", () => {
   afterEach(() => vi.unstubAllGlobals());

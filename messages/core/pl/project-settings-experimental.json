@@ -1,0 +1,11 @@
+{
+  "projectSettingsExperimental": {
+    "title": "Moduły eksperymentalne",
+    "description": "Włącz moduł eksperymentalny w tym projekcie. Wyłączone moduły nie są dostępne w nawigacji.",
+    "module": {
+      "competitors": "Konkurenci",
+      "timeline": "Oś czasu"
+    },
+    "saveError": "Nie udało się zapisać modułów eksperymentalnych."
+  }
+}

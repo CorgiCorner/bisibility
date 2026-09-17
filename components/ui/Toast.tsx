@@ -1,6 +1,7 @@
 "use client";
 
 import { useMediaQuery } from "@/lib/ui/use-media-query";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { type ToastEntry, ToastItem } from "./ToastItem";
 import { ToastContext, type ToastOptions } from "./toast-context";
@@ -12,9 +13,8 @@ export { type ToastContextValue, type ToastOptions, useToast } from "./toast-con
 type ToastProviderProps = { children: ReactNode };
 
 const UNDO_TOAST_DURATION = 6000;
-const UNDO_ERROR_MESSAGE = "Undo failed. Please try again.";
-
 export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
+  const t = useTranslations("shared.controls.toast");
   const [toasts, setToastsState] = useState<ToastEntry[]>([]);
   const toastsRef = useRef<ToastEntry[]>([]);
   const lifecyclesRef = useRef(new Map<number, ToastLifecycle>());
@@ -88,7 +88,7 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
             ? {
                 ...entry,
                 durationMs,
-                message: UNDO_ERROR_MESSAGE,
+                message: t("undoFailed"),
                 severity: "error",
                 undo: undefined,
                 undoPending: false,
@@ -97,7 +97,7 @@ export function ToastProvider({ children }: Readonly<ToastProviderProps>) {
         ),
       );
     },
-    [updateToasts, handleExpired],
+    [updateToasts, handleExpired, t],
   );
 
   const handleUndoClick = useCallback(

@@ -61,6 +61,7 @@ export function TeamSettingsContent({
       <TeamPendingInvitesCard
         canManageTeam={team.canManageTeam}
         invites={team.pendingInvites}
+        now={team.now}
         projectId={projectId}
         readOnly={projectReadOnly}
         resendInvite={actions.resendInvite}

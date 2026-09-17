@@ -9,6 +9,7 @@ import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 const googleOauthConsoleUrl = "https://console.cloud.google.com/apis/credentials";
@@ -19,6 +20,11 @@ const googleOauthConsoleUrl = "https://console.cloud.google.com/apis/credentials
 // quiet by default - a hairline in --border - and only wakes up under the pointer.
 const quietLinkClass =
   "font-semibold text-fg-muted underline decoration-border underline-offset-2 transition-colors hover:text-fg hover:decoration-accent-text";
+
+function selfHostedImportHref(projectRef: ProjectRef) {
+  const query = new URLSearchParams({ ctx: "settings", project: projectRef });
+  return ["/cloud/import?", query.toString()].join("");
+}
 
 export function StagePanel({
   action,
@@ -45,24 +51,20 @@ function QuietAlternatives({
   canCreateKeywords,
   projectRef,
 }: Readonly<{ canCreateKeywords: boolean; projectRef: ProjectRef }>) {
-  return (
-    <>
-      Prefer your own data?{" "}
-      <Link className={quietLinkClass} href={appPath(projectRef, "integrations")}>
-        Use a SERP provider
+  const t = useTranslations("projectDashboard.emptyOnboarding");
+  return t.rich("connect.alternatives", {
+    canCreateKeywords: canCreateKeywords ? "true" : "other",
+    manual: (chunks) => (
+      <Link className={quietLinkClass} href={appPath(projectRef, "rank-tracker?add=1")}>
+        {chunks}
       </Link>
-      {canCreateKeywords ? (
-        <>
-          {" "}
-          or{" "}
-          <Link className={quietLinkClass} href={appPath(projectRef, "rank-tracker?add=1")}>
-            add keywords manually
-          </Link>
-        </>
-      ) : null}
-      .
-    </>
-  );
+    ),
+    provider: (chunks) => (
+      <Link className={quietLinkClass} href={appPath(projectRef, "integrations")}>
+        {chunks}
+      </Link>
+    ),
+  });
 }
 
 export function ConnectStage({
@@ -74,11 +76,12 @@ export function ConnectStage({
   gscOAuthConfigured: boolean;
   projectRef: ProjectRef;
 }>) {
+  const t = useTranslations("projectDashboard.emptyOnboarding");
   if (!capabilities.canManageProviders) {
     return (
       <StagePanel
-        description="Ask a project admin to connect Search Console or a SERP provider."
-        title="Connect a data source"
+        description={t("connect.permissionDescription")}
+        title={t("connect.permissionTitle")}
       />
     );
   }
@@ -99,12 +102,12 @@ export function ConnectStage({
             target="_blank"
             variant="secondary"
           >
-            Set up Google OAuth
+            {t("connect.oauthAction")}
           </Button>
         }
-        description="Search Console is the free path, but this instance has no Google OAuth client yet. Create one first, then come back here."
+        description={t("connect.oauthDescription")}
         quiet={quiet}
-        title="Connect a data source"
+        title={t("connect.oauthTitle")}
       />
     );
   }
@@ -118,12 +121,12 @@ export function ConnectStage({
           startIcon={<MagnifyingGlass size={15} weight="regular" />}
           variant="primary"
         >
-          Connect Search Console
+          {t("connect.action")}
         </Button>
       }
-      description="Free, one click, and it brings the queries your domain already ranks for."
+      description={t("connect.description")}
       quiet={quiet}
-      title="Connect Search Console"
+      title={t("connect.title")}
     />
   );
 }
@@ -141,11 +144,12 @@ export function KeywordsStage({
   pending: boolean;
   projectRef: ProjectRef;
 }>) {
+  const t = useTranslations("projectDashboard.emptyOnboarding");
   if (!canCreateKeywords) {
     return (
       <StagePanel
-        description="Ask a project member with keyword access to add the first keywords."
-        title="Add keywords"
+        description={t("keywords.permissionDescription")}
+        title={t("keywords.permissionTitle")}
       />
     );
   }
@@ -155,25 +159,23 @@ export function KeywordsStage({
         action={
           <Button
             loading={pending}
-            loadingLabel="Loading queries..."
+            loadingLabel={t("import.loading")}
             onClick={onImport}
             startIcon={<ArrowLineDown size={15} weight="regular" />}
             variant="primary"
           >
-            Import your top queries
+            {t("keywords.importAction")}
           </Button>
         }
-        description="Search Console already knows what your domain ranks for. Pick from your real queries instead of typing a list."
-        quiet={
-          <>
-            Or{" "}
+        description={t("keywords.importDescription")}
+        quiet={t.rich("keywords.manualAlternative", {
+          manual: (chunks) => (
             <Link className={quietLinkClass} href={appPath(projectRef, "rank-tracker?add=1")}>
-              add keywords manually
+              {chunks}
             </Link>
-            .
-          </>
-        }
-        title="Track your real queries"
+          ),
+        })}
+        title={t("keywords.importTitle")}
       />
     );
   }
@@ -186,11 +188,11 @@ export function KeywordsStage({
           href={appPath(projectRef, "rank-tracker?add=1")}
           variant="primary"
         >
-          Add keywords
+          {t("keywords.manualAction")}
         </Button>
       }
-      description="Paste a list or import a CSV for your domain."
-      title="Add keywords"
+      description={t("keywords.manualDescription")}
+      title={t("keywords.manualTitle")}
     />
   );
 }
@@ -199,53 +201,56 @@ export function OptionsFooter({
   capabilities,
   projectRef,
 }: Readonly<{ capabilities: GettingStartedCapabilities; projectRef: ProjectRef }>) {
+  const t = useTranslations("projectDashboard.emptyOnboarding");
   if (!capabilities.canInstallSampleData && !capabilities.canManageImports) return null;
   return (
     <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-4 text-[12.5px] text-fg-muted">
       {capabilities.canInstallSampleData ? (
         <span>
-          Just exploring?{" "}
-          {/* Match the quiet adjacent links, including their plain-space separation. */}
-          <SampleDataButton
-            label="Load sample project"
-            size="sm"
-            style={{
-              "--control-color": "var(--fg-muted)",
-              fontSize: "12.5px",
-              fontWeight: 600,
-              minHeight: 0,
-              paddingLeft: 0,
-              paddingRight: 0,
-              paddingTop: 0,
-              paddingBottom: 0,
-              verticalAlign: "baseline",
-              "--control-text-decoration": "underline",
-              "--control-text-decoration-color": "var(--border)",
-              "--control-text-underline-offset": "2px",
-              "--control-hover-background-color": "transparent",
-              "--control-hover-color": "var(--fg)",
-              "--control-hover-text-decoration": "underline",
-              "--control-hover-text-decoration-color": "var(--border)",
-              "--control-disabled-color": "var(--fg-muted)",
-              "--control-disabled-opacity": 0.6,
-              "--control-disabled-text-decoration": "underline",
-              "--control-disabled-text-decoration-color": "var(--border)",
-            }}
-            variant="ghost"
-          />
-          .
+          {t.rich("options.sample", {
+            label: t("options.sampleAction"),
+            sample: () => (
+              /* Match the quiet adjacent links, including their plain-space separation. */
+              <SampleDataButton
+                label={t("options.sampleAction")}
+                size="sm"
+                style={{
+                  "--control-color": "var(--fg-muted)",
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  minHeight: 0,
+                  paddingLeft: 0,
+                  paddingRight: 0,
+                  paddingTop: 0,
+                  paddingBottom: 0,
+                  verticalAlign: "baseline",
+                  "--control-text-decoration": "underline",
+                  "--control-text-decoration-color": "var(--border)",
+                  "--control-text-underline-offset": "2px",
+                  "--control-hover-background-color": "transparent",
+                  "--control-hover-color": "var(--fg)",
+                  "--control-hover-text-decoration": "underline",
+                  "--control-hover-text-decoration-color": "var(--border)",
+                  "--control-disabled-color": "var(--fg-muted)",
+                  "--control-disabled-opacity": 0.6,
+                  "--control-disabled-text-decoration": "underline",
+                  "--control-disabled-text-decoration-color": "var(--border)",
+                }}
+                variant="ghost"
+              />
+            ),
+          })}
         </span>
       ) : null}
       {capabilities.canManageImports ? (
         <span>
-          Coming from self-host?{" "}
-          <Link
-            className={quietLinkClass}
-            href={`/cloud/import?ctx=settings&project=${encodeURIComponent(projectRef)}`}
-          >
-            Import your data
-          </Link>
-          .
+          {t.rich("options.selfHosted", {
+            import: (chunks) => (
+              <Link className={quietLinkClass} href={selfHostedImportHref(projectRef)}>
+                {chunks}
+              </Link>
+            ),
+          })}
         </span>
       ) : null}
     </div>

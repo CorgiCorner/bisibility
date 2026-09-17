@@ -3,6 +3,7 @@
 import { authClient } from "@/lib/auth/client";
 import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,7 +22,7 @@ export type OAuthConsentFormProps = {
   scopes: string[];
 };
 
-function errorMessage(error: unknown) {
+function errorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
     const message = (error as { message?: unknown }).message;
     if (typeof message === "string") return message;
@@ -30,7 +31,7 @@ function errorMessage(error: unknown) {
     const description = (error as { error_description?: unknown }).error_description;
     if (typeof description === "string") return description;
   }
-  return "Could not complete the consent request.";
+  return fallback;
 }
 
 function isSafeRedirect(target: string) {
@@ -49,6 +50,7 @@ export function OAuthConsentForm({
   expiresAt,
   scopes,
 }: Readonly<OAuthConsentFormProps>) {
+  const t = useTranslations("auth.oauthConsent");
   const secondsLeft = useOAuthConsentCountdown(expiresAt);
   const [pendingChoice, setPendingChoice] = useState<"accept" | "deny" | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -61,17 +63,17 @@ export function OAuthConsentForm({
     setFormError(null);
     try {
       const response = await authClient.oauth2.consent({ accept: values.accept });
-      if (response.error) return setFormError(errorMessage(response.error));
+      if (response.error) return setFormError(errorMessage(response.error, t("consentError")));
       const redirectUrl = response.data?.url;
       if (typeof redirectUrl !== "string" || !redirectUrl) {
-        return setFormError("Consent response did not include a redirect URI.");
+        return setFormError(t("consentMissingRedirect"));
       }
       if (!isSafeRedirect(redirectUrl)) {
-        return setFormError("Consent response returned an unsupported redirect URI.");
+        return setFormError(t("consentUnsupportedRedirect"));
       }
       window.location.assign(redirectUrl);
     } catch (error) {
-      setFormError(errorMessage(error));
+      setFormError(errorMessage(error, t("consentError")));
     } finally {
       setPendingChoice(null);
     }

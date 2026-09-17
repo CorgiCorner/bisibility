@@ -80,16 +80,6 @@ function rankAttention(
   return null;
 }
 
-function rankTitle(trigger: z.infer<typeof runTriggerSchema>) {
-  const titles: Record<z.infer<typeof runTriggerSchema>, string> = {
-    api: "API rank check",
-    manual: "Manual rank check",
-    retry: "Retry rank check",
-    scheduled: "Scheduled rank check",
-  };
-  return titles[trigger];
-}
-
 export function rankProjectRun(
   row: RankRunRow,
   project: ProjectRunsPresentationProject,
@@ -115,7 +105,7 @@ export function rankProjectRun(
       name: project.name,
       publicId: project.publicId as ProjectRunRankCheck["project"]["publicId"],
     },
-    scope: { description: null, label: `${row.keywordCount} keywords` },
+    scope: { description: null, keywordCount: row.keywordCount, kind: "rank_check" },
     timestamps: {
       createdAt: row.createdAt.toISOString(),
       finishedAt: iso(row.finishedAt),
@@ -123,7 +113,7 @@ export function rankProjectRun(
       plannedFor: iso(row.plannedFor),
       startedAt: iso(row.startedAt),
     },
-    title: rankTitle(trigger),
+    title: { kind: "rank_check", trigger },
   };
 }
 
@@ -195,7 +185,7 @@ export function gscProjectRun(
       name: project.name,
       publicId: project.publicId as ProjectRunGscImport["project"]["publicId"],
     },
-    scope: { description: record.property, label: "Search Console" },
+    scope: { description: record.property, kind: "gsc_import" },
     timestamps: {
       createdAt: record.timestamps.createdAt.toISOString(),
       lastProbeAt: iso(record.timestamps.lastProbeAt),
@@ -203,6 +193,6 @@ export function gscProjectRun(
       lastSyncStartedAt: iso(record.timestamps.lastSyncStartedAt),
       syncStartedAt: iso(record.timestamps.syncStartedAt),
     },
-    title: "Search Console import",
+    title: { kind: "gsc_import" },
   };
 }

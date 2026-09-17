@@ -13,7 +13,7 @@ type TrackingSettingsSectionProps = {
   projectId: string;
 };
 
-const idlePreview: CronPreviewResult = { message: "", runs: [], status: "idle" };
+const idlePreview: CronPreviewResult = { message: null, runs: [], status: "idle", timezone: null };
 
 export async function TrackingSettingsSection({
   canEdit,

@@ -178,12 +178,13 @@ v.describe("SearchInsightsBody", () => {
         clicksToSessionsKpi: {
           kind: "visible",
           kpi: {
-            delta: "+2.00 pp",
+            delta: { kind: "changed", unit: "percentage_points", value: 0.02 },
             dir: "up",
-            label: "Clicks to sessions",
-            prev: "82.00%",
-            source: "GSC",
-            value: "84.00%",
+            metric: "clicks_to_sessions",
+            previous: 0.82,
+            source: "gsc",
+            value: 0.84,
+            valueKind: "percentage",
           },
         },
         sessionsReadable: true,

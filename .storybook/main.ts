@@ -29,11 +29,11 @@ export const keywordActionBoundaries = {
 } as const;
 const rankRunActionPrefix = "@/lib/actions/rank-check-run-";
 const serverActionAliases = [
-  "@/app/app/account/actions",
-  "@/app/app/account/preferences/actions",
-  "@/app/app/settings/actions",
-  "@/app/cloud/import/actions",
-  "@/app/onboarding/actions",
+  "@/app/(regional)/app/account/actions",
+  "@/app/(regional)/app/account/preferences/actions",
+  "@/app/(regional)/app/settings/actions",
+  "@/app/(regional)/cloud/import/actions",
+  "@/app/(regional)/onboarding/actions",
   "@/lib/actions/_shared",
   "@/lib/actions/account",
   "@/lib/actions/alert-feed",
@@ -66,7 +66,7 @@ const serverActionAliases = [
   "@/lib/actions/workspace",
 ];
 const serverActionPattern =
-  /^@\/(?:app\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
+  /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
 const runtimeStubPatterns = [
   /^@\/components\/shell\/keyword-search$/,
   /^@\/lib\/api\/ratelimit$/,
@@ -86,6 +86,7 @@ const prismaRuntimeStubPatterns = [
 const nodeRuntimeStubPattern = /^node:(async_hooks|crypto|dns\/promises|net|tls)$/;
 
 const runtimeAliases = {
+  "@/lib/roadmap/actions": fileURLToPath(new URL("./roadmap-action-stubs.ts", import.meta.url)),
   "@/components/cost-estimate/useCostEstimate": fileURLToPath(
     new URL("../tests/cost-estimate.ts", import.meta.url),
   ),

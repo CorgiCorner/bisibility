@@ -6,13 +6,14 @@ import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ScheduleKeywordCandidateRow } from "./ScheduleKeywordCandidateRow";
 export type ScheduleKeywordCandidate = {
   assigned?: boolean;
-  checks: string;
+  checks: number;
   device: string;
   id: string;
   keyword: string;
@@ -48,7 +49,7 @@ async function assignScheduleKeywords(input: AssignScheduleKeywordsForm) {
     headers: { "content-type": "application/json" },
     method: "POST",
   });
-  if (!response.ok) throw new Error("Could not add keywords to this schedule.");
+  if (!response.ok) throw new Error("schedule_add_keywords_failed");
 }
 function options(values: readonly string[], allLabel: string) {
   return [{ label: allLabel, value: "all" }, ...values.map((value) => ({ label: value, value }))];
@@ -79,6 +80,7 @@ export function AddKeywordsDrawer({
   scheduleId,
   scheduleName,
 }: Readonly<AddKeywordsDrawerProps>) {
+  const t = useTranslations("projectRuns.schedules");
   const [device, setDevice] = useState(initialFilters?.device ?? "all");
   const [market, setMarket] = useState(initialFilters?.market ?? "all");
   const [scope, setScope] = useState<Scope>("all");
@@ -141,7 +143,7 @@ export function AddKeywordsDrawer({
       }
       close();
     } catch {
-      setSubmitError("Could not add keywords to this schedule. Try again.");
+      setSubmitError(t("drawer.submitFailed"));
     }
   }
   return (
@@ -150,21 +152,23 @@ export function AddKeywordsDrawer({
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <span className="min-w-0 text-[11.5px] leading-5 text-fg-muted">
             {selectedIds.length
-              ? `${selectedIds.length} selected`
-              : "Choose keywords to add to this schedule."}
+              ? t("drawer.selected", { count: selectedIds.length })
+              : t("drawer.choose")}
           </span>
           <div className="flex shrink-0 items-center gap-2.5">
             <Button onClick={close} type="button" variant="ghost">
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               disabled={selectedIds.length === 0}
               form="schedule-add-keywords-form"
               loading={form.formState.isSubmitting}
-              loadingLabel="Adding..."
+              loadingLabel={t("drawer.adding")}
               type="submit"
             >
-              {selectedIds.length ? `Add ${selectedIds.length} keywords` : "Add keywords"}
+              {selectedIds.length
+                ? t("drawer.add", { count: selectedIds.length })
+                : t("drawer.addKeywords")}
             </Button>
           </div>
         </div>
@@ -173,9 +177,9 @@ export function AddKeywordsDrawer({
       open={open}
       title={
         <span className="block">
-          <span className="block">Add keywords</span>
+          <span className="block">{t("drawer.addKeywords")}</span>
           <span className="mt-1 block text-[12px] font-normal text-fg-muted">
-            to {scheduleName}
+            {t("drawer.toSchedule", { name: scheduleName })}
           </span>
         </span>
       }
@@ -191,42 +195,42 @@ export function AddKeywordsDrawer({
         <div className="flex flex-col gap-2.5 border-b border-border pb-3.5">
           <ToolbarSearch
             id="schedule-keyword-search"
-            label="Search keywords"
+            label={t("searchKeywords")}
             onChange={setSearch}
-            placeholder="Search keywords"
+            placeholder={t("searchKeywords")}
             value={search}
             variant="outlined"
           />
           <div className="flex flex-wrap gap-1.5">
             <MenuSelect
-              ariaLabel="Tag"
+              ariaLabel={t("tag")}
               compact
               onChange={setTag}
-              options={options(tags, "All tags")}
+              options={options(tags, t("allTags"))}
               selectedContent={(option) =>
-                option?.value === "all" ? "Tag" : `Tag: ${option?.label}`
+                option?.value === "all" ? t("tag") : `${t("tag")}: ${option?.label}`
               }
               triggerClassName="min-h-7 rounded-full px-2.5 text-[11.5px] font-semibold"
               value={tag}
             />
             <MenuSelect
-              ariaLabel="Market"
+              ariaLabel={t("market")}
               compact
               onChange={setMarket}
-              options={options(markets, "All markets")}
+              options={options(markets, t("allMarkets"))}
               selectedContent={(option) =>
-                option?.value === "all" ? "Market" : `Market: ${option?.label}`
+                option?.value === "all" ? t("market") : `${t("market")}: ${option?.label}`
               }
               triggerClassName="min-h-7 rounded-full px-2.5 text-[11.5px] font-semibold"
               value={market}
             />
             <MenuSelect
-              ariaLabel="Device"
+              ariaLabel={t("device")}
               compact
               onChange={setDevice}
-              options={options(devices, "All devices")}
+              options={options(devices, t("allDevices"))}
               selectedContent={(option) =>
-                option?.value === "all" ? "Device" : `Device: ${option?.label}`
+                option?.value === "all" ? t("device") : `${t("device")}: ${option?.label}`
               }
               triggerClassName="min-h-7 rounded-full px-2.5 text-[11.5px] font-semibold"
               value={device}
@@ -234,7 +238,7 @@ export function AddKeywordsDrawer({
           </div>
           {activeFilters ? (
             <p className="m-0 text-[11.5px] leading-5 text-fg-muted">
-              Matches {matchingCandidates.length} now. New keywords will not join automatically.
+              {t("drawer.matches", { count: matchingCandidates.length })}
             </p>
           ) : null}
         </div>
@@ -244,24 +248,24 @@ export function AddKeywordsDrawer({
               {activeFilters ? (
                 <Button onClick={selectAllMatching} size="xs" type="button" variant="secondary">
                   {allMatchesSelected
-                    ? `Clear selection (${selectedIds.length})`
-                    : `Select all ${selectableMatches.length} matching`}
+                    ? t("drawer.clearSelection", { count: selectedIds.length })
+                    : t("drawer.selectAll", { count: selectableMatches.length })}
                 </Button>
               ) : null}
               {selectedIds.length ? (
                 <Button onClick={() => updateSelected([])} size="xs" type="button" variant="ghost">
-                  Clear
+                  {t("drawer.clear")}
                 </Button>
               ) : null}
             </div>
             {selectedIds.length ? (
               <SegmentedControl
-                ariaLabel="List scope"
+                ariaLabel={t("drawer.listScope")}
                 fitContent
                 onChange={setScope}
                 options={[
-                  { label: "All", value: "all" },
-                  { label: `Selected (${selectedIds.length})`, value: "selected" },
+                  { label: t("all"), value: "all" },
+                  { label: t("drawer.selected", { count: selectedIds.length }), value: "selected" },
                 ]}
                 size="xs"
                 value={scope}
@@ -285,7 +289,7 @@ export function AddKeywordsDrawer({
           ))}
           {visibleCandidates.length === 0 ? (
             <p className="m-0 px-3 py-8 text-center text-[12px] text-fg-muted">
-              No keywords match.
+              {t("drawer.noMatches")}
             </p>
           ) : null}
         </div>

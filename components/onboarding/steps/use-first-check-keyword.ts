@@ -1,7 +1,9 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { keywordLines } from "@/components/onboarding/onboarding-form-utils";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { presentActionError } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import type { FirstCheckRunActions } from "./use-first-check-run";
 
@@ -26,6 +28,8 @@ export function useFirstCheckKeyword({
   listFirstCheckCandidatesAction,
   projectId,
 }: Input) {
+  const t = useTranslations("onboarding.firstCheck");
+  const sharedErrors = useSharedErrorMessages();
   const draftOptions = useMemo(() => uniqueKeywordOptions(keywordDraft), [keywordDraft]);
   const initialOptions = draftOptions.length
     ? draftOptions
@@ -42,13 +46,11 @@ export function useFirstCheckKeyword({
     try {
       const { candidates } = await listFirstCheckCandidatesAction({ limit: 1, projectId });
       const keyword = candidates[0]?.text;
-      if (!keyword) throw new Error("No saved keyword is available.");
+      if (!keyword) throw new Error();
       setResumedOptions([{ label: keyword, value: keyword }]);
       setSelected(keyword);
     } catch (error) {
-      setKeywordError(
-        actionErrorMessage(error, "The sample keyword could not be loaded. Try again."),
-      );
+      setKeywordError(presentActionError(error, sharedErrors, t("errors.keyword")));
     }
   }
   return {

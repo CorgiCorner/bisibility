@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { activeMarketLocationIds, runnableKeywordWhere } from "@/lib/rank-check/runnable";
-import { ordinalDayOfMonth, persistedScheduleCalendar } from "@/lib/schedules/cadence-label";
+import { persistedScheduleCalendar, scheduleWeekdayNames } from "@/lib/schedules/cadence-label";
 import { resolveSerpDepth } from "@/lib/serp/constants";
 import { getRequestProjectDefaults } from "./workspace-request-data";
 
@@ -50,21 +50,33 @@ type ScheduleMemberGroup = {
 };
 type ScheduleTagAssignment = { keyword: { checkScheduleId: string | null }; tag: { name: string } };
 
-function countLabel(count: number, singular: string) {
-  return `${count} ${singular}${count === 1 ? "" : "s"}`;
-}
-
 function dayOfMonth(value: Date, timezone: string) {
-  return ordinalDayOfMonth(
-    Number(new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone: timezone }).format(value)),
+  return Number(
+    new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone: timezone }).format(value),
   );
 }
 
-function sharedTagScope(assignments: readonly ScheduleTagAssignment[], targetCount: number) {
+function weekday(value: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: timezone,
+    year: "numeric",
+  }).formatToParts(value);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((entry) => entry.type === type)?.value);
+  return (
+    scheduleWeekdayNames[
+      new Date(Date.UTC(part("year"), part("month") - 1, part("day"))).getUTCDay()
+    ] ?? null
+  );
+}
+
+function sharedTag(assignments: readonly ScheduleTagAssignment[], targetCount: number) {
   const counts = new Map<string, number>();
   for (const { tag } of assignments) counts.set(tag.name, (counts.get(tag.name) ?? 0) + 1);
   const shared = [...counts].filter(([, count]) => count === targetCount).map(([name]) => name);
-  return shared.length === 1 ? `tag = ${shared[0]}` : null;
+  return shared.length === 1 ? (shared[0] ?? null) : null;
 }
 
 export function scheduleProviderId(policy: string | null) {
@@ -136,21 +148,21 @@ function scheduleListDto(
     archivedAt: row.archivedAt?.toISOString() ?? null,
     dayOfMonth:
       schedule.frequency === "monthly"
-        ? (persistedCalendar.dayOfMonth ?? (plannedFor ? dayOfMonth(plannedFor, timezone) : null))
+        ? persistedCalendar.dayOfMonth
+          ? Number.parseInt(persistedCalendar.dayOfMonth, 10)
+          : plannedFor
+            ? dayOfMonth(plannedFor, timezone)
+            : null
         : null,
     keywordCount: projection.keywordCount,
-    memberMeta: `${countLabel(new Set(memberGroups.map((keyword) => keyword.locationId)).size, "market")} x ${countLabel(new Set(memberGroups.map((keyword) => keyword.device)).size, "device")}`,
+    memberDeviceCount: new Set(memberGroups.map((keyword) => keyword.device)).size,
+    memberMarketCount: new Set(memberGroups.map((keyword) => keyword.locationId)).size,
     perRunCents: projection.estimatedCostCents,
-    tagScope: sharedTagScope(tagAssignments, projection.targetCount),
+    sharedTag: sharedTag(tagAssignments, projection.targetCount),
     targetCount: projection.targetCount,
     weekday:
       schedule.frequency === "weekly"
-        ? (persistedCalendar.weekday ??
-          (plannedFor
-            ? new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "long" }).format(
-                plannedFor,
-              )
-            : null))
+        ? (persistedCalendar.weekday ?? (plannedFor ? weekday(plannedFor, timezone) : null))
         : null,
   };
 }

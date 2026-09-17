@@ -8,13 +8,10 @@ import { Sheet } from "@/components/ui/Sheet";
 import { Slider } from "@/components/ui/Slider";
 import {
   type ChangeFilter,
-  changeOptions,
   emptyKeywordFilters,
   type KeywordFilters,
   type LastCheckFilter,
-  lastCheckOptions,
   type PositionBucketId,
-  serpFeatures,
 } from "@/lib/keywords/keyword-filter-model";
 import type { ActiveLens, LensLocationOption } from "@/lib/keywords/lens-model";
 import type {
@@ -34,6 +31,7 @@ import { QuotesIcon as Quotes } from "@phosphor-icons/react/dist/csr/Quotes";
 import { SparkleIcon as Sparkle } from "@phosphor-icons/react/dist/csr/Sparkle";
 import { TagIcon as Tag } from "@phosphor-icons/react/dist/csr/Tag";
 import { TextAaIcon as TextAa } from "@phosphor-icons/react/dist/csr/TextAa";
+import { useTranslations } from "next-intl";
 import {
   FilterCheckTile,
   type FilterIcon,
@@ -43,6 +41,12 @@ import {
 } from "./FilterDrawerControls";
 import { FilterFacetPillSection } from "./FilterFacetPillSection";
 import { getFilterFacets } from "./keyword-filter-facets";
+import {
+  localizedChangeOptions,
+  localizedLastCheckOptions,
+  localizedPositionBuckets,
+  localizedSerpFeatures,
+} from "./keyword-filter-presentation";
 import { UrlFilterToggle } from "./UrlFilterToggle";
 
 type FiltersDrawerProps = {
@@ -83,8 +87,14 @@ export function FiltersDrawer({
   query,
   viewId = null,
 }: Readonly<FiltersDrawerProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.filters");
   const { market } = useMarketContext();
   const facets = serverFacets ?? getFilterFacets(rows);
+  const positions = localizedPositionBuckets(t);
+  const positionCounts = new Map(facets.positions.map((bucket) => [bucket.id, bucket.count]));
+  const changes = localizedChangeOptions(t);
+  const lastChecks = localizedLastCheckOptions(t);
+  const serp = localizedSerpFeatures(t);
   const activeCount =
     filters.position.length +
     (filters.change === "any" ? 0 : 1) +
@@ -107,14 +117,14 @@ export function FiltersDrawer({
       footer={
         <ReplaySurface kind="rank-tracker" className="flex items-center gap-2.5">
           <Button onClick={() => onChange(emptyKeywordFilters)} type="button" variant="secondary">
-            Reset
+            {t("reset")}
           </Button>
           <Button
             onClick={() => (onApply ? onApply(filters) : onClose())}
             style={{ flex: 1 }}
             type="button"
           >
-            Show results
+            {t("showResults")}
           </Button>
         </ReplaySurface>
       }
@@ -123,10 +133,10 @@ export function FiltersDrawer({
       open={open}
       title={
         <span className="inline-flex items-baseline gap-2">
-          <span>Filters</span>
+          <span>{t("title")}</span>
           {activeCount > 0 ? (
             <span className="font-sans tabular-nums text-[11px] font-medium text-fg-muted">
-              {activeCount} active
+              {t("active", { count: activeCount })}
             </span>
           ) : null}
         </span>
@@ -136,7 +146,7 @@ export function FiltersDrawer({
       <ReplaySurface kind="rank-tracker" className="-mt-1">
         {lens && !market ? (
           <div className="lg:hidden">
-            <FilterSection icon={MapPin} title="Scope">
+            <FilterSection icon={MapPin} title={t("scope")}>
               <div className="mt-[13px]">
                 <KeywordsScopeLocationSelect
                   basePath={basePath}
@@ -151,13 +161,13 @@ export function FiltersDrawer({
           </div>
         ) : null}
 
-        <FilterSection icon={ChartLineUp} title="Ranking data">
-          <div className="mb-2 mt-[11px] text-[12px] text-fg-muted">Current position</div>
+        <FilterSection icon={ChartLineUp} title={t("rankingData")}>
+          <div className="mb-2 mt-[11px] text-[12px] text-fg-muted">{t("currentPosition")}</div>
           <div className="grid grid-cols-2 gap-[7px]">
-            {facets.positions.map((bucket) => (
+            {positions.map((bucket) => (
               <FilterCheckTile
                 active={filters.position.includes(bucket.id)}
-                count={bucket.count}
+                count={positionCounts.get(bucket.id) ?? 0}
                 key={bucket.id}
                 label={bucket.label}
                 onClick={() =>
@@ -168,27 +178,31 @@ export function FiltersDrawer({
               />
             ))}
           </div>
-          <div className="mb-2 mt-4 text-[12px] text-fg-muted">Position change / 7d</div>
+          <div className="mb-2 mt-4 text-[12px] text-fg-muted">{t("positionChange")}</div>
           <FilterSegment<ChangeFilter>
-            ariaLabel="Position change"
+            ariaLabel={t("positionChangeAria")}
             onChange={(change) => patch({ change })}
-            options={changeOptions}
+            options={changes}
             value={filters.change}
           />
-          <div className="mb-2 mt-4 text-[12px] text-fg-muted">Last check</div>
+          <div className="mb-2 mt-4 text-[12px] text-fg-muted">{t("lastCheck")}</div>
           <FilterSegment<LastCheckFilter>
-            ariaLabel="Last check"
+            ariaLabel={t("lastCheckAria")}
             onChange={(lastCheck) => patch({ lastCheck })}
-            options={lastCheckOptions}
+            options={lastChecks}
             value={filters.lastCheck}
           />
         </FilterSection>
 
-        <FilterSection icon={TextAa} title="Keyword attributes">
+        <FilterSection icon={TextAa} title={t("keywordAttributes")}>
           <div className="mb-2 mt-[13px] flex items-center justify-between">
-            <span className="text-[12px] text-fg-muted">Search volume / mo</span>
+            <span className="text-[12px] text-fg-muted">{t("searchVolume")}</span>
             <span className="font-sans tabular-nums text-[11px] font-semibold text-accent-text">
-              {filters.volMin}k - {filters.volMax >= 50 ? "50k+" : `${filters.volMax}k`}
+              {t("volumeRange", {
+                maximum: filters.volMax,
+                minimum: filters.volMin,
+                isCapped: filters.volMax >= 50 ? "yes" : "other",
+              })}
             </span>
           </div>
           <Slider
@@ -202,11 +216,11 @@ export function FiltersDrawer({
             value={[filters.volMin, filters.volMax]}
           />
           <div className="flex justify-between font-sans tabular-nums text-[10px] text-fg-muted">
-            <span>0</span>
-            <span>50k+</span>
+            <span>{t("volumeMinimum")}</span>
+            <span>{t("volumeMaximum")}</span>
           </div>
           <label className="mt-4 block text-[12px] text-fg-muted" htmlFor="keyword-contains">
-            Keyword contains
+            {t("keywordContains")}
           </label>
           <div className="mt-2 flex items-center gap-2 rounded-control border border-border-control bg-transparent px-[11px] py-2 transition-colors focus-within:border-accent">
             <TextAa weight="regular" className="text-fg-muted" size={14} />
@@ -214,15 +228,15 @@ export function FiltersDrawer({
               className="min-w-0 flex-1 bg-transparent font-sans tabular-nums text-[12.5px] text-fg outline-none focus-visible:outline-none"
               id="keyword-contains"
               onChange={(event) => patch({ contains: event.target.value })}
-              placeholder="e.g. open source"
+              placeholder={t("keywordContainsPlaceholder")}
               value={filters.contains}
             />
           </div>
         </FilterSection>
 
-        <FilterSection icon={MagnifyingGlass} title="SERP features">
+        <FilterSection icon={MagnifyingGlass} title={t("serpFeatures")}>
           <div className="mt-[13px] grid grid-cols-2 gap-[7px]">
-            {serpFeatures.map((feature) => (
+            {serp.map((feature) => (
               <FilterCheckTile
                 active={filters.serp.includes(feature.id)}
                 icon={serpIcons[feature.id]}
@@ -238,36 +252,36 @@ export function FiltersDrawer({
           facets={facets.tags}
           icon={Tag}
           onChange={(tags) => patch({ tags })}
-          title="Tags"
+          title={t("tags")}
           values={filters.tags}
         />
         <FilterFacetPillSection
           facets={facets.topics}
           icon={ListBullets}
           onChange={(topics) => patch({ topics })}
-          title="Topics"
+          title={t("topics")}
           values={filters.topics}
         />
         <FilterFacetPillSection
           facets={facets.intents}
           icon={Sparkle}
           onChange={(intents) => patch({ intents })}
-          title="Intent"
+          title={t("intent")}
           values={filters.intents}
         />
 
-        <FilterSection icon={LinkSimple} title="URLs">
+        <FilterSection icon={LinkSimple} title={t("urls")}>
           <div className="mt-[13px] grid gap-4">
             <UrlFilterToggle
               active={filters.wrongUrl}
-              description="Ranking URL differs from target URL"
-              label="Wrong URL ranking"
+              description={t("wrongUrlDescription")}
+              label={t("wrongUrl")}
               onClick={() => patch({ wrongUrl: !filters.wrongUrl })}
             />
             <UrlFilterToggle
               active={filters.urlChanged}
-              description="More than one URL ranked during the tracked history"
-              label="Ranking URL changed"
+              description={t("urlChangedDescription")}
+              label={t("urlChanged")}
               onClick={() => patch({ urlChanged: !filters.urlChanged })}
             />
           </div>

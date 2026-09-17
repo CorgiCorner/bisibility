@@ -1,15 +1,17 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
 import { loadCloudBackupCounts } from "@/lib/actions/cloud";
 import type { CloudBackupCounts } from "@/lib/migration/cloud-backup-sections";
 import type { CloudPackageExportSummary } from "@/lib/queries/cloud-beta-export";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { CloudBackupModal } from "./CloudBackupModal";
 import { CloudBetaCoverageModal } from "./CloudBetaCoverageModal";
+import { presentCloudBackupActionError } from "./cloud-backup-action-error";
 import {
   CLOUD_BETA_DISMISSAL_COOKIE,
   CLOUD_BETA_DISMISSAL_MAX_AGE_SECONDS,
@@ -65,6 +67,8 @@ export function CloudBetaBanner({
   projectRef,
   projectName,
 }: Readonly<CloudBetaBannerProps>) {
+  const sharedErrors = useSharedErrorMessages();
+  const t = useTranslations("shell.betaBanner");
   const [isDismissed, setIsDismissed] = useState(dismissed);
   const [activeModal, setActiveModal] = useState<"backup" | "coverage" | null>(null);
   const [backupCounts, setBackupCounts] = useState<CloudBackupCounts | null>(null);
@@ -91,7 +95,14 @@ export function CloudBetaBanner({
       setBackupCounts(await loadCloudBackupCounts({ projectId }));
       setActiveModal("backup");
     } catch (error) {
-      setBackupLoadError(actionErrorMessage(error, "Project backup counts could not be loaded."));
+      setBackupLoadError(
+        presentCloudBackupActionError(error, sharedErrors, {
+          exportFallback: () => t("backupLoadError"),
+          keywordLimit: () => t("backupLoadError"),
+          rankCheckLimit: () => t("backupLoadError"),
+          unsupportedHistory: () => t("backupLoadError"),
+        }),
+      );
     } finally {
       setBackupLoading(false);
     }
@@ -133,12 +144,11 @@ export function CloudBetaBanner({
             >
               {/* A single word space after a semibold clause reads as a collision; the extra
                   2px separates the lead from the sentence that qualifies it. */}
-              <strong className="mr-0.5 font-semibold text-fg">Hosted beta:</strong> Data recovery
-              isn't guaranteed yet. Keep a recent export.
+              <strong className="mr-0.5 font-semibold text-fg">{t("lead")}</strong> {t("detail")}
             </p>
           </div>
           <button
-            aria-label="Dismiss hosted beta banner"
+            aria-label={t("dismiss")}
             className="grid h-7 w-7 shrink-0 place-items-center rounded-control text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid @xl:order-3"
             onClick={dismiss}
             type="button"
@@ -160,18 +170,18 @@ export function CloudBetaBanner({
               style={quietAction}
               variant="ghost"
             >
-              What beta covers
+              {t("coverage")}
             </Button>
             <Button
               className="no-underline hover:underline"
               loading={backupLoading}
-              loadingLabel="Loading..."
+              loadingLabel={t("loading")}
               onClick={() => void openBackup()}
               size="sm"
               style={quietAction}
               variant="ghost"
             >
-              Export data
+              {t("exportData")}
             </Button>
           </div>
           {backupLoadError ? (

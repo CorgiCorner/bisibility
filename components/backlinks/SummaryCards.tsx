@@ -5,12 +5,8 @@ import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import type { BacklinksHistoryMonth, BacklinksSummary } from "@/lib/backlinks/types";
 import { formatDateRange } from "@/lib/dates/format";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
-import {
-  historyFooter,
-  latestHistoryDeltas,
-  signedNumber,
-  summaryTrends,
-} from "./summary-cards-model";
+import { useFormatter, useTranslations } from "next-intl";
+import { historyFooter, latestHistoryDeltas, summaryTrends } from "./summary-cards-model";
 
 type SummaryCardsProps = {
   history: BacklinksHistoryMonth[];
@@ -22,6 +18,7 @@ const labelClass =
   "font-sans tabular-nums text-[10px] font-medium uppercase tracking-[.08em] text-fg-muted";
 
 function DeltaBadge({ value }: Readonly<{ value: number }>) {
+  const t = useTranslations("projectBacklinks.workspace.summary");
   const positive = value >= 0;
   return (
     <span
@@ -35,7 +32,7 @@ function DeltaBadge({ value }: Readonly<{ value: number }>) {
         size={10}
         weight="regular"
       />
-      {signedNumber(value)} / 30d
+      {t("delta", { sign: value >= 0 ? "+" : "", value })}
     </span>
   );
 }
@@ -53,6 +50,7 @@ function TotalMetric({
   label: string;
   value: number;
 }>) {
+  const t = useTranslations("projectBacklinks.workspace.summary");
   return (
     <div className="grid gap-1.5">
       <div className="flex items-center justify-between gap-2">
@@ -60,10 +58,10 @@ function TotalMetric({
         <DeltaBadge value={delta} />
       </div>
       <strong className="font-sans tabular-nums text-[26px] leading-none tracking-[-.01em]">
-        {value.toLocaleString("en-US")}
+        {t("value", { value })}
       </strong>
       <Sparkline
-        ariaLabel={`${label} 12 month trend`}
+        ariaLabel={t("trendAria", { label })}
         color={color}
         data={data}
         height={44}
@@ -74,10 +72,11 @@ function TotalMetric({
 }
 
 function MonthlyBars({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>) {
+  const t = useTranslations("projectBacklinks.workspace.summary");
   const maximum = Math.max(1, ...history.flatMap((month) => [month.newLinks, month.lostLinks]));
   return (
     <div
-      aria-label="New and lost backlinks by month"
+      aria-label={t("monthlyAria")}
       className="grid min-h-[150px] grid-cols-12 items-center gap-1"
       role="img"
     >
@@ -102,18 +101,22 @@ function MonthlyBars({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>
 }
 
 function NewLostCard({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>) {
+  const t = useTranslations("projectBacklinks.workspace.summary");
   const dateFormat = useDateFormat();
   const footer = historyFooter(history);
+  const biggestLossMonth = footer.biggestLossMonth
+    ? formatDateRange(`${footer.biggestLossMonth}-01`, `${footer.biggestLossMonth}-01`, dateFormat)
+    : t("notAvailable");
   return (
-    <section className={`${cardClass} grid content-start gap-2.5`} aria-label="New vs lost">
+    <section className={`${cardClass} grid content-start gap-2.5`} aria-label={t("newLostAria")}>
       <div className="flex items-center justify-between gap-3">
-        <span className={labelClass}>New vs lost, monthly</span>
+        <span className={labelClass}>{t("newLost")}</span>
         <span className="flex gap-3.5 text-[11.5px] text-fg-muted">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-[9px] w-[9px] rounded-control bg-green/75" /> New
+            <span className="h-[9px] w-[9px] rounded-control bg-green/75" /> {t("new")}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-[9px] w-[9px] rounded-control bg-red/70" /> Lost
+            <span className="h-[9px] w-[9px] rounded-control bg-red/70" /> {t("lost")}
           </span>
         </span>
       </div>
@@ -126,28 +129,33 @@ function NewLostCard({ history }: Readonly<{ history: BacklinksHistoryMonth[] }>
         ))}
       </div>
       <p className="m-0 border-t border-border pt-2 text-[12px] text-fg-muted">
-        Net{" "}
+        {t("net")}{" "}
         <strong className="font-sans tabular-nums text-green-text">
-          {signedNumber(footer.net)}
+          {t("signedValue", { sign: footer.net >= 0 ? "+" : "", value: footer.net })}
         </strong>{" "}
-        links in 12 months - biggest loss: {footer.biggestLoss} in {footer.biggestLossMonth}
+        {t("lossSummary", { loss: footer.biggestLoss, month: biggestLossMonth })}
       </p>
     </section>
   );
 }
 
 function ProfileHealth({ summary }: Readonly<{ summary: BacklinksSummary }>) {
+  const t = useTranslations("projectBacklinks.workspace.summary");
+  const format = useFormatter();
   const rows = [
-    ["Domain rank", summary.domainRank],
-    ["Target spam score", summary.spamScore.toFixed(1)],
-    ["Dofollow links", `${summary.dofollowPct}%`],
-    ["Referring pages", summary.referringPages.toLocaleString("en-US")],
-    ["Broken backlinks", summary.brokenBacklinks],
-    ["Broken pages", summary.brokenPages],
+    [t("domainRank"), t("value", { value: summary.domainRank })],
+    [
+      t("targetSpam"),
+      format.number(summary.spamScore, { maximumFractionDigits: 1, minimumFractionDigits: 1 }),
+    ],
+    [t("dofollowLinks"), format.number(summary.dofollowPct / 100, { style: "percent" })],
+    [t("referringPages"), t("value", { value: summary.referringPages })],
+    [t("brokenBacklinks"), t("value", { value: summary.brokenBacklinks })],
+    [t("brokenPages"), t("value", { value: summary.brokenPages })],
   ] as const;
   return (
-    <section className={`${cardClass} flex flex-col`} aria-label="Profile health">
-      <span className={`${labelClass} mb-1.5`}>Profile health</span>
+    <section className={`${cardClass} flex flex-col`} aria-label={t("healthAria")}>
+      <span className={`${labelClass} mb-1.5`}>{t("health")}</span>
       {rows.map(([label, value], index) => (
         <div
           className={`flex items-center justify-between gap-2 py-2 ${
@@ -157,31 +165,30 @@ function ProfileHealth({ summary }: Readonly<{ summary: BacklinksSummary }>) {
         >
           <span className="text-[13px] text-fg-muted">{label}</span>
           <strong className="inline-flex items-center gap-1.5 font-sans tabular-nums text-[13.5px]">
-            {label === "Target spam score" ? (
+            {label === t("targetSpam") ? (
               <span className="h-[7px] w-[7px] rounded-full bg-green" />
             ) : null}
             {value}
           </strong>
         </div>
       ))}
-      <p className="mb-0 mt-auto pt-2 text-[12px] leading-5 text-fg-muted">
-        Spam and rank come with the summary call - no extra cost.
-      </p>
+      <p className="mb-0 mt-auto pt-2 text-[12px] leading-5 text-fg-muted">{t("healthNote")}</p>
     </section>
   );
 }
 
 export function SummaryCards({ history, summary }: Readonly<SummaryCardsProps>) {
+  const t = useTranslations("projectBacklinks.workspace.summary");
   const deltas = latestHistoryDeltas(history);
   const trends = summaryTrends(history, summary.backlinksTotal, summary.referringDomainsTotal);
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_minmax(0,.95fr)]">
-      <section className={`${cardClass} grid gap-3.5`} aria-label="Backlink totals">
+      <section className={`${cardClass} grid gap-3.5`} aria-label={t("totalsAria")}>
         <TotalMetric
           color="var(--accent)"
           data={trends.backlinks}
           delta={deltas.backlinks}
-          label="Backlinks"
+          label={t("backlinks")}
           value={summary.backlinksTotal}
         />
         <div className="border-t border-border pt-3">
@@ -189,7 +196,7 @@ export function SummaryCards({ history, summary }: Readonly<SummaryCardsProps>) 
             color="var(--fg-muted)"
             data={trends.referringDomains}
             delta={deltas.referringDomains}
-            label="Referring domains"
+            label={t("referringDomains")}
             value={summary.referringDomainsTotal}
           />
         </div>

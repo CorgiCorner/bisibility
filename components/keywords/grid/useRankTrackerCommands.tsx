@@ -2,8 +2,9 @@
 
 import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
 import type { RankTrackerAction } from "@/lib/keywords/rank-tracker-command";
-import { type MarketScope, scopedRunActionLabel } from "@/lib/markets/market-scope";
+import type { MarketScope } from "@/lib/markets/market-scope";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useRef } from "react";
 
 type UseRankTrackerCommandsInput = {
@@ -33,46 +34,49 @@ export function useRankTrackerCommands({
   onRunChecks,
   rowCounts,
 }: Readonly<UseRankTrackerCommandsInput>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management");
   const router = useRouter();
   const canExport = rowCounts.visible > 0;
   const canFilter = rowCounts.all > 0;
   const runCheckRows = rowCounts.scoped ?? rowCounts.visible;
   const canRunChecks = canUpdateKeyword && canExport && runCheckRows > 0;
-  const runChecksLabel = scopedRunActionLabel("Run rank checks", marketScope);
+  const runChecksLabel = marketScope
+    ? t("commands.runChecksInMarket", { market: marketScope.label })
+    : t("commands.runChecks");
 
   const commands = useMemo<RegisteredCommand[]>(() => {
     const cmds: RegisteredCommand[] = [];
     if (canCreateKeyword) {
       cmds.push({
         id: "rt-add",
-        label: "Add keyword",
+        label: t("commands.add"),
         scope: "rank-tracker",
-        hint: "New keyword",
+        hint: t("commands.addHint"),
         run: onAdd,
       });
       cmds.push({
         id: "rt-import",
-        label: "Import CSV",
+        label: t("commands.import"),
         scope: "rank-tracker",
-        hint: "Upload file",
+        hint: t("commands.importHint"),
         run: onImport,
       });
     }
     if (canExport) {
       cmds.push({
         id: "rt-export",
-        label: "Export keywords",
+        label: t("export.title"),
         scope: "rank-tracker",
-        hint: "Download file",
+        hint: t("commands.exportHint"),
         run: onExport,
       });
     }
     if (canFilter) {
       cmds.push({
         id: "rt-filter",
-        label: "Filter",
+        label: t("commands.filter"),
         scope: "rank-tracker",
-        hint: "Refine rows",
+        hint: t("commands.filterHint"),
         run: onFilter,
       });
     }
@@ -81,7 +85,7 @@ export function useRankTrackerCommands({
         id: "rt-run-checks",
         label: runChecksLabel,
         scope: "rank-tracker",
-        hint: "Check visible",
+        hint: t("commands.runChecksHint"),
         run: onRunChecks,
       });
     }
@@ -97,6 +101,7 @@ export function useRankTrackerCommands({
     onImport,
     onRunChecks,
     runChecksLabel,
+    t,
   ]);
 
   const registerRef = useRegisterCommands(commands);

@@ -131,6 +131,6 @@ describe("addKeywordDrawerInput", () => {
         },
         values: { ...values, keywords: "rank tracker | https://example.com/rank" },
       }),
-    ).toEqual({ warning: "Per-line target URLs cannot be combined with multiple markets." });
+    ).toEqual({ warning: "perLineTargetMarkets" });
   });
 });

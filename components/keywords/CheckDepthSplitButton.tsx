@@ -14,9 +14,10 @@ import { menuSelectPaperStyle } from "@/components/ui/MenuSelect";
 import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
-import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
+import { VISIBILITY_HORIZON } from "@/lib/visibility/definition";
 import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type CheckDepthSplitButtonSize = "md" | "xs";
@@ -24,6 +25,7 @@ export type CheckDepthSplitButtonSize = "md" | "xs";
 type CheckDepthSplitButtonProps = {
   actionLabel: string;
   caretAriaLabel?: string;
+  copy?: CheckDepthSplitButtonCopy;
   currentDepth: SerpDepth | null;
   disabled?: boolean;
   onAction: () => void;
@@ -31,6 +33,13 @@ type CheckDepthSplitButtonProps = {
   optionLabel?: (depth: SerpDepth) => string;
   size?: CheckDepthSplitButtonSize;
   spinning?: boolean;
+};
+
+export type CheckDepthSplitButtonCopy = {
+  changeDefault: string;
+  depthMenu: string;
+  optionLabel: (depth: SerpDepth) => string;
+  shallowVisibility: string;
 };
 
 const caretStyle = { minWidth: 34, paddingLeft: 6, paddingRight: 6 } as const;
@@ -42,27 +51,32 @@ function splitButtonStyle(size: CheckDepthSplitButtonSize) {
 
 export function CheckDepthSplitButton({
   actionLabel,
-  caretAriaLabel = "Choose check depth",
+  caretAriaLabel,
+  copy,
   currentDepth,
   disabled = false,
   onAction,
   onDepthChange,
-  optionLabel = (depth) => `Top ${depth}`,
+  optionLabel: optionLabelOverride,
   size = "md",
   spinning = false,
 }: Readonly<CheckDepthSplitButtonProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.runChecks");
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const { projectRef } = useProjectWriteMode();
   const compact = size === "xs";
   const buttonStyle = splitButtonStyle(size);
   const heightClass = compact ? "min-h-[30px]" : "min-h-[36px]";
+  // Feature callers can own presentation without requiring the shared control to load a
+  // feature catalog. Existing callers retain their narrow, message-free default.
+  const optionLabel = copy?.optionLabel ?? optionLabelOverride ?? ((depth) => t("top", { depth }));
 
   return (
     <span className="inline-flex items-center gap-2">
       <Tooltip
         content={
           currentDepth !== null && currentDepth < VISIBILITY_HORIZON
-            ? VISIBILITY_SHALLOW_CHECK_COPY
+            ? (copy?.shallowVisibility ?? t("shallowVisibility"))
             : null
         }
         semantics="description"
@@ -86,7 +100,7 @@ export function CheckDepthSplitButton({
             {actionLabel}
           </Button>
           <Button
-            aria-label={caretAriaLabel}
+            aria-label={caretAriaLabel ?? t("chooseDepth")}
             variant="secondary"
             size={size}
             className={heightClass}
@@ -102,7 +116,7 @@ export function CheckDepthSplitButton({
         anchorEl={menuAnchor}
         onClose={() => setMenuAnchor(null)}
         open={Boolean(menuAnchor)}
-        listProps={{ "aria-label": "Check depth", style: { padding: 0 } }}
+        listProps={{ "aria-label": copy?.depthMenu ?? t("depthMenu"), style: { padding: 0 } }}
         contentProps={{ style: menuSelectPaperStyle }}
       >
         {serpDepthValues.map((depth) => (
@@ -124,7 +138,7 @@ export function CheckDepthSplitButton({
               size="xs"
               variant="secondary"
             >
-              Change default
+              {copy?.changeDefault ?? t("changeDefault")}
             </Button>
           </MenuActionFooter>
         ) : null}

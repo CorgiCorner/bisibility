@@ -16,6 +16,7 @@ import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist
 import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { KeywordsToolbarButton, toolbarSecondaryIconClassName } from "./KeywordsToolbarButton";
 
@@ -52,6 +53,7 @@ export function KeywordsToolbarActions({
   onOpenExport,
   onOpenFilters,
 }: Readonly<KeywordsToolbarActionsProps>) {
+  const t = useTranslations("projectRankTracker.list.toolbar");
   const [transferAnchor, setTransferAnchor] = useState<null | HTMLElement>(null);
   const { readOnly } = useProjectWriteMode();
   const mobileTooltips = useMediaQuery("(max-width:1023px)");
@@ -71,7 +73,7 @@ export function KeywordsToolbarActions({
       </span>
       <KeywordsToolbarButton
         showTooltip={mobileTooltips}
-        label="Filters"
+        label={t("filters")}
         onClick={onOpenFilters}
         startIcon={
           <Funnel
@@ -101,7 +103,7 @@ export function KeywordsToolbarActions({
           aria-controls={transferAnchor ? "keyword-transfer-menu" : undefined}
           aria-expanded={transferAnchor ? "true" : undefined}
           aria-haspopup="menu"
-          label="Import or export"
+          label={t("importOrExport")}
           onClick={(event) => setTransferAnchor(event.currentTarget)}
           startIcon={
             <UploadSimple weight="regular" size={15} className={toolbarSecondaryIconClassName} />
@@ -124,7 +126,7 @@ export function KeywordsToolbarActions({
           style={menuRowStyle}
         >
           <UploadSimple weight="regular" aria-hidden size={15} />
-          Export keywords
+          {t("exportKeywords")}
         </MenuItem>
         {onImportCsv ? (
           <MenuItem
@@ -136,14 +138,14 @@ export function KeywordsToolbarActions({
             style={menuRowStyle}
           >
             <DownloadSimple weight="regular" aria-hidden size={15} />
-            Import keywords
+            {t("importKeywords")}
           </MenuItem>
         ) : null}
       </Menu>
       <span className="hidden lg:inline-flex" data-testid="keywords-export-action">
         <KeywordsToolbarButton
           compactBelowXl
-          label="Export"
+          label={t("export")}
           onClick={onOpenExport}
           showTooltip
           startIcon={
@@ -163,7 +165,7 @@ export function KeywordsToolbarActions({
             <KeywordsToolbarButton
               compactBelowXl
               disabled={readOnly}
-              label="Import"
+              label={t("import")}
               onClick={onImportCsv}
               showTooltip
               startIcon={
@@ -185,7 +187,7 @@ export function KeywordsToolbarActions({
             compactBelowXl
             showTooltip
             disabled={readOnly}
-            label="Add keyword"
+            label={t("addKeyword")}
             onClick={onAddKeyword}
             startIcon={<Plus size={15} weight="regular" className="text-current" />}
             variant="primary"

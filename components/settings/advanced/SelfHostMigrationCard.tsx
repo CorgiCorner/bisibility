@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/Modal";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { ArrowCounterClockwiseIcon as ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type ProjectMigrationAction = (input: { projectId: string }) => Promise<unknown>;
@@ -37,6 +38,7 @@ export function SelfHostMigrationCard({
   projectName,
   writeMode,
 }: Readonly<SelfHostMigrationCardProps>) {
+  const t = useTranslations("projectSettingsAdvanced.selfHost");
   const router = useRouter();
   const [wizardOpen, setWizardOpen] = useState(false);
   const [reactivateOpen, setReactivateOpen] = useState(false);
@@ -54,7 +56,7 @@ export function SelfHostMigrationCard({
       setReactivateOpen(false);
       router.refresh();
     } catch (error) {
-      setFeedback(actionErrorMessage(error, "Project could not be reactivated."));
+      setFeedback(actionErrorMessage(error, t("reactivateError")));
     } finally {
       setBusy(false);
     }
@@ -69,12 +71,12 @@ export function SelfHostMigrationCard({
         type="button"
         variant="secondary"
       >
-        Reactivate project
+        {t("reactivate")}
       </Button>
     ) : null
   ) : canManage ? (
     <Button onClick={() => setWizardOpen(true)} size="sm" type="button" variant="secondary">
-      {held ? "Continue transfer" : "Transfer project"}
+      {held ? t("continue") : t("transfer")}
     </Button>
   ) : null;
 
@@ -82,15 +84,12 @@ export function SelfHostMigrationCard({
     <>
       <AdvancedCardFrame
         className={advancedCardGeometryClassNames.migration}
-        description="Move this project to another Bisibility instance. We'll verify the destination first, then ask you to pause project writes so the transferred data stays consistent."
+        description={t("description")}
         footer={footer}
         id="self-host-migration"
-        title="Transfer project"
+        title={t("title")}
       >
-        <p className="m-0 text-[11.5px] leading-5 text-fg-muted">
-          Provider credentials, API keys, billing information, and user passwords are not
-          transferred. Connect providers separately on the destination.
-        </p>
+        <p className="m-0 text-[11.5px] leading-5 text-fg-muted">{t("notTransferred")}</p>
         {feedback ? (
           <p aria-live="polite" className="m-0 text-[12px] text-red-text">
             {feedback}
@@ -119,28 +118,25 @@ export function SelfHostMigrationCard({
               type="button"
               variant="ghost"
             >
-              Keep read-only
+              {t("keepReadOnly")}
             </Button>
             <Button
               loading={busy}
-              loadingLabel="Reactivating..."
+              loadingLabel={t("reactivating")}
               onClick={reactivate}
               type="button"
               variant="destructive"
             >
-              Reactivate project
+              {t("reactivate")}
             </Button>
           </>
         }
         onClose={() => setReactivateOpen(false)}
         open={reactivateOpen}
         size="sm"
-        title="Reactivate this source project?"
+        title={t("reactivateTitle")}
       >
-        <p className="m-0 text-[13px] leading-5 text-fg-muted">
-          Writes and scheduled checks resume here. Data already moved to another instance will not
-          stay synchronized with this source.
-        </p>
+        <p className="m-0 text-[13px] leading-5 text-fg-muted">{t("reactivateDescription")}</p>
       </Modal>
     </>
   );

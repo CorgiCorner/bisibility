@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { DateFormat } from "@/lib/dates/format";
@@ -10,9 +11,9 @@ import { cn } from "@/lib/ui/cn";
 import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { SearchInsightsMenu, SearchInsightsMenuOption } from "./SearchInsightsMenu";
-import { PERIOD_MENU_LABEL } from "./search-insights-copy";
 import {
   periodOptions,
   periodTooltipLines,
@@ -37,8 +38,11 @@ export function SearchInsightsPeriodMenu({
   period,
   window = null,
 }: Readonly<PeriodMenuProps>) {
+  const dateDisplay = useDateDisplay();
+  const t = useTranslations("projectSearchInsights.copy");
+  const display = { ...dateDisplay, dateFormat };
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const options = periodOptions(importFacts, window?.current.end ?? null, period, dateFormat);
+  const options = periodOptions(importFacts, window?.current.end ?? null, period, display, t);
 
   function pick(id: string) {
     setAnchorEl(null);
@@ -50,7 +54,7 @@ export function SearchInsightsPeriodMenu({
     <Button
       aria-expanded={Boolean(anchorEl)}
       aria-haspopup="listbox"
-      aria-label={periodTriggerName(period, window, dateFormat)}
+      aria-label={periodTriggerName(period, window, display, t)}
       disabled={pending}
       onClick={(event) => setAnchorEl(event.currentTarget)}
       size="sm"
@@ -59,7 +63,7 @@ export function SearchInsightsPeriodMenu({
     >
       <span className="flex items-center gap-2 whitespace-nowrap">
         <span className="font-sans tabular-nums text-ui-caption">
-          {periodTriggerLabel(period, window, dateFormat)}
+          {periodTriggerLabel(period, window, display, t)}
         </span>
         <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
       </span>
@@ -75,7 +79,7 @@ export function SearchInsightsPeriodMenu({
               className="block max-w-80 whitespace-normal text-left"
               data-testid="period-tooltip-content"
             >
-              {periodTooltipLines(period, window, dateFormat).map((line) => (
+              {periodTooltipLines(period, window, display, t).map((line) => (
                 <span className="block" key={line}>
                   {line}
                 </span>
@@ -92,7 +96,7 @@ export function SearchInsightsPeriodMenu({
       )}
       <SearchInsightsMenu
         anchorEl={anchorEl}
-        ariaLabel={PERIOD_MENU_LABEL}
+        ariaLabel={t("periodMenuLabel")}
         onClose={() => setAnchorEl(null)}
       >
         {options.map((option) => (

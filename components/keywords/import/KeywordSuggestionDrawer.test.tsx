@@ -1,6 +1,18 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { topQueryImportMessages } from "@/components/onboarding/steps/keyword-import-messages";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import onboardingMessages from "@/messages/core/en/onboarding.json";
+import { fireEvent, screen } from "@testing-library/react";
+import { createTranslator } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordSuggestionDrawer, type SuggestionCostContext } from "./KeywordSuggestionDrawer";
+
+const drawerMessages = topQueryImportMessages(
+  createTranslator({
+    locale: "en",
+    messages: onboardingMessages,
+    namespace: "onboarding.keywords",
+  }),
+).drawer;
 
 const costContext: SuggestionCostContext = {
   cronExpression: null,
@@ -27,6 +39,7 @@ function renderDrawer(props: Partial<Parameters<typeof KeywordSuggestionDrawer>[
       costContext={costContext}
       existingKeywords={["rank tracker"]}
       hidden={[]}
+      messages={drawerMessages}
       onClose={vi.fn()}
       onConfirm={onConfirm}
       open

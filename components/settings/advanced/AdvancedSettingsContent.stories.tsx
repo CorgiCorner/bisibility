@@ -1,3 +1,4 @@
+import { withAdvancedSettingsMessages } from "@/.storybook/settings-shell-messages";
 import { AdvancedSettingsContent } from "@/components/settings/advanced/AdvancedSettingsContent";
 import {
   AdvancedSettingsContentLoading,
@@ -32,6 +33,14 @@ function auditEntry(index: number): AuditEntry {
       name: index === 4 ? "System" : "Alex Owner",
     },
     diff: [],
+    action:
+      [
+        "provider.test",
+        "keyword.csv_import",
+        "project_defaults.update",
+        "check_schedule.update",
+        "settings.project_details.update",
+      ][index] ?? "settings.project_details.update",
     eventName:
       [
         "Provider API key updated",
@@ -99,6 +108,7 @@ const meta = {
         )}
       </main>
     ),
+    withAdvancedSettingsMessages,
   ],
   parameters: { nextjs: { appDirectory: true } },
   title: "Settings/Advanced",

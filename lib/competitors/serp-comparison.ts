@@ -57,7 +57,7 @@ export function buildSerpComparison(
     {
       id: "own",
       domain: normalizeDomain(ownDomain) ?? ownDomain,
-      label: "Your site",
+      label: normalizeDomain(ownDomain) ?? ownDomain,
       own: true,
       position: ownPosition,
       gap: null,

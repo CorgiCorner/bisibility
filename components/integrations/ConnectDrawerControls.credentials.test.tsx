@@ -1,9 +1,10 @@
+import { renderWithIntegrationMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import {
   providerCredentialFieldsFor,
   SAVED_SECRET_DESCRIPTION,
 } from "@/lib/integrations/credential-fields";
 import type { IntegrationProviderData } from "@/lib/integrations/types";
-import { render, renderHook, screen } from "@testing-library/react";
+import { renderHook, screen } from "@testing-library/react";
 import { useForm } from "react-hook-form";
 import { describe, expect, it } from "vitest";
 import { CredentialFields } from "./ConnectDrawerControls";

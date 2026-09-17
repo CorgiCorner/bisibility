@@ -1,4 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import {
+  costEstimateFeatureTestMessages,
+  renderWithCostEstimateMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { HeaderProviderSpend } from "./HeaderProviderSpend";
 import { SessionSpendProvider } from "./SessionSpendProvider";
@@ -93,5 +98,29 @@ describe("HeaderProviderSpend", () => {
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("uses the workspace payload's localized cap and currency copy", () => {
+    const messages = structuredClone(costEstimateFeatureTestMessages);
+    messages.projectCostEstimate.providerSpend.headerCapAria = "Limit miesieczny {used}";
+    messages.projectCostEstimate.providerSpend.headerUsed = "Wykorzystano {percent, number}%";
+
+    renderWithFeatureMessages(
+      <SessionSpendProvider>
+        <HeaderProviderSpend
+          action="details"
+          projectRef="prj_example"
+          recorded={{ cents: 1240, units: 28 }}
+          tightest={{ provider: "SerpApi", usedPercent: 100 }}
+          usedPercent={62}
+        />
+      </SessionSpendProvider>,
+      { locale: "pl", messages },
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Limit miesieczny Wykorzystano 62%" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("62% used")).not.toBeInTheDocument();
   });
 });

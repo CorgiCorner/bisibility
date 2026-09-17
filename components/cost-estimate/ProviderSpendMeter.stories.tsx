@@ -1,4 +1,6 @@
 import { ProviderSpendMeter } from "@/components/cost-estimate/ProviderSpendMeter";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import projectCostEstimateMessages from "@/messages/core/en/project-cost-estimate.json";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const docsHref = "/docs/integrations#budget-cap";
@@ -24,9 +26,11 @@ const meta = {
   component: ProviderSpendMeter,
   decorators: [
     (Story) => (
-      <div className="max-w-xl bg-bg p-6 text-fg">
-        <Story />
-      </div>
+      <FeatureMessagesProvider locale="en" messages={projectCostEstimateMessages} timeZone="UTC">
+        <div className="max-w-xl bg-bg p-6 text-fg">
+          <Story />
+        </div>
+      </FeatureMessagesProvider>
     ),
   ],
   title: "Cost Estimate/ProviderSpendMeter",

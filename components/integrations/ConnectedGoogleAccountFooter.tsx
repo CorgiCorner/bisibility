@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import { UserCircleIcon as UserCircle } from "@phosphor-icons/react/dist/csr/UserCircle";
+import { useTranslations } from "next-intl";
 
 type ConnectedGoogleAccountFooterProps = {
   accountEmail?: string;
@@ -16,6 +17,7 @@ export function ConnectedGoogleAccountFooter({
   onDisconnect,
   switchAccountHref,
 }: Readonly<ConnectedGoogleAccountFooterProps>) {
+  const t = useTranslations("projectIntegrations.oauth");
   const standalone = layout === "standalone";
   return (
     <div
@@ -30,7 +32,7 @@ export function ConnectedGoogleAccountFooter({
         className={`m-0 flex min-w-0 items-center gap-2 text-[11.5px] text-fg-muted${standalone ? "" : " flex-1"}`}
       >
         <UserCircle aria-hidden className="shrink-0" size={15} weight="regular" />
-        <span className="min-w-0 truncate">{accountEmail ?? "Google account connected"}</span>
+        <span className="min-w-0 truncate">{accountEmail ?? t("googleAccountConnected")}</span>
       </p>
       <div
         className={
@@ -45,7 +47,7 @@ export function ConnectedGoogleAccountFooter({
           size="xs"
           variant="ghost"
         >
-          Reconnect account
+          {t("reconnect")}
         </Button>
         <Button
           className="px-0 hover:underline focus-visible:underline"
@@ -59,7 +61,7 @@ export function ConnectedGoogleAccountFooter({
           type="button"
           variant="ghost"
         >
-          Disconnect
+          {t("disconnect")}
         </Button>
       </div>
     </div>

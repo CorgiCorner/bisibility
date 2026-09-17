@@ -1,16 +1,15 @@
 import { Tooltip } from "@/components/ui/Tooltip";
-
-const RESEARCH_SCOPE_UNAVAILABLE_TOOLTIP =
-  "No search volume or difficulty data for this country and language. Rank tracking is unaffected.";
+import { useTranslations } from "next-intl";
 
 export function ResearchUnavailableMetric({
   label,
   className = "font-sans tabular-nums text-fg-muted",
 }: Readonly<{ className?: string; label: string }>) {
+  const t = useTranslations("projectResearch.unavailable");
   return (
-    <Tooltip content={RESEARCH_SCOPE_UNAVAILABLE_TOOLTIP}>
+    <Tooltip content={t("tooltip")}>
       <span aria-label={label} className={`${className} cursor-help`}>
-        n/a
+        {t("value")}
       </span>
     </Tooltip>
   );

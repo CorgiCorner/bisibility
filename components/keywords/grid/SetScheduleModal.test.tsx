@@ -1,7 +1,14 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { ToastProvider } from "@/components/ui/Toast";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import rankTrackerMessages from "@/messages/core/en/project-rank-tracker.json";
+import keywordImportMessages from "@/messages/core/en/project-rank-tracker-keyword-import.json";
+import sharedMessages from "@/messages/core/en/shared.json";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SetScheduleModal } from "./SetScheduleModal";
 import type { CheckScheduleSummary } from "./set-schedule-model";
@@ -55,7 +62,75 @@ function renderModal(overrides: Partial<React.ComponentProps<typeof SetScheduleM
   );
 }
 
+function renderPolish(children: ReactNode) {
+  const messages = {
+    ...keywordImportMessages,
+    projectRankTracker: {
+      ...keywordImportMessages.projectRankTracker,
+      keywordImport: {
+        ...keywordImportMessages.projectRankTracker.keywordImport,
+        management: {
+          ...keywordImportMessages.projectRankTracker.keywordImport.management,
+          schedule: {
+            ...keywordImportMessages.projectRankTracker.keywordImport.management.schedule,
+            ariaLabel: "Harmonogram",
+            create: "Utwórz harmonogram",
+            daily: "Codziennie",
+            depth: "Głębokość",
+            depthProviderHint: "Głębokość i dostawca wynikają z ustawień projektu.",
+            name: "Nazwa",
+            new: "Nowy harmonogram",
+            newDescription: "Nowy rytm dla {count, plural, one {tego celu.} other {tych # celów.}}",
+            newTitle: "Nowy harmonogram z wyboru",
+            monthlyDelta:
+              "{direction, select, positive {Więcej o +{cost, number, ::currency/USD} miesięcznie} negative {Mniej o -{cost, number, ::currency/USD} miesięcznie} other {Bez zmiany}}",
+            monthlyDeltaBelowCent:
+              "{direction, select, positive {Więcej o +< {minimum, number, ::currency/USD} miesięcznie} negative {Mniej o -< {minimum, number, ::currency/USD} miesięcznie} other {Bez zmiany}}",
+            monthlyNoSpend: "Brak zaplanowanych kosztów",
+            monthlySame: "Ten sam koszt miesięczny",
+            monthlyUnavailable: "Wycena niedostępna",
+            projectDefaultDepth: "Domyślna głębokość (Top {depth, number})",
+            saveForbidden: "Nie masz dostępu do zmiany tych harmonogramów.",
+            saveNotFound: "Ten harmonogram nie jest już dostępny. Odśwież i wybierz go ponownie.",
+            saveUnauthorized: "Zaloguj się ponownie, a następnie zapisz harmonogram.",
+            saveValidationFailed: "Sprawdź pola harmonogramu i spróbuj ponownie.",
+            timezone: "Strefa czasowa",
+            title:
+              "Ustaw harmonogram dla {count, plural, one {# słowa kluczowego / # celu} few {# słów kluczowych / # celów} many {# słów kluczowych / # celów} other {# słowa kluczowego / # celu}}",
+          },
+        },
+      },
+    },
+  };
+  return render(
+    <FeatureMessagesProvider
+      locale="pl"
+      messages={mergeMessageCatalogs(sharedMessages, rankTrackerMessages, messages)}
+      timeZone="UTC"
+    >
+      {children}
+    </FeatureMessagesProvider>,
+  );
+}
+
 afterEach(() => vi.unstubAllGlobals());
+
+function problemResponse(
+  status: number,
+  code: "forbidden" | "not_found" | "unauthorized" | "validation_failed",
+) {
+  return new Response(
+    JSON.stringify({
+      detail: "Raw server detail must not reach the interface.",
+      docs_url: `https://bisibility.com/docs/api/errors#${code}`,
+      instance: "urn:bisibility:app:rank-check-runs:error",
+      status,
+      title: "Server response",
+      type: `https://bisibility.com/problems/${code}`,
+    }),
+    { status },
+  );
+}
 
 describe("SetScheduleModal", () => {
   it("radiogroup", () => {
@@ -96,7 +171,7 @@ describe("SetScheduleModal", () => {
   it("keeps the static choices usable when schedules fail to load", () => {
     renderModal({
       initialChoice: "remove",
-      scheduleLoadError: "Could not load schedules. Try again.",
+      scheduleLoadError: "unknown",
       scheduleLoadState: "error",
     });
 
@@ -253,5 +328,170 @@ describe("SetScheduleModal", () => {
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/check-schedules");
     expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/check-schedules/sch_new/keywords");
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+  });
+
+  it("uses an injected non-English payload for list-invoked schedule controls", () => {
+    renderPolish(
+      <ToastProvider>
+        <SetScheduleModal
+          initialView="new"
+          onClose={vi.fn()}
+          onDone={vi.fn()}
+          open
+          projectId={projectId}
+          schedules={schedules}
+          selectedRows={[{ ...rows[0], projectSerpDepth: 20 } as KeywordRow]}
+        />
+      </ToastProvider>,
+    );
+
+    expect(screen.getByRole("dialog", { name: "Nowy harmonogram z wyboru" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Nazwa" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Codziennie" })).toBeChecked();
+    expect(screen.getByRole("button", { name: "Strefa czasowa" })).toBeInTheDocument();
+    expect(screen.getByText("Głębokość:")).toBeInTheDocument();
+    expect(screen.getByText(/Domyślna głębokość \(Top/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Utwórz harmonogram" })).toBeInTheDocument();
+  });
+
+  it.each([
+    [401, "unauthorized", "Zaloguj się ponownie, a następnie zapisz harmonogram."],
+    [403, "forbidden", "Nie masz dostępu do zmiany tych harmonogramów."],
+    [404, "not_found", "Ten harmonogram nie jest już dostępny. Odśwież i wybierz go ponownie."],
+    [400, "validation_failed", "Sprawdź pola harmonogramu i spróbuj ponownie."],
+  ] as const)(
+    "maps a %i %s app-route problem to a safe localized remedy",
+    async (status, code, remedy) => {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(problemResponse(status, code)));
+      renderPolish(
+        <ToastProvider>
+          <SetScheduleModal
+            currentScheduleId="sch_daily"
+            onClose={vi.fn()}
+            onDone={vi.fn()}
+            open
+            projectId={projectId}
+            providerRate={{ overrideCents: 1, providerId: "dataforseo" }}
+            schedules={schedules}
+            selectedRows={rows}
+          />
+        </ToastProvider>,
+      );
+
+      fireEvent.click(screen.getByRole("radio", { name: /Weekly Mon/ }));
+      fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+      expect(await screen.findByText(remedy)).toBeVisible();
+      expect(
+        screen.queryByText("Raw server detail must not reach the interface."),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it("keeps positive, negative, subcent, zero, and unavailable monthly deltas localized", () => {
+    const manualRow = {
+      ...rows[0],
+      checkSchedule: null,
+      schedule: { ...rows[0].schedule, frequency: "manual" as const },
+    };
+    const positive = renderPolish(
+      <ToastProvider>
+        <SetScheduleModal
+          currentScheduleId={null}
+          onClose={vi.fn()}
+          onDone={vi.fn()}
+          open
+          projectId={projectId}
+          providerRate={{ overrideCents: 1, providerId: "dataforseo" }}
+          schedules={schedules}
+          selectedRows={[manualRow]}
+        />
+      </ToastProvider>,
+    );
+    expect(screen.getAllByText(/Więcej o \+.*USD/).length).toBeGreaterThan(0);
+    positive.unmount();
+
+    const negative = renderPolish(
+      <ToastProvider>
+        <SetScheduleModal
+          currentScheduleId="sch_daily"
+          onClose={vi.fn()}
+          onDone={vi.fn()}
+          open
+          projectId={projectId}
+          providerRate={{ overrideCents: 1, providerId: "dataforseo" }}
+          schedules={schedules}
+          selectedRows={rows}
+        />
+      </ToastProvider>,
+    );
+    expect(screen.getAllByText(/Mniej o -.*USD/).length).toBeGreaterThan(0);
+    negative.unmount();
+
+    const positiveSubcent = renderPolish(
+      <ToastProvider>
+        <SetScheduleModal
+          currentScheduleId={null}
+          onClose={vi.fn()}
+          onDone={vi.fn()}
+          open
+          projectId={projectId}
+          providerRate={{ overrideCents: 0.001, providerId: "dataforseo" }}
+          schedules={schedules}
+          selectedRows={[manualRow]}
+        />
+      </ToastProvider>,
+    );
+    expect(screen.getAllByText(/Więcej o \+<.*USD/).length).toBeGreaterThan(0);
+    positiveSubcent.unmount();
+
+    const negativeSubcent = renderPolish(
+      <ToastProvider>
+        <SetScheduleModal
+          currentScheduleId="sch_daily"
+          onClose={vi.fn()}
+          onDone={vi.fn()}
+          open
+          projectId={projectId}
+          providerRate={{ overrideCents: 0.001, providerId: "dataforseo" }}
+          schedules={schedules}
+          selectedRows={rows}
+        />
+      </ToastProvider>,
+    );
+    expect(screen.getAllByText(/Mniej o -<.*USD/).length).toBeGreaterThan(0);
+    negativeSubcent.unmount();
+
+    const zero = renderPolish(
+      <ToastProvider>
+        <SetScheduleModal
+          currentScheduleId="sch_daily"
+          onClose={vi.fn()}
+          onDone={vi.fn()}
+          open
+          projectId={projectId}
+          providerRate={{ overrideCents: 0, providerId: "dataforseo" }}
+          schedules={schedules}
+          selectedRows={rows}
+        />
+      </ToastProvider>,
+    );
+    expect(screen.getAllByText("Ten sam koszt miesięczny").length).toBeGreaterThan(0);
+    zero.unmount();
+
+    renderPolish(
+      <ToastProvider>
+        <SetScheduleModal
+          currentScheduleId="sch_daily"
+          onClose={vi.fn()}
+          onDone={vi.fn()}
+          open
+          projectId={projectId}
+          schedules={schedules}
+          selectedRows={rows}
+        />
+      </ToastProvider>,
+    );
+    expect(screen.getAllByText("Wycena niedostępna").length).toBeGreaterThan(0);
   });
 });

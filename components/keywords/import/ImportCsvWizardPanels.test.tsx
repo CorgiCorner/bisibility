@@ -1,9 +1,17 @@
 import { ToastProvider } from "@/components/ui/Toast";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { keywordImportTemplateCsv } from "@/lib/keywords/import-csv-template";
 import { stubBlobDownload } from "@/tests/blob-download";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DoneStep, MapStep, ReviewStep, TemplateStep, UploadStep } from "./ImportCsvWizardPanels";
+import {
+  DoneStep,
+  MapStep,
+  presentImportValidationMessage,
+  ReviewStep,
+  TemplateStep,
+  UploadStep,
+} from "./ImportCsvWizardPanels";
 import { ParsedRowsPreview } from "./ParsedRowsPreview";
 
 function renderTemplate() {
@@ -216,10 +224,29 @@ describe("ImportCsvWizardPanels", () => {
       />,
     );
     expect(screen.getByText("3 added, 2 skipped, 8 failed.")).toBeInTheDocument();
-    expect(screen.getByText("Some locations need review")).toBeInTheDocument();
-    expect(screen.getByText("Row 6: Error 5")).toBeInTheDocument();
-    expect(screen.queryByText("Row 7: Error 6")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("The selected location was tracked at country level."),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/This row is invalid/)).toHaveLength(6);
+    expect(screen.queryByText("Error 6")).not.toBeInTheDocument();
   });
+});
+
+it("uses localized validation codes and never exposes an unknown action message", () => {
+  const pl = vi.fn((key: string, values?: Record<string, unknown>) =>
+    values ? `pl:${key}:${JSON.stringify(values)}` : `pl:${key}`,
+  );
+
+  expect(
+    presentImportValidationMessage(
+      "Location key US/Texas/Austin could not be resolved exactly.",
+      pl as never,
+    ),
+  ).toBe('pl:rowLocationKeyUnresolved:{"locationKey":"US/Texas/Austin"}');
+  expect(presentImportValidationMessage("provider response: account 123", pl as never)).toBe(
+    "pl:rowInvalid",
+  );
+  expect(pl).not.toHaveBeenCalledWith(expect.anything(), expect.stringContaining("account 123"));
 });
 
 it("shows exact row failures and paused-market consequences during review", () => {

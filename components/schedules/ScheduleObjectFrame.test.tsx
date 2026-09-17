@@ -7,6 +7,7 @@ describe("ScheduleObjectFrame", () => {
     const { rerender } = render(
       <ScheduleObjectFrame
         bodyLabel="Schedule body"
+        breadcrumbLabel="Breadcrumb"
         breadcrumb={{ href: "/app/prj_1/rank-tracker", label: "Rank Tracker" }}
         subtitle="Not saved yet. It runs on its cadence once saved with at least one keyword."
         title="Schedule"
@@ -27,6 +28,7 @@ describe("ScheduleObjectFrame", () => {
     rerender(
       <ScheduleObjectFrame
         bodyLabel="Schedule body"
+        breadcrumbLabel="Breadcrumb"
         breadcrumb={{ href: "/app/prj_1/runs/schedules", label: "All schedules" }}
         title="Schedule"
       />,

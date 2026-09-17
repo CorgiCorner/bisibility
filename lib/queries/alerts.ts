@@ -11,7 +11,7 @@ import { privateNetworkAllowed } from "@/lib/alerts/webhook-target";
 import {
   type AlertFeedQuery,
   listAlertRuleViews,
-  listTriggeredAlertViews,
+  listTriggeredAlertFeedViews,
 } from "@/lib/api/alert-list";
 import { listWebhookEndpointsWithHistory } from "@/lib/api/webhook-service";
 import { prisma } from "@/lib/db/prisma";
@@ -36,12 +36,13 @@ function requiredPublicId(value: string | null, prefix: PublicIdPrefix, resource
 
 type FeedMarket = { id: string; label: string; language: string; locationId: string };
 
-function marketScopeLabel(marketIds: readonly string[], markets: AlertTargetOptions["markets"]) {
-  if (!marketIds.length) return "All markets";
+function marketScope(marketIds: readonly string[], markets: AlertTargetOptions["markets"]) {
   const labels = marketIds
     .map((marketId) => markets.find((market) => market.id === marketId)?.label)
     .filter((label): label is string => Boolean(label));
-  return labels.length === 1 ? labels[0] : `${marketIds.length} markets`;
+  return labels.length === 1
+    ? { count: marketIds.length, label: labels[0] }
+    : { count: marketIds.length };
 }
 
 function alertFacetOptions(markets: readonly FeedMarket[]): FeedFacetOptions {
@@ -183,7 +184,7 @@ export async function getAlertsView(projectId: string, searchParams: FeedFacetSe
   const { facets } = parseFeedFacets(searchParams, facetOptions);
   const [rules, alerts] = await Promise.all([
     listAlertRuleViews(project.id),
-    listTriggeredAlertViews(project.id, alertFacetQuery(facets, targets.feedMarkets)),
+    listTriggeredAlertFeedViews(project.id, alertFacetQuery(facets, targets.feedMarkets)),
   ]);
 
   return {
@@ -194,7 +195,7 @@ export async function getAlertsView(projectId: string, searchParams: FeedFacetSe
     rules: rules.map((rule) => ({
       ...rule,
       depthConflict: alertDepthConflict(rule, minimumTargetedDepth(rule, targets.depthKeywords)),
-      marketScope: marketScopeLabel(rule.marketIds, targets.options.markets),
+      marketScope: marketScope(rule.marketIds, targets.options.markets),
     })),
     targets: { ...targets.options, projectDomain: trackedProjectDomain(project.domain) ?? "" },
   };

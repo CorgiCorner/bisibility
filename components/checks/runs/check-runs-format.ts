@@ -5,66 +5,101 @@ import type {
   CheckRunRow,
   DeferredGroup,
 } from "@/lib/checks/contract";
-import { type DateFormat, formatDateRange, formatDateTime } from "@/lib/dates/format";
+import type { DateDisplayContext } from "@/lib/dates/format";
+import { formatDisplayDateRange } from "@/lib/dates/format";
 import { centsToDollars } from "@/lib/format/currency";
-import { relativePast } from "@/lib/format/relative-time";
+import type { useTranslations } from "next-intl";
 
-const money = new Intl.NumberFormat("en-US", {
-  currency: "USD",
-  maximumFractionDigits: 6,
-  minimumFractionDigits: 2,
-  style: "currency",
-});
+export type CheckRunsTranslations = ReturnType<typeof useTranslations<"projectRankTracker.checks">>;
 
-export const rangeOptions = [
-  { label: "24h", value: "24h" },
-  { label: "7d", value: "7d" },
-  { label: "30d", value: "30d" },
-] as const;
-
-export const rangeCopy: Record<CheckRange, { caption: string; window: string }> = {
-  "24h": { caption: "last 24 hours", window: "in the last 24 hours" },
-  "7d": { caption: "last 7 days", window: "in the last 7 days" },
-  "30d": { caption: "last 30 days", window: "in the last 30 days" },
+type FormatContext = {
+  locale: string;
+  t: CheckRunsTranslations;
 };
 
-export function formatMoney(cents: number) {
-  return money.format(centsToDollars(cents));
+export const rangeValues = ["24h", "7d", "30d"] as const;
+
+const rangeCaptionKeys = {
+  "24h": "range24hCaption",
+  "30d": "range30dCaption",
+  "7d": "range7dCaption",
+} as const satisfies Record<CheckRange, "range24hCaption" | "range7dCaption" | "range30dCaption">;
+
+const rangeWindowKeys = {
+  "24h": "range24hWindow",
+  "30d": "range30dWindow",
+  "7d": "range7dWindow",
+} as const satisfies Record<CheckRange, "range24hWindow" | "range7dWindow" | "range30dWindow">;
+
+export function rangeCaption(range: CheckRange, t: CheckRunsTranslations) {
+  return t(rangeCaptionKeys[range]);
 }
 
-export function formatRunCost(run: CheckRunRow) {
-  if (run.status === "failed") return "-";
-  if (typeof run.costCents === "number") return formatMoney(run.costCents);
+export function rangeWindow(range: CheckRange, t: CheckRunsTranslations) {
+  return t(rangeWindowKeys[range]);
+}
+
+export function formatCount(count: number, { locale }: Pick<FormatContext, "locale">) {
+  return new Intl.NumberFormat(locale).format(count);
+}
+
+export function formatMoney(cents: number, { locale }: Pick<FormatContext, "locale">) {
+  return new Intl.NumberFormat(locale, {
+    currency: "USD",
+    maximumFractionDigits: 6,
+    minimumFractionDigits: 2,
+    style: "currency",
+  }).format(centsToDollars(cents));
+}
+
+export function formatRunCost(run: CheckRunRow, context: FormatContext) {
+  if (run.status === "failed") return context.t("notAvailable");
+  if (typeof run.costCents === "number") return formatMoney(run.costCents, context);
   if (typeof run.estimatedCostCents === "number") {
-    return `~${formatMoney(run.estimatedCostCents)}`;
+    return context.t("estimatedCost", { amount: formatMoney(run.estimatedCostCents, context) });
   }
-  return run.status === "running" ? "~" : "-";
+  return run.status === "running" ? context.t("estimatedOnly") : context.t("notAvailable");
 }
 
-export function formatDuration(durationMs: number | null) {
+export function formatDuration(durationMs: number | null, context: Pick<FormatContext, "t">) {
   if (durationMs === null) return null;
-  if (durationMs < 1_000) return `${durationMs}ms`;
+  if (durationMs < 1_000) return context.t("durationMilliseconds", { count: durationMs });
   if (durationMs < 60_000) {
     const seconds = durationMs / 1_000;
-    return `${Number(seconds.toFixed(seconds < 10 ? 1 : 0))}s`;
+    return context.t("durationSeconds", { count: Number(seconds.toFixed(seconds < 10 ? 1 : 0)) });
   }
   const minutes = Math.floor(durationMs / 60_000);
   const seconds = Math.floor((durationMs % 60_000) / 1_000);
-  return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
+  return seconds > 0
+    ? context.t("durationMinutesSeconds", { minutes, seconds })
+    : context.t("durationMinutes", { count: minutes });
 }
 
-export function formatElapsed(startedAt: string | null, now: Date) {
-  if (!startedAt) return "Running";
-  return formatDuration(Math.max(0, now.getTime() - new Date(startedAt).getTime())) ?? "Running";
+export function formatElapsed(
+  startedAt: string | null,
+  now: Date,
+  context: Pick<FormatContext, "t">,
+) {
+  if (!startedAt) return context.t("running");
+  return (
+    formatDuration(Math.max(0, now.getTime() - new Date(startedAt).getTime()), context) ??
+    context.t("running")
+  );
 }
 
-export function formatWhen(run: CheckRunRow, now: Date) {
-  return relativePast(new Date(run.checkedAt), now);
+export function formatWhen(run: CheckRunRow, now: Date, context: Pick<FormatContext, "t">) {
+  const minutes = Math.max(
+    0,
+    Math.floor((now.getTime() - new Date(run.checkedAt).getTime()) / 60_000),
+  );
+  if (minutes < 1) return context.t("justNow");
+  if (minutes < 60) return context.t("minutesAgo", { count: minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return context.t("hoursAgo", { count: hours });
+  const days = Math.floor(hours / 24);
+  return days === 1 ? context.t("yesterday") : context.t("daysAgo", { count: days });
 }
 
-export const INTERNAL_ERROR_LABEL = "Internal error during check";
-
-// Replace raw internal error shapes with a safe label in the user-facing result cell.
 export function isInternalErrorString(error: string): boolean {
   const trimmed = error.trim();
   return (
@@ -78,29 +113,33 @@ export function isInternalErrorString(error: string): boolean {
   );
 }
 
-// The short, user-facing label for a stored error. Known infra shapes collapse to
-// a neutral label; concise human errors pass through unchanged.
-export function presentCheckError(error: string): string {
-  return isInternalErrorString(error) ? INTERNAL_ERROR_LABEL : error.trim();
+export function presentCheckError(error: string, t: CheckRunsTranslations): string {
+  return isInternalErrorString(error) ? t("internalError") : error.trim();
 }
 
-export function formatResult(run: CheckRunRow, now: Date) {
-  if (run.status === "running") return formatElapsed(run.startedAt, now);
-  if (run.status === "failed") return "All providers failed";
-  return typeof run.position === "number" ? `#${run.position}` : "No position";
+export function formatResult(run: CheckRunRow, now: Date, context: FormatContext) {
+  if (run.status === "running") return formatElapsed(run.startedAt, now, context);
+  if (run.status === "failed") return context.t("allProvidersFailed");
+  return typeof run.position === "number"
+    ? context.t("position", { position: run.position })
+    : context.t("noPosition");
 }
 
 function claimsAttemptSuccess(detail: string) {
   return /^(?:ok|completed|success|successful|succeeded)[.!]?$/i.test(detail.trim());
 }
 
-export function formatAttemptOutcome(attempt: CheckAttempt, failedRun = false) {
-  if (failedRun && attempt.outcome === "ok") return "Provider error";
+export function formatAttemptOutcome(
+  attempt: CheckAttempt,
+  context: Pick<FormatContext, "t">,
+  failedRun = false,
+) {
+  if (failedRun && attempt.outcome === "ok") return context.t("providerError");
   const fallback = {
-    credentials_unavailable: "Credentials unavailable",
-    ok: "Completed",
-    provider_failed: "Provider error",
-    rate_limited: "Rate limited",
+    credentials_unavailable: context.t("credentialsUnavailable"),
+    ok: context.t("completed"),
+    provider_failed: context.t("providerError"),
+    rate_limited: context.t("rateLimited"),
   }[attempt.outcome];
   if (!attempt.detail || (attempt.outcome !== "ok" && claimsAttemptSuccess(attempt.detail))) {
     return fallback;
@@ -113,7 +152,7 @@ export function formatAttemptOutcome(attempt: CheckAttempt, failedRun = false) {
   const detail = withoutCode
     ? `${withoutCode.slice(0, 1).toUpperCase()}${withoutCode.slice(1)}`
     : fallback;
-  return code ? `${detail} (${code})` : detail;
+  return code ? context.t("detailWithCode", { code, detail }) : detail;
 }
 
 export function totalForFilter(filter: CheckRunFilter, counts: CheckRunsViewCounts) {
@@ -132,24 +171,38 @@ type CheckRunsViewCounts = {
 };
 
 function calendarDay(date: Date, timeZone: string) {
-  return formatDateTime(date, "iso", timeZone).slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(date);
 }
 
-function clock(date: Date, timeZone: string) {
-  return formatDateTime(date, "iso", timeZone).slice(-5);
+function clock(date: Date, timeZone: string, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    hourCycle: "h23",
+    minute: "2-digit",
+    timeZone,
+  }).format(date);
 }
 
 export function deferredWindow(
   group: DeferredGroup,
   now: Date,
   timeZone: string,
-  dateFormat: DateFormat,
+  dateDisplay: DateDisplayContext,
+  context: FormatContext,
 ) {
   const first = new Date(group.firstAt);
   const last = new Date(group.lastAt);
   const firstDay = calendarDay(first, timeZone);
   const lastDay = calendarDay(last, timeZone);
   const today = firstDay === calendarDay(now, timeZone) && lastDay === calendarDay(now, timeZone);
-  if (today) return `today ${clock(first, timeZone)}-${clock(last, timeZone)}`;
-  return `${formatDateRange(firstDay, firstDay, dateFormat)}, ${clock(first, timeZone)} - ${formatDateRange(lastDay, lastDay, dateFormat)}, ${clock(last, timeZone)}`;
+  if (today) {
+    return context.t("deferredToday", {
+      end: clock(last, timeZone, context.locale),
+      start: clock(first, timeZone, context.locale),
+    });
+  }
+  return context.t("deferredRange", {
+    end: `${formatDisplayDateRange(lastDay, lastDay, dateDisplay)}, ${clock(last, timeZone, context.locale)}`,
+    start: `${formatDisplayDateRange(firstDay, firstDay, dateDisplay)}, ${clock(first, timeZone, context.locale)}`,
+  });
 }

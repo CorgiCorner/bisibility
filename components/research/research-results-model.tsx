@@ -14,21 +14,6 @@ import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 
 export type MonthlyTrendPoint = GroupedResearchRow["monthlyTrend"][number];
 
-export const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-] as const;
-
 // Providers report monthly searches newest-first; charts read left-to-right, oldest-first.
 export function chronologicalTrend(points: readonly MonthlyTrendPoint[]): MonthlyTrendPoint[] {
   return [...points].sort((left, right) => left.year - right.year || left.month - right.month);
@@ -48,27 +33,31 @@ export function difficultyPillStyle(value: number | null) {
 }
 
 // --yellow is the border/fill shade; --yellow-text keeps amber text readable.
-const INTENT_CHIPS: Record<string, { border: string; color: string; label: string }> = {
-  commercial: { border: "var(--yellow)", color: "var(--yellow-text)", label: "Comm" },
-  informational: { border: "var(--blue)", color: "var(--blue)", label: "Info" },
-  navigational: { border: "var(--purple)", color: "var(--purple)", label: "Nav" },
-  transactional: { border: "var(--green)", color: "var(--green-text)", label: "Trans" },
+const INTENT_CHIPS: Record<string, { border: string; color: string }> = {
+  commercial: { border: "var(--yellow)", color: "var(--yellow-text)" },
+  informational: { border: "var(--blue)", color: "var(--blue)" },
+  navigational: { border: "var(--purple)", color: "var(--purple)" },
+  transactional: { border: "var(--green)", color: "var(--green-text)" },
 };
 
 export function intentChipMeta(intent: string | null) {
   return intent == null ? null : (INTENT_CHIPS[intent] ?? null);
 }
 
-export function IntentChip({ intent }: Readonly<{ intent: string | null }>) {
+export function IntentChip({
+  intent,
+  label,
+}: Readonly<{ intent: string | null; label?: string | null }>) {
   const meta = intentChipMeta(intent);
-  if (!meta) return <span className="font-sans tabular-nums text-[11px] text-fg-muted">-</span>;
+  if (!meta || !label)
+    return <span className="font-sans tabular-nums text-[11px] text-fg-muted">-</span>;
   return (
     <span
       className="rounded-full border px-2 py-0.5 text-[10.5px] font-semibold"
       style={{ borderColor: meta.border, color: meta.color }}
-      title={intent ?? undefined}
+      title={label}
     >
-      {meta.label}
+      {label}
     </span>
   );
 }

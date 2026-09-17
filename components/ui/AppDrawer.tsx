@@ -6,6 +6,7 @@ import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { MOTION_DRAWER_ENTER, MOTION_DRAWER_EXIT } from "@/lib/ui/motion";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
 import type { ReactNode, Ref } from "react";
 import { useId } from "react";
 import { type DrawerBackAction, DrawerBackButton } from "./DrawerBackButton";
@@ -53,6 +54,7 @@ export function AppDrawer({
   headerLeading,
   sheetOnMobile = false,
 }: Readonly<AppDrawerProps>) {
+  const t = useTranslations("shared.controls.drawer");
   const titleId = useId();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const narrow = useMediaQuery("(max-width:640px)");
@@ -108,7 +110,7 @@ export function AppDrawer({
             ) : null}
           </div>
           <IconButton
-            aria-label="Close drawer"
+            aria-label={t("close")}
             className="shrink-0"
             autoFocus={autoFocusClose}
             onClick={() => onClose()}

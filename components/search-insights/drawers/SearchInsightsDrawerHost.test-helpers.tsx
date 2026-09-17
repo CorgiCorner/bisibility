@@ -4,8 +4,9 @@ import {
 } from "@/components/search-insights/search-insights-copy";
 import { handleShellKeyDown } from "@/components/shell/command-keyboard";
 import { ToastProvider } from "@/components/ui/Toast";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { DRAWER_LIST_CAP } from "@/lib/search-insights/constants";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   storyBandList,

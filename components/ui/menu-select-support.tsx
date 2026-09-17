@@ -113,12 +113,13 @@ export function resolveSelectedOption(
 export function selectedSummary(
   selected: readonly MenuSelectOption[],
   placeholder: string,
+  selectedLabel: (count: number) => string,
   summary?: (selected: readonly MenuSelectOption[]) => string,
 ) {
   if (summary) return summary(selected);
   if (selected.length === 0) return placeholder;
   if (selected.length <= 2) return selected.map((option) => option.label).join(", ");
-  return `${selected.length} selected`;
+  return selectedLabel(selected.length);
 }
 
 type MenuSearchFieldProps = {

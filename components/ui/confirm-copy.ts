@@ -1,3 +1,4 @@
+import type { CoreMessages } from "@/i18n/core-messages.generated";
 import { CrownSimpleIcon as CrownSimple } from "@phosphor-icons/react/dist/csr/CrownSimple";
 import { GaugeIcon as Gauge } from "@phosphor-icons/react/dist/csr/Gauge";
 import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
@@ -7,170 +8,173 @@ import { UserMinusIcon as UserMinus } from "@phosphor-icons/react/dist/csr/UserM
 import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/csr/UserPlus";
 import { WarningIcon as Warning } from "@phosphor-icons/react/dist/csr/Warning";
 
-export type ConfirmKind =
+type ConfirmMessageKey =
+  | "clearTargetUrls"
   | "deactivateAccount"
   | "deleteAccount"
-  | "deleteProject"
-  | "deleteWebhookEndpoint"
   | "deleteBulk"
   | "deleteKeyword"
+  | "deleteProject"
   | "deleteRun"
-  | "clearTargetUrls"
+  | "deleteWebhookEndpoint"
   | "reactivateAccount"
+  | "removeIntegration"
+  | "removeSampleData"
+  | "removeSearchConsoleConnection"
+  | "removeTeamMember"
   | "resetAccountLimits"
   | "revokeKey"
   | "revokeMigrationToken"
   | "rollMigrationToken"
-  | "removeIntegration"
-  | "removeSearchConsoleConnection"
-  | "removeSampleData"
-  | "removeTeamMember"
   | "transferProjectOwnership";
 
+type ConfirmationMessageKey = keyof CoreMessages["shared"]["controls"]["confirmation"];
+type ConfirmBodyKey = Extract<ConfirmationMessageKey, `${ConfirmMessageKey}Body`>;
+type ConfirmDangerLabelKey = Extract<ConfirmationMessageKey, `${ConfirmMessageKey}DangerLabel`>;
+type ConfirmTitleKey = Extract<ConfirmationMessageKey, `${ConfirmMessageKey}Title`>;
+type ConfirmToastMessageKey = Extract<ConfirmationMessageKey, `${ConfirmMessageKey}ToastMessage`>;
+
 type ConfirmConfig = {
-  title: string;
-  body: string;
   icon: typeof Warning;
-  dangerLabel: string;
-  toastMessage: string;
+  bodyKey: ConfirmBodyKey;
+  dangerLabelKey: ConfirmDangerLabelKey;
+  titleKey: ConfirmTitleKey;
+  toastMessageKey: ConfirmToastMessageKey;
   requireType?: boolean;
   typeWord?: string;
 };
 
-const MIGRATION_TOKEN_INVALIDATE_BODY =
-  "This invalidates the current token. Any transfer using it will no longer work.";
-
-export const CONFIRM: Record<ConfirmKind, ConfirmConfig> = {
+export const CONFIRM: Record<ConfirmMessageKey, ConfirmConfig> = {
   clearTargetUrls: {
-    body: "Remove the configured target URL from the selected keywords. Ranking history is not affected.",
-    dangerLabel: "Clear target URLs",
     icon: Warning,
-    toastMessage: "Target URLs cleared",
-    title: "Clear target URLs",
+    bodyKey: "clearTargetUrlsBody",
+    dangerLabelKey: "clearTargetUrlsDangerLabel",
+    titleKey: "clearTargetUrlsTitle",
+    toastMessageKey: "clearTargetUrlsToastMessage",
   },
   deactivateAccount: {
-    body: "Deactivation will block sign-in and revoke every session. It will pause scheduled checks owned by this account. Every personal access token belonging to it will be permanently revoked. Instance administrators are protected.",
-    dangerLabel: "Deactivate account",
     icon: UserMinus,
-    toastMessage: "Account action requested",
-    title: "Deactivate account",
+    bodyKey: "deactivateAccountBody",
+    dangerLabelKey: "deactivateAccountDangerLabel",
+    titleKey: "deactivateAccountTitle",
+    toastMessageKey: "deactivateAccountToastMessage",
   },
-  deleteBulk: {
-    body: "Remove the selected keywords and their history. This cannot be undone.",
-    dangerLabel: "Delete keywords",
-    icon: Trash,
-    toastMessage: "Selected keywords deleted",
-    title: "Delete selected keywords",
-  },
-  deleteRun: {
-    body: "Delete this run from history? Keyword positions and recorded provider spend are retained. This cannot be undone.",
-    dangerLabel: "Delete run",
-    icon: Trash,
-    toastMessage: "Run deleted",
-    title: "Delete run",
-  },
-  deleteKeyword: {
-    body: "Stop tracking this keyword and remove its position history. This cannot be undone.",
-    dangerLabel: "Delete keyword",
-    icon: Trash,
-    toastMessage: "Keyword deleted",
-    title: "Delete keyword",
-  },
-  // Account deletion used to borrow the project copy, so the last thing a user read before
-  // confirming described a different object than the one being destroyed.
   deleteAccount: {
-    body: "This permanently deletes your account, your projects, and everything tracked in them. This cannot be undone.",
-    dangerLabel: "Delete account",
     icon: Warning,
+    bodyKey: "deleteAccountBody",
+    dangerLabelKey: "deleteAccountDangerLabel",
+    titleKey: "deleteAccountTitle",
+    toastMessageKey: "deleteAccountToastMessage",
     requireType: true,
-    toastMessage: "Account deleted",
-    title: "Delete account",
     typeWord: "you@example.com",
   },
+  deleteBulk: {
+    icon: Trash,
+    bodyKey: "deleteBulkBody",
+    dangerLabelKey: "deleteBulkDangerLabel",
+    titleKey: "deleteBulkTitle",
+    toastMessageKey: "deleteBulkToastMessage",
+  },
+  deleteKeyword: {
+    icon: Trash,
+    bodyKey: "deleteKeywordBody",
+    dangerLabelKey: "deleteKeywordDangerLabel",
+    titleKey: "deleteKeywordTitle",
+    toastMessageKey: "deleteKeywordToastMessage",
+  },
   deleteProject: {
-    body: "This permanently deletes this project and all tracked keywords, history and API keys. This cannot be undone.",
-    dangerLabel: "Delete project",
     icon: Warning,
+    bodyKey: "deleteProjectBody",
+    dangerLabelKey: "deleteProjectDangerLabel",
+    titleKey: "deleteProjectTitle",
+    toastMessageKey: "deleteProjectToastMessage",
     requireType: true,
-    toastMessage: "Project deleted",
-    title: "Delete project",
     typeWord: "acme.dev",
   },
+  deleteRun: {
+    icon: Trash,
+    bodyKey: "deleteRunBody",
+    dangerLabelKey: "deleteRunDangerLabel",
+    titleKey: "deleteRunTitle",
+    toastMessageKey: "deleteRunToastMessage",
+  },
   deleteWebhookEndpoint: {
-    body: "Stop future deliveries to this endpoint and remove its delivery history association. This cannot be undone.",
-    dangerLabel: "Delete endpoint",
     icon: Trash,
-    toastMessage: "Webhook endpoint deleted",
-    title: "Delete webhook endpoint",
-  },
-  removeIntegration: {
-    body: "Rank checks will stop until another SERP provider is connected. Stored credentials are removed from this instance.",
-    dangerLabel: "Disconnect provider",
-    icon: Plugs,
-    toastMessage: "Provider disconnected",
-    title: "Disconnect provider",
-  },
-  removeSearchConsoleConnection: {
-    body: "This removes the saved connection and authorization tokens from this project. Already imported Search Console metrics remain available.",
-    dangerLabel: "Disconnect Search Console",
-    icon: Plugs,
-    toastMessage: "Search Console disconnected",
-    title: "Disconnect Search Console",
-  },
-  removeSampleData: {
-    body: "This deletes the sample project and its generated demo data. Your other projects are not affected.",
-    dangerLabel: "Remove sample data",
-    icon: Trash,
-    toastMessage: "Sample data removed",
-    title: "Remove sample data",
-  },
-  removeTeamMember: {
-    body: "Remove this member from the project. Their account and access to other projects are not affected.",
-    dangerLabel: "Remove member",
-    icon: UserMinus,
-    toastMessage: "Project member removed",
-    title: "Remove project member",
+    bodyKey: "deleteWebhookEndpointBody",
+    dangerLabelKey: "deleteWebhookEndpointDangerLabel",
+    titleKey: "deleteWebhookEndpointTitle",
+    toastMessageKey: "deleteWebhookEndpointToastMessage",
   },
   reactivateAccount: {
-    body: "Allow sign-in again. Previously revoked personal access tokens stay revoked and must be recreated. Scheduled checks will reconverge through the schedule reconciler.",
-    dangerLabel: "Reactivate account",
     icon: UserPlus,
-    toastMessage: "Account action requested",
-    title: "Reactivate account",
+    bodyKey: "reactivateAccountBody",
+    dangerLabelKey: "reactivateAccountDangerLabel",
+    titleKey: "reactivateAccountTitle",
+    toastMessageKey: "reactivateAccountToastMessage",
+  },
+  removeIntegration: {
+    icon: Plugs,
+    bodyKey: "removeIntegrationBody",
+    dangerLabelKey: "removeIntegrationDangerLabel",
+    titleKey: "removeIntegrationTitle",
+    toastMessageKey: "removeIntegrationToastMessage",
+  },
+  removeSampleData: {
+    icon: Trash,
+    bodyKey: "removeSampleDataBody",
+    dangerLabelKey: "removeSampleDataDangerLabel",
+    titleKey: "removeSampleDataTitle",
+    toastMessageKey: "removeSampleDataToastMessage",
+  },
+  removeSearchConsoleConnection: {
+    icon: Plugs,
+    bodyKey: "removeSearchConsoleConnectionBody",
+    dangerLabelKey: "removeSearchConsoleConnectionDangerLabel",
+    titleKey: "removeSearchConsoleConnectionTitle",
+    toastMessageKey: "removeSearchConsoleConnectionToastMessage",
+  },
+  removeTeamMember: {
+    icon: UserMinus,
+    bodyKey: "removeTeamMemberBody",
+    dangerLabelKey: "removeTeamMemberDangerLabel",
+    titleKey: "removeTeamMemberTitle",
+    toastMessageKey: "removeTeamMemberToastMessage",
   },
   resetAccountLimits: {
-    body: "Clear this account's rate-limit buckets. Monthly spend is a rolling window and cannot be reset.",
-    dangerLabel: "Reset rate limits",
     icon: Gauge,
-    toastMessage: "Rate-limit reset requested",
-    title: "Reset rate limits",
+    bodyKey: "resetAccountLimitsBody",
+    dangerLabelKey: "resetAccountLimitsDangerLabel",
+    titleKey: "resetAccountLimitsTitle",
+    toastMessageKey: "resetAccountLimitsToastMessage",
   },
   revokeKey: {
-    body: "Any app or script using this key will stop working immediately. Generate a new key to restore access.",
-    dangerLabel: "Revoke key",
     icon: Key,
-    toastMessage: "API key revoked",
-    title: "Revoke API key",
+    bodyKey: "revokeKeyBody",
+    dangerLabelKey: "revokeKeyDangerLabel",
+    titleKey: "revokeKeyTitle",
+    toastMessageKey: "revokeKeyToastMessage",
   },
   revokeMigrationToken: {
-    body: MIGRATION_TOKEN_INVALIDATE_BODY,
-    dangerLabel: "Revoke token",
     icon: Warning,
-    toastMessage: "Migration token revoked",
-    title: "Revoke migration token",
+    bodyKey: "revokeMigrationTokenBody",
+    dangerLabelKey: "revokeMigrationTokenDangerLabel",
+    titleKey: "revokeMigrationTokenTitle",
+    toastMessageKey: "revokeMigrationTokenToastMessage",
   },
   rollMigrationToken: {
-    body: MIGRATION_TOKEN_INVALIDATE_BODY,
-    dangerLabel: "Roll token",
     icon: Warning,
-    toastMessage: "Token rolled",
-    title: "Roll token",
+    bodyKey: "rollMigrationTokenBody",
+    dangerLabelKey: "rollMigrationTokenDangerLabel",
+    titleKey: "rollMigrationTokenTitle",
+    toastMessageKey: "rollMigrationTokenToastMessage",
   },
   transferProjectOwnership: {
-    body: "Make this member the project owner. Your project role changes to admin, and only the new owner can transfer ownership again.",
-    dangerLabel: "Transfer ownership",
     icon: CrownSimple,
-    toastMessage: "Project ownership transferred",
-    title: "Transfer project ownership",
+    bodyKey: "transferProjectOwnershipBody",
+    dangerLabelKey: "transferProjectOwnershipDangerLabel",
+    titleKey: "transferProjectOwnershipTitle",
+    toastMessageKey: "transferProjectOwnershipToastMessage",
   },
 };
+
+export type ConfirmKind = keyof typeof CONFIRM;

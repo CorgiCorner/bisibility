@@ -1,0 +1,52 @@
+{
+  "projectSettingsGeneral": {
+    "domainChange": {
+      "afterConfirmation": "Después de confirmar",
+      "cancel": "Cancelar",
+      "competitorHistory": "El histórico de competidores sigue vinculado al dominio que se usó en cada comprobación.",
+      "confirmationFirst": "Deja la confirmación en blanco para definir el primer dominio",
+      "confirmationFirstError": "Deja la confirmación en blanco para definir el primer dominio de este proyecto.",
+      "confirmationMustMatch": "La confirmación debe coincidir con {domain}.",
+      "confirmationWithDomain": "Escribe {domain} para confirmar",
+      "confirm": "Confirmar el cambio",
+      "confirming": "Confirmando…",
+      "description": "Cambia el dominio que usa este proyecto para identificar los resultados que le corresponden.",
+      "error": "No se ha podido cambiar el dominio.",
+      "futureChecks": "Las comprobaciones existentes conservan sus resultados originales. Las próximas comprobaciones usarán el dominio nuevo y sus subdominios para identificar los resultados del proyecto.",
+      "newDomain": "Dominio nuevo",
+      "title": "Confirma un dominio nuevo para el proyecto"
+    },
+    "projectDetails": {
+      "changeDomain": "Cambiar dominio",
+      "copyProjectId": "Copiar el ID del proyecto",
+      "description": "Nombre, dominio e ID de este proyecto.",
+      "domain": "Dominio",
+      "domainHelp": "Una comprobación considera tuyo un resultado cuando este dominio aparece en él. Para cambiarlo hace falta una confirmación.",
+      "name": "Nombre del proyecto",
+      "nameRequired": "Escribe un nombre para el proyecto.",
+      "nameTooLong": "El nombre del proyecto puede tener 120 caracteres como máximo.",
+      "projectId": "ID del proyecto",
+      "saveError": "No se han podido guardar los datos del proyecto.",
+      "title": "Datos del proyecto"
+    },
+    "validation": {
+      "confirmationTooLong": "La confirmación puede tener 253 caracteres como máximo.",
+      "domainTooLong": "Un dominio puede tener 253 caracteres como máximo.",
+      "invalidDomain": "Escribe un dominio, por ejemplo example.com."
+    },
+    "tags": {
+      "cancel": "Cancelar",
+      "description": "Las etiquetas agrupan palabras clave y páginas. Las vistas guardadas pueden filtrar por ellas.",
+      "duplicate": "{name} ya existe.",
+      "remove": "Quitar etiqueta",
+      "removeError": "No se ha podido quitar la etiqueta.",
+      "removeTitle": "¿Quitar {name}?",
+      "title": "Etiquetas",
+      "usageBothManyKeywords": "{keywordCount, number} palabras clave y {segmentCount, plural, one {# segmento la usan.} other {# segmentos la usan.}}",
+      "usageBothOneKeyword": "{segmentCount, plural, one {1 palabra clave y # segmento la usan.} other {1 palabra clave y # segmentos la usan.}}",
+      "usageKeywordOnly": "{count, plural, one {# palabra clave la usa.} other {# palabras clave la usan.}}",
+      "usageSegmentOnly": "{count, plural, one {# segmento la usa.} other {# segmentos la usan.}}",
+      "writeError": "No se ha podido añadir la etiqueta."
+    }
+  }
+}

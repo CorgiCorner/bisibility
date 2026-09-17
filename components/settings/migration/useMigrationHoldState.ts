@@ -1,6 +1,6 @@
 "use client";
 
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type MigrationHoldAction = (input: { projectId: string }) => Promise<unknown>;
@@ -22,6 +22,7 @@ export function useMigrationHoldState({
   projectId,
   releaseMigrationHold,
 }: MigrationHoldStateOptions) {
+  const t = useTranslations("projectSettingsMigration.hold.error");
   const [override, setOverride] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -35,8 +36,8 @@ export function useMigrationHoldState({
       if (projectId && enableMigrationHold) await enableMigrationHold({ projectId });
       setOverride(true);
       return true;
-    } catch (error) {
-      setMessage(actionErrorMessage(error, "Read-only mode could not be enabled."));
+    } catch {
+      setMessage(t("enable"));
       return false;
     } finally {
       setBusy(false);
@@ -50,8 +51,8 @@ export function useMigrationHoldState({
       if (projectId && releaseMigrationHold) await releaseMigrationHold({ projectId });
       setOverride(false);
       return true;
-    } catch (error) {
-      setMessage(actionErrorMessage(error, "Read-only mode could not be released."));
+    } catch {
+      setMessage(t("release"));
       return false;
     } finally {
       setBusy(false);
@@ -68,8 +69,8 @@ export function useMigrationHoldState({
       await cancelMigration({ projectId });
       setOverride(false);
       return true;
-    } catch (error) {
-      setMessage(actionErrorMessage(error, "Migration could not be cancelled."));
+    } catch {
+      setMessage(t("cancel"));
       return false;
     } finally {
       setBusy(false);
@@ -82,8 +83,8 @@ export function useMigrationHoldState({
     try {
       if (projectId && markProjectMigrated) await markProjectMigrated({ projectId });
       return true;
-    } catch (error) {
-      setMessage(actionErrorMessage(error, "Project could not be marked as migrated."));
+    } catch {
+      setMessage(t("markMigrated"));
       return false;
     } finally {
       setBusy(false);

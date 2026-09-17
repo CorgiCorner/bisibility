@@ -1,0 +1,123 @@
+{
+  "projectSettingsShell": {
+    "card": {
+      "save": "Guardar",
+      "saved": "Guardado"
+    },
+    "mobileSectionLabel": "Sección de ajustes",
+    "navigationLabel": "Secciones de ajustes",
+    "search": {
+      "empty": "No se ha encontrado ningún ajuste. Prueba con zona horaria, clave de API o presupuesto.",
+      "label": "Buscar en los ajustes",
+      "placeholder": "Buscar en los ajustes…",
+      "results": "{count, plural, one {# ajuste encontrado} other {# ajustes encontrados}}",
+      "resultsLabel": "Ajustes coincidentes",
+      "sections": {
+        "providerConnections": "Integraciones / Conexiones",
+        "providerUsage": "Integraciones / Uso"
+      },
+      "entries": {
+        "apiKeys": {
+          "label": "Claves de API",
+          "keywords": "api clave token acceso credenciales"
+        },
+        "applicationPlan": {
+          "label": "Plan de la aplicación",
+          "keywords": "facturación precio suscripción beta alojada autoalojado"
+        },
+        "checkFrequency": {
+          "label": "Frecuencia de comprobación",
+          "keywords": "programación manual diaria semanal mensual cron automática"
+        },
+        "competitors": {
+          "label": "Competidores y alias de marca",
+          "keywords": "competencia menciones citas"
+        },
+        "defaultDevice": {
+          "label": "Dispositivo predeterminado",
+          "keywords": "móvil escritorio"
+        },
+        "defaultLocation": {
+          "label": "Ubicación predeterminada",
+          "keywords": "país ciudad mercado región idioma"
+        },
+        "defaultSerpDepth": {
+          "label": "Profundidad de SERP predeterminada",
+          "keywords": "top 10 20 50 100 posición comprobación resultados"
+        },
+        "deployWebhooks": {
+          "label": "Webhooks de despliegue",
+          "keywords": "endpoint secreto despliegue hook"
+        },
+        "domainMatching": {
+          "label": "Coincidencia de dominio",
+          "keywords": "subdominio exacto raíz url alcance"
+        },
+        "experimentalFeatures": {
+          "label": "Funciones experimentales",
+          "keywords": "módulos vista previa beta alfa funciones"
+        },
+        "members": {
+          "label": "Miembros e invitaciones",
+          "keywords": "usuarios invitar rol acceso permisos"
+        },
+        "notificationChannels": {
+          "label": "Canales de notificación",
+          "keywords": "correo slack webhook alertas resumen"
+        },
+        "projectManagement": {
+          "label": "Gestión del proyecto",
+          "keywords": "copia de seguridad exportación migración autoalojamiento eliminar proyecto auditoría historial"
+        },
+        "projectName": {
+          "label": "Nombre del proyecto",
+          "keywords": "renombrar proyecto espacio de trabajo"
+        },
+        "providerBudgets": {
+          "label": "Presupuestos y uso de los proveedores",
+          "keywords": "asignación gasto coste saldo cuota créditos búsquedas límite"
+        },
+        "providerConnections": {
+          "label": "Conexiones de proveedores",
+          "keywords": "conectar desconectar credenciales dataforseo serpapi google search console analytics"
+        },
+        "scheduleTimezone": {
+          "label": "Zona horaria de la programación",
+          "keywords": "zona horaria reloj utc"
+        },
+        "searchDataSync": {
+          "label": "Sincronización de datos de búsqueda",
+          "keywords": "gsc retención meses importación pausar ritmo"
+        },
+        "stopOnMatch": {
+          "label": "Detener las comprobaciones en la primera coincidencia",
+          "keywords": "dominio primer resultado profundidad coste"
+        },
+        "tagsAndSegments": {
+          "label": "Etiquetas y segmentos",
+          "keywords": "organizar palabras clave etiquetas"
+        },
+        "urlInspectionLimit": {
+          "label": "Límite de inspección de URL",
+          "keywords": "diario cuota indexación google search console"
+        },
+        "websiteDomain": {
+          "label": "Dominio del sitio web",
+          "keywords": "sitio web url cambiar dominio"
+        }
+      }
+    },
+    "sections": {
+      "advanced": "Avanzado",
+      "billing": "Facturación",
+      "competitors": "Competidores",
+      "dataSources": "Fuentes de datos",
+      "developers": "Desarrolladores",
+      "experimental": "Experimental",
+      "general": "General",
+      "notifications": "Notificaciones",
+      "team": "Equipo",
+      "tracking": "Seguimiento"
+    }
+  }
+}

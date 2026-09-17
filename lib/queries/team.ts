@@ -14,6 +14,7 @@ export type TeamRoleLabel = "Admin" | "Editor" | "Owner" | "Viewer";
 export type TeamRoleValue = "admin" | "member" | "owner" | "viewer";
 
 export type TeamMemberData = {
+  accessSince: string;
   accessLabel: string;
   avatarUrl?: string | null;
   canChangeRole: boolean;
@@ -32,10 +33,12 @@ export type TeamMemberData = {
 
 export type PendingInviteData = {
   email: string;
+  expiresAt: string;
   expiresLabel: string;
   expired: boolean;
   id: string;
   invitedByLabel: string;
+  invitedAt: string;
   invitedLabel: string;
   role: TeamRoleLabel;
   roleValue: Exclude<TeamRoleValue, "owner">;
@@ -46,6 +49,7 @@ export type TeamAccessView = {
   canManageTeam: boolean;
   canTransferOwnership: boolean;
   members: TeamMemberData[];
+  now: string;
   pendingInvites: PendingInviteData[];
 };
 
@@ -170,6 +174,7 @@ async function readTeamAccess(
     members: members.map((member, index) => {
       const manageable = canManageMember(actorRole, member.role);
       return {
+        accessSince: member.createdAt.toISOString().slice(0, 10),
         accessLabel: memberAccessLabel(member.createdAt, dateFormat),
         avatarUrl: gravatarUrl(member.user.email, 34),
         canChangeRole: manageable,
@@ -189,13 +194,16 @@ async function readTeamAccess(
     }),
     pendingInvites: pendingInvites.map((invite) => ({
       email: invite.email,
+      expiresAt: invite.expiresAt.toISOString(),
       expiresLabel: relativeDateLabel("expires", invite.expiresAt, now),
       expired: invite.expiresAt <= now,
       id: requiredPublicId(invite.publicId, "inv", "Invite"),
       invitedByLabel: inviterLabel(invite.invitedBy),
+      invitedAt: invite.createdAt.toISOString(),
       invitedLabel: relativeDateLabel("invited", invite.createdAt, now),
       role: roleLabel(invite.role),
       roleValue: roleValue(invite.role) as Exclude<TeamRoleValue, "owner">,
     })),
+    now: now.toISOString(),
   };
 }

@@ -1,6 +1,7 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
+import { renderWithIntegrationMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ProviderActionHandlers } from "@/lib/integrations/types";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { integrationCategories } from "./integrations-fixtures";
 import { ProviderCard as ProductionProviderCard, type ProviderCardProps } from "./ProviderCard";
@@ -90,9 +91,9 @@ describe("ProviderCard", () => {
       },
       enabled: true,
       meta: [
-        { label: "Property", value: "sc-domain:example.com" },
-        { label: "Last sync", value: "Never" },
-        { label: "State", value: "Enabled" },
+        { labelKey: "property" as const, value: "sc-domain:example.com" },
+        { labelKey: "lastSync" as const, valueKey: "never" as const },
+        { labelKey: "state" as const, valueKey: "enabled" as const },
       ],
       neverSynced: true,
       status: "connected" as const,
@@ -170,7 +171,10 @@ describe("ProviderCard", () => {
 
   it("keeps connected metadata without repeating the state badge", () => {
     const base = integrationCategories[0].providers[0];
-    const provider = { ...base, meta: [...base.meta, { label: "State", value: "Enabled" }] };
+    const provider = {
+      ...base,
+      meta: [...base.meta, { labelKey: "state" as const, valueKey: "enabled" as const }],
+    };
     render(
       <ProviderCard
         canManageProviders={false}
@@ -181,7 +185,7 @@ describe("ProviderCard", () => {
     );
 
     expect(screen.getByText("Last rank check")).toBeVisible();
-    expect(screen.getByText("12 min ago")).toBeVisible();
+    expect(screen.getByText("12 minutes ago")).toBeVisible();
     expect(screen.getByText("Connected")).toBeVisible();
     expect(screen.queryByText("State")).not.toBeInTheDocument();
   });
@@ -196,8 +200,8 @@ describe("ProviderCard", () => {
           status: "ready",
           secondaryAction: undefined,
           meta: [
-            { label: "Last sync", value: "Never" },
-            { label: "State", value: "Ready" },
+            { labelKey: "lastSync" as const, valueKey: "never" as const },
+            { labelKey: "state" as const, valueKey: "ready" as const },
           ],
           consumerStatuses: {
             searchModule: { state: "not_configured", summary: "Not configured" },

@@ -154,7 +154,7 @@ describe("OnboardingWizard keyword step", () => {
     });
     expect(await screen.findByText("Not in top 50")).toBeInTheDocument();
     expect(
-      screen.getByText(/Your 2 keywords run automatically on your daily schedule/),
+      screen.getByText(/Your 2 keywords run automatically on your Daily schedule/),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Optional: check 1 keyword now/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
@@ -200,7 +200,7 @@ describe("OnboardingWizard keyword step", () => {
     );
     expect(
       await screen.findByText(
-        "Search Console sync didn't finish - observed data may take a moment. You can retry from Integrations.",
+        "Search Console sync did not finish. Observed data may take a moment. You can retry from Integrations.",
       ),
     ).toBeInTheDocument();
     expect(screen.getAllByRole("heading", { name: "First check" })).toHaveLength(2);

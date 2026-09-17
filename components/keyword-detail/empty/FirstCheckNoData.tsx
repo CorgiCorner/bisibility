@@ -2,7 +2,8 @@ import {
   EmptyModuleCard,
   EmptyModuleLabel,
 } from "@/components/keyword-detail/empty/empty-state-primitives";
-import { rankObservationState, TRACKED_DEPTH_NOT_FOUND_LABEL } from "@/lib/serp/rank-depth";
+import { rankObservationState } from "@/lib/serp/rank-depth";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 export type FirstCheckNoDataProps = {
@@ -25,48 +26,48 @@ function FirstCheckCard({ children, label }: Readonly<FirstCheckCardProps>) {
   );
 }
 
-function firstCheckPositionLabel(trackedDepth: number) {
+function firstCheckPositionLabel(trackedDepth: number, fallback: string) {
   const observation = rankObservationState({
     completedChecks: 1,
     position: null,
     trackedDepth,
   });
 
-  return observation.kind === "not_ranked"
-    ? TRACKED_DEPTH_NOT_FOUND_LABEL.replace(/\d+$/, String(trackedDepth))
-    : observation.label;
+  return observation.kind === "not_ranked" ? fallback : observation.label;
 }
 
 export function FirstCheckNoData({
-  nextCheckLabel = "Not scheduled",
+  nextCheckLabel,
   trackedDepth = 20,
-  trackedSince = "Not available",
+  trackedSince,
 }: Readonly<FirstCheckNoDataProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.empty");
   const safeTrackedDepth = Math.max(1, Math.round(trackedDepth));
+  const trackedSinceLabel = trackedSince ?? t("notAvailable");
+  const nextCheck = nextCheckLabel ?? t("notScheduled");
 
   return (
     <EmptyModuleCard>
       <div className="grid gap-3 lg:grid-cols-3">
-        <FirstCheckCard label="Position">
+        <FirstCheckCard label={t("position")}>
           <p className="m-0 mt-2 text-[15px] font-semibold text-fg-muted">
-            {firstCheckPositionLabel(safeTrackedDepth)}
+            {firstCheckPositionLabel(
+              safeTrackedDepth,
+              t("notFoundTop", { depth: safeTrackedDepth }),
+            )}
           </p>
           <p className="m-0 mt-auto pt-3 font-sans tabular-nums text-[10.5px] text-fg-muted">
-            Tracked since {trackedSince}
+            {t("trackedSince", { date: trackedSinceLabel })}
           </p>
         </FirstCheckCard>
-        <FirstCheckCard label="Ranking URL">
-          <p className="m-0 mt-2 text-[15px] font-semibold text-fg-muted">
-            No ranking URL observed yet
-          </p>
+        <FirstCheckCard label={t("rankingUrl")}>
+          <p className="m-0 mt-2 text-[15px] font-semibold text-fg-muted">{t("noRankingUrl")}</p>
         </FirstCheckCard>
-        <FirstCheckCard label="What changed">
-          <p className="m-0 mt-2 text-[15px] font-semibold text-fg">First check collected</p>
-          <p className="m-0 mt-1 text-[12px] leading-[1.5] text-fg-muted">
-            One more check is needed to establish a trend.
-          </p>
+        <FirstCheckCard label={t("whatChanged")}>
+          <p className="m-0 mt-2 text-[15px] font-semibold text-fg">{t("firstCheckCollected")}</p>
+          <p className="m-0 mt-1 text-[12px] leading-[1.5] text-fg-muted">{t("oneMoreCheck")}</p>
           <p className="m-0 mt-auto pt-3 font-sans tabular-nums text-[10.5px] text-fg-muted">
-            Next check: {nextCheckLabel}
+            {t("nextCheck", { date: nextCheck })}
           </p>
         </FirstCheckCard>
       </div>

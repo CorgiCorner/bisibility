@@ -1,13 +1,3 @@
-import {
-  DRAWER_COPY,
-  DRAWER_STAT_LABELS,
-  SHOW_MORE_TITLE,
-} from "@/components/search-insights/search-insights-copy";
-import {
-  formatRowCount,
-  formatRowCtr,
-  reachLabel,
-} from "@/components/search-insights/search-insights-rows-model";
 import { DRAWER_LIST_CAP, POSITION_BAND } from "@/lib/search-insights/constants";
 import type { SearchInsightsBandRow } from "@/lib/search-insights/queries/band-list";
 import type {
@@ -18,6 +8,7 @@ import type {
 import type { SearchInsightsOverlapRow } from "@/lib/search-insights/queries/overlap-list";
 import type { SearchInsightsPageDetail } from "@/lib/search-insights/queries/page-detail";
 import type { SearchInsightsQueryDetail } from "@/lib/search-insights/queries/query-detail";
+import type { useTranslations } from "next-intl";
 
 export type SearchInsightsListKind = "band" | "overlap";
 
@@ -40,33 +31,34 @@ export type SearchInsightsDrawerEntry =
 /** Counts the chips already show, so a list drawer can title itself before its rows arrive. */
 export type SearchInsightsListCounts = Record<SearchInsightsListKind, number>;
 
-export const BAND_KICKER = `Positions ${POSITION_BAND.min} to ${POSITION_BAND.max}`;
-export const OVERLAP_KICKER = "Page overlap";
-
-const LIST_KICKER: Record<SearchInsightsListKind, string> = {
-  band: BAND_KICKER,
-  overlap: OVERLAP_KICKER,
+export type SearchInsightsDrawerPresentation = {
+  formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
+  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>;
 };
 
-const LIST_TITLE: Record<SearchInsightsListKind, (count: number) => string> = {
-  band: (count) => `${count.toLocaleString("en-US")} queries ranking below the top three`,
-  overlap: (count) => `${count.toLocaleString("en-US")} queries answered by more than one page`,
-};
+function formatCount(presentation: SearchInsightsDrawerPresentation, value: number) {
+  return presentation.formatNumber(value, { maximumFractionDigits: 0 });
+}
 
-const LIST_NOTE: Record<SearchInsightsListKind, string> = {
-  band: DRAWER_COPY.bandNote,
-  overlap: DRAWER_COPY.overlapNote,
-};
+function listKicker(which: SearchInsightsListKind, presentation: SearchInsightsDrawerPresentation) {
+  return which === "band"
+    ? presentation.t("drawerBandKicker", { max: POSITION_BAND.max, min: POSITION_BAND.min })
+    : presentation.t("drawerOverlapKicker");
+}
 
-const LIST_PIVOT_TITLE: Record<SearchInsightsListKind, string> = {
-  band: DRAWER_COPY.bandPivotTitle,
-  overlap: DRAWER_COPY.overlapPivotTitle,
-};
+function listTitle(
+  which: SearchInsightsListKind,
+  count: number,
+  presentation: SearchInsightsDrawerPresentation,
+) {
+  return which === "band"
+    ? presentation.t("drawerListTitleBand", { count })
+    : presentation.t("drawerListTitleOverlap", { count });
+}
 
-const LIST_SORT_TIP: Record<SearchInsightsListKind, string> = {
-  band: DRAWER_COPY.bandSortTip,
-  overlap: DRAWER_COPY.overlapSortTip,
-};
+function listNote(which: SearchInsightsListKind, presentation: SearchInsightsDrawerPresentation) {
+  return which === "band" ? presentation.t("drawerBandNote") : presentation.t("drawerOverlapNote");
+}
 
 /** The identity of a frame: what the visited marks are keyed by and what the cache holds. */
 export function drawerFrameKey(frame: SearchInsightsDrawerFrame) {
@@ -76,14 +68,22 @@ export function drawerFrameKey(frame: SearchInsightsDrawerFrame) {
 }
 
 /** What the arrow says: the title of the frame the customer would return to. */
-export function drawerBackLabel(frame: SearchInsightsDrawerFrame) {
-  if (frame.kind === "list") return LIST_KICKER[frame.which];
+export function drawerBackLabel(
+  frame: SearchInsightsDrawerFrame,
+  presentation: SearchInsightsDrawerPresentation,
+) {
+  if (frame.kind === "list") return listKicker(frame.which, presentation);
   return frame.kind === "page" ? frame.path : frame.query;
 }
 
-export function drawerKicker(frame: SearchInsightsDrawerFrame) {
-  if (frame.kind === "list") return LIST_KICKER[frame.which];
-  return frame.kind === "page" ? DRAWER_COPY.pageKicker : DRAWER_COPY.queryKicker;
+export function drawerKicker(
+  frame: SearchInsightsDrawerFrame,
+  presentation: SearchInsightsDrawerPresentation,
+) {
+  if (frame.kind === "list") return listKicker(frame.which, presentation);
+  return frame.kind === "page"
+    ? presentation.t("drawerPageKicker")
+    : presentation.t("drawerQueryKicker");
 }
 
 export function drawerGoogleSearchHref(query: string) {
@@ -96,54 +96,69 @@ export function drawerTitle(
   frame: SearchInsightsDrawerFrame,
   entry: SearchInsightsDrawerEntry | undefined,
   counts: SearchInsightsListCounts,
+  presentation: SearchInsightsDrawerPresentation,
 ) {
   if (frame.kind === "query") return frame.query;
   if (frame.kind === "page") return frame.path;
   const content = entry?.status === "ready" ? entry.content : null;
   const loaded = content?.kind === frame.which ? content.list.total : null;
-  return LIST_TITLE[frame.which](loaded ?? counts[frame.which]);
+  return listTitle(frame.which, loaded ?? counts[frame.which], presentation);
 }
 
-export function drawerListNote(which: SearchInsightsListKind) {
-  return LIST_NOTE[which];
+export function drawerListNote(
+  which: SearchInsightsListKind,
+  presentation: SearchInsightsDrawerPresentation,
+) {
+  return listNote(which, presentation);
 }
 
-export function drawerListPivot(which: SearchInsightsListKind) {
-  return { sortTip: LIST_SORT_TIP[which], title: LIST_PIVOT_TITLE[which] };
+export function drawerListPivot(
+  which: SearchInsightsListKind,
+  presentation: SearchInsightsDrawerPresentation,
+) {
+  return which === "band"
+    ? {
+        sortTip: presentation.t("drawerBandSortTip"),
+        title: presentation.t("drawerBandPivotTitle"),
+      }
+    : {
+        sortTip: presentation.t("drawerOverlapSortTip"),
+        title: presentation.t("drawerOverlapPivotTitle"),
+      };
 }
 
-export function drawerListEmptyCopy(which: SearchInsightsListKind, namedQueryCount: number) {
-  const noMaterial =
-    "Nothing to show yet. This list needs named queries in the window, and Google has named none so far.";
+export function drawerListEmptyCopy(
+  which: SearchInsightsListKind,
+  namedQueryCount: number,
+  presentation: SearchInsightsDrawerPresentation,
+) {
+  const noMaterial = presentation.t("drawerNoMaterial");
   if (which === "band") {
     return {
-      copy:
-        namedQueryCount > 0
-          ? "None of your named queries sit at positions 4 to 20 - everything Google names ranks in the top three."
-          : noMaterial,
-      definition: "This list tracks queries where demand exists but rank can improve.",
+      copy: namedQueryCount > 0 ? presentation.t("drawerBandEmpty") : noMaterial,
+      definition: presentation.t("drawerBandDefinition"),
     };
   }
   return {
-    copy:
-      namedQueryCount > 0
-        ? "No query is answered by more than one page in this window - no overlap signal."
-        : noMaterial,
-    definition: "This list tracks queries where more than one of your pages appears.",
+    copy: namedQueryCount > 0 ? presentation.t("drawerOverlapEmpty") : noMaterial,
+    definition: presentation.t("drawerOverlapDefinition"),
   };
 }
 
 /** The pivot heading of a detail frame, which names what the rows below it are. */
-export function drawerPivotHeading(content: SearchInsightsDrawerContent) {
+export function drawerPivotHeading(
+  content: SearchInsightsDrawerContent,
+  presentation: SearchInsightsDrawerPresentation,
+) {
   if (content.kind === "page") {
     const { queries } = content.detail;
     return {
       count:
         queries.total > 0
-          ? `${queries.rows.length.toLocaleString("en-US")} of ${queries.total.toLocaleString("en-US")}`
+          ? `${formatCount(presentation, queries.rows.length)} of ${formatCount(presentation, queries.total)}`
           : null,
       note: null,
-      title: DRAWER_COPY.pagePivotTitle,
+      title: presentation.t("drawerPagePivotTitle"),
     };
   }
   if (content.kind === "query") {
@@ -155,10 +170,12 @@ export function drawerPivotHeading(content: SearchInsightsDrawerContent) {
     return {
       count:
         shown < total
-          ? `${shown.toLocaleString("en-US")} of ${total.toLocaleString("en-US")}`
-          : `${shown.toLocaleString("en-US")} ${many ? "pages" : "page"}`,
-      note: many ? DRAWER_COPY.queryOverlapNote : null,
-      title: many ? DRAWER_COPY.queryPagesTitle : DRAWER_COPY.queryPageTitle,
+          ? `${formatCount(presentation, shown)} of ${formatCount(presentation, total)}`
+          : presentation.t("drawerQueryPageCount", { count: shown }),
+      note: many ? presentation.t("drawerQueryOverlapNote") : null,
+      title: many
+        ? presentation.t("drawerQueryPagesTitle")
+        : presentation.t("drawerQueryPageTitle"),
     };
   }
   const { list } = content;
@@ -166,10 +183,10 @@ export function drawerPivotHeading(content: SearchInsightsDrawerContent) {
   const truncated = list.rows.length < list.total;
   return {
     count: truncated
-      ? `${list.rows.length.toLocaleString("en-US")} of ${list.total.toLocaleString("en-US")}`
+      ? `${formatCount(presentation, list.rows.length)} of ${formatCount(presentation, list.total)}`
       : null,
-    note: drawerListNote(content.kind),
-    title: drawerListPivot(content.kind).title,
+    note: drawerListNote(content.kind, presentation),
+    title: drawerListPivot(content.kind, presentation).title,
   };
 }
 
@@ -185,14 +202,17 @@ export type DrawerBar = {
  * disagree. Every day in the window is finalized, which is why none of them is drawn as
  * provisional.
  */
-export function drawerBars(perDay: readonly SearchInsightsDay[]): DrawerBar[] {
+export function drawerBars(
+  perDay: readonly SearchInsightsDay[],
+  presentation: SearchInsightsDrawerPresentation,
+): DrawerBar[] {
   const peak = perDay.reduce((highest, day) => Math.max(highest, day.clicks), 0);
   return perDay.map((day) => ({
     date: day.date,
     // 2% is the hairline used when every day is empty. A zero day next to a peak must keep
     // that same baseline; otherwise one clicky day collapses the rest to 0px.
     height: peak > 0 && day.clicks > 0 ? Math.round((day.clicks / peak) * 100) : 2,
-    title: `${day.clicks.toLocaleString("en-US")} clicks`,
+    title: presentation.t("drawerClickCount", { count: day.clicks }),
   }));
 }
 
@@ -201,43 +221,74 @@ export function drawerBars(perDay: readonly SearchInsightsDay[]): DrawerBar[] {
  * tables follow: one click may build at most the cap, so past it the label says so and once the
  * list holds the cap the control goes away rather than re-reading the same rows.
  */
-export function drawerShowAllLabel(list: SearchInsightsList<unknown>) {
-  return reachLabel(list.rows.length, list.total, DRAWER_LIST_CAP);
+export function drawerShowAllLabel(
+  list: SearchInsightsList<unknown>,
+  presentation: SearchInsightsDrawerPresentation,
+) {
+  if (list.rows.length >= Math.min(list.total, DRAWER_LIST_CAP)) return null;
+  return list.total > DRAWER_LIST_CAP
+    ? presentation.t("showTopCount", { count: DRAWER_LIST_CAP })
+    : presentation.t("showAllCount", { count: list.total });
 }
 
-export function drawerShowAllTitle(list: SearchInsightsList<unknown>) {
-  return list.total > DRAWER_LIST_CAP ? DRAWER_COPY.capTitle : SHOW_MORE_TITLE;
+export function drawerShowAllTitle(
+  list: SearchInsightsList<unknown>,
+  presentation: SearchInsightsDrawerPresentation,
+) {
+  return list.total > DRAWER_LIST_CAP
+    ? presentation.t("drawerCapTitle", { count: DRAWER_LIST_CAP })
+    : presentation.t("showMoreTitle");
 }
 
 /** The four numbers above the bars, in the design's order. */
-export function drawerStatCards(stats: SearchInsightsStats) {
+export function drawerStatCards(
+  stats: SearchInsightsStats,
+  presentation: SearchInsightsDrawerPresentation,
+) {
   return [
-    { label: DRAWER_STAT_LABELS[0], value: formatRowCount(stats.clicks) },
-    { label: DRAWER_STAT_LABELS[1], value: formatRowCount(stats.impressions) },
-    { label: DRAWER_STAT_LABELS[2], value: formatRowCtr(stats.ctr) },
-    { label: DRAWER_STAT_LABELS[3], value: stats.position.toFixed(1) },
+    { label: presentation.t("metricClicks"), value: formatCount(presentation, stats.clicks) },
+    {
+      label: presentation.t("impressionsShort"),
+      value: formatCount(presentation, stats.impressions),
+    },
+    {
+      label: presentation.t("metricCtr"),
+      value: presentation.formatNumber(stats.ctr, {
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 1,
+        style: "percent",
+      }),
+    },
+    {
+      label: presentation.t("averagePosition"),
+      value: presentation.formatNumber(stats.position, {
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 1,
+      }),
+    },
   ];
 }
 
 /** The label beside the bars. Every day of the window is finalized, and it says so. */
-export function drawerWindowLabel(days: number) {
-  if (days === 1) return "1 finalized day";
-  return `${days.toLocaleString("en-US")} finalized days`;
+export function drawerWindowLabel(days: number, presentation: SearchInsightsDrawerPresentation) {
+  return presentation.t("drawerFinalizedDay", { count: days });
 }
 
-export function drawerMeasuredZeroLine(days: number) {
+export function drawerMeasuredZeroLine(
+  days: number,
+  presentation: SearchInsightsDrawerPresentation,
+) {
   if (days === 1) {
-    return "No clicks on this 1 day. The impressions above are views without a click.";
+    return presentation.t("drawerNoClicksOne");
   }
-  return `No clicks on any of these ${days.toLocaleString("en-US")} days. The impressions above are views without a click.`;
+  return presentation.t("drawerNoClicksMany", { days });
 }
 
-export function drawerPagePivotEmptyCopy(detail: SearchInsightsPageDetail) {
+export function drawerPagePivotEmptyCopy(
+  detail: SearchInsightsPageDetail,
+  presentation: SearchInsightsDrawerPresentation,
+) {
   const impressions = detail.stats.impressions;
-  if (impressions <= 0) return "No named queries for this page in the selected period.";
-  const measured =
-    impressions === 1
-      ? "the 1 impression"
-      : `all ${impressions.toLocaleString("en-US")} impressions`;
-  return `No named queries for this page. Google hides low-volume query text for privacy - ${measured} came from queries it does not name.`;
+  if (impressions <= 0) return presentation.t("drawerNoNamedQueries");
+  return presentation.t("drawerNoNamedQueriesPrivacy", { impressions });
 }

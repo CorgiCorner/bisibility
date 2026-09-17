@@ -1,3 +1,4 @@
+import { renderWithSearchInsightsMessages } from "@/i18n/test-support/render-with-feature-messages";
 import * as r from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as v from "vitest";
@@ -153,7 +154,7 @@ v.describe("SearchInsightsBody", () => {
 
   v.it("threads the same-view named query total through both signal chip opens", async () => {
     const openList = v.vi.fn();
-    r.render(
+    renderWithSearchInsightsMessages(
       <SearchInsightsDrawerContext.Provider
         value={{
           adding: new Set(),

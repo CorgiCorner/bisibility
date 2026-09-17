@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { DataTableStoryHarness } from "./DataTableStoryHarness";
@@ -35,6 +36,7 @@ import { DataTableResponsiveStory } from "./data-table-story-responsive";
 
 const meta = {
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="min-h-screen min-w-0 overflow-x-hidden bg-bg p-6 text-fg">
         <Story />

@@ -1,17 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import {
+  FIRST_VIEW_ROW_BUFFER,
+  FIRST_VIEW_ROWS,
+  SEARCH_INSIGHTS_ROWS_CAP,
+} from "@/lib/search-insights/constants";
 import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { COLLAPSE_TITLE } from "./search-insights-copy";
-import {
-  collapseLabel,
-  counterLabel,
-  moreLabel,
-  moreTitle,
-  type RowsShow,
-} from "./search-insights-rows-model";
+import type { RowsShow } from "./search-insights-rows-model";
 
 export type SearchInsightsRowsCardProps = {
   caption: ReactNode;
@@ -44,10 +43,24 @@ export function SearchInsightsRowsCard({
   title,
   total,
 }: Readonly<SearchInsightsRowsCardProps>) {
+  const t = useTranslations("projectSearchInsights.copy");
   const empty = total === 0;
-  const counter = counterLabel(shown, total);
-  const collapse = collapseLabel(show);
-  const more = moreLabel(show, total);
+  const counter = t("rowsShownCounter", { shown, total });
+  const collapse = show === FIRST_VIEW_ROWS ? null : t("showTopTen");
+  const more =
+    show === "all" || total <= FIRST_VIEW_ROWS
+      ? null
+      : show === FIRST_VIEW_ROWS
+        ? t("showMore")
+        : FIRST_VIEW_ROW_BUFFER >= Math.min(total, SEARCH_INSIGHTS_ROWS_CAP)
+          ? null
+          : total > SEARCH_INSIGHTS_ROWS_CAP
+            ? t("showTopCount", { count: SEARCH_INSIGHTS_ROWS_CAP })
+            : t("showAllCount", { count: total });
+  const moreTitle =
+    show !== FIRST_VIEW_ROWS && total > SEARCH_INSIGHTS_ROWS_CAP
+      ? t("showCapTitle", { count: SEARCH_INSIGHTS_ROWS_CAP })
+      : t("showMoreTitle");
   const showPager = !empty && Boolean(collapse || more);
   const showFooter = !empty && (showPager || Boolean(footerEnd));
 
@@ -73,7 +86,7 @@ export function SearchInsightsRowsCard({
       {showFooter ? (
         <div className="flex items-center gap-3 px-4 py-2.5">
           {collapse ? (
-            <Button onClick={onCollapse} size="xs" title={COLLAPSE_TITLE} variant="secondary">
+            <Button onClick={onCollapse} size="xs" title={t("collapseTitle")} variant="secondary">
               {collapse}
             </Button>
           ) : null}
@@ -83,7 +96,7 @@ export function SearchInsightsRowsCard({
               onClick={onMore}
               size="xs"
               startIcon={<CaretDown weight="regular" size={12} />}
-              title={moreTitle(show, total)}
+              title={moreTitle}
               variant="secondary"
             >
               {more}

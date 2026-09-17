@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -21,13 +22,14 @@ export function StepConnectProviderModal({
   onSave,
   open,
 }: Readonly<Props>) {
+  const t = useTranslations("onboarding.provider.modal");
   return (
     <Modal
       dismissDisabled={busy}
       footer={
         <>
           <Button disabled={busy} onClick={onCancel} size="md" type="button" variant="ghost">
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             disabled={disabled}
@@ -37,7 +39,7 @@ export function StepConnectProviderModal({
             type="button"
             variant="primary"
           >
-            Save connection
+            {t("save")}
           </Button>
         </>
       }
@@ -48,7 +50,7 @@ export function StepConnectProviderModal({
       onExited={onExited}
       open={open}
       size="lg"
-      title="Connect a provider"
+      title={t("title")}
     >
       <div id="onboarding-provider-modal">{children}</div>
     </Modal>

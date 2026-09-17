@@ -1,6 +1,7 @@
-import { render, screen, within } from "@testing-library/react";
+import { renderWithInstallMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { capitalizeFirst, InstallPageContent } from "./InstallPageContent";
+import { InstallPageContent } from "./InstallPageContent";
 import { SKILLS } from "./install-catalog";
 
 vi.mock("@/components/ui/CopyButton", () => ({
@@ -9,10 +10,11 @@ vi.mock("@/components/ui/CopyButton", () => ({
 
 const props = {
   apiKey: {
-    createdLabel: "created 2026-08-16",
+    createdAt: new Date("2026-08-16T12:00:00.000Z"),
     maskedValue: "bsk_example_******",
-    scopeLabel: "Read and write",
+    scope: "write" as const,
   },
+  hasKeywordAndCheck: false,
   isCloudHosted: true,
   mcpUrl: "https://app.example.com/api/mcp",
   origin: "https://app.example.com",
@@ -170,8 +172,8 @@ describe("InstallPageContent", () => {
     expect(container.textContent).not.toContain(prohibitedCopyLabel);
   });
 
-  it("capitalizes a created label once for the API key sentence", () => {
-    expect(capitalizeFirst("created 2026-08-16")).toBe("Created 2026-08-16");
-    expect(capitalizeFirst("")).toBe("");
+  it("formats an API key creation date at the presentation boundary", () => {
+    render(<InstallPageContent {...props} />);
+    expect(screen.getByText(/Created Aug 16, 2026/)).toBeVisible();
   });
 });

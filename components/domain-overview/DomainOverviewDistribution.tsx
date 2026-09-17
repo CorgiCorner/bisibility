@@ -1,12 +1,14 @@
 import { Card } from "@/components/ui/Card";
 import type { DomainRankMetrics } from "@/lib/providers/types";
+import { useLocale, useTranslations } from "next-intl";
 import { positionBuckets } from "./domain-overview-metrics";
 
-const number = new Intl.NumberFormat("en-US");
-const percent = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
-
 export function DomainOverviewDistribution({ metrics }: Readonly<{ metrics: DomainRankMetrics }>) {
-  const buckets = positionBuckets(metrics);
+  const locale = useLocale();
+  const t = useTranslations("projectDomainOverview.workspace.ui");
+  const number = new Intl.NumberFormat(locale);
+  const percent = new Intl.NumberFormat(locale, { maximumFractionDigits: 1, style: "percent" });
+  const buckets = positionBuckets(metrics, t);
   const total = Math.max(0, metrics.count ?? buckets.reduce((sum, item) => sum + item.count, 0));
   const max = Math.max(1, ...buckets.map((bucket) => bucket.count));
 
@@ -14,12 +16,12 @@ export function DomainOverviewDistribution({ metrics }: Readonly<{ metrics: Doma
     <Card className="px-4.5 py-4" size="md">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="m-0 inline text-[14.5px] font-semibold">Position distribution</h3>
+          <h3 className="m-0 inline text-[14.5px] font-semibold">{t("positionDistribution")}</h3>
           <span className="ml-2 font-sans tabular-nums text-[11px] text-fg-muted">
-            {number.format(total)} keywords by organic position · Estimated
+            {t("keywordsByPosition", { count: total })}
           </span>
         </div>
-        <span className="text-[12px] text-fg-muted">Organic keyword positions</span>
+        <span className="text-[12px] text-fg-muted">{t("organicKeywordPositions")}</span>
       </div>
       {buckets.map((bucket) => {
         const share = total > 0 ? (bucket.count / total) * 100 : 0;
@@ -42,7 +44,7 @@ export function DomainOverviewDistribution({ metrics }: Readonly<{ metrics: Doma
               {number.format(bucket.count)}
             </strong>
             <span className="font-sans tabular-nums text-[11px] text-fg-muted sm:text-right">
-              {percent.format(share)}%
+              {percent.format(share / 100)}
             </span>
           </div>
         );

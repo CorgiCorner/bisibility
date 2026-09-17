@@ -1,178 +1,230 @@
+import {
+  type SettingsSectionId,
+  type SettingsShellTranslations,
+  settingsSectionLabel,
+} from "@/components/settings/shell/settings-sections";
 import { appPath } from "@/lib/routing/app-path";
 
+type SearchEntryDefinition = {
+  anchor?: string;
+  label: (t: SettingsShellTranslations) => string;
+  keywords: (t: SettingsShellTranslations) => string;
+  path: string;
+  query?: string;
+  section: (t: SettingsShellTranslations) => string;
+};
+
+function searchEntry(
+  section: SettingsSectionId | ((t: SettingsShellTranslations) => string),
+  path: string,
+  copy: (t: SettingsShellTranslations) => { keywords: string; label: string },
+  options: Pick<SearchEntryDefinition, "anchor" | "query"> = {},
+): SearchEntryDefinition {
+  return {
+    ...options,
+    label: (t) => copy(t).label,
+    keywords: (t) => copy(t).keywords,
+    path,
+    section: typeof section === "function" ? section : (t) => settingsSectionLabel(t, section),
+  };
+}
+
 export const settingsSearchEntries = [
-  {
-    label: "Default location",
-    section: "Tracking",
-    path: "settings/tracking",
-    anchor: "tracking-location",
-    keywords: "country city market region language",
-  },
-  {
-    label: "Check frequency",
-    section: "Tracking",
-    path: "settings/tracking",
-    anchor: "tracking-frequency",
-    keywords: "schedule manual daily weekly monthly cron automatic",
-  },
-  {
-    label: "Stop checks at first match",
-    section: "Tracking",
-    path: "settings/tracking",
-    anchor: "tracking-stop-on-match",
-    keywords: "domain first result depth cost",
-  },
-  {
-    label: "Experimental features",
-    section: "Experimental",
-    path: "settings/experimental",
-    anchor: "",
-    keywords: "modules preview beta alpha features",
-  },
-  {
-    label: "Project management",
-    section: "Advanced",
-    path: "settings/advanced",
-    anchor: "",
-    keywords: "backup export migration self host delete project audit history",
-  },
-  {
-    label: "Project name",
-    section: "General",
-    path: "settings/general",
-    anchor: "general-project-name",
-    keywords: "rename project workspace",
-  },
-  {
-    label: "Website domain",
-    section: "General",
-    path: "settings/general",
-    anchor: "general-project-domain",
-    keywords: "website url change domain",
-  },
-  {
-    label: "Tags and segments",
-    section: "General",
-    path: "settings/general",
-    anchor: "tags-segments",
-    keywords: "organize keywords labels",
-  },
-  {
-    label: "URL inspection limit",
-    section: "Data sources",
-    path: "settings/data-sources",
-    anchor: "url-inspection",
-    keywords: "daily quota indexing google search console",
-  },
-  {
-    label: "Search data sync",
-    section: "Data sources",
-    path: "settings/data-sources",
-    anchor: "search-data-sync",
-    keywords: "gsc retention months import pause pace",
-  },
-  {
-    label: "Default SERP depth",
-    section: "Tracking",
-    path: "settings/tracking",
-    anchor: "tracking-depth",
-    keywords: "top 10 20 50 100 rank check results",
-  },
-  {
-    label: "Default device",
-    section: "Tracking",
-    path: "settings/tracking",
-    anchor: "tracking-device",
-    keywords: "mobile desktop",
-  },
-  {
-    label: "Schedule timezone",
-    section: "Tracking",
-    path: "settings/tracking",
-    anchor: "tracking-timezone",
-    keywords: "time zone clock utc",
-  },
-  {
-    label: "Domain matching",
-    section: "Tracking",
-    path: "settings/tracking",
-    anchor: "match-scope",
-    keywords: "subdomain exact root url scope",
-  },
-  {
-    label: "Competitors and brand aliases",
-    section: "Competitors",
-    path: "settings/competitors",
-    anchor: "",
-    keywords: "competition mentions citations",
-  },
-  {
-    label: "Notification channels",
-    section: "Notifications",
-    path: "settings/notifications",
-    anchor: "notification-preferences-form",
-    keywords: "email slack webhook alerts digest",
-  },
-  {
-    label: "Members and invitations",
-    section: "Team",
-    path: "settings/team",
-    anchor: "",
-    keywords: "users invite role access permissions",
-  },
-  {
-    label: "Application plan",
-    section: "Billing",
-    path: "settings/billing",
-    anchor: "plan",
-    keywords: "billing price subscription hosted beta self hosted",
-  },
-  {
-    label: "API keys",
-    section: "Developers",
-    path: "settings/developers",
-    anchor: "api-keys",
-    keywords: "api key token access credentials",
-  },
-  {
-    label: "Deploy webhooks",
-    section: "Developers",
-    path: "settings/developers",
-    anchor: "deploy-webhooks",
-    keywords: "endpoint secret deploy hook",
-  },
-  {
-    label: "Provider connections",
-    section: "Integrations / Connections",
-    path: "integrations",
-    anchor: "all-providers",
-    keywords: "connect disconnect credentials dataforseo serpapi google search console analytics",
-  },
-  {
-    label: "Provider budgets and usage",
-    section: "Integrations / Usage",
-    path: "integrations",
-    query: "tab=usage",
-    anchor: "provider-usage",
-    keywords: "allocation spending spend cost balance quota credits searches limit",
-  },
-] as const;
+  searchEntry(
+    "tracking",
+    "settings/tracking",
+    (t) => ({
+      label: t("search.entries.defaultLocation.label"),
+      keywords: t("search.entries.defaultLocation.keywords"),
+    }),
+    { anchor: "tracking-location" },
+  ),
+  searchEntry(
+    "tracking",
+    "settings/tracking",
+    (t) => ({
+      label: t("search.entries.checkFrequency.label"),
+      keywords: t("search.entries.checkFrequency.keywords"),
+    }),
+    { anchor: "tracking-frequency" },
+  ),
+  searchEntry(
+    "tracking",
+    "settings/tracking",
+    (t) => ({
+      label: t("search.entries.stopOnMatch.label"),
+      keywords: t("search.entries.stopOnMatch.keywords"),
+    }),
+    { anchor: "tracking-stop-on-match" },
+  ),
+  searchEntry("experimental", "settings/experimental", (t) => ({
+    label: t("search.entries.experimentalFeatures.label"),
+    keywords: t("search.entries.experimentalFeatures.keywords"),
+  })),
+  searchEntry("advanced", "settings/advanced", (t) => ({
+    label: t("search.entries.projectManagement.label"),
+    keywords: t("search.entries.projectManagement.keywords"),
+  })),
+  searchEntry(
+    "general",
+    "settings/general",
+    (t) => ({
+      label: t("search.entries.projectName.label"),
+      keywords: t("search.entries.projectName.keywords"),
+    }),
+    { anchor: "general-project-name" },
+  ),
+  searchEntry(
+    "general",
+    "settings/general",
+    (t) => ({
+      label: t("search.entries.websiteDomain.label"),
+      keywords: t("search.entries.websiteDomain.keywords"),
+    }),
+    { anchor: "general-project-domain" },
+  ),
+  searchEntry(
+    "general",
+    "settings/general",
+    (t) => ({
+      label: t("search.entries.tagsAndSegments.label"),
+      keywords: t("search.entries.tagsAndSegments.keywords"),
+    }),
+    { anchor: "tags-segments" },
+  ),
+  searchEntry(
+    "data-sources",
+    "settings/data-sources",
+    (t) => ({
+      label: t("search.entries.urlInspectionLimit.label"),
+      keywords: t("search.entries.urlInspectionLimit.keywords"),
+    }),
+    { anchor: "url-inspection" },
+  ),
+  searchEntry(
+    "data-sources",
+    "settings/data-sources",
+    (t) => ({
+      label: t("search.entries.searchDataSync.label"),
+      keywords: t("search.entries.searchDataSync.keywords"),
+    }),
+    { anchor: "search-data-sync" },
+  ),
+  searchEntry(
+    "tracking",
+    "settings/tracking",
+    (t) => ({
+      label: t("search.entries.defaultSerpDepth.label"),
+      keywords: t("search.entries.defaultSerpDepth.keywords"),
+    }),
+    { anchor: "tracking-depth" },
+  ),
+  searchEntry(
+    "tracking",
+    "settings/tracking",
+    (t) => ({
+      label: t("search.entries.defaultDevice.label"),
+      keywords: t("search.entries.defaultDevice.keywords"),
+    }),
+    { anchor: "tracking-device" },
+  ),
+  searchEntry(
+    "tracking",
+    "settings/tracking",
+    (t) => ({
+      label: t("search.entries.scheduleTimezone.label"),
+      keywords: t("search.entries.scheduleTimezone.keywords"),
+    }),
+    { anchor: "tracking-timezone" },
+  ),
+  searchEntry(
+    "tracking",
+    "settings/tracking",
+    (t) => ({
+      label: t("search.entries.domainMatching.label"),
+      keywords: t("search.entries.domainMatching.keywords"),
+    }),
+    { anchor: "match-scope" },
+  ),
+  searchEntry("competitors", "settings/competitors", (t) => ({
+    label: t("search.entries.competitors.label"),
+    keywords: t("search.entries.competitors.keywords"),
+  })),
+  searchEntry(
+    "notifications",
+    "settings/notifications",
+    (t) => ({
+      label: t("search.entries.notificationChannels.label"),
+      keywords: t("search.entries.notificationChannels.keywords"),
+    }),
+    { anchor: "notification-preferences-form" },
+  ),
+  searchEntry("team", "settings/team", (t) => ({
+    label: t("search.entries.members.label"),
+    keywords: t("search.entries.members.keywords"),
+  })),
+  searchEntry(
+    "billing",
+    "settings/billing",
+    (t) => ({
+      label: t("search.entries.applicationPlan.label"),
+      keywords: t("search.entries.applicationPlan.keywords"),
+    }),
+    { anchor: "plan" },
+  ),
+  searchEntry(
+    "developers",
+    "settings/developers",
+    (t) => ({
+      label: t("search.entries.apiKeys.label"),
+      keywords: t("search.entries.apiKeys.keywords"),
+    }),
+    { anchor: "api-keys" },
+  ),
+  searchEntry(
+    "developers",
+    "settings/developers",
+    (t) => ({
+      label: t("search.entries.deployWebhooks.label"),
+      keywords: t("search.entries.deployWebhooks.keywords"),
+    }),
+    { anchor: "deploy-webhooks" },
+  ),
+  searchEntry(
+    (t) => t("search.sections.providerConnections"),
+    "integrations",
+    (t) => ({
+      label: t("search.entries.providerConnections.label"),
+      keywords: t("search.entries.providerConnections.keywords"),
+    }),
+    { anchor: "all-providers" },
+  ),
+  searchEntry(
+    (t) => t("search.sections.providerUsage"),
+    "integrations",
+    (t) => ({
+      label: t("search.entries.providerBudgets.label"),
+      keywords: t("search.entries.providerBudgets.keywords"),
+    }),
+    { anchor: "provider-usage", query: "tab=usage" },
+  ),
+] as const satisfies readonly SearchEntryDefinition[];
 
 export type SettingsSearchEntry = (typeof settingsSearchEntries)[number];
 
 export function settingsSearchHref(projectRef: string, entry: SettingsSearchEntry) {
-  const query = "query" in entry ? `?${entry.query}` : "";
+  const query = entry.query ? `?${entry.query}` : "";
   return `${appPath(projectRef, ...entry.path.split("/"))}${query}${entry.anchor ? `#${entry.anchor}` : ""}`;
 }
 
-export function findSettings(query: string) {
+export function findSettings(query: string, t: SettingsShellTranslations) {
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   const labelMatches = (entry: SettingsSearchEntry) =>
-    words.every((word) => entry.label.toLocaleLowerCase().includes(word));
+    words.every((word) => entry.label(t).toLocaleLowerCase().includes(word));
   return settingsSearchEntries
     .filter((entry) => {
-      const text = `${entry.label} ${entry.section} ${entry.keywords}`.toLocaleLowerCase();
+      const text = `${entry.label(t)} ${entry.section(t)} ${entry.keywords(t)}`.toLocaleLowerCase();
       return words.every((word) => text.includes(word));
     })
     .sort((left, right) => Number(labelMatches(right)) - Number(labelMatches(left)));

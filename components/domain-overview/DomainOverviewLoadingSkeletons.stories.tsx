@@ -20,5 +20,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const RoutePage: Story = {};
-export const Results: Story = { render: () => <DomainOverviewResultsLoading /> };
+export const RoutePage: Story = { args: { ariaLabel: "Domain Overview page loading" } };
+export const Results: Story = {
+  args: { ariaLabel: "Domain Overview loading" },
+  render: () => <DomainOverviewResultsLoading ariaLabel="Domain Overview loading" />,
+};

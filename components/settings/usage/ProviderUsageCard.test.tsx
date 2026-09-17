@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithUsageSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 

@@ -1,7 +1,8 @@
 import { TooltipProvider } from "@/components/ui/Tooltip";
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { appPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SidebarNav } from "./SidebarNav";

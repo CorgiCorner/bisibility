@@ -1,3 +1,5 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import messages from "@/messages/core/en/project-rank-tracker.json";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SavedKeywordsWorkspace } from "./SavedKeywordsWorkspace";
@@ -13,19 +15,21 @@ vi.mock("./SavedKeywordsTable", () => ({
 describe("SavedKeywordsWorkspace", () => {
   it("decrements the Saved count when the table consumes tracked rows", () => {
     render(
-      <SavedKeywordsWorkspace
-        addKeywordsAction={vi.fn()}
-        canCreateKeyword
-        canDeleteKeyword
-        costContext={{} as never}
-        defaultDevice="desktop"
-        initialSavedCount={3}
-        projectId="prj_1"
-        removeSavedKeywordsAction={vi.fn()}
-        rows={[]}
-        runsCount={124}
-        trackedCount={12}
-      />,
+      <FeatureMessagesProvider locale="en" messages={messages} timeZone="UTC">
+        <SavedKeywordsWorkspace
+          addKeywordsAction={vi.fn()}
+          canCreateKeyword
+          canDeleteKeyword
+          costContext={{} as never}
+          defaultDevice="desktop"
+          initialSavedCount={3}
+          projectId="prj_1"
+          removeSavedKeywordsAction={vi.fn()}
+          rows={[]}
+          runsCount={124}
+          trackedCount={12}
+        />
+      </FeatureMessagesProvider>,
     );
 
     expect(screen.getByRole("link", { name: "Saved 3" })).toHaveAttribute("aria-current", "page");

@@ -16,6 +16,7 @@ import {
   initialOnboardingDraft,
   projectIdFor,
 } from "@/components/onboarding/onboarding-wizard-state";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { OnboardingProjectOptions } from "./OnboardingProjectOptions";
 import { OnboardingWizardSkipAction } from "./OnboardingWizardSkipAction";
@@ -28,7 +29,7 @@ import {
 } from "./steps/StepConnectProvider.fields";
 import { useOnboardingSources } from "./use-onboarding-sources";
 // biome-ignore format: Compact initial props keep this production component within its line limit.
-export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMessage,
+export function OnboardingWizard({ actions, costCalculatorPath, costPerCheckCents, dataResidencyMessage,
   gscJustConnected,
   gscGoogleOAuth,
   gscOAuthConfigured,
@@ -46,6 +47,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
   providerConnected,
   rankedKeywordConnections = [],
 }: Readonly<OnboardingWizardProps>) {
+  const t = useTranslations("onboarding");
   const sources = useOnboardingSources({ gscJustConnected, gscGoogleOAuth, gscPropertyLabel, hasAnalyticsSource, hasOtherAnalyticsSource, rankedKeywordConnections });
   const startingFlowState = {
     ...initialFlowState,
@@ -190,9 +192,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
     setInlineWarning(warning ?? null);
     if (sources.hasAnalyticsSource) {
       void actions.syncProjectTrafficAction({ projectId: values.projectId }).catch(() => {
-        setInlineWarning(
-          "Search Console sync didn't finish - observed data may take a moment. You can retry from Integrations.",
-        );
+        setInlineWarning(t("errors.searchConsoleSync"));
       });
     }
   };
@@ -241,6 +241,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
         ) : null}
         <OnboardingWizardSteps
           actions={actions}
+          costCalculatorPath={costCalculatorPath}
           currentStep={currentStep}
           dataResidencyMessage={dataResidencyMessage}
           draft={draft}
@@ -276,7 +277,7 @@ export function OnboardingWizard({ actions, costPerCheckCents, dataResidencyMess
           <OnboardingNav
             busy={keywordsSaving}
             continueDisabled={continueDisabled}
-            continueLabel={keywordsSaving ? "Saving keywords..." : "Continue"}
+            continueLabel={keywordsSaving ? t("navigation.savingKeywords") : t("navigation.continue")}
             currentStep={currentStep}
             flowState={flowState}
             leadingAction={

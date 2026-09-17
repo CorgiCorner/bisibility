@@ -1,41 +1,47 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import type { UpcomingForecast } from "@/lib/checks/contract";
-import { formatCap, formatEstimatedCost, formatForecastDate } from "./upcoming-format";
+import { useLocale, useTranslations } from "next-intl";
+import type { ReactNode } from "react";
+import { formatCap, formatEstimatedAmount, formatForecastDate } from "./upcoming-format";
 
 export type BudgetForecastNoteProps = {
   forecast: UpcomingForecast | null;
 };
 
-// A small, muted note. Only the amounts and dates are emphasised (semibold, full
-// contrast); the surrounding prose stays quiet at ~12px per the design.
 export function BudgetForecastNote({ forecast }: Readonly<BudgetForecastNoteProps>) {
-  const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
+  const locale = useLocale();
+  const t = useTranslations("projectRankTracker.checks");
   if (!forecast || forecast.next48hCents <= 0) return null;
 
-  const cap = formatCap(forecast.capCents);
-  const next48h = formatEstimatedCost(forecast.next48hCents);
+  const cap = formatCap(forecast.capCents, locale);
+  const next48h = t("estimatedAmount", {
+    amount: formatEstimatedAmount(forecast.next48hCents, locale),
+    isLessThanCent: String(forecast.next48hCents > 0 && forecast.next48hCents < 1),
+  });
 
   return (
     <p className="m-0 text-[12px] leading-relaxed text-fg-muted">
-      {forecast.capLastsUntil ? (
-        <>
-          At the current daily rate the <strong className="font-semibold text-fg">{cap} cap</strong>{" "}
-          lasts until{" "}
-          <strong className="font-semibold text-fg">
-            ~{formatForecastDate(forecast.capLastsUntil, dateFormat)}
-          </strong>
-          .{" "}
-        </>
-      ) : (
-        <>
-          The <strong className="font-semibold text-fg">{cap} cap</strong> has no projected end date
-          at the current daily rate.{" "}
-        </>
-      )}
-      Forecast for scheduled checks:{" "}
-      <strong className="font-semibold text-fg">{next48h}/next 48h.</strong>
+      {forecast.capLastsUntil
+        ? t.rich("forecastWithDate", {
+            cap,
+            date: formatForecastDate(forecast.capLastsUntil, dateDisplay),
+            strong: (chunks: ReactNode) => (
+              <strong className="font-semibold text-fg">{chunks}</strong>
+            ),
+          })
+        : t.rich("forecastWithoutDate", {
+            cap,
+            strong: (chunks: ReactNode) => (
+              <strong className="font-semibold text-fg">{chunks}</strong>
+            ),
+          })}{" "}
+      {t.rich("forecastScheduled", {
+        amount: next48h,
+        strong: (chunks: ReactNode) => <strong className="font-semibold text-fg">{chunks}</strong>,
+      })}
     </p>
   );
 }

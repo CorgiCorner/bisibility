@@ -12,10 +12,10 @@ import { FileCsvIcon as FileCsv } from "@phosphor-icons/react/dist/csr/FileCsv";
 import { FolderOpenIcon as FolderOpen } from "@phosphor-icons/react/dist/csr/FolderOpen";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import { TableIcon as Table } from "@phosphor-icons/react/dist/csr/Table";
+import { useTranslations } from "next-intl";
 
 export { DoneStep } from "./ImportCsvWizardDoneStep";
 
-const steps = ["Template", "Upload", "Map", "Review", "Done"] as const;
 const mapRows = [
   ["keyword", "Keyword", "required"],
   ["target_url", "Target URL", ""],
@@ -33,6 +33,8 @@ const previewRows = [
 ] as const;
 
 export function ImportStepper({ step }: Readonly<{ step: number }>) {
+  const t = useTranslations("projectRankTracker.keywordImport.csvWizard.steps");
+  const steps = [t("template"), t("upload"), t("map"), t("review"), t("done")];
   return (
     <div className="mt-4.5 flex items-center">
       {steps.map((label, index) => {

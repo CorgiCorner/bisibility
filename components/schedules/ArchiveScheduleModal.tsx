@@ -7,12 +7,24 @@ import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { archiveCheckScheduleSchema } from "@/lib/schemas/check-schedule-lifecycle";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { scheduleLifecycleRequest } from "./ScheduleLifecycleActions";
 import type { ScheduleListRow } from "./SchedulesList";
 
 const formSchema = archiveCheckScheduleSchema.pick({ destinationScheduleId: true });
+
+function archiveErrorMessage(error: unknown, fallback: string, currentSchedule: string) {
+  if (
+    error instanceof Error &&
+    (error.message === "Choose a current schedule." ||
+      error.message === "Choose a current schedule for this project.")
+  ) {
+    return currentSchedule;
+  }
+  return fallback;
+}
 export function ArchiveScheduleModal({
   onClose,
   projectId,
@@ -24,6 +36,7 @@ export function ArchiveScheduleModal({
   schedule: ScheduleListRow;
   schedules: readonly ScheduleListRow[];
 }>) {
+  const t = useTranslations("projectRuns.schedules");
   const router = useRouter();
   const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
@@ -33,12 +46,12 @@ export function ArchiveScheduleModal({
   });
   const destination = form.watch("destinationScheduleId");
   const options = [
-    { value: "", label: "Manual checks" },
+    { value: "", label: t("archiveDialog.manualChecks") },
     ...schedules
       .filter((item) => !item.archivedAt && item.publicId !== schedule.publicId)
       .map((item) => ({
         value: item.publicId,
-        label: `${item.name}${item.enabled ? "" : " (paused)"}`,
+        label: `${item.name}${item.enabled ? "" : ` (${t("list.paused")})`}`,
       })),
   ];
   const count = schedule.assignedKeywordCount ?? schedule.keywordCount;
@@ -46,11 +59,17 @@ export function ArchiveScheduleModal({
     setError(null);
     try {
       await scheduleLifecycleRequest(projectId, schedule.publicId, "archive", values);
-      showToast("Schedule archived. Past runs and results are preserved.", { severity: "success" });
+      showToast(t("lifecycle.archived"), { severity: "success" });
       onClose();
       router.refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not archive the schedule.");
+    } catch (error) {
+      setError(
+        archiveErrorMessage(
+          error,
+          t("lifecycle.archiveFailed"),
+          t("lifecycle.currentScheduleUnavailable"),
+        ),
+      );
     }
   });
   return (
@@ -58,34 +77,31 @@ export function ArchiveScheduleModal({
       open
       onClose={onClose}
       dismissDisabled={form.formState.isSubmitting}
-      title={`Archive “${schedule.name}”?`}
+      title={t("archiveDialog.title", { name: schedule.name })}
       footer={
         <>
           <Button variant="ghost" disabled={form.formState.isSubmitting} onClick={onClose}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             loading={form.formState.isSubmitting}
-            loadingLabel="Archiving..."
+            loadingLabel={t("lifecycle.archiving")}
             onClick={() => void submit()}
           >
-            Archive schedule
+            {t("archiveSchedule")}
           </Button>
         </>
       }
     >
       <div className="grid gap-4">
-        <p className="m-0 text-sm text-fg-muted">
-          Future runs will stop. Runs already launched can finish, and past results remain
-          available.
-        </p>
+        <p className="m-0 text-sm text-fg-muted">{t("archiveDialog.body")}</p>
         {count > 0 ? (
           <div className="grid gap-2">
             <span className="text-sm font-medium text-fg">
-              Move {count} {count === 1 ? "keyword" : "keywords"} to
+              {t("archiveDialog.moveKeywords", { count })}
             </span>
             <MenuSelect
-              ariaLabel="Move keywords to"
+              ariaLabel={t("archiveDialog.moveKeywords", { count })}
               size="input"
               value={destination ?? ""}
               options={options}
@@ -96,10 +112,7 @@ export function ArchiveScheduleModal({
           </div>
         ) : null}
         {schedule.isDefault ? (
-          <p className="m-0 text-sm text-fg-muted">
-            This is the default schedule. New keywords will use manual checks until you choose
-            another default.
-          </p>
+          <p className="m-0 text-sm text-fg-muted">{t("archiveDialog.defaultNotice")}</p>
         ) : null}
         {error ? (
           <p role="alert" className="m-0 text-sm text-danger">

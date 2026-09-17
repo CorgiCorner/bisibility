@@ -1,6 +1,6 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay, useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleMark } from "@/components/ui/ModuleMark";
@@ -15,16 +15,9 @@ import {
 import { VIEWER_ASK_ADMIN_GSC } from "@/lib/ui/viewer-affordances";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/csr/GoogleLogo";
+import { useTranslations } from "next-intl";
 import { SearchInsightsRefresh } from "./SearchInsightsRefresh";
-import {
-  FIRST_VIEW_BLOCKED,
-  NO_PROPERTY_BODY,
-  NO_PROPERTY_CTA,
-  NO_PROPERTY_TITLE,
-  REAUTH_BODY,
-  REAUTH_CTA,
-  REAUTH_TITLE,
-} from "./search-insights-copy";
+import { formatSearchSyncCalendarDay, presentSearchSync } from "./search-sync-presentation";
 
 export type SearchInsightsNoPropertyStateProps = {
   canManageProviders?: boolean;
@@ -44,6 +37,7 @@ export function SearchInsightsNoPropertyState({
   propertyName,
   reauth = false,
 }: Readonly<SearchInsightsNoPropertyStateProps>) {
+  const t = useTranslations("projectSearchInsights.copy");
   const href = googleInstallUrl({
     projectId,
     provider: "gsc",
@@ -60,25 +54,25 @@ export function SearchInsightsNoPropertyState({
             target="_blank"
             variant="secondary"
           >
-            Open Search Console
+            {t("openSearchConsole")}
           </Button>
           {canManageProviders ? (
             <Button href={href} variant="primary">
-              {reauth ? REAUTH_CTA : NO_PROPERTY_CTA}
+              {reauth ? t("reauthCta") : t("noPropertyCta")}
             </Button>
           ) : (
             <p className="m-0 self-center text-[13px] text-fg-muted">{VIEWER_ASK_ADMIN_GSC}</p>
           )}
         </div>
       }
-      description={reauth ? REAUTH_BODY : NO_PROPERTY_BODY}
-      mark={<ModuleMark bordered icon={GoogleLogo} label="Search Console module" />}
+      description={reauth ? t("reauthBody") : t("noPropertyBody")}
+      mark={<ModuleMark bordered icon={GoogleLogo} label={t("searchConsoleModule")} />}
       title={
         reauth
-          ? REAUTH_TITLE
+          ? t("reauthTitle")
           : propertyName
-            ? `No finalized days yet for ${propertyName}`
-            : NO_PROPERTY_TITLE
+            ? t("noFinalizedDaysForProperty", { property: propertyName })
+            : t("noPropertyTitle")
       }
     />
   );
@@ -110,8 +104,13 @@ export function SearchInsightsNoDataState({
   facts,
   projectId,
 }: Readonly<SearchInsightsNoDataStateProps>) {
+  const t = useTranslations("projectSearchInsights.copy");
+  const dateDisplay = useDateDisplay();
   const dateFormat = useDateFormat();
   const model = resolveSearchBackfillPresentation(facts, dateFormat);
+  const localizedModel = presentSearchSync(model, t, (value) =>
+    formatSearchSyncCalendarDay(value, dateDisplay),
+  );
   const reconnectHref = googleInstallUrl({
     projectId,
     provider: "gsc",
@@ -121,7 +120,7 @@ export function SearchInsightsNoDataState({
   const primary =
     model.action === "reconnect" && canManageProviders ? (
       <Button href={reconnectHref} variant="primary">
-        Reconnect Search Console
+        {t("reauthCta")}
       </Button>
     ) : null;
   const watching = SELF_RESOLVING.has(model.kind);
@@ -141,12 +140,14 @@ export function SearchInsightsNoDataState({
       action={action}
       description={
         <>
-          <p className="m-0">{FIRST_VIEW_BLOCKED}</p>
-          {model.supportingText ? <p className="m-0 mt-1.5">{model.supportingText}</p> : null}
+          <p className="m-0">{t("firstViewBlocked")}</p>
+          {localizedModel.supportingText ? (
+            <p className="m-0 mt-1.5">{localizedModel.supportingText}</p>
+          ) : null}
         </>
       }
-      mark={<ModuleMark bordered icon={GoogleLogo} label="Search Console module" />}
-      title={model.title}
+      mark={<ModuleMark bordered icon={GoogleLogo} label={t("searchConsoleModule")} />}
+      title={localizedModel.status}
     />
   );
 }

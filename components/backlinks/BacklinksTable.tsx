@@ -3,6 +3,7 @@
 import type { BacklinksOutcome, BacklinksRow } from "@/lib/backlinks/types";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { BacklinksAggregateTable } from "./BacklinksAggregateTable";
 import { BacklinksExportMenu } from "./BacklinksExportMenu";
@@ -43,15 +44,15 @@ export type BacklinksTableProps = {
 };
 
 function BrokenEmptyState() {
+  const t = useTranslations("projectBacklinks.workspace.table");
   return (
     <div className="flex flex-col items-center gap-2.5 px-5 py-12 text-center">
       <span className="grid h-11 w-11 place-items-center rounded-full bg-green/10 text-green-text">
         <Check aria-hidden size={20} weight="regular" />
       </span>
-      <strong className="text-[14.5px]">No broken backlinks</strong>
+      <strong className="text-[14.5px]">{t("noBrokenTitle")}</strong>
       <p className="m-0 max-w-[360px] text-[12.5px] leading-5 text-fg-muted">
-        Every URL that other sites link to currently returns a 200. Checked with the snapshot, at no
-        extra cost.
+        {t("noBrokenDescription")}
       </p>
     </div>
   );
@@ -73,6 +74,7 @@ export function BacklinksTable({
   totalDomains,
   totalRowsAvailable,
 }: Readonly<BacklinksTableProps>) {
+  const t = useTranslations("projectBacklinks.workspace.table");
   const [currentRows, setCurrentRows] = useState(rows);
   const [currentFetchedCount, setCurrentFetchedCount] = useState(fetchedRowCount);
   const [currentTotalAvailable, setCurrentTotalAvailable] = useState(totalRowsAvailable);
@@ -99,7 +101,7 @@ export function BacklinksTable({
   const shownLabel =
     filter === "broken"
       ? ""
-      : `Showing ${filteredGroups.length.toLocaleString("en-US")} of ${shownDomainTotal.toLocaleString("en-US")} domains`;
+      : t("showing", { shown: filteredGroups.length, total: shownDomainTotal });
   const expandedRunMap = new Map(
     Object.entries(expandedRuns).map(([domain, signatures]) => [domain, new Set(signatures)]),
   );
@@ -211,8 +213,7 @@ export function BacklinksTable({
         </div>
         <footer className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
           <span className="text-[12.5px] text-fg-muted">
-            Fetched {currentFetchedCount.toLocaleString("en-US")} of{" "}
-            {currentTotalAvailable.toLocaleString("en-US")} links
+            {t("fetched", { fetched: currentFetchedCount, total: currentTotalAvailable })}
           </span>
           {hasLoadMore ? (
             <button
@@ -221,7 +222,7 @@ export function BacklinksTable({
               onClick={() => void loadMore()}
               type="button"
             >
-              {loadingMore ? "Loading 100 more..." : "Load 100 more"}{" "}
+              {loadingMore ? t("loadingMore") : t("loadMore")}{" "}
               <span className="font-sans tabular-nums">
                 ~{formatEstimateCents(loadMoreEstimateCents)}
               </span>
@@ -229,13 +230,11 @@ export function BacklinksTable({
           ) : null}
           {loadMoreError ? (
             <span className="text-[12px] text-red-text" role="status">
-              More backlinks could not be loaded. Try again.
+              {t("loadFailed")}
             </span>
           ) : null}
           <span className="flex-1" />
-          <span className="text-[12px] text-fg-muted">
-            Sorting and filtering the fetched rows is free
-          </span>
+          <span className="text-[12px] text-fg-muted">{t("freeFilters")}</span>
         </footer>
       </section>
       <BacklinksFiltersDrawer

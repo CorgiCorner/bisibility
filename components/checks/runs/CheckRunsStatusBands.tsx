@@ -1,11 +1,11 @@
 "use client";
 
 import { formatCap } from "@/components/checks/upcoming/upcoming-format";
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import type { CheckRunsView, UpcomingView } from "@/lib/checks/contract";
 import { zonedDateInputValue } from "@/lib/checks/date-boundary";
-import { type DateFormat, formatDateRange } from "@/lib/dates/format";
+import { type DateDisplayContext, formatDisplayDateRange } from "@/lib/dates/format";
 import { monthlyBudgetExhausted } from "@/lib/rank-check/budget-contract";
 import { ArrowClockwiseIcon as Retry } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight";
@@ -13,6 +13,7 @@ import { ClockCountdownIcon as Clock } from "@phosphor-icons/react/dist/ssr/Cloc
 import { PauseCircleIcon as Pause } from "@phosphor-icons/react/dist/ssr/PauseCircle";
 import { WarningCircleIcon as Warning } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 export type CheckRunsBudget = Pick<UpcomingView, "blocked" | "forecast">;
@@ -28,11 +29,11 @@ type StatusBandsProps = {
   view: CheckRunsView;
 };
 
-function nextMonthLabel(now: Date, timeZone: string, dateFormat: DateFormat) {
+function nextMonthLabel(now: Date, timeZone: string, dateDisplay: DateDisplayContext) {
   const [year, month] = zonedDateInputValue(now, timeZone).split("-").map(Number);
   const nextMonth = new Date(Date.UTC(year, month, 1, 12));
   const key = nextMonth.toISOString().slice(0, 10);
-  return formatDateRange(key, key, dateFormat);
+  return formatDisplayDateRange(key, key, dateDisplay);
 }
 
 function budgetStatus(budget: CheckRunsBudget, view: CheckRunsView) {
@@ -101,10 +102,11 @@ export function CheckRunsStatusBands({
   timeZone,
   view,
 }: Readonly<StatusBandsProps>) {
-  const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
+  const locale = useLocale();
+  const t = useTranslations("projectRankTracker.checks");
   const budgetState = budgetStatus(budget, view);
   if (budgetState?.kind === "exhausted") {
-    const checkLabel = budgetState.skipped === 1 ? "check was" : "checks were";
     return (
       <Band
         action={
@@ -115,7 +117,7 @@ export function CheckRunsStatusBands({
             size="sm"
             variant="ghost"
           >
-            Change limit
+            {t("changeLimit")}
           </Button>
         }
         icon={
@@ -128,15 +130,10 @@ export function CheckRunsStatusBands({
         }
         tone="yellow"
       >
-        Monthly spending limit reached.{" "}
-        {budgetState.skipped > 0 ? (
-          <>
-            {budgetState.skipped.toLocaleString("en-US")} {checkLabel} skipped - checks
-          </>
-        ) : (
-          "Checks"
-        )}{" "}
-        resume on {nextMonthLabel(now, timeZone, dateFormat)}.
+        {t("budgetExhausted", {
+          count: budgetState.skipped,
+          nextMonth: nextMonthLabel(now, timeZone, dateDisplay),
+        })}
       </Band>
     );
   }
@@ -145,7 +142,7 @@ export function CheckRunsStatusBands({
       <Band
         action={
           <Button component={Link} href={budgetSettingsHref} size="sm" variant="ghost">
-            Review limit
+            {t("reviewLimit")}
           </Button>
         }
         icon={
@@ -158,24 +155,26 @@ export function CheckRunsStatusBands({
         }
         tone="yellow"
       >
-        Estimated spend is at {budgetState.percent}% of the {formatCap(budget.forecast.capCents)}
-        /month limit.
+        {t("budgetWarning", {
+          cap: formatCap(budget.forecast.capCents, locale),
+          percent: budgetState.percent,
+        })}
       </Band>
     );
   }
   const stale = showStale ? view.staleCount : 0;
   if (stale > 0) {
-    const checkLabel = stale === 1 ? "check" : "checks";
     return (
       <Band
-        action={onRetryStale ? <RetryButton label="Retry stale" onClick={onRetryStale} /> : null}
+        action={
+          onRetryStale ? <RetryButton label={t("retryStale")} onClick={onRetryStale} /> : null
+        }
         icon={
           <Clock aria-hidden className="mt-0.5 shrink-0 text-fg-muted" size={15} weight="regular" />
         }
         tone="aged"
       >
-        Positions shown may be stale. {stale.toLocaleString("en-US")} {checkLabel} last completed
-        more than 48 hours ago.
+        {t("stalePositions", { count: stale, hours: 48 })}
       </Band>
     );
   }
@@ -183,7 +182,9 @@ export function CheckRunsStatusBands({
     const total = view.counts.completed + view.counts.failed + view.counts.deferred;
     return (
       <Band
-        action={onRetryFailed ? <RetryButton label="Retry failed" onClick={onRetryFailed} /> : null}
+        action={
+          onRetryFailed ? <RetryButton label={t("retryFailed")} onClick={onRetryFailed} /> : null
+        }
         icon={
           <Warning
             aria-hidden
@@ -194,8 +195,7 @@ export function CheckRunsStatusBands({
         }
         tone="red"
       >
-        {view.counts.failed.toLocaleString("en-US")} of {total.toLocaleString("en-US")} checks
-        failed. Successful checks in the same run kept their results.
+        {t("failedChecks", { failed: view.counts.failed, total })}
       </Band>
     );
   }

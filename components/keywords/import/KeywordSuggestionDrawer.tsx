@@ -2,11 +2,6 @@
 
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
-import {
-  formatEstimateCents,
-  monthlyChecksFor,
-  monthlyCostCentsFor,
-} from "@/lib/cost-estimate/project-estimate";
 import type { TopQuerySuggestion } from "@/lib/keyword-suggest/sanitize-top-queries";
 import {
   DEFAULT_PRESELECT_TOP_N,
@@ -21,26 +16,20 @@ import {
   toggleKey,
   topByClicksKeys,
 } from "@/lib/keyword-suggest/top-query-selection";
-import type { SerpDepth } from "@/lib/serp/constants";
-import type { RankCheckFrequency } from "@/lib/settings/options";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useMemo, useState } from "react";
+import type { SuggestionDrawerMessages } from "./keyword-suggestion-copy";
+import { type SuggestionCostContext, suggestionCostLine } from "./keyword-suggestion-cost";
 
-export type SuggestionCostContext = {
-  cronExpression?: string | null;
-  depth: SerpDepth;
-  deviceCount: number;
-  frequency: RankCheckFrequency;
-  locationCount: number;
-  overrideCents: number | null;
-  providerId: string | null;
-};
+export type { SuggestionDrawerMessages } from "./keyword-suggestion-copy";
+export type { SuggestionCostContext } from "./keyword-suggestion-cost";
 
 type KeywordSuggestionDrawerProps = {
   costContext?: SuggestionCostContext;
   selectionOnly?: boolean;
   existingKeywords: readonly string[];
   hidden: readonly TopQuerySuggestion[];
+  messages: SuggestionDrawerMessages;
   onClose: () => void;
   onConfirm: (queries: string[]) => void;
   open: boolean;
@@ -57,38 +46,15 @@ const bulkButtonStyle = {
   paddingRight: 10,
 };
 
-function metric(value: number | undefined) {
-  return value == null ? "-" : value.toLocaleString();
-}
-
-function costLine(count: number, context: SuggestionCostContext) {
-  const volume = {
-    cronExpression: context.cronExpression,
-    depth: context.depth,
-    deviceCount: context.deviceCount,
-    frequency: context.frequency,
-    keywordCount: count,
-    locationCount: context.locationCount,
-  };
-  const checks = monthlyChecksFor(volume);
-  if (checks == null) {
-    return `+${count} ${count === 1 ? "keyword" : "keywords"}`;
-  }
-  const cost = monthlyCostCentsFor(volume, {
-    overrideCents: context.overrideCents,
-    providerId: context.providerId,
-  });
-  const suffix = cost == null ? "" : ` ~ ${formatEstimateCents(cost)}/mo`;
-  return `+${count} ${count === 1 ? "keyword" : "keywords"} = +${checks.toLocaleString()} checks/mo${suffix}`;
-}
-
 function SuggestionRow({
   existingLabel,
+  messages,
   onToggle,
   selected,
   suggestion,
 }: Readonly<{
   existingLabel: string;
+  messages: SuggestionDrawerMessages;
   onToggle: (query: string) => void;
   selected: boolean;
   suggestion: SelectableSuggestion;
@@ -114,8 +80,16 @@ function SuggestionRow({
           {existingLabel}
         </span>
       ) : null}
-      <span className={metricCell}>{metric(suggestion.clicks)}</span>
-      <span className={metricCell}>{metric(suggestion.impressions)}</span>
+      <span className={metricCell}>
+        {suggestion.clicks == null
+          ? messages.metricUnavailable
+          : messages.metric({ value: suggestion.clicks })}
+      </span>
+      <span className={metricCell}>
+        {suggestion.impressions == null
+          ? messages.metricUnavailable
+          : messages.metric({ value: suggestion.impressions })}
+      </span>
     </label>
   );
 }
@@ -125,6 +99,7 @@ export function KeywordSuggestionDrawer({
   selectionOnly = false,
   existingKeywords,
   hidden,
+  messages,
   onClose,
   onConfirm,
   open,
@@ -158,11 +133,13 @@ export function KeywordSuggestionDrawer({
 
   return (
     <AppDrawer
-      description="Sanitized Search Console queries. Pick the ones to track."
+      description={messages.description}
       footer={
         <div className="flex flex-col gap-2">
           <span className="font-sans tabular-nums text-[11.5px] text-fg-muted">
-            {costContext ? costLine(confirmed.length, costContext) : `${confirmed.length} selected`}
+            {costContext
+              ? suggestionCostLine(confirmed.length, costContext, messages)
+              : messages.selected({ count: confirmed.length })}
           </span>
           <div className="flex items-center justify-end gap-2.5">
             <Button
@@ -171,7 +148,7 @@ export function KeywordSuggestionDrawer({
               type="button"
               variant="secondary"
             >
-              Cancel
+              {messages.cancel}
             </Button>
             <Button
               disabled={confirmed.length === 0}
@@ -179,15 +156,16 @@ export function KeywordSuggestionDrawer({
               type="button"
               variant="primary"
             >
-              {selectionOnly ? "Use" : "Add"} {confirmed.length}{" "}
-              {confirmed.length === 1 ? "keyword" : "keywords"}
+              {selectionOnly
+                ? messages.use({ count: confirmed.length })
+                : messages.add({ count: confirmed.length })}
             </Button>
           </div>
         </div>
       }
       onClose={onClose}
       open={open}
-      title="Import from Search Console"
+      title={messages.title}
     >
       <div className="flex flex-wrap items-center gap-2">
         {allSelected ? null : (
@@ -198,7 +176,7 @@ export function KeywordSuggestionDrawer({
             type="button"
             variant="secondary"
           >
-            Select all
+            {messages.selectAll}
           </Button>
         )}
         {hasSelection ? (
@@ -209,7 +187,7 @@ export function KeywordSuggestionDrawer({
             type="button"
             variant="secondary"
           >
-            Clear
+            {messages.clear}
           </Button>
         ) : null}
         <Button
@@ -219,7 +197,7 @@ export function KeywordSuggestionDrawer({
           type="button"
           variant="secondary"
         >
-          Top {DEFAULT_PRESELECT_TOP_N} by clicks
+          {messages.top({ count: DEFAULT_PRESELECT_TOP_N })}
         </Button>
       </div>
 
@@ -232,10 +210,10 @@ export function KeywordSuggestionDrawer({
             size={14}
           />
           <input
-            aria-label="Filter suggestions"
+            aria-label={messages.filterAria}
             className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-[12px] placeholder:leading-4"
             onChange={(event) => setTerm(event.target.value)}
-            placeholder="Filter queries"
+            placeholder={messages.filterPlaceholder}
             value={term}
           />
         </label>
@@ -243,15 +221,16 @@ export function KeywordSuggestionDrawer({
 
       <div className="mt-3 flex items-center gap-3 border-b border-border px-1 pb-1.5 font-sans tabular-nums text-[9.5px] uppercase tracking-[0.3px] text-fg-muted">
         <span className="w-4 shrink-0" />
-        <span className="min-w-0 flex-1">Query</span>
-        <span className="w-16 shrink-0 text-right">Clicks</span>
-        <span className="w-16 shrink-0 text-right">Impr.</span>
+        <span className="min-w-0 flex-1">{messages.query}</span>
+        <span className="w-16 shrink-0 text-right">{messages.clicks}</span>
+        <span className="w-16 shrink-0 text-right">{messages.impressions}</span>
       </div>
       <div className="mt-0" data-analytics-mask>
         {filtered.map((suggestion) => (
           <SuggestionRow
-            existingLabel={selectionOnly ? "In draft" : "Tracked"}
+            existingLabel={selectionOnly ? messages.inDraft : messages.tracked}
             key={queryKey(suggestion.query)}
+            messages={messages}
             onToggle={toggle}
             selected={selected.has(queryKey(suggestion.query))}
             suggestion={suggestion}
@@ -259,8 +238,9 @@ export function KeywordSuggestionDrawer({
         ))}
         {hiddenFiltered.map((suggestion) => (
           <SuggestionRow
-            existingLabel={selectionOnly ? "In draft" : "Tracked"}
+            existingLabel={selectionOnly ? messages.inDraft : messages.tracked}
             key={`hidden-${queryKey(suggestion.query)}`}
+            messages={messages}
             onToggle={toggle}
             selected={selected.has(queryKey(suggestion.query))}
             suggestion={suggestion}
@@ -270,13 +250,13 @@ export function KeywordSuggestionDrawer({
 
       {hidden.length > 0 ? (
         <p className="m-0 mt-3 text-[12px] text-fg-muted">
-          {hidden.length} low-quality {hidden.length === 1 ? "query" : "queries"} hidden.{" "}
+          {messages.hidden({ count: hidden.length })}{" "}
           <button
             className="font-semibold text-accent-text hover:underline"
             onClick={() => setShowHidden((value) => !value)}
             type="button"
           >
-            {showHidden ? "Hide" : "Show anyway"}
+            {showHidden ? messages.hide : messages.show}
           </button>
         </p>
       ) : null}

@@ -1,6 +1,7 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BulkActionBar } from "./BulkActionBar";
 
@@ -169,6 +170,27 @@ describe("BulkActionBar", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
     expect(onRunChecks).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Run checks (Top 20)" })).toBeInTheDocument();
+  });
+
+  it("localizes the pending list action and keeps its depth menu non-mutating", () => {
+    const onRunChecks = vi.fn();
+    render(
+      <BulkActionBar
+        {...actions}
+        canDeleteKeyword
+        canUpdateKeyword
+        checksRunning
+        onClear={vi.fn()}
+        onRunChecks={onRunChecks}
+        projectId="prj_1"
+        selectedRows={[{ ...row, schedule: { ...row.schedule, serp_depth: 10 } }]}
+      />,
+    );
+
+    const action = screen.getByRole("button", { name: "Starting..." });
+    expect(action).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Choose check depth" })).toBeDisabled();
+    expect(onRunChecks).not.toHaveBeenCalled();
   });
 
   it("opens the set-schedule modal after reading the authenticated schedules route", async () => {

@@ -4,10 +4,12 @@ import {
   checkLegacyUpgradeContract,
   LEGACY_UPGRADE_ANCHORS,
   LEGACY_UPGRADE_HUB,
+  LEGACY_UPGRADE_INDEX,
   LEGACY_UPGRADE_PAGE,
 } from "./legacy-upgrade-contract.mjs";
 
 const HUB_KEY = LEGACY_UPGRADE_HUB;
+const INDEX_KEY = LEGACY_UPGRADE_INDEX;
 const PAGE_KEY = LEGACY_UPGRADE_PAGE;
 const LEGACY_LINK = "(/self-hosting/legacy-upgrades/v0-1-to-v0-2)";
 
@@ -18,10 +20,18 @@ function anchorTags() {
 function validHub() {
   return [
     '---\ntitle: "Self-hosted upgrades"\n---\n',
+    "See [Legacy upgrades](/self-hosting/legacy-upgrades).\n",
     '<span id="upgrade-from-v010-to-v020"></span>\n',
-    "## Upgrade from v0.1.0 to v0.2.0\n",
     anchorTags(),
     "\nThis one-time source upgrade has its own page:",
+    `[Upgrade from v0.1.0 to v0.2.0]${LEGACY_LINK}.`,
+  ].join("\n");
+}
+
+function validIndex() {
+  return [
+    '---\ntitle: "Legacy upgrades"\n---\n',
+    "v0.5.0 resets the Prisma migration history.\n",
     `[Upgrade from v0.1.0 to v0.2.0]${LEGACY_LINK}.`,
   ].join("\n");
 }
@@ -44,6 +54,7 @@ function validLegacy() {
 function validPages() {
   return new Map([
     [HUB_KEY, validHub()],
+    [INDEX_KEY, validIndex()],
     [PAGE_KEY, validLegacy()],
   ]);
 }
@@ -97,6 +108,22 @@ describe("legacy-upgrade-contract checker", () => {
         (f) => f.includes(HUB_KEY) && f.includes("before the moved-procedure link"),
       ),
       `expected hub precedence failure, got ${JSON.stringify(failures)}`,
+    );
+  });
+
+  it("rejects a hub that keeps the historical heading", () => {
+    const pages = validPages();
+    pages.set(
+      HUB_KEY,
+      validHub().replace(
+        '<span id="upgrade-from-v010-to-v020"></span>',
+        '<span id="upgrade-from-v010-to-v020"></span>\n\n## Upgrade from v0.1.0 to v0.2.0',
+      ),
+    );
+    const failures = checkLegacyUpgradeContract(pages);
+    assert.ok(
+      failures.some((f) => f.includes("must not keep the historical")),
+      `expected historical heading failure, got ${JSON.stringify(failures)}`,
     );
   });
 

@@ -9,13 +9,14 @@ import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
-import { relativePast } from "@/lib/format/relative-time";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useFormatter, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { researchRelativePast } from "./research-relative-time";
 import { researchResultsColumns } from "./research-results-columns";
 import {
   RESEARCH_RESULTS_DEFAULT_PAGE_SIZE,
@@ -78,6 +79,32 @@ export function ResearchResultsTable({
   trackingMarketCount = 1,
   metricsAvailable = true,
 }: Readonly<ResearchResultsTableProps>) {
+  const t = useTranslations("projectResearch.results");
+  const columnsT = useTranslations("projectResearch.columns");
+  const relativeTimeT = useTranslations("projectResearch.time");
+  const format = useFormatter();
+  const columnMessages = useMemo(
+    () => ({
+      columns: {
+        cpc: columnsT("cpc"),
+        cpcTitle: columnsT("cpcTitle"),
+        cpcUnavailable: columnsT("cpcUnavailable"),
+        difficulty: columnsT("difficulty"),
+        difficultyShort: columnsT("difficultyShort"),
+        difficultyUnavailable: columnsT("difficultyUnavailable"),
+        intent: columnsT("intent"),
+        keyword: columnsT("keyword"),
+        source: columnsT("source"),
+        trend: columnsT("trend"),
+        trendAria: ({ keyword }: { keyword: string }) => columnsT("trendAria", { keyword }),
+        trendUnavailable: columnsT("trendUnavailable"),
+        volume: columnsT("volume"),
+        volumeUnavailable: columnsT("volumeUnavailable"),
+      },
+      formatNumber: (value: number) => format.number(value),
+    }),
+    [columnsT, format],
+  );
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: RESEARCH_RESULTS_DEFAULT_PAGE_SIZE,
@@ -87,8 +114,14 @@ export function ResearchResultsTable({
     field: "searchVolume",
   });
   const columns = useMemo(
-    () => researchResultsColumns({ canRemoveSaved, metricsAvailable, onToggleSave }),
-    [canRemoveSaved, metricsAvailable, onToggleSave],
+    () =>
+      researchResultsColumns({
+        canRemoveSaved,
+        messages: columnMessages,
+        metricsAvailable,
+        onToggleSave,
+      }),
+    [canRemoveSaved, columnMessages, metricsAvailable, onToggleSave],
   );
   const tableRows = useMemo(() => researchResultsTableRows(rows), [rows]);
   const selection = useMemo(
@@ -96,7 +129,13 @@ export function ResearchResultsTable({
     [selectedKeywords, tableRows],
   );
   const checksPerRun = selectedKeywords.length * trackingMarketCount;
-  const fetchedAge = relativePast(new Date(fetchedAt), new Date());
+  const fetchedAge = researchRelativePast(new Date(fetchedAt), new Date(), {
+    daysAgo: ({ count }) => relativeTimeT("daysAgo", { count }),
+    hoursAgo: ({ count }) => relativeTimeT("hoursAgo", { count }),
+    justNow: () => relativeTimeT("justNow"),
+    minutesAgo: ({ count }) => relativeTimeT("minutesAgo", { count }),
+    yesterday: () => relativeTimeT("yesterday"),
+  });
 
   return (
     <Card className="min-w-0 overflow-hidden p-0" size="md">
@@ -109,14 +148,16 @@ export function ResearchResultsTable({
             className="flex min-w-0 items-center justify-between gap-2 @4xl:justify-start"
             data-testid="research-selection-summary"
           >
-            <strong className="text-[12.5px] text-fg">{selectedKeywords.length} selected</strong>
+            <strong className="text-[12.5px] text-fg">
+              {t("selected", { count: selectedKeywords.length })}
+            </strong>
             <Button
               onClick={() => onSelectionChange?.([])}
               size="sm"
               startIcon={<X weight="regular" size={13} />}
               variant="ghost"
             >
-              Clear
+              {t("clear")}
             </Button>
           </div>
           <div
@@ -140,7 +181,7 @@ export function ResearchResultsTable({
               }}
               variant="secondary"
             >
-              Save {selectedKeywords.length} for later
+              {t("saveForLater", { count: selectedKeywords.length })}
             </Button>
             <Button
               className="w-full @4xl:w-auto"
@@ -148,8 +189,8 @@ export function ResearchResultsTable({
               size="sm"
               startIcon={<Plus weight="regular" size={14} />}
             >
-              Add {selectedKeywords.length} to tracking
-              {` +${checksPerRun} ${checksPerRun === 1 ? "check" : "checks"} per run`}
+              {t("addToTracking", { count: selectedKeywords.length })}
+              {` ${t("checksPerRun", { count: checksPerRun })}`}
             </Button>
           </div>
         </div>
@@ -161,7 +202,7 @@ export function ResearchResultsTable({
           startIcon={<Funnel weight="regular" size={14} />}
           variant="secondary"
         >
-          Filters
+          {t("filters")}
           {filterCount > 0 ? (
             <span className="ml-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent-soft px-1 font-sans tabular-nums text-[9.5px] text-accent-text">
               {filterCount}
@@ -169,8 +210,16 @@ export function ResearchResultsTable({
           ) : null}
         </Button>
         <p className="m-0 min-w-0 flex-1 text-[12px] text-fg-muted">
-          Showing <strong className="text-fg">{rows.length}</strong> of {totalCount} keywords
-          {storedFreshness ? null : cached ? ` - cached ${fetchedAge}` : ` - fetched ${fetchedAge}`}
+          {t.rich("showing", {
+            freshness: storedFreshness
+              ? "none"
+              : cached
+                ? t("cached", { age: fetchedAge })
+                : t("fetched", { age: fetchedAge }),
+            shown: rows.length,
+            strong: (chunks) => <strong className="text-fg">{chunks}</strong>,
+            total: totalCount,
+          })}
         </p>
         <ResearchExportMenu rows={rows} seed={seed} />
         {storedFreshness ? <StoredResultFreshness {...storedFreshness} /> : null}
@@ -180,11 +229,9 @@ export function ResearchResultsTable({
         data-testid="research-results-viewport"
       >
         <DataTable
-          ariaLabel="Keyword research results"
+          ariaLabel={t("tableAria")}
           columns={columns}
-          emptyState={
-            <p className="m-0 text-[12px] text-fg-muted">No keywords match these filters.</p>
-          }
+          emptyState={<p className="m-0 text-[12px] text-fg-muted">{t("empty")}</p>}
           id={RESEARCH_RESULTS_TABLE_ID}
           layout="fill"
           onPaginationChange={setPagination}
@@ -218,20 +265,21 @@ export function ResearchResultsTable({
       </div>
       {deeper && onDeeper ? (
         <p className="m-0 border-t border-border px-4 py-3 text-[12px] text-fg-muted">
-          Showing all {fetchedCount} fetched -{" "}
-          <button
-            className="cursor-pointer p-0 text-[12px] font-semibold text-accent-text outline-none hover:underline focus-visible:underline"
-            onClick={onDeeper}
-            type="button"
-          >
-            run with {deeper.nextLimit} results
-            {deeper.cached
-              ? " free, cached"
-              : deeper.costCents == null
-                ? ""
-                : ` ~${formatEstimateCents(deeper.costCents)}`}
-          </button>{" "}
-          for deeper coverage
+          {t.rich("deeper", {
+            cached: deeper.cached ? "true" : "false",
+            cost: deeper.costCents == null ? "none" : formatEstimateCents(deeper.costCents),
+            count: fetchedCount,
+            limit: deeper.nextLimit,
+            run: (chunks) => (
+              <button
+                className="cursor-pointer p-0 text-[12px] font-semibold text-accent-text outline-none hover:underline focus-visible:underline"
+                onClick={onDeeper}
+                type="button"
+              >
+                {chunks}
+              </button>
+            ),
+          })}
         </p>
       ) : null}
     </Card>

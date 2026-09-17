@@ -4,6 +4,7 @@ import { AddCompetitorDrawer } from "@/components/competitors/AddCompetitorDrawe
 import { Button } from "@/components/ui/Button";
 import type { SuggestedCompetitor } from "@/lib/competitors/types";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type AddCompetitorActionProps = {
@@ -17,6 +18,7 @@ export function AddCompetitorAction({
   projectId,
   suggestions = [],
 }: Readonly<AddCompetitorActionProps>) {
+  const t = useTranslations("projectCompetitors.ui");
   const [open, setOpen] = useState(false);
 
   if (!canCreate) return null;
@@ -30,7 +32,7 @@ export function AddCompetitorAction({
         startIcon={<Plus aria-hidden size={14} weight="regular" />}
         type="button"
       >
-        Add competitor
+        {t("addCompetitor")}
       </Button>
       <AddCompetitorDrawer
         canCreate={canCreate}

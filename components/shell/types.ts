@@ -11,10 +11,8 @@ export type ShellUser = {
   roleLine?: string;
 };
 
-const FALLBACK_NAME = "Your account";
-
-export function shellUserName(user?: ShellUser) {
-  return user?.name?.trim() || user?.email?.trim() || FALLBACK_NAME;
+export function shellUserName(user: ShellUser | undefined, fallbackName: string) {
+  return user?.name?.trim() || user?.email?.trim() || fallbackName;
 }
 
 export function shellUserEmail(user?: ShellUser) {

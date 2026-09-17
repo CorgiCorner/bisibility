@@ -5,6 +5,25 @@ describe("researchResultsColumns", () => {
   it("declares 4px-scale defaults and only enables descending-first volume sorting", () => {
     const columns = researchResultsColumns({
       canRemoveSaved: true,
+      messages: {
+        columns: {
+          cpc: "CPC",
+          cpcTitle: "Cost per click",
+          cpcUnavailable: "CPC unavailable",
+          difficulty: "Keyword difficulty",
+          difficultyShort: "KD",
+          difficultyUnavailable: "KD unavailable",
+          intent: "Intent",
+          keyword: "Keyword",
+          source: "Source",
+          trend: "Trend",
+          trendAria: ({ keyword }) => `Monthly volume trend for ${keyword}`,
+          trendUnavailable: "Search trend unavailable",
+          volume: "Volume",
+          volumeUnavailable: "Search volume unavailable",
+        },
+        formatNumber: (value) => String(value),
+      },
       metricsAvailable: true,
       onToggleSave: vi.fn(),
     });

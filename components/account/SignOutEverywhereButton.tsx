@@ -1,11 +1,12 @@
 "use client";
 
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { feedbackClass, ghostButtonClass } from "./account-ui";
+import { useAccountActionError } from "./useAccountActionError";
 
 export type SignOutEverywhereButtonProps = {
   // Number of *other* sessions; the button is disabled when there are none to revoke.
@@ -18,25 +19,25 @@ export function SignOutEverywhereButton({
   signOutEverywhere,
 }: Readonly<SignOutEverywhereButtonProps>) {
   const router = useRouter();
+  const t = useTranslations("account.security.sessions");
+  const accountErrors = useAccountActionError();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
 
   function onClick() {
     setMessage(null);
-    startTransition(() => {
-      void signOutEverywhere()
-        .then((result) => {
-          if (result.revokedCount === 0) {
-            setMessage("No other sessions were active.");
-          } else {
-            const noun = result.revokedCount === 1 ? "session" : "sessions";
-            setMessage(`Signed out ${result.revokedCount} other ${noun}.`);
-          }
-          router.refresh();
-        })
-        .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "Could not sign out other sessions.")),
-        );
+    startTransition(async () => {
+      try {
+        const result = await signOutEverywhere();
+        if (result.revokedCount === 0) {
+          setMessage(t("none"));
+        } else {
+          setMessage(t("signedOut", { count: result.revokedCount }));
+        }
+        router.refresh();
+      } catch (error: unknown) {
+        setMessage(accountErrors.generic(error, t("signOutError")));
+      }
     });
   }
 
@@ -50,7 +51,7 @@ export function SignOutEverywhereButton({
         type="button"
       >
         <SignOut size={14} weight="regular" />
-        {isPending ? "Signing out" : "Sign out everywhere"}
+        {isPending ? t("signingOut") : t("signOutEverywhere")}
       </button>
     </div>
   );

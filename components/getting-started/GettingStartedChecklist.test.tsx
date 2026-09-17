@@ -1,6 +1,7 @@
+import { renderWithGettingStartedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { track } from "@/lib/analytics/client";
 import type { SetupContext, SetupCta, SetupStepState } from "@/lib/getting-started/setup-steps";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GettingStartedChecklist } from "./GettingStartedChecklist";
@@ -141,7 +142,7 @@ describe("GettingStartedChecklist", () => {
   });
 
   it("keeps written content in the expanded left row and only video anatomy on the right", () => {
-    setup({ cta: { id: "run_first_check", label: "Run first check" }, family: "action" });
+    setup({ cta: { id: "run_first_check" }, family: "action" });
     const row = screen.getByRole("button", { name: "Run your first rank check" });
     const panel = document.getElementById(row.getAttribute("aria-controls") ?? "");
     const video = screen.getByRole("region", { name: "Video walkthrough" });
@@ -171,7 +172,7 @@ describe("GettingStartedChecklist", () => {
   });
 
   it("keeps every expansion panel mounted with the source transitions", () => {
-    setup({ cta: { id: "run_first_check", label: "Run first check" }, family: "action" });
+    setup({ cta: { id: "run_first_check" }, family: "action" });
     const panels = screen.getAllByTestId(/^setup-step-panel-/);
 
     expect(panels).toHaveLength(5);
@@ -196,7 +197,7 @@ describe("GettingStartedChecklist", () => {
 
   it("switches the expanded row and selected video reference", async () => {
     const { user } = setup({
-      cta: { id: "run_first_check", label: "Run first check" },
+      cta: { id: "run_first_check" },
       family: "action",
     });
     const create = screen.getByRole("button", { name: "Create your project" });
@@ -215,7 +216,7 @@ describe("GettingStartedChecklist", () => {
   it("uses a dashed circle for a first check blocked by a missing data source", () => {
     setup({
       family: "blocked",
-      reason: "Needs a data source first",
+      reason: "needs_data_source",
       unblockedBy: "connect_source",
     });
 
@@ -225,20 +226,17 @@ describe("GettingStartedChecklist", () => {
   });
 
   it.each([
-    ["action", { cta: { id: "run_first_check", label: "Run first check" }, family: "action" }],
+    ["action", { cta: { id: "run_first_check" }, family: "action" }],
     [
       "waiting",
       {
-        accelerate: { id: "run_first_check", label: "Run it now instead" },
+        accelerate: { id: "run_first_check" },
         family: "waiting",
         when: { nextRunAt: new Date("2026-08-31T04:00:00.000Z"), timezone: "Europe/Warsaw" },
       },
     ],
     ["running", { family: "running", progress: { completed: 2, total: 5 } }],
-    [
-      "blocked",
-      { family: "blocked", reason: "Needs a data source first", unblockedBy: "connect_source" },
-    ],
+    ["blocked", { family: "blocked", reason: "needs_data_source", unblockedBy: "connect_source" }],
     ["done", { family: "done" }],
   ] satisfies Array<[string, SetupStepState]>)(
     "keeps the first-check row selectable in %s state",
@@ -255,15 +253,15 @@ describe("GettingStartedChecklist", () => {
   );
 
   it("keeps the waiting accelerator exactly once and preserves typed CTA dispatch", async () => {
-    const cta = { id: "run_first_check", label: "Run it now instead" } as const;
+    const cta = { id: "run_first_check" } as const;
     const { onCta, user } = setup({
       accelerate: cta,
       family: "waiting",
       when: { nextRunAt: new Date("2026-08-31T04:00:00.000Z"), timezone: "Europe/Warsaw" },
     });
 
-    expect(screen.getAllByRole("button", { name: cta.label })).toHaveLength(1);
-    await user.click(screen.getByRole("button", { name: cta.label }));
+    expect(screen.getAllByRole("button", { name: "Run it now instead" })).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: "Run it now instead" }));
     expect(onCta).toHaveBeenCalledWith(cta);
     expect(track).toHaveBeenCalledWith("getting_started_cta_clicked", {
       cta: "accelerate",
@@ -272,10 +270,10 @@ describe("GettingStartedChecklist", () => {
   });
 
   it("tracks a primary checklist CTA with its setup step", async () => {
-    const cta = { id: "run_first_check", label: "Run first check" } as const;
+    const cta = { id: "run_first_check" } as const;
     const { onCta, user } = setup({ cta, family: "action" });
 
-    await user.click(screen.getByRole("button", { name: cta.label }));
+    await user.click(screen.getByRole("button", { name: "Run first check" }));
 
     expect(onCta).toHaveBeenCalledWith(cta);
     expect(track).toHaveBeenCalledWith("getting_started_cta_clicked", {
@@ -294,7 +292,7 @@ describe("GettingStartedChecklist", () => {
       />,
     );
 
-    const checklist = screen.getByRole("region", { name: "Getting started checklist" });
+    const checklist = screen.getByRole("region", { name: "Get set up" });
     expect(checklist).not.toHaveClass("lg:border-r", "lg:border-border");
     const createTitle = screen.getByText("Create your project");
     expect(createTitle).toHaveClass("line-through", "text-fg-muted");
@@ -316,10 +314,7 @@ describe("GettingStartedChecklist", () => {
   });
 
   it("opens the mobile Sheet only after row activation while retaining deterministic selection", async () => {
-    const { user } = setup(
-      { cta: { id: "run_first_check", label: "Run first check" }, family: "action" },
-      false,
-    );
+    const { user } = setup({ cta: { id: "run_first_check" }, family: "action" }, false);
 
     expect(screen.queryByRole("dialog")).toBeNull();
     const firstCheck = screen.getByRole("button", { name: "Run your first rank check" });

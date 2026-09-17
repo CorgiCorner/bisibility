@@ -1,8 +1,9 @@
 "use client";
 
 import { PricingPopover } from "@/components/ui/PricingPopover";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { domainOverviewListEstimate } from "@/lib/cost-estimate/provider-rates";
+import { useLocale, useTranslations } from "next-intl";
+import { formatDomainEstimatedCost } from "./domain-overview-metrics";
 import type { DomainOverviewEstimateView } from "./domain-overview-workspace-model";
 
 type DomainOverviewPricingPopoverProps = {
@@ -13,10 +14,15 @@ type DomainOverviewPricingPopoverProps = {
 
 const listEstimate = domainOverviewListEstimate("dataforseo");
 
-function estimateLabel(costCents: number | null, fallbackCents: number | null) {
-  if (costCents === 0) return "free from cache";
+function estimateLabel(
+  costCents: number | null,
+  fallbackCents: number | null,
+  locale: string,
+  t: ReturnType<typeof useTranslations<"projectDomainOverview.workspace.ui">>,
+) {
+  if (costCents === 0) return t("priceFreeFromCache");
   const amount = costCents ?? fallbackCents;
-  return amount == null ? "price unavailable" : `~${formatEstimateCents(amount)}`;
+  return amount == null ? t("priceUnavailable") : formatDomainEstimatedCost(amount, locale, t);
 }
 
 export function DomainOverviewPricingPopover({
@@ -24,26 +30,23 @@ export function DomainOverviewPricingPopover({
   estimate,
   onClose,
 }: Readonly<DomainOverviewPricingPopoverProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectDomainOverview.workspace.ui");
   return (
     <PricingPopover
       anchor={anchor}
-      footer={
-        <span>
-          Estimated charges go directly to your DataForSEO account. Cached results are free for 12
-          hours.
-        </span>
-      }
+      footer={<span>{t("pricingFooter")}</span>}
       onClose={onClose}
       rows={[
         {
-          label: "Overview, keywords and pages",
-          value: estimateLabel(estimate.costCents, listEstimate.core),
+          label: t("pricingCore"),
+          value: estimateLabel(estimate.costCents, listEstimate.core, locale, t),
         },
         {
-          label: "Monthly organic history",
-          value: estimateLabel(estimate.historyCostCents, listEstimate.history),
+          label: t("pricingHistory"),
+          value: estimateLabel(estimate.historyCostCents, listEstimate.history, locale, t),
         },
-        { label: "Repeat within 12 hours", value: "free from cache" },
+        { label: t("pricingRepeat"), value: t("priceFreeFromCache") },
       ]}
     />
   );

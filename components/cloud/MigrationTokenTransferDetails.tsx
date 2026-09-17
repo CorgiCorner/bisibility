@@ -1,15 +1,16 @@
 "use client";
 
-import { MigrationReachabilityHint } from "@/components/settings/migration/MigrationReachabilityHint";
 import { CopyButton } from "@/components/ui/CopyButton";
+import { useTranslations } from "next-intl";
 import type { IssuedMigrationToken } from "./cloud-token";
-import { remainingMinutesLabel } from "./cloud-token";
+import { minutesUntilExpiry } from "./cloud-token";
+import { LocalizedCloudDestinationReachabilityHint } from "./LocalizedCloudDestinationReachabilityHint";
 
-function scopeLabel(scope: IssuedMigrationToken["scope"]) {
-  return scope === "full" ? "Full project" : "Keywords";
-}
-
-function CopyRow({ label, value }: Readonly<{ label: string; value: string }>) {
+function CopyRow({
+  copyLabel,
+  label,
+  value,
+}: Readonly<{ copyLabel: string; label: string; value: string }>) {
   return (
     <div className="flex items-center gap-2 border-border border-b px-3.5 py-3 last:border-b-0">
       <span className="min-w-0 flex-1">
@@ -20,7 +21,7 @@ function CopyRow({ label, value }: Readonly<{ label: string; value: string }>) {
           {value}
         </span>
       </span>
-      <CopyButton label={`Copy ${label}`} size="md" text={value} />
+      <CopyButton label={copyLabel} size="md" text={value} />
     </div>
   );
 }
@@ -45,30 +46,45 @@ export function MigrationTokenTransferDetails({
   token: IssuedMigrationToken;
   workspaceName: string;
 }>) {
-  const expires = `${remainingMinutesLabel(token.expiresAt)} · ${
-    token.singleUse ? "single use" : "reusable"
-  }`;
+  const t = useTranslations("cloudImport.token");
+  const expires = t("expiryDetails", {
+    kind: token.singleUse ? t("singleUseDetails") : t("reusableDetails"),
+    remaining: t("remaining", { count: minutesUntilExpiry(token.expiresAt) }),
+  });
 
   return (
     <div>
-      <div className="text-[14.5px] font-semibold">Token created</div>
-      <p className="mt-1.5 text-[13px] leading-[1.55] text-fg-muted">
-        Copy this token now. For security, it cannot be shown again after you refresh or leave this
-        page.
-      </p>
+      <div className="text-[14.5px] font-semibold">{t("createdTitle")}</div>
+      <p className="mt-1.5 text-[13px] leading-[1.55] text-fg-muted">{t("valueHidden")}</p>
       <div className="mt-4 overflow-hidden rounded-card border border-border bg-bg-sunken">
-        {destinationUrl ? <CopyRow label="Destination URL" value={destinationUrl} /> : null}
-        <CopyRow label="Migration token" value={token.token} />
+        {destinationUrl ? (
+          <CopyRow
+            copyLabel={t("copy", { label: t("destinationUrl") })}
+            label={t("destinationUrl")}
+            value={destinationUrl}
+          />
+        ) : null}
+        <CopyRow
+          copyLabel={t("copy", { label: t("header") })}
+          label={t("header")}
+          value={token.token}
+        />
       </div>
       {destinationUrl ? (
         <div className="mt-3">
-          <MigrationReachabilityHint surface="destination" targetOrigin={destinationUrl} />
+          <LocalizedCloudDestinationReachabilityHint
+            surface="destination"
+            targetOrigin={destinationUrl}
+          />
         </div>
       ) : null}
       <dl className="m-0 mt-4 border-border border-t pt-2">
-        <DetailRow label="Target project" value={workspaceName} />
-        <DetailRow label="Scope" value={scopeLabel(token.scope)} />
-        <DetailRow label="Expires" value={expires} />
+        <DetailRow label={t("targetProject")} value={workspaceName} />
+        <DetailRow
+          label={t("scopeLabel")}
+          value={token.scope === "full" ? t("scopeFull") : t("scopeKeywords")}
+        />
+        <DetailRow label={t("expires")} value={expires} />
       </dl>
     </div>
   );

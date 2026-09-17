@@ -10,24 +10,53 @@ import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist
 import { ShieldWarningIcon as ShieldWarning } from "@phosphor-icons/react/dist/ssr/ShieldWarning";
 import { SlidersHorizontalIcon as SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal";
 import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/ssr/UserPlus";
+import type { useTranslations } from "next-intl";
 
 export const settingsSections = [
-  { icon: SlidersHorizontal, id: "general", label: "General" },
-  { icon: Database, id: "data-sources", label: "Data sources" },
-  { icon: Crosshair, id: "tracking", label: "Tracking" },
-  { icon: Flag, id: "competitors", label: "Competitors" },
-  { icon: PaperPlaneTilt, id: "notifications", label: "Notifications" },
-  { icon: UserPlus, id: "team", label: "Team" },
-  { icon: CreditCard, id: "billing", label: "Billing" },
-  { icon: Code, id: "developers", label: "Developers" },
-  { icon: Flask, id: "experimental", label: "Experimental" },
-  { icon: ShieldWarning, id: "advanced", label: "Advanced" },
-] as const satisfies ReadonlyArray<{ icon: Icon; id: string; label: string }>;
+  { icon: SlidersHorizontal, id: "general" },
+  { icon: Database, id: "data-sources" },
+  { icon: Crosshair, id: "tracking" },
+  { icon: Flag, id: "competitors" },
+  { icon: PaperPlaneTilt, id: "notifications" },
+  { icon: UserPlus, id: "team" },
+  { icon: CreditCard, id: "billing" },
+  { icon: Code, id: "developers" },
+  { icon: Flask, id: "experimental" },
+  { icon: ShieldWarning, id: "advanced" },
+] as const satisfies ReadonlyArray<{ icon: Icon; id: string }>;
 
 // Keep the old usage id valid for links into the new integrations section.
 export type SettingsSectionId = (typeof settingsSections)[number]["id"] | "usage";
 
 export type SettingsSection = (typeof settingsSections)[number];
+export type SettingsShellTranslations = ReturnType<typeof useTranslations<"projectSettingsShell">>;
+
+export function settingsSectionLabel(t: SettingsShellTranslations, section: SettingsSectionId) {
+  switch (section) {
+    case "advanced":
+      return t("sections.advanced");
+    case "billing":
+      return t("sections.billing");
+    case "competitors":
+      return t("sections.competitors");
+    case "data-sources":
+      return t("sections.dataSources");
+    case "developers":
+      return t("sections.developers");
+    case "experimental":
+      return t("sections.experimental");
+    case "general":
+      return t("sections.general");
+    case "notifications":
+      return t("sections.notifications");
+    case "team":
+      return t("sections.team");
+    case "tracking":
+      return t("sections.tracking");
+    case "usage":
+      return t("sections.billing");
+  }
+}
 
 // These are the section anchors rendered by the legacy settings surface. Form-control ids are
 // intentionally not routes: no legacy link targets them as a settings destination.

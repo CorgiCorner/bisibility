@@ -18,10 +18,10 @@ export const competitorColors = [
 ];
 
 export const competitorPositionBuckets = [
-  { id: "all", label: "All keywords" },
-  { id: "top3", label: "Top 3" },
-  { id: "top10", label: "Top 10" },
-] as const satisfies readonly { id: CompetitorPositionBucket; label: string }[];
+  { id: "all" },
+  { id: "top3" },
+  { id: "top10" },
+] as const satisfies readonly { id: CompetitorPositionBucket }[];
 
 export const emptyCompetitorFilter: CompetitorFilter = {
   excludedKeywordIds: [],

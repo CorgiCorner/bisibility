@@ -9,6 +9,7 @@ import type {
 } from "@/lib/getting-started/setup-steps";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { CompetitorSuggestionList } from "./CompetitorSuggestionList";
 
@@ -26,17 +27,6 @@ type ConfirmCompetitorsStepProps = Readonly<{
   suggestions: CompetitorSuggestionEvidence[];
 }>;
 
-const blockedBody =
-  "Suggestions use your completed rank checks. This step opens after your first check.";
-const readyBody = "Choose competitors to track. You can change this later in Settings.";
-const skippedBody =
-  "Skipped. Nothing is tracked as a competitor, and share of voice stays off until you confirm a set.";
-
-function trackLabel(count: number) {
-  if (count === 0) return "Track selected";
-  return `Track ${count} competitor${count === 1 ? "" : "s"}`;
-}
-
 export function ConfirmCompetitorsStep({
   actions,
   projectId,
@@ -44,6 +34,7 @@ export function ConfirmCompetitorsStep({
   suggestions,
 }: ConfirmCompetitorsStepProps) {
   const router = useRouter();
+  const t = useTranslations("projectGettingStarted.competitors");
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(() => new Set());
   const [confirmedDomains, setConfirmedDomains] = useState<Set<string>>(() => new Set());
   const [dismissedDomains, setDismissedDomains] = useState<Set<string>>(() => new Set());
@@ -52,19 +43,15 @@ export function ConfirmCompetitorsStep({
   const [actionError, setActionError] = useState<string | null>(null);
   const [localOutcome, setLocalOutcome] = useState<"confirmed" | "skipped" | null>(null);
   if (state.family === "blocked") {
-    return <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">{blockedBody}</p>;
+    return <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">{t("blocked")}</p>;
   }
 
   if (state.family === "skipped" || localOutcome === "skipped") {
-    return <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">{skippedBody}</p>;
+    return <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">{t("skipped")}</p>;
   }
 
   if (state.family === "done" || localOutcome === "confirmed") {
-    return (
-      <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">
-        Confirmed. Your selected competitors are now tracked.
-      </p>
-    );
+    return <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">{t("confirmed")}</p>;
   }
 
   const visibleSuggestions = suggestions.filter(
@@ -101,7 +88,7 @@ export function ConfirmCompetitorsStep({
     setConfirmedDomains((current) => new Set([...current, ...successfulDomains]));
     setSelectedDomains(new Set(failedDomains));
     if (failedDomains.length > 0) {
-      setActionError("Could not confirm every selected competitor. Try again.");
+      setActionError(t("confirmError"));
       return;
     }
     setDialogView(null);
@@ -121,7 +108,7 @@ export function ConfirmCompetitorsStep({
         return next;
       });
     } catch (error) {
-      setActionError(actionErrorMessage(error, "Competitor could not be removed."));
+      setActionError(actionErrorMessage(error, t("dismissError")));
     } finally {
       setIsSaving(false);
     }
@@ -137,7 +124,7 @@ export function ConfirmCompetitorsStep({
       setLocalOutcome(result.outcome);
       router.refresh();
     } catch (error) {
-      setActionError(actionErrorMessage(error, "Competitor setup could not be skipped."));
+      setActionError(actionErrorMessage(error, t("skipError")));
     } finally {
       setIsSaving(false);
     }
@@ -165,9 +152,7 @@ export function ConfirmCompetitorsStep({
   return (
     <div className="max-w-[440px]">
       <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">
-        {hasSuggestions
-          ? readyBody
-          : "No suggestions yet. Add a competitor or do this later in Settings."}
+        {hasSuggestions ? t("ready") : t("none")}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button
@@ -179,7 +164,7 @@ export function ConfirmCompetitorsStep({
           size="sm"
           type="button"
         >
-          {hasSuggestions ? "Review competitors" : "Add your own"}
+          {hasSuggestions ? t("review") : t("addOwn")}
         </Button>
         {confirmedDomains.size === 0 ? (
           <Button
@@ -189,7 +174,7 @@ export function ConfirmCompetitorsStep({
             type="button"
             variant="ghost"
           >
-            Skip for now
+            {t("skip")}
           </Button>
         ) : null}
       </div>
@@ -199,7 +184,7 @@ export function ConfirmCompetitorsStep({
         onClose={() => setDialogView(null)}
         open={dialogView !== null}
         size="md"
-        title={dialogView === "manual" ? "Add competitor" : "Review competitors"}
+        title={dialogView === "manual" ? t("modalAdd") : t("modalReview")}
         footer={
           dialogView === "suggestions" ? (
             <>
@@ -213,7 +198,7 @@ export function ConfirmCompetitorsStep({
                 type="button"
                 variant="secondary"
               >
-                Add your own
+                {t("addOwn")}
               </Button>
               <Button
                 disabled={isSaving || selectedSuggestions.length === 0}
@@ -221,7 +206,11 @@ export function ConfirmCompetitorsStep({
                 size="sm"
                 type="button"
               >
-                {isSaving ? "Saving..." : trackLabel(selectedSuggestions.length)}
+                {isSaving
+                  ? t("saving")
+                  : selectedSuggestions.length === 0
+                    ? t("trackSelected")
+                    : t("trackCount", { count: selectedSuggestions.length })}
               </Button>
             </>
           ) : undefined
@@ -232,14 +221,12 @@ export function ConfirmCompetitorsStep({
             addManualCompetitor={addManualCompetitor}
             onClose={() => setDialogView(null)}
             onCancel={() => setDialogView(hasSuggestions ? "suggestions" : null)}
-            cancelLabel={hasSuggestions ? "Back" : "Cancel"}
+            cancelLabel={hasSuggestions ? t("back") : t("cancel")}
             projectId={projectId}
           />
         ) : (
           <>
-            <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">
-              Select the domains you want to track.
-            </p>
+            <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">{t("select")}</p>
             {hasSuggestions ? (
               <CompetitorSuggestionList
                 suggestions={visibleSuggestions}
@@ -249,9 +236,7 @@ export function ConfirmCompetitorsStep({
                 onDismiss={(domain) => void dismissSuggestion(domain)}
               />
             ) : (
-              <p className="mt-3 text-[13px] text-fg-muted">
-                No suggestions left. You can add your own competitor.
-              </p>
+              <p className="mt-3 text-[13px] text-fg-muted">{t("noneLeft")}</p>
             )}
             {errorNotice}
           </>

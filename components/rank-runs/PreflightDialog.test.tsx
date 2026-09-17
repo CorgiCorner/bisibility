@@ -1,6 +1,7 @@
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PreflightDialog, type PreflightDialogProps } from "./PreflightDialog";

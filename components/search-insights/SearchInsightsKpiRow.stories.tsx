@@ -42,7 +42,11 @@ export const ClicksToSessionsRatio: Story = {
 
 export const Declining: Story = {
   args: {
-    kpis: storyFirstView.kpis.map((kpi) => ({ ...kpi, delta: "-4.1%", dir: "down" as const })),
+    kpis: storyFirstView.kpis.map((kpi) => ({
+      ...kpi,
+      delta: { kind: "changed" as const, unit: "percent_change" as const, value: -0.041 },
+      dir: "down" as const,
+    })),
   },
 };
 

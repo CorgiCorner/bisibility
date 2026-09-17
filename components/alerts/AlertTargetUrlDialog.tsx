@@ -8,6 +8,7 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import { targetUrlValueSchema } from "@/lib/schemas/keyword";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,6 +31,7 @@ export function AlertTargetUrlDialog({
   projectId,
   targetUrl,
 }: Readonly<AlertTargetUrlDialogProps>) {
+  const t = useTranslations("projectAlerts.target");
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const {
@@ -48,25 +50,27 @@ export function AlertTargetUrlDialog({
       onClose();
       router.refresh();
     } catch (error) {
-      setActionError(actionErrorMessage(error, "Target URL could not be saved."));
+      setActionError(actionErrorMessage(error, t("saveError")));
     }
   }
 
   return (
     <AppDrawer
-      description={`Set the URL you expect to rank for "${keyword}".`}
+      description={t("description", { keyword })}
       onClose={onClose}
       open
-      title="Set target URL"
+      title={t("title")}
     >
       <form className="flex flex-col gap-4" onSubmit={handleSubmit((values) => void save(values))}>
         <TargetUrlField
           error={errors.targetUrl?.message}
+          help={t("fieldHelp")}
+          label={t("fieldLabel")}
           placeholder="https://example.com/page"
           {...register("targetUrl")}
         />
         <Button disabled={isSubmitting} style={{ minHeight: 40 }} type="submit" variant="primary">
-          {isSubmitting ? "Saving..." : "Save target URL"}
+          {isSubmitting ? t("saving") : t("save")}
         </Button>
         {actionError ? (
           <span className="font-sans tabular-nums text-[11px] text-red-text">{actionError}</span>

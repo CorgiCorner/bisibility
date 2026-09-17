@@ -1,6 +1,5 @@
 "use client";
 
-import { formatProviderBudgetUsedLabel } from "@/components/cost-estimate/provider-spend-label";
 import { SpendBar } from "@/components/cost-estimate/SpendBar";
 import { spendTone } from "@/components/cost-estimate/spend-tone";
 import { BudgetEditModal } from "@/components/settings/usage/BudgetEditModal";
@@ -8,14 +7,15 @@ import { ProviderUsageRow } from "@/components/settings/usage/ProviderUsageRow";
 import { UsageCard } from "@/components/settings/usage/UsageCard";
 import { Button } from "@/components/ui/Button";
 import type { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
-import { formatMoneyCents } from "@/lib/format/money";
-import { createUserDateTimeFormatter } from "@/lib/format/user-datetime";
+import { formatDisplayDate, formatDisplayMonthYear } from "@/lib/dates/format";
+import { resolveDateFormat } from "@/lib/dates/resolve";
 import type { ProjectProviderSpend } from "@/lib/queries/provider-spend";
 import { appPath } from "@/lib/routing/app-path";
 import type { ProviderUsageData } from "@/lib/settings/options";
 import { metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 type ProviderUsageCardProps = {
@@ -36,61 +36,101 @@ function Kpi({ label, value }: Readonly<{ label: string; value: string }>) {
   );
 }
 
-function recordedSpend(recorded: ProjectProviderSpend["summary"]["recorded"]) {
-  const values = [];
-  if (recorded.cents) values.push(formatMoneyCents(recorded.cents));
-  if (recorded.units) values.push(`${recorded.units.toLocaleString("en-US")} searches`);
-  return values.length ? values.join(" + ") : "$0.00";
+function formatUsdCents(cents: number, locale: string) {
+  const dollars = cents / 100;
+  const fractionDigits = Math.abs(dollars) < 100 ? 2 : 0;
+  return new Intl.NumberFormat(locale, {
+    currency: "USD",
+    currencyDisplay: "narrowSymbol",
+    maximumFractionDigits: fractionDigits,
+    minimumFractionDigits: fractionDigits,
+    style: "currency",
+  }).format(dollars);
 }
 
-function periodLine(usage: ProviderUsageCardProps["usage"]) {
-  const period = usage.providerSpend.summary.period;
-  const formatter = createUserDateTimeFormatter({
-    dateFormat: usage.period.dateFormat,
-    timezone: "UTC",
+function formatLocalizedNumber(value: number, locale: string) {
+  return new Intl.NumberFormat(locale).format(value);
+}
+
+function recordedSpend(
+  recorded: ProjectProviderSpend["summary"]["recorded"],
+  locale: string,
+  t: ProviderUsageTranslator,
+) {
+  return t("recordedSpendValue", {
+    amount: formatUsdCents(recorded.cents, locale),
+    hasSearches: recorded.units ? "true" : "false",
+    searches: t("searches", { count: recorded.units }),
   });
+}
+
+type ProviderUsageTranslator = ReturnType<typeof useTranslations<"projectSettingsUsage.provider">>;
+
+function periodLine(
+  usage: ProviderUsageCardProps["usage"],
+  locale: string,
+  t: ProviderUsageTranslator,
+) {
+  const period = usage.providerSpend.summary.period;
   const start = new Date(period.startsAt);
   const end = new Date(period.endsAt);
+  const dateContext = {
+    dateFormat: resolveDateFormat(usage.period.dateFormat),
+    locale,
+    timeZone: "UTC",
+  } as const;
   const calendarMonth = start.getUTCDate() === 1 && end.getUTCDate() === 1;
   const range = calendarMonth
-    ? formatter.formatMonthYear(start)
-    : `${formatter.formatDate(start)} - ${formatter.formatDate(end)}`;
-  const reset =
-    period.daysUntilReset === 1 ? "resets in 1 day" : `resets in ${period.daysUntilReset} days`;
-  return `${range} (UTC) · ${reset}`;
+    ? formatDisplayMonthYear(start.toISOString().slice(0, 10), dateContext)
+    : `${formatDisplayDate(start.toISOString().slice(0, 10), dateContext)} - ${formatDisplayDate(end.toISOString().slice(0, 10), dateContext)}`;
+  return t("period", { days: period.daysUntilReset, range });
 }
 
-function projectionExplanation(usage: ProviderUsageCardProps["usage"]) {
+function projectionExplanation(
+  usage: ProviderUsageCardProps["usage"],
+  locale: string,
+  t: ProviderUsageTranslator,
+) {
   const projected = usage.providerSpend.summary.projected;
-  if (projected.kind === "no_usage") return "No usage yet";
-  if (projected.kind === "within_limits") return "within budgets";
-  const formatter = createUserDateTimeFormatter({
-    dateFormat: usage.period.dateFormat,
-    timezone: "UTC",
-  });
+  if (projected.kind === "no_usage") return t("noUsage");
+  if (projected.kind === "within_limits") return t("withinLimits");
   const otherBelow = usage.providerSpend.connections
     .filter((item) => item.provider !== projected.provider)
     .every((item) => (item.usedPercent ?? 0) < 40);
-  return `on pace to hit ${projected.provider} budget ${formatter.formatDate(new Date(projected.at))}${otherBelow ? " · other providers below 40%" : ""}`;
-}
-
-function projectionKpi(usage: ProviderUsageCardProps["usage"]) {
-  const projected = usage.providerSpend.summary.projected;
-  if (projected.kind === "no_usage") return "No usage yet";
-  if (projected.kind === "within_limits") return "within budgets";
-  const formatter = createUserDateTimeFormatter({
-    dateFormat: usage.period.dateFormat,
-    timezone: "UTC",
+  return t("projectionPace", {
+    date: formatDisplayDate(new Date(projected.at).toISOString().slice(0, 10), {
+      dateFormat: resolveDateFormat(usage.period.dateFormat),
+      locale,
+      timeZone: "UTC",
+    }),
+    othersBelow: otherBelow ? "true" : "false",
+    provider: projected.provider,
   });
-  return `${projected.provider} budget by ${formatter.formatDate(new Date(projected.at))}`;
 }
 
-function attentionCopy(usage: ProviderUsageCardProps["usage"]) {
+function projectionKpi(
+  usage: ProviderUsageCardProps["usage"],
+  locale: string,
+  t: ProviderUsageTranslator,
+) {
+  const projected = usage.providerSpend.summary.projected;
+  if (projected.kind === "no_usage") return t("noUsage");
+  if (projected.kind === "within_limits") return t("withinLimits");
+  return t("projectionBy", {
+    date: formatDisplayDate(new Date(projected.at).toISOString().slice(0, 10), {
+      dateFormat: resolveDateFormat(usage.period.dateFormat),
+      locale,
+      timeZone: "UTC",
+    }),
+    provider: projected.provider,
+  });
+}
+
+function attentionCopy(usage: ProviderUsageCardProps["usage"], t: ProviderUsageTranslator) {
   const connections = usage.providerSpend.connections.filter((item) =>
     usage.providerSpend.summary.attention.includes(item.connectionId),
   );
-  if (connections.length > 1)
-    return `${connections.length} providers need attention. Check the provider settings.`;
+  if (connections.length > 1) return t("attentionMany", { count: connections.length });
   const connection = connections[0];
   if (!connection) return null;
   if (connection.state === "fallback_active") {
@@ -98,11 +138,14 @@ function attentionCopy(usage: ProviderUsageCardProps["usage"]) {
       (item) =>
         item.connectionId !== connection.connectionId && item.enabled && item.state !== "capped",
     );
-    return `${connection.provider} hit its budget - checks are falling back to ${fallback?.provider ?? "another provider"}.`;
+    return t("attentionFallback", {
+      fallback: fallback?.provider ?? t("anotherProvider"),
+      provider: connection.provider,
+    });
   }
   if (connection.state === "top_up_required")
-    return `${connection.provider} needs a top up before checks can continue.`;
-  return `${connection.provider} hit its budget - checks are paused.`;
+    return t("attentionTopUp", { provider: connection.provider });
+  return t("attentionPaused", { provider: connection.provider });
 }
 
 export function ProviderUsageCard({
@@ -113,25 +156,27 @@ export function ProviderUsageCard({
   updateProviderAllocation,
   usage,
 }: Readonly<ProviderUsageCardProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectSettingsUsage.provider");
   const [editOpen, setEditOpen] = useState(initialBudgetEditOpen && canEditBudget);
   const { connections, summary } = usage.providerSpend;
-  const banner = summary.attention.length ? attentionCopy(usage) : null;
+  const banner = summary.attention.length ? attentionCopy(usage, t) : null;
   const summaryTone = spendTone(summary.maxUsedPercent ?? 0, summary.maxUsedPercent != null);
   return (
     <UsageCard
       action={
         canEditBudget ? (
           <Button onClick={() => setEditOpen(true)} size="sm" type="button" variant="secondary">
-            Edit budget
+            {t("editBudget")}
           </Button>
         ) : null
       }
       className="min-h-0"
-      description="Monthly budget and provider spend for this project. Checks pause once the budget is spent."
+      description={t("description")}
       id="provider-usage"
-      title="Provider spend"
+      title={t("title")}
     >
-      <p className="m-0 text-[12px] text-fg-muted">{periodLine(usage)}</p>
+      <p className="m-0 text-[12px] text-fg-muted">{periodLine(usage, locale, t)}</p>
       {banner ? (
         <div className="mt-4 flex items-start gap-2.5 rounded-control border border-red/30 bg-[color-mix(in_srgb,var(--red)_8%,transparent)] px-3.5 py-3 text-[12.5px] leading-5 text-red-text">
           <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={16} weight="regular" />
@@ -141,26 +186,30 @@ export function ProviderUsageCard({
               className="font-medium underline hover:no-underline"
               href={appPath(projectRef, "integrations")}
             >
-              Connection settings
+              {t("connectionSettings")}
             </Link>
           </span>
         </div>
       ) : null}
-      <section className="mt-4" aria-label="Budget used">
+      <section className="mt-4" aria-label={t("budgetUsed")}>
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <span className={metricEyebrowClassName}>Budget used</span>
+          <span className={metricEyebrowClassName}>{t("budgetUsed")}</span>
           {summary.tightest ? (
             <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-              tightest: {summary.tightest.provider} ·{" "}
-              {formatProviderBudgetUsedLabel(summary.tightest.usedPercent)}
+              {t("tightest", {
+                percent: formatLocalizedNumber(Math.round(summary.tightest.usedPercent), locale),
+                provider: summary.tightest.provider,
+              })}
             </span>
           ) : (
-            <span className="font-sans tabular-nums text-[11px] text-fg-muted">No budget set</span>
+            <span className="font-sans tabular-nums text-[11px] text-fg-muted">
+              {t("noBudget")}
+            </span>
           )}
         </div>
         {summary.maxUsedPercent == null ? null : (
           <SpendBar
-            ariaLabel="Budget used"
+            ariaLabel={t("budgetUsed")}
             className="mt-2 h-1.5 w-full overflow-hidden rounded-full"
             percent={summary.maxUsedPercent}
             roundedFill
@@ -168,13 +217,16 @@ export function ProviderUsageCard({
           />
         )}
         <p className="m-0 mt-2 font-sans tabular-nums text-[11px] text-fg-muted">
-          {projectionExplanation(usage)}
+          {projectionExplanation(usage, locale, t)}
         </p>
       </section>
       <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border pt-4 sm:grid-cols-3">
-        <Kpi label="Recorded spend" value={recordedSpend(summary.recorded)} />
-        <Kpi label="Provider requests (mo)" value={summary.requestCount.toLocaleString("en-US")} />
-        <Kpi label="Projected spend" value={projectionKpi(usage)} />
+        <Kpi label={t("recordedSpend")} value={recordedSpend(summary.recorded, locale, t)} />
+        <Kpi
+          label={t("providerRequests")}
+          value={formatLocalizedNumber(summary.requestCount, locale)}
+        />
+        <Kpi label={t("projectedSpend")} value={projectionKpi(usage, locale, t)} />
       </div>
       {connections.length ? (
         <ul className="m-0 mt-4 list-none border-t border-border p-0">
@@ -188,7 +240,7 @@ export function ProviderUsageCard({
         </ul>
       ) : (
         <p className="m-0 mt-4 border-t border-border pt-4 text-[12px] text-fg-muted">
-          Usage appears once a provider is connected.
+          {t("usageAfterConnect")}
         </p>
       )}
       {editOpen ? (

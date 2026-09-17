@@ -19,9 +19,9 @@ import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/csr/GoogleLogo";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { SearchInsightsGa4PropertyPicker } from "./SearchInsightsGa4PropertyPicker";
-import { SELECT_FAILED } from "./search-insights-copy";
 
 export type CancelGooglePropertySelectionAction = typeof cancelGooglePropertySelection;
 export type CompleteGooglePropertySelectionAction = typeof completeGooglePropertySelection;
@@ -51,6 +51,7 @@ export function SearchInsightsOauthReturn({
   syncPlan,
 }: Readonly<SearchInsightsOauthReturnProps>) {
   const router = useRouter();
+  const t = useTranslations("projectSearchInsights.copy");
   const isGa4 = setup.provider === "ga4";
   const [property, setProperty] = useState(
     setup.preferredProperty ?? setup.properties[0]?.value ?? "",
@@ -111,7 +112,7 @@ export function SearchInsightsOauthReturn({
         router.refresh();
       });
     } catch (error) {
-      setPropertyError(actionErrorMessage(error, SELECT_FAILED));
+      setPropertyError(actionErrorMessage(error, t("selectFailed")));
       setPending(false);
     }
   }
@@ -133,15 +134,14 @@ export function SearchInsightsOauthReturn({
             bordered
             className="mb-4"
             icon={GoogleLogo}
-            label="Google logo"
+            label={t("googleLogo")}
             variant="soft"
           />
           <h1 className="m-0 text-[22px] font-semibold tracking-[-0.35px] text-fg">
-            Pick the property to read
+            {t("gscSelectionTitle")}
           </h1>
           <p className="m-0 mt-2.5 text-[13.5px] leading-6 text-fg-muted">
-            Search Console reports per property. Choose one, and bisibility imports its history -
-            you can change it later without losing what has already been pulled.
+            {t("gscSelectionBody")}
           </p>
         </header>
       ) : null}

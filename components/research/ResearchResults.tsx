@@ -15,12 +15,12 @@ import {
 } from "@/lib/keyword-research/view-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
-import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
-import { type ReactNode, useMemo, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 import { ResearchDetailPanel } from "./ResearchDetailPanel";
 import { ResearchFiltersDrawer } from "./ResearchFiltersDrawer";
 import { ResearchResultsTable } from "./ResearchResultsTable";
+import { DiagnosticsBanner, skipNote, warningLabel } from "./research-diagnostics";
 import { deeperResearchCostCents } from "./research-results-model";
 import { rowsForResearchScope } from "./research-scope-capability";
 import type { ResearchAddDraft, ResearchSaveDraft } from "./research-workspace-model";
@@ -43,80 +43,10 @@ type ResearchResultsProps = {
   storedFreshness?: StoredResultFreshness;
   trackingMarketCount?: number;
 };
-const sourceLabels: Record<KeywordResearchSource, string> = {
-  idea: "ideas",
-  related: "related",
-  suggestion: "suggestions",
-};
-const RESEARCH_SCOPE_UNAVAILABLE_TOOLTIP =
-  "No search volume or difficulty data for this country and language. Rank tracking is unaffected.";
-function joinLabels(labels: string[]) {
-  if (labels.length <= 1) return labels[0] ?? "";
-  return `${labels.slice(0, -1).join(", ")} and ${labels.at(-1)}`;
-}
 function isInfoSkip(source: KeywordResearchSourceDiagnostic) {
   return (
     source.status === "skipped" &&
     (source.reason === "cost_limit" || source.reason === "result_limit")
-  );
-}
-function skipNote(input: {
-  okLabels: string[];
-  reason: "cost_limit" | "result_limit";
-  resultCount: number;
-  skippedLabels: string[];
-}) {
-  const results = `${input.resultCount} ${input.resultCount === 1 ? "result" : "results"}`;
-  const origin =
-    input.okLabels.length > 0
-      ? `Your ${results} came from ${joinLabels(input.okLabels)}`
-      : `Your ${results} ${input.resultCount === 1 ? "was" : "were"} already covered`;
-  const single = input.skippedLabels.length === 1;
-  const subject = `the ${joinLabels(input.skippedLabels)} ${single ? "source" : "sources"}`;
-  const outcome =
-    input.reason === "result_limit"
-      ? `${single ? "was" : "were"} not needed`
-      : `${single ? "was" : "were"} skipped to stay within the cost cap`;
-  return `${origin} - ${subject} ${outcome}, so ${single ? "it was" : "they were"} not charged.`;
-}
-function warningLabel(source: KeywordResearchSourceDiagnostic) {
-  const reason = (source.reason ?? "provider_error").replaceAll("_", " ");
-  const verb = source.status === "failed" ? "failed" : "was skipped";
-  return `The ${sourceLabels[source.source]} source ${verb} (${reason}) - results may be incomplete.`;
-}
-function DiagnosticsBanner({
-  children,
-  onDismiss,
-  tone,
-}: Readonly<{ children: ReactNode; onDismiss: () => void; tone: "note" | "warning" }>) {
-  const warning = tone === "warning";
-  return (
-    <div
-      className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-control border px-3 py-2 text-[11.5px] text-fg-muted ${
-        warning ? "border-yellow/40 bg-yellow/10" : "border-border bg-bg-sunken"
-      }`}
-      data-testid="research-diagnostics-banner"
-    >
-      {warning ? (
-        <WarningCircle className="shrink-0 text-yellow-text" size={14} weight="regular" />
-      ) : (
-        <Info className="shrink-0 text-fg-muted" size={14} weight="regular" />
-      )}
-      <div
-        className="flex min-w-0 flex-wrap gap-x-4 gap-y-1 py-0.5 leading-[1.45]"
-        data-testid="research-diagnostics-content"
-      >
-        {children}
-      </div>
-      <button
-        aria-label="Dismiss"
-        className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-control p-0 text-fg-muted hover:text-fg"
-        onClick={onDismiss}
-        type="button"
-      >
-        <X size={12} weight="regular" />
-      </button>
-    </div>
   );
 }
 
@@ -137,6 +67,13 @@ export function ResearchResults({
   storedFreshness,
   trackingMarketCount = 1,
 }: Readonly<ResearchResultsProps>) {
+  const t = useTranslations("projectResearch.diagnostics");
+  const format = useFormatter();
+  const sourceLabels: Record<KeywordResearchSource, string> = {
+    idea: t("ideas"),
+    related: t("related"),
+    suggestion: t("suggestions"),
+  };
   const [activeKeyword, setActiveKeyword] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<string[]>([]);
   const [filters, setFilters] = useState(emptyResearchFilters);
@@ -160,10 +97,12 @@ export function ResearchResults({
     if (skipped.length === 0) return [];
     return [
       skipNote({
+        format,
         okLabels,
         reason,
         resultCount: reason === "result_limit" ? requestedLimit : result.rows.length,
         skippedLabels: skipped.map((source) => sourceLabels[source.source]),
+        t,
       }),
     ];
   });
@@ -204,14 +143,22 @@ export function ResearchResults({
   return (
     <section className="grid gap-3">
       {warnings.length > 0 && !isDismissed("warning") ? (
-        <DiagnosticsBanner onDismiss={() => dismiss("warning")} tone="warning">
+        <DiagnosticsBanner
+          dismissLabel={t("dismiss")}
+          onDismiss={() => dismiss("warning")}
+          tone="warning"
+        >
           {warnings.map((source) => (
-            <span key={source.source}>{warningLabel(source)}</span>
+            <span key={source.source}>{warningLabel(source, sourceLabels, t)}</span>
           ))}
         </DiagnosticsBanner>
       ) : null}
       {!readOnly && skipNotes.length > 0 && !isDismissed("note") ? (
-        <DiagnosticsBanner onDismiss={() => dismiss("note")} tone="note">
+        <DiagnosticsBanner
+          dismissLabel={t("dismiss")}
+          onDismiss={() => dismiss("note")}
+          tone="note"
+        >
           {skipNotes.map((note) => (
             <span key={note}>{note}</span>
           ))}
@@ -284,7 +231,7 @@ export function ResearchResults({
       {!metricsAvailable ? (
         <p className="m-0 flex items-start gap-2 text-[12.5px] leading-5 text-fg-muted">
           <Info weight="regular" aria-hidden className="mt-0.5 shrink-0" size={14} />
-          {RESEARCH_SCOPE_UNAVAILABLE_TOOLTIP}
+          {t("unavailableTooltip")}
         </p>
       ) : null}
       <ResearchFiltersDrawer

@@ -16,20 +16,28 @@ export const pendingRunItems = {
   where: { status: { in: ["queued", "running"] } },
 } satisfies Prisma.RankCheckRunSelect["items"];
 
+export type RunScheduleTiming =
+  | { kind: "spread_across_day" }
+  | { kind: "spread_across_interval" }
+  | { kind: "starts_at_scheduled_time" }
+  | { kind: "starts_within_minutes"; minutes: number };
+
 export function runScheduleTiming(
   schedule: {
     frequency: string;
     timeOfDay: string | null;
     jitterMinutes: number;
   } | null,
-) {
+): RunScheduleTiming | null {
   if (!schedule) return null;
   if (schedule.timeOfDay === null && schedule.frequency !== "custom_cron") {
-    return schedule.frequency === "daily" ? "spread across the day" : "spread across the interval";
+    return schedule.frequency === "daily"
+      ? { kind: "spread_across_day" }
+      : { kind: "spread_across_interval" };
   }
   return schedule.jitterMinutes > 0
-    ? `starts within ${schedule.jitterMinutes} min of the scheduled time`
-    : "starts at the scheduled time";
+    ? { kind: "starts_within_minutes", minutes: schedule.jitterMinutes }
+    : { kind: "starts_at_scheduled_time" };
 }
 
 export function runStartFacts(run: {

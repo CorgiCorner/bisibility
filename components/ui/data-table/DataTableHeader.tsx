@@ -5,6 +5,7 @@ import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretUpIcon as CaretUp } from "@phosphor-icons/react/dist/csr/CaretUp";
 import { flexRender, type Header, type Table } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 import type { CSSProperties, ReactNode } from "react";
 import { DataTableResizeHandle } from "./DataTableResizeHandle";
 import { DataTableSelectionCheckbox } from "./DataTableSelectionCheckbox";
@@ -61,13 +62,16 @@ function SortableHeader<TRow extends DataTableRowBase>({
   onSortingChange: (sort: DataTableSort | null) => void;
   sorting: DataTableSort | null;
 }>) {
+  const t = useTranslations("shared.controls.dataTable");
   const definition = header.column.columnDef as DataTableColumn<TRow>;
   const field = definition.meta?.sortField ?? header.column.id;
   const active = sorting?.field === field ? sorting.direction : undefined;
   const next = nextDataTableSort(sorting, field, Boolean(definition.sortDescFirst));
   const action = next
-    ? `Sort ${label} ${next.direction === "asc" ? "ascending" : "descending"}`
-    : `Clear ${label} sorting`;
+    ? next.direction === "asc"
+      ? t("sortAscending", { column: label })
+      : t("sortDescending", { column: label })
+    : t("clearSort", { column: label });
   return (
     <button
       aria-label={action}
@@ -96,6 +100,7 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
   sourceSizing,
   table,
 }: Readonly<DataTableHeaderProps<TRow>>) {
+  const t = useTranslations("shared.controls.dataTable");
   const headerGroup = table.getHeaderGroups().at(-1);
   const headerSelection = dataTableHeaderSelectionState(rows, selection ?? new Set(), selectable);
   if (!headerGroup) return null;
@@ -156,7 +161,7 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
               {header.column.id === DATA_TABLE_SELECTION_COLUMN_ID ? (
                 <DataTableSelectionCheckbox
                   {...headerSelection}
-                  ariaLabel="Select visible rows"
+                  ariaLabel={t("selectVisibleRows")}
                   onChange={
                     onSelectionChange
                       ? (checked) =>

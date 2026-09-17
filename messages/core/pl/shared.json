@@ -1,0 +1,570 @@
+{
+  "shared": {
+    "language": {
+      "english": "angielski",
+      "label": "Język"
+    },
+    "analyticsConsent": {
+      "actions": {
+        "acceptAll": "Akceptuj wszystkie",
+        "rejectAll": "Odrzuć wszystkie",
+        "save": "Zapisz",
+        "settings": "Ustawienia"
+      },
+      "banner": {
+        "ariaLabel": "Zgoda na analitykę",
+        "body": "Liczymy wizyty bez plików cookie. Opcjonalne analityczne pliki cookie i nagrania pomagają nam ulepszać bisibility.",
+        "saveError": "Nie udało się zapisać wyboru. Wyłączone opcje pozostają wyłączone. Spróbuj ponownie.",
+        "update": "Nagrania mogą obejmować ekrany aplikacji. Sprawdź swój wybór. Analityka pozostaje bez zmian."
+      },
+      "modal": {
+        "alwaysOn": "Zawsze włączone",
+        "essential": {
+          "body": "Wymagane do logowania, bezpieczeństwa i zapisanych ustawień.",
+          "title": "Niezbędne"
+        },
+        "footer": "Twój wybór zapisujemy na 6 miesięcy. Możesz go zmienić w każdej chwili w sekcji Wybory prywatności w stopce.",
+        "intro": "Wybierz osobno analitykę i nagrania. Niezbędne pliki cookie pozostają włączone.",
+        "privacyPolicy": "Polityka prywatności",
+        "replay": {
+          "body": "Opcjonalne nagrania pomagają nam ulepszać stronę i konfigurację. W aplikacji nagrania mogą obejmować pierwsze sprawdzenie i monitor pozycji. Pola formularzy i dane projektu są maskowane. Ekrany logowania, konta i płatności, dane uwierzytelniające oraz dane z Google są wyłączone.",
+          "title": "Nagrania"
+        },
+        "saveError": "Nie udało się zapisać zmian. Wyłączone opcje pozostają wyłączone. Spróbuj ponownie.",
+        "usage": {
+          "body": "Strony i kroki konfiguracji, z których korzystasz, łączone między wizytami analitycznym plikiem cookie.",
+          "title": "Analityka użycia"
+        },
+        "visitCounts": "Jeśli odrzucisz opcjonalną analitykę, nadal będziemy liczyć wizyty – bez plików cookie i bez trwałego profilu."
+      },
+      "title": "Wybory prywatności"
+    },
+    "errors": {
+      "genericFallback": "Nie udało się wykonać tej operacji.",
+      "rateLimited": "Zbyt wiele żądań. Spróbuj ponownie później.",
+      "serverComponentDigest": "Sprawdzenie nie powiodło się po naszej stronie (ref. {digest}). Ponów za chwilę.",
+      "staleDeployment": "bisibility zostało zaktualizowane, gdy ta strona była otwarta. Odśwież aplikację, aby kontynuować. Niezapisane zmiany zostaną utracone.",
+      "verificationFailed": "Weryfikacja nie powiodła się. Spróbuj ponownie."
+    },
+    "emergencyRecovery": {
+      "error": {
+        "backToApp": "Wróć do aplikacji",
+        "description": "Monitor pozycji nie zdołał dokończyć tego żądania. Spróbuj ponownie albo wróć do aplikacji na czas przywracania tej ścieżki.",
+        "retry": "Spróbuj ponownie",
+        "status": "500 – błąd serwera",
+        "title": "Monitor pozycji napotkał błąd"
+      },
+      "notFound": {
+        "backToApp": "Wróć do aplikacji",
+        "description": "Ta strona mogła zostać przeniesiona albo nigdy nie istniała.",
+        "status": "404 – nie znaleziono",
+        "title": "Ta strona jest niedostępna"
+      }
+    },
+    "appError": {
+      "cloudMessage": "Aplikacja działa dalej, więc Twoje dane są bezpieczne. Otwórz widok jeszcze raz – jeśli błąd się powtarza, przekaż numer referencyjny błędu do <support>wsparcia</support>.",
+      "copied": "Skopiowano",
+      "copyUrl": "Kopiuj URL",
+      "diagnostics": {
+        "copied": "Skopiowano",
+        "copyDetails": "Kopiuj szczegóły",
+        "hideTrace": "Ukryj ślad",
+        "noReference": "brak numeru referencyjnego",
+        "publicReview": "Te szczegóły mogą zawierać ścieżkę Twojego projektu. Sprawdź je, zanim udostępnisz je publicznie.",
+        "showTrace": "Pokaż ślad",
+        "stackTrace": "Ślad stosu"
+      },
+      "goToOverview": "Przejdź do przeglądu",
+      "retrying": "Ponawianie",
+      "selfHostMessage": "Aplikacja działa dalej, więc Twoje dane są bezpieczne. Otwórz widok jeszcze raz – jeśli błąd się powtarza, skopiuj szczegóły i <issue>zgłoś problem</issue>.",
+      "title": "Ten widok przestał się renderować",
+      "tryAgain": "Spróbuj ponownie",
+      "urlCopied": "Skopiowano URL",
+      "viewError": "Błąd widoku"
+    },
+    "rankPreflight": {
+      "budget": "Budżet",
+      "budgetBlocked": "Ten przebieg jest wstrzymany, ponieważ osiągnięto limit budżetu.",
+      "cancel": "Anuluj",
+      "configuredProvider": "Jako dostawcę głównego ustawiono {provider}.",
+      "couldNotLoad": "Nie udało się wczytać szacunku przebiegu. Spróbuj ponownie.",
+      "couldNotRefresh": "Nie udało się zaktualizować szacunku. Spróbuj ponownie.",
+      "couldNotStart": "Nie udało się uruchomić tego przebiegu. Spróbuj ponownie.",
+      "depth": "Głębokość",
+      "depthAria": "Głębokość wyników",
+      "devices": "{count, plural, one {# urządzenie} few {# urządzenia} many {# urządzeń} other {# urządzenia}}",
+      "duplicate": "Przebieg o tym zakresie już trwa. Uruchomienie teraz oznaczałoby podwójną opłatę za te same pozycje.",
+      "editBudget": "Edytuj budżet",
+      "noProvider": "Brak dostawcy",
+      "noProviderBlocked": "Nie połączono żadnego dostawcy, więc nie ma dokąd wysłać tych celów. Własny klucz, rozliczany bezpośrednio z Tobą.",
+      "openIntegrations": "Otwórz integracje",
+      "openRun": "Otwórz przebieg",
+      "pricePerTarget": "cena za cel",
+      "primaryProvider": "Dostawca główny",
+      "primaryProviderAria": "Dostawca główny",
+      "previewChanged": "Szczegóły przebiegu się zmieniły. Odśwież, aby sprawdzić aktualny szacunek.",
+      "runInProgress": "Przebieg w toku",
+      "runOptions": "Opcje przebiegu",
+      "runScope": "Zakres przebiegu",
+      "markets": "{count, plural, one {# rynek} few {# rynki} many {# rynków} other {# rynku}}",
+      "startRun": "Uruchom przebieg",
+      "sampleProject": "Projekty przykładowe nie wykonują prawdziwych sprawdzeń.",
+      "scopeDescription": "Sprawdza {count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} na rynku {market}, zanim cokolwiek trafi do dostawcy.",
+      "scopeEquation": "{keywords, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} · {market} · {devices} = {targets, plural, one {# cel} few {# cele} many {# celów} other {# celu}}",
+      "scopeMany": "Sprawdź {count, plural, one {# wybrane słowo kluczowe} few {# wybrane słowa kluczowe} many {# wybranych słów kluczowych} other {# wybranego słowa kluczowego}} na rynku {market}",
+      "scopeOne": "Sprawdź {keyword} na rynku {market}",
+      "scopeSubtitle": "Sprawdź zakres na rynku {market} przed uruchomieniem.",
+      "starting": "Uruchamianie…",
+      "topDepth": "Top {depth, number}"
+    },
+    "globalError": {
+      "description": "Aplikacja nie mogła wyrenderować tej strony. Odśwież, aby spróbować ponownie.",
+      "retry": "Odśwież aplikację",
+      "title": "Coś poszło nie tak"
+    },
+    "markets": {
+      "add": "Dodaj {count, plural, one {rynek} few {# rynki} many {# rynków} other {# rynku}}",
+      "addMarkets": "Dodaj rynki",
+      "allLanguages": "Wszystkie języki",
+      "cancel": "Anuluj",
+      "catalog": "Katalog",
+      "desktop": "Komputer",
+      "estimateProviderCost": "Oszacuj koszt dostawcy",
+      "languages": "Języki",
+      "location": "Lokalizacja",
+      "locationCity": "Miasto",
+      "locationClearSearch": "Wyczyść wyszukiwanie lokalizacji",
+      "locationCountries": "Kraje",
+      "locationNoMatching": "Brak pasujących lokalizacji. Spróbuj innej nazwy lub wybierz kraj.",
+      "locationRegion": "Region",
+      "locationRegionsAndCities": "Regiony i miasta",
+      "locationSearching": "Wyszukiwanie lokalizacji…",
+      "markets": "Rynki",
+      "mobile": "Telefon",
+      "moreLanguages": "Więcej języków",
+      "newMarket": "Nowy rynek",
+      "noMatchingLanguages": "Żaden obsługiwany język nie pasuje do tego wyszukiwania.",
+      "noVolume": "brak wolumenu/KD",
+      "researchUnavailable": "{language}: brak danych o liczbie wyszukiwań i trudności dla tego rynku – pozycje są śledzone normalnie.",
+      "searchAllLanguages": "Szukaj wśród wszystkich obsługiwanych języków",
+      "searchMarkets": "Szukaj rynków…",
+      "searchMoreLanguages": "Szukaj więcej języków",
+      "selected": "Wybrano {count, plural, one {# rynek} few {# rynki} many {# rynków} other {# rynku}}",
+      "suggestedLanguages": "Sugerowane języki",
+      "suggestedOnly": "Tylko sugerowane",
+      "tracked": "Śledzone",
+      "trackedMarkets": "Śledzone rynki"
+    },
+    "humanVerification": {
+      "ariaLabel": "Weryfikacja, czy jesteś człowiekiem",
+      "complete": "Weryfikacja zakończona.",
+      "expired": "Weryfikacja wygasła. Wykonaj ją ponownie.",
+      "failed": "Weryfikacja nie powiodła się. Spróbuj ponownie.",
+      "unavailable": "Weryfikacja nie jest teraz dostępna."
+    },
+    "scheduleName": {
+      "custom": "Niestandardowy \u00b7 {expression}",
+      "daily": "Codziennie {time}",
+      "monthly": "Miesięcznie \u00b7 {day} {time}",
+      "noFixedTime": "Bez stałej godziny",
+      "weekly": "Co tydzień \u00b7 {weekday} {time}"
+    },
+    "operationRow": {
+      "days": "{count, plural, one {dzień} few {dni} many {dni} other {dnia}}",
+      "actions": {
+        "cancel": {
+          "label": "Anuluj",
+          "tip": "Zatrzymuje sprawdzenia, które nie zostały jeszcze wysłane. Sprawdzenia przekazane już dostawcy kończą się i są rozliczane."
+        },
+        "pause": {
+          "label": "Wstrzymaj",
+          "tip": "Wstrzymuje import po bieżącym miesiącu. Nic, co już zaimportowano, nie zostaje odrzucone."
+        },
+        "reconnect": {
+          "label": "Połącz ponownie",
+          "tip": "Połącz ponownie Search Console dla tej usługi."
+        },
+        "resume": {
+          "label": "Wznów",
+          "tip": "Przywraca ten import do zapisanej kolejki."
+        },
+        "retry": {
+          "label": "Ponów",
+          "tip": "Ponawia dokładnie tę operację z jej zapisanego stanu."
+        }
+      },
+      "etaMinutes": "pozostało ~{count, plural, one {# min} few {# min} many {# min} other {# min}}",
+      "etaSeconds": "pozostało ~{count, plural, one {# s} few {# s} many {# s} other {# s}}",
+      "items": "elementy",
+      "nextCheck": "{kind} sprawdzenie {when}",
+      "nextCheckFirst": "Pierwsze",
+      "nextCheckNext": "Następne",
+      "provider": "Dostawca",
+      "relative": {
+        "dueNow": "już teraz",
+        "inDays": "za {count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+        "inHours": "za {count, plural, one {# godzinę} few {# godziny} many {# godzin} other {# godziny}}",
+        "inMinutes": "za {count, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}"
+      },
+      "progress": "{title}: przetworzono {processed, number} z {total, number} ({unit}), ukończono {completed, number}, nie powiodło się {failed, number}, odroczono {deferred, number}",
+      "states": {
+        "budget": "Osiągnięto miesięczny limit{hasResumeDate, select, no { – pozostałe elementy są pomijane.} other { – reszta jest pomijana do {resumeDate}.}}",
+        "cancelled": "{hasActor, select, no {Anulowano – zachowano to, co zdążyło się ukończyć.} other {Anulowano przez: {actor} – zachowano to, co zdążyło się ukończyć.}}",
+        "cancelling": "Anulowanie – sprawdzenia wysłane już do dostawcy zostaną dokończone.",
+        "deferred": "Odroczono z powodu limitów zapytań dostawcy – zostaną ponowione przy następnym zaplanowanym przebiegu.",
+        "failed": "Nic nie zostało ukończone – wszystkie żądania odrzucił dostawca {provider}.",
+        "notConfirmed": "Przebieg zakończył się, ale jego wynik nie został potwierdzony.",
+        "partial": "Zakończono z {failed, plural, one {# błędem} few {# błędami} many {# błędami} other {# błędu}} – ponowienie wyśle tylko te pozycje i nic więcej.",
+        "queued": "Oczekiwanie na rozpoczęcie pierwszego sprawdzenia.",
+        "quota": "Osiągnięto limit u dostawcy {provider}. Import wznowi się automatycznie, gdy będzie to możliwe.",
+        "retrying": "Ponawianie nieudanych sprawdzeń{hasEta, select, no {.} other { – {eta}.}}",
+        "running": "Dostawca {provider} zwraca wyniki{hasEta, select, no {.} other { – {eta}.}}",
+        "succeeded": "Wszystkie elementy ukończone.",
+        "worker": "Status workera importu jest opóźniony. Odśwież, aby sprawdzić ponownie."
+      }
+    },
+    "tokens": {
+      "githubRepository": "Repozytorium GitHub",
+      "githubStars": "Gwiazdki w serwisie GitHub: {count, number}",
+      "remove": "Usuń {value}"
+    },
+    "appNotFound": {
+      "backToProjects": "Wróć do swoich projektów",
+      "description": "Ten projekt nie istnieje albo Twoje konto nie należy do jego zespołu.",
+      "descriptionSignedIn": "Zalogowano jako {email}. Ten projekt nie istnieje albo to konto nie należy do jego zespołu. Jeśli link przysłał Ci ktoś z zespołu, mógł korzystać z innego konta niż to, którego używasz tutaj.",
+      "footnote": "404 – nie znaleziono",
+      "pageTitle": "Ta strona jest niedostępna",
+      "signInDifferentAccount": "Zaloguj się na inne konto",
+      "title": "Strona niedostępna"
+    },
+    "projectItemNotFound": {
+      "backToProjects": "Wróć do swoich projektów",
+      "description": "Ten projekt jest otwarty, ale strona, do której prowadzi link, nie należy do niego. Element mógł zostać usunięty albo adres jest nieaktualny.",
+      "footnote": "404 – nie znaleziono",
+      "pageTitle": "Nie udało się znaleźć tej strony",
+      "title": "Nie znaleziono strony"
+    },
+    "siteNotFound": {
+      "backToApp": "Wróć do aplikacji",
+      "description": "Sprawdziliśmy każdy adres URL, jaki udało się znaleźć, a ten nie zajmuje żadnej pozycji. Mógł zostać przeniesiony albo nigdy nie istniał.",
+      "docsLink": "Nadal nie działa? Przeczytaj dokumentację",
+      "goToHomepage": "Przejdź na stronę główną",
+      "goToSignIn": "Przejdź do logowania",
+      "kicker": "404 – nie znaleziono",
+      "statusLabel": "HTTP 404",
+      "terminalNote": "spróbuj jednego z tych adresów",
+      "title": "Tej strony nie ma w indeksie"
+    },
+    "setupVideo": {
+      "fallback": "Twoja przeglądarka nie obsługuje wideo.",
+      "open": "Otwórz wideo"
+    },
+    "firstCheck": {
+      "action": "Uruchom pierwsze sprawdzenie",
+      "cancel": "Anuluj",
+      "confirm": "Potwierdź i uruchom",
+      "loading": "Wczytywanie szczegółów przebiegu…",
+      "manualRunDescription": "Ten przebieg ręczny uruchamia sprawdzenia od razu, poza harmonogramem.",
+      "providerOrder": "Kolejność dostawców zapasowych",
+      "providerOrderAriaLabel": "Kolejność zapasowych dostawców SERP",
+      "retry": "Ponów",
+      "starting": "Uruchamianie…",
+      "title": "Uruchom pierwsze sprawdzenie",
+      "unavailable": "Szczegóły przebiegu są niedostępne.",
+      "errors": {
+        "checkInProgress": "Sprawdzenie pozycji dla tego słowa kluczowego już trwa.",
+        "keywordArchived": "To słowo kluczowe nie jest już dostępne do sprawdzenia pozycji.",
+        "loadPlan": "Nie udało się wczytać szczegółów przebiegu.",
+        "marketInactive": "Ten rynek jest nieaktywny i nie może wykonywać sprawdzeń pozycji.",
+        "start": "Nie udało się uruchomić pierwszego sprawdzenia pozycji."
+      },
+      "notices": {
+        "budgetExhausted": "Osiągnięto miesięczny budżet sprawdzeń pozycji.",
+        "noneReady": "Żadne słowo kluczowe nie jest gotowe do pierwszego sprawdzenia.",
+        "providerMissing": "Połącz dostawcę SERP, zanim uruchomisz sprawdzenia.",
+        "raiseBudget": "Zwiększ budżet",
+        "sampleProject": "Projekty przykładowe nie wykonują prawdziwych sprawdzeń."
+      },
+      "scope": {
+        "allReady": "Wszystkie gotowe ({count, number})",
+        "budget": "Budżet",
+        "depth": "Głębokość",
+        "depthValue": "Top {value, number}",
+        "desktop": "Komputer",
+        "device": "Urządzenie",
+        "engine": "Wyszukiwarka",
+        "google": "Google",
+        "firstKeyword": "Pierwsze słowo kluczowe",
+        "frequency": "Częstotliwość",
+        "location": "Lokalizacja",
+        "mobile": "Telefon",
+        "runAriaLabel": "Zakres przebiegu – {count, number} {count, plural, one {gotowe słowo kluczowe} few {gotowe słowa kluczowe} many {gotowych słów kluczowych} other {gotowego słowa kluczowego}}",
+        "title": "Zakres sprawdzenia",
+        "queueDetail": "Pierwsze słowo kluczowe rusza od razu; pozostałe {count, number} {count, plural, one {słowo kluczowe trafia} few {słowa kluczowe trafiają} many {słów kluczowych trafia} other {słowa kluczowego trafia}} do kolejki sprawdzeń."
+      },
+      "frequency": {
+        "custom_cron": "Własny cron",
+        "daily": "Codziennie",
+        "manual": "Ręcznie",
+        "monthly": "Co miesiąc",
+        "paused": "Wstrzymano",
+        "weekly": "Co tydzień"
+      },
+      "cost": {
+        "budgetWithCap": "{spent} z {cap}",
+        "budgetWithoutCap": "{spent} w tym miesiącu",
+        "estimated": "Szacowany koszt",
+        "estimatedValue": "~{amount}",
+        "lessThanOneCent": "< {amount}"
+      }
+    },
+    "controls": {
+      "alert": {
+        "dismiss": "Zamknij alert"
+      },
+      "confirmation": {
+        "cancel": "Anuluj",
+        "failure": "Nie udało się wykonać tej operacji. Spróbuj ponownie.",
+        "typeToConfirm": "Wpisz <strong>{word}</strong>, aby potwierdzić",
+        "working": "Przetwarzanie…",
+        "clearTargetUrlsBody": "Usuwa skonfigurowany docelowy adres URL z wybranych słów kluczowych. Historia pozycji pozostaje bez zmian.",
+        "clearTargetUrlsDangerLabel": "Wyczyść docelowe adresy URL",
+        "clearTargetUrlsTitle": "Wyczyścić docelowe adresy URL?",
+        "clearTargetUrlsToastMessage": "Wyczyszczono docelowe adresy URL",
+        "deactivateAccountBody": "Dezaktywacja zablokuje logowanie i unieważni wszystkie sesje. Wstrzyma zaplanowane sprawdzenia należące do tego konta. Wszystkie jego osobiste tokeny dostępu zostaną trwale unieważnione. Administratorzy instancji są chronieni.",
+        "deactivateAccountDangerLabel": "Dezaktywuj konto",
+        "deactivateAccountTitle": "Dezaktywować konto?",
+        "deactivateAccountToastMessage": "Zgłoszono operację na koncie",
+        "deleteAccountBody": "Trwale usuwa Twoje konto, Twoje projekty i wszystko, co jest w nich śledzone. Tej operacji nie można cofnąć.",
+        "deleteAccountDangerLabel": "Usuń konto",
+        "deleteAccountTitle": "Usunąć konto?",
+        "deleteAccountToastMessage": "Usunięto konto",
+        "deleteBulkBody": "Usuwa wybrane słowa kluczowe wraz z ich historią. Tej operacji nie można cofnąć.",
+        "deleteBulkDangerLabel": "Usuń słowa kluczowe",
+        "deleteBulkTitle": "Usunąć wybrane słowa kluczowe?",
+        "deleteBulkToastMessage": "Usunięto wybrane słowa kluczowe",
+        "deleteKeywordBody": "Przerywa śledzenie tego słowa kluczowego i usuwa jego historię pozycji. Tej operacji nie można cofnąć.",
+        "deleteKeywordDangerLabel": "Usuń słowo kluczowe",
+        "deleteKeywordTitle": "Usunąć słowo kluczowe?",
+        "deleteKeywordToastMessage": "Usunięto słowo kluczowe",
+        "deleteProjectBody": "Trwale usuwa ten projekt oraz wszystkie śledzone słowa kluczowe, historię i klucze API. Tej operacji nie można cofnąć.",
+        "deleteProjectDangerLabel": "Usuń projekt",
+        "deleteProjectTitle": "Usunąć projekt?",
+        "deleteProjectToastMessage": "Usunięto projekt",
+        "deleteRunBody": "Usunąć ten przebieg z historii? Pozycje słów kluczowych i zapisane wydatki u dostawcy zostają zachowane. Tej operacji nie można cofnąć.",
+        "deleteRunDangerLabel": "Usuń przebieg",
+        "deleteRunTitle": "Usunąć przebieg?",
+        "deleteRunToastMessage": "Usunięto przebieg",
+        "deleteWebhookEndpointBody": "Wstrzymuje przyszłe dostarczenia do tego punktu końcowego i usuwa jego powiązanie z historią dostarczeń. Tej operacji nie można cofnąć.",
+        "deleteWebhookEndpointDangerLabel": "Usuń punkt końcowy",
+        "deleteWebhookEndpointTitle": "Usunąć punkt końcowy webhooka?",
+        "deleteWebhookEndpointToastMessage": "Usunięto punkt końcowy webhooka",
+        "reactivateAccountBody": "Ponownie zezwala na logowanie. Wcześniej unieważnione osobiste tokeny dostępu pozostają unieważnione i trzeba utworzyć je od nowa. Zaplanowane sprawdzenia wrócą do harmonogramu przy najbliższym uzgodnieniu.",
+        "reactivateAccountDangerLabel": "Aktywuj konto ponownie",
+        "reactivateAccountTitle": "Aktywować konto ponownie?",
+        "reactivateAccountToastMessage": "Zgłoszono operację na koncie",
+        "removeIntegrationBody": "Sprawdzenia pozycji zostaną wstrzymane, dopóki nie połączysz innego dostawcy SERP. Zapisane dane uwierzytelniające zostaną usunięte z tej instancji.",
+        "removeIntegrationDangerLabel": "Odłącz dostawcę",
+        "removeIntegrationTitle": "Odłączyć dostawcę?",
+        "removeIntegrationToastMessage": "Odłączono dostawcę",
+        "removeSampleDataBody": "Usuwa projekt przykładowy i wygenerowane dla niego dane demonstracyjne. Twoje pozostałe projekty pozostają bez zmian.",
+        "removeSampleDataDangerLabel": "Usuń dane przykładowe",
+        "removeSampleDataTitle": "Usunąć dane przykładowe?",
+        "removeSampleDataToastMessage": "Usunięto dane przykładowe",
+        "removeSearchConsoleConnectionBody": "Usuwa z tego projektu zapisane połączenie i tokeny autoryzacji. Zaimportowane wcześniej dane z Search Console pozostają dostępne.",
+        "removeSearchConsoleConnectionDangerLabel": "Odłącz Search Console",
+        "removeSearchConsoleConnectionTitle": "Odłączyć Search Console?",
+        "removeSearchConsoleConnectionToastMessage": "Odłączono Search Console",
+        "removeTeamMemberBody": "Usuwa tę osobę z projektu. Jej konto i dostęp do innych projektów pozostają bez zmian.",
+        "removeTeamMemberDangerLabel": "Usuń członka z projektu",
+        "removeTeamMemberTitle": "Usunąć członka z projektu?",
+        "removeTeamMemberToastMessage": "Usunięto członka z projektu",
+        "resetAccountLimitsBody": "Czyści liczniki limitów zapytań tego konta. Miesięczne wydatki liczone są w oknie kroczącym i nie można ich zresetować.",
+        "resetAccountLimitsDangerLabel": "Zresetuj limity zapytań",
+        "resetAccountLimitsTitle": "Zresetować limity zapytań?",
+        "resetAccountLimitsToastMessage": "Zgłoszono reset limitów zapytań",
+        "revokeKeyBody": "Każda aplikacja lub skrypt korzystające z tego klucza natychmiast przestaną działać. Wygeneruj nowy klucz, aby przywrócić dostęp.",
+        "revokeKeyDangerLabel": "Unieważnij klucz",
+        "revokeKeyTitle": "Unieważnić klucz API?",
+        "revokeKeyToastMessage": "Unieważniono klucz API",
+        "revokeMigrationTokenBody": "Unieważnia bieżący token. Każdy transfer, który go używa, przestanie działać.",
+        "revokeMigrationTokenDangerLabel": "Unieważnij token",
+        "revokeMigrationTokenTitle": "Unieważnić token migracji?",
+        "revokeMigrationTokenToastMessage": "Unieważniono token migracji",
+        "rollMigrationTokenBody": "Unieważnia bieżący token. Każdy transfer, który go używa, przestanie działać.",
+        "rollMigrationTokenDangerLabel": "Wymień token",
+        "rollMigrationTokenTitle": "Wymienić token?",
+        "rollMigrationTokenToastMessage": "Wymieniono token",
+        "transferProjectOwnershipBody": "Czyni tę osobę właścicielem projektu. Twoja rola w projekcie zmieni się na administratora, a ponownie przenieść własność będzie mógł tylko nowy właściciel.",
+        "transferProjectOwnershipDangerLabel": "Przenieś własność",
+        "transferProjectOwnershipTitle": "Przenieść własność projektu?",
+        "transferProjectOwnershipToastMessage": "Przeniesiono własność projektu"
+      },
+      "copy": {
+        "action": "Kopiuj",
+        "copied": "Skopiowano!",
+        "failed": "Nie udało się skopiować",
+        "id": "Kopiuj ID"
+      },
+      "calendar": {
+        "april": "kwiecień",
+        "august": "sierpień",
+        "chooseDate": "Wybierz datę",
+        "december": "grudzień",
+        "february": "luty",
+        "friday": "pt",
+        "january": "styczeń",
+        "july": "lipiec",
+        "june": "czerwiec",
+        "march": "marzec",
+        "may": "maj",
+        "monthYear": "{month} {year}",
+        "monday": "pn",
+        "nextMonth": "Następny miesiąc",
+        "november": "listopad",
+        "october": "październik",
+        "previousMonth": "Poprzedni miesiąc",
+        "saturday": "so",
+        "september": "wrzesień",
+        "sunday": "nd",
+        "thursday": "cz",
+        "tuesday": "wt",
+        "wednesday": "śr"
+      },
+      "zonedTime": {
+        "plain": "{time}",
+        "timeZone": "{time} ({timeZone})",
+        "yourTime": "{time} (Twój czas)"
+      },
+      "checkStatus": {
+        "completed": "Zakończono",
+        "failed": "Nie powiodło się",
+        "pending": "Oczekuje",
+        "running": "W toku"
+      },
+      "countrySelect": {
+        "catalog": "Wszystkie kraje",
+        "noResults": "Żaden kraj nie pasuje do tego wyszukiwania.",
+        "searchPlaceholder": "Szukaj krajów",
+        "tracked": "Śledzone kraje"
+      },
+      "dataTable": {
+        "clearSort": "Wyczyść sortowanie – {column}",
+        "column": "Kolumna",
+        "columns": "Kolumny",
+        "compact": "Zwarta",
+        "comfortable": "Luźna",
+        "density": "Gęstość tabeli",
+        "hideColumn": "Ukryj kolumnę {column}",
+        "nextPage": "Następna strona",
+        "number": "{value, number}",
+        "pageRange": "{start, number}–{end, number} z {total, number}",
+        "previousPage": "Poprzednia strona",
+        "resizeColumn": "Zmień szerokość kolumny {column}",
+        "resizeInstructions": "Przeciągnij, aby zmienić szerokość. Kliknij dwukrotnie, aby zresetować.",
+        "resetLayout": "Zresetuj układ",
+        "rows": "Wiersze",
+        "rowsPerPage": "Wierszy na stronę",
+        "selectRow": "Zaznacz wiersz {row}",
+        "selectVisibleRows": "Zaznacz widoczne wiersze",
+        "collapseRow": "Zwiń wiersz {row}",
+        "expandRow": "Rozwiń wiersz {row}",
+        "showColumn": "Pokaż kolumnę {column}",
+        "sortAscending": "Sortuj rosnąco – {column}",
+        "sortDescending": "Sortuj malejąco – {column}",
+        "standard": "Standardowa",
+        "toggleColumns": "Przełącz kolumny"
+      },
+      "drawer": {
+        "close": "Zamknij panel boczny"
+      },
+      "emailCapture": {
+        "emailAddress": "Adres e-mail",
+        "joining": "Dołączanie…",
+        "submitFailed": "Nie udało się teraz dołączyć.",
+        "validation": {
+          "emailInvalid": "Podaj prawidłowy adres e-mail.",
+          "emailTooLong": "Podaj adres e-mail krótszy niż {maximum, number} znaków.",
+          "workEmail": "Użyj służbowego adresu e-mail."
+        }
+      },
+      "expiryChoice": {
+        "label": "Wygasa"
+      },
+      "menuMultiSelect": {
+        "noResults": "Brak wyników",
+        "searchPlaceholder": "Szukaj…",
+        "selected": "Wybrano {count, plural, one {#} few {#} many {#} other {#}}"
+      },
+      "menuSelect": {
+        "moreOptionsHint": "Dostępnych jest więcej opcji. Zacznij pisać, aby wyszukać.",
+        "noResults": "Brak wyników",
+        "searchPlaceholder": "Szukaj…"
+      },
+      "modal": {
+        "close": "Zamknij okno"
+      },
+      "password": {
+        "hide": "Ukryj hasło",
+        "show": "Pokaż hasło"
+      },
+      "sheet": {
+        "close": "Zamknij panel"
+      },
+      "status": {
+        "blocked": "Zablokowano",
+        "cancelled": "Anulowano",
+        "cancelling": "Anulowanie",
+        "completed": "Zakończono",
+        "deferred": "Odroczono",
+        "fallback": "Status",
+        "notConfirmed": "Niepotwierdzone",
+        "partial": "Częściowo",
+        "primary": "Główny",
+        "queued": "W kolejce",
+        "running": "W toku",
+        "skipped": "Pominięto",
+        "succeeded": "Powiodło się",
+        "connected": "Połączono",
+        "needsReauth": "Wymagane ponowne połączenie",
+        "ready": "Gotowe",
+        "planned": "Zaplanowano",
+        "optional": "Opcjonalne",
+        "success": "Sukces",
+        "failed": "Nie powiodło się",
+        "matches": "Zgodny URL",
+        "wrongUrl": "Inny URL",
+        "disabled": "Wyłączone",
+        "create": "Utworzenie",
+        "update": "Aktualizacja",
+        "delete": "Usunięcie",
+        "import": "Import",
+        "export": "Eksport",
+        "login": "Logowanie"
+      },
+      "tagAdder": {
+        "action": "Dodaj tag",
+        "cancel": "Anuluj dodawanie tagu",
+        "enter": "Enter",
+        "input": "Nazwa nowego tagu",
+        "validation": {
+          "required": "Podaj nazwę tagu.",
+          "tooLong": "Nazwa tagu może mieć maksymalnie {maximum, number} znaków."
+        }
+      },
+      "theme": {
+        "dark": "Ciemny",
+        "label": "Motyw",
+        "light": "Jasny",
+        "system": "Systemowy"
+      },
+      "toast": {
+        "undo": "Cofnij",
+        "undoFailed": "Nie udało się cofnąć. Spróbuj ponownie."
+      },
+      "toolbarSearch": {
+        "clear": "Wyczyść {label}"
+      }
+    }
+  }
+}

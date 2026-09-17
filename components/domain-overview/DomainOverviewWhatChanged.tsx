@@ -6,10 +6,9 @@ import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/csr/Arrow
 import { ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/csr/ArrowUp";
 import { MinusCircleIcon as MinusCircle } from "@phosphor-icons/react/dist/csr/MinusCircle";
 import { PlusCircleIcon as PlusCircle } from "@phosphor-icons/react/dist/csr/PlusCircle";
+import { useLocale, useTranslations } from "next-intl";
 import styles from "./DomainOverviewWhatChanged.module.css";
 import { sourceDateLabel } from "./domain-overview-metrics";
-
-const number = new Intl.NumberFormat("en-US");
 
 export function DomainOverviewWhatChanged({
   dateFormat,
@@ -20,26 +19,53 @@ export function DomainOverviewWhatChanged({
   metrics: DomainRankMetrics;
   sourceSnapshotAt: string | null;
 }>) {
+  const locale = useLocale();
+  const t = useTranslations("projectDomainOverview.workspace.ui");
+  const number = new Intl.NumberFormat(locale);
   const max = Math.max(1, metrics.isNew, metrics.isLost, metrics.isUp, metrics.isDown);
   const rows = [
-    { color: "green" as const, icon: PlusCircle, label: "New", sign: "+", value: metrics.isNew },
-    { color: "red" as const, icon: MinusCircle, label: "Lost", sign: "−", value: metrics.isLost },
-    { color: "green" as const, icon: ArrowUp, label: "Improved", sign: "", value: metrics.isUp },
-    { color: "red" as const, icon: ArrowDown, label: "Declined", sign: "", value: metrics.isDown },
+    {
+      color: "green" as const,
+      icon: PlusCircle,
+      label: t("movementNew"),
+      sign: "+",
+      value: metrics.isNew,
+    },
+    {
+      color: "red" as const,
+      icon: MinusCircle,
+      label: t("movementLost"),
+      sign: "−",
+      value: metrics.isLost,
+    },
+    {
+      color: "green" as const,
+      icon: ArrowUp,
+      label: t("movementImproved"),
+      sign: "",
+      value: metrics.isUp,
+    },
+    {
+      color: "red" as const,
+      icon: ArrowDown,
+      label: t("movementDeclined"),
+      sign: "",
+      value: metrics.isDown,
+    },
   ];
 
   return (
     <Card className="flex min-w-0 flex-col px-4 py-4" size="md">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex min-w-0 items-center gap-1.5">
-          <h3 className="m-0 text-[14.5px] font-semibold">Ranking changes</h3>
-          <InfoTooltip text="Compared with DataForSEO's previous index check. The API does not provide that check's date. These are estimated indexed keywords, not your tracked rankings." />
+          <h3 className="m-0 text-[14.5px] font-semibold">{t("rankingChanges")}</h3>
+          <InfoTooltip text={t("rankingChangesTooltip")} />
         </div>
         <span className="shrink-0 whitespace-nowrap font-sans tabular-nums text-[10px] uppercase tracking-[0.06em] text-fg-muted">
-          index updated {sourceDateLabel(sourceSnapshotAt, dateFormat)}
+          {t("indexUpdated", { date: sourceDateLabel(sourceSnapshotAt, dateFormat, t) })}
         </span>
       </div>
-      <ul aria-label="Keyword movements" className={`${styles.grid} m-0 list-none p-0`}>
+      <ul aria-label={t("keywordMovements")} className={`${styles.grid} m-0 list-none p-0`}>
         {rows.map((row) => {
           const Icon = row.icon;
           const tone = row.color === "green" ? "text-green-text" : "text-red-text";
@@ -69,8 +95,7 @@ export function DomainOverviewWhatChanged({
         })}
       </ul>
       <p className="mb-0 mt-auto hidden pt-3 text-[12px] leading-5 text-fg-muted xl:block">
-        Compared with DataForSEO's previous index check. Its date is not provided. Estimated indexed
-        keywords, not your tracked rankings.
+        {t("rankingChangesNote")}
       </p>
     </Card>
   );

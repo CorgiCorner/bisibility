@@ -4,7 +4,6 @@ import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/
 import { Button } from "@/components/ui/Button";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { appPath } from "@/lib/routing/app-path";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
 import { CaretLeftIcon as CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
@@ -13,6 +12,7 @@ import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useMemo, useRef } from "react";
 import { downloadSavedKeywordsCsv } from "./saved-keywords-export";
 
@@ -27,28 +27,29 @@ export function SavedKeywordsToolbar({
   rows: readonly SavedKeywordRow[];
   search: string;
 }>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.saved");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const savedCommands = useMemo<RegisteredCommand[]>(() => {
     const cmds: RegisteredCommand[] = [
       {
         id: "sk-filter",
-        label: "Filter",
+        label: t("filter"),
         scope: "saved-keywords",
-        hint: "Search saved keywords",
+        hint: t("filterHint"),
         run: () => searchInputRef.current?.focus(),
       },
     ];
     if (rows.length > 0) {
       cmds.push({
         id: "sk-export",
-        label: "Export",
+        label: t("export"),
         scope: "saved-keywords",
-        hint: "Download CSV",
+        hint: t("downloadCsv"),
         run: () => downloadSavedKeywordsCsv(rows),
       });
     }
     return cmds;
-  }, [rows]);
+  }, [rows, t]);
   const savedRegisterRef = useRegisterCommands(savedCommands);
 
   return (
@@ -57,9 +58,9 @@ export function SavedKeywordsToolbar({
         className="min-w-[220px]"
         id="saved-keywords-filter"
         inputRef={searchInputRef}
-        label="Filter saved keywords"
+        label={t("filterLabel")}
         onChange={onSearchChange}
-        placeholder="Filter saved keywords..."
+        placeholder={t("filterPlaceholder")}
         value={search}
         variant="outlined"
       />
@@ -70,7 +71,7 @@ export function SavedKeywordsToolbar({
         startIcon={<DownloadSimple weight="regular" size={14} />}
         variant="secondary"
       >
-        Export
+        {t("export")}
       </Button>
       <Button
         component={Link}
@@ -80,7 +81,7 @@ export function SavedKeywordsToolbar({
         startIcon={<MagnifyingGlass weight="regular" size={13} />}
         variant="secondary"
       >
-        Find more in Research
+        {t("findMore")}
       </Button>
       <span aria-hidden hidden ref={savedRegisterRef} />
     </div>
@@ -106,15 +107,16 @@ export function SavedKeywordsBulkBar({
   onTrack: () => void;
   trackDisabledReason?: string;
 }>) {
-  const estimate = costCents == null ? null : formatEstimateCents(costCents);
+  const t = useTranslations("projectRankTracker.keywordImport.management.saved");
+  const cost = costCents == null ? null : costCents / 100;
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-[#e8d5c9] bg-accent-soft px-4 py-[9px]">
-      <strong className="whitespace-nowrap text-[13px] text-accent-text">{count} selected</strong>
+      <strong className="whitespace-nowrap text-[13px] text-accent-text">
+        {t("selected", { count })}
+      </strong>
       <span className="font-sans tabular-nums text-[11px] text-[#a85c22]">
         {trackDisabledReason ??
-          `tracking all ${count} adds ${
-            estimate == null ? "an unavailable estimate" : `~${estimate}/mo`
-          } at daily checks`}
+          (cost == null ? t("trackingUnavailable", { count }) : t("trackingAll", { cost, count }))}
       </span>
       <span className="flex-1" />
       {canDelete ? (
@@ -129,21 +131,21 @@ export function SavedKeywordsBulkBar({
           }}
           variant="secondary"
         >
-          Remove
+          {t("remove")}
         </Button>
       ) : null}
       {canTrack ? (
         <Button
-          aria-label={`Track ${count}${estimate == null ? "" : ` ~${estimate}/mo`}`}
+          aria-label={cost == null ? t("track", { count }) : t("trackAria", { cost, count })}
           disabled={Boolean(trackDisabledReason)}
           onClick={onTrack}
           size="sm"
           style={{ minHeight: 30 }}
         >
-          Track {count}
-          {estimate == null ? null : (
+          {t("track", { count })}
+          {cost == null ? null : (
             <span className="ml-1.5 font-sans tabular-nums text-[12px] font-medium">
-              ~{estimate}/mo
+              {t("monthlyEstimate", { cost })}
             </span>
           )}
         </Button>
@@ -153,7 +155,7 @@ export function SavedKeywordsBulkBar({
         onClick={onClear}
         type="button"
       >
-        Clear
+        {t("clear")}
       </button>
     </div>
   );
@@ -176,28 +178,26 @@ export function SavedKeywordsFooter({
   start: number;
   total: number;
 }>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.saved");
   const hasPrevious = page > 0;
   const hasNext = end < total;
   return (
     <div className="flex flex-wrap items-center justify-between gap-5 border-t border-border px-4 py-3">
-      <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-        Metrics are a snapshot from the research run / saving is free, nothing is checked until you
-        track
-      </span>
+      <span className="font-sans tabular-nums text-[11px] text-fg-muted">{t("snapshotNote")}</span>
       <div className="flex items-center gap-5">
         <MenuSelect
-          ariaLabel="Rows per page"
+          ariaLabel={t("rowsPerPage")}
           onChange={(value) => onPageSizeChange(Number(value))}
           options={[10, 25, 50].map((value) => ({ label: String(value), value: String(value) }))}
           triggerClassName="min-w-[126px] border-0 bg-transparent px-0 font-sans tabular-nums text-[12px]"
           value={String(pageSize)}
         />
         <span className="whitespace-nowrap font-sans tabular-nums text-[12px] text-fg-muted">
-          {start}-{end} of {total}
+          {t("range", { end, start, total })}
         </span>
         <div className="flex gap-1">
           <button
-            aria-label="Previous page"
+            aria-label={t("previousPage")}
             className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-control bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-muted"
             disabled={!hasPrevious}
             onClick={() => onPageChange(page - 1)}
@@ -206,7 +206,7 @@ export function SavedKeywordsFooter({
             <CaretLeft size={12} weight="regular" />
           </button>
           <button
-            aria-label="Next page"
+            aria-label={t("nextPage")}
             className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-control bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-muted"
             disabled={!hasNext}
             onClick={() => onPageChange(page + 1)}

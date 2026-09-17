@@ -1,15 +1,17 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { MenuGroupHeading } from "@/components/ui/MenuGroupHeading";
 import type {
   ArchivedSearchInsightsProperty,
   SearchInsightsPropertyOption,
 } from "@/lib/actions/search-insights";
+import { formatDisplayDate } from "@/lib/dates/format";
 import type { SearchInsightsConnection } from "@/lib/search-insights/queries/context";
+import { useTranslations } from "next-intl";
 import { SearchInsightsMenuOption } from "./SearchInsightsMenu";
-import { archivedPropertyMetadata } from "./SearchInsightsPropertyPickerGrouping";
 import { PropertyListRow } from "./SearchInsightsPropertyRow";
+import { matchesProjectDomain } from "./search-insights-property-match";
 
 type Property = NonNullable<SearchInsightsConnection["property"]>;
 
@@ -34,12 +36,21 @@ export function SearchInsightsPropertyMenuGroups({
   onPropertySelect,
   projectDomain,
 }: Readonly<PropertyMenuGroupsProps>) {
-  const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
+  const t = useTranslations("projectSearchInsights.copy");
+  const archivedMetadata = (option: ArchivedSearchInsightsProperty) => {
+    const lastSynced = t("archivedPropertyLastSynced", {
+      date: formatDisplayDate(option.lastSyncedDate, dateDisplay),
+    });
+    return matchesProjectDomain(option, projectDomain)
+      ? `${t("archivedPropertyMatchesProject")} · ${lastSynced}`
+      : lastSynced;
+  };
   const groups = [
     active
       ? {
           id: "active",
-          label: "Active",
+          label: t("activeProperties"),
           options: (
             <SearchInsightsMenuOption
               className="border border-border"
@@ -55,7 +66,7 @@ export function SearchInsightsPropertyMenuGroups({
     archived.length > 0
       ? {
           id: "archived",
-          label: "Archived",
+          label: t("archivedProperties"),
           options: archived.map((option) => (
             <SearchInsightsMenuOption
               key={option.value}
@@ -64,7 +75,7 @@ export function SearchInsightsPropertyMenuGroups({
             >
               <PropertyListRow
                 className="opacity-75"
-                metadata={archivedPropertyMetadata(option, projectDomain, dateFormat)}
+                metadata={archivedMetadata(option)}
                 option={option}
               />
             </SearchInsightsMenuOption>
@@ -74,7 +85,7 @@ export function SearchInsightsPropertyMenuGroups({
     matching.length > 0
       ? {
           id: "matching",
-          label: "Matches this project",
+          label: t("matchingProperties"),
           options: matching.map((option) => (
             <SearchInsightsMenuOption
               key={option.value}

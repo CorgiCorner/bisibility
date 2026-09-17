@@ -1,7 +1,8 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { parseCheckAttempts } from "@/lib/checks/attempts";
 import type { CheckRunRow, CheckRunsView } from "@/lib/checks/contract";
 import { stubIntersectionObserver, stubResizeObserver } from "@/tests/observers";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CheckRunsTable } from "./CheckRunsTable";
 import { checkRunsFixtureView } from "./check-runs-fixtures";

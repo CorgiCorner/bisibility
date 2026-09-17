@@ -8,6 +8,7 @@ import { MenuItem } from "@/components/ui/MenuItem";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { menuItemRowHoverStyle } from "@/lib/ui/menu-item-row-styles";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export const USER_MENU_ROW_STYLE = {
   borderRadius: UI_RADIUS_ROLES.control,
@@ -23,7 +24,7 @@ export const USER_MENU_ROW_STYLE = {
 } as const;
 
 export type UserMenuRowProps = {
-  item: UserMenuLink;
+  item: UserMenuLink & { label: string };
   disabled?: boolean;
   onClose?: () => void;
   /** Action rows (sign out): handle selection instead of navigating. */
@@ -31,6 +32,7 @@ export type UserMenuRowProps = {
 };
 
 export function UserMenuRow({ item, disabled, onClose, onSelect }: Readonly<UserMenuRowProps>) {
+  const t = useTranslations("shell.userMenu");
   const Icon = item.icon;
   const content = (
     <>
@@ -53,7 +55,7 @@ export function UserMenuRow({ item, disabled, onClose, onSelect }: Readonly<User
   if (item.external) {
     return (
       <MenuItem
-        aria-label={`${item.label} (opens in a new tab)`}
+        aria-label={t("opensInNewTab", { label: item.label })}
         component="a"
         href={item.href ?? "#"}
         onClick={onClose}

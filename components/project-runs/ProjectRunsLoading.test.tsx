@@ -1,21 +1,21 @@
-import RunsLoading from "@/app/app/(workspace)/[project]/runs/loading";
-import SchedulesLoading from "@/app/app/(workspace)/[project]/runs/schedules/loading";
+import { ProjectRunsLoading } from "@/components/project-runs/ProjectRunsLoading";
 import {
   dataTableHeaderHeight,
   dataTableRowHeight,
 } from "@/components/ui/data-table/data-table-density";
-import { render, screen } from "@testing-library/react";
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-describe("Runs route loading boundaries", () => {
+describe("Project runs loading boundaries", () => {
   it.each([
     {
-      Component: RunsLoading,
+      Component: () => <ProjectRunsLoading />,
       label: "runs",
       columns: ["Operation", "Type", "Scope", "Status", "Progress", "Unit", "Submitted", "Started"],
     },
     {
-      Component: SchedulesLoading,
+      Component: () => <ProjectRunsLoading active="schedules" />,
       label: "schedules",
       columns: ["Schedule", "Cadence", "Members", "Per run", "Next"],
     },

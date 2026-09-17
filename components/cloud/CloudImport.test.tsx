@@ -1,6 +1,7 @@
+import { renderWithCloudImportMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { isoFromFrozenNow } from "@/tests/clock";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CloudImport } from "./CloudImport";
 import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
@@ -202,7 +203,7 @@ describe("CloudImport", () => {
     await waitFor(() => expect(actions.regenerateMigrationTokenAction).toHaveBeenCalledTimes(2));
   });
 
-  it("shows mint and revoke failures without losing the active token", async () => {
+  it("hides unknown mint and revoke diagnostics without losing the active token", async () => {
     const mint = vi.fn(async () => {
       throw new Error("Mint unavailable");
     });
@@ -216,14 +217,15 @@ describe("CloudImport", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Generate" }));
-    expect(await screen.findByText("Mint unavailable")).toBeInTheDocument();
+    expect(await screen.findByText("Couldn't create token")).toBeInTheDocument();
+    expect(screen.queryByText("Mint unavailable")).not.toBeInTheDocument();
     expect(screen.getByText("Token status error")).toBeInTheDocument();
 
     const revokeButton = screen.getByRole("button", { name: "Revoke" });
     await waitFor(() => expect(revokeButton).toBeEnabled());
     fireEvent.click(revokeButton);
     await waitFor(() => expect(revoke).toHaveBeenCalledOnce());
-    expect(await screen.findByText("Revoke unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("Revoke unavailable")).not.toBeInTheDocument();
     expect(screen.getByText("Couldn't revoke token")).toBeInTheDocument();
   });
 
@@ -235,7 +237,9 @@ describe("CloudImport", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Generate" }));
 
-    expect(await screen.findByText("Migration action failed.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Migration token action failed. Try again."),
+    ).toBeInTheDocument();
   });
 
   it("renders a handled read-only token failure without a rejected action", async () => {
@@ -251,8 +255,52 @@ describe("CloudImport", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Generate" }));
 
-    expect(await screen.findByText("Project is read-only during migration.")).toBeVisible();
+    expect(
+      await screen.findByText(
+        "Migration token controls are unavailable while this project is read-only. Return to Migration settings to finish or cancel the migration first.",
+      ),
+    ).toBeVisible();
     expect(mintMigrationTokenAction).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    [
+      "revoked or expired",
+      "migration_token_not_active",
+      "This migration token is no longer active. Create a new token to continue.",
+    ],
+    [
+      "already used",
+      "migration_token_already_consumed",
+      "This migration token has already been used. Create a new token to continue.",
+    ],
+  ] as const)("renders a localized recovery for a %s token", async (_state, code, message) => {
+    const mintMigrationTokenAction = vi.fn(async () => ({
+      error: { code, message: "untrusted migration detail", status: 409 as const },
+      ok: false as const,
+    }));
+    renderImport({ mintMigrationTokenAction });
+
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+
+    expect(await screen.findByText(message)).toBeVisible();
+    expect(screen.queryByText("untrusted migration detail")).not.toBeInTheDocument();
+  });
+
+  it("retains the shared stale-deployment recovery without exposing a migration diagnostic", async () => {
+    const mintMigrationTokenAction = vi.fn(async () => {
+      throw new Error("Server Action abc was not found on the server.");
+    });
+    renderImport({ mintMigrationTokenAction });
+
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+
+    expect(
+      await screen.findByText(
+        "bisibility was updated while this page was open. Refresh the app to continue. Any unsaved changes will be lost.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByText(/Server Action abc/)).not.toBeInTheDocument();
   });
 
   it("disables only token controls with migration guidance while read-only", () => {

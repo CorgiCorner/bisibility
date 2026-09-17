@@ -29,11 +29,11 @@
           },
           {
             "group": "Reference and support",
-            "pages": ["versioning", "compatibility", "project-support", "sdks/methods"]
+            "pages": ["versioning"]
           },
           {
             "group": "Contribute",
-            "pages": ["style-guide"]
+            "pages": ["style-guide", "project-support"]
           }
         ]
       },
@@ -41,25 +41,39 @@
         "tab": "Use Bisibility",
         "groups": [
           {
-            "group": "Use Bisibility",
+            "group": "Set up your project",
             "pages": [
-              "guides/choose-first-keywords",
-              "guides/alerts",
-              "guides/competitors",
-              "guides/teams",
-              "guides/saved-keywords",
-              "guides/saved-views",
-              "guides/analytics",
-              "guides/sitemap-monitoring",
-              "guides/migration",
-              "guides/operations",
-              "guides/runs",
-              "guides/schedules"
+              "integrations",
+              "guides/manage-markets",
+              "markets",
+              "guides/choose-first-keywords"
             ]
           },
           {
-            "group": "Understand",
-            "pages": ["architecture", "markets", "serp-observations", "audit-log"]
+            "group": "Track rankings",
+            "pages": ["guides/runs", "guides/schedules", "guides/competitors", "serp-observations"]
+          },
+          {
+            "group": "Research",
+            "pages": [
+              "guides/keyword-research",
+              "guides/saved-keywords",
+              "guides/backlinks",
+              "guides/domain-overview"
+            ]
+          },
+          {
+            "group": "Analytics and monitoring",
+            "pages": [
+              "guides/search-console",
+              "guides/analytics",
+              "guides/alerts",
+              "guides/sitemap-monitoring"
+            ]
+          },
+          {
+            "group": "Organize and collaborate",
+            "pages": ["guides/saved-views", "guides/teams", "audit-log"]
           }
         ]
       },
@@ -67,51 +81,75 @@
         "tab": "Build and automate",
         "groups": [
           {
-            "group": "Connect",
-            "pages": ["authentication", "integrations"]
+            "group": "API basics",
+            "pages": ["api/overview", "authentication", "api/discovery", "api/errors"]
           },
           {
-            "group": "API workflows",
+            "group": "Projects and access",
+            "expanded": false,
             "pages": [
-              "api/overview",
-              "api/checks",
-              "api/rank-check-runs",
-              "api/rank-history",
-              "api/webhooks",
-              "api/deploy-webhooks",
-              "api/cloud-import",
-              "api/errors"
-            ]
-          },
-          {
-            "group": "Resource workflows",
-            "pages": [
-              "api/discovery",
               "api/projects",
               "api/api-keys",
               "api/personal-access-tokens",
-              "api/keywords",
-              "api/locations",
-              "api/keyword-research",
-              "api/keyword-metrics",
-              "api/ranked-keyword-suggestions",
-              "api/saved-keywords",
-              "api/competitors",
               "api/providers",
-              "api/analytics",
-              "api/backlinks",
-              "api/domain-overview",
-              "api/alert-rules",
-              "api/notification-preferences",
-              "api/saved-views",
-              "api/signals",
-              "api/sitemap-monitors",
               "api/team"
             ]
           },
           {
+            "group": "Rank tracking",
+            "expanded": false,
+            "pages": [
+              "api/keywords",
+              "api/locations",
+              "api/checks",
+              "api/rank-history",
+              "api/competitors",
+              "api/saved-views"
+            ]
+          },
+          {
+            "group": "Research",
+            "expanded": false,
+            "pages": [
+              "api/keyword-research",
+              "api/keyword-metrics",
+              "api/ranked-keyword-suggestions",
+              "api/saved-keywords",
+              "api/backlinks",
+              "api/domain-overview"
+            ]
+          },
+          {
+            "group": "Analytics and monitoring",
+            "expanded": false,
+            "pages": ["api/analytics", "api/signals", "api/sitemap-monitors"]
+          },
+          {
+            "group": "Alerts and webhooks",
+            "expanded": false,
+            "pages": [
+              "api/alert-rules",
+              "api/notification-preferences",
+              "api/webhooks",
+              "api/deploy-webhooks"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "expanded": false,
+            "pages": ["api/rank-check-runs", "api/cloud-import"]
+          },
+          {
             "group": "SDKs",
-            "pages": ["sdks/overview", "sdks/behavior", "sdks/python", "sdks/typescript", "sdks/go"]
+            "pages": [
+              "sdks/overview",
+              "sdks/behavior",
+              "sdks/methods",
+              "compatibility",
+              "sdks/python",
+              "sdks/typescript",
+              "sdks/go"
+            ]
           },
           {
             "group": "CLI",
@@ -330,25 +368,36 @@
         "tab": "Self-hosting",
         "groups": [
           {
-            "group": "Install and operate",
+            "group": "Install",
+            "pages": ["self-hosting", "self-hosting/docker", "self-hosting/railway"]
+          },
+          {
+            "group": "Configure",
             "pages": [
-              "self-hosting",
-              "self-hosting/docker",
-              "self-hosting/upgrades",
-              {
-                "group": "Legacy upgrades",
-                "pages": ["self-hosting/legacy-upgrades/v0-1-to-v0-2"]
-              },
-              "self-hosting/railway",
-              "self-hosting/temporal",
               "self-hosting/configuration",
-              "self-hosting/analytics",
               "self-hosting/email",
-              "self-hosting/security",
-              "self-hosting/backup-restore",
-              "self-hosting/operations",
-              "self-hosting/troubleshooting"
+              "self-hosting/google-oauth",
+              "self-hosting/analytics"
             ]
+          },
+          {
+            "group": "Operate",
+            "pages": [
+              "self-hosting/temporal",
+              "self-hosting/operations",
+              "self-hosting/upgrades",
+              "self-hosting/backup-restore",
+              "guides/operations",
+              "guides/migration"
+            ]
+          },
+          {
+            "group": "Reference and troubleshooting",
+            "pages": ["architecture", "self-hosting/security", "self-hosting/troubleshooting"]
+          },
+          {
+            "group": "Legacy",
+            "pages": ["self-hosting/legacy-upgrades", "self-hosting/legacy-upgrades/v0-1-to-v0-2"]
           }
         ]
       }
@@ -362,21 +411,27 @@
       },
       {
         "label": "GitHub",
-        "href": "https://github.com/CorgiCorner/bisibility"
+        "href": "https://github.com/CorgiCorner/bisibility",
+        "icon": "github",
+        "iconType": "brands"
       },
       {
         "label": "Discord",
-        "href": "https://discord.gg/HcYpvfn79w"
+        "href": "https://discord.gg/HcYpvfn79w",
+        "icon": "discord",
+        "iconType": "brands"
       },
       {
         "label": "YouTube",
-        "href": "https://www.youtube.com/@bisibility"
+        "href": "https://www.youtube.com/@bisibility",
+        "icon": "youtube",
+        "iconType": "brands"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Open bisibility",
-      "href": "https://bisibility.com"
+      "href": "https://bisibility.com/login"
     }
   },
   "footer": {

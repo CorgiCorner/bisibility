@@ -1,7 +1,8 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
-import { type DateFormat, formatDateTime } from "@/lib/dates/format";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
+import { type DateFormat, formatDisplayDateTime } from "@/lib/dates/format";
+import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
 
 export type ZonedTimeProps = {
@@ -28,19 +29,22 @@ export function useBrowserTimeZone(): string | null {
 }
 
 export function ZonedTime({ format, timeZone, value }: Readonly<ZonedTimeProps>) {
-  const contextFormat = useDateFormat();
-  const dateFormat = format ?? contextFormat;
+  const dateDisplay = useDateDisplay();
+  const t = useTranslations("shared.controls.zonedTime");
   const date = new Date(value);
   const iso = date.toISOString();
-  const formatted = formatDateTime(date, dateFormat, timeZone);
+  const formatted = formatDisplayDateTime(date, {
+    ...dateDisplay,
+    dateFormat: format ?? dateDisplay.dateFormat,
+    timeZone,
+  });
   const browserTz = useBrowserTimeZone();
-  const suffix =
-    browserTz === null ? "" : browserTz === timeZone ? " (your time)" : ` (${timeZone})`;
+  const label =
+    browserTz === null
+      ? t("plain", { time: formatted })
+      : browserTz === timeZone
+        ? t("yourTime", { time: formatted })
+        : t("timeZone", { time: formatted, timeZone });
 
-  return (
-    <time dateTime={iso}>
-      {formatted}
-      <span>{suffix}</span>
-    </time>
-  );
+  return <time dateTime={iso}>{label}</time>;
 }

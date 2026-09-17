@@ -18,17 +18,31 @@ export type WindowSessionsPair = {
 /** `up` is the improving direction, so a lower position counts as up; `flat` is no change. */
 export type DeltaDirection = "down" | "flat" | "up";
 
+export type SearchInsightsKpiMetric =
+  | "clicks"
+  | "clicks_to_sessions"
+  | "ctr"
+  | "impressions"
+  | "position";
+
+export type SearchInsightsKpiValueKind = "count" | "percentage" | "position";
+
+export type SearchInsightsKpiDelta =
+  | { kind: "changed"; unit: "percentage_points" | "percent_change" | "position"; value: number }
+  | { kind: "new" | "no_data" | "unchanged" };
+
 export type SearchInsightsKpi = {
-  delta: string;
+  delta: SearchInsightsKpiDelta;
   dir: DeltaDirection;
-  label: string;
-  prev: string;
-  source: string;
-  value: string;
+  metric: SearchInsightsKpiMetric;
+  previous: number | null;
+  source: "gsc";
+  value: number;
+  valueKind: SearchInsightsKpiValueKind;
 };
 
 export type ClicksToSessionsKpi =
-  | { kind: "hidden"; reason: "zero_clicks"; source: "GSC" }
+  | { kind: "hidden"; reason: "zero_clicks"; source: "gsc" }
   | { kind: "visible"; kpi: SearchInsightsKpi };
 
 export type TotalsRow = {
@@ -36,12 +50,6 @@ export type TotalsRow = {
   impressions: bigint | number;
   positionWeight: number;
 };
-
-const KPI_SOURCE = "GSC";
-const NO_BASELINE = "new";
-// What a card says about a window that holds no rows. Its ratios come back as zeros, and a zero
-// there is the absence of a measurement rather than a rate of nought or a position a page held.
-const NO_DATA = "no data";
 
 export const EMPTY_TOTALS: WindowTotals = { clicks: 0, ctr: 0, impressions: 0, position: 0 };
 
@@ -66,18 +74,6 @@ export function windowTotals(row: TotalsRow | undefined): WindowTotals {
   };
 }
 
-export function formatCount(value: number) {
-  return Math.round(value).toLocaleString("en-US");
-}
-
-export function formatCtr(value: number) {
-  return `${(value * 100).toFixed(2)}%`;
-}
-
-export function formatPosition(value: number) {
-  return value.toFixed(1);
-}
-
 // Rounded to the precision the card shows before the sign is decided, so a change too small
 // to render never comes out as a signed zero.
 function rounded(value: number, digits: number) {
@@ -85,87 +81,75 @@ function rounded(value: number, digits: number) {
   return next === 0 ? 0 : next;
 }
 
-function signed(value: number, digits: number, suffix: string) {
-  return `${value > 0 ? "+" : ""}${value.toFixed(digits)}${suffix}`;
+function rawUnchanged(): SearchInsightsKpiDelta {
+  return { kind: "unchanged" };
 }
 
-// No change has no direction: an arrow beside the word would assert one the copy denies.
-const UNCHANGED = { delta: "unchanged", dir: "flat" as const };
-const UNCOVERED_BASELINE = { delta: NO_BASELINE, dir: "flat" as const };
+function rawNew(): SearchInsightsKpiDelta {
+  return { kind: "new" };
+}
 
-// Neither window measured anything comparable, so the line reports that instead of a distance.
-const NOTHING_TO_COMPARE = { delta: NO_DATA, dir: "flat" as const };
+function rawNoData(): SearchInsightsKpiDelta {
+  return { kind: "no_data" };
+}
 
 function hasRows(totals: WindowTotals) {
   return totals.impressions > 0;
 }
 
-// The delta is read beside the two numbers the card prints, so it is measured between those
-// printed numbers: diffing the raw values lets a card claim movement its own figures deny, or
-// call one window unchanged while it shows 17.3 against 17.4.
-function displayed(formatted: string) {
-  return Number.parseFloat(formatted);
-}
-
-/**
- * A window with no earlier traffic has no percentage to report: dividing by zero would either
- * throw or invent an infinite gain, and both read as a number the customer can act on.
- */
-export function countDelta(current: number, previous: number) {
-  if (previous <= 0) return current > 0 ? { delta: NO_BASELINE, dir: "up" as const } : UNCHANGED;
-  const change = rounded(((current - previous) / previous) * 100, 1);
-  // A change too small to print is unchanged, the same word the CTR and position cards use for
-  // it: the four cards must not describe one flat window in two vocabularies.
-  if (change === 0) return UNCHANGED;
-  return { delta: signed(change, 1, "%"), dir: change > 0 ? ("up" as const) : ("down" as const) };
-}
-
-/**
- * Click-through rate moves in percentage points, never in percent of a percent. Both windows
- * have to hold rows for there to be a distance between them: an empty window's zero is the
- * absence of a measurement, and subtracting it would report a whole rate as a gain or a loss.
- */
-export function ctrDelta(current: WindowTotals, previous: WindowTotals) {
-  if (!hasRows(current)) return hasRows(previous) ? NOTHING_TO_COMPARE : UNCHANGED;
-  if (!hasRows(previous)) return { delta: NO_BASELINE, dir: "up" as const };
-  const change = rounded(displayed(formatCtr(current.ctr)) - displayed(formatCtr(previous.ctr)), 2);
-  if (change === 0) return UNCHANGED;
+function rawCountDelta(
+  current: number,
+  previous: number,
+): {
+  delta: SearchInsightsKpiDelta;
+  dir: DeltaDirection;
+} {
+  if (previous <= 0)
+    return current > 0 ? { delta: rawNew(), dir: "up" } : { delta: rawUnchanged(), dir: "flat" };
+  const change = rounded((current - previous) / previous, 3);
+  if (change === 0) return { delta: rawUnchanged(), dir: "flat" };
   return {
-    delta: `${signed(change, 2, "")} pp`,
-    dir: change > 0 ? ("up" as const) : ("down" as const),
+    delta: { kind: "changed", unit: "percent_change", value: change },
+    dir: change > 0 ? "up" : "down",
   };
 }
 
-/**
- * Lower is better, so the sentence names the direction rather than leaving a sign to read. Zero
- * is not a position any page holds, so a window without rows is reported as such rather than as
- * the distance from the top of the results - in either direction.
- */
-export function positionDelta(current: WindowTotals, previous: WindowTotals) {
-  if (!hasRows(current)) return hasRows(previous) ? NOTHING_TO_COMPARE : UNCHANGED;
-  if (!hasRows(previous)) return { delta: NO_BASELINE, dir: "up" as const };
-  const change = rounded(
-    displayed(formatPosition(previous.position)) - displayed(formatPosition(current.position)),
-    1,
-  );
-  if (change > 0) return { delta: `${change.toFixed(1)} better`, dir: "up" as const };
-  if (change < 0) return { delta: `${Math.abs(change).toFixed(1)} worse`, dir: "down" as const };
-  return UNCHANGED;
-}
-
-function percentagePointDelta(
+function rawPercentagePointDelta(
   currentRate: number,
   currentDenominator: number,
   previousRate: number,
   previousDenominator: number,
-) {
-  if (currentDenominator <= 0) return previousDenominator > 0 ? NOTHING_TO_COMPARE : UNCHANGED;
-  if (previousDenominator <= 0) return { delta: NO_BASELINE, dir: "up" as const };
-  const change = rounded(displayed(formatCtr(currentRate)) - displayed(formatCtr(previousRate)), 2);
-  if (change === 0) return UNCHANGED;
+): { delta: SearchInsightsKpiDelta; dir: DeltaDirection } {
+  if (currentDenominator <= 0)
+    return previousDenominator > 0
+      ? { delta: rawNoData(), dir: "flat" }
+      : { delta: rawUnchanged(), dir: "flat" };
+  if (previousDenominator <= 0) return { delta: rawNew(), dir: "up" };
+  const change = rounded(currentRate - previousRate, 4);
+  if (change === 0) return { delta: rawUnchanged(), dir: "flat" };
   return {
-    delta: `${signed(change, 2, "")} pp`,
-    dir: change > 0 ? ("up" as const) : ("down" as const),
+    delta: { kind: "changed", unit: "percentage_points", value: change },
+    dir: change > 0 ? "up" : "down",
+  };
+}
+
+function rawPositionDelta(
+  current: WindowTotals,
+  previous: WindowTotals,
+): {
+  delta: SearchInsightsKpiDelta;
+  dir: DeltaDirection;
+} {
+  if (!hasRows(current))
+    return hasRows(previous)
+      ? { delta: rawNoData(), dir: "flat" }
+      : { delta: rawUnchanged(), dir: "flat" };
+  if (!hasRows(previous)) return { delta: rawNew(), dir: "up" };
+  const change = rounded(previous.position - current.position, 1);
+  if (change === 0) return { delta: rawUnchanged(), dir: "flat" };
+  return {
+    delta: { kind: "changed", unit: "position", value: Math.abs(change) },
+    dir: change > 0 ? "up" : "down",
   };
 }
 
@@ -176,38 +160,49 @@ export function searchInsightsKpis(
   const { current, previous } = totals;
   // One decision for the whole row: a compared period with no impressions holds no rows, so
   // every card reports the absence rather than measuring against numbers nobody recorded.
-  const from = (formatted: string) =>
-    previousWindowCovered && hasRows(previous) ? formatted : NO_DATA;
-  const guarded = (delta: Pick<SearchInsightsKpi, "delta" | "dir">) =>
-    previousWindowCovered ? delta : UNCOVERED_BASELINE;
+  const previousValue = (value: number) =>
+    previousWindowCovered && hasRows(previous) ? value : null;
+  const guarded = (delta: { delta: SearchInsightsKpiDelta; dir: DeltaDirection }) =>
+    previousWindowCovered ? delta : { delta: rawNew(), dir: "flat" as const };
   return [
     {
-      ...guarded(countDelta(current.clicks, previous.clicks)),
-      label: "Clicks",
-      prev: from(formatCount(previous.clicks)),
-      source: KPI_SOURCE,
-      value: formatCount(current.clicks),
+      ...guarded(rawCountDelta(current.clicks, previous.clicks)),
+      metric: "clicks",
+      previous: previousValue(previous.clicks),
+      source: "gsc",
+      value: current.clicks,
+      valueKind: "count",
     },
     {
-      ...guarded(countDelta(current.impressions, previous.impressions)),
-      label: "Impressions",
-      prev: from(formatCount(previous.impressions)),
-      source: KPI_SOURCE,
-      value: formatCount(current.impressions),
+      ...guarded(rawCountDelta(current.impressions, previous.impressions)),
+      metric: "impressions",
+      previous: previousValue(previous.impressions),
+      source: "gsc",
+      value: current.impressions,
+      valueKind: "count",
     },
     {
-      ...guarded(ctrDelta(current, previous)),
-      label: "CTR",
-      prev: from(formatCtr(previous.ctr)),
-      source: KPI_SOURCE,
-      value: formatCtr(current.ctr),
+      ...guarded(
+        rawPercentagePointDelta(
+          current.ctr,
+          current.impressions,
+          previous.ctr,
+          previous.impressions,
+        ),
+      ),
+      metric: "ctr",
+      previous: previousValue(previous.ctr),
+      source: "gsc",
+      value: current.ctr,
+      valueKind: "percentage",
     },
     {
-      ...guarded(positionDelta(current, previous)),
-      label: "Avg position",
-      prev: from(formatPosition(previous.position)),
-      source: KPI_SOURCE,
-      value: formatPosition(current.position),
+      ...guarded(rawPositionDelta(current, previous)),
+      metric: "position",
+      previous: previousValue(previous.position),
+      source: "gsc",
+      value: current.position,
+      valueKind: "position",
     },
   ];
 }
@@ -217,19 +212,20 @@ export function clicksToSessionsKpi(
   sessions: WindowSessionsPair,
   previousWindowCovered = true,
 ): ClicksToSessionsKpi {
-  if (clicks.current.clicks === 0) return { kind: "hidden", reason: "zero_clicks", source: "GSC" };
+  if (clicks.current.clicks === 0) return { kind: "hidden", reason: "zero_clicks", source: "gsc" };
   const current = sessions.current / clicks.current.clicks;
   const previous = clicks.previous.clicks > 0 ? sessions.previous / clicks.previous.clicks : 0;
   return {
     kind: "visible",
     kpi: {
       ...(previousWindowCovered
-        ? percentagePointDelta(current, clicks.current.clicks, previous, clicks.previous.clicks)
-        : UNCOVERED_BASELINE),
-      label: "Clicks to sessions",
-      prev: previousWindowCovered && clicks.previous.clicks > 0 ? formatCtr(previous) : NO_DATA,
-      source: "GSC",
-      value: formatCtr(current),
+        ? rawPercentagePointDelta(current, clicks.current.clicks, previous, clicks.previous.clicks)
+        : { delta: rawNew(), dir: "flat" as const }),
+      metric: "clicks_to_sessions",
+      previous: previousWindowCovered && clicks.previous.clicks > 0 ? previous : null,
+      source: "gsc",
+      value: current,
+      valueKind: "percentage",
     },
   };
 }

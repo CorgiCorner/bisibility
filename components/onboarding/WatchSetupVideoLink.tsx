@@ -4,6 +4,7 @@ import { SetupVideoModal } from "@/components/getting-started/SetupVideoModal";
 import { Button } from "@/components/ui/Button";
 import { track } from "@/lib/analytics/client";
 import { SETUP_VIDEO_MANIFEST, type SetupVideoRef } from "@/lib/getting-started/video-manifest";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 declare module "@/lib/analytics/client" {
@@ -26,9 +27,10 @@ const setupStepIds = {
 } as const;
 
 export function WatchSetupVideoLink({ step, title, videoRef }: Readonly<WatchSetupVideoLinkProps>) {
+  const t = useTranslations("onboarding.video");
   const [open, setOpen] = useState(false);
   const video = SETUP_VIDEO_MANIFEST[videoRef];
-  const label = step === 2 ? "Watch provider setup" : "Watch setup video";
+  const label = step === 2 ? t("watchProviderSetup") : t("watchSetup");
   if (!video) return null;
 
   function showVideo() {

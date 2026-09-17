@@ -1,3 +1,4 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { SettingsShellLoading } from "@/components/settings/shell/SettingsShellLoading";
@@ -5,10 +6,16 @@ import { SettingsField } from "@/components/settings/shell/settings-field-widths
 import { settingsCardGeometryClassNames } from "@/components/settings/shell/settings-layout";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import { DEFAULT_LOCALE } from "@/i18n/config";
+import { DEFAULT_TIME_ZONE } from "@/i18n/formats";
+import projectSettingsShellMessages from "@/messages/core/en/project-settings-shell.json";
+import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
 
 const projectRef = "prj_7Kd2Qf9m";
+const settingsShellMessages = mergeMessageCatalogs(sharedMessages, projectSettingsShellMessages);
 
 const meta = {
   title: "Settings/Shell",
@@ -20,9 +27,15 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <main className="min-h-screen bg-bg p-4 text-fg sm:p-6">
-        <Story />
-      </main>
+      <FeatureMessagesProvider
+        locale={DEFAULT_LOCALE}
+        messages={settingsShellMessages}
+        timeZone={DEFAULT_TIME_ZONE}
+      >
+        <main className="min-h-screen bg-bg p-4 text-fg sm:p-6">
+          <Story />
+        </main>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { nextjs: { appDirectory: true } },

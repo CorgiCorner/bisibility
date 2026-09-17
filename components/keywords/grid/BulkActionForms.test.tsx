@@ -1,8 +1,8 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { ToastProvider } from "@/components/ui/Toast";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { FIELD_HELP } from "@/lib/settings/field-help";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SetScheduleModal } from "./SetScheduleModal";
@@ -92,15 +92,31 @@ describe("New schedule from selection", () => {
   it("shows help for each schedule field", () => {
     renderForm();
 
-    expect(screen.getByRole("button", { name: FIELD_HELP.frequency })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: FIELD_HELP.timezone })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: FIELD_HELP.jitter })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "How often ranks are checked automatically, from daily through monthly. Manual and Paused stop scheduled checks.",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Anchors daily, weekly, monthly, and custom schedules to the selected local clock.",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Each keyword has a stable position within its check interval; jitter adds a random delay of 0 to N minutes so it does not land at the exact same moment every run, reducing overlap with provider rate-limit windows or maintenance blips.",
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Jitter (min)")).toHaveDisplayValue("15");
     expect(screen.getByLabelText("Jitter (min)")).toHaveAttribute("max", "120");
 
     fireEvent.click(screen.getByRole("radio", { name: "Custom cron" }));
 
-    expect(screen.getByRole("button", { name: FIELD_HELP.cron })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Custom schedule in cron syntax: minute hour day-of-month month day-of-week.",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("can return from an explicit zone to the project zone before saving", async () => {

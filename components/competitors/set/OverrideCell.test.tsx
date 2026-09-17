@@ -1,5 +1,6 @@
+import { renderWithCompetitorsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { deferred } from "@/tests/deferred";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { OverrideCell } from "./OverrideCell";
@@ -117,7 +118,7 @@ describe("OverrideCell", () => {
 
     await waitFor(() =>
       expect(container.querySelector('[role="alert"]')).toHaveTextContent(
-        "Project market not found.",
+        "Markets could not be updated.",
       ),
     );
     expect(screen.getByRole("menuitemradio", { name: "All markets" })).toHaveAttribute(
@@ -183,7 +184,9 @@ describe("OverrideCell", () => {
     firstSave.reject(new Error("Denied"));
 
     await waitFor(() =>
-      expect(container.querySelector('[role="alert"]')).toHaveTextContent("Denied"),
+      expect(container.querySelector('[role="alert"]')).toHaveTextContent(
+        "Markets could not be updated.",
+      ),
     );
     expect(mocks.replaceCompetitorMarkets).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("menuitemradio", { name: "All markets" })).toHaveAttribute(

@@ -2,7 +2,8 @@ import {
   ScheduleAssignment,
   type ScheduleAssignmentProps,
 } from "@/components/markets/blocks/ScheduleAssignment";
-import { render, screen } from "@testing-library/react";
+import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 

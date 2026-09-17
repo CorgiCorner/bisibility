@@ -20,10 +20,11 @@ import type {
   CurrentAccountEmailVerified,
 } from "@/lib/actions/account-email";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useAccountActionError } from "./useAccountActionError";
 
 export type {
   ConfirmAccountEmailChange,
@@ -61,6 +62,8 @@ export function AccountEmailCard({
   requestAccountEmailChangeCode,
   requestCurrentAccountEmailVerification,
 }: Readonly<AccountEmailCardProps>) {
+  const t = useTranslations("account.email");
+  const accountErrors = useAccountActionError();
   const confirmationForm = useForm<VerificationCodeForm>({
     defaultValues: { code: "" },
     mode: "onChange",
@@ -93,7 +96,7 @@ export function AccountEmailCard({
       confirmationForm.reset({ code: "" });
       setCodeRequested(true);
     } catch (error: unknown) {
-      setErrorMessage(actionErrorMessage(error, "Verification code could not be sent."));
+      setErrorMessage(accountErrors.email(error, t("sendError")));
     } finally {
       setSendingCode(false);
     }
@@ -118,7 +121,7 @@ export function AccountEmailCard({
       setCodeRequested(false);
       router.refresh();
     } catch (error: unknown) {
-      setErrorMessage(actionErrorMessage(error, "Account email could not be confirmed."));
+      setErrorMessage(accountErrors.email(error, t("confirmError")));
     } finally {
       setConfirming(false);
     }
@@ -135,19 +138,16 @@ export function AccountEmailCard({
       data-account-card-frame="email"
       data-account-email-state={verified ? "verified" : "unverified"}
     >
-      <AccountSection
-        description="The email address used to sign in and receive verification codes."
-        title="Account email"
-      >
+      <AccountSection description={t("description")} title={t("title")}>
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <FieldLabel
               className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
               htmlFor="account-email"
-              label="Account email"
+              label={t("label")}
             />
             <StatusPill
-              label={verified ? "Verified" : "Unverified"}
+              label={verified ? t("verified") : t("unverified")}
               size="sm"
               status={verified ? "connected" : "needs_reauth"}
             />
@@ -159,7 +159,7 @@ export function AccountEmailCard({
             canConfirm={canVerifyCurrentEmail}
             codeError={confirmationForm.formState.errors.code}
             confirming={confirming}
-            description={`Enter the code sent to ${currentEmail} to verify this account email.`}
+            description={t("confirmDescription", { email: currentEmail })}
             onConfirm={confirmEmail}
             onSendCode={sendCode}
             register={confirmationForm.register}
@@ -175,14 +175,12 @@ export function AccountEmailCard({
         ) : null}
         {!changeActions && !canVerifyCurrentEmail ? (
           <p className="m-0 mt-3 text-[12px] leading-5 text-fg-muted">
-            {verified
-              ? "Verified with your login code. Changing it sends a new code."
-              : "No code has been confirmed for this address yet."}
+            {verified ? t("verifiedFallback") : t("unverifiedFallback")}
           </p>
         ) : null}
         {codeRequested ? (
           <p aria-live="polite" className="m-0 mt-2 text-[11.5px] text-green-text">
-            If this address can be used, a verification code will arrive.
+            {t("codeSent")}
           </p>
         ) : null}
         {errorMessage ? (

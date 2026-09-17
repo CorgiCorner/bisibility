@@ -1,9 +1,14 @@
+import {
+  renderWithSearchInsightsMessages as render,
+  renderWithFeatureMessages,
+  searchInsightsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { KNOWN_DATA_INCIDENTS } from "@/lib/search-insights/constants";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
 import { isoFromFrozenNow } from "@/tests/clock";
 import { routerMock } from "@/tests/next-navigation";
-import { act, render, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SearchInsightsContextCard } from "./SearchInsightsContextCard";
 import { SearchInsightsNoDataState } from "./SearchInsightsEmptyStates";
@@ -91,6 +96,34 @@ function renderStrip(overrides: Partial<Parameters<typeof SearchInsightsTrustStr
       workerStatus={matchedWorker}
       {...overrides}
     />,
+  );
+}
+
+function renderPausedStrip(dateFormat: "day_first" | "month_first") {
+  return render(
+    <SearchInsightsTrustStrip
+      coverage={{ calculable: true, capHitDays: 0, clicksShare: 62, impressionsShare: 41 }}
+      deploymentMode="self-host"
+      importState={{
+        ...importState,
+        pauseStartedAt: "2026-08-01T00:30:00.000Z",
+        pausedReason: "user",
+        state: "paused",
+      }}
+      incidents={[]}
+      localViewReady
+      projectId="prj_test"
+      providerAvailabilitySource="metadata"
+      providerAvailableThrough="2026-07-08"
+      statusFacts={{
+        ...runningStatusFacts,
+        pauseStartedAt: "2026-08-01T00:30:00.000Z",
+        pausedReason: "user",
+        state: "paused",
+      }}
+      workerStatus={matchedWorker}
+    />,
+    { dateFormat, locale: "en", timeZone: "America/Los_Angeles" },
   );
 }
 
@@ -211,6 +244,61 @@ describe("strip and empty card together", () => {
 });
 
 describe("SearchInsightsTrustStrip", () => {
+  it("renders every data-ready provenance fact from the scoped catalog", () => {
+    const messages = structuredClone(searchInsightsFeatureTestMessages);
+    Object.assign(messages.projectSearchInsights.copy, {
+      coverageCapHit: ", limit wierszy osiagniety przez {days, number} dni",
+      coverageNote: "Google ukrywa czesc zapytan dla prywatnosci.",
+      dataProvenanceAria: "Pochodzenie danych",
+      freshnessAdjustmentTooltip: "Google moze jeszcze korygowac dane.",
+      freshnessChecked: "sprawdzone {relative}",
+      freshnessEstimatedFinalPrefix: "Szacowane dane do",
+      freshnessFinalPrefix: "Dane koncowe do",
+      freshnessRelativeDays: "{count, number} d temu",
+      freshnessRelativeHours: "{count, number} h temu",
+      freshnessRelativeJustNow: "teraz",
+      freshnessRelativeMinutes: "{count, number} min temu",
+      freshnessTooltip: "Ostatnie sprawdzenie {timestamp}. {adjustment}",
+      incidentImpressions202505: "Znany problem Google z wyswietleniami.",
+      incidentPill: "Znany problem danych Google",
+      retentionFullSelfHost: "Przechowywane w Twojej bazie danych.",
+      syncCoverageDays: "{completed, number} z {total, number} dni zakonczonych",
+      trustCoverage: "Pokrycie",
+      trustCoverageSummary:
+        "Tekst zapytania dla <clicksValue>{clicks, number}%</clicksValue> klikniec i <impressionsValue>{impressions, number}%</impressionsValue> wyswietlen{capHit}",
+      trustDeepHistory: "{completed, number} z {total, number} miesiecy",
+      trustFreshness: "Swiezosc",
+      trustRetention: "Retencja",
+    });
+
+    renderWithFeatureMessages(
+      <SearchInsightsTrustStrip
+        coverage={{ calculable: true, capHitDays: 3, clicksShare: 62, impressionsShare: 41 }}
+        deploymentMode="self-host"
+        importState={importStateWithFacts()}
+        incidents={KNOWN_DATA_INCIDENTS}
+        localViewReady
+        pauseAction={pauseAction}
+        projectId="prj_test"
+        providerAvailabilitySource="metadata"
+        providerAvailableThrough="2026-07-08"
+        resumeAction={pauseAction}
+        statusFacts={runningStatusFacts}
+        workerStatus={matchedWorker}
+      />,
+      { locale: "pl", messages, timeZone: "America/Los_Angeles" },
+    );
+
+    expect(screen.getByRole("region", { name: "Pochodzenie danych" })).toBeInTheDocument();
+    expect(screen.getByText("Dane koncowe do", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("Tekst zapytania dla", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("Google ukrywa czesc zapytan dla prywatnosci.")).toBeInTheDocument();
+    expect(screen.getByText("Przechowywane w Twojej bazie danych.")).toBeInTheDocument();
+    expect(screen.getByText("Znany problem danych Google")).toBeInTheDocument();
+    expect(screen.queryByText("Query text on", { exact: false })).not.toBeInTheDocument();
+    expect(screen.queryByText("Kept in your database", { exact: false })).not.toBeInTheDocument();
+  });
+
   it("uses the waiting strip for d1-only facts while provider availability is pending", () => {
     const firstLookFacts = {
       ...observabilityFacts,
@@ -323,7 +411,7 @@ describe("SearchInsightsTrustStrip", () => {
     expect(container.textContent).not.toMatch(
       /0% \/ 0%|Query text on|about three days|first data|,\s{2}|%.* \/ .*%/i,
     );
-    expect(screen.queryByLabelText("Refresh import status")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Refresh stored insights")).not.toBeInTheDocument();
     expect(screen.queryByTestId("search-import-line")).not.toBeInTheDocument();
   });
 
@@ -415,7 +503,7 @@ describe("SearchInsightsTrustStrip", () => {
     );
     expect(screen.getByText("Completed")).toBeInTheDocument();
     expect(
-      screen.getByLabelText("Refresh import status").closest("[data-auto-refresh]"),
+      screen.getByLabelText("Refresh stored insights").closest("[data-auto-refresh]"),
     ).toHaveAttribute("data-auto-refresh", "inactive");
   });
 
@@ -424,7 +512,7 @@ describe("SearchInsightsTrustStrip", () => {
     renderStrip();
 
     expect(
-      screen.getByLabelText("Refresh import status").closest("[data-auto-refresh]"),
+      screen.getByLabelText("Refresh stored insights").closest("[data-auto-refresh]"),
     ).toHaveAttribute("data-auto-refresh", "inactive");
     expect(vi.getTimerCount()).toBe(0);
     act(() => vi.advanceTimersByTime(90_000));
@@ -439,7 +527,7 @@ describe("SearchInsightsTrustStrip", () => {
     expect(
       screen.queryByRole("button", { name: /Pause|Resume|Retry Search Console import/ }),
     ).toBeNull();
-    expect(screen.getAllByRole("button", { name: "Refresh import status" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Refresh stored insights" })).toHaveLength(1);
   });
 
   it("retains the reconnect link but not legacy mutation controls", () => {
@@ -532,7 +620,7 @@ describe("SearchInsightsTrustStrip", () => {
     expect(
       screen.queryByRole("link", { name: "Reconnect Search Console" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Ask a project admin to connect")).toBeInTheDocument();
+    expect(screen.getByText("Ask an administrator to connect Search Console.")).toBeInTheDocument();
   });
 
   it("shows exact user pause takeover and freshness copy without polling", () => {
@@ -554,7 +642,18 @@ describe("SearchInsightsTrustStrip", () => {
     expect(
       screen.queryByRole("button", { name: "Resume Search Console import" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Refresh import status" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh stored insights" })).toBeInTheDocument();
+  });
+
+  it("keeps a paused UTC calendar day while applying the selected date order", () => {
+    const { unmount } = renderPausedStrip("day_first");
+
+    expect(screen.getByText("Paused on 1 Aug 2026.")).toBeInTheDocument();
+    expect(screen.queryByText("Paused on 31 Jul 2026.")).not.toBeInTheDocument();
+
+    unmount();
+    renderPausedStrip("month_first");
+    expect(screen.getByText("Paused on Aug 1, 2026.")).toBeInTheDocument();
   });
 
   it("flags a published provider anomaly beside the freshness fact", () => {
@@ -683,7 +782,7 @@ it("renders selector-backed phase C progress alongside separate truthful segment
   expect(container.querySelector('[data-startup-segment="progress"]')).toBeInTheDocument();
   expect(container.querySelector('[data-startup-segment="deep-history"]')).toBeNull();
   expect(container.querySelector('[data-startup-segment="freshness"]')).toBeNull();
-  expect(screen.getByLabelText("Refresh import status")).toBeInTheDocument();
+  expect(screen.getByLabelText("Refresh stored insights")).toBeInTheDocument();
   expect(screen.queryByText("Coverage shows once the first days arrive.")).not.toBeInTheDocument();
   expect(screen.queryByText(/no day yet/)).not.toBeInTheDocument();
   expect(screen.queryByText(/Query text on/)).not.toBeInTheDocument();
@@ -698,7 +797,7 @@ it("renders phase B from the truthful total without progress, heartbeat, or ETA"
 
   expect(screen.getByText("Importing")).toBeInTheDocument();
   expect(container.querySelector('[data-startup-segment="progress"]')).not.toBeInTheDocument();
-  expect(screen.getByLabelText("Refresh import status")).toBeInTheDocument();
+  expect(screen.getByLabelText("Refresh stored insights")).toBeInTheDocument();
   expect(screen.queryByText(/0 of|last activity|about .*left|not yet/)).not.toBeInTheDocument();
 });
 

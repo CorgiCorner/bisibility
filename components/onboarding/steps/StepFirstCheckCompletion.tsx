@@ -5,6 +5,8 @@ import { formatDateTime } from "@/lib/dates/format";
 import { appPath } from "@/lib/routing/app-path";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
+import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 type Props = {
   frequency?: ProjectDefaultsInput["frequency"];
@@ -23,41 +25,33 @@ export function StepFirstCheckCompletion({
   projectId,
   timezone,
 }: Readonly<Props>) {
+  const t = useTranslations("onboarding.firstCheck");
   const dateFormat = useDateFormat();
   const rankTrackerHref = appPath(projectId, "rank-tracker");
   const settingsHref = projectSchedulesPath(projectId);
-  const singular = keywordCount === 1;
-  const keywordsLabel = `${keywordCount} ${singular ? "keyword" : "keywords"}`;
-  const be = singular ? "is" : "are";
-  const run = singular ? "runs" : "run";
-  const objectPronoun = singular ? "it" : "them";
+  const objectPronoun = keywordCount === 1 ? t("completion.it") : t("completion.them");
+  const links = {
+    schedules: (chunks: ReactNode) => (
+      <a className="underline" href={settingsHref}>
+        {chunks}
+      </a>
+    ),
+    tracker: (chunks: ReactNode) => (
+      <a className="underline" href={rankTrackerHref}>
+        {chunks}
+      </a>
+    ),
+  };
   if (frequency === "manual")
     return (
       <p className="mt-4 text-[13px] leading-relaxed text-fg-muted">
-        Your {keywordsLabel} {be} ready. Nothing runs - or spends - until you say so: run{" "}
-        {objectPronoun} anytime from the{" "}
-        <a className="underline" href={rankTrackerHref}>
-          Rank Tracker
-        </a>
-        , or switch to a schedule in{" "}
-        <a className="underline" href={settingsHref}>
-          Schedules
-        </a>{" "}
-        for hands-off tracking.
+        {t.rich("completion.manual", { ...links, keywords: keywordCount, objectPronoun })}
       </p>
     );
   if (frequency === "paused")
     return (
       <p className="mt-4 text-[13px] leading-relaxed text-fg-muted">
-        Your {keywordsLabel} {be} paused. No scheduled checks run until you resume tracking in{" "}
-        <a className="underline" href={settingsHref}>
-          Schedules
-        </a>
-        . You can still run {objectPronoun} from the{" "}
-        <a className="underline" href={rankTrackerHref}>
-          Rank Tracker
-        </a>
-        .
+        {t.rich("completion.paused", { ...links, keywords: keywordCount, objectPronoun })}
       </p>
     );
   let nextRun: string | null = null;
@@ -68,12 +62,13 @@ export function StepFirstCheckCompletion({
   }
   return (
     <p className="mt-4 text-[13px] leading-relaxed text-fg-muted">
-      Your {keywordsLabel} {run} automatically on your {frequencyLabel.toLowerCase()} schedule
-      {nextRun ? ` - next run ${nextRun}` : ""}. Or run {objectPronoun} anytime from the{" "}
-      <a className="underline" href={rankTrackerHref}>
-        Rank Tracker
-      </a>
-      .
+      {t.rich("completion.scheduled", {
+        ...links,
+        frequency: frequencyLabel,
+        keywords: keywordCount,
+        nextRun: nextRun ?? "none",
+        objectPronoun,
+      })}
     </p>
   );
 }

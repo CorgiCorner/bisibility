@@ -1,20 +1,59 @@
-import {
-  itemStatusChipPresentation,
-  runStatusChipPresentation,
-} from "@/components/ui/status-chip-mapping";
-import { relativeFuture } from "@/lib/format/relative-time";
+import type { StatusChipPresentation } from "@/components/ui/status-chip-mapping";
 import type {
   ItemStatus,
   OperationSnapshot,
   RankCheckOperation,
   RunStatus,
 } from "@/lib/rank-check/runs/contract";
+import type { RunScheduleTiming } from "@/lib/rank-check/runs/start-facts";
 import type { RunPageData, RunPageItem } from "./RunPageTypes";
-import { countWithNoun, formatElapsed, isSkippedOccurrence } from "./runs-format";
+import { isSkippedOccurrence } from "./runs-format";
 
 export type RunItemFilter = "all" | ItemStatus;
 
+type CounterKind = "cancelled" | "completed" | "deferred" | "failed" | "remaining";
 type Counter = { count: number; label: string; note: string };
+type RunFact =
+  | { kind: "selection"; keywordCount: number; targetCount: number }
+  | { kind: "provider"; providerLabel: string | null; state: "chosen_at_launch" | "not_chosen" }
+  | {
+      costCents: number | null;
+      kind: "cost";
+      note: "estimate" | "no_rate_yet" | "nothing_billed" | "set_when_planned";
+      phase: "cost" | "estimated" | "spent";
+    }
+  | {
+      kind: "first_check";
+      nextAt: string | null;
+      note: "waiting_for_worker" | "waiting_to_start" | "schedule_timing";
+      scheduleTiming: RunScheduleTiming | null;
+    }
+  | {
+      kind: "timing";
+      note:
+        | "not_finished"
+        | "not_started"
+        | "scheduled_occurrence"
+        | "started"
+        | "waiting_to_start";
+      now: string;
+      phase: "blocked_since" | "duration" | "elapsed" | "starts_in";
+      value:
+        | { kind: "duration"; finishedAt: string | null; startedAt: string | null }
+        | { kind: "instant"; value: string | null };
+    };
+
+export type RunPageSummaryLabels = {
+  counter: (kind: CounterKind) => Omit<Counter, "count">;
+  elapsed: (startedAt: string | null, finishedAt: string | null, now: string) => string;
+  fact: (fact: RunFact) => { label: string; note: string; value: string };
+  matched: (started: number, total: number) => string;
+  progress: (processed: number, total: number) => string;
+  runPresentation: (run: RunPageData, skipped: boolean) => StatusChipPresentation;
+  selected: (count: number) => string;
+  skippedBy: (name: string, date: string) => string;
+  skippedExplanation: () => string;
+};
 
 const FILTERABLE_ITEM_STATUSES: ItemStatus[] = [
   "running",
@@ -29,14 +68,6 @@ const FILTERABLE_ITEM_STATUSES: ItemStatus[] = [
 
 function isActiveRun(status: RunStatus): boolean {
   return status === "queued" || status === "running" || status === "cancelling";
-}
-
-function cents(value: number): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value / 100);
-}
-
-function count(value: number): string {
-  return value.toLocaleString("en-US");
 }
 
 function timestamp(item: RunPageItem): string {
@@ -67,29 +98,25 @@ export function liveRun(run: RunPageData, operations: OperationSnapshot[]): RunP
   return operation ? { ...run, ...operation } : run;
 }
 
-export function runCounters(run: RunPageData): Counter[] {
+export function runCounters(run: RunPageData, labels: RunPageSummaryLabels): Counter[] {
   const pending = Math.max(run.counts.total - terminalCount(run), 0);
   return [
-    { count: pending, label: "Remaining", note: "not terminal" },
+    { count: pending, ...labels.counter("remaining") },
     {
       count: run.counts.completed,
-      label: itemStatusChipPresentation("completed").label,
-      note: "positions written",
+      ...labels.counter("completed"),
     },
     {
       count: run.counts.failed,
-      label: itemStatusChipPresentation("failed").label,
-      note: "no position written",
+      ...labels.counter("failed"),
     },
     {
       count: run.counts.deferred,
-      label: itemStatusChipPresentation("deferred").label,
-      note: "retry on the next run",
+      ...labels.counter("deferred"),
     },
     {
       count: run.counts.cancelled,
-      label: itemStatusChipPresentation("cancelled").label,
-      note: "stopped before sending",
+      ...labels.counter("cancelled"),
     },
   ].filter((counter) => counter.count > 0);
 }
@@ -129,9 +156,9 @@ export function orderedRunItems(
 
 export function runSummary(
   run: RunPageData,
-  options: { formatInstant: (iso: string) => string; now: string },
+  options: { now: string },
+  labels: RunPageSummaryLabels,
 ) {
-  const formatInstant = options.formatInstant;
   const processed = terminalCount(run);
   const active = isActiveRun(run.status);
   const planned = run.status === "planned" || (run.status === "blocked" && !run.startedAt);
@@ -139,90 +166,90 @@ export function runSummary(
   const beforeStart = planned || waiting;
   const skipped = isSkippedOccurrence(run);
   const started = skipped ? 0 : (run.startedTargets ?? 0);
-  const selection = `${countWithNoun(run.keywordCount, "keyword")} · ${countWithNoun(run.counts.total, "target")}`;
+  const selection = labels.fact({
+    kind: "selection",
+    keywordCount: run.keywordCount,
+    targetCount: run.counts.total,
+  });
+  const provider = labels.fact({
+    kind: "provider",
+    providerLabel: skipped ? null : (run.providerLabel ?? null),
+    state: skipped || !run.providerLabel ? "not_chosen" : "chosen_at_launch",
+  });
+  const cost = labels.fact({
+    costCents:
+      skipped || (beforeStart && run.estimatedCostCents === 0)
+        ? null
+        : beforeStart
+          ? run.estimatedCostCents
+          : run.costCents,
+    kind: "cost",
+    note: skipped
+      ? "nothing_billed"
+      : beforeStart
+        ? run.estimatedCostCents === 0
+          ? "no_rate_yet"
+          : "set_when_planned"
+        : "estimate",
+    phase: beforeStart ? "estimated" : active ? "spent" : "cost",
+  });
+  const timing = waiting
+    ? labels.fact({
+        kind: "first_check",
+        nextAt: run.firstNotBefore ?? run.nextCheckAt,
+        note: run.scheduleTiming
+          ? "schedule_timing"
+          : run.firstNotBefore || run.nextCheckAt
+            ? "waiting_to_start"
+            : "waiting_for_worker",
+        scheduleTiming: run.scheduleTiming ?? null,
+      })
+    : labels.fact({
+        kind: "timing",
+        note:
+          run.status === "blocked" && run.trigger === "manual"
+            ? "waiting_to_start"
+            : planned
+              ? "scheduled_occurrence"
+              : active
+                ? run.startedAt
+                  ? "started"
+                  : "not_started"
+                : run.finishedAt
+                  ? "started"
+                  : "not_finished",
+        phase:
+          run.status === "blocked" && run.trigger === "manual"
+            ? "blocked_since"
+            : planned
+              ? "starts_in"
+              : active
+                ? "elapsed"
+                : "duration",
+        value:
+          run.status === "blocked" && run.trigger === "manual"
+            ? { kind: "instant", value: run.launchedAt }
+            : planned
+              ? { kind: "instant", value: run.plannedFor }
+              : { finishedAt: run.finishedAt, kind: "duration", startedAt: run.startedAt },
+        now: options.now,
+      });
   return {
     active,
     cancellable: run.status === "queued" || run.status === "running",
-    counters: runCounters(run),
-    facts: [
-      { label: "Selection", note: "", value: selection },
-      {
-        label: "Provider",
-        note: skipped ? "not chosen" : run.providerLabel ? "chosen at launch" : "not chosen yet",
-        value: skipped ? "-" : (run.providerLabel ?? "-"),
-      },
-      {
-        label: beforeStart ? "Estimated cost" : active ? "Spent so far" : "Cost",
-        note: skipped
-          ? "nothing billed"
-          : beforeStart
-            ? run.estimatedCostCents === 0
-              ? "no rate yet"
-              : "set when planned"
-            : `estimate ${cents(run.estimatedCostCents)}`,
-        value:
-          skipped || (beforeStart && run.estimatedCostCents === 0)
-            ? "-"
-            : cents(beforeStart ? run.estimatedCostCents : run.costCents),
-      },
-      waiting
-        ? {
-            label: "First check in",
-            note: run.scheduleTiming ?? "Waiting to start",
-            value:
-              (run.firstNotBefore ?? run.nextCheckAt)
-                ? relativeFuture(
-                    new Date((run.firstNotBefore ?? run.nextCheckAt) as string),
-                    new Date(options.now),
-                  ).replace(/^in /, "")
-                : "Waiting for worker",
-          }
-        : {
-            label:
-              run.status === "blocked" && run.trigger === "manual"
-                ? "Blocked since"
-                : planned
-                  ? "Starts in"
-                  : active
-                    ? "Elapsed"
-                    : "Duration",
-            note:
-              run.status === "blocked" && run.trigger === "manual"
-                ? "Waiting to start"
-                : planned
-                  ? "scheduled occurrence"
-                  : active
-                    ? run.startedAt
-                      ? `Started ${formatInstant(run.startedAt)}`
-                      : "Not started"
-                    : run.finishedAt
-                      ? `Finished ${formatInstant(run.finishedAt)}`
-                      : "Not finished",
-            value:
-              run.status === "blocked" && run.trigger === "manual"
-                ? run.launchedAt
-                  ? formatInstant(run.launchedAt)
-                  : "Not started"
-                : planned
-                  ? run.plannedFor
-                    ? formatInstant(run.plannedFor)
-                    : "Not scheduled"
-                  : formatElapsed(run.startedAt, run.finishedAt, options.now),
-          },
-    ],
+    counters: runCounters(run, labels),
+    facts: [selection, provider, cost, timing],
     matchedLine: planned
-      ? `${countWithNoun(run.counts.total, "target")} selected`
-      : `${count(started)} of ${count(run.counts.total)} selected targets started`,
+      ? labels.selected(run.counts.total)
+      : labels.matched(started, run.counts.total),
     planned,
     processed,
-    progressLabel: `${count(processed)} of ${count(run.counts.total)} targets processed`,
-    runPresentation: skipped
-      ? { label: "Skipped", tone: "neutral" as const }
-      : runStatusChipPresentation(run.status, run.outcome),
+    progressLabel: labels.progress(processed, run.counts.total),
+    runPresentation: labels.runPresentation(run, skipped),
     skipped,
     skippedLine: skipped
-      ? `Skipped by ${run.skippedBy?.name ?? "a team member"} on ${run.finishedAt ? formatInstant(run.finishedAt) : "an unknown date"}`
-      : "Skipped targets never reach a provider and cost nothing.",
+      ? labels.skippedBy(run.skippedBy?.name ?? "", run.finishedAt ?? "")
+      : labels.skippedExplanation(),
   };
 }
 

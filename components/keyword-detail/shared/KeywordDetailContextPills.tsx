@@ -1,6 +1,7 @@
 import { ListBulletsIcon as ListBullets } from "@phosphor-icons/react/dist/csr/ListBullets";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
+import { useTranslations } from "next-intl";
 
 export type KeywordDetailContextPillsProps = {
   depth: number;
@@ -27,11 +28,12 @@ export function KeywordDetailContextPills({
   device,
   location,
 }: Readonly<KeywordDetailContextPillsProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.empty");
   return (
-    <div aria-label="Keyword context" className="flex flex-wrap items-center gap-[7px]">
+    <div aria-label={t("contextAria")} className="flex flex-wrap items-center gap-[7px]">
       <ContextPill icon={MapPin}>{location}</ContextPill>
       <ContextPill icon={Monitor}>{device}</ContextPill>
-      <ContextPill icon={ListBullets}>{`Top ${depth}`}</ContextPill>
+      <ContextPill icon={ListBullets}>{t("top", { depth })}</ContextPill>
     </div>
   );
 }

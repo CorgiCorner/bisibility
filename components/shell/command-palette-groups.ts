@@ -26,8 +26,32 @@ export type CommandItem = {
 };
 
 export type CommandGroup = {
-  title: "Actions" | "Keywords" | "Markets" | "Navigate" | "On this page";
+  title: string;
   items: CommandItem[];
+};
+
+/** Display copy arrives from the shell catalog; paths and command callbacks remain model data. */
+export type CommandPaletteCopy = {
+  actionItems: {
+    addKeyword: string;
+    exportKeywords: string;
+    importCsv: string;
+    signOut: string;
+    toggleTheme: string;
+  };
+  groups: { actions: string; keywords: string; markets: string; navigate: string };
+  hints: {
+    account: string;
+    downloadFile: string;
+    goTo: string;
+    keyword: string;
+    market: string;
+    newKeyword: string;
+    theme: string;
+    uploadFile: string;
+  };
+  marketNavigation: (section: string, market: string) => string;
+  navigation: Record<string, string>;
 };
 
 /**
@@ -41,6 +65,7 @@ export function commandGroups(
   projectRef: string,
   push: (href: string) => void,
   setMode: (mode: "dark" | "light") => void,
+  copy: CommandPaletteCopy,
   keywordHits: KeywordHit[],
   markets: readonly PaletteMarket[] = [],
   context?: NavContext,
@@ -49,8 +74,8 @@ export function commandGroups(
   const navigate = [...navItems(projectRef, context, enabledExperimentalModules), docsNavItem].map(
     (item) => ({
       icon: item.icon,
-      label: item.label,
-      hint: "Go to",
+      label: navigationLabel(copy, item.label),
+      hint: copy.hints.goTo,
       run: item.external
         ? () => {
             window.open(item.href, "_blank", "noopener,noreferrer");
@@ -62,20 +87,20 @@ export function commandGroups(
   const keywords = keywordHits.map((hit) => ({
     icon: MagnifyingGlass,
     label: hit.label,
-    hint: "Keyword",
+    hint: copy.hints.keyword,
     run: () => push(appPath(projectRef, "rank-tracker", hit.id)),
   }));
 
-  const marketRows = marketItems(projectRef, markets, push);
+  const marketRows = marketItems(projectRef, markets, push, copy);
 
   return [
     // Above Navigate: a market row answers the same question more precisely, and a reader who
     // has markets at all is usually after one of them. With no markets there is no group, so
     // a project that tracks none sees exactly the palette it saw before.
-    ...(marketRows.length > 0 ? [{ title: "Markets" as const, items: marketRows }] : []),
-    { title: "Navigate", items: navigate },
-    { title: "Keywords", items: keywords },
-    { title: "Actions", items: actionItems(projectRef, push, setMode) },
+    ...(marketRows.length > 0 ? [{ title: copy.groups.markets, items: marketRows }] : []),
+    { title: copy.groups.navigate, items: navigate },
+    { title: copy.groups.keywords, items: keywords },
+    { title: copy.groups.actions, items: actionItems(projectRef, push, setMode, copy) },
   ];
 }
 
@@ -110,6 +135,7 @@ function marketItems(
   projectRef: string,
   markets: readonly PaletteMarket[],
   push: (href: string) => void,
+  copy: CommandPaletteCopy,
 ): CommandItem[] {
   const routed = navItems(projectRef)
     .map((item) => ({ ...item, segments: sectionSegments(item.href) }))
@@ -119,8 +145,8 @@ function marketItems(
     routed.map((item) => ({
       icon: item.icon,
       id: `market:${market.ref}:${item.segments.join("/")}`,
-      label: `${item.label} in ${market.label}`,
-      hint: "Market",
+      label: copy.marketNavigation(navigationLabel(copy, item.label), market.label),
+      hint: copy.hints.market,
       run: () => push(marketPath(projectRef, market.ref, ...item.segments)),
     })),
   );
@@ -130,30 +156,31 @@ function actionItems(
   projectRef: string,
   push: (href: string) => void,
   setMode: (mode: "dark" | "light") => void,
+  copy: CommandPaletteCopy,
 ): CommandItem[] {
   return [
     {
       icon: Plus,
-      label: "Rank Tracker: Add keyword",
-      hint: "New keyword",
+      label: copy.actionItems.addKeyword,
+      hint: copy.hints.newKeyword,
       run: () => push(rankTrackerActionHref(projectRef, "add")),
     },
     {
       icon: UploadSimple,
-      label: "Rank Tracker: Import CSV",
-      hint: "Upload file",
+      label: copy.actionItems.importCsv,
+      hint: copy.hints.uploadFile,
       run: () => push(rankTrackerActionHref(projectRef, "import")),
     },
     {
       icon: DownloadSimple,
-      label: "Rank Tracker: Export keywords",
-      hint: "Download file",
+      label: copy.actionItems.exportKeywords,
+      hint: copy.hints.downloadFile,
       run: () => push(rankTrackerActionHref(projectRef, "export")),
     },
     {
       icon: Palette,
-      label: "Toggle theme",
-      hint: "Theme",
+      label: copy.actionItems.toggleTheme,
+      hint: copy.hints.theme,
       run: () => {
         const next = readTheme() === "dark" ? "light" : "dark";
         applyTheme(next);
@@ -162,8 +189,8 @@ function actionItems(
     },
     {
       icon: SignOut,
-      label: "Sign out",
-      hint: "Account",
+      label: copy.actionItems.signOut,
+      hint: copy.hints.account,
       run: async () => {
         await authClient.signOut();
         notifyAuthenticatedSessionEnd();
@@ -171,4 +198,10 @@ function actionItems(
       },
     },
   ];
+}
+
+function navigationLabel(copy: CommandPaletteCopy, label: string) {
+  const localized = copy.navigation[label];
+  if (!localized) throw new Error(`Missing command-palette navigation copy for ${label}`);
+  return localized;
 }

@@ -16,6 +16,7 @@ import { UsersThreeIcon as UsersThree } from "@phosphor-icons/react/dist/csr/Use
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import type { Icon } from "@phosphor-icons/react/lib";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 type NotificationKind = "check" | "error" | "rank" | "system" | "team";
@@ -144,6 +145,7 @@ function NotificationBellView({
   markAllNotificationsRead,
   markNotificationRead,
 }: Readonly<NotificationBellClientProps>) {
+  const t = useTranslations("shell.notifications");
   const { showToast } = useToast();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
@@ -171,7 +173,7 @@ function NotificationBellView({
           next.delete(item.id);
           return next;
         });
-        showToast("Could not mark notifications as read. Please try again.", { severity: "error" });
+        showToast(t("markReadError"), { severity: "error" });
       }
     });
   }
@@ -184,7 +186,7 @@ function NotificationBellView({
         await markAllNotificationsRead();
       } catch {
         setAllReadAt(previousReadAt);
-        showToast("Could not mark notifications as read. Please try again.", { severity: "error" });
+        showToast(t("markReadError"), { severity: "error" });
       }
     });
   }
@@ -195,13 +197,13 @@ function NotificationBellView({
         aria-controls={open ? "notification-bell-menu" : undefined}
         aria-expanded={open}
         aria-haspopup="dialog"
-        aria-label="Notifications"
+        aria-label={t("title")}
         className={[
           "grid h-9 w-9 place-items-center rounded-control p-0 text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid",
           open ? "bg-bg-sunken" : "",
         ].join(" ")}
         onClick={(event) => setAnchorEl(event.currentTarget)}
-        title="Notifications"
+        title={t("title")}
         type="button"
       >
         <Bell aria-hidden size={17} weight="regular" />
@@ -222,7 +224,7 @@ function NotificationBellView({
       >
         <div className="flex items-center justify-between gap-2.5 border-b border-border px-4 py-[13px]">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">Notifications</span>
+            <span className="text-sm font-semibold">{t("title")}</span>
           </div>
           <button
             className="p-0 text-xs font-semibold text-accent-text disabled:text-fg-muted"
@@ -230,7 +232,7 @@ function NotificationBellView({
             onClick={markAllRead}
             type="button"
           >
-            Mark all read
+            {t("markAllRead")}
           </button>
         </div>
         <div className="max-h-[380px] overflow-y-auto">
@@ -247,7 +249,7 @@ function NotificationBellView({
               />
             ))
           ) : (
-            <div className="px-4 py-8 text-center text-xs text-fg-muted">No notifications</div>
+            <div className="px-4 py-8 text-center text-xs text-fg-muted">{t("empty")}</div>
           )}
         </div>
       </Popover>

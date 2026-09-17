@@ -8,6 +8,7 @@ import type {
   DataTableSort,
 } from "@/components/ui/data-table/data-table-types";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { KeywordNoRowsOverlay, type KeywordNoRowsState } from "./KeywordTableStatus";
 
@@ -54,6 +55,7 @@ export function KeywordGridViewport({
   selection,
   sorting,
 }: Readonly<KeywordGridViewportProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   return (
     <div className="min-w-0 overflow-hidden">
       <div
@@ -61,7 +63,7 @@ export function KeywordGridViewport({
         data-testid="keywords-grid-viewport"
       >
         <DataTable
-          ariaLabel="Rank tracker keywords"
+          ariaLabel={t("tableAria")}
           columnSizing={columnSizing}
           columns={columns}
           columnVisibility={columnVisibility}

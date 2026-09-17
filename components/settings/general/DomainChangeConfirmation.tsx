@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { domainSchema } from "@/lib/schemas/project";
 import { actionErrorMessage } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -41,6 +42,8 @@ export function DomainChangeConfirmation({
   projectId,
   requestDomainChange,
 }: Readonly<DomainChangeConfirmationProps>) {
+  const t = useTranslations("projectSettingsGeneral.domainChange");
+  const validationT = useTranslations("projectSettingsGeneral.validation");
   const renderedCurrentDomain = currentDomain?.trim() ?? "";
   const hasCurrentDomain = renderedCurrentDomain.length > 0;
   const form = useForm<DomainChangeForm>({
@@ -55,6 +58,14 @@ export function DomainChangeConfirmation({
     ? confirmationDomain === renderedCurrentDomain
     : confirmationDomain === "";
   const canConfirm = form.formState.isValid && isChanged && isConfirmed;
+  const newDomainError = form.formState.errors.newDomain;
+  const confirmationError = form.formState.errors.confirmationDomain;
+  const newDomainValidationMessage =
+    newDomainError?.type === "too_big"
+      ? validationT("domainTooLong")
+      : newDomainError?.type === "too_small" || newDomainError?.type === "custom"
+        ? validationT("invalidDomain")
+        : newDomainError?.message;
 
   function close() {
     form.reset({ confirmationDomain: "", newDomain: renderedCurrentDomain });
@@ -72,7 +83,7 @@ export function DomainChangeConfirmation({
       close();
     } catch (error: unknown) {
       form.setError("newDomain", {
-        message: actionErrorMessage(error, "The domain could not be changed."),
+        message: actionErrorMessage(error, t("error")),
       });
     }
   }
@@ -82,17 +93,17 @@ export function DomainChangeConfirmation({
       footer={
         <>
           <Button onClick={close} size="sm" type="button" variant="ghost">
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             disabled={!canConfirm}
             form="domain-change-confirmation-form"
             loading={form.formState.isSubmitting}
-            loadingLabel="Confirming"
+            loadingLabel={t("confirming")}
             size="sm"
             type="submit"
           >
-            Confirm domain change
+            {t("confirm")}
           </Button>
         </>
       }
@@ -100,19 +111,17 @@ export function DomainChangeConfirmation({
       onClose={close}
       open={open}
       size="md"
-      title="Confirm a new project domain"
+      title={t("title")}
     >
       <form
         className="space-y-4"
         id="domain-change-confirmation-form"
         onSubmit={form.handleSubmit(submit)}
       >
-        <p className="m-0 text-[12.5px] leading-[1.55] text-fg-muted">
-          Change the domain this project uses to identify its matching results.
-        </p>
+        <p className="m-0 text-[12.5px] leading-[1.55] text-fg-muted">{t("description")}</p>
         <div>
           <label className={labelClass} htmlFor="domain-change-next-domain">
-            New domain
+            {t("newDomain")}
           </label>
           <Input
             autoComplete="url"
@@ -121,17 +130,17 @@ export function DomainChangeConfirmation({
             spellCheck={false}
             {...form.register("newDomain")}
           />
-          {form.formState.errors.newDomain ? (
+          {newDomainError ? (
             <p className="m-0 mt-1.5 text-[11.5px] font-medium text-red-text">
-              {form.formState.errors.newDomain.message}
+              {newDomainValidationMessage}
             </p>
           ) : null}
         </div>
         <div>
           <label className={labelClass} htmlFor="domain-change-confirmation-domain">
             {hasCurrentDomain
-              ? `Type ${renderedCurrentDomain} to confirm`
-              : "Leave confirmation blank to set the first domain"}
+              ? t("confirmationWithDomain", { domain: renderedCurrentDomain })
+              : t("confirmationFirst")}
           </label>
           <Input
             autoComplete="off"
@@ -140,32 +149,29 @@ export function DomainChangeConfirmation({
             spellCheck={false}
             {...form.register("confirmationDomain")}
           />
-          {form.formState.errors.confirmationDomain ? (
+          {confirmationError ? (
             <p className="m-0 mt-1.5 text-[11.5px] font-medium text-red-text">
-              {form.formState.errors.confirmationDomain.message}
+              {validationT("confirmationTooLong")}
             </p>
           ) : hasCurrentDomain &&
             confirmationDomain &&
             confirmationDomain !== renderedCurrentDomain ? (
             <p className="m-0 mt-1.5 text-[11.5px] font-medium text-red-text">
-              The confirmation must match {renderedCurrentDomain}.
+              {t("confirmationMustMatch", { domain: renderedCurrentDomain })}
             </p>
           ) : !hasCurrentDomain && confirmationDomain ? (
             <p className="m-0 mt-1.5 text-[11.5px] font-medium text-red-text">
-              Leave the confirmation blank to set this project&apos;s first domain.
+              {t("confirmationFirstError")}
             </p>
           ) : null}
         </div>
         <div className="rounded-control border border-dashed border-border px-3 py-2.5">
           <p className="m-0 font-sans tabular-nums text-[9.5px] uppercase tracking-[1.1px] text-fg-muted">
-            After you confirm
+            {t("afterConfirmation")}
           </p>
+          <p className="m-0 mt-1 text-[12px] leading-[1.55] text-fg-muted">{t("futureChecks")}</p>
           <p className="m-0 mt-1 text-[12px] leading-[1.55] text-fg-muted">
-            Existing checks keep their original results. Future checks use the new domain and its
-            subdomains to identify project matches.
-          </p>
-          <p className="m-0 mt-1 text-[12px] leading-[1.55] text-fg-muted">
-            Competitor history stays tied to the domain that was used when each check ran.
+            {t("competitorHistory")}
           </p>
         </div>
       </form>

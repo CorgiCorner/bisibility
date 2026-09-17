@@ -1,9 +1,11 @@
 "use client";
 
+import { localizedHeaderMeta } from "@/components/shell/header-copy";
 import { headerMetaFor } from "@/components/shell/header-title";
 import { IdChip } from "@/components/ui/IdChip";
 import { appRootPath } from "@/lib/routing/app-path";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type AppHeaderTitleProps = Readonly<{
   setupCompleted?: boolean;
@@ -14,11 +16,13 @@ export function AppHeaderTitle({
   setupCompleted = false,
   setupTotalCount = 4,
 }: AppHeaderTitleProps) {
+  const t = useTranslations("shell.header");
   const pathname = usePathname() ?? appRootPath();
-  const { headerVariant, id, subtitle, title } = headerMetaFor(pathname, {
-    completed: setupCompleted,
-    totalCount: setupTotalCount,
-  });
+  const { headerVariant, id, subtitle, title } = localizedHeaderMeta(
+    t,
+    headerMetaFor(pathname, { completed: setupCompleted, totalCount: setupTotalCount }),
+    setupCompleted,
+  );
   const settingsHeader = headerVariant === "settings";
 
   return (
@@ -33,7 +37,7 @@ export function AppHeaderTitle({
         >
           {title}
         </h1>
-        {id ? <IdChip copyLabel="Copy run ID" size="xs" value={id} /> : null}
+        {id ? <IdChip copyLabel={t("copyRunId")} size="xs" value={id} /> : null}
       </div>
       {subtitle ? (
         <div className="mt-1 hidden truncate text-[12.5px] text-fg-muted sm:block">{subtitle}</div>

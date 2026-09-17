@@ -1,16 +1,19 @@
+"use client";
+
 import { FeedMetadataTokens } from "@/components/feeds/FacetToken";
 import { RemoveNoteAction } from "@/components/timeline/RemoveNoteAction";
 import type { TimelineItem } from "@/lib/timeline/timeline-data";
-import type { StackIcon as Stack } from "@phosphor-icons/react/dist/ssr";
-import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
-import { DesktopIcon as Desktop } from "@phosphor-icons/react/dist/ssr/Desktop";
-import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/ssr/DeviceMobile";
-import { FileMagnifyingGlassIcon as FileMagnifyingGlass } from "@phosphor-icons/react/dist/ssr/FileMagnifyingGlass";
-import { MedalIcon as Medal } from "@phosphor-icons/react/dist/ssr/Medal";
-import { NotePencilIcon as NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil";
-import { RocketLaunchIcon as RocketLaunch } from "@phosphor-icons/react/dist/ssr/RocketLaunch";
-import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/ssr/UploadSimple";
-import { WarningIcon as Warning } from "@phosphor-icons/react/dist/ssr/Warning";
+import type { Icon } from "@phosphor-icons/react";
+import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
+import { DesktopIcon as Desktop } from "@phosphor-icons/react/dist/csr/Desktop";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
+import { FileMagnifyingGlassIcon as FileMagnifyingGlass } from "@phosphor-icons/react/dist/csr/FileMagnifyingGlass";
+import { MedalIcon as Medal } from "@phosphor-icons/react/dist/csr/Medal";
+import { NotePencilIcon as NotePencil } from "@phosphor-icons/react/dist/csr/NotePencil";
+import { RocketLaunchIcon as RocketLaunch } from "@phosphor-icons/react/dist/csr/RocketLaunch";
+import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
+import { WarningIcon as Warning } from "@phosphor-icons/react/dist/csr/Warning";
+import { useTranslations } from "next-intl";
 
 const itemIcons = {
   api: UploadSimple,
@@ -19,7 +22,7 @@ const itemIcons = {
   pages: FileMagnifyingGlass,
   rankings: Medal,
   status: Warning,
-} satisfies Record<TimelineItem["icon"], typeof Stack>;
+} satisfies Record<TimelineItem["icon"], Icon>;
 
 const tintStyles = {
   amber: {
@@ -30,12 +33,14 @@ const tintStyles = {
   red: { bg: "color-mix(in srgb, var(--red) 10%, transparent)", color: "var(--red)" },
 } satisfies Record<TimelineItem["tint"], { bg: string; color: string }>;
 
-function TimelineMeta({ item }: Readonly<{ item: TimelineItem }>) {
+type TimelineRowTranslations = ReturnType<typeof useTranslations<"projectTimeline.row">>;
+
+function TimelineMeta({ item, t }: Readonly<{ item: TimelineItem; t: TimelineRowTranslations }>) {
   if (!item.marketMeta) {
     return item.feedMeta ? <FeedMetadataTokens metadata={item.feedMeta} /> : item.meta;
   }
   const [keyword, location, language, source] = item.marketMeta.segments;
-  const deviceLabel = item.marketMeta.device === "mobile" ? "Mobile" : "Desktop";
+  const deviceLabel = item.marketMeta.device === "mobile" ? t("deviceMobile") : t("deviceDesktop");
   const DeviceIcon = item.marketMeta.device === "mobile" ? DeviceMobile : Desktop;
   if (item.feedMeta) {
     return (
@@ -80,6 +85,7 @@ type TimelineRowProps = {
 };
 
 export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRowProps>) {
+  const t = useTranslations("projectTimeline.row");
   const Icon = itemIcons[item.icon];
   const tint = tintStyles[item.tint];
 
@@ -117,7 +123,7 @@ export function TimelineRow({ canDelete, item, projectId }: Readonly<TimelineRow
             ) : null}
           </div>
           <div className="mt-1 min-w-0 font-sans tabular-nums text-[11px] text-fg-muted">
-            <TimelineMeta item={item} />
+            <TimelineMeta item={item} t={t} />
           </div>
           {item.url ? (
             <a

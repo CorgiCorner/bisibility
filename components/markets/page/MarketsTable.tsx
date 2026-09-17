@@ -6,16 +6,11 @@ import type { DataTableColumn } from "@/components/ui/data-table/data-table-type
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { Switch } from "@/components/ui/Switch";
-import { formatMoneyCents } from "@/lib/format/money";
-import {
-  type MarketsPageRow,
-  type MarketsSortKey,
-  marketMetric,
-  sortMarkets,
-} from "@/lib/markets/page-model";
+import { type MarketsPageRow, type MarketsSortKey, sortMarkets } from "@/lib/markets/page-model";
 import { asMarketRef, asProjectRef, marketPath } from "@/lib/routing/app-path";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import Link from "next/link";
+import { useFormatter, useTranslations } from "next-intl";
 import { type ReactElement, useRef, useState } from "react";
 
 type MarketsTableProps = {
@@ -32,10 +27,6 @@ type MarketsTableProps = {
   title: string;
 };
 
-function statusLabel(status: MarketsPageRow["status"]) {
-  return status === "active" ? "Active" : "Paused";
-}
-
 export function MarketsTable({
   canAddKeywords,
   canArchive,
@@ -49,6 +40,8 @@ export function MarketsTable({
   rows,
   title,
 }: Readonly<MarketsTableProps>) {
+  const format = useFormatter();
+  const t = useTranslations("projectMarkets");
   const [error, setError] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<MarketsSortKey>("name");
   const [statuses, setStatuses] = useState(() => new Map(rows.map((row) => [row.id, row.status])));
@@ -93,7 +86,7 @@ export function MarketsTable({
         setStatuses((current) =>
           new Map(current).set(market.id, confirmed.current.get(market.id) ?? market.status),
         );
-        setError(actionErrorMessage(cause, "Market status could not be updated."));
+        setError(actionErrorMessage(cause, t("updateFailed")));
         onStatusConfirmed();
       }
     };
@@ -126,14 +119,12 @@ export function MarketsTable({
             projectId,
             sortableHeader,
             statuses,
+            format,
+            t,
           })}
           density="standard"
           emptyState={
-            <EmptyState
-              compact
-              description="Resume a paused market to start tracking again."
-              title="No active markets"
-            />
+            <EmptyState compact description={t("resumePausedHint")} title={t("noActiveMarkets")} />
           }
           id="markets-table"
           layout="auto"
@@ -161,6 +152,8 @@ type MarketTableColumnsOptions = {
   projectId: string;
   sortableHeader: (label: string, key: MarketsSortKey) => ReactElement;
   statuses: Map<string, MarketsPageRow["status"]>;
+  format: ReturnType<typeof useFormatter>;
+  t: ReturnType<typeof useTranslations<"projectMarkets">>;
 };
 
 function marketTableColumns({
@@ -174,6 +167,8 @@ function marketTableColumns({
   projectId,
   sortableHeader,
   statuses,
+  format,
+  t,
 }: Readonly<MarketTableColumnsOptions>): readonly DataTableColumn<MarketsPageRow>[] {
   return [
     {
@@ -192,40 +187,43 @@ function marketTableColumns({
         </div>
       ),
       enableSorting: false,
-      header: () => sortableHeader("Market", "name"),
+      header: () => sortableHeader(t("market"), "name"),
       id: "name",
-      meta: { flex: 1, lockResize: true, lockVisible: true, sortable: false, title: "Market" },
+      meta: { flex: 1, lockResize: true, lockVisible: true, sortable: false, title: t("market") },
       minSize: 240,
       size: 272,
     },
     {
       accessorKey: "keywordCount",
-      cell: ({ row }) => row.original.keywordCount,
+      cell: ({ row }) => format.number(row.original.keywordCount),
       enableSorting: false,
-      header: () => sortableHeader("Keywords", "keywordCount"),
+      header: () => sortableHeader(t("keywordCount"), "keywordCount"),
       id: "keywordCount",
-      meta: { align: "end", lockResize: true, sortable: false, title: "Keywords" },
+      meta: { align: "end", lockResize: true, sortable: false, title: t("keywordCount") },
       minSize: 92,
       size: 100,
     },
     {
       accessorKey: "currentVisibility",
       cell: ({ row }) =>
-        row.original.currentVisibility == null ? "-" : `${row.original.currentVisibility}%`,
+        row.original.currentVisibility == null
+          ? "-"
+          : format.number(row.original.currentVisibility / 100, { style: "percent" }),
       enableSorting: false,
-      header: () => sortableHeader("Visibility", "currentVisibility"),
+      header: () => sortableHeader(t("visibility"), "currentVisibility"),
       id: "currentVisibility",
-      meta: { align: "end", lockResize: true, sortable: false, title: "Visibility" },
+      meta: { align: "end", lockResize: true, sortable: false, title: t("visibility") },
       minSize: 104,
       size: 112,
     },
     {
       accessorKey: "topThreeCount",
-      cell: ({ row }) => marketMetric(row.original.topThreeCount),
+      cell: ({ row }) =>
+        row.original.topThreeCount == null ? "-" : format.number(row.original.topThreeCount),
       enableSorting: false,
-      header: "Top 3",
+      header: t("topThree"),
       id: "topThreeCount",
-      meta: { align: "end", lockResize: true, sortable: false, title: "Top 3" },
+      meta: { align: "end", lockResize: true, sortable: false, title: t("topThree") },
       minSize: 72,
       size: 80,
     },
@@ -234,11 +232,14 @@ function marketTableColumns({
       cell: ({ row }) =>
         row.original.monthlyCostCents == null
           ? "-"
-          : formatMoneyCents(row.original.monthlyCostCents),
+          : format.number(row.original.monthlyCostCents / 100, {
+              currency: "USD",
+              style: "currency",
+            }),
       enableSorting: false,
-      header: () => sortableHeader("Monthly cost", "monthlyCostCents"),
+      header: () => sortableHeader(t("monthlyCost"), "monthlyCostCents"),
       id: "monthlyCostCents",
-      meta: { align: "end", lockResize: true, sortable: false, title: "Monthly cost" },
+      meta: { align: "end", lockResize: true, sortable: false, title: t("monthlyCost") },
       minSize: 128,
       size: 136,
     },
@@ -249,20 +250,23 @@ function marketTableColumns({
         return (
           <div className="flex items-center gap-2">
             <Switch
-              aria-label={`${active ? "Pause" : "Resume"} ${row.original.name}`}
+              aria-label={`${active ? t("pause") : t("resume")} ${row.original.name}`}
               checked={active}
               className="border-0 bg-transparent p-0"
               disabled={!canEdit}
               onChange={(event) => onStatusChange(row.original, event.currentTarget.checked)}
             />
-            <StatusChip label={statusLabel(status)} tone={active ? "positive" : "neutral"} />
+            <StatusChip
+              label={active ? t("active") : t("paused")}
+              tone={active ? "positive" : "neutral"}
+            />
           </div>
         );
       },
       enableSorting: false,
-      header: "Status",
+      header: t("status"),
       id: "status",
-      meta: { lockResize: true, sortable: false, title: "Status" },
+      meta: { lockResize: true, sortable: false, title: t("status") },
       minSize: 152,
       size: 160,
     },
@@ -281,7 +285,7 @@ function marketTableColumns({
       enableSorting: false,
       header: "",
       id: "actions",
-      meta: { align: "end", lockResize: true, sortable: false, title: "Actions" },
+      meta: { align: "end", lockResize: true, sortable: false, title: t("actions") },
       minSize: 48,
       size: 56,
     },

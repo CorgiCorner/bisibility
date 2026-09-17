@@ -6,6 +6,7 @@ import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import type { ProviderActionHandlers } from "@/lib/integrations/types";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { type Notice, providerActionErrorNotice } from "./ConnectDrawerSchema";
 
@@ -26,6 +27,8 @@ export function ProviderDisconnectAction({
   providerId,
   renderTrigger,
 }: Readonly<ProviderDisconnectActionProps>) {
+  const t = useTranslations("projectIntegrations.provider");
+  const drawerT = useTranslations("projectIntegrations.drawer");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failureNotice, setFailureNotice] = useState<Notice | null>(null);
@@ -42,7 +45,15 @@ export function ProviderDisconnectAction({
       setOpen(false);
       onDisconnected();
     } catch (error) {
-      setFailureNotice(providerActionErrorNotice(error));
+      setFailureNotice(
+        providerActionErrorNotice(error, {
+          appUpdateRequired: drawerT("appUpdateRequired"),
+          connectionTestFailed: drawerT("connectionTestFailed"),
+          connectionTestPassed: drawerT("connectionTestPassed"),
+          providerActionFailed: drawerT("providerActionFailed"),
+          providerActionFailedMessage: drawerT("providerActionFailedMessage"),
+        }),
+      );
       throw error;
     } finally {
       setBusy(false);
@@ -73,7 +84,7 @@ export function ProviderDisconnectAction({
             type="button"
             variant="ghost"
           >
-            Disconnect
+            {t("disconnect")}
           </Button>
         </ProjectReadOnlyTooltip>
       )}

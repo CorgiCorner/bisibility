@@ -1,0 +1,123 @@
+{
+  "projectSettingsShell": {
+    "card": {
+      "save": "保存",
+      "saved": "保存しました"
+    },
+    "mobileSectionLabel": "設定セクション",
+    "navigationLabel": "設定セクション",
+    "search": {
+      "empty": "設定が見つかりません。タイムゾーン、API キー、予算などで検索してください。",
+      "label": "設定を検索",
+      "placeholder": "設定を検索...",
+      "results": "{count, plural, other {#件の設定が見つかりました}}",
+      "resultsLabel": "一致した設定",
+      "sections": {
+        "providerConnections": "連携 / 接続",
+        "providerUsage": "連携 / 利用状況"
+      },
+      "entries": {
+        "apiKeys": {
+          "label": "API キー",
+          "keywords": "api キー トークン アクセス 認証情報"
+        },
+        "applicationPlan": {
+          "label": "アプリケーションプラン",
+          "keywords": "請求 料金 サブスクリプション ホスト型ベータ セルフホスト"
+        },
+        "checkFrequency": {
+          "label": "チェック頻度",
+          "keywords": "スケジュール 手動 毎日 毎週 毎月 cron 自動"
+        },
+        "competitors": {
+          "label": "競合とブランド別名",
+          "keywords": "競合 メンション 引用"
+        },
+        "defaultDevice": {
+          "label": "デフォルトのデバイス",
+          "keywords": "モバイル デスクトップ"
+        },
+        "defaultLocation": {
+          "label": "デフォルトのロケーション",
+          "keywords": "国 都市 市場 地域 言語"
+        },
+        "defaultSerpDepth": {
+          "label": "デフォルトの SERP 取得深度",
+          "keywords": "上位 10 20 50 100 順位チェック 結果"
+        },
+        "deployWebhooks": {
+          "label": "デプロイ Webhook",
+          "keywords": "エンドポイント シークレット デプロイ フック"
+        },
+        "domainMatching": {
+          "label": "ドメインの一致",
+          "keywords": "サブドメイン 完全一致 ルート URL スコープ"
+        },
+        "experimentalFeatures": {
+          "label": "実験的機能",
+          "keywords": "モジュール プレビュー beta alpha 機能"
+        },
+        "members": {
+          "label": "メンバーと招待",
+          "keywords": "ユーザー 招待 ロール アクセス 権限"
+        },
+        "notificationChannels": {
+          "label": "通知チャネル",
+          "keywords": "メール Slack Webhook アラート ダイジェスト"
+        },
+        "projectManagement": {
+          "label": "プロジェクト管理",
+          "keywords": "バックアップ エクスポート 移行 セルフホスト プロジェクトの削除 監査履歴"
+        },
+        "projectName": {
+          "label": "プロジェクト名",
+          "keywords": "名前の変更 プロジェクト ワークスペース"
+        },
+        "providerBudgets": {
+          "label": "プロバイダーの予算と利用状況",
+          "keywords": "割り当て 利用額 費用 残高 クォータ クレジット 検索回数 上限"
+        },
+        "providerConnections": {
+          "label": "プロバイダー接続",
+          "keywords": "接続 切断 認証情報 DataForSEO SerpApi Google Search Console Google Analytics GA4"
+        },
+        "scheduleTimezone": {
+          "label": "スケジュールのタイムゾーン",
+          "keywords": "タイムゾーン 時刻 UTC"
+        },
+        "searchDataSync": {
+          "label": "検索データの同期",
+          "keywords": "GSC 保持期間 月数 インポート 一時停止 取り込み速度"
+        },
+        "stopOnMatch": {
+          "label": "最初の一致でチェックを停止",
+          "keywords": "ドメイン 最初の結果 取得深度 費用"
+        },
+        "tagsAndSegments": {
+          "label": "タグとセグメント",
+          "keywords": "整理 キーワード ラベル"
+        },
+        "urlInspectionLimit": {
+          "label": "URL 検査の上限",
+          "keywords": "毎日 クォータ インデックス登録 Google Search Console"
+        },
+        "websiteDomain": {
+          "label": "ウェブサイトのドメイン",
+          "keywords": "ウェブサイト URL ドメインの変更"
+        }
+      }
+    },
+    "sections": {
+      "advanced": "詳細設定",
+      "billing": "請求",
+      "competitors": "競合",
+      "dataSources": "データソース",
+      "developers": "開発者",
+      "experimental": "実験的機能",
+      "general": "一般",
+      "notifications": "通知",
+      "team": "チーム",
+      "tracking": "追跡"
+    }
+  }
+}

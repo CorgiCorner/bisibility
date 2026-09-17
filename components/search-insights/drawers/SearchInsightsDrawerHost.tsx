@@ -1,7 +1,6 @@
 "use client";
 
 import { trackingScheduleValueWithDepthOverride } from "@/components/keywords/add/AddKeywordDrawerExtensions";
-import { TRACK_FAILED, trackDoneCopy } from "@/components/search-insights/search-insights-copy";
 import { useToast } from "@/components/ui/toast-context";
 import type { addKeywordsMatrix } from "@/lib/actions/keyword";
 import type {
@@ -12,8 +11,10 @@ import { track } from "@/lib/analytics/client";
 import { trackedKey } from "@/lib/search-insights/queries/tracked-model";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useRef, useState } from "react";
+import { drawerBackLabel } from "./drawer-model";
 import { SearchInsightsDrawer } from "./SearchInsightsDrawer";
 import {
   type TrackQueryConfirm,
@@ -58,9 +59,12 @@ export function SearchInsightsDrawerHost({
 }: Readonly<SearchInsightsDrawerHostProps>) {
   const router = useRouter();
   const { showToast } = useToast();
+  const format = useFormatter();
+  const t = useTranslations("projectSearchInsights.copy");
   const drawers = useSearchInsightsDrawers({
     ...actions,
     comparison,
+    labelFrame: (frame) => drawerBackLabel(frame, { formatNumber: format.number, t }),
     period,
     projectId,
     property,
@@ -104,11 +108,19 @@ export function SearchInsightsDrawerHost({
           choice.schedule === "project_default"
             ? trackDialog.costContext.rawFrequency
             : choice.schedule;
-        showToast(trackDoneCopy(effectiveFrequency), { severity: "success" });
+        const key =
+          effectiveFrequency === "manual"
+            ? "trackToastManual"
+            : effectiveFrequency === "paused"
+              ? "trackToastPaused"
+              : "trackToastScheduled";
+        showToast(t(key, { frequency: effectiveFrequency.replace("_", " ") }), {
+          severity: "success",
+        });
         router.refresh();
       }
     } catch (error) {
-      showToast(actionErrorMessage(error, TRACK_FAILED), { severity: "error" });
+      showToast(actionErrorMessage(error, t("trackFailed")), { severity: "error" });
     } finally {
       setAdding((current) => {
         const next = new Set(current);
@@ -131,7 +143,7 @@ export function SearchInsightsDrawerHost({
       .then(setTrackDialog)
       .catch((error) => {
         setTarget(null);
-        showToast(actionErrorMessage(error, TRACK_FAILED), { severity: "error" });
+        showToast(actionErrorMessage(error, t("trackFailed")), { severity: "error" });
       })
       .finally(() => {
         trackDialogRead.current = null;

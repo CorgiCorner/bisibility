@@ -1,0 +1,570 @@
+{
+  "shared": {
+    "language": {
+      "english": "Inglés",
+      "label": "Idioma"
+    },
+    "analyticsConsent": {
+      "actions": {
+        "acceptAll": "Aceptar todo",
+        "rejectAll": "Rechazar todo",
+        "save": "Guardar",
+        "settings": "Ajustes"
+      },
+      "banner": {
+        "ariaLabel": "Consentimiento de analítica",
+        "body": "Contamos las visitas sin cookies. Las cookies de analítica y las grabaciones opcionales nos ayudan a mejorar bisibility.",
+        "saveError": "No se ha podido guardar tu elección. Lo que has desactivado sigue desactivado. Inténtalo de nuevo.",
+        "update": "Las grabaciones pueden incluir pantallas de la aplicación. Revisa tu elección. La analítica no cambia."
+      },
+      "modal": {
+        "alwaysOn": "Siempre activas",
+        "essential": {
+          "body": "Necesarias para iniciar sesión, para la seguridad y para tus ajustes guardados.",
+          "title": "Esenciales"
+        },
+        "footer": "Tu elección se guarda durante 6 meses. Puedes cambiarla cuando quieras desde Opciones de privacidad, en el pie de página.",
+        "intro": "Elige por separado la analítica y las grabaciones. Las cookies esenciales siguen activas.",
+        "privacyPolicy": "Política de privacidad",
+        "replay": {
+          "body": "Las grabaciones opcionales nos ayudan a mejorar la web y la configuración inicial. En la aplicación, pueden incluir la primera comprobación y el seguimiento de posiciones. Los campos de entrada y los datos del proyecto se enmascaran. Quedan excluidas las pantallas de inicio de sesión, cuenta y facturación, las credenciales y los datos de Google.",
+          "title": "Grabaciones"
+        },
+        "saveError": "No se han podido guardar los cambios. Lo que has desactivado sigue desactivado. Inténtalo de nuevo.",
+        "usage": {
+          "body": "Las páginas y los pasos de configuración que usas, vinculados entre visitas mediante una cookie de analítica.",
+          "title": "Analítica de uso"
+        },
+        "visitCounts": "Si rechazas la analítica opcional, seguimos contando las visitas sin cookies ni perfil persistente."
+      },
+      "title": "Opciones de privacidad"
+    },
+    "errors": {
+      "genericFallback": "No se ha podido completar la acción.",
+      "rateLimited": "Demasiadas peticiones. Inténtalo de nuevo más tarde.",
+      "serverComponentDigest": "La comprobación ha fallado por nuestra parte (ref. {digest}). Reinténtalo en un momento.",
+      "staleDeployment": "bisibility se ha actualizado mientras esta página estaba abierta. Recarga la aplicación para continuar. Se perderán los cambios sin guardar.",
+      "verificationFailed": "La verificación ha fallado. Inténtalo de nuevo."
+    },
+    "emergencyRecovery": {
+      "error": {
+        "backToApp": "Volver a la aplicación",
+        "description": "El seguimiento no ha podido completar esta petición. Inténtalo de nuevo o vuelve a la aplicación mientras se recupera esta ruta.",
+        "retry": "Reintentar",
+        "status": "500: error del servidor",
+        "title": "El seguimiento ha dado un error"
+      },
+      "notFound": {
+        "backToApp": "Volver a la aplicación",
+        "description": "Puede que esta página se haya movido o que nunca haya existido.",
+        "status": "404: no encontrada",
+        "title": "Esta página no está disponible"
+      }
+    },
+    "appError": {
+      "cloudMessage": "La aplicación ha seguido funcionando, así que tus datos están a salvo. Vuelve a abrir la vista; si sigue fallando, comparte la referencia del error con <support>asistencia</support>.",
+      "copied": "Copiado",
+      "copyUrl": "Copiar la URL",
+      "diagnostics": {
+        "copied": "Copiado",
+        "copyDetails": "Copiar los detalles",
+        "hideTrace": "Ocultar la traza",
+        "noReference": "sin referencia",
+        "publicReview": "Estos detalles pueden incluir la ruta de tu proyecto. Revísalos antes de publicarlos.",
+        "showTrace": "Mostrar la traza",
+        "stackTrace": "Traza de la pila"
+      },
+      "goToOverview": "Ir a Vista general",
+      "retrying": "Reintentando",
+      "selfHostMessage": "La aplicación ha seguido funcionando, así que tus datos están a salvo. Vuelve a abrir la vista; si sigue fallando, copia los detalles y <issue>abre una incidencia</issue>.",
+      "title": "Esta vista ha dejado de renderizarse",
+      "tryAgain": "Reintentar",
+      "urlCopied": "URL copiada",
+      "viewError": "Error de la vista"
+    },
+    "rankPreflight": {
+      "budget": "Presupuesto",
+      "budgetBlocked": "Esta ejecución está en pausa porque se ha agotado el presupuesto.",
+      "cancel": "Cancelar",
+      "configuredProvider": "El proveedor principal configurado es {provider}.",
+      "couldNotLoad": "No se ha podido cargar la estimación de la ejecución. Inténtalo de nuevo.",
+      "couldNotRefresh": "No se ha podido actualizar la estimación. Inténtalo de nuevo.",
+      "couldNotStart": "No se ha podido iniciar la ejecución. Inténtalo de nuevo.",
+      "depth": "Profundidad",
+      "depthAria": "Profundidad de los resultados",
+      "devices": "{count, plural, one {# dispositivo} other {# dispositivos}}",
+      "duplicate": "Ya hay una ejecución en curso con este alcance. Si inicias otra ahora, pagarás dos veces por las mismas posiciones.",
+      "editBudget": "Editar el presupuesto",
+      "noProvider": "Sin proveedor",
+      "noProviderBlocked": "No hay ningún proveedor conectado, así que no hay adónde enviar estos objetivos. Usa tu propia clave de API: se te factura directamente.",
+      "openIntegrations": "Abrir Integraciones",
+      "openRun": "Abrir la ejecución",
+      "pricePerTarget": "precio por objetivo",
+      "primaryProvider": "Proveedor principal",
+      "primaryProviderAria": "Proveedor principal",
+      "previewChanged": "Los detalles de la ejecución han cambiado. Actualiza para revisar la estimación actual.",
+      "runInProgress": "Ejecución en curso",
+      "runOptions": "Opciones de la ejecución",
+      "runScope": "Alcance de la ejecución",
+      "markets": "{count, plural, one {# mercado} other {# mercados}}",
+      "startRun": "Iniciar la ejecución",
+      "sampleProject": "Los proyectos de ejemplo no ejecutan comprobaciones reales.",
+      "scopeDescription": "Comprueba {count, plural, one {# palabra clave} other {# palabras clave}} en {market} antes de enviar nada al proveedor.",
+      "scopeEquation": "{keywords, plural, one {# palabra clave} other {# palabras clave}} · {market} · {devices} = {targets, plural, one {# objetivo} other {# objetivos}}",
+      "scopeMany": "Comprobar {count, plural, one {# palabra clave seleccionada} other {# palabras clave seleccionadas}} en {market}",
+      "scopeOne": "Comprobar {keyword} en {market}",
+      "scopeSubtitle": "Revisa el alcance en {market} antes de empezar.",
+      "starting": "Iniciando…",
+      "topDepth": "Top {depth, number}"
+    },
+    "globalError": {
+      "description": "La aplicación no ha podido renderizar esta página. Recarga para volver a intentarlo.",
+      "retry": "Recargar la aplicación",
+      "title": "Se ha producido un error"
+    },
+    "markets": {
+      "add": "Añadir {count, plural, one {mercado} other {# mercados}}",
+      "addMarkets": "Añadir mercados",
+      "allLanguages": "Todos los idiomas",
+      "cancel": "Cancelar",
+      "catalog": "Catálogo",
+      "desktop": "Escritorio",
+      "estimateProviderCost": "Estimar el coste del proveedor",
+      "languages": "Idiomas",
+      "location": "Ubicación",
+      "locationCity": "Ciudad",
+      "locationClearSearch": "Borrar la búsqueda de ubicaciones",
+      "locationCountries": "Países",
+      "locationNoMatching": "No hay ninguna ubicación que coincida. Prueba con otro nombre o selecciona el país.",
+      "locationRegion": "Región",
+      "locationRegionsAndCities": "Regiones y ciudades",
+      "locationSearching": "Buscando ubicaciones…",
+      "markets": "Mercados",
+      "mobile": "Móvil",
+      "moreLanguages": "Más idiomas",
+      "newMarket": "Nuevo mercado",
+      "noMatchingLanguages": "Ningún idioma compatible coincide con esa búsqueda.",
+      "noVolume": "sin volumen ni KD",
+      "researchUnavailable": "{language}: no hay datos de volumen de búsqueda ni de dificultad para este mercado; las posiciones se siguen con normalidad.",
+      "searchAllLanguages": "Buscar en todos los idiomas compatibles",
+      "searchMarkets": "Buscar mercados…",
+      "searchMoreLanguages": "Buscar más idiomas",
+      "selected": "{count, plural, one {# mercado seleccionado} other {# mercados seleccionados}}",
+      "suggestedLanguages": "Idiomas sugeridos",
+      "suggestedOnly": "Solo los sugeridos",
+      "tracked": "En seguimiento",
+      "trackedMarkets": "Mercados en seguimiento"
+    },
+    "humanVerification": {
+      "ariaLabel": "Desafío de verificación humana",
+      "complete": "Verificación completada.",
+      "expired": "La verificación ha caducado. Vuelve a completarla.",
+      "failed": "La verificación ha fallado. Inténtalo de nuevo.",
+      "unavailable": "La verificación humana no está disponible ahora mismo."
+    },
+    "scheduleName": {
+      "custom": "Personalizado \u00b7 {expression}",
+      "daily": "Diario {time}",
+      "monthly": "Mensual \u00b7 {day} {time}",
+      "noFixedTime": "Sin hora fija",
+      "weekly": "Semanal \u00b7 {weekday} {time}"
+    },
+    "operationRow": {
+      "days": "{count, plural, one {día} other {días}}",
+      "actions": {
+        "cancel": {
+          "label": "Cancelar",
+          "tip": "Detiene las comprobaciones que aún no se han enviado. Las que ya están en el proveedor terminan y se facturan."
+        },
+        "pause": {
+          "label": "Pausar",
+          "tip": "Pausa la importación al terminar el mes en curso. No se descarta nada de lo ya importado."
+        },
+        "reconnect": {
+          "label": "Volver a conectar",
+          "tip": "Vuelve a conectar Search Console para esta propiedad."
+        },
+        "resume": {
+          "label": "Reanudar",
+          "tip": "Devuelve esta importación a su cola guardada."
+        },
+        "retry": {
+          "label": "Reintentar",
+          "tip": "Reintenta esta misma operación desde su estado guardado."
+        }
+      },
+      "etaMinutes": "~{count, plural, one {queda # min} other {quedan # min}}",
+      "etaSeconds": "~{count, plural, one {queda # s} other {quedan # s}}",
+      "items": "elementos",
+      "nextCheck": "{kind} comprobación {when}",
+      "nextCheckFirst": "Primera",
+      "nextCheckNext": "Siguiente",
+      "provider": "Proveedor",
+      "relative": {
+        "dueNow": "toca ahora",
+        "inDays": "dentro de {count, plural, one {# día} other {# días}}",
+        "inHours": "dentro de {count, plural, one {# hora} other {# horas}}",
+        "inMinutes": "dentro de {count, plural, one {# minuto} other {# minutos}}"
+      },
+      "progress": "{title}: se han procesado {processed, number} de {total, number} {unit}; {completed, number} con resultado correcto, {failed, number} con errores, {deferred, number} en aplazamiento",
+      "states": {
+        "budget": "Se ha alcanzado el tope mensual{hasResumeDate, select, no {: se omiten los elementos restantes.} other {: el resto se omite hasta {resumeDate}.}}",
+        "cancelled": "{hasActor, select, no {Cancelado: se conserva lo que ya se había completado.} other {Cancelado por {actor}: se conserva lo que ya se había completado.}}",
+        "cancelling": "Cancelando: las comprobaciones ya enviadas al proveedor terminarán igualmente.",
+        "deferred": "Aplazadas por los límites de peticiones del proveedor: se reintentan en la siguiente ejecución programada.",
+        "failed": "No se ha completado nada: {provider} ha rechazado todas las peticiones.",
+        "notConfirmed": "La ejecución ha terminado, pero no se ha confirmado su resultado.",
+        "partial": "Ha terminado con {failed, plural, one {# fallo} other {# fallos}}: al reintentar solo se envían esas comprobaciones.",
+        "queued": "Esperando a que empiece la primera comprobación.",
+        "quota": "Se ha alcanzado la cuota de {provider}. La importación se reanuda automáticamente en cuanto se permita.",
+        "retrying": "Reintentando las comprobaciones fallidas{hasEta, select, no {.} other {: {eta}.}}",
+        "running": "{provider} está devolviendo resultados{hasEta, select, no {.} other {: {eta}.}}",
+        "succeeded": "Se han completado todos los elementos.",
+        "worker": "El estado del proceso de importación llega con retraso. Actualiza para volver a comprobarlo."
+      }
+    },
+    "tokens": {
+      "githubRepository": "Repositorio de GitHub",
+      "githubStars": "{count, number} estrellas en GitHub",
+      "remove": "Quitar {value}"
+    },
+    "appNotFound": {
+      "backToProjects": "Volver a tus proyectos",
+      "description": "Este proyecto no existe o tu cuenta no forma parte de él.",
+      "descriptionSignedIn": "Has iniciado sesión como {email}. Este proyecto no existe o esa cuenta no forma parte de él. Si te ha pasado el enlace alguien de tu equipo, puede que use una cuenta distinta de la que tienes aquí.",
+      "footnote": "404: no encontrada",
+      "pageTitle": "Esta página no está disponible",
+      "signInDifferentAccount": "Iniciar sesión con otra cuenta",
+      "title": "Página no disponible"
+    },
+    "projectItemNotFound": {
+      "backToProjects": "Volver a tus proyectos",
+      "description": "Este proyecto está abierto, pero la página a la que apunta el enlace no forma parte de él. Puede que el elemento se haya eliminado o que la dirección esté desactualizada.",
+      "footnote": "404: no encontrada",
+      "pageTitle": "No hemos encontrado esa página",
+      "title": "Página no encontrada"
+    },
+    "siteNotFound": {
+      "backToApp": "Volver a la aplicación",
+      "description": "Hemos rastreado todas las URL que hemos podido encontrar y esta no posiciona. Puede que se haya movido o que nunca haya existido.",
+      "docsLink": "¿Sigues sin resolverlo? Lee la documentación",
+      "goToHomepage": "Ir a la página de inicio",
+      "goToSignIn": "Ir al inicio de sesión",
+      "kicker": "404: NO ENCONTRADA",
+      "statusLabel": "HTTP 404",
+      "terminalNote": "prueba mejor con una de estas",
+      "title": "Esta página no está en el índice"
+    },
+    "setupVideo": {
+      "fallback": "Tu navegador no admite vídeo.",
+      "open": "Abrir el vídeo"
+    },
+    "firstCheck": {
+      "action": "Ejecutar la primera comprobación",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar y ejecutar",
+      "loading": "Cargando los detalles de la ejecución…",
+      "manualRunDescription": "Esta ejecución manual inicia las comprobaciones ahora, fuera de la programación.",
+      "providerOrder": "Orden de proveedores de reserva",
+      "providerOrderAriaLabel": "Orden de proveedores de SERP de reserva",
+      "retry": "Reintentar",
+      "starting": "Iniciando…",
+      "title": "Ejecutar la primera comprobación",
+      "unavailable": "Los detalles de la ejecución no están disponibles.",
+      "errors": {
+        "checkInProgress": "Ya hay una comprobación de posiciones en curso para esta palabra clave.",
+        "keywordArchived": "Esta palabra clave ya no está disponible para una comprobación de posiciones.",
+        "loadPlan": "No se han podido cargar los detalles de la ejecución.",
+        "marketInactive": "Este mercado está inactivo y no admite comprobaciones de posiciones.",
+        "start": "No se ha podido iniciar la primera comprobación de posiciones."
+      },
+      "notices": {
+        "budgetExhausted": "Se ha agotado el presupuesto mensual de comprobaciones de posiciones.",
+        "noneReady": "No hay ninguna palabra clave lista para una primera comprobación.",
+        "providerMissing": "Conecta un proveedor de SERP antes de ejecutar comprobaciones.",
+        "raiseBudget": "Subir el presupuesto",
+        "sampleProject": "Los proyectos de ejemplo no ejecutan comprobaciones reales."
+      },
+      "scope": {
+        "allReady": "Todas listas ({count, number})",
+        "budget": "Presupuesto",
+        "depth": "Profundidad",
+        "depthValue": "Top {value, number}",
+        "desktop": "Escritorio",
+        "device": "Dispositivo",
+        "engine": "Buscador",
+        "google": "Google",
+        "firstKeyword": "Primera palabra clave",
+        "frequency": "Frecuencia",
+        "location": "Ubicación",
+        "mobile": "Móvil",
+        "runAriaLabel": "Alcance de la ejecución: {count, number} {count, plural, one {palabra clave lista} other {palabras clave listas}}",
+        "title": "Alcance de la comprobación",
+        "queueDetail": "La primera palabra clave se ejecuta de inmediato y {count, number} {count, plural, one {palabra clave más entra} other {palabras clave más entran}} en la cola de comprobaciones."
+      },
+      "frequency": {
+        "custom_cron": "Cron personalizado",
+        "daily": "Diaria",
+        "manual": "Manual",
+        "monthly": "Mensual",
+        "paused": "En pausa",
+        "weekly": "Semanal"
+      },
+      "cost": {
+        "budgetWithCap": "{spent} de {cap}",
+        "budgetWithoutCap": "{spent} este mes",
+        "estimated": "Coste estimado",
+        "estimatedValue": "~{amount}",
+        "lessThanOneCent": "< {amount}"
+      }
+    },
+    "controls": {
+      "alert": {
+        "dismiss": "Descartar la alerta"
+      },
+      "confirmation": {
+        "cancel": "Cancelar",
+        "failure": "No se ha podido completar la acción. Inténtalo de nuevo.",
+        "typeToConfirm": "Escribe <strong>{word}</strong> para confirmar",
+        "working": "Procesando…",
+        "clearTargetUrlsBody": "Quita la URL de destino configurada de las palabras clave seleccionadas. El histórico de posiciones no se ve afectado.",
+        "clearTargetUrlsDangerLabel": "Quitar las URL de destino",
+        "clearTargetUrlsTitle": "Quitar las URL de destino",
+        "clearTargetUrlsToastMessage": "URL de destino quitadas",
+        "deactivateAccountBody": "La desactivación bloqueará el inicio de sesión y revocará todas las sesiones. Pausará las comprobaciones programadas de esta cuenta. Todos sus tokens de acceso personal se revocarán de forma permanente. Los administradores de la instancia están protegidos.",
+        "deactivateAccountDangerLabel": "Desactivar la cuenta",
+        "deactivateAccountTitle": "Desactivar la cuenta",
+        "deactivateAccountToastMessage": "Acción de cuenta solicitada",
+        "deleteAccountBody": "Esto elimina de forma permanente tu cuenta, tus proyectos y todo lo que tengas en seguimiento en ellos. Esta acción no se puede deshacer.",
+        "deleteAccountDangerLabel": "Eliminar la cuenta",
+        "deleteAccountTitle": "Eliminar la cuenta",
+        "deleteAccountToastMessage": "Cuenta eliminada",
+        "deleteBulkBody": "Elimina las palabras clave seleccionadas y su histórico. Esta acción no se puede deshacer.",
+        "deleteBulkDangerLabel": "Eliminar las palabras clave",
+        "deleteBulkTitle": "Eliminar las palabras clave seleccionadas",
+        "deleteBulkToastMessage": "Palabras clave seleccionadas eliminadas",
+        "deleteKeywordBody": "Deja de seguir esta palabra clave y elimina su histórico de posiciones. Esta acción no se puede deshacer.",
+        "deleteKeywordDangerLabel": "Eliminar la palabra clave",
+        "deleteKeywordTitle": "Eliminar la palabra clave",
+        "deleteKeywordToastMessage": "Palabra clave eliminada",
+        "deleteProjectBody": "Esto elimina de forma permanente este proyecto y todas las palabras clave en seguimiento, el histórico y las claves de API. Esta acción no se puede deshacer.",
+        "deleteProjectDangerLabel": "Eliminar el proyecto",
+        "deleteProjectTitle": "Eliminar el proyecto",
+        "deleteProjectToastMessage": "Proyecto eliminado",
+        "deleteRunBody": "¿Eliminar esta ejecución del histórico? Se conservan las posiciones de las palabras clave y el gasto registrado del proveedor. Esta acción no se puede deshacer.",
+        "deleteRunDangerLabel": "Eliminar la ejecución",
+        "deleteRunTitle": "Eliminar la ejecución",
+        "deleteRunToastMessage": "Ejecución eliminada",
+        "deleteWebhookEndpointBody": "Detiene los próximos envíos a este endpoint y elimina su vínculo con el histórico de entregas. Esta acción no se puede deshacer.",
+        "deleteWebhookEndpointDangerLabel": "Eliminar el endpoint",
+        "deleteWebhookEndpointTitle": "Eliminar el endpoint del webhook",
+        "deleteWebhookEndpointToastMessage": "Endpoint del webhook eliminado",
+        "reactivateAccountBody": "Permite iniciar sesión de nuevo. Los tokens de acceso personal ya revocados siguen revocados y hay que volver a crearlos. Las comprobaciones programadas se reajustarán mediante el reconciliador de programaciones.",
+        "reactivateAccountDangerLabel": "Reactivar la cuenta",
+        "reactivateAccountTitle": "Reactivar la cuenta",
+        "reactivateAccountToastMessage": "Acción de cuenta solicitada",
+        "removeIntegrationBody": "Las comprobaciones de posiciones se detendrán hasta que conectes otro proveedor de SERP. Las credenciales guardadas se eliminan de esta instancia.",
+        "removeIntegrationDangerLabel": "Desconectar el proveedor",
+        "removeIntegrationTitle": "Desconectar el proveedor",
+        "removeIntegrationToastMessage": "Se ha desconectado el proveedor",
+        "removeSampleDataBody": "Esto elimina el proyecto de ejemplo y los datos de demostración que ha generado. Tus otros proyectos no se ven afectados.",
+        "removeSampleDataDangerLabel": "Quitar los datos de ejemplo",
+        "removeSampleDataTitle": "Quitar los datos de ejemplo",
+        "removeSampleDataToastMessage": "Datos de ejemplo quitados",
+        "removeSearchConsoleConnectionBody": "Esto elimina de este proyecto la conexión guardada y los tokens de autorización. Las métricas de Search Console ya importadas siguen disponibles.",
+        "removeSearchConsoleConnectionDangerLabel": "Desconectar Search Console",
+        "removeSearchConsoleConnectionTitle": "Desconectar Search Console",
+        "removeSearchConsoleConnectionToastMessage": "Se ha desconectado Search Console",
+        "removeTeamMemberBody": "Quita a este miembro del proyecto. Su cuenta y su acceso a otros proyectos no se ven afectados.",
+        "removeTeamMemberDangerLabel": "Quitar al miembro",
+        "removeTeamMemberTitle": "Quitar a un miembro del proyecto",
+        "removeTeamMemberToastMessage": "Miembro del proyecto quitado",
+        "resetAccountLimitsBody": "Vacía los contadores de límite de peticiones de esta cuenta. El gasto mensual es una ventana móvil y no se puede restablecer.",
+        "resetAccountLimitsDangerLabel": "Restablecer los límites",
+        "resetAccountLimitsTitle": "Restablecer los límites de peticiones",
+        "resetAccountLimitsToastMessage": "Restablecimiento de límites solicitado",
+        "revokeKeyBody": "Cualquier aplicación o script que use esta clave dejará de funcionar de inmediato. Genera una clave nueva para restaurar el acceso.",
+        "revokeKeyDangerLabel": "Revocar la clave",
+        "revokeKeyTitle": "Revocar la clave de API",
+        "revokeKeyToastMessage": "Clave de API revocada",
+        "revokeMigrationTokenBody": "Esto invalida el token actual. Cualquier transferencia que lo use dejará de funcionar.",
+        "revokeMigrationTokenDangerLabel": "Revocar el token",
+        "revokeMigrationTokenTitle": "Revocar el token de migración",
+        "revokeMigrationTokenToastMessage": "Token de migración revocado",
+        "rollMigrationTokenBody": "Esto invalida el token actual. Cualquier transferencia que lo use dejará de funcionar.",
+        "rollMigrationTokenDangerLabel": "Rotar el token",
+        "rollMigrationTokenTitle": "Rotar el token",
+        "rollMigrationTokenToastMessage": "Token rotado",
+        "transferProjectOwnershipBody": "Convierte a este miembro en propietario del proyecto. Tu rol en el proyecto pasa a administrador y solo el nuevo propietario podrá volver a transferir la propiedad.",
+        "transferProjectOwnershipDangerLabel": "Transferir la propiedad",
+        "transferProjectOwnershipTitle": "Transferir la propiedad del proyecto",
+        "transferProjectOwnershipToastMessage": "Propiedad del proyecto transferida"
+      },
+      "copy": {
+        "action": "Copiar",
+        "copied": "¡Copiado!",
+        "failed": "No se ha podido copiar",
+        "id": "Copiar el ID"
+      },
+      "calendar": {
+        "april": "abril",
+        "august": "agosto",
+        "chooseDate": "Elige una fecha",
+        "december": "diciembre",
+        "february": "febrero",
+        "friday": "Vi",
+        "january": "enero",
+        "july": "julio",
+        "june": "junio",
+        "march": "marzo",
+        "may": "mayo",
+        "monthYear": "{month} de {year}",
+        "monday": "Lu",
+        "nextMonth": "Mes siguiente",
+        "november": "noviembre",
+        "october": "octubre",
+        "previousMonth": "Mes anterior",
+        "saturday": "Sá",
+        "september": "septiembre",
+        "sunday": "Do",
+        "thursday": "Ju",
+        "tuesday": "Ma",
+        "wednesday": "Mi"
+      },
+      "zonedTime": {
+        "plain": "{time}",
+        "timeZone": "{time} ({timeZone})",
+        "yourTime": "{time} (hora local)"
+      },
+      "checkStatus": {
+        "completed": "Completada",
+        "failed": "Fallida",
+        "pending": "Pendiente",
+        "running": "En curso"
+      },
+      "countrySelect": {
+        "catalog": "Todos los países",
+        "noResults": "Ningún país coincide con esta búsqueda.",
+        "searchPlaceholder": "Buscar países",
+        "tracked": "Países en seguimiento"
+      },
+      "dataTable": {
+        "clearSort": "Quitar la ordenación de {column}",
+        "column": "Columna",
+        "columns": "Columnas",
+        "compact": "Compacta",
+        "comfortable": "Cómoda",
+        "density": "Densidad de la tabla",
+        "hideColumn": "Ocultar la columna {column}",
+        "nextPage": "Página siguiente",
+        "number": "{value, number}",
+        "pageRange": "{start, number}-{end, number} de {total, number}",
+        "previousPage": "Página anterior",
+        "resizeColumn": "Redimensionar la columna {column}",
+        "resizeInstructions": "Arrastra para redimensionar. Haz doble clic para restablecer.",
+        "resetLayout": "Restablecer la disposición",
+        "rows": "Filas",
+        "rowsPerPage": "Filas por página",
+        "selectRow": "Seleccionar {row}",
+        "selectVisibleRows": "Seleccionar las filas visibles",
+        "collapseRow": "Contraer {row}",
+        "expandRow": "Expandir {row}",
+        "showColumn": "Mostrar la columna {column}",
+        "sortAscending": "Ordenar {column} de forma ascendente",
+        "sortDescending": "Ordenar {column} de forma descendente",
+        "standard": "Estándar",
+        "toggleColumns": "Mostrar u ocultar columnas"
+      },
+      "drawer": {
+        "close": "Cerrar el panel lateral"
+      },
+      "emailCapture": {
+        "emailAddress": "Dirección de correo electrónico",
+        "joining": "Apuntándote…",
+        "submitFailed": "Ahora mismo no es posible apuntarte.",
+        "validation": {
+          "emailInvalid": "Introduce una dirección de correo electrónico válida.",
+          "emailTooLong": "Introduce una dirección de correo electrónico de menos de {maximum, number} caracteres.",
+          "workEmail": "Usa tu correo electrónico de trabajo."
+        }
+      },
+      "expiryChoice": {
+        "label": "Caduca"
+      },
+      "menuMultiSelect": {
+        "noResults": "Sin resultados",
+        "searchPlaceholder": "Buscar…",
+        "selected": "{count, plural, one {# seleccionado} other {# seleccionados}}"
+      },
+      "menuSelect": {
+        "moreOptionsHint": "Hay más opciones disponibles. Escribe para buscar.",
+        "noResults": "Sin resultados",
+        "searchPlaceholder": "Buscar…"
+      },
+      "modal": {
+        "close": "Cerrar la ventana"
+      },
+      "password": {
+        "hide": "Ocultar la contraseña",
+        "show": "Mostrar la contraseña"
+      },
+      "sheet": {
+        "close": "Cerrar el panel"
+      },
+      "status": {
+        "blocked": "Bloqueado",
+        "cancelled": "Cancelado",
+        "cancelling": "Cancelando",
+        "completed": "Completado",
+        "deferred": "Aplazado",
+        "fallback": "Estado",
+        "notConfirmed": "Sin confirmar",
+        "partial": "Parcial",
+        "primary": "Principal",
+        "queued": "En cola",
+        "running": "En curso",
+        "skipped": "Omitido",
+        "succeeded": "Correcto",
+        "connected": "Conectado",
+        "needsReauth": "Requiere reconexión",
+        "ready": "Listo",
+        "planned": "Planificado",
+        "optional": "Opcional",
+        "success": "Correcto",
+        "failed": "Fallido",
+        "matches": "Coincide",
+        "wrongUrl": "URL distinta",
+        "disabled": "Desactivado",
+        "create": "Creación",
+        "update": "Actualización",
+        "delete": "Eliminación",
+        "import": "Importación",
+        "export": "Exportación",
+        "login": "Inicio de sesión"
+      },
+      "tagAdder": {
+        "action": "Añadir etiqueta",
+        "cancel": "Cancelar la creación de la etiqueta",
+        "enter": "Intro",
+        "input": "Nombre de la etiqueta nueva",
+        "validation": {
+          "required": "Escribe un nombre de etiqueta.",
+          "tooLong": "Los nombres de etiqueta admiten como máximo {maximum, number} caracteres."
+        }
+      },
+      "theme": {
+        "dark": "Oscuro",
+        "label": "Tema",
+        "light": "Claro",
+        "system": "Sistema"
+      },
+      "toast": {
+        "undo": "Deshacer",
+        "undoFailed": "No se ha podido deshacer. Inténtalo de nuevo."
+      },
+      "toolbarSearch": {
+        "clear": "Borrar {label}"
+      }
+    }
+  }
+}

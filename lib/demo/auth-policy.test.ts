@@ -95,6 +95,39 @@ describe("public demo auth policy", () => {
     ).toBe(false);
   });
 
+  it("allows the OAuth protocol without opening account or client administration", () => {
+    for (const path of [
+      "/oauth2/register",
+      "/oauth2/consent",
+      "/oauth2/continue",
+      "/oauth2/token",
+      "/oauth2/revoke",
+    ]) {
+      expect(editableDemoAuthRequestAllowed(path, "POST")).toBe(true);
+      expect(editableDemoAuthRequestAllowed(path, "GET")).toBe(false);
+      expect(demoAuthRequestAllowed(path, "POST")).toBe(false);
+    }
+    for (const path of [
+      "/jwks",
+      "/.well-known/oauth-authorization-server",
+      "/.well-known/openid-configuration",
+    ]) {
+      expect(editableDemoAuthRequestAllowed(path, "GET")).toBe(true);
+      expect(editableDemoAuthRequestAllowed(path, "POST")).toBe(false);
+    }
+    for (const path of [
+      "/oauth2/create-client",
+      "/oauth2/update-client",
+      "/oauth2/delete-client",
+      "/oauth2/client/rotate-secret",
+      "/delete-user",
+      "/revoke-sessions",
+    ]) {
+      for (const method of ["GET", "POST", "DELETE", "PATCH"])
+        expect(editableDemoAuthRequestAllowed(path, method)).toBe(false);
+    }
+  });
+
   it("never promotes the viewer and keeps its single-membership requirement", () => {
     expect(editableViewerIdentityAllowed(user, "project-demo")).toBe(true);
     expect(editableViewerIdentityAllowed({ ...user, isInstanceAdmin: true }, "project-demo")).toBe(

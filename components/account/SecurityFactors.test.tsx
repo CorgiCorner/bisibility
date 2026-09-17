@@ -1,5 +1,6 @@
+import { renderWithAccountMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SecurityFactors } from "./SecurityFactors";
 
@@ -80,7 +81,9 @@ describe("SecurityFactors", () => {
       }),
     );
     expect(await screen.findByText("abcde-12345")).toBeInTheDocument();
-    expect(screen.getByText("Enabled")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Two-factor authentication enabled. Save the backup codes."),
+    ).toHaveLength(2);
   });
 
   it("requires a current authenticator code before regenerating backup codes", async () => {
@@ -160,8 +163,10 @@ describe("SecurityFactors", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Disable two-factor authentication" }));
 
-    expect(await screen.findByText("Verification failed.")).toBeInTheDocument();
-    expect(screen.getByText("Enabled")).toBeInTheDocument();
+    expect(await screen.findByText("Verification failed. Try again.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Two-factor authentication enabled. Save the backup codes."),
+    ).toBeInTheDocument();
     expect(routerMock.replace).not.toHaveBeenCalled();
   });
 

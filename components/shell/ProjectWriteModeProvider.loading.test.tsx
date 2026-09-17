@@ -24,9 +24,7 @@ it("provides write mode without loading the banner or tooltip components", async
       <Probe />
     </ProjectWriteModeProvider>,
   );
-  expect(screen.getByRole("status")).toHaveTextContent(
-    "migration_hold:true:Read-only during migration hold",
-  );
+  expect(screen.getByRole("status")).toHaveTextContent("migration_hold:true:null");
   rerender(
     <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
       <Probe />

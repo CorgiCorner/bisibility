@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { InviteModal } from "@/components/settings/team/InviteModal";
 import {
@@ -7,25 +8,17 @@ import {
   TeamMemberActionsMenu,
 } from "@/components/settings/team/TeamMemberActionsMenu";
 import { teamCardGeometryClassNames } from "@/components/settings/team/team-card-layout";
+import { useTeamActionError } from "@/components/settings/team/useTeamActionError";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { formatDisplayDate } from "@/lib/dates/format";
 import type { TeamMemberData } from "@/lib/queries/team";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/csr/UserPlus";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-
-const roleOptions = [
-  { label: "Admin", secondary: "Settings, members and keys", value: "admin" },
-  { label: "Editor", secondary: "Keywords, alerts and views", value: "member" },
-  { label: "Viewer", secondary: "Dashboards and exports", value: "viewer" },
-] as const satisfies readonly {
-  label: string;
-  secondary: string;
-  value: AssignableTeamRole;
-}[];
 
 type AssignableRole = AssignableTeamRole;
 type MemberAction = (input: { memberId: string; projectId: string }) => Promise<unknown>;
@@ -59,29 +52,52 @@ const avatarColors = {
   purple: "bg-purple/15 text-fg",
 } as const;
 
-function RoleBadge({ member, role }: Readonly<{ member: TeamMemberData; role?: AssignableRole }>) {
-  const roleLabel = roleOptions.find((option) => option.value === role)?.label;
-
-  return (
-    <StatusPill
-      label={roleLabel ?? (member.hasAuditAccess ? "Viewer / audit" : member.role)}
-      showDot={false}
-      size={member.hasAuditAccess ? "sm" : "md"}
-      status="optional"
-    />
-  );
-}
-
 export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
   const { canAssignAdmin, canManageTeam, domain, members, projectId, readOnly = false } = props;
+  const dateDisplay = useDateDisplay();
   const router = useRouter();
+  const presentActionError = useTeamActionError();
+  const t = useTranslations("projectSettingsTeam");
   const [actionError, setActionError] = useState<string | null>(null);
   const [changedRoles, setChangedRoles] = useState<Record<string, AssignableRole>>({});
   const [inviteOpen, setInviteOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const roleOptions = [
+    {
+      label: t("members.role.admin"),
+      secondary: t("members.roleDescription.admin"),
+      value: "admin",
+    },
+    {
+      label: t("members.role.editor"),
+      secondary: t("members.roleDescription.editor"),
+      value: "member",
+    },
+    {
+      label: t("members.role.viewer"),
+      secondary: t("members.roleDescription.viewer"),
+      value: "viewer",
+    },
+  ] as const satisfies readonly {
+    label: string;
+    secondary: string;
+    value: AssignableTeamRole;
+  }[];
   const availableRoleOptions = canAssignAdmin
     ? roleOptions
     : roleOptions.filter((option) => option.value !== "admin");
+
+  function roleLabel(member: TeamMemberData, changedRole?: AssignableRole) {
+    if (changedRole === "admin" || (!changedRole && member.roleValue === "admin")) {
+      return t("members.role.admin");
+    }
+    if (changedRole === "member" || (!changedRole && member.roleValue === "member")) {
+      return t("members.role.editor");
+    }
+    if (member.hasAuditAccess) return t("members.viewerAudit");
+    if (member.roleValue === "owner") return t("members.role.owner");
+    return t("members.role.viewer");
+  }
 
   async function runAction(key: string, action: () => Promise<unknown>) {
     setActionError(null);
@@ -90,7 +106,7 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
       await action();
       router.refresh();
     } catch (error) {
-      setActionError(actionErrorMessage(error, "Team change failed."));
+      setActionError(presentActionError(error, t("errors.teamChange")));
     } finally {
       setPendingAction(null);
     }
@@ -111,19 +127,19 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
       setChangedRoles((roles) => ({ ...roles, [member.id]: role }));
       router.refresh();
     } catch (error) {
-      setActionError(actionErrorMessage(error, "Role could not be changed."));
+      setActionError(presentActionError(error, t("errors.roleChange")));
     } finally {
       setPendingAction(null);
     }
   }
 
   return (
-    <div data-team-card-frame="members">
+    <section aria-label={t("members.title")} data-team-card-frame="members">
       <SettingsCard
         className={teamCardGeometryClassNames.members}
-        description={`Everyone with access to ${domain || "this project"}.`}
+        description={t("members.description", { domain: domain || t("members.thisProject") })}
         showSave={false}
-        title="Members"
+        title={t("members.title")}
       >
         <div>
           <div className="divide-y divide-border rounded-control border border-border">
@@ -152,20 +168,32 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                     <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
                       <span className="truncate">{member.name}</span>
                       {member.isCurrentUser ? (
-                        <StatusPill label="you" showDot={false} size="sm" status="optional" />
+                        <StatusPill
+                          label={t("members.you")}
+                          showDot={false}
+                          size="sm"
+                          status="optional"
+                        />
                       ) : null}
                     </span>
                     <span className="block truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
                       {member.email}
                     </span>
                     <span className="block truncate text-[11px] text-fg-muted">
-                      {member.accessLabel}
+                      {t("members.accessSince", {
+                        date: formatDisplayDate(member.accessSince, dateDisplay),
+                      })}
                     </span>
                   </span>
-                  <RoleBadge member={member} role={changedRoles[member.id]} />
+                  <StatusPill
+                    label={roleLabel(member, changedRoles[member.id])}
+                    showDot={false}
+                    size={member.hasAuditAccess ? "sm" : "md"}
+                    status="optional"
+                  />
                   {rolePending ? (
                     <span className="text-[11.5px] text-fg-muted" role="status">
-                      Updating role…
+                      {t("members.updatingRole")}
                     </span>
                   ) : null}
                   {canAct ? (
@@ -211,14 +239,14 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
                 startIcon={<UserPlus aria-hidden size={14} weight="regular" />}
                 type="button"
               >
-                Invite member
+                {t("members.inviteMember")}
               </Button>
             </div>
           ) : null}
           {canManageTeam ? (
             <InviteModal
               canAssignAdmin={canAssignAdmin}
-              domain={domain || "this project"}
+              domain={domain || t("members.thisProject")}
               inviteMember={props.inviteMember}
               onClose={() => setInviteOpen(false)}
               onInviteSent={() => router.refresh()}
@@ -228,6 +256,6 @@ export function TeamMembersCard(props: Readonly<TeamMembersCardProps>) {
           ) : null}
         </div>
       </SettingsCard>
-    </div>
+    </section>
   );
 }

@@ -1,5 +1,8 @@
+"use client";
+
 import { DomainIconLayer } from "@/components/ui/DomainIconLayer";
 import { buildDomainIconUrl, domainIconHost } from "@/components/ui/domain-icon-url";
+import { useTranslations } from "next-intl";
 
 type RememberedWebsiteCueProps = {
   website: string;
@@ -14,12 +17,13 @@ function fallbackLetter(label: string) {
 }
 
 export function RememberedWebsiteCue({ website }: Readonly<RememberedWebsiteCueProps>) {
+  const t = useTranslations("auth.login");
   const label = cueLabel(website);
   const src = buildDomainIconUrl({ domain: website });
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-1 text-[11px] text-fg-muted">
-      <span className="text-xs">Setting up tracking for</span>
+      <span className="text-xs">{t("rememberedWebsite")}</span>
       <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-full border border-border bg-bg-elev py-0.5 pr-2 pl-1.5 text-fg">
         <span
           aria-hidden

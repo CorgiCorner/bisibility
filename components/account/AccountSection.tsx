@@ -8,7 +8,7 @@ export type AccountSectionProps = {
   badge?: ReactNode;
   children: ReactNode;
   contentClassName?: string;
-  description?: string;
+  description?: ReactNode;
   title: string;
   tone?: "danger" | "default";
 };

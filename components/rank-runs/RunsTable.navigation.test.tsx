@@ -1,6 +1,7 @@
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { projectRunRankCheckPath } from "@/lib/routing/project-runs-path";
 import { routerMock } from "@/tests/next-navigation";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { RunsTable } from "./RunsTable";

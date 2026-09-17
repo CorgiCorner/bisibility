@@ -1,8 +1,9 @@
 import { ToastProvider } from "@/components/ui/Toast";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { validateEventProps } from "@/lib/analytics/event-schemas";
 import { WINDOW_PRESETS } from "@/lib/search-insights/constants";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchInsightsWorkspace } from "./SearchInsightsWorkspace";
@@ -277,7 +278,7 @@ describe("SearchInsightsWorkspace", () => {
     expect(await screen.findByText("Archived", { exact: true })).toBeInTheDocument();
     const archivedOption = screen
       .getAllByRole("option", { name: /example\.com/i })
-      .find((option) => option.textContent?.includes("last synced Aug 26, 2026"));
+      .find((option) => option.textContent?.includes("Last synced Aug 26, 2026"));
     expect(archivedOption).toBeInTheDocument();
   });
 

@@ -15,6 +15,7 @@ import { ChartBarIcon as ChartBar } from "@phosphor-icons/react/dist/csr/ChartBa
 import { LinkIcon as Link } from "@phosphor-icons/react/dist/csr/Link";
 import { ProhibitIcon as Prohibit } from "@phosphor-icons/react/dist/csr/Prohibit";
 import { TextTIcon as TextT } from "@phosphor-icons/react/dist/csr/TextT";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import {
   activeBacklinksFilterCount,
@@ -33,12 +34,6 @@ type BacklinksFiltersDrawerProps = {
   open: boolean;
   resultCount: number;
 };
-
-const firstSeenOptions = [
-  { id: "any" as const, label: "Any time" },
-  { id: "30" as const, label: "30 days" },
-  { id: "90" as const, label: "90 days" },
-];
 
 function RangeFilter({
   ariaLabel,
@@ -124,30 +119,42 @@ export function BacklinksFiltersDrawer({
   open,
   resultCount,
 }: Readonly<BacklinksFiltersDrawerProps>) {
+  const t = useTranslations("projectBacklinks.workspace.filters");
   const activeCount = activeBacklinksFilterCount(draft);
   const patch = (value: Partial<BacklinksFilters>) => onChange({ ...draft, ...value });
+  const firstSeenOptions = [
+    { id: "any" as const, label: t("anyTime") },
+    { id: "30" as const, label: t("days30") },
+    { id: "90" as const, label: t("days90") },
+  ];
+  const linkTypeLabels: Record<BacklinksLinkType, string> = {
+    dofollow: t("dofollow"),
+    image: t("imageLinks"),
+    nofollow: t("nofollow"),
+    sitewide: t("sitewide"),
+    sponsored: t("sponsored"),
+    ugc: t("ugc"),
+  };
 
   return (
     <Sheet
       footer={
         <div className="grid gap-3">
-          <p className="m-0 text-[12px] leading-[1.5] text-fg-muted">
-            Filters run on the cached snapshot - applying them is free.
-          </p>
+          <p className="m-0 text-[12px] leading-[1.5] text-fg-muted">{t("free")}</p>
           <div className="flex items-center gap-2.5">
             <Button
               onClick={() => onChange({ ...emptyBacklinksFilters })}
               type="button"
               variant="secondary"
             >
-              Reset
+              {t("reset")}
             </Button>
             <Button
               endIcon={<CaretRight size={14} weight="regular" />}
               onClick={onApply}
               style={{ flex: 1 }}
             >
-              Show {resultCount.toLocaleString("en-US")} {resultCount === 1 ? "domain" : "domains"}
+              {t("show", { count: resultCount, domains: t("domains", { count: resultCount }) })}
             </Button>
           </div>
         </div>
@@ -158,7 +165,7 @@ export function BacklinksFiltersDrawer({
           onClick={() => onChange({ ...emptyBacklinksFilters })}
           type="button"
         >
-          Clear all
+          {t("clearAll")}
         </button>
       }
       heightVariant="filters"
@@ -166,7 +173,7 @@ export function BacklinksFiltersDrawer({
       open={open}
       title={
         <span className="inline-flex items-center gap-2">
-          Filters
+          {t("title")}
           <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-sans tabular-nums text-[10.5px] font-semibold text-accent-text">
             {activeCount}
           </span>
@@ -174,7 +181,7 @@ export function BacklinksFiltersDrawer({
       }
       widthVariant="filters"
     >
-      <FilterSection icon={Link} title="Link type">
+      <FilterSection icon={Link} title={t("linkType")}>
         <div className="mt-3 grid grid-cols-2 gap-[7px]">
           {backlinksLinkTypeOptions.map((option) => (
             <label
@@ -183,13 +190,13 @@ export function BacklinksFiltersDrawer({
               key={option.id}
             >
               <Checkbox
-                aria-label={option.label}
+                aria-label={linkTypeLabels[option.id]}
                 checked={draft.linkTypes.includes(option.id)}
                 id={`backlinks-link-type-${option.id}`}
                 onChange={() => patch({ linkTypes: toggleFilterValue(draft.linkTypes, option.id) })}
               />
               <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-fg">
-                {option.label}
+                {linkTypeLabels[option.id]}
               </span>
               <span className="font-sans tabular-nums text-[11px] text-fg-muted">
                 {linkTypeCounts[option.id]}
@@ -198,25 +205,25 @@ export function BacklinksFiltersDrawer({
           ))}
         </div>
       </FilterSection>
-      <FilterSection icon={ChartBar} title="Metrics">
+      <FilterSection icon={ChartBar} title={t("metrics")}>
         <RangeFilter
-          ariaLabel="Domain authority"
+          ariaLabel={t("domainAuthority")}
           max={100}
           onChange={(domainAuthority) => patch({ domainAuthority })}
-          title="Domain authority"
+          title={t("domainAuthority")}
           value={draft.domainAuthority}
         />
         <RangeFilter
-          ariaLabel="Spam score"
+          ariaLabel={t("spamScore")}
           max={10}
           onChange={(spamScore) => patch({ spamScore })}
-          title="Spam score"
+          title={t("spamScore")}
           value={draft.spamScore}
         />
       </FilterSection>
-      <FilterSection icon={CalendarBlank} title="First seen">
+      <FilterSection icon={CalendarBlank} title={t("firstSeen")}>
         <fieldset className="mt-3 flex rounded-control border-0 bg-bg-sunken p-[3px]">
-          <legend className="sr-only">First seen</legend>
+          <legend className="sr-only">{t("firstSeen")}</legend>
           {firstSeenOptions.map((option) => (
             <button
               aria-pressed={draft.firstSeen === option.id}
@@ -234,26 +241,26 @@ export function BacklinksFiltersDrawer({
           ))}
         </fieldset>
       </FilterSection>
-      <FilterSection icon={TextT} title="Text match">
+      <FilterSection icon={TextT} title={t("textMatch")}>
         <TextFilter
           icon={<TextT weight="regular" size={14} />}
-          label="Anchor contains"
+          label={t("anchorContains")}
           onChange={(anchorContains) => patch({ anchorContains })}
-          placeholder="e.g. acme"
+          placeholder={t("anchorPlaceholder")}
           value={draft.anchorContains}
         />
         <TextFilter
           icon={<ArrowRight weight="regular" size={14} />}
-          label="Target URL contains"
+          label={t("targetContains")}
           onChange={(targetUrlContains) => patch({ targetUrlContains })}
-          placeholder="e.g. /desks"
+          placeholder={t("targetPlaceholder")}
           value={draft.targetUrlContains}
         />
         <TextFilter
           icon={<Prohibit weight="regular" size={14} />}
-          label="Exclude domain"
+          label={t("excludeDomain")}
           onChange={(excludeDomain) => patch({ excludeDomain })}
-          placeholder="e.g. toolindex.app"
+          placeholder={t("excludePlaceholder")}
           value={draft.excludeDomain}
         />
       </FilterSection>

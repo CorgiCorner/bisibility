@@ -3,6 +3,7 @@ import { RecipientFields } from "@/components/alerts/NewRuleDrawerControls";
 import { WebhookEndpointEditor } from "@/components/alerts/WebhookEndpointEditor";
 import type { AlertTargetOptions } from "@/lib/alerts/alert-data";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
+import { useTranslations } from "next-intl";
 import type { UseFormReturn } from "react-hook-form";
 
 type NewRuleDeliveryFieldsProps = Pick<
@@ -26,10 +27,12 @@ export function NewRuleDeliveryFields({
   upsertWebhookEndpointAction,
   watch,
 }: Readonly<NewRuleDeliveryFieldsProps>) {
+  const t = useTranslations("projectAlerts.drawer");
+
   return (
     <section>
       <div className="mb-[9px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        Delivery
+        {t("delivery")}
       </div>
       <DeliveryChannelsField register={register} setValue={setValue} watch={watch} />
       {watch("channels").includes("email") ? (

@@ -1,8 +1,6 @@
 type CloudBackupSectionContract = {
   countable: boolean;
   countKey: string | null;
-  description: string;
-  label: string;
   payloadKey: string;
 };
 
@@ -10,50 +8,36 @@ export const CLOUD_BACKUP_SECTIONS = [
   {
     countable: true,
     countKey: "keywords",
-    description: "Names, tags and target URLs",
-    label: "Keywords and tags",
     payloadKey: "keywords",
   },
   {
     countable: true,
     countKey: "rankChecks",
-    description: "Every retained position and ranking URL",
-    label: "Rank history",
     payloadKey: "rank_checks",
   },
   {
     countable: true,
     countKey: "competitors",
-    description: "Tracked domains and their labels",
-    label: "Competitors",
     payloadKey: "competitors",
   },
   {
     countable: true,
     countKey: "alertRules",
-    description: "Thresholds, targets and delivery channels",
-    label: "Alert rules",
     payloadKey: "alert_rules",
   },
   {
     countable: true,
     countKey: "savedViews",
-    description: "Names and project filter configurations",
-    label: "Saved views",
     payloadKey: "saved_views",
   },
   {
     countable: true,
     countKey: "notificationPreferences",
-    description: "Project notification choices",
-    label: "Notification preferences",
     payloadKey: "notification_preferences",
   },
   {
     countable: false,
     countKey: null,
-    description: "Name, domain and import metadata",
-    label: "Project details",
     payloadKey: "projects",
   },
 ] as const satisfies readonly CloudBackupSectionContract[];
@@ -73,13 +57,13 @@ export function assertCloudBackupSectionContract(sections: readonly CloudBackupS
   const countKeys = new Set<string>();
   for (const section of sections) {
     if (section.countable && !section.countKey) {
-      throw new Error(`${section.label} is countable but has no export count key.`);
+      throw new Error(`${section.payloadKey} is countable but has no export count key.`);
     }
     if (!section.countable && section.countKey) {
-      throw new Error(`${section.label} is non-countable but has an export count key.`);
+      throw new Error(`${section.payloadKey} is non-countable but has an export count key.`);
     }
     if (section.countKey && countKeys.has(section.countKey)) {
-      throw new Error(`${section.label} duplicates export count key ${section.countKey}.`);
+      throw new Error(`${section.payloadKey} duplicates export count key ${section.countKey}.`);
     }
     if (section.countKey) countKeys.add(section.countKey);
   }

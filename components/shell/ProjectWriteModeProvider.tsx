@@ -8,23 +8,21 @@ import {
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 
-export const PROJECT_READ_ONLY_REASON = "Read-only during migration hold";
-export const PROJECT_MIGRATED_REASON = "Project migrated and disabled";
-
-function readOnlyReasonFor(writeMode: ProjectWriteMode) {
-  return writeMode === "migrated" ? PROJECT_MIGRATED_REASON : PROJECT_READ_ONLY_REASON;
-}
+export type ProjectWriteModeReasons = Readonly<{
+  migrated: string;
+  migration_hold: string;
+}>;
 
 type ProjectWriteModeContextValue = {
   readOnly: boolean;
-  readOnlyReason: string;
+  readOnlyReason: string | null;
   projectRef: string | null;
   writeMode: ProjectWriteMode;
 };
 
 const defaultValue: ProjectWriteModeContextValue = {
   readOnly: false,
-  readOnlyReason: PROJECT_READ_ONLY_REASON,
+  readOnlyReason: null,
   projectRef: null,
   writeMode: "active",
 };
@@ -34,21 +32,25 @@ const ProjectWriteModeContext = createContext<ProjectWriteModeContextValue>(defa
 export function ProjectWriteModeProvider({
   children,
   projectRef,
+  reasons,
   writeMode,
 }: Readonly<{
   children: ReactNode;
   projectRef: string;
+  reasons?: ProjectWriteModeReasons;
   writeMode: ProjectWriteMode;
 }>) {
   const normalizedWriteMode = normalizeProjectWriteMode(writeMode);
+  const readOnly = isProjectReadOnly(normalizedWriteMode);
   const contextValue = useMemo(
     () => ({
-      readOnly: isProjectReadOnly(normalizedWriteMode),
-      readOnlyReason: readOnlyReasonFor(normalizedWriteMode),
+      readOnly,
+      readOnlyReason:
+        normalizedWriteMode === "active" ? null : (reasons?.[normalizedWriteMode] ?? null),
       projectRef,
       writeMode: normalizedWriteMode,
     }),
-    [normalizedWriteMode, projectRef],
+    [normalizedWriteMode, projectRef, readOnly, reasons],
   );
 
   return (

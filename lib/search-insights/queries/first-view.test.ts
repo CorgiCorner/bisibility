@@ -100,7 +100,10 @@ describe("getSearchInsightsFirstView", () => {
     expect(view.deploymentMode).toBe("self-host");
     expect(view.coverage.clicksShare).toBe(62);
     expect(mocks.signals).not.toHaveBeenCalled();
-    expect(view.kpis[0]).toMatchObject({ delta: "+8.2%", value: "12,480" });
+    expect(view.kpis[0]).toMatchObject({
+      delta: { kind: "changed", unit: "percent_change", value: 0.082 },
+      value: 12_480,
+    });
   });
 
   it("reads the scope the page already resolved instead of loading a second one", async () => {
@@ -110,7 +113,7 @@ describe("getSearchInsightsFirstView", () => {
     });
 
     expect(mocks.scope).not.toHaveBeenCalled();
-    expect(view.kpis[0]).toMatchObject({ value: "12,480" });
+    expect(view.kpis[0]).toMatchObject({ value: 12_480 });
   });
 
   it("loads signals independently from the scope the page already resolved", async () => {
@@ -152,7 +155,9 @@ describe("getSearchInsightsFirstView", () => {
       period: { id: "7" },
     });
     const view = await getSearchInsightsFirstView("prj_1");
-    expect(view.kpis.every(({ delta, prev }) => delta === "new" && prev === "no data")).toBe(true);
+    expect(
+      view.kpis.every(({ delta, previous }) => delta.kind === "new" && previous === null),
+    ).toBe(true);
   });
 
   it("does not compare the first look even when its prior day is recorded", async () => {
@@ -174,13 +179,13 @@ describe("getSearchInsightsFirstView", () => {
 
     const view = await getSearchInsightsFirstView("prj_1");
 
-    expect(view.kpis.map(({ delta, dir, prev }) => ({ delta, dir, prev }))).toEqual([
-      { delta: "new", dir: "flat", prev: "no data" },
-      { delta: "new", dir: "flat", prev: "no data" },
-      { delta: "new", dir: "flat", prev: "no data" },
-      { delta: "new", dir: "flat", prev: "no data" },
+    expect(view.kpis.map(({ delta, dir, previous }) => ({ delta, dir, previous }))).toEqual([
+      { delta: { kind: "new" }, dir: "flat", previous: null },
+      { delta: { kind: "new" }, dir: "flat", previous: null },
+      { delta: { kind: "new" }, dir: "flat", previous: null },
+      { delta: { kind: "new" }, dir: "flat", previous: null },
     ]);
-    expect(view.sessionsKpi).toMatchObject({ delta: "new", dir: "flat", prev: "no data" });
+    expect(view.sessionsKpi).toMatchObject({ delta: { kind: "new" }, dir: "flat", previous: null });
   });
 
   it("reads sessions for the first look when GA4 covers only its boundary day", async () => {
@@ -203,7 +208,7 @@ describe("getSearchInsightsFirstView", () => {
     const firstLook = await getSearchInsightsFirstView("prj_1");
 
     expect(firstLook.sessionsReadable).toBe(true);
-    expect(firstLook.sessionsKpi).toMatchObject({ value: "73.08%" });
+    expect(firstLook.sessionsKpi).toMatchObject({ value: 0.7307692307692307 });
     expect(firstLook.clicksToSessionsKpi).toMatchObject({ kind: "visible" });
     expect(mocks.pages).toHaveBeenLastCalledWith(
       "project_1",
@@ -234,7 +239,7 @@ describe("getSearchInsightsFirstView", () => {
     );
   });
 
-  it("keeps covered 7-day KPI output byte-identical", async () => {
+  it("keeps covered 7-day KPI measurements structured for local presentation", async () => {
     mocks.scope.mockResolvedValue({
       ...scope,
       importFacts: { readyThrough: { d7: { current: true, previous: true } } },
@@ -251,39 +256,47 @@ describe("getSearchInsightsFirstView", () => {
 
     expect(view.kpis).toEqual([
       {
-        delta: "+8.2%",
+        delta: { kind: "changed", unit: "percent_change", value: 0.082 },
         dir: "up",
-        label: "Clicks",
-        prev: "11,534",
-        source: "GSC",
-        value: "12,480",
+        metric: "clicks",
+        previous: 11_534,
+        source: "gsc",
+        value: 12_480,
+        valueKind: "count",
       },
       {
-        delta: "+3.1%",
+        delta: { kind: "changed", unit: "percent_change", value: 0.031 },
         dir: "up",
-        label: "Impressions",
-        prev: "471,690",
-        source: "GSC",
-        value: "486,310",
+        metric: "impressions",
+        previous: 471_690,
+        source: "gsc",
+        value: 486_310,
+        valueKind: "count",
       },
       {
-        delta: "+0.13 pp",
+        delta: { kind: "changed", unit: "percentage_points", value: 0.0013 },
         dir: "up",
-        label: "CTR",
-        prev: "2.44%",
-        source: "GSC",
-        value: "2.57%",
+        metric: "ctr",
+        previous: 0.0244,
+        source: "gsc",
+        value: 0.0257,
+        valueKind: "percentage",
       },
       {
-        delta: "1.6 better",
+        delta: { kind: "changed", unit: "position", value: 1.6 },
         dir: "up",
-        label: "Avg position",
-        prev: "20.0",
-        source: "GSC",
-        value: "18.4",
+        metric: "position",
+        previous: 20,
+        source: "gsc",
+        value: 18.4,
+        valueKind: "position",
       },
     ]);
-    expect(view.sessionsKpi).toMatchObject({ delta: "+3.69 pp", dir: "up", prev: "69.39%" });
+    expect(view.sessionsKpi).toMatchObject({
+      delta: { kind: "changed", unit: "percentage_points", value: 0.0368 },
+      dir: "up",
+      previous: 0.6939483266863187,
+    });
   });
 
   it("carries a published provider anomaly that overlaps the compared period", async () => {
@@ -356,7 +369,7 @@ describe("getSearchInsightsFirstView", () => {
       "123456789",
     );
     expect(mocks.sessionsTotals).toHaveBeenCalledWith("project_1", "123456789", scope.window);
-    expect(view.sessionsKpi).toMatchObject({ label: "Clicks to sessions", source: "GSC" });
+    expect(view.sessionsKpi).toMatchObject({ metric: "clicks_to_sessions", source: "gsc" });
     expect(view.sessionsReadable).toBe(true);
   });
 
@@ -380,7 +393,7 @@ describe("getSearchInsightsFirstView", () => {
     expect(view.clicksToSessionsKpi).toEqual({
       kind: "hidden",
       reason: "zero_clicks",
-      source: "GSC",
+      source: "gsc",
     });
     expect(view.sessionsKpi).toBeNull();
   });

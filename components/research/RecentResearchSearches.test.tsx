@@ -1,6 +1,14 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  renderWithFeatureMessages,
+  researchFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RecentResearchSearches } from "./RecentResearchSearches";
+
+const render = (ui: ReactElement) =>
+  renderWithFeatureMessages(ui, { messages: researchFeatureTestMessages });
 
 const search = {
   cachedUntil: "2026-07-22T20:00:00.000Z",

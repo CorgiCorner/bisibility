@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/data-table/DataTable";
@@ -9,6 +10,7 @@ import type {
   UpdateCompetitorDetailsInput,
 } from "@/lib/actions/competitor-set-input";
 import type { CompetitorSetSettingsModel } from "@/lib/queries/competitor-set-settings";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { CompetitorDetailsDialog } from "./CompetitorDetailsDialog";
 import { competitorSetColumns } from "./competitor-set-columns";
@@ -39,6 +41,8 @@ export function CompetitorSetTable({
   replaceMarkets,
   updateCompetitor,
 }: Readonly<CompetitorSetTableProps>) {
+  const dateDisplay = useDateDisplay();
+  const t = useTranslations("projectCompetitors.ui");
   const [filter, setFilter] = useState("");
   const [finderOpen, setFinderOpen] = useState(false);
   const [editing, setEditing] = useState<Competitor | null>(
@@ -50,13 +54,15 @@ export function CompetitorSetTable({
       competitorSetColumns({
         canEdit,
         canDelete,
+        dateDisplay,
         markets,
         projectId,
         replaceMarkets,
+        t,
         onEdit: setEditing,
         onRemove: setRemoving,
       }),
-    [canEdit, canDelete, markets, projectId, replaceMarkets],
+    [canEdit, canDelete, dateDisplay, markets, projectId, replaceMarkets, t],
   );
   const rows = useMemo(
     () => competitors.map((competitor) => ({ ...competitor, id: competitor.publicId })),
@@ -71,15 +77,15 @@ export function CompetitorSetTable({
     <Card className="min-w-0 overflow-hidden p-0" data-competitor-set-table="">
       <div className="flex flex-wrap items-start justify-between gap-3 border-border border-b px-4 py-3.5">
         <div className="min-w-0">
-          <h2 className="m-0 text-[15px] font-semibold text-fg">Competitors</h2>
+          <h2 className="m-0 text-[15px] font-semibold text-fg">{t("competitors")}</h2>
           <p className="m-0 mt-1 max-w-xl text-[12.5px] leading-5 text-fg-muted">
-            Manage competitors across your project and choose which markets they appear in.
+            {t("competitorsSettingsDescription")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {canEdit ? (
             <Button onClick={() => setFinderOpen(true)} size="sm" type="button" variant="secondary">
-              Add competitor
+              {t("addCompetitor")}
             </Button>
           ) : null}
         </div>
@@ -87,25 +93,24 @@ export function CompetitorSetTable({
       {showFinder ? (
         <div className="border-border border-b px-4 py-3">
           <Input
-            aria-label="Search competitors"
+            aria-label={t("searchCompetitors")}
             className="max-w-45"
             onChange={(event) => setFilter(event.target.value)}
-            placeholder="Search competitors"
+            placeholder={t("searchCompetitors")}
             value={filter}
           />
         </div>
       ) : null}
       {competitors.length === 0 ? (
         <div className="max-w-xl px-4 py-7">
-          <h2 className="m-0 text-[13.5px] font-semibold text-fg">No competitors added</h2>
+          <h2 className="m-0 text-[13.5px] font-semibold text-fg">{t("noCompetitorsAdded")}</h2>
           <p className="m-0 mt-2 text-[12.5px] leading-5 text-fg-muted">
-            Competitors appear here once added to the project. Rank checks do not add them
-            automatically.
+            {t("noCompetitorsAddedDescription")}
           </p>
         </div>
       ) : (
         <DataTable
-          ariaLabel="Competitors"
+          ariaLabel={t("competitors")}
           bordered={false}
           columns={columns}
           density="standard"

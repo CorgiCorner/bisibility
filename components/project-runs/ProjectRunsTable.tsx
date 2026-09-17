@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/dates/format";
 import type { ProjectRun } from "@/lib/runs/project-run";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useMemo, useState, useTransition } from "react";
 import { RunActions } from "./ProjectRunActions";
 import type { ProjectRunWithOperationSnapshot } from "./project-runs-presentation";
@@ -27,32 +28,63 @@ type ProjectRunsTableProps = {
   rows: readonly ProjectRunWithOperationSnapshot[];
 };
 
-const gscStatuses = {
-  cancelled: { label: "Cancelled", tone: "neutral" },
-  completed: { label: "Completed", tone: "positive" },
-  failed: { label: "Failed", tone: "critical" },
-  paused: { label: "Paused", tone: "attention" },
-  queued: { label: "Queued", tone: "info" },
-  running: { label: "Running", tone: "info" },
-  status_unavailable: { label: "Status unavailable", tone: "neutral" },
-  waiting_for_first_data: { label: "Waiting for first data", tone: "info" },
-  waiting_to_resume: { label: "Waiting to resume", tone: "attention" },
-} as const;
-
-function statusFor(run: ProjectRunWithOperationSnapshot) {
+function statusFor(
+  run: ProjectRunWithOperationSnapshot,
+  t: ReturnType<typeof useTranslations<"projectRuns.table">>,
+) {
   if (run.kind === "rank_check") {
     return runStatusChipPresentation(run.details.status, run.details.outcome);
   }
+  const gscStatuses = {
+    cancelled: { label: t("statusCancelled"), tone: "neutral" },
+    completed: { label: t("statusCompleted"), tone: "positive" },
+    failed: { label: t("statusFailed"), tone: "critical" },
+    paused: { label: t("statusPaused"), tone: "attention" },
+    queued: { label: t("statusQueued"), tone: "info" },
+    running: { label: t("statusRunning"), tone: "info" },
+    status_unavailable: { label: t("statusUnavailable"), tone: "neutral" },
+    waiting_for_first_data: { label: t("statusWaitingForFirstData"), tone: "info" },
+    waiting_to_resume: { label: t("statusWaitingToResume"), tone: "attention" },
+  } as const;
   const fallback =
     gscStatuses[run.lifecycle as keyof typeof gscStatuses] ?? gscStatuses.status_unavailable;
-  if (!run.snapshotPresentationTitle || !run.snapshotPresentationTone) return fallback;
-  return { label: run.snapshotPresentationTitle, tone: run.snapshotPresentationTone };
+  if (!run.snapshotState || !run.snapshotPresentationTone) return fallback;
+  const snapshotLabels = {
+    Completed: t("snapshotCompleted"),
+    Delayed: t("snapshotDelayed"),
+    Failed: t("snapshotFailed"),
+    Importing: t("snapshotImporting"),
+    Paused: t("snapshotPaused"),
+    Queued: t("snapshotQueued"),
+    "Reconnect required": t("snapshotReconnectRequired"),
+    "Status unavailable": t("snapshotStatusUnavailable"),
+    "Waiting for Google": t("snapshotWaitingForGoogle"),
+    "Waiting for data": t("snapshotWaitingForData"),
+  } as const;
+  return { label: snapshotLabels[run.snapshotState], tone: run.snapshotPresentationTone };
 }
 
-function progressFor(run: ProjectRun) {
+function progressFor(run: ProjectRun, t: ReturnType<typeof useTranslations<"projectRuns.table">>) {
   const { completed, total } = run.progress;
-  if (completed === null || total === null) return "Not available";
-  return `${completed.toLocaleString("en-US")} / ${total.toLocaleString("en-US")}`;
+  if (completed === null || total === null) return t("notAvailable");
+  return t("progressValue", { completed, total });
+}
+
+function titleFor(run: ProjectRun, t: ReturnType<typeof useTranslations<"projectRuns.table">>) {
+  if (run.title.kind === "gsc_import") return t("searchConsoleImport");
+  if (run.title.trigger === "api") return t("rankCheckApi");
+  if (run.title.trigger === "manual") return t("rankCheckManual");
+  if (run.title.trigger === "retry") return t("rankCheckRetry");
+  return t("rankCheckScheduled");
+}
+
+function scopeLabelFor(
+  run: ProjectRun,
+  t: ReturnType<typeof useTranslations<"projectRuns.table">>,
+) {
+  return run.scope.kind === "rank_check"
+    ? t("keywordCount", { count: run.scope.keywordCount })
+    : t("searchConsole");
 }
 
 function startedAt(run: ProjectRun) {
@@ -68,6 +100,7 @@ export function ProjectRunsTable({
   projectRef,
   rows,
 }: Readonly<ProjectRunsTableProps>) {
+  const t = useTranslations("projectRuns.table");
   const dateFormat = useDateFormat();
   const isDesktop = useMediaQuery("(min-width:1024px)");
   const router = useRouter();
@@ -84,13 +117,13 @@ export function ProjectRunsTable({
           await action({ projectRef, runId: run.id });
           router.refresh();
         } catch {
-          setActionError("The planned run could not be updated. Try again.");
+          setActionError(t("plannedUpdateFailed"));
         } finally {
           setPendingRunId(null);
         }
       });
     },
-    [projectRef, router],
+    [projectRef, router, t],
   );
 
   const columns = useMemo<readonly DataTableColumn<ProjectRunsTableRow>[]>(
@@ -99,22 +132,25 @@ export function ProjectRunsTable({
         accessorKey: "title",
         cell: ({ row }) => (
           <span className="block min-w-0">
-            <span className="block truncate font-medium text-fg" title={row.original.run.title}>
-              {row.original.run.title}
+            <span
+              className="block truncate font-medium text-fg"
+              title={titleFor(row.original.run, t)}
+            >
+              {titleFor(row.original.run, t)}
             </span>
           </span>
         ),
-        header: "Operation",
-        meta: { flex: 1, pin: "left", title: "Operation" },
+        header: t("operation"),
+        meta: { flex: 1, pin: "left", title: t("operation") },
         minSize: 210,
         size: 260,
       },
       {
         id: "type",
         cell: ({ row }) =>
-          row.original.run.kind === "rank_check" ? "Rank check" : "Search Console import",
-        header: "Type",
-        meta: { title: "Type" },
+          row.original.run.kind === "rank_check" ? t("rankCheck") : t("searchConsoleImport"),
+        header: t("type"),
+        meta: { title: t("type") },
         minSize: 150,
         size: 170,
       },
@@ -122,8 +158,8 @@ export function ProjectRunsTable({
         id: "scope",
         cell: ({ row }) => (
           <span className="block min-w-0">
-            <span className="block truncate text-fg" title={row.original.run.scope.label}>
-              {row.original.run.scope.label}
+            <span className="block truncate text-fg" title={scopeLabelFor(row.original.run, t)}>
+              {scopeLabelFor(row.original.run, t)}
             </span>
             {row.original.run.scope.description ? (
               <span
@@ -135,36 +171,36 @@ export function ProjectRunsTable({
             ) : null}
           </span>
         ),
-        header: "Scope",
-        meta: { title: "Scope" },
+        header: t("scope"),
+        meta: { title: t("scope") },
         minSize: 180,
         size: 230,
       },
       {
         id: "status",
         cell: ({ row }) => {
-          const status = statusFor(row.original.run);
-          return <StatusChip label={status.label} tone={status.tone} />;
+          const status = statusFor(row.original.run, t);
+          return <StatusChip {...status} />;
         },
-        header: "Status",
-        meta: { title: "Status" },
+        header: t("status"),
+        meta: { title: t("status") },
         minSize: 152,
         size: 152,
       },
       {
         id: "progress",
-        cell: ({ row }) => <span className="tabular-nums">{progressFor(row.original.run)}</span>,
-        header: "Progress",
-        meta: { align: "end", title: "Progress" },
+        cell: ({ row }) => <span className="tabular-nums">{progressFor(row.original.run, t)}</span>,
+        header: t("progress"),
+        meta: { align: "end", title: t("progress") },
         minSize: 120,
         size: 140,
       },
       {
         id: "unit",
         cell: ({ row }) =>
-          row.original.run.progress.unit === "days" ? "Finalized days" : "Targets",
-        header: "Unit",
-        meta: { title: "Unit" },
+          row.original.run.progress.unit === "days" ? t("finalizedDays") : t("targets"),
+        header: t("unit"),
+        meta: { title: t("unit") },
         minSize: 118,
         size: 128,
       },
@@ -172,8 +208,8 @@ export function ProjectRunsTable({
         id: "submitted",
         cell: ({ row }) =>
           formatDateTime(new Date(row.original.run.timestamps.createdAt), dateFormat),
-        header: "Submitted",
-        meta: { title: "Submitted" },
+        header: t("submitted"),
+        meta: { title: t("submitted") },
         minSize: 166,
         size: 184,
       },
@@ -181,10 +217,10 @@ export function ProjectRunsTable({
         id: "started",
         cell: ({ row }) => {
           const value = startedAt(row.original.run);
-          return value ? formatDateTime(new Date(value), dateFormat) : "Not started";
+          return value ? formatDateTime(new Date(value), dateFormat) : t("notStarted");
         },
-        header: "Started",
-        meta: { title: "Started" },
+        header: t("started"),
+        meta: { title: t("started") },
         minSize: 166,
         size: 184,
       },
@@ -207,27 +243,38 @@ export function ProjectRunsTable({
             run={row.original.run}
           />
         ),
-        header: () => <span className="sr-only">Actions</span>,
+        header: () => <span className="sr-only">{t("actions")}</span>,
         maxSize: 48,
-        meta: { align: "end", lockResize: true, pin: "right", title: "Actions" },
+        meta: { align: "end", lockResize: true, pin: "right", title: t("actions") },
         minSize: 48,
         size: 48,
       },
     ],
-    [canMutate, dateFormat, mutate, onRunNow, onSkip, pendingRunId, onDelete, projectRef, router],
+    [
+      canMutate,
+      dateFormat,
+      mutate,
+      onRunNow,
+      onSkip,
+      pendingRunId,
+      onDelete,
+      projectRef,
+      router,
+      t,
+    ],
   );
 
   return (
     <div className="grid min-w-0 gap-2 [&_[data-column-id=actions]]:px-2 [&_[data-column-id=status]]:px-2">
       <DataTable
-        ariaLabel="Project runs"
+        ariaLabel={t("projectRuns")}
         columnPinning={isDesktop ? undefined : { left: [], right: ["actions"] }}
         columns={columns}
         emptyState={emptyState}
         id="project-runs-table"
         onRowClick={(row) => router.push(row.run.href)}
         onSortingChange={() => undefined}
-        rows={rows.map((run) => ({ id: run.id, run, title: run.title }))}
+        rows={rows.map((run) => ({ id: run.id, run, title: titleFor(run, t) }))}
         sorting={null}
       />
       {actionError ? (
@@ -237,7 +284,7 @@ export function ProjectRunsTable({
       ) : null}
       {pending ? (
         <span className="sr-only" role="status">
-          Updating planned run
+          {t("updatingPlannedRun")}
         </span>
       ) : null}
     </div>

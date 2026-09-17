@@ -5,15 +5,31 @@ import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import Link from "next/link";
 
-const headers = [
-  { className: "", label: "Keyword" },
-  { className: "text-right", label: "Volume" },
-  { className: "", label: "KD" },
-  { className: "text-right", label: "CPC" },
-  { className: "", label: "Intent" },
-] as const;
+type SavedKeywordsEmptyStateProps = {
+  copy: {
+    browseResearch: string;
+    cpc: string;
+    difficulty: string;
+    emptyDescription: string;
+    emptyTitle: string;
+    intent: string;
+    keyword: string;
+    volume: string;
+  };
+  projectRef: string;
+};
 
-export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: string }>) {
+export function SavedKeywordsEmptyState({
+  copy,
+  projectRef,
+}: Readonly<SavedKeywordsEmptyStateProps>) {
+  const headers = [
+    { className: "", label: copy.keyword },
+    { className: "text-right", label: copy.volume },
+    { className: "", label: copy.difficulty },
+    { className: "text-right", label: copy.cpc },
+    { className: "", label: copy.intent },
+  ] as const;
   return (
     <Card className="overflow-hidden p-0" size="md">
       <div className="grid grid-cols-[minmax(0,1.4fr)_90px_60px_70px_80px] items-center gap-2 border-b border-border px-4.5 py-2.5">
@@ -31,11 +47,10 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
           <BookmarkSimple size={26} weight="regular" />
         </span>
         <h2 className="mb-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px] text-fg">
-          Nothing saved yet
+          {copy.emptyTitle}
         </h2>
         <p className="mb-0 mt-[7px] max-w-[440px] text-[13.5px] leading-[1.55] text-fg-muted">
-          Save ideas from Research to build a shortlist before you commit to tracking. Saving is
-          free and runs no checks.
+          {copy.emptyDescription}
         </p>
         <Button
           component={Link}
@@ -44,7 +59,7 @@ export function SavedKeywordsEmptyState({ projectRef }: Readonly<{ projectRef: s
           startIcon={<MagnifyingGlass size={13} weight="regular" />}
           style={{ marginTop: "22px", minHeight: 40, paddingInline: "18px" }}
         >
-          Browse Keyword Research
+          {copy.browseResearch}
         </Button>
       </div>
     </Card>

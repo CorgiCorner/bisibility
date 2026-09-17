@@ -1,7 +1,14 @@
+"use client";
+
+// The footer's only message source is the workspace shell's client boundary, so it has to
+// render on that side of the boundary: as a Server Component it reads the request config
+// instead, which carries `shared` alone and cannot resolve `shell.footer`.
+
 import { PrivacyChoicesLink } from "@/components/analytics/PrivacyChoicesLink";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { ThemeSegments } from "@/components/ui/ThemeSegments";
 import { instanceAdminNavItem } from "@/lib/nav/nav-items";
+import { useTranslations } from "next-intl";
 
 type AppFooterProps = {
   schemaStatus?: "drift" | "ok" | "unknown";
@@ -14,41 +21,44 @@ type AppFooterProps = {
 type InstanceAdminStatus = Required<Pick<AppFooterProps, "schemaStatus" | "workerStatus">> &
   Pick<AppFooterProps, "temporalIdentityDetail" | "temporalIdentityStatus">;
 
-function footerStatus({
-  schemaStatus,
-  temporalIdentityDetail,
-  temporalIdentityStatus,
-  workerStatus,
-}: InstanceAdminStatus) {
+function footerStatus(
+  t: ReturnType<typeof useTranslations<"shell.footer">>,
+  {
+    schemaStatus,
+    temporalIdentityDetail,
+    temporalIdentityStatus,
+    workerStatus,
+  }: InstanceAdminStatus,
+) {
   if (schemaStatus === "drift") {
     return {
       color: "var(--red)",
       detail: null,
-      label: `${instanceAdminNavItem.label} · Schema drift`,
+      label: t("instanceStatus.schemaDrift"),
     };
   }
   if (temporalIdentityStatus === "mismatch") {
     return {
       color: "var(--red)",
       detail: temporalIdentityDetail ?? null,
-      label: `${instanceAdminNavItem.label} · Worker on different queues`,
+      label: t("instanceStatus.workerDifferentQueues"),
     };
   }
   if (workerStatus === "stale") {
     return {
       color: "var(--yellow)",
       detail: null,
-      label: `${instanceAdminNavItem.label} · Worker down`,
+      label: t("instanceStatus.workerDown"),
     };
   }
   if (workerStatus === "unknown") {
     return {
       color: "var(--fg-muted)",
       detail: null,
-      label: `${instanceAdminNavItem.label} · Manual mode`,
+      label: t("instanceStatus.manualMode"),
     };
   }
-  return { color: "var(--green)", detail: null, label: instanceAdminNavItem.label };
+  return { color: "var(--green)", detail: null, label: t("instanceStatus.healthy") };
 }
 
 export function AppFooter({
@@ -58,9 +68,10 @@ export function AppFooter({
   temporalIdentityStatus,
   workerStatus,
 }: Readonly<AppFooterProps>) {
+  const t = useTranslations("shell.footer");
   const status =
     showInstanceAdmin && schemaStatus && workerStatus
-      ? footerStatus({
+      ? footerStatus(t, {
           schemaStatus,
           temporalIdentityDetail,
           temporalIdentityStatus,
@@ -95,7 +106,7 @@ export function AppFooter({
         <span />
       )}
       <div className="flex items-center gap-2">
-        <PrivacyChoicesLink />
+        <PrivacyChoicesLink label={t("privacyChoices")} />
         <ThemeSegments size="sm" />
       </div>
     </footer>

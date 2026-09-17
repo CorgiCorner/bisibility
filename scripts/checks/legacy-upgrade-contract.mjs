@@ -1,5 +1,6 @@
 export const LEGACY_UPGRADE_PAGE = "self-hosting/legacy-upgrades/v0-1-to-v0-2.mdx";
 export const LEGACY_UPGRADE_HUB = "self-hosting/upgrades.mdx";
+export const LEGACY_UPGRADE_INDEX = "self-hosting/legacy-upgrades.mdx";
 
 export const LEGACY_UPGRADE_ANCHORS = [
   "1-back-up-postgresql",
@@ -51,17 +52,27 @@ export function checkLegacyUpgradeContract(pages) {
   const failures = [];
   const hub = pages.get(LEGACY_UPGRADE_HUB) ?? "";
   const legacy = pages.get(LEGACY_UPGRADE_PAGE) ?? "";
+  const index = pages.get(LEGACY_UPGRADE_INDEX) ?? "";
 
-  if (
-    !hub.includes(
-      '<span id="upgrade-from-v010-to-v020"></span>\n\n## Upgrade from v0.1.0 to v0.2.0',
-    )
-  ) {
+  if (!hub.includes('<span id="upgrade-from-v010-to-v020"></span>')) {
     failures.push("self-hosting/upgrades.mdx is missing #upgrade-from-v010-to-v020.");
+  }
+  if (hub.includes("## Upgrade from v0.1.0 to v0.2.0")) {
+    failures.push(
+      "self-hosting/upgrades.mdx must not keep the historical v0.1.0 heading; move it to Legacy upgrades.",
+    );
+  }
+  if (!hub.includes("(/self-hosting/legacy-upgrades)")) {
+    failures.push("self-hosting/upgrades.mdx must link to the Legacy upgrades hub.");
   }
   if (!hub.includes(LEGACY_LINK)) {
     failures.push(
       "self-hosting/upgrades.mdx must link to the legacy v0.1.0 to v0.2.0 upgrade page.",
+    );
+  }
+  if (!index.includes("v0.5.0") || !index.includes(LEGACY_LINK)) {
+    failures.push(
+      "self-hosting/legacy-upgrades.mdx must document the v0.5.0 reset and link to v0.1.0 to v0.2.0.",
     );
   }
 

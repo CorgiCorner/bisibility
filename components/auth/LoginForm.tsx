@@ -7,6 +7,7 @@ import {
   type OAuthProvider,
 } from "@/components/auth/LoginEmailStep";
 import { OtpStep } from "@/components/auth/OtpStep";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { authClient } from "@/lib/auth/client";
 import { emptyOtpDigits, type LoginFormValues, loginSchema } from "@/lib/auth/login-schema";
 import { resendSignInOtp } from "@/lib/auth/otp-resend";
@@ -17,8 +18,9 @@ import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import type { SignInCapacity, SignInCapacityMiss } from "@/lib/auth/signin-capacity-types";
 import type { LegalConsentLinks } from "@/lib/deployment/legal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { waitlistFailureMessage } from "@/lib/ui/action-error";
+import { presentWaitlistFailure } from "@/lib/ui/action-error";
 import { useHumanVerification } from "@/lib/verification/human-verification-client";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { authErrorMessage, isEmailCapacityError } from "./login-errors";
@@ -53,6 +55,16 @@ export function LoginForm({
   legalConsentLinks,
   returnTo,
 }: Readonly<LoginFormProps>) {
+  const t = useTranslations("auth");
+  const sharedErrors = useSharedErrorMessages();
+  const socialErrorMessages = {
+    emailUnavailable: t("emailUnavailable.description"),
+    fallback: t("login.status.genericError"),
+    methodUnavailable: t("login.status.methodUnavailable"),
+    providerEmailUnavailable: t("login.status.providerEmailUnavailable"),
+    providerEmailUnverified: t("login.status.providerEmailUnverified"),
+    providerProfileUnavailable: t("login.status.providerProfileUnavailable"),
+  };
   const verification = useHumanVerification();
   const [emailStepKey, setEmailStepKey] = useState(0);
   const [step, setStep] = useState<LoginStep>("email");
@@ -139,11 +151,11 @@ export function LoginForm({
     if (isEmailCapacityError({ code: result.code })) {
       setCapacityMiss("email");
     } else if (result.code === "verification_failed" || result.code === "rate_limited") {
-      setFormError(waitlistFailureMessage(result.code));
+      setFormError(presentWaitlistFailure(result.code, sharedErrors));
     } else if (result.code === "EMAIL_NOT_CONFIGURED") {
-      setFormError(authErrorMessage({ code: result.code }));
+      setFormError(t("emailUnavailable.description"));
     } else {
-      setFormError("Could not send a login code. Try again.");
+      setFormError(t("login.status.codeSendFailed"));
     }
     setEmailStepKey((key) => key + 1);
   }
@@ -154,7 +166,7 @@ export function LoginForm({
     }
 
     if (!enabledProviders[provider]) {
-      setFormError("This sign-in method is not configured.");
+      setFormError(t("login.status.methodUnavailable"));
       return;
     }
 
@@ -170,10 +182,10 @@ export function LoginForm({
       });
 
       if (response.error) {
-        setFormError(authErrorMessage(response.error));
+        setFormError(authErrorMessage(response.error, socialErrorMessages));
       }
     } catch (error) {
-      setFormError(authErrorMessage(error));
+      setFormError(authErrorMessage(error, socialErrorMessages));
     } finally {
       setSocialProvider(null);
     }
@@ -197,7 +209,7 @@ export function LoginForm({
     const otp = parsed.data.otp.join("");
 
     if (!/^\d{6}$/.test(otp)) {
-      form.setError("otp", { message: "Enter the 6-digit code." });
+      form.setError("otp", { message: t("login.validation.otp") });
       return;
     }
 
@@ -242,15 +254,15 @@ export function LoginForm({
         startCooldown(result.retryAfter);
       }
       if (result.code === "verification_failed") {
-        setFormError("Verification failed. Please try again.");
+        setFormError(t("login.status.verificationFailed"));
       } else if (result.code === "rate_limited") {
-        setFormError("Too many requests. Please try again later.");
+        setFormError(t("login.status.resendRateLimited"));
       } else if (result.code === "capacity_exhausted") {
-        setFormError("Email sign-in capacity is temporarily full. Try again later.");
+        setFormError(t("login.status.emailCapacity"));
       } else if (result.code === "EMAIL_NOT_CONFIGURED") {
-        setFormError(authErrorMessage({ code: result.code }));
+        setFormError(t("emailUnavailable.description"));
       } else {
-        setFormError("Could not send a new code. Try again.");
+        setFormError(t("login.status.resendFailed"));
       }
       return;
     }
@@ -281,7 +293,7 @@ export function LoginForm({
         onDigitEntry={clearOtpErrorOnDigit}
         onResend={resendCode}
         onSubmit={form.handleSubmit(verifyCode)}
-        otpError={errors.otp?.message}
+        otpError={errors.otp ? t("login.validation.otp") : undefined}
         resentCode={resentCode}
         status={authStatus}
       />

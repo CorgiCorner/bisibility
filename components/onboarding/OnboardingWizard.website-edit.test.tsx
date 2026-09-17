@@ -25,6 +25,6 @@ it("preserves the corrected project through 1 > 2 > 1 and another visit to step 
   );
   fireEvent.click(await screen.findByRole("button", { name: "Back" }));
   expect(screen.getByLabelText("Your website")).toHaveValue("tes.co");
-  expect(screen.getByText("tes", { exact: true })).toBeInTheDocument();
+  expect(screen.getByText("Project name: tes")).toBeInTheDocument();
   expect(createProjectAction).toHaveBeenCalledTimes(1);
 });

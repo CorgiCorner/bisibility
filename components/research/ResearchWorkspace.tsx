@@ -1,7 +1,6 @@
 "use client";
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { ResearchKeywordsActionInput } from "@/lib/actions/keyword-research";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
@@ -19,12 +18,10 @@ import { ResearchTrackingDrawer } from "./ResearchTrackingDrawer";
 import { researchScopeMetricsAvailable } from "./research-scope-capability";
 import {
   focusResearchSeedInput,
-  nextBudgetResetLabel,
   type ResearchAddDraft,
   type ResearchWorkspaceProps,
   recentSearchReplay,
   researchFailureState,
-  researchRetryLabel,
   researchScopeLocationKey,
   researchScopeTrackingLocation,
   researchTabRequest,
@@ -33,9 +30,7 @@ import { useRecentSearches } from "./useRecentSearches";
 import { useResearchEstimate } from "./useResearchEstimate";
 import { useResearchRuns } from "./useResearchRuns";
 import { useResearchSavedKeywords } from "./useResearchSavedKeywords";
-
-const BUDGET_BLOCKED_TOOLTIP =
-  "Fresh lookups are disabled until the monthly provider budget resets. Cached recent searches remain available.";
+import { useResearchWorkspaceCopy } from "./useResearchWorkspaceCopy";
 
 export function ResearchWorkspace({
   addKeywordsAction,
@@ -49,8 +44,8 @@ export function ResearchWorkspace({
   researchAction,
   saveKeywordsAction,
 }: Readonly<ResearchWorkspaceProps>) {
-  const dateFormat = useDateFormat();
   const { addSpend } = useSessionSpend();
+  const copy = useResearchWorkspaceCopy(costContext.timezone ?? "UTC");
   const recent = useRecentSearches(context.project.id);
   const scopeOptions = researchScopeOptionsForProject([
     context.defaultScope,
@@ -146,7 +141,7 @@ export function ResearchWorkspace({
 
   return (
     <section className="grid min-w-0 gap-4">
-      <Tooltip content={budgetBlocked ? BUDGET_BLOCKED_TOOLTIP : ""} wrapperClassName="w-full">
+      <Tooltip content={budgetBlocked ? copy.budgetBlockedTooltip : ""} wrapperClassName="w-full">
         <div className="w-full">
           <ResearchSearchCard
             connectionId={connectionId}
@@ -190,7 +185,7 @@ export function ResearchWorkspace({
       </Tooltip>
       <RecentResearchSearches
         disabled={!hasProvider}
-        disabledHint="Connect DataForSEO to replay recent searches."
+        disabledHint={copy.recentDisabledHint}
         onOpen={openRecentSearch}
         onRemove={recent.remove}
         searches={recent.searches}
@@ -204,7 +199,7 @@ export function ResearchWorkspace({
       {hasProvider && !researching && !activeTab ? (
         <ResearchStatePanel
           projectRef={context.project.id}
-          resumeLabel={nextBudgetResetLabel(costContext.timezone ?? "UTC", dateFormat)}
+          resumeLabel={copy.budgetResetLabel()}
           scopeLabel={`${scope.countryName} / ${scope.languageLabel}`}
           state={
             budgetBlocked ? "budget_exhausted" : researchAvailable ? "idle" : "unsupported_location"
@@ -231,10 +226,10 @@ export function ResearchWorkspace({
             void runResearch([activeTab.seed], researchTabRequest(activeTab), activeTab.scope)
           }
           projectRef={context.project.id}
-          retryLabel={researchRetryLabel(
+          retryLabel={copy.retryLabel(
             activeTab.retryEstimate ?? { cached: false, costCents: null, loading: false },
           )}
-          resumeLabel={nextBudgetResetLabel(costContext.timezone ?? "UTC", dateFormat)}
+          resumeLabel={copy.budgetResetLabel()}
           scopeLabel={`${activeTab.scope.countryName} / ${activeTab.scope.languageLabel}`}
           state={researchFailureState(activeTab.outcome)}
         />

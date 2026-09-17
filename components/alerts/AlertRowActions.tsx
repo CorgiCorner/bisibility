@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTargetUrlDialog } from "@/components/alerts/AlertTargetUrlDialog";
+import type { AlertFeedCta } from "@/components/alerts/alert-feed-presentation";
 import { Button } from "@/components/ui/Button";
 import { getAlertCtaTargets, muteTriggeredAlert } from "@/lib/actions/alert-feed";
 import { BellSlashIcon as BellSlash } from "@phosphor-icons/react/dist/csr/BellSlash";
@@ -10,22 +11,31 @@ import { ListMagnifyingGlassIcon as ListMagnifyingGlass } from "@phosphor-icons/
 import { TargetIcon as Target } from "@phosphor-icons/react/dist/csr/Target";
 import type { Icon } from "@phosphor-icons/react/lib";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-const ctaIcons: Record<string, Icon> = {
-  "Compare SERP": Columns,
-  "Open keyword": CaretRight,
-  "Set target URL": Target,
-  "Set winner URL": Target,
-  "View SERP": ListMagnifyingGlass,
+const ctaIcons: Record<AlertFeedCta, Icon> = {
+  compare_serp: Columns,
+  open_keyword: CaretRight,
+  set_target_url: Target,
+  set_winner_url: Target,
+  view_serp: ListMagnifyingGlass,
 };
 
-const serpCtas = new Set(["Compare SERP", "View SERP"]);
-const targetCtas = new Set(["Set target URL", "Set winner URL"]);
+const serpCtas = new Set<AlertFeedCta>(["compare_serp", "view_serp"]);
+const targetCtas = new Set<AlertFeedCta>(["set_target_url", "set_winner_url"]);
+
+function ctaLabel(cta: AlertFeedCta, t: ReturnType<typeof useTranslations<"projectAlerts.feed">>) {
+  if (cta === "compare_serp") return t("ctaCompareSerp");
+  if (cta === "open_keyword") return t("ctaOpenKeyword");
+  if (cta === "set_target_url") return t("ctaSetTargetUrl");
+  if (cta === "set_winner_url") return t("ctaSetWinnerUrl");
+  return t("ctaViewSerp");
+}
 
 type AlertRowActionsProps = {
   alertId: string;
-  ctas: string[];
+  ctas: AlertFeedCta[];
   keyword: string;
   onError: (message: string) => void;
   onSnooze: (id: string) => () => void;
@@ -40,11 +50,12 @@ export function AlertRowActions({
   onSnooze,
   projectId,
 }: Readonly<AlertRowActionsProps>) {
+  const t = useTranslations("projectAlerts.feed");
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [dialogTargetUrl, setDialogTargetUrl] = useState<string | null | undefined>(undefined);
 
-  async function runCta(cta: string) {
+  async function runCta(cta: AlertFeedCta) {
     setBusy(true);
     try {
       const targets = await getAlertCtaTargets({ alertId, projectId });
@@ -72,7 +83,7 @@ export function AlertRowActions({
       router.refresh();
     } catch {
       rollback();
-      onError("Could not snooze alert. Try again.");
+      onError(t("snoozeError"));
     } finally {
       setBusy(false);
     }
@@ -81,7 +92,7 @@ export function AlertRowActions({
   return (
     <div className="mt-2.5 flex flex-wrap items-center gap-2">
       {ctas.map((cta) => {
-        const CtaIcon = ctaIcons[cta] ?? CaretRight;
+        const CtaIcon = ctaIcons[cta];
 
         return (
           <Button
@@ -93,7 +104,7 @@ export function AlertRowActions({
             type="button"
             variant="secondary"
           >
-            {cta}
+            {ctaLabel(cta, t)}
           </Button>
         );
       })}
@@ -105,7 +116,7 @@ export function AlertRowActions({
         type="button"
         variant="ghost"
       >
-        Snooze
+        {t("snooze")}
       </Button>
       {dialogTargetUrl !== undefined ? (
         <AlertTargetUrlDialog

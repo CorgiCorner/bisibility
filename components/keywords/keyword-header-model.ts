@@ -1,26 +1,27 @@
 import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import {
-  RESEARCH_METRICS_UNAVAILABLE_TOOLTIP,
-  supportsResearchScope,
-} from "@/lib/serp/research-capability";
+import { supportsResearchScope } from "@/lib/serp/research-capability";
 import { cn } from "@/lib/ui/cn";
 
 export const metadataChipClassName = cn(quietChipVariants({ size: "lg" }), "text-fg");
 
-export function keywordMetricsAvailabilityNote(
+export type KeywordMetricsAvailability =
+  | { kind: "unsupported" }
+  | { kind: "missing"; metrics: readonly ("volume" | "difficulty")[] }
+  | null;
+
+export function keywordMetricsAvailability(
   keyword: Pick<KeywordRow, "volumeKnown" | "difficultyKnown" | "location">,
-) {
-  const missing = [
-    ...(keyword.volumeKnown === false ? ["Search volume"] : []),
-    ...(keyword.difficultyKnown === false ? ["difficulty"] : []),
+): KeywordMetricsAvailability {
+  const metrics = [
+    ...(keyword.volumeKnown === false ? (["volume"] as const) : []),
+    ...(keyword.difficultyKnown === false ? (["difficulty"] as const) : []),
   ];
-  if (missing.length === 0) return null;
+  if (metrics.length === 0) return null;
   if (!supportsResearchScope(keyword.location.countryCode, keyword.location.hl)) {
-    return RESEARCH_METRICS_UNAVAILABLE_TOOLTIP;
+    return { kind: "unsupported" };
   }
-  const label = missing.join(" and ");
-  return `${label[0].toUpperCase()}${label.slice(1)} ${missing.length > 1 ? "are" : "is"} unavailable for this keyword. Rank tracking is unaffected.`;
+  return { kind: "missing", metrics };
 }
 
 export function deviceValue(value: string): "desktop" | "mobile" {

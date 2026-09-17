@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { inputClassName } from "@/components/ui/input-styles";
 import { normalizeGa4PropertyId } from "@/lib/providers/analytics/property-id";
+import { useTranslations } from "next-intl";
 
 type Ga4PropertyManualEntryProps = {
   hasOptions: boolean;
@@ -34,6 +35,7 @@ export function Ga4PropertyManualEntry({
   propertyError,
   readOnly,
 }: Readonly<Ga4PropertyManualEntryProps>) {
+  const t = useTranslations("projectIntegrations.oauth");
   const normalized = property.trim() ? normalizeGa4PropertyId(property) : null;
 
   if (!manualEntry) {
@@ -48,7 +50,7 @@ export function Ga4PropertyManualEntry({
         type="button"
         variant="ghost"
       >
-        I don&apos;t see my property
+        {t("manualEntry")}
       </Button>
     ) : null;
   }
@@ -56,7 +58,7 @@ export function Ga4PropertyManualEntry({
   return (
     <div className="flex flex-col gap-3">
       <label className={labelClass}>
-        Google Analytics 4 property id
+        {t("ga4PropertyId")}
         <input
           autoComplete="off"
           aria-invalid={Boolean(propertyError)}
@@ -75,23 +77,24 @@ export function Ga4PropertyManualEntry({
         />
       </label>
       <p className="m-0 text-[11.5px] leading-5 text-fg-muted">
-        In Google Analytics 4, open Admin (gear, bottom-left) → Property settings → Property details
-        and copy the digits-only Property ID. You can also search for “Property ID” in Analytics. Do
-        not paste a G- Measurement ID or UA- tracking ID. See Google&apos;s{" "}
-        <ExternalLink
-          className="text-accent-text hover:underline"
-          href="https://developers.google.com/analytics/devguides/reporting/data/v1/property-id"
-        >
-          Property ID guide
-        </ExternalLink>{" "}
-        and{" "}
-        <ExternalLink
-          className="text-accent-text hover:underline"
-          href="https://support.google.com/analytics/answer/12270356?hl=en"
-        >
-          Measurement ID guide
-        </ExternalLink>
-        .
+        {t.rich("ga4PropertyHelp", {
+          measurementGuide: (chunks) => (
+            <ExternalLink
+              className="text-accent-text hover:underline"
+              href="https://support.google.com/analytics/answer/12270356?hl=en"
+            >
+              {chunks}
+            </ExternalLink>
+          ),
+          propertyGuide: (chunks) => (
+            <ExternalLink
+              className="text-accent-text hover:underline"
+              href="https://developers.google.com/analytics/devguides/reporting/data/v1/property-id"
+            >
+              {chunks}
+            </ExternalLink>
+          ),
+        })}
       </p>
       {propertyError ? (
         <p className="m-0 text-[12.5px] leading-5 text-red-text" role="alert">
@@ -101,11 +104,11 @@ export function Ga4PropertyManualEntry({
       <Button
         disabled={!normalized?.ok || Boolean(propertyError) || readOnly}
         loading={pending}
-        loadingLabel="Connecting…"
+        loadingLabel={t("connecting")}
         onClick={onSelect}
         type="button"
       >
-        Use entered property
+        {t("useEnteredProperty")}
       </Button>
     </div>
   );

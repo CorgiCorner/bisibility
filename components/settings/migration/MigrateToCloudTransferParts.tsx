@@ -1,11 +1,14 @@
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import { TerminalWindowIcon as TerminalWindow } from "@phosphor-icons/react/dist/csr/TerminalWindow";
+import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 export function StepLabel({ index, title }: Readonly<{ index: number; title: string }>) {
+  const t = useTranslations("projectSettingsMigration.transfer");
+  const locale = useLocale();
   return (
     <div className="mt-5 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-      Step {index} · {title}
+      {t("step", { index: new Intl.NumberFormat(locale).format(index), title })}
     </div>
   );
 }
@@ -19,17 +22,11 @@ export function TokenSourceStep({
   step: number;
   targetLabel: string;
 }>) {
+  const t = useTranslations("projectSettingsMigration.transfer");
   return (
     <>
-      <StepLabel
-        index={step}
-        title={`Create a migration token on the ${targetLabel} destination`}
-      />
-      <p className="m-0 mt-2 text-[12.5px] leading-5 text-fg-muted">
-        The destination import page mints the{" "}
-        <code className="font-sans tabular-nums">mig_...</code> token. It is shown once there - copy
-        it before leaving that page.
-      </p>
+      <StepLabel index={step} title={t("createToken", { target: targetLabel })} />
+      <p className="m-0 mt-2 text-[12.5px] leading-5 text-fg-muted">{t("tokenSource")}</p>
       {children}
     </>
   );

@@ -89,10 +89,10 @@ type SearchInsightsMenuNoticeProps = {
   children: ReactNode;
 };
 
-export function SearchInsightsMenuSkeleton() {
+export function SearchInsightsMenuSkeleton({ ariaLabel }: Readonly<{ ariaLabel: string }>) {
   return (
     <li
-      aria-label="Loading properties"
+      aria-label={ariaLabel}
       className="flex h-8 w-full items-center gap-2.5 rounded-control border border-transparent px-2.5"
       role="status"
     >

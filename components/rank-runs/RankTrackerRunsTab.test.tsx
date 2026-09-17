@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RankTrackerRunsTab } from "./RankTrackerRunsTab";
 
@@ -18,6 +19,9 @@ vi.mock("@/components/rank-tracker/RankTrackerTabs", () => ({
     capturedTabsProps = props;
     return <div data-testid="rank-tracker-tabs" />;
   },
+}));
+vi.mock("@/components/rank-tracker/RankTrackerFeatureBoundary", () => ({
+  RankTrackerFeatureBoundary: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock("./RunsSection", () => ({
   RunsSection: (props: Record<string, unknown>) => {

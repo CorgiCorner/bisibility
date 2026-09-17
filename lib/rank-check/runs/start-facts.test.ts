@@ -14,7 +14,7 @@ describe("run start facts shared by the tray and run pages", () => {
       firstNotBefore: "2026-09-04T14:00:00.000Z",
       hasRunningTargets: false,
       nextCheckAt: "2026-09-04T14:00:00.000Z",
-      scheduleTiming: "spread across the day",
+      scheduleTiming: { kind: "spread_across_day" },
       startedTargets: 0,
     });
   });
@@ -53,10 +53,10 @@ describe("run start facts shared by the tray and run pages", () => {
   it("uses the actual configured jitter rather than promising a constant start window", () => {
     expect(
       runScheduleTiming({ ...queued.checkSchedule, jitterMinutes: 60, timeOfDay: "06:00" }),
-    ).toBe("starts within 60 min of the scheduled time");
+    ).toEqual({ kind: "starts_within_minutes", minutes: 60 });
     expect(
       runScheduleTiming({ ...queued.checkSchedule, jitterMinutes: 0, timeOfDay: "06:00" }),
-    ).toBe("starts at the scheduled time");
+    ).toEqual({ kind: "starts_at_scheduled_time" });
     expect(runScheduleTiming(null)).toBeNull();
   });
 });

@@ -144,7 +144,7 @@ v.describe("SearchInsightsDrawerHost", () => {
 
     await user.click(r.screen.getByRole("button", { name: "chip overlap" }));
 
-    await user.click(await r.within(t.panel()).findByRole("button", { name: "Try again" }));
+    await user.click(await r.within(t.panel()).findByRole("button", { name: "Retry" }));
 
     v.expect(await r.within(t.panel()).findByText("Most clicks first")).toBeInTheDocument();
   });

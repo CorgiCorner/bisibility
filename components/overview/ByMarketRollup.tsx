@@ -10,6 +10,7 @@ import type { OverviewMarketRow } from "@/lib/queries/overview-markets";
 import { appPath } from "@/lib/routing/app-path";
 import { ArrowsDownUpIcon as Sort } from "@phosphor-icons/react/dist/csr/ArrowsDownUp";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { type ByMarketTableRow, byMarketTableColumns } from "./by-market-table-columns";
 
@@ -20,11 +21,6 @@ export type ByMarketRollupProps = {
   projectRef: string;
   rows: OverviewMarketRow[];
 };
-
-const sortOptions = [
-  { label: "Sort: Worst first", value: "worst" },
-  { label: "Sort: A-Z", value: "alphabetical" },
-] as const;
 
 function pairLabel(row: OverviewMarketRow) {
   return `${row.locationLabel} / ${row.languageLabel}`;
@@ -53,8 +49,13 @@ function tableRows(
 
 export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRollupProps>) {
   const router = useRouter();
+  const t = useTranslations("projectDashboard.markets");
   const [sort, setSort] = useState<MarketSort>("worst");
   const tableData = tableRows(rows, device, projectRef, sort);
+  const sortOptions = [
+    { label: t("sortWorstFirst"), value: "worst" },
+    { label: t("sortAlphabetical"), value: "alphabetical" },
+  ] as const;
 
   if (rows.length < 2) {
     return null;
@@ -62,18 +63,18 @@ export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRo
 
   return (
     <Card
-      aria-label="By market rollup"
+      aria-label={t("title")}
       className="min-w-0 overflow-hidden p-0"
       component="section"
       size="md"
     >
       <div className="flex flex-wrap items-start justify-between gap-3 px-5 pb-3.5 pt-4.5">
         <div className="min-w-0">
-          <SectionTitle>By market</SectionTitle>
-          <span className="block">{rows.length} active markets / paused markets excluded</span>
+          <SectionTitle>{t("title")}</SectionTitle>
+          <span className="block">{t("activeMarkets", { count: rows.length })}</span>
         </div>
         <MenuSelect
-          ariaLabel="Sort markets"
+          ariaLabel={t("sortAriaLabel")}
           leadingIcon={<Sort weight="regular" aria-hidden size={12} />}
           onChange={(value) => setSort(value as MarketSort)}
           options={sortOptions}
@@ -83,8 +84,8 @@ export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRo
       </div>
       <div className="min-w-0 [&>[role=table]]:border-0">
         <DataTable
-          ariaLabel="By market rollup"
-          columns={byMarketTableColumns()}
+          ariaLabel={t("title")}
+          columns={byMarketTableColumns(t)}
           density="compact"
           id="by-market-rollup"
           layout="auto"

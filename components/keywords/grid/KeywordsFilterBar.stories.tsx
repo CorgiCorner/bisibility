@@ -3,6 +3,7 @@ import type {
   DataTableDensity,
 } from "@/components/ui/data-table/data-table-types";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
@@ -14,6 +15,7 @@ const meta = {
   component: KeywordsFilterBar,
   parameters: { layout: "fullscreen" },
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="min-h-[220px] bg-bg p-6 text-fg">
         <div className="rounded-card border border-border bg-bg-elev">

@@ -2,11 +2,7 @@
 
 import { RankCheckRunModal } from "@/components/keywords/RankCheckRunModal";
 import { Button } from "@/components/ui/Button";
-import {
-  type CostRateInfo,
-  formatEstimateCents,
-  runCostCents,
-} from "@/lib/cost-estimate/project-estimate";
+import { type CostRateInfo, runCostCents } from "@/lib/cost-estimate/project-estimate";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { dominantErrorCode, isProviderErrorCode } from "@/lib/providers/provider-error-code";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -15,7 +11,8 @@ import { appPath } from "@/lib/routing/app-path";
 import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-runs-path";
 import type { SerpDepth } from "@/lib/serp/constants";
 import Link from "next/link";
-import { effectiveRowDepth, selectionDepthLabel } from "./run-check-depth";
+import { useTranslations } from "next-intl";
+import { effectiveRowDepth } from "./run-check-depth";
 
 export type PendingRunChecks = { depth?: SerpDepth; keywordIds: string[] };
 export type RunChecksFailure = { code: string | null; message: string; rankCheckId: string | null };
@@ -37,13 +34,17 @@ type Props = {
   rows: KeywordRow[];
 };
 
-function flowTitle(flow: RunChecksFlow) {
-  const plural = flow.pending.keywordIds.length !== 1;
-  if (flow.step === "confirm" || flow.step === "starting")
-    return `Run rank ${plural ? "checks" : "check"}`;
-  if (flow.step === "running") return plural ? "Checks running" : "Check running";
-  if (flow.step === "success") return plural ? "Checks complete" : "Check complete";
-  return plural ? "Checks failed" : "Check failed";
+function flowTitle(
+  flow: RunChecksFlow,
+  t: ReturnType<
+    typeof useTranslations<"projectRankTracker.keywordImport.management.runConfirmation">
+  >,
+) {
+  const count = flow.pending.keywordIds.length;
+  if (flow.step === "confirm" || flow.step === "starting") return t("titleConfirm", { count });
+  if (flow.step === "running") return t("titleRunning", { count });
+  if (flow.step === "success") return t("titleComplete", { count });
+  return t("titleFailed", { count });
 }
 
 const SAFE_IMMEDIATE_BLOCK_CODES = new Set([
@@ -54,8 +55,7 @@ const SAFE_IMMEDIATE_BLOCK_CODES = new Set([
 
 function dominantProviderCode(failures: RunChecksFailure[]) {
   const recognized = failures.flatMap((failure) => {
-    const code = providerFailurePresentation(failure.code, failure.message).code;
-    return isProviderErrorCode(code) ? [code] : [];
+    return isProviderErrorCode(failure.code) ? [failure.code] : [];
   });
   return recognized.length > 0 ? dominantErrorCode(recognized) : null;
 }
@@ -64,18 +64,41 @@ function deferredFailure(failures: RunChecksFailure[]) {
   return failures.find((failure) => failure.code === "rank_check_deferred") ?? null;
 }
 
-function FailureBody({ failures }: { failures: RunChecksFailure[] }) {
+function providerMessage(
+  code: string | null,
+  t: ReturnType<
+    typeof useTranslations<"projectRankTracker.keywordImport.management.runConfirmation">
+  >,
+) {
+  if (code === "provider_billing") return t("providerBilling");
+  if (code === "provider_account_restricted") return t("providerAccountRestricted");
+  if (code === "provider_auth") return t("providerAuth");
+  if (code === "provider_rate_limited") return t("providerRateLimited");
+  if (code === "provider_transient") return t("providerUnavailable");
+  return t("providerUnknown");
+}
+
+function FailureBody({
+  failures,
+  t,
+}: {
+  failures: RunChecksFailure[];
+  t: ReturnType<
+    typeof useTranslations<"projectRankTracker.keywordImport.management.runConfirmation">
+  >;
+}) {
   const first = failures[0];
   const deferred = deferredFailure(failures);
   const providerCode = dominantProviderCode(failures);
   const appBlock = first && SAFE_IMMEDIATE_BLOCK_CODES.has(first.code ?? "") ? first : null;
-  const message =
-    deferred?.message ?? appBlock?.message ?? providerFailurePresentation(providerCode).message;
+  const message = deferred?.message ?? appBlock?.message ?? providerMessage(providerCode, t);
   return (
     <div role="alert">
       <p className="m-0 text-[13px] leading-5 text-fg-muted">{message}</p>
       {failures.length > 1 ? (
-        <p className="m-0 text-[12px] text-fg-muted">{failures.length} checks need attention.</p>
+        <p className="m-0 text-[12px] text-fg-muted">
+          {t("checksNeedAttention", { count: failures.length })}
+        </p>
       ) : null}
     </div>
   );
@@ -90,6 +113,8 @@ export function RunChecksConfirmationModal({
   providerRate,
   rows,
 }: Readonly<Props>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.runConfirmation");
+  const runT = useTranslations("projectRankTracker.keywordImport.management.runChecks");
   const selectedRows = flow
     ? flow.pending.keywordIds.flatMap((id) => rows.find((row) => row.id === id) ?? [])
     : [];
@@ -98,9 +123,13 @@ export function RunChecksConfirmationModal({
     : selectedRows.map(effectiveRowDepth);
   const estimatedCost = providerRate && flow ? runCostCents(depths, providerRate) : null;
   const count = flow?.pending.keywordIds.length ?? 0;
+  const selectionDepths = new Set(selectedRows.map(effectiveRowDepth));
+  const selectionDepth = selectionDepths.size === 1 ? selectionDepths.values().next().value : null;
   const depthLabel = flow?.pending.depth
-    ? `Top ${flow.pending.depth}`
-    : selectionDepthLabel(selectedRows);
+    ? runT("top", { depth: flow.pending.depth })
+    : selectionDepth != null
+      ? runT("top", { depth: selectionDepth })
+      : runT("keywordDefaults");
   const firstFailure = flow?.failures[0];
   const providerCode = flow ? dominantProviderCode(flow.failures) : null;
   const failurePresentation = providerFailurePresentation(providerCode);
@@ -115,10 +144,10 @@ export function RunChecksConfirmationModal({
     footer = (
       <div className="flex w-full justify-end gap-2">
         <Button disabled={flow.step === "starting"} onClick={onClose} variant="secondary">
-          Cancel
+          {t("cancel")}
         </Button>
-        <Button loading={flow.step === "starting"} loadingLabel="Starting..." onClick={onConfirm}>
-          Confirm and run
+        <Button loading={flow.step === "starting"} loadingLabel={t("starting")} onClick={onConfirm}>
+          {t("confirmAndRun")}
         </Button>
       </div>
     );
@@ -126,14 +155,14 @@ export function RunChecksConfirmationModal({
     footer = (
       <div className="flex w-full justify-end">
         <Button onClick={onClose} variant="secondary">
-          Close
+          {t("close")}
         </Button>
       </div>
     );
   } else if (flow?.step === "success") {
     footer = (
       <div className="flex w-full justify-end">
-        <Button onClick={onClose}>Continue</Button>
+        <Button onClick={onClose}>{t("continue")}</Button>
       </div>
     );
   } else if (flow?.step === "failed") {
@@ -147,16 +176,16 @@ export function RunChecksConfirmationModal({
           className="text-[13px] font-medium text-accent-text underline-offset-4 hover:underline"
           href={failureDetailsHref}
         >
-          View check details
+          {t("viewDetails")}
         </Link>
         <div className="flex items-center justify-end gap-2">
           {showRetry ? (
             <Button onClick={onRetry} variant="secondary">
-              Try again
+              {t("tryAgain")}
             </Button>
           ) : null}
           {!deferred && failurePresentation.showOpenIntegrations ? (
-            <Button href={appPath(projectId, "integrations")}>Open integrations</Button>
+            <Button href={appPath(projectId, "integrations")}>{t("openIntegrations")}</Button>
           ) : null}
         </div>
       </div>
@@ -167,17 +196,19 @@ export function RunChecksConfirmationModal({
   if (flow?.step === "confirm" || flow?.step === "starting") {
     body = (
       <>
-        <p className="m-0 mb-4 text-[12.5px] leading-5 text-fg-muted">
-          Confirm this manual run before it is sent to the provider.
-        </p>
+        <p className="m-0 mb-4 text-[12.5px] leading-5 text-fg-muted">{t("confirmDescription")}</p>
         <div className="overflow-hidden rounded-card border border-border">
           {[
-            { label: "Keywords", value: `${count} keyword${count === 1 ? "" : "s"}` },
-            { label: "Depth", value: depthLabel },
+            { label: t("keywords"), value: t("keywordsValue", { count }) },
+            { label: t("depth"), value: depthLabel },
             {
-              label: "Estimated cost",
+              label: t("estimatedCost"),
               value:
-                estimatedCost == null ? "Unavailable" : `~${formatEstimateCents(estimatedCost)}`,
+                estimatedCost == null
+                  ? t("unavailable")
+                  : estimatedCost > 0 && estimatedCost < 1
+                    ? t("estimatedCostBelowCent", { minimum: 0.01 })
+                    : t("estimatedCostValue", { cost: estimatedCost / 100 }),
             },
           ].map((row, index) => (
             <div
@@ -196,21 +227,18 @@ export function RunChecksConfirmationModal({
   } else if (flow?.step === "running") {
     body = (
       <p className="m-0 text-[13px] leading-5 text-fg-muted" role="status">
-        {flow.rankCheckIds.length === 1
-          ? "Check running"
-          : `${flow.rankCheckIds.length} checks running`}
-        . You can close this window - results will appear on this page.
+        {t("runningBody", { count: flow.rankCheckIds.length })}
       </p>
     );
   } else if (flow?.step === "success") {
     body = (
       <div>
         <p className="m-0 text-[13px] leading-5 text-fg-muted">
-          {flow.completed} rank {flow.completed === 1 ? "check has" : "checks have"} completed.
+          {t("successBody", { count: flow.completed })}
         </p>
       </div>
     );
-  } else if (flow?.step === "failed") body = <FailureBody failures={flow.failures} />;
+  } else if (flow?.step === "failed") body = <FailureBody failures={flow.failures} t={t} />;
 
   return (
     <RankCheckRunModal
@@ -221,7 +249,7 @@ export function RunChecksConfirmationModal({
       open={flow !== null}
       size="sm"
       step={flow?.step ?? "confirm"}
-      title={flow ? flowTitle(flow) : "Run rank checks"}
+      title={flow ? flowTitle(flow, t) : t("titleFallback")}
     >
       {body}
     </RankCheckRunModal>

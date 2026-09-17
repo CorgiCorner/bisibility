@@ -1,7 +1,8 @@
+import { renderWithTimelineMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import type { Role } from "@/lib/generated/prisma/client";
 import type { TimelineSignalRow } from "@/lib/queries/timeline";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { TimelineFeed } from "./TimelineFeed";
 
@@ -36,12 +37,15 @@ const manualNote: TimelineSignalRow = {
   url: null,
 };
 
+const dateDisplay = { dateFormat: "day_first", locale: "en", timeZone: "UTC" } as const;
+
 describe("TimelineFeed empty state", () => {
   it("uses the app header once and keeps Add note after Timeline search", () => {
     render(
       <TimelineFeed
         canCreate
         canDelete
+        dateDisplay={dateDisplay}
         projectId="prj_1"
         projectRef="prj_1"
         view={{
@@ -99,7 +103,14 @@ describe("TimelineFeed empty state", () => {
       timeZone: "UTC",
     };
     const { rerender } = render(
-      <TimelineFeed canCreate canDelete projectId="prj_1" projectRef="prj_1" view={baseView} />,
+      <TimelineFeed
+        canCreate
+        canDelete
+        dateDisplay={dateDisplay}
+        projectId="prj_1"
+        projectRef="prj_1"
+        view={baseView}
+      />,
     );
     expect(
       screen
@@ -111,6 +122,7 @@ describe("TimelineFeed empty state", () => {
       <TimelineFeed
         canCreate
         canDelete
+        dateDisplay={dateDisplay}
         projectId="prj_1"
         projectRef="prj_1"
         view={{ ...baseView, isFiltered: true, search: "deploy" }}
@@ -128,6 +140,7 @@ describe("TimelineFeed empty state", () => {
       <TimelineFeed
         canCreate
         canDelete
+        dateDisplay={dateDisplay}
         projectId="prj_1"
         projectRef="prj_1"
         view={{
@@ -161,6 +174,7 @@ describe("TimelineFeed empty state", () => {
         <TimelineFeed
           canCreate={canCreate}
           canDelete={canDelete}
+          dateDisplay={dateDisplay}
           projectId="prj_1"
           projectRef="prj_1"
           view={{

@@ -152,7 +152,7 @@ const importRun: ProjectRunsApiResponse["runs"][number] = {
   lifecycle: "running",
   progress: { completed: 56, total: 488, unit: "days" },
   project: { name: "Example", publicId: "prj_story" },
-  scope: { description: "sc-domain:example.com", label: "Search Console" },
+  scope: { description: "sc-domain:example.com", kind: "gsc_import" },
   timestamps: {
     createdAt: "2026-09-06T09:00:00.000Z",
     lastProbeAt: null,
@@ -160,7 +160,7 @@ const importRun: ProjectRunsApiResponse["runs"][number] = {
     lastSyncStartedAt: "2026-09-06T09:10:00.000Z",
     syncStartedAt: "2026-09-06T09:10:00.000Z",
   },
-  title: "Search Console import",
+  title: { kind: "gsc_import" },
 };
 const noop = async () => undefined;
 

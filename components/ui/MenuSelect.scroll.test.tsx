@@ -1,5 +1,6 @@
 import { MenuSelect, type MenuSelectOptionGroup } from "@/components/ui/MenuSelect";
-import { render, screen } from "@testing-library/react";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
@@ -21,7 +22,7 @@ const groups: MenuSelectOptionGroup[] = [
 ];
 
 function openMenu() {
-  return render(
+  return renderWithSharedMessages(
     <MenuSelect
       ariaLabel="Country"
       groups={groups}

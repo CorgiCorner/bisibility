@@ -7,6 +7,7 @@ import type {
 } from "@/lib/keywords/import-csv-parser";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { TableIcon as Table } from "@phosphor-icons/react/dist/csr/Table";
+import type { useTranslations } from "next-intl";
 
 export type KeywordImportPreviewRow = {
   city?: string | null;
@@ -27,19 +28,9 @@ export type KeywordImportPreviewRow = {
 export type ImportPreviewDataTableRow = KeywordImportPreviewRow & { id: string };
 export type ImportColumnMappingDataTableRow = KeywordImportSourceColumn & { id: string };
 
-const destinationOptions: MenuSelectOption[] = [
-  { label: "Ignore this column", value: "ignore" },
-  { label: "Keyword", value: "keyword" },
-  { label: "Target URL", value: "targetUrl" },
-  { label: "Tags", value: "tags" },
-  { label: "Topic", value: "topic" },
-  { label: "Intent", value: "intent" },
-  { label: "Country", value: "location" },
-  { label: "Search language", value: "language" },
-  { label: "City", value: "city" },
-  { label: "Location key", value: "locationKey" },
-  { label: "Device", value: "device" },
-];
+type TableTranslator = ReturnType<
+  typeof useTranslations<"projectRankTracker.keywordImport.csvWizard.table">
+>;
 
 type PreviewTextField = Exclude<keyof KeywordImportPreviewRow, "row" | "tags">;
 
@@ -68,48 +59,52 @@ function previewTextColumn(
   };
 }
 
-export const importPreviewTableColumns: readonly DataTableColumn<ImportPreviewDataTableRow>[] = [
-  {
-    ...previewTextColumn("keyword", "Keyword", 128, 2),
-    cell: ({ getValue }) => (
-      <span className="block truncate font-semibold text-fg">
-        {previewCell(getValue() as string)}
-      </span>
-    ),
-  },
-  {
-    ...previewTextColumn("marketName", "Market", 220, 2),
-    cell: ({ row }) => (
-      <span className="block truncate" title={row.original.marketName}>
-        {row.original.marketName ?? "-"}
-        {row.original.marketStatus === "paused" ? " (paused)" : ""}
-      </span>
-    ),
-  },
-  previewTextColumn("targetUrl", "Target URL", 160, 2),
-  {
-    accessorKey: "tags",
-    cell: ({ getValue }) => (
-      <span className="block truncate">
-        {(getValue() as readonly string[] | null)?.join(", ") || "-"}
-      </span>
-    ),
-    enableResizing: false,
-    enableSorting: false,
-    header: "Tags",
-    id: "tags",
-    meta: { flex: 1, lockResize: true, lockVisible: true, sortable: false, title: "Tags" },
-    minSize: 96,
-    size: 96,
-  },
-  previewTextColumn("topic", "Topic", 112),
-  previewTextColumn("intent", "Intent", 112),
-  previewTextColumn("location", "Country", 112),
-  previewTextColumn("language", "Language", 128),
-  previewTextColumn("city", "City", 96),
-  previewTextColumn("locationKey", "Location key", 144),
-  previewTextColumn("device", "Device", 112),
-];
+export function importPreviewTableColumns(
+  t: TableTranslator,
+): readonly DataTableColumn<ImportPreviewDataTableRow>[] {
+  return [
+    {
+      ...previewTextColumn("keyword", t("keyword"), 128, 2),
+      cell: ({ getValue }) => (
+        <span className="block truncate font-semibold text-fg">
+          {previewCell(getValue() as string)}
+        </span>
+      ),
+    },
+    {
+      ...previewTextColumn("marketName", t("market"), 220, 2),
+      cell: ({ row }) => (
+        <span className="block truncate" title={row.original.marketName}>
+          {row.original.marketName ?? "-"}
+          {row.original.marketStatus === "paused" ? ` ${t("paused")}` : ""}
+        </span>
+      ),
+    },
+    previewTextColumn("targetUrl", t("targetUrl"), 160, 2),
+    {
+      accessorKey: "tags",
+      cell: ({ getValue }) => (
+        <span className="block truncate">
+          {(getValue() as readonly string[] | null)?.join(", ") || "-"}
+        </span>
+      ),
+      enableResizing: false,
+      enableSorting: false,
+      header: t("tags"),
+      id: "tags",
+      meta: { flex: 1, lockResize: true, lockVisible: true, sortable: false, title: t("tags") },
+      minSize: 96,
+      size: 96,
+    },
+    previewTextColumn("topic", t("topic"), 112),
+    previewTextColumn("intent", t("intent"), 112),
+    previewTextColumn("location", t("country"), 112),
+    previewTextColumn("language", t("language"), 128),
+    previewTextColumn("city", t("city"), 96),
+    previewTextColumn("locationKey", t("locationKey"), 144),
+    previewTextColumn("device", t("device"), 112),
+  ];
+}
 
 function destinationForColumn(mapping: KeywordImportColumnMapping, columnIndex: number) {
   return (
@@ -122,7 +117,21 @@ function destinationForColumn(mapping: KeywordImportColumnMapping, columnIndex: 
 export function importColumnMappingTableColumns(
   mapping: KeywordImportColumnMapping,
   onChange: (sourceIndex: number, destination: KeywordImportField | null) => void,
+  t: TableTranslator,
 ): readonly DataTableColumn<ImportColumnMappingDataTableRow>[] {
+  const destinationOptions: MenuSelectOption[] = [
+    { label: t("ignore"), value: "ignore" },
+    { label: t("keyword"), value: "keyword" },
+    { label: t("targetUrl"), value: "targetUrl" },
+    { label: t("tags"), value: "tags" },
+    { label: t("topic"), value: "topic" },
+    { label: t("intent"), value: "intent" },
+    { label: t("country"), value: "location" },
+    { label: t("language"), value: "language" },
+    { label: t("city"), value: "city" },
+    { label: t("locationKey"), value: "locationKey" },
+    { label: t("device"), value: "device" },
+  ];
   return [
     {
       accessorKey: "label",
@@ -134,14 +143,14 @@ export function importColumnMappingTableColumns(
       ),
       enableResizing: false,
       enableSorting: false,
-      header: "In your file",
+      header: t("source"),
       id: "source",
       meta: {
         flex: 1,
         lockResize: true,
         lockVisible: true,
         sortable: false,
-        title: "In your file",
+        title: t("source"),
       },
       minSize: 192,
       size: 192,
@@ -159,7 +168,7 @@ export function importColumnMappingTableColumns(
     {
       cell: ({ row }) => (
         <MenuSelect
-          ariaLabel={`Map ${row.original.label}`}
+          ariaLabel={t("map", { column: row.original.label })}
           onChange={(value) =>
             onChange(row.original.index, value === "ignore" ? null : (value as KeywordImportField))
           }
@@ -170,9 +179,15 @@ export function importColumnMappingTableColumns(
       ),
       enableResizing: false,
       enableSorting: false,
-      header: "Save as",
+      header: t("destination"),
       id: "destination",
-      meta: { flex: 1, lockResize: true, lockVisible: true, sortable: false, title: "Save as" },
+      meta: {
+        flex: 1,
+        lockResize: true,
+        lockVisible: true,
+        sortable: false,
+        title: t("destination"),
+      },
       minSize: 192,
       size: 192,
     },

@@ -3,8 +3,8 @@
 import { useAppRealtime } from "@/components/shell/AppRealtimeProvider";
 import { Button } from "@/components/ui/Button";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { pluralize } from "@/lib/format/pluralize";
 import { rankCheckOperationSchema } from "@/lib/rank-check/runs/contract";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { z } from "zod";
 import { type BudgetNotice, BudgetNotices } from "./BudgetNotices";
@@ -115,6 +115,7 @@ export function RunsSection({
   projectRef,
   schedulesHref,
 }: Readonly<RunsSectionProps>) {
+  const t = useTranslations("projectRuns.rankRuns");
   const { operations } = useAppRealtime();
   const [segment, setSegment] = useState<RunsSegment>(initialSegment);
   const [history, setHistory] = useState(initialHistory.data);
@@ -151,8 +152,8 @@ export function RunsSection({
         setHistory((current) => prependFreshRuns(current, page.data));
         setHistoryCursor(page.nextCursor);
       })
-      .catch(() => setError("Finished runs could not be refreshed. Try again."));
-  }, [history, projectRef, realtime]);
+      .catch(() => setError(t("runsRefreshFailed")));
+  }, [history, projectRef, realtime, t]);
 
   function loadMore() {
     if (!cursor) return;
@@ -168,7 +169,7 @@ export function RunsSection({
           setPlannedCursor(page.nextCursor);
         }
       } catch {
-        setError("Runs could not be loaded. Try again.");
+        setError(t("runsCouldNotLoad"));
       }
     });
   }
@@ -182,7 +183,7 @@ export function RunsSection({
         setHistoryCursor(page.nextCursor);
         setNewRunIds([]);
       } catch {
-        setError("New runs could not be loaded. Try again.");
+        setError(t("runsCouldNotLoad"));
       }
     });
   }
@@ -198,7 +199,7 @@ export function RunsSection({
           setHistory((current) => prependFreshRuns(current, [updated]));
         }
       } catch {
-        setError("The run could not be updated. Try again.");
+        setError(t("updateFailed"));
       } finally {
         setPendingRunId(null);
       }
@@ -213,19 +214,19 @@ export function RunsSection({
       <div className="flex flex-col gap-3 border-b border-border px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="m-0 text-[15px] font-semibold leading-[1.35] text-fg" id="runs-title">
-            Runs
+            {t("runs")}
           </h2>
           <p className="m-0 text-[10px] leading-[1.45] text-fg-muted">
-            {segment === "planned" ? "Next 7 days · soonest first" : "Newest first"}
+            {segment === "planned" ? t("nextSevenDays") : t("newestFirst")}
           </p>
         </div>
         <SegmentedControl
-          ariaLabel="Runs segment"
+          ariaLabel={t("runs")}
           fitContent
           onChange={setSegment}
           options={[
-            { label: "Planned", value: "planned" },
-            { label: "History", value: "history" },
+            { label: t("planned"), value: "planned" },
+            { label: t("history"), value: "history" },
           ]}
           size="toolbar"
           value={segment}
@@ -234,16 +235,16 @@ export function RunsSection({
       <div className="flex flex-wrap items-center justify-between gap-2.5 px-4 py-3 pb-2">
         <span className="text-[11px] text-fg-muted">
           {cursor
-            ? `Showing ${visibleRows.length} - more available`
+            ? t("showingMore", { count: visibleRows.length })
             : segment === "planned"
               ? planned.length > 0
-                ? pluralize(planned.length, "planned run")
+                ? t("plannedRunCount", { count: planned.length })
                 : null
-              : pluralize(historyRows.length, "run")}
+              : t("runCount", { count: historyRows.length })}
         </span>
         {segment === "planned" ? (
           <Button href={schedulesHref} size="sm" variant="secondary">
-            Manage schedules
+            {t("manageSchedules")}
           </Button>
         ) : null}
       </div>
@@ -271,11 +272,10 @@ export function RunsSection({
               data-testid="new-runs-pill"
             >
               <span className="text-[12.5px] text-fg">
-                {newRunIds.length} {newRunIds.length === 1 ? "run started" : "runs started"} while
-                you were reading
+                {t("newRunsWhileReading", { count: newRunIds.length })}
               </span>
               <Button loading={isPending} onClick={showNewRuns} size="xs" variant="ghost">
-                Show
+                {t("show")}
               </Button>
             </div>
           ) : null}
@@ -291,13 +291,13 @@ export function RunsSection({
             size="sm"
             variant="secondary"
           >
-            Load 20 more
+            {t("loadTwentyMore")}
           </Button>
         </div>
       ) : null}
       {visibleRows.length === 0 && segment === "planned" ? (
         <p className="m-0 border-t border-border px-4 py-3 text-[11.5px] text-fg-muted">
-          No scheduled runs are due in the next 7 days.
+          {t("noScheduledRuns")}
         </p>
       ) : null}
     </section>

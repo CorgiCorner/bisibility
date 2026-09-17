@@ -1,5 +1,4 @@
 import { itemStatusSchema } from "@/lib/rank-check/runs/contract";
-import { runItemStatusCopy } from "@/lib/rank-check/runs/status";
 import { z } from "zod";
 import type { FirstCheckResultRow } from "./first-check-run-rows";
 
@@ -48,11 +47,9 @@ export async function readFirstCheckProgress(
       status: "completed",
     };
   }
-  const copy = runItemStatusCopy(item.status, item.blockedReason);
   return {
     ...row,
-    code: "failed",
-    message: copy.detail ?? `Check ${copy.label.toLowerCase()}.`,
-    status: "failed",
+    blockedReason: item.blockedReason,
+    status: item.status,
   };
 }

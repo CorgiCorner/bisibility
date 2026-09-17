@@ -20,6 +20,7 @@ type Story = StoryObj<typeof meta>;
 
 const commonArgs = {
   apiKey: null,
+  hasKeywordAndCheck: false,
   isCloudHosted: true,
   mcpUrl: "https://app.example.com/api/mcp",
   origin: "https://app.example.com",
@@ -30,13 +31,25 @@ export const WithApiKey: Story = {
   args: {
     ...commonArgs,
     apiKey: {
-      createdLabel: "created 2026-08-16",
+      createdAt: new Date("2026-08-16T12:00:00.000Z"),
       maskedValue: "bsk_example_******",
-      scopeLabel: "Read and write",
+      scope: "write",
     },
   },
 };
 
 export const WithoutApiKey: Story = {
   args: { ...commonArgs, apiKey: null },
+};
+
+export const WithKeywordAndCheck: Story = {
+  args: {
+    ...commonArgs,
+    apiKey: {
+      createdAt: new Date("2026-08-16T12:00:00.000Z"),
+      maskedValue: "bsk_example_******",
+      scope: "write",
+    },
+    hasKeywordAndCheck: true,
+  },
 };

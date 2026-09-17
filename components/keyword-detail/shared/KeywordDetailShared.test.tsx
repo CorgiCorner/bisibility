@@ -8,7 +8,11 @@ import {
 } from "@/components/keyword-detail/shared/KeywordDetailStatePill";
 import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
 import { StepDots } from "@/components/ui/StepDots";
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  renderWithProjectRankTrackerMessages as render,
+  renderWithOnboardingMessages as renderOnboarding,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const depthOptions = [
@@ -103,7 +107,7 @@ describe("keyword detail shared primitives", () => {
   });
 
   it("marks the page loading region busy and hides every skeleton bar", () => {
-    const { container } = render(<KeywordDetailPageSkeleton />);
+    const { container } = render(<KeywordDetailPageSkeleton ariaLabel="Loading keyword detail" />);
 
     expect(screen.getByRole("region", { name: "Loading keyword detail" })).toHaveAttribute(
       "aria-busy",
@@ -156,7 +160,7 @@ describe("keyword detail shared primitives", () => {
     }
     overview.unmount();
 
-    const onboarding = render(
+    const onboarding = renderOnboarding(
       <OnboardingStepper currentStep={2} flowState={{ projectId: "prj_1" }} maxReachableStep={2}>
         <div>Current panel</div>
       </OnboardingStepper>,

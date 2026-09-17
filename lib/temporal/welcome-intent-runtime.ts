@@ -2,6 +2,7 @@ import { collectTemporalHeartbeat } from "../ops/heartbeat-temporal";
 import { refreshWorkerLiveness, WORKER_LIVENESS_REFRESH_MS } from "../ops/liveness";
 import { publishTemporalSnapshot } from "../ops/temporal-snapshot";
 import { type TemporalConnectionOptions, temporalWebUiUrl } from "./connection-options";
+import { startWorkerExtensions } from "./worker-extensions";
 import { startWorkerIntentProcessor } from "./worker-intent-processor";
 
 type RunningWorker = { run: () => Promise<unknown> };
@@ -31,10 +32,11 @@ export async function runWelcomeIntentRuntime({
   livenessTimer.unref();
 
   const workerIntentProcessor = startWorkerIntentProcessor();
+  const workerExtensions = startWorkerExtensions();
   try {
     await Promise.all([worker.run(), deliveryWorker.run()]);
   } finally {
     clearInterval(livenessTimer);
-    await workerIntentProcessor.close();
+    await Promise.all([workerIntentProcessor.close(), workerExtensions.close()]);
   }
 }

@@ -2,6 +2,7 @@
 
 import { Tooltip } from "@/components/ui/Tooltip";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
 import type { ResearchTab } from "./research-workspace-model";
 
 export function ResearchSeedTabs({
@@ -15,10 +16,11 @@ export function ResearchSeedTabs({
   onClose?: (id: string) => void;
   tabs: ResearchTab[];
 }>) {
+  const t = useTranslations("projectResearch.tabs");
   if (tabs.length <= 1) return null;
   return (
     <div
-      aria-label="Research seed tabs"
+      aria-label={t("aria")}
       className="flex items-center gap-0.5 overflow-x-auto border-b border-border"
       role="tablist"
     >
@@ -42,7 +44,7 @@ export function ResearchSeedTabs({
             </Tooltip>
             {onClose ? (
               <button
-                aria-label={`Close ${tab.seed}`}
+                aria-label={t("close", { seed: tab.seed })}
                 className={`grid h-5 w-5 shrink-0 place-items-center rounded transition-colors ${active ? "text-accent-text hover:text-fg" : "text-fg-muted hover:text-fg"}`}
                 onClick={() => onClose(tab.id)}
                 type="button"

@@ -1,6 +1,7 @@
 import { countryValueForCode } from "@/components/keywords/location-picker-data";
+import { renderWithSharedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { MARKETING_URL } from "@/lib/site/site";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MarketPicker } from "./MarketPicker";
 
@@ -78,7 +79,7 @@ describe("MarketPicker", () => {
     const english = screen.getByRole("button", { name: /English.*no volume\/KD/ });
     expect(english).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(english);
-    fireEvent.click(screen.getByRole("button", { name: "Add 2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add 2 markets" }));
 
     await waitFor(() =>
       expect(onCommit).toHaveBeenCalledWith([
@@ -91,13 +92,13 @@ describe("MarketPicker", () => {
   it("does not recommit tracked pairs", async () => {
     const onCommit = renderPicker(["ES"]);
 
-    expect(screen.getByRole("button", { name: /Spanish.*TRACKED/ })).toBeDisabled();
-    expect(screen.getByText("SUGGESTED LANGUAGES")).toHaveStyle({ fontSize: "9px" });
-    expect(screen.getByText("TRACKED")).toHaveStyle({ fontSize: "9px" });
+    expect(screen.getByRole("button", { name: /Spanish.*Tracked/ })).toBeDisabled();
+    expect(screen.getByText("Suggested languages")).toHaveStyle({ fontSize: "9px" });
+    expect(screen.getByText("Tracked")).toHaveStyle({ fontSize: "9px" });
     expect(screen.getByRole("button", { name: "Add market" })).toBeDisabled();
     showEnglish();
     fireEvent.click(screen.getByRole("button", { name: /English.*no volume\/KD/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Add 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add market" }));
 
     await waitFor(() =>
       expect(onCommit).toHaveBeenCalledWith([expect.objectContaining({ canonicalKey: "ES@en" })]),
@@ -107,20 +108,20 @@ describe("MarketPicker", () => {
   it("clears pending languages when geography changes", () => {
     renderPicker();
     fireEvent.click(screen.getByRole("button", { name: /Catalan/ }));
-    expect(screen.getByRole("button", { name: "Add 2" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Add 2 markets" })).toBeEnabled();
 
     fireEvent.click(screen.getByRole("button", { name: "Change location to Germany" }));
 
     expect(screen.queryByRole("button", { name: /Catalan/ })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "German" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "Add 1" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Add market" })).toBeEnabled();
   });
 
   it("keeps a selection that the current search no longer shows", async () => {
     const onCommit = renderPicker();
     showEnglish();
     fireEvent.click(screen.getByRole("button", { name: /English.*no volume\/KD/ }));
-    expect(screen.getByRole("button", { name: "Add 2" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Add 2 markets" })).toBeEnabled();
 
     // Narrowing the search must not silently discard what the user already picked.
     fireEvent.change(screen.getByRole("textbox", { name: "Search more languages" }), {
@@ -128,7 +129,7 @@ describe("MarketPicker", () => {
     });
 
     expect(screen.queryByRole("button", { name: /^English/ })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Add 2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add 2 markets" }));
 
     await waitFor(() =>
       expect(onCommit).toHaveBeenCalledWith([
@@ -149,7 +150,7 @@ describe("MarketPicker", () => {
 
     expect(screen.queryByRole("button", { name: /^English/ })).not.toBeInTheDocument();
     expect(screen.getByText(offCatalogNote)).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "Add 2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add 2 markets" }));
 
     await waitFor(() =>
       expect(onCommit).toHaveBeenCalledWith([
@@ -196,7 +197,7 @@ describe("MarketPicker", () => {
   it("keeps the off-catalog sentence on a tracked row that cannot take focus", () => {
     renderPicker(["ES@en"]);
     showEnglish();
-    const row = screen.getByRole("button", { name: /English.*TRACKED/ });
+    const row = screen.getByRole("button", { name: /English.*Tracked/ });
     expect(row).toBeDisabled();
 
     // A disabled button emits no pointer or focus events, so the description has to hang

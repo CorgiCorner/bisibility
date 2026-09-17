@@ -5,7 +5,10 @@ import {
   WorkspaceSwitcherTrigger,
   type WorkspaceTriggerVariant,
 } from "@/components/shell/WorkspaceSwitcherTrigger";
-import { workspaceSublabel } from "@/components/shell/workspace-labels";
+import {
+  type WorkspaceLabelFormatter,
+  workspaceSublabel,
+} from "@/components/shell/workspace-labels";
 import {
   estimateWorkspaceMenuHeight,
   resolveWorkspaceMenuPlacement,
@@ -20,6 +23,7 @@ import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 
 const MENU_ID = "workspace-switcher-menu";
@@ -47,24 +51,29 @@ type WorkspaceSearchHeaderProps = {
   inputRef: (node: HTMLInputElement | null) => void;
   onSearchChange: (value: string) => void;
   search: string;
+  labels: {
+    find: string;
+    findPlaceholder: string;
+  };
 };
 
 function WorkspaceSearchHeader({
   inputRef,
   onSearchChange,
   search,
+  labels,
 }: Readonly<WorkspaceSearchHeaderProps>) {
   return (
     <div className="-mx-1.5 -mt-1.5 mb-1.5 flex h-10 items-center gap-2 border-border border-b px-3">
       <input
         data-menu-search
-        aria-label="Find project"
+        aria-label={labels.find}
         className="min-w-0 flex-1 bg-transparent text-[12px] text-fg outline-none placeholder:text-fg-muted [&::-webkit-search-cancel-button]:hidden"
         onChange={(event) => onSearchChange(event.target.value)}
         onKeyDown={(event) => {
           if (event.key !== "Escape") event.stopPropagation();
         }}
-        placeholder="Find project..."
+        placeholder={labels.findPlaceholder}
         ref={inputRef}
         type="search"
         value={search}
@@ -97,6 +106,12 @@ export function WorkspaceSwitcher({
   variant = "ghost",
   workspaces,
 }: Readonly<WorkspaceSwitcherProps>) {
+  const t = useTranslations("shell.workspace");
+  const labels: WorkspaceLabelFormatter = {
+    keywordCount: (count) => t("keywordCount", { count }),
+    newProject: () => t("newProject"),
+    noData: (count) => t("noData", { count }),
+  };
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [placement, setPlacement] = useState<WorkspaceMenuPlacement>("up");
   const [search, setSearch] = useState("");
@@ -148,7 +163,7 @@ export function WorkspaceSwitcher({
   }
 
   const { anchorOrigin, offset } = workspaceMenuOrigins(false, placement);
-  const sublabel = compact || !active ? null : workspaceSublabel(active);
+  const sublabel = compact || !active ? null : workspaceSublabel(active, labels);
   const normalizedSearch = search.trim().toLocaleLowerCase();
   const visibleWorkspaces = normalizedSearch
     ? workspaces.filter(
@@ -167,7 +182,7 @@ export function WorkspaceSwitcher({
         compact={compact}
         domain={active?.domain ?? ""}
         menuId={MENU_ID}
-        name={active?.name ?? "Project"}
+        name={active?.name ?? t("project")}
         onOpen={onTriggerClick}
         open={open}
         sublabel={sublabel}
@@ -185,10 +200,15 @@ export function WorkspaceSwitcher({
         id={MENU_ID}
         onClose={close}
         open={open}
-        listProps={{ "aria-label": "Projects", style: { padding: 0 } }}
+        listProps={{ "aria-label": t("projects"), style: { padding: 0 } }}
         contentProps={{ ref: measureMenu, style: { ...PAPER_STYLE, ...offset } }}
       >
-        <WorkspaceSearchHeader inputRef={focusSearch} onSearchChange={setSearch} search={search} />
+        <WorkspaceSearchHeader
+          inputRef={focusSearch}
+          labels={{ find: t("find"), findPlaceholder: t("findPlaceholder") }}
+          onSearchChange={setSearch}
+          search={search}
+        />
         {visibleWorkspaces.map((workspace) => (
           <WorkspaceRow
             active={workspace.id === activeProjectId}
@@ -199,7 +219,7 @@ export function WorkspaceSwitcher({
         ))}
         {visibleWorkspaces.length === 0 ? (
           <p className="m-0 px-[9px] py-3 text-[12px] leading-relaxed text-fg-muted">
-            Projects you create and join appear here for quick context switching.
+            {t("empty")}
           </p>
         ) : null}
         {/* No settings row: the rail already has Settings, and it points at the same screen.
@@ -207,7 +227,7 @@ export function WorkspaceSwitcher({
         {canCreateWorkspace ? <Divider style={DIVIDER_STYLE} /> : null}
         {canCreateWorkspace ? (
           <MenuItem
-            aria-label="Create project"
+            aria-label={t("create")}
             component={Link}
             href="/onboarding?new=1"
             onClick={close}
@@ -218,10 +238,10 @@ export function WorkspaceSwitcher({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[13px] font-medium leading-tight text-fg">
-                Create project
+                {t("create")}
               </span>
               <span className="mt-px block text-[10px] text-fg-muted">
-                Collaborate with others in a new project
+                {t("createDescription")}
               </span>
             </span>
           </MenuItem>

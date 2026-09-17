@@ -20,7 +20,15 @@
       }
     ],
     "paths": {
+      "@/app/(auth)/*": ["./app/(regional)/(auth)/*"],
+      "@/app/(marketing)/*": ["./app/(static)/(marketing)/*"],
+      "@/app/app/*": ["./app/(regional)/app/*"],
+      "@/app/cloud/*": ["./app/(regional)/cloud/*"],
       "@/components/content/*": ["./components/marketing/content/*"],
+      "@/app/email/*": ["./app/(regional)/email/*"],
+      "@/app/invite/*": ["./app/(regional)/invite/*"],
+      "@/app/onboarding/*": ["./app/(regional)/onboarding/*"],
+      "@/app/setup/*": ["./app/(regional)/setup/*"],
       "@/*": ["./*"]
     },
     "types": ["node", "@testing-library/jest-dom"]

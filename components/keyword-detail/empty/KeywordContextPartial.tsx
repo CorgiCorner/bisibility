@@ -2,6 +2,7 @@ import {
   EmptyModuleCard,
   EmptyModuleLabel,
 } from "@/components/keyword-detail/empty/empty-state-primitives";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 type Difficulty = {
@@ -37,18 +38,25 @@ function difficultyColor(label: Difficulty["label"]) {
   return "var(--red)";
 }
 
+const difficultyMessage = {
+  Easy: "easy",
+  Medium: "medium",
+  Hard: "hard",
+} as const;
+
 export function KeywordContextPartial({
   cpc,
   difficulty = { label: "Medium", score: 62 },
   volume = "18k/mo",
 }: Readonly<KeywordContextPartialProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.empty");
   return (
     <EmptyModuleCard>
-      <EmptyModuleLabel>Keyword context</EmptyModuleLabel>
-      <div aria-label="Available keyword metrics" className="mt-3 flex flex-wrap gap-2">
-        {volume ? <MetricPill label="Volume">{volume}</MetricPill> : null}
+      <EmptyModuleLabel>{t("keywordContext")}</EmptyModuleLabel>
+      <div aria-label={t("availableMetrics")} className="mt-3 flex flex-wrap gap-2">
+        {volume ? <MetricPill label={t("volume")}>{volume}</MetricPill> : null}
         {difficulty ? (
-          <MetricPill label="Difficulty">
+          <MetricPill label={t("difficulty")}>
             <span className="inline-flex items-center gap-1.5">
               <span
                 aria-hidden
@@ -57,12 +65,12 @@ export function KeywordContextPartial({
               />
               <span>{difficulty.score}</span>
               <span className="font-sans tabular-nums text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
-                {difficulty.label}
+                {t(difficultyMessage[difficulty.label])}
               </span>
             </span>
           </MetricPill>
         ) : null}
-        {cpc ? <MetricPill label="CPC">{cpc}</MetricPill> : null}
+        {cpc ? <MetricPill label={t("cpc")}>{cpc}</MetricPill> : null}
       </div>
     </EmptyModuleCard>
   );

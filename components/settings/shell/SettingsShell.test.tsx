@@ -1,4 +1,4 @@
-import CompetitorsSettingsLoading from "@/app/app/(workspace)/[project]/settings/(sections)/competitors/loading";
+import CompetitorsSettingsLoading from "@/app/(regional)/app/(workspace)/[project]/settings/(sections)/competitors/loading";
 import { AdvancedSettingsLoading } from "@/components/settings/advanced/AdvancedSettingsLoading";
 import { DataSourcesSettingsRouteLoading } from "@/components/settings/data-sources/DataSourcesSettingsLoading";
 import { DevelopersLoading } from "@/components/settings/developers/DevelopersLoading";
@@ -27,12 +27,58 @@ import {
 } from "@/components/settings/shell/settings-sections";
 import { TeamSettingsLoading } from "@/components/settings/team/TeamSettingsLoading";
 import { TrackingSettingsRouteLoading } from "@/components/settings/tracking/TrackingSettingsLoading";
+import {
+  renderWithFeatureMessages,
+  settingsShellFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const projectRef = "prj_7Kd2Qf9m";
+
+const nonEnglishSettingsShellMessages = {
+  ...settingsShellFeatureTestMessages,
+  projectSettingsShell: {
+    ...settingsShellFeatureTestMessages.projectSettingsShell,
+    card: {
+      ...settingsShellFeatureTestMessages.projectSettingsShell.card,
+      save: "Guardar",
+      saved: "Guardado",
+    },
+    mobileSectionLabel: "Sección de ajustes",
+    navigationLabel: "Secciones de ajustes",
+    search: {
+      ...settingsShellFeatureTestMessages.projectSettingsShell.search,
+      empty: "No se encontraron ajustes. Prueba presupuesto o API.",
+      label: "Buscar ajustes",
+      placeholder: "Buscar ajustes...",
+      results: "{count, plural, one {# ajuste encontrado} other {# ajustes encontrados}}",
+      resultsLabel: "Resultados de ajustes",
+      sections: {
+        ...settingsShellFeatureTestMessages.projectSettingsShell.search.sections,
+        providerUsage: "Integraciones / Uso",
+      },
+      entries: {
+        ...settingsShellFeatureTestMessages.projectSettingsShell.search.entries,
+        providerBudgets: {
+          keywords: "presupuesto gasto límite",
+          label: "Uso y presupuesto de proveedores",
+        },
+      },
+    },
+    sections: {
+      ...settingsShellFeatureTestMessages.projectSettingsShell.sections,
+      developers: "Desarrollo",
+    },
+  },
+};
+
+function render(ui: ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: settingsShellFeatureTestMessages });
+}
 
 const loadingBoundaries = [
   {
@@ -165,6 +211,65 @@ describe("SettingsShell", () => {
 
     expect(routerMock.push).toHaveBeenCalledWith("/app/prj_7Kd2Qf9m/settings/experimental");
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+  });
+
+  it("searches translated labels and preserves the canonical integration usage destination", async () => {
+    const user = userEvent.setup();
+    render(<Shell />);
+
+    await user.type(screen.getAllByRole("searchbox", { name: "Search settings" })[0], "budget");
+
+    const links = screen.getAllByRole("link", { name: /Provider budgets and usage/i });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute(
+      "href",
+      "/app/prj_7Kd2Qf9m/integrations?tab=usage#provider-usage",
+    );
+    expect(links[0]).toHaveTextContent("Integrations / Usage");
+    expect(screen.getByRole("list", { name: "Matching settings" })).toBeInTheDocument();
+  });
+
+  it("uses the injected settings catalog for the real client subnavigation and search flow", async () => {
+    const user = userEvent.setup();
+    renderWithFeatureMessages(<Shell />, {
+      locale: "es-ES",
+      messages: nonEnglishSettingsShellMessages,
+    });
+
+    expect(screen.getByRole("navigation", { name: "Secciones de ajustes" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Desarrollo" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
+
+    const search = screen.getAllByRole("searchbox", { name: "Buscar ajustes" })[0];
+    await user.type(search, "presupuesto");
+
+    const result = screen.getByRole("link", { name: /Uso y presupuesto de proveedores/i });
+    expect(result).toHaveAttribute(
+      "href",
+      "/app/prj_7Kd2Qf9m/integrations?tab=usage#provider-usage",
+    );
+    expect(result).toHaveTextContent("Integraciones / Uso");
+    expect(screen.getByRole("list", { name: "Resultados de ajustes" })).toBeInTheDocument();
+    expect(screen.getByText("1 ajuste encontrado")).toBeVisible();
+
+    await user.keyboard("{Enter}");
+    expect(routerMock.push).toHaveBeenCalledWith(
+      "/app/prj_7Kd2Qf9m/integrations?tab=usage#provider-usage",
+    );
+  });
+
+  it("translates the empty-search guidance", async () => {
+    const user = userEvent.setup();
+    render(<Shell />);
+
+    await user.type(screen.getAllByRole("searchbox", { name: "Search settings" })[0], "void");
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "No settings found. Try timezone, API key or budget.",
+    );
   });
 
   it("keeps loading and settled card frames on the same geometry contract", () => {

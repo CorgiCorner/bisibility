@@ -2,10 +2,11 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { RankingUrlHistory } from "@/components/keywords/RankingUrlHistory";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { deriveRankingUrlPeriods } from "@/lib/keyword-detail/ranking-url-history";
 import { deriveKeywordDetailWhatChanged } from "@/lib/keyword-detail/state-model";
 import type { KeywordRow, RankingUrlEvent } from "@/lib/queries/keywords";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 type UrlHistoryEventInput = RankingUrlEvent;
@@ -52,9 +53,7 @@ describe("RankingUrlHistory", () => {
     expect(historySource).not.toMatch(/\bTooltip\b/u);
     expect(historySource).not.toMatch(/<a\b/u);
     expect(linkSource).toMatch(/^"use client";/u);
-    expect(linkSource).toContain(
-      '<Tooltip content="Open ranking URL in a new tab" semantics="description">',
-    );
+    expect(linkSource).toContain('content={t("openExternal")}');
     expect(linkSource).toContain("<a");
     expect(linkSource).toContain("ArrowUpRightIcon as ArrowUpRight");
     expect(linkSource).toMatch(/<ArrowUpRight[^>]*size=\{12\}[^>]*weight="regular"/u);
@@ -156,7 +155,7 @@ describe("RankingUrlHistory", () => {
     renderHistory(history);
 
     expect(screen.queryByText("Current")).not.toBeInTheDocument();
-    expect(screen.getByText("May 12")).toBeInTheDocument();
+    expect(screen.getByText("May 12 - May 12")).toBeInTheDocument();
     expect(screen.queryByText(/- now/)).not.toBeInTheDocument();
   });
 

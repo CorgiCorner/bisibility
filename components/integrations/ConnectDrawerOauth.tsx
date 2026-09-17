@@ -2,19 +2,15 @@
 
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import type {
-  GoogleOAuthSetup,
-  GooglePropertySaveResult,
-  IntegrationProviderData,
-  ProviderActionHandlers,
-} from "@/lib/integrations/types";
+import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { normalizeGa4PropertyId } from "@/lib/providers/analytics/property-id";
-import { appPath, asProjectRef, type ProjectRef } from "@/lib/routing/app-path";
-import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
+import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ActionNotice } from "./ConnectDrawerControls";
+import type { ConnectDrawerOauthProps, SearchSyncSelection } from "./ConnectDrawerOauth.types";
 import { ConnectDrawerOauthActions } from "./ConnectDrawerOauthActions";
 import { ConnectDrawerOauthSelection } from "./ConnectDrawerOauthSelection";
 import {
@@ -24,33 +20,7 @@ import {
 } from "./ConnectDrawerOauthSummary";
 import { type Notice, providerActionErrorNotice } from "./ConnectDrawerSchema";
 
-type SearchSyncSelection = Pick<SearchSyncPreflightPlan, "pace" | "retentionMonths">;
-export type ConnectDrawerOauthProps = {
-  completePropertySelection?: (input: {
-    pace?: SearchSyncSelection["pace"];
-    projectId: string;
-    property: string;
-    retentionMonths?: SearchSyncSelection["retentionMonths"];
-  }) => Promise<{ property: string }>;
-  disconnectProvider?: ProviderActionHandlers["disconnectProvider"];
-  loadStoredProperties?: (input: {
-    projectId: string;
-    provider: "ga4" | "gsc";
-  }) => Promise<GoogleOAuthSetup>;
-  onDisconnected?: () => void;
-  projectId?: string;
-  projectRef?: ProjectRef;
-  provider: IntegrationProviderData;
-  saveStoredProperty?: (input: {
-    pace?: SearchSyncSelection["pace"];
-    projectId: string;
-    property: string;
-    provider: "ga4" | "gsc";
-    retentionMonths?: SearchSyncSelection["retentionMonths"];
-  }) => Promise<GooglePropertySaveResult>;
-  scopes: readonly string[];
-  syncPlan: SearchSyncPreflightPlan | undefined;
-};
+export type { ConnectDrawerOauthProps } from "./ConnectDrawerOauth.types";
 
 export function ConnectDrawerOauth({
   completePropertySelection,
@@ -64,6 +34,8 @@ export function ConnectDrawerOauth({
   scopes,
   syncPlan,
 }: Readonly<ConnectDrawerOauthProps>) {
+  const t = useTranslations("projectIntegrations.oauth");
+  const drawerT = useTranslations("projectIntegrations.drawer");
   const oauthProviderId = provider.id as "ga4" | "gsc";
   const isGa4 = oauthProviderId === "ga4";
   const isConnected = provider.status === "connected";
@@ -127,7 +99,7 @@ export function ConnectDrawerOauth({
       setManualEntry(false);
       setSavedProperty(null);
     } catch {
-      setError("Properties could not be loaded. Try again or reconnect the account.");
+      setError(t("loadPropertiesError"));
     } finally {
       setPending(false);
     }
@@ -143,7 +115,15 @@ export function ConnectDrawerOauth({
       router.refresh();
       onDisconnected?.();
     } catch (cause) {
-      setDisconnectFailure(providerActionErrorNotice(cause));
+      setDisconnectFailure(
+        providerActionErrorNotice(cause, {
+          appUpdateRequired: drawerT("appUpdateRequired"),
+          connectionTestFailed: drawerT("connectionTestFailed"),
+          connectionTestPassed: drawerT("connectionTestPassed"),
+          providerActionFailed: drawerT("providerActionFailed"),
+          providerActionFailedMessage: drawerT("providerActionFailedMessage"),
+        }),
+      );
       throw cause;
     } finally {
       setDisconnecting(false);
@@ -182,23 +162,23 @@ export function ConnectDrawerOauth({
               projectId,
               property: selectedValue,
             });
-      if (!result) throw new Error("Property selection is unavailable.");
+      if (!result) throw new Error(t("propertySelectionUnavailable"));
       if ("status" in result && result.status === "reauth_required") {
         setSetup({
-          error: "Reconnect the Google account to change its property.",
+          error: t("reconnectToChangeProperty"),
           properties: [],
           provider: oauthProviderId,
           requiresReauth: true,
         });
         return;
       }
-      if (!("property" in result)) throw new Error("Property selection is unavailable.");
+      if (!("property" in result)) throw new Error(t("propertySelectionUnavailable"));
       setSavedProperty(result.property);
       setSetup(null);
       setSelectionSource(null);
       router.refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Google connection failed.");
+      setError(cause instanceof Error ? cause.message : t("connectionFailed"));
     } finally {
       setPending(false);
     }

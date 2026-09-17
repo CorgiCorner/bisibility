@@ -1,5 +1,6 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { notificationCardGeometryClassNames } from "@/components/settings/notifications/notification-card-layout";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
@@ -9,9 +10,10 @@ import { Switch } from "@/components/ui/Switch";
 import { updateNotificationPreferences } from "@/lib/actions/notification-prefs";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { NotificationPreferencesView } from "@/lib/queries/notification-prefs";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { classifyActionError } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { type Control, Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -38,15 +40,15 @@ type ChannelKey = "email" | "inApp";
 type NotificationRow = {
   email: PreferenceField;
   inApp?: PreferenceField;
-  label: string;
+  label: "alertFired" | "checkComplete" | "importFinished" | "invite" | "weeklyReport";
 };
 
 const rows: readonly NotificationRow[] = [
-  { email: "alertEmail", inApp: "alertInApp", label: "Alert fired" },
-  { email: "checkEmail", inApp: "checkInApp", label: "Check complete" },
-  { email: "importEmail", inApp: "importInApp", label: "Import finished" },
-  { email: "inviteEmail", inApp: "inviteInApp", label: "Invite" },
-  { email: "reportEmail", label: "Weekly report" },
+  { email: "alertEmail", inApp: "alertInApp", label: "alertFired" },
+  { email: "checkEmail", inApp: "checkInApp", label: "checkComplete" },
+  { email: "importEmail", inApp: "importInApp", label: "importFinished" },
+  { email: "inviteEmail", inApp: "inviteInApp", label: "invite" },
+  { email: "reportEmail", label: "weeklyReport" },
 ] satisfies readonly NotificationRow[];
 
 const channels = [
@@ -72,9 +74,10 @@ function formDefaults(preferences: NotificationPreferencesView): NotificationPre
 }
 
 function UnavailableMark({ label }: Readonly<{ label: string }>) {
+  const t = useTranslations("projectSettingsNotifications.channels");
   return (
     <span
-      aria-label={`${label} is not available`}
+      aria-label={t("unavailable", { label })}
       className="font-sans tabular-nums text-[16px] leading-none text-fg-muted"
       role="img"
     >
@@ -133,6 +136,8 @@ export function NotificationChannelsCard({
     resolver: zodResolver(notificationPreferencesSchema),
   });
   const router = useRouter();
+  const sharedErrors = useSharedErrorMessages();
+  const t = useTranslations("projectSettingsNotifications.channels");
   const { readOnly } = useProjectWriteMode();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const controlsDisabled = !canEdit || readOnly;
@@ -149,7 +154,14 @@ export function NotificationChannelsCard({
       })();
     } catch (error: unknown) {
       form.reset(previousValues);
-      setErrorMessage(actionErrorMessage(error, "Preferences could not be saved."));
+      const classified = classifyActionError(error);
+      setErrorMessage(
+        classified.kind === "staleDeployment"
+          ? sharedErrors.staleDeployment()
+          : classified.kind === "serverComponentDigest"
+            ? sharedErrors.serverComponentDigest({ digest: classified.digest })
+            : t("saveError"),
+      );
     }
   }
 
@@ -165,9 +177,9 @@ export function NotificationChannelsCard({
     <div data-notification-card-frame="channels">
       <SettingsCard
         className={notificationCardGeometryClassNames.channels}
-        description="Where an alert goes once it is raised. Alert conditions are configured on the Alerts screen."
+        description={t("description")}
         showSave={false}
-        title="Channels"
+        title={t("title")}
       >
         <form id="notification-preferences-form" onSubmit={(event) => event.preventDefault()}>
           <fieldset className="contents" disabled={controlsDisabled}>
@@ -177,16 +189,16 @@ export function NotificationChannelsCard({
             <SettingsField width="full">
               <FieldLabel
                 className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
-                label="Events and channels"
+                label={t("eventsAndChannels")}
               />
               <div className="mt-2 overflow-x-auto">
                 <div className="min-w-[420px] overflow-hidden rounded-control border border-border">
                   <div className="grid grid-cols-[minmax(150px,1.6fr)_repeat(2,minmax(82px,1fr))] bg-bg-sunken text-center font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-                    <div className="px-3 py-2 text-left">Event</div>
+                    <div className="px-3 py-2 text-left">{t("event")}</div>
                     {channels.map((channel) => (
                       <div className="px-2 py-2" key={channel.key}>
                         <span className="inline-flex items-center justify-center whitespace-nowrap">
-                          {channel.label}
+                          {t(channel.key)}
                         </span>
                       </div>
                     ))}
@@ -196,10 +208,10 @@ export function NotificationChannelsCard({
                       className="grid min-h-11 grid-cols-[minmax(150px,1.6fr)_repeat(2,minmax(82px,1fr))] items-center border-t border-border text-[13px]"
                       key={row.label}
                     >
-                      <div className="px-3 font-semibold text-fg">{row.label}</div>
+                      <div className="px-3 font-semibold text-fg">{t(row.label)}</div>
                       {channels.map((channel) => {
                         const name = row[channel.key as ChannelKey];
-                        const label = `${row.label} ${channel.label}`;
+                        const label = `${t(row.label)} ${t(channel.key)}`;
                         return (
                           <div className="flex justify-center px-2" key={channel.key}>
                             <DeliveryToggle
@@ -217,8 +229,7 @@ export function NotificationChannelsCard({
                 </div>
               </div>
               <p className="m-0 mt-2 text-[11.5px] leading-5 text-fg-muted">
-                A dash means the channel does not exist for that event – the weekly report is an
-                email and is only ever sent once a week.
+                {t("unavailableHelp")}
               </p>
             </SettingsField>
             {errorMessage ? (

@@ -7,7 +7,7 @@ export type ProjectRunSnapshotTone = "attention" | "critical" | "info" | "neutra
 
 export type ProjectRunWithOperationSnapshot = ProjectRun &
   Readonly<{
-    snapshotPresentationTitle?: GscImportOperation["presentation"]["title"];
+    snapshotState?: GscImportOperation["presentation"]["title"];
     snapshotPresentationTone?: ProjectRunSnapshotTone;
   }>;
 
@@ -45,7 +45,7 @@ export function applyOperationSnapshotToRuns(
         total: operation.progress.total,
         unit: "days",
       },
-      snapshotPresentationTitle: operation.presentation.title,
+      snapshotState: operation.presentation.title,
       snapshotPresentationTone: gscSnapshotTones[operation.presentation.title],
     };
   });

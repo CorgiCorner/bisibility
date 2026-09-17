@@ -1,5 +1,6 @@
 import { AccountEmailChangeSteps } from "@/components/account/AccountEmailChangeSteps";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithAccountMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -157,6 +158,67 @@ describe("AccountEmailChangeSteps", () => {
 
     expect(await screen.findByText("Verification code could not be sent.")).toBeInTheDocument();
     expect(screen.queryByLabelText("Code from your current email")).not.toBeInTheDocument();
+  });
+
+  it("maps the current-email code remedy without exposing the server message", async () => {
+    const requestAccountEmailChange = vi
+      .fn()
+      .mockRejectedValue(
+        new Error("The code from your current email is invalid or expired. Request a new one."),
+      );
+    await reachDetailsStep({ requestAccountEmailChange });
+
+    fireEvent.change(screen.getByLabelText("Code from your current email"), {
+      target: { value: "654321" },
+    });
+    fireEvent.change(screen.getByLabelText("New email address"), {
+      target: { value: "updated@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Send code to the new address" }));
+
+    expect(
+      await screen.findByText(
+        "The code from your current email is invalid or expired. Request a new one.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Code from your current email")).toBeInTheDocument();
+  });
+
+  it("keeps shared stale-deployment recovery and does not leak unknown action details", async () => {
+    const requestAccountEmailChangeCode = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("Failed to find Server Action for this request"))
+      .mockRejectedValueOnce(new Error("internal provider diagnostic"));
+    renderSteps({ requestAccountEmailChangeCode });
+
+    fireEvent.click(screen.getByRole("button", { name: "Change email" }));
+    expect(
+      await screen.findByText(
+        "bisibility was updated while this page was open. Refresh the app to continue. Any unsaved changes will be lost.",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Change email" }));
+    expect(await screen.findByText("Verification code could not be sent.")).toBeInTheDocument();
+    expect(screen.queryByText("internal provider diagnostic")).not.toBeInTheDocument();
+  });
+
+  it("keeps the shared server digest reference without exposing the error detail", async () => {
+    const requestAccountEmailChangeCode = vi.fn().mockRejectedValue(
+      Object.assign(new Error("Server Components render failed: internal provider diagnostic"), {
+        digest: "account-email-42",
+      }),
+    );
+    renderSteps({ requestAccountEmailChangeCode });
+
+    fireEvent.click(screen.getByRole("button", { name: "Change email" }));
+
+    expect(
+      await screen.findByText(
+        "Check failed on our side (ref account-email-42). Retry in a moment.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/internal provider diagnostic/)).not.toBeInTheDocument();
   });
 
   it("locks Cancel while a request is pending so a late reply cannot reopen a step", async () => {

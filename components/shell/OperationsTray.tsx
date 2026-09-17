@@ -10,6 +10,7 @@ import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import {
   isTrayOperation,
@@ -18,6 +19,7 @@ import {
   performOperationAction,
   type TrayOperation,
 } from "./OperationsTrayModel";
+import { localizeGscTrayOperation } from "./operations-tray-gsc-copy";
 
 export { operationPresentationFor } from "./OperationsTrayModel";
 
@@ -54,10 +56,86 @@ const pillToneClassName = {
   positive: "bg-green",
 } as const;
 
+type OperationsTranslator = ReturnType<typeof useTranslations<"shell.operations">>;
+
+function rankSelectionLabel(
+  selection: NonNullable<TrayOperation["rankCheck"]>["selectionKind"],
+  t: OperationsTranslator,
+) {
+  return t(`rank.selectionKinds.${selection}`);
+}
+
+function rankTitle(
+  trigger: NonNullable<TrayOperation["rankCheck"]>["trigger"],
+  t: OperationsTranslator,
+) {
+  return t(`rank.titles.${trigger}`);
+}
+
+function blockedStateLine(
+  operation: NonNullable<TrayOperation["rankCheck"]>,
+  deploymentMode: ReturnType<typeof useDeploymentMode>,
+  locale: string,
+  t: OperationsTranslator,
+) {
+  if (operation.blockedReason === "temporal_unavailable") {
+    return deploymentMode === "self-host"
+      ? t("rank.blocked.workerSelfHost")
+      : t("rank.blocked.workerCloud");
+  }
+  if (operation.blockedReason === "budget_exhausted") {
+    if (!operation.budget) return t("rank.blocked.budgetWithoutAmounts");
+    const formatCurrency = (cents: number) =>
+      new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(cents / 100);
+    return t("rank.blocked.budgetWithAmounts", {
+      cap: formatCurrency(operation.budget.capCents),
+      spent: formatCurrency(operation.budget.spentCents),
+    });
+  }
+  if (
+    operation.blockedReason === "no_provider" ||
+    operation.blockedReason === "credentials_unavailable"
+  ) {
+    return t("rank.blocked.noProvider");
+  }
+  if (operation.blockedReason === "market_inactive") return t("rank.blocked.marketInactive");
+  if (operation.blockedReason === "keyword_archived") return t("rank.blocked.keywordArchived");
+  if (operation.blockedReason === "provider_unavailable")
+    return t("rank.blocked.providerUnavailable");
+  return t("rank.blocked.waiting");
+}
+
+function localizedTrayOperation(
+  operation: TrayOperation,
+  deploymentMode: ReturnType<typeof useDeploymentMode>,
+  locale: string,
+  t: OperationsTranslator,
+): TrayOperation {
+  if (operation.gscImport) return localizeGscTrayOperation(operation, t);
+  if (!operation.rankCheck) return operation;
+  const rankCheck = operation.rankCheck;
+  const keywordCount = t("rank.keywordCount", { count: rankCheck.keywordCount });
+  return {
+    ...operation,
+    meta:
+      rankCheck.selectionKind === "single" || rankCheck.trigger === "scheduled"
+        ? keywordCount
+        : t("rank.scope", {
+            keywords: keywordCount,
+            selection: rankSelectionLabel(rankCheck.selectionKind, t),
+          }),
+    stateLine: operation.blocked ? blockedStateLine(rankCheck, deploymentMode, locale, t) : null,
+    title: rankTitle(rankCheck.trigger, t),
+    unit: t("rank.targetUnit", { count: operation.total }),
+  };
+}
+
 export function OperationsTray({
   defaultOpen = false,
   projectRef,
 }: Readonly<{ defaultOpen?: boolean; projectRef: ProjectRef }>) {
+  const t = useTranslations("shell.operations");
+  const locale = useLocale();
   const { operations, status } = useAppRealtime();
   const deploymentMode = useDeploymentMode();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -65,10 +143,21 @@ export function OperationsTray({
   const [actionError, setActionError] = useState<string | null>(null);
   const trayOperations = operations
     .filter(isTrayOperation)
-    .map((operation) => operationPresentationFor(operation, projectRef, deploymentMode));
+    .map((operation) => operationPresentationFor(operation, projectRef))
+    .map((operation) => localizedTrayOperation(operation, deploymentMode, locale, t));
   const pill = labelForPill(trayOperations);
   const runsHref = projectRunsPath(projectRef);
   const stale = status === "offline" || status === "reconnecting";
+  const pillState =
+    pill.kind === "busy"
+      ? pill.word === "running"
+        ? t("states.running")
+        : pill.word === "waiting"
+          ? t("states.waiting")
+          : pill.word === "blocked"
+            ? t("states.blocked")
+            : t("states.failed")
+      : "";
 
   // Synchronize the popup anchor with the realtime operation store when it drains.
   useEffect(() => {
@@ -81,7 +170,7 @@ export function OperationsTray({
   function runAction(operation: TrayOperation) {
     setActionError(null);
     void performOperationAction(operation, projectRef).catch(() =>
-      setActionError("Could not update this operation. Refresh and try again."),
+      setActionError(t("actionError")),
     );
   }
 
@@ -89,20 +178,20 @@ export function OperationsTray({
     <>
       {pill.kind === "idle" ? (
         <a className={operationsTrayPillClassName} href={runsHref}>
-          Runs
+          {t("runs")}
         </a>
       ) : (
         <button
           aria-expanded={open}
           aria-haspopup="dialog"
-          aria-label={`${pill.count} ${pill.word} operations, open activity`}
+          aria-label={t("pillAria", { count: pill.count, state: pillState })}
           className={operationsTrayPillClassName}
           onClick={(event) => {
             setAnchorEl(event.currentTarget);
             setOpen(true);
           }}
           ref={setAnchorEl}
-          title={`${pill.count} ${pill.word} operations`}
+          title={t("pillTitle", { count: pill.count, state: pillState })}
           type="button"
         >
           <span
@@ -125,7 +214,7 @@ export function OperationsTray({
                   : "text-fg",
             )}
           >
-            {pill.word}
+            {pillState}
           </span>
         </button>
       )}
@@ -133,7 +222,7 @@ export function OperationsTray({
         anchorEl={anchorEl}
         align="end"
         side="bottom"
-        aria-label="Activity"
+        aria-label={t("activity")}
         onClose={() => setOpen(false)}
         open={open}
         contentProps={{
@@ -142,9 +231,9 @@ export function OperationsTray({
       >
         <div className="flex max-h-[calc(100dvh-96px)] flex-col">
           <header className="flex flex-none items-center justify-between gap-2.5 border-b border-border px-4 py-[13px]">
-            <span className="text-sm font-semibold">Activity</span>
+            <span className="text-sm font-semibold">{t("activity")}</span>
             <button
-              aria-label="Close activity"
+              aria-label={t("closeActivity")}
               className="grid h-9 w-9 place-items-center rounded-control bg-transparent p-0 text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg"
               onClick={() => setOpen(false)}
               type="button"
@@ -158,7 +247,7 @@ export function OperationsTray({
                 className="m-0 border-b border-border px-4 py-2 text-xs text-fg-muted"
                 role="status"
               >
-                Live updates are unavailable. Showing the last known operations.
+                {t("stale")}
               </p>
             ) : null}
             {trayOperations.length > 0 ? (
@@ -176,10 +265,9 @@ export function OperationsTray({
                 <span className="grid h-10 w-10 place-items-center rounded-card bg-bg-sunken text-lg text-fg-muted">
                   ~
                 </span>
-                <span className="text-[13.5px] font-semibold">Nothing running</span>
+                <span className="text-[13.5px] font-semibold">{t("emptyTitle")}</span>
                 <p className="m-0 max-w-[340px] text-xs leading-[1.6] text-fg-muted">
-                  No rank check or import is in flight. Finished rank checks keep their record in
-                  Runs, imports in Search Console.
+                  {t("emptyDescription")}
                 </p>
               </div>
             )}
@@ -194,7 +282,7 @@ export function OperationsTray({
               className="text-xs font-semibold text-fg-muted transition-colors hover:text-fg"
               href={runsHref}
             >
-              View all runs
+              {t("viewAll")}
             </a>
           </footer>
         </div>

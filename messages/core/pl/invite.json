@@ -1,0 +1,32 @@
+{
+  "invite": {
+    "accept": "Przyjmij zaproszenie",
+    "alreadyUsed": "Zaproszenie zostało już wykorzystane",
+    "alreadyUsedBody": "To zaproszenie zostało już przyjęte lub zastąpione nowszym.",
+    "expires": "Wygasa",
+    "expired": "Zaproszenie wygasło",
+    "expiredBody": "Poproś administratora projektu o nowe zaproszenie.",
+    "goToSignIn": "Przejdź do logowania",
+    "invalid": "Nie znaleziono zaproszenia",
+    "invalidBody": "Sprawdź link lub poproś nadawcę o ponowne wysłanie zaproszenia.",
+    "invitedEmail": "Zaproszony adres e-mail",
+    "join": "Dołącz do projektu {project}",
+    "metadataDescription": "Przyjmij zaproszenie do projektu w bisibility.",
+    "mismatchedAccount": "Zalogowano jako {current}. Aby przyjąć to zaproszenie, zaloguj się jako {invited}.",
+    "oneTimeCodeSent": "Wysłaliśmy kod jednorazowy na adres <address>{email}</address>.",
+    "role": "Rola",
+    "roles": {
+      "admin": "Administrator",
+      "member": "Edytor",
+      "viewer": "Przeglądający"
+    },
+    "sendSignInCode": "Wyślij kod logowania",
+    "signInCode": "Kod logowania",
+    "signOut": "Wyloguj się",
+    "teamInvite": "Zaproszenie do zespołu",
+    "validEmail": "Podaj prawidłowy adres e-mail.",
+    "verifyAndReturn": "Zweryfikuj i wróć",
+    "verifyCode": "Podaj 6-cyfrowy kod.",
+    "verifyFailed": "Coś poszło nie tak. Spróbuj ponownie."
+  }
+}

@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AddKeywordsDrawer, type ScheduleKeywordCandidate } from "./AddKeywordsDrawer";
@@ -10,7 +11,7 @@ const candidates: ScheduleKeywordCandidate[] = [
     keyword: "contentful alternative",
     market: "Spain",
     tags: ["commercial"],
-    checks: "2",
+    checks: 2,
   },
   {
     device: "Desktop",
@@ -19,7 +20,7 @@ const candidates: ScheduleKeywordCandidate[] = [
     market: "Spain",
     sourceName: "Daily 06:00",
     tags: ["commercial", "product"],
-    checks: "2",
+    checks: 2,
   },
   {
     assigned: true,
@@ -28,7 +29,7 @@ const candidates: ScheduleKeywordCandidate[] = [
     keyword: "cms comparison chart",
     market: "United Kingdom",
     tags: ["docs"],
-    checks: "2",
+    checks: 2,
   },
 ];
 
@@ -114,12 +115,12 @@ describe("AddKeywordsDrawer", () => {
     expect(screen.getByRole("button", { name: "Clear selection (2)" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Clear" })).toBeVisible();
     expect(screen.getByRole("radio", { name: "All" })).toBeVisible();
-    expect(screen.getByRole("radio", { name: "Selected (2)" })).toBeVisible();
+    expect(screen.getByRole("radio", { name: "2 selected" })).toBeVisible();
 
     fireEvent.click(screen.getByRole("button", { name: "Clear" }));
 
     expect(screen.queryByRole("button", { name: "Clear" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("radio", { name: "Selected (2)" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "2 selected" })).not.toBeInTheDocument();
   });
 
   it("submits selected keywords through the audited schedule membership action", async () => {

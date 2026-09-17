@@ -1,5 +1,4 @@
 "use client";
-
 import {
   beginTwoFactorEnrollmentAction,
   completeTwoFactorEnrollmentAction,
@@ -16,6 +15,7 @@ import { cn } from "@/lib/ui/cn";
 import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
 import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/csr/ShieldCheck";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AccountSection } from "./AccountSection";
@@ -28,36 +28,35 @@ import {
   ghostButtonClass,
 } from "./account-ui";
 import { BackupCodes } from "./BackupCodes";
-import { factorStatusLabel } from "./security-factor-utils";
+import { factorStatusKey } from "./security-factor-utils";
 import { TwoFactorManagementForm } from "./TwoFactorManagementForm";
 import { createTotpQrDataUrl } from "./totp-qr";
 
 type Mode = "backup" | "disable" | "replace" | "setup";
 type SetupData = { enrollmentId: string; qrDataUrl: string | null; secret: string };
 type SecurityFactorsProps = { hasPasswordCredential: boolean; initiallyEnabled: boolean };
-function managementCopy(mode: Mode) {
+function managementCopy(mode: Mode, t: ReturnType<typeof useTranslations>) {
   if (mode === "backup") {
     return {
-      description: "Verify a current factor before replacing every existing backup code.",
-      label: "Generate new backup codes",
+      description: t("manage.backup.description"),
+      label: t("manage.backup.label"),
     };
   }
   if (mode === "disable") {
     return {
-      description:
-        "Verify a current factor before removing 2FA. You will be signed out on every device.",
-      label: "Disable two-factor authentication",
+      description: t("manage.disable.description"),
+      label: t("manage.disable.label"),
     };
   }
   if (mode === "replace") {
     return {
-      description: "Verify a current factor before replacing the authenticator app.",
-      label: "Continue",
+      description: t("manage.replace.description"),
+      label: t("manage.replace.label"),
     };
   }
   return {
-    description: "For security, initial enrollment requires a sign-in from the last five minutes.",
-    label: "Continue",
+    description: t("manage.setup.description"),
+    label: t("manage.setup.label"),
   };
 }
 export function SecurityFactors({
@@ -65,6 +64,7 @@ export function SecurityFactors({
   initiallyEnabled,
 }: Readonly<SecurityFactorsProps>) {
   const router = useRouter();
+  const t = useTranslations("account.security.twoFactor");
   const [mode, setMode] = useState<Mode | null>(null);
   const [setup, setSetup] = useState<SetupData | null>(null);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
@@ -89,7 +89,7 @@ export function SecurityFactors({
     if (mode === "setup" || mode === "replace") {
       const result = await beginTwoFactorEnrollmentAction(values);
       if (!result.ok) {
-        setMessage(result.error.message);
+        setMessage(t(result.error.code === "session_not_fresh" ? "reauthRequired" : "updateError"));
         setReauthRequired(result.error.code === "session_not_fresh");
         return;
       }
@@ -100,30 +100,34 @@ export function SecurityFactors({
         secret,
       });
       verificationForm.reset({ code: "" });
-      setMessage("Scan the QR code and verify the new authenticator.");
+      setMessage(t("scanAndVerify"));
       return;
     }
     if (mode === "backup") {
       const result = await regenerateTwoFactorBackupCodesAction(values);
       if (!result.ok) {
-        setMessage(result.error.message);
+        setMessage(
+          t(result.error.code === "step_up_failed" ? "verificationFailed" : "updateError"),
+        );
         return;
       }
       setBackupCodes(result.value.backupCodes);
       setMode(null);
-      setMessage("New backup codes generated. Save them now.");
+      setMessage(t("backupCodesGenerated"));
       return;
     }
     if (mode === "disable") {
       const result = await disableTwoFactorAction(values);
       if (!result.ok) {
-        setMessage(result.error.message);
+        setMessage(
+          t(result.error.code === "step_up_failed" ? "verificationFailed" : "updateError"),
+        );
         return;
       }
       notifyAuthenticatedSessionEnd();
       setEnabled(false);
       setMode(null);
-      setMessage("Two-factor authentication disabled. Redirecting to sign in.");
+      setMessage(t("disabledRedirecting"));
       router.replace("/login");
       router.refresh();
     }
@@ -137,7 +141,7 @@ export function SecurityFactors({
       router.replace(loginErrorReturnTo("/app/account/security"));
       router.refresh();
     } catch {
-      setMessage("Sign-out failed. Refresh the page and try again.");
+      setMessage(t("signOutError"));
     } finally {
       setPending(false);
     }
@@ -152,31 +156,27 @@ export function SecurityFactors({
         enrollmentId: setup.enrollmentId,
       });
       if (!result.ok) {
-        setMessage(result.error.message);
+        setMessage(t("updateError"));
         return;
       }
       setEnabled(true);
       setBackupCodes(result.value.backupCodes);
       setSetup(null);
       setMode(null);
-      setMessage(
-        result.value.replaced
-          ? "Authenticator replaced. Save the new backup codes."
-          : "Two-factor authentication enabled. Save the backup codes.",
-      );
+      setMessage(result.value.replaced ? t("replaced") : t("enabled"));
       router.refresh();
     } catch {
-      setMessage("The authenticator could not be verified. Try again.");
+      setMessage(t("verifyError"));
     } finally {
       setPending(false);
     }
   }
-  const copy = mode ? managementCopy(mode) : null;
+  const copy = mode ? managementCopy(mode, t) : null;
   return (
     <AccountSection
       contentClassName="px-4.5 py-4"
-      description="Add a second step after the email login code."
-      title="Two-factor authentication"
+      description={t("description")}
+      title={t("title")}
     >
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-[13px]">
@@ -188,32 +188,34 @@ export function SecurityFactors({
             )}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[13.5px] font-semibold text-fg">Authenticator app</span>
-            <span className="block text-[11.5px] text-fg-muted">{factorStatusLabel(enabled)}</span>
+            <span className="block text-[13.5px] font-semibold text-fg">
+              {t("authenticatorApp")}
+            </span>
+            <span className="block text-[11.5px] text-fg-muted">{t(factorStatusKey(enabled))}</span>
           </span>
           {enabled ? (
             <div className="flex flex-wrap justify-end gap-2">
               <button className={ghostButtonClass} onClick={() => openMode("backup")} type="button">
-                Backup codes
+                {t("backupCodes")}
               </button>
               <button
                 className={ghostButtonClass}
                 onClick={() => openMode("replace")}
                 type="button"
               >
-                Replace authenticator
+                {t("replaceAuthenticator")}
               </button>
               <button
                 className={ghostButtonClass}
                 onClick={() => openMode("disable")}
                 type="button"
               >
-                Disable
+                {t("disable")}
               </button>
             </div>
           ) : (
             <button className={accentButtonClass} onClick={() => openMode("setup")} type="button">
-              Enable
+              {t("enable")}
             </button>
           )}
         </div>
@@ -239,24 +241,24 @@ export function SecurityFactors({
               {setup.qrDataUrl ? (
                 // biome-ignore lint/performance/noImgElement: The generated QR code is an in-memory data URI.
                 <img
-                  alt="Authenticator app QR code"
+                  alt={t("qrAlt")}
                   className="h-[180px] w-[180px] rounded-card border border-border bg-white p-2"
                   src={setup.qrDataUrl}
                 />
               ) : (
                 <span className={cn(fieldValueClass, "h-[180px] text-center text-fg-muted")}>
-                  QR unavailable
+                  {t("qrUnavailable")}
                 </span>
               )}
               <div className="grid content-start gap-3">
                 <div className={fieldLabelClass}>
-                  {"Secret "}
+                  {t("secret")}
                   <span className={cn(fieldValueClass, "break-all font-sans tabular-nums")}>
                     {setup.secret}
                   </span>
                 </div>
                 <label className={fieldLabelClass}>
-                  {"New authenticator code "}
+                  {t("newCode")}
                   <input
                     autoComplete="one-time-code"
                     className={fieldInputClass}
@@ -265,19 +267,17 @@ export function SecurityFactors({
                     {...verificationForm.register("code")}
                   />
                   {verificationForm.formState.errors.code ? (
-                    <span className={cn(feedbackClass, "text-red-text")}>
-                      {verificationForm.formState.errors.code.message}
-                    </span>
+                    <span className={cn(feedbackClass, "text-red-text")}>{t("invalidInput")}</span>
                   ) : null}
                 </label>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button className={accentButtonClass} disabled={pending} type="submit">
-                {pending ? "Verifying" : "Verify"}
+                {pending ? t("verifying") : t("verify")}
               </button>
               <button className={ghostButtonClass} onClick={() => setSetup(null)} type="button">
-                Cancel
+                {t("cancel")}
               </button>
             </div>
           </form>
@@ -290,7 +290,7 @@ export function SecurityFactors({
             onClick={reauthenticate}
             type="button"
           >
-            {pending ? "Signing out" : "Sign in again"}
+            {pending ? t("signingOut") : t("signInAgain")}
           </button>
         ) : null}
         {message ? <span className={cn(feedbackClass, "text-fg-muted")}>{message}</span> : null}

@@ -1,10 +1,7 @@
 "use client";
 
-import { actionErrorMessage } from "@/components/keywords/action-utils";
-import {
-  type KeywordExportTarget,
-  keywordExportTargetLabel,
-} from "@/components/keywords/export-target-model";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import type { KeywordExportTarget } from "@/components/keywords/export-target-model";
 import { Button } from "@/components/ui/Button";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Modal } from "@/components/ui/Modal";
@@ -19,14 +16,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
-  columnLabels,
   ExportOptionRow,
   exportColumns,
   exportFormats,
   exportScopes,
-  formatOptions,
-  scopeOptions,
+  useExportModalPresentation,
 } from "./ExportModalParts";
+import { exportFailureMessage } from "./export-action-error";
 
 const exportSchema = z.object({
   columns: z.record(z.enum(exportColumns), z.boolean()),
@@ -46,17 +42,6 @@ type ExportModalProps = {
   target: KeywordExportTarget;
 };
 
-const rangeOptions = [
-  { label: "Last 30 days", value: "30" },
-  { label: "Last 90 days", value: "90" },
-  { label: "All history", value: "all" },
-] as const;
-
-const granularityOptions = [
-  { label: "Daily", value: "daily" },
-  { label: "Weekly", value: "weekly" },
-] as const;
-
 const historySelectClass =
   "min-h-9 flex-1 justify-between rounded-control border-border-control bg-bg-elev px-3 text-[12.5px] font-normal";
 
@@ -71,6 +56,9 @@ function downloadExport(file: ExportFile) {
 }
 
 export function ExportModal({ onClose, open, projectId, target }: Readonly<ExportModalProps>) {
+  const { columnLabels, formatOptions, granularityOptions, rangeOptions, scopeOptions, t } =
+    useExportModalPresentation();
+  const sharedErrors = useSharedErrorMessages();
   const [actionError, setActionError] = useState<string | null>(null);
   const {
     formState: { isSubmitting },
@@ -97,9 +85,13 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
     resolver: zodResolver(exportSchema),
   });
   const values = watch();
-  const ctaLabel = `Export ${values.format.toUpperCase()}`;
-  const subtitle = keywordExportTargetLabel(target);
-
+  const ctaLabel = t("export", { format: values.format.toUpperCase() });
+  const subtitle =
+    target.selection.mode === "all"
+      ? t("targetAll")
+      : target.selection.mode === "query"
+        ? t("targetFiltered", { count: target.count })
+        : t("targetSelected", { count: target.count });
   async function submit(formValues: ExportValues) {
     setActionError(null);
     try {
@@ -111,7 +103,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
       downloadExport(file);
       onClose();
     } catch (error) {
-      setActionError(actionErrorMessage(error));
+      setActionError(exportFailureMessage(error, sharedErrors, t));
     }
   }
 
@@ -120,12 +112,12 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
       footer={
         <>
           <Button disabled={isSubmitting} onClick={onClose} type="button" variant="ghost">
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             form="export-keywords"
             loading={isSubmitting}
-            loadingLabel="Exporting..."
+            loadingLabel={t("exporting")}
             startIcon={<DownloadSimple size={15} weight="regular" />}
             type="submit"
           >
@@ -139,7 +131,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
       size="md"
       title={
         <span className="block">
-          <span className="block">Export keywords</span>
+          <span className="block">{t("title")}</span>
           <span className="mt-1 block text-[12.5px] font-normal tracking-normal text-fg-muted">
             {subtitle}
           </span>
@@ -151,7 +143,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
         <input type="hidden" {...register("granularity")} />
         <div>
           <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-            Format
+            {t("format")}
           </div>
           <div className="mt-[9px] grid gap-[7px]">
             {formatOptions.map((option) => {
@@ -189,7 +181,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
 
         <div>
           <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-            Data
+            {t("data")}
           </div>
           <div className="mt-[9px] grid gap-[7px]">
             {scopeOptions.map((option) => {
@@ -217,7 +209,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
           {values.scope === "history" ? (
             <div className="mt-2 flex gap-2">
               <MenuSelect
-                ariaLabel="Export range"
+                ariaLabel={t("rangeAria")}
                 onChange={(value) =>
                   setValue("range", value as ExportValues["range"], {
                     shouldDirty: true,
@@ -229,7 +221,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
                 value={values.range}
               />
               <MenuSelect
-                ariaLabel="Export granularity"
+                ariaLabel={t("granularityAria")}
                 onChange={(value) =>
                   setValue("granularity", value as ExportValues["granularity"], {
                     shouldDirty: true,
@@ -246,16 +238,16 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
 
         <div>
           <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-            Columns
+            {t("columns")}
           </div>
           <div className="mt-[9px] grid grid-cols-2 gap-[7px]">
             <div className="inline-flex items-center gap-[9px] rounded-control border border-border bg-bg px-2.5 py-2">
               <span className="grid h-[17px] w-[17px] place-items-center rounded-control bg-accent-solid text-accent-on-solid">
                 <LockSimple size={10} weight="regular" />
               </span>
-              <span className="flex-1 text-[12.5px] text-fg">Keyword + Pos</span>
+              <span className="flex-1 text-[12.5px] text-fg">{t("keywordAndPosition")}</span>
               <span className="font-sans tabular-nums text-[9px] uppercase tracking-[0.4px] text-fg-muted">
-                Always
+                {t("always")}
               </span>
             </div>
             {exportColumns.map((column) => {
@@ -285,10 +277,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
 
         <div className="flex items-center gap-[9px] rounded-control border border-dashed border-border bg-transparent px-[13px] py-[11px]">
           <ArrowsClockwise weight="regular" className="shrink-0 text-accent-text" size={15} />
-          <span className="text-[11.5px] leading-[1.45] text-fg-muted">
-            CSV and XLSX keep import-friendly columns. JSON includes ranking history for each
-            exported keyword.
-          </span>
+          <span className="text-[11.5px] leading-[1.45] text-fg-muted">{t("fileFormatNote")}</span>
         </div>
         {actionError ? (
           <p className="m-0 font-sans tabular-nums text-[11.5px] text-red-text">{actionError}</p>

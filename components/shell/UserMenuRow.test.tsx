@@ -1,5 +1,6 @@
 import { Menu, MenuContent } from "@/components/ui/primitives/menu";
-import { render as renderDom, screen } from "@testing-library/react";
+import { renderWithShellMessages as renderDom } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { USER_MENU_ROW_STYLE, UserMenuRow } from "./UserMenuRow";
@@ -25,31 +26,24 @@ describe("UserMenuRow", () => {
   });
 
   it("hides the managed homepage link on self-hosted deployments", () => {
-    expect(resourceLinksForDeployment(false).map((item) => item.label)).toEqual([
-      "Docs and self-hosting",
-      "Send feedback",
-    ]);
-    expect(resourceLinksForDeployment(true).map((item) => item.label)).toEqual([
-      "Docs and self-hosting",
-      "Homepage",
-      "Send feedback",
+    expect(resourceLinksForDeployment(false).map((item) => item.key)).toEqual(["docs", "feedback"]);
+    expect(resourceLinksForDeployment(true).map((item) => item.key)).toEqual([
+      "docs",
+      "homepage",
+      "feedback",
     ]);
   });
 
   it("offers one canonical homepage link instead of roadmap and changelog", () => {
-    expect(resourceLinks.map((item) => item.label)).toEqual([
-      "Docs and self-hosting",
-      "Homepage",
-      "Send feedback",
-    ]);
+    expect(resourceLinks.map((item) => item.key)).toEqual(["docs", "homepage", "feedback"]);
 
-    const homepage = resourceLinks.find((item) => item.label === "Homepage");
+    const homepage = resourceLinks.find((item) => item.key === "homepage");
     expect(homepage).toBeDefined();
     if (!homepage) {
       throw new Error("Homepage resource link is missing");
     }
 
-    render(<UserMenuRow item={homepage} />);
+    render(<UserMenuRow item={{ ...homepage, label: "Homepage" }} />);
 
     const link = screen.getByRole("menuitem", {
       name: "Homepage (opens in a new tab)",
@@ -61,7 +55,7 @@ describe("UserMenuRow", () => {
   });
 
   it("places Discord directly below GitHub in the community links", () => {
-    expect(communityLinks.map((item) => item.label)).toEqual(["GitHub", "Discord"]);
+    expect(communityLinks.map((item) => item.key)).toEqual(["github", "discord"]);
 
     const discord = communityLinks[1];
     expect(discord).toBeDefined();
@@ -69,7 +63,7 @@ describe("UserMenuRow", () => {
       throw new Error("Discord community link is missing");
     }
 
-    render(<UserMenuRow item={discord} />);
+    render(<UserMenuRow item={{ ...discord, label: "Discord" }} />);
 
     const link = screen.getByRole("menuitem", {
       name: "Discord (opens in a new tab)",
@@ -80,6 +74,6 @@ describe("UserMenuRow", () => {
   });
 
   it("exposes only Account settings in account links", () => {
-    expect(accountLinks.map((item) => item.label)).toEqual(["Account settings"]);
+    expect(accountLinks.map((item) => item.key)).toEqual(["accountSettings"]);
   });
 });

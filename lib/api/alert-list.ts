@@ -1,23 +1,21 @@
 import "server-only";
-import type { AlertRuleView, TriggeredAlertView } from "@/lib/alerts/alert-data";
+import type {
+  AlertRuleView,
+  TriggeredAlertFeedView,
+  TriggeredAlertView,
+} from "@/lib/alerts/alert-data";
 import { getRequestAlertKeywordData } from "@/lib/alerts/alert-request-data";
 import { visibleAlertSnoozeWhere } from "@/lib/alerts/snooze";
+import {
+  legacyPositionText,
+  legacyRelativeTime,
+  legacyWebhookEndpointLabel,
+  payloadString,
+  payloadStrings,
+} from "@/lib/api/alert-payload-values";
 import { prisma } from "@/lib/db/prisma";
 import { type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
-
-const conditionLabels = {
-  change_pct: "position changes by percent",
-  competitor_overtake: "competitor ranks above you",
-  ctr_drop: "CTR drops against the 28-day baseline",
-  downtrend: "down in 3 of last 5 checks",
-  enters_top_n: "rank enters top N",
-  exits_top_n: "rank exits top N",
-  position_drop: "rank drops by N positions",
-  serp_feature: "SERP feature appears",
-  threshold: "rank crosses threshold",
-  url_mismatch: "ranking URL differs from target URL",
-};
 
 export type AlertFeedQuery = {
   marketsByLocation?: ReadonlyMap<string, { id: string; label: string; language: string }>;
@@ -30,90 +28,7 @@ function requiredPublicId(value: string | null, resource: string, prefix: Public
   }
   return value;
 }
-function relativeTime(date: Date) {
-  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-  if (seconds < 60) {
-    return "just now";
-  }
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) {
-    return `${minutes}m ago`;
-  }
-  const hours = Math.floor(minutes / 60);
-  if (hours < 48) {
-    return `${hours}h ago`;
-  }
-  return `${Math.floor(hours / 24)}d ago`;
-}
-function positionText(position: number | null) {
-  return position ? `#${position}` : "No rank";
-}
-function webhookEndpointLabel(
-  channel: string,
-  endpoint: { description: string | null; url: string } | null,
-) {
-  if (channel !== "webhook") return null;
-  if (!endpoint) return "Deleted endpoint";
-  return endpoint.description?.trim() || endpoint.url;
-}
-function payloadValue(payload: Prisma.JsonValue | null | undefined, key: string) {
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-    return null;
-  }
-  const value = payload[key as keyof typeof payload];
-  return typeof value === "string" ? value : null;
-}
-function payloadList(payload: Prisma.JsonValue | null | undefined, key: string) {
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-    return null;
-  }
-  const value = payload[key as keyof typeof payload];
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string")
-    : null;
-}
-function conditionText(rule: {
-  changePct: unknown;
-  competitorDomain: string | null;
-  conditionType: keyof typeof conditionLabels;
-  dropPositions: number | null;
-  serpFeature: string | null;
-  thresholdPosition: number | null;
-  topN: number | null;
-}) {
-  if (rule.conditionType === "threshold") {
-    return `rank crosses below #${rule.thresholdPosition}`;
-  }
-  if (rule.conditionType === "change_pct") {
-    return `position changes by ${Number(rule.changePct ?? 0)}%`;
-  }
-  if (rule.conditionType === "ctr_drop") {
-    return `CTR drops by ${Number(rule.changePct ?? 0)}% vs the 28-day baseline`;
-  }
-  if (rule.conditionType === "position_drop") {
-    return `rank drops by ${rule.dropPositions} positions`;
-  }
-  if (rule.conditionType === "downtrend") {
-    return "down in 3 of last 5 checks";
-  }
-  if (rule.conditionType === "enters_top_n") {
-    return `rank enters top ${rule.topN}`;
-  }
-  if (rule.conditionType === "exits_top_n") {
-    return `rank exits top ${rule.topN}`;
-  }
-  if (rule.conditionType === "competitor_overtake") {
-    return `${rule.competitorDomain} ranks above you`;
-  }
-  if (rule.conditionType === "serp_feature") {
-    return `${rule.serpFeature} appears`;
-  }
-  if (rule.conditionType === "url_mismatch") {
-    return "ranking URL differs from target URL";
-  }
-  return conditionLabels[rule.conditionType];
-}
-function scopeText(
+function scopeValues(
   rule: {
     targetType: string;
     targets: {
@@ -123,22 +38,9 @@ function scopeText(
   },
   keywordLabels: ReadonlyMap<string, string>,
 ) {
-  if (rule.targetType === "all") {
-    return "All keywords";
-  }
-  const names = rule.targets
+  return rule.targets
     .map((target) => (target.keywordId ? keywordLabels.get(target.keywordId) : target.tag?.name))
     .filter((name): name is string => Boolean(name));
-  if (names.length === 0) {
-    return rule.targetType === "keyword" ? "Selected keywords" : "Selected tags";
-  }
-  return names.length === 1 ? names[0] : `${names[0]} +${names.length - 1}`;
-}
-function channelText(channels: string[]) {
-  if (channels.length === 0) {
-    return "In-app";
-  }
-  return channels.map((channel) => channel[0].toUpperCase() + channel.slice(1)).join(", ");
 }
 function ruleView(
   rule: Awaited<ReturnType<typeof loadRules>>[number],
@@ -146,24 +48,22 @@ function ruleView(
 ): AlertRuleView {
   return {
     changePct: rule.changePct === null ? null : Number(rule.changePct),
-    channel: channelText(rule.channels),
     channels: rule.channels,
-    condition: conditionText(rule),
     conditionType: rule.conditionType,
     competitorDomain: rule.competitorDomain,
     dropPositions: rule.dropPositions,
     enabled: rule.enabled,
-    fires: `${rule.triggered.length} this week`,
+    firedThisWeek: rule.triggered.length,
     id: requiredPublicId(rule.publicId, "Alert rule", "alr"),
     marketIds: rule.markets.map(({ projectMarket }) =>
       requiredPublicId(projectMarket.publicId, "Project market", "pmkt"),
     ),
     name: rule.name,
-    period: rule.conditionType === "ctr_drop" ? "7d vs prior 28d" : "Each check",
+    period: rule.conditionType === "ctr_drop" ? "ctr_baseline" : "each_check",
     recipientIds: rule.recipients.map(({ user }) =>
       requiredPublicId(user.publicId, "Recipient", "usr"),
     ),
-    scope: scopeText(rule, keywordLabels),
+    scope: { labels: scopeValues(rule, keywordLabels), targetType: rule.targetType },
     serpFeature: rule.serpFeature,
     severity: rule.severity,
     status: rule.enabled ? "active" : "paused",
@@ -185,13 +85,13 @@ function alertView(
   marketsByLocation: AlertFeedQuery["marketsByLocation"],
 ): TriggeredAlertView {
   const payload = alert.payload;
-  const severity = payloadValue(payload, "severity") ?? alert.rule.severity;
+  const severity = payloadString(payload, "severity") ?? alert.rule.severity;
   const market = marketsByLocation?.get(alert.keyword.locationId);
   const visibleSeverity = severity === "info" || severity === "urgent" ? severity : "warning";
   return {
-    action: payloadValue(payload, "action") ?? "Review the latest rank check.",
-    ctas: payloadList(payload, "ctas") ?? ["Open keyword"],
-    current: payloadValue(payload, "current") ?? positionText(alert.afterPosition),
+    action: payloadString(payload, "action") ?? "Review the latest rank check.",
+    ctas: payloadStrings(payload, "ctas") ?? ["Open keyword"],
+    current: payloadString(payload, "current") ?? legacyPositionText(alert.afterPosition),
     deliveryAttempts: alert.deliveryAttempts.map((attempt) => ({
       channel: attempt.channel,
       error: attempt.error,
@@ -199,8 +99,8 @@ function alertView(
       webhookEndpointId: attempt.webhookEndpoint
         ? requiredPublicId(attempt.webhookEndpoint.publicId, "Webhook endpoint", "we")
         : null,
-      webhookEndpointLabel: webhookEndpointLabel(attempt.channel, attempt.webhookEndpoint),
-      when: relativeTime(attempt.attemptedAt),
+      webhookEndpointLabel: legacyWebhookEndpointLabel(attempt.channel, attempt.webhookEndpoint),
+      when: legacyRelativeTime(attempt.attemptedAt),
     })),
     deliveryState: alert.deliveryState,
     feedMeta: {
@@ -213,18 +113,75 @@ function alertView(
       severity: visibleSeverity,
       source: "RANK",
     },
-    headline: payloadValue(payload, "headline") ?? alert.rule.name,
+    headline: payloadString(payload, "headline") ?? alert.rule.name,
     id: requiredPublicId(alert.publicId, "Triggered alert", "al"),
     keyword: keywordLabels.get(alert.keywordId) ?? "Unknown keyword",
     location: alert.keyword.locationRef.displayName,
     device: alert.keyword.device,
-    previous: payloadValue(payload, "previous") ?? positionText(alert.beforePosition),
-    rankingUrl: payloadValue(payload, "rankingUrl"),
+    previous: payloadString(payload, "previous") ?? legacyPositionText(alert.beforePosition),
+    rankingUrl: payloadString(payload, "rankingUrl"),
     rule: alert.rule.name,
     severity: visibleSeverity,
-    targetUrl: payloadValue(payload, "targetUrl"),
+    targetUrl: payloadString(payload, "targetUrl"),
     unread: alert.status === "firing",
-    when: relativeTime(alert.firedAt),
+    when: legacyRelativeTime(alert.firedAt),
+  };
+}
+
+function alertFeedView(
+  alert: Awaited<ReturnType<typeof loadAlerts>>[number],
+  keywordLabels: ReadonlyMap<string, string>,
+  marketsByLocation: AlertFeedQuery["marketsByLocation"],
+): TriggeredAlertFeedView {
+  const market = marketsByLocation?.get(alert.keyword.locationId);
+  const storedSeverity = payloadString(alert.payload, "severity") ?? alert.rule.severity;
+  const visibleSeverity =
+    storedSeverity === "info" || storedSeverity === "urgent" ? storedSeverity : "warning";
+
+  return {
+    afterPosition: alert.afterPosition,
+    beforePosition: alert.beforePosition,
+    condition: {
+      changePct: alert.rule.changePct === null ? null : Number(alert.rule.changePct),
+      competitorDomain: alert.rule.competitorDomain,
+      dropPositions: alert.rule.dropPositions,
+      serpFeature: alert.rule.serpFeature,
+      thresholdPosition: alert.rule.thresholdPosition,
+      topN: alert.rule.topN,
+    },
+    conditionType: alert.rule.conditionType,
+    deliveryAttempts: alert.deliveryAttempts.map((attempt) => ({
+      attemptedAt: attempt.attemptedAt.toISOString(),
+      channel: attempt.channel,
+      error: attempt.error,
+      status: attempt.status,
+      webhookEndpoint: attempt.webhookEndpoint
+        ? {
+            id: requiredPublicId(attempt.webhookEndpoint.publicId, "Webhook endpoint", "we"),
+            label: attempt.webhookEndpoint.description?.trim() || attempt.webhookEndpoint.url,
+          }
+        : null,
+    })),
+    deliveryState: alert.deliveryState,
+    device: alert.keyword.device,
+    feedMeta: {
+      engine: "Google",
+      ...(alert.keyword.locationRef.languageLabel
+        ? { language: alert.keyword.locationRef.languageLabel }
+        : {}),
+      ...(market ? { market: { id: market.id, label: market.label } } : {}),
+      module: "rank",
+      severity: visibleSeverity,
+      source: "RANK",
+    },
+    firedAt: alert.firedAt.toISOString(),
+    id: requiredPublicId(alert.publicId, "Triggered alert", "al"),
+    keyword: keywordLabels.get(alert.keywordId) ?? null,
+    rankingUrl: payloadString(alert.payload, "rankingUrl"),
+    rule: alert.rule.name,
+    severity: visibleSeverity,
+    targetUrl: payloadString(alert.payload, "targetUrl"),
+    unread: alert.status === "firing",
   };
 }
 async function loadRules(projectId: string) {
@@ -274,7 +231,20 @@ async function loadAlerts(
           locationRef: { select: { displayName: true, languageLabel: true } },
         },
       },
-      rule: { select: { conditionType: true, name: true, projectId: true, severity: true } },
+      rule: {
+        select: {
+          changePct: true,
+          competitorDomain: true,
+          conditionType: true,
+          dropPositions: true,
+          name: true,
+          projectId: true,
+          serpFeature: true,
+          severity: true,
+          thresholdPosition: true,
+          topN: true,
+        },
+      },
     },
     orderBy: { firedAt: "desc" },
     take: 50,
@@ -299,4 +269,15 @@ export async function listTriggeredAlertViews(
     getRequestAlertKeywordData(projectId),
   ]);
   return alerts.map((alert) => alertView(alert, keywordData.labels, query.marketsByLocation));
+}
+
+export async function listTriggeredAlertFeedViews(
+  projectId: string,
+  query: AlertFeedQuery = {},
+): Promise<TriggeredAlertFeedView[]> {
+  const [alerts, keywordData] = await Promise.all([
+    loadAlerts(projectId, query.where),
+    getRequestAlertKeywordData(projectId),
+  ]);
+  return alerts.map((alert) => alertFeedView(alert, keywordData.labels, query.marketsByLocation));
 }

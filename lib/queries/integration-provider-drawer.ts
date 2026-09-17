@@ -1,4 +1,3 @@
-import { providerAgeLabel } from "@/lib/integrations/provider-age";
 import type {
   ProviderMetaRow,
   ProviderRateData,
@@ -52,37 +51,50 @@ export function providerDescription(item: (typeof PROVIDER_CATALOG)[number]) {
     : `${item.label} connection for owned data enrichment.`;
 }
 
+function stateValueKey(connection: ProviderConnectionRow | undefined) {
+  if (!connection) return "ready" as const;
+  return connection.enabled ? ("enabled" as const) : ("disabled" as const);
+}
+
+/** A timestamp row: the viewer's locale turns it into relative time, never this module. */
+function elapsedRow(
+  labelKey: ProviderMetaRow["labelKey"],
+  date: Date | null | undefined,
+  now: Date,
+): ProviderMetaRow {
+  if (!date) return { labelKey, valueKey: "never" };
+  return { labelKey, relativeTo: now.toISOString(), valueAt: date.toISOString() };
+}
+
 export function providerMeta(
   item: (typeof PROVIDER_CATALOG)[number],
   connection: ProviderConnectionRow | undefined,
   credentials: ProviderCredentials,
   now: Date,
 ): ProviderMetaRow[] {
-  let state = "Ready";
-  if (connection) state = connection.enabled ? "Enabled" : "Disabled";
-
   if (item.kind === "analytics") {
-    const identityLabel = item.id === "plausible" ? "Site domain" : "Property";
+    const identityKey = item.id === "plausible" ? "siteDomain" : "property";
     return [
-      { label: identityLabel, value: credentials.login ?? "Not selected" },
+      credentials.login
+        ? { labelKey: identityKey, value: credentials.login }
+        : { labelKey: identityKey, valueKey: "notSelected" },
       ...(item.id === "plausible"
-        ? [{ label: "API service", value: credentials.endpoint ?? "Plausible Cloud" }]
+        ? [
+            {
+              labelKey: "apiService" as const,
+              value: credentials.endpoint ?? "Plausible Cloud",
+            },
+          ]
         : []),
-      { label: "Last sync", value: providerAgeLabel(connection?.lastUsedAt, now) },
-      { label: "State", value: state },
+      elapsedRow("lastSync", connection?.lastUsedAt, now),
+      { labelKey: "state", valueKey: stateValueKey(connection) },
     ];
   }
 
   return [
-    ...(credentials.login ? [{ label: "Account", value: credentials.login }] : []),
-    {
-      label: "Last rank check",
-      value: providerAgeLabel(connection?.lastUsedAt, now),
-    },
-    {
-      label: "State",
-      value: state,
-    },
+    ...(credentials.login ? [{ labelKey: "account" as const, value: credentials.login }] : []),
+    elapsedRow("lastRankCheck", connection?.lastUsedAt, now),
+    { labelKey: "state", valueKey: stateValueKey(connection) },
   ];
 }
 
@@ -91,11 +103,11 @@ export function providerActivities(
   now: Date,
 ): ProviderMetaRow[] {
   return [
-    { label: "Last used", value: providerAgeLabel(connection?.lastUsedAt, now) },
-    { label: "Connection updated", value: providerAgeLabel(connection?.updatedAt, now) },
+    elapsedRow("lastUsed", connection?.lastUsedAt, now),
+    elapsedRow("connectionUpdated", connection?.updatedAt, now),
     {
-      label: "Fallback state",
-      value: connection ? (connection.enabled ? "Enabled" : "Disabled") : "Not connected",
+      labelKey: "fallbackState",
+      valueKey: connection ? (connection.enabled ? "enabled" : "disabled") : "notConnected",
     },
   ];
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { Button } from "@/components/ui/Button";
 import { inputClassName } from "@/components/ui/input-styles";
 import { Sheet } from "@/components/ui/Sheet";
@@ -10,12 +12,13 @@ import {
   type SuggestedCompetitor,
 } from "@/lib/competitors/types";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { presentCompetitorValidationMessage } from "./competitor-validation-presentation";
 
 type AddCompetitorDrawerProps = {
   canCreate: boolean;
@@ -40,6 +43,8 @@ export function AddCompetitorDrawer({
   projectId,
   suggestions,
 }: Readonly<AddCompetitorDrawerProps>) {
+  const t = useTranslations("projectCompetitors.ui");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const {
@@ -85,7 +90,7 @@ export function AddCompetitorDrawer({
       closeDrawer();
       router.refresh();
     } catch (error) {
-      setActionError(actionErrorMessage(error, "Competitor could not be added."));
+      setActionError(presentSafeActionError(error, sharedErrors, t("addError")));
     }
   }
 
@@ -94,17 +99,17 @@ export function AddCompetitorDrawer({
       footer={
         <div className="flex items-center gap-2.5">
           <Button disabled={isSubmitting} onClick={handleClose} type="button" variant="secondary">
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             className="flex-1"
             form="add-competitor-form"
             loading={isSubmitting}
-            loadingLabel="Adding..."
+            loadingLabel={t("adding")}
             startIcon={<Plus aria-hidden size={14} weight="regular" />}
             type="submit"
           >
-            Add competitor
+            {t("addCompetitor")}
           </Button>
         </div>
       }
@@ -112,9 +117,9 @@ export function AddCompetitorDrawer({
       open={open}
       title={
         <span className="block">
-          {"Add competitor "}
+          {t("addCompetitor")}
           <span className="mt-[3px] block text-[13px] font-normal tracking-normal text-fg-muted">
-            Benchmark another domain across your tracked keywords.
+            {t("addCompetitorDescription")}
           </span>
         </span>
       }
@@ -127,34 +132,38 @@ export function AddCompetitorDrawer({
       >
         <input type="hidden" {...register("projectId")} />
         <label className={labelClass}>
-          {"Domain "}
+          {t("domain")}
           <input
             className={`${fieldClass} font-sans tabular-nums`}
             disabled={isSubmitting}
-            placeholder="competitor.example"
+            placeholder={t("domainPlaceholder")}
             {...register("domain")}
           />
           <span className="font-sans tabular-nums text-[10px] normal-case tracking-normal text-fg-muted">
-            {errors.domain?.message ?? "Bare domains work best. We normalize https:// and www."}
+            {errors.domain?.message
+              ? presentCompetitorValidationMessage(errors.domain.message, t)
+              : t("bareDomainHint")}
           </span>
         </label>
 
         <label className={labelClass}>
-          {"Label "}
+          {t("label")}
           <input
             className={fieldClass}
             disabled={isSubmitting}
-            placeholder="Example competitor"
+            placeholder={t("competitorLabelPlaceholder")}
             {...register("label")}
           />
           <span className="font-sans tabular-nums text-[10px] normal-case tracking-normal text-fg-muted">
-            {errors.label?.message ?? "Optional. Used in the charts and head-to-head table."}
+            {errors.label?.message
+              ? presentCompetitorValidationMessage(errors.label.message, t)
+              : t("labelHint")}
           </span>
         </label>
 
         <section className="overflow-hidden rounded-card border border-border">
           <div className="bg-bg-sunken px-[15px] py-3 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-            Observed in your SERPs
+            {t("observedInSerps")}
           </div>
           {suggestions.length > 0 ? (
             suggestions.map((suggestion) => (
@@ -168,7 +177,7 @@ export function AddCompetitorDrawer({
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] font-semibold">{suggestion.domain}</span>
                   <span className="block font-sans tabular-nums text-[10.5px] text-fg-muted">
-                    {suggestion.overlap} observed keywords
+                    {t("observedKeywords", { count: suggestion.overlap })}
                   </span>
                 </span>
                 <button
@@ -178,13 +187,13 @@ export function AddCompetitorDrawer({
                   type="button"
                 >
                   <Plus aria-hidden size={12} weight="regular" />
-                  Use
+                  {t("use")}
                 </button>
               </div>
             ))
           ) : (
             <div className="border-border border-t px-[15px] py-3 text-[12.5px] leading-5 text-fg-muted">
-              No observed competitor domains yet. Add a bare domain manually.
+              {t("noObservedCompetitors")}
             </div>
           )}
         </section>
@@ -193,10 +202,7 @@ export function AddCompetitorDrawer({
           <span className="flex h-5 shrink-0 items-center">
             <Info weight="regular" aria-hidden className="text-accent-text" size={15} />
           </span>
-          <span>
-            Share of voice and head-to-head ranks update from completed rank checks for keywords you
-            already track.
-          </span>
+          <span>{t("competitorUpdateHint")}</span>
         </div>
         {actionError ? (
           <span className="font-sans tabular-nums text-[11px] text-red-text">{actionError}</span>

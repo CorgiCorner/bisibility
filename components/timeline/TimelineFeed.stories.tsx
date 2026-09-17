@@ -5,6 +5,7 @@ const meta = {
   args: {
     canCreate: true,
     canDelete: true,
+    dateDisplay: { dateFormat: "day_first", locale: "en", timeZone: "Europe/Warsaw" },
     projectId: "project_story",
     projectRef: "prj_story",
     view: {

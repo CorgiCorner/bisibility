@@ -41,7 +41,7 @@ export const Blocked: Story = {
     projectId: "prj_abcdefghijklmnopqrstuvwx",
     state: {
       family: "blocked",
-      reason: "Needs first check results",
+      reason: "needs_first_check",
       unblockedBy: "first_check",
     },
     suggestions: [],

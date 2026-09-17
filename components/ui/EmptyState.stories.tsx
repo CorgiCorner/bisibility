@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import type { Meta, StoryObj } from "@storybook/react";
 
@@ -7,6 +8,7 @@ const meta = {
   title: "UI/EmptyState",
   component: EmptyState,
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="min-h-[320px] bg-bg p-6 text-fg">
         <Story />

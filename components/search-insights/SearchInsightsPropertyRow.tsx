@@ -5,18 +5,22 @@ import type { SearchInsightsConnection } from "@/lib/search-insights/queries/con
 import { cn } from "@/lib/ui/cn";
 import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
 import { LinkSimpleIcon as LinkSimple } from "@phosphor-icons/react/dist/csr/LinkSimple";
-import { propertyTip, propertyTruncation } from "./search-insights-workspace-model";
+import { useTranslations } from "next-intl";
+import { propertyTruncation } from "./search-insights-workspace-model";
 
 type Property = SearchInsightsPropertyOption | NonNullable<SearchInsightsConnection["property"]>;
 
-export function PropertyKindPill({
-  kind,
-  label,
-}: Readonly<{ kind: "domain" | "url-prefix"; label: string }>) {
+export function PropertyKindPill({ kind }: Readonly<{ kind: "domain" | "url-prefix" }>) {
+  const t = useTranslations("projectSearchInsights.copy");
   return (
     <span className="shrink-0 justify-self-end" data-slot="property-kind">
-      <Tooltip content={propertyTip(kind)} semantics="description">
-        <PillBadge className="cursor-help whitespace-nowrap">{label}</PillBadge>
+      <Tooltip
+        content={kind === "domain" ? t("domainTip") : t("prefixTip")}
+        semantics="description"
+      >
+        <PillBadge className="cursor-help whitespace-nowrap">
+          {kind === "domain" ? t("domainProperty") : t("urlPrefixProperty")}
+        </PillBadge>
       </Tooltip>
     </span>
   );
@@ -60,7 +64,7 @@ export function PropertyListRow({
         <LinkSimple weight="regular" aria-hidden className="shrink-0 text-fg-muted" size={15} />
       )}
       <PropertyName name={option.displayName} value={option.value} />
-      <PropertyKindPill kind={option.kind} label={option.kindLabel} />
+      <PropertyKindPill kind={option.kind} />
       {metadata ? (
         <span
           className="col-start-2 col-end-4 mt-0.5 min-w-0 truncate font-sans tabular-nums text-[10px] uppercase tracking-wide text-fg-muted"

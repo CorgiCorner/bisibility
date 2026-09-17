@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { Input } from "@/components/ui/Input";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { researchMetricsUnavailableNote } from "@/lib/serp/research-capability";
 import { MARKETING_URL } from "@/lib/site/site";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { MagnifyingGlassIcon as Search } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { useTranslations } from "next-intl";
 import { useId, useMemo, useState } from "react";
 import {
   additionalMarketLanguages,
@@ -64,6 +64,7 @@ export function MarketPicker({
   projectId,
   trackedCanonicalKeys,
 }: Readonly<MarketPickerProps>) {
+  const t = useTranslations("shared.markets");
   const listId = useId();
   const [location, setLocation] = useState(initialLocation);
   const [selectedCodes, setSelectedCodes] = useState(() => initialCodes(initialLocation));
@@ -142,12 +143,12 @@ export function MarketPicker({
           // Terse on the row; the whole sentence is the row's description and the note
           // under the selection. Muted metadata, never an error treatment.
           <span className="shrink-0 font-sans tabular-nums text-[9.5px] tracking-[0.3px] text-fg-muted">
-            no volume/KD
+            {t("noVolume")}
           </span>
         )}
         {isTracked ? (
-          <span className="font-sans text-[9px] tabular-nums" style={{ fontSize: "9px" }}>
-            TRACKED
+          <span className="font-sans text-[9px] uppercase tabular-nums" style={{ fontSize: "9px" }}>
+            {t("tracked")}
           </span>
         ) : null}
         {isSelected && !isTracked ? <Check aria-hidden size={15} weight="regular" /> : null}
@@ -167,7 +168,7 @@ export function MarketPicker({
       <Tooltip
         semantics="description"
         key={language.code}
-        content={researchMetricsUnavailableNote(language.label)}
+        content={t("researchUnavailable", { language: language.label })}
       >
         {isDisabled ? <span className="block">{row}</span> : row}
       </Tooltip>
@@ -197,17 +198,29 @@ export function MarketPicker({
   }
 
   return (
-    <section aria-label="Add markets" className="rounded-card border border-border bg-bg-elev p-4">
+    <section
+      aria-label={t("addMarkets")}
+      className="rounded-card border border-border bg-bg-elev p-4"
+    >
       <LocationField
         disabled={submitting}
-        label="Location"
+        label={t("location")}
+        messages={{
+          city: t("locationCity"),
+          clearSearch: t("locationClearSearch"),
+          countries: t("locationCountries"),
+          noMatching: t("locationNoMatching"),
+          region: t("locationRegion"),
+          regionsAndCities: t("locationRegionsAndCities"),
+          searching: t("locationSearching"),
+        }}
         onChange={changeLocation}
         projectId={projectId}
         value={location}
       />
       <div className="mt-4">
         <div className="flex items-center justify-between gap-3">
-          <span>LANGUAGES</span>
+          <span>{t("languages")}</span>
           <button
             aria-controls={listId}
             aria-expanded={showMore}
@@ -215,13 +228,13 @@ export function MarketPicker({
             onClick={toggleExpanded}
             type="button"
           >
-            {showMore ? "Suggested only" : "More languages"}
+            {showMore ? t("suggestedOnly") : t("moreLanguages")}
           </button>
         </div>
         {/* Capped and scrolled here rather than by the host: the picker also renders inline,
             and the dialog must not grow past the viewport in either case. */}
         <fieldset
-          aria-label="Languages"
+          aria-label={t("languages")}
           className="m-0 mt-2 max-h-[min(60vh,520px)] min-w-0 overflow-y-auto rounded-control border border-border p-0"
           id={listId}
         >
@@ -237,21 +250,19 @@ export function MarketPicker({
                   size={14}
                 />
                 <Input
-                  aria-label="Search more languages"
+                  aria-label={t("searchMoreLanguages")}
                   className="pl-8"
                   onChange={(event) => setLanguageQuery(event.target.value)}
-                  placeholder="Search all supported languages"
+                  placeholder={t("searchAllLanguages")}
                   value={languageQuery}
                 />
               </span>
             </div>
           ) : null}
-          {languageGroup("suggested", "SUGGESTED LANGUAGES", suggestedShown)}
-          {languageGroup("all", "ALL LANGUAGES", additional)}
+          {languageGroup("suggested", t("suggestedLanguages"), suggestedShown)}
+          {languageGroup("all", t("allLanguages"), additional)}
           {suggestedShown.length + additional.length === 0 ? (
-            <p className="m-0 px-3 py-4 text-[12.5px] text-fg-muted">
-              No supported language matches that search.
-            </p>
+            <p className="m-0 px-3 py-4 text-[12.5px] text-fg-muted">{t("noMatchingLanguages")}</p>
           ) : null}
         </fieldset>
         {offCatalog.map((choice) => (
@@ -259,13 +270,13 @@ export function MarketPicker({
             className="m-0 mt-2 text-[11.5px] leading-[1.5] text-fg-muted"
             key={choice.canonicalKey}
           >
-            {researchMetricsUnavailableNote(choice.language.label)}
+            {t("researchUnavailable", { language: choice.language.label })}
           </p>
         ))}
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <span className="text-[12px] text-fg-muted">
-          {pending.length} {pending.length === 1 ? "market" : "markets"} selected
+          {t("selected", { count: pending.length })}
           {calculatorHref ? (
             <>
               {" / "}
@@ -273,7 +284,7 @@ export function MarketPicker({
                 className="text-accent-text hover:underline"
                 href={`${MARKETING_URL}${calculatorHref}`}
               >
-                Estimate provider cost
+                {t("estimateProviderCost")}
               </ExternalLink>
             </>
           ) : null}
@@ -281,11 +292,11 @@ export function MarketPicker({
         <span className="flex gap-2">
           {onCancel ? (
             <Button disabled={submitting} onClick={onCancel} size="sm" variant="secondary">
-              Cancel
+              {t("cancel")}
             </Button>
           ) : null}
           <Button disabled={pending.length === 0} loading={submitting} onClick={commit} size="sm">
-            Add {pending.length || "market"}
+            {t("add", { count: pending.length || 1 })}
           </Button>
         </span>
       </div>

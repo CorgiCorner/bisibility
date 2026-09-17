@@ -1,39 +1,37 @@
 import { comparableCompletedWindow } from "@/lib/checks/status";
-import { relativePast } from "@/lib/format/relative-time";
-import { notRankedLabel, rankObservationState } from "@/lib/serp/rank-depth";
 import { rankBucketColors } from "@/lib/theme/chart-colors";
 import type { Keyword } from "./overview-trend";
+import type {
+  Bucket,
+  HighlightList,
+  HighlightNote,
+  HighlightPositionState,
+  HighlightRow,
+  Kpi,
+  OverviewKpiDelta,
+  OverviewKpiId,
+  OverviewMetrics,
+  RelativeTime,
+  Tone,
+} from "./overview-view-models";
 import { summarizeVisibility, visibilitySnapshotFor } from "./visibility";
 
 export type { Check, Keyword, Trend } from "./overview-trend";
 export { buildTrend, buildTrendTakeaway } from "./overview-trend";
-
-export type Tone = "positive" | "negative" | "neutral";
-export type Kpi = {
-  delta: string;
-  deltaAction?: "check_runs";
-  deltaTone: Tone;
-  label: string;
-  value: string;
-};
-export type Bucket = { color: string; count: number; label: string };
-export type MetricDistributionBucket = { count: number | null; max: number; min: number };
-export type OverviewMetrics = {
-  averagePosition: number | null;
-  averagePositionDelta: number | null;
-  positionDistribution: MetricDistributionBucket[];
-  top3Count: number | null;
-  top10Count: number | null;
-  top10Delta: number | null;
-  top100Count: number | null;
-  visibility: number | null;
-  visibilityMeasuredKeywordCount: number;
-  visibilityDelta: number | null;
-};
-// biome-ignore format: compact query-local shapes keep this file under the line cap.
-export type HighlightRow = { delta?: { direction: "down" | "up"; title: string; value: string }; device?: string; id: string; keyword: string; marketLanguageLabel?: string; marketLocationLabel?: string; note: string; positionText: string; positionTone?: "danger" | "default" | "muted" };
-// biome-ignore format: compact query-local shapes keep this file under the line cap.
-export type HighlightList = { kind: "attention" | "newTop10" | "recentlyAdded" | "wins"; rows: HighlightRow[]; subtitle: string; title: string };
+export type {
+  Bucket,
+  HighlightList,
+  HighlightNote,
+  HighlightPositionState,
+  HighlightRow,
+  Kpi,
+  MetricDistributionBucket,
+  OverviewKpiDelta,
+  OverviewKpiId,
+  OverviewMetrics,
+  RelativeTime,
+  Tone,
+} from "./overview-view-models";
 export type Snapshot = ReturnType<typeof snapshotFor>;
 
 export const buckets = [
@@ -46,19 +44,13 @@ export const buckets = [
 
 export const avg = (values: number[]) =>
   values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+const roundToDisplayTenth = (value: number) => Number(value.toFixed(1));
 export const pos = (value: number | null | undefined) =>
   typeof value === "number" && value > 0 && value <= 100 ? value : null;
 export const tone = (value: number): Tone => {
   if (value > 0) return "positive";
   return value < 0 ? "negative" : "neutral";
 };
-
-function averageDeltaCopy(hasData: boolean, averageDelta: number) {
-  if (!hasData) return "awaiting first check";
-  if (!averageDelta) return "0";
-  const direction = averageDelta > 0 ? "up" : "down";
-  return `${direction} ${Math.abs(averageDelta).toFixed(1)}`;
-}
 
 export function snapshotFor(keyword: Keyword, volume: number | null = null) {
   const latestAttempt = keyword.rankChecks[0] ?? null;
@@ -92,36 +84,38 @@ export function delta(current: number | null, previous: number | null) {
   const gained = previous - current;
   return {
     direction: gained > 0 ? "up" : "down",
-    title: gained > 0 ? `Up ${gained}` : `Down ${Math.abs(gained)}`,
-    value: String(Math.abs(gained)),
+    value: Math.abs(gained),
   } as const;
 }
 
-export function rowFor(snapshot: Snapshot, note?: string, showDelta = true): HighlightRow {
-  const observation = rankObservationState({
-    completedChecks: snapshot.latestAttempt?.status === "completed" ? 1 : 0,
-    position: snapshot.latestAttempt?.position,
-  });
+export function rowFor(
+  snapshot: Snapshot,
+  note: HighlightNote = { kind: "rankingUrl", url: snapshot.latest?.rankingUrl ?? null },
+  showDelta = true,
+): HighlightRow {
+  const positionState: HighlightPositionState = snapshot.position
+    ? "ranked"
+    : snapshot.latestAttempt?.status === "completed"
+      ? "notRanked"
+      : "awaitingFirstCheck";
   return {
     ...(showDelta ? { delta: delta(snapshot.position, snapshot.previous) } : {}),
     device: snapshot.keyword.device,
     id: snapshot.keyword.publicId,
     keyword: snapshot.keyword.text,
+    marketCountryCode: snapshot.keyword.locationRef.countryCode ?? null,
+    marketLanguageCode: snapshot.keyword.locationRef.languageCode ?? null,
     marketLanguageLabel: snapshot.keyword.locationRef.languageLabel,
     marketLocationLabel: snapshot.keyword.locationRef.displayName,
-    note: note ?? snapshot.latest?.rankingUrl ?? "No ranking URL observed",
-    positionText: snapshot.position ? `#${snapshot.position}` : observation.label,
+    note,
+    position: snapshot.position,
+    positionState,
     positionTone: snapshot.position ? "default" : "muted",
   };
 }
 
-export function list(
-  kind: HighlightList["kind"],
-  title: string,
-  subtitle: string,
-  rows: HighlightRow[],
-) {
-  return { kind, rows, subtitle, title };
+export function list(kind: HighlightList["kind"], rows: HighlightRow[]) {
+  return { kind, rows };
 }
 
 export function buildDistribution(positions: number[]): Bucket[] {
@@ -135,50 +129,63 @@ export function buildDistribution(positions: number[]): Bucket[] {
 // biome-ignore format: dense aggregation keeps this file under the project line cap.
 export function buildHighlights(snapshots: Snapshot[], now: Date): HighlightList[] {
   const byGain = [...snapshots].sort((a, b) => (b.movement ?? 0) - (a.movement ?? 0));
-  const note = (item: Snapshot, verb: string) => `${verb} ${Math.abs(item.movement ?? 0)} - ${item.latest?.rankingUrl ?? "No ranking URL observed"}`;
+  const note = (item: Snapshot, direction: "dropped" | "gained"): HighlightNote => ({
+    direction,
+    kind: "movement",
+    url: item.latest?.rankingUrl ?? null,
+    value: Math.abs(item.movement ?? 0),
+  });
   const successfulLatest = (item: Snapshot) => item.latestAttempt?.status === "completed" && Boolean(pos(item.latestAttempt.position));
-  const wins = byGain.filter((item) => (item.movement ?? 0) > 0 && successfulLatest(item)).slice(0, 4).map((item) => rowFor(item, note(item, "Gained")));
+  const wins = byGain.filter((item) => (item.movement ?? 0) > 0 && successfulLatest(item)).slice(0, 4).map((item) => rowFor(item, note(item, "gained")));
   const failures = snapshots.filter((item) => item.latestAttempt?.status === "failed").map((item) => ({
-    ...rowFor(item, undefined, false), note: "Latest check failed", positionText: "No data", positionTone: "danger" as const,
+    ...rowFor(item, { kind: "latestCheckFailed" }, false), position: null, positionState: "noData" as const, positionTone: "danger" as const,
   }));
   const outsideTop100 = snapshots.filter((item) => item.latestAttempt?.status === "completed" && !pos(item.latestAttempt.position)).map((item) => ({
-    ...rowFor(item, undefined, false), note: `Latest check completed - ${notRankedLabel().toLowerCase()}`, positionText: notRankedLabel(), positionTone: "muted" as const,
+    ...rowFor(item, { kind: "latestCheckNotRanked" }, false), position: null, positionState: "notRanked" as const, positionTone: "muted" as const,
   }));
-  const drops = byGain.filter((item) => (item.movement ?? 0) < 0 && successfulLatest(item)).reverse().map((item) => rowFor(item, note(item, "Dropped")));
+  const drops = byGain.filter((item) => (item.movement ?? 0) < 0 && successfulLatest(item)).reverse().map((item) => rowFor(item, note(item, "dropped")));
   const top10 = snapshots
     .filter((item) => successfulLatest(item) && item.position && item.position <= 10 && (item.previous === null || item.previous > 10))
     .sort((a, b) => (a.position ?? 101) - (b.position ?? 101)).slice(0, 4)
-    .map((item) => rowFor(item, `Entered top 10 - ${item.latest?.rankingUrl ?? "No ranking URL observed"}`));
+    .map((item) => rowFor(item, { kind: "enteredTop10", url: item.latest?.rankingUrl ?? null }));
   const recentCutoff = now.getTime() - 7 * 24 * 60 * 60 * 1000;
   const recentlyAdded = snapshots
     .filter((item) => item.keyword.createdAt.getTime() >= recentCutoff && item.keyword.createdAt.getTime() <= now.getTime())
     .sort((a, b) => b.keyword.createdAt.getTime() - a.keyword.createdAt.getTime()).slice(0, 4)
     .map((item) => {
-      const observation = rankObservationState({
-        completedChecks: item.latestAttempt?.status === "completed" ? 1 : 0,
-        position: item.latestAttempt?.position,
+      const minutes = Math.max(0, Math.floor((now.getTime() - item.keyword.createdAt.getTime()) / 60_000));
+      const age: RelativeTime = minutes < 1
+        ? { kind: "justNow" }
+        : minutes < 60
+          ? { kind: "minutes", value: minutes }
+          : minutes < 24 * 60
+            ? { kind: "hours", value: Math.floor(minutes / 60) }
+            : Math.floor(minutes / (24 * 60)) === 1
+              ? { kind: "yesterday" }
+              : { kind: "days", value: Math.floor(minutes / (24 * 60)) };
+      const isNotRanked = item.latestAttempt?.status === "completed" && !pos(item.latestAttempt.position);
+      return rowFor(item, {
+        age,
+        checkState: isNotRanked ? "notRanked" : item.latest ? "rankingUrl" : "firstCheckPending",
+        kind: "recentlyAdded",
+        url: item.latest?.rankingUrl ?? null,
       });
-      const checkState = observation.kind === "not_ranked"
-        ? ` · Checked - ${observation.label.toLowerCase()}`
-        : item.latest
-          ? ` · ${item.latest.rankingUrl ?? "No ranking URL observed"}`
-          : " · first check pending";
-      return rowFor(item, `Added ${relativePast(item.keyword.createdAt, now)}${checkState}`);
     });
   return [
-    list("wins", "Biggest wins", "Gained the most positions", wins),
-    list("attention", "Needs attention", "Dropped, outside top 100, or failed checks", [...failures, ...outsideTop100, ...drops].slice(0, 4)),
-    list("newTop10", "New in top 10", "Now ranking on page one", top10),
-    list("recentlyAdded", "Recently added", "Added in the last 7 days", recentlyAdded),
+    list("wins", wins),
+    list("attention", [...failures, ...outsideTop100, ...drops].slice(0, 4)),
+    list("newTop10", top10),
+    list("recentlyAdded", recentlyAdded),
   ];
 }
 
-export function kpi(label: string, value: string, delta: string, deltaTone: Tone = "neutral"): Kpi {
-  return { delta, deltaTone, label, value };
-}
-
-function percentagePointCopy(value: number) {
-  return `${value > 0 ? "+" : ""}${value.toFixed(1)}pp`;
+export function kpi(
+  id: OverviewKpiId,
+  value: number | null,
+  delta: OverviewKpiDelta,
+  deltaTone: Tone = "neutral",
+): Kpi {
+  return { delta, deltaTone, id, value };
 }
 
 export function buildOverviewMetrics(snapshots: Snapshot[]): OverviewMetrics {
@@ -231,49 +238,56 @@ export function buildKpis(
   );
   const hasPositionData = metrics.averagePosition !== null;
   const hasComparison = metrics.averagePositionDelta !== null;
-  const averageDelta = metrics.averagePositionDelta ?? 0;
-  const countDelta = (value: number) => (value > 0 ? `+${value}` : String(value));
-  const waitingCopy = hasFailedChecks ? "first check failed" : "awaiting first check";
+  const averageDelta = roundToDisplayTenth(metrics.averagePositionDelta ?? 0);
+  const waitingCopy: OverviewKpiDelta = hasFailedChecks
+    ? { kind: "firstCheckFailed" }
+    : { kind: "awaitingFirstCheck" };
   const waitingTone = hasFailedChecks ? "negative" : "neutral";
   const waitingAction = hasFailedChecks ? "check_runs" : undefined;
-  const waitingKpi = (label: string, value: string): Kpi => ({
+  const waitingKpi = (id: OverviewKpiId, value: number | null): Kpi => ({
     delta: waitingCopy,
     ...(waitingAction ? { deltaAction: waitingAction } : {}),
     deltaTone: waitingTone,
-    label,
+    id,
     value,
   });
-  const averageCopy = hasPositionData
+  const averageCopy: OverviewKpiDelta = hasPositionData
     ? hasComparison
-      ? `${averageDeltaCopy(true, averageDelta)} vs previous ranked check`
-      : "new"
-    : "no ranked positions";
-  const topDeltaCopy = hasComparison ? countDelta(metrics.top10Delta ?? 0) : "new";
-  const visibilityDelta = metrics.visibilityDelta ?? 0;
+      ? { kind: "averageComparison", value: averageDelta }
+      : { kind: "new" }
+    : { kind: "noRankedPositions" };
+  const topDeltaCopy: OverviewKpiDelta = hasComparison
+    ? { kind: "countChange", value: metrics.top10Delta ?? 0 }
+    : { kind: "new" };
+  const visibilityDelta = roundToDisplayTenth(metrics.visibilityDelta ?? 0);
   if (!hasCompletedChecks) {
     return [
-      waitingKpi("Avg. position", "-"),
-      kpi("Tracked keywords", String(keywordCount), addedThisMonth ? `+${addedThisMonth} this month` : "no new this month"),
-      waitingKpi("In top 10", "-"),
-      waitingKpi("Visibility", "–"),
+      waitingKpi("averagePosition", null),
+      kpi("trackedKeywords", keywordCount, addedThisMonth ? { kind: "countThisMonth", value: addedThisMonth } : { kind: "noNewThisMonth" }),
+      waitingKpi("inTop10", null),
+      waitingKpi("visibility", null),
     ];
   }
   const visibilityKpi =
     metrics.visibility === null
       ? {
-          ...waitingKpi("Visibility", "–"),
-          delta: hasFailedChecks ? waitingCopy : "awaiting Top 20 check",
+          ...waitingKpi("visibility", null),
+          delta: hasFailedChecks
+            ? waitingCopy
+            : ({ kind: "awaitingTop20" } satisfies OverviewKpiDelta),
         }
       : kpi(
-          "Visibility",
-          `${Math.round(metrics.visibility)}%`,
-          metrics.visibilityDelta === null ? "new" : percentagePointCopy(visibilityDelta),
+          "visibility",
+          Math.round(metrics.visibility),
+          metrics.visibilityDelta === null
+            ? { kind: "new" }
+            : { kind: "percentagePointChange", value: visibilityDelta },
           tone(visibilityDelta),
         );
   return [
-    kpi("Avg. position", hasPositionData ? metrics.averagePosition?.toFixed(1) ?? "-" : "-", averageCopy, tone(averageDelta)),
-    kpi("Tracked keywords", String(keywordCount), addedThisMonth ? `+${addedThisMonth} this month` : "no new this month"),
-    kpi("In top 10", String(metrics.top10Count ?? 0), topDeltaCopy, tone(metrics.top10Delta ?? 0)),
+    kpi("averagePosition", hasPositionData ? metrics.averagePosition : null, averageCopy, tone(averageDelta)),
+    kpi("trackedKeywords", keywordCount, addedThisMonth ? { kind: "countThisMonth", value: addedThisMonth } : { kind: "noNewThisMonth" }),
+    kpi("inTop10", metrics.top10Count ?? 0, topDeltaCopy, tone(metrics.top10Delta ?? 0)),
     visibilityKpi,
   ];
 }

@@ -8,13 +8,9 @@ import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/Car
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useId, useState } from "react";
-import {
-  blockedChipLabel,
-  formatCheckCount,
-  formatCount,
-  formatEstimatedCost,
-} from "./upcoming-format";
+import { formatEstimatedAmount } from "./upcoming-format";
 
 export type UpcomingStripProps = {
   blocked: UpcomingBlockedGroup[];
@@ -31,15 +27,23 @@ export function UpcomingStrip({
   schedulesHref,
   timeZone,
 }: Readonly<UpcomingStripProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectRankTracker.checks");
   const [openDayKey, setOpenDayKey] = useState(initialOpenDayKey ?? null);
   const titleId = useId();
   const openDay = days.find((day) => day.key === openDayKey) ?? null;
-  const blockerLabel = blockedChipLabel(blocked);
+  const blockerLabel = blocked
+    .map((group) => {
+      if (group.reason === "no_provider") return t("willNeverRun", { count: group.keywordCount });
+      if (group.reason === "migration_hold") return t("onHold", { count: group.keywordCount });
+      return t("overBudget", { count: group.keywordCount });
+    })
+    .join(" · ");
   const hasNeverRun = blocked.some((group) => group.reason === "no_provider");
 
   return (
     <>
-      <section aria-label="Upcoming checks" className="flex min-w-0 gap-2 overflow-x-auto pb-1">
+      <section aria-label={t("upcomingChecks")} className="flex min-w-0 gap-2 overflow-x-auto pb-1">
         {blockerLabel ? (
           <span
             className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold ${
@@ -59,15 +63,23 @@ export function UpcomingStrip({
         ) : null}
         {days.map((day) => (
           <button
-            aria-label={`${day.label}, ${formatCheckCount(day.count)}, about ${formatEstimatedCost(
-              day.estimatedCostCents,
-            )}`}
+            aria-label={t("upcomingDayAria", {
+              amount: formatEstimatedAmount(day.estimatedCostCents, locale),
+              count: day.count,
+              day: day.label,
+              isLessThanCent: String(day.estimatedCostCents > 0 && day.estimatedCostCents < 1),
+            })}
             className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-border-control bg-bg-elev px-3 text-xs font-semibold text-fg outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
             key={day.key}
             onClick={() => setOpenDayKey(day.key)}
             type="button"
           >
-            {day.label} {formatCount(day.count)} · {formatEstimatedCost(day.estimatedCostCents)}
+            {t("upcomingDay", {
+              amount: formatEstimatedAmount(day.estimatedCostCents, locale),
+              count: day.count,
+              day: day.label,
+              isLessThanCent: String(day.estimatedCostCents > 0 && day.estimatedCostCents < 1),
+            })}
           </button>
         ))}
       </section>
@@ -77,7 +89,7 @@ export function UpcomingStrip({
         onClose={() => setOpenDayKey(null)}
         open={openDay !== null}
         backdropProps={{
-          "aria-label": "Close upcoming details",
+          "aria-label": t("closeUpcomingDetails"),
           style: { backgroundColor: "rgba(20,16,8,.42)" },
         }}
         contentProps={{
@@ -108,12 +120,17 @@ export function UpcomingStrip({
                   {openDay.label}
                 </h2>
                 <p className="mb-0 mt-1 font-sans tabular-nums text-[11px] text-fg-muted">
-                  {formatCheckCount(openDay.count)} ·{" "}
-                  {formatEstimatedCost(openDay.estimatedCostCents)} est.
+                  {t("checksAndEstimate", {
+                    amount: formatEstimatedAmount(openDay.estimatedCostCents, locale),
+                    count: openDay.count,
+                    isLessThanCent: String(
+                      openDay.estimatedCostCents > 0 && openDay.estimatedCostCents < 1,
+                    ),
+                  })}
                 </p>
               </div>
               <button
-                aria-label="Close sheet"
+                aria-label={t("closeSheet")}
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-colors hover:bg-bg-sunken focus-visible:bg-bg-sunken"
                 onClick={() => setOpenDayKey(null)}
                 type="button"
@@ -141,7 +158,7 @@ export function UpcomingStrip({
                 className="inline-flex items-center gap-1 text-xs font-semibold text-accent-text outline-none hover:underline focus-visible:underline"
                 href={schedulesHref}
               >
-                Manage schedules in Keywords
+                {t("manageSchedulesInKeywords")}
                 <CaretRight aria-hidden size={12} weight="regular" />
               </Link>
             </footer>

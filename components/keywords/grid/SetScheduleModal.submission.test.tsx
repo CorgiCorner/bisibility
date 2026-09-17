@@ -1,11 +1,12 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { ToastProvider } from "@/components/ui/Toast";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import {
   checkScheduleMembershipSchema,
   createCheckScheduleSchema,
 } from "@/lib/schemas/check-schedule";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SetScheduleModal } from "./SetScheduleModal";

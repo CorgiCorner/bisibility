@@ -1,7 +1,8 @@
 "use client";
-import { actionErrorMessage } from "@/components/onboarding/onboarding-form-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { type FormEventHandler, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { completeProviderSelection } from "./complete-provider-selection";
@@ -25,12 +26,12 @@ import {
   withConnectedProvider,
 } from "./StepConnectProvider.fields";
 import type { StepConnectProviderProps } from "./StepConnectProvider.types";
-import { StepConnectProviderCards } from "./StepConnectProviderCards";
-import { StepConnectProviderCredentials } from "./StepConnectProviderCredentials";
+import { StepConnectProviderContent } from "./StepConnectProviderContent";
 import { StepConnectProviderLayout } from "./StepConnectProviderLayout";
-import { StepConnectProviderView } from "./StepConnectProviderView";
+import { providerActionError, providerLabel } from "./step-connect-provider-copy";
 
 export type { OnboardingConnectProviderInput } from "./StepConnectProvider.fields";
+
 export function StepConnectProvider({
   analyticsNotice,
   analyticsOption,
@@ -46,6 +47,8 @@ export function StepConnectProvider({
   onContinueDisabledChange,
   testProviderConnectionAction,
 }: Readonly<StepConnectProviderProps>) {
+  const t = useTranslations("onboarding.provider");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const pendingModalCompletion = useRef<{
     connections: ConnectedProviderMap;
@@ -72,7 +75,14 @@ export function StepConnectProvider({
     watch,
   } = useForm<OnboardingConnectProviderInput>({
     defaultValues: defaults,
-    resolver: zodResolver(onboardingConnectProviderSchemaForConnections(connections)),
+    resolver: zodResolver(
+      onboardingConnectProviderSchemaForConnections(connections, {
+        costPrecision: t("errors.costPrecision"),
+        credentialTooLong: t("errors.credentialTooLong", { maximum: 500 }),
+        loginRequired: t("errors.loginRequired"),
+        secretRequired: t("errors.secretRequired"),
+      }),
+    ),
   });
   const selectedProviderId = watch("providerId") ?? defaults.providerId;
   const credentialValues = {
@@ -82,6 +92,7 @@ export function StepConnectProvider({
   };
   const selectedProvider =
     providerOptions.find((provider) => provider.value === selectedProviderId) ?? providerOptions[0];
+  const selectedProviderLabel = providerLabel(t, selectedProvider.value);
   const { testDisabled, testResult: currentTestResult } = currentProviderState(
     selectedProvider.value,
     credentialValues,
@@ -168,11 +179,11 @@ export function StepConnectProvider({
         await runTest(values);
       } catch (error) {
         updateContinueDisabled();
-        setActionError(actionErrorMessage(error));
+        setActionError(providerActionError(error, sharedErrors, t("errors.test")));
       }
     })().catch((error) => {
       updateContinueDisabled();
-      setActionError(actionErrorMessage(error));
+      setActionError(providerActionError(error, sharedErrors, t("errors.test")));
     });
   }
   function handleSave() {
@@ -184,7 +195,7 @@ export function StepConnectProvider({
           testedCredentialKeys[values.providerId] !==
             providerCredentialKey(values.providerId, values)
         ) {
-          setActionError(`Test ${selectedProvider.label} before connecting it.`);
+          setActionError(t("errors.testBeforeConnect", { provider: selectedProviderLabel }));
           updateContinueDisabled();
           return;
         }
@@ -209,11 +220,11 @@ export function StepConnectProvider({
         }
       } catch (error) {
         updateContinueDisabled();
-        setActionError(actionErrorMessage(error));
+        setActionError(providerActionError(error, sharedErrors, t("errors.save")));
       }
     })().catch((error) => {
       updateContinueDisabled();
-      setActionError(actionErrorMessage(error));
+      setActionError(providerActionError(error, sharedErrors, t("errors.save")));
     });
   }
   async function onSubmit(values: OnboardingConnectProviderInput) {
@@ -224,7 +235,7 @@ export function StepConnectProvider({
         : null;
     const providerId = selectedConnection ?? connectedProvider;
     if (providerId) return continueToNext(providerId, values);
-    setActionError("Save a provider before continuing.");
+    setActionError(t("errors.saveBeforeContinue"));
     updateContinueDisabled();
   }
   const handleProviderSubmit: FormEventHandler<HTMLFormElement> = connectedProvider
@@ -234,47 +245,29 @@ export function StepConnectProvider({
       }
     : handleSubmit(onSubmit);
   const editor = (
-    <StepConnectProviderView
+    <StepConnectProviderContent
       actionError={actionError}
       analyticsNotice={analyticsNotice}
       analyticsOption={analyticsOption}
-      cards={
-        <StepConnectProviderCards
-          connections={connections}
-          dirtyProviders={dirtyProviders}
-          onSelect={selectProvider}
-          selectedProviderId={selectedProviderId}
-          testResults={testResults}
-        />
-      }
-      credentials={
-        <StepConnectProviderCredentials
-          busy={isSubmitting || testingProviderId !== null}
-          errors={errors}
-          onCredentialChange={handleCredentialChange}
-          onSave={handleSave}
-          onTest={handleTest}
-          providerId={selectedProvider.value}
-          providerLabel={selectedProvider.label}
-          register={register}
-          saveDisabled={currentTestResult?.ok !== true}
-          savedConnection={
-            Boolean(connections[selectedProvider.value]) && !dirtyProviders[selectedProvider.value]
-          }
-          showSave={mode === "step"}
-          testDisabled={testDisabled}
-          testResult={currentTestResult}
-          testing={testingProviderId === selectedProvider.value}
-        />
-      }
-      hidden={
-        <>
-          <input type="hidden" {...register("projectId")} />
-          <input type="hidden" {...register("providerId")} />
-        </>
-      }
+      busy={isSubmitting || testingProviderId !== null}
+      connections={connections}
+      currentTestResult={currentTestResult}
+      dirtyProviders={dirtyProviders}
+      errors={errors}
+      mode={mode}
+      onCredentialChange={handleCredentialChange}
+      onSave={handleSave}
+      onSelect={selectProvider}
+      onTest={handleTest}
       providerError={errors.providerId?.message}
-      showHeading={mode === "step"}
+      providerId={selectedProvider.value}
+      providerLabel={selectedProviderLabel}
+      register={register}
+      saveDisabled={currentTestResult?.ok !== true}
+      selectedProviderId={selectedProviderId}
+      testDisabled={testDisabled}
+      testing={testingProviderId === selectedProvider.value}
+      testResults={testResults}
     />
   );
   function handleModalExited() {

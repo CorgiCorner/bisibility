@@ -17,19 +17,36 @@ export type ScheduleModalCounts = Readonly<{
   totalTargetCount: number;
 }>;
 
+export type ScheduleRowState =
+  | Readonly<{ kind: "manual" }>
+  | Readonly<{ kind: "mixed"; scheduleCount: number }>
+  | Readonly<{ kind: "named"; name: string }>;
+
 function uniqueTargets<T extends ScheduleTarget>(targets: readonly T[]): T[] {
   return [...new Map(targets.map((target) => [target.id, target])).values()];
 }
 
-export function scheduleRowLabel(targets: readonly ScheduleTarget[]): string {
-  const assignments = new Map<string, string>();
+export function scheduleRowState(targets: readonly ScheduleTarget[]): ScheduleRowState {
+  const assignments = new Map<string, ScheduleReference | null>();
   for (const target of uniqueTargets(targets)) {
     const key = target.schedule?.publicId ?? "manual";
-    assignments.set(key, target.schedule?.name ?? "Manual");
+    assignments.set(key, target.schedule);
   }
-  if (assignments.size === 0) return "Manual";
-  if (assignments.size > 1) return `Mixed - ${assignments.size}`;
-  return [...assignments.values()][0] ?? "Manual";
+  if (assignments.size === 0) return { kind: "manual" };
+  if (assignments.size > 1) return { kind: "mixed", scheduleCount: assignments.size };
+  const assignment = assignments.values().next().value;
+  return assignment ? { kind: "named", name: assignment.name } : { kind: "manual" };
+}
+
+/**
+ * The grid sorts with the stable legacy values, while its cell translates the visible state.
+ * Keeping this separate prevents translated labels from changing ordering or feeding UI logic.
+ */
+export function scheduleRowSortValue(targets: readonly ScheduleTarget[]): string {
+  const state = scheduleRowState(targets);
+  if (state.kind === "manual") return "Manual";
+  if (state.kind === "mixed") return `Mixed - ${state.scheduleCount}`;
+  return state.name;
 }
 
 export function scheduleModalCounts(

@@ -17,6 +17,7 @@ import { createProjectSchema } from "@/lib/schemas/project";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { VIEWER_READ_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -55,6 +56,8 @@ export function ProjectDetailsCard({
   updateProject,
 }: Readonly<ProjectDetailsCardProps>) {
   const router = useRouter();
+  const shellT = useTranslations("projectSettingsShell");
+  const t = useTranslations("projectSettingsGeneral");
   const [domainConfirmationOpen, setDomainConfirmationOpen] = useState(
     initialDomainConfirmationOpen,
   );
@@ -64,6 +67,7 @@ export function ProjectDetailsCard({
     mode: "onChange",
     resolver: zodResolver(projectNameSchema),
   });
+  const nameError = form.formState.errors.name;
 
   async function saveProjectName() {
     if (!canEdit || !(await form.trigger("name"))) return;
@@ -77,7 +81,7 @@ export function ProjectDetailsCard({
       form.reset({ name: updated.name });
       router.refresh();
     } catch (error: unknown) {
-      setSaveError(actionErrorMessage(error, "Project details could not be saved."));
+      setSaveError(actionErrorMessage(error, t("projectDetails.saveError")));
       throw error;
     }
   }
@@ -87,15 +91,17 @@ export function ProjectDetailsCard({
       <SettingsCard
         action={canEdit ? undefined : <StatusChip label={VIEWER_READ_ONLY_LABEL} tone="neutral" />}
         className={generalSettingsCardGeometryClassNames.projectDetails}
-        description="Name, domain, and ID for this project."
+        description={t("projectDetails.description")}
         onSave={saveProjectName}
+        saveLabel={shellT("card.save")}
+        savedLabel={shellT("card.saved")}
         showSave={canEdit}
-        title="Project details"
+        title={t("projectDetails.title")}
       >
         <div className="space-y-4">
           <SettingsField width="field">
             <label className={labelClass} htmlFor="general-project-name">
-              Project name
+              {t("projectDetails.name")}
             </label>
             {canEdit ? (
               <Input
@@ -107,15 +113,21 @@ export function ProjectDetailsCard({
             ) : (
               <p className="m-0 mt-1.5 text-[13px] font-medium text-fg">{project.name}</p>
             )}
-            {form.formState.errors.name ? (
+            {nameError ? (
               <p className="m-0 mt-1.5 text-[11.5px] font-medium text-red-text">
-                {form.formState.errors.name.message}
+                {nameError.type === "too_big"
+                  ? t("projectDetails.nameTooLong")
+                  : t("projectDetails.nameRequired")}
               </p>
             ) : null}
           </SettingsField>
           <SettingsField width="field">
             <span className="flex flex-wrap items-center justify-between gap-2">
-              <FieldLabel className={labelClass} htmlFor="general-project-domain" label="Domain" />
+              <FieldLabel
+                className={labelClass}
+                htmlFor="general-project-domain"
+                label={t("projectDetails.domain")}
+              />
               {canEdit ? (
                 <Button
                   onClick={() => setDomainConfirmationOpen(true)}
@@ -123,7 +135,7 @@ export function ProjectDetailsCard({
                   type="button"
                   variant="secondary"
                 >
-                  Change domain
+                  {t("projectDetails.changeDomain")}
                 </Button>
               ) : null}
             </span>
@@ -144,15 +156,14 @@ export function ProjectDetailsCard({
               </p>
             )}
             <p className={helpClass} id="general-project-domain-help">
-              A check counts a result as yours when this domain appears in it. Changing it needs a
-              confirmation.
+              {t("projectDetails.domainHelp")}
             </p>
           </SettingsField>
           <SettingsField width="field">
-            <FieldLabel className={labelClass} label="Project ID" />
+            <FieldLabel className={labelClass} label={t("projectDetails.projectId")} />
             <IdChip
               className="mt-1.5 flex min-h-10 justify-between bg-bg-sunken px-3"
-              copyLabel="Copy project ID"
+              copyLabel={t("projectDetails.copyProjectId")}
               size="xs"
               value={project.projectId}
             />

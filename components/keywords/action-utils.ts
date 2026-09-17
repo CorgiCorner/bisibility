@@ -28,14 +28,13 @@ export type KeywordDetailActions = {
   updateKeywordAction: KeywordAction<UpdateKeywordInput>;
 };
 
-export { actionErrorMessage } from "@/lib/ui/action-error";
-
-export function actionWarningMessage(result: unknown) {
+/** A warning is a protocol signal, not display copy. Consumers choose their scoped message. */
+export function hasActionWarning(result: unknown) {
   if (!result || typeof result !== "object" || !("warning" in result)) {
-    return null;
+    return false;
   }
   const warning = (result as { warning?: unknown }).warning;
-  return typeof warning === "string" && warning.trim() ? warning : null;
+  return typeof warning === "string" && warning.trim().length > 0;
 }
 
 export function actionResultCount(result: unknown, fallback: number) {

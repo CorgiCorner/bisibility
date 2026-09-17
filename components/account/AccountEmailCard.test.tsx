@@ -1,6 +1,7 @@
 import { AccountEmailCard } from "@/components/account/AccountEmailCard";
+import { renderWithAccountMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -174,5 +175,23 @@ describe("AccountEmailCard", () => {
     );
     expect(within(card).getByText("Verified")).toBeInTheDocument();
     expect(routerMock.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("maps a rejected current-email verification to a safe retry remedy", async () => {
+    const confirmCurrentAccountEmailVerification = vi
+      .fn()
+      .mockRejectedValue(new Error("The verification code is invalid or expired."));
+    renderCard({
+      confirmCurrentAccountEmailVerification,
+      emailVerified: false,
+      requestCurrentAccountEmailVerification: vi.fn(),
+    });
+
+    fireEvent.change(screen.getByLabelText("Verification code"), { target: { value: "123456" } });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm email" }));
+
+    expect(
+      await screen.findByText("The verification code is invalid or expired. Request a new one."),
+    ).toBeInTheDocument();
   });
 });

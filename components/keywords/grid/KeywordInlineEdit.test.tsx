@@ -1,6 +1,7 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordLocation, KeywordRow } from "@/lib/queries/keywords";
 import { keywordLocation, locationSearchWireCandidate } from "@/lib/test/fixtures/location";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeywordInlineEdit } from "./KeywordInlineEdit";
 
@@ -295,13 +296,11 @@ describe("KeywordInlineEdit", () => {
     );
     fireEvent.change(screen.getByLabelText("Target URL"), { target: { value: "invalid target" } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(
-      await screen.findByText("Target URL must be an absolute URL or a path."),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Enter an absolute URL or a path.")).toBeInTheDocument();
     expect(updateKeywordAction).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("Target URL"), { target: { value: "/alternatives" } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(await screen.findByText("Save unavailable")).toBeInTheDocument();
+    expect(await screen.findByText("Keyword could not be saved. Try again.")).toBeInTheDocument();
     expect(screen.getByLabelText("Target URL")).toHaveDisplayValue("/alternatives");
     expect(onSaved).not.toHaveBeenCalled();
   });

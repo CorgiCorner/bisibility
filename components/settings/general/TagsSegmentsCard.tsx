@@ -9,6 +9,7 @@ import { TagChip } from "@/components/ui/TagChip";
 import { type ActionResult, unwrapActionResult } from "@/lib/actions/action-result";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type GeneralTag = {
@@ -41,17 +42,6 @@ function tagKey(label: string) {
   return label.trim().toLocaleLowerCase();
 }
 
-function usageLabel(keywordCount: number, segmentCount: number) {
-  const parts: string[] = [];
-  if (keywordCount > 0) {
-    parts.push(`${keywordCount.toLocaleString("en-US")} keyword${keywordCount === 1 ? "" : "s"}`);
-  }
-  if (segmentCount > 0) {
-    parts.push(`${segmentCount.toLocaleString("en-US")} segment${segmentCount === 1 ? "" : "s"}`);
-  }
-  return parts.join(" and ");
-}
-
 export function TagsSegmentsCard({
   canCreate,
   canDelete,
@@ -61,6 +51,7 @@ export function TagsSegmentsCard({
   tags: initialTags,
 }: Readonly<TagsSegmentsCardProps>) {
   const router = useRouter();
+  const t = useTranslations("projectSettingsGeneral.tags");
   const [tags, setTags] = useState(() => [...initialTags]);
   const [rowError, setRowError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<GeneralTag | null>(null);
@@ -68,7 +59,7 @@ export function TagsSegmentsCard({
 
   async function addTag(name: string) {
     if (tags.some((tag) => tagKey(tag.label) === tagKey(name))) {
-      setRowError(`${name} already exists.`);
+      setRowError(t("duplicate", { name }));
       return;
     }
     if (!createTag) return;
@@ -82,7 +73,7 @@ export function TagsSegmentsCard({
       ]);
       router.refresh();
     } catch (error: unknown) {
-      setRowError(actionErrorMessage(error, "Tag could not be added."));
+      setRowError(actionErrorMessage(error, t("writeError")));
     }
   }
 
@@ -97,7 +88,7 @@ export function TagsSegmentsCard({
       router.refresh();
       return true;
     } catch (error: unknown) {
-      setRowError(actionErrorMessage(error, "Tag could not be removed."));
+      setRowError(actionErrorMessage(error, t("removeError")));
       return false;
     }
   }
@@ -122,17 +113,32 @@ export function TagsSegmentsCard({
     }
   }
 
-  const pendingUsage = pendingDelete
-    ? usageLabel(pendingDelete.keywordCount, pendingDelete.segmentCount)
-    : "";
+  function pendingUsageMessage() {
+    if (!pendingDelete) return null;
+    if (pendingDelete.keywordCount === 0) {
+      return t("usageSegmentOnly", { count: pendingDelete.segmentCount });
+    }
+    if (pendingDelete.segmentCount === 0) {
+      return t("usageKeywordOnly", { count: pendingDelete.keywordCount });
+    }
+    if (pendingDelete.keywordCount === 1) {
+      return t("usageBothOneKeyword", { segmentCount: pendingDelete.segmentCount });
+    }
+    return t("usageBothManyKeywords", {
+      keywordCount: pendingDelete.keywordCount,
+      segmentCount: pendingDelete.segmentCount,
+    });
+  }
+
+  const pendingUsage = pendingUsageMessage();
 
   return (
     <>
       <SettingsCard
         className={generalSettingsCardGeometryClassNames.tagsSegments}
-        description="Tags group keywords and pages. Saved views can filter by them."
+        description={t("description")}
         showSave={false}
-        title="Tags"
+        title={t("title")}
       >
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -154,10 +160,10 @@ export function TagsSegmentsCard({
         footer={
           <div className="flex justify-end gap-2">
             <Button disabled={deleting} onClick={() => setPendingDelete(null)} variant="secondary">
-              Cancel
+              {t("cancel")}
             </Button>
             <Button loading={deleting} onClick={() => void confirmRemove()} variant="destructive">
-              Remove tag
+              {t("remove")}
             </Button>
           </div>
         }
@@ -166,11 +172,9 @@ export function TagsSegmentsCard({
         }}
         open={pendingDelete !== null}
         size="sm"
-        title={pendingDelete ? `Remove ${pendingDelete.label}?` : undefined}
+        title={pendingDelete ? t("removeTitle", { name: pendingDelete.label }) : undefined}
       >
-        {pendingUsage ? (
-          <p className="m-0 text-ui-body text-fg-muted">{pendingUsage} use it.</p>
-        ) : null}
+        {pendingUsage ? <p className="m-0 text-ui-body text-fg-muted">{pendingUsage}</p> : null}
       </Modal>
     </>
   );

@@ -14,6 +14,7 @@ import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";
 import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export type SidebarProps = {
   version?: string;
@@ -48,6 +49,7 @@ export function Sidebar({
   version,
   workspaces,
 }: Readonly<SidebarProps>) {
+  const t = useTranslations("shell.navigation");
   const { collapsed, setCollapsed } = useSidebarCollapsed();
   const pathname = usePathname();
   const currentHref = activeHref ?? pathname ?? appPath(projectRef, "dashboard");
@@ -73,9 +75,9 @@ export function Sidebar({
     >
       <div className="flex-none">
         {collapsed ? (
-          <Tooltip placement="right" content="Expand sidebar">
+          <Tooltip placement="right" content={t("expandSidebar")}>
             <button
-              aria-label="Expand sidebar"
+              aria-label={t("expandSidebar")}
               className="ml-5.5 grid size-9 cursor-e-resize place-items-center rounded-control p-0 text-fg transition-colors hover:bg-bg-sunken focus-visible:-outline-offset-2"
               onClick={handleToggle}
               type="button"
@@ -96,7 +98,7 @@ export function Sidebar({
             <div className="ml-auto flex flex-none items-center gap-2">
               <CommandPaletteTrigger variant="sidebar" />
               <button
-                aria-label="Collapse sidebar"
+                aria-label={t("collapseSidebar")}
                 className="grid h-[30px] w-[30px] flex-none cursor-w-resize place-items-center rounded-control p-0 text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:-outline-offset-2"
                 onClick={handleToggle}
                 type="button"

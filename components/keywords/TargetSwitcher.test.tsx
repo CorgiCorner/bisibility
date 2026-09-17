@@ -1,7 +1,8 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TargetSwitcher } from "./TargetSwitcher";
 

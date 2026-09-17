@@ -7,6 +7,7 @@ import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
 import type { BacklinksRow } from "@/lib/backlinks/types";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { backlinksExportContent } from "./backlinks-table-export";
 import type { BacklinksSlice, BacklinksView } from "./backlinks-table-model";
@@ -42,6 +43,7 @@ export function BacklinksExportMenu(
     view: BacklinksView;
   }>,
 ) {
+  const t = useTranslations("projectBacklinks.workspace.export");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   return (
@@ -53,13 +55,13 @@ export function BacklinksExportMenu(
         startIcon={<DownloadSimple weight="regular" size={14} />}
         variant="secondary"
       >
-        Export
+        {t("button")}
       </Button>
       <Menu
         anchorEl={anchorEl}
         onClose={() => setAnchorEl(null)}
         open={Boolean(anchorEl)}
-        listProps={{ "aria-label": "Export backlinks", style: { padding: 0 } }}
+        listProps={{ "aria-label": t("aria"), style: { padding: 0 } }}
         contentProps={{ style: menuSelectPaperStyle }}
       >
         <MenuSelectOptionItem
@@ -68,7 +70,7 @@ export function BacklinksExportMenu(
             downloadBacklinksExport(props);
             setAnchorEl(null);
           }}
-          option={{ label: "Export CSV", value: "csv" }}
+          option={{ label: t("csv"), value: "csv" }}
         />
       </Menu>
     </>

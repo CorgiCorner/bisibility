@@ -1,3 +1,5 @@
+"use client";
+
 import { AdminFailureBreakdown } from "@/components/admin/AdminFailureBreakdown";
 import { AdminHealthPills } from "@/components/admin/AdminHealthPills";
 import { AdminOpsActions } from "@/components/admin/AdminOpsActions";
@@ -7,25 +9,26 @@ import { AdminProviderUsageTable } from "@/components/admin/AdminProviderUsageTa
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
 import { AdminWorkerHealth } from "@/components/admin/AdminWorkerHealth";
 import { AdminDashboardOpsEventsTable } from "@/components/admin/admin-dashboard-tables";
-import { type DateFormat, formatDateTime } from "@/lib/dates/format";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { checkFailureRate } from "@/lib/ops/instance-admin-health";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import { useFormatter, useTranslations } from "next-intl";
 
-function connectionKindLabel(kind: string) {
-  return kind
-    .split(/[_-]/)
-    .map((word) =>
-      word.length <= 4 ? word.toUpperCase() : `${word.charAt(0).toUpperCase()}${word.slice(1)}`,
-    )
-    .join(" ");
+type AdminTranslations = ReturnType<typeof useTranslations<"instanceAdmin">>;
+
+function connectionKindLabel(kind: string, t: AdminTranslations) {
+  if (kind === "analytics") return t("dashboard.stats.analytics");
+  if (kind === "serp") return t("dashboard.stats.serp");
+  return kind;
 }
 
-export function AdminDashboard({
-  data,
-  dateFormat = "day_first",
-}: Readonly<{ data: InstanceAdminDashboard; dateFormat?: DateFormat }>) {
+export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard }>) {
+  const context = useDateDisplay();
+  const format = useFormatter();
+  const t = useTranslations("instanceAdmin");
   const temporalHeartbeat = data.temporal.status === "ok" ? data.temporal.heartbeat : null;
-  const temporalSnapshotNote = data.temporal.status === "stale" ? "Temporal snapshot stale" : null;
+  const temporalSnapshotNote =
+    data.temporal.status === "stale" ? t("dashboard.temporal.snapshotStale") : null;
   const temporalIssues = [
     ...(temporalSnapshotNote ? [temporalSnapshotNote] : []),
     ...(temporalHeartbeat?.issueSchedules ?? []),
@@ -34,7 +37,7 @@ export function AdminDashboard({
   const checkFailureRatePercent = data.availability.rankChecks
     ? checkFailureRate(data.rank24h.failed, data.rank24h.succeeded)
     : null;
-  const unavailable = displayTime(null, dateFormat);
+  const unavailable = t("values.unavailable");
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -45,28 +48,25 @@ export function AdminDashboard({
         workerStatus={data.worker.status}
       />
 
-      <AdminWorkerHealth
-        available={data.availability.worker}
-        dateFormat={dateFormat}
-        ops={data.ops}
-        worker={data.worker}
-      />
+      <AdminWorkerHealth available={data.availability.worker} ops={data.ops} worker={data.worker} />
 
       <Panel
-        description="Execution totals and schedule-to-start lag. Deferred rows never count as successes."
-        title="Rank checks"
+        description={t("dashboard.rankChecks.description")}
+        id="admin-rank-checks"
+        title={t("dashboard.rankChecks.title")}
       >
         {!data.availability.rankChecks ? (
-          <AdminSectionUnavailable>Rank-check diagnostics are unavailable.</AdminSectionUnavailable>
+          <AdminSectionUnavailable>{t("dashboard.rankChecks.unavailable")}</AdminSectionUnavailable>
         ) : (
           <div className="space-y-5">
-            <RankWindow data={data.rank24h} label="Last 24 hours" />
-            <RankWindow data={data.rank7d} label="Last 7 days" />
+            <RankWindow data={data.rank24h} label={t("dashboard.rankChecks.last24Hours")} />
+            <RankWindow data={data.rank7d} label={t("dashboard.rankChecks.last7Days")} />
             <div>
-              <h3 className="text-sm font-semibold text-fg">Failures (24h)</h3>
+              <h3 className="text-sm font-semibold text-fg">
+                {t("dashboard.rankChecks.failures")}
+              </h3>
               <p className="mt-1 text-xs text-fg-muted">
-                Checks that failed after exhausting all providers. Grouped by provider and
-                summarized reason.
+                {t("dashboard.rankChecks.failureDescription")}
               </p>
               <div className="mt-2">
                 <AdminFailureBreakdown
@@ -76,15 +76,16 @@ export function AdminDashboard({
               </div>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-fg">Fallbacks (24h)</h3>
+              <h3 className="text-sm font-semibold text-fg">
+                {t("dashboard.rankChecks.fallbacks")}
+              </h3>
               <p className="mt-1 text-xs text-fg-muted">
-                Checks that completed only after a primary provider failed. Grouped by the provider
-                that failed and the summarized reason.
+                {t("dashboard.rankChecks.fallbackDescription")}
               </p>
               <div className="mt-2">
                 <AdminFailureBreakdown
                   breakdown={data.rank24h.fallbackBreakdown}
-                  emptyLabel="No fallback rank checks in the last 24 hours."
+                  emptyLabel={t("dashboard.rankChecks.fallbackEmpty")}
                   now={data.generatedAt}
                 />
               </div>
@@ -94,12 +95,13 @@ export function AdminDashboard({
       </Panel>
 
       <Panel
-        description="Per-provider sync health across all connections. Per-connection detail is available only through Account lookup."
-        title="Data sources"
+        description={t("dashboard.dataSources.description")}
+        id="admin-data-sources"
+        title={t("dashboard.dataSources.title")}
       >
         {!data.availability.dataSources ? (
           <AdminSectionUnavailable>
-            Data-source diagnostics are unavailable.
+            {t("dashboard.dataSources.unavailable")}
           </AdminSectionUnavailable>
         ) : (
           <AdminProviderHealth rows={data.providerHealth} />
@@ -107,25 +109,27 @@ export function AdminDashboard({
       </Panel>
 
       <Panel
-        description="Latest property-budget deferral from the daily URL-presence workflow. The budget resets automatically."
-        title="URL presence"
+        description={t("dashboard.presence.description")}
+        id="admin-url-presence"
+        title={t("dashboard.presence.title")}
       >
         {!data.availability.presence ? (
-          <AdminSectionUnavailable>
-            URL-presence diagnostics are unavailable.
-          </AdminSectionUnavailable>
+          <AdminSectionUnavailable>{t("dashboard.presence.unavailable")}</AdminSectionUnavailable>
         ) : (
           <div className="grid gap-3 sm:grid-cols-3">
-            <Metric label="Deferred URLs" value={data.presence?.deferred ?? unavailable} />
             <Metric
-              label="Affected projects"
+              label={t("dashboard.presence.deferredUrls")}
+              value={data.presence?.deferred ?? unavailable}
+            />
+            <Metric
+              label={t("dashboard.presence.affectedProjects")}
               value={data.presence?.affectedProjects ?? unavailable}
             />
             <Metric
-              label="Last budget exhaustion"
+              label={t("dashboard.presence.lastBudgetExhaustion")}
               value={
                 <span className="text-sm">
-                  {displayTime(data.presence?.occurredAt ?? null, dateFormat)}
+                  {displayTime(data.presence?.occurredAt ?? null, context, unavailable)}
                 </span>
               }
             />
@@ -134,35 +138,48 @@ export function AdminDashboard({
       </Panel>
 
       <Panel
-        description="Temporal schedule inspection and recorded bootstrap failures."
-        title="Temporal"
+        description={t("dashboard.temporal.description")}
+        id="admin-temporal"
+        title={t("dashboard.temporal.title")}
       >
         <p className="mb-3 text-xs text-fg-muted">
           {data.temporal.collectedAt
-            ? `As of ${formatDateTime(new Date(data.temporal.collectedAt), dateFormat).split(", ").at(-1)}`
+            ? t("dashboard.temporal.asOf", {
+                time: format.dateTime(new Date(data.temporal.collectedAt), {
+                  hour: "2-digit",
+                  hour12: false,
+                  minute: "2-digit",
+                }),
+              })
             : unavailable}
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
-          <Metric label="Schedules" value={temporalHeartbeat?.schedules ?? unavailable} />
-          <Metric label="Recent actions" value={temporalHeartbeat?.recentActions ?? unavailable} />
           <Metric
-            label="Missed catchup"
+            label={t("dashboard.temporal.schedules")}
+            value={temporalHeartbeat?.schedules ?? unavailable}
+          />
+          <Metric
+            label={t("dashboard.temporal.recentActions")}
+            value={temporalHeartbeat?.recentActions ?? unavailable}
+          />
+          <Metric
+            label={t("dashboard.temporal.missedCatchup")}
             value={temporalHeartbeat?.missedCatchupTotal ?? unavailable}
           />
           <Metric
-            label="Skipped overlap"
+            label={t("dashboard.temporal.skippedOverlap")}
             value={temporalHeartbeat?.skippedOverlapTotal ?? unavailable}
           />
           <Metric
-            label="Inspection errors"
+            label={t("dashboard.temporal.inspectionErrors")}
             value={temporalHeartbeat?.inspectionErrors ?? unavailable}
           />
           <Metric
-            label="Next action"
+            label={t("dashboard.temporal.nextAction")}
             value={
               <span className="text-sm">
                 {temporalHeartbeat
-                  ? displayTime(temporalHeartbeat.nextActionAt, dateFormat)
+                  ? displayTime(temporalHeartbeat.nextActionAt, context, unavailable)
                   : unavailable}
               </span>
             }
@@ -170,13 +187,12 @@ export function AdminDashboard({
         </div>
         {data.temporal.status === "unavailable" ? (
           <p className="mt-3 rounded-card bg-yellow/10 p-3 text-xs text-yellow-text">
-            Snapshot unavailable {"-"} worker has not published Temporal data. Values above are
-            unknown, not zero.
+            {t("dashboard.temporal.snapshotUnavailable")}
           </p>
         ) : null}
         {data.temporal.status === "disabled" ? (
           <p className="mt-3 rounded-card bg-bg-sunken p-3 text-xs text-fg-muted">
-            Temporal scheduling is disabled for this topology.
+            {t("dashboard.temporal.disabled")}
           </p>
         ) : null}
         {temporalIssues.length > 0 ? (
@@ -189,46 +205,50 @@ export function AdminDashboard({
       </Panel>
 
       <Panel
-        description="Recent operator events show delivery metadata only; free-form payload fields are never exposed here."
-        title="Ops events"
+        description={t("dashboard.ops.description")}
+        id="admin-ops-events"
+        title={t("dashboard.ops.title")}
       >
         <div className="mb-3">
           <AdminOpsActions slackConfigured={data.ops.configured && data.ops.enabled} />
         </div>
         {!data.availability.opsDelivery ? (
           <div className="mb-3">
-            <AdminSectionUnavailable>Delivery diagnostics are unavailable.</AdminSectionUnavailable>
+            <AdminSectionUnavailable>
+              {t("dashboard.ops.deliveryUnavailable")}
+            </AdminSectionUnavailable>
           </div>
         ) : null}
         {!data.availability.opsEvents ? (
-          <AdminSectionUnavailable>
-            Operational event history is unavailable.
-          </AdminSectionUnavailable>
+          <AdminSectionUnavailable>{t("dashboard.ops.historyUnavailable")}</AdminSectionUnavailable>
         ) : data.ops.events.length === 0 ? (
-          <p className="text-xs text-fg-muted">No operational events recorded.</p>
+          <p className="text-xs text-fg-muted">{t("dashboard.ops.empty")}</p>
         ) : (
           <div className="[&>[role=table]]:border-0">
-            <AdminDashboardOpsEventsTable dateFormat={dateFormat} events={data.ops.events} />
+            <AdminDashboardOpsEventsTable events={data.ops.events} />
           </div>
         )}
       </Panel>
 
       <Panel
-        description="Instance counts and completed SERP usage for the current UTC month."
-        title="Instance stats"
+        description={t("dashboard.stats.description")}
+        id="admin-instance-stats"
+        title={t("dashboard.stats.title")}
       >
         {!data.availability.stats ? (
-          <AdminSectionUnavailable>Instance statistics are unavailable.</AdminSectionUnavailable>
+          <AdminSectionUnavailable>{t("dashboard.stats.unavailable")}</AdminSectionUnavailable>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-              <Metric label="Users" value={data.stats.users} />
-              <Metric label="Projects" value={data.stats.projects} />
-              <Metric label="Keywords" value={data.stats.keywords} />
+              <Metric label={t("dashboard.stats.users")} value={data.stats.users} />
+              <Metric label={t("dashboard.stats.projects")} value={data.stats.projects} />
+              <Metric label={t("dashboard.stats.keywords")} value={data.stats.keywords} />
               {data.stats.activeProviderConnectionsByKind.map((connection) => (
                 <Metric
                   key={connection.kind}
-                  label={`${connectionKindLabel(connection.kind)} connections`}
+                  label={t("dashboard.stats.connections", {
+                    kind: connectionKindLabel(connection.kind, t),
+                  })}
                   value={connection.count}
                 />
               ))}

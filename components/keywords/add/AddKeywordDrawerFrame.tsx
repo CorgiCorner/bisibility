@@ -6,8 +6,8 @@ import {
 } from "@/components/markets/sheet/NewMarketCreator";
 import { NewMarketScheduleEditor } from "@/components/markets/sheet/NewMarketScheduleEditor";
 import { AppDrawer } from "@/components/ui/AppDrawer";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { addKeywordDrawerDescription } from "./AddKeywordDrawerExtensions";
 import type { useAddKeywordDrawerMarkets } from "./useAddKeywordDrawerMarkets";
 
 type AddKeywordDrawerFrameProps = {
@@ -34,20 +34,25 @@ export function AddKeywordDrawerFrame({
   onExited,
   open,
 }: Readonly<AddKeywordDrawerFrameProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
   return (
     <NewMarketCreator {...creator}>
       {(market) => (
         <AppDrawer
           description={
-            marketOpen || scheduleStep.open ? undefined : addKeywordDrawerDescription(false, domain)
+            marketOpen || scheduleStep.open
+              ? undefined
+              : domain
+                ? t("drawerDescriptionForDomain", { domain })
+                : t("drawerDescription")
           }
           footer={scheduleStep.open ? undefined : marketOpen ? market.footer : footer}
           backAction={
             scheduleStep.open
-              ? { label: "Back to keywords", onClick: scheduleStep.close }
+              ? { label: t("backToKeywords"), onClick: scheduleStep.close }
               : marketOpen
                 ? {
-                    label: market.creatingSchedule ? "Back to market" : "Back to keywords",
+                    label: market.creatingSchedule ? t("backToMarket") : t("backToKeywords"),
                     onClick: market.onBack,
                   }
                 : undefined
@@ -58,12 +63,14 @@ export function AddKeywordDrawerFrame({
             onExited();
           }}
           open={open}
-          title={scheduleStep.open ? "New schedule" : marketOpen ? market.title : "Add keywords"}
+          title={
+            scheduleStep.open ? t("newSchedule") : marketOpen ? market.title : t("drawerTitle")
+          }
         >
           {scheduleStep.open && creator.scheduleContext ? (
             <NewMarketScheduleEditor
               context={creator.scheduleContext}
-              memberSummary="Keywords will join this schedule when you add them."
+              memberSummary={t("marketDrawerDescription")}
               onBack={scheduleStep.close}
               onSaved={scheduleStep.onSaved}
               projectId={creator.projectId}

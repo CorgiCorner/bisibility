@@ -1,13 +1,12 @@
 "use client";
 
-import { deviceScopeOptions } from "@/components/keywords/RankTrackerDeviceHeaderControl";
 import {
   ContextSwitcherCaret,
   contextSwitcherTriggerClassName,
 } from "@/components/shell/ContextSwitcherTrigger";
-import { HEADER_CONTEXT_LABEL } from "@/components/shell/HeaderContextSlot";
 import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { OverviewView } from "./types";
 
 export function OverviewHeaderContext({
@@ -15,6 +14,7 @@ export function OverviewHeaderContext({
 }: Readonly<{
   options: OverviewView["toolbar"]["marketOptions"];
 }>) {
+  const t = useTranslations("projectDashboard.headerContext");
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,6 +22,11 @@ export function OverviewHeaderContext({
   const selectedDevice =
     deviceValue === "desktop" || deviceValue === "mobile" ? deviceValue : "all";
   if (!options.length) return null;
+  const deviceScopeOptions = [
+    { label: t("allDevices"), value: "all" },
+    { label: t("desktop"), value: "desktop" },
+    { label: t("mobile"), value: "mobile" },
+  ];
 
   function changeMarkets(values: string[]) {
     const params = new URLSearchParams(searchParams.toString());
@@ -42,33 +47,29 @@ export function OverviewHeaderContext({
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: labelled header context, matching the shared shell slot
-    <div
-      aria-label={HEADER_CONTEXT_LABEL}
-      className="flex min-w-0 flex-none items-center gap-1"
-      role="group"
-    >
+    <div aria-label={t("changeContext")} className="flex min-w-0 items-center gap-1" role="group">
       <MenuMultiSelect
-        allLabel="All markets"
-        ariaLabel="Markets"
+        allLabel={t("allMarkets")}
+        ariaLabel={t("markets")}
         minSelected={0}
         onChange={changeMarkets}
         options={options}
-        placeholder="All markets"
+        placeholder={t("allMarkets")}
         summary={(markets) => {
-          if (markets.length === 0) return "All markets";
+          if (markets.length === 0) return t("allMarkets");
           if (markets.length === 1) return `${markets[0]?.label} / ${markets[0]?.secondary}`;
-          return `${markets.length} markets`;
+          return t("marketCount", { count: markets.length });
         }}
         trailingIcon={<ContextSwitcherCaret />}
-        triggerClassName={`${contextSwitcherTriggerClassName} max-w-[150px] sm:max-w-[280px]`}
+        triggerClassName={`${contextSwitcherTriggerClassName} max-w-[116px] sm:max-w-[280px]`}
         values={searchParams.getAll("market")}
       />
       <MenuSelect
-        ariaLabel="Device scope"
+        ariaLabel={t("deviceScope")}
         onChange={changeDevice}
         options={deviceScopeOptions}
         trailingIcon={<ContextSwitcherCaret />}
-        triggerClassName={contextSwitcherTriggerClassName}
+        triggerClassName={`${contextSwitcherTriggerClassName} max-w-[108px] sm:max-w-none`}
         value={selectedDevice}
       />
     </div>

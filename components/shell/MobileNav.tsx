@@ -8,6 +8,7 @@ import { DialogSurface as Drawer } from "@/components/ui/DialogSurface";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
 import { ListIcon as List } from "@phosphor-icons/react/dist/csr/List";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type MobileNavProps = {
@@ -45,6 +46,7 @@ export function MobileNav({
   version,
   workspaces,
 }: Readonly<MobileNavProps>) {
+  const t = useTranslations("shell.navigation");
   const [open, setOpen] = useState(defaultOpen);
   const close = () => setOpen(false);
 
@@ -52,7 +54,7 @@ export function MobileNav({
     <>
       <span className="flex-none lg:hidden">
         <button
-          aria-label="Menu"
+          aria-label={t("menu")}
           className="grid h-9 w-9 flex-none place-items-center rounded-control border-0 bg-transparent p-0 text-fg-muted shadow-none transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
           onClick={() => setOpen(true)}
           type="button"

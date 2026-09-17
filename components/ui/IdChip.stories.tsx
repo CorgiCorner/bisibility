@@ -1,10 +1,12 @@
 import { IdChip } from "@/components/ui/IdChip";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
   title: "UI/IdChip",
   component: IdChip,
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="bg-bg p-6 text-fg">
         <Story />

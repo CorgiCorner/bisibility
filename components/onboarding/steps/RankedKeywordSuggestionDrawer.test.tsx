@@ -1,5 +1,8 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, within } from "@testing-library/react";
+import { useTranslations } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
+import { rankedImportMessages } from "./keyword-import-messages";
 import type { RankedKeywordGroup } from "./keyword-ranked-model";
 import { RankedKeywordSuggestionDrawer } from "./RankedKeywordSuggestionDrawer";
 
@@ -56,10 +59,15 @@ const groups: RankedKeywordGroup[] = [
 
 type DrawerProps = Parameters<typeof RankedKeywordSuggestionDrawer>[0];
 
-function renderDrawer(overrides: Partial<DrawerProps> = {}) {
+function LocalizedRankedKeywordSuggestionDrawer(props: Omit<DrawerProps, "messages">) {
+  const t = useTranslations("onboarding.keywords");
+  return <RankedKeywordSuggestionDrawer {...props} messages={rankedImportMessages(t).drawer} />;
+}
+
+function renderDrawer(overrides: Partial<Omit<DrawerProps, "messages">> = {}) {
   const onConfirm = vi.fn();
   render(
-    <RankedKeywordSuggestionDrawer
+    <LocalizedRankedKeywordSuggestionDrawer
       canLoad
       currentKeywords={[]}
       groups={groups}
@@ -68,7 +76,7 @@ function renderDrawer(overrides: Partial<DrawerProps> = {}) {
       onConfirm={onConfirm}
       onLoadMore={vi.fn()}
       open
-      pageCost="$0.02"
+      pageCostCents={2}
       pageCount={1}
       pending={false}
       remaining={2}

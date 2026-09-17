@@ -1,13 +1,15 @@
+"use client";
+
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleMark } from "@/components/ui/ModuleMark";
 import type { FeedFacet } from "@/lib/feeds/facets";
-import { pluralize } from "@/lib/format/pluralize";
 import { appPath } from "@/lib/routing/app-path";
-import { BellIcon as Bell } from "@phosphor-icons/react/dist/ssr/Bell";
-import { BellRingingIcon as BellRinging } from "@phosphor-icons/react/dist/ssr/BellRinging";
-import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
-import { PlusIcon as Plus } from "@phosphor-icons/react/dist/ssr/Plus";
+import { BellIcon as Bell } from "@phosphor-icons/react/dist/csr/Bell";
+import { BellRingingIcon as BellRinging } from "@phosphor-icons/react/dist/csr/BellRinging";
+import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 export function AlertsSetupEmpty({
@@ -15,6 +17,8 @@ export function AlertsSetupEmpty({
   canCreateKeyword,
   projectRef,
 }: Readonly<{ action?: ReactNode; canCreateKeyword: boolean; projectRef: string }>) {
+  const t = useTranslations("projectAlerts.empty");
+
   return (
     <EmptyState
       action={
@@ -25,15 +29,15 @@ export function AlertsSetupEmpty({
                 href={appPath(projectRef, "rank-tracker")}
               >
                 <Plus aria-hidden size={14} weight="regular" />
-                Add keyword
+                {t("addKeyword")}
               </Link>
             ))
           : undefined
       }
-      description="Get notified when rankings slip out of the top 10, a competitor overtakes you, or a keyword jumps. Rules run after each rank check."
-      footnote="Activates once you have tracked keywords"
+      description={t("setupDescription")}
+      footnote={t("setupFootnote")}
       mark={<ModuleMark bordered icon={Bell} />}
-      title="No alerts yet"
+      title={t("setupTitle")}
     />
   );
 }
@@ -45,55 +49,51 @@ export function AlertsAllClear({
   action?: ReactNode;
   activeRuleCount: number;
 }>) {
+  const t = useTranslations("projectAlerts.empty");
+
   return (
     <EmptyState
       action={action}
-      description={
-        <>
-          No alerts have fired in the last 48 hours. You have{" "}
-          {pluralize(activeRuleCount, "active rule")}.
-        </>
-      }
+      description={t("clearDescription", { count: activeRuleCount })}
       footnote={
         <span className="flex flex-wrap items-center justify-center gap-3">
           <span className="inline-flex items-center gap-1.5">
             <CheckCircle aria-hidden className="text-green-text" size={13} weight="regular" />
-            {pluralize(activeRuleCount, "active rule")}
+            {t("activeRuleCount", { count: activeRuleCount })}
           </span>
           <span className="h-[11px] w-px bg-border" />
-          <span>Nothing fired in 48h</span>
+          <span>{t("nothingFired")}</span>
         </span>
       }
       icon={<BellRinging aria-hidden size={27} weight="regular" />}
-      title="All clear"
+      title={t("clearTitle")}
       tone="positive"
     />
   );
 }
 
 export function AlertsCaughtUp({ snoozedCount }: Readonly<{ snoozedCount: number }>) {
+  const t = useTranslations("projectAlerts.empty");
+
   return (
     <EmptyState
-      description={
-        <>
-          No alerts are currently visible. {pluralize(snoozedCount, "alert")} snoozed in the last 48
-          hours.
-        </>
-      }
+      description={t("caughtUpDescription", { count: snoozedCount })}
       icon={<BellRinging aria-hidden size={27} weight="regular" />}
-      title="All caught up"
+      title={t("caughtUpTitle")}
       tone="positive"
     />
   );
 }
 
 export function AlertsFilteredEmpty({ facets }: Readonly<{ facets: readonly FeedFacet[] }>) {
+  const t = useTranslations("projectAlerts.empty");
+
   return (
     <EmptyState
-      description="Remove a filter or add another one to widen the alert feed."
+      description={t("filteredDescription")}
       icon={<BellRinging aria-hidden size={27} weight="regular" />}
-      title="No alerts match these filters"
-      footnote={`${facets.length} active filter${facets.length === 1 ? "" : "s"}`}
+      title={t("filteredTitle")}
+      footnote={t("activeFilters", { count: facets.length })}
     />
   );
 }

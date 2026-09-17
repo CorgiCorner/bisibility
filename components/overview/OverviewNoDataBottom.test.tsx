@@ -1,15 +1,15 @@
-import { ViewAllKeywordsButton } from "@/components/overview/OverviewNoDataBottom";
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { ViewAllKeywordsButton } from "./OverviewNoDataBottom";
 
 describe("ViewAllKeywordsButton", () => {
-  it("renders a serializable anchor to the rank tracker", () => {
-    const button = ViewAllKeywordsButton({ projectRef: "prj_abc123" });
-
-    expect(button.props.component).toBe("a");
-    expect(button.props.className).toContain("self-end");
-
-    render(button);
+  it("renders a localized serializable anchor to the rank tracker", () => {
+    render(
+      <ProjectDashboardMessages>
+        <ViewAllKeywordsButton projectRef="prj_abc123" />
+      </ProjectDashboardMessages>,
+    );
 
     expect(screen.getByRole("link", { name: "View all keywords" })).toHaveAttribute(
       "href",

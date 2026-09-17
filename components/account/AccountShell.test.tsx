@@ -1,12 +1,12 @@
 import { AccountShell } from "@/components/account/AccountShell";
 import { AccountShellLoading } from "@/components/account/AccountShellLoading";
-import { accountSections } from "@/components/account/account-sections";
 import {
   settingsContentColumnClassName,
   settingsShellGridClassName,
 } from "@/components/settings/shell/settings-layout";
+import { renderWithAccountMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -14,6 +14,11 @@ const loadingBoundaries = [
   { activeSection: "profile", name: "Profile" },
   { activeSection: "preferences", name: "Preferences" },
   { activeSection: "security", name: "Security" },
+] as const;
+const sectionLinks = [
+  ["profile", "Profile", "/app/account"],
+  ["preferences", "Preferences", "/app/account/preferences"],
+  ["security", "Security", "/app/account/security"],
 ] as const;
 
 function Shell({
@@ -139,7 +144,7 @@ describe("AccountShell", () => {
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
 
-  it.each(accountSections.map((section) => [section.id, section.label, section.href] as const))(
+  it.each(sectionLinks)(
     "activates $label correctly when it is the current section",
     (id, label, href) => {
       render(<Shell activeSection={id as "profile" | "preferences" | "security"} />);

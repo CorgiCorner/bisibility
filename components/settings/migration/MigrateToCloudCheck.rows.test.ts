@@ -1,3 +1,5 @@
+import messages from "@/messages/core/en/project-settings-migration.json";
+import { createTranslator } from "use-intl/core";
 import { describe, expect, it } from "vitest";
 import { resultRows } from "./MigrateToCloudCheck.rows";
 import type { MigrationCompatibilityResult } from "./MigrateToCloudWizard.types";
@@ -34,8 +36,11 @@ function compatibility(
 }
 
 describe("migration compatibility rows", () => {
+  const t = createTranslator({ locale: "en", messages: messages.projectSettingsMigration.check });
+  const dateContext = { dateFormat: "month_first" as const, locale: "en", timeZone: "UTC" };
+
   it("renders the resolved destination origin and a chip-less transfer plan", () => {
-    const rows = resultRows(compatibility());
+    const rows = resultRows(compatibility(), dateContext, t);
     const destination = rows.find((row) => row.title === "Destination instance");
     const transferPlan = rows.find((row) => row.title === "Transfer plan");
 
@@ -49,12 +54,10 @@ describe("migration compatibility rows", () => {
 
   it("includes the resolved address and deployment-mode guidance for MIG-105", () => {
     const result = compatibility({ sameInstance: true });
-    result.blockers = [
-      { code: "MIG-105", message: "The destination address points at this same instance." },
-    ];
+    result.blockers = [{ code: "MIG-105" }];
     result.compatible = false;
 
-    const blocker = resultRows(result).find(
+    const blocker = resultRows(result, dateContext, t).find(
       (row) => row.variant === "status" && row.status === "MIG-105",
     );
 

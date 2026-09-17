@@ -1,5 +1,6 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { UsageCard } from "@/components/settings/usage/UsageCard";
 import { Button } from "@/components/ui/Button";
@@ -12,9 +13,10 @@ import {
   type HostedPricingFeedbackInput,
   hostedPricingFeedbackSchema,
 } from "@/lib/schemas/usage-settings";
-import { actionErrorMessage, waitlistFailureMessage } from "@/lib/ui/action-error";
+import { classifyWaitlistError } from "@/lib/ui/action-error";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -31,34 +33,31 @@ type PlanCardProps = {
 };
 
 function SelfHostedPlan() {
+  const t = useTranslations("projectSettingsUsage.plan");
   return (
     <div className="space-y-3" data-pricing-state="self-hosted">
-      <span className="block text-[17px] font-semibold tracking-[-0.2px]">Self-hosted</span>
+      <span className="block text-[17px] font-semibold tracking-[-0.2px]">
+        {t("selfHostTitle")}
+      </span>
       <p className="m-0 max-w-[640px] text-[13px] leading-[1.55] text-fg-muted">
-        This instance runs on infrastructure you operate. Bisibility does not charge a subscription
-        or per-keyword license fee for the self-hosted app.
+        {t("selfHostBody")}
       </p>
-      <p className="m-0 pt-2 text-[12px] leading-[1.55] text-fg-muted">
-        Infrastructure, provider requests and optional services remain your costs.
-      </p>
+      <p className="m-0 pt-2 text-[12px] leading-[1.55] text-fg-muted">{t("selfHostCosts")}</p>
     </div>
   );
 }
 
 function HostedPlanSummary() {
+  const t = useTranslations("projectSettingsUsage.plan");
+  const benefits = [t("benefitOne"), t("benefitTwo"), t("benefitThree"), t("benefitFour")];
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[17px] font-semibold tracking-[-0.2px]">Hosted plan</span>
-        <StatusPill label="Free beta" showDot={false} status="ready" />
+        <span className="text-[17px] font-semibold tracking-[-0.2px]">{t("hostedTitle")}</span>
+        <StatusPill label={t("freeBeta")} showDot={false} status="ready" />
       </div>
       <ul className="m-0 grid list-none gap-2 border-t border-border p-0 pt-3 text-[12.5px] leading-[1.5] text-fg-muted">
-        {[
-          "Free while the beta lasts, with usage limits and no payment method.",
-          "Pricing will be announced before the beta ends.",
-          "Nothing is charged without your confirmation.",
-          "Provider accounts, quotas and billing stay directly with each provider.",
-        ].map((item) => (
+        {benefits.map((item) => (
           <li className="flex items-start gap-2.5" key={item}>
             <Check
               aria-hidden
@@ -82,6 +81,8 @@ export function PlanCard({
   projectId,
   submitPricingFeedback,
 }: Readonly<PlanCardProps>) {
+  const t = useTranslations("projectSettingsUsage.plan");
+  const sharedErrors = useSharedErrorMessages();
   const [answered, setAnswered] = useState(initialAnswered);
   const [actionError, setActionError] = useState<string | null>(null);
   const form = useForm<HostedPricingFeedbackInput>({
@@ -94,24 +95,35 @@ export function PlanCard({
     try {
       const result = await submitPricingFeedback(values);
       if ("ok" in result && !result.ok) {
-        setActionError(waitlistFailureMessage(result.code));
+        setActionError(
+          result.code === "verification_failed"
+            ? t("feedbackVerification")
+            : t("feedbackRateLimited"),
+        );
         return;
       }
       setAnswered(true);
     } catch (error) {
-      setActionError(actionErrorMessage(error, "Pricing feedback could not be sent."));
+      const classified = classifyWaitlistError(error);
+      setActionError(
+        classified.kind === "verificationFailed"
+          ? t("feedbackVerification")
+          : classified.kind === "rateLimited"
+            ? t("feedbackRateLimited")
+            : classified.kind === "staleDeployment"
+              ? sharedErrors.staleDeployment()
+              : classified.kind === "serverComponentDigest"
+                ? sharedErrors.serverComponentDigest({ digest: classified.digest })
+                : t("sendError"),
+      );
     }
   }
 
   return (
     <UsageCard
       className={deployment === "cloud" ? "min-h-[340px]" : "min-h-[232px]"}
-      description={
-        deployment === "cloud"
-          ? "Your hosted beta status and optional pricing feedback."
-          : "The application plan for this deployment."
-      }
-      title="Plan"
+      description={deployment === "cloud" ? t("cloudDescription") : t("selfHostDescription")}
+      title={t("title")}
     >
       {deployment === "self-host" ? (
         <SelfHostedPlan />
@@ -120,14 +132,14 @@ export function PlanCard({
           <HostedPlanSummary />
           {answered ? (
             <p className="m-0 border-t border-border pt-4 text-[13px] font-medium text-green-text">
-              Thanks, your answer helps us set the price.
+              {t("answered")}
             </p>
           ) : canSubmitPricingFeedback ? (
             <form className="border-t border-border pt-4" onSubmit={form.handleSubmit(submit)}>
               <FieldLabel
                 className="font-sans tabular-nums text-[10px] tracking-[0.5px] text-fg-muted uppercase"
                 htmlFor="hosted-monthly-price"
-                label="What would you pay per month?"
+                label={t("priceLabel")}
               />
               <div className="mt-1.5 flex flex-col gap-2 sm:flex-row sm:items-start">
                 <SettingsField className="flex items-center gap-2" width="field">
@@ -136,7 +148,7 @@ export function PlanCard({
                   </span>
                   <Input
                     {...form.register("monthlyPrice")}
-                    aria-label="What would you pay per month?"
+                    aria-label={t("priceLabel")}
                     className="h-[35px] min-h-[35px]"
                     id="hosted-monthly-price"
                     inputMode="numeric"
@@ -145,18 +157,16 @@ export function PlanCard({
                 </SettingsField>
                 <Button
                   loading={form.formState.isSubmitting}
-                  loadingLabel="Sending"
+                  loadingLabel={t("sending")}
                   startIcon={<PaperPlaneTilt aria-hidden size={15} weight="regular" />}
                   type="submit"
                   variant="secondary"
                 >
-                  Send feedback
+                  {t("send")}
                 </Button>
               </div>
               {form.formState.errors.monthlyPrice ? (
-                <p className="m-0 mt-1.5 text-[11.5px] text-red-text">
-                  {form.formState.errors.monthlyPrice.message}
-                </p>
+                <p className="m-0 mt-1.5 text-[11.5px] text-red-text">{t("priceInvalid")}</p>
               ) : null}
               {actionError ? (
                 <p className="m-0 mt-1.5 text-[11.5px] text-red-text">{actionError}</p>
@@ -164,7 +174,7 @@ export function PlanCard({
             </form>
           ) : (
             <p className="m-0 border-t border-border pt-4 text-[12px] text-fg-muted">
-              Only the project owner can send pricing feedback.
+              {t("ownerOnly")}
             </p>
           )}
         </div>

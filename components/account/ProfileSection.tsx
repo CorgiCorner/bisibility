@@ -3,10 +3,10 @@
 import { IdChip } from "@/components/ui/IdChip";
 import { updateProfileName } from "@/lib/actions/account";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -19,12 +19,9 @@ import {
   fieldLabelClass,
   fieldValueClass,
 } from "./account-ui";
+import { useAccountActionError } from "./useAccountActionError";
 
-const profileSchema = z.object({
-  name: z.string().trim().min(1, "Name is required.").max(120, "Name is too long."),
-});
-
-type ProfileForm = z.infer<typeof profileSchema>;
+type ProfileForm = { name: string };
 
 export type ProfileSectionProps = {
   email: string;
@@ -44,6 +41,8 @@ export function ProfileSection({
   publicId,
 }: Readonly<ProfileSectionProps>) {
   const router = useRouter();
+  const t = useTranslations("account.profile");
+  const accountErrors = useAccountActionError();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const {
@@ -54,21 +53,24 @@ export function ProfileSection({
   } = useForm<ProfileForm>({
     defaultValues: { name },
     mode: "onChange",
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(
+      z.object({
+        name: z.string().trim().min(1, t("nameRequired")).max(120, t("nameTooLong")),
+      }),
+    ),
   });
 
   function onSubmit(values: ProfileForm) {
     setMessage(null);
-    startTransition(() => {
-      void updateProfileName(values)
-        .then((result) => {
-          reset({ name: result.name });
-          setMessage("Profile saved.");
-          router.refresh();
-        })
-        .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "Profile could not be saved.")),
-        );
+    startTransition(async () => {
+      try {
+        const result = await updateProfileName(values);
+        reset({ name: result.name });
+        setMessage(t("saved"));
+        router.refresh();
+      } catch (error: unknown) {
+        setMessage(accountErrors.generic(error, t("saveError")));
+      }
     });
   }
 
@@ -81,11 +83,11 @@ export function ProfileSection({
           form="account-profile-form"
           type="submit"
         >
-          {isPending ? "Saving" : "Save"}
+          {isPending ? t("saving") : t("save")}
         </button>
       }
-      description="How you appear across bisibility. Email is your sign-in identity."
-      title="Profile"
+      description={t("description")}
+      title={t("title")}
     >
       <AvatarField email={email} image={image} name={name} />
       <form
@@ -94,7 +96,7 @@ export function ProfileSection({
         onSubmit={handleSubmit(onSubmit)}
       >
         <label className={fieldLabelClass}>
-          {"Display name "}
+          {t("displayName")}
           <input className={fieldInputClass} {...register("name")} />
           {errors.name ? (
             <span className={cn(feedbackClass, "text-red-text")}>{errors.name.message}</span>
@@ -102,7 +104,7 @@ export function ProfileSection({
         </label>
         <div className={fieldLabelClass}>
           <span className="flex flex-wrap items-center gap-2">
-            {"Email "}
+            {t("email")}
             <span
               className={cn(
                 "inline-flex items-center gap-1 rounded-full px-[7px] py-px text-[9px] font-semibold tracking-[0.3px]",
@@ -110,16 +112,16 @@ export function ProfileSection({
               )}
             >
               <CheckCircle size={11} weight="regular" />
-              {emailVerified ? "Verified via OTP" : "Unverified"}
+              {emailVerified ? t("verified") : t("unverified")}
             </span>
           </span>
           <span className={cn(fieldValueClass, "font-sans tabular-nums")}>{email}</span>
         </div>
         <div className={cn(fieldLabelClass, "sm:col-span-2 sm:max-w-[50%]")}>
-          {"User ID "}
+          {t("userId")}
           <IdChip
             className="flex min-h-10 justify-between bg-transparent px-3 normal-case tracking-normal text-fg"
-            copyLabel="Copy user ID"
+            copyLabel={t("copyUserId")}
             size="xs"
             value={publicId}
           />

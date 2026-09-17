@@ -1,5 +1,5 @@
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { countrySeed } from "@/lib/serp/location";
-import { render } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { vi } from "vitest";
 import { OnboardingWizard } from "./OnboardingWizard";

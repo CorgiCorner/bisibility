@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { renderWithGettingStartedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import {
   resolveSetupProgress,
   type SetupContext,
@@ -6,7 +7,7 @@ import {
 } from "@/lib/getting-started/setup-steps";
 import { routerMock } from "@/tests/next-navigation";
 import { composeStories } from "@storybook/react";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ConfirmCompetitorsStep } from "./ConfirmCompetitorsStep";

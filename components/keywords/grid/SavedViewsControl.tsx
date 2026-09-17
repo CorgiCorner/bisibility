@@ -1,6 +1,6 @@
 "use client";
 
-import { actionErrorMessage } from "@/components/keywords/action-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Divider } from "@/components/ui/Divider";
 import { IconButton } from "@/components/ui/IconButton";
 import { Menu } from "@/components/ui/Menu";
@@ -22,7 +22,9 @@ import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { presentBulkActionError } from "./bulk-action-error";
 import { SaveViewModal } from "./SaveViewModal";
 
 type SavedViewsControlProps = {
@@ -46,6 +48,8 @@ export function SavedViewsControl({
   projectId,
   savedViews,
 }: Readonly<SavedViewsControlProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.savedViews");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const { showToast } = useToast();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -71,14 +75,17 @@ export function SavedViewsControl({
     startTransition(() => {
       void deleteSavedViewAction({ projectId, viewId })
         .then(() => {
-          showToast("View deleted", { severity: "success" });
+          showToast(t("deleted"), { severity: "success" });
           if (viewId === activeViewId) {
             router.push(savedViewHref(projectId, null));
           } else {
             router.refresh();
           }
         })
-        .catch((error) => showToast(actionErrorMessage(error), { severity: "error" }));
+        .catch((error) => {
+          const message = presentBulkActionError(error, sharedErrors, t("deleteFailed"));
+          showToast(message, { severity: "error" });
+        });
     });
   }
 
@@ -95,7 +102,7 @@ export function SavedViewsControl({
         <span className="flex shrink-0 text-fg-muted">
           <BookmarkSimple weight="regular" aria-hidden size={15} />
         </span>
-        <span className="min-w-0 truncate text-fg">{activeView?.name ?? "All keywords"}</span>
+        <span className="min-w-0 truncate text-fg">{activeView?.name ?? t("allKeywords")}</span>
         <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
       </button>
       <Menu
@@ -106,13 +113,13 @@ export function SavedViewsControl({
         contentProps={{ style: { border: "1px solid var(--border)", minWidth: 240 } }}
       >
         <div className="px-4 pb-1 pt-2 font-sans tabular-nums text-[10px] uppercase tracking-[0.6px] text-fg-muted">
-          Saved views
+          {t("title")}
         </div>
         <MenuItem onClick={() => applyView(null)} selected={!activeViewId}>
           <span className="mr-2 grid h-4 w-4 place-items-center">
             {!activeViewId ? <Check size={13} weight="regular" /> : null}
           </span>
-          {"All keywords "}
+          {t("allKeywords")}
         </MenuItem>
         {savedViews.length ? (
           savedViews.map((view) => (
@@ -127,9 +134,9 @@ export function SavedViewsControl({
               </span>
               <span className="min-w-0 flex-1 truncate">{view.name}</span>
               {deletableSavedViewIdSet.has(view.id) ? (
-                <Tooltip content="Delete view">
+                <Tooltip content={t("delete")}>
                   <IconButton
-                    aria-label={`Delete ${view.name}`}
+                    aria-label={t("deleteAria", { name: view.name })}
                     disabled={isPending || !deleteSavedViewAction}
                     onClick={(event) => {
                       event.stopPropagation();
@@ -145,7 +152,7 @@ export function SavedViewsControl({
             </MenuItem>
           ))
         ) : (
-          <MenuItem disabled>No saved views yet</MenuItem>
+          <MenuItem disabled>{t("empty")}</MenuItem>
         )}
         <Divider />
         <MenuItem
@@ -158,7 +165,7 @@ export function SavedViewsControl({
           <span className="mr-2 grid h-4 w-4 place-items-center text-accent-text">
             <Plus size={13} weight="regular" />
           </span>
-          {"Save current view "}
+          {t("saveCurrent")}
         </MenuItem>
       </Menu>
       {saveOpen ? (

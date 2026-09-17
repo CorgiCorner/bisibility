@@ -1,24 +1,19 @@
 "use client";
 
+import { useTeamActionError } from "@/components/settings/team/useTeamActionError";
 import { Button } from "@/components/ui/Button";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { Modal } from "@/components/ui/Modal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const roleOptions = [
-  { desc: "Can manage settings, team members and keys.", label: "Admin", value: "admin" },
-  { desc: "Can manage keywords, tags and alert rules.", label: "Editor", value: "member" },
-  { desc: "Can view dashboards, exports and reports.", label: "Viewer", value: "viewer" },
-] as const;
-
 const inviteSchema = z.object({
-  email: z.string().trim().pipe(z.email("Enter a teammate email.")),
+  email: z.string().trim().pipe(z.email()),
   role: z.enum(["admin", "member", "viewer"]),
 });
 
@@ -46,6 +41,8 @@ export function InviteModal({
   open,
   projectId,
 }: Readonly<InviteModalProps>) {
+  const presentActionError = useTeamActionError();
+  const t = useTranslations("projectSettingsTeam");
   const [inviteLink, setInviteLink] = useState("");
   const [sentEmail, setSentEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -59,6 +56,23 @@ export function InviteModal({
   const primaryDisabled =
     !invitesAvailable || !form.formState.isValid || form.formState.isSubmitting || sent;
   const selectedRole = form.watch("role");
+  const roleOptions = [
+    {
+      desc: t("invite.roleDescription.admin"),
+      label: t("members.role.admin"),
+      value: "admin",
+    },
+    {
+      desc: t("invite.roleDescription.editor"),
+      label: t("members.role.editor"),
+      value: "member",
+    },
+    {
+      desc: t("invite.roleDescription.viewer"),
+      label: t("members.role.viewer"),
+      value: "viewer",
+    },
+  ] as const;
   const availableRoles = canAssignAdmin
     ? roleOptions
     : roleOptions.filter((role) => role.value !== "admin");
@@ -74,7 +88,7 @@ export function InviteModal({
 
   async function onSubmit(values: InviteForm) {
     if (!inviteMember || !projectId) {
-      setSubmitError("Invites are unavailable for this project.");
+      setSubmitError(t("errors.inviteUnavailable"));
       return;
     }
 
@@ -82,7 +96,7 @@ export function InviteModal({
     try {
       const result = await inviteMember({ ...values, projectId });
       if (result.status === "error") {
-        setSubmitError(result.message);
+        setSubmitError(presentActionError(result.message, t("errors.inviteSend")));
         return;
       }
       setInviteLink(result.inviteLink);
@@ -90,7 +104,7 @@ export function InviteModal({
       setSent(true);
       onInviteSent?.();
     } catch (error) {
-      setSubmitError(actionErrorMessage(error, "Invite could not be sent."));
+      setSubmitError(presentActionError(error, t("errors.inviteSend")));
     }
   }
 
@@ -99,18 +113,18 @@ export function InviteModal({
       footer={
         <>
           <Button onClick={handleClose} size="sm" type="button" variant="ghost">
-            {sent ? "Done" : "Cancel"}
+            {sent ? t("invite.done") : t("invite.cancel")}
           </Button>
           {sent ? null : (
             <Button
               disabled={!invitesAvailable || !form.formState.isValid}
               form="invite-teammate-form"
               loading={form.formState.isSubmitting}
-              loadingLabel="Sending"
+              loadingLabel={t("invite.sending")}
               startIcon={<PaperPlaneTilt aria-hidden size={15} weight="regular" />}
               type="submit"
             >
-              Send invite
+              {t("invite.send")}
             </Button>
           )}
         </>
@@ -123,9 +137,9 @@ export function InviteModal({
       initialFocus={() => form.setFocus("email")}
       title={
         <span className="block">
-          <span className="block">Invite teammate</span>
+          <span className="block">{t("invite.title")}</span>
           <span className="mt-[3px] block text-[12.5px] font-normal leading-normal tracking-normal text-fg-muted">
-            They&apos;ll get access to {domain || "this project"}.
+            {t("invite.description", { domain })}
           </span>
         </span>
       }
@@ -135,15 +149,15 @@ export function InviteModal({
           <span className="grid h-12 w-12 place-items-center rounded-card bg-green/10 text-green-text">
             <PaperPlaneTilt aria-hidden size={24} weight="regular" />
           </span>
-          <div className="mt-3.5 text-[15px] font-semibold text-fg">Invitation sent</div>
+          <div className="mt-3.5 text-[15px] font-semibold text-fg">{t("invite.sentTitle")}</div>
           <p className="m-0 mt-1.5 max-w-[300px] text-[13px] text-fg-muted">
-            We emailed an invite to {sentEmail}. You can also share this link directly.
+            {t("invite.sentDescription", { email: sentEmail })}
           </p>
           <div className="mt-4 flex w-full items-center gap-2 rounded-control border border-border bg-transparent px-3 py-[9px]">
             <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
               {inviteLink}
             </span>
-            <CopyButton label="Copy invite link" size="md" text={inviteLink} />
+            <CopyButton label={t("invite.copyLink")} size="md" text={inviteLink} />
           </div>
         </div>
       ) : (
@@ -152,7 +166,7 @@ export function InviteModal({
             className="block font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
             htmlFor="invite-email"
           >
-            Email address
+            {t("invite.email")}
           </label>
           <input
             aria-describedby={form.formState.errors.email ? "invite-email-error" : undefined}
@@ -160,17 +174,17 @@ export function InviteModal({
             className="mt-[7px] min-h-11 w-full rounded-control border border-border-control bg-transparent px-[13px] font-sans tabular-nums text-[13.5px] font-medium text-fg outline-none placeholder:text-[12px] placeholder:leading-4 focus:border-accent"
             id="invite-email"
             inputMode="email"
-            placeholder="teammate@acme.dev"
+            placeholder={t("invite.emailPlaceholder")}
             type="email"
             {...form.register("email")}
           />
           {form.formState.errors.email ? (
             <div className="mt-1.5 text-[11.5px] font-medium text-red-text" id="invite-email-error">
-              {form.formState.errors.email.message}
+              {t("invite.emailInvalid")}
             </div>
           ) : null}
           <div className="mt-4 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-            Role
+            {t("invite.role")}
           </div>
           <div className="mt-[9px] flex flex-col gap-[7px]">
             {availableRoles.map((role) => {

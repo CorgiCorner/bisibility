@@ -1,0 +1,11 @@
+{
+  "projectSettingsExperimental": {
+    "title": "Experimental modules",
+    "description": "Enable an experimental module for this project. Disabled modules are not available in navigation.",
+    "module": {
+      "competitors": "Competitors",
+      "timeline": "Timeline"
+    },
+    "saveError": "Experimental modules could not be saved."
+  }
+}

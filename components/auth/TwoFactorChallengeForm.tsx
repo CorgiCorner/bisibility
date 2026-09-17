@@ -12,6 +12,7 @@ import { CircleNotchIcon as CircleNotch } from "@phosphor-icons/react/dist/csr/C
 import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
 import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/csr/ShieldCheck";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { type KeyboardEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -22,11 +23,11 @@ const challengeSchema = z.discriminatedUnion("method", [
     code: z
       .string()
       .trim()
-      .regex(/^\d{6}$/, "Enter the 6-digit authenticator code."),
+      .regex(/^\d{6}$/),
   }),
   z.object({
     method: z.literal("backup"),
-    code: z.string().trim().min(1, "Enter a backup code.").max(128, "Enter a valid backup code."),
+    code: z.string().trim().min(1).max(128),
   }),
 ]);
 
@@ -52,6 +53,7 @@ type TwoFactorChallengeFormProps = {
 export function TwoFactorChallengeForm({
   returnTo = SIGNED_IN_HOME_PATH,
 }: Readonly<TwoFactorChallengeFormProps> = {}) {
+  const t = useTranslations("auth.twoFactor");
   const router = useRouter();
   const destination = returnToOrDefault(returnTo);
   const [message, setMessage] = useState<string | null>(null);
@@ -62,6 +64,12 @@ export function TwoFactorChallengeForm({
   });
   const method = form.watch("method");
   const submitting = form.formState.isSubmitting;
+  const validationMessage =
+    method === "totp"
+      ? t("validation.totp")
+      : form.formState.errors.code?.type === "too_small"
+        ? t("validation.backupRequired")
+        : t("validation.backupInvalid");
 
   function selectMethod(nextMethod: ChallengeMethod) {
     setMessage(null);
@@ -76,7 +84,7 @@ export function TwoFactorChallengeForm({
         : await authClient.twoFactor.verifyBackupCode({ code: values.code });
 
     if (response.error) {
-      setMessage("That code is invalid, expired, or already used.");
+      setMessage(t("invalid"));
       form.setValue("code", "", { shouldDirty: true });
       form.setFocus("code");
       return;
@@ -103,14 +111,12 @@ export function TwoFactorChallengeForm({
         <ShieldCheck aria-hidden size={23} weight="regular" />
       </span>
       <h1 className="mt-4.5 mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
-        Verify it&apos;s you
+        {t("title")}
       </h1>
-      <p className="mt-2 mb-0 text-[14px] leading-[1.5] text-fg-muted">
-        Your email code was accepted. Complete the second step to sign in.
-      </p>
+      <p className="mt-2 mb-0 text-[14px] leading-[1.5] text-fg-muted">{t("description")}</p>
 
       <fieldset className="mt-6 grid grid-cols-2 gap-2 border-0 p-0">
-        <legend className="sr-only">Verification method</legend>
+        <legend className="sr-only">{t("method")}</legend>
         <Button
           aria-pressed={method === "totp"}
           disabled={submitting}
@@ -120,7 +126,7 @@ export function TwoFactorChallengeForm({
           type="button"
           variant="secondary"
         >
-          Authenticator
+          {t("authenticator")}
         </Button>
         <Button
           aria-pressed={method === "backup"}
@@ -131,7 +137,7 @@ export function TwoFactorChallengeForm({
           type="button"
           variant="secondary"
         >
-          Backup code
+          {t("backupCode")}
         </Button>
       </fieldset>
 
@@ -140,7 +146,7 @@ export function TwoFactorChallengeForm({
           className="block text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
           htmlFor="two-factor-code"
         >
-          {method === "totp" ? "Authenticator code" : "Backup code"}
+          {method === "totp" ? t("authenticatorCode") : t("backupCode")}
         </label>
         <input
           autoComplete={method === "totp" ? "one-time-code" : "off"}
@@ -152,14 +158,12 @@ export function TwoFactorChallengeForm({
           inputMode={method === "totp" ? "numeric" : "text"}
           maxLength={method === "totp" ? 6 : 128}
           onKeyDown={submitOnEnter}
-          placeholder={method === "totp" ? "000000" : "xxxxx-xxxxx"}
+          placeholder={method === "totp" ? t("placeholderTotp") : t("placeholderBackup")}
           type="text"
           {...form.register("code")}
         />
         {form.formState.errors.code ? (
-          <p className="mt-2 mb-0 text-[13px] text-red-text">
-            {form.formState.errors.code.message}
-          </p>
+          <p className="mt-2 mb-0 text-[13px] text-red-text">{validationMessage}</p>
         ) : null}
         {message ? (
           <p aria-live="polite" className="mt-2 mb-0 text-[13px] text-red-text">
@@ -188,7 +192,7 @@ export function TwoFactorChallengeForm({
           type="button"
           variant="primary"
         >
-          {submitting ? "Verifying..." : "Verify and continue"}
+          {submitting ? t("verifying") : t("verify")}
         </Button>
       </div>
 
@@ -196,7 +200,7 @@ export function TwoFactorChallengeForm({
         className="mt-5 block text-center text-[13px] font-semibold text-fg-muted no-underline hover:text-fg"
         href={loginErrorReturnTo(destination)}
       >
-        Cancel and return to sign in
+        {t("cancel")}
       </a>
     </div>
   );

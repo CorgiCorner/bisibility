@@ -61,6 +61,7 @@ export class SerializedToggleQueue {
 export function useRuleEnabledQueue(
   initial: boolean,
   save: (enabled: boolean) => Promise<unknown>,
+  errorMessage: string,
 ) {
   const saveRef = useRef(save);
   const [enabled, setEnabled] = useState(initial);
@@ -70,7 +71,7 @@ export function useRuleEnabledQueue(
   saveRef.current = save;
 
   const handlers: ToggleQueueHandlers = {
-    onError: () => setError("Could not update this rule. Try again."),
+    onError: () => setError(errorMessage),
     onPending: setPending,
     onRequest: () => setError(null),
     onState: setEnabled,

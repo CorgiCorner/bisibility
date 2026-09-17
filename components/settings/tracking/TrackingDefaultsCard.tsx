@@ -1,5 +1,6 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { TrackingCheckFields } from "@/components/settings/tracking/TrackingCheckFields";
 import { TrackingScheduleFields } from "@/components/settings/tracking/TrackingScheduleFields";
@@ -12,10 +13,10 @@ import { StatusChip } from "@/components/ui/StatusChip";
 import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { projectDefaultsSchema } from "@/lib/schemas/project";
-import { type DefaultsData, frequencyOptions } from "@/lib/settings/options";
-import { actionErrorMessage } from "@/lib/ui/action-error";
-import { VIEWER_READ_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
+import type { DefaultsData } from "@/lib/settings/options";
+import { presentActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
@@ -46,6 +47,8 @@ export function TrackingDefaultsCard({
   updateDefaults,
 }: Readonly<TrackingDefaultsCardProps>) {
   const router = useRouter();
+  const sharedErrors = useSharedErrorMessages();
+  const t = useTranslations("projectSettingsTracking.checkDefaults");
   const [preview, setPreview] = useState(initialCronPreview);
   const [previewPending, startPreviewTransition] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -60,47 +63,57 @@ export function TrackingDefaultsCard({
       try {
         setPreview(await previewCron({ cronExpression, projectId, timezone }));
       } catch {
-        setPreview({ message: "The next runs could not be checked.", runs: [], status: "invalid" });
+        setPreview({ message: "invalid_expression", runs: [], status: "invalid", timezone: null });
       }
     });
   }
 
   if (!canEdit) {
-    const frequencyLabel =
-      frequencyOptions.find((option) => option.value === defaults.schedule.frequency)?.label ??
-      defaults.schedule.frequency;
+    const frequencyLabels = {
+      custom_cron: t("frequencyCustomCron"),
+      daily: t("frequencyDaily"),
+      manual: t("frequencyManual"),
+      monthly: t("frequencyMonthly"),
+      paused: t("frequencyPaused"),
+      weekly: t("frequencyWeekly"),
+    };
+    const deviceLabel = defaults.device === "Mobile" ? t("deviceMobile") : t("deviceDesktop");
     return (
       <SettingsCard
-        action={<StatusChip label={VIEWER_READ_ONLY_LABEL} tone="neutral" />}
+        action={<StatusChip label={t("readOnly")} tone="neutral" />}
         className={trackingCardGeometryClassNames.checkDefaults}
-        description="What every keyword is checked with, unless it has its own setting."
+        description={t("description")}
         showSave={false}
-        title="Check defaults"
+        title={t("title")}
       >
         <dl className="m-0 grid grid-cols-1 gap-3 text-[13px]">
           <div>
             <dt className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-              Frequency
+              {t("frequency")}
             </dt>
-            <dd className="m-0 mt-1 font-medium text-fg">{frequencyLabel}</dd>
+            <dd className="m-0 mt-1 font-medium text-fg">
+              {frequencyLabels[defaults.schedule.frequency]}
+            </dd>
           </div>
           <div>
             <dt className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-              Timezone
+              {t("timezone")}
             </dt>
             <dd className="m-0 mt-1 font-medium text-fg">{defaults.schedule.timezone}</dd>
           </div>
           <div>
             <dt className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-              Depth
+              {t("depth")}
             </dt>
-            <dd className="m-0 mt-1 font-medium text-fg">Top {defaults.serpDepth ?? 100}</dd>
+            <dd className="m-0 mt-1 font-medium text-fg">
+              {t("depthValue", { depth: defaults.serpDepth ?? 100 })}
+            </dd>
           </div>
           <div>
             <dt className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-              Device
+              {t("device")}
             </dt>
-            <dd className="m-0 mt-1 font-medium text-fg">{defaults.device}</dd>
+            <dd className="m-0 mt-1 font-medium text-fg">{deviceLabel}</dd>
           </div>
         </dl>
       </SettingsCard>
@@ -109,7 +122,7 @@ export function TrackingDefaultsCard({
 
   async function saveDefaults() {
     if (!canEdit || !(await form.trigger())) {
-      throw new Error("Check the highlighted settings before saving.");
+      throw new Error(t("saveValidation"));
     }
     const values = form.getValues();
     setSaveError(null);
@@ -118,7 +131,7 @@ export function TrackingDefaultsCard({
       form.reset(values);
       router.refresh();
     } catch (error: unknown) {
-      setSaveError(actionErrorMessage(error, "Check defaults could not be saved."));
+      setSaveError(presentActionError(error, sharedErrors, t("saveError")));
       throw error;
     }
   }
@@ -126,9 +139,9 @@ export function TrackingDefaultsCard({
   return (
     <SettingsCard
       className={trackingCardGeometryClassNames.checkDefaults}
-      description="What every keyword is checked with, unless it has its own setting."
+      description={t("description")}
       onSave={saveDefaults}
-      title="Check defaults"
+      title={t("title")}
     >
       {({ markDirty }) => (
         <form onSubmit={(event) => event.preventDefault()}>
@@ -147,7 +160,7 @@ export function TrackingDefaultsCard({
                     form.getValues("timezone"),
                   );
                 } else {
-                  setPreview({ message: "", runs: [], status: "idle" });
+                  setPreview({ message: null, runs: [], status: "idle", timezone: null });
                 }
               }}
               onTimezoneChange={(timezone) => {

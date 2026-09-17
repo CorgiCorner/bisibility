@@ -5,8 +5,15 @@ import type {
 } from "@/lib/integrations/types";
 
 export type ProviderAuthMode = "key" | "oauth";
+export type OAuthScope = "account_identity" | "analytics_readonly" | "search_console_readonly";
+export type TestSuccessPresentation = {
+  balance: { kind: "currency" | "searches"; value: number } | null;
+  kind: "application_connection" | "provider_message" | "verified";
+  message: string | null;
+};
 
 const oauthProviderIds = new Set(["gsc", "ga4"]);
+const applicationConnectionProviderIds = new Set(["ga4", "gsc", "plausible"]);
 
 export function providerAuthMode(provider: IntegrationProviderData): ProviderAuthMode {
   return oauthProviderIds.has(provider.id) ? "oauth" : "key";
@@ -22,38 +29,47 @@ export function providerCredentialFields(
   return provider.drawer.credentialFields;
 }
 
-export function oauthScopes(provider: IntegrationProviderData): readonly string[] {
+export function oauthScopes(provider: IntegrationProviderData): readonly OAuthScope[] {
   if (/analytics 4/i.test(provider.name)) {
-    return ["analytics.readonly (reports and properties)", "openid email (account selection)"];
+    return ["analytics_readonly", "account_identity"];
   }
 
-  return [
-    "webmasters.readonly (property list + search analytics + sitemap status)",
-    "openid email (account selection)",
-  ];
+  return ["search_console_readonly", "account_identity"];
 }
 
-function successLead(message: string | undefined) {
+function successLead(
+  providerId: string,
+  message: string | undefined,
+): Pick<TestSuccessPresentation, "kind" | "message"> {
   const trimmed = message?.trim() ?? "";
   if (!trimmed || /^(ok|okay|connected|connection ok)\.?$/i.test(trimmed)) {
-    return "Connection verified.";
+    return { kind: "verified", message: null };
   }
-  return trimmed;
+  const applicationConnection = /^connection ok\s*·\s*(.+)$/i.exec(trimmed)?.[1]?.trim();
+  if (applicationConnection && applicationConnectionProviderIds.has(providerId)) {
+    return { kind: "application_connection", message: applicationConnection };
+  }
+  return { kind: "provider_message", message: trimmed };
 }
 
-export function testSuccessCopy(providerId: string, result: ProviderTestResult | null) {
-  const message = successLead(result?.message);
-  if (typeof result?.balance !== "number") return message;
+/**
+ * Keeps provider response data separate from locale-specific UI composition.
+ * Callers render this fact with the projectIntegrations catalog.
+ */
+export function testSuccessPresentation(
+  providerId: string,
+  result: ProviderTestResult | null,
+): TestSuccessPresentation {
+  const lead = successLead(providerId, result?.message);
+  if (typeof result?.balance !== "number") return { ...lead, balance: null };
 
   if (providerId === "dataforseo") {
-    return `${message} · Account balance: $${result.balance.toLocaleString("en-US", {
-      maximumFractionDigits: 4,
-    })}`;
+    return { ...lead, balance: { kind: "currency", value: result.balance } };
   }
 
   if (providerId === "serpapi") {
-    return `${message} · ${Math.round(result.balance).toLocaleString("en-US")} searches remaining`;
+    return { ...lead, balance: { kind: "searches", value: Math.round(result.balance) } };
   }
 
-  return message;
+  return { ...lead, balance: null };
 }

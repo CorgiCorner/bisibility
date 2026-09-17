@@ -3,6 +3,7 @@ import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import { rankTrackerTabPath } from "@/lib/routing/app-path";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 type ResearchDetailSaveActionProps = {
   onSave?: (row: GroupedResearchRow) => void;
@@ -15,6 +16,7 @@ export function ResearchDetailSaveAction({
   projectRef,
   row,
 }: Readonly<ResearchDetailSaveActionProps>) {
+  const t = useTranslations("projectResearch.saved");
   if (row.alreadySaved) {
     return (
       <Link
@@ -22,7 +24,7 @@ export function ResearchDetailSaveAction({
         href={rankTrackerTabPath(projectRef, "saved")}
       >
         <BookmarkSimple aria-hidden size={14} weight="regular" />
-        Saved / view in Keywords
+        {t("savedLink")}
       </Link>
     );
   }
@@ -42,11 +44,9 @@ export function ResearchDetailSaveAction({
         }}
         variant="secondary"
       >
-        Save for later
+        {t("save")}
       </Button>
-      <p className="m-0 text-center text-[12px] text-fg-muted">
-        Free. No checks run until you track it.
-      </p>
+      <p className="m-0 text-center text-[12px] text-fg-muted">{t("freeHint")}</p>
     </div>
   );
 }

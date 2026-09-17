@@ -4,6 +4,7 @@ import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type { AddKeywordDrawerForm } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { SerpDevice } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
+import { useTranslations } from "next-intl";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import {
   TrackingConfigurationFields,
@@ -37,9 +38,10 @@ export function AddKeywordTrackingPanel({
   scheduleFrequency = "project_default",
   showSchedule = false,
 }: Readonly<AddKeywordTrackingPanelProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
   return (
     <div>
-      <div className="text-[12.5px] font-semibold text-fg">Tracking</div>
+      <div className="text-[12.5px] font-semibold text-fg">{t("tracking")}</div>
       <input type="hidden" {...register("device")} />
       <div className="mt-2">
         <TrackingConfigurationFields
@@ -61,10 +63,7 @@ export function AddKeywordTrackingPanel({
           showSchedule={showSchedule}
         />
       </div>
-      <p className="mt-2 text-[11.5px] text-fg-muted">
-        You pay your SERP provider per check. Optionally narrow to a city, or duplicate after adding
-        for more devices/locations.
-      </p>
+      <p className="mt-2 text-[11.5px] text-fg-muted">{t("trackingHint")}</p>
     </div>
   );
 }

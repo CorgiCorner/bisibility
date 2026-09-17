@@ -1,7 +1,16 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  renderWithFeatureMessages,
+  sharedControlTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DataTable } from "./DataTable";
 import { dataTableColumnWidthVariable } from "./data-table-sizing";
+
+function render(ui: React.ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: sharedControlTestMessages });
+}
+
 import { type TestDataTableRow, testDataTableRows } from "./data-table-test-fixtures";
 import type { DataTableColumn } from "./data-table-types";
 

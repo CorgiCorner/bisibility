@@ -1,4 +1,5 @@
 import { Checkbox } from "@/components/ui/Checkbox";
+import { useTranslations } from "next-intl";
 import { useId } from "react";
 import type { ScheduleKeywordCandidate } from "./AddKeywordsDrawer";
 
@@ -8,16 +9,12 @@ type ScheduleKeywordCandidateRowProps = {
   selected: boolean;
 };
 
-function membershipLabel(candidate: ScheduleKeywordCandidate) {
-  if (candidate.assigned) return "Already here";
-  return candidate.sourceName ? `on ${candidate.sourceName}` : "Manual";
-}
-
 export function ScheduleKeywordCandidateRow({
   candidate,
   onToggle,
   selected,
 }: Readonly<ScheduleKeywordCandidateRowProps>) {
+  const t = useTranslations("projectRuns.schedules");
   const inputId = useId();
   const muted = candidate.assigned;
 
@@ -39,11 +36,15 @@ export function ScheduleKeywordCandidateRow({
           {candidate.keyword}
         </span>
         <span className="mt-px block text-[10.5px] leading-4 text-fg-muted">
-          {candidate.checks} checks
+          {t("checks", { count: candidate.checks })}
         </span>
       </span>
       <span className="shrink-0 whitespace-nowrap text-[11px] text-fg-muted">
-        {membershipLabel(candidate)}
+        {candidate.assigned
+          ? t("drawer.alreadyHere")
+          : candidate.sourceName
+            ? t("drawer.onSchedule", { name: candidate.sourceName })
+            : t("drawer.manual")}
       </span>
     </label>
   );

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { PreflightProvider } from "./preflight-presentation";
 
@@ -62,14 +63,16 @@ export function PreflightOptionGroups({
   selectedDepth,
   selectedProvider,
 }: Readonly<PreflightOptionGroupsProps>) {
+  const t = useTranslations("shared.rankPreflight");
   return (
-    <section className="grid gap-3" aria-label="Run options">
+    <section className="grid gap-3" aria-label={t("runOptions")}>
       <div>
         <p className="m-0 text-[10.5px] font-semibold uppercase tracking-[0.05em] text-fg-muted">
-          Depth <span className="font-normal normal-case tracking-normal">· price per target</span>
+          {t("depth")}{" "}
+          <span className="font-normal normal-case tracking-normal">· {t("pricePerTarget")}</span>
         </p>
         <div
-          aria-label="Result depth"
+          aria-label={t("depthAria")}
           className="mt-[7px] flex flex-wrap gap-1.5"
           role="radiogroup"
         >
@@ -80,7 +83,7 @@ export function PreflightOptionGroups({
               key={depth}
               onClick={() => onDepthChange(depth)}
             >
-              Top {depth}
+              {t("topDepth", { depth })}
             </ChoiceButton>
           ))}
         </div>
@@ -88,11 +91,11 @@ export function PreflightOptionGroups({
 
       <div>
         <p className="m-0 text-[10.5px] font-semibold uppercase tracking-[0.05em] text-fg-muted">
-          Primary provider
+          {t("primaryProvider")}
         </p>
         {providers.length > 1 ? (
           <div
-            aria-label="Primary provider"
+            aria-label={t("primaryProviderAria")}
             className="mt-[7px] flex flex-wrap gap-1.5"
             role="radiogroup"
           >
@@ -113,7 +116,7 @@ export function PreflightOptionGroups({
           </div>
         ) : providers[0] ? (
           <p className="m-0 mt-[7px] text-[12px] text-fg">
-            {providers[0].label} is set as the primary provider.
+            {t("configuredProvider", { provider: providers[0].label })}
           </p>
         ) : null}
         {providerFallbackNote ? (

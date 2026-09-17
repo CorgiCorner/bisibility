@@ -10,6 +10,7 @@ import { onboardingFormId } from "@/components/onboarding/onboarding-form-utils"
 import { Button } from "@/components/ui/Button";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 type OnboardingNavProps = {
@@ -37,9 +38,10 @@ export function OnboardingNav({
   onContinue,
   secondaryAction,
 }: Readonly<OnboardingNavProps>) {
+  const t = useTranslations("onboarding.navigation");
   const previousStep = Math.max(1, currentStep - 1) as OnboardingStepNumber;
   const isLastStep = currentStep === totalOnboardingSteps;
-  const label = continueLabel ?? (isLastStep ? "View dashboard" : "Continue");
+  const label = continueLabel ?? (isLastStep ? t("viewDashboard") : t("continue"));
   let backAction: ReactNode = leadingAction ?? <span />;
   if (currentStep > 1 && onBack) {
     backAction = (
@@ -52,7 +54,7 @@ export function OnboardingNav({
         type="button"
         variant="secondary"
       >
-        Back
+        {t("back")}
       </Button>
     );
   } else if (currentStep > 1) {
@@ -65,7 +67,7 @@ export function OnboardingNav({
         style={{ "--control-color": "var(--fg-muted)" }}
         variant="secondary"
       >
-        Back
+        {t("back")}
       </Button>
     );
   }

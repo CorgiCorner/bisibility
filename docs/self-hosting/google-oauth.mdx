@@ -1,0 +1,103 @@
+---
+title: "Google OAuth and traffic sync"
+description: "Configure the instance Google OAuth client, callback, secrets, worker, and traffic-sync schedule."
+---
+
+[Production checklist](/self-hosting#production-checklist)
+
+Hosted projects connect Google Search Console and GA4 from
+**Integrations** without creating a Google Cloud OAuth client. This page is for
+self-hosted instance administrators.
+
+Application users should follow [Connect integrations](/integrations) and
+[Search Console](/guides/search-console).
+
+## Google OAuth client setup
+
+Google Search Console and GA4 share one Google OAuth 2.0 web client. It is the
+same client used for optional Google social sign-in, extended with analytics
+scopes.
+
+1. Create or select a project in the [Google Cloud console](https://console.cloud.google.com/).
+2. Enable these APIs on the project:
+   - **Google Search Console API** - Search Analytics, URL Inspection, and
+     sitemap calls.
+   - **Google Analytics Data API** - GA4 traffic reports.
+   - **Google Analytics Admin API** - lists the GA4 accounts and properties
+     shown in the property picker during connect.
+3. Configure the OAuth consent screen (Google Auth Platform) with these scopes:
+   - `openid` and `email`
+   - `https://www.googleapis.com/auth/webmasters.readonly` for Search Console.
+     bisibility reads properties, search analytics, sitemap status, and URL
+     inspection results; it does not submit or re-submit sitemaps.
+   - `https://www.googleapis.com/auth/analytics.readonly` for GA4.
+4. Create an OAuth client with the **Web application** type and add the
+   authorized redirect URI built from your instance origin (`SITE_URL`):
+
+   ```text
+   https://<your-bisibility-host>/api/integrations/google/callback
+   ```
+
+   For local development, `http://localhost:3000/api/integrations/google/callback`
+   works; Google allows plain `http` only for localhost.
+5. Set the client credentials in the environment and restart the app:
+
+   ```text
+   GOOGLE_CLIENT_ID=
+   GOOGLE_CLIENT_SECRET=
+   ```
+
+6. Ask project owners to connect Search Console from **Search Console**, and
+   GA4 from **Integrations**.
+
+The connect flow requests offline access with a forced consent prompt, so
+Google returns a refresh token on every connect. bisibility stores only the
+encrypted refresh token and mints short-lived access tokens on demand; access
+tokens are never persisted.
+
+<Warning>
+  An external Google OAuth app left in the **Testing** publishing status
+  receives refresh tokens that expire after about seven days, after which
+  scheduled imports stop and the connection shows **Reconnect required**.
+  Publish the OAuth app to **Production** for persistent scheduled imports. A
+  personal self-hosted instance can stay unverified and accept Google's
+  unverified-app warning during consent.
+</Warning>
+
+If Google does not return a refresh token, remove the app's existing grant at
+[myaccount.google.com/permissions](https://myaccount.google.com/permissions)
+and reconnect.
+
+## Worker and traffic-sync schedule
+
+Scheduled Search Console and traffic sync need the Temporal worker. Set:
+
+```dotenv
+TRAFFIC_SYNC_ENABLED=true
+# TRAFFIC_SYNC_CRON=45 5 * * *
+```
+
+Without a custom cron, the worker creates a daily 05:45 UTC schedule. It skips
+overlapping runs. This worker-owned Temporal schedule is the only scheduled
+traffic-sync path; no external HTTP scheduler is required.
+
+Snapshots are retained for 180 days by default. Change this with
+`TRAFFIC_SNAPSHOT_RETENTION_DAYS`. Rate-limited connections are skipped and can
+be retried later; one failing project does not stop synchronization for others.
+
+See [Temporal](/self-hosting/temporal) for worker startup.
+
+## Instance quota notes
+
+Inspect remaining Search Console quota in the Google Cloud Console quotas tab;
+an HTTP `429` response is the runtime backstop. Google documents these
+[Search Console API limits](https://developers.google.com/webmaster-tools/limits):
+
+| API | Google property limit | Google user limit |
+| - | - | - |
+| Search Analytics | 1,200 queries per minute | 1,200 queries per minute |
+| URL Inspection | 2,000 inspections per day and 600 per minute | No separate user limit documented. |
+
+Search Analytics has no daily per-property cap. The project **Daily inspection
+limit** accepts up to 1,000 inspections so other tools can share Google's
+2,000-per-day property quota.

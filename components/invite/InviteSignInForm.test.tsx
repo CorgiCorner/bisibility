@@ -1,3 +1,5 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { inviteFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import { routerMock } from "@/tests/next-navigation";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -26,13 +28,21 @@ describe("InviteSignInForm", () => {
     window.history.replaceState(null, "", "/invite/invite_123?source=email#access-details");
   });
 
+  function renderInviteSignInForm() {
+    return render(
+      <FeatureMessagesProvider locale="en" messages={inviteFeatureTestMessages} timeZone="UTC">
+        <InviteSignInForm email="invitee@example.com" />
+      </FeatureMessagesProvider>,
+    );
+  }
+
   it("preserves the invite URL when email OTP requires a second factor", async () => {
     mocks.sendVerificationOtp.mockResolvedValue({ data: { success: true }, error: null });
     const response = { data: { twoFactorRedirect: true }, error: null };
     mocks.signIn.mockResolvedValue(response);
     mocks.signInRedirectUrl.mockReturnValue("#two-factor");
     const user = userEvent.setup();
-    render(<InviteSignInForm email="invitee@example.com" />);
+    renderInviteSignInForm();
 
     await user.click(screen.getByRole("button", { name: "Send sign-in code" }));
     await user.type(await screen.findByLabelText("Sign-in code"), "123456");

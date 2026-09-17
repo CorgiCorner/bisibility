@@ -1,0 +1,39 @@
+{
+  "projectCostEstimate": {
+    "providerSpend": {
+      "docs": "予算の仕組み",
+      "eyebrow": "月間予算",
+      "noCapAmount": "今月 {spent}",
+      "meterAria": "プロバイダー利用額: 今月 {cap} のうち {spent}{session, select, none {} other {、このセッション {session}}}",
+      "segmentedAmount": "{cap} のうち {spent} を使用",
+      "cardCap": "上限 {cap}",
+      "thisMonth": "今月",
+      "capReached": "上限に到達",
+      "session": "このセッション {spent}",
+      "pace": "月あたり約 {spent} のペース",
+      "left": "残り {spent}",
+      "otherProvider": "その他",
+      "headerUnavailable": "利用額不明",
+      "headerCapTooltip": "プロバイダーの月間予算です。",
+      "headerNoCap": "予算なし · 予算を設定",
+      "headerNoCapWithSpend": "{spent} · 予算なし · 予算を設定",
+      "headerNoCapAria": "予算なし、予算を設定",
+      "headerNoCapAriaWithSpend": "予算なしで {spent} を使用、予算を設定",
+      "headerUnderOnePercent": "使用率1%未満",
+      "headerUsed": "使用率{percent, number}%",
+      "headerCapAria": "月間上限 {used}"
+    },
+    "status": {
+      "unavailable": "見積もりを取得できません。",
+      "retry": "再試行",
+      "updating": "見積もりを更新中..."
+    },
+    "spendInfo": {
+      "aria": "プロバイダー利用額について",
+      "description": "プロバイダーの月間上限と現在の利用状況です。",
+      "session": "このセッション {spent}",
+      "details": "詳細",
+      "setBudget": "予算を設定"
+    }
+  }
+}

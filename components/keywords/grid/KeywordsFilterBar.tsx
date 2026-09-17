@@ -1,15 +1,17 @@
 "use client";
 
+import type { LocalizedKeywordFilterChip } from "@/components/keywords/filters/keyword-filter-presentation";
 import type {
   DataTableColumn,
   DataTableDensity,
 } from "@/components/ui/data-table/data-table-types";
 import { Pill } from "@/components/ui/Pill";
 import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
-import type { KeywordFilterChip } from "@/lib/keywords/keyword-filter-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { cn } from "@/lib/ui/cn";
 import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { KeywordsToolbarActions } from "./KeywordsToolbarActions";
 import { KeywordsToolbarButton, toolbarSecondaryIconClassName } from "./KeywordsToolbarButton";
@@ -19,7 +21,7 @@ type KeywordsFilterBarProps = {
   columns: readonly DataTableColumn<KeywordRow>[];
   columnVisibility: Record<string, boolean>;
   density: DataTableDensity;
-  filterChips: KeywordFilterChip[];
+  filterChips: LocalizedKeywordFilterChip[];
   filterCount: number;
   groupingControl?: ReactNode;
   id: string;
@@ -67,6 +69,7 @@ export function KeywordsFilterBar({
   scopeChip,
   scopeControl,
 }: Readonly<KeywordsFilterBarProps>) {
+  const t = useTranslations("projectRankTracker.list.filterBar");
   const hasChips = Boolean(scopeChip) || filterChips.length > 0;
   const hasFilters = filterCount > 0 || Boolean(searchValue.trim());
   const hasContextControls = Boolean(scopeControl || groupingControl || savedViewControl);
@@ -91,7 +94,7 @@ export function KeywordsFilterBar({
               <span className="hidden flex-none sm:inline-flex">{savedViewControl}</span>
             ) : null}
             <KeywordsToolbarButton
-              label="Refresh table"
+              label={t("refreshTable")}
               labelFrom="lg"
               onClick={onRefresh}
               showTooltip
@@ -111,10 +114,10 @@ export function KeywordsFilterBar({
           <ToolbarSearch
             className="min-w-0"
             id="keywords-filter"
-            label="Search keywords"
+            label={t("searchKeywords")}
             onChange={onSearchChange}
             onSubmit={onSearchCommit}
-            placeholder="Search keywords..."
+            placeholder={t("searchPlaceholder")}
             value={searchValue}
           />
           <KeywordsToolbarActions
@@ -136,18 +139,21 @@ export function KeywordsFilterBar({
       </div>
       {hasChips || hasFilters ? (
         <div
-          className={`mt-3 flex min-w-0 flex-wrap items-center gap-2 ${scopeChipOnly ? "lg:hidden" : ""}`}
+          className={cn(
+            "mt-3 flex min-w-0 flex-wrap items-center gap-2",
+            scopeChipOnly && "lg:hidden",
+          )}
         >
           {hasFilters ? (
             <span className="mr-1 font-sans tabular-nums text-[10px] font-semibold uppercase tracking-[0.6px] text-fg-muted">
-              Active filters
+              {t("activeFilters")}
             </span>
           ) : null}
           {scopeChip}
           {filterChips.map((chip) => (
             <Pill
               active
-              aria-label={`Remove filter: ${chip.label}`}
+              aria-label={t("removeFilter", { filter: chip.label })}
               key={chip.key}
               onClick={() => onRemoveFilter(chip.key)}
               size="sm"
@@ -158,12 +164,12 @@ export function KeywordsFilterBar({
           ))}
           {hasFilters ? (
             <button
-              aria-label="Clear all search and filters"
+              aria-label={t("clearAllAriaLabel")}
               className="min-h-7 rounded-full px-2.5 text-[12px] font-semibold text-fg-muted transition-colors hover:bg-bg-sunken hover:text-accent-text"
               onClick={onClearFilters}
               type="button"
             >
-              Clear all
+              {t("clearAll")}
             </button>
           ) : null}
         </div>

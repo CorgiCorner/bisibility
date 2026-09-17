@@ -1,3 +1,4 @@
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import { iconWellClassName } from "@/components/ui/icon-well-styles";
 import { ToastProvider } from "@/components/ui/Toast";
 import { routerMock } from "@/tests/next-navigation";
@@ -15,9 +16,11 @@ vi.mock("@/lib/actions/sample-data", () => ({
 
 function renderBanner() {
   return render(
-    <ToastProvider>
-      <SampleProjectBanner projectId="prj_sample" />
-    </ToastProvider>,
+    <ProjectDashboardMessages>
+      <ToastProvider>
+        <SampleProjectBanner projectId="prj_sample" />
+      </ToastProvider>
+    </ProjectDashboardMessages>,
   );
 }
 

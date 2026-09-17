@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { CompetitorMarket } from "@/lib/competitors/types";
 import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type HeadToHeadTableProps = {
@@ -12,16 +13,17 @@ type HeadToHeadTableProps = {
 };
 
 const ROW_PAGE_SIZE = 100;
+type CompetitorTranslations = ReturnType<typeof useTranslations<"projectCompetitors.ui">>;
 
-function formatRank(rank: number | null) {
-  return rank ? `#${rank}` : "n/a";
+function formatRank(rank: number | null, t: CompetitorTranslations) {
+  return rank ? t("rank", { rank }) : t("notAvailable");
 }
 
-function formatGap(gap: number | null) {
+function formatGap(gap: number | null, t: CompetitorTranslations) {
   if (gap === null) {
-    return "n/a";
+    return t("notAvailable");
   }
-  return gap > 0 ? `+${gap}` : String(gap);
+  return gap > 0 ? t("positiveNumber", { value: gap }) : t("number", { value: gap });
 }
 
 function gapColor(gap: number | null) {
@@ -48,6 +50,7 @@ function rankColor(columnIndex: number, gap: number | null) {
 }
 
 export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTableProps>) {
+  const t = useTranslations("projectCompetitors.ui");
   const [expanded, setExpanded] = useState(false);
   const [visibleRows, setVisibleRows] = useState(ROW_PAGE_SIZE);
   const hiddenCount = Math.max(0, market.columns.length - 4);
@@ -58,20 +61,24 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
   const hiddenRowCount = market.rows.length - rows.length;
   const emptyCopy =
     market.dataState === "filter_excludes_all"
-      ? "No completed rank checks match the current filters."
+      ? t("headToHeadFilteredEmpty")
       : market.dataState === "no_completed_checks"
-        ? "Run at least one rank check for this market to populate head-to-head rows."
-        : "No competitor rankings have been observed for this market yet.";
+        ? t("headToHeadNoChecks")
+        : t("headToHeadEmpty");
 
   return (
     <Card className="overflow-hidden p-0" size="md">
       <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-4.5 py-[15px]">
         <div className="flex min-w-0 flex-col gap-1">
-          <SectionTitle>Shared keywords · head-to-head</SectionTitle>
+          <SectionTitle>{t("sharedKeywordsHeadToHead")}</SectionTitle>
           <p className="m-0 font-sans tabular-nums text-[11px] text-fg-muted">
-            {market.location} / {market.languageLabel} /{" "}
-            {market.device === "mobile" ? "Mobile" : "Desktop"} · {market.sharedKeywordCount} shared
-            of {market.trackedKeywordCount} tracked
+            {t("headToHeadScope", {
+              device: market.device === "mobile" ? t("mobile") : t("desktop"),
+              language: market.languageLabel,
+              location: market.location,
+              shared: market.sharedKeywordCount,
+              tracked: market.trackedKeywordCount,
+            })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -81,7 +88,7 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
               onClick={() => setExpanded((value) => !value)}
               type="button"
             >
-              {expanded ? "Show top competitors" : `+${hiddenCount} more`}
+              {expanded ? t("showTopCompetitors") : t("showMorePositive", { count: hiddenCount })}
             </button>
           ) : null}
           <button
@@ -90,14 +97,14 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
             type="button"
           >
             <UploadSimple weight="regular" aria-hidden size={13} />
-            Export
+            {t("export")}
           </button>
         </div>
       </div>
 
       {!hasCompetitors ? (
         <div className="bg-bg-sunken px-4.5 py-3 font-sans tabular-nums text-[10.5px] text-fg-muted">
-          Add at least one competitor to compare head-to-head rankings.
+          {t("addCompetitorHeadToHead")}
         </div>
       ) : null}
 
@@ -107,13 +114,13 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
             className="grid gap-x-2.5 border-border border-b bg-bg-sunken px-4.5 py-2.5 font-sans tabular-nums text-[10px] uppercase text-fg-muted"
             style={{ gridTemplateColumns }}
           >
-            <span>Keyword</span>
+            <span>{t("keyword")}</span>
             {columns.map((column, index) => (
               <span className={index === 0 ? "text-accent-text" : undefined} key={column.domain}>
                 {column.label}
               </span>
             ))}
-            <span className="text-right">Gap</span>
+            <span className="text-right">{t("gap")}</span>
           </div>
           {rows.map((row, index) => (
             <div
@@ -130,14 +137,14 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
                   key={column.domain}
                   style={{ color: rankColor(index, row.gap) }}
                 >
-                  {formatRank(row.ranks[column.domain] ?? null)}
+                  {formatRank(row.ranks[column.domain] ?? null, t)}
                 </span>
               ))}
               <span
                 className="text-right font-sans tabular-nums text-xs font-semibold"
                 style={{ color: gapColor(row.gap) }}
               >
-                {formatGap(row.gap)}
+                {formatGap(row.gap, t)}
               </span>
             </div>
           ))}
@@ -146,15 +153,13 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
           ) : null}
           {hiddenRowCount > 0 ? (
             <div className="flex items-center justify-between gap-3 px-4.5 py-3 text-xs text-fg-muted">
-              <span>
-                Showing {rows.length} of {market.rows.length} keywords
-              </span>
+              <span>{t("showingKeywords", { count: rows.length, total: market.rows.length })}</span>
               <button
                 className="inline-flex min-h-8 items-center rounded-control border border-border-control bg-bg-elev px-3 font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
                 onClick={() => setVisibleRows((count) => count + ROW_PAGE_SIZE)}
                 type="button"
               >
-                Show {Math.min(ROW_PAGE_SIZE, hiddenRowCount)} more
+                {t("showMore", { count: Math.min(ROW_PAGE_SIZE, hiddenRowCount) })}
               </button>
             </div>
           ) : null}

@@ -1,4 +1,3 @@
-import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import type { OverviewRange } from "./overview-filters";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -15,7 +14,9 @@ export type OverviewMarketKeyword = {
   id: string;
   locationId: string;
   locationRef: {
+    countryCode?: string | null;
     displayName: string;
+    languageCode?: string | null;
     languageLabel: string;
   };
   rankChecks: MarketCheck[];
@@ -23,28 +24,33 @@ export type OverviewMarketKeyword = {
 };
 
 export type OverviewMarketRow = {
+  countryCode?: string | null;
   deltaPoints: number;
-  deltaTooltip: string;
+  languageCode?: string | null;
   languageLabel: string;
   locationId: string;
   locationLabel: string;
+  previousPeriod: { end: string; start: string };
   rangeDays: number;
   researchAvailable: boolean;
   targetCount: number;
   top10Count: number;
   top10Share: number;
-  top10Tooltip: string;
   trend: number[];
 };
 
 export type OverviewRegistryMarket = {
-  location: { displayName: string; languageLabel: string };
+  location: {
+    countryCode?: string | null;
+    displayName: string;
+    languageCode?: string | null;
+    languageLabel: string;
+  };
   locationId: string;
   researchAvailable?: boolean;
 };
 
 type BuildOptions = {
-  dateFormat?: DateFormat;
   defaultFrequency?: string | null;
   now: Date;
   range: OverviewRange;
@@ -92,13 +98,8 @@ function share(count: number, total: number) {
   return total > 0 ? Math.round((count / total) * 100) : 0;
 }
 
-function dateLabel(value: Date, dateFormat: DateFormat) {
-  const key = value.toISOString().slice(0, 10);
-  return formatDateRange(key, key, dateFormat);
-}
-
-function signedPoints(value: number) {
-  return `${value > 0 ? "+" : ""}${value}pp`;
+function dateKey(value: Date) {
+  return value.toISOString().slice(0, 10);
 }
 
 function trendFor(keywords: OverviewMarketKeyword[], historyStart: Date, start: Date, now: Date) {
@@ -117,7 +118,7 @@ export function buildOverviewMarkets(
 ): OverviewMarketRow[] {
   const options = Array.isArray(registryOrOptions) ? maybeOptions : registryOrOptions;
   if (!options) throw new Error("Overview market build options are required.");
-  const { dateFormat = "month_first", defaultFrequency, now, range } = options;
+  const { defaultFrequency, now, range } = options;
   const active = keywords.filter(
     (keyword) =>
       keyword.locationId &&
@@ -156,17 +157,21 @@ export function buildOverviewMarkets(
     const languageLabel = location.languageLabel;
 
     return {
+      countryCode: location.countryCode ?? null,
       deltaPoints,
-      deltaTooltip: `Top-10 share ${signedPoints(deltaPoints)} vs ${dateLabel(previousStart, dateFormat)} - ${dateLabel(previousEnd, dateFormat)}, the previous ${days} days.`,
+      languageCode: location.languageCode ?? null,
       languageLabel,
       locationId,
       locationLabel,
+      previousPeriod: {
+        end: dateKey(previousEnd),
+        start: dateKey(previousStart),
+      },
       rangeDays: days,
       researchAvailable,
       targetCount: targets.length,
       top10Count: currentTop10,
       top10Share: currentShare,
-      top10Tooltip: `Targets of this market currently ranking in positions 1 to 10, out of ${targets.length} active targets.`,
       trend: trendFor(targets, previousStart, start, now),
     };
   });

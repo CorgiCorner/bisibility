@@ -2,7 +2,7 @@
 
 import { type RefObject, useState } from "react";
 import { flushSync } from "react-dom";
-import { drawerBackLabel, type SearchInsightsDrawerFrame } from "./drawer-model";
+import type { SearchInsightsDrawerFrame } from "./drawer-model";
 
 /** A frame and where the customer had scrolled to when they left it. */
 export type DrawerStackEntry = {
@@ -28,7 +28,10 @@ export type DrawerStack = {
  * it, and Back pops it. Push records the offset the origin frame was left at so Back can put the
  * customer back where they were rather than at the top of a list they had scrolled through.
  */
-export function useDrawerStack(bodyRef: RefObject<HTMLElement | null>): DrawerStack {
+export function useDrawerStack(
+  bodyRef: RefObject<HTMLElement | null>,
+  labelFrame: (frame: SearchInsightsDrawerFrame) => string,
+): DrawerStack {
   const [stack, setStack] = useState<readonly DrawerStackEntry[]>([]);
   const [opened, setOpened] = useState(false);
 
@@ -82,7 +85,7 @@ export function useDrawerStack(bodyRef: RefObject<HTMLElement | null>): DrawerSt
   }
 
   return {
-    back: previous ? drawerBackLabel(previous) : null,
+    back: previous ? labelFrame(previous) : null,
     close,
     frame,
     open,

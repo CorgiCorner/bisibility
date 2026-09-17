@@ -1,6 +1,6 @@
 "use client";
 
-import { AddFilterMenu } from "@/components/feeds/AddFilterMenu";
+import { AddFilterMenu, type FeedFacetLabels } from "@/components/feeds/AddFilterMenu";
 import { FacetToken } from "@/components/feeds/FacetToken";
 import {
   addFeedFacet,
@@ -18,9 +18,11 @@ function hrefFor(pathname: string, params: URLSearchParams) {
 
 export function FacetBar({
   facets,
+  labels,
   options,
 }: Readonly<{
   facets: readonly FeedFacet[];
+  labels: FeedFacetLabels;
   options: FeedFacetOptions;
 }>) {
   const pathname = usePathname() ?? "";
@@ -33,17 +35,22 @@ export function FacetBar({
   }
 
   return (
-    <fieldset aria-label="Feed facets" className="flex flex-wrap items-center gap-2 border-0 p-0">
+    <fieldset
+      aria-label={labels.addFeedFilter}
+      className="flex flex-wrap items-center gap-2 border-0 p-0"
+    >
       {facets.map((facet) => (
         <FacetToken
           facet={facet}
           key={`${facet.axis}:${facet.value}`}
           label={feedFacetLabel(facet, options)}
+          labels={labels}
           onRemove={(removed) => navigate(removeFeedFacet(current, removed, options))}
         />
       ))}
       <AddFilterMenu
         facets={facets}
+        labels={labels}
         onAdd={(added) => navigate(addFeedFacet(current, added, options))}
         options={options}
       />

@@ -1,8 +1,9 @@
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type ScheduleListRow, SchedulesList } from "./SchedulesList";
 
 const mocks = vi.hoisted(() => ({ showToast: vi.fn() }));
@@ -13,14 +14,14 @@ vi.mock("@/components/ui/toast-context", async (importOriginal) => ({
 
 const schedules: ScheduleListRow[] = [
   {
-    cadenceMeta: "Europe/Madrid / starts within 15 min of 06:00",
     enabled: true,
     frequency: "daily",
     isDefault: true,
     keywordCount: 248,
-    memberMeta: "2 markets x 1 device",
+    memberDeviceCount: 1,
+    memberMarketCount: 2,
     name: "Daily 06:00",
-    nextRunLabel: "tomorrow 06:00",
+    nextRunAt: "2026-09-02T04:00:00.000Z",
     perRunCents: 298,
     publicId: "sch_daily",
     targetCount: 496,
@@ -29,48 +30,48 @@ const schedules: ScheduleListRow[] = [
   },
   {
     blocked: true,
-    cadenceMeta: "Europe/Madrid / starts within 15 min of 06:00",
     enabled: true,
     frequency: "daily",
     isDefault: false,
     keywordCount: 350,
-    memberMeta: "2 markets x 1 device",
+    memberDeviceCount: 1,
+    memberMarketCount: 2,
     name: "Commercial daily",
-    nextRunLabel: "tomorrow 06:00",
+    nextRunAt: "2026-09-02T04:00:00.000Z",
     perRunCents: 420,
     publicId: "sch_commercial",
-    tagScope: "tag = commercial",
+    sharedTag: "commercial",
     targetCount: 700,
     timeOfDay: "06:00",
     timezone: "Europe/Madrid",
   },
   {
-    cadenceMeta: "Europe/Stockholm / exactly 06:00",
     enabled: false,
     frequency: "weekly",
     isDefault: false,
     keywordCount: 40,
-    memberMeta: "2 markets x 1 device",
+    memberDeviceCount: 1,
+    memberMarketCount: 2,
     name: "Nordics weekly",
-    nextRunLabel: "-",
+    nextRunAt: "2026-09-07T04:00:00.000Z",
     perRunCents: 48,
     publicId: "sch_nordics",
-    tagScope: "tag = nordics",
+    sharedTag: "nordics",
     targetCount: 80,
     timeOfDay: "06:00",
     timezone: "Europe/Stockholm",
     weekday: "Monday",
   },
   {
-    cadenceMeta: "Europe/Madrid / starts within 15 min of 06:00",
-    dayOfMonth: "1st",
+    dayOfMonth: 1,
     enabled: true,
     frequency: "monthly",
     isDefault: false,
     keywordCount: 12,
-    memberMeta: "1 market x 1 device",
+    memberDeviceCount: 1,
+    memberMarketCount: 1,
     name: "Monthly 06:00",
-    nextRunLabel: "Mon 06:00",
+    nextRunAt: "2026-09-07T04:00:00.000Z",
     perRunCents: 14,
     publicId: "sch_monthly",
     targetCount: 12,
@@ -106,6 +107,8 @@ async function tabPastScheduleResizeControls(user: ReturnType<typeof userEvent.s
 }
 
 describe("SchedulesList", () => {
+  afterEach(() => vi.useRealTimers());
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
@@ -124,18 +127,19 @@ describe("SchedulesList", () => {
         .getAllByRole("columnheader")
         .map((cell) => cell.textContent),
     ).toEqual(["Schedule", "Cadence", "Members", "Per run", "Next", "Actions"]);
-    expect(
-      within(table).getByText("248 keywords in 2 markets x 1 device = 496 checks a run"),
-    ).toBeVisible();
+    expect(within(table).getByText("248 keywords = 496 checks a run")).toBeVisible();
+    expect(within(table).getAllByText("2 markets x 1 device")).toHaveLength(3);
     expect(within(table).getByText("~$2.98")).toBeVisible();
   });
 
   it("renders scope, cadence, and an estimate without a planned run", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-01T12:00:00.000Z"));
     renderList();
 
     expect(screen.getByText("tag = commercial")).toBeVisible();
     expect(screen.getByText("tag = nordics")).toBeVisible();
-    expect(screen.getByText("Mondays, 06:00")).toBeVisible();
+    expect(screen.getByText("Monday, 06:00")).toBeVisible();
     expect(screen.getByText("Monthly on the 1st, 06:00")).toBeVisible();
     expect(screen.getAllByText("tomorrow 06:00")).toHaveLength(2);
     expect(screen.getByText("Mon 06:00")).toBeVisible();

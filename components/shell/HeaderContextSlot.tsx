@@ -6,6 +6,7 @@ import { headerContextState } from "@/lib/markets/header-context";
 import { appRootPath, type ProjectRef } from "@/lib/routing/app-path";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 /**
@@ -34,6 +35,7 @@ export function HeaderContextSlot({
   projectRef = "",
   trailingControl,
 }: HeaderContextSlotProps) {
+  const t = useTranslations("shell.header");
   const pathname = usePathname() ?? appRootPath();
   const state = headerContextState(pathname, contexts);
   if (state.kind === "none") {
@@ -42,14 +44,10 @@ export function HeaderContextSlot({
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: a labelled grouping in the header, not a fieldset of form controls
-    <div
-      aria-label={HEADER_CONTEXT_LABEL}
-      className="flex min-w-0 flex-none items-center gap-1"
-      role="group"
-    >
+    <div aria-label={t("changeContext")} className="flex min-w-0 items-center gap-1" role="group">
       {contexts.length === 0 && (state.kind === "market" || state.kind === "all-markets") ? (
         <span className="flex h-8 flex-none items-center px-2 text-[13px] font-medium text-fg-muted">
-          No markets
+          {t("noMarkets")}
         </span>
       ) : state.kind === "market" || state.kind === "all-markets" ? (
         <MarketSwitcher

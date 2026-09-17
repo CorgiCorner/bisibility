@@ -1,5 +1,6 @@
+import { renderWithIntegrationMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ProviderRateData } from "@/lib/integrations/types";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ProviderRates } from "./ProviderRates";
 

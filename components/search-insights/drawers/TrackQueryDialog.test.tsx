@@ -1,6 +1,10 @@
+import { formatResearchEstimateCents } from "@/components/research/research-money";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
-import { render, screen } from "@testing-library/react";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import messages from "@/messages/core/en/project-search-insights.json";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { createTranslator } from "next-intl";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { storyCostContext, storyProjectMarkets } from "./drawer-story-fixtures";
@@ -11,6 +15,18 @@ import {
   trackDefaultMarketKey,
   trackMarketOptions,
 } from "./track-dialog-model";
+
+const t = createTranslator({
+  locale: "en",
+  messages: messages.projectSearchInsights.copy,
+});
+const presentation = {
+  formatMoney: (cents: number) =>
+    formatResearchEstimateCents(cents, (value, options) =>
+      new Intl.NumberFormat("en", options).format(value),
+    ),
+  t,
+};
 
 type Options = {
   costContext?: typeof storyCostContext;
@@ -69,10 +85,10 @@ function ResetHarness() {
 
 describe("trackCostLine", () => {
   it("prices the selected depth and frequency at the customer's own rate", () => {
-    expect(trackCostLine(storyCostContext, "project_default", 100)).toBe(
+    expect(trackCostLine(storyCostContext, "project_default", 100, presentation)).toBe(
       "1 check per day / < $0.01 per check / $0.02 per month",
     );
-    expect(trackCostLine(storyCostContext, "weekly", 20)).toBe(
+    expect(trackCostLine(storyCostContext, "weekly", 20, presentation)).toBe(
       "1 check per week / < $0.01 per check / < $0.01 per month",
     );
   });
@@ -83,12 +99,13 @@ describe("trackCostLine", () => {
         { ...storyCostContext, cronExpression: "0 6 * * 1", rawFrequency: "custom_cron" },
         "project_default",
         20,
+        presentation,
       ),
     ).toContain("custom project schedule");
-    expect(trackCostLine(storyCostContext, "manual", 20)).toBe(
+    expect(trackCostLine(storyCostContext, "manual", 20, presentation)).toBe(
       "No scheduled checks / < $0.01 per manual check",
     );
-    expect(trackCostLine(storyCostContext, "paused", 20)).toBe("No scheduled checks");
+    expect(trackCostLine(storyCostContext, "paused", 20, presentation)).toBe("No scheduled checks");
   });
 
   it("drops money rather than inventing a price nobody quoted", () => {
@@ -97,6 +114,7 @@ describe("trackCostLine", () => {
         { ...storyCostContext, costPerCheckCents: null, providerId: null },
         "weekly",
         20,
+        presentation,
       ),
     ).toBe("1 check per week");
   });
@@ -111,7 +129,7 @@ describe("trackConfirmLabel", () => {
     ["manual", "Add as manual"],
     ["paused", "Add paused"],
   ] as const)("labels %s truthfully", (selection, expected) => {
-    expect(trackConfirmLabel(selection, "daily")).toBe(expected);
+    expect(trackConfirmLabel(selection, "daily", t)).toBe(expected);
   });
 });
 

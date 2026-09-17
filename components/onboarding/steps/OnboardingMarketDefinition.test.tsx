@@ -1,6 +1,7 @@
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NewMarketCreateInput } from "@/lib/markets/create-input";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -143,7 +144,7 @@ describe("OnboardingMarketDefinition", () => {
     expect(createMarketAction).toHaveBeenCalledTimes(1);
   });
 
-  it("shows the server's refusal and keeps the draft when creation fails", async () => {
+  it("shows the localized refusal and keeps the draft when creation fails", async () => {
     const user = userEvent.setup();
     const createMarketAction = createAction();
     createMarketAction.mockRejectedValueOnce(new Error("Choose a valid market location."));
@@ -152,7 +153,8 @@ describe("OnboardingMarketDefinition", () => {
     await defineSpain(user);
     await user.click(screen.getByRole("button", { name: "Create market" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Choose a valid market location.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Market could not be created.");
+    expect(screen.queryByText("Choose a valid market location.")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Remove Spain / Spanish" }),
     ).not.toBeInTheDocument();

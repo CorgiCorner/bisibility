@@ -4,6 +4,7 @@ import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/Car
 import { PuzzlePieceIcon as PuzzlePiece } from "@phosphor-icons/react/dist/ssr/PuzzlePiece";
 import { RankingIcon as Ranking } from "@phosphor-icons/react/dist/ssr/Ranking";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 export type FirstCheckBannerIcon = "puzzle" | "ranking";
@@ -12,18 +13,6 @@ const bannerIcons = {
   puzzle: PuzzlePiece,
   ranking: Ranking,
 } as const;
-
-export function keywordReadinessSubject(keywordCount: number) {
-  const count = Number.isFinite(keywordCount) ? Math.max(0, Math.floor(keywordCount)) : 0;
-  if (count === 0) return "No keywords are";
-  if (count === 1) return "1 keyword is";
-  return `${count.toLocaleString("en-US")} keywords are`;
-}
-
-function defaultFirstCheckDetail(keywordCount: number) {
-  if (keywordCount === 0) return "Add keywords to start rank tracking.";
-  return `${keywordReadinessSubject(keywordCount)} ready for the first rank check.`;
-}
 
 export function FirstCheckBannerLink({ href, label }: Readonly<{ href: string; label: string }>) {
   return (
@@ -43,7 +32,7 @@ export function FirstCheckBanner({
   detail,
   icon = "puzzle",
   keywordCount,
-  title = "No rankings yet",
+  title,
 }: Readonly<{
   action?: ReactNode;
   detail?: string;
@@ -51,8 +40,11 @@ export function FirstCheckBanner({
   keywordCount?: number;
   title?: string;
 }>) {
+  const t = useTranslations("projectRankTracker.list.notices");
   const Glyph = bannerIcons[icon];
-  const resolvedDetail = detail ?? defaultFirstCheckDetail(keywordCount ?? 0);
+  const count = Number.isFinite(keywordCount) ? Math.max(0, Math.floor(keywordCount ?? 0)) : 0;
+  const resolvedDetail = detail ?? t("firstCheckDetail", { count });
+  const resolvedTitle = title ?? t("firstCheckTitle");
 
   return (
     <section className="flex flex-col gap-3 rounded-card border border-border bg-bg-elev px-4 py-[13px] text-fg sm:flex-row sm:items-center sm:gap-3">
@@ -69,7 +61,7 @@ export function FirstCheckBanner({
         />
       </span>
       <div className="min-w-0 flex-1">
-        <h2 className="m-0 text-[13px] font-semibold leading-[1.5] text-fg">{title}</h2>
+        <h2 className="m-0 text-[13px] font-semibold leading-[1.5] text-fg">{resolvedTitle}</h2>
         <p className="m-0 mt-0.5 text-[13px] leading-[1.5] text-fg-muted">{resolvedDetail}</p>
       </div>
       {action}

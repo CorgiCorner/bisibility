@@ -10,7 +10,8 @@ import {
 } from "@/components/keyword-detail/empty/SearchPerformanceAwaitingFirstSync";
 import { SearchPerformanceNotConnected } from "@/components/keyword-detail/empty/SearchPerformanceNotConnected";
 import { TargetMismatchCannibalization } from "@/components/keyword-detail/empty/TargetMismatchCannibalization";
-import { render, screen } from "@testing-library/react";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 describe("keyword detail empty module states", () => {

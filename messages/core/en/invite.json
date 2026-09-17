@@ -1,0 +1,32 @@
+{
+  "invite": {
+    "accept": "Accept invite",
+    "alreadyUsed": "This invite was already used",
+    "alreadyUsedBody": "The invite has already been accepted or replaced by a newer one.",
+    "expires": "Expires",
+    "expired": "This invite has expired",
+    "expiredBody": "Ask a project admin to send a fresh invite.",
+    "goToSignIn": "Go to sign in",
+    "invalid": "Invite not found",
+    "invalidBody": "Check the link or ask the sender to resend the invite.",
+    "invitedEmail": "Invited email",
+    "join": "Join {project}",
+    "metadataDescription": "Accept a bisibility project invitation.",
+    "mismatchedAccount": "You are signed in as {current}. Sign in as {invited} to accept this invite.",
+    "oneTimeCodeSent": "We sent a one-time code to <address>{email}</address>.",
+    "role": "Role",
+    "roles": {
+      "admin": "Admin",
+      "member": "Editor",
+      "viewer": "Viewer"
+    },
+    "sendSignInCode": "Send sign-in code",
+    "signInCode": "Sign-in code",
+    "signOut": "Sign out",
+    "teamInvite": "Team invite",
+    "validEmail": "Enter a valid email address.",
+    "verifyAndReturn": "Verify and return to invite",
+    "verifyCode": "Enter the 6-digit code.",
+    "verifyFailed": "Something went wrong. Try again."
+  }
+}

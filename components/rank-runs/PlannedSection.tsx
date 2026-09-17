@@ -1,11 +1,11 @@
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { runStatusChipPresentation } from "@/components/ui/status-chip-mapping";
 import { useBrowserTimeZone } from "@/components/ui/ZonedTime";
-import { formatDateTime } from "@/lib/dates/format";
-import { pluralize } from "@/lib/format/pluralize";
-import { formatPlannedDay, plannedRunDayKey } from "./runs-format";
+import { formatDisplayDate } from "@/lib/dates/format";
+import { useLocale, useTranslations } from "next-intl";
+import { plannedRunDayKey } from "./runs-format";
 import type { RankRunRecord } from "./runs-types";
 
 type PlannedSectionProps = {
@@ -24,8 +24,9 @@ type PlannedDay = {
 
 function plannedDays(
   runs: readonly RankRunRecord[],
-  dateFormat: ReturnType<typeof useDateFormat>,
+  dateDisplay: ReturnType<typeof useDateDisplay>,
   timeZone: string,
+  unscheduled: string,
 ): PlannedDay[] {
   const groups = new Map<string, RankRunRecord[]>();
   for (const run of runs) {
@@ -34,19 +35,22 @@ function plannedDays(
   }
   return [...groups.values()].map((dayRuns) => {
     return {
-      label: formatPlannedDay(dayRuns[0]?.plannedFor ?? null, dateFormat, timeZone),
+      label: dayRuns[0]?.plannedFor
+        ? formatDisplayDate(plannedRunDayKey(dayRuns[0].plannedFor, timeZone), dateDisplay)
+        : unscheduled,
       runs: dayRuns,
     };
   });
 }
 
-function time(
-  value: string | null,
-  dateFormat: ReturnType<typeof useDateFormat>,
-  timeZone: string,
-) {
-  if (!value) return "-";
-  return formatDateTime(new Date(value), dateFormat, timeZone).split(", ").at(-1) ?? "-";
+function time(value: string | null, locale: string, timeZone: string) {
+  if (!value) return null;
+  return new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    hourCycle: "h23",
+    minute: "2-digit",
+    timeZone,
+  }).format(new Date(value));
 }
 
 export function PlannedSection({
@@ -57,9 +61,12 @@ export function PlannedSection({
   pendingRunId,
   runs,
 }: Readonly<PlannedSectionProps>) {
-  const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
+  const locale = useLocale();
+  const t = useTranslations("projectRuns.rankRuns");
+  const statusT = useTranslations("shared.controls.status");
   const timeZone = useBrowserTimeZone() ?? "UTC";
-  const days = plannedDays(runs, dateFormat, timeZone);
+  const days = plannedDays(runs, dateDisplay, timeZone, t("relative.notScheduled"));
 
   if (days.length === 0) return null;
 
@@ -76,7 +83,7 @@ export function PlannedSection({
                 <span className="col-span-2 text-[12.5px] font-semibold text-fg">
                   {day.label}
                   <span className="ml-2 text-[11px] font-normal text-fg-muted">
-                    {day.runs.length} {day.runs.length === 1 ? "run" : "runs"}
+                    {t("runCount", { count: day.runs.length })}
                   </span>
                 </span>
               </div>
@@ -96,41 +103,45 @@ export function PlannedSection({
                     key={run.id}
                   >
                     <span className="text-[11.5px] tabular-nums text-fg-muted">
-                      {time(run.plannedFor, dateFormat, timeZone)}
+                      {time(run.plannedFor, locale, timeZone) ?? t("unavailable")}
                     </span>
                     <span className="min-w-0">
                       <span className="flex flex-wrap items-center gap-2">
                         <span className="text-[12.5px] font-semibold text-fg">
-                          {run.checkSchedulePublicId ? "Scheduled" : "Planned"}
+                          {run.checkSchedulePublicId ? t("scheduled") : t("planned")}
                         </span>
-                        {blocked ? <StatusChip {...presentation} /> : null}
+                        {blocked ? (
+                          <StatusChip {...presentation} label={statusT(presentation.messageKey)} />
+                        ) : null}
                       </span>
                       <span className="mt-0.5 block text-[11px] text-fg-muted">
-                        {pluralize(run.keywordCount, "keyword")} /{" "}
-                        {pluralize(run.targetCount, "target")}
+                        {t("keywordsSlashTargets", {
+                          keywords: run.keywordCount,
+                          targets: run.targetCount,
+                        })}
                       </span>
                       {blocked ? (
                         <span className="mt-1 block text-[11.5px] text-fg">
-                          Targets are paused because the budget was reached.
+                          {t("plannedSection.budgetReached")}
                         </span>
                       ) : null}
                     </span>
                     <span className="flex justify-end gap-1.5">
                       {blocked ? (
                         <Button href={budgetSettingsHref} size="xs" variant="secondary">
-                          Edit budget
+                          {t("plannedSection.editBudget")}
                         </Button>
                       ) : (
                         <>
                           <Button
                             disabled={pending}
                             loading={pending}
-                            loadingLabel="Running"
+                            loadingLabel={t("plannedSection.running")}
                             onClick={() => onRunNow(run)}
                             size="xs"
                             variant="ghost"
                           >
-                            Run now
+                            {t("plannedSection.runNow")}
                           </Button>
                           <Button
                             disabled={pending}
@@ -138,7 +149,7 @@ export function PlannedSection({
                             size="xs"
                             variant="ghost"
                           >
-                            Skip once
+                            {t("skipOnce")}
                           </Button>
                         </>
                       )}

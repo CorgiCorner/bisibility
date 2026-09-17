@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
+import {
+  onboardingFeatureTestMessages,
+  renderWithOnboardingMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StepConnectProvider } from "./StepConnectProvider";
 import {
@@ -7,6 +13,36 @@ import {
   defaultValues,
   renderProviderStep,
 } from "./StepConnectProvider.test-utils";
+
+const nonEnglishValidationMessages = {
+  ...onboardingFeatureTestMessages,
+  onboarding: {
+    ...onboardingFeatureTestMessages.onboarding,
+    provider: {
+      ...onboardingFeatureTestMessages.onboarding.provider,
+      errors: {
+        ...onboardingFeatureTestMessages.onboarding.provider.errors,
+        credentialTooLong: "Wpisz najwyżej {maximum, number} znaków.",
+      },
+    },
+  },
+};
+
+function renderWithNonEnglishProviderMessages(
+  props: Partial<Parameters<typeof StepConnectProvider>[0]> = {},
+) {
+  const onComplete = vi.fn();
+  renderWithFeatureMessages(
+    <>
+      <StepConnectProvider defaultValues={defaultValues()} onComplete={onComplete} {...props} />
+      <button form={onboardingFormId} type="submit">
+        Continue
+      </button>
+    </>,
+    { messages: nonEnglishValidationMessages },
+  );
+  return onComplete;
+}
 
 describe("StepConnectProvider submission", () => {
   it("exposes one selected provider through the radiogroup", () => {
@@ -74,6 +110,25 @@ describe("StepConnectProvider submission", () => {
     expect(screen.getByText("Enter your API password.")).toBeInTheDocument();
     expect(onComplete).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["API login", "API password"],
+    ["API password", "API login"],
+  ])(
+    "renders the localized maximum-length error for an oversized %s through submit",
+    async (oversizedLabel, otherLabel) => {
+      const onComplete = renderWithNonEnglishProviderMessages();
+
+      fireEvent.change(screen.getByLabelText(oversizedLabel), {
+        target: { value: "x".repeat(501) },
+      });
+      fireEvent.change(screen.getByLabelText(otherLabel), { target: { value: "valid" } });
+      clickContinue();
+
+      expect(await screen.findByText("Wpisz najwyżej 500 znaków.")).toBeInTheDocument();
+      expect(onComplete).not.toHaveBeenCalled();
+    },
+  );
 
   it("submits no client-owned enabled, primary, or priority to the provider action", async () => {
     const connectProviderAction = vi.fn(async (_input: unknown) => undefined);

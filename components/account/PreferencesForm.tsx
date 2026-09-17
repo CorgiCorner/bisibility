@@ -1,18 +1,17 @@
 "use client";
 
+import { useAccountActionError } from "@/components/account/useAccountActionError";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/SegmentedControl";
+import { type ActiveLocale, activeLocaleValues, localeAutonyms } from "@/i18n/config";
 import {
-  dateFormatOptions,
-  densityOptions,
-  landingOptions,
+  dateFormatExamples,
   preferencesSchema,
-  themeOptions,
   type UserPreferences,
 } from "@/lib/account/preferences-shared";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import { primaryNavEntries } from "@/lib/nav/nav-items";
 import { applyTheme } from "@/lib/theme/browser-theme";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { cn } from "@/lib/ui/cn";
 import { ListIcon as List } from "@phosphor-icons/react/dist/csr/List";
 import { ListDashesIcon as ListDashes } from "@phosphor-icons/react/dist/csr/ListDashes";
@@ -21,7 +20,8 @@ import { MoonStarsIcon as MoonStars } from "@phosphor-icons/react/dist/csr/MoonS
 import { RowsIcon as Rows } from "@phosphor-icons/react/dist/csr/Rows";
 import { SunIcon as Sun } from "@phosphor-icons/react/dist/csr/Sun";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
+import { useRef, useState, useTransition } from "react";
 import { type UseFormSetValue, useForm } from "react-hook-form";
 import { AccountSection } from "./AccountSection";
 import { feedbackClass, fieldLabelClass } from "./account-ui";
@@ -29,8 +29,10 @@ import { feedbackClass, fieldLabelClass } from "./account-ui";
 export type PreferencesFormProps = {
   autoExample: "day_first" | "month_first" | "iso";
   defaults: UserPreferences;
+  locale: ActiveLocale;
   todayKey: string;
   updatePreferences: (input: UserPreferences) => Promise<UserPreferences>;
+  updateUiLocale: (input: ActiveLocale) => Promise<ActiveLocale>;
 };
 
 const selectTriggerClass =
@@ -57,27 +59,31 @@ function densityIcon(value: UserPreferences["density"]) {
   return <List aria-hidden size={16} weight="regular" />;
 }
 
-function themeSegments(): SegmentedControlOption<UserPreferences["theme"]>[] {
-  return themeOptions.map((option) => ({
+function themeSegments(
+  labels: Record<UserPreferences["theme"], string>,
+): SegmentedControlOption<UserPreferences["theme"]>[] {
+  return (["light", "dark", "system"] as const).map((value) => ({
     label: (
       <>
-        {themeIcon(option.value)}
-        <span>{option.label}</span>
+        {themeIcon(value)}
+        <span>{labels[value]}</span>
       </>
     ),
-    value: option.value,
+    value,
   }));
 }
 
-function densitySegments(): SegmentedControlOption<UserPreferences["density"]>[] {
-  return densityOptions.map((option) => ({
+function densitySegments(
+  labels: Record<UserPreferences["density"], string>,
+): SegmentedControlOption<UserPreferences["density"]>[] {
+  return (["compact", "standard", "comfortable"] as const).map((value) => ({
     label: (
       <>
-        {densityIcon(option.value)}
-        <span className="sr-only">{option.label}</span>
+        {densityIcon(value)}
+        <span className="sr-only">{labels[value]}</span>
       </>
     ),
-    value: option.value,
+    value,
   }));
 }
 
@@ -105,11 +111,16 @@ function setPreferenceValue(
 export function PreferencesForm({
   autoExample,
   defaults,
+  locale,
   todayKey,
   updatePreferences,
+  updateUiLocale,
 }: Readonly<PreferencesFormProps>) {
   const router = useRouter();
+  const t = useTranslations("account.preferences");
+  const actionError = useAccountActionError();
   const [message, setMessage] = useState<string | null>(null);
+  const localeRequestPending = useRef(false);
   const [isPending, startTransition] = useTransition();
   const { getValues, register, reset, setValue, watch } = useForm<UserPreferences>({
     defaultValues: defaults,
@@ -120,22 +131,68 @@ export function PreferencesForm({
   const dateFormat = watch("dateFormat");
   const landing = watch("landing");
   const density = watch("density");
-  const formatOptions = dateFormatOptions(todayKey, autoExample);
+  const dateExamples = dateFormatExamples(todayKey, autoExample, locale);
+  const formatOptions = [
+    { label: t("date.auto", { date: dateExamples.auto }), value: "auto" },
+    { label: dateExamples.day_first, value: "day_first" },
+    { label: dateExamples.month_first, value: "month_first" },
+    { label: dateExamples.iso, value: "iso" },
+  ] as const;
+  const landingLabels = {
+    backlinks: t("landing.backlinks"),
+    competitors: t("landing.competitors"),
+    dashboard: t("landing.dashboard"),
+    "domain-overview": t("landing.domain-overview"),
+    "keyword-research": t("landing.keyword-research"),
+    "rank-tracker": t("landing.rank-tracker"),
+    "search-console": t("landing.search-console"),
+    timeline: t("landing.timeline"),
+  } satisfies Record<UserPreferences["landing"], string>;
+  const landingOptions = primaryNavEntries.map((entry) => ({
+    label: landingLabels[entry.segment],
+    value: entry.segment,
+  }));
+  const themeLabels = {
+    dark: t("theme.dark"),
+    light: t("theme.light"),
+    system: t("theme.system"),
+  } satisfies Record<UserPreferences["theme"], string>;
+  const densityLabels = {
+    comfortable: t("density.comfortable"),
+    compact: t("density.compact"),
+    standard: t("density.standard"),
+  } satisfies Record<UserPreferences["density"], string>;
 
   function persist<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
     setPreferenceValue(setValue, key, value);
     const next = preferencesSchema.parse({ ...getValues(), [key]: value });
     setMessage(null);
     applyTheme(next.theme);
-    startTransition(() => {
-      void updatePreferences(next)
-        .then((saved) => {
-          reset(saved);
-          router.refresh();
-        })
-        .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "Preferences could not be saved.")),
-        );
+    startTransition(async () => {
+      try {
+        const saved = await updatePreferences(next);
+        reset(saved);
+        router.refresh();
+      } catch (error: unknown) {
+        setMessage(actionError.generic(error, t("saveError")));
+      }
+    });
+  }
+
+  function persistLocale(value: string) {
+    if (localeRequestPending.current) return;
+
+    localeRequestPending.current = true;
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await updateUiLocale(value as ActiveLocale);
+        router.refresh();
+      } catch (error: unknown) {
+        setMessage(actionError.generic(error, t("saveError")));
+      } finally {
+        localeRequestPending.current = false;
+      }
     });
   }
 
@@ -143,31 +200,31 @@ export function PreferencesForm({
     <form aria-busy={isPending} id="account-preferences-form">
       <AccountSection
         contentClassName="px-5 py-4.5"
-        description="Personal to you, applied on every device you sign in from."
-        title="Preferences"
+        description={t.rich("description", { emphasis: (chunks) => <strong>{chunks}</strong> })}
+        title={t("title")}
       >
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3.5">
             <div className="min-w-0">
-              <div className="text-[13.5px] font-semibold text-fg">Theme</div>
-              <div className="mt-px text-xs text-fg-muted">Light, dark, or follow your system</div>
+              <div className="text-[13.5px] font-semibold text-fg">{t("theme.label")}</div>
+              <div className="mt-px text-xs text-fg-muted">{t("theme.subtitle")}</div>
             </div>
             <SegmentedControl
-              ariaLabel="Theme"
+              ariaLabel={t("theme.ariaLabel")}
               fitContent
               name="theme"
               onChange={(value) => persist("theme", value)}
-              options={themeSegments()}
+              options={themeSegments(themeLabels)}
               size="xs"
               value={theme}
             />
           </div>
           <div className="grid gap-3.5 border-t border-border pt-4 sm:grid-cols-2">
             <div className={fieldLabelClass}>
-              <span>Date format</span>
+              <span>{t("date.label")}</span>
               <input type="hidden" {...register("dateFormat")} />
               <MenuSelect
-                ariaLabel="Date format"
+                ariaLabel={t("date.ariaLabel")}
                 onChange={(value) => persist("dateFormat", value as UserPreferences["dateFormat"])}
                 options={formatOptions}
                 triggerClassName={selectTriggerClass}
@@ -175,10 +232,10 @@ export function PreferencesForm({
               />
             </div>
             <div className={fieldLabelClass}>
-              <span>Default landing page</span>
+              <span>{t("landing.label")}</span>
               <input type="hidden" {...register("landing")} />
               <MenuSelect
-                ariaLabel="Default landing page"
+                ariaLabel={t("landing.ariaLabel")}
                 onChange={(value) => persist("landing", value as UserPreferences["landing"])}
                 options={landingOptions}
                 triggerClassName={selectTriggerClass}
@@ -186,17 +243,36 @@ export function PreferencesForm({
               />
             </div>
           </div>
+          <div className="grid gap-3.5 border-t border-border pt-4 sm:grid-cols-2">
+            <div className={fieldLabelClass}>
+              <span>{t("language.label")}</span>
+              <span className="text-xs font-normal normal-case tracking-normal text-fg-muted">
+                {t("language.description")}
+              </span>
+              <MenuSelect
+                ariaLabel={t("language.label")}
+                disabled={isPending}
+                onChange={persistLocale}
+                options={activeLocaleValues.map((value) => ({
+                  label: localeAutonyms[value],
+                  value,
+                }))}
+                triggerClassName={selectTriggerClass}
+                value={locale}
+              />
+            </div>
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-3.5 border-t border-border pt-4">
             <div className="min-w-0">
-              <div className="text-[13.5px] font-semibold text-fg">Default table density</div>
-              <div className="mt-px text-xs text-fg-muted">Row height in the keyword grid</div>
+              <div className="text-[13.5px] font-semibold text-fg">{t("density.label")}</div>
+              <div className="mt-px text-xs text-fg-muted">{t("density.subtitle")}</div>
             </div>
             <SegmentedControl
-              ariaLabel="Default table density"
+              ariaLabel={t("density.ariaLabel")}
               fitContent
               name="density"
               onChange={(value) => persist("density", value)}
-              options={densitySegments()}
+              options={densitySegments(densityLabels)}
               size="xs"
               value={density}
             />

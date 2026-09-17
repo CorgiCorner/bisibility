@@ -1,13 +1,16 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { NewMarketSheet } from "@/components/markets/sheet/NewMarketSheet";
 import { MAX_ONBOARDING_LOCATIONS } from "@/components/onboarding/onboarding-locations";
 import { Button } from "@/components/ui/Button";
 import type { NewMarketCreateInput, NewMarketCreateResult } from "@/lib/markets/create-input";
 import type { SerpDevice } from "@/lib/serp/constants";
+import { classifyActionError, presentActionError } from "@/lib/ui/action-error";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { CreateOnboardingMarketAction } from "./onboarding-market-actions";
 
@@ -43,14 +46,30 @@ export function OnboardingMarketDefinition({
   projectId,
   values,
 }: Readonly<OnboardingMarketDefinitionProps>) {
+  const t = useTranslations("onboarding.markets");
+  const sharedErrors = useSharedErrorMessages();
   const [adding, setAdding] = useState(false);
   const [created, setCreated] = useState<ReadonlyMap<string, NewMarketCreateResult>>(new Map());
   const canAddMore = values.length < MAX_ONBOARDING_LOCATIONS;
 
+  function marketActionError(cause: unknown) {
+    const classified = classifyActionError(cause);
+    if (classified.kind === "staleDeployment" || classified.kind === "serverComponentDigest") {
+      return presentActionError(cause, sharedErrors, t("drawer.createFailed"));
+    }
+    if (
+      classified.kind === "ownedMessage" &&
+      classified.message === t("errors.createProjectFirst")
+    ) {
+      return classified.message;
+    }
+    return t("drawer.createFailed");
+  }
+
   async function create(input: NewMarketCreateInput) {
     const known = created.get(input.canonicalKey);
     if (known) return known;
-    if (!createMarketAction) throw new Error("Create the project before adding markets.");
+    if (!createMarketAction) throw new Error(t("errors.createProjectFirst"));
     const result = await createMarketAction(input);
     setCreated((current) => new Map(current).set(result.canonicalKey, result));
     return result;
@@ -59,12 +78,12 @@ export function OnboardingMarketDefinition({
   return (
     <section
       aria-describedby={error ? "onboarding-markets-error" : undefined}
-      aria-label="Markets"
+      aria-label={t("title")}
       data-analytics-mask
       id="onboarding-markets"
       tabIndex={-1}
     >
-      <div className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">Markets</div>
+      <div className="text-[10px] uppercase tracking-[0.4px] text-fg-muted">{t("title")}</div>
       <div className="mt-2 flex flex-wrap gap-2">
         {values.map((value) => (
           <span className={chipClass} key={value.canonicalKey}>
@@ -72,7 +91,10 @@ export function OnboardingMarketDefinition({
             <span className="text-[11px] text-fg-muted">/</span>
             <span className="text-fg-muted">{value.languageLabel}</span>
             <Button
-              aria-label={`Remove ${value.displayName} / ${value.languageLabel}`}
+              aria-label={t("remove", {
+                language: value.languageLabel ?? "",
+                market: value.displayName,
+              })}
               onClick={() =>
                 onChange(values.filter((item) => item.canonicalKey !== value.canonicalKey))
               }
@@ -106,7 +128,7 @@ export function OnboardingMarketDefinition({
             type="button"
             variant="secondary"
           >
-            {values.length === 0 ? "Add market" : "Another market"}
+            {values.length === 0 ? t("add") : t("another")}
           </Button>
         ) : null}
       </div>
@@ -117,11 +139,37 @@ export function OnboardingMarketDefinition({
       ) : null}
       {!canAddMore ? (
         <p className="m-0 mt-2 text-[11.5px] font-medium text-fg-muted">
-          Maximum {MAX_ONBOARDING_LOCATIONS} markets selected.
+          {t("maximum", { count: MAX_ONBOARDING_LOCATIONS })}
         </p>
       ) : null}
       <NewMarketSheet
         definitionOnly={{ devices }}
+        messages={{
+          actionError: marketActionError,
+          backToMarket: t("drawer.backToMarket"),
+          cancel: t("drawer.cancel"),
+          createMarket: t("drawer.create"),
+          description: t("drawer.description"),
+          marketDefinition: {
+            active: (values) => t("drawer.active", values),
+            allLanguages: t("drawer.allLanguages"),
+            archived: (values) => t("drawer.archived", values),
+            country: t("drawer.country"),
+            customName: t("drawer.customName"),
+            language: t("drawer.language"),
+            location: t("drawer.location"),
+            locationHint: t("drawer.locationHint"),
+            marketDefinition: t("drawer.marketDefinition"),
+            marketName: t("drawer.marketName"),
+            noLocationResults: t("drawer.noLocationResults"),
+            searchAllLanguages: t("drawer.searchAllLanguages"),
+            searchLocations: t("drawer.searchLocations"),
+            searchingLocations: t("drawer.searchingLocations"),
+            suggested: t("drawer.suggested"),
+          },
+          newMarket: t("drawer.newMarket"),
+          newSchedule: t("drawer.newSchedule"),
+        }}
         onClose={() => setAdding(false)}
         onCreate={create}
         onCreated={(result) => onChange([...values, marketValue(result)])}

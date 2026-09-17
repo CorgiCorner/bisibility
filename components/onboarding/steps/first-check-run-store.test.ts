@@ -19,13 +19,22 @@ const result = {
   rankingUrl: null,
   requestedDepth: 20,
 };
-function response(status: string, rankCheck: unknown = null, publicId = "kw_1") {
+function response(
+  status: string,
+  rankCheck: unknown = null,
+  publicId = "kw_1",
+  blockedReason: string | null = null,
+) {
   return Response.json({
-    data: [{ blockedReason: null, keyword: { publicId }, rankCheck, status }],
+    data: [{ blockedReason, keyword: { publicId }, rankCheck, status }],
   });
 }
 function setup() {
-  const store = createFirstCheckRunStore();
+  const store = createFirstCheckRunStore(
+    [],
+    undefined,
+    "Status nie zostal odswiezony. Ponawiamy automatycznie.",
+  );
   store.setState({ mode: "preview", rows: [queued], message: null, status: "queued" });
   const unsubscribe = store.subscribe(vi.fn());
   store.track("prj_1", queued);
@@ -74,13 +83,29 @@ describe("first-check progress", () => {
       await vi.advanceTimersByTimeAsync(0);
       expect(store.getSnapshot()).toMatchObject({
         status: "completed",
-        rows: [{ status: "failed", message: `Check ${status}.` }],
+        rows: [{ blockedReason: null, status }],
       });
       await vi.advanceTimersByTimeAsync(60_000);
       expect(fetch).toHaveBeenCalledTimes(1);
       unsubscribe();
     },
   );
+
+  it("keeps send-unconfirmed blocked status and reason without scheduling a retry", async () => {
+    const fetch = vi.fn().mockResolvedValue(response("blocked", null, "kw_1", "send_unconfirmed"));
+    vi.stubGlobal("fetch", fetch);
+    const { store, unsubscribe } = setup();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(store.getSnapshot()).toMatchObject({
+      status: "completed",
+      rows: [{ blockedReason: "send_unconfirmed", status: "blocked" }],
+    });
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    unsubscribe();
+  });
 
   it.each([
     ["HTTP failure", () => new Response(null, { status: 503 })],
@@ -100,7 +125,7 @@ describe("first-check progress", () => {
       expect(store.getSnapshot()).toMatchObject({
         status: "queued",
         rows: [{ status: "queued" }],
-        message: expect.stringContaining("Retrying automatically"),
+        message: expect.stringContaining("Ponawiamy automatycznie"),
       });
       await vi.advanceTimersByTimeAsync(4_000);
       expect(store.getSnapshot()).toMatchObject({ status: "completed", message: null });
@@ -182,7 +207,7 @@ describe("first-check progress", () => {
     vi.stubGlobal("fetch", fetch);
     const { store, unsubscribe } = setup();
     await vi.advanceTimersByTimeAsync(15_000);
-    expect(store.getSnapshot().message).toContain("Retrying automatically");
+    expect(store.getSnapshot().message).toContain("Ponawiamy automatycznie");
     await vi.advanceTimersByTimeAsync(4_000);
     expect(store.getSnapshot().status).toBe("completed");
     unsubscribe();

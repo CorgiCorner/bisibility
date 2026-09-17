@@ -76,10 +76,6 @@ function keyword(overrides: Record<string, unknown>) {
   };
 }
 
-function metric(result: Awaited<ReturnType<typeof getOverview>>, label: string) {
-  return result.dataSource.metrics.find((item) => item.label === label)?.value;
-}
-
 describe("overview query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -406,11 +402,8 @@ describe("overview query", () => {
       state: "populated",
       toolbar: {
         availableTags: ["Docs", "Product"],
-        device: "All devices",
         deviceValue: "all",
-        range: "Last 28 days",
         rangeValue: "28d",
-        tag: "All tags",
         tagValue: null,
       },
       trackedKeywordCount: 5,
@@ -419,21 +412,31 @@ describe("overview query", () => {
     expect(result.nextCheckAt).toBeInstanceOf(Date);
     expect(result.kpis).toEqual([
       {
-        delta: "0 vs previous ranked check",
+        delta: { kind: "averageComparison", value: 0 },
         deltaTone: "neutral",
-        label: "Avg. position",
-        value: "8.7",
+        id: "averagePosition",
+        value: 8.666666666666666,
       },
-      { delta: "+5 this month", deltaTone: "neutral", label: "Tracked keywords", value: "5" },
-      { delta: "0", deltaTone: "neutral", label: "In top 10", value: "2" },
-      { delta: "+5.0pp", deltaTone: "positive", label: "Visibility", value: "19%" },
+      {
+        delta: { kind: "countThisMonth", value: 5 },
+        deltaTone: "neutral",
+        id: "trackedKeywords",
+        value: 5,
+      },
+      { delta: { kind: "countChange", value: 0 }, deltaTone: "neutral", id: "inTop10", value: 2 },
+      {
+        delta: { kind: "percentagePointChange", value: 5 },
+        deltaTone: "positive",
+        id: "visibility",
+        value: 19,
+      },
     ]);
     expect(result.visibilityCoverage).toEqual({ limited: false, measured: 3, total: 5 });
     expect(result.trend).toEqual([
-      { label: "2026-06-19", value: 12 },
-      { label: "2026-06-20", value: 7 },
-      { label: "2026-06-26", value: 9 },
-      { label: "now", value: 8.5 },
+      { dateKey: "2026-06-20", label: "2026-06-20", value: 12 },
+      { dateKey: "2026-06-21", label: "2026-06-21", value: 7 },
+      { dateKey: "2026-06-27", label: "2026-06-27", value: 9 },
+      { dateKey: "2026-06-28", label: null, value: 8.5 },
     ]);
     expect(result.distribution.map((bucket) => [bucket.label, bucket.count])).toEqual([
       ["#1-3", 1],
@@ -442,14 +445,15 @@ describe("overview query", () => {
       ["#21-50", 0],
       ["#51-100", 0],
     ]);
-    expect(metric(result, "Primary provider")).toBe("DataForSEO");
-    expect(metric(result, "Last check via")).toBe("SerpApi");
-    expect(metric(result, "Last check")).toBe("2h ago");
-    expect(metric(result, "Next check")).toBe("in 4d");
-    expect(metric(result, "Checks this month")).toBe("2");
-    expect(metric(result, "Est. provider cost")).toBe("$1.23");
+    expect(result.dataSource).toMatchObject({
+      checksThisMonth: 2,
+      lastCheckProvider: "serpapi",
+      primaryProvider: "dataforseo",
+      providerCostCents: 123,
+      status: "healthy",
+    });
     expect(result.highlights.find((list) => list.kind === "wins")?.rows[0]).toMatchObject({
-      delta: { direction: "up", value: "5" },
+      delta: { direction: "up", value: 5 },
       id: "kw_headless",
     });
     expect(result.highlights.find((list) => list.kind === "attention")?.rows[0]).toMatchObject({
@@ -458,7 +462,7 @@ describe("overview query", () => {
     });
     expect(result.highlights.find((list) => list.kind === "newTop10")?.rows[0]).toMatchObject({
       id: "kw_analytics",
-      positionText: "#9",
+      position: 9,
     });
   });
 
@@ -492,9 +496,9 @@ describe("overview query", () => {
     const wins = result.highlights.find((list) => list.kind === "wins");
     expect(wins?.rows).not.toHaveLength(0);
     expect(wins?.rows[0]).toMatchObject({
-      delta: { direction: "up", value: "5" },
+      delta: { direction: "up", value: 5 },
       id: "kw_sameday",
-      positionText: "#3",
+      position: 3,
     });
   });
 
@@ -511,9 +515,9 @@ describe("overview query", () => {
     const result = await getOverview("prj_1", { now });
 
     expect(result.trackedKeywordCount).toBe(2500);
-    expect(result.kpis.find((item) => item.label === "Tracked keywords")).toMatchObject({
-      delta: "+73 this month",
-      value: "2500",
+    expect(result.kpis.find((item) => item.id === "trackedKeywords")).toMatchObject({
+      delta: { kind: "countThisMonth", value: 73 },
+      value: 2500,
     });
     expect(result.addedThisMonth).toBe(73);
     expect(result.state).toBe("no-data");
@@ -597,11 +601,8 @@ describe("overview query", () => {
     });
     expect(result.toolbar).toMatchObject({
       availableTags: ["Docs"],
-      device: "Mobile",
       deviceValue: "mobile",
-      range: "Last 7 days",
       rangeValue: "7d",
-      tag: "Docs",
       tagValue: "Docs",
     });
   });
@@ -626,8 +627,8 @@ describe("overview query", () => {
         }),
       }),
     );
-    expect(metric(result, "Checks this month")).toBe("1");
-    expect(metric(result, "Est. provider cost")).toBe("$0.25");
+    expect(result.dataSource.checksThisMonth).toBe(1);
+    expect(result.dataSource.providerCostCents).toBe(25);
   });
 
   it("places position distribution edges into exact buckets", async () => {
@@ -685,11 +686,11 @@ describe("overview query", () => {
     expect(result.firstPendingKeywordId).toBe("kw_pending_1");
     expect(result.serpProviderState).toBe("missing");
     expect(result.isEmpty).toBe(false);
-    expect(result.kpis[0]).toMatchObject({ delta: "awaiting first check", value: "-" });
+    expect(result.kpis[0]).toMatchObject({ delta: { kind: "awaitingFirstCheck" }, value: null });
     expect(result.trend).toEqual([]);
     expect(result.highlights.find((list) => list.kind === "recentlyAdded")?.rows).toHaveLength(2);
-    expect(metric(result, "Last check")).toBe("Never");
-    expect(metric(result, "Next check")).toBe("No scheduled checks");
+    expect(result.dataSource.lastCheckAt).toBeNull();
+    expect(result.dataSource.nextCheckAt).toBeNull();
   });
 
   it("keeps a project populated when its latest check is older than the selected window", async () => {
@@ -722,7 +723,7 @@ describe("overview query", () => {
       lastCheckEverAt,
       state: "populated",
     });
-    expect(metric(result, "Last check")).not.toBe("Never");
+    expect(result.dataSource.lastCheckAt).toBe(lastCheckEverAt.toISOString());
   });
 
   it("derives primary from the eligible fallback when another provider needs attention", async () => {
@@ -737,7 +738,7 @@ describe("overview query", () => {
 
     expect(result.providerConnected).toBe(true);
     expect(result.serpProviderState).toBe("ready");
-    expect(metric(result, "Primary provider")).toBe("SerpApi");
+    expect(result.dataSource.primaryProvider).toBe("serpapi");
   });
 
   it("distinguishes a configured SERP provider that needs attention", async () => {
@@ -751,7 +752,7 @@ describe("overview query", () => {
 
     expect(result.providerConnected).toBe(false);
     expect(result.serpProviderState).toBe("needs_attention");
-    expect(result.dataSource.status).toBe("Provider needs attention");
+    expect(result.dataSource.status).toBe("needsAttention");
   });
 
   it("derives the analytics source from the combined provider read", async () => {
@@ -787,7 +788,7 @@ describe("overview query", () => {
 
     expect(result.toolbar).not.toHaveProperty("refresh");
     expect(result.nextCheckAt).toBeNull();
-    expect(metric(result, "Next check")).toBe("No scheduled checks");
+    expect(result.dataSource.nextCheckAt).toBeNull();
   });
 
   it("returns empty overview defaults when a project has no keywords", async () => {

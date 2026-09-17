@@ -17,7 +17,7 @@ const candidates: ScheduleKeywordCandidate[] = Array.from({ length: 350 }, (_, i
   keyword: keywords[index] ?? `commercial cms keyword ${index + 1}`,
   market: "Spain",
   tags: ["commercial"],
-  checks: "2",
+  checks: 2,
 }));
 
 const meta = {

@@ -80,9 +80,9 @@ const compactCategories: IntegrationCategoryData[] = [
               secondaryAction: "Test",
               neverSynced: true,
               meta: [
-                { label: "Property", value: "545703482" },
-                { label: "Last sync", value: "Never" },
-                { label: "State", value: "Enabled" },
+                { labelKey: "property" as const, value: "545703482" },
+                { labelKey: "lastSync" as const, valueKey: "never" as const },
+                { labelKey: "state" as const, valueKey: "enabled" as const },
               ],
             }
           : provider,

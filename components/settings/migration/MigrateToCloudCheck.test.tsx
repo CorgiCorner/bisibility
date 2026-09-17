@@ -1,6 +1,7 @@
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
+import { renderWithAdvancedSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { isoFromFrozenNow } from "@/tests/clock";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeCompatibilityPayload, makePreflightPayload } from "./__tests__/migration.fixtures";
 import { CheckStep } from "./MigrateToCloudCheck";
@@ -73,7 +74,7 @@ describe("migration compatibility check", () => {
       await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
     });
     expect(changed.mock.calls[1]?.[0]).toMatchObject({
-      blockers: [{ code: "MIG-101", message: "We couldn't reach the destination instance." }],
+      blockers: [{ code: "MIG-101" }],
       compatible: false,
     });
   });
@@ -127,9 +128,7 @@ describe("migration compatibility check", () => {
       await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
     });
     expect(changed.mock.calls[1]?.[0]).toMatchObject({
-      blockers: [
-        { code: "MIG-105", message: "The destination address points at this same instance." },
-      ],
+      blockers: [{ code: "MIG-105" }],
       compatible: false,
     });
     expect(mocks.preflight).toHaveBeenCalledWith({
@@ -143,7 +142,7 @@ describe("migration compatibility check", () => {
     const changed = renderStep({ direction: "to-self-host" });
     fireEvent.click(screen.getByRole("button", { name: "Run compatibility check" }));
     expect(form.trigger).toHaveBeenCalledWith("targetOrigin");
-    expect(await screen.findByText("Source unavailable")).toBeInTheDocument();
+    expect(await screen.findByText("Compatibility check failed.")).toBeInTheDocument();
     expect(changed).toHaveBeenCalledWith(null);
   });
 
@@ -170,7 +169,7 @@ describe("migration compatibility check", () => {
   it("suggests a tunnel for LAN only after the destination is unreachable", () => {
     form.watch.mockReturnValue("http://10.0.0.8:3000");
     const unreachable: MigrationCompatibilityResult = {
-      blockers: [{ code: "MIG-101", message: "We couldn't reach the destination instance." }],
+      blockers: [{ code: "MIG-101" }],
       checkedAt: isoFromFrozenNow({ hours: 13 }),
       compatible: false,
       contextKey: "ctx",

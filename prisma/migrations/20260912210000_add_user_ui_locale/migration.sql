@@ -1,0 +1,3 @@
+ALTER TABLE "users"
+ADD COLUMN "uiLocale" TEXT NOT NULL DEFAULT 'en',
+ADD COLUMN "uiLocaleSelectedAt" TIMESTAMP(3);

@@ -4,6 +4,7 @@ import { WorkspaceTile } from "@/components/shell/WorkspaceTile";
 import { truncateProjectName } from "@/components/shell/workspace-labels";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { CaretUpDownIcon as CaretUpDown } from "@phosphor-icons/react/dist/csr/CaretUpDown";
+import { useTranslations } from "next-intl";
 import type { MouseEvent } from "react";
 
 /** `ghost` is what the rail uses: the workspace is context, not a control to hunt for. */
@@ -45,6 +46,7 @@ export function WorkspaceSwitcherTrigger({
   sublabel,
   variant,
 }: Readonly<WorkspaceSwitcherTriggerProps>) {
+  const t = useTranslations("shell.workspace");
   // Collapsed the row loses its box entirely and the hover fill moves onto the tile, so the
   // rail stays a column of glyphs rather than growing a second, wider hit target.
   // The collapsed control is a 36px square. Expanding changes only its width, never its
@@ -61,7 +63,7 @@ export function WorkspaceSwitcherTrigger({
 
   return (
     <Tooltip
-      content={collapsed ? "Switch project" : ""}
+      content={collapsed ? t("switch") : ""}
       placement="right"
       wrapperClassName={collapsed ? undefined : "w-full"}
     >
@@ -69,7 +71,7 @@ export function WorkspaceSwitcherTrigger({
         aria-controls={open ? menuId : undefined}
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label="Switch project"
+        aria-label={t("switch")}
         className={[
           "group flex items-center rounded-control border text-left text-[13.5px] text-fg transition-colors",
           // The focus ring belongs to both modes. It used to sit only in the expanded branch,

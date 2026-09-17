@@ -1,11 +1,22 @@
+import { renderWithCompetitorsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { CompetitorMarketOption } from "@/lib/competitors/types";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { routerMock } from "@/tests/next-navigation";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { CompetitorScopeControls } from "./CompetitorScopeControls";
 import { competitorRegistryOptions } from "./competitor-market-mapping";
+
+const marketCopy = {
+  noDeviceKeywords: ({ device }: { device: string }) => `no ${device} keywords`,
+  noVolumeData: "no volume data",
+  noVolumeTooltip: "SOV needs search volume - this pair is outside the research catalog.",
+  paused: "paused",
+  pausedTooltip: "Enable this market in Settings before using it for SOV.",
+  trackDeviceKeywords: ({ device }: { device: string }) =>
+    `Track ${device} keywords in this market before using it for SOV.`,
+};
 
 const COUNTRY_NAMES: Record<string, string> = {
   BE: "Belgium",
@@ -222,7 +233,12 @@ describe("competitorRegistryOptions", () => {
   });
 
   it("derives research support from the PR1 catalog guard", () => {
-    const options = competitorRegistryOptions(mappingMarkets, "desktop", mappingProjectMarkets);
+    const options = competitorRegistryOptions(
+      mappingMarkets,
+      "desktop",
+      marketCopy,
+      mappingProjectMarkets,
+    );
     expect(options.find((item) => item.value === "BE@ar")).toMatchObject({
       disabled: true,
       secondary: "no volume data",
@@ -236,7 +252,7 @@ describe("competitorRegistryOptions", () => {
 
   it("does not silently switch devices when a market has keywords only on mobile", () => {
     const mobileOnly = [option("ES", "ES", "es", "Spanish", "loc_es_es", "mobile")];
-    const [desktopOption] = competitorRegistryOptions(mobileOnly, "desktop", {
+    const [desktopOption] = competitorRegistryOptions(mobileOnly, "desktop", marketCopy, {
       ...mappingProjectMarkets,
       markets: mappingProjectMarkets.markets.slice(0, 1),
     });

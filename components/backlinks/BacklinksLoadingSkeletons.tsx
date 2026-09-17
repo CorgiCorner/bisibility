@@ -1,5 +1,11 @@
+"use client";
+
+// Rendered both by the client workspace and by the route-level loading.tsx, which mounts
+// BacklinksMessagesBoundary around it. Either way `projectBacklinks` is a client payload.
+
 import { PageContent } from "@/components/shell/PageContent";
 import { cn } from "@/lib/ui/cn";
+import { useTranslations } from "next-intl";
 import type { ComponentPropsWithoutRef } from "react";
 
 function Bar({ className, ...props }: Readonly<ComponentPropsWithoutRef<"div">>) {
@@ -93,8 +99,9 @@ function ResultsTableLoading() {
 }
 
 export function BacklinksResultsLoading() {
+  const t = useTranslations("projectBacklinks.workspace.snapshot");
   return (
-    <div aria-label="Backlinks loading" className="grid min-w-0 gap-4">
+    <div aria-label={t("loadingAria")} className="grid min-w-0 gap-4">
       <div className="flex flex-wrap items-center gap-2.5">
         <Bar className="h-7 w-[142px] rounded-full" />
         <Bar className="h-3 w-[268px]" />

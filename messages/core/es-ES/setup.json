@@ -1,0 +1,70 @@
+{
+  "setup": {
+    "account": {
+      "description": "Esta instancia todavía no tiene ninguna cuenta. Crea la cuenta de administrador para terminar de configurarla.",
+      "email": "Correo electrónico",
+      "name": "Tu nombre",
+      "notice": "La primera cuenta pasa a ser la del administrador de la instancia. El resto de usuarios inician sesión con normalidad una vez terminada la configuración.",
+      "sendCode": "Continuar",
+      "sendingCode": "Enviando el código…",
+      "title": "Te damos la bienvenida a bisibility"
+    },
+    "errors": {
+      "alreadyCompleted": "La configuración del administrador ya ha finalizado. Inicia sesión para continuar.",
+      "complete": "No se ha podido finalizar la configuración. Inténtalo de nuevo.",
+      "expiredCode": "El código no es correcto o ha caducado. Solicita otro e inténtalo de nuevo.",
+      "requestCode": "No se ha podido enviar el código. Revisa la configuración de correo de tu servidor e inténtalo de nuevo."
+    },
+    "frame": {
+      "version": "autoalojado · v{version}"
+    },
+    "metadata": {
+      "description": "Crea la cuenta de administrador de esta instalación de bisibility.",
+      "title": "Configurar bisibility"
+    },
+    "noMailer": {
+      "codeLog": "[auth] sign-in OTP for {email}: ******",
+      "description": "Todavía no se ha configurado el envío de correo, así que hemos escrito tu código en los registros del servidor. Leerlo ahí confirma que controlas este servidor.",
+      "title": "Busca el código en los registros"
+    },
+    "recovery": {
+      "complete": "Completar la configuración",
+      "completing": "Completando la configuración"
+    },
+    "status": {
+      "administratorExists": "Esta instancia ya tiene un administrador. Si necesitas acceso de administración, pídeselo; un operador del servidor también puede reasignar el rol desde la línea de comandos.",
+      "complete": "La configuración ha finalizado",
+      "finish": "Finalizar la configuración del administrador",
+      "goToApp": "Ir a la aplicación",
+      "pending": "Esta instancia no tiene administrador. La cuenta con la que has iniciado sesión puede completar ahora la configuración.",
+      "switchAccount": "Cambiar de cuenta",
+      "switchAccountAria": "Cerrar sesión y cambiar de cuenta"
+    },
+    "stepper": {
+      "label": "Configuración de la instancia",
+      "progress": "Progreso de la configuración"
+    },
+    "success": {
+      "adminPanel": "Abrir el panel de administración",
+      "continue": "Ir a tu proyecto",
+      "description": "La configuración ha finalizado. Esta instancia es tuya: conecta ahora un proveedor de datos y añade tus primeras palabras clave.",
+      "emailDescription": "Los códigos de acceso del resto de usuarios necesitan un proveedor de correo operativo: añade uno a la configuración de tu servidor antes de invitar a nadie.",
+      "emailTitle": "Siguiente paso: configurar el envío de correo.",
+      "title": "Ya eres administrador"
+    },
+    "verify": {
+      "changeEmail": "Usar otro correo",
+      "description": "Hemos enviado un código de 6 dígitos a <recipient>{email}</recipient>. Introdúcelo para verificar la dirección.",
+      "resend": "Reenviar el código",
+      "submit": "Verificar y crear la cuenta",
+      "submitting": "Creando la cuenta de administrador…",
+      "title": "Revisa tu bandeja de entrada"
+    },
+    "validation": {
+      "email": "Introduce una dirección de correo válida.",
+      "nameLong": "El nombre debe tener menos de 100 caracteres.",
+      "nameRequired": "Introduce tu nombre.",
+      "otp": "Introduce el código de 6 dígitos."
+    }
+  }
+}

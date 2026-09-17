@@ -1,5 +1,6 @@
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { useTranslations } from "next-intl";
 import { CheckStep } from "./MigrateToCloudCheck";
 import { DoneStep } from "./MigrateToCloudHandoff";
 import { TransferStep } from "./MigrateToCloudTransferPanels";
@@ -44,6 +45,7 @@ export function MigrateToCloudWizard({
   projectId,
   releaseMigrationHold,
 }: Readonly<MigrateToCloudWizardProps>) {
+  const t = useTranslations("projectSettingsMigration.wizard");
   const wizard = useMigrationWizardState({
     cancelMigration,
     defaultTargetOrigin: direction === "to-cloud" ? defaultTargetOrigin : "",
@@ -60,11 +62,10 @@ export function MigrateToCloudWizard({
   const targetOrigin = usesUserTarget
     ? wizard.form.watch("targetOrigin")?.trim() || undefined
     : undefined;
-  const title = "Transfer project";
-  const targetLabel = direction === "to-cloud" ? "hosted instance" : "a self-hosted instance";
-  const description = `Move ${domain} to another bisibility instance (${targetLabel} by default). The source project stays read-only while export and import finish.`;
-  let continueLabel = "Continue";
-  if (wizard.step === 3) continueLabel = "Done";
+  const title = t("title");
+  const targetLabel = direction === "to-cloud" ? t("target.cloud") : t("target.selfHost");
+  const description = t("description", { domain, target: targetLabel });
+  const continueLabel = wizard.step === 3 ? t("done") : t("continue");
 
   return (
     <Sheet
@@ -90,7 +91,7 @@ export function MigrateToCloudWizard({
                 type="button"
                 variant="secondary"
               >
-                Back
+                {t("back")}
               </Button>
             ) : null}
             <Button

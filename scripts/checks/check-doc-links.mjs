@@ -86,21 +86,21 @@ for (const missing of docsNavigation.missingFragments) {
   );
 }
 const docsTab = config.navigation?.tabs?.find((tab) => tab.tab === "Build and automate");
-const apiWorkflowGroup = findNavigationGroup(docsTab, "API workflows");
-const expectedApiWorkflows = [
-  "api/overview",
-  "api/checks",
-  "api/rank-check-runs",
-  "api/rank-history",
-  "api/webhooks",
-  "api/deploy-webhooks",
-  "api/cloud-import",
-  "api/errors",
-];
-if (JSON.stringify(apiWorkflowGroup?.pages) !== JSON.stringify(expectedApiWorkflows)) {
-  failures.push(
-    "docs/docs.json: API workflows must contain only cross-endpoint integration guides",
-  );
+const expectedBuildGroups = {
+  "API basics": ["api/overview", "authentication", "api/discovery", "api/errors"],
+  Advanced: ["api/rank-check-runs", "api/cloud-import"],
+  "Alerts and webhooks": [
+    "api/alert-rules",
+    "api/notification-preferences",
+    "api/webhooks",
+    "api/deploy-webhooks",
+  ],
+};
+for (const [name, pages] of Object.entries(expectedBuildGroups)) {
+  const group = findNavigationGroup(docsTab, name);
+  if (JSON.stringify(group?.pages) !== JSON.stringify(pages)) {
+    failures.push(`docs/docs.json: ${name} must keep this page order: ${pages.join(", ")}`);
+  }
 }
 const apiReferenceTab = config.navigation?.tabs?.find((tab) => tab.tab === "API Reference");
 if (apiReferenceTab?.openapi !== "openapi.snapshot.json") {

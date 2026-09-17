@@ -1,6 +1,6 @@
 "use client";
 
-import { actionWarningMessage } from "@/components/keywords/action-utils";
+import { hasActionWarning } from "@/components/keywords/action-utils";
 import { LocationActionWarning } from "@/components/keywords/LocationActionWarning";
 import { Button } from "@/components/ui/Button";
 import { CopyButton } from "@/components/ui/CopyButton";
@@ -14,6 +14,7 @@ import { downloadTextFile } from "@/lib/ui/download";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { CircleNotchIcon as CircleNotch } from "@phosphor-icons/react/dist/csr/CircleNotch";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { useTranslations } from "next-intl";
 import { ImportColumnMapping } from "./ImportColumnMapping";
 import { KeywordImportDropzone } from "./KeywordImportDropzone";
 import { type KeywordImportPreviewRow, ParsedRowsPreview } from "./ParsedRowsPreview";
@@ -26,6 +27,38 @@ type ImportResultSummary = {
   skipped: number;
   warning?: string | null;
 };
+
+type CsvWizardTranslations = ReturnType<
+  typeof useTranslations<"projectRankTracker.keywordImport.csvWizard">
+>;
+
+/**
+ * Import actions predate the localized wizard and return stable English details.
+ * Keep that action contract intact, but do not render an arbitrary server message.
+ */
+export function presentImportValidationMessage(message: string, t: CsvWizardTranslations) {
+  if (message === "Could not resolve this row's market. Check its location and language.") {
+    return t("rowMarketUnresolved");
+  }
+  if (
+    message ===
+    "Choose a market for rows without a location, or provide Country and Language or an exact Location key in this row."
+  ) {
+    return t("rowLocationRequired");
+  }
+  const locationKey = /^Location key (.+) could not be resolved exactly\.$/.exec(message)?.[1];
+  if (locationKey) return t("rowLocationKeyUnresolved", { locationKey });
+  const location =
+    /^Location (.+) could not be resolved exactly\. Choose an existing market or use its exact Location key\.$/.exec(
+      message,
+    )?.[1];
+  if (location) return t("rowLocationUnresolved", { location });
+  const market = /^Market (.+) is not tracked by this project\. Add it in Markets first\.$/.exec(
+    message,
+  )?.[1];
+  if (market) return t("rowMarketNotTracked", { market });
+  return t("rowInvalid");
+}
 
 type UploadStepProps = {
   csvText: string;
@@ -53,19 +86,14 @@ function downloadTemplate(templateCsv: string) {
 export function TemplateStep({
   templateCsv = keywordImportTemplateCsv,
 }: Readonly<{ templateCsv?: string }>) {
+  const t = useTranslations("projectRankTracker.keywordImport.csvWizard");
   return (
     <div>
-      <h3 className="m-0 text-[15px] font-semibold">Start from the template</h3>
+      <h3 className="m-0 text-[15px] font-semibold">{t("templateTitle")}</h3>
       <p className="m-0 mt-1.5 text-[13px] leading-[1.55] text-fg-muted">
-        Select a market above, then fill in your keywords and upload CSV or XLSX. With a selected
-        market, only <code className="font-mono text-[12px] text-accent-text">keyword</code> is
-        required.
+        {t("templateDescription", { field: "keyword" })}
       </p>
-      <p className="m-0 mt-2 text-[12px] leading-[1.5] text-fg-muted">
-        Create your markets before importing. Each row must match an active or paused market in this
-        project. Keywords in paused markets can be imported, but rank checks wait until you resume
-        the market.
-      </p>
+      <p className="m-0 mt-2 text-[12px] leading-[1.5] text-fg-muted">{t("marketRequirement")}</p>
       <Button
         onClick={() => downloadTemplate(templateCsv)}
         startIcon={<DownloadSimple size={15} weight="regular" />}
@@ -73,7 +101,7 @@ export function TemplateStep({
         type="button"
         variant="secondary"
       >
-        Download template.csv
+        {t("downloadTemplate")}
       </Button>
       <div className="mt-4.5 min-w-0 overflow-hidden rounded-control border border-code-border bg-code-bg">
         <div className="flex items-center justify-between gap-2 border-b border-code-border px-3 pt-2">
@@ -86,7 +114,7 @@ export function TemplateStep({
           >
             csv
           </div>
-          <CopyButton label="Copy template" size="sm" style={codeDarkCopy} text={templateCsv} />
+          <CopyButton label={t("copyTemplate")} size="sm" style={codeDarkCopy} text={templateCsv} />
         </div>
         <pre className="m-0 overflow-x-auto px-[15px] py-[13px] font-mono text-[11.5px] leading-[1.75] text-code-fg">
           {templateCsv}
@@ -106,6 +134,7 @@ export function UploadStep({
   onWorkbookFileChange,
   parsedCount,
 }: Readonly<UploadStepProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.csvWizard");
   return (
     <div className="grid gap-3.5">
       <KeywordImportDropzone
@@ -119,10 +148,10 @@ export function UploadStep({
       <div>
         <div className="flex items-center justify-between gap-2">
           <label className="text-[12.5px] font-semibold text-fg" htmlFor="import-csv-input">
-            Paste CSV
+            {t("pasteCsv")}
           </label>
           <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-            {parsedCount} {parsedCount === 1 ? "keyword" : "keywords"} parsed
+            {t("parsed", { count: parsedCount })}
           </span>
         </div>
         <textarea
@@ -155,22 +184,13 @@ export function MapStep({
   parsedCount: ParsedCount;
   sourceColumns: readonly KeywordImportSourceColumn[];
 }>) {
-  const keywordNoun = parsedCount === 1 ? "keyword" : "keywords";
-  const label =
-    parsedCount === null
-      ? "Workbook selected. Check where each column should be saved."
-      : `${parsedCount} ${keywordNoun} found. Check where each column should be saved.`;
+  const t = useTranslations("projectRankTracker.keywordImport.csvWizard");
+  const label = parsedCount === null ? t("workbookSelected") : t("found", { count: parsedCount });
   return (
     <div>
-      <h3 className="m-0 text-[15px] font-semibold">Map columns</h3>
+      <h3 className="m-0 text-[15px] font-semibold">{t("mapTitle")}</h3>
       <p className="m-0 mt-1.5 text-[13px] text-fg-muted">{label}</p>
-      <p className="m-0 mt-2 text-[12px] leading-[1.5] text-fg-muted">
-        Keyword is required. Missing location fields use the market selected above. Without a
-        selected market, each row needs Country or Location key. Language selects the search-result
-        language. Device uses the project default when omitted; other optional fields stay empty.
-        Country, location and language must match a market you have already created. Importing does
-        not move existing keywords between markets.
-      </p>
+      <p className="m-0 mt-2 text-[12px] leading-[1.5] text-fg-muted">{t("mappingHelp")}</p>
       {hasHeader ? (
         <ImportColumnMapping
           mapping={mapping}
@@ -179,14 +199,11 @@ export function MapStep({
         />
       ) : (
         <p className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-3 text-[12px] leading-[1.5] text-fg-muted">
-          This file has no header row, so its standard column order is used. Add a header row to map
-          columns yourself.
+          {t("noHeader")}
         </p>
       )}
       <p className="m-0 mt-3 text-[12px] leading-[1.5] text-fg-muted">
-        <span className="font-medium text-fg">Location fields:</span> Country tracks a country; add
-        City for local tracking, or use Location key for an exact saved location. Location key takes
-        priority over Country and City. Language sets the search-result language.
+        <span className="font-medium text-fg">{t("locationFields")}</span> {t("locationHelp")}
       </p>
       {isReviewing ? (
         <p
@@ -195,7 +212,7 @@ export function MapStep({
           role="status"
         >
           <CircleNotch weight="regular" aria-hidden className="animate-spin" size={15} />
-          Checking mapped rows and project markets...
+          {t("checkingMapped")}
         </p>
       ) : null}
     </div>
@@ -203,7 +220,6 @@ export function MapStep({
 }
 
 export function ReviewStep({
-  parsedCount,
   review,
 }: Readonly<{
   parsedCount: ParsedCount;
@@ -214,35 +230,36 @@ export function ReviewStep({
     rows: KeywordImportPreviewRow[];
   } | null;
 }>) {
-  const rowNoun = (review?.rows.length ?? parsedCount) === 1 ? "row" : "rows";
+  const t = useTranslations("projectRankTracker.keywordImport.csvWizard");
   const label =
     review === null
-      ? "Checking rows before import."
-      : `${review.rows.length} valid ${rowNoun} ready after removing ${review.duplicateRows} duplicate${review.duplicateRows === 1 ? "" : "s"} from this file.`;
+      ? t("checkingRows")
+      : t("reviewReady", { duplicates: review.duplicateRows, rows: review.rows.length });
   return (
     <div>
-      <h3 className="m-0 text-[15px] font-semibold">Review and confirm</h3>
+      <h3 className="m-0 text-[15px] font-semibold">{t("reviewTitle")}</h3>
       <p className="m-0 mt-1.5 text-[13px] leading-[1.55] text-fg-muted">
-        This list has passed column and market validation and removes duplicates within this file.
-        Existing project duplicates are checked again when you confirm.
+        {t("reviewDescription")}
       </p>
       <ParsedRowsPreview rows={review?.rows ?? []} />
       {review?.rows.some((row) => row.marketStatus === "paused") ? (
         <p className="mt-3 text-[12px] text-fg-muted" role="status">
-          Keywords in paused markets will not be checked until those markets are resumed.
+          {t("pausedMarkets")}
         </p>
       ) : null}
       {review?.errors.length ? (
         <div className="mt-4 rounded-card border border-border bg-bg-sunken px-4 py-3 text-[12px] leading-[1.5] text-red-text">
-          {review.errors.length} {review.errors.length === 1 ? "row was" : "rows were"} excluded
-          during validation. Fix the file or its project markets, then go back to include them.
+          {t("excluded", { count: review.errors.length })}
           <ul
             className="m-0 mt-2 max-h-40 list-none overflow-auto p-0"
-            aria-label="Import validation errors"
+            aria-label={t("validationErrors")}
           >
             {review.errors.map((error) => (
               <li key={`${error.row}-${error.message}`}>
-                Row {error.row}: {error.message}
+                {t("rowError", {
+                  message: presentImportValidationMessage(error.message, t),
+                  row: error.row,
+                })}
               </li>
             ))}
           </ul>
@@ -256,22 +273,26 @@ export function ReviewStep({
 }
 
 export function DoneStep({ result }: Readonly<{ result: ImportResultSummary }>) {
-  const warning = actionWarningMessage(result);
+  const t = useTranslations("projectRankTracker.keywordImport.csvWizard");
+  const warning = hasActionWarning(result) ? t("locationDegraded") : null;
   return (
     <div className="flex flex-col items-center px-4 py-[30px] text-center">
       <span className="grid h-14 w-14 place-items-center rounded-card text-green-text [background:color-mix(in_srgb,var(--green)_12%,transparent)]">
         <CheckCircle size={30} weight="regular" />
       </span>
-      <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">Import complete</h3>
+      <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">{t("complete")}</h3>
       <p className="m-0 mt-[7px] max-w-[340px] text-[13.5px] leading-[1.55] text-fg-muted">
-        {result.created} added, {result.skipped} skipped, {result.failed} failed.
+        {t("summary", result)}
       </p>
       <LocationActionWarning message={warning} />
       {result.errors.length ? (
         <div className="mt-4 max-h-32 w-full overflow-auto rounded-control bg-bg-sunken p-3 text-left font-sans tabular-nums text-[11px] text-red-text">
           {result.errors.slice(0, 6).map((error) => (
             <div key={`${error.row}-${error.message}`}>
-              Row {error.row}: {error.message}
+              {t("rowError", {
+                message: presentImportValidationMessage(error.message, t),
+                row: error.row,
+              })}
             </div>
           ))}
         </div>

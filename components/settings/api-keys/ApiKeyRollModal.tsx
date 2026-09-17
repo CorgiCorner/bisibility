@@ -1,11 +1,14 @@
 "use client";
 
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
+import { useDeveloperActionError } from "@/components/settings/developers/useDeveloperActionError";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { formatDisplayDateTime } from "@/lib/dates/format";
 import { type RegenerateApiKeyInput, regenerateApiKeySchema } from "@/lib/schemas/apiKey";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ApiKeyRevealContent } from "./ApiKeyReveal";
 import type { ApiKeyData, IssuedApiKey } from "./api-key-model";
@@ -25,6 +28,9 @@ export function ApiKeyRollModal({
   projectId,
   regenerateKey,
 }: Readonly<ApiKeyRollModalProps>) {
+  const dateDisplay = useDateDisplay();
+  const presentActionError = useDeveloperActionError();
+  const t = useTranslations("projectSettingsDevelopers.apiKeys");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [issuedKey, setIssuedKey] = useState<IssuedApiKey | null>(null);
@@ -38,7 +44,7 @@ export function ApiKeyRollModal({
       setIssuedKey(replacement);
       onRolled();
     } catch (caught) {
-      setError(actionErrorMessage(caught, "API key could not be rolled."));
+      setError(presentActionError.apiKey(caught, t("errors.roll")));
     } finally {
       setBusy(false);
     }
@@ -54,21 +60,21 @@ export function ApiKeyRollModal({
             startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
             type="button"
           >
-            Done
+            {t("done")}
           </Button>
         ) : (
           <>
             <Button disabled={busy} onClick={onClose} size="sm" type="button" variant="ghost">
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               loading={busy}
-              loadingLabel="Rolling"
+              loadingLabel={t("rolling")}
               onClick={rollKey}
               startIcon={<ArrowsClockwise aria-hidden size={15} weight="regular" />}
               type="button"
             >
-              Roll key
+              {t("roll")}
             </Button>
           </>
         )
@@ -79,37 +85,55 @@ export function ApiKeyRollModal({
       }}
       open
       size="md"
-      title={issuedKey ? "New API key" : "Roll API key"}
+      title={issuedKey ? t("newTitle") : t("rollTitle")}
     >
       {issuedKey ? (
         <div className="space-y-4">
           <div className="rounded-card border border-red bg-red/10 px-3.5 py-3 text-[12.5px] font-semibold text-fg">
-            The old key was revoked and now returns 401.
+            {t("oldRevoked")}
           </div>
           <ApiKeyRevealContent issuedKey={issuedKey} showProjectGuidance />
         </div>
       ) : (
         <div>
           <dl className="m-0 grid grid-cols-[110px_minmax(0,1fr)] gap-x-3 gap-y-2 text-[12.5px]">
-            <dt className="text-fg-muted">Name</dt>
+            <dt className="text-fg-muted">{t("name")}</dt>
             <dd className="m-0 font-semibold">{apiKey.name}</dd>
-            <dt className="text-fg-muted">Masked value</dt>
+            <dt className="text-fg-muted">{t("maskedValue")}</dt>
             <dd className="m-0">
               <span>{apiKey.maskedValue}</span>
             </dd>
-            <dt className="text-fg-muted">Created</dt>
-            <dd className="m-0">{apiKey.createdLabel}</dd>
-            <dt className="text-fg-muted">Last used</dt>
-            <dd className="m-0">{apiKey.lastUsedLabel}</dd>
-            <dt className="text-fg-muted">Expiry</dt>
-            <dd className="m-0">{apiKey.expiresLabel}</dd>
+            <dt className="text-fg-muted">{t("createdLabel")}</dt>
+            <dd className="m-0">
+              {t("created", {
+                date: formatDisplayDateTime(new Date(apiKey.createdAt), dateDisplay),
+              })}
+            </dd>
+            <dt className="text-fg-muted">{t("lastUsedLabel")}</dt>
+            <dd className="m-0">
+              {apiKey.lastUsedAt
+                ? t("lastUsed", {
+                    date: formatDisplayDateTime(new Date(apiKey.lastUsedAt), dateDisplay),
+                  })
+                : t("lastUsedNever")}
+            </dd>
+            <dt className="text-fg-muted">{t("expiryLabel")}</dt>
+            <dd className="m-0">
+              {!apiKey.expiresAt
+                ? t("neverExpires")
+                : apiKey.isExpired
+                  ? t("expired", {
+                      date: formatDisplayDateTime(new Date(apiKey.expiresAt), dateDisplay),
+                    })
+                  : t("expires", {
+                      date: formatDisplayDateTime(new Date(apiKey.expiresAt), dateDisplay),
+                    })}
+            </dd>
           </dl>
           <div className="mt-6 rounded-card border border-red bg-red/10 px-3.5 py-3">
-            <p className="m-0 text-[13px] font-semibold text-fg">
-              The old key stops working immediately and returns 401.
-            </p>
+            <p className="m-0 text-[13px] font-semibold text-fg">{t("rollWarningTitle")}</p>
             <p className="m-0 mt-1 text-[12px] leading-[1.5] text-fg-muted">
-              Integrations using it will fail until you replace the secret with the new key.
+              {t("rollWarningDescription")}
             </p>
           </div>
           {error ? <div className="mt-4 text-[12px] font-medium text-red-text">{error}</div> : null}

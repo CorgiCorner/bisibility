@@ -11,6 +11,7 @@ import { docsLinkProps } from "@/lib/site/site";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type StepConnectGscCardProps = {
@@ -37,21 +38,24 @@ type StepConnectGscCardProps = {
 };
 
 export function StepConnectGscSetupNotice({ configured }: Readonly<{ configured: boolean }>) {
+  const t = useTranslations("onboarding.searchConsole");
   if (configured) return null;
   return (
     <InlineCallout className="mt-2 w-full" tint="yellow">
-      Search Console OAuth is not configured on this instance. Set{" "}
-      <InlineCode>GOOGLE_CLIENT_ID</InlineCode> and <InlineCode>GOOGLE_CLIENT_SECRET</InlineCode>.
-      See the{" "}
-      <a
-        className="inline-flex items-center gap-0.5 font-medium text-accent-text hover:underline"
-        href="/docs/integrations#analytics-sources"
-        {...docsLinkProps("/docs/integrations#analytics-sources")}
-      >
-        setup guide
-        <ArrowUpRight aria-hidden size={13} weight="regular" />
-      </a>{" "}
-      for how to create them.
+      {t.rich("notConfigured.message", {
+        clientId: (chunks) => <InlineCode>{chunks}</InlineCode>,
+        clientSecret: (chunks) => <InlineCode>{chunks}</InlineCode>,
+        guide: (chunks) => (
+          <a
+            className="inline-flex items-center gap-0.5 font-medium text-accent-text hover:underline"
+            href="/docs/integrations#analytics-sources"
+            {...docsLinkProps("/docs/integrations#analytics-sources")}
+          >
+            {chunks}
+            <ArrowUpRight aria-hidden size={13} weight="regular" />
+          </a>
+        ),
+      })}
     </InlineCallout>
   );
 }
@@ -67,6 +71,7 @@ export function StepConnectGscCard({
   returnPath,
   saveStoredProperty,
 }: Readonly<StepConnectGscCardProps>) {
+  const t = useTranslations("onboarding.searchConsole");
   const [setup, setSetup] = useState<GoogleOAuthSetup | null>(googleOAuth ?? null);
   const [selectionSource, setSelectionSource] = useState<"pending" | "stored" | null>(
     googleOAuth ? "pending" : null,
@@ -96,7 +101,7 @@ export function StepConnectGscCard({
       );
       setPropertyDrawerDismissed(false);
     } catch {
-      setError("Properties could not be loaded. Try again or reconnect the account.");
+      setError(t("errors.propertiesLoad"));
     } finally {
       setPending(false);
     }
@@ -111,10 +116,10 @@ export function StepConnectGscCard({
         selectionSource === "stored"
           ? await saveStoredProperty?.({ projectId, property, provider: "gsc" })
           : await completePropertySelection?.({ projectId, property });
-      if (!result) throw new Error("Property selection is unavailable.");
+      if (!result) throw new Error(t("errors.selectionUnavailable"));
       if ("status" in result && result.status === "reauth_required") {
         setSetup({
-          error: "Reconnect the Google account to change its property.",
+          error: t("errors.reconnect"),
           properties: [],
           provider: "gsc",
           requiresReauth: true,
@@ -125,8 +130,8 @@ export function StepConnectGscCard({
       setSelectionSource(null);
       setPropertyDrawerDismissed(true);
       router.refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Search Console connection failed.");
+    } catch {
+      setError(t("errors.connectionFailed"));
     } finally {
       setPending(false);
     }
@@ -140,19 +145,17 @@ export function StepConnectGscCard({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex flex-col items-start gap-2">
-            <span className="text-sm font-semibold text-fg">Search Console</span>
+            <span className="text-sm font-semibold text-fg">{t("name")}</span>
             {connected || configured ? (
               <StatusPill
-                label={connected ? "Connected" : "Ready to connect"}
+                label={connected ? t("status.connected") : t("status.ready")}
                 size="sm"
                 status={connected ? "connected" : "ready"}
               />
             ) : null}
           </span>
         </div>
-        <p className="m-0 mt-2 text-[13px] leading-[1.5] text-fg-muted">
-          Free - import real queries, clicks, and impressions. No API key is needed.
-        </p>
+        <p className="m-0 mt-2 text-[13px] leading-[1.5] text-fg-muted">{t("description")}</p>
       </div>
       {setup || (connected && loadStoredProperties) || href ? (
         <div className="mt-4 flex flex-none justify-end">
@@ -163,55 +166,55 @@ export function StepConnectGscCard({
               type="button"
               variant="secondary"
             >
-              Select property
+              {t("actions.select")}
             </Button>
           ) : connected && loadStoredProperties ? (
             <Button
               className="w-full sm:w-auto"
               loading={pending}
-              loadingLabel="Loading properties…"
+              loadingLabel={t("actions.loading")}
               onClick={() => void changeProperty()}
               type="button"
               variant="secondary"
             >
-              Change property
+              {t("actions.change")}
             </Button>
           ) : (
             <Button className="w-full sm:w-auto" href={href ?? undefined} variant="secondary">
-              {connected ? "Change property" : "Connect"}
+              {connected ? t("actions.change") : t("actions.connect")}
             </Button>
           )}
         </div>
       ) : null}
       {setup ? (
         <AppDrawer
-          description="Choose a property returned by your connected Google account."
+          description={t("drawer.description")}
           footer={
             <div className="flex flex-wrap justify-end gap-2.5">
               {href ? (
                 <Button href={href} variant="secondary">
-                  Use another account
+                  {t("actions.otherAccount")}
                 </Button>
               ) : null}
               <Button
                 disabled={!property}
                 loading={pending}
-                loadingLabel="Connecting…"
+                loadingLabel={t("actions.connecting")}
                 onClick={() => void selectProperty()}
                 type="button"
               >
-                Use selected property
+                {t("actions.useSelected")}
               </Button>
             </div>
           }
           onClose={() => setPropertyDrawerDismissed(true)}
           open={!propertyDrawerDismissed}
-          title="Select a Search Console property"
+          title={t("drawer.title")}
         >
           {setup.properties.length > 0 ? (
             <div className="flex flex-col gap-3" data-analytics-block>
               <MenuSelect
-                ariaLabel="Search Console property"
+                ariaLabel={t("drawer.property")}
                 onChange={setProperty}
                 options={setup.properties}
                 triggerClassName="min-h-[42px] w-full justify-between"
@@ -231,8 +234,7 @@ export function StepConnectGscCard({
                 size={15}
                 weight="regular"
               />
-              {setup.error ??
-                "This account has no verified Search Console properties. Verify one or connect a different Google account."}
+              {setup.error ?? t("drawer.noProperties")}
             </p>
           )}
           {error ? (

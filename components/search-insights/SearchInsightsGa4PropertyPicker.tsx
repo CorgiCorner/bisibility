@@ -9,20 +9,9 @@ import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/csr/GoogleLogo";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { useTranslations } from "next-intl";
 import { useId } from "react";
-import {
-  GA4_PICKER_LIST_LINK,
-  GA4_PICKER_MANUAL_LINK,
-  GA4_PICKER_NOT_NOW,
-  GA4_PICKER_PROMISE,
-  GA4_PICKER_PROPERTY_LABEL,
-  GA4_PICKER_TITLE,
-  GA4_PICKER_USE,
-} from "./search-insights-copy";
 
-const LOAD_PREFIX = "Couldn't load your GA4 properties. ";
-const EMPTY_PROPERTIES =
-  "This Google account returned no Google Analytics 4 properties. Enter the numeric Property ID manually or use a different account.";
 /** Hit padding with a matching negative inset so the copy, not the box, shares the field edge. */
 const MODE_LINK =
   "inline-flex min-h-6 items-center self-start rounded-control -ms-2 px-2 text-left text-[11.5px] leading-5 text-fg hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid";
@@ -44,15 +33,16 @@ export type SearchInsightsGa4PropertyPickerProps = {
 };
 
 function DiscoveryMessage({ setup }: Readonly<{ setup: GoogleOAuthSetup }>) {
-  if (setup.error?.startsWith(LOAD_PREFIX)) {
+  const t = useTranslations("projectSearchInsights.copy");
+  if (setup.failureClass) {
     return (
       <span className="flex flex-col gap-1">
-        <span>Couldn't load your GA4 properties.</span>
-        <span>{setup.error.slice(LOAD_PREFIX.length)}</span>
+        <span>{t("ga4DiscoveryFailed")}</span>
+        <span>{ga4FailureMessage(setup.failureClass, t)}</span>
       </span>
     );
   }
-  return <span>{setup.error ?? EMPTY_PROPERTIES}</span>;
+  return <span>{setup.error ?? t("ga4EmptyProperties")}</span>;
 }
 
 export function SearchInsightsGa4PropertyPicker({
@@ -70,6 +60,7 @@ export function SearchInsightsGa4PropertyPicker({
   retrying = false,
   setup,
 }: Readonly<SearchInsightsGa4PropertyPickerProps>) {
+  const t = useTranslations("projectSearchInsights.copy");
   const promiseId = useId();
   const properties = setup.properties;
   const showSelect = properties.length > 0 && !manualEntry;
@@ -95,23 +86,23 @@ export function SearchInsightsGa4PropertyPicker({
             className="shrink-0"
             compact
             icon={GoogleLogo}
-            label="Google logo"
+            label={t("googleLogo")}
             variant="soft"
           />
           <div className="min-w-0">
-            <h2 className="m-0 text-ui-body font-semibold">{GA4_PICKER_TITLE}</h2>
+            <h2 className="m-0 text-ui-body font-semibold">{t("ga4PickerTitle")}</h2>
             <p className="m-0 mt-1 text-ui-caption leading-normal text-fg-muted" id={promiseId}>
-              {GA4_PICKER_PROMISE}
+              {t("ga4PickerPromise")}
             </p>
           </div>
         </div>
         <div className="min-w-0">
           {showSelect ? (
             <>
-              <FieldLabel label={GA4_PICKER_PROPERTY_LABEL} />
+              <FieldLabel label={t("ga4PickerProperty")} />
               <MenuSelect
                 ariaDescribedBy={promiseId}
-                ariaLabel="Google Analytics property"
+                ariaLabel={t("ga4PropertyAriaLabel")}
                 onChange={(value) => {
                   onPropertyChange(value);
                   onPropertyErrorChange(null);
@@ -125,7 +116,7 @@ export function SearchInsightsGa4PropertyPicker({
                 value={property}
               />
               <button className={`${MODE_LINK} mt-1.5`} onClick={openManual} type="button">
-                {GA4_PICKER_MANUAL_LINK}
+                {t("ga4PickerManual")}
               </button>
             </>
           ) : (
@@ -143,7 +134,7 @@ export function SearchInsightsGa4PropertyPicker({
               ) : (
                 <button className={`${MODE_LINK} gap-1`} onClick={closeManual} type="button">
                   <ArrowLeft aria-hidden className="shrink-0" size={12} weight="regular" />
-                  {GA4_PICKER_LIST_LINK}
+                  {t("ga4PickerList")}
                 </button>
               )}
               <Ga4PropertyManualEntry
@@ -164,18 +155,18 @@ export function SearchInsightsGa4PropertyPicker({
       </div>
       <div className="flex items-center justify-end gap-3 border-t border-border px-4 py-3">
         <Button loading={cancelling} onClick={onCancel} type="button" variant="ghost">
-          {GA4_PICKER_NOT_NOW}
+          {t("notNow")}
         </Button>
         {onRetry ? (
           <Button
             loading={retrying}
-            loadingLabel="Retrying…"
+            loadingLabel={t("retrying")}
             onClick={onRetry}
             size="xs"
             type="button"
             variant="secondary"
           >
-            Retry
+            {t("retry")}
           </Button>
         ) : null}
         {showSelect ? (
@@ -183,15 +174,37 @@ export function SearchInsightsGa4PropertyPicker({
             className="w-auto"
             disabled={!property}
             loading={pending}
-            loadingLabel="Connecting…"
+            loadingLabel={t("connecting")}
             onClick={onSelect}
             type="button"
             variant="secondary"
           >
-            {GA4_PICKER_USE}
+            {t("useThisProperty")}
           </Button>
         ) : null}
       </div>
     </div>
   );
+}
+
+function ga4FailureMessage(
+  failureClass: NonNullable<GoogleOAuthSetup["failureClass"]>,
+  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>,
+) {
+  switch (failureClass) {
+    case "auth":
+      return t("ga4FailureAuth");
+    case "config_invalid":
+      return t("ga4FailureConfig");
+    case "network":
+      return t("ga4FailureNetwork");
+    case "provider_4xx":
+      return t("ga4FailureProvider");
+    case "provider_5xx":
+      return t("ga4FailureServer");
+    case "rate_limit":
+      return t("ga4FailureRateLimit");
+    case "unknown":
+      return t("ga4FailureUnknown");
+  }
 }

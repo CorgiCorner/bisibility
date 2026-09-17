@@ -1,0 +1,52 @@
+{
+  "projectSettingsGeneral": {
+    "domainChange": {
+      "afterConfirmation": "Po potwierdzeniu",
+      "cancel": "Anuluj",
+      "competitorHistory": "Historia konkurentów pozostaje powiązana z domeną, która obowiązywała w momencie każdego sprawdzenia.",
+      "confirmationFirst": "Zostaw pole potwierdzenia puste, aby ustawić pierwszą domenę",
+      "confirmationFirstError": "Zostaw pole potwierdzenia puste, aby ustawić pierwszą domenę tego projektu.",
+      "confirmationMustMatch": "Potwierdzenie musi być zgodne z domeną {domain}.",
+      "confirmationWithDomain": "Wpisz {domain}, aby potwierdzić",
+      "confirm": "Potwierdź zmianę",
+      "confirming": "Potwierdzanie",
+      "description": "Zmień domenę, po której ten projekt rozpoznaje pasujące wyniki.",
+      "error": "Nie udało się zmienić domeny.",
+      "futureChecks": "Dotychczasowe sprawdzenia zachowują pierwotne wyniki. Kolejne sprawdzenia rozpoznają dopasowania projektu po nowej domenie i jej subdomenach.",
+      "newDomain": "Nowa domena",
+      "title": "Potwierdź nową domenę projektu"
+    },
+    "projectDetails": {
+      "changeDomain": "Zmień domenę",
+      "copyProjectId": "Kopiuj identyfikator projektu",
+      "description": "Nazwa, domena i ID tego projektu.",
+      "domain": "Domena",
+      "domainHelp": "Sprawdzenie uznaje wynik za Twój, gdy pojawia się w nim ta domena. Zmiana wymaga potwierdzenia.",
+      "name": "Nazwa projektu",
+      "nameRequired": "Podaj nazwę projektu.",
+      "nameTooLong": "Nazwa projektu może mieć maksymalnie 120 znaków.",
+      "projectId": "ID projektu",
+      "saveError": "Nie udało się zapisać danych projektu.",
+      "title": "Dane projektu"
+    },
+    "validation": {
+      "confirmationTooLong": "Potwierdzenie może mieć maksymalnie 253 znaki.",
+      "domainTooLong": "Domena może mieć maksymalnie 253 znaki.",
+      "invalidDomain": "Podaj domenę w formacie example.com."
+    },
+    "tags": {
+      "cancel": "Anuluj",
+      "description": "Tagi grupują słowa kluczowe i strony. W zapisanych widokach możesz filtrować według nich.",
+      "duplicate": "Tag {name} już istnieje.",
+      "remove": "Usuń tag",
+      "removeError": "Nie udało się usunąć tagu.",
+      "removeTitle": "Usunąć tag {name}?",
+      "title": "Tagi",
+      "usageBothManyKeywords": "Używany przez słowa kluczowe ({keywordCount, number}) i {segmentCount, plural, one {# segment} few {# segmenty} many {# segmentów} other {# segmentu}}.",
+      "usageBothOneKeyword": "{segmentCount, plural, one {Używany przez 1 słowo kluczowe i # segment.} few {Używany przez 1 słowo kluczowe i # segmenty.} many {Używany przez 1 słowo kluczowe i # segmentów.} other {Używany przez 1 słowo kluczowe i # segmentu.}}",
+      "usageKeywordOnly": "{count, plural, one {Używany przez # słowo kluczowe.} few {Używany przez # słowa kluczowe.} many {Używany przez # słów kluczowych.} other {Używany przez # słowa kluczowego.}}",
+      "usageSegmentOnly": "{count, plural, one {Używany przez # segment.} few {Używany przez # segmenty.} many {Używany przez # segmentów.} other {Używany przez # segmentu.}}",
+      "writeError": "Nie udało się dodać tagu."
+    }
+  }
+}

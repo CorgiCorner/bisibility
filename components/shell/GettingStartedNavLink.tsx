@@ -1,13 +1,10 @@
 "use client";
 
-import {
-  GETTING_STARTED_LABEL,
-  gettingStartedProgressAriaLabel,
-} from "@/components/getting-started/getting-started-copy";
 import { SetupProgressRing } from "@/components/getting-started/SetupProgressRing";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { appPath } from "@/lib/routing/app-path";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export type GettingStartedNavLinkProps = Readonly<{
   collapsed?: boolean;
@@ -30,9 +27,13 @@ export function GettingStartedNavLink({
   settledCount,
   totalCount,
 }: GettingStartedNavLinkProps) {
+  const t = useTranslations("shell.header");
   const href = appPath(projectRef, "getting-started");
   const active = currentHref === href || currentHref.startsWith(`${href}/`);
-  const progressLabel = gettingStartedProgressAriaLabel(settledCount, totalCount);
+  const progressLabel = t("gettingStartedProgress", {
+    settled: String(settledCount),
+    total: totalCount,
+  });
 
   return (
     <Tooltip
@@ -57,7 +58,7 @@ export function GettingStartedNavLink({
           <SetupProgressRing settledCount={settledCount} size={20} totalCount={totalCount} />
         </span>
         {collapsed ? null : (
-          <span className="min-w-0 flex-1 truncate">{GETTING_STARTED_LABEL}</span>
+          <span className="min-w-0 flex-1 truncate">{t("titles.gettingStarted")}</span>
         )}
       </Link>
     </Tooltip>

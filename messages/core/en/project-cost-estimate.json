@@ -1,0 +1,39 @@
+{
+  "projectCostEstimate": {
+    "providerSpend": {
+      "docs": "How budgets work",
+      "eyebrow": "MONTHLY BUDGET",
+      "noCapAmount": "{spent} this month",
+      "meterAria": "Provider spend: {spent} of {cap} this month{session, select, none {} other {, {session} this session}}",
+      "segmentedAmount": "{spent} of {cap} used",
+      "cardCap": "of {cap} cap",
+      "thisMonth": "this month",
+      "capReached": "cap reached",
+      "session": "{spent} this session",
+      "pace": "on pace ~{spent}/mo",
+      "left": "{spent} left",
+      "otherProvider": "Other",
+      "headerUnavailable": "Spend unavailable",
+      "headerCapTooltip": "Monthly provider budget.",
+      "headerNoCap": "No budget · Set one",
+      "headerNoCapWithSpend": "{spent} · no budget · Set one",
+      "headerNoCapAria": "No budget, set one",
+      "headerNoCapAriaWithSpend": "{spent} spent with no budget, set one",
+      "headerUnderOnePercent": "<1% used",
+      "headerUsed": "{percent, number}% used",
+      "headerCapAria": "Monthly cap {used}"
+    },
+    "status": {
+      "unavailable": "Estimate unavailable.",
+      "retry": "Retry",
+      "updating": "Updating estimate..."
+    },
+    "spendInfo": {
+      "aria": "About provider spend",
+      "description": "Your monthly provider limit and current usage.",
+      "session": "{spent} this session",
+      "details": "Details",
+      "setBudget": "Set budget"
+    }
+  }
+}

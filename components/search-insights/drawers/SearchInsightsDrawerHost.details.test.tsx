@@ -19,7 +19,7 @@ v.describe("SearchInsightsDrawerHost", () => {
     v.expect(
       await r.screen.findByText("5 queries answered by more than one page"),
     ).toBeInTheDocument();
-    v.expect(r.within(t.panel()).getByText("x3")).toBeInTheDocument();
+    v.expect(r.within(t.panel()).getByText("3 pages")).toBeInTheDocument();
     v.expect(r.within(t.panel()).getByText("/blog/rank-tracking-2026")).toBeInTheDocument();
   });
 

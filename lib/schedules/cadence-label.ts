@@ -4,13 +4,38 @@ import type { RankCheckFrequency } from "@/lib/settings/options";
 type ScheduleCadenceInput = {
   cronExpression?: string | null;
   dayOfMonth?: string | null;
-  frequency: RankCheckFrequency;
+  frequency: RankCheckFrequency | string;
   timeOfDay?: string | null;
   weekday?: string | null;
 };
 
+export type ScheduleCadenceLabels = {
+  custom: (expression: string) => string;
+  daily: (time: string) => string;
+  every: (interval: "day" | "month" | "week") => string;
+  manual: () => string;
+  monthly: (day: string, time: string) => string;
+  paused: () => string;
+  weekly: (day: string, time: string) => string;
+  weekday: (day: (typeof scheduleWeekdayNames)[number]) => string;
+};
+
+export const scheduleWeekdayNames = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
 function onlyValue(field: ReadonlySet<number> | null) {
   return field?.size === 1 ? [...field][0] : null;
+}
+
+function isScheduleWeekdayName(value: string): value is (typeof scheduleWeekdayNames)[number] {
+  return scheduleWeekdayNames.some((weekday) => weekday === value);
 }
 
 export function ordinalDayOfMonth(value: number) {
@@ -26,7 +51,7 @@ export function ordinalDayOfMonth(value: number) {
 }
 
 export function persistedScheduleCalendar(
-  frequency: RankCheckFrequency,
+  frequency: RankCheckFrequency | string,
   cronExpression: string | null | undefined,
 ) {
   if (!cronExpression || (frequency !== "weekly" && frequency !== "monthly")) {
@@ -39,12 +64,7 @@ export function persistedScheduleCalendar(
     const weekday = onlyValue(parsed.weekday);
     return {
       dayOfMonth: null,
-      weekday:
-        weekday === null
-          ? null
-          : (["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][
-              weekday
-            ] ?? null),
+      weekday: weekday === null ? null : (scheduleWeekdayNames[weekday] ?? null),
     };
   }
 
@@ -52,25 +72,31 @@ export function persistedScheduleCalendar(
   return { dayOfMonth: day === null ? null : ordinalDayOfMonth(day), weekday: null };
 }
 
-export function scheduleCadenceLabel(schedule: ScheduleCadenceInput) {
+export function scheduleCadenceLabel(
+  schedule: ScheduleCadenceInput,
+  labels: ScheduleCadenceLabels,
+) {
   if (schedule.timeOfDay == null && ["daily", "weekly", "monthly"].includes(schedule.frequency)) {
     const interval =
       schedule.frequency === "daily" ? "day" : schedule.frequency === "weekly" ? "week" : "month";
-    return `Every ${interval} · no fixed time`;
+    return labels.every(interval);
   }
   const calendar = persistedScheduleCalendar(schedule.frequency, schedule.cronExpression);
   const time = schedule.timeOfDay ?? "-";
-  if (schedule.frequency === "daily") return `Daily, ${time}`;
+  if (schedule.frequency === "daily") return labels.daily(time);
   if (schedule.frequency === "weekly") {
     const weekday = schedule.weekday ?? calendar.weekday;
-    return `${weekday ? `${weekday}s` : "Weekly"}, ${time}`;
+    return labels.weekly(
+      weekday && isScheduleWeekdayName(weekday) ? labels.weekday(weekday) : "",
+      time,
+    );
   }
   if (schedule.frequency === "monthly") {
     const dayOfMonth = schedule.dayOfMonth ?? calendar.dayOfMonth;
-    return `Monthly on the ${dayOfMonth ?? "-"}, ${time}`;
+    return labels.monthly(dayOfMonth ?? "-", time);
   }
   if (schedule.frequency === "custom_cron") {
-    return `Custom - ${schedule.cronExpression ?? "-"}`;
+    return labels.custom(schedule.cronExpression ?? "-");
   }
-  return schedule.frequency === "manual" ? "Manual" : "Paused";
+  return schedule.frequency === "manual" ? labels.manual() : labels.paused();
 }

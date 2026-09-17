@@ -1,0 +1,11 @@
+{
+  "projectSettingsExperimental": {
+    "title": "Módulos experimentales",
+    "description": "Activa un módulo experimental para este proyecto. Los módulos desactivados no aparecen en la navegación.",
+    "module": {
+      "competitors": "Competidores",
+      "timeline": "Cronología"
+    },
+    "saveError": "No se han podido guardar los módulos experimentales."
+  }
+}

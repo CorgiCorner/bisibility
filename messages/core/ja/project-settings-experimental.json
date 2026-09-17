@@ -1,0 +1,11 @@
+{
+  "projectSettingsExperimental": {
+    "title": "実験的モジュール",
+    "description": "このプロジェクトで実験的モジュールを有効にします。無効にしたモジュールはナビゲーションに表示されません。",
+    "module": {
+      "competitors": "競合",
+      "timeline": "タイムライン"
+    },
+    "saveError": "実験的モジュールを保存できませんでした。"
+  }
+}

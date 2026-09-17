@@ -10,21 +10,35 @@ export type RankedSuggestionTableRow = {
 };
 
 type ColumnsOptions = {
-  trackedLabel?: string;
+  messages: {
+    estimatedTraffic: string;
+    keyword: string;
+    position: string;
+    select: (values: { keyword: string }) => string;
+    selectKeyword: string;
+    variants: (values: { count: number }) => string;
+    volume: string;
+  };
+  trackedLabel: string;
   onToggle: (key: string) => void;
   selected: ReadonlySet<string>;
 };
 
 function KeywordCell({
+  messages,
   row,
   trackedLabel,
-}: Readonly<{ row: RankedSuggestionTableRow; trackedLabel: string }>) {
+}: Readonly<{
+  messages: ColumnsOptions["messages"];
+  row: RankedSuggestionTableRow;
+  trackedLabel: string;
+}>) {
   const { group, tracked } = row;
   return (
     <span className="min-w-0 truncate font-medium text-fg">
       {group.row.keyword}
       {group.count > 1 ? (
-        <span className="ml-2 text-fg-muted">+{group.count - 1} variants</span>
+        <span className="ml-2 text-fg-muted">{messages.variants({ count: group.count - 1 })}</span>
       ) : null}
       {tracked ? <span className="ml-2 text-fg-muted">{trackedLabel}</span> : null}
     </span>
@@ -36,7 +50,8 @@ function NumericCell({ value }: Readonly<{ value: number | null }>) {
 }
 
 export function rankedSuggestionTableColumns({
-  trackedLabel = "Already tracked",
+  messages,
+  trackedLabel,
   onToggle,
   selected,
 }: Readonly<ColumnsOptions>): readonly DataTableColumn<RankedSuggestionTableRow>[] {
@@ -44,7 +59,7 @@ export function rankedSuggestionTableColumns({
     {
       cell: ({ row }) => (
         <Checkbox
-          aria-label={`Select ${row.original.keyword}`}
+          aria-label={messages.select({ keyword: row.original.keyword })}
           checked={!row.original.tracked && selected.has(row.original.id)}
           disabled={row.original.tracked}
           onChange={() => onToggle(row.original.id)}
@@ -55,17 +70,19 @@ export function rankedSuggestionTableColumns({
       header: "",
       id: "choose",
       maxSize: 44,
-      meta: { lockResize: true, lockVisible: true, title: "Select keyword" },
+      meta: { lockResize: true, lockVisible: true, title: messages.selectKeyword },
       minSize: 44,
       size: 44,
     },
     {
       accessorKey: "keyword",
-      cell: ({ row }) => <KeywordCell row={row.original} trackedLabel={trackedLabel} />,
+      cell: ({ row }) => (
+        <KeywordCell messages={messages} row={row.original} trackedLabel={trackedLabel} />
+      ),
       enableSorting: false,
-      header: "Keyword",
+      header: messages.keyword,
       id: "keyword",
-      meta: { flex: 1, lockVisible: true, sortable: false, title: "Keyword" },
+      meta: { flex: 1, lockVisible: true, sortable: false, title: messages.keyword },
       minSize: 160,
       size: 220,
     },
@@ -73,9 +90,9 @@ export function rankedSuggestionTableColumns({
       accessorFn: (row) => row.group.row.position,
       cell: ({ row }) => <NumericCell value={row.original.group.row.position} />,
       enableSorting: false,
-      header: "Position",
+      header: messages.position,
       id: "position",
-      meta: { sortable: false, title: "Position" },
+      meta: { sortable: false, title: messages.position },
       minSize: 96,
       size: 96,
     },
@@ -83,9 +100,9 @@ export function rankedSuggestionTableColumns({
       accessorFn: (row) => row.group.row.searchVolume,
       cell: ({ row }) => <NumericCell value={row.original.group.row.searchVolume} />,
       enableSorting: false,
-      header: "Volume",
+      header: messages.volume,
       id: "volume",
-      meta: { sortable: false, title: "Volume" },
+      meta: { sortable: false, title: messages.volume },
       minSize: 88,
       size: 88,
     },
@@ -101,9 +118,9 @@ export function rankedSuggestionTableColumns({
         />
       ),
       enableSorting: false,
-      header: "Est. traffic",
+      header: messages.estimatedTraffic,
       id: "estimatedTraffic",
-      meta: { sortable: false, title: "Est. traffic" },
+      meta: { sortable: false, title: messages.estimatedTraffic },
       minSize: 116,
       size: 116,
     },

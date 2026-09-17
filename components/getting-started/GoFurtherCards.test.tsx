@@ -1,8 +1,9 @@
 import { settingsSectionHref } from "@/components/settings/shell/settings-sections";
+import { renderWithGettingStartedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { track } from "@/lib/analytics/client";
 import { appPath } from "@/lib/routing/app-path";
 import { GITHUB_URL } from "@/lib/site/site";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GoFurtherCards } from "./GoFurtherCards";

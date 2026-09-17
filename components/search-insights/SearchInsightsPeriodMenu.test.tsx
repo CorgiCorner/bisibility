@@ -1,7 +1,12 @@
+import {
+  renderWithSearchInsightsMessages as render,
+  renderWithFeatureMessages,
+  searchInsightsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { type FinalizedWindow, finalizedWindow } from "@/lib/search-insights/dates";
 import type { SearchInsightsContext } from "@/lib/search-insights/queries/context";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchInsightsPeriodMenu } from "./SearchInsightsPeriodMenu";
@@ -70,6 +75,27 @@ describe("SearchInsightsPeriodMenu", () => {
     expect(trigger).toHaveTextContent("Aug 22 - 28");
     expect(trigger).not.toHaveTextContent("Aug 15 - 21");
     expect(trigger).toHaveAttribute("aria-haspopup", "listbox");
+  });
+
+  it("uses the scoped catalog for the period-control label", async () => {
+    const user = userEvent.setup();
+    const messages = structuredClone(searchInsightsFeatureTestMessages);
+    messages.projectSearchInsights.copy.periodMenuLabel = "Okno porownania";
+
+    renderWithFeatureMessages(
+      <SearchInsightsPeriodMenu
+        importFacts={importFacts}
+        onPeriodChange={onPeriodChange}
+        period={period}
+        window={window}
+      />,
+      { locale: "pl", messages },
+    );
+
+    const trigger = screen.getByRole("button", { name: /Okno porownania:/ });
+    await user.click(trigger);
+    expect(screen.getByRole("listbox", { name: "Okno porownania" })).toBeInTheDocument();
+    expect(screen.queryByRole("listbox", { name: "Comparison window" })).toBeNull();
   });
 
   it("puts the comparison and Pacific boundary in a left-aligned tooltip", async () => {
@@ -152,7 +178,7 @@ describe("SearchInsightsPeriodMenu", () => {
     expect(trigger).toHaveTextContent("First look · Aug 28");
     await userEvent.click(trigger);
 
-    const firstLook = await screen.findByRole("option", { name: /1 finalized day/ });
+    const firstLook = await screen.findByRole("option", { name: /First look/ });
     expect(firstLook).toHaveAttribute("aria-selected", "true");
     expect(firstLook).toHaveTextContent("Aug 28");
     expect(firstLook).not.toHaveTextContent("first look");

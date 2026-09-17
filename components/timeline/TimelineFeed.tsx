@@ -1,12 +1,14 @@
+"use client";
+
 import { FacetBar } from "@/components/feeds/FacetBar";
 import { AddNoteForm } from "@/components/timeline/AddNoteForm";
+import { TimelineEmpty } from "@/components/timeline/TimelineEmpty";
 import { TimelineRow } from "@/components/timeline/TimelineRow";
 import { Card } from "@/components/ui/Card";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { filterChipStateClassName } from "@/components/ui/filter-chip-styles";
 import { compactInputTypographyClassName } from "@/components/ui/input-styles";
-import { ModuleMark } from "@/components/ui/ModuleMark";
-import type { DateFormatPreference } from "@/lib/format/user-datetime";
+import type { DateDisplayContext } from "@/lib/dates/format";
+import type { FeedFacetAxis } from "@/lib/feeds/facets";
 import type { TimelineFilterKey, TimelineView } from "@/lib/queries/timeline";
 import { appPath } from "@/lib/routing/app-path";
 import {
@@ -15,20 +17,20 @@ import {
   timelineFilters,
   timelineGroups,
 } from "@/lib/timeline/timeline-data";
-import { ClockCounterClockwiseIcon as ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr/ClockCounterClockwise";
-import { FileDashedIcon as FileDashed } from "@phosphor-icons/react/dist/ssr/FileDashed";
-import { FileMagnifyingGlassIcon as FileMagnifyingGlass } from "@phosphor-icons/react/dist/ssr/FileMagnifyingGlass";
-import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
-import { MedalIcon as Medal } from "@phosphor-icons/react/dist/ssr/Medal";
-import { NotePencilIcon as NotePencil } from "@phosphor-icons/react/dist/ssr/NotePencil";
-import { RocketLaunchIcon as RocketLaunch } from "@phosphor-icons/react/dist/ssr/RocketLaunch";
-import { StackIcon as Stack } from "@phosphor-icons/react/dist/ssr/Stack";
+import { createTimelinePresentation } from "@/lib/timeline/timeline-presentation";
+import { FileMagnifyingGlassIcon as FileMagnifyingGlass } from "@phosphor-icons/react/dist/csr/FileMagnifyingGlass";
+import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { MedalIcon as Medal } from "@phosphor-icons/react/dist/csr/Medal";
+import { NotePencilIcon as NotePencil } from "@phosphor-icons/react/dist/csr/NotePencil";
+import { RocketLaunchIcon as RocketLaunch } from "@phosphor-icons/react/dist/csr/RocketLaunch";
+import { StackIcon as Stack } from "@phosphor-icons/react/dist/csr/Stack";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 type TimelineFeedProps = {
   canCreate: boolean;
   canDelete: boolean;
-  dateFormat?: DateFormatPreference;
+  dateDisplay: DateDisplayContext;
   projectId: string;
   projectRef: string;
   view: TimelineView;
@@ -41,6 +43,8 @@ const filterIcons = {
   pages: FileMagnifyingGlass,
   rankings: Medal,
 } satisfies Record<TimelineFilterKey, typeof Stack>;
+
+type TimelineFeedTranslations = ReturnType<typeof useTranslations<"projectTimeline.feed">>;
 
 function timelineHref({
   filter,
@@ -70,11 +74,13 @@ function FilterChip({
   facets,
   projectRef,
   search,
+  t,
 }: Readonly<{
   filter: TimelineFilterView;
   facets: TimelineView["facets"];
   projectRef: string;
   search: string;
+  t: TimelineFeedTranslations;
 }>) {
   const Icon = filterIcons[filter.icon];
   const selected = Boolean(filter.selected);
@@ -90,7 +96,7 @@ function FilterChip({
     >
       <Icon aria-hidden size={14} weight="regular" />
       {filter.label}
-      <span className="sr-only">{selected ? " selected" : " switch filter"}</span>
+      <span className="sr-only"> {selected ? t("filterSelected") : t("filterSwitch")}</span>
     </Link>
   );
 }
@@ -114,59 +120,15 @@ function TimelineGroupCard({
   );
 }
 
-function TimelineEmpty({
-  facets,
-  filtered,
-  outOfRange,
+function Pagination({
   projectRef,
-}: Readonly<{
-  facets: TimelineView["facets"];
-  filtered: boolean;
-  outOfRange: boolean;
-  projectRef: string;
-}>) {
-  if (outOfRange) {
-    return (
-      <EmptyState
-        action={
-          <Link
-            className="inline-flex min-h-9 items-center rounded-control border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid"
-            href={timelineHref({ facets, filter: "all", projectRef, search: "" })}
-          >
-            Back to page 1
-          </Link>
-        }
-        description="This page has no timeline entries. Return to the first page to continue browsing."
-        icon={<FileDashed weight="regular" aria-hidden size={24} />}
-        title="No timeline entries on this page"
-      />
-    );
-  }
-
-  if (filtered) {
-    return (
-      <EmptyState
-        description="Adjust the search or filter to see more timeline entries."
-        icon={<MagnifyingGlass weight="regular" aria-hidden size={24} />}
-        title="No matching timeline entries"
-      />
-    );
-  }
-
-  return (
-    <EmptyState
-      description="Rank changes, page events, deploys, and manual notes will appear here."
-      mark={<ModuleMark bordered icon={ClockCounterClockwise} />}
-      title="No timeline entries yet"
-    />
-  );
-}
-
-function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: TimelineView }>) {
+  t,
+  view,
+}: Readonly<{ projectRef: string; t: TimelineFeedTranslations; view: TimelineView }>) {
   if (!view.hasNextPage && !view.hasPreviousPage) return null;
 
   return (
-    <nav className="flex items-center justify-between gap-3" aria-label="Timeline pages">
+    <nav className="flex items-center justify-between gap-3" aria-label={t("pagesAria")}>
       {view.hasPreviousPage ? (
         <Link
           className="inline-flex min-h-8 items-center rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
@@ -179,12 +141,14 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
           })}
           prefetch={false}
         >
-          Previous
+          {t("previous")}
         </Link>
       ) : (
         <span />
       )}
-      <span className="font-sans tabular-nums text-[11px] text-fg-muted">Page {view.page}</span>
+      <span className="font-sans tabular-nums text-[11px] text-fg-muted">
+        {t("page", { page: view.page })}
+      </span>
       {view.hasNextPage ? (
         <Link
           className="inline-flex min-h-8 items-center rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text"
@@ -197,7 +161,7 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
           })}
           prefetch={false}
         >
-          Next
+          {t("next")}
         </Link>
       ) : (
         <span />
@@ -209,17 +173,17 @@ function Pagination({ projectRef, view }: Readonly<{ projectRef: string; view: T
 export function TimelineFeed({
   canCreate,
   canDelete,
-  dateFormat,
+  dateDisplay,
   projectId,
   projectRef,
   view,
 }: Readonly<TimelineFeedProps>) {
-  const filters = timelineFilters(view);
+  const t = useTranslations("projectTimeline.feed");
+  const dataT = useTranslations("projectTimeline.data");
+  const presentation = createTimelinePresentation(dataT);
+  const filters = timelineFilters(view, presentation);
   const facets = view.facets ?? [];
-  const groups = timelineGroups(view.rows, view.now, {
-    dateFormat,
-    timezone: view.timeZone,
-  });
+  const groups = timelineGroups(view.rows, view.now, dateDisplay, presentation);
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-4">
@@ -249,11 +213,11 @@ export function TimelineFeed({
                 size={15}
               />
               <input
-                aria-label="Search timeline"
+                aria-label={t("searchAria")}
                 className={`${compactInputTypographyClassName} min-w-0 flex-1 bg-transparent font-sans tabular-nums text-fg outline-none focus-visible:outline-none`}
                 defaultValue={view.search}
                 name="q"
-                placeholder="Search timeline (type, URL, note)..."
+                placeholder={t("searchPlaceholder")}
                 type="search"
               />
             </label>
@@ -261,7 +225,7 @@ export function TimelineFeed({
               className="inline-flex h-[34px] shrink-0 items-center justify-center rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
               type="submit"
             >
-              Search
+              {t("search")}
             </button>
           </form>
           <AddNoteForm canCreate={canCreate} compact projectId={projectId} />
@@ -275,10 +239,13 @@ export function TimelineFeed({
               key={filter.key}
               projectRef={projectRef}
               search={view.search}
+              t={t}
             />
           ))}
         </div>
-        {view.facetOptions ? <FacetBar facets={facets} options={view.facetOptions} /> : null}
+        {view.facetOptions ? (
+          <FacetBar facets={facets} labels={feedFacetLabels(t)} options={view.facetOptions} />
+        ) : null}
       </Card>
 
       {groups.length > 0 ? (
@@ -292,14 +259,39 @@ export function TimelineFeed({
         ))
       ) : (
         <TimelineEmpty
-          facets={facets}
+          backToFirstPageHref={timelineHref({ facets, filter: "all", projectRef, search: "" })}
           filtered={view.isFiltered}
           outOfRange={view.page > 1}
-          projectRef={projectRef}
         />
       )}
 
-      <Pagination projectRef={projectRef} view={view} />
+      <Pagination projectRef={projectRef} t={t} view={view} />
     </div>
   );
+}
+
+function feedFacetLabels(t: TimelineFeedTranslations) {
+  return {
+    addFeedFilter: t("facetAddFeedFilter"),
+    addFilter: t("facetAddFilter"),
+    axis: (axis: FeedFacetAxis) => feedFacetAxis(axis, t),
+    noMoreFilters: t("facetNoMoreFilters"),
+    remove: (axis: FeedFacetAxis, label: string) =>
+      t("facetRemove", { axis: feedFacetAxis(axis, t), label }),
+  };
+}
+
+function feedFacetAxis(axis: FeedFacetAxis, t: TimelineFeedTranslations) {
+  switch (axis) {
+    case "engine":
+      return t("facetAxisEngine");
+    case "language":
+      return t("facetAxisLanguage");
+    case "market":
+      return t("facetAxisMarket");
+    case "module":
+      return t("facetAxisModule");
+    case "severity":
+      return t("facetAxisSeverity");
+  }
 }

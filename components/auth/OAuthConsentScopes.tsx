@@ -1,145 +1,70 @@
-import { getOAuthConsentCopy } from "@/lib/auth/oauth-consent-copy";
-import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
-import { cn } from "@/lib/ui/cn";
-import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
-import { CrownSimpleIcon as CrownSimple } from "@phosphor-icons/react/dist/csr/CrownSimple";
-import { EnvelopeSimpleIcon as EnvelopeSimple } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { EyeIcon as Eye } from "@phosphor-icons/react/dist/csr/Eye";
-import { IdentificationBadgeIcon as IdentificationBadge } from "@phosphor-icons/react/dist/csr/IdentificationBadge";
-import { KeyIcon as Key } from "@phosphor-icons/react/dist/csr/Key";
-import { PencilSimpleIcon as PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { PlugsConnectedIcon as PlugsConnected } from "@phosphor-icons/react/dist/csr/PlugsConnected";
-import { QuestionIcon as Question } from "@phosphor-icons/react/dist/csr/Question";
-import { UserIcon as User } from "@phosphor-icons/react/dist/csr/User";
-import { UserCircleIcon as UserCircle } from "@phosphor-icons/react/dist/csr/UserCircle";
-import type { ComponentType } from "react";
+import { grantedApiScopes } from "@/lib/api/scope-policy";
+import { canCreateOAuthApiTokens } from "@/lib/auth/oauth-consent-copy";
+import { useTranslations } from "next-intl";
 
-type ScopeItem = {
-  broad?: boolean;
-  icon: ComponentType<{
-    "aria-hidden"?: boolean;
-    className?: string;
-    size?: number;
-    weight?: "bold" | "duotone" | "fill" | "light" | "regular" | "thin";
-  }>;
-  value: string;
-};
+const knownScopes = new Set([
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+  "read",
+  "write",
+  "admin",
+  "tokens:write",
+]);
 
-type ScopeGroup = {
-  icon: ScopeItem["icon"];
-  id: "identity" | "access" | "credentials" | "other";
-  note: string;
-  scopes: ScopeItem[];
-  title: string;
-};
+type IdentityKey = "profileAndEmail" | "profile" | "email" | "openid";
+type ProjectKey = "admin" | "write" | "read";
 
-const scopeDefinitions: Record<string, Omit<ScopeItem, "value"> & { group: ScopeGroup["id"] }> = {
-  openid: { group: "identity", icon: IdentificationBadge },
-  profile: { group: "identity", icon: User },
-  email: { group: "identity", icon: EnvelopeSimple },
-  offline_access: { group: "identity", icon: ArrowsClockwise },
-  read: { group: "access", icon: Eye },
-  write: { group: "access", icon: PencilSimple },
-  admin: { broad: true, group: "access", icon: CrownSimple },
-  "tokens:write": { broad: true, group: "credentials", icon: Key },
-};
-
-const groupDefinitions: Array<Omit<ScopeGroup, "scopes">> = [
-  { icon: UserCircle, id: "identity", note: "who you are", title: "Sign-in and session" },
-  { icon: PlugsConnected, id: "access", note: "your rank data", title: "MCP and API access" },
-  {
-    icon: Key,
-    id: "credentials",
-    note: "create API tokens for your account",
-    title: "Credentials",
-  },
-  { icon: Question, id: "other", note: "additional permission", title: "Other" },
-];
-
-function groupedScopes(scopes: string[]) {
-  const normalized = scopes.length ? scopes : ["openid"];
-  return groupDefinitions
-    .map((group) => ({
-      ...group,
-      scopes: normalized
-        .map((value) => {
-          const definition = scopeDefinitions[value];
-          return {
-            broad: definition?.broad,
-            group: definition?.group ?? "other",
-            icon: definition?.icon ?? Question,
-            value,
-          };
-        })
-        .filter((scope) => scope.group === group.id),
-    }))
-    .filter((group) => group.scopes.length);
+function identityAccessKey(scopes: string[]): IdentityKey | null {
+  const profile = scopes.includes("profile");
+  const email = scopes.includes("email");
+  if (profile && email) return "profileAndEmail";
+  if (profile) return "profile";
+  if (email) return "email";
+  return scopes.includes("openid") ? "openid" : null;
 }
 
-function ScopeChip({ scope }: Readonly<{ scope: ScopeItem }>) {
-  const Icon = scope.icon;
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-control border px-2.5 py-1 text-[11px] leading-none",
-        scope.broad
-          ? "border-red/30 bg-red/10 text-red-text"
-          : "border-border bg-bg-elev text-fg-muted",
-      )}
-    >
-      <Icon aria-hidden size={12} />
-      {scope.value}
-    </span>
-  );
+function projectAccessKey(scopes: string[]): ProjectKey | null {
+  const granted = grantedApiScopes(scopes);
+  if (granted.includes("admin")) return "admin";
+  if (granted.includes("write")) return "write";
+  if (granted.includes("read")) return "read";
+  return null;
 }
 
-export function OAuthConsentScopes({
-  client,
-  scopes,
-}: Readonly<{ client: OAuthConsentClient; scopes: string[] }>) {
-  const persona = getOAuthConsentCopy(client).persona;
+export function OAuthConsentScopes({ scopes }: Readonly<{ scopes: string[] }>) {
+  const t = useTranslations("auth.oauthConsent.scopes");
+  const identity = identityAccessKey(scopes);
+  const access = projectAccessKey(scopes);
+  const unknown = scopes.some((scope) => !knownScopes.has(scope));
+  const credentials = canCreateOAuthApiTokens(scopes);
   return (
-    <section className="mt-4" aria-labelledby="requested-scopes-title">
-      <p
-        className="m-0 text-[10.5px] uppercase tracking-[0.5px] text-fg-muted"
-        id="requested-scopes-title"
-      >
-        Requested scopes
+    <section className="mt-6 text-[13px] leading-[1.6]" aria-labelledby="requested-scopes-title">
+      <p className="m-0 font-semibold" id="requested-scopes-title">
+        {t("intro")}
       </p>
-      <div className="mt-2.5 flex flex-col gap-2.5">
-        {groupedScopes(scopes).map((group) => {
-          const GroupIcon = group.icon;
-          return (
-            <div key={group.id}>
-              <div className="flex flex-wrap items-center gap-2">
-                <GroupIcon
-                  aria-hidden
-                  className={cn(
-                    group.id === "identity" && "text-blue-text",
-                    group.id === "access" && "text-accent-text",
-                    group.id === "credentials" && "text-yellow-text",
-                    group.id === "other" && "text-fg-muted",
-                  )}
-                  size={14}
-                  weight="fill"
-                />
-                <span className="text-[12.5px] font-semibold text-fg">{group.title}</span>
-                <span className="text-[12px] text-fg-muted">{group.note}</span>
-              </div>
-              <div className="mt-1.5 flex flex-wrap gap-1.5 pl-5.5">
-                {group.scopes.map((scope) => (
-                  <ScopeChip key={scope.value} scope={scope} />
-                ))}
-              </div>
-              {group.id === "credentials" && persona === "cli" ? (
-                <p className="mt-2 mb-0 pl-5.5 text-[12px] text-fg-muted">
-                  The CLI will create one API token for this device.
-                </p>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
+      <ul className="mt-2 mb-0 list-disc space-y-2 pl-5">
+        {identity || access ? (
+          <li>
+            {[
+              identity ? t(`identity.${identity}`) : null,
+              // The continued form keeps the second clause mid-sentence.
+              access ? t(identity ? `projectContinued.${access}` : `project.${access}`) : null,
+            ]
+              .filter(Boolean)
+              .join("; ")}
+            .{access ? ` ${t("withinPermissions")}` : null}
+          </li>
+        ) : null}
+        {credentials ? (
+          <li className="text-red-text">
+            {t.rich("credentials", { strong: (chunks) => <strong>{chunks}</strong> })}
+          </li>
+        ) : null}
+        {unknown ? <li className="text-red-text">{t("unknown")}</li> : null}
+        {!identity && !access && !credentials && !unknown ? <li>{t("none")}</li> : null}
+      </ul>
     </section>
   );
 }

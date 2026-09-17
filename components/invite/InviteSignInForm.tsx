@@ -8,43 +8,52 @@ import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/Car
 import { CircleNotchIcon as CircleNotch } from "@phosphor-icons/react/dist/csr/CircleNotch";
 import { EnvelopeSimpleOpenIcon as EnvelopeSimpleOpen } from "@phosphor-icons/react/dist/csr/EnvelopeSimpleOpen";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const emailSchema = z.object({
-  email: z.string().trim().pipe(z.email("Enter a valid email address.")),
-});
-const otpSchema = z.object({
-  otp: z
-    .string()
-    .trim()
-    .regex(/^\d{6}$/, "Enter the 6-digit code."),
-});
+type EmailForm = { email: string };
+type OtpForm = { otp: string };
 
-type EmailForm = z.infer<typeof emailSchema>;
-type OtpForm = z.infer<typeof otpSchema>;
-
-function errorMessage(error: unknown) {
+function errorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
     const message = (error as { message?: unknown }).message;
     if (typeof message === "string") return message;
   }
-  return "Something went wrong. Try again.";
+  return fallback;
 }
 
 export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
+  const t = useTranslations("invite");
   const router = useRouter();
   const [step, setStep] = useState<"email" | "otp">("email");
   const [pending, setPending] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const schemas = useMemo(
+    () => ({
+      email: z.object({
+        email: z
+          .string()
+          .trim()
+          .pipe(z.email(t("validEmail"))),
+      }),
+      otp: z.object({
+        otp: z
+          .string()
+          .trim()
+          .regex(/^\d{6}$/, t("verifyCode")),
+      }),
+    }),
+    [t],
+  );
   const emailForm = useForm<EmailForm>({
     defaultValues: { email },
-    resolver: zodResolver(emailSchema),
+    resolver: zodResolver(schemas.email),
   });
   const otpForm = useForm<OtpForm>({
     defaultValues: { otp: "" },
-    resolver: zodResolver(otpSchema),
+    resolver: zodResolver(schemas.otp),
   });
 
   async function requestCode(values: EmailForm) {
@@ -56,12 +65,12 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
         type: "sign-in",
       });
       if (response.error) {
-        setFormError(errorMessage(response.error));
+        setFormError(errorMessage(response.error, t("verifyFailed")));
         return;
       }
       setStep("otp");
     } catch (error) {
-      setFormError(errorMessage(error));
+      setFormError(errorMessage(error, t("verifyFailed")));
     } finally {
       setPending(false);
     }
@@ -76,7 +85,7 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
         otp: values.otp,
       });
       if (response.error) {
-        setFormError(errorMessage(response.error));
+        setFormError(errorMessage(response.error, t("verifyFailed")));
         return;
       }
 
@@ -92,7 +101,7 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
 
       router.refresh();
     } catch (error) {
-      setFormError(errorMessage(error));
+      setFormError(errorMessage(error, t("verifyFailed")));
     } finally {
       setPending(false);
     }
@@ -109,12 +118,14 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
             weight="regular"
           />
           <p className="m-0 text-[13px] leading-relaxed text-fg-muted">
-            We sent a one-time code to{" "}
-            <span className="font-semibold text-fg">{emailForm.getValues("email")}</span>.
+            {t.rich("oneTimeCodeSent", {
+              address: (chunks) => <span className="font-semibold text-fg">{chunks}</span>,
+              email: emailForm.getValues("email"),
+            })}
           </p>
         </div>
         <label className="block text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-          {"Sign-in code "}
+          {t("signInCode")}
           <input
             autoComplete="one-time-code"
             className="mt-2 block min-h-11 w-full rounded-control border border-border-control bg-transparent px-3 text-[15px] font-semibold tracking-[0.4px] text-fg outline-none focus:border-accent"
@@ -141,7 +152,7 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
           {pending ? (
             <CircleNotch aria-hidden className="bv-spin" size={15} weight="regular" />
           ) : null}
-          Verify and return to invite
+          {t("verifyAndReturn")}
         </button>
       </form>
     );
@@ -150,7 +161,7 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
   return (
     <form className="mt-5 space-y-3" onSubmit={emailForm.handleSubmit(requestCode)}>
       <label className="block text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-        {"Invited email "}
+        {t("invitedEmail")}
         <input
           autoComplete="email"
           className="mt-2 block min-h-11 w-full rounded-control border border-border-control bg-transparent px-3 text-[13.5px] font-medium text-fg outline-none focus:border-accent"
@@ -176,7 +187,7 @@ export function InviteSignInForm({ email }: Readonly<{ email: string }>) {
         ) : (
           <CaretRight aria-hidden size={15} weight="regular" />
         )}
-        Send sign-in code
+        {t("sendSignInCode")}
       </button>
     </form>
   );

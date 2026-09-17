@@ -1,6 +1,5 @@
 "use client";
 
-import { DRAWER_COPY, TRACK_DIALOG_COPY } from "@/components/search-insights/search-insights-copy";
 import { AppDrawer, type AppDrawerCloseReason } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -11,6 +10,7 @@ import { ArrowSquareOutIcon as ArrowSquareOut } from "@phosphor-icons/react/dist
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode, RefObject } from "react";
 import {
   drawerGoogleSearchHref,
@@ -48,15 +48,22 @@ export type SearchInsightsDrawerProps = {
 
 const KICKER = "font-sans tabular-nums text-ui-micro uppercase tracking-wider text-fg-muted";
 
-const QUERY_SOURCE_TOOLTIP =
-  "Opens this search on Google. What you see can differ from what Search Console measured - results vary by location, device, and personalization.";
+type DrawerFooterProps = Pick<
+  SearchInsightsDrawerProps,
+  "adding" | "canTrack" | "entry" | "frame" | "onTrack" | "tracked"
+> & {
+  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>;
+};
 
-function querySourceAction(frame: SearchInsightsDrawerFrame): ReactNode {
+function querySourceAction(
+  frame: SearchInsightsDrawerFrame,
+  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>,
+): ReactNode {
   if (frame.kind !== "query") return null;
   return (
-    <Tooltip content={QUERY_SOURCE_TOOLTIP} semantics="description">
+    <Tooltip content={t("drawerQuerySourceTooltip")} semantics="description">
       <a
-        aria-label={`Search Google for ${frame.query}`}
+        aria-label={t("searchGoogleForQuery", { query: frame.query })}
         className="inline-grid h-6 w-6 shrink-0 place-items-center rounded-control border border-border-control opacity-50 transition-opacity hover:opacity-100 focus-visible:opacity-100"
         href={drawerGoogleSearchHref(frame.query)}
         onClick={(event) => event.stopPropagation()}
@@ -80,10 +87,8 @@ function footerFor({
   frame,
   onTrack,
   tracked,
-}: Pick<
-  SearchInsightsDrawerProps,
-  "adding" | "canTrack" | "entry" | "frame" | "onTrack" | "tracked"
->): ReactNode {
+  t,
+}: DrawerFooterProps): ReactNode {
   if (!frame) return null;
   if (frame.kind === "page") {
     const href = pageHref(frame.url);
@@ -97,7 +102,7 @@ function footerFor({
         target="_blank"
         variant="secondary"
       >
-        {DRAWER_COPY.openPage}
+        {t("drawerOpenPage")}
       </Button>
     );
   }
@@ -111,7 +116,7 @@ function footerFor({
     return (
       <span className="inline-flex max-w-full items-center justify-center gap-2 rounded-control border border-border px-3.75 py-2.5 text-center text-ui-body font-semibold text-fg-muted">
         {isTracked ? <Check aria-hidden size={14} weight="regular" /> : null}
-        {isTracked ? DRAWER_COPY.tracked : TRACK_DIALOG_COPY.adding}
+        {isTracked ? t("drawerTracked") : t("adding")}
       </span>
     );
   }
@@ -122,7 +127,7 @@ function footerFor({
       className="max-w-full whitespace-normal text-center"
       startIcon={<Plus size={14} weight="regular" />}
     >
-      {DRAWER_COPY.track}
+      {t("drawerTrack")}
     </Button>
   );
 }
@@ -152,7 +157,10 @@ export function SearchInsightsDrawer({
   seen,
   tracked,
 }: Readonly<SearchInsightsDrawerProps>) {
-  const footer = footerFor({ adding, canTrack, entry, frame, onTrack, tracked });
+  const format = useFormatter();
+  const t = useTranslations("projectSearchInsights.copy");
+  const presentation = { formatNumber: format.number, t };
+  const footer = footerFor({ adding, canTrack, entry, frame, onTrack, t, tracked });
 
   return (
     <AppDrawer
@@ -170,15 +178,15 @@ export function SearchInsightsDrawer({
             <span className="min-w-0 truncate">{back}</span>
           </button>
         ) : (
-          <span className={KICKER}>{frame ? drawerKicker(frame) : ""}</span>
+          <span className={KICKER}>{frame ? drawerKicker(frame, presentation) : ""}</span>
         )
       }
       onClose={onClose}
       onExited={onExited}
       open={open}
       sheetOnMobile
-      title={frame ? drawerTitle(frame, entry, counts) : ""}
-      titleAction={frame ? querySourceAction(frame) : null}
+      title={frame ? drawerTitle(frame, entry, counts, presentation) : ""}
+      titleAction={frame ? querySourceAction(frame, t) : null}
     >
       {entry?.status === "ready" ? (
         <SearchInsightsDrawerContent
@@ -195,15 +203,15 @@ export function SearchInsightsDrawer({
       ) : null}
       {entry?.status === "failed" ? (
         <div className="flex flex-col items-start gap-2.5">
-          <p className="m-0 text-ui-body text-fg-muted">{DRAWER_COPY.failed}</p>
+          <p className="m-0 text-ui-body text-fg-muted">{t("drawerOpenFailed")}</p>
           <Button onClick={onRetry} size="sm" variant="secondary">
-            {DRAWER_COPY.retry}
+            {t("retry")}
           </Button>
         </div>
       ) : null}
       {entry?.status === "loading" || entry === undefined ? (
         <div className="flex flex-col gap-2" role="status">
-          <span className="sr-only">{DRAWER_COPY.loading}</span>
+          <span className="sr-only">{t("drawerLoading")}</span>
           <span className="h-16.5 animate-pulse rounded-control bg-bg-sunken" />
           <span className="h-13.5 animate-pulse rounded-card bg-bg-sunken" />
           <span className="h-27.5 animate-pulse rounded-card bg-bg-sunken" />

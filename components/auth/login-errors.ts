@@ -1,4 +1,3 @@
-import { EMAIL_SIGN_IN_UNAVAILABLE_MESSAGE } from "@/lib/auth/email-sign-in-availability";
 import { EMAIL_CAPACITY_EXHAUSTED } from "@/lib/auth/signin-capacity-types";
 
 function errorCodes(error: unknown) {
@@ -7,19 +6,39 @@ function errorCodes(error: unknown) {
   return [typed.code, typed.message, typed.body?.code];
 }
 
-export function authErrorMessage(error: unknown) {
-  if (errorCodes(error).some((value) => value === "EMAIL_NOT_CONFIGURED")) {
-    return EMAIL_SIGN_IN_UNAVAILABLE_MESSAGE;
-  }
-  if (error && typeof error === "object" && "message" in error) {
-    const message = (error as { message?: unknown }).message;
+export type AuthErrorMessages = {
+  emailUnavailable: string;
+  fallback: string;
+  methodUnavailable: string;
+  providerEmailUnavailable: string;
+  providerEmailUnverified: string;
+  providerProfileUnavailable: string;
+};
 
-    if (typeof message === "string") {
-      return message;
-    }
+const messageKeyByKnownSocialError = {
+  EMAIL_NOT_CONFIGURED: "emailUnavailable",
+  EMAIL_NOT_VERIFIED: "providerEmailUnverified",
+  FAILED_TO_GET_USER_INFO: "providerProfileUnavailable",
+  PROVIDER_NOT_FOUND: "methodUnavailable",
+  USER_EMAIL_NOT_FOUND: "providerEmailUnavailable",
+} as const satisfies Record<string, keyof AuthErrorMessages>;
+
+/**
+ * Maps known Better Auth social-sign-in codes to caller-scoped catalog values.
+ * Upstream text is deliberately not rendered: an unknown code can contain provider diagnostics,
+ * while known user-facing states must not fall through as English framework messages.
+ */
+export function authErrorMessage(error: unknown, messages: AuthErrorMessages) {
+  for (const value of errorCodes(error)) {
+    if (typeof value !== "string") continue;
+    const key =
+      messageKeyByKnownSocialError[
+        value.toUpperCase() as keyof typeof messageKeyByKnownSocialError
+      ];
+    if (key) return messages[key];
   }
 
-  return "Something went wrong. Try again.";
+  return messages.fallback;
 }
 
 export function isEmailCapacityError(error: unknown) {

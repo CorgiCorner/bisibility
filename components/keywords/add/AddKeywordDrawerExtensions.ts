@@ -6,7 +6,6 @@ import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type {
   AddKeywordDrawerForm,
   AddKeywordEntryTab,
-  AddKeywordTab,
 } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
@@ -41,12 +40,6 @@ export type AddKeywordDrawerProps = Pick<KeywordWorkspaceActions, "addKeywordsAc
   tagSuggestions?: readonly string[];
 };
 
-/** What the panel is for, which changes while the nested New market step is open. */
-export function addKeywordDrawerDescription(marketStepOpen: boolean, domain?: string) {
-  if (marketStepOpen) return "The market is added to the project and selected for these keywords.";
-  return domain ? `Track where ${domain} ranks in Google.` : "Track new keywords in Google.";
-}
-
 export function trackingScheduleValue(
   frequency: TrackingScheduleSelection | undefined,
   costContext?: ProjectCostContext,
@@ -77,16 +70,6 @@ export function trackingScheduleValueWithDepthOverride(
     serpDepth: costContext.depth,
     timezone: costContext.timezone ?? "UTC",
   };
-}
-
-export function addKeywordDrawerCtaLabel(
-  activeTab: AddKeywordTab,
-  csvReviewOpen: boolean,
-  isPaused: boolean,
-) {
-  if (activeTab === "csv") return csvReviewOpen ? "Confirm" : "Review keywords";
-  if (isPaused) return "Add paused keywords";
-  return "Add keywords";
 }
 
 export function useAddKeywordTrackingSchedule(

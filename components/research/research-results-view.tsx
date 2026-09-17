@@ -7,6 +7,7 @@ import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import { downloadTextFile } from "@/lib/ui/download";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 // Client-only export UI. Pure table/panel helpers live in research-results-model.tsx
@@ -76,6 +77,7 @@ export function ResearchExportMenu({
   seed,
 }: Readonly<{ rows: GroupedResearchRow[]; seed: string }>) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const t = useTranslations("projectResearch.results");
 
   function exportAs(format: ResearchExportFormat) {
     downloadResearchExport(rows, seed, format);
@@ -90,24 +92,24 @@ export function ResearchExportMenu({
         startIcon={<DownloadSimple weight="regular" size={14} />}
         variant="secondary"
       >
-        Export
+        {t("export")}
       </Button>
       <Menu
         anchorEl={anchorEl}
         onClose={() => setAnchorEl(null)}
         open={Boolean(anchorEl)}
-        listProps={{ "aria-label": "Export results", style: { padding: 0 } }}
+        listProps={{ "aria-label": t("exportAria"), style: { padding: 0 } }}
         contentProps={{ style: menuSelectPaperStyle }}
       >
         <MenuSelectOptionItem
           current={false}
           onSelect={() => exportAs("csv")}
-          option={{ label: "Export CSV", value: "csv" }}
+          option={{ label: t("exportCsv"), value: "csv" }}
         />
         <MenuSelectOptionItem
           current={false}
           onSelect={() => exportAs("json")}
-          option={{ label: "Export JSON", value: "json" }}
+          option={{ label: t("exportJson"), value: "json" }}
         />
       </Menu>
     </>

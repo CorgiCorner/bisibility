@@ -1,3 +1,4 @@
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AlertBanner } from "./AlertBanner";
@@ -7,6 +8,7 @@ const meta = {
   title: "UI/AlertBanner",
   component: AlertBanner,
   decorators: [
+    withSharedMessages,
     (Story) => (
       <div className="min-h-[220px] bg-bg p-6 text-fg">
         <AlertBannerStack>

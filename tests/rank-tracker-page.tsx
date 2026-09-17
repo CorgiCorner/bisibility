@@ -1,7 +1,8 @@
-import KeywordsPage from "@/app/app/(workspace)/[project]/rank-tracker/page";
+import KeywordsPage from "@/app/(regional)/app/(workspace)/[project]/rank-tracker/page";
 import type { RankTrackerAction } from "@/lib/keywords/rank-tracker-command";
 import { permanentRedirect, redirect } from "@/tests/next-navigation";
 import { render } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -31,6 +32,9 @@ export const captured = {
   initialDensity: undefined as string | undefined,
 };
 
+vi.mock("@/components/rank-tracker/RankTrackerFeatureBoundary", () => ({
+  RankTrackerFeatureBoundary: ({ children }: { children: ReactNode }) => children,
+}));
 vi.mock("@/components/rank-tracker/RankTrackerTabs", () => ({
   RankTrackerTabs: (props: { activeTab: string; savedCount: number; trackedCount: number }) => (
     <div data-testid="rank-tracker-tabs">

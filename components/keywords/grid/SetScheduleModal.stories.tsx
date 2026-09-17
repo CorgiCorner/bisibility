@@ -85,7 +85,7 @@ export const ModalSetScheduleLoading: Story = {
 export const ModalSetScheduleLoadError: Story = {
   args: {
     ...args,
-    scheduleLoadError: "Could not load schedules. Try again.",
+    scheduleLoadError: "unknown",
     scheduleLoadState: "error",
   },
   name: "modal-set-schedule-load-error",

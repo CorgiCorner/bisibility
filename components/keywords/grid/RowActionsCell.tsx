@@ -16,6 +16,7 @@ import { DotsThreeVerticalIcon as DotsThreeVertical } from "@phosphor-icons/reac
 import { PencilSimpleIcon as PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { type MouseEvent, useState } from "react";
 import { effectiveRowDepth } from "./run-check-depth";
 
@@ -73,6 +74,7 @@ export function RowActionsCell({
   projectRef,
   row,
 }: Readonly<RowActionsCellProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.rowActions");
   const router = useRouter();
   const { readOnly } = useProjectWriteMode();
   const { showToast } = useToast();
@@ -106,14 +108,14 @@ export function RowActionsCell({
     setAnchorEl(null);
     const clipboard = navigator.clipboard;
     if (!clipboard) {
-      showToast("Could not copy keyword ID", { severity: "error" });
+      showToast(t("copyFailed"), { severity: "error" });
       return;
     }
     try {
       await clipboard.writeText(row.id);
-      showToast("Keyword ID copied", { severity: "success" });
+      showToast(t("copySucceeded"), { severity: "success" });
     } catch {
-      showToast("Could not copy keyword ID", { severity: "error" });
+      showToast(t("copyFailed"), { severity: "error" });
     }
   }
 
@@ -123,7 +125,7 @@ export function RowActionsCell({
         aria-controls={anchorEl ? menuId : undefined}
         aria-expanded={anchorEl ? "true" : undefined}
         aria-haspopup="menu"
-        aria-label="Keyword actions"
+        aria-label={t("menu")}
         onClick={openMenu}
         size="small"
         style={{ "--control-color": "var(--fg-muted)" }}
@@ -145,16 +147,16 @@ export function RowActionsCell({
             style={{ gap: "10px", minHeight: 36 }}
           >
             <PencilSimple weight="regular" size={15} />
-            Edit keyword
+            {t("edit")}
           </MenuItem>
         ) : null}
         <MenuItem onClick={open} style={{ gap: "10px", minHeight: 36 }}>
           <ArrowUpRight weight="regular" size={15} />
-          View details
+          {t("details")}
         </MenuItem>
         <MenuItem onClick={copyId} style={{ gap: "10px", minHeight: 36 }}>
           <Copy weight="regular" size={15} />
-          Copy keyword ID
+          {t("copyId")}
         </MenuItem>
         {canUpdateKeyword ? (
           <MenuItem
@@ -163,7 +165,7 @@ export function RowActionsCell({
             style={{ gap: "10px", minHeight: 36 }}
           >
             <ArrowsClockwise weight="regular" size={15} />
-            {`Run check (Top ${effectiveRowDepth(row)})`}
+            {t("runCheck", { depth: effectiveRowDepth(row) })}
           </MenuItem>
         ) : null}
         {canDeleteKeyword ? (
@@ -173,7 +175,7 @@ export function RowActionsCell({
             style={{ "--control-color": "var(--red)", gap: "10px", minHeight: 36 }}
           >
             <Trash weight="regular" size={15} />
-            Delete
+            {t("delete")}
           </MenuItem>
         ) : null}
       </Menu>

@@ -1,5 +1,8 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 // Server runtime env is baked into a server-only module (scripts/deploy/bake-runtime-env.mjs),
 // never Next's `env` config, which would inline the values into the client bundle.
@@ -142,7 +145,7 @@ const nextConfig: NextConfig = {
   output: resolveNextOutput(process.env),
 };
 
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withNextIntl(nextConfig), {
   authToken: canUploadSentrySourceMaps ? sentryAuthToken : undefined,
   org: sentryOrg,
   project: "bisibility",

@@ -1,0 +1,26 @@
+{
+  "projectSettingsNotifications": {
+    "channels": {
+      "title": "Kanały",
+      "description": "Dokąd trafia alert po wywołaniu. Warunki alertów ustawiasz w sekcji Alerty.",
+      "eventsAndChannels": "Zdarzenia i kanały",
+      "event": "Zdarzenie",
+      "inApp": "W aplikacji",
+      "email": "E-mail",
+      "alertFired": "Alert wywołany",
+      "checkComplete": "Sprawdzenie zakończone",
+      "importFinished": "Import zakończony",
+      "invite": "Zaproszenie",
+      "weeklyReport": "Raport tygodniowy",
+      "unavailable": "{label} – niedostępne",
+      "unavailableHelp": "Kreska oznacza, że dany kanał nie istnieje dla tego zdarzenia – raport tygodniowy to e-mail wysyłany tylko raz w tygodniu.",
+      "saveError": "Nie udało się zapisać preferencji."
+    },
+    "delivery": {
+      "title": "Adres dostarczania",
+      "description": "Adres, na który trafiają e-maile z powiadomieniami.",
+      "manageEmail": "Zarządzaj adresem",
+      "deliveredTo": "Powiadomienia są dostarczane na adres <address>{email}</address>."
+    }
+  }
+}

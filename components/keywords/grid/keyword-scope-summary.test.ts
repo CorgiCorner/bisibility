@@ -1,9 +1,16 @@
+import messages from "@/messages/core/en/project-rank-tracker-keyword-import.json";
+import { createTranslator } from "use-intl/core";
 import { describe, expect, it } from "vitest";
 import { keywordNoRowsCopy } from "./keyword-scope-summary";
 
 const options = [
   { count: 2, displayName: "Austin, Texas", id: "loc_austin", kind: "city" as const },
 ];
+const t = createTranslator({
+  locale: "en",
+  messages,
+  namespace: "projectRankTracker.keywordImport.management.grid",
+});
 
 describe("keywordNoRowsCopy", () => {
   it("names the active scope and filter count", () => {
@@ -14,6 +21,7 @@ describe("keywordNoRowsCopy", () => {
         lens: { device: "desktop", locationId: "loc_austin" },
         needsRankData: false,
         options,
+        t,
       }),
     ).toEqual({
       description: "Adjust the active filters or show keywords from all locations and devices.",
@@ -29,6 +37,7 @@ describe("keywordNoRowsCopy", () => {
         lens: { device: "desktop", locationId: null },
         needsRankData: true,
         options,
+        t,
       }),
     ).toEqual({
       description:

@@ -46,7 +46,14 @@ const entries = [
 ] satisfies readonly AuditEntry[];
 
 const meta = {
-  args: { dateRange: "30d", entries, entryLimit: 200, retentionDays: 365, truncated: false },
+  args: {
+    dateDisplay: { dateFormat: "day_first", locale: "en", timeZone: "UTC" },
+    dateRange: "30d",
+    entries,
+    entryLimit: 200,
+    retentionDays: 365,
+    truncated: false,
+  },
   component: AuditLogView,
   decorators: [
     (Story, context) => (

@@ -1,19 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  clicksToSessionsKpi,
-  countDelta,
-  ctrDelta,
-  EMPTY_TOTALS,
-  positionDelta,
-  searchInsightsKpis,
-  type WindowTotals,
-  windowTotals,
-} from "./kpis-model";
-
-// A window is only comparable when it holds impressions, so every fixture carries them.
-function totals(part: Partial<WindowTotals>): WindowTotals {
-  return { clicks: 1_000, ctr: 0.02, impressions: 100_000, position: 12, ...part };
-}
+import { clicksToSessionsKpi, searchInsightsKpis, windowTotals } from "./kpis-model";
 
 describe("windowTotals", () => {
   it("takes the ratio of the window, not the average of its days", () => {
@@ -41,122 +27,6 @@ describe("windowTotals", () => {
   });
 });
 
-describe("countDelta", () => {
-  it("signs the percentage and calls a gain an improvement", () => {
-    expect(countDelta(12_480, 11_534)).toEqual({ delta: "+8.2%", dir: "up" });
-  });
-
-  it("marks a loss as a decline without colouring it as an error", () => {
-    expect(countDelta(11_534, 12_480)).toEqual({ delta: "-7.6%", dir: "down" });
-  });
-
-  it("does not dress a rounding difference up as movement", () => {
-    expect(countDelta(1_000, 1_000.2)).toEqual({ delta: "unchanged", dir: "flat" });
-    expect(countDelta(1_000, 1_000.2)).toEqual(
-      ctrDelta(totals({ ctr: 0.022 }), totals({ ctr: 0.022001 })),
-    );
-  });
-
-  it("says so instead of inventing an infinite gain over an empty baseline", () => {
-    expect(countDelta(120, 0)).toEqual({ delta: "new", dir: "up" });
-  });
-
-  it("speaks of an empty window in the same word the other cards use", () => {
-    expect(countDelta(0, 0)).toEqual({ delta: "unchanged", dir: "flat" });
-    expect(countDelta(0, 0)).toEqual(ctrDelta(EMPTY_TOTALS, EMPTY_TOTALS));
-    expect(countDelta(0, 0)).toEqual(positionDelta(EMPTY_TOTALS, EMPTY_TOTALS));
-  });
-});
-
-describe("ctrDelta", () => {
-  it("moves in percentage points, never in percent of a percent", () => {
-    expect(ctrDelta(totals({ ctr: 0.0257 }), totals({ ctr: 0.0244 }))).toEqual({
-      delta: "+0.13 pp",
-      dir: "up",
-    });
-    expect(ctrDelta(totals({ ctr: 0.0244 }), totals({ ctr: 0.0257 }))).toEqual({
-      delta: "-0.13 pp",
-      dir: "down",
-    });
-  });
-
-  it("says unchanged rather than printing a signed zero", () => {
-    expect(ctrDelta(totals({ ctr: 0.022001 }), totals({ ctr: 0.022 }))).toEqual({
-      delta: "unchanged",
-      dir: "flat",
-    });
-  });
-
-  it("measures between the two rates the card prints, not between their raw values", () => {
-    // Both render as 2.20%, so a card claiming movement would contradict its own figures.
-    expect(ctrDelta(totals({ ctr: 0.02204 }), totals({ ctr: 0.021996 }))).toEqual({
-      delta: "unchanged",
-      dir: "flat",
-    });
-    // 2.20% against 2.21%: the printed numbers differ, so the line has to say so.
-    expect(ctrDelta(totals({ ctr: 0.022004 }), totals({ ctr: 0.022096 }))).toEqual({
-      delta: "-0.01 pp",
-      dir: "down",
-    });
-  });
-
-  it("reports no baseline rather than reading the whole rate as a gain", () => {
-    expect(ctrDelta(totals({ ctr: 0.0257 }), EMPTY_TOTALS)).toEqual({ delta: "new", dir: "up" });
-  });
-
-  it("has nothing to compare once the current window holds no rows", () => {
-    expect(ctrDelta(EMPTY_TOTALS, totals({ ctr: 0.0257 }))).toEqual({
-      delta: "no data",
-      dir: "flat",
-    });
-  });
-});
-
-describe("positionDelta", () => {
-  it("names the direction, because a smaller number is the better one", () => {
-    expect(positionDelta(totals({ position: 18.4 }), totals({ position: 20 }))).toEqual({
-      delta: "1.6 better",
-      dir: "up",
-    });
-    expect(positionDelta(totals({ position: 20 }), totals({ position: 18.4 }))).toEqual({
-      delta: "1.6 worse",
-      dir: "down",
-    });
-  });
-
-  it("does not dress a rounding difference up as movement", () => {
-    expect(positionDelta(totals({ position: 18.42 }), totals({ position: 18.44 }))).toEqual({
-      delta: "unchanged",
-      dir: "flat",
-    });
-  });
-
-  it("measures between the two positions the card prints, not between their raw values", () => {
-    // Both render as 17.3, so the word beside them has to be unchanged.
-    expect(positionDelta(totals({ position: 17.32 }), totals({ position: 17.34 }))).toEqual({
-      delta: "unchanged",
-      dir: "flat",
-    });
-    // 17.3 against 17.4: a card cannot call that unchanged while it prints two numbers.
-    expect(positionDelta(totals({ position: 17.31 }), totals({ position: 17.36 }))).toEqual({
-      delta: "0.1 better",
-      dir: "up",
-    });
-  });
-
-  it("does not read an empty window as the distance from the top of the results", () => {
-    // Zero is what an empty window's weighted average comes back as, and it is not a position.
-    expect(positionDelta(totals({ position: 18.4 }), EMPTY_TOTALS)).toEqual({
-      delta: "new",
-      dir: "up",
-    });
-    expect(positionDelta(EMPTY_TOTALS, totals({ position: 18.4 }))).toEqual({
-      delta: "no data",
-      dir: "flat",
-    });
-  });
-});
-
 describe("searchInsightsKpis", () => {
   const comparedTotals = {
     current: { clicks: 12_480, ctr: 0.0257, impressions: 486_310, position: 18.4 },
@@ -166,69 +36,73 @@ describe("searchInsightsKpis", () => {
   it("suppresses every delta until the previous window is covered", () => {
     const cards = searchInsightsKpis(comparedTotals, false);
 
-    expect(cards.map(({ delta, dir, prev, value }) => ({ delta, dir, prev, value }))).toEqual([
-      { delta: "new", dir: "flat", prev: "no data", value: "12,480" },
-      { delta: "new", dir: "flat", prev: "no data", value: "486,310" },
-      { delta: "new", dir: "flat", prev: "no data", value: "2.57%" },
-      { delta: "new", dir: "flat", prev: "no data", value: "18.4" },
+    expect(
+      cards.map(({ delta, dir, previous, value }) => ({ delta, dir, previous, value })),
+    ).toEqual([
+      { delta: { kind: "new" }, dir: "flat", previous: null, value: 12_480 },
+      { delta: { kind: "new" }, dir: "flat", previous: null, value: 486_310 },
+      { delta: { kind: "new" }, dir: "flat", previous: null, value: 0.0257 },
+      { delta: { kind: "new" }, dir: "flat", previous: null, value: 18.4 },
     ]);
   });
 
-  it("keeps covered output byte-identical to the existing default", () => {
+  it("keeps raw metrics and delta units in the model", () => {
     const baseline = searchInsightsKpis(comparedTotals);
 
-    expect(baseline).toMatchInlineSnapshot(`
-      [
-        {
-          "delta": "+8.2%",
-          "dir": "up",
-          "label": "Clicks",
-          "prev": "11,534",
-          "source": "GSC",
-          "value": "12,480",
-        },
-        {
-          "delta": "+3.1%",
-          "dir": "up",
-          "label": "Impressions",
-          "prev": "471,690",
-          "source": "GSC",
-          "value": "486,310",
-        },
-        {
-          "delta": "+0.13 pp",
-          "dir": "up",
-          "label": "CTR",
-          "prev": "2.44%",
-          "source": "GSC",
-          "value": "2.57%",
-        },
-        {
-          "delta": "1.6 better",
-          "dir": "up",
-          "label": "Avg position",
-          "prev": "20.0",
-          "source": "GSC",
-          "value": "18.4",
-        },
-      ]
-    `);
+    expect(baseline).toEqual([
+      {
+        delta: { kind: "changed", unit: "percent_change", value: 0.082 },
+        dir: "up",
+        metric: "clicks",
+        previous: 11_534,
+        source: "gsc",
+        value: 12_480,
+        valueKind: "count",
+      },
+      {
+        delta: { kind: "changed", unit: "percent_change", value: 0.031 },
+        dir: "up",
+        metric: "impressions",
+        previous: 471_690,
+        source: "gsc",
+        value: 486_310,
+        valueKind: "count",
+      },
+      {
+        delta: { kind: "changed", unit: "percentage_points", value: 0.0013 },
+        dir: "up",
+        metric: "ctr",
+        previous: 0.0244,
+        source: "gsc",
+        value: 0.0257,
+        valueKind: "percentage",
+      },
+      {
+        delta: { kind: "changed", unit: "position", value: 1.6 },
+        dir: "up",
+        metric: "position",
+        previous: 20,
+        source: "gsc",
+        value: 18.4,
+        valueKind: "position",
+      },
+    ]);
     expect(JSON.stringify(searchInsightsKpis(comparedTotals, true))).toBe(JSON.stringify(baseline));
   });
 
-  it("labels every card with the system that produced the number", () => {
+  it("retains each metric and its source code for presentation", () => {
     const cards = searchInsightsKpis(comparedTotals);
 
-    expect(cards.map((card) => card.label)).toEqual([
-      "Clicks",
-      "Impressions",
-      "CTR",
-      "Avg position",
-    ]);
-    expect(cards.every((card) => card.source === "GSC")).toBe(true);
-    expect(cards[0]).toMatchObject({ delta: "+8.2%", prev: "11,534", value: "12,480" });
-    expect(cards[2]).toMatchObject({ prev: "2.44%", value: "2.57%" });
-    expect(cards[3]).toMatchObject({ delta: "1.6 better", dir: "up", prev: "20.0", value: "18.4" });
+    expect(cards.map((card) => card.metric)).toEqual(["clicks", "impressions", "ctr", "position"]);
+    expect(cards.every((card) => card.source === "gsc")).toBe(true);
+    expect(cards[0]).toMatchObject({ previous: 11_534, value: 12_480 });
+    expect(cards[2]).toMatchObject({ previous: 0.0244, value: 0.0257 });
+    expect(cards[3]).toMatchObject({
+      delta: { kind: "changed", unit: "position", value: 1.6 },
+      dir: "up",
+      previous: 20,
+      value: 18.4,
+    });
   });
 
   it("says the compared period holds nothing rather than comparing against its zeros", () => {
@@ -237,8 +111,13 @@ describe("searchInsightsKpis", () => {
       previous: { clicks: 0, ctr: 0, impressions: 0, position: 0 },
     });
 
-    expect(cards.map((card) => card.delta)).toEqual(["new", "new", "new", "new"]);
-    expect(cards.every((card) => card.prev === "no data")).toBe(true);
+    expect(cards.map((card) => card.delta)).toEqual([
+      { kind: "new" },
+      { kind: "new" },
+      { kind: "new" },
+      { kind: "new" },
+    ]);
+    expect(cards.every((card) => card.previous === null)).toBe(true);
   });
 
   it("does not colour a window that lost all its traffic as an improvement", () => {
@@ -247,9 +126,12 @@ describe("searchInsightsKpis", () => {
       previous: { clicks: 12_480, ctr: 0.0257, impressions: 486_310, position: 18.4 },
     });
 
-    expect(cards[0]).toMatchObject({ delta: "-100.0%", dir: "down" });
-    expect(cards[2]).toMatchObject({ delta: "no data", dir: "flat", prev: "2.57%" });
-    expect(cards[3]).toMatchObject({ delta: "no data", dir: "flat", prev: "18.4" });
+    expect(cards[0]).toMatchObject({
+      delta: { kind: "changed", unit: "percent_change", value: -1 },
+      dir: "down",
+    });
+    expect(cards[2]).toMatchObject({ delta: { kind: "no_data" }, dir: "flat", previous: 0.0257 });
+    expect(cards[3]).toMatchObject({ delta: { kind: "no_data" }, dir: "flat", previous: 18.4 });
   });
 });
 
@@ -259,16 +141,17 @@ describe("clicksToSessionsKpi", () => {
     previous: { clicks: 100, ctr: 0, impressions: 100, position: 0 },
   };
 
-  it("formats the sessions-to-clicks ratio as a percentage", () => {
+  it("keeps the sessions-to-clicks ratio numeric for locale presentation", () => {
     expect(clicksToSessionsKpi(clicks, { current: 92, previous: 88 })).toEqual({
       kind: "visible",
       kpi: {
-        delta: "+4.00 pp",
+        delta: { kind: "changed", unit: "percentage_points", value: 0.04 },
         dir: "up",
-        label: "Clicks to sessions",
-        prev: "88.00%",
-        source: "GSC",
-        value: "92.00%",
+        metric: "clicks_to_sessions",
+        previous: 0.88,
+        source: "gsc",
+        value: 0.92,
+        valueKind: "percentage",
       },
     });
   });
@@ -276,7 +159,7 @@ describe("clicksToSessionsKpi", () => {
   it("uses the uncovered-baseline affordance when comparison coverage is unavailable", () => {
     expect(clicksToSessionsKpi(clicks, { current: 92, previous: 88 }, false)).toEqual({
       kind: "visible",
-      kpi: expect.objectContaining({ delta: "new", dir: "flat", prev: "no data" }),
+      kpi: expect.objectContaining({ delta: { kind: "new" }, dir: "flat", previous: null }),
     });
   });
 
@@ -289,13 +172,13 @@ describe("clicksToSessionsKpi", () => {
           previous: 88,
         },
       ),
-    ).toEqual({ kind: "hidden", reason: "zero_clicks", source: "GSC" });
+    ).toEqual({ kind: "hidden", reason: "zero_clicks", source: "gsc" });
   });
 
   it("keeps zero sessions as a measured zero when clicks exist", () => {
     expect(clicksToSessionsKpi(clicks, { current: 0, previous: 88 })).toEqual({
       kind: "visible",
-      kpi: expect.objectContaining({ value: "0.00%" }),
+      kpi: expect.objectContaining({ value: 0, valueKind: "percentage" }),
     });
   });
 });

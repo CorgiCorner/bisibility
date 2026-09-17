@@ -1,5 +1,6 @@
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { setNavigationState } from "@/tests/next-navigation";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CommandPaletteProvider, CommandPaletteTrigger, useCommandPalette } from "./CommandPalette";
@@ -293,6 +294,10 @@ describe("CommandPalette", () => {
       "prj_1",
       expect.any(Function),
       expect.any(Function),
+      expect.objectContaining({
+        groups: expect.objectContaining({ markets: "Markets", navigate: "Navigate" }),
+        marketNavigation: expect.any(Function),
+      }),
       [],
       markets,
       { marketSegments: ["m", "pmkt_current"] },

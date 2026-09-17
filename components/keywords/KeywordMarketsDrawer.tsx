@@ -1,5 +1,6 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { AddKeywordTrackingControls } from "@/components/keywords/add/AddKeywordTrackingControls";
 import { useAddKeywordDrawerMarkets } from "@/components/keywords/add/useAddKeywordDrawerMarkets";
 import { NewMarketCreator } from "@/components/markets/sheet/NewMarketCreator";
@@ -12,8 +13,10 @@ import { appPath, asProjectRef } from "@/lib/routing/app-path";
 import type { AddKeywordsMatrixInput, BulkKeywordIdsInput } from "@/lib/schemas/keyword";
 import type { SerpDevice } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { actionErrorMessage, deviceValue, type KeywordAction } from "./action-utils";
+import { deviceValue, type KeywordAction } from "./action-utils";
+import { presentSafeActionError } from "./safe-action-error";
 
 type KeywordMarketsDrawerProps = {
   addKeywordsMatrixAction: KeywordAction<AddKeywordsMatrixInput>;
@@ -64,10 +67,17 @@ function scheduleInput(keyword: KeywordRow) {
   };
 }
 
-function checkDeltaLabel(current: number, next: number) {
+function checkDeltaLabel(
+  current: number,
+  next: number,
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordImport.management.add">>,
+) {
   const delta = next - current;
-  if (delta === 0) return "No change to checks per run.";
-  return `${delta > 0 ? "+" : ""}${delta} ${Math.abs(delta) === 1 ? "check" : "checks"} per run.`;
+  if (delta === 0) return t("marketDrawerNoChange");
+  return t("marketDrawerDelta", {
+    count: Math.abs(delta),
+    direction: delta > 0 ? "positive" : "other",
+  });
 }
 
 export function KeywordMarketsDrawer({
@@ -81,6 +91,8 @@ export function KeywordMarketsDrawer({
   projectMarkets,
   targets,
 }: Readonly<KeywordMarketsDrawerProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const { showToast } = useToast();
   const uniqueTargets = [...new Map(targets.map((target) => [target.id, target])).values()];
@@ -115,7 +127,7 @@ export function KeywordMarketsDrawer({
   async function save() {
     if (!valid || saving) return;
     if (addsTargets && !canCreateKeyword) {
-      setError("You do not have permission to add keyword targets.");
+      setError(t("marketDrawerNoCreatePermission"));
       return;
     }
     setSaving(true);
@@ -145,7 +157,8 @@ export function KeywordMarketsDrawer({
       const currentDeleted = deleteTargets.some((target) => target.id === keyword.id);
       const retained = uniqueTargets.find((target) => desiredKeys.has(targetKey(target)));
       if (currentDeleted && !retained && addedIds.length === 0) {
-        throw new Error("The replacement target is not available yet. Refresh and try again.");
+        setError(t("marketDrawerMissingReplacement"));
+        return;
       }
       if (deleteTargets.length > 0) {
         await bulkDeleteAction({
@@ -155,7 +168,7 @@ export function KeywordMarketsDrawer({
       }
       const nextId = retained?.id ?? addedIds[0];
       setPendingAddition(null);
-      showToast("Updated markets and devices", { severity: "success" });
+      showToast(t("marketDrawerUpdated"), { severity: "success" });
       onClose();
       if (currentDeleted && nextId) {
         router.push(appPath(asProjectRef(projectId), "rank-tracker", nextId));
@@ -164,10 +177,10 @@ export function KeywordMarketsDrawer({
       }
     } catch (cause) {
       if (addedIds.length > 0) {
-        setError("New targets were added, but old targets could not be removed. Retry to finish.");
+        setError(t("marketDrawerPartialUpdate"));
         router.refresh();
       } else {
-        setError(actionErrorMessage(cause, "Markets and devices could not be updated."));
+        setError(presentSafeActionError(cause, sharedErrors, t("marketDrawerUpdateFailed")));
       }
     } finally {
       setSaving(false);
@@ -177,17 +190,17 @@ export function KeywordMarketsDrawer({
   const footer = (
     <div className="flex items-center gap-2.5">
       <Button disabled={saving} onClick={onClose} type="button" variant="secondary">
-        Cancel
+        {t("marketDrawerCancel")}
       </Button>
       <Button
         className="flex-1"
         disabled={!valid || saving}
         loading={saving}
-        loadingLabel="Saving..."
+        loadingLabel={t("marketDrawerSaving")}
         onClick={() => void save()}
         type="button"
       >
-        Save markets and devices
+        {t("marketDrawerSave")}
       </Button>
     </div>
   );
@@ -197,7 +210,9 @@ export function KeywordMarketsDrawer({
       {(market) => (
         <Sheet
           backAction={
-            marketFlow.step.open ? { label: "Back to keyword", onClick: market.onBack } : undefined
+            marketFlow.step.open
+              ? { label: t("marketDrawerBack"), onClick: market.onBack }
+              : undefined
           }
           footer={marketFlow.step.open ? market.footer : footer}
           onClose={onClose}
@@ -208,7 +223,7 @@ export function KeywordMarketsDrawer({
               market.title
             ) : (
               <span className="block min-w-0">
-                <span className="block">Markets and devices</span>
+                <span className="block">{t("marketDrawerTitle")}</span>
                 <span className="mt-1 block truncate text-[12px] font-normal text-fg-muted">
                   {keyword.keyword}
                 </span>
@@ -221,7 +236,7 @@ export function KeywordMarketsDrawer({
           ) : (
             <>
               <p className="m-0 mb-4 text-[12px] text-fg-muted">
-                This keyword is tracked for every selected market and device.
+                {t("marketDrawerKeywordDescription")}
               </p>
               <div className="grid gap-4">
                 <AddKeywordTrackingControls
@@ -231,21 +246,23 @@ export function KeywordMarketsDrawer({
                 />
               </div>
               <div
-                aria-label="Keyword target change"
+                aria-label={t("marketDrawerTargetChange")}
                 className="mt-5 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
               >
                 <p className="m-0 font-sans tabular-nums text-[11px] text-fg">
-                  {selection.locationKeys.length} markets x {selection.devices.length}{" "}
-                  {selection.devices.length === 1 ? "device" : "devices"} = {nextCount} checks per
-                  run
+                  {t("marketDrawerChecksPerRun", {
+                    checks: nextCount,
+                    devices: selection.devices.length,
+                    markets: selection.locationKeys.length,
+                  })}
                 </p>
                 <p className="m-0 mt-1 text-[11.5px] text-fg-muted">
-                  {checkDeltaLabel(uniqueTargets.length, nextCount)}
+                  {checkDeltaLabel(uniqueTargets.length, nextCount, t)}
                 </p>
               </div>
               {!valid ? (
                 <p className="mt-3 text-[12px] text-red-text">
-                  Select at least one market and device.
+                  {t("marketDrawerSelectionRequired")}
                 </p>
               ) : null}
               {error ? <p className="mt-3 text-[12px] text-red-text">{error}</p> : null}

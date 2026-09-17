@@ -1,4 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import {
+  renderWithShellMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import shellMessages from "@/messages/core/en/shell.json";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AppFooter } from "./AppFooter";
 
@@ -21,7 +26,63 @@ function expectAdminLink(name: string) {
   return link;
 }
 
+const polishShellMessages = {
+  ...shellMessages,
+  shell: {
+    ...shellMessages.shell,
+    footer: {
+      ...shellMessages.shell.footer,
+      instanceStatus: {
+        ...shellMessages.shell.footer.instanceStatus,
+        healthy: "Administrator instancji",
+        manualMode: "Administrator instancji · Tryb reczny",
+        schemaDrift: "Administrator instancji · Niezgodny schemat",
+        workerDifferentQueues: "Administrator instancji · Rozne kolejki procesu roboczego",
+        workerDown: "Administrator instancji · Proces roboczy nie dziala",
+      },
+    },
+  },
+};
+
 describe("AppFooter", () => {
+  it.each([
+    {
+      label: "Administrator instancji",
+      props: { schemaStatus: "ok", workerStatus: "ok" } as const,
+    },
+    {
+      label: "Administrator instancji · Niezgodny schemat",
+      props: { schemaStatus: "drift", workerStatus: "ok" } as const,
+    },
+    {
+      label: "Administrator instancji · Rozne kolejki procesu roboczego",
+      props: {
+        schemaStatus: "ok",
+        temporalIdentityStatus: "mismatch",
+        workerStatus: "ok",
+      } as const,
+    },
+    {
+      label: "Administrator instancji · Proces roboczy nie dziala",
+      props: { schemaStatus: "ok", workerStatus: "stale" } as const,
+    },
+    {
+      label: "Administrator instancji · Tryb reczny",
+      props: { schemaStatus: "unknown", workerStatus: "unknown" } as const,
+    },
+  ])(
+    "translates the $label instance-admin status at the shell render boundary",
+    ({ label, props }) => {
+      renderWithFeatureMessages(<AppFooter {...props} showInstanceAdmin />, {
+        locale: "pl",
+        messages: polishShellMessages,
+      });
+
+      expectAdminLink(label);
+      expect(screen.queryByText("Instance admin · Worker down")).not.toBeInTheDocument();
+    },
+  );
+
   it("prioritizes schema drift with a red status", () => {
     render(<AppFooter schemaStatus="drift" showInstanceAdmin workerStatus="ok" />);
 

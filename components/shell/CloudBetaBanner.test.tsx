@@ -1,5 +1,10 @@
+import {
+  renderWithShellMessages as render,
+  renderWithFeatureMessages,
+  shellFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CloudBetaBanner } from "./CloudBetaBanner";
 import {
@@ -31,6 +36,20 @@ const defaultProps = {
   projectRef: "prj_1",
   projectName: "acme.dev",
 } as const;
+
+const preparedPolishShellMessages = {
+  ...shellFeatureTestMessages,
+  shell: {
+    ...shellFeatureTestMessages.shell,
+    betaBanner: {
+      ...shellFeatureTestMessages.shell.betaBanner,
+      detail: "Odzyskanie danych nie jest jeszcze gwarantowane.",
+      dismiss: "Zamknij baner beta",
+      exportData: "Eksportuj dane",
+      lead: "Beta hostowana:",
+    },
+  },
+};
 
 function clearDismissalCookie() {
   // biome-ignore lint/suspicious/noDocumentCookie: Reset the browser state between tests.
@@ -83,6 +102,20 @@ describe("CloudBetaBanner", () => {
     // The banner states one risk. A reassurance about parity with self-hosting belongs in the
     // coverage modal, not in the strip a reader sees on every page.
     expect(screen.getByRole("status")).not.toHaveTextContent("match self-hosted");
+  });
+
+  it("uses the prepared non-English shell payload for its warning and controls", () => {
+    renderWithFeatureMessages(<CloudBetaBanner {...defaultProps} />, {
+      locale: "pl",
+      messages: preparedPolishShellMessages,
+    });
+
+    expect(screen.getByRole("status")).toHaveTextContent("Beta hostowana:");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Odzyskanie danych nie jest jeszcze gwarantowane.",
+    );
+    expect(screen.getByRole("button", { name: "Eksportuj dane" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Zamknij baner beta" })).toBeInTheDocument();
   });
 
   it("renders the hosted beta lead semibold", () => {

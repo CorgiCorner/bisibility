@@ -3,7 +3,8 @@ import {
   type AdvancedSettingsContentProps,
 } from "@/components/settings/advanced/AdvancedSettingsContent";
 import { ToastProvider } from "@/components/ui/Toast";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { renderWithAdvancedSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -151,6 +152,38 @@ describe("AdvancedSettingsContent", () => {
         projectId: "prj_story",
       }),
     );
+  });
+
+  it("keeps unknown backup and deletion failures behind their scoped remedies", async () => {
+    const user = userEvent.setup();
+    const props = hostedProps();
+    const rawFailure = "unmapped upstream diagnostic";
+    props.actions.exportBackup = vi.fn(async () => {
+      throw new Error(rawFailure);
+    });
+    props.actions.deleteProject = vi.fn(async () => {
+      throw new Error(rawFailure);
+    });
+    render(
+      <ToastProvider>
+        <AdvancedSettingsContent {...props} />
+      </ToastProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Download data export" }));
+    expect(await screen.findByText("Project data could not be exported.")).toBeInTheDocument();
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Delete project" }));
+    const dialog = screen.getByRole("dialog", { name: "Confirm project deletion" });
+    await user.type(
+      within(dialog).getByLabelText("Type example.com to confirm deletion"),
+      "example.com",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Delete project" }));
+
+    expect(await screen.findByText("Project could not be deleted.")).toBeInTheDocument();
+    expect(screen.queryByText(rawFailure)).not.toBeInTheDocument();
   });
 
   it("uses the project ID inside the modal when no domain is set", async () => {

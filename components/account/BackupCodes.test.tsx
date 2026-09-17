@@ -1,5 +1,6 @@
+import { renderWithAccountMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { stubBlobDownload } from "@/tests/blob-download";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { BackupCodes } from "./BackupCodes";
 

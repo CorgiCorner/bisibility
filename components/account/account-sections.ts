@@ -4,10 +4,10 @@ import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/ssr/S
 import { UserCircleIcon as UserCircle } from "@phosphor-icons/react/dist/ssr/UserCircle";
 
 export const accountSections = [
-  { href: "/app/account", icon: UserCircle, id: "profile", label: "Profile" },
-  { href: "/app/account/preferences", icon: GearSix, id: "preferences", label: "Preferences" },
-  { href: "/app/account/security", icon: ShieldCheck, id: "security", label: "Security" },
-] as const satisfies ReadonlyArray<{ href: string; icon: Icon; id: string; label: string }>;
+  { href: "/app/account", icon: UserCircle, id: "profile" },
+  { href: "/app/account/preferences", icon: GearSix, id: "preferences" },
+  { href: "/app/account/security", icon: ShieldCheck, id: "security" },
+] as const satisfies ReadonlyArray<{ href: string; icon: Icon; id: string }>;
 
 export type AccountSectionId = (typeof accountSections)[number]["id"];
 

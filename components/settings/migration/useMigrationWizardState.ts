@@ -3,6 +3,7 @@
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { MigrationImportCompletion } from "@/lib/migration/result";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type {
@@ -44,6 +45,7 @@ export function useMigrationWizardState({
   projectId,
   releaseMigrationHold,
 }: UseMigrationWizardStateOptions) {
+  const t = useTranslations("projectSettingsMigration.wizard");
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [mode, setMode] = useState<MigrationMode>("push");
@@ -70,7 +72,7 @@ export function useMigrationWizardState({
   const form = useForm<MigrationTokenForm>({
     defaultValues: { targetOrigin: defaultTargetOrigin, token: "" },
     mode: "onChange",
-    resolver: zodResolver(migrationWizardSchema(direction)),
+    resolver: zodResolver(migrationWizardSchema(direction, t)),
   });
   const targetOrigin = form.watch("targetOrigin").trim();
   const compatibilityContextKey = [projectId ?? "missing", direction, targetOrigin].join("|");
@@ -147,16 +149,14 @@ export function useMigrationWizardState({
     setGateMessage(null);
     const ready = await hold.ensure();
     if (ready) setTransferring(true);
-    else setGateMessage("Transfer did not start because read-only mode could not be enabled.");
+    else setGateMessage(t("gate.transferStart"));
     return ready;
   }
 
   async function handleTransferEnd() {
     setTransferring(false);
     if (!(await hold.release())) {
-      setGateMessage(
-        "Transfer ended, but read-only mode could not be released. Use Cancel migration to retry.",
-      );
+      setGateMessage(t("gate.transferEnd"));
     }
   }
 
@@ -179,11 +179,11 @@ export function useMigrationWizardState({
           if (!validTarget) return;
           if (!isFreshCompatibility(checkedCompatibility, compatibilityContextKey)) {
             setCheckedCompatibility(null);
-            setGateMessage("Run a current compatibility check before continuing.");
+            setGateMessage(t("gate.checkCurrent"));
             return;
           }
           if (!checkedCompatibility?.compatible) {
-            setGateMessage("Resolve the compatibility blockers before continuing.");
+            setGateMessage(t("gate.resolveBlockers"));
             return;
           }
           if (hold.active) {
@@ -197,7 +197,7 @@ export function useMigrationWizardState({
     }
     if (step === 2 && mode === "push") {
       if (outcome?.kind !== "completed") {
-        setGateMessage("Complete the transfer first.");
+        setGateMessage(t("gate.completeTransfer"));
         return;
       }
       advanceOnSuccess(form.trigger("token"), () => setStep(3));
@@ -205,11 +205,11 @@ export function useMigrationWizardState({
     }
     if (step === 2 && mode === "download") {
       if (!exported) {
-        setGateMessage("Export the project package before continuing.");
+        setGateMessage(t("gate.exportPackage"));
         return;
       }
       if (!downloadConfirmed) {
-        setGateMessage("Confirm the destination upload before continuing.");
+        setGateMessage(t("gate.confirmUpload"));
         return;
       }
       setOutcome({ kind: "external-pending" });
@@ -239,7 +239,7 @@ export function useMigrationWizardState({
     mustReleaseTerminalHold ||
     mustConfirmDownload ||
     mustChooseDoneHold;
-  const continueHint = continueHintFor({
+  const continueHint = continueHintFor(t, {
     exported: Boolean(exported),
     hasCompatibilityBlockers,
     mustCheckCompatibility,

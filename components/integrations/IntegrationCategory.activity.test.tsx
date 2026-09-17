@@ -1,10 +1,11 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
+import { renderWithIntegrationMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type {
   IntegrationProviderData,
   ProviderActionHandlers,
   ProviderTrafficSyncResult,
 } from "@/lib/integrations/types";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { IntegrationCategory } from "./IntegrationCategory";
 import { integrationCategories } from "./integrations-fixtures";
@@ -23,7 +24,7 @@ const provider = {
     },
     trafficEnrichment: { state: "never_synced", summary: "Never synced" },
   },
-  meta: [{ label: "Last sync", value: "Never" }],
+  meta: [{ labelKey: "lastSync" as const, valueKey: "never" as const }],
 } satisfies IntegrationProviderData;
 
 function renderCategory({

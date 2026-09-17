@@ -5,7 +5,11 @@ import type { KeywordRow } from "@/lib/queries/keywords";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SetScheduleModal } from "./grid/SetScheduleModal";
-import type { CheckScheduleSummary, ScheduleLoadState } from "./grid/set-schedule-model";
+import type {
+  CheckScheduleSummary,
+  ScheduleLoadProblem,
+  ScheduleLoadState,
+} from "./grid/set-schedule-model";
 
 type UseKeywordScheduleModalArgs = {
   keyword: KeywordRow;
@@ -13,15 +17,36 @@ type UseKeywordScheduleModalArgs = {
   providerRate?: CostRateInfo;
 };
 
-async function loadSchedules(projectId: string): Promise<CheckScheduleSummary[]> {
+class ScheduleLoadError extends Error {
+  constructor(readonly problem: ScheduleLoadProblem) {
+    super(problem);
+  }
+}
+
+function loadProblem(response: Response, body: unknown): ScheduleLoadProblem {
+  const code =
+    body && typeof body === "object" && "type" in body && typeof body.type === "string"
+      ? body.type.split("/").at(-1)
+      : null;
+  if (response.status === 401 || code === "unauthorized") return "unauthorized";
+  if (response.status === 403 || code === "forbidden") return "forbidden";
+  if (response.status === 404 || code === "not_found") return "notFound";
+  if (response.status === 400 || code === "validation_failed") return "validation";
+  return "unknown";
+}
+
+export async function loadSchedules(projectId: string): Promise<CheckScheduleSummary[]> {
   const response = await fetch(`/api/check-schedules?project=${encodeURIComponent(projectId)}`, {
     headers: { Accept: "application/json" },
   });
-  const body = (await response.json()) as { data?: CheckScheduleSummary[]; detail?: string };
-  if (!response.ok || !body.data) {
-    throw new Error(body.detail || "Could not load schedules. Try again.");
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new ScheduleLoadError(loadProblem(response, body));
   }
-  return body.data;
+  if (!body || typeof body !== "object" || !("data" in body) || !Array.isArray(body.data)) {
+    throw new ScheduleLoadError("unknown");
+  }
+  return body.data as CheckScheduleSummary[];
 }
 
 export function useKeywordScheduleModal({
@@ -32,7 +57,7 @@ export function useKeywordScheduleModal({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [schedules, setSchedules] = useState<CheckScheduleSummary[]>([]);
-  const [scheduleLoadError, setScheduleLoadError] = useState<string | null>(null);
+  const [scheduleLoadError, setScheduleLoadError] = useState<ScheduleLoadProblem | null>(null);
   const [scheduleLoadState, setScheduleLoadState] = useState<ScheduleLoadState>("loading");
 
   async function onChangeSchedule() {
@@ -44,9 +69,7 @@ export function useKeywordScheduleModal({
       setSchedules(await loadSchedules(projectId));
       setScheduleLoadState("loaded");
     } catch (error) {
-      setScheduleLoadError(
-        error instanceof Error ? error.message : "Could not load schedules. Try again.",
-      );
+      setScheduleLoadError(error instanceof ScheduleLoadError ? error.problem : "unknown");
       setScheduleLoadState("error");
     }
   }

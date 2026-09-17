@@ -1,5 +1,6 @@
 import {
   CsvParseError,
+  type CsvParseErrorCode,
   detectedKeywordImportColumnMapping,
   parseKeywordImportCsvRows,
   parseKeywordImportCsvTable,
@@ -50,8 +51,12 @@ export function appendKeywordSuggestions(current: string, suggestions: readonly 
   return [current.trimEnd(), ...additions].filter(Boolean).join("\n");
 }
 
+export type KeywordTargetLineError =
+  | { code: "invalid_target_url"; target: string }
+  | { code: "missing_keyword" };
+
 export type ParsedKeywordTarget = {
-  error: string | null;
+  error: KeywordTargetLineError | null;
   keyword: string;
   targetUrl: string | null;
 };
@@ -79,7 +84,7 @@ export function parseKeywordTargetLines(value: string): ParsedKeywordTarget[] {
     const url = line.slice(pipe + 1).trim();
     if (!keyword) {
       entries.push({
-        error: "Add a keyword before the | target URL.",
+        error: { code: "missing_keyword" },
         keyword: "",
         targetUrl: null,
       });
@@ -90,7 +95,11 @@ export function parseKeywordTargetLines(value: string): ParsedKeywordTarget[] {
       continue;
     }
     if (!isValidTargetUrl(url)) {
-      entries.push({ error: `"${url}" is not a valid URL or path.`, keyword, targetUrl: null });
+      entries.push({
+        error: { code: "invalid_target_url", target: url },
+        keyword,
+        targetUrl: null,
+      });
       continue;
     }
     entries.push({ error: null, keyword, targetUrl: url });
@@ -98,7 +107,9 @@ export function parseKeywordTargetLines(value: string): ParsedKeywordTarget[] {
   return entries;
 }
 
-export function keywordTargetLineError(entries: readonly ParsedKeywordTarget[]): string | null {
+export function keywordTargetLineError(
+  entries: readonly ParsedKeywordTarget[],
+): KeywordTargetLineError | null {
   return entries.find((entry) => entry.error)?.error ?? null;
 }
 
@@ -127,7 +138,7 @@ export function parseCsvKeywordsResult(value: string) {
     if (error instanceof CsvParseError)
       return {
         columnMapping: {},
-        error: error.message,
+        error: error.code as CsvParseErrorCode,
         hasHeader: false,
         keywords: [],
         rows: [],

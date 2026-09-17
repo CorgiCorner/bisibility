@@ -9,6 +9,7 @@ import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { EnvelopeSimpleOpenIcon as EnvelopeSimpleOpen } from "@phosphor-icons/react/dist/csr/EnvelopeSimpleOpen";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { useTranslations } from "next-intl";
 import type { SyntheticEvent } from "react";
 import { type Control, Controller, useWatch } from "react-hook-form";
 
@@ -58,14 +59,12 @@ export function OtpStep({
   status,
   devOtpCode = null,
 }: Readonly<OtpStepProps>) {
+  const t = useTranslations("auth.otp");
   const otp = useWatch({ control, name: "otp" }) ?? [];
   const otpComplete = otp.length === 6 && otp.every((digit) => digit !== "");
   const submitting = status === "verifying";
   const showOtpError = status === "error";
-  const authErrorMessage =
-    attempts >= 3
-      ? "Too many attempts. Request a new code to continue."
-      : "That code is incorrect or expired. Try again.";
+  const authErrorMessage = attempts >= 3 ? t("errorTooManyAttempts") : t("error");
 
   return (
     <div className="w-full max-w-[380px]">
@@ -76,7 +75,7 @@ export function OtpStep({
         type="button"
         variant="ghost"
       >
-        Back
+        {t("back")}
       </Button>
 
       <span className="mt-4.5 grid h-[46px] w-[46px] place-items-center rounded-card bg-accent-soft text-accent-solid">
@@ -84,18 +83,22 @@ export function OtpStep({
       </span>
 
       <h1 className="mt-4.5 mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
-        Enter your code
+        {t("title")}
       </h1>
       {devOtpCode ? (
         // Demo instances send no email at all, so the "we sent a code" copy would be false.
         <p className="mt-2 mb-0 text-[14px] leading-[1.5] text-fg-muted">
-          This demo instance uses a fixed sign-in code for{" "}
-          <strong className="font-semibold text-fg">{email}</strong> - no email is sent.
+          {t.rich("demoMessage", {
+            email,
+            strong: (chunks) => <strong className="font-semibold text-fg">{chunks}</strong>,
+          })}
         </p>
       ) : (
         <p className="mt-2 mb-0 text-[14px] leading-[1.5] text-fg-muted">
-          We sent a 6-digit code to <strong className="font-semibold text-fg">{email}</strong>. It
-          expires in 5 minutes.
+          {t.rich("description", {
+            email,
+            strong: (chunks) => <strong className="font-semibold text-fg">{chunks}</strong>,
+          })}
         </p>
       )}
       <DataResidencyNote className="mt-4" message={dataResidencyMessage} />
@@ -147,7 +150,7 @@ export function OtpStep({
           type="submit"
           variant="primary"
         >
-          {submitting ? "Verifying..." : "Verify and continue"}
+          {submitting ? t("verifying") : t("verify")}
         </Button>
       </form>
 
@@ -155,8 +158,10 @@ export function OtpStep({
         // Above the resend row on purpose: on a demo instance without a mailer this hint is
         // the only way to learn the code, so it cannot be the least visible line on the page.
         <p className="mt-3.5 text-center text-[12.5px] text-fg-muted">
-          Demo mode &middot; use code{" "}
-          <span className="font-semibold text-accent-text">{devOtpCode}</span> to sign in
+          {t.rich("demoHint", {
+            code: devOtpCode,
+            emphasis: (chunks) => <span className="font-semibold text-accent-text">{chunks}</span>,
+          })}
         </p>
       ) : null}
 

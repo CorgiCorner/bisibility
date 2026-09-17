@@ -3,6 +3,7 @@ import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/sto
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
+  args: { ariaLabel: "Loading keyword detail" },
   component: KeywordDetailPageSkeleton,
   decorators: [
     (Story) => (

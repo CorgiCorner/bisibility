@@ -1,4 +1,5 @@
 import { cn } from "@/lib/ui/cn";
+import { useTranslations } from "next-intl";
 
 export const keywordDetailPageStates = [
   "ranked",
@@ -16,17 +17,24 @@ export type KeywordDetailStatePillProps = {
 };
 
 const stateMeta = {
-  failed: { className: "border-red text-red-text", label: "Check failed" },
-  never_checked: { className: "border-border-control text-fg-muted", label: "Not checked" },
-  not_ranked: { className: "border-yellow text-yellow-text", label: "Not ranked" },
-  ranked: { className: "border-green text-green-text", label: "Ranked" },
-  running: { className: "border-blue text-blue-text", label: "Check in progress" },
-} satisfies Record<KeywordDetailPageState, { className: string; label: string }>;
+  failed: { className: "border-red text-red-text", message: "failed" },
+  never_checked: { className: "border-border-control text-fg-muted", message: "neverChecked" },
+  not_ranked: { className: "border-yellow text-yellow-text", message: "notRanked" },
+  ranked: { className: "border-green text-green-text", message: "ranked" },
+  running: { className: "border-blue text-blue-text", message: "running" },
+} as const satisfies Record<
+  KeywordDetailPageState,
+  {
+    className: string;
+    message: "failed" | "neverChecked" | "notRanked" | "ranked" | "running";
+  }
+>;
 
 export function KeywordDetailStatePill({
   className,
   state,
 }: Readonly<KeywordDetailStatePillProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.empty.state");
   const meta = stateMeta[state];
 
   return (
@@ -37,7 +45,7 @@ export function KeywordDetailStatePill({
         className,
       )}
     >
-      {meta.label}
+      {t(meta.message)}
     </span>
   );
 }

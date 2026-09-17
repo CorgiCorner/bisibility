@@ -15,6 +15,7 @@ import {
 } from "@/lib/getting-started/setup-steps";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { StepGlyph } from "./StepGlyph";
 import { StepStateMeta } from "./StepStateMeta";
@@ -34,6 +35,7 @@ export function GettingStartedChecklist({
   now,
   onCta,
 }: Readonly<GettingStartedChecklistProps>) {
+  const t = useTranslations("projectGettingStarted");
   const progress = resolveSetupProgress(context);
   const initialId =
     progress.steps.find(({ state }) => state.family !== "done" && state.family !== "skipped")
@@ -83,7 +85,7 @@ export function GettingStartedChecklist({
   return (
     <Card className="overflow-hidden p-0" radius="card">
       <div className="grid min-w-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <section aria-label="Getting started checklist" className="min-w-0">
+        <section aria-label={t("header.label")} className="min-w-0">
           <ol className="m-0 list-none p-0">
             {progress.steps.map(({ definition, state }, index) => {
               const titleId = `setup-step-${definition.id}-title`;
@@ -117,7 +119,7 @@ export function GettingStartedChecklist({
                         className={`block text-[13.5px] font-semibold leading-5 ${state.family === "done" ? "text-fg-muted line-through" : "text-fg"}`}
                         id={titleId}
                       >
-                        {definition.title}
+                        {t(`steps.${definition.id}`)}
                       </span>
                       <StepStateMeta
                         id={metaId}
@@ -157,7 +159,11 @@ export function GettingStartedChecklist({
         </section>
       </div>
       {!isDesktop && mobileOpen ? (
-        <Sheet onClose={() => setMobileOpenId(null)} open title={mobileOpen.definition.title}>
+        <Sheet
+          onClose={() => setMobileOpenId(null)}
+          open
+          title={t(`steps.${mobileOpen.definition.id}`)}
+        >
           {renderStepContent(mobileOpen.definition.id, mobileOpen.state)}
         </Sheet>
       ) : null}

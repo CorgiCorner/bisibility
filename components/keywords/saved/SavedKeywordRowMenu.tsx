@@ -12,6 +12,7 @@ import { DotsThreeVerticalIcon as DotsThreeVertical } from "@phosphor-icons/reac
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { type MouseEvent, useState } from "react";
 import { savedKeywordResearchHref } from "./saved-keywords-table-model";
 
@@ -32,6 +33,7 @@ export function SavedKeywordRowMenu({
   projectRef,
   row,
 }: Readonly<SavedKeywordRowMenuProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.saved");
   const { showToast } = useToast();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const close = () => setAnchorEl(null);
@@ -47,16 +49,16 @@ export function SavedKeywordRowMenu({
     close();
     try {
       await navigator.clipboard.writeText(row.text);
-      showToast("Keyword copied", { severity: "success" });
+      showToast(t("copied"), { severity: "success" });
     } catch {
-      showToast("Could not copy keyword", { severity: "error" });
+      showToast(t("copyFailed"), { severity: "error" });
     }
   }
 
   return (
     <>
       <IconButton
-        aria-label={`Actions for ${row.text}`}
+        aria-label={t("rowActions", { keyword: row.text })}
         onClick={(event) => {
           event.stopPropagation();
           setAnchorEl(event.currentTarget);
@@ -85,7 +87,7 @@ export function SavedKeywordRowMenu({
         {canTrack ? (
           <MenuItem onClick={(event) => select(event, () => onTrack(row))} style={{ gap: "9px" }}>
             <ChartLineUp weight="regular" size={14} />
-            Track now
+            {t("trackNow")}
           </MenuItem>
         ) : null}
         <MenuItem
@@ -95,11 +97,11 @@ export function SavedKeywordRowMenu({
           style={{ gap: "9px" }}
         >
           <MagnifyingGlass weight="regular" size={14} />
-          Open source search
+          {t("openSource")}
         </MenuItem>
         <MenuItem onClick={copy} style={{ gap: "9px" }}>
           <Copy weight="regular" size={14} />
-          Copy keyword
+          {t("copyKeyword")}
         </MenuItem>
         {canDelete ? (
           <MenuItem
@@ -107,7 +109,7 @@ export function SavedKeywordRowMenu({
             style={{ "--control-color": "var(--red)", gap: "9px" }}
           >
             <Trash weight="regular" size={14} />
-            Remove from saved
+            {t("removeFromSaved")}
           </MenuItem>
         ) : null}
       </Menu>

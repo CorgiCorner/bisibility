@@ -12,6 +12,7 @@ import type { ProjectRunsQuery } from "@/lib/runs/filters";
 import type { ProjectRun } from "@/lib/runs/project-run";
 import type { ProjectRunsApiResponse } from "@/lib/runs/project-runs-api";
 import { ListChecksIcon as ListChecks } from "@phosphor-icons/react";
+import { useTranslations } from "next-intl";
 import { ProjectRunsFilters } from "./ProjectRunsFilters";
 import { ProjectRunsTable } from "./ProjectRunsTable";
 import { ProjectRunsTabs } from "./ProjectRunsTabs";
@@ -44,6 +45,7 @@ function EmptyRuns({
   projectRef: string;
   query: ProjectRunsQuery;
 }>) {
+  const t = useTranslations("projectRuns.content");
   const clearFiltersHref = projectRunsPath(projectRef, { view: query.view });
   const historyHref = projectRunsPath(projectRef, { source: query.source });
   const schedulesHref = projectSchedulesPath(projectRef);
@@ -51,9 +53,9 @@ function EmptyRuns({
   if (query.view === "planned" && query.source === "search_console") {
     return (
       <EmptyState
-        description="Search Console imports do not have schedules."
+        description={t("plannedSearchConsoleDescription")}
         icon={<ListChecks size={22} weight="regular" />}
-        title="No upcoming Search Console runs"
+        title={t("plannedSearchConsoleTitle")}
       />
     );
   }
@@ -62,12 +64,12 @@ function EmptyRuns({
       <EmptyState
         action={
           <Button href={schedulesHref} size="sm" variant="secondary">
-            Manage schedules
+            {t("manageSchedules")}
           </Button>
         }
-        description="Scheduled rank checks appear here before they start."
+        description={t("plannedDescription")}
         icon={<ListChecks size={22} weight="regular" />}
-        title="No upcoming runs"
+        title={t("plannedTitle")}
       />
     );
   }
@@ -76,12 +78,12 @@ function EmptyRuns({
       <EmptyState
         action={
           <Button href={historyHref} size="sm" variant="secondary">
-            View run history
+            {t("viewHistory")}
           </Button>
         }
-        description="Review run history or choose another status to find completed work."
+        description={t("activeDescription")}
         icon={<ListChecks size={22} weight="regular" />}
-        title="No runs in progress"
+        title={t("activeTitle")}
       />
     );
   }
@@ -90,12 +92,12 @@ function EmptyRuns({
       <EmptyState
         action={
           <Button href={searchConsolePath(projectRef)} size="sm" variant="secondary">
-            Open Search Console
+            {t("openSearchConsole")}
           </Button>
         }
-        description="Import Search Console data to keep its run history here."
+        description={t("searchConsoleDescription")}
         icon={<ListChecks size={22} weight="regular" />}
-        title="No Search Console runs yet"
+        title={t("searchConsoleTitle")}
       />
     );
   }
@@ -104,20 +106,20 @@ function EmptyRuns({
       <EmptyState
         action={
           <Button href={clearFiltersHref} size="sm" variant="secondary">
-            Clear filters
+            {t("clearFilters")}
           </Button>
         }
-        description="Change or clear the filters to see other runs."
+        description={t("filteredDescription")}
         icon={<ListChecks size={22} weight="regular" />}
-        title="No matching runs"
+        title={t("filteredTitle")}
       />
     );
   }
   return (
     <EmptyState
-      description="Rank checks and Search Console history imports will appear here."
+      description={t("historyDescription")}
       icon={<ListChecks size={22} weight="regular" />}
-      title="No runs yet"
+      title={t("historyTitle")}
     />
   );
 }
@@ -127,6 +129,7 @@ export function ProjectRunsLoadError({
   query,
   stale,
 }: Readonly<ProjectRunsLoadErrorProps>) {
+  const t = useTranslations("projectRuns.content");
   return (
     <div className="grid gap-4">
       <ProjectRunsTabs active="runs" projectRef={projectRef} query={query} />
@@ -135,19 +138,17 @@ export function ProjectRunsLoadError({
         role="alert"
       >
         <h1 className="m-0 text-[17px] font-semibold text-fg">
-          {stale ? "This Runs page is stale" : "Runs could not be loaded"}
+          {stale ? t("staleTitle") : t("loadError")}
         </h1>
         <p className="mx-auto mb-4 mt-2 max-w-lg text-[12.5px] text-fg-muted">
-          {stale
-            ? "The cursor no longer matches these filters. Return to the first page to continue."
-            : "Try again. If the problem continues, return to the first page."}
+          {stale ? t("staleDescription") : t("tryAgainDescription")}
         </p>
         <Button
           href={projectRunsPath(projectRef, { ...query, cursor: null })}
           size="sm"
           variant="secondary"
         >
-          Return to first page
+          {t("returnToFirstPage")}
         </Button>
       </section>
     </div>
@@ -165,6 +166,7 @@ export function ProjectRunsContent({
   runNowAction,
   skipAction,
 }: Readonly<ProjectRunsContentProps>) {
+  const t = useTranslations("projectRuns.content");
   // The API schema validates this transport shape; R1's presentation type carries its stricter ID brands.
   const rows = applyOperationSnapshotToRuns(page.runs as unknown as ProjectRun[], operations);
   const nextHref = page.nextCursor
@@ -174,14 +176,14 @@ export function ProjectRunsContent({
   return (
     <section
       className="grid min-w-0 gap-4"
-      aria-label={query.view === "planned" ? "Upcoming runs" : "Runs"}
+      aria-label={query.view === "planned" ? t("upcomingRuns") : t("runs")}
     >
       <ProjectRunsTabs active="runs" projectRef={projectRef} query={query} />
       <Card className="min-w-0 overflow-hidden p-0 [&_[role=table]]:border-0" size="sm">
         <TableCardHeader
           className="border-b border-border"
           titleId="runs-list-title"
-          title={`${page.counts.total.toLocaleString("en-US")} ${page.counts.total === 1 ? "run" : "runs"}`}
+          title={t("runCount", { count: page.counts.total })}
           actions={<ProjectRunsFilters projectRef={projectRef} query={query} />}
         />
         <ProjectRunsTable
@@ -197,7 +199,7 @@ export function ProjectRunsContent({
       {nextHref ? (
         <div className="flex justify-end">
           <Button href={nextHref} size="sm" variant="secondary">
-            Next page
+            {t("nextPage")}
           </Button>
         </div>
       ) : null}

@@ -1,8 +1,9 @@
 import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
 import { menuTransitionDuration, useMenuExitLifecycle } from "@/components/ui/menu-exit-lifecycle";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
 import { MOTION_MENU_ENTER, MOTION_MENU_EXIT } from "@/lib/ui/motion";
 import { FROZEN_NOW_MS } from "@/tests/clock";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { createRef, forwardRef, useImperativeHandle, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,6 +18,8 @@ const rect = {
   y: 0,
   toJSON: () => ({}),
 };
+
+const render = renderWithSharedMessages;
 
 function restoreTimers() {
   vi.useRealTimers();

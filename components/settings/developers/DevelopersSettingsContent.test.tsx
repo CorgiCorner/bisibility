@@ -1,15 +1,23 @@
 import { DevelopersSettingsContent } from "@/components/settings/developers/DevelopersSettingsContent";
+import {
+  developersSettingsFeatureTestMessages,
+  renderWithDevelopersSettingsMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { DOCS_URL } from "@/lib/site/site";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 const apiKeys = [
   {
+    createdAt: "2025-02-04T12:00:00.000Z",
     createdLabel: "created Feb 4, 2025",
+    expiresAt: null,
     expiresLabel: "never expires",
     id: "key_example",
     isExpired: false,
+    lastUsedAt: "2025-02-05T10:00:00.000Z",
     lastUsedLabel: "last used 2 hours ago",
     maskedValue: "bsb_key_live_example******",
     name: "CI deploy checks",
@@ -18,10 +26,12 @@ const apiKeys = [
 
 const hooks = [
   {
+    createdAt: "2025-02-04T12:00:00.000Z",
     createdLabel: "created Feb 4, 2025",
     disabled: false,
     id: "dwh_example",
     label: "Production deploys",
+    lastUsedAt: "2025-02-05T10:00:00.000Z",
     lastUsedLabel: "last used 2 hours ago",
   },
 ] as const;
@@ -34,6 +44,22 @@ const baseProps = {
   hooks,
   projectId: "prj_example",
 } as const;
+
+const nonEnglishDeveloperMessages = {
+  ...developersSettingsFeatureTestMessages,
+  projectSettingsDevelopers: {
+    ...developersSettingsFeatureTestMessages.projectSettingsDevelopers,
+    webhooks: {
+      ...developersSettingsFeatureTestMessages.projectSettingsDevelopers.webhooks,
+      errors: {
+        ...developersSettingsFeatureTestMessages.projectSettingsDevelopers.webhooks.errors,
+        testNotCreated: "Nie udało się utworzyć zdarzenia testowego webhooka.",
+      },
+      sendTestFor: "Wyślij zdarzenie testowe dla {label}",
+      title: "Webhooki wdrożeń",
+    },
+  },
+};
 
 describe("DevelopersSettingsContent", () => {
   it("lets both developer cards size naturally to their content", () => {
@@ -161,5 +187,29 @@ describe("DevelopersSettingsContent", () => {
       "href",
       "/app/prj_example/timeline#signal-sig_example",
     );
+  });
+
+  it("uses injected non-English copy while preserving the test-event payload and mapping failure", async () => {
+    const user = userEvent.setup();
+    const sendTestHook = vi
+      .fn()
+      .mockRejectedValue(new Error("Deploy webhook test event could not be created."));
+    renderWithFeatureMessages(
+      <DevelopersSettingsContent {...baseProps} sendTestHook={sendTestHook} />,
+      { messages: nonEnglishDeveloperMessages },
+    );
+
+    expect(screen.getByRole("region", { name: "Webhooki wdrożeń" })).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: "Wyślij zdarzenie testowe dla Production deploys" }),
+    );
+
+    expect(sendTestHook).toHaveBeenCalledWith({
+      hookId: "dwh_example",
+      projectId: "prj_example",
+    });
+    expect(
+      await screen.findByText("Nie udało się utworzyć zdarzenia testowego webhooka."),
+    ).toBeVisible();
   });
 });

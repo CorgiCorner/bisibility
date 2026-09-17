@@ -1,3 +1,4 @@
+import { withDevelopersSettingsMessages } from "@/.storybook/developers-settings-messages";
 import {
   DevelopersCardsLoading,
   DevelopersLoading,
@@ -10,19 +11,25 @@ const projectId = "prj_story";
 
 const apiKeys = [
   {
+    createdAt: "2025-02-04T12:00:00.000Z",
     createdLabel: "created Feb 4, 2025",
+    expiresAt: null,
     expiresLabel: "never expires",
     id: "key_ci",
     isExpired: false,
+    lastUsedAt: "2025-02-04T13:00:00.000Z",
     lastUsedLabel: "last used 2 hours ago",
     maskedValue: "bsb_key_live_8f3c******a1f2",
     name: "CI deploy checks",
   },
   {
+    createdAt: "2026-06-14T12:00:00.000Z",
     createdLabel: "created Jun 14, 2026",
+    expiresAt: "2026-09-12T12:00:00.000Z",
     expiresLabel: "expires Sep 12, 2026",
     id: "key_dashboard",
     isExpired: false,
+    lastUsedAt: "2026-09-09T12:00:00.000Z",
     lastUsedLabel: "last used 3 days ago",
     maskedValue: "bsb_key_live_21a9******77c4",
     name: "Reporting dashboard",
@@ -31,16 +38,20 @@ const apiKeys = [
 
 const hooks = [
   {
+    createdAt: "2025-02-04T12:00:00.000Z",
     createdLabel: "created Feb 4, 2025",
     disabled: false,
     id: "dwh_production",
+    lastUsedAt: "2025-02-04T13:00:00.000Z",
     label: "Production deploys",
     lastUsedLabel: "last used 2 hours ago",
   },
   {
+    createdAt: "2026-06-14T12:00:00.000Z",
     createdLabel: "created Jun 14, 2026",
     disabled: true,
     id: "dwh_staging",
+    lastUsedAt: "2026-05-03T12:00:00.000Z",
     label: "Staging deploys",
     lastUsedLabel: "last used May 3, 2026",
   },
@@ -94,6 +105,7 @@ const meta = {
         )}
       </main>
     ),
+    withDevelopersSettingsMessages,
   ],
   parameters: { nextjs: { appDirectory: true } },
   title: "Settings/Developers",

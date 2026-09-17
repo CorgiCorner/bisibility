@@ -15,6 +15,7 @@ import { authClient } from "@/lib/auth/client";
 import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 const PAPER_STYLE = {
@@ -59,6 +60,7 @@ export function UserMenu({
   roleLine,
   showHostedLinks = false,
 }: Readonly<UserMenuProps>) {
+  const t = useTranslations("shell.userMenu");
   const [pending, setPending] = useState(false);
   const { showToast } = useToast();
   const initials = avatarInitials(name, email);
@@ -77,7 +79,7 @@ export function UserMenu({
       // The session is still live, and /login would redirect straight back into the app,
       // so surface the failure here instead of navigating into a no-op.
       setPending(false);
-      showToast("Could not sign out. Please try again.", { severity: "error" });
+      showToast(t("signOutError"), { severity: "error" });
       return;
     }
     closeAfterNavigate();
@@ -92,7 +94,7 @@ export function UserMenu({
       id="sidebar-user-menu"
       onClose={onClose}
       open={Boolean(anchorEl)}
-      listProps={{ "aria-label": "Account menu", style: { padding: 0 } }}
+      listProps={{ "aria-label": t("accountMenu"), style: { padding: 0 } }}
       contentProps={{ style: PAPER_STYLE }}
     >
       <div className="flex items-center gap-2.5 px-[9px] pb-[11px] pt-[9px]">
@@ -112,18 +114,34 @@ export function UserMenu({
       </div>
       <Divider style={{ ...DIVIDER_STYLE, marginTop: "2px" }} />
       {accountLinks.map((item) => (
-        <UserMenuRow item={item} key={item.label} onClose={closeAfterNavigate} />
+        <UserMenuRow
+          item={{ ...item, label: t(item.key) }}
+          key={item.key}
+          onClose={closeAfterNavigate}
+        />
       ))}
       <Divider style={DIVIDER_STYLE} />
       {resourceLinksForDeployment(showHostedLinks).map((item) => (
-        <UserMenuRow item={item} key={item.label} onClose={closeAfterNavigate} />
+        <UserMenuRow
+          item={{ ...item, label: t(item.key) }}
+          key={item.key}
+          onClose={closeAfterNavigate}
+        />
       ))}
       <Divider style={DIVIDER_STYLE} />
       {communityLinks.map((item) => (
-        <UserMenuRow item={item} key={item.label} onClose={closeAfterNavigate} />
+        <UserMenuRow
+          item={{ ...item, label: t(item.key) }}
+          key={item.key}
+          onClose={closeAfterNavigate}
+        />
       ))}
       <Divider style={DIVIDER_STYLE} />
-      <UserMenuRow disabled={pending} item={signOutLink} onSelect={() => void handleSignOut()} />
+      <UserMenuRow
+        disabled={pending}
+        item={{ ...signOutLink, label: t(signOutLink.key) }}
+        onSelect={() => void handleSignOut()}
+      />
     </Menu>
   );
 }

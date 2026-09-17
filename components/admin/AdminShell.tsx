@@ -1,12 +1,16 @@
+"use client";
+
 import { AdminRefresh } from "@/components/admin/AdminRefresh";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { appRootPath } from "@/lib/routing/app-path";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
+  const t = useTranslations("instanceAdmin.shell");
   return (
     <div className="min-h-screen bg-bg text-fg">
       <header className="sticky top-0 z-80 border-b border-border bg-bg-elev/85 backdrop-blur-md">
@@ -18,7 +22,7 @@ export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
             <BrandLockup className="hidden sm:inline-flex" />
             <span aria-hidden className="hidden h-4 w-px bg-border md:block" />
             <span className="hidden text-[11px] uppercase tracking-[0.5px] text-fg-muted md:inline">
-              Instance admin
+              {t("context")}
             </span>
           </div>
           <div className="flex flex-none items-center gap-1 sm:gap-2">
@@ -27,7 +31,7 @@ export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
               className="inline-flex min-h-[34px] items-center gap-1.5 rounded-control px-2.5 text-[12.5px] font-semibold text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg sm:px-3"
               href={appRootPath()}
             >
-              Back to app
+              {t("backToApp")}
               <CaretRight aria-hidden size={12} weight="regular" />
             </Link>
           </div>
@@ -36,10 +40,8 @@ export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
 
       <main className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 pb-20 pt-7 sm:px-[26px] sm:pt-[30px]">
         <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.7px]">Instance administration</h1>
-          <p className="mt-1.5 text-[13px] text-fg-muted">
-            Cross-instance operational diagnostics. Tenant data is represented by identifiers only.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-[-0.7px]">{t("title")}</h1>
+          <p className="mt-1.5 text-[13px] text-fg-muted">{t("description")}</p>
         </div>
         <AdminTabs />
         {children}

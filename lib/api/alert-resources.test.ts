@@ -21,21 +21,19 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 
 const rule = {
-  channel: "Email",
   channels: ["email"],
   changePct: null,
-  condition: "rank crosses below #10",
   conditionType: "threshold",
   competitorDomain: null,
   dropPositions: null,
   enabled: true,
-  fires: "0 this week",
+  firedThisWeek: 0,
   id: "rule_db_1",
   marketIds: [],
   name: "Rank drop",
-  period: "Each check",
+  period: "each_check",
   recipientIds: ["user_db_1"],
-  scope: "Selected keywords",
+  scope: { labels: [], targetType: "keyword" },
   serpFeature: null,
   severity: "urgent",
   status: "active",
@@ -105,6 +103,20 @@ describe("REST alert resources", () => {
         targetIds: ["kw_a00000000000000000000000"],
       },
     ]);
+  });
+
+  it("keeps the established alert-rule REST fields separate from localized UI inputs", async () => {
+    const [resource] = await alertRuleApiResources([rule]);
+
+    expect(resource).toMatchObject({
+      channel: "Email",
+      condition: "rank crosses below #10",
+      fires: "0 this week",
+      period: "Each check",
+      scope: "Selected keywords",
+    });
+    expect(resource).not.toHaveProperty("firedThisWeek");
+    expect(resource).not.toHaveProperty("marketScope");
   });
 
   it("replaces alert and endpoint IDs and omits non-addressable attempt IDs", async () => {

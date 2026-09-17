@@ -5,6 +5,16 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { FacetBar } from "./FacetBar";
 
+const labels = {
+  addFeedFilter: "Add feed filter",
+  addFilter: "Add filter",
+  axis: (axis: "engine" | "language" | "market" | "module" | "severity") =>
+    axis[0].toUpperCase() + axis.slice(1),
+  noMoreFilters: "No more filters",
+  remove: (axis: "engine" | "language" | "market" | "module" | "severity", label: string) =>
+    `Remove ${axis}: ${label}`,
+};
+
 const options = {
   engine: [{ label: "Google", value: "google" }],
   market: [{ label: "Malaga core", value: "pmkt_malaga" }],
@@ -21,7 +31,13 @@ describe("FacetBar", () => {
 
   it("removes a token with a canonical URL while keeping unrelated query state", async () => {
     const user = userEvent.setup();
-    render(<FacetBar facets={[{ axis: "market", value: "pmkt_malaga" }]} options={options} />);
+    render(
+      <FacetBar
+        facets={[{ axis: "market", value: "pmkt_malaga" }]}
+        labels={labels}
+        options={options}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Remove market: Malaga core" }));
 
@@ -31,7 +47,13 @@ describe("FacetBar", () => {
 
   it("offers only remaining valid values through an accessible menu", async () => {
     const user = userEvent.setup();
-    render(<FacetBar facets={[{ axis: "market", value: "pmkt_malaga" }]} options={options} />);
+    render(
+      <FacetBar
+        facets={[{ axis: "market", value: "pmkt_malaga" }]}
+        labels={labels}
+        options={options}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Add filter" }));
 

@@ -1,8 +1,9 @@
 import { SidebarNav } from "@/components/shell/SidebarNav";
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NavBadge, NavContext } from "@/lib/nav/nav-items";
 import { appPath, asMarketRef, marketPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 

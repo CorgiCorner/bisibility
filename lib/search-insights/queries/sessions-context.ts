@@ -2,7 +2,6 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { addDays, dateKey, type FinalizedWindow } from "@/lib/search-insights/dates";
-import type { SearchSyncStatusTitle } from "@/lib/search-insights/sync/control-model";
 import { resolveOrganicSessionsProperty } from "@/lib/search-insights/sync/sessions-credentials";
 import type { ImportObservabilityFacts } from "./import-observability";
 
@@ -39,11 +38,28 @@ export type OrganicSessionsContext = {
 /** A client-safe slot for a connected GA4 source whose compared sessions are not readable yet. */
 export type OrganicSessionsPendingPresentation = {
   kind: "pending";
-  label: string;
-  readyIn: string | null;
-  reason: string;
-  source: "GA4";
-  status: SearchSyncStatusTitle | "Waiting for today's GA4 data";
+  readyInMinutes: number | null;
+  reason:
+    | "history_not_covered"
+    | "needs_reauth"
+    | "needs_retry"
+    | "paused_by_provider"
+    | "paused_by_user"
+    | "queued"
+    | "running"
+    | "waiting_for_today"
+    | "waiting_on_worker";
+  source: "ga4";
+  status:
+    | "complete"
+    | "needs_reauth"
+    | "needs_retry"
+    | "paused_by_provider"
+    | "paused_by_user"
+    | "queued"
+    | "running"
+    | "waiting_for_today"
+    | "waiting_on_worker";
 };
 
 export function importStateView(

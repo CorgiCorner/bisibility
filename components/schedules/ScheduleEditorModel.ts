@@ -1,32 +1,44 @@
-import { parseCronExpression, zonedCronParts } from "@/lib/rank-check/cron";
+import { parseCronExpression } from "@/lib/rank-check/cron";
 import { monthDays, weekdays } from "@/lib/rank-check/schedule-calendar";
 import { newScheduleDefaults } from "@/lib/schedules/form-defaults";
 import { serpDepthSchema } from "@/lib/schemas/serp-depth";
-import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { CronExpressionParser } from "cron-parser";
 import { z } from "zod";
 
 export const scheduleFrequencies = ["daily", "weekly", "monthly", "custom_cron"] as const;
+export const scheduleEditorValidationCode = {
+  invalidCron: "schedule_editor_invalid_cron",
+  cronTooLong: "schedule_editor_cron_too_long",
+  invalidTime: "schedule_editor_invalid_time",
+  invalidTimeStep: "schedule_editor_invalid_time_step",
+  name: "schedule_editor_name",
+  nameTooLong: "schedule_editor_name_too_long",
+} as const;
 const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const timeOfDaySchema = z.string().superRefine((value, context) => {
   if (value === "") return;
   if (!timePattern.test(value)) {
-    context.addIssue({ code: "custom", message: "Enter a time in HH:mm format." });
+    context.addIssue({ code: "custom", message: scheduleEditorValidationCode.invalidTime });
     return;
   }
   if (Number(value.slice(3)) % 30 !== 0) {
-    context.addIssue({ code: "custom", message: "Enter a time in 30-minute steps." });
+    context.addIssue({ code: "custom", message: scheduleEditorValidationCode.invalidTimeStep });
   }
 });
 
 export const scheduleEditorSchema = z
   .object({
-    cronExpression: z.string().trim().max(120),
+    cronExpression: z.string().trim().max(120, scheduleEditorValidationCode.cronTooLong),
     dayOfMonth: z.enum(monthDays),
     frequency: z.enum(scheduleFrequencies),
     isDefault: z.boolean(),
     jitterMinutes: z.enum(["0", "15", "60"]),
-    name: z.string().trim().min(1, "Enter a schedule name.").max(80),
+    name: z
+      .string()
+      .trim()
+      .min(1, scheduleEditorValidationCode.name)
+      .max(80, scheduleEditorValidationCode.nameTooLong),
     providerPolicy: z.string().trim().min(1),
     serpDepth: z.union([
       z.literal("project"),
@@ -41,7 +53,7 @@ export const scheduleEditorSchema = z
     if (value.frequency === "custom_cron" && !parseCronExpression(value.cronExpression).ok) {
       context.addIssue({
         code: "custom",
-        message: "Enter a valid five-field cron expression.",
+        message: scheduleEditorValidationCode.invalidCron,
         path: ["cronExpression"],
       });
     }
@@ -100,22 +112,6 @@ export type ScheduleEditorProjectDefaults = {
   provider: ScheduleEditorProvider | null;
   serpDepth: SerpDepth;
 };
-
-export const scheduleOverrideHelp =
-  "Project default follows the project settings. Always pins this schedule.";
-
-export function scheduleOverrideOptions(
-  projectDefaultLabel: string | null,
-  overrides: readonly ScheduleEditorProvider[],
-) {
-  return [
-    {
-      label: projectDefaultLabel ? `Project default (${projectDefaultLabel})` : "Project default",
-      value: "project",
-    },
-    ...overrides.map(({ label, value }) => ({ label: `Always ${label}`, value })),
-  ];
-}
 
 export type ScheduleEditorProps = {
   canEdit?: boolean;
@@ -179,19 +175,13 @@ export function scheduleEditorDefaults(schedule: ScheduleEditorSchedule): Schedu
   };
 }
 
-function timeLabel(date: Date, timezone: string) {
-  const parts = zonedCronParts(date, timezone);
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  return `${days[parts.weekday]} ${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
-}
-
 export function cronPreview(
   expression: string,
   timezone: string,
   referenceIso = new Date().toISOString(),
 ) {
   if (!parseCronExpression(expression).ok) {
-    return { detail: "Enter a valid five-field cron expression.", next: null };
+    return { detail: "invalidCron" as const, runs: null, timeZone: timezone };
   }
 
   try {
@@ -205,36 +195,34 @@ export function cronPreview(
       new Date(interval.next().getTime()),
     ];
     return {
-      detail: expression === "0 6 * * 1-5" ? "Every weekday at 06:00." : "Custom cron schedule.",
-      next: `Next three: ${runs.map((run) => timeLabel(run, timezone)).join(", ")} ${timezone}.`,
+      detail: expression === "0 6 * * 1-5" ? ("everyWeekday" as const) : ("custom" as const),
+      runs: runs.map((run) => run.toISOString()),
+      timeZone: timezone,
     };
   } catch {
-    return { detail: "Enter a valid time zone.", next: null };
+    return { detail: "invalidTimeZone" as const, runs: null, timeZone: timezone };
   }
 }
 
-export function defaultScheduleNote(defaultScheduleName: string | null | undefined) {
-  return defaultScheduleName
-    ? `Replaces ${defaultScheduleName} for new keywords. Existing keywords keep their schedules.`
-    : "Enable to use this schedule for new keywords. Existing keywords keep their schedules.";
-}
+export type MoveSummaryLabels = {
+  combine: (scheduled: string, manual: string) => string;
+  manual: (count: number) => string;
+  scheduled: (count: number) => string;
+  summary: (summary: string, scheduleName: string) => string;
+};
 
-export function scheduleDepthOptions(projectDepth: SerpDepth) {
-  return scheduleOverrideOptions(
-    `Top ${projectDepth}`,
-    serpDepthValues.map((depth) => ({ label: `Top ${depth}`, value: String(depth) })),
-  );
-}
-
-export function moveSummary(members: readonly ScheduleEditorMember[], scheduleName: string) {
+export function moveSummary(
+  members: readonly ScheduleEditorMember[],
+  scheduleName: string,
+  labels: MoveSummaryLabels,
+) {
   const scheduled = members.filter((member) => member.sourceName).length;
   const manual = members.length - scheduled;
-  const parts: string[] = [];
-  if (scheduled) {
-    parts.push(`${scheduled} ${scheduled === 1 ? "keyword" : "keywords"} from other schedules`);
-  }
-  if (manual) {
-    parts.push(`${manual} ${manual === 1 ? "keyword" : "keywords"} from manual`);
-  }
-  return parts.length ? `Saving moves ${parts.join(" and ")} into ${scheduleName}.` : null;
+  const scheduledSummary = scheduled ? labels.scheduled(scheduled) : null;
+  const manualSummary = manual ? labels.manual(manual) : null;
+  const summary =
+    scheduledSummary && manualSummary
+      ? labels.combine(scheduledSummary, manualSummary)
+      : (scheduledSummary ?? manualSummary);
+  return summary ? labels.summary(summary, scheduleName) : null;
 }

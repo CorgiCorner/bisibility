@@ -8,11 +8,10 @@ import {
   ScopeFields,
   TemplatePicker,
 } from "@/components/alerts/NewRuleDrawerControls";
+import { NewRuleDrawerFooter } from "@/components/alerts/NewRuleDrawerFooter";
 import { NewRuleMarketFields, RulePreview } from "@/components/alerts/NewRuleMarketFields";
-import { newRuleFormDefaults } from "@/components/alerts/new-rule-form-defaults";
-import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
+import { localizedNewRuleFormDefaults } from "@/components/alerts/new-rule-form-defaults";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui/Button";
 import { inputClassName } from "@/components/ui/input-styles";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Sheet } from "@/components/ui/Sheet";
@@ -29,11 +28,11 @@ import {
 } from "@/lib/alerts/new-rule-data";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { actionErrorMessage } from "@/lib/ui/action-error";
-import { BellRingingIcon as BellRinging } from "@phosphor-icons/react/dist/csr/BellRinging";
 import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/csr/ClockCountdown";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -73,12 +72,19 @@ export function NewRuleDrawer({
   projectId,
   targets,
 }: Readonly<NewRuleDrawerProps>) {
+  const t = useTranslations("projectAlerts.drawer");
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
   const availableMarketIds = targets.markets.map((market) => market.id);
   const form = useForm<NewRuleForm>({
-    defaultValues: newRuleFormDefaults(projectId, initialTemplate, initialRule, availableMarketIds),
+    defaultValues: localizedNewRuleFormDefaults(
+      projectId,
+      initialTemplate,
+      t("templateName", { template: initialTemplate }),
+      initialRule,
+      availableMarketIds,
+    ),
     resolver: zodResolver(newRuleSchema),
   });
   const {
@@ -90,8 +96,8 @@ export function NewRuleDrawer({
     watch,
   } = form;
   const templates = ruleTemplatesForDomain(projectDomain);
+  const previewDomain = projectDomain ?? targets.projectDomain ?? t("defaultProjectDomain");
   const selectedId = watch("template");
-  const selected = templates[selectedId];
   const selectedSeverity = watch("severity");
   const isEdit = Boolean(initialRule || watch("ruleId"));
   const { readOnly } = useProjectWriteMode();
@@ -100,7 +106,15 @@ export function NewRuleDrawer({
   function handleClose() {
     setActionError(null);
     setActionWarning(null);
-    reset(newRuleFormDefaults(projectId, initialTemplate, initialRule, availableMarketIds));
+    reset(
+      localizedNewRuleFormDefaults(
+        projectId,
+        initialTemplate,
+        t("templateName", { template: initialTemplate }),
+        initialRule,
+        availableMarketIds,
+      ),
+    );
     onClose();
   }
 
@@ -110,7 +124,10 @@ export function NewRuleDrawer({
       return;
     }
     setValue("template", templateId, { shouldDirty: true });
-    setValue("name", next.name, { shouldDirty: true, shouldValidate: true });
+    setValue("name", t("templateName", { template: templateId }), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
     setValue("severity", next.severity, { shouldDirty: true, shouldValidate: true });
     for (const [key, value] of Object.entries(next.defaults)) {
       setValue(key as keyof NewRuleForm, value, { shouldDirty: true, shouldValidate: true });
@@ -144,7 +161,7 @@ export function NewRuleDrawer({
       handleClose();
       router.refresh();
     } catch (error) {
-      setActionError(actionErrorMessage(error, "Alert rule could not be saved."));
+      setActionError(actionErrorMessage(error, t("saveError")));
     }
   }
 
@@ -156,40 +173,20 @@ export function NewRuleDrawer({
   return (
     <Sheet
       footer={
-        <div className="flex items-center gap-2.5">
-          <ProjectReadOnlyTooltip>
-            <Button
-              className="shrink-0"
-              disabled={readOnly || isSubmitting}
-              onClick={() => submitWithEnabled(false)}
-              size="md"
-              type="button"
-              variant="secondary"
-            >
-              {isEdit ? "Save paused" : "Create paused"}
-            </Button>
-          </ProjectReadOnlyTooltip>
-          <ProjectReadOnlyTooltip className="inline-flex flex-1">
-            <Button
-              className="flex-1"
-              disabled={readOnly || isSubmitting}
-              onClick={() => submitWithEnabled(true)}
-              size="md"
-              startIcon={<BellRinging aria-hidden size={14} weight="regular" />}
-              type="button"
-            >
-              {isEdit ? "Save rule" : "Create rule"}
-            </Button>
-          </ProjectReadOnlyTooltip>
-        </div>
+        <NewRuleDrawerFooter
+          isEdit={isEdit}
+          isSubmitting={isSubmitting}
+          onSubmitWithEnabled={submitWithEnabled}
+          readOnly={readOnly}
+        />
       }
       onClose={handleClose}
       open={open}
       title={
         <span className="block">
-          {isEdit ? "Edit alert rule" : "New alert rule"}
+          {isEdit ? t("editTitle") : t("newTitle")}
           <span className="mt-[3px] block text-[13px] font-normal tracking-normal text-fg-muted">
-            Rules are evaluated after each completed rank check.
+            {t("intro")}
           </span>
         </span>
       }
@@ -198,8 +195,7 @@ export function NewRuleDrawer({
         className="flex flex-col gap-5.5"
         onSubmit={handleSubmit(save, (invalid) =>
           setActionError(
-            Object.values(invalid).find((issue) => issue?.message)?.message ??
-              "Review the highlighted fields.",
+            Object.values(invalid).find((issue) => issue?.message)?.message ?? t("reviewFields"),
           ),
         )}
         ref={formRef}
@@ -210,7 +206,7 @@ export function NewRuleDrawer({
         <input type="hidden" {...register("template")} />
         <TemplatePicker onSelect={selectTemplate} selectedId={selectedId} />
         <label className={labelClass}>
-          {"Rule name "}
+          {t("ruleName")}
           <input className={fieldClass} {...register("name")} />
           {errors.name ? <span className="text-red-text">{errors.name.message}</span> : null}
         </label>
@@ -235,18 +231,18 @@ export function NewRuleDrawer({
         />
         <section>
           <div className="mb-2 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-            Condition
+            {t("condition")}
           </div>
           <input type="hidden" {...register("conditionType")} />
           <MenuSelect
-            ariaLabel="Condition"
+            ariaLabel={t("conditionAria")}
             onChange={(value) =>
               setValue("conditionType", value as NewRuleForm["conditionType"], {
                 shouldDirty: true,
                 shouldValidate: true,
               })
             }
-            options={conditionOptions}
+            options={conditionOptions(t)}
             triggerClassName={selectTriggerClass}
             value={watch("conditionType")}
           />
@@ -257,7 +253,7 @@ export function NewRuleDrawer({
           />
           <div className="mt-[9px] flex items-center gap-[7px] font-sans tabular-nums text-[11.5px] text-fg-muted">
             <ClockCountdown weight="regular" aria-hidden size={13} />
-            Evaluation: {selected.evalMode}
+            {t("evaluation", { mode: t("templateEvaluation", { template: selectedId }) })}
           </div>
         </section>
         <NewRuleDeliveryFields
@@ -291,7 +287,12 @@ export function NewRuleDrawer({
             {actionWarning}
           </p>
         ) : null}
-        <RulePreview>{selected.preview}</RulePreview>
+        <RulePreview>
+          {t("templatePreview", {
+            domain: previewDomain,
+            template: selectedId,
+          })}
+        </RulePreview>
       </form>
     </Sheet>
   );

@@ -4,9 +4,14 @@ import { ProviderUsageCard } from "./ProviderUsageCard";
 
 type UsageSettingsContentProps = ComponentProps<typeof ProviderUsageCard>;
 
+import {
+  renderWithUsageSettingsMessages as render,
+  renderWithFeatureMessages,
+  usageSettingsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { appPath } from "@/lib/routing/app-path";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -286,6 +291,29 @@ describe("UsageSettingsContent", () => {
     });
     expect(routerMock.refresh).toHaveBeenCalledOnce();
     fireEvent.click(screen.getByRole("button", { name: "Edit budget" }));
+  });
+
+  it("keeps an unknown pricing action failure localized for a non-English locale", async () => {
+    const user = userEvent.setup();
+    const messages = structuredClone(usageSettingsFeatureTestMessages);
+    messages.projectSettingsUsage.plan.sendError = "Nie udało się wysłać informacji o cenie.";
+    const submitPricingFeedback = vi.fn(async () => {
+      throw new Error("untrusted pricing transport failure");
+    });
+    renderWithFeatureMessages(
+      <PlanCard
+        canSubmitPricingFeedback
+        deployment="cloud"
+        projectId="prj_story"
+        submitPricingFeedback={submitPricingFeedback}
+      />,
+      { locale: "pl", messages },
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send feedback" }));
+
+    expect(await screen.findByText("Nie udało się wysłać informacji o cenie.")).toBeInTheDocument();
+    expect(screen.queryByText("untrusted pricing transport failure")).not.toBeInTheDocument();
   });
 });
 

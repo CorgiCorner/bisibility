@@ -60,26 +60,7 @@ export type CloudImportPackageFile = {
   mimeType: string;
 };
 
-export function expiresInLabel(expiresAt: string) {
-  const minutes = Math.max(0, Math.ceil((Date.parse(expiresAt) - Date.now()) / 60_000));
-
-  if (minutes === 0) {
-    return "Expires now";
-  }
-  if (minutes === 1) {
-    return "Expires in 1 min";
-  }
-  return `Expires in ${minutes} min`;
-}
-
-export function remainingMinutesLabel(expiresAt: string) {
-  const minutes = Math.max(0, Math.ceil((Date.parse(expiresAt) - Date.now()) / 60_000));
-
-  if (minutes === 0) {
-    return "expires now";
-  }
-  if (minutes === 1) {
-    return "1 minute remaining";
-  }
-  return `${minutes} minutes remaining`;
+/** Expiry arithmetic is locale-neutral; callers format this value in their scoped catalog. */
+export function minutesUntilExpiry(expiresAt: string) {
+  return Math.max(0, Math.ceil((Date.parse(expiresAt) - Date.now()) / 60_000));
 }

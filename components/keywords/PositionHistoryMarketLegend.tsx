@@ -1,6 +1,7 @@
 import { keywordMarketLabel } from "@/lib/keywords/market-position-history";
 import type { KeywordRow, PositionPoint } from "@/lib/queries/keywords";
 import { chartColors } from "@/lib/theme/chart-colors";
+import { useTranslations } from "next-intl";
 
 export const marketPositionPalette = [
   chartColors.accent,
@@ -24,6 +25,7 @@ export function PositionHistoryMarketLegend({
   markets: readonly KeywordRow[];
   visibleMarkets: readonly KeywordRow[];
 }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.position");
   const degraded = (allMarkets ? comparisonPoints.flat() : history).some(
     (point) => point.degradedToCountry,
   );
@@ -35,11 +37,11 @@ export function PositionHistoryMarketLegend({
             aria-hidden
             className="h-2.5 w-2.5 rounded-full border-2 border-dashed border-fg-muted bg-bg-elev"
           />
-          checked at country level
+          {t("countryLevel")}
         </p>
       ) : null}
       {allMarkets ? (
-        <div className="mt-3 flex flex-wrap gap-2" aria-label="Compared markets">
+        <div className="mt-3 flex flex-wrap gap-2" aria-label={t("comparedMarkets")}>
           {visibleMarkets.map((target, index) => (
             <span
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-2.5 py-1 font-sans tabular-nums text-[10.5px] text-fg-muted"
@@ -52,15 +54,20 @@ export function PositionHistoryMarketLegend({
                   backgroundColor: marketPositionPalette[index % marketPositionPalette.length],
                 }}
               />
-              {keywordMarketLabel(target)} {target.hasRankData ? `#${target.position}` : "n/a"}
+              {target.hasRankData && target.position !== null
+                ? t("marketPosition", {
+                    market: keywordMarketLabel(target),
+                    position: target.position,
+                  })
+                : `${keywordMarketLabel(target)} ${t("notApplicable")}`}
               {target.volumeKnown === false || target.difficultyKnown === false
-                ? " / no volume/KD"
+                ? t("noVolumeDifficulty")
                 : ""}
             </span>
           ))}
           {markets.length > 6 ? (
             <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
-              +{markets.length - 6} more markets - filter in the grid to compare them
+              {t("moreMarkets", { count: markets.length - 6 })}
             </span>
           ) : null}
         </div>

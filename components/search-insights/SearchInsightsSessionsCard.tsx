@@ -4,14 +4,11 @@ import { Button } from "@/components/ui/Button";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { ChartDonutIcon as ChartDonut } from "@phosphor-icons/react/dist/csr/ChartDonut";
 import { usePathname, useSearchParams } from "next/navigation";
-import {
-  SESSIONS_CONNECT_BODY,
-  SESSIONS_CONNECT_CTA,
-  SESSIONS_CONNECT_TITLE,
-} from "./search-insights-copy";
+import { useTranslations } from "next-intl";
 import { searchInsightsCurrentReturnPath } from "./search-insights-return-path";
 
 export function SearchInsightsSessionsCard({ projectId }: Readonly<{ projectId: string }>) {
+  const t = useTranslations("projectSearchInsights.copy");
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const href = googleInstallUrl({
@@ -25,13 +22,13 @@ export function SearchInsightsSessionsCard({ projectId }: Readonly<{ projectId: 
         <ChartDonut weight="regular" aria-hidden size={19} />
       </span>
       <span className="flex min-w-48 flex-1 flex-col items-start gap-0.5">
-        <span className="text-ui-body font-semibold">{SESSIONS_CONNECT_TITLE}</span>
+        <span className="text-ui-body font-semibold">{t("sessionsConnectTitle")}</span>
         <span className="text-ui-caption leading-normal text-fg-muted">
-          {SESSIONS_CONNECT_BODY}
+          {t("sessionsConnectBody")}
         </span>
       </span>
       <Button className="ml-auto shrink-0" href={href} size="sm" variant="secondary">
-        {SESSIONS_CONNECT_CTA}
+        {t("connect")}
       </Button>
     </div>
   );

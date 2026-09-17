@@ -17,6 +17,7 @@ import {
 import { ChartBarIcon as ChartBar } from "@phosphor-icons/react/dist/csr/ChartBar";
 import { CompassIcon as Compass } from "@phosphor-icons/react/dist/csr/Compass";
 import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
+import { useFormatter, useTranslations } from "next-intl";
 
 type ResearchFiltersDrawerProps = {
   filters: ResearchFilters;
@@ -27,20 +28,6 @@ type ResearchFiltersDrawerProps = {
   resultCount: number;
 };
 
-const difficulties = [
-  { id: "easy" as const, label: "Easy, 0-29" },
-  { id: "medium" as const, label: "Medium, 30-69" },
-  { id: "hard" as const, label: "Hard, 70-100" },
-];
-const intents = [
-  { id: "informational", label: "Info" },
-  { id: "navigational", label: "Nav" },
-  { id: "commercial", label: "Comm" },
-  { id: "transactional", label: "Trans" },
-  { id: "unknown", label: "Unknown" },
-];
-const sources = ["related", "suggestion", "idea"];
-
 export function ResearchFiltersDrawer({
   filters,
   intentCounts,
@@ -49,6 +36,25 @@ export function ResearchFiltersDrawer({
   open,
   resultCount,
 }: Readonly<ResearchFiltersDrawerProps>) {
+  const t = useTranslations("projectResearch.filters");
+  const format = useFormatter();
+  const difficulties = [
+    { id: "easy" as const, label: t("easy") },
+    { id: "medium" as const, label: t("medium") },
+    { id: "hard" as const, label: t("hard") },
+  ];
+  const intents = [
+    { id: "informational", label: t("informational") },
+    { id: "navigational", label: t("navigational") },
+    { id: "commercial", label: t("commercial") },
+    { id: "transactional", label: t("transactional") },
+    { id: "unknown", label: t("unknown") },
+  ];
+  const sources = [
+    { id: "related", label: t("related") },
+    { id: "suggestion", label: t("suggestion") },
+    { id: "idea", label: t("idea") },
+  ];
   const activeCount = activeResearchFilterCount(filters);
   const patch = (value: Partial<ResearchFilters>) => onChange({ ...filters, ...value });
 
@@ -57,10 +63,10 @@ export function ResearchFiltersDrawer({
       footer={
         <div className="flex items-center gap-2.5">
           <Button onClick={() => onChange(emptyResearchFilters)} type="button" variant="secondary">
-            Reset
+            {t("reset")}
           </Button>
           <Button onClick={onClose} style={{ flex: 1 }} type="button">
-            Show {resultCount} {resultCount === 1 ? "result" : "results"}
+            {t("showResults", { count: resultCount })}
           </Button>
         </div>
       }
@@ -69,7 +75,7 @@ export function ResearchFiltersDrawer({
       open={open}
       title={
         <span className="inline-flex items-center gap-2">
-          Filters
+          {t("title")}
           <span className="grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-1.5 font-sans tabular-nums text-[10.5px] font-semibold text-accent-text">
             {activeCount}
           </span>
@@ -77,7 +83,7 @@ export function ResearchFiltersDrawer({
       }
       widthVariant="filters"
     >
-      <FilterSection icon={Compass} title="Search intent">
+      <FilterSection icon={Compass} title={t("intent")}>
         <div className="mt-3 grid grid-cols-2 gap-2">
           {intents.map((intent) => (
             <FilterCheckTile
@@ -90,11 +96,11 @@ export function ResearchFiltersDrawer({
           ))}
         </div>
       </FilterSection>
-      <FilterSection icon={ChartBar} title="Metrics">
+      <FilterSection icon={ChartBar} title={t("metrics")}>
         <div className="mb-2 mt-3 flex items-center justify-between text-[12px] text-fg-muted">
-          <span>Search volume / mo, minimum</span>
+          <span>{t("minimumVolume")}</span>
           <span className="font-sans tabular-nums font-semibold text-accent-text">
-            {filters.minVolume.toLocaleString("en-US")}
+            {format.number(filters.minVolume)}
           </span>
         </div>
         <Slider
@@ -105,7 +111,7 @@ export function ResearchFiltersDrawer({
           style={{ color: "var(--accent)" }}
           value={filters.minVolume}
         />
-        <div className="mb-2 mt-3 text-[12px] text-fg-muted">Keyword difficulty</div>
+        <div className="mb-2 mt-3 text-[12px] text-fg-muted">{t("difficulty")}</div>
         <div className="grid grid-cols-1 gap-2">
           {difficulties.map((item) => (
             <FilterCheckTile
@@ -117,21 +123,21 @@ export function ResearchFiltersDrawer({
           ))}
         </div>
       </FilterSection>
-      <FilterSection icon={Funnel} title="Source and tracking">
+      <FilterSection icon={Funnel} title={t("sourceTracking")}>
         <div className="mt-3 grid grid-cols-1 gap-2">
           {sources.map((source) => (
             <FilterCheckTile
-              active={filters.sources.includes(source)}
-              key={source}
-              label={source}
-              onClick={() => patch({ sources: toggleFilterValue(filters.sources, source) })}
+              active={filters.sources.includes(source.id)}
+              key={source.id}
+              label={source.label}
+              onClick={() => patch({ sources: toggleFilterValue(filters.sources, source.id) })}
             />
           ))}
         </div>
         <div className="mt-4">
           <Switch
             checked={filters.hideTracked}
-            label="Hide already tracked"
+            label={t("hideTracked")}
             onChange={(event) => patch({ hideTracked: event.target.checked })}
           />
         </div>

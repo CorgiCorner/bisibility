@@ -1,61 +1,72 @@
 "use client";
 
 import { Badge, displayTime } from "@/components/admin/AdminPrimitives";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn, DataTableSort } from "@/components/ui/data-table/data-table-types";
-import type { DateFormat } from "@/lib/dates/format";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import { useFormatter, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 type OpsEvent = InstanceAdminDashboard["ops"]["events"][number];
 type OpsEventRow = Omit<OpsEvent, "kind"> & { eventKind: OpsEvent["kind"]; id: string };
+type OpsTranslations = ReturnType<typeof useTranslations<"instanceAdmin.opsTable">>;
 
-function opsEventColumns(dateFormat: DateFormat): readonly DataTableColumn<OpsEventRow>[] {
+function opsEventColumns(
+  context: ReturnType<typeof useDateDisplay>,
+  format: ReturnType<typeof useFormatter>,
+  t: OpsTranslations,
+  unavailable: string,
+): readonly DataTableColumn<OpsEventRow>[] {
   return [
     {
       accessorFn: (row) => row.eventKind,
       cell: ({ row }) => <span>{row.original.eventKind}</span>,
-      header: "Kind",
+      header: t("kind"),
       id: "kind",
-      meta: { flex: 1, sortable: true, title: "Kind" },
+      meta: { flex: 1, sortable: true, title: t("kind") },
       minSize: 180,
       size: 180,
     },
     {
       accessorFn: (row) => row.severity,
       cell: ({ row }) => <Badge status={row.original.severity} />,
-      header: "Severity",
+      header: t("severity"),
       id: "severity",
-      meta: { sortable: true, title: "Severity" },
+      meta: { sortable: true, title: t("severity") },
       minSize: 112,
       size: 112,
     },
     {
       accessorFn: (row) => row.createdAt,
       cell: ({ row }) => (
-        <span className="text-fg-muted">{displayTime(row.original.createdAt, dateFormat)}</span>
+        <span className="text-fg-muted">
+          {displayTime(row.original.createdAt, context, unavailable)}
+        </span>
       ),
-      header: "Created",
+      header: t("created"),
       id: "created",
-      meta: { flex: 1, sortable: true, title: "Created" },
+      meta: { flex: 1, sortable: true, title: t("created") },
       minSize: 156,
       size: 156,
     },
     {
       accessorFn: (row) => (row.deliveredAt ? "delivered" : "undelivered"),
       cell: ({ row }) => <Badge status={row.original.deliveredAt ? "delivered" : "undelivered"} />,
-      header: "Delivery",
+      header: t("delivery"),
       id: "delivery",
-      meta: { flex: 1, sortable: true, title: "Delivery" },
+      meta: { flex: 1, sortable: true, title: t("delivery") },
       minSize: 180,
       size: 180,
     },
     {
       accessorFn: (row) => row.attempts,
-      cell: ({ row }) => <span className="text-fg-muted">{row.original.attempts}</span>,
-      header: "Attempts",
+      cell: ({ row }) => (
+        <span className="text-fg-muted">{format.number(row.original.attempts)}</span>
+      ),
+      header: t("attempts"),
       id: "attempts",
-      meta: { align: "end", sortable: true, title: "Attempts" },
+      meta: { align: "end", sortable: true, title: t("attempts") },
       minSize: 132,
       size: 132,
     },
@@ -63,11 +74,17 @@ function opsEventColumns(dateFormat: DateFormat): readonly DataTableColumn<OpsEv
 }
 
 export function AdminDashboardOpsEventsTable({
-  dateFormat,
   events,
-}: Readonly<{ dateFormat: DateFormat; events: InstanceAdminDashboard["ops"]["events"] }>) {
+}: Readonly<{ events: InstanceAdminDashboard["ops"]["events"] }>) {
+  const context = useDateDisplay();
+  const format = useFormatter();
+  const t = useTranslations("instanceAdmin.opsTable");
+  const values = useTranslations("instanceAdmin.values");
   const [sorting, setSorting] = useState<DataTableSort | null>(null);
-  const columns = useMemo(() => opsEventColumns(dateFormat), [dateFormat]);
+  const columns = useMemo(
+    () => opsEventColumns(context, format, t, values("unavailable")),
+    [context, format, t, values],
+  );
   const rows = useMemo(
     () =>
       events.map(({ kind, ...event }, index) => ({
@@ -80,7 +97,7 @@ export function AdminDashboardOpsEventsTable({
 
   return (
     <DataTable
-      ariaLabel="Recent operational events"
+      ariaLabel={t("tableLabel")}
       columns={columns}
       id="admin-ops-events-table"
       layout="auto"

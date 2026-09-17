@@ -244,20 +244,6 @@ export function overlapBadgeTitle(pages: number) {
   return `${pages} of your pages rank for this query. Full breakdown, with each page's position, is one click away.`;
 }
 
-export const TRACK_DIALOG_COPY = {
-  adding: "Adding",
-  cancel: "Cancel",
-  costTitle: "What this costs",
-  depth: "Search depth",
-  device: "Device",
-  market: "Market",
-  ownRate:
-    "Billed by your provider at your own rate, not by us. Nothing is spent until you confirm.",
-  paused: "PAUSED",
-  schedule: "Schedule",
-  title: "Add to Rank Tracker",
-} as const;
-
 export const TRACK_FAILED = "The query could not be added to Rank Tracker. Try again.";
 export function trackDoneCopy(frequency: string) {
   if (frequency === "manual") return "Added as manual in Rank Tracker.";

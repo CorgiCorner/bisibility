@@ -3,6 +3,7 @@
 import { ScheduleEditor } from "@/components/schedules/ScheduleEditor";
 import { newEditorSchedule } from "@/components/schedules/ScheduleEditorModel";
 import type { MarketScheduleContext } from "@/lib/markets/schedule-context";
+import { useTranslations } from "next-intl";
 
 type NewMarketScheduleEditorProps = {
   context: MarketScheduleContext;
@@ -19,17 +20,18 @@ type NewMarketScheduleEditorProps = {
 
 export function NewMarketScheduleEditor({
   context,
-  memberSummary = "Keywords will join this schedule when you create the market.",
+  memberSummary,
   onBack,
   onSaved,
   projectId,
 }: Readonly<NewMarketScheduleEditorProps>) {
+  const t = useTranslations("projectMarkets");
   return (
     <ScheduleEditor
       {...context}
       embedded
       isNew
-      memberSummary={memberSummary}
+      memberSummary={memberSummary ?? t("newKeywordsJoinSchedule")}
       onCancel={onBack}
       onSaved={onSaved}
       projectId={projectId}

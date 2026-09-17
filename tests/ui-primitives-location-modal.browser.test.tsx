@@ -5,11 +5,23 @@ import { countryValueForName } from "@/components/keywords/location-picker-data"
 import { AnchoredList } from "@/components/ui/AnchoredList";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { sharedMessagesElement } from "@/i18n/test-support/render-with-feature-messages";
 import { locationSearchWireCandidate } from "@/lib/test/fixtures/location";
+import sharedMessages from "@/messages/core/en/shared.json";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
+
+const locationMessages = {
+  city: sharedMessages.shared.markets.locationCity,
+  clearSearch: sharedMessages.shared.markets.locationClearSearch,
+  countries: sharedMessages.shared.markets.locationCountries,
+  noMatching: sharedMessages.shared.markets.locationNoMatching,
+  region: sharedMessages.shared.markets.locationRegion,
+  regionsAndCities: sharedMessages.shared.markets.locationRegionsAndCities,
+  searching: sharedMessages.shared.markets.locationSearching,
+};
 
 afterEach(async () => {
   cleanup();
@@ -47,7 +59,7 @@ describe("Portalled suggestions inside a modal", () => {
         </>
       );
     }
-    render(<Harness />);
+    render(sharedMessagesElement(<Harness />));
     await userEvent.click(screen.getByRole("button", { name: "Open location modal" }));
     const dialog = screen.getByRole("dialog", { name: "Choose location" });
     await userEvent.click(screen.getByRole("button", { name: "Show suggestions" }));
@@ -119,6 +131,7 @@ describe("Portalled suggestions inside a modal", () => {
             }}
           >
             <LocationField
+              messages={locationMessages}
               value={value}
               onChange={(next) => {
                 selected(next);
@@ -129,7 +142,7 @@ describe("Portalled suggestions inside a modal", () => {
         </>
       );
     }
-    render(<Harness />);
+    render(sharedMessagesElement(<Harness />));
     const trigger = screen.getByRole("button", { name: "Open tracking" });
     await userEvent.click(trigger);
     const input = screen.getByRole("combobox", { name: "Location" });

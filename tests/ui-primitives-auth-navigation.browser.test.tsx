@@ -1,7 +1,13 @@
 /// <reference types="vite/client" />
 import "@/app/globals.css";
 import { OtpStep } from "@/components/auth/OtpStep";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
+import {
+  authFeatureTestMessages,
+  featureMessagesElement,
+  onboardingFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { emptyOtpDigits, type LoginFormValues } from "@/lib/auth/login-schema";
 import { applyTheme } from "@/lib/theme/browser-theme";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
@@ -41,7 +47,11 @@ describe.each(["light", "dark"] as const)("Auth navigation in %s", (theme) => {
   it("keeps Back neutral, borderless and padded before returning to email", async () => {
     applyTheme(theme);
     const onBack = vi.fn();
-    render(<OtpHarness onBack={onBack} />);
+    render(
+      <FeatureMessagesProvider locale="en" messages={authFeatureTestMessages} timeZone="UTC">
+        <OtpHarness onBack={onBack} />
+      </FeatureMessagesProvider>,
+    );
     const back = screen.getByRole("button", { name: "Back" });
     const style = getComputedStyle(back);
     expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
@@ -63,12 +73,15 @@ describe.each(["light", "dark"] as const)("Auth navigation in %s", (theme) => {
     async (navigation) => {
       applyTheme(theme);
       render(
-        <OnboardingStepper
-          currentStep={2}
-          onStepChange={navigation === "buttons" ? vi.fn() : undefined}
-        >
-          <div>Current panel</div>
-        </OnboardingStepper>,
+        featureMessagesElement(
+          <OnboardingStepper
+            currentStep={2}
+            onStepChange={navigation === "buttons" ? vi.fn() : undefined}
+          >
+            <div>Current panel</div>
+          </OnboardingStepper>,
+          { messages: onboardingFeatureTestMessages },
+        ),
       );
       const rail = screen.getByLabelText("Onboarding steps");
       // Show the desktop rail independently of the browser runner's viewport.

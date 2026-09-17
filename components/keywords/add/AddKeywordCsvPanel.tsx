@@ -3,6 +3,7 @@
 import { Textarea } from "@/components/ui/Textarea";
 import { keywordImportTemplateCsv } from "@/lib/keywords/import-csv-template";
 import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
+import { useTranslations } from "next-intl";
 
 type AddKeywordCsvPanelProps = {
   csvText: string;
@@ -10,8 +11,6 @@ type AddKeywordCsvPanelProps = {
   onCsvTextChange: (value: string) => void;
   parsedCount: number;
 };
-
-const csvColumnsHint = "keyword, target_url, tags, country, language, device";
 
 function handleDragOver(event: React.DragEvent<HTMLLabelElement>) {
   event.preventDefault();
@@ -23,6 +22,7 @@ export function AddKeywordCsvPanel({
   onCsvTextChange,
   parsedCount,
 }: Readonly<AddKeywordCsvPanelProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
   async function readCsvFile(file: File) {
     onCsvTextChange(await file.text());
   }
@@ -53,8 +53,8 @@ export function AddKeywordCsvPanel({
         onDrop={(event) => void handleDrop(event)}
       >
         <UploadSimple weight="regular" className="text-accent-solid" size={26} />
-        <span className="text-[13.5px] font-semibold text-fg">Drop a CSV or click to upload</span>
-        <span className="text-[11.5px] text-fg-muted">{csvColumnsHint}</span>
+        <span className="text-[13.5px] font-semibold text-fg">{t("csvUpload")}</span>
+        <span className="text-[11.5px] text-fg-muted">{t("csvColumns")}</span>
         <input
           accept=".csv,text/csv"
           className="sr-only"
@@ -66,10 +66,10 @@ export function AddKeywordCsvPanel({
       <div>
         <div className="flex items-center justify-between gap-2">
           <label className="text-[12.5px] font-semibold text-fg" htmlFor="add-csv-input">
-            Paste CSV
+            {t("pasteCsv")}
           </label>
           <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-            {parsedCount} {parsedCount === 1 ? "keyword" : "keywords"} parsed
+            {t("csvParsed", { count: parsedCount })}
           </span>
         </div>
         <Textarea

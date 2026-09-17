@@ -1,11 +1,15 @@
+"use client";
+
 import { SettingsSearch } from "@/components/settings/shell/SettingsSearch";
 import {
   type SettingsSectionId,
   settingsSectionHref,
+  settingsSectionLabel,
   settingsSections,
 } from "@/components/settings/shell/settings-sections";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 type SettingsSubnavProps = {
   activeSection: SettingsSectionId;
@@ -13,9 +17,11 @@ type SettingsSubnavProps = {
 };
 
 export function SettingsSubnav({ activeSection, projectRef }: Readonly<SettingsSubnavProps>) {
+  const t = useTranslations("projectSettingsShell");
+
   return (
     <nav
-      aria-label="Settings sections"
+      aria-label={t("navigationLabel")}
       className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-3.5 lg:flex"
       data-settings-subnav=""
     >
@@ -54,7 +60,7 @@ export function SettingsSubnav({ activeSection, projectRef }: Readonly<SettingsS
                   >
                     <Icon aria-hidden className="text-current" size={16} weight="regular" />
                   </span>
-                  <span>{section.label}</span>
+                  <span>{settingsSectionLabel(t, section.id)}</span>
                 </Link>
               </li>
             );

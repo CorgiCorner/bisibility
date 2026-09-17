@@ -49,8 +49,31 @@ describe("market position history", () => {
       positionHistory: [{ checkedAt: "2026-08-14T11:00:00.000Z", label: "Today", position: 9 }],
     };
     const comparison = marketComparisonData([first, second], 30);
-    expect(comparison.labels).toEqual(["Aug 13", "Today"]);
+    expect(comparison.labels).toEqual(["2026-08-13", "2026-08-14"]);
     expect(comparison.values[0]?.data).toEqual([4, 3]);
     expect(comparison.values[1]?.data).toEqual([null, 9]);
+  });
+
+  it("keeps shared labels on their persisted UTC calendar day", () => {
+    const first = {
+      ...market("United States", "country:US:lang:en", 3),
+      positionHistory: [
+        { checkedAt: "2026-08-14T00:20:00.000Z", label: "UTC Aug 14", position: 3 },
+      ],
+    };
+    const second = {
+      ...market("Belgium", "country:BE:lang:nl", 9),
+      positionHistory: [
+        { checkedAt: "2026-08-14T01:20:00.000Z", label: "UTC Aug 14", position: 9 },
+      ],
+    };
+
+    const comparison = marketComparisonData(
+      [first, second],
+      1,
+      new Date("2026-08-14T02:00:00.000Z"),
+    );
+    expect(comparison.labels).toEqual(["2026-08-14"]);
+    expect(comparison.values.map((series) => series.data)).toEqual([[3], [9]]);
   });
 });

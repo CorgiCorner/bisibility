@@ -243,6 +243,18 @@ export const auth = betterAuth({
         returned: false,
         type: "string",
       },
+      uiLocale: {
+        input: false,
+        required: false,
+        returned: true,
+        type: "string",
+      },
+      uiLocaleSelectedAt: {
+        input: false,
+        required: false,
+        returned: false,
+        type: "date",
+      },
       welcomeFollowupRequestedAt: {
         input: false,
         required: false,

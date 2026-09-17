@@ -256,7 +256,7 @@ function pageRoutePatterns(directory: string, segments: string[] = []): string[]
 
 describe("dashboard header titles", () => {
   it("covers every app page route", () => {
-    const appDirectory = resolve(import.meta.dirname, "../../app/app");
+    const appDirectory = resolve(import.meta.dirname, "../../app/(regional)/app");
 
     expect(routeCases.map((route) => route.pattern).sort()).toEqual(
       pageRoutePatterns(appDirectory).sort(),

@@ -57,14 +57,10 @@ export function selectedPlanKey(planKey: string) {
   return planKey === "" || planKey === AUTO_PLAN_KEY ? undefined : planKey;
 }
 
-export function pluralCount(count: number, noun: string) {
-  return `${formatChecks(count)} ${noun}${count === 1 ? "" : "s"}`;
-}
-
-export function formatCentsAsDollars(cents: number, fractionDigits = 2): string {
+export function formatCentsAsDollars(cents: number, fractionDigits = 2, locale = "en-US"): string {
   const digits = Math.min(Math.max(Math.floor(fractionDigits), 0), 6);
 
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     currency: "USD",
     maximumFractionDigits: digits,
     minimumFractionDigits: digits,
@@ -72,8 +68,8 @@ export function formatCentsAsDollars(cents: number, fractionDigits = 2): string 
   }).format(centsToDollars(cents));
 }
 
-export function formatChecks(value: number): string {
-  return value.toLocaleString("en-US");
+export function formatChecks(value: number, locale = "en-US"): string {
+  return value.toLocaleString(locale);
 }
 
 export const monoHintClass =

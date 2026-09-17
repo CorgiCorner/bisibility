@@ -1,0 +1,23 @@
+{
+  "emailPreferences": {
+    "metadata": {
+      "title": "Email preferences"
+    },
+    "page": {
+      "back": "Back to bisibility",
+      "docsLink": "Still stuck? Read the docs",
+      "invalidDescription": "The link could not be verified. Reply to the email and we will update the preference for you.",
+      "invalidTitle": "This unsubscribe link is invalid",
+      "kicker": "EMAIL PREFERENCES",
+      "successDescription": "We will not send you welcome follow-ups or other marketing emails. Account and service messages are unaffected.",
+      "successTitle": "You are unsubscribed",
+      "validDescription": "You will stop receiving founder check-ins and other marketing emails. Account and service messages will still arrive.",
+      "validTitle": "Stop founder check-ins?"
+    },
+    "button": {
+      "error": "We could not update your preference. Please try again.",
+      "idle": "Unsubscribe",
+      "pending": "Updating..."
+    }
+  }
+}

@@ -1,9 +1,19 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import type { AppLocale } from "@/i18n/config";
 import { appPath } from "@/lib/routing/app-path";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ComponentProps } from "react";
+import rankTrackerMessages from "@/messages/core/en/project-rank-tracker.json";
+import sharedMessages from "@/messages/core/en/shared.json";
+import { fireEvent, render as renderDom, screen, waitFor } from "@testing-library/react";
+import type { ComponentProps, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordsEmptyState } from "./KeywordsEmptyState";
+
+function render(children: ReactNode) {
+  return renderDom(<ProjectRankTrackerMessages>{children}</ProjectRankTrackerMessages>);
+}
 
 type EmptyStateProps = ComponentProps<typeof KeywordsEmptyState>;
 
@@ -60,7 +70,7 @@ describe("KeywordsEmptyState", () => {
     expect(props.onImportCsv).toHaveBeenCalledOnce();
   });
 
-  it("uses the shared empty-state mark and a short market prompt", () => {
+  it("keeps the frozen-main mark and short no-market prompt", () => {
     renderEmpty(true, { hasMarkets: false });
 
     expect(screen.getByRole("heading", { name: "Start with your first market" })).toHaveClass(
@@ -73,6 +83,48 @@ describe("KeywordsEmptyState", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/adding another market later/i)).not.toBeInTheDocument();
+  });
+
+  it("uses injected non-English list-empty messages", () => {
+    const localizedMessages = {
+      ...rankTrackerMessages,
+      projectRankTracker: {
+        ...rankTrackerMessages.projectRankTracker,
+        list: {
+          ...rankTrackerMessages.projectRankTracker.list,
+          empty: {
+            ...rankTrackerMessages.projectRankTracker.list.empty,
+            moduleLabel: "Seguimiento de posiciones",
+            noKeywordsDescription: "Añade palabras clave para seguir tus posiciones.",
+            noKeywordsTitle: "Aún no hay palabras clave",
+          },
+        },
+      },
+    };
+
+    renderDom(
+      <FeatureMessagesProvider
+        locale={"es-ES" as AppLocale}
+        messages={mergeMessageCatalogs(sharedMessages, localizedMessages)}
+        timeZone="UTC"
+      >
+        <ProjectWriteModeProvider projectRef="prj_1" writeMode="active">
+          <KeywordsEmptyState
+            canCreateKeyword
+            canManageProviders
+            onAddKeyword={vi.fn()}
+            onImportCsv={vi.fn()}
+            onImportQueries={vi.fn()}
+            projectId="prj_1"
+          />
+        </ProjectWriteModeProvider>
+      </FeatureMessagesProvider>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Aún no hay palabras clave" })).toBeVisible();
+    expect(screen.getByText("Añade palabras clave para seguir tus posiciones.")).toBeVisible();
+    expect(screen.getByRole("img", { name: "Seguimiento de posiciones" })).toBeVisible();
+    expect(screen.queryByText("No keywords yet")).not.toBeInTheDocument();
   });
 
   it("hides create paths below member", () => {
@@ -186,7 +238,9 @@ describe("KeywordsEmptyState", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "From Search Console" }));
 
-    expect(await screen.findByText("Rate limited, try again shortly.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Search Console is busy. Try again shortly."),
+    ).toBeInTheDocument();
   });
 
   it("disables all mutation paths in read-only mode", async () => {

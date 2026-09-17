@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { inputClassName } from "@/components/ui/input-styles";
 import type { WebhookEndpointView } from "@/lib/alerts/alert-data";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type WebhookEndpointEditorProps = {
@@ -29,6 +30,7 @@ export function WebhookEndpointEditor({
   projectId,
   testAction,
 }: Readonly<WebhookEndpointEditorProps>) {
+  const t = useTranslations("projectAlerts.webhook");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
@@ -55,13 +57,13 @@ export function WebhookEndpointEditor({
         setError(response.error);
         return;
       }
-      setSaved(`Saved enabled endpoint ${url}.`);
+      setSaved(t("saved", { url }));
       setDescription("");
       setHmacSecret("");
       setUrl("");
       router.refresh();
     } catch {
-      setError("Webhook endpoint could not be saved.");
+      setError(t("saveError"));
     } finally {
       setSubmitting(false);
     }
@@ -70,12 +72,7 @@ export function WebhookEndpointEditor({
   return (
     <div className="mt-3 rounded-control border border-border bg-transparent p-3">
       <p className="m-0 text-[12px] leading-relaxed text-fg-muted">
-        Events: alert.fired, alert.digest, and alert.daily_cap_reached. Every enabled endpoint in
-        this project receives every webhook-channel alert. The HMAC secret is encrypted at rest,
-        write-only, and cannot be read back.{" "}
-        {allowPrivateNetwork
-          ? "This self-hosted environment allows private and loopback destinations."
-          : "Private and loopback destinations are blocked by the active webhook guard."}
+        {t("description")} {allowPrivateNetwork ? t("privateAllowed") : t("privateBlocked")}
       </p>
       {endpoints.length > 0 ? (
         <ul className="my-2 grid gap-1 p-0 font-sans tabular-nums text-[10.5px] text-fg-muted">
@@ -92,22 +89,22 @@ export function WebhookEndpointEditor({
         </ul>
       ) : (
         <p className="my-2 font-sans tabular-nums text-[10.5px] text-yellow-text">
-          No endpoint configured yet.
+          {t("noneConfigured")}
         </p>
       )}
       <div className="mt-3 grid gap-2.5">
         <label className={labelClass}>
-          Endpoint URL
+          {t("endpointUrl")}
           <input
             className={fieldClass}
             name="url"
             onChange={(event) => setUrl(event.target.value)}
-            placeholder="https://example.com/alerts"
+            placeholder={t("urlPlaceholder")}
             value={url}
           />
         </label>
         <label className={labelClass}>
-          Description
+          {t("descriptionLabel")}
           <input
             className={fieldClass}
             maxLength={160}
@@ -135,13 +132,13 @@ export function WebhookEndpointEditor({
         <Button
           disabled={!url || hmacSecret.length < 16}
           loading={submitting}
-          loadingLabel="Saving..."
+          loadingLabel={t("saving")}
           onClick={() => void saveEndpoint()}
           size="sm"
           type="button"
           variant="secondary"
         >
-          Save enabled endpoint
+          {t("saveEnabled")}
         </Button>
       </div>
     </div>

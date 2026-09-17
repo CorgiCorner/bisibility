@@ -413,7 +413,7 @@ export default [
     },
   },
   {
-    files: ["app/(marketing)/**/*.{ts,tsx}"],
+    files: ["app/(marketing-current)/**/*.{ts,tsx}", "app/(static)/(marketing)/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -430,7 +430,7 @@ export default [
     },
   },
   {
-    files: ["app/app/**/*.{ts,tsx}"],
+    files: ["app/(regional)/app/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -464,5 +464,23 @@ export default [
     rules: {
       "max-lines": ["error", { max: 300, skipBlankLines: true, skipComments: true }],
     },
+  },
+  {
+    // The public generated message contract grows with the validated catalog.
+    files: ["i18n/core-messages.generated.ts"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      parser: importEdgeParser,
+      sourceType: "module",
+    },
+    plugins: {
+      lineCount: {
+        processors: {
+          safe: lineCountProcessor,
+        },
+      },
+    },
+    processor: "lineCount/safe",
+    rules: { "max-lines": "off" },
   },
 ];

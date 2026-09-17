@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth/client";
 import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 /** Uses the dashboard sign-out path so onboarding clears the session before login. */
 export function OnboardingLogoutButton() {
+  const t = useTranslations("onboarding");
   const [pending, setPending] = useState(false);
 
   async function handleSignOut() {
@@ -33,7 +35,7 @@ export function OnboardingLogoutButton() {
       type="button"
       variant="ghost"
     >
-      Log out
+      {t("logout")}
     </Button>
   );
 }

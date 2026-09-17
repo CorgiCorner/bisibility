@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  actionErrorMessage,
-  type KeywordWorkspaceActions,
-} from "@/components/keywords/action-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import type { KeywordWorkspaceActions } from "@/components/keywords/action-utils";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
@@ -18,9 +16,11 @@ import { TagIcon as Tag } from "@phosphor-icons/react/dist/csr/Tag";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { BulkActionModal, type BulkMode } from "./BulkActionModal";
 import { BulkRunChecksControls } from "./BulkRunChecksControls";
+import { presentBulkActionError } from "./bulk-action-error";
 import { bulkTargetView } from "./bulk-target-model";
 import { SetScheduleModal } from "./SetScheduleModal";
 import type { CheckScheduleSummary } from "./set-schedule-model";
@@ -57,6 +57,8 @@ export function BulkActionBar({
   providerRate,
   selectedRows,
 }: BulkActionBarProps) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.bulk");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -95,7 +97,7 @@ export function BulkActionBar({
       setConfirmOpen(false);
       finishAction();
     } catch (error) {
-      setActionError(actionErrorMessage(error));
+      setActionError(presentBulkActionError(error, sharedErrors, t("actionFailed")));
       throw error;
     } finally {
       setDeleting(false);
@@ -110,7 +112,7 @@ export function BulkActionBar({
       setClearTargetsOpen(false);
       finishAction();
     } catch (error) {
-      setActionError(actionErrorMessage(error));
+      setActionError(presentBulkActionError(error, sharedErrors, t("actionFailed")));
       throw error;
     } finally {
       setClearingTargets(false);
@@ -127,14 +129,12 @@ export function BulkActionBar({
       );
       const body = (await response.json()) as { data?: CheckScheduleSummary[]; detail?: string };
       if (!response.ok || !body.data) {
-        throw new Error(body.detail || "Could not load schedules. Try again.");
+        throw new Error();
       }
       setSchedules(body.data);
       setScheduleOpen(true);
     } catch (error) {
-      setActionError(
-        error instanceof Error ? error.message : "Could not load schedules. Try again.",
-      );
+      setActionError(presentBulkActionError(error, sharedErrors, t("scheduleLoadFailed")));
     } finally {
       setScheduleLoading(false);
     }
@@ -144,7 +144,7 @@ export function BulkActionBar({
     <div className="grid gap-2 border-b border-border px-4 py-[11px]">
       <div className="flex flex-wrap items-center gap-2">
         <span className="mr-1 font-sans tabular-nums text-[12.5px] font-semibold text-fg">
-          {selectedRows.length} selected
+          {t("selected", { count: selectedRows.length })}
         </span>
         {onRunChecks && canUpdateKeyword ? (
           <BulkRunChecksControls
@@ -168,7 +168,7 @@ export function BulkActionBar({
               startIcon={<Tag weight="regular" size={15} />}
               variant="secondary"
             >
-              Add tag
+              {t("addTag")}
             </Button>
           </ProjectReadOnlyTooltip>
         ) : null}
@@ -181,7 +181,7 @@ export function BulkActionBar({
               startIcon={<LinkSimple weight="regular" size={15} />}
               variant="secondary"
             >
-              {targetView.actionLabel}
+              {t(targetView.actionKey)}
             </Button>
           </ProjectReadOnlyTooltip>
         ) : null}
@@ -190,13 +190,13 @@ export function BulkActionBar({
             <Button
               disabled={readOnly || scheduleLoading}
               loading={scheduleLoading}
-              loadingLabel="Loading..."
+              loadingLabel={t("loading")}
               onClick={() => void openScheduleModal()}
               size="xs"
               startIcon={<CalendarDots weight="regular" size={15} />}
               variant="secondary"
             >
-              Set schedule
+              {t("setSchedule")}
             </Button>
           </ProjectReadOnlyTooltip>
         ) : null}
@@ -218,7 +218,7 @@ export function BulkActionBar({
               }}
               variant="secondary"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? t("deleting") : t("delete")}
             </Button>
           </ProjectReadOnlyTooltip>
         ) : null}
@@ -229,7 +229,7 @@ export function BulkActionBar({
           style={{ marginLeft: "auto" }}
           variant="ghost"
         >
-          Clear
+          {t("clear")}
         </Button>
       </div>
       {canDeleteKeyword ? (

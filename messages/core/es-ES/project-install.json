@@ -1,0 +1,97 @@
+{
+  "projectInstall": {
+    "agents": {
+      "heading": "Agentes de IA",
+      "description": "Elige tu herramienta, copia un comando y pégalo en tu terminal. Con eso ya está todo listo.",
+      "copyCommand": "Copiar el comando de {agent}",
+      "claude-code": {
+        "label": "Claude Code",
+        "hint": "CLI",
+        "note": "Después ejecuta /mcp dentro de Claude Code para iniciar sesión."
+      },
+      "codex": {
+        "label": "Codex",
+        "hint": "CLI",
+        "note": "Codex inicia sesión con el mismo flujo de OAuth."
+      },
+      "cursor": {
+        "label": "Cursor",
+        "hint": "editor",
+        "note": "Ajustes, MCP y después pega esto en mcp.json."
+      },
+      "claude-desktop": {
+        "label": "Claude Desktop",
+        "hint": "conector",
+        "note": "Sin terminal: Ajustes, Conectores, Añadir conector personalizado; después pega esta URL e inicia sesión."
+      },
+      "other": {
+        "label": "Cualquier cliente MCP",
+        "hint": "manual",
+        "note": "HTTP en streaming con inicio de sesión mediante OAuth. Sin clave en la URL."
+      }
+    },
+    "endpoint": {
+      "heading": "Endpoint de MCP",
+      "description": "¿Usas una herramienta que no está en la lista? Pega esta dirección en ella e inicia sesión con tu cuenta de bisibility.",
+      "copy": "Copiar la URL de MCP",
+      "selfHosted": "¿autoalojas bisibility? usa tu propia dirección: '<your-instance>'/api/mcp"
+    },
+    "apiKey": {
+      "heading": "Clave de API",
+      "scope": "ámbito: {scope}",
+      "scopeRead": "Solo lectura",
+      "scopeWrite": "Lectura y escritura",
+      "scopeAdmin": "Acceso completo",
+      "description": "Úsala cuando algo tenga que ejecutarse sin ti, como un script nocturno.{created, select, none {} other { {created}.}}",
+      "created": "Creada el {date}",
+      "manage": "Gestionar en Ajustes, Desarrolladores",
+      "none": "Todavía no hay ninguna clave de API. Los administradores del proyecto pueden crear una en Ajustes → Desarrolladores.",
+      "copyCurl": "Copiar el ejemplo de curl"
+    },
+    "skills": {
+      "heading": "Habilidades",
+      "planned": "previsto",
+      "description": "Tareas de SEO ya preparadas que tu agente podrá ejecutar por ti. Todavía no hay ninguna disponible, así que esta lista es lo que llegará próximamente.",
+      "footer": "el comando de instalación aparecerá aquí cuando esté lista la primera habilidad",
+      "keyword-import": "Añadir en bloque y quitar duplicados",
+      "provider-setup": "Conectar y verificar claves",
+      "project-onboarding": "Configuración del primer proyecto",
+      "weekly-report": "Resumen de movimientos",
+      "keyword-clustering": "Agrupar por intención",
+      "seo-audit": "Correcciones priorizadas"
+    },
+    "chatgptIcon": {
+      "copyUrl": "Copiar la URL del icono",
+      "description": "Usa este icono al añadir bisibility como aplicación MCP personalizada.",
+      "download": "Descargar PNG",
+      "heading": "Icono de la aplicación de ChatGPT",
+      "imageAlt": "Icono de la aplicación de bisibility",
+      "meta": "PNG · {width, number} × {height, number} px · {kilobytes} KB ({bytes, number} bytes) · menos de 10 KB"
+    },
+    "gettingStarted": {
+      "addApp": {
+        "copyMcpUrl": "Copiar la URL de MCP para ChatGPT",
+        "description": "Abre Plugins, pulsa + y añade la URL de MCP de abajo. Usa OAuth e inicia sesión en bisibility. Si te lo pide, sube el icono de arriba.",
+        "title": "2. Añadir bisibility"
+      },
+      "description": "Conecta bisibility con ChatGPT.",
+      "developerMode": {
+        "description": "En ChatGPT, abre Ajustes → Seguridad e inicio de sesión y activa el modo de desarrollador.",
+        "title": "1. Activar el modo de desarrollador"
+      },
+      "dismiss": "Ocultar «Cómo empezar»",
+      "firstChat": {
+        "description": "Elige bisibility en el menú de herramientas de un chat nuevo. Prueba con: «{prompt}»",
+        "prompt": {
+          "withChecks": "¿Qué palabras clave han perdido posiciones esta semana?",
+          "withoutChecks": "Añade mis primeras palabras clave y ejecuta una comprobación de posiciones."
+        },
+        "title": "3. Iniciar una conversación"
+      },
+      "guideLink": "Guía de configuración de ChatGPT",
+      "heading": "Cómo empezar",
+      "note": "El modo de desarrollador puede depender de los ajustes de tu cuenta o de tu espacio de trabajo.",
+      "show": "Mostrar cómo empezar"
+    }
+  }
+}

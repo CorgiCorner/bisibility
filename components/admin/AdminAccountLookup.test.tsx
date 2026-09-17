@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithInstanceAdminMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -61,7 +62,7 @@ describe("AdminAccountLookup", () => {
     expect(screen.getByText("$123.45")).toBeInTheDocument();
     expect(screen.getByText("google_search_console: 2")).toBeInTheDocument();
     expect(screen.getByText("dataforseo: 1")).toBeInTheDocument();
-    expect(screen.getByText("active")).toBeInTheDocument();
+    expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.getByText("-")).toBeInTheDocument();
 
     expect(screen.getByText("Account actions: active")).toBeInTheDocument();
@@ -89,7 +90,7 @@ describe("AdminAccountLookup", () => {
     await user.click(screen.getByRole("button", { name: "Look up" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Too many account lookups. Try again later.",
+      "Too many account lookups. Try again shortly.",
     );
   });
 });

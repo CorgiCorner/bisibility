@@ -1,6 +1,10 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { ThemeSegments } from "@/components/ui/ThemeSegments";
 import { TooltipProvider } from "@/components/ui/Tooltip";
+import { DEFAULT_LOCALE } from "@/i18n/config";
+import { DEFAULT_TIME_ZONE } from "@/i18n/formats";
 import { initializeThemeFromCookie, readTheme } from "@/lib/theme/browser-theme";
+import sharedMessages from "@/messages/core/en/shared.json";
 import type { Decorator, Preview } from "@storybook/nextjs-vite";
 import "../app/globals.css";
 import "./preview-fonts.css";
@@ -46,14 +50,20 @@ const withAppTheme: Decorator = (Story, context) => {
       data-app-theme-root
       data-theme={activeTheme}
     >
-      <TooltipProvider>
-        <Story />
-        {context.viewMode === "story" ? (
-          <div className="fixed right-4 bottom-4 z-[1400]">
-            <ThemeSegments size="sm" />
-          </div>
-        ) : null}
-      </TooltipProvider>
+      <FeatureMessagesProvider
+        locale={DEFAULT_LOCALE}
+        messages={sharedMessages}
+        timeZone={DEFAULT_TIME_ZONE}
+      >
+        <TooltipProvider>
+          <Story />
+          {context.viewMode === "story" ? (
+            <div className="fixed right-4 bottom-4 z-[1400]">
+              <ThemeSegments size="sm" />
+            </div>
+          ) : null}
+        </TooltipProvider>
+      </FeatureMessagesProvider>
     </div>
   );
 };

@@ -1,17 +1,17 @@
 "use client";
 
 import { Sparkline } from "@/components/charts/Sparkline";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { MarketChip } from "@/components/markets/MarketChip";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { formatDisplayDate } from "@/lib/dates/format";
 import type { OverviewMarketRow } from "@/lib/queries/overview-markets";
 import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
 import { ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/csr/ArrowUp";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import Link from "next/link";
-
-const OFF_CATALOG_TOOLTIP =
-  "No search volume or difficulty data for this market - positions are tracked normally.";
+import { useFormatter, useTranslations } from "next-intl";
 
 export type ByMarketTableRow = OverviewMarketRow & {
   href: string;
@@ -19,7 +19,11 @@ export type ByMarketTableRow = OverviewMarketRow & {
   label: string;
 };
 
+type MarketTranslations = ReturnType<typeof useTranslations<"projectDashboard.markets">>;
+
 function DeltaCell({ row }: Readonly<{ row: ByMarketTableRow }>) {
+  const dateDisplay = useDateDisplay();
+  const t = useTranslations("projectDashboard.markets");
   const Icon = row.deltaPoints > 0 ? ArrowUp : row.deltaPoints < 0 ? ArrowDown : null;
   const tone =
     row.deltaPoints > 0
@@ -27,10 +31,20 @@ function DeltaCell({ row }: Readonly<{ row: ByMarketTableRow }>) {
       : row.deltaPoints < 0
         ? "text-red-text"
         : "text-fg-muted";
-  const value = `${row.deltaPoints > 0 ? "+" : ""}${row.deltaPoints}pp`;
+  const direction =
+    row.deltaPoints > 0 ? "positive" : row.deltaPoints < 0 ? "negative" : "unchanged";
+  const value = t("percentagePointChange", { direction, value: Math.abs(row.deltaPoints) });
 
   return (
-    <Tooltip content={row.deltaTooltip}>
+    <Tooltip
+      content={t("top10Tooltip", {
+        change: Math.abs(row.deltaPoints),
+        days: row.rangeDays,
+        direction,
+        end: formatDisplayDate(row.previousPeriod.end, dateDisplay),
+        start: formatDisplayDate(row.previousPeriod.start, dateDisplay),
+      })}
+    >
       <span
         className={`inline-flex items-center justify-end gap-[3px] whitespace-nowrap font-sans tabular-nums text-xs font-semibold ${tone}`}
       >
@@ -42,26 +56,34 @@ function DeltaCell({ row }: Readonly<{ row: ByMarketTableRow }>) {
 }
 
 function MarketCell({ row }: Readonly<{ row: ByMarketTableRow }>) {
+  const t = useTranslations("projectDashboard.markets");
   return (
     <Link
-      aria-label={`View ${row.label}`}
+      aria-label={t("viewMarket", { market: row.label })}
       className="block min-w-0"
       href={row.href}
       onClick={(event) => event.stopPropagation()}
     >
-      <MarketChip languageLabel={row.languageLabel} locationLabel={row.locationLabel} />
+      <MarketChip
+        countryCode={row.countryCode}
+        languageCode={row.languageCode}
+        languageLabel={row.languageLabel}
+        locationLabel={row.locationLabel}
+      />
     </Link>
   );
 }
 
-export function byMarketTableColumns(): readonly DataTableColumn<ByMarketTableRow>[] {
+export function byMarketTableColumns(
+  t: MarketTranslations,
+): readonly DataTableColumn<ByMarketTableRow>[] {
   return [
     {
       accessorFn: (row) => row.label,
       cell: ({ row }) => <MarketCell row={row.original} />,
-      header: "Market",
+      header: t("market"),
       id: "market",
-      meta: { flex: 1, lockResize: true, lockVisible: true, sortable: false, title: "Market" },
+      meta: { flex: 1, lockResize: true, lockVisible: true, sortable: false, title: t("market") },
       minSize: 224,
       size: 224,
     },
@@ -69,15 +91,15 @@ export function byMarketTableColumns(): readonly DataTableColumn<ByMarketTableRo
       accessorFn: (row) => row.researchAvailable,
       cell: ({ row }) =>
         row.original.researchAvailable ? null : (
-          <Tooltip content={OFF_CATALOG_TOOLTIP}>
+          <Tooltip content={t("researchUnavailable")}>
             <span className="whitespace-nowrap font-sans tabular-nums text-[9.5px] tracking-[0.3px] text-fg-muted">
-              no volume/KD
+              {t("researchUnavailableBadge")}
             </span>
           </Tooltip>
         ),
       header: "",
       id: "research",
-      meta: { lockResize: true, sortable: false, title: "Research availability" },
+      meta: { lockResize: true, sortable: false, title: t("researchAvailability") },
       minSize: 96,
       size: 96,
     },
@@ -85,57 +107,53 @@ export function byMarketTableColumns(): readonly DataTableColumn<ByMarketTableRo
       accessorFn: (row) => row.targetCount,
       cell: ({ row }) => (
         <span className="whitespace-nowrap font-sans tabular-nums text-xs text-fg-muted">
-          {row.original.targetCount} targets
+          {t("targetsCount", { count: row.original.targetCount })}
         </span>
       ),
-      header: "Targets",
+      header: t("targets"),
       id: "targets",
-      meta: { align: "end", lockResize: true, sortable: false, title: "Targets" },
+      meta: { align: "end", lockResize: true, sortable: false, title: t("targets") },
       minSize: 92,
       size: 92,
     },
     {
       accessorFn: (row) => row.top10Share,
       cell: ({ row }) => (
-        <Tooltip content={row.original.top10Tooltip}>
+        <Tooltip content={t("top10TooltipDetail", { count: row.original.targetCount })}>
           <span className="flex items-baseline gap-[7px] whitespace-nowrap font-sans tabular-nums">
-            <span className="text-[13px] font-semibold text-fg">{row.original.top10Share}%</span>
+            <span className="text-[13px] font-semibold text-fg">
+              {t("top10Share", { value: row.original.top10Share })}
+            </span>
             <span className="text-[11.5px] text-fg-muted">
-              {row.original.top10Count} of {row.original.targetCount} in top 10
+              {t("top10Detail", {
+                targets: row.original.targetCount,
+                top10: row.original.top10Count,
+              })}
             </span>
           </span>
         </Tooltip>
       ),
-      header: "In top 10",
+      header: t("top10"),
       id: "top10",
-      meta: { lockResize: true, sortable: false, title: "In top 10" },
+      meta: { lockResize: true, sortable: false, title: t("top10") },
       minSize: 168,
       size: 168,
     },
     {
       accessorFn: (row) => row.deltaPoints,
       cell: ({ row }) => <DeltaCell row={row.original} />,
-      header: "Change",
+      header: t("change"),
       id: "change",
-      meta: { align: "end", lockResize: true, sortable: false, title: "Change" },
+      meta: { align: "end", lockResize: true, sortable: false, title: t("change") },
       minSize: 88,
       size: 88,
     },
     {
       accessorFn: (row) => row.trend.at(-1) ?? null,
-      cell: ({ row }) => (
-        <Sparkline
-          ariaLabel={`Top-10 share for ${row.original.label} over the last ${row.original.rangeDays} days: ${row.original.trend.join("%, ")}%`}
-          color="var(--fg-muted)"
-          data={row.original.trend}
-          height={20}
-          valueFormatter={(value) => (value == null ? "" : `${value}%`)}
-          width={72}
-        />
-      ),
-      header: "Trend",
+      cell: ({ row }) => <TrendCell row={row.original} />,
+      header: t("trend"),
       id: "trend",
-      meta: { lockResize: true, sortable: false, title: "Trend" },
+      meta: { lockResize: true, sortable: false, title: t("trend") },
       minSize: 96,
       size: 96,
     },
@@ -143,9 +161,29 @@ export function byMarketTableColumns(): readonly DataTableColumn<ByMarketTableRo
       cell: () => <CaretRight aria-hidden className="text-fg-muted" size={13} weight="regular" />,
       header: "",
       id: "navigate",
-      meta: { lockResize: true, sortable: false, title: "Open market" },
+      meta: { lockResize: true, sortable: false, title: t("openMarket") },
       minSize: 40,
       size: 40,
     },
   ];
+}
+
+function TrendCell({ row }: Readonly<{ row: ByMarketTableRow }>) {
+  const format = useFormatter();
+  const t = useTranslations("projectDashboard.markets");
+  const trend = format.list(row.trend.map((value) => t("top10Share", { value })));
+  return (
+    <Sparkline
+      ariaLabel={t("top10ShareAriaLabel", {
+        days: row.rangeDays,
+        market: row.label,
+        trend,
+      })}
+      color="var(--fg-muted)"
+      data={row.trend}
+      height={20}
+      valueFormatter={(value) => (value == null ? "" : t("top10Share", { value }))}
+      width={72}
+    />
+  );
 }

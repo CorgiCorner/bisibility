@@ -1,5 +1,6 @@
 import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -30,6 +31,8 @@ function Harness() {
     />
   );
 }
+
+const render = renderWithSharedMessages;
 
 function SearchableMultiHarness() {
   const [values, setValues] = useState(["us"]);

@@ -6,8 +6,7 @@ import type {
   ResearchKeywordsActionInput,
 } from "@/lib/actions/keyword-research";
 import type { removeSavedKeywords, saveKeywords } from "@/lib/actions/saved-keyword";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
-import { type DateFormat, formatDateTime } from "@/lib/dates/format";
+import { formatDateTime } from "@/lib/dates/format";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import {
   cacheTimeRemaining,
@@ -49,9 +48,18 @@ export const EMPTY_RESEARCH_ESTIMATE: ResearchEstimateView = {
   loading: false,
 };
 
-export function researchRetryLabel(estimate: ResearchEstimateView) {
-  if (estimate.cached) return "Retry free, cached";
-  return estimate.costCents == null ? "Retry" : `Retry ~${formatEstimateCents(estimate.costCents)}`;
+export type ResearchRetryPresentation =
+  | { kind: "cached" }
+  | { kind: "plain" }
+  | { costCents: number; kind: "cost" };
+
+export function researchRetryPresentation(
+  estimate: ResearchEstimateView,
+): ResearchRetryPresentation {
+  if (estimate.cached) return { kind: "cached" };
+  return estimate.costCents == null
+    ? { kind: "plain" }
+    : { costCents: estimate.costCents, kind: "cost" };
 }
 
 export function actualResearchCostCents(result: KeywordResearchSuccess) {
@@ -307,17 +315,11 @@ function zonedMonthStart(year: number, month: number, timezone: string) {
   return new Date(instant);
 }
 
-export function nextBudgetResetLabel(
-  timezone: string,
-  dateFormatOrNow: DateFormat | Date = "month_first",
-  maybeNow = new Date(),
-) {
-  const dateFormat = dateFormatOrNow instanceof Date ? "month_first" : dateFormatOrNow;
-  const now = dateFormatOrNow instanceof Date ? dateFormatOrNow : maybeNow;
+export function nextBudgetResetAt(timezone: string, now = new Date()) {
   const localNow = zonedParts(now, timezone);
   const reset =
     localNow.month === 12
       ? zonedMonthStart(localNow.year + 1, 1, timezone)
       : zonedMonthStart(localNow.year, localNow.month + 1, timezone);
-  return formatDateTime(reset, dateFormat, timezone);
+  return reset;
 }

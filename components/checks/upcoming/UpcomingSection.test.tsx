@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { UpcomingSection, type UpcomingSectionProps } from "./UpcomingSection";
@@ -8,7 +9,7 @@ import {
   upcomingUnblockedView,
   upcomingViewFixture,
 } from "./upcoming-fixtures";
-import { formatEstimatedCost } from "./upcoming-format";
+import { formatEstimatedAmount } from "./upcoming-format";
 
 const sharedProps = {
   mode: "rail",
@@ -32,9 +33,9 @@ describe("UpcomingSection", () => {
   });
 
   it("keeps positive sub-cent estimates visible", () => {
-    expect(formatEstimatedCost(0)).toBe("~$0.00");
-    expect(formatEstimatedCost(0.35)).toBe("<$0.01");
-    expect(formatEstimatedCost(1)).toBe("~$0.01");
+    expect(formatEstimatedAmount(0, "en-US")).toBe("$0.00");
+    expect(formatEstimatedAmount(0.35, "en-US")).toBe("$0.01");
+    expect(formatEstimatedAmount(1, "en-US")).toBe("$0.01");
   });
 
   it("renders the rail hierarchy and expanded day with project-zone sample times", () => {

@@ -7,6 +7,7 @@ import type {
   SearchInsightsSort,
   SearchInsightsSortKey,
 } from "@/lib/search-insights/queries/top-rows-sort";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 import {
   type SearchInsightsQueryDataTableRow,
@@ -51,17 +52,20 @@ export function SearchInsightsQueriesTable({
   sort,
   tracked,
 }: Readonly<SearchInsightsQueriesTableProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectSearchInsights.copy");
   const dataRows = useMemo<SearchInsightsQueryDataTableRow[]>(
     () => rows.map((row) => ({ ...row, id: row.query })),
     [rows],
   );
   const columns = useMemo(
-    () => searchInsightsQueryColumns({ adding, onTrack, sortable: Boolean(sort), tracked }),
-    [adding, onTrack, sort, tracked],
+    () =>
+      searchInsightsQueryColumns({ adding, locale, onTrack, sortable: Boolean(sort), t, tracked }),
+    [adding, locale, onTrack, sort, t, tracked],
   );
   const table = (
     <DataTable
-      ariaLabel="Top queries"
+      ariaLabel={t("topQueries")}
       columns={columns}
       density="compact"
       id="search-insights-queries"

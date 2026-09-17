@@ -1,14 +1,11 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import {
   buildOnboardingStepHref,
   type OnboardingFlowState,
 } from "@/components/onboarding/onboarding-fixtures";
-import {
-  actionErrorMessage,
-  feedbackClass,
-  onboardingFormId,
-} from "@/components/onboarding/onboarding-form-utils";
+import { feedbackClass, onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
 import { DataResidencyNote } from "@/components/ui/DataResidencyNote";
 import { DomainIconLayer } from "@/components/ui/DomainIconLayer";
 import { buildPublicDomainIconUrl } from "@/components/ui/domain-icon-url";
@@ -18,20 +15,20 @@ import type {
   OnboardingProjectIdentity as CreatedProject,
   UpdateOnboardingProjectResult,
 } from "@/lib/onboarding/project-update-result";
-import {
-  type OnboardingWebsiteInput,
+import type {
+  OnboardingWebsiteInput,
   onboardingWebsiteSchema,
-  type WebsiteProjectIdentity,
+  WebsiteProjectIdentity,
 } from "@/lib/onboarding/website";
+import { onboardingWebsiteSchemaFor } from "@/lib/onboarding/website";
+import { presentActionError } from "@/lib/ui/action-error";
 import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/csr/Globe";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { type ChangeEvent, type FocusEvent, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { TrackedWebsiteNotice } from "./TrackedWebsiteNotice";
-
-export const WEBSITE_MATCHING_HINT =
-  "www and every subdomain of your domain count as yours - matching is fixed today, per-scope control is on the roadmap.";
 
 export type CreateProjectFormValues = z.infer<typeof onboardingWebsiteSchema>;
 
@@ -75,6 +72,8 @@ export function StepCreateProject({
   initialProject,
   onComplete,
 }: Readonly<StepCreateProjectProps>) {
+  const sharedErrors = useSharedErrorMessages();
+  const t = useTranslations("onboarding.website");
   const router = useRouter();
   const [measuredProject, setMeasuredProject] = useState(
     initialProject?.trackingStartedAt ? initialProject : null,
@@ -98,7 +97,13 @@ export function StepCreateProject({
     trigger,
   } = useForm<CreateProjectFormValues>({
     defaultValues: defaultValues ?? { website: initialProject?.domain ?? "" },
-    resolver: zodResolver(onboardingWebsiteSchema),
+    resolver: zodResolver(
+      onboardingWebsiteSchemaFor({
+        invalid: t("errors.invalid"),
+        required: t("errors.required"),
+        tooLong: t("errors.tooLong"),
+      }),
+    ),
   });
   const websiteField = register("website");
 
@@ -137,7 +142,7 @@ export function StepCreateProject({
     } catch (error) {
       if (derivationId.current === requestId && getValues("website") === website) {
         setIdentity(null);
-        setError("website", { message: actionErrorMessage(error), type: "server" });
+        setError("website", { message: presentActionError(error, sharedErrors), type: "server" });
       }
     } finally {
       if (derivationId.current === requestId) {
@@ -158,7 +163,7 @@ export function StepCreateProject({
           advance(values, initialProject);
           return;
         }
-        if (!updateProjectAction) throw new Error("Website changes are unavailable. Try again.");
+        if (!updateProjectAction) throw new Error(t("errors.updateUnavailable"));
         const result = await updateProjectAction({ ...values, projectId: initialProject.publicId });
         const project = { ...initialProject, ...result.project };
         if (!result.ok) {
@@ -175,7 +180,7 @@ export function StepCreateProject({
       const project = await createProjectAction({ ...values, timezone: browserTimezone });
       advance(values, project);
     } catch (error) {
-      setActionError(actionErrorMessage(error));
+      setActionError(presentActionError(error, sharedErrors));
     }
   }
 
@@ -188,8 +193,8 @@ export function StepCreateProject({
         setFocus("website");
       })}
     >
-      <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">Website</h2>
-      <div className="mt-1 text-[13px] text-fg-muted">Enter the website you want to track.</div>
+      <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{t("title")}</h2>
+      <div className="mt-1 text-[13px] text-fg-muted">{t("description")}</div>
       {dataResidencyMessage ? (
         <DataResidencyNote className="mt-4 max-w-[440px]" message={dataResidencyMessage} />
       ) : null}
@@ -204,9 +209,9 @@ export function StepCreateProject({
           <div className="flex flex-col gap-[7px]">
             <FieldLabel
               className="text-[10px] uppercase tracking-[0.5px] text-fg-muted"
-              help={WEBSITE_MATCHING_HINT}
+              help={t("matchingHint")}
               htmlFor="onboarding-website"
-              label="Your website"
+              label={t("label")}
             />
             <div
               className="relative flex h-10 w-full min-w-0 items-center overflow-hidden rounded-lg bg-transparent font-sans text-sm font-normal text-fg ring-1 ring-border shadow-xs transition-[box-shadow] duration-[var(--motion-tooltip)] ease-[ease] motion-reduce:transition-none hover:ring-border-control focus-within:ring-[1.25px] focus-within:ring-accent focus-within:hover:ring-[1.25px] focus-within:hover:ring-accent has-[:disabled]:pointer-events-none has-[:disabled]:opacity-50 has-[[aria-invalid=true]]:ring-red/40"
@@ -237,7 +242,7 @@ export function StepCreateProject({
                 className="h-full min-w-0 flex-1 bg-transparent px-3 font-sans text-sm text-fg outline-none placeholder:font-normal placeholder:text-sm placeholder:text-fg-muted focus-visible:outline-none"
                 id="onboarding-website"
                 inputMode="url"
-                placeholder="https://example.com"
+                placeholder={t("placeholder")}
                 required
                 spellCheck={false}
                 type="url"
@@ -259,13 +264,9 @@ export function StepCreateProject({
             ) : null}
           </div>
           <p aria-live="polite" className="m-0 text-[12.5px] leading-[1.5] text-fg-muted">
-            {isDeriving ? "Checking website..." : null}
-            {!isDeriving && identity ? (
-              <>
-                Project name: <span className="font-medium text-fg">{identity.name}</span>
-              </>
-            ) : null}
-            {!isDeriving && !identity ? "We'll use the website as the project name." : null}
+            {isDeriving ? t("checking") : null}
+            {!isDeriving && identity ? t("projectName", { name: identity.name }) : null}
+            {!isDeriving && !identity ? t("projectNameFallback") : null}
           </p>
         </div>
       )}
@@ -274,7 +275,7 @@ export function StepCreateProject({
         <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>
       ) : null}
       {isSubmitting ? (
-        <p className={`m-0 mt-3 ${feedbackClass} text-fg-muted`}>Saving project...</p>
+        <p className={`m-0 mt-3 ${feedbackClass} text-fg-muted`}>{t("saving")}</p>
       ) : null}
     </form>
   );

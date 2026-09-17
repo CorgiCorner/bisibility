@@ -1,12 +1,4 @@
 import {
-  AVG_POSITION_TIP,
-  TRACK_DIALOG_COPY,
-  TRACK_LABEL,
-  TRACK_TITLE,
-  TRACKED_LABEL,
-  TRACKED_TITLE,
-} from "@/components/search-insights/search-insights-copy";
-import {
   formatRowCount,
   formatRowCtr,
   formatRowPosition,
@@ -17,13 +9,16 @@ import type { DataTableColumn } from "@/components/ui/data-table/data-table-type
 import type { SearchInsightsQueryRow } from "@/lib/search-insights/queries/top-rows-model";
 import { trackedKey } from "@/lib/search-insights/queries/tracked-model";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import type { useTranslations } from "next-intl";
 
 export type SearchInsightsQueryDataTableRow = SearchInsightsQueryRow & { id: string };
 
 type SearchInsightsQueryColumnsOptions = {
   adding: ReadonlySet<string>;
+  locale: string;
   onTrack?: (row: SearchInsightsQueryRow) => void;
   sortable: boolean;
+  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>;
   tracked: ReadonlySet<string>;
 };
 
@@ -36,11 +31,13 @@ function QueryActions({
   adding,
   onTrack,
   row,
+  t,
   tracked,
 }: Readonly<{
   adding: ReadonlySet<string>;
   onTrack?: (row: SearchInsightsQueryRow) => void;
   row: SearchInsightsQueryDataTableRow;
+  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>;
   tracked: ReadonlySet<string>;
 }>) {
   const isTracked = tracked.has(trackedKey(row.query));
@@ -48,9 +45,9 @@ function QueryActions({
     return (
       <span
         className="inline-flex items-center font-sans tabular-nums text-ui-micro text-fg-muted"
-        title={isTracked ? TRACKED_TITLE : undefined}
+        title={isTracked ? t("trackedTitle") : undefined}
       >
-        {isTracked ? TRACKED_LABEL : TRACK_DIALOG_COPY.adding}
+        {isTracked ? t("tracked") : t("adding")}
       </span>
     );
   }
@@ -60,10 +57,10 @@ function QueryActions({
         className={QUICK_ACTION}
         onClick={() => onTrack?.(row)}
         size="xs"
-        title={TRACK_TITLE}
+        title={t("trackTitle")}
         variant="secondary"
       >
-        {TRACK_LABEL}
+        {t("track")}
       </Button>
       <CaretRight aria-hidden className={COARSE_CARET} size={12} weight="regular" />
     </>
@@ -72,8 +69,10 @@ function QueryActions({
 
 export function searchInsightsQueryColumns({
   adding,
+  locale,
   onTrack,
   sortable,
+  t,
   tracked,
 }: SearchInsightsQueryColumnsOptions): readonly DataTableColumn<SearchInsightsQueryDataTableRow>[] {
   return [
@@ -84,20 +83,22 @@ export function searchInsightsQueryColumns({
           {row.original.query}
         </span>
       ),
-      header: "Query",
+      header: t("query"),
       id: "text",
-      meta: { flex: 1, sortField: "text", sortable, title: "Query" },
+      meta: { flex: 1, sortField: "text", sortable, title: t("query") },
       minSize: 160,
       size: 200,
     },
     {
       accessorKey: "clicks",
       cell: ({ row }) => (
-        <span className={`${NUMBER} font-semibold`}>{formatRowCount(row.original.clicks)}</span>
+        <span className={`${NUMBER} font-semibold`}>
+          {formatRowCount(row.original.clicks, locale)}
+        </span>
       ),
-      header: "Clicks",
+      header: t("clicks"),
       id: "clicks",
-      meta: { align: "end", sortField: "clicks", sortable, title: "Clicks" },
+      meta: { align: "end", sortField: "clicks", sortable, title: t("clicks") },
       minSize: 80,
       size: 80,
       sortDescFirst: true,
@@ -106,12 +107,12 @@ export function searchInsightsQueryColumns({
       accessorKey: "impressions",
       cell: ({ row }) => (
         <span className={`${NUMBER} text-fg-muted`}>
-          {formatRowCount(row.original.impressions)}
+          {formatRowCount(row.original.impressions, locale)}
         </span>
       ),
-      header: "Impr",
+      header: t("impressionsShort"),
       id: "impressions",
-      meta: { align: "end", sortField: "impressions", sortable, title: "Impressions" },
+      meta: { align: "end", sortField: "impressions", sortable, title: t("impressions") },
       minSize: 72,
       size: 72,
       sortDescFirst: true,
@@ -119,11 +120,11 @@ export function searchInsightsQueryColumns({
     {
       accessorKey: "ctr",
       cell: ({ row }) => (
-        <span className={`${NUMBER} text-fg-muted`}>{formatRowCtr(row.original.ctr)}</span>
+        <span className={`${NUMBER} text-fg-muted`}>{formatRowCtr(row.original.ctr, locale)}</span>
       ),
-      header: "CTR",
+      header: t("ctr"),
       id: "ctr",
-      meta: { align: "end", sortField: "ctr", sortable, title: "CTR" },
+      meta: { align: "end", sortField: "ctr", sortable, title: t("ctr") },
       minSize: 64,
       size: 64,
       sortDescFirst: true,
@@ -132,23 +133,29 @@ export function searchInsightsQueryColumns({
       accessorKey: "position",
       cell: ({ row }) => (
         <span className={`${NUMBER} ${positionClassName(row.original.position)}`}>
-          {formatRowPosition(row.original.position)}
+          {formatRowPosition(row.original.position, locale)}
         </span>
       ),
-      header: "Avg pos",
+      header: t("averagePosition"),
       id: "position",
-      meta: { align: "end", sortField: "position", sortable, title: AVG_POSITION_TIP },
+      meta: { align: "end", sortField: "position", sortable, title: t("avgPositionTip") },
       minSize: 88,
       size: 88,
     },
     {
       cell: ({ row }) => (
-        <QueryActions adding={adding} onTrack={onTrack} row={row.original} tracked={tracked} />
+        <QueryActions
+          adding={adding}
+          onTrack={onTrack}
+          row={row.original}
+          t={t}
+          tracked={tracked}
+        />
       ),
       enableSorting: false,
-      header: () => <span className="sr-only">Actions</span>,
+      header: () => <span className="sr-only">{t("actions")}</span>,
       id: "actions",
-      meta: { align: "end", lockResize: true, title: "Actions" },
+      meta: { align: "end", lockResize: true, title: t("actions") },
       minSize: 96,
       size: 96,
     },

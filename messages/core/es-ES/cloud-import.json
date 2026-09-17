@@ -1,0 +1,159 @@
+{
+  "cloudImport": {
+    "metadata": {
+      "cloudDescription": "Crea un token de migración de un solo uso que autoriza a una instancia autoalojada a enviar sus datos a este proyecto alojado.",
+      "cloudLayoutDescription": "La beta alojada: tareas de configuración e importación centradas en tu proyecto.",
+      "cloudLayoutTitle": "Beta alojada",
+      "cloudTitle": "Importación de instancia",
+      "instanceDescription": "Crea un token de migración de un solo uso que autoriza a otra instancia de bisibility a enviar sus datos a este proyecto.",
+      "instanceTitle": "Importar desde otra instancia"
+    },
+    "screen": {
+      "backToSetup": "Volver a la configuración",
+      "cloudSubtitle": "Crea un token de un solo uso que permite a una instancia autoalojada enviar sus datos a este proyecto.",
+      "cloudTitle": "Importar desde una instancia autoalojada",
+      "instanceSubtitle": "Crea un token de un solo uso que permite a otra instancia enviar sus datos a este proyecto.",
+      "instanceTitle": "Importar desde otra instancia",
+      "onboardSubtitle": "Este será tu nuevo proyecto alojado.",
+      "onboardTitle": "Importa tus datos autoalojados",
+      "settings": "Ajustes"
+    },
+    "source": {
+      "instance": "instancia de origen",
+      "selfHost": "instancia autoalojada"
+    },
+    "topBar": {
+      "beta": "Beta",
+      "fallbackWorkspace": "Proyecto",
+      "setupProgress": "Configuración / {current, number} de {total, number}"
+    },
+    "token": {
+      "activeDescription": "Su valor está oculto. Regenera el token si necesitas copiar uno.",
+      "activeTitle": "Ya hay un token activo",
+      "actionFailedCode": "token_action_failed",
+      "authorizes": "Autoriza a una {source} a enviar su exportación a <workspace>{project}</workspace>.",
+      "copy": "Copiar {label}",
+      "createdBy": "Creado por {email}",
+      "createdTitle": "Token creado",
+      "create": "Crear el token",
+      "creating": "Creando el token",
+      "defaultSource": "instancia autoalojada",
+      "destinationUrl": "URL de destino",
+      "error": {
+        "create": "No se ha podido crear el token",
+        "generic": "La acción sobre el token de migración ha fallado. Inténtalo de nuevo.",
+        "notActive": "Este token de migración ya no está activo. Crea uno nuevo para continuar.",
+        "rateLimited": "Demasiadas peticiones de tokens de migración. Inténtalo de nuevo en unos instantes.",
+        "regenerate": "No se ha podido regenerar el token",
+        "revoke": "No se ha podido revocar el token",
+        "tokenUsed": "Este token de migración ya se ha utilizado. Crea uno nuevo para continuar.",
+        "writeLocked": "Los controles del token de migración no están disponibles mientras el proyecto es de solo lectura. Vuelve a Ajustes de migración para terminar o cancelar antes la migración."
+      },
+      "expires": "Caduca",
+      "expiryDetails": "{remaining} · {kind}",
+      "expiresIn": "{count, plural, =0 {Caduca ahora} one {Caduca dentro de # minuto} other {Caduca dentro de # minutos}}",
+      "header": "Token de migración",
+      "noneDescription": "Crea un token para iniciar una importación. Se muestra una sola vez, caduca a los 60 minutos y se consume tras una importación correcta.",
+      "noneTitle": "No hay ningún token activo",
+      "noTokenIssued": "No se ha emitido ningún token. No se ha expuesto nada.",
+      "readOnlyRole": "Los controles de migración solo están disponibles para los administradores y propietarios del proyecto.",
+      "regenerating": "Regenerando el token",
+      "remaining": "{count, plural, =0 {caduca ahora} one {queda # minuto} other {quedan # minutos}}",
+      "reusable": "Reutilizable",
+      "reusableDetails": "reutilizable",
+      "revoke": "Revocar el token",
+      "revoking": "Revocando",
+      "roll": "Regenerar el token",
+      "scope": "Ámbito {scope}",
+      "scopeFull": "Todo el proyecto",
+      "scopeKeywords": "Palabras clave",
+      "security": {
+        "cloud": "El token solo concede acceso de importación a este proyecto, nunca a tus proveedores ni a la facturación. Caduca automáticamente y puedes revocarlo en cualquier momento antes de usarlo.",
+        "instance": "El token solo concede acceso de importación a este proyecto, nunca a las credenciales de los proveedores. Caduca automáticamente y puedes revocarlo en cualquier momento antes de usarlo."
+      },
+      "singleUse": "Un solo uso",
+      "singleUseDetails": "un solo uso",
+      "scopeLabel": "Ámbito",
+      "targetProject": "Proyecto de destino",
+      "tryAgain": "Reintentar",
+      "valueHidden": "Copia este token ahora. Por seguridad, no volverá a mostrarse cuando actualices o salgas de esta página."
+    },
+    "reachability": {
+      "copy": "Copiar comando",
+      "destinationFollowUp": "Usa la URL HTTPS generada como URL de destino en el origen y mantén el comando en ejecución hasta que termine la transferencia. <learnMore>Más información</learnMore>.",
+      "intro": "Esta dirección solo es accesible desde este equipo. Publícala temporalmente con un Quick Tunnel.",
+      "runningLocal": "¿Lo ejecutas en local?",
+      "sourceFollowUp": "Pega aquí la URL HTTPS generada y vuelve a ejecutar la comprobación de compatibilidad. <learnMore>Más información</learnMore>.",
+      "unreachable": "Si el destino no es accesible desde esta instancia, usa un Cloudflare Tunnel temporal o importa un paquete ZIP."
+    },
+    "transfer": {
+      "completion": {
+        "empty": "Transferencia completada. {visibility, select, none {} other {{visibility} }}Vuelve a conectar los proveedores para reanudar las comprobaciones.",
+        "imported": "Se han importado {items}. {visibility, select, none {} other {{visibility} }}Vuelve a conectar los proveedores para reanudar las comprobaciones.",
+        "importedWithSkipped": "Se han importado {items}. Se han omitido {skipped}. {visibility, select, none {} other {{visibility} }}Vuelve a conectar los proveedores para reanudar las comprobaciones.",
+        "visibilityNote": "{count, plural, one {# fila de histórico recibida tiene una profundidad desconocida.} other {# filas de histórico recibidas tienen una profundidad desconocida.}} Las comprobaciones con profundidad desconocida no actualizan la Visibilidad. Las palabras clave afectadas siguen contando para su total de cobertura."
+      },
+      "counts": {
+        "alertRules": "{count, plural, one {# regla de alerta} other {# reglas de alerta}}",
+        "alertRulesSkipped": "{count, plural, one {# regla de alerta} other {# reglas de alerta}}",
+        "competitors": "{count, plural, one {# competidor} other {# competidores}}",
+        "competitorsSkipped": "{count, plural, one {# competidor} other {# competidores}}",
+        "history": "{count, plural, one {# fila de histórico} other {# filas de histórico}}",
+        "historySkipped": "{count, plural, one {# fila de histórico} other {# filas de histórico}}",
+        "historyUnknownDepth": "{count, plural, one {# fila de histórico recibida con profundidad desconocida} other {# filas de histórico recibidas con profundidad desconocida}}",
+        "keywords": "{count, plural, one {# palabra clave} other {# palabras clave}}",
+        "keywordsCreated": "{count, plural, one {# palabra clave nueva} other {# palabras clave nuevas}}",
+        "keywordsSkipped": "{count, plural, one {# palabra clave} other {# palabras clave}}",
+        "notificationPreferences": "{count, plural, one {# preferencia de notificación} other {# preferencias de notificación}}",
+        "notificationPreferencesSkipped": "{count, plural, one {# preferencia de notificación} other {# preferencias de notificación}}",
+        "savedViews": "{count, plural, one {# vista guardada} other {# vistas guardadas}}",
+        "savedViewsSkipped": "{count, plural, one {# vista guardada} other {# vistas guardadas}}",
+        "unknown": "{count, number} {key}"
+      },
+      "tiles": {
+        "alertRules": "{count, plural, one {# regla de alerta importada} other {# reglas de alerta importadas}}",
+        "alertRulesSkipped": "{count, plural, one {# regla de alerta omitida} other {# reglas de alerta omitidas}}",
+        "competitors": "{count, plural, one {# competidor importado} other {# competidores importados}}",
+        "competitorsSkipped": "{count, plural, one {# competidor omitido} other {# competidores omitidos}}",
+        "history": "{count, plural, one {# fila de histórico importada} other {# filas de histórico importadas}}",
+        "historySkipped": "{count, plural, one {# fila de histórico omitida} other {# filas de histórico omitidas}}",
+        "historyUnknownDepth": "{count, plural, one {# fila de histórico recibida con profundidad desconocida} other {# filas de histórico recibidas con profundidad desconocida}}",
+        "keywords": "{count, plural, one {# palabra clave importada} other {# palabras clave importadas}}",
+        "keywordsCreated": "{count, plural, one {# palabra clave nueva creada} other {# palabras clave nuevas creadas}}",
+        "keywordsSkipped": "{count, plural, one {# palabra clave omitida} other {# palabras clave omitidas}}",
+        "notificationPreferences": "{count, plural, one {# preferencia de notificación importada} other {# preferencias de notificación importadas}}",
+        "notificationPreferencesSkipped": "{count, plural, one {# preferencia de notificación omitida} other {# preferencias de notificación omitidas}}",
+        "savedViews": "{count, plural, one {# vista guardada importada} other {# vistas guardadas importadas}}",
+        "savedViewsSkipped": "{count, plural, one {# vista guardada omitida} other {# vistas guardadas omitidas}}",
+        "unknown": "{count, number} {key}"
+      },
+      "downloadErrorLog": "Descargar registro de errores",
+      "failed": {
+        "fallback": "No se ha podido completar la importación. Genera un token nuevo y vuelve a enviar los datos.",
+        "followUp": "Lo que ya se ha importado permanece en este proyecto.",
+        "stopped": "La transferencia se ha detenido en el {progress, number} %.",
+        "timedOut": "Se ha agotado el tiempo de espera de la importación. Genera un token nuevo y vuelve a enviar los datos."
+      },
+      "importingDescription": "Transfiriendo palabras clave, histórico de posiciones, etiquetas y reglas de alerta a este proyecto.",
+      "importingPill": "Transfiriendo",
+      "importingTitle": "Transferencia en curso",
+      "importJob": "Trabajo de importación",
+      "newToken": "Nuevo token",
+      "notesPill": "Notas",
+      "notesTitle": "Datos restaurados con notas",
+      "openProject": "Abrir el proyecto",
+      "pending": "pendiente",
+      "readyDescription": "Comparte el token de un solo uso con la instancia de origen para iniciar la transferencia.",
+      "readyPill": "Listo",
+      "readyTitle": "Listo para recibir",
+      "receivingDescription": "Recibiendo el paquete de exportación de la {source}.",
+      "receivingPill": "Recibiendo",
+      "receivingTitle": "Recibiendo el paquete",
+      "retryFromSource": "Después, vuelve a enviar los datos desde el origen.",
+      "successPill": "Hecho",
+      "successTitle": "Transferencia completada",
+      "failedPill": "Fallida",
+      "failedTitle": "Transferencia fallida"
+    }
+  }
+}

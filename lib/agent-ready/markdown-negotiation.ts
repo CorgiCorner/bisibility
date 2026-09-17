@@ -1,3 +1,5 @@
+import { pageMarkdown } from "@/lib/agent-ready/page-markdown";
+
 const markdownableMethods = new Set(["GET", "HEAD"]);
 
 const markdownSkipPrefixes = [
@@ -87,18 +89,26 @@ export function createMarkdownForRequest(request: Request) {
   const url = new URL(request.url);
   const origin = url.origin;
   const title = titleForPath(url.pathname);
+  // A page that publishes its own content replaces the generic summary of the
+  // request, but keeps the agent entry points that every response carries.
+  const pageSpecific = pageMarkdown(url.pathname, `${origin}${url.pathname}`);
+  const heading = pageSpecific
+    ? [pageSpecific, ""]
+    : [
+        `# ${title}`,
+        "",
+        "bisibility is an open-source keyword rank tracker with bring-your-own SERP",
+        "provider credentials, owned Postgres history, a REST API, OpenAPI metadata,",
+        "Agent Skills, and MCP discovery surfaces.",
+        "",
+        "## Requested page",
+        "",
+        `- URL: ${url.toString()}`,
+        "",
+      ];
 
   return [
-    `# ${title}`,
-    "",
-    "bisibility is an open-source keyword rank tracker with bring-your-own SERP",
-    "provider credentials, owned Postgres history, a REST API, OpenAPI metadata,",
-    "Agent Skills, and MCP discovery surfaces.",
-    "",
-    "## Requested page",
-    "",
-    `- URL: ${url.toString()}`,
-    "",
+    ...heading,
     "## Agent entry points",
     "",
     `- API llms.txt: ${origin}/api/v1/llms.txt`,

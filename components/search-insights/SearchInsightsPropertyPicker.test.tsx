@@ -1,6 +1,11 @@
 import { ToastProvider } from "@/components/ui/Toast";
+import {
+  renderWithSearchInsightsMessages as render,
+  renderWithFeatureMessages,
+  searchInsightsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { TransitionStartFunction } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -106,6 +111,30 @@ describe("SearchInsightsPropertyPicker", () => {
     expect(screen.queryByRole("link", { name: "Connection" })).not.toBeInTheDocument();
   });
 
+  it("uses the scoped catalog for the property-menu loading status", async () => {
+    const user = userEvent.setup();
+    const messages = structuredClone(searchInsightsFeatureTestMessages);
+    messages.projectSearchInsights.copy.propertiesLoading = "Ladowanie wlasciwosci...";
+    const loadPropertiesAction = vi.fn(() => new Promise<never>(() => undefined));
+
+    renderWithFeatureMessages(
+      <ToastProvider>
+        <SearchInsightsPropertyPicker
+          connection={connected}
+          loadPropertiesAction={loadPropertiesAction}
+          projectDomain="example.com"
+          projectId="prj_1"
+          selectPropertyAction={vi.fn()}
+        />
+      </ToastProvider>,
+      { locale: "pl", messages },
+    );
+
+    await user.click(screen.getByRole("button", { name: "Search Console property" }));
+    expect(screen.getByRole("status", { name: "Ladowanie wlasciwosci..." })).toBeInTheDocument();
+    expect(screen.queryByRole("status", { name: "Loading properties..." })).toBeNull();
+  });
+
   it("shows the connected property, its kind pill and the overlap tooltip", () => {
     renderPicker();
 
@@ -115,7 +144,7 @@ describe("SearchInsightsPropertyPicker", () => {
     expect(
       screen.getByText("Covers the whole domain: every subdomain and protocol."),
     ).toBeInTheDocument();
-    expect(screen.getByText("domain")).toHaveAttribute("aria-describedby");
+    expect(screen.getByText("Domain property")).toHaveAttribute("aria-describedby");
   });
 
   it("links a domain property to Search Console with external protections", () => {
@@ -313,7 +342,7 @@ describe("SearchInsightsPropertyPicker", () => {
     });
 
     await userEvent.click(screen.getByRole("button", { name: "Search Console property" }));
-    expect(screen.getByRole("status", { name: "Loading properties" })).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Loading properties..." })).toBeInTheDocument();
     resolveLoad?.({ properties });
 
     const firstHeader = await screen.findByText("Matches this project");
@@ -644,7 +673,7 @@ describe("SearchInsightsPropertyPicker", () => {
     await userEvent.click(screen.getByRole("button", { name: "Search Console property" }));
 
     const archivedRow = screen.getByRole("option", { name: /archive\.example\.com/i });
-    expect(archivedRow).toHaveTextContent("matches this project · last synced Aug 20, 2026");
+    expect(archivedRow).toHaveTextContent("Matches this project · Last synced Aug 20, 2026");
     expect(screen.getAllByRole("option", { name: /archive\.example\.com/i })).toHaveLength(1);
   });
 
@@ -816,7 +845,7 @@ describe("SearchInsightsPropertyPicker", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Search Console property" }));
 
-    const loadingRow = screen.getByRole("status", { name: "Loading properties" });
+    const loadingRow = screen.getByRole("status", { name: "Loading properties..." });
     expect(loadingRow).toBeInTheDocument();
     expect(loadingRow).toHaveClass("h-8", "border", "border-transparent", "rounded-control");
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
@@ -824,7 +853,7 @@ describe("SearchInsightsPropertyPicker", () => {
     expect(screen.queryByText("Loading properties...")).not.toBeInTheDocument();
     resolveLoad?.({ properties });
     await waitFor(() =>
-      expect(screen.queryByRole("status", { name: "Loading properties" })).toBeNull(),
+      expect(screen.queryByRole("status", { name: "Loading properties..." })).toBeNull(),
     );
   });
 });

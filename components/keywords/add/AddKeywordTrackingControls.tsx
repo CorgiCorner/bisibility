@@ -5,9 +5,11 @@ import {
   ScheduleAssignment,
   type ScheduleAssignmentSchedule,
 } from "@/components/markets/blocks/ScheduleAssignment";
+import { languageDisplayName, regionDisplayName } from "@/lib/i18n/display-names";
 import { fieldLabelClass, fieldMetaClass } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { SerpDevice } from "@/lib/serp/constants";
+import { useLocale, useTranslations } from "next-intl";
 import { AddKeywordDeviceChips } from "./AddKeywordDeviceChips";
 
 export type AddKeywordTrackingMarket = ProjectMarketsView["markets"][number];
@@ -29,8 +31,11 @@ type AddKeywordTrackingControlsProps = {
   showSchedule?: boolean;
 };
 
-function marketLabel(market: AddKeywordTrackingMarket) {
-  return `${market.displayName} / ${market.languageLabel}`;
+/** The stored labels are English; the chip reads the viewer's own country and language names. */
+function marketLabel(market: AddKeywordTrackingMarket, locale: string) {
+  const location = regionDisplayName(market.countryCode, market.displayName, locale);
+  const language = languageDisplayName(market.languageCode, market.languageLabel, locale);
+  return `${location} / ${language}`;
 }
 
 export function AddKeywordTrackingControls({
@@ -47,6 +52,8 @@ export function AddKeywordTrackingControls({
   schedules,
   showSchedule = true,
 }: Readonly<AddKeywordTrackingControlsProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
+  const locale = useLocale();
   const selectedIds = markets
     .filter((market) => locationKeys.includes(market.canonicalKey))
     .map((market) => market.id);
@@ -64,20 +71,17 @@ export function AddKeywordTrackingControls({
     <>
       <div className="grid gap-3">
         <div className="flex items-center gap-2">
-          <span className={fieldLabelClass}>Markets</span>
-          <span className={fieldMetaClass}>Required</span>
+          <span className={fieldLabelClass}>{t("markets")}</span>
+          <span className={fieldMetaClass}>{t("required")}</span>
         </div>
         {markets.length > 0 ? null : (
-          <p className="m-0 text-[12px] text-fg-muted">
-            Start with a market: choose a country, location and language. Every keyword belongs to a
-            market.
-          </p>
+          <p className="m-0 text-[12px] text-fg-muted">{t("startWithMarket")}</p>
         )}
         <MarketChips
           capability="selection"
           markets={markets.map((market) => ({
             id: market.id,
-            label: marketLabel(market),
+            label: marketLabel(market, locale),
             researchAvailable: market.researchAvailable,
             status: market.status,
           }))}
@@ -90,8 +94,7 @@ export function AddKeywordTrackingControls({
         (market) => market.status === "paused" && locationKeys.includes(market.canonicalKey),
       ) ? (
         <p className="m-0 text-[12px] text-fg-muted" role="status">
-          You can prepare keywords in paused markets. They will not be checked until those markets
-          are resumed. Schedule estimates show the cost after resuming.
+          {t("pausedMarketsHint")}
         </p>
       ) : null}
       <AddKeywordDeviceChips

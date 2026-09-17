@@ -1,6 +1,7 @@
 import { Toolbar } from "@/components/shell/Toolbar";
 import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
@@ -9,6 +10,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 const meta = {
   title: "Shell/Toolbar",
   component: Toolbar,
+  decorators: [withSharedMessages],
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof Toolbar>;
 

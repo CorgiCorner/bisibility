@@ -4,7 +4,7 @@ import {
   GeneralSettingsRouteLoading,
 } from "@/components/settings/general/GeneralSettingsLoading";
 import { generalSettingsCardGeometryClassNames } from "@/components/settings/general/general-settings-layout";
-import { render } from "@testing-library/react";
+import { renderWithGeneralSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { describe, expect, it, vi } from "vitest";
 
 const props = {

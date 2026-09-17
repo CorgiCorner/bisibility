@@ -1,6 +1,7 @@
 "use client";
 
-import { actionErrorMessage } from "@/components/keywords/action-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
 import type { CompetitorSavedViewConfig } from "@/lib/competitors/saved-view-model";
@@ -11,6 +12,7 @@ import type { ProjectRef } from "@/lib/routing/app-path";
 import type { CreateProjectSavedViewInput, SavedViewResource } from "@/lib/saved-views/model";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 
 type SaveCompetitorViewModalProps = {
@@ -32,6 +34,8 @@ export function SaveCompetitorViewModal({
   projectId,
   projectRef,
 }: Readonly<SaveCompetitorViewModalProps>) {
+  const t = useTranslations("projectCompetitors.ui");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const { showToast } = useToast();
   const {
@@ -51,11 +55,11 @@ export function SaveCompetitorViewModal({
       if (view.surface !== "competitors") throw new Error("Unexpected saved view surface.");
       onSaved();
       onClose();
-      showToast("Comparison view saved", { severity: "success" });
+      showToast(t("comparisonViewSaved"), { severity: "success" });
       router.push(competitorSavedViewHref(projectRef, view.id, view.config));
       router.refresh();
     } catch (error) {
-      setError("root", { message: actionErrorMessage(error) });
+      setError("root", { message: presentSafeActionError(error, sharedErrors, t("saveError")) });
     }
   }
 
@@ -68,7 +72,7 @@ export function SaveCompetitorViewModal({
             onClick={onClose}
             type="button"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             className="inline-flex items-center gap-2 rounded-control bg-accent-solid px-4 py-2.5 text-[13px] font-semibold text-accent-on-solid disabled:bg-bg-sunken disabled:text-fg-muted"
@@ -77,14 +81,14 @@ export function SaveCompetitorViewModal({
             type="submit"
           >
             <BookmarkSimple aria-hidden size={15} weight="regular" />
-            {isSubmitting ? "Saving..." : "Save view"}
+            {isSubmitting ? t("saving") : t("saveView")}
           </button>
         </>
       }
       onClose={onClose}
       open={open}
       size="sm"
-      title="Save comparison view"
+      title={t("saveComparisonView")}
     >
       <form
         className="grid gap-3"
@@ -92,10 +96,10 @@ export function SaveCompetitorViewModal({
         onSubmit={handleSubmit((values) => void submit(values))}
       >
         <label className="grid gap-2 font-sans tabular-nums text-[10px] uppercase text-fg-muted">
-          View name
+          {t("viewName")}
           <input
             className="rounded-control border border-border-control bg-transparent px-3 py-2.5 font-sans tabular-nums text-[13.5px] normal-case text-fg outline-none focus:border-accent"
-            placeholder="e.g. US mobile core set"
+            placeholder={t("viewNamePlaceholder")}
             {...register("name")}
           />
         </label>
@@ -105,9 +109,7 @@ export function SaveCompetitorViewModal({
         {errors.root ? (
           <p className="m-0 text-[12px] text-red-text">{errors.root.message}</p>
         ) : null}
-        <p className="m-0 text-[12.5px] leading-5 text-fg-muted">
-          Saves this location, device, filters, and excluded keywords.
-        </p>
+        <p className="m-0 text-[12.5px] leading-5 text-fg-muted">{t("saveViewHint")}</p>
       </form>
     </Modal>
   );

@@ -4,14 +4,20 @@ import { EstimateStatus } from "@/components/cost-estimate/EstimateStatus";
 import { useCostEstimate } from "@/components/cost-estimate/useCostEstimate";
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { ExternalLink } from "@/components/ui/ExternalLink";
-import { buildCostCalculatorHref } from "@/lib/cost-estimate/calculator-query";
+import {
+  buildCostCalculatorHref,
+  COST_CALCULATOR_PATH,
+  withCostCalculatorPath,
+} from "@/lib/cost-estimate/calculator-query";
 import { DEFAULT_ONBOARDING_FREQUENCY } from "@/lib/onboarding/defaults";
 import type { KeywordScheduleInput } from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEPTH, type SerpDepth, type SerpDevice } from "@/lib/serp/constants";
 import { MARKETING_URL } from "@/lib/site/site";
+import { useTranslations } from "next-intl";
 import { OnboardingCostSummary } from "./OnboardingCostSummary";
 
 type KeywordImportSummaryProps = {
+  calculatorPath?: string;
   cronExpression?: string | null;
   devices: readonly SerpDevice[];
   frequency?: KeywordScheduleInput["frequency"];
@@ -21,6 +27,7 @@ type KeywordImportSummaryProps = {
 };
 
 export function KeywordImportSummary({
+  calculatorPath = COST_CALCULATOR_PATH,
   cronExpression,
   devices,
   frequency = DEFAULT_ONBOARDING_FREQUENCY,
@@ -28,6 +35,7 @@ export function KeywordImportSummary({
   locationCount,
   serpDepth = DEFAULT_SERP_DEPTH,
 }: Readonly<KeywordImportSummaryProps>) {
+  const t = useTranslations("onboarding.keywordSummary");
   const deploymentMode = useDeploymentMode();
   const state = useCostEstimate({
     keywordCount,
@@ -46,15 +54,19 @@ export function KeywordImportSummary({
     );
   const pages = state.data.result_pages_per_run;
   const monthlyPages = state.data.monthly_billing_units;
-  const monthlyLabel =
+  const monthlySchedule =
     frequency === "manual"
-      ? "Manual checks"
+      ? "manual"
       : frequency === "paused"
-        ? "Checks paused"
+        ? "paused"
         : monthlyPages === null
-          ? "excludes custom cron schedule"
-          : `≈ ${monthlyPages} result pages/month`;
-  const monthlyLine = `${monthlyLabel} at Top ${serpDepth}`;
+          ? "custom"
+          : "monthly";
+  const monthlyLine = t("monthlyLine", {
+    depth: serpDepth,
+    pages: monthlyPages ?? 0,
+    schedule: monthlySchedule,
+  });
   const calculatorHref = buildCostCalculatorHref({
     depth: serpDepth,
     devices,
@@ -71,18 +83,17 @@ export function KeywordImportSummary({
       >
         <span>
           <span className="block text-fg tabular-nums">
-            Up to {pages} result {pages === 1 ? "page" : "pages"} per run · {locationCount}{" "}
-            {locationCount === 1 ? "market" : "markets"}
+            {t("perRun", { markets: locationCount, pages })}
           </span>
           <span className="block">{monthlyLine}</span>
         </span>
         {deploymentMode === "cloud" && keywordCount > 0 && calculatorHref !== null ? (
           <ExternalLink
-            aria-label="Estimate provider cost"
+            aria-label={t("estimate")}
             className="font-medium text-accent-text hover:underline"
-            href={`${MARKETING_URL}${calculatorHref}`}
+            href={`${MARKETING_URL}${withCostCalculatorPath(calculatorHref, calculatorPath)}`}
           >
-            Estimate provider cost
+            {t("estimate")}
           </ExternalLink>
         ) : null}
       </div>

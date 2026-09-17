@@ -14,6 +14,7 @@ import type { BacklinkTargetScope } from "@/lib/providers/types";
 import { GlobeSimpleIcon as GlobeSimple } from "@phosphor-icons/react/dist/csr/GlobeSimple";
 import { LinkIcon as Link } from "@phosphor-icons/react/dist/csr/Link";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -22,16 +23,6 @@ import type { BacklinksEstimateView, BacklinksLimit } from "./backlinks-workspac
 
 const formSchema = z.object({ target: z.string().trim().min(1).max(2048) });
 type FormValues = z.infer<typeof formSchema>;
-
-const scopeOptions = [
-  { label: "Whole site", value: "site" },
-  { label: "Exact page", value: "page" },
-] as const;
-
-const limitOptions = [100, 300, 500, 1000].map((value) => ({
-  label: `Top ${value} links`,
-  value: String(value),
-}));
 
 const analyzeControlHeightClassName = "h-[34px]";
 
@@ -50,13 +41,6 @@ type AnalyzeCardProps = {
   target: string;
 };
 
-function analyzeLabel(estimate: BacklinksEstimateView, submitting: boolean) {
-  const prefix = submitting ? "Analyzing" : "Analyze";
-  if (estimate.cached) return `${prefix} free, cached`;
-  if (estimate.costCents == null) return prefix;
-  return `${prefix} ~${formatEstimateCents(estimate.costCents)}`;
-}
-
 export function AnalyzeCard({
   disabled = false,
   estimate,
@@ -71,6 +55,21 @@ export function AnalyzeCard({
   submitting = false,
   target,
 }: Readonly<AnalyzeCardProps>) {
+  const t = useTranslations("projectBacklinks.workspace.analyze");
+  const scopeOptions = [
+    { label: t("wholeSite"), value: "site" },
+    { label: t("exactPage"), value: "page" },
+  ] as const;
+  const limitOptions = [100, 300, 500, 1000].map((value) => ({
+    label: t("topLinks", { count: value }),
+    value: String(value),
+  }));
+  function analyzeLabel(submittingLabel: boolean) {
+    const action = submittingLabel ? t("analyzing") : t("analyze");
+    if (estimate.cached) return t("cached", { action });
+    if (estimate.costCents == null) return action;
+    return t("priced", { action, cost: formatEstimateCents(estimate.costCents) });
+  }
   const [pricingAnchor, setPricingAnchor] = useState<HTMLElement | null>(null);
   const { handleSubmit, register, reset } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -102,7 +101,7 @@ export function AnalyzeCard({
               <span className="inline-flex min-w-0 items-center gap-1.5 rounded-control bg-bg-sunken px-2 py-1 font-medium">
                 <span className="truncate">{target}</span>
                 <button
-                  aria-label={`Remove ${target}`}
+                  aria-label={t("removeTarget", { target })}
                   className="shrink-0 rounded-full text-fg-muted transition-colors hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
                   onClick={clearTarget}
                   type="button"
@@ -113,7 +112,7 @@ export function AnalyzeCard({
             ) : (
               <>
                 <label className="sr-only" htmlFor="backlinks-target">
-                  Backlinks target
+                  {t("targetLabel")}
                 </label>
                 <input
                   {...targetField}
@@ -125,14 +124,14 @@ export function AnalyzeCard({
                     targetField.onChange(event);
                     onTargetChange(event.currentTarget.value);
                   }}
-                  placeholder="Enter a domain or URL"
+                  placeholder={t("targetPlaceholder")}
                   spellCheck={false}
                 />
               </>
             )}
           </div>
           <SegmentedControl
-            ariaLabel="Backlinks target scope"
+            ariaLabel={t("scopeAria")}
             className="shrink-0"
             fitContent
             onChange={onScopeChange}
@@ -142,7 +141,7 @@ export function AnalyzeCard({
             value={scope}
           />
           <MenuSelect
-            ariaLabel="Backlinks limit"
+            ariaLabel={t("limitAria")}
             onChange={(value) => onLimitChange(Number(value) as BacklinksLimit)}
             options={limitOptions}
             triggerClassName={`${analyzeControlHeightClassName} min-h-0 justify-between lg:w-[132px]`}
@@ -155,11 +154,11 @@ export function AnalyzeCard({
               checked={includeSubdomains}
               className="border-0 bg-transparent px-0 py-0"
               disabled={scope === "page"}
-              label="Include subdomains"
+              label={t("includeSubdomains")}
               labelClassName="font-normal"
               onChange={(event) => onIncludeSubdomainsChange(event.currentTarget.checked)}
             />
-            <InfoTooltip text="Counts links to blog.acme-store.com and other subdomains as part of the profile. Does not change the price." />
+            <InfoTooltip text={t("subdomainsHelp")} />
           </span>
           <div className="ml-auto flex items-center gap-4">
             <button
@@ -167,18 +166,18 @@ export function AnalyzeCard({
               onClick={(event) => setPricingAnchor(event.currentTarget)}
               type="button"
             >
-              How is this priced?
+              {t("pricing")}
             </button>
             <Button
               disabled={analyzeDisabled}
               loading={submitting}
-              loadingLabel={analyzeLabel(estimate, true)}
+              loadingLabel={analyzeLabel(true)}
               startIcon={<Link aria-hidden size={14} weight="regular" />}
               style={{ minWidth: 216 }}
-              title={!targetIsSet ? "Enter a domain first - the price appears here" : undefined}
+              title={!targetIsSet ? t("needTarget") : undefined}
               type="submit"
             >
-              {analyzeLabel(estimate, false)}
+              {analyzeLabel(false)}
             </Button>
           </div>
         </div>

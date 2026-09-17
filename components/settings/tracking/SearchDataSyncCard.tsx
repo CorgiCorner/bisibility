@@ -1,6 +1,7 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay, useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { SearchSyncStatusControl } from "@/components/search-insights/SearchSyncStatusControl";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
@@ -15,6 +16,7 @@ import {
   retrySearchInsightsImport,
   type SearchInsightsImportAction,
 } from "@/lib/actions/search-insights";
+import { formatDisplayDate } from "@/lib/dates/format";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
@@ -25,13 +27,14 @@ import {
   type SearchSyncControlFacts,
 } from "@/lib/search-insights/sync/control-model";
 import { searchSyncRequestSetsPerHour } from "@/lib/search-insights/sync/plan";
-import { searchSyncPreflightEstimate } from "@/lib/settings/search-sync-config";
-import { actionErrorMessage } from "@/lib/ui/action-error";
-import { VIEWER_READ_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
+import { searchSyncPreflightFacts } from "@/lib/settings/search-sync-config";
+import { presentActionError } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
+import { localizeSearchSyncControl } from "./search-sync-presentation";
 
 type FormData = z.infer<typeof projectSearchSyncSchema>;
 export type SearchSyncMetrics = SearchSyncControlFacts & {
@@ -50,27 +53,6 @@ type Props = FormData & {
   retryAction?: SearchInsightsImportAction;
   updateSettings?: (input: FormData) => Promise<unknown>;
 };
-const depthOptions = [16, 12, 6, 3].map((value) => ({
-  label: `${value} months`,
-  value: String(value),
-}));
-const paceOptions = [
-  { label: "Standard", value: "normal" },
-  { label: "Reduced", value: "gentle" },
-];
-function clampedHistoryHelp(
-  metrics: SearchSyncMetrics,
-  retentionMonths: FormData["retentionMonths"],
-) {
-  if (!metrics.firstDataDate || !metrics.firstDataDateLabel || !metrics.newestFinalizedDate)
-    return null;
-  const firstDataDate = metrics.firstDataDate.slice(0, 10);
-  const newestFinalizedDate = metrics.newestFinalizedDate.slice(0, 10);
-  return firstDataDate > monthsBefore(newestFinalizedDate, retentionMonths)
-    ? `This property's Google history starts ${metrics.firstDataDateLabel} - deeper retention has nothing more to import.`
-    : null;
-}
-
 export function SearchDataSyncCard({
   canEdit,
   metrics,
@@ -83,7 +65,10 @@ export function SearchDataSyncCard({
   updateSettings = updateSearchSyncSettings,
 }: Readonly<Props>) {
   const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
   const router = useRouter();
+  const sharedErrors = useSharedErrorMessages();
+  const t = useTranslations("projectSettingsTracking.searchSync");
   const { showToast } = useToast();
   const [pauseBusy, setPauseBusy] = useState(false);
   const form = useForm<FormData>({
@@ -91,13 +76,44 @@ export function SearchDataSyncCard({
     resolver: zodResolver(projectSearchSyncSchema),
   });
   const control = resolveSearchSyncControl(metrics, dateFormat);
+  const localizedControl = localizeSearchSyncControl({
+    control,
+    dateDisplay,
+    facts: metrics,
+    t: t as unknown as (key: string, values?: Record<string, number | string>) => string,
+  });
   const selectedRetentionMonths = form.watch("retentionMonths");
   const selectedPace = form.watch("pace");
-  const estimate = searchSyncPreflightEstimate({
+  const preflight = searchSyncPreflightFacts({
     pace: selectedPace,
     retentionMonths: selectedRetentionMonths,
   });
-  const historyHelp = clampedHistoryHelp(metrics, selectedRetentionMonths);
+  const estimate = t("preflightEstimate", {
+    duration: preflight.duration,
+    durationUnit: preflight.durationUnit,
+    firstViewMinutes: preflight.firstViewMinutes,
+    months: preflight.retentionMonths,
+    pace: preflight.pace === "gentle" ? t("reduced") : t("standard"),
+    requests: preflight.requests,
+  });
+  const firstDataDateLabel = metrics.firstDataDate
+    ? formatDisplayDate(metrics.firstDataDate.slice(0, 10), dateDisplay)
+    : null;
+  const historyHelp =
+    metrics.firstDataDate && firstDataDateLabel && metrics.newestFinalizedDate
+      ? metrics.firstDataDate.slice(0, 10) >
+        monthsBefore(metrics.newestFinalizedDate.slice(0, 10), selectedRetentionMonths)
+        ? t("historyClamped", { date: firstDataDateLabel })
+        : null
+      : null;
+  const depthOptions = [16, 12, 6, 3].map((value) => ({
+    label: t("months", { count: value }),
+    value: String(value),
+  }));
+  const paceOptions = [
+    { label: t("standard"), value: "normal" },
+    { label: t("reduced"), value: "gentle" },
+  ];
   const reconnectHref = googleInstallUrl({
     projectId,
     provider: "gsc",
@@ -115,12 +131,18 @@ export function SearchDataSyncCard({
     try {
       const result = await action({ projectId, transition: control.action });
       if (!result.ok) {
-        showToast(result.message, { severity: "error" });
+        const message =
+          control.action === "pause"
+            ? t("pauseError")
+            : control.action === "resume"
+              ? t("resumeError")
+              : t("retryError");
+        showToast(message, { severity: "error" });
         return;
       }
       router.refresh();
     } catch {
-      showToast("Search data sync action failed. Refresh the page and try again.", {
+      showToast(t("actionError"), {
         severity: "error",
       });
     } finally {
@@ -129,15 +151,15 @@ export function SearchDataSyncCard({
   }
 
   async function save() {
-    if (!canEdit || !(await form.trigger()))
-      throw new Error("Check the highlighted settings before saving.");
+    if (!canEdit || !(await form.trigger())) throw new Error(t("saveValidation"));
     const values = form.getValues();
     try {
       await updateSettings(values);
       form.reset(values);
       router.refresh();
     } catch (cause) {
-      showToast(actionErrorMessage(cause, "Search data sync settings could not be saved."), {
+      const message = presentActionError(cause, sharedErrors, t("saveError"));
+      showToast(message, {
         severity: "error",
       });
       throw cause;
@@ -145,25 +167,25 @@ export function SearchDataSyncCard({
   }
   return (
     <SettingsCard
-      action={canEdit ? undefined : <StatusChip label={VIEWER_READ_ONLY_LABEL} tone="neutral" />}
+      action={canEdit ? undefined : <StatusChip label={t("readOnly")} tone="neutral" />}
       contentClassName="mt-3"
-      description="Control historical Search Console import depth and import speed."
+      description={t("description")}
       onSave={save}
       showSave={canEdit}
-      title="Search data sync"
+      title={t("title")}
     >
       {({ markDirty }) => (
         <form className="-mx-5" onSubmit={(event) => event.preventDefault()}>
           <fieldset className="grid grid-cols-1 gap-4 px-4" disabled={!canEdit}>
             <SettingsField className="max-w-none" width="field">
-              <FieldLabel label="Import depth" />
+              <FieldLabel label={t("importDepth")} />
               {canEdit ? (
                 <Controller
                   control={form.control}
                   name="retentionMonths"
                   render={({ field }) => (
                     <MenuSelect
-                      ariaLabel="Import depth"
+                      ariaLabel={t("importDepth")}
                       disabled={!canEdit}
                       onChange={(value) => {
                         field.onChange(Number(value));
@@ -177,7 +199,7 @@ export function SearchDataSyncCard({
                 />
               ) : (
                 <p className="m-0 mt-1.5 text-[13px] font-medium text-fg">
-                  {retentionMonths} months
+                  {t("months", { count: retentionMonths })}
                 </p>
               )}
               {historyHelp ? (
@@ -185,7 +207,7 @@ export function SearchDataSyncCard({
               ) : null}
             </SettingsField>
             <SettingsField className="max-w-none" width="field">
-              <FieldLabel label="Import speed" />
+              <FieldLabel label={t("importSpeed")} />
               {canEdit ? (
                 <Controller
                   control={form.control}
@@ -193,7 +215,7 @@ export function SearchDataSyncCard({
                   render={({ field }) => (
                     <div>
                       <MenuSelect
-                        ariaLabel="Import speed"
+                        ariaLabel={t("importSpeed")}
                         disabled={!canEdit}
                         onChange={(value) => {
                           field.onChange(value);
@@ -212,7 +234,7 @@ export function SearchDataSyncCard({
               ) : (
                 <div>
                   <p className="m-0 mt-1.5 text-[13px] font-medium text-fg">
-                    {pace === "gentle" ? "Reduced" : "Standard"}
+                    {pace === "gentle" ? t("reduced") : t("standard")}
                   </p>
                   <p className="m-0 mt-1.5 text-[11px] leading-[1.45] text-fg-muted">{estimate}</p>
                 </div>
@@ -224,7 +246,20 @@ export function SearchDataSyncCard({
               <SearchSyncStatusControl
                 busy={pauseBusy}
                 disabled={!canEdit}
-                model={control}
+                labels={{
+                  actionAriaLabel: (action) =>
+                    t("control.actionAria", {
+                      action:
+                        action === "pause"
+                          ? t("control.pause")
+                          : action === "resume"
+                            ? t("control.resume")
+                            : t("control.retry"),
+                    }),
+                  askAdminToConnect: t("control.askAdminToConnect"),
+                  pauseTooltip: t("control.pauseTooltip"),
+                }}
+                model={localizedControl}
                 onAction={runContextAction}
                 reconnectHref={reconnectHref}
                 suppressPauseTooltip
@@ -232,21 +267,15 @@ export function SearchDataSyncCard({
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-x-2 gap-y-1 px-4 font-sans tabular-nums text-[11px] text-fg-muted">
-            <span>requests in current window: {metrics.requestsToday.toLocaleString("en-US")}</span>
+            <span>{t("requests", { count: metrics.requestsToday })}</span>
             <span aria-hidden>·</span>
-            <span>
-              configured pace: {searchSyncRequestSetsPerHour(pace).toLocaleString("en-US")} request
-              sets/hour
-            </span>
+            <span>{t("configuredPace", { count: searchSyncRequestSetsPerHour(pace) })}</span>
             <span aria-hidden>·</span>
-            <span>planned remaining: {metrics.plannedRemaining.toLocaleString("en-US")}</span>
+            <span>{t("plannedRemaining", { count: metrics.plannedRemaining })}</span>
           </div>
-          <p className="m-0 mt-4 px-4 text-[12px] leading-[1.55] text-fg-muted">
-            This quota is shared with other tools using the same property.
-          </p>
+          <p className="m-0 mt-4 px-4 text-[12px] leading-[1.55] text-fg-muted">{t("quota")}</p>
           <p className="m-0 mt-1 px-4 text-[12px] leading-[1.55] text-fg-muted">
-            Increasing depth extends the running import; decreasing depth keeps what is already
-            imported.
+            {t("depthChange")}
           </p>
         </form>
       )}

@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  SystemPage,
-  SystemPrimaryAction,
-  SystemSecondaryAction,
-} from "@/components/marketing/system/SystemPage";
+import { EmergencyRecovery } from "@/components/i18n/EmergencyRecovery";
+import { EmergencyMessagesProvider } from "@/i18n/EmergencyMessagesProvider";
 import { reportAppError } from "@/lib/observability/error-reporting";
-import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
@@ -23,22 +19,8 @@ export default function ErrorBoundary({ error, reset }: Readonly<ErrorPageProps>
   }, [error, pathname]);
 
   return (
-    <SystemPage
-      actions={
-        <>
-          <SystemPrimaryAction
-            onClick={reset}
-            startIcon={<ArrowClockwise size={16} weight="regular" />}
-          >
-            Try again
-          </SystemPrimaryAction>
-          <SystemSecondaryAction href="/app">Back to app</SystemSecondaryAction>
-        </>
-      }
-      description="The request fell outside a clean ranking run. Try again, or head back to the dashboard while we recover the route."
-      kicker="500 - SERVER ERROR"
-      statusLabel="HTTP 500"
-      title="The tracker hit an error"
-    />
+    <EmergencyMessagesProvider>
+      <EmergencyRecovery kind="error" onReset={reset} />
+    </EmergencyMessagesProvider>
   );
 }

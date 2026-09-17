@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/Button";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { unwrapActionFailureResult } from "@/lib/actions/action-result";
 import { createCloudMigrationHandoff } from "@/lib/actions/cloud";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { CloudArrowUpIcon as CloudArrowUp } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
 import { CloudCheckIcon as CloudCheck } from "@phosphor-icons/react/dist/csr/CloudCheck";
 import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ImportCompletionSummary } from "./MigrateToCloudImportCompletion";
 import type {
@@ -25,10 +25,6 @@ type HandoffProps = { direction: MigrationDirection; handoff: CloudMigrationHand
 // biome-ignore format: compact props keep this component under the file line cap.
 type DoneStepProps = HandoffProps & { domain: string; holdMessage?: string | null; holdPending?: boolean; migrationHold: boolean; outcome: MigrationOutcome | null; onCancelMigration: () => void; onKeepReadOnly: () => void; onMarkMigrated: () => void };
 
-function errorMessage(error: unknown) {
-  return actionErrorMessage(error, "Migration handoff generation failed.");
-}
-
 async function copyText(text: string) {
   await navigator.clipboard?.writeText(text);
 }
@@ -40,12 +36,15 @@ export function HandoffPanel({
   projectId,
   targetOrigin,
 }: Readonly<HandoffProps>) {
+  const t = useTranslations("projectSettingsMigration.handoff");
+  const transferT = useTranslations("projectSettingsMigration.transfer");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const targetLabel = direction === "to-cloud" ? "hosted instance" : "self-host";
-  let generateLabel = "Generate";
-  if (busy) generateLabel = "Generating...";
-  else if (handoff) generateLabel = "Refresh";
+  const targetLabel =
+    direction === "to-cloud" ? transferT("target.hosted") : transferT("target.selfHost");
+  let generateLabel = t("generate");
+  if (busy) generateLabel = t("generating");
+  else if (handoff) generateLabel = t("refresh");
 
   async function handleGenerate() {
     setBusy(true);
@@ -59,9 +58,9 @@ export function HandoffPanel({
       );
       onHandoff(next);
       await copyText(next.cloudImportUrl).catch(() => undefined);
-      setMessage(`${targetLabel} import link generated and copied.`);
-    } catch (error) {
-      setMessage(errorMessage(error));
+      setMessage(t("generated", { target: targetLabel }));
+    } catch {
+      setMessage(t("generationError"));
     } finally {
       setBusy(false);
     }
@@ -74,10 +73,8 @@ export function HandoffPanel({
           <CloudArrowUp aria-hidden size={20} weight="regular" />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-[13.5px] font-semibold">{targetLabel} handoff</div>
-          <div className="mt-0.5 text-[12px] text-fg-muted">
-            Opens the destination import flow where the migration token is created.
-          </div>
+          <div className="text-[13.5px] font-semibold">{t("title", { target: targetLabel })}</div>
+          <div className="mt-0.5 text-[12px] text-fg-muted">{t("description")}</div>
         </div>
         <Button
           disabled={busy}
@@ -92,17 +89,17 @@ export function HandoffPanel({
       </div>
       {handoff ? (
         <div className="flex flex-col gap-3 p-[16px_18px]">
-          <HandoffRow label="Import page" value={handoff.cloudImportUrl} />
-          <HandoffRow label="Import API" value={handoff.apiImportUrl} />
+          <HandoffRow label={t("importPage")} value={handoff.cloudImportUrl} />
+          <HandoffRow label={t("importApi")} value={handoff.apiImportUrl} />
           <div className="rounded-control border border-border bg-bg-sunken px-3.5 py-3">
             <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-              REST handoff
+              {t("rest")}
             </div>
             <div className="mt-1.5 flex items-center gap-2">
               <code className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
                 {handoff.apiRequest}
               </code>
-              <CopyButton label="Copy REST handoff" size="md" text={handoff.apiRequest} />
+              <CopyButton label={t("copyRest")} size="md" text={handoff.apiRequest} />
             </div>
           </div>
           <a
@@ -111,7 +108,7 @@ export function HandoffPanel({
             rel="noreferrer"
             target="_blank"
           >
-            Open {targetLabel} import page
+            {t("openImport", { target: targetLabel })}
             <CaretRight aria-hidden size={13} weight="regular" />
           </a>
         </div>
@@ -145,9 +142,12 @@ export function DoneStep({
   projectId,
   targetOrigin,
 }: DoneStepProps) {
+  const t = useTranslations("projectSettingsMigration.handoff");
+  const transferT = useTranslations("projectSettingsMigration.transfer");
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const targetLabel = direction === "to-cloud" ? "hosted instance" : "self-host";
+  const targetLabel =
+    direction === "to-cloud" ? transferT("target.hosted") : transferT("target.selfHost");
   const targetUrl = handoff?.cloudWorkspaceUrl ?? handoff?.cloudImportUrl ?? null;
   const completed = outcome?.kind === "completed" ? outcome.completion : null;
 
@@ -163,9 +163,9 @@ export function DoneStep({
       );
       onHandoff(next);
       await copyText(next.cloudWorkspaceUrl).catch(() => undefined);
-      setMessage(`${targetLabel} project URL generated and copied.`);
-    } catch (error) {
-      setMessage(errorMessage(error));
+      setMessage(t("projectGenerated", { target: targetLabel }));
+    } catch {
+      setMessage(t("generationError"));
     } finally {
       setBusy(false);
     }
@@ -183,20 +183,20 @@ export function DoneStep({
         )}
       </span>
       <h3 className="m-0 mt-4.5 text-[18px] font-semibold tracking-[-0.4px]">
-        {completed ? `${targetLabel} import complete` : "Awaiting external confirmation"}
+        {completed ? t("completed", { target: targetLabel }) : t("pending")}
       </h3>
       <p className="m-0 mt-[7px] max-w-[390px] text-[13.5px] leading-[1.55] text-fg-muted">
         {completed
-          ? `${domain} was accepted and committed by the destination. Keep this source project as rollback until you verify the migrated project.`
-          : `The package left this source flow, but ${targetLabel} has not reported a completed import here. Verify the destination before releasing read-only mode.`}
+          ? t("completedDescription", { domain })
+          : t("pendingDescription", { target: targetLabel })}
       </p>
       {completed ? <ImportCompletionSummary completion={completed} /> : null}
       <div className="mt-5.5 flex w-full max-w-[420px] items-center gap-2 rounded-control border border-border bg-transparent px-3.5 py-[11px]">
         <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
-          {targetUrl ?? `Generate the ${targetLabel} handoff to copy a real URL`}
+          {targetUrl ?? t("generateUrl", { target: targetLabel })}
         </span>
         {targetUrl ? (
-          <CopyButton label={`Copy ${targetLabel} URL`} size="md" text={targetUrl} />
+          <CopyButton label={t("copyUrl", { target: targetLabel })} size="md" text={targetUrl} />
         ) : (
           <Button
             disabled={busy}
@@ -205,20 +205,16 @@ export function DoneStep({
             type="button"
             variant="primary"
           >
-            Generate
+            {t("generate")}
           </Button>
         )}
       </div>
       {message ? <p className="m-0 mt-2 text-[12px] text-fg-muted">{message}</p> : null}
-      <p className="m-0 mt-3 font-sans tabular-nums text-[11px] text-fg-muted">
-        Re-connect SERP and analytics providers on the destination before resuming scheduled checks.
-      </p>
+      <p className="m-0 mt-3 font-sans tabular-nums text-[11px] text-fg-muted">{t("reconnect")}</p>
       <div className="mt-5 w-full max-w-[420px] rounded-card border border-border bg-bg px-3.5 py-3 text-left">
-        <div className="text-[13px] font-semibold text-fg">Source project</div>
+        <div className="text-[13px] font-semibold text-fg">{t("sourceTitle")}</div>
         <p className="m-0 mt-1 text-xs leading-5 text-fg-muted">
-          {migrationHold
-            ? `Keep it read-only while you verify the ${targetLabel} project, then mark it as migrated to disable it for good. Cancelling resumes writes here and the instances may drift apart.`
-            : "Writes are active on this source project."}
+          {migrationHold ? t("sourceHeld", { target: targetLabel }) : t("sourceActive")}
         </p>
         {migrationHold ? (
           <>
@@ -230,7 +226,7 @@ export function DoneStep({
                 type="button"
                 variant="secondary"
               >
-                Keep read-only
+                {t("keepReadOnly")}
               </Button>
               <Button
                 disabled={busy || holdPending}
@@ -239,7 +235,7 @@ export function DoneStep({
                 type="button"
                 variant="primary"
               >
-                Mark as migrated
+                {t("markMigrated")}
               </Button>
             </div>
             <button
@@ -248,7 +244,7 @@ export function DoneStep({
               onClick={onCancelMigration}
               type="button"
             >
-              Cancel migration and resume writes
+              {t("cancelResume")}
             </button>
           </>
         ) : null}
@@ -263,6 +259,7 @@ export function DoneStep({
 }
 
 function HandoffRow({ label, value }: Readonly<{ label: string; value: string }>) {
+  const t = useTranslations("projectSettingsMigration.handoff");
   return (
     <div className="flex items-center gap-2 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
       <span className="min-w-0 flex-1">
@@ -273,7 +270,7 @@ function HandoffRow({ label, value }: Readonly<{ label: string; value: string }>
           {value}
         </span>
       </span>
-      <CopyButton label={`Copy ${label}`} size="md" text={value} />
+      <CopyButton label={t("copy", { label })} size="md" text={value} />
     </div>
   );
 }

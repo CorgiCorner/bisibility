@@ -43,18 +43,18 @@ function highlights(keywords: Keyword[]) {
   return buildHighlights(keywords.map(snapshotFor), now);
 }
 
-function visibilityValue(snapshots: ReturnType<typeof snapshotFor>[]) {
-  return buildKpis(snapshots, snapshots.length, 0).find((item) => item.label === "Visibility");
+function visibilityKpi(snapshots: ReturnType<typeof snapshotFor>[]) {
+  return buildKpis(snapshots, snapshots.length, 0).find((item) => item.id === "visibility");
 }
 
 describe("overview builders", () => {
-  it("treats position sentinels above 100 as outside the tracked range", () => {
+  it("keeps only valid ranked positions in the trend", () => {
     const outside = keyword("outside", [check(101)]);
 
     expect(pos(100)).toBe(100);
     expect(pos(101)).toBeNull();
     expect(snapshotFor(outside).position).toBeNull();
-    expect(buildTrend([outside], { formatDate: (date) => date.toISOString() })).toEqual([]);
+    expect(buildTrend([outside])).toEqual([]);
   });
 
   it("uses only genuine earlier in-window positions for movement", () => {
@@ -97,6 +97,36 @@ describe("overview builders", () => {
     expect(snapshot).toMatchObject({ movement: 5, position: 3, previous: 8 });
   });
 
+  it("returns semantic highlight states instead of display sentences", () => {
+    const rows = buildHighlights(
+      [
+        snapshotFor(
+          keyword("newly-added", [check(4)], {
+            createdAt: new Date("2026-06-28T11:00:00.000Z"),
+          }),
+        ),
+        snapshotFor(keyword("failed", [check(null, { status: "failed" })])),
+      ],
+      now,
+    );
+
+    expect(rows.find((list) => list.kind === "recentlyAdded")?.rows[0]).toMatchObject({
+      note: {
+        age: { kind: "hours", value: 1 },
+        checkState: "rankingUrl",
+        kind: "recentlyAdded",
+        url: "/position-4",
+      },
+      position: 4,
+      positionState: "ranked",
+    });
+    expect(rows.find((list) => list.kind === "attention")?.rows[0]).toMatchObject({
+      note: { kind: "latestCheckFailed" },
+      positionState: "noData",
+      positionTone: "danger",
+    });
+  });
+
   it("lists keywords added in the last seven days, including checked keywords", () => {
     const rows = highlights([
       keyword("checked-recently", [check(4)], {
@@ -110,8 +140,25 @@ describe("overview builders", () => {
     ]).find((list) => list.kind === "recentlyAdded")?.rows;
 
     expect(rows?.map((row) => row.id)).toEqual(["checked-recently", "newest", "third", "fourth"]);
-    expect(rows?.[0]).toMatchObject({ note: "Added 1h ago · /position-4", positionText: "#4" });
-    expect(rows?.[1]?.note).toBe("Added 2h ago · first check pending");
+    expect(rows?.[0]).toMatchObject({
+      note: {
+        age: { kind: "hours", value: 1 },
+        checkState: "rankingUrl",
+        kind: "recentlyAdded",
+        url: "/position-4",
+      },
+      position: 4,
+      positionState: "ranked",
+    });
+    expect(rows?.[1]).toMatchObject({
+      note: {
+        age: { kind: "hours", value: 2 },
+        checkState: "firstCheckPending",
+        kind: "recentlyAdded",
+        url: null,
+      },
+      positionState: "awaitingFirstCheck",
+    });
     expect(rows?.some((row) => row.id === "outside-window")).toBe(false);
   });
 
@@ -130,13 +177,55 @@ describe("overview builders", () => {
     expect(result.find((list) => list.kind === "wins")?.rows).toEqual([]);
     expect(result.find((list) => list.kind === "attention")?.rows).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: "failed-win", note: "Latest check failed" }),
-        expect.objectContaining({ id: "completed-drop", note: expect.stringContaining("Dropped") }),
+        expect.objectContaining({ id: "failed-win", note: { kind: "latestCheckFailed" } }),
+        expect.objectContaining({
+          id: "completed-drop",
+          note: expect.objectContaining({ direction: "dropped", kind: "movement" }),
+        }),
       ]),
     );
   });
 
-  it("distinguishes failed, outside-top-100, and running latest attempts", () => {
+  it("does not retain a previous successful rank when the newest attempt failed or was unranked", () => {
+    const rows = buildHighlights(
+      [
+        snapshotFor(
+          keyword("failed-after-rank", [
+            check(null, { status: "failed" }),
+            check(3, { checkedAt: new Date("2026-06-27T10:00:00.000Z") }),
+            check(8, { checkedAt: new Date("2026-06-21T10:00:00.000Z") }),
+          ]),
+        ),
+        snapshotFor(
+          keyword("unranked-after-rank", [
+            check(null),
+            check(4, { checkedAt: new Date("2026-06-27T10:00:00.000Z") }),
+            check(9, { checkedAt: new Date("2026-06-21T10:00:00.000Z") }),
+          ]),
+        ),
+      ],
+      now,
+    ).find((list) => list.kind === "attention")?.rows;
+
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "failed-after-rank",
+          note: { kind: "latestCheckFailed" },
+          position: null,
+          positionState: "noData",
+        }),
+        expect.objectContaining({
+          id: "unranked-after-rank",
+          note: { kind: "latestCheckNotRanked" },
+          position: null,
+          positionState: "notRanked",
+        }),
+      ]),
+    );
+  });
+
+  it("excludes running attempts and removes deltas from failed and unranked attempts", () => {
     const rows = highlights([
       keyword("failed", [
         check(null, { status: "failed" }),
@@ -144,27 +233,24 @@ describe("overview builders", () => {
         check(8, { checkedAt: new Date("2026-06-21T10:00:00.000Z") }),
       ]),
       keyword("outside", [
-        check(null, { status: "completed" }),
+        check(null),
         check(3, { checkedAt: new Date("2026-06-27T10:00:00.000Z") }),
         check(8, { checkedAt: new Date("2026-06-21T10:00:00.000Z") }),
       ]),
       keyword("running", [check(null, { status: "running" })]),
     ]).find((list) => list.kind === "attention")?.rows;
 
-    expect(rows).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: "failed",
-          note: "Latest check failed",
-          positionTone: "danger",
-        }),
-        expect.objectContaining({
-          id: "outside",
-          note: "Latest check completed - not in top 100",
-          positionText: "Not in top 100",
-        }),
-      ]),
-    );
+    expect(rows?.find((row) => row.id === "failed")).toMatchObject({
+      note: { kind: "latestCheckFailed" },
+      position: null,
+      positionState: "noData",
+      positionTone: "danger",
+    });
+    expect(rows?.find((row) => row.id === "outside")).toMatchObject({
+      note: { kind: "latestCheckNotRanked" },
+      position: null,
+      positionState: "notRanked",
+    });
     expect(rows?.find((row) => row.id === "failed")).not.toHaveProperty("delta");
     expect(rows?.find((row) => row.id === "outside")).not.toHaveProperty("delta");
     expect(rows?.some((row) => row.id === "running")).toBe(false);
@@ -187,14 +273,19 @@ describe("overview builders", () => {
     const firstCheck = snapshotFor(keyword("first", [check(2, { previousPosition: 81 })]));
 
     expect(buildKpis([firstCheck], 2500, 73)).toEqual([
-      { delta: "new", deltaTone: "neutral", label: "Avg. position", value: "2.0" },
-      { delta: "+73 this month", deltaTone: "neutral", label: "Tracked keywords", value: "2500" },
-      { delta: "new", deltaTone: "neutral", label: "In top 10", value: "1" },
-      { delta: "new", deltaTone: "neutral", label: "Visibility", value: "57%" },
+      { delta: { kind: "new" }, deltaTone: "neutral", id: "averagePosition", value: 2 },
+      {
+        delta: { kind: "countThisMonth", value: 73 },
+        deltaTone: "neutral",
+        id: "trackedKeywords",
+        value: 2500,
+      },
+      { delta: { kind: "new" }, deltaTone: "neutral", id: "inTop10", value: 1 },
+      { delta: { kind: "new" }, deltaTone: "neutral", id: "visibility", value: 57 },
     ]);
   });
 
-  it("excludes first observations from deltas when comparable history exists", () => {
+  it("returns semantic numeric KPI deltas", () => {
     const snapshots = [
       snapshotFor(keyword("first", [check(2)])),
       snapshotFor(
@@ -207,74 +298,96 @@ describe("overview builders", () => {
 
     expect(buildKpis(snapshots, 2, 0)).toEqual([
       {
-        delta: "up 10.0 vs previous ranked check",
+        delta: { kind: "averageComparison", value: 10 },
         deltaTone: "positive",
-        label: "Avg. position",
-        value: "2.5",
+        id: "averagePosition",
+        value: 2.5,
       },
-      { delta: "no new this month", deltaTone: "neutral", label: "Tracked keywords", value: "2" },
-      { delta: "+1", deltaTone: "positive", label: "In top 10", value: "2" },
-      { delta: "+29.0pp", deltaTone: "positive", label: "Visibility", value: "47%" },
+      {
+        delta: { kind: "noNewThisMonth" },
+        deltaTone: "neutral",
+        id: "trackedKeywords",
+        value: 2,
+      },
+      {
+        delta: { kind: "countChange", value: 1 },
+        deltaTone: "positive",
+        id: "inTop10",
+        value: 2,
+      },
+      {
+        delta: { kind: "percentagePointChange", value: 29 },
+        deltaTone: "positive",
+        id: "visibility",
+        value: 47,
+      },
     ]);
   });
 
   it("weights visibility by volume with the specified fallbacks", () => {
     expect(
-      visibilityValue([
+      visibilityKpi([
         snapshotFor(keyword("one", [check(1)]), 10),
         snapshotFor(keyword("two", [check(1)]), 100),
       ])?.value,
-    ).toBe("100%");
-    expect(visibilityValue([snapshotFor(keyword("outside", [check(null)]), 100)])?.value).toBe(
-      "0%",
-    );
+    ).toBe(100);
+    expect(visibilityKpi([snapshotFor(keyword("outside", [check(null)]), 100)])?.value).toBe(0);
     expect(
-      visibilityValue([
+      visibilityKpi([
         snapshotFor(keyword("head", [check(1)]), 1000),
         snapshotFor(keyword("tail", [check(20)]), 10),
       ])?.value,
-    ).toBe("99%");
+    ).toBe(99);
     expect(
-      visibilityValue([
+      visibilityKpi([
         snapshotFor(keyword("known-low", [check(20)]), 10),
         snapshotFor(keyword("known-high", [check(20)]), 30),
         snapshotFor(keyword("unknown", [check(1)])),
       ])?.value,
-    ).toBe("36%");
+    ).toBe(36);
     expect(
-      visibilityValue([
+      visibilityKpi([
         snapshotFor(keyword("unweighted-head", [check(1)])),
         snapshotFor(keyword("unweighted-tail", [check(20)])),
       ])?.value,
-    ).toBe("52%");
+    ).toBe(52);
   });
 
   it("reports visibility deltas in percentage points with directional tone", () => {
-    const gain = visibilityValue([
+    const gain = visibilityKpi([
       snapshotFor(
         keyword("gain", [check(1), check(20, { checkedAt: new Date("2026-06-21T10:00:00.000Z") })]),
         100,
       ),
     ]);
-    const loss = visibilityValue([
+    const loss = visibilityKpi([
       snapshotFor(
         keyword("loss", [check(20), check(1, { checkedAt: new Date("2026-06-21T10:00:00.000Z") })]),
         100,
       ),
     ]);
 
-    expect(gain).toMatchObject({ delta: "+96.7pp", deltaTone: "positive" });
-    expect(loss).toMatchObject({ delta: "-96.7pp", deltaTone: "negative" });
+    expect(gain).toMatchObject({
+      delta: { kind: "percentagePointChange", value: 96.7 },
+      deltaTone: "positive",
+    });
+    expect(loss).toMatchObject({
+      delta: { kind: "percentagePointChange", value: -96.7 },
+      deltaTone: "negative",
+    });
   });
 
   it("renders numeric zeroes after a completed not-found check", () => {
-    const kpis = buildKpis([snapshotFor(keyword("not-found", [check(null)]))], 1, 0);
-
-    expect(kpis).toEqual([
-      { delta: "no ranked positions", deltaTone: "neutral", label: "Avg. position", value: "-" },
-      { delta: "no new this month", deltaTone: "neutral", label: "Tracked keywords", value: "1" },
-      { delta: "new", deltaTone: "neutral", label: "In top 10", value: "0" },
-      { delta: "new", deltaTone: "neutral", label: "Visibility", value: "0%" },
+    expect(buildKpis([snapshotFor(keyword("not-found", [check(null)]))], 1, 0)).toEqual([
+      {
+        delta: { kind: "noRankedPositions" },
+        deltaTone: "neutral",
+        id: "averagePosition",
+        value: null,
+      },
+      { delta: { kind: "noNewThisMonth" }, deltaTone: "neutral", id: "trackedKeywords", value: 1 },
+      { delta: { kind: "new" }, deltaTone: "neutral", id: "inTop10", value: 0 },
+      { delta: { kind: "new" }, deltaTone: "neutral", id: "visibility", value: 0 },
     ]);
   });
 
@@ -287,60 +400,41 @@ describe("overview builders", () => {
     );
 
     expect(buildKpis([snapshot], 1, 0)).toEqual([
-      { delta: "no ranked positions", deltaTone: "neutral", label: "Avg. position", value: "-" },
-      { delta: "no new this month", deltaTone: "neutral", label: "Tracked keywords", value: "1" },
-      { delta: "new", deltaTone: "neutral", label: "In top 10", value: "0" },
-      { delta: "new", deltaTone: "neutral", label: "Visibility", value: "0%" },
+      {
+        delta: { kind: "noRankedPositions" },
+        deltaTone: "neutral",
+        id: "averagePosition",
+        value: null,
+      },
+      { delta: { kind: "noNewThisMonth" }, deltaTone: "neutral", id: "trackedKeywords", value: 1 },
+      { delta: { kind: "new" }, deltaTone: "neutral", id: "inTop10", value: 0 },
+      { delta: { kind: "new" }, deltaTone: "neutral", id: "visibility", value: 0 },
     ]);
   });
 
   it("renders Visibility as awaiting when every completed check is shallower than Top 20", () => {
-    const kpis = buildKpis(
-      [snapshotFor(keyword("shallow", [check(null, { requestedDepth: 10 })]))],
-      1,
-      0,
-    );
-
-    expect(kpis.find((item) => item.label === "Visibility")).toEqual({
-      delta: "awaiting Top 20 check",
+    expect(
+      visibilityKpi([snapshotFor(keyword("shallow", [check(null, { requestedDepth: 10 })]))]),
+    ).toEqual({
+      delta: { kind: "awaitingTop20" },
       deltaTone: "neutral",
-      label: "Visibility",
-      value: "–",
+      id: "visibility",
+      value: null,
     });
   });
 
-  it("distinguishes a failed first check from a check that has not run", () => {
-    const failed = buildKpis(
+  it("keeps failed first-check KPIs actionable without a display fallback", () => {
+    const kpis = buildKpis(
       [snapshotFor(keyword("failed", [check(null, { status: "failed" })]))],
       1,
       0,
     );
-    const pending = buildKpis([snapshotFor(keyword("pending"))], 1, 0);
 
-    expect(failed.filter((kpi) => kpi.label !== "Tracked keywords")).toEqual([
-      {
-        delta: "first check failed",
-        deltaAction: "check_runs",
-        deltaTone: "negative",
-        label: "Avg. position",
-        value: "-",
-      },
-      {
-        delta: "first check failed",
-        deltaAction: "check_runs",
-        deltaTone: "negative",
-        label: "In top 10",
-        value: "-",
-      },
-      {
-        delta: "first check failed",
-        deltaAction: "check_runs",
-        deltaTone: "negative",
-        label: "Visibility",
-        value: "–",
-      },
-    ]);
-    expect(pending.filter((kpi) => kpi.delta === "awaiting first check")).toHaveLength(3);
-    expect(failed.some((kpi) => kpi.delta === "awaiting first check")).toBe(false);
+    expect(kpis.filter((item) => item.delta.kind === "firstCheckFailed")).toHaveLength(3);
+    expect(kpis.filter((item) => item.deltaAction === "check_runs")).toHaveLength(3);
+
+    const pending = buildKpis([snapshotFor(keyword("pending"))], 1, 0);
+    expect(pending.filter((item) => item.delta.kind === "awaitingFirstCheck")).toHaveLength(3);
+    expect(kpis.some((item) => item.delta.kind === "awaitingFirstCheck")).toBe(false);
   });
 });

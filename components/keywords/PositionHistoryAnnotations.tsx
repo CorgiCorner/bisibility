@@ -1,4 +1,4 @@
-import { positionTargetAnnotation } from "@/lib/keywords/position-history";
+import { useTranslations } from "next-intl";
 import { ReferenceLine, usePlotArea, useXAxisScale, useYAxisScale } from "recharts";
 
 export function historyAnnotationTop({
@@ -28,6 +28,7 @@ export function historyAnnotationTop({
 }
 
 export function TargetReferenceLine({ target }: Readonly<{ target: number }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.position");
   const area = usePlotArea();
   const yScale = useYAxisScale();
   if (!area || !yScale) return null;
@@ -39,7 +40,7 @@ export function TargetReferenceLine({ target }: Readonly<{ target: number }>) {
       stroke="var(--green)"
       strokeDasharray="4 3"
       label={{
-        value: `TARGET #${target}`,
+        value: t("target", { target }),
         position: labelBelow ? "insideBottomLeft" : "insideTopLeft",
         fill: "var(--fg-muted)",
         fontSize: 10,
@@ -54,6 +55,7 @@ export function LatestPositionAnnotation({
   positions,
   target,
 }: Readonly<{ labels: string[]; positions: number[]; target: number }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.position");
   const area = usePlotArea();
   const xScale = useXAxisScale();
   const yScale = useYAxisScale();
@@ -69,7 +71,9 @@ export function LatestPositionAnnotation({
   const targetY = yScale(target);
   if (typeof markerX !== "number" || typeof markerY !== "number") return null;
 
-  const copy = positionTargetAnnotation(position, target);
+  const distance = Math.max(0, position - target);
+  const copy =
+    distance === 0 ? t("targetReached", { position }) : t("targetAway", { distance, position });
   const chipWidth = Math.min(copy.length * 6 + 10, width - 24);
   const chipRight = left + width - 12;
   const chipTop = historyAnnotationTop({

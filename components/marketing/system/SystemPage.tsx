@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 type SystemPageProps = {
   actions: ReactNode;
   description: string;
+  docsLinkLabel?: string;
   kicker: string;
   statusLabel: string;
   terminal?: ReactNode;
@@ -43,6 +44,7 @@ export function SystemSecondaryAction(props: ButtonProps) {
 export function SystemPage({
   actions,
   description,
+  docsLinkLabel = "Still stuck? Read the docs",
   kicker,
   statusLabel,
   terminal,
@@ -76,7 +78,7 @@ export function SystemPage({
           rel="noreferrer noopener"
           target="_blank"
         >
-          Still stuck? Read the docs
+          {docsLinkLabel}
           <ArrowUpRight aria-hidden size={14} weight="regular" />
         </a>
       </section>

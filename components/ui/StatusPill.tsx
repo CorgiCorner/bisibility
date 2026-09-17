@@ -2,6 +2,7 @@ import { cn } from "@/lib/ui/cn";
 import type { StatusKind } from "@/lib/ui/status-kind";
 import { cva } from "class-variance-authority";
 import type { ReactNode } from "react";
+import { type StatusPillMessageKey, StatusPillText } from "./StatusPillText";
 
 export type { StatusKind } from "@/lib/ui/status-kind";
 
@@ -17,24 +18,24 @@ export type StatusPillProps = {
 // HANDOFF-12 §5: one quiet pattern everywhere a status shows - a neutral chip
 // (bg-sunken + thin border) with a colored status dot.
 const statusMeta = {
-  connected: { label: "Connected", color: "var(--green)" },
-  needs_reauth: { label: "Reconnect required", color: "var(--red)" },
-  ready: { label: "Ready", color: "var(--green)" },
-  planned: { label: "Planned", color: "var(--yellow)" },
-  optional: { label: "Optional", color: "var(--fg-muted)" },
-  success: { label: "Success", color: "var(--green)" },
-  failed: { label: "Failed", color: "var(--red)" },
-  matches: { label: "Matches", color: "var(--green)" },
-  wrong_url: { label: "Wrong URL", color: "var(--yellow)" },
-  primary: { label: "Primary", color: "var(--accent)" },
-  disabled: { label: "Disabled", color: "var(--fg-muted)" },
-  create: { label: "Create", color: "var(--green)" },
-  update: { label: "Update", color: "var(--yellow)" },
-  delete: { label: "Delete", color: "var(--red)" },
-  import: { label: "Import", color: "var(--blue)" },
-  export: { label: "Export", color: "var(--blue)" },
-  login: { label: "Login", color: "var(--purple)" },
-} satisfies Record<StatusKind, { label: string; color: string }>;
+  connected: { labelKey: "connected", color: "var(--green)" },
+  needs_reauth: { labelKey: "needsReauth", color: "var(--red)" },
+  ready: { labelKey: "ready", color: "var(--green)" },
+  planned: { labelKey: "planned", color: "var(--yellow)" },
+  optional: { labelKey: "optional", color: "var(--fg-muted)" },
+  success: { labelKey: "success", color: "var(--green)" },
+  failed: { labelKey: "failed", color: "var(--red)" },
+  matches: { labelKey: "matches", color: "var(--green)" },
+  wrong_url: { labelKey: "wrongUrl", color: "var(--yellow)" },
+  primary: { labelKey: "primary", color: "var(--accent)" },
+  disabled: { labelKey: "disabled", color: "var(--fg-muted)" },
+  create: { labelKey: "create", color: "var(--green)" },
+  update: { labelKey: "update", color: "var(--yellow)" },
+  delete: { labelKey: "delete", color: "var(--red)" },
+  import: { labelKey: "import", color: "var(--blue)" },
+  export: { labelKey: "export", color: "var(--blue)" },
+  login: { labelKey: "login", color: "var(--purple)" },
+} as const satisfies Record<StatusKind, { labelKey: StatusPillMessageKey; color: string }>;
 
 const chipVariants = cva(
   "inline-flex items-center rounded-full border border-border bg-bg-sunken font-semibold leading-none tracking-[0.3px] text-fg-muted",
@@ -75,12 +76,12 @@ export function StatusPill({
       <span className={cn(chipVariants({ size }))}>
         {icon}
         {shouldShowDot ? <StatusDot color={meta.color} /> : null}
-        {label ?? meta.label}
+        {label ?? <StatusPillText messageKey={meta.labelKey} />}
       </span>
       {primary ? (
         <span className={cn(chipVariants({ size }))}>
           {shouldShowDot ? <StatusDot color="var(--accent)" /> : null}
-          Primary
+          <StatusPillText messageKey="primary" />
         </span>
       ) : null}
     </span>

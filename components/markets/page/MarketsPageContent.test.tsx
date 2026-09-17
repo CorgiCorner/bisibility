@@ -1,7 +1,8 @@
+import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NewMarketCreateResult } from "@/lib/markets/create-input";
 import type { ArchivedProjectMarketsView, ProjectMarketsView } from "@/lib/queries/project-markets";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MarketsPageContent } from "./MarketsPageContent";

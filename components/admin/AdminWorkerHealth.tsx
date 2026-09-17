@@ -1,71 +1,77 @@
+"use client";
+
 import { Badge, displayTime, Metric, Panel } from "@/components/admin/AdminPrimitives";
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
-import type { DateFormat } from "@/lib/dates/format";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import type { MigrationComparison } from "@/lib/db/migration-state";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import { useTranslations } from "next-intl";
 
-function schemaStatus(comparison: MigrationComparison) {
-  if (comparison === "ok") return { label: "In sync", tone: "ok" };
-  if (comparison === "worker-behind") return { label: "Worker behind", tone: "error" };
-  if (comparison === "worker-ahead") return { label: "Worker ahead", tone: "warning" };
-  return { label: "Unknown", tone: "unknown" };
-}
+type WorkerTranslations = ReturnType<typeof useTranslations<"instanceAdmin.worker">>;
 
-function migrationName(value: string | null) {
-  return value ?? "-";
+function schemaStatus(comparison: MigrationComparison, t: WorkerTranslations, unknown: string) {
+  if (comparison === "ok") return { label: t("schemaInSync"), tone: "ok" };
+  if (comparison === "worker-behind") return { label: t("schemaWorkerBehind"), tone: "error" };
+  if (comparison === "worker-ahead") return { label: t("schemaWorkerAhead"), tone: "warning" };
+  return { label: unknown, tone: "unknown" };
 }
 
 export function AdminWorkerHealth({
   available,
-  dateFormat,
   ops,
   worker,
 }: Readonly<{
   available: boolean;
-  dateFormat: DateFormat;
   ops: InstanceAdminDashboard["ops"];
   worker: InstanceAdminDashboard["worker"];
 }>) {
-  const schema = schemaStatus(worker.schemaComparison);
+  const context = useDateDisplay();
+  const t = useTranslations("instanceAdmin.worker");
+  const statusT = useTranslations("instanceAdmin.status");
+  const values = useTranslations("instanceAdmin.values");
+  const status = schemaStatus(worker.schemaComparison, t, statusT("unknown"));
 
   return (
-    <Panel
-      description="Worker heartbeat, deployment identity, database schema agreement, and Slack delivery configuration."
-      title="Worker"
-    >
+    <Panel description={t("description")} id="admin-worker" title={t("title")}>
       {!available ? (
-        <AdminSectionUnavailable>Worker diagnostics are unavailable.</AdminSectionUnavailable>
+        <AdminSectionUnavailable>{t("unavailable")}</AdminSectionUnavailable>
       ) : worker.schedulerDriver === "none" ? (
-        <AdminSectionUnavailable>
-          Scheduled worker is disabled for this topology.
-        </AdminSectionUnavailable>
+        <AdminSectionUnavailable>{t("disabled")}</AdminSectionUnavailable>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Metric label="Status" value={<Badge status={worker.status} />} />
+          <Metric label={t("status")} value={<Badge status={worker.status} />} />
           <Metric
-            label="Last heartbeat"
-            value={<span className="text-sm">{displayTime(worker.lastSeenAt, dateFormat)}</span>}
+            label={t("lastHeartbeat")}
+            value={
+              <span className="text-sm">
+                {displayTime(worker.lastSeenAt, context, values("unavailable"))}
+              </span>
+            }
           />
-          <Metric label="Release" value={<span>{worker.release}</span>} />
-          <Metric label="Environment" value={<span>{worker.environment}</span>} />
-          <Metric label="Scheduler driver" value={<span>{worker.schedulerDriver}</span>} />
+          <Metric label={t("release")} value={<span>{worker.release}</span>} />
+          <Metric label={t("environment")} value={<span>{worker.environment}</span>} />
+          <Metric label={t("schedulerDriver")} value={<span>{worker.schedulerDriver}</span>} />
           <Metric
-            label="Schema status"
-            value={<Badge status={schema.tone}>{schema.label}</Badge>}
-          />
-          <Metric
-            label="Bundled migration"
-            value={<span>{migrationName(worker.bundledMigration)}</span>}
-          />
-          <Metric
-            label="Applied migration"
-            value={<span>{migrationName(worker.appliedMigration)}</span>}
+            label={t("schemaStatus")}
+            value={<Badge status={status.tone}>{status.label}</Badge>}
           />
           <Metric
-            label="Slack ops"
+            label={t("bundledMigration")}
+            value={<span>{worker.bundledMigration ?? values("unavailable")}</span>}
+          />
+          <Metric
+            label={t("appliedMigration")}
+            value={<span>{worker.appliedMigration ?? values("unavailable")}</span>}
+          />
+          <Metric
+            label={t("slackOps")}
             value={
               <Badge status={ops.enabled ? "ok" : "unknown"}>
-                {ops.configured ? (ops.enabled ? "Configured" : "Disabled") : "Not configured"}
+                {ops.configured
+                  ? ops.enabled
+                    ? statusT("configured")
+                    : statusT("disabled")
+                  : statusT("notConfigured")}
               </Badge>
             }
           />

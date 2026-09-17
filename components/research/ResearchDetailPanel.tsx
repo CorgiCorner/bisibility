@@ -1,6 +1,7 @@
 "use client";
 
 import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import {
   TrackingConfigurationFields,
   type TrackingConfigurationValue,
@@ -8,20 +9,19 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
+import { formatDisplayMonthYear } from "@/lib/dates/format";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { appPath } from "@/lib/routing/app-path";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import Link from "next/link";
+import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ResearchDetailSaveAction } from "./ResearchDetailSaveAction";
+import { ResearchIntentChip } from "./ResearchIntentChip";
+import { ResearchTrackingCostLine } from "./ResearchTrackingCostLine";
 import { ResearchUnavailableMetric } from "./ResearchUnavailableMetric";
-import {
-  chronologicalTrend,
-  difficultyPillStyle,
-  IntentChip,
-  MONTH_LABELS,
-} from "./research-results-model";
+import { chronologicalTrend, difficultyPillStyle } from "./research-results-model";
 import { researchTrackingCost, researchTrackingCostLine } from "./research-tracking-cost";
 import type { ResearchAddDraft } from "./research-workspace-model";
 
@@ -62,6 +62,9 @@ export function ResearchDetailPanel({
   seed,
   trackingMarketCount = 1,
 }: Readonly<ResearchDetailPanelProps>) {
+  const t = useTranslations("projectResearch.detail");
+  const format = useFormatter();
+  const dateDisplay = useDateDisplay();
   const [device, setDevice] = useState(defaultTracking?.device ?? "desktop");
   const [location, setLocation] = useState(defaultTracking?.location);
   const [scheduleFrequency, setScheduleFrequency] = useState(
@@ -79,7 +82,9 @@ export function ResearchDetailPanel({
       ? { costContext, line, location, onAdd, projectId }
       : null;
   const points = chronologicalTrend(active?.monthlyTrend ?? []);
-  const labels = points.map((point) => MONTH_LABELS[point.month - 1] ?? String(point.month));
+  const labels = points.map((point) =>
+    formatDisplayMonthYear(`${point.year}-${String(point.month).padStart(2, "0")}-01`, dateDisplay),
+  );
   const trend = points.map((point) => point.searchVolume);
   const availableTrend = trend.filter((value): value is number => value != null);
   const peak = Math.max(...availableTrend, 0);
@@ -88,7 +93,7 @@ export function ResearchDetailPanel({
 
   return (
     <Card className="min-w-0 lg:sticky lg:top-4 lg:self-start" size="lg">
-      <Eyebrow>{active ? "From results" : "Active seed"}</Eyebrow>
+      <Eyebrow>{active ? t("fromResults") : t("activeSeed")}</Eyebrow>
       <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
         <h2
           className="m-0 min-w-0 truncate text-[19px] font-semibold tracking-[-0.35px] text-fg"
@@ -100,41 +105,44 @@ export function ResearchDetailPanel({
           <span
             className="rounded-full border px-2 py-0.5 font-sans tabular-nums text-[11px] font-semibold"
             style={difficultyPillStyle(active.difficulty)}
-            title={`Keyword difficulty ${active.difficulty ?? "-"}`}
+            title={t("difficultyTitle")}
           >
             {active.difficulty ?? "-"}
           </span>
         ) : active ? (
-          <ResearchUnavailableMetric label="KD unavailable" />
+          <ResearchUnavailableMetric label={t("unavailableDifficulty")} />
         ) : null}
-        {active ? <IntentChip intent={active.intent} /> : null}
+        {active ? <ResearchIntentChip intent={active.intent} /> : null}
       </div>
 
       {active ? (
         <>
           <div className="mt-4 grid grid-cols-3 gap-2">
             <Metric
-              label="Volume"
+              label={t("volume")}
+              unavailableLabel={t("unavailableVolume")}
               unavailable={!metricsAvailable}
-              value={metric(active.searchVolume, (value) => value.toLocaleString("en-US"))}
+              value={metric(active.searchVolume, (value) => format.number(value))}
             />
             <Metric
-              label="CPC"
+              label={t("cpc")}
+              unavailableLabel={t("unavailableCpc")}
               unavailable={!metricsAvailable}
               value={metric(active.cpcCents, formatEstimateCents)}
             />
             <Metric
-              label="Competition"
+              label={t("competition")}
+              unavailableLabel={t("unavailableCompetition")}
               unavailable={!metricsAvailable}
               value={metric(active.competition, (value) => value.toFixed(2))}
             />
           </div>
           <div className="mt-5">
-            <Eyebrow>12-month trend</Eyebrow>
+            <Eyebrow>{t("trend")}</Eyebrow>
             <div className="mt-2 h-[190px] min-w-0">
               {!metricsAvailable ? (
                 <div className="grid h-full place-items-center rounded-control bg-bg-sunken">
-                  <ResearchUnavailableMetric label="Search trend unavailable" />
+                  <ResearchUnavailableMetric label={t("unavailableTrend")} />
                 </div>
               ) : availableTrend.length > 1 ? (
                 <TimeSeriesChart
@@ -142,7 +150,7 @@ export function ResearchDetailPanel({
                   labels={labels}
                   series={[
                     {
-                      label: "Search volume",
+                      label: t("trendSeries"),
                       values: trend,
                       color: "var(--accent)",
                       fill: true,
@@ -159,52 +167,51 @@ export function ResearchDetailPanel({
                 />
               ) : (
                 <div className="grid h-full place-items-center rounded-control bg-bg-sunken text-[12px] text-fg-muted">
-                  No monthly trend available
+                  {t("noTrend")}
                 </div>
               )}
             </div>
           </div>
           {active.variants.length > 1 ? (
             <div className="mt-5 border-t border-border pt-4">
-              <Eyebrow>Variants, grouped</Eyebrow>
+              <Eyebrow>{t("variants")}</Eyebrow>
               <div className="mt-2 grid gap-1.5">
                 {active.variants.map((variant) => (
                   <div className="flex justify-between gap-3 text-[12px]" key={variant.keyword}>
                     <span className="truncate text-fg-muted">{variant.keyword}</span>
                     <span className="font-sans tabular-nums text-fg-muted">
                       {metricsAvailable ? (
-                        metric(variant.searchVolume, (value) => value.toLocaleString("en-US"))
+                        metric(variant.searchVolume, (value) => format.number(value))
                       ) : (
-                        <ResearchUnavailableMetric label="Variant search volume unavailable" />
+                        <ResearchUnavailableMetric label={t("variantVolume")} />
                       )}
                     </span>
                   </div>
                 ))}
               </div>
-              <p className="mb-0 mt-2 text-[11px] leading-5 text-fg-muted">
-                Variants share one Google volume unless clickstream volumes are on.
-              </p>
+              <p className="mb-0 mt-2 text-[11px] leading-5 text-fg-muted">{t("variantHelp")}</p>
             </div>
           ) : null}
         </>
       ) : (
-        <p className="mt-4 text-[12.5px] leading-5 text-fg-muted">
-          Select a result row to inspect provider metrics and grouped variants.
-        </p>
+        <p className="mt-4 text-[12.5px] leading-5 text-fg-muted">{t("selectResult")}</p>
       )}
 
       {management ? (
         <div className="mt-5 border-t border-border pt-4">
-          <Eyebrow>Add to tracking</Eyebrow>
+          <Eyebrow>{t("tracking")}</Eyebrow>
           {active?.alreadyTracked ? (
             <p className="mb-0 mt-2 text-[12.5px] text-fg-muted">
-              Already tracked.{" "}
-              <Link
-                className="font-semibold text-accent-text hover:underline"
-                href={appPath(management.projectId, "rank-tracker")}
-              >
-                Open in the keyword grid
-              </Link>
+              {t.rich("alreadyTracked", {
+                keywords: (chunks) => (
+                  <Link
+                    className="font-semibold text-accent-text hover:underline"
+                    href={appPath(management.projectId, "rank-tracker")}
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </p>
           ) : (
             <>
@@ -223,13 +230,7 @@ export function ResearchDetailPanel({
                   showSchedule
                 />
               </div>
-              <p className="mb-3 mt-2 font-sans tabular-nums text-[11.5px] leading-5 text-fg-muted">
-                {management.line.lead}
-                {management.line.emphasis ? (
-                  <span className="text-fg">{management.line.emphasis}</span>
-                ) : null}
-                {management.line.tail}
-              </p>
+              <ResearchTrackingCostLine fact={management.line} />
               <Button
                 onClick={() =>
                   management.onAdd({
@@ -242,7 +243,7 @@ export function ResearchDetailPanel({
                 startIcon={<Plus weight="regular" size={14} />}
                 style={{ width: "100%" }}
               >
-                Add to tracking
+                {t("tracking")}
               </Button>
               {active ? (
                 <ResearchDetailSaveAction
@@ -261,16 +262,17 @@ export function ResearchDetailPanel({
 
 function Metric({
   label,
+  unavailableLabel,
   unavailable,
   value,
-}: Readonly<{ label: string; unavailable?: boolean; value: string }>) {
+}: Readonly<{ label: string; unavailableLabel: string; unavailable?: boolean; value: string }>) {
   return (
     <div className="rounded-control bg-bg-sunken p-3">
       <span className="block font-sans tabular-nums text-[9.5px] uppercase tracking-[0.4px] text-fg-muted">
         {label}
       </span>
       <strong className="mt-1 block font-sans tabular-nums text-[14px] text-fg">
-        {unavailable ? <ResearchUnavailableMetric label={`${label} unavailable`} /> : value}
+        {unavailable ? <ResearchUnavailableMetric label={unavailableLabel} /> : value}
       </strong>
     </div>
   );

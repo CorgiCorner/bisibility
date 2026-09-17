@@ -3,10 +3,10 @@
 import { RankCheckRunModal } from "@/components/keywords/RankCheckRunModal";
 import { Button } from "@/components/ui/Button";
 import { isPublicIdOfType } from "@/lib/db/public-id";
-import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-runs-path";
 import type { SerpDepth } from "@/lib/serp/constants";
+import { useTranslations } from "next-intl";
 
 export type KeywordFirstCheckModalStep = "confirm" | "running" | "success" | "failed";
 
@@ -29,7 +29,14 @@ export type KeywordFirstCheckModalProps = {
 };
 
 type FailureCopy = {
-  body: string;
+  messageKey:
+    | "accountRestricted"
+    | "billing"
+    | "failed"
+    | "providerAuth"
+    | "rateLimited"
+    | "transient"
+    | "unknown";
   showOpenIntegrations: boolean;
   showTryAgain: boolean;
   showViewCheckDetails: boolean;
@@ -38,7 +45,7 @@ type FailureCopy = {
 function failureCopy(errorCode: string | null): FailureCopy {
   if (errorCode === "provider_billing") {
     return {
-      body: "Your rank data provider account has insufficient funds. Add funds or connect a different provider, then run the check again.",
+      messageKey: "billing",
       showOpenIntegrations: true,
       showTryAgain: true,
       showViewCheckDetails: true,
@@ -46,7 +53,7 @@ function failureCopy(errorCode: string | null): FailureCopy {
   }
   if (errorCode === "provider_account_restricted") {
     return {
-      body: providerFailurePresentation(errorCode).message,
+      messageKey: "accountRestricted",
       showOpenIntegrations: true,
       showTryAgain: false,
       showViewCheckDetails: true,
@@ -54,14 +61,30 @@ function failureCopy(errorCode: string | null): FailureCopy {
   }
   if (errorCode === "provider_auth") {
     return {
-      body: "The rank data provider rejected the credentials. Reconnect the provider and run the check again.",
+      messageKey: "providerAuth",
       showOpenIntegrations: true,
       showTryAgain: false,
       showViewCheckDetails: true,
     };
   }
+  if (errorCode === "provider_rate_limited") {
+    return {
+      messageKey: "rateLimited",
+      showOpenIntegrations: false,
+      showTryAgain: true,
+      showViewCheckDetails: true,
+    };
+  }
+  if (errorCode === "provider_transient") {
+    return {
+      messageKey: "transient",
+      showOpenIntegrations: false,
+      showTryAgain: true,
+      showViewCheckDetails: true,
+    };
+  }
   return {
-    body: "The check failed after several attempts. This is usually temporary - try again in a few minutes.",
+    messageKey: errorCode === null ? "unknown" : "failed",
     showOpenIntegrations: false,
     showTryAgain: true,
     showViewCheckDetails: true,
@@ -73,24 +96,23 @@ function ConfirmBody({
   costLabel,
   depth,
 }: Readonly<Pick<KeywordFirstCheckModalProps, "confirming" | "costLabel" | "depth">>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.firstCheck");
   if (confirming) {
     return (
       <p className="m-0 text-[13px] leading-5 text-fg-muted" role="status">
-        The check is processing now.
+        {t("processing")}
       </p>
     );
   }
 
   const rows = [
-    { label: "Keywords", value: "1 keyword" },
-    { label: "Depth", value: `Top ${depth}` },
-    { label: "Estimated cost", value: costLabel ?? "Unavailable" },
+    { label: t("keywords"), value: t("oneKeyword") },
+    { label: t("depth"), value: t("top", { depth }) },
+    { label: t("estimatedCost"), value: costLabel ?? t("unavailable") },
   ];
   return (
     <div className="grid gap-4">
-      <p className="m-0 text-[12.5px] leading-5 text-fg-muted">
-        Confirm this manual run before it is sent to the provider.
-      </p>
+      <p className="m-0 text-[12.5px] leading-5 text-fg-muted">{t("confirmDescription")}</p>
       <div className="overflow-hidden rounded-card border border-border">
         {rows.map((row, index) => (
           <div
@@ -109,44 +131,28 @@ function ConfirmBody({
 }
 
 function RunningBody() {
-  return (
-    <p className="m-0 text-[13px] leading-5 text-fg-muted">
-      Check running. This usually takes about a minute. You can close this window - the result will
-      appear on this page.
-    </p>
-  );
+  const t = useTranslations("projectRankTracker.keywordDetail.firstCheck");
+  return <p className="m-0 text-[13px] leading-5 text-fg-muted">{t("runningDescription")}</p>;
 }
 
 function SuccessBody({ depth, position }: Readonly<{ depth: number; position: number | null }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.firstCheck");
   const ranked = position != null && position > 0;
   return (
     <div>
       <p className="m-0 text-[13px] leading-5 text-fg-muted">
-        {ranked
-          ? `Ranked #${position} in the top ${depth}.`
-          : `Not ranked in the top ${depth} yet.`}
+        {ranked ? t("ranked", { depth, position }) : t("notRanked", { depth })}
       </p>
     </div>
   );
 }
 
-const SAFE_IMMEDIATE_BLOCK_CODES = new Set([
-  "budget_exhausted",
-  "check_in_progress",
-  "sample_project",
-]);
-
-function FailedBody({
-  errorCode,
-  message,
-}: Readonly<{ errorCode: string | null; message: string | null }>) {
-  const safeMessage =
-    message && SAFE_IMMEDIATE_BLOCK_CODES.has(errorCode ?? "")
-      ? message
-      : providerFailurePresentation(errorCode, message).message;
+function FailedBody({ errorCode }: Readonly<{ errorCode: string | null }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.firstCheck");
+  const copy = failureCopy(errorCode);
   return (
     <div role="alert">
-      <p className="m-0 text-[13px] leading-5 text-fg-muted">{safeMessage}</p>
+      <p className="m-0 text-[13px] leading-5 text-fg-muted">{t(copy.messageKey)}</p>
     </div>
   );
 }
@@ -168,14 +174,13 @@ export function KeywordFirstCheckModal({
   requestedDepth,
   step,
 }: Readonly<KeywordFirstCheckModalProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.firstCheck");
   const successDepth = requestedDepth ?? depth;
   const isRunning = step === "running";
   const isFailed = step === "failed";
   const isConfirm = step === "confirm";
   const modalOnClose = step === "success" ? onContinue : onClose;
-  const failedCopy = failureCopy(
-    providerFailurePresentation(errorCode, confirmError).code ?? errorCode,
-  );
+  const failedCopy = failureCopy(errorCode);
   const detailRunId = rankCheckId && isPublicIdOfType(rankCheckId, "rcr") ? rankCheckId : null;
   const checksHref = detailRunId
     ? projectRunRankCheckPath(projectRef, detailRunId)
@@ -187,14 +192,14 @@ export function KeywordFirstCheckModal({
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
         {confirmError ? (
           <p className="m-0 mb-1 w-full text-[12px] leading-5 text-red-text" role="alert">
-            {confirmError}
+            {t("couldNotStart")}
           </p>
         ) : null}
         <Button disabled={confirming} onClick={onClose} type="button" variant="secondary">
-          Cancel
+          {t("cancel")}
         </Button>
-        <Button loading={confirming} loadingLabel="Starting..." onClick={onConfirm} type="button">
-          Confirm and run
+        <Button loading={confirming} loadingLabel={t("starting")} onClick={onConfirm} type="button">
+          {t("confirmAndRun")}
         </Button>
       </div>
     );
@@ -202,7 +207,7 @@ export function KeywordFirstCheckModal({
     footer = (
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
         <Button onClick={onClose} type="button" variant="secondary">
-          Close
+          {t("close")}
         </Button>
       </div>
     );
@@ -211,17 +216,17 @@ export function KeywordFirstCheckModal({
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
         {failedCopy.showViewCheckDetails ? (
           <Button href={checksHref} type="button" variant="secondary">
-            View check details
+            {t("viewCheckDetails")}
           </Button>
         ) : null}
         {failedCopy.showTryAgain ? (
           <Button onClick={onTryAgain} type="button" variant="secondary">
-            Try again
+            {t("tryAgain")}
           </Button>
         ) : null}
         {failedCopy.showOpenIntegrations ? (
           <Button href={appPath(projectRef, "integrations")} type="button">
-            Open integrations
+            {t("openIntegrations")}
           </Button>
         ) : null}
       </div>
@@ -230,19 +235,19 @@ export function KeywordFirstCheckModal({
     footer = (
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
         <Button onClick={onContinue} type="button">
-          Continue
+          {t("continue")}
         </Button>
       </div>
     );
   }
 
   const title = isConfirm
-    ? "Run rank check"
+    ? t("runTitle")
     : isRunning
-      ? "Check running"
+      ? t("runningTitle")
       : step === "success"
-        ? "Check complete"
-        : "Check failed";
+        ? t("completeTitle")
+        : t("failedTitle");
 
   let body: React.ReactNode;
   if (isConfirm) {
@@ -250,7 +255,7 @@ export function KeywordFirstCheckModal({
   } else if (isRunning) {
     body = <RunningBody />;
   } else if (isFailed) {
-    body = <FailedBody errorCode={errorCode} message={confirmError} />;
+    body = <FailedBody errorCode={errorCode} />;
   } else {
     body = <SuccessBody depth={successDepth} position={position} />;
   }

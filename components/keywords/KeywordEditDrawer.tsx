@@ -7,6 +7,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { KeywordDetailActions } from "./action-utils";
 import { useKeywordScheduleModal } from "./use-keyword-schedule-modal";
@@ -23,11 +24,6 @@ type KeywordEditDrawerProps = Pick<KeywordDetailActions, "updateKeywordAction"> 
   providerRate?: CostRateInfo;
 };
 
-const sectionOptions = [
-  { label: "Details", value: "details" },
-  { label: "Schedule", value: "schedule" },
-] as const;
-
 export function KeywordEditDrawer({
   focusTargetUrl = false,
   keyword,
@@ -38,6 +34,7 @@ export function KeywordEditDrawer({
   providerRate,
   updateKeywordAction,
 }: Readonly<KeywordEditDrawerProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.edit");
   const [section, setSection] = useState<EditSection>("details");
   const [saving, setSaving] = useState(false);
   const { onChangeSchedule, scheduleModal } = useKeywordScheduleModal({
@@ -65,21 +62,21 @@ export function KeywordEditDrawer({
         footer={
           <div className="flex items-center gap-2.5">
             <Button disabled={saving} onClick={handleClose} type="button" variant="secondary">
-              Cancel
+              {t("cancel")}
             </Button>
             {section === "details" ? (
               <Button
                 className="flex-1"
                 form={detailsFormId}
                 loading={saving}
-                loadingLabel="Saving..."
+                loadingLabel={t("saving")}
                 type="submit"
               >
-                Save details
+                {t("saveDetails")}
               </Button>
             ) : (
               <Button className="flex-1" onClick={onChangeSchedule} type="button">
-                Set schedule
+                {t("setSchedule")}
               </Button>
             )}
           </div>
@@ -88,7 +85,7 @@ export function KeywordEditDrawer({
         open={open}
         title={
           <span className="block min-w-0">
-            <span className="block">Edit keyword</span>
+            <span className="block">{t("title")}</span>
             <span className="mt-1 block truncate text-[12px] font-normal text-fg-muted">
               {keyword.keyword}
             </span>
@@ -96,11 +93,14 @@ export function KeywordEditDrawer({
         }
       >
         <SegmentedControl
-          ariaLabel="Edit section"
+          ariaLabel={t("section")}
           className="mb-5"
           disabled={saving}
           onChange={setSection}
-          options={sectionOptions}
+          options={[
+            { label: t("details"), value: "details" },
+            { label: t("schedule"), value: "schedule" },
+          ]}
           value={section}
         />
         <div hidden={section !== "details"}>
@@ -119,7 +119,7 @@ export function KeywordEditDrawer({
           />
         </div>
         <p className="text-[13px] text-fg-muted" hidden={section !== "schedule"}>
-          Assign this keyword to a check schedule for the selected target.
+          {t("scheduleDescription")}
         </p>
       </Sheet>
       {scheduleModal}

@@ -1,14 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { runPageFixture } from "./RunPageFixtures";
-import { runSummary } from "./RunPageModel";
 import { RunPageTargets } from "./RunPageTargets";
-
-function summary() {
-  return runSummary(runPageFixture.run, {
-    formatInstant: (instant) => instant,
-    now: runPageFixture.now,
-  });
-}
 
 const meta = {
   args: {
@@ -23,7 +15,7 @@ const meta = {
     onMutate: () => undefined,
     projectRef: "prj_example",
     run: runPageFixture.run,
-    summary: summary(),
+    summary: { active: true, planned: false },
   },
   component: RunPageTargets,
   decorators: [

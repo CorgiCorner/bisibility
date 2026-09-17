@@ -1,0 +1,23 @@
+{
+  "emailPreferences": {
+    "metadata": {
+      "title": "Preferencje e-mail"
+    },
+    "page": {
+      "back": "Wróć do bisibility",
+      "docsLink": "Nadal nie działa? Zajrzyj do dokumentacji",
+      "invalidDescription": "Nie udało się zweryfikować linku. Odpowiedz na tę wiadomość, a zmienimy preferencje za Ciebie.",
+      "invalidTitle": "Ten link do wypisania jest nieprawidłowy",
+      "kicker": "Preferencje e-mail",
+      "successDescription": "Nie będziemy wysyłać Ci wiadomości powitalnych ani innych e-maili marketingowych. Wiadomości dotyczące konta i usługi pozostają bez zmian.",
+      "successTitle": "Wypisano Cię",
+      "validDescription": "Przestaniesz otrzymywać wiadomości od założyciela i inne e-maile marketingowe. Wiadomości dotyczące konta i usługi będą nadal przychodzić.",
+      "validTitle": "Wypisać się z wiadomości od założyciela?"
+    },
+    "button": {
+      "error": "Nie udało się zaktualizować preferencji. Spróbuj ponownie.",
+      "idle": "Wypisz się",
+      "pending": "Aktualizowanie…"
+    }
+  }
+}

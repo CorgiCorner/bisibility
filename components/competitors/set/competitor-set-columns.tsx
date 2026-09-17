@@ -5,27 +5,35 @@ import type { DataTableColumn } from "@/components/ui/data-table/data-table-type
 import { RowActionsMenu } from "@/components/ui/RowActionsMenu";
 import { TagChip } from "@/components/ui/TagChip";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { formatDate } from "@/lib/dates/format";
+import type { DateDisplayContext } from "@/lib/dates/format";
+import { formatDisplayDate } from "@/lib/dates/format";
 import type { CompetitorSetSettingsModel } from "@/lib/queries/competitor-set-settings";
+import type { useTranslations } from "next-intl";
 import { OverrideCell, type ReplaceMarketsAction } from "./OverrideCell";
 
 export type CompetitorSetRow = CompetitorSetSettingsModel["competitors"][number] & { id: string };
 
-function suggestionEvidence(evidence: unknown) {
-  if (!evidence || typeof evidence !== "object") return "Suggested from persisted evidence.";
+type CompetitorSetTranslations = ReturnType<typeof useTranslations<"projectCompetitors.ui">>;
+
+function suggestionEvidence(evidence: unknown, t: CompetitorSetTranslations) {
+  if (!evidence || typeof evidence !== "object") return t("suggestedEvidence");
   const value = evidence as Record<string, unknown>;
   if (
     typeof value.seenOn === "number" &&
     typeof value.of === "number" &&
     typeof value.bestPosition === "number"
   ) {
-    return `seen on ${value.seenOn} of ${value.of} keywords / best #${value.bestPosition}`;
+    return t("suggestedEvidenceDetail", {
+      bestPosition: value.bestPosition,
+      of: value.of,
+      seenOn: value.seenOn,
+    });
   }
-  return "Suggested from persisted evidence.";
+  return t("suggestedEvidence");
 }
 
-function addedDate(createdAt: Date) {
-  return formatDate(createdAt.toISOString().slice(0, 10), "day_first");
+function addedDate(createdAt: Date, dateDisplay: DateDisplayContext) {
+  return formatDisplayDate(createdAt.toISOString().slice(0, 10), dateDisplay);
 }
 
 export function competitorSetColumns({
@@ -36,6 +44,8 @@ export function competitorSetColumns({
   replaceMarkets,
   onEdit,
   onRemove,
+  dateDisplay,
+  t,
 }: {
   canEdit: boolean;
   canDelete: boolean;
@@ -44,14 +54,16 @@ export function competitorSetColumns({
   replaceMarkets: ReplaceMarketsAction;
   onEdit: (competitor: CompetitorSetRow) => void;
   onRemove: (competitor: CompetitorSetRow) => void;
+  dateDisplay: DateDisplayContext;
+  t: CompetitorSetTranslations;
 }): readonly DataTableColumn<CompetitorSetRow>[] {
   const columns: DataTableColumn<CompetitorSetRow>[] = [
     {
       accessorKey: "domain",
       cell: ({ row }) => <CompetitorDomainLink domain={row.original.domain} />,
-      header: "Domain",
+      header: t("domain"),
       id: "domain",
-      meta: { flex: 1, lockResize: true, lockVisible: true, sortable: false, title: "Domain" },
+      meta: { flex: 1, lockResize: true, lockVisible: true, sortable: false, title: t("domain") },
       minSize: 192,
       size: 192,
     },
@@ -66,14 +78,14 @@ export function competitorSetColumns({
           )}
         </div>
       ),
-      header: "Brand aliases",
+      header: t("brandAliases"),
       id: "aliases",
       meta: {
         flex: 1.3,
         lockResize: true,
         lockVisible: true,
         sortable: false,
-        title: "Brand aliases",
+        title: t("brandAliases"),
       },
       minSize: 216,
       size: 216,
@@ -91,14 +103,14 @@ export function competitorSetColumns({
           scopePolicy={row.original.scopePolicy}
         />
       ),
-      header: "In markets",
+      header: t("inMarkets"),
       id: "markets",
       meta: {
         flex: 1.2,
         lockResize: true,
         lockVisible: true,
         sortable: false,
-        title: "In markets",
+        title: t("inMarkets"),
       },
       minSize: 208,
       size: 240,
@@ -109,17 +121,17 @@ export function competitorSetColumns({
         <span className="text-[11px] text-fg-muted">
           <span>{row.original.source}</span>
           {row.original.source === "suggested" && row.original.evidence ? (
-            <Tooltip content={suggestionEvidence(row.original.evidence)} semantics="description">
+            <Tooltip content={suggestionEvidence(row.original.evidence, t)} semantics="description">
               <button className="mt-1 block text-[10px] text-fg-muted underline" type="button">
-                why?
+                {t("why")}
               </button>
             </Tooltip>
           ) : null}
         </span>
       ),
-      header: "Source",
+      header: t("source"),
       id: "source",
-      meta: { lockResize: true, lockVisible: true, sortable: false, title: "Source" },
+      meta: { lockResize: true, lockVisible: true, sortable: false, title: t("source") },
       minSize: 112,
       size: 128,
     },
@@ -127,12 +139,12 @@ export function competitorSetColumns({
       accessorKey: "createdAt",
       cell: ({ row }) => (
         <span className="whitespace-nowrap text-[11px] text-fg-muted">
-          {addedDate(row.original.createdAt)}
+          {addedDate(row.original.createdAt, dateDisplay)}
         </span>
       ),
-      header: "Added",
+      header: t("added"),
       id: "added",
-      meta: { lockResize: true, lockVisible: true, sortable: false, title: "Added" },
+      meta: { lockResize: true, lockVisible: true, sortable: false, title: t("added") },
       minSize: 112,
       size: 112,
     },
@@ -150,15 +162,15 @@ export function competitorSetColumns({
         lockVisible: true,
         pin: "right",
         sortable: false,
-        title: "Actions",
+        title: t("actions"),
       },
       cell: ({ row }) => (
         <RowActionsMenu
-          ariaLabel={`Actions for ${row.original.domain}`}
+          ariaLabel={t("actionsFor", { domain: row.original.domain })}
           items={[
-            ...(canEdit ? [{ label: "Edit", onSelect: () => onEdit(row.original) }] : []),
+            ...(canEdit ? [{ label: t("edit"), onSelect: () => onEdit(row.original) }] : []),
             ...(canDelete
-              ? [{ label: "Remove", danger: true, onSelect: () => onRemove(row.original) }]
+              ? [{ label: t("remove"), danger: true, onSelect: () => onRemove(row.original) }]
               : []),
           ]}
         />

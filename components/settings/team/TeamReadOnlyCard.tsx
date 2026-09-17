@@ -21,10 +21,12 @@ export function TeamReadOnlyCard({
 }: Readonly<TeamReadOnlyCardProps>) {
   return (
     <Card
+      aria-label={title}
       className={cn(settingsCardFrameClassName, className)}
       data-settings-card=""
       data-settings-card-frame="settled"
       data-team-card-frame={frameId}
+      role="region"
       size="lg"
     >
       <SectionTitle>{title}</SectionTitle>

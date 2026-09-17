@@ -2,13 +2,13 @@
 
 import { launchRankCheckRunAction } from "@/lib/actions/rank-check-run-launch";
 import type { PreviewRankCheckRunActionInput } from "@/lib/actions/rank-check-run-preview-result";
-import type { ProblemDetails } from "@/lib/api/responses";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import type { RunSelectionSpec } from "@/lib/rank-check/runs/selection";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { PreflightDialog } from "./PreflightDialog";
 import type { PreflightProvider, PreflightScope } from "./preflight-presentation";
@@ -32,43 +32,24 @@ function preflightProjectId(projectId: string): PreviewRankCheckRunActionInput["
   return projectId as PreviewRankCheckRunActionInput["projectId"];
 }
 
-function plural(count: number, singular: string) {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
-}
-
 function providerLabel(id: string) {
   if (id === "dataforseo") return "DataForSEO";
   if (id === "serpapi") return "SerpApi";
   return id;
 }
 
-function providers(providerId?: string | null): readonly PreflightProvider[] {
+function providers(
+  providerId: string | null | undefined,
+  t: ReturnType<typeof useTranslations<"shared.rankPreflight">>,
+): readonly PreflightProvider[] {
   if (!providerId) return [];
   return [
     {
       id: providerId,
       label: providerLabel(providerId),
-      tooltip: "Configured primary provider.",
+      tooltip: t("configuredProvider", { provider: providerLabel(providerId) }),
     },
   ];
-}
-
-function scope(rows: readonly KeywordRow[]): PreflightScope {
-  const markets = [...new Set(rows.map((row) => row.location.displayName))];
-  const devices = [...new Set(rows.map((row) => row.device))];
-  const marketLabel =
-    markets.length === 1 ? (markets[0] ?? "this market") : `${markets.length} markets`;
-  const deviceLabel = devices.length === 1 ? (devices[0] ?? "device") : `${devices.length} devices`;
-  const one = rows.length === 1;
-  return {
-    description: `Checks ${plural(rows.length, "keyword")} across ${marketLabel} before anything is sent to the provider.`,
-    equation: `${plural(rows.length, "keyword")} · ${marketLabel} · ${deviceLabel} = ${plural(rows.length, "target")}`,
-    startLabel: "Start run",
-    subtitle: `Review the ${marketLabel} scope before starting.`,
-    title: one
-      ? `Check ${rows[0]?.keyword ?? "keyword"} in ${marketLabel}`
-      : `Check ${plural(rows.length, "selected keyword")} in ${marketLabel}`,
-  };
 }
 
 export function manualPreflightDepth(
@@ -84,14 +65,6 @@ export function manualPreflightDepth(
   );
 }
 
-function problemMessage(payload: unknown) {
-  if (payload && typeof payload === "object" && "detail" in payload) {
-    const detail = (payload as ProblemDetails).detail;
-    if (typeof detail === "string" && detail) return detail;
-  }
-  return "Could not load the run estimate. Try again.";
-}
-
 export async function previewRankCheckRunFromApp(
   input: PreviewRankCheckRunActionInput,
 ): Promise<RankCheckRunPreview> {
@@ -102,18 +75,43 @@ export async function previewRankCheckRunFromApp(
     method: "POST",
   });
   const payload: unknown = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(problemMessage(payload));
+  if (!response.ok) throw new Error("rank_run_preview_failed");
   if (!payload || typeof payload !== "object" || !("data" in payload)) {
-    throw new Error("Could not load the run estimate. Try again.");
+    throw new Error("rank_run_preview_failed");
   }
   return (payload as PreviewEnvelope).data;
 }
 
 export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPreflightOptions>) {
+  const t = useTranslations("shared.rankPreflight");
   const router = useRouter();
   const [active, setActive] = useState<ActivePreflight | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [opening, setOpening] = useState(false);
+
+  function preflightScope(rows: readonly KeywordRow[]): PreflightScope {
+    const markets = [...new Set(rows.map((row) => row.location.displayName))];
+    const devices = [...new Set(rows.map((row) => row.device))];
+    const market =
+      markets.length === 1 ? (markets[0] ?? "-") : t("markets", { count: markets.length });
+    const device =
+      devices.length === 1 ? (devices[0] ?? "-") : t("devices", { count: devices.length });
+    return {
+      description: t("scopeDescription", { count: rows.length, market }),
+      equation: t("scopeEquation", {
+        devices: device,
+        market,
+        targets: rows.length,
+        keywords: rows.length,
+      }),
+      startLabel: t("startRun"),
+      subtitle: t("scopeSubtitle", { market }),
+      title:
+        rows.length === 1
+          ? t("scopeOne", { keyword: rows[0]?.keyword ?? "-", market })
+          : t("scopeMany", { count: rows.length, market }),
+    };
+  }
 
   async function request(request: PreflightRequest) {
     if (request.rows.length === 0) return;
@@ -127,10 +125,8 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
         spec: request.spec,
       });
       setActive({ ...request, preview });
-    } catch (requestError) {
-      setError(
-        requestError instanceof Error ? requestError.message : "Could not load the run estimate.",
-      );
+    } catch {
+      setError(t("couldNotLoad"));
     } finally {
       setOpening(false);
     }
@@ -157,8 +153,8 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
           open
           projectId={preflightProjectId(projectId)}
           previewAction={previewRankCheckRunFromApp}
-          providers={providers(providerId)}
-          scope={scope(active.rows)}
+          providers={providers(providerId, t)}
+          scope={preflightScope(active.rows)}
           spec={active.spec}
         />
       ) : null}

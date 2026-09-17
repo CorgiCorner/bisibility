@@ -1,11 +1,12 @@
-import { actionErrorMessage } from "@/components/onboarding/onboarding-form-utils";
 import type {
   FirstCheckCandidate,
   FirstCheckPreviewFailureCode,
   RunFirstCheckPreviewResult,
 } from "@/lib/actions/rank-check-preview";
+import type { ItemStatus } from "@/lib/rank-check/runs/contract";
 
 type FirstCheckTarget = Pick<FirstCheckCandidate, "device" | "market">;
+type FirstCheckTerminalStatus = Exclude<ItemStatus, "completed" | "queued" | "running">;
 
 export type FirstCheckResultRow =
   | (FirstCheckTarget & {
@@ -30,6 +31,13 @@ export type FirstCheckResultRow =
       requestedDepth?: number;
       rankingUrl: string | null;
       status: "completed";
+      text: string;
+    })
+  | (FirstCheckTarget & {
+      blockedReason: string | null;
+      keywordId: string;
+      publicId: string;
+      status: FirstCheckTerminalStatus;
       text: string;
     })
   | (FirstCheckTarget & {
@@ -111,14 +119,14 @@ export function previewRow(
 
 export function clientErrorRow(
   candidate: FirstCheckCandidate,
-  error: unknown,
+  message: string,
 ): FirstCheckResultRow {
   return {
     code: "client_error",
     device: candidate.device,
     keywordId: candidate.id,
     market: candidate.market,
-    message: actionErrorMessage(error),
+    message,
     publicId: candidate.publicId,
     status: "failed",
     text: candidate.text,
@@ -126,7 +134,7 @@ export function clientErrorRow(
 }
 
 export function candidateFromFailedRow(
-  row: Extract<FirstCheckResultRow, { status: "failed" }>,
+  row: Pick<FirstCheckResultRow, "device" | "keywordId" | "market" | "publicId" | "text">,
 ): FirstCheckCandidate {
   return {
     device: row.device,

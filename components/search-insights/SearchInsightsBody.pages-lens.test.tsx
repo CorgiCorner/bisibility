@@ -1,3 +1,4 @@
+import { renderWithSearchInsightsMessages } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import * as r from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -84,7 +85,7 @@ v.describe("SearchInsightsBody", () => {
       searchParams: { google: "select", period: "7" },
     });
     const user = userEvent.setup();
-    r.render(<SearchInsightsPagesLens lens="search" showSessions />);
+    renderWithSearchInsightsMessages(<SearchInsightsPagesLens lens="search" showSessions />);
 
     const search = r.screen.getByRole("radio", { name: PAGE_LENS_SEARCH_LABEL });
     v.expect(r.screen.getByRole("group", { name: PAGE_LENS_CONTROL_LABEL })).toBeInTheDocument();

@@ -1,0 +1,317 @@
+{
+  "instanceAdmin": {
+    "shell": {
+      "context": "Instance admin",
+      "backToApp": "Back to app",
+      "title": "Instance administration",
+      "description": "Cross-instance operational diagnostics. Tenant data is represented by identifiers only."
+    },
+    "navigation": {
+      "label": "Instance administration sections",
+      "operations": "Operations",
+      "administration": "Administration",
+      "audit": "Audit"
+    },
+    "controls": {
+      "refresh": "Refresh",
+      "lookUp": "Look up",
+      "lookingUp": "Looking up...",
+      "olderEntries": "Older entries",
+      "sendTestNotification": "Send test notification",
+      "sending": "Sending...",
+      "runOutboxSweep": "Run outbox sweep",
+      "running": "Running...",
+      "deactivateAccount": "Deactivate account",
+      "reactivateAccount": "Reactivate account",
+      "resetRateLimits": "Reset rate limits"
+    },
+    "status": {
+      "active": "Active",
+      "blocked": "Blocked",
+      "completed": "Completed",
+      "configured": "Configured",
+      "deactivated": "Deactivated",
+      "deferred": "Deferred",
+      "deferredRateLimit": "Deferred by rate limit",
+      "delivered": "Delivered",
+      "disabled": "Disabled",
+      "error": "Error",
+      "failed": "Failed",
+      "info": "Info",
+      "notConfigured": "Not configured",
+      "ok": "OK",
+      "stale": "Stale",
+      "succeededEmpty": "Succeeded with no data",
+      "succeededWithData": "Succeeded with data",
+      "unknown": "Unknown",
+      "undelivered": "Undelivered",
+      "warning": "Warning"
+    },
+    "values": {
+      "unavailable": "-",
+      "unknown": "unknown",
+      "sectionUnavailable": "{message} Values are unknown, not zero."
+    },
+    "duration": {
+      "milliseconds": "{value, number} ms",
+      "seconds": "{value, number, ::.0} s",
+      "minutes": "{value, number, ::.0} min"
+    },
+    "shellHealth": {
+      "label": "Operations health",
+      "worker": "Worker {status}",
+      "checks": "Checks: {value, number, ::.0}% failed",
+      "checksUnknown": "Checks: unknown",
+      "provider": "{provider}: {value, number, ::.0}% failed",
+      "providerUnknown": "{provider}: unknown",
+      "deliveryUnknown": "Delivery: unknown",
+      "undelivered": "{count, plural, one {# undelivered} other {# undelivered}}"
+    },
+    "rankWindow": {
+      "scheduled": "Scheduled",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "deferred": "Deferred",
+      "stuck": "Stuck",
+      "lagP50": "Lag p50",
+      "lagP95": "Lag p95"
+    },
+    "dashboard": {
+      "rankChecks": {
+        "title": "Rank checks",
+        "description": "Execution totals and schedule-to-start lag. Deferred rows never count as successes.",
+        "unavailable": "Rank-check diagnostics are unavailable.",
+        "last24Hours": "Last 24 hours",
+        "last7Days": "Last 7 days",
+        "failures": "Failures (24h)",
+        "failureDescription": "Checks that failed after exhausting all providers. Grouped by provider and summarized reason.",
+        "fallbacks": "Fallbacks (24h)",
+        "fallbackDescription": "Checks that completed only after a primary provider failed. Grouped by the provider that failed and the summarized reason.",
+        "fallbackEmpty": "No fallback rank checks in the last 24 hours."
+      },
+      "dataSources": {
+        "title": "Data sources",
+        "description": "Per-provider sync health across all connections. Per-connection detail is available only through Account lookup.",
+        "unavailable": "Data-source diagnostics are unavailable."
+      },
+      "presence": {
+        "title": "URL presence",
+        "description": "Latest property-budget deferral from the daily URL-presence workflow. The budget resets automatically.",
+        "unavailable": "URL-presence diagnostics are unavailable.",
+        "deferredUrls": "Deferred URLs",
+        "affectedProjects": "Affected projects",
+        "lastBudgetExhaustion": "Last budget exhaustion"
+      },
+      "temporal": {
+        "title": "Temporal",
+        "description": "Temporal schedule inspection and recorded bootstrap failures.",
+        "asOf": "As of {time}",
+        "schedules": "Schedules",
+        "recentActions": "Recent actions",
+        "missedCatchup": "Missed catchup",
+        "skippedOverlap": "Skipped overlap",
+        "inspectionErrors": "Inspection errors",
+        "nextAction": "Next action",
+        "snapshotUnavailable": "Snapshot unavailable - worker has not published Temporal data. Values above are unknown, not zero.",
+        "disabled": "Temporal scheduling is disabled for this topology.",
+        "snapshotStale": "Temporal snapshot stale"
+      },
+      "ops": {
+        "title": "Ops events",
+        "description": "Recent operator events show delivery metadata only; free-form payload fields are never exposed here.",
+        "deliveryUnavailable": "Delivery diagnostics are unavailable.",
+        "historyUnavailable": "Operational event history is unavailable.",
+        "empty": "No operational events recorded."
+      },
+      "stats": {
+        "title": "Instance stats",
+        "description": "Instance counts and completed SERP usage for the current UTC month.",
+        "unavailable": "Instance statistics are unavailable.",
+        "users": "Users",
+        "projects": "Projects",
+        "keywords": "Keywords",
+        "analytics": "Analytics",
+        "serp": "SERP",
+        "connections": "{kind} connections"
+      }
+    },
+    "worker": {
+      "title": "Worker",
+      "description": "Worker heartbeat, deployment identity, database schema agreement, and Slack delivery configuration.",
+      "unavailable": "Worker diagnostics are unavailable.",
+      "disabled": "Scheduled worker is disabled for this topology.",
+      "status": "Status",
+      "lastHeartbeat": "Last heartbeat",
+      "release": "Release",
+      "environment": "Environment",
+      "schedulerDriver": "Scheduler driver",
+      "schemaStatus": "Schema status",
+      "bundledMigration": "Bundled migration",
+      "appliedMigration": "Applied migration",
+      "slackOps": "Slack ops",
+      "schemaInSync": "In sync",
+      "schemaWorkerBehind": "Worker behind",
+      "schemaWorkerAhead": "Worker ahead"
+    },
+    "failureBreakdown": {
+      "empty": "No failed rank checks in the last 24 hours.",
+      "unavailable": "-",
+      "projectCount": "{count, plural, one {# project} other {# projects}}",
+      "acrossProjects": "across {count, plural, one {# project} other {# projects}}",
+      "copyProjectId": "Copy project ID",
+      "justNow": "just now",
+      "minutesAgo": "{count, plural, one {#m ago} other {#m ago}}",
+      "hoursAgo": "{count, plural, one {#h ago} other {#h ago}}",
+      "daysAgo": "{count, plural, one {#d ago} other {#d ago}}",
+      "firstSeen": "first seen {time}",
+      "lastSeen": "last seen {time}",
+      "moreClasses": "and {count, number} more classes"
+    },
+    "providerHealth": {
+      "empty": "No connected analytics sources.",
+      "ok": "ok {count, number}",
+      "stale": "stale {count, number}",
+      "failed": "failed {count, number}",
+      "notRun": "not run {count, number}",
+      "p95LastSuccess": "p95 last success: {age}",
+      "unknown": "unknown",
+      "ageMinutes": "{count, plural, one {# min} other {# min}}",
+      "ageHours": "{count, plural, one {# h} other {# h}}",
+      "ageDays": "{count, plural, one {# d} other {# d}}",
+      "failureRate": "{value, number, ::.0}% failed",
+      "failureRateUnknown": "unknown"
+    },
+    "providerUsage": {
+      "empty": "No completed SERP checks this month.",
+      "tableLabel": "SERP usage this month by provider",
+      "provider": "Provider",
+      "completedChecks": "Completed checks",
+      "requestsUnits": "Requests / units",
+      "referenceCost": "Reference cost",
+      "rateBasis": "Rate basis",
+      "rateBasisLiveDepth": "Live depth pricing",
+      "rateBasisProductionPlan": "Production plan equivalent",
+      "rateBasisUnavailable": "Rate unavailable",
+      "referenceUnknown": "-",
+      "note": "Reference estimates use maintained provider rates and recorded request units. User-entered costs are ignored; provider invoices remain authoritative."
+    },
+    "opsTable": {
+      "tableLabel": "Recent operational events",
+      "kind": "Kind",
+      "severity": "Severity",
+      "created": "Created",
+      "delivery": "Delivery",
+      "attempts": "Attempts"
+    },
+    "administration": {
+      "growth": {
+        "title": "Growth",
+        "description": "30-day UTC aggregates. No behavioral analytics or tenant content.",
+        "users": "Users",
+        "projects": "Projects",
+        "keywords": "Keywords",
+        "rankChecks": "Rank checks",
+        "trend": "{label} daily count trend",
+        "delta": "{direction, select, positive {+{value, number, ::.0}% vs prior 30 days} negative {-{value, number, ::.0}% vs prior 30 days} other {0.0% vs prior 30 days}}",
+        "noComparison": "No prior-period comparison",
+        "activeAccounts": "Active accounts (approx.)",
+        "activeAccountsDescription": "Distinct accounts with session activity in the last 7 days."
+      },
+      "consumption": {
+        "title": "Top consumption",
+        "description": "Top 10 project/provider rows by reference cost this month. User-entered rates are ignored.",
+        "empty": "No completed SERP checks recorded this month.",
+        "note": "Reference costs use maintained provider rates and recorded request units. Provider invoices remain authoritative.",
+        "tableLabel": "Top project and provider consumption this month",
+        "projectId": "Project ID",
+        "copyProjectId": "Copy project ID {projectId}",
+        "provider": "Provider",
+        "checks": "Checks",
+        "requestsUnits": "Requests / units",
+        "referenceCost": "Reference cost",
+        "rateBasisLiveDepth": "Live depth pricing",
+        "rateBasisProductionPlan": "Production plan equivalent",
+        "rateBasisUnavailable": "Rate unavailable",
+        "referenceUnknown": "-",
+        "share": "Share of instance",
+        "shareAriaLabel": "{value, number, ::.0}% of instance reference cost",
+        "shareValue": "{value, number, ::.0}%"
+      },
+      "mailer": {
+        "title": "Email provider not configured",
+        "description": "Email sign-in is unavailable because this instance cannot send sign-in codes. Set {provider} and its required credentials to restore email delivery.",
+        "link": "Configure email delivery"
+      }
+    },
+    "account": {
+      "title": "Account lookup",
+      "description": "Exact-match lookup returning account metadata only - never tenant content.",
+      "identifier": "Exact email or user ID",
+      "placeholder": "Exact email or user ID",
+      "validationIdentifier": "Enter an exact email or user ID.",
+      "auditNotice": "Lookups are recorded in the admin audit log.",
+      "notFound": "No account matches this identifier.",
+      "unavailable": "-",
+      "created": "Created",
+      "lastActive": "Last active",
+      "projects": "Projects",
+      "keywords": "Keywords",
+      "spendThisMonth": "Spend this month",
+      "connectionsByKind": "Connections by kind",
+      "connection": "{kind}: {count, number}",
+      "lookup": {
+        "forbidden": "This action is not available.",
+        "invalidIdentifier": "Enter an exact email or user ID.",
+        "rateLimited": "Too many account lookups. Try again shortly.",
+        "temporarilyUnavailable": "Account lookup is temporarily unavailable.",
+        "failed": "Account lookup failed."
+      },
+      "actions": {
+        "deactivated": "Account deactivated. Sessions and personal access tokens were revoked; scheduled checks pause on reconciliation.",
+        "reactivated": "Account reactivated. Scheduled checks will reconverge on reconciliation.",
+        "blocked": "Instance administrators cannot be deactivated.",
+        "forbidden": "This action is not available.",
+        "invalidTarget": "Select a valid account.",
+        "rateLimited": "This account action was rate limited. Try again shortly.",
+        "temporarilyUnavailable": "Account action is temporarily unavailable.",
+        "accountNotFound": "Account not found.",
+        "failed": "Account action failed.",
+        "limitsCompleted": "Rate limits reset; monthly spend is a rolling window and cannot be reset",
+        "limitsFailed": "Rate limits could not be reset."
+      }
+    },
+    "opsActions": {
+      "delivered": "Test notification delivered to Slack.",
+      "notConfigured": "Slack operator notifications are not configured.",
+      "deliveryFailed": "Slack test delivery failed.",
+      "forbidden": "This action is not available.",
+      "rateLimited": "This admin action was rate limited. Try again shortly.",
+      "temporarilyUnavailable": "Admin action is temporarily unavailable.",
+      "sweepFailed": "Outbox sweep failed.",
+      "sweepCompleted": "Outbox sweep completed: {delivered, number} of {attempted, number} delivered.",
+      "failed": "The operator action could not be completed."
+    },
+    "audit": {
+      "title": "Admin activity",
+      "description": "instance_admin.* entries. Visible to instance admins only; admins are not anonymous to each other.",
+      "filterLabel": "Filter instance administrator activity",
+      "all": "All",
+      "account": "Account",
+      "ops": "Ops",
+      "setup": "Setup",
+      "selected": "selected",
+      "empty": "No instance-admin audit entries match this filter.",
+      "tableLabel": "Instance administrator activity",
+      "time": "Time",
+      "actor": "Actor",
+      "action": "Action",
+      "target": "Target",
+      "result": "Result",
+      "resultOk": "OK",
+      "resultBlocked": "Blocked",
+      "statusFailed": "Failed",
+      "copyTargetId": "Copy audit target ID {targetId}",
+      "targetUnavailable": "{targetType}:unavailable"
+    }
+  }
+}

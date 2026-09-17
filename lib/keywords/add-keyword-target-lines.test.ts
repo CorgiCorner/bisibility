@@ -44,17 +44,20 @@ describe("parseKeywordTargetLines", () => {
     );
 
     expect(parsed.map((entry) => entry.error)).toEqual([
-      '"not a url" is not a valid URL or path.',
-      '"example.com/no-scheme" is not a valid URL or path.',
-      '"//evil.com" is not a valid URL or path.',
+      { code: "invalid_target_url", target: "not a url" },
+      { code: "invalid_target_url", target: "example.com/no-scheme" },
+      { code: "invalid_target_url", target: "//evil.com" },
     ]);
     expect(parsed.every((entry) => entry.targetUrl === null)).toBe(true);
-    expect(keywordTargetLineError(parsed)).toBe('"not a url" is not a valid URL or path.');
+    expect(keywordTargetLineError(parsed)).toEqual({
+      code: "invalid_target_url",
+      target: "not a url",
+    });
   });
 
   it("errors when the keyword is missing before the pipe", () => {
     expect(parseKeywordTargetLines("| https://example.com")).toEqual([
-      { error: "Add a keyword before the | target URL.", keyword: "", targetUrl: null },
+      { error: { code: "missing_keyword" }, keyword: "", targetUrl: null },
     ]);
   });
 

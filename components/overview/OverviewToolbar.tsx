@@ -9,23 +9,15 @@ import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { TagIcon as Tag } from "@phosphor-icons/react/dist/csr/Tag";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { OverviewView } from "./types";
 
 type SelectedFilters = OverviewView["toolbar"];
 
-const RANGE_OPTIONS: readonly MenuSelectOption[] = [
-  { label: "Last 7 days", value: "7d" },
-  { label: "Last 28 days", value: "28d" },
-  { label: "Last 90 days", value: "90d" },
-];
-
 const ALL_TAGS = "__all__";
 
-function tagOptions(tags: readonly string[]): MenuSelectOption[] {
-  return [
-    { label: "All tags", value: ALL_TAGS },
-    ...tags.map((tag) => ({ label: tag, value: tag })),
-  ];
+function tagOptions(allTags: string, tags: readonly string[]): MenuSelectOption[] {
+  return [{ label: allTags, value: ALL_TAGS }, ...tags.map((tag) => ({ label: tag, value: tag }))];
 }
 
 export function OverviewToolbar({
@@ -37,20 +29,16 @@ export function OverviewToolbar({
   initialSelected?: SelectedFilters;
   projectRef: string;
 }>) {
+  const t = useTranslations("projectDashboard.toolbar");
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selected = initialSelected ?? {
-    availableTags: [],
-    device: "All devices",
-    deviceValue: "all",
-    marketOptions: [],
-    marketValues: [],
-    range: "Last 28 days",
-    rangeValue: "28d",
-    tag: "All tags",
-    tagValue: null,
-  };
+  const selected = initialSelected ?? { availableTags: [], rangeValue: "28d", tagValue: null };
+  const rangeOptions: readonly MenuSelectOption[] = [
+    { label: t("last7Days"), value: "7d" },
+    { label: t("last28Days"), value: "28d" },
+    { label: t("last90Days"), value: "90d" },
+  ];
 
   function pushFilter(key: "range" | "tag", value: string | null) {
     const params = new URLSearchParams(searchParams.toString());
@@ -77,27 +65,27 @@ export function OverviewToolbar({
               style={{ height: 37, minHeight: 37, whiteSpace: "nowrap" }}
               variant="primary"
             >
-              <span className="hidden sm:inline">Add keyword</span>
-              <span className="sm:hidden">Add</span>
+              <span className="hidden sm:inline">{t("addKeyword")}</span>
+              <span className="sm:hidden">{t("add")}</span>
             </Button>
           ) : null
         }
       >
         <MenuSelect
-          ariaLabel="Date range"
+          ariaLabel={t("dateRangeAriaLabel")}
           leadingIcon={
             <CalendarBlank weight="regular" aria-hidden className="text-fg-muted" size={15} />
           }
           onChange={(value) => pushFilter("range", value)}
-          options={RANGE_OPTIONS}
+          options={rangeOptions}
           triggerClassName="overview-toolbar-filter"
           value={selected.rangeValue}
         />
         <MenuSelect
-          ariaLabel="Tag"
+          ariaLabel={t("tagAriaLabel")}
           leadingIcon={<Tag weight="regular" aria-hidden className="text-fg-muted" size={15} />}
           onChange={(value) => pushFilter("tag", value === ALL_TAGS ? null : value)}
-          options={tagOptions(selected.availableTags)}
+          options={tagOptions(t("allTags"), selected.availableTags)}
           triggerClassName="overview-toolbar-filter"
           value={selected.tagValue ?? ALL_TAGS}
         />

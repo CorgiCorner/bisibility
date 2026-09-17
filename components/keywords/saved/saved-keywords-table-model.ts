@@ -1,6 +1,6 @@
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { countryValueForCode } from "@/components/keywords/location-picker-data";
-import { relativePast } from "@/lib/format/relative-time";
+import { relativePastFact } from "@/lib/format/relative-time";
 import { appPath } from "@/lib/routing/app-path";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
 
@@ -11,7 +11,7 @@ export function savedKeywordIsStale(savedAt: string, now = new Date()) {
 }
 
 export function savedKeywordAge(savedAt: string, now = new Date()) {
-  return relativePast(new Date(savedAt), now);
+  return relativePastFact(new Date(savedAt), now);
 }
 
 export function savedKeywordResearchHref(

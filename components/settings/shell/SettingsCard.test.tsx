@@ -1,7 +1,16 @@
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
-import { render, screen, waitFor } from "@testing-library/react";
+import {
+  renderWithFeatureMessages,
+  settingsShellFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+
+function render(ui: ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: settingsShellFeatureTestMessages });
+}
 
 describe("SettingsCard", () => {
   it("enables its own Save control only after a local field becomes dirty", async () => {
@@ -36,6 +45,16 @@ describe("SettingsCard", () => {
     );
 
     expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+  });
+
+  it("uses an explicit caller label when a card needs contextual wording", () => {
+    render(
+      <SettingsCard onSave={vi.fn()} saveLabel="Apply changes" title="General">
+        Plan details
+      </SettingsCard>,
+    );
+
+    expect(screen.getByRole("button", { name: "Apply changes" })).toBeDisabled();
   });
 
   it("keeps the card dirty when its save handler rejects", async () => {

@@ -4,115 +4,143 @@ import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn, DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { IdChip } from "@/components/ui/IdChip";
 import type { InstanceAdminAdministration } from "@/lib/queries/instance-admin-administration";
+import { useFormatter, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
-const count = new Intl.NumberFormat("en-US");
-const money = new Intl.NumberFormat("en-US", {
-  currency: "USD",
-  maximumFractionDigits: 4,
-  minimumFractionDigits: 2,
-  style: "currency",
-});
-
 type ConsumptionRow = InstanceAdminAdministration["topConsumption"][number] & { id: string };
+type ConsumptionTranslations = ReturnType<
+  typeof useTranslations<"instanceAdmin.administration.consumption">
+>;
+type NumberFormatter = ReturnType<typeof useFormatter>;
 
-const columns: readonly DataTableColumn<ConsumptionRow>[] = [
-  {
-    accessorFn: (row) => row.projectId,
-    cell: ({ row }) => (
-      <IdChip
-        className="max-w-full"
-        copyLabel={`Copy project ID ${row.original.projectId}`}
-        size="sm"
-        value={row.original.projectId}
-      />
-    ),
-    header: "Project ID",
-    id: "project",
-    meta: { flex: 1, sortable: true, title: "Project ID" },
-    minSize: 200,
-    size: 200,
-  },
-  {
-    accessorFn: (row) => row.providerLabel,
-    cell: ({ row }) => (
-      <span className="min-w-0">
-        <span className="block truncate text-xs font-semibold">{row.original.providerLabel}</span>
-        <span className="mt-0.5 block truncate text-[10px] text-fg-muted">
-          {row.original.rateBasis}
-        </span>
-      </span>
-    ),
-    header: "Provider",
-    id: "provider",
-    meta: { flex: 1, sortable: true, title: "Provider" },
-    minSize: 132,
-    size: 132,
-  },
-  {
-    accessorFn: (row) => row.checks,
-    cell: ({ row }) => <span>{count.format(row.original.checks)}</span>,
-    header: "Checks",
-    id: "checks",
-    meta: { align: "end", sortable: true, title: "Checks" },
-    minSize: 104,
-    size: 104,
-  },
-  {
-    accessorFn: (row) => row.billableUnits,
-    cell: ({ row }) => <span>{count.format(row.original.billableUnits)}</span>,
-    header: "Requests / units",
-    id: "units",
-    meta: { align: "end", sortable: true, title: "Requests / units" },
-    minSize: 144,
-    size: 144,
-  },
-  {
-    accessorFn: (row) => (row.referenceCostKnown ? row.referenceCostCents : null),
-    cell: ({ row }) => (
-      <span>
-        {row.original.referenceCostKnown
-          ? money.format(row.original.referenceCostCents / 100)
-          : "-"}
-      </span>
-    ),
-    header: "Reference cost",
-    id: "referenceCost",
-    meta: { align: "end", sortable: true, title: "Reference cost" },
-    minSize: 140,
-    size: 140,
-  },
-  {
-    accessorFn: (row) => row.sharePercent,
-    cell: ({ row }) => {
-      const share = Math.min(100, Math.max(0, row.original.sharePercent));
-      return (
-        <span className="flex min-w-0 items-center gap-2">
-          <span
-            aria-label={`${row.original.sharePercent.toFixed(1)}% of instance reference cost`}
-            className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-bg-sunken"
-            role="img"
-          >
-            <span className="block h-full rounded-full bg-accent" style={{ width: `${share}%` }} />
-          </span>
-          <span className="min-w-10 text-right text-[10.5px] tabular-nums text-fg-muted">
-            {row.original.sharePercent.toFixed(1)}%
-          </span>
-        </span>
-      );
+function rateBasisLabel(rateBasis: ConsumptionRow["rateBasis"], t: ConsumptionTranslations) {
+  switch (rateBasis) {
+    case "live_depth":
+      return t("rateBasisLiveDepth");
+    case "production_plan":
+      return t("rateBasisProductionPlan");
+    case "unavailable":
+      return t("rateBasisUnavailable");
+    default: {
+      const exhaustive: never = rateBasis;
+      return exhaustive;
+    }
+  }
+}
+
+function consumptionColumns(
+  t: ConsumptionTranslations,
+  format: NumberFormatter,
+): readonly DataTableColumn<ConsumptionRow>[] {
+  return [
+    {
+      accessorFn: (row) => row.projectId,
+      cell: ({ row }) => (
+        <IdChip
+          className="max-w-full"
+          copyLabel={t("copyProjectId", { projectId: row.original.projectId })}
+          size="sm"
+          value={row.original.projectId}
+        />
+      ),
+      header: t("projectId"),
+      id: "project",
+      meta: { flex: 1, sortable: true, title: t("projectId") },
+      minSize: 200,
+      size: 200,
     },
-    header: "Share of instance",
-    id: "share",
-    meta: { flex: 1, sortable: true, title: "Share of instance" },
-    minSize: 188,
-    size: 188,
-  },
-];
+    {
+      accessorFn: (row) => row.providerLabel,
+      cell: ({ row }) => (
+        <span className="min-w-0">
+          <span className="block truncate text-xs font-semibold">{row.original.providerLabel}</span>
+          <span className="mt-0.5 block truncate text-[10px] text-fg-muted">
+            {rateBasisLabel(row.original.rateBasis, t)}
+          </span>
+        </span>
+      ),
+      header: t("provider"),
+      id: "provider",
+      meta: { flex: 1, sortable: true, title: t("provider") },
+      minSize: 132,
+      size: 132,
+    },
+    {
+      accessorFn: (row) => row.checks,
+      cell: ({ row }) => <span>{format.number(row.original.checks)}</span>,
+      header: t("checks"),
+      id: "checks",
+      meta: { align: "end", sortable: true, title: t("checks") },
+      minSize: 104,
+      size: 104,
+    },
+    {
+      accessorFn: (row) => row.billableUnits,
+      cell: ({ row }) => <span>{format.number(row.original.billableUnits)}</span>,
+      header: t("requestsUnits"),
+      id: "units",
+      meta: { align: "end", sortable: true, title: t("requestsUnits") },
+      minSize: 144,
+      size: 144,
+    },
+    {
+      accessorFn: (row) => (row.referenceCostKnown ? row.referenceCostCents : null),
+      cell: ({ row }) => (
+        <span>
+          {row.original.referenceCostKnown
+            ? format.number(row.original.referenceCostCents / 100, {
+                currency: "USD",
+                maximumFractionDigits: 4,
+                minimumFractionDigits: 2,
+                style: "currency",
+              })
+            : t("referenceUnknown")}
+        </span>
+      ),
+      header: t("referenceCost"),
+      id: "referenceCost",
+      meta: { align: "end", sortable: true, title: t("referenceCost") },
+      minSize: 140,
+      size: 140,
+    },
+    {
+      accessorFn: (row) => row.sharePercent,
+      cell: ({ row }) => {
+        const share = Math.min(100, Math.max(0, row.original.sharePercent));
+        return (
+          <span className="flex min-w-0 items-center gap-2">
+            <span
+              aria-label={t("shareAriaLabel", { value: row.original.sharePercent })}
+              className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-bg-sunken"
+              role="img"
+            >
+              <span
+                className="block h-full rounded-full bg-accent"
+                style={{ width: `${share}%` }}
+              />
+            </span>
+            <span className="min-w-10 text-right text-[10.5px] tabular-nums text-fg-muted">
+              {t("shareValue", { value: row.original.sharePercent })}
+            </span>
+          </span>
+        );
+      },
+      header: t("share"),
+      id: "share",
+      meta: { flex: 1, sortable: true, title: t("share") },
+      minSize: 188,
+      size: 188,
+    },
+  ];
+}
 
 export function AdminAdministrationConsumptionTable({
   rows,
 }: Readonly<{ rows: InstanceAdminAdministration["topConsumption"] }>) {
+  const format = useFormatter();
+  const t = useTranslations("instanceAdmin.administration.consumption");
   const [sorting, setSorting] = useState<DataTableSort | null>(null);
+  const columns = useMemo(() => consumptionColumns(t, format), [format, t]);
   const tableRows = useMemo(
     () => rows.map((row) => ({ ...row, id: `${row.projectId}:${row.provider}` })),
     [rows],
@@ -120,7 +148,7 @@ export function AdminAdministrationConsumptionTable({
 
   return (
     <DataTable
-      ariaLabel="Top project and provider consumption this month"
+      ariaLabel={t("tableLabel")}
       columns={columns}
       id="admin-top-consumption-table"
       layout="auto"

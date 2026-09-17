@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { relativeFuture, relativePast } from "./relative-time";
+import { relativeFuture, relativePast, relativePastFact } from "./relative-time";
 
 const now = new Date("2026-07-03T12:00:00.000Z");
 
@@ -10,6 +10,13 @@ describe("relative time formatters", () => {
     expect(relativePast(new Date("2026-07-03T09:00:00.000Z"), now)).toBe("3h ago");
     expect(relativePast(new Date("2026-07-02T12:00:00.000Z"), now)).toBe("yesterday");
     expect(relativePast(new Date("2026-06-25T12:00:00.000Z"), now)).toBe("8d ago");
+  });
+
+  it("keeps the rendered boundary's relative-time facts language-neutral", () => {
+    expect(relativePastFact(new Date("2026-07-03T11:42:00.000Z"), now)).toEqual({
+      count: 18,
+      kind: "minutesAgo",
+    });
   });
 
   it("formats future labels with the existing overview copy", () => {

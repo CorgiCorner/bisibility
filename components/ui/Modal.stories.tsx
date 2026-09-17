@@ -1,9 +1,11 @@
 import { Modal } from "@/components/ui/Modal";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
   title: "UI/Modal",
   component: Modal,
+  decorators: [withSharedMessages],
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof Modal>;
 

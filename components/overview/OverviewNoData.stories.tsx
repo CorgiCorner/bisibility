@@ -1,57 +1,55 @@
 import { OverviewNoData } from "@/components/overview/OverviewNoData";
 import { overviewFixture } from "@/components/overview/overview-fixtures";
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import type { OverviewView } from "@/components/overview/types";
+import type { FirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const noDataOverview = {
   ...overviewFixture,
   dataSource: {
     ...overviewFixture.dataSource,
-    metrics: overviewFixture.dataSource.metrics.map((metric) =>
-      metric.label === "Provider" ? { ...metric, value: "Not connected" } : metric,
-    ),
-    status: "Provider not connected",
+    lastCheckAt: null,
+    lastCheckProvider: null,
+    nextCheckAt: null,
+    primaryProvider: null,
+    status: "notConnected",
   },
   distribution: overviewFixture.distribution.map((bucket) => ({ ...bucket, count: 0 })),
   firstPendingKeywordId: "kw_newsite_01",
-  gettingStarted: { ...overviewFixture.gettingStarted, providerConnected: false },
+  gettingStarted: { ...overviewFixture.gettingStarted, hasCheck: false, providerConnected: false },
   hasEverChecked: false,
   highlights: [
     {
       kind: "recentlyAdded",
-      rows: [
-        "ai visibility tracker",
-        "brand monitoring tool",
-        "content decay alerts",
-        "enterprise seo dashboard",
-      ].map((keyword, index) => ({
-        id: `kw_newsite_${String(index + 1).padStart(2, "0")}`,
-        keyword,
-        note: "Added today · first check pending",
-        positionText: "No data",
-        positionTone: "muted",
-      })),
-      subtitle: "Waiting for first check",
-      title: "Recently added",
+      rows: ["ai visibility tracker", "brand monitoring tool", "content decay alerts"].map(
+        (keyword, index) => ({
+          id: `kw_newsite_${String(index + 1).padStart(2, "0")}`,
+          keyword,
+          note: {
+            age: { kind: "justNow" as const },
+            checkState: "firstCheckPending" as const,
+            kind: "recentlyAdded" as const,
+            url: null,
+          },
+          position: null,
+          positionState: "awaitingFirstCheck" as const,
+          positionTone: "muted" as const,
+        }),
+      ),
     },
   ],
-  providerConnected: false,
   lastCheckAt: null,
   lastCheckEverAt: null,
-  state: "no-data",
+  providerConnected: false,
   serpProviderState: "missing",
+  state: "no-data",
   trackedKeywordCount: 20,
 } satisfies OverviewView;
 
 const readyOverview = {
   ...noDataOverview,
-  dataSource: {
-    ...noDataOverview.dataSource,
-    metrics: noDataOverview.dataSource.metrics.map((metric) =>
-      metric.label === "Provider" ? { ...metric, value: "DataForSEO" } : metric,
-    ),
-    status: "Provider healthy",
-  },
+  dataSource: { ...noDataOverview.dataSource, primaryProvider: "dataforseo", status: "healthy" },
   gettingStarted: { ...noDataOverview.gettingStarted, providerConnected: true },
   providerConnected: true,
   serpProviderState: "ready",
@@ -59,12 +57,12 @@ const readyOverview = {
 
 const needsAttentionOverview = {
   ...noDataOverview,
-  dataSource: { ...noDataOverview.dataSource, status: "Provider needs attention" },
+  dataSource: { ...noDataOverview.dataSource, status: "needsAttention" },
   serpProviderState: "needs_attention",
 } satisfies OverviewView;
 
 const runCheckNowAction = async () => ({ status: "running" });
-const getFirstCheckRunPlanAction = async () => ({
+const getFirstCheckRunPlanAction = async (): Promise<FirstCheckRunPlan> => ({
   budget: { capCents: 5000, spentCents: 1250 },
   budgetExhausted: false,
   estimatedCostPerCheckCents: 0.1,
@@ -73,10 +71,10 @@ const getFirstCheckRunPlanAction = async () => ({
   providers: ["dataforseo", "serpapi"],
   readyCount: 20,
   scope: {
-    depth: "Top 100",
-    device: "Desktop",
-    engine: "Google",
-    frequency: "Daily",
+    depth: 100,
+    device: "desktop",
+    engine: "google",
+    frequency: "daily",
     location: "United States",
   },
 });
@@ -91,30 +89,26 @@ const actionArgs = {
 };
 
 const meta = {
-  title: "Overview/OverviewNoData",
   component: OverviewNoData,
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-bg p-6 text-fg">
-        <div className="mx-auto max-w-7xl">
-          <Story />
+      <ProjectDashboardMessages>
+        <div className="min-h-screen bg-bg p-6 text-fg">
+          <div className="mx-auto max-w-7xl">
+            <Story />
+          </div>
         </div>
-      </div>
+      </ProjectDashboardMessages>
     ),
   ],
+  title: "Overview/OverviewNoData",
 } satisfies Meta<typeof OverviewNoData>;
 
 export default meta;
-
 type Story = StoryObj<typeof meta>;
 
 export const MissingProvider: Story = {
-  args: {
-    budgetExhausted: false,
-    ...actionArgs,
-    overview: noDataOverview,
-    runningCheckCount: 0,
-  },
+  args: { budgetExhausted: false, ...actionArgs, overview: noDataOverview, runningCheckCount: 0 },
 };
 
 export const ProviderNeedsAttention: Story = {
@@ -127,19 +121,9 @@ export const ProviderNeedsAttention: Story = {
 };
 
 export const ReadyForFirstCheck: Story = {
-  args: {
-    budgetExhausted: false,
-    ...actionArgs,
-    overview: readyOverview,
-    runningCheckCount: 0,
-  },
+  args: { budgetExhausted: false, ...actionArgs, overview: readyOverview, runningCheckCount: 0 },
 };
 
 export const FirstCheckRunning: Story = {
-  args: {
-    budgetExhausted: false,
-    ...actionArgs,
-    overview: readyOverview,
-    runningCheckCount: 1,
-  },
+  args: { budgetExhausted: false, ...actionArgs, overview: readyOverview, runningCheckCount: 1 },
 };

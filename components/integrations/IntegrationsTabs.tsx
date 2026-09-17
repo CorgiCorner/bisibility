@@ -3,6 +3,7 @@
 import { Tabs } from "@/components/ui/Tabs";
 import { appPath } from "@/lib/routing/app-path";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export function IntegrationsTabs({
   active,
@@ -12,18 +13,19 @@ export function IntegrationsTabs({
   projectRef: string;
 }>) {
   const router = useRouter();
+  const t = useTranslations("projectIntegrations.tabs");
   return (
     <div className="border-b border-border">
       <Tabs
-        ariaLabel="Integrations sections"
+        ariaLabel={t("aria")}
         onChange={(tab) =>
           router.push(
             `${appPath(projectRef, "integrations")}${tab === "usage" ? "?tab=usage" : ""}`,
           )
         }
         options={[
-          { label: "Connections", value: "connections" },
-          { label: "Usage", value: "usage" },
+          { label: t("connections"), value: "connections" },
+          { label: t("usage"), value: "usage" },
         ]}
         panelId="integrations-panel"
         value={active}

@@ -3,9 +3,10 @@ import {
   useSessionSpend,
 } from "@/components/cost-estimate/SessionSpendProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { renderWithResearchMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ResearchKeywordsAction } from "@/lib/actions/keyword-research";
 import { makeCostContext } from "@/tests/factories/cost-context";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ResearchWorkspace } from "./ResearchWorkspace";

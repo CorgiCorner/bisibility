@@ -3,6 +3,7 @@
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
+import { useTranslations } from "next-intl";
 
 type AddKeywordDrawerFooterProps = {
   ctaLabel: string;
@@ -19,6 +20,7 @@ export function AddKeywordDrawerFooter({
   onReview,
   submitDisabled,
 }: Readonly<AddKeywordDrawerFooterProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
   const { readOnly } = useProjectWriteMode();
 
   return (
@@ -32,7 +34,7 @@ export function AddKeywordDrawerFooter({
             style={{ flex: 1 }}
             type={isReviewMode ? "button" : "submit"}
           >
-            {isSubmitting ? "Adding..." : ctaLabel}
+            {isSubmitting ? t("adding") : ctaLabel}
           </Button>
         </ProjectReadOnlyTooltip>
       </div>

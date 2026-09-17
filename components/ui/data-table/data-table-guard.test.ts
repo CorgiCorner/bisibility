@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   directMuiTableImport,
@@ -22,14 +23,24 @@ import {
 const temporaryMigrationPaths = new Set<string>();
 
 const exemptions: TableOwnershipExemptions = {
-  permanentStaticPaths: new Set(["app/(marketing)/alternatives/[slug]/page.tsx"]),
+  permanentStaticPaths: new Set(["app/(static)/(marketing)/alternatives/[slug]/page.tsx"]),
   permanentStaticRoots: ["components/marketing"],
   temporaryMigrationPaths,
 };
 
 describe("data table ownership guard", () => {
-  it("includes tracked root-level app TSX files", () => {
-    expect(readTrackedTablePaths()).toContain("app/layout.tsx");
+  it("includes every document-root layout after the route split", () => {
+    // A checkout only guards the layouts it ships: the public snapshot excludes
+    // the localized marketing route, so require the document-root layouts that
+    // exist in this tree instead of a fixed private-tree list.
+    const documentRootLayouts = [
+      "app/(regional)/layout.tsx",
+      "app/(marketing-current)/layout.tsx",
+      "app/(marketing-localized)/[locale]/layout.tsx",
+      "app/(static)/layout.tsx",
+    ].filter((layoutPath) => existsSync(layoutPath));
+
+    expect(readTrackedTablePaths()).toEqual(expect.arrayContaining(documentRootLayouts));
   });
 
   it("keeps tracked production tables limited to the migration and static-content lists", () => {
@@ -130,14 +141,14 @@ describe("data table ownership guard", () => {
   it("keeps permanent static-content exemptions exact", () => {
     const sources = [
       tableSource("components/marketing/content/StaticMatrix.tsx", splitTableOpeningTag),
-      tableSource("app/(marketing)/alternatives/[slug]/page.tsx", splitTableOpeningTag),
-      tableSource("app/(marketing)/alternatives/page.tsx", splitTableOpeningTag),
+      tableSource("app/(static)/(marketing)/alternatives/[slug]/page.tsx", splitTableOpeningTag),
+      tableSource("app/(static)/(marketing)/alternatives/page.tsx", splitTableOpeningTag),
     ];
 
     expect(findTableOwnershipViolations(sources, exemptions)).toEqual([
       expect.objectContaining({
         kind: "html-table",
-        path: "app/(marketing)/alternatives/page.tsx",
+        path: "app/(static)/(marketing)/alternatives/page.tsx",
       }),
     ]);
   });

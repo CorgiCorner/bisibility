@@ -1,29 +1,28 @@
-import { formatMoneyCents } from "@/lib/format/money";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
 import {
   type ProviderAllocationInput,
   providerAllocationSchema,
 } from "@/lib/schemas/usage-settings";
 
-export const BUDGET_MODAL_CONSEQUENCE_COPY =
-  "When a budget is reached, checks and lookups using that provider stop until next month.";
+export type BudgetValidationIssue =
+  | "invalid"
+  | "invalidDecimal"
+  | "positiveMoney"
+  | "positiveUnits"
+  | "tooLarge"
+  | "wholeUnits";
+
+export class ProviderAvailabilityBudgetError extends Error {
+  constructor(readonly reason: "incompatible" | "unavailable") {
+    super(reason);
+  }
+}
 
 export function budgetInitialValue(connection: ProviderSpendConnection) {
   if (!connection.allocation) return "";
   return connection.unit === "cents"
     ? (connection.allocation.amountPerMonth / 100).toFixed(2)
     : String(connection.allocation.amountPerMonth);
-}
-
-function formatUsageAmount(amount: number, unit: ProviderSpendConnection["unit"]) {
-  if (unit === "cents") return formatMoneyCents(amount);
-  return `${amount.toLocaleString("en-US")} searches`;
-}
-
-export function providerUsageContextLine(connection: ProviderSpendConnection) {
-  const thisMonth = formatUsageAmount(connection.used, connection.unit);
-  const lastMonth = formatUsageAmount(connection.usedPriorMonth, connection.unit);
-  return `${thisMonth} this month · ${lastMonth} last month`;
 }
 
 export function buildProviderAllocationPayload(
@@ -46,15 +45,36 @@ export function buildProviderAllocationPayload(
   };
 }
 
-export function validateBudgetField(
+/** Keeps exact schema parsing while exposing stable local presentation categories. */
+export function budgetValidationIssue(
   connection: ProviderSpendConnection,
   rawValue: string,
-): string | null {
+): BudgetValidationIssue | null {
+  const trimmed = rawValue.trim();
+  if (
+    connection.unit === "units" &&
+    trimmed.length > 0 &&
+    Number.isFinite(Number(trimmed)) &&
+    !Number.isInteger(Number(trimmed))
+  ) {
+    return "wholeUnits";
+  }
   const parsed = providerAllocationSchema.safeParse(
     buildProviderAllocationPayload(connection, rawValue),
   );
   if (parsed.success) return null;
-  return parsed.error.issues[0]?.message ?? "Enter a valid budget.";
+  const message = parsed.error.issues[0]?.message;
+  if (message === "Enter a positive amount with up to two decimals.") return "invalidDecimal";
+  if (message === "Enter a positive monthly budget.") return "positiveMoney";
+  if (message === "Enter a whole number of units.") return "wholeUnits";
+  if (message === "Enter a positive number of units.") return "positiveUnits";
+  if (
+    message === "Monthly allocation is too large." ||
+    message === "Monthly budget is too large."
+  ) {
+    return "tooLarge";
+  }
+  return "invalid";
 }
 
 export function budgetFieldChanged(connection: ProviderSpendConnection, rawValue: string): boolean {
@@ -72,7 +92,7 @@ export function budgetFromProviderAvailability(connection: ProviderSpendConnecti
     !Number.isFinite(available.amount) ||
     available.amount <= 0
   ) {
-    throw new Error("A positive provider balance is unavailable. Enter a budget manually.");
+    throw new ProviderAvailabilityBudgetError("unavailable");
   }
   const remaining =
     connection.unit === "cents" && available.unit === "usd"
@@ -81,7 +101,7 @@ export function budgetFromProviderAvailability(connection: ProviderSpendConnecti
         ? Math.floor(available.amount)
         : null;
   if (remaining === null || remaining <= 0)
-    throw new Error("This provider does not report a compatible balance.");
+    throw new ProviderAvailabilityBudgetError("incompatible");
   const total = Math.ceil(connection.used) + remaining;
   return connection.unit === "cents" ? (total / 100).toFixed(2) : String(total);
 }

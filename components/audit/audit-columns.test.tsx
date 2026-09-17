@@ -1,15 +1,22 @@
-import type { AuditEntry } from "@/lib/queries/audit";
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  auditFeatureTestMessages,
+  renderWithAuditMessages as render,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
+import { createTranslator } from "next-intl";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { auditColumns } from "./audit-columns";
+import type { PresentedAuditEntry } from "./audit-presentation";
 
-const entry: AuditEntry = {
+const entry: PresentedAuditEntry = {
   actor: { email: "auditor@example.com", id: "user_1", initials: "AU", name: "Auditor" },
   diff: [],
   eventName: "Provider test",
   eventType: "system",
   id: "audit_1",
+  hasRecordedIp: false,
+  hasRecordedUserAgent: false,
   metadata: {
     app_version: "Not recorded",
     correlation_id: "corr_1",
@@ -24,15 +31,21 @@ const entry: AuditEntry = {
   timestampLabel: "2026-07-16 14:32:00 UTC",
 };
 
+const t = createTranslator({
+  locale: "en",
+  messages: auditFeatureTestMessages,
+  namespace: "projectAudit.columns",
+});
+
 function renderCell(columnId: string, row = entry, onOpenEntry = vi.fn()) {
-  const column = auditColumns({ onOpenEntry }).find((candidate) => candidate.id === columnId);
+  const column = auditColumns({ onOpenEntry, t }).find((candidate) => candidate.id === columnId);
   const cell = typeof column?.cell === "function" ? column.cell : undefined;
   return { onOpenEntry, ...render(cell?.({ row: { original: row } } as never) as ReactElement) };
 }
 
 describe("audit-columns", () => {
   it("uses the 4px sizing contract", () => {
-    const columns = auditColumns({ onOpenEntry: vi.fn() });
+    const columns = auditColumns({ onOpenEntry: vi.fn(), t });
 
     expect(columns.map(({ id, minSize, size }) => ({ id, minSize, size }))).toEqual([
       { id: "timestamp", minSize: 172, size: 200 },

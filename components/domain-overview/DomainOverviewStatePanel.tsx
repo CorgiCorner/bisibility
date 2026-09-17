@@ -15,6 +15,7 @@ import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/C
 import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/csr/Globe";
 import { MagnifyingGlassMinusIcon as MagnifyingGlassMinus } from "@phosphor-icons/react/dist/csr/MagnifyingGlassMinus";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { DomainOverviewResultsLoading } from "./DomainOverviewLoadingSkeletons";
 import type { DomainOverviewUiState } from "./domain-overview-workspace-model";
@@ -59,9 +60,8 @@ export function DomainOverviewNoDataCard({
 }
 
 function ProviderAction({ projectRef }: Readonly<{ projectRef: string }>) {
-  return (
-    <AccentCtaLink href={appPath(projectRef, "integrations")}>Connect DataForSEO</AccentCtaLink>
-  );
+  const t = useTranslations("projectDomainOverview.workspace.state");
+  return <AccentCtaLink href={appPath(projectRef, "integrations")}>{t("connect")}</AccentCtaLink>;
 }
 
 export function DomainOverviewStatePanel({
@@ -76,17 +76,15 @@ export function DomainOverviewStatePanel({
   target,
 }: Readonly<DomainOverviewStatePanelProps>) {
   const dateFormat = useDateFormat();
-  if (state === "loading") return <DomainOverviewResultsLoading />;
+  const t = useTranslations("projectDomainOverview.workspace.state");
+  const uiT = useTranslations("projectDomainOverview.workspace.ui");
+  if (state === "loading") return <DomainOverviewResultsLoading ariaLabel={uiT("loading")} />;
   if (state === "idle") {
     return (
       <EmptyState
-        bullets={[
-          "Runs on your own DataForSEO key",
-          "Results cached for 12 hours, repeat lookups are free",
-          "Turn findings into tracked keywords in one click",
-        ]}
+        bullets={[t("idleBullets.key"), t("idleBullets.cache"), t("idleBullets.track")]}
         mark={<ModuleMark bordered icon={Globe} />}
-        title="Analyze any domain"
+        title={t("idleTitle")}
       />
     );
   }
@@ -94,9 +92,9 @@ export function DomainOverviewStatePanel({
     return (
       <EmptyState
         action={<ProviderAction projectRef={projectRef} />}
-        description="Domain Overview requires a provider with domain intelligence support. Lookups run on your own key."
+        description={t("noProviderDescription")}
         mark={<ModuleMark bordered icon={Globe} />}
-        title="Connect DataForSEO to analyze domains"
+        title={t("noProviderTitle")}
       />
     );
   }
@@ -104,13 +102,11 @@ export function DomainOverviewStatePanel({
     return (
       <EmptyState
         action={
-          <AccentCtaLink href={appPath(projectRef, "integrations")}>
-            Reconnect DataForSEO
-          </AccentCtaLink>
+          <AccentCtaLink href={appPath(projectRef, "integrations")}>{t("reconnect")}</AccentCtaLink>
         }
-        description="Reconnect this project's DataForSEO credentials to resume domain analysis."
+        description={t("reauthDescription")}
         mark={<ModuleMark bordered icon={Globe} />}
-        title="DataForSEO needs to be reconnected"
+        title={t("reauthTitle")}
       />
     );
   }
@@ -122,24 +118,27 @@ export function DomainOverviewStatePanel({
             className="font-semibold text-accent-text hover:underline"
             href={appPath(projectRef, "settings#provider-usage")}
           >
-            Raise the budget
+            {t("raiseBudget")}
           </Link>
         }
-        description="Fresh lookups resume after the monthly reset. Cached recent analyses remain free."
+        description={t("budgetDescription")}
         icon={<ChartLineDown weight="regular" size={28} />}
-        title="Monthly provider budget reached"
+        title={t("budgetTitle")}
       />
     );
   }
   if (state === "unsupported_location") {
     const description = researchScope
-      ? `Research is not available for ${researchScope.countryName} / ${researchScope.languageLabel}. Rank tracking is unaffected.`
-      : "Research is not available for this country and language pair. Rank tracking is unaffected.";
+      ? t("unsupportedWithScope", {
+          country: researchScope.countryName,
+          language: researchScope.languageLabel,
+        })
+      : t("unsupported");
     return (
       <EmptyState
         description={description}
         icon={<Globe weight="regular" size={28} />}
-        title="Research is not available for this country and language"
+        title={t("unsupportedTitle")}
       />
     );
   }
@@ -148,11 +147,11 @@ export function DomainOverviewStatePanel({
       <EmptyState
         description={
           resetAt
-            ? `Another analysis is already running. Try again after ${formatDateTime(new Date(resetAt), dateFormat)}.`
-            : "Another analysis is already running. Wait for it to finish before retrying."
+            ? t("inProgressAfter", { time: formatDateTime(new Date(resetAt), dateFormat) })
+            : t("inProgress")
         }
         icon={<ArrowsClockwise weight="regular" size={28} />}
-        title="Analysis already in progress"
+        title={t("inProgressTitle")}
       />
     );
   }
@@ -161,29 +160,29 @@ export function DomainOverviewStatePanel({
       <EmptyState
         description={
           resetAt
-            ? `The provider is temporarily rate limited. Try again after ${formatDateTime(new Date(resetAt), dateFormat)}.`
-            : "The provider is temporarily rate limited. Try again shortly."
+            ? t("rateLimitedAfter", { time: formatDateTime(new Date(resetAt), dateFormat) })
+            : t("rateLimited")
         }
         icon={<ArrowsClockwise weight="regular" size={28} />}
-        title="Provider rate limit reached"
+        title={t("rateLimitedTitle")}
       />
     );
   }
   if (state === "cost_limit_exceeded") {
     return (
       <EmptyState
-        description="The price changed before the lookup started. Review the updated estimate above before analyzing again."
+        description={t("costDescription")}
         icon={<ChartLineDown weight="regular" size={28} />}
-        title="The approved price is no longer current"
+        title={t("costTitle")}
       />
     );
   }
   if (state === "snapshot_expired") {
     return (
       <EmptyState
-        description="The cached analysis expired. Review the current price above before running it again."
+        description={t("expiredDescription")}
         icon={<ArrowsClockwise weight="regular" size={28} />}
-        title="This cached analysis has expired"
+        title={t("expiredTitle")}
       />
     );
   }
@@ -196,12 +195,17 @@ export function DomainOverviewStatePanel({
             href={`${appPath(projectRef, "backlinks")}${target ? `?target=${encodeURIComponent(target)}` : ""}`}
             variant="secondary"
           >
-            Check backlinks instead
+            {t("backlinks")}
           </Button>
         }
-        description={`The DataForSEO index may not cover ${target ?? "this domain"} yet${researchScope ? ` in ${researchScope.countryName} / ${researchScope.languageLabel}` : ""}. Try another country and language.`}
-        sectionTitle="Index coverage"
-        title="No index data for this domain"
+        description={t("noDataDescription", {
+          scope: researchScope
+            ? `${researchScope.countryName} / ${researchScope.languageLabel}`
+            : "none",
+          target: target ?? "this domain",
+        })}
+        sectionTitle={t("noDataSection")}
+        title={t("noDataTitle")}
       />
     );
   }
@@ -211,13 +215,13 @@ export function DomainOverviewStatePanel({
         action={
           onClearFilters ? (
             <Button onClick={onClearFilters} variant="secondary">
-              Clear filters
+              {t("clearFilters")}
             </Button>
           ) : null
         }
         compact
         icon={<MagnifyingGlassMinus weight="regular" size={28} />}
-        title="Nothing matches these filters"
+        title={t("emptyTitle")}
       />
     );
   }
@@ -232,9 +236,9 @@ export function DomainOverviewStatePanel({
           ) : null
         }
         compact
-        description="This section could not be loaded. The rest of the analysis is still available."
+        description={t("partialDescription")}
         icon={<ArrowsClockwise weight="regular" size={24} />}
-        title="Part of this report is unavailable"
+        title={t("partialTitle")}
       />
     );
   }
@@ -249,18 +253,17 @@ export function DomainOverviewStatePanel({
       }
       description={
         <span className="grid justify-items-center gap-1.5">
-          <span>The request failed before a complete report came back.</span>
+          <span>{t("lookupDescription")}</span>
           {charged === false ? (
             <span className="inline-flex items-center gap-1 font-semibold text-green-text">
-              <CheckCircle size={14} weight="regular" /> You were not charged for the failed
-              attempt.
+              <CheckCircle size={14} weight="regular" /> {t("notCharged")}
             </span>
           ) : null}
-          {charged === true ? <span>The provider reported a charge for this attempt.</span> : null}
+          {charged === true ? <span>{t("charged")}</span> : null}
         </span>
       }
       icon={<ArrowsClockwise weight="regular" size={28} />}
-      title="That lookup did not go through"
+      title={t("lookupTitle")}
     />
   );
 }

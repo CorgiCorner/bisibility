@@ -2,13 +2,13 @@ import { Sparkline } from "@/components/charts/Sparkline";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { type ScheduleReference, scheduleRowLabel } from "@/lib/schedules/mixed-state";
+import { type ScheduleReference, scheduleRowSortValue } from "@/lib/schedules/mixed-state";
 import * as rankDepth from "@/lib/serp/rank-depth";
 import { frequencyOptions } from "@/lib/settings/options";
 import { chartColors } from "@/lib/theme/chart-colors";
 import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
-import { trafficColumns } from "./grid-columns-traffic";
+import { type TrafficColumnLabels, trafficColumns } from "./grid-columns-traffic";
 import { KeywordChangeCell } from "./KeywordChangeCell";
 import type { KeywordColumnActions } from "./keyword-column-actions";
 import { LastCheckedCell } from "./LastCheckedCell";
@@ -19,13 +19,34 @@ import {
   MarketPositionCell,
   MarketVolumeCell,
   NoDataValue,
-  noRankLabel,
 } from "./market-grid-cells";
 import { rowActionsColumn } from "./RowActionsCell";
 import { ScheduleCell, type ScheduleCellTarget } from "./ScheduleCell";
 import { TargetRankingCell } from "./TargetRankingCell";
 
 type ScheduledKeywordRow = KeywordRow & { checkSchedule?: ScheduleReference | null };
+
+export type KeywordColumnLabels = TrafficColumnLabels & {
+  change: string;
+  device: string;
+  difficulty: string;
+  keyword: string;
+  lastChecked: string;
+  location: string;
+  noRankLabel: (row: KeywordRow) => string;
+  formatPosition: (value: number) => string;
+  position: string;
+  positionShort: string;
+  positionTrend: (values: { keyword: string }) => string;
+  schedule: string;
+  targetAndRanking: string;
+  tags: string;
+  topic: string;
+  trend: string;
+  trendTitle: string;
+  intent: string;
+  volume: string;
+};
 
 function fallbackSchedule(row: KeywordRow): ScheduleReference | null {
   if (row.schedule.frequency === "manual") return null;
@@ -59,7 +80,17 @@ function DeviceCell({ row }: Readonly<{ row: KeywordRow }>) {
   );
 }
 
-function SparklineCell({ row }: Readonly<{ row: KeywordRow }>) {
+function SparklineCell({
+  formatPosition,
+  noRankLabel,
+  positionTrend,
+  row,
+}: Readonly<{
+  formatPosition: (value: number) => string;
+  noRankLabel: (row: KeywordRow) => string;
+  positionTrend: string;
+  row: KeywordRow;
+}>) {
   if (!rankDepth.hasTrackedPosition(row)) {
     return <NoDataValue className="block w-[92px]" label={noRankLabel(row)} />;
   }
@@ -72,10 +103,10 @@ function SparklineCell({ row }: Readonly<{ row: KeywordRow }>) {
         : chartColors.red;
   return (
     <Sparkline
-      ariaLabel={`Position trend for ${row.keyword}`}
+      ariaLabel={positionTrend}
       color={color}
       data={row.sparkline}
-      valueFormatter={(value) => (value ? `#${value}` : "")}
+      valueFormatter={(value) => (value ? formatPosition(value) : "")}
     />
   );
 }
@@ -110,23 +141,24 @@ export function keywordColumns(
   actions: KeywordColumnActions,
   projectRef: string,
   pendingCheckIds: ReadonlySet<string> = new Set(),
+  labels: KeywordColumnLabels,
 ): DataTableColumn<KeywordRow>[] {
   return [
     {
       accessorFn: (row) => row.keyword,
       cell: ({ row }) => <MarketKeywordCell projectRef={projectRef} row={row.original} />,
-      header: "Keyword",
+      header: labels.keyword,
       id: "keyword",
-      meta: { flex: 1.55, lockVisible: true, pin: "left", title: "Keyword" },
+      meta: { flex: 1.55, lockVisible: true, pin: "left", title: labels.keyword },
       minSize: 160,
       size: 300,
     },
     {
       accessorFn: (row) => row.position,
       cell: ({ row }) => <MarketPositionCell row={row.original} />,
-      header: "Pos",
+      header: labels.positionShort,
       id: "position",
-      meta: { align: "end", title: "Position" },
+      meta: { align: "end", title: labels.position },
       minSize: 172,
       size: 172,
     },
@@ -139,29 +171,29 @@ export function keywordColumns(
         rankDepth.hasTrackedPosition(row.original) ? (
           <KeywordChangeCell row={row.original} />
         ) : (
-          <NoDataValue label={noRankLabel(row.original)} />
+          <NoDataValue label={labels.noRankLabel(row.original)} />
         ),
-      header: "Change",
+      header: labels.change,
       id: "change",
-      meta: { align: "end", title: "Change" },
+      meta: { align: "end", title: labels.change },
       minSize: 92,
       size: 92,
     },
     {
       accessorFn: (row) => row.location.displayName,
       cell: ({ row }) => <MarketLocationCell row={row.original} />,
-      header: "Location",
+      header: labels.location,
       id: "location",
-      meta: { flex: 0.9, title: "Location" },
+      meta: { flex: 0.9, title: labels.location },
       minSize: 152,
       size: 152,
     },
     {
       accessorFn: (row) => row.device,
       cell: ({ row }) => <DeviceCell row={row.original} />,
-      header: "Device",
+      header: labels.device,
       id: "device",
-      meta: { lockResize: true, sortable: ({ grouped }) => !grouped, title: "Device" },
+      meta: { lockResize: true, sortable: ({ grouped }) => !grouped, title: labels.device },
       maxSize: 84,
       minSize: 84,
       size: 84,
@@ -169,9 +201,9 @@ export function keywordColumns(
     {
       accessorFn: (row) => row.volume,
       cell: ({ row }) => <MarketVolumeCell row={row.original} />,
-      header: "Volume",
+      header: labels.volume,
       id: "volume",
-      meta: { align: "end", title: "Volume" },
+      meta: { align: "end", title: labels.volume },
       minSize: 96,
       size: 96,
       sortDescFirst: true,
@@ -180,23 +212,30 @@ export function keywordColumns(
       accessorFn: (row) =>
         marketGridParent(row)?.aggregate.difficulty === "mixed" ? null : row.difficulty,
       cell: ({ row }) => <MarketDifficultyCell row={row.original} />,
-      header: "Difficulty",
+      header: labels.difficulty,
       id: "difficulty",
-      meta: { align: "end", title: "Difficulty" },
+      meta: { align: "end", title: labels.difficulty },
       minSize: 104,
       size: 104,
     },
     {
       accessorFn: (row) =>
         rankDepth.hasTrackedPosition(row) ? (row.sparkline.at(-1) ?? null) : null,
-      cell: ({ row }) => <SparklineCell row={row.original} />,
-      header: "12-wk",
+      cell: ({ row }) => (
+        <SparklineCell
+          formatPosition={labels.formatPosition}
+          noRankLabel={labels.noRankLabel}
+          positionTrend={labels.positionTrend({ keyword: row.original.keyword })}
+          row={row.original}
+        />
+      ),
+      header: labels.trend,
       id: "sparkline",
-      meta: { title: "12-wk trend" },
+      meta: { title: labels.trendTitle },
       minSize: 120,
       size: 120,
     },
-    ...trafficColumns,
+    ...trafficColumns(labels),
     {
       accessorFn: (row) => row.lastCheckAt,
       cell: ({ row }) => (
@@ -205,54 +244,54 @@ export function keywordColumns(
           status={pendingCheckIds.has(row.original.id) ? "running" : row.original.lastCheckStatus}
         />
       ),
-      header: "Last checked",
+      header: labels.lastChecked,
       id: "lastChecked",
-      meta: { title: "Last checked" },
+      meta: { title: labels.lastChecked },
       minSize: 152,
       size: 152,
     },
     {
-      accessorFn: (row) => scheduleRowLabel(scheduleTargetsForRow(row)),
+      accessorFn: (row) => scheduleRowSortValue(scheduleTargetsForRow(row)),
       cell: ({ row }) => <ScheduleCell targets={scheduleTargetsForRow(row.original)} />,
-      header: "Schedule",
+      header: labels.schedule,
       id: "frequency",
-      meta: { title: "Schedule" },
+      meta: { title: labels.schedule },
       minSize: 148,
       size: 148,
     },
     {
       accessorFn: (row) => [row.targetUrl, row.rankingUrl].filter(Boolean).join(" "),
       cell: ({ row }) => <TargetRankingCell row={row.original} />,
-      header: "Target and ranking",
+      header: labels.targetAndRanking,
       id: "targetRanking",
-      meta: { flex: 1.35, title: "Target and ranking" },
+      meta: { flex: 1.35, title: labels.targetAndRanking },
       minSize: 300,
       size: 300,
     },
     {
       accessorFn: (row) => row.tags.join(", "),
       cell: ({ row }) => <TagsCell row={row.original} />,
-      header: "Tags",
+      header: labels.tags,
       id: "tags",
-      meta: { flex: 0.9, title: "Tags" },
+      meta: { flex: 0.9, title: labels.tags },
       minSize: 172,
       size: 172,
     },
     {
       accessorFn: (row) => row.topic,
       cell: ({ row }) => <MetadataChip value={row.original.topic} />,
-      header: "Topic",
+      header: labels.topic,
       id: "topic",
-      meta: { title: "Topic" },
+      meta: { title: labels.topic },
       minSize: 132,
       size: 132,
     },
     {
       accessorFn: (row) => row.intent,
       cell: ({ row }) => <MetadataChip value={row.original.intent} />,
-      header: "Intent",
+      header: labels.intent,
       id: "intent",
-      meta: { title: "Intent" },
+      meta: { title: labels.intent },
       minSize: 132,
       size: 132,
     },

@@ -1,10 +1,23 @@
+import {
+  authFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type { LoginFormValues } from "@/lib/auth/login-schema";
 import type { SignInCapacity, SignInCapacityMiss } from "@/lib/auth/signin-capacity-types";
 import type { LegalConsentLinks } from "@/lib/deployment/legal";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import type { UseFormRegister } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
 import { type EnabledOAuthProviders, LoginEmailStep, type OAuthProvider } from "./LoginEmailStep";
+import { JoinedToday } from "./SignInCapacity";
+
+function render(
+  ui: ReactElement,
+  options: Parameters<typeof renderWithFeatureMessages>[1] = { messages: authFeatureTestMessages },
+) {
+  return renderWithFeatureMessages(ui, options);
+}
 
 const enabledProviders = {
   github: true,
@@ -21,12 +34,19 @@ const cloudLegalConsentLinks = {
   termsHref: "/terms",
 } satisfies LegalConsentLinks;
 
+const betaEmailCapacity = {
+  emailCodes: { binding: "daily", cap: 200, left: 143 },
+  googleSpots: { cap: 100, left: 14 },
+  signupsToday: 0,
+} satisfies SignInCapacity;
+
 function renderStep(
   providers: EnabledOAuthProviders,
   legalConsentLinks: LegalConsentLinks | null = cloudLegalConsentLinks,
   capacity: SignInCapacity | null = null,
   capacityMiss: SignInCapacityMiss = null,
   emailSignInUnavailable = false,
+  options: Parameters<typeof renderWithFeatureMessages>[1] = { messages: authFeatureTestMessages },
 ) {
   const register = (() => ({
     name: "email",
@@ -51,6 +71,7 @@ function renderStep(
       register={register}
       socialProvider={null}
     />,
+    options,
   );
 }
 
@@ -88,6 +109,26 @@ describe("LoginEmailStep", () => {
     });
 
     expect(screen.queryByText(/people joined today/)).toBeNull();
+  });
+
+  it("uses injected Polish one, few, and many forms for joined-today counts", () => {
+    const messages = structuredClone(authFeatureTestMessages);
+    messages.auth.capacity.joinedToday =
+      "{count, plural, one {# osoba dołączyła dzisiaj} few {# osoby dołączyły dzisiaj} many {# osób dołączyło dzisiaj} other {# osoby dołączyły dzisiaj}}";
+    const options = { locale: "pl" as const, messages };
+
+    for (const [signupsToday, expected] of [
+      [1, "1 osoba dołączyła dzisiaj"],
+      [2, "2 osoby dołączyły dzisiaj"],
+      [5, "5 osób dołączyło dzisiaj"],
+    ] as const) {
+      const rendered = render(<JoinedToday count={signupsToday} />, options);
+      expect(screen.getByText(expected)).toBeInTheDocument();
+      rendered.unmount();
+    }
+
+    render(<JoinedToday count={0} />, options);
+    expect(screen.queryByText(/dołączy/)).toBeNull();
   });
 
   it("renders both configured social providers", () => {
@@ -146,6 +187,116 @@ describe("LoginEmailStep", () => {
 
     expect(screen.queryByText(/By continuing you agree/)).toBeNull();
   });
+
+  it.each([
+    {
+      betaEnabled: false,
+      expected: "By continuing you agree to the Terms and Privacy Policy.",
+      name: "both links",
+      links: cloudLegalConsentLinks,
+      privacy: { href: "/privacy", external: false },
+      terms: { href: "/terms", external: false },
+    },
+    {
+      betaEnabled: true,
+      expected:
+        "By continuing you agree to the Terms and Privacy Policy, and to beta emails (updates, incidents, pricing).",
+      name: "both links",
+      links: cloudLegalConsentLinks,
+      privacy: { href: "/privacy", external: false },
+      terms: { href: "/terms", external: false },
+    },
+    {
+      betaEnabled: false,
+      expected: "By continuing you agree to the Terms.",
+      name: "terms only",
+      links: { privacyHref: null, termsHref: "HTTPS://operator.example.com/terms" },
+      privacy: null,
+      terms: { href: "HTTPS://operator.example.com/terms", external: true },
+    },
+    {
+      betaEnabled: true,
+      expected:
+        "By continuing you agree to the Terms, and to beta emails (updates, incidents, pricing).",
+      name: "terms only",
+      links: { privacyHref: null, termsHref: "HTTPS://operator.example.com/terms" },
+      privacy: null,
+      terms: { href: "HTTPS://operator.example.com/terms", external: true },
+    },
+    {
+      betaEnabled: false,
+      expected: "By continuing you agree to the Privacy Policy.",
+      name: "privacy only",
+      links: { privacyHref: "/operator-privacy", termsHref: null },
+      privacy: { href: "/operator-privacy", external: false },
+      terms: null,
+    },
+    {
+      betaEnabled: true,
+      expected:
+        "By continuing you agree to the Privacy Policy, and to beta emails (updates, incidents, pricing).",
+      name: "privacy only",
+      links: { privacyHref: "/operator-privacy", termsHref: null },
+      privacy: { href: "/operator-privacy", external: false },
+      terms: null,
+    },
+    {
+      betaEnabled: false,
+      expected: null,
+      name: "no links",
+      links: null,
+      privacy: null,
+      terms: null,
+    },
+    {
+      betaEnabled: true,
+      expected: null,
+      name: "no links",
+      links: null,
+      privacy: null,
+      terms: null,
+    },
+  ] as const)(
+    "preserves consent for $name with beta enabled: $betaEnabled",
+    ({ betaEnabled, expected, links, privacy, terms }) => {
+      const { container } = renderStep(
+        disabledProviders,
+        links,
+        betaEnabled ? betaEmailCapacity : null,
+      );
+      const consent = container.querySelector("p.mt-5\\.5");
+
+      if (!expected) {
+        expect(consent).toBeNull();
+        expect(screen.queryByRole("link", { name: "Terms" })).toBeNull();
+        expect(screen.queryByRole("link", { name: "Privacy Policy" })).toBeNull();
+        return;
+      }
+
+      expect(consent).toHaveTextContent(expected);
+
+      for (const [label, expectedLink] of [
+        ["Terms", terms],
+        ["Privacy Policy", privacy],
+      ] as const) {
+        const link = screen.queryByRole("link", { name: label });
+
+        if (!expectedLink) {
+          expect(link).toBeNull();
+          continue;
+        }
+
+        expect(link).toHaveAttribute("href", expectedLink.href);
+        if (expectedLink.external) {
+          expect(link).toHaveAttribute("target", "_blank");
+          expect(link).toHaveAttribute("rel", "noreferrer");
+        } else {
+          expect(link).not.toHaveAttribute("target");
+          expect(link).not.toHaveAttribute("rel");
+        }
+      }
+    },
+  );
 
   it("renders terms-only wording and external-link attributes", () => {
     renderStep(disabledProviders, {

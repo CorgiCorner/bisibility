@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { NewMarketCreateInput } from "@/lib/markets/create-input";
+import { useTranslations } from "next-intl";
 
 export type NewMarketScheduleOption = {
   isDefault?: boolean;
@@ -25,21 +26,22 @@ export function NewMarketSchedule({
   schedules,
   value,
 }: Readonly<NewMarketScheduleProps>) {
+  const t = useTranslations("projectMarkets");
   return (
-    <section aria-label="Keyword schedule" className="grid gap-2">
+    <section aria-label={t("schedule")} className="grid gap-2">
       <div className="flex items-center justify-between gap-3">
-        <FieldLabel label="Schedule" />
+        <FieldLabel label={t("schedule")} />
         <Button onClick={onNewSchedule} size="xs" type="button" variant="ghost">
-          New schedule
+          {t("newSchedule")}
         </Button>
       </div>
       <MenuSelect
-        ariaLabel="Schedule"
+        ariaLabel={t("schedule")}
         onChange={(scheduleId) =>
           onChange(scheduleId === "manual" ? { kind: "manual" } : { kind: "existing", scheduleId })
         }
         options={[
-          { label: "Manual", value: "manual" },
+          { label: t("manual"), value: "manual" },
           ...schedules
             .filter((schedule) => schedule.frequency !== "manual")
             .map((schedule) => ({ label: schedule.name, value: schedule.id })),

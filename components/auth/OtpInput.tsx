@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/ui/cn";
+import { useTranslations } from "next-intl";
 import { type ForwardedRef, forwardRef, useRef } from "react";
 
 export type OtpInputProps = {
@@ -30,6 +31,7 @@ export const OtpInput = forwardRef<HTMLInputElement, OtpInputProps>(function Otp
   { disabled = false, error = false, id, length = 6, name, onBlur, onChange, onDigitEntry, value },
   ref,
 ) {
+  const t = useTranslations("auth.otp");
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const digits = Array.from({ length }, (_, index) => value[index] ?? "");
   const boxIds = Array.from({ length }, (_, index) => `otp-box-${index}`);
@@ -116,14 +118,14 @@ export const OtpInput = forwardRef<HTMLInputElement, OtpInputProps>(function Otp
 
   return (
     <fieldset className="m-0 border-0 p-0">
-      <legend className="sr-only">OTP digits</legend>
+      <legend className="sr-only">{t("inputLegend")}</legend>
       <div className={cn("mt-0 grid grid-cols-6 gap-[9px]", error && "bv-err")} data-m="otp-row">
         {boxIds.map((boxId, index) => {
           const digit = digits[index] ?? "";
 
           return (
             <input
-              aria-label={index === 0 ? "Code" : `Code digit ${index + 1}`}
+              aria-label={index === 0 ? t("code") : t("codeDigit", { index: String(index + 1) })}
               autoComplete="one-time-code"
               // biome-ignore lint/a11y/noAutofocus: HANDOFF-3 requires OTP autofocus without useEffect.
               autoFocus={index === 0}

@@ -87,12 +87,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const KeywordResearch: Story = {
-  args: { actorKind: "viewer", options: [], title: "Keyword Research" },
+  args: { actorKind: "viewer", module: "keywordResearch", options: [] },
   render: () => <StoredKeywordResearchView result={keywordResult} />,
 };
 
 export const Backlinks: Story = {
-  args: { actorKind: "viewer", options: [], title: "Backlinks" },
+  args: { actorKind: "viewer", module: "backlinks", options: [] },
   render: () => (
     <StoredBacklinksView
       result={{ ...backlinksSnapshotFixture, fetchedAt, freshUntil, stale: false }}
@@ -101,7 +101,7 @@ export const Backlinks: Story = {
 };
 
 export const DomainOverview: Story = {
-  args: { actorKind: "viewer", options: [], title: "Domain Overview" },
+  args: { actorKind: "viewer", module: "domainOverview", options: [] },
   render: () => <StoredDomainOverviewView result={storedDomain} />,
 };
 
@@ -110,16 +110,16 @@ export const OwnerNewLookupEntry: Story = {
     actorKind: "owner",
     options: [{ label: "standing desk - US/en", value: keywordResult.requestKey }],
     selectedValue: keywordResult.requestKey,
-    title: "Keyword Research",
+    module: "keywordResearch",
   },
 };
 
 export const ViewerEmpty: Story = {
-  args: { actorKind: "viewer", options: [], title: "Backlinks" },
-  render: () => <StoredResearchEmpty title="Backlinks" />,
+  args: { actorKind: "viewer", module: "backlinks", options: [] },
+  render: () => <StoredResearchEmpty module="backlinks" />,
 };
 
 export const StaleStoredResult: Story = {
-  args: { actorKind: "viewer", options: [], title: "Domain Overview" },
+  args: { actorKind: "viewer", module: "domainOverview", options: [] },
   render: () => <StoredDomainOverviewView result={{ ...storedDomain, stale: true }} />,
 };

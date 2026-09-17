@@ -19,6 +19,7 @@ import { StepFirstCheck } from "@/components/onboarding/steps/StepFirstCheck";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { Button } from "@/components/ui/Button";
+import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/ssr/SignOut";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ComponentProps, ReactNode } from "react";
@@ -276,6 +277,7 @@ function OnboardingStory({
 const meta = {
   title: "Onboarding/Wizard",
   component: OnboardingStory,
+  decorators: [withSharedMessages],
   args: {
     analyticsMode: "none",
     competitorMode: "blank",

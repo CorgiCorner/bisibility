@@ -1,5 +1,6 @@
 import { TagAdder } from "@/components/ui/TagAdder";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
+import { act, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -11,7 +12,7 @@ afterEach(() => {
 describe("TagAdder", () => {
   it("opens an inline input from the ghost chip", async () => {
     const user = userEvent.setup();
-    render(<TagAdder onAdd={vi.fn()} />);
+    renderWithSharedMessages(<TagAdder onAdd={vi.fn()} />);
 
     await user.click(screen.getByRole("button", { name: "Add tag" }));
 
@@ -23,7 +24,7 @@ describe("TagAdder", () => {
   it("commits on Enter and keeps the input open", async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
-    render(<TagAdder onAdd={onAdd} />);
+    renderWithSharedMessages(<TagAdder onAdd={onAdd} />);
 
     await user.click(screen.getByRole("button", { name: "Add tag" }));
     await user.type(screen.getByLabelText("New tag name"), "docs{Enter}");
@@ -36,7 +37,7 @@ describe("TagAdder", () => {
   it("closes on Escape without adding", async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
-    render(<TagAdder onAdd={onAdd} />);
+    renderWithSharedMessages(<TagAdder onAdd={onAdd} />);
 
     await user.click(screen.getByRole("button", { name: "Add tag" }));
     await user.type(screen.getByLabelText("New tag name"), "docs{Escape}");
@@ -48,7 +49,7 @@ describe("TagAdder", () => {
   it("closes on cancel without adding", async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
-    render(<TagAdder onAdd={onAdd} />);
+    renderWithSharedMessages(<TagAdder onAdd={onAdd} />);
 
     await user.click(screen.getByRole("button", { name: "Add tag" }));
     await user.type(screen.getByLabelText("New tag name"), "docs");
@@ -61,7 +62,7 @@ describe("TagAdder", () => {
   it("uses the shared tag schema before adding", async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
-    render(<TagAdder onAdd={onAdd} />);
+    renderWithSharedMessages(<TagAdder onAdd={onAdd} />);
 
     await user.click(screen.getByRole("button", { name: "Add tag" }));
     await user.type(screen.getByLabelText("New tag name"), `${"a".repeat(49)}{Enter}`);
@@ -72,7 +73,7 @@ describe("TagAdder", () => {
 
   it("uses motion tokens for the editing shell and affordances", async () => {
     const user = userEvent.setup();
-    render(<TagAdder onAdd={vi.fn()} />);
+    renderWithSharedMessages(<TagAdder onAdd={vi.fn()} />);
 
     await user.click(screen.getByRole("button", { name: "Add tag" }));
 
@@ -94,7 +95,7 @@ describe("TagAdder", () => {
   it("cancels the exit fallback before it fires when unmounted", () => {
     vi.useFakeTimers();
     const clearTimeout = vi.spyOn(globalThis, "clearTimeout");
-    const view = render(<TagAdder onAdd={vi.fn()} />);
+    const view = renderWithSharedMessages(<TagAdder onAdd={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Add tag" }));
     fireEvent.keyDown(screen.getByLabelText("New tag name"), { key: "Escape" });

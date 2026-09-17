@@ -1,0 +1,75 @@
+---
+title: "Manage markets"
+description: "Create, select, pause, and archive project markets before importing keywords."
+---
+
+A market is a location and language pair. Tracked keywords add a device, so one
+phrase can have separate desktop and mobile targets in the same market. Create
+markets before you import keywords; imports never create a missing market.
+
+Country and language lists live in the
+[Markets and languages](/markets) reference.
+
+## Create a market
+
+1. Open **Markets**.
+2. Select **New market**.
+3. Choose a **Country**, then a **Language**. Language stays disabled until the
+   country is set. Suggested languages appear first; the full list is searchable.
+4. Leave **Location** on the whole country, or search for a city or region.
+5. Optionally add a **Custom name**.
+6. Choose **Devices**: Desktop, Mobile, or Both.
+7. Choose how the market gets keywords: **Copy from market**, **Paste
+   keywords**, or **Start empty**. Copy and paste also need a **Schedule** (or
+   **Manual**).
+8. Select **Create market**. Creating the market spends nothing.
+
+Empty projects show **Track your first market**. You can also open the same
+sheet from the header switcher with **Add market**.
+
+## Select a market
+
+Use the header switcher next to the page title. The list includes **All
+markets**, then each market. Search **Find market...** appears when the project
+has more than six markets.
+
+Selecting a market scopes **Rank Tracker**. Other modules stay at the project
+level and do not follow this switcher. Opening a market name from the Markets
+table goes to that market's Rank Tracker.
+
+Opening **Import CSV** from a market preselects it as the **Market for rows
+without a location**.
+
+## Add keywords to a market
+
+From **Markets**, use the row menu **Add keywords**. The add drawer opens with
+that market selected. **Markets** and **Devices** are required there. A paused
+market still accepts keywords; the drawer says **Add paused keywords**, and
+rank checks wait until you resume the market.
+
+Keywords attach by the market's location, not by a separate market field on
+each phrase.
+
+## Pause, resume, and archive
+
+The Markets page has **Active and paused** and **Archived** tabs. Active and
+paused markets appear in separate tables.
+
+- Use the status switch to **Pause** or **Resume** a market. Rank checks run
+  only while the market is active.
+- **Archive market** stops tracking for its keywords. Existing rank history
+  stays readable. It does not delete keywords.
+- **Restore** from **Archived** brings the market back as active and resumes
+  its keywords on their schedules.
+
+Paused and archived markets are not runnable. The app reports **Market not
+active** when a check is stopped for that reason.
+
+## Import behavior
+
+Create the project's markets first, then select **Import CSV**. Continue stays
+disabled until at least one market exists. Choose the **Market for rows
+without a location** before uploading. To import into several existing
+markets, choose **Use markets from the file** and provide `country` with the
+matching `language`, or an exact `location_key`. Unknown locations are
+rejected. See [Add your first keywords](/guides/choose-first-keywords).

@@ -10,6 +10,7 @@ import type {
   RelevantPagesResult,
 } from "@/lib/providers/types";
 import type { ResearchScope } from "@/lib/research/scope";
+import { useTranslations } from "next-intl";
 import { DomainOverviewBacklinksTeaser } from "./DomainOverviewBacklinksTeaser";
 import { DomainOverviewContextBar } from "./DomainOverviewContextBar";
 import { DomainOverviewDistribution } from "./DomainOverviewDistribution";
@@ -69,6 +70,7 @@ export function DomainOverviewResults({
   saveSelectedKeywordsAction,
 }: Readonly<DomainOverviewResultsProps>) {
   const dateFormat = useDateFormat();
+  const t = useTranslations("projectDomainOverview.workspace.ui");
   const metrics = report.overview;
   const keywords = readOnly
     ? (storedModules?.keywords ?? null)
@@ -97,9 +99,9 @@ export function DomainOverviewResults({
             sourceSnapshotAt={report.sourceSnapshotAt}
           />
           <DomainOverviewNoDataCard
-            description="The selected domain has no indexed organic history for this country and language."
-            sectionTitle="Organic performance"
-            title="No index history to display"
+            description={t("noIndexDescription")}
+            sectionTitle={t("organicPerformance")}
+            title={t("noIndexTitle")}
           />
           {readOnly ? null : (
             <DomainOverviewStatePanel
@@ -160,9 +162,9 @@ export function DomainOverviewResults({
             />
           ) : (
             <DomainOverviewNoDataCard
-              description="Keyword rows were not collected with this saved result."
-              sectionTitle="Top organic keywords"
-              title="Keyword rows not collected"
+              description={t("keywordRowsMissing")}
+              sectionTitle={t("topOrganicKeywords")}
+              title={t("keywordRowsTitle")}
             />
           )}
           {pages ? (
@@ -178,9 +180,9 @@ export function DomainOverviewResults({
             />
           ) : (
             <DomainOverviewNoDataCard
-              description="Page rows were not collected with this saved result."
-              sectionTitle="Top pages"
-              title="Page rows not collected"
+              description={t("pageRowsMissing")}
+              sectionTitle={t("topPages")}
+              title={t("pageRowsTitle")}
             />
           )}
           {!readOnly ? (

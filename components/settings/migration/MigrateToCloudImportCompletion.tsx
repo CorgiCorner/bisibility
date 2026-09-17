@@ -4,17 +4,19 @@ import {
   migrationImportCountSummary,
 } from "@/lib/migration/import-counts";
 import type { MigrationImportCompletion } from "@/lib/migration/result";
+import { useTranslations } from "next-intl";
 
 export function ImportCompletionSummary({
   completion,
 }: Readonly<{ completion: MigrationImportCompletion }>) {
+  const t = useTranslations("projectSettingsMigration.completion");
   const countEntries = migrationImportCountEntries(completion.counts);
   const summary = migrationImportCountSummary(completion.counts);
   return (
     <div className="mt-4 w-full max-w-[420px] rounded-control border border-border bg-bg-sunken px-3.5 py-3 text-left">
       <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-fg-muted">
-        Import job
-        <IdChip copyLabel="Copy import job ID" size="xs" value={completion.jobId} />
+        {t("job")}
+        <IdChip copyLabel={t("copyJob")} size="xs" value={completion.jobId} />
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
         {countEntries.length > 0 ? (
@@ -27,9 +29,7 @@ export function ImportCompletionSummary({
             </span>
           ))
         ) : (
-          <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-            No imported rows reported.
-          </span>
+          <span className="font-sans tabular-nums text-[11px] text-fg-muted">{t("noRows")}</span>
         )}
       </div>
       {summary.visibilityNote ? (

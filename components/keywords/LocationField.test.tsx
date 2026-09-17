@@ -1,12 +1,41 @@
 import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
 import { countryValueForName } from "@/components/keywords/location-picker-data";
+import { sharedMessagesElement } from "@/i18n/test-support/render-with-feature-messages";
 import { locationSearchWireCandidate } from "@/lib/test/fixtures/location";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import sharedMessages from "@/messages/core/en/shared.json";
+import {
+  render as baseRender,
+  fireEvent,
+  type RenderResult,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import type { ReactElement, ReactNode } from "react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
+const locationMessages = {
+  city: sharedMessages.shared.markets.locationCity,
+  clearSearch: sharedMessages.shared.markets.locationClearSearch,
+  countries: sharedMessages.shared.markets.locationCountries,
+  noMatching: sharedMessages.shared.markets.locationNoMatching,
+  region: sharedMessages.shared.markets.locationRegion,
+  regionsAndCities: sharedMessages.shared.markets.locationRegionsAndCities,
+  searching: sharedMessages.shared.markets.locationSearching,
+};
+
+// The field reads the viewer locale to name a stored country, so every render supplies the
+// same shared-message boundary the app gives it.
+function render(ui: ReactElement): RenderResult {
+  const result = baseRender(sharedMessagesElement(ui));
+  return {
+    ...result,
+    rerender: (next: ReactNode) => result.rerender(sharedMessagesElement(next)),
+  };
+}
 
 function country(name = "United States") {
   const value = countryValueForName(name);
@@ -31,7 +60,12 @@ function Harness({ initial = country() }: { initial?: LocationFieldValue }) {
   const [value, setValue] = useState<LocationFieldValue>(initial);
   return (
     <div>
-      <LocationField onChange={setValue} projectId="prj_1" value={value} />
+      <LocationField
+        messages={locationMessages}
+        onChange={setValue}
+        projectId="prj_1"
+        value={value}
+      />
       <output data-testid="kind">{value.kind}</output>
       <output data-testid="display">{value.displayName}</output>
       <output data-testid="key">{value.canonicalKey}</output>
@@ -40,13 +74,61 @@ function Harness({ initial = country() }: { initial?: LocationFieldValue }) {
 }
 
 describe("LocationField", () => {
+  it("uses feature-owned location copy instead of the legacy English defaults", async () => {
+    mockLocations([
+      locationSearchWireCandidate({
+        canonical_key: "FR",
+        country_code: "FR",
+        display_name: "France",
+        id: "country:FR",
+      }),
+    ]);
+
+    render(
+      <LocationField
+        label="Ubicación"
+        messages={{
+          city: "Ciudad",
+          clearSearch: "Borrar búsqueda de ubicación",
+          countries: "Países",
+          noMatching: "No hay ubicaciones coincidentes.",
+          region: "Región",
+          regionsAndCities: "Regiones y ciudades",
+          searching: "Buscando ubicaciones...",
+        }}
+        onChange={vi.fn()}
+        placeholder="Busca un país, región o ciudad"
+        projectId="prj_1"
+        value={country()}
+      />,
+    );
+
+    const input = screen.getByRole("combobox", { name: "Ubicación" });
+    expect(input).toHaveAttribute("placeholder", "Busca un país, región o ciudad");
+    fireEvent.change(input, { target: { value: "fra" } });
+
+    expect(await screen.findByText("Países")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Borrar búsqueda de ubicación" }),
+    ).toBeInTheDocument();
+  });
+
   it("keeps form and toolbar fields transparent with a visible border", () => {
-    const { rerender } = render(<LocationField onChange={vi.fn()} value={country()} />);
+    const { rerender } = render(
+      <LocationField messages={locationMessages} onChange={vi.fn()} value={country()} />,
+    );
     expect(screen.getByRole("combobox", { name: /location/i })).toHaveClass(
       "bg-transparent",
       "border-border-control",
     );
-    rerender(<LocationField onChange={vi.fn()} value={country()} variant="toolbar" />);
+    rerender(
+      <LocationField
+        messages={locationMessages}
+        onChange={vi.fn()}
+        value={country()}
+        variant="toolbar"
+      />,
+    );
     expect(screen.getByRole("combobox", { name: /location/i })).toHaveClass(
       "bg-transparent",
       "border-border-control",
@@ -54,7 +136,14 @@ describe("LocationField", () => {
   });
 
   it("renders the research variant as a compact market control with a right caret", () => {
-    render(<LocationField onChange={vi.fn()} value={country()} variant="research" />);
+    render(
+      <LocationField
+        messages={locationMessages}
+        onChange={vi.fn()}
+        value={country()}
+        variant="research"
+      />,
+    );
 
     const input = screen.getByRole("combobox", { name: /location/i });
     expect(input).toHaveClass(
@@ -335,6 +424,7 @@ describe("LocationField", () => {
     render(
       <LocationField
         help="Country or city used for localized results."
+        messages={locationMessages}
         onChange={vi.fn()}
         value={country()}
       />,

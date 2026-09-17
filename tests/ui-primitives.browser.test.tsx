@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { Modal } from "@/components/ui/Modal";
 import { Pill } from "@/components/ui/Pill";
+import { sharedMessagesElement } from "@/i18n/test-support/render-with-feature-messages";
 import { applyTheme } from "@/lib/theme/browser-theme";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
@@ -24,13 +25,15 @@ function color(element: HTMLElement, token: string) {
 describe("Native control style contracts", () => {
   it("keeps the four button sizes and the small pill geometry", () => {
     render(
-      <>
-        <Button size="xs">Extra small</Button>
-        <Button size="sm">Small</Button>
-        <Button>Medium</Button>
-        <Button size="lg">Large</Button>
-        <Pill size="sm">Filter</Pill>
-      </>,
+      sharedMessagesElement(
+        <>
+          <Button size="xs">Extra small</Button>
+          <Button size="sm">Small</Button>
+          <Button>Medium</Button>
+          <Button size="lg">Large</Button>
+          <Pill size="sm">Filter</Pill>
+        </>,
+      ),
     );
     for (const [name, height, font] of [
       ["Extra small", 30, "12px"],
@@ -54,12 +57,14 @@ describe("Native control style contracts", () => {
     (theme) => {
       applyTheme(theme);
       render(
-        <>
-          <Button href="/connect">Connect</Button>
-          <Button variant="secondary">Secondary</Button>
-          <Button variant="destructive">Delete</Button>
-          <Button variant="ghost">Ghost</Button>
-        </>,
+        sharedMessagesElement(
+          <>
+            <Button href="/connect">Connect</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="destructive">Delete</Button>
+            <Button variant="ghost">Ghost</Button>
+          </>,
+        ),
       );
       for (const [name, role, bg, fg] of [
         ["Connect", "link", "--accent-solid", "--accent-on-solid"],
@@ -80,7 +85,7 @@ describe("Native control style contracts", () => {
   it.each(["primary", "secondary", "destructive", "ghost"] as const)(
     "preserves %s paint and borders while loading",
     (variant) => {
-      const view = render(<Button variant={variant}>Save</Button>);
+      const view = render(sharedMessagesElement(<Button variant={variant}>Save</Button>));
       const button = screen.getByRole("button", { name: "Save" });
       const before = getComputedStyle(button);
       const expected = {
@@ -90,9 +95,11 @@ describe("Native control style contracts", () => {
         height: button.getBoundingClientRect().height,
       };
       view.rerender(
-        <Button variant={variant} loading>
-          Save
-        </Button>,
+        sharedMessagesElement(
+          <Button variant={variant} loading>
+            Save
+          </Button>,
+        ),
       );
       const after = getComputedStyle(button);
       expect(after.backgroundColor).toBe(expected.background);
@@ -106,10 +113,12 @@ describe("Native control style contracts", () => {
 
   it("reserves ghost fill and the visible outline for keyboard focus after the pointer leaves", async () => {
     render(
-      <>
-        <Button variant="ghost">Ghost</Button>
-        <Button>Next</Button>
-      </>,
+      sharedMessagesElement(
+        <>
+          <Button variant="ghost">Ghost</Button>
+          <Button>Next</Button>
+        </>,
+      ),
     );
     const button = screen.getByRole("button", { name: "Ghost" });
     const width = button.getBoundingClientRect().width;
@@ -130,11 +139,13 @@ describe("Native control style contracts", () => {
 
   it("uses guarded press scaling for solid buttons, pills and copy controls", () => {
     render(
-      <>
-        <Button>Action</Button>
-        <Pill>Filter</Pill>
-        <CopyButton label="Copy" text="demo" />
-      </>,
+      sharedMessagesElement(
+        <>
+          <Button>Action</Button>
+          <Pill>Filter</Pill>
+          <CopyButton label="Copy" text="demo" />
+        </>,
+      ),
     );
     const css = Array.from(document.styleSheets)
       .flatMap((sheet) => {
@@ -169,7 +180,7 @@ describe("Dialog browser lifecycle", () => {
         </>
       );
     }
-    render(<Harness />);
+    render(sharedMessagesElement(<Harness />));
     const trigger = screen.getByRole("button", { name: "Open panel" });
     await userEvent.click(trigger);
     const dialog = screen.getByRole("dialog", { name: "Edit settings" });

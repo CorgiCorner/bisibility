@@ -1,4 +1,8 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+  renderWithSharedMessages as render,
+  sharedMessagesElement,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -68,14 +72,14 @@ describe("OperationRow", () => {
     vi.setSystemTime(new Date("2026-09-02T10:00:00.000Z"));
     renderOperation({ nextCheckAt: "2026-09-02T12:00:00.000Z" });
 
-    expect(screen.getByText("Next check in 2h")).toBeInTheDocument();
+    expect(screen.getByText("Next check in 2 hours")).toBeInTheDocument();
   });
 
   it("names the first check while the run is still queued", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-02T10:00:00.000Z"));
     renderOperation({ state: "queued", nextCheckAt: "2026-09-02T14:00:00.000Z" });
-    expect(screen.getByText("First check in 4h")).toBeInTheDocument();
+    expect(screen.getByText("First check in 4 hours")).toBeInTheDocument();
   });
 
   it("does not invent an actor or resume date when operation data omits them", () => {
@@ -85,7 +89,7 @@ describe("OperationRow", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/Oct 1|Anna/)).not.toBeInTheDocument();
 
-    rerender(<OperationRow {...operation} actor={null} state="cancelled" />);
+    rerender(sharedMessagesElement(<OperationRow {...operation} actor={null} state="cancelled" />));
     expect(screen.getByText("Cancelled - what completed first is kept.")).toBeInTheDocument();
     expect(screen.queryByText(/Anna/)).not.toBeInTheDocument();
   });
@@ -95,7 +99,9 @@ describe("OperationRow", () => {
     expect(screen.getByText("12 / 20 targets")).toBeInTheDocument();
 
     rerender(
-      <OperationRow {...operation} completed={12} counts="12 / 20" total={20} unit="targets" />,
+      sharedMessagesElement(
+        <OperationRow {...operation} completed={12} counts="12 / 20" total={20} unit="targets" />,
+      ),
     );
     expect(screen.getByText("12 / 20 targets")).toBeInTheDocument();
   });
@@ -134,7 +140,7 @@ describe("OperationRow", () => {
 
   it("hydrates a ticking relative value from the server instant without a warning", async () => {
     const markup = renderToString(
-      <OperationRow {...operation} nextCheckAt="2026-09-02T12:00:00.000Z" />,
+      sharedMessagesElement(<OperationRow {...operation} nextCheckAt="2026-09-02T12:00:00.000Z" />),
     );
     const container = document.createElement("div");
     container.innerHTML = markup;
@@ -144,7 +150,9 @@ describe("OperationRow", () => {
     await act(async () => {
       root = hydrateRoot(
         container,
-        <OperationRow {...operation} nextCheckAt="2026-09-02T12:00:00.000Z" />,
+        sharedMessagesElement(
+          <OperationRow {...operation} nextCheckAt="2026-09-02T12:00:00.000Z" />,
+        ),
       );
     });
 

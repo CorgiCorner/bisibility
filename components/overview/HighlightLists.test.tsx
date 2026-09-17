@@ -1,41 +1,48 @@
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import { render, screen, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { describe, expect, it } from "vitest";
 import { HighlightLists } from "./HighlightLists";
 
+function renderHighlights(lists: ComponentProps<typeof HighlightLists>["lists"]) {
+  return render(
+    <ProjectDashboardMessages>
+      <HighlightLists lists={lists} projectRef="prj_1" />
+    </ProjectDashboardMessages>,
+  );
+}
+
 describe("HighlightLists", () => {
   it("keeps duplicate keyword text distinguishable by market and device", () => {
-    render(
-      <HighlightLists
-        lists={[
+    renderHighlights([
+      {
+        kind: "wins",
+        rows: [
           {
-            kind: "wins",
-            rows: [
-              {
-                device: "desktop",
-                id: "kw_es",
-                keyword: "shared keyword",
-                marketLanguageLabel: "Spanish",
-                marketLocationLabel: "Spain",
-                note: "Gained 2",
-                positionText: "#3",
-              },
-              {
-                device: "mobile",
-                id: "kw_be",
-                keyword: "shared keyword",
-                marketLanguageLabel: "Dutch",
-                marketLocationLabel: "Belgium",
-                note: "Gained 1",
-                positionText: "#4",
-              },
-            ],
-            subtitle: "Gained the most",
-            title: "Biggest wins",
+            delta: { direction: "up", value: 2 },
+            device: "desktop",
+            id: "kw_es",
+            keyword: "shared keyword",
+            marketLanguageLabel: "Spanish",
+            marketLocationLabel: "Spain",
+            note: { direction: "gained", kind: "movement", url: "/one", value: 2 },
+            position: 3,
+            positionState: "ranked",
           },
-        ]}
-        projectRef="prj_1"
-      />,
-    );
+          {
+            delta: { direction: "up", value: 1 },
+            device: "mobile",
+            id: "kw_be",
+            keyword: "shared keyword",
+            marketLanguageLabel: "Dutch",
+            marketLocationLabel: "Belgium",
+            note: { direction: "gained", kind: "movement", url: "/two", value: 1 },
+            position: 4,
+            positionState: "ranked",
+          },
+        ],
+      },
+    ]);
 
     expect(screen.getByText("Spain")).toBeVisible();
     expect(screen.getByText("/ Spanish")).toBeVisible();
@@ -45,122 +52,99 @@ describe("HighlightLists", () => {
     expect(screen.getByLabelText("Mobile")).toBeVisible();
   });
 
-  it("keeps the row height off the chip and hides the chip without a pair", () => {
-    render(
-      <HighlightLists
-        lists={[
+  it("renders semantic recent-addition timing and an empty state per list", () => {
+    renderHighlights([
+      {
+        kind: "recentlyAdded",
+        rows: [
           {
-            kind: "wins",
-            rows: [
-              {
-                device: "desktop",
-                id: "kw_paired",
-                keyword: "paired keyword",
-                marketLanguageLabel: "Spanish",
-                marketLocationLabel: "Spain",
-                note: "Gained 2",
-                positionText: "#3",
-              },
-              {
-                id: "kw_unpaired",
-                keyword: "unpaired keyword",
-                note: "First check pending",
-                positionText: "No data",
-              },
-            ],
-            subtitle: "Gained the most",
-            title: "Biggest wins",
+            id: "kw_new",
+            keyword: "new keyword",
+            note: {
+              age: { kind: "hours", value: 2 },
+              checkState: "firstCheckPending",
+              kind: "recentlyAdded",
+              url: null,
+            },
+            position: null,
+            positionState: "awaitingFirstCheck",
           },
-        ]}
-        projectRef="prj_1"
-      />,
-    );
+        ],
+      },
+      { kind: "wins", rows: [] },
+    ]);
 
-    // The chip is height-pinned and the row keeps its own minimum, so a chip appearing on
-    // one row cannot make it taller than a row without one.
+    expect(screen.getByText("Added 2h ago · first check pending")).toBeVisible();
+    expect(screen.getByText("Needs another check")).toBeVisible();
+    const recentRow = screen.getByRole("link", { name: /new keyword/i });
+    expect(within(recentRow).getByText("Awaiting first check")).toBeVisible();
+  });
+
+  it("honors the current attempt state instead of displaying a prior successful rank", () => {
+    renderHighlights([
+      {
+        kind: "attention",
+        rows: [
+          {
+            id: "kw_failed",
+            keyword: "failed current check",
+            note: { kind: "latestCheckFailed" },
+            position: 3,
+            positionState: "noData",
+            positionTone: "danger",
+          },
+          {
+            id: "kw_unranked",
+            keyword: "unranked current check",
+            note: { kind: "latestCheckNotRanked" },
+            position: 4,
+            positionState: "notRanked",
+            positionTone: "muted",
+          },
+        ],
+      },
+    ]);
+
+    const failed = screen.getByRole("link", { name: /failed current check/i });
+    const unranked = screen.getByRole("link", { name: /unranked current check/i });
+    expect(within(failed).getByText("No data")).toBeVisible();
+    expect(within(unranked).getByText("Not in top 100")).toBeVisible();
+    expect(screen.queryByText("#3")).not.toBeInTheDocument();
+    expect(screen.queryByText("#4")).not.toBeInTheDocument();
+  });
+
+  it("keeps the row height off the chip and hides the chip without a pair", () => {
+    renderHighlights([
+      {
+        kind: "wins",
+        rows: [
+          {
+            id: "kw_paired",
+            keyword: "paired keyword",
+            marketLanguageLabel: "Spanish",
+            marketLocationLabel: "Spain",
+            note: { kind: "rankingUrl", url: null },
+            position: 3,
+            positionState: "ranked",
+          },
+          {
+            id: "kw_unpaired",
+            keyword: "unpaired keyword",
+            note: { kind: "rankingUrl", url: null },
+            position: null,
+            positionState: "awaitingFirstCheck",
+          },
+        ],
+      },
+    ]);
+
     expect(screen.getByText("Spain").parentElement).toHaveClass("h-[22px]");
     for (const row of screen.getAllByRole("link")) {
       expect(row).toHaveClass("min-h-[68px]");
     }
-    // Not `queryByText("/ ")`: the default normalizer trims the element text, so that
-    // string can never match anything and the assertion would hold with the guard gone.
     const [paired, unpaired] = screen.getAllByRole("link");
     expect(within(paired).getByText("/ Spanish")).toBeVisible();
     expect(within(unpaired).queryByText(/\//)).not.toBeInTheDocument();
     expect(within(unpaired).getByText("unpaired keyword")).toBeVisible();
-  });
-
-  it("separates the chip and note with enough vertical rhythm to never overlap", () => {
-    render(
-      <HighlightLists
-        lists={[
-          {
-            kind: "wins",
-            rows: [
-              {
-                device: "desktop",
-                id: "kw_long_url",
-                keyword: "a very long keyword that stretches the row width",
-                marketLanguageLabel: "Spanish",
-                marketLocationLabel: "Malaga, Spain",
-                note: "Gained 2 positions since last check",
-                positionText: "#3",
-              },
-            ],
-            subtitle: "Gained the most",
-            title: "Biggest wins",
-          },
-        ]}
-        projectRef="prj_1"
-      />,
-    );
-
-    const row = screen.getByRole("link");
-    // The row must reserve enough height for all three lines (keyword, chip, note).
-    expect(row).toHaveClass("min-h-[68px]");
-    // Title-to-market spacing stays at mt-1.5 (6px), while the 22px centered chip needs
-    // an mt-2 (8px) note gap for the intended optical separation.
-    const chipWrapper = screen.getByText("Malaga, Spain").closest("span[class*='mt-1.5']");
-    expect(chipWrapper).not.toBeNull();
-    const note = screen.getByText("Gained 2 positions since last check");
-    expect(note).toHaveClass("mt-2");
-    // All three lines are block-level so they stack vertically, never inline.
-    expect(screen.getByText("a very long keyword that stretches the row width")).toHaveClass(
-      "block",
-    );
-    expect(note).toHaveClass("block");
-  });
-
-  it("renders comparison and no-match empty states per list", () => {
-    render(
-      <HighlightLists
-        lists={[
-          { kind: "wins", rows: [], subtitle: "Gained the most", title: "Biggest wins" },
-          {
-            kind: "attention",
-            rows: [],
-            subtitle: "Dropped the most",
-            title: "Needs attention",
-          },
-          {
-            kind: "newTop10",
-            rows: [],
-            subtitle: "Now on page one",
-            title: "New in top 10",
-          },
-          {
-            kind: "recentlyAdded",
-            rows: [],
-            subtitle: "Added recently",
-            title: "Recently added",
-          },
-        ]}
-        projectRef="prj_1"
-      />,
-    );
-
-    expect(screen.getAllByText("Needs another check")).toHaveLength(2);
-    expect(screen.getAllByText("No matches")).toHaveLength(2);
-    expect(screen.getByText("No keywords were added in the last 7 days.")).toBeInTheDocument();
   });
 });

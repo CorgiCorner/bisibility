@@ -188,9 +188,9 @@ describe("integration queries", () => {
     expect(provider.drawer.defaults).not.toHaveProperty("primary");
     expect(provider.drawer.defaults).not.toHaveProperty("priority");
     expect(provider).toMatchObject({ enabled: true, primary: true, priority: 7 });
-    expect(provider.meta).toContainEqual({ label: "Account", value: "dfs-user@example.com" });
-    expect(provider.meta.map((row) => row.label)).not.toContain("Fallback priority");
-    expect(provider.meta.map((row) => row.label)).not.toContain("Est. provider cost");
+    expect(provider.meta).toContainEqual({ labelKey: "account", value: "dfs-user@example.com" });
+    expect(provider.meta.map((row) => row.labelKey)).not.toContain("fallbackPriority");
+    expect(provider.meta.map((row) => row.labelKey)).not.toContain("estProviderCost");
     expect(JSON.stringify(provider)).not.toContain("dfs-secret");
   });
 
@@ -345,12 +345,12 @@ describe("integration queries", () => {
       login: "example.com",
       secret: "",
     });
-    expect(provider?.meta).toContainEqual({ label: "Site domain", value: "example.com" });
+    expect(provider?.meta).toContainEqual({ labelKey: "siteDomain", value: "example.com" });
     expect(provider?.meta).toContainEqual({
-      label: "API service",
+      labelKey: "apiService",
       value: "https://stats.example.com",
     });
-    expect(provider?.meta.map((row) => row.label)).not.toContain("Billing");
+    expect(provider?.meta.map((row) => row.labelKey)).not.toContain("billing");
     expect(JSON.stringify(provider)).not.toContain("secret-token");
   });
 
@@ -372,7 +372,7 @@ describe("integration queries", () => {
       neverSynced: true,
       status: "connected",
     });
-    expect(provider?.meta).toContainEqual({ label: "Last sync", value: "Never" });
+    expect(provider?.meta).toContainEqual({ labelKey: "lastSync", valueKey: "never" });
   });
 
   it("loads durable Search Console progress independently from traffic sync", async () => {
@@ -642,10 +642,15 @@ describe("integration queries", () => {
     const categories = await getIntegrationCategories("prj_1", { now });
     const provider = categories.find((category) => category.id === "serp")?.providers[0];
 
-    expect(provider?.meta).toContainEqual({ label: "Last rank check", value: "2h ago" });
+    expect(provider?.meta).toContainEqual({
+      labelKey: "lastRankCheck",
+      relativeTo: now.toISOString(),
+      valueAt: "2026-06-28T10:00:00.000Z",
+    });
     expect(provider?.drawer.activities).toContainEqual({
-      label: "Connection updated",
-      value: "3h ago",
+      labelKey: "connectionUpdated",
+      relativeTo: now.toISOString(),
+      valueAt: "2026-06-28T09:00:00.000Z",
     });
   });
 

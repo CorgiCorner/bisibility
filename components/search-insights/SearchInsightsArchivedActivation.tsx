@@ -1,15 +1,15 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
 import type { SelectSearchInsightsPropertyAction } from "@/lib/actions/search-insights";
-import { formatDateLabel } from "@/lib/search-insights/dates";
+import { formatDisplayDate } from "@/lib/dates/format";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { REAUTH_REQUIRED, SELECT_FAILED } from "./search-insights-copy";
 
 export type ArchivedActivationTarget = {
   displayName: string;
@@ -32,7 +32,8 @@ export function SearchInsightsArchivedActivation({
   selectPropertyAction,
   target,
 }: Readonly<ArchivedActivationProps>) {
-  const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
+  const t = useTranslations("projectSearchInsights.copy");
   const router = useRouter();
   const { showToast } = useToast();
   const [busy, setBusy] = useState(false);
@@ -43,29 +44,29 @@ export function SearchInsightsArchivedActivation({
     try {
       const result = await selectPropertyAction({ projectId, property: target.value });
       if (result.status === "reauth_required") {
-        showToast(REAUTH_REQUIRED, { severity: "connection" });
+        showToast(t("reauthRequired"), { severity: "connection" });
         return;
       }
       onClose();
       router.refresh();
     } catch (error) {
-      showToast(actionErrorMessage(error, SELECT_FAILED), { severity: "error" });
+      showToast(actionErrorMessage(error, t("selectFailed")), { severity: "error" });
     } finally {
       setBusy(false);
     }
   }
 
-  const targetName = target?.displayName ?? "this property";
+  const targetName = target?.displayName ?? t("thisProperty");
   return (
     <Modal
       dismissDisabled={busy}
       footer={
         <>
           <Button disabled={busy} onClick={onClose} variant="secondary">
-            Keep {currentDisplayName}
+            {t("keepProperty", { property: currentDisplayName })}
           </Button>
           <Button loading={busy} onClick={() => void confirm()} variant="primary">
-            Make {targetName} active
+            {t("makePropertyActive", { property: targetName })}
           </Button>
         </>
       }
@@ -74,11 +75,13 @@ export function SearchInsightsArchivedActivation({
       open={target !== null}
       primaryActionDisabled={busy}
       size="sm"
-      title={`Make ${targetName} active?`}
+      title={t("makePropertyActiveTitle", { property: targetName })}
     >
       <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">
-        {currentDisplayName} stops syncing and becomes an archive. We will fill the gap since{" "}
-        {target ? formatDateLabel(target.lastSyncedDate, dateFormat) : "the last sync"}.
+        {t("archivedActivationBody", {
+          currentProperty: currentDisplayName,
+          date: target ? formatDisplayDate(target.lastSyncedDate, dateDisplay) : t("lastSync"),
+        })}
       </p>
     </Modal>
   );

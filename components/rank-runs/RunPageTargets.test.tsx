@@ -1,8 +1,8 @@
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { appPath } from "@/lib/routing/app-path";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { runPageFixture } from "./RunPageFixtures";
-import { runSummary } from "./RunPageModel";
 import { RunPageTargets } from "./RunPageTargets";
 import type { RunPageData, RunPageItem } from "./RunPageTypes";
 
@@ -15,7 +15,10 @@ type RenderOptions = {
 };
 
 function summary(run: RunPageData) {
-  return runSummary(run, { formatInstant: (instant) => instant, now: runPageFixture.now });
+  return {
+    active: run.status === "queued" || run.status === "running",
+    planned: run.status === "planned",
+  };
 }
 
 function renderTargets({

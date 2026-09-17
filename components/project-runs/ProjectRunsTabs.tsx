@@ -1,8 +1,15 @@
+"use client";
+
+// The tab strip is rendered both by a client parent (the runs list) and directly by the
+// schedules server pages. Its messages come from ProjectRunsFeatureBoundary, a client
+// provider, so the strip must resolve them on the client in both placements.
+
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import type { ProjectRunsQuery } from "@/lib/runs/filters";
 import { cn } from "@/lib/ui/cn";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 type ProjectRunsTabsProps = {
   active: "runs" | "schedules";
@@ -11,17 +18,18 @@ type ProjectRunsTabsProps = {
 };
 
 export function ProjectRunsTabs({ active, projectRef, query }: Readonly<ProjectRunsTabsProps>) {
+  const t = useTranslations("projectRuns.navigation");
   const tabs = [
     {
       href: projectRunsPath(projectRef, { ...query, cursor: null }),
-      label: "Runs",
+      label: t("runs"),
       value: "runs",
     },
-    { href: projectSchedulesPath(projectRef), label: "Schedules", value: "schedules" },
+    { href: projectSchedulesPath(projectRef), label: t("schedules"), value: "schedules" },
   ];
 
   return (
-    <nav aria-label="Runs sections" className="flex min-w-0 gap-0.5 border-b border-border">
+    <nav aria-label={t("runsSections")} className="flex min-w-0 gap-0.5 border-b border-border">
       {tabs.map((tab) => (
         <Link
           aria-current={active === tab.value ? "page" : undefined}

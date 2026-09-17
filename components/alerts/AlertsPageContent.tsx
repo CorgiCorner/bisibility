@@ -9,6 +9,8 @@ import {
 } from "@/components/alerts/AlertsEmptyStates";
 import { AlertsLiveToolbar } from "@/components/alerts/AlertsLiveToolbar";
 import { AlertTemplateButtons } from "@/components/alerts/AlertTemplateButtons";
+import { alertFeedFacetLabels } from "@/components/alerts/alert-feed-facet-labels";
+import { presentAlertFeedFacetOptions } from "@/components/alerts/alert-feed-presentation";
 import { NewRuleAction } from "@/components/alerts/NewRuleAction";
 import { FacetBar } from "@/components/feeds/FacetBar";
 import { AlertBanner } from "@/components/ui/AlertBanner";
@@ -17,14 +19,14 @@ import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { markProjectAlertsRead } from "@/lib/actions/alert-feed";
-import type { TriggeredAlertView } from "@/lib/alerts/alert-data";
-import { pluralize } from "@/lib/format/pluralize";
+import type { TriggeredAlertFeedView } from "@/lib/alerts/alert-data";
 import { appPath } from "@/lib/routing/app-path";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { ListMagnifyingGlassIcon as ListMagnifyingGlass } from "@phosphor-icons/react/dist/csr/ListMagnifyingGlass";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type AlertFilter = "all" | "unread" | "urgent";
@@ -33,7 +35,7 @@ import type { AlertsPageContentProps } from "./AlertsPageContent.types";
 
 export type { AlertsPageContentProps } from "./AlertsPageContent.types";
 
-function filterAlerts(alerts: TriggeredAlertView[], readIds: Set<string>, filter: AlertFilter) {
+function filterAlerts(alerts: TriggeredAlertFeedView[], readIds: Set<string>, filter: AlertFilter) {
   if (filter === "unread") {
     return alerts.filter((alert) => isAlertUnread(alert, readIds));
   }
@@ -65,6 +67,7 @@ export function AlertsPageContent({
   targets,
   templates,
 }: Readonly<AlertsPageContentProps>) {
+  const t = useTranslations("projectAlerts.feed");
   const router = useRouter();
   const [filter, setFilter] = useState<AlertFilter>("all");
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
@@ -85,10 +88,13 @@ export function AlertsPageContent({
   const urgentCount = liveAlerts.filter((alert) => alert.severity === "urgent").length;
   const resolvedProjectDomain = projectDomain ?? targets.projectDomain;
   const filters = [
-    { id: "all", label: "All", count: liveAlerts.length },
-    { id: "unread", label: "Unread", count: unreadCount },
-    { id: "urgent", label: "Urgent", count: urgentCount },
+    { id: "all", label: t("all"), count: liveAlerts.length },
+    { id: "unread", label: t("unread"), count: unreadCount },
+    { id: "urgent", label: t("urgent"), count: urgentCount },
   ] satisfies { count: number; id: AlertFilter; label: string }[];
+  const localizedFacetOptions = facetOptions
+    ? presentAlertFeedFacetOptions(facetOptions, t)
+    : undefined;
 
   async function markAllRead() {
     const previousReadIds = readIds;
@@ -99,7 +105,7 @@ export function AlertsPageContent({
       router.refresh();
     } catch {
       setReadIds(previousReadIds);
-      setFeedError("Could not mark alerts read. Try again.");
+      setFeedError(t("markReadError"));
     }
   }
 
@@ -124,17 +130,23 @@ export function AlertsPageContent({
         projectId={projectId}
         targets={targets}
       />
-      {facetOptions ? <FacetBar facets={facets} options={facetOptions} /> : null}
+      {localizedFacetOptions ? (
+        <FacetBar
+          facets={facets}
+          labels={alertFeedFacetLabels(t)}
+          options={localizedFacetOptions}
+        />
+      ) : null}
       {!hasTrackedKeywords ? (
         <AlertBanner
           action={{
             href: appPath(projectRef, "rank-tracker?add=1"),
             icon: "arrow",
-            label: "Add keyword",
+            label: t("addKeyword"),
           }}
-          detail="Existing alert configuration and history are preserved, but rules cannot evaluate until a keyword is tracked."
+          detail={t("trackingBlockedDetail")}
           tint="yellow"
-          title="No keywords are currently tracked."
+          title={t("trackingBlockedTitle")}
         />
       ) : null}
       {feedFilteredEmpty ? (
@@ -165,15 +177,17 @@ export function AlertsPageContent({
           <Card className="overflow-hidden p-0" size="md">
             <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-4.5 py-3.5">
               <div className="flex flex-wrap items-center gap-2.5">
-                <SectionTitle>Triggered alerts</SectionTitle>
+                <SectionTitle>{t("triggered")}</SectionTitle>
                 <span className="rounded-full bg-bg-sunken px-2 py-0.5 font-sans tabular-nums text-[10.5px] font-semibold text-fg-muted">
-                  {liveAlerts.length} loaded
+                  {t("loaded", { count: liveAlerts.length })}
                 </span>
-                <span className="font-sans tabular-nums text-[11px] text-fg-muted">last 48h</span>
+                <span className="font-sans tabular-nums text-[11px] text-fg-muted">
+                  {t("last48Hours")}
+                </span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <SegmentedControl
-                  ariaLabel="Alert filter"
+                  ariaLabel={t("filterAria")}
                   className="min-w-[220px]"
                   onChange={setFilter}
                   optionClassName="min-h-7 flex-row gap-1.5 px-2.5 py-1 text-[11.5px]"
@@ -198,7 +212,7 @@ export function AlertsPageContent({
                   type="button"
                   variant="secondary"
                 >
-                  Mark all read
+                  {t("markAllRead")}
                 </Button>
               </div>
             </div>
@@ -214,13 +228,11 @@ export function AlertsPageContent({
                 />
               ))
             ) : (
-              <div className="px-4.5 py-8 text-center text-[13px] text-fg-muted">
-                No alerts match this filter.
-              </div>
+              <div className="px-4.5 py-8 text-center text-[13px] text-fg-muted">{t("empty")}</div>
             )}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-bg-sunken px-4.5 py-3">
               <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-                Showing {shownCount} of {pluralize(filteredAlerts.length, "loaded alert")}
+                {t("showing", { shown: shownCount, total: filteredAlerts.length })}
               </span>
               <div className="flex flex-wrap items-center gap-2.5">
                 {canReadAudit ? (
@@ -229,7 +241,7 @@ export function AlertsPageContent({
                     href={appPath(projectRef, "settings", "audit")}
                   >
                     <ListMagnifyingGlass weight="regular" aria-hidden size={13} />
-                    View audit log
+                    {t("audit")}
                   </Link>
                 ) : null}
                 <Button
@@ -242,7 +254,7 @@ export function AlertsPageContent({
                   type="button"
                   variant="secondary"
                 >
-                  Load 20 more
+                  {t("loadMore")}
                 </Button>
               </div>
             </div>
@@ -252,7 +264,7 @@ export function AlertsPageContent({
       {canCreate ? (
         <section>
           <div className="mb-2.5 font-sans tabular-nums text-[10.5px] uppercase text-fg-muted">
-            Create from template
+            {t("template")}
           </div>
           <div className="flex flex-wrap gap-2">
             <AlertTemplateButtons

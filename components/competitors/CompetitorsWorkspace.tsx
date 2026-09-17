@@ -33,6 +33,7 @@ import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr
 import { UsersThreeIcon as UsersThree } from "@phosphor-icons/react/dist/csr/UsersThree";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 type CompetitorsWorkspaceProps = Partial<Pick<KeywordWorkspaceActions, "addKeywordsAction">> & {
@@ -65,6 +66,7 @@ export function CompetitorsWorkspace({
   savedViews,
   view,
 }: Readonly<CompetitorsWorkspaceProps>) {
+  const t = useTranslations("projectCompetitors.workspace");
   const router = useRouter();
   const [scopeOpen, setScopeOpen] = useState(false);
   const [trackOpen, setTrackOpen] = useState(false);
@@ -100,9 +102,9 @@ export function CompetitorsWorkspace({
               />
             ) : undefined
           }
-          description="Add at least one competitor to compare share of voice and head-to-head rankings."
+          description={t("noCompetitorsDescription")}
           mark={<ModuleMark bordered icon={UsersThree} />}
-          title="No competitors yet"
+          title={t("noCompetitorsTitle")}
         />
       </div>
     );
@@ -119,12 +121,15 @@ export function CompetitorsWorkspace({
             className="inline-flex min-h-10 items-center gap-2 rounded-control border border-border-control bg-bg-elev px-4.5 text-[13.5px] font-semibold text-fg hover:border-accent hover:text-accent-text"
             href={appPath(projectRef, "rank-tracker")}
           >
-            Add keywords first
+            {t("addKeywords")}
             <CaretRight aria-hidden size={14} weight="regular" />
           </Link>
         }
-        description={`${view.managedCompetitors.length} competitor${view.managedCompetitors.length === 1 ? "" : "s"} (${competitorNames}) saved. Track at least one keyword before benchmarking.`}
-        title="No tracked keywords"
+        description={t("noKeywordsDescription", {
+          count: view.managedCompetitors.length,
+          names: competitorNames,
+        })}
+        title={t("noKeywordsTitle")}
       />
     );
   }
@@ -146,11 +151,11 @@ export function CompetitorsWorkspace({
         <EmptyState
           action={
             requestedLocation && addKeywordsAction ? (
-              <Button onClick={() => setTrackOpen(true)}>Track this market</Button>
+              <Button onClick={() => setTrackOpen(true)}>{t("trackMarket")}</Button>
             ) : undefined
           }
-          description="This exact location and device combination is not tracked yet. Choose an available market or add keywords for this scope."
-          title="Market not tracked"
+          description={t("marketNotTrackedDescription")}
+          title={t("marketNotTrackedTitle")}
         />
         {trackOpen && requestedLocation && requestedScope && addKeywordsAction ? (
           <AddKeywordDrawer
@@ -221,7 +226,7 @@ export function CompetitorsWorkspace({
             startIcon={<FunnelSimple weight="regular" aria-hidden size={13} />}
             variant="secondary"
           >
-            Comparison scope
+            {t("comparisonScope")}
           </Button>
           <Button
             onClick={() => downloadCompetitorMarketCsv(market)}
@@ -229,7 +234,7 @@ export function CompetitorsWorkspace({
             startIcon={<UploadSimple weight="regular" aria-hidden size={13} />}
             variant="secondary"
           >
-            Export
+            {t("export")}
           </Button>
           {canCreate ? (
             <AddCompetitorAction

@@ -1,10 +1,9 @@
 "use client";
 
 import type { RankedKeywordRow } from "@/lib/providers/types";
+import type { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { SaveDomainKeywords } from "./domain-overview-keyword-tracking";
-
-const number = new Intl.NumberFormat("en-US");
 
 function selectionKey(row: RankedKeywordRow) {
   return `${row.keyword}\u0000${row.rankingUrl ?? ""}`;
@@ -12,6 +11,7 @@ function selectionKey(row: RankedKeywordRow) {
 
 export function useDomainKeywordSelection(
   rows: readonly RankedKeywordRow[],
+  t: ReturnType<typeof useTranslations<"projectDomainOverview.workspace.ui">>,
   onSaveSelected?: SaveDomainKeywords,
 ) {
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
@@ -44,12 +44,10 @@ export function useDomainKeywordSelection(
       const result = await onSaveSelected(selectedRows);
       setSelected(new Set());
       setSavingMessage(
-        result.savedCount > 0
-          ? `${number.format(result.savedCount)} ${result.savedCount === 1 ? "keyword" : "keywords"} added to Saved`
-          : "No new saved keywords",
+        result.savedCount > 0 ? t("savedCount", { count: result.savedCount }) : t("savedNone"),
       );
     } catch {
-      setSavingMessage("Selected keywords were not added to Saved");
+      setSavingMessage(t("savedFailed"));
     } finally {
       setSaving(false);
     }

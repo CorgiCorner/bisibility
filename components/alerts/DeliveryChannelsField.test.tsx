@@ -1,5 +1,6 @@
+import { renderWithAlertMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NewRuleForm } from "@/lib/alerts/new-rule-data";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { useForm } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
 import { DeliveryChannelsField } from "./DeliveryChannelsField";

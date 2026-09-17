@@ -1,0 +1,317 @@
+{
+  "instanceAdmin": {
+    "shell": {
+      "context": "インスタンス管理",
+      "backToApp": "アプリに戻る",
+      "title": "インスタンス管理",
+      "description": "インスタンス全体の運用診断情報です。テナントのデータは識別子のみで表示されます。"
+    },
+    "navigation": {
+      "label": "インスタンス管理のセクション",
+      "operations": "運用",
+      "administration": "管理",
+      "audit": "監査"
+    },
+    "controls": {
+      "refresh": "更新",
+      "lookUp": "検索",
+      "lookingUp": "検索中...",
+      "olderEntries": "以前のエントリ",
+      "sendTestNotification": "テスト通知を送信",
+      "sending": "送信中...",
+      "runOutboxSweep": "アウトボックスのスイープを実行",
+      "running": "実行中...",
+      "deactivateAccount": "アカウントを無効化",
+      "reactivateAccount": "アカウントを再有効化",
+      "resetRateLimits": "レート制限をリセット"
+    },
+    "status": {
+      "active": "有効",
+      "blocked": "ブロック済み",
+      "completed": "完了",
+      "configured": "設定済み",
+      "deactivated": "無効化済み",
+      "deferred": "延期",
+      "deferredRateLimit": "レート制限により延期",
+      "delivered": "配信済み",
+      "disabled": "無効",
+      "error": "エラー",
+      "failed": "失敗",
+      "info": "情報",
+      "notConfigured": "未設定",
+      "ok": "OK",
+      "stale": "古い",
+      "succeededEmpty": "成功（データなし）",
+      "succeededWithData": "成功（データあり）",
+      "unknown": "不明",
+      "undelivered": "未配信",
+      "warning": "警告"
+    },
+    "values": {
+      "unavailable": "-",
+      "unknown": "不明",
+      "sectionUnavailable": "{message}値はゼロではなく不明です。"
+    },
+    "duration": {
+      "milliseconds": "{value, number}ミリ秒",
+      "seconds": "{value, number, ::.0}秒",
+      "minutes": "{value, number, ::.0}分"
+    },
+    "shellHealth": {
+      "label": "運用ヘルス",
+      "worker": "ワーカー: {status}",
+      "checks": "チェック: {value, number, ::.0}%が失敗",
+      "checksUnknown": "チェック: 不明",
+      "provider": "{provider}: {value, number, ::.0}%が失敗",
+      "providerUnknown": "{provider}: 不明",
+      "deliveryUnknown": "配信: 不明",
+      "undelivered": "{count, plural, other {未配信#件}}"
+    },
+    "rankWindow": {
+      "scheduled": "予定",
+      "succeeded": "成功",
+      "failed": "失敗",
+      "deferred": "延期",
+      "stuck": "停滞",
+      "lagP50": "遅延 p50",
+      "lagP95": "遅延 p95"
+    },
+    "dashboard": {
+      "rankChecks": {
+        "title": "順位チェック",
+        "description": "実行の合計と、スケジュールから開始までの遅延です。延期された行は成功に含まれません。",
+        "unavailable": "順位チェックの診断情報は利用できません。",
+        "last24Hours": "過去24時間",
+        "last7Days": "過去7日間",
+        "failures": "失敗（24時間）",
+        "failureDescription": "すべてのプロバイダーを試しても失敗したチェックです。プロバイダーと要約された理由ごとにグループ化しています。",
+        "fallbacks": "フォールバック（24時間）",
+        "fallbackDescription": "主要プロバイダーが失敗した後にのみ完了したチェックです。失敗したプロバイダーと要約された理由ごとにグループ化しています。",
+        "fallbackEmpty": "過去24時間にフォールバックした順位チェックはありません。"
+      },
+      "dataSources": {
+        "title": "データソース",
+        "description": "すべての接続を対象としたプロバイダー別の同期状況です。接続ごとの詳細はアカウント検索でのみ確認できます。",
+        "unavailable": "データソースの診断情報は利用できません。"
+      },
+      "presence": {
+        "title": "URL 掲載状況",
+        "description": "日次の URL 掲載状況ワークフローで発生した、最新のプロパティ予算の延期です。予算は自動的にリセットされます。",
+        "unavailable": "URL 掲載状況の診断情報は利用できません。",
+        "deferredUrls": "延期された URL",
+        "affectedProjects": "影響を受けたプロジェクト",
+        "lastBudgetExhaustion": "直近の予算枯渇"
+      },
+      "temporal": {
+        "title": "Temporal",
+        "description": "Temporal のスケジュール検査と、記録されたブートストラップ失敗です。",
+        "asOf": "{time} 時点",
+        "schedules": "スケジュール",
+        "recentActions": "最近のアクション",
+        "missedCatchup": "キャッチアップ未実行",
+        "skippedOverlap": "重複スキップ",
+        "inspectionErrors": "検査エラー",
+        "nextAction": "次のアクション",
+        "snapshotUnavailable": "スナップショットを利用できません。ワーカーが Temporal のデータを公開していません。上記の値はゼロではなく不明です。",
+        "disabled": "このトポロジーでは Temporal のスケジューリングは無効です。",
+        "snapshotStale": "Temporal スナップショットが古い"
+      },
+      "ops": {
+        "title": "運用イベント",
+        "description": "最近のオペレーターイベントには配信メタデータのみが表示され、自由記述のペイロードフィールドはここには公開されません。",
+        "deliveryUnavailable": "配信の診断情報は利用できません。",
+        "historyUnavailable": "運用イベントの履歴は利用できません。",
+        "empty": "記録された運用イベントはありません。"
+      },
+      "stats": {
+        "title": "インスタンス統計",
+        "description": "今月（UTC）のインスタンス全体の件数と、完了した SERP の利用状況です。",
+        "unavailable": "インスタンス統計は利用できません。",
+        "users": "ユーザー",
+        "projects": "プロジェクト",
+        "keywords": "キーワード",
+        "analytics": "アナリティクス",
+        "serp": "SERP",
+        "connections": "{kind} の接続"
+      }
+    },
+    "worker": {
+      "title": "ワーカー",
+      "description": "ワーカーのハートビート、デプロイ識別情報、データベーススキーマの一致、Slack 配信設定です。",
+      "unavailable": "ワーカーの診断情報は利用できません。",
+      "disabled": "このトポロジーではスケジュールワーカーは無効です。",
+      "status": "ステータス",
+      "lastHeartbeat": "最終ハートビート",
+      "release": "リリース",
+      "environment": "環境",
+      "schedulerDriver": "スケジューラードライバー",
+      "schemaStatus": "スキーマの状態",
+      "bundledMigration": "同梱のマイグレーション",
+      "appliedMigration": "適用済みマイグレーション",
+      "slackOps": "Slack 運用通知",
+      "schemaInSync": "同期済み",
+      "schemaWorkerBehind": "ワーカーが古い",
+      "schemaWorkerAhead": "ワーカーが先行"
+    },
+    "failureBreakdown": {
+      "empty": "過去24時間に失敗した順位チェックはありません。",
+      "unavailable": "-",
+      "projectCount": "{count, plural, other {#件のプロジェクト}}",
+      "acrossProjects": "{count, plural, other {#件のプロジェクトに分散}}",
+      "copyProjectId": "プロジェクト ID をコピー",
+      "justNow": "たった今",
+      "minutesAgo": "{count, plural, other {#分前}}",
+      "hoursAgo": "{count, plural, other {#時間前}}",
+      "daysAgo": "{count, plural, other {#日前}}",
+      "firstSeen": "初回検出 {time}",
+      "lastSeen": "最終検出 {time}",
+      "moreClasses": "ほか{count, number}件の分類"
+    },
+    "providerHealth": {
+      "empty": "接続されたアナリティクスソースはありません。",
+      "ok": "正常{count, number}件",
+      "stale": "古い{count, number}件",
+      "failed": "失敗{count, number}件",
+      "notRun": "未実行{count, number}件",
+      "p95LastSuccess": "p95 最終成功: {age}",
+      "unknown": "不明",
+      "ageMinutes": "{count, plural, other {#分}}",
+      "ageHours": "{count, plural, other {#時間}}",
+      "ageDays": "{count, plural, other {#日}}",
+      "failureRate": "{value, number, ::.0}%が失敗",
+      "failureRateUnknown": "不明"
+    },
+    "providerUsage": {
+      "empty": "今月に完了した SERP チェックはありません。",
+      "tableLabel": "今月のプロバイダー別 SERP 利用状況",
+      "provider": "プロバイダー",
+      "completedChecks": "完了したチェック",
+      "requestsUnits": "リクエスト / ユニット",
+      "referenceCost": "参考費用",
+      "rateBasis": "レート基準",
+      "rateBasisLiveDepth": "ライブ取得深度の料金",
+      "rateBasisProductionPlan": "本番プラン相当",
+      "rateBasisUnavailable": "レート不明",
+      "referenceUnknown": "-",
+      "note": "参考見積もりには、管理されたプロバイダーレートと記録済みのリクエストユニットを使用します。ユーザーが入力した費用は無視され、プロバイダーの請求書が正となります。"
+    },
+    "opsTable": {
+      "tableLabel": "最近の運用イベント",
+      "kind": "種別",
+      "severity": "重要度",
+      "created": "作成日時",
+      "delivery": "配信",
+      "attempts": "試行回数"
+    },
+    "administration": {
+      "growth": {
+        "title": "成長",
+        "description": "30日間（UTC）の集計です。行動分析やテナントのコンテンツは含まれません。",
+        "users": "ユーザー",
+        "projects": "プロジェクト",
+        "keywords": "キーワード",
+        "rankChecks": "順位チェック",
+        "trend": "{label} の日次件数の推移",
+        "delta": "{direction, select, positive {前の30日間比 +{value, number, ::.0}%} negative {前の30日間比 -{value, number, ::.0}%} other {前の30日間比 0.0%}}",
+        "noComparison": "前期間との比較はありません",
+        "activeAccounts": "アクティブアカウント（概算）",
+        "activeAccountsDescription": "過去7日間にセッション活動があった一意のアカウントです。"
+      },
+      "consumption": {
+        "title": "利用額上位",
+        "description": "今月の参考費用が多いプロジェクト / プロバイダーの上位10件です。ユーザーが入力したレートは無視されます。",
+        "empty": "今月に完了した SERP チェックの記録はありません。",
+        "note": "参考費用には、管理されたプロバイダーレートと記録済みのリクエストユニットを使用します。プロバイダーの請求書が正となります。",
+        "tableLabel": "今月の利用額が上位のプロジェクトとプロバイダー",
+        "projectId": "プロジェクト ID",
+        "copyProjectId": "プロジェクト ID {projectId} をコピー",
+        "provider": "プロバイダー",
+        "checks": "チェック",
+        "requestsUnits": "リクエスト / ユニット",
+        "referenceCost": "参考費用",
+        "rateBasisLiveDepth": "ライブ取得深度の料金",
+        "rateBasisProductionPlan": "本番プラン相当",
+        "rateBasisUnavailable": "レート不明",
+        "referenceUnknown": "-",
+        "share": "インスタンス構成比",
+        "shareAriaLabel": "インスタンスの参考費用の{value, number, ::.0}%",
+        "shareValue": "{value, number, ::.0}%"
+      },
+      "mailer": {
+        "title": "メールプロバイダーが未設定です",
+        "description": "このインスタンスはサインインコードを送信できないため、メールでのサインインを利用できません。メール配信を復旧するには {provider} と必要な認証情報を設定してください。",
+        "link": "メール配信を設定"
+      }
+    },
+    "account": {
+      "title": "アカウント検索",
+      "description": "完全一致で検索し、アカウントのメタデータのみを返します。テナントのコンテンツは返しません。",
+      "identifier": "完全一致のメールアドレスまたはユーザー ID",
+      "placeholder": "完全一致のメールアドレスまたはユーザー ID",
+      "validationIdentifier": "完全一致のメールアドレスまたはユーザー ID を入力してください。",
+      "auditNotice": "検索は管理者の監査ログに記録されます。",
+      "notFound": "この識別子に一致するアカウントはありません。",
+      "unavailable": "-",
+      "created": "作成日時",
+      "lastActive": "最終アクティビティ",
+      "projects": "プロジェクト",
+      "keywords": "キーワード",
+      "spendThisMonth": "今月の利用額",
+      "connectionsByKind": "種別ごとの接続",
+      "connection": "{kind}: {count, number}件",
+      "lookup": {
+        "forbidden": "この操作は利用できません。",
+        "invalidIdentifier": "完全一致のメールアドレスまたはユーザー ID を入力してください。",
+        "rateLimited": "アカウント検索の回数が上限に達しました。しばらくしてから再試行してください。",
+        "temporarilyUnavailable": "アカウント検索は一時的に利用できません。",
+        "failed": "アカウントを検索できませんでした。"
+      },
+      "actions": {
+        "deactivated": "アカウントを無効化しました。セッションと個人アクセストークンを取り消し、スケジュールされたチェックは次回の整合処理で一時停止します。",
+        "reactivated": "アカウントを再有効化しました。スケジュールされたチェックは次回の整合処理で再開します。",
+        "blocked": "インスタンス管理者は無効化できません。",
+        "forbidden": "この操作は利用できません。",
+        "invalidTarget": "有効なアカウントを選択してください。",
+        "rateLimited": "このアカウント操作はレート制限により実行できませんでした。しばらくしてから再試行してください。",
+        "temporarilyUnavailable": "アカウント操作は一時的に利用できません。",
+        "accountNotFound": "アカウントが見つかりません。",
+        "failed": "アカウント操作を実行できませんでした。",
+        "limitsCompleted": "レート制限をリセットしました。月間の利用額はローリングウィンドウのためリセットできません。",
+        "limitsFailed": "レート制限をリセットできませんでした。"
+      }
+    },
+    "opsActions": {
+      "delivered": "テスト通知を Slack に配信しました。",
+      "notConfigured": "Slack のオペレーター通知は設定されていません。",
+      "deliveryFailed": "Slack へのテスト配信ができませんでした。",
+      "forbidden": "この操作は利用できません。",
+      "rateLimited": "この管理操作はレート制限により実行できませんでした。しばらくしてから再試行してください。",
+      "temporarilyUnavailable": "管理操作は一時的に利用できません。",
+      "sweepFailed": "アウトボックスのスイープを実行できませんでした。",
+      "sweepCompleted": "アウトボックスのスイープが完了しました。{attempted, number}件中{delivered, number}件を配信しました。",
+      "failed": "オペレーター操作を完了できませんでした。"
+    },
+    "audit": {
+      "title": "管理者アクティビティ",
+      "description": "instance_admin.* のエントリです。インスタンス管理者のみが閲覧でき、管理者同士は匿名ではありません。",
+      "filterLabel": "インスタンス管理者のアクティビティを絞り込み",
+      "all": "すべて",
+      "account": "アカウント",
+      "ops": "運用",
+      "setup": "セットアップ",
+      "selected": "選択中",
+      "empty": "このフィルターに一致するインスタンス管理の監査エントリはありません。",
+      "tableLabel": "インスタンス管理者のアクティビティ",
+      "time": "日時",
+      "actor": "実行者",
+      "action": "アクション",
+      "target": "対象",
+      "result": "結果",
+      "resultOk": "OK",
+      "resultBlocked": "ブロック済み",
+      "statusFailed": "失敗",
+      "copyTargetId": "監査対象 ID {targetId} をコピー",
+      "targetUnavailable": "{targetType}:利用不可"
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { withUsageSettingsMessages } from "@/.storybook/settings-shell-messages";
 import { BillingLoading, UsageCardsLoading } from "@/components/settings/usage/UsageLoading";
 import type { ComponentProps } from "react";
 import { ProviderUsageCard } from "./ProviderUsageCard";
@@ -92,6 +93,7 @@ const meta = {
     },
     usage: usage as unknown as UsageSettingsContentProps["usage"],
   },
+  decorators: [withUsageSettingsMessages],
   title: "Settings/Usage and billing",
   parameters: { nextjs: { appDirectory: true } },
 } satisfies Meta<typeof ProviderUsageCard>;

@@ -1,8 +1,9 @@
+import { renderWithCompetitorsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { buildCompetitorMarket } from "@/lib/competitors/competitor-market-model";
 import type { CompetitorMarketData, CompetitorsViewModel } from "@/lib/competitors/types";
 import type { Role } from "@/lib/generated/prisma/client";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CompetitorsWorkspace } from "./CompetitorsWorkspace";
 

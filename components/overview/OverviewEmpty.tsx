@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import { RocketLaunchIcon as RocketLaunch } from "@phosphor-icons/react/dist/ssr/RocketLaunch";
+import { useTranslations } from "next-intl";
 import { GhostKpiRow } from "./GhostKpiRow";
 import type { GettingStartedCapabilities, GettingStartedProgress } from "./getting-started";
 import type { AddKeywordsAction, OnboardingCardProps } from "./OnboardingCard";
@@ -25,12 +26,13 @@ export function OverviewEmpty({
   importTopQueriesAction,
   workspaceName,
 }: Readonly<OverviewEmptyProps>) {
+  const t = useTranslations("projectDashboard.emptyOnboarding");
   // The creation default (lib/actions/cloud.ts) doubles as a name here, and "Welcome to
   // "New project" reads like a grammar slip; a possessive greeting covers that case.
   const heading =
     workspaceName.trim().toLowerCase() === CREATION_DEFAULT_NAME
-      ? "Welcome to your new project"
-      : `Welcome to ${workspaceName}`;
+      ? t("heading.newProject")
+      : t("heading.workspace", { workspaceName });
 
   return (
     <div className="flex flex-col gap-4.5">
@@ -45,9 +47,7 @@ export function OverviewEmpty({
             <RocketLaunch aria-hidden size={25} weight="regular" />
           </span>
           <h2 className="mt-4.5 text-2xl font-semibold tracking-[-0.8px] text-fg">{heading}</h2>
-          <p className="mt-2 text-[14.5px] leading-[1.55] text-fg-muted">
-            This project is empty. One step at a time gets you to your first rankings.
-          </p>
+          <p className="mt-2 text-[14.5px] leading-[1.55] text-fg-muted">{t("description")}</p>
           <OnboardingCard
             addKeywordsAction={addKeywordsAction}
             capabilities={capabilities}

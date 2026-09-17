@@ -22,8 +22,8 @@ const ownedRoots = [
   "components/account",
   "components/settings",
   "components/cloud",
-  "app/app/(workspace)",
-  "app/cloud",
+  "app/(regional)/app/(workspace)",
+  "app/(regional)/cloud",
 ];
 
 const allowedMonoLine = (line: string) =>

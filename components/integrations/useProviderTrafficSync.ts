@@ -15,10 +15,16 @@ const demoTrafficSync = async (): Promise<ProviderTrafficSyncResult> => ({
 });
 
 export function useProviderTrafficSync({
+  messages,
   projectId,
   readOnly,
   syncProjectTraffic = demoTrafficSync,
 }: {
+  messages: {
+    failed: string;
+    noSource: string;
+    updated: (keywords: number, pages: number) => string;
+  };
   projectId?: string;
   readOnly: boolean;
   syncProjectTraffic?: ProviderActionHandlers["syncProjectTraffic"];
@@ -36,13 +42,13 @@ export function useProviderTrafficSync({
       setSyncResult({
         message:
           failures > 0 && result.connections === 0
-            ? "No analytics source completed. Check the provider credentials and worker logs."
-            : `${result.keywordSnapshots} keyword and ${result.pageSnapshots} page snapshots updated.`,
+            ? messages.noSource
+            : messages.updated(result.keywordSnapshots, result.pageSnapshots),
         ok: failures === 0 || result.connections > 0,
       });
     } catch (error) {
       setSyncResult({
-        message: error instanceof Error ? error.message : "Traffic sync failed.",
+        message: error instanceof Error ? error.message : messages.failed,
         ok: false,
       });
     } finally {

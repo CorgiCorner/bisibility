@@ -1,18 +1,21 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { removeManagedCompetitor, renameManagedCompetitor } from "@/lib/actions/competitors";
 import type { ManagedCompetitor, RenameManagedCompetitorInput } from "@/lib/competitors/types";
 import { renameManagedCompetitorSchema } from "@/lib/competitors/types";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PencilSimpleIcon as PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { presentCompetitorValidationMessage } from "./competitor-validation-presentation";
 
 type ManagedCompetitorControlsProps = {
   canDelete: boolean;
@@ -30,6 +33,8 @@ export function ManagedCompetitorControls({
   competitor,
   projectId,
 }: Readonly<ManagedCompetitorControlsProps>) {
+  const t = useTranslations("projectCompetitors.ui");
+  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -64,13 +69,13 @@ export function ManagedCompetitorControls({
           router.refresh();
         })
         .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "Competitor could not be updated.")),
+          setMessage(presentSafeActionError(error, sharedErrors, t("updateError"))),
         );
     });
   }
 
   function onRemove() {
-    if (!confirm(`Remove ${competitor.label} from competitors?`)) {
+    if (!confirm(t("removeCompetitorConfirm", { name: competitor.label }))) {
       return;
     }
     setMessage(null);
@@ -78,7 +83,7 @@ export function ManagedCompetitorControls({
       void removeManagedCompetitor({ competitorId: competitor.id, projectId })
         .then(() => router.refresh())
         .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "Competitor could not be updated.")),
+          setMessage(presentSafeActionError(error, sharedErrors, t("updateError"))),
         );
     });
   }
@@ -90,12 +95,12 @@ export function ManagedCompetitorControls({
         <input type="hidden" {...register("competitorId")} />
         <span className="flex items-center gap-1.5">
           <input
-            aria-label="Competitor label"
+            aria-label={t("competitorLabel")}
             className="h-8 min-w-0 flex-1 rounded-control border border-border-control bg-transparent px-2.5 text-[12.5px] font-medium text-fg outline-none focus:border-accent"
             {...register("label")}
           />
           <button
-            aria-label="Save competitor label"
+            aria-label={t("saveCompetitorLabel")}
             className={iconButtonClass}
             disabled={isPending}
             type="submit"
@@ -103,7 +108,7 @@ export function ManagedCompetitorControls({
             <Check aria-hidden size={13} weight="regular" />
           </button>
           <button
-            aria-label="Cancel rename"
+            aria-label={t("cancelRename")}
             className={iconButtonClass}
             onClick={closeEdit}
             type="button"
@@ -112,7 +117,9 @@ export function ManagedCompetitorControls({
           </button>
         </span>
         <span className="font-sans tabular-nums text-[10px] text-red-text">
-          {errors.label?.message ?? message}
+          {errors.label?.message
+            ? presentCompetitorValidationMessage(errors.label.message, t)
+            : message}
         </span>
       </form>
     );
@@ -121,9 +128,9 @@ export function ManagedCompetitorControls({
   return (
     <span className="inline-flex items-center gap-1.5">
       {canUpdate ? (
-        <Tooltip content="Rename">
+        <Tooltip content={t("rename")}>
           <button
-            aria-label={`Rename ${competitor.label}`}
+            aria-label={t("renameCompetitor", { name: competitor.label })}
             className={iconButtonClass}
             onClick={() => setIsEditing(true)}
             type="button"
@@ -133,10 +140,10 @@ export function ManagedCompetitorControls({
         </Tooltip>
       ) : null}
       {canDelete ? (
-        <Tooltip content="Remove">
+        <Tooltip content={t("remove")}>
           <span>
             <button
-              aria-label={`Remove ${competitor.label}`}
+              aria-label={t("removeCompetitor", { name: competitor.label })}
               className={iconButtonClass}
               disabled={isPending}
               onClick={onRemove}

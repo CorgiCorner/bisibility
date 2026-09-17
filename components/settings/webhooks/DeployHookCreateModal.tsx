@@ -1,12 +1,14 @@
 "use client";
 
+import { useDeveloperActionError } from "@/components/settings/developers/useDeveloperActionError";
 import { Button } from "@/components/ui/Button";
 import { inputClassName } from "@/components/ui/input-styles";
 import { Modal } from "@/components/ui/Modal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { createIngestHookSchema } from "@/lib/schemas/ingestHook";
+import { createIngestHookSchema, DEFAULT_INGEST_HOOK_LABEL } from "@/lib/schemas/ingestHook";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -35,11 +37,13 @@ export function DeployHookCreateModal({
   open,
   projectId,
 }: Readonly<DeployHookCreateModalProps>) {
+  const presentActionError = useDeveloperActionError();
+  const t = useTranslations("projectSettingsDevelopers.webhooks");
   const [issuedHook, setIssuedHook] = useState<IssuedDeployHook | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const canCreate = Boolean(createHook && projectId);
   const form = useForm<CreateHookForm>({
-    defaultValues: { label: "Production deploys", projectId: projectId ?? "" },
+    defaultValues: { label: DEFAULT_INGEST_HOOK_LABEL, projectId: projectId ?? "" },
     mode: "onChange",
     resolver: zodResolver(createIngestHookSchema),
   });
@@ -47,13 +51,13 @@ export function DeployHookCreateModal({
   function handleClose() {
     setIssuedHook(null);
     setSubmitError(null);
-    form.reset({ label: "Production deploys", projectId: projectId ?? "" });
+    form.reset({ label: DEFAULT_INGEST_HOOK_LABEL, projectId: projectId ?? "" });
     onClose();
   }
 
   async function onSubmit(values: CreateHookForm) {
     if (!createHook || !projectId) {
-      setSubmitError("Deploy webhook creation is unavailable for this project.");
+      setSubmitError(t("errors.createUnavailable"));
       return;
     }
 
@@ -63,9 +67,7 @@ export function DeployHookCreateModal({
       setIssuedHook(hook);
       onCreated?.();
     } catch (error) {
-      setSubmitError(
-        error instanceof Error ? error.message : "Deploy webhook could not be created.",
-      );
+      setSubmitError(presentActionError.webhook(error, t("errors.create")));
     }
   }
 
@@ -79,22 +81,22 @@ export function DeployHookCreateModal({
             startIcon={<CheckCircle aria-hidden size={15} weight="regular" />}
             type="button"
           >
-            Done
+            {t("done")}
           </Button>
         ) : (
           <>
             <Button onClick={handleClose} size="sm" type="button" variant="ghost">
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               disabled={!canCreate || !form.formState.isValid}
               form="create-deploy-hook-form"
               loading={form.formState.isSubmitting}
-              loadingLabel="Creating"
+              loadingLabel={t("creating")}
               startIcon={<Plus aria-hidden size={15} weight="regular" />}
               type="submit"
             >
-              Create webhook
+              {t("create")}
             </Button>
           </>
         )
@@ -105,11 +107,9 @@ export function DeployHookCreateModal({
       size="md"
       title={
         <span className="block">
-          <span className="block">
-            {issuedHook ? "New deploy webhook" : "Create deploy webhook"}
-          </span>
+          <span className="block">{issuedHook ? t("newTitle") : t("createTitle")}</span>
           <span className="mt-1 block text-[12.5px] font-normal tracking-normal text-fg-muted">
-            {issuedHook ? "The token is available one time." : "Name the inbound deploy endpoint."}
+            {issuedHook ? t("newDescription") : t("createDescription")}
           </span>
         </span>
       }
@@ -125,18 +125,18 @@ export function DeployHookCreateModal({
           <input type="hidden" {...form.register("projectId")} />
           <div>
             <label className={labelClass} htmlFor="deploy-hook-label">
-              Webhook label
+              {t("webhookLabel")}
             </label>
             <input
               autoComplete="off"
               className={inputClass}
               id="deploy-hook-label"
-              placeholder="Production deploys"
+              placeholder={t("webhookPlaceholder")}
               {...form.register("label")}
             />
             {form.formState.errors.label ? (
               <div className="mt-1.5 text-[11.5px] font-medium text-red-text">
-                {form.formState.errors.label.message}
+                {t("validationLabel")}
               </div>
             ) : null}
           </div>

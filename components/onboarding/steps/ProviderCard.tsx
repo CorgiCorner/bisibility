@@ -2,6 +2,7 @@
 
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { type StatusKind, StatusPill } from "@/components/ui/StatusPill";
+import { useTranslations } from "next-intl";
 import type { OnboardingSerpProviderId, providerOptions } from "./StepConnectProvider.fields";
 
 export type ProviderCardState = "connected" | "dirty" | "failed" | "idle" | "tested";
@@ -19,12 +20,11 @@ function stateClass(selected: boolean) {
   return "border-border bg-transparent";
 }
 
-function stateText(state: ProviderCardState) {
-  if (state === "connected") return "Connected";
-  if (state === "dirty") return "Unsaved changes";
-  if (state === "tested") return "Verified";
-  if (state === "failed") return "Test failed";
-  return "Not connected";
+function stateText(
+  t: ReturnType<typeof useTranslations<"onboarding.provider.cards">>,
+  state: ProviderCardState,
+) {
+  return t(`status.${state}`);
 }
 
 function statusKind(state: ProviderCardState): StatusKind {
@@ -34,6 +34,26 @@ function statusKind(state: ProviderCardState): StatusKind {
   return "disabled";
 }
 
+function providerCopy(
+  t: ReturnType<typeof useTranslations<"onboarding.provider.cards">>,
+  providerId: OnboardingSerpProviderId,
+) {
+  if (providerId === "dataforseo") {
+    return {
+      capability: t("dataforseo.capability"),
+      costCaption: t("dataforseo.costCaption"),
+      costDetail: t("dataforseo.costDetail"),
+      label: t("dataforseo.label"),
+    };
+  }
+  return {
+    capability: t("serpapi.capability"),
+    costCaption: t("serpapi.costCaption"),
+    costDetail: t("serpapi.costDetail"),
+    label: t("serpapi.label"),
+  };
+}
+
 export function ProviderCard({
   balance,
   provider,
@@ -41,13 +61,15 @@ export function ProviderCard({
   state,
   onSelect,
 }: Readonly<ProviderCardProps>) {
+  const t = useTranslations("onboarding.provider.cards");
+  const copy = providerCopy(t, provider.value);
   return (
     <section
       className={`relative flex h-full flex-col rounded-card border p-4 transition-colors ${stateClass(selected)}`}
     >
       <input
         aria-checked={selected}
-        aria-label={provider.label}
+        aria-label={copy.label}
         checked={selected}
         className="absolute inset-0 z-0 m-0 size-full cursor-pointer appearance-none rounded-card border-0 bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
         name="onboarding-serp-provider"
@@ -56,19 +78,19 @@ export function ProviderCard({
         value={provider.value}
       />
       <span className="pointer-events-none relative z-1 flex flex-col items-start gap-2">
-        <span className="text-sm font-semibold text-fg">{provider.label}</span>
-        <span className="text-xs leading-[1.4] text-fg-muted">{provider.capability}</span>
-        <StatusPill label={stateText(state)} size="sm" status={statusKind(state)} />
+        <span className="text-sm font-semibold text-fg">{copy.label}</span>
+        <span className="text-xs leading-[1.4] text-fg-muted">{copy.capability}</span>
+        <StatusPill label={stateText(t, state)} size="sm" status={statusKind(state)} />
       </span>
       <span className="pointer-events-none relative z-1 mt-2 flex items-start gap-1 text-[12.5px] leading-[1.4] text-fg-muted">
-        <span>{provider.costCaption}</span>
+        <span>{copy.costCaption}</span>
         <span className="pointer-events-auto">
-          <InfoTooltip text={provider.costDetail} />
+          <InfoTooltip text={copy.costDetail} />
         </span>
       </span>
       {state === "connected" && balance !== undefined ? (
         <span className="pointer-events-none relative z-1 mt-3 block text-xs text-green-text tabular-nums">
-          Balance: {balance}
+          {t("balance", { balance })}
         </span>
       ) : null}
       <span className="pointer-events-none relative z-1 mt-auto flex flex-wrap items-baseline gap-[5px] pt-3">
@@ -78,10 +100,10 @@ export function ProviderCard({
           rel={provider.affiliate ? "sponsored noopener noreferrer" : "noreferrer"}
           target="_blank"
         >
-          Get API credentials ↗
+          {t("getCredentials")}
         </a>
         {provider.affiliate ? (
-          <span className="text-[11.5px] text-fg-muted">· affiliate link</span>
+          <span className="text-[11.5px] text-fg-muted">· {t("affiliate")}</span>
         ) : null}
       </span>
     </section>

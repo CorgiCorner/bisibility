@@ -2,6 +2,7 @@ import type { VerificationCodeForm } from "@/components/account/account-email-fo
 import { Button } from "@/components/ui/Button";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
+import { useTranslations } from "next-intl";
 import type { FieldError, UseFormRegister } from "react-hook-form";
 
 type AccountEmailConfirmationProps = {
@@ -25,6 +26,8 @@ export function AccountEmailConfirmation({
   register,
   sendingCode,
 }: Readonly<AccountEmailConfirmationProps>) {
+  const t = useTranslations("account.email");
+
   return (
     <div className="mt-3 space-y-3">
       <div className="flex flex-wrap items-center gap-3">
@@ -36,11 +39,11 @@ export function AccountEmailConfirmation({
           type="button"
           variant="secondary"
         >
-          Send code
+          {t("sendCode")}
         </Button>
         <p className="m-0 text-[12px] leading-5 text-fg-muted">{description}</p>
       </div>
-      <FieldLabel htmlFor="account-email-code" label="Verification code" />
+      <FieldLabel htmlFor="account-email-code" label={t("verificationCode")} />
       <div className="mt-1.5 flex flex-wrap items-start gap-2">
         <div className="min-w-[180px] flex-1">
           <Input
@@ -56,7 +59,7 @@ export function AccountEmailConfirmation({
               id="account-email-code-error"
               role="alert"
             >
-              {codeError.message}
+              {codeError.message === "invalidCode" ? t("invalidCode") : codeError.message}
             </p>
           ) : null}
         </div>
@@ -67,7 +70,7 @@ export function AccountEmailConfirmation({
           size="sm"
           type="button"
         >
-          Confirm email
+          {t("confirm")}
         </Button>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { clsx } from "clsx";
+import { useTranslations } from "next-intl";
 
 export type InlineTokenProps = {
   className?: string;
@@ -16,6 +17,8 @@ export function InlineToken({
   onDismiss,
   value,
 }: Readonly<InlineTokenProps>) {
+  const t = useTranslations("shared.tokens");
+
   return (
     <span
       className={clsx(
@@ -26,7 +29,7 @@ export function InlineToken({
       <span>{value}</span>
       {onDismiss ? (
         <button
-          aria-label={dismissLabel ?? `Remove ${value}`}
+          aria-label={dismissLabel ?? t("remove", { value })}
           className="inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] text-fg-muted hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-solid"
           onClick={onDismiss}
           type="button"

@@ -1,8 +1,32 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  onboardingFeatureTestMessages,
+  renderWithOnboardingMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StepConnectGscCard, StepConnectGscSetupNotice } from "./StepConnectGscCard";
 
 describe("StepConnectGscCard", () => {
+  it("translates the configured warning around its protocol-code slots", () => {
+    const messages = structuredClone(onboardingFeatureTestMessages);
+    messages.onboarding.searchConsole.notConfigured.message =
+      "OAuth Search Console nie jest skonfigurowany. Ustaw <clientId>GOOGLE_CLIENT_ID</clientId> i <clientSecret>GOOGLE_CLIENT_SECRET</clientSecret>. Zobacz <guide>instrukcje</guide>.";
+
+    renderWithFeatureMessages(<StepConnectGscSetupNotice configured={false} />, {
+      locale: "pl",
+      messages,
+    });
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Ustaw GOOGLE_CLIENT_ID i GOOGLE_CLIENT_SECRET.");
+    expect(screen.getByRole("link", { name: "instrukcje" })).toHaveAttribute(
+      "href",
+      "https://bisibility.com/docs/integrations#analytics-sources",
+    );
+    expect(alert.textContent).not.toContain(" and ");
+  });
+
   it("matches provider-card hierarchy and keeps setup guidance outside the card", () => {
     const { container } = render(
       <>

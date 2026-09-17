@@ -1,4 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import {
+  renderWithFeatureMessages as render,
+  researchFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StoredKeywordResearchView } from "./StoredKeywordResearchView";
 
@@ -10,7 +14,7 @@ vi.mock("@/components/research/ResearchResults", () => ({
 
 describe("StoredKeywordResearchView", () => {
   it("renders truthful empty copy without manufacturing a result", () => {
-    render(<StoredKeywordResearchView result={null} />);
+    render(<StoredKeywordResearchView result={null} />, { messages: researchFeatureTestMessages });
     expect(screen.getByText(/No saved keyword research results/i)).toBeInTheDocument();
   });
 
@@ -28,6 +32,7 @@ describe("StoredKeywordResearchView", () => {
           } as never
         }
       />,
+      { messages: researchFeatureTestMessages },
     );
     expect(screen.getByTestId("research-results")).toHaveTextContent('"readOnly":true');
   });

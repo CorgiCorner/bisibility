@@ -1,5 +1,6 @@
 import { CountrySelect } from "@/components/locations/CountrySelect";
-import { render, screen } from "@testing-library/react";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -13,7 +14,7 @@ const countries = [
 
 function renderSelect(overrides: Partial<React.ComponentProps<typeof CountrySelect>> = {}) {
   const onChange = vi.fn();
-  render(
+  renderWithSharedMessages(
     <CountrySelect
       ariaLabel="Country"
       countries={countries}
@@ -92,5 +93,21 @@ describe("CountrySelect", () => {
 
     await user.click(screen.getByRole("menuitem", { name: "Belgium" }));
     expect(onChange).toHaveBeenCalledWith("BE");
+  });
+
+  it("keeps explicit labels instead of replacing caller copy", async () => {
+    const user = userEvent.setup();
+    renderSelect({
+      catalogLabel: "Country catalog",
+      noResultsMessage: "No country here.",
+      searchPlaceholder: "Find a country",
+      trackedLabel: "Pinned countries",
+    });
+
+    await user.click(screen.getByRole("button", { name: "Country" }));
+    expect(screen.getByText("Pinned countries")).toBeVisible();
+    expect(screen.getByText("Country catalog")).toBeVisible();
+    await user.type(screen.getByRole("textbox", { name: "Find a country" }), "Atlantis");
+    expect(screen.getByText("No country here.")).toBeVisible();
   });
 });

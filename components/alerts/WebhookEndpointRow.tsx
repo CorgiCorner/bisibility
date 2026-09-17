@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/Switch";
 import type { WebhookEndpointView } from "@/lib/alerts/alert-data";
 import { formatDateTime } from "@/lib/dates/format";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type EndpointAction = (input: unknown) => Promise<unknown>;
@@ -27,6 +28,17 @@ function actionResponse(result: unknown) {
   return result && typeof result === "object" ? (result as Record<string, unknown>) : {};
 }
 
+function attemptStatusLabel(
+  status: string,
+  t: ReturnType<typeof useTranslations<"projectAlerts.webhook">>,
+) {
+  if (status === "failed") return t("attemptStatusFailed");
+  if (status === "pending") return t("attemptStatusPending");
+  if (status === "sent") return t("attemptStatusSent");
+  if (status === "skipped") return t("attemptStatusSkipped");
+  return t("attemptStatusUnknown", { status });
+}
+
 export function WebhookEndpointRow({
   deleteAction,
   endpoint,
@@ -34,7 +46,9 @@ export function WebhookEndpointRow({
   testAction,
   upsertAction,
 }: Readonly<WebhookEndpointRowProps>) {
+  const t = useTranslations("projectAlerts.webhook");
   const dateFormat = useDateFormat();
+  const lastDeliveryAt = endpoint.lastDeliveryAt;
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -60,17 +74,13 @@ export function WebhookEndpointRow({
         await upsertAction({ ...fields, endpointId: endpoint.id, projectId }),
       );
       if (response.ok === false) {
-        setError(
-          typeof response.error === "string"
-            ? response.error
-            : "Webhook endpoint could not be updated.",
-        );
+        setError(typeof response.error === "string" ? response.error : t("updateError"));
         return false;
       }
       router.refresh();
       return true;
     } catch {
-      setError("Webhook endpoint could not be updated.");
+      setError(t("updateError"));
       return false;
     } finally {
       setBusy(false);
@@ -88,7 +98,7 @@ export function WebhookEndpointRow({
     ) {
       setEditing(false);
       setRotationSecret("");
-      setStatus("Endpoint updated.");
+      setStatus(t("updated"));
     }
   }
 
@@ -101,7 +111,7 @@ export function WebhookEndpointRow({
         url: endpoint.url,
       })
     ) {
-      setStatus(next ? "Endpoint enabled." : "Endpoint disabled.");
+      setStatus(next ? t("enabledStatus") : t("disabledStatus"));
     }
   }
 
@@ -115,15 +125,20 @@ export function WebhookEndpointRow({
       const latency = typeof response.latencyMs === "number" ? response.latencyMs : 0;
       const httpStatus = typeof response.status === "number" ? response.status : null;
       const message = httpStatus
-        ? `HTTP ${httpStatus} in ${latency} ms`
-        : `Delivery failed in ${latency} ms`;
+        ? t("testSuccess", { latency, status: httpStatus })
+        : t("testFailure", { latency });
       if (response.ok === true) {
-        setStatus(`${message}.`);
+        setStatus(message);
       } else {
-        setError(`${message}: ${String(response.error ?? "Webhook test delivery failed.")}`);
+        setError(
+          t("testErrorDetail", {
+            error: String(response.error ?? t("testError")),
+            message,
+          }),
+        );
       }
     } catch {
-      setError("Webhook test delivery failed.");
+      setError(t("testError"));
     } finally {
       setBusy(false);
     }
@@ -136,14 +151,14 @@ export function WebhookEndpointRow({
     try {
       const response = actionResponse(await deleteAction({ endpointId: endpoint.id, projectId }));
       if (response.ok === false) {
-        setError(String(response.error ?? "Webhook endpoint could not be deleted."));
+        setError(String(response.error ?? t("deleteError")));
         setConfirmingDelete(false);
         return;
       }
       setConfirmingDelete(false);
       router.refresh();
     } catch {
-      setError("Webhook endpoint could not be deleted.");
+      setError(t("deleteError"));
       setConfirmingDelete(false);
     } finally {
       setBusy(false);
@@ -155,13 +170,13 @@ export function WebhookEndpointRow({
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <span className="min-w-0 flex-1 truncate">{endpoint.url}</span>
         <span className={endpoint.enabled ? "text-green-text" : "text-fg-muted"}>
-          {endpoint.enabled ? "enabled" : "disabled"}
+          {endpoint.enabled ? t("enabledState") : t("disabled")}
         </span>
       </div>
       {editing ? (
         <div className="grid gap-2">
           <label>
-            URL
+            {t("editUrl")}
             <input
               className={fieldClass}
               onChange={(event) => setUrl(event.target.value)}
@@ -169,7 +184,7 @@ export function WebhookEndpointRow({
             />
           </label>
           <label>
-            Description
+            {t("descriptionLabel")}
             <input
               className={fieldClass}
               maxLength={160}
@@ -178,7 +193,7 @@ export function WebhookEndpointRow({
             />
           </label>
           <label htmlFor={`webhook-rotation-${endpoint.id}`}>
-            New HMAC secret (optional)
+            {t("newSecret")}
             <PasswordInput
               className={fieldClass}
               id={`webhook-rotation-${endpoint.id}`}
@@ -189,7 +204,7 @@ export function WebhookEndpointRow({
           </label>
           <Switch
             checked={enabled}
-            label="Enabled"
+            label={t("enabled")}
             onChange={(event) => setEnabled(event.currentTarget.checked)}
           />
         </div>
@@ -198,16 +213,16 @@ export function WebhookEndpointRow({
         {editing ? (
           <>
             <Button disabled={busy || !url} onClick={() => void saveEdit()} size="sm" type="button">
-              Save changes
+              {t("saveChanges")}
             </Button>
             <Button onClick={() => setEditing(false)} size="sm" type="button" variant="secondary">
-              Cancel
+              {t("cancel")}
             </Button>
           </>
         ) : (
           <>
             <Button onClick={() => setEditing(true)} size="sm" type="button" variant="secondary">
-              Edit
+              {t("edit")}
             </Button>
             <Button
               disabled={busy}
@@ -216,7 +231,7 @@ export function WebhookEndpointRow({
               type="button"
               variant="secondary"
             >
-              {endpoint.enabled ? "Disable" : "Enable"}
+              {endpoint.enabled ? t("disable") : t("enable")}
             </Button>
             {testAction ? (
               <Button
@@ -226,7 +241,7 @@ export function WebhookEndpointRow({
                 type="button"
                 variant="secondary"
               >
-                Send test event
+                {t("test")}
               </Button>
             ) : null}
             {deleteAction ? (
@@ -237,25 +252,23 @@ export function WebhookEndpointRow({
                 type="button"
                 variant="secondary"
               >
-                Delete
+                {t("delete")}
               </Button>
             ) : null}
           </>
         )}
       </div>
       <div
-        aria-label={`Delivery history for ${endpoint.url}`}
+        aria-label={t("deliveryHistory", { url: endpoint.url })}
         className="grid gap-1 border-t border-border pt-2 text-[10.5px] text-fg-muted"
       >
         <p className="m-0">
-          Last successful delivery:{" "}
-          {endpoint.lastDeliveryAt ? (
-            <time dateTime={endpoint.lastDeliveryAt}>
-              {formatDateTime(new Date(endpoint.lastDeliveryAt), dateFormat)}
-            </time>
-          ) : (
-            "None"
-          )}
+          {lastDeliveryAt
+            ? t.rich("lastSuccessful", {
+                time: (chunks) => <time dateTime={lastDeliveryAt}>{chunks}</time>,
+                value: formatDateTime(new Date(lastDeliveryAt), dateFormat),
+              })
+            : t("lastSuccessfulNone", { value: t("none") })}
         </p>
         {endpoint.deliveryAttempts?.length ? (
           <ul className="m-0 grid gap-1 p-0">
@@ -265,14 +278,14 @@ export function WebhookEndpointRow({
                   <time dateTime={attempt.attemptedAt}>
                     {formatDateTime(new Date(attempt.attemptedAt), dateFormat)}
                   </time>{" "}
-                  {attempt.event} {attempt.status}
+                  {attempt.event} {attemptStatusLabel(attempt.status, t)}
                 </span>
                 {attempt.error ? <span className="text-red-text">{attempt.error}</span> : null}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="m-0">No deliveries yet</p>
+          <p className="m-0">{t("noDeliveries")}</p>
         )}
       </div>
       {error ? (

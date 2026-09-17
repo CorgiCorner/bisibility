@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { OperationRow } from "@/components/ui/OperationRow";
+import { useTranslations } from "next-intl";
 import type { RunPageData } from "./RunPageTypes";
 
 type RunPageCancelDialogProps = {
@@ -20,6 +21,7 @@ export function RunPageCancelDialog({
   open,
   run,
 }: Readonly<RunPageCancelDialogProps>) {
+  const t = useTranslations("projectRuns.rankRuns");
   const completed = run.counts.completed;
   const sent = Math.max(
     run.counts.total -
@@ -35,33 +37,30 @@ export function RunPageCancelDialog({
       footer={
         <>
           <Button disabled={busy} onClick={onClose} size="sm" variant="ghost">
-            Keep run
+            {t("keepRun")}
           </Button>
           <Button
             loading={busy}
-            loadingLabel="Cancelling"
+            loadingLabel={t("cancelling")}
             onClick={onConfirm}
             size="sm"
             variant="destructive"
           >
-            Cancel run
+            {t("cancelRun")}
           </Button>
         </>
       }
       onClose={onClose}
       open={open}
       size="md"
-      title="Cancel this run?"
+      title={t("cancelDialog.title")}
     >
       <div className="grid gap-4 text-[12.5px] leading-[1.55] text-fg">
-        <p className="m-0 text-pretty">
-          Cancelling changes only this run. It does not change the schedule or remove completed
-          results.
-        </p>
+        <p className="m-0 text-pretty">{t("cancelDialog.body")}</p>
         <ol className="m-0 grid list-decimal gap-2 pl-5 text-fg-muted">
-          <li>Targets that have not been sent stop immediately.</li>
-          <li>Targets already with the provider finish and are billed.</li>
-          <li>Completed targets and their results are kept.</li>
+          <li>{t("cancelDialog.unsentStop")}</li>
+          <li>{t("cancelDialog.providerFinishes")}</li>
+          <li>{t("cancelDialog.completedKept")}</li>
         </ol>
         <OperationRow
           action=""
@@ -72,16 +71,16 @@ export function RunPageCancelDialog({
           etaSeconds={null}
           failed={run.counts.failed}
           href={null}
-          meta={`${run.counts.total.toLocaleString("en-US")} targets`}
+          meta={t("targets", { count: run.counts.total })}
           nextCheckAt={null}
           now={null}
           provider={null}
           resumeDate={null}
           showBar
           state="cancelling"
-          stateLine={`${sent.toLocaleString("en-US")} targets may still be with the provider.`}
+          stateLine={t("cancelDialog.stateLine", { count: sent })}
           status={null}
-          title="Cancellation outcome"
+          title={t("cancelDialog.outcome")}
           total={run.counts.total}
           unit="targets"
           variant="modal"

@@ -1,8 +1,6 @@
 "use client";
-
 import { ConnectDrawer } from "@/components/integrations/ConnectDrawer";
 import { ProviderCredentialWarning } from "@/components/integrations/ProviderCredentialWarning";
-import { ProviderDisconnectAction } from "@/components/integrations/ProviderDisconnectAction";
 import { ProviderSyncFailureAlert } from "@/components/integrations/ProviderSyncFailureAlert";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
@@ -15,22 +13,19 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { testConnection as testConnectionAction } from "@/lib/actions/providers";
 import type { ProviderActionHandlers, ProviderTestResult } from "@/lib/integrations/types";
 import { VIEWER_READ_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { Notice } from "./ConnectDrawerSchema";
 import type { ProviderCardProps } from "./ProviderCard.types";
+import { ProviderCardDescription } from "./ProviderCardDescription";
+import { ProviderCardDisconnectMenu } from "./ProviderCardDisconnectMenu";
 import { ProviderCardFeedback } from "./ProviderCardFeedback";
 import { ProviderCardMeta } from "./ProviderCardMeta";
 import { ProviderConsumerRows } from "./ProviderConsumerRows";
 
 export type { ProviderCardProps } from "./ProviderCard.types";
 
-import { DeveloperActionsMenu } from "@/components/settings/developers/DeveloperActionsMenu";
-import {
-  actionLabels,
-  outlineActionStyle,
-  providerConsumerStatuses,
-  reauthCopy,
-} from "./provider-card-config";
+import { outlineActionStyle, providerConsumerStatuses } from "./provider-card-config";
 import { useProviderTrafficSync } from "./useProviderTrafficSync";
 
 type ProviderId = Parameters<ProviderActionHandlers["testProviderConnection"]>[0]["providerId"];
@@ -52,6 +47,7 @@ export function ProviderCard({
   searchSyncPlan,
   timeZone,
 }: Readonly<ProviderCardProps>) {
+  const t = useTranslations("projectIntegrations.provider");
   const [drawerOpen, setDrawerOpen] = useState(initialOpen && canManageProviders);
   const [testPending, setTestPending] = useState(false);
   const [testResult, setTestResult] = useState<ProviderTestResult | null>(null);
@@ -62,7 +58,9 @@ export function ProviderCard({
   const actionStyle = primaryAction ? undefined : outlineActionStyle;
   const actionDisabled = readOnly && primaryAction;
   const managementActionLabel =
-    provider.id === "gsc" && provider.status === "connected" ? "Connection settings" : "Manage";
+    provider.id === "gsc" && provider.status === "connected"
+      ? t("connectionSettings")
+      : t("manage");
   const canSync =
     provider.kind === "analytics" && provider.status === "connected" && provider.enabled !== false;
   const consumerStatuses = providerConsumerStatuses(provider);
@@ -70,6 +68,11 @@ export function ProviderCard({
   const testProviderConnection =
     actions?.testProviderConnection ?? (projectId ? testConnectionAction : demoTestConnection);
   const { handleTrafficSync, syncPending, syncResult } = useProviderTrafficSync({
+    messages: {
+      failed: t("trafficFailed"),
+      noSource: t("trafficNoSource"),
+      updated: (keywords, pages) => t("trafficUpdated", { keywords, pages }),
+    },
     projectId,
     readOnly,
     syncProjectTraffic: actions?.syncProjectTraffic,
@@ -93,14 +96,13 @@ export function ProviderCard({
       );
     } catch (error) {
       setTestResult({
-        message: error instanceof Error ? error.message : "Provider connection test failed.",
+        message: error instanceof Error ? error.message : t("connectionTestFailed"),
         ok: false,
       });
     } finally {
       setTestPending(false);
     }
   }
-
   return (
     <>
       <Card
@@ -111,7 +113,7 @@ export function ProviderCard({
       >
         <div className="flex min-w-0 items-center gap-2.5">
           <ProviderLogo
-            alt={`${provider.name} logo`}
+            alt={t("logo", { provider: provider.name })}
             domain={provider.logoDomain}
             fallbackIcon={provider.icon}
             size="sm"
@@ -135,7 +137,7 @@ export function ProviderCard({
             </div>
           </div>
         </div>
-        <p className="m-0 mt-2 text-[12px] leading-5 text-fg-muted">{provider.description}</p>
+        <ProviderCardDescription provider={provider} />
 
         {consumerStatuses && consumerDetails === "inline" ? (
           <ProviderConsumerRows
@@ -156,7 +158,12 @@ export function ProviderCard({
                 ? {
                     ...provider,
                     meta: consumerStatuses.searchModule.detail
-                      ? [{ label: "Property", value: consumerStatuses.searchModule.detail }]
+                      ? [
+                          {
+                            labelKey: "property" as const,
+                            value: consumerStatuses.searchModule.detail,
+                          },
+                        ]
                       : [],
                   }
                 : provider
@@ -168,8 +175,11 @@ export function ProviderCard({
             className="m-0 mt-3 rounded-control border border-red bg-red/5 px-3 py-2 text-[12.5px] leading-[1.45] text-red-text"
             role="alert"
           >
-            {reauthCopy[provider.id as string] ??
-              "Authorization is no longer valid. Reconnect to resume traffic syncs."}
+            {provider.id === "gsc"
+              ? t("reauthGsc")
+              : provider.id === "ga4"
+                ? t("reauthGa4")
+                : t("reauthGeneric")}
           </p>
         ) : null}
         <ProviderCredentialWarning credentialIssue={provider.credentialIssue} />
@@ -201,7 +211,11 @@ export function ProviderCard({
                     type="button"
                     variant="secondary"
                   >
-                    {testPending ? "Testing..." : provider.secondaryAction}
+                    {testPending
+                      ? t("testing")
+                      : provider.secondaryAction === "Test"
+                        ? t("test")
+                        : provider.secondaryAction}
                   </Button>
                 </ProjectReadOnlyTooltip>
               ) : null}
@@ -217,7 +231,7 @@ export function ProviderCard({
                     type="button"
                     variant="secondary"
                   >
-                    {syncPending ? "Syncing..." : "Sync now"}
+                    {syncPending ? t("syncing") : t("syncNow")}
                   </Button>
                 </ProjectReadOnlyTooltip>
               ) : null}
@@ -232,7 +246,9 @@ export function ProviderCard({
                   >
                     {provider.status === "connected"
                       ? managementActionLabel
-                      : actionLabels[provider.status]}
+                      : provider.status === "needs_reauth"
+                        ? t("reconnect")
+                        : t("connect")}
                   </Button>
                 </ProjectReadOnlyTooltip>
               ) : canManageProviders ? (
@@ -245,40 +261,29 @@ export function ProviderCard({
                 >
                   {provider.status === "connected"
                     ? managementActionLabel
-                    : actionLabels[provider.status]}
+                    : provider.status === "needs_reauth"
+                      ? t("reconnect")
+                      : t("connect")}
                 </Button>
               ) : null}
               {provider.status === "connected" && canManageProviders ? (
-                <ProviderDisconnectAction
+                <ProviderCardDisconnectMenu
                   disconnectProvider={actions?.disconnectProvider}
-                  projectId={projectId ?? "prj_storybook"}
-                  providerId={provider.id as ProviderId}
+                  hasTest={Boolean(provider.secondaryAction)}
                   onDisconnected={() => setDrawerOpen(false)}
                   onNotice={setDisconnectNotice}
-                  renderTrigger={({ disabled, onOpen }) => (
-                    <DeveloperActionsMenu
-                      ariaLabel={`Actions for ${provider.name}`}
-                      items={[
-                        ...(provider.secondaryAction
-                          ? [
-                              {
-                                label: testPending ? "Testing..." : provider.secondaryAction,
-                                disabled: readOnly || testPending,
-                                onSelect: () => void handleSecondaryAction(),
-                              },
-                            ]
-                          : []),
-                        { label: "Disconnect", danger: true, disabled, onSelect: onOpen },
-                      ]}
-                    />
-                  )}
+                  onTest={() => void handleSecondaryAction()}
+                  projectId={projectId ?? "prj_storybook"}
+                  providerId={provider.id as ProviderId}
+                  providerName={provider.name}
+                  readOnly={readOnly}
+                  testPending={testPending}
                 />
               ) : null}
             </div>
           ) : null}
         </div>
       </Card>
-
       {canManageProviders ? (
         <ConnectDrawer
           actions={actions}

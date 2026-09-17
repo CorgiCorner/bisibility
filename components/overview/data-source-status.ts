@@ -1,33 +1,21 @@
-export function dataSourceStatusColor(status: string) {
-  if (/failed|error/i.test(status)) {
-    return "var(--red)";
-  }
+import type { DataSourceHealth } from "./types";
 
-  if (/not connected|disconnected/i.test(status)) {
+type DataSourceStatus = DataSourceHealth["status"];
+
+export function dataSourceStatusColor(status: DataSourceStatus) {
+  if (status === "notConnected") {
     return "var(--fg-muted)";
   }
 
-  if (/missing|migration hold|paused/i.test(status)) {
+  if (status === "migrationHold" || status === "needsAttention") {
     return "var(--yellow)";
   }
 
   return "var(--green)";
 }
 
-export function dataSourceStatusTextColor(status: string) {
-  if (/failed|error/i.test(status)) return "var(--red-text)";
-  if (/not connected|disconnected/i.test(status)) return "var(--fg-muted)";
-  if (/missing|migration hold|paused/i.test(status)) return "var(--yellow-text)";
+export function dataSourceStatusTextColor(status: DataSourceStatus) {
+  if (status === "notConnected") return "var(--fg-muted)";
+  if (status === "migrationHold" || status === "needsAttention") return "var(--yellow-text)";
   return "var(--green-text)";
-}
-
-const statusLabels: Record<string, string> = {
-  "Provider failed": "Failed",
-  "Provider healthy": "Healthy",
-  "Provider needs attention": "Needs attention",
-  "Provider not connected": "Not connected",
-};
-
-export function dataSourceStatusLabel(status: string) {
-  return statusLabels[status] ?? status;
 }

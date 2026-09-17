@@ -1,6 +1,6 @@
 "use client";
 
-import { actionErrorMessage } from "@/components/onboarding/onboarding-form-utils";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import type {
   FirstCheckCandidate,
   ListFirstCheckCandidatesResult,
@@ -12,6 +12,8 @@ import type {
   ListFirstCheckCandidatesInput,
   RunFirstCheckPreviewInput,
 } from "@/lib/schemas/keyword";
+import { classifyActionError, presentActionError } from "@/lib/ui/action-error";
+import { useTranslations } from "next-intl";
 import { useRef, useState, useSyncExternalStore } from "react";
 import {
   candidateFromFailedRow,
@@ -33,12 +35,27 @@ export type FirstCheckRunActions = {
   ) => Promise<RunFirstCheckPreviewResult>;
 };
 
+function presentFirstCheckActionError(
+  error: unknown,
+  sharedErrors: ReturnType<typeof useSharedErrorMessages>,
+  fallback: string,
+) {
+  const classified = classifyActionError(error);
+  return classified.kind === "staleDeployment" || classified.kind === "serverComponentDigest"
+    ? presentActionError(error, sharedErrors, fallback)
+    : fallback;
+}
+
 export function useFirstCheckRun(
   actions: FirstCheckRunActions,
   initialCandidates: FirstCheckCandidate[] = [],
   initialProjectId?: string | null,
 ) {
-  const [store] = useState(() => createFirstCheckRunStore(initialCandidates, initialProjectId));
+  const t = useTranslations("onboarding.firstCheck");
+  const sharedErrors = useSharedErrorMessages();
+  const [store] = useState(() =>
+    createFirstCheckRunStore(initialCandidates, initialProjectId, t("errors.statusUnavailable")),
+  );
   const state = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
   const { setState } = store;
   const projectRef = useRef<string | null>(initialProjectId ?? null);
@@ -61,7 +78,12 @@ export function useFirstCheckRun(
         setState((current) => ({
           ...current,
           rows: current.rows.map((row) =>
-            row.keywordId === candidate.id ? clientErrorRow(candidate, error) : row,
+            row.keywordId === candidate.id
+              ? clientErrorRow(
+                  candidate,
+                  presentFirstCheckActionError(error, sharedErrors, t("errors.preview")),
+                )
+              : row,
           ),
         }));
       }
@@ -71,7 +93,7 @@ export function useFirstCheckRun(
   async function runPreview(projectId: string, options: { keywordText: string; limit?: number }) {
     if (!actions.listFirstCheckCandidatesAction || !actions.runFirstCheckPreviewAction) {
       setState({
-        message: "First-check preview is not available in this build.",
+        message: t("errors.previewUnavailable"),
         mode: "preview",
         rows: [],
         status: "failed",
@@ -91,7 +113,7 @@ export function useFirstCheckRun(
 
       if (isSampleProject) {
         setState({
-          message: "Sample projects don't run real checks.",
+          message: t("errors.sampleProject"),
           mode: "preview",
           rows: [],
           status: "failed",
@@ -101,7 +123,7 @@ export function useFirstCheckRun(
 
       if (!providerReady) {
         setState({
-          message: "Connect a SERP provider before running checks.",
+          message: t("errors.waitingForProvider"),
           mode: "preview",
           rows: [],
           status: "failed",
@@ -111,7 +133,7 @@ export function useFirstCheckRun(
 
       if (candidates.length === 0) {
         setState({
-          message: "This keyword is no longer available. Go back to choose a keyword.",
+          message: t("errors.unavailableKeyword"),
           mode: "preview",
           rows: [],
           status: "failed",
@@ -138,7 +160,7 @@ export function useFirstCheckRun(
     } catch (error) {
       setState((current) => ({
         ...current,
-        message: actionErrorMessage(error),
+        message: presentFirstCheckActionError(error, sharedErrors, t("errors.preview")),
         status: "failed",
       }));
     }
@@ -153,7 +175,7 @@ export function useFirstCheckRun(
     try {
       if (!input.keywordText) {
         setState({
-          message: "Select one keyword for the sample checks.",
+          message: t("errors.selectKeyword"),
           mode: "preview",
           rows: [],
           status: "failed",

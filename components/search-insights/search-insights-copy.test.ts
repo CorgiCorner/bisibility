@@ -31,7 +31,7 @@ function sourceFiles(directory: string): string[] {
 
 const moduleFiles = [
   ...sourceFiles(join(repositoryRoot, "components/search-insights")),
-  ...sourceFiles(join(repositoryRoot, "app/app/(workspace)/[project]/search-console")),
+  ...sourceFiles(join(repositoryRoot, "app/(regional)/app/(workspace)/[project]/search-console")),
   ...sourceFiles(join(repositoryRoot, "lib/search-insights")),
   ...sourceFiles(join(repositoryRoot, "lib/actions")).filter((path) =>
     /^search-insights.*\.ts$/.test(basename(path)),

@@ -17,6 +17,7 @@ import { type AnalyticsControlId, analyticsControlModule } from "@/lib/analytics
 import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 
 export type MenuMultiSelectProps = {
@@ -50,7 +51,7 @@ export function MenuMultiSelect({
   onSelectAll,
   options,
   placeholder = ariaLabel,
-  searchPlaceholder = "Search...",
+  searchPlaceholder,
   searchable = false,
   summary,
   summaryClassName,
@@ -58,6 +59,7 @@ export function MenuMultiSelect({
   triggerClassName,
   values,
 }: Readonly<MenuMultiSelectProps>) {
+  const t = useTranslations("shared.controls.menuMultiSelect");
   const [menuWidth, setMenuWidth] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const { anchorEl, closeMenu, handleExited, open, openMenu } = useMenuExitLifecycle(() => {
@@ -120,7 +122,7 @@ export function MenuMultiSelect({
       >
         {leadingIcon ? <span className="flex shrink-0 text-fg-muted">{leadingIcon}</span> : null}
         <span className={cn("min-w-0 truncate text-fg", summaryClassName)}>
-          {selectedSummary(selected, placeholder, summary)}
+          {selectedSummary(selected, placeholder, (count) => t("selected", { count }), summary)}
         </span>
         {trailingIcon ?? (
           <CaretDown
@@ -150,7 +152,11 @@ export function MenuMultiSelect({
         onExited={handleExited}
       >
         {searchable ? (
-          <MenuSearchField onChange={setSearch} placeholder={searchPlaceholder} value={search} />
+          <MenuSearchField
+            onChange={setSearch}
+            placeholder={searchPlaceholder ?? t("searchPlaceholder")}
+            value={search}
+          />
         ) : null}
         {allLabel ? (
           <MenuItem
@@ -172,7 +178,7 @@ export function MenuMultiSelect({
           </MenuItem>
         ) : null}
         {filteredOptions.length === 0 ? (
-          <div className="px-2 py-2 text-[12px] text-fg-muted">No results</div>
+          <div className="px-2 py-2 text-[12px] text-fg-muted">{t("noResults")}</div>
         ) : null}
         {filteredOptions.map((option) => (
           <MenuMultiSelectOption

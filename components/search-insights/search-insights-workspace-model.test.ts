@@ -1,9 +1,10 @@
+import { searchInsightsFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
+import type { DateDisplayContext } from "@/lib/dates/format";
 import { finalizedWindow } from "@/lib/search-insights/dates";
 import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/import-observability";
+import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
-import { DOMAIN_TIP, PREFIX_TIP } from "./search-insights-copy";
 import {
-  exportLabel,
   periodOptions,
   periodTooltipLines,
   periodTriggerLabel,
@@ -51,6 +52,16 @@ const importFacts = {
 } satisfies ImportObservabilityFacts;
 
 const previousComparison = { comparison: "previous_period" as const };
+const dateDisplay = {
+  dateFormat: "month_first",
+  locale: "en",
+  timeZone: "UTC",
+} satisfies DateDisplayContext;
+const t = createTranslator({
+  locale: "en",
+  messages: searchInsightsFeatureTestMessages,
+  namespace: "projectSearchInsights.copy",
+});
 
 describe("propertyTruncation", () => {
   it("leaves a short name whole", () => {
@@ -67,8 +78,8 @@ describe("propertyTruncation", () => {
 
 describe("propertyTip", () => {
   it("explains that the two property kinds overlap", () => {
-    expect(propertyTip("domain")).toBe(DOMAIN_TIP);
-    expect(propertyTip("url-prefix")).toBe(PREFIX_TIP);
+    expect(propertyTip("domain")).toBe("domain");
+    expect(propertyTip("url-prefix")).toBe("url_prefix");
   });
 });
 
@@ -83,12 +94,16 @@ describe("period", () => {
           label: "7 finalized days",
         },
         finalizedWindow("2026-08-28", 7),
+        dateDisplay,
+        t,
       ),
     ).toBe("Aug 22 - 28");
     expect(
       periodTriggerLabel(
         { ...previousComparison, days: 1, id: "1", label: "1 finalized day" },
         finalizedWindow("2026-08-28", 1),
+        dateDisplay,
+        t,
       ),
     ).toBe("First look · Aug 28");
     expect(
@@ -100,6 +115,8 @@ describe("period", () => {
           label: "7 finalized days",
         },
         null,
+        dateDisplay,
+        t,
       ),
     ).toBe("7 finalized days");
     expect(
@@ -111,21 +128,30 @@ describe("period", () => {
           label: "7 finalized days",
         },
         finalizedWindow("2026-07-08", 7),
+        dateDisplay,
+        t,
       ),
     ).toBe("Comparison window: Jul 2 - 8");
     expect(
       periodTriggerName(
         { ...previousComparison, days: 1, id: "1", label: "1 finalized day" },
         finalizedWindow("2026-07-08", 1),
+        dateDisplay,
+        t,
       ),
     ).toBe("Comparison window: First look, Jul 8");
     expect(
-      periodTriggerName({
-        ...previousComparison,
-        days: 7,
-        id: "7",
-        label: "7 finalized days",
-      }),
+      periodTriggerName(
+        {
+          ...previousComparison,
+          days: 7,
+          id: "7",
+          label: "7 finalized days",
+        },
+        null,
+        dateDisplay,
+        t,
+      ),
     ).toBe("Comparison window");
   });
 
@@ -139,6 +165,8 @@ describe("period", () => {
           label: "7 finalized days",
         },
         finalizedWindow("2026-08-28", 7),
+        dateDisplay,
+        t,
       ),
     ).toEqual([
       "Aug 22 - 28 · 7 finalized days",
@@ -148,12 +176,18 @@ describe("period", () => {
   });
 
   it("shows only dated window preset options", () => {
-    const options = periodOptions(null, "2026-08-28", {
-      comparison: "previous_period",
-      days: 7,
-      id: "7",
-      label: "7 finalized days",
-    });
+    const options = periodOptions(
+      null,
+      "2026-08-28",
+      {
+        comparison: "previous_period",
+        days: 7,
+        id: "7",
+        label: "7 finalized days",
+      },
+      dateDisplay,
+      t,
+    );
 
     expect(options.map((option) => option.id)).toEqual(["7", "28", "90"]);
     expect(options.map((option) => option.dates)).toEqual([
@@ -178,6 +212,8 @@ describe("period", () => {
       },
       "2026-08-28",
       { ...previousComparison, days: 1, id: "1", label: "1 finalized day" },
+      dateDisplay,
+      t,
     );
 
     expect(options).toEqual([
@@ -185,7 +221,7 @@ describe("period", () => {
         dates: "Aug 28",
         disabled: false,
         id: "1",
-        label: "1 finalized day",
+        label: "First look",
         sub: null,
       },
       {
@@ -227,7 +263,7 @@ describe("period", () => {
     ).toEqual({
       checked: false,
       disabled: true,
-      reason: "Needs 13 months of history · 0 of 3 imported",
+      reason: { imported: 0, required: 13, target: 3 },
     });
   });
 
@@ -268,6 +304,8 @@ describe("period", () => {
         id,
         label: `${id} finalized days`,
       },
+      dateDisplay,
+      t,
     );
 
     expect(options.filter((option) => !option.disabled).map((option) => option.id)).toEqual([id]);
@@ -288,6 +326,8 @@ describe("period", () => {
           id: "7",
           label: "7 finalized days",
         },
+        dateDisplay,
+        t,
       );
 
     expect(options(4, 2 * 60_000).at(0)?.sub).toBe("ready in ~6 min");
@@ -304,6 +344,8 @@ describe("period", () => {
       },
       "2026-08-28",
       { ...previousComparison, days: 7, id: "7", label: "7 finalized days" },
+      dateDisplay,
+      t,
     ).at(0);
 
     expect(option).toMatchObject({ disabled: true, sub: "ready in ~5 min" });
@@ -314,46 +356,37 @@ describe("syncView", () => {
   it("requires a property before offering a manual sync", () => {
     expect(syncView(null, "idle", false)).toEqual({
       disabled: true,
-      label: "Sync now",
-      title: "Connect a Search Console property first.",
+      title: "requires_property",
     });
   });
 
   it("stands down while the backfill holds the queue", () => {
     expect(syncView(importState, "idle")).toEqual({
       disabled: true,
-      label: "Sync now",
-      title: expect.stringContaining("import is still running"),
+      title: "backfill",
     });
     expect(
       syncView({ ...importState, plannedRetentionMonths: 3, state: "running" }, "idle"),
     ).toEqual({
       disabled: true,
-      label: "Sync now",
-      title:
-        "The 3-month import is still running. A manual sync queues behind it and would spend load quota twice.",
+      title: "backfill",
     });
-    expect(syncView({ ...importState, state: "queued" }, "idle").label).toBe("Sync now");
+    expect(syncView({ ...importState, state: "queued" }, "idle").title).toBe("backfill");
     expect(
       syncView({ ...importState, pausedReason: "user", state: "paused" }, "idle"),
     ).toMatchObject({
       disabled: true,
-      label: "Sync now",
-      title: "Resume the history import before fetching new finalized data.",
+      title: "paused_user",
     });
   });
 
   it.each([
-    [
-      "rate_limited",
-      "The provider limit must reset before finalized data can be fetched. The import resumes automatically.",
-    ],
-    ["needs_reauth", "Reconnect Search Console before fetching new finalized data."],
-    ["error", "Retry the history import before fetching new finalized data."],
+    ["rate_limited", "paused_provider"],
+    ["needs_reauth", "paused_reauth"],
+    ["error", "paused_retry"],
   ] as const)("explains why Sync now stays disabled for a %s pause", (pausedReason, title) => {
     expect(syncView({ ...importState, pausedReason, state: "paused" }, "idle")).toEqual({
       disabled: true,
-      label: "Sync now",
       title,
     });
   });
@@ -361,8 +394,7 @@ describe("syncView", () => {
   it("states its cooldown after a run", () => {
     expect(syncView(null, "queued")).toEqual({
       disabled: true,
-      label: "Sync now",
-      title: expect.stringContaining("cooldown"),
+      title: "cooldown",
     });
     expect(syncView(null, "cooldown").disabled).toBe(true);
   });
@@ -370,8 +402,7 @@ describe("syncView", () => {
   it("invites a run when nothing is in flight", () => {
     expect(syncView({ ...importState, state: "completed" }, "idle")).toEqual({
       disabled: false,
-      label: "Sync now",
-      title: "Fetch anything Google has finalized since the last run.",
+      title: "ready",
     });
   });
 
@@ -383,14 +414,7 @@ describe("syncView", () => {
     [null, "queued", true],
     [null, "cooldown", true],
     [null, "idle", true],
-  ] as const)("keeps Sync now as the control label", (state, outcome, hasProperty) => {
-    expect(syncView(state, outcome, hasProperty).label).toBe("Sync now");
-  });
-});
-
-describe("exportLabel", () => {
-  it("counts the rows the export will contain", () => {
-    expect(exportLabel(1284)).toBe("Export CSV (1,284 rows)");
-    expect(exportLabel(0)).toBe("Export CSV (0 rows)");
+  ] as const)("always returns a presentation title code", (state, outcome, hasProperty) => {
+    expect(syncView(state, outcome, hasProperty).title).toBeTruthy();
   });
 });

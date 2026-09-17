@@ -1,0 +1,394 @@
+{
+  "shell": {
+    "commandPalette": {
+      "actions": "Actions",
+      "actionItems": {
+        "addKeyword": "Rank Tracker: Add keyword",
+        "exportKeywords": "Rank Tracker: Export keywords",
+        "importCsv": "Rank Tracker: Import CSV",
+        "signOut": "Sign out",
+        "toggleTheme": "Toggle theme"
+      },
+      "close": "close",
+      "closeAriaLabel": "Close command palette",
+      "dialogAriaLabel": "Command palette",
+      "groups": {
+        "keywords": "Keywords",
+        "markets": "Markets",
+        "navigate": "Navigate",
+        "onThisPage": "On this page"
+      },
+      "hints": {
+        "account": "Account",
+        "downloadFile": "Download file",
+        "goTo": "Go to",
+        "keyword": "Keyword",
+        "market": "Market",
+        "newKeyword": "New keyword",
+        "theme": "Theme",
+        "uploadFile": "Upload file"
+      },
+      "marketNavigation": "{section} in {market}",
+      "navigation": {
+        "docs": "Docs and self-hosting"
+      },
+      "noMatches": "No matches",
+      "open": "open",
+      "placeholder": "Search keywords, views and actions...",
+      "search": "Search",
+      "searchTooltip": "Search ({shortcut})"
+    },
+    "navigation": {
+      "collapseSidebar": "Collapse sidebar",
+      "expandSidebar": "Expand sidebar",
+      "badges": {
+        "alpha": "alpha",
+        "beta": "beta",
+        "experimental": "Experimental",
+        "new": "new"
+      },
+      "groups": {
+        "modules": {
+          "label": "Modules",
+          "tag": "MODULES",
+          "tooltip": "Market modules follow the selected market. The rest keep their own axis."
+        },
+        "project": {
+          "label": "Project",
+          "tag": "PROJECT",
+          "tooltip": "Project-wide configuration. A market never narrows it."
+        }
+      },
+      "items": {
+        "alerts": "Alerts",
+        "backlinks": "Backlinks",
+        "competitors": "Competitors",
+        "dashboard": "Dashboard",
+        "domainOverview": "Domain Overview",
+        "install": "Install",
+        "integrations": "Integrations",
+        "keywordResearch": "Keyword Research",
+        "markets": "Markets",
+        "rankTracker": "Rank Tracker",
+        "runs": "Runs",
+        "searchConsole": "Search Console",
+        "settings": "Settings"
+      },
+      "menu": "Menu"
+    },
+    "notifications": {
+      "empty": "No notifications",
+      "markAllRead": "Mark all read",
+      "markReadError": "Could not mark notifications as read. Please try again.",
+      "title": "Notifications"
+    },
+    "operations": {
+      "actionError": "Could not update this operation. Refresh and try again.",
+      "activity": "Activity",
+      "closeActivity": "Close activity",
+      "gsc": {
+        "states": {
+          "completed": "Completed",
+          "delayed": "Delayed",
+          "failed": "Failed",
+          "importing": "Importing",
+          "paused": "Paused",
+          "queued": "Queued",
+          "reconnectRequired": "Reconnect required",
+          "statusUnavailable": "Status unavailable",
+          "waitingForData": "Waiting for data",
+          "waitingForGoogle": "Waiting for Google"
+        },
+        "title": "Search Console import"
+      },
+      "rank": {
+        "blocked": {
+          "budgetWithAmounts": "Spent {spent} of {cap} this month; checks resume when the budget resets.",
+          "budgetWithoutAmounts": "Checks resume when the budget resets.",
+          "keywordArchived": "This keyword was archived before the check started, so it was stopped before it cost anything.",
+          "marketInactive": "This keyword's market is paused, so the check was stopped before it cost anything.",
+          "noProvider": "Connect or reconnect a provider to start this run.",
+          "providerUnavailable": "The provider isn't reachable right now. The run starts on its own once it reconnects.",
+          "waiting": "This run is waiting to start. It will continue automatically when it can.",
+          "workerCloud": "The background worker isn't reachable right now. The run starts on its own once it reconnects.",
+          "workerSelfHost": "The background worker isn't running. Restart it and the run starts on its own."
+        },
+        "keywordCount": "{count, plural, one {# keyword} other {# keywords}}",
+        "scope": "{keywords} by {selection}",
+        "selectionKinds": {
+          "all": "all tracked keywords",
+          "filter": "filter",
+          "legacy_schedule": "schedule",
+          "rerun": "rerun selection",
+          "retry_failed": "failed targets",
+          "scheduled_due": "due schedule members",
+          "selected": "selected keywords",
+          "single": "one keyword"
+        },
+        "targetUnit": "{count, plural, one {target} other {targets}}",
+        "titles": {
+          "api": "API run",
+          "manual": "Manual run",
+          "retry": "Retry run",
+          "scheduled": "Scheduled run"
+        }
+      },
+      "emptyDescription": "No rank check or import is in flight. Finished rank checks keep their record in Runs, imports in Search Console.",
+      "emptyTitle": "Nothing running",
+      "pillAria": "{count, plural, =0 {No operations} one {# {state} operation, open activity} other {# {state} operations, open activity}}",
+      "pillTitle": "{count, plural, =0 {No operations} one {# {state} operation} other {# {state} operations}}",
+      "runs": "Runs",
+      "stale": "Live updates are unavailable. Showing the last known operations.",
+      "states": {
+        "blocked": "blocked",
+        "failed": "failed",
+        "running": "running",
+        "waiting": "waiting"
+      },
+      "viewAll": "View all runs"
+    },
+    "userMenu": {
+      "accountMenu": "Account menu",
+      "accountSettings": "Account settings",
+      "discord": "Discord",
+      "docs": "Docs and self-hosting",
+      "feedback": "Send feedback",
+      "homepage": "Homepage",
+      "github": "GitHub",
+      "roleInProject": "{role} in {project}",
+      "roles": {
+        "admin": "Admin",
+        "auditor": "Auditor",
+        "member": "Member",
+        "owner": "Owner",
+        "viewer": "Viewer"
+      },
+      "signOut": "Sign out",
+      "signOutError": "Could not sign out. Please try again.",
+      "fallbackName": "Your account",
+      "opensInNewTab": "{label} (opens in a new tab)"
+    },
+    "market": {
+      "add": "Add market",
+      "all": "All markets",
+      "count": "{count, plural, =0 {empty} one {# keyword} other {# keywords}}",
+      "dialog": "Switch market",
+      "empty": "Add your first market to choose where and in which language to track keywords.",
+      "find": "Find market",
+      "findPlaceholder": "Find market...",
+      "list": "Markets",
+      "noMatches": "No market matches that.",
+      "noMarkets": "No markets",
+      "paused": "Paused"
+    },
+    "header": {
+      "changeContext": "Change context",
+      "copyRunId": "Copy run ID",
+      "gettingStartedProgress": "Get set up, {settled} of {total, plural, one {# step} other {# steps}} complete",
+      "noMarkets": "No markets",
+      "subtitles": {
+        "account": "Manage your bisibility user, separate from project settings.",
+        "alerts": "Get notified when rankings change.",
+        "audit": "Review project changes and security events.",
+        "backlinks": "See who links to a site, what changed, and the cost before every run.",
+        "competitors": "Benchmark competitors on your tracked keywords.",
+        "docs": "Install, configure and self-host bisibility.",
+        "domainOverview": "Analyze estimated organic visibility for any domain.",
+        "gettingStartedComplete": "Done. Everything below is optional.",
+        "gettingStartedIncomplete": "Four steps to your first positions.",
+        "integrations": "Connect data providers and analytics sources.",
+        "install": "Let your AI agent, editor or scripts use the same data you see here.",
+        "importFromAnotherInstance": "Move data into this project with a one-time migration token.",
+        "instanceAdministration": "Growth, consumption and account administration.",
+        "instanceAdministrationAudit": "Instance administrator activity and outcomes.",
+        "instanceAdministrationOverview": "Worker health and operator diagnostics.",
+        "keywordResearch": "Find phrases worth tracking, with the cost visible before every lookup.",
+        "markets": "Manage locations, keyword defaults, and market lifecycle.",
+        "preferences": "Theme and personal defaults.",
+        "runs": "Rank checks and Search Console imports for this project.",
+        "searchConsole": "What Google reported, what it withheld, and what you keep.",
+        "security": "Password, sessions and account protection.",
+        "timeline": "Project signals, page changes and notes over time."
+      },
+      "titles": {
+        "account": "Account settings",
+        "alerts": "Alerts",
+        "audit": "Audit log",
+        "backlinks": "Backlinks",
+        "competitors": "Competitors",
+        "dashboard": "Dashboard",
+        "docs": "Docs",
+        "domainOverview": "Domain Overview",
+        "gettingStarted": "Get set up",
+        "integrations": "Integrations",
+        "install": "Install",
+        "importFromAnotherInstance": "Import from another instance",
+        "instanceAdministration": "Instance administration",
+        "keywordDetails": "Keyword details",
+        "keywordResearch": "Keyword Research",
+        "markets": "Markets",
+        "overview": "Overview",
+        "preferences": "Preferences",
+        "rankTracker": "Rank Tracker",
+        "run": "Run",
+        "runs": "Runs",
+        "searchConsole": "Search Console",
+        "security": "Security",
+        "settings": "Settings",
+        "timeline": "Timeline"
+      }
+    },
+    "footer": {
+      "instanceStatus": {
+        "healthy": "Instance admin",
+        "manualMode": "Instance admin · Manual mode",
+        "schemaDrift": "Instance admin · Schema drift",
+        "workerDifferentQueues": "Instance admin · Worker on different queues",
+        "workerDown": "Instance admin · Worker down"
+      },
+      "privacyChoices": "Privacy choices"
+    },
+    "workspace": {
+      "create": "Create project",
+      "createDescription": "Collaborate with others in a new project",
+      "empty": "Projects you create and join appear here for quick context switching.",
+      "find": "Find project",
+      "findPlaceholder": "Find project...",
+      "newProject": "New project",
+      "noData": "{count, number} queued - no data",
+      "project": "Project",
+      "projects": "Projects",
+      "sample": "Sample",
+      "switch": "Switch project",
+      "keywordCount": "{count, plural, =0 {# keywords} one {# keyword} other {# keywords}}"
+    },
+    "writeMode": {
+      "migrationSettings": "Migration settings",
+      "reasons": {
+        "migrated": "Project migrated and disabled",
+        "migrationHold": "Read-only during migration hold"
+      },
+      "migrated": {
+        "detail": "This project moved to another bisibility instance. Writes and rank checks stay off until you reactivate it in settings.",
+        "title": "Project migrated - disabled on this instance."
+      },
+      "migrationHold": {
+        "detail": "Reads still work. Writes, imports, provider changes, and rank-check starts are paused. Cancel the migration in settings to resume writes. Advanced shows when the hold becomes eligible for automatic release; the hourly worker releases it shortly afterward.",
+        "title": "Project is read-only - migration in progress."
+      }
+    },
+    "demo": {
+      "createAccount": "Create your account",
+      "editableOwner": {
+        "message": "Changes you make here are visible to demo visitors.",
+        "title": "Demo workspace."
+      },
+      "editableViewer": {
+        "message": "Browse read-only saved data. Changes and new checks are disabled."
+      },
+      "legacy": {
+        "message": "Explore saved rankings. Changes and new checks are disabled."
+      },
+      "readOnlyTitle": "Read-only demo.",
+      "snapshot": "Snapshot: {date} UTC"
+    },
+    "betaBanner": {
+      "backupLoadError": "Project backup counts could not be loaded.",
+      "coverage": "What beta covers",
+      "detail": "Data recovery isn't guaranteed yet. Keep a recent export.",
+      "dismiss": "Dismiss hosted beta banner",
+      "exportData": "Export data",
+      "lead": "Hosted beta:",
+      "loading": "Loading..."
+    },
+    "betaCoverage": {
+      "close": "Close",
+      "covered": "Covered",
+      "coveredItems": {
+        "export": "Export is available at any time, in full fidelity.",
+        "history": "Full history is retained for the whole beta, never trimmed.",
+        "providerOwnership": "Your provider keys and quotas stay yours - no markup, no resale.",
+        "scheduled": "Rank checks run on schedule, on the same engine as self-host."
+      },
+      "end": {
+        "detail": "30 days notice before pricing. Nothing charged without your confirmation. Self-host stays available.",
+        "title": "When the beta ends"
+      },
+      "exportData": "Export data",
+      "notYet": "Not yet",
+      "notYetItems": {
+        "migration": "No guaranteed migration path between hosted regions.",
+        "restore": "No restore guarantee. If we lose data, we cannot roll you back.",
+        "support": "Support is best-effort over email, with no response target.",
+        "uptime": "No uptime SLA. Maintenance can interrupt checks without notice."
+      },
+      "responsibilities": {
+        "ours": {
+          "detail": "Nightly snapshots are kept for 7 days on a best-effort basis. A small team runs this open beta, so there is no on-call rota and no incident notice you can rely on: assume you will notice an outage before we do.",
+          "title": "On our side"
+        },
+        "title": "Who does what",
+        "yours": {
+          "detail": "Keep a recent export. It is the copy fully under your control and can be restored into self-host.",
+          "title": "On your side"
+        }
+      },
+      "subtitle": "Hosted beta policy",
+      "title": "What the hosted beta covers"
+    },
+    "backup": {
+      "cancel": "Cancel",
+      "duration": "Usually under a minute",
+      "errors": {
+        "keywordLimit": "This package can include up to {limit, number} keywords.",
+        "rankCheckLimit": "This package can include up to {limit, number} rank checks per keyword.",
+        "unsupportedHistory": "This package contains history that cannot be exported."
+      },
+      "exportError": "Instance import package export failed.",
+      "exporting": "Exporting...",
+      "exportPackage": "Export package",
+      "included": "Included",
+      "lastExport": {
+        "days": "Last export {count, number}d ago",
+        "hours": "Last export {count, number}h ago",
+        "justNow": "Last export just now",
+        "minutes": "Last export {count, number}m ago",
+        "never": "Never exported",
+        "yesterday": "Last export yesterday"
+      },
+      "sections": {
+        "alert_rules": {
+          "description": "Thresholds, targets and delivery channels",
+          "label": "Alert rules"
+        },
+        "competitors": {
+          "description": "Tracked domains and their labels",
+          "label": "Competitors"
+        },
+        "keywords": {
+          "description": "Names, tags and target URLs",
+          "label": "Keywords and tags"
+        },
+        "notification_preferences": {
+          "description": "Project notification choices",
+          "label": "Notification preferences"
+        },
+        "projects": {
+          "description": "Name, domain and import metadata",
+          "label": "Project details"
+        },
+        "rank_checks": {
+          "description": "Every retained position and ranking URL",
+          "label": "Rank history"
+        },
+        "saved_views": {
+          "description": "Names and project filter configurations",
+          "label": "Saved views"
+        }
+      },
+      "subtitle": "A full copy of {projectName} you can restore into self-host",
+      "success": "Package exported and downloaded.",
+      "title": "Export project data"
+    }
+  }
+}

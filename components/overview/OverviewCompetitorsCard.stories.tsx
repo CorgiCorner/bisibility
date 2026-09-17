@@ -1,8 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { OverviewCompetitorsCard } from "./OverviewCompetitorsCard";
+import { ProjectDashboardMessages } from "./ProjectDashboardMessages";
 
 const meta = {
   component: OverviewCompetitorsCard,
+  decorators: [
+    (Story) => (
+      <ProjectDashboardMessages>
+        <Story />
+      </ProjectDashboardMessages>
+    ),
+  ],
   parameters: { layout: "padded", nextjs: { appDirectory: true } },
   title: "Components/Overview/Competitors",
   args: {

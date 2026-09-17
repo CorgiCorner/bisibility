@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { renderWithAdvancedSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   defaultPublicProjectId,
@@ -53,14 +54,18 @@ describe("migration destination validation", () => {
     mocks.preflightMigrationTarget.mockResolvedValue(makePreflightPayload());
   });
   it("renders a configured target failure inline without reclassifying the default as user input", async () => {
-    const message =
-      "Migration target configuration is invalid. Check BISIBILITY_CLOUD_URL or the site URL. Target URL port must be empty, 80, 443, or 8443.";
-    mocks.preflightMigrationTarget.mockResolvedValueOnce(makePreflightFailurePayload(message));
+    mocks.preflightMigrationTarget.mockResolvedValueOnce(
+      makePreflightFailurePayload(
+        "Migration target configuration is invalid. Check BISIBILITY_CLOUD_URL or the site URL. Target URL port must be empty, 80, 443, or 8443.",
+      ),
+    );
     const { state } = renderCheck();
 
     fireEvent.click(screen.getByRole("button", { name: /Run compatibility check/i }));
 
-    expect(await screen.findByText(message)).toBeInTheDocument();
+    expect(
+      await screen.findByText("Enter a valid destination URL, then run the check again."),
+    ).toBeInTheDocument();
     expect(mocks.preflightMigrationTarget).toHaveBeenCalledWith({
       projectId: defaultPublicProjectId,
     });
@@ -68,8 +73,9 @@ describe("migration destination validation", () => {
   });
 
   it("renders a rejected user target inline with the validator reason", async () => {
-    const message = "Target URL port must be empty, 80, 443, or 8443.";
-    mocks.preflightMigrationTarget.mockResolvedValueOnce(makePreflightFailurePayload(message));
+    mocks.preflightMigrationTarget.mockResolvedValueOnce(
+      makePreflightFailurePayload("Target URL port must be empty, 80, 443, or 8443."),
+    );
     const { state } = renderCheck();
     fireEvent.change(screen.getByLabelText("Destination URL"), {
       target: { value: "https://target.example.com:3000" },
@@ -77,7 +83,9 @@ describe("migration destination validation", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Run compatibility check/i }));
 
-    expect(await screen.findByText(message)).toBeInTheDocument();
+    expect(
+      await screen.findByText("Enter a valid destination URL, then run the check again."),
+    ).toBeInTheDocument();
     expect(mocks.preflightMigrationTarget).toHaveBeenCalledWith({
       projectId: defaultPublicProjectId,
       targetOrigin: "https://target.example.com:3000",

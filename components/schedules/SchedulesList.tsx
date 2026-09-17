@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast-context";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { ArchiveScheduleModal } from "./ArchiveScheduleModal";
 import { type SchedulesTableRow, schedulesTableColumns } from "./schedules-table-columns";
@@ -19,20 +20,20 @@ export type ScheduleListRow = {
   archivedAt?: string | null;
   assignedKeywordCount?: number;
   blocked?: boolean;
-  cadenceLabel?: string;
-  cadenceMeta?: string;
   cronExpression?: string | null;
-  dayOfMonth?: string | null;
+  dayOfMonth?: number | null;
   enabled: boolean;
   frequency: ScheduleFrequency;
   isDefault: boolean;
+  jitterMinutes?: number;
   keywordCount: number;
-  memberMeta?: string;
+  memberDeviceCount?: number;
+  memberMarketCount?: number;
   name: string;
-  nextRunLabel?: string | null;
+  nextRunAt?: string | null;
   perRunCents?: number | null;
   publicId: string;
-  tagScope?: string | null;
+  sharedTag?: string | null;
   targetCount?: number | null;
   timeOfDay?: string | null;
   timezone?: string | null;
@@ -48,6 +49,44 @@ type SchedulesListProps = {
   schedules: readonly ScheduleListRow[];
 };
 
+function calendarDay(value: Date, locale: string, timeZone: string) {
+  const parts = new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone,
+    year: "numeric",
+  }).formatToParts(value);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((entry) => entry.type === type)?.value ?? "00";
+  return Date.UTC(Number(part("year")), Number(part("month")) - 1, Number(part("day")));
+}
+
+function nextRunLabel(
+  value: string | null | undefined,
+  timeZone: string | null | undefined,
+  locale: string,
+  t: ReturnType<typeof useTranslations<"projectRuns.schedules">>,
+) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const zone = timeZone ?? "UTC";
+  const now = new Date();
+  const days = Math.round(
+    (calendarDay(date, locale, zone) - calendarDay(now, locale, zone)) / 86_400_000,
+  );
+  const time = new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    hourCycle: "h23",
+    minute: "2-digit",
+    timeZone: zone,
+  }).format(date);
+  if (days === 0) return t("nextRun.today", { time });
+  if (days === 1) return t("nextRun.tomorrow", { time });
+  const day = new Intl.DateTimeFormat(locale, { timeZone: zone, weekday: "short" }).format(date);
+  return t("nextRun.at", { day, time });
+}
+
 export function SchedulesList({
   canUpdate,
   canManage = false,
@@ -56,13 +95,20 @@ export function SchedulesList({
   projectRef,
   schedules,
 }: Readonly<SchedulesListProps>) {
+  const t = useTranslations("projectRuns.schedules");
+  const locale = useLocale();
   const router = useRouter();
   const [archiveTarget, setArchiveTarget] = useState<ScheduleListRow | null>(null);
   const { showToast } = useToast();
   const [pendingScheduleId, setPendingScheduleId] = useState<string | null>(null);
   const rows = useMemo<readonly SchedulesTableRow[]>(
-    () => schedules.map((schedule) => ({ ...schedule, id: schedule.publicId })),
-    [schedules],
+    () =>
+      schedules.map((schedule) => ({
+        ...schedule,
+        id: schedule.publicId,
+        nextRunLabel: nextRunLabel(schedule.nextRunAt, schedule.timezone, locale, t),
+      })),
+    [locale, schedules, t],
   );
 
   const togglePause = useCallback(
@@ -77,17 +123,17 @@ export function SchedulesList({
           method: "PATCH",
         });
         if (!response.ok) {
-          showToast("Could not update the schedule. Please try again.", { severity: "error" });
+          showToast(t("list.toggleFailed"), { severity: "error" });
           return;
         }
         router.refresh();
       } catch {
-        showToast("Could not update the schedule. Please try again.", { severity: "error" });
+        showToast(t("list.toggleFailed"), { severity: "error" });
       } finally {
         setPendingScheduleId(null);
       }
     },
-    [projectId, router, showToast],
+    [projectId, router, showToast, t],
   );
 
   const columns = useMemo(
@@ -100,8 +146,10 @@ export function SchedulesList({
         onTogglePause: togglePause,
         pendingScheduleId,
         projectRef,
+        locale,
+        t,
       }),
-    [canUpdate, canManage, projectId, pendingScheduleId, projectRef, togglePause],
+    [canUpdate, canManage, locale, projectId, pendingScheduleId, projectRef, t, togglePause],
   );
 
   return (
@@ -110,16 +158,16 @@ export function SchedulesList({
         <TableCardHeader
           className="border-b border-border"
           titleId="schedules-list-title"
-          title={`${schedules.length} ${schedules.length === 1 ? "schedule" : "schedules"}`}
+          title={t("scheduleCount", { count: schedules.length })}
           actions={
             <>
               <MenuSelect
-                ariaLabel="Schedule status"
-                leadingLabel="Status:"
+                ariaLabel={t("scheduleStatus")}
+                leadingLabel={t("status")}
                 value={status}
                 options={[
-                  { label: "Current", value: "current" },
-                  { label: "Archived", value: "archived" },
+                  { label: t("current"), value: "current" },
+                  { label: t("archived"), value: "archived" },
                 ]}
                 onChange={(value) =>
                   router.push(
@@ -133,7 +181,7 @@ export function SchedulesList({
                   size="sm"
                   variant="secondary"
                 >
-                  New schedule
+                  {t("newSchedule")}
                 </Button>
               ) : null}
             </>
@@ -144,18 +192,18 @@ export function SchedulesList({
             <EmptyState
               compact
               icon={<CalendarBlank aria-hidden size={22} weight="regular" />}
-              title={status === "archived" ? "No archived schedules" : "No schedules yet"}
+              title={status === "archived" ? t("empty.archivedTitle") : t("empty.currentTitle")}
               description={
                 status === "archived"
-                  ? "Archived schedules will appear here. Their past runs and results are preserved."
-                  : "Keywords are checked only when you launch a run. Create a schedule to check them on a cadence."
+                  ? t("empty.archivedDescription")
+                  : t("empty.currentDescription")
               }
             />
           </div>
         ) : (
           <div className="min-w-0 [&>[role=table]]:border-0">
             <DataTable
-              ariaLabel="Schedules"
+              ariaLabel={t("schedules")}
               columns={columns}
               id="schedules-list"
               layout="auto"

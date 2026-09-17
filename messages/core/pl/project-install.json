@@ -1,0 +1,97 @@
+{
+  "projectInstall": {
+    "agents": {
+      "heading": "Agenci AI",
+      "description": "Wybierz narzędzie, skopiuj jedno polecenie i wklej je w terminalu. To cała konfiguracja.",
+      "copyCommand": "Kopiuj polecenie – {agent}",
+      "claude-code": {
+        "label": "Claude Code",
+        "hint": "CLI",
+        "note": "Następnie uruchom /mcp w Claude Code, aby się zalogować."
+      },
+      "codex": {
+        "label": "Codex",
+        "hint": "CLI",
+        "note": "Codex korzysta z tego samego logowania OAuth."
+      },
+      "cursor": {
+        "label": "Cursor",
+        "hint": "edytor",
+        "note": "Ustawienia, MCP, a następnie wklej do mcp.json."
+      },
+      "claude-desktop": {
+        "label": "Claude Desktop",
+        "hint": "łącznik",
+        "note": "Bez terminala: Ustawienia, Łączniki, Dodaj własny łącznik, a następnie wklej ten adres URL i zaloguj się."
+      },
+      "other": {
+        "label": "Dowolny klient MCP",
+        "hint": "ręcznie",
+        "note": "Streamable HTTP z logowaniem OAuth. Bez klucza w adresie URL."
+      }
+    },
+    "endpoint": {
+      "heading": "Punkt końcowy MCP",
+      "description": "Używasz narzędzia spoza listy? Wklej w nim ten adres i zaloguj się kontem bisibility.",
+      "copy": "Kopiuj URL MCP",
+      "selfHosted": "self-hosting? użyj zamiast tego własnego adresu: '<your-instance>'/api/mcp"
+    },
+    "apiKey": {
+      "heading": "Klucz API",
+      "scope": "zakres: {scope}",
+      "scopeRead": "Tylko odczyt",
+      "scopeWrite": "Odczyt i zapis",
+      "scopeAdmin": "Pełny dostęp",
+      "description": "Użyj go, gdy coś ma działać bez Ciebie – na przykład nocny skrypt.{created, select, none {} other { {created}.}}",
+      "created": "Utworzono {date}",
+      "manage": "Zarządzaj w sekcji Ustawienia, Deweloperzy",
+      "none": "Nie ma jeszcze klucza API. Administratorzy projektu mogą go utworzyć w sekcji Ustawienia → Deweloperzy.",
+      "copyCurl": "Kopiuj przykład curl"
+    },
+    "skills": {
+      "heading": "Umiejętności",
+      "planned": "planowane",
+      "description": "Gotowe zadania SEO, które agent będzie mógł wykonać za Ciebie. Żadne nie jest jeszcze dostępne, więc ta lista pokazuje, co pojawi się w następnej kolejności.",
+      "footer": "polecenie instalacji pojawi się tutaj, gdy pierwsza umiejętność będzie gotowa",
+      "keyword-import": "Zbiorcze dodawanie, deduplikacja",
+      "provider-setup": "Połączenie, weryfikacja kluczy",
+      "project-onboarding": "Konfiguracja pierwszego projektu",
+      "weekly-report": "Podsumowanie zmian pozycji",
+      "keyword-clustering": "Grupowanie według intencji",
+      "seo-audit": "Poprawki według priorytetu"
+    },
+    "chatgptIcon": {
+      "copyUrl": "Kopiuj URL ikony",
+      "description": "Użyj tej ikony, dodając bisibility jako własną aplikację MCP.",
+      "download": "Pobierz PNG",
+      "heading": "Ikona aplikacji ChatGPT",
+      "imageAlt": "ikona aplikacji bisibility",
+      "meta": "PNG · {width, number} × {height, number} px · {kilobytes} KB ({bytes, number} bajtów) · poniżej 10 KB"
+    },
+    "gettingStarted": {
+      "addApp": {
+        "copyMcpUrl": "Kopiuj URL MCP dla ChatGPT",
+        "description": "Otwórz Wtyczki, wybierz +, a następnie dodaj poniższy adres URL MCP. Wybierz OAuth i zaloguj się do bisibility. Jeśli pojawi się prośba, prześlij ikonę powyżej.",
+        "title": "2. Dodaj bisibility"
+      },
+      "description": "Połącz bisibility z ChatGPT.",
+      "developerMode": {
+        "description": "W ChatGPT otwórz Ustawienia → Bezpieczeństwo i logowanie, a następnie włącz tryb dewelopera.",
+        "title": "1. Włącz tryb dewelopera"
+      },
+      "dismiss": "Ukryj pierwsze kroki",
+      "firstChat": {
+        "description": "Wybierz bisibility z menu narzędzi w nowym czacie. Spróbuj: „{prompt}”",
+        "prompt": {
+          "withChecks": "Które słowa kluczowe straciły pozycje w tym tygodniu?",
+          "withoutChecks": "Dodaj moje pierwsze słowa kluczowe i uruchom sprawdzenie pozycji."
+        },
+        "title": "3. Rozpocznij rozmowę"
+      },
+      "guideLink": "Przewodnik konfiguracji ChatGPT",
+      "heading": "Pierwsze kroki",
+      "note": "Tryb dewelopera może zależeć od ustawień Twojego konta lub przestrzeni roboczej.",
+      "show": "Pokaż pierwsze kroki"
+    }
+  }
+}

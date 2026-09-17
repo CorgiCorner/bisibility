@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { renderWithInstallMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AgentInstallList } from "./AgentInstallList";
 import { AGENTS, API_VERSION, curlExample } from "./install-catalog";
@@ -13,6 +14,13 @@ vi.mock("@/components/ui/CopyButton", () => ({
 }));
 
 const mcpUrl = "https://app.example.com/api/mcp";
+const agentLabels = {
+  "claude-code": "Claude Code",
+  "claude-desktop": "Claude Desktop",
+  codex: "Codex",
+  cursor: "Cursor",
+  other: "Any MCP client",
+} as const;
 
 // Literal expectations. Asserting a rendered block against AGENTS[n].command(mcpUrl) only
 // proves the component calls the catalogue, not that the catalogue still spells the command
@@ -124,7 +132,7 @@ describe("AgentInstallList", () => {
     render(<AgentInstallList mcpUrl={mcpUrl} />);
 
     for (const agent of AGENTS) {
-      const trigger = agentButton(agent.label);
+      const trigger = agentButton(agentLabels[agent.id]);
       // Claude Code is already open on first render; clicking it would close it.
       if (trigger.getAttribute("aria-expanded") === "false") {
         fireEvent.click(trigger);

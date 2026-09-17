@@ -1,6 +1,7 @@
 "use client";
 
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useTranslations } from "next-intl";
 import { ProviderCard, type ProviderCardState } from "./ProviderCard";
 import {
   type ConnectedProviderMap,
@@ -42,14 +43,15 @@ export function StepConnectProviderCards({
   selectedProviderId,
   testResults,
 }: Readonly<StepConnectProviderCardsProps>) {
+  const t = useTranslations("onboarding.provider.cards");
   return (
     <div className="mt-5.5">
       <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
-        Rank data / powers rank checks
-        <InfoTooltip text="Google has no official rankings API, so checks run through a SERP provider. Bisibility uses your own provider account and you pay the provider directly, per check. You can skip this and connect later in Integrations - keywords can be added now, but checks stay paused until a provider is connected." />
+        {t("label")}
+        <InfoTooltip text={t("tooltip")} />
       </div>
       <div
-        aria-label="SERP provider"
+        aria-label={t("group")}
         className="mt-2 grid items-stretch gap-3 sm:grid-cols-2"
         role="radiogroup"
       >
@@ -69,9 +71,7 @@ export function StepConnectProviderCards({
           />
         ))}
       </div>
-      <p className="m-0 mt-2 text-[11.5px] text-fg-muted">
-        Connections are saved per provider - switching does not disconnect.
-      </p>
+      <p className="m-0 mt-2 text-[11.5px] text-fg-muted">{t("notice")}</p>
     </div>
   );
 }

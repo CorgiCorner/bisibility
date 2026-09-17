@@ -9,6 +9,7 @@ import type { ConnectedProviderMap } from "./steps/StepConnectProvider.fields";
 
 export type OnboardingWizardProps = {
   actions: OnboardingWizardActions;
+  costCalculatorPath?: string;
   costPerCheckCents: number | null;
   dataResidencyMessage: string;
   gscJustConnected: boolean;

@@ -4,6 +4,7 @@ import {
 } from "@/components/overview/check-health-fixtures";
 import { DataSourcePanel } from "@/components/overview/DataSourcePanel";
 import { overviewFixture } from "@/components/overview/overview-fixtures";
+import { ProjectDashboardMessages } from "@/components/overview/ProjectDashboardMessages";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
@@ -11,11 +12,13 @@ const meta = {
   component: DataSourcePanel,
   decorators: [
     (Story) => (
-      <div className="min-h-[300px] bg-bg p-6 text-fg">
-        <div className="max-w-4xl">
-          <Story />
+      <ProjectDashboardMessages>
+        <div className="min-h-[300px] bg-bg p-6 text-fg">
+          <div className="max-w-4xl">
+            <Story />
+          </div>
         </div>
-      </div>
+      </ProjectDashboardMessages>
     ),
   ],
 } satisfies Meta<typeof DataSourcePanel>;

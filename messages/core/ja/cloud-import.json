@@ -1,0 +1,159 @@
+{
+  "cloudImport": {
+    "metadata": {
+      "cloudDescription": "セルフホストインスタンスがこのホスト型プロジェクトにデータを送信することを許可する、1回限りの移行トークンを作成します。",
+      "cloudLayoutDescription": "ホスト型ベータ: プロジェクトのセットアップとインポートに絞ったタスクです。",
+      "cloudLayoutTitle": "ホスト型ベータ",
+      "cloudTitle": "インスタンスからのインポート",
+      "instanceDescription": "別の bisibility インスタンスがこのプロジェクトにデータを送信することを許可する、1回限りの移行トークンを作成します。",
+      "instanceTitle": "別のインスタンスからインポート"
+    },
+    "screen": {
+      "backToSetup": "セットアップに戻る",
+      "cloudSubtitle": "セルフホストインスタンスがこのプロジェクトにデータを送信できるようにする、1回限りのトークンを作成します。",
+      "cloudTitle": "セルフホストからインポート",
+      "instanceSubtitle": "別のインスタンスがこのプロジェクトにデータを送信できるようにする、1回限りのトークンを作成します。",
+      "instanceTitle": "別のインスタンスからインポート",
+      "onboardSubtitle": "これが新しいホスト型プロジェクトになります。",
+      "onboardTitle": "セルフホストのデータをインポート",
+      "settings": "設定"
+    },
+    "source": {
+      "instance": "送信元インスタンス",
+      "selfHost": "セルフホストインスタンス"
+    },
+    "topBar": {
+      "beta": "ベータ",
+      "fallbackWorkspace": "プロジェクト",
+      "setupProgress": "セットアップ / {current, number}/{total, number}"
+    },
+    "token": {
+      "activeDescription": "値は非表示です。コピーが必要な場合はトークンをローテーションしてください。",
+      "activeTitle": "有効なトークンがあります",
+      "actionFailedCode": "token_action_failed",
+      "authorizes": "1台の{source}がエクスポートを <workspace>{project}</workspace> に送信することを許可します。",
+      "copy": "{label}をコピー",
+      "createdBy": "作成者: {email}",
+      "createdTitle": "トークンを作成しました",
+      "create": "移行トークンを作成",
+      "creating": "トークンを作成中",
+      "defaultSource": "セルフホストインスタンス",
+      "destinationUrl": "宛先 URL",
+      "error": {
+        "create": "トークンを作成できませんでした",
+        "generic": "移行トークンの操作を実行できませんでした。再試行してください。",
+        "notActive": "この移行トークンは有効ではなくなりました。続行するには新しいトークンを作成してください。",
+        "rateLimited": "移行トークンのリクエストが多すぎます。しばらくしてから再試行してください。",
+        "regenerate": "トークンを再生成できませんでした",
+        "revoke": "トークンを取り消せませんでした",
+        "tokenUsed": "この移行トークンはすでに使用されています。続行するには新しいトークンを作成してください。",
+        "writeLocked": "このプロジェクトが読み取り専用の間、移行トークンの操作は利用できません。まず移行設定に戻り、移行を完了するかキャンセルしてください。"
+      },
+      "expires": "有効期限",
+      "expiryDetails": "{remaining} · {kind}",
+      "expiresIn": "{count, plural, =0 {まもなく期限切れ} other {あと#分で期限切れ}}",
+      "header": "移行トークン",
+      "noneDescription": "インポートを開始するにはトークンを作成してください。トークンは一度だけ表示され、60分で期限切れになり、インポートが成功すると使用済みになります。",
+      "noneTitle": "有効なトークンはありません",
+      "noTokenIssued": "トークンは発行されていません。値は一切公開されていません。",
+      "readOnlyRole": "移行の操作はプロジェクトの管理者と所有者が利用できます。",
+      "regenerating": "トークンをローテーション中",
+      "remaining": "{count, plural, =0 {まもなく期限切れ} other {残り#分}}",
+      "reusable": "再利用可能",
+      "reusableDetails": "再利用可能",
+      "revoke": "トークンを取り消す",
+      "revoking": "取り消し中",
+      "roll": "トークンをローテーション",
+      "scope": "スコープ {scope}",
+      "scopeFull": "プロジェクト全体",
+      "scopeKeywords": "キーワード",
+      "security": {
+        "cloud": "トークンが許可するのはこのプロジェクトへのインポートのみで、プロバイダーや請求にはアクセスできません。自動的に期限切れになり、使用前であればいつでも取り消せます。",
+        "instance": "トークンが許可するのはこのプロジェクトへのインポートのみで、プロバイダーの認証情報にはアクセスできません。自動的に期限切れになり、使用前であればいつでも取り消せます。"
+      },
+      "singleUse": "1回限り",
+      "singleUseDetails": "1回限り",
+      "scopeLabel": "スコープ",
+      "targetProject": "対象プロジェクト",
+      "tryAgain": "再試行",
+      "valueHidden": "このトークンを今すぐコピーしてください。セキュリティ上、ページを再読み込みするか離れると再表示できません。"
+    },
+    "reachability": {
+      "copy": "コマンドをコピー",
+      "destinationFollowUp": "生成された HTTPS URL を送信元の宛先 URL に設定し、転送が完了するまでコマンドを実行したままにしてください。<learnMore>詳細はこちら</learnMore>。",
+      "intro": "このアドレスにはこのマシンからのみ到達できます。Quick Tunnel で一時的に公開してください。",
+      "runningLocal": "ローカルで実行していますか？",
+      "sourceFollowUp": "生成された HTTPS URL をここに貼り付けて、互換性チェックを再度実行してください。<learnMore>詳細はこちら</learnMore>。",
+      "unreachable": "このインスタンスから宛先に到達できない場合は、一時的な Cloudflare Tunnel を使用するか、ZIP パッケージをインポートしてください。"
+    },
+    "transfer": {
+      "completion": {
+        "empty": "転送が完了しました。{visibility, select, none {} other {{visibility}}}チェックを再開するにはプロバイダーを再接続してください。",
+        "imported": "{items}をインポートしました。{visibility, select, none {} other {{visibility}}}チェックを再開するにはプロバイダーを再接続してください。",
+        "importedWithSkipped": "{items}をインポートし、{skipped}をスキップしました。{visibility, select, none {} other {{visibility}}}チェックを再開するにはプロバイダーを再接続してください。",
+        "visibilityNote": "{count, plural, other {受信した履歴#件の取得深度が不明です。}}取得深度が不明なチェックは可視性に反映されません。対象のキーワードは可視性の集計対象には引き続き含まれます。"
+      },
+      "counts": {
+        "alertRules": "{count, plural, other {アラートルール#件}}",
+        "alertRulesSkipped": "{count, plural, other {アラートルール#件}}",
+        "competitors": "{count, plural, other {競合ドメイン#件}}",
+        "competitorsSkipped": "{count, plural, other {競合ドメイン#件}}",
+        "history": "{count, plural, other {履歴#件}}",
+        "historySkipped": "{count, plural, other {履歴#件}}",
+        "historyUnknownDepth": "{count, plural, other {取得深度が不明な受信履歴#件}}",
+        "keywords": "{count, plural, other {キーワード#件}}",
+        "keywordsCreated": "{count, plural, other {新規キーワード#件}}",
+        "keywordsSkipped": "{count, plural, other {キーワード#件}}",
+        "notificationPreferences": "{count, plural, other {通知設定#件}}",
+        "notificationPreferencesSkipped": "{count, plural, other {通知設定#件}}",
+        "savedViews": "{count, plural, other {保存済みビュー#件}}",
+        "savedViewsSkipped": "{count, plural, other {保存済みビュー#件}}",
+        "unknown": "{key} {count, number}件"
+      },
+      "tiles": {
+        "alertRules": "インポートしたアラートルール{count, plural, other {#件}}",
+        "alertRulesSkipped": "スキップしたアラートルール{count, plural, other {#件}}",
+        "competitors": "インポートした競合ドメイン{count, plural, other {#件}}",
+        "competitorsSkipped": "スキップした競合ドメイン{count, plural, other {#件}}",
+        "history": "インポートした履歴{count, plural, other {#件}}",
+        "historySkipped": "スキップした履歴{count, plural, other {#件}}",
+        "historyUnknownDepth": "取得深度が不明な受信履歴{count, plural, other {#件}}",
+        "keywords": "インポートしたキーワード{count, plural, other {#件}}",
+        "keywordsCreated": "新規作成したキーワード{count, plural, other {#件}}",
+        "keywordsSkipped": "スキップしたキーワード{count, plural, other {#件}}",
+        "notificationPreferences": "インポートした通知設定{count, plural, other {#件}}",
+        "notificationPreferencesSkipped": "スキップした通知設定{count, plural, other {#件}}",
+        "savedViews": "インポートした保存済みビュー{count, plural, other {#件}}",
+        "savedViewsSkipped": "スキップした保存済みビュー{count, plural, other {#件}}",
+        "unknown": "{key} {count, number}件"
+      },
+      "downloadErrorLog": "エラーログをダウンロード",
+      "failed": {
+        "fallback": "インポートを完了できませんでした。新しいトークンを生成して、もう一度送信してください。",
+        "followUp": "すでにインポートされたデータはこのプロジェクトに残ります。",
+        "stopped": "転送は{progress, number}%で停止しました。",
+        "timedOut": "インポートがタイムアウトしました。新しいトークンを生成して、もう一度送信してください。"
+      },
+      "importingDescription": "キーワード、順位データの履歴、タグ、アラートルールをこのプロジェクトに転送しています。",
+      "importingPill": "転送中",
+      "importingTitle": "転送を実行中",
+      "importJob": "インポートジョブ",
+      "newToken": "新しいトークン",
+      "notesPill": "注意事項",
+      "notesTitle": "注意事項付きで復元しました",
+      "openProject": "プロジェクトを開く",
+      "pending": "保留中",
+      "readyDescription": "転送を開始するには、1回限りのトークンを送信元インスタンスに共有してください。",
+      "readyPill": "準備完了",
+      "readyTitle": "受信の準備完了",
+      "receivingDescription": "{source}からエクスポートパッケージを受信しています。",
+      "receivingPill": "受信中",
+      "receivingTitle": "パッケージを受信中",
+      "retryFromSource": "その後、送信元からもう一度送信してください。",
+      "successPill": "完了",
+      "successTitle": "転送が完了しました",
+      "failedPill": "失敗",
+      "failedTitle": "転送できませんでした"
+    }
+  }
+}

@@ -10,6 +10,7 @@ import { MARKETS_SECTION } from "@/lib/markets/market-routes";
 import { appPath, contextFreePathname, type ProjectRef } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { flushSync } from "react-dom";
 
@@ -49,8 +50,9 @@ export function MarketSwitcher({
   pathname,
   projectRef,
 }: MarketSwitcherProps) {
+  const t = useTranslations("shell.market");
   const router = useRouter();
-  const label = market?.name ?? (markets.length ? "All markets" : "No markets");
+  const label = market?.name ?? (markets.length ? t("all") : t("noMarkets"));
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
 

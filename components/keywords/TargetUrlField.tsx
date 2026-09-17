@@ -1,21 +1,17 @@
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
-import { FIELD_HELP } from "@/lib/settings/field-help";
 import { cn } from "@/lib/ui/cn";
 import { forwardRef, type InputHTMLAttributes, useId } from "react";
 
 type TargetUrlFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "className"> & {
   className?: string;
   error?: string;
-  help?: string;
-  label?: string;
+  help: string;
+  label: string;
 };
 
 export const TargetUrlField = forwardRef<HTMLInputElement, TargetUrlFieldProps>(
-  function TargetUrlField(
-    { className, error, help = FIELD_HELP.targetUrl, label = "Target URL", ...inputProps },
-    ref,
-  ) {
+  function TargetUrlField({ className, error, help, label, ...inputProps }, ref) {
     const generatedId = useId();
     const inputId = inputProps.id ?? inputProps.name ?? generatedId;
 

@@ -1,5 +1,6 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
-import { render, screen } from "@testing-library/react";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PositionHistoryCard } from "./PositionHistoryCard";

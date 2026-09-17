@@ -4,6 +4,7 @@ import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider
 import { Card } from "@/components/ui/Card";
 import type { IntegrationProviderData, ProviderActionHandlers } from "@/lib/integrations/types";
 import type { ProjectRef } from "@/lib/routing/app-path";
+import { useTranslations } from "next-intl";
 import { ProviderConsumerRows } from "./ProviderConsumerRows";
 import { providerConsumerStatuses } from "./provider-card-config";
 import { useProviderTrafficSync } from "./useProviderTrafficSync";
@@ -23,8 +24,14 @@ export function ProviderConsumerPanel({
   provider: IntegrationProviderData;
   timeZone: string;
 }>) {
+  const t = useTranslations("projectIntegrations.provider");
   const { readOnly } = useProjectWriteMode();
   const { handleTrafficSync, syncPending, syncResult } = useProviderTrafficSync({
+    messages: {
+      failed: t("trafficFailed"),
+      noSource: t("trafficNoSource"),
+      updated: (keywords, pages) => t("trafficUpdated", { keywords, pages }),
+    },
     projectId,
     readOnly,
     syncProjectTraffic: actions?.syncProjectTraffic,
@@ -32,7 +39,11 @@ export function ProviderConsumerPanel({
   const statuses = providerConsumerStatuses(provider);
   if (!statuses) return null;
   return (
-    <Card aria-label={`${provider.name} activity`} component="section" className="min-w-0 p-4">
+    <Card
+      aria-label={t("activity", { provider: provider.name })}
+      component="section"
+      className="min-w-0 p-4"
+    >
       <ProviderConsumerRows
         canSync={canUpdateProject && provider.status === "connected" && provider.enabled !== false}
         layout="columns"

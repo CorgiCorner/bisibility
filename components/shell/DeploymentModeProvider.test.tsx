@@ -1,7 +1,8 @@
-import AppErrorBoundary from "@/app/app/error";
+import AppErrorBoundary from "@/app/(regional)/app/error";
+import { renderWithSharedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { FEEDBACK_URL } from "@/lib/site/site";
 import { setNavigationState } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DeploymentModeProvider } from "./DeploymentModeProvider";

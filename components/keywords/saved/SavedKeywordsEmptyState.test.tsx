@@ -4,7 +4,22 @@ import { SavedKeywordsEmptyState } from "./SavedKeywordsEmptyState";
 
 describe("SavedKeywordsEmptyState", () => {
   it("renders the 36C faux header and exact empty-state copy", () => {
-    render(<SavedKeywordsEmptyState projectRef="prj_1" />);
+    render(
+      <SavedKeywordsEmptyState
+        copy={{
+          browseResearch: "Browse Keyword Research",
+          cpc: "CPC",
+          difficulty: "KD",
+          emptyDescription:
+            "Save ideas from Research to build a shortlist before you commit to tracking. Saving is free and runs no checks.",
+          emptyTitle: "Nothing saved yet",
+          intent: "Intent",
+          keyword: "Keyword",
+          volume: "Volume",
+        }}
+        projectRef="prj_1"
+      />,
+    );
 
     for (const heading of ["Keyword", "Volume", "KD", "CPC", "Intent"]) {
       expect(screen.getByText(heading)).toBeInTheDocument();

@@ -72,7 +72,10 @@ export function AppHeaderFrame({
         />
         <div className="col-start-2 row-start-1 flex min-w-0 items-center gap-2 sm:gap-3">
           <AppHeaderTitle setupCompleted={setupCompleted} setupTotalCount={setupTotalCount} />
-          <div className="min-w-0 flex-none empty:hidden">{context}</div>
+          {/* The context group must be allowed to shrink: `flex-none` held the market and device
+            selectors at their intrinsic width, so a locale with longer labels (es-ES at 390px)
+            pushed the row past the viewport instead of truncating. */}
+          <div className="min-w-0 shrink empty:hidden">{context}</div>
         </div>
       </div>
       {/* Right cluster: spend pill and account utilities share one rhythm. */}

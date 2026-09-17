@@ -89,7 +89,7 @@ describe("KeywordHeaderCard", () => {
     await screen.findByRole("dialog", { name: /Check rank tracker in United States/ });
     fireEvent.click(screen.getByRole("button", { name: "Start run" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Sample projects don't run real checks.",
+      "Sample projects do not run real checks.",
     );
     expect(
       screen.getByRole("dialog", { name: /Check rank tracker in United States/ }),

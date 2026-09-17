@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useRef, useTransition } from "react";
 
 const POLL_MS = 45_000;
@@ -12,6 +13,7 @@ function documentIsHidden() {
 }
 
 export function SearchInsightsRefresh({ active }: Readonly<{ active: boolean }>) {
+  const t = useTranslations("projectSearchInsights.copy");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,7 +60,7 @@ export function SearchInsightsRefresh({ active }: Readonly<{ active: boolean }>)
   return (
     <span data-auto-refresh={active ? "active" : "inactive"} ref={hostRef}>
       <Button
-        aria-label="Refresh import status"
+        aria-label={t("refreshAriaLabel")}
         loading={pending}
         loadingIndicator={
           <ArrowClockwise weight="regular" aria-hidden className="animate-spin" size={14} />
@@ -68,7 +70,7 @@ export function SearchInsightsRefresh({ active }: Readonly<{ active: boolean }>)
         startIcon={<ArrowClockwise weight="regular" aria-hidden size={14} />}
         variant="ghost"
       >
-        Refresh
+        {t("refresh")}
       </Button>
     </span>
   );

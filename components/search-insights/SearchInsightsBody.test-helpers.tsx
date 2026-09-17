@@ -3,11 +3,12 @@ import { view } from "./search-insights-row-test-fixtures";
 export { deferred, pageRows, queryRows, view } from "./search-insights-row-test-fixtures";
 
 import { ToastProvider } from "@/components/ui/Toast";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { LoadSearchInsightsRowsAction } from "@/lib/actions/search-insights-rows";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { SearchInsightsFirstView } from "@/lib/search-insights/queries/first-view";
 import type { SearchInsightsSignals } from "@/lib/search-insights/queries/signals";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { vi } from "vitest";
 import { SearchInsightsBody } from "./SearchInsightsBody";
 import { SearchInsightsSessionsCard } from "./SearchInsightsSessionsCard";

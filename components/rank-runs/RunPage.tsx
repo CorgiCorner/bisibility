@@ -1,10 +1,10 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { useAppRealtime } from "@/components/shell/AppRealtimeProvider";
 import { useLiveNow } from "@/components/ui/useLiveNow";
-import { formatDateTimeCurrentYear } from "@/lib/dates/format";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { RunPageBlockedBanner } from "./RunPageBlockedBanner";
 import { RunPageCancelDialog } from "./RunPageCancelDialog";
@@ -13,6 +13,7 @@ import { RunPageHeader } from "./RunPageHeader";
 import { liveRun, orderedRunItems, type RunItemFilter, runSummary } from "./RunPageModel";
 import { RunPageTargets } from "./RunPageTargets";
 import type { RunPageData, RunPageInitialData, RunPageItem } from "./RunPageTypes";
+import { createRunPageSummaryLabels } from "./run-page-summary-presentation";
 
 type RunMutation = "cancel" | "run-now" | "skip" | "retry-failed" | "retry-deferred";
 
@@ -52,7 +53,10 @@ export function RunPage({
   projectRef,
   run: initialRun,
 }: Readonly<RunPageProps>) {
-  const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
+  const locale = useLocale();
+  const t = useTranslations("projectRuns.rankRuns");
+  const statusT = useTranslations("shared.controls.status");
   const { operations } = useAppRealtime();
   const [run, setRun] = useState(initialRun);
   const [items, setItems] = useState(initialItems);
@@ -72,10 +76,11 @@ export function RunPage({
       currentRun.status === "running" ||
       currentRun.status === "cancelling",
   );
-  const summary = runSummary(currentRun, {
-    formatInstant: (iso) => formatDateTimeCurrentYear(new Date(iso), dateFormat, new Date(now)),
-    now,
-  });
+  const summary = runSummary(
+    currentRun,
+    { now },
+    createRunPageSummaryLabels({ currentRun, dateDisplay, locale, now, statusT, t }),
+  );
   const scopedProject = asProjectRef(projectRef);
 
   // Synchronize the persisted detail with the external realtime snapshot when it becomes terminal.
@@ -97,8 +102,8 @@ export function RunPage({
         if (!refreshed) throw new Error("Run refresh payload was invalid.");
         setRun(refreshed);
       })
-      .catch(() => setError("The finished run could not be refreshed. Try again."));
-  }, [hasRealtimeRun, projectRef, run.id]);
+      .catch(() => setError(t("runsRefreshFailed")));
+  }, [hasRealtimeRun, projectRef, run.id, t]);
 
   async function mutate(mutation: RunMutation) {
     setBusy(mutation);
@@ -118,7 +123,7 @@ export function RunPage({
       if (retryId) window.location.assign(appPath(scopedProject, "rank-tracker", "runs", retryId));
       setDialogOpen(false);
     } catch {
-      setError("The run could not be updated. Try again.");
+      setError(t("updateFailed"));
     } finally {
       setBusy(null);
     }
@@ -143,7 +148,7 @@ export function RunPage({
       ]);
       setCursor(payload.meta?.next_cursor ?? null);
     } catch {
-      setError("More targets could not be loaded. Try again.");
+      setError(t("loadingTargets"));
     }
   }
 

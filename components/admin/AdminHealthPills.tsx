@@ -1,8 +1,12 @@
+"use client";
+
+import { statusLabel } from "@/components/admin/AdminPrimitives";
 import {
   type HealthTone,
   healthToneForRate,
   type ProviderHealthRow,
 } from "@/lib/ops/instance-admin-health";
+import { useTranslations } from "next-intl";
 
 const toneClasses: Record<HealthTone, string> = {
   failed: "bg-red/10 text-red-text",
@@ -17,11 +21,6 @@ const dotClasses: Record<HealthTone, string> = {
   stale: "bg-yellow",
   unknown: "bg-fg-muted",
 };
-
-function percentLabel(value: number | null): string {
-  if (value === null) return "unknown";
-  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(value)}% failed`;
-}
 
 function HealthPill({ label, tone }: Readonly<{ label: string; tone: HealthTone }>) {
   return (
@@ -59,6 +58,8 @@ export function AdminHealthPills({
   undeliveredCount,
   workerStatus,
 }: Readonly<AdminHealthPillsProps>) {
+  const t = useTranslations("instanceAdmin.shellHealth");
+  const adminT = useTranslations("instanceAdmin");
   const worst = compact ? worstProvider(providerHealth) : null;
   const providers: readonly ProviderHealthRow[] = compact
     ? worst === null
@@ -67,24 +68,35 @@ export function AdminHealthPills({
     : providerHealth;
 
   return (
-    <div aria-label="Operations health" className="flex flex-wrap items-center gap-1.5">
-      <HealthPill label={`Worker ${workerStatus}`} tone={workerStatus} />
+    <div aria-label={t("label")} className="flex flex-wrap items-center gap-1.5">
       <HealthPill
-        label={`Checks: ${percentLabel(checkFailureRatePercent)}`}
+        label={t("worker", { status: statusLabel(workerStatus, adminT) })}
+        tone={workerStatus}
+      />
+      <HealthPill
+        label={
+          checkFailureRatePercent === null
+            ? t("checksUnknown")
+            : t("checks", { value: checkFailureRatePercent })
+        }
         tone={healthToneForRate(checkFailureRatePercent)}
       />
       {providers.map((provider) => (
         <HealthPill
           key={provider.provider}
-          label={`${provider.provider}: ${percentLabel(provider.failureRatePercent)}`}
+          label={
+            provider.failureRatePercent === null
+              ? t("providerUnknown", { provider: provider.provider })
+              : t("provider", { provider: provider.provider, value: provider.failureRatePercent })
+          }
           tone={healthToneForRate(provider.failureRatePercent)}
         />
       ))}
       <HealthPill
         label={
           undeliveredCount === null
-            ? "Delivery: unknown"
-            : `${new Intl.NumberFormat("en-US").format(undeliveredCount)} undelivered`
+            ? t("deliveryUnknown")
+            : t("undelivered", { count: undeliveredCount })
         }
         tone={undeliveredCount === null ? "unknown" : undeliveredCount === 0 ? "ok" : "stale"}
       />

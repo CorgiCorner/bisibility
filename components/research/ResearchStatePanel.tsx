@@ -11,6 +11,7 @@ import { BinocularsIcon as Binoculars } from "@phosphor-icons/react/dist/csr/Bin
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { MagnifyingGlassMinusIcon as MagnifyingGlassMinus } from "@phosphor-icons/react/dist/csr/MagnifyingGlassMinus";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { ResearchResultsLoading } from "./ResearchLoadingSkeletons";
 
@@ -38,32 +39,35 @@ type ResearchStatePanelProps = {
 };
 
 function IdleState() {
+  const t = useTranslations("projectResearch.state");
+
   return (
     <EmptyState
-      bullets={[
-        "Runs on your own DataForSEO key",
-        "Results cached for 12 hours, repeat lookups are free",
-        "Grouped variants and already-tracked phrases marked",
-      ]}
+      bullets={[t("idleBulletProvider"), t("idleBulletCache"), t("idleBulletGrouping")]}
       mark={<ModuleMark bordered icon={Binoculars} />}
-      title="Research starts with a seed"
+      title={t("idleTitle")}
     />
   );
 }
 
 function LoadingState() {
-  return <ResearchResultsLoading />;
+  const t = useTranslations("projectResearch.state");
+  return <ResearchResultsLoading ariaLabel={t("loadingAria")} />;
 }
 
 function NoProviderState({ projectRef }: Readonly<{ projectRef: string }>) {
+  const t = useTranslations("projectResearch.state");
+
   return (
     <EmptyState
       action={
-        <AccentCtaLink href={appPath(projectRef, "integrations")}>Connect DataForSEO</AccentCtaLink>
+        <AccentCtaLink href={appPath(projectRef, "integrations")}>
+          {t("connectAction")}
+        </AccentCtaLink>
       }
-      description="Keyword Research requires a provider with keyword research support. Lookups run on your own key."
+      description={t("connectDescription")}
       mark={<ModuleMark bordered icon={Binoculars} />}
-      title="Connect DataForSEO to research keywords"
+      title={t("connectTitle")}
     />
   );
 }
@@ -79,6 +83,8 @@ function LookupFailedState({
   projectRef: string;
   retryLabel: string;
 }>) {
+  const t = useTranslations("projectResearch.state");
+
   return (
     <EmptyState
       action={
@@ -89,35 +95,33 @@ function LookupFailedState({
             </Button>
           ) : null}
           <span className="text-fg-muted">
-            If this keeps happening, check the provider status in{" "}
-            <Link
-              className="font-semibold text-accent-text hover:underline"
-              href={appPath(projectRef, "integrations")}
-            >
-              Integrations
-            </Link>
-            .
+            {t.rich("failureAdvice", {
+              integrations: (chunks) => (
+                <Link
+                  className="font-semibold text-accent-text hover:underline"
+                  href={appPath(projectRef, "integrations")}
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
           </span>
         </div>
       }
       description={
         <span className="grid justify-items-center gap-1.5">
-          <span>The request failed before any results came back.</span>
+          <span>{t("failureRequest")}</span>
           {charged === false ? (
             <span className="inline-flex items-center gap-1 font-semibold text-green-text">
               <CheckCircle size={14} weight="regular" />
-              {"You weren't charged for the failed attempt."}
+              {t("failureNotCharged")}
             </span>
           ) : null}
-          {charged === true ? (
-            <span>
-              The provider reported a charge before it failed - check your DataForSEO dashboard.
-            </span>
-          ) : null}
+          {charged === true ? <span>{t("failureCharged")}</span> : null}
         </span>
       }
       icon={<ArrowsClockwise weight="regular" size={28} />}
-      title="That lookup did not go through"
+      title={t("failureTitle")}
     />
   );
 }
@@ -133,10 +137,8 @@ function EmptyResultsState({
   mode: string;
   onEditSearch?: () => void;
 }>) {
-  const bullets = [
-    ...(mode === "auto" ? [] : ["Switch mode to Auto to cascade across all sources"]),
-    "Broaden a seed: shorter, more generic phrasing",
-  ];
+  const t = useTranslations("projectResearch.state");
+  const bullets = [...(mode === "auto" ? [] : [t("emptyAutoHint")]), t("emptySeedHint")];
 
   return (
     <EmptyState
@@ -144,23 +146,17 @@ function EmptyResultsState({
         <div className="grid justify-items-center gap-3">
           {onEditSearch ? (
             <Button onClick={onEditSearch} variant="secondary">
-              Edit search
+              {t("editSearch")}
             </Button>
           ) : null}
           {cached == null ? null : (
-            <span className="text-fg-muted">
-              {cached
-                ? "Served from the 12-hour cache, this repeat was free."
-                : "This lookup was charged once. Repeats within 12 hours are free."}
-            </span>
+            <span className="text-fg-muted">{cached ? t("cacheFree") : t("cacheCharged")}</span>
           )}
         </div>
       }
       bullets={bullets}
       icon={<MagnifyingGlassMinus weight="regular" size={28} />}
-      title={
-        scopeLabel ? `No ideas found for these seeds in ${scopeLabel}` : "No keyword ideas found"
-      }
+      title={scopeLabel ? t("emptyTitle", { scopeLabel }) : t("emptyTitleGeneric")}
     />
   );
 }
@@ -189,11 +185,12 @@ export function ResearchStatePanel({
   mode = "auto",
   onEditSearch,
   onRetry,
-  retryLabel = "Retry",
-  resumeLabel = "next month",
+  retryLabel,
+  resumeLabel,
   projectRef,
   state,
 }: Readonly<ResearchStatePanelProps>) {
+  const t = useTranslations("projectResearch.state");
   if (state === "idle") return <IdleState />;
   if (state === "loading") return <LoadingState />;
   if (state === "no_provider") return <NoProviderState projectRef={projectRef} />;
@@ -205,23 +202,22 @@ export function ResearchStatePanel({
             className="font-semibold text-accent-text hover:underline"
             href={appPath(projectRef, "settings#provider-usage")}
           >
-            Raise the budget
+            {t("budgetAction")}
           </Link>
         }
-        description={
-          <>
-            Fresh provider lookups resume {resumeLabel}. Cached recent searches remain free and
-            available.{" "}
+        description={t.rich("budgetDescription", {
+          docs: (chunks) => (
             <Link
               className="font-semibold text-accent-text hover:underline"
               href="/docs/integrations#budget-cap"
               {...docsLinkProps("/docs/integrations#budget-cap")}
             >
-              How budgets work
+              {chunks}
             </Link>
-          </>
-        }
-        title="Monthly provider budget reached"
+          ),
+          resumeLabel: resumeLabel ?? t("defaultResume"),
+        })}
+        title={t("budgetTitle")}
       />
     );
   }
@@ -230,20 +226,22 @@ export function ResearchStatePanel({
       <MessageState
         action={
           <AccentCtaLink href={appPath(projectRef, "integrations")}>
-            Reconnect DataForSEO
+            {t("reauthAction")}
           </AccentCtaLink>
         }
-        description="Reconnect the project's DataForSEO credentials to resume research lookups."
+        description={t("reauthDescription")}
         mark={<ModuleMark bordered icon={Binoculars} />}
-        title="DataForSEO needs to be reconnected"
+        title={t("reauthTitle")}
       />
     );
   }
   if (state === "unsupported_location") {
     return (
       <MessageState
-        description={`Research is not available for ${scopeLabel ?? "this country and language"}. Rank tracking is unaffected.`}
-        title="Research is not available for this country and language"
+        description={t("unsupportedDescription", {
+          scopeLabel: scopeLabel ?? t("unsupportedTitle").toLowerCase(),
+        })}
+        title={t("unsupportedTitle")}
       />
     );
   }
@@ -253,7 +251,7 @@ export function ResearchStatePanel({
         charged={charged}
         onRetry={onRetry}
         projectRef={projectRef}
-        retryLabel={retryLabel}
+        retryLabel={retryLabel ?? t("retry")}
       />
     );
   }

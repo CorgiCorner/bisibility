@@ -1,0 +1,281 @@
+{
+  "account": {
+    "connected": {
+      "connect": "接続",
+      "connectError": "接続を開始できませんでした。",
+      "connectProvider": "{provider} を接続",
+      "connected": "接続済み",
+      "connectedDetail": "{provider} に接続済み",
+      "connecting": "接続中",
+      "description": "プロバイダーを連携すると、ワンクリックでサインインできます。現在のサインインはメールコードで行い、OAuth は任意です。",
+      "notConnectedDetail": "未接続です。現在のサインインはメールコードで行います。",
+      "providerUnavailable": "{provider} のサインインは設定されていません。",
+      "title": "連携済みアカウント"
+    },
+    "delete": {
+      "action": "アカウントを削除",
+      "description": "アカウント、所有するプロジェクト、追跡中のすべてのデータを完全に削除します。この操作は元に戻せません。",
+      "error": "アカウントを削除できませんでした。",
+      "title": "危険な操作",
+      "unavailable": "アカウントの削除は利用できません。"
+    },
+    "demo": {
+      "description": "この共有アカウントは読み取り専用です。メールアドレス、プロフィール、セキュリティ設定は変更できません。",
+      "title": "デモアカウント"
+    },
+    "email": {
+      "codeSent": "このアドレスが使用可能な場合、確認コードが届きます。",
+      "confirm": "メールアドレスを確認",
+      "confirmDescription": "このアカウントのメールアドレスを確認するには、{email} に送信されたコードを入力してください。",
+      "confirmError": "アカウントのメールアドレスを確認できませんでした。",
+      "description": "サインインと確認コードの受信に使用するメールアドレスです。",
+      "errors": {
+        "alreadyVerified": "このメールアドレスは確認済みです。続行するにはページを再読み込みしてください。",
+        "currentCodeExpired": "現在のメールアドレスに届いたコードが無効か、有効期限が切れています。新しいコードをリクエストしてください。",
+        "differentAddress": "別のメールアドレスを入力してください。",
+        "newCodeInvalidOrUnavailable": "新しいメールアドレスの確認コードが無効か有効期限切れであるか、そのアドレスは使用できません。",
+        "verificationCodeInvalidOrExpired": "確認コードが無効か、有効期限が切れています。新しいコードをリクエストしてください。"
+      },
+      "invalidCode": "6桁の確認コードを入力してください。",
+      "invalidEmail": "有効なアカウントのメールアドレスを入力してください。",
+      "label": "アカウントのメールアドレス",
+      "sendCode": "コードを送信",
+      "sendError": "確認コードを送信できませんでした。",
+      "title": "アカウントのメールアドレス",
+      "unverified": "未確認",
+      "unverifiedFallback": "このアドレスではまだコードが確認されていません。",
+      "verificationCode": "確認コード",
+      "verified": "確認済み",
+      "verifiedFallback": "サインインコードで確認済みです。変更すると新しいコードが送信されます。",
+      "change": {
+        "cancel": "キャンセル",
+        "confirm": "メールアドレスの変更を確認",
+        "confirmError": "アカウントのメールアドレスを確認できませんでした。",
+        "currentCode": "現在のメールアドレスに届いたコード",
+        "finishDescription": "変更を完了するには、{email} に送信されたコードを入力してください。",
+        "newCode": "新しいメールアドレスに届いたコード",
+        "newEmail": "新しいメールアドレス",
+        "restart": "最初からやり直し",
+        "sendError": "確認コードを送信できませんでした。",
+        "sendNewCode": "新しいアドレスにコードを送信",
+        "start": "メールアドレスを変更"
+      }
+    },
+    "navigation": {
+      "ariaLabel": "アカウントセクション",
+      "preferences": "環境設定",
+      "profile": "プロフィール",
+      "security": "セキュリティ"
+    },
+    "profile": {
+      "copyUserId": "ユーザー ID をコピー",
+      "description": "bisibility 全体での表示内容です。メールアドレスがサインイン時の識別情報になります。",
+      "displayName": "表示名",
+      "email": "メールアドレス",
+      "nameRequired": "名前を入力してください。",
+      "nameTooLong": "名前が長すぎます。",
+      "save": "保存",
+      "saveError": "プロフィールを保存できませんでした。",
+      "saved": "プロフィールを保存しました。",
+      "saving": "保存中",
+      "title": "プロフィール",
+      "unverified": "未確認",
+      "userId": "ユーザー ID",
+      "verified": "OTP で確認済み"
+    },
+    "privacy": {
+      "action": "プライバシー設定",
+      "description": "このブラウザーに保存されている、アナリティクスとセットアップリプレイの任意の選択内容を確認または変更します。",
+      "title": "プライバシー設定"
+    },
+    "security": {
+      "backupCodes": {
+        "description": "これらのコードを今すぐ保存してください。再表示されません。",
+        "download": ".txt をダウンロード",
+        "downloadAriaLabel": "リカバリーコードをダウンロード",
+        "title": "バックアップコード"
+      },
+      "twoFactor": {
+        "authenticatorApp": "認証アプリ",
+        "authenticatorCode": "認証アプリのコード",
+        "backupCode": "バックアップコード",
+        "backupCodes": "バックアップコード",
+        "backupCodesGenerated": "新しいバックアップコードを生成しました。今すぐ保存してください。",
+        "cancel": "キャンセル",
+        "currentAuthenticatorCode": "現在の認証アプリのコード",
+        "currentBackupCode": "現在のバックアップコード",
+        "description": "メールのサインインコードの後に、もう一段階の認証を追加します。",
+        "disable": "無効化",
+        "disabledRedirecting": "2要素認証を無効にしました。サインイン画面に移動します。",
+        "enable": "有効化",
+        "enabled": "2要素認証を有効にしました。バックアップコードを保存してください。",
+        "invalidInput": "有効な値を入力して再試行してください。",
+        "notEnabled": "無効",
+        "newCode": "新しい認証アプリのコード",
+        "password": "アカウントのパスワード",
+        "qrAlt": "認証アプリの QR コード",
+        "qrUnavailable": "QR を表示できません",
+        "reauthRequired": "2要素認証を有効にする前に、サインアウトしてサインインし直してください。",
+        "replaced": "認証アプリを置き換えました。新しいバックアップコードを保存してください。",
+        "replaceAuthenticator": "認証アプリを置き換え",
+        "scanAndVerify": "QR コードをスキャンして、新しい認証アプリを確認してください。",
+        "secret": "シークレット",
+        "signInAgain": "再度サインイン",
+        "signOutError": "サインアウトできませんでした。ページを再読み込みして再試行してください。",
+        "signingOut": "サインアウト中",
+        "title": "2要素認証",
+        "updateError": "2要素認証を更新できませんでした。再試行してください。",
+        "verificationMethod": "確認方法",
+        "verificationFailed": "確認できませんでした。再試行してください。",
+        "verify": "確認",
+        "verifyError": "認証アプリを確認できませんでした。再試行してください。",
+        "verifying": "確認中",
+        "working": "処理中",
+        "manage": {
+          "backup": {
+            "description": "既存のバックアップコードをすべて置き換える前に、現在の認証要素を確認してください。",
+            "label": "新しいバックアップコードを生成"
+          },
+          "disable": {
+            "description": "2要素認証を解除する前に、現在の認証要素を確認してください。すべてのデバイスからサインアウトされます。",
+            "label": "2要素認証を無効化"
+          },
+          "replace": {
+            "description": "認証アプリを置き換える前に、現在の認証要素を確認してください。",
+            "label": "続行"
+          },
+          "setup": {
+            "description": "セキュリティのため、初回登録には過去5分以内のサインインが必要です。",
+            "label": "続行"
+          }
+        }
+      },
+      "personalTokens": {
+        "cancel": "キャンセル",
+        "copyKey": "{name} をコピー",
+        "create": "トークンを作成",
+        "createDescription": "このトークンに必要なアクセス権を選択してください。いつでも取り消せます。",
+        "createError": "個人アクセストークンを作成できませんでした。",
+        "createTitle": "個人アクセストークンを作成",
+        "creating": "作成中",
+        "dates": {
+          "created": "作成: {date}",
+          "expired": "失効済み: {date}",
+          "expires": "有効期限: {date}",
+          "lastUsed": "最終使用: {date}",
+          "neverExpires": "無期限",
+          "neverUsed": "未使用"
+        },
+        "description": "所属するすべてのプロジェクトで本人として動作する、アカウント全体の API トークン (bsb_pat_) です。`bisibility auth login` でも発行されます。",
+        "done": "完了",
+        "empty": {
+          "action": "最初のトークンを作成",
+          "description": "CI やその他の信頼できる連携用にトークンを作成してください。",
+          "title": "個人アクセストークンはまだありません"
+        },
+        "expiry": {
+          "30": "30日",
+          "90": "90日",
+          "365": "1年",
+          "label": "有効期限",
+          "never": "無期限"
+        },
+        "key": "トークン",
+        "name": "トークン名",
+        "namePlaceholder": "CI 自動化",
+        "newTitle": "個人アクセストークン",
+        "oneTimeSecret": "このトークンを今すぐコピーしてください。再表示されません。",
+        "revealStorage": "パスワードマネージャーまたは安全な CI シークレットストアに保管してください。",
+        "revealWarning": "このトークンを持つ人は本人として操作できます。共有しないでください。",
+        "revealedOnce": "このトークンは一度だけ表示されました。",
+        "revokeAriaLabel": "{name} トークンを取り消す",
+        "revokeError": "個人アクセストークンを取り消せませんでした。",
+        "revoked": "個人アクセストークンを取り消しました。",
+        "scope": {
+          "admin": {
+            "description": "アカウントとプロジェクトにフルアクセスできます。",
+            "label": "管理"
+          },
+          "read": {
+            "description": "プロジェクトとそのデータを読み取ります。",
+            "label": "読み取り"
+          },
+          "write": {
+            "description": "プロジェクトのデータを読み取り、変更します。",
+            "label": "書き込み"
+          }
+        },
+        "scopeLabel": "スコープ",
+        "storedPrefix": "{prefix} として保存",
+        "title": "個人アクセストークン"
+      },
+      "sessions": {
+        "activeDays": "{count, number}日前にアクティブ",
+        "activeHours": "{count, number}時間前にアクティブ",
+        "activeJustNow": "たった今アクティブ",
+        "activeMinutes": "{count, number}分前にアクティブ",
+        "browserUnknown": "ブラウザー",
+        "description": "現在このアカウントにサインインしているデバイスです。",
+        "device": "{browser} · {operatingSystem}",
+        "locationUnknown": "不明なロケーション",
+        "none": "他に有効なセッションはありませんでした。",
+        "operatingSystemUnknown": "不明",
+        "revoke": "取り消す",
+        "revokeAriaLabel": "セッションを取り消す",
+        "revokeError": "セッションを取り消せませんでした。",
+        "retry": "再試行",
+        "retryRevokeAriaLabel": "セッションの取り消しを再試行",
+        "revoking": "取り消し中",
+        "signedOut": "{count, plural, =0 {他のセッションはありませんでした} other {他のセッション#件からサインアウトしました}}。",
+        "signOutError": "他のセッションをサインアウトできませんでした。",
+        "signOutEverywhere": "すべてのデバイスからサインアウト",
+        "signingOut": "サインアウト中",
+        "thisDevice": "このデバイス",
+        "title": "有効なセッション"
+      }
+    },
+    "preferences": {
+      "date": {
+        "ariaLabel": "日付形式",
+        "auto": "自動（{date}）",
+        "label": "日付形式"
+      },
+      "density": {
+        "ariaLabel": "既定の表の密度",
+        "comfortable": "ゆったり",
+        "compact": "コンパクト",
+        "label": "既定の表の密度",
+        "standard": "標準",
+        "subtitle": "キーワードグリッドの行の高さ"
+      },
+      "description": "個人ごとの設定です。<emphasis>サインインするすべてのデバイスに適用されます。</emphasis>",
+      "landing": {
+        "ariaLabel": "既定の開始ページ",
+        "backlinks": "バックリンク",
+        "competitors": "競合",
+        "dashboard": "ダッシュボード",
+        "domain-overview": "ドメイン概要",
+        "keyword-research": "キーワードリサーチ",
+        "label": "既定の開始ページ",
+        "rank-tracker": "順位トラッカー",
+        "search-console": "Search Console",
+        "timeline": "タイムライン"
+      },
+      "language": {
+        "description": "さらに多くの言語を準備中です。現在は英語が有効です。",
+        "english": "英語",
+        "label": "言語"
+      },
+      "saveError": "環境設定を保存できませんでした。",
+      "theme": {
+        "ariaLabel": "テーマ",
+        "dark": "ダーク",
+        "label": "テーマ",
+        "light": "ライト",
+        "subtitle": "ライト、ダーク、またはシステム設定に従う",
+        "system": "システム"
+      },
+      "title": "環境設定"
+    }
+  }
+}

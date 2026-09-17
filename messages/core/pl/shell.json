@@ -1,0 +1,394 @@
+{
+  "shell": {
+    "commandPalette": {
+      "actions": "Akcje",
+      "actionItems": {
+        "addKeyword": "Monitor pozycji: dodaj słowo kluczowe",
+        "exportKeywords": "Monitor pozycji: eksportuj słowa kluczowe",
+        "importCsv": "Monitor pozycji: importuj CSV",
+        "signOut": "Wyloguj się",
+        "toggleTheme": "Przełącz motyw"
+      },
+      "close": "zamknij",
+      "closeAriaLabel": "Zamknij paletę poleceń",
+      "dialogAriaLabel": "Paleta poleceń",
+      "groups": {
+        "keywords": "Słowa kluczowe",
+        "markets": "Rynki",
+        "navigate": "Nawigacja",
+        "onThisPage": "Na tej stronie"
+      },
+      "hints": {
+        "account": "Konto",
+        "downloadFile": "Pobierz plik",
+        "goTo": "Przejdź do",
+        "keyword": "Słowo kluczowe",
+        "market": "Rynek",
+        "newKeyword": "Nowe słowo kluczowe",
+        "theme": "Motyw",
+        "uploadFile": "Wyślij plik"
+      },
+      "marketNavigation": "{section} na rynku {market}",
+      "navigation": {
+        "docs": "Dokumentacja i self-hosting"
+      },
+      "noMatches": "Brak wyników",
+      "open": "otwórz",
+      "placeholder": "Szukaj słów kluczowych, widoków i akcji…",
+      "search": "Szukaj",
+      "searchTooltip": "Szukaj ({shortcut})"
+    },
+    "navigation": {
+      "collapseSidebar": "Zwiń panel boczny",
+      "expandSidebar": "Rozwiń panel boczny",
+      "badges": {
+        "alpha": "alfa",
+        "beta": "beta",
+        "experimental": "Eksperymentalne",
+        "new": "nowe"
+      },
+      "groups": {
+        "modules": {
+          "label": "Moduły",
+          "tag": "Moduły",
+          "tooltip": "Moduły rynkowe podążają za wybranym rynkiem. Pozostałe mają własną oś."
+        },
+        "project": {
+          "label": "Projekt",
+          "tag": "Projekt",
+          "tooltip": "Konfiguracja całego projektu. Rynek nigdy jej nie zawęża."
+        }
+      },
+      "items": {
+        "alerts": "Alerty",
+        "backlinks": "Linki zwrotne",
+        "competitors": "Konkurenci",
+        "dashboard": "Pulpit",
+        "domainOverview": "Przegląd domeny",
+        "install": "Instalacja",
+        "integrations": "Integracje",
+        "keywordResearch": "Analiza słów kluczowych",
+        "markets": "Rynki",
+        "rankTracker": "Monitor pozycji",
+        "runs": "Przebiegi",
+        "searchConsole": "Search Console",
+        "settings": "Ustawienia"
+      },
+      "menu": "Menu"
+    },
+    "notifications": {
+      "empty": "Brak powiadomień",
+      "markAllRead": "Oznacz jako przeczytane",
+      "markReadError": "Nie udało się oznaczyć powiadomień jako przeczytanych. Spróbuj ponownie.",
+      "title": "Powiadomienia"
+    },
+    "operations": {
+      "actionError": "Nie udało się zaktualizować tej operacji. Odśwież stronę i spróbuj ponownie.",
+      "activity": "Aktywność",
+      "closeActivity": "Zamknij panel aktywności",
+      "gsc": {
+        "states": {
+          "completed": "Zakończono",
+          "delayed": "Opóźniono",
+          "failed": "Nie powiodło się",
+          "importing": "Importowanie",
+          "paused": "Wstrzymano",
+          "queued": "W kolejce",
+          "reconnectRequired": "Wymagane ponowne połączenie",
+          "statusUnavailable": "Status niedostępny",
+          "waitingForData": "Oczekiwanie na dane",
+          "waitingForGoogle": "Oczekiwanie na Google"
+        },
+        "title": "Import z Search Console"
+      },
+      "rank": {
+        "blocked": {
+          "budgetWithAmounts": "W tym miesiącu wydano {spent} z {cap}; sprawdzenia wznowią się po zresetowaniu budżetu.",
+          "budgetWithoutAmounts": "Sprawdzenia wznowią się po zresetowaniu budżetu.",
+          "keywordArchived": "To słowo kluczowe zostało zarchiwizowane przed startem sprawdzenia, więc zatrzymano je, zanim zdążyło wygenerować koszt.",
+          "marketInactive": "Rynek tego słowa kluczowego jest wstrzymany, więc sprawdzenie zatrzymano, zanim zdążyło wygenerować koszt.",
+          "noProvider": "Połącz dostawcę lub połącz go ponownie, aby uruchomić ten przebieg.",
+          "providerUnavailable": "Dostawca jest teraz nieosiągalny. Przebieg ruszy sam, gdy połączenie wróci.",
+          "waiting": "Ten przebieg czeka na start. Ruszy automatycznie, gdy będzie to możliwe.",
+          "workerCloud": "Worker w tle jest teraz nieosiągalny. Przebieg ruszy sam, gdy połączenie wróci.",
+          "workerSelfHost": "Worker w tle nie działa. Uruchom go ponownie, a przebieg ruszy sam."
+        },
+        "keywordCount": "{count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
+        "scope": "{keywords} – {selection}",
+        "selectionKinds": {
+          "all": "wszystkie śledzone słowa kluczowe",
+          "filter": "filtr",
+          "legacy_schedule": "harmonogram",
+          "rerun": "wybór z ponownego przebiegu",
+          "retry_failed": "nieudane cele",
+          "scheduled_due": "elementy harmonogramu do wykonania",
+          "selected": "wybrane słowa kluczowe",
+          "single": "jedno słowo kluczowe"
+        },
+        "targetUnit": "{count, plural, one {cel} few {cele} many {celów} other {celu}}",
+        "titles": {
+          "api": "Przebieg API",
+          "manual": "Przebieg ręczny",
+          "retry": "Przebieg ponowny",
+          "scheduled": "Przebieg zaplanowany"
+        }
+      },
+      "emptyDescription": "Żadne sprawdzenie pozycji ani import nie są w toku. Zakończone sprawdzenia pozycji zapisują się w Przebiegach, a importy w Search Console.",
+      "emptyTitle": "Nic się nie wykonuje",
+      "pillAria": "{count, plural, =0 {Brak operacji} one {# operacja {state}, otwórz panel aktywności} few {# operacje {state}, otwórz panel aktywności} many {# operacji {state}, otwórz panel aktywności} other {# operacji {state}, otwórz panel aktywności}}",
+      "pillTitle": "{count, plural, =0 {Brak operacji} one {# operacja {state}} few {# operacje {state}} many {# operacji {state}} other {# operacji {state}}}",
+      "runs": "Przebiegi",
+      "stale": "Aktualizacje na żywo są niedostępne. Widoczne są ostatnio znane operacje.",
+      "states": {
+        "blocked": "w blokadzie",
+        "failed": "z błędem",
+        "running": "w toku",
+        "waiting": "w oczekiwaniu"
+      },
+      "viewAll": "Zobacz wszystkie przebiegi"
+    },
+    "userMenu": {
+      "accountMenu": "Menu konta",
+      "accountSettings": "Ustawienia konta",
+      "discord": "Discord",
+      "docs": "Dokumentacja i self-hosting",
+      "feedback": "Wyślij opinię",
+      "homepage": "Strona główna",
+      "github": "GitHub",
+      "roleInProject": "{role} w projekcie {project}",
+      "roles": {
+        "admin": "Administrator",
+        "auditor": "Audytor",
+        "member": "Członek",
+        "owner": "Właściciel",
+        "viewer": "Przeglądający"
+      },
+      "signOut": "Wyloguj się",
+      "signOutError": "Nie udało się wylogować. Spróbuj ponownie.",
+      "fallbackName": "Twoje konto",
+      "opensInNewTab": "{label} (otwiera się w nowej karcie)"
+    },
+    "market": {
+      "add": "Dodaj rynek",
+      "all": "Wszystkie rynki",
+      "count": "{count, plural, =0 {pusty} one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
+      "dialog": "Zmień rynek",
+      "empty": "Dodaj pierwszy rynek, aby wybrać, gdzie i w jakim języku śledzić słowa kluczowe.",
+      "find": "Znajdź rynek",
+      "findPlaceholder": "Znajdź rynek…",
+      "list": "Rynki",
+      "noMatches": "Żaden rynek nie pasuje.",
+      "noMarkets": "Brak rynków",
+      "paused": "Wstrzymany"
+    },
+    "header": {
+      "changeContext": "Zmień kontekst",
+      "copyRunId": "Kopiuj ID przebiegu",
+      "gettingStartedProgress": "Pierwsze kroki, ukończono {settled} z {total, plural, one {# kroku} few {# kroków} many {# kroków} other {# kroków}}",
+      "noMarkets": "Brak rynków",
+      "subtitles": {
+        "account": "Zarządzaj swoim kontem użytkownika w bisibility, niezależnie od ustawień projektu.",
+        "alerts": "Otrzymuj powiadomienia, gdy pozycje się zmienią.",
+        "audit": "Sprawdzaj zmiany w projekcie i zdarzenia bezpieczeństwa.",
+        "backlinks": "Zobacz, kto linkuje do witryny, co się zmieniło i ile kosztuje każdy przebieg.",
+        "competitors": "Porównaj konkurentów na śledzonych słowach kluczowych.",
+        "docs": "Zainstaluj, skonfiguruj i uruchom bisibility u siebie.",
+        "domainOverview": "Analizuj szacowaną widoczność organiczną dowolnej domeny.",
+        "gettingStartedComplete": "Gotowe. Wszystko poniżej jest opcjonalne.",
+        "gettingStartedIncomplete": "Cztery kroki do pierwszych pozycji.",
+        "integrations": "Połącz dostawców danych i źródła analityczne.",
+        "install": "Pozwól swojemu agentowi AI, edytorowi lub skryptom korzystać z tych samych danych, które tu widzisz.",
+        "importFromAnotherInstance": "Przenieś dane do tego projektu za pomocą jednorazowego tokenu migracji.",
+        "instanceAdministration": "Wzrost, zużycie i administracja kontami.",
+        "instanceAdministrationAudit": "Działania administratora instancji i ich skutki.",
+        "instanceAdministrationOverview": "Kondycja workerów i diagnostyka operatora.",
+        "keywordResearch": "Znajdź frazy warte śledzenia – koszt widzisz przed każdym wyszukaniem.",
+        "markets": "Zarządzaj lokalizacjami, domyślnymi ustawieniami słów kluczowych i cyklem życia rynków.",
+        "preferences": "Motyw i ustawienia osobiste.",
+        "runs": "Sprawdzenia pozycji i importy z Search Console w tym projekcie.",
+        "searchConsole": "Co Google pokazało, co ukryło i co zostaje u Ciebie.",
+        "security": "Hasło, sesje i ochrona konta.",
+        "timeline": "Sygnały projektu, zmiany stron i notatki w czasie."
+      },
+      "titles": {
+        "account": "Ustawienia konta",
+        "alerts": "Alerty",
+        "audit": "Dziennik audytu",
+        "backlinks": "Linki zwrotne",
+        "competitors": "Konkurenci",
+        "dashboard": "Pulpit",
+        "docs": "Dokumentacja",
+        "domainOverview": "Przegląd domeny",
+        "gettingStarted": "Pierwsze kroki",
+        "integrations": "Integracje",
+        "install": "Instalacja",
+        "importFromAnotherInstance": "Import z innej instancji",
+        "instanceAdministration": "Administracja instancją",
+        "keywordDetails": "Szczegóły słowa kluczowego",
+        "keywordResearch": "Analiza słów kluczowych",
+        "markets": "Rynki",
+        "overview": "Przegląd",
+        "preferences": "Preferencje",
+        "rankTracker": "Monitor pozycji",
+        "run": "Przebieg",
+        "runs": "Przebiegi",
+        "searchConsole": "Search Console",
+        "security": "Bezpieczeństwo",
+        "settings": "Ustawienia",
+        "timeline": "Oś czasu"
+      }
+    },
+    "footer": {
+      "instanceStatus": {
+        "healthy": "Administrator instancji",
+        "manualMode": "Administrator instancji · Tryb ręczny",
+        "schemaDrift": "Administrator instancji · Niezgodność schematu",
+        "workerDifferentQueues": "Administrator instancji · Worker w innych kolejkach",
+        "workerDown": "Administrator instancji · Worker nie działa"
+      },
+      "privacyChoices": "Ustawienia prywatności"
+    },
+    "workspace": {
+      "create": "Utwórz projekt",
+      "createDescription": "Współpracuj z innymi w nowym projekcie",
+      "empty": "Projekty, które tworzysz i do których dołączasz, pojawiają się tutaj, aby szybko przełączać kontekst.",
+      "find": "Znajdź projekt",
+      "findPlaceholder": "Znajdź projekt…",
+      "newProject": "Nowy projekt",
+      "noData": "{count, number} w kolejce – brak danych",
+      "project": "Projekt",
+      "projects": "Projekty",
+      "sample": "Przykładowy",
+      "switch": "Zmień projekt",
+      "keywordCount": "{count, plural, =0 {# słów kluczowych} one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}"
+    },
+    "writeMode": {
+      "migrationSettings": "Ustawienia migracji",
+      "reasons": {
+        "migrated": "Projekt przeniesiony i wyłączony",
+        "migrationHold": "Tylko do odczytu na czas blokady migracji"
+      },
+      "migrated": {
+        "detail": "Ten projekt został przeniesiony do innej instancji bisibility. Zapis i sprawdzenia pozycji pozostaną wyłączone, dopóki nie aktywujesz go ponownie w ustawieniach.",
+        "title": "Projekt przeniesiony – wyłączony w tej instancji."
+      },
+      "migrationHold": {
+        "detail": "Odczyt nadal działa. Zapis, importy, zmiany dostawców i uruchamianie sprawdzeń pozycji są wstrzymane. Anuluj migrację w ustawieniach, aby wznowić zapis. Sekcja zaawansowana pokazuje, kiedy blokada kwalifikuje się do automatycznego zdjęcia; worker uruchamiany co godzinę zdejmie ją wkrótce potem.",
+        "title": "Projekt jest tylko do odczytu – trwa migracja."
+      }
+    },
+    "demo": {
+      "createAccount": "Załóż konto",
+      "editableOwner": {
+        "message": "Zmiany, które tu wprowadzisz, są widoczne dla odwiedzających demo.",
+        "title": "Przestrzeń robocza demo."
+      },
+      "editableViewer": {
+        "message": "Przeglądaj zapisane dane tylko do odczytu. Zmiany i nowe sprawdzenia są wyłączone."
+      },
+      "legacy": {
+        "message": "Przeglądaj zapisane pozycje. Zmiany i nowe sprawdzenia są wyłączone."
+      },
+      "readOnlyTitle": "Demo tylko do odczytu.",
+      "snapshot": "Zrzut danych: {date} UTC"
+    },
+    "betaBanner": {
+      "backupLoadError": "Nie udało się wczytać podsumowania kopii zapasowej projektu.",
+      "coverage": "Co obejmuje beta",
+      "detail": "Odzyskiwanie danych nie jest jeszcze gwarantowane. Zachowaj aktualny eksport.",
+      "dismiss": "Zamknij baner hostowanej bety",
+      "exportData": "Eksportuj dane",
+      "lead": "Hostowana beta:",
+      "loading": "Wczytywanie…"
+    },
+    "betaCoverage": {
+      "close": "Zamknij",
+      "covered": "Objęte",
+      "coveredItems": {
+        "export": "Eksport jest dostępny w każdej chwili, w pełnej postaci.",
+        "history": "Pełna historia jest przechowywana przez całą betę i nigdy nie jest przycinana.",
+        "providerOwnership": "Twoje klucze i limity u dostawców zostają Twoje – bez marży i odsprzedaży.",
+        "scheduled": "Sprawdzenia pozycji działają według harmonogramu, na tym samym silniku co własna instancja."
+      },
+      "end": {
+        "detail": "O cenniku uprzedzimy 30 dni wcześniej. Nic nie zostanie naliczone bez Twojego potwierdzenia. Własna instancja pozostaje dostępna.",
+        "title": "Gdy beta się skończy"
+      },
+      "exportData": "Eksportuj dane",
+      "notYet": "Jeszcze nie",
+      "notYetItems": {
+        "migration": "Brak gwarantowanej ścieżki migracji między regionami hostingu.",
+        "restore": "Brak gwarancji odtworzenia. Jeśli stracimy dane, nie przywrócimy wcześniejszego stanu.",
+        "support": "Wsparcie działa w miarę możliwości przez e-mail, bez gwarantowanego czasu odpowiedzi.",
+        "uptime": "Brak SLA na dostępność. Prace serwisowe mogą przerwać sprawdzenia bez zapowiedzi."
+      },
+      "responsibilities": {
+        "ours": {
+          "detail": "Nocne kopie zapasowe przechowujemy przez 7 dni, w miarę możliwości. Tę otwartą betę prowadzi mały zespół, więc nie ma dyżurów ani powiadomień o awariach, na których można polegać: zakładaj, że awarię zauważysz wcześniej niż my.",
+          "title": "Po naszej stronie"
+        },
+        "title": "Kto za co odpowiada",
+        "yours": {
+          "detail": "Zachowaj aktualny eksport. To kopia w pełni pod Twoją kontrolą, którą odtworzysz we własnej instancji.",
+          "title": "Po Twojej stronie"
+        }
+      },
+      "subtitle": "Zasady hostowanej bety",
+      "title": "Co obejmuje hostowana beta"
+    },
+    "backup": {
+      "cancel": "Anuluj",
+      "duration": "Zwykle poniżej minuty",
+      "errors": {
+        "keywordLimit": "Ten pakiet może zawierać maksymalnie {limit, number} słów kluczowych.",
+        "rankCheckLimit": "Ten pakiet może zawierać maksymalnie {limit, number} sprawdzeń pozycji na słowo kluczowe.",
+        "unsupportedHistory": "Ten pakiet zawiera historię, której nie można wyeksportować."
+      },
+      "exportError": "Nie udało się wyeksportować pakietu importu instancji.",
+      "exporting": "Eksportowanie…",
+      "exportPackage": "Eksportuj pakiet",
+      "included": "Zawartość",
+      "lastExport": {
+        "days": "Ostatni eksport {count, number}d temu",
+        "hours": "Ostatni eksport {count, number}h temu",
+        "justNow": "Ostatni eksport przed chwilą",
+        "minutes": "Ostatni eksport {count, number}m temu",
+        "never": "Nigdy nie eksportowano",
+        "yesterday": "Ostatni eksport wczoraj"
+      },
+      "sections": {
+        "alert_rules": {
+          "description": "Progi, cele i kanały dostarczania",
+          "label": "Reguły alertów"
+        },
+        "competitors": {
+          "description": "Śledzone domeny i ich etykiety",
+          "label": "Konkurenci"
+        },
+        "keywords": {
+          "description": "Nazwy, tagi i docelowe adresy URL",
+          "label": "Słowa kluczowe i tagi"
+        },
+        "notification_preferences": {
+          "description": "Ustawienia powiadomień w projekcie",
+          "label": "Preferencje powiadomień"
+        },
+        "projects": {
+          "description": "Nazwa, domena i metadane importu",
+          "label": "Szczegóły projektu"
+        },
+        "rank_checks": {
+          "description": "Każda zachowana pozycja i adres URL w wynikach",
+          "label": "Historia pozycji"
+        },
+        "saved_views": {
+          "description": "Nazwy i konfiguracje filtrów projektu",
+          "label": "Zapisane widoki"
+        }
+      },
+      "subtitle": "Pełna kopia projektu {projectName}, którą odtworzysz we własnej instancji",
+      "success": "Pakiet wyeksportowano i pobrano.",
+      "title": "Eksportuj dane projektu"
+    }
+  }
+}

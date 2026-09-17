@@ -6,13 +6,22 @@ import { type FeedFacet, type FeedFacetOptions, feedFacetAxes } from "@/lib/feed
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useState } from "react";
 
+export type FeedFacetLabels = {
+  addFilter: string;
+  addFeedFilter: string;
+  axis: (axis: FeedFacet["axis"]) => string;
+  noMoreFilters: string;
+  remove: (axis: FeedFacet["axis"], label: string) => string;
+};
+
 type AddFilterMenuProps = {
   facets: readonly FeedFacet[];
+  labels: FeedFacetLabels;
   onAdd: (facet: FeedFacet) => void;
   options: FeedFacetOptions;
 };
 
-export function AddFilterMenu({ facets, onAdd, options }: Readonly<AddFilterMenuProps>) {
+export function AddFilterMenu({ facets, labels, onAdd, options }: Readonly<AddFilterMenuProps>) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const choices = feedFacetAxes.flatMap((axis) =>
     (options[axis] ?? [])
@@ -32,7 +41,7 @@ export function AddFilterMenu({ facets, onAdd, options }: Readonly<AddFilterMenu
         type="button"
       >
         <Plus aria-hidden size={13} weight="regular" />
-        Add filter
+        {labels.addFilter}
       </button>
       <Menu
         anchorEl={anchor}
@@ -40,21 +49,21 @@ export function AddFilterMenu({ facets, onAdd, options }: Readonly<AddFilterMenu
         side="bottom"
         onClose={() => setAnchor(null)}
         open={Boolean(anchor)}
-        listProps={{ "aria-label": "Add feed filter" }}
+        listProps={{ "aria-label": labels.addFeedFilter }}
       >
         {choices.map((choice) => (
           <MenuItem
-            aria-label={`${choice.axis[0].toUpperCase() + choice.axis.slice(1)}: ${choice.label}`}
+            aria-label={`${labels.axis(choice.axis)}: ${choice.label}`}
             key={`${choice.axis}:${choice.value}`}
             onClick={() => {
               onAdd({ axis: choice.axis, value: choice.value });
               setAnchor(null);
             }}
           >
-            {choice.axis[0].toUpperCase() + choice.axis.slice(1)}: {choice.label}
+            {labels.axis(choice.axis)}: {choice.label}
           </MenuItem>
         ))}
-        {choices.length === 0 ? <MenuItem disabled>No more filters</MenuItem> : null}
+        {choices.length === 0 ? <MenuItem disabled>{labels.noMoreFilters}</MenuItem> : null}
       </Menu>
     </>
   );

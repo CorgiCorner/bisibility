@@ -49,4 +49,18 @@ describe("position history day bucketing", () => {
       dailyPositionPoints(points, 7, new Date("2026-07-20T23:30:00.000Z")).map((point) => point.id),
     ).toEqual(["boundary", "latest-today"]);
   });
+
+  it("keeps separate UTC-day checks even when a project timezone shares their local day", () => {
+    const now = new Date("2026-09-13T12:00:00.000Z");
+    const points = [
+      { checkedAt: "2026-09-12T23:30:00.000Z", id: "utc-day-one" },
+      { checkedAt: "2026-09-13T00:30:00.000Z", id: "utc-day-two" },
+    ];
+
+    expect(calendarDayKey(new Date(points[1]?.checkedAt ?? ""), "Asia/Tokyo")).toBe("2026-09-13");
+    expect(dailyPositionPoints(points, 7, now).map((point) => point.id)).toEqual([
+      "utc-day-one",
+      "utc-day-two",
+    ]);
+  });
 });

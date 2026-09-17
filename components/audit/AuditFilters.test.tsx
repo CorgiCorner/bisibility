@@ -2,7 +2,8 @@ import {
   CommandRegistryProvider,
   useRegisteredCommands,
 } from "@/components/shell/command-registry";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { renderWithAuditMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuditFilters } from "./AuditFilters";

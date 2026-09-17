@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { SearchInsightsGa4PropertyPicker } from "./SearchInsightsGa4PropertyPicker";
@@ -141,6 +142,37 @@ describe("SearchInsightsGa4PropertyPicker", () => {
 
     expect(
       screen.queryByRole("button", { name: "Choose from discovered properties" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("presents a structured discovery failure without parsing provider prose", () => {
+    render(
+      <SearchInsightsGa4PropertyPicker
+        cancelling={false}
+        manualEntry
+        onCancel={vi.fn()}
+        onManualEntryChange={vi.fn()}
+        onPropertyChange={vi.fn()}
+        onPropertyErrorChange={vi.fn()}
+        onSelect={vi.fn()}
+        pending={false}
+        property=""
+        propertyError={null}
+        setup={{
+          error: "Untrusted provider response that is not presentation copy",
+          failureClass: "rate_limit",
+          properties: [],
+          provider: "ga4",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Couldn't load your GA4 properties.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Google's request limit was reached. Try again shortly."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Untrusted provider response that is not presentation copy"),
     ).not.toBeInTheDocument();
   });
 });

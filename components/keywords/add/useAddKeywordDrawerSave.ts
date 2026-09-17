@@ -1,12 +1,15 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import type { ExistingKeyword } from "@/components/keywords/AddKeywordCsvReviewModel";
-import { actionErrorMessage, actionWarningMessage } from "@/components/keywords/action-utils";
+import { hasActionWarning } from "@/components/keywords/action-utils";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { addKeywordsMatrix } from "@/lib/actions/keyword";
 import type { AddKeywordDrawerForm, AddKeywordTab } from "@/lib/keywords/add-keyword-drawer-shared";
 import type { SerpDevice } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import type { DrawerCsvKeywordRow } from "./AddKeywordCsvRows";
 import { type AddKeywordDrawerProps, addedKeywordResult } from "./AddKeywordDrawerExtensions";
@@ -46,6 +49,8 @@ export function useAddKeywordDrawerSave({
   setActionWarning,
 }: UseAddKeywordDrawerSaveArgs) {
   const router = useRouter();
+  const sharedErrors = useSharedErrorMessages();
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
   return useCallback(
     async (values: AddKeywordDrawerForm) => {
       setActionError(null);
@@ -61,7 +66,7 @@ export function useAddKeywordDrawerSave({
         locationValue,
         values,
       });
-      if ("warning" in pending) return setActionWarning(pending.warning);
+      if ("warning" in pending) return setActionWarning(t(pending.warning));
       try {
         const input = consumeSavedIds?.length
           ? { ...pending.input, consumeSavedIds: [...consumeSavedIds] }
@@ -69,9 +74,8 @@ export function useAddKeywordDrawerSave({
         const result =
           activeTab === "manual" ? await addKeywordsMatrix(input) : await addKeywordsAction(input);
         const addedKeywords = addedKeywordResult(result);
-        const warning = actionWarningMessage(result);
-        if (warning) {
-          setActionWarning(warning);
+        if (hasActionWarning(result)) {
+          setActionWarning(t("locationDegraded"));
           onAdded?.(addedKeywords, { locationKeys });
           router.refresh();
           return;
@@ -80,7 +84,7 @@ export function useAddKeywordDrawerSave({
         onClose();
         router.refresh();
       } catch (error) {
-        setActionError(actionErrorMessage(error));
+        setActionError(presentSafeActionError(error, sharedErrors, t("addFailed")));
       }
     },
     [
@@ -99,6 +103,8 @@ export function useAddKeywordDrawerSave({
       router,
       setActionError,
       setActionWarning,
+      sharedErrors,
+      t,
     ],
   );
 }

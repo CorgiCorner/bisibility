@@ -1,6 +1,7 @@
 import { LocationField, type LocationFieldValue } from "@/components/keywords/LocationField";
 import { countryValueForName } from "@/components/keywords/location-picker-data";
 import { FIELD_HELP } from "@/lib/settings/field-help";
+import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
@@ -46,6 +47,16 @@ const LOCATION_FIXTURE = [
   },
 ];
 
+const locationMessages = {
+  city: sharedMessages.shared.markets.locationCity,
+  clearSearch: sharedMessages.shared.markets.locationClearSearch,
+  countries: sharedMessages.shared.markets.locationCountries,
+  noMatching: sharedMessages.shared.markets.locationNoMatching,
+  region: sharedMessages.shared.markets.locationRegion,
+  regionsAndCities: sharedMessages.shared.markets.locationRegionsAndCities,
+  searching: sharedMessages.shared.markets.locationSearching,
+};
+
 function country(name = "United States") {
   const value = countryValueForName(name);
   if (!value) {
@@ -71,6 +82,7 @@ function FieldHarness({ initial = country() }: { initial?: LocationFieldValue })
   return (
     <LocationField
       help={FIELD_HELP.location}
+      messages={locationMessages}
       onChange={setValue}
       projectId="prj_demo"
       value={value}
@@ -82,6 +94,7 @@ const meta = {
   title: "Keywords/LocationField",
   component: LocationField,
   args: {
+    messages: locationMessages,
     onChange: () => undefined,
     value: country(),
   },

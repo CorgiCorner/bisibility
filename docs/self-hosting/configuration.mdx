@@ -138,7 +138,7 @@ hand.
 | `AUDIT_PURGE_CRON`, `RANK_CHECK_RAW_PURGE_CRON`, `QUEUED_RANK_CHECK_RETENTION_CRON`, `SESSION_PURGE_CRON`, `WEEKLY_DIGEST_CRON` | Optional cron overrides for maintenance schedules controlled by `SCHEDULED_MAINTENANCE_ENABLED`. |
 | `SITEMAP_SYNC_ENABLED`, `SITEMAP_SYNC_CRON` | Opt in to worker-owned sitemap sync and optionally override its cron expression. See [Sitemap monitoring](/guides/sitemap-monitoring). |
 | `PRESENCE_SYNC_ENABLED`, `PRESENCE_SYNC_CRON` | Opt in to worker-owned presence sync and optionally override its cron expression. |
-| `TRAFFIC_SYNC_ENABLED`, `TRAFFIC_SYNC_CRON` | Worker-owned daily analytics traffic import. The worker process must be running because its Temporal schedule is the only scheduled traffic-sync path. See [Analytics sync](/guides/analytics). |
+| `TRAFFIC_SYNC_ENABLED`, `TRAFFIC_SYNC_CRON` | Worker-owned daily analytics traffic import. The worker process must be running because its Temporal schedule is the only scheduled traffic-sync path. See [Google OAuth and traffic sync](/self-hosting/google-oauth). |
 | `TRAFFIC_SNAPSHOT_RETENTION_DAYS` | Retain traffic snapshots for this many days. Defaults to `180`. |
 
 ### Limits and networking
@@ -168,7 +168,7 @@ hand.
 | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`, `NEXT_PUBLIC_SENTRY_RELEASE`, `SENTRY_TRACES_SAMPLE_RATE`, `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` | Optional Sentry error monitoring. The auth token and org are build-time only and enable source map uploads to the configured project slug (`bisibility` by default; change `next.config.ts` if you use a different slug). |
 | `GITHUB_API_TOKEN` | Optional server-side token for authenticated GitHub repository metadata requests. The repository link remains visible when this is unset or GitHub is unavailable. |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub social sign-in. |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google social sign-in and Google Search Console / GA4 connections. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google social sign-in and Google Search Console / GA4 connections. See [Google OAuth and traffic sync](/self-hosting/google-oauth). |
 | `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET` | Slack alert delivery (API-only preview; workspace installation and channel management are not yet exposed in the dashboard). |
 | `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`, `SERPAPI_API_KEY` | Optional environment fallbacks for SERP provider credentials normally connected in the app. See [Integrations](/integrations). |
 | `PROVIDER_AVAILABILITY_TTL_SECONDS` | Cache TTL (seconds) for provider availability and balance checks. Defaults to `900` (15m). |

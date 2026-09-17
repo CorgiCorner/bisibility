@@ -1,7 +1,15 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { useState } from "react";
+import {
+  authFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
+import { type ReactElement, useState } from "react";
 import { describe, expect, it } from "vitest";
 import { OtpInput } from "./OtpInput";
+
+function render(ui: ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: authFeatureTestMessages });
+}
 
 function Harness({ initial = [] as string[] }) {
   const [value, setValue] = useState<string[]>(initial);

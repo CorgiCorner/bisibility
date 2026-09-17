@@ -1,0 +1,24 @@
+{
+  "shared": {
+    "globalError": {
+      "description": "The app could not render this page. Reload to try again.",
+      "retry": "Reload the app",
+      "title": "Something went wrong"
+    },
+    "emergencyRecovery": {
+      "error": {
+        "backToApp": "Back to app",
+        "description": "The tracker could not finish this request. Try again, or return to the app while this route recovers.",
+        "retry": "Try again",
+        "status": "500 - server error",
+        "title": "The tracker hit an error"
+      },
+      "notFound": {
+        "backToApp": "Back to app",
+        "description": "This page may have moved, or it may never have existed.",
+        "status": "404 - not found",
+        "title": "This page is not available"
+      }
+    }
+  }
+}

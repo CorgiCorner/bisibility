@@ -1,25 +1,22 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { Button } from "@/components/ui/Button";
 import { IdChip } from "@/components/ui/IdChip";
-import { formatDateTime } from "@/lib/dates/format";
-import {
-  migrationImportCountEntries,
-  migrationImportCountSummary,
-} from "@/lib/migration/import-counts";
-import { appPath } from "@/lib/routing/app-path";
+import { formatDisplayDateTime } from "@/lib/dates/format";
+import { migrationImportPresentation } from "@/lib/migration/import-counts";
 import type { Icon } from "@phosphor-icons/react";
 import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
-import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { CloudArrowDownIcon as CloudArrowDown } from "@phosphor-icons/react/dist/csr/CloudArrowDown";
 import { DatabaseIcon as Database } from "@phosphor-icons/react/dist/csr/Database";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
-import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
 import { WarningIcon as Warning } from "@phosphor-icons/react/dist/csr/Warning";
 import { WarningOctagonIcon as WarningOctagon } from "@phosphor-icons/react/dist/csr/WarningOctagon";
+import { useLocale, useTranslations } from "next-intl";
+import { CloudImportCompletedFooter } from "./CloudImportCompletedFooter";
 import type { CloudImportJobData } from "./cloud-token";
+import { useCloudImportCountLabels } from "./useCloudImportCountLabels";
 
 type TransferState = CloudImportJobData["state"];
 type Tone = "blue" | "green" | "neutral" | "red" | "yellow";
@@ -33,95 +30,17 @@ type StateConfig = {
   weight: "regular" | "fill";
 };
 
-const TONES: Record<Tone, { tile: string; text: string; dot: string }> = {
-  blue: { tile: "bg-blue/15 text-blue-text", text: "text-blue-text", dot: "bg-blue" },
-  green: { tile: "bg-green/15 text-green-text", text: "text-green-text", dot: "bg-green" },
-  neutral: { tile: "bg-bg-sunken text-fg-muted", text: "text-fg-muted", dot: "bg-fg-muted" },
-  red: { tile: "bg-red/10 text-red-text", text: "text-red-text", dot: "bg-red" },
-  yellow: { tile: "bg-yellow/15 text-yellow-text", text: "text-yellow-text", dot: "bg-yellow" },
+const TONES: Record<Tone, { dot: string; tile: string; toneClass: string }> = {
+  blue: { dot: "bg-blue", tile: "bg-blue/15 text-blue-text", toneClass: "text-blue-text" },
+  green: { dot: "bg-green", tile: "bg-green/15 text-green-text", toneClass: "text-green-text" },
+  neutral: { dot: "bg-fg-muted", tile: "bg-bg-sunken text-fg-muted", toneClass: "text-fg-muted" },
+  red: { dot: "bg-red", tile: "bg-red/10 text-red-text", toneClass: "text-red-text" },
+  yellow: {
+    dot: "bg-yellow",
+    tile: "bg-yellow/15 text-yellow-text",
+    toneClass: "text-yellow-text",
+  },
 };
-
-function doneDescription(job: CloudImportJobData) {
-  const summary = migrationImportCountSummary(job.counts);
-  if (!summary.reportsKeywordCreations && summary.imported.length === 0) {
-    const note = summary.visibilityNote ? ` ${summary.visibilityNote}` : "";
-    return `Transfer completed.${note} Re-connect providers to resume checks.`;
-  }
-  const imported =
-    summary.imported.length > 0
-      ? `Imported ${summary.imported.join(", ")}.`
-      : `Imported ${summary.keywordsCreated} new keywords.`;
-  const skipped = summary.skipped.length > 0 ? ` ${summary.skipped.join(", ")} skipped.` : "";
-  const note = summary.visibilityNote ? ` ${summary.visibilityNote}` : "";
-  return `${imported}${skipped}${note} Re-connect providers to resume checks.`;
-}
-
-function restoredWithNotes(job: CloudImportJobData) {
-  const summary = migrationImportCountSummary(job.counts);
-  return job.state === "done" && (summary.skipped.length > 0 || summary.visibilityNote !== null);
-}
-
-function failedFollowUp(job: CloudImportJobData) {
-  const leftover = "Anything already imported stays in this project.";
-  return job.error ? `${job.error} ${leftover}` : leftover;
-}
-
-function configFor(job: CloudImportJobData, sourceLabel: string): StateConfig {
-  if (restoredWithNotes(job)) {
-    return {
-      desc: doneDescription(job),
-      icon: Warning,
-      pill: "Notes",
-      title: "Restored with notes",
-      tone: "yellow",
-      weight: "fill",
-    };
-  }
-  const configs: Record<TransferState, StateConfig> = {
-    done: {
-      desc: doneDescription(job),
-      icon: CheckCircle,
-      pill: "Done",
-      title: "Transfer complete",
-      tone: "green",
-      weight: "fill",
-    },
-    failed: {
-      desc: job.error ?? "The package was rejected. Generate a new token and push again.",
-      icon: Warning,
-      pill: "Failed",
-      title: "Transfer failed",
-      tone: "red",
-      weight: "fill",
-    },
-    idle: {
-      desc: "Share the one-time token with the source instance to start the transfer.",
-      icon: CloudArrowDown,
-      pill: "Ready",
-      title: "Ready to receive",
-      tone: "neutral",
-      weight: "regular",
-    },
-    importing: {
-      desc: "Transferring keywords, ranking history, tags and alert rules into this project.",
-      icon: Database,
-      pill: "Transferring",
-      title: "Transfer in progress",
-      tone: "blue",
-      weight: "regular",
-    },
-    receiving: {
-      desc: `Receiving the export package from the ${sourceLabel}.`,
-      icon: DownloadSimple,
-      pill: "Receiving",
-      title: "Receiving package",
-      tone: "blue",
-      weight: "regular",
-    },
-  };
-
-  return configs[job.state];
-}
 
 function errorLogHref(job: CloudImportJobData) {
   const log = [
@@ -147,17 +66,110 @@ export function TransferPanel({
   job,
   onNewToken,
   projectRef,
-  sourceLabel = "self-hosted instance",
+  sourceLabel,
 }: Readonly<TransferPanelProps>) {
-  const dateFormat = useDateFormat();
+  const dateDisplay = useDateDisplay();
+  const locale = useLocale();
+  const t = useTranslations("cloudImport");
+  const countLabels = useCloudImportCountLabels();
+  const resolvedSourceLabel = sourceLabel ?? t("source.selfHost");
+
+  function list(items: string[]) {
+    return new Intl.ListFormat(locale, { style: "long", type: "conjunction" }).format(items);
+  }
+
+  function doneDescription() {
+    const summary = migrationImportPresentation(job.counts);
+    const visibility = summary.unknownDepth
+      ? t("transfer.completion.visibilityNote", { count: summary.unknownDepth })
+      : "none";
+    const imported = summary.imported.map(countLabels.summary);
+    const skipped = summary.skipped.map(countLabels.summary);
+
+    if (!summary.reportsKeywordCreations && imported.length === 0) {
+      return t("transfer.completion.empty", { visibility });
+    }
+    const items = imported.length
+      ? list(imported)
+      : countLabels.summary({ key: "keywords_created", value: summary.keywordsCreated });
+    return skipped.length
+      ? t("transfer.completion.importedWithSkipped", {
+          items,
+          skipped: list(skipped),
+          visibility,
+        })
+      : t("transfer.completion.imported", { items, visibility });
+  }
+
+  const presentation = migrationImportPresentation(job.counts);
+  const restoredWithNotes =
+    job.state === "done" && (presentation.skipped.length > 0 || presentation.unknownDepth > 0);
+  const completedDescription = doneDescription();
+  const configs: Record<TransferState, StateConfig> = {
+    done: {
+      desc: completedDescription,
+      icon: CheckCircle,
+      pill: t("transfer.successPill"),
+      title: t("transfer.successTitle"),
+      tone: "green",
+      weight: "fill",
+    },
+    failed: {
+      desc:
+        job.error === "Import timed out."
+          ? t("transfer.failed.timedOut")
+          : t("transfer.failed.fallback"),
+      icon: Warning,
+      pill: t("transfer.failedPill"),
+      title: t("transfer.failedTitle"),
+      tone: "red",
+      weight: "fill",
+    },
+    idle: {
+      desc: t("transfer.readyDescription"),
+      icon: CloudArrowDown,
+      pill: t("transfer.readyPill"),
+      title: t("transfer.readyTitle"),
+      tone: "neutral",
+      weight: "regular",
+    },
+    importing: {
+      desc: t("transfer.importingDescription"),
+      icon: Database,
+      pill: t("transfer.importingPill"),
+      title: t("transfer.importingTitle"),
+      tone: "blue",
+      weight: "regular",
+    },
+    receiving: {
+      desc: t("transfer.receivingDescription", { source: resolvedSourceLabel }),
+      icon: DownloadSimple,
+      pill: t("transfer.receivingPill"),
+      title: t("transfer.receivingTitle"),
+      tone: "blue",
+      weight: "regular",
+    },
+  };
   if (job.state === "idle" && !hasToken) {
     return null;
   }
 
-  const cfg = configFor(job, sourceLabel);
+  const cfg = restoredWithNotes
+    ? {
+        desc: completedDescription,
+        icon: Warning,
+        pill: t("transfer.notesPill"),
+        title: t("transfer.notesTitle"),
+        tone: "yellow" as const,
+        weight: "fill" as const,
+      }
+    : configs[job.state];
   const tone = TONES[cfg.tone];
   const StateIcon = cfg.icon;
-  const counts = migrationImportCountEntries(job.counts, "value-label");
+  const counts = presentation.entries.map((item) => ({
+    key: item.key,
+    label: countLabels.tile(item),
+  }));
   const showProgress =
     job.state === "receiving" || job.state === "importing" || job.state === "done";
 
@@ -174,7 +186,7 @@ export function TransferPanel({
           <div className="mt-0.5 text-[12px] text-fg-muted">{cfg.desc}</div>
         </div>
         <span
-          className={`inline-flex flex-none items-center gap-1.5 rounded-full bg-bg-sunken px-[11px] py-[5px] font-sans tabular-nums text-[10.5px] font-semibold ${tone.text}`}
+          className={`inline-flex flex-none items-center gap-1.5 rounded-full bg-bg-sunken px-[11px] py-[5px] font-sans tabular-nums text-[10.5px] font-semibold ${tone.toneClass}`}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} />
           {cfg.pill}
@@ -186,11 +198,7 @@ export function TransferPanel({
           <div className="h-1.5 overflow-hidden rounded-control bg-bg-sunken">
             <div
               className={`h-full rounded-control transition-[width] duration-500 ${
-                job.state === "done"
-                  ? restoredWithNotes(job)
-                    ? "bg-yellow"
-                    : "bg-green"
-                  : "bg-blue"
+                job.state === "done" ? (restoredWithNotes ? "bg-yellow" : "bg-green") : "bg-blue"
               }`}
               style={{ width: `${job.progress}%` }}
             />
@@ -203,29 +211,22 @@ export function TransferPanel({
           {counts.map((item) => (
             <div
               className="rounded-control bg-bg-sunken px-3 py-2 font-sans tabular-nums text-[11px]"
-              key={item}
+              key={item.key}
             >
-              {item}
+              {item.label}
             </div>
           ))}
         </div>
       ) : null}
 
       {job.state === "done" ? (
-        <div className="flex items-center gap-[9px] border-border border-t p-[14px_20px]">
-          <LinkIcon aria-hidden className="flex-none text-fg-muted" size={15} weight="regular" />
-          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 text-[11.5px] text-fg-muted">
-            Import job
-            {job.id ? <IdChip copyLabel="Copy import job ID" size="xs" value={job.id} /> : null}
-          </span>
-          <a
-            className="inline-flex flex-none items-center gap-1.5 rounded-control bg-accent-solid px-3.5 py-2 font-semibold text-[12px] text-accent-on-solid"
-            href={appPath(projectRef, "dashboard")}
-          >
-            Open project
-            <CaretRight aria-hidden size={12} weight="regular" />
-          </a>
-        </div>
+        <CloudImportCompletedFooter
+          copyImportJobLabel={t("token.copy", { label: t("transfer.importJob") })}
+          importJobId={job.id}
+          importJobLabel={t("transfer.importJob")}
+          openProjectLabel={t("transfer.openProject")}
+          projectRef={projectRef}
+        />
       ) : null}
 
       {job.state === "failed" ? (
@@ -238,26 +239,32 @@ export function TransferPanel({
               weight="regular"
             />
             <div className="min-w-0 flex-1 text-[12.5px] leading-[1.5] text-fg">
-              <strong className="font-semibold">Transfer stopped at {job.progress}%.</strong>{" "}
-              <span className="text-fg-muted">{failedFollowUp(job)}</span>
+              <strong className="font-semibold">
+                {t("transfer.failed.stopped", { progress: job.progress })}
+              </strong>{" "}
+              <span className="text-fg-muted">{t("transfer.failed.followUp")}</span>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-x-[11px] gap-y-2 font-sans tabular-nums text-[11px] text-fg-muted">
-            <span className="text-red-text">failed</span>
+            <span className="text-red-text">{t("transfer.failedPill")}</span>
             <span className="h-2.5 w-px bg-border" />
             <span className="inline-flex flex-wrap items-center gap-1.5">
-              Import job
+              {t("transfer.importJob")}
               {job.id ? (
-                <IdChip copyLabel="Copy import job ID" size="xs" value={job.id} />
+                <IdChip
+                  copyLabel={t("token.copy", { label: t("transfer.importJob") })}
+                  size="xs"
+                  value={job.id}
+                />
               ) : (
-                "pending"
+                t("transfer.pending")
               )}
             </span>
             {job.finishedAt ? (
               <>
                 <span className="h-2.5 w-px bg-border" />
-                <span>{formatDateTime(new Date(job.finishedAt), dateFormat)}</span>
+                <span>{formatDisplayDateTime(new Date(job.finishedAt), dateDisplay)}</span>
               </>
             ) : null}
           </div>
@@ -271,7 +278,7 @@ export function TransferPanel({
               type="button"
               variant="primary"
             >
-              New token
+              {t("transfer.newToken")}
             </Button>
             <a
               className="inline-flex flex-none items-center gap-1.5 rounded-control border border-border-control bg-bg-elev px-3.5 py-2 font-semibold text-[12px] text-fg"
@@ -279,9 +286,9 @@ export function TransferPanel({
               href={errorLogHref(job)}
             >
               <DownloadSimple aria-hidden size={13} weight="regular" />
-              Download error log
+              {t("transfer.downloadErrorLog")}
             </a>
-            <span className="text-[12px] text-fg-muted">then push again from the source.</span>
+            <span className="text-[12px] text-fg-muted">{t("transfer.retryFromSource")}</span>
           </div>
         </div>
       ) : null}

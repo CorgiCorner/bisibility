@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  factorStatusLabel,
-  passwordActionLabel,
+  factorStatusKey,
+  passwordActionKey,
   secretFromTotpUri,
-  twoFactorErrorMessage,
+  twoFactorErrorKey,
 } from "./security-factor-utils";
 import { createTotpQrDataUrl } from "./totp-qr";
 
@@ -17,16 +17,16 @@ describe("security factor helpers", () => {
   });
 
   it("maps missing credential password errors to account copy", () => {
-    expect(twoFactorErrorMessage({ message: "No password credential found" })).toBe(
-      "This account does not have a password credential yet.",
+    expect(twoFactorErrorKey({ message: "No password credential found" })).toBe(
+      "passwordUnavailable",
     );
   });
 
   it("labels factor state and password actions", () => {
-    expect(factorStatusLabel(false)).toBe("Not enabled");
-    expect(factorStatusLabel(true)).toBe("Enabled");
-    expect(passwordActionLabel(false, "setup")).toBe("Continue");
-    expect(passwordActionLabel(true, "disable")).toBe("Working");
+    expect(factorStatusKey(false)).toBe("notEnabled");
+    expect(factorStatusKey(true)).toBe("enabled");
+    expect(passwordActionKey(false, "setup")).toBe("continue");
+    expect(passwordActionKey(true, "disable")).toBe("working");
   });
 
   it("creates a local QR data URL without leaking the otpauth URI to a remote service", () => {

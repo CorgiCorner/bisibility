@@ -1,6 +1,7 @@
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
+import { renderWithCloudImportMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { dateFromFrozenNow, isoFromFrozenNow } from "@/tests/clock";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
 import { MigrationTokenCard, type MigrationTokenStatus } from "./MigrationTokenCard";
@@ -154,6 +155,18 @@ describe("MigrationTokenCard", () => {
       fireEvent.click(screen.getByRole("button", { name: "Copy Destination URL" }));
     });
     expect(writeText).toHaveBeenCalledWith("https://seo.example.com");
+  });
+
+  it("labels an expired issued token without treating its value as reusable", () => {
+    renderCard("created", {
+      issuedToken: {
+        ...issuedToken,
+        expiresAt: isoFromFrozenNow({ hours: 13, minutes: 29 }),
+        singleUse: true,
+      },
+    });
+
+    expect(screen.getByText("expires now · single use")).toBeInTheDocument();
   });
 
   it("renders pending revoke and regenerate labels", () => {

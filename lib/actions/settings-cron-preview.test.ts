@@ -13,7 +13,7 @@ describe("previewProjectCronRuns", () => {
     mocks.requireReadableProject.mockResolvedValue({});
   });
 
-  it("authorizes the project read and identifies raw cron anchors before dispatcher jitter", async () => {
+  it("authorizes the project read and returns stable preview data for localized presentation", async () => {
     const result = await previewProjectCronRuns({
       cronExpression: "0 6 * * *",
       projectId: "prj_1",
@@ -22,13 +22,14 @@ describe("previewProjectCronRuns", () => {
 
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
     expect(result).toEqual({
-      message: "Each keyword is scheduled at or after an anchor using deterministic jitter.",
-      runs: ["Aug 10, 06:00", "Aug 11, 06:00", "Aug 12, 06:00"],
+      message: "ready",
+      runs: ["2026-08-10T04:00:00.000Z", "2026-08-11T04:00:00.000Z", "2026-08-12T04:00:00.000Z"],
       status: "ready",
+      timezone: "Europe/Warsaw",
     });
   });
 
-  it("returns the B1 hourly-floor error without exposing a parser exception", async () => {
+  it("returns the stable hourly-floor code without exposing a parser exception", async () => {
     await expect(
       previewProjectCronRuns({
         cronExpression: "*/30 * * * *",
@@ -36,9 +37,10 @@ describe("previewProjectCronRuns", () => {
         timezone: "UTC",
       }),
     ).resolves.toEqual({
-      message: "Custom cron schedules must run at least one hour apart.",
+      message: "anchors_too_close",
       runs: [],
       status: "invalid",
+      timezone: null,
     });
   });
 });

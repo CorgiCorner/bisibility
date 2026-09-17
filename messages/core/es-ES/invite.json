@@ -1,0 +1,32 @@
+{
+  "invite": {
+    "accept": "Aceptar la invitación",
+    "alreadyUsed": "Esta invitación ya se ha utilizado",
+    "alreadyUsedBody": "La invitación ya se ha aceptado o se ha sustituido por otra más reciente.",
+    "expires": "Caduca",
+    "expired": "Esta invitación ha caducado",
+    "expiredBody": "Pide a un administrador del proyecto que te envíe una invitación nueva.",
+    "goToSignIn": "Ir al inicio de sesión",
+    "invalid": "No se ha encontrado la invitación",
+    "invalidBody": "Revisa el enlace o pide a quien te la envió que te la reenvíe.",
+    "invitedEmail": "Correo de la invitación",
+    "join": "Únete a {project}",
+    "metadataDescription": "Acepta una invitación a un proyecto de bisibility.",
+    "mismatchedAccount": "Has iniciado sesión como {current}. Inicia sesión como {invited} para aceptar esta invitación.",
+    "oneTimeCodeSent": "Hemos enviado un código de un solo uso a <address>{email}</address>.",
+    "role": "Rol",
+    "roles": {
+      "admin": "Administrador",
+      "member": "Editor",
+      "viewer": "Lector"
+    },
+    "sendSignInCode": "Enviar código de acceso",
+    "signInCode": "Código de acceso",
+    "signOut": "Cerrar sesión",
+    "teamInvite": "Invitación de equipo",
+    "validEmail": "Introduce una dirección de correo válida.",
+    "verifyAndReturn": "Verificar y volver a la invitación",
+    "verifyCode": "Introduce el código de 6 dígitos.",
+    "verifyFailed": "Se ha producido un error. Inténtalo de nuevo."
+  }
+}

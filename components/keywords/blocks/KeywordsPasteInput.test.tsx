@@ -1,5 +1,10 @@
 import { KeywordsPasteInput } from "@/components/keywords/blocks/KeywordsPasteInput";
-import { render, screen } from "@testing-library/react";
+import {
+  projectRankTrackerFeatureTestMessages,
+  renderWithProjectRankTrackerMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -52,6 +57,26 @@ describe("KeywordsPasteInput", () => {
     );
   });
 
+  it("localizes structured paste errors at the rendered field boundary", () => {
+    const messages = structuredClone(projectRankTrackerFeatureTestMessages);
+    const add = messages.projectRankTracker.keywordImport.management.add;
+    add.pasteInvalidTargetUrl = "Adres {target} jest nieprawidłowy.";
+    add.pasteDuplicateKeyword = "Powtórzone słowo kluczowe.";
+
+    renderWithFeatureMessages(
+      <KeywordsPasteInput
+        count={vi.fn()}
+        onChange={vi.fn()}
+        value={"rank tracking | not a url\nRANK TRACKING"}
+      />,
+      { locale: "pl", messages },
+    );
+
+    expect(screen.getByText("Line 1: Adres not a url jest nieprawidłowy.")).toBeInTheDocument();
+    expect(screen.getByText("Line 2: Powtórzone słowo kluczowe.")).toBeInTheDocument();
+    expect(screen.queryByText(/not a valid URL or path/)).not.toBeInTheDocument();
+  });
+
   it("preserves source line numbers when blank lines separate errors", () => {
     render(
       <KeywordsPasteInput
@@ -61,13 +86,14 @@ describe("KeywordsPasteInput", () => {
       />,
     );
 
-    expect(screen.getByText('Line 2: "not a url" is not a valid URL or path.')).toHaveAttribute(
+    expect(screen.getByText("Line 2: not a url is not a valid URL or path.")).toHaveAttribute(
       "id",
       "keywords-paste-error-2",
     );
-    expect(
-      screen.getByText('Line 4: "also not a url" is not a valid URL or path.'),
-    ).toHaveAttribute("id", "keywords-paste-error-4");
+    expect(screen.getByText("Line 4: also not a url is not a valid URL or path.")).toHaveAttribute(
+      "id",
+      "keywords-paste-error-4",
+    );
     expect(screen.getByRole("textbox", { name: "Keywords" })).toHaveAttribute(
       "aria-describedby",
       "keywords-paste-error-2 keywords-paste-error-4",

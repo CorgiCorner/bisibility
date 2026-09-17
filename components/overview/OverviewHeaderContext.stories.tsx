@@ -3,6 +3,7 @@ import { AppRealtimeContext } from "@/lib/realtime/useAppRealtime";
 import type { Meta, StoryObj } from "@storybook/react";
 import { OverviewHeaderContext } from "./OverviewHeaderContext";
 import { OverviewToolbar } from "./OverviewToolbar";
+import { ProjectDashboardMessages } from "./ProjectDashboardMessages";
 
 const options = [
   { label: "Spain", secondary: "Spanish", value: "loc_es_es" },
@@ -17,21 +18,23 @@ const meta = {
   },
   args: { options },
   render: (args) => (
-    <AppRealtimeContext.Provider value={{ notifications: null, operations: [], status: "live" }}>
-      <div className="min-h-[540px] bg-bg text-fg">
-        <AppHeaderFrame
-          activeProjectId="prj_story"
-          projectRef="prj_story"
-          workspaces={[]}
-          canCreateWorkspace={false}
-          notificationControl={null}
-          context={<OverviewHeaderContext {...args} />}
-        />
-        <div className="p-4 sm:p-5 lg:px-7 lg:py-5.5">
-          <OverviewToolbar projectRef="prj_story" />
+    <ProjectDashboardMessages>
+      <AppRealtimeContext.Provider value={{ notifications: null, operations: [], status: "live" }}>
+        <div className="min-h-[540px] bg-bg text-fg">
+          <AppHeaderFrame
+            activeProjectId="prj_story"
+            projectRef="prj_story"
+            workspaces={[]}
+            canCreateWorkspace={false}
+            notificationControl={null}
+            context={<OverviewHeaderContext {...args} />}
+          />
+          <div className="p-4 sm:p-5 lg:px-7 lg:py-5.5">
+            <OverviewToolbar projectRef="prj_story" />
+          </div>
         </div>
-      </div>
-    </AppRealtimeContext.Provider>
+      </AppRealtimeContext.Provider>
+    </ProjectDashboardMessages>
   ),
 } satisfies Meta<typeof OverviewHeaderContext>;
 export default meta;

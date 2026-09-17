@@ -20,7 +20,10 @@ export type KeywordFilters = {
   urlChanged: boolean;
 };
 
-export type KeywordFilterChip = { key: string; label: string };
+/**
+ * Filter state is transport data. Presentation code supplies localized labels at the UI boundary.
+ */
+export type KeywordFilterChip = { key: string };
 
 export const emptyKeywordFilters: KeywordFilters = {
   change: "any",
@@ -44,35 +47,35 @@ export const defaultKeywordFilters: KeywordFilters = {
 };
 
 export const positionBuckets = [
-  { id: "top3", label: "Top 3" },
-  { id: "top10", label: "Top 10" },
-  { id: "11-50", label: "11-50" },
-  { id: "51-100", label: "51-100" },
+  { id: "top3" },
+  { id: "top10" },
+  { id: "11-50" },
+  { id: "51-100" },
 ] as const;
 
 export const changeOptions = [
-  { id: "any", label: "Any" },
-  { id: "up", label: "Improved" },
-  { id: "down", label: "Dropped" },
-  { id: "new", label: "New" },
-  { id: "lost", label: "Lost" },
+  { id: "any" },
+  { id: "up" },
+  { id: "down" },
+  { id: "new" },
+  { id: "lost" },
 ] as const;
 
 export const lastCheckOptions = [
-  { id: "any", label: "Any" },
-  { id: "failed", label: "Failed" },
-  { id: "running", label: "Running" },
-  { id: "completed", label: "Completed" },
-  { id: "not_checked", label: "Not checked" },
+  { id: "any" },
+  { id: "failed" },
+  { id: "running" },
+  { id: "completed" },
+  { id: "not_checked" },
 ] as const;
 
 export const serpFeatures = [
-  { id: "featured", label: "Featured snippet" },
-  { id: "paa", label: "People also ask" },
-  { id: "sitelinks", label: "Sitelinks" },
-  { id: "image", label: "Image pack" },
-  { id: "video", label: "Video" },
-  { id: "ai", label: "AI overview" },
+  { id: "featured" },
+  { id: "paa" },
+  { id: "sitelinks" },
+  { id: "image" },
+  { id: "video" },
+  { id: "ai" },
 ] as const;
 
 const serpAliases: Record<string, string[]> = {
@@ -168,48 +171,37 @@ export function applyKeywordFilters(rows: KeywordRow[], filters: KeywordFilters)
 export function getFilterChips(filters: KeywordFilters): KeywordFilterChip[] {
   const chips: KeywordFilterChip[] = [];
   if (filters.position.length) {
-    const labels = positionBuckets
-      .filter((bucket) => filters.position.includes(bucket.id))
-      .map((bucket) => bucket.label);
-    chips.push({ key: "position", label: `Position: ${labels.join(", ")}` });
+    chips.push({ key: "position" });
   }
   if (filters.change !== "any") {
-    const label = changeOptions.find((item) => item.id === filters.change)?.label ?? filters.change;
-    chips.push({ key: "change", label: `Change: ${label}` });
+    chips.push({ key: "change" });
   }
   if (filters.volMin > 0 || filters.volMax < 50) {
-    const maximumVolume = filters.volMax >= 50 ? "50k+" : `${filters.volMax}k`;
-    chips.push({
-      key: "volume",
-      label: `Volume: ${filters.volMin}k - ${maximumVolume}`,
-    });
+    chips.push({ key: "volume" });
   }
   if (filters.contains) {
-    chips.push({ key: "contains", label: `Contains: "${filters.contains}"` });
+    chips.push({ key: "contains" });
   }
   for (const tag of filters.tags) {
-    chips.push({ key: `tag:${tag}`, label: `Tag: ${tag}` });
+    chips.push({ key: `tag:${tag}` });
   }
   for (const topic of filters.topics) {
-    chips.push({ key: `topic:${topic}`, label: `Topic: ${topic}` });
+    chips.push({ key: `topic:${topic}` });
   }
   for (const intent of filters.intents) {
-    chips.push({ key: `intent:${intent}`, label: `Intent: ${intent}` });
+    chips.push({ key: `intent:${intent}` });
   }
   for (const feature of filters.serp) {
-    const label = serpFeatures.find((item) => item.id === feature)?.label ?? feature;
-    chips.push({ key: `serp:${feature}`, label: `SERP: ${label}` });
+    chips.push({ key: `serp:${feature}` });
   }
   if (filters.lastCheck !== "any") {
-    const label =
-      lastCheckOptions.find((item) => item.id === filters.lastCheck)?.label ?? filters.lastCheck;
-    chips.push({ key: "lastCheck", label: `Last check: ${label}` });
+    chips.push({ key: "lastCheck" });
   }
   if (filters.wrongUrl) {
-    chips.push({ key: "wrongUrl", label: "Wrong URL ranking" });
+    chips.push({ key: "wrongUrl" });
   }
   if (filters.urlChanged) {
-    chips.push({ key: "urlChanged", label: "Ranking URL changed" });
+    chips.push({ key: "urlChanged" });
   }
   return chips;
 }

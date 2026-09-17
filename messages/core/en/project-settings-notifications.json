@@ -1,0 +1,26 @@
+{
+  "projectSettingsNotifications": {
+    "channels": {
+      "title": "Channels",
+      "description": "Where an alert goes once it is raised. Alert conditions are configured on the Alerts screen.",
+      "eventsAndChannels": "Events and channels",
+      "event": "Event",
+      "inApp": "In-app",
+      "email": "Email",
+      "alertFired": "Alert fired",
+      "checkComplete": "Check complete",
+      "importFinished": "Import finished",
+      "invite": "Invite",
+      "weeklyReport": "Weekly report",
+      "unavailable": "{label} is not available",
+      "unavailableHelp": "A dash means the channel does not exist for that event - the weekly report is an email and is only ever sent once a week.",
+      "saveError": "Preferences could not be saved."
+    },
+    "delivery": {
+      "title": "Delivery address",
+      "description": "The address that receives notification emails.",
+      "manageEmail": "Manage email",
+      "deliveredTo": "Notifications are delivered to <address>{email}</address>."
+    }
+  }
+}

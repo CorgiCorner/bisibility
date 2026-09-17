@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/ui/cn";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import { useFormatter, useTranslations } from "next-intl";
 import { tagChipClassName, tagChipSurfaceClassName } from "./tag-chip-styles";
 
 export type TagChipProps = {
@@ -12,10 +13,6 @@ export type TagChipProps = {
   removeLabel?: string;
 };
 
-function formatUsageCount(count: number) {
-  return count.toLocaleString("en-US");
-}
-
 export function TagChip({
   keywordCount = 0,
   label,
@@ -23,6 +20,8 @@ export function TagChip({
   pending = false,
   removeLabel,
 }: Readonly<TagChipProps>) {
+  const format = useFormatter();
+  const t = useTranslations("shared.tokens");
   const showUsage = keywordCount > 0;
 
   return (
@@ -35,13 +34,11 @@ export function TagChip({
     >
       <span className="min-w-0 truncate">
         {label}
-        {showUsage ? (
-          <span className="text-fg-muted"> · {formatUsageCount(keywordCount)}</span>
-        ) : null}
+        {showUsage ? <span className="text-fg-muted"> · {format.number(keywordCount)}</span> : null}
       </span>
       {onRemove ? (
         <button
-          aria-label={removeLabel ?? `Remove ${label}`}
+          aria-label={removeLabel ?? t("remove", { value: label })}
           className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full p-0 leading-none text-fg-muted outline-none transition-colors hover:bg-bg-elev hover:text-fg focus-visible:bg-bg-elev focus-visible:text-fg"
           onClick={onRemove}
           type="button"

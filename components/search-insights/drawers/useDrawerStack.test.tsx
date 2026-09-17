@@ -1,13 +1,20 @@
 import { act, renderHook } from "@testing-library/react";
 import { createRef } from "react";
 import { describe, expect, it } from "vitest";
+import type { SearchInsightsDrawerFrame } from "./drawer-model";
 import { useDrawerStack } from "./useDrawerStack";
+
+function labelFrame(frame: SearchInsightsDrawerFrame) {
+  if (frame.kind === "query") return frame.query;
+  if (frame.kind === "page") return frame.path;
+  return frame.which === "band" ? "Positions 4 to 20" : "Page overlap";
+}
 
 function stack() {
   const body = document.createElement("div");
   const ref = createRef<HTMLElement | null>() as { current: HTMLElement | null };
   ref.current = body;
-  return { ...renderHook(() => useDrawerStack(ref)), body };
+  return { ...renderHook(() => useDrawerStack(ref, labelFrame)), body };
 }
 
 describe("useDrawerStack", () => {

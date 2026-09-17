@@ -1,3 +1,5 @@
+"use client";
+
 import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { KeywordDetailTrafficState } from "@/lib/keyword-detail/state-model";
@@ -5,6 +7,7 @@ import type { KeywordTrafficDetail, PageTrafficSnapshotLike } from "@/lib/querie
 import { appPath } from "@/lib/routing/app-path";
 import { QUERY_STATS_LAG_DAYS } from "@/lib/traffic/constants";
 import Link from "next/link";
+import { useFormatter, useTranslations } from "next-intl";
 
 type QueryTraffic = NonNullable<KeywordTrafficDetail["query"]>;
 type Stat = { label: string; value: string | null };
@@ -25,19 +28,24 @@ function providerLabel(provider: string) {
   return providerLabels[provider] ?? provider.replace(/[-_]/g, " ");
 }
 
-function formatCount(value: number) {
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
+function formatCount(value: number, format: ReturnType<typeof useFormatter>) {
+  return format.number(value, { maximumFractionDigits: 0 });
 }
 
-function formatRate(value: number) {
+function formatRate(value: number, format: ReturnType<typeof useFormatter>) {
   const percent = value > 1 ? value : value * 100;
-  return `${percent.toFixed(1)}%`;
+  return format.number(percent / 100, { maximumFractionDigits: 1, style: "percent" });
 }
 
-function formatDuration(seconds: number) {
+function formatDuration(
+  seconds: number,
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordDetail.traffic">>,
+) {
   const minutes = Math.floor(Math.max(0, seconds) / 60);
   const remainder = Math.round(Math.max(0, seconds) % 60);
-  return minutes ? `${minutes}m ${remainder}s` : `${remainder}s`;
+  return minutes
+    ? t("minutesSeconds", { minutes, seconds: remainder })
+    : t("seconds", { seconds: remainder });
 }
 
 function SourceChip({ provider }: Readonly<{ provider: string }>) {
@@ -48,7 +56,13 @@ function SourceChip({ provider }: Readonly<{ provider: string }>) {
   );
 }
 
-function StatGrid({ stats }: Readonly<{ stats: Stat[] }>) {
+function StatGrid({
+  stats,
+  t,
+}: Readonly<{
+  stats: Stat[];
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordDetail.traffic">>;
+}>) {
   return (
     <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-2.5">
       {stats.map((stat) => (
@@ -60,7 +74,7 @@ function StatGrid({ stats }: Readonly<{ stats: Stat[] }>) {
             {stat.label}
           </p>
           <p className="m-0 mt-1 text-[18px] font-semibold leading-none text-fg">
-            {stat.value ?? "No data"}
+            {stat.value ?? t("noData")}
           </p>
         </div>
       ))}
@@ -69,25 +83,29 @@ function StatGrid({ stats }: Readonly<{ stats: Stat[] }>) {
 }
 
 function SearchPerformanceCard({ query }: Readonly<{ query: QueryTraffic }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.traffic");
+  const format = useFormatter();
   const stats: Stat[] = [
-    { label: "Clicks", value: formatCount(query.clicks) },
-    { label: "Impressions", value: formatCount(query.impressions) },
-    { label: "CTR", value: formatRate(query.ctr) },
-    { label: "Avg. position", value: query.position.toFixed(1) },
+    { label: t("clicks"), value: formatCount(query.clicks, format) },
+    { label: t("impressions"), value: formatCount(query.impressions, format) },
+    { label: t("ctr"), value: formatRate(query.ctr, format) },
+    {
+      label: t("averagePosition"),
+      value: format.number(query.position, { maximumFractionDigits: 1 }),
+    },
   ];
 
   return (
     <Card className="rounded-card" size="lg">
       <div className="flex flex-wrap items-center gap-2">
-        <SectionTitle>Search performance</SectionTitle>
+        <SectionTitle>{t("searchPerformance")}</SectionTitle>
         <SourceChip provider={query.provider} />
       </div>
-      <p className="m-0 mt-1 text-[12px] text-fg-muted">Trailing {query.windowDays} days</p>
-      <StatGrid stats={stats} />
-      <p className="m-0 mt-3 text-[11.5px] leading-[1.45] text-fg-muted">
-        GSC position is an average across real impressions and may differ from the latest rank
-        check.
+      <p className="m-0 mt-1 text-[12px] text-fg-muted">
+        {t("trailingDays", { days: query.windowDays })}
       </p>
+      <StatGrid stats={stats} t={t} />
+      <p className="m-0 mt-3 text-[11.5px] leading-[1.45] text-fg-muted">{t("gscPositionNote")}</p>
     </Card>
   );
 }
@@ -96,32 +114,30 @@ function SearchPerformanceEmpty({
   connected,
   projectRef,
 }: Readonly<{ connected: boolean; projectRef: string }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.traffic");
   return (
     <Card className="rounded-card" size="lg">
       <div className="flex flex-wrap items-center gap-2">
-        <SectionTitle>Search performance</SectionTitle>
+        <SectionTitle>{t("searchPerformance")}</SectionTitle>
         <SourceChip provider="gsc" />
       </div>
-      <p className="m-0 mt-1 text-[12px] text-fg-muted">Trailing 28 days</p>
+      <p className="m-0 mt-1 text-[12px] text-fg-muted">{t("trailingDays", { days: 28 })}</p>
       <div className="mt-3 rounded-control border border-dashed border-border bg-transparent px-4 py-5">
         {connected ? (
           <>
-            <p className="m-0 text-[13.5px] font-medium text-fg">Awaiting first traffic sync.</p>
+            <p className="m-0 text-[13.5px] font-medium text-fg">{t("awaitingSync")}</p>
             <p className="m-0 mt-1 text-[12px] text-fg-muted">
-              Search Console data arrives with an approximately {QUERY_STATS_LAG_DAYS}-day reporting
-              lag.
+              {t("reportingLag", { days: QUERY_STATS_LAG_DAYS })}
             </p>
           </>
         ) : (
           <>
-            <p className="m-0 text-[13.5px] text-fg-muted">
-              Connect Search Console to see clicks, impressions and CTR for this keyword.
-            </p>
+            <p className="m-0 text-[13.5px] text-fg-muted">{t("connectDescription")}</p>
             <Link
               className="mt-3 inline-flex text-[13px] font-semibold text-fg underline decoration-fg underline-offset-3"
               href={appPath(projectRef, "integrations")}
             >
-              Connect Search Console
+              {t("connect")}
             </Link>
           </>
         )}
@@ -130,33 +146,41 @@ function SearchPerformanceEmpty({
   );
 }
 
-function optionalPageStats(page: PageTrafficSnapshotLike): Stat[] {
+function optionalPageStats(
+  page: PageTrafficSnapshotLike,
+  format: ReturnType<typeof useFormatter>,
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordDetail.traffic">>,
+): Stat[] {
   const stats: (Stat | null)[] = [
-    page.visitors === null ? null : { label: "Visitors", value: formatCount(page.visitors) },
+    page.visitors === null
+      ? null
+      : { label: t("visitors"), value: formatCount(page.visitors, format) },
     {
-      label: page.provider === "plausible" ? "Pageviews" : "Sessions",
-      value: formatCount(page.sessions),
+      label: page.provider === "plausible" ? t("pageviews") : t("sessions"),
+      value: formatCount(page.sessions, format),
     },
-    page.bounceRate === null ? null : { label: "Bounce", value: formatRate(page.bounceRate) },
+    page.bounceRate === null
+      ? null
+      : { label: t("bounce"), value: formatRate(page.bounceRate, format) },
     page.visitDurationSeconds === null
       ? null
-      : { label: "Duration", value: formatDuration(page.visitDurationSeconds) },
+      : { label: t("duration"), value: formatDuration(page.visitDurationSeconds, t) },
     page.scrollDepth === null
       ? null
-      : { label: "Scroll depth", value: formatRate(page.scrollDepth) },
+      : { label: t("scrollDepth"), value: formatRate(page.scrollDepth, format) },
   ];
   return stats.filter((stat): stat is Stat => stat !== null);
 }
 
 function LandingPagePerformanceCard({ pages }: Readonly<{ pages: PageTrafficSnapshotLike[] }>) {
-  const firstPath = pages[0]?.path ?? "the ranking page";
+  const t = useTranslations("projectRankTracker.keywordDetail.traffic");
+  const format = useFormatter();
+  const firstPath = pages[0]?.path ?? "/";
 
   return (
     <Card className="rounded-card" size="lg">
-      <SectionTitle>Landing page performance</SectionTitle>
-      <p className="m-0 mt-1 text-[12px] text-fg-muted">
-        All traffic to {firstPath}, not attributed to this keyword.
-      </p>
+      <SectionTitle>{t("landingPerformance")}</SectionTitle>
+      <p className="m-0 mt-1 text-[12px] text-fg-muted">{t("allTraffic", { path: firstPath })}</p>
       <div className="mt-3 grid gap-3">
         {pages.map((page) => (
           <section
@@ -167,10 +191,10 @@ function LandingPagePerformanceCard({ pages }: Readonly<{ pages: PageTrafficSnap
               <SourceChip provider={page.provider} />
               <span className="font-sans tabular-nums text-[11.5px] text-fg">{page.path}</span>
               <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
-                last {page.windowDays} days
+                {t("lastDays", { days: page.windowDays })}
               </span>
             </div>
-            <StatGrid stats={optionalPageStats(page)} />
+            <StatGrid stats={optionalPageStats(page, format, t)} t={t} />
           </section>
         ))}
       </div>

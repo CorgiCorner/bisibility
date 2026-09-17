@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/data-table/DataTable";
+import { useTranslations } from "next-intl";
 import { moveSummary, type ScheduleEditorMember } from "./ScheduleEditorModel";
 import { scheduleMemberTableColumns } from "./schedule-members-table-columns";
 
@@ -24,22 +25,28 @@ export function ScheduleEditorMembers({
   scheduleName,
   storedMembers,
 }: Readonly<ScheduleEditorMembersProps>) {
+  const t = useTranslations("projectRuns.schedules");
   const members = [...storedMembers, ...pendingMembers];
   const rows = members.map((member) => ({ ...member, id: member.publicId }));
-  const consequence = moveSummary(pendingMembers, scheduleName);
+  const consequence = moveSummary(pendingMembers, scheduleName, {
+    combine: (scheduled, manual) => t("editor.moveCombined", { manual, scheduled }),
+    manual: (count) => t("editor.moveManual", { count }),
+    scheduled: (count) => t("editor.moveScheduled", { count }),
+    summary: (summary, name) => t("editor.moveSummary", { name, summary }),
+  });
 
   return (
     <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3.5">
         <span className="min-w-0">
-          <span className="block text-[15px] font-semibold text-fg">Members</span>
+          <span className="block text-[15px] font-semibold text-fg">{t("editor.members")}</span>
           <span className="mt-0.5 block text-[12.5px] leading-5 text-fg-muted">
-            {memberSummary ?? `${memberCount} keywords`}
+            {memberSummary ?? t("editor.memberCount", { count: memberCount })}
           </span>
         </span>
         {canEdit ? (
           <Button onClick={onOpenDrawer} size="sm" type="button" variant="secondary">
-            Add keywords
+            {t("addKeywords")}
           </Button>
         ) : null}
       </header>
@@ -47,8 +54,8 @@ export function ScheduleEditorMembers({
       {members.length ? (
         <div className="min-w-0 [&>[role=table]]:border-0">
           <DataTable
-            ariaLabel="Schedule members"
-            columns={scheduleMemberTableColumns}
+            ariaLabel={t("editor.membersTable")}
+            columns={scheduleMemberTableColumns(t)}
             id="schedule-editor-members"
             layout="auto"
             onSortingChange={() => undefined}
@@ -58,7 +65,7 @@ export function ScheduleEditorMembers({
         </div>
       ) : (
         <p className="m-0 px-4 pb-3.5 pt-1.5 text-[12px] leading-5 text-fg-muted">
-          No keywords yet. Add some to start scheduled checks.
+          {t("editor.memberEmpty")}
         </p>
       )}
       {consequence ? (
@@ -68,7 +75,7 @@ export function ScheduleEditorMembers({
       ) : null}
       {members.length ? (
         <div className="border-t border-border px-4 py-3 text-[11px] tabular-nums text-fg-muted">
-          1-{members.length} of {memberCount} {memberCount === 1 ? "keyword" : "keywords"}
+          {t("editor.memberRange", { shown: members.length, total: memberCount })}
         </div>
       ) : null}
     </section>

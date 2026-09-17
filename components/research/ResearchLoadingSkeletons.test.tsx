@@ -19,7 +19,7 @@ describe("ResearchLoadingSkeletons", () => {
   });
 
   it("exposes the result-loading state accessibly", () => {
-    render(<ResearchResultsLoading />);
+    render(<ResearchResultsLoading ariaLabel="Research loading" />);
 
     expect(screen.getByLabelText("Research loading")).toBeInTheDocument();
   });

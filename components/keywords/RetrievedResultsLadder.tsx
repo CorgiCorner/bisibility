@@ -3,6 +3,7 @@
 import type { RetrievedResults, RetrievedRow } from "@/lib/checks/contract";
 import { gapBlock } from "@/lib/checks/retrieved-results-model";
 import { matchingCompetitor, type TrackedCompetitor } from "@/lib/competitors/serp-comparison";
+import { useTranslations } from "next-intl";
 import { type RefObject, useCallback, useRef } from "react";
 
 const ROW_HEIGHT = 65;
@@ -14,11 +15,14 @@ type LadderProps = {
   trackedRef?: RefObject<HTMLLIElement | null>;
 };
 
-function rowLabel(row: RetrievedRow) {
+function rowLabel(
+  row: RetrievedRow,
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordDetail.results">>,
+) {
   const target = row.url ?? row.domain;
   return row.tracked
-    ? `Your result, position ${row.position}, ${target}`
-    : `Position ${row.position}, ${target}`;
+    ? t("yourResultAria", { position: row.position, target })
+    : t("resultAria", { position: row.position, target });
 }
 
 function LadderRow({
@@ -30,9 +34,10 @@ function LadderRow({
   row: RetrievedRow;
   trackedRef?: RefObject<HTMLLIElement | null>;
 }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.results");
   return (
     <li
-      aria-label={rowLabel(row)}
+      aria-label={rowLabel(row, t)}
       className={`relative grid min-h-[64px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-2 border-b border-border px-4 py-2.5 last:border-b-0 sm:gap-3 sm:px-6 ${row.tracked ? "m-3 rounded-control border border-border-control px-3 last:border-b sm:px-4" : ""}`}
       data-tracked={row.tracked ? "true" : undefined}
       ref={row.tracked ? trackedRef : undefined}
@@ -40,7 +45,7 @@ function LadderRow({
       <span
         className={`font-sans tabular-nums text-[12px] ${row.tracked ? "font-semibold text-fg" : "text-fg-muted"}`}
       >
-        #{row.position}
+        {t("position", { position: row.position })}
       </span>
       <span className="min-w-0">
         {row.url ? (
@@ -63,7 +68,7 @@ function LadderRow({
       </span>
       {row.tracked || competitor ? (
         <span className="rounded-full border border-accent-solid px-2.5 py-1 font-sans tabular-nums text-[10px] font-medium text-accent-text">
-          {row.tracked ? "Your site" : "Competitor"}
+          {row.tracked ? t("yourSite") : t("competitor")}
         </span>
       ) : null}
     </li>
@@ -75,6 +80,7 @@ export function RetrievedResultsLadder({
   results,
   trackedRef,
 }: Readonly<LadderProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.results");
   const scrollerRef = useRef<HTMLElement | null>(null);
   const gap = gapBlock({
     requestedDepth: results.requestedDepth,
@@ -93,7 +99,7 @@ export function RetrievedResultsLadder({
 
   return (
     <section
-      aria-label="Retrieved results"
+      aria-label={t("ladderAria")}
       className="max-h-[420px] overflow-y-auto"
       key={results.checkId}
       ref={openAtTracked}
@@ -113,10 +119,14 @@ export function RetrievedResultsLadder({
       {gap ? (
         <div className="m-3 rounded-control border border-dashed border-border bg-bg-sunken p-3">
           <p className="m-0 font-sans tabular-nums text-[11px] font-medium uppercase text-fg-muted">
-            {gap.heading}
+            {t("gapPositions", { end: gap.end, start: gap.start })}
           </p>
-          <p className="m-0 mt-1 font-sans tabular-nums text-[11px] text-fg-muted">{gap.count}</p>
-          <p className="m-0 mt-2 text-[12px] leading-5 text-fg-muted">{gap.reason}</p>
+          <p className="m-0 mt-1 font-sans tabular-nums text-[11px] text-fg-muted">
+            {t("notRetrieved", { count: gap.count })}
+          </p>
+          <p className="m-0 mt-2 text-[12px] leading-5 text-fg-muted">
+            {gap.kind === "stopped" ? t("gapStopped") : t("gapUnknown")}
+          </p>
         </div>
       ) : null}
     </section>

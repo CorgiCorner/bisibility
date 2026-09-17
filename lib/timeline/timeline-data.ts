@@ -1,12 +1,14 @@
+import type { DateDisplayContext } from "@/lib/dates/format";
 import type { FeedRowMetadata } from "@/lib/feeds/facets";
-import {
-  createUserDateTimeFormatter,
-  type DateTimeFormatContext,
-} from "@/lib/format/user-datetime";
 import type { Device, SignalSeverity, SignalSource } from "@/lib/generated/prisma/client";
 import type { TimelineFilterKey, TimelineSignalRow, TimelineView } from "@/lib/queries/timeline";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 import { SIGNAL_TYPES } from "@/lib/signals/types";
+import {
+  createTimelineDateTimeFormatter,
+  type TimelineDateTimeFormatter,
+} from "./timeline-date-formatter";
+import type { TimelinePresentation } from "./timeline-presentation";
 
 export type TimelineItemIcon = "api" | "deploys" | "notes" | "pages" | "rankings" | "status";
 export type TimelineItemTint = "amber" | "green" | "red";
@@ -16,7 +18,7 @@ export type TimelineFilterView = {
   label: string;
   selected: boolean;
 };
-export type TimelineBadge = "Test event" | "URL changed";
+export type TimelineBadge = string;
 export type TimelineItemDetail = { label: string; value: string };
 export type TimelineMarketMeta = {
   device: Device;
@@ -45,12 +47,12 @@ export type TimelineGroup = { day: string; items: TimelineItem[] };
 type JsonObject = Record<string, unknown>;
 
 export const timelineFilterOptions = [
-  { icon: "all", key: "all", label: "All" },
-  { icon: "rankings", key: "rankings", label: "Rankings" },
-  { icon: "pages", key: "pages", label: "Pages" },
-  { icon: "deploys", key: "deploys", label: "Deploys" },
-  { icon: "notes", key: "notes", label: "Notes" },
-] satisfies Omit<TimelineFilterView, "selected">[];
+  { icon: "all", key: "all" },
+  { icon: "rankings", key: "rankings" },
+  { icon: "pages", key: "pages" },
+  { icon: "deploys", key: "deploys" },
+  { icon: "notes", key: "notes" },
+] satisfies Omit<TimelineFilterView, "label" | "selected">[];
 
 const iconBySource = {
   api: "api",
@@ -69,18 +71,6 @@ const tintBySeverity = {
   info: "green",
   warning: "amber",
 } satisfies Record<SignalSeverity, TimelineItemTint>;
-
-const sourceLabel = {
-  api: "API",
-  cms: "CMS",
-  deploy: "Deploy",
-  manual: "Manual",
-  rank_tracker: "Rank tracker",
-  search_analytics: "Search analytics",
-  search_engine_status: "Search status",
-  sitemap: "Sitemap",
-  url_inspection: "URL inspection",
-} satisfies Record<SignalSource, string>;
 
 const sourceTag = {
   api: "API",
@@ -108,10 +98,6 @@ function numberOrNull(source: JsonObject, key: string) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function rankLabel(value: number | null, requestedDepth: number) {
-  return value === null ? `not found in top ${requestedDepth}` : String(value);
-}
-
 function pathFromUrl(value: string) {
   if (value.startsWith("/")) return value;
   try {
@@ -127,34 +113,37 @@ function titleCase(type: string) {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-function actorLabel(row: TimelineSignalRow) {
-  return row.createdBy?.name?.trim() || row.createdBy?.email || "System";
+function actorLabel(row: TimelineSignalRow, presentation: TimelinePresentation) {
+  return row.createdBy?.name?.trim() || row.createdBy?.email || presentation.actorSystem();
 }
 
-function titleFor(row: TimelineSignalRow, payload: JsonObject) {
+function titleFor(row: TimelineSignalRow, payload: JsonObject, presentation: TimelinePresentation) {
   if (row.type === SIGNAL_TYPES.rankingChanged) {
     const requestedDepth = numberOrNull(payload, "requestedDepth") ?? DEFAULT_SERP_DEPTH;
     const before = numberOrNull(payload, "before");
     const after = numberOrNull(payload, "after");
     if (before === null) {
       return after === null
-        ? `First observation: not found in top ${requestedDepth}`
-        : `First observation: #${after}`;
+        ? presentation.rankFirstNotFound(requestedDepth)
+        : presentation.rankFirstPosition(after);
     }
-    return `Position ${rankLabel(before, requestedDepth)} → ${rankLabel(after, requestedDepth)}`;
+    return after === null
+      ? presentation.rankPositionNotFound(before, requestedDepth)
+      : presentation.rankPosition(before, after);
   }
-  if (row.type === SIGNAL_TYPES.rankingUrlChanged) return "Ranking URL changed";
-  if (row.type === SIGNAL_TYPES.note) return text(payload, "note") ?? "Manual note";
-  if (row.type === SIGNAL_TYPES.deployCompleted) return "Deploy completed";
-  if (row.type === SIGNAL_TYPES.sitemapChanged) return "Sitemap changed";
-  if (row.type === SIGNAL_TYPES.pageChanged) return "Page changed";
-  if (row.type === SIGNAL_TYPES.urlIndexed) return "URL indexed";
-  if (row.type === SIGNAL_TYPES.urlDeindexed) return "URL deindexed";
-  if (row.type === SIGNAL_TYPES.searchEngineUpdate) return "Search engine update";
-  return titleCase(row.type);
+  if (row.type === SIGNAL_TYPES.rankingUrlChanged) return presentation.titleRankingUrlChanged();
+  if (row.type === SIGNAL_TYPES.note)
+    return text(payload, "note") ?? presentation.titleManualNote();
+  if (row.type === SIGNAL_TYPES.deployCompleted) return presentation.titleDeployCompleted();
+  if (row.type === SIGNAL_TYPES.sitemapChanged) return presentation.titleSitemapChanged();
+  if (row.type === SIGNAL_TYPES.pageChanged) return presentation.titlePageChanged();
+  if (row.type === SIGNAL_TYPES.urlIndexed) return presentation.titleUrlIndexed();
+  if (row.type === SIGNAL_TYPES.urlDeindexed) return presentation.titleUrlDeindexed();
+  if (row.type === SIGNAL_TYPES.searchEngineUpdate) return presentation.titleSearchEngineUpdate();
+  return presentation.titleUnknown(titleCase(row.type));
 }
 
-function noteFor(row: TimelineSignalRow, payload: JsonObject) {
+function noteFor(row: TimelineSignalRow, payload: JsonObject, presentation: TimelinePresentation) {
   if (row.type === SIGNAL_TYPES.rankingUrlChanged) {
     const before = text(payload, "before");
     const after = text(payload, "after");
@@ -164,7 +153,7 @@ function noteFor(row: TimelineSignalRow, payload: JsonObject) {
     const added = numberOrNull(payload, "addedCount") ?? 0;
     const removed = numberOrNull(payload, "removedCount") ?? 0;
     const changed = numberOrNull(payload, "lastmodChangedCount") ?? 0;
-    return `+${added} / -${removed} / ${changed} lastmod`;
+    return presentation.sitemapChange(added, removed, changed);
   }
   if (row.type !== SIGNAL_TYPES.note) return text(payload, "note") ?? undefined;
   return undefined;
@@ -178,7 +167,11 @@ function positionFor(row: TimelineSignalRow, payload: JsonObject) {
   return position === null ? undefined : `#${position}`;
 }
 
-function deployDetails(row: TimelineSignalRow, payload: JsonObject) {
+function deployDetails(
+  row: TimelineSignalRow,
+  payload: JsonObject,
+  presentation: TimelinePresentation,
+) {
   if (row.type !== SIGNAL_TYPES.deployCompleted) return undefined;
 
   const provider = text(payload, "provider");
@@ -191,17 +184,23 @@ function deployDetails(row: TimelineSignalRow, payload: JsonObject) {
     : [];
   const details = [
     provider
-      ? { label: "Provider", value: provider.charAt(0).toUpperCase() + provider.slice(1) }
+      ? {
+          label: presentation.detailProvider(),
+          value: provider.charAt(0).toUpperCase() + provider.slice(1),
+        }
       : null,
-    deploymentId ? { label: "Deployment ID", value: deploymentId } : null,
-    environment ? { label: "Environment", value: environment } : null,
-    paths.length ? { label: "Paths", value: paths.join(", ") } : null,
+    deploymentId ? { label: presentation.detailDeploymentId(), value: deploymentId } : null,
+    environment ? { label: presentation.detailEnvironment(), value: environment } : null,
+    paths.length ? { label: presentation.detailPaths(), value: paths.join(", ") } : null,
   ].filter((detail): detail is TimelineItemDetail => Boolean(detail));
 
   return details.length ? details : undefined;
 }
 
-function metaFor(row: TimelineSignalRow): Pick<TimelineItem, "feedMeta" | "marketMeta" | "meta"> {
+function metaFor(
+  row: TimelineSignalRow,
+  presentation: TimelinePresentation,
+): Pick<TimelineItem, "feedMeta" | "marketMeta" | "meta"> {
   const feedMeta = { ...row.feedMeta, source: sourceTag[row.source] };
   const isRankingSignal =
     row.type === SIGNAL_TYPES.rankingChanged || row.type === SIGNAL_TYPES.rankingUrlChanged;
@@ -210,18 +209,22 @@ function metaFor(row: TimelineSignalRow): Pick<TimelineItem, "feedMeta" | "marke
       row.keyword.text,
       row.keyword.locationRef.displayName,
       row.keyword.locationRef.languageLabel,
-      sourceLabel[row.source],
+      presentation.sourceLabel(row.source),
     ];
-    const deviceLabel = row.keyword.device === "mobile" ? "Mobile" : "Desktop";
+    const deviceLabel = presentation.deviceLabel(row.keyword.device);
     return {
       feedMeta,
       marketMeta: { device: row.keyword.device, segments },
       meta: [...segments.slice(0, 3), deviceLabel, segments[3]].join(" / "),
     };
   }
-  const keyword = row.keyword?.text ? `Keyword: ${row.keyword.text}` : null;
-  const actor = row.type === SIGNAL_TYPES.note ? `by ${actorLabel(row)}` : null;
-  return { feedMeta, meta: [keyword, sourceLabel[row.source], actor].filter(Boolean).join(" · ") };
+  const keyword = row.keyword?.text ? presentation.keyword(row.keyword.text) : null;
+  const actor =
+    row.type === SIGNAL_TYPES.note ? presentation.byActor(actorLabel(row, presentation)) : null;
+  return {
+    feedMeta,
+    meta: [keyword, presentation.sourceLabel(row.source), actor].filter(Boolean).join(" · "),
+  };
 }
 
 function safeHref(value: string | null | undefined) {
@@ -234,38 +237,43 @@ function urlFor(row: TimelineSignalRow, payload: JsonObject) {
 
 function mapRow(
   row: TimelineSignalRow,
-  dateTime: ReturnType<typeof createUserDateTimeFormatter>,
+  dateTime: TimelineDateTimeFormatter,
+  presentation: TimelinePresentation,
 ): TimelineItem {
   const payload = asObject(row.payload);
   const url = urlFor(row, payload);
-  const meta = metaFor(row);
+  const meta = metaFor(row, presentation);
 
   return {
     badge:
       row.type === SIGNAL_TYPES.rankingUrlChanged
-        ? "URL changed"
+        ? presentation.badgeUrlChanged()
         : row.type === SIGNAL_TYPES.deployCompleted && payload.test === true
-          ? "Test event"
+          ? presentation.badgeTestEvent()
           : undefined,
     date: dateTime.formatDate(row.happenedAt),
-    details: deployDetails(row, payload),
+    details: deployDetails(row, payload, presentation),
     icon: iconBySource[row.source],
     id: row.publicId,
     ...meta,
-    note: noteFor(row, payload),
+    note: noteFor(row, payload, presentation),
     position: positionFor(row, payload),
     removable: row.source === "manual" && row.type === SIGNAL_TYPES.note,
     time: dateTime.formatTime(row.happenedAt),
     tint: tintBySeverity[row.severity],
-    title: titleFor(row, payload),
+    title: titleFor(row, payload, presentation),
     url,
     urlLabel: url ? pathFromUrl(url) : undefined,
   };
 }
 
-export function timelineFilters(view: TimelineView): TimelineFilterView[] {
+export function timelineFilters(
+  view: TimelineView,
+  presentation: TimelinePresentation,
+): TimelineFilterView[] {
   return timelineFilterOptions.map((option) => ({
     ...option,
+    label: presentation.filterLabel(option.key),
     selected: option.key === view.filter,
   }));
 }
@@ -273,13 +281,18 @@ export function timelineFilters(view: TimelineView): TimelineFilterView[] {
 export function timelineGroups(
   rows: TimelineSignalRow[],
   now: Date,
-  context: DateTimeFormatContext,
+  context: DateDisplayContext,
+  presentation: TimelinePresentation,
 ): TimelineGroup[] {
-  const dateTime = createUserDateTimeFormatter(context);
+  const dateTime = createTimelineDateTimeFormatter(context);
   const groups = new Map<string, TimelineItem[]>();
   for (const row of rows) {
-    const day = dateTime.formatRelativeDay(row.happenedAt, now);
-    groups.set(day, [...(groups.get(day) ?? []), mapRow(row, dateTime)]);
+    const relativeDay = dateTime.formatRelativeDay(row.happenedAt, now);
+    const day =
+      relativeDay === "today" || relativeDay === "yesterday"
+        ? presentation.relativeDay(relativeDay)
+        : dateTime.formatDate(row.happenedAt);
+    groups.set(day, [...(groups.get(day) ?? []), mapRow(row, dateTime, presentation)]);
   }
   return Array.from(groups, ([day, items]) => ({ day, items }));
 }

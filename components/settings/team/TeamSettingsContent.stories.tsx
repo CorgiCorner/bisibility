@@ -1,3 +1,4 @@
+import { withTeamSettingsMessages } from "@/.storybook/team-settings-messages";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { TeamSettingsContent } from "@/components/settings/team/TeamSettingsContent";
 import {
@@ -19,6 +20,7 @@ const actions = {
 
 function member(overrides: Partial<TeamMemberData>): TeamMemberData {
   return {
+    accessSince: "2025-02-04",
     accessLabel: "Project access since 4 Feb 2025",
     canChangeRole: true,
     canRemove: true,
@@ -69,9 +71,11 @@ const settledTeam: TeamAccessView = {
   pendingInvites: [
     {
       email: "editor@example.com",
+      expiresAt: "2026-09-18T12:00:00.000Z",
       expired: false,
       expiresLabel: "expires in 5d",
       id: "inv_story_editor",
+      invitedAt: "2026-09-11T12:00:00.000Z",
       invitedByLabel: "Owner Example (owner@example.com)",
       invitedLabel: "invited 2d ago",
       role: "Editor",
@@ -79,9 +83,11 @@ const settledTeam: TeamAccessView = {
     },
     {
       email: "partner@example.org",
+      expiresAt: "2026-09-20T12:00:00.000Z",
       expired: false,
       expiresLabel: "expires in 7d",
       id: "inv_story_viewer",
+      invitedAt: "2026-09-13T06:00:00.000Z",
       invitedByLabel: "Owner Example (owner@example.com)",
       invitedLabel: "invited 6h ago",
       role: "Viewer",
@@ -89,21 +95,25 @@ const settledTeam: TeamAccessView = {
     },
     {
       email: "expired@example.com",
+      expiresAt: "2026-09-09T12:00:00.000Z",
       expired: true,
       expiresLabel: "expired 4d ago",
       id: "inv_story_expired",
+      invitedAt: "2026-09-02T12:00:00.000Z",
       invitedByLabel: "Owner Example (owner@example.com)",
       invitedLabel: "invited 11d ago",
       role: "Editor",
       roleValue: "member",
     },
   ],
+  now: "2026-09-13T12:00:00.000Z",
 };
 
 const meta = {
   args: { activeSection: "team", children: null, projectRef },
   component: SettingsShell,
   decorators: [
+    withTeamSettingsMessages,
     (Story) => (
       <main className="min-h-screen bg-bg p-4 text-fg sm:p-6">
         <Story />

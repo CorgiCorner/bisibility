@@ -1,6 +1,5 @@
-import type { DateFormat } from "@/lib/dates/format";
 import type { KeywordRow, PositionPoint } from "@/lib/queries/keywords";
-import { calendarDayKey, dailyPositionPoints, positionDateLabel } from "./position-history";
+import { calendarDayKey, dailyPositionPoints } from "./position-history";
 
 export function keywordMarketLabel(keyword: Pick<KeywordRow, "location">) {
   return `${keyword.location.displayName} / ${keyword.location.languageLabel ?? keyword.location.hl}`;
@@ -16,15 +15,12 @@ export function comparisonTargets(targets: readonly KeywordRow[], active: Keywor
 export function marketComparisonData(
   targets: readonly KeywordRow[],
   days: number,
-  dateFormat: DateFormat = "month_first",
+  now = new Date(),
 ) {
   const histories = targets.map((target) => ({
-    points: dailyPositionPoints(target.positionHistory, days).map((point) => ({
+    points: dailyPositionPoints(target.positionHistory, days, now).map((point) => ({
       ...point,
-      label:
-        point.label === "Today"
-          ? "Today"
-          : positionDateLabel(new Date(point.checkedAt), new Date(), dateFormat),
+      label: calendarDayKey(new Date(point.checkedAt)),
     })),
     target,
   }));

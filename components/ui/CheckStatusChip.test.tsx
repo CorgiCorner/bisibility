@@ -1,13 +1,24 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { CheckStatusChip, type CheckStatusKind } from "./CheckStatusChip";
 
 const KINDS: CheckStatusKind[] = ["completed", "failed", "pending", "running"];
 
+function AllCheckStatusChips() {
+  return (
+    <>
+      {KINDS.map((kind) => (
+        <CheckStatusChip key={kind} kind={kind} />
+      ))}
+    </>
+  );
+}
+
 describe("CheckStatusChip", () => {
   it("pulses only the running dot and keeps all others static", () => {
     for (const kind of KINDS) {
-      const { unmount } = render(<CheckStatusChip kind={kind} />);
+      const { unmount } = renderWithSharedMessages(<CheckStatusChip kind={kind} />);
       const chip = screen.getByText(
         kind === "completed"
           ? "Completed"
@@ -34,7 +45,7 @@ describe("CheckStatusChip", () => {
   });
 
   it("keeps the running dot relative, aria-hidden, and free of inline motion", () => {
-    render(<CheckStatusChip kind="running" />);
+    renderWithSharedMessages(<CheckStatusChip kind="running" />);
 
     const dot = screen
       .getByText("Running")
@@ -45,7 +56,7 @@ describe("CheckStatusChip", () => {
   });
 
   it("renders default labels for all four kinds", () => {
-    render(KINDS.map((k) => <CheckStatusChip key={k} kind={k} />));
+    renderWithSharedMessages(<AllCheckStatusChips />);
 
     expect(screen.getByText("Completed")).toBeInTheDocument();
     expect(screen.getByText("Failed")).toBeInTheDocument();

@@ -32,6 +32,7 @@ function assertSliceHeaders(canvasElement: HTMLElement, label: string, headers: 
 export const PageSlice: Story = {
   render: () => (
     <DrawerSliceRows
+      isPageRows
       keyEventsConfigured
       label="Your pages competing for it"
       pageMetricsReadable
@@ -54,6 +55,7 @@ export const PageSlice: Story = {
 export const PageSliceWithoutMetrics: Story = {
   render: () => (
     <DrawerSliceRows
+      isPageRows
       keyEventsConfigured
       label="Your page ranking for it"
       pageMetricsReadable={false}
@@ -77,6 +79,7 @@ export const PageSliceWithoutMetrics: Story = {
 export const QuerySlice: Story = {
   render: () => (
     <DrawerSliceRows
+      isPageRows={false}
       keyEventsConfigured={null}
       label="Queries landing here"
       rows={storyQueryDetail.pages.rows.map((row) => ({

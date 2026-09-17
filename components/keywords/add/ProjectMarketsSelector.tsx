@@ -1,14 +1,18 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { MarketPicker, type MarketPickerChoice } from "@/components/markets/MarketPicker";
 import { Button } from "@/components/ui/Button";
 import { addProjectMarkets, type ProjectMarketChoice } from "@/lib/actions/project-markets";
+import { languageDisplayName, regionDisplayName } from "@/lib/i18n/display-names";
 import { fieldLabelClass, fieldMetaClass } from "@/lib/keywords/add-keyword-drawer-shared";
+import { MarketArchivedError } from "@/lib/markets/archived";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
-import { type SerpDevice, serpDeviceOptions } from "@/lib/serp/constants";
-import { actionErrorMessage } from "@/lib/ui/action-error";
+import { type SerpDevice, serpDeviceValues } from "@/lib/serp/constants";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 type ProjectMarketsSelectorProps = {
@@ -30,15 +34,28 @@ function marketChoice(choice: MarketPickerChoice): ProjectMarketChoice {
   };
 }
 
-function label(market: ProjectMarketsView["markets"][number]) {
-  return `${market.displayName} / ${market.languageLabel}`;
+type MarketNames = { language: string; location: string };
+
+/** The stored labels are English; the viewer's locale owns the words that are shown. */
+function marketNames(market: ProjectMarketsView["markets"][number], locale: string): MarketNames {
+  return {
+    language: languageDisplayName(market.languageCode, market.languageLabel, locale),
+    location: regionDisplayName(market.countryCode, market.displayName, locale),
+  };
 }
 
-function SectionLabel({ children }: Readonly<{ children: string }>) {
+function label(names: MarketNames) {
+  return `${names.location} / ${names.language}`;
+}
+
+function SectionLabel({
+  children,
+  requiredLabel,
+}: Readonly<{ children: string; requiredLabel: string }>) {
   return (
     <div className="flex items-center gap-2">
       <span className={fieldLabelClass}>{children}</span>
-      <span className={fieldMetaClass}>Required</span>
+      <span className={fieldMetaClass}>{requiredLabel}</span>
     </div>
   );
 }
@@ -52,6 +69,10 @@ export function ProjectMarketsSelector({
   onChange,
   projectId,
 }: Readonly<ProjectMarketsSelectorProps>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.add");
+  const deviceNames = useTranslations("shared.markets");
+  const locale = useLocale();
+  const sharedErrors = useSharedErrorMessages();
   const [markets, setMarkets] = useState(initialMarkets);
   const [selectedKeys, setSelectedKeys] = useState<string[]>(() => [...initialMarketKeys]);
   const [devices, setDevices] = useState<SerpDevice[]>(() =>
@@ -86,7 +107,7 @@ export function ProjectMarketsSelector({
     try {
       const result = await addProjectMarkets({ choices: choices.map(marketChoice), projectId });
       if (!result.ok) {
-        setError(`This project can track up to ${result.maxMarkets} markets.`);
+        setError(t("marketLimit", { count: result.maxMarkets }));
         return;
       }
       const added = choices.map((choice) => ({
@@ -104,15 +125,19 @@ export function ProjectMarketsSelector({
       update([...selectedKeys, ...added.map((choice) => choice.canonicalKey)]);
       setPickerOpen(false);
     } catch (cause) {
-      setError(actionErrorMessage(cause, "Markets could not be added."));
+      if (cause instanceof MarketArchivedError) {
+        setError(t("marketArchived", { market: cause.marketName }));
+        return;
+      }
+      setError(presentSafeActionError(cause, sharedErrors, t("marketsAddFailed")));
     }
   }
 
   const visibleMarkets = markets.markets;
   return (
-    <section aria-label="Markets" className="grid gap-3">
+    <section aria-label={t("markets")} className="grid gap-3">
       <div>
-        <SectionLabel>Markets</SectionLabel>
+        <SectionLabel requiredLabel={t("required")}>{t("markets")}</SectionLabel>
         {description ? <p className="m-0 mt-1 text-[11.5px] text-fg-muted">{description}</p> : null}
       </div>
       {visibleMarkets.length > 0 ? (
@@ -120,9 +145,10 @@ export function ProjectMarketsSelector({
           {visibleMarkets.map((market) => {
             const active = market.status === "active";
             const selected = selectedKeys.includes(market.canonicalKey);
+            const names = marketNames(market, locale);
             return (
               <button
-                aria-label={label(market)}
+                aria-label={label(names)}
                 aria-pressed={selected}
                 className={`inline-flex min-h-[30px] max-w-full items-center gap-1.5 rounded-full border border-border px-2.5 text-[12px] font-medium outline-offset-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${
                   selected ? "bg-bg-sunken text-fg" : "bg-bg-elev text-fg-muted hover:bg-bg-sunken"
@@ -133,17 +159,17 @@ export function ProjectMarketsSelector({
               >
                 {selected ? <Check aria-hidden size={10} weight="regular" /> : null}
                 <span className="inline-flex min-w-0 items-baseline gap-1 whitespace-nowrap">
-                  <span className="truncate font-semibold">{market.displayName}</span>
-                  <span className="text-fg-muted">/ {market.languageLabel}</span>
+                  <span className="truncate font-semibold">{names.location}</span>
+                  <span className="text-fg-muted">/ {names.language}</span>
                 </span>
                 {!market.researchAvailable ? (
                   <span className="font-sans text-[10px] tabular-nums" style={{ fontSize: "10px" }}>
-                    no volume/KD
+                    {t("marketUnavailableResearch")}
                   </span>
                 ) : null}
                 {!active ? (
                   <span className="font-sans text-[9px] tabular-nums" style={{ fontSize: "9px" }}>
-                    PAUSED
+                    {t("marketPaused")}
                   </span>
                 ) : null}
               </button>
@@ -151,7 +177,7 @@ export function ProjectMarketsSelector({
           })}
         </div>
       ) : (
-        <p className="m-0 text-[12px] text-fg-muted">No markets yet. Add one with New market.</p>
+        <p className="m-0 text-[12px] text-fg-muted">{t("noMarkets")}</p>
       )}
       <Button
         disabled={visibleMarkets.length >= markets.maxMarkets}
@@ -177,7 +203,7 @@ export function ProjectMarketsSelector({
         type="button"
         variant="ghost"
       >
-        New market
+        {t("newMarket")}
       </Button>
       {pickerOpen ? (
         <MarketPicker
@@ -189,20 +215,18 @@ export function ProjectMarketsSelector({
         />
       ) : null}
       <div>
-        <SectionLabel>Devices</SectionLabel>
+        <SectionLabel requiredLabel={t("required")}>{t("devices")}</SectionLabel>
         <div className="mt-2 flex gap-2">
-          {serpDeviceOptions.map((option) => (
+          {serpDeviceValues.map((device) => (
             <button
-              aria-pressed={devices.includes(option.value)}
-              className={`inline-flex min-h-[30px] items-center gap-1.5 rounded-full border border-border px-3 text-[12px] font-medium outline-offset-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${devices.includes(option.value) ? "bg-bg-sunken text-fg" : "bg-bg-elev text-fg-muted hover:bg-bg-sunken"}`}
-              key={option.value}
-              onClick={() => toggleDevice(option.value)}
+              aria-pressed={devices.includes(device)}
+              className={`inline-flex min-h-[30px] items-center gap-1.5 rounded-full border border-border px-3 text-[12px] font-medium outline-offset-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid ${devices.includes(device) ? "bg-bg-sunken text-fg" : "bg-bg-elev text-fg-muted hover:bg-bg-sunken"}`}
+              key={device}
+              onClick={() => toggleDevice(device)}
               type="button"
             >
-              {devices.includes(option.value) ? (
-                <Check aria-hidden size={10} weight="regular" />
-              ) : null}
-              {option.label}
+              {devices.includes(device) ? <Check aria-hidden size={10} weight="regular" /> : null}
+              {deviceNames(device)}
             </button>
           ))}
         </div>

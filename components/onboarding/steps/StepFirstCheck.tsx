@@ -5,6 +5,7 @@ import { locationValuesForKeys } from "@/components/onboarding/onboarding-locati
 import { Button } from "@/components/ui/Button";
 import type { ProjectDefaultsInput } from "@/lib/schemas/project";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { FirstCheckErrors } from "./FirstCheckErrors";
 import { FirstCheckQueueMessage } from "./FirstCheckQueueMessage";
@@ -19,14 +20,6 @@ import { useFirstCheckKeyword } from "./use-first-check-keyword";
 import { useFirstCheckRun } from "./use-first-check-run";
 import { useFirstCheckSubmit } from "./use-first-check-submit";
 
-const frequencyLabels: Record<ProjectDefaultsInput["frequency"], string> = {
-  custom_cron: "Custom cron",
-  daily: "Daily",
-  manual: "Manual",
-  monthly: "Monthly",
-  paused: "Paused",
-  weekly: "Weekly",
-};
 function selectedDevices(
   defaults: ProjectDefaultsInput | OnboardingTrackingDefaultsInput | undefined,
 ) {
@@ -43,6 +36,25 @@ function selectedMarkets(
 }
 const isPausedFrequency = (frequency: ProjectDefaultsInput["frequency"] | undefined) =>
   frequency === "manual" || frequency === "paused";
+function localizedFrequency(
+  t: ReturnType<typeof useTranslations<"onboarding.firstCheck">>,
+  frequency: ProjectDefaultsInput["frequency"],
+) {
+  switch (frequency) {
+    case "custom_cron":
+      return t("frequency.customCron");
+    case "daily":
+      return t("frequency.daily");
+    case "manual":
+      return t("frequency.manual");
+    case "monthly":
+      return t("frequency.monthly");
+    case "paused":
+      return t("frequency.paused");
+    case "weekly":
+      return t("frequency.weekly");
+  }
+}
 export function StepFirstCheck({
   completeOnboardingAction,
   connectProviderAction,
@@ -66,6 +78,7 @@ export function StepFirstCheck({
   saveMarketsAction,
   testProviderConnectionAction,
 }: Readonly<StepFirstCheckProps>) {
+  const t = useTranslations("onboarding.firstCheck");
   const projectId = flowState?.projectId ?? defaults?.projectId ?? null;
   const hasProject = Boolean(projectId);
   const navigationProjectId = project?.publicId ?? projectId;
@@ -75,9 +88,13 @@ export function StepFirstCheck({
   const markets = selectedMarkets(defaults),
     devices = selectedDevices(defaults);
   const sampleCount = keywordCount > 0 ? markets.length * devices.length : 0;
+  const deviceLabel =
+    devices.length === 2 && devices.includes("desktop") && devices.includes("mobile")
+      ? t("review.bothDevices")
+      : t("review.devices", { count: devices.length });
   const matrixLabel =
     sampleCount > 1
-      ? `1 keyword · ${markets.length} ${markets.length === 1 ? "market" : "markets"} · ${devices.length === 2 && devices.includes("desktop") && devices.includes("mobile") ? "both devices" : `${devices.length} ${devices.length === 1 ? "device" : "devices"}`} · ${sampleCount} checks`
+      ? t("matrix", { checks: sampleCount, devices: deviceLabel, markets: markets.length })
       : null;
   const { keywordError, retryKeyword, sampleKeyword } = useFirstCheckKeyword({
     initialKeywordText,
@@ -114,24 +131,28 @@ export function StepFirstCheck({
     (providerReady && !sampleKeyword);
   const providerLabel = providerReady
     ? displayProvider(providerId ?? flowState?.providerId)
-    : "Not connected";
-  const frequencyLabel = frequencyLabels[defaults?.frequency ?? "daily"] ?? "Daily";
+    : t("notConnected");
+  const frequency = defaults?.frequency ?? "daily";
+  const frequencyLabel = localizedFrequency(t, frequency);
   const hasFailedSampleChecks = state.rows.some((row) => row.status === "failed");
   const queueMessage = sampleProject
-    ? "Sample projects keep their synthetic ranking history."
+    ? t("queue.sample")
     : !providerReady
       ? null
       : paused
-        ? "Manual preview can run now. Scheduled checks stay paused."
+        ? t("queue.manual")
         : state.status === "running"
-          ? "Sample checks are running. You can open the dashboard while they finish."
+          ? t("queue.running")
           : state.status === "queued"
-            ? "Sample checks are queued. You can open the dashboard while the worker starts them."
+            ? t("queue.queued")
             : state.status === "completed"
               ? hasFailedSampleChecks
-                ? `The sample ${state.rows.length === 1 ? "check" : "checks"} finished with an issue. You can retry the failed ${state.rows.length === 1 ? "check" : "checks"} below. Every keyword still follows your ${frequencyLabel.toLowerCase()} schedule.`
-                : `Sample ${state.rows.length === 1 ? "check" : "checks"} finished. Every keyword follows your ${frequencyLabel.toLowerCase()} schedule from here.`
-              : `${sampleCount} ${sampleCount === 1 ? "check" : "checks"} run once now so you can see it working. Everything else follows your ${frequencyLabel.toLowerCase()} schedule.`;
+                ? t("queue.completedWithFailures", {
+                    checks: state.rows.length,
+                    frequency: frequencyLabel,
+                  })
+                : t("queue.completed", { checks: state.rows.length, frequency: frequencyLabel })
+              : t("queue.initial", { checks: sampleCount, frequency: frequencyLabel });
 
   function openProvider() {
     providerCloseFocusRef.current = "trigger";
@@ -166,7 +187,7 @@ export function StepFirstCheck({
       await onTimezoneChange?.(value);
     } catch {
       setTimezone((current) => (current === value ? previous : current));
-      setTimezoneError("Timezone could not be saved. Try again.");
+      setTimezoneError(t("errors.timezone"));
     }
   }
 
@@ -179,7 +200,7 @@ export function StepFirstCheck({
       type="button"
       variant="secondary"
     >
-      Back
+      {t("back")}
     </Button>
   ) : (
     <Button
@@ -189,24 +210,24 @@ export function StepFirstCheck({
       style={{ "--control-color": "var(--fg-muted)" }}
       variant="secondary"
     >
-      Back
+      {t("back")}
     </Button>
   );
 
   const reviewDescription =
     state.status === "completed"
-      ? "Your first results are ready."
+      ? t("description.completed")
       : !providerReady
-        ? "Almost ready. Everything is set - connect a data provider whenever you want to run checks."
+        ? t("description.noProvider")
         : defaults?.frequency === "manual"
-          ? "Everything's ready. Run your first check whenever you like - nothing runs until you start it."
+          ? t("description.manual")
           : defaults?.frequency === "paused"
-            ? "Everything's ready. Checks are paused until you resume the schedule."
-            : `Your ${frequencyLabel.toLowerCase()} schedule is set. You can also run a sample check now.`;
+            ? t("description.paused")
+            : t("description.scheduled", { frequency: frequencyLabel });
 
   return (
     <form id={onboardingFormId} onSubmit={onSubmit}>
-      <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">First check</h2>
+      <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{t("title")}</h2>
       <div className="mt-1 text-[13px] text-fg-muted">{reviewDescription}</div>
 
       <StepFirstCheckReview
@@ -216,7 +237,7 @@ export function StepFirstCheck({
         keywordCount={keywordCount}
         markets={markets}
         onTimezoneChange={(value) => void changeTimezone(value)}
-        providerLabel={providerReady ? providerLabel : "Not connected"}
+        providerLabel={providerLabel}
         providerAction={
           !providerReady ? (
             <Button
@@ -228,7 +249,7 @@ export function StepFirstCheck({
               type="button"
               variant="secondary"
             >
-              Connect
+              {t("connect")}
             </Button>
           ) : undefined
         }
@@ -238,10 +259,7 @@ export function StepFirstCheck({
 
       <FirstCheckErrors
         keywordError={
-          keywordError ??
-          (!sampleKeyword && providerReady
-            ? "The sample keyword could not be loaded. Try again."
-            : null)
+          keywordError ?? (!sampleKeyword && providerReady ? t("errors.keyword") : null)
         }
         onRetryKeyword={retryKeyword}
         submitError={submitError}

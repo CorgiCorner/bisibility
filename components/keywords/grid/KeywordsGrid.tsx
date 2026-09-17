@@ -19,6 +19,7 @@ import { marketRunPartition, resolveMarketScope } from "@/lib/markets/market-sco
 import type { RunSelectionSpec } from "@/lib/rank-check/runs/selection";
 import { appPath, marketPath } from "@/lib/routing/app-path";
 import type { SerpDepth } from "@/lib/serp/constants";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { KeywordDataTable } from "./KeywordDataTable";
 import { KeywordsGridDialogBundle } from "./KeywordsGridDialogBundle";
@@ -36,6 +37,7 @@ import { useRankTrackerNavigation } from "./use-flat-rank-tracker-navigation";
 import { useKeywordsGridViewState } from "./use-keywords-grid-view-state";
 
 export function KeywordsGrid(props: KeywordsGridProps) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const {
     activeViewId = null,
     bulkClearTargetAction,
@@ -80,6 +82,7 @@ export function KeywordsGrid(props: KeywordsGridProps) {
     locations,
     rows,
     searchValue,
+    t,
   });
   const keywordsPath = marketContext.market
     ? marketPath(projectId, marketContext.market.ref, "rank-tracker")
@@ -185,8 +188,8 @@ export function KeywordsGrid(props: KeywordsGridProps) {
   const noRowsState =
     props.page > 1 && rows.length === 0
       ? {
-          description: "This page is beyond the available filtered results.",
-          title: "Page no longer available",
+          description: t("pageUnavailableDescription"),
+          title: t("pageUnavailableTitle"),
         }
       : rows.length === 0
         ? keywordNoRowsState({
@@ -196,6 +199,7 @@ export function KeywordsGrid(props: KeywordsGridProps) {
             lens: query.lens,
             onResetScope: resetScope,
             options: locations,
+            t,
           })
         : undefined;
   return (

@@ -7,6 +7,7 @@ import {
   researchCountryScopes,
   resolveCountryScope,
 } from "@/lib/research/scope-country";
+import { useTranslations } from "next-intl";
 
 type ResearchScopePickerProps = {
   disabled?: boolean;
@@ -30,6 +31,7 @@ export function ResearchScopePicker({
   scopes,
   value,
 }: Readonly<ResearchScopePickerProps>) {
+  const t = useTranslations("projectResearch.search");
   const tracked = countryScopes(scopes);
   const trackedCodes = tracked.map((scope) => scope.countryCode);
   const catalog = researchCountryScopes().filter(
@@ -49,13 +51,13 @@ export function ResearchScopePicker({
 
   return (
     <CountrySelect
-      ariaLabel="Country"
+      ariaLabel={t("countryAria")}
       countries={countries}
       disabled={disabled}
       onChange={handleChange}
       trackedCodes={trackedCodes}
       triggerClassName="min-h-[34px] w-full justify-between bg-bg-elev px-3 text-[13px]"
-      triggerTitle="Defaults to the country you track most"
+      triggerTitle={t("countryHelp")}
       triggerWrapperClassName="w-full"
       value={value.countryCode}
     />

@@ -1,4 +1,5 @@
 import { rateForProvider } from "@/lib/cost-estimate/provider-rates";
+import { connectProviderSchema } from "@/lib/schemas/provider";
 import { describe, expect, it } from "vitest";
 import {
   costPerCheckCentsFromUsd,
@@ -12,6 +13,12 @@ const emptyCredentials = {
   projectId: "prj_1",
   providerId: "dataforseo" as const,
   secret: "",
+};
+const validationMessages = {
+  costPrecision: "Use up to 4 decimals.",
+  credentialTooLong: "Credentials must be 500 characters or fewer.",
+  loginRequired: "Enter your API login.",
+  secretRequired: "Enter your API password.",
 };
 
 describe("provider options", () => {
@@ -44,9 +51,10 @@ describe("costPerCheckCentsFromUsd", () => {
   });
 
   it("accepts empty credentials for an already-connected provider", () => {
-    const schema = onboardingConnectProviderSchemaForConnections({
-      dataforseo: {},
-    });
+    const schema = onboardingConnectProviderSchemaForConnections(
+      { dataforseo: {} },
+      validationMessages,
+    );
 
     expect(schema.safeParse(emptyCredentials).success).toBe(true);
   });
@@ -59,7 +67,9 @@ describe("costPerCheckCentsFromUsd", () => {
   });
 
   it("rejects empty credentials for a provider without a stored connection", () => {
-    const result = onboardingConnectProviderSchemaForConnections({}).safeParse(emptyCredentials);
+    const result = onboardingConnectProviderSchemaForConnections({}, validationMessages).safeParse(
+      emptyCredentials,
+    );
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -67,6 +77,50 @@ describe("costPerCheckCentsFromUsd", () => {
         "Enter your API login.",
         "Enter your API password.",
       ]);
+    }
+  });
+
+  it("uses the provided precision message for a form-visible decimal validation error", () => {
+    const schema = onboardingConnectProviderSchemaForConnections(
+      { dataforseo: {} },
+      { ...validationMessages, costPrecision: "Podaj najwyzej 4 miejsca po przecinku." },
+    );
+
+    const result = schema.safeParse({ ...emptyCredentials, costPerCheck: 0.00001 });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues).toContainEqual(
+        expect.objectContaining({ message: "Podaj najwyzej 4 miejsca po przecinku." }),
+      );
+    }
+  });
+
+  it("keeps the server schema's default issue out of the localized form projection", () => {
+    const oversizedSecret = "x".repeat(501);
+    const rawResult = connectProviderSchema.safeParse({
+      login: "login",
+      projectId: "prj_1",
+      providerId: "dataforseo",
+      secret: oversizedSecret,
+    });
+    const projectedResult = onboardingConnectProviderSchemaForConnections(
+      {},
+      { ...validationMessages, credentialTooLong: "Wpisz najwyżej 500 znaków." },
+    ).safeParse({
+      login: "login",
+      projectId: "prj_1",
+      providerId: "dataforseo",
+      secret: oversizedSecret,
+    });
+
+    expect(rawResult.success).toBe(false);
+    expect(projectedResult.success).toBe(false);
+    if (!rawResult.success && !projectedResult.success) {
+      expect(rawResult.error.issues[0]?.message).toMatch(/^Too big:/);
+      expect(projectedResult.error.issues).toContainEqual(
+        expect.objectContaining({ message: "Wpisz najwyżej 500 znaków." }),
+      );
     }
   });
 });

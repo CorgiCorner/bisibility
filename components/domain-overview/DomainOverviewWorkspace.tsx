@@ -5,6 +5,7 @@ import type { DomainOverviewScope, DomainRecentTarget } from "@/lib/domain-overv
 import { researchScopeKey } from "@/lib/research/scope";
 import { appPath } from "@/lib/routing/app-path";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { DomainOverviewAnalyzeCard } from "./DomainOverviewAnalyzeCard";
 import { DomainOverviewResultsLoading } from "./DomainOverviewLoadingSkeletons";
@@ -42,6 +43,8 @@ export function DomainOverviewWorkspace({
   researchScope,
   saveSelectedKeywordsAction,
 }: Readonly<DomainOverviewWorkspaceProps>) {
+  const t = useTranslations("projectDomainOverview.workspace");
+  const uiT = useTranslations("projectDomainOverview.workspace.ui");
   const router = useRouter();
   const { addSpend } = useSessionSpend();
   const activeResearchScope = supportedResearchScope(researchScope);
@@ -180,7 +183,7 @@ export function DomainOverviewWorkspace({
           : failureState(outcome);
 
   return (
-    <section aria-label="Domain Overview" className="grid min-w-0 gap-4">
+    <section aria-label={t("aria")} className="grid min-w-0 gap-4">
       {researchScope ? (
         <DomainOverviewAnalyzeCard
           catalogScopes={context.catalogScopes}
@@ -212,7 +215,7 @@ export function DomainOverviewWorkspace({
         targets={recentTargets}
       />
       {submitting && !report ? (
-        <DomainOverviewResultsLoading />
+        <DomainOverviewResultsLoading ariaLabel={uiT("loading")} />
       ) : report && activeResearchScope ? (
         <DomainOverviewResults
           history={history?.data ?? null}

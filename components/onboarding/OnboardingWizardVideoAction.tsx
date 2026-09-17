@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { type OnboardingStepNumber, onboardingSteps } from "./onboarding-fixtures";
 import { WatchSetupVideoLink } from "./WatchSetupVideoLink";
 
@@ -15,10 +16,11 @@ type OnboardingWizardVideoActionProps = {
 export function OnboardingWizardVideoAction({
   currentStep,
 }: Readonly<OnboardingWizardVideoActionProps>) {
+  const t = useTranslations("onboarding");
   return (
     <WatchSetupVideoLink
       step={currentStep}
-      title={onboardingSteps[currentStep - 1]?.title ?? "Setup"}
+      title={onboardingSteps(t)[currentStep - 1]?.title ?? t("video.fallbackTitle")}
       videoRef={setupVideoRefByStep[currentStep]}
     />
   );

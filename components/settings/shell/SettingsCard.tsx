@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { cn } from "@/lib/ui/cn";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useRef, useState } from "react";
 
 export type SettingsCardState = {
@@ -19,6 +20,8 @@ type SettingsCardProps = {
   contentClassName?: string;
   description?: string;
   onSave?: () => void | Promise<void>;
+  saveLabel?: string;
+  savedLabel?: string;
   showSave?: boolean;
   title: string;
 };
@@ -37,9 +40,12 @@ export function SettingsCard({
   contentClassName,
   description,
   onSave,
+  saveLabel,
+  savedLabel,
   showSave = true,
   title,
 }: Readonly<SettingsCardProps>) {
+  const t = useTranslations("projectSettingsShell.card");
   const [dirty, setDirty] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -69,6 +75,8 @@ export function SettingsCard({
   }
 
   const state = { dirty, markDirty };
+  const resolvedSaveLabel = saveLabel ?? t("save");
+  const resolvedSavedLabel = savedLabel ?? t("saved");
 
   return (
     <Card
@@ -91,7 +99,7 @@ export function SettingsCard({
             data-settings-card-actions=""
           >
             <span aria-live="polite" className="text-[12px] font-medium text-green-text">
-              {saved ? <span data-settings-card-saved="">Saved</span> : null}
+              {saved ? <span data-settings-card-saved="">{resolvedSavedLabel}</span> : null}
             </span>
             {action}
             {showSave ? (
@@ -102,7 +110,7 @@ export function SettingsCard({
                 onClick={save}
                 size="sm"
               >
-                Save
+                {resolvedSaveLabel}
               </Button>
             ) : null}
           </div>

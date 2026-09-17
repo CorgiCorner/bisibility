@@ -2,6 +2,7 @@
 
 import { Tooltip } from "@/components/ui/Tooltip";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
+import { useTranslations } from "next-intl";
 
 type RankingUrlExternalLinkProps = {
   href: string;
@@ -9,8 +10,9 @@ type RankingUrlExternalLinkProps = {
 };
 
 export function RankingUrlExternalLink({ href, path }: Readonly<RankingUrlExternalLinkProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.rankingUrl");
   return (
-    <Tooltip content="Open ranking URL in a new tab" semantics="description">
+    <Tooltip content={t("openExternal")} semantics="description">
       <a
         className="min-w-0 flex-1 truncate font-sans tabular-nums text-[12.5px] text-fg hover:text-accent-text hover:underline"
         href={href}

@@ -21,17 +21,30 @@ import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr
 import { DevicesIcon as Devices } from "@phosphor-icons/react/dist/csr/Devices";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useRankTrackerSearchDraft } from "./RankTrackerSearchDraft";
 
-export const deviceScopeOptions: readonly MenuSelectOption[] = [
-  { icon: <Devices aria-hidden size={14} weight="regular" />, label: "All devices", value: "all" },
-  { icon: <Monitor aria-hidden size={14} weight="regular" />, label: "Desktop", value: "desktop" },
-  {
-    icon: <DeviceMobile aria-hidden size={14} weight="regular" />,
-    label: "Mobile",
-    value: "mobile",
-  },
-];
+function deviceScopeOptions(
+  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordImport.management.grid">>,
+): readonly MenuSelectOption[] {
+  return [
+    {
+      icon: <Devices aria-hidden size={14} weight="regular" />,
+      label: t("allDevices"),
+      value: "all",
+    },
+    {
+      icon: <Monitor aria-hidden size={14} weight="regular" />,
+      label: t("deviceDesktop"),
+      value: "desktop",
+    },
+    {
+      icon: <DeviceMobile aria-hidden size={14} weight="regular" />,
+      label: t("deviceMobile"),
+      value: "mobile",
+    },
+  ];
+}
 
 function searchRecord(params: URLSearchParams): NextSearchParams {
   const record: NextSearchParams = {};
@@ -52,6 +65,7 @@ function isDevice(value: string): value is LensDevice {
 }
 
 export function RankTrackerDeviceHeaderControl({ savedView }: { savedView?: SavedViewConfig }) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,9 +90,9 @@ export function RankTrackerDeviceHeaderControl({ savedView }: { savedView?: Save
 
   return (
     <MenuSelect
-      ariaLabel="Device scope"
+      ariaLabel={t("deviceScope")}
       onChange={changeDevice}
-      options={deviceScopeOptions}
+      options={deviceScopeOptions(t)}
       trailingIcon={<ContextSwitcherCaret />}
       triggerClassName={contextSwitcherTriggerClassName}
       value={query.lens.device}

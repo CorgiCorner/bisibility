@@ -9,12 +9,13 @@ import type {
 } from "@/lib/actions/search-insights";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
-import { searchSyncPreflightCopy } from "@/lib/search-insights/sync/plan";
+import { searchSyncPreflightFacts } from "@/lib/search-insights/sync/plan";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { ArrowSquareOutIcon as ArrowSquareOut } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 import {
   SearchInsightsMenu,
@@ -26,16 +27,6 @@ import type { PropertyPickerProps } from "./SearchInsightsPropertyPicker.types";
 import { SearchInsightsPropertyPickerFooter } from "./SearchInsightsPropertyPickerFooter";
 import { groupSearchInsightsProperties } from "./SearchInsightsPropertyPickerGrouping";
 import { PropertyKindPill, PropertyName } from "./SearchInsightsPropertyRow";
-import {
-  NO_PROPERTY_LABEL,
-  OPEN_IN_SEARCH_CONSOLE_LABEL,
-  PROPERTIES_EMPTY,
-  PROPERTIES_FAILED,
-  PROPERTIES_RECONNECT,
-  PROPERTY_MENU_LABEL,
-  REAUTH_REQUIRED,
-  SELECT_FAILED,
-} from "./search-insights-copy";
 import { searchInsightsPropertyViewPath } from "./search-insights-return-path";
 
 export function SearchInsightsPropertyPicker({
@@ -48,6 +39,7 @@ export function SearchInsightsPropertyPicker({
   syncPlan = { daysTotal: 488, pace: "normal", retentionMonths: 16 },
   viewedProperty,
 }: Readonly<PropertyPickerProps>) {
+  const t = useTranslations("projectSearchInsights.copy");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -90,7 +82,7 @@ export function SearchInsightsPropertyPicker({
       const result = await loadPropertiesAction({ projectId });
       setArchived(result.archived ?? []);
       if (result.requiresReauth) {
-        setNotice(PROPERTIES_RECONNECT);
+        setNotice(t("propertiesReconnect"));
         return;
       }
       if (result.error) {
@@ -98,12 +90,12 @@ export function SearchInsightsPropertyPicker({
         return;
       }
       if (result.properties.length === 0) {
-        setNotice(PROPERTIES_EMPTY);
+        setNotice(t("propertiesEmpty"));
         return;
       }
       setOptions(result.properties);
     } catch (error) {
-      setNotice(actionErrorMessage(error, PROPERTIES_FAILED));
+      setNotice(actionErrorMessage(error, t("propertiesFailed")));
     } finally {
       setBusy(false);
     }
@@ -115,12 +107,12 @@ export function SearchInsightsPropertyPicker({
       try {
         const result = await selectPropertyAction({ projectId, property: option.value });
         if (result.status === "reauth_required") {
-          showToast(REAUTH_REQUIRED, { severity: "connection" });
+          showToast(t("reauthRequired"), { severity: "connection" });
           return;
         }
         router.refresh();
       } catch (error) {
-        showToast(actionErrorMessage(error, SELECT_FAILED), { severity: "error" });
+        showToast(actionErrorMessage(error, t("selectFailed")), { severity: "error" });
       } finally {
         setPendingProperty(null);
       }
@@ -156,7 +148,7 @@ export function SearchInsightsPropertyPicker({
       <Button
         aria-expanded={!needsConnection ? Boolean(anchorEl) : undefined}
         aria-haspopup={!needsConnection ? "listbox" : undefined}
-        aria-label={PROPERTY_MENU_LABEL}
+        aria-label={t("propertyMenuLabel")}
         className="max-w-105"
         href={needsConnection ? connectHref : undefined}
         loading={navigationPending}
@@ -180,12 +172,10 @@ export function SearchInsightsPropertyPicker({
             <PropertyName name={displayedProperty.displayName} value={displayedProperty.value} />
           ) : (
             <span className="text-ui-caption">
-              {needsConnection ? NO_PROPERTY_LABEL : "Choose a property"}
+              {needsConnection ? t("noPropertyLabel") : t("chooseProperty")}
             </span>
           )}
-          {displayedProperty ? (
-            <PropertyKindPill kind={displayedProperty.kind} label={displayedProperty.kindLabel} />
-          ) : null}
+          {displayedProperty ? <PropertyKindPill kind={displayedProperty.kind} /> : null}
           <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
         </span>
       </Button>
@@ -198,16 +188,16 @@ export function SearchInsightsPropertyPicker({
           target="_blank"
           variant="secondary"
         >
-          {OPEN_IN_SEARCH_CONSOLE_LABEL}
+          {t("openInSearchConsole")}
         </Button>
       ) : null}
       <SearchInsightsMenu
         anchorEl={anchorEl}
-        ariaLabel={PROPERTY_MENU_LABEL}
+        ariaLabel={t("propertyMenuLabel")}
         onClose={() => setAnchorEl(null)}
         wide
       >
-        {busy ? <SearchInsightsMenuSkeleton /> : null}
+        {busy ? <SearchInsightsMenuSkeleton ariaLabel={t("propertiesLoading")} /> : null}
         {!busy && notice ? <SearchInsightsMenuNotice>{notice}</SearchInsightsMenuNotice> : null}
         {!busy ? (
           <SearchInsightsPropertyMenuGroups
@@ -227,34 +217,50 @@ export function SearchInsightsPropertyPicker({
         footer={
           <>
             <Button onClick={() => setPendingProperty(null)} variant="secondary">
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               loading={selectPending}
               onClick={() => pendingProperty && pick(pendingProperty)}
               variant="primary"
             >
-              Switch property
+              {t("switchProperty")}
             </Button>
           </>
         }
         onClose={() => setPendingProperty(null)}
         open={pendingProperty !== null}
         size="sm"
-        title="Switch this project’s property?"
+        title={t("switchPropertyTitle")}
       >
         <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">
-          Switch this project to{" "}
-          <strong className="font-sans tabular-nums font-medium text-fg">
-            {pendingProperty?.displayName}
-          </strong>
-          ? {searchSyncPreflightCopy(syncPlan)} History already imported for{" "}
-          <strong className="font-sans tabular-nums font-medium text-fg">
-            {property?.displayName}
-          </strong>{" "}
-          stays stored, so you can switch back anytime.
+          {t("switchPropertyBody", {
+            currentProperty: property?.displayName ?? "",
+            preflight: syncPreflightCopy(syncPlan, t),
+            property: pendingProperty?.displayName ?? "",
+          })}
         </p>
       </Modal>
     </>
   );
+}
+
+function syncPreflightCopy(
+  plan: Parameters<typeof searchSyncPreflightFacts>[0],
+  t: ReturnType<typeof useTranslations<"projectSearchInsights.copy">>,
+) {
+  const facts = searchSyncPreflightFacts(plan);
+  const roundedHours = Math.round(facts.durationHours);
+  if (roundedHours < 24) {
+    return t("syncPreflightHours", {
+      hours: roundedHours,
+      months: facts.retentionMonths,
+      requests: facts.requests,
+    });
+  }
+  return t("syncPreflightDays", {
+    days: Math.round(facts.durationHours / 24),
+    months: facts.retentionMonths,
+    requests: facts.requests,
+  });
 }

@@ -6,6 +6,7 @@ import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/S
 import type { MigrationImportCompletion } from "@/lib/migration/result";
 import { appRootPath } from "@/lib/routing/app-path";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { useTranslations } from "next-intl";
 import { ExportPackageCard, exportActiveCloudImportPackage } from "./MigrateToCloudExportPackage";
 import { HandoffPanel } from "./MigrateToCloudHandoff";
 import { InfoBox, StepHeading, StepLabel, TokenSourceStep } from "./MigrateToCloudTransferParts";
@@ -35,11 +36,6 @@ type TransferStepProps = {
   targetOrigin?: string;
 };
 
-const modeOptions = [
-  { hint: "Direct", label: "Push", value: "push" },
-  { hint: "Manual", label: "Download", value: "download" },
-] satisfies SegmentedControlOption<MigrationMode>[];
-
 export function TransferStep({
   direction,
   downloadConfirmed,
@@ -57,7 +53,12 @@ export function TransferStep({
   setMode,
   targetOrigin,
 }: Readonly<TransferStepProps>) {
-  const targetLabel = direction === "to-cloud" ? "hosted instance" : "self-host";
+  const t = useTranslations("projectSettingsMigration.transfer");
+  const targetLabel = direction === "to-cloud" ? t("target.hosted") : t("target.selfHost");
+  const modeOptions = [
+    { hint: t("pushHint"), label: t("push"), value: "push" },
+    { hint: t("downloadHint"), label: t("download"), value: "download" },
+  ] satisfies SegmentedControlOption<MigrationMode>[];
 
   function handleModeChange(nextMode: MigrationMode) {
     setMode(nextMode);
@@ -67,11 +68,11 @@ export function TransferStep({
   return (
     <>
       <StepHeading
-        body={`Choose a direct push or move the project package manually through the ${targetLabel} import page.`}
-        title={`Transfer to ${targetLabel}`}
+        body={t("body", { target: targetLabel })}
+        title={t("title", { target: targetLabel })}
       />
       <SegmentedControl
-        ariaLabel="Transfer mode"
+        ariaLabel={t("mode")}
         className="mt-4"
         onChange={handleModeChange}
         options={modeOptions}
@@ -133,12 +134,13 @@ function PushTransferPanel({
     | "targetOrigin"
   >
 >) {
+  const t = useTranslations("projectSettingsMigration.transfer");
   const rawToken = form.watch("token")?.trim() || null;
   const transfer = useChunkedTransfer();
-  const targetLabel = direction === "to-cloud" ? "hosted instance" : "self-host";
+  const targetLabel = direction === "to-cloud" ? t("target.hosted") : t("target.selfHost");
 
   if (!projectId) {
-    return <InfoBox>A project is required before a package can be transferred.</InfoBox>;
+    return <InfoBox>{t("projectRequiredTransfer")}</InfoBox>;
   }
 
   return (
@@ -152,13 +154,13 @@ function PushTransferPanel({
           targetOrigin={targetOrigin}
         />
       </TokenSourceStep>
-      <StepLabel index={2} title="Paste the migration token here" />
+      <StepLabel index={2} title={t("pasteToken")} />
       <form className="mt-2 flex flex-col gap-3">
         <label className="flex flex-col gap-[7px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-          {"Migration token "}
+          {t("token")}{" "}
           <input
             className="min-h-11 rounded-control border border-accent bg-transparent px-[13px] font-sans tabular-nums text-[13px] font-medium text-fg placeholder:text-[12px] placeholder:leading-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
-            placeholder="mig_************"
+            placeholder={t("tokenPlaceholder")}
             {...form.register("token")}
           />
         </label>
@@ -168,10 +170,10 @@ function PushTransferPanel({
           </div>
         ) : null}
       </form>
-      <StepLabel index={3} title="Transfer the package" />
+      <StepLabel index={3} title={t("transferPackage")} />
       <PackageTransferPanel
         exportPackageAction={exportActiveCloudImportPackage}
-        missingTokenMessage={`Paste the ${targetLabel}-issued migration token before transferring.`}
+        missingTokenMessage={t("missingToken", { target: targetLabel })}
         onExportSuccess={onExportSuccess}
         onStatusRefresh={async () => null}
         onTransferEnd={onTransferEnd}
@@ -184,7 +186,7 @@ function PushTransferPanel({
         serverTransferAction={(input) => transfer.runChunkedTransfer({ ...input, targetOrigin })}
       />
       <InfoBox icon="terminal">
-        Destination preflight runs during transfer before import starts. REST import endpoint:{" "}
+        {t("preflight")}{" "}
         <code className="font-sans tabular-nums text-fg">
           {handoff?.apiImportUrl ?? "/api/v1/cloud/import"}
         </code>
@@ -212,8 +214,9 @@ function DownloadTransferPanel({
   onConfirmedChange: (confirmed: boolean) => void;
   targetOrigin?: string;
 }) {
+  const t = useTranslations("projectSettingsMigration.transfer");
   const canConfirm = exported;
-  const targetLabel = direction === "to-cloud" ? "hosted instance" : "self-host";
+  const targetLabel = direction === "to-cloud" ? t("target.hosted") : t("target.selfHost");
   const importUrl = targetOrigin
     ? new URL(appRootPath(), targetOrigin).toString()
     : "https://bisibility.com/cloud/import?ctx=onboard";
@@ -229,17 +232,17 @@ function DownloadTransferPanel({
           targetOrigin={targetOrigin}
         />
       </TokenSourceStep>
-      <StepLabel index={2} title="Export the project package" />
+      <StepLabel index={2} title={t("exportPackage")} />
       {projectId ? (
         <ExportPackageCard
           onExportSuccess={onExportSuccess}
           projectId={projectId}
-          successMessage="Package exported and downloaded. Upload it on the destination instance."
+          successMessage={t("exportedSuccess")}
         />
       ) : (
-        <InfoBox>A project is required before a package can be exported.</InfoBox>
+        <InfoBox>{t("projectRequiredExport")}</InfoBox>
       )}
-      <StepLabel index={3} title="Upload it on the destination" />
+      <StepLabel index={3} title={t("uploadDestination")} />
       <div className="mt-2 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
         <a
           className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent-text"
@@ -247,31 +250,20 @@ function DownloadTransferPanel({
           rel="noreferrer"
           target="_blank"
         >
-          Open destination import page
+          {t("openDestination")}
           <CaretRight aria-hidden size={13} weight="regular" />
         </a>
-        <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">
-          Upload the downloaded project package there and paste the migration token from step 1 when
-          asked. The destination validates the token, schema, package counts and target
-          compatibility before import.
-        </p>
+        <p className="m-0 mt-2 text-xs leading-5 text-fg-muted">{t("uploadDescription")}</p>
       </div>
       <Checkbox
         checked={confirmed}
         containerClassName="mt-4 rounded-control border border-border bg-bg px-3.5 py-3"
-        description={
-          canConfirm
-            ? "Confirm only after the destination import page accepts the uploaded package."
-            : "Export the project package before confirming the manual upload."
-        }
+        description={canConfirm ? t("confirmReady") : t("confirmPending")}
         disabled={!canConfirm}
-        label="I uploaded the package; await confirmation on the destination"
+        label={t("confirmLabel")}
         onChange={(event) => onConfirmedChange(event.currentTarget.checked)}
       />
-      <InfoBox>
-        Manual transfer cannot verify the remote import from this source. The final screen will
-        remain awaiting external confirmation until you verify the destination separately.
-      </InfoBox>
+      <InfoBox>{t("manualNote")}</InfoBox>
     </>
   );
 }

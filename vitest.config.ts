@@ -33,6 +33,16 @@ const browserTestAliases = [
     find: "@/lib/actions/competitor-set-input",
     replacement: fileURLToPath(new URL("./lib/actions/competitor-set-input.ts", import.meta.url)),
   },
+  {
+    find: "@/lib/actions/experimental-modules",
+    replacement: fileURLToPath(
+      new URL("./.storybook/experimental-module-action-stubs.ts", import.meta.url),
+    ),
+  },
+  {
+    find: "@/lib/roadmap/actions",
+    replacement: fileURLToPath(new URL("./.storybook/roadmap-action-stubs.ts", import.meta.url)),
+  },
   { find: /^@\/lib\/actions\/.+/, replacement: browserStubs },
   { find: "@/lib/api/ratelimit", replacement: browserStubs },
   { find: "@/lib/auth/auth", replacement: browserStubs },
@@ -55,11 +65,12 @@ const nodeUnitIncludes = [
   "app/**/*.test.ts",
   "app/api/**/*.test.tsx",
   "components/**/*.test.ts",
+  "i18n/**/*.test.ts",
   "lib/**/*.test.ts",
 ];
 const domUnitTests = [
   "lib/keyword-research/default-scope.characterization.test.ts",
-  "app/onboarding/actions.test.ts",
+  "app/(regional)/onboarding/actions.test.ts",
   "components/rank-runs/notice-dismissals.test.ts",
   "components/cloud/use-cloud-import-job.test.ts",
   "components/cloud/workspace-package-download.test.ts",
@@ -126,6 +137,7 @@ export default defineConfig({
           include: [
             "app/**/*.test.tsx",
             "components/**/*.test.tsx",
+            "i18n/**/*.test.tsx",
             "lib/**/*.test.tsx",
             ...domUnitTests,
           ],
@@ -201,6 +213,7 @@ export default defineConfig({
           },
           include: [
             "tests/storybook-imports.browser.test.ts",
+            "tests/settings-shell-stories.browser.test.tsx",
             "tests/data-table-stories.browser.test.tsx",
             "tests/ui-primitives*.browser.test.tsx",
             "components/marketing/landing/MarketingNav.browser.test.tsx",

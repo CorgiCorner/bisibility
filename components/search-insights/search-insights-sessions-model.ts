@@ -2,7 +2,6 @@ import { addDays } from "@/lib/search-insights/dates";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { SearchInsightsFirstView } from "@/lib/search-insights/queries/first-view";
 import type { OrganicSessionsPendingPresentation } from "@/lib/search-insights/queries/sessions-context";
-import { GA4_SESSIONS_LABEL } from "./search-insights-copy";
 
 /**
  * Why the second source has no number yet, in the module's own vocabulary. Pure mapping over the
@@ -10,7 +9,7 @@ import { GA4_SESSIONS_LABEL } from "./search-insights-copy";
  * logic can be read - and tested - on its own.
  */
 const MAX_READY_MINUTES = 24 * 60;
-export function readyInGa4Duration(importState: SearchInsightsImportState, period: string) {
+export function readyInGa4Minutes(importState: SearchInsightsImportState, period: string) {
   const periodDays = Number(period);
   if (
     !Number.isSafeInteger(periodDays) ||
@@ -30,7 +29,7 @@ export function readyInGa4Duration(importState: SearchInsightsImportState, perio
     return null;
   const minutes = Math.ceil((daysRemaining * elapsedMs) / (daysDone * 60_000));
   if (!Number.isFinite(minutes) || minutes < 1 || minutes > MAX_READY_MINUTES) return null;
-  return `~${minutes < 60 ? `${minutes} min` : `${Math.ceil(minutes / 60)} hr`}`;
+  return minutes;
 }
 
 export function ga4IsOneDayBehind(
@@ -54,38 +53,34 @@ export function organicSessionsPendingPresentation(
   if (organicSessions.status === "needs_reauth" || importState?.pausedReason === "needs_reauth")
     return {
       kind: "pending",
-      label: GA4_SESSIONS_LABEL,
-      readyIn: null,
-      reason: "Reconnect GA4 before the import can continue.",
-      source: "GA4",
-      status: "Needs reauth",
+      readyInMinutes: null,
+      reason: "needs_reauth",
+      source: "ga4",
+      status: "needs_reauth",
     };
   if (!importState)
     return {
       kind: "pending",
-      label: GA4_SESSIONS_LABEL,
-      readyIn: null,
-      reason: "The GA4 import is queued for worker pickup.",
-      source: "GA4",
-      status: "Queued",
+      readyInMinutes: null,
+      reason: "queued",
+      source: "ga4",
+      status: "queued",
     };
   if (importState.pausedReason === "user")
     return {
       kind: "pending",
-      label: GA4_SESSIONS_LABEL,
-      readyIn: null,
-      reason: "The GA4 import is paused until you resume it.",
-      source: "GA4",
-      status: "Paused by you",
+      readyInMinutes: null,
+      reason: "paused_by_user",
+      source: "ga4",
+      status: "paused_by_user",
     };
   if (importState.pausedReason === "rate_limited")
     return {
       kind: "pending",
-      label: GA4_SESSIONS_LABEL,
-      readyIn: null,
-      reason: "The GA4 provider limit will reset before the import resumes.",
-      source: "GA4",
-      status: "Paused by provider limits",
+      readyInMinutes: null,
+      reason: "paused_by_provider",
+      source: "ga4",
+      status: "paused_by_provider",
     };
   if (
     importState.state === "waiting_on_worker" ||
@@ -94,20 +89,18 @@ export function organicSessionsPendingPresentation(
   )
     return {
       kind: "pending",
-      label: GA4_SESSIONS_LABEL,
-      readyIn: null,
-      reason: "The GA4 import is waiting for a background worker.",
-      source: "GA4",
-      status: "Waiting on worker",
+      readyInMinutes: null,
+      reason: "waiting_on_worker",
+      source: "ga4",
+      status: "waiting_on_worker",
     };
   if (importState.state === "failed" || importState.pausedReason === "error")
     return {
       kind: "pending",
-      label: GA4_SESSIONS_LABEL,
-      readyIn: null,
-      reason: "Retry the GA4 import to continue.",
-      source: "GA4",
-      status: "Needs retry",
+      readyInMinutes: null,
+      reason: "needs_retry",
+      source: "ga4",
+      status: "needs_retry",
     };
   if (importState.state === "completed") {
     const oneDayBehind = ga4IsOneDayBehind(
@@ -116,30 +109,25 @@ export function organicSessionsPendingPresentation(
     );
     return {
       kind: "pending",
-      label: GA4_SESSIONS_LABEL,
-      readyIn: null,
-      reason: oneDayBehind
-        ? "GA4 has not finalized today's data yet."
-        : "GA4 history does not cover this comparison yet.",
-      source: "GA4",
-      status: oneDayBehind ? "Waiting for today's GA4 data" : "Complete",
+      readyInMinutes: null,
+      reason: oneDayBehind ? "waiting_for_today" : "history_not_covered",
+      source: "ga4",
+      status: oneDayBehind ? "waiting_for_today" : "complete",
     };
   }
   if (importState.state === "queued")
     return {
       kind: "pending",
-      label: GA4_SESSIONS_LABEL,
-      readyIn: null,
-      reason: "The GA4 import is queued for worker pickup.",
-      source: "GA4",
-      status: "Queued",
+      readyInMinutes: null,
+      reason: "queued",
+      source: "ga4",
+      status: "queued",
     };
   return {
     kind: "pending",
-    label: GA4_SESSIONS_LABEL,
-    readyIn: readyInGa4Duration(importState, period),
-    reason: "Importing newest GA4 ranges.",
-    source: "GA4",
-    status: "Running",
+    readyInMinutes: readyInGa4Minutes(importState, period),
+    reason: "running",
+    source: "ga4",
+    status: "running",
   };
 }

@@ -1,5 +1,6 @@
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { setNavigationState } from "@/tests/next-navigation";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SearchInsightsSessionsCard } from "./SearchInsightsSessionsCard";
 import { SESSIONS_CONNECT_BODY, SESSIONS_CONNECT_TITLE } from "./search-insights-copy";

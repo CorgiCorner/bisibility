@@ -1,0 +1,317 @@
+{
+  "instanceAdmin": {
+    "shell": {
+      "context": "Administración de la instancia",
+      "backToApp": "Volver a la aplicación",
+      "title": "Administración de la instancia",
+      "description": "Diagnóstico operativo de toda la instancia. Los datos de los inquilinos se representan únicamente mediante identificadores."
+    },
+    "navigation": {
+      "label": "Secciones de administración de la instancia",
+      "operations": "Operaciones",
+      "administration": "Administración",
+      "audit": "Auditoría"
+    },
+    "controls": {
+      "refresh": "Actualizar",
+      "lookUp": "Buscar",
+      "lookingUp": "Buscando…",
+      "olderEntries": "Entradas anteriores",
+      "sendTestNotification": "Enviar notificación de prueba",
+      "sending": "Enviando…",
+      "runOutboxSweep": "Ejecutar barrido de la cola de salida",
+      "running": "Ejecutando…",
+      "deactivateAccount": "Desactivar la cuenta",
+      "reactivateAccount": "Reactivar la cuenta",
+      "resetRateLimits": "Restablecer los límites de peticiones"
+    },
+    "status": {
+      "active": "Activo",
+      "blocked": "Bloqueado",
+      "completed": "Completado",
+      "configured": "Configurado",
+      "deactivated": "Desactivado",
+      "deferred": "Aplazado",
+      "deferredRateLimit": "Aplazado por el límite de peticiones",
+      "delivered": "Entregado",
+      "disabled": "Desactivado",
+      "error": "Error",
+      "failed": "Fallido",
+      "info": "Información",
+      "notConfigured": "Sin configurar",
+      "ok": "OK",
+      "stale": "Desactualizado",
+      "succeededEmpty": "Correcto sin datos",
+      "succeededWithData": "Correcto con datos",
+      "unknown": "Desconocido",
+      "undelivered": "Sin entregar",
+      "warning": "Advertencia"
+    },
+    "values": {
+      "unavailable": "-",
+      "unknown": "desconocido",
+      "sectionUnavailable": "{message} Los valores son desconocidos, no cero."
+    },
+    "duration": {
+      "milliseconds": "{value, number} ms",
+      "seconds": "{value, number, ::.0} s",
+      "minutes": "{value, number, ::.0} min"
+    },
+    "shellHealth": {
+      "label": "Estado de las operaciones",
+      "worker": "Worker {status}",
+      "checks": "Comprobaciones: {value, number, ::.0} % de fallos",
+      "checksUnknown": "Comprobaciones: desconocido",
+      "provider": "{provider}: {value, number, ::.0} % de fallos",
+      "providerUnknown": "{provider}: desconocido",
+      "deliveryUnknown": "Entrega: desconocido",
+      "undelivered": "{count, plural, one {# sin entregar} other {# sin entregar}}"
+    },
+    "rankWindow": {
+      "scheduled": "Programadas",
+      "succeeded": "Correctas",
+      "failed": "Fallidas",
+      "deferred": "Aplazadas",
+      "stuck": "Atascadas",
+      "lagP50": "Retardo p50",
+      "lagP95": "Retardo p95"
+    },
+    "dashboard": {
+      "rankChecks": {
+        "title": "Comprobaciones de posiciones",
+        "description": "Totales de ejecución y retardo entre la programación y el inicio. Las filas aplazadas nunca cuentan como correctas.",
+        "unavailable": "El diagnóstico de las comprobaciones de posiciones no está disponible.",
+        "last24Hours": "Últimas 24 horas",
+        "last7Days": "Últimos 7 días",
+        "failures": "Fallos (24 h)",
+        "failureDescription": "Comprobaciones que han fallado tras agotar todos los proveedores. Agrupadas por proveedor y por motivo resumido.",
+        "fallbacks": "Reservas (24 h)",
+        "fallbackDescription": "Comprobaciones que solo se han completado tras el fallo de un proveedor principal. Agrupadas por el proveedor que ha fallado y por el motivo resumido.",
+        "fallbackEmpty": "No hay comprobaciones de posiciones con proveedor de reserva en las últimas 24 horas."
+      },
+      "dataSources": {
+        "title": "Fuentes de datos",
+        "description": "Estado de sincronización por proveedor en todas las conexiones. El detalle de cada conexión solo está disponible en la búsqueda de cuentas.",
+        "unavailable": "El diagnóstico de las fuentes de datos no está disponible."
+      },
+      "presence": {
+        "title": "Presencia de URL",
+        "description": "Último aplazamiento por presupuesto de propiedad en el flujo diario de presencia de URL. El presupuesto se restablece automáticamente.",
+        "unavailable": "El diagnóstico de presencia de URL no está disponible.",
+        "deferredUrls": "URL aplazadas",
+        "affectedProjects": "Proyectos afectados",
+        "lastBudgetExhaustion": "Último agotamiento del presupuesto"
+      },
+      "temporal": {
+        "title": "Temporal",
+        "description": "Inspección de las programaciones de Temporal y fallos de arranque registrados.",
+        "asOf": "Actualizado a las {time}",
+        "schedules": "Programaciones",
+        "recentActions": "Acciones recientes",
+        "missedCatchup": "Recuperaciones perdidas",
+        "skippedOverlap": "Solapamientos omitidos",
+        "inspectionErrors": "Errores de inspección",
+        "nextAction": "Próxima acción",
+        "snapshotUnavailable": "Instantánea no disponible: el worker no ha publicado datos de Temporal. Los valores anteriores son desconocidos, no cero.",
+        "disabled": "La programación con Temporal está desactivada en esta topología.",
+        "snapshotStale": "Instantánea de Temporal desactualizada"
+      },
+      "ops": {
+        "title": "Eventos de operaciones",
+        "description": "Los eventos de operador recientes muestran solo los metadatos de entrega; aquí nunca se exponen los campos de contenido libre.",
+        "deliveryUnavailable": "El diagnóstico de entregas no está disponible.",
+        "historyUnavailable": "El historial de eventos operativos no está disponible.",
+        "empty": "No hay eventos operativos registrados."
+      },
+      "stats": {
+        "title": "Estadísticas de la instancia",
+        "description": "Recuentos de la instancia y uso de SERP completado en el mes UTC en curso.",
+        "unavailable": "Las estadísticas de la instancia no están disponibles.",
+        "users": "Usuarios",
+        "projects": "Proyectos",
+        "keywords": "Palabras clave",
+        "analytics": "Analítica",
+        "serp": "SERP",
+        "connections": "Conexiones de {kind}"
+      }
+    },
+    "worker": {
+      "title": "Worker",
+      "description": "Latido del worker, identidad del despliegue, concordancia del esquema de base de datos y configuración de entregas en Slack.",
+      "unavailable": "El diagnóstico del worker no está disponible.",
+      "disabled": "El worker programado está desactivado en esta topología.",
+      "status": "Estado",
+      "lastHeartbeat": "Último latido",
+      "release": "Versión",
+      "environment": "Entorno",
+      "schedulerDriver": "Controlador del programador",
+      "schemaStatus": "Estado del esquema",
+      "bundledMigration": "Migración incluida",
+      "appliedMigration": "Migración aplicada",
+      "slackOps": "Operaciones en Slack",
+      "schemaInSync": "Sincronizado",
+      "schemaWorkerBehind": "Worker por detrás",
+      "schemaWorkerAhead": "Worker por delante"
+    },
+    "failureBreakdown": {
+      "empty": "No hay comprobaciones de posiciones fallidas en las últimas 24 horas.",
+      "unavailable": "-",
+      "projectCount": "{count, plural, one {# proyecto} other {# proyectos}}",
+      "acrossProjects": "en {count, plural, one {# proyecto} other {# proyectos}}",
+      "copyProjectId": "Copiar el ID del proyecto",
+      "justNow": "ahora mismo",
+      "minutesAgo": "{count, plural, one {hace # min} other {hace # min}}",
+      "hoursAgo": "{count, plural, one {hace # h} other {hace # h}}",
+      "daysAgo": "{count, plural, one {hace # d} other {hace # d}}",
+      "firstSeen": "visto por primera vez {time}",
+      "lastSeen": "visto por última vez {time}",
+      "moreClasses": "y {count, number} clases más"
+    },
+    "providerHealth": {
+      "empty": "No hay fuentes de analítica conectadas.",
+      "ok": "{count, number} correctas",
+      "stale": "{count, number} desactualizadas",
+      "failed": "{count, number} fallidas",
+      "notRun": "{count, number} sin ejecutar",
+      "p95LastSuccess": "p95 del último resultado correcto: {age}",
+      "unknown": "desconocido",
+      "ageMinutes": "{count, plural, one {# min} other {# min}}",
+      "ageHours": "{count, plural, one {# h} other {# h}}",
+      "ageDays": "{count, plural, one {# d} other {# d}}",
+      "failureRate": "{value, number, ::.0} % de fallos",
+      "failureRateUnknown": "desconocido"
+    },
+    "providerUsage": {
+      "empty": "No hay comprobaciones de SERP completadas este mes.",
+      "tableLabel": "Uso de SERP este mes por proveedor",
+      "provider": "Proveedor",
+      "completedChecks": "Comprobaciones completadas",
+      "requestsUnits": "Peticiones / unidades",
+      "referenceCost": "Coste de referencia",
+      "rateBasis": "Base de la tarifa",
+      "rateBasisLiveDepth": "Precio por profundidad en directo",
+      "rateBasisProductionPlan": "Equivalente al plan de producción",
+      "rateBasisUnavailable": "Tarifa no disponible",
+      "referenceUnknown": "-",
+      "note": "Las estimaciones de referencia usan las tarifas de proveedor que mantenemos y las unidades de petición registradas. Los costes introducidos por el usuario se ignoran; prevalecen las facturas del proveedor."
+    },
+    "opsTable": {
+      "tableLabel": "Eventos operativos recientes",
+      "kind": "Tipo",
+      "severity": "Gravedad",
+      "created": "Creado",
+      "delivery": "Entrega",
+      "attempts": "Intentos"
+    },
+    "administration": {
+      "growth": {
+        "title": "Crecimiento",
+        "description": "Agregados de 30 días en UTC. Sin analítica de comportamiento ni contenido de los inquilinos.",
+        "users": "Usuarios",
+        "projects": "Proyectos",
+        "keywords": "Palabras clave",
+        "rankChecks": "Comprobaciones de posiciones",
+        "trend": "Tendencia del recuento diario de {label}",
+        "delta": "{direction, select, positive {+{value, number, ::.0} % frente a los 30 días anteriores} negative {-{value, number, ::.0} % frente a los 30 días anteriores} other {0,0 % frente a los 30 días anteriores}}",
+        "noComparison": "Sin comparación con el periodo anterior",
+        "activeAccounts": "Cuentas activas (aprox.)",
+        "activeAccountsDescription": "Cuentas distintas con actividad de sesión en los últimos 7 días."
+      },
+      "consumption": {
+        "title": "Mayor consumo",
+        "description": "Top 10 de combinaciones de proyecto y proveedor por coste de referencia este mes. Las tarifas introducidas por el usuario se ignoran.",
+        "empty": "No se ha registrado ninguna comprobación de SERP completada este mes.",
+        "note": "Los costes de referencia usan las tarifas de proveedor que mantenemos y las unidades de petición registradas. Prevalecen las facturas del proveedor.",
+        "tableLabel": "Mayor consumo por proyecto y proveedor este mes",
+        "projectId": "ID del proyecto",
+        "copyProjectId": "Copiar el ID de proyecto {projectId}",
+        "provider": "Proveedor",
+        "checks": "Comprobaciones",
+        "requestsUnits": "Peticiones / unidades",
+        "referenceCost": "Coste de referencia",
+        "rateBasisLiveDepth": "Precio por profundidad en directo",
+        "rateBasisProductionPlan": "Equivalente al plan de producción",
+        "rateBasisUnavailable": "Tarifa no disponible",
+        "referenceUnknown": "-",
+        "share": "Cuota de la instancia",
+        "shareAriaLabel": "{value, number, ::.0} % del coste de referencia de la instancia",
+        "shareValue": "{value, number, ::.0} %"
+      },
+      "mailer": {
+        "title": "Proveedor de correo sin configurar",
+        "description": "El inicio de sesión por correo no está disponible porque esta instancia no puede enviar códigos de acceso. Define {provider} y sus credenciales obligatorias para restablecer el envío de correo.",
+        "link": "Configurar el envío de correo"
+      }
+    },
+    "account": {
+      "title": "Búsqueda de cuentas",
+      "description": "Búsqueda por coincidencia exacta que devuelve solo los metadatos de la cuenta, nunca contenido del inquilino.",
+      "identifier": "Correo exacto o ID de usuario",
+      "placeholder": "Correo exacto o ID de usuario",
+      "validationIdentifier": "Introduce un correo exacto o un ID de usuario.",
+      "auditNotice": "Las búsquedas quedan registradas en el registro de auditoría de administración.",
+      "notFound": "Ninguna cuenta coincide con este identificador.",
+      "unavailable": "-",
+      "created": "Fecha de creación",
+      "lastActive": "Última actividad",
+      "projects": "Proyectos",
+      "keywords": "Palabras clave",
+      "spendThisMonth": "Gasto de este mes",
+      "connectionsByKind": "Conexiones por tipo",
+      "connection": "{kind}: {count, number}",
+      "lookup": {
+        "forbidden": "Esta acción no está disponible.",
+        "invalidIdentifier": "Introduce un correo exacto o un ID de usuario.",
+        "rateLimited": "Demasiadas búsquedas de cuentas. Inténtalo de nuevo en unos instantes.",
+        "temporarilyUnavailable": "La búsqueda de cuentas no está disponible temporalmente.",
+        "failed": "No se ha podido completar la búsqueda de cuentas."
+      },
+      "actions": {
+        "deactivated": "Cuenta desactivada. Se han revocado las sesiones y los tokens de acceso personal; las comprobaciones programadas se pausarán en la próxima reconciliación.",
+        "reactivated": "Cuenta reactivada. Las comprobaciones programadas volverán a converger en la próxima reconciliación.",
+        "blocked": "Los administradores de la instancia no se pueden desactivar.",
+        "forbidden": "Esta acción no está disponible.",
+        "invalidTarget": "Selecciona una cuenta válida.",
+        "rateLimited": "Esta acción sobre la cuenta ha alcanzado el límite de peticiones. Inténtalo de nuevo en unos instantes.",
+        "temporarilyUnavailable": "Las acciones sobre cuentas no están disponibles temporalmente.",
+        "accountNotFound": "No se ha encontrado la cuenta.",
+        "failed": "No se ha podido completar la acción sobre la cuenta.",
+        "limitsCompleted": "Límites de peticiones restablecidos; el gasto mensual se calcula sobre un periodo móvil y no se puede restablecer",
+        "limitsFailed": "No se han podido restablecer los límites de peticiones."
+      }
+    },
+    "opsActions": {
+      "delivered": "Se ha entregado la notificación de prueba en Slack.",
+      "notConfigured": "Las notificaciones de operador en Slack no están configuradas.",
+      "deliveryFailed": "No se ha podido entregar la prueba en Slack.",
+      "forbidden": "Esta acción no está disponible.",
+      "rateLimited": "Esta acción de administración ha alcanzado el límite de peticiones. Inténtalo de nuevo en unos instantes.",
+      "temporarilyUnavailable": "Las acciones de administración no están disponibles temporalmente.",
+      "sweepFailed": "No se ha podido completar el barrido de la cola de salida.",
+      "sweepCompleted": "Barrido de la cola de salida completado: {delivered, number} de {attempted, number} entregados.",
+      "failed": "No se ha podido completar la acción de operador."
+    },
+    "audit": {
+      "title": "Actividad de administración",
+      "description": "Entradas instance_admin.*. Solo visibles para los administradores de la instancia; los administradores no son anónimos entre sí.",
+      "filterLabel": "Filtrar la actividad de los administradores de la instancia",
+      "all": "Todo",
+      "account": "Cuenta",
+      "ops": "Operaciones",
+      "setup": "Instalación",
+      "selected": "filtro seleccionado",
+      "empty": "Ninguna entrada de auditoría de administración de la instancia coincide con este filtro.",
+      "tableLabel": "Actividad de los administradores de la instancia",
+      "time": "Fecha y hora",
+      "actor": "Actor",
+      "action": "Acción",
+      "target": "Objetivo",
+      "result": "Resultado",
+      "resultOk": "OK",
+      "resultBlocked": "Bloqueado",
+      "statusFailed": "Fallido",
+      "copyTargetId": "Copiar el ID de objetivo de auditoría {targetId}",
+      "targetUnavailable": "{targetType}:no disponible"
+    }
+  }
+}

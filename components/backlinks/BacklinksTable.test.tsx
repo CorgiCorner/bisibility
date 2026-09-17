@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { renderWithBacklinksMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { BacklinksTable, type BacklinksTableProps } from "./BacklinksTable";
@@ -6,7 +7,10 @@ import { backlinksSnapshotFixture } from "./backlinks-fixtures";
 
 const now = new Date("2026-07-24T12:00:00.000Z");
 
-function renderTable(overrides: Partial<BacklinksTableProps> = {}) {
+function renderTable(
+  overrides: Partial<BacklinksTableProps> = {},
+  options: Parameters<typeof render>[1] = {},
+) {
   return render(
     <BacklinksTable
       fetchedRowCount={backlinksSnapshotFixture.fetchedRowCount}
@@ -17,6 +21,7 @@ function renderTable(overrides: Partial<BacklinksTableProps> = {}) {
       totalRowsAvailable={backlinksSnapshotFixture.totalRowsAvailable}
       {...overrides}
     />,
+    options,
   );
 }
 
@@ -61,14 +66,25 @@ describe("BacklinksTable", () => {
   });
 
   it("dims and strikes lost domains and renders the lost-date pill", () => {
-    renderTable();
+    renderTable({
+      rows: backlinksSnapshotFixture.rows.map((row) =>
+        row.status === "lost"
+          ? {
+              ...row,
+              sourceDomain: "archive.example.com",
+              sourceUrl: "https://archive.example.com/minimalist-desks",
+            }
+          : row,
+      ),
+    });
 
-    const source = screen.getByText("designweekly.co");
+    const source = screen.getByText("archive.example.com");
     const lostRow = source.closest("button");
     expect(lostRow).toHaveAttribute("data-status", "lost");
     expect(lostRow).toHaveClass("text-fg-muted");
     expect(source).toHaveClass("line-through");
     expect(within(lostRow as HTMLElement).getByText("lost Jul 12")).toBeInTheDocument();
+    expect(lostRow).toHaveAccessibleName("archive.example.com lost Jul 12");
   });
 
   it("turns spam values amber at the 5 point threshold", () => {
@@ -76,6 +92,25 @@ describe("BacklinksTable", () => {
 
     expect(screen.getByText("6.0")).toHaveClass("text-yellow-text");
     expect(screen.getByText("4.0")).not.toHaveClass("text-yellow-text");
+  });
+
+  it("formats displayed metrics and human-facing flags with the active locale", () => {
+    renderTable(
+      {
+        rows: [
+          {
+            ...backlinksSnapshotFixture.rows[0],
+            flags: ["nofollow", "sitewide"],
+            spamScore: 6,
+          },
+        ],
+      },
+      { locale: "es-ES" },
+    );
+
+    expect(screen.getByText("6,0")).toHaveClass("text-yellow-text");
+    expect(screen.getByText("Nofollow")).toBeInTheDocument();
+    expect(screen.getByText("Sitewide")).toBeInTheDocument();
   });
 
   it.each([

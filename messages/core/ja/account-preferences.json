@@ -1,0 +1,7 @@
+{
+  "account": {
+    "preferences": {
+      "savedCount": "{count, plural, =0 {保存済みの環境設定はありません} other {#件の環境設定を保存済み}}"
+    }
+  }
+}

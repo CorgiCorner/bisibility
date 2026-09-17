@@ -2,28 +2,47 @@ import { Avatar } from "@/components/ui/Avatar";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { IdChip } from "@/components/ui/IdChip";
 import { StatusPill } from "@/components/ui/StatusPill";
-import type { AuditEntry, AuditStatus } from "@/lib/queries/audit";
+import type { AuditStatus } from "@/lib/queries/audit";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import type { useTranslations } from "next-intl";
+import type { PresentedAuditEntry } from "./audit-presentation";
 import { OperationPill } from "./OperationPill";
 
-const RESOURCE_TYPE_LABELS: Record<AuditEntry["resource"]["type"], string> = {
-  api_key: "API key",
-  auth_session: "Session",
-  export: "Export",
-  keyword: "Keyword",
-  project: "Project",
-  provider: "Provider",
-  team: "Team",
-};
+type AuditColumnsTranslations = ReturnType<typeof useTranslations<"projectAudit.columns">>;
 
 type AuditColumnsOptions = {
-  onOpenEntry: (entry: AuditEntry) => void;
+  onOpenEntry: (entry: PresentedAuditEntry) => void;
+  t: AuditColumnsTranslations;
 };
+
+function resourceLabel(type: PresentedAuditEntry["resource"]["type"], t: AuditColumnsTranslations) {
+  switch (type) {
+    case "api_key":
+      return t("resourceApiKey");
+    case "auth_session":
+      return t("resourceSession");
+    case "export":
+      return t("resourceExport");
+    case "keyword":
+      return t("resourceKeyword");
+    case "project":
+      return t("resourceProject");
+    case "provider":
+      return t("resourceProvider");
+    case "team":
+      return t("resourceTeam");
+  }
+}
 
 function ActorEventCell({
   onOpenEntry,
   row,
-}: Readonly<{ onOpenEntry: AuditColumnsOptions["onOpenEntry"]; row: AuditEntry }>) {
+  t,
+}: Readonly<{
+  onOpenEntry: AuditColumnsOptions["onOpenEntry"];
+  row: PresentedAuditEntry;
+  t: AuditColumnsTranslations;
+}>) {
   return (
     <span className="flex h-full min-w-0 items-center gap-2.5 py-1">
       <Avatar
@@ -34,7 +53,7 @@ function ActorEventCell({
       />
       <span className="min-w-0">
         <button
-          aria-label={`Open audit event ${row.eventName}`}
+          aria-label={t("openEntry", { eventName: row.eventName })}
           className="block max-w-full truncate text-left text-[12.5px] font-medium leading-[1.25] text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
           onClick={(event) => {
             event.stopPropagation();
@@ -52,11 +71,14 @@ function ActorEventCell({
   );
 }
 
-function ResourceCell({ row }: Readonly<{ row: AuditEntry }>) {
+function ResourceCell({
+  row,
+  t,
+}: Readonly<{ row: PresentedAuditEntry; t: AuditColumnsTranslations }>) {
   return (
     <span className="flex h-full min-w-0 flex-col justify-center gap-1 py-1">
       <span className="truncate text-[12px] font-medium leading-[1.2] text-fg">
-        {RESOURCE_TYPE_LABELS[row.resource.type]}
+        {resourceLabel(row.resource.type, t)}
       </span>
       {row.resource.id ? (
         <IdChip className="border-0 bg-transparent px-0" size="sm" value={row.resource.id} />
@@ -74,7 +96,7 @@ function StatusCell({ status }: Readonly<{ status: AuditStatus }>) {
   );
 }
 
-export function auditColumns({ onOpenEntry }: Readonly<AuditColumnsOptions>) {
+export function auditColumns({ onOpenEntry, t }: Readonly<AuditColumnsOptions>) {
   return [
     {
       accessorKey: "timestamp",
@@ -83,49 +105,49 @@ export function auditColumns({ onOpenEntry }: Readonly<AuditColumnsOptions>) {
           {row.original.timestampLabel}
         </span>
       ),
-      header: "Timestamp",
+      header: t("timestamp"),
       id: "timestamp",
-      meta: { title: "Timestamp" },
+      meta: { title: t("timestamp") },
       minSize: 172,
       size: 200,
       sortDescFirst: true,
     },
     {
-      accessorFn: (row: AuditEntry) => `${row.actor.email} ${row.eventName}`,
-      cell: ({ row }) => <ActorEventCell onOpenEntry={onOpenEntry} row={row.original} />,
-      header: "Actor / Event",
+      accessorFn: (row: PresentedAuditEntry) => `${row.actor.email} ${row.eventName}`,
+      cell: ({ row }) => <ActorEventCell onOpenEntry={onOpenEntry} row={row.original} t={t} />,
+      header: t("actorEvent"),
       id: "eventName",
-      meta: { flex: 1.4, title: "Actor / Event" },
+      meta: { flex: 1.4, title: t("actorEvent") },
       minSize: 232,
       size: 272,
     },
     {
-      accessorFn: (row: AuditEntry) =>
+      accessorFn: (row: PresentedAuditEntry) =>
         `${row.resource.type} ${row.resource.id ?? ""} ${row.resource.name}`,
-      cell: ({ row }) => <ResourceCell row={row.original} />,
-      header: "Resource",
+      cell: ({ row }) => <ResourceCell row={row.original} t={t} />,
+      header: t("resource"),
       id: "resource",
-      meta: { flex: 1.6, title: "Resource" },
+      meta: { flex: 1.6, title: t("resource") },
       minSize: 240,
       size: 280,
     },
     {
       accessorKey: "operation",
       cell: ({ row }) => <OperationPill operation={row.original.operation} />,
-      header: "Operation",
+      header: t("operation"),
       id: "operation",
-      meta: { title: "Operation" },
+      meta: { title: t("operation") },
       minSize: 112,
       size: 120,
     },
     {
       accessorKey: "status",
       cell: ({ row }) => <StatusCell status={row.original.status} />,
-      header: "Status",
+      header: t("status"),
       id: "status",
-      meta: { title: "Status" },
+      meta: { title: t("status") },
       minSize: 112,
       size: 120,
     },
-  ] satisfies DataTableColumn<AuditEntry>[];
+  ] satisfies DataTableColumn<PresentedAuditEntry>[];
 }

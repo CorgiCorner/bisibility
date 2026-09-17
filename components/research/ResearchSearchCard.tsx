@@ -13,6 +13,7 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
 import type { ResearchScope } from "@/lib/research/scope";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { useTranslations } from "next-intl";
 import type { KeyboardEvent } from "react";
 import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,18 +27,6 @@ import { ResearchScopePicker } from "./ResearchScopePicker";
 
 const formSchema = z.object({ seed: z.string().trim().max(80) });
 type FormValues = z.infer<typeof formSchema>;
-
-const modeOptions = [
-  { label: "Auto", value: "auto" },
-  { label: "Related", value: "related" },
-  { label: "Suggestions", value: "suggestions" },
-  { label: "Ideas", value: "ideas" },
-];
-const limitOptions = [100, 300, 500].map((value) => ({
-  label: `${value} results`,
-  value: String(value),
-}));
-const NO_SEED_HINT = "Enter a seed keyword first - the price appears here";
 
 export type ResearchEstimateView = {
   cached: boolean;
@@ -73,12 +62,14 @@ function researchButtonLabel(
   researching: boolean,
   estimate: ResearchEstimateView,
   fallbackCostCents: number | null,
+  t: ReturnType<typeof useTranslations<"projectResearch.search">>,
 ) {
-  const prefix = researching ? "Researching" : "Research";
-  if (estimate.cached) return `${prefix} free, cached`;
   const costCents = estimate.costCents ?? fallbackCostCents;
-  if (costCents == null) return prefix;
-  return `${prefix} ~${formatEstimateCents(costCents)}`;
+  return t("button", {
+    cached: estimate.cached ? "true" : "false",
+    cost: estimate.cached || costCents == null ? "none" : formatEstimateCents(costCents),
+    researching: researching ? "true" : "false",
+  });
 }
 
 export function ResearchSearchCard({
@@ -99,12 +90,23 @@ export function ResearchSearchCard({
   researching,
   seeds,
 }: Readonly<ResearchSearchCardProps>) {
+  const t = useTranslations("projectResearch.search");
   const { getValues, handleSubmit, register, resetField, watch } = useForm<FormValues>({
     defaultValues: { seed: "" },
     resolver: zodResolver(formSchema),
   });
 
   const noSeedHintId = useId();
+  const modeOptions = [
+    { label: t("modeAuto"), value: "auto" },
+    { label: t("modeRelated"), value: "related" },
+    { label: t("modeSuggestions"), value: "suggestions" },
+    { label: t("modeIdeas"), value: "ideas" },
+  ];
+  const limitOptions = [100, 300, 500].map((value) => ({
+    label: t("resultLimit", { count: value }),
+    value: String(value),
+  }));
 
   const typedSeed = watch("seed") ?? "";
   const hasSeed = seeds.length > 0 || typedSeed.trim().length > 0;
@@ -145,7 +147,7 @@ export function ResearchSearchCard({
           <div className="flex min-h-[34px] flex-1 flex-wrap items-center gap-1.5 rounded-control border border-border-control bg-transparent px-2.5 py-0.5 focus-within:border-accent md:min-w-[240px]">
             {seeds.map((seed) => (
               <InlineToken
-                dismissLabel={`Remove ${seed}`}
+                dismissLabel={t("removeSeed", { seed })}
                 key={seed}
                 onDismiss={() => onSeedsChange(seeds.filter((item) => item !== seed))}
                 value={seed}
@@ -153,12 +155,14 @@ export function ResearchSearchCard({
             ))}
             <input
               {...register("seed")}
-              aria-label="Seed keyword"
+              aria-label={t("seedAria")}
               className={`${compactInputTypographyClassName} min-w-[160px] flex-1 bg-transparent px-1 font-medium text-fg outline-none`}
               disabled={disabled || researching || seeds.length >= 5}
               id="research-seed"
               onKeyDown={handleSeedKeyDown}
-              placeholder={seeds.length === 0 ? "Enter up to 5 seed keywords" : "Add another seed"}
+              placeholder={
+                seeds.length === 0 ? t("seedPlaceholder") : t("additionalSeedPlaceholder")
+              }
             />
           </div>
           <div className="md:w-[230px]">
@@ -170,16 +174,16 @@ export function ResearchSearchCard({
             />
           </div>
           <MenuSelect
-            ariaLabel="Results limit"
+            ariaLabel={t("resultsLimitAria")}
             onChange={(value) => onLimitChange(Number(value) as 100 | 300 | 500)}
             options={limitOptions}
             triggerClassName="justify-between md:w-[132px]"
             value={String(resultLimit)}
           />
           <MenuSelect
-            ariaLabel="Research mode"
+            ariaLabel={t("modeAria")}
             compact
-            leadingLabel="Mode:"
+            leadingLabel={t("modeLabel")}
             onChange={(value) => onModeChange(value as KeywordResearchMode)}
             pinCaret
             options={modeOptions}
@@ -193,11 +197,11 @@ export function ResearchSearchCard({
             <Switch
               checked={includeClickstream}
               className="border-0 bg-transparent px-0 py-0"
-              label="Clickstream volumes"
+              label={t("clickstream")}
               labelClassName="font-normal"
               onChange={(event) => onIncludeClickstreamChange(event.target.checked)}
             />
-            <InfoTooltip text="Volumes corrected with real-user browsing data instead of Google Ads estimates alone. About twice the lookup cost." />
+            <InfoTooltip text={t("clickstreamHelp")} />
           </span>
           <div className="ml-auto flex items-center gap-4">
             <button
@@ -205,23 +209,23 @@ export function ResearchSearchCard({
               onClick={(event) => setPricingAnchor(event.currentTarget)}
               type="button"
             >
-              How is this priced?
+              {t("pricing")}
             </button>
-            <span className="inline-flex" title={!hasSeed ? NO_SEED_HINT : undefined}>
+            <span className="inline-flex" title={!hasSeed ? t("noSeedHint") : undefined}>
               <Button
                 aria-describedby={!hasSeed ? noSeedHintId : undefined}
                 disabled={disabled || lookupDisabled || researching || !hasSeed}
                 loading={researching}
-                loadingLabel={researchButtonLabel(true, estimate, fallbackCostCents)}
+                loadingLabel={researchButtonLabel(true, estimate, fallbackCostCents, t)}
                 startIcon={<MagnifyingGlass size={15} weight="regular" />}
                 style={{ minWidth: 216 }}
                 type="submit"
               >
-                {researchButtonLabel(false, estimate, fallbackCostCents)}
+                {researchButtonLabel(false, estimate, fallbackCostCents, t)}
               </Button>
               {!hasSeed ? (
                 <span className="sr-only" id={noSeedHintId}>
-                  {NO_SEED_HINT}
+                  {t("noSeedHint")}
                 </span>
               ) : null}
             </span>

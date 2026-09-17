@@ -1,8 +1,8 @@
 import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { CompetitorFilter, CompetitorKind, CompetitorMarket } from "@/lib/competitors/types";
-import { countLabel } from "@/lib/format/pluralize";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { CompetitorFilterControls } from "./CompetitorFilterControls";
 import { CompetitorTile } from "./CompetitorTile";
@@ -35,16 +35,13 @@ export function ShareOfVoiceCard({
   projectId,
   scopeControls,
 }: Readonly<ShareOfVoiceCardProps>) {
+  const t = useTranslations("projectCompetitors.ui");
   const maxShare = Math.max(1, ...market.shares.map((competitor) => competitor.shareOfVoice));
   const emptyCopy = {
-    completed_unranked:
-      "Rank checks have completed for this market, but no tracked domain ranked in the top 100.",
-    filter_excludes_all:
-      "No completed rank checks match the current filters. Adjust the filters to view available market data.",
-    no_volume_data:
-      "No positive search volume is available for the compared keywords. Head-to-head ranks remain available below.",
-    no_completed_checks:
-      "No completed rank checks exist for this market yet. Run a check to calculate share of voice from real positions.",
+    completed_unranked: t("sovCompletedUnranked"),
+    filter_excludes_all: t("sovFilterExcludesAll"),
+    no_volume_data: t("sovNoVolume"),
+    no_completed_checks: t("sovNoCompletedChecks"),
     ranked: null,
   }[market.dataState];
 
@@ -52,13 +49,15 @@ export function ShareOfVoiceCard({
     <Card className="px-5 py-4.5" size="md">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 flex-col gap-1">
-          <SectionTitle>Share of voice</SectionTitle>
+          <SectionTitle>{t("shareOfVoice")}</SectionTitle>
           <span>
-            Visibility across {countLabel(market.trackedKeywordCount, "tracked keyword")}
-            {" / "}
-            {market.location} / {market.languageLabel} /{" "}
-            {market.device === "mobile" ? "Mobile" : "Desktop"}
-            {market.checkedKeywordCount < market.trackedKeywordCount ? " · Partial data" : ""}
+            {t("sovScope", {
+              device: market.device === "mobile" ? t("mobile") : t("desktop"),
+              language: market.languageLabel,
+              location: market.location,
+              partial: String(market.checkedKeywordCount < market.trackedKeywordCount),
+              tracked: market.trackedKeywordCount,
+            })}
           </span>
         </div>
         <CompetitorFilterControls
@@ -122,7 +121,7 @@ export function ShareOfVoiceCard({
                       className="shrink-0 rounded-full px-2 py-0.5 font-sans tabular-nums text-[9px] font-semibold uppercase"
                       style={{ backgroundColor: kind.background, color: kind.color }}
                     >
-                      You
+                      {t("you")}
                     </span>
                   ) : null}
                 </span>
@@ -134,7 +133,10 @@ export function ShareOfVoiceCard({
                   />
                 </span>
                 <span className="w-full text-right font-sans tabular-nums text-xs text-fg-muted sm:w-[130px]">
-                  {competitor.sharedKeywords} kw · {competitor.shareOfVoice}%
+                  {t("sharedKeywordsPercent", {
+                    count: competitor.sharedKeywords,
+                    percent: competitor.shareOfVoice,
+                  })}
                 </span>
                 {managed ? (
                   <ManagedCompetitorControls
@@ -152,7 +154,7 @@ export function ShareOfVoiceCard({
 
       <p className="m-0 mt-4 flex items-center gap-2 border-border border-t pt-3.5 text-[11.5px] text-fg-muted">
         <Info weight="regular" aria-hidden className="shrink-0 text-accent-text" size={14} />
-        SOV = share of estimated top-10 visibility (rank x search volume).
+        {t("sovDefinition")}
       </p>
     </Card>
   );

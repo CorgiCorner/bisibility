@@ -1,0 +1,52 @@
+{
+  "projectSettingsGeneral": {
+    "domainChange": {
+      "afterConfirmation": "After you confirm",
+      "cancel": "Cancel",
+      "competitorHistory": "Competitor history stays tied to the domain that was used when each check ran.",
+      "confirmationFirst": "Leave confirmation blank to set the first domain",
+      "confirmationFirstError": "Leave the confirmation blank to set this project's first domain.",
+      "confirmationMustMatch": "The confirmation must match {domain}.",
+      "confirmationWithDomain": "Type {domain} to confirm",
+      "confirm": "Confirm domain change",
+      "confirming": "Confirming",
+      "description": "Change the domain this project uses to identify its matching results.",
+      "error": "The domain could not be changed.",
+      "futureChecks": "Existing checks keep their original results. Future checks use the new domain and its subdomains to identify project matches.",
+      "newDomain": "New domain",
+      "title": "Confirm a new project domain"
+    },
+    "projectDetails": {
+      "changeDomain": "Change domain",
+      "copyProjectId": "Copy project ID",
+      "description": "Name, domain, and ID for this project.",
+      "domain": "Domain",
+      "domainHelp": "A check counts a result as yours when this domain appears in it. Changing it needs a confirmation.",
+      "name": "Project name",
+      "nameRequired": "Enter a project name.",
+      "nameTooLong": "Project names can be at most 120 characters.",
+      "projectId": "Project ID",
+      "saveError": "Project details could not be saved.",
+      "title": "Project details"
+    },
+    "validation": {
+      "confirmationTooLong": "The confirmation can be at most 253 characters.",
+      "domainTooLong": "Domains can be at most 253 characters.",
+      "invalidDomain": "Enter a domain such as example.com."
+    },
+    "tags": {
+      "cancel": "Cancel",
+      "description": "Tags group keywords and pages. Saved views can filter by them.",
+      "duplicate": "{name} already exists.",
+      "remove": "Remove tag",
+      "removeError": "Tag could not be removed.",
+      "removeTitle": "Remove {name}?",
+      "title": "Tags",
+      "usageBothManyKeywords": "{keywordCount, number} keywords and {segmentCount, plural, one {# segment use it.} other {# segments use it.}}",
+      "usageBothOneKeyword": "{segmentCount, plural, one {1 keyword and # segment use it.} other {1 keyword and # segments use it.}}",
+      "usageKeywordOnly": "{count, plural, one {# keyword uses it.} other {# keywords use it.}}",
+      "usageSegmentOnly": "{count, plural, one {# segment uses it.} other {# segments use it.}}",
+      "writeError": "Tag could not be added."
+    }
+  }
+}

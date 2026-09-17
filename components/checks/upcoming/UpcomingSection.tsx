@@ -7,6 +7,7 @@ import type { UpcomingView } from "@/lib/checks/contract";
 import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { BudgetForecastNote } from "./BudgetForecastNote";
 import { UpcomingBlockedAlerts } from "./UpcomingBlockedAlerts";
 import { UpcomingDayRollups } from "./UpcomingDayRollups";
@@ -31,6 +32,7 @@ function EmptyUpcoming({
   mode,
   schedulesHref,
 }: Readonly<{ mode: UpcomingDisplayMode; schedulesHref: string }>) {
+  const t = useTranslations("projectRankTracker.checks");
   if (mode === "strip") {
     return (
       <div className="flex min-h-12 items-center justify-between gap-3 rounded-card border border-dashed border-border bg-bg-elev px-3.5 py-2.5">
@@ -41,13 +43,13 @@ function EmptyUpcoming({
             className="shrink-0 text-fg-muted"
             size={16}
           />
-          No scheduled keywords
+          {t("noScheduledKeywords")}
         </span>
         <Link
           className="shrink-0 text-xs font-semibold text-accent-text outline-none hover:underline focus-visible:underline"
           href={schedulesHref}
         >
-          Manage
+          {t("manage")}
         </Link>
       </div>
     );
@@ -60,23 +62,24 @@ function EmptyUpcoming({
           className="inline-flex items-center gap-1 text-xs font-semibold text-accent-text outline-none hover:underline focus-visible:underline"
           href={schedulesHref}
         >
-          Manage schedules in Keywords
+          {t("manageSchedulesInKeywords")}
           <CaretRight aria-hidden size={12} weight="regular" />
         </Link>
       }
       compact
-      description="Set a schedule in Keywords to see the next checks here."
+      description={t("noScheduledKeywordsDescription")}
       icon={<CalendarBlank aria-hidden size={22} weight="regular" />}
-      title="No scheduled keywords"
+      title={t("noScheduledKeywords")}
     />
   );
 }
 
 function UpcomingHeader() {
+  const t = useTranslations("projectRankTracker.checks");
   return (
     <div className="border-border border-b px-4 py-3.5">
-      <SectionTitle>Upcoming</SectionTitle>
-      <span className="truncate">Forecast</span>
+      <SectionTitle>{t("upcoming")}</SectionTitle>
+      <span className="truncate">{t("forecast")}</span>
     </div>
   );
 }
@@ -91,11 +94,12 @@ export function UpcomingSection({
   timelineHref,
   view,
 }: Readonly<UpcomingSectionProps>) {
+  const t = useTranslations("projectRankTracker.checks");
   const empty = view.blocked.length === 0 && view.days.length === 0;
 
   if (empty) {
     return (
-      <aside aria-label="Upcoming checks">
+      <aside aria-label={t("upcomingChecks")}>
         {mode === "strip" ? (
           <EmptyUpcoming mode={mode} schedulesHref={schedulesHref} />
         ) : (
@@ -112,7 +116,7 @@ export function UpcomingSection({
 
   if (mode === "strip") {
     return (
-      <aside aria-label="Upcoming checks">
+      <aside aria-label={t("upcomingChecks")}>
         <UpcomingStrip
           blocked={view.blocked}
           days={view.days}
@@ -125,7 +129,7 @@ export function UpcomingSection({
   }
 
   return (
-    <aside aria-label="Upcoming checks" className="space-y-3">
+    <aside aria-label={t("upcomingChecks")} className="space-y-3">
       <Card className="overflow-hidden p-0" size="md">
         <UpcomingHeader />
         <div className="space-y-3 p-4">

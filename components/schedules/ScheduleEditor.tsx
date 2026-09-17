@@ -6,8 +6,10 @@ import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { calendarCronExpression } from "@/lib/rank-check/schedule-calendar";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
+import { suggestedScheduleName } from "@/lib/schedules/suggested-name";
 import { VIEWER_PREVIEW_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AddKeywordsDrawer } from "./AddKeywordsDrawer";
@@ -20,6 +22,7 @@ import {
   scheduleEditorDefaults,
   scheduleEditorSchema,
 } from "./ScheduleEditorModel";
+import { useScheduleNameLabels } from "./useScheduleNameLabels";
 
 type ApiResponse<T> = { data: T };
 
@@ -67,11 +70,17 @@ export function ScheduleEditor({
   referenceIso,
   schedule,
 }: Readonly<ScheduleEditorProps>) {
+  const t = useTranslations("projectRuns.schedules");
+  const scheduleNames = useScheduleNameLabels();
   const router = useRouter();
   const { showToast } = useToast();
+  const editorDefaults = scheduleEditorDefaults(schedule);
   const form = useForm<ScheduleEditorValues>({
     defaultValues: {
-      ...scheduleEditorDefaults(schedule),
+      ...editorDefaults,
+      // A brand-new schedule arrives without a name, so the suggestion is built from the
+      // viewer's catalog rather than an English literal in the defaults module.
+      name: editorDefaults.name || suggestedScheduleName(editorDefaults, scheduleNames),
       isDefault: (isNew && defaultScheduleName === null) || schedule.isDefault,
     },
     resolver: zodResolver(scheduleEditorSchema),
@@ -86,7 +95,7 @@ export function ScheduleEditor({
     : candidates.filter((candidate) => candidate.scheduleId === schedule.publicId);
   const drawerCandidates = candidates.map((candidate) => ({
     assigned: candidate.scheduleId === schedule.publicId,
-    checks: String(candidate.targetCount),
+    checks: candidate.targetCount,
     device: candidate.device,
     id: candidate.publicId,
     keyword: candidate.name,
@@ -133,7 +142,7 @@ export function ScheduleEditor({
           projectId,
         });
       }
-      showToast("Schedule saved.", { severity: "success" });
+      showToast(t("editor.saved"), { severity: "success" });
       if (onSaved)
         onSaved({
           publicId: scheduleId,
@@ -143,8 +152,8 @@ export function ScheduleEditor({
         });
       else if (isNew) router.replace(projectSchedulesPath(projectId, scheduleId));
       else router.refresh();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not save the schedule.");
+    } catch {
+      setMessage(t("editor.saveFailed"));
     }
   }
 
@@ -167,7 +176,7 @@ export function ScheduleEditor({
       >
         <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
           <header className="border-b border-border px-4 py-3.5">
-            <h2 className="m-0 text-[15px] font-semibold text-fg">Schedule</h2>
+            <h2 className="m-0 text-[15px] font-semibold text-fg">{t("schedule")}</h2>
           </header>
           <fieldset className="contents" disabled={!canEdit}>
             <ScheduleEditorFields
@@ -189,7 +198,7 @@ export function ScheduleEditor({
             memberSummary={memberSummary}
             onOpenDrawer={() => setPickerOpen(true)}
             pendingMembers={pendingMembers}
-            scheduleName={form.watch("name") || "this schedule"}
+            scheduleName={form.watch("name") || t("thisSchedule")}
             storedMembers={storedMembers}
           />
         )}
@@ -205,12 +214,12 @@ export function ScheduleEditor({
             type="button"
             variant="ghost"
           >
-            Cancel
+            {t("cancel")}
           </Button>
         ) : null}
         {canEdit ? (
-          <Button loading={formState.isSubmitting} loadingLabel="Saving..." type="submit">
-            Save schedule
+          <Button loading={formState.isSubmitting} loadingLabel={t("editor.saving")} type="submit">
+            {t("editor.save")}
           </Button>
         ) : null}
       </div>
@@ -228,7 +237,7 @@ export function ScheduleEditor({
           open={pickerOpen}
           projectId={projectId}
           scheduleId={schedule.publicId}
-          scheduleName={form.watch("name") || "this schedule"}
+          scheduleName={form.watch("name") || t("thisSchedule")}
         />
       ) : null}
     </form>

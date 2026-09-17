@@ -2,24 +2,27 @@
 
 import type { FeedFacet, FeedRowMetadata } from "@/lib/feeds/facets";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
+import type { FeedFacetLabels } from "./AddFilterMenu";
 
 export function FacetToken({
   facet,
   label,
+  labels,
   onRemove,
 }: Readonly<{
   facet: FeedFacet;
   label: string;
+  labels: FeedFacetLabels;
   onRemove: (facet: FeedFacet) => void;
 }>) {
   return (
     <button
-      aria-label={`Remove ${facet.axis}: ${label}`}
+      aria-label={labels.remove(facet.axis, label)}
       className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border-control bg-bg-elev px-2.5 font-sans tabular-nums text-[11px] text-fg transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:outline-none"
       onClick={() => onRemove(facet)}
       type="button"
     >
-      <span className="text-fg-muted">{facet.axis}</span>
+      <span className="text-fg-muted">{labels.axis(facet.axis)}</span>
       <span className="font-semibold">{label}</span>
       <X aria-hidden size={12} weight="regular" />
     </button>

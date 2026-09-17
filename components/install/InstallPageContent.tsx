@@ -1,13 +1,19 @@
+"use client";
+
 import { AgentInstallList } from "@/components/install/AgentInstallList";
 import { curlExample, SKILLS } from "@/components/install/install-catalog";
 import { CopyButton } from "@/components/ui/CopyButton";
 import type { InstallApiKeySummary } from "@/lib/queries/install";
 import { appPath } from "@/lib/routing/app-path";
 import Link from "next/link";
+import { useFormatter, useTranslations } from "next-intl";
+import { ChatGptIconDownload } from "./ChatGptIconDownload";
 import { HighlightedInstallCode } from "./CommandHighlight";
+import { InstallGettingStarted } from "./InstallGettingStarted";
 
 type InstallPageContentProps = {
   apiKey: InstallApiKeySummary | null;
+  hasKeywordAndCheck: boolean;
   isCloudHosted: boolean;
   mcpUrl: string;
   origin: string;
@@ -20,8 +26,10 @@ const codeCopyClassName =
   "!h-7 !min-h-7 !min-w-7 !w-7 !rounded-control !bg-transparent !p-0 text-code-faint";
 const codeCopyStyle = { "--control-color": "var(--code-faint)" };
 
-export function capitalizeFirst(value: string) {
-  return value ? `${value[0].toUpperCase()}${value.slice(1)}` : value;
+function scopeMessageKey(scope: NonNullable<InstallApiKeySummary>["scope"]) {
+  if (scope === "read") return "apiKey.scopeRead";
+  if (scope === "write") return "apiKey.scopeWrite";
+  return "apiKey.scopeAdmin";
 }
 
 function CodeBlock({ label, text }: Readonly<{ label: string; text: string }>) {
@@ -45,60 +53,63 @@ function CodeBlock({ label, text }: Readonly<{ label: string; text: string }>) {
 
 export function InstallPageContent({
   apiKey,
+  hasKeywordAndCheck,
   isCloudHosted,
   mcpUrl,
   origin,
   projectRef,
 }: Readonly<InstallPageContentProps>) {
+  const format = useFormatter();
+  const t = useTranslations("projectInstall");
   const curl = curlExample(origin);
-  const apiKeyCreatedLabel = apiKey ? capitalizeFirst(apiKey.createdLabel) : null;
+  const apiKeyCreated = apiKey
+    ? t("apiKey.created", {
+        date: format.dateTime(apiKey.createdAt, { dateStyle: "medium" }),
+      })
+    : "none";
 
   return (
     <div className="max-w-[1000px]">
+      <ChatGptIconDownload origin={origin} />
+      <InstallGettingStarted hasKeywordAndCheck={hasKeywordAndCheck} mcpUrl={mcpUrl} />
       <div className="mb-3 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <section className="rounded-card border border-border bg-bg-elev px-5 py-[18px]">
-          <h2 className="m-0 mb-0.5 text-[15px] font-semibold">AI agents</h2>
-          <p className="m-0 mb-2 text-[12.5px] text-fg-muted">
-            Pick your tool, copy one command, paste it in your terminal. That is the whole setup.
-          </p>
+          <h2 className="m-0 mb-0.5 text-[15px] font-semibold">{t("agents.heading")}</h2>
+          <p className="m-0 mb-2 text-[12.5px] text-fg-muted">{t("agents.description")}</p>
           <AgentInstallList mcpUrl={mcpUrl} />
         </section>
 
         <div className="flex min-w-0 flex-col gap-3">
           <section className="rounded-card border border-border bg-bg-elev px-5 py-[18px]">
-            <h2 className="m-0 mb-0.5 text-[15px] font-semibold">MCP endpoint</h2>
-            <p className="m-0 mb-3 text-[12.5px] text-fg-muted">
-              Using a tool that is not on the list? Paste this address into it and sign in with your
-              bisibility account.
-            </p>
+            <h2 className="m-0 mb-0.5 text-[15px] font-semibold">{t("endpoint.heading")}</h2>
+            <p className="m-0 mb-3 text-[12.5px] text-fg-muted">{t("endpoint.description")}</p>
             <div className="flex min-h-[42px] items-center gap-2.5 rounded-control border border-border-control bg-transparent pl-3 pr-1.5">
               <span className="min-w-0 flex-1 truncate font-sans text-[12.5px]">{mcpUrl}</span>
               <CopyButton
                 className="ml-auto shrink-0 !h-8 !min-h-8 !min-w-8 !w-8 !rounded-control !p-0"
-                label="Copy MCP URL"
+                label={t("endpoint.copy")}
                 size="sm"
                 text={mcpUrl}
               />
             </div>
             {isCloudHosted ? (
               <p className="m-0 mt-2 font-sans text-[10.5px] text-fg-muted">
-                self-hosting? use your own address instead: &lt;your-instance&gt;/api/mcp
+                {t("endpoint.selfHosted")}
               </p>
             ) : null}
           </section>
 
           <section className="rounded-card border border-border bg-bg-elev px-5 py-[18px]">
             <div className="flex flex-wrap items-baseline gap-2.5">
-              <h2 className="m-0 mb-0.5 text-[15px] font-semibold">API key</h2>
+              <h2 className="m-0 mb-0.5 text-[15px] font-semibold">{t("apiKey.heading")}</h2>
               {apiKey ? (
                 <span className="ml-auto font-sans text-[10.5px] text-fg-muted">
-                  scope: {apiKey.scopeLabel}
+                  {t("apiKey.scope", { scope: t(scopeMessageKey(apiKey.scope)) })}
                 </span>
               ) : null}
             </div>
             <p className="m-0 mb-3 text-[12.5px] text-fg-muted">
-              Use this when something has to run without you, like a nightly script.
-              {apiKeyCreatedLabel ? ` ${apiKeyCreatedLabel}.` : null}
+              {t("apiKey.description", { created: apiKeyCreated })}
             </p>
             {apiKey ? (
               <>
@@ -111,32 +122,27 @@ export function InstallPageContent({
                   className="mt-2.5 inline-flex text-[12.5px] font-semibold text-accent-text no-underline hover:underline"
                   href={appPath(projectRef, "settings", "developers")}
                 >
-                  Manage in Settings, Developers
+                  {t("apiKey.manage")}
                 </Link>
               </>
             ) : (
-              <p className="m-0 text-[12.5px] text-fg-muted">
-                No API key yet. Project admins can create one under Settings → Developers.
-              </p>
+              <p className="m-0 text-[12.5px] text-fg-muted">{t("apiKey.none")}</p>
             )}
-            <CodeBlock label="Copy curl example" text={curl} />
+            <CodeBlock label={t("apiKey.copyCurl")} text={curl} />
           </section>
         </div>
       </div>
 
       <section className="mb-3 rounded-card border border-border bg-bg-elev px-5 py-[18px]">
         <div className="mb-1 flex flex-wrap items-baseline gap-2.5">
-          <h2 className="m-0 text-[15px] font-semibold">Skills</h2>
+          <h2 className="m-0 text-[15px] font-semibold">{t("skills.heading")}</h2>
           {/* nav-active is #EDEAE1, the exact value the design calls surface-hover; bg-sunken is
               a 30% alpha that composites to near-invisible on the card. */}
           <span className="ml-auto inline-flex items-center rounded-full bg-nav-active px-[9px] py-[3px] font-sans text-[10px] font-semibold text-yellow-text">
-            planned
+            {t("skills.planned")}
           </span>
         </div>
-        <p className="m-0 mb-3 text-[12.5px] text-fg-muted">
-          Ready-made SEO tasks your agent will be able to run for you. None are live yet, so this
-          list is what is coming next.
-        </p>
+        <p className="m-0 mb-3 text-[12.5px] text-fg-muted">{t("skills.description")}</p>
         <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[repeat(auto-fit,minmax(230px,1fr))]">
           {SKILLS.map((skill) => (
             <div
@@ -146,13 +152,11 @@ export function InstallPageContent({
               <span className="truncate font-sans text-[12px] font-semibold text-fg">
                 {skill.name}
               </span>
-              <span className="text-[11.5px] text-fg-muted">{skill.note}</span>
+              <span className="text-[11.5px] text-fg-muted">{t(`skills.${skill.name}`)}</span>
             </div>
           ))}
         </div>
-        <p className="m-0 mt-3.5 font-sans text-[10.5px] text-fg-muted">
-          the install command appears here once the first skill is ready
-        </p>
+        <p className="m-0 mt-3.5 font-sans text-[10.5px] text-fg-muted">{t("skills.footer")}</p>
       </section>
     </div>
   );

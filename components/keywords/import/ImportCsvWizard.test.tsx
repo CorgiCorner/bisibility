@@ -1,5 +1,6 @@
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { type ButtonHTMLAttributes, type ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -365,7 +366,7 @@ describe("ImportCsvWizard", () => {
 
     expect(
       await screen.findByText(
-        "This file appears to use semicolons (;) as separators. Export it as comma-separated CSV and try again.",
+        "This CSV uses an unsupported delimiter. Export it as comma-separated CSV and try again.",
       ),
     ).toBeInTheDocument();
     fireEvent.click(await continueButton());
@@ -602,7 +603,7 @@ describe("ImportCsvWizard", () => {
 
     expect(
       await screen.findByText(
-        'Missing required keyword column. Add a column named "keyword" and try again.',
+        "Missing required keyword column. Add a column named 'keyword' and try again.",
       ),
     ).toBeInTheDocument();
     fireEvent.click(await continueButton());
@@ -616,7 +617,9 @@ describe("ImportCsvWizard", () => {
     await reachReviewWithCsv();
 
     fireEvent.click(screen.getByRole("button", { name: "Import keywords" }));
-    expect(await screen.findByText("Import service unavailable")).toBeInTheDocument();
+    expect(
+      await screen.findByText("The keywords could not be imported. Try again."),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close sheet" }));
     expect(mocks.onClose).toHaveBeenCalledOnce();
   });

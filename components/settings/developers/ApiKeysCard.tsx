@@ -1,5 +1,6 @@
 "use client";
 
+import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { ApiKeyCreateModal } from "@/components/settings/api-keys/ApiKeyCreateModal";
 import { ApiKeyRollModal } from "@/components/settings/api-keys/ApiKeyRollModal";
 import type { ApiKeyData, IssuedApiKey } from "@/components/settings/api-keys/api-key-model";
@@ -10,18 +11,20 @@ import {
   developerListClassName,
   developerRowClassName,
 } from "@/components/settings/developers/developer-settings-layout";
+import { useDeveloperActionError } from "@/components/settings/developers/useDeveloperActionError";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { formatDisplayDateTime } from "@/lib/dates/format";
 import {
   type IssueApiKeyInput,
   type RegenerateApiKeyInput,
   revokeApiKeySchema,
 } from "@/lib/schemas/apiKey";
-import { actionErrorMessage } from "@/lib/ui/action-error";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import type { z } from "zod";
 
@@ -44,12 +47,31 @@ export function ApiKeysCard({
   regenerateKey,
   revokeKey,
 }: Readonly<ApiKeysCardProps>) {
+  const dateDisplay = useDateDisplay();
   const router = useRouter();
+  const presentActionError = useDeveloperActionError();
+  const t = useTranslations("projectSettingsDevelopers.apiKeys");
   const [isPending, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<ApiKeyData | null>(null);
   const [rollTarget, setRollTarget] = useState<ApiKeyData | null>(null);
+
+  function createdLabel(apiKey: ApiKeyData) {
+    return t("created", { date: formatDisplayDateTime(new Date(apiKey.createdAt), dateDisplay) });
+  }
+
+  function lastUsedLabel(apiKey: ApiKeyData) {
+    return apiKey.lastUsedAt
+      ? t("lastUsed", { date: formatDisplayDateTime(new Date(apiKey.lastUsedAt), dateDisplay) })
+      : t("lastUsedNever");
+  }
+
+  function expiryLabel(apiKey: ApiKeyData) {
+    if (!apiKey.expiresAt) return t("neverExpires");
+    const date = formatDisplayDateTime(new Date(apiKey.expiresAt), dateDisplay);
+    return apiKey.isExpired ? t("expired", { date }) : t("expires", { date });
+  }
 
   function revoke() {
     if (!revokeTarget || !revokeKey) return;
@@ -57,12 +79,12 @@ export function ApiKeysCard({
     startTransition(() => {
       void revokeKey(input)
         .then(() => {
-          setMessage("API key revoked.");
+          setMessage(t("revoked"));
           setRevokeTarget(null);
           router.refresh();
         })
         .catch((error: unknown) =>
-          setMessage(actionErrorMessage(error, "API key could not be revoked.")),
+          setMessage(presentActionError.apiKey(error, t("errors.revoke"))),
         );
     });
   }
@@ -70,14 +92,14 @@ export function ApiKeysCard({
   return (
     <DeveloperCardFrame
       className={developerCardGeometryClassNames.apiKeys}
-      description="Keys for the bisibility API, each with a scope and an expiry."
+      description={t("description")}
       footer={
         <>
           <ExternalLink
             className="rounded-control border border-border-control bg-bg-elev px-3 py-1.5 text-[13px] font-medium text-fg-muted transition-colors hover:bg-bg-sunken hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
             href={docsHref}
           >
-            Docs quickstart
+            {t("docsQuickstart")}
           </ExternalLink>
           {issueKey ? (
             <Button
@@ -86,13 +108,13 @@ export function ApiKeysCard({
               startIcon={<Plus aria-hidden size={14} weight="regular" />}
               type="button"
             >
-              Create key
+              {t("create")}
             </Button>
           ) : null}
         </>
       }
       id="api-keys"
-      title="API keys"
+      title={t("title")}
     >
       <div className={developerListClassName}>
         {apiKeys.length ? (
@@ -102,28 +124,28 @@ export function ApiKeysCard({
                 <span className="block text-[13.5px] font-semibold">{apiKey.name}</span>
                 <span className="mt-0.5 truncate">{apiKey.maskedValue}</span>
                 <span className="mt-0.5 block text-[11.5px] text-fg-muted">
-                  {apiKey.createdLabel} · {apiKey.lastUsedLabel}
+                  {createdLabel(apiKey)} · {lastUsedLabel(apiKey)}
                 </span>
               </span>
               <span className="flex flex-wrap items-center justify-end gap-2">
                 <StatusPill
-                  label={apiKey.expiresLabel}
+                  label={expiryLabel(apiKey)}
                   showDot={false}
                   status={apiKey.isExpired ? "needs_reauth" : "optional"}
                 />
                 {regenerateKey || revokeKey ? (
                   <DeveloperActionsMenu
-                    ariaLabel={`${apiKey.name} key actions`}
+                    ariaLabel={t("actionsFor", { name: apiKey.name })}
                     items={[
                       {
                         disabled: !regenerateKey || isPending,
-                        label: "Roll key",
+                        label: t("roll"),
                         onSelect: () => setRollTarget(apiKey),
                       },
                       {
                         danger: true,
                         disabled: !revokeKey || isPending,
-                        label: "Revoke key",
+                        label: t("revoke"),
                         onSelect: () => setRevokeTarget(apiKey),
                       },
                     ]}
@@ -135,9 +157,11 @@ export function ApiKeysCard({
         ) : (
           <div className={developerRowClassName}>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13.5px] font-semibold text-fg-muted">No keys yet</span>
+              <span className="block text-[13.5px] font-semibold text-fg-muted">
+                {t("emptyTitle")}
+              </span>
               <span className="mt-0.5 block text-[11.5px] text-fg-muted">
-                The first key is made with Create key.
+                {t("emptyDescription")}
               </span>
             </span>
           </div>

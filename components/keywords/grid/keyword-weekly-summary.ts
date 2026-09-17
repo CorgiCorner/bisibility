@@ -3,7 +3,11 @@ import { weeklyPositionComparison } from "@/lib/keywords/position-history";
 import type { KeywordRow } from "@/lib/queries/keywords";
 
 export type KeywordWeeklySummary = {
-  sentence: string;
+  kind: "dropped" | "improved" | "mixed" | "steady";
+  improved?: number;
+  keyword?: string;
+  positionDelta?: number;
+  total?: number;
   tone: SummaryStripTone;
 };
 
@@ -27,23 +31,30 @@ export function buildKeywordWeeklySummary(
   )[0];
 
   if (improved.length === 0 && !biggestDrop) {
-    return { sentence: "Positions held steady this week", tone: "steady" };
+    return { kind: "steady", tone: "steady" };
   }
   if (!biggestDrop) {
     return {
-      sentence: `${improved.length} of ${rows.length} keywords improved this week · no drops`,
+      improved: improved.length,
+      kind: "improved",
       tone: "improved",
+      total: rows.length,
     };
   }
-  const dropCopy = `biggest drop: ${biggestDrop.row.keyword} (${biggestDrop.delta})`;
   if (improved.length === 0) {
     return {
-      sentence: `No keywords improved this week · ${dropCopy}`,
+      kind: "dropped",
+      keyword: biggestDrop.row.keyword,
+      positionDelta: biggestDrop.delta,
       tone: "dropped",
     };
   }
   return {
-    sentence: `${improved.length} of ${rows.length} keywords improved this week · ${dropCopy}`,
+    improved: improved.length,
+    kind: "mixed",
+    keyword: biggestDrop.row.keyword,
+    positionDelta: biggestDrop.delta,
     tone: "improved",
+    total: rows.length,
   };
 }

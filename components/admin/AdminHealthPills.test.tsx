@@ -1,4 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
+import { renderWithInstanceAdminMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { AdminHealthPills } from "./AdminHealthPills";
 
@@ -44,10 +45,10 @@ describe("AdminHealthPills", () => {
     );
 
     const health = screen.getByLabelText("Operations health");
-    expect(within(health).getByText("Worker unknown")).toHaveAttribute("data-tone", "unknown");
+    expect(within(health).getByText("Worker Unknown")).toHaveAttribute("data-tone", "unknown");
     expect(within(health).getByText("Checks: 4.9% failed")).toHaveAttribute("data-tone", "ok");
-    expect(within(health).getByText("gsc: 5% failed")).toHaveAttribute("data-tone", "stale");
-    expect(within(health).getByText("ga4: 20% failed")).toHaveAttribute("data-tone", "stale");
+    expect(within(health).getByText("gsc: 5.0% failed")).toHaveAttribute("data-tone", "stale");
+    expect(within(health).getByText("ga4: 20.0% failed")).toHaveAttribute("data-tone", "stale");
     expect(within(health).getByText("plausible: 20.1% failed")).toHaveAttribute(
       "data-tone",
       "failed",
@@ -67,7 +68,7 @@ describe("AdminHealthPills", () => {
     );
 
     expect(screen.getByText("plausible: 20.1% failed")).toBeInTheDocument();
-    expect(screen.queryByText("gsc: 5% failed")).not.toBeInTheDocument();
+    expect(screen.queryByText("gsc: 5.0% failed")).not.toBeInTheDocument();
     expect(screen.getByText("Checks: unknown")).toHaveAttribute("data-tone", "unknown");
     expect(screen.getByText("0 undelivered")).toHaveAttribute("data-tone", "ok");
   });

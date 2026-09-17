@@ -1,8 +1,6 @@
-import {
-  FirstCheckBanner,
-  FirstCheckBannerLink,
-  keywordReadinessSubject,
-} from "@/components/rank-check/FirstCheckBanner";
+"use client";
+
+import { FirstCheckBanner, FirstCheckBannerLink } from "@/components/rank-check/FirstCheckBanner";
 import {
   FirstCheckBannerAction,
   type GetFirstCheckRunPlanAction,
@@ -15,18 +13,18 @@ import type { ProjectRef } from "@/lib/routing/app-path";
 import { appPath } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
-import { VIEWER_ASK_ADMIN_SERP } from "@/lib/ui/viewer-affordances";
-import { VISIBILITY_DESCRIPTION, visibilityCoverageCopy } from "@/lib/visibility/definition";
+import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { RecentlyAddedCard } from "./OverviewNoDataBottom";
 import { PositionDistributionCard } from "./PositionDistributionCard";
 import { PositionTrendCard } from "./PositionTrendCard";
 import type { DistributionBucket, OverviewView, TrendPoint } from "./types";
 
 const kpis = [
-  { label: "Avg. position", subline: "", value: "–", muted: true },
-  { label: "Tracked keywords", subline: "status", value: "count", muted: false },
-  { label: "In top 10", subline: "no data", value: "–", muted: true },
-  { label: "Visibility", subline: "", value: "–", muted: true },
+  { id: "averagePosition", muted: true, subline: "", value: "empty" },
+  { id: "trackedKeywords", muted: false, subline: "status", value: "count" },
+  { id: "inTop10", muted: true, subline: "noData", value: "empty" },
+  { id: "visibility", muted: true, subline: "", value: "empty" },
 ] as const;
 
 export type NoDataBannerState =
@@ -36,29 +34,32 @@ export type NoDataBannerState =
   | "ready"
   | "running";
 
-function bannerText(state: Exclude<NoDataBannerState, "ready">, keywordCount: number) {
-  const keywords = keywordReadinessSubject(keywordCount);
+function bannerText(
+  state: Exclude<NoDataBannerState, "ready">,
+  keywordCount: number,
+  t: ReturnType<typeof useTranslations<"projectDashboard.noData">>,
+) {
   if (state === "migration_hold") {
     return {
-      detail: "This project is on migration hold. Rank tracking will resume when the hold ends.",
-      title: "Rank checks paused.",
+      detail: t("migrationHoldDetail"),
+      title: t("migrationHoldTitle"),
     };
   }
   if (state === "missing") {
     return {
-      detail: "Connect DataForSEO or SerpApi to start rank tracking.",
-      title: "SERP provider required",
+      detail: t("providerMissingDetail"),
+      title: t("providerMissingTitle"),
     };
   }
   if (state === "needs_attention") {
     return {
-      detail: `${keywords} ready. Enable or reconnect a SERP provider before the first rank check.`,
-      title: "SERP provider needs attention.",
+      detail: t("providerNeedsAttentionDetail", { count: keywordCount }),
+      title: t("providerNeedsAttentionTitle"),
     };
   }
   return {
-    detail: "Rankings will appear here when the current check finishes.",
-    title: "First rank check in progress.",
+    detail: t("firstCheckInProgressDetail"),
+    title: t("firstCheckInProgressTitle"),
   };
 }
 
@@ -87,6 +88,7 @@ export function NoDataBanner({
   runCheckNowAction: RunFirstCheckAction;
   state: NoDataBannerState;
 }>) {
+  const t = useTranslations("projectDashboard.noData");
   if (state === "ready") {
     const needsKeywords = !keywordId && keywordCount === 0;
     const action =
@@ -102,49 +104,54 @@ export function NoDataBanner({
       ) : needsKeywords && canCreateKeyword ? (
         <FirstCheckBannerLink
           href={appPath(projectRef, needsKeywords ? "rank-tracker?add=1" : "rank-tracker")}
-          label={needsKeywords ? "Add keywords" : "View keywords"}
+          label={needsKeywords ? t("addKeywords") : t("viewKeywords")}
         />
       ) : !needsKeywords ? (
-        <FirstCheckBannerLink href={appPath(projectRef, "rank-tracker")} label="View keywords" />
+        <FirstCheckBannerLink
+          href={appPath(projectRef, "rank-tracker")}
+          label={t("viewKeywords")}
+        />
       ) : null;
     return (
       <FirstCheckBanner
         action={action}
+        detail={t("readyDetail", { count: keywordCount })}
         icon={needsKeywords ? "ranking" : "puzzle"}
         keywordCount={keywordCount}
+        title={t("noRankingsYet")}
       />
     );
   }
 
-  const copy = bannerText(state, keywordCount);
+  const copy = bannerText(state, keywordCount, t);
   const viewerBlocked = !canManageProviders && (state === "missing" || state === "needs_attention");
   let action: ReactNode = (
     <FirstCheckBannerLink
       href={appPath(projectRef, "integrations#all-providers")}
-      label="Connect"
+      label={t("connect")}
     />
   );
   if (viewerBlocked) {
     action = undefined;
   } else if (state === "migration_hold") {
     action = (
-      <FirstCheckBannerLink href={appPath(projectRef, "rank-tracker")} label="View keywords" />
+      <FirstCheckBannerLink href={appPath(projectRef, "rank-tracker")} label={t("viewKeywords")} />
     );
   } else if (state === "needs_attention") {
     action = (
       <FirstCheckBannerLink
         href={appPath(projectRef, "integrations#all-providers")}
-        label="Manage provider"
+        label={t("manageProvider")}
       />
     );
   } else if (state === "running") {
-    action = <FirstCheckBannerLink href={projectRunsPath(projectRef)} label="View check runs" />;
+    action = <FirstCheckBannerLink href={projectRunsPath(projectRef)} label={t("viewCheckRuns")} />;
   }
 
   return (
     <FirstCheckBanner
       action={action}
-      detail={viewerBlocked && state === "missing" ? VIEWER_ASK_ADMIN_SERP : copy.detail}
+      detail={viewerBlocked && state === "missing" ? t("viewerAskAdmin") : copy.detail}
       title={copy.title}
     />
   );
@@ -159,49 +166,67 @@ type NoDataKpiRowProps = {
   visibilityCoverage: OverviewView["visibilityCoverage"];
 };
 
-function trackedKeywordSubline({
-  budgetExhausted,
-  projectReadOnly,
-  runningCheckCount,
-  serpProviderState,
-}: NoDataKpiRowProps) {
-  if (projectReadOnly) return "paused · migration hold";
-  if (budgetExhausted) return "monthly budget exhausted";
-  if (serpProviderState === "missing") return "provider not connected";
-  if (serpProviderState === "needs_attention") return "provider needs attention";
-  if (runningCheckCount > 0) return "check in progress";
-  return "ready to check";
+function trackedKeywordSubline(
+  { budgetExhausted, projectReadOnly, runningCheckCount, serpProviderState }: NoDataKpiRowProps,
+  t: ReturnType<typeof useTranslations<"projectDashboard.noData">>,
+) {
+  if (projectReadOnly) return t("pausedMigrationHold");
+  if (budgetExhausted) return t("monthlyBudgetExhausted");
+  if (serpProviderState === "missing") return t("providerNotConnected");
+  if (serpProviderState === "needs_attention") return t("providerNeedsAttention");
+  if (runningCheckCount > 0) return t("checkInProgress");
+  return t("readyToCheck");
 }
 
 export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
+  const format = useFormatter();
+  const t = useTranslations("projectDashboard.noData");
+  const kpiT = useTranslations("projectDashboard.kpis");
+  const dashboardT = useTranslations("projectDashboard.dashboard");
   const { keywordCount } = props;
-  const keywordSubline = trackedKeywordSubline(props);
+  const keywordSubline = trackedKeywordSubline(props, t);
 
   return (
     <section
-      aria-label="Overview KPIs"
+      aria-label={dashboardT("kpisAriaLabel")}
       className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4"
     >
       {kpis.map((kpi) => {
-        const value = kpi.value === "count" ? String(keywordCount) : kpi.value;
+        const value = kpi.value === "count" ? format.number(keywordCount) : "–";
         const subline =
-          kpi.label === "Visibility"
-            ? visibilityCoverageCopy(props.visibilityCoverage)
+          kpi.id === "visibility"
+            ? kpiT("visibilityDetail", {
+                limited: props.visibilityCoverage.limited ? "true" : "false",
+                measured: props.visibilityCoverage.measured,
+                total: props.visibilityCoverage.total,
+              })
             : kpi.subline === "status"
               ? keywordSubline
-              : kpi.subline;
+              : kpi.subline === "noData"
+                ? t("noData")
+                : kpi.subline;
         const valueClassName = kpi.muted ? "text-fg-muted" : "text-fg";
         const sublineClassName = kpi.value === "count" ? "text-accent-text" : "text-fg-muted";
 
         return (
           <Card
-            key={kpi.label}
+            key={kpi.id}
             size="md"
             style={{ borderRadius: UI_RADIUS_ROLES.card, padding: "16px 18px" }}
           >
             <div className="flex items-center gap-1 font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-              <span>{kpi.label}</span>
-              {kpi.label === "Visibility" ? <InfoTooltip text={VISIBILITY_DESCRIPTION} /> : null}
+              <span>
+                {kpi.id === "averagePosition"
+                  ? kpiT("averagePosition")
+                  : kpi.id === "trackedKeywords"
+                    ? kpiT("trackedKeywords")
+                    : kpi.id === "inTop10"
+                      ? kpiT("inTop10")
+                      : kpiT("visibility")}
+              </span>
+              {kpi.id === "visibility" ? (
+                <InfoTooltip text={kpiT("visibilityDescription")} />
+              ) : null}
             </div>
             <div
               className={`mt-2 text-[26px] font-semibold leading-none tracking-[-1px] ${valueClassName}`}
@@ -223,12 +248,14 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
 export function NoDataCharts({
   distribution,
   domain,
-  source,
+  projectRef,
+  recentlyAddedRows,
   trend,
 }: Readonly<{
   distribution: DistributionBucket[];
   domain: string;
-  source: ReactNode;
+  projectRef: string;
+  recentlyAddedRows: OverviewView["highlights"][number]["rows"];
   trend: TrendPoint[];
 }>) {
   return (
@@ -236,7 +263,7 @@ export function NoDataCharts({
       <PositionTrendCard data={trend} empty seriesLabel={domain} />
       <section className="grid min-w-0 gap-4 lg:grid-cols-2">
         <PositionDistributionCard buckets={distribution} empty />
-        {source}
+        <RecentlyAddedCard projectRef={projectRef} rows={recentlyAddedRows} />
       </section>
     </>
   );

@@ -1,4 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
+import {
+  instanceAdminFeatureTestMessages,
+  renderWithInstanceAdminMessages as render,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/admin/AdminAccountLookup", () => ({
@@ -39,7 +44,7 @@ const data = {
     projectId: `project_${index + 1}`,
     provider: index % 2 === 0 ? "serpapi" : "dataforseo",
     providerLabel: index % 2 === 0 ? "SerpApi" : "DataForSEO",
-    rateBasis: index % 2 === 0 ? "Production plan equivalent" : "Live depth pricing",
+    rateBasis: index % 2 === 0 ? ("production_plan" as const) : ("live_depth" as const),
     referenceCostCents: 12_345 - index,
     referenceCostKnown: true,
     sharePercent: index === 0 ? 37.5 : 5,
@@ -87,6 +92,66 @@ describe("AdminAdministration", () => {
     expect(
       within(table).getByRole("img", { name: "37.5% of instance reference cost" }).firstChild,
     ).toHaveStyle({ width: "37.5%" });
+  });
+
+  it("localizes flat, plan, and unavailable generated rate bases in the real consumption table", () => {
+    const messages = structuredClone(instanceAdminFeatureTestMessages);
+    messages.instanceAdmin.administration.consumption.rateBasisLiveDepth =
+      "Cennik według głębokości";
+    messages.instanceAdmin.administration.consumption.rateBasisProductionPlan =
+      "Odpowiednik planu produkcyjnego";
+    messages.instanceAdmin.administration.consumption.rateBasisUnavailable = "Stawka niedostępna";
+    const topConsumption = [
+      {
+        ...data.topConsumption[0],
+        projectId: "project_flat",
+        provider: "flat-provider",
+        providerLabel: "Flat Provider",
+        rateBasis: "live_depth" as const,
+        referenceCostCents: 0,
+        referenceCostKnown: true,
+        sharePercent: 0,
+      },
+      {
+        ...data.topConsumption[1],
+        projectId: "project_plan",
+        provider: "plan-provider",
+        providerLabel: "Plan Provider",
+        rateBasis: "production_plan" as const,
+        referenceCostCents: 125,
+        referenceCostKnown: true,
+        sharePercent: 100,
+      },
+      {
+        ...data.topConsumption[2],
+        projectId: "project_unknown",
+        provider: "unknown-provider",
+        providerLabel: "Unknown Provider",
+        rateBasis: "unavailable" as const,
+        referenceCostCents: 0,
+        referenceCostKnown: false,
+        sharePercent: 0,
+      },
+    ];
+
+    renderWithFeatureMessages(<AdminAdministration data={{ ...data, topConsumption }} />, {
+      locale: "pl",
+      messages,
+      timeZone: "Europe/Warsaw",
+    });
+
+    for (const label of ["Flat Provider", "Plan Provider", "Unknown Provider"]) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    for (const label of [
+      "Cennik według głębokości",
+      "Odpowiednik planu produkcyjnego",
+      "Stawka niedostępna",
+    ]) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    expect(screen.getAllByText(/USD/u).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("-").length).toBeGreaterThan(0);
   });
 
   it("reserves room for sortable consumption headers and fills a wide table container", () => {

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 type ScheduleObjectFrameProps = {
   bodyLabel: string;
+  breadcrumbLabel: string;
   breadcrumb: { href: string; label: ReactNode };
   children?: ReactNode;
   navigation?: ReactNode;
@@ -13,6 +14,7 @@ type ScheduleObjectFrameProps = {
 
 export function ScheduleObjectFrame({
   bodyLabel,
+  breadcrumbLabel,
   breadcrumb,
   children,
   navigation,
@@ -22,7 +24,7 @@ export function ScheduleObjectFrame({
   return (
     <PageContent className="grid gap-4">
       {navigation}
-      <nav aria-label="Breadcrumb" className="w-fit text-[12.5px] text-fg-muted">
+      <nav aria-label={breadcrumbLabel} className="w-fit text-[12.5px] text-fg-muted">
         <BackLink href={breadcrumb.href}>{breadcrumb.label}</BackLink>
       </nav>
       <header>

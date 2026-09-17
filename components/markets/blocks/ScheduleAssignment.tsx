@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
+import { useTranslations } from "next-intl";
 
 export type ScheduleAssignmentSchedule = {
   costPerCheckCents: number | null;
@@ -28,31 +29,32 @@ export function ScheduleAssignment({
   schedules,
   selectedId,
 }: Readonly<ScheduleAssignmentProps>) {
+  const t = useTranslations("projectMarkets");
   const selected = schedules.find((schedule) => schedule.id === selectedId);
   const manual = selectedId === null || selected?.frequency === "manual";
   const counted =
     keywordCount > 0 && fixed > 0
-      ? `${keywordCount} keyword${keywordCount === 1 ? "" : "s"} · ${fixed} check${fixed === 1 ? "" : "s"} per run.`
-      : "New keywords will join this schedule.";
+      ? t("scheduleMemberCount", { checks: fixed, keywords: keywordCount })
+      : t("scheduleEmpty");
 
   return (
-    <section aria-label="Schedule assignment" className="grid gap-2">
+    <section aria-label={t("scheduleAssignment")} className="grid gap-2">
       <div className="flex items-center justify-between gap-3">
-        <FieldLabel className="text-[12px] font-semibold text-fg" label="Schedule" />
+        <FieldLabel className="text-[12px] font-semibold text-fg" label={t("schedule")} />
         {onNewSchedule ? (
           <Button onClick={onNewSchedule} size="xs" type="button" variant="ghost">
-            New schedule
+            {t("newSchedule")}
           </Button>
         ) : null}
       </div>
       <MenuSelect
-        ariaLabel="Schedule"
+        ariaLabel={t("schedule")}
         onChange={(next) => {
           if (next === "manual") onChange(null);
           else if (schedules.some((schedule) => schedule.id === next)) onChange(next);
         }}
         options={[
-          { label: "Manual", value: "manual" },
+          { label: t("manual"), value: "manual" },
           ...schedules
             .filter((schedule) => schedule.frequency !== "manual")
             .map((schedule) => ({ label: schedule.name, value: schedule.id })),
@@ -62,11 +64,11 @@ export function ScheduleAssignment({
       />
       {selectedId && !selected ? (
         <p className="m-0 text-[12px] text-red-text" role="alert">
-          This schedule is no longer available. Choose a current schedule.
+          {t("currentScheduleUnavailable")}
         </p>
       ) : (
         <p className="m-0 text-[12px] text-fg-muted">
-          {manual ? "Checks run only when you start them." : counted}
+          {manual ? t("scheduleDescription") : counted}
         </p>
       )}
     </section>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/ui/cn";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { useTranslations } from "next-intl";
 import type { UseFormRegisterReturn } from "react-hook-form";
 import { CredentialFieldInput } from "./CredentialFieldInput";
 import { ProviderSetupVideo } from "./ProviderSetupVideo";
@@ -47,6 +48,7 @@ function TestStatus({
   testResult?: ProviderTestResult | null;
   testing: boolean;
 }>) {
+  const t = useTranslations("onboarding.provider.credentials");
   if (testing) {
     return <span className={statusChip} role="status" />;
   }
@@ -54,7 +56,7 @@ function TestStatus({
     return (
       <span className={`${statusChip} text-green-text`} role="status">
         <CheckCircle aria-hidden size={14} weight="regular" />
-        {providerLabel} connected
+        {t("connected", { provider: providerLabel })}
       </span>
     );
   }
@@ -62,7 +64,7 @@ function TestStatus({
     return (
       <span className={`${statusChip} text-green-text`} role="status">
         <CheckCircle aria-hidden size={14} weight="regular" />
-        {providerLabel} verified
+        {t("verified", { provider: providerLabel })}
       </span>
     );
   }
@@ -70,7 +72,7 @@ function TestStatus({
     return (
       <span className={`${statusChip} text-red-text`} role="status">
         <WarningCircle aria-hidden size={14} weight="regular" />
-        {testResult.message}
+        {t("failed")}
       </span>
     );
   }
@@ -93,11 +95,11 @@ export function ProviderCredentialForm({
   testing,
   showSave = true,
 }: Readonly<ProviderCredentialFormProps>) {
-  const saveHint = "Test the credentials and save.";
+  const t = useTranslations("onboarding.provider.credentials");
   return (
     <section className="mt-4 rounded-card border border-border bg-bg-elev p-4" data-analytics-block>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <h3 className="m-0 text-[13px] font-semibold">API credentials</h3>
+        <h3 className="m-0 text-[13px] font-semibold">{t("title")}</h3>
         <ProviderSetupVideo key={providerId} providerId={providerId} />
       </div>
       <div className={cn("grid gap-4", fields.length > 1 && "sm:grid-cols-2")}>
@@ -131,7 +133,7 @@ export function ProviderCredentialForm({
             type="button"
             variant="secondary"
           >
-            Test connection
+            {t("test")}
           </Button>
           {showSave ? (
             <Button
@@ -141,13 +143,13 @@ export function ProviderCredentialForm({
               type="button"
               variant="secondary"
             >
-              Save connection
+              {t("save")}
             </Button>
           ) : null}
         </div>
       </div>
       <p className="m-0 mt-2.5 text-[11.5px] leading-[1.5] text-fg-muted">
-        {savedConnection ? "Leave credentials blank to keep the stored connection." : saveHint}
+        {savedConnection ? t("keepStored") : t("saveHint")}
       </p>
     </section>
   );

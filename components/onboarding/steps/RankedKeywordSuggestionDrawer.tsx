@@ -16,6 +16,31 @@ import {
 
 const DEFAULT_SELECTION = 3;
 
+export type RankedKeywordSuggestionDrawerMessages = {
+  aboutPage: (values: { cost: number }) => string;
+  add: (values: { count: number }) => string;
+  cancel: string;
+  clear: string;
+  drawerDescription: string;
+  drawerTitle: string;
+  estimatedTraffic: string;
+  inDraft: string;
+  keyword: string;
+  load: string;
+  position: string;
+  remaining: (values: { available: number; selected: number }) => string;
+  select: (values: { keyword: string }) => string;
+  selectAll: string;
+  selectKeyword: string;
+  spent: (values: { cached: "yes" | "no"; cost: number; page: number }) => string;
+  table: string;
+  top: string;
+  tracked: string;
+  use: (values: { count: number }) => string;
+  variants: (values: { count: number }) => string;
+  volume: string;
+};
+
 type RankedKeywordSuggestionDrawerProps = {
   selectionOnly?: boolean;
   canLoad: boolean;
@@ -26,11 +51,12 @@ type RankedKeywordSuggestionDrawerProps = {
   onLoadMore: () => void;
   open: boolean;
   pageCount: number;
-  pageCost: string | null;
+  pageCostCents: number | null;
   pending: boolean;
   remaining: number;
   spentCents: number;
   lastPageCached: boolean;
+  messages: RankedKeywordSuggestionDrawerMessages;
 };
 
 function orderedGroups(groups: readonly RankedKeywordGroup[]) {
@@ -52,11 +78,12 @@ export function RankedKeywordSuggestionDrawer({
   onLoadMore,
   open,
   pageCount,
-  pageCost,
+  pageCostCents,
   pending,
   remaining,
   spentCents,
   lastPageCached,
+  messages,
 }: Readonly<RankedKeywordSuggestionDrawerProps>) {
   const current = useMemo(
     () => new Set(currentKeywords.map(normalizeRankedKeyword)),
@@ -96,31 +123,35 @@ export function RankedKeywordSuggestionDrawer({
 
   return (
     <AppDrawer
-      description="Keywords your site already ranks for, ordered by estimated traffic."
+      description={messages.drawerDescription}
       footer={
         <div className="flex flex-col gap-2">
           <span className="text-[11.5px] text-fg-muted tabular-nums">
-            Spent this session: ${(spentCents / 100).toFixed(2)}
-            {lastPageCached ? `. Page ${pageCount} cached.` : ""}
+            {messages.spent({
+              cached: lastPageCached ? "yes" : "no",
+              cost: spentCents / 100,
+              page: pageCount,
+            })}
           </span>
           <div className="flex items-center justify-end gap-2.5">
             <Button onClick={onClose} type="button" variant="secondary">
-              Cancel
+              {messages.cancel}
             </Button>
             <Button
               disabled={active.length === 0}
               onClick={() => onConfirm(active.map((row) => row.group.row.keyword.trim()))}
               type="button"
             >
-              {selectionOnly ? "Use" : "Add"} {active.length}{" "}
-              {active.length === 1 ? "keyword" : "keywords"}
+              {selectionOnly
+                ? messages.use({ count: active.length })
+                : messages.add({ count: active.length })}
             </Button>
           </div>
         </div>
       }
       onClose={onClose}
       open={open}
-      title="Import from DataForSEO"
+      title={messages.drawerTitle}
     >
       <div className="flex flex-wrap gap-2">
         {!allSelected ? (
@@ -132,7 +163,7 @@ export function RankedKeywordSuggestionDrawer({
             type="button"
             variant="secondary"
           >
-            Select all
+            {messages.selectAll}
           </Button>
         ) : null}
         {active.length > 0 ? (
@@ -142,23 +173,32 @@ export function RankedKeywordSuggestionDrawer({
             type="button"
             variant="secondary"
           >
-            Clear
+            {messages.clear}
           </Button>
         ) : null}
         <Button onClick={selectTop} size="xs" type="button" variant="secondary">
-          Top 3 by traffic
+          {messages.top}
         </Button>
         <span className="self-center text-[11px] text-fg-muted tabular-nums">
-          {active.length} of {selectable.length} selected
+          {messages.remaining({ available: selectable.length, selected: active.length })}
         </span>
       </div>
       <div className="mt-3" data-analytics-mask>
         <DataTable
-          ariaLabel="Ranked keyword suggestions"
+          ariaLabel={messages.table}
           columns={rankedSuggestionTableColumns({
+            messages: {
+              estimatedTraffic: messages.estimatedTraffic,
+              keyword: messages.keyword,
+              position: messages.position,
+              select: messages.select,
+              selectKeyword: messages.selectKeyword,
+              variants: messages.variants,
+              volume: messages.volume,
+            },
             onToggle: toggle,
             selected,
-            trackedLabel: selectionOnly ? "In draft" : "Already tracked",
+            trackedLabel: selectionOnly ? messages.inDraft : messages.tracked,
           })}
           density="compact"
           id="ranked-keyword-suggestions"
@@ -176,7 +216,8 @@ export function RankedKeywordSuggestionDrawer({
           type="button"
           variant="secondary"
         >
-          Load next 100{pageCost ? ` (about ${pageCost})` : ""}
+          {messages.load}
+          {pageCostCents == null ? "" : ` ${messages.aboutPage({ cost: pageCostCents / 100 })}`}
         </Button>
       ) : null}
     </AppDrawer>

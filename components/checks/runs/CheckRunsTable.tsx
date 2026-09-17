@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
 import type { CheckRunFilter, CheckRunRow, CheckRunsView } from "@/lib/checks/contract";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { checkRunDetailLines } from "./CheckRunDetails";
-import { totalForFilter } from "./check-runs-format";
+import { type CheckRunsTranslations, totalForFilter } from "./check-runs-format";
 import { type CheckRunsTableRow, checkRunsTableColumns } from "./check-runs-table-columns";
 import { useAutoLoadMore } from "./use-auto-load-more";
 import { type RunTableColumns, useRunTableWidth } from "./use-run-table-width";
@@ -21,7 +22,11 @@ type TableProps = {
   view: CheckRunsView;
 };
 
-type RunRowOptions = Pick<TableProps, "keywordHref" | "now"> & { columns: RunTableColumns };
+type RunRowOptions = Pick<TableProps, "keywordHref" | "now"> & {
+  columns: RunTableColumns;
+  locale: string;
+  t: CheckRunsTranslations;
+};
 
 function canExpandRun(run: CheckRunRow, columns: RunTableColumns) {
   return (
@@ -40,13 +45,19 @@ function checkRunsTableRows(
 ): CheckRunsTableRow[] {
   return runs.map((run) => {
     if (!canExpandRun(run, options.columns)) {
-      return { id: run.id, kind: "row", keyword: run.keyword, label: `${run.keyword} run`, run };
+      return {
+        id: run.id,
+        kind: "row",
+        keyword: run.keyword,
+        label: options.t("runLabel", { keyword: run.keyword }),
+        run,
+      };
     }
     return {
       id: run.id,
       kind: "group",
       keyword: run.keyword,
-      label: `${run.keyword} run`,
+      label: options.t("runLabel", { keyword: run.keyword }),
       run,
       subRows: checkRunDetailLines({
         ...options,
@@ -57,7 +68,7 @@ function checkRunsTableRows(
         id: detail.id,
         kind: "section",
         keyword: run.keyword,
-        label: `${run.keyword} run`,
+        label: options.t("runLabel", { keyword: run.keyword }),
         run,
       })),
     };
@@ -79,24 +90,30 @@ function changedExpandedRunId(current: ReadonlySet<string>, next: ReadonlySet<st
 function ignoreSorting(_: DataTableSort | null) {}
 
 export function CheckRunsTable(props: Readonly<TableProps>) {
+  const locale = useLocale();
+  const t = useTranslations("projectRankTracker.checks");
   const { columns: visibleColumns, containerRef } = useRunTableWidth();
   const columns = useMemo(
     () =>
       checkRunsTableColumns({
         columns: visibleColumns,
         keywordHref: props.keywordHref,
+        locale,
         now: props.now,
+        t,
       }),
-    [props.keywordHref, props.now, visibleColumns],
+    [locale, props.keywordHref, props.now, t, visibleColumns],
   );
   const rows = useMemo(
     () =>
       checkRunsTableRows(props.view.rows, {
         columns: visibleColumns,
         keywordHref: props.keywordHref,
+        locale,
         now: props.now,
+        t,
       }),
-    [props.keywordHref, props.now, props.view.rows, visibleColumns],
+    [locale, props.keywordHref, props.now, props.view.rows, t, visibleColumns],
   );
   const canLoadMore = props.view.nextCursor !== null;
   const loadKey = props.view.nextCursor
@@ -109,7 +126,7 @@ export function CheckRunsTable(props: Readonly<TableProps>) {
     <>
       <div className="[&>[role=table]]:border-0" ref={containerRef}>
         <DataTable
-          ariaLabel="Check runs"
+          ariaLabel={t("checkRuns")}
           columns={columns}
           expanded={props.expandedRunIds}
           id="check-runs-table"
@@ -128,15 +145,12 @@ export function CheckRunsTable(props: Readonly<TableProps>) {
       <footer className="flex flex-col gap-3 border-t border-border px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="m-0 text-[12px] font-semibold text-fg">
-            Showing {props.view.rows.length.toLocaleString("en-US")} of{" "}
-            {total.toLocaleString("en-US")} checks
+            {t("showingChecks", { count: props.view.rows.length, total })}
           </p>
-          <p className="m-0 mt-0.5 text-[10.5px] text-fg-muted">
-            Older runs load as you scroll. Choose an earlier date above for older history.
-          </p>
+          <p className="m-0 mt-0.5 text-[10.5px] text-fg-muted">{t("olderRunsHint")}</p>
         </div>
         <Button disabled={!canLoadMore} onClick={props.onLoadMore} size="sm" variant="secondary">
-          Load 50 more
+          {t("loadMore", { count: 50 })}
         </Button>
       </footer>
     </>

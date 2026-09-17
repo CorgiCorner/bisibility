@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/Button";
 import { useHumanVerification } from "@/lib/verification/human-verification-client";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
-const resendReferenceLabel = "Code sent Resend again in 1:00";
 const linkButtonStyle = {
   "--control-background-color": "transparent",
   "--control-border": "none",
@@ -35,6 +35,7 @@ export function OtpResendControl({
   resentCode,
   submitting,
 }: Readonly<OtpResendControlProps>) {
+  const t = useTranslations("auth.otp");
   const verification = useHumanVerification();
   const pendingRef = useRef(false);
   const [pending, setPending] = useState(false);
@@ -60,7 +61,7 @@ export function OtpResendControl({
         <div className="mb-2.5">{verification.field}</div>
       ) : null}
       <div className="flex items-center justify-center gap-1.5 text-[13px] text-fg-muted">
-        {resentCode ? "Code sent" : "Did not get it?"}
+        {resentCode ? t("resent") : t("tryAgain")}
         <Button
           disabled={disabled}
           onClick={() => void resend()}
@@ -90,12 +91,17 @@ export function OtpResendControl({
               aria-hidden
               style={{ gridArea: "1 / 1", visibility: "hidden", whiteSpace: "nowrap" }}
             >
-              {resendReferenceLabel}
+              {t("resendReference", {
+                label: t("resendAgainIn", { time: "1:00" }),
+                status: t("resent"),
+              })}
             </span>
             <span style={{ gridArea: "1 / 1", whiteSpace: "nowrap" }}>
               {cooldownRemaining > 0
-                ? `${resentCode ? "Resend again in" : "Resend in"} ${formatCooldown(cooldownRemaining)}`
-                : "Resend code"}
+                ? t(resentCode ? "resendAgainIn" : "resendIn", {
+                    time: formatCooldown(cooldownRemaining),
+                  })
+                : t("resend")}
             </span>
           </span>
         </Button>

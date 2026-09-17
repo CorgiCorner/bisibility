@@ -11,10 +11,24 @@ export const providerIdSchema = z.enum([
   "plausible",
 ]);
 
-const credentialSchema = z.preprocess(
-  (value) => (value === "" ? undefined : value),
-  z.string().trim().max(500).optional(),
-);
+export type CredentialValidationMessages = {
+  tooLong: string;
+};
+
+function credentialSchemaWithMessage(messages?: CredentialValidationMessages) {
+  const valueSchema = z.string().trim();
+  return z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    (messages ? valueSchema.max(500, messages.tooLong) : valueSchema.max(500)).optional(),
+  );
+}
+
+/** Builds a request-local credential projection without changing server validation copy. */
+export function credentialSchemaFor(messages: CredentialValidationMessages) {
+  return credentialSchemaWithMessage(messages);
+}
+
+const credentialSchema = credentialSchemaWithMessage();
 
 export const providerCredentialsSchema = z.object({
   apiKey: credentialSchema,

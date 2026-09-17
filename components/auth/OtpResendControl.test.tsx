@@ -1,8 +1,16 @@
+import {
+  authFeatureTestMessages,
+  renderWithFeatureMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type { HumanVerificationState } from "@/lib/verification/human-verification-client";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useState } from "react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { type ReactElement, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { OtpResendControl } from "./OtpResendControl";
+
+function render(ui: ReactElement) {
+  return renderWithFeatureMessages(ui, { messages: authFeatureTestMessages });
+}
 
 const mocks = vi.hoisted(() => ({ reset: vi.fn(), useHumanVerification: vi.fn() }));
 vi.mock("@/lib/verification/human-verification-client", () => ({

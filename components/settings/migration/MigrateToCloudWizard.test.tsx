@@ -1,6 +1,7 @@
+import { renderWithAdvancedSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { stubBlobDownload } from "@/tests/blob-download";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   defaultPackageFile,
@@ -227,7 +228,9 @@ describe("MigrateToCloudWizard", () => {
     expect(screen.getByText("bisibility-cloud-import.zip")).toBeInTheDocument();
     expect(screen.queryByText("bisibility-cloud-import.json")).not.toBeInTheDocument();
     expect(
-      screen.getByText("Package exported and downloaded. Upload it on the destination instance."),
+      screen.getByText(
+        "Package exported and downloaded. Upload it on the destination import page.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
 
@@ -269,7 +272,11 @@ describe("MigrateToCloudWizard", () => {
       target: { value: "mig_123456789012345678901234" },
     });
     fireEvent.click(screen.getByRole("button", { name: /^Transfer$/ }));
-    expect(await screen.findAllByText("Destination rejected the transfer.")).toHaveLength(2);
+    expect(
+      await screen.findByText(
+        "Package transfer failed. Try again, or use the manual download flow.",
+      ),
+    ).toBeInTheDocument();
     await waitFor(() => expect(mocks.releaseMigrationHold).toHaveBeenCalledTimes(1));
     expect(screen.queryByText(/Read-only mode is on/)).not.toBeInTheDocument();
 

@@ -5,6 +5,7 @@ import type {
   DrawerDefaults,
   IntegrationCategoryData,
   IntegrationProviderData,
+  ProviderMetaRow,
 } from "@/lib/integrations/types";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 
@@ -22,7 +23,12 @@ export type CredentialField = {
   type?: "password" | "text";
 };
 
-export type ProviderMetaRow = { label: string; value: string };
+export type { ProviderMetaRow } from "@/lib/integrations/types";
+
+// Fixed instants so the stories and tests render the same elapsed copy on every run.
+const FIXTURE_NOW = "2026-02-02T12:00:00.000Z";
+const FIXTURE_RECENT = "2026-02-02T11:48:00.000Z";
+const FIXTURE_YESTERDAY = "2026-02-01T12:00:00.000Z";
 
 export type IntegrationProvider = IntegrationProviderData;
 export type IntegrationCategoryFixture = IntegrationCategoryData;
@@ -42,19 +48,18 @@ type DrawerInput = Omit<IntegrationProvider["drawer"], "costHelp" | "defaults" |
     defaults?: Partial<DrawerDefaults>;
   };
 
-const noFailure = { label: "Failed · last error", value: "0 · none" };
+const fallbackReady: ProviderMetaRow = { labelKey: "fallbackState", valueKey: "enabled" };
 const googleCostHelp = `Google API and quota usage stay with your own Google project. ${COST_ESTIMATE_PER_CHECK_HELP}`;
 
-function activities(
-  lastLabel: string,
-  lastValue: string,
-  countLabel: string,
-  countValue: string,
-): ProviderMetaRow[] {
+function activities(lastUsed: ProviderMetaRow["valueKey"] | string): ProviderMetaRow[] {
+  const used: ProviderMetaRow =
+    lastUsed === "never"
+      ? { labelKey: "lastUsed", valueKey: "never" }
+      : { labelKey: "lastUsed", relativeTo: FIXTURE_NOW, valueAt: lastUsed };
   return [
-    { label: lastLabel, value: lastValue },
-    { label: countLabel, value: countValue },
-    noFailure,
+    used,
+    { labelKey: "connectionUpdated", relativeTo: FIXTURE_NOW, valueAt: FIXTURE_YESTERDAY },
+    fallbackReady,
   ];
 }
 
@@ -88,11 +93,11 @@ export const integrationCategories = [
         primary: true,
         secondaryAction: "Test",
         meta: [
-          { label: "Last rank check", value: "12 min ago" },
-          { label: "Est. provider cost", value: "$0.0155 / check" },
+          { labelKey: "lastRankCheck", relativeTo: FIXTURE_NOW, valueAt: FIXTURE_RECENT },
+          { labelKey: "state", valueKey: "enabled" },
         ],
         drawer: makeDrawer({
-          activities: activities("Last rank check", "12 min ago", "Checks completed", "248"),
+          activities: activities(FIXTURE_RECENT),
           costHelp: COST_ESTIMATE_PER_CHECK_HELP,
           credentialFields: providerCredentialFieldsFor("dataforseo", { connected: true }),
           defaults: { costPerCheck: 0.0155, login: "team@example.com" },
@@ -169,11 +174,11 @@ export const integrationCategories = [
           "Alternative SERP provider for rank checks. Keep available for provider switching.",
         status: "ready",
         meta: [
-          { label: "Last rank check", value: "Never" },
-          { label: "Est. provider cost", value: "Configured by provider" },
+          { labelKey: "lastRankCheck", valueKey: "never" },
+          { labelKey: "state", valueKey: "ready" },
         ],
         drawer: makeDrawer({
-          activities: activities("Last rank check", "Never", "Checks completed", "0"),
+          activities: activities("never"),
           credentialFields: providerCredentialFieldsFor("serpapi", { connected: false }),
           rates: [
             {
@@ -204,11 +209,11 @@ export const integrationCategories = [
         status: "connected",
         secondaryAction: "Test",
         meta: [
-          { label: "Last import", value: "6h ago" },
-          { label: "Billing", value: "Google API / quota" },
+          { labelKey: "lastSync", relativeTo: FIXTURE_NOW, valueAt: FIXTURE_YESTERDAY },
+          { labelKey: "state", valueKey: "enabled" },
         ],
         drawer: makeDrawer({
-          activities: activities("Last import", "6h ago", "Rows imported", "4,812"),
+          activities: activities(FIXTURE_YESTERDAY),
           costHelp: googleCostHelp,
           credentialFields: providerCredentialFieldsFor("gsc", { connected: true }),
         }),
@@ -222,11 +227,11 @@ export const integrationCategories = [
         description: "Sessions, events and conversions for tying rankings to business outcomes.",
         status: "ready",
         meta: [
-          { label: "Last import", value: "Never" },
-          { label: "Billing", value: "Google API / quota" },
+          { labelKey: "lastSync", valueKey: "never" },
+          { labelKey: "state", valueKey: "ready" },
         ],
         drawer: makeDrawer({
-          activities: activities("Last import", "Never", "Rows imported", "0"),
+          activities: activities("never"),
           costHelp: googleCostHelp,
           credentialFields: providerCredentialFieldsFor("ga4", { connected: false }),
         }),
@@ -240,12 +245,12 @@ export const integrationCategories = [
         description: "Privacy-friendly site analytics for organic traffic and page performance.",
         status: "ready",
         meta: [
-          { label: "Site domain", value: "Not selected" },
-          { label: "API service", value: "Plausible Cloud" },
-          { label: "Last sync", value: "Never" },
+          { labelKey: "siteDomain", valueKey: "notSelected" },
+          { labelKey: "apiService", value: "Plausible Cloud" },
+          { labelKey: "lastSync", valueKey: "never" },
         ],
         drawer: makeDrawer({
-          activities: activities("Last sync", "Never", "Rows imported", "0"),
+          activities: activities("never"),
           credentialFields: providerCredentialFieldsFor("plausible", { connected: false }),
         }),
       },

@@ -26,7 +26,7 @@ export type BacklinksAggregateRow = {
   key: string;
   label: string;
   linksCount: number;
-  secondary: string;
+  coverageKind: "coverageReferringDomains" | "coverageTargetPages";
   spamScore: number;
 };
 
@@ -170,7 +170,10 @@ function aggregate(
   rows: readonly BacklinksRow[],
   keyFor: (row: BacklinksRow) => string,
   labelFor: (row: BacklinksRow) => string,
-  coverageFor: (rows: BacklinksRow[]) => { count: number; label: string },
+  coverageFor: (rows: BacklinksRow[]) => {
+    count: number;
+    coverageKind: BacklinksAggregateRow["coverageKind"];
+  },
 ) {
   const groups = new Map<string, BacklinksRow[]>();
   for (const row of rows) {
@@ -187,7 +190,7 @@ function aggregate(
         key,
         label: labelFor(groupedRows[0]),
         linksCount: groupedRows.reduce((sum, row) => sum + row.linksCount, 0),
-        secondary: `${coverage.count} ${coverage.label}`,
+        coverageKind: coverage.coverageKind,
         spamScore: Math.max(...groupedRows.map((row) => row.spamScore)),
       };
     })
@@ -209,7 +212,7 @@ export function aggregateBacklinksView(
       (row) => row.sourceDomain,
       (group) => ({
         count: new Set(group.map((row) => row.targetUrl)).size,
-        label: "target pages",
+        coverageKind: "coverageTargetPages",
       }),
     );
   }
@@ -220,7 +223,7 @@ export function aggregateBacklinksView(
       (row) => row.targetUrl,
       (group) => ({
         count: new Set(group.map((row) => row.sourceDomain)).size,
-        label: "referring domains",
+        coverageKind: "coverageReferringDomains",
       }),
     );
   }
@@ -230,7 +233,7 @@ export function aggregateBacklinksView(
     (row) => row.anchor || "(image)",
     (group) => ({
       count: new Set(group.map((row) => row.sourceDomain)).size,
-      label: "referring domains",
+      coverageKind: "coverageReferringDomains",
     }),
   );
 }

@@ -6,6 +6,7 @@ import { MenuItem } from "@/components/ui/MenuItem";
 import { menuSelectPaperStyle } from "@/components/ui/menu-select-support";
 import { ArrowCounterClockwiseIcon as ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
 import { EyeIcon as Eye } from "@phosphor-icons/react/dist/csr/Eye";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { DataTableSelectionCheckbox } from "./DataTableSelectionCheckbox";
 import { useDataTableLayout } from "./data-table-layout-store";
@@ -16,14 +17,17 @@ import type {
   DataTableRowBase,
 } from "./data-table-types";
 
-function columnLabel<TRow extends DataTableRowBase>(column: DataTableColumn<TRow>): string {
+function columnLabel<TRow extends DataTableRowBase>(
+  column: DataTableColumn<TRow>,
+  fallback: string,
+): string {
   if (column.meta?.title) return column.meta.title;
   if (typeof column.header === "string") return column.header;
-  return dataTableColumnId(column) ?? "Column";
+  return dataTableColumnId(column) ?? fallback;
 }
 
 export function DataTableColumnsMenu<TRow extends DataTableRowBase>({
-  ariaLabel = "Columns",
+  ariaLabel,
   columnSizing,
   columnVisibility,
   columns,
@@ -31,7 +35,9 @@ export function DataTableColumnsMenu<TRow extends DataTableRowBase>({
   onColumnSizingChange,
   onColumnVisibilityChange,
 }: Readonly<DataTableColumnsMenuProps<TRow>>) {
+  const t = useTranslations("shared.controls.dataTable");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const columnsLabel = ariaLabel ?? t("columns");
   const layout = useDataTableLayout(id);
   const visibility = columnVisibility ?? layout.columnVisibility;
   const toggleable = columns.flatMap((column) => {
@@ -57,28 +63,28 @@ export function DataTableColumnsMenu<TRow extends DataTableRowBase>({
         aria-controls={anchorEl ? `${id}-columns-menu` : undefined}
         aria-expanded={Boolean(anchorEl)}
         aria-haspopup="menu"
-        aria-label={ariaLabel}
+        aria-label={columnsLabel}
         onClick={(event) => setAnchorEl(event.currentTarget)}
         size="sm"
         startIcon={<Eye aria-hidden size={15} weight="regular" />}
         style={{ fontWeight: 400 }}
         variant="secondary"
       >
-        Columns
+        {t("columns")}
       </Button>
       <Menu
         anchorEl={anchorEl}
         id={`${id}-columns-menu`}
         onClose={() => setAnchorEl(null)}
         open={Boolean(anchorEl)}
-        listProps={{ "aria-label": ariaLabel, style: { padding: 0 } }}
+        listProps={{ "aria-label": columnsLabel, style: { padding: 0 } }}
         contentProps={{ style: { ...menuSelectPaperStyle, minWidth: 210 } }}
       >
         <div className="px-2 py-1.5 font-sans text-[10px] font-semibold uppercase tracking-[0.08em] text-fg-muted">
-          Toggle columns
+          {t("toggleColumns")}
         </div>
         {toggleable.map(({ column, id: columnId }) => {
-          const label = columnLabel(column);
+          const label = columnLabel(column, t("column"));
           const checked = visibility[columnId] !== false;
           return (
             <MenuItem
@@ -87,7 +93,7 @@ export function DataTableColumnsMenu<TRow extends DataTableRowBase>({
               style={{ alignItems: "center", display: "flex", gap: "10px", minHeight: 36 }}
             >
               <DataTableSelectionCheckbox
-                ariaLabel={`${checked ? "Hide" : "Show"} ${label} column`}
+                ariaLabel={t(checked ? "hideColumn" : "showColumn", { column: label })}
                 checked={checked}
                 disabled={false}
                 indeterminate={false}
@@ -110,7 +116,7 @@ export function DataTableColumnsMenu<TRow extends DataTableRowBase>({
           }}
         >
           <ArrowCounterClockwise aria-hidden size={15} weight="regular" />
-          Reset layout
+          {t("resetLayout")}
         </MenuItem>
       </Menu>
     </>

@@ -1,0 +1,122 @@
+{
+  "projectGettingStarted": {
+    "header": {
+      "label": "Primeros pasos",
+      "progress": "{settled, number} de {total, number} {total, plural, one {paso} other {pasos}}"
+    },
+    "steps": {
+      "create_project": "Crea tu proyecto",
+      "connect_source": "Conecta una fuente de datos",
+      "add_keywords": "Sigue tus primeras palabras clave",
+      "first_check": "Ejecuta tu primera comprobación de posiciones",
+      "confirm_competitors": "Confirma los competidores"
+    },
+    "cta": {
+      "create_project": "Crear proyecto",
+      "connect_source": "Conectar fuente de datos",
+      "add_keywords": "Añadir palabras clave",
+      "run_first_check": "Ejecutar la comprobación",
+      "run_first_check_now": "Mejor, ejecutarla ahora"
+    },
+    "state": {
+      "needs_data_source": "Antes necesitas una fuente de datos",
+      "needs_keywords": "Antes necesitas palabras clave",
+      "needs_first_check": "Antes necesitas los resultados de la primera comprobación",
+      "running": "En curso: {completed, number} de {total, number} comprobaciones completadas",
+      "scheduledToday": "Programada: se ejecuta hoy a las {time} ({timezone})",
+      "scheduledTomorrow": "Programada: se ejecuta mañana a las {time} ({timezone})",
+      "scheduledInDays": "Programada: se ejecuta dentro de {days, number} {days, plural, one {día} other {días}} a las {time} ({timezone})"
+    },
+    "walkthrough": {
+      "create_project": {
+        "active": "Ponle nombre al proyecto que quieres seguir. Puedes actualizar sus datos más adelante en Ajustes del proyecto.",
+        "done": "Esto es lo que ha ocurrido al crear el proyecto: un dominio, con todas las comprobaciones e importaciones acotadas a él. El nombre y el dominio están en Ajustes del proyecto."
+      },
+      "add_keywords": {
+        "active": "Escribe o pega tus palabras clave, una por línea. Descartamos las que ya estás siguiendo.",
+        "done": "Esto es lo que ha ocurrido al añadir tus primeras palabras clave: cada una lleva su propio mercado y dispositivo, y puedes editarlos en su fila en Seguimiento de posiciones."
+      },
+      "connect_source": {
+        "active": "Search Console es gratis y solo requiere dos clics. Un proveedor de SERP añade comprobaciones de posiciones en tiempo real con tu propia clave.",
+        "done": "Esto es lo que ha ocurrido al conectar una fuente de datos: las comprobaciones de posiciones pasan por ella y el proveedor te factura directamente. Puedes gestionarla o cambiarla en Integraciones."
+      },
+      "first_check": {
+        "active": "Ejecuta la primera comprobación para recoger las posiciones de las palabras clave que sigues. Los ajustes de las comprobaciones están en los ajustes de seguimiento del proyecto.",
+        "done": "Esto es lo que ha ocurrido al completarse tu primera comprobación: todas las palabras clave que incluía ya tienen una posición y una URL posicionada, y el histórico crece a partir de aquí. Las comprobaciones siguen la programación predeterminada del proyecto, y cualquier palabra clave puede sustituirla por la suya. Ambas están en Seguimiento de posiciones."
+      }
+    },
+    "competitors": {
+      "blocked": "Las sugerencias se basan en tus comprobaciones de posiciones completadas. Este paso se abre después de la primera comprobación.",
+      "ready": "Elige los competidores que quieres seguir. Puedes cambiarlo más adelante en Ajustes.",
+      "skipped": "Paso omitido. No se sigue ningún competidor y la cuota de voz permanece desactivada hasta que confirmes una selección.",
+      "confirmed": "Confirmado. Ya estás siguiendo los competidores que has seleccionado.",
+      "none": "Todavía no hay sugerencias. Añade un competidor o hazlo más adelante en Ajustes.",
+      "review": "Revisar competidores",
+      "addOwn": "Añadir uno propio",
+      "skip": "Omitir por ahora",
+      "modalAdd": "Añadir competidor",
+      "modalReview": "Revisar competidores",
+      "trackSelected": "Seguir los seleccionados",
+      "trackCount": "Seguir {count, number} {count, plural, one {competidor} other {competidores}}",
+      "saving": "Guardando…",
+      "select": "Selecciona los dominios que quieres seguir.",
+      "noneLeft": "No quedan sugerencias. Puedes añadir tu propio competidor.",
+      "back": "Atrás",
+      "cancel": "Cancelar",
+      "confirmError": "No se han podido confirmar todos los competidores seleccionados. Inténtalo de nuevo.",
+      "dismissError": "No se ha podido quitar el competidor.",
+      "skipError": "No se ha podido omitir el paso de competidores.",
+      "manual": {
+        "domain": "Dominio",
+        "domainError": "Introduce un dominio.",
+        "domainInvalid": "Introduce un dominio de competidor válido.",
+        "domainPlaceholder": "competitor.example.org",
+        "aliases": "Alias de marca (opcional)",
+        "aliasesPlaceholder": "Nombres de marca separados por comas",
+        "aliasesHelp": "Otros nombres de marca que se buscarán en las menciones, separados por comas.",
+        "adding": "Añadiendo…",
+        "add": "Añadir competidor",
+        "addError": "No se ha podido añadir el competidor."
+      },
+      "suggestions": {
+        "suggestedTitle": "Competidores sugeridos",
+        "suggestedDescription": "Aparecen en al menos dos palabras clave distintas sin marca.",
+        "otherTitle": "Otros dominios en los resultados",
+        "otherDescription": "Estos resultados por sí solos no demuestran que haya competencia. Añade un dominio solo si compite con tu sitio.",
+        "evidence": "aparece en {seenOn, number} de {of, number} palabras clave / mejor n.º {bestPosition, number}",
+        "platform": "{coverage}; plataforma o directorio",
+        "limited": "{coverage}; evidencia limitada",
+        "remove": "Quitar"
+      }
+    },
+    "completion": {
+      "allComplete": "Todos los pasos completados",
+      "heading": "Lo que viene ahora",
+      "acknowledged": "Ya has completado la configuración inicial. Puedes volver aquí siempre que necesites recordar cómo está conectado el proyecto.",
+      "helper": "Confirma la configuración inicial cuando quieras. Tu proyecto conserva los datos y los ajustes que ya tiene.",
+      "finish": "Finalizar la configuración",
+      "checklistError": "Completa todos los pasos antes de finalizar.",
+      "writeError": "No se ha podido completar la configuración inicial. Inténtalo de nuevo."
+    },
+    "goFurther": {
+      "heading": "Ve más allá",
+      "ai": {
+        "title": "Conectar un asistente de IA",
+        "description": "Conecta Claude, ChatGPT o cualquier cliente MCP."
+      },
+      "github": {
+        "title": "Dar una estrella a bisibility en GitHub",
+        "description": "Gratis y de código abierto: una estrella ayuda."
+      },
+      "team": {
+        "title": "Invitar a compañeros de equipo",
+        "description": "Invita a compañeros de equipo y asígnales roles."
+      }
+    },
+    "video": {
+      "aria": "Guía en vídeo",
+      "heading": "Guías en vídeo",
+      "description": "Cada paso se abre con su versión escrita. Los clips irán apareciendo aquí a medida que se publiquen."
+    }
+  }
+}

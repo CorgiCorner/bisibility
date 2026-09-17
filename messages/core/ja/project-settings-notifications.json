@@ -1,0 +1,26 @@
+{
+  "projectSettingsNotifications": {
+    "channels": {
+      "title": "チャネル",
+      "description": "アラートが発生したときの通知先です。アラートの条件はアラート画面で設定します。",
+      "eventsAndChannels": "イベントとチャネル",
+      "event": "イベント",
+      "inApp": "アプリ内",
+      "email": "メール",
+      "alertFired": "アラート発生",
+      "checkComplete": "チェック完了",
+      "importFinished": "インポート完了",
+      "invite": "招待",
+      "weeklyReport": "週次レポート",
+      "unavailable": "{label}は利用不可",
+      "unavailableHelp": "ダッシュは、そのイベントにそのチャネルが存在しないことを示します。週次レポートはメールのみで、週に1回だけ配信されます。",
+      "saveError": "環境設定を保存できませんでした。"
+    },
+    "delivery": {
+      "title": "配信先アドレス",
+      "description": "通知メールを受け取るアドレスです。",
+      "manageEmail": "メールを管理",
+      "deliveredTo": "通知は <address>{email}</address> に配信されます。"
+    }
+  }
+}
