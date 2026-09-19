@@ -52,7 +52,7 @@ export function domainOverviewPaths(input: { bearer: Bearer }) {
         "DomainOverviewAnalyzeRequest",
         {
           description:
-            "estimate_only is a free cache-aware dry run. Paid analysis requires an explicit max_cost_cents, including zero for cache-only access. Charged partial reports return HTTP 200 with nested module failures and their costs.",
+            "estimate_only is a free cache-aware dry run. estimate_only=true needs only read scope and never spends provider budget. Paid analysis requires an explicit max_cost_cents, including zero for cache-only access. Charged partial reports return HTTP 200 with nested module failures and their costs.",
         },
       ),
     },

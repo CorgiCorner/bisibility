@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => {
   const prisma = {
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
+    alertRule: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
     competitor: {
       create: vi.fn(),
       delete: vi.fn(),
@@ -222,11 +223,13 @@ describe("competitor actions", () => {
       expect.objectContaining({
         action: "competitor.remove",
         before: {
+          disabledAlertRuleIds: [],
           domain: "competitor.example.com",
           id: competitorPublicId,
           label: "Competitor",
         },
       }),
+      mocks.prisma,
     );
   });
 

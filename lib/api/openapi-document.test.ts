@@ -24,6 +24,7 @@ describe("OpenAPI document", () => {
         "keyword-research",
         "backlinks",
         "domain-overview",
+        "research-reports",
         "analytics",
         "alerts",
         "competitors",
@@ -37,7 +38,7 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(100);
+    expect(operations).toHaveLength(102);
     expect(operations.every((operation) => operation.tags?.length === 1)).toBe(true);
     expect(
       operations.every(
@@ -83,6 +84,16 @@ describe("OpenAPI document", () => {
     });
     expect(doc.components.schemas.DomainOverviewMetrics.properties).toHaveProperty("pos1");
     expect(doc.components.schemas.DomainOverviewMetrics.properties).not.toHaveProperty("pos_1");
+  });
+
+  it("documents the domain overview report state as freshness, not the data outcome", () => {
+    const state =
+      getOpenApiDocument().components.schemas.StoredDomainOverviewReport.properties.state;
+
+    expect(state.description).toContain("fresh_until is authoritative");
+    expect(state.description).toContain(
+      "data_state carries the no_data/ok/partial value that GET /projects/{project_id}/domain-overview returns as state",
+    );
   });
 
   it("publishes executable Domain Overview request constraints", () => {

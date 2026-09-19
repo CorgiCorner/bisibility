@@ -20,6 +20,7 @@ import * as personalAccess from "./openapi-pat";
 import { projectOverviewPaths } from "./openapi-project-overview";
 import { publicPaths } from "./openapi-public";
 import { rankedKeywordSuggestionPaths } from "./openapi-ranked-keywords";
+import { researchReportsPaths, researchReportsSchemas } from "./openapi-research-reports";
 import { resourcePaths } from "./openapi-resource-paths";
 import { savedKeywordPaths } from "./openapi-saved-keywords";
 import { savedViewOperations } from "./openapi-saved-views";
@@ -91,7 +92,12 @@ export function getOpenApiDocument() {
   return {
     components: {
       parameters: projectSelectionParameterComponents,
-      schemas: { ...schemas, ...backlinksSchemas, ...domainOverviewSchemas },
+      schemas: {
+        ...schemas,
+        ...backlinksSchemas,
+        ...domainOverviewSchemas,
+        ...researchReportsSchemas,
+      },
       securitySchemes: {
         ...personalAccess.apiCredentialSecuritySchemes,
         ...migrationSecuritySchemes,
@@ -187,6 +193,7 @@ export function getOpenApiDocument() {
         ...analyticsPaths({ bearer: bearerOperation, ref }),
         ...backlinksPaths({ bearer: bearerOperation }),
         ...domainOverviewPaths({ bearer: bearerOperation }),
+        ...researchReportsPaths({ bearer: bearerOperation }),
         ...savedKeywordPaths(list, bearerOperation, createdBearerOperation),
         "/projects/{project_id}/saved-views": savedViewOperations(
           list,

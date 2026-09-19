@@ -2191,8 +2191,8 @@ export type CoreMessages = {
       readonly remove: "Remove";
       readonly removeAlias: "Remove alias {alias}";
       readonly removeCompetitor: "Remove {name}";
-      readonly removeCompetitorConfirm: "Remove {name} from competitors?";
-      readonly removeCompetitorDescription: "Remove <strong>{domain}</strong> from this project? Its aliases and market settings will also be removed. Saved rank checks and SERP results are kept.";
+      readonly removeCompetitorConfirm: "Remove {name} from this project? It will disappear from competitor reports, share of voice, and SERP comparisons. Its aliases and market settings will be lost. Adding the same domain again later restores its rank history.";
+      readonly removeCompetitorDescription: "Remove <strong>{domain}</strong> from this project? It will disappear from competitor reports, share of voice, and SERP comparisons. Its aliases and market settings will be lost. Adding the same domain again later restores its rank history.";
       readonly removeCompetitorTitle: "Remove competitor";
       readonly removeError: "Competitor could not be removed.";
       readonly removeTagFilter: "Remove tag filter";
@@ -2894,15 +2894,22 @@ export type CoreMessages = {
   };
   readonly projectInstall: {
     readonly agents: {
+      readonly chatgpt: {
+        readonly caveat: "ChatGPT shows only read-only tools on individual plans; write actions such as rank checks and backlink analysis need a Business or Enterprise workspace with developer mode. Read-only tools cover stored reports and cost estimates.";
+        readonly hint: "App";
+        readonly label: "ChatGPT";
+        readonly note: "Settings, Apps, Advanced settings, enable developer mode, then add the URL as a custom MCP app.";
+      };
       readonly "claude-code": {
         readonly hint: "CLI";
         readonly label: "Claude Code";
         readonly note: "Then run /mcp inside Claude Code to sign in.";
       };
       readonly "claude-desktop": {
+        readonly caveat: "Claude exposes every tool. It asks before each write tool the first time; use Allow always only for tools you trust to run unsupervised. Research runs tools without asking, so disable write tools there.";
         readonly hint: "connector";
-        readonly label: "Claude Desktop";
-        readonly note: "No terminal: Settings, Connectors, Add custom connector, then paste this URL and sign in.";
+        readonly label: "Claude (web and desktop)";
+        readonly note: "Customize, Connectors, Add custom connector, paste the URL, then approve the sign-in.";
       };
       readonly codex: {
         readonly hint: "CLI";
@@ -2948,6 +2955,7 @@ export type CoreMessages = {
       readonly description: "Using a tool that is not on the list? Paste this address into it and sign in with your bisibility account.";
       readonly heading: "MCP endpoint";
       readonly selfHosted: "self-hosting? use your own address instead: '<your-instance>'/api/mcp";
+      readonly toolScope: "Tools marked read-only ({readOnly} of {total}) work in every client. Paid operations such as rank checks and backlink analysis are write tools; some agent apps show them only with a developer or write mode enabled, and some plans expose read tools only. Stored reports and cost estimates are read-only.";
     };
     readonly gettingStarted: {
       readonly addApp: {

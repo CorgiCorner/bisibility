@@ -16,7 +16,9 @@ export function registerCompetitorAuditDeclarations(declare: Declare) {
     ...strings("domain", "id", "label", "scopePolicy", "source"),
   };
   declare(["competitor.add"], { after: competitor });
-  declare(["competitor.remove"], { before: competitor });
+  declare(["competitor.remove"], {
+    before: { ...competitor, disabledAlertRuleIds: list("string") },
+  });
   declare(["competitor.rename"], { after: competitor, before: competitor });
   declare(["competitor.suggestion.confirm", "competitor.manual.add"], { after: competitor });
   declare(["competitor.aliases.update", "competitor.details.update"], {

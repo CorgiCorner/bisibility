@@ -19,10 +19,17 @@
         "hint": "editor",
         "note": "Ajustes, MCP y después pega esto en mcp.json."
       },
+      "chatgpt": {
+        "label": "ChatGPT",
+        "hint": "aplicación",
+        "note": "Ajustes, Aplicaciones, Ajustes avanzados, activa el modo de desarrollador y luego añade la URL como aplicación MCP personalizada.",
+        "caveat": "ChatGPT solo muestra herramientas de solo lectura en los planes individuales; las acciones de escritura, como las comprobaciones de posiciones y el análisis de backlinks, requieren un espacio de trabajo Business o Enterprise con el modo de desarrollador. Las herramientas de solo lectura cubren los informes guardados y las estimaciones de coste."
+      },
       "claude-desktop": {
-        "label": "Claude Desktop",
+        "label": "Claude (web y escritorio)",
         "hint": "conector",
-        "note": "Sin terminal: Ajustes, Conectores, Añadir conector personalizado; después pega esta URL e inicia sesión."
+        "note": "Personalizar, Conectores, Añadir conector personalizado, pega la URL y luego aprueba el inicio de sesión.",
+        "caveat": "Claude expone todas las herramientas. La primera vez pide confirmación antes de cada herramienta de escritura; usa Permitir siempre solo con las herramientas que aceptes que se ejecuten sin supervisión. Research ejecuta las herramientas sin pedir confirmación, así que desactiva allí las herramientas de escritura."
       },
       "other": {
         "label": "Cualquier cliente MCP",
@@ -34,7 +41,8 @@
       "heading": "Endpoint de MCP",
       "description": "¿Usas una herramienta que no está en la lista? Pega esta dirección en ella e inicia sesión con tu cuenta de bisibility.",
       "copy": "Copiar la URL de MCP",
-      "selfHosted": "¿autoalojas bisibility? usa tu propia dirección: '<your-instance>'/api/mcp"
+      "selfHosted": "¿autoalojas bisibility? usa tu propia dirección: '<your-instance>'/api/mcp",
+      "toolScope": "Las herramientas marcadas como de solo lectura ({readOnly} de {total}) funcionan en todos los clientes. Las operaciones de pago, como las comprobaciones de posiciones y el análisis de backlinks, son herramientas de escritura; algunas aplicaciones de agentes solo las muestran con un modo de desarrollador o de escritura activado, y algunos planes solo ofrecen herramientas de lectura. Los informes guardados y las estimaciones de coste son de solo lectura."
     },
     "apiKey": {
       "heading": "Clave de API",

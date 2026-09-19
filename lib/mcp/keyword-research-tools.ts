@@ -31,17 +31,39 @@ function query(input: JsonObject) {
   return params.size ? `?${params}` : "";
 }
 
+function estimateQuery(input: JsonObject) {
+  const params = new URLSearchParams({ estimate_only: "true" });
+  for (const key of ["seed", "mode", "result_limit", "include_clickstream", "max_cost_cents"]) {
+    const value = input[key];
+    if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+  }
+  return `?${params}`;
+}
+
 export function dispatchKeywordResearchTool(
   name: string,
   input: JsonObject,
 ): ResearchToolCall | null {
-  if (name !== "research_keywords" && name !== "get_keyword_metrics") return null;
+  if (
+    name !== "research_keywords" &&
+    name !== "estimateKeywordResearchCost" &&
+    name !== "get_keyword_metrics"
+  ) {
+    return null;
+  }
   const id = projectId(input);
   const base = `/projects/${encodeURIComponent(id)}`;
   if (name === "research_keywords") {
     return {
       method: "GET",
       path: `${base}/keyword-research${query(input)}`,
+      projectId: id,
+    };
+  }
+  if (name === "estimateKeywordResearchCost") {
+    return {
+      method: "GET",
+      path: `${base}/keyword-research${estimateQuery(input)}`,
       projectId: id,
     };
   }

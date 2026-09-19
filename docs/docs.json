@@ -257,6 +257,13 @@
             ]
           },
           {
+            "group": "Research Reports",
+            "pages": [
+              "GET /projects/{project_id}/research/reports",
+              "GET /projects/{project_id}/research/reports/{kind}"
+            ]
+          },
+          {
             "group": "Analytics",
             "pages": [
               "GET /projects/{project_id}/overview",

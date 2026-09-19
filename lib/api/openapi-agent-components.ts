@@ -1,3 +1,4 @@
+import { analyticsSchemas } from "./openapi-analytics-schemas";
 import { publicIdSchema } from "./openapi-public-id";
 
 const nullableNumber = { type: ["number", "null"] };
@@ -10,6 +11,7 @@ const trafficMetrics = {
 
 export const agentSchemas = {
   ...loopClosureSchemas,
+  ...analyticsSchemas,
   AnalyticsConnection: {
     properties: {
       id: { pattern: "^conn_[a-z][a-z0-9]{23}$", type: "string" },
@@ -59,29 +61,6 @@ export const agentSchemas = {
       total_count: { minimum: 0, type: "integer" },
     },
     required: ["rows", "total_count", "offset"],
-    type: "object",
-  },
-  SearchPerformanceQueryStat: {
-    properties: {
-      clicks: { minimum: 0, type: "integer" },
-      ctr: { minimum: 0, type: "number" },
-      impressions: { minimum: 0, type: "integer" },
-      page: { type: ["string", "null"] },
-      position: { minimum: 0, type: "number" },
-      query: { type: "string" },
-    },
-    required: ["query", "clicks", "impressions", "ctr", "position"],
-    type: "object",
-  },
-  SearchPerformanceQueryStatsResponse: {
-    properties: {
-      connection: { $ref: "#/components/schemas/AnalyticsConnection" },
-      rows: {
-        items: { $ref: "#/components/schemas/SearchPerformanceQueryStat" },
-        type: "array",
-      },
-    },
-    required: ["connection", "rows"],
     type: "object",
   },
   TrafficSyncRun: {

@@ -120,7 +120,13 @@ describe("competitor row actions", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Remove" }));
     const dialog = screen.getByRole("dialog", { name: "Remove competitor" });
     expect(dialog).toHaveTextContent(rows[1].domain);
-    expect(dialog).toHaveTextContent("Saved rank checks and SERP results are kept.");
+    expect(dialog).toHaveTextContent(
+      "It will disappear from competitor reports, share of voice, and SERP comparisons.",
+    );
+    expect(dialog).toHaveTextContent(
+      "Adding the same domain again later restores its rank history.",
+    );
+    expect(dialog).not.toHaveTextContent("Saved rank checks and SERP results are kept.");
     expect(removeCompetitor).not.toHaveBeenCalled();
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
     expect(removeCompetitor).not.toHaveBeenCalled();

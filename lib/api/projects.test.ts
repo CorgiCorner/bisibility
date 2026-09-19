@@ -1,6 +1,8 @@
 import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness";
+import { PROVIDER_CATALOG, serpProviderCapabilities } from "@/lib/providers/registry";
 import { keywordLocation } from "@/lib/test/fixtures/location";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ApiScope } from "./auth";
 import type { ApiContext, PersonalApiContext } from "./context";
 import { resetIdempotencyForTests } from "./idempotency";
 import * as projectHandlers from "./projects";
@@ -20,6 +22,8 @@ const mocks = vi.hoisted(() => ({
       update: vi.fn(),
     },
     projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
+    providerConnection: { findMany: vi.fn() },
+    rankCheck: { findMany: vi.fn(async () => []), groupBy: vi.fn(async () => []) },
   },
   resolveKeywordLocation: vi.fn(),
   writeAudit: vi.fn(),
@@ -59,6 +63,24 @@ const project = {
   updatedAt: new Date("2026-01-02T00:00:00.000Z"),
 };
 
+const serpCatalogId = PROVIDER_CATALOG.find((item) => item.kind === "serp")?.id ?? "";
+const fullSerpCatalogId =
+  PROVIDER_CATALOG.find(
+    (item) => item.kind === "serp" && serpProviderCapabilities(item.id)?.backlinks,
+  )?.id ?? "";
+const analyticsCatalogId = PROVIDER_CATALOG.find((item) => item.kind === "analytics")?.id ?? "";
+
+function providerConnectionRow(overrides: Record<string, unknown> = {}) {
+  return {
+    enabled: true,
+    kind: "serp",
+    priority: 0,
+    provider: serpCatalogId,
+    status: "connected",
+    ...overrides,
+  };
+}
+
 function request(method: string, path: string, body?: unknown) {
   return new Request(`https://example.test/api/v1${path}`, {
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -77,7 +99,12 @@ async function call(method: string, path: string, body?: unknown) {
   );
 }
 
-function context(method: string, path: string, body?: unknown): ApiContext {
+function context(
+  method: string,
+  path: string,
+  body?: unknown,
+  scopes: readonly ApiScope[] = ["admin"],
+): ApiContext {
   const req = request(method, path, body);
   return {
     auth: {
@@ -86,7 +113,7 @@ function context(method: string, path: string, body?: unknown): ApiContext {
         name: "Key",
         prefix: "bsb_key_live_",
         projectId: project.id,
-        scopes: ["admin"],
+        scopes,
       },
       project,
     },
@@ -207,6 +234,7 @@ describe("project write API routes", () => {
       warning: null,
     });
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
     mocks.prisma.projectDefaults.upsert.mockImplementation(({ create }) =>
       Promise.resolve({
         id: "defaults_1",
@@ -761,6 +789,55 @@ describe("project write API routes", () => {
     });
     expect(mocks.prisma.projectDefaults.findUnique).toHaveBeenCalledWith({
       where: { projectId: "project_1" },
+    });
+  });
+
+  it("returns project readiness with provider_disabled for a disabled connection", async () => {
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      providerConnectionRow({ enabled: false, provider: serpCatalogId }),
+    ]);
+
+    const response = await projectHandlers.getProject(
+      context("GET", "/projects/prj_a00000000000000000000000"),
+      "prj_a00000000000000000000000",
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      id: "prj_a00000000000000000000000",
+      readiness: {
+        serp: { available: false, primary_provider: null, reason: "provider_disabled" },
+        token_scope: "write",
+        write_mode: "active",
+      },
+    });
+  });
+
+  it("gates write-only areas for read-scope keys while read areas stay available", async () => {
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      providerConnectionRow({ provider: fullSerpCatalogId }),
+      providerConnectionRow({ kind: "analytics", provider: analyticsCatalogId }),
+    ]);
+
+    const response = await projectHandlers.getProject(
+      context("GET", "/projects/prj_a00000000000000000000000", undefined, ["read"]),
+      "prj_a00000000000000000000000",
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      readiness: {
+        backlinks: { available: true, reason: null },
+        domain_overview: { available: true, reason: null },
+        keyword_research: { available: true, reason: null },
+        search_performance: { available: true, reason: null },
+        serp: {
+          available: false,
+          primary_provider: fullSerpCatalogId,
+          reason: "token_read_only",
+        },
+        token_scope: "read",
+      },
     });
   });
 

@@ -74,7 +74,7 @@ export function dispatchAgentToolRoute(name: string, input: ToolArgs): AgentRest
   if (name === "listSearchPerformanceQueryStats")
     return call(
       input,
-      `${project(input, "analytics/query-stats")}${query(input, ["start_date", "end_date", "connection_id", "query", "limit"])}`,
+      `${project(input, "analytics/query-stats")}${query(input, ["start_date", "end_date", "connection_id", "query", "limit", "query_match", "page_path", "page_path_match", "clicks_min", "impressions_min", "position_max"])}`,
       "GET",
     );
   if (name === "syncProjectTraffic") return call(input, project(input, "analytics/sync"), "POST");

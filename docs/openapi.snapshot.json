@@ -1254,6 +1254,162 @@
         "required": ["domain"],
         "type": "object"
       },
+      "CompetitorMarket": {
+        "properties": {
+          "checked_keyword_count": {
+            "description": "Number of tracked keywords with a completed check in this market.",
+            "type": "integer"
+          },
+          "country": {
+            "description": "Resolved location display name.",
+            "type": "string"
+          },
+          "data_state": {
+            "description": "Why the matrix looks the way it does: ranked, no_volume_data, completed_unranked, no_completed_checks, or filter_excludes_all.",
+            "enum": [
+              "ranked",
+              "no_volume_data",
+              "completed_unranked",
+              "no_completed_checks",
+              "filter_excludes_all"
+            ],
+            "type": "string"
+          },
+          "device": {
+            "enum": ["Desktop", "Mobile"],
+            "type": "string"
+          },
+          "domains": {
+            "items": {
+              "properties": {
+                "domain": {
+                  "type": "string"
+                },
+                "managed": {
+                  "description": "True for tracked competitors.",
+                  "type": "boolean"
+                }
+              },
+              "required": ["domain", "managed"],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "engine": {
+            "type": "string"
+          },
+          "id": {
+            "description": "Market key: location, device, and engine.",
+            "type": "string"
+          },
+          "measured_at": {
+            "description": "Check date of the newest completed observation, when any exist.",
+            "format": "date-time",
+            "type": ["string", "null"]
+          },
+          "observations": {
+            "items": {
+              "properties": {
+                "checked_at": {
+                  "description": "Check date that produced the ranks, when the check completed.",
+                  "format": "date-time",
+                  "type": ["string", "null"]
+                },
+                "completed": {
+                  "type": "boolean"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "keyword": {
+                  "type": "string"
+                },
+                "keyword_id": {
+                  "type": "string"
+                },
+                "ranked": {
+                  "type": "boolean"
+                },
+                "ranks": {
+                  "additionalProperties": {
+                    "type": ["integer", "null"]
+                  },
+                  "description": "Best rank per domain in the latest completed check.",
+                  "type": "object"
+                },
+                "tags": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "id",
+                "keyword",
+                "keyword_id",
+                "completed",
+                "ranked",
+                "tags",
+                "checked_at",
+                "ranks"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "shared_keyword_count": {
+            "description": "Completed keywords where a tracked competitor ranks.",
+            "type": "integer"
+          },
+          "shares": {
+            "items": {
+              "properties": {
+                "domain": {
+                  "type": "string"
+                },
+                "share_of_voice": {
+                  "description": "Exact fraction of volume-weighted visibility across the matrix domains. Null whenever data_state is not ranked, never zero for cannot-compute.",
+                  "type": ["number", "null"]
+                },
+                "shared_keywords": {
+                  "type": "integer"
+                }
+              },
+              "required": ["domain", "shared_keywords", "share_of_voice"],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "country",
+          "device",
+          "engine",
+          "data_state",
+          "checked_keyword_count",
+          "shared_keyword_count",
+          "measured_at",
+          "domains",
+          "observations",
+          "shares"
+        ],
+        "type": "object"
+      },
+      "CompetitorSuggestion": {
+        "properties": {
+          "domain": {
+            "type": "string"
+          },
+          "overlap": {
+            "description": "Keywords where the domain appears in results.",
+            "type": "integer"
+          }
+        },
+        "required": ["domain", "overlap"],
+        "type": "object"
+      },
       "CostEstimate": {
         "additionalProperties": true,
         "description": "Estimated rank-check volume and provider spend for a keyword portfolio.",
@@ -2109,8 +2265,15 @@
             "example": "English",
             "type": "string"
           },
+          "latest_check": {
+            "$ref": "#/components/schemas/KeywordLatestCheck"
+          },
           "latest_position": {
+            "description": "`latest_position` = `latest_check.position`; it is `null` when the latest executed check failed OR when the domain was not found within the requested depth. Agents that need \"the last known ranking\" must read `latest_successful_check.position`.",
             "type": ["integer", "null"]
+          },
+          "latest_successful_check": {
+            "$ref": "#/components/schemas/KeywordLatestSuccessfulCheck"
           },
           "location": {
             "description": "Resolved keyword location display name.",
@@ -2123,6 +2286,7 @@
             "type": "string"
           },
           "previous_position": {
+            "description": "`previous_position` = the position recorded on `latest_check` as its predecessor.",
             "type": ["integer", "null"]
           },
           "project_id": {
@@ -2156,6 +2320,11 @@
                 "format": "date-time",
                 "type": ["string", "null"]
               },
+              "source": {
+                "description": "Whether these schedule values come from the keyword's own row or from the project defaults.",
+                "enum": ["keyword", "project_default"],
+                "type": "string"
+              },
               "timezone": {
                 "description": "IANA time zone that anchors monthly and custom cron wall-clock schedules. Daily and weekly use a stable keyword-specific interval phase that timezone does not move.",
                 "type": "string"
@@ -2167,7 +2336,8 @@
               "timezone",
               "jitter_minutes",
               "last_checked_at",
-              "next_check_at"
+              "next_check_at",
+              "source"
             ],
             "type": ["object", "null"]
           },
@@ -2199,7 +2369,9 @@
           "country",
           "location",
           "device",
+          "latest_check",
           "latest_position",
+          "latest_successful_check",
           "language_code",
           "language_label",
           "location_key",
@@ -2391,6 +2563,69 @@
         },
         "required": ["created", "skipped", "results"],
         "type": "object"
+      },
+      "KeywordLatestCheck": {
+        "description": "The most recent executed check of any status. A completed check with `position: null` means \"not ranked within the requested depth\"; `latest_check.status: \"failed\"` means \"unknown, the check did not run to completion\".",
+        "properties": {
+          "checked_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "error": {
+            "type": ["string", "null"]
+          },
+          "error_code": {
+            "type": ["string", "null"]
+          },
+          "id": {
+            "example": "check_a00000000000000000000000",
+            "pattern": "^check_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "position": {
+            "type": ["integer", "null"]
+          },
+          "run_id": {
+            "description": "Rank-check run that produced this check, or null for a legacy row.",
+            "example": "rcr_a00000000000000000000000",
+            "pattern": "^rcr_[a-z][a-z0-9]{23}$",
+            "type": ["string", "null"]
+          },
+          "status": {
+            "enum": ["completed", "failed", "running"],
+            "type": "string"
+          }
+        },
+        "required": ["checked_at", "error", "error_code", "id", "position", "run_id", "status"],
+        "type": ["object", "null"]
+      },
+      "KeywordLatestSuccessfulCheck": {
+        "description": "The most recent check with status completed, i.e. the last known ranking for this keyword.",
+        "properties": {
+          "checked_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "example": "check_a00000000000000000000000",
+            "pattern": "^check_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "position": {
+            "type": ["integer", "null"]
+          },
+          "ranking_url": {
+            "type": ["string", "null"]
+          },
+          "run_id": {
+            "description": "Rank-check run that produced this check, or null for a legacy row.",
+            "example": "rcr_a00000000000000000000000",
+            "pattern": "^rcr_[a-z][a-z0-9]{23}$",
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["checked_at", "id", "position", "ranking_url", "run_id"],
+        "type": ["object", "null"]
       },
       "KeywordMatch": {
         "properties": {
@@ -3414,6 +3649,139 @@
           "name": {
             "type": "string"
           },
+          "readiness": {
+            "description": "Present on get_project responses; summarizes what the current credential can do on the project.",
+            "properties": {
+              "backlinks": {
+                "properties": {
+                  "available": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "description": "Closed reason enum; null when the area is available.",
+                    "enum": [
+                      "provider_not_connected",
+                      "provider_disabled",
+                      "needs_reauth",
+                      "project_read_only",
+                      "token_read_only",
+                      null
+                    ],
+                    "type": ["string", "null"]
+                  }
+                },
+                "required": ["available", "reason"],
+                "type": "object"
+              },
+              "domain_overview": {
+                "properties": {
+                  "available": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "description": "Closed reason enum; null when the area is available.",
+                    "enum": [
+                      "provider_not_connected",
+                      "provider_disabled",
+                      "needs_reauth",
+                      "project_read_only",
+                      "token_read_only",
+                      null
+                    ],
+                    "type": ["string", "null"]
+                  }
+                },
+                "required": ["available", "reason"],
+                "type": "object"
+              },
+              "keyword_research": {
+                "properties": {
+                  "available": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "description": "Closed reason enum; null when the area is available.",
+                    "enum": [
+                      "provider_not_connected",
+                      "provider_disabled",
+                      "needs_reauth",
+                      "project_read_only",
+                      "token_read_only",
+                      null
+                    ],
+                    "type": ["string", "null"]
+                  }
+                },
+                "required": ["available", "reason"],
+                "type": "object"
+              },
+              "search_performance": {
+                "properties": {
+                  "available": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "description": "Closed reason enum; null when the area is available.",
+                    "enum": [
+                      "provider_not_connected",
+                      "provider_disabled",
+                      "needs_reauth",
+                      "project_read_only",
+                      "token_read_only",
+                      null
+                    ],
+                    "type": ["string", "null"]
+                  }
+                },
+                "required": ["available", "reason"],
+                "type": "object"
+              },
+              "serp": {
+                "properties": {
+                  "available": {
+                    "type": "boolean"
+                  },
+                  "primary_provider": {
+                    "description": "Rank-data provider that would serve checks, regardless of availability.",
+                    "type": ["string", "null"]
+                  },
+                  "reason": {
+                    "description": "Closed reason enum; null when the area is available.",
+                    "enum": [
+                      "provider_not_connected",
+                      "provider_disabled",
+                      "needs_reauth",
+                      "project_read_only",
+                      "token_read_only",
+                      null
+                    ],
+                    "type": ["string", "null"]
+                  }
+                },
+                "required": ["available", "reason", "primary_provider"],
+                "type": "object"
+              },
+              "token_scope": {
+                "description": "What this credential may do: read or write.",
+                "enum": ["read", "write"],
+                "type": "string"
+              },
+              "write_mode": {
+                "enum": ["active", "migration_hold", "migrated"],
+                "type": "string"
+              }
+            },
+            "required": [
+              "token_scope",
+              "write_mode",
+              "serp",
+              "backlinks",
+              "domain_overview",
+              "keyword_research",
+              "search_performance"
+            ],
+            "type": "object"
+          },
           "updated_at": {
             "format": "date-time",
             "type": "string"
@@ -3728,6 +4096,38 @@
       },
       "Provider": {
         "properties": {
+          "capabilities": {
+            "description": "Provider-implemented features; true only while the connection is connected and enabled.",
+            "properties": {
+              "backlinks": {
+                "type": "boolean"
+              },
+              "domain_overview": {
+                "type": "boolean"
+              },
+              "keyword_metrics": {
+                "type": "boolean"
+              },
+              "keyword_research": {
+                "type": "boolean"
+              },
+              "rank_checks": {
+                "type": "boolean"
+              },
+              "search_performance": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "backlinks",
+              "domain_overview",
+              "keyword_metrics",
+              "keyword_research",
+              "rank_checks",
+              "search_performance"
+            ],
+            "type": "object"
+          },
           "category_id": {
             "enum": ["serp", "analytics"],
             "type": "string"
@@ -3735,8 +4135,16 @@
           "category_title": {
             "type": "string"
           },
+          "connected": {
+            "description": "Credentials on file are valid; enabled may still be false.",
+            "type": "boolean"
+          },
           "connection_id": {
             "pattern": "^conn_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "connection_status": {
+            "enum": ["connected", "needs_reauth", "not_connected"],
             "type": "string"
           },
           "enabled": {
@@ -3750,6 +4158,10 @@
             "enum": ["serp", "analytics"],
             "type": "string"
           },
+          "last_used_at": {
+            "format": "date-time",
+            "type": ["string", "null"]
+          },
           "name": {
             "type": "string"
           },
@@ -3760,10 +4172,22 @@
             "type": "integer"
           },
           "status": {
+            "description": "catalog state of the integration, not the connection; read connection_status",
             "type": "string"
           }
         },
-        "required": ["category_id", "category_title", "id", "kind", "name", "status"],
+        "required": [
+          "category_id",
+          "category_title",
+          "id",
+          "kind",
+          "name",
+          "status",
+          "connection_status",
+          "connected",
+          "capabilities",
+          "last_used_at"
+        ],
         "type": "object"
       },
       "ProviderConnect": {
@@ -3839,6 +4263,10 @@
           "error": {
             "type": ["string", "null"]
           },
+          "error_code": {
+            "description": "Stable failure code for this check, or null for rows older than the code taxonomy.",
+            "type": ["string", "null"]
+          },
           "id": {
             "example": "check_a00000000000000000000000",
             "pattern": "^check_[a-z][a-z0-9]{23}$",
@@ -3861,6 +4289,32 @@
           "ranking_url": {
             "type": ["string", "null"]
           },
+          "run": {
+            "description": "The run that produced this result, or null for a legacy row.",
+            "properties": {
+              "finished_at": {
+                "format": "date-time",
+                "type": ["string", "null"]
+              },
+              "id": {
+                "example": "rcr_a00000000000000000000000",
+                "pattern": "^rcr_[a-z][a-z0-9]{23}$",
+                "type": "string"
+              },
+              "started_at": {
+                "format": "date-time",
+                "type": ["string", "null"]
+              },
+              "status": {
+                "type": "string"
+              },
+              "trigger": {
+                "type": "string"
+              }
+            },
+            "required": ["id", "status", "trigger", "started_at", "finished_at"],
+            "type": ["object", "null"]
+          },
           "run_id": {
             "description": "Rank-check run that produced this result, or null for a legacy row.",
             "example": "rcr_a00000000000000000000000",
@@ -3881,9 +4335,11 @@
           "provider",
           "ranking_url",
           "run_id",
+          "run",
           "cost_cents",
           "attempts",
           "error",
+          "error_code",
           "status"
         ],
         "type": "object"
@@ -4126,18 +4582,89 @@
         "type": "object"
       },
       "SearchPerformanceQueryStatsResponse": {
+        "description": "Rows are the provider's aggregate over all countries and devices for the range; filter by query is exact match unless query_match=contains.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/AnalyticsConnection"
+          },
+          "result": {
+            "properties": {
+              "row_cap": {
+                "description": "Maximum number of rows this request can return.",
+                "type": "integer"
+              },
+              "rows_returned": {
+                "description": "Rows carried in this response after all filters.",
+                "type": "integer"
+              },
+              "sort": {
+                "description": "Rows are ordered by clicks, highest first.",
+                "enum": ["clicks_desc"],
+                "type": "string"
+              },
+              "truncated": {
+                "description": "True exactly when this response carries row_cap rows; more matching rows may exist. clicks_min, impressions_min and position_max are applied after the source cap, so when they are set a false value does not prove that no further matching rows exist.",
+                "type": "boolean"
+              }
+            },
+            "required": ["row_cap", "rows_returned", "truncated", "sort"],
+            "type": "object"
           },
           "rows": {
             "items": {
               "$ref": "#/components/schemas/SearchPerformanceQueryStat"
             },
             "type": "array"
+          },
+          "scope": {
+            "properties": {
+              "country": {
+                "description": "Always null. Rows are the provider's aggregate over all countries and devices for the range.",
+                "type": "null"
+              },
+              "device": {
+                "description": "Always null. Rows are the provider's aggregate over all countries and devices for the range.",
+                "type": "null"
+              },
+              "dimensions": {
+                "description": "Dimensions the source grouped rows by: query, or query and page when page_path is set.",
+                "items": {
+                  "enum": ["query", "page"],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "end_date": {
+                "format": "date",
+                "type": "string"
+              },
+              "page_path": {
+                "description": "Page path filter applied, or null when none was requested.",
+                "type": ["string", "null"]
+              },
+              "query_match": {
+                "description": "Match semantics applied to the query filter: exact match unless query_match=contains.",
+                "enum": ["equals", "contains"],
+                "type": "string"
+              },
+              "start_date": {
+                "format": "date",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start_date",
+              "end_date",
+              "dimensions",
+              "query_match",
+              "page_path",
+              "country",
+              "device"
+            ],
+            "type": "object"
           }
         },
-        "required": ["connection", "rows"],
+        "required": ["connection", "rows", "scope", "result"],
         "type": "object"
       },
       "Signal": {
@@ -4330,6 +4857,489 @@
           }
         },
         "required": ["enabled"],
+        "type": "object"
+      },
+      "StoredBacklinksReport": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BacklinksSnapshot"
+          },
+          {
+            "properties": {
+              "fresh_until": {
+                "description": "fresh_until is authoritative: a report is fresh while now is before fresh_until, and the window is 30 days counted from the earliest successful source fetch, which can be earlier than saved_at.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "saved_at": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "stale": {
+                "type": "boolean"
+              },
+              "state": {
+                "description": "fresh_until is authoritative: a report is fresh while now is before fresh_until, and the window is 30 days counted from the earliest successful source fetch, which can be earlier than saved_at.",
+                "enum": ["fresh", "stale"],
+                "type": "string"
+              }
+            },
+            "required": ["saved_at", "fresh_until", "stale", "state"],
+            "type": "object"
+          }
+        ]
+      },
+      "StoredDomainOverviewReport": {
+        "properties": {
+          "cached": {
+            "type": "boolean"
+          },
+          "cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "country_code": {
+            "type": ["string", "null"]
+          },
+          "data_state": {
+            "description": "the stored report outcome, the same value GET /projects/{project_id}/domain-overview returns as state",
+            "enum": ["no_data", "ok", "partial"],
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "fresh_until": {
+            "description": "fresh_until is authoritative: a report is fresh while now is before fresh_until, and the window is 30 days counted from the earliest successful source fetch, which can be earlier than saved_at.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "history": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DomainOverviewHistoricalRow"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "keywords": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DomainOverviewKeywordsData"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "language_code": {
+            "type": "string"
+          },
+          "location_code": {
+            "type": "integer"
+          },
+          "overview": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DomainOverviewMetrics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DomainOverviewPagesData"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "partial": {
+            "type": "boolean"
+          },
+          "previous_fetched_at": {
+            "format": "date-time",
+            "type": ["string", "null"]
+          },
+          "previous_overview": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DomainOverviewMetrics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "previous_source_snapshot_at": {
+            "format": "date-time",
+            "type": ["string", "null"]
+          },
+          "provider": {
+            "type": "string"
+          },
+          "saved_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "scope": {
+            "enum": ["root", "subdomain"],
+            "type": "string"
+          },
+          "source_snapshot_at": {
+            "format": "date-time",
+            "type": ["string", "null"]
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "state": {
+            "description": "fresh_until is authoritative: a report is fresh while now is before fresh_until, and the window is 30 days counted from the earliest successful source fetch, which can be earlier than saved_at. This is report freshness, not the data outcome; data_state carries the no_data/ok/partial value that GET /projects/{project_id}/domain-overview returns as state.",
+            "enum": ["fresh", "stale"],
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cached",
+          "cost_cents",
+          "country_code",
+          "data_state",
+          "fetched_at",
+          "fresh_until",
+          "history",
+          "keywords",
+          "language_code",
+          "location_code",
+          "overview",
+          "pages",
+          "partial",
+          "previous_fetched_at",
+          "previous_overview",
+          "previous_source_snapshot_at",
+          "provider",
+          "saved_at",
+          "scope",
+          "source_snapshot_at",
+          "stale",
+          "state",
+          "target"
+        ],
+        "type": "object"
+      },
+      "StoredKeywordResearchReport": {
+        "properties": {
+          "cached": {
+            "type": "boolean"
+          },
+          "cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "country_code": {
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "fresh_until": {
+            "description": "fresh_until is authoritative: a report is fresh while now is before fresh_until, and the window is 30 days counted from the earliest successful source fetch, which can be earlier than saved_at.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "include_clickstream": {
+            "type": "boolean"
+          },
+          "language_code": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "partial": {
+            "type": "boolean"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "request_key": {
+            "type": "string"
+          },
+          "result_limit": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "properties": {
+                "already_saved": {
+                  "type": "boolean"
+                },
+                "already_tracked": {
+                  "type": "boolean"
+                },
+                "competition": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": ["number", "null"]
+                },
+                "cpc_cents": {
+                  "minimum": 0,
+                  "type": ["integer", "null"]
+                },
+                "difficulty": {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": ["integer", "null"]
+                },
+                "intent": {
+                  "enum": [
+                    "informational",
+                    "commercial",
+                    "transactional",
+                    "navigational",
+                    "unknown",
+                    null
+                  ],
+                  "type": "string"
+                },
+                "keyword": {
+                  "type": "string"
+                },
+                "monthly_trend": {
+                  "items": {
+                    "properties": {
+                      "month": {
+                        "maximum": 12,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "search_volume": {
+                        "type": ["number", "null"]
+                      },
+                      "year": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": ["year", "month", "search_volume"],
+                    "type": "object"
+                  },
+                  "maxItems": 12,
+                  "type": "array"
+                },
+                "search_volume": {
+                  "minimum": 0,
+                  "type": ["number", "null"]
+                },
+                "source": {
+                  "enum": ["related", "suggestion", "idea"],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "keyword",
+                "source",
+                "already_saved",
+                "already_tracked",
+                "competition",
+                "cpc_cents",
+                "difficulty",
+                "intent",
+                "monthly_trend",
+                "search_volume"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "saved_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "seed": {
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "properties": {
+                "cached": {
+                  "type": "boolean"
+                },
+                "cost_cents": {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "reason": {
+                  "enum": [
+                    "budget_exhausted",
+                    "cost_limit",
+                    "in_progress",
+                    "needs_reauth",
+                    "no_source",
+                    "previous_source_failed",
+                    "provider_error",
+                    "rate_limited",
+                    "result_limit",
+                    "unsupported_location"
+                  ],
+                  "type": "string"
+                },
+                "returned": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "source": {
+                  "enum": ["related", "suggestion", "idea"],
+                  "type": "string"
+                },
+                "status": {
+                  "enum": ["ok", "failed", "skipped"],
+                  "type": "string"
+                }
+              },
+              "required": ["cached", "cost_cents", "returned", "source", "status"],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "state": {
+            "description": "fresh_until is authoritative: a report is fresh while now is before fresh_until, and the window is 30 days counted from the earliest successful source fetch, which can be earlier than saved_at.",
+            "enum": ["fresh", "stale"],
+            "type": "string"
+          }
+        },
+        "required": [
+          "cached",
+          "cost_cents",
+          "country_code",
+          "fetched_at",
+          "fresh_until",
+          "include_clickstream",
+          "language_code",
+          "mode",
+          "partial",
+          "provider",
+          "request_key",
+          "result_limit",
+          "rows",
+          "saved_at",
+          "seed",
+          "sources",
+          "stale",
+          "state"
+        ],
+        "type": "object"
+      },
+      "StoredResearchReportResponse": {
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/StoredBacklinksReport"
+              },
+              {
+                "$ref": "#/components/schemas/StoredDomainOverviewReport"
+              },
+              {
+                "$ref": "#/components/schemas/StoredKeywordResearchReport"
+              }
+            ]
+          }
+        },
+        "required": ["data"],
+        "type": "object"
+      },
+      "StoredResearchReportsResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/StoredResearchReportSummary"
+            },
+            "type": "array"
+          },
+          "meta": {
+            "properties": {
+              "freshness_days": {
+                "description": "fresh_until is authoritative: a report is fresh while now is before fresh_until, and the window is 30 days counted from the earliest successful source fetch, which can be earlier than saved_at.",
+                "type": "integer"
+              }
+            },
+            "required": ["freshness_days"],
+            "type": "object"
+          }
+        },
+        "required": ["data", "meta"],
+        "type": "object"
+      },
+      "StoredResearchReportSummary": {
+        "properties": {
+          "country_code": {
+            "type": "string"
+          },
+          "fresh_until": {
+            "description": "fresh_until is authoritative: a report is fresh while now is before fresh_until, and the window is 30 days counted from the earliest successful source fetch, which can be earlier than saved_at.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "include_clickstream": {
+            "type": "boolean"
+          },
+          "include_subdomains": {
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": ["backlinks", "domain_overview", "keyword_research"],
+            "type": "string"
+          },
+          "language_code": {
+            "type": "string"
+          },
+          "location_code": {
+            "type": "integer"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "result_limit": {
+            "type": "integer"
+          },
+          "saved_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "seed": {
+            "type": "string"
+          },
+          "state": {
+            "description": "fresh_until is authoritative: a report is fresh while now is before fresh_until, and the window is 30 days counted from the earliest successful source fetch, which can be earlier than saved_at.",
+            "enum": ["fresh", "stale"],
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "target_scope": {
+            "description": "site or page for backlinks, root or subdomain for domain overviews.",
+            "type": "string"
+          }
+        },
+        "required": ["kind", "saved_at", "fresh_until", "state"],
         "type": "object"
       },
       "TeamInvite": {
@@ -8690,6 +9700,62 @@
               "minimum": 1,
               "type": "integer"
             }
+          },
+          {
+            "description": "Inclusive lower bound on clicks.",
+            "in": "query",
+            "name": "clicks_min",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Inclusive lower bound on impressions.",
+            "in": "query",
+            "name": "impressions_min",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Inclusive upper bound on average position.",
+            "in": "query",
+            "name": "position_max",
+            "schema": {
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Page path filter; setting it also groups rows by page.",
+            "in": "query",
+            "name": "page_path",
+            "schema": {
+              "maxLength": 2048,
+              "type": "string"
+            }
+          },
+          {
+            "description": "contains keeps rows whose page URL contains the given path; prefix matches pages whose URL starts with the source property host followed by the path.",
+            "in": "query",
+            "name": "page_path_match",
+            "schema": {
+              "default": "contains",
+              "enum": ["contains", "prefix"],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Match semantics for the query filter; default equals is exact match.",
+            "in": "query",
+            "name": "query_match",
+            "schema": {
+              "default": "equals",
+              "enum": ["equals", "contains"],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -9288,8 +10354,20 @@
                     },
                     "meta": {
                       "properties": {
+                        "markets": {
+                          "items": {
+                            "$ref": "#/components/schemas/CompetitorMarket"
+                          },
+                          "type": "array"
+                        },
                         "next_cursor": {
                           "type": ["string", "null"]
+                        },
+                        "suggestions": {
+                          "items": {
+                            "$ref": "#/components/schemas/CompetitorSuggestion"
+                          },
+                          "type": "array"
                         }
                       },
                       "required": ["next_cursor"],
@@ -10180,7 +11258,7 @@
     },
     "/projects/{project_id}/keyword-research": {
       "get": {
-        "description": "Researches or estimates keywords from one seed and requires write scope.",
+        "description": "Researches or estimates keywords from one seed and requires write scope. estimate_only=true needs only read scope and never spends provider budget.",
         "operationId": "researchKeywords",
         "parameters": [
           {
@@ -12031,6 +13109,300 @@
         ],
         "summary": "List ranked keyword suggestions",
         "tags": ["keyword-research"]
+      }
+    },
+    "/projects/{project_id}/research/reports": {
+      "get": {
+        "description": "Read-only view of a report that is already stored. Reads never call a provider and never require a connected provider. A report is fresh while now is before fresh_until.",
+        "operationId": "listStoredResearchReports",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredResearchReportsResponse"
+                }
+              }
+            },
+            "description": "JSON response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "List stored research reports",
+        "tags": ["research-reports"]
+      }
+    },
+    "/projects/{project_id}/research/reports/{kind}": {
+      "get": {
+        "description": "Read-only view of a report that is already stored. Reads never call a provider and never require a connected provider. A report is fresh while now is before fresh_until.",
+        "operationId": "getStoredResearchReport",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Report kind. The remaining query parameters are validated per kind.",
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": ["backlinks", "domain_overview", "keyword_research"],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Stored target; required for backlinks and domain overviews.",
+            "in": "query",
+            "name": "target",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "site or page for backlinks; root or subdomain for overviews.",
+            "in": "query",
+            "name": "target_scope",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Backlinks row mode or keyword research mode as stored.",
+            "in": "query",
+            "name": "mode",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Backlinks include-subdomains flag as stored.",
+            "in": "query",
+            "name": "include_subdomains",
+            "schema": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Keyword research seed as stored. Required for keyword research.",
+            "in": "query",
+            "name": "seed",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Keyword research clickstream flag as stored.",
+            "in": "query",
+            "name": "include_clickstream",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Keyword research result limit as stored.",
+            "in": "query",
+            "name": "result_limit",
+            "schema": {
+              "default": 100,
+              "enum": [100, 300, 500],
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Provider connection public ID used when the report was stored.",
+            "in": "query",
+            "name": "connection_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Domain overview language code as stored.",
+            "in": "query",
+            "name": "language_code",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Domain overview location code as stored.",
+            "in": "query",
+            "name": "location_code",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredResearchReportResponse"
+                }
+              }
+            },
+            "description": "JSON response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Read a stored research report",
+        "tags": ["research-reports"]
       }
     },
     "/projects/{project_id}/saved-keywords": {
@@ -14839,7 +16211,7 @@
     },
     "/projects/{projectId}/backlinks": {
       "get": {
-        "description": "Requires write scope because cache misses spend provider budget. estimate_only is a free dry run, and max_cost_cents is a best-effort pre-estimate gate. Snapshots are cached for 24 hours. Aggregated referring-domain, page, and anchor views are consumer-side and must be labeled \"within fetched rows\".",
+        "description": "Requires write scope because cache misses spend provider budget. estimate_only=true needs only read scope and never spends provider budget. estimate_only is a free dry run, and max_cost_cents is a best-effort pre-estimate gate. Snapshots are cached for 24 hours. Aggregated referring-domain, page, and anchor views are consumer-side and must be labeled \"within fetched rows\".",
         "operationId": "analyzeBacklinks",
         "parameters": [
           {
@@ -15146,7 +16518,7 @@
     },
     "/projects/{projectId}/domain-overview/analyze": {
       "post": {
-        "description": "estimate_only is a free cache-aware dry run. Paid analysis requires an explicit max_cost_cents, including zero for cache-only access. Charged partial reports return HTTP 200 with nested module failures and their costs.",
+        "description": "estimate_only is a free cache-aware dry run. estimate_only=true needs only read scope and never spends provider budget. Paid analysis requires an explicit max_cost_cents, including zero for cache-only access. Charged partial reports return HTTP 200 with nested module failures and their costs.",
         "operationId": "analyzeDomainOverview",
         "parameters": [
           {
@@ -16255,6 +17627,11 @@
       "description": "Analyze domain visibility and load its history, keywords, and pages.",
       "name": "domain-overview",
       "x-group": "Domain Overview"
+    },
+    {
+      "description": "Read stored research reports with their freshness state.",
+      "name": "research-reports",
+      "x-group": "Research Reports"
     },
     {
       "description": "Read project analytics, traffic snapshots, and search-performance data.",

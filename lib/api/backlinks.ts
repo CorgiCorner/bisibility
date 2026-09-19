@@ -7,6 +7,7 @@ import {
 } from "@/lib/backlinks/service";
 import { UnsupportedBacklinksTargetError } from "@/lib/backlinks/target";
 import type { BacklinksOutcome, BacklinksSnapshot } from "@/lib/backlinks/types";
+import { READINESS_REASON } from "@/lib/projects/readiness";
 import type { ProviderLookupFailure } from "@/lib/provider-lookups/paid-call";
 import { z } from "zod";
 import type { ApiContext } from "./context";
@@ -69,7 +70,12 @@ function retryHeaders(ctx: ApiContext, resetAt: number | undefined, fallbackMs: 
 function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
   const common = { headers: ctx.headers, instance: ctx.instance };
   if (outcome.reason === "no_source") {
-    return errorResponse("not_found", "No eligible backlinks source is connected.", 404, common);
+    return errorResponse(
+      "not_found",
+      `No eligible backlinks source is connected. Reason: ${READINESS_REASON.providerNotConnected}.`,
+      404,
+      common,
+    );
   }
   if (outcome.reason === "budget_exhausted") {
     return errorResponse("budget_exhausted", "Monthly provider budget reached.", 429, common);

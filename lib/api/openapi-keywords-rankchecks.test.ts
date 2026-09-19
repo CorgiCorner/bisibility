@@ -118,6 +118,54 @@ describe("OpenAPI document", () => {
     });
   });
 
+  it("documents keyword check state with its exact semantics sentences", () => {
+    const doc = getOpenApiDocument();
+    const keyword = doc.components.schemas.Keyword;
+
+    expect(keyword.properties.latest_position.description).toContain(
+      '`latest_position` = `latest_check.position`; it is `null` when the latest executed check failed OR when the domain was not found within the requested depth. Agents that need "the last known ranking" must read `latest_successful_check.position`.',
+    );
+    expect(keyword.properties.previous_position.description).toContain(
+      "`previous_position` = the position recorded on `latest_check` as its predecessor.",
+    );
+    expect(doc.components.schemas.KeywordLatestCheck.description).toContain(
+      'A completed check with `position: null` means "not ranked within the requested depth"; `latest_check.status: "failed"` means "unknown, the check did not run to completion".',
+    );
+    expect(keyword.properties).toMatchObject({
+      latest_check: { $ref: "#/components/schemas/KeywordLatestCheck" },
+      latest_successful_check: { $ref: "#/components/schemas/KeywordLatestSuccessfulCheck" },
+    });
+    expect(keyword.required).toEqual(
+      expect.arrayContaining(["latest_check", "latest_position", "latest_successful_check"]),
+    );
+    expect(keyword.properties.schedule.properties.source).toMatchObject({
+      enum: ["keyword", "project_default"],
+    });
+    expect(keyword.properties.schedule.required).toContain("source");
+    expect(doc.components.schemas.KeywordLatestSuccessfulCheck.properties).toMatchObject({
+      position: { type: ["integer", "null"] },
+      ranking_url: { type: ["string", "null"] },
+    });
+  });
+
+  it("documents rank-check error codes and the joined run", () => {
+    const rankCheck = getOpenApiDocument().components.schemas.RankCheck;
+
+    expect(rankCheck.properties.error_code).toMatchObject({ type: ["string", "null"] });
+    expect(rankCheck.properties.run).toMatchObject({
+      properties: {
+        id: { pattern: "^rcr_[a-z][a-z0-9]{23}$" },
+        status: { type: "string" },
+        trigger: { type: "string" },
+        started_at: { format: "date-time", type: ["string", "null"] },
+        finished_at: { format: "date-time", type: ["string", "null"] },
+      },
+      required: ["id", "status", "trigger", "started_at", "finished_at"],
+      type: ["object", "null"],
+    });
+    expect(rankCheck.required).toEqual(expect.arrayContaining(["error_code", "run"]));
+  });
+
   it("documents rank-check list filters and cursor pagination", () => {
     const operation = getOpenApiDocument().paths["/keywords/{id}/rank-checks"].get;
     const parameters = operation.parameters as Parameter[];

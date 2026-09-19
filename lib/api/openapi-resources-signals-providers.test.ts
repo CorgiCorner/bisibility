@@ -72,6 +72,22 @@ describe("OpenAPI document", () => {
     expect(paths["/projects/{project_id}/analytics/query-stats"].get).toMatchObject({
       operationId: "listSearchPerformanceQueryStats",
     });
+    expect(paths["/projects/{project_id}/analytics/query-stats"].get.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "page_path" }),
+        expect.objectContaining({
+          name: "page_path_match",
+          schema: { default: "contains", enum: ["contains", "prefix"], type: "string" },
+        }),
+        expect.objectContaining({
+          name: "query_match",
+          schema: { default: "equals", enum: ["equals", "contains"], type: "string" },
+        }),
+        expect.objectContaining({ name: "clicks_min" }),
+        expect.objectContaining({ name: "impressions_min" }),
+        expect.objectContaining({ name: "position_max" }),
+      ]),
+    );
     expect(paths["/projects/{project_id}/analytics/sync"].post).toMatchObject({
       operationId: "syncProjectTraffic",
     });
@@ -97,6 +113,40 @@ describe("OpenAPI document", () => {
     });
     expect(paths["/projects/{project_id}/sitemap-monitors/{monitor_id}"].patch).toMatchObject({
       operationId: "updateSitemapMonitor",
+    });
+  });
+
+  it("documents the query-stats response scope and result honestly", () => {
+    const schema = getOpenApiDocument().components.schemas.SearchPerformanceQueryStatsResponse;
+
+    expect(schema.required).toEqual(["connection", "rows", "scope", "result"]);
+    expect(schema.properties.scope.properties.country).toMatchObject({
+      description: expect.stringContaining("aggregate over all countries"),
+      type: "null",
+    });
+    expect(schema.properties.scope.properties.device).toMatchObject({
+      description: expect.stringContaining("aggregate over all countries"),
+      type: "null",
+    });
+    expect(schema.properties.scope.properties.query_match).toMatchObject({
+      description: expect.stringContaining("exact match unless query_match=contains"),
+      enum: ["equals", "contains"],
+    });
+    expect(schema.properties.scope.properties.dimensions).toMatchObject({
+      items: { enum: ["query", "page"], type: "string" },
+    });
+    expect(schema.properties.result.properties).toMatchObject({
+      row_cap: { type: "integer" },
+      rows_returned: { type: "integer" },
+      sort: { enum: ["clicks_desc"], type: "string" },
+      truncated: {
+        description: expect.stringContaining("row_cap"),
+        type: "boolean",
+      },
+    });
+    expect(schema.properties.result.properties.truncated).toMatchObject({
+      description: expect.stringContaining("after the source cap"),
+      type: "boolean",
     });
   });
 

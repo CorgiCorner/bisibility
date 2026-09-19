@@ -16,7 +16,8 @@ vi.mock("@/components/ui/CopyButton", () => ({
 const mcpUrl = "https://app.example.com/api/mcp";
 const agentLabels = {
   "claude-code": "Claude Code",
-  "claude-desktop": "Claude Desktop",
+  "claude-desktop": "Claude (web and desktop)",
+  chatgpt: "ChatGPT",
   codex: "Codex",
   cursor: "Cursor",
   other: "Any MCP client",
@@ -31,6 +32,7 @@ const EXPECTED_COMMANDS: Record<(typeof AGENTS)[number]["id"], string> = {
   codex: "codex mcp add bisibility --url https://app.example.com/api/mcp",
   cursor:
     '{\n  "mcpServers": {\n    "bisibility": {\n      "url": "https://app.example.com/api/mcp"\n    }\n  }\n}',
+  chatgpt: "https://app.example.com/api/mcp",
   "claude-desktop": "https://app.example.com/api/mcp",
   other: "https://app.example.com/api/mcp",
 };
@@ -72,9 +74,10 @@ describe("AgentInstallList", () => {
     render(<AgentInstallList mcpUrl={mcpUrl} />);
 
     expect(agentButton("Claude Code")).toHaveAttribute("aria-expanded", "true");
+    expect(agentButton("ChatGPT")).toHaveAttribute("aria-expanded", "false");
     expect(agentButton("Codex")).toHaveAttribute("aria-expanded", "false");
     expect(agentButton("Cursor")).toHaveAttribute("aria-expanded", "false");
-    expect(agentButton("Claude Desktop")).toHaveAttribute("aria-expanded", "false");
+    expect(agentButton("Claude (web and desktop)")).toHaveAttribute("aria-expanded", "false");
     expect(agentButton("Any MCP client")).toHaveAttribute("aria-expanded", "false");
   });
 
@@ -190,7 +193,7 @@ describe("AgentInstallList", () => {
   it("keeps URL-only connector commands neutral without changing their text", () => {
     render(<AgentInstallList mcpUrl={mcpUrl} />);
 
-    fireEvent.click(agentButton("Claude Desktop"));
+    fireEvent.click(agentButton("Claude (web and desktop)"));
 
     const connectorCommand = commandBlock(EXPECTED_COMMANDS["claude-desktop"]);
     expect(connectorCommand.textContent).toBe(mcpUrl);
@@ -216,6 +219,53 @@ describe("AgentInstallList", () => {
     render(<AgentInstallList mcpUrl={mcpUrl} />);
 
     expect(agentButton("Claude Code")).toHaveClass("px-0", "py-[11px]");
+  });
+
+  // D2 guard: entries without a caveat must keep byte-identical output when the optional
+  // caveat line is added for other entries.
+  it("renders the caveat-less Codex row with byte-identical markup", () => {
+    render(<AgentInstallList mcpUrl={mcpUrl} />);
+
+    fireEvent.click(agentButton("Codex"));
+
+    const row = document.getElementById("install-agent-codex")?.parentElement;
+    expect(row?.outerHTML).toMatchInlineSnapshot(
+      `"<div class="border-t border-border"><button aria-controls="install-agent-codex" aria-expanded="true" class="flex min-h-[44px] w-full cursor-pointer items-center gap-2.5 border-0 bg-transparent px-0 py-[11px] text-left text-[13.5px] text-fg" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true" class="shrink-0 text-fg-muted"><path d="M117.31,134l-72,64a8,8,0,1,1-10.63-12L100,128,34.69,70A8,8,0,1,1,45.32,58l72,64a8,8,0,0,1,0,12ZM216,184H120a8,8,0,0,0,0,16h96a8,8,0,0,0,0-16Z"></path></svg><span class="font-medium">Codex</span><span class="ml-auto font-sans text-[10.5px] text-fg-muted">CLI</span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true" class="shrink-0 text-fg-muted"><path d="M213.66,165.66a8,8,0,0,1-11.32,0L128,91.31,53.66,165.66a8,8,0,0,1-11.32-11.32l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,213.66,165.66Z"></path></svg></button><div aria-hidden="false" class="grid overflow-hidden transition-none motion-safe:[transition:grid-template-rows_.24s_cubic-bezier(.32,.72,0,1),opacity_.18s_ease] grid-rows-[1fr] opacity-100" id="install-agent-codex"><div class="min-h-0 overflow-hidden"><div class="pb-3"><div class="relative"><pre aria-hidden="false" class="m-0 whitespace-pre-wrap break-words rounded-[8px] bg-code-bg py-2.5 pl-3 pr-10 font-mono text-[11.5px] leading-[1.65] text-code-fg [word-break:break-word]"><span style="color: var(--blue);">codex</span> mcp add bisibility <span style="color: var(--blue);">--url</span> https://app.example.com/api/mcp</pre><span class="absolute right-[7px] top-[7px]"><button type="button" aria-label="Copy Codex command"></button></span></div><p class="m-0 mt-2 text-[11.5px] text-fg-muted">Codex signs in through the same OAuth flow.</p></div></div></div></div>"`,
+    );
+  });
+
+  it("renders the ChatGPT caveat as a second muted line under the note", () => {
+    render(<AgentInstallList mcpUrl={mcpUrl} />);
+
+    fireEvent.click(agentButton("ChatGPT"));
+
+    const note = screen.getByText(
+      "Settings, Apps, Advanced settings, enable developer mode, then add the URL as a custom MCP app.",
+    );
+    const caveat = screen.getByText(
+      "ChatGPT shows only read-only tools on individual plans; write actions such as rank checks and backlink analysis need a Business or Enterprise workspace with developer mode. Read-only tools cover stored reports and cost estimates.",
+    );
+    expect(note).toHaveClass("text-fg-muted");
+    expect(caveat.tagName).toBe("P");
+    expect(caveat).toHaveClass("text-fg-muted");
+    expect(caveat.previousElementSibling).toBe(note);
+  });
+
+  it("renders the Claude (web and desktop) caveat as a second muted line under the note", () => {
+    render(<AgentInstallList mcpUrl={mcpUrl} />);
+
+    fireEvent.click(agentButton("Claude (web and desktop)"));
+
+    const note = screen.getByText(
+      "Customize, Connectors, Add custom connector, paste the URL, then approve the sign-in.",
+    );
+    const caveat = screen.getByText(
+      "Claude exposes every tool. It asks before each write tool the first time; use Allow always only for tools you trust to run unsupervised. Research runs tools without asking, so disable write tools there.",
+    );
+    expect(note).toHaveClass("text-fg-muted");
+    expect(caveat.tagName).toBe("P");
+    expect(caveat).toHaveClass("text-fg-muted");
+    expect(caveat.previousElementSibling).toBe(note);
   });
 
   it("ties each trigger to the panel it opens and names its copy button per tool", () => {

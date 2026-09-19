@@ -2,12 +2,16 @@ import "server-only";
 
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { computeProjectReadiness, type ReadinessConnection } from "@/lib/projects/readiness";
+import { providerChainOrderBy } from "@/lib/rank-check/provider-chain-order";
 import { createProjectSchema, domainSchema } from "@/lib/schemas/project";
 import { projectAuditResource } from "./audit-resources";
 import type { ApiContext, PersonalApiContext } from "./context";
 import { forbidden, projectMatches } from "./context";
+import { tierFromScopes } from "./key-scope";
 import { decodeCursor, encodeCursor, parseLimit, splitPage } from "./pagination";
 import { createProjectRecord } from "./project-service";
+import { providerAreaCapabilities } from "./provider-list";
 import { requireApiPublicId } from "./public-id";
 import { ProjectLimitExceededError } from "./resource-limits";
 import { projectResource } from "./resources";
@@ -90,12 +94,39 @@ export async function createProjectForUser(ctx: PersonalApiContext) {
   }
 }
 
-export function getProject(ctx: ApiContext, projectId: string) {
+async function projectReadiness(ctx: ApiContext) {
+  const connections = await prisma.providerConnection.findMany({
+    orderBy: providerChainOrderBy(),
+    where: { projectId: ctx.auth.project.id },
+  });
+  return computeProjectReadiness({
+    connections: connections.map(
+      (connection): ReadinessConnection => ({
+        ...providerAreaCapabilities(connection.kind, connection.provider),
+        enabled: connection.enabled,
+        kind: connection.kind,
+        priority: connection.priority,
+        provider: connection.provider,
+        status: connection.status,
+      }),
+    ),
+    tokenScope: tierFromScopes(ctx.auth.apiKey.scopes) === "read" ? "read" : "write",
+    writeMode: ctx.auth.project.writeMode ?? "active",
+  });
+}
+
+export async function getProject(ctx: ApiContext, projectId: string) {
   if (!projectMatches(ctx.auth, projectId)) {
     return forbidden(ctx, "API key is not scoped to this project.");
   }
 
-  return resourceResponse(projectResource(ctx.auth.project), { headers: ctx.headers });
+  const readiness = await projectReadiness(ctx);
+  return resourceResponse(
+    { ...projectResource(ctx.auth.project), readiness },
+    {
+      headers: ctx.headers,
+    },
+  );
 }
 
 export async function createProject(ctx: ApiContext) {

@@ -50,6 +50,33 @@ The MCP server card lists the endpoint and available tools:
 https://your-host.example/.well-known/mcp/server-card.json
 ```
 
+## What each client exposes
+
+Every client reaches the same endpoint and the same tool list. What differs
+is where the URL is added, which tools the client shows, and how an action
+is approved.
+
+| Client | Adds the URL where | Write tools | Approval |
+|-|-|-|-|
+| Claude (web, desktop, Cowork) | Customize, Connectors, Add custom connector, then approve the sign-in | Every tool is exposed; no developer or write mode is required | Asks before each write tool the first time |
+| ChatGPT (individual plans) | Custom MCP app entry in the app's settings | Read tools only; write tools are not offered | Read and fetch tools only, so no write approval applies |
+| ChatGPT (Business or Enterprise with developer mode) | Custom MCP app; developer mode lives at Settings, Apps, Advanced settings | Custom MCP apps with write actions are a beta | The approved tool snapshot stays frozen until an admin refreshes it |
+| Claude Code | The `claude mcp add` command | Every tool is exposed | Follows the client's own tool-permission settings |
+| Codex | The `codex mcp add` command | Every tool is exposed | Follows the client's own tool-permission settings |
+| Cursor | Settings, MCP, then paste into `mcp.json` | Every tool is exposed | Follows the client's own tool-permission settings |
+| Other MCP clients | Any Streamable HTTP configuration with OAuth sign-in | Every tool is exposed | Follows the client's own tool-permission settings |
+
+Each tool declares a `readOnlyHint` marker. Tools that never spend budget or
+change data are marked read-only; clients that hide or gate write tools rely
+on that marker. Paid operations such as rank checks and backlink analysis are
+write tools; stored reports and cost estimates are read-only.
+
+Once a ChatGPT connection is approved, the client keeps a frozen snapshot of
+the tool definitions until the connector is refreshed or re-added in the
+app, so new tools appear in ChatGPT only after a refresh. Nothing in the
+OAuth flow can widen that snapshot; the consent page can only narrow the
+scopes a client asked for.
+
 ## Authenticate
 
 Choose a personal access token when the agent acts as you across projects or

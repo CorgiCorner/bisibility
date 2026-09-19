@@ -153,12 +153,113 @@ describe("analytics REST endpoints", () => {
     );
     await expect(response.json()).resolves.toMatchObject({
       connection: { id: connectionPublicId, provider: "gsc" },
+      result: { row_cap: 50, rows_returned: 1, sort: "clicks_desc", truncated: false },
       rows: [{ clicks: 10, query: "rank tracker" }],
+      scope: {
+        country: null,
+        device: null,
+        dimensions: ["query"],
+        end_date: "2026-06-30",
+        page_path: null,
+        query_match: "equals",
+        start_date: "2026-06-01",
+      },
     });
     expect(mocks.fetchQueryStats).toHaveBeenCalledWith(
       { apiKey: "secret" },
       expect.objectContaining({ endDate: "2026-06-30", limit: 50, query: "rank" }),
     );
+  });
+
+  it("maps page_path and query_match inputs onto the provider call", async () => {
+    mocks.fetchQueryStats.mockResolvedValue([
+      {
+        clicks: 5,
+        ctr: 0.1,
+        impressions: 50,
+        page: "https://example.com/blog/post",
+        position: 3.1,
+        query: "seo api",
+      },
+    ]);
+    const response = await listSearchPerformanceQueryStats(
+      context(
+        "GET",
+        "?start_date=2026-06-01&end_date=2026-06-30&page_path=%2Fblog%2F&page_path_match=prefix&query=seo&query_match=contains&clicks_min=2&impressions_min=10&position_max=8",
+      ),
+      projectPublicId,
+    );
+    const body = await response.json();
+    expect(mocks.fetchQueryStats).toHaveBeenCalledWith(
+      { apiKey: "secret" },
+      expect.objectContaining({
+        clicks: { min: 2 },
+        impressions: { min: 10 },
+        pagePath: { match: "prefix", value: "/blog/" },
+        position: { max: 8 },
+        query: "seo",
+        queryMatch: "contains",
+      }),
+    );
+    expect(body.scope).toMatchObject({
+      dimensions: ["query", "page"],
+      page_path: "/blog/",
+      query_match: "contains",
+    });
+    expect(body.rows[0]).toHaveProperty("page", "https://example.com/blog/post");
+  });
+
+  it("maps the default and the explicit contains page_path_match to the contains filter", async () => {
+    await listSearchPerformanceQueryStats(
+      context("GET", "?start_date=2026-06-01&end_date=2026-06-30&page_path=%2Fdocs%2F"),
+      projectPublicId,
+    );
+    expect(mocks.fetchQueryStats).toHaveBeenCalledWith(
+      { apiKey: "secret" },
+      expect.objectContaining({ pagePath: { match: "contains", value: "/docs/" } }),
+    );
+
+    await listSearchPerformanceQueryStats(
+      context(
+        "GET",
+        "?start_date=2026-06-01&end_date=2026-06-30&page_path=%2Fdocs%2F&page_path_match=contains",
+      ),
+      projectPublicId,
+    );
+    expect(mocks.fetchQueryStats).toHaveBeenLastCalledWith(
+      { apiKey: "secret" },
+      expect.objectContaining({ pagePath: { match: "contains", value: "/docs/" } }),
+    );
+  });
+
+  it("marks the result truncated exactly when the source returned the row cap", async () => {
+    mocks.fetchQueryStats.mockResolvedValue(
+      Array.from({ length: 100 }, (_, index) => ({
+        clicks: index,
+        ctr: 0.1,
+        impressions: 10,
+        position: 1,
+        query: `q${index}`,
+      })),
+    );
+    const capped = await listSearchPerformanceQueryStats(
+      context("GET", "?start_date=2026-06-01&end_date=2026-06-30"),
+      projectPublicId,
+    );
+    await expect(capped.json()).resolves.toMatchObject({
+      result: { row_cap: 100, rows_returned: 100, sort: "clicks_desc", truncated: true },
+    });
+
+    mocks.fetchQueryStats.mockResolvedValue([
+      { clicks: 10, ctr: 0.1, impressions: 100, position: 4.2, query: "rank tracker" },
+    ]);
+    const short = await listSearchPerformanceQueryStats(
+      context("GET", "?start_date=2026-06-01&end_date=2026-06-30&limit=5"),
+      projectPublicId,
+    );
+    await expect(short.json()).resolves.toMatchObject({
+      result: { row_cap: 5, rows_returned: 1, sort: "clicks_desc", truncated: false },
+    });
   });
 
   it("returns not found when no query-capable source is eligible", async () => {

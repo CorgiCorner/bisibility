@@ -15,6 +15,7 @@ type InstallPageContentProps = {
   apiKey: InstallApiKeySummary | null;
   hasKeywordAndCheck: boolean;
   isCloudHosted: boolean;
+  mcpToolCounts: Readonly<{ readOnly: number; total: number }>;
   mcpUrl: string;
   origin: string;
   projectRef: string;
@@ -55,6 +56,7 @@ export function InstallPageContent({
   apiKey,
   hasKeywordAndCheck,
   isCloudHosted,
+  mcpToolCounts,
   mcpUrl,
   origin,
   projectRef,
@@ -92,6 +94,12 @@ export function InstallPageContent({
                 text={mcpUrl}
               />
             </div>
+            <p className="m-0 mt-2 text-[12.5px] text-fg-muted">
+              {t("endpoint.toolScope", {
+                readOnly: String(mcpToolCounts.readOnly),
+                total: String(mcpToolCounts.total),
+              })}
+            </p>
             {isCloudHosted ? (
               <p className="m-0 mt-2 font-sans text-[10.5px] text-fg-muted">
                 {t("endpoint.selfHosted")}

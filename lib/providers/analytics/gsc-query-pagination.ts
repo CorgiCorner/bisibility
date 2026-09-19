@@ -26,7 +26,11 @@ export function gscQueryDimensions(input: AnalyticsQueryStatsInput) {
 export function gscDimensionFilterGroups(input: AnalyticsQueryStatsInput) {
   const filters: Array<{ dimension: string; expression: string; operator: string }> = [];
   if (input.query) {
-    filters.push({ dimension: "query", expression: input.query, operator: "equals" });
+    filters.push({
+      dimension: "query",
+      expression: input.query,
+      operator: input.queryMatch === "contains" ? "contains" : "equals",
+    });
   }
   if (input.pagePath) {
     const isPrefix = input.pagePath.match === "prefix";

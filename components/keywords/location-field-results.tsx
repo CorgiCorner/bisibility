@@ -1,5 +1,5 @@
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
-import { CountryFlag } from "./CountryFlag";
 import { countryNameForCode, type LocationSuggestion } from "./location-picker-data";
 
 const optionId = (option: LocationSuggestion) => option.id || option.canonicalKey;

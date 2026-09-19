@@ -5288,6 +5288,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/integrations/provider-meta-copy.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/integrations/ProviderCard.tsx",
       "status": "excluded"
@@ -5310,11 +5315,6 @@
     {
       "kind": "render",
       "path": "components/integrations/ProviderCardMeta.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/integrations/provider-meta-copy.ts",
       "status": "migrated"
     },
     {
@@ -5610,11 +5610,6 @@
     {
       "kind": "render",
       "path": "components/keywords/CheckDepthSplitButton.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/keywords/CountryFlag.tsx",
       "status": "migrated"
     },
     {
@@ -7493,6 +7488,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/schedules/schedule-editor-field-options.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/schedules/schedule-members-table-columns.tsx",
       "status": "migrated"
@@ -7523,16 +7523,6 @@
       "status": "migrated"
     },
     {
-      "kind": "ui-data",
-      "path": "components/schedules/schedule-editor-field-options.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/schedules/useScheduleNameLabels.ts",
-      "status": "migrated"
-    },
-    {
       "kind": "render",
       "path": "components/schedules/ScheduleKeywordCandidateRow.tsx",
       "status": "migrated"
@@ -7555,6 +7545,11 @@
     {
       "kind": "render",
       "path": "components/schedules/SchedulesList.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/schedules/useScheduleNameLabels.ts",
       "status": "migrated"
     },
     {
@@ -8770,6 +8765,11 @@
     {
       "kind": "render",
       "path": "components/ui/CopyButton.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ui/CountryFlag.tsx",
       "status": "migrated"
     },
     {

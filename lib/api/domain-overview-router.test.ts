@@ -123,13 +123,24 @@ describe("Domain Overview router", () => {
     expect(mocks.pages).toHaveBeenCalledOnce();
   });
 
-  it("requires write scope for estimates and paid operations", async () => {
+  it("requires write scope for paid operations but only read for estimates", async () => {
     authenticate(["read"]);
 
-    const response = await route("analyze", { ...commonBody, estimate_only: true });
-
-    expect(response.status).toBe(403);
+    const paid = await route("analyze", commonBody);
+    expect(paid.status).toBe(403);
     expect(mocks.analyze).not.toHaveBeenCalled();
+
+    const estimate = await route("analyze", {
+      estimate_only: true,
+      language_code: "en",
+      location_code: 2840,
+      target: "example.com",
+    });
+    expect(estimate.status).toBe(200);
+    expect(mocks.analyze).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ estimateOnly: true }),
+    );
   });
 
   it.each([

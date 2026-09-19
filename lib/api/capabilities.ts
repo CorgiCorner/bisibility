@@ -1,237 +1,13 @@
-import { alertRuleToolSchema } from "@/lib/alerts/tool-schema";
-import { JITTER_MINUTES_MAX, JITTER_MINUTES_MIN } from "@/lib/schemas/keyword";
 import {
   DEFAULT_SERP_DEPTH,
   DEFAULT_SERP_DEVICE,
   SERP_ENGINE,
   serpDepthValues,
-  serpDeviceValues,
 } from "@/lib/serp/constants";
-import { apiKeyCreateProperties } from "./api-key-contract";
 import { API_VERSION_HEADER, getApiVersionCapabilities } from "./api-versions";
-import { cloudImportCapabilitySchemas } from "./cloud-import-capabilities";
-import {
-  DEFAULT_LOCATION_KEY,
-  legacyMarketNameOpenApiSchema,
-  primaryLocationKeyDescription,
-} from "./legacy-market-input";
-import { loopClosureToolInputSchemas } from "./loop-closure-capabilities";
+import { mcpToolNameByCapability, type ToolName, toolInputSchemas } from "./capabilities-schemas";
+import { DEFAULT_LOCATION_KEY } from "./legacy-market-input";
 import { getOpenApiDocument } from "./openapi";
-import { COST_ESTIMATE_MAX_KEYWORDS, COST_ESTIMATE_MAX_LOCATIONS } from "./public-cost";
-import { savedViewCapabilitySchemas } from "./saved-view-capabilities";
-
-const projectToolSchema = {
-  properties: { api_key: { type: "string" }, project_id: { type: "string" } },
-  required: ["api_key", "project_id"],
-  type: "object",
-} as const;
-
-function projectMemberToolSchema(memberName: string) {
-  return {
-    properties: {
-      api_key: { type: "string" },
-      [memberName]: { type: "string" },
-      project_id: { type: "string" },
-    },
-    required: ["api_key", "project_id", memberName],
-    type: "object",
-  } as const;
-}
-
-const serpDeviceSchema = { enum: serpDeviceValues, type: "string" } as const;
-const locationKeySchema = (detail: string) =>
-  ({ description: primaryLocationKeyDescription(detail), type: "string" }) as const;
-const savedViewTools = savedViewCapabilitySchemas(projectToolSchema);
-
-const scheduleSchema = {
-  properties: {
-    cron_expression: { type: ["string", "null"] },
-    frequency: {
-      enum: ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
-      type: "string",
-    },
-    jitter_minutes: {
-      maximum: JITTER_MINUTES_MAX,
-      minimum: JITTER_MINUTES_MIN,
-      type: "integer",
-    },
-    timezone: { type: "string" },
-  },
-  type: "object",
-} as const;
-
-const toolInputSchemas = {
-  addKeywords: {
-    properties: {
-      api_key: { type: "string" },
-      country: legacyMarketNameOpenApiSchema(
-        "Country market name used when location_key is omitted; defaults to the project default market.",
-      ),
-      device: { ...serpDeviceSchema, default: DEFAULT_SERP_DEVICE },
-      keywords: { items: { type: "string" }, minItems: 1, type: "array" },
-      location_key: locationKeySchema("Defaults to the project default market."),
-      project_id: { type: "string" },
-      schedule: scheduleSchema,
-      target_url: { type: ["string", "null"] },
-    },
-    required: ["api_key", "project_id", "keywords"],
-    type: "object",
-  },
-  createApiKey: {
-    properties: { api_key: { type: "string" }, ...apiKeyCreateProperties },
-    required: ["api_key", "name"],
-    type: "object",
-  },
-  estimateSerpCost: {
-    properties: {
-      devices: { default: 1, enum: [1, 2], type: "integer" },
-      frequency: {
-        default: "daily",
-        enum: ["daily", "weekly", "monthly", "manual", "paused", "custom_cron"],
-        type: "string",
-      },
-      cron_expression: { type: "string", maxLength: 120 },
-      depth: { default: 100, enum: [10, 20, 50, 100], type: "integer" },
-      keywords: { maximum: COST_ESTIMATE_MAX_KEYWORDS, minimum: 0, type: "integer" },
-      locations: { default: 1, maximum: COST_ESTIMATE_MAX_LOCATIONS, minimum: 1, type: "integer" },
-      option: { enum: ["standard", "priority", "live"], type: "string" },
-      plan: { type: "string" },
-      provider: { default: "dataforseo", enum: ["dataforseo", "serpapi"], type: "string" },
-    },
-    required: ["keywords"],
-    type: "object",
-  },
-  updateProject: projectToolSchema,
-  deleteProject: projectToolSchema,
-  updateProjectDefaults: {
-    properties: {
-      api_key: { type: "string" },
-      // Omitted market fields are a no-op for schedule-only updates.
-      country: legacyMarketNameOpenApiSchema(
-        "Country market name when location_key is omitted; provide together with device.",
-      ),
-      cron_expression: { type: ["string", "null"] },
-      device: serpDeviceSchema,
-      frequency: {
-        enum: ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
-        type: "string",
-      },
-      jitter_minutes: {
-        maximum: JITTER_MINUTES_MAX,
-        minimum: JITTER_MINUTES_MIN,
-        type: "integer",
-      },
-      location_key: locationKeySchema("Updates the default market."),
-      project_id: { type: "string" },
-      serp_stop_on_match: { type: "boolean" },
-      timezone: { type: "string" },
-    },
-    required: ["api_key", "project_id"],
-    type: "object",
-  },
-  getRankCheckResult: {
-    properties: { api_key: { type: "string" }, check_id: { type: "string" } },
-    required: ["api_key", "check_id"],
-    type: "object",
-  },
-  listKeywords: {
-    properties: {
-      api_key: { type: "string" },
-      country: legacyMarketNameOpenApiSchema("Country filter matched against stored labels."),
-      device: serpDeviceSchema,
-      limit: { maximum: 200, minimum: 1, type: "integer" },
-      location_key: locationKeySchema("Filters by the exact canonical location key."),
-      project_id: { type: "string" },
-      search: { type: "string" },
-    },
-    required: ["api_key", "project_id"],
-    type: "object",
-  },
-  createSignal: {
-    properties: {
-      api_key: { type: "string" },
-      happened_at: { format: "date-time", type: "string" },
-      keyword_id: { type: "string" },
-      payload: { additionalProperties: true, type: "object" },
-      severity: { default: "info", enum: ["info", "warning", "critical"], type: "string" },
-      source: { enum: ["deploy", "cms", "api"], type: "string" },
-      type: { pattern: String.raw`^[a-z_]+\.[a-z_]+$`, type: "string" },
-      url: { format: "uri", type: "string" },
-    },
-    required: ["api_key", "source", "type"],
-    type: "object",
-  },
-  listSignals: {
-    properties: {
-      api_key: { type: "string" },
-      cursor: { type: "string" },
-      from: { format: "date-time", type: "string" },
-      limit: { maximum: 200, minimum: 1, type: "integer" },
-      project_id: { type: "string" },
-      source: {
-        enum: [
-          "rank_tracker",
-          "search_analytics",
-          "url_inspection",
-          "sitemap",
-          "deploy",
-          "cms",
-          "search_engine_status",
-          "manual",
-          "api",
-        ],
-        type: "string",
-      },
-      to: { format: "date-time", type: "string" },
-      type: { type: "string" },
-    },
-    required: ["api_key", "project_id"],
-    type: "object",
-  },
-  runRankCheck: {
-    properties: { api_key: { type: "string" }, keyword_id: { type: "string" } },
-    required: ["api_key", "keyword_id"],
-    type: "object",
-  },
-  setKeywordTargetUrl: {
-    properties: {
-      api_key: { type: "string" },
-      keyword_id: { type: "string" },
-      target_url: { type: ["string", "null"] },
-    },
-    required: ["api_key", "keyword_id", "target_url"],
-    type: "object",
-  },
-  listAlertRules: projectToolSchema,
-  createAlertRule: alertRuleToolSchema({ includeApiKey: true }),
-  updateAlertRule: alertRuleToolSchema({ includeApiKey: true, update: true }),
-  deleteAlertRule: projectMemberToolSchema("rule_id"),
-  listTriggeredAlerts: projectToolSchema,
-  ...loopClosureToolInputSchemas,
-  listTeamMembers: projectToolSchema,
-  listTeamInvites: projectToolSchema,
-  createTeamInvite: projectToolSchema,
-  revokeTeamInvite: projectMemberToolSchema("invite_id"),
-  listProviders: projectToolSchema,
-  connectProvider: projectMemberToolSchema("provider_id"),
-  testProviderConnection: projectMemberToolSchema("provider_id"),
-  updateProviderSettings: projectMemberToolSchema("provider_id"),
-  disconnectProvider: projectMemberToolSchema("provider_id"),
-  listSavedViews: savedViewTools.list,
-  createSavedView: savedViewTools.create,
-  deleteSavedView: projectMemberToolSchema("view_id"),
-  listCompetitors: projectToolSchema,
-  addCompetitor: projectToolSchema,
-  removeCompetitor: projectMemberToolSchema("competitor_id"),
-  getNotificationPreferences: projectToolSchema,
-  updateNotificationPreferences: projectToolSchema,
-  listMigrationTokens: projectToolSchema,
-  mintMigrationToken: projectToolSchema,
-  revokeMigrationToken: projectMemberToolSchema("token_id"),
-  ...cloudImportCapabilitySchemas,
-} as const;
-
-type ToolName = keyof typeof toolInputSchemas;
 
 const toolNames = Object.keys(toolInputSchemas) as ToolName[];
 const operationIdByToolName: Partial<Record<ToolName, string>> = {
@@ -239,6 +15,12 @@ const operationIdByToolName: Partial<Record<ToolName, string>> = {
   enableSitemapMonitor: "updateSitemapMonitor",
   estimateSerpCost: "getCostEstimate",
 };
+
+export const capabilitiesCatalogMetadata = {
+  authentication: { scheme: "bearer", scope: "read write admin" },
+  description:
+    "public catalog of operations; the effective permissions of a session are in get_project.readiness",
+} as const;
 
 function operationsById() {
   const paths = getOpenApiDocument().paths;
@@ -265,6 +47,7 @@ export function getCapabilities() {
     return {
       description: operations.get(operationId)?.summary ?? operationId,
       input_schema: toolInputSchemas[name],
+      mcp_tool: mcpToolNameByCapability[name],
       name,
       operationId,
     };

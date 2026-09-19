@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.25.0] - 2026-09-18
+
+- Responses state what they measure: latest vs latest successful check with failure codes, matrix data state and dates, readiness, stats scope; competitor removal stops its alerts.
+
+- Stored research reports are readable without a provider, read-only cost estimates work with read-only access, and the MCP session exposes its effective profile.
+
+- The install page and docs explain which MCP tools each client exposes, the capabilities catalog maps every entry to its MCP tool, and the language switcher shows locale flags.
+
 ## [0.24.0] - 2026-09-16
 
 - Added Spanish, Japanese and Polish interface languages with typed catalogs and account preferences; Spanish marketing uses `/es` redirects, `hreflang` and localized sitemaps.

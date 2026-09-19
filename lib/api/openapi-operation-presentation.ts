@@ -60,7 +60,8 @@ export const openApiOperationPresentation: Record<string, OperationPresentation>
     summary: "Remove a non-owner team member",
   },
   researchKeywords: {
-    description: "Researches or estimates keywords from one seed and requires write scope.",
+    description:
+      "Researches or estimates keywords from one seed and requires write scope. estimate_only=true needs only read scope and never spends provider budget.",
     summary: "Research keywords",
   },
   revokeMigrationToken: { summary: "Revoke a migration token by ID" },

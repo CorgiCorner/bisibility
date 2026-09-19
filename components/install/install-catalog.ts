@@ -5,9 +5,10 @@ export function curlExample(origin: string) {
 }
 
 export type AgentInstall = {
+  caveat?: true;
   command: (mcpUrl: string) => string;
   icon: "cube" | "dots-three" | "monitor" | "terminal";
-  id: "claude-code" | "codex" | "cursor" | "claude-desktop" | "other";
+  id: "claude-code" | "chatgpt" | "codex" | "cursor" | "claude-desktop" | "other";
 };
 
 export const AGENTS = [
@@ -28,6 +29,13 @@ export const AGENTS = [
     id: "cursor",
   },
   {
+    caveat: true,
+    command: (mcpUrl) => mcpUrl,
+    icon: "dots-three",
+    id: "chatgpt",
+  },
+  {
+    caveat: true,
     command: (mcpUrl) => mcpUrl,
     icon: "monitor",
     id: "claude-desktop",

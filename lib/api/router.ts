@@ -18,6 +18,7 @@ import {
 import type { ApiContext } from "./context";
 import { handleDiscovery } from "./discovery-router";
 import { errorFromUnknown } from "./error-mapper";
+import { scopeToEnforce } from "./estimate-only-scope";
 import { withIdempotency } from "./idempotency";
 import { operationPolicyForRequest } from "./operation-policy";
 import { resolvePersonalProjectScope } from "./personal-scope";
@@ -160,9 +161,10 @@ async function dispatchApiRequest(
   if (!declaredOperation) {
     return routeNotFound({ headers: authResult.headers, instance: instance(url) });
   }
+  const requiredScope = await scopeToEnforce(declaredOperation, req, url);
   if (method === "GET" && path[0] === "locations" && path[1] === "search" && path.length === 2) {
     const scopes = auth.kind === "personal_token" ? auth.token.scopes : auth.apiKey.scopes;
-    if (!hasScope(scopes, declaredOperation.requiredScope)) {
+    if (!hasScope(scopes, requiredScope)) {
       return errorResponse("forbidden", "API key scope does not allow this operation.", 403, {
         headers: authResult.headers,
         instance: instance(url),
@@ -184,7 +186,7 @@ async function dispatchApiRequest(
     actorId = auth.user.id;
     if (isAccountRoute(path)) {
       return handleAccountRequest({
-        allowed: hasScope(auth.token.scopes, declaredOperation.requiredScope),
+        allowed: hasScope(auth.token.scopes, requiredScope),
         auth,
         headers: authResult.headers,
         method,
@@ -225,7 +227,7 @@ async function dispatchApiRequest(
     });
   }
 
-  if (!hasScope(projectAuth.apiKey.scopes, declaredOperation.requiredScope)) {
+  if (!hasScope(projectAuth.apiKey.scopes, requiredScope)) {
     return errorResponse("forbidden", "API key scope does not allow this operation.", 403, {
       headers: authResult.headers,
       instance: instance(url),

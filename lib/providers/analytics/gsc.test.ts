@@ -1,7 +1,11 @@
 import { clearProviderRateLimitState, ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { gscAnalyticsProvider } from "./gsc";
-import { GSC_QUERY_STATS_PAGE_SIZE, GSC_QUERY_STATS_ROW_CAP } from "./gsc-query-pagination";
+import {
+  GSC_QUERY_STATS_PAGE_SIZE,
+  GSC_QUERY_STATS_ROW_CAP,
+  gscDimensionFilterGroups,
+} from "./gsc-query-pagination";
 import { createGscSearchAnalyticsSession } from "./gsc-search-analytics";
 
 const tokenResponse = { access_token: "access_token" };
@@ -254,6 +258,33 @@ describe("gsc analytics provider", () => {
       GSC_QUERY_STATS_PAGE_SIZE,
       GSC_QUERY_STATS_PAGE_SIZE * 2,
     ]);
+  });
+
+  it("maps query_match to the dimension filter operator", () => {
+    expect(
+      gscDimensionFilterGroups({
+        endDate: "2026-07-03",
+        query: "seo api",
+        queryMatch: "contains",
+        startDate: "2026-07-01",
+      }),
+    ).toEqual({
+      dimensionFilterGroups: [
+        { filters: [{ dimension: "query", expression: "seo api", operator: "contains" }] },
+      ],
+    });
+
+    expect(
+      gscDimensionFilterGroups({
+        endDate: "2026-07-03",
+        query: "seo api",
+        startDate: "2026-07-01",
+      }),
+    ).toEqual({
+      dimensionFilterGroups: [
+        { filters: [{ dimension: "query", expression: "seo api", operator: "equals" }] },
+      ],
+    });
   });
 
   it("filters query stats to one exact Search Analytics query", async () => {

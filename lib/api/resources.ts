@@ -2,7 +2,21 @@ import { whereExecutedChecks } from "@/lib/checks/status";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
 import { tierFromScopes } from "./key-scope";
+import {
+  apiRankCheckStatus,
+  type LatestSuccessfulCheckRecord,
+  latestCheckState,
+  latestSuccessfulCheckState,
+  loadLatestSuccessfulChecks,
+  RANK_CHECK_FAILED_STATUS,
+} from "./keyword-check-state";
 import { requireApiPublicId } from "./public-id";
+
+export {
+  RANK_CHECK_COMPLETED_STATUS,
+  RANK_CHECK_FAILED_STATUS,
+  RANK_CHECK_RUNNING_STATUS,
+} from "./keyword-check-state";
 
 export const keywordInclude = {
   locationRef: {
@@ -10,6 +24,7 @@ export const keywordInclude = {
   },
   project: { select: { defaults: true } },
   rankChecks: {
+    include: { run: { select: { publicId: true } } },
     orderBy: { checkedAt: "desc" },
     take: 1,
     where: whereExecutedChecks(),
@@ -31,13 +46,12 @@ export const rankCheckSelect = {
   rankingUrl: true,
   raw: true,
   error: true,
-  run: { select: { publicId: true } },
+  errorCode: true,
+  run: {
+    select: { finishedAt: true, publicId: true, startedAt: true, status: true, trigger: true },
+  },
   status: true,
 } satisfies Prisma.RankCheckSelect;
-
-export const RANK_CHECK_COMPLETED_STATUS = "completed";
-export const RANK_CHECK_FAILED_STATUS = "failed";
-export const RANK_CHECK_RUNNING_STATUS = "running";
 
 export type ProjectLike = {
   createdAt: Date;
@@ -51,17 +65,6 @@ export type ProjectLike = {
 
 export type KeywordRecord = Prisma.KeywordGetPayload<{ include: typeof keywordInclude }>;
 export type RankCheckRecord = Prisma.RankCheckGetPayload<{ select: typeof rankCheckSelect }>;
-
-function apiRankCheckStatus(status: string) {
-  if (
-    status === RANK_CHECK_COMPLETED_STATUS ||
-    status === RANK_CHECK_FAILED_STATUS ||
-    status === RANK_CHECK_RUNNING_STATUS
-  ) {
-    return status;
-  }
-  throw new Error("Rank check status is not API-visible.");
-}
 
 function iso(date: Date | null | undefined) {
   return date ? date.toISOString() : null;
@@ -182,7 +185,11 @@ export function webhookEndpointResource(endpoint: {
   };
 }
 
-export function keywordResource(keyword: KeywordRecord, projectPublicId: string) {
+export function keywordResource(
+  keyword: KeywordRecord,
+  projectPublicId: string,
+  latestSuccessful?: LatestSuccessfulCheckRecord | null,
+) {
   const latest = keyword.rankChecks[0];
   const defaults = keyword.project?.defaults ?? null;
   const schedule = keyword.schedule ?? defaults;
@@ -195,7 +202,9 @@ export function keywordResource(keyword: KeywordRecord, projectPublicId: string)
     device: keyword.device,
     id: requireApiPublicId(keyword.publicId, "kw"),
     intent: keyword.intent,
+    latest_check: latestCheckState(latest),
     latest_position: latest?.position ?? null,
+    latest_successful_check: latestSuccessfulCheckState(latestSuccessful),
     location: keyword.location,
     location_key: keyword.locationRef.canonicalKey,
     language_code: keyword.locationRef.languageCode,
@@ -210,6 +219,7 @@ export function keywordResource(keyword: KeywordRecord, projectPublicId: string)
           jitter_minutes: schedule.jitterMinutes,
           last_checked_at: iso(schedule.lastCheckedAt),
           next_check_at: iso(effective?.nextCheckAt),
+          source: keyword.schedule ? "keyword" : "project_default",
           timezone: schedule.timezone,
         }
       : null,
@@ -221,6 +231,16 @@ export function keywordResource(keyword: KeywordRecord, projectPublicId: string)
   };
 }
 
+export async function keywordResources(
+  keywords: readonly KeywordRecord[],
+  projectPublicId: string,
+) {
+  const latestSuccessful = await loadLatestSuccessfulChecks(keywords.map((keyword) => keyword.id));
+  return keywords.map((keyword) =>
+    keywordResource(keyword, projectPublicId, latestSuccessful.get(keyword.id)),
+  );
+}
+
 export function rankCheckResource(check: RankCheckRecord) {
   const failed = check.status === RANK_CHECK_FAILED_STATUS;
   return {
@@ -228,12 +248,22 @@ export function rankCheckResource(check: RankCheckRecord) {
     checked_at: check.checkedAt.toISOString(),
     cost_cents: decimalNumber(check.costCents),
     error: failed ? (check.error ?? "Rank check failed.") : null,
+    error_code: check.errorCode,
     id: requireApiPublicId(check.publicId, "check"),
     keyword_id: requireApiPublicId(check.keyword.publicId, "kw"),
     position: check.position,
     previous_position: check.previousPosition,
     provider: check.provider,
     ranking_url: check.rankingUrl,
+    run: check.run
+      ? {
+          finished_at: iso(check.run.finishedAt),
+          id: requireApiPublicId(check.run.publicId, "rcr"),
+          started_at: iso(check.run.startedAt),
+          status: check.run.status,
+          trigger: check.run.trigger,
+        }
+      : null,
     run_id: check.run ? requireApiPublicId(check.run.publicId, "rcr") : null,
     status: apiRankCheckStatus(check.status),
   };

@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => {
     });
   };
   return {
+    authenticateBearer: vi.fn(),
     handleApiRequest: vi.fn(handler),
     handleMcpPreauthenticatedApiRequest: vi.fn(handler),
   };
@@ -38,16 +39,21 @@ vi.mock("@/lib/api/router", () => ({
   handleMcpPreauthenticatedApiRequest: mocks.handleMcpPreauthenticatedApiRequest,
 }));
 
+vi.mock("@/lib/api/auth", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  authenticateBearer: mocks.authenticateBearer,
+}));
+
 describe("MCP tool dispatch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("publishes the canonical unprefixed 91-tool contract", () => {
+  it("publishes the canonical unprefixed 95-tool contract", () => {
     const definitions = getMcpToolDefinitions();
 
     expect(definitions.map((tool) => tool.name)).toEqual(MCP_TOOL_NAMES);
-    expect(definitions).toHaveLength(91);
+    expect(definitions).toHaveLength(95);
     expect(definitions.every((tool) => /^[a-z][a-z0-9_]*$/.test(tool.name))).toBe(true);
     expect(definitions.some((tool) => tool.name.startsWith("bisibility_"))).toBe(false);
     expect(definitions.some((tool) => tool.name === "list_rank_checks")).toBe(false);
@@ -198,6 +204,95 @@ describe("MCP tool dispatch", () => {
     expect(request.headers.get("authorization")).toBeNull();
     expect(preauthenticated.auth).toBe(oauthAuth);
     expect(mocks.handleApiRequest).not.toHaveBeenCalled();
+  });
+
+  it("answers get_session_profile locally with a read-scope token profile", async () => {
+    const readOnlyHintCount = getMcpToolDefinitions().filter(
+      (tool) => tool.annotations?.readOnlyHint,
+    ).length;
+    const result = await dispatchMcpTool("get_session_profile", {}, {
+      kind: "personal_token",
+      memberships: [],
+      token: {
+        id: "oauth:test",
+        name: "MCP OAuth",
+        prefix: "oauth",
+        publicId: null,
+        scopes: ["read"],
+        userId: "user_1",
+      },
+      user: {
+        email: "owner@example.com",
+        id: "user_1",
+        name: "Owner",
+        publicId: "usr_a00000000000000000000000",
+      },
+    } as const);
+
+    expect(result).toMatchObject({ ok: true, status: 200 });
+    expect(result.payload).toEqual({
+      canonical_names: [...MCP_TOOL_NAMES],
+      client_note: `Clients that hide tools without readOnlyHint (for example connectors without a developer or write mode) show ${readOnlyHintCount} of ${MCP_TOOL_NAMES.length} tools; a missing write tool is a client setting, not a token limit.`,
+      read_only: true,
+      tool_count: MCP_TOOL_NAMES.length,
+      tool_names: [...MCP_TOOL_NAMES],
+      toolsets: expect.arrayContaining(["system", "keywords", "projects"]),
+    });
+    expect(mocks.handleApiRequest).not.toHaveBeenCalled();
+    expect(mocks.handleMcpPreauthenticatedApiRequest).not.toHaveBeenCalled();
+    expect(mocks.authenticateBearer).not.toHaveBeenCalled();
+  });
+
+  it("marks a write-scope token as a read-write session profile", async () => {
+    const result = await dispatchMcpTool("get_session_profile", {}, {
+      kind: "personal_token",
+      memberships: [],
+      token: {
+        id: "oauth:test",
+        name: "MCP OAuth",
+        prefix: "oauth",
+        publicId: null,
+        scopes: ["admin", "read", "write"],
+        userId: "user_1",
+      },
+      user: {
+        email: "owner@example.com",
+        id: "user_1",
+        name: "Owner",
+        publicId: "usr_a00000000000000000000000",
+      },
+    } as const);
+
+    expect(result.payload).toMatchObject({ read_only: false });
+    expect(mocks.handleApiRequest).not.toHaveBeenCalled();
+  });
+
+  it("resolves bearer-credential scopes for the session profile without a REST call", async () => {
+    mocks.authenticateBearer.mockResolvedValue({
+      kind: "personal_token",
+      memberships: [],
+      token: {
+        id: "token_1",
+        name: "Automation",
+        prefix: "bsb_pat_live_",
+        publicId: null,
+        scopes: ["read"],
+        userId: "user_1",
+      },
+      user: {
+        email: "owner@example.com",
+        id: "user_1",
+        name: "Owner",
+        publicId: null,
+      },
+    });
+
+    const result = await dispatchMcpTool("get_session_profile", {}, "bsb_pat_live_test");
+
+    expect(result.payload).toMatchObject({ read_only: true });
+    expect(mocks.authenticateBearer).toHaveBeenCalledTimes(1);
+    expect(mocks.handleApiRequest).not.toHaveBeenCalled();
+    expect(mocks.handleMcpPreauthenticatedApiRequest).not.toHaveBeenCalled();
   });
 
   it("normalizes keyword creation payloads and forwards idempotency", async () => {
@@ -466,6 +561,88 @@ describe("MCP tool dispatch", () => {
     expect(mocks.handleApiRequest).not.toHaveBeenCalled();
   });
 
+  it("routes the read-only estimate tools with estimate_only forced", async () => {
+    const projectId = "prj_a00000000000000000000000";
+
+    const backlinks = await dispatchMcpTool(
+      "estimate_backlinks_cost",
+      {
+        include_subdomains: true,
+        mode: "one_per_domain",
+        project_id: projectId,
+        result_limit: 300,
+        target: "example.com",
+        target_scope: "site",
+      },
+      "bsb_key_live_test",
+    );
+    expect(backlinks.payload).toMatchObject({
+      method: "GET",
+      path: ["projects", projectId, "backlinks"],
+      search:
+        "?estimate_only=true&target=example.com&target_scope=site&mode=one_per_domain&result_limit=300&include_subdomains=true",
+    });
+
+    const research = await dispatchMcpTool(
+      "estimate_keyword_research_cost",
+      {
+        include_clickstream: true,
+        max_cost_cents: 500,
+        mode: "related",
+        project_id: projectId,
+        result_limit: 300,
+        seed: "rank tracker",
+      },
+      "bsb_key_live_test",
+    );
+    expect(research.payload).toMatchObject({
+      method: "GET",
+      path: ["projects", projectId, "keyword-research"],
+      search:
+        "?estimate_only=true&seed=rank+tracker&mode=related&result_limit=300&include_clickstream=true&max_cost_cents=500",
+    });
+
+    const domainOverview = await dispatchMcpTool(
+      "estimate_domain_overview_cost",
+      {
+        keyword_limit: 50,
+        language_code: "en",
+        location_code: 2840,
+        project_id: projectId,
+        target: "example.com",
+      },
+      "bsb_key_live_test",
+    );
+    expect(domainOverview.payload).toMatchObject({
+      body: {
+        estimate_only: true,
+        keyword_limit: 50,
+        language_code: "en",
+        location_code: 2840,
+        target: "example.com",
+      },
+      method: "POST",
+      path: ["projects", projectId, "domain-overview", "analyze"],
+    });
+  });
+
+  it("marks the estimate tools read-only in the served definitions", () => {
+    const definitions = getMcpToolDefinitions();
+
+    for (const name of [
+      "estimate_backlinks_cost",
+      "estimate_domain_overview_cost",
+      "estimate_keyword_research_cost",
+      "get_session_profile",
+    ]) {
+      const tool = definitions.find((definition) => definition.name === name);
+      expect(tool?.annotations).toMatchObject({
+        readOnlyHint: true,
+        destructiveHint: false,
+      });
+    }
+  });
+
   it("maps optional project_id to the PAT project-selection header", async () => {
     const result = await dispatchMcpTool(
       "get_keyword",
@@ -662,6 +839,28 @@ describe("MCP tool dispatch", () => {
       path: ["projects", "prj_a00000000000000000000000", "analytics", "query-stats"],
       search:
         "?start_date=2026-06-01&end_date=2026-06-30&connection_id=conn_a00000000000000000000000&query=rank+tracker",
+    });
+
+    const filteredQueries = await dispatchMcpTool(
+      "list_search_performance_query_stats",
+      {
+        clicks_min: 5,
+        end_date: "2026-06-30",
+        impressions_min: 100,
+        page_path: "/docs/",
+        page_path_match: "prefix",
+        position_max: 20,
+        project_id: "prj_a00000000000000000000000",
+        query_match: "contains",
+        start_date: "2026-06-01",
+      },
+      "bsb_key_live_test",
+    );
+    expect(filteredQueries.payload).toMatchObject({
+      method: "GET",
+      path: ["projects", "prj_a00000000000000000000000", "analytics", "query-stats"],
+      search:
+        "?start_date=2026-06-01&end_date=2026-06-30&query_match=contains&page_path=%2Fdocs%2F&page_path_match=prefix&clicks_min=5&impressions_min=100&position_max=20",
     });
 
     const sync = await dispatchMcpTool(

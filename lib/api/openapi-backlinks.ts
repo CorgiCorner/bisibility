@@ -276,7 +276,7 @@ export function backlinksPaths(input: { bearer: Bearer }) {
           undefined,
           queryParameters,
         ),
-        'Requires write scope because cache misses spend provider budget. estimate_only is a free dry run, and max_cost_cents is a best-effort pre-estimate gate. Snapshots are cached for 24 hours. Aggregated referring-domain, page, and anchor views are consumer-side and must be labeled "within fetched rows".',
+        'Requires write scope because cache misses spend provider budget. estimate_only=true needs only read scope and never spends provider budget. estimate_only is a free dry run, and max_cost_cents is a best-effort pre-estimate gate. Snapshots are cached for 24 hours. Aggregated referring-domain, page, and anchor views are consumer-side and must be labeled "within fetched rows".',
       ),
     },
     "/projects/{projectId}/backlinks/rows": {

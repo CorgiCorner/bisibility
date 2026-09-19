@@ -16,6 +16,7 @@ const props = {
   },
   hasKeywordAndCheck: false,
   isCloudHosted: true,
+  mcpToolCounts: { readOnly: 3, total: 5 },
   mcpUrl: "https://app.example.com/api/mcp",
   origin: "https://app.example.com",
   projectRef: "prj_abcdefghijklmnopqrstuvwx",
@@ -29,6 +30,32 @@ describe("InstallPageContent", () => {
       "Let your AI agent, editor or scripts use the same data you see here.",
     );
     expect(container).not.toHaveTextContent("Nothing new to sign up for.");
+  });
+
+  it("renders the tool scope paragraph under the MCP URL with live counts", () => {
+    render(<InstallPageContent {...props} />);
+
+    const endpointSection = screen
+      .getByRole("heading", { name: "MCP endpoint" })
+      .closest("section");
+    expect(endpointSection).not.toBeNull();
+
+    expect(
+      within(endpointSection as HTMLElement).getByText(
+        "Tools marked read-only (3 of 5) work in every client. Paid operations such as rank checks and backlink analysis are write tools; some agent apps show them only with a developer or write mode enabled, and some plans expose read tools only. Stored reports and cost estimates are read-only.",
+      ),
+    ).toHaveClass("text-fg-muted");
+  });
+
+  it("renders both client connect caveats verbatim on the install page", () => {
+    const { container } = render(<InstallPageContent {...props} />);
+
+    expect(container).toHaveTextContent(
+      "ChatGPT shows only read-only tools on individual plans; write actions such as rank checks and backlink analysis need a Business or Enterprise workspace with developer mode. Read-only tools cover stored reports and cost estimates.",
+    );
+    expect(container).toHaveTextContent(
+      "Claude exposes every tool. It asks before each write tool the first time; use Allow always only for tools you trust to run unsupervised. Research runs tools without asking, so disable write tools there.",
+    );
   });
 
   it("uses neutral input styling for the MCP endpoint and stored API key", () => {

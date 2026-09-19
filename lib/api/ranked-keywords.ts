@@ -1,5 +1,6 @@
 import "server-only";
 
+import { READINESS_REASON } from "@/lib/projects/readiness";
 import { fetchRankedKeywords } from "@/lib/ranked-keywords/service";
 import { z } from "zod";
 import type { ApiContext } from "./context";
@@ -40,10 +41,15 @@ function connectionsResource(connections: Array<{ id: string; label: string; pro
 
 function error(ctx: ApiContext, reason: string, resetAt?: number) {
   if (reason === "no_source") {
-    return errorResponse("not_found", "No eligible ranked-keyword source is connected.", 404, {
-      headers: ctx.headers,
-      instance: ctx.instance,
-    });
+    return errorResponse(
+      "not_found",
+      `No eligible ranked-keyword source is connected. Reason: ${READINESS_REASON.providerNotConnected}.`,
+      404,
+      {
+        headers: ctx.headers,
+        instance: ctx.instance,
+      },
+    );
   }
   if (reason === "no_domain") {
     return errorResponse("bad_request", "The project needs a valid domain.", 422, {

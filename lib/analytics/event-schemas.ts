@@ -1,3 +1,4 @@
+import { activeLocaleValues } from "@/i18n/config";
 import {
   ANALYTICS_CONTROL_IDS,
   type AnalyticsControlId,
@@ -20,6 +21,7 @@ export const FORBIDDEN_PROPERTY_KEYS = [
 ] as const;
 
 const empty = z.object({});
+const activeLocale = z.enum(activeLocaleValues);
 const provider = z.enum(["dataforseo", "ga4", "gsc", "local-sequence", "plausible", "serpapi"]);
 const surface = z.enum(["getting_started", "onboarding", "settings"]);
 const setupStep = z.enum(["add_keywords", "connect_source", "create_project", "first_check"]);
@@ -70,6 +72,11 @@ export const analyticsEventSchemas = {
   landing_hero_viewed: z.object({
     experiment: z.literal("landing-hero-actions"),
     "$feature/landing-hero-actions": z.enum(["control", "dual_cta"]),
+  }),
+  language_switched: z.object({
+    from: activeLocale,
+    surface: z.enum(["marketing_header", "marketing_mobile_menu"]),
+    to: activeLocale,
   }),
   onboarding_entered: empty,
   onboarding_completed: z.object({

@@ -19,6 +19,43 @@ type KeywordPathHelpers = {
   ref: (name: keyof typeof schemas) => object;
 };
 
+const latestCheckRunIdSchema = {
+  ...publicIdSchema("rcr"),
+  description: "Rank-check run that produced this check, or null for a legacy row.",
+  type: ["string", "null"],
+};
+
+export const keywordCheckStateSchemas = {
+  KeywordLatestCheck: {
+    description:
+      'The most recent executed check of any status. A completed check with `position: null` means "not ranked within the requested depth"; `latest_check.status: "failed"` means "unknown, the check did not run to completion".',
+    properties: {
+      checked_at: { format: "date-time", type: "string" },
+      error: { type: ["string", "null"] },
+      error_code: { type: ["string", "null"] },
+      id: publicIdSchema("check"),
+      position: { type: ["integer", "null"] },
+      run_id: latestCheckRunIdSchema,
+      status: { enum: ["completed", "failed", "running"], type: "string" },
+    },
+    required: ["checked_at", "error", "error_code", "id", "position", "run_id", "status"],
+    type: ["object", "null"],
+  },
+  KeywordLatestSuccessfulCheck: {
+    description:
+      "The most recent check with status completed, i.e. the last known ranking for this keyword.",
+    properties: {
+      checked_at: { format: "date-time", type: "string" },
+      id: publicIdSchema("check"),
+      position: { type: ["integer", "null"] },
+      ranking_url: { type: ["string", "null"] },
+      run_id: latestCheckRunIdSchema,
+    },
+    required: ["checked_at", "id", "position", "ranking_url", "run_id"],
+    type: ["object", "null"],
+  },
+};
+
 export const keywordMatchSchemas = {
   KeywordMatch: {
     properties: {

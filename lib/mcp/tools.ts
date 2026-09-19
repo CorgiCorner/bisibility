@@ -7,6 +7,7 @@ import { dispatchKeywordResearchTool } from "./keyword-research-tools";
 import { dispatchLoopClosureTool } from "./loop-closure-tools";
 import { validateMcpPublicIds } from "./public-id-input";
 import { dispatchMcpRestCall, type McpApiAuthorization, type RestCall } from "./rest-call";
+import { dispatchSessionProfile } from "./session-profile";
 import type { JsonObject } from "./types";
 
 type ToolArgs = JsonObject;
@@ -302,5 +303,9 @@ export async function dispatchMcpTool(
   input: ToolArgs,
   authorization: McpApiAuthorization,
 ) {
-  return dispatchMcpRestCall(dispatchToRest(internalMcpToolName(name), input), authorization);
+  const internalName = internalMcpToolName(name);
+  if (internalName === "getSessionProfile") {
+    return dispatchSessionProfile(authorization);
+  }
+  return dispatchMcpRestCall(dispatchToRest(internalName, input), authorization);
 }

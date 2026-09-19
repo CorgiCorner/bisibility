@@ -1435,8 +1435,8 @@ exports[`audit redaction canaries > enumerates every application audit payload p
   {
     "action": ""competitor.remove"",
     "after": null,
-    "before": "safeCompetitor(before)",
-    "input": "{ action: "competitor.remove", actorId: context.auditActorId, before: safeCompetitor(before), projectId: project.id, targetId: requiredPublicId(before.publicId), targetType: "competitor", }",
+    "before": "{ ...safeCompetitor(before), disabledAlertRuleIds: affectedAlertRules.map((rule) => rule.publicId), }",
+    "input": "{ action: "competitor.remove", actorId: context.auditActorId, before: { ...safeCompetitor(before), disabledAlertRuleIds: affectedAlertRules.map((rule) => rule.publicId), }, projectId: project.id, targetId: requiredPublicId(before.publicId), targetType: "competitor", }",
     "occurrence": 1,
     "path": "lib/competitors/service.ts",
     "statusReason": null,

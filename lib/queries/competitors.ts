@@ -61,7 +61,7 @@ async function queryCompetitors(
         },
         rankChecks: {
           orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
-          select: { organicRanks: true, position: true },
+          select: { checkedAt: true, organicRanks: true, position: true },
           take: 1,
           where: { status: "completed" },
         },

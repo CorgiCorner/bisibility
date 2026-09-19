@@ -37,6 +37,8 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
         const Caret = expanded ? CaretUp : CaretDown;
         const panelId = `install-agent-${agent.id}`;
         const label = t(`${agent.id}.label`);
+        const hint = t(`${agent.id}.hint`);
+        const note = t(`${agent.id}.note`);
 
         return (
           <div className="border-t border-border" key={agent.id}>
@@ -49,9 +51,7 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
             >
               <AgentIcon icon={agent.icon} />
               <span className="font-medium">{label}</span>
-              <span className="ml-auto font-sans text-[10.5px] text-fg-muted">
-                {t(`${agent.id}.hint`)}
-              </span>
+              <span className="ml-auto font-sans text-[10.5px] text-fg-muted">{hint}</span>
               <Caret aria-hidden className="shrink-0 text-fg-muted" size={12} weight="regular" />
             </button>
             <div
@@ -81,7 +81,12 @@ export function AgentInstallList({ mcpUrl }: Readonly<AgentInstallListProps>) {
                       />
                     </span>
                   </div>
-                  <p className="m-0 mt-2 text-[11.5px] text-fg-muted">{t(`${agent.id}.note`)}</p>
+                  <p className="m-0 mt-2 text-[11.5px] text-fg-muted">{note}</p>
+                  {agent.caveat ? (
+                    <p className="m-0 mt-1 text-[11.5px] text-fg-muted">
+                      {t(`${agent.id}.caveat`)}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </div>

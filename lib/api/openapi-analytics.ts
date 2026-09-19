@@ -64,6 +64,43 @@ export function analyticsPaths(input: {
               name: "limit",
               schema: { default: 100, maximum: 1000, minimum: 1, type: "integer" },
             },
+            {
+              description: "Inclusive lower bound on clicks.",
+              in: "query",
+              name: "clicks_min",
+              schema: { minimum: 0, type: "integer" },
+            },
+            {
+              description: "Inclusive lower bound on impressions.",
+              in: "query",
+              name: "impressions_min",
+              schema: { minimum: 0, type: "integer" },
+            },
+            {
+              description: "Inclusive upper bound on average position.",
+              in: "query",
+              name: "position_max",
+              schema: { minimum: 0, type: "number" },
+            },
+            {
+              description: "Page path filter; setting it also groups rows by page.",
+              in: "query",
+              name: "page_path",
+              schema: { maxLength: 2048, type: "string" },
+            },
+            {
+              description:
+                "contains keeps rows whose page URL contains the given path; prefix matches pages whose URL starts with the source property host followed by the path.",
+              in: "query",
+              name: "page_path_match",
+              schema: { default: "contains", enum: ["contains", "prefix"], type: "string" },
+            },
+            {
+              description: "Match semantics for the query filter; default equals is exact match.",
+              in: "query",
+              name: "query_match",
+              schema: { default: "equals", enum: ["equals", "contains"], type: "string" },
+            },
           ],
         ),
       ),

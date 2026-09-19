@@ -66,6 +66,11 @@ vi.mock("./resources", () => ({
     id: stored.publicId,
     type: "keyword",
   }),
+  keywordResources: async (keywords: { publicId: string }[]) =>
+    keywords.map((stored) => ({
+      id: stored.publicId,
+      type: "keyword",
+    })),
 }));
 
 function context(

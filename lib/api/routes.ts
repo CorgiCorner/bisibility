@@ -22,6 +22,7 @@ import { domainOverviewRoute } from "./routes-domain-overview";
 import { keywordResearchRoute } from "./routes-keyword-research";
 import { loopClosureRoutes } from "./routes-loop-closure";
 import { topLevelMemberRoutes } from "./routes-members";
+import { researchReportsRoute } from "./routes-research-reports";
 
 function projectRoutes(ctx: ApiContext) {
   const [first, second, third] = ctx.path;
@@ -192,6 +193,7 @@ function projectCollectionRoutes(ctx: ApiContext) {
     keywordResearchRoute(ctx) ??
     backlinksRoute(ctx) ??
     domainOverviewRoute(ctx) ??
+    researchReportsRoute(ctx) ??
     analyticsProjectRoute(ctx, projectId, resource, fourth);
   if (specializedRoute) return specializedRoute;
 

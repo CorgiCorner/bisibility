@@ -1,18 +1,14 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { ProviderAuthError } from "@/lib/providers/auth-error";
-import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
-import { getAnalyticsProvider } from "@/lib/providers/registry";
-import type { AnalyticsProvider } from "@/lib/providers/types";
-import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
-import { trafficRuntimeCredentials } from "@/lib/traffic/runtime-credentials";
 import { syncProjectTrafficNow } from "@/lib/traffic/sync-now";
 import { z } from "zod";
 import type { ApiContext } from "./context";
 import { requireApiPublicId } from "./public-id";
-import { errorResponse, resourceResponse } from "./responses";
+import { resourceResponse } from "./responses";
 import { scopedProject, snakeizeKeys } from "./surface";
+
+export { listSearchPerformanceQueryStats } from "./analytics-query-stats";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const dateFields = { endDate: isoDate, startDate: isoDate };
@@ -26,15 +22,6 @@ const snapshotQuery = z
     limit: z.coerce.number().int().min(1).max(200).default(50),
     offset: z.coerce.number().int().min(0).default(0),
     paths: z.array(z.string().trim().min(1).max(2_048)).max(50),
-  })
-  .refine(validRange, rangeError);
-
-const queryStatsQuery = z
-  .object({
-    ...dateFields,
-    connectionId: z.string().trim().min(1).max(120).optional(),
-    limit: z.coerce.number().int().min(1).max(1_000).default(100),
-    query: z.string().trim().min(1).max(1_000).optional(),
   })
   .refine(validRange, rangeError);
 
@@ -125,77 +112,6 @@ export async function listTrafficSnapshots(ctx: ApiContext, projectId: string) {
     { offset: input.offset, rows: rows.map(snapshotResource), total_count: totalCount },
     { headers: ctx.headers },
   );
-}
-
-type QueryProvider = AnalyticsProvider & {
-  fetchQueryStats: NonNullable<AnalyticsProvider["fetchQueryStats"]>;
-};
-
-function queryCapable(provider: AnalyticsProvider): provider is QueryProvider {
-  return typeof provider.fetchQueryStats === "function";
-}
-
-async function queryConnections(projectId: string) {
-  const connections = await prisma.providerConnection.findMany({
-    orderBy: providerChainOrderBy(),
-    select: { credentialsEncrypted: true, id: true, provider: true, publicId: true },
-    where: { ...providerChainWhere("analytics"), projectId },
-  });
-  return connections.flatMap((connection) => {
-    const provider = getAnalyticsProvider(connection.provider);
-    return queryCapable(provider) ? [{ connection, provider }] : [];
-  });
-}
-
-export async function listSearchPerformanceQueryStats(ctx: ApiContext, projectId: string) {
-  const scoped = scopedProject(ctx, projectId);
-  if (scoped) return scoped;
-  const input = queryStatsQuery.parse({
-    ...rangeInput(ctx),
-    connectionId: ctx.url.searchParams.get("connection_id") ?? undefined,
-    limit: ctx.url.searchParams.get("limit") ?? undefined,
-    query: ctx.url.searchParams.get("query") ?? undefined,
-  });
-  const eligible = await queryConnections(ctx.auth.project.id);
-  const requestedConnectionId = input.connectionId
-    ? requireApiPublicId(input.connectionId, "conn")
-    : null;
-  const selected = requestedConnectionId
-    ? eligible.find(({ connection }) => connection.publicId === requestedConnectionId)
-    : eligible[0];
-  if (!selected)
-    return errorResponse("not_found", "No eligible search-performance source is connected.", 404, {
-      headers: ctx.headers,
-      instance: ctx.instance,
-    });
-  try {
-    const rows = await selected.provider.fetchQueryStats(
-      trafficRuntimeCredentials(selected.connection),
-      input,
-    );
-    return resourceResponse(
-      {
-        connection: {
-          id: requireApiPublicId(selected.connection.publicId ?? "", "conn"),
-          label: selected.provider.label,
-          provider: selected.provider.id,
-        },
-        rows: rows.map(snakeizeKeys),
-      },
-      { headers: ctx.headers },
-    );
-  } catch (error) {
-    if (!(error instanceof ProviderAuthError)) throw error;
-    await markProviderNeedsReauth({
-      connectionId: selected.connection.id,
-      projectId: ctx.auth.project.id,
-      provider: selected.provider.id,
-    });
-    return errorResponse("provider_unavailable", "Provider authorization must be renewed.", 422, {
-      headers: ctx.headers,
-      instance: ctx.instance,
-    });
-  }
 }
 
 export async function syncProjectTrafficApi(ctx: ApiContext, projectId: string) {

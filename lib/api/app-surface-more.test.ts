@@ -1,3 +1,7 @@
+import {
+  buildCompetitorMarket,
+  emptyCompetitorFilter,
+} from "@/lib/competitors/competitor-market-model";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleApiRequest } from "./router";
 
@@ -161,15 +165,42 @@ describe("public API remaining app surface routes", () => {
         },
       ],
       markets: [
-        {
-          columns: [{ domain: "example.com", kind: "You", label: "You" }],
-          device: "desktop",
-          engine: "google",
-          location: "United States",
-          observations: [],
-          rows: [{ gap: null, id: ids.keyword, keyword: "rank tracker", ranks: {} }],
-          shares: [{ domain: "example.com", shareOfVoice: 100, sharedKeywords: 1 }],
-        },
+        buildCompetitorMarket(
+          {
+            allColumns: [
+              { domain: "example.com", kind: "You", label: "You" },
+              {
+                domain: "competitor.example.com",
+                id: ids.competitor,
+                kind: "Managed",
+                label: "Competitor",
+              },
+            ],
+            competitorCount: 1,
+            device: "desktop",
+            engine: "google",
+            key: "location_us::desktop::google",
+            languageLabel: "English",
+            location: "United States",
+            locationId: "location_us",
+            locationKind: "country",
+            observations: [
+              {
+                checkedAt: "2026-09-10T08:00:00.000Z",
+                completed: true,
+                id: ids.keyword,
+                keyword: "rank tracker",
+                ranked: true,
+                ranks: { "competitor.example.com": 1, "example.com": 3 },
+                tags: [],
+                volume: 1_000,
+              },
+            ],
+            tags: [],
+            trackedKeywordCount: 1,
+          },
+          emptyCompetitorFilter,
+        ),
       ],
       suggestions: [],
     });
@@ -268,12 +299,19 @@ describe("public API remaining app surface routes", () => {
       meta: {
         markets: [
           {
-            columns: [{ domain: "example.com" }],
             country: "United States",
+            data_state: "ranked",
             device: "Desktop",
+            domains: expect.arrayContaining([{ domain: "example.com", managed: false }]),
             engine: "Google",
-            rows: [{ id: ids.keyword }],
-            shares: [{ domain: "example.com" }],
+            id: "location_us::desktop::google",
+            observations: [{ id: ids.keyword, checked_at: "2026-09-10T08:00:00.000Z" }],
+            shares: expect.arrayContaining([
+              expect.objectContaining({
+                domain: "example.com",
+                share_of_voice: expect.any(Number),
+              }),
+            ]),
           },
         ],
       },

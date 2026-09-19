@@ -14,6 +14,70 @@ import {
 const serpDeviceSchema = { enum: serpDeviceValues, type: "string" };
 const locationKeySchema = { example: "ES/Andalusia/Malaga@en", type: "string" };
 
+// Mirrors READINESS_REASONS in lib/projects/readiness; pinned by
+// openapi-project-components.test.ts.
+const readinessReasonValues = [
+  "provider_not_connected",
+  "provider_disabled",
+  "needs_reauth",
+  "project_read_only",
+  "token_read_only",
+] as const;
+
+const readinessReasonSchema = {
+  description: "Closed reason enum; null when the area is available.",
+  enum: [...readinessReasonValues, null],
+  type: ["string", "null"],
+};
+
+const readinessAreaSchema = {
+  properties: {
+    available: { type: "boolean" },
+    reason: readinessReasonSchema,
+  },
+  required: ["available", "reason"],
+  type: "object",
+};
+
+const readinessSchema = {
+  description:
+    "Present on get_project responses; summarizes what the current credential can do on the project.",
+  properties: {
+    backlinks: readinessAreaSchema,
+    domain_overview: readinessAreaSchema,
+    keyword_research: readinessAreaSchema,
+    search_performance: readinessAreaSchema,
+    serp: {
+      properties: {
+        available: { type: "boolean" },
+        primary_provider: {
+          description: "Rank-data provider that would serve checks, regardless of availability.",
+          type: ["string", "null"],
+        },
+        reason: readinessReasonSchema,
+      },
+      required: ["available", "reason", "primary_provider"],
+      type: "object",
+    },
+    token_scope: {
+      description: "What this credential may do: read or write.",
+      enum: ["read", "write"],
+      type: "string",
+    },
+    write_mode: { enum: ["active", "migration_hold", "migrated"], type: "string" },
+  },
+  required: [
+    "token_scope",
+    "write_mode",
+    "serp",
+    "backlinks",
+    "domain_overview",
+    "keyword_research",
+    "search_performance",
+  ],
+  type: "object",
+};
+
 export const projectSchemas = {
   Project: {
     properties: {
@@ -21,6 +85,7 @@ export const projectSchemas = {
       domain: { type: "string" },
       id: publicIdSchema("prj"),
       name: { type: "string" },
+      readiness: readinessSchema,
       updated_at: { format: "date-time", type: "string" },
       write_mode: { enum: ["active", "migration_hold", "migrated"], type: "string" },
     },

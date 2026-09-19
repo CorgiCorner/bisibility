@@ -54,6 +54,31 @@ function provider(input: JsonObject) {
   return `${project(input, "providers")}/${required(input, "provider_id")}`;
 }
 
+function estimateQuery(input: JsonObject, keys: string[]) {
+  const params = new URLSearchParams({ estimate_only: "true" });
+  for (const key of keys) {
+    const value = input[key];
+    if (value !== undefined && value !== null && value !== "") {
+      params.set(key, String(value));
+    }
+  }
+  return `?${params}`;
+}
+
+const storedReportQueryKeys: Record<string, string[]> = {
+  backlinks: ["target", "target_scope", "mode", "include_subdomains"],
+  domain_overview: ["target", "target_scope", "language_code", "location_code"],
+  keyword_research: ["seed", "mode", "include_clickstream", "result_limit", "connection_id"],
+};
+
+function storedReportQuery(input: JsonObject, kind: string) {
+  const keys = storedReportQueryKeys[kind];
+  if (!keys) {
+    throw new Error(`kind must be one of: ${Object.keys(storedReportQueryKeys).join(", ")}.`);
+  }
+  return query(input, keys);
+}
+
 export function dispatchExtendedToolRoute(name: string, input: JsonObject): RestCall | null {
   switch (name) {
     case "getCloudImportCompatibility":
@@ -99,6 +124,19 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
       );
     case "loadMoreBacklinkRows":
       return call(input, project(input, "backlinks/rows"), "POST", body(input, ["project_id"]));
+    case "estimateBacklinksCost":
+      return call(
+        input,
+        `${project(input, "backlinks")}${estimateQuery(input, [
+          "target",
+          "target_scope",
+          "mode",
+          "result_limit",
+          "include_subdomains",
+          "max_cost_cents",
+        ])}`,
+        "GET",
+      );
     case "analyzeDomainOverview":
       requireCostCap(input);
       return call(
@@ -128,6 +166,11 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
         "POST",
         body(input, ["project_id"]),
       );
+    case "estimateDomainOverviewCost":
+      return call(input, project(input, "domain-overview/analyze"), "POST", {
+        ...body(input, ["project_id"]),
+        estimate_only: true,
+      });
     case "createSignal":
       return call(input, "/signals", "POST", body(input, ["project_id"]));
     case "listSignals":
@@ -157,6 +200,16 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
       return call(input, provider(input), "PATCH", { priority: input.priority });
     case "setPrimaryProvider":
       return call(input, provider(input), "PATCH", { priority: 0 });
+    case "listStoredReports":
+      return call(input, project(input, "research/reports"), "GET");
+    case "getStoredReport": {
+      const kind = typeof input.kind === "string" ? input.kind : "";
+      return call(
+        input,
+        `${project(input, "research/reports")}/${encodeURIComponent(kind)}${storedReportQuery(input, kind)}`,
+        "GET",
+      );
+    }
     default:
       return null;
   }

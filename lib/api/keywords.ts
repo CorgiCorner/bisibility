@@ -27,7 +27,7 @@ import {
   parseLimit,
   splitPage,
 } from "./pagination";
-import { keywordInclude, keywordResource } from "./resources";
+import { keywordInclude, keywordResources } from "./resources";
 import { listResponse, resourceResponse } from "./responses";
 import { keywordPatchSchema } from "./schemas";
 
@@ -186,11 +186,9 @@ export async function listKeywords(ctx: ApiContext, projectId: string) {
       : encodeOffsetCursor(offset + limit),
   );
 
-  return listResponse(
-    page.map((keyword) => keywordResource(keyword, ctx.auth.project.publicId)),
-    nextCursor,
-    { headers: ctx.headers },
-  );
+  return listResponse(await keywordResources(page, ctx.auth.project.publicId), nextCursor, {
+    headers: ctx.headers,
+  });
 }
 
 export async function getKeyword(ctx: ApiContext, keywordId: string) {
@@ -202,7 +200,7 @@ export async function getKeyword(ctx: ApiContext, keywordId: string) {
     return notFound(ctx, "Keyword not found.");
   }
 
-  return resourceResponse(keywordResource(keyword, ctx.auth.project.publicId), {
+  return resourceResponse((await keywordResources([keyword], ctx.auth.project.publicId))[0], {
     headers: ctx.headers,
   });
 }
@@ -299,6 +297,8 @@ export async function deleteKeyword(ctx: ApiContext, keywordId: string) {
     return notFound(ctx, "Keyword not found.");
   }
 
+  // Serialize before the deletion; the checks are cascade-deleted with the keyword.
+  const resource = (await keywordResources([keyword], ctx.auth.project.publicId))[0];
   await prisma.$transaction(async (tx) => {
     await cancelRunItemsForKeywordDeletion(tx, [keyword.id]);
     await tx.keyword.delete({ where: { id: keyword.id } });
@@ -315,7 +315,7 @@ export async function deleteKeyword(ctx: ApiContext, keywordId: string) {
     );
   });
 
-  return resourceResponse(keywordResource(keyword, ctx.auth.project.publicId), {
+  return resourceResponse(resource, {
     headers: ctx.headers,
   });
 }

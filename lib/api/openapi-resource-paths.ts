@@ -37,7 +37,22 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
       ),
     },
     "/projects/{project_id}/competitors": {
-      get: bearer("List competitors", "listCompetitors", list(ref("Competitor"))),
+      get: bearer("List competitors", "listCompetitors", {
+        properties: {
+          data: { items: ref("Competitor"), type: "array" },
+          meta: {
+            properties: {
+              markets: { items: ref("CompetitorMarket"), type: "array" },
+              next_cursor: { type: ["string", "null"] },
+              suggestions: { items: ref("CompetitorSuggestion"), type: "array" },
+            },
+            required: ["next_cursor"],
+            type: "object",
+          },
+        },
+        required: ["data", "meta"],
+        type: "object",
+      }),
       post: bearer("Add a competitor", "addCompetitor", ref("Competitor"), ref("CompetitorCreate")),
     },
     "/projects/{project_id}/competitors/{competitor_id}": {

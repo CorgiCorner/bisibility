@@ -1,9 +1,10 @@
 import "server-only";
 
 import { addManagedCompetitorFor, removeManagedCompetitorFor } from "@/lib/competitors/service";
-import type { CompetitorObservation } from "@/lib/competitors/types";
+import type { ManagedCompetitor } from "@/lib/competitors/types";
 import { addManagedCompetitorSchema, removeManagedCompetitorSchema } from "@/lib/competitors/types";
 import { getCompetitorsApiViewFor } from "@/lib/queries/competitors";
+import { competitorMarketApiView } from "./competitor-market-view";
 import { type ApiContext, apiMutationContext, requireApiActor } from "./context";
 import { paginateArray } from "./pagination";
 import { listResponse, resourceResponse } from "./responses";
@@ -16,15 +17,8 @@ import {
   snakeizeKeys,
 } from "./surface";
 
-function publicObservation({
-  completed,
-  id,
-  keyword,
-  ranked,
-  ranks,
-  tags,
-}: CompetitorObservation): Omit<CompetitorObservation, "volume"> {
-  return { completed, id, keyword, ranked, ranks, tags };
+function publicCompetitor({ domain, id, label }: ManagedCompetitor) {
+  return { domain, id, label };
 }
 
 export async function listProjectCompetitors(ctx: ApiContext, projectId: string) {
@@ -34,17 +28,11 @@ export async function listProjectCompetitors(ctx: ApiContext, projectId: string)
   const view = await runDomain(() => getCompetitorsApiViewFor(requireApiActor(ctx), projectId));
   const { nextCursor, page } = paginateArray(ctx.url, view.managedCompetitors);
 
-  return listResponse(page.map(snakeizeKeys), nextCursor, {
+  return listResponse(page.map(publicCompetitor).map(snakeizeKeys), nextCursor, {
     headers: ctx.headers,
     meta: snakeizeKeys({
-      markets: view.markets.map((market) => ({
-        ...market,
-        country: market.location,
-        device: market.device === "mobile" ? "Mobile" : "Desktop",
-        engine: "Google",
-        observations: market.observations.map(publicObservation),
-      })),
-      suggestions: view.suggestions,
+      markets: view.markets.map(competitorMarketApiView),
+      suggestions: view.suggestions.map(({ domain, overlap }) => ({ domain, overlap })),
     }) as Record<string, unknown>,
   });
 }

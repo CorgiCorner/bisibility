@@ -2,6 +2,8 @@ import { readDemoConfig } from "./config";
 
 const FRESHNESS_MS = 30 * 24 * 60 * 60 * 1000;
 
+export const RESEARCH_FRESHNESS_DAYS = FRESHNESS_MS / 86_400_000;
+
 type DemoEnvironment = Record<string, string | undefined>;
 
 function validTimestamp(value: Date | string) {

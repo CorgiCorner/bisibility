@@ -22,6 +22,7 @@ const commonArgs = {
   apiKey: null,
   hasKeywordAndCheck: false,
   isCloudHosted: true,
+  mcpToolCounts: { readOnly: 3, total: 5 },
   mcpUrl: "https://app.example.com/api/mcp",
   origin: "https://app.example.com",
   projectRef: "prj_abcdefghijklmnopqrstuvwx",

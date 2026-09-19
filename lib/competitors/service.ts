@@ -171,14 +171,31 @@ export async function removeManagedCompetitorFor(
   const { project } = await competitorProjectScope(context.actor, "delete", data.projectId);
   const before = await findManagedCompetitor(project.id, data.competitorId);
 
-  await prisma.competitor.delete({ where: { id: before.id } });
-  await writeAudit({
-    action: "competitor.remove",
-    actorId: context.auditActorId,
-    before: safeCompetitor(before),
-    projectId: project.id,
-    targetId: requiredPublicId(before.publicId),
-    targetType: "competitor",
+  await prisma.$transaction(async (tx) => {
+    const alertRuleWhere = {
+      competitorDomain: { equals: before.domain, mode: "insensitive" as const },
+      projectId: project.id,
+    };
+    const affectedAlertRules = await tx.alertRule.findMany({
+      select: { publicId: true },
+      where: alertRuleWhere,
+    });
+    await tx.alertRule.updateMany({ data: { enabled: false }, where: alertRuleWhere });
+    await tx.competitor.delete({ where: { id: before.id } });
+    await writeAudit(
+      {
+        action: "competitor.remove",
+        actorId: context.auditActorId,
+        before: {
+          ...safeCompetitor(before),
+          disabledAlertRuleIds: affectedAlertRules.map((rule) => rule.publicId),
+        },
+        projectId: project.id,
+        targetId: requiredPublicId(before.publicId),
+        targetType: "competitor",
+      },
+      tx,
+    );
   });
   revalidateCompetitorViews();
 

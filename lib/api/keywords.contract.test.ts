@@ -23,6 +23,8 @@ vi.mock("@/lib/serp/location-service", () => ({ resolveKeywordLocation: mocks.re
 vi.mock("./resources", () => ({
   keywordInclude: {},
   keywordResource: (keyword: { publicId: string }) => ({ id: keyword.publicId, type: "keyword" }),
+  keywordResources: async (keywords: { publicId: string }[]) =>
+    keywords.map((keyword) => ({ id: keyword.publicId, type: "keyword" })),
 }));
 
 const keyword = {

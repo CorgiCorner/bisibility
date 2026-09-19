@@ -5,6 +5,7 @@ import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { absoluteUrl, getOriginFromHeaders } from "@/lib/agent-ready/origin";
 import { isCloud } from "@/lib/deployment/deployment";
+import { getMcpToolDefinitions } from "@/lib/mcp/definitions";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
 import { getInstallApiKeySummary, getInstallHasKeywordAndCheck } from "@/lib/queries/install";
 import { headers } from "next/headers";
@@ -20,6 +21,11 @@ export default async function InstallPage({ params }: Readonly<InstallPageProps>
   ]);
   const origin = getOriginFromHeaders(requestHeaders);
   const mcpUrl = absoluteUrl(origin, "/api/mcp");
+  const definitions = getMcpToolDefinitions();
+  const mcpToolCounts = {
+    readOnly: definitions.filter((definition) => definition.annotations.readOnlyHint).length,
+    total: definitions.length,
+  };
   const [apiKey, hasKeywordAndCheck] = await Promise.all([
     getInstallApiKeySummary(access.publicId),
     getInstallHasKeywordAndCheck(access.publicId),
@@ -36,6 +42,7 @@ export default async function InstallPage({ params }: Readonly<InstallPageProps>
           apiKey={apiKey}
           hasKeywordAndCheck={hasKeywordAndCheck}
           isCloudHosted={isCloud}
+          mcpToolCounts={mcpToolCounts}
           mcpUrl={mcpUrl}
           origin={origin}
           projectRef={access.publicId}

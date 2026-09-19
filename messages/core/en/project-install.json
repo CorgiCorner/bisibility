@@ -19,10 +19,17 @@
         "hint": "editor",
         "note": "Settings, MCP, then paste into mcp.json."
       },
+      "chatgpt": {
+        "label": "ChatGPT",
+        "hint": "App",
+        "note": "Settings, Apps, Advanced settings, enable developer mode, then add the URL as a custom MCP app.",
+        "caveat": "ChatGPT shows only read-only tools on individual plans; write actions such as rank checks and backlink analysis need a Business or Enterprise workspace with developer mode. Read-only tools cover stored reports and cost estimates."
+      },
       "claude-desktop": {
-        "label": "Claude Desktop",
+        "label": "Claude (web and desktop)",
         "hint": "connector",
-        "note": "No terminal: Settings, Connectors, Add custom connector, then paste this URL and sign in."
+        "note": "Customize, Connectors, Add custom connector, paste the URL, then approve the sign-in.",
+        "caveat": "Claude exposes every tool. It asks before each write tool the first time; use Allow always only for tools you trust to run unsupervised. Research runs tools without asking, so disable write tools there."
       },
       "other": {
         "label": "Any MCP client",
@@ -34,7 +41,8 @@
       "heading": "MCP endpoint",
       "description": "Using a tool that is not on the list? Paste this address into it and sign in with your bisibility account.",
       "copy": "Copy MCP URL",
-      "selfHosted": "self-hosting? use your own address instead: '<your-instance>'/api/mcp"
+      "selfHosted": "self-hosting? use your own address instead: '<your-instance>'/api/mcp",
+      "toolScope": "Tools marked read-only ({readOnly} of {total}) work in every client. Paid operations such as rank checks and backlink analysis are write tools; some agent apps show them only with a developer or write mode enabled, and some plans expose read tools only. Stored reports and cost estimates are read-only."
     },
     "apiKey": {
       "heading": "API key",

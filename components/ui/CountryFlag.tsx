@@ -1,3 +1,5 @@
+"use client";
+
 import { FLAG_SPRITE_URL } from "@/lib/ui/flag-sprite";
 import { FLAG_SPRITE_CODES } from "@/lib/ui/generated/flag-sprite-codes";
 import { GlobeHemisphereWestIcon as GlobeHemisphereWest } from "@phosphor-icons/react/dist/csr/GlobeHemisphereWest";

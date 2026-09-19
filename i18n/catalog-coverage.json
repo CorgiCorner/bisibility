@@ -446,12 +446,12 @@
     "components/integrations/provider-auth.ts",
     "components/integrations/provider-card-config.ts",
     "components/integrations/provider-credentials.ts",
+    "components/integrations/provider-meta-copy.ts",
     "components/integrations/ProviderCard.tsx",
     "components/integrations/ProviderCardDescription.tsx",
     "components/integrations/ProviderCardDisconnectMenu.tsx",
     "components/integrations/ProviderCardFeedback.tsx",
     "components/integrations/ProviderCardMeta.tsx",
-    "components/integrations/provider-meta-copy.ts",
     "components/integrations/ProviderConsumerPanel.tsx",
     "components/integrations/ProviderConsumerRows.tsx",
     "components/integrations/ProviderCredentialWarning.tsx",
@@ -511,7 +511,6 @@
     "components/keywords/blocks/keyword-paste-parser.ts",
     "components/keywords/blocks/KeywordsPasteInput.tsx",
     "components/keywords/CheckDepthSplitButton.tsx",
-    "components/keywords/CountryFlag.tsx",
     "components/keywords/DegradedPositionMarkers.tsx",
     "components/keywords/export-target-model.ts",
     "components/keywords/export/export-action-error.ts",
@@ -887,19 +886,19 @@
     "components/schedules/ArchivedScheduleDetails.tsx",
     "components/schedules/ArchiveScheduleModal.tsx",
     "components/schedules/MarketLabel.tsx",
+    "components/schedules/schedule-editor-field-options.ts",
     "components/schedules/schedule-members-table-columns.tsx",
     "components/schedules/ScheduleEditor.tsx",
     "components/schedules/ScheduleEditorFieldPrimitives.tsx",
     "components/schedules/ScheduleEditorFields.tsx",
     "components/schedules/ScheduleEditorMembers.tsx",
     "components/schedules/ScheduleEditorModel.ts",
-    "components/schedules/schedule-editor-field-options.ts",
-    "components/schedules/useScheduleNameLabels.ts",
     "components/schedules/ScheduleKeywordCandidateRow.tsx",
     "components/schedules/ScheduleLifecycleActions.tsx",
     "components/schedules/ScheduleObjectFrame.tsx",
     "components/schedules/schedules-table-columns.tsx",
     "components/schedules/SchedulesList.tsx",
+    "components/schedules/useScheduleNameLabels.ts",
     "components/search-insights/drawers/drawer-model.ts",
     "components/search-insights/drawers/drawer-story-fixtures.ts",
     "components/search-insights/drawers/drawer-table-columns.tsx",
@@ -1143,6 +1142,7 @@
     "components/ui/confirm-copy.ts",
     "components/ui/ConfirmModal.tsx",
     "components/ui/CopyButton.tsx",
+    "components/ui/CountryFlag.tsx",
     "components/ui/data-table/data-table-density.ts",
     "components/ui/data-table/data-table-expansion.ts",
     "components/ui/data-table/data-table-layout-store.ts",
@@ -13234,6 +13234,26 @@
       },
       {
         "arguments": [],
+        "key": "projectInstall.agents.chatgpt.caveat",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.agents.chatgpt.hint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.agents.chatgpt.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.agents.chatgpt.note",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectInstall.agents.claude-code.hint",
         "tags": []
       },
@@ -13245,6 +13265,11 @@
       {
         "arguments": [],
         "key": "projectInstall.agents.claude-code.note",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.agents.claude-desktop.caveat",
         "tags": []
       },
       {
@@ -13420,6 +13445,11 @@
       {
         "arguments": [],
         "key": "projectInstall.endpoint.selfHosted",
+        "tags": []
+      },
+      {
+        "arguments": [["readOnly", 1], ["total", 1]],
+        "key": "projectInstall.endpoint.toolScope",
         "tags": []
       },
       {

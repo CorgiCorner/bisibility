@@ -2,6 +2,7 @@ import "server-only";
 
 import { fetchKeywordMetrics, researchKeywords } from "@/lib/keyword-research/service";
 import type { ProviderLookupFailure } from "@/lib/keyword-research/types";
+import { READINESS_REASON } from "@/lib/projects/readiness";
 import type { KeywordMetrics } from "@/lib/providers/types";
 import { z } from "zod";
 import type { ApiContext } from "./context";
@@ -58,10 +59,15 @@ function connectionResources(connections: Array<{ id: string; label: string; pro
 
 function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
   if (outcome.reason === "no_source") {
-    return errorResponse("not_found", "No eligible keyword research source is connected.", 404, {
-      headers: ctx.headers,
-      instance: ctx.instance,
-    });
+    return errorResponse(
+      "not_found",
+      `No eligible keyword research source is connected. Reason: ${READINESS_REASON.providerNotConnected}.`,
+      404,
+      {
+        headers: ctx.headers,
+        instance: ctx.instance,
+      },
+    );
   }
   if (outcome.reason === "budget_exhausted") {
     return errorResponse("budget_exhausted", "Monthly provider budget reached.", 429, {

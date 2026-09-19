@@ -19,10 +19,17 @@
         "hint": "edytor",
         "note": "Ustawienia, MCP, a następnie wklej do mcp.json."
       },
+      "chatgpt": {
+        "label": "ChatGPT",
+        "hint": "aplikacja",
+        "note": "Ustawienia, Aplikacje, Ustawienia zaawansowane, włącz tryb dewelopera, a następnie dodaj ten adres URL jako własną aplikację MCP.",
+        "caveat": "ChatGPT pokazuje w planach indywidualnych tylko narzędzia tylko do odczytu; działania zapisu, takie jak sprawdzanie pozycji i analiza linków zwrotnych, wymagają przestrzeni roboczej Business lub Enterprise z włączonym trybem dewelopera. Narzędzia tylko do odczytu obejmują zapisane raporty i szacunki kosztów."
+      },
       "claude-desktop": {
-        "label": "Claude Desktop",
+        "label": "Claude (web i pulpit)",
         "hint": "łącznik",
-        "note": "Bez terminala: Ustawienia, Łączniki, Dodaj własny łącznik, a następnie wklej ten adres URL i zaloguj się."
+        "note": "Dostosuj, Łączniki, Dodaj własny łącznik, wklej adres URL, a następnie zatwierdź logowanie.",
+        "caveat": "Claude udostępnia wszystkie narzędzia. Za pierwszym razem pyta przed każdym narzędziem zapisu; opcję Zawsze zezwalaj używaj tylko dla narzędzi, którym ufasz na tyle, by działały bez nadzoru. Research uruchamia narzędzia bez pytania, więc wyłącz tam narzędzia zapisu."
       },
       "other": {
         "label": "Dowolny klient MCP",
@@ -34,7 +41,8 @@
       "heading": "Punkt końcowy MCP",
       "description": "Używasz narzędzia spoza listy? Wklej w nim ten adres i zaloguj się kontem bisibility.",
       "copy": "Kopiuj URL MCP",
-      "selfHosted": "self-hosting? użyj zamiast tego własnego adresu: '<your-instance>'/api/mcp"
+      "selfHosted": "self-hosting? użyj zamiast tego własnego adresu: '<your-instance>'/api/mcp",
+      "toolScope": "Narzędzia oznaczone jako tylko do odczytu ({readOnly} z {total}) działają w każdym kliencie. Operacje płatne, takie jak sprawdzanie pozycji i analiza linków zwrotnych, to narzędzia zapisu; niektóre aplikacje agentów pokazują je dopiero po włączeniu trybu dewelopera lub trybu zapisu, a niektóre plany udostępniają tylko narzędzia odczytu. Zapisane raporty i szacunki kosztów są tylko do odczytu."
     },
     "apiKey": {
       "heading": "Klucz API",

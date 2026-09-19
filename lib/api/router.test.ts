@@ -57,7 +57,11 @@ const mocks = vi.hoisted(() => {
         upsert: vi.fn(),
       },
       providerConnectionRate: { upsert: vi.fn() },
-      rankCheck: { findFirst: vi.fn(), findMany: vi.fn() },
+      rankCheck: {
+        findFirst: vi.fn(),
+        findMany: vi.fn().mockResolvedValue([]),
+        groupBy: vi.fn().mockResolvedValue([]),
+      },
       tag: { createMany: vi.fn(), findMany: vi.fn() },
       webhookEndpoint: {
         count: vi.fn(),

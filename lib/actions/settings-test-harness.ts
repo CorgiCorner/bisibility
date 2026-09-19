@@ -20,6 +20,7 @@ const settingsActionMocks = vi.hoisted(() => {
     keyword: { findMany: vi.fn(), updateMany: vi.fn() },
     project: { findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
+    rankCheck: { findMany: vi.fn(async () => []), groupBy: vi.fn(async () => []) },
     user: { findUnique: vi.fn() },
   };
 

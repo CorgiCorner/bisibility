@@ -89,6 +89,7 @@ export type CompetitorFilter = {
 };
 
 export type CompetitorObservation = {
+  checkedAt?: string | null;
   completed: boolean;
   id: string;
   keyword: string;

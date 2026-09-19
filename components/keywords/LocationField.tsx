@@ -13,6 +13,7 @@ import {
   useLocationSearch,
 } from "@/components/keywords/location-picker-data";
 import { AnchoredList as Popper } from "@/components/ui/AnchoredList";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
 import { regionDisplayName } from "@/lib/i18n/display-names";
@@ -21,7 +22,6 @@ import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/Caret
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import { useLocale } from "next-intl";
 import { type FocusEvent, useId, useRef, useState } from "react";
-import { CountryFlag } from "./CountryFlag";
 import {
   type LocationFieldMessages,
   LocationResults,

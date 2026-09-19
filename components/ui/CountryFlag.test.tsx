@@ -1,6 +1,6 @@
-import { CountryFlag } from "@/components/keywords/CountryFlag";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { CountryFlag } from "./CountryFlag";
 
 describe("CountryFlag", () => {
   it("references the shared sprite instead of inlining a flag", () => {

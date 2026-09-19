@@ -49,6 +49,11 @@ export const openApiTags = [
     "x-group": "Domain Overview",
   },
   {
+    name: "research-reports",
+    description: "Read stored research reports with their freshness state.",
+    "x-group": "Research Reports",
+  },
+  {
     name: "analytics",
     description: "Read project analytics, traffic snapshots, and search-performance data.",
     "x-group": "Analytics",

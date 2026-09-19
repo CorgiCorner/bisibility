@@ -26,6 +26,7 @@ export type AnalyticsQueryStatsInput = {
   pagePath?: { match: "contains" | "prefix"; value: string };
   position?: AnalyticsMetricRange;
   query?: string;
+  queryMatch?: "contains" | "equals";
   startDate: string;
 };
 

@@ -22,7 +22,7 @@ import {
   serpDeviceOptions,
 } from "@/lib/serp/constants";
 import { getApiVersionCapabilities } from "./api-versions";
-import { getCapabilities, getLlmsText } from "./capabilities";
+import { capabilitiesCatalogMetadata, getCapabilities, getLlmsText } from "./capabilities";
 import type { ApiContext } from "./context";
 import { DEFAULT_LOCATION_KEY, legacySerpMarketCatalog } from "./legacy-market-input";
 import { getOpenApiDocument } from "./openapi";
@@ -246,6 +246,7 @@ export function getOpenApi(ctx: Pick<ApiContext, "headers">) {
 export function capabilities(ctx: Pick<ApiContext, "headers">) {
   return jsonResponse(
     {
+      ...capabilitiesCatalogMetadata,
       ...getApiVersionCapabilities(),
       data: getCapabilities(),
       rank_check_scheduler_mode: resolveRankCheckSchedulerMode(),

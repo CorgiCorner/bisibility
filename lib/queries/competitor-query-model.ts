@@ -14,7 +14,7 @@ import type { OrganicDomainRank } from "@/lib/rank-check/organic-ranks";
 import { storedOrganicDomainRanks } from "@/lib/rank-check/organic-ranks";
 
 export type ManagedRow = { domain: string; label: string | null; publicId: string | null };
-export type LatestRank = { organicRanks: unknown; position: number | null };
+export type LatestRank = { checkedAt?: Date; organicRanks: unknown; position: number | null };
 export type QueryKeywordSummary = {
   device: "desktop" | "mobile";
   id: string;
@@ -127,6 +127,7 @@ export function competitorMarketData(
     for (const item of organicRanks) addRank(ranks, item.domain, item.position);
     addRank(ranks, ownDomain, latest?.position ?? null);
     return {
+      checkedAt: latest?.checkedAt ? latest.checkedAt.toISOString() : null,
       completed: Boolean(latest),
       id: keyword.publicId,
       keyword: keyword.text,

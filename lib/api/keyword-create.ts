@@ -21,7 +21,7 @@ import { type ApiContext, forbidden, projectMatches } from "./context";
 import { scheduleFromCreate } from "./keyword-utils";
 import { legacyMarketLocationKey, legacyMarketLocationSelection } from "./legacy-market-input";
 import { KeywordLimitExceededError } from "./resource-limits";
-import { keywordInclude, keywordResource } from "./resources";
+import { keywordInclude, keywordResources } from "./resources";
 import { errorResponse, resourceResponse } from "./responses";
 import { keywordCreateItemSchema } from "./schemas";
 
@@ -226,13 +226,16 @@ export async function createKeywords(
       include: keywordInclude,
       where: { id: { in: persisted.accepted.map(({ keyword }) => keyword.id) } },
     });
-    const hydratedById = new Map(hydrated.map((keyword) => [keyword.id, keyword]));
+    const serialized = await keywordResources(hydrated, ctx.auth.project.publicId);
+    const serializedById = new Map(
+      hydrated.map((keyword, index) => [keyword.id, serialized[index]]),
+    );
     const results = persisted.accepted.map(({ created, keyword }, index) => {
-      const stored = hydratedById.get(keyword.id);
-      if (!stored) throw new Error("Keyword could not be created.");
+      const resource = serializedById.get(keyword.id);
+      if (!resource) throw new Error("Keyword could not be created.");
       const warning = resolvedItems[index]?.resolved.warning;
       return {
-        keyword: keywordResource(stored, ctx.auth.project.publicId),
+        keyword: resource,
         status: created ? "created" : "skipped",
         ...(warning ? { warning } : {}),
       };

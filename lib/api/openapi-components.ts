@@ -9,10 +9,11 @@ import { alertRuleSchemas } from "./openapi-alert-components";
 import { apiKeySchemas } from "./openapi-api-key-components";
 import { keywordPatchSchema } from "./openapi-keyword-patch";
 import { keywordResearchSchemas } from "./openapi-keyword-research-components";
-import { keywordMatchSchemas } from "./openapi-keywords";
+import { keywordCheckStateSchemas, keywordMatchSchemas } from "./openapi-keywords";
 import { migrationSchemas } from "./openapi-migration-components";
 import { personalAccessSchemas } from "./openapi-pat-components";
 import { projectSchemas } from "./openapi-project-components";
+import { providerSchemas } from "./openapi-provider-components";
 import { publicIdSchema } from "./openapi-public-id";
 import { resourceSchemas } from "./openapi-resource-components";
 import {
@@ -45,6 +46,12 @@ const keywordScheduleResourceSchema = {
     jitter_minutes: jitterMinutesContractSchema,
     last_checked_at: { format: "date-time", type: ["string", "null"] },
     next_check_at: { format: "date-time", type: ["string", "null"] },
+    source: {
+      description:
+        "Whether these schedule values come from the keyword's own row or from the project defaults.",
+      enum: ["keyword", "project_default"],
+      type: "string",
+    },
     timezone: scheduleTimezoneContractSchema,
   },
   required: [
@@ -54,14 +61,16 @@ const keywordScheduleResourceSchema = {
     "jitter_minutes",
     "last_checked_at",
     "next_check_at",
+    "source",
   ],
   type: ["object", "null"],
 };
 // biome-ignore format: grouped fields keep the central schema below the enforced line limit.
 const keywordResourceRequiredFields = [
-  "id", "project_id", "text", "country", "location", "device", "latest_position",
-  "language_code", "language_label", "location_key", "previous_position", "ranking_url",
-  "schedule", "tags", "target_url", "topic", "intent", "created_at", "updated_at",
+  "id", "project_id", "text", "country", "location", "device", "latest_check",
+  "latest_position", "latest_successful_check", "language_code", "language_label",
+  "location_key", "previous_position", "ranking_url", "schedule", "tags", "target_url",
+  "topic", "intent", "created_at", "updated_at",
 ];
 
 export const schemas = {
@@ -73,6 +82,7 @@ export const schemas = {
   },
   ...migrationSchemas,
   ...keywordMatchSchemas,
+  ...keywordCheckStateSchemas,
   ...keywordResearchSchemas,
   ...personalAccessSchemas,
   ...signalSchemas,
@@ -90,12 +100,22 @@ export const schemas = {
         type: "string",
       },
       intent: { type: ["string", "null"] },
-      latest_position: { type: ["integer", "null"] },
+      latest_check: { $ref: "#/components/schemas/KeywordLatestCheck" },
+      latest_position: {
+        description:
+          '`latest_position` = `latest_check.position`; it is `null` when the latest executed check failed OR when the domain was not found within the requested depth. Agents that need "the last known ranking" must read `latest_successful_check.position`.',
+        type: ["integer", "null"],
+      },
+      latest_successful_check: { $ref: "#/components/schemas/KeywordLatestSuccessfulCheck" },
       language_code: { example: "en", type: "string" },
       language_label: { example: "English", type: "string" },
       location: keywordLocationSchema,
       location_key: locationKeySchema,
-      previous_position: { type: ["integer", "null"] },
+      previous_position: {
+        description:
+          "`previous_position` = the position recorded on `latest_check` as its predecessor.",
+        type: ["integer", "null"],
+      },
       project_id: {
         example: "prj_a00000000000000000000000",
         pattern: "^prj_[a-z][a-z0-9]{23}$",
@@ -178,25 +198,7 @@ export const schemas = {
     required: ["type", "title", "status", "detail", "instance", "docs_url"],
     type: "object",
   },
-  Provider: {
-    properties: {
-      category_id: { enum: ["serp", "analytics"], type: "string" },
-      category_title: { type: "string" },
-      connection_id: {
-        pattern: "^conn_[a-z][a-z0-9]{23}$",
-        type: "string",
-      },
-      enabled: { type: "boolean" },
-      id: { description: "Natural provider catalog ID.", type: "string" },
-      kind: { enum: ["serp", "analytics"], type: "string" },
-      name: { type: "string" },
-      primary: { type: "boolean" },
-      priority: { type: "integer" },
-      status: { type: "string" },
-    },
-    required: ["category_id", "category_title", "id", "kind", "name", "status"],
-    type: "object",
-  },
+  ...providerSchemas,
   ...agentSchemas,
   ...projectSchemas,
   RankCheck: {
@@ -216,12 +218,29 @@ export const schemas = {
       checked_at: { format: "date-time", type: "string" },
       cost_cents: { type: ["number", "null"] },
       error: { type: ["string", "null"] },
+      error_code: {
+        description:
+          "Stable failure code for this check, or null for rows older than the code taxonomy.",
+        type: ["string", "null"],
+      },
       id: publicIdSchema("check"),
       keyword_id: publicIdSchema("kw"),
       position: { type: ["integer", "null"] },
       previous_position: { type: ["integer", "null"] },
       provider: { type: "string" },
       ranking_url: { type: ["string", "null"] },
+      run: {
+        description: "The run that produced this result, or null for a legacy row.",
+        properties: {
+          finished_at: { format: "date-time", type: ["string", "null"] },
+          id: publicIdSchema("rcr"),
+          started_at: { format: "date-time", type: ["string", "null"] },
+          status: { type: "string" },
+          trigger: { type: "string" },
+        },
+        required: ["id", "status", "trigger", "started_at", "finished_at"],
+        type: ["object", "null"],
+      },
       run_id: {
         ...publicIdSchema("rcr"),
         description: "Rank-check run that produced this result, or null for a legacy row.",
@@ -238,9 +257,11 @@ export const schemas = {
       "provider",
       "ranking_url",
       "run_id",
+      "run",
       "cost_cents",
       "attempts",
       "error",
+      "error_code",
       "status",
     ],
     type: "object",

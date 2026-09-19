@@ -15,6 +15,7 @@ import type {
   DomainOverviewLookupFailure,
   DomainOverviewOutcome,
 } from "@/lib/domain-overview/types";
+import { READINESS_REASON } from "@/lib/projects/readiness";
 import { z } from "zod";
 import type { ApiContext } from "./context";
 import { dataResponse, errorResponse } from "./responses";
@@ -103,7 +104,7 @@ function lookupError(ctx: ApiContext, outcome: DomainOverviewLookupFailure) {
   if (outcome.reason === "no_source") {
     return errorResponse(
       "not_found",
-      "No eligible Domain Overview source is connected.",
+      `No eligible Domain Overview source is connected. Reason: ${READINESS_REASON.providerNotConnected}.`,
       404,
       common,
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import { CountryFlag } from "@/components/keywords/CountryFlag";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import { MenuSelect, type MenuSelectOptionGroup } from "@/components/ui/MenuSelect";
 import { useLocale, useTranslations } from "next-intl";
 

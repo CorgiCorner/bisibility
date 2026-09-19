@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => {
     project: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
     projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
     providerConnection: { count: vi.fn() },
+    rankCheck: { findMany: vi.fn(async () => []), groupBy: vi.fn(async () => []) },
     rankCheckRun: { count: vi.fn() },
     user: { findUnique: vi.fn() },
   };

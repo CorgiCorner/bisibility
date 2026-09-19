@@ -1,4 +1,5 @@
 export const MCP_TOOL_NAMES = [
+  "get_session_profile",
   "get_health",
   "get_capabilities",
   "get_cloud_import_compatibility",
@@ -17,9 +18,12 @@ export const MCP_TOOL_NAMES = [
   "list_keywords",
   "list_ranked_keyword_suggestions",
   "research_keywords",
+  "estimate_keyword_research_cost",
   "analyze_backlinks",
+  "estimate_backlinks_cost",
   "load_more_backlink_rows",
   "analyze_domain_overview",
+  "estimate_domain_overview_cost",
   "load_domain_overview_history",
   "load_domain_overview_keywords",
   "load_domain_overview_pages",
@@ -91,6 +95,11 @@ export const MCP_TOOL_NAMES = [
   "mint_migration_token",
   "revoke_migration_token",
 ] as const;
+
+// Phase C ships list_stored_reports and get_stored_report in the standalone
+// package. When it does, move each name into MCP_TOOL_NAMES so the hosted
+// server serves it; until then internalMcpToolName keeps throwing for them.
+export const PHASE_C_PENDING_TOOL_NAMES = ["list_stored_reports", "get_stored_report"] as const;
 
 export type McpToolName = (typeof MCP_TOOL_NAMES)[number];
 
