@@ -3,26 +3,8 @@ import type { ProjectRun } from "@/lib/runs/project-run";
 
 type GscImportOperation = Extract<OperationSnapshot, { kind: "gsc_import" }>;
 
-export type ProjectRunSnapshotTone = "attention" | "critical" | "info" | "neutral" | "positive";
-
 export type ProjectRunWithOperationSnapshot = ProjectRun &
-  Readonly<{
-    snapshotState?: GscImportOperation["presentation"]["title"];
-    snapshotPresentationTone?: ProjectRunSnapshotTone;
-  }>;
-
-const gscSnapshotTones = {
-  Completed: "positive",
-  Delayed: "attention",
-  Failed: "critical",
-  Importing: "info",
-  Paused: "attention",
-  Queued: "info",
-  "Reconnect required": "critical",
-  "Status unavailable": "neutral",
-  "Waiting for Google": "attention",
-  "Waiting for data": "info",
-} as const satisfies Record<GscImportOperation["presentation"]["title"], ProjectRunSnapshotTone>;
+  Readonly<{ snapshotState?: GscImportOperation["presentation"]["title"] }>;
 
 /** Keeps the one active import's qualifying coverage aligned with the operations tray. */
 export function applyOperationSnapshotToRuns(
@@ -46,7 +28,6 @@ export function applyOperationSnapshotToRuns(
         unit: "days",
       },
       snapshotState: operation.presentation.title,
-      snapshotPresentationTone: gscSnapshotTones[operation.presentation.title],
     };
   });
 }

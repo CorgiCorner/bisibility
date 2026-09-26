@@ -1,6 +1,7 @@
 "use server";
 
 import { isPublicIdOfType } from "@/lib/db/public-id";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { fetchRankedKeywords } from "@/lib/ranked-keywords/service";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
@@ -32,6 +33,7 @@ export async function fetchRankedKeywordSuggestions(input: unknown) {
     connectionId: data.connectionId,
     limit: 100,
     offset: data.offset,
+    origin: APP_REQUEST_ORIGIN,
     projectId: project.id,
   });
   if (!result.ok) return { reason: result.reason } as const;

@@ -37,7 +37,7 @@ describe("AnalyzePricingPopover localization boundary", () => {
 
     expect(screen.getByText("Koszt dostawcy")).toBeInTheDocument();
     expect(screen.getByText(/na 100/)).toBeInTheDocument();
-    expect(screen.getByText(/0,01\s+USD na 100/)).toBeInTheDocument();
+    expect(screen.getByText(/0,03\s+USD na 100/)).toBeInTheDocument();
     expect(screen.queryByText(/\$/)).not.toBeInTheDocument();
   });
 });

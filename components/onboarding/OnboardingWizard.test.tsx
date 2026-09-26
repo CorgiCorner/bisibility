@@ -32,14 +32,14 @@ describe("OnboardingWizard", () => {
     expect(screen.getByText("Enter the website you want to track.")).toBeInTheDocument();
 
     const rail = screen.getByLabelText("Onboarding steps");
-    for (const name of ["Provider", "Keywords", "First check"]) {
+    for (const name of ["Rank data", "Keywords", "First check"]) {
       const lockedStep = within(rail).getByRole("button", { name });
       expect(lockedStep).toBeDisabled();
       fireEvent.click(lockedStep);
     }
 
     expect(screen.getByText("Enter the website you want to track.")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Provider" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Rank data" })).not.toBeInTheDocument();
     expect(screen.queryByText("Run your first check")).not.toBeInTheDocument();
   });
 
@@ -51,12 +51,12 @@ describe("OnboardingWizard", () => {
     });
 
     const rail = screen.getByLabelText("Onboarding steps");
-    const connectData = within(rail).getByRole("button", { name: "Provider" });
+    const connectData = within(rail).getByRole("button", { name: "Rank data" });
     expect(connectData).toBeDisabled();
     fireEvent.click(connectData);
 
     expect(screen.getByText("Enter the website you want to track.")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Provider" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Rank data" })).not.toBeInTheDocument();
   });
 
   it("sizes sample and restore actions to the continue control", () => {
@@ -98,24 +98,24 @@ describe("OnboardingWizard", () => {
       initialStep: 2,
     });
 
-    expect(screen.getAllByRole("heading", { name: "Provider" })).toHaveLength(2);
-    expect(screen.getByText("Rank data / powers rank checks")).toBeInTheDocument();
-    expect(screen.getByText("Your site's data / optional, free")).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Rank data" })).toHaveLength(2);
+    expect(screen.getByText("Choose your provider")).toBeInTheDocument();
+    expect(screen.getByText("Search Console · Optional")).toBeInTheDocument();
     expect(screen.getByText("Search Console")).toBeInTheDocument();
     expect(
       screen
         .getByLabelText("API login")
-        .compareDocumentPosition(screen.getByText("Your site's data / optional, free")) &
+        .compareDocumentPosition(screen.getByText("Search Console · Optional")) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    const siteHeading = screen.getByText("Your site's data / optional, free");
+    const siteHeading = screen.getByText("Search Console · Optional");
     const oauthNotice = screen.getByRole("alert");
     expect(oauthNotice).toHaveTextContent("GOOGLE_CLIENT_ID");
     expect(
       siteHeading.compareDocumentPosition(oauthNotice) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(
-      screen.getByText("Rank data / powers rank checks").compareDocumentPosition(oauthNotice) &
+      screen.getByText("Choose your provider").compareDocumentPosition(oauthNotice) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(screen.queryByText("Connect from your terminal or API")).not.toBeInTheDocument();
@@ -145,11 +145,11 @@ describe("OnboardingWizard", () => {
     expect(skipButton.nextElementSibling).toBe(continueButton);
     expect(getComputedStyle(skipButton).minHeight).toBe(getComputedStyle(continueButton).minHeight);
     expect(getComputedStyle(skipButton).fontSize).toBe(getComputedStyle(continueButton).fontSize);
-    expect(screen.getByRole("button", { name: "Provider" })).not.toContainElement(skipButton);
+    expect(screen.getByRole("button", { name: "Rank data" })).not.toContainElement(skipButton);
     fireEvent.click(skipButton);
 
     expect(screen.getAllByRole("heading", { name: "Keywords" })).toHaveLength(2);
-    expect(screen.queryByLabelText("Provider")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Rank data")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Engine")).not.toBeInTheDocument();
     expect(window.location.search).toBe("?step=3&projectId=prj_1");
     expect(
@@ -260,7 +260,7 @@ describe("OnboardingWizard", () => {
     expect(window.location.search).toBe("?step=3&projectId=prj_1&providerId=dataforseo");
 
     const rail = screen.getByLabelText("Onboarding steps");
-    fireEvent.click(within(rail).getByRole("button", { name: "Provider, completed" }));
+    fireEvent.click(within(rail).getByRole("button", { name: "Rank data, completed" }));
 
     expect(within(rail).getByRole("button", { name: "Keywords" })).toBeDisabled();
     expect(screen.getByText("Connected")).toBeInTheDocument();

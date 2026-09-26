@@ -1,3 +1,4 @@
+import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -35,6 +36,32 @@ function failure(code: string | null, message = RAW_PROVIDER_MESSAGE): RunChecks
 }
 
 describe("RunChecksConfirmationModal presentation", () => {
+  it("shows all effective depths for a mixed selection", () => {
+    const row = keywordRows[0];
+    render(
+      <RunChecksConfirmationModal
+        flow={{
+          completed: 0,
+          failures: [],
+          pending: { keywordIds: [row.id, "kw_2"] },
+          rankCheckIds: [],
+          step: "confirm",
+        }}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+        onRetry={vi.fn()}
+        projectId="prj_demo"
+        rows={[
+          { ...row, schedule: { ...row.schedule, serp_depth: 50 } },
+          { ...row, id: "kw_2", schedule: { ...row.schedule, serp_depth: 20 } },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Top 20 / Top 50")).toBeInTheDocument();
+    expect(screen.queryByText("keyword defaults")).not.toBeInTheDocument();
+  });
+
   it("renders a plain confirm title and the conjunction in the confirm action", () => {
     render(
       <RunChecksConfirmationModal

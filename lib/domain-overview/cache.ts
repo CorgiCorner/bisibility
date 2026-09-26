@@ -3,6 +3,7 @@ import "server-only";
 import { readProviderLookupCache, withProviderLookupCache } from "@/lib/provider-lookups/cache";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { chargedProviderCostCents } from "@/lib/providers/call-error";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { RankedKeywordsPage, RelevantPagesResult } from "@/lib/providers/types";
 import { domainOverviewCacheTtlSeconds } from "./cache-policy";
 import type {
@@ -78,6 +79,7 @@ export function withDomainOverviewCache<T>(input: {
 }
 
 export function domainOverviewFailure(error: unknown): DomainOverviewLookupFailure {
+  if (error instanceof DeploymentAdmissionExhaustedError) throw error;
   return error instanceof ProviderLookupSignal
     ? { ...error.outcome, costCents: error.outcome.costCents ?? 0 }
     : { costCents: chargedProviderCostCents(error) ?? 0, ok: false, reason: "lookup_failed" };

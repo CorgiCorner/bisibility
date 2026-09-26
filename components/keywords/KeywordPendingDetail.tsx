@@ -1,7 +1,8 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { AccentCtaLink } from "@/components/ui/AccentCtaLink";
-import { runCostCents } from "@/lib/cost-estimate/project-estimate";
+import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
 import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -39,14 +40,14 @@ type KeywordPendingDetailProps = KeywordDetailActions & {
 function checkCostLabel(
   depth: SerpDepth,
   costContext: ProjectCostContext | undefined,
-  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordDetail.firstCheck">>,
+  usage: ReturnType<typeof useNativeUsageFormat>,
 ) {
   if (!costContext) return null;
-  const costCents = runCostCents([depth], {
+  const estimate = estimateRankUsage([depth], {
     overrideCents: costContext.costPerCheckCents,
     providerId: costContext.providerId,
   });
-  return costCents == null ? null : t("estimatedCostValue", { cost: costCents / 100 });
+  return usage.format(estimate);
 }
 
 export function KeywordPendingDetail({
@@ -65,7 +66,7 @@ export function KeywordPendingDetail({
   updateKeywordAction,
 }: Readonly<KeywordPendingDetailProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail.actions");
-  const firstCheckT = useTranslations("projectRankTracker.keywordDetail.firstCheck");
+  const usage = useNativeUsageFormat();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const {
@@ -152,7 +153,7 @@ export function KeywordPendingDetail({
         <KeywordFirstCheckModal
           confirmError={modal.error}
           confirming={confirming}
-          costLabel={checkCostLabel(modal.depth, costContext, firstCheckT)}
+          costLabel={checkCostLabel(modal.depth, costContext, usage)}
           depth={modal.depth}
           errorCode={modal.errorCode}
           onClose={closeCheckModal}

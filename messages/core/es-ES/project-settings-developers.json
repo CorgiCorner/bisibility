@@ -70,7 +70,9 @@
         "revoke": "No se ha podido revocar la clave de API.",
         "notFound": "No se ha encontrado la clave de API.",
         "action": "No se ha podido completar la acción sobre la clave de API."
-      }
+      },
+      "spendThisMonth": "Gasto de este mes: {amount}",
+      "spendTooltip": "Cuenta contra el presupuesto de API, MCP y SDK"
     },
     "webhooks": {
       "title": "Webhooks de despliegue",

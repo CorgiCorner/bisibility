@@ -43,7 +43,11 @@ function RunPageFilters({
     >
       {filters.map(({ count, value }) => {
         const label =
-          value === "all" ? t("allTargets") : statusT(itemStatusChipPresentation(value).messageKey);
+          value === "all"
+            ? t("allTargets")
+            : value === "skipped"
+              ? t("skippedOrBlocked")
+              : statusT(itemStatusChipPresentation(value).messageKey);
         return (
           <label
             className={`h-[26px] cursor-pointer rounded-control border px-2.5 text-[12.5px] font-normal leading-[24px] ${filter === value ? "border-border-control bg-nav-active text-fg" : "border-transparent bg-transparent text-fg-muted"}`}
@@ -91,7 +95,7 @@ export function RunPageTargets({
   return (
     <section
       aria-labelledby="run-targets-title"
-      className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev [&>[role=table]]:border-0"
+      className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev"
     >
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3.5">
         <div>
@@ -118,6 +122,7 @@ export function RunPageTargets({
         </div>
       </header>
       <DataTable
+        bordered={false}
         ariaLabel={t("targetsInRun")}
         columns={runTargetTableColumns({
           deploymentMode,

@@ -125,7 +125,11 @@ describe("runRankCheckActivity runnable gate", () => {
 
     expect(mocks.prisma.$executeRaw).toHaveBeenCalledTimes(1);
     expect(mocks.runKeywordCheckWithFallback).toHaveBeenCalledWith(
-      expect.objectContaining({ keywordId: "keyword_1", source: "worker" }),
+      expect.objectContaining({
+        keywordId: "keyword_1",
+        source: "app",
+        trigger: "scheduled",
+      }),
     );
   });
 

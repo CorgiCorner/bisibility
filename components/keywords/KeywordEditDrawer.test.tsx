@@ -78,6 +78,34 @@ describe("KeywordEditDrawer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
 
     expect(screen.getByText(/Assign this keyword to a check schedule/)).toBeInTheDocument();
+    expect(screen.getByText("Not assigned to a check schedule.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Set schedule" })).toBeInTheDocument();
+  });
+
+  it("shows the assigned schedule and the depth it checks at", () => {
+    render(
+      <KeywordEditDrawer
+        keyword={
+          {
+            checkSchedule: { name: "Daily", nextCheckAt: null, publicId: "sch_daily" },
+            id: "kw_1",
+            keyword: "rank tracker",
+            projectSerpDepth: 20,
+            schedule: { serp_depth: null },
+          } as never
+        }
+        onClose={vi.fn()}
+        open
+        projectId="project_1"
+        updateKeywordAction={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+
+    expect(screen.getByText("Current schedule")).toBeInTheDocument();
+    expect(screen.getByText("Daily")).toBeInTheDocument();
+    expect(screen.getByText("Top 20")).toBeInTheDocument();
+    expect(screen.queryByText("Not assigned to a check schedule.")).not.toBeInTheDocument();
   });
 });

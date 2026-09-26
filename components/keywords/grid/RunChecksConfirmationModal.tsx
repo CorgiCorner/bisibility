@@ -1,8 +1,10 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { RankCheckRunModal } from "@/components/keywords/RankCheckRunModal";
 import { Button } from "@/components/ui/Button";
-import { type CostRateInfo, runCostCents } from "@/lib/cost-estimate/project-estimate";
+import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
+import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { dominantErrorCode, isProviderErrorCode } from "@/lib/providers/provider-error-code";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -12,7 +14,7 @@ import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-
 import type { SerpDepth } from "@/lib/serp/constants";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { effectiveRowDepth } from "./run-check-depth";
+import { effectiveRowDepth, selectionDepthLabel } from "./run-check-depth";
 
 export type PendingRunChecks = { depth?: SerpDepth; keywordIds: string[] };
 export type RunChecksFailure = { code: string | null; message: string; rankCheckId: string | null };
@@ -121,15 +123,12 @@ export function RunChecksConfirmationModal({
   const depths = flow?.pending.depth
     ? selectedRows.map(() => flow.pending.depth as SerpDepth)
     : selectedRows.map(effectiveRowDepth);
-  const estimatedCost = providerRate && flow ? runCostCents(depths, providerRate) : null;
+  const usage = useNativeUsageFormat();
+  const estimatedUsage = providerRate && flow ? estimateRankUsage(depths, providerRate) : null;
   const count = flow?.pending.keywordIds.length ?? 0;
-  const selectionDepths = new Set(selectedRows.map(effectiveRowDepth));
-  const selectionDepth = selectionDepths.size === 1 ? selectionDepths.values().next().value : null;
   const depthLabel = flow?.pending.depth
     ? runT("top", { depth: flow.pending.depth })
-    : selectionDepth != null
-      ? runT("top", { depth: selectionDepth })
-      : runT("keywordDefaults");
+    : selectionDepthLabel(selectedRows, (depth) => runT("top", { depth })) || t("unavailable");
   const firstFailure = flow?.failures[0];
   const providerCode = flow ? dominantProviderCode(flow.failures) : null;
   const failurePresentation = providerFailurePresentation(providerCode);
@@ -202,13 +201,8 @@ export function RunChecksConfirmationModal({
             { label: t("keywords"), value: t("keywordsValue", { count }) },
             { label: t("depth"), value: depthLabel },
             {
-              label: t("estimatedCost"),
-              value:
-                estimatedCost == null
-                  ? t("unavailable")
-                  : estimatedCost > 0 && estimatedCost < 1
-                    ? t("estimatedCostBelowCent", { minimum: 0.01 })
-                    : t("estimatedCostValue", { cost: estimatedCost / 100 }),
+              label: usage.estimatedLabel,
+              value: usage.format(estimatedUsage),
             },
           ].map((row, index) => (
             <div

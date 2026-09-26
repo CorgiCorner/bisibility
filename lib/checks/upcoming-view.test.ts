@@ -66,6 +66,7 @@ describe("upcoming checks view", () => {
       capCents: 100,
       capLastsUntil: null,
       next48hCents: 0,
+      next48hNative: null,
       spentCents: 0,
     });
     expect(view.providerSummary).toBe("No provider connected");
@@ -98,5 +99,74 @@ describe("upcoming checks view", () => {
     });
 
     expect(view.forecast).toMatchObject({ capCents: 0, capLastsUntil: null, spentCents: 25 });
+  });
+
+  it("estimates upper-bound operations per day for a quota provider, never plan dollars", () => {
+    const view = buildUpcomingView({
+      blockedReason: null,
+      budgetCapCents: 100,
+      now: NOW,
+      projectTimezone: "Europe/Warsaw",
+      providers: [{ provider: "serpapi", providerLabel: "SerpApi" }],
+      schedules: [
+        schedule("1", "2026-07-24T23:00:00.000Z"),
+        schedule("2", "2026-07-25T23:00:00.000Z", 20),
+      ],
+      spentCents: 0,
+    });
+
+    expect(view.days.map(({ nativeEstimate }) => nativeEstimate)).toEqual([
+      { providerId: "serpapi", quantity: 1, unit: "units", unknownTargets: 0 },
+      { providerId: "serpapi", quantity: 2, unit: "units", unknownTargets: 0 },
+    ]);
+    expect(view.forecast?.next48hNative).toEqual({
+      providerId: "serpapi",
+      quantity: 3,
+      unit: "units",
+      unknownTargets: 0,
+    });
+  });
+
+  it("keeps an unknown provider unknown instead of pricing it", () => {
+    const view = buildUpcomingView({
+      blockedReason: null,
+      budgetCapCents: 100,
+      now: NOW,
+      projectTimezone: "UTC",
+      providers: [{ provider: "unrecognized", providerLabel: "Unrecognized" }],
+      schedules: [schedule("1", "2026-07-25T10:00:00.000Z")],
+      spentCents: 0,
+    });
+
+    expect(view.days[0]?.nativeEstimate).toEqual({
+      providerId: "unrecognized",
+      quantity: null,
+      unit: null,
+      unknownTargets: 1,
+    });
+    expect(view.forecast?.next48hNative).toEqual({
+      providerId: "unrecognized",
+      quantity: null,
+      unit: null,
+      unknownTargets: 1,
+    });
+  });
+
+  it("keeps metered cents native and never mixes them with quota operations", () => {
+    const view = buildUpcomingView({
+      blockedReason: null,
+      budgetCapCents: 100,
+      now: NOW,
+      projectTimezone: "UTC",
+      providers: [{ provider: "dataforseo", providerLabel: "DataForSEO" }],
+      schedules: [
+        schedule("1", "2026-07-25T10:00:00.000Z", 20),
+        schedule("2", "2026-07-25T11:00:00.000Z", 10),
+      ],
+      spentCents: 0,
+    });
+
+    expect(view.days[0]?.nativeEstimate).toMatchObject({ quantity: 0.55, unit: "cents" });
+    expect(view.forecast?.next48hNative).toMatchObject({ quantity: 0.55, unit: "cents" });
   });
 });

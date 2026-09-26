@@ -3,11 +3,11 @@
   --radius-control: 6px;
   --radius-card: 12px;
   --error-contrast: var(--bg-sidebar);
-  --bg: #fcf7ed;
+  --bg: #f5f3ee;
   --bg-elev: #fbf9f4;
   --bg-sidebar: #ffffff;
   --bg-sunken: #ece7db4d;
-  --bg-band: #f3eee3;
+  --bg-band: #ebe8e0;
   --bg-inset: #e2ddd0;
   --contrast-bg: #1c1a16;
   --contrast-surface: #24211b;
@@ -20,7 +20,7 @@
   --fg-muted: #615b4d;
   --border: #ddd8cc;
   --border-soft: #f0eee6;
-  --border-control: #b1a99a;
+  --border-control: #c5bfb4;
   --nav-active: #edeae1;
   --meter-track: #e2ddd0;
   --accent: #f1511c;

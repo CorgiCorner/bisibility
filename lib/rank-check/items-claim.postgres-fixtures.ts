@@ -55,6 +55,8 @@ const SCHEMA = `
     "claimExpiresAt" timestamp(3), "finishedAt" timestamp(3), "notBefore" timestamp(3),
     "rankCheckId" text, "startedAt" timestamp(3), "updatedAt" timestamp(3)
   );
+  CREATE UNIQUE INDEX "rank_check_run_items_keywordId_running_key"
+    ON rank_check_run_items ("keywordId") WHERE status = 'running';
 `;
 
 function assignments(data: Row, values: unknown[]) {

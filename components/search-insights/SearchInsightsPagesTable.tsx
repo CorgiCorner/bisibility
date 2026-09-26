@@ -1,16 +1,24 @@
 "use client";
 
 import { DataTable } from "@/components/ui/data-table/DataTable";
+import type { ExpandableCardView } from "@/components/ui/ExpandableCard";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { SearchInsightsPageRow } from "@/lib/search-insights/queries/top-rows-model";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useTransition } from "react";
+import { useMemo } from "react";
 import {
   forwardSearchInsightsSort,
+  type ModuleTablePaging,
   type ModuleTableSort,
   searchInsightsDataTableSort,
+  searchInsightsPagingProps,
 } from "./SearchInsightsRowsTable";
+import {
+  SEARCH_INSIGHTS_TABLE_DENSITY,
+  SearchInsightsTableFrame,
+  searchInsightsTableLayout,
+} from "./SearchInsightsTableFrame";
 import {
   type SearchInsightsPageDataTableRow,
   searchInsightsPageColumns,
@@ -32,26 +40,27 @@ export function pageLensFromQuery(
 
 export type SearchInsightsPagesLensProps = {
   lens: SearchInsightsPageLens;
+  /** The radio group name; a second copy of the lens on the page needs its own. */
+  name?: string;
   showSessions: boolean;
 };
 
 export function SearchInsightsPagesLens({
   lens,
+  name = "search-insights-pages-lens",
   showSessions,
 }: Readonly<SearchInsightsPagesLensProps>) {
   const t = useTranslations("projectSearchInsights.copy");
   const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [pending, startTransition] = useTransition();
 
+  // The lens only changes columns the page already holds. A router navigation would re-render the
+  // server view and reset both tables' search, sort and page, so only the URL is replaced.
   function pick(nextLens: SearchInsightsPageLens) {
-    if (nextLens === lens || pending) return;
+    if (nextLens === lens) return;
     const next = new URLSearchParams(searchParams);
     next.set(PAGE_LENS_QUERY_PARAM, nextLens);
-    startTransition(() => {
-      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
-    });
+    window.history.replaceState(window.history.state, "", `${pathname}?${next.toString()}`);
   }
 
   if (!showSessions) return null;
@@ -60,37 +69,40 @@ export function SearchInsightsPagesLens({
     <SegmentedControl<SearchInsightsPageLens>
       ariaLabel={t("pageLensControl")}
       fitContent
-      loading={pending}
-      name="search-insights-pages-lens"
+      name={name}
       onChange={pick}
       options={[
         { label: t("pageLensSearch"), value: "search" },
         { label: t("pageLensTraffic"), value: "traffic" },
       ]}
-      size="xs"
+      size="toolbar"
       value={lens}
     />
   );
 }
 
 export type SearchInsightsPagesTableProps = {
+  bordered?: boolean;
   keyEventsConfigured?: boolean | null;
   lens?: SearchInsightsPageLens;
   onOpen?: (row: SearchInsightsPageRow) => void;
+  paging?: ModuleTablePaging;
   rows: readonly SearchInsightsPageRow[];
-  scroll?: boolean;
   showSessions?: boolean;
   sort?: ModuleTableSort;
+  view?: ExpandableCardView;
 };
 
 export function SearchInsightsPagesTable({
+  bordered = true,
   keyEventsConfigured = null,
   lens,
   onOpen,
+  paging,
   rows,
-  scroll = false,
   showSessions = false,
   sort,
+  view,
 }: Readonly<SearchInsightsPagesTableProps>) {
   const locale = useLocale();
   const t = useTranslations("projectSearchInsights.copy");
@@ -111,20 +123,22 @@ export function SearchInsightsPagesTable({
       }),
     [keyEventsConfigured, locale, showTraffic, sort, t],
   );
-  const table = (
-    <DataTable
-      ariaLabel={t("topPages")}
-      columns={columns}
-      density="compact"
-      id="search-insights-pages"
-      layout={scroll ? "fill" : "auto"}
-      onRowClick={onOpen}
-      onSortingChange={(next) => forwardSearchInsightsSort(sort, next)}
-      rows={dataRows}
-      sorting={searchInsightsDataTableSort(sort)}
-      sortingMode="server"
-    />
+  return (
+    <SearchInsightsTableFrame paged={Boolean(paging)} rows={dataRows.length} view={view}>
+      <DataTable
+        bordered={bordered}
+        ariaLabel={t("topPages")}
+        columns={columns}
+        density={SEARCH_INSIGHTS_TABLE_DENSITY}
+        id="search-insights-pages"
+        layout={searchInsightsTableLayout(view)}
+        onRowClick={onOpen}
+        onSortingChange={(next) => forwardSearchInsightsSort(sort, next)}
+        rows={dataRows}
+        {...searchInsightsPagingProps(paging)}
+        sorting={searchInsightsDataTableSort(sort)}
+        sortingMode="server"
+      />
+    </SearchInsightsTableFrame>
   );
-
-  return scroll ? <div className="h-130">{table}</div> : table;
 }

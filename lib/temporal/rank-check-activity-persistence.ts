@@ -32,15 +32,16 @@ import type {
   RankCheckActivityInput,
   RunningRankCheckActivityResult,
 } from "./rank-check-activity-contract";
+import { throwIfRunItemKeywordBusy } from "./rank-check-busy-keyword";
 import { notifyDeferredRankCheckOps, notifyFailedRankCheckOps } from "./rank-check-ops";
 
 class RunItemAlreadyClaimedError extends Error {}
-
 async function runningReservation(input: RankCheckActivityInput) {
   const [connection, keyword] = await Promise.all([
     prisma.providerConnection.findFirst({
       orderBy: serpProviderChainOrderBy(),
-      select: { costPerCheckCents: true, id: true, projectId: true, provider: true },
+      // biome-ignore format: compact selection keeps this activity module under the line cap.
+      select: { costPerCheckCents: true, credentialSource: true, id: true, projectId: true, provider: true },
       where: {
         enabled: true,
         kind: "serp",
@@ -68,18 +69,20 @@ async function runningReservation(input: RankCheckActivityInput) {
   // biome-ignore format: compact call keeps this activity module under the line cap.
   const depth = resolveEffectiveSerpDepth({ projectDepth: keyword?.project.defaults?.serpDepth, requestedDepth: input.depth, checkScheduleDepth: keyword?.checkSchedule?.serpDepth, scheduleDepth: keyword?.schedule?.serpDepth });
   if (!keyword) throw new Error("Keyword not found.");
-  const rateContext = connection
+  const loadedRateContext = connection
     ? await loadProviderRateContext(connection.id, "rank_check")
     : LIST_PROVIDER_RATE_CONTEXT;
+  const rateContext =
+    connection?.credentialSource === "hosted"
+      ? { ...loadedRateContext, manualAmountCents: null }
+      : loadedRateContext;
   // biome-ignore format: compact return keeps this activity module under the line cap.
-  return { allocationConnection: connection ? { id: connection.id, provider: connection.provider } : null, estimatedCostCents: estimatedRankCheckCostCents(connection?.provider, depth, connection?.costPerCheckCents, rateContext), depth, projectId: connection?.projectId ?? keyword.projectId, providerAllocationsInitializedAt: Boolean(keyword.project.providerAllocationsInitializedAt), keywordPublicId: keyword.publicId };
+  return { allocationConnection: connection ? { credentialSource: connection.credentialSource, id: connection.id, provider: connection.provider } : null, estimatedCostCents: estimatedRankCheckCostCents(connection?.provider, depth, connection?.credentialSource === "hosted" ? null : connection?.costPerCheckCents, rateContext), depth, projectId: connection?.projectId ?? keyword.projectId, providerAllocationsInitializedAt: Boolean(keyword.project.providerAllocationsInitializedAt), keywordPublicId: keyword.publicId };
 }
-
 function automaticLegacySource(input: CreateRunningRankCheckActivityInput) {
   if (input.scheduleId === RANK_CHECK_DISPATCHER_SCHEDULE_ID) return true;
   return input.scheduleId === rankCheckWorkflowId(input.keywordId);
 }
-
 export async function createRunningRankCheckActivity(
   input: CreateRunningRankCheckActivityInput,
 ): Promise<RunningRankCheckActivityResult> {
@@ -176,6 +179,7 @@ export async function createRunningRankCheckActivity(
         type: "rank_check_run_item_keyword_mismatch",
       });
     }
+    await throwIfRunItemKeywordBusy(error, input);
     if (!(error instanceof RunItemAlreadyClaimedError) || !input.runItemId) throw error;
     const item = await prisma.rankCheckRunItem.findUnique({
       select: { rankCheck: { select: { workflowRunId: true } }, rankCheckId: true },

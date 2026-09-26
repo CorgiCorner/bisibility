@@ -205,7 +205,7 @@ export const dataForSeoProvider: SerpProvider = {
 
       return {
         ok,
-        message: data.status_message ?? (ok ? "Connected." : "DataForSEO connection test failed."),
+        message: ok ? "Connected." : (data.status_message ?? "DataForSEO connection test failed."),
         balance: extractDataForSeoBalance(data),
       };
     } catch (error) {

@@ -5,7 +5,7 @@ import {
 } from "@/i18n/test-support/render-with-feature-messages";
 import { fireEvent, render as renderDom, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps, ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectWriteModeProvider } from "../../shell/ProjectWriteModeProvider";
 import { KeywordsGridNotices } from "./KeywordsGridNotices";
 
@@ -51,6 +51,67 @@ function renderNotices(props: Partial<ComponentProps<typeof KeywordsGridNotices>
 }
 
 describe("KeywordsGridNotices", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+  });
+
+  it("does not show historical failures after the current problem has cleared", () => {
+    renderNotices({
+      checkHealth: {
+        budget: { capCents: 1000, exhausted: false, spentCents: 0 },
+        currentFailures: { count: 0, latestCheckId: null },
+        failed24h: { count: 3, latest: null },
+        providerRate: { overrideCents: null, providerId: null },
+      },
+      checkStates: ["never_checked"],
+    });
+    expect(
+      screen.queryByText("Rank checks failed to produce ranking data."),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("No rankings yet")).toBeInTheDocument();
+  });
+
+  it("remembers dismissal for this incident and shows a new failure or another project", async () => {
+    function notice(checkId: string, projectId = "prj_1") {
+      return (
+        <KeywordsGridNotices
+          canManageProviders
+          checkStates={["failed"]}
+          projectId={projectId}
+          rowCount={1}
+          getFirstCheckRunPlanAction={vi.fn()}
+          queueFirstChecksAction={vi.fn()}
+          checkHealth={{
+            budget: { capCents: 1000, exhausted: false, spentCents: 0 },
+            currentFailures: { count: 1, latestCheckId: checkId },
+            failed24h: { count: 3, latest: null },
+            providerRate: { overrideCents: null, providerId: null },
+          }}
+        />
+      );
+    }
+    const first = render(notice("check_first"));
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss alert" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Dismiss alert" })).not.toBeInTheDocument(),
+    );
+    first.unmount();
+    const next = render(notice("check_first"));
+    expect(
+      screen.queryByText("Rank checks failed to produce ranking data."),
+    ).not.toBeInTheDocument();
+    next.rerender(notice("check_new"));
+    expect(screen.getByRole("button", { name: "Dismiss alert" })).toBeInTheDocument();
+    next.rerender(notice("check_first", "prj_other"));
+    expect(screen.getByRole("button", { name: "Dismiss alert" })).toBeInTheDocument();
+  });
+
   it("localizes the first-check defaults when this host supplies only its action and count", () => {
     const messages = structuredClone(projectRankTrackerFeatureTestMessages);
     messages.projectRankTracker.list.notices.firstCheckDetail =

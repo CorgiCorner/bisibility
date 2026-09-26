@@ -7,17 +7,23 @@ import projectSettingsAdvancedMessages from "@/messages/core/en/project-settings
 import projectSettingsExperimentalMessages from "@/messages/core/en/project-settings-experimental.json";
 import projectSettingsMigrationMessages from "@/messages/core/en/project-settings-migration.json";
 import projectSettingsShellMessages from "@/messages/core/en/project-settings-shell.json";
+import projectSettingsTrackingMessages from "@/messages/core/en/project-settings-tracking.json";
 import projectSettingsUsageMessages from "@/messages/core/en/project-settings-usage.json";
 import sharedMessages from "@/messages/core/en/shared.json";
 import type { Decorator } from "@storybook/nextjs-vite";
 
 const settingsShellMessages = mergeMessageCatalogs(sharedMessages, projectSettingsShellMessages);
+// Mirrors the data-sources route payload, which reuses the tracking search-sync and inspection cards.
+const dataSourcesSettingsMessages = mergeMessageCatalogs(
+  settingsShellMessages,
+  projectSettingsTrackingMessages,
+);
 
 /** Settings stories replace the global shared-only payload with their route payload. */
-export const withSettingsShellMessages: Decorator = (Story) => (
+export const withDataSourcesSettingsMessages: Decorator = (Story) => (
   <FeatureMessagesProvider
     locale={DEFAULT_LOCALE}
-    messages={settingsShellMessages}
+    messages={dataSourcesSettingsMessages}
     timeZone={DEFAULT_TIME_ZONE}
   >
     <DateFormatProvider value="month_first">

@@ -1,3 +1,4 @@
+import { Prisma } from "@/lib/generated/prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { keywordResource, type RankCheckRecord, rankCheckResource } from "./resources";
 
@@ -194,6 +195,21 @@ function checkRecord(run: Record<string, unknown> | null) {
 }
 
 describe("rankCheckResource", () => {
+  it.each([0, 1, 2, null])(
+    "exposes measured quota quantity %s without deriving it from depth",
+    (billingUnits) => {
+      const resource = rankCheckResource({
+        ...checkRecord(null),
+        provider: "serpapi",
+        billingUnits,
+      });
+      expect(resource.usage).toEqual({
+        quantity: billingUnits,
+        unit: "operations",
+        status: billingUnits === null ? "unconfirmed" : "confirmed",
+      });
+    },
+  );
   it("exposes the public run ID and preserves null for legacy checks", () => {
     expect(
       rankCheckResource(checkRecord({ publicId: "rcr_a00000000000000000000000" })),
@@ -224,6 +240,42 @@ describe("rankCheckResource", () => {
         status: "completed",
         trigger: "api",
       },
+    });
+  });
+
+  it("applies an explicit accounting override over the stored fields", () => {
+    const resource = rankCheckResource(
+      {
+        ...checkRecord(null),
+        provider: "serpapi",
+        billingUnits: 1,
+        costCents: new Prisma.Decimal(0.625),
+      },
+      { costCents: 1.5, usageQuantity: 3 },
+    );
+    expect(resource.cost_cents).toBe(1.5);
+    expect(resource.usage).toEqual({
+      quantity: 3,
+      status: "confirmed",
+      unit: "operations",
+    });
+  });
+
+  it("keeps an unknown accounting override null instead of the stored values", () => {
+    const resource = rankCheckResource(
+      {
+        ...checkRecord(null),
+        provider: "serpapi",
+        billingUnits: 3,
+        costCents: new Prisma.Decimal(2),
+      },
+      { costCents: null, usageQuantity: null },
+    );
+    expect(resource.cost_cents).toBeNull();
+    expect(resource.usage).toEqual({
+      quantity: null,
+      status: "unconfirmed",
+      unit: "operations",
     });
   });
 });

@@ -10,7 +10,8 @@
       "label": "Sekcje administracji instancją",
       "operations": "Operacje",
       "administration": "Administracja",
-      "audit": "Dziennik audytu"
+      "audit": "Dziennik audytu",
+      "metering": "Pomiar użycia"
     },
     "controls": {
       "refresh": "Odśwież",
@@ -312,6 +313,40 @@
       "statusFailed": "Nie powiodło się",
       "copyTargetId": "Kopiuj identyfikator celu audytu {targetId}",
       "targetUnavailable": "{targetType}:brak"
+    },
+    "metering": {
+      "title": "Pomiar użycia",
+      "heading": "Porównanie w trybie shadow",
+      "description": "Porównaj zapisane koszty dostawców bez zmiany decyzji o dostępie. Kwoty są w centach, chyba że podano inną jednostkę.",
+      "month": "Miesiąc",
+      "project": "Projekt",
+      "allProjects": "Wszystkie projekty",
+      "usage": "Użycie i dotychczasowe sumy",
+      "budgets": "Bieżące budżety",
+      "exceptions": "Wyjątki",
+      "emptyUsage": "Brak zapisanego użycia dla tego wyboru.",
+      "emptyBudgets": "Brak odwzorowanych budżetów dla tego wyboru.",
+      "emptyExceptions": "Brak oczekujących operacji i błędów shadow.",
+      "unavailableNote": "Dane pomiarowe są niedostępne. Kwoty i liczby są nieznane.",
+      "disagreements": "Rozbieżności z ostatnich 7 dni",
+      "connection": "Połączenie",
+      "surface": "Powierzchnia",
+      "funding": "Źródło finansowania",
+      "meter": "Koszt pomiarowy",
+      "reserved": "Zarezerwowane",
+      "legacy": "Dotychczasowy koszt",
+      "difference": "Różnica",
+      "certainty": "Pewność",
+      "used": "Zużyte",
+      "remaining": "Pozostało",
+      "resetsAt": "Reset",
+      "operation": "Operacja",
+      "state": "Stan",
+      "updatedAt": "Aktualizacja",
+      "unavailable": "Niedostępne",
+      "unlimited": "Bez limitu",
+      "truncated": "Pokazano ograniczony zestaw. Wybierz projekt, aby zawęzić wyniki.",
+      "budgetNote": "Budżety pokazują bieżący cykl niezależnie od wybranego miesiąca użycia."
     }
   }
 }

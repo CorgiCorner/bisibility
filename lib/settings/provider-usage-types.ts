@@ -1,4 +1,5 @@
 import type { DateFormatPreference } from "@/lib/dates/format";
+import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
 
 export type ProviderUsageFeature =
   | "backlinks"
@@ -8,11 +9,25 @@ export type ProviderUsageFeature =
   | "rank_check"
   | "ranked_keywords";
 
+export type ProviderUsageStatSource = {
+  count: number;
+  costCents: number;
+  scheduled: number;
+  source: ProviderRequestSource | "unknown";
+};
+
 export type ProviderUsageStat = {
+  bySource: ProviderUsageStatSource[];
   costCents: number;
   count: number;
   feature: ProviderUsageFeature;
   label: string;
+  /** Logical rank checks completed this month; kept separate from ledger usage. */
+  checksCount?: number;
+  /** Confirmed native quantity (searches) for quota features; null when unmeasured. */
+  quantity?: number | null;
+  /** Requests whose measurement has not settled yet; confirmed totals are partial then. */
+  unconfirmedCount?: number;
 };
 
 export type ProviderAvailabilityData =

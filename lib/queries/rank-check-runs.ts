@@ -8,7 +8,9 @@ import { getRequestMonthlySpendCents } from "@/lib/queries/workspace-request-dat
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { activeMarketLocationIds, runnableKeywordWhere } from "@/lib/rank-check/runnable";
 import { RUN_STATUSES } from "@/lib/rank-check/runs/contract";
+import { runUsage } from "@/lib/rank-check/runs/usage";
 import { scheduledRunProjection, scheduleProviderId } from "./check-schedule-list";
+import { ledgerActualCostCents, rankCheckRunLedgerActuals } from "./rank-check-run-accounting";
 import {
   type RankCheckRunActor,
   type RankCheckRunRow,
@@ -21,6 +23,7 @@ import {
   wasSkippedBeforeLaunch,
 } from "./rank-check-run-history";
 import { budgetForRuns, statusCsv } from "./rank-check-run-query-helpers";
+import { rankCheckRunUsageGroups } from "./rank-check-run-usage";
 
 async function rankCheckRunReadModel(
   row: RankCheckRunRow,
@@ -63,6 +66,7 @@ async function rankCheckRunReadModel(
       total: projection.targetCount,
     },
     estimatedCostCents: projection.estimatedCostCents ?? 0,
+    nativeEstimate: projection.nativeEstimate,
     keywordCount: projection.keywordCount,
     targetCount: projection.targetCount,
   };
@@ -118,6 +122,13 @@ export async function listRankCheckRuns(projectId: string, url: URL) {
       });
   const page = rows.slice(0, limit);
   const skippedBy = await skippedByRunPublicId(page);
+  const [usageGroups, ledgerActuals] = await Promise.all([
+    rankCheckRunUsageGroups(page.map((row) => row.id)),
+    rankCheckRunLedgerActuals(
+      projectId,
+      page.map((row) => row.id),
+    ),
+  ]);
   const budget = budgetForRuns(
     page,
     page.some((row) => row.blockedReason === "budget_exhausted")
@@ -136,7 +147,18 @@ export async function listRankCheckRuns(projectId: string, url: URL) {
       : null;
   return {
     data: await Promise.all(
-      page.map((row) => rankCheckRunReadModel(row, skippedBy.get(row.publicId) ?? null, budget)),
+      page.map(async (row) => {
+        const ledger = ledgerActuals.get(row.id);
+        return {
+          ...(await rankCheckRunReadModel(row, skippedBy.get(row.publicId) ?? null, budget)),
+          costCents: ledgerActualCostCents(ledger, row.costCents),
+          usage: runUsage(
+            { ...row, startedTargets: row._count.items },
+            usageGroups.get(row.id) ?? [],
+            ledger,
+          ),
+        };
+      }),
     ),
     nextCursor,
   };
@@ -155,13 +177,24 @@ export async function getRankCheckRun(projectId: string, publicId: string) {
   });
   if (!row) throw new ApiNotFoundError("Rank-check run not found.");
   const skippedBy = await skippedByRunPublicId([row]);
+  const [usageGroups, ledgerActuals] = await Promise.all([
+    rankCheckRunUsageGroups([row.id]),
+    rankCheckRunLedgerActuals(projectId, [row.id]),
+  ]);
   const budget = budgetForRuns(
     [row],
     row.blockedReason === "budget_exhausted" ? await getRequestMonthlySpendCents(projectId) : null,
   );
+  const ledger = ledgerActuals.get(row.id);
   return {
     ...(await rankCheckRunReadModel(row, skippedBy.get(row.publicId) ?? null, budget)),
+    costCents: ledgerActualCostCents(ledger, row.costCents),
     selectionSpec: row.selectionSpec,
+    usage: runUsage(
+      { ...row, startedTargets: row._count.items },
+      usageGroups.get(row.id) ?? [],
+      ledger,
+    ),
   };
 }
 

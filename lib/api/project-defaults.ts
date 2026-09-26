@@ -5,6 +5,7 @@ import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
 import { projectDefaultsPatchSchema } from "@/lib/schemas/project";
+import { resolveSerpDepth } from "@/lib/serp/constants";
 import {
   keywordMarketSelect,
   type ProjectDefaultMarket,
@@ -31,7 +32,7 @@ type DefaultsResourceRow = {
 };
 
 const unwrittenDefaults: DefaultsResourceRow = {
-  // Keep these fallback values aligned with ProjectDefaults in prisma/schema.prisma.
+  // Keep these fallback values aligned with ProjectDefaults in prisma/schema/core.prisma.
   cronExpression: null,
   frequency: "daily",
   jitterMinutes: 60,
@@ -109,7 +110,11 @@ export async function updateProjectDefaults(ctx: ApiContext, projectId: string) 
       where: { projectId: ctx.auth.project.id },
     }),
   ]);
-  const schedule = normalizeSchedule(data);
+  // serp_depth is optional on PATCH; an omitted value keeps the stored depth.
+  const schedule = normalizeSchedule({
+    ...data,
+    serpDepth: resolveSerpDepth(data.serpDepth ?? before?.serpDepth ?? undefined),
+  });
   const currentMarket = projectDefaultSerpMarket(before, keywords);
   const shouldResolveMarket =
     data.city !== undefined ||

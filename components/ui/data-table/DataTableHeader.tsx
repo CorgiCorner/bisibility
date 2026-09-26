@@ -110,7 +110,10 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
     <div className="sticky top-0 z-10 block bg-bg-elev" role="rowgroup">
       {/* biome-ignore lint/a11y/useSemanticElements: Virtualized rows require a div-based ARIA row. */}
       <div
-        className={cn(tableHeaderClassName, "flex h-[42px] border-t-0 font-semibold")}
+        className={cn(
+          tableHeaderClassName,
+          "flex h-[42px] border-t-0 font-semibold group-data-[bordered=false]/table:border-t",
+        )}
         role="row"
         tabIndex={-1}
       >

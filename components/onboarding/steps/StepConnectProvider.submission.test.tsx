@@ -166,7 +166,7 @@ describe("StepConnectProvider submission", () => {
         priority: 0,
       }),
     );
-    expect(screen.getByText("Provider")).toBeInTheDocument();
+    expect(screen.getByText("Rank data")).toBeInTheDocument();
   });
 
   it("submits SerpApi from onboarding as an API key credential", async () => {

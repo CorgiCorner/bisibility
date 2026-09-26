@@ -3,6 +3,7 @@
 import { SpendBar } from "@/components/cost-estimate/SpendBar";
 import { spendTone } from "@/components/cost-estimate/spend-tone";
 import { BudgetEditModal } from "@/components/settings/usage/BudgetEditModal";
+import { ProviderBudgetGuide } from "@/components/settings/usage/ProviderBudgetGuide";
 import { ProviderUsageRow } from "@/components/settings/usage/ProviderUsageRow";
 import { UsageCard } from "@/components/settings/usage/UsageCard";
 import { Button } from "@/components/ui/Button";
@@ -12,14 +13,19 @@ import { resolveDateFormat } from "@/lib/dates/resolve";
 import type { ProjectProviderSpend } from "@/lib/queries/provider-spend";
 import { appPath } from "@/lib/routing/app-path";
 import type { ProviderUsageData } from "@/lib/settings/options";
+import type { UsageBudgetCredits } from "@/lib/settings/usage-budget-credits";
+import { cn } from "@/lib/ui/cn";
 import { metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 type ProviderUsageCardProps = {
+  budgetExplanation?: ReactNode;
   canEditBudget: boolean;
+  /** Present only in deployments with credits; null hides every credits surface. */
+  credits?: UsageBudgetCredits | null;
   initialBudgetEditOpen?: boolean;
   projectId: string;
   projectRef: string;
@@ -52,7 +58,8 @@ function formatLocalizedNumber(value: number, locale: string) {
   return new Intl.NumberFormat(locale).format(value);
 }
 
-function recordedSpend(
+/** What providers charged on the project's own keys; credits are reported apart. */
+function paidToProviders(
   recorded: ProjectProviderSpend["summary"]["recorded"],
   locale: string,
   t: ProviderUsageTranslator,
@@ -145,11 +152,18 @@ function attentionCopy(usage: ProviderUsageCardProps["usage"], t: ProviderUsageT
   }
   if (connection.state === "top_up_required")
     return t("attentionTopUp", { provider: connection.provider });
+  const appCapped = connection.surfaces.app.state === "capped";
+  const programmaticCapped = connection.surfaces.programmatic.state === "capped";
+  if (programmaticCapped && !appCapped)
+    return t("attentionProgrammatic", { provider: connection.provider });
+  if (appCapped && !programmaticCapped) return t("attentionApp", { provider: connection.provider });
   return t("attentionPaused", { provider: connection.provider });
 }
 
 export function ProviderUsageCard({
+  budgetExplanation,
   canEditBudget,
+  credits = null,
   initialBudgetEditOpen = false,
   projectId,
   projectRef,
@@ -162,6 +176,19 @@ export function ProviderUsageCard({
   const { connections, summary } = usage.providerSpend;
   const banner = summary.attention.length ? attentionCopy(usage, t) : null;
   const summaryTone = spendTone(summary.maxUsedPercent ?? 0, summary.maxUsedPercent != null);
+  // Credits surfaces appear where credits can run, or where credits budgets or spend exist.
+  const creditsAvailable =
+    credits !== null &&
+    (credits.providers.length > 0 ||
+      connections.some(
+        (connection) =>
+          connection.credentialSource === "hosted" ||
+          connection.credits.requestCount > 0 ||
+          connection.credits.usedPriorMonth > 0 ||
+          connection.credits.surfaces.app.allocation !== null ||
+          connection.credits.surfaces.programmatic.allocation !== null,
+      ));
+  const showCreditsSpent = creditsAvailable || summary.recorded.creditsCents > 0;
   return (
     <UsageCard
       action={
@@ -177,6 +204,8 @@ export function ProviderUsageCard({
       title={t("title")}
     >
       <p className="m-0 text-[12px] text-fg-muted">{periodLine(usage, locale, t)}</p>
+      <ProviderBudgetGuide />
+      {budgetExplanation}
       {banner ? (
         <div className="mt-4 flex items-start gap-2.5 rounded-control border border-red/30 bg-[color-mix(in_srgb,var(--red)_8%,transparent)] px-3.5 py-3 text-[12.5px] leading-5 text-red-text">
           <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={16} weight="regular" />
@@ -196,10 +225,22 @@ export function ProviderUsageCard({
           <span className={metricEyebrowClassName}>{t("budgetUsed")}</span>
           {summary.tightest ? (
             <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-              {t("tightest", {
-                percent: formatLocalizedNumber(Math.round(summary.tightest.usedPercent), locale),
-                provider: summary.tightest.provider,
-              })}
+              {creditsAvailable
+                ? t("tightestSource", {
+                    percent: formatLocalizedNumber(
+                      Math.round(summary.tightest.usedPercent),
+                      locale,
+                    ),
+                    provider: summary.tightest.provider,
+                    source: summary.tightest.source,
+                  })
+                : t("tightest", {
+                    percent: formatLocalizedNumber(
+                      Math.round(summary.tightest.usedPercent),
+                      locale,
+                    ),
+                    provider: summary.tightest.provider,
+                  })}
             </span>
           ) : (
             <span className="font-sans tabular-nums text-[11px] text-fg-muted">
@@ -220,8 +261,19 @@ export function ProviderUsageCard({
           {projectionExplanation(usage, locale, t)}
         </p>
       </section>
-      <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border pt-4 sm:grid-cols-3">
-        <Kpi label={t("recordedSpend")} value={recordedSpend(summary.recorded, locale, t)} />
+      <div
+        className={cn(
+          "mt-4 grid grid-cols-2 gap-4 border-t border-border pt-4",
+          showCreditsSpent ? "sm:grid-cols-4" : "sm:grid-cols-3",
+        )}
+      >
+        <Kpi label={t("paidToProviders")} value={paidToProviders(summary.recorded, locale, t)} />
+        {showCreditsSpent ? (
+          <Kpi
+            label={t("creditsSpent")}
+            value={formatUsdCents(summary.recorded.creditsCents, locale)}
+          />
+        ) : null}
         <Kpi
           label={t("providerRequests")}
           value={formatLocalizedNumber(summary.requestCount, locale)}
@@ -233,6 +285,7 @@ export function ProviderUsageCard({
           {connections.map((connection) => (
             <ProviderUsageRow
               connection={connection}
+              creditsAvailable={creditsAvailable}
               key={connection.connectionId}
               now={usage.period.now}
             />
@@ -246,6 +299,7 @@ export function ProviderUsageCard({
       {editOpen ? (
         <BudgetEditModal
           connections={connections}
+          credits={creditsAvailable ? credits : null}
           onClose={() => setEditOpen(false)}
           onSaved={() => setEditOpen(false)}
           projectId={projectId}

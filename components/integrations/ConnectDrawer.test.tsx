@@ -357,6 +357,43 @@ describe("ConnectDrawer", () => {
     expect(screen.queryByText("$0.00")).not.toBeInTheDocument();
   });
 
+  it("requires a new tested key for a hosted connection and keeps rates read-only", async () => {
+    const provider = connectedDataForSeo();
+    renderDrawer({
+      ...provider,
+      connectionId: "conn_0123456789abcdefghjkmnpq",
+      connectionUpdatedAt: "2026-09-24T00:00:00.000Z",
+      credentialSource: "hosted",
+      drawer: {
+        ...provider.drawer,
+        credentialFields: providerCredentialFieldsFor("dataforseo", { connected: false }),
+        defaults: { ...provider.drawer.defaults, login: "", secret: "" },
+      },
+    });
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /Edit rate/i })).toBeNull();
+    fireEvent.change(screen.getByLabelText("API login"), {
+      target: { value: "new-user@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("API password"), {
+      target: { value: "new-fixture-key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() =>
+      expect(actions.connectProvider).toHaveBeenCalledWith(
+        expect.objectContaining({
+          expectedConnectionId: "conn_0123456789abcdefghjkmnpq",
+          expectedConnectionUpdatedAt: "2026-09-24T00:00:00.000Z",
+          expectedCredentialSource: "hosted",
+          login: "new-user@example.com",
+          secret: "new-fixture-key",
+        }),
+      ),
+    );
+  });
+
   it("saves connected-provider settings without a fresh test when credentials are untouched", async () => {
     const { onClose } = renderDrawer(connectedDataForSeo());
 
@@ -432,7 +469,7 @@ describe("ConnectDrawer", () => {
     messages.projectIntegrations.drawer.connectionVerifiedWithDetail =
       "Połączenie zweryfikowane: {detail}";
     actions.testProviderConnection.mockResolvedValueOnce({
-      message: "Connection OK · example.com.",
+      message: "Connected · example.com.",
       ok: true,
     });
 
@@ -452,7 +489,7 @@ describe("ConnectDrawer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
 
     expect(await screen.findByText("Połączenie zweryfikowane: example.com.")).toBeInTheDocument();
-    expect(screen.queryByText("Connection OK · example.com.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Connected · example.com.")).not.toBeInTheDocument();
   });
 
   it.each([

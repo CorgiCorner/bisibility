@@ -157,16 +157,16 @@ v.describe("SearchInsightsBody", () => {
       v.expect(
         r.within(card).getByText(KEY_EVENTS_NOT_CONFIGURED, { exact: false }),
       ).toBeInTheDocument();
-      v.expect(heading.parentElement?.nextElementSibling).not.toContainElement(manage);
+      v.expect(heading.parentElement).not.toContainElement(manage);
       v.expect(manage).toHaveAttribute("href", "/app/prj_1/integrations?connect=ga4");
-      v.expect(manage.parentElement).toHaveClass("ms-auto");
+      v.expect(r.within(card).getByTestId("data-table-footer")).toContainElement(manage);
       v.expect(t.pageColumnHeaders(card).some((item) => item.textContent === "Key events")).toBe(
         false,
       );
     },
   );
 
-  v.it("puts the Top pages lens on the title row and keeps Manage GA4 in Traffic", () => {
+  v.it("puts the Top pages lens next to the search and keeps Manage GA4 in Traffic", () => {
     const connected = {
       importState: null,
       keyEventsConfigured: false as const,
@@ -188,15 +188,16 @@ v.describe("SearchInsightsBody", () => {
     const caption = r.within(searchCard).getByText(TABLE_CAPTIONS.pages);
     const lens = r.within(searchCard).getByRole("group", { name: PAGE_LENS_CONTROL_LABEL });
     const titleGroup = heading.parentElement as HTMLElement;
-    const header = titleGroup.parentElement as HTMLElement;
+    const search = r.within(searchCard).getByRole("searchbox", { name: "Search pages" });
     v.expect(titleGroup).toContainElement(caption);
     v.expect(titleGroup).toHaveClass("gap-1");
-    v.expect(header).toHaveClass("items-start", "justify-between");
-    v.expect(header).toContainElement(lens);
     v.expect(titleGroup).not.toContainElement(lens);
+    v.expect(lens.closest(".ms-auto")?.parentElement).toContainElement(search);
+    // The lens shares the 34px toolbar height with the search beside it.
     v.expect(
       r.screen.getByRole("radio", { name: PAGE_LENS_SEARCH_LABEL }).parentElement?.parentElement,
-    ).toHaveClass("min-h-[30px]");
+    ).toHaveClass("min-h-[34px]");
+    v.expect(search.closest("label")).toHaveClass("min-h-[34px]");
     v.expect(
       r.within(searchCard).queryByRole("link", { name: "Manage GA4" }),
     ).not.toBeInTheDocument();
@@ -217,8 +218,8 @@ v.describe("SearchInsightsBody", () => {
     v.expect(manage).toHaveAttribute("href", "/app/prj_1/integrations?connect=ga4");
     v.expect(manage).toHaveClass("hover:underline");
     v.expect(manage).not.toHaveClass("underline");
-    v.expect(trafficHeading.parentElement?.nextElementSibling).not.toContainElement(manage);
-    v.expect(manage.parentElement).toHaveClass("ms-auto");
+    v.expect(trafficHeading.parentElement).not.toContainElement(manage);
+    v.expect(r.within(trafficCard).getByTestId("data-table-footer")).toContainElement(manage);
     v.expect(
       r.within(trafficCard).getByText(KEY_EVENTS_NOT_CONFIGURED, { exact: false }),
     ).toBeInTheDocument();

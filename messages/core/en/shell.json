@@ -260,7 +260,15 @@
       "projects": "Projects",
       "sample": "Sample",
       "switch": "Switch project",
-      "keywordCount": "{count, plural, =0 {# keywords} one {# keyword} other {# keywords}}"
+      "keywordCount": "{count, plural, =0 {# keywords} one {# keyword} other {# keywords}}",
+      "defaultProject": {
+        "error": "Could not update your default project. Please try again.",
+        "isDefault": "Default project",
+        "isDefaultDescription": "Select to stop opening this project first.",
+        "label": "Default project: {name}",
+        "makeDefault": "Make default project",
+        "makeDefaultDescription": "Opens first when you sign in."
+      }
     },
     "writeMode": {
       "migrationSettings": "Migration settings",

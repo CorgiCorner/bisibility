@@ -66,7 +66,7 @@ it("creates a draft market through the shared drawer, keeps it across navigation
   expect(actions.addKeywordsAction).not.toHaveBeenCalled();
 
   const rail = screen.getByLabelText("Onboarding steps");
-  fireEvent.click(within(rail).getByRole("button", { name: /Provider/ }));
+  fireEvent.click(within(rail).getByRole("button", { name: /Rank data/ }));
   // The rail no longer jumps forward past the current step, so returning to the keywords
   // step goes through this step's own Skip, which is the path a user has.
   fireEvent.click(

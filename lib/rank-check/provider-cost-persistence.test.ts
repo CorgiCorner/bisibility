@@ -8,6 +8,45 @@ describe("writeRankCheckProviderCostEntry", () => {
     vi.restoreAllMocks();
   });
 
+  it.each(["recorded", "unknown"])(
+    "does not add an aggregate over an existing %s request receipt",
+    async (measurementStatus) => {
+      const tx = {
+        providerCostEntry: {
+          findFirst: vi.fn().mockResolvedValue({ id: "receipt_1", measurementStatus }),
+          createMany: vi.fn().mockResolvedValue({ count: 1 }),
+        },
+      };
+      await writeRankCheckProviderCostEntry(tx as never, {
+        connectionId: "connection_1",
+        projectId: "project_1",
+        provider: "dataforseo",
+        costCents: 1.25,
+        failed: true,
+        usage: {
+          context: {
+            correlationId: "queued_task_1",
+            feature: "rank_check",
+            projectId: "project_1",
+            source: "worker",
+            trigger: "scheduled",
+          },
+          tag: "trusted-tag",
+        },
+      });
+      expect(tx.providerCostEntry.createMany).not.toHaveBeenCalled();
+      expect(tx.providerCostEntry.findFirst).toHaveBeenCalledWith({
+        select: { id: true },
+        where: {
+          connectionId: "connection_1",
+          projectId: "project_1",
+          feature: "rank_check",
+          correlationId: "queued_task_1",
+        },
+      });
+    },
+  );
+
   it("keeps unattributed provider requests idempotent", async () => {
     const rows = new Map<string, unknown>();
     const tx = {

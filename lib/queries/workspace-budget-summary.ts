@@ -58,7 +58,12 @@ export async function loadWorkspaceBudgetSummary(
       hasAllocation,
       headerAction: connected.length ? (hasAllocation ? "details" : "set_budget") : null,
       maxUsedPercent: providerSpend.summary.maxUsedPercent,
-      recorded: providerSpend.summary.recorded,
+      // The header pill shows one total the workspace paid this month: provider charges
+      // on its own keys plus credits spent. Budgets stay separate per source.
+      recorded: {
+        cents: providerSpend.summary.recorded.cents + providerSpend.summary.recorded.creditsCents,
+        units: providerSpend.summary.recorded.units,
+      },
       spentCents,
       tightest: providerSpend.summary.tightest,
     };

@@ -109,7 +109,7 @@ describe("useKeywordRunChecks", () => {
     });
   });
 
-  it("adds estimated spend only for checks that started", async () => {
+  it("does not record queued estimates as confirmed session spend", async () => {
     const runCheckNowAction = vi
       .fn()
       .mockResolvedValueOnce({ status: "queued" })
@@ -131,7 +131,7 @@ describe("useKeywordRunChecks", () => {
 
     await act(async () => result.current.runChecks(keywordRows.slice(0, 2).map((row) => row.id)));
 
-    expect(result.current.sessionCents).toBe(2);
+    expect(result.current.sessionCents).toBe(0);
     expect(result.current.statusLabel).toBe("Started 1 rank check. 1 rank check failed to start.");
   });
 });

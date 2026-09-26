@@ -4,7 +4,7 @@ description: "How bisibility app, REST API, and client package versions relate, 
 ---
 
 The application version, the REST API contract, and the SDK, CLI, and MCP
-packages version independently. Do not treat an app release such as `0.25.0`
+packages version independently. Do not treat an app release such as `0.26.0`
 as the TypeScript, Python, Go, CLI, or MCP version.
 
 application version ≠ REST API contract ≠ OpenAPI document version ≠
@@ -58,7 +58,7 @@ All listed clients target REST API v1 unless a row says otherwise.
 
 | Component | Distribution | Docs-tested version | API contract | Runtime | Test artifact | Last verified | Support |
 | - | - | - | - | - | - | - | - |
-| Application | bisibility | `0.25.0` | `v1` | Node 22 | `package.json` | 2026-09-18 | pre-1.0 |
+| Application | bisibility | `0.26.0` | `v1` | Node 22 | `package.json` | 2026-09-21 | pre-1.0 |
 | REST API | `/api/v1` | `v1` | `v1` | HTTP | `docs/openapi.snapshot.json` | 2026-09-12 | current contract |
 | TypeScript SDK | `@bisibility/sdk` | `0.12.0` | `v1` | Node 18+ | `examples/ts/package.json` | 2026-09-12 | independently versioned |
 | Python SDK | `bisibility` | `0.9.0` | `v1` | Python 3 | `examples/python/requirements.txt` | 2026-09-12 | independently versioned; package metadata may mark it Alpha |

@@ -18,6 +18,8 @@ function iso(date: Date) {
 }
 
 type CheckHealthStatsRow = {
+  currentFailedCount: number;
+  latestCurrentFailedCheckId: string | null;
   failedCount: number;
   latestCheckedAt: Date | null;
   latestError: string | null;
@@ -29,13 +31,25 @@ type CheckHealthStatsRow = {
 
 export async function loadCheckHealthStats(projectId: string, since: Date) {
   const [row] = await prisma.$queryRaw<CheckHealthStatsRow[]>`
-    WITH scoped_checks AS (
+    WITH scoped_keywords AS (
+      SELECT id, text, "archivedAt" FROM "keywords" WHERE "projectId" = ${projectId}
+    ), scoped_checks AS (
       SELECT rc."checkedAt", rc.error, rc."errorCode", rc.provider, rc.status, k.text AS keyword
       FROM "rank_checks" rc
-      JOIN "keywords" k ON k.id = rc."keywordId"
-      WHERE k."projectId" = ${projectId}
+      JOIN scoped_keywords k ON k.id = rc."keywordId"
+    ), current_checks AS (
+      SELECT latest.* FROM scoped_keywords k
+      CROSS JOIN LATERAL (
+        SELECT rc.id, rc."publicId", rc.status, rc."checkedAt"
+        FROM "rank_checks" rc WHERE rc."keywordId" = k.id
+        ORDER BY rc."checkedAt" DESC, rc.id DESC LIMIT 1
+      ) latest
+      WHERE k."archivedAt" IS NULL
     )
     SELECT
+      (SELECT COUNT(*)::int FROM current_checks WHERE status = 'failed') AS "currentFailedCount",
+      (SELECT "publicId" FROM current_checks WHERE status = 'failed'
+        ORDER BY "checkedAt" DESC, id DESC LIMIT 1) AS "latestCurrentFailedCheckId",
       (SELECT COUNT(*)::int FROM scoped_checks WHERE status = 'failed' AND "checkedAt" >= ${since}) AS "failedCount",
       latest."checkedAt" AS "latestCheckedAt",
       latest.error AS "latestError",
@@ -54,6 +68,8 @@ export async function loadCheckHealthStats(projectId: string, since: Date) {
   `;
   return (
     row ?? {
+      currentFailedCount: 0,
+      latestCurrentFailedCheckId: null,
       failedCount: 0,
       latestCheckedAt: null,
       latestError: null,
@@ -90,6 +106,10 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
       capCents,
       exhausted: monthlyBudgetExhausted(capCents, spentCents),
       spentCents,
+    },
+    currentFailures: {
+      count: stats.currentFailedCount ?? 0,
+      latestCheckId: stats.latestCurrentFailedCheckId ?? null,
     },
     failed24h: {
       count: stats.failedCount,

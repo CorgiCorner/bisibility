@@ -16,11 +16,7 @@ import {
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
-import {
-  monthlyLookupSpendByConnection,
-  monthlySpendCents,
-  monthUtcRange,
-} from "@/lib/rank-check/budget";
+import { monthlySpendCents, monthUtcRange } from "@/lib/rank-check/budget";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { aggregateObservedUsage } from "@/lib/rank-check/observed-usage";
 import {
@@ -35,8 +31,10 @@ import { resolveSearchSyncSettings } from "@/lib/settings/search-sync-config";
 import { loadSearchSyncMetrics } from "@/lib/settings/search-sync-metrics";
 import { requireReadableProject } from "./_auth";
 import { apiKeyExpiryLabel } from "./api-key-settings";
+import { monthlySpendByApiKey } from "./api-key-spend";
 import { loadProviderAvailability } from "./provider-availability";
 import { loadProjectProviderSpend } from "./provider-spend";
+import { providerCostBySource } from "./provider-spend-usage";
 import { initials, memberColor, roleLabel } from "./settings-members";
 import { settingsConnectionUsage, settingsProviderSummaries } from "./settings-provider-summaries";
 import type { SettingsView } from "./settings-view-types";
@@ -89,7 +87,7 @@ function labelFromDate(prefix: string, date: Date | null | undefined, dateTime: 
 export async function getSettings(projectId: string, options: { dateFormat?: DateFormatPreference; now?: Date } = {}): Promise<SettingsView> {
   const { project } = await requireReadableProject(projectId);
   const now = options.now ?? new Date();
-  const [fullProject, monthChecks, spentCents, connectionLookups, providerSpend, savedViews] =
+  const [fullProject, monthChecks, spentCents, apiKeySpend, sourceUsage, providerSpend, savedViews] =
     await Promise.all([
     prisma.project.findUnique({
       include: {
@@ -114,7 +112,8 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
       },
     }),
     monthlySpendCents(project.id, now),
-    monthlyLookupSpendByConnection(project.id, now),
+    monthlySpendByApiKey(project.id, now),
+    providerCostBySource(project.id, now),
     loadProjectProviderSpend({ catalog: PROVIDER_CATALOG, now, projectId: project.id }),
     prisma.savedView.findMany({
       select: { config: true },
@@ -192,6 +191,7 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
       lastUsedLabel: labelFromDate("last used", apiKey.lastUsedAt, dateTime),
       maskedValue: `${apiKey.prefix}******`,
       name: apiKey.name,
+      spendThisMonthCents: apiKeySpend.get(apiKey.id) ?? 0,
     })),
     defaults: {
       city: market.city,
@@ -267,10 +267,10 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
       connections: settingsConnectionUsage(
         fullProject.providerConnections,
         monthChecks,
-        connectionLookups,
         serpDepth,
         rateContexts,
         providerAvailability,
+        sourceUsage,
       ),
       providerSpend,
       hasProvider: primarySerp != null,

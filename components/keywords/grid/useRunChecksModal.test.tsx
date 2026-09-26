@@ -1,4 +1,7 @@
-import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
+import {
+  SessionSpendProvider,
+  useSessionSpend,
+} from "@/components/cost-estimate/SessionSpendProvider";
 import type { RankCheckBatchPollAction } from "@/components/keywords/use-rank-check-batch-poll";
 import {
   featureMessagesElement,
@@ -46,6 +49,29 @@ function RunChecksModalProbe({ pollAction }: { pollAction: RankCheckBatchPollAct
 describe("useRunChecksModal", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
+
+  it("does not add estimated session spend when a queued check is accepted", async () => {
+    const { result } = renderHook(
+      () => ({
+        ...useRunChecksModal({
+          onSettled: vi.fn(),
+          pollAction: vi.fn().mockResolvedValue([]),
+          projectId: "prj_abcdefghijklmnopqrstuvwx",
+          providerRate: { overrideCents: 2, providerId: "dataforseo" },
+          rows: [],
+          runCheckNowAction: vi.fn().mockResolvedValue({ ok: true, rankCheckId: CHECK_ID }),
+        }),
+        sessionCents: useSessionSpend().sessionCents,
+      }),
+      { wrapper },
+    );
+
+    act(() => result.current.request(["kw_abcdefghijklmnopqrstuvwx"]));
+    await act(async () => result.current.confirm());
+
+    expect(result.current.flow?.step).toBe("running");
+    expect(result.current.sessionCents).toBe(0);
+  });
 
   it("keeps batch polling after the running modal closes and refreshes on terminal", async () => {
     const onSettled = vi.fn();

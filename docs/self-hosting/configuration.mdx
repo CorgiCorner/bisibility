@@ -179,6 +179,19 @@ hand.
 | `AUDIT_RETENTION_DAYS`, `AUDIT_IP_HMAC_SECRET`, `APP_VERSION` | Audit retention, optional source-IP HMAC hashing, and an audit version label. |
 | `DATA_REGION` | Optional data-residency label shown in auth and onboarding surfaces. |
 
+### Shadow metering
+
+| Variable | Purpose |
+| - | - |
+| `METERING_SHADOW` | Optional accounting comparison. Defaults to `off`. `on` also requires each project's `metering.shadow.project.<id>` instance setting to be `on`. Existing admission stays authoritative. |
+| `METERING_NAMESPACE` | Accounting partition shared by app and worker. Defaults to `default`. Keep it stable after recording usage. |
+
+Apply the metering schema and mirror existing connection allocations before opting in a project.
+The administrator metering page compares provider usage with recorded legacy costs.
+The Temporal schedule `maintenance-metering-shadow` sweeps expired undispatched reservations
+every minute when scheduled maintenance and shadow are enabled. Dispatched calls with
+uncertain outcomes remain in the exceptions queue until provider evidence can resolve them.
+
 ### Operator observability
 
 | Variable | Purpose |

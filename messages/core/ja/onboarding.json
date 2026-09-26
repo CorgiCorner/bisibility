@@ -304,7 +304,7 @@
         },
         "getCredentials": "API 認証情報を取得",
         "group": "SERP プロバイダー",
-        "label": "順位データ / 順位チェックに使用",
+        "label": "プロバイダーを選択",
         "notice": "接続はプロバイダーごとに保存されます。切り替えても切断されません。",
         "serpapi": {
           "capability": "順位チェックのみ対応します。",
@@ -358,10 +358,10 @@
         "title": "プロバイダーを接続"
       },
       "searchConsole": {
-        "label": "サイトのデータ / 任意、無料",
+        "label": "Search Console · 任意",
         "tooltip": "Search Console では、サイトがすでに順位を獲得しているクエリを確認できます。キーワード候補を無料でインポートできますが、順位のチェックはできません。"
       },
-      "title": "プロバイダー",
+      "title": "順位データ",
       "skip": "プロバイダーの接続をスキップしてキーワードを一時停止状態で追加",
       "skipLabel": "今はスキップ",
       "video": {
@@ -374,7 +374,8 @@
           "title": "SerpApi アカウントの設定"
         },
         "watch": "設定ガイドを見る"
-      }
+      },
+      "description": "順位チェックのデータ取得方法を選択します。後から連携設定で変更できます。"
     },
     "residency": {
       "message": "データは {region} で保存・処理されます。"
@@ -425,8 +426,8 @@
         "title": "キーワード"
       },
       "provider": {
-        "description": "SERP プロバイダーと検索インサイト",
-        "title": "プロバイダー"
+        "description": "順位チェックと検索データ",
+        "title": "順位データ"
       },
       "website": {
         "description": "名前とドメイン",

@@ -24,6 +24,12 @@ function context(method: string, body?: unknown) {
     headers: new Headers(),
     instance: "urn:test",
     method,
+    origin: {
+      credentialId: "key_test",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
     path: [],
     req: new Request(url, {
       body: body === undefined ? undefined : JSON.stringify(body),

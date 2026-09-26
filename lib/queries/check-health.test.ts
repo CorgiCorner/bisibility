@@ -45,7 +45,7 @@ describe("check health query", () => {
   });
 
   it("returns budget, failed-check, and running-check state for a readable project", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 500 } });
+    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 500 } });
     mocks.prisma.$queryRaw.mockResolvedValue([
       {
         failedCount: 2,
@@ -63,6 +63,7 @@ describe("check health query", () => {
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
     expect(result).toEqual({
       budget: { capCents: 500, exhausted: true, spentCents: 500 },
+      currentFailures: { count: 0, latestCheckId: null },
       failed24h: {
         count: 2,
         latest: {
@@ -82,11 +83,19 @@ describe("check health query", () => {
   it("scopes every rank-check read to the authorized project id", async () => {
     await getCheckHealth("prj_1", { now });
 
-    expect(mocks.prisma.rankCheck.aggregate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ keyword: { projectId: "project_1" } }),
-      }),
-    );
+    expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
+    expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledWith({
+      _sum: { costCents: true },
+      where: {
+        cached: false,
+        createdAt: {
+          gte: new Date("2026-07-01T00:00:00.000Z"),
+          lt: new Date("2026-08-01T00:00:00.000Z"),
+        },
+        measurementStatus: "recorded",
+        projectId: "project_1",
+      },
+    });
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledOnce();
     expect(mocks.prisma.$queryRaw.mock.calls[0]?.[0].join(" ")).toContain('rc."errorCode"');
     expect(mocks.prisma.$queryRaw.mock.calls[0]?.slice(1)).toEqual([
@@ -143,7 +152,7 @@ describe("check health query", () => {
   });
 
   it("keeps budget available when monthly spend is below the cap", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 125 } });
+    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 125 } });
 
     await expect(getCheckHealth("prj_1", { now })).resolves.toMatchObject({
       budget: { capCents: 500, exhausted: false, spentCents: 125 },

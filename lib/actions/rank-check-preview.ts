@@ -1,12 +1,11 @@
 "use server";
 
 import { writeAudit } from "@/lib/auth/audit";
-import { unitCostCentsFor } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { buildFirstCheckRunPlan } from "@/lib/queries/first-check-run-plan";
 import { firstCheckTargets } from "@/lib/queries/first-check-targets";
 import { monthlySpendCents, projectBudgetCapCents } from "@/lib/rank-check/budget";
-import { monthlyBudgetExhausted } from "@/lib/rank-check/budget-contract";
-import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { launchSingleRankCheckRun } from "@/lib/rank-check/runs/launch-single";
 import {
   isLaunchRankCheckRunNothingToRun,
@@ -19,9 +18,8 @@ import {
   listFirstCheckCandidatesSchema,
   runFirstCheckPreviewSchema,
 } from "@/lib/schemas/keyword";
-import { DEFAULT_SERP_DEPTH, SERP_ENGINE, serpDepthValues } from "@/lib/serp/constants";
+import { DEFAULT_SERP_DEPTH, SERP_ENGINE } from "@/lib/serp/constants";
 import { serpCountryByCode } from "@/lib/serp/country-catalog";
-import { keywordMarketSelect, projectDefaultSerpMarket } from "@/lib/serp/default-market";
 import {
   getActionActor,
   parseActionInput,
@@ -126,10 +124,6 @@ const samplePreviewCountry = (() => {
   return country;
 })();
 
-function previewSerpDepth(value: number | null | undefined) {
-  return serpDepthValues.find((depth) => depth === value) ?? DEFAULT_SERP_DEPTH;
-}
-
 export async function getFirstCheckRunPlan(input: unknown): Promise<FirstCheckRunPlan> {
   const data = parseActionInput(getFirstCheckRunPlanSchema, input);
   const actor = await getActionActor();
@@ -156,44 +150,7 @@ export async function getFirstCheckRunPlan(input: unknown): Promise<FirstCheckRu
       },
     };
   }
-  const [readyCount, connections, defaults, keywords, spentCents, capCents] = await Promise.all([
-    prisma.keyword.count({
-      where: { projectId: project.id, rankChecks: { none: { status: "completed" } } },
-    }),
-    loadSerpProviderChain(project.id),
-    prisma.projectDefaults.findUnique({ where: { projectId: project.id } }),
-    prisma.keyword.findMany({ select: keywordMarketSelect, where: { projectId: project.id } }),
-    monthlySpendCents(project.id),
-    projectBudgetCapCents(project.id),
-  ]);
-  const market = projectDefaultSerpMarket(defaults, keywords);
-  const providers = connections.map((connection) => connection.provider);
-  const depth = previewSerpDepth(defaults?.serpDepth);
-  const estimatedCostPerCheckCents = unitCostCentsFor(
-    {
-      overrideCents:
-        connections[0]?.costPerCheckCents == null ? null : Number(connections[0].costPerCheckCents),
-      providerId: connections[0]?.provider ?? null,
-      rateContext: connections[0]?.rateContext,
-    },
-    depth,
-  );
-  return {
-    budget: { capCents, spentCents },
-    budgetExhausted: monthlyBudgetExhausted(capCents, spentCents),
-    estimatedCostPerCheckCents,
-    isSampleProject: false,
-    providerReady: providers.length > 0,
-    providers,
-    readyCount,
-    scope: {
-      depth,
-      device: market.device,
-      engine: SERP_ENGINE.id,
-      frequency: defaults?.frequency ?? "daily",
-      location: market.displayName,
-    },
-  };
+  return buildFirstCheckRunPlan(project.id);
 }
 
 export async function runFirstCheckPreview(input: unknown): Promise<RunFirstCheckPreviewResult> {
@@ -231,6 +188,7 @@ export async function runFirstCheckPreview(input: unknown): Promise<RunFirstChec
       const launched = await launchSingleRankCheckRun({
         actorId: actor.id,
         keywordId: keywordScope.publicId as `kw_${string}`,
+        origin: APP_REQUEST_ORIGIN,
         project,
         trigger: "manual",
       });

@@ -68,12 +68,14 @@ export async function loadCheckRunsSummary(
         where: { ...scope, viaFallback: true },
       }),
       prisma.$queryRaw<SpendRow[]>`
-      SELECT COALESCE(SUM(COALESCE(rc."costCents", rc."estimatedCostCents")), 0) AS total
-      FROM "rank_checks" rc
-      JOIN "keywords" k ON k.id = rc."keywordId"
-      WHERE k."projectId" = ${projectId}
-        AND rc."checkedAt" >= ${range.start}
-        AND rc."checkedAt" <= ${range.end}
+      SELECT COALESCE(SUM("costCents"), 0) AS total
+      FROM "provider_cost_entries"
+      WHERE "projectId" = ${projectId}
+        AND feature = 'rank_check'
+        AND "createdAt" >= ${range.start}
+        AND "createdAt" <= ${range.end}
+        AND cached = false
+        AND "measurementStatus" = 'recorded'
     `,
       prisma.$queryRaw<DeferredGroupRow[]>`
       SELECT

@@ -125,6 +125,21 @@ Selection precedence is: `{project_id}` path parameter, X-Bisibility-Project hea
 If the user belongs to multiple projects and no selector is present, the API
 returns `400 Bad Request` with `projectSelectionRequired`.
 
+## Declaring the client source
+
+API, MCP and SDK requests can declare which client produced them:
+
+```text
+X-Bisibility-Source: sdk
+```
+
+Allowed values are `sdk`, `cli`, and `mcp`; any other value (or a missing
+header) counts as `api`. The header only refines usage reporting in
+**Settings > Provider usage**. It never changes authentication and never
+changes which budget applies: every bearer-authenticated request counts
+against the API, MCP and SDK budget. The SDKs and the CLI send the header
+automatically from their next release.
+
 ## Rate limits
 
 Every request includes rate-limit headers:

@@ -13,9 +13,13 @@ export type LegacyAllocationBackfillResult =
 const connectionSelect = {
   allocationAmountPerMonth: true,
   allocationUnit: true,
+  credentialSource: true,
+  creditsAllocationAmountPerMonth: true,
+  creditsProgrammaticAllocationAmountPerMonth: true,
   enabled: true,
   id: true,
   priority: true,
+  programmaticAllocationAmountPerMonth: true,
   provider: true,
   status: true,
 } as const;
@@ -43,11 +47,32 @@ export async function backfillLegacyProjectAllocationInLockedTransaction(
   if (!primary) return { internalPrimaryConnectionId: null, status: "deferred_no_eligible" };
   validateAllocationAmount(project.budgetCapCents);
   await tx.providerConnection.updateMany({
-    data: { allocationAmountPerMonth: null, allocationUnit: null },
+    data: {
+      allocationAmountPerMonth: null,
+      allocationUnit: null,
+      creditsAllocationAmountPerMonth: null,
+      creditsProgrammaticAllocationAmountPerMonth: null,
+      programmaticAllocationAmountPerMonth: null,
+    },
     where: { projectId: internalProjectId },
   });
+  // The legacy project cap seeds both surfaces so the cutover loosens nothing (plan P4).
+  // It lands in the budget of the source the primary runs on today: own keys and
+  // credits keep separate budgets.
+  const hosted =
+    project.providerConnections.find((connection) => connection.id === primary.id)
+      ?.credentialSource === "hosted";
   await tx.providerConnection.update({
-    data: { allocationAmountPerMonth: project.budgetCapCents, allocationUnit: "cents" },
+    data: hosted
+      ? {
+          creditsAllocationAmountPerMonth: project.budgetCapCents,
+          creditsProgrammaticAllocationAmountPerMonth: project.budgetCapCents,
+        }
+      : {
+          allocationAmountPerMonth: project.budgetCapCents,
+          allocationUnit: "cents",
+          programmaticAllocationAmountPerMonth: project.budgetCapCents,
+        },
     where: { id: primary.id },
   });
   await tx.project.update({

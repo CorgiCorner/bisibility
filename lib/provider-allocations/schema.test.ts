@@ -1,8 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { providerAllocationSchema } from "@/lib/schemas/usage-settings";
 import { describe, expect, it } from "vitest";
 
-const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8");
+const connectionId = "conn_abcdefghijklmnopqrstuvwx";
+const baseInput = { allocation: { amountDollars: "25.00", unit: "cents" }, connectionId };
+
+const schema = readFileSync(join(process.cwd(), "prisma/schema/core.prisma"), "utf8");
 const migration = readFileSync(
   join(
     process.cwd(),
@@ -63,5 +67,46 @@ describe("provider allocation storage schema", () => {
     );
     expect(migration).toContain("Reconcile duplicate ledger rows before retrying this migration.");
     expect(migration).not.toMatch(/dataforseo|serpapi/i);
+  });
+});
+
+describe("providerAllocationSchema programmaticAllocation", () => {
+  it("accepts programmaticAllocation as a dollars-to-cents value", () => {
+    expect(
+      providerAllocationSchema.parse({
+        ...baseInput,
+        programmaticAllocation: { amountDollars: "10.00", unit: "cents" },
+      }),
+    ).toEqual({
+      allocation: { amountDollars: "25.00", unit: "cents" },
+      connectionId,
+      programmaticAllocation: { amountDollars: "10.00", unit: "cents" },
+    });
+  });
+
+  it("accepts programmaticAllocation as a native unit amount", () => {
+    expect(
+      providerAllocationSchema.parse({
+        ...baseInput,
+        programmaticAllocation: { amount: 500, unit: "units" },
+      }),
+    ).toEqual({
+      allocation: { amountDollars: "25.00", unit: "cents" },
+      connectionId,
+      programmaticAllocation: { amount: 500, unit: "units" },
+    });
+  });
+
+  it("accepts programmaticAllocation as null to clear the programmatic cap", () => {
+    expect(providerAllocationSchema.parse({ ...baseInput, programmaticAllocation: null })).toEqual({
+      allocation: { amountDollars: "25.00", unit: "cents" },
+      connectionId,
+      programmaticAllocation: null,
+    });
+  });
+
+  it("keeps programmaticAllocation optional when the key is absent", () => {
+    expect("programmaticAllocation" in providerAllocationSchema.parse(baseInput)).toBe(false);
+    expect(providerAllocationSchema.safeParse(baseInput).success).toBe(true);
   });
 });

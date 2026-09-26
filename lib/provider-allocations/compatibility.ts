@@ -4,8 +4,14 @@ import type {
   AllocationProject,
   EffectiveProviderAllocation,
   ProviderAllocation,
+  SurfaceAllocations,
 } from "./types";
-import { catalogEntry, validateAllocationAmount, validateProviderAllocation } from "./validation";
+import {
+  catalogEntry,
+  validateAllocationAmount,
+  validateCreditsAllocation,
+  validateProviderAllocation,
+} from "./validation";
 
 export function isPrimaryEligibleMetered(
   connection: AllocationConnection,
@@ -47,6 +53,38 @@ function storedAllocation(
   return allocation;
 }
 
+function storedProgrammaticAllocation(
+  connection: AllocationConnection,
+  catalog: readonly ProviderCatalogEntry[],
+): ProviderAllocation | null {
+  const amountPerMonth = connection.programmaticAllocationAmountPerMonth ?? null;
+  if (amountPerMonth === null) return null;
+  const entry = catalogEntry(catalog, connection.provider);
+  if (entry.allocation.kind !== "billable") return null;
+  // The unit column is shared with the app cap; the storage pair constraint keeps it null
+  // while the app cap is unset, so a programmatic-only cap falls back to the catalog unit.
+  const unit = connection.allocationUnit ?? entry.allocation.allocationUnit;
+  const allocation = { amountPerMonth, unit };
+  validateProviderAllocation(catalog, connection.provider, allocation);
+  return allocation;
+}
+
+function storedCreditsAllocations(
+  connection: AllocationConnection,
+  catalog: readonly ProviderCatalogEntry[],
+): SurfaceAllocations {
+  const allocation = (amountPerMonth: number | null | undefined) => {
+    if (amountPerMonth == null) return null;
+    const value = { amountPerMonth, unit: "cents" as const };
+    validateCreditsAllocation(catalog, connection.provider, value);
+    return value;
+  };
+  return {
+    app: allocation(connection.creditsAllocationAmountPerMonth),
+    programmatic: allocation(connection.creditsProgrammaticAllocationAmountPerMonth),
+  };
+}
+
 export function resolveEffectiveAllocations(input: {
   catalog: readonly ProviderCatalogEntry[];
   connections: readonly AllocationConnection[];
@@ -58,15 +96,36 @@ export function resolveEffectiveAllocations(input: {
   }
   return input.connections.map((connection) => {
     const allocation = storedAllocation(connection, input.catalog);
-    if (allocation)
-      return { allocation, internalConnectionId: connection.id, source: "connection" };
+    const programmaticAllocation = storedProgrammaticAllocation(connection, input.catalog);
+    const credits = storedCreditsAllocations(connection, input.catalog);
+    if (allocation) {
+      return {
+        allocation,
+        credits,
+        internalConnectionId: connection.id,
+        programmaticAllocation,
+        source: "connection",
+      };
+    }
     if (!input.project.providerAllocationsInitializedAt && connection.id === primary?.id) {
       return {
         allocation: { amountPerMonth: input.project.budgetCapCents, unit: "cents" },
+        credits,
         internalConnectionId: connection.id,
+        // Legacy mode mirrors the project cap into both surfaces of the primary (plan P4).
+        programmaticAllocation: programmaticAllocation ?? {
+          amountPerMonth: input.project.budgetCapCents,
+          unit: "cents",
+        },
         source: "legacy_project",
       };
     }
-    return { allocation: null, internalConnectionId: connection.id, source: "none" };
+    return {
+      allocation: null,
+      credits,
+      internalConnectionId: connection.id,
+      programmaticAllocation,
+      source: "none",
+    };
   });
 }

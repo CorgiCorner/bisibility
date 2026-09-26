@@ -43,6 +43,10 @@ function tasks(count: number) {
   }));
 }
 
+function tagFor(index: number) {
+  return `app=bisibility;stage=dev;src=worker;trg=scheduled;f=rank_check;p=project_1;c=correlation_${index}`;
+}
+
 function createdEnvelope(count: number) {
   return {
     cost: count * 0.012,
@@ -240,6 +244,106 @@ describe("DataForSEO queued tasks", () => {
       }),
     ).rejects.toBeInstanceOf(DataForSeoAmbiguousSubmissionError);
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it("keeps an explicit zero cost but never coerces a missing cost to free", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status_code: 20000,
+          tasks: [
+            { cost: 0, data: { tag: tagFor(1) }, id: "provider_zero", status_code: 20100 },
+            { data: { tag: tagFor(2) }, id: "provider_missing", status_code: 20100 },
+            { cost: -0.01, data: { tag: tagFor(3) }, id: "provider_negative", status_code: 20100 },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await submitDataForSeoQueuedTasks({
+      credentials: { login: "login", password: "password" },
+      priority: "high",
+      tasks: tasks(3),
+    });
+
+    expect(result.accepted.map((task) => [task.correlationId, task.costCents])).toEqual([
+      ["correlation_1", 0],
+      ["correlation_2", null],
+      ["correlation_3", null],
+    ]);
+  });
+
+  it("keeps a partial-batch rejection as an explicit charged or unknown cost", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status_code: 20000,
+          tasks: [
+            {
+              cost: 0.012,
+              data: { tag: tagFor(1) },
+              status_code: 40601,
+              status_message: "Task rejected.",
+            },
+            {
+              data: { tag: tagFor(2) },
+              status_code: 40601,
+              status_message: "Task rejected without cost.",
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await submitDataForSeoQueuedTasks({
+      credentials: { login: "login", password: "password" },
+      priority: "high",
+      tasks: tasks(2),
+    });
+
+    expect(result.failed).toEqual([
+      { correlationId: "correlation_1", costCents: 1.2, message: "Task rejected." },
+      {
+        correlationId: "correlation_2",
+        costCents: null,
+        message: "Task rejected without cost.",
+      },
+    ]);
+    expect(result.accepted).toEqual([]);
+    expect(result.unknown).toEqual([]);
+  });
+
+  it("marks a task without a provider response unknown instead of free", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(createdEnvelope(1)), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await submitDataForSeoQueuedTasks({
+      credentials: { login: "login", password: "password" },
+      priority: "high",
+      tasks: tasks(2),
+    });
+
+    expect(result.accepted).toEqual([
+      {
+        correlationId: "correlation_1",
+        costCents: 1.2,
+        providerTaskId: "provider_1",
+        tag: tagFor(1),
+      },
+    ]);
+    expect(result.failed).toEqual([]);
+    expect(result.unknown).toEqual([
+      {
+        correlationId: "correlation_2",
+        message: "DataForSEO did not return a task result for this correlation.",
+      },
+    ]);
   });
 
   it("preserves a positive cost from a failed queued result envelope", async () => {

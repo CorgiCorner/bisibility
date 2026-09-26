@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { dollarsToCents } from "@/lib/format/currency";
+import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { providerRateFeatures } from "@/lib/provider-rates/catalog";
 import type { UpdateProviderCostInput, UpdateProviderRateInput } from "@/lib/schemas/provider";
 import { auditConnection, auditProviderMutation } from "./provider-audit";
@@ -12,8 +13,12 @@ type ProviderMutationContext = {
   projectId: string;
 };
 
-function findConnection(projectId: string, providerId: string) {
-  return prisma.providerConnection.findUnique({
+function findConnection(
+  projectId: string,
+  providerId: string,
+  client: Pick<typeof prisma, "providerConnection"> = prisma,
+) {
+  return client.providerConnection.findUnique({
     where: { projectId_provider: { projectId, provider: providerId } },
   });
 }
@@ -22,13 +27,14 @@ export async function updateProviderCostConnection(
   input: UpdateProviderCostInput,
   context: ProviderMutationContext,
 ) {
-  const before = await findConnection(context.projectId, input.providerId);
-  if (!before) {
-    throw new Error("Provider connection not found.");
-  }
-
   const amountCents = dollarsToCents(input.costPerCheck);
   return prisma.$transaction(async (tx) => {
+    await lockProjectForProviderMutation(tx, context.projectId);
+    const before = await findConnection(context.projectId, input.providerId, tx);
+    if (!before) throw new Error("Provider connection not found.");
+    if (before.credentialSource === "hosted") {
+      throw new Error("Hosted provider rates are read-only.");
+    }
     const connection = await tx.providerConnection.update({
       data: { costPerCheckCents: amountCents },
       where: { id: before.id },
@@ -69,21 +75,20 @@ export async function updateProviderConnectionRate(
   if (!providerRateFeatures(input.providerId).includes(input.feature)) {
     throw new Error("Provider does not support this billable feature.");
   }
-  const connection = await findConnection(context.projectId, input.providerId);
-  if (!connection) {
-    throw new Error("Provider connection not found.");
-  }
-  const before = await prisma.providerConnectionRate.findUnique({
-    where: {
-      connectionId_feature: {
-        connectionId: connection.id,
-        feature: input.feature,
-      },
-    },
-  });
   const amountCents = input.costPerUnit === null ? null : dollarsToCents(input.costPerUnit);
 
   return prisma.$transaction(async (tx) => {
+    await lockProjectForProviderMutation(tx, context.projectId);
+    const connection = await findConnection(context.projectId, input.providerId, tx);
+    if (!connection) throw new Error("Provider connection not found.");
+    if (connection.credentialSource === "hosted") {
+      throw new Error("Hosted provider rates are read-only.");
+    }
+    const before = await tx.providerConnectionRate.findUnique({
+      where: {
+        connectionId_feature: { connectionId: connection.id, feature: input.feature },
+      },
+    });
     let rate = null;
     if (amountCents === null) {
       await tx.providerConnectionRate.deleteMany({

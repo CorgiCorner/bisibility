@@ -1,3 +1,5 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import messages from "@/messages/core/en/project-install.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { InstallPageContent } from "./InstallPageContent";
 
@@ -6,9 +8,11 @@ const meta = {
   component: InstallPageContent,
   decorators: [
     (Story) => (
-      <main className="min-h-screen bg-bg p-6 text-fg">
-        <Story />
-      </main>
+      <FeatureMessagesProvider locale="en" messages={messages} timeZone="UTC">
+        <main className="min-h-screen bg-bg p-6 text-fg">
+          <Story />
+        </main>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { nextjs: { appDirectory: true } },

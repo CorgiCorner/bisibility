@@ -73,6 +73,19 @@ export function ApiKeysCard({
     return apiKey.isExpired ? t("expired", { date }) : t("expires", { date });
   }
 
+  function spendLabel(apiKey: ApiKeyData) {
+    const dollars = apiKey.spendThisMonthCents / 100;
+    const fractionDigits = Math.abs(dollars) < 100 ? 2 : 0;
+    const amount = new Intl.NumberFormat(dateDisplay.locale, {
+      currency: "USD",
+      currencyDisplay: "narrowSymbol",
+      maximumFractionDigits: fractionDigits,
+      minimumFractionDigits: fractionDigits,
+      style: "currency",
+    }).format(dollars);
+    return t("spendThisMonth", { amount });
+  }
+
   function revoke() {
     if (!revokeTarget || !revokeKey) return;
     const input = revokeApiKeySchema.parse({ apiKeyId: revokeTarget.id, projectId });
@@ -125,6 +138,12 @@ export function ApiKeysCard({
                 <span className="mt-0.5 truncate">{apiKey.maskedValue}</span>
                 <span className="mt-0.5 block text-[11.5px] text-fg-muted">
                   {createdLabel(apiKey)} · {lastUsedLabel(apiKey)}
+                </span>
+                <span
+                  className="mt-0.5 block text-[11.5px] text-fg-muted"
+                  title={t("spendTooltip")}
+                >
+                  {spendLabel(apiKey)}
                 </span>
               </span>
               <span className="flex flex-wrap items-center justify-end gap-2">

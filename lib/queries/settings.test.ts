@@ -5,10 +5,11 @@ import { getSettings } from "./settings";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    instanceSetting: { findUnique: vi.fn().mockResolvedValue(null) },
     $queryRaw: vi.fn(),
     project: { findUnique: vi.fn() },
     providerConnectionRate: { findMany: vi.fn() },
-    providerCostEntry: { aggregate: vi.fn(), groupBy: vi.fn() },
+    providerCostEntry: { aggregate: vi.fn(), count: vi.fn(), groupBy: vi.fn() },
     rankCheck: { aggregate: vi.fn(), findMany: vi.fn() },
     savedView: { findMany: vi.fn() },
   },
@@ -64,6 +65,7 @@ vi.mock("@/lib/providers/registry", () => ({
       kind: "serp",
       label: "SerpApi",
       logoDomain: "serpapi.com",
+      allocation: { kind: "billable", allocationUnit: "units" },
     },
     {
       id: "gsc",
@@ -158,7 +160,11 @@ describe("settings queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireReadableProject.mockResolvedValue({ project });
-    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: null } });
+    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
+      _count: { _all: 0 },
+      _sum: { costCents: null, usageQuantity: null },
+    });
+    mocks.prisma.providerCostEntry.count.mockResolvedValue(0);
     mocks.prisma.providerCostEntry.groupBy.mockResolvedValue([]);
     mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
     mocks.prisma.$queryRaw.mockResolvedValue([]);
@@ -172,9 +178,9 @@ describe("settings queries", () => {
   it("uses the cap-enforcement aggregate for budget and pace", async () => {
     mocks.prisma.project.findUnique.mockResolvedValue(fullProject());
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({
-      _sum: { costCents: 1_200, estimatedCostCents: 0 },
+      _sum: { costCents: 1_200, estimatedCostCents: 40 },
     });
-    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 300 } });
+    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 1_500 } });
 
     const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
       now: dateFromFrozenNow(),
@@ -182,6 +188,18 @@ describe("settings queries", () => {
 
     expect(result.usage.budget).toEqual({ capCents: 5_000, spentCents: 1_500 });
     expect(result.usage.onPaceCents).toBe(4_650);
+    expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledWith({
+      _sum: { costCents: true },
+      where: {
+        cached: false,
+        createdAt: {
+          gte: new Date("2026-07-01T00:00:00.000Z"),
+          lt: new Date("2026-08-01T00:00:00.000Z"),
+        },
+        measurementStatus: "recorded",
+        projectId: "project_1",
+      },
+    });
   });
 
   it("formats project settings dates in the project timezone", async () => {
@@ -332,12 +350,61 @@ describe("settings queries", () => {
         connectionId: "conn_abcdefghijklmnopqrstuvwx",
         costPerCheck: "$0.0006",
         features: [
-          { costCents: 75, count: 2, feature: "rank_check", label: "Rank checks" },
-          { costCents: 0, count: 0, feature: "keyword_research", label: "Keyword research" },
-          { costCents: 0, count: 0, feature: "keyword_metrics", label: "Keyword metrics" },
-          { costCents: 0, count: 0, feature: "ranked_keywords", label: "Ranked keywords" },
-          { costCents: 0, count: 0, feature: "backlinks", label: "Backlinks" },
-          { costCents: 0, count: 0, feature: "domain_overview", label: "Domain overview" },
+          {
+            bySource: [],
+            checksCount: 2,
+            costCents: 0,
+            count: 0,
+            feature: "rank_check",
+            label: "Rank checks",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+          {
+            bySource: [],
+            costCents: 0,
+            count: 0,
+            feature: "keyword_research",
+            label: "Keyword research",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+          {
+            bySource: [],
+            costCents: 0,
+            count: 0,
+            feature: "keyword_metrics",
+            label: "Keyword metrics",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+          {
+            bySource: [],
+            costCents: 0,
+            count: 0,
+            feature: "ranked_keywords",
+            label: "Ranked keywords",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+          {
+            bySource: [],
+            costCents: 0,
+            count: 0,
+            feature: "backlinks",
+            label: "Backlinks",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+          {
+            bySource: [],
+            costCents: 0,
+            count: 0,
+            feature: "domain_overview",
+            label: "Domain overview",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
         ],
         primary: true,
         provider: "DataForSEO",
@@ -489,20 +556,51 @@ describe("settings queries", () => {
       { costCents: 50, provider: "dataforseo", status: "completed" },
       { costCents: 400, provider: "serpapi", status: "completed" },
     ]);
-    mocks.prisma.providerCostEntry.groupBy.mockResolvedValue([
-      {
-        _count: { _all: 3 },
-        _sum: { costCents: "150.5000" },
-        connectionId: "conn_dataforseo",
-        feature: "keyword_research",
+    mocks.prisma.providerCostEntry.groupBy.mockImplementation(
+      async (args: {
+        by: string[];
+        where?: { measurementStatus?: unknown; usageQuantity?: unknown };
+      }) => {
+        if (!args.by.includes("source") || args.by.includes("credentialId")) return [];
+        const { measurementStatus, usageQuantity } = args.where ?? {};
+        if (measurementStatus === "recorded" && usageQuantity === null) return [];
+        if (measurementStatus !== "recorded") return [];
+        return [
+          {
+            _count: { _all: 2 },
+            _sum: { costCents: "75.0000", usageQuantity: null },
+            connectionId: "conn_dataforseo",
+            feature: "rank_check",
+            source: "app",
+            trigger: "scheduled",
+          },
+          {
+            _count: { _all: 3 },
+            _sum: { costCents: "150.5000", usageQuantity: null },
+            connectionId: "conn_dataforseo",
+            feature: "keyword_research",
+            source: "app",
+            trigger: null,
+          },
+          {
+            _count: { _all: 1 },
+            _sum: { costCents: "49.5000", usageQuantity: null },
+            connectionId: "conn_dataforseo",
+            feature: "keyword_metrics",
+            source: "app",
+            trigger: null,
+          },
+          {
+            _count: { _all: 1 },
+            _sum: { costCents: "400.0000", usageQuantity: null },
+            connectionId: "conn_serpapi",
+            feature: "rank_check",
+            source: "api",
+            trigger: null,
+          },
+        ];
       },
-      {
-        _count: { _all: 1 },
-        _sum: { costCents: "49.5000" },
-        connectionId: "conn_dataforseo",
-        feature: "keyword_metrics",
-      },
-    ]);
+    );
 
     const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
       now: dateFromFrozenNow(),
@@ -510,15 +608,15 @@ describe("settings queries", () => {
 
     expect(mocks.prisma.providerCostEntry.groupBy).toHaveBeenCalledWith({
       _count: { _all: true },
-      _sum: { costCents: true },
-      by: ["connectionId", "feature"],
+      _sum: { costCents: true, usageQuantity: true },
+      by: ["connectionId", "feature", "source", "trigger"],
       where: {
         cached: false,
         createdAt: {
           gte: new Date("2026-07-01T00:00:00.000Z"),
           lt: new Date("2026-08-01T00:00:00.000Z"),
         },
-        feature: { not: "rank_check" },
+        measurementStatus: "recorded",
         projectId: "project_1",
       },
     });
@@ -531,12 +629,61 @@ describe("settings queries", () => {
         connectionId: "conn_abcdefghijklmnopqrstuvwx",
         costPerCheck: "$0.0006",
         features: [
-          { costCents: 75, count: 2, feature: "rank_check", label: "Rank checks" },
-          { costCents: 150.5, count: 3, feature: "keyword_research", label: "Keyword research" },
-          { costCents: 49.5, count: 1, feature: "keyword_metrics", label: "Keyword metrics" },
-          { costCents: 0, count: 0, feature: "ranked_keywords", label: "Ranked keywords" },
-          { costCents: 0, count: 0, feature: "backlinks", label: "Backlinks" },
-          { costCents: 0, count: 0, feature: "domain_overview", label: "Domain overview" },
+          {
+            bySource: [{ count: 2, costCents: 75, scheduled: 2, source: "app" }],
+            checksCount: 2,
+            costCents: 75,
+            count: 2,
+            feature: "rank_check",
+            label: "Rank checks",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+          {
+            bySource: [{ count: 3, costCents: 150.5, scheduled: 0, source: "app" }],
+            costCents: 150.5,
+            count: 3,
+            feature: "keyword_research",
+            label: "Keyword research",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+          {
+            bySource: [{ count: 1, costCents: 49.5, scheduled: 0, source: "app" }],
+            costCents: 49.5,
+            count: 1,
+            feature: "keyword_metrics",
+            label: "Keyword metrics",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+          {
+            bySource: [],
+            costCents: 0,
+            count: 0,
+            feature: "ranked_keywords",
+            label: "Ranked keywords",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+          {
+            bySource: [],
+            costCents: 0,
+            count: 0,
+            feature: "backlinks",
+            label: "Backlinks",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+          {
+            bySource: [],
+            costCents: 0,
+            count: 0,
+            feature: "domain_overview",
+            label: "Domain overview",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
         ],
         primary: true,
         provider: "DataForSEO",
@@ -549,7 +696,18 @@ describe("settings queries", () => {
         },
         connectionId: "conn_bbcdefghijklmnopqrstuvwx",
         costPerCheck: "$0.0100",
-        features: [{ costCents: 400, count: 1, feature: "rank_check", label: "Rank checks" }],
+        features: [
+          {
+            bySource: [{ count: 1, costCents: 400, scheduled: 0, source: "api" }],
+            checksCount: 1,
+            costCents: 400,
+            count: 1,
+            feature: "rank_check",
+            label: "Rank checks",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+        ],
         primary: false,
         provider: "SerpApi",
         providerId: "serpapi",
@@ -558,7 +716,141 @@ describe("settings queries", () => {
     expect(result.usage.primaryProvider).toBe("DataForSEO");
   });
 
-  it("attributes pending estimates and primary reservations to the active connection", async () => {
+  it("attaches per-source usage rows to each feature breakdown", async () => {
+    mocks.prisma.project.findUnique.mockResolvedValue(
+      fullProject({
+        providerConnections: [
+          {
+            costPerCheckCents: 0,
+            enabled: true,
+            id: "conn_dataforseo",
+            kind: "serp",
+            provider: "dataforseo",
+            status: "connected",
+          },
+        ],
+      }),
+    );
+    mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
+    mocks.prisma.providerCostEntry.groupBy.mockImplementation(async (args: { by: string[] }) =>
+      args.by.includes("source")
+        ? [
+            {
+              _count: { _all: 2 },
+              _sum: { costCents: "4.0000" },
+              connectionId: "conn_dataforseo",
+              feature: "rank_check",
+              source: "app",
+              trigger: "scheduled",
+            },
+            {
+              _count: { _all: 1 },
+              _sum: { costCents: "6.0000" },
+              connectionId: "conn_dataforseo",
+              feature: "rank_check",
+              source: "api",
+              trigger: null,
+            },
+          ]
+        : [],
+    );
+
+    const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
+      now: dateFromFrozenNow(),
+    });
+
+    expect(result.usage.connections[0]?.features[0]).toMatchObject({
+      bySource: [
+        { count: 2, costCents: 4, scheduled: 2, source: "app" },
+        { count: 1, costCents: 6, scheduled: 0, source: "api" },
+      ],
+      feature: "rank_check",
+    });
+  });
+
+  it("derives quota feature usage from the ledger, not depth, with explicit unconfirmed coverage", async () => {
+    mocks.prisma.project.findUnique.mockResolvedValue(
+      fullProject({
+        providerConnections: [
+          {
+            costPerCheckCents: null,
+            enabled: true,
+            id: "conn_serpapi",
+            kind: "serp",
+            provider: "serpapi",
+            status: "connected",
+          },
+        ],
+      }),
+    );
+    mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
+    mocks.prisma.providerCostEntry.groupBy.mockImplementation(
+      async (args: {
+        by: string[];
+        where?: { measurementStatus?: unknown; usageQuantity?: unknown };
+      }) => {
+        if (!args.by.includes("source")) return [];
+        const { measurementStatus, usageQuantity } = args.where ?? {};
+        if (measurementStatus === "recorded" && usageQuantity === null) {
+          return [
+            {
+              _count: { _all: 1 },
+              connectionId: "conn_serpapi",
+              feature: "rank_check",
+              source: "app",
+              trigger: "scheduled",
+            },
+          ];
+        }
+        if (measurementStatus !== "recorded") {
+          return [
+            {
+              _count: { _all: 2 },
+              connectionId: "conn_serpapi",
+              feature: "rank_check",
+              source: "app",
+              trigger: "scheduled",
+            },
+          ];
+        }
+        return [
+          {
+            _count: { _all: 2 },
+            _sum: { costCents: "0.0000", usageQuantity: "3.000000" },
+            connectionId: "conn_serpapi",
+            feature: "rank_check",
+            source: "app",
+            trigger: "scheduled",
+          },
+          {
+            _count: { _all: 5 },
+            _sum: { costCents: "9.0000", usageQuantity: "5.000000" },
+            connectionId: "conn_other_project",
+            feature: "rank_check",
+            source: "app",
+            trigger: "scheduled",
+          },
+        ];
+      },
+    );
+
+    const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
+      now: dateFromFrozenNow(),
+    });
+
+    expect(result.usage.connections[0]?.features[0]).toEqual({
+      bySource: [{ count: 2, costCents: 0, scheduled: 2, source: "app" }],
+      checksCount: 0,
+      costCents: 0,
+      count: 2,
+      feature: "rank_check",
+      label: "Rank checks",
+      quantity: 3,
+      unconfirmedCount: 3,
+    });
+  });
+
+  it("reads confirmed spend from the ledger without pending estimates or reservations", async () => {
     mocks.prisma.project.findUnique.mockResolvedValue(
       fullProject({
         providerConnections: [
@@ -589,18 +881,33 @@ describe("settings queries", () => {
       },
     ]);
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({
-      _sum: { costCents: 140, estimatedCostCents: 25 },
+      _sum: { costCents: 9_900, estimatedCostCents: 25 },
+    });
+    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
+      _sum: { costCents: "1.7500" },
     });
 
     const result = await getSettings("prj_abcdefghijklmnopqrstuvwx", {
       now: dateFromFrozenNow(),
     });
 
-    expect(result.usage.budget.spentCents).toBe(165);
+    expect(result.usage.budget.spentCents).toBe(1.75);
+    expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
     expect(result.usage.connections).toEqual([
       expect.objectContaining({
         connectionId: "conn_abcdefghijklmnopqrstuvwx",
-        features: [{ costCents: 165, count: 1, feature: "rank_check", label: "Rank checks" }],
+        features: [
+          {
+            bySource: [],
+            checksCount: 1,
+            costCents: 0,
+            count: 0,
+            feature: "rank_check",
+            label: "Rank checks",
+            quantity: null,
+            unconfirmedCount: 0,
+          },
+        ],
       }),
     ]);
     expect(result.usage.serpChecksMonth).toBe("1");

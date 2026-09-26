@@ -155,8 +155,7 @@ describe("AnalyzeCard", () => {
 
   it("prices every billed row from the rate card so the rows reconcile with the button", () => {
     // Server side, backlinksEstimate bills summary + history (site only) +
-    // rows(resultLimit). At site scope and 100 rows that is 2 + 2 + 1 = 5 cents,
-    // which is exactly the "Analyze ~$0.05" label the estimate harness asserts.
+    // rows(resultLimit). At site scope and 100 rows that is 2 + 2 + 3 = 7 cents.
     render(<AnalyzeCard {...baseProps} resultLimit={100} scope="site" />);
     fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
 
@@ -164,19 +163,19 @@ describe("AnalyzeCard", () => {
       "$0.02",
     );
     expect(screen.getByText("12-month history").nextElementSibling).toHaveTextContent("$0.02");
-    expect(screen.getByText("Link rows (100)").nextElementSibling).toHaveTextContent("$0.01");
+    expect(screen.getByText("Link rows (100)").nextElementSibling).toHaveTextContent("$0.03");
   });
 
   it("scales the link rows price with resultLimit", () => {
     const { unmount } = render(<AnalyzeCard {...baseProps} resultLimit={100} scope="site" />);
     fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
     expect(screen.getByText("Link rows (100)")).toBeInTheDocument();
-    expect(screen.getByText("$0.01")).toBeInTheDocument();
+    expect(screen.getByText("$0.03")).toBeInTheDocument();
     unmount();
 
     render(<AnalyzeCard {...baseProps} resultLimit={500} scope="site" />);
     fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
     expect(screen.getByText("Link rows (500)")).toBeInTheDocument();
-    expect(screen.getByText("$0.05")).toBeInTheDocument();
+    expect(screen.getByText("$0.07")).toBeInTheDocument();
   });
 });

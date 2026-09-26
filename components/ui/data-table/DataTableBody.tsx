@@ -5,7 +5,11 @@ import type { Column, ColumnPinningState, Row, Table } from "@tanstack/react-tab
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, type ReactNode } from "react";
 import { DataTableRow } from "./DataTableRow";
-import { dataTableHeaderHeight, dataTableRowHeight } from "./data-table-density";
+import {
+  dataTableEmptyBodyHeight,
+  dataTableHeaderHeight,
+  dataTableRowHeight,
+} from "./data-table-density";
 import {
   DATA_TABLE_VIEWPORT_WIDTH_VARIABLE,
   DATA_TABLE_WIDTH_VARIABLE,
@@ -88,9 +92,12 @@ function EmptyBody<TRow extends DataTableRowBase>({
   return (
     // biome-ignore lint/a11y/useSemanticElements: The empty state belongs to the div-based ARIA table.
     <div
-      className="sticky left-0 flex min-h-28"
+      className="sticky left-0 flex"
       role="row"
-      style={{ width: `var(${DATA_TABLE_VIEWPORT_WIDTH_VARIABLE})` }}
+      style={{
+        minHeight: dataTableEmptyBodyHeight,
+        width: `var(${DATA_TABLE_VIEWPORT_WIDTH_VARIABLE})`,
+      }}
       tabIndex={-1}
     >
       {/* biome-ignore lint/a11y/useSemanticElements: The empty state spans the div-based ARIA table. */}

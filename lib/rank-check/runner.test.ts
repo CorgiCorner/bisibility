@@ -1,4 +1,5 @@
 import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
+import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { encryptSecret } from "@/lib/providers/crypto";
 import { clearProviderRateLimitState } from "@/lib/providers/rate-limit";
 import type { SerpProvider } from "@/lib/providers/types";
@@ -14,6 +15,7 @@ const US_LOCATION = {
   secondaryGeoName: "United States",
 };
 const mocks = vi.hoisted(() => ({
+  assertOperationAccess: vi.fn(),
   evaluateKeywordAlerts: vi.fn(() => Promise.resolve([])),
   notifyRankCheckCompleted: vi.fn(() => Promise.resolve()),
   notifyRankCheckFailed: vi.fn(() => Promise.resolve()),
@@ -37,6 +39,10 @@ vi.mock("@/lib/alerts/evaluate", () => ({
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: mocks.prisma,
+}));
+
+vi.mock("@/lib/operations/access-extension", () => ({
+  assertOperationAccess: mocks.assertOperationAccess,
 }));
 
 vi.mock("@/lib/notifications/events", () => ({
@@ -243,7 +249,7 @@ describe("runCheck", () => {
     );
   });
 
-  it("uses the configured connection cost when the provider reports zero cost", async () => {
+  it("keeps provider-reported zero actual despite a configured connection estimate", async () => {
     const serp = provider(
       vi.fn().mockResolvedValue({
         checkedAt: new Date("2026-01-01T06:00:00.000Z"),
@@ -270,7 +276,7 @@ describe("runCheck", () => {
       schedule: { frequency: "manual" },
     });
 
-    expect(result.rankCheck.costCents).toBe(0.75);
+    expect(result.rankCheck.costCents).toBe(0);
     expect(result.rankCheck.estimatedCostCents).toBeNull();
   });
 
@@ -299,16 +305,13 @@ describe("runCheck", () => {
     });
 
     expect(result.rankCheck.costCents).toBe(0);
-    expect(result.rankCheck.estimatedCostCents).toBe(0);
+    expect(result.rankCheck.estimatedCostCents).toBeNull();
     expect(result.providerCostCents).toBeUndefined();
   });
 
-  it.each([
-    [10, 1],
-    [100, 10],
-  ] as const)(
-    "estimates SerpApi top-%i cost when neither provider nor connection reports a cost",
-    async (depth, expectedCostCents) => {
+  it.each([10, 100] as const)(
+    "does not convert top-%i quota usage into assumed subscription dollars",
+    async (depth) => {
       const serp = provider(
         vi.fn().mockResolvedValue({
           checkedAt: new Date("2026-01-01T06:00:00.000Z"),
@@ -334,7 +337,7 @@ describe("runCheck", () => {
       });
 
       expect(result.rankCheck.costCents).toBe(0);
-      expect(result.rankCheck.estimatedCostCents).toBe(expectedCostCents);
+      expect(result.rankCheck.estimatedCostCents).toBeNull();
       expect(result.providerCostCents).toBeUndefined();
     },
   );
@@ -526,5 +529,50 @@ describe("persistRankCheck", () => {
       }),
     );
     expect(rankCheck.id).toBe("rank_failed_1");
+  });
+
+  it("refuses before credentials, rate limit, or fetch when the access gate denies the project", async () => {
+    mocks.assertOperationAccess.mockRejectedValueOnce(new OperationAccessDeniedError());
+    const fetchRank = vi.fn();
+    await expect(
+      runCheck({
+        connection: { credentials: { apiKey: "serp-key" }, provider: "serpapi" },
+        keyword: {
+          device: "desktop",
+          domain: "example.com",
+          id: "keyword_1",
+          location: US_LOCATION,
+          text: "rank tracker",
+        },
+        projectId: "project_1",
+        provider: provider(fetchRank),
+        schedule: { frequency: "manual", jitterMinutes: 0 },
+      }),
+    ).rejects.toThrow(new OperationAccessDeniedError());
+    expect(mocks.assertOperationAccess).toHaveBeenCalledWith("project_1");
+    expect(fetchRank).not.toHaveBeenCalled();
+  });
+
+  it("keeps the legacy no-project path ungated when no trusted project id is supplied", async () => {
+    const fetchRank = vi.fn().mockResolvedValue({
+      checkedAt: new Date("2026-01-01T06:00:00.000Z"),
+      costCents: 0.2,
+      position: 3,
+      rankingUrl: "https://example.com/ranking-page",
+    });
+    await runCheck({
+      connection: { credentials: { apiKey: "serp-key" }, provider: "serpapi" },
+      keyword: {
+        device: "desktop",
+        domain: "example.com",
+        id: "keyword_1",
+        location: US_LOCATION,
+        text: "rank tracker",
+      },
+      provider: provider(fetchRank),
+      schedule: { frequency: "manual", jitterMinutes: 0 },
+    });
+    expect(mocks.assertOperationAccess).not.toHaveBeenCalled();
+    expect(fetchRank).toHaveBeenCalledOnce();
   });
 });

@@ -33,6 +33,8 @@ import {
   ensureStaleImportJobsSchedule,
   ensureWeeklyDigestSchedule,
 } from "./maintenance-schedule-bootstrap";
+import { ensureMeteringMaintenanceSchedule } from "./metering-maintenance-bootstrap";
+import { ensureProviderUsageReconciliationSchedule } from "./provider-usage-reconcile-bootstrap";
 import { convergeRankCheckSchedulerSingletons } from "./rank-check-scheduler-convergence";
 import { ensureRankCheckSearchAttributes } from "./search-attribute-bootstrap";
 // Imported directly, not through bootstrap.ts: search-insights-bootstrap.ts already depends on
@@ -202,6 +204,8 @@ async function run() {
         ...ensureTrafficRuntimeSchedules(),
         ensureSearchInsightsSyncSchedule(),
         ensureSearchInsightsQueueReconciliationSchedule(),
+        ensureProviderUsageReconciliationSchedule(),
+        ensureMeteringMaintenanceSchedule(),
         ensureSitemapSyncSchedule(),
         ensurePresenceSyncSchedule(),
         safeOpsHeartbeatBootstrap(),

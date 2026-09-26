@@ -64,12 +64,19 @@ function plausibleCredentials(values: ConnectFormValues) {
   };
 }
 
-export function connectInput(values: ConnectFormValues): ConnectProviderActionInput {
+export function connectInput(
+  values: ConnectFormValues,
+  binding?: Pick<
+    ConnectProviderActionInput,
+    "expectedConnectionId" | "expectedConnectionUpdatedAt" | "expectedCredentialSource"
+  >,
+): ConnectProviderActionInput {
   const base = {
     // Drawer rate edits are persisted per feature, outside the credential form.
     costPerCheck: undefined,
     projectId: values.projectId,
     providerId: values.providerId,
+    ...binding,
   };
   if (values.providerId === "plausible") {
     return {

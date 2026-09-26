@@ -53,10 +53,10 @@ describe("RunPageTargets", () => {
     const table = screen.getByRole("table", { name: "Targets in this run" });
     const section = screen.getByRole("heading", { name: "Targets in this run" }).closest("section");
 
-    expect(section).toHaveClass("[&>[role=table]]:border-0");
+    expect(table).toHaveAttribute("data-bordered", "false");
     expect(table.parentElement).toBe(section);
     expect(table).toHaveAttribute("data-layout", "auto");
-    expect(table).toHaveClass("border", "border-border");
+    expect(table).toHaveClass("border-0");
     expect(screen.getByRole("columnheader", { name: /^Keyword\b/ })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /^Position\b/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "alpha cms" })).toHaveAttribute(
@@ -70,7 +70,7 @@ describe("RunPageTargets", () => {
     const onFilter = vi.fn();
     renderTargets({ onFilter });
 
-    fireEvent.click(screen.getByLabelText("Skipped"));
+    fireEvent.click(screen.getByLabelText("Skipped or blocked"));
 
     expect(onFilter).toHaveBeenCalledWith("skipped");
   });

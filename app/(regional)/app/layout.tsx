@@ -1,4 +1,5 @@
 import { DateDisplayProvider, DateFormatProvider } from "@/components/dates/DateFormatProvider";
+import { renderAccountDataSourceExtension } from "@/components/settings/AccountDataSourceExtension";
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
 import { appExtensions } from "@/lib/app-extensions";
 import { redirectToSetupIfFirstRun } from "@/lib/auth/first-run";
@@ -26,15 +27,18 @@ export default async function AppLayout({ children }: Readonly<AppLayoutProps>) 
   const session = await requireSession();
   const demo = readDemoConfig();
   const isDemo = demo.kind !== "disabled";
-  const [{ resolved }, decorated, supportWidget] = await Promise.all([
+  const quizDecorated = isDemo
+    ? Promise.resolve(children)
+    : appExtensions.renderOnboardingQuizSlot(children);
+  const [{ resolved }, supportWidget, decorated] = await Promise.all([
     getResolvedDateFormat(),
-    isDemo ? children : appExtensions.renderOnboardingQuizSlot(children),
     isCloud && !isDemo
       ? appExtensions.renderSupportWidget({
           expiresAt: session.session.expiresAt,
           userId: session.user.id,
         })
       : Promise.resolve(null),
+    quizDecorated.then((base) => (isDemo ? base : renderAccountDataSourceExtension(base))),
   ]);
   return (
     <DeploymentModeProvider deploymentMode={isCloud ? "cloud" : "self-host"}>

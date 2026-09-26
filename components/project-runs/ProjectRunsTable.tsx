@@ -3,8 +3,6 @@
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
-import { StatusChip } from "@/components/ui/StatusChip";
-import { runStatusChipPresentation } from "@/components/ui/status-chip-mapping";
 import { formatDateTime } from "@/lib/dates/format";
 import type { ProjectRun } from "@/lib/runs/project-run";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
@@ -13,6 +11,9 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useMemo, useState, useTransition } from "react";
 import { RunActions } from "./ProjectRunActions";
 import type { ProjectRunWithOperationSnapshot } from "./project-runs-presentation";
+import { RunStatusChip } from "./RunStatusChip";
+import { RunStatusLegend } from "./RunStatusLegend";
+import { useRunStatusCopy } from "./run-status-copy";
 
 type ProjectRunAction = (input: { projectRef: string; runId: string }) => Promise<void>;
 
@@ -27,42 +28,6 @@ type ProjectRunsTableProps = {
   projectRef: string;
   rows: readonly ProjectRunWithOperationSnapshot[];
 };
-
-function statusFor(
-  run: ProjectRunWithOperationSnapshot,
-  t: ReturnType<typeof useTranslations<"projectRuns.table">>,
-) {
-  if (run.kind === "rank_check") {
-    return runStatusChipPresentation(run.details.status, run.details.outcome);
-  }
-  const gscStatuses = {
-    cancelled: { label: t("statusCancelled"), tone: "neutral" },
-    completed: { label: t("statusCompleted"), tone: "positive" },
-    failed: { label: t("statusFailed"), tone: "critical" },
-    paused: { label: t("statusPaused"), tone: "attention" },
-    queued: { label: t("statusQueued"), tone: "info" },
-    running: { label: t("statusRunning"), tone: "info" },
-    status_unavailable: { label: t("statusUnavailable"), tone: "neutral" },
-    waiting_for_first_data: { label: t("statusWaitingForFirstData"), tone: "info" },
-    waiting_to_resume: { label: t("statusWaitingToResume"), tone: "attention" },
-  } as const;
-  const fallback =
-    gscStatuses[run.lifecycle as keyof typeof gscStatuses] ?? gscStatuses.status_unavailable;
-  if (!run.snapshotState || !run.snapshotPresentationTone) return fallback;
-  const snapshotLabels = {
-    Completed: t("snapshotCompleted"),
-    Delayed: t("snapshotDelayed"),
-    Failed: t("snapshotFailed"),
-    Importing: t("snapshotImporting"),
-    Paused: t("snapshotPaused"),
-    Queued: t("snapshotQueued"),
-    "Reconnect required": t("snapshotReconnectRequired"),
-    "Status unavailable": t("snapshotStatusUnavailable"),
-    "Waiting for Google": t("snapshotWaitingForGoogle"),
-    "Waiting for data": t("snapshotWaitingForData"),
-  } as const;
-  return { label: snapshotLabels[run.snapshotState], tone: run.snapshotPresentationTone };
-}
 
 function progressFor(run: ProjectRun, t: ReturnType<typeof useTranslations<"projectRuns.table">>) {
   const { completed, total } = run.progress;
@@ -101,6 +66,7 @@ export function ProjectRunsTable({
   rows,
 }: Readonly<ProjectRunsTableProps>) {
   const t = useTranslations("projectRuns.table");
+  const statusCopy = useRunStatusCopy();
   const dateFormat = useDateFormat();
   const isDesktop = useMediaQuery("(min-width:1024px)");
   const router = useRouter();
@@ -178,11 +144,14 @@ export function ProjectRunsTable({
       },
       {
         id: "status",
-        cell: ({ row }) => {
-          const status = statusFor(row.original.run, t);
-          return <StatusChip {...status} />;
-        },
-        header: t("status"),
+        cell: ({ row }) => <RunStatusChip {...statusCopy.forRun(row.original.run)} />,
+        enableSorting: false,
+        header: () => (
+          <span className="inline-flex items-center gap-0.5">
+            <span data-replay-label>{t("status")}</span>
+            <RunStatusLegend groups={statusCopy.groups} label={t("statusLegend")} />
+          </span>
+        ),
         meta: { title: t("status") },
         minSize: 152,
         size: 152,
@@ -260,6 +229,7 @@ export function ProjectRunsTable({
       onDelete,
       projectRef,
       router,
+      statusCopy,
       t,
     ],
   );
@@ -267,6 +237,7 @@ export function ProjectRunsTable({
   return (
     <div className="grid min-w-0 gap-2 [&_[data-column-id=actions]]:px-2 [&_[data-column-id=status]]:px-2">
       <DataTable
+        bordered={false}
         ariaLabel={t("projectRuns")}
         columnPinning={isDesktop ? undefined : { left: [], right: ["actions"] }}
         columns={columns}

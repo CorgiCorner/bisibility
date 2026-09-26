@@ -84,7 +84,7 @@
     "researchUnavailable": "{language}: この市場の検索ボリュームと難易度のデータはありません。順位は通常どおり追跡されます。",
     "restore": "復元",
     "restoreArchivedHint": "アーカイブ済みの市場はここに表示されます。スケジュールを再開する準備ができたら復元してください。",
-    "restoreBody": "復元すると、{count, plural, other {キーワード#件}}のスケジュールが再開されます。月額はおよそ {cost} です。",
+    "restoreBody": "復元すると、{count, plural, other {キーワード#件}}のスケジュールが再開されます。",
     "restoreFailed": "市場を復元できませんでした。再試行してください。",
     "restoreMarket": "市場を復元",
     "restoreTitle": "{market} を復元しますか？",

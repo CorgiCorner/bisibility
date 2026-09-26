@@ -1,5 +1,6 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/data-table/DataTable";
@@ -7,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { TableCardHeader } from "@/components/ui/TableCardHeader";
 import { useToast } from "@/components/ui/toast-context";
+import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/csr/CalendarBlank";
 import { useRouter } from "next/navigation";
@@ -32,6 +34,7 @@ export type ScheduleListRow = {
   name: string;
   nextRunAt?: string | null;
   perRunCents?: number | null;
+  nativeEstimate?: NativeUsageEstimate;
   publicId: string;
   sharedTag?: string | null;
   targetCount?: number | null;
@@ -96,6 +99,7 @@ export function SchedulesList({
   schedules,
 }: Readonly<SchedulesListProps>) {
   const t = useTranslations("projectRuns.schedules");
+  const usage = useNativeUsageFormat();
   const locale = useLocale();
   const router = useRouter();
   const [archiveTarget, setArchiveTarget] = useState<ScheduleListRow | null>(null);
@@ -139,6 +143,7 @@ export function SchedulesList({
   const columns = useMemo(
     () =>
       schedulesTableColumns({
+        usage,
         canUpdate,
         canManage,
         projectId,
@@ -149,7 +154,7 @@ export function SchedulesList({
         locale,
         t,
       }),
-    [canUpdate, canManage, locale, projectId, pendingScheduleId, projectRef, t, togglePause],
+    [canUpdate, canManage, locale, projectId, pendingScheduleId, projectRef, t, togglePause, usage],
   );
 
   return (
@@ -201,8 +206,9 @@ export function SchedulesList({
             />
           </div>
         ) : (
-          <div className="min-w-0 [&>[role=table]]:border-0">
+          <div className="min-w-0">
             <DataTable
+              bordered={false}
               ariaLabel={t("schedules")}
               columns={columns}
               id="schedules-list"

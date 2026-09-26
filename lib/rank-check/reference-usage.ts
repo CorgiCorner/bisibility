@@ -57,8 +57,11 @@ function usageForGroup(group: ReferenceUsageGroup): ProviderReferenceUsage {
   const requestedDepth = depth(group.requestedDepth);
   const rate = rateForProvider(group.provider);
   const unitsPerCheck =
-    count(group.billingUnits) ||
-    (rate?.pricingModel === "plan" ? pagesPerCheck(requestedDepth) : 1);
+    group.billingUnits !== null
+      ? count(group.billingUnits)
+      : rate?.pricingModel === "plan"
+        ? pagesPerCheck(requestedDepth)
+        : 1;
   const billableUnits = checks * unitsPerCheck;
   const referenceCostCents =
     rate?.pricingModel === "plan"

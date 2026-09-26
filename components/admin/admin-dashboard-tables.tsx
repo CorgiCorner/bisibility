@@ -97,6 +97,7 @@ export function AdminDashboardOpsEventsTable({
 
   return (
     <DataTable
+      bordered={false}
       ariaLabel={t("tableLabel")}
       columns={columns}
       id="admin-ops-events-table"

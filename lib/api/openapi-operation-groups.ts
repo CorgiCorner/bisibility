@@ -112,6 +112,8 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
       "testProviderConnection",
       "updateProviderSettings",
       "disconnectProvider",
+      "listProviderBudgets",
+      "updateProviderBudgets",
     ],
   ],
   [

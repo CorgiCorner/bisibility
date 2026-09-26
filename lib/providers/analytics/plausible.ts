@@ -228,7 +228,7 @@ export const plausibleAnalyticsProvider: AnalyticsProvider = {
         metrics: ["visitors"],
         site_id: siteId,
       });
-      return { message: `Connection OK · ${siteId}.`, ok: true };
+      return { message: `Connected · ${siteId}.`, ok: true };
     } catch (error) {
       return {
         message: error instanceof Error ? error.message : "Plausible connection test failed.",

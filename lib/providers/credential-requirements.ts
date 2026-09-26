@@ -32,12 +32,19 @@ export function missingProviderCredentials(
   return (provider.requiredCredentials ?? []).filter((field) => !hasCredential(credentials[field]));
 }
 
+export function providerCredentialLabel(
+  provider: Pick<ProviderCatalogItem, "credentialLabels">,
+  field: ProviderCredentialRequirement,
+) {
+  return provider.credentialLabels?.[field] ?? credentialLabels[field];
+}
+
 export function providerCredentialRequirementMessage(
   provider: ProviderCatalogItem,
   credentials: ProviderCredentials,
 ) {
-  const labels = missingProviderCredentials(provider, credentials).map(
-    (field) => credentialLabels[field],
+  const labels = missingProviderCredentials(provider, credentials).map((field) =>
+    providerCredentialLabel(provider, field),
   );
   if (labels.length === 0) return null;
 

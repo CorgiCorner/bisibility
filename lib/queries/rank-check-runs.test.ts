@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   checkSchedule: { findFirst: vi.fn(), findMany: vi.fn() },
   auditLog: { findMany: vi.fn() },
   itemFindMany: vi.fn(),
+  usageGroups: vi.fn().mockResolvedValue([]),
+  ledgerRaw: vi.fn(),
   loadProviderChain: vi.fn(),
   monthlySpend: vi.fn(),
   raw: vi.fn(),
@@ -18,7 +20,13 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    $queryRaw: mocks.raw,
+    rankCheck: { groupBy: mocks.usageGroups },
+    $queryRaw: (query: unknown) => {
+      const text = Array.isArray((query as { strings?: string[] }).strings)
+        ? (query as { strings: string[] }).strings.join(" ")
+        : String(query);
+      return text.includes("provider_cost_entries") ? mocks.ledgerRaw(query) : mocks.raw(query);
+    },
     auditLog: mocks.auditLog,
     checkSchedule: mocks.checkSchedule,
     rankCheckRun: {
@@ -41,6 +49,7 @@ vi.mock("@/lib/queries/workspace-request-data", () => ({
 
 import {
   getCheckSchedule,
+  getRankCheckRun,
   getRankCheckRunCount,
   listCheckSchedules,
   listRankCheckRunItems,
@@ -119,6 +128,7 @@ function item(id: string, createdAt: Date) {
 describe("rank-check run queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.ledgerRaw.mockResolvedValue([]);
     mocks.loadProviderChain.mockResolvedValue([
       { costPerCheckCents: 2, provider: "serpapi", rateContext: { entries: [] } },
     ]);
@@ -127,6 +137,55 @@ describe("rank-check run queries", () => {
     mocks.scheduleKeywords.mockResolvedValue([]);
     mocks.projectMarket.findMany.mockResolvedValue([{ locationId: "market_1" }]);
     mocks.monthlySpend.mockResolvedValue(0);
+  });
+
+  it("returns operation usage from all checks in the scoped run, independently of target pagination", async () => {
+    const row = {
+      ...run(runIds[0] as string, new Date()),
+      _count: { items: 2 },
+      targetCount: 2,
+      selectionSpec: { providerId: "serpapi" },
+    };
+    mocks.runFindFirst.mockResolvedValueOnce(row);
+    mocks.usageGroups.mockResolvedValueOnce([
+      {
+        runId: row.id,
+        provider: "serpapi",
+        requestedDepth: 20,
+        _count: { _all: 2, billingUnits: 0 },
+        _sum: { billingUnits: null },
+      },
+    ]);
+    const result = await getRankCheckRun("project_1", row.publicId);
+    expect(result.usage).toEqual({ actual: null, estimated: 4, unit: "operations" });
+    expect(mocks.usageGroups).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { runId: { in: [row.id] } } }),
+    );
+  });
+
+  it("agrees on the launch native estimate between the run list and run detail", async () => {
+    const nativeEstimate = {
+      providerId: "serpapi",
+      quantity: 12,
+      unit: "units" as const,
+      unknownTargets: 0,
+    };
+    const row = {
+      ...run(runIds[0] as string, new Date("2026-09-02T12:00:00.000Z")),
+      selectionSpec: { kind: "all", nativeEstimate, providerAtLaunch: "serpapi", v: 1 },
+    };
+    mocks.raw.mockResolvedValueOnce([{ publicId: row.publicId }]);
+    mocks.runFindMany.mockResolvedValueOnce([row]);
+    mocks.runFindFirst.mockResolvedValueOnce(row);
+
+    const detail = await getRankCheckRun("project_1", row.publicId);
+    const list = await listRankCheckRuns(
+      "project_1",
+      new URL("http://localhost/api/rank-check-runs?segment=history"),
+    );
+
+    expect(detail.nativeEstimate).toEqual(nativeEstimate);
+    expect(list.data[0]?.nativeEstimate).toEqual(nativeEstimate);
   });
 
   it("pages launched and skipped history without duplicates or gaps", async () => {
@@ -508,6 +567,7 @@ describe("rank-check run queries", () => {
         rankCheck: {
           costCents: { toString: () => "0.4000" },
           errorCode: null,
+          id: "rc_stored",
           position: null,
           provider: "dataforseo",
           publicId: "check_1",
@@ -535,8 +595,10 @@ describe("rank-check run queries", () => {
         select: expect.objectContaining({
           rankCheck: {
             select: {
+              billingUnits: true,
               costCents: true,
               errorCode: true,
+              id: true,
               position: true,
               provider: true,
               publicId: true,
@@ -548,6 +610,184 @@ describe("rank-check run queries", () => {
         where: { runId: "run_1" },
       }),
     );
+  });
+
+  it("keeps stored target fields when the ledger has no receipts for the run", async () => {
+    mocks.runFindFirst.mockResolvedValue({ id: "run_1" });
+    mocks.itemFindMany.mockResolvedValue([
+      {
+        ...item("item_1", new Date()),
+        status: "completed",
+        actualCostCents: 4,
+        rankCheck: {
+          billingUnits: 5,
+          costCents: { toString: () => "9.0000" },
+          errorCode: null,
+          id: "rc_stored",
+          position: 1,
+          provider: "serpapi",
+          publicId: "check_1",
+          rankingUrl: null,
+          requestedDepth: 20,
+        },
+      },
+    ]);
+
+    const page = await listRankCheckRunItems(
+      "project_1",
+      runIds[0] as string,
+      new URL("https://example.com/items"),
+    );
+
+    expect(page.data[0]).toMatchObject({ actualCostCents: 4 });
+    expect(page.data[0]?.rankCheck).toMatchObject({ billingUnits: 5 });
+  });
+
+  it("projects per-target ledger actuals onto target cost and units, one receipt set per target", async () => {
+    mocks.runFindFirst.mockResolvedValue({ id: "run_1" });
+    const check = (id: string, billingUnits: number | null) => ({
+      billingUnits,
+      costCents: null,
+      errorCode: null,
+      id,
+      position: null,
+      provider: "serpapi",
+      publicId: `check_${id}`,
+      rankingUrl: null,
+      requestedDepth: 20,
+    });
+    mocks.itemFindMany.mockResolvedValue([
+      {
+        ...item("item_1", new Date("2026-09-02T10:00:00.000Z")),
+        status: "completed",
+        actualCostCents: 4,
+        rankCheck: check("rc_ledger", null),
+      },
+      {
+        ...item("item_2", new Date("2026-09-02T11:00:00.000Z")),
+        status: "failed",
+        actualCostCents: null,
+        rankCheck: check("rc_unconfirmed", 5),
+      },
+    ]);
+    mocks.ledgerRaw.mockResolvedValue([
+      {
+        scopeId: "rc_ledger",
+        receiptCount: 2,
+        unitProvider: "serpapi",
+        unconfirmedCount: 0,
+        unmeasuredCount: 0,
+        recordedCostCents: 0.925,
+        recordedUnits: 3,
+      },
+      {
+        scopeId: "rc_unconfirmed",
+        receiptCount: 1,
+        unitProvider: "serpapi",
+        unconfirmedCount: 1,
+        unmeasuredCount: 0,
+        recordedCostCents: 0.5,
+        recordedUnits: 1,
+      },
+    ]);
+
+    const page = await listRankCheckRunItems(
+      "project_1",
+      runIds[0] as string,
+      new URL("https://example.com/items"),
+    );
+
+    expect(page.data[0]).toMatchObject({ actualCostCents: 0.925 });
+    expect(page.data[0]?.rankCheck).toMatchObject({ billingUnits: 3, costCents: 0.925 });
+    expect(page.data[1]).toMatchObject({ actualCostCents: null });
+    expect(page.data[1]?.rankCheck).toMatchObject({ billingUnits: null, costCents: null });
+    expect(mocks.ledgerRaw).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: expect.arrayContaining(["project_1", "run_1"]),
+      }),
+    );
+  });
+
+  it("derives run cost and native actual from the ledger in list and detail", async () => {
+    const row = {
+      ...run(runIds[0] as string, new Date("2026-09-02T12:00:00.000Z")),
+      _count: { items: 2 },
+      selectionSpec: { providerId: "serpapi" },
+      targetCount: 2,
+    };
+    mocks.raw.mockResolvedValue([{ publicId: row.publicId }]);
+    mocks.runFindMany.mockResolvedValue([row]);
+    mocks.runFindFirst.mockResolvedValue(row);
+    mocks.ledgerRaw.mockResolvedValue([
+      {
+        scopeId: row.id,
+        receiptCount: 2,
+        unitProvider: "serpapi",
+        unconfirmedCount: 0,
+        unmeasuredCount: 0,
+        recordedCostCents: 0.925,
+        recordedUnits: 2,
+      },
+    ]);
+
+    const detail = await getRankCheckRun("project_1", row.publicId);
+    const list = await listRankCheckRuns(
+      "project_1",
+      new URL("https://example.com/api/rank-check-runs?segment=history"),
+    );
+
+    expect(detail.costCents).toBe(0.925);
+    expect(detail.usage).toMatchObject({ actual: 2, unit: "operations" });
+    expect(list.data[0]).toMatchObject({ costCents: 0.925, usage: { actual: 2 } });
+    expect(mocks.ledgerRaw).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: expect.arrayContaining(["project_1", row.id]),
+      }),
+    );
+  });
+
+  it("keeps an unconfirmed ledger explicit instead of resuming stored cost or units", async () => {
+    const row = {
+      ...run(runIds[0] as string, new Date("2026-09-02T12:00:00.000Z")),
+      _count: { items: 2 },
+      selectionSpec: { providerId: "serpapi" },
+      targetCount: 2,
+    };
+    mocks.runFindFirst.mockResolvedValue(row);
+    mocks.usageGroups.mockResolvedValue([
+      {
+        runId: row.id,
+        provider: "serpapi",
+        requestedDepth: 20,
+        _count: { _all: 2, billingUnits: 2 },
+        _sum: { billingUnits: 3 },
+      },
+    ]);
+    mocks.ledgerRaw.mockResolvedValue([
+      {
+        scopeId: row.id,
+        receiptCount: 2,
+        unitProvider: "serpapi",
+        unconfirmedCount: 1,
+        unmeasuredCount: 0,
+        recordedCostCents: 1,
+        recordedUnits: 2,
+      },
+    ]);
+
+    const detail = await getRankCheckRun("project_1", row.publicId);
+
+    expect(detail.costCents).toBeNull();
+    expect(detail.usage?.actual).toBeNull();
+  });
+
+  it("keeps explicitly measured stored cost when the run predates the ledger", async () => {
+    const row = run(runIds[0] as string, new Date("2026-09-02T12:00:00.000Z"));
+    mocks.runFindFirst.mockResolvedValue(row);
+
+    const detail = await getRankCheckRun("project_1", row.publicId);
+
+    expect(detail.costCents).toBe(10);
   });
 
   it("filters a shared scheduled run to the requested keyword", async () => {

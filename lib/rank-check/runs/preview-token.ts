@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { getPurposeSecretKeys } from "@/lib/providers/crypto";
 import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
 import { z } from "zod";
+import type { RunLaunchTrigger } from "./selection";
 
 const TOKEN_PURPOSE = "rank-check-run-preview";
 const TOKEN_TTL_SECONDS = 10 * 60;
@@ -13,6 +14,8 @@ const tokenPayloadSchema = z
     projectId: z.string().min(1),
     providerId: z.string().min(1).nullable(),
     selectionHash: z.string().regex(/^[a-f0-9]{64}$/),
+    // A manual preview admits rows an API launch leaves out; tokens from before the field are API.
+    trigger: z.enum(["api", "manual"]).default("api"),
   })
   .strict();
 
@@ -22,6 +25,7 @@ export type PreviewTokenExpected = {
   projectId: string;
   providerId: string | null;
   selectionHash: string;
+  trigger: RunLaunchTrigger;
 };
 export type PreviewTokenPayload = PreviewTokenExpected & { exp: number };
 export type PreviewTokenErrorCode = "expired" | "mismatch" | "tampered";
@@ -41,6 +45,7 @@ function canonicalPayload(payload: PreviewTokenPayload) {
     providerId: payload.providerId,
     estimateCents: payload.estimateCents,
     exp: payload.exp,
+    trigger: payload.trigger,
   });
 }
 
@@ -114,7 +119,8 @@ export function verifyPreviewToken(
     payload.selectionHash !== expected.selectionHash ||
     payload.depth !== expected.depth ||
     payload.providerId !== expected.providerId ||
-    payload.estimateCents !== expected.estimateCents
+    payload.estimateCents !== expected.estimateCents ||
+    payload.trigger !== expected.trigger
   ) {
     throw new PreviewTokenError("mismatch");
   }

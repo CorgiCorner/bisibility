@@ -10,6 +10,7 @@ import type { HistoricalOverviewRow } from "@/lib/providers/types";
 import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/csr/ChartLineUp";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useDomainOverviewCacheDuration } from "./DomainOverviewCacheProvider";
 import {
   formatDomainEstimatedCost,
   type HistoryMetric,
@@ -50,6 +51,7 @@ export function DomainOverviewPerformanceChart({
   readOnly?: boolean;
 }>) {
   const dateDisplay = useDateDisplay();
+  const cacheDuration = useDomainOverviewCacheDuration();
   const t = useTranslations("projectDomainOverview.workspace.ui");
   const [metric, setMetric] = useState<HistoryMetric>("traffic");
   const [range, setRange] = useState<Range>("12m");
@@ -136,7 +138,7 @@ export function DomainOverviewPerformanceChart({
                 ? t("historyLoadFailed")
                 : readOnly
                   ? t("historySavedUnavailable")
-                  : t("historyCacheHint")}
+                  : t("historyCacheHint", { duration: cacheDuration })}
             </span>
             {!readOnly && onLoad ? (
               <Button loading={loading} onClick={onLoad} size="sm" variant="secondary">

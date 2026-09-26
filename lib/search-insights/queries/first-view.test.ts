@@ -1,4 +1,4 @@
-import { FIRST_VIEW_ROW_BUFFER, KNOWN_DATA_INCIDENTS } from "@/lib/search-insights/constants";
+import { FIRST_VIEW_ROWS, KNOWN_DATA_INCIDENTS } from "@/lib/search-insights/constants";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SearchInsightsScope } from "./context";
 
@@ -94,7 +94,7 @@ describe("getSearchInsightsFirstView", () => {
     const view = await getSearchInsightsFirstView("prj_1", { period: "28" });
     expect(mocks.scope).toHaveBeenCalledWith("prj_1", { period: "28" });
     expect(mocks.queries).toHaveBeenCalledWith("project_1", scope.property, scope.window.current, {
-      limit: FIRST_VIEW_ROW_BUFFER,
+      limit: FIRST_VIEW_ROWS,
       offset: 0,
     });
     expect(view.deploymentMode).toBe("self-host");
@@ -214,7 +214,7 @@ describe("getSearchInsightsFirstView", () => {
       "project_1",
       scope.property,
       { end: "2026-07-08", start: "2026-07-08" },
-      { limit: FIRST_VIEW_ROW_BUFFER, offset: 0 },
+      { limit: FIRST_VIEW_ROWS, offset: 0 },
       "123456789",
     );
 
@@ -234,7 +234,7 @@ describe("getSearchInsightsFirstView", () => {
       "project_1",
       scope.property,
       scope.window.current,
-      { limit: FIRST_VIEW_ROW_BUFFER, offset: 0 },
+      { limit: FIRST_VIEW_ROWS, offset: 0 },
       null,
     );
   });
@@ -340,7 +340,7 @@ describe("getSearchInsightsFirstView", () => {
       "project_1",
       scope.property,
       scope.window.current,
-      { limit: FIRST_VIEW_ROW_BUFFER, offset: 0 },
+      { limit: FIRST_VIEW_ROWS, offset: 0 },
       null,
     );
     expect(mocks.sessionsTotals).not.toHaveBeenCalled();
@@ -365,7 +365,7 @@ describe("getSearchInsightsFirstView", () => {
       "project_1",
       scope.property,
       scope.window.current,
-      { limit: FIRST_VIEW_ROW_BUFFER, offset: 0 },
+      { limit: FIRST_VIEW_ROWS, offset: 0 },
       "123456789",
     );
     expect(mocks.sessionsTotals).toHaveBeenCalledWith("project_1", "123456789", scope.window);

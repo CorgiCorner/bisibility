@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   experimentalModules: vi.fn(),
   lastExport: vi.fn(),
   listWorkspaces: vi.fn(),
+  noticeExtension: vi.fn(),
   loadSetupAcknowledgedAt: vi.fn(),
   loadSetupContext: vi.fn(),
   paletteProps: vi.fn(),
@@ -90,6 +91,9 @@ vi.mock("@/components/shell/CommandPalette", () => ({
     mocks.paletteProps(props);
     return props.children;
   },
+}));
+vi.mock("@/components/shell/AccountNoticeExtension", () => ({
+  renderAccountNoticeExtension: mocks.noticeExtension,
 }));
 vi.mock("@/components/shell/cloud-beta", () => ({
   CLOUD_BETA_DISMISSAL_COOKIE: "cloud-beta",
@@ -211,6 +215,7 @@ describe("workspace layout", () => {
       { label: "Malaga / Spanish", ref: "pmkt_malaga00000000000000000" },
     ]);
     mocks.experimentalModules.mockResolvedValue([]);
+    mocks.noticeExtension.mockResolvedValue(null);
     mocks.workerLiveness.mockResolvedValue({
       alertDeliveryTaskQueue: null,
       namespace: null,
@@ -403,6 +408,39 @@ describe("workspace layout", () => {
     expect(markup.indexOf('data-testid="cloud-beta-banner"')).toBeLessThan(
       markup.indexOf("<header"),
     );
+  });
+
+  it("renders the resolved account notice where the beta banner sat and suppresses the beta banner", async () => {
+    mocks.deployment.isCloud = true;
+    mocks.noticeExtension.mockResolvedValue({ content: <aside data-testid="account-notice" /> });
+
+    const markup = renderToStaticMarkup(
+      await WorkspaceShell({
+        activeProjectId: "project_1",
+        children: <div>Cloud workspace</div>,
+        projectRef: "prj_f00000000000000000000000",
+      }),
+    );
+
+    expect(mocks.noticeExtension).toHaveBeenCalledWith({ locale: "en" });
+    expect(markup).toContain('data-testid="account-notice"');
+    expect(markup).not.toContain('data-testid="cloud-beta-banner"');
+    expect(markup.indexOf('data-testid="account-notice"')).toBeLessThan(markup.indexOf("<header"));
+  });
+
+  it("keeps the beta banner when the notice gate resolves to nothing", async () => {
+    mocks.deployment.isCloud = true;
+
+    const markup = renderToStaticMarkup(
+      await WorkspaceShell({
+        activeProjectId: "project_1",
+        children: <div>Cloud workspace</div>,
+        projectRef: "prj_f00000000000000000000000",
+      }),
+    );
+
+    expect(markup).toContain('data-testid="cloud-beta-banner"');
+    expect(markup).not.toContain('data-testid="account-notice"');
   });
 
   it.each([

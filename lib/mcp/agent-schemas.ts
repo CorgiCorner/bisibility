@@ -99,6 +99,6 @@ export const agentMcpSchemas = {
   ),
   updateSitemapMonitor: objectSchema(
     { ...idempotency, monitor_id: mcpPublicIdSchema("prj"), project_id: mcpPublicIdSchema("prj") },
-    ["project_id", "monitor_id"],
+    ["project_id"],
   ),
 } satisfies Record<string, JsonObject>;

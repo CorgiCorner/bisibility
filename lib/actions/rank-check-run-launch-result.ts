@@ -19,6 +19,7 @@ export type LaunchRankCheckRunActionInput = z.infer<typeof launchRankCheckRunAct
 export type LaunchRankCheckRunActionFailure = {
   code:
     | "budget_exhausted"
+    | "cost_limit_exceeded"
     | "no_provider"
     | "preview_expired"
     | "preview_mismatch"

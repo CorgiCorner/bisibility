@@ -4,18 +4,20 @@ import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { SEARCH_INSIGHTS_SEARCH_TYPE } from "@/lib/search-insights/constants";
 import { SEARCH_INSIGHTS_SOURCE } from "@/lib/search-insights/sync/credentials";
-import { readActiveSearchImportSnapshot } from "@/lib/search-insights/sync/operation-snapshot";
+import {
+  type ActiveSearchImportSnapshot,
+  readActiveSearchImportSnapshot,
+} from "@/lib/search-insights/sync/operation-snapshot";
 import {
   decodeProjectRunsCursor,
   type ProjectRunsPlannedSortTuple,
   type ProjectRunsSortTuple,
 } from "./cursor";
-import type { ProjectRunsQuery, ProjectRunsStatus } from "./filters";
+import { isProjectRunsStatusGroup, type ProjectRunsQuery, type ProjectRunsStatus } from "./filters";
 import type { ProjectRunGscImport } from "./project-run";
 import { type ProjectRunsApiResponse, projectRunsApiResponseSchema } from "./project-runs-api";
 import {
   adjustedGscCount,
-  GSC_ACTIVE_IMPORT_STATES,
   gscSnapshotMatchesStatus,
   rawGscSnapshotMatchesStatus,
 } from "./project-runs-gsc-snapshot";
@@ -27,22 +29,14 @@ import {
   rankProjectRun,
   rankRunSelect,
 } from "./project-runs-presentation";
-
-const RANK_ACTIVE_STATUSES = ["queued", "running", "cancelling"] as const;
-const RANK_FINISHED_STATUSES = ["completed", "cancelled"] as const;
-const GSC_ATTENTION_PAUSE_REASONS = ["error", "needs_reauth", "user"] as const;
-const GSC_FINISHED_STATES = ["completed", "failed"] as const;
+import {
+  gscStatusWhere,
+  includesUpcomingRuns,
+  rankStatusWhere,
+  upcomingStatusWhere,
+} from "./project-runs-status-where";
 
 type ProjectRunsProject = Readonly<{ id: string; name?: string; publicId: string }>;
-
-function rankStatusWhere(status: ProjectRunsStatus): Prisma.RankCheckRunWhereInput {
-  if (status === "active") return { status: { in: [...RANK_ACTIVE_STATUSES] } };
-  if (status === "attention") {
-    return { OR: [{ status: "blocked" }, { outcome: "failed", status: "completed" }] };
-  }
-  if (status === "finished") return { status: { in: [...RANK_FINISHED_STATUSES] } };
-  return {};
-}
 
 function rankWhere(
   projectId: string,
@@ -56,8 +50,6 @@ function rankWhere(
 }
 
 function plannedWhere(projectId: string, status: ProjectRunsStatus): Prisma.RankCheckRunWhereInput {
-  const statusWhere =
-    status === "attention" ? { status: "blocked" } : status === "all" ? {} : { id: { in: [] } };
   return {
     AND: [
       {
@@ -67,7 +59,7 @@ function plannedWhere(projectId: string, status: ProjectRunsStatus): Prisma.Rank
         plannedFor: { not: null },
         status: { in: ["planned", "blocked"] },
       },
-      statusWhere,
+      upcomingStatusWhere(status),
     ],
   };
 }
@@ -75,27 +67,11 @@ function plannedWhere(projectId: string, status: ProjectRunsStatus): Prisma.Rank
 function gscWhere(
   projectId: string,
   query: ProjectRunsQuery,
+  snapshot: ActiveSearchImportSnapshot | null,
   attentionSnapshotId: string | null = null,
 ): Prisma.SearchAnalyticsImportWhereInput | null {
   if (query.view === "planned") return null;
-  const rawStatus =
-    query.status === "active"
-      ? {
-          OR: [
-            { state: { in: [...GSC_ACTIVE_IMPORT_STATES] } },
-            { pausedReason: "rate_limited", state: "paused" },
-          ],
-        }
-      : query.status === "attention"
-        ? {
-            OR: [
-              { state: "failed" },
-              { pausedReason: { in: [...GSC_ATTENTION_PAUSE_REASONS] }, state: "paused" },
-            ],
-          }
-        : query.status === "finished"
-          ? { state: { in: [...GSC_FINISHED_STATES] } }
-          : {};
+  const rawStatus = gscStatusWhere(query.status, snapshot);
   const status =
     query.status === "attention" && attentionSnapshotId
       ? { OR: [rawStatus, { id: attentionSnapshotId }] }
@@ -172,23 +148,30 @@ export async function listProjectRuns(
   const take = query.limit + 1;
   const includeRanks = query.source !== "search_console";
   const includeGsc = query.source !== "rank_checks";
-  const includeUpcoming = includeRanks && (query.status === "all" || query.status === "attention");
+  const includeUpcoming = includeRanks && includesUpcomingRuns(query.status);
   const upcomingWhere = plannedWhere(project.id, query.status);
   const activeSnapshot =
     includeGsc && query.status !== "finished"
       ? await readActiveSearchImportSnapshot(project.id)
       : null;
+  const groupStatus = isProjectRunsStatusGroup(query.status) ? query.status : null;
   const snapshotIsAttention =
-    activeSnapshot && gscSnapshotMatchesStatus(activeSnapshot, "attention");
+    activeSnapshot && groupStatus && gscSnapshotMatchesStatus(activeSnapshot, "attention");
   const snapshotLeavesRawStatus = Boolean(
     activeSnapshot &&
-      rawGscSnapshotMatchesStatus(activeSnapshot, query.status) &&
-      !gscSnapshotMatchesStatus(activeSnapshot, query.status),
+      groupStatus &&
+      rawGscSnapshotMatchesStatus(activeSnapshot, groupStatus) &&
+      !gscSnapshotMatchesStatus(activeSnapshot, groupStatus),
   );
   const launchedWhere = rankCursorWhere(rankWhere(project.id, query, true), "launchedAt", cursor);
   const cancelledWhere = rankCursorWhere(rankWhere(project.id, query, false), "finishedAt", cursor);
-  const importsWhere = gscWhere(project.id, query, snapshotIsAttention ? activeSnapshot.id : null);
-  const importCountWhere = gscWhere(project.id, query);
+  const importsWhere = gscWhere(
+    project.id,
+    query,
+    activeSnapshot,
+    snapshotIsAttention ? activeSnapshot.id : null,
+  );
+  const importCountWhere = gscWhere(project.id, query, activeSnapshot);
   const importTake = take + Number(snapshotIsAttention || snapshotLeavesRawStatus);
   const [
     launched,

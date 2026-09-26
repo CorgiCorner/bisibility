@@ -10,6 +10,7 @@ import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { KeywordDetailActions } from "./action-utils";
+import { effectiveRowDepth } from "./grid/run-check-depth";
 import { useKeywordScheduleModal } from "./use-keyword-schedule-modal";
 
 type EditSection = "details" | "schedule";
@@ -118,9 +119,26 @@ export function KeywordEditDrawer({
             updateKeywordAction={updateKeywordAction}
           />
         </div>
-        <p className="text-[13px] text-fg-muted" hidden={section !== "schedule"}>
-          {t("scheduleDescription")}
-        </p>
+        <div hidden={section !== "schedule"}>
+          <p className="text-[13px] text-fg-muted">{t("scheduleDescription")}</p>
+          <div className="mt-5 rounded-control border border-border bg-bg-sunken px-3.5 py-3">
+            <div className="font-sans text-[11px] uppercase tracking-[0.5px] text-fg-muted">
+              {t("currentSchedule")}
+            </div>
+            {keyword.checkSchedule ? (
+              <div className="mt-1.5 flex items-baseline justify-between gap-3 text-[13px]">
+                <span className="min-w-0 truncate font-medium text-fg">
+                  {keyword.checkSchedule.name}
+                </span>
+                <span className="shrink-0 tabular-nums text-fg-muted">
+                  {t("scheduleDepth", { depth: effectiveRowDepth(keyword) })}
+                </span>
+              </div>
+            ) : (
+              <p className="mt-1.5 text-[13px] text-fg-muted">{t("noSchedule")}</p>
+            )}
+          </div>
+        </div>
       </Sheet>
       {scheduleModal}
     </>

@@ -131,6 +131,7 @@ export function AdminAuditDataTable({
 
   return (
     <DataTable
+      bordered={false}
       ariaLabel={t("tableLabel")}
       columns={columns}
       id="admin-audit-table"

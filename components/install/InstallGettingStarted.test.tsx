@@ -38,6 +38,28 @@ describe("install getting started", () => {
       screen.queryByText((content) => content.includes(prompts.withoutChecks)),
     ).not.toBeInTheDocument();
   });
+  it("switches instructions, scope and help link between clients", () => {
+    render(<InstallGettingStarted hasKeywordAndCheck={false} mcpUrl={mcpUrl} />);
+    expect(screen.getByRole("radio", { name: "ChatGPT" })).toBeChecked();
+    expect(screen.getByText("Read-only access")).toBeVisible();
+    expect(screen.queryByText(/Add my first keywords/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "Claude" }));
+    expect(screen.getByText("Read and write access")).toBeVisible();
+    expect(screen.getByText("1. Open connectors")).toBeVisible();
+    expect(screen.queryByText("1. Enable developer mode")).not.toBeInTheDocument();
+    const guide = screen.getByRole("link", { name: "Claude setup guide" });
+    expect(new URL(guide.getAttribute("href") ?? "").pathname).toBe(
+      "/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp",
+    );
+    expect(screen.getByRole("button", { name: "Copy Claude MCP URL" })).toHaveAttribute(
+      "data-copy-text",
+      mcpUrl,
+    );
+    fireEvent.click(screen.getByRole("radio", { name: "ChatGPT" }));
+    expect(screen.getByText("1. Enable developer mode")).toBeVisible();
+    expect(screen.getByText("Read-only access")).toBeVisible();
+  });
+
   it("persists dismissal after remount and lets the user restore the guide", () => {
     const { unmount } = render(
       <InstallGettingStarted hasKeywordAndCheck={false} mcpUrl={mcpUrl} />,
@@ -76,5 +98,7 @@ describe("install getting started", () => {
       "/videos/setup/connect-chatgpt.mp4",
     );
     expect(screen.getByTestId("setup-video")).toHaveAttribute("preload", "none");
+    fireEvent.click(screen.getByRole("radio", { name: "Claude" }));
+    expect(screen.queryByTestId("setup-video")).not.toBeInTheDocument();
   });
 });

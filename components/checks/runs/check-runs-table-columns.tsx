@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckStatusChip } from "@/components/ui/CheckStatusChip";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CheckRunRow } from "@/lib/checks/contract";
@@ -146,7 +147,7 @@ export function checkRunsTableColumns({
       148,
       (run) => (
         <Link
-          className="block truncate font-semibold text-fg outline-none hover:text-accent-text focus-visible:text-accent-text"
+          className={`block truncate font-semibold outline-none ${dataLinkClassName}`}
           href={keywordHref(run.keywordPublicId)}
         >
           {run.keyword}

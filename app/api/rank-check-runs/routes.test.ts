@@ -115,7 +115,11 @@ describe("rank-check run app routes", () => {
     );
 
     expect(mocks.launch).toHaveBeenCalledWith(
-      expect.objectContaining({ idempotencyKey: "request-0001", trigger: "api" }),
+      expect.objectContaining({
+        idempotencyKey: "request-0001",
+        origin: { source: "app" },
+        trigger: "api",
+      }),
     );
   });
 
@@ -178,8 +182,23 @@ describe("rank-check run app routes", () => {
       type: "keyword",
     });
     expect(mocks.preview).toHaveBeenCalledWith(
-      expect.objectContaining({ project: expect.objectContaining({ id: "project_1" }) }),
+      expect.objectContaining({
+        project: expect.objectContaining({ id: "project_1" }),
+        trigger: "api",
+      }),
     );
+  });
+
+  it("previews the manual overlap rule only when the run dialog asks for it", async () => {
+    await preview(
+      json("/api/rank-check-runs/preview", {
+        projectId,
+        spec: { kind: "all", v: 1 },
+        trigger: "manual",
+      }),
+    );
+
+    expect(mocks.preview).toHaveBeenCalledWith(expect.objectContaining({ trigger: "manual" }));
   });
 
   it("returns a run DTO after cancellation even when Temporal handling was best effort", async () => {
@@ -211,7 +230,11 @@ describe("rank-check run app routes", () => {
     );
 
     expect(mocks.retry).toHaveBeenCalledWith(
-      expect.objectContaining({ actorId: "user_1", relation: "retry_failed" }),
+      expect.objectContaining({
+        actorId: "user_1",
+        origin: { source: "app" },
+        relation: "retry_failed",
+      }),
     );
     expect(mocks.runNow).toHaveBeenCalledWith(expect.objectContaining({ runId: "run_1" }));
     expect(mocks.skip).toHaveBeenCalledWith(expect.objectContaining({ runId: "run_1" }));

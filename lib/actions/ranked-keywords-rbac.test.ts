@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, expect, it, vi } from "vitest";
 import { fetchRankedKeywordSuggestions } from "./ranked-keywords";
 
@@ -44,6 +45,6 @@ it("allows a member to request suggestions", async () => {
   });
   await fetchRankedKeywordSuggestions({ projectId });
   expect(mocks.lookup).toHaveBeenCalledWith(
-    expect.objectContaining({ actorId: "user", projectId: "project" }),
+    expect.objectContaining({ actorId: "user", origin: APP_REQUEST_ORIGIN, projectId: "project" }),
   );
 });

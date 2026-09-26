@@ -7,9 +7,12 @@ type DbClient = PrismaClient | Prisma.TransactionClient;
 const connectionSelect = {
   allocationAmountPerMonth: true,
   allocationUnit: true,
+  creditsAllocationAmountPerMonth: true,
+  creditsProgrammaticAllocationAmountPerMonth: true,
   enabled: true,
   id: true,
   priority: true,
+  programmaticAllocationAmountPerMonth: true,
   provider: true,
   status: true,
 } as const;

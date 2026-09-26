@@ -1,22 +1,30 @@
-import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
+import { estimateRankUsage, type NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { prisma } from "@/lib/db/prisma";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import {
-  assertProviderAllocationAvailable,
-  ProviderAllocationExhaustedError,
-} from "@/lib/provider-usage/enforcement";
-import { PROVIDER_CATALOG } from "@/lib/providers/registry";
+  type ProviderRequestOrigin,
+  type ProviderRequestSurface,
+  surfaceOf,
+} from "@/lib/provider-usage/surface";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
-import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
 import { activeMarketLocationIds, unrunnableKeywordReason } from "@/lib/rank-check/runnable";
 import type { UnrunnableReason } from "@/lib/rank-check/runnable-reasons";
 import { resolveEffectiveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
-import { RUN_STATUSES, TERMINAL_RUN_STATUSES } from "./contract";
+import { ACTIVE_RUN_STATUSES } from "./contract";
 import { type RankCheckRunProject, requireRankCheckRunProject } from "./launch-types";
+import { allocationBudget } from "./preview-budget";
+import { findRankCheckRunOverlaps, type RankCheckRunOverlap } from "./preview-overlaps";
 import { createPreviewToken } from "./preview-token";
-import { type RunSelectionSpec, resolveRunSelection } from "./selection";
+import {
+  type RunLaunchTrigger,
+  type RunSelectionKeyword,
+  type RunSelectionSpec,
+  resolveRunSelection,
+  runSelectionKeywordHeld,
+  runSelectionKeywordSelect,
+} from "./selection";
 
 export type RankCheckRunExclusionReason =
   | "paused"
@@ -33,8 +41,10 @@ export type RankCheckRunPreview = {
     reason: "budget_exhausted" | "duplicate" | "no_provider" | null;
     remainingAfterCents: number | null;
     spentCents: number | null;
+    surface?: ProviderRequestSurface;
   };
   estimate: {
+    native?: NativeUsageEstimate;
     costCents: number | null;
     perTargetCents: number | null;
     unknownCostTargets: number;
@@ -44,6 +54,9 @@ export type RankCheckRunPreview = {
   expiresAt: string;
   keywordCount: number;
   matched: number;
+  /** Other runs that also check some of these keywords; reported for manual previews only. */
+  overlapRunCount: number;
+  overlaps: RankCheckRunOverlap[];
   previewToken: string;
   selectionHash: string;
   targetCount: number;
@@ -51,33 +64,21 @@ export type RankCheckRunPreview = {
 
 export type RankCheckRunPreviewInput = {
   depth?: SerpDepth;
+  origin: ProviderRequestOrigin;
   project: RankCheckRunProject;
   providerId?: string;
   spec: RunSelectionSpec;
+  /** The launch this preview signs for. Defaults to the protective API rule. */
+  trigger?: RunLaunchTrigger;
 };
-type KeywordRow = {
-  archivedAt: Date | null;
-  id: string;
-  locationId: string;
-  publicId: string;
-  queuedRankCheckTasks: Array<{ state: string }>;
-  rankChecks: Array<{ status: string }>;
-  checkSchedule?: { serpDepth: number | null } | null;
-  schedule: { serpDepth: number | null } | null;
-  text: string;
-};
+type KeywordRow = RunSelectionKeyword & { publicId: string };
 
-const activeRunStatuses = RUN_STATUSES.filter(
-  (status) => !(TERMINAL_RUN_STATUSES as readonly string[]).includes(status),
-);
+// API launches refuse a repeat of an active scope; blocked runs retain their reservation.
+const duplicateRunStatuses = [...ACTIVE_RUN_STATUSES, "blocked"];
 
 function selectedPublicIds(spec: RunSelectionSpec) {
   if (spec.kind === "single") return [spec.keywordId];
   return spec.kind === "selected" ? spec.keywordIds : [];
-}
-
-function inProgress(row: KeywordRow) {
-  return row.queuedRankCheckTasks.length > 0 || row.rankChecks[0]?.status === "running";
 }
 
 function estimateTargets(
@@ -106,10 +107,24 @@ function estimateTargets(
   return {
     costCents: known.length > 0 ? known.reduce((sum, cost) => sum + cost, 0) : null,
     depths: targets.map(({ depth }) => depth),
+    native: estimateRankUsage(
+      targets.map(({ depth }) => depth),
+      {
+        providerId: connection.provider,
+        overrideCents:
+          connection.costPerCheckCents == null ? null : Number(connection.costPerCheckCents),
+        rateContext: connection.rateContext,
+      },
+    ),
     perTargetCents:
       known.length === targets.length && unique.size === 1 ? (known[0] ?? null) : null,
     unknownCostTargets: targets.length - known.length,
   };
+}
+
+// biome-ignore format: compact helper keeps this module under the project line cap.
+function remainingAfterCents(state: { capCents: number; reservedCents?: number; spentCents: number }, costCents: number | null) {
+  return Math.max(0, state.capCents - state.spentCents - (state.reservedCents ?? 0) - (costCents ?? 0));
 }
 
 async function legacyBudget(projectId: string, capCents: number, costCents: number | null) {
@@ -123,7 +138,7 @@ async function legacyBudget(projectId: string, capCents: number, costCents: numb
       capCents: state.capCents,
       mode: "legacy" as const,
       reason: null,
-      remainingAfterCents: Math.max(0, state.capCents - state.spentCents - (costCents ?? 0)),
+      remainingAfterCents: remainingAfterCents(state, costCents),
       spentCents: state.spentCents,
     };
   } catch (error) {
@@ -133,39 +148,9 @@ async function legacyBudget(projectId: string, capCents: number, costCents: numb
       capCents: error.budget.capCents,
       mode: "legacy" as const,
       reason: "budget_exhausted" as const,
-      remainingAfterCents: Math.max(
-        0,
-        error.budget.capCents - error.budget.spentCents - (costCents ?? 0),
-      ),
+      remainingAfterCents: remainingAfterCents(error.budget, costCents),
       spentCents: error.budget.spentCents,
     };
-  }
-}
-
-async function allocationBudget(
-  projectId: string,
-  provider: string,
-  connectionId: string,
-  costCents: number | null,
-  depths: SerpDepth[],
-) {
-  try {
-    await assertProviderAllocationAvailable(
-      {
-        catalog: PROVIDER_CATALOG,
-        connectionId,
-        estimatedCostCents: costCents ?? 0,
-        estimatedUsageQuantity: depths.reduce((sum, depth) => sum + pagesPerCheck(depth), 0),
-        legacyBudgetCheck: async () => undefined,
-        projectId,
-        provider,
-      },
-      prisma,
-    );
-    return { blocked: false, reason: null } as const;
-  } catch (error) {
-    if (!(error instanceof ProviderAllocationExhaustedError)) throw error;
-    return { blocked: true, reason: "budget_exhausted" } as const;
   }
 }
 
@@ -173,6 +158,7 @@ export async function previewRankCheckRun(
   input: RankCheckRunPreviewInput,
 ): Promise<RankCheckRunPreview> {
   requireRankCheckRunProject(input.project);
+  const trigger = input.trigger ?? "api";
   const resolved = await resolveRunSelection(input.project, input.spec);
   const activeLocationIds = await activeMarketLocationIds(input.project.id, prisma);
   const [project, rows, connections, duplicate] = await Promise.all([
@@ -186,36 +172,21 @@ export async function previewRankCheckRun(
     }),
     prisma.keyword.findMany({
       orderBy: { id: "asc" },
-      select: {
-        archivedAt: true,
-        id: true,
-        locationId: true,
-        publicId: true,
-        queuedRankCheckTasks: {
-          select: { state: true },
-          take: 1,
-          where: { state: { in: ACTIVE_QUEUED_TASK_STATES } },
-        },
-        rankChecks: {
-          orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
-          select: { status: true },
-          take: 1,
-        },
-        checkSchedule: { select: { serpDepth: true } },
-        schedule: { select: { serpDepth: true } },
-        text: true,
-      },
+      select: { ...runSelectionKeywordSelect, publicId: true },
       where: { id: { in: resolved.keywordIds }, projectId: input.project.id },
     }),
     loadSerpProviderChain(input.project.id, input.providerId),
-    prisma.rankCheckRun.findFirst({
-      select: { id: true },
-      where: {
-        projectId: input.project.id,
-        selectionHash: resolved.selectionHash,
-        status: { in: activeRunStatuses },
-      },
-    }),
+    // A manual launch runs alongside another run over the same scope and reports it instead.
+    trigger === "manual"
+      ? null
+      : prisma.rankCheckRun.findFirst({
+          select: { id: true },
+          where: {
+            projectId: input.project.id,
+            selectionHash: resolved.selectionHash,
+            status: { in: duplicateRunStatuses },
+          },
+        }),
   ]);
   if (!project) throw new Error("Project not found.");
 
@@ -233,7 +204,8 @@ export async function previewRankCheckRun(
       excluded.push({ keywordId: row.publicId, reason: unrunnable });
       return false;
     }
-    if (inProgress(row)) {
+    // Launch drops the same held rows for this trigger; the signed estimate must drop them too.
+    if (runSelectionKeywordHeld(row, trigger)) {
       excluded.push({ keywordId: row.publicId, reason: "in_progress" });
       return false;
     }
@@ -244,6 +216,14 @@ export async function previewRankCheckRun(
     // Manual previews intentionally include paused and manual cadence keywords.
     return true;
   });
+  const overlaps =
+    trigger === "manual"
+      ? await findRankCheckRunOverlaps(
+          input.project.id,
+          executableRows.map(({ id }) => id),
+          new Date(),
+        )
+      : { runs: [], total: 0 };
   const estimate = connections[0]
     ? estimateTargets(executableRows, project.defaults?.serpDepth, input.depth, connections[0])
     : { costCents: null, depths: [], perTargetCents: null, unknownCostTargets: 0 };
@@ -276,6 +256,7 @@ export async function previewRankCheckRun(
       connections[0].id,
       estimate.costCents,
       estimate.depths,
+      surfaceOf(input.origin.source),
     );
     budget = {
       ...allocation,
@@ -291,10 +272,12 @@ export async function previewRankCheckRun(
     projectId: input.project.id,
     providerId: input.providerId ?? null,
     selectionHash: resolved.selectionHash,
+    trigger,
   });
   return {
     budget,
     estimate: {
+      native: "native" in estimate ? estimate.native : undefined,
       costCents: estimate.costCents,
       perTargetCents: estimate.perTargetCents,
       unknownCostTargets: estimate.unknownCostTargets,
@@ -304,6 +287,8 @@ export async function previewRankCheckRun(
     expiresAt: signed.expiresAt.toISOString(),
     keywordCount: new Set(executableRows.map(({ text }) => text)).size,
     matched: resolved.keywordIds.length,
+    overlapRunCount: overlaps.total,
+    overlaps: overlaps.runs,
     previewToken: signed.token,
     selectionHash: resolved.selectionHash,
     targetCount: executableRows.length,

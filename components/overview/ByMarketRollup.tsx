@@ -82,8 +82,9 @@ export function ByMarketRollup({ device, projectRef, rows }: Readonly<ByMarketRo
           value={sort}
         />
       </div>
-      <div className="min-w-0 [&>[role=table]]:border-0">
+      <div className="min-w-0">
         <DataTable
+          bordered={false}
           ariaLabel={t("title")}
           columns={byMarketTableColumns(t)}
           density="compact"

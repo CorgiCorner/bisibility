@@ -11,7 +11,7 @@ function renderRow(active: boolean) {
 }
 
 function checkGlyph(container: HTMLElement) {
-  return container.querySelector<SVGElement>("svg");
+  return container.querySelector<SVGElement>("svg[data-workspace-check]");
 }
 
 function render(children: ReactNode) {
@@ -45,6 +45,49 @@ describe("WorkspaceRow", () => {
     expect(screen.getByRole("menuitem")).not.toHaveAttribute("aria-current");
     expect(checkGlyph(container)).not.toBeNull();
     expect(checkGlyph(container)?.style.visibility).toBe("hidden");
+  });
+
+  it("places the default star beside the item, before the check, and fills it when default", () => {
+    const { container } = render(
+      <WorkspaceRow
+        active
+        defaultStar={{ isDefault: true, onToggle: vi.fn() }}
+        onSelect={vi.fn()}
+        workspace={mockWorkspaces[0]}
+      />,
+    );
+
+    const row = screen.getByRole("menuitem");
+    const starButton = screen.getByRole("button", {
+      name: `Default project: ${mockWorkspaces[0].name}`,
+    });
+    // A menuitem's children are presentational, so the button must not be nested inside it.
+    expect(row.contains(starButton)).toBe(false);
+    expect(starButton).toHaveAttribute("aria-pressed", "true");
+    expect(starButton.querySelector("[data-default-star-fill]")).not.toBeNull();
+    expect(starButton.className).not.toContain("opacity-0");
+    expect(checkGlyph(container)?.style.visibility).toBe("visible");
+  });
+
+  it("keeps a non-default star hidden until the row is hovered or focused", () => {
+    render(
+      <WorkspaceRow
+        active={false}
+        defaultStar={{ isDefault: false, onToggle: vi.fn() }}
+        onSelect={vi.fn()}
+        workspace={mockWorkspaces[0]}
+      />,
+    );
+
+    const starButton = screen.getByRole("button", { name: /^Default project:/ });
+    expect(starButton).toHaveAttribute("aria-pressed", "false");
+    expect(starButton.querySelector("[data-default-star-fill]")).toBeNull();
+    expect(starButton).toHaveClass(
+      "opacity-0",
+      "group-hover/workspace-row:opacity-100",
+      "group-focus-within/workspace-row:opacity-100",
+      "[@media(hover:none)]:opacity-100",
+    );
   });
 
   it("falls back to the domain's first letter under the favicon layer", () => {

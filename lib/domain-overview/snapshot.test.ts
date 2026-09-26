@@ -1,4 +1,5 @@
 import { Prisma } from "@/lib/generated/prisma/client";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   findDomainOverviewSnapshotMetadata,
@@ -68,6 +69,7 @@ describe("domain overview snapshots", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("READ_ONLY_DEMO", "0");
+    vi.stubEnv("DEMO_MODE", "");
     vi.stubEnv("DOMAIN_OVERVIEW_CACHE_TTL_SECONDS", "");
     mocks.prisma.$transaction.mockImplementation(
       (callback: (tx: typeof mocks.tx) => Promise<unknown>) => callback(mocks.tx),
@@ -202,67 +204,73 @@ describe("domain overview snapshots", () => {
     });
   });
 
-  it.each([false, true])("replays durable modules without paid calls (demo: %s)", async (demo) => {
-    vi.stubEnv("READ_ONLY_DEMO", demo ? "1" : "0");
-    vi.useFakeTimers();
-    const now = new Date(demo ? "2026-08-28T10:00:00.000Z" : "2026-07-30T11:00:00.000Z");
-    vi.setSystemTime(now);
-    mocks.prisma.domainOverviewSnapshot.findFirst.mockResolvedValue({
-      cachedUntil: new Date("2026-07-30T22:00:00.000Z"),
-      fetchedAt: new Date("2026-07-30T10:00:00.000Z"),
-      history: null,
-      id: "snapshot_1",
-      languageCode: "pl",
-      locationCode: 2616,
-      overview: currentMetrics,
-      previousFetchedAt: null,
-      previousOverview: null,
-      previousSourceSnapshotAt: null,
-      projectId: "project_1",
-      provider: "dataforseo",
-      rankedKeywords: { consumedCount: 0, costCents: 2, rows: [], totalCount: 12 },
-      relevantPages: { consumedCount: 0, costCents: 3, rows: [], totalCount: 4 },
-      scope: "root",
-      sourceSnapshotAt: new Date("2026-07-29T00:00:00.000Z"),
-      target: "example.com",
-    });
+  it.each(["disabled", "snapshot", "editable"])(
+    "replays durable modules without paid calls (demo: %s)",
+    async (mode) => {
+      const demo = mode !== "disabled";
+      vi.stubEnv("READ_ONLY_DEMO", mode === "snapshot" ? "1" : "0");
+      vi.stubEnv("DEMO_MODE", mode === "editable" ? "editable" : "");
+      vi.useFakeTimers();
+      const now = new Date(demo ? "2026-08-28T10:00:00.000Z" : "2026-07-30T11:00:00.000Z");
+      vi.setSystemTime(now);
+      mocks.prisma.domainOverviewSnapshot.findFirst.mockResolvedValue({
+        cachedUntil: new Date("2026-07-30T22:00:00.000Z"),
+        fetchedAt: new Date("2026-07-30T10:00:00.000Z"),
+        history: null,
+        id: "snapshot_1",
+        languageCode: "pl",
+        locationCode: 2616,
+        overview: currentMetrics,
+        previousFetchedAt: null,
+        previousOverview: null,
+        previousSourceSnapshotAt: null,
+        projectId: "project_1",
+        provider: "dataforseo",
+        rankedKeywords: { consumedCount: 0, costCents: 2, rows: [], totalCount: 12 },
+        relevantPages: { consumedCount: 0, costCents: 3, rows: [], totalCount: 4 },
+        scope: "root",
+        sourceSnapshotAt: new Date("2026-07-29T00:00:00.000Z"),
+        target: "example.com",
+      });
 
-    await expect(
-      resolveDomainOverviewSnapshot({
+      await expect(
+        resolveDomainOverviewSnapshot({
+          ...key,
+          fresh: false,
+          key: "overview-key",
+          origin: APP_REQUEST_ORIGIN,
+          project: { budgetCapCents: 100 } as never,
+          source: { provider: { id: "dataforseo" } } as never,
+        }),
+      ).resolves.toMatchObject({
+        cached: true,
+        costCents: 0,
+        data: { cachedUntil: demo ? "2026-08-29T10:00:00.000Z" : "2026-07-30T22:00:00.000Z" },
+        durable: true,
+        modules: {
+          keywords: { consumedCount: 0, costCents: 2, rows: [], totalCount: 12 },
+          pages: { consumedCount: 0, costCents: 3, rows: [], totalCount: 4 },
+        },
+      });
+      const expectedWhere = {
         ...key,
-        fresh: false,
-        key: "overview-key",
-        project: { budgetCapCents: 100 } as never,
-        source: { provider: { id: "dataforseo" } } as never,
-      }),
-    ).resolves.toMatchObject({
-      cached: true,
-      costCents: 0,
-      data: { cachedUntil: demo ? "2026-08-29T10:00:00.000Z" : "2026-07-30T22:00:00.000Z" },
-      durable: true,
-      modules: {
-        keywords: { consumedCount: 0, costCents: 2, rows: [], totalCount: 12 },
-        pages: { consumedCount: 0, costCents: 3, rows: [], totalCount: 4 },
-      },
-    });
-    const expectedWhere = {
-      ...key,
-      provider: "dataforseo",
-      ...(demo
-        ? { fetchedAt: { gt: new Date("2026-07-29T10:00:00.000Z") } }
-        : { cachedUntil: { gt: now } }),
-    };
-    expect(mocks.prisma.domainOverviewSnapshot.findFirst).toHaveBeenLastCalledWith({
-      where: expectedWhere,
-    });
-    await findDomainOverviewSnapshotMetadata({ ...key, now, provider: "dataforseo" });
-    expect(mocks.prisma.domainOverviewSnapshot.findFirst).toHaveBeenLastCalledWith({
-      select: { cachedUntil: true, fetchedAt: true, overview: true, provider: true },
-      where: expectedWhere,
-    });
-    expect(mocks.withCache).not.toHaveBeenCalled();
-    expect(mocks.fetchMetrics).not.toHaveBeenCalled();
-  });
+        provider: "dataforseo",
+        ...(demo
+          ? { fetchedAt: { gt: new Date("2026-07-29T10:00:00.000Z") } }
+          : { cachedUntil: { gt: now } }),
+      };
+      expect(mocks.prisma.domainOverviewSnapshot.findFirst).toHaveBeenLastCalledWith({
+        where: expectedWhere,
+      });
+      await findDomainOverviewSnapshotMetadata({ ...key, now, provider: "dataforseo" });
+      expect(mocks.prisma.domainOverviewSnapshot.findFirst).toHaveBeenLastCalledWith({
+        select: { cachedUntil: true, fetchedAt: true, overview: true, provider: true },
+        where: expectedWhere,
+      });
+      expect(mocks.withCache).not.toHaveBeenCalled();
+      expect(mocks.fetchMetrics).not.toHaveBeenCalled();
+    },
+  );
 
   it("checks the approved cost immediately before a snapshot provider call", async () => {
     const blocked = new Error("cost blocked");
@@ -278,6 +286,7 @@ describe("domain overview snapshots", () => {
         },
         fresh: true,
         key: "overview-key",
+        origin: APP_REQUEST_ORIGIN,
         project: { budgetCapCents: 100 } as never,
         source: { provider: { id: "dataforseo" } } as never,
       }),

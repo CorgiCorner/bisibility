@@ -302,6 +302,24 @@ describe("SetScheduleModal", () => {
     ).toMatch(/-\$.*\/ month/);
   });
 
+  it("prices quota operations from effective depths, never plan dollars", () => {
+    const manualRow = {
+      ...rows[0],
+      checkSchedule: null,
+      projectSerpDepth: 10 as const,
+      schedule: { ...rows[0].schedule, frequency: "manual" as const, serp_depth: null },
+    };
+    renderModal({
+      currentScheduleId: null,
+      providerRate: { overrideCents: 999, providerId: "serpapi" },
+      selectedRows: [manualRow, { ...manualRow, id: "kw_deep", projectSerpDepth: 20 }],
+    });
+
+    expect(screen.getAllByText("+90 operations / month").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("+12 operations / month").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/\$/)).not.toBeInTheDocument();
+  });
+
   it("uses singular target grammar for a new schedule", () => {
     renderModal();
 

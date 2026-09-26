@@ -93,7 +93,7 @@
       "depth": "Profundidad",
       "depthAria": "Profundidad de los resultados",
       "devices": "{count, plural, one {# dispositivo} other {# dispositivos}}",
-      "duplicate": "Ya hay una ejecución en curso con este alcance. Si inicias otra ahora, pagarás dos veces por las mismas posiciones.",
+      "duplicate": "Otra ejecución ya está comprobando todas las palabras clave seleccionadas, así que no hay nada que iniciar.",
       "editBudget": "Editar el presupuesto",
       "noProvider": "Sin proveedor",
       "noProviderBlocked": "No hay ningún proveedor conectado, así que no hay adónde enviar estos objetivos. Usa tu propia clave de API: se te factura directamente.",
@@ -109,13 +109,21 @@
       "markets": "{count, plural, one {# mercado} other {# mercados}}",
       "startRun": "Iniciar la ejecución",
       "sampleProject": "Los proyectos de ejemplo no ejecutan comprobaciones reales.",
-      "scopeDescription": "Comprueba {count, plural, one {# palabra clave} other {# palabras clave}} en {market} antes de enviar nada al proveedor.",
+      "scopeDescription": "No se envía nada al proveedor hasta que empieces.",
       "scopeEquation": "{keywords, plural, one {# palabra clave} other {# palabras clave}} · {market} · {devices} = {targets, plural, one {# objetivo} other {# objetivos}}",
       "scopeMany": "Comprobar {count, plural, one {# palabra clave seleccionada} other {# palabras clave seleccionadas}} en {market}",
       "scopeOne": "Comprobar {keyword} en {market}",
-      "scopeSubtitle": "Revisa el alcance en {market} antes de empezar.",
+      "scopeSubtitle": "Revisa el alcance antes de empezar.",
       "starting": "Iniciando…",
-      "topDepth": "Top {depth, number}"
+      "topDepth": "Top {depth, number}",
+      "alreadyScheduled": "Ya programado",
+      "cancelRun": "Cancelar la ejecución",
+      "cancellingRun": "Cancelando…",
+      "couldNotCancel": "No se ha podido cancelar esa ejecución. Inténtalo de nuevo.",
+      "overlapCancelHint": "Cancela esa ejecución o mantén las dos y paga dos veces por estas posiciones.",
+      "overlapKeepHint": "Si inicias esta ejecución, pagarás dos veces por estas posiciones.",
+      "overlapMessage": "{count, plural, one {# de estas palabras clave también está} other {# de estas palabras clave también están}} en una ejecución que {status, select, planned {está programada para {time}} running {está en curso} cancelling {se está cancelando} blocked {está bloqueada} other {está en cola}}.",
+      "overlapMore": "+{count, plural, one {# ejecución más} other {# ejecuciones más}}"
     },
     "globalError": {
       "description": "La aplicación no ha podido renderizar esta página. Recarga para volver a intentarlo.",
@@ -163,11 +171,11 @@
       "unavailable": "La verificación humana no está disponible ahora mismo."
     },
     "scheduleName": {
-      "custom": "Personalizado \u00b7 {expression}",
+      "custom": "Personalizado · {expression}",
       "daily": "Diario {time}",
-      "monthly": "Mensual \u00b7 {day} {time}",
+      "monthly": "Mensual · {day} {time}",
       "noFixedTime": "Sin hora fija",
-      "weekly": "Semanal \u00b7 {weekday} {time}"
+      "weekly": "Semanal · {weekday} {time}"
     },
     "operationRow": {
       "days": "{count, plural, one {día} other {días}}",
@@ -488,6 +496,7 @@
           "workEmail": "Usa tu correo electrónico de trabajo."
         }
       },
+      "expandableCard": { "expand": "Ampliar", "expandNamed": "Ampliar {title}" },
       "expiryChoice": {
         "label": "Caduca"
       },
@@ -564,6 +573,95 @@
       },
       "toolbarSearch": {
         "clear": "Borrar {label}"
+      }
+    },
+    "nativeUsage": {
+      "estimated": "Consumo estimado",
+      "usage": "Consumo",
+      "monthly": "Consumo mensual",
+      "unknown": "Desconocido",
+      "operations": "{count, number} operaciones",
+      "belowCent": "< 0,01 USD",
+      "monthlyEstimate": "Consumo mensual estimado: {usage}",
+      "delta": "Cambio del consumo mensual: {usage}"
+    },
+    "runStatuses": {
+      "rank": {
+        "planned": {
+          "description": "La ejecución espera a su hora programada."
+        },
+        "blocked": {
+          "description": "Un problema, como un presupuesto agotado o la falta de un proveedor, detiene la ejecución."
+        },
+        "queued": {
+          "description": "La ejecución está aceptada y espera su primera comprobación."
+        },
+        "running": {
+          "description": "La ejecución está comprobando sus objetivos."
+        },
+        "cancelling": {
+          "description": "La ejecución se detiene cuando terminan las comprobaciones ya iniciadas."
+        },
+        "succeeded": {
+          "description": "Todos los objetivos obtuvieron un resultado."
+        },
+        "partial": {
+          "description": "Algunos objetivos obtuvieron un resultado y otros no."
+        },
+        "deferred": {
+          "description": "La ejecución aplazó sus objetivos y no cobró nada por ellos."
+        },
+        "failed": {
+          "description": "Ningún objetivo obtuvo un resultado porque sus comprobaciones fallaron o se omitieron."
+        },
+        "cancelled": {
+          "description": "La ejecución se detuvo a petición y conserva los resultados ya obtenidos."
+        },
+        "not_confirmed": {
+          "description": "La ejecución terminó, pero no tiene ningún resultado registrado."
+        }
+      },
+      "searchConsole": {
+        "queued": {
+          "label": "En cola",
+          "description": "La importación espera para empezar."
+        },
+        "importing": {
+          "label": "Importando",
+          "description": "La importación está obteniendo datos de búsqueda de Google."
+        },
+        "paused": {
+          "label": "En pausa",
+          "description": "Un usuario pausó la importación hasta que alguien la reanude."
+        },
+        "waiting_for_google": {
+          "label": "Esperando a Google",
+          "description": "Google limita las solicitudes y la importación se reanuda sola cuando puede."
+        },
+        "reconnect_required": {
+          "label": "Requiere reconexión",
+          "description": "La importación necesita que vuelvas a conectar Search Console."
+        },
+        "waiting_for_data": {
+          "label": "Esperando datos",
+          "description": "Google aún no tiene datos de búsqueda definitivos para esta propiedad."
+        },
+        "delayed": {
+          "label": "Retrasado",
+          "description": "La importación no puede continuar porque su proceso de trabajo no está disponible."
+        },
+        "failed": {
+          "label": "Fallido",
+          "description": "El último intento de importación falló y necesita un reintento."
+        },
+        "completed": {
+          "label": "Completado",
+          "description": "La importación terminó."
+        },
+        "status_unavailable": {
+          "label": "Estado no disponible",
+          "description": "La aplicación no puede leer ahora el estado actual de la importación."
+        }
       }
     }
   }

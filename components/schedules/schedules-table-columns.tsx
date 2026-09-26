@@ -1,3 +1,4 @@
+import type { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { Button } from "@/components/ui/Button";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { PillBadge } from "@/components/ui/Pill";
@@ -10,6 +11,7 @@ import type { ScheduleListRow } from "./SchedulesList";
 export type SchedulesTableRow = ScheduleListRow & { id: string; nextRunLabel: string | null };
 
 type SchedulesTableColumnsOptions = {
+  usage: ReturnType<typeof useNativeUsageFormat>;
   canUpdate: boolean;
   canManage?: boolean;
   onArchive?: (row: SchedulesTableRow) => void;
@@ -104,6 +106,7 @@ function cadenceMeta(row: SchedulesTableRow, t: SchedulesTableColumnsOptions["t"
 }
 
 export function schedulesTableColumns({
+  usage,
   canUpdate,
   canManage,
   onArchive,
@@ -207,7 +210,11 @@ export function schedulesTableColumns({
       cell: ({ row }) => (
         <div>
           <span className="block font-sans text-[12px] font-semibold tabular-nums text-fg">
-            {row.original.archivedAt ? "-" : perRunLabel(row.original.perRunCents, locale)}
+            {row.original.archivedAt
+              ? "-"
+              : row.original.nativeEstimate
+                ? `~${usage.format(row.original.nativeEstimate)}`
+                : perRunLabel(row.original.perRunCents, locale)}
           </span>
           {!row.original.archivedAt ? (
             <span className="mt-0.5 block text-[10px] text-fg-muted">{t("list.perRun")}</span>

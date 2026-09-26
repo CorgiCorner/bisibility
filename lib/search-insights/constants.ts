@@ -67,10 +67,10 @@ export const DEFAULT_WINDOW_ID: WindowPresetId = "28";
 
 export const SYNC_NOW_COOLDOWN_MS = 5 * 60 * 1_000;
 
-// The first view renders ten rows, holds fifty, and pages the rest in on request. One page of
-// the paged reads is capped so a single click can never materialize a saturated window.
+// The first view renders the first page of ten rows, and the tables read every other page from
+// the server. One page is capped so a single request can never materialize a saturated window.
 export const FIRST_VIEW_ROWS = 10;
-export const FIRST_VIEW_ROW_BUFFER = 50;
+export const SEARCH_INSIGHTS_PAGE_SIZES = [10, 25, 50, 100] as const;
 export const ROWS_PAGE_LIMIT = 1_000;
 
 // One definition of the page size: the request layer already owns it.
@@ -83,9 +83,8 @@ export const DAILY_ROW_CEILING = 50_000;
 // queries of the window rather than letting one click build the whole history in memory.
 export const SEARCH_INSIGHTS_EXPORT_ROW_CAP = 50_000;
 
-// The same ceiling for the tables, an order of magnitude tighter: every row a table expands to is
-// paged over the wire and then held in the browser, so Show all reaches the busiest rows of the
-// window and the export is what carries a saturated one.
+// The same ceiling for the tables, an order of magnitude tighter: the table pages reach the
+// busiest rows of the window, and the export is what carries a saturated one.
 export const SEARCH_INSIGHTS_ROWS_CAP = 5_000;
 
 export type DataIncident = {

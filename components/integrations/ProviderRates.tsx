@@ -16,6 +16,7 @@ type ProviderRatesProps = {
   projectId: string;
   providerId: string;
   rates: readonly ProviderRateData[];
+  readOnlyRates?: boolean;
   updateRate?: NonNullable<ProviderActionHandlers["updateProviderRate"]>;
 };
 
@@ -38,6 +39,7 @@ export function ProviderRates({
   projectId,
   providerId,
   rates,
+  readOnlyRates = false,
   updateRate,
 }: Readonly<ProviderRatesProps>) {
   const t = useTranslations("projectIntegrations.rates");
@@ -51,7 +53,7 @@ export function ProviderRates({
   if (rates.length === 0) return null;
 
   function edit(rate: ProviderRateData) {
-    if (rate.editable === false) return;
+    if (rate.editable === false || readOnlyRates) return;
     if (!connected || readOnly || pending) return;
     if (editing === rate.feature) {
       setEditing(null);
@@ -65,7 +67,7 @@ export function ProviderRates({
   }
 
   async function save(rate: ProviderRateData, costPerUnit: number | null) {
-    if (rate.editable === false) return;
+    if (rate.editable === false || readOnlyRates) return;
     if (!updateRate || readOnly) return;
     setPending(true);
     setError(null);
@@ -87,7 +89,7 @@ export function ProviderRates({
   }
 
   function saveDraft(rate: ProviderRateData) {
-    if (rate.editable === false) return;
+    if (rate.editable === false || readOnlyRates) return;
     const normalized = draft.trim().replace(",", ".");
     const value = Number(normalized);
     const { maximum, minimum } = PROVIDER_RATE_COST_BOUNDS;
@@ -110,7 +112,7 @@ export function ProviderRates({
           <div className="border-border border-t" key={rate.feature}>
             <div className="flex items-start justify-between gap-3 px-3.5 py-2.5">
               <span className="pt-1 text-[13px] font-medium">{rate.label}</span>
-              {rate.editable === false ? (
+              {rate.editable === false || readOnlyRates ? (
                 <span className="inline-flex items-center gap-[9px] px-2 py-1">
                   <span className="text-xs font-medium tabular-nums text-fg">
                     {displayedAmount(rate, t)}

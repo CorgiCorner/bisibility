@@ -9,7 +9,7 @@ describe("OpenAPI document", () => {
     const operation = getOpenApiDocument().paths["/projects/{project_id}/keywords"].get;
     const parameters = operation.parameters as Parameter[];
 
-    expect(parameters.map((parameter) => parameter.name)).toEqual([
+    expect(parameters.map((parameter) => parameter.name ?? parameter.$ref)).toEqual([
       API_VERSION_HEADER,
       "limit",
       "cursor",
@@ -23,6 +23,7 @@ describe("OpenAPI document", () => {
       "position_gt",
       "position_lt",
       "sort",
+      "#/components/parameters/SourceHeader",
     ]);
     expect(parameters.find((parameter) => parameter.name === "topic")?.schema).toMatchObject({
       maxLength: 80,
@@ -180,6 +181,7 @@ describe("OpenAPI document", () => {
       "until",
       "#/components/parameters/ProjectHeader",
       "#/components/parameters/ProjectQuery",
+      "#/components/parameters/SourceHeader",
     ]);
     expect(parameters.find((parameter) => parameter.name === "status")?.schema).toMatchObject({
       enum: ["completed", "failed", "running"],

@@ -103,6 +103,10 @@ function integrationProvider(
   const displayedLogin = displayedProviderLogin(item.id, credentials.login);
 
   return {
+    connectionId: connection?.publicId,
+    connectionUpdatedAt: connection?.updatedAt.toISOString(),
+    credentialSource: connection?.credentialSource ?? "own",
+    hasStoredCredentials: Boolean(connection?.credentialsEncrypted),
     credentialIssue: identity.state === "unreadable" ? "unreadable" : undefined,
     consumerStatuses,
     description:
@@ -113,7 +117,9 @@ function integrationProvider(
       accountEmail: identity.state === "readable" ? identity.accountEmail : undefined,
       activities: kind === "serp" ? providerActivities(connection, now) : [],
       costHelp: COST_ESTIMATE_PER_CHECK_HELP,
-      credentialFields: providerCredentialFieldsFor(item.id, { connected }),
+      credentialFields: providerCredentialFieldsFor(item.id, {
+        connected: connected && connection?.credentialSource !== "hosted",
+      }),
       defaults: {
         costPerCheck: cost == null ? undefined : centsToDollars(Number(cost)),
         depth: `Top ${DEFAULT_SERP_DEPTH}`,
@@ -151,7 +157,10 @@ function integrationProvider(
         : undefined,
     primary: primary || undefined,
     priority: connection?.priority,
-    secondaryAction: connection?.status === "connected" ? "Test" : undefined,
+    secondaryAction:
+      connection?.status === "connected" && connection.credentialSource !== "hosted"
+        ? "Test"
+        : undefined,
     status: statusFor(item.defaultStatus, connection),
     syncFailure: connection?.status === "needs_reauth" ? undefined : syncFailure,
     tint: `var(--${tintFor(item.id)})`,

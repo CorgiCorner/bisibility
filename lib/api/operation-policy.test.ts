@@ -94,7 +94,7 @@ describe("operation policy", () => {
       .sort((left, right) => left.operationId.localeCompare(right.operationId));
 
     expect(after).toEqual(before);
-    expect(before).toHaveLength(89);
+    expect(before).toHaveLength(91);
     for (const operation of before) {
       const runtimePath = pathSegments(operation.path).map((segment) =>
         segment.startsWith("{") ? "value" : segment,
@@ -114,7 +114,7 @@ describe("operation policy", () => {
       { admin: 0, read: 0, write: 0 },
     );
 
-    expect(counts).toEqual({ admin: 16, read: 29, write: 44 });
+    expect(counts).toEqual({ admin: 16, read: 30, write: 45 });
   });
 
   it("declares self-revocation and prefers it over the token-id route", () => {

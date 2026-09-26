@@ -10,6 +10,7 @@ export type AppHeaderProps = {
   actions?: ReactNode;
   activeProjectId: string;
   canCreateWorkspace: boolean;
+  canSetDefault?: boolean;
   context?: ReactNode;
   enabledExperimentalModules?: readonly ExperimentalModuleKey[];
   projectRef: string;
@@ -27,6 +28,7 @@ export function AppHeader({
   actions,
   activeProjectId,
   canCreateWorkspace,
+  canSetDefault,
   context,
   enabledExperimentalModules = [],
   projectRef,
@@ -44,6 +46,7 @@ export function AppHeader({
       actions={actions}
       activeProjectId={activeProjectId}
       canCreateWorkspace={canCreateWorkspace}
+      canSetDefault={canSetDefault}
       context={context}
       enabledExperimentalModules={enabledExperimentalModules}
       notificationControl={<NotificationBell projectId={activeProjectId} projectRef={projectRef} />}

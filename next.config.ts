@@ -45,6 +45,10 @@ const nextConfig: NextConfig = {
   agentRules: false,
   experimental: {
     useTypeScriptCli: true,
+    // Managed webpack builds release each compiler process before TypeScript starts.
+    // Sentry/next-intl add a webpack config, so Next cannot enable this worker by default.
+    webpackBuildWorker: isNextBuildMemoryCapped(process.env) ? true : undefined,
+    webpackMemoryOptimizations: isNextBuildMemoryCapped(process.env) ? true : undefined,
     // Keep managed 8 GB builds below their process limit. More workers made page-data
     // collection fail with spawn ENOMEM and forced the 2.5x compute rate as a workaround.
     // The cap is a build-time constraint, so a dev run keeps the full worker pool.
@@ -60,8 +64,14 @@ const nextConfig: NextConfig = {
     root: import.meta.dirname,
   },
   distDir: resolveNextDistDir(process.env.NEXT_DIST_DIR),
+  webpack(config, { dev }) {
+    // Cache serialization can overlap compilation and exceed the managed builder's RAM.
+    if (!dev && isNextBuildMemoryCapped(process.env)) config.cache = false;
+    return config;
+  },
   outputFileTracingIncludes: {
-    "/*": [
+    // Middleware and instrumentation entry names have no leading slash.
+    "**/*": [
       "./lib/serp/generated/shared-location-catalog.json.gz",
       "./prisma/migrations/**/*",
       "./prisma/rds-ca.pem",

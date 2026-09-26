@@ -50,7 +50,7 @@ describe("OnboardingWizard provider state", () => {
     expect(await screen.findAllByRole("heading", { name: "Keywords" })).toHaveLength(2);
 
     const rail = screen.getByLabelText("Onboarding steps");
-    fireEvent.click(within(rail).getByRole("button", { name: "Provider, completed" }));
+    fireEvent.click(within(rail).getByRole("button", { name: "Rank data, completed" }));
 
     expect((screen.getByLabelText("API key") as HTMLInputElement).value).toBe("");
     expect(screen.queryByDisplayValue("dataforseo-secret")).not.toBeInTheDocument();

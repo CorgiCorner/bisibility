@@ -45,6 +45,18 @@ export async function writeRankCheckProviderCostEntry(
     });
     return;
   }
+  // Transport receipts already account for this attempt, including partial failures.
+  // Reconstructing an aggregate here would charge queued failures twice or hide uncertainty.
+  const receipt = await tx.providerCostEntry.findFirst({
+    select: { id: true },
+    where: {
+      connectionId: input.connectionId,
+      projectId: input.projectId,
+      feature: "rank_check",
+      correlationId: input.usage.context.correlationId,
+    },
+  });
+  if (receipt) return;
   await recordProviderUsage(tx, {
     attribution: input.usage,
     connectionId: input.connectionId,

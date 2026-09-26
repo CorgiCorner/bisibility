@@ -202,7 +202,7 @@ describe("estimate-only scope for the two GET estimate operations", () => {
     const backlinks = await route(`${backlinksPath}?target=example.com&estimate_only=true`);
     expect(backlinks.status).toBe(200);
     await expect(backlinks.json()).resolves.toMatchObject({
-      data: { estimate: true, estimated_cost_cents: 5 },
+      data: { estimate: true, estimated_cost_cents: 7 },
     });
 
     const research = await route(`${researchPath}?seed=test&estimate_only=true`);

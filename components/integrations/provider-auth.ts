@@ -45,7 +45,11 @@ function successLead(
   if (!trimmed || /^(ok|okay|connected|connection ok)\.?$/i.test(trimmed)) {
     return { kind: "verified", message: null };
   }
-  const applicationConnection = /^connection ok\s*·\s*(.+)$/i.exec(trimmed)?.[1]?.trim();
+  // Providers report "Connected · <detail>."; the legacy "Connected · <detail>" form is
+  // still accepted for saved results.
+  const applicationConnection = /^(?:connected|connection ok)\s*·\s*(.+)$/i
+    .exec(trimmed)?.[1]
+    ?.trim();
   if (applicationConnection && applicationConnectionProviderIds.has(providerId)) {
     return { kind: "application_connection", message: applicationConnection };
   }

@@ -9,7 +9,7 @@ describe("keyword archive state", () => {
   afterEach(() => vi.useRealTimers());
 
   it("keeps the keyword identity unique across archive and restore", () => {
-    const schema = readFileSync("prisma/schema.prisma", "utf8");
+    const schema = readFileSync("prisma/schema/core.prisma", "utf8");
     expect(schema).toMatch(/^\s*archivedAt\s+DateTime\?$/m);
     expect(schema).toContain("@@unique([projectId, text, locationId, device])");
   });

@@ -1,6 +1,11 @@
 import type { ActiveSearchImportSnapshot } from "@/lib/search-insights/sync/operation-snapshot";
-import type { ProjectRunsStatus } from "./filters";
+import {
+  isProjectRunsStatusGroup,
+  type ProjectRunsStatus,
+  type ProjectRunsStatusGroup,
+} from "./filters";
 import type { ProjectRunAttention, ProjectRunLifecycle } from "./project-run";
+import { type GscRunStatusKey, gscLifecycleStatusKey } from "./run-status-vocabulary";
 
 export const GSC_ACTIVE_IMPORT_STATES = ["queued", "running", "waiting_for_first_data"] as const;
 
@@ -46,9 +51,14 @@ export function gscActiveSnapshotRunState(
   }
 }
 
+export function gscSnapshotStatusKey(snapshot: ActiveSearchImportSnapshot): GscRunStatusKey {
+  const state = gscActiveSnapshotRunState(snapshot);
+  return gscLifecycleStatusKey(state.lifecycle, state.attention);
+}
+
 export function rawGscSnapshotMatchesStatus(
   snapshot: ActiveSearchImportSnapshot,
-  status: ProjectRunsStatus,
+  status: ProjectRunsStatusGroup,
 ) {
   if (status === "all") return true;
   if (status === "finished") return false;
@@ -66,7 +76,7 @@ export function rawGscSnapshotMatchesStatus(
 
 export function gscSnapshotMatchesStatus(
   snapshot: ActiveSearchImportSnapshot,
-  status: ProjectRunsStatus,
+  status: ProjectRunsStatusGroup,
 ) {
   if (status === "all") return true;
   if (status === "finished") return false;
@@ -80,7 +90,7 @@ export function adjustedGscCount(
   snapshot: ActiveSearchImportSnapshot | null,
   status: ProjectRunsStatus,
 ) {
-  if (!snapshot) return count;
+  if (!snapshot || !isProjectRunsStatusGroup(status)) return count;
   return (
     count +
     Number(gscSnapshotMatchesStatus(snapshot, status)) -

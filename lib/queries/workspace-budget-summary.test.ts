@@ -49,7 +49,7 @@ describe("workspace budget summary", () => {
       connections: [{ allocation: { amountPerMonth: 5_000, unit: "cents" }, status: "connected" }],
       summary: {
         maxUsedPercent: 80,
-        recorded: { cents: 1_240, units: 10 },
+        recorded: { cents: 1_240, creditsCents: 0, units: 10 },
         tightest: {
           connectionId: "conn_abcdefghijklmnopqrstuvwx",
           provider: "Metered",
@@ -113,7 +113,7 @@ describe("workspace budget summary", () => {
       connections,
       summary: {
         maxUsedPercent: null,
-        recorded: { cents: 0, units: 0 },
+        recorded: { cents: 0, creditsCents: 0, units: 0 },
         tightest: null,
       },
     });

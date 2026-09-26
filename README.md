@@ -6,7 +6,7 @@ bisibility is an open-source SEO platform for researching keywords, inspecting
 backlinks, and tracking Google rankings - in a PostgreSQL database you own.
 Self-host it or start with the hosted beta.
 
-[![CI](https://github.com/CorgiCorner/bisibility/actions/workflows/ci.yml/badge.svg)](https://github.com/CorgiCorner/bisibility/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/CorgiCorner/bisibility/ci.yml?event=push&label=CI)](https://github.com/CorgiCorner/bisibility/actions/workflows/ci.yml?query=event%3Apush)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
 
 [Self-hosting guide](https://bisibility.com/docs/self-hosting) ·

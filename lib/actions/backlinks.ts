@@ -1,6 +1,7 @@
 "use server";
 
 import { analyzeBacklinks, loadMoreBacklinkRows } from "@/lib/backlinks/service";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
 
@@ -38,7 +39,7 @@ export async function analyzeBacklinksAction(input: unknown) {
   });
 
   return analyzeBacklinks(
-    { actorId: actor.id, projectId: project.id },
+    { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
     {
       estimateOnly: data.estimateOnly,
       fresh: data.fresh,
@@ -60,7 +61,7 @@ export async function loadMoreBacklinkRowsAction(input: unknown) {
   });
 
   return loadMoreBacklinkRows(
-    { actorId: actor.id, projectId: project.id },
+    { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
     {
       includeSubdomains: data.includeSubdomains,
       limit: data.limit,

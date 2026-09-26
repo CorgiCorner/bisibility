@@ -5,7 +5,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { getMcpToolDefinitions } from "./definitions";
 import type { McpApiAuthorization } from "./rest-call";
-import { errorToolResult, jsonToolResult } from "./result";
+import { errorToolResult, jsonToolResult, restFailureToolError } from "./result";
 import { dispatchMcpTool } from "./tools";
 
 type CreateMcpServerOptions = {
@@ -41,11 +41,7 @@ export function createBisibilityMcpServer(options: CreateMcpServerOptions) {
         options.authorization,
       );
       if (!result.ok) {
-        return errorToolResult({
-          message: "bisibility API request failed.",
-          payload: result.payload,
-          status: result.status,
-        });
+        return errorToolResult(restFailureToolError(result.payload, result.status));
       }
       return jsonToolResult(result.payload);
     } catch (error) {

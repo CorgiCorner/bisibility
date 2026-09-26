@@ -1,4 +1,6 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { domainOverviewFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type {
   AnalyzeDomainOverviewAction,
   LoadDomainHistoryAction,
@@ -8,6 +10,7 @@ import type {
 } from "@/lib/actions/domain-overview";
 import type { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "storybook/test";
+import { DomainOverviewCacheProvider } from "./DomainOverviewCacheProvider";
 import { DomainOverviewWorkspace } from "./DomainOverviewWorkspace";
 import {
   domainOverviewHistoryFixture,
@@ -101,11 +104,17 @@ const meta = {
   component: DomainOverviewWorkspace,
   decorators: [
     (Story) => (
-      <SessionSpendProvider>
-        <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
-          <Story />
-        </div>
-      </SessionSpendProvider>
+      <FeatureMessagesProvider
+        locale="en"
+        messages={domainOverviewFeatureTestMessages}
+        timeZone="UTC"
+      >
+        <SessionSpendProvider>
+          <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
+            <Story />
+          </div>
+        </SessionSpendProvider>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
@@ -160,6 +169,32 @@ export const Idle: Story = {
     },
     initialOutcome: null,
   },
+};
+
+export const DemoNewLookup: Story = {
+  args: {
+    ...Idle.args,
+    context: {
+      ...common.context,
+      recentTargets: [
+        {
+          cachedUntil: new Date(Date.now() + 29 * 86_400_000).toISOString(),
+          fetchedAt: new Date(Date.now() - 86_400_000).toISOString(),
+          languageCode: trackedScopes[0].languageCode,
+          locationCode: trackedScopes[0].providerLocationCode,
+          scope: "root",
+          target: "example.com",
+        },
+      ],
+    },
+  },
+  decorators: [
+    (Story) => (
+      <DomainOverviewCacheProvider ttlSeconds={2_592_000}>
+        <Story />
+      </DomainOverviewCacheProvider>
+    ),
+  ],
 };
 
 export const Results: Story = {

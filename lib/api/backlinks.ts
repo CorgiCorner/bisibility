@@ -6,11 +6,13 @@ import {
   loadMoreBacklinkRows,
 } from "@/lib/backlinks/service";
 import { UnsupportedBacklinksTargetError } from "@/lib/backlinks/target";
-import type { BacklinksOutcome, BacklinksSnapshot } from "@/lib/backlinks/types";
+import type { BacklinksEstimate, BacklinksOutcome, BacklinksSnapshot } from "@/lib/backlinks/types";
 import { READINESS_REASON } from "@/lib/projects/readiness";
 import type { ProviderLookupFailure } from "@/lib/provider-lookups/paid-call";
 import { z } from "zod";
+import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
+import { providerOrigin } from "./request-origin";
 import { dataResponse, errorResponse } from "./responses";
 import { readJsonBody, scopedProject, snakeizeKeys } from "./surface";
 
@@ -78,14 +80,22 @@ function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
     );
   }
   if (outcome.reason === "budget_exhausted") {
-    return errorResponse("budget_exhausted", "Monthly provider budget reached.", 429, common);
+    return budgetExhaustedResponse(ctx, {
+      surface: "programmatic",
+      ...(outcome.provider === undefined ? {} : { provider: outcome.provider }),
+    });
   }
   if (outcome.reason === "cost_limit_exceeded") {
     return errorResponse(
       "cost_limit_exceeded",
       "The estimated provider cost exceeds max_cost_cents.",
       422,
-      common,
+      {
+        ...common,
+        ...(outcome.estimatedCostCents === undefined
+          ? {}
+          : { problemDetails: { estimated_cost_cents: outcome.estimatedCostCents } }),
+      },
     );
   }
   if (outcome.reason === "in_progress") {
@@ -115,7 +125,7 @@ function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
   );
 }
 
-function successResponse(ctx: ApiContext, snapshot: BacklinksSnapshot) {
+function successResponse(ctx: ApiContext, snapshot: BacklinksEstimate | BacklinksSnapshot) {
   const { ok: _ok, ...data } = snapshot;
   return dataResponse(snakeizeKeys(data), { headers: ctx.headers });
 }
@@ -146,7 +156,7 @@ export async function getBacklinks(ctx: ApiContext, projectId: string) {
   const input = analyzeQuery(ctx);
   try {
     const outcome = await analyzeBacklinks(
-      { actorId: ctx.actorId, projectId: ctx.auth.project.id },
+      { actorId: ctx.actorId, origin: providerOrigin(ctx.origin), projectId: ctx.auth.project.id },
       {
         estimateOnly: input.estimate_only,
         fresh: input.fresh,
@@ -170,7 +180,7 @@ export async function postBacklinkRows(ctx: ApiContext, projectId: string) {
   const input = rowsBodySchema.parse(await readJsonBody(ctx));
   try {
     const outcome = await loadMoreBacklinkRows(
-      { actorId: ctx.actorId, projectId: ctx.auth.project.id },
+      { actorId: ctx.actorId, origin: providerOrigin(ctx.origin), projectId: ctx.auth.project.id },
       {
         includeSubdomains: input.include_subdomains,
         limit: input.limit,

@@ -43,6 +43,7 @@ export const Idle: Story = {
     canDeleteSavedKeywords: true,
     checkHealth: {
       budget: { capCents: 5000, exhausted: false, spentCents: 1280 },
+      currentFailures: { count: 0, latestCheckId: null },
       failed24h: { count: 0, latest: null },
       providerConnected: true,
       providerRate: { overrideCents: null, providerId: "dataforseo" },

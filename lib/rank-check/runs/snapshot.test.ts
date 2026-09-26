@@ -5,15 +5,17 @@ import { readOperationSnapshot } from "./snapshot";
 const mocks = vi.hoisted(() => ({
   loadProviderChain: vi.fn(),
   activeSearchImport: vi.fn(),
+  ledgerRaw: vi.fn(),
   monthlySpend: vi.fn(),
   keyword: { findMany: vi.fn() },
+  rankCheck: { groupBy: vi.fn().mockResolvedValue([]) },
   rankCheckRun: { findMany: vi.fn() },
   searchAnalyticsImport: { findMany: vi.fn() },
   unitCost: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db/prisma", () => ({ prisma: mocks }));
+vi.mock("@/lib/db/prisma", () => ({ prisma: { ...mocks, $queryRaw: mocks.ledgerRaw } }));
 vi.mock("@/lib/cost-estimate/project-estimate", () => ({ unitCostCentsFor: mocks.unitCost }));
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadProviderChain,
@@ -24,6 +26,7 @@ vi.mock("@/lib/search-insights/sync/operation-snapshot", () => ({
 }));
 
 const baseRun = {
+  id: "run_example",
   _count: { items: 0 },
   blockedReason: null,
   cancelledCount: 0,
@@ -57,6 +60,7 @@ describe("readOperationSnapshot", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.ledgerRaw.mockResolvedValue([]);
     mocks.loadProviderChain.mockResolvedValue([
       { costPerCheckCents: 2, provider: "serpapi", rateContext: { entries: [] } },
     ]);
@@ -86,6 +90,96 @@ describe("readOperationSnapshot", () => {
       property: "sc-domain:example.com",
       state: "running",
     });
+  });
+
+  it("includes recorded native operations in the validated live snapshot", async () => {
+    mocks.rankCheckRun.findMany.mockResolvedValueOnce([
+      {
+        ...baseRun,
+        _count: { items: 2 },
+        publicId: "rcr_running",
+        status: "running",
+        selectionSpec: { providerId: "serpapi", estimatedOperations: 4 },
+        targetCount: 2,
+      },
+    ]);
+    mocks.rankCheck.groupBy.mockResolvedValueOnce([
+      {
+        runId: baseRun.id,
+        provider: "serpapi",
+        requestedDepth: 20,
+        _count: { _all: 2, billingUnits: 2 },
+        _sum: { billingUnits: 3 },
+      },
+    ]);
+    const [operation] = await readOperationSnapshot("project_1");
+    expect(operation).toMatchObject({ usage: { actual: 3, estimated: 4, unit: "operations" } });
+    expect(mocks.rankCheck.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { runId: { in: [baseRun.id] } },
+      }),
+    );
+  });
+
+  it("derives operation cost and usage from the provider ledger like the run views", async () => {
+    mocks.rankCheckRun.findMany.mockResolvedValueOnce([
+      {
+        ...baseRun,
+        _count: { items: 2 },
+        publicId: "rcr_running",
+        status: "running",
+        selectionSpec: { providerId: "serpapi", estimatedOperations: 4 },
+        targetCount: 2,
+      },
+    ]);
+    mocks.ledgerRaw.mockResolvedValue([
+      {
+        scopeId: baseRun.id,
+        receiptCount: 2,
+        unitProvider: "serpapi",
+        unconfirmedCount: 0,
+        unmeasuredCount: 0,
+        recordedCostCents: 0.925,
+        recordedUnits: 2,
+      },
+    ]);
+
+    const [operation] = await readOperationSnapshot("project_1");
+
+    expect(operation).toMatchObject({ costCents: 0.925, usage: { actual: 2 } });
+    expect(mocks.ledgerRaw).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: expect.arrayContaining(["project_1", baseRun.id]),
+      }),
+    );
+  });
+
+  it("keeps an unconfirmed ledger explicit in the polling snapshot", async () => {
+    mocks.rankCheckRun.findMany.mockResolvedValueOnce([
+      {
+        ...baseRun,
+        _count: { items: 2 },
+        publicId: "rcr_running",
+        status: "running",
+        selectionSpec: { providerId: "serpapi", estimatedOperations: 4 },
+        targetCount: 2,
+      },
+    ]);
+    mocks.ledgerRaw.mockResolvedValue([
+      {
+        scopeId: baseRun.id,
+        receiptCount: 2,
+        unitProvider: "serpapi",
+        unconfirmedCount: 1,
+        unmeasuredCount: 0,
+        recordedCostCents: 1,
+        recordedUnits: 2,
+      },
+    ]);
+
+    const [operation] = await readOperationSnapshot("project_1");
+
+    expect(operation).toMatchObject({ costCents: null, usage: { actual: null } });
   });
 
   it("maps active runs and imports into validated operation DTOs", async () => {

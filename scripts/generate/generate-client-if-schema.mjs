@@ -2,7 +2,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 
-const requiredFiles = ["prisma.config.ts", "prisma/schema.prisma"];
+const requiredFiles = ["prisma.config.ts", "prisma/schema/core.prisma"];
 
 if (!requiredFiles.every((path) => existsSync(path))) {
   console.log("[postinstall] skipped Prisma generation because the schema is not present");

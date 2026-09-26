@@ -34,7 +34,8 @@ Use a specific connected provider:
 ```
 
 If `provider_id` is omitted, the primary connected SERP provider for the project
-is used.
+is used. An optional `max_cost_cents` integer refuses the launch with a
+`cost_limit_exceeded` problem when its preflight cost estimate exceeds it.
 
 Response status is `201` when the check completes during the request.
 

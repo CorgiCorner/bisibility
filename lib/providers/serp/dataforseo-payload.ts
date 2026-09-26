@@ -28,6 +28,7 @@ export type DataForSeoResponse = {
   status_code?: number;
   status_message?: string;
   tasks?: Array<{
+    id?: string;
     cost?: number;
     result?: Array<{
       items?: unknown[];

@@ -16,6 +16,12 @@ export type KeywordCheckSchedule = {
   nextCheckAt: string | null;
   publicId: string;
 };
+/** Every keyword row loader selects this, so an assigned schedule always owns the row's depth. */
+export const keywordCheckScheduleSelect = {
+  name: true,
+  publicId: true,
+  serpDepth: true,
+} as const;
 export type PositionPoint = {
   checkedAt: string;
   degradedToCountry?: boolean;

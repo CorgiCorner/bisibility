@@ -124,8 +124,9 @@ export function CheckRunsTable(props: Readonly<TableProps>) {
 
   return (
     <>
-      <div className="[&>[role=table]]:border-0" ref={containerRef}>
+      <div ref={containerRef}>
         <DataTable
+          bordered={false}
           ariaLabel={t("checkRuns")}
           columns={columns}
           expanded={props.expandedRunIds}

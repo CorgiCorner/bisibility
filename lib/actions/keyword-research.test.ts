@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { researchKeywordsAction } from "./keyword-research";
 
@@ -63,6 +64,7 @@ describe("researchKeywordsAction", () => {
       includeClickstream: true,
       maxCostCents: 8,
       mode: "ideas",
+      origin: APP_REQUEST_ORIGIN,
       projectId: "project_1",
       resultLimit: 300,
       seed: "rank tracker",
@@ -84,6 +86,10 @@ describe("researchKeywordsAction", () => {
       ok: false,
       reason,
     });
+    expect(mocks.research).toHaveBeenCalledWith(
+      expect.objectContaining({ origin: { source: "app" } }),
+    );
+    expect(mocks.research.mock.calls[0]?.[0].origin).toEqual(APP_REQUEST_ORIGIN);
   });
 
   it("rejects invalid inputs before authorizing", async () => {

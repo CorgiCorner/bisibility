@@ -240,7 +240,12 @@ async function main() {
       writeFile(coveragePath, `${JSON.stringify(coverage, null, 2)}\n`),
       writeFile(messageTypesPath, messageTypes),
     ]);
-    await execFile(resolve(root, "node_modules/.bin/biome"), ["format", "--write", coveragePath]);
+    await execFile(resolve(root, "node_modules/.bin/biome"), [
+      "format",
+      "--write",
+      "--files-max-size=2097152",
+      coveragePath,
+    ]);
     return;
   }
 

@@ -153,7 +153,7 @@ export const gscAnalyticsProvider: GscAnalyticsProvider = {
           ok: false,
         };
       }
-      return { message: `Connection OK · ${property} (${match.permissionLevel}).`, ok: true };
+      return { message: `Connected · ${property} (${match.permissionLevel}).`, ok: true };
     } catch (error) {
       return {
         message: error instanceof Error ? error.message : "Search Console connection test failed.",

@@ -83,7 +83,7 @@ describe("workspace request data", () => {
       },
     });
     expect(mocks.prisma.keyword.groupBy).toHaveBeenCalledOnce();
-    expect(mocks.prisma.rankCheck.aggregate).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
     expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledOnce();
   });
 

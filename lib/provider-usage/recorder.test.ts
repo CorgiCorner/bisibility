@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { recordProviderUsage } from "./recorder";
+import { createProviderRequestAttribution } from "./tag";
 
 const attribution = {
   context: {
@@ -11,11 +12,39 @@ const attribution = {
   },
   tag: "app=bisibility;stage=dev;src=sdk;trg=manual;f=keyword_metrics;p=project_1;c=request-1",
 };
+const attributionWithCredential = {
+  ...attribution,
+  credential: { id: "key_9", kind: "project_key" as const },
+};
 function client(count = 1) {
   return { providerCostEntry: { createMany: vi.fn().mockResolvedValue({ count }) } };
 }
 
 describe("provider usage recorder", () => {
+  it.each(["editable:prj_example", `project:${"a".repeat(100)}`])(
+    "preserves trusted project identity when the provider tag normalizes %s",
+    async (projectId) => {
+      const db = client();
+      const request = await createProviderRequestAttribution({ ...attribution.context, projectId });
+      await expect(
+        recordProviderUsage(db, {
+          attribution: request,
+          connectionId: "connection_1",
+          costCents: 0,
+          failed: false,
+          projectId,
+          provider: "serpapi",
+          usageQuantity: 2,
+        }),
+      ).resolves.toEqual({ status: "recorded" });
+      expect(request.context.projectId).toBe(projectId);
+      expect(request.tag).not.toContain(`p=${projectId};`);
+      expect(db.providerCostEntry.createMany).toHaveBeenCalledWith({
+        data: [expect.objectContaining({ projectId, usageQuantity: 2 })],
+        skipDuplicates: true,
+      });
+    },
+  );
   it("records cost, native quantity, and trusted request identity", async () => {
     const db = client();
     await expect(
@@ -38,6 +67,78 @@ describe("provider usage recorder", () => {
           usageQuantity: 3,
         }),
       ],
+      skipDuplicates: true,
+    });
+  });
+  it("persists credential attribution when it is provided", async () => {
+    const db = client();
+    await expect(
+      recordProviderUsage(db, {
+        attribution,
+        connectionId: "connection_1",
+        costCents: 1,
+        credentialId: "api_key_1",
+        credentialKind: "project_key",
+        failed: false,
+        provider: "provider-a",
+        usageQuantity: 1,
+      }),
+    ).resolves.toEqual({ status: "recorded" });
+    expect(db.providerCostEntry.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ credentialId: "api_key_1", credentialKind: "project_key" })],
+      skipDuplicates: true,
+    });
+  });
+  it("persists the attribution credential when input fields are absent", async () => {
+    const db = client();
+    await expect(
+      recordProviderUsage(db, {
+        attribution: attributionWithCredential,
+        connectionId: "connection_1",
+        costCents: 1,
+        failed: false,
+        provider: "provider-a",
+        usageQuantity: 1,
+      }),
+    ).resolves.toEqual({ status: "recorded" });
+    expect(db.providerCostEntry.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ credentialId: "key_9", credentialKind: "project_key" })],
+      skipDuplicates: true,
+    });
+  });
+  it("prefers explicit input credential fields over the attribution credential", async () => {
+    const db = client();
+    await expect(
+      recordProviderUsage(db, {
+        attribution: attributionWithCredential,
+        connectionId: "connection_1",
+        costCents: 1,
+        credentialId: "pat_2",
+        credentialKind: "personal_token",
+        failed: false,
+        provider: "provider-a",
+        usageQuantity: 1,
+      }),
+    ).resolves.toEqual({ status: "recorded" });
+    expect(db.providerCostEntry.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ credentialId: "pat_2", credentialKind: "personal_token" })],
+      skipDuplicates: true,
+    });
+  });
+  it("omits credential attribution when it is not provided", async () => {
+    const db = client();
+    await expect(
+      recordProviderUsage(db, {
+        attribution,
+        connectionId: "connection_1",
+        costCents: 1,
+        failed: false,
+        provider: "provider-a",
+        usageQuantity: 1,
+      }),
+    ).resolves.toEqual({ status: "recorded" });
+    expect(db.providerCostEntry.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ credentialId: undefined, credentialKind: undefined })],
       skipDuplicates: true,
     });
   });

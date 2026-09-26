@@ -14,6 +14,7 @@ export type ObservedUsage = {
 
 export function aggregateObservedUsage(checks: readonly ObservedCheckCost[]): ObservedUsage {
   const costs = checks.flatMap((check) => {
+    if (check.costCents == null) return [];
     const cost = Number(check.costCents);
     return Number.isFinite(cost) && cost >= 0 ? [cost] : [];
   });

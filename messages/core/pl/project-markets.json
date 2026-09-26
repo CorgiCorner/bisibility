@@ -84,7 +84,7 @@
     "researchUnavailable": "{language}: brak danych o liczbie wyszukiwań i trudności dla tego rynku – pozycje są śledzone normalnie.",
     "restore": "Przywróć",
     "restoreArchivedHint": "Tutaj pojawiają się zarchiwizowane rynki. Przywróć rynek, gdy zechcesz wznowić jego harmonogramy.",
-    "restoreBody": "Przywrócenie wznowi {count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} w ich harmonogramach – około {cost} miesięcznie.",
+    "restoreBody": "Przywrócenie wznowi {count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} w ich harmonogramach.",
     "restoreFailed": "Nie udało się przywrócić rynku. Spróbuj ponownie.",
     "restoreMarket": "Przywróć rynek",
     "restoreTitle": "Przywrócić rynek {market}?",

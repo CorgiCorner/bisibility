@@ -63,4 +63,31 @@ describe("depth decrease warnings", () => {
     await expect(getKeywordDepthDecreaseWarning("kw_1", 50)).resolves.toBeNull();
     expect(mocks.prisma.alertRule.findMany).not.toHaveBeenCalled();
   });
+
+  it("measures a keyword from its assigned schedule, not a stale legacy depth", async () => {
+    mocks.prisma.keyword.findUnique.mockResolvedValue({
+      checkSchedule: { serpDepth: null },
+      id: "kw_1",
+      project: { defaults: { serpDepth: 20 } },
+      projectId: "project_1",
+      schedule: { serpDepth: 50 },
+      tags: [],
+    });
+
+    await expect(getKeywordDepthDecreaseWarning("kw_1", 20)).resolves.toBeNull();
+    expect(mocks.prisma.alertRule.findMany).not.toHaveBeenCalled();
+  });
+
+  it("treats keywords on a project-default schedule as inheriting the project depth", async () => {
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      defaults: { serpDepth: 100 },
+      keywords: [
+        { checkSchedule: { serpDepth: null }, id: "kw_1", schedule: { serpDepth: 100 }, tags: [] },
+      ],
+    });
+
+    await expect(getProjectDepthDecreaseWarning("project_1", 20)).resolves.toContain(
+      "Affected alerts: Top 50.",
+    );
+  });
 });

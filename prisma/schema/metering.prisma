@@ -1,0 +1,146 @@
+model MeteringOperation {
+  operation_pk           String            @id
+  namespace              String
+  principal              String
+  operation_id           String
+  state                  String
+  version                Int
+  semantic_hash          String
+  budget_epochs          Json
+  reservation_expires_at DateTime          @db.Timestamptz
+  lease_id               String?
+  lease_holder           String?
+  lease_expires_at       DateTime?         @db.Timestamptz
+  lease_kind             String?
+  created_at             DateTime          @db.Timestamptz
+  updated_at             DateTime          @db.Timestamptz
+  input                  Json
+  warnings               Json
+  receipts               MeteringReceipt[]
+  commands               MeteringCommand[]
+  events                 MeteringEvent[]
+
+  @@unique([namespace, operation_id])
+  @@index([namespace, state, reservation_expires_at], map: "metering_operation_expiry_idx")
+  @@map("metering_operation")
+}
+
+model MeteringReceipt {
+  receipt_pk     String                @id
+  operation_pk   String
+  receipt_id     String
+  supersedes     String?
+  body           Json
+  occurred_at    DateTime              @db.Timestamptz
+  recorded_at    DateTime              @db.Timestamptz
+  cost_units     BigInt?
+  cost_certainty String
+  sequence       Int
+  operation      MeteringOperation     @relation(fields: [operation_pk], references: [operation_pk], onDelete: NoAction, onUpdate: NoAction)
+  measurements   MeteringMeasurement[]
+  events         MeteringEvent[]
+
+  @@unique([operation_pk, receipt_id])
+  @@unique([operation_pk, sequence])
+  @@map("metering_receipt")
+}
+
+model MeteringMeasurement {
+  receipt_pk String
+  unit       String
+  value      Decimal?        @db.Decimal(38, 0)
+  scale      Int?
+  certainty  String
+  receipt    MeteringReceipt @relation(fields: [receipt_pk], references: [receipt_pk], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([receipt_pk, unit])
+  @@map("metering_measurement")
+}
+
+model MeteringCommand {
+  operation_pk String
+  command_id   String
+  kind         String
+  input_hash   String
+  input        Json
+  result       Json
+  operation    MeteringOperation @relation(fields: [operation_pk], references: [operation_pk], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([operation_pk, command_id])
+  @@map("metering_command")
+}
+
+model MeteringBudget {
+  sequence BigInt @default(autoincrement())
+  namespace   String
+  budget_id   String
+  version     Int
+  scope_kind  String
+  scope_key   String
+  surface     String
+  unit        String
+  limit_value Decimal? @db.Decimal(38, 0)
+  limit_scale Int?
+  window      Json
+  on_exceed   String
+  body        Json
+
+  @@id([namespace, budget_id, version])
+  @@index([namespace, scope_key, surface], map: "metering_budget_scope_idx")
+  @@map("metering_budget")
+}
+
+model MeteringBudgetUsage {
+  namespace         String
+  budget_id         String
+  epoch             String
+  settled_value     Decimal @db.Decimal(38, 0)
+  outstanding_value Decimal @db.Decimal(38, 0)
+  scale             Int
+
+  @@id([namespace, budget_id, epoch])
+  @@map("metering_budget_usage")
+}
+
+model MeteringEvent {
+  event_id     BigInt            @id @default(autoincrement())
+  operation_pk String
+  namespace    String
+  state        String
+  receipt_pk   String?
+  occurred_at  DateTime?         @db.Timestamptz
+  operation    MeteringOperation @relation(fields: [operation_pk], references: [operation_pk], onDelete: NoAction, onUpdate: NoAction)
+  receipt      MeteringReceipt?  @relation(fields: [receipt_pk], references: [receipt_pk], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([namespace, occurred_at, event_id], map: "metering_event_time_idx")
+  @@index([operation_pk, event_id(sort: Desc)], map: "metering_event_operation_idx")
+  @@map("metering_event")
+}
+
+model MeteringMetadata {
+  key   String @id
+  value String
+
+  @@map("metering_metadata")
+}
+
+model MeteringShadow {
+  namespace String
+  operation_id String
+  project_id String
+  connection_id String
+  funding_source String @default("byok")
+  legacy String
+  meter String
+  settled String
+  duration_ms Float @default(0)
+  failures Int @default(0)
+  handoff_lease_id String?
+  handoff_kind String?
+  handoff_expires_at DateTime? @db.Timestamptz
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @db.Timestamptz
+  @@id([namespace, operation_id])
+  @@index([namespace, project_id, created_at], map: "metering_shadow_project_created")
+  @@map("metering_shadow")
+}

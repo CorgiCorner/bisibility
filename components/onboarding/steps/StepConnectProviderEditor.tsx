@@ -1,3 +1,4 @@
+import { OnboardingDataSourceSlot } from "@/components/settings/AccountDataSourceSlot";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -28,14 +29,19 @@ export function StepConnectProviderEditor({
     <>
       {hidden}
       {showHeading ? (
-        <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{t("title")}</h2>
+        <div className="mb-7">
+          <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{t("title")}</h2>
+          <p className="m-0 mt-2 text-[13px] leading-relaxed text-fg-muted">{t("description")}</p>
+        </div>
       ) : null}
-      {cards}
-      {providerError}
-      {credentials}
-      {actionError}
+      <OnboardingDataSourceSlot>
+        {cards}
+        {providerError}
+        {credentials}
+        {actionError}
+      </OnboardingDataSourceSlot>
       {analyticsOption ? (
-        <div className="mt-5.5">
+        <div className="mt-8 border-t border-border pt-6">
           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.5px] text-fg-muted">
             {t("searchConsole.label")}
             <InfoTooltip text={t("searchConsole.tooltip")} />

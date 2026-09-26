@@ -9,6 +9,11 @@ import {
 } from "@/lib/api/pagination";
 import { prisma } from "@/lib/db/prisma";
 import { ITEM_STATUSES, type ItemStatus } from "@/lib/rank-check/runs/contract";
+import {
+  ledgerActualCostCents,
+  ledgerActualUnits,
+  rankCheckRunTargetLedgerActuals,
+} from "./rank-check-run-accounting";
 import { iso, statusCsv } from "./rank-check-run-query-helpers";
 
 export async function listRankCheckRunItems(projectId: string, publicId: string, url: URL) {
@@ -44,8 +49,10 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
       notBefore: true,
       rankCheck: {
         select: {
+          billingUnits: true,
           costCents: true,
           errorCode: true,
+          id: true,
           position: true,
           provider: true,
           publicId: true,
@@ -74,22 +81,41 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
   const { nextCursor, page } = splitPage(rows, limit, (row) =>
     encodeUnprefixedCursor({ publicId: row.id, timestamp: row.createdAt }),
   );
+  const ledgerActuals = await rankCheckRunTargetLedgerActuals(projectId, run.id);
   return {
-    data: page.map(({ createdAt, id, keyword: { locationRef, ...keyword }, ...row }) => ({
-      ...row,
-      finishedAt: iso(row.finishedAt),
-      id: encodeUnprefixedCursor({ publicId: id, timestamp: createdAt }),
-      keyword: { ...keyword, languageLabel: locationRef?.languageLabel ?? null },
-      rankCheck: row.rankCheck
-        ? {
-            ...row.rankCheck,
-            costCents: row.rankCheck.costCents === null ? null : Number(row.rankCheck.costCents),
-          }
-        : null,
-      notBefore: iso(row.notBefore),
-      startedAt: iso(row.startedAt),
-      status: row.status as ItemStatus,
-    })),
+    data: page.map(({ createdAt, id, keyword: { locationRef, ...keyword }, ...row }) => {
+      const storedRankCheck = row.rankCheck;
+      const ledger = storedRankCheck ? ledgerActuals.get(storedRankCheck.id) : undefined;
+      return {
+        ...row,
+        actualCostCents: ledgerActualCostCents(ledger, row.actualCostCents),
+        finishedAt: iso(row.finishedAt),
+        id: encodeUnprefixedCursor({ publicId: id, timestamp: createdAt }),
+        keyword: { ...keyword, languageLabel: locationRef?.languageLabel ?? null },
+        rankCheck: storedRankCheck
+          ? {
+              billingUnits: ledgerActualUnits(
+                ledger,
+                storedRankCheck.billingUnits,
+                storedRankCheck.provider,
+              ),
+              costCents: ledgerActualCostCents(
+                ledger,
+                storedRankCheck.costCents === null ? null : Number(storedRankCheck.costCents),
+              ),
+              errorCode: storedRankCheck.errorCode,
+              position: storedRankCheck.position,
+              provider: storedRankCheck.provider,
+              publicId: storedRankCheck.publicId,
+              rankingUrl: storedRankCheck.rankingUrl,
+              requestedDepth: storedRankCheck.requestedDepth,
+            }
+          : null,
+        notBefore: iso(row.notBefore),
+        startedAt: iso(row.startedAt),
+        status: row.status as ItemStatus,
+      };
+    }),
     nextCursor,
   };
 }

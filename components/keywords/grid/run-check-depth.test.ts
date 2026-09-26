@@ -24,7 +24,7 @@ describe("run check depth", () => {
   it("labels uniform and mixed selections", () => {
     expect(selectionDepthLabel([row, { ...row, id: "kw_2" }])).toBe("Top 100");
     expect(selectionDepthLabel([row, { ...row, id: "kw_2", projectSerpDepth: 50 }])).toBe(
-      "keyword defaults",
+      "Top 50 / Top 100",
     );
   });
 });

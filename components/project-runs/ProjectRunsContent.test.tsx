@@ -93,7 +93,7 @@ describe("ProjectRunsContent", () => {
     expect(screen.getByRole("link", { name: "Runs" })).toHaveAttribute("aria-current", "page");
   });
 
-  it("selects Upcoming from another status and clears the old cursor", () => {
+  it("selects Planned from another status and clears the old cursor", () => {
     renderContent({
       query: {
         cursor: "old-page",
@@ -104,18 +104,18 @@ describe("ProjectRunsContent", () => {
       },
     });
     fireEvent.click(screen.getByRole("button", { name: "Run status" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Upcoming" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Planned" }));
     expect(routerMock.push).toHaveBeenCalledWith(
-      `/app/${projectRef}/runs?view=planned&source=rank_checks&limit=50`,
+      `/app/${projectRef}/runs?source=rank_checks&status=planned&limit=50`,
     );
   });
 
   it.each([
     ["All statuses", ""],
-    ["Active", "&status=active"],
-    ["Needs attention", "&status=attention"],
-    ["Finished", "&status=finished"],
-  ])("leaves Upcoming for %s without retaining its cursor", (label, suffix) => {
+    ["Running", "&status=running"],
+    ["Blocked", "&status=blocked"],
+    ["Deferred", "&status=deferred"],
+  ])("leaves the planned view for %s without retaining its cursor", (label, suffix) => {
     renderContent({
       query: {
         cursor: "upcoming-page",
@@ -125,7 +125,7 @@ describe("ProjectRunsContent", () => {
         view: "planned",
       },
     });
-    expect(screen.getByRole("button", { name: "Run status" })).toHaveTextContent("Upcoming");
+    expect(screen.getByRole("button", { name: "Run status" })).toHaveTextContent("Planned");
     fireEvent.click(screen.getByRole("button", { name: "Run status" }));
     fireEvent.click(screen.getByRole("menuitem", { name: label }));
     expect(routerMock.push).toHaveBeenCalledWith(

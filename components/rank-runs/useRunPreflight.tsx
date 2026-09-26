@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { PreflightDialog } from "./PreflightDialog";
+import type { CancelOverlappingRunAction } from "./PreflightOverlapNotice";
 import type { PreflightProvider, PreflightScope } from "./preflight-presentation";
 
 type PreviewEnvelope = { data: RankCheckRunPreview };
@@ -69,7 +70,8 @@ export async function previewRankCheckRunFromApp(
   input: PreviewRankCheckRunActionInput,
 ): Promise<RankCheckRunPreview> {
   const response = await fetch("/api/rank-check-runs/preview", {
-    body: JSON.stringify(input),
+    // This dialog only starts manual runs, so it asks for the manual overlap rule.
+    body: JSON.stringify({ ...input, trigger: "manual" }),
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     method: "POST",
@@ -81,6 +83,18 @@ export async function previewRankCheckRunFromApp(
   }
   return (payload as PreviewEnvelope).data;
 }
+
+/** Planned occurrences are skipped once; queued and blocked runs use the run cancel command. */
+export const cancelOverlappingRunFromApp: CancelOverlappingRunAction = async (input) => {
+  const action = input.status === "planned" ? "skip" : "cancel";
+  const response = await fetch(`/api/rank-check-runs/${input.runId}/${action}`, {
+    body: JSON.stringify({ projectId: input.projectId }),
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("rank_run_cancel_failed");
+};
 
 export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPreflightOptions>) {
   const t = useTranslations("shared.rankPreflight");
@@ -97,7 +111,7 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
     const device =
       devices.length === 1 ? (devices[0] ?? "-") : t("devices", { count: devices.length });
     return {
-      description: t("scopeDescription", { count: rows.length, market }),
+      description: t("scopeDescription"),
       equation: t("scopeEquation", {
         devices: device,
         market,
@@ -105,7 +119,7 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
         keywords: rows.length,
       }),
       startLabel: t("startRun"),
-      subtitle: t("scopeSubtitle", { market }),
+      subtitle: t("scopeSubtitle"),
       title:
         rows.length === 1
           ? t("scopeOne", { keyword: rows[0]?.keyword ?? "-", market })
@@ -142,6 +156,7 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
       {active ? (
         <PreflightDialog
           budgetHref={`/app/${projectId}/integrations?tab=usage&budget=edit`}
+          cancelRunAction={cancelOverlappingRunFromApp}
           duplicateRunHref={projectRunsPath(projectId)}
           initialDepth={active.depth}
           initialPreview={active.preview}

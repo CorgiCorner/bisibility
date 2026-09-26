@@ -146,8 +146,9 @@
         "completedNote": "posiciones registradas",
         "deferredNote": "se reintentarán en la próxima ejecución",
         "failedNote": "sin posición registrada",
-        "notTerminal": "todavía sin estado final",
-        "skippedBeforeStart": "{count, plural, one {# omitido antes de empezar} other {# omitidos antes de empezar}}"
+        "notTerminal": "en espera o en ejecución",
+        "skippedBeforeStart": "{count, plural, one {# omitido antes de empezar} other {# omitidos antes de empezar}}",
+        "skippedOrBlocked": "Omitidos o bloqueados: {count}"
       },
       "facts": {
         "actual": "real",
@@ -207,7 +208,8 @@
         "processed": "Se han procesado {processed, number} de {total, number} objetivos",
         "selected": "{count, plural, one {# objetivo seleccionado} other {# objetivos seleccionados}}",
         "skippedBy": "Omitida por {name} el {date}",
-        "skippedExplanation": "Los objetivos omitidos no llegan a ningún proveedor y no generan ningún coste."
+        "skippedExplanation": "Los objetivos omitidos no llegan a ningún proveedor y no generan ningún coste.",
+        "skippedOrBlockedExplanation": "Los objetivos omitidos o bloqueados han finalizado. Consulta el motivo en cada objetivo."
       },
       "table": {
         "actual": "real",
@@ -235,8 +237,14 @@
         "providerRestricted": "El proveedor ha restringido esta cuenta.",
         "providerTransient": "El proveedor no está disponible temporalmente.",
         "providerUnknown": "El proveedor no ha podido completar esta comprobación.",
-        "skippedBeforeStart": "Omitido antes de empezar"
-      }
+        "skippedBeforeStart": "Omitido antes de empezar",
+        "sendUnconfirmed": "Resultado sin confirmar; no se reintentó para evitar un consumo duplicado.",
+        "stoppedAfterStart": "Detenido después de empezar"
+      },
+      "operations": "Operaciones",
+      "usageNotRecorded": "Sin registrar",
+      "estimatedOperations": "estimación: {count}",
+      "skippedOrBlocked": "Omitidos o bloqueados"
     }
   }
 }

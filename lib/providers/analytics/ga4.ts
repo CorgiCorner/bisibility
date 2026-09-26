@@ -183,7 +183,7 @@ export const ga4AnalyticsProvider: Ga4AnalyticsProvider = {
         }),
         method: "POST",
       });
-      return { message: `Connection OK · ${property}.`, ok: true };
+      return { message: `Connected · ${property}.`, ok: true };
     } catch (error) {
       return {
         message: error instanceof Error ? error.message : "Analytics 4 connection test failed.",

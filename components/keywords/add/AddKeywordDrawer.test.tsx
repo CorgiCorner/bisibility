@@ -42,21 +42,37 @@ const marketCreation = {
   sources: [],
 };
 
-async function openMarketStep(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: "New market" }));
+function setupUser() {
+  return userEvent.setup({ delay: null, pointerEventsCheck: 0 });
 }
 
-async function completeDefinition(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: "Country" }));
-  await user.click(screen.getByRole("menuitem", { name: "Spain" }));
-  await user.click(screen.getByRole("button", { name: "Language" }));
-  await user.click(screen.getByRole("menuitem", { name: "Spanish" }));
-  await user.click(screen.getByRole("button", { name: "Location" }));
-  await user.click(screen.getByRole("menuitem", { name: "Spain (Country)" }));
-  await user.type(screen.getByLabelText("Custom name (optional)"), "Spain search");
-  await user.click(screen.getByRole("button", { name: "Devices" }));
-  await user.click(screen.getByRole("menuitem", { name: "Desktop" }));
-  await user.click(screen.getByRole("radio", { name: "Start empty" }));
+async function openMarketStep() {
+  act(() => {
+    fireEvent.click(screen.getByRole("button", { name: "New market" }));
+  });
+}
+
+function clickControl(name: string, role: "button" | "menuitem" | "radio" = "button") {
+  act(() => {
+    fireEvent.click(screen.getByRole(role, { name }));
+  });
+}
+
+async function completeDefinition() {
+  clickControl("Country");
+  clickControl("Spain", "menuitem");
+  clickControl("Language");
+  clickControl("Spanish", "menuitem");
+  clickControl("Location");
+  clickControl("Spain (Country)", "menuitem");
+  act(() => {
+    fireEvent.change(screen.getByLabelText("Custom name (optional)"), {
+      target: { value: "Spain search" },
+    });
+  });
+  clickControl("Devices");
+  clickControl("Desktop", "menuitem");
+  clickControl("Start empty", "radio");
 }
 
 const projectMarkets = {
@@ -200,11 +216,11 @@ describe("AddKeywordDrawer", () => {
   });
 
   it("swaps the drawer body for a nested market step and restores the selection on Back", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
 
     fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
-    await openMarketStep(user);
+    await openMarketStep();
 
     expect(screen.getAllByRole("heading", { name: "New market" })).toHaveLength(1);
     expect(screen.getByRole("button", { name: "Country" })).toBeVisible();
@@ -224,39 +240,42 @@ describe("AddKeywordDrawer", () => {
   });
 
   it("reports what the nested step still needs and creates nothing while it is incomplete", async () => {
-    const user = userEvent.setup();
     renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
-    await openMarketStep(user);
+    await openMarketStep();
 
     expect(screen.getByRole("button", { name: "Devices" })).toBeVisible();
     for (const name of ["Copy from market", "Paste keywords", "Start empty"]) {
       expect(screen.getByRole("radio", { name })).not.toBeChecked();
     }
     expect(screen.getByRole("button", { name: "Create market" })).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: "Country" }));
-    await user.click(screen.getByRole("menuitem", { name: "Spain" }));
+    clickControl("Country");
+    clickControl("Spain", "menuitem");
     expect(screen.getByRole("button", { name: "Create market" })).toBeDisabled();
 
-    await user.click(screen.getByRole("button", { name: "Language" }));
-    await user.click(screen.getByRole("menuitem", { name: "Spanish" }));
-    await user.click(screen.getByRole("button", { name: "Location" }));
-    await user.click(screen.getByRole("menuitem", { name: "Spain (Country)" }));
-    await user.type(screen.getByLabelText("Custom name (optional)"), "Spain search");
+    clickControl("Language");
+    clickControl("Spanish", "menuitem");
+    clickControl("Location");
+    clickControl("Spain (Country)", "menuitem");
+    act(() => {
+      fireEvent.change(screen.getByLabelText("Custom name (optional)"), {
+        target: { value: "Spain search" },
+      });
+    });
 
     expect(screen.getByRole("button", { name: "Create market" })).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: "Devices" }));
-    await user.click(screen.getByRole("menuitem", { name: "Mobile" }));
+    clickControl("Devices");
+    clickControl("Mobile", "menuitem");
     expect(screen.getByRole("button", { name: "Create market" })).toBeDisabled();
-    await user.click(screen.getByRole("radio", { name: "Start empty" }));
+    clickControl("Start empty", "radio");
     expect(screen.getByRole("button", { name: "Create market" })).toBeEnabled();
     expect(createProjectMarket).not.toHaveBeenCalled();
   });
 
   it("creates the market through the project action and selects it for these keywords", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
-    await openMarketStep(user);
-    await completeDefinition(user);
+    await openMarketStep();
+    await completeDefinition();
 
     await user.click(screen.getByRole("button", { name: "Create market" }));
 
@@ -277,10 +296,10 @@ describe("AddKeywordDrawer", () => {
   });
 
   it("refuses a market name the server would reject rather than masking the failure", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
-    await openMarketStep(user);
-    await completeDefinition(user);
+    await openMarketStep();
+    await completeDefinition();
     fireEvent.change(screen.getByLabelText("Custom name (optional)"), {
       target: { value: "a".repeat(121) },
     });
@@ -294,13 +313,13 @@ describe("AddKeywordDrawer", () => {
   });
 
   it("surfaces a duplicate market without adding a chip", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     createProjectMarket.mockRejectedValueOnce(
       new Error("This location is already tracked by the project."),
     );
     renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
-    await openMarketStep(user);
-    await completeDefinition(user);
+    await openMarketStep();
+    await completeDefinition();
 
     await user.click(screen.getByRole("button", { name: "Create market" }));
 
@@ -313,7 +332,7 @@ describe("AddKeywordDrawer", () => {
   });
 
   it("counts targets without treating a project-wide unit price as the selected schedule price", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderDrawer({
       costContext: { costPerCheckCents: 25 } as never,
       projectMarkets: { ...projectMarkets, marketCreation },
@@ -327,7 +346,7 @@ describe("AddKeywordDrawer", () => {
   });
 
   it("states no price when the project has no cost per check", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
     fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
 
@@ -339,7 +358,7 @@ describe("AddKeywordDrawer", () => {
   });
 
   it("counts one keyword on two devices as one keyword and two checks", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderDrawer({
       costContext: { costPerCheckCents: 25 } as never,
       initialDevices: ["desktop", "mobile"],
@@ -354,7 +373,7 @@ describe("AddKeywordDrawer", () => {
   });
 
   it("submits the assigned schedule with the created keyword rows", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
     fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "rank tracker" } });
 
@@ -372,7 +391,7 @@ describe("AddKeywordDrawer", () => {
   });
 
   it("keeps the typed target URL on every market the submission creates", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderDrawer({
       initialMarketKeys: ["ES"],
       projectMarkets: {
@@ -656,7 +675,7 @@ describe("AddKeywordDrawer", () => {
 });
 
 it("preselects a paused market opened for preparation and saves its keywords", async () => {
-  const user = userEvent.setup();
+  const user = setupUser();
   renderDrawer({
     initialMarketKeys: ["US"],
     projectMarkets: {
@@ -687,9 +706,9 @@ it("requires creating a market before the first manual keyword can be saved", as
 });
 
 it("creates the first country-wide market without requiring an optional custom name", async () => {
-  const user = userEvent.setup();
+  const user = setupUser();
   renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation, markets: [] } });
-  await openMarketStep(user);
+  await openMarketStep();
   await user.click(screen.getByRole("button", { name: "Country" }));
   await user.click(screen.getByRole("menuitem", { name: "Spain" }));
   await user.click(screen.getByRole("button", { name: "Language" }));
@@ -709,14 +728,14 @@ it("creates the first country-wide market without requiring an optional custom n
 });
 
 it("keeps one drawer and all keyword and market drafts across the schedule Back path", async () => {
-  const user = userEvent.setup();
+  const user = setupUser();
   renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
   const drawer = screen.getByRole("dialog");
   fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "original keyword" } });
   fireEvent.change(screen.getByLabelText("Target URL"), { target: { value: "/original" } });
   fireEvent.change(screen.getByLabelText("Tags"), { target: { value: "Launch" } });
-  await openMarketStep(user);
-  await completeDefinition(user);
+  await openMarketStep();
+  await completeDefinition();
   await user.click(screen.getByRole("radio", { name: "Paste keywords" }));
   fireEvent.change(screen.getByRole("textbox", { name: "Paste keywords" }), {
     target: { value: "market keyword" },
@@ -744,12 +763,12 @@ it("keeps one drawer and all keyword and market drafts across the schedule Back 
 });
 
 it("saves a schedule inside the market creator, creates pasted keywords and selects the market", async () => {
-  const user = userEvent.setup();
+  const user = setupUser();
   const createdScheduleId = `sch_${"s".repeat(24)}`;
   renderDrawer({ projectMarkets: { ...projectMarkets, marketCreation } });
   fireEvent.change(screen.getByLabelText("Keywords"), { target: { value: "original keyword" } });
-  await openMarketStep(user);
-  await completeDefinition(user);
+  await openMarketStep();
+  await completeDefinition();
   await user.click(screen.getByRole("radio", { name: "Paste keywords" }));
   fireEvent.change(screen.getByRole("textbox", { name: "Paste keywords" }), {
     target: { value: "market keyword" },
@@ -781,7 +800,7 @@ it("saves a schedule inside the market creator, creates pasted keywords and sele
 });
 
 it("copies from the same market sources with an explicitly chosen schedule and devices", async () => {
-  const user = userEvent.setup();
+  const user = setupUser();
   const sourceId = `pmkt_${"m".repeat(24)}`;
   renderDrawer({
     projectMarkets: {
@@ -792,8 +811,8 @@ it("copies from the same market sources with an explicitly chosen schedule and d
       },
     },
   });
-  await openMarketStep(user);
-  await completeDefinition(user);
+  await openMarketStep();
+  await completeDefinition();
   await user.click(screen.getByRole("button", { name: "Devices" }));
   await user.click(screen.getByRole("menuitem", { name: "Both" }));
   await user.click(screen.getByRole("radio", { name: "Copy from market" }));

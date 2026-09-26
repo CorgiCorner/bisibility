@@ -7,6 +7,7 @@ import {
   type AuditPayloadPolicy,
   auditFields as f,
 } from "@/lib/auth/audit-payload-policy";
+import { auditPayloadPolicyExtension } from "./audit-payload-extension";
 
 // This published registry is the audit payload contract. Missing actions retain row metadata only.
 const declarations = new Map<string, AuditPayloadPolicy>();
@@ -215,6 +216,7 @@ declare(["instance_admin.account_limits_reset"], {
     ...strings("requestedTarget"),
   },
 });
+declare(["instance_admin.metering_viewed"], { after: strings("month", "project") });
 declare(["instance_admin.account_viewed"], { after: strings("result") });
 declare(
   [
@@ -298,11 +300,11 @@ registerAccountAuditDeclarations(declare, { projectCounts });
 registerRankCheckRunAuditDeclarations(declare);
 
 export function auditPayloadPolicy(action: string) {
-  return declarations.get(action);
+  return declarations.get(action) ?? auditPayloadPolicyExtension(action) ?? undefined;
 }
 
 export function hasDeclaredAuditAction(action: string) {
-  return declarations.has(action);
+  return declarations.has(action) || auditPayloadPolicyExtension(action) !== null;
 }
 
 export function declaredAuditActions() {

@@ -1,8 +1,4 @@
-import {
-  FIRST_VIEW_ROW_BUFFER,
-  FIRST_VIEW_ROWS,
-  SEARCH_INSIGHTS_ROWS_CAP,
-} from "@/lib/search-insights/constants";
+import { SEARCH_INSIGHTS_ROWS_CAP } from "@/lib/search-insights/constants";
 import type {
   SearchInsightsPageRow,
   SearchInsightsQueryRow,
@@ -15,40 +11,39 @@ import {
 
 export type SearchInsightsRowKind = "pages" | "queries";
 
-/** Ten rows, then the fifty already loaded, then everything the window holds. */
-export type RowsShow = "all" | number;
+/** What one table asks the server for: a page of the rows that match the search, in one order. */
+export type RowsQuery = {
+  page: number;
+  pageSize: number;
+  search: string;
+  sort: SearchInsightsSort;
+};
 
-export type RowsState<TRow> = {
+export type RowsState<TRow> = RowsQuery & {
   rows: readonly TRow[];
-  show: RowsShow;
   total: number;
 };
 
 export type QueryRowsState = RowsState<SearchInsightsQueryRow>;
 export type PageRowsState = RowsState<SearchInsightsPageRow>;
 
-export function nextShow(show: RowsShow): RowsShow {
-  return show === FIRST_VIEW_ROWS ? FIRST_VIEW_ROW_BUFFER : "all";
+export function rowsQuery({ page, pageSize, search, sort }: RowsQuery): RowsQuery {
+  return { page, pageSize, search, sort };
 }
 
-export function visibleRows<TRow>(rows: readonly TRow[], show: RowsShow) {
-  return show === "all" ? rows : rows.slice(0, show);
+export function rowsOffset({ page, pageSize }: Pick<RowsQuery, "page" | "pageSize">) {
+  return (page - 1) * pageSize;
 }
 
 /**
- * How far the last step reaches. A saturated window holds every distinct query Google named,
- * which runs to hundreds of thousands: paging all of them in would be one request per thousand
- * rows and then the lot of them in the browser, so the table stops at the cap.
+ * How far the pages reach. A saturated window holds every distinct query Google named, which
+ * runs to hundreds of thousands, and every page re-aggregates the window before it skips, so the
+ * pages stop at the cap and the export carries the rest.
  */
 export function rowsReach(total: number) {
   return Math.min(total, SEARCH_INSIGHTS_ROWS_CAP);
 }
 
-/**
- * The one rule every "show the rest" control follows, table or drawer. Past the cap the label
- * must not promise what it stops short of, and once the rows already reach the cap there is
- * nothing left to offer: a button that re-reads the same rows would never leave the screen.
- */
 /**
  * Position colour is a rank-quality bucket, never a status colour: the accent stays reserved
  * for actions, so a weak position reads muted rather than alarming.

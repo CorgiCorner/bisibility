@@ -22,7 +22,7 @@ const mocks = vi.hoisted(() => ({
     observationRun: { create: vi.fn() },
     projectDefaults: { update: vi.fn() },
     providerConnection: { update: vi.fn() },
-    providerCostEntry: { createMany: vi.fn() },
+    providerCostEntry: { findFirst: vi.fn().mockResolvedValue(null), createMany: vi.fn() },
     rankCheck: { create: vi.fn(), findUniqueOrThrow: vi.fn(), updateMany: vi.fn() },
     rankCheckRun: { update: vi.fn() },
     rankCheckRunItem: { findUnique: vi.fn(), updateMany: vi.fn() },
@@ -77,7 +77,10 @@ describe("rank-check persistence update path", () => {
       keywordSchedule: { update: vi.fn(() => Promise.resolve({})) },
       projectDefaults: { update: vi.fn() },
       providerConnection: { update: vi.fn(() => Promise.resolve({})) },
-      providerCostEntry: { createMany: vi.fn(() => Promise.resolve({ count: 1 })) },
+      providerCostEntry: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        createMany: vi.fn(() => Promise.resolve({ count: 1 })),
+      },
       rankCheck: {
         create: vi.fn(),
         findUniqueOrThrow: vi.fn(({ where }) =>
@@ -223,7 +226,7 @@ describe("rank-check persistence update path", () => {
       observationRun: { create: vi.fn(() => Promise.resolve({ id: "observation_run_1" })) },
       projectDefaults: { update: vi.fn() },
       providerConnection: { update: vi.fn() },
-      providerCostEntry: { createMany: vi.fn() },
+      providerCostEntry: { findFirst: vi.fn().mockResolvedValue(null), createMany: vi.fn() },
       rankCheck: {
         create: vi.fn(({ data }) =>
           Promise.resolve({ id: "rank_new_1", publicId: RANK_CHECK_PUBLIC_ID, ...data }),
@@ -291,7 +294,7 @@ describe("rank-check persistence update path", () => {
       observationRun: { create: vi.fn(() => Promise.resolve({ id: "observation_run_1" })) },
       projectDefaults: { update: vi.fn() },
       providerConnection: { update: vi.fn() },
-      providerCostEntry: { createMany: vi.fn() },
+      providerCostEntry: { findFirst: vi.fn().mockResolvedValue(null), createMany: vi.fn() },
       rankCheck: {
         create: vi.fn(),
         findUniqueOrThrow: vi.fn(({ where }) =>
@@ -869,7 +872,10 @@ describe("rank-check persistence update path", () => {
     const tx = {
       $queryRaw: vi.fn(),
       auditLog: { create: auditCreate },
-      providerCostEntry: { createMany: vi.fn(() => Promise.resolve({ count: 1 })) },
+      providerCostEntry: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        createMany: vi.fn(() => Promise.resolve({ count: 1 })),
+      },
       rankCheck: {
         findUniqueOrThrow: vi.fn(({ where }) =>
           Promise.resolve({
@@ -1045,7 +1051,13 @@ describe("rank-check persistence update path", () => {
   it("records native provider usage when monetary cost is zero", async () => {
     const { writeRankCheckProviderCostEntry } = await import("./provider-cost-persistence");
     const createMany = vi.fn().mockResolvedValue({ count: 1 });
-    const tx = { providerCostEntry: { create: vi.fn(), createMany } };
+    const tx = {
+      providerCostEntry: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        create: vi.fn(),
+        createMany,
+      },
+    };
 
     await writeRankCheckProviderCostEntry(tx as never, {
       connectionId: "connection_1",

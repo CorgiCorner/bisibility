@@ -14,6 +14,12 @@ import {
 v.describe("SearchInsightsBody", () => {
   v.beforeEach(() => {
     t.analyticsMock().track.mockReset();
+    v.vi.spyOn(window.history, "replaceState");
+    routerMock.replace.mockReset();
+  });
+
+  v.afterEach(() => {
+    v.vi.restoreAllMocks();
   });
 
   v.it.each([
@@ -63,10 +69,12 @@ v.describe("SearchInsightsBody", () => {
     const { unmount } = t.renderBody({ view: ga4View });
 
     await userEvent.click(r.screen.getByRole("radio", { name: PAGE_LENS_SEARCH_LABEL }));
-    v.expect(routerMock.replace).toHaveBeenCalledWith(
+    v.expect(window.history.replaceState).toHaveBeenCalledWith(
+      window.history.state,
+      "",
       "/app/prj_1/search-console?google=select&period=7&lens=search",
-      { scroll: false },
     );
+    v.expect(routerMock.replace).not.toHaveBeenCalled();
 
     unmount();
     setNavigationState({
@@ -94,9 +102,11 @@ v.describe("SearchInsightsBody", () => {
     v.expect(search).toHaveFocus();
     await user.keyboard("{ArrowRight}");
 
-    v.expect(routerMock.replace).toHaveBeenCalledWith(
+    v.expect(window.history.replaceState).toHaveBeenCalledWith(
+      window.history.state,
+      "",
       "/app/prj_1/search-console?google=select&period=7&lens=traffic",
-      { scroll: false },
     );
+    v.expect(routerMock.replace).not.toHaveBeenCalled();
   });
 });

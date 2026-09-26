@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useDataTableLayout } from "@/components/ui/data-table/data-table-layout-store";
 import type { DataTableDensity, DataTableSort } from "@/components/ui/data-table/data-table-types";
+import { FloatingSelectionBarSpacer } from "@/components/ui/FloatingSelectionBar";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { SummaryStrip } from "@/components/ui/SummaryStrip";
 import {
@@ -180,50 +181,107 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
   }
 
   return (
-    <Card className="min-w-0 overflow-hidden p-0" size="md" style={keywordTableCardStyle}>
-      <KeywordsFilterBar
-        columnSizing={layout.columnSizing}
-        columns={columns}
-        columnVisibility={columnVisibility}
-        density={density}
-        filterChips={filterChips}
-        filterCount={filterCount}
-        groupingControl={
-          <SegmentedControl
-            activeVariant="neutral"
-            ariaLabel={t("grouping")}
-            fitContent
-            onChange={(value) => {
-              const grouped = value === "grouped";
-              if (grouped !== query.grouped)
-                navigate(resetRankTrackerPage({ ...query, grouped }), ["grouped", "page"]);
-            }}
-            options={[
-              { label: t("grouped"), value: "grouped" },
-              { label: t("flat"), value: "flat" },
-            ]}
-            size="toolbar"
-            value={query.grouped ? "grouped" : "flat"}
+    <>
+      <Card className="min-w-0 overflow-hidden p-0" size="md" style={keywordTableCardStyle}>
+        <KeywordsFilterBar
+          columnSizing={layout.columnSizing}
+          columns={columns}
+          columnVisibility={columnVisibility}
+          density={density}
+          filterChips={filterChips}
+          filterCount={filterCount}
+          groupingControl={
+            <SegmentedControl
+              activeVariant="neutral"
+              ariaLabel={t("grouping")}
+              fitContent
+              onChange={(value) => {
+                const grouped = value === "grouped";
+                if (grouped !== query.grouped)
+                  navigate(resetRankTrackerPage({ ...query, grouped }), ["grouped", "page"]);
+              }}
+              options={[
+                { label: t("grouped"), value: "grouped" },
+                { label: t("flat"), value: "flat" },
+              ]}
+              size="toolbar"
+              value={query.grouped ? "grouped" : "flat"}
+            />
+          }
+          id={KEYWORD_DATA_TABLE_ID}
+          onAddKeyword={onAddKeyword}
+          onClearFilters={onClearFilters}
+          onColumnSizingChange={layout.setColumnSizing}
+          onColumnVisibilityChange={layout.setColumnVisibility}
+          onDensityChange={handleDensityChange}
+          onImportCsv={onImportCsv}
+          onOpenExport={() => onOpenExport(selectedIds)}
+          onOpenFilters={onOpenFilters}
+          onRefresh={() => router.refresh()}
+          onRemoveFilter={onRemoveFilter}
+          onSearchChange={onSearchChange}
+          onSearchCommit={onSearchCommit}
+          savedViewControl={savedViewControl}
+          searchValue={searchValue}
+          scopeChip={scopeChip}
+          scopeControl={scopeControl}
+        />
+        {rowActionError ? (
+          <p className="m-0 border-b border-border px-4 py-2 font-sans tabular-nums text-[11.5px] text-red-text">
+            {rowActionError}
+          </p>
+        ) : null}
+        {weeklySummary ? (
+          <SummaryStrip
+            className="rounded-none border-b border-border px-4"
+            sentence={t("currentPage", { summary: weeklySummarySentence(weeklySummary, t) })}
+            tone={weeklySummary.tone}
           />
-        }
-        id={KEYWORD_DATA_TABLE_ID}
-        onAddKeyword={onAddKeyword}
-        onClearFilters={onClearFilters}
-        onColumnSizingChange={layout.setColumnSizing}
-        onColumnVisibilityChange={layout.setColumnVisibility}
-        onDensityChange={handleDensityChange}
-        onImportCsv={onImportCsv}
-        onOpenExport={() => onOpenExport(selectedIds)}
-        onOpenFilters={onOpenFilters}
-        onRefresh={() => router.refresh()}
-        onRemoveFilter={onRemoveFilter}
-        onSearchChange={onSearchChange}
-        onSearchCommit={onSearchCommit}
-        savedViewControl={savedViewControl}
-        searchValue={searchValue}
-        scopeChip={scopeChip}
-        scopeControl={scopeControl}
-      />
+        ) : null}
+        <KeywordGridViewport
+          key={`${query.grouped ? "grouped" : "flat"}:${searchParams.toString()}:${navigationSequence}`}
+          columnSizing={layout.columnSizing}
+          columns={columns}
+          columnVisibility={columnVisibility}
+          density={density}
+          footerStart={
+            query.grouped ? <span>{t("matchingTargets", { count: matchedTargetCount })}</span> : undefined
+          }
+          id={KEYWORD_DATA_TABLE_ID}
+          noRowsState={noRowsState}
+          onColumnSizingChange={layout.setColumnSizing}
+          onColumnVisibilityChange={layout.setColumnVisibility}
+          onNavigate={(keywordId) => router.push(appPath(projectId, "rank-tracker", keywordId))}
+          onPaginationChange={handlePagination}
+          onSelectionChange={setSelection}
+          onSortingChange={handleSorting}
+          pagination={pagination}
+          pending={navigationPending}
+          rows={rows}
+          selection={selection}
+          sorting={query.sort}
+        />
+        {canUpdateKeyword && editing ? (
+          <KeywordEditDrawer
+            focusTargetUrl={editing.focusTargetUrl}
+            key={`${editing.row.id}-${editing.focusTargetUrl ? "target" : "details"}`}
+            keyword={editing.row}
+            onClose={() => setEditing(null)}
+            open
+            projectId={projectId}
+            projectMarkets={projectMarkets}
+            providerRate={checkHealth?.providerRate}
+            updateKeywordAction={updateKeywordAction}
+          />
+        ) : null}
+        <ConfirmModal
+          busy={deleting}
+          kind="deleteKeyword"
+          onClose={() => setDeletingKeyword(null)}
+          onConfirm={handleDeleteKeyword}
+          open={Boolean(deletingKeyword)}
+        />
+      </Card>
       <BulkActionBar
         bulkClearTargetAction={bulkClearTargetAction}
         bulkDeleteAction={bulkDeleteAction}
@@ -240,61 +298,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
         providerRate={checkHealth?.providerRate}
         selectedRows={selectedRows}
       />
-      {rowActionError ? (
-        <p className="m-0 border-b border-border px-4 py-2 font-sans tabular-nums text-[11.5px] text-red-text">
-          {rowActionError}
-        </p>
-      ) : null}
-      {weeklySummary ? (
-        <SummaryStrip
-          className="rounded-none border-b border-border px-4"
-          sentence={t("currentPage", { summary: weeklySummarySentence(weeklySummary, t) })}
-          tone={weeklySummary.tone}
-        />
-      ) : null}
-      <KeywordGridViewport
-        key={`${query.grouped ? "grouped" : "flat"}:${searchParams.toString()}:${navigationSequence}`}
-        columnSizing={layout.columnSizing}
-        columns={columns}
-        columnVisibility={columnVisibility}
-        density={density}
-        footerStart={
-          query.grouped ? <span>{t("matchingTargets", { count: matchedTargetCount })}</span> : undefined
-        }
-        id={KEYWORD_DATA_TABLE_ID}
-        noRowsState={noRowsState}
-        onColumnSizingChange={layout.setColumnSizing}
-        onColumnVisibilityChange={layout.setColumnVisibility}
-        onNavigate={(keywordId) => router.push(appPath(projectId, "rank-tracker", keywordId))}
-        onPaginationChange={handlePagination}
-        onSelectionChange={setSelection}
-        onSortingChange={handleSorting}
-        pagination={pagination}
-        pending={navigationPending}
-        rows={rows}
-        selection={selection}
-        sorting={query.sort}
-      />
-      {canUpdateKeyword && editing ? (
-        <KeywordEditDrawer
-          focusTargetUrl={editing.focusTargetUrl}
-          key={`${editing.row.id}-${editing.focusTargetUrl ? "target" : "details"}`}
-          keyword={editing.row}
-          onClose={() => setEditing(null)}
-          open
-          projectId={projectId}
-          projectMarkets={projectMarkets}
-          providerRate={checkHealth?.providerRate}
-          updateKeywordAction={updateKeywordAction}
-        />
-      ) : null}
-      <ConfirmModal
-        busy={deleting}
-        kind="deleteKeyword"
-        onClose={() => setDeletingKeyword(null)}
-        onConfirm={handleDeleteKeyword}
-        open={Boolean(deletingKeyword)}
-      />
-    </Card>
+      {selectedRows.length > 0 ? <FloatingSelectionBarSpacer /> : null}
+    </>
   );
 }

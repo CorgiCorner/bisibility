@@ -188,6 +188,7 @@ export const schemas = {
   Problem: {
     properties: {
       detail: { type: "string" },
+      details: { additionalProperties: true, type: "object" },
       docs_url: { type: "string" },
       errors: {},
       instance: { type: "string" },
@@ -203,6 +204,17 @@ export const schemas = {
   ...projectSchemas,
   RankCheck: {
     properties: {
+      usage: {
+        description:
+          "Confirmed provider usage; null quantity means unconfirmed and is never inferred from requested depth. Costs may take up to 15 minutes to update.",
+        properties: {
+          quantity: { minimum: 0, type: ["number", "null"] },
+          status: { enum: ["confirmed", "unconfirmed"], type: "string" },
+          unit: { enum: ["operations", "cents"], type: "string" },
+        },
+        required: ["quantity", "status", "unit"],
+        type: "object",
+      },
       attempts: {
         description: "Provider fallback attempts recorded before the final rank-check status.",
         items: {

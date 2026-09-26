@@ -13,13 +13,14 @@ import {
   projectRunPlannedSortTuple,
   projectRunSortTuple,
 } from "./project-run";
+import { projectRunStatusKey } from "./run-status-vocabulary";
 
 const RANK_FINISHED_STATUSES = ["completed", "cancelled"] as const;
 const GSC_FINISHED_STATES = ["completed", "failed"] as const;
 
 export type ProjectRunsPage = Readonly<{ data: ProjectRun[]; nextCursor: string | null }>;
 
-function matchesStatus(run: ProjectRun, status: ProjectRunsStatus) {
+export function matchesProjectRunsStatus(run: ProjectRun, status: ProjectRunsStatus) {
   if (status === "all") return true;
   if (status === "attention") return run.attention !== null;
   if (status === "active") {
@@ -31,16 +32,20 @@ function matchesStatus(run: ProjectRun, status: ProjectRunsStatus) {
       "waiting_to_resume",
     ].includes(run.lifecycle);
   }
-  return run.kind === "rank_check"
-    ? (RANK_FINISHED_STATUSES as readonly string[]).includes(run.lifecycle)
-    : (GSC_FINISHED_STATES as readonly string[]).includes(run.lifecycle);
+  if (status === "finished") {
+    return run.kind === "rank_check"
+      ? (RANK_FINISHED_STATUSES as readonly string[]).includes(run.lifecycle)
+      : (GSC_FINISHED_STATES as readonly string[]).includes(run.lifecycle);
+  }
+  return projectRunStatusKey(run) === status;
 }
 
 export function matchesProjectRunsQuery(run: ProjectRun, query: ProjectRunsQuery) {
   if (query.source === "rank_checks" && run.kind !== "rank_check") return false;
   if (query.source === "search_console" && run.kind !== "gsc_import") return false;
-  if (query.view === "planned") return isPlannedProjectRun(run) && matchesStatus(run, query.status);
-  return matchesStatus(run, query.status);
+  if (query.view === "planned")
+    return isPlannedProjectRun(run) && matchesProjectRunsStatus(run, query.status);
+  return matchesProjectRunsStatus(run, query.status);
 }
 
 function filtersFor(query: ProjectRunsQuery): ProjectRunsFilters {

@@ -1,4 +1,5 @@
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   assertDomainOverviewMaxCost,
@@ -53,14 +54,13 @@ describe("domain overview provider calls", () => {
     );
   });
 
-  it("estimates provisional module costs and keeps history at 10x overview", () => {
+  it("estimates module costs from the measured list rates", () => {
     const estimate = domainOverviewEstimate({ keywordLimit: 100, pageLimit: 100, source });
 
-    expect(estimate.overview).toBeCloseTo(1.212);
+    expect(estimate.overview).toBe(2);
     expect(estimate.history).toBeCloseTo(12.12);
-    expect(estimate.history / estimate.overview).toBe(10);
     expect(estimate.keywords).toBe(2);
-    expect(estimate.pages).toBeCloseTo(2.4);
+    expect(estimate.pages).toBe(2);
     expect(estimate.core).toBeCloseTo(estimate.overview + estimate.keywords + estimate.pages);
   });
 
@@ -73,6 +73,7 @@ describe("domain overview provider calls", () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ProviderLookupSignal);
       expect((error as ProviderLookupSignal).outcome).toEqual({
+        estimatedCostCents: 12.01,
         ok: false,
         reason: "cost_limit_exceeded",
       });
@@ -87,11 +88,17 @@ describe("domain overview provider calls", () => {
   });
 
   it("keeps the aggregate preflight as a thin connection-aware wrapper", async () => {
+    const origin = {
+      credential: { id: "key_1", kind: "project_key" as const },
+      source: "sdk" as const,
+    };
+
     await preflightDomainOverview({
       budgetCapCents: 500,
       connectionId: "connection_1",
       estimatedCostCents: 6,
       estimatedUsageQuantity: 3,
+      origin,
       projectId: "project_1",
       provider: "dataforseo",
     });
@@ -101,8 +108,10 @@ describe("domain overview provider calls", () => {
       connectionId: "connection_1",
       estimatedCostCents: 6,
       estimatedUsageQuantity: 3,
+      origin,
       projectId: "project_1",
       provider: "dataforseo",
+      surface: "programmatic",
     });
   });
 
@@ -116,6 +125,7 @@ describe("domain overview provider calls", () => {
     await fetchDomainOverviewMetrics({
       ...researchScope,
       budgetCapCents: 500,
+      origin: APP_REQUEST_ORIGIN,
       projectId: "project_1",
       scope: "root",
       source,
@@ -157,6 +167,7 @@ describe("domain overview provider calls", () => {
       budgetCapCents: 500,
       limit: 25,
       offset: 50,
+      origin: APP_REQUEST_ORIGIN,
       projectId: "project_1",
       source,
       target: "example.com",
@@ -173,5 +184,47 @@ describe("domain overview provider calls", () => {
         locationCode: 2616,
       }),
     );
+  });
+
+  it("threads the paying request origin into every paid provider call", async () => {
+    const origin = {
+      credential: { id: "key_1", kind: "project_key" as const },
+      source: "sdk" as const,
+    };
+    provider.fetchDomainRankOverview.mockResolvedValue({
+      costCents: 1.2,
+      metrics: null,
+      sourceSnapshotAt: null,
+    });
+    provider.fetchRankedKeywords.mockResolvedValue({ costCents: 2, rows: [], totalCount: 0 });
+
+    await fetchDomainOverviewMetrics({
+      ...researchScope,
+      budgetCapCents: 500,
+      origin,
+      projectId: "project_1",
+      scope: "root",
+      source,
+      target: "example.com",
+    });
+    await fetchDomainKeywords({
+      ...researchScope,
+      budgetCapCents: 500,
+      limit: 25,
+      offset: 0,
+      origin,
+      projectId: "project_1",
+      source,
+      target: "example.com",
+    });
+
+    expect(mocks.paidCall).toHaveBeenCalled();
+    for (const [input] of mocks.paidCall.mock.calls) {
+      expect(input).toMatchObject({
+        credential: { id: "key_1", kind: "project_key" },
+        source: "sdk",
+        trigger: "manual",
+      });
+    }
   });
 });

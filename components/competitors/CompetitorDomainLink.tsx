@@ -1,4 +1,5 @@
 import { rankTrackerKeywordLinkClassName } from "@/components/keywords/grid/keyword-link-styles";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 
 export function CompetitorDomainLink({
@@ -11,7 +12,7 @@ export function CompetitorDomainLink({
   return (
     <ExternalLink
       aria-label={rankTracker ? url : label === domain ? domain : `${label} ${domain}`}
-      className={`max-w-full min-w-0 ${rankTracker ? `whitespace-nowrap ${rankTrackerKeywordLinkClassName}` : "text-accent-text hover:underline"} [&>svg]:shrink-0`}
+      className={`max-w-full min-w-0 ${rankTracker ? `whitespace-nowrap ${rankTrackerKeywordLinkClassName}` : `items-start ${dataLinkClassName} [&>svg]:mt-[3px]`} [&>svg]:shrink-0`}
       href={url}
       title={rankTracker ? url : domain}
     >

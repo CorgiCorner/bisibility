@@ -80,11 +80,21 @@ describe("legacy provider allocation backfill", () => {
     });
     expect(tx.$queryRaw).toHaveBeenCalledOnce();
     expect(tx.providerConnection.updateMany).toHaveBeenCalledWith({
-      data: { allocationAmountPerMonth: null, allocationUnit: null },
+      data: {
+        allocationAmountPerMonth: null,
+        allocationUnit: null,
+        creditsAllocationAmountPerMonth: null,
+        creditsProgrammaticAllocationAmountPerMonth: null,
+        programmaticAllocationAmountPerMonth: null,
+      },
       where: { projectId: "project_1" },
     });
     expect(tx.providerConnection.update).toHaveBeenCalledWith({
-      data: { allocationAmountPerMonth: 5000, allocationUnit: "cents" },
+      data: {
+        allocationAmountPerMonth: 5000,
+        allocationUnit: "cents",
+        programmaticAllocationAmountPerMonth: 5000,
+      },
       where: { id: "primary" },
     });
     expect(tx.project.update).toHaveBeenCalledOnce();

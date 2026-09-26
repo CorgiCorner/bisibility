@@ -5,7 +5,7 @@ const baseline = readFileSync(
   "prisma/migrations/20260806000000_squashed_migrations/migration.sql",
   "utf8",
 );
-const schema = readFileSync("prisma/schema.prisma", "utf8");
+const schema = readFileSync("prisma/schema/core.prisma", "utf8");
 const dispatcherSources = [
   "lib/rank-check/dispatcher.ts",
   "lib/rank-check/dispatcher-compensation.ts",

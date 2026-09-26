@@ -21,6 +21,7 @@ import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { ProjectDefaultMarket } from "@/lib/serp/default-market";
 
 export type CheckHealthView = {
+  currentFailures?: { count: number; latestCheckId: string | null };
   budget: { capCents: number; exhausted: boolean; spentCents: number };
   failed24h: {
     count: number;

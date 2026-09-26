@@ -2,55 +2,45 @@ import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { TransitionStartFunction } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const transition = vi.hoisted(() => ({ pending: false, start: vi.fn() }));
-vi.mock("react", async () => {
-  const actual = await vi.importActual<typeof import("react")>("react");
-  return {
-    ...actual,
-    useTransition: (): [boolean, TransitionStartFunction] => [transition.pending, transition.start],
-  };
-});
-
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchInsightsPagesLens } from "./SearchInsightsPagesTable";
 
 describe("SearchInsightsPagesLens", () => {
   beforeEach(() => {
-    transition.pending = false;
-    transition.start.mockReset();
-    transition.start.mockImplementation((callback) => callback());
+    vi.spyOn(window.history, "replaceState");
     setNavigationState({
       pathname: "/app/prj_1/search-console",
       searchParams: { google: "select", period: "7" },
     });
   });
 
-  it("issues the lens navigation from inside a transition", async () => {
-    let insideTransition = false;
-    transition.start.mockImplementation((callback) => {
-      insideTransition = true;
-      callback();
-      insideTransition = false;
-    });
-    routerMock.replace.mockImplementation(() => {
-      expect(insideTransition).toBe(true);
-    });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    routerMock.replace.mockReset();
+    routerMock.push.mockReset();
+    routerMock.refresh.mockReset();
+  });
+
+  it("replaces only the URL, so the tables keep their search, sort and page", async () => {
     render(<SearchInsightsPagesLens lens="search" showSessions />);
 
     await userEvent.click(screen.getByRole("radio", { name: "Traffic" }));
 
-    expect(transition.start).toHaveBeenCalledOnce();
+    expect(window.history.replaceState).toHaveBeenCalledWith(
+      window.history.state,
+      "",
+      "/app/prj_1/search-console?google=select&period=7&lens=traffic",
+    );
+    expect(routerMock.replace).not.toHaveBeenCalled();
+    expect(routerMock.push).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
   });
 
-  it("marks the lens control busy and disables every option while pending", () => {
-    transition.pending = true;
+  it("does nothing when the active lens is chosen again", async () => {
     render(<SearchInsightsPagesLens lens="search" showSessions />);
 
-    const control = screen.getByRole("group", { name: "Top pages lens" });
-    expect(control).toHaveAttribute("aria-busy", "true");
-    for (const option of screen.getAllByRole("radio")) expect(option).toBeDisabled();
-    expect(control.querySelector("[data-spinner]")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("radio", { name: "Search" }));
+
+    expect(window.history.replaceState).not.toHaveBeenCalled();
   });
 });

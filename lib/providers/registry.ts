@@ -1,3 +1,4 @@
+import { PROVIDER_ALLOCATION_METADATA } from "./allocation-metadata";
 import { ga4AnalyticsProvider } from "./analytics/ga4";
 import { gscAnalyticsProvider } from "./analytics/gsc";
 import { plausibleAnalyticsProvider } from "./analytics/plausible";
@@ -22,12 +23,7 @@ import type {
 const BASE_PROVIDER_CATALOG = [
   {
     id: "dataforseo",
-    allocation: {
-      allocationUnit: "cents",
-      billing: "metered",
-      kind: "billable",
-      quotaReset: "none",
-    },
+    allocation: PROVIDER_ALLOCATION_METADATA.dataforseo,
     label: "DataForSEO",
     kind: "serp",
     defaultStatus: "ready",
@@ -36,12 +32,7 @@ const BASE_PROVIDER_CATALOG = [
   },
   {
     id: "serpapi",
-    allocation: {
-      allocationUnit: "units",
-      billing: "quota",
-      kind: "billable",
-      quotaReset: "billing_cycle",
-    },
+    allocation: PROVIDER_ALLOCATION_METADATA.serpapi,
     label: "SerpApi",
     kind: "serp",
     defaultStatus: "ready",
@@ -50,7 +41,7 @@ const BASE_PROVIDER_CATALOG = [
   },
   {
     id: "gsc",
-    allocation: { kind: "non_billable" },
+    allocation: PROVIDER_ALLOCATION_METADATA.gsc,
     label: "Google Search Console",
     kind: "analytics",
     defaultStatus: "optional",
@@ -59,7 +50,7 @@ const BASE_PROVIDER_CATALOG = [
   },
   {
     id: "ga4",
-    allocation: { kind: "non_billable" },
+    allocation: PROVIDER_ALLOCATION_METADATA.ga4,
     label: "Google Analytics 4",
     kind: "analytics",
     defaultStatus: "optional",
@@ -68,18 +59,21 @@ const BASE_PROVIDER_CATALOG = [
   },
   {
     id: "plausible",
-    allocation: { kind: "non_billable" },
+    allocation: PROVIDER_ALLOCATION_METADATA.plausible,
     label: "Plausible",
     kind: "analytics",
     defaultStatus: "optional",
     requiredCredentials: ["apiKey", "login"],
+    // Plausible's "login" is the site domain (site_id); it is not an account login.
+    credentialLabels: { apiKey: "API token (api_key)", login: "site domain (login)" },
+    loginDefaultsToProjectDomain: true,
     logoDomain: "plausible.io",
   },
 ] as const satisfies ProviderCatalogEntry[];
 
 const LOCAL_SEQUENCE_CATALOG_ITEM = {
   id: "local-sequence",
-  allocation: { kind: "non_billable" },
+  allocation: PROVIDER_ALLOCATION_METADATA["local-sequence"],
   label: "Local rank test",
   kind: "serp",
   defaultStatus: "ready",

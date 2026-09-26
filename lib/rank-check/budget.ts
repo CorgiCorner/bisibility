@@ -1,6 +1,5 @@
 import "server-only";
 
-import { whereExecutedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import {
   BUDGET_EXHAUSTED_CODE,
@@ -41,7 +40,7 @@ export function monthStartUtc(now = new Date()) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 }
 
-function nextMonthStartUtc(now: Date) {
+export function nextMonthStartUtc(now: Date) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 }
 
@@ -52,34 +51,57 @@ export function monthUtcRange(now = new Date()) {
   };
 }
 
+/**
+ * Confirmed provider spend for the current UTC month, across every feature.
+ * Canonical source is the provider cost ledger: rows whose measurement
+ * settled ("recorded"). Rank-check manual/estimated costs and in-flight
+ * reservations never appear here; reservations stay separate in
+ * assertBudgetAvailable.
+ */
 export async function monthlySpendCents(
   projectId: string,
   now = new Date(),
   options: MonthlySpendOptions = {},
 ) {
   const client = options.client ?? prisma;
-  const period = monthUtcRange(now);
-  const [rankChecks, providerCosts] = await Promise.all([
-    client.rankCheck.aggregate({
-      _sum: { costCents: true, estimatedCostCents: true },
-      where: {
-        checkedAt: period,
-        ...(options.excludeRankCheckId ? { id: { not: options.excludeRankCheckId } } : {}),
-        keyword: { projectId },
-        ...whereExecutedChecks(),
-      },
-    }),
-    client.providerCostEntry.aggregate({
-      _sum: { costCents: true },
-      where: { cached: false, createdAt: period, feature: { not: "rank_check" }, projectId },
-    }),
-  ]);
+  const providerCosts = await client.providerCostEntry.aggregate({
+    _sum: { costCents: true },
+    where: {
+      cached: false,
+      createdAt: monthUtcRange(now),
+      measurementStatus: "recorded",
+      projectId,
+    },
+  });
 
-  return (
-    Number(rankChecks._sum.costCents ?? 0) +
-    Number(rankChecks._sum.estimatedCostCents ?? 0) +
-    Number(providerCosts._sum.costCents ?? 0)
-  );
+  return Number(providerCosts._sum.costCents ?? 0);
+}
+
+/** Charged amount for cap enforcement; provider-cost reporting stays separate. */
+async function monthlyBudgetValuation(projectId: string, now: Date, client: BudgetClient) {
+  const groups = await client.providerCostEntry.groupBy({
+    _count: { _all: true, priceCents: true },
+    _sum: { costCents: true, priceCents: true },
+    by: ["credentialSource"],
+    where: {
+      cached: false,
+      createdAt: monthUtcRange(now),
+      measurementStatus: "recorded",
+      projectId,
+    },
+  });
+
+  let spentCents = 0;
+  let valuationIncomplete = false;
+  for (const group of groups) {
+    if (group.credentialSource === "hosted") {
+      spentCents += Number(group._sum.priceCents ?? 0);
+      valuationIncomplete ||= group._count.priceCents !== group._count._all;
+    } else {
+      spentCents += Number(group._sum.costCents ?? 0);
+    }
+  }
+  return { spentCents, valuationIncomplete };
 }
 
 export type ConnectionLookupSpend = {
@@ -108,6 +130,7 @@ export async function monthlyLookupSpendByConnection(
       cached: false,
       createdAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) },
       feature: { not: "rank_check" },
+      measurementStatus: "recorded",
       projectId,
     },
   });
@@ -128,7 +151,10 @@ export async function monthlyLookupSpendByConnection(
 
 export type BudgetState = {
   capCents: number;
+  reservedCents?: number;
+  /** Charged value for admission, distinct from provider-cost reporting. */
   spentCents: number;
+  valuationIncomplete?: boolean;
 };
 
 export class BudgetExhaustedError extends Error {
@@ -136,7 +162,11 @@ export class BudgetExhaustedError extends Error {
   readonly status = 429;
 
   constructor(readonly budget: BudgetState & { projectId: string }) {
-    super("Rank check monthly budget reached.");
+    super(
+      budget.valuationIncomplete
+        ? "Rank check monthly budget valuation unavailable."
+        : "Rank check monthly budget reached.",
+    );
     this.name = "BudgetExhaustedError";
   }
 }
@@ -167,14 +197,36 @@ export async function assertBudgetAvailable(
     options.capCents != null && Number.isFinite(options.capCents)
       ? options.capCents
       : await projectBudgetCapCents(projectId, options);
-  const spentCents = await monthlySpendCents(projectId, now, options);
+  const client = options.client ?? prisma;
+  const [valuation, reservations] = await Promise.all([
+    monthlyBudgetValuation(projectId, now, client),
+    client.rankCheck.aggregate({
+      _sum: { estimatedCostCents: true },
+      where: {
+        checkedAt: monthUtcRange(now),
+        ...(options.excludeRankCheckId ? { id: { not: options.excludeRankCheckId } } : {}),
+        keyword: { projectId },
+        status: "running",
+      },
+    }),
+  ]);
+  const { spentCents, valuationIncomplete } = valuation;
+  const reservedCents = Number(reservations._sum.estimatedCostCents ?? 0);
+  const state: BudgetState = {
+    capCents,
+    spentCents,
+    ...(reservedCents > 0 ? { reservedCents } : {}),
+    ...(valuationIncomplete ? { valuationIncomplete } : {}),
+  };
+  const committedCents = spentCents + reservedCents;
   const estimatedCostCents = positiveCostCents(options.estimatedCostCents);
   if (
-    monthlyBudgetExhausted(capCents, spentCents) ||
-    (hasMonthlyBudgetCap(capCents) && spentCents + estimatedCostCents > capCents)
+    (valuationIncomplete && hasMonthlyBudgetCap(capCents)) ||
+    monthlyBudgetExhausted(capCents, committedCents) ||
+    (hasMonthlyBudgetCap(capCents) && committedCents + estimatedCostCents > capCents)
   ) {
-    throw new BudgetExhaustedError({ capCents, projectId, spentCents });
+    throw new BudgetExhaustedError({ ...state, projectId });
   }
 
-  return { capCents, spentCents };
+  return state;
 }

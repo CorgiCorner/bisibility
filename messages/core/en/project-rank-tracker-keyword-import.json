@@ -448,6 +448,7 @@
           "monthlyNoSpend": "No scheduled spend",
           "monthlyUnavailable": "Estimate unavailable",
           "monthlySame": "Same monthly spend",
+          "monthlyDeltaUsage": "{direction, select, positive {+{usage} / month} negative {-{usage} / month} other {{usage} / month}}",
           "monthlyDelta": "{direction, select, positive {+{cost, number, ::currency/USD}} negative {-{cost, number, ::currency/USD}} other {{cost, number, ::currency/USD}}} / month",
           "monthlyDeltaBelowCent": "{direction, select, positive {+} negative {-} other {}}< {minimum, number, ::currency/USD} / month",
           "name": "Name",
@@ -581,7 +582,8 @@
           "deleting": "Deleting...",
           "delete": "Delete",
           "clear": "Clear",
-          "scheduleLoadFailed": "Could not load schedules. Try again."
+          "scheduleLoadFailed": "Could not load schedules. Try again.",
+          "toolbar": "Actions for selected keywords"
         },
         "filters": {
           "reset": "Reset",
@@ -716,11 +718,14 @@
           "downloadCsv": "Download CSV",
           "findMore": "Find more in Research",
           "selected": "{count, plural, one {# selected} other {# selected}}",
+          "trackingAllUsage": "tracking all {count, number} adds {usage}/mo at daily checks",
           "trackingAll": "tracking all {count, number} adds {cost, number, ::currency/USD}/mo at daily checks",
           "trackingUnavailable": "tracking all {count, number} has an unavailable estimate at daily checks",
           "remove": "Remove",
           "track": "Track {count, number}",
+          "trackAriaUsage": "Track {count, number}, {usage}/mo",
           "trackAria": "Track {count, number} {cost, number, ::currency/USD}/mo",
+          "monthlyEstimateUsage": "~{usage}/mo",
           "monthlyEstimate": "~{cost, number, ::currency/USD}/mo",
           "clear": "Clear",
           "snapshotNote": "Metrics are a snapshot from the research run / saving is free, nothing is checked until you track",

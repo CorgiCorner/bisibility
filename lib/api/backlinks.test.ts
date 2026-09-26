@@ -75,6 +75,12 @@ function context(method: "GET" | "POST", search = "", body?: unknown) {
     headers: new Headers({ "RateLimit-Remaining": "99" }),
     instance: "urn:test",
     method,
+    origin: {
+      credentialId: "key_test",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
     path:
       method === "GET"
         ? ["projects", "prj_1", "backlinks"]
@@ -105,7 +111,11 @@ describe("backlinks REST handlers", () => {
     );
 
     expect(mocks.analyze).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      {
+        actorId: "user_1",
+        origin: { credential: { id: "key_test", kind: "project_key" }, source: "api" },
+        projectId: "project_1",
+      },
       {
         estimateOnly: true,
         fresh: true,
@@ -133,7 +143,11 @@ describe("backlinks REST handlers", () => {
     await getBacklinks(context("GET", "?target=acme-store.com"), "prj_1");
 
     expect(mocks.analyze).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      {
+        actorId: "user_1",
+        origin: { credential: { id: "key_test", kind: "project_key" }, source: "api" },
+        projectId: "project_1",
+      },
       {
         estimateOnly: false,
         fresh: false,
@@ -169,6 +183,19 @@ describe("backlinks REST handlers", () => {
     }
   });
 
+  it("reports the exhausted budget with surface, reset, and retry headers", async () => {
+    mocks.analyze.mockResolvedValue({ ok: false, reason: "budget_exhausted" });
+
+    const response = await getBacklinks(context("GET", "?target=acme-store.com"), "prj_1");
+
+    expect(response.status).toBe(429);
+    const body = await response.json();
+    expect(body.details.surface).toBe("programmatic");
+    expect(typeof body.details.resets_at).toBe("string");
+    expect(response.headers.get("retry-after")).toBeTruthy();
+    expect(response.headers.get("ratelimit-reset")).toBeTruthy();
+  });
+
   it("maps local target validation to unsupported_target", async () => {
     mocks.analyze.mockRejectedValue(new UnsupportedBacklinksTargetError("Invalid target."));
 
@@ -193,7 +220,11 @@ describe("backlinks REST handlers", () => {
     );
 
     expect(mocks.loadMore).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      {
+        actorId: "user_1",
+        origin: { credential: { id: "key_test", kind: "project_key" }, source: "api" },
+        projectId: "project_1",
+      },
       {
         includeSubdomains: true,
         limit: 300,
@@ -223,5 +254,39 @@ describe("backlinks REST handlers", () => {
     await expect(response.json()).resolves.toMatchObject({
       type: "https://bisibility.com/problems/snapshot_expired",
     });
+  });
+
+  it("derives the service origin from the SDK request credential", async () => {
+    const sdkOrigin = {
+      credentialId: "key_1",
+      credentialKind: "project_key",
+      source: "sdk",
+      surface: "programmatic",
+    } as const;
+    const expectedOrigin = {
+      credential: { id: "key_1", kind: "project_key" },
+      source: "sdk",
+    };
+
+    const analyzeContext = context("GET", "?target=acme-store.com");
+    analyzeContext.origin = sdkOrigin;
+    await getBacklinks(analyzeContext, "prj_1");
+    expect(mocks.analyze).toHaveBeenCalledWith(
+      expect.objectContaining({ origin: expectedOrigin }),
+      expect.anything(),
+    );
+
+    const loadMoreContext = context("POST", "", {
+      include_subdomains: true,
+      limit: 100,
+      target: "acme-store.com",
+      target_scope: "site",
+    });
+    loadMoreContext.origin = sdkOrigin;
+    await postBacklinkRows(loadMoreContext, "prj_1");
+    expect(mocks.loadMore).toHaveBeenCalledWith(
+      expect.objectContaining({ origin: expectedOrigin }),
+      expect.anything(),
+    );
   });
 });

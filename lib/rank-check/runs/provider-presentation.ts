@@ -7,7 +7,8 @@ export function rankCheckProviderPresentation(selectionSpec: unknown) {
   }
 
   const provider = rankCheckProviderSchema.safeParse(
-    (selectionSpec as Record<string, unknown>).providerId,
+    (selectionSpec as Record<string, unknown>).providerAtLaunch ??
+      (selectionSpec as Record<string, unknown>).providerId,
   );
   if (!provider.success) return { provider: null, providerLabel: null };
 

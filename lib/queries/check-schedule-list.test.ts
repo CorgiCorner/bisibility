@@ -223,6 +223,54 @@ describe("check schedule list query", () => {
     });
   });
 
+  it("projects quota operations per scheduled run and keeps unavailable providers unknown", async () => {
+    mocks.checkSchedule.findMany.mockResolvedValue([
+      {
+        cronExpression: null,
+        enabled: true,
+        frequency: "daily",
+        isDefault: false,
+        jitterMinutes: 15,
+        _count: { keywords: 2 },
+        id: "schedule_1",
+        name: "Daily",
+        providerPolicy: null,
+        publicId: "sch_daily",
+        rankCheckRuns: [],
+        serpDepth: 20,
+        timeOfDay: "06:00",
+        timezone: "Europe/Madrid",
+      },
+    ]);
+    mocks.keyword.groupBy.mockResolvedValue([
+      { checkScheduleId: "schedule_1", device: "desktop", locationId: "es", text: "coffee beans" },
+      { checkScheduleId: "schedule_1", device: "desktop", locationId: "fr", text: "coffee beans" },
+    ]);
+    mocks.keywordTag.findMany.mockResolvedValue([]);
+
+    const [quota] = await listCheckScheduleRows("project_1");
+    expect(quota).toEqual(
+      expect.objectContaining({
+        nativeEstimate: { providerId: "serpapi", quantity: 4, unit: "units", unknownTargets: 0 },
+        targetCount: 2,
+      }),
+    );
+
+    mocks.loadProviderChain.mockResolvedValue([
+      {
+        costPerCheckCents: null,
+        provider: "unrecognized",
+        rateContext: { entries: [], manualAmountCents: null },
+      },
+    ]);
+    const [unknown] = await listCheckScheduleRows("project_1");
+    expect(unknown?.nativeEstimate).toMatchObject({
+      quantity: null,
+      unit: null,
+      unknownTargets: 2,
+    });
+  });
+
   it("labels weekly and monthly schedules from their persisted calendar cron", async () => {
     mocks.checkSchedule.findMany.mockResolvedValue([
       {

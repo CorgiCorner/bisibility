@@ -14,7 +14,7 @@ test("backlinks smoke: analyze, filter, expand, and load more", async ({ page })
   const analyze = page.getByRole("button", { name: "Analyze", exact: true });
   await expect(analyze).toBeDisabled();
   await page.getByRole("textbox", { name: "Backlinks target" }).fill("example.com");
-  const pricedAnalyze = page.getByRole("button", { name: "Analyze ~$0.05" });
+  const pricedAnalyze = page.getByRole("button", { name: "Analyze ~$0.07" });
   await expect(pricedAnalyze).toBeEnabled();
 
   await pricedAnalyze.click();
@@ -49,7 +49,7 @@ test("backlinks smoke: analyze, filter, expand, and load more", async ({ page })
   await page.getByRole("button", { name: "Reset" }).click();
   await page.getByRole("button", { name: "Show 99 domains" }).click();
 
-  await page.getByRole("button", { name: "Load 100 more ~$0.01" }).click();
+  await page.getByRole("button", { name: "Load 100 more ~$0.03" }).click();
   await expect(page.getByText("source-149.example")).toBeVisible();
   await expect(page.getByText("Fetched 200 of 220 links")).toBeVisible();
   await expect(page.getByText("Showing 199 of 219 domains")).toBeVisible();

@@ -37,6 +37,17 @@ function tokenScopes(payload: unknown) {
   return typeof scope === "string" ? scope.split(/\s+/).filter(Boolean) : [];
 }
 
+function oauthClientId(payload: unknown) {
+  const claims = payload as { azp?: unknown; client_id?: unknown };
+  if (typeof claims.client_id === "string" && claims.client_id.length > 0) {
+    return claims.client_id;
+  }
+  if (typeof claims.azp === "string" && claims.azp.length > 0) {
+    return claims.azp;
+  }
+  return "oauth";
+}
+
 function oauthVerificationOptions() {
   if (!AUTH_URL_CONFIGURED) {
     throw new Error("MCP OAuth token verification requires BETTER_AUTH_URL to be configured.");
@@ -87,6 +98,7 @@ export async function authenticateMcpOAuthRequest(req: Request): Promise<OAuthAu
     auth: {
       kind: "personal_token",
       memberships: user.memberships,
+      oauthClientId: oauthClientId(payload),
       token: {
         id: `oauth:${createHash("sha256").update(rawToken).digest("hex").slice(0, 32)}`,
         name: "MCP OAuth",

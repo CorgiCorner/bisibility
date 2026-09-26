@@ -30,6 +30,7 @@ vi.mock("./_auth", () => ({ getQueryActor: mocks.getQueryActor }));
 function project(overrides: Record<string, unknown> = {}) {
   return {
     _count: { keywords: 2 },
+    defaultForUsers: [],
     domain: "example.com",
     id: "project_1",
     keywords: [
@@ -50,6 +51,7 @@ describe("listWorkspaces", () => {
     vi.clearAllMocks();
     mocks.cacheEntries.clear();
     mocks.getQueryActor.mockResolvedValue({
+      id: "user_1",
       memberships: [{ projectId: "project_1", role: "owner" }],
     });
   });
@@ -103,6 +105,24 @@ describe("listWorkspaces", () => {
     const workspaces = await listWorkspaces();
 
     expect(workspaces[0]).toMatchObject({ isSample: true });
+  });
+
+  it("flags only the viewer's own default project", async () => {
+    mocks.prisma.project.findMany.mockResolvedValue([
+      project({ defaultForUsers: [{ id: "user_1" }] }),
+      project({ id: "project_2", publicId: "prj_ccdefghijklmnopqrstuvwxy" }),
+    ]);
+
+    const workspaces = await listWorkspaces();
+
+    expect(mocks.prisma.project.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          defaultForUsers: { select: { id: true }, where: { id: "user_1" } },
+        }),
+      }),
+    );
+    expect(workspaces.map((workspace) => workspace.isDefault)).toEqual([true, false]);
   });
 
   it("leaves freshness empty when no completed rank check exists", async () => {

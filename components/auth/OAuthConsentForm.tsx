@@ -1,6 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth/client";
+import { oauthConsentScopes } from "@/lib/auth/oauth-consent-copy";
 import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { useTranslations } from "next-intl";
@@ -52,6 +53,7 @@ export function OAuthConsentForm({
 }: Readonly<OAuthConsentFormProps>) {
   const t = useTranslations("auth.oauthConsent");
   const secondsLeft = useOAuthConsentCountdown(expiresAt);
+  const grantedScopes = oauthConsentScopes(client, scopes);
   const [pendingChoice, setPendingChoice] = useState<"accept" | "deny" | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<ConsentValues>({
@@ -61,8 +63,16 @@ export function OAuthConsentForm({
 
   async function submitConsent(values: ConsentValues) {
     setFormError(null);
+    if (values.accept && grantedScopes.length === 0) {
+      setFormError(t("consentNoScopes"));
+      setPendingChoice(null);
+      return;
+    }
     try {
-      const response = await authClient.oauth2.consent({ accept: values.accept });
+      const response = await authClient.oauth2.consent({
+        accept: values.accept,
+        ...(values.accept ? { scope: grantedScopes.join(" ") } : {}),
+      });
       if (response.error) return setFormError(errorMessage(response.error, t("consentError")));
       const redirectUrl = response.data?.url;
       if (typeof redirectUrl !== "string" || !redirectUrl) {
@@ -100,7 +110,7 @@ export function OAuthConsentForm({
         error={formError}
         onChoose={choose}
         pendingChoice={pendingChoice}
-        scopes={scopes}
+        scopes={grantedScopes}
         secondsLeft={secondsLeft}
       />
     </div>

@@ -1,4 +1,4 @@
-import { withSettingsShellMessages } from "@/.storybook/settings-shell-messages";
+import { withDataSourcesSettingsMessages } from "@/.storybook/settings-shell-messages";
 import { DataSourcesSettingsContent } from "@/components/settings/data-sources/DataSourcesSettingsContent";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import type { DefaultsData } from "@/lib/settings/options";
@@ -50,7 +50,7 @@ function renderContent(storyDefaults: DefaultsData) {
 }
 const meta = {
   component: DataSourcesSettingsContent,
-  decorators: [withSettingsShellMessages],
+  decorators: [withDataSourcesSettingsMessages],
   parameters: { nextjs: { appDirectory: true } },
   title: "Settings/Data sources",
 } satisfies Meta<typeof DataSourcesSettingsContent>;

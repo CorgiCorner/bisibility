@@ -8,9 +8,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function AppEntryPage() {
-  const completedWorkspace = (await listWorkspaces()).find(
+  // Only member projects are listed, so a default the user lost access to is never opened.
+  const completedWorkspaces = (await listWorkspaces()).filter(
     (workspace) => workspace.onboardingCompletedAt !== null,
   );
+  const completedWorkspace =
+    completedWorkspaces.find((workspace) => workspace.isDefault) ?? completedWorkspaces[0];
   if (!completedWorkspace) {
     redirect("/onboarding");
   }

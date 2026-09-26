@@ -304,7 +304,7 @@
         },
         "getCredentials": "Obtener credenciales de API",
         "group": "Proveedor de SERP",
-        "label": "Datos de posiciones / impulsa las comprobaciones",
+        "label": "Elige tu proveedor",
         "notice": "Las conexiones se guardan por proveedor: cambiar de proveedor no desconecta ninguna.",
         "serpapi": {
           "capability": "Solo comprobaciones de posiciones.",
@@ -358,10 +358,10 @@
         "title": "Conectar un proveedor"
       },
       "searchConsole": {
-        "label": "Datos de tu sitio / opcional y gratis",
+        "label": "Search Console · Opcional",
         "tooltip": "Search Console muestra las consultas por las que tu sitio ya posiciona. La importación de sugerencias de palabras clave es gratis, pero no puede comprobar posiciones."
       },
-      "title": "Proveedor",
+      "title": "Datos de posiciones",
       "skip": "Omitir la conexión del proveedor y añadir las palabras clave en pausa",
       "skipLabel": "Omitir por ahora",
       "video": {
@@ -374,7 +374,8 @@
           "title": "Configuración de la cuenta de SerpApi"
         },
         "watch": "Ver la guía de configuración"
-      }
+      },
+      "description": "Elige cómo obtener los datos de posiciones. Puedes cambiarlo después en Integraciones."
     },
     "residency": {
       "message": "Tus datos se almacenan y se procesan en {region}."
@@ -425,8 +426,8 @@
         "title": "Palabras clave"
       },
       "provider": {
-        "description": "Proveedor de SERP y datos de Search Console",
-        "title": "Proveedor"
+        "description": "Posiciones y datos de búsqueda",
+        "title": "Datos de posiciones"
       },
       "website": {
         "description": "Nombre y dominio",

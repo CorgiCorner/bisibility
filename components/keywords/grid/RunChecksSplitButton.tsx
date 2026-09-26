@@ -6,7 +6,7 @@ import type { MarketScope } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { useTranslations } from "next-intl";
-import { effectiveRowDepth } from "./run-check-depth";
+import { effectiveRowDepth, selectionDepthLabel } from "./run-check-depth";
 
 type RunChecksSplitButtonProps = {
   checksRunning: boolean;
@@ -36,9 +36,7 @@ export function RunChecksSplitButton({
   const selectionLabel =
     chosenDepth != null
       ? t("top", { depth: chosenDepth })
-      : uniformDepth != null
-        ? t("top", { depth: uniformDepth })
-        : t("keywordDefaults");
+      : selectionDepthLabel(selectedRows, (depth) => t("top", { depth }));
   const baseAction = selectedRows.length === 1 ? t("runCheck") : t("runChecks");
   const action = marketScope
     ? selectedRows.length === 1
@@ -61,6 +59,7 @@ export function RunChecksSplitButton({
         currentDepth={currentDepth}
         caretAriaLabel={t("chooseDepth")}
         disabled={readOnly || checksRunning}
+        menuSide="top"
         onAction={() =>
           chosenDepth != null ? onRunChecks(selectedIds, chosenDepth) : onRunChecks(selectedIds)
         }

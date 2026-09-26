@@ -96,7 +96,11 @@ describe("KeywordsGrid pending state", () => {
     const groupRow = toggle.closest('[role="row"]') as HTMLElement;
     fireEvent.click(within(groupRow).getByRole("checkbox"));
 
-    expect(screen.getByText("2 selected")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("toolbar", { name: "Actions for selected keywords" })).getByText(
+        "2 selected",
+      ),
+    ).toBeInTheDocument();
     expect(routerMock.push).not.toHaveBeenCalled();
     fireEvent.click(toggle);
 

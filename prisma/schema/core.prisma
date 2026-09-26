@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  output   = "../../lib/generated/prisma"
 }
 
 datasource db {
@@ -66,6 +66,11 @@ enum ProviderCostFeature {
   keyword_research
   rank_check
   ranked_keywords
+}
+
+enum ProviderCredentialSource {
+  own
+  hosted
 }
 
 enum AlertConditionType {
@@ -213,6 +218,9 @@ model User {
   dateFormat                   String                   @default("auto")
   uiLocale                     String                   @default("en")
   uiLocaleSelectedAt           DateTime?
+  /// Project opened first at sign-in. The entry page ignores it without a membership.
+  defaultProjectId             String?
+  defaultProject               Project?                 @relation("UserDefaultProject", fields: [defaultProjectId], references: [id], onDelete: SetNull)
   welcomeFollowupRequestedAt   DateTime?
   welcomeFollowupStartedAt     DateTime?
   welcomeFollowupFinishedAt    DateTime?
@@ -249,6 +257,7 @@ model User {
   updatedAt                    DateTime                 @updatedAt
 
   // Migration-only partial index: users (welcomeFollowupStartedAt) for pending worker intents.
+  @@index([defaultProjectId])
   @@map("users")
 }
 
@@ -516,6 +525,7 @@ model Project {
   writeModeChangedAt               DateTime?
   writeModeChangedById             String?
   writeModeChangedBy               User?                            @relation("ProjectWriteModeChangedBy", fields: [writeModeChangedById], references: [id], onDelete: SetNull)
+  defaultForUsers                  User[]                           @relation("UserDefaultProject")
   onboardingCompletedAt            DateTime?
   competitorSetupOutcome           CompetitorSetupOutcome?
   competitorSetupDecidedAt         DateTime?
@@ -577,11 +587,11 @@ model Project {
 }
 
 model ProviderCostEntry {
-  id                String              @id @default(cuid())
+  id                String                   @id @default(cuid())
   projectId         String
-  project           Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project           Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   connectionId      String
-  feature           ProviderCostFeature @default(ranked_keywords)
+  feature           ProviderCostFeature      @default(ranked_keywords)
   provider          String?
   keywordId         String?
   source            String?
@@ -589,19 +599,28 @@ model ProviderCostEntry {
   tag               String?
   correlationId     String?
   providerRequestId String?
+  /// "project_key" | "personal_token" | "oauth_client"; null for app rows.
+  credentialKind    String?                  @db.VarChar(16)
+  /// ApiKey.id, PersonalAccessToken.id, or the OAuth client id from the JWT.
+  credentialId      String?                  @db.VarChar(128)
   // A migration-only partial unique index covers non-null connection/request identifiers.
-  usageQuantity     Decimal?            @db.Decimal(18, 6)
-  costCents         Decimal             @db.Decimal(10, 4)
-  unitCostCents     Decimal?            @db.Decimal(10, 4)
-  cached            Boolean             @default(false)
-  failed            Boolean             @default(false)
-  createdAt         DateTime            @default(now())
+  usageQuantity     Decimal?                 @db.Decimal(18, 6)
+  measurementStatus String                   @default("recorded") @db.VarChar(16)
+  costCents         Decimal                  @db.Decimal(10, 4)
+  unitCostCents     Decimal?                 @db.Decimal(10, 4)
+  priceCents        Decimal?                 @db.Decimal(10, 4)
+  credentialSource  ProviderCredentialSource @default(own)
+  cached            Boolean                  @default(false)
+  failed            Boolean                  @default(false)
+  createdAt         DateTime                 @default(now())
 
   @@index([projectId, createdAt])
   @@index([connectionId, createdAt])
   @@index([connectionId, feature, createdAt])
+  @@index([connectionId, source, createdAt])
   @@index([projectId, correlationId])
   @@index([provider, providerRequestId])
+  @@index([projectId, credentialKind, credentialId, createdAt], map: "provider_cost_entries_credential_idx")
   @@map("provider_cost_entries")
 }
 
@@ -963,6 +982,10 @@ model RankCheckRun {
   project                 Project                @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   /// Allowed values: "manual", "scheduled", "api", "retry".
   trigger                 String
+  /// ProviderRequestSource of the launcher; null for legacy rows.
+  source                  String?
+  credentialKind          String?
+  credentialId            String?
   /// Allowed values: "single", "selected", "filter", "all", "scheduled_due", "retry_failed", "rerun", "legacy_schedule".
   selectionKind           String
   selectionSpec           Json
@@ -1133,6 +1156,12 @@ model QueuedRankCheckBatch {
   provider        String                @default("dataforseo")
   priority        String
   state           String
+  /// ProviderRequestSource of the request that queued the batch.
+  source          String?
+  /// "manual" | "scheduled".
+  trigger         String?
+  credentialKind  String?
+  credentialId    String?
   claimedAt       DateTime
   queueDeadlineAt DateTime
   submittedAt     DateTime?
@@ -1161,6 +1190,7 @@ model QueuedRankCheckTask {
   rankCheck                 RankCheck            @relation(fields: [rankCheckId], references: [id], onDelete: Cascade)
   providerTaskId            String?              @unique
   providerTag               String?
+  meteringContext           Json?
   state                     String
   costCents                 Decimal?             @db.Decimal(10, 4)
   error                     String?
@@ -1354,27 +1384,35 @@ model KeywordTrafficSnapshot {
 }
 
 model ProviderConnection {
-  id                       String                   @id @default(cuid())
-  publicId                 String                   @unique
-  projectId                String
-  project                  Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  kind                     ProviderKind
-  provider                 String
-  status                   ProviderStatus
-  priority                 Int                      @default(100)
-  enabled                  Boolean                  @default(true)
-  credentialsEncrypted     String?
-  costPerCheckCents        Decimal?                 @db.Decimal(10, 4)
-  allocationUnit           ProviderAllocationUnit?
-  allocationAmountPerMonth Int?
-  rates                    ProviderConnectionRate[]
-  queuedRankCheckBatches   QueuedRankCheckBatch[]
-  lastUsedAt               DateTime?
-  firstSyncRequestedAt     DateTime?
-  firstSyncStartedAt       DateTime?
-  firstSyncFinishedAt      DateTime?
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
+  id                                          String                   @id @default(cuid())
+  publicId                                    String                   @unique
+  projectId                                   String
+  project                                     Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind                                        ProviderKind
+  provider                                    String
+  status                                      ProviderStatus
+  priority                                    Int                      @default(100)
+  enabled                                     Boolean                  @default(true)
+  credentialsEncrypted                        String?
+  credentialSource                            ProviderCredentialSource @default(own)
+  costPerCheckCents                           Decimal?                 @db.Decimal(10, 4)
+  /// Own-keys budget for the app surface (app and schedules), in the provider catalog unit.
+  allocationUnit                              ProviderAllocationUnit?
+  allocationAmountPerMonth                    Int?
+  /// Own-keys monthly cap for the programmatic surface (API, MCP, SDK, CLI); same unit as allocationUnit. Null = no cap.
+  programmaticAllocationAmountPerMonth        Int?
+  /// Credits budget for the app surface, in cents of charged credits price. Null = no budget.
+  creditsAllocationAmountPerMonth             Int?
+  /// Credits budget for the programmatic surface, in cents of charged credits price. Null = no budget.
+  creditsProgrammaticAllocationAmountPerMonth Int?
+  rates                                       ProviderConnectionRate[]
+  queuedRankCheckBatches                      QueuedRankCheckBatch[]
+  lastUsedAt                                  DateTime?
+  firstSyncRequestedAt                        DateTime?
+  firstSyncStartedAt                          DateTime?
+  firstSyncFinishedAt                         DateTime?
+  createdAt                                   DateTime                 @default(now())
+  updatedAt                                   DateTime                 @updatedAt
 
   @@unique([projectId, provider])
   @@index([projectId])

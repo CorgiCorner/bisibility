@@ -28,9 +28,12 @@ doubles the provider price. Results, including empty results, are cached for 12
 hours and shared with MCP and the UI. `fresh=true` skips the cache read.
 Endpoints that can spend provider budget require write scope.
 
-Use `estimate_only=true` for a free, cache-aware dry run. It returns no rows,
-sets `estimate: true`, and reports each source's estimated cost without calling
-the provider, consuming budget, or writing the cost ledger. `max_cost_cents`
+Use `estimate_only=true` for a free, cache-aware dry run. It returns a cost-only
+`KeywordResearchEstimate` (`estimate: true`, aggregate `cost_cents`, `cached`,
+and one `{source, cost_cents, cached}` entry per planned source) without calling
+the provider, consuming budget, or writing the cost ledger. A dry run never
+carries `rows`, `fetched_at`, or source statuses, so it cannot be mistaken for
+an empty result. `max_cost_cents`
 sets a best-effort request guard. Auto mode stops before a source whose estimate
 would exceed the remaining guard and returns partial results with that source
 marked `skipped` and reason `cost_limit`. Estimates come from the maintained

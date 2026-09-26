@@ -102,6 +102,28 @@ const selectorFacts = {
 };
 
 describe("integration queries", () => {
+  it("ignores saved own manual rates when displaying a deployment-supplied connection", async () => {
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      connection({
+        credentialSource: "hosted",
+        provider: "dataforseo",
+        costPerCheckCents: 0.0001,
+        rates: [{ feature: "keyword_research", amountCents: 0.0001 }],
+      }),
+    ]);
+    const categories = await getIntegrationCategories("prj_1", { now });
+    const rates = categories[0].providers.find((provider) => provider.id === "dataforseo")?.drawer
+      .rates;
+    expect(rates?.find((rate) => rate.feature === "rank_check")).toMatchObject({
+      source: "list",
+      amountCents: 1.55,
+    });
+    expect(rates?.find((rate) => rate.feature === "keyword_research")).toMatchObject({
+      source: "list",
+    });
+    expect(rates?.some((rate) => rate.source === "manual")).toBe(false);
+  });
+
   afterEach(() => vi.unstubAllEnvs());
 
   beforeEach(() => {
@@ -274,7 +296,7 @@ describe("integration queries", () => {
       { source: "list" },
       { source: "list" },
       {
-        amountCents: 1.212,
+        amountCents: 2,
         editable: false,
         feature: "domain_rank_overview",
         source: "list",
@@ -286,7 +308,7 @@ describe("integration queries", () => {
         source: "list",
       },
       {
-        amountCents: 2.4,
+        amountCents: 2,
         editable: false,
         feature: "relevant_pages",
         source: "list",

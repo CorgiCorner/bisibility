@@ -13,32 +13,40 @@ describe("recent domain overview targets", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("READ_ONLY_DEMO", "0");
+    vi.stubEnv("DEMO_MODE", "");
   });
   afterEach(() => vi.unstubAllEnvs());
 
-  it("keeps demo targets visible for 30 days and reports the same expiry as the report", async () => {
-    vi.stubEnv("READ_ONLY_DEMO", "1");
-    mocks.findMany.mockResolvedValue([
-      {
-        cachedUntil: new Date("2026-08-12T00:00:00.000Z"),
-        fetchedAt: new Date("2026-08-11T12:00:00.000Z"),
-        languageCode: "en",
-        locationCode: 2840,
-        scope: "root",
-        target: "example.com",
-      },
-    ]);
-    await expect(
-      recentDomainOverviewTargets("project_1", 8, new Date("2026-09-08T12:00:00.000Z")),
-    ).resolves.toEqual([
-      expect.objectContaining({ cachedUntil: "2026-09-10T12:00:00.000Z", target: "example.com" }),
-    ]);
-    expect(mocks.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { fetchedAt: { gt: new Date("2026-08-09T12:00:00.000Z") }, projectId: "project_1" },
-      }),
-    );
-  });
+  it.each(["snapshot", "editable"])(
+    "keeps %s demo targets visible for 30 days with the report expiry",
+    async (mode) => {
+      vi.stubEnv("READ_ONLY_DEMO", mode === "snapshot" ? "1" : "0");
+      vi.stubEnv("DEMO_MODE", mode === "editable" ? "editable" : "");
+      mocks.findMany.mockResolvedValue([
+        {
+          cachedUntil: new Date("2026-08-12T00:00:00.000Z"),
+          fetchedAt: new Date("2026-08-11T12:00:00.000Z"),
+          languageCode: "en",
+          locationCode: 2840,
+          scope: "root",
+          target: "example.com",
+        },
+      ]);
+      await expect(
+        recentDomainOverviewTargets("project_1", 8, new Date("2026-09-08T12:00:00.000Z")),
+      ).resolves.toEqual([
+        expect.objectContaining({ cachedUntil: "2026-09-10T12:00:00.000Z", target: "example.com" }),
+      ]);
+      expect(mocks.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            fetchedAt: { gt: new Date("2026-08-09T12:00:00.000Z") },
+            projectId: "project_1",
+          },
+        }),
+      );
+    },
+  );
 
   it.each([
     {

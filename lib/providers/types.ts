@@ -17,6 +17,7 @@ import type {
   RelevantPagesInput,
   RelevantPagesResult,
 } from "./domain-overview-types";
+import type { ProviderUsageObserver } from "./usage";
 
 export type {
   AnalyticsMetricRange,
@@ -38,6 +39,7 @@ export type {
 } from "./domain-overview-types";
 
 export type ProviderCredentials = {
+  usageObserver?: ProviderUsageObserver;
   accountEmail?: string;
   login?: string;
   password?: string;
@@ -89,7 +91,7 @@ export type SerpRawPayload = {
 };
 
 export type SerpRankResult = {
-  billingUnits?: number;
+  billingUnits?: number | null;
   position: number | null;
   rankingUrl: string | null;
   costCents: number;
@@ -293,6 +295,10 @@ type ProviderCatalogItemBase = {
   kind: ProviderKind;
   defaultStatus: ProviderStatus;
   requiredCredentials?: readonly ProviderCredentialRequirement[];
+  /** Provider-specific names for credential fields, used in requirement messages. */
+  credentialLabels?: Partial<Record<ProviderCredentialRequirement, string>>;
+  /** When true, a missing login credential defaults to the project's tracked domain. */
+  loginDefaultsToProjectDomain?: boolean;
   logoDomain?: string;
 };
 

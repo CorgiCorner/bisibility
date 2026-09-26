@@ -25,3 +25,23 @@ export function getOAuthConsentCopy(client: OAuthConsentClient): OAuthConsentCop
 export function canCreateOAuthApiTokens(scopes: readonly string[]) {
   return scopes.includes("tokens:write") || scopes.includes("admin");
 }
+
+const READ_ONLY_OAUTH_SCOPES = new Set(["openid", "profile", "email", "offline_access", "read"]);
+
+export function oauthConsentScopes(
+  client: OAuthConsentClient,
+  requested: readonly string[],
+): string[] {
+  let chatGptRedirect = false;
+  if (client.redirectUri) {
+    try {
+      const host = new URL(`https://${client.redirectUri}`).hostname;
+      chatGptRedirect = host === "chatgpt.com" || host === "chat.openai.com";
+    } catch {
+      // Unrecognized callbacks do not identify a client.
+    }
+  }
+  // Client metadata can only reduce access here; it never establishes trust.
+  const readOnly = chatGptRedirect || client.name.trim().toLowerCase() === "chatgpt";
+  return [...new Set(requested)].filter((scope) => !readOnly || READ_ONLY_OAUTH_SCOPES.has(scope));
+}

@@ -24,10 +24,13 @@ rows you fetched. Endpoints that can spend provider budget require write scope.
 One paid snapshot per target is kept for 24 hours and shared with MCP and the
 UI, so filtering, sorting, and grouping the rows you already paid for is free.
 `fresh=true` skips the cache read and pays again. Use `estimate_only=true` for a
-free, cache-aware dry run: it returns no rows, sets `estimate: true`, and reports
-`estimated_cost_cents` without calling the provider, consuming budget, or writing
-the cost ledger. `max_cost_cents` is a best-effort guard applied to the
-pre-estimate; the monthly provider budget remains the hard stop.
+free, cache-aware dry run. It returns a cost-only `BacklinksEstimate` (`estimate:
+true`, `estimated_cost_cents`, `cost_cents`, `cached`, `cached_until`, `provider`,
+and the normalized target) without calling the provider, consuming budget, or
+writing the cost ledger. A dry run never carries `summary`, `history`, `rows`,
+or `fetched_at`, so it cannot be mistaken for an empty backlink profile.
+`max_cost_cents` is a best-effort guard applied to the pre-estimate; the monthly
+provider budget remains the hard stop.
 
 The response envelope carries `target`, `target_scope`, `include_subdomains`,
 `provider`, `fetched_at`, `cached`, `cached_until`, `cost_cents`,

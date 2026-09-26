@@ -3,6 +3,7 @@ import type { RunSelectionSpec } from "./selection";
 
 const mocks = vi.hoisted(() => ({
   assertBudgetAvailable: vi.fn(),
+  assertOperationAccess: vi.fn(),
   assertProviderAllocationAvailable: vi.fn(),
   connect: vi.fn(),
   estimatedCost: vi.fn(),
@@ -18,9 +19,12 @@ const mocks = vi.hoisted(() => ({
   },
   resolveSelection: vi.fn(),
   tx: {
+    $executeRaw: vi.fn(),
+    $queryRaw: vi.fn(),
     auditLog: { create: vi.fn() },
+    project: { findUnique: vi.fn() },
     projectMarket: { findMany: vi.fn() },
-    rankCheckRun: { create: vi.fn() },
+    rankCheckRun: { create: vi.fn(), findUnique: vi.fn() },
     rankCheckRunItem: { createMany: vi.fn() },
   },
   verifyToken: vi.fn(),
@@ -29,6 +33,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/operations/access-extension", () => ({
+  assertOperationAccess: mocks.assertOperationAccess,
+}));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/rank-check/budget", () => ({
   assertBudgetAvailable: mocks.assertBudgetAvailable,
@@ -64,6 +71,8 @@ vi.mock("./preview-token", async (importOriginal) => {
   return { ...actual, verifyPreviewToken: mocks.verifyToken };
 });
 
+import { OperationAccessDeniedError } from "@/lib/operations/access-error";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { launchRankCheckRun, launchRetryRun } from "./launch";
 import { PreviewTokenError } from "./preview-token";
 
@@ -76,6 +85,7 @@ const spec: RunSelectionSpec = {
 const input = {
   actorId: "user_1",
   idempotencyKey: "request-0001",
+  origin: APP_REQUEST_ORIGIN,
   previewToken: "signed-token",
   project,
   spec,
@@ -118,6 +128,14 @@ describe("launchRankCheckRun", () => {
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: null,
     });
+    mocks.tx.project.findUnique.mockResolvedValue({
+      budgetCapCents: 5_000,
+      defaults: { serpDepth: 100 },
+      providerAllocationsInitializedAt: null,
+    });
+    mocks.tx.$executeRaw.mockResolvedValue(1);
+    mocks.tx.$queryRaw.mockResolvedValue([]);
+    mocks.tx.rankCheckRun.findUnique.mockResolvedValue(null);
     mocks.prisma.keyword.findMany.mockResolvedValue([
       keyword("keyword_1", "one"),
       keyword("keyword_2", "two"),
@@ -155,12 +173,47 @@ describe("launchRankCheckRun", () => {
     },
   );
 
+  it("rejects changed run economics under the launch lock", async () => {
+    mocks.estimatedCost
+      .mockReturnValueOnce(25)
+      .mockReturnValueOnce(25)
+      .mockReturnValueOnce(50)
+      .mockReturnValueOnce(50);
+    mocks.verifyToken
+      .mockImplementationOnce(() => undefined)
+      .mockImplementationOnce(() => {
+        throw new PreviewTokenError("mismatch");
+      });
+    await expect(launchRankCheckRun(input)).rejects.toMatchObject({ code: "mismatch" });
+    expect(mocks.verifyToken).toHaveBeenCalledTimes(2);
+    expect(mocks.verifyToken).toHaveBeenNthCalledWith(
+      2,
+      "signed-token",
+      expect.objectContaining({ estimateCents: 100 }),
+      expect.any(Date),
+    );
+    expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
+  });
+
   it("rejects a sample project before it can create a run", async () => {
     await expect(
       launchRankCheckRun({ ...input, project: { ...project, isSample: true } }),
     ).rejects.toMatchObject({ code: "sample_project" });
 
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects a manual launch through the access gate before creating a doomed run", async () => {
+    mocks.assertOperationAccess.mockRejectedValueOnce(new OperationAccessDeniedError());
+
+    await expect(launchRankCheckRun(input)).rejects.toThrow(new OperationAccessDeniedError());
+
+    expect(mocks.assertOperationAccess).toHaveBeenCalledWith("project_1");
+    expect(mocks.resolveSelection).not.toHaveBeenCalled();
+    expect(mocks.loadProviderChain).not.toHaveBeenCalled();
+    expect(mocks.assertBudgetAvailable).not.toHaveBeenCalled();
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
   });
 
   it("requires a tracked domain before it can create a run", async () => {
@@ -186,6 +239,8 @@ describe("launchRankCheckRun", () => {
     });
     expect(mocks.tx.rankCheckRun.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
+        credentialId: null,
+        credentialKind: null,
         estimatedCostCents: 50,
         idempotencyKey: "api:request-0001",
         keywordCount: 2,
@@ -193,6 +248,7 @@ describe("launchRankCheckRun", () => {
         requestedCount: 2,
         selectionHash: "a".repeat(64),
         selectionKind: "selected",
+        source: "app",
         status: "queued",
         targetCount: 2,
         totalCount: 2,
@@ -216,6 +272,23 @@ describe("launchRankCheckRun", () => {
     expect(mocks.publishWorkerIntent).toHaveBeenCalledWith("rank_run");
     expect(mocks.publishWorkerIntent.mock.invocationCallOrder[0]).toBeGreaterThan(
       mocks.prisma.$transaction.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("stores the API origin's source and paying credential on the run row", async () => {
+    await launchRankCheckRun({
+      ...input,
+      origin: { credential: { id: "key_1", kind: "project_key" }, source: "api" },
+    });
+
+    expect(mocks.tx.rankCheckRun.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          credentialId: "key_1",
+          credentialKind: "project_key",
+          source: "api",
+        }),
+      }),
     );
   });
 
@@ -303,7 +376,7 @@ describe("launchRankCheckRun", () => {
     expect(mocks.prisma.rankCheckRun.updateMany).not.toHaveBeenCalled();
   });
 
-  it("rechecks the whole frozen estimate before opening the transaction", async () => {
+  it("rechecks the whole frozen estimate under the launch transaction", async () => {
     mocks.assertBudgetAvailable.mockRejectedValueOnce(
       Object.assign(new Error("exhausted"), { code: "budget_exhausted" }),
     );
@@ -311,11 +384,15 @@ describe("launchRankCheckRun", () => {
     await expect(launchRankCheckRun(input)).rejects.toMatchObject({
       code: "budget_exhausted",
     });
-    expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith("project_1", expect.any(Date), {
-      capCents: 5_000,
-      estimatedCostCents: 50,
-    });
-    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith(
+      "project_1",
+      expect.any(Date),
+      expect.objectContaining({
+        capCents: 5_000,
+        estimatedCostCents: 50,
+      }),
+    );
+    expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
   });
 
   it("asks the database only for runnable rows of the project", async () => {
@@ -387,14 +464,23 @@ describe("launchRankCheckRun", () => {
       status: "completed" as const,
     };
 
-    await launchRetryRun({ actorId: "user_1", parentRun, relation: "retry_failed" });
-
-    // The retry keeps the in-progress row and drops the paused one, so the pre-transaction
-    // estimate covers exactly one check.
-    expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith("project_1", expect.any(Date), {
-      capCents: 5_000,
-      estimatedCostCents: 25,
+    await launchRetryRun({
+      actorId: "user_1",
+      origin: APP_REQUEST_ORIGIN,
+      parentRun,
+      relation: "retry_failed",
     });
+
+    // The retry keeps the in-progress row and drops the paused one, so the locked
+    // estimate covers exactly one check.
+    expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith(
+      "project_1",
+      expect.any(Date),
+      expect.objectContaining({
+        capCents: 5_000,
+        estimatedCostCents: 25,
+      }),
+    );
     expect(mocks.tx.rankCheckRunItem.createMany).toHaveBeenCalledWith({
       data: [expect.objectContaining({ keywordId: "keyword_1" })],
     });
@@ -470,7 +556,7 @@ describe("launchRankCheckRun", () => {
       status: "completed",
     };
 
-    await launchRetryRun({ actorId: "user_1", parentRun, relation });
+    await launchRetryRun({ actorId: "user_1", origin: APP_REQUEST_ORIGIN, parentRun, relation });
 
     expect(mocks.verifyToken).not.toHaveBeenCalled();
     expect(mocks.tx.rankCheckRun.create).toHaveBeenCalledWith(
@@ -479,7 +565,18 @@ describe("launchRankCheckRun", () => {
           parentRelation: relation,
           parentRunId: "parent_1",
           selectionKind: relation,
-          selectionSpec: { kind: relation, parentRunId: parentRun.publicId, v: 1 },
+          selectionSpec: expect.objectContaining({
+            kind: relation,
+            nativeEstimate: {
+              providerId: "provider-a",
+              quantity: null,
+              unit: null,
+              unknownTargets: 1,
+            },
+            parentRunId: parentRun.publicId,
+            providerAtLaunch: "provider-a",
+            v: 1,
+          }),
           trigger: "retry",
         }),
       }),
@@ -506,11 +603,21 @@ describe("launchRankCheckRun", () => {
     };
 
     expect(() =>
-      launchRetryRun({ actorId: "user_1", parentRun, relation: "retry_failed" }),
+      launchRetryRun({
+        actorId: "user_1",
+        origin: APP_REQUEST_ORIGIN,
+        parentRun,
+        relation: "retry_failed",
+      }),
     ).toThrow("Only completed or cancelled");
     parentRun.status = "completed";
     expect(() =>
-      launchRetryRun({ actorId: "user_1", parentRun, relation: "retry_failed" }),
+      launchRetryRun({
+        actorId: "user_1",
+        origin: APP_REQUEST_ORIGIN,
+        parentRun,
+        relation: "retry_failed",
+      }),
     ).toThrow("no matching items");
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
   });

@@ -17,6 +17,7 @@ import { MagnifyingGlassMinusIcon as MagnifyingGlassMinus } from "@phosphor-icon
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useDomainOverviewCacheDuration } from "./DomainOverviewCacheProvider";
 import { DomainOverviewResultsLoading } from "./DomainOverviewLoadingSkeletons";
 import type { DomainOverviewUiState } from "./domain-overview-workspace-model";
 
@@ -76,13 +77,18 @@ export function DomainOverviewStatePanel({
   target,
 }: Readonly<DomainOverviewStatePanelProps>) {
   const dateFormat = useDateFormat();
+  const cacheDuration = useDomainOverviewCacheDuration();
   const t = useTranslations("projectDomainOverview.workspace.state");
   const uiT = useTranslations("projectDomainOverview.workspace.ui");
   if (state === "loading") return <DomainOverviewResultsLoading ariaLabel={uiT("loading")} />;
   if (state === "idle") {
     return (
       <EmptyState
-        bullets={[t("idleBullets.key"), t("idleBullets.cache"), t("idleBullets.track")]}
+        bullets={[
+          t("idleBullets.key"),
+          t("idleBullets.cache", { duration: cacheDuration }),
+          t("idleBullets.track"),
+        ]}
         mark={<ModuleMark bordered icon={Globe} />}
         title={t("idleTitle")}
       />

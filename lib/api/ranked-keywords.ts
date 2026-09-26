@@ -3,8 +3,10 @@ import "server-only";
 import { READINESS_REASON } from "@/lib/projects/readiness";
 import { fetchRankedKeywords } from "@/lib/ranked-keywords/service";
 import { z } from "zod";
+import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
 import { requireApiPublicId } from "./public-id";
+import { providerOrigin } from "./request-origin";
 import { errorResponse, resourceResponse } from "./responses";
 import { scopedProject } from "./surface";
 
@@ -16,6 +18,7 @@ const querySchema = z.object({
   connectionId: z.string().trim().min(1).max(120).optional(),
   fresh: booleanParam,
   limit: z.coerce.number().int().min(1).max(100).default(100),
+  maxCostCents: z.coerce.number().int().min(1).optional(),
   offset: z.coerce.number().int().min(0).max(900).multipleOf(100).default(0),
 });
 
@@ -24,6 +27,7 @@ function query(ctx: ApiContext) {
     connectionId: ctx.url.searchParams.get("connection_id") ?? undefined,
     fresh: ctx.url.searchParams.get("fresh") ?? undefined,
     limit: ctx.url.searchParams.get("limit") ?? undefined,
+    maxCostCents: ctx.url.searchParams.get("max_cost_cents") ?? undefined,
     offset: ctx.url.searchParams.get("offset") ?? undefined,
   });
   return {
@@ -39,7 +43,15 @@ function connectionsResource(connections: Array<{ id: string; label: string; pro
   }));
 }
 
-function error(ctx: ApiContext, reason: string, resetAt?: number) {
+type RankedKeywordsFailure = Exclude<
+  Awaited<ReturnType<typeof fetchRankedKeywords>>,
+  {
+    ok: true;
+  }
+>;
+
+function error(ctx: ApiContext, outcome: RankedKeywordsFailure) {
+  const reason = outcome.reason;
   if (reason === "no_source") {
     return errorResponse(
       "not_found",
@@ -58,15 +70,29 @@ function error(ctx: ApiContext, reason: string, resetAt?: number) {
     });
   }
   if (reason === "budget_exhausted") {
-    return errorResponse("budget_exhausted", "Rank check monthly budget reached.", 429, {
-      headers: ctx.headers,
-      instance: ctx.instance,
+    return budgetExhaustedResponse(ctx, {
+      surface: "programmatic",
+      ...(outcome.provider === undefined ? {} : { provider: outcome.provider }),
     });
+  }
+  if (reason === "cost_limit_exceeded") {
+    return errorResponse(
+      "cost_limit_exceeded",
+      "The estimated provider cost exceeds max_cost_cents.",
+      422,
+      {
+        headers: ctx.headers,
+        instance: ctx.instance,
+        ...(outcome.estimatedCostCents === undefined
+          ? {}
+          : { problemDetails: { estimated_cost_cents: outcome.estimatedCostCents } }),
+      },
+    );
   }
   if (reason === "rate_limited") {
     const headers = new Headers(ctx.headers);
     const retryAfter = String(
-      Math.max(1, Math.ceil(((resetAt ?? Date.now() + 1_000) - Date.now()) / 1_000)),
+      Math.max(1, Math.ceil(((outcome.resetAt ?? Date.now() + 1_000) - Date.now()) / 1_000)),
     );
     headers.set("Retry-After", retryAfter);
     headers.set("RateLimit-Reset", retryAfter);
@@ -96,9 +122,10 @@ export async function listRankedKeywordSuggestions(ctx: ApiContext, projectId: s
   const result = await fetchRankedKeywords({
     actorId: ctx.actorId,
     ...input,
+    origin: providerOrigin(ctx.origin),
     projectId: ctx.auth.project.id,
   });
-  if (!result.ok) return error(ctx, result.reason, result.resetAt);
+  if (!result.ok) return error(ctx, result);
   return resourceResponse(
     {
       cached: result.cached,

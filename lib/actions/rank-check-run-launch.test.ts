@@ -57,6 +57,7 @@ describe("launchRankCheckRunAction", () => {
       actorId: "user_1",
       depth: undefined,
       idempotencyKey: "request-0001",
+      origin: { source: "app" },
       previewToken: "signed-token",
       project,
       providerId: undefined,

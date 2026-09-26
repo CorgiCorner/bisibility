@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type RestoreMarketDialogProps = {
@@ -18,7 +18,6 @@ export function RestoreMarketDialog({
   onRestore,
 }: Readonly<RestoreMarketDialogProps>) {
   const t = useTranslations("projectMarkets");
-  const format = useFormatter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,10 +35,6 @@ export function RestoreMarketDialog({
     }
   }
 
-  const cost =
-    market?.monthlyCostCents == null
-      ? "-"
-      : format.number(market.monthlyCostCents / 100, { currency: "USD", style: "currency" });
   return (
     <Modal
       footer={
@@ -58,7 +53,7 @@ export function RestoreMarketDialog({
       title={t("restoreTitle", { market: market?.name ?? t("market") })}
     >
       <p className="m-0 text-[13px] leading-[1.55] text-fg-muted">
-        {market ? t("restoreBody", { cost, count: market.keywordCount }) : null}
+        {market ? t("restoreBody", { count: market.keywordCount }) : null}
       </p>
       {error ? <p className="m-0 mt-3 text-[12px] text-red-text">{error}</p> : null}
     </Modal>

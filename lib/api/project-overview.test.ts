@@ -277,6 +277,7 @@ describe("project overview API", () => {
           name: "tag",
           schema: { maxLength: 48, type: "string" },
         }),
+        expect.objectContaining({ $ref: "#/components/parameters/SourceHeader" }),
       ],
       responses: {
         "200": expect.objectContaining({

@@ -1,4 +1,5 @@
 import { ProviderCallError } from "@/lib/providers/call-error";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -39,6 +40,7 @@ describe("domain overview cache", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("READ_ONLY_DEMO", "0");
+    vi.stubEnv("DEMO_MODE", "");
     vi.stubEnv("DOMAIN_OVERVIEW_CACHE_TTL_SECONDS", "");
   });
   afterEach(() => vi.unstubAllEnvs());
@@ -75,15 +77,25 @@ describe("domain overview cache", () => {
     expect(domainOverviewCachedUntil("2026-08-11T10:00:00.000Z")).toBe("2026-08-11T22:00:00.000Z");
   });
 
-  it("keeps demo results for 30 days even when the installation has a shorter TTL", async () => {
-    vi.stubEnv("READ_ONLY_DEMO", "1");
-    vi.stubEnv("DOMAIN_OVERVIEW_CACHE_TTL_SECONDS", "43200");
-    expect(domainOverviewCacheTtlSeconds()).toBe(2_592_000);
-    expect(domainOverviewCachedUntil("2026-08-11T10:00:00.000Z")).toBe("2026-09-10T10:00:00.000Z");
-    const load = vi.fn();
-    await withDomainOverviewCache({ key: "demo-key", load });
-    expect(mocks.withCache).toHaveBeenCalledWith({ key: "demo-key", load, ttlSeconds: 2_592_000 });
-  });
+  it.each(["snapshot", "editable"])(
+    "keeps %s demo results for 30 days even with a shorter TTL",
+    async (mode) => {
+      vi.stubEnv("READ_ONLY_DEMO", mode === "snapshot" ? "1" : "0");
+      vi.stubEnv("DEMO_MODE", mode === "editable" ? "editable" : "");
+      vi.stubEnv("DOMAIN_OVERVIEW_CACHE_TTL_SECONDS", "43200");
+      expect(domainOverviewCacheTtlSeconds()).toBe(2_592_000);
+      expect(domainOverviewCachedUntil("2026-08-11T10:00:00.000Z")).toBe(
+        "2026-09-10T10:00:00.000Z",
+      );
+      const load = vi.fn();
+      await withDomainOverviewCache({ key: "demo-key", load });
+      expect(mocks.withCache).toHaveBeenCalledWith({
+        key: "demo-key",
+        load,
+        ttlSeconds: 2_592_000,
+      });
+    },
+  );
 
   it("delegates reads and writes with the configured TTL", async () => {
     const load = vi.fn().mockResolvedValue({ value: true });
@@ -160,5 +172,13 @@ describe("domain overview cache", () => {
       ok: false,
       reason: "lookup_failed",
     });
+  });
+
+  it("propagates deployment admission through the real module catch", async () => {
+    const admission = new DeploymentAdmissionExhaustedError("budget", { scope: "connection" });
+    mocks.withCache.mockRejectedValueOnce(admission);
+    await expect(loadDomainOverviewModule({ key: "cache-key", load: vi.fn() })).rejects.toBe(
+      admission,
+    );
   });
 });

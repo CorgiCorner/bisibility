@@ -1,4 +1,5 @@
 import type { StatusChipTone } from "@/components/ui/StatusChip";
+import type { LaunchRankCheckRunActionResult } from "@/lib/actions/rank-check-run-launch-result";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 
 export type PreflightScope = {
@@ -33,4 +34,16 @@ export function decisionLine(
   const duration =
     preview.targetCount <= 30 ? "~40s" : preview.targetCount <= 400 ? "~6 min" : "~9 min";
   return leftAfterLabel ?? duration;
+}
+
+export function idempotencyKey() {
+  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `preflight-${Date.now()}`;
+}
+
+export function isNotStarted(
+  result: LaunchRankCheckRunActionResult,
+): result is Extract<LaunchRankCheckRunActionResult, { status: "not_started" }> {
+  return "status" in result && result.status === "not_started";
 }

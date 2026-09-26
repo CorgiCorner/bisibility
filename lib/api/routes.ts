@@ -22,6 +22,7 @@ import { domainOverviewRoute } from "./routes-domain-overview";
 import { keywordResearchRoute } from "./routes-keyword-research";
 import { loopClosureRoutes } from "./routes-loop-closure";
 import { topLevelMemberRoutes } from "./routes-members";
+import { providerMemberRoutes } from "./routes-providers";
 import { researchReportsRoute } from "./routes-research-reports";
 
 function projectRoutes(ctx: ApiContext) {
@@ -145,6 +146,10 @@ function standardProjectCollectionRoute(
         ),
     },
     overview: { GET: () => getProjectOverview(ctx, projectId) },
+    "provider-budgets": {
+      GET: () =>
+        import("./provider-budgets").then((routes) => routes.listProviderBudgets(ctx, projectId)),
+    },
     providers: {
       GET: () => import("./providers").then((routes) => routes.listProviders(ctx, projectId)),
     },
@@ -233,33 +238,6 @@ function projectCollectionRoutes(ctx: ApiContext) {
     ctx.path.length === 6
   ) {
     return import("./team").then((routes) => routes.resendTeamInvite(ctx, fifth, projectId));
-  }
-  return null;
-}
-
-function providerMemberRoutes(ctx: ApiContext) {
-  const [first, projectId, resource, id, action] = ctx.path;
-  if (first !== "projects" || !projectId || resource !== "providers" || !id) return null;
-
-  if (action === "connect" && ctx.method === "POST") {
-    return import("./providers").then((routes) =>
-      routes.connectProviderForProject(ctx, projectId, id),
-    );
-  }
-  if (action === "test" && ctx.method === "POST") {
-    return import("./providers").then((routes) =>
-      routes.testProviderForProject(ctx, projectId, id),
-    );
-  }
-  if (!action && ctx.method === "PATCH") {
-    return import("./providers").then((routes) =>
-      routes.updateProviderSettings(ctx, projectId, id),
-    );
-  }
-  if (!action && ctx.method === "DELETE") {
-    return import("./providers").then((routes) =>
-      routes.disconnectProviderForProject(ctx, projectId, id),
-    );
   }
   return null;
 }

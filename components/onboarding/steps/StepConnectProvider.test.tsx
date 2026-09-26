@@ -18,7 +18,7 @@ describe("StepConnectProvider", () => {
   it("renders provider cards and reveals selected credential fields", () => {
     renderProviderStep();
 
-    expect(screen.getByText("Rank data / powers rank checks")).toBeInTheDocument();
+    expect(screen.getByText("Choose your provider")).toBeInTheDocument();
     expect(screen.getByText("Also powers keyword research and difficulty.")).toBeInTheDocument();
     expect(screen.getByText("Rank checks only.")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /DataForSEO/ })).toBeInTheDocument();

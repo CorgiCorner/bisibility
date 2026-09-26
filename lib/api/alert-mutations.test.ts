@@ -86,6 +86,12 @@ function context(path: string, body: unknown): ApiContext {
     headers: new Headers(),
     instance: "urn:test",
     method: "POST",
+    origin: {
+      credentialKind: "project_key",
+      credentialId: "key_test",
+      source: "api",
+      surface: "programmatic",
+    },
     path: [],
     req,
     url: new URL(req.url),

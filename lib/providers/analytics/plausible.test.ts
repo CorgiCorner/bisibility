@@ -356,7 +356,7 @@ describe("plausible analytics provider", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ results: [] })));
 
     await expect(plausibleAnalyticsProvider.testConnection(credentials)).resolves.toEqual({
-      message: "Connection OK · example.com.",
+      message: "Connected · example.com.",
       ok: true,
     });
     expect(requestBody()).toEqual({

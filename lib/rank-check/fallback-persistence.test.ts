@@ -17,13 +17,19 @@ const mocks = vi.hoisted(() => ({
     observationRun: { create: vi.fn().mockResolvedValue({ id: "obs_1" }) },
     project: { findUnique: vi.fn() },
     projectDefaults: { update: vi.fn() },
-    providerConnection: { findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    providerConnection: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
     providerConnectionRate: { findMany: vi.fn() },
-    providerCostEntry: { aggregate: vi.fn(), create: vi.fn() },
+    providerCostEntry: { aggregate: vi.fn(), create: vi.fn(), groupBy: vi.fn() },
     rankCheck: {
       aggregate: vi.fn(),
       create: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -61,8 +67,22 @@ describe("runKeywordCheckWithFallback persistence", () => {
     mocks.prisma.auditLog.create.mockResolvedValue({ id: "audit_1" });
     mocks.prisma.project.findUnique.mockResolvedValue({ budgetCapCents: 5_000 });
     mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 0 } });
+    mocks.prisma.providerCostEntry.groupBy.mockResolvedValue([]);
     mocks.prisma.providerCostEntry.create.mockResolvedValue({ id: "cost_1" });
     mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
+    mocks.prisma.providerConnection.findUnique.mockImplementation(({ where }) =>
+      Promise.resolve({
+        credentialSource: "own",
+        projectId: "project_1",
+        provider: where.id === "connection_backup" ? "backup" : "primary",
+      }),
+    );
+    mocks.prisma.rankCheck.findUnique.mockResolvedValue({
+      keywordId: "keyword_1",
+      provider: "primary",
+      runItem: null,
+      status: "running",
+    });
     mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
     mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue(null);
     mocks.prisma.signal.create.mockImplementation(({ data }) =>
@@ -135,7 +155,7 @@ describe("runKeywordCheckWithFallback persistence", () => {
     expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();
     expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        costCents: 0.25,
+        costCents: 0,
         position: 6,
         requestedDepth: 20,
         status: "completed",
@@ -210,7 +230,7 @@ describe("runKeywordCheckWithFallback persistence", () => {
       data: expect.objectContaining({
         attemptCount: 2,
         attempts: [{ message: "network down", provider: "primary" }],
-        costCents: 0.3,
+        costCents: 0,
         degradedToCountry: false,
         provider: "backup",
         status: "completed",

@@ -1,7 +1,7 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BulkActionBar } from "./BulkActionBar";
 
@@ -76,8 +76,8 @@ describe("BulkActionBar", () => {
     expect(onRunChecks).toHaveBeenLastCalledWith([row.id], 20);
   }, 15_000);
 
-  it("shares the filter-bar chrome instead of an accent fill", () => {
-    const { container } = render(
+  it("floats on the card surface instead of an accent fill", () => {
+    render(
       <BulkActionBar
         {...actions}
         canDeleteKeyword
@@ -88,10 +88,52 @@ describe("BulkActionBar", () => {
       />,
     );
 
-    const bar = container.firstElementChild;
-    expect(bar).toHaveClass("border-b", "border-border");
+    const bar = screen.getByRole("toolbar", { name: "Actions for selected keywords" });
+    expect(bar).toHaveClass("bg-bg-elev", "border", "border-border", "rounded-card");
     expect(bar).not.toHaveClass("bg-accent-soft");
-    expect(screen.getByText("1 selected")).toHaveClass("text-fg");
+    expect(bar.closest("[data-floating-selection-bar]")).toHaveClass("fixed", "bottom-0");
+    expect(within(bar).getByText("1 selected")).toHaveClass("text-fg");
+    expect(screen.getByRole("status")).toHaveTextContent("1 selected");
+  });
+
+  it("renders no bar and no dialogs without a selection", () => {
+    render(
+      <BulkActionBar
+        {...actions}
+        canDeleteKeyword
+        canUpdateKeyword
+        onClear={vi.fn()}
+        projectId="prj_1"
+        selectedRows={[]}
+      />,
+    );
+
+    expect(screen.queryByRole("toolbar")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("");
+  });
+
+  it("shows an action error in the bar footer", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ json: async () => ({}), ok: false })),
+    );
+    render(
+      <BulkActionBar
+        {...actions}
+        canDeleteKeyword
+        canUpdateKeyword
+        onClear={vi.fn()}
+        projectId="prj_1"
+        selectedRows={[row]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Set schedule" }));
+    const bar = screen.getByRole("toolbar", { name: "Actions for selected keywords" });
+    expect(
+      await within(bar).findByText("Could not load schedules. Try again."),
+    ).toBeInTheDocument();
   });
 
   it("uses the shared xs control height for every bulk action", () => {
@@ -145,7 +187,7 @@ describe("BulkActionBar", () => {
     expect(screen.queryByRole("button", { name: /Run check/ })).not.toBeInTheDocument();
   });
 
-  it("does not highlight a depth for a mixed selection", () => {
+  it("shows each effective depth without highlighting one for a mixed selection", () => {
     const onRunChecks = vi.fn();
     render(
       <BulkActionBar
@@ -162,6 +204,9 @@ describe("BulkActionBar", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "Run checks (Top 20 / Top 50)" }));
+    expect(onRunChecks).toHaveBeenLastCalledWith([row.id, "kw_2"]);
+    onRunChecks.mockClear();
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     expect(
       screen.getAllByRole("menuitem").every((item) => item.querySelector("svg") === null),

@@ -6,6 +6,7 @@ import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotic
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { FloatingSelectionBar } from "@/components/ui/FloatingSelectionBar";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { MarketScope } from "@/lib/markets/market-scope";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -14,13 +15,13 @@ import { CalendarDotsIcon as CalendarDots } from "@phosphor-icons/react/dist/csr
 import { LinkSimpleIcon as LinkSimple } from "@phosphor-icons/react/dist/csr/LinkSimple";
 import { TagIcon as Tag } from "@phosphor-icons/react/dist/csr/Tag";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
-import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { BulkActionModal, type BulkMode } from "./BulkActionModal";
 import { BulkRunChecksControls } from "./BulkRunChecksControls";
 import { presentBulkActionError } from "./bulk-action-error";
+import { bulkDeleteButtonStyle } from "./bulk-action-styles";
 import { bulkTargetView } from "./bulk-target-model";
 import { SetScheduleModal } from "./SetScheduleModal";
 import type { CheckScheduleSummary } from "./set-schedule-model";
@@ -77,9 +78,7 @@ export function BulkActionBar({
   );
   const chosenDepth = depthOverride?.key === selectionKey ? depthOverride.depth : null;
   const targetView = bulkTargetView(selectedRows);
-  if (selectedRows.length === 0) {
-    return null;
-  }
+  const hasSelection = selectedRows.length > 0;
 
   function finishAction() {
     setMode(null);
@@ -141,11 +140,19 @@ export function BulkActionBar({
   }
 
   return (
-    <div className="grid gap-2 border-b border-border px-4 py-[11px]">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 font-sans tabular-nums text-[12.5px] font-semibold text-fg">
-          {t("selected", { count: selectedRows.length })}
-        </span>
+    <>
+      <FloatingSelectionBar
+        ariaLabel={t("toolbar")}
+        clearLabel={t("clear")}
+        count={selectedRows.length}
+        countLabel={t("selected", { count: selectedRows.length })}
+        footer={
+          actionError && mode === null ? (
+            <p className="m-0 font-sans tabular-nums text-[11.5px] text-red-text">{actionError}</p>
+          ) : null
+        }
+        onClear={onClear}
+      >
         {onRunChecks && canUpdateKeyword ? (
           <BulkRunChecksControls
             checksRunning={checksRunning}
@@ -207,32 +214,15 @@ export function BulkActionBar({
               onClick={() => setConfirmOpen(true)}
               size="xs"
               startIcon={<Trash weight="regular" size={15} />}
-              style={{
-                "--control-background-color": "transparent",
-                "--control-border": "1px solid var(--red)",
-                "--control-color": "var(--red)",
-                "--control-hover-background-color":
-                  "color-mix(in srgb, var(--red) 12%, transparent)",
-                "--control-hover-border": "1px solid var(--red)",
-                "--control-hover-color": "var(--red)",
-              }}
+              style={bulkDeleteButtonStyle}
               variant="secondary"
             >
               {deleting ? t("deleting") : t("delete")}
             </Button>
           </ProjectReadOnlyTooltip>
         ) : null}
-        <Button
-          onClick={onClear}
-          size="xs"
-          startIcon={<X weight="regular" size={14} />}
-          style={{ marginLeft: "auto" }}
-          variant="ghost"
-        >
-          {t("clear")}
-        </Button>
-      </div>
-      {canDeleteKeyword ? (
+      </FloatingSelectionBar>
+      {hasSelection && canDeleteKeyword ? (
         <ConfirmModal
           busy={deleting}
           kind="deleteBulk"
@@ -241,7 +231,7 @@ export function BulkActionBar({
           open={confirmOpen}
         />
       ) : null}
-      {canUpdateKeyword ? (
+      {hasSelection && canUpdateKeyword ? (
         <ConfirmModal
           busy={clearingTargets}
           kind="clearTargetUrls"
@@ -250,7 +240,7 @@ export function BulkActionBar({
           open={clearTargetsOpen}
         />
       ) : null}
-      {canUpdateKeyword ? (
+      {hasSelection && canUpdateKeyword ? (
         <BulkActionModal
           actionError={actionError}
           bulkSetTargetAction={bulkSetTargetAction}
@@ -270,7 +260,7 @@ export function BulkActionBar({
           selectedRows={selectedRows}
         />
       ) : null}
-      {canUpdateKeyword && scheduleOpen ? (
+      {hasSelection && canUpdateKeyword && scheduleOpen ? (
         <SetScheduleModal
           onClose={() => setScheduleOpen(false)}
           onDone={() => {
@@ -284,9 +274,6 @@ export function BulkActionBar({
           selectedRows={selectedRows}
         />
       ) : null}
-      {actionError && mode === null ? (
-        <p className="m-0 font-sans tabular-nums text-[11.5px] text-red-text">{actionError}</p>
-      ) : null}
-    </div>
+    </>
   );
 }

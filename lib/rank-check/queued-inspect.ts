@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
+import { recoverQueuedDeploymentExecution } from "@/lib/providers/execution-extension";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
 import {
   legacyDataForSeoQueuedTaskTag,
@@ -58,26 +59,37 @@ export async function inspectQueuedRankCheckBatch(
     where: { id: batchId },
   });
   const authorization = queuedRankCheckModeAuthorization(rankCheckSchedulerMode(), batch.state);
+  const hostedTag = batch.tasks.some((task) => task.providerTag?.includes(";cs=hosted;"));
+  const hosted = hostedTag || batch.connection?.credentialSource === "hosted";
+  const recovery = hosted ? await recoverQueuedDeploymentExecution(batchId) : null;
+  if (hostedTag && !recovery) throw new Error("Queued hosted execution is unavailable.");
+  await recovery?.reconcile();
+  const inspectedTasks = recovery
+    ? await prisma.queuedRankCheckTask.findMany({
+        orderBy: { id: "asc" },
+        select: { id: true, providerTag: true, state: true },
+        where: { batchId },
+      })
+    : batch.tasks;
   if (
     authorization.allowPaidRetrieval &&
     ACTIVE_STATES.includes(batch.state as (typeof ACTIVE_STATES)[number])
   ) {
     const byTag = new Map(
-      batch.tasks
+      inspectedTasks
         .filter((task) => ["ambiguous", "submitting", "submitted"].includes(task.state))
         .map((task) => [task.providerTag ?? legacyDataForSeoQueuedTaskTag(task.id), task.id]),
     );
-    if (byTag.size > 0) {
-      if (!batch.connection) {
+    if (byTag.size > 0 && (!hosted || recovery)) {
+      if (!batch.connection && !recovery) {
         await failUnrecoverableTasks(
           batchId,
           "DataForSEO connection was removed during queued result recovery.",
         );
       } else {
-        const credentials = resolveProviderCredentials(
-          "dataforseo",
-          batch.connection.credentialsEncrypted,
-        );
+        const credentials =
+          recovery?.credentials ??
+          resolveProviderCredentials("dataforseo", batch.connection?.credentialsEncrypted);
         const polled = await pollDataForSeoQueue(
           credentials,
           batch.projectId,
@@ -95,6 +107,10 @@ export async function inspectQueuedRankCheckBatch(
         if (polled.status === "deadline_reached") {
           deadlineReached = true;
         } else if (polled.status === "ready") {
+          for (const task of polled.value) {
+            const id = byTag.get(task.tag);
+            if (id) await recovery?.bindReadyTask(id, task.tag, task.providerTaskId);
+          }
           await prisma.$transaction(async (tx) => {
             for (const task of polled.value) {
               const id = byTag.get(task.tag);
@@ -120,6 +136,7 @@ export async function inspectQueuedRankCheckBatch(
   const counts = inspectionCounts(tasks);
   if (counts.pending + counts.ambiguous + counts.ready === 0) {
     const progress = await finalizeQueuedBatchState(batchId);
+    await recovery?.finish();
     return { ...counts, deadlineReached, state: progress.state };
   }
   const state = counts.ready > 0 ? "ready" : counts.ambiguous > 0 ? "ambiguous" : batch.state;

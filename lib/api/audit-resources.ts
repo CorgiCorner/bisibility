@@ -98,6 +98,8 @@ export function providerConnectionAuditResource(value: {
   allocationUnit?: string | null;
   costPerCheckCents?: unknown;
   credentialsEncrypted?: string | null;
+  creditsAllocationAmountPerMonth?: number | null;
+  creditsProgrammaticAllocationAmountPerMonth?: number | null;
   enabled: boolean;
   kind: string;
   priority: number;
@@ -111,6 +113,13 @@ export function providerConnectionAuditResource(value: {
       : {
           allocationAmountPerMonth: value.allocationAmountPerMonth ?? null,
           allocationUnit: value.allocationUnit,
+        }),
+    ...(value.creditsAllocationAmountPerMonth === undefined
+      ? {}
+      : {
+          creditsAllocationAmountPerMonth: value.creditsAllocationAmountPerMonth,
+          creditsProgrammaticAllocationAmountPerMonth:
+            value.creditsProgrammaticAllocationAmountPerMonth ?? null,
         }),
     costPerCheck:
       value.costPerCheckCents == null ? null : centsToDollars(Number(value.costPerCheckCents)),

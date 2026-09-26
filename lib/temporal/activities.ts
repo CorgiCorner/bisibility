@@ -35,8 +35,12 @@ export {
   syncPresenceActivity,
   syncSitemapsActivity,
 } from "./maintenance-activities";
+export type { MeteringMaintenanceActivityResult } from "./metering-maintenance-activity";
+export { maintainMeteringShadowActivity } from "./metering-maintenance-activity";
 export type { OpsHeartbeatActivityResult } from "./ops-activities";
 export { opsHeartbeatActivity } from "./ops-activities";
+export type { ProviderUsageReconciliationActivityResult } from "./provider-usage-reconcile-activity";
+export { reconcileProviderUsageActivity } from "./provider-usage-reconcile-activity";
 export {
   authorizeQueuedRankCheckBatchActivity,
   inspectQueuedRankCheckBatchActivity,

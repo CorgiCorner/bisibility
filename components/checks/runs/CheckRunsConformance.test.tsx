@@ -36,6 +36,7 @@ describe("Checks visual conformance", () => {
               capCents: 5_000,
               capLastsUntil: null,
               next48hCents: 0,
+              next48hNative: null,
               spentCents: 5_000,
             },
           },
@@ -64,6 +65,7 @@ describe("Checks visual conformance", () => {
               capCents: 5_000,
               capLastsUntil: "2026-08-08",
               next48hCents: 300,
+              next48hNative: null,
               spentCents: 3_900,
             },
           },
@@ -80,7 +82,13 @@ describe("Checks visual conformance", () => {
         {...bands({
           budget: {
             blocked: [],
-            forecast: { capCents: 0, capLastsUntil: null, next48hCents: 0, spentCents: 0 },
+            forecast: {
+              capCents: 0,
+              capLastsUntil: null,
+              next48hCents: 0,
+              next48hNative: null,
+              spentCents: 0,
+            },
           },
         })}
       />,
@@ -99,6 +107,7 @@ describe("Checks visual conformance", () => {
               capCents: 5_000,
               capLastsUntil: null,
               next48hCents: 0,
+              next48hNative: null,
               spentCents: 5_000,
             },
           },

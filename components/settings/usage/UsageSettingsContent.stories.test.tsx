@@ -1,4 +1,7 @@
-import { renderWithUsageSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import {
+  renderWithUsageSettingsMessages as render,
+  usageSettingsFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
 import { composeStories } from "@storybook/react";
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
@@ -12,12 +15,23 @@ const {
   NoProviders,
   NoUsage,
   TopUpRequired,
+  TwoBudgets,
 } = composeStories(stories);
 
 describe("UsageSettingsContent provider spend stories", () => {
   it("renders the legacy project allocation", () => {
     render(<LegacyProject />);
     expect(screen.getByText("$12.40 of $50.00 used")).toBeInTheDocument();
+  });
+
+  it("renders the two-budget state with a surface-specific attention banner", () => {
+    render(<TwoBudgets />);
+    const banner =
+      usageSettingsFeatureTestMessages.projectSettingsUsage.provider.attentionApp.replace(
+        "{provider}",
+        "DataForSEO",
+      );
+    expect(screen.getByText(banner)).toBeInTheDocument();
   });
 
   it("renders cents and native units together", () => {

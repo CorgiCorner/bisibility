@@ -45,25 +45,25 @@ export const PROVIDER_FEATURE_RATES: ProviderFeatureRate[] = [
     providerId: "dataforseo",
     sourceUrl: "https://dataforseo.com/apis/backlinks-api/pricing",
   },
-  // provisional - finalize via scripts/backlinks-cost-profile
+  // backlinks/live bills a per-request base plus a per-row component; a 100-row page
+  // returned task.cost 0.03 (lib/providers/serp/fixtures/backlinks/backlinks-success.json).
   {
-    baseCostCents: 0,
-    checkedAt: "2026-07-24",
-    costCents: 1,
+    baseCostCents: 2,
+    checkedAt: "2026-09-21",
+    costCents: 3,
     feature: "backlinks_rows",
     providerId: "dataforseo",
     sourceUrl: "https://dataforseo.com/apis/backlinks-api/pricing",
     unitCostCents: 0.01,
   },
-  // provisional - finalize via scripts/domain-overview-cost-profile
+  // domain_rank_overview/live is a flat per-request charge; measured task.cost 0.02
+  // (lib/providers/serp/fixtures/domain-overview/overview-success.json).
   {
-    baseCostCents: 1.2,
-    checkedAt: "2026-08-11",
-    costCents: 1.2,
+    checkedAt: "2026-09-21",
+    costCents: 2,
     feature: "domain_rank_overview",
     providerId: "dataforseo",
     sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-    unitCostCents: 0.012,
   },
   // provisional - finalize via scripts/domain-overview-cost-profile
   {
@@ -75,15 +75,16 @@ export const PROVIDER_FEATURE_RATES: ProviderFeatureRate[] = [
     sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
     unitCostCents: 0.12,
   },
-  // provisional - finalize via scripts/domain-overview-cost-profile
+  // relevant_pages/live bills a per-request base plus a per-row component; a 100-row page
+  // returned task.cost 0.02 (lib/providers/serp/fixtures/domain-overview/pages-success.json).
   {
-    baseCostCents: 1.2,
-    checkedAt: "2026-08-11",
-    costCents: 1.2,
+    baseCostCents: 1,
+    checkedAt: "2026-09-21",
+    costCents: 2,
     feature: "relevant_pages",
     providerId: "dataforseo",
     sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-    unitCostCents: 0.012,
+    unitCostCents: 0.01,
   },
   ...(
     [

@@ -21,6 +21,8 @@ export type WorkspaceSummary = {
   domain: string;
   keywordCount: number;
   isSample: boolean;
+  /** The viewer's account-wide default project, opened first by the app entry page. */
+  isDefault: boolean;
   latestCompletedRankCheckAt: Date | null;
   state?: WorkspaceDataState;
   onboardingCompletedAt: Date | null;
@@ -43,6 +45,7 @@ export const listWorkspaces = perRequestCache(async (): Promise<WorkspaceSummary
     orderBy: { createdAt: "asc" },
     select: {
       _count: { select: { keywords: true } },
+      defaultForUsers: { select: { id: true }, where: { id: actor.id } },
       domain: true,
       id: true,
       isSample: true,
@@ -78,6 +81,7 @@ export const listWorkspaces = perRequestCache(async (): Promise<WorkspaceSummary
     return {
       domain: trackedProjectDomain(project.domain) ?? "",
       id: asProjectRef(project.publicId),
+      isDefault: project.defaultForUsers.length > 0,
       isSample: project.isSample,
       keywordCount: project._count.keywords,
       latestCompletedRankCheckAt,

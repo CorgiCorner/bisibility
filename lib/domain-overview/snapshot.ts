@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type {
   DomainRankMetrics,
   HistoricalOverviewRow,
@@ -243,6 +244,7 @@ export async function resolveDomainOverviewSnapshot(
     beforeLoad?: () => void;
     fresh?: boolean;
     key: string;
+    origin: ProviderRequestOrigin;
     project: DomainOverviewProject;
     source: DomainOverviewSource;
   },
@@ -271,6 +273,7 @@ export async function resolveDomainOverviewSnapshot(
       const result = await fetchDomainOverviewMetrics({
         budgetCapCents: input.project.budgetCapCents,
         languageCode: input.languageCode,
+        origin: input.origin,
         locationCode: input.locationCode,
         projectId: input.projectId,
         scope: input.scope,

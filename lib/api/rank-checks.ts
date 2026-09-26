@@ -8,12 +8,12 @@ import { notFound } from "./context";
 import { ApiInputError } from "./errors";
 import { decodeCursor, encodeCursor, parseLimit, splitPage } from "./pagination";
 import { requireApiPublicId } from "./public-id";
+import { rankCheckResources } from "./rank-check-accounting";
 import { requestRankCheck } from "./rank-check-request";
 import {
   RANK_CHECK_COMPLETED_STATUS,
   RANK_CHECK_FAILED_STATUS,
   RANK_CHECK_RUNNING_STATUS,
-  rankCheckResource,
   rankCheckSelect,
 } from "./resources";
 import { listResponse, resourceResponse } from "./responses";
@@ -105,7 +105,9 @@ export async function listRankChecks(ctx: ApiContext, keywordId: string) {
     ),
   );
 
-  return listResponse(page.map(rankCheckResource), nextCursor, { headers: ctx.headers });
+  return listResponse(await rankCheckResources(ctx.auth.project.id, page), nextCursor, {
+    headers: ctx.headers,
+  });
 }
 
 export async function getRankCheck(ctx: ApiContext, checkId: string) {
@@ -122,7 +124,8 @@ export async function getRankCheck(ctx: ApiContext, checkId: string) {
     return notFound(ctx, "Rank check not found.");
   }
 
-  return resourceResponse(rankCheckResource(check), { headers: ctx.headers });
+  const [resource] = await rankCheckResources(ctx.auth.project.id, [check]);
+  return resourceResponse(resource, { headers: ctx.headers });
 }
 
 export async function runRankCheck(ctx: ApiContext, keywordId: string) {

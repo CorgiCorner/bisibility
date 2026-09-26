@@ -1,5 +1,6 @@
 "use client";
 
+import { useDefaultProject } from "@/components/shell/use-default-project";
 import { MENU_ROW_STYLE, WorkspaceRow } from "@/components/shell/WorkspaceRow";
 import {
   WorkspaceSwitcherTrigger,
@@ -91,6 +92,8 @@ export type WorkspaceSwitcherProps = {
   collapsed?: boolean;
   compact?: boolean;
   canCreateWorkspace: boolean;
+  /** Shows the default-project star on rows the entry page could open. */
+  canSetDefault?: boolean;
   className?: string;
   /** `ghost` (default) is transparent until hover; `boxed` sits on its own elevated card. */
   variant?: WorkspaceTriggerVariant;
@@ -100,6 +103,7 @@ export type WorkspaceSwitcherProps = {
 export function WorkspaceSwitcher({
   activeProjectId,
   canCreateWorkspace,
+  canSetDefault = false,
   className,
   collapsed = false,
   compact = false,
@@ -118,6 +122,7 @@ export function WorkspaceSwitcher({
   // Last rendered menu height. A plain ref written from a callback ref, so the flip needs no
   // effect: the open handler reads a real measurement from the previous render.
   const menuHeightRef = useRef(0);
+  const { defaultProjectId, toggleDefault } = useDefaultProject(workspaces);
   const open = Boolean(anchorEl);
   const focusSearch = useCallback(
     (node: HTMLInputElement | null) => {
@@ -212,6 +217,14 @@ export function WorkspaceSwitcher({
         {visibleWorkspaces.map((workspace) => (
           <WorkspaceRow
             active={workspace.id === activeProjectId}
+            defaultStar={
+              canSetDefault && workspace.onboardingCompletedAt !== null
+                ? {
+                    isDefault: workspace.id === defaultProjectId,
+                    onToggle: () => void toggleDefault(workspace.id),
+                  }
+                : undefined
+            }
             key={workspace.id}
             onSelect={close}
             workspace={workspace}

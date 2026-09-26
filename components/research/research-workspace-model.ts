@@ -125,7 +125,7 @@ export async function loadResearchEstimate(
 }
 
 export type UiResearchOutcome =
-  | KeywordResearchOutcome
+  | Exclude<KeywordResearchOutcome, { estimate: true }>
   | { charged: boolean | null; ok: false; reason: "lookup_failed" };
 
 export type ResearchTab = {

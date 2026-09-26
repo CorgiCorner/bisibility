@@ -25,7 +25,7 @@ describe("project runs query filters", () => {
     expect(parseProjectRunsQuery(new URLSearchParams({ status }))).toMatchObject({ status });
   });
 
-  it.each(["view=history", "source=imports", "status=queued", "limit=0", "limit=20.5"])(
+  it.each(["view=history", "source=imports", "status=upcoming", "limit=0", "limit=20.5"])(
     "rejects an invalid query value: %s",
     (query) => {
       expect(() => parseProjectRunsQuery(new URLSearchParams(query))).toThrow();

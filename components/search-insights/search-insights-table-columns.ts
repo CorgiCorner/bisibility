@@ -159,7 +159,7 @@ export const moduleTableColumns = {
  * exists to hold the space the rows arrive into, so the two cannot be allowed to drift apart.
  */
 export const moduleTablesLayout =
-  "grid grid-cols-1 items-start gap-3 min-[1340px]:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]";
+  "grid grid-cols-1 items-start gap-3 min-[1340px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]";
 
 /**
  * The floor the fluid text column needs, summed over the variant and put on the `<table>`. The

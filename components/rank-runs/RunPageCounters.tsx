@@ -36,10 +36,12 @@ export function RunPageCounters({ onShowSkipped, run, summary }: Readonly<RunPag
                 <button
                   className="border-0 border-b border-dashed border-border-control bg-transparent p-0 font-sans text-[11.5px] text-fg"
                   onClick={onShowSkipped}
-                  title={summary.skippedLine}
+                  title={t("summary.skippedOrBlockedExplanation")}
                   type="button"
                 >
-                  {t("counters.skippedBeforeStart", { count: run.counts.skipped })}
+                  {t("counters.skippedOrBlocked", {
+                    count: new Intl.NumberFormat(locale).format(run.counts.skipped),
+                  })}
                 </button>
               </>
             ) : null}
@@ -66,7 +68,7 @@ export function RunPageCounters({ onShowSkipped, run, summary }: Readonly<RunPag
             />
             <span
               className="h-full bg-fg-muted"
-              style={{ width: width(run.counts.cancelled, run.counts.total) }}
+              style={{ width: width(run.counts.cancelled + run.counts.skipped, run.counts.total) }}
             />
           </div>
           <p className="mb-0 mt-1.5 text-[10.5px] tabular-nums text-fg-muted">

@@ -24,8 +24,9 @@ export function AdminProviderUsageTable({
   }
 
   return (
-    <div className="mt-4 [&>[role=table]]:border-0">
+    <div className="mt-4">
       <DataTable
+        bordered={false}
         ariaLabel={t("tableLabel")}
         columns={columns}
         id="admin-provider-usage-table"

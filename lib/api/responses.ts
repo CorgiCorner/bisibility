@@ -4,6 +4,7 @@ export type ApiErrorCode =
   | "bad_request"
   | "budget_exhausted"
   | "conflict"
+  | "credits_exhausted"
   | "cost_limit_exceeded"
   | "forbidden"
   | "internal_server_error"
@@ -41,6 +42,7 @@ export type ProblemDetails = {
   instance: string;
   docs_url: string;
   errors?: unknown;
+  details?: Record<string, unknown>;
 };
 
 type ApiResponseInit = {
@@ -48,6 +50,7 @@ type ApiResponseInit = {
   headers?: HeadersInit;
   instance?: string;
   meta?: ApiMeta;
+  problemDetails?: Record<string, unknown>;
   status?: number;
 };
 
@@ -57,6 +60,7 @@ const errorTitles = {
   bad_request: "Bad request",
   budget_exhausted: "Budget exhausted",
   conflict: "Conflict",
+  credits_exhausted: "Credits exhausted",
   cost_limit_exceeded: "Cost limit exceeded",
   forbidden: "Forbidden",
   internal_server_error: "Internal server error",
@@ -125,6 +129,9 @@ export function errorResponse(
   };
   if (init.details !== undefined) {
     body.errors = init.details;
+  }
+  if (init.problemDetails !== undefined) {
+    body.details = init.problemDetails;
   }
 
   const headers = new Headers(init.headers);

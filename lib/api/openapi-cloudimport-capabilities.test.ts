@@ -44,11 +44,14 @@ describe("OpenAPI document", () => {
       operationId: "uploadCloudImportChunk",
       requestBody: { content: { "application/json": { schema: ref("CloudImportUploadChunk") } } },
     });
-    expect((uploadChunk.parameters as Parameter[]).map((parameter) => parameter.name)).toEqual([
+    expect(
+      (uploadChunk.parameters as Parameter[]).map((parameter) => parameter.name ?? parameter.$ref),
+    ).toEqual([
       API_VERSION_HEADER,
       "sessionId",
       "index",
       "Content-Encoding",
+      "#/components/parameters/SourceHeader",
     ]);
     expect(finalizeSession).toMatchObject({
       requestBody: {

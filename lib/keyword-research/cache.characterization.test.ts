@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { keywordMetricsCacheKey, keywordResearchCacheKey } from "./cache";
 import { fetchKeywordMetrics } from "./metrics";
@@ -189,6 +190,7 @@ describe("pre-R3 cache behavior characterization", () => {
       fetchKeywordMetrics({
         includeClickstream: false,
         keywords: ["Standing Desk"],
+        origin: APP_REQUEST_ORIGIN,
         projectId: "project_1",
       }),
     ).resolves.toMatchObject({ cachedCount: 1, fetchedCount: 0, ok: true });
@@ -215,6 +217,7 @@ describe("pre-R3 cache behavior characterization", () => {
       researchKeywords({
         includeClickstream: false,
         mode: "related",
+        origin: APP_REQUEST_ORIGIN,
         projectId: "project_1",
         resultLimit: 100,
         seed: "Standing Desk",
@@ -234,6 +237,7 @@ describe("pre-R3 cache behavior characterization", () => {
       includeClickstream: false,
       limit: 100,
       location: cityLocation,
+      origin: APP_REQUEST_ORIGIN,
       projectId: "project_1",
       rateContext: { entries: [], manualAmountCents: null } as never,
       seed: "standing desk",

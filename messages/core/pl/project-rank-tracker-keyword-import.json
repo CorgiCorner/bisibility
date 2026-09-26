@@ -448,6 +448,7 @@
           "monthlyNoSpend": "Brak zaplanowanych wydatków",
           "monthlyUnavailable": "Szacunek niedostępny",
           "monthlySame": "Wydatki miesięczne bez zmian",
+          "monthlyDeltaUsage": "{direction, select, positive {+{usage} / mies.} negative {-{usage} / mies.} other {{usage} / mies.}}",
           "monthlyDelta": "{direction, select, positive {+{cost, number, ::currency/USD}} negative {-{cost, number, ::currency/USD}} other {{cost, number, ::currency/USD}}} / mies.",
           "monthlyDeltaBelowCent": "{direction, select, positive {+} negative {-} other {}}< {minimum, number, ::currency/USD} / mies.",
           "name": "Nazwa",
@@ -581,7 +582,8 @@
           "deleting": "Usuwanie…",
           "delete": "Usuń",
           "clear": "Wyczyść",
-          "scheduleLoadFailed": "Nie udało się wczytać harmonogramów. Spróbuj ponownie."
+          "scheduleLoadFailed": "Nie udało się wczytać harmonogramów. Spróbuj ponownie.",
+          "toolbar": "Działania dla zaznaczonych słów kluczowych"
         },
         "filters": {
           "reset": "Resetuj",
@@ -716,11 +718,14 @@
           "downloadCsv": "Pobierz CSV",
           "findMore": "Znajdź więcej w analizie słów kluczowych",
           "selected": "{count, plural, one {# zaznaczone} few {# zaznaczone} many {# zaznaczonych} other {# zaznaczonego}}",
+          "trackingAllUsage": "śledzenie wszystkich ({count, number}) to dodatkowe {usage}/mies. przy codziennych sprawdzeniach",
           "trackingAll": "śledzenie wszystkich ({count, number}) to dodatkowe {cost, number, ::currency/USD}/mies. przy codziennych sprawdzeniach",
           "trackingUnavailable": "śledzenie wszystkich ({count, number}) – szacunek niedostępny przy codziennych sprawdzeniach",
           "remove": "Usuń",
           "track": "Śledź {count, number}",
+          "trackAriaUsage": "Śledź {count, number} - {usage}/mies.",
           "trackAria": "Śledź {count, number} – {cost, number, ::currency/USD}/mies.",
+          "monthlyEstimateUsage": "~{usage}/mies.",
           "monthlyEstimate": "~{cost, number, ::currency/USD}/mies.",
           "clear": "Wyczyść",
           "snapshotNote": "Metryki pochodzą z przebiegu analizy / zapisywanie jest bezpłatne, nic nie jest sprawdzane, dopóki nie zaczniesz śledzić",

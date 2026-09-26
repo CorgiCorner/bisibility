@@ -60,6 +60,19 @@ function finiteStarCount(count: string | null | undefined) {
   return Number.isFinite(value) && value >= 0 ? value : null;
 }
 
+export function formatGithubStarCount(
+  count: string | null | undefined,
+  format: ReturnType<typeof useFormatter>,
+) {
+  const starCount = finiteStarCount(count);
+  return starCount === null
+    ? null
+    : format.number(starCount, {
+        maximumFractionDigits: 1,
+        notation: starCount >= 1_000 ? "compact" : "standard",
+      });
+}
+
 export function GithubStars({
   className,
   count,
@@ -70,13 +83,7 @@ export function GithubStars({
   const format = useFormatter();
   const t = useTranslations("shared.tokens");
   const starCount = finiteStarCount(count);
-  const formattedCount =
-    starCount === null
-      ? null
-      : format.number(starCount, {
-          maximumFractionDigits: 1,
-          notation: starCount >= 1_000 ? "compact" : "standard",
-        });
+  const formattedCount = formatGithubStarCount(count, format);
 
   return (
     <a

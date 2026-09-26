@@ -225,10 +225,11 @@ export function ResearchResultsTable({
         {storedFreshness ? <StoredResultFreshness {...storedFreshness} /> : null}
       </div>
       <div
-        className="h-[620px] min-w-0 [&>[role=table]]:border-0 [&_.bv-research-save-toggle]:opacity-0 [&_.bv-research-save-toggle]:transition-[opacity,color] [&_[role=row]:hover_.bv-research-save-toggle]:opacity-100 [&_.bv-research-save-toggle:focus-visible]:opacity-100"
+        className="h-[620px] min-w-0 [&_.bv-research-save-toggle]:opacity-0 [&_.bv-research-save-toggle]:transition-[opacity,color] [&_[role=row]:hover_.bv-research-save-toggle]:opacity-100 [&_.bv-research-save-toggle:focus-visible]:opacity-100"
         data-testid="research-results-viewport"
       >
         <DataTable
+          bordered={false}
           ariaLabel={t("tableAria")}
           columns={columns}
           emptyState={<p className="m-0 text-[12px] text-fg-muted">{t("empty")}</p>}

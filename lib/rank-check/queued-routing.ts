@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
+import { queuedDeploymentCredentialsAvailable } from "@/lib/providers/execution-extension";
 import { isRankCheckDispatcherEnabled } from "./dispatcher-config";
 import type { ClaimedRankCheckGroup } from "./dispatcher-types";
 import { serpProviderChainOrderBy } from "./provider-chain-order";
@@ -40,6 +41,11 @@ export async function queuedRankCheckRoute(
     return { mode: "legacy", reason: "primary_provider_not_dataforseo" };
   }
   try {
+    if (primary.credentialSource === "hosted") {
+      return queuedDeploymentCredentialsAvailable("dataforseo")
+        ? { mode: "queued", provider: "dataforseo" }
+        : { mode: "deferred", reason: "credentials_unavailable" };
+    }
     const credentials = resolveProviderCredentials("dataforseo", primary.credentialsEncrypted);
     if (!credentials.login || !credentials.password) {
       return { mode: "deferred", reason: "credentials_unavailable" };

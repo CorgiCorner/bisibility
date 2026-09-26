@@ -91,17 +91,18 @@ export async function persistRankCheck(
         data: { lastUsedAt: result.rankCheck.checkedAt },
         where: { id: target.connectionId },
       });
-      await writeRankCheckProviderCostEntry(tx, {
-        connectionId: target.connectionId,
-        costCents: result.providerCostCents,
-        failed: false,
-        keywordId: target.keywordId,
-        provider: result.rankCheck.provider,
-        providerRequestId: target.providerRequestId,
-        projectId: target.projectId,
-        usage: target.providerUsage ?? result.providerUsage,
-        usageQuantity: result.rankCheck.billingUnits,
-      });
+      if (!result.usageRecorded)
+        await writeRankCheckProviderCostEntry(tx, {
+          connectionId: target.connectionId,
+          costCents: result.providerCostCents,
+          failed: false,
+          keywordId: target.keywordId,
+          provider: result.rankCheck.provider,
+          providerRequestId: target.providerRequestId,
+          projectId: target.projectId,
+          usage: target.providerUsage ?? result.providerUsage,
+          usageQuantity: result.rankCheck.billingUnits,
+        });
     }
     await writeRankCheckAudit(tx, {
       action: "rank_check.completed",

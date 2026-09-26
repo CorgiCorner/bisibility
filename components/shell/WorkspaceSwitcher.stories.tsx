@@ -6,6 +6,7 @@ const faviconStates = [
   {
     domain: "bisibility.com",
     id: "workspace_bisibility",
+    isDefault: false,
     isSample: false,
     keywordCount: 24,
     latestCompletedRankCheckAt: new Date("2026-08-09T10:00:00.000Z"),
@@ -20,6 +21,7 @@ const faviconStates = [
   {
     domain: "no-favicon.example.com",
     id: "workspace_missing",
+    isDefault: false,
     isSample: false,
     keywordCount: 8,
     latestCompletedRankCheckAt: null,
@@ -36,6 +38,7 @@ const faviconStates = [
 const optOutState = {
   domain: "opt-out.example.org",
   id: "workspace_opt_out",
+  isDefault: false,
   isSample: false,
   keywordCount: 0,
   latestCompletedRankCheckAt: null,
@@ -48,12 +51,19 @@ const optOutState = {
   writeMode: "active",
 } satisfies WorkspaceSummary;
 
-function Frame({ workspaces = faviconStates }: { workspaces?: WorkspaceSummary[] }) {
+function Frame({
+  canSetDefault = false,
+  workspaces = faviconStates,
+}: {
+  canSetDefault?: boolean;
+  workspaces?: WorkspaceSummary[];
+}) {
   return (
     <div className="min-h-[360px] w-[380px] bg-bg p-6 text-fg">
       <WorkspaceSwitcher
         activeProjectId={workspaces[0]?.id ?? ""}
         canCreateWorkspace={false}
+        canSetDefault={canSetDefault}
         variant="boxed"
         workspaces={workspaces}
       />
@@ -80,6 +90,16 @@ type Story = StoryObj<typeof meta>;
 export const DomainFaviconStates: Story = {
   name: "Domain favicon states",
   render: () => <Frame />,
+};
+
+export const DefaultProjectStar: Story = {
+  name: "Default project star",
+  render: () => (
+    <Frame
+      canSetDefault
+      workspaces={[faviconStates[0], { ...faviconStates[1], isDefault: true }]}
+    />
+  ),
 };
 
 export const DomainIconsOptedOut: Story = {

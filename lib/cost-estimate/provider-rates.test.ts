@@ -239,10 +239,10 @@ describe("provider rates", () => {
   });
 
   it.each([
-    { expectedCostCents: 5, resultLimit: 100 },
-    { expectedCostCents: 7, resultLimit: 300 },
-    { expectedCostCents: 9, resultLimit: 500 },
-    { expectedCostCents: 14, resultLimit: 1_000 },
+    { expectedCostCents: 7, resultLimit: 100 },
+    { expectedCostCents: 9, resultLimit: 300 },
+    { expectedCostCents: 11, resultLimit: 500 },
+    { expectedCostCents: 16, resultLimit: 1_000 },
   ])(
     "estimates a domain backlinks analysis with $resultLimit rows at $expectedCostCents cents",
     ({ expectedCostCents, resultLimit }) => {
@@ -257,8 +257,8 @@ describe("provider rates", () => {
   );
 
   it.each([
-    { expectedCostCents: 1, resultLimit: 100 },
-    { expectedCostCents: 3, resultLimit: 300 },
+    { expectedCostCents: 3, resultLimit: 100 },
+    { expectedCostCents: 5, resultLimit: 300 },
   ])(
     "estimates loading $resultLimit more backlink rows at $expectedCostCents cents",
     ({ expectedCostCents, resultLimit }) => {
@@ -273,27 +273,25 @@ describe("provider rates", () => {
 
     expect(backlinksCostCents(rates.summary, 0, true)).toBe(2);
     expect(backlinksCostCents(rates.history, 0, true)).toBe(2);
-    expect(backlinksCostCents(rates.rows, 100, true)).toBe(1);
+    expect(backlinksCostCents(rates.rows, 100, true)).toBe(3);
   });
 
   it("skips backlink history pricing for page scope", () => {
     const rates = backlinksRates("dataforseo");
     const costCents = backlinksCostCents(rates.summary, 0) + backlinksCostCents(rates.rows, 100);
 
-    expect(costCents).toBe(3);
+    expect(costCents).toBe(5);
   });
 
   it("pins the provisional domain overview feature rates", () => {
     const rates = domainOverviewRates("dataforseo");
 
-    expect(rates.overview).toMatchObject({
-      baseCostCents: 1.2,
-      checkedAt: "2026-08-11",
-      costCents: 1.2,
+    expect(rates.overview).toEqual({
+      checkedAt: "2026-09-21",
+      costCents: 2,
       feature: "domain_rank_overview",
       providerId: "dataforseo",
       sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-      unitCostCents: 0.012,
     });
     expect(rates.history).toMatchObject({
       baseCostCents: 12,
@@ -305,13 +303,13 @@ describe("provider rates", () => {
       unitCostCents: 0.12,
     });
     expect(rates.pages).toMatchObject({
-      baseCostCents: 1.2,
-      checkedAt: "2026-08-11",
-      costCents: 1.2,
+      baseCostCents: 1,
+      checkedAt: "2026-09-21",
+      costCents: 2,
       feature: "relevant_pages",
       providerId: "dataforseo",
       sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-      unitCostCents: 0.012,
+      unitCostCents: 0.01,
     });
   });
 
@@ -326,19 +324,18 @@ describe("provider rates", () => {
   it("estimates domain overview costs per task plus returned item", () => {
     const rates = domainOverviewRates("dataforseo");
 
+    // The overview is a flat per-request charge, so the item count does not scale it.
     expect(estimatedFeatureCostCents(rates.overview, 100, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(
-      2.4,
+      2,
     );
     expect(estimatedFeatureCostCents(rates.history, 12, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(
       13.44,
     );
-    expect(estimatedFeatureCostCents(rates.pages, 100, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(
-      2.4,
-    );
+    expect(estimatedFeatureCostCents(rates.pages, 100, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(2);
   });
 
   it("exposes the default list estimate before a target-specific cache check", () => {
-    expect(domainOverviewListEstimate("dataforseo")).toEqual({ core: 5.612, history: 12.12 });
+    expect(domainOverviewListEstimate("dataforseo")).toEqual({ core: 6, history: 12.12 });
     expect(domainOverviewListEstimate("missing")).toEqual({ core: null, history: null });
   });
 

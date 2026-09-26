@@ -202,6 +202,7 @@ describe("MCP tool dispatch", () => {
       -1,
     ) as unknown as [Request, string[], { auth: unknown }];
     expect(request.headers.get("authorization")).toBeNull();
+    expect(request.headers.get("x-bisibility-source")).toBe("mcp");
     expect(preauthenticated.auth).toBe(oauthAuth);
     expect(mocks.handleApiRequest).not.toHaveBeenCalled();
   });
@@ -340,6 +341,7 @@ describe("MCP tool dispatch", () => {
     });
     const request = mocks.handleApiRequest.mock.calls.at(-1)?.[0] as Request;
     expect(request.headers.get("x-bisibility-project")).toBe("prj_a00000000000000000000000");
+    expect(request.headers.get("x-bisibility-source")).toBe("mcp");
   });
 
   it("forwards async rank checks through the standard Prefer header", async () => {
@@ -665,6 +667,7 @@ describe("MCP tool dispatch", () => {
         connection_id: "conn_a00000000000000000000000",
         fresh: true,
         limit: 100,
+        max_cost_cents: 5,
         offset: 100,
         project_id: "prj_a00000000000000000000000",
       },
@@ -673,7 +676,8 @@ describe("MCP tool dispatch", () => {
     expect(result.payload).toMatchObject({
       method: "GET",
       path: ["projects", "prj_a00000000000000000000000", "ranked-keyword-suggestions"],
-      search: "?connection_id=conn_a00000000000000000000000&offset=100&limit=100&fresh=true",
+      search:
+        "?connection_id=conn_a00000000000000000000000&offset=100&limit=100&fresh=true&max_cost_cents=5",
     });
     expect(
       getMcpToolDefinitions().find((tool) => tool.name === "list_ranked_keyword_suggestions")

@@ -129,6 +129,8 @@ const preview = {
   expiresAt: "2026-09-03T12:00:00.000Z",
   keywordCount: 1,
   matched: 1,
+  overlapRunCount: 0,
+  overlaps: [],
   previewToken: "preview-header-token",
   selectionHash: "header-selection",
   targetCount: 1,

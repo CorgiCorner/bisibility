@@ -1,15 +1,59 @@
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ProjectDomainRequiredError } from "@/lib/projects/tracked-domain";
+import type { AdmissionErrorDetails } from "@/lib/providers/admission-error-details";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { BudgetExhaustedError } from "@/lib/rank-check/budget";
+import { ProviderChainError } from "@/lib/rank-check/provider-chain-error";
 import { RankCheckRunnerError } from "@/lib/rank-check/runner-error";
-import { UnrunnableInlineRankCheckError } from "@/lib/rank-check/runs/launch-types";
+import {
+  LaunchRankCheckRunError,
+  UnrunnableInlineRankCheckError,
+} from "@/lib/rank-check/runs/launch-types";
 import { ZodError, z } from "zod";
+import { budgetExhaustedResponse } from "./budget-exhausted";
 import { ApiConflictError, ApiForbiddenError, ApiInputError, ApiNotFoundError } from "./errors";
 import { errorResponse } from "./responses";
 
-export function errorFromUnknown(error: unknown, headers: Headers, url: URL) {
+export function errorFromUnknown(
+  error: unknown,
+  headers: Headers,
+  url: URL,
+  admissionDetails?: AdmissionErrorDetails | null,
+) {
   const instance = `urn:bisibility:api:v1:${url.pathname}`;
+  if (error instanceof DeploymentAdmissionExhaustedError) {
+    if (error.reason === "budget") {
+      return budgetExhaustedResponse(
+        { headers, instance },
+        {
+          detail: "Deployment spending budget is exhausted for this month.",
+          scope: error.scope,
+          surface: error.surface ?? "programmatic",
+        },
+      );
+    }
+    const cleanHeaders = new Headers(headers);
+    cleanHeaders.delete("Retry-After");
+    cleanHeaders.delete("RateLimit-Reset");
+    return errorResponse(
+      "credits_exhausted",
+      "Deployment credits are exhausted. Ask the project owner to add credits in Billing or connect their own provider key.",
+      402,
+      {
+        headers: cleanHeaders,
+        instance,
+        problemDetails: admissionDetails ?? { balance_cents: null },
+      },
+    );
+  }
+  if (
+    error instanceof ProviderChainError &&
+    error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError
+  ) {
+    return errorFromUnknown(error.admissionExhaustion, headers, url, admissionDetails);
+  }
   if (error instanceof ZodError) {
     return errorResponse("validation_failed", "Request input failed validation.", 400, {
       details: z.flattenError(error),
@@ -42,11 +86,27 @@ export function errorFromUnknown(error: unknown, headers: Headers, url: URL) {
   if (error instanceof ApiForbiddenError) {
     return errorResponse("forbidden", error.message, 403, { headers, instance });
   }
+  if (isOperationAccessDeniedError(error)) {
+    return errorResponse("forbidden", error.message, 403, { headers, instance });
+  }
   if (error instanceof ProjectReadOnlyError) {
     return errorResponse("project_read_only", error.message, 423, { headers, instance });
   }
   if (error instanceof ProjectDomainRequiredError) {
     return errorResponse("project_domain_required", error.message, 422, { headers, instance });
+  }
+  if (error instanceof LaunchRankCheckRunError) {
+    if (error.code === "budget_exhausted") {
+      return budgetExhaustedResponse({ headers, instance }, { surface: "programmatic" });
+    }
+    if (error.code === "cost_limit_exceeded") {
+      return errorResponse("cost_limit_exceeded", error.message, 422, {
+        headers,
+        instance,
+        problemDetails: { estimated_cost_cents: error.estimatedCostCents },
+      });
+    }
+    return errorResponse("provider_unavailable", error.message, 409, { headers, instance });
   }
   if (error instanceof BudgetExhaustedError) {
     return errorResponse("budget_exhausted", error.message, 429, { headers, instance });

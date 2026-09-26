@@ -156,6 +156,7 @@ export const keywordBulkSchema = z
   });
 
 export const runRankCheckSchema = z.object({
+  max_cost_cents: z.number().int().positive().optional(),
   provider_id: z.string().trim().min(1).max(80).optional(),
 });
 

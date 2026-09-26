@@ -1,7 +1,9 @@
 import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { itemStatusChipPresentation } from "@/components/ui/status-chip-mapping";
+import { nativeUsageUnit } from "@/lib/cost-estimate/native-usage";
 import { deviceLabel } from "@/lib/queries/keyword-row-format";
 import { isUnrunnableReason } from "@/lib/rank-check/runnable-reasons";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
@@ -27,6 +29,7 @@ export function runTargetNote(
   t: ReturnType<typeof useTranslations<"projectRuns.rankRuns">>,
   locale: string,
 ) {
+  if (item.blockedReason === "send_unconfirmed") return t("targetPresentation.sendUnconfirmed");
   if (
     item.blockedReason === "target_paused" ||
     item.blockedReason === "location_language_unavailable"
@@ -39,7 +42,9 @@ export function runTargetNote(
       .compact;
   }
   if (item.status === "skipped" || item.status === "blocked") {
-    return t("targetPresentation.skippedBeforeStart");
+    return item.startedAt
+      ? t("targetPresentation.stoppedAfterStart")
+      : t("targetPresentation.skippedBeforeStart");
   }
   if (run.status === "blocked" && item.status === "queued") {
     return localizedBlockedRunCopy(
@@ -77,12 +82,20 @@ export function runTargetTableColumns({
     value === null
       ? t("unavailable")
       : new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(value / 100);
+  const operations = nativeUsageUnit(run.provider) === "units" || Boolean(run.usage);
+  const usageLabel = operations ? t("operations") : t("cost");
+  const actualUsage = (item: RunPageItem) =>
+    operations
+      ? nativeUsageUnit(item.rankCheck?.provider) === "units"
+        ? (item.rankCheck?.billingUnits ?? null)
+        : null
+      : item.actualCostCents;
   const columns: DataTableColumn<RunPageItem>[] = [
     {
       accessorFn: (item) => item.keyword.text,
       cell: ({ row }) => (
         <Link
-          className="block truncate font-semibold text-fg no-underline hover:text-accent-text"
+          className={`block truncate font-semibold ${dataLinkClassName}`}
           href={appPath(projectRef, "rank-tracker", row.original.keyword.publicId)}
         >
           {row.original.keyword.text}
@@ -103,14 +116,16 @@ export function runTargetTableColumns({
             ? "blocked"
             : row.original.status,
         );
-        return <StatusChip {...status} label={statusT(status.messageKey)} />;
+        const messageKey =
+          row.original.blockedReason === "send_unconfirmed" ? "notConfirmed" : status.messageKey;
+        return <StatusChip {...status} messageKey={messageKey} label={statusT(messageKey)} />;
       },
       enableSorting: false,
       header: t("status"),
       id: "status",
       meta: { lockResize: true, title: t("status") },
-      minSize: 112,
-      size: 120,
+      minSize: 128,
+      size: 136,
     },
     {
       accessorFn: (item) => `${item.keyword.location} ${item.keyword.languageLabel ?? ""}`,
@@ -148,14 +163,21 @@ export function runTargetTableColumns({
       size: 112,
     },
     {
-      accessorFn: (item) => item.actualCostCents ?? item.estimatedCostCents,
-      cell: ({ row }) => money(row.original.actualCostCents ?? row.original.estimatedCostCents),
+      accessorFn: actualUsage,
+      cell: ({ row }) => {
+        const value = actualUsage(row.original);
+        return operations
+          ? value === null
+            ? t("usageNotRecorded")
+            : new Intl.NumberFormat(locale).format(value)
+          : money(value);
+      },
       enableSorting: false,
-      header: t("cost"),
+      header: usageLabel,
       id: "cost",
-      meta: { align: "end", lockResize: true, title: t("cost") },
-      minSize: 88,
-      size: 96,
+      meta: { align: "end", lockResize: true, title: usageLabel },
+      minSize: operations ? 120 : 88,
+      size: operations ? 128 : 96,
     },
   ];
   if (showNotes) {

@@ -1,5 +1,6 @@
 "use server";
 
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { launchRankCheckRun } from "@/lib/rank-check/runs/launch";
 import { LaunchRankCheckRunError, SampleProjectError } from "@/lib/rank-check/runs/launch-types";
 import { PreviewTokenError } from "@/lib/rank-check/runs/preview-token";
@@ -28,6 +29,7 @@ export async function launchRankCheckRunAction(
       actorId: actor.id,
       depth: data.depth,
       idempotencyKey: data.idempotencyKey,
+      origin: APP_REQUEST_ORIGIN,
       previewToken: data.previewToken,
       project,
       providerId: data.providerId,

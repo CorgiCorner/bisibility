@@ -6,7 +6,7 @@ describe("chatgptStarterPromptKey", () => {
     expect(chatgptStarterPromptKey(true)).toBe("withChecks");
   });
 
-  it("selects the first-keyword prompt when the project has none", () => {
+  it("selects the project-discovery prompt when the project has no checks", () => {
     expect(chatgptStarterPromptKey(false)).toBe("withoutChecks");
   });
 });

@@ -41,6 +41,22 @@ describe("loadSearchInsightsRows", () => {
     });
   });
 
+  it("hands a trimmed search to the read service", async () => {
+    await loadSearchInsightsRows({
+      kind: "pages",
+      limit: 25,
+      offset: 25,
+      projectId: "prj_1",
+      property: "sc-domain:example.com",
+      search: "  /guide  ",
+    });
+
+    expect(mocks.rowsPage).toHaveBeenCalledWith(
+      "prj_1",
+      expect.objectContaining({ kind: "pages", limit: 25, offset: 25, search: "/guide" }),
+    );
+  });
+
   it("requires the canonical property for every table kind", async () => {
     for (const kind of ["pages", "queries"] as const) {
       await expect(

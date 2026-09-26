@@ -43,9 +43,13 @@ const usage = {
         allocationSource: "legacy_project",
         billing: "quota",
         connectionId: "conn_serp",
+        credentialSource: "own",
         enabled: true,
-        features: [{ costCents: 0, count: 0, feature: "rank_check", label: "Rank checks" }],
+        features: [
+          { bySource: [], costCents: 0, count: 0, feature: "rank_check", label: "Rank checks" },
+        ],
         primary: true,
+        programmaticAllocation: null,
         projectedExhaustionAt: null,
         provider: "SerpApi",
         providerId: "serpapi",
@@ -54,6 +58,74 @@ const usage = {
         requestCount: 28,
         state: "fallback_active",
         status: "connected",
+        own: {
+          requestCount: 28,
+          surfaces: {
+            app: {
+              allocation: { amountPerMonth: 100, unit: "units" },
+              projectedExhaustionAt: null,
+              remaining: 0,
+              state: "capped",
+              used: 100,
+              usedPercent: 100,
+            },
+            programmatic: {
+              allocation: null,
+              projectedExhaustionAt: null,
+              remaining: null,
+              state: "no_allocation",
+              used: 0,
+              usedPercent: null,
+            },
+          },
+          unconfirmedCount: 0,
+          unit: "units",
+          used: 100,
+          usedPriorMonth: 1280,
+        },
+        credits: {
+          requestCount: 0,
+          surfaces: {
+            app: {
+              allocation: null,
+              projectedExhaustionAt: null,
+              remaining: null,
+              state: "no_allocation",
+              used: 0,
+              usedPercent: null,
+            },
+            programmatic: {
+              allocation: null,
+              projectedExhaustionAt: null,
+              remaining: null,
+              state: "no_allocation",
+              used: 0,
+              usedPercent: null,
+            },
+          },
+          unconfirmedCount: 0,
+          unit: "cents",
+          used: 0,
+          usedPriorMonth: 0,
+        },
+        surfaces: {
+          app: {
+            allocation: { amountPerMonth: 100, unit: "units" },
+            projectedExhaustionAt: null,
+            remaining: 0,
+            state: "capped",
+            used: 100,
+            usedPercent: 100,
+          },
+          programmatic: {
+            allocation: null,
+            projectedExhaustionAt: null,
+            remaining: null,
+            state: "no_allocation",
+            used: 0,
+            usedPercent: null,
+          },
+        },
         unit: "units",
         used: 100,
         usedPercent: 100,
@@ -70,9 +142,13 @@ const usage = {
         allocationSource: "connection",
         billing: "metered",
         connectionId: "conn_data",
+        credentialSource: "own",
         enabled: true,
-        features: [{ costCents: 10, count: 1, feature: "rank_check", label: "Rank checks" }],
+        features: [
+          { bySource: [], costCents: 10, count: 1, feature: "rank_check", label: "Rank checks" },
+        ],
         primary: false,
+        programmaticAllocation: null,
         projectedExhaustionAt: null,
         provider: "DataForSEO",
         providerId: "dataforseo",
@@ -81,6 +157,74 @@ const usage = {
         requestCount: 1,
         state: "ok",
         status: "connected",
+        own: {
+          requestCount: 1,
+          surfaces: {
+            app: {
+              allocation: { amountPerMonth: 3000, unit: "cents" },
+              projectedExhaustionAt: null,
+              remaining: 2990,
+              state: "ok",
+              used: 10,
+              usedPercent: 0.33,
+            },
+            programmatic: {
+              allocation: null,
+              projectedExhaustionAt: null,
+              remaining: null,
+              state: "no_allocation",
+              used: 0,
+              usedPercent: null,
+            },
+          },
+          unconfirmedCount: 0,
+          unit: "cents",
+          used: 10,
+          usedPriorMonth: 40,
+        },
+        credits: {
+          requestCount: 0,
+          surfaces: {
+            app: {
+              allocation: null,
+              projectedExhaustionAt: null,
+              remaining: null,
+              state: "no_allocation",
+              used: 0,
+              usedPercent: null,
+            },
+            programmatic: {
+              allocation: null,
+              projectedExhaustionAt: null,
+              remaining: null,
+              state: "no_allocation",
+              used: 0,
+              usedPercent: null,
+            },
+          },
+          unconfirmedCount: 0,
+          unit: "cents",
+          used: 0,
+          usedPriorMonth: 0,
+        },
+        surfaces: {
+          app: {
+            allocation: { amountPerMonth: 3000, unit: "cents" },
+            projectedExhaustionAt: null,
+            remaining: 2990,
+            state: "ok",
+            used: 10,
+            usedPercent: 0.33,
+          },
+          programmatic: {
+            allocation: null,
+            projectedExhaustionAt: null,
+            remaining: null,
+            state: "no_allocation",
+            used: 0,
+            usedPercent: null,
+          },
+        },
         unit: "cents",
         used: 10,
         usedPercent: 0.33,
@@ -103,9 +247,15 @@ const usage = {
         startsAt: "2026-08-01T00:00:00.000Z",
       },
       projected: { at: "2026-08-27T00:00:00.000Z", kind: "cap_by", provider: "SerpApi" },
-      recorded: { cents: 10, units: 28 },
+      recorded: { cents: 10, creditsCents: 0, units: 28 },
       requestCount: 29,
-      tightest: { connectionId: "conn_serp", provider: "SerpApi", usedPercent: 100 },
+      tightest: {
+        connectionId: "conn_serp",
+        provider: "SerpApi",
+        source: "own",
+        surface: "app",
+        usedPercent: 100,
+      },
     },
   },
 } as unknown as UsageSettingsContentProps["usage"];
@@ -199,17 +349,24 @@ describe("UsageSettingsContent", () => {
     const connection = next.providerSpend.connections[0];
     connection.used = percent;
     connection.usedPercent = percent;
+    connection.surfaces.app.used = percent;
+    connection.surfaces.app.usedPercent = percent;
+    connection.own.used = percent;
+    connection.own.surfaces.app.used = percent;
+    connection.own.surfaces.app.usedPercent = percent;
     next.providerSpend.summary.maxUsedPercent = percent;
     next.providerSpend.summary.tightest = {
       connectionId: "conn_serp",
       provider: "SerpApi",
+      source: "own",
+      surface: "app",
       usedPercent: percent,
     };
     const { container } = renderUsage(next);
 
     const summaryFill = container.querySelector('[role="meter"][aria-label="Budget used"] span');
     const rowFill = container.querySelector(
-      '[role="meter"][aria-label="SerpApi budget used"] span',
+      '[role="meter"][aria-label="SerpApi app and schedules budget used"] span',
     );
     const allocation = screen.getByText(`${percent} of 100 searches used`);
     expect(summaryFill).toHaveClass(fillClass);
@@ -255,7 +412,7 @@ describe("UsageSettingsContent", () => {
     };
     renderUsage(next);
 
-    await user.click(screen.getByRole("button", { name: "Edit budget" }));
+    await user.click(screen.getByRole("button", { name: "Edit budgets" }));
 
     expect(screen.getByRole("dialog")).toHaveTextContent(
       "No provider connected yet. Connect a provider to set a monthly budget for it.",
@@ -272,16 +429,16 @@ describe("UsageSettingsContent", () => {
     next.providerSpend.connections = [next.providerSpend.connections[0]];
     renderUsage(next);
 
-    await user.click(screen.getByRole("button", { name: "Edit budget" }));
+    await user.click(screen.getByRole("button", { name: "Edit budgets" }));
 
-    expect(screen.getByLabelText("SerpApi monthly budget")).toBeInTheDocument();
+    expect(screen.getByLabelText("SerpApi app and schedules budget")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
   it("validates and saves changed per-provider budget payloads", async () => {
     const user = userEvent.setup();
     renderUsage();
-    await user.click(screen.getByRole("button", { name: "Edit budget" }));
-    const input = screen.getByLabelText("DataForSEO monthly budget");
+    await user.click(screen.getByRole("button", { name: "Edit budgets" }));
+    const input = screen.getByLabelText("DataForSEO app and schedules budget");
     await user.clear(input);
     await user.type(input, "40.50");
     await user.click(screen.getByRole("button", { name: "Save" }));
@@ -290,7 +447,7 @@ describe("UsageSettingsContent", () => {
       connectionId: "conn_data",
     });
     expect(routerMock.refresh).toHaveBeenCalledOnce();
-    fireEvent.click(screen.getByRole("button", { name: "Edit budget" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit budgets" }));
   });
 
   it("keeps an unknown pricing action failure localized for a non-English locale", async () => {
@@ -320,15 +477,24 @@ describe("UsageSettingsContent", () => {
 it("fills the monthly budget from a fresh provider balance and leaves saving to the user", async () => {
   const user = userEvent.setup();
   actions.updateProviderAllocation.mockClear();
+  const dataForSeo = usage.providerSpend.connections[1];
   refreshBalance.mockResolvedValue({
-    ...usage.providerSpend.connections[1],
+    ...dataForSeo,
     used: 14,
+    own: {
+      ...dataForSeo.own,
+      used: 14,
+      surfaces: {
+        ...dataForSeo.own.surfaces,
+        app: { ...dataForSeo.own.surfaces.app, used: 14 },
+      },
+    },
     availableAtProvider: { status: "available", amount: 0.86, unit: "usd" },
   });
   renderUsage();
-  await user.click(screen.getByRole("button", { name: "Edit budget" }));
+  await user.click(screen.getByRole("button", { name: "Edit budgets" }));
   await user.click(screen.getAllByRole("button", { name: "Use provider balance" })[1]);
   expect(refreshBalance).toHaveBeenCalledWith("prj_story", "conn_data");
-  expect(screen.getByLabelText("DataForSEO monthly budget")).toHaveValue("1.00");
+  expect(screen.getByLabelText("DataForSEO app and schedules budget")).toHaveValue("1.00");
   expect(actions.updateProviderAllocation).not.toHaveBeenCalled();
 });

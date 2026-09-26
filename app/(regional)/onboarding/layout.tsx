@@ -1,6 +1,7 @@
 import { ReplaySurface } from "@/components/analytics/ReplaySurface";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { OnboardingLogoutButton } from "@/components/onboarding/OnboardingLogoutButton";
+import { renderAccountDataSourceExtension } from "@/components/settings/AccountDataSourceExtension";
 import { shellUserEmail } from "@/components/shell/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandLockup } from "@/components/ui/BrandLockup";
@@ -60,6 +61,7 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
         })
       : null;
 
+  const decorated = isDemo ? children : await renderAccountDataSourceExtension(children);
   return (
     <FeatureMessagesProvider
       locale={runtime.locale}
@@ -86,7 +88,7 @@ export default async function OnboardingLayout({ children }: Readonly<Onboarding
               <OnboardingLogoutButton />
             </div>
           </header>
-          {isDemo ? children : <ReplaySurface kind="onboarding">{children}</ReplaySurface>}
+          {isDemo ? children : <ReplaySurface kind="onboarding">{decorated}</ReplaySurface>}
           <div className="mt-auto pt-14">
             <footer className="flex flex-wrap items-center justify-between gap-3 border-border border-t pt-6 text-xs text-fg-muted">
               <span>{runtime.t("onboarding.layout.copyright")}</span>

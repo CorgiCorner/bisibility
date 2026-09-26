@@ -3,6 +3,7 @@
 // components/checks/upcoming. Seeded identically on all checks-v2 branches;
 // keep changes additive and mirror them across branches before merging.
 
+import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import type { Device } from "@/lib/generated/prisma/client";
 
 export type RankCheckStatus = "running" | "completed" | "failed" | "deferred";
@@ -213,6 +214,8 @@ export type UpcomingDayGroup = {
   label: string;
   count: number;
   estimatedCostCents: number;
+  /** Provider-native estimate for the day's scheduled checks; null when no provider can say. */
+  nativeEstimate: NativeUsageEstimate | null;
   samples: UpcomingSample[];
 };
 
@@ -220,6 +223,8 @@ export type UpcomingForecast = {
   capCents: number;
   spentCents: number;
   next48hCents: number;
+  /** Provider-native estimate for the next 48 hours; null when no provider can say. */
+  next48hNative: NativeUsageEstimate | null;
   /** ISO date the cap is projected to run out; null when the spend rate is zero. */
   capLastsUntil: string | null;
 };

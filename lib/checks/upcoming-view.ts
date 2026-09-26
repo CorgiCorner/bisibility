@@ -1,3 +1,8 @@
+import {
+  combineUsageEstimates,
+  estimateRankUsage,
+  type NativeUsageEstimate,
+} from "@/lib/cost-estimate/native-usage";
 import { type DateFormat, formatDateRange } from "@/lib/dates/format";
 import { hasMonthlyBudgetCap } from "@/lib/rank-check/budget-contract";
 import { defaultCostPerCheckCents } from "@/lib/rank-check/default-cost";
@@ -87,6 +92,17 @@ function scheduleCost(
   );
 }
 
+/** Upper-bound native operations (or metered cents) per scheduled check; never plan dollars. */
+function scheduleUsage(
+  schedule: UpcomingScheduleSource,
+  providers: readonly UpcomingProviderSource[],
+): NativeUsageEstimate {
+  return estimateRankUsage([resolveSerpDepth(schedule.serpDepth ?? undefined)], {
+    overrideCents: null,
+    providerId: primaryProvider(providers)?.provider ?? null,
+  });
+}
+
 function dayGroups(input: UpcomingViewInput): UpcomingDayGroup[] {
   const startDay = zonedDay(input.now, input.projectTimezone);
   const groups = new Map<string, UpcomingDayGroup>();
@@ -120,12 +136,22 @@ function dayGroups(input: UpcomingViewInput): UpcomingDayGroup[] {
           input.projectTimezone,
           input.dateFormat ?? "month_first",
         ),
+        nativeEstimate: scheduleUsage(schedule, input.providers),
         samples: [sample],
       });
       continue;
     }
     existing.count += 1;
     existing.estimatedCostCents += scheduleCost(schedule, input.providers);
+    existing.nativeEstimate = combineUsageEstimates([
+      existing.nativeEstimate ?? {
+        providerId: null,
+        unit: null,
+        quantity: null,
+        unknownTargets: existing.count - 1,
+      },
+      scheduleUsage(schedule, input.providers),
+    ]);
     if (existing.samples.length < 3) existing.samples.push(sample);
   }
 
@@ -140,6 +166,17 @@ function next48hCents(input: UpcomingViewInput) {
       ? sum + scheduleCost(schedule, input.providers)
       : sum;
   }, 0);
+}
+
+function next48hUsage(input: UpcomingViewInput) {
+  const until = input.now.getTime() + 2 * DAY_MS;
+  const estimates = input.schedules
+    .filter((schedule) => {
+      const scheduledAt = schedule.nextCheckAt.getTime();
+      return scheduledAt >= input.now.getTime() && scheduledAt <= until;
+    })
+    .map((schedule) => scheduleUsage(schedule, input.providers));
+  return estimates.length > 0 ? combineUsageEstimates(estimates) : null;
 }
 
 function observedDailySpend(input: UpcomingViewInput) {
@@ -168,6 +205,7 @@ export function buildUpcomingView(input: UpcomingViewInput): UpcomingView {
       capCents: input.budgetCapCents,
       capLastsUntil,
       next48hCents: next48h,
+      next48hNative: next48hUsage(input),
       spentCents: input.spentCents,
     },
     providerSummary: upcomingProviderSummary(input.providers),

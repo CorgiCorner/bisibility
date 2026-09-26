@@ -1,10 +1,12 @@
 import "server-only";
 
+import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { launchRankCheckRun } from "./launch";
 import {
   ALREADY_IN_PROGRESS_REASON,
   isLaunchRankCheckRunNothingToRun,
+  LaunchRankCheckRunError,
   type LaunchRankCheckRunResult,
   launchRankCheckRunNothingToRun,
   nothingToRunReasonFromExclusion,
@@ -16,6 +18,8 @@ type LaunchSingleRankCheckRunInput = {
   actorId: string | null;
   depth?: SerpDepth;
   keywordId: `kw_${string}`;
+  maxCostCents?: number;
+  origin: ProviderRequestOrigin;
   project: RankCheckRunProject;
   providerId?: string;
   trigger: "api" | "manual";
@@ -27,13 +31,23 @@ export async function launchSingleRankCheckRun(
   const spec = { kind: "single" as const, keywordId: input.keywordId, v: 1 as const };
   const preview = await previewRankCheckRun({
     depth: input.depth,
+    origin: input.origin,
     project: input.project,
     providerId: input.providerId,
     spec,
+    trigger: input.trigger,
   });
+  if (
+    input.maxCostCents !== undefined &&
+    typeof preview.estimate.costCents === "number" &&
+    preview.estimate.costCents > input.maxCostCents
+  ) {
+    throw new LaunchRankCheckRunError("cost_limit_exceeded", preview.estimate.costCents);
+  }
   const launched = await launchRankCheckRun({
     actorId: input.actorId,
     depth: input.depth,
+    origin: input.origin,
     previewToken: preview.previewToken,
     project: input.project,
     providerId: input.providerId,

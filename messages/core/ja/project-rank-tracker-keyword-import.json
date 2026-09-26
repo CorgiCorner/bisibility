@@ -448,6 +448,7 @@
           "monthlyNoSpend": "スケジュールによる利用額なし",
           "monthlyUnavailable": "推定値を利用できません",
           "monthlySame": "月間の利用額は変わりません",
+          "monthlyDeltaUsage": "{direction, select, positive {+{usage} / 月} negative {-{usage} / 月} other {{usage} / 月}}",
           "monthlyDelta": "{direction, select, positive {+{cost, number, ::currency/USD}} negative {-{cost, number, ::currency/USD}} other {{cost, number, ::currency/USD}}} / 月",
           "monthlyDeltaBelowCent": "{direction, select, positive {+} negative {-} other {}}< {minimum, number, ::currency/USD} / 月",
           "name": "名前",
@@ -581,7 +582,8 @@
           "deleting": "削除中...",
           "delete": "削除",
           "clear": "クリア",
-          "scheduleLoadFailed": "スケジュールを読み込めませんでした。再試行してください。"
+          "scheduleLoadFailed": "スケジュールを読み込めませんでした。再試行してください。",
+          "toolbar": "選択したキーワードの操作"
         },
         "filters": {
           "reset": "リセット",
@@ -716,11 +718,14 @@
           "downloadCsv": "CSV をダウンロード",
           "findMore": "キーワードリサーチでさらに探す",
           "selected": "{count, plural, other {#件を選択中}}",
+          "trackingAllUsage": "{count, number}件すべてを追跡すると、毎日のチェックで月あたり {usage} 増えます",
           "trackingAll": "{count, number}件すべてを追跡すると、毎日のチェックで月あたり {cost, number, ::currency/USD} 増えます",
           "trackingUnavailable": "{count, number}件すべてを追跡した場合、毎日のチェックでの推定値は利用できません",
           "remove": "削除",
           "track": "{count, number}件を追跡",
+          "trackAriaUsage": "{count, number}件を追跡 月あたり {usage}",
           "trackAria": "{count, number}件を追跡 月あたり {cost, number, ::currency/USD}",
+          "monthlyEstimateUsage": "約 {usage}/月",
           "monthlyEstimate": "約 {cost, number, ::currency/USD}/月",
           "clear": "クリア",
           "snapshotNote": "指標はリサーチ実行時点のスナップショットです / 保存は無料で、追跡を開始するまでチェックは行われません",

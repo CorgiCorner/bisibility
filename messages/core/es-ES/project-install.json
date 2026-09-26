@@ -92,14 +92,36 @@
         "description": "Elige bisibility en el menú de herramientas de un chat nuevo. Prueba con: «{prompt}»",
         "prompt": {
           "withChecks": "¿Qué palabras clave han perdido posiciones esta semana?",
-          "withoutChecks": "Añade mis primeras palabras clave y ejecuta una comprobación de posiciones."
+          "withoutChecks": "¿Qué proyectos y palabras clave puedo consultar?"
         },
         "title": "3. Iniciar una conversación"
       },
       "guideLink": "Guía de configuración de ChatGPT",
       "heading": "Cómo empezar",
       "note": "El modo de desarrollador puede depender de los ajustes de tu cuenta o de tu espacio de trabajo.",
-      "show": "Mostrar cómo empezar"
+      "show": "Mostrar cómo empezar",
+      "clientSwitcher": "Asistente de IA",
+      "accessTitle": "Acceso de solo lectura",
+      "accessDescription": "Esta conexión con ChatGPT permite leer datos de proyectos y posiciones. No permite modificar ni eliminar proyectos, gestionar miembros ni crear claves de API.",
+      "claude": {
+        "description": "Conecta bisibility con Claude.",
+        "accessTitle": "Acceso de lectura y escritura",
+        "accessDescription": "Claude puede leer datos y utilizar las herramientas de escritura disponibles, según los permisos que apruebes y los que ya tengas en cada proyecto.",
+        "developerMode": {
+          "title": "1. Abre los conectores",
+          "description": "En Claude, abre Settings → Connectors y selecciona Add custom connector."
+        },
+        "addApp": {
+          "title": "2. Añade bisibility",
+          "description": "Introduce bisibility como nombre y pega la URL de MCP que aparece abajo. Añade el conector, selecciona Connect e inicia sesión en bisibility para revisar los permisos.",
+          "copyMcpUrl": "Copiar URL de MCP para Claude"
+        },
+        "firstChat": {
+          "description": "En un chat nuevo, abre el menú +, elige Connectors y activa bisibility. Prueba: «{prompt}»"
+        },
+        "note": "Es posible que el administrador de tu espacio de trabajo deba añadir o habilitar los conectores personalizados.",
+        "guideLink": "Guía de configuración de Claude"
+      }
     }
   }
 }

@@ -94,6 +94,7 @@ export const operationPolicy = {
   listPersonalAccessTokens: policy("GET", "/me/tokens", "admin"),
   listProjectApiKeys: policy("GET", "/projects/{project_id}/api-keys", "admin"),
   listProjects: policy("GET", "/projects", "read"),
+  listProviderBudgets: policy("GET", "/projects/{project_id}/provider-budgets", "read"),
   listProviders: policy("GET", "/projects/{project_id}/providers", "read"),
   listRankChecks: policy("GET", "/keywords/{id}/rank-checks", "read"),
   listRankedKeywordSuggestions: policy(
@@ -220,6 +221,13 @@ export const operationPolicy = {
   ),
   updateProject: policy("PATCH", "/projects/{project_id}", "write"),
   updateProjectDefaults: policy("PATCH", "/projects/{project_id}/defaults", "write"),
+  updateProviderBudgets: policy(
+    "PATCH",
+    "/projects/{project_id}/providers/{provider_id}/budgets",
+    "write",
+    "write",
+    caps.manageProviderConnection,
+  ),
   updateProviderSettings: policy(
     "PATCH",
     "/projects/{project_id}/providers/{provider_id}",

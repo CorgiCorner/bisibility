@@ -1,21 +1,18 @@
 import type { ResearchKeywordsAction } from "@/lib/actions/keyword-research";
-import type { KeywordResearchSuccess } from "@/lib/keyword-research/types";
+import type { KeywordResearchEstimate } from "@/lib/keyword-research/types";
 import { deferred } from "@/tests/deferred";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useResearchEstimate } from "./useResearchEstimate";
 
-function estimate(costCents: number): KeywordResearchSuccess {
+function estimate(costCents: number): KeywordResearchEstimate {
   return {
     cached: false,
-    cachedUntil: "2026-07-22T22:00:00.000Z",
     connections: [],
     costCents,
     estimate: true,
-    fetchedAt: "2026-07-22T10:00:00.000Z",
     ok: true,
     provider: "DataForSEO",
-    rows: [],
     sources: [],
   };
 }
@@ -27,8 +24,8 @@ describe("useResearchEstimate", () => {
 
   it("ignores a stale estimate that resolves after the latest request", async () => {
     vi.useFakeTimers();
-    const first = deferred<KeywordResearchSuccess>();
-    const second = deferred<KeywordResearchSuccess>();
+    const first = deferred<KeywordResearchEstimate>();
+    const second = deferred<KeywordResearchEstimate>();
     const researchAction = vi.fn((input: unknown) => {
       const seed = (input as { seed: string }).seed;
       return seed === "first" ? first.promise : second.promise;

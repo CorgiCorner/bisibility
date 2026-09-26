@@ -145,6 +145,10 @@ export type DrawerDefaults = {
 };
 
 export type ProviderConnectionReadState = {
+  readonly connectionId?: string;
+  readonly credentialSource?: "own" | "hosted";
+  readonly connectionUpdatedAt?: string;
+  readonly hasStoredCredentials?: boolean;
   readonly enabled?: boolean;
   readonly primary?: boolean;
   readonly priority?: number;

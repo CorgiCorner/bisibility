@@ -4,7 +4,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { describe, expect, it } from "vitest";
 
 const migrationName = "20260905210000_competitor_membership_contract";
-const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8");
+const schema = readFileSync(join(process.cwd(), "prisma/schema/core.prisma"), "utf8");
 const migration = readFileSync(
   join(process.cwd(), "prisma/migrations", migrationName, "migration.sql"),
   "utf8",

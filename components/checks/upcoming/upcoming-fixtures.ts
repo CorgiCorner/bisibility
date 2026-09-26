@@ -2,12 +2,15 @@ import type { UpcomingView } from "@/lib/checks/contract";
 
 export const upcomingNow = new Date("2026-07-24T12:00:00.000Z");
 
+const dataforseo = "dataforseo";
+
 const days: UpcomingView["days"] = [
   {
     count: 214,
     estimatedCostCents: 45,
     key: "2026-07-24",
     label: "Today",
+    nativeEstimate: { providerId: dataforseo, quantity: 45, unit: "cents", unknownTargets: 0 },
     samples: [
       {
         frequency: "daily",
@@ -44,6 +47,7 @@ const days: UpcomingView["days"] = [
     estimatedCostCents: 260,
     key: "2026-07-25",
     label: "Tomorrow",
+    nativeEstimate: { providerId: dataforseo, quantity: 260, unit: "cents", unknownTargets: 0 },
     samples: [
       {
         frequency: "daily",
@@ -66,6 +70,7 @@ const days: UpcomingView["days"] = [
     estimatedCostCents: 263,
     key: "2026-07-26",
     label: "Sun 26 Jul",
+    nativeEstimate: { providerId: dataforseo, quantity: 263, unit: "cents", unknownTargets: 0 },
     samples: [
       {
         frequency: "weekly",
@@ -82,6 +87,7 @@ const forecast: NonNullable<UpcomingView["forecast"]> = {
   capCents: 5000,
   capLastsUntil: "2026-08-08",
   next48hCents: 530,
+  next48hNative: { providerId: dataforseo, quantity: 530, unit: "cents", unknownTargets: 0 },
   spentCents: 1820,
 };
 

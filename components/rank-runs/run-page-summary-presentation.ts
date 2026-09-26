@@ -86,6 +86,20 @@ export function createRunPageSummaryLabels({
           value: fact.providerLabel ?? t("unavailable"),
         };
       }
+      if (fact.kind === "usage") {
+        const value = fact.beforeStart ? fact.estimated : fact.actual;
+        return {
+          label: t("operations"),
+          value:
+            value === null ? t("usageNotRecorded") : new Intl.NumberFormat(locale).format(value),
+          note:
+            fact.estimated === null
+              ? ""
+              : t("estimatedOperations", {
+                  count: new Intl.NumberFormat(locale).format(fact.estimated),
+                }),
+        };
+      }
       if (fact.kind === "cost") {
         const label =
           fact.phase === "estimated"

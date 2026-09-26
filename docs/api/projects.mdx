@@ -64,6 +64,11 @@ schedule and does not move keywords.
 provided. `jitter_minutes` must be a whole number from `0` to `120`. Omitting
 it uses `60`; `0` disables jitter.
 
+The schedule fields (`frequency`, `cron_expression`, `jitter_minutes`,
+`timezone`) are replaced as a whole. `serp_depth` (`10`, `20`, `50`, or `100`)
+and `serp_stop_on_match` are independent of the schedule: omitting either keeps
+its stored value.
+
 Daily and weekly defaults give each keyword a stable interval phase, and
 `timezone` does not move that phase. Monthly and custom cron schedules use
 `timezone` as their wall-clock anchor.

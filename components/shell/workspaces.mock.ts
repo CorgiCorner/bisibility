@@ -5,6 +5,7 @@ export const mockWorkspaces: WorkspaceSummary[] = [
   {
     domain: "acme.dev",
     id: "ws_acme",
+    isDefault: false,
     isSample: false,
     keywordCount: 248,
     latestCompletedRankCheckAt: new Date("2026-07-03T10:00:00.000Z"),
@@ -19,6 +20,7 @@ export const mockWorkspaces: WorkspaceSummary[] = [
   {
     domain: "newsite.dev",
     id: "ws_newsite",
+    isDefault: false,
     isSample: false,
     keywordCount: 20,
     latestCompletedRankCheckAt: null,
@@ -33,6 +35,7 @@ export const mockWorkspaces: WorkspaceSummary[] = [
   {
     domain: "vega-labs.com",
     id: "ws_vega",
+    isDefault: false,
     isSample: true,
     keywordCount: 0,
     latestCompletedRankCheckAt: null,

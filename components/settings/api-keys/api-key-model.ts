@@ -9,6 +9,7 @@ export type ApiKeyData = {
   lastUsedLabel: string;
   maskedValue: string;
   name: string;
+  spendThisMonthCents: number;
 };
 
 export type IssuedApiKey = {

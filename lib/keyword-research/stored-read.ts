@@ -9,7 +9,7 @@ import type { KeywordResearchRow, KeywordResearchSourceDiagnostic } from "./type
 const sourceSchema = z.enum(["idea", "related", "suggestion"]);
 const sourceDiagnosticSchema = z.object({
   cached: z.boolean(),
-  costCents: z.number().int(),
+  costCents: z.number(),
   reason: z
     .enum([
       "budget_exhausted",

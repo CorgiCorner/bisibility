@@ -4,6 +4,10 @@ import { createHash } from "node:crypto";
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import { quoteDeploymentRankReservations } from "@/lib/providers/execution-extension";
+import { exactExecutionEstimate } from "@/lib/providers/execution-extension-estimate";
+import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import {
   providerAllocationReservation,
   reserveProviderAllocation,
@@ -15,7 +19,7 @@ export async function wrapLegacyRankCheck(
   input: { keywordId: string },
   rankCheckId: string,
   reservation: {
-    allocationConnection: { id: string; provider: string } | null;
+    allocationConnection: { id: string; provider: string; credentialSource?: string } | null;
     depth: SerpDepth;
     estimatedCostCents: number | null;
     keywordPublicId: string;
@@ -31,14 +35,47 @@ export async function wrapLegacyRankCheck(
           pagesPerCheck(reservation.depth),
         )
       : {};
-  if (reservation.providerAllocationsInitializedAt && reservation.allocationConnection) {
+  if (
+    reservation.providerAllocationsInitializedAt &&
+    reservation.allocationConnection &&
+    reservation.allocationConnection.credentialSource !== "hosted"
+  ) {
     await reserveProviderAllocation(tx, {
       connection: reservation.allocationConnection,
       estimatedCostCents: reservation.estimatedCostCents ?? 0,
       estimatedUsageQuantity: pagesPerCheck(reservation.depth),
       now: startedAt,
       projectId: reservation.projectId,
+      surface: "app",
     });
+  }
+  const rankQuote =
+    reservation.allocationConnection?.credentialSource === "hosted"
+      ? await quoteDeploymentRankReservations(tx, {
+          connectionId: reservation.allocationConnection.id,
+          projectId: reservation.projectId,
+          rankCheckId,
+          source: "app",
+          items: [
+            {
+              keywordId: input.keywordId,
+              estimatedCostCents: exactExecutionEstimate(
+                estimatedRankCheckCostCents(
+                  reservation.allocationConnection.provider,
+                  reservation.depth,
+                  null,
+                  LIST_PROVIDER_RATE_CONTEXT,
+                ),
+                4,
+              ),
+              // Depth changes estimated cost; one rank task is one native operation.
+              estimatedQuantity: "1.000000",
+            },
+          ],
+        })
+      : null;
+  if (reservation.allocationConnection?.credentialSource === "hosted" && !rankQuote) {
+    throw new Error("Hosted run reservation unavailable.");
   }
   const item = {
     estimatedCostCents:
@@ -63,6 +100,12 @@ export async function wrapLegacyRankCheck(
         keywordId: reservation.keywordPublicId,
         v: 1,
         ...allocationReservation,
+        ...(rankQuote
+          ? {
+              providerConnectionId: reservation.allocationConnection?.id,
+              rankReservationPrices: rankQuote.prices,
+            }
+          : {}),
       },
       startedAt,
       status: "running",

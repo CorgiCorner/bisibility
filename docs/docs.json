@@ -327,9 +327,11 @@
             "group": "Providers",
             "pages": [
               "GET /projects/{project_id}/providers",
+              "GET /projects/{project_id}/provider-budgets",
               "POST /projects/{project_id}/providers/{provider_id}/connect",
               "POST /projects/{project_id}/providers/{provider_id}/test",
               "PATCH /projects/{project_id}/providers/{provider_id}",
+              "PATCH /projects/{project_id}/providers/{provider_id}/budgets",
               "DELETE /projects/{project_id}/providers/{provider_id}"
             ]
           },

@@ -51,7 +51,7 @@ describe("ga4 analytics provider", () => {
   it("uses a one-row report as the connection probe", async () => {
     await expect(
       ga4AnalyticsProvider.testConnection({ apiKey: "refresh_token", login: "123" }),
-    ).resolves.toEqual({ message: "Connection OK · properties/123.", ok: true });
+    ).resolves.toEqual({ message: "Connected · properties/123.", ok: true });
 
     const fetchMock = vi.mocked(fetch);
     const reportCall = fetchMock.mock.calls.find(([url]) => String(url).includes(":runReport"));

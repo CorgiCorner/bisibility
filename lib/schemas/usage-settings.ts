@@ -33,20 +33,32 @@ const providerAllocationDollars = moneyInput
     message: "Monthly budget is too large.",
   });
 
+const allocationValue = z.union([
+  z.null(),
+  z.object({ amountDollars: providerAllocationDollars, unit: z.literal("cents") }),
+  z.object({
+    amount: z.coerce
+      .number()
+      .int("Enter a whole number of units.")
+      .min(1, "Enter a positive number of units.")
+      .max(MAX_ALLOCATION_AMOUNT, "Monthly allocation is too large."),
+    unit: z.literal("units"),
+  }),
+]);
+
+/** Credits budgets are always money: cents of charged credits price. */
+const creditsAllocationValue = z.union([
+  z.null(),
+  z.object({ amountDollars: providerAllocationDollars, unit: z.literal("cents") }),
+]);
+
+/** Own-keys budgets at the top level, credits budgets under `credits*`; omitted = unchanged. */
 export const providerAllocationSchema = z.object({
-  allocation: z.union([
-    z.null(),
-    z.object({ amountDollars: providerAllocationDollars, unit: z.literal("cents") }),
-    z.object({
-      amount: z.coerce
-        .number()
-        .int("Enter a whole number of units.")
-        .min(1, "Enter a positive number of units.")
-        .max(MAX_ALLOCATION_AMOUNT, "Monthly allocation is too large."),
-      unit: z.literal("units"),
-    }),
-  ]),
+  allocation: allocationValue.optional(),
   connectionId: providerConnectionId,
+  creditsAllocation: creditsAllocationValue.optional(),
+  creditsProgrammaticAllocation: creditsAllocationValue.optional(),
+  programmaticAllocation: allocationValue.optional(),
 });
 
 export type ProviderAllocationInput = z.infer<typeof providerAllocationSchema>;

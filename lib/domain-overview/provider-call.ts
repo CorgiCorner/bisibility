@@ -8,6 +8,7 @@ import {
   requiredEstimatedCostCents,
 } from "@/lib/provider-lookups/paid-call";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import { type ProviderRequestOrigin, surfaceOf } from "@/lib/provider-usage/surface";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import {
   researchProviderLanguageCode,
@@ -48,15 +49,17 @@ export function domainOverviewEstimate(input: {
 
 function paidCallInput(input: {
   budgetCapCents: number;
+  origin: ProviderRequestOrigin;
   projectId: string;
   source: DomainOverviewSource;
 }) {
   return {
     connection: input.source.connection,
+    credential: input.origin.credential,
     feature: "domain_overview" as const,
     projectId: input.projectId,
     provider: input.source.provider,
-    source: "app" as const,
+    source: input.origin.source,
     trigger: "manual" as const,
   };
 }
@@ -83,7 +86,11 @@ function providerTarget(
 
 export function assertDomainOverviewMaxCost(estimatedCostCents: number, maxCostCents?: number) {
   if (maxCostCents !== undefined && estimatedCostCents > maxCostCents) {
-    throw new ProviderLookupSignal({ ok: false, reason: "cost_limit_exceeded" });
+    throw new ProviderLookupSignal({
+      estimatedCostCents,
+      ok: false,
+      reason: "cost_limit_exceeded",
+    });
   }
 }
 
@@ -100,15 +107,17 @@ export function preflightDomainOverview(input: {
   connectionId: string;
   estimatedCostCents: number;
   estimatedUsageQuantity?: number;
+  origin: ProviderRequestOrigin;
   projectId: string;
   provider: string;
 }) {
-  return preflightProviderBudget(input);
+  return preflightProviderBudget({ ...input, surface: surfaceOf(input.origin.source) });
 }
 
 export function fetchDomainOverviewMetrics(
   input: DomainOverviewResearchScope & {
     budgetCapCents: number;
+    origin: ProviderRequestOrigin;
     projectId: string;
     scope: DomainOverviewScope;
     source: DomainOverviewSource;
@@ -131,6 +140,7 @@ export function fetchDomainOverviewMetrics(
 export function fetchDomainHistory(
   input: DomainOverviewResearchScope & {
     budgetCapCents: number;
+    origin: ProviderRequestOrigin;
     projectId: string;
     scope: DomainOverviewScope;
     source: DomainOverviewSource;
@@ -155,6 +165,7 @@ export function fetchDomainKeywords(
     budgetCapCents: number;
     limit: number;
     offset: number;
+    origin: ProviderRequestOrigin;
     projectId: string;
     source: DomainOverviewSource;
     target: string;
@@ -184,6 +195,7 @@ export function fetchDomainPages(
     budgetCapCents: number;
     limit: number;
     offset: number;
+    origin: ProviderRequestOrigin;
     projectId: string;
     scope: DomainOverviewScope;
     source: DomainOverviewSource;

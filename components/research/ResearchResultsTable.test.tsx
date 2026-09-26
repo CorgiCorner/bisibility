@@ -286,9 +286,9 @@ describe("ResearchResultsTable", () => {
       "@lg:grid-cols-2",
       "@4xl:flex",
     );
-    expect(screen.getByTestId("research-results-viewport")).toHaveClass(
-      "min-w-0",
-      "[&>[role=table]]:border-0",
-    );
+    expect(screen.getByTestId("research-results-viewport")).toHaveClass("min-w-0");
+    expect(
+      within(screen.getByTestId("research-results-viewport")).getByRole("table"),
+    ).toHaveAttribute("data-bordered", "false");
   });
 });

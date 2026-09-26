@@ -4,7 +4,6 @@ import { createHash } from "node:crypto";
 import { consume } from "@/lib/api/ratelimit";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
-import { whereExecutedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { monthStartUtc } from "@/lib/rank-check/budget";
 import { z } from "zod";
@@ -95,12 +94,13 @@ async function loadAccount(identifier: string, now: Date): Promise<InstanceAdmin
       by: ["kind"],
       where: projectWhere,
     }),
-    prisma.rankCheck.aggregate({
-      _sum: { costCents: true, estimatedCostCents: true },
+    prisma.providerCostEntry.aggregate({
+      _sum: { costCents: true },
       where: {
-        checkedAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) },
-        keyword: projectWhere,
-        ...whereExecutedChecks(),
+        cached: false,
+        createdAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) },
+        measurementStatus: "recorded",
+        projectId: { in: projectIds },
       },
     }),
   ]);
@@ -111,8 +111,7 @@ async function loadAccount(identifier: string, now: Date): Promise<InstanceAdmin
     id: requiredPublicAuditId(user.publicId, "usr", "User"),
     keywordCount,
     lastActiveAt: user.sessions[0]?.updatedAt.toISOString() ?? null,
-    monthlySpendCents:
-      Number(spend._sum.costCents ?? 0) + Number(spend._sum.estimatedCostCents ?? 0),
+    monthlySpendCents: Number(spend._sum.costCents ?? 0),
     projectCount: projectIds.length,
     providerConnectionsByKind: connectionGroups.map((group) => ({
       count: group._count._all,

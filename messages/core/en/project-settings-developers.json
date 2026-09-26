@@ -70,7 +70,9 @@
         "revoke": "API key could not be revoked.",
         "notFound": "API key not found.",
         "action": "The API key action could not be completed."
-      }
+      },
+      "spendThisMonth": "Spend this month: {amount}",
+      "spendTooltip": "Counts against the API, MCP and SDK budget"
     },
     "webhooks": {
       "title": "Deploy webhooks",

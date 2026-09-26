@@ -10,7 +10,8 @@
       "label": "Instance administration sections",
       "operations": "Operations",
       "administration": "Administration",
-      "audit": "Audit"
+      "audit": "Audit",
+      "metering": "Metering"
     },
     "controls": {
       "refresh": "Refresh",
@@ -312,6 +313,40 @@
       "statusFailed": "Failed",
       "copyTargetId": "Copy audit target ID {targetId}",
       "targetUnavailable": "{targetType}:unavailable"
+    },
+    "metering": {
+      "title": "Metering",
+      "heading": "Shadow comparison",
+      "description": "Compare recorded provider costs without changing admission decisions. Amounts are exact cents unless a unit is shown.",
+      "month": "Month",
+      "project": "Project",
+      "allProjects": "All projects",
+      "usage": "Usage and legacy totals",
+      "budgets": "Current budgets",
+      "exceptions": "Exceptions",
+      "emptyUsage": "No recorded usage for this selection.",
+      "emptyBudgets": "No mirrored budgets for this selection.",
+      "emptyExceptions": "No pending work or shadow errors.",
+      "unavailableNote": "Metering data is unavailable. Amounts and counts are unknown.",
+      "disagreements": "Disagreements in the last 7 days",
+      "connection": "Connection",
+      "surface": "Surface",
+      "funding": "Funding",
+      "meter": "Meter cost",
+      "reserved": "Reserved",
+      "legacy": "Legacy cost",
+      "difference": "Difference",
+      "certainty": "Certainty",
+      "used": "Used",
+      "remaining": "Remaining",
+      "resetsAt": "Resets at",
+      "operation": "Operation",
+      "state": "State",
+      "updatedAt": "Updated at",
+      "unavailable": "Unavailable",
+      "unlimited": "Unlimited",
+      "truncated": "Showing a bounded selection. Filter by project to narrow the results.",
+      "budgetNote": "Budgets show the current cycle, independently of the selected usage month."
     }
   }
 }

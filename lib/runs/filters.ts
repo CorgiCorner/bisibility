@@ -1,8 +1,11 @@
 import { z } from "zod";
+import { RUN_STATUS_KEYS } from "./run-status-vocabulary";
 
 export const PROJECT_RUNS_VIEWS = ["runs", "planned"] as const;
 export const PROJECT_RUNS_SOURCES = ["all", "rank_checks", "search_console"] as const;
-export const PROJECT_RUNS_STATUSES = ["all", "active", "attention", "finished"] as const;
+/** Group values predate per-chip statuses and stay valid for URLs and `GET /api/runs`. */
+export const PROJECT_RUNS_STATUS_GROUPS = ["all", "active", "attention", "finished"] as const;
+export const PROJECT_RUNS_STATUSES = [...PROJECT_RUNS_STATUS_GROUPS, ...RUN_STATUS_KEYS] as const;
 
 export const projectRunsViewSchema = z.enum(PROJECT_RUNS_VIEWS);
 export const projectRunsSourceSchema = z.enum(PROJECT_RUNS_SOURCES);
@@ -11,6 +14,11 @@ export const projectRunsStatusSchema = z.enum(PROJECT_RUNS_STATUSES);
 export type ProjectRunsView = z.infer<typeof projectRunsViewSchema>;
 export type ProjectRunsSource = z.infer<typeof projectRunsSourceSchema>;
 export type ProjectRunsStatus = z.infer<typeof projectRunsStatusSchema>;
+export type ProjectRunsStatusGroup = (typeof PROJECT_RUNS_STATUS_GROUPS)[number];
+
+export function isProjectRunsStatusGroup(status: string): status is ProjectRunsStatusGroup {
+  return (PROJECT_RUNS_STATUS_GROUPS as readonly string[]).includes(status);
+}
 
 export const PROJECT_RUNS_DEFAULT_LIMIT = 20;
 export const PROJECT_RUNS_MAX_LIMIT = 100;

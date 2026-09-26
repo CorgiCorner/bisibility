@@ -1,10 +1,11 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import type { UpcomingForecast } from "@/lib/checks/contract";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { formatCap, formatEstimatedAmount, formatForecastDate } from "./upcoming-format";
+import { formatCap, formatForecastDate, upcomingAmountParts } from "./upcoming-format";
 
 export type BudgetForecastNoteProps = {
   forecast: UpcomingForecast | null;
@@ -12,15 +13,16 @@ export type BudgetForecastNoteProps = {
 
 export function BudgetForecastNote({ forecast }: Readonly<BudgetForecastNoteProps>) {
   const dateDisplay = useDateDisplay();
+  const usage = useNativeUsageFormat();
   const locale = useLocale();
   const t = useTranslations("projectRankTracker.checks");
   if (!forecast || forecast.next48hCents <= 0) return null;
 
   const cap = formatCap(forecast.capCents, locale);
-  const next48h = t("estimatedAmount", {
-    amount: formatEstimatedAmount(forecast.next48hCents, locale),
-    isLessThanCent: String(forecast.next48hCents > 0 && forecast.next48hCents < 1),
-  });
+  const next48h = t(
+    "estimatedAmount",
+    upcomingAmountParts(forecast.next48hCents, forecast.next48hNative, locale, usage.format),
+  );
 
   return (
     <p className="m-0 text-[12px] leading-relaxed text-fg-muted">

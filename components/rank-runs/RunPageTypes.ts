@@ -25,6 +25,9 @@ export type RunPageItem = {
   };
   notBefore: string | null;
   rankCheck: {
+    billingUnits?: number | null;
+    provider?: string;
+    requestedDepth?: number | null;
     errorCode: string | null;
     position: number | null;
     publicId: string;

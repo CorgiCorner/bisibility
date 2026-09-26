@@ -5,6 +5,13 @@ import {
   type QueueFirstChecksAction,
   type RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
+import {
+  dismissRankRunNotice,
+  isInRankRunNoticeDismissalSnapshot,
+  type RankRunNoticeIdentity,
+  rankRunNoticeDismissalStorageKey,
+  useRankRunNoticeDismissalSnapshot,
+} from "@/components/rank-runs/notice-dismissals";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { AlertBanner } from "@/components/ui/AlertBanner";
 import { AlertBannerStack } from "@/components/ui/AlertBannerStack";
@@ -66,7 +73,7 @@ function emptyRankNotice({
       title: t("migrationHoldTitle"),
     };
   }
-  if (failedCount > 0 || checkStates.includes("failed")) {
+  if (failedCount > 0) {
     return {
       action: {
         href: projectRunsPath(projectRef),
@@ -127,9 +134,21 @@ export function KeywordsGridNotices({
 }: Readonly<KeywordsGridNoticesProps>) {
   const t = useTranslations("projectRankTracker.list.notices");
   const { readOnly } = useProjectWriteMode();
+  const failureIdentity: RankRunNoticeIdentity | null = checkHealth?.currentFailures?.latestCheckId
+    ? {
+        kind: "rank-tracker-failures",
+        projectId,
+        checkId: checkHealth.currentFailures.latestCheckId,
+      }
+    : null;
+  const dismissed = useRankRunNoticeDismissalSnapshot(failureIdentity ? [failureIdentity] : []);
+  const failureDismissed =
+    failureIdentity !== null && isInRankRunNoticeDismissalSnapshot(dismissed, failureIdentity);
   const rankNotice = emptyRankNotice({
     checkStates,
-    failedCount: checkHealth?.failed24h.count ?? 0,
+    failedCount:
+      checkHealth?.currentFailures?.count ??
+      checkStates.filter((state) => state === "failed").length,
     providerConnected,
     projectRef: projectId,
     readOnly,
@@ -159,9 +178,17 @@ export function KeywordsGridNotices({
           keywordCount={rowCount}
         />
       ) : null}
-      {rankNotice?.kind === "alert" ? (
+      {rankNotice?.kind === "alert" && !(rankNotice.tint === "red" && failureDismissed) ? (
         <AlertBannerStack>
           <AlertBanner
+            key={
+              failureIdentity ? rankRunNoticeDismissalStorageKey(failureIdentity) : rankNotice.title
+            }
+            onDismiss={
+              rankNotice.tint === "red" && failureIdentity
+                ? () => dismissRankRunNotice(failureIdentity)
+                : undefined
+            }
             action={rankNotice.action}
             detail={rankNotice.detail}
             tint={rankNotice.tint}

@@ -23,7 +23,7 @@ yourself.
 | MCP endpoint | `lib/mcp/` | Streamable HTTP transport whose tools call the same REST router. |
 | Notification stream | `app/api/notifications/` | Server-sent events for the in-app bell, fanned out through Redis pub/sub. |
 | Temporal worker | `lib/temporal/` | Runs scheduled rank checks, schedule reconciliation, and maintenance jobs. |
-| PostgreSQL | `prisma/schema.prisma` | All durable state: projects, keywords, checks, providers, alerts, audit log. |
+| PostgreSQL | `prisma/schema/core.prisma` | All durable state: projects, keywords, checks, providers, alerts, audit log. |
 | Valkey or another Redis-compatible endpoint | `lib/redis/` | API and provider rate limiting, idempotency replay, notification pub/sub. |
 | Providers | `lib/providers/` | Pluggable SERP and analytics adapters. See [Integrations](/integrations). |
 

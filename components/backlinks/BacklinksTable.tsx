@@ -1,6 +1,6 @@
 "use client";
 
-import type { BacklinksOutcome, BacklinksRow } from "@/lib/backlinks/types";
+import type { BacklinksRow, BacklinksRowsOutcome } from "@/lib/backlinks/types";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { useTranslations } from "next-intl";
@@ -36,7 +36,7 @@ export type BacklinksTableProps = {
   initialView?: BacklinksView;
   loadMoreEstimateCents?: number;
   now?: Date;
-  onLoadMore?: () => Promise<BacklinksOutcome>;
+  onLoadMore?: () => Promise<BacklinksRowsOutcome>;
   rows: BacklinksRow[];
   target: string;
   totalDomains: number;

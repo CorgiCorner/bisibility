@@ -23,6 +23,7 @@ project's provider budget, the bearer token must include write scope.
 | `offset` | Defaults to `0`. Must be a multiple of `100`, maximum `900`. |
 | `limit` | Defaults to `100`, maximum `100`. |
 | `fresh` | Defaults to `false`. Fetch and cache a new provider result. |
+| `max_cost_cents` | Optional best-effort pre-estimate provider cost gate, in cents. On a cache miss, when the estimated cost of the page exceeds it, the endpoint returns `422 cost_limit_exceeded` instead of calling the provider. |
 
 ```json
 {

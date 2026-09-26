@@ -49,6 +49,7 @@ describe("AdminShell", () => {
   it.each([
     ["/app/admin/administration", "Administration"],
     ["/app/admin/audit", "Audit"],
+    ["/app/admin/metering", "Metering"],
   ])("marks %s active", (pathname, label) => {
     setNavigationState({ pathname });
     render(<AdminShell>Content</AdminShell>);

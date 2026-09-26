@@ -93,7 +93,7 @@
       "depth": "深度",
       "depthAria": "結果の取得深度",
       "devices": "{count, plural, other {デバイス#件}}",
-      "duplicate": "このスコープの実行はすでに進行中です。今すぐ開始すると、同じ順位に二重で料金が発生します。",
+      "duplicate": "選択したキーワードはすべて別の実行でチェック中のため、開始するものがありません。",
       "editBudget": "予算を編集",
       "noProvider": "プロバイダーなし",
       "noProviderBlocked": "プロバイダーが接続されていないため、これらのターゲットの送信先がありません。ご自身のキーを使用し、料金は直接請求されます。",
@@ -109,13 +109,21 @@
       "markets": "{count, plural, other {市場#件}}",
       "startRun": "実行を開始",
       "sampleProject": "サンプルプロジェクトでは実際のチェックは行われません。",
-      "scopeDescription": "プロバイダーに送信する前に、{market} の{count, plural, other {#件のキーワード}}をチェックします。",
+      "scopeDescription": "開始するまで、プロバイダーには何も送信されません。",
       "scopeEquation": "{keywords, plural, other {キーワード#件}} · {market} · {devices} = {targets, plural, other {ターゲット#件}}",
       "scopeMany": "{market} で選択中の{count, plural, other {#件のキーワード}}をチェック",
       "scopeOne": "{market} で {keyword} をチェック",
-      "scopeSubtitle": "開始する前に {market} のスコープを確認してください。",
+      "scopeSubtitle": "開始する前にスコープを確認してください。",
       "starting": "開始中...",
-      "topDepth": "上位{depth, number}位"
+      "topDepth": "上位{depth, number}位",
+      "alreadyScheduled": "予定済み",
+      "cancelRun": "実行をキャンセル",
+      "cancellingRun": "キャンセル中...",
+      "couldNotCancel": "その実行をキャンセルできませんでした。再試行してください。",
+      "overlapCancelHint": "その実行をキャンセルするか、両方を残してこれらの順位に二重で料金を支払うかを選べます。",
+      "overlapKeepHint": "この実行を開始すると、これらの順位に二重で料金が発生します。",
+      "overlapMessage": "このうち{count, plural, other {#件のキーワード}}は、{status, select, planned {{time} に予定されている} running {進行中の} cancelling {キャンセル中の} blocked {ブロック中の} other {待機中の}}別の実行にも含まれています。",
+      "overlapMore": "+{count, plural, other {#件の実行}}"
     },
     "globalError": {
       "description": "アプリはこのページを表示できませんでした。再読み込みしてもう一度お試しください。",
@@ -163,11 +171,11 @@
       "unavailable": "現在、人間であることの確認は利用できません。"
     },
     "scheduleName": {
-      "custom": "カスタム \u00b7 {expression}",
+      "custom": "カスタム · {expression}",
       "daily": "毎日 {time}",
-      "monthly": "毎月 \u00b7 {day} {time}",
+      "monthly": "毎月 · {day} {time}",
       "noFixedTime": "時刻の指定なし",
-      "weekly": "毎週 \u00b7 {weekday} {time}"
+      "weekly": "毎週 · {weekday} {time}"
     },
     "operationRow": {
       "days": "{count, plural, other {日}}",
@@ -488,6 +496,7 @@
           "workEmail": "勤務先のメールアドレスを入力してください。"
         }
       },
+      "expandableCard": { "expand": "拡大", "expandNamed": "{title}を拡大" },
       "expiryChoice": {
         "label": "有効期限"
       },
@@ -564,6 +573,95 @@
       },
       "toolbarSearch": {
         "clear": "{label} をクリア"
+      }
+    },
+    "nativeUsage": {
+      "estimated": "推定使用量",
+      "usage": "使用量",
+      "monthly": "月間使用量",
+      "unknown": "不明",
+      "operations": "{count, number} 回",
+      "belowCent": "< 0.01 USD",
+      "monthlyEstimate": "推定月間使用量: {usage}",
+      "delta": "月間使用量の変化: {usage}"
+    },
+    "runStatuses": {
+      "rank": {
+        "planned": {
+          "description": "予定時刻になるまで実行を待機しています。"
+        },
+        "blocked": {
+          "description": "予算切れやプロバイダー未設定などの問題で実行が止まっています。"
+        },
+        "queued": {
+          "description": "実行は受け付け済みで、最初のチェックを待っています。"
+        },
+        "running": {
+          "description": "実行が対象をチェックしています。"
+        },
+        "cancelling": {
+          "description": "開始済みのチェックが終わると実行が停止します。"
+        },
+        "succeeded": {
+          "description": "すべての対象で結果を取得しました。"
+        },
+        "partial": {
+          "description": "一部の対象では結果を取得し、残りでは取得できませんでした。"
+        },
+        "deferred": {
+          "description": "実行は対象を延期し、その分の料金は発生していません。"
+        },
+        "failed": {
+          "description": "チェックが失敗またはスキップされたため、どの対象でも結果を取得できませんでした。"
+        },
+        "cancelled": {
+          "description": "要求により実行が停止しました。取得済みの結果は残ります。"
+        },
+        "not_confirmed": {
+          "description": "実行は終了しましたが、記録された結果がありません。"
+        }
+      },
+      "searchConsole": {
+        "queued": {
+          "label": "キュー済み",
+          "description": "インポートは開始を待っています。"
+        },
+        "importing": {
+          "label": "インポート中",
+          "description": "インポートが Google から検索データを取得しています。"
+        },
+        "paused": {
+          "label": "一時停止中",
+          "description": "ユーザーがインポートを一時停止しており、再開されるまで止まっています。"
+        },
+        "waiting_for_google": {
+          "label": "Google の応答待ち",
+          "description": "Google がリクエストを制限しています。可能になるとインポートは自動で再開します。"
+        },
+        "reconnect_required": {
+          "label": "要再接続",
+          "description": "インポートを続けるには Search Console の再接続が必要です。"
+        },
+        "waiting_for_data": {
+          "label": "データ待ち",
+          "description": "このプロパティの確定した検索データが Google にまだありません。"
+        },
+        "delayed": {
+          "label": "遅延",
+          "description": "ワーカーを利用できないため、インポートを続行できません。"
+        },
+        "failed": {
+          "label": "失敗",
+          "description": "前回のインポートが失敗したため、再試行が必要です。"
+        },
+        "completed": {
+          "label": "完了",
+          "description": "インポートが完了しました。"
+        },
+        "status_unavailable": {
+          "label": "ステータス不明",
+          "description": "現在のインポート状態を今は読み取れません。"
+        }
       }
     }
   }

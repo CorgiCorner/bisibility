@@ -39,6 +39,17 @@ describe("API responses", () => {
     expect(response.headers.get("content-type")).toContain("application/problem+json");
   });
 
+  it("keeps the errors and details members separate on problems", async () => {
+    const response = errorResponse("cost_limit_exceeded", "Too expensive.", 422, {
+      details: { field: "limit" },
+      problemDetails: { estimated_cost_cents: 5 },
+    });
+
+    const body = await response.json();
+    expect(body.errors).toEqual({ field: "limit" });
+    expect(body.details).toEqual({ estimated_cost_cents: 5 });
+  });
+
   it("sets Allow on method errors", () => {
     const response = methodNotAllowed(["GET"]);
 

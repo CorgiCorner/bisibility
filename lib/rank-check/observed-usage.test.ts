@@ -2,6 +2,16 @@ import { describe, expect, it } from "vitest";
 import { aggregateObservedUsage, aggregateObservedUsageForProvider } from "./observed-usage";
 
 describe("aggregateObservedUsage", () => {
+  it("excludes unknown costs from averages while retaining check count", () => {
+    expect(
+      aggregateObservedUsage([
+        { costCents: null },
+        { costCents: undefined },
+        { costCents: 0 },
+        { costCents: 2 },
+      ]),
+    ).toEqual({ averageCostCents: 1, checkCount: 4, totalCostCents: 2 });
+  });
   it("preserves recorded fractional-cent costs for totals and averages", () => {
     expect(aggregateObservedUsage([{ costCents: 0.8 }, { costCents: 1.55 }])).toEqual({
       averageCostCents: 1.175,

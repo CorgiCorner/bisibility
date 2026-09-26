@@ -1,14 +1,18 @@
 "use client";
 
+import type { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
+import { RunStatusChip } from "@/components/project-runs/RunStatusChip";
+import type { RunStatusCopyApi } from "@/components/project-runs/run-status-copy";
 import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { IdChip } from "@/components/ui/IdChip";
-import { StatusChip } from "@/components/ui/StatusChip";
-import { runStatusChipPresentation } from "@/components/ui/status-chip-mapping";
+import { nativeUsageUnit } from "@/lib/cost-estimate/native-usage";
 import type { DateFormat } from "@/lib/dates/format";
 import { formatDateTimeCurrentYear } from "@/lib/dates/format";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-runs-path";
+import { rankRunStatusKey } from "@/lib/runs/run-status-vocabulary";
 import Link from "next/link";
 import type { useTranslations } from "next-intl";
 import { localizedBlockedRunCopy } from "./rank-run-copy";
@@ -17,10 +21,12 @@ import { launchedBy, NextCheckLine, RunActor } from "./runs-table-cells";
 import type { RankRunRecord } from "./runs-types";
 
 type RunsTableColumnsOptions = {
+  usage: ReturnType<typeof useNativeUsageFormat>;
   dateFormat: DateFormat;
   deploymentMode: ClientDeploymentMode;
   locale: string;
   projectRef: string;
+  statusCopy: RunStatusCopyApi;
   statusT: ReturnType<typeof useTranslations<"shared.controls.status">>;
   t: ReturnType<typeof useTranslations<"projectRuns.rankRuns">>;
 };
@@ -44,20 +50,23 @@ function triggerLabel(
 }
 
 export function runsTableColumns({
+  usage,
   dateFormat,
   deploymentMode,
   locale,
   projectRef,
+  statusCopy,
   statusT,
   t,
 }: RunsTableColumnsOptions): readonly DataTableColumn<RunsTableRow>[] {
-  const money = (cents: number) =>
-    new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(cents / 100);
-  const statusPresentation = (run: RankRunRecord) => {
-    if (isSkippedOccurrence(run)) return { label: statusT("skipped"), tone: "neutral" as const };
-    const presentation = runStatusChipPresentation(run.status, run.outcome);
-    return { ...presentation, label: statusT(presentation.messageKey) };
-  };
+  const money = (cents: number | null) =>
+    cents === null
+      ? t("unavailable")
+      : new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(cents / 100);
+  const statusPresentation = (run: RankRunRecord) =>
+    isSkippedOccurrence(run)
+      ? { label: statusT("skipped"), tone: "neutral" as const }
+      : statusCopy.rank(rankRunStatusKey(run.status, run.outcome));
   const selection = (run: RankRunRecord) => {
     switch (run.selectionKind) {
       case "all":
@@ -103,7 +112,7 @@ export function runsTableColumns({
         return (
           <div className="min-w-0">
             <Link
-              className="block w-fit text-[12.5px] font-semibold text-fg no-underline hover:text-accent-text"
+              className={`block w-fit text-[12.5px] font-semibold ${dataLinkClassName}`}
               href={href}
             >
               {triggerLabel(run, t)}
@@ -176,7 +185,7 @@ export function runsTableColumns({
         return (
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <StatusChip {...status} />
+              <RunStatusChip {...status} />
               <span className="text-[10.5px] tabular-nums text-fg-muted">{runCounts(run)}</span>
             </div>
             <NextCheckLine run={run} />
@@ -207,7 +216,16 @@ export function runsTableColumns({
         return (
           <div>
             <span className="block">
-              {money(skipped ? 0 : planned ? run.estimatedCostCents : run.costCents)}
+              {run.usage || nativeUsageUnit(run.provider) === "units"
+                ? usage.format({
+                    unit: "units",
+                    quantity: planned
+                      ? (run.nativeEstimate?.quantity ?? run.usage?.estimated ?? null)
+                      : (run.usage?.actual ?? null),
+                  })
+                : planned && run.nativeEstimate
+                  ? usage.format(run.nativeEstimate)
+                  : money(skipped ? 0 : planned ? run.estimatedCostCents : run.costCents)}
             </span>
             <span className="mt-0.5 block text-[10.5px] text-fg-muted">
               {skipped ? t("nothingBilled") : planned ? t("facts.estimate") : t("facts.actual")}
@@ -216,9 +234,9 @@ export function runsTableColumns({
         );
       },
       enableSorting: false,
-      header: t("cost"),
+      header: usage.label,
       id: "cost",
-      meta: { align: "end", lockResize: true, title: t("cost") },
+      meta: { align: "end", lockResize: true, title: usage.label },
       minSize: 96,
       size: 104,
     },

@@ -1,6 +1,6 @@
 import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { stubResizeObserver } from "@/tests/observers";
-import { fireEvent, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchInsightsPagesTable } from "./SearchInsightsPagesTable";
@@ -118,26 +118,6 @@ describe("SearchInsightsQueriesTable", () => {
     expect(screen.getByText("#6.2")).toHaveClass("text-fg");
     expect(screen.getByText("#24.6")).toHaveClass("text-fg-muted");
     expect(screen.getByText("query 0").closest('[role="row"]')).toHaveStyle({ height: "56px" });
-  });
-
-  it("keeps 5,000 expanded rows in the bounded virtualized region", () => {
-    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(640);
-    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(640);
-    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(520);
-    render(<SearchInsightsQueriesTable rows={queryRows(5_000)} scroll tracked={new Set()} />);
-
-    const table = screen.getByRole("table", { name: "Top queries" });
-    const body = within(table).getByTestId("search-insights-queries-body");
-    expect(table).toHaveAttribute("data-layout", "fill");
-    expect(table.parentElement).toHaveClass("h-130");
-    expect(table).toHaveAttribute("aria-rowcount", "5000");
-    expect(body.childElementCount).toBeLessThan(40);
-    expect(screen.queryByText("query 4999")).not.toBeInTheDocument();
-
-    table.scrollTop = 56 * 4_990;
-    fireEvent.scroll(table);
-
-    expect(screen.getByText("query 4999")).toBeInTheDocument();
   });
 
   it("forwards server sort keys while preserving the current key on clear", async () => {

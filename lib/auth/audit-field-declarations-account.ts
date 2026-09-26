@@ -39,6 +39,10 @@ export function registerAccountAuditDeclarations(
   });
   declare(["account.session_revoked"], { before: strings("id", "ipAddress", "userAgent") });
   declare(["account.sessions_revoked"], { after: f.numbers("revokedCount") });
+  declare(["user.default_project.update"], {
+    after: strings("defaultProjectId"),
+    before: strings("defaultProjectId"),
+  });
   declare(["user.date_format.update"], {
     after: strings("dateFormat"),
     before: strings("dateFormat"),

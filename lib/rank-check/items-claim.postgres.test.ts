@@ -235,4 +235,42 @@ describe("first target claim SQL", () => {
       await db.close();
     }
   });
+
+  it("leaves a keyword's due target queued while another run checks that keyword", async () => {
+    const { database, db, query } = await createClaimFixture();
+    const now = new Date("2026-09-04T14:00:00Z");
+    try {
+      await db.exec(`
+        INSERT INTO projects VALUES ('project', 'example.com');
+        INSERT INTO project_markets VALUES ('pm', 'project', 'market', 'active');
+        INSERT INTO keywords (id, "publicId", "projectId", "locationId", device)
+          VALUES
+            ('busy', '${publicId("kw", "busy")}', 'project', 'market', 'desktop'),
+            ('twice', '${publicId("kw", "twice")}', 'project', 'market', 'desktop');
+        INSERT INTO rank_check_runs (id, "publicId", "projectId", "requestedCount", "selectionKind", status)
+          VALUES
+            ('manual', '${publicId("rcr", "manual")}', 'project', 1, 'selected', 'running'),
+            ('first', '${publicId("rcr", "first")}', 'project', 2, 'scheduled_due', 'queued'),
+            ('second', '${publicId("rcr", "second")}', 'project', 1, 'scheduled_due', 'queued');
+        INSERT INTO rank_check_run_items (id, "runId", "keywordId", status, "notBefore", "rankCheckId")
+          VALUES
+            ('manual-busy', 'manual', 'busy', 'running', NULL, 'check'),
+            ('first-busy', 'first', 'busy', 'queued', '2026-09-04 13:00Z', NULL),
+            ('first-twice', 'first', 'twice', 'queued', '2026-09-04 13:00Z', NULL),
+            ('second-twice', 'second', 'twice', 'queued', '2026-09-04 13:30Z', NULL);
+      `);
+
+      await expect(claimDueRankCheckItems({ now }, database as never)).resolves.toMatchObject({
+        claimed: 1,
+      });
+      expect(await query("SELECT id, status FROM rank_check_run_items ORDER BY id")).toEqual([
+        { id: "first-busy", status: "queued" },
+        { id: "first-twice", status: "running" },
+        { id: "manual-busy", status: "running" },
+        { id: "second-twice", status: "queued" },
+      ]);
+    } finally {
+      await db.close();
+    }
+  });
 });

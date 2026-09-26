@@ -132,3 +132,46 @@ describe("project defaults legacy market contract", () => {
     },
   );
 });
+
+describe("project defaults serp depth contract", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.prisma.$transaction.mockImplementation((run: (tx: unknown) => unknown) =>
+      run(mocks.prisma),
+    );
+    mocks.prisma.keyword.findMany.mockResolvedValue([]);
+    mocks.prisma.projectDefaults.upsert.mockImplementation(({ update }: { update: object }) =>
+      Promise.resolve({ id: "defaults_1", lastCheckedAt: null, nextCheckAt: null, ...update }),
+    );
+  });
+
+  it("keeps the stored serp_depth when the patch omits it", async () => {
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
+      ...schedule,
+      cronExpression: null,
+      jitterMinutes: 0,
+      serpDepth: 20,
+      serpStopOnMatch: false,
+    });
+    const result = await patchDefaults(schedule);
+
+    expect(result.status).toBe(200);
+    expect(result.upsert).toMatchObject({ update: { serpDepth: 20 } });
+    expect(result.body).toMatchObject({ serp_depth: 20 });
+  });
+
+  it("falls back to the default depth for a project without stored defaults", async () => {
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
+    const result = await patchDefaults(schedule);
+
+    expect(result.upsert).toMatchObject({ update: { serpDepth: 100 } });
+  });
+
+  it("stores an explicit serp_depth", async () => {
+    mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
+    const result = await patchDefaults({ ...schedule, serp_depth: 50 });
+
+    expect(result.upsert).toMatchObject({ update: { serpDepth: 50 } });
+    expect(result.body).toMatchObject({ serp_depth: 50 });
+  });
+});

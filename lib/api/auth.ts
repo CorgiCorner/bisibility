@@ -50,6 +50,8 @@ export type MembershipFact = { projectId: string; role: Role };
 export type PersonalTokenAuth = {
   kind: "personal_token";
   memberships: readonly MembershipFact[];
+  /** OAuth client id from the MCP access token claims; set only by authenticateMcpOAuthRequest. */
+  oauthClientId?: string;
   token: {
     id: string;
     name: string;

@@ -1,9 +1,11 @@
+import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { planRankCheckRuns, scheduleAdmission } from "./plan";
 
 const mocks = vi.hoisted(() => ({
   assertAllocation: vi.fn(),
   assertBudget: vi.fn(),
+  assertOperationAccess: vi.fn(),
   existingKeys: new Set<string>(),
   findMany: vi.fn(),
   currentSchedule: vi.fn(),
@@ -15,6 +17,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/operations/access-extension", () => ({
+  assertOperationAccess: mocks.assertOperationAccess,
+}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     $transaction: async (fn: (tx: object) => unknown) =>
@@ -195,5 +200,30 @@ describe("rank-check run planner", () => {
     );
 
     expect(mocks.loadChain).toHaveBeenCalledWith("project_1", undefined);
+  });
+
+  it("keeps a schedule blocked until the access gate allows the project again", async () => {
+    mocks.assertOperationAccess.mockRejectedValueOnce(new OperationAccessDeniedError());
+
+    const admission = await scheduleAdmission(
+      {
+        keywords: [{ id: "keyword_1" }],
+        project: {
+          budgetCapCents: 1_000,
+          defaults: { serpDepth: 20 },
+          providerAllocationsInitializedAt: null,
+        },
+        projectId: "project_1",
+        providerPolicy: "project",
+        serpDepth: null,
+      },
+      new Date("2026-09-02T00:00:00.000Z"),
+    );
+
+    // The run stays blocked under a neutral reason; no provider is marked
+    // bad, no connection is loaded or altered, and no budget is spent.
+    expect(admission.blockedReason).toBe("operation_unavailable");
+    expect(mocks.loadChain).not.toHaveBeenCalled();
+    expect(mocks.assertBudget).not.toHaveBeenCalled();
   });
 });

@@ -160,7 +160,7 @@ export const ProviderUsage: Story = {
 export const TopConsumption: Story = {
   render: () => (
     <StoryTableCard titleKey="topConsumption">
-      <div className="mt-3 [&>[role=table]]:border-0">
+      <div className="mt-3">
         <AdminAdministrationConsumptionTable rows={consumption} />
       </div>
     </StoryTableCard>
@@ -170,7 +170,7 @@ export const TopConsumption: Story = {
 export const OperationalEvents: Story = {
   render: () => (
     <StoryTableCard titleKey="ops">
-      <div className="mt-3 [&>[role=table]]:border-0">
+      <div className="mt-3">
         <AdminDashboardOpsEventsTable events={opsEvents} />
       </div>
     </StoryTableCard>

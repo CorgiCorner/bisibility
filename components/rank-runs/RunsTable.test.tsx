@@ -4,7 +4,7 @@ import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { RunsTable } from "./RunsTable";
-import { historyRun } from "./runs-fixtures";
+import { historyRun, plannedRun } from "./runs-fixtures";
 
 describe("RunsTable", () => {
   it("uses run labels without repeating run", () => {
@@ -179,6 +179,31 @@ describe("RunsTable", () => {
     expect(screen.getByText("$1.92")).toBeInTheDocument();
     expect(screen.getByText("estimate")).toBeInTheDocument();
     expect(screen.queryByText("actual")).toBeNull();
+  });
+
+  it("shows planned quota operations instead of plan dollars for a quota provider", () => {
+    render(
+      <RunsTable
+        emptyActionHref="/app/prj_1/runs/schedules"
+        projectRef="prj_1"
+        rows={[
+          {
+            ...plannedRun,
+            provider: "serpapi",
+            nativeEstimate: {
+              providerId: "serpapi",
+              quantity: 12,
+              unit: "units",
+              unknownTargets: 0,
+            },
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("12 operations")).toBeInTheDocument();
+    expect(screen.getByText("estimate")).toBeInTheDocument();
+    expect(screen.queryByText(/\$/)).not.toBeInTheDocument();
   });
 
   it("shows a person avatar and keeps Schedule and API launches text-only", () => {

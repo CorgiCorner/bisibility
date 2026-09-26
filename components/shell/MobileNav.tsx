@@ -15,6 +15,7 @@ export type MobileNavProps = {
   activeHref?: string;
   activeProjectId: string;
   canCreateWorkspace: boolean;
+  canSetDefault?: boolean;
   defaultOpen?: boolean;
   enabledExperimentalModules?: readonly ExperimentalModuleKey[];
   projectRef: string;
@@ -33,6 +34,7 @@ export function MobileNav({
   activeHref,
   activeProjectId,
   canCreateWorkspace,
+  canSetDefault,
   defaultOpen = false,
   enabledExperimentalModules = [],
   projectRef,
@@ -81,6 +83,7 @@ export function MobileNav({
             <WorkspaceSwitcher
               activeProjectId={activeProjectId}
               canCreateWorkspace={canCreateWorkspace}
+              canSetDefault={canSetDefault}
               className="mt-0 w-full"
               compact
               workspaces={workspaces}

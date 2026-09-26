@@ -123,7 +123,8 @@ export const projectDefaultsPatchSchema = keywordScheduleBaseSchema
     device: deviceSchema.optional(),
     locationKey: canonicalKeySchema.optional(),
     projectId: idSchema,
-    serpDepth: serpDepthSchema.default(DEFAULT_SERP_DEPTH),
+    // Optional on PATCH: an omitted depth keeps the stored value instead of resetting it.
+    serpDepth: serpDepthSchema.optional(),
     serpStopOnMatch: z.boolean().optional(),
   })
   .superRefine((value, ctx) => {

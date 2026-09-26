@@ -39,4 +39,16 @@ describe("keyword row loader", () => {
       }),
     );
   });
+
+  it("selects the assigned check schedule so it owns the row depth", async () => {
+    await loadKeywordRowsByInternalIds({ domain: "example.com", id: "project_1" }, ["keyword_1"]);
+
+    expect(mocks.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          checkSchedule: { select: { name: true, publicId: true, serpDepth: true } },
+        }),
+      }),
+    );
+  });
 });

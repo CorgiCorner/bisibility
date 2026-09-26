@@ -88,6 +88,7 @@ export type {
   ProviderUsageData,
   ProviderUsageFeature,
   ProviderUsageStat,
+  ProviderUsageStatSource,
 } from "./provider-usage-types";
 
 export function getInspectionSchedulePreview(targetUrlCount: number, dailyLimit: number) {

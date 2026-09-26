@@ -200,8 +200,9 @@ export function BacklinksRows({
   }
 
   return (
-    <div className="min-w-0 [&>[role=table]]:border-0">
+    <div className="min-w-0">
       <DataTable<BacklinksTableDataRow>
+        bordered={false}
         ariaLabel={t("backlinks")}
         columns={columns}
         expanded={expanded}
