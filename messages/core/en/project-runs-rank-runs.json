@@ -146,8 +146,9 @@
         "completedNote": "positions written",
         "deferredNote": "retry on the next run",
         "failedNote": "no position written",
-        "notTerminal": "not terminal",
-        "skippedBeforeStart": "{count, plural, one {# skipped before start} other {# skipped before start}}"
+        "notTerminal": "waiting or running",
+        "skippedBeforeStart": "{count, plural, one {# skipped before start} other {# skipped before start}}",
+        "skippedOrBlocked": "{count} skipped or blocked"
       },
       "facts": {
         "actual": "actual",
@@ -207,7 +208,8 @@
         "processed": "{processed, number} of {total, number} targets processed",
         "selected": "{count, plural, one {# target selected} other {# targets selected}}",
         "skippedBy": "Skipped by {name} on {date}",
-        "skippedExplanation": "Skipped targets never reach a provider and cost nothing."
+        "skippedExplanation": "Skipped targets never reach a provider and cost nothing.",
+        "skippedOrBlockedExplanation": "Skipped or blocked targets are finished. See each target for the reason."
       },
       "table": {
         "actual": "actual",
@@ -235,8 +237,14 @@
         "providerRestricted": "The provider has restricted this account.",
         "providerTransient": "The provider is temporarily unavailable.",
         "providerUnknown": "The provider could not complete this check.",
-        "skippedBeforeStart": "Skipped before start"
-      }
+        "skippedBeforeStart": "Skipped before start",
+        "sendUnconfirmed": "Result not confirmed; not retried to avoid duplicate usage.",
+        "stoppedAfterStart": "Stopped after starting"
+      },
+      "operations": "Operations",
+      "usageNotRecorded": "Not recorded",
+      "estimatedOperations": "estimate {count}",
+      "skippedOrBlocked": "Skipped or blocked"
     }
   }
 }

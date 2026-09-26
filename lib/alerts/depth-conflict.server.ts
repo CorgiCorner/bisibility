@@ -11,6 +11,21 @@ import {
   minimumTargetedDepth,
 } from "./depth-conflict";
 
+type DepthSources = {
+  checkSchedule: { serpDepth: number | null } | null;
+  schedule: { serpDepth: number | null } | null;
+};
+
+const depthSourcesSelect = {
+  checkSchedule: { select: { serpDepth: true } },
+  schedule: { select: { serpDepth: true } },
+} as const;
+
+/** An assigned check schedule owns depth (null follows the project), as in resolveEffectiveSerpDepth. */
+function keywordScheduleDepth(keyword: DepthSources) {
+  return keyword.checkSchedule ? keyword.checkSchedule.serpDepth : keyword.schedule?.serpDepth;
+}
+
 function keywordTargetWhere(data: AlertRuleForm, projectId: string) {
   if (data.targetType === "keyword") {
     return {
@@ -32,9 +47,9 @@ export async function getAlertRuleDepthWarning(data: AlertRuleForm, projectId: s
 
   const keywords = await prisma.keyword.findMany({
     select: {
+      ...depthSourcesSelect,
       id: true,
       project: { select: { defaults: { select: { serpDepth: true } } } },
-      schedule: { select: { serpDepth: true } },
     },
     where: keywordTargetWhere(data, projectId),
   });
@@ -43,7 +58,7 @@ export async function getAlertRuleDepthWarning(data: AlertRuleForm, projectId: s
     keywords.map((keyword) => ({
       id: keyword.id,
       projectDepth: keyword.project?.defaults?.serpDepth,
-      scheduleDepth: keyword.schedule?.serpDepth,
+      scheduleDepth: keywordScheduleDepth(keyword),
     })),
   );
   return alertDepthConflictWarning(alertDepthConflict(data, trackedDepth));
@@ -99,8 +114,8 @@ export async function getProjectDepthDecreaseWarning(projectId: string, depth: S
         defaults: { select: { serpDepth: true } },
         keywords: {
           select: {
+            ...depthSourcesSelect,
             id: true,
-            schedule: { select: { serpDepth: true } },
             tags: { select: { tagId: true } },
           },
         },
@@ -112,7 +127,7 @@ export async function getProjectDepthDecreaseWarning(projectId: string, depth: S
   const currentDepth = resolveSerpDepth(project?.defaults?.serpDepth);
   if (depth >= currentDepth) return null;
   const inheriting = (project?.keywords ?? [])
-    .filter((keyword) => keyword.schedule?.serpDepth == null)
+    .filter((keyword) => keywordScheduleDepth(keyword) == null)
     .map((keyword) => ({ id: keyword.id, tagIds: keyword.tags.map((tag) => tag.tagId) }));
   return loweringWarning(depth, affectedRuleNames(rules, depth, inheriting));
 }
@@ -123,17 +138,17 @@ export async function getKeywordDepthDecreaseWarning(
 ) {
   const keyword = await prisma.keyword.findUnique({
     select: {
+      ...depthSourcesSelect,
       id: true,
       project: { select: { defaults: { select: { serpDepth: true } } } },
       projectId: true,
-      schedule: { select: { serpDepth: true } },
       tags: { select: { tagId: true } },
     },
     where: { id: keywordId },
   });
   if (!keyword) return null;
   const projectDepth = resolveSerpDepth(keyword.project.defaults?.serpDepth);
-  const currentDepth = resolveSerpDepth(keyword.schedule?.serpDepth ?? projectDepth);
+  const currentDepth = resolveSerpDepth(keywordScheduleDepth(keyword) ?? projectDepth);
   const nextDepth = resolveSerpDepth(depth ?? projectDepth);
   if (nextDepth >= currentDepth) return null;
   const rules = await prisma.alertRule.findMany({

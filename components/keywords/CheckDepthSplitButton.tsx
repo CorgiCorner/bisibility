@@ -28,6 +28,8 @@ type CheckDepthSplitButtonProps = {
   copy?: CheckDepthSplitButtonCopy;
   currentDepth: SerpDepth | null;
   disabled?: boolean;
+  /** Where the depth menu opens; a control docked at the bottom of the screen opens it upward. */
+  menuSide?: "bottom" | "top";
   onAction: () => void;
   onDepthChange: (depth: SerpDepth) => void;
   optionLabel?: (depth: SerpDepth) => string;
@@ -55,6 +57,7 @@ export function CheckDepthSplitButton({
   copy,
   currentDepth,
   disabled = false,
+  menuSide = "bottom",
   onAction,
   onDepthChange,
   optionLabel: optionLabelOverride,
@@ -116,6 +119,7 @@ export function CheckDepthSplitButton({
         anchorEl={menuAnchor}
         onClose={() => setMenuAnchor(null)}
         open={Boolean(menuAnchor)}
+        side={menuSide}
         listProps={{ "aria-label": copy?.depthMenu ?? t("depthMenu"), style: { padding: 0 } }}
         contentProps={{ style: menuSelectPaperStyle }}
       >

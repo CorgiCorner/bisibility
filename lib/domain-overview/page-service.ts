@@ -42,6 +42,7 @@ async function loadDomainPage<T extends "keywords" | "pages">(
     const common = {
       ...input,
       budgetCapCents: project.budgetCapCents,
+      origin: context.origin,
       projectId: project.id,
       source,
     };

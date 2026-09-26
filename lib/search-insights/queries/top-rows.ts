@@ -25,6 +25,8 @@ import { searchInsightsWindowFilter } from "./window-filter";
 export type TopRowsPage = {
   limit: number;
   offset: number;
+  /** A case-insensitive substring of the row text. The total counts only the matching rows. */
+  search?: string;
   sort?: SearchInsightsSort;
 };
 
@@ -85,6 +87,15 @@ function searchInsightsOrderBy(sort: SearchInsightsSort, textColumn: Prisma.Sql)
   return Prisma.sql`${sortExpression(sort.key, textColumn)} ${direction}${nulls}, ${textColumn} ASC`;
 }
 
+const escapeLike = (value: string) => value.replace(/[\\%_]/g, "\\$&");
+
+/** The search is a bound parameter with its wildcards escaped, so the text only ever matches. */
+function textFilter(search: string | undefined, textColumn: Prisma.Sql) {
+  const term = search?.trim();
+  if (!term) return Prisma.empty;
+  return Prisma.sql` AND ${textColumn} ILIKE ${`%${escapeLike(term)}%`} ESCAPE '\\'`;
+}
+
 // The text always breaks ties, so a page boundary can never repeat or skip a row whichever
 // column the reader sorted by.
 function slice(page: TopRowsPage) {
@@ -92,6 +103,7 @@ function slice(page: TopRowsPage) {
   return {
     limit,
     offset: Math.max(0, page.offset),
+    search: page.search,
     sort: page.sort ?? SEARCH_INSIGHTS_DEFAULT_SORT,
   };
 }
@@ -106,7 +118,7 @@ export async function getTopQueries(
   window: DateWindow,
   page: TopRowsPage,
 ): Promise<SearchInsightsRows<SearchInsightsQueryRow>> {
-  const { limit, offset, sort } = slice(page);
+  const { limit, offset, search, sort } = slice(page);
   if (limit === 0) return EMPTY_ROWS;
   const rows = await prisma.$queryRaw<(AggregatedRow & { query: string })[]>(Prisma.sql`
     SELECT
@@ -116,7 +128,7 @@ export async function getTopQueries(
       SUM("position" * "impressions") AS "positionWeight",
       COUNT(*) OVER () AS "total"
     FROM "search_analytics_query_daily"
-    WHERE ${searchInsightsWindowFilter(projectId, property, window)}
+    WHERE ${searchInsightsWindowFilter(projectId, property, window)}${textFilter(search, Prisma.sql`"query"`)}
     GROUP BY "query"
     ORDER BY ${searchInsightsOrderBy(sort, Prisma.sql`"query"`)}
     LIMIT ${limit} OFFSET ${offset}
@@ -190,7 +202,7 @@ export async function getTopPages(
   page: TopRowsPage,
   sessionsProperty: string | null = null,
 ): Promise<SearchInsightsRows<SearchInsightsPageRow>> {
-  const { limit, offset, sort } = slice(page);
+  const { limit, offset, search, sort } = slice(page);
   if (limit === 0) return EMPTY_ROWS;
   const rows = await prisma.$queryRaw<(AggregatedRow & { page: string })[]>(Prisma.sql`
     SELECT
@@ -200,7 +212,7 @@ export async function getTopPages(
       SUM("position" * "impressions") AS "positionWeight",
       COUNT(*) OVER () AS "total"
     FROM "search_analytics_page_daily"
-    WHERE ${searchInsightsWindowFilter(projectId, property, window)}
+    WHERE ${searchInsightsWindowFilter(projectId, property, window)}${textFilter(search, Prisma.sql`"page"`)}
     GROUP BY "page"
     ORDER BY ${searchInsightsOrderBy(sort, Prisma.sql`"page"`)}
     LIMIT ${limit} OFFSET ${offset}

@@ -101,6 +101,12 @@ describe("public API project ID outputs", () => {
             headers: new Headers(),
             instance: "urn:test",
             method: "GET",
+            origin: {
+              credentialId: "key_test",
+              credentialKind: "project_key",
+              source: "api",
+              surface: "programmatic",
+            },
             path: ["projects", publicId, "overview"],
             req,
             url: new URL(req.url),

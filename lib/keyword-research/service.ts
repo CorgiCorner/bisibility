@@ -2,6 +2,8 @@ import "server-only";
 
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { ResearchPage } from "@/lib/providers/types";
 import { supportsResearchScope } from "@/lib/serp/research-capability";
 import { keywordResearchCachedUntil, withKeywordResearchCache } from "./cache";
@@ -41,6 +43,7 @@ export async function researchKeywords(input: {
   locationKey?: string;
   maxCostCents?: number;
   mode: KeywordResearchMode;
+  origin: ProviderRequestOrigin;
   projectId: string;
   resultLimit: number;
   seed: string;
@@ -69,19 +72,13 @@ export async function researchKeywords(input: {
       location: location.value,
       selected,
     });
-    return annotateResearchResult(
-      {
-        ...estimate,
-        cachedUntil: keywordResearchCachedUntil(fetchedAt),
-        estimate: true,
-        fetchedAt,
-        rows: [],
-      },
-      project,
-      selected.provider.label,
-      connectionResources(eligible),
-      location.key,
-    );
+    return {
+      ...estimate,
+      connections: connectionResources(eligible),
+      estimate: true,
+      ok: true,
+      provider: selected.provider.label,
+    };
   }
 
   const plannedSources = sourcesForMode(input.mode);
@@ -122,7 +119,11 @@ export async function researchKeywords(input: {
             input.maxCostCents !== undefined &&
             spentThisRequest + estimated > input.maxCostCents
           ) {
-            throw new ProviderLookupSignal({ ok: false, reason: "cost_limit_exceeded" });
+            throw new ProviderLookupSignal({
+              estimatedCostCents: spentThisRequest + estimated,
+              ok: false,
+              reason: "cost_limit_exceeded",
+            });
           }
           const page = await callResearchSource({
             ...input,
@@ -162,6 +163,7 @@ export async function researchKeywords(input: {
         if (rows.length >= input.resultLimit) break;
       }
     } catch (error) {
+      if (error instanceof DeploymentAdmissionExhaustedError) throw error;
       const outcome = error instanceof ProviderLookupSignal ? error.outcome : null;
       const isCostLimit = outcome?.reason === "cost_limit_exceeded";
       if (

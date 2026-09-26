@@ -92,14 +92,36 @@
         "description": "新しいチャットのツールメニューから bisibility を選択します。例: 「{prompt}」",
         "prompt": {
           "withChecks": "今週、順位が下がったキーワードはどれですか？",
-          "withoutChecks": "最初のキーワードを追加して順位チェックを実行してください。"
+          "withoutChecks": "閲覧できるプロジェクトとキーワードを教えてください。"
         },
         "title": "3. 会話を開始"
       },
       "guideLink": "ChatGPT セットアップガイド",
       "heading": "開始方法",
       "note": "開発者モードの利用可否はアカウントまたはワークスペースの設定によって異なります。",
-      "show": "開始方法を表示"
+      "show": "開始方法を表示",
+      "clientSwitcher": "AIアシスタント",
+      "accessTitle": "読み取り専用アクセス",
+      "accessDescription": "このChatGPT接続では、プロジェクトと順位のデータを読み取れます。プロジェクトの変更や削除、メンバーの管理、APIキーの作成はできません。",
+      "claude": {
+        "description": "bisibilityをClaudeに接続します。",
+        "accessTitle": "読み取り・書き込みアクセス",
+        "accessDescription": "Claudeは、承認したスコープと既存のプロジェクト権限の範囲内で、データの読み取りと利用可能な書き込みツールの使用ができます。",
+        "developerMode": {
+          "title": "1. コネクタを開く",
+          "description": "ClaudeでSettings → Connectorsを開き、Add custom connectorを選択します。"
+        },
+        "addApp": {
+          "title": "2. bisibilityを追加",
+          "description": "名前をbisibilityにして、下のMCP URLを貼り付けます。コネクタを追加し、Connectを選択してbisibilityにログインし、権限を確認します。",
+          "copyMcpUrl": "Claude用MCP URLをコピー"
+        },
+        "firstChat": {
+          "description": "新しいチャットで+メニューを開き、Connectorsからbisibilityを有効にします。例：「{prompt}」"
+        },
+        "note": "カスタムコネクタの追加や有効化には、ワークスペース管理者の操作が必要な場合があります。",
+        "guideLink": "Claudeの設定ガイド"
+      }
     }
   }
 }

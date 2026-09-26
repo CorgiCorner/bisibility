@@ -4,7 +4,9 @@ import {
   PROJECT_DOMAIN_REQUIRED_MESSAGE,
   ProjectDomainRequiredError,
 } from "../projects/tracked-domain";
+import { DeploymentAdmissionExhaustedError } from "../providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "../providers/rate-limit";
+import { ProviderUsagePersistenceError } from "../providers/usage";
 import { BudgetExhaustedError } from "../rank-check/budget";
 import { ProviderChainError } from "../rank-check/fallback";
 import { RankCheckClosedBeforePersistenceError } from "../rank-check/persistence-errors";
@@ -294,7 +296,13 @@ describe("rank-check activities", () => {
     });
     expect(mocks.prisma.providerConnection.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        select: { costPerCheckCents: true, id: true, projectId: true, provider: true },
+        select: {
+          costPerCheckCents: true,
+          credentialSource: true,
+          id: true,
+          projectId: true,
+          provider: true,
+        },
       }),
     );
     expect(mocks.prisma.keyword.findUnique).toHaveBeenCalledWith({
@@ -779,12 +787,112 @@ describe("rank-check activities", () => {
     ).resolves.toMatchObject({ rankCheckId: "rank_running_1", position: 3 });
 
     expect(mocks.runKeywordCheckWithFallback).toHaveBeenCalledWith({
+      credential: undefined,
       depth: 20,
       keywordId: "keyword_1",
       providerId: undefined,
       rankCheckId: "rank_running_1",
       source: "app",
+      trigger: "manual",
     });
+  });
+
+  it("keeps a run item's stored origin when the worker executes it", async () => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValueOnce({
+      run: {
+        credentialId: "client-1",
+        credentialKind: "oauth_client",
+        source: "mcp",
+        trigger: "manual",
+      },
+    });
+    mocks.runKeywordCheckWithFallback.mockResolvedValue({
+      attempts: [],
+      provider: "serpapi",
+      rankCheck: {
+        checkedAt: new Date("2026-01-01T06:00:00.000Z"),
+        costCents: 0.1,
+        id: "rank_running_1",
+        keywordId: "keyword_1",
+        position: 3,
+        rankingUrl: null,
+      },
+    });
+
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_running_1",
+        runItemId: "item_1",
+        source: "dispatcher",
+      }),
+    ).resolves.toMatchObject({ rankCheckId: "rank_running_1" });
+
+    expect(mocks.runKeywordCheckWithFallback).toHaveBeenCalledWith(
+      expect.objectContaining({
+        credential: { id: "client-1", kind: "oauth_client" },
+        source: "mcp",
+        trigger: "manual",
+      }),
+    );
+  });
+
+  it("attributes dispatcher work without a run item to the app surface as scheduled", async () => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
+    mocks.runKeywordCheckWithFallback.mockResolvedValue({
+      attempts: [],
+      provider: "serpapi",
+      rankCheck: {
+        checkedAt: new Date("2026-01-01T06:00:00.000Z"),
+        costCents: 0.1,
+        id: "rank_running_1",
+        keywordId: "keyword_1",
+        position: 3,
+        rankingUrl: null,
+      },
+    });
+
+    await expect(
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_running_1",
+        source: "dispatcher",
+      }),
+    ).resolves.toMatchObject({ rankCheckId: "rank_running_1" });
+
+    expect(mocks.runKeywordCheckWithFallback).toHaveBeenCalledWith(
+      expect.objectContaining({ source: "app", trigger: "scheduled" }),
+    );
+  });
+
+  it("never writes the legacy worker source into a provider attribution", async () => {
+    mocks.prisma.rankCheckRunItem.findUnique.mockResolvedValue({
+      run: { credentialId: null, credentialKind: null, source: "worker", trigger: "scheduled" },
+    });
+    mocks.runKeywordCheckWithFallback.mockResolvedValue({
+      attempts: [],
+      provider: "serpapi",
+      rankCheck: {
+        checkedAt: new Date("2026-01-01T06:00:00.000Z"),
+        costCents: 0.1,
+        id: "rank_running_1",
+        keywordId: "keyword_1",
+        position: 3,
+        rankingUrl: null,
+      },
+    });
+
+    await runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      runItemId: "item_1",
+      source: "legacy",
+    });
+
+    expect(mocks.runKeywordCheckWithFallback).toHaveBeenCalledWith(
+      expect.not.objectContaining({ source: "worker" }),
+    );
   });
 
   it("rechecks automatic mode before provider execution on a late activity retry", async () => {
@@ -814,6 +922,13 @@ describe("rank-check activities", () => {
       nonRetryable: true,
       type: PROVIDER_RATE_LIMITED_FAILURE,
     });
+  });
+
+  it("does not automatically replay provider usage with unconfirmed billing", async () => {
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(new ProviderUsagePersistenceError());
+    await expect(
+      runRankCheckActivity({ keywordId: "keyword_1", source: "manual" }),
+    ).rejects.toMatchObject({ nonRetryable: true, type: "provider_usage_unconfirmed" });
   });
 
   it("maps exhausted budgets to a non-retryable Temporal failure", async () => {
@@ -947,6 +1062,46 @@ describe("rank-check activities", () => {
       type: BUDGET_EXHAUSTED_FAILURE,
     });
   });
+
+  it.each([false, true])(
+    "defers final credit exhaustion and preserves inline provenance (earlier failure: %s)",
+    async (earlierFailure) => {
+      const admission = new DeploymentAdmissionExhaustedError("balance");
+      const chainError = new ProviderChainError(
+        [
+          ...(earlierFailure
+            ? [
+                {
+                  provider: "serpapi",
+                  message: "Temporary failure.",
+                  code: "provider_transient" as const,
+                },
+              ]
+            : []),
+          { provider: "dataforseo", message: admission.message, reason: "allocation_exhausted" },
+        ],
+        admission,
+      );
+      mocks.runKeywordCheckWithFallback.mockRejectedValue(chainError);
+      mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+      await expect(
+        runRankCheckActivity({
+          keywordId: "keyword_1",
+          rankCheckId: "rank_running_1",
+          source: "manual",
+        }),
+      ).rejects.toMatchObject({ nonRetryable: true, type: "credits_exhausted" });
+      await expect(
+        runRankCheckActivity({
+          keywordId: "keyword_1",
+          rankCheckId: "rank_running_1",
+          inline: true,
+          source: "manual",
+        }),
+      ).rejects.toBe(chainError);
+      expect(chainError.attempts).toHaveLength(earlierFailure ? 2 : 1);
+    },
+  );
 
   it("re-throws transient chain errors so Temporal retries them", async () => {
     const chainError = new ProviderChainError([

@@ -1,6 +1,7 @@
 import type { Actor } from "@/lib/auth/authorize";
 import type { AuthenticatedApiKey, PersonalTokenAuth } from "./auth";
 import { ApiForbiddenError } from "./errors";
+import type { ApiRequestOrigin } from "./request-origin";
 import { errorResponse } from "./responses";
 
 export type ApiContext = {
@@ -12,6 +13,7 @@ export type ApiContext = {
   headers: Headers;
   instance: string;
   method: string;
+  origin: ApiRequestOrigin;
   path: string[];
   req: Request;
   url: URL;

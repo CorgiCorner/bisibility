@@ -10,6 +10,8 @@ export const previewRankCheckRunActionSchema = z
     projectId: z.string().refine((value) => isPublicIdOfType(value, "prj"), "Project not found."),
     providerId: z.string().trim().min(1).max(120).optional(),
     spec: runSelectionSpecSchema,
+    /** The launch the preview is for; only the app's manual run dialog sends "manual". */
+    trigger: z.enum(["api", "manual"]).optional(),
   })
   .strict();
 

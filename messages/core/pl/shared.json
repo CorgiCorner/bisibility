@@ -93,7 +93,7 @@
       "depth": "Głębokość",
       "depthAria": "Głębokość wyników",
       "devices": "{count, plural, one {# urządzenie} few {# urządzenia} many {# urządzeń} other {# urządzenia}}",
-      "duplicate": "Przebieg o tym zakresie już trwa. Uruchomienie teraz oznaczałoby podwójną opłatę za te same pozycje.",
+      "duplicate": "Każde wybrane słowo kluczowe jest właśnie sprawdzane w innym przebiegu, więc nie ma czego uruchomić.",
       "editBudget": "Edytuj budżet",
       "noProvider": "Brak dostawcy",
       "noProviderBlocked": "Nie połączono żadnego dostawcy, więc nie ma dokąd wysłać tych celów. Własny klucz, rozliczany bezpośrednio z Tobą.",
@@ -109,13 +109,21 @@
       "markets": "{count, plural, one {# rynek} few {# rynki} many {# rynków} other {# rynku}}",
       "startRun": "Uruchom przebieg",
       "sampleProject": "Projekty przykładowe nie wykonują prawdziwych sprawdzeń.",
-      "scopeDescription": "Sprawdza {count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} na rynku {market}, zanim cokolwiek trafi do dostawcy.",
+      "scopeDescription": "Nic nie trafi do dostawcy, dopóki nie uruchomisz.",
       "scopeEquation": "{keywords, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} · {market} · {devices} = {targets, plural, one {# cel} few {# cele} many {# celów} other {# celu}}",
       "scopeMany": "Sprawdź {count, plural, one {# wybrane słowo kluczowe} few {# wybrane słowa kluczowe} many {# wybranych słów kluczowych} other {# wybranego słowa kluczowego}} na rynku {market}",
       "scopeOne": "Sprawdź {keyword} na rynku {market}",
-      "scopeSubtitle": "Sprawdź zakres na rynku {market} przed uruchomieniem.",
+      "scopeSubtitle": "Sprawdź zakres przed uruchomieniem.",
       "starting": "Uruchamianie…",
-      "topDepth": "Top {depth, number}"
+      "topDepth": "Top {depth, number}",
+      "alreadyScheduled": "Już zaplanowane",
+      "cancelRun": "Anuluj przebieg",
+      "cancellingRun": "Anulowanie…",
+      "couldNotCancel": "Nie udało się anulować tamtego przebiegu. Spróbuj ponownie.",
+      "overlapCancelHint": "Anuluj tamten przebieg albo zostaw oba i zapłać dwa razy za te pozycje.",
+      "overlapKeepHint": "Uruchomienie tego przebiegu oznacza podwójną opłatę za te pozycje.",
+      "overlapMessage": "{count, plural, one {# z tych słów kluczowych jest} few {# z tych słów kluczowych są} many {# z tych słów kluczowych jest} other {# z tych słów kluczowych jest}} też w przebiegu, który {status, select, planned {jest zaplanowany na {time}} running {właśnie trwa} cancelling {jest anulowany} blocked {jest wstrzymany} other {czeka w kolejce}}.",
+      "overlapMore": "+{count, plural, one {# kolejny przebieg} few {# kolejne przebiegi} many {# kolejnych przebiegów} other {# kolejnego przebiegu}}"
     },
     "globalError": {
       "description": "Aplikacja nie mogła wyrenderować tej strony. Odśwież, aby spróbować ponownie.",
@@ -163,11 +171,11 @@
       "unavailable": "Weryfikacja nie jest teraz dostępna."
     },
     "scheduleName": {
-      "custom": "Niestandardowy \u00b7 {expression}",
+      "custom": "Niestandardowy · {expression}",
       "daily": "Codziennie {time}",
-      "monthly": "Miesięcznie \u00b7 {day} {time}",
+      "monthly": "Miesięcznie · {day} {time}",
       "noFixedTime": "Bez stałej godziny",
-      "weekly": "Co tydzień \u00b7 {weekday} {time}"
+      "weekly": "Co tydzień · {weekday} {time}"
     },
     "operationRow": {
       "days": "{count, plural, one {dzień} few {dni} many {dni} other {dnia}}",
@@ -488,6 +496,7 @@
           "workEmail": "Użyj służbowego adresu e-mail."
         }
       },
+      "expandableCard": { "expand": "Powiększ", "expandNamed": "Powiększ: {title}" },
       "expiryChoice": {
         "label": "Wygasa"
       },
@@ -564,6 +573,95 @@
       },
       "toolbarSearch": {
         "clear": "Wyczyść {label}"
+      }
+    },
+    "nativeUsage": {
+      "estimated": "Szacowane zużycie",
+      "usage": "Zużycie",
+      "monthly": "Miesięczne zużycie",
+      "unknown": "Brak danych",
+      "operations": "{count, number} operacji",
+      "belowCent": "< 0,01 USD",
+      "monthlyEstimate": "Szacowane miesięczne zużycie: {usage}",
+      "delta": "Zmiana miesięcznego zużycia: {usage}"
+    },
+    "runStatuses": {
+      "rank": {
+        "planned": {
+          "description": "Przebieg czeka na zaplanowany termin."
+        },
+        "blocked": {
+          "description": "Problem, na przykład wyczerpany budżet lub brak dostawcy, zatrzymuje przebieg."
+        },
+        "queued": {
+          "description": "Przebieg jest przyjęty i czeka na pierwsze sprawdzenie."
+        },
+        "running": {
+          "description": "Przebieg sprawdza swoje cele."
+        },
+        "cancelling": {
+          "description": "Przebieg zatrzyma się, gdy rozpoczęte sprawdzenia się zakończą."
+        },
+        "succeeded": {
+          "description": "Każdy cel ma wynik."
+        },
+        "partial": {
+          "description": "Część celów ma wynik, a pozostałe go nie mają."
+        },
+        "deferred": {
+          "description": "Przebieg odłożył swoje cele i nic za nie nie naliczył."
+        },
+        "failed": {
+          "description": "Żaden cel nie ma wyniku, bo sprawdzenia nie powiodły się lub zostały pominięte."
+        },
+        "cancelled": {
+          "description": "Przebieg zatrzymano na żądanie i zachowuje już uzyskane wyniki."
+        },
+        "not_confirmed": {
+          "description": "Przebieg się zakończył, ale nie ma zapisanego wyniku."
+        }
+      },
+      "searchConsole": {
+        "queued": {
+          "label": "W kolejce",
+          "description": "Import czeka na rozpoczęcie."
+        },
+        "importing": {
+          "label": "Importowanie",
+          "description": "Import pobiera dane wyszukiwania z Google."
+        },
+        "paused": {
+          "label": "Wstrzymano",
+          "description": "Użytkownik wstrzymał import do czasu wznowienia."
+        },
+        "waiting_for_google": {
+          "label": "Oczekiwanie na Google",
+          "description": "Google ogranicza żądania, a import wznowi się sam, gdy to będzie możliwe."
+        },
+        "reconnect_required": {
+          "label": "Wymagane ponowne połączenie",
+          "description": "Import wymaga ponownego połączenia Search Console."
+        },
+        "waiting_for_data": {
+          "label": "Oczekiwanie na dane",
+          "description": "Google nie ma jeszcze ostatecznych danych wyszukiwania dla tej usługi."
+        },
+        "delayed": {
+          "label": "Opóźniono",
+          "description": "Import nie może kontynuować, bo jego proces roboczy jest niedostępny."
+        },
+        "failed": {
+          "label": "Nie powiodło się",
+          "description": "Ostatnia próba importu nie powiodła się i wymaga ponowienia."
+        },
+        "completed": {
+          "label": "Zakończono",
+          "description": "Import się zakończył."
+        },
+        "status_unavailable": {
+          "label": "Status niedostępny",
+          "description": "Aplikacja nie może teraz odczytać bieżącego stanu importu."
+        }
       }
     }
   }

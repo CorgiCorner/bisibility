@@ -11,6 +11,7 @@ export type SerpApiOrganicResult = {
 };
 
 export type SerpApiResponse = {
+  search_metadata?: { id?: string; status?: string };
   error?: string;
   extra_credits?: number;
   organic_results?: unknown[];

@@ -141,13 +141,15 @@ export function DataTable<TRow extends DataTableRowBase>({
       aria-rowcount={rowCount}
       className={cn(
         dataTableRootClassName,
-        !bordered && "border-0",
+        // A borderless table owns its header top rule; -mt-px lays it over any rule directly above.
+        !bordered && "-mt-px border-0",
         layout === "fill"
           ? "flex h-full flex-col overflow-auto"
           : rowCount > 0
             ? "overflow-x-auto"
             : undefined,
       )}
+      data-bordered={bordered}
       data-layout={layout}
       data-scrolled="false"
       data-testid={id}

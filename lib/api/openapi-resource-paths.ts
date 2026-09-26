@@ -82,6 +82,9 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
         ref("NotificationPreferences"),
       ),
     },
+    "/projects/{project_id}/provider-budgets": {
+      get: bearer("List provider budgets", "listProviderBudgets", list(ref("ProviderBudgets"))),
+    },
     "/projects/{project_id}/providers": {
       get: bearer("List providers", "listProviders", list(ref("Provider"))),
     },
@@ -92,6 +95,14 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
         "updateProviderSettings",
         ref("Provider"),
         ref("ProviderConnect"),
+      ),
+    },
+    "/projects/{project_id}/providers/{provider_id}/budgets": {
+      patch: bearer(
+        "Update provider budgets",
+        "updateProviderBudgets",
+        ref("ProviderBudgets"),
+        ref("ProviderBudgetsUpdate"),
       ),
     },
     "/projects/{project_id}/providers/{provider_id}/connect": {

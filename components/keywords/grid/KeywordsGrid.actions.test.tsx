@@ -33,6 +33,8 @@ const preview = {
   expiresAt: "2026-09-03T12:00:00.000Z",
   keywordCount: 1,
   matched: 1,
+  overlapRunCount: 0,
+  overlaps: [],
   previewToken: "preview-grid-token",
   selectionHash: "grid-selection",
   targetCount: 1,
@@ -79,7 +81,11 @@ describe("KeywordsGrid actions", () => {
     ) as HTMLElement;
     fireEvent.click(within(keywordRow).getByRole("checkbox"));
 
-    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("toolbar", { name: "Actions for selected keywords" })).getByText(
+        "1 selected",
+      ),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete keywords" }));
 
@@ -168,7 +174,11 @@ describe("KeywordsGrid actions", () => {
 
     const keywordRow = screen.getByText(rows[0].keyword).closest('[role="row"]') as HTMLElement;
     fireEvent.click(within(keywordRow).getByRole("checkbox"));
-    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("toolbar", { name: "Actions for selected keywords" })).getByText(
+        "1 selected",
+      ),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
 
     expect(
@@ -180,6 +190,7 @@ describe("KeywordsGrid actions", () => {
       depth: 100,
       projectId: "prj_1",
       spec: { kind: "single", keywordId: rows[0].id, v: 1 },
+      trigger: "manual",
     });
     fireEvent.click(screen.getByRole("button", { name: "Start run" }));
     await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledOnce());

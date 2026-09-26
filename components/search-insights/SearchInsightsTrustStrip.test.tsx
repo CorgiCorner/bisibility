@@ -9,6 +9,7 @@ import type { ImportObservabilityFacts } from "@/lib/search-insights/queries/imp
 import { isoFromFrozenNow } from "@/tests/clock";
 import { routerMock } from "@/tests/next-navigation";
 import { act, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { SearchInsightsContextCard } from "./SearchInsightsContextCard";
 import { SearchInsightsNoDataState } from "./SearchInsightsEmptyStates";
@@ -259,8 +260,9 @@ describe("SearchInsightsTrustStrip", () => {
       freshnessRelativeJustNow: "teraz",
       freshnessRelativeMinutes: "{count, number} min temu",
       freshnessTooltip: "Ostatnie sprawdzenie {timestamp}. {adjustment}",
-      incidentImpressions202505: "Znany problem Google z wyswietleniami.",
-      incidentPill: "Znany problem danych Google",
+      incidentImpressions202505: "Znany problem Google z wyswietleniami od {from} do {to}.",
+      incidentPill: "Problem danych Google",
+      incidentTitle: "Znany problem danych Google",
       retentionFullSelfHost: "Przechowywane w Twojej bazie danych.",
       syncCoverageDays: "{completed, number} z {total, number} dni zakonczonych",
       trustCoverage: "Pokrycie",
@@ -659,7 +661,22 @@ describe("SearchInsightsTrustStrip", () => {
   it("flags a published provider anomaly beside the freshness fact", () => {
     renderStrip({ incidents: KNOWN_DATA_INCIDENTS });
 
-    expect(screen.getByText("Known Google data issue")).toBeInTheDocument();
+    const note = screen.getByRole("button", { name: "Google data issue" });
+    expect(note).not.toHaveClass("rounded-full");
+    expect(note).toHaveClass("text-fg-muted");
+  });
+
+  it("explains the provider anomaly and its dates when the note receives focus", async () => {
+    const user = userEvent.setup();
+    renderStrip({ incidents: KNOWN_DATA_INCIDENTS });
+
+    screen.getByRole("button", { name: "Google data issue" }).focus();
+
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveTextContent("Known Google data issue");
+    expect(tooltip).toHaveTextContent("from May 13, 2025 to Apr 27, 2026");
+    expect(tooltip).toHaveTextContent("compare them with care");
+    await user.keyboard("{Escape}");
   });
 
   it("renders selector-backed readiness and deep-history progress without another status label", () => {

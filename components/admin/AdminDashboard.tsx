@@ -224,9 +224,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
         ) : data.ops.events.length === 0 ? (
           <p className="text-xs text-fg-muted">{t("dashboard.ops.empty")}</p>
         ) : (
-          <div className="[&>[role=table]]:border-0">
-            <AdminDashboardOpsEventsTable events={data.ops.events} />
-          </div>
+          <AdminDashboardOpsEventsTable events={data.ops.events} />
         )}
       </Panel>
 

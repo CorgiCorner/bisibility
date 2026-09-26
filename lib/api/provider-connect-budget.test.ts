@@ -192,6 +192,39 @@ describe("starting provider budgets", () => {
   });
 });
 
+describe("connect priority", () => {
+  it("appends a new connection to the fallback chain when priority is omitted", async () => {
+    rows.set("dataforseo", { ...connection("dataforseo"), priority: 0 });
+    mocks.verify.mockResolvedValue({ ok: true, balance: 200 });
+    const result = await connectProviderConnection(
+      { ...input, providerId: "serpapi", credentials: { apiKey: "test" } },
+      context,
+    );
+    expect(result.priority).toBe(1);
+  });
+
+  it("stores an explicit priority on connect", async () => {
+    rows.set("dataforseo", { ...connection("dataforseo"), priority: 0 });
+    mocks.verify.mockResolvedValue({ ok: true, balance: 200 });
+    const result = await connectProviderConnection(
+      { ...input, priority: 90, providerId: "serpapi", credentials: { apiKey: "test" } },
+      context,
+    );
+    expect(result.priority).toBe(90);
+  });
+
+  it("promotes priority 0 and renumbers the rest of the chain", async () => {
+    rows.set("dataforseo", { ...connection("dataforseo"), priority: 0 });
+    mocks.verify.mockResolvedValue({ ok: true, balance: 200 });
+    const result = await connectProviderConnection(
+      { ...input, priority: 0, providerId: "serpapi", credentials: { apiKey: "test" } },
+      context,
+    );
+    expect(result.priority).toBe(0);
+    expect(rows.get("dataforseo")?.priority).toBe(1);
+  });
+});
+
 describe("account balance conversion", () => {
   it.each([
     [0.29, 29],

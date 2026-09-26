@@ -6,13 +6,14 @@ import type { RankNormalizationVersion } from "./normalization-version";
 import type { OrganicDomainRank } from "./organic-ranks";
 
 export type RankCheckRunResult = {
+  usageRecorded?: boolean;
   comparisonAllowed: boolean;
   providerCostCents?: number;
   providerUsage?: ProviderRequestAttribution;
   rankCheck: {
     billingUnits: number | null;
     checkedAt: Date;
-    costCents: number;
+    costCents: number | null;
     estimatedCostCents: number | null;
     keywordId: string;
     normalizationVersion: RankNormalizationVersion;

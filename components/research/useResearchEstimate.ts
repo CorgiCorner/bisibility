@@ -4,7 +4,10 @@ import type {
   ResearchKeywordsAction,
   ResearchKeywordsActionInput,
 } from "@/lib/actions/keyword-research";
-import type { KeywordResearchSuccess } from "@/lib/keyword-research/types";
+import {
+  isKeywordResearchEstimate,
+  type KeywordResearchEstimate,
+} from "@/lib/keyword-research/types";
 import { useRef, useState } from "react";
 import { EMPTY_RESEARCH_ESTIMATE } from "./research-workspace-model";
 
@@ -40,7 +43,9 @@ export function useResearchEstimate(
             researchAction(requestInput(seed, { ...overrides, estimateOnly: true })),
           ),
         );
-        const successful = outcomes.filter((item): item is KeywordResearchSuccess => item.ok);
+        const successful = outcomes.filter(
+          (item): item is KeywordResearchEstimate => item.ok && isKeywordResearchEstimate(item),
+        );
         if (sequence !== requestSequence.current) return;
         setEstimate({
           cached: successful.length === outcomes.length && successful.every((item) => item.cached),

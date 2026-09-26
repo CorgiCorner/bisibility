@@ -1,5 +1,6 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { DialogSurface as Drawer } from "@/components/ui/DialogSurface";
 import { ZonedTime } from "@/components/ui/ZonedTime";
 import type { UpcomingBlockedGroup, UpcomingDayGroup } from "@/lib/checks/contract";
@@ -10,7 +11,7 @@ import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useId, useState } from "react";
-import { formatEstimatedAmount } from "./upcoming-format";
+import { upcomingAmountParts } from "./upcoming-format";
 
 export type UpcomingStripProps = {
   blocked: UpcomingBlockedGroup[];
@@ -27,6 +28,7 @@ export function UpcomingStrip({
   schedulesHref,
   timeZone,
 }: Readonly<UpcomingStripProps>) {
+  const usage = useNativeUsageFormat();
   const locale = useLocale();
   const t = useTranslations("projectRankTracker.checks");
   const [openDayKey, setOpenDayKey] = useState(initialOpenDayKey ?? null);
@@ -64,10 +66,14 @@ export function UpcomingStrip({
         {days.map((day) => (
           <button
             aria-label={t("upcomingDayAria", {
-              amount: formatEstimatedAmount(day.estimatedCostCents, locale),
+              ...upcomingAmountParts(
+                day.estimatedCostCents,
+                day.nativeEstimate,
+                locale,
+                usage.format,
+              ),
               count: day.count,
               day: day.label,
-              isLessThanCent: String(day.estimatedCostCents > 0 && day.estimatedCostCents < 1),
             })}
             className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-border-control bg-bg-elev px-3 text-xs font-semibold text-fg outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
             key={day.key}
@@ -75,10 +81,14 @@ export function UpcomingStrip({
             type="button"
           >
             {t("upcomingDay", {
-              amount: formatEstimatedAmount(day.estimatedCostCents, locale),
+              ...upcomingAmountParts(
+                day.estimatedCostCents,
+                day.nativeEstimate,
+                locale,
+                usage.format,
+              ),
               count: day.count,
               day: day.label,
-              isLessThanCent: String(day.estimatedCostCents > 0 && day.estimatedCostCents < 1),
             })}
           </button>
         ))}
@@ -121,11 +131,13 @@ export function UpcomingStrip({
                 </h2>
                 <p className="mb-0 mt-1 font-sans tabular-nums text-[11px] text-fg-muted">
                   {t("checksAndEstimate", {
-                    amount: formatEstimatedAmount(openDay.estimatedCostCents, locale),
-                    count: openDay.count,
-                    isLessThanCent: String(
-                      openDay.estimatedCostCents > 0 && openDay.estimatedCostCents < 1,
+                    ...upcomingAmountParts(
+                      openDay.estimatedCostCents,
+                      openDay.nativeEstimate,
+                      locale,
+                      usage.format,
                     ),
+                    count: openDay.count,
                   })}
                 </p>
               </div>

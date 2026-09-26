@@ -3,7 +3,7 @@
 import type { KeywordAction } from "@/components/keywords/action-utils";
 import { AddKeywordDrawer } from "@/components/keywords/add/AddKeywordDrawer";
 import { Card } from "@/components/ui/Card";
-import { monthlyTrackingCostCents } from "@/lib/cost-estimate/project-estimate";
+import { monthlyNativeUsage } from "@/lib/cost-estimate/project-estimate";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
@@ -80,13 +80,16 @@ export function SavedKeywordsTable({
   );
   const selectedSet = new Set(selectedIds);
   const selectedRows = rows.filter((row) => selectedSet.has(row.publicId));
-  const trackingCost = monthlyTrackingCostCents(
-    selectedRows.length,
+  const trackingUsage = monthlyNativeUsage(
     {
-      ...costContext,
-      overrideCents: costContext.costPerCheckCents,
+      cronExpression: costContext.cronExpression,
+      depth: costContext.depth,
+      deviceCount: 1,
+      keywordCount: selectedRows.length,
+      locationCount: 1,
+      frequency: "daily",
     },
-    "daily",
+    { overrideCents: costContext.costPerCheckCents, providerId: costContext.providerId },
   );
 
   function updateRows(removedIds: readonly string[]) {
@@ -154,8 +157,8 @@ export function SavedKeywordsTable({
           <SavedKeywordsBulkBar
             canDelete={canDeleteKeyword}
             canTrack={canCreateKeyword}
-            costCents={trackingCost}
             count={selectedRows.length}
+            nativeUsage={trackingUsage}
             onClear={() => setSelectedIds([])}
             onRemove={() => void removeRows(selectedRows)}
             onTrack={() => setTrackDraft(selectedRows)}
@@ -167,19 +170,17 @@ export function SavedKeywordsTable({
           </p>
         ) : null}
         {filtered.length > 0 ? (
-          <div className="[&>[role=table]]:border-0">
-            <SavedKeywordsTableRows
-              canDelete={canDeleteKeyword}
-              canTrack={canCreateKeyword}
-              onRemove={(row) => void removeRows([row])}
-              onSelectionChange={(selection) => setSelectedIds([...selection])}
-              onToggle={toggleRow}
-              onTrack={(row) => setTrackDraft([row])}
-              projectRef={projectId}
-              rows={dataTableRows}
-              selectedIds={selectedSet}
-            />
-          </div>
+          <SavedKeywordsTableRows
+            canDelete={canDeleteKeyword}
+            canTrack={canCreateKeyword}
+            onRemove={(row) => void removeRows([row])}
+            onSelectionChange={(selection) => setSelectedIds([...selection])}
+            onToggle={toggleRow}
+            onTrack={(row) => setTrackDraft([row])}
+            projectRef={projectId}
+            rows={dataTableRows}
+            selectedIds={selectedSet}
+          />
         ) : (
           <div className="px-6 py-16 text-center">
             <h2 className="m-0 text-[15px] font-semibold">{t("noMatchTitle")}</h2>

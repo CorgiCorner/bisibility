@@ -21,6 +21,7 @@ export type SidebarProps = {
   activeHref?: string;
   activeProjectId: string;
   canCreateWorkspace: boolean;
+  canSetDefault?: boolean;
   enabledExperimentalModules?: readonly ExperimentalModuleKey[];
   projectRef: string;
   setupCompleted?: boolean;
@@ -37,6 +38,7 @@ export function Sidebar({
   activeHref,
   activeProjectId,
   canCreateWorkspace,
+  canSetDefault,
   enabledExperimentalModules = [],
   projectRef,
   setupCompleted = false,
@@ -90,6 +92,7 @@ export function Sidebar({
             <WorkspaceSwitcher
               activeProjectId={activeProjectId}
               canCreateWorkspace={canCreateWorkspace}
+              canSetDefault={canSetDefault}
               className="mt-0 min-w-0 flex-1"
               collapsed={collapsed}
               compact

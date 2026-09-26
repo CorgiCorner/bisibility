@@ -9,7 +9,10 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
+export function AdminShell({
+  children,
+  extraTabs,
+}: Readonly<{ children: ReactNode; extraTabs?: readonly { href: string; label: string }[] }>) {
   const t = useTranslations("instanceAdmin.shell");
   return (
     <div className="min-h-screen bg-bg text-fg">
@@ -43,7 +46,7 @@ export function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
           <h1 className="text-2xl font-semibold tracking-[-0.7px]">{t("title")}</h1>
           <p className="mt-1.5 text-[13px] text-fg-muted">{t("description")}</p>
         </div>
-        <AdminTabs />
+        <AdminTabs extraTabs={extraTabs} />
         {children}
       </main>
     </div>

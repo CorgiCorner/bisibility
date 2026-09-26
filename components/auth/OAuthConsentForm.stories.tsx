@@ -1,5 +1,7 @@
 import { OAuthConsentForm } from "@/components/auth/OAuthConsentForm";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { BrandLockup } from "@/components/ui/BrandLockup";
+import messages from "@/messages/core/en/auth.json";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
@@ -7,12 +9,14 @@ const meta = {
   parameters: { layout: "fullscreen" },
   decorators: [
     (Story) => (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-bg-sunken px-4 py-8 text-fg sm:px-6">
-        <div className="mb-7">
-          <BrandLockup />
+      <FeatureMessagesProvider locale="en" messages={messages} timeZone="UTC">
+        <div className="flex min-h-dvh flex-col items-center justify-center bg-bg-sunken px-4 py-8 text-fg sm:px-6">
+          <div className="mb-7">
+            <BrandLockup />
+          </div>
+          <Story />
         </div>
-        <Story />
-      </div>
+      </FeatureMessagesProvider>
     ),
   ],
   title: "Auth/OAuth Consent",
@@ -61,5 +65,19 @@ export const LongAppName: Story = {
       name: "A very long application name that should still fit on a small phone screen",
       redirectUri: "example.com/callback",
     },
+  },
+};
+
+export const WriteAccess: Story = {
+  ...DynamicClient,
+  args: {
+    ...DynamicClient.args,
+    client: {
+      dynamic: true,
+      id: "write-client",
+      name: "Claude",
+      redirectUri: "claude.ai/api/mcp/auth_callback",
+    },
+    scopes: ["openid", "email", "read", "write"],
   },
 };

@@ -84,7 +84,7 @@ describe("OAuthConsentForm", () => {
       screen.getByText(/additional permissions that bisibility cannot describe/),
     ).toBeVisible();
     expect(screen.getByText("openid, custom:scope")).not.toBeVisible();
-    expect(screen.queryByText(/Read your project and rank data/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/read your project and rank data/i)).not.toBeInTheDocument();
   });
 
   it("shows only read access without token creation or automatic renewal for a read-only request", () => {
@@ -103,10 +103,57 @@ describe("OAuthConsentForm", () => {
     );
     expect(screen.getByRole("button", { name: "Allow ChatGPT" })).toBeEnabled();
     expect(screen.getByText("chatgpt.com")).toBeVisible();
-    expect(screen.getByText(/Read your project and rank data/)).toBeVisible();
+    expect(screen.getByText(/read your project and rank data/i)).toBeVisible();
     expect(screen.queryByText(/Create API tokens/)).not.toBeInTheDocument();
     expect(screen.queryByText(/change|administer/)).not.toBeInTheDocument();
     expect(screen.getByText("Access lasts up to 1 hour.")).toBeVisible();
+  });
+
+  it("grants only the displayed read scopes for a broad ChatGPT request", async () => {
+    mocks.consent.mockResolvedValue({ data: {}, error: null });
+    render(
+      <OAuthConsentForm
+        {...consentProps({
+          client: {
+            dynamic: true,
+            id: "chat-client",
+            name: "ChatGPT",
+            redirectUri: "chat.example.com/callback",
+          },
+        })}
+      />,
+    );
+    expect(screen.getByText(/read your project and rank data/i)).toBeVisible();
+    expect(screen.queryByText(/delete projects/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Create API tokens")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Allow ChatGPT" }));
+    await screen.findByText("Consent response did not include a redirect URI.");
+    expect(mocks.consent).toHaveBeenCalledWith({
+      accept: true,
+      scope: "openid profile email offline_access read",
+    });
+  });
+
+  it("does not submit an empty grant when only unsupported scopes were requested", async () => {
+    render(
+      <OAuthConsentForm
+        {...consentProps({
+          client: {
+            dynamic: true,
+            id: "chat-client",
+            name: "ChatGPT",
+            redirectUri: "chat.example.com/callback",
+          },
+          scopes: ["admin", "tokens:write"],
+        })}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Allow ChatGPT" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "No supported permissions were requested",
+    );
+    expect(mocks.consent).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Deny" })).toBeEnabled();
   });
 
   it("also warns about persistent credentials when admin grants API key creation", () => {
@@ -189,7 +236,7 @@ describe("OAuthConsentForm", () => {
     expect(
       await screen.findByText("Consent response did not include a redirect URI."),
     ).toBeInTheDocument();
-    expect(mocks.consent).toHaveBeenCalledWith({ accept: true });
+    expect(mocks.consent).toHaveBeenCalledWith({ accept: true, scope: "email" });
   });
 
   it("posts denial and maps provider and network failures", async () => {

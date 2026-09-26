@@ -1,0 +1,28 @@
+@layer theme, base, components, utilities;
+@layer components {
+  .bar {
+    animation: floating-selection-bar-enter var(--motion-toast-enter) var(--ease-out);
+  }
+  .actions {
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .actions::-webkit-scrollbar {
+    display: none;
+  }
+  @keyframes floating-selection-bar-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bar {
+      animation: none;
+    }
+  }
+}

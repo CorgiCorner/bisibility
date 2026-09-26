@@ -1,4 +1,5 @@
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
+import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import {
   isUnrunnableReason,
   KEYWORD_ARCHIVED_REASON,
@@ -8,7 +9,7 @@ import {
 import { isSampleProject } from "@/lib/sample-data/marker";
 import type { SerpDepth } from "@/lib/serp/constants";
 import type { ParentRelation, RunStatus } from "./contract";
-import type { RunSelectionSpec } from "./selection";
+import type { RunLaunchTrigger, RunSelectionSpec } from "./selection";
 
 export type RankCheckRunProject = { domain: string | null; id: string; isSample: boolean };
 
@@ -31,11 +32,12 @@ export type LaunchRankCheckRunInput = {
   actorId: string | null;
   depth?: SerpDepth;
   idempotencyKey?: string;
+  origin: ProviderRequestOrigin;
   previewToken: string;
   project: RankCheckRunProject;
   providerId?: string;
   spec: RunSelectionSpec;
-  trigger: "api" | "manual";
+  trigger: RunLaunchTrigger;
 };
 
 export type LaunchRankCheckRunCreatedResult = {
@@ -119,14 +121,22 @@ export function isLaunchRankCheckRunNothingToRun(
   return "outcome" in result && result.outcome === "nothing_to_run";
 }
 
-export type LaunchRankCheckRunErrorCode = "budget_exhausted" | "no_provider";
+export type LaunchRankCheckRunErrorCode =
+  | "budget_exhausted"
+  | "cost_limit_exceeded"
+  | "no_provider";
 
 export class LaunchRankCheckRunError extends Error {
-  constructor(readonly code: LaunchRankCheckRunErrorCode) {
+  constructor(
+    readonly code: LaunchRankCheckRunErrorCode,
+    readonly estimatedCostCents?: number,
+  ) {
     super(
       code === "budget_exhausted"
         ? "Rank check monthly budget reached."
-        : "No connected rank data provider is available.",
+        : code === "cost_limit_exceeded"
+          ? "The estimated rank check cost exceeds max_cost_cents."
+          : "No connected rank data provider is available.",
     );
     this.name = "LaunchRankCheckRunError";
   }

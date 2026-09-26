@@ -11,6 +11,9 @@ const mocks = vi.hoisted(() => ({
   planContent: vi.fn(),
 }));
 
+vi.mock("@/components/settings/billing/account-extension", () => ({
+  renderAccountSettingsExtension: vi.fn(async () => null),
+}));
 vi.mock("@/app/(regional)/app/(workspace)/[project]/settings/(sections)/usage/actions", () => ({
   submitHostedPricingFeedback: vi.fn(),
 }));

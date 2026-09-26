@@ -12,9 +12,10 @@ export async function credentialsForProviderTest(
   inputCredentials: ProviderCredentials,
 ) {
   const connection = await prisma.providerConnection.findUnique({
-    select: { credentialsEncrypted: true },
+    select: { credentialSource: true, credentialsEncrypted: true },
     where: { projectId_provider: { projectId, provider: providerId } },
   });
+  if (connection?.credentialSource === "hosted") return inputCredentials;
   return resolveProviderCredentialsWithOverrides(
     providerId,
     connection?.credentialsEncrypted,
@@ -48,6 +49,7 @@ export async function restoreProviderAfterSuccessfulTest(input: {
       },
     });
     if (current?.status !== "needs_reauth") return { count: 0 };
+    if (current.credentialSource === "hosted") return { count: 0 };
     const result = await tx.providerConnection.updateMany({
       data: { status: "connected" },
       where: { id: current.id, status: "needs_reauth" },

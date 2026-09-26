@@ -1,6 +1,6 @@
 ---
 title: "Run rank checks"
-description: "Start a rank check, find the result, and use the Upcoming, Active, Needs attention, and Finished filters."
+description: "Start a rank check, find the result, and filter runs by source and status."
 ---
 
 A rank-check run is one tracked execution over a selection of keyword targets. A
@@ -13,13 +13,14 @@ the app API. It groups the work and its results in one place.
 2. Select **Run checks** (or **Run check** for one keyword), review the selected
    depth and estimated cost, then select **Start run**. From Overview you can
    also select **Run first check**.
-3. Watch progress under **Runs → Active**.
-4. When the run finishes, open **Runs → Finished** and open the run to read
-   positions, ranking URLs, and per-target outcomes.
+3. Watch progress in **Runs**. Set **Status** to **Running** to see only the
+   runs that are checking targets.
+4. When the run finishes, open it from **Runs** to read positions, ranking
+   URLs, and per-target outcomes.
 
-To start one future occurrence immediately, or to skip it, open
-**Runs → Upcoming**. These controls change that one occurrence, not the
-schedule. Edit the [schedule](/guides/schedules) to change cadence or
+To start one future occurrence immediately, or to skip it, open **Runs** and
+set **Status** to **Planned**. These controls change that one occurrence, not
+the schedule. Edit the [schedule](/guides/schedules) to change cadence or
 membership.
 
 A [single check](/api/checks) retrieves one current position for one keyword
@@ -28,23 +29,60 @@ waiting, the ones that finished, and the final result of the whole selection.
 
 ## Filter runs
 
-**Runs** lists every execution. Use these filters:
+**Runs** lists every execution. Use **Source** to show rank checks, Search
+Console imports, or both. The **Status** filter uses the same words as the
+status chips in the table, grouped by source. Hover a chip to read what it
+means, or select the info icon next to the **Status** column header to see
+every status.
 
-| Filter | What you see |
+Rank checks:
+
+| Status | API value | Meaning |
+| - | - | - |
+| Planned | `planned` | The run waits for its scheduled time. |
+| Blocked | `blocked` | A problem, such as a used-up budget or a missing provider, stops the run. |
+| Queued | `queued` | The run is accepted and waits for its first check. |
+| Running | `running` | The run is checking its targets. |
+| Cancelling | `cancelling` | The run stops when its started checks finish. |
+| Succeeded | `succeeded` | Every target got a result. |
+| Partial | `partial` | Some targets got a result, and others did not. |
+| Deferred | `deferred` | The run postponed its targets and charged nothing for them. |
+| Failed | `failed` | No target got a result because its checks failed or were skipped. |
+| Cancelled | `cancelled` | The run stopped on request and keeps the results it already got. |
+| Not confirmed | `not_confirmed` | The run finished, but it has no recorded result. |
+
+Search Console imports:
+
+| Status | API value | Meaning |
+| - | - | - |
+| Queued | `queued` | The import waits to start. |
+| Importing | `importing` | The import is getting search data from Google. |
+| Paused | `paused` | A user paused the import until someone resumes it. |
+| Waiting for Google | `waiting_for_google` | Google limits requests, and the import resumes by itself when it can. |
+| Reconnect required | `reconnect_required` | The import needs you to reconnect Search Console. |
+| Waiting for data | `waiting_for_data` | Google has no final search data for this property yet. |
+| Delayed | `delayed` | The import cannot continue because its worker is unavailable. |
+| Failed | `failed` | The last import attempt failed and needs a retry. |
+| Completed | `completed` | The import finished. |
+| Status unavailable | `status_unavailable` | The app cannot read the current import state right now. |
+
+Selecting a status in the app also sets **Source**. When you request
+`GET /api/runs` with `source=all`, `queued` and `failed` match both rank
+checks and Search Console imports, and `cancelled` matches rank checks.
+
+`GET /api/runs` also accepts these group values for `status`. The app menu no
+longer lists them.
+
+| Group value | What you see |
 | - | - |
-| Upcoming | Future schedule occurrences that have not started. |
-| Active | Runs that are queued, running, or cancelling. |
-| Needs attention | Blocked or otherwise stalled work. |
-| Finished | Terminal runs you can inspect or retry. |
-
-The Upcoming filter is the app label for occurrences whose backend status is
-still `planned` (or blocked before launch). The status table below keeps the
-contract names.
+| `active` | Runs that are queued, running, or cancelling, and imports that are queued, importing, waiting for data, or waiting for Google. |
+| `attention` | Blocked runs, failed runs, and imports that are paused, failed, or need a reconnect. |
+| `finished` | Terminal runs you can inspect or retry. |
 
 **Rank Tracker → Runs** uses a different control: **Planned** and **History**,
-not Upcoming. Planned lists the next seven days, soonest first. Per-row labels
-there are **Scheduled** or **Planned**. Use the project **Runs** page when you
-need Upcoming, Active, Needs attention, and Finished.
+not the status filter. Planned lists the next seven days, soonest first.
+Per-row labels there are **Scheduled** or **Planned**. Use the project **Runs**
+page when you need to filter by status.
 
 When a completed run is `partial`, you can retry its failed or deferred targets
 as a new run. The original run and its results are retained.

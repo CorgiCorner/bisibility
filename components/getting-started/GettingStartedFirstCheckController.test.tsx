@@ -83,7 +83,7 @@ function setup(overrides: Partial<ComponentProps<typeof GettingStartedFirstCheck
     <GettingStartedFirstCheckController
       context={context()}
       now={new Date("2026-08-30T17:00:00.000Z")}
-      providerRate={{ overrideCents: 1, providerId: null }}
+      providerRate={{ overrideCents: 1, providerId: "dataforseo" }}
       rows={rows as never}
       runCheckNowAction={runCheckNowAction}
       {...overrides}
@@ -107,7 +107,7 @@ describe("GettingStartedFirstCheckController", () => {
       await user.click(screen.getByRole("button", { name: label }));
       expect(screen.getByRole("dialog", { name: "Run rank checks" })).toBeVisible();
       expect(screen.getByText("2 keywords")).toBeVisible();
-      expect(screen.getByText("~$0.02")).toBeVisible();
+      expect(screen.getByText("$0.02")).toBeVisible();
       expect(runCheckNowAction).not.toHaveBeenCalled();
       await user.click(screen.getByRole("button", { name: "Cancel" }));
       await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());

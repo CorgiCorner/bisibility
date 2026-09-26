@@ -62,7 +62,7 @@ export function dispatchAgentToolRoute(name: string, input: ToolArgs): AgentRest
   if (name === "listRankedKeywordSuggestions")
     return call(
       input,
-      `${project(input, "ranked-keyword-suggestions")}${query(input, ["connection_id", "offset", "limit", "fresh"])}`,
+      `${project(input, "ranked-keyword-suggestions")}${query(input, ["connection_id", "offset", "limit", "fresh", "max_cost_cents"])}`,
       "GET",
     );
   if (name === "listTrafficSnapshots")

@@ -24,10 +24,17 @@ const columns: readonly DataTableColumn<Row>[] = [
   },
 ];
 
-function Table({ onSortingChange = vi.fn() }: { onSortingChange?: (value: unknown) => void }) {
+function Table({
+  bordered,
+  onSortingChange = vi.fn(),
+}: {
+  bordered?: boolean;
+  onSortingChange?: (value: unknown) => void;
+}) {
   return (
     <DataTable
       ariaLabel="Sortable rows"
+      bordered={bordered}
       columns={columns}
       id="header-unit-table"
       onSortingChange={onSortingChange}
@@ -53,6 +60,20 @@ describe("DataTableHeader", () => {
     expect(pinnedHeader).toHaveClass(
       "group-data-[scrolled=true]/table:shadow-[1px_0_0_var(--border)]",
     );
+  });
+
+  it("draws the header top rule itself only when the table is borderless", () => {
+    const { rerender } = render(<Table />);
+    const table = screen.getByRole("table");
+    const headerRow = screen.getAllByRole("row")[0];
+
+    expect(table).toHaveAttribute("data-bordered", "true");
+    expect(table).not.toHaveClass("-mt-px");
+    expect(headerRow).toHaveClass("border-t-0", "group-data-[bordered=false]/table:border-t");
+
+    rerender(<Table bordered={false} />);
+    expect(table).toHaveAttribute("data-bordered", "false");
+    expect(table).toHaveClass("-mt-px", "border-0");
   });
 
   it("cycles descending-first sort through descending, ascending and default", () => {

@@ -224,6 +224,7 @@ const context = {
 
 const checkHealth = {
   budget: { capCents: 5_000, exhausted: false, spentCents: 200 },
+  currentFailures: { count: 0, latestCheckId: null },
   failed24h: { count: 0, latest: null },
   providerConnected: true,
   providerRate: { overrideCents: null, providerId: "dataforseo" },

@@ -21,6 +21,7 @@ export type SettingsView = {
     lastUsedLabel: string;
     maskedValue: string;
     name: string;
+    spendThisMonthCents: number;
   }[];
   defaults: {
     city: string | null;

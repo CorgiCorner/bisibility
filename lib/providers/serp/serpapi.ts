@@ -5,12 +5,14 @@ import type {
   SerpRankInput,
   SerpRankResult,
 } from "@/lib/providers/types";
+import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
 import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { serpApiObservationRun } from "./observation-extract-serpapi";
 import { decideOrganicResult, type OrganicResultCandidate } from "./organic-result-decision";
 import { requireDeterminateOrganicResult } from "./payload-contract-error";
 import { rawPayload, type SerpApiResponse, serpApiOrganicCandidates } from "./serpapi-payload";
+import { serpApiUsageReceipt } from "./usage-receipts";
 
 const ACCOUNT_URL = "https://serpapi.com/account.json";
 const SEARCH_URL = "https://serpapi.com/search.json";
@@ -95,15 +97,11 @@ function finiteSum(left: number, right: number) {
   return Number.isFinite(sum) && sum >= 0 ? sum : undefined;
 }
 
-async function readResponse(response: Response, creds: ProviderCredentials) {
-  let data: SerpApiResponse | null = null;
-
-  try {
-    data = (await response.json()) as SerpApiResponse;
-  } catch {
-    data = null;
-  }
-
+function readResponse(
+  response: Response,
+  data: SerpApiResponse | null,
+  creds: ProviderCredentials,
+) {
   if (!response.ok) {
     const retryable = response.status === 429 || response.status >= 500;
     const message = safeErrorMessage(data, `SerpApi request failed with HTTP ${response.status}.`);
@@ -141,8 +139,14 @@ async function requestJson(
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     try {
-      return await readResponse(await fetchWithTimeout(url, {}, timeoutMs), creds);
+      const { response, data } = await readObservedResponse<SerpApiResponse>({
+        observer: url.startsWith(SEARCH_URL) ? creds.usageObserver : undefined,
+        request: () => fetchWithTimeout(url, {}, timeoutMs),
+        measure: serpApiUsageReceipt,
+      });
+      return readResponse(response, data, creds);
     } catch (error) {
+      if (error instanceof ProviderUsagePersistenceError) throw error;
       lastError = providerError(error, creds);
       if (!lastError.retryable || attempt === MAX_ATTEMPTS - 1) {
         throw lastError;
@@ -194,6 +198,7 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
   const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
   let stoppedOnMatch = false;
   let reachedEnd = false;
+  let billingUnits: number | null = 0;
 
   for (const start of pageStarts) {
     const data = await requestJson(
@@ -201,6 +206,8 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
       credentials,
       SEARCH_REQUEST_TIMEOUT_MS,
     );
+    const quantity = serpApiUsageReceipt(data, { ok: true }).quantity;
+    billingUnits = billingUnits === null || quantity === null ? null : billingUnits + quantity;
     const pageResults = data.organic_results;
 
     if (!Array.isArray(pageResults)) {
@@ -233,6 +240,7 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
   }
 
   return {
+    billingUnits,
     candidates,
     depth,
     pages,
@@ -278,8 +286,15 @@ export const serpApiProvider: SerpProvider = {
 
   async fetchRank(input: SerpRankInput): Promise<SerpRankResult> {
     const credentials = input.credentials ?? {};
-    const { candidates, depth, pages, reachedEnd, requestedPageCount, stoppedOnMatch } =
-      await fetchGoogleOrganicResults(input, requireApiKey(credentials));
+    const {
+      billingUnits,
+      candidates,
+      depth,
+      pages,
+      reachedEnd,
+      requestedPageCount,
+      stoppedOnMatch,
+    } = await fetchGoogleOrganicResults(input, requireApiKey(credentials));
     const decision = requireDeterminateOrganicResult(
       "SerpApi",
       decideOrganicResult({ candidates, depth, domain: input.domain }),
@@ -288,7 +303,7 @@ export const serpApiProvider: SerpProvider = {
     const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
     const checkedAt = new Date();
     return {
-      billingUnits: pages.length,
+      billingUnits,
       position: decision.position,
       rankingUrl: decision.rankingUrl,
       costCents: 0,

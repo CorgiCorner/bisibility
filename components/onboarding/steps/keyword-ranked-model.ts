@@ -71,6 +71,7 @@ export function groupRankedKeywords(pages: RankedKeywordsPage[]): RankedKeywordG
 export function rankedKeywordErrorCopy(reason: RankedKeywordError) {
   const messages: Record<RankedKeywordError, string> = {
     budget_exhausted: "Monthly rank-check budget reached.",
+    cost_limit_exceeded: "The estimated provider cost exceeds the requested limit.",
     needs_reauth: "DataForSEO authorization has expired.",
     no_domain: "Add a valid project domain before looking up ranked keywords.",
     no_source: "No eligible DataForSEO connection is available.",

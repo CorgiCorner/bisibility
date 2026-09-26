@@ -260,7 +260,15 @@
       "projects": "Projekty",
       "sample": "Przykładowy",
       "switch": "Zmień projekt",
-      "keywordCount": "{count, plural, =0 {# słów kluczowych} one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}"
+      "keywordCount": "{count, plural, =0 {# słów kluczowych} one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
+      "defaultProject": {
+        "error": "Nie udało się zmienić domyślnego projektu. Spróbuj ponownie.",
+        "isDefault": "Domyślny projekt",
+        "isDefaultDescription": "Kliknij, aby ten projekt nie otwierał się jako pierwszy.",
+        "label": "Domyślny projekt: {name}",
+        "makeDefault": "Ustaw jako domyślny projekt",
+        "makeDefaultDescription": "Otwiera się jako pierwszy po zalogowaniu."
+      }
     },
     "writeMode": {
       "migrationSettings": "Ustawienia migracji",

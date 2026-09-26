@@ -93,7 +93,7 @@
       "depth": "Depth",
       "depthAria": "Result depth",
       "devices": "{count, plural, one {# device} other {# devices}}",
-      "duplicate": "A run over this scope is already running. Starting now would pay twice for the same positions.",
+      "duplicate": "Every selected keyword is being checked by another run right now, so there is nothing to start.",
       "editBudget": "Edit budget",
       "noProvider": "No provider",
       "noProviderBlocked": "No provider connected, so there is nowhere to send these targets. Your own key, billed to you directly.",
@@ -109,13 +109,21 @@
       "markets": "{count, plural, one {# market} other {# markets}}",
       "startRun": "Start run",
       "sampleProject": "Sample projects do not run real checks.",
-      "scopeDescription": "Checks {count, plural, one {# keyword} other {# keywords}} across {market} before anything is sent to the provider.",
+      "scopeDescription": "Nothing is sent to the provider until you start.",
       "scopeEquation": "{keywords, plural, one {# keyword} other {# keywords}} · {market} · {devices} = {targets, plural, one {# target} other {# targets}}",
       "scopeMany": "Check {count, plural, one {# selected keyword} other {# selected keywords}} in {market}",
       "scopeOne": "Check {keyword} in {market}",
-      "scopeSubtitle": "Review the {market} scope before starting.",
+      "scopeSubtitle": "Review the scope before starting.",
       "starting": "Starting...",
-      "topDepth": "Top {depth, number}"
+      "topDepth": "Top {depth, number}",
+      "alreadyScheduled": "Already scheduled",
+      "cancelRun": "Cancel run",
+      "cancellingRun": "Cancelling...",
+      "couldNotCancel": "Could not cancel that run. Try again.",
+      "overlapCancelHint": "Cancel that run, or keep both and pay twice for these positions.",
+      "overlapKeepHint": "Starting this run pays twice for these positions.",
+      "overlapMessage": "{count, plural, one {# of these keywords is} other {# of these keywords are}} also in a run that is {status, select, planned {planned for {time}} running {running} cancelling {cancelling} blocked {blocked} other {queued}}.",
+      "overlapMore": "+{count, plural, one {# more run} other {# more runs}}"
     },
     "globalError": {
       "description": "The app could not render this page. Reload to try again.",
@@ -475,6 +483,7 @@
           "workEmail": "Use your work email."
         }
       },
+      "expandableCard": { "expand": "Expand", "expandNamed": "Expand {title}" },
       "expiryChoice": { "label": "Expires" },
       "menuMultiSelect": {
         "noResults": "No results",
@@ -541,6 +550,95 @@
         "undoFailed": "Undo failed. Please try again."
       },
       "toolbarSearch": { "clear": "Clear {label}" }
+    },
+    "nativeUsage": {
+      "estimated": "Estimated usage",
+      "usage": "Usage",
+      "monthly": "Monthly usage",
+      "unknown": "Unknown",
+      "operations": "{count, number} operations",
+      "belowCent": "< $0.01",
+      "monthlyEstimate": "Estimated monthly usage: {usage}",
+      "delta": "Monthly usage change: {usage}"
+    },
+    "runStatuses": {
+      "rank": {
+        "planned": {
+          "description": "The run waits for its scheduled time."
+        },
+        "blocked": {
+          "description": "A problem, such as a used-up budget or a missing provider, stops the run."
+        },
+        "queued": {
+          "description": "The run is accepted and waits for its first check."
+        },
+        "running": {
+          "description": "The run is checking its targets."
+        },
+        "cancelling": {
+          "description": "The run stops when its started checks finish."
+        },
+        "succeeded": {
+          "description": "Every target got a result."
+        },
+        "partial": {
+          "description": "Some targets got a result, and others did not."
+        },
+        "deferred": {
+          "description": "The run postponed its targets and charged nothing for them."
+        },
+        "failed": {
+          "description": "No target got a result because its checks failed or were skipped."
+        },
+        "cancelled": {
+          "description": "The run stopped on request and keeps the results it already got."
+        },
+        "not_confirmed": {
+          "description": "The run finished, but it has no recorded result."
+        }
+      },
+      "searchConsole": {
+        "queued": {
+          "label": "Queued",
+          "description": "The import waits to start."
+        },
+        "importing": {
+          "label": "Importing",
+          "description": "The import is getting search data from Google."
+        },
+        "paused": {
+          "label": "Paused",
+          "description": "A user paused the import until someone resumes it."
+        },
+        "waiting_for_google": {
+          "label": "Waiting for Google",
+          "description": "Google limits requests, and the import resumes by itself when it can."
+        },
+        "reconnect_required": {
+          "label": "Reconnect required",
+          "description": "The import needs you to reconnect Search Console."
+        },
+        "waiting_for_data": {
+          "label": "Waiting for data",
+          "description": "Google has no final search data for this property yet."
+        },
+        "delayed": {
+          "label": "Delayed",
+          "description": "The import cannot continue because its worker is unavailable."
+        },
+        "failed": {
+          "label": "Failed",
+          "description": "The last import attempt failed and needs a retry."
+        },
+        "completed": {
+          "label": "Completed",
+          "description": "The import finished."
+        },
+        "status_unavailable": {
+          "label": "Status unavailable",
+          "description": "The app cannot read the current import state right now."
+        }
+      }
     }
   }
 }

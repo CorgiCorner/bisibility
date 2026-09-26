@@ -6,6 +6,7 @@ import { CaretLeftIcon as CaretLeft } from "@phosphor-icons/react/dist/csr/Caret
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { dataTableFooterHeight } from "./data-table-density";
 import type { DataTablePagination } from "./data-table-types";
 
 type DataTableFooterProps = {
@@ -37,10 +38,11 @@ export function DataTableFooter({
   return (
     <div
       className={cn(
-        "sticky left-0 z-10 flex min-h-[52px] w-full min-w-0 shrink-0 flex-wrap items-center justify-between gap-x-5 gap-y-2 border-t border-border bg-bg-elev px-4 py-2.5",
+        "sticky left-0 z-10 flex w-full min-w-0 shrink-0 flex-wrap items-center justify-between gap-x-5 gap-y-2 border-t border-border bg-bg-elev px-4 py-2.5",
         layout === "fill" && "bottom-0 mt-auto",
       )}
       data-testid="data-table-footer"
+      style={{ minHeight: dataTableFooterHeight }}
     >
       {footerStart !== undefined ? (
         <div className="min-w-0 flex-1 basis-full text-[12px] text-fg-muted sm:basis-auto">

@@ -8,7 +8,7 @@ function source(path: string) {
 
 describe("two-factor schema hardening", () => {
   it("keeps the user lookup index and removes the secret index", () => {
-    const schema = source("prisma/schema.prisma");
+    const schema = source("prisma/schema/core.prisma");
     const model = /model TwoFactor \{([\s\S]*?)\n\}/.exec(schema)?.[1] ?? "";
 
     expect(model).toContain("@@index([userId])");
@@ -17,7 +17,7 @@ describe("two-factor schema hardening", () => {
 
   it("matches the installed two-factor verification fields", () => {
     const pluginSchema = source("node_modules/better-auth/dist/plugins/two-factor/schema.mjs");
-    const prismaSchema = source("prisma/schema.prisma");
+    const prismaSchema = source("prisma/schema/core.prisma");
     const model = /model TwoFactor \{([\s\S]*?)\n\}/.exec(prismaSchema)?.[1] ?? "";
 
     expect(pluginSchema).toMatch(

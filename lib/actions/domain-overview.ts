@@ -7,6 +7,7 @@ import {
   loadDomainPagesPage,
 } from "@/lib/domain-overview/service";
 import { domainOverviewLocationCode } from "@/lib/domain-overview/target";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { appPath } from "@/lib/routing/app-path";
 import { saveSavedKeywordRows } from "@/lib/saved-keywords/service";
 import { saveKeywordsSchema } from "@/lib/schemas/saved-keyword";
@@ -86,7 +87,7 @@ export async function analyzeDomainOverviewAction(input: unknown) {
   const data = parseActionInput(analyzeSchema, input);
   const { actor, project } = await mutationScope(data);
   return analyzeDomainOverview(
-    { actorId: actor.id, projectId: project.id },
+    { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
     {
       estimateOnly: data.estimateOnly,
       fresh: data.fresh,
@@ -129,7 +130,7 @@ export async function loadDomainHistoryAction(input: unknown) {
   const data = parseActionInput(historySchema, input);
   const { actor, project } = await mutationScope(data);
   return loadDomainOverviewHistory(
-    { actorId: actor.id, projectId: project.id },
+    { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
     {
       fresh: data.fresh,
       ...(data.countryCode ? { countryCode: data.countryCode } : {}),
@@ -167,8 +168,14 @@ async function loadTablePage(input: unknown, module: "keywords" | "pages") {
   // sort and filters describe free client-side slicing of fetched rows; the paid cache key is
   // intentionally based only on provider pagination and market dimensions.
   return module === "keywords"
-    ? loadDomainKeywordsPage({ actorId: actor.id, projectId: project.id }, options)
-    : loadDomainPagesPage({ actorId: actor.id, projectId: project.id }, options);
+    ? loadDomainKeywordsPage(
+        { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
+        options,
+      )
+    : loadDomainPagesPage(
+        { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
+        options,
+      );
 }
 
 export async function loadDomainKeywordsPageAction(input: unknown) {

@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import { aggregateProviderReferenceUsage } from "./reference-usage";
 
 describe("aggregateProviderReferenceUsage", () => {
+  it("preserves cached zero usage instead of estimating pages again", () => {
+    expect(
+      aggregateProviderReferenceUsage([
+        { billingUnits: 0, checks: 2, provider: "serpapi", requestedDepth: 100 },
+      ]),
+    ).toEqual([expect.objectContaining({ billableUnits: 0, referenceCostCents: 0 })]);
+  });
   it("groups completed usage by the provider that ran each check", () => {
     expect(
       aggregateProviderReferenceUsage([

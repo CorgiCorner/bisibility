@@ -1,14 +1,22 @@
 import "server-only";
 
+import { nativeEstimateFromSelection } from "@/lib/cost-estimate/native-usage";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { scheduledRunProjection, scheduleProviderId } from "@/lib/queries/check-schedule-list";
+import {
+  ledgerActualCostCents,
+  type RunLedgerActual,
+  rankCheckRunLedgerActuals,
+} from "@/lib/queries/rank-check-run-accounting";
+import { rankCheckRunUsageGroups } from "@/lib/queries/rank-check-run-usage";
 import { monthlySpendCents } from "@/lib/rank-check/budget";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { readActiveSearchImportSnapshot } from "@/lib/search-insights/sync/operation-snapshot";
 import { type OperationSnapshot, operationSnapshotSchema } from "./contract";
 import { rankCheckProviderPresentation } from "./provider-presentation";
 import { pendingRunItems, runStartFacts, startedRunItemWhere } from "./start-facts";
+import { type RunUsageGroup, runUsage } from "./usage";
 
 const ACTIVE_RUN_STATUSES = ["queued", "running", "cancelling", "blocked"];
 const snapshotRunSelect = {
@@ -17,6 +25,7 @@ const snapshotRunSelect = {
       items: { where: startedRunItemWhere },
     },
   },
+  id: true,
   blockedReason: true,
   cancelledCount: true,
   checkSchedule: {
@@ -68,6 +77,7 @@ export function operationEtaSeconds(
     deferred: number;
     failed: number;
     total: number;
+    skipped?: number;
   },
   startedAt: Date | null,
   snapshotAt: Date,
@@ -76,7 +86,8 @@ export function operationEtaSeconds(
   const elapsedSeconds = (snapshotAt.getTime() - startedAt.getTime()) / 1_000;
   if (!Number.isFinite(elapsedSeconds) || elapsedSeconds < 30) return null;
 
-  const processed = counts.completed + counts.failed + counts.deferred + counts.cancelled;
+  const processed =
+    counts.completed + counts.failed + counts.deferred + counts.cancelled + (counts.skipped ?? 0);
   const remaining = Math.max(counts.total - processed, 0);
   if (remaining === 0) return null;
 
@@ -85,6 +96,8 @@ export function operationEtaSeconds(
 
 async function operationForRun(
   run: SnapshotRun,
+  usageGroups: RunUsageGroup[],
+  ledger: RunLedgerActual | undefined,
   snapshotAt: Date,
   budget: { capCents: number; spentCents: number } | null,
 ) {
@@ -100,10 +113,12 @@ async function operationForRun(
   const operation = {
     blockedReason: run.blockedReason,
     budget: run.blockedReason === "budget_exhausted" ? budget : null,
-    costCents: run.costCents,
+    costCents: ledgerActualCostCents(ledger, run.costCents),
+    usage: runUsage({ ...run, startedTargets: run._count.items }, usageGroups, ledger),
     counts,
     etaSeconds: operationEtaSeconds(counts, run.startedAt, snapshotAt),
     estimatedCostCents: run.estimatedCostCents,
+    nativeEstimate: nativeEstimateFromSelection(run.selectionSpec),
     finishedAt: iso(run.finishedAt),
     id: run.publicId,
     keywordCount: run.keywordCount,
@@ -148,6 +163,7 @@ async function operationForRun(
       total: projection.targetCount,
     },
     estimatedCostCents: projection.estimatedCostCents ?? 0,
+    nativeEstimate: projection.nativeEstimate,
     keywordCount: projection.keywordCount,
     targetCount: projection.targetCount,
   };
@@ -168,11 +184,20 @@ export async function readOperationSnapshot(projectId: string): Promise<Operatio
   const spentCents = runs.some((run) => run.blockedReason === "budget_exhausted")
     ? await monthlySpendCents(projectId, snapshotAt)
     : null;
+  const [usageGroups, ledgerActuals] = await Promise.all([
+    rankCheckRunUsageGroups(runs.map((run) => run.id)),
+    rankCheckRunLedgerActuals(
+      projectId,
+      runs.map((run) => run.id),
+    ),
+  ]);
   const operations = [
     ...(await Promise.all(
       runs.map((run) =>
         operationForRun(
           run,
+          usageGroups.get(run.id) ?? [],
+          ledgerActuals.get(run.id),
           snapshotAt,
           run.blockedReason === "budget_exhausted" && spentCents !== null
             ? { capCents: run.project.budgetCapCents, spentCents }

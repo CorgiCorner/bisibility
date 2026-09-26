@@ -92,14 +92,36 @@
         "description": "Wybierz bisibility z menu narzędzi w nowym czacie. Spróbuj: „{prompt}”",
         "prompt": {
           "withChecks": "Które słowa kluczowe straciły pozycje w tym tygodniu?",
-          "withoutChecks": "Dodaj moje pierwsze słowa kluczowe i uruchom sprawdzenie pozycji."
+          "withoutChecks": "Jakie projekty i słowa kluczowe mogę wyświetlić?"
         },
         "title": "3. Rozpocznij rozmowę"
       },
       "guideLink": "Przewodnik konfiguracji ChatGPT",
       "heading": "Pierwsze kroki",
       "note": "Tryb dewelopera może zależeć od ustawień Twojego konta lub przestrzeni roboczej.",
-      "show": "Pokaż pierwsze kroki"
+      "show": "Pokaż pierwsze kroki",
+      "clientSwitcher": "Asystent AI",
+      "accessTitle": "Dostęp tylko do odczytu",
+      "accessDescription": "To połączenie z ChatGPT pozwala odczytywać dane projektów i pozycji. Nie pozwala zmieniać ani usuwać projektów, zarządzać członkami ani tworzyć kluczy API.",
+      "claude": {
+        "description": "Połącz bisibility z Claude.",
+        "accessTitle": "Dostęp do odczytu i zapisu",
+        "accessDescription": "Claude może odczytywać dane i korzystać z dostępnych narzędzi zapisu w ramach zatwierdzonych zakresów i Twoich uprawnień w projektach.",
+        "developerMode": {
+          "title": "1. Otwórz konektory",
+          "description": "W Claude otwórz Settings → Connectors i wybierz Add custom connector."
+        },
+        "addApp": {
+          "title": "2. Dodaj bisibility",
+          "description": "Wpisz nazwę bisibility i wklej poniższy adres MCP. Dodaj konektor, wybierz Connect i zaloguj się do bisibility, aby sprawdzić uprawnienia.",
+          "copyMcpUrl": "Kopiuj adres MCP dla Claude"
+        },
+        "firstChat": {
+          "description": "W nowej rozmowie otwórz menu +, wybierz Connectors i włącz bisibility. Spróbuj: „{prompt}”"
+        },
+        "note": "Administrator przestrzeni roboczej może musieć dodać lub włączyć własne konektory.",
+        "guideLink": "Instrukcja konfiguracji Claude"
+      }
     }
   }
 }

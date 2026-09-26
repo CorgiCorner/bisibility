@@ -31,6 +31,7 @@ describe("provider allocation repository", () => {
               enabled: true,
               id: "connection_1",
               priority: 0,
+              programmaticAllocationAmountPerMonth: null,
               provider: "metered",
               status: "connected",
             },
@@ -43,7 +44,9 @@ describe("provider allocation repository", () => {
     ).resolves.toEqual([
       {
         allocation: { amountPerMonth: 5000, unit: "cents" },
+        credits: { app: null, programmatic: null },
         internalConnectionId: "connection_1",
+        programmaticAllocation: { amountPerMonth: 5000, unit: "cents" },
         source: "legacy_project",
       },
     ]);

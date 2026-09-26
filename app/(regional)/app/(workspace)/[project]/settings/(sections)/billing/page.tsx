@@ -1,5 +1,6 @@
 import { submitHostedPricingFeedback } from "@/app/(regional)/app/(workspace)/[project]/settings/(sections)/usage/actions";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { renderAccountSettingsExtension } from "@/components/settings/billing/account-extension";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { PlanCard } from "@/components/settings/usage/PlanCard";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
@@ -14,15 +15,25 @@ import { asProjectRef } from "@/lib/routing/app-path";
 
 type BillingSettingsPageProps = {
   params: Promise<{ project: string }>;
+  searchParams?: Promise<{ ledger?: string }>;
 };
 
-export default async function BillingSettingsPage({ params }: Readonly<BillingSettingsPageProps>) {
+export default async function BillingSettingsPage({
+  params,
+  searchParams,
+}: Readonly<BillingSettingsPageProps>) {
   const { project: projectRef } = await params;
   const [access, session, runtime] = await Promise.all([
     requireReadableProject(projectRef),
     requireSession(),
     resolveRegionalDocumentLocale(),
   ]);
+  const query = await searchParams;
+  const billingAccount = await renderAccountSettingsExtension({
+    projectRef,
+    locale: runtime.locale,
+    cursor: typeof query?.ledger === "string" ? query.ledger : null,
+  });
   const role = getProjectRole(access.actor, access.project.id);
   const publicId = asProjectRef(access.project.publicId);
   const writable = access.project.writeMode === "active";
@@ -48,18 +59,22 @@ export default async function BillingSettingsPage({ params }: Readonly<BillingSe
         timeZone={runtime.timeZone}
       >
         <div
-          className="max-w-[760px] scroll-mt-6"
+          className={
+            billingAccount ? "min-w-0 max-w-[1100px] scroll-mt-6" : "max-w-[760px] scroll-mt-6"
+          }
           data-settings-section-slot="billing"
           id="plan"
           tabIndex={-1}
         >
-          <PlanCard
-            canSubmitPricingFeedback={writable && canProjectAction(role, "manage", "billing")}
-            deployment={deploymentMode()}
-            initialAnswered={pricingFeedbackAnswered}
-            projectId={publicId}
-            submitPricingFeedback={submitHostedPricingFeedback}
-          />
+          {billingAccount ?? (
+            <PlanCard
+              canSubmitPricingFeedback={writable && canProjectAction(role, "manage", "billing")}
+              deployment={deploymentMode()}
+              initialAnswered={pricingFeedbackAnswered}
+              projectId={publicId}
+              submitPricingFeedback={submitHostedPricingFeedback}
+            />
+          )}
         </div>
       </FeatureMessagesProvider>
     </SettingsShell>

@@ -136,7 +136,7 @@ describe("cost calculator query", () => {
     });
   });
 
-  it("returns the raw schedule and cap-enforcement spend context", async () => {
+  it("returns the raw schedule and confirmed ledger spend context", async () => {
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
       cronExpression: "0 6 * * 1",
       frequency: "custom_cron",
@@ -152,8 +152,9 @@ describe("cost calculator query", () => {
       capCents: 900,
       cronExpression: "0 6 * * 1",
       rawFrequency: "custom_cron",
-      spentCents: 200,
+      spentCents: 75,
       timezone: "America/New_York",
     });
+    expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
   });
 });

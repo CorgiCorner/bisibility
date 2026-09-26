@@ -4,6 +4,32 @@ import { API_VERSION_HEADER } from "./api-versions";
 import { getOpenApiDocument } from "./openapi";
 
 describe("OpenAPI document", () => {
+  it("advertises 402 only on operations that can issue paid provider requests", () => {
+    const paths = getOpenApiDocument().paths;
+    const paid = [
+      ["/projects/{project_id}/keyword-metrics", "post"],
+      ["/projects/{project_id}/keyword-research", "get"],
+      ["/projects/{project_id}/ranked-keyword-suggestions", "get"],
+      ["/projects/{projectId}/backlinks", "get"],
+      ["/projects/{projectId}/backlinks/rows", "post"],
+      ["/projects/{projectId}/domain-overview/analyze", "post"],
+      ["/projects/{projectId}/domain-overview/history", "post"],
+      ["/projects/{projectId}/domain-overview/keywords", "post"],
+      ["/projects/{projectId}/domain-overview/pages", "post"],
+      ["/keywords/{id}/checks", "post"],
+    ] as const;
+    for (const [path, method] of paid) {
+      const operation = (paths[path] as Record<string, { responses: Record<string, unknown> }>)[
+        method
+      ];
+      expect(operation.responses["402"]).toMatchObject({
+        description: expect.stringContaining("Deployment credits exhausted"),
+      });
+    }
+    expect(paths["/projects"].get.responses["402"]).toBeUndefined();
+    expect(paths["/rank-checks/{check_id}"].get.responses["402"]).toBeUndefined();
+  });
+
   it("groups every operation into an ordered API reference section", () => {
     const doc = getOpenApiDocument();
     const operations = Object.values(doc.paths).flatMap((path) => Object.values(path)) as Array<{
@@ -38,7 +64,7 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(102);
+    expect(operations).toHaveLength(104);
     expect(operations.every((operation) => operation.tags?.length === 1)).toBe(true);
     expect(
       operations.every(
@@ -154,6 +180,47 @@ describe("OpenAPI document", () => {
       },
       required: ["apiVersions", "data", "rank_check_scheduler_mode", "scheduler_driver"],
     });
+  });
+
+  it("documents the optional client source header on every secured operation", () => {
+    const doc = getOpenApiDocument();
+
+    expect(doc.components.parameters.SourceHeader).toEqual({
+      description: expect.stringContaining("usage reporting"),
+      in: "header",
+      name: "X-Bisibility-Source",
+      required: false,
+      schema: { enum: ["sdk", "cli", "mcp"], type: "string" },
+    });
+
+    const operations = Object.values(doc.paths).flatMap((path) => Object.values(path)) as Array<{
+      parameters?: Array<{ $ref?: string }>;
+      security?: unknown;
+    }>;
+    const secured = operations.filter(
+      (operation) => Array.isArray(operation.security) && operation.security.length > 0,
+    );
+    expect(secured.length).toBeGreaterThan(0);
+    for (const operation of secured) {
+      const refs = (operation.parameters ?? []).filter(
+        (parameter) => parameter.$ref === "#/components/parameters/SourceHeader",
+      );
+      expect(refs).toHaveLength(1);
+    }
+    for (const operation of operations.filter(
+      (candidate) => !(Array.isArray(candidate.security) && candidate.security.length > 0),
+    )) {
+      expect((operation.parameters ?? []).some((parameter) => parameter.$ref !== undefined)).toBe(
+        false,
+      );
+    }
+  });
+
+  it("adds an optional details object to the Problem schema", () => {
+    const problem = getOpenApiDocument().components.schemas.Problem;
+
+    expect(problem.properties.details).toEqual({ additionalProperties: true, type: "object" });
+    expect(problem.required).not.toContain("details");
   });
 
   it("does not publish bare object schemas on public operations", () => {

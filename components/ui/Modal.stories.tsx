@@ -63,3 +63,28 @@ export const Open: Story = {
     </div>
   ),
 };
+
+/** The full preset fills the viewport inside the 24px gutter; its body scrolls on its own. */
+export const Full: Story = {
+  args: {
+    children: (
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
+        {Array.from({ length: 60 }, (_, index) => (
+          <li className="rounded-control border border-border px-3 py-2 text-[13px]" key={index}>
+            Row {index + 1}
+          </li>
+        ))}
+      </ul>
+    ),
+    headerDivider: true,
+    onClose: () => undefined,
+    open: true,
+    size: "full",
+    title: "Top queries",
+  },
+  render: (args) => (
+    <div className="min-h-[560px] bg-bg text-fg">
+      <Modal {...args} />
+    </div>
+  ),
+};

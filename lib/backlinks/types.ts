@@ -1,8 +1,10 @@
 import type { ProviderLookupFailure } from "@/lib/provider-lookups/paid-call";
+import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type { BacklinkFlag, BacklinkRowMode, BacklinkTargetScope } from "@/lib/providers/types";
 
 export type BacklinksServiceContext = {
   actorId?: string | null;
+  origin: ProviderRequestOrigin;
   projectId: string;
 };
 
@@ -65,8 +67,6 @@ export type BacklinksSnapshot = {
   cached: boolean;
   cachedUntil: string;
   costCents: number;
-  estimate?: boolean;
-  estimatedCostCents?: number;
   fetchedAt: string;
   fetchedRowCount: number;
   history: BacklinksHistoryMonth[];
@@ -80,4 +80,30 @@ export type BacklinksSnapshot = {
   totalRowsAvailable: number;
 };
 
-export type BacklinksOutcome = BacklinksSnapshot | ProviderLookupFailure;
+/**
+ * A free dry run. It carries only the cost facts, never report fields, so a caller cannot
+ * mistake it for an empty backlink profile.
+ */
+export type BacklinksEstimate = {
+  cached: boolean;
+  /** Expiry of the unexpired snapshot the paid call would reuse; null without one. */
+  cachedUntil: string | null;
+  costCents: number;
+  estimate: true;
+  estimatedCostCents: number;
+  includeSubdomains: boolean;
+  ok: true;
+  provider: string;
+  target: string;
+  targetScope: BacklinkTargetScope;
+};
+
+export type BacklinksOutcome = BacklinksSnapshot | BacklinksEstimate | ProviderLookupFailure;
+
+export function isBacklinksEstimate(
+  outcome: BacklinksEstimate | BacklinksSnapshot,
+): outcome is BacklinksEstimate {
+  return "estimate" in outcome && outcome.estimate === true;
+}
+/** Loading more rows always extends a stored snapshot; it never produces a dry run. */
+export type BacklinksRowsOutcome = BacklinksSnapshot | ProviderLookupFailure;

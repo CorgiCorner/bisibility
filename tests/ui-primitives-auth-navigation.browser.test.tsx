@@ -96,7 +96,7 @@ describe.each(["light", "dark"] as const)("Auth navigation in %s", (theme) => {
         expect(style.paddingLeft).toBe("0px");
       }
       const current = screen.getByRole(navigation === "buttons" ? "button" : "link", {
-        name: "Provider",
+        name: "Rank data",
       });
       const marker = current.querySelector<HTMLElement>("[data-step-dot-state]");
       if (!marker) throw new Error("The current step marker is missing");

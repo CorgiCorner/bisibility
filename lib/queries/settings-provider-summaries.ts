@@ -8,6 +8,7 @@ import {
   providerRateContextKey,
 } from "@/lib/provider-rates/connection-context";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
 import {
   PROVIDER_CATALOG,
   type ProviderTint,
@@ -93,24 +94,27 @@ type ConnectionUsageInput = {
   status: StatusKind;
 };
 
-type ConnectionLookupSpendInput = {
+type ConnectionSourceUsageInput = {
   connectionId: string;
+  /** Settled ("recorded") request rows. */
+  count: number;
   costCents: number;
-  entryCount: number;
-  feature: Exclude<ProviderUsageFeature, "rank_check">;
+  feature: string;
+  /** Confirmed native quantity sum; null when nothing was measured. */
+  quantity: number | null;
+  /** Confirmed scheduled request rows. */
+  scheduled: number;
+  source: ProviderRequestSource | "unknown";
+  /** Recorded rows without a measured quantity (unconfirmed for quota units). */
+  unmeasuredCount: number;
+  /** Rows whose measurement has not settled. */
+  unrecordedCount: number;
 };
 
 type RecordedProviderCheckCost = ObservedProviderCheckCost & {
   estimatedCostCents: number | { toString(): string } | null | undefined;
   status: string;
 };
-
-function recordedCostCents(check: RecordedProviderCheckCost) {
-  // Runner output keeps a positive actual cost and its fallback estimate mutually exclusive.
-  const actual = Number(check.costCents ?? 0);
-  const estimated = Number(check.estimatedCostCents ?? 0);
-  return (Number.isFinite(actual) ? actual : 0) + (Number.isFinite(estimated) ? estimated : 0);
-}
 
 function requiredConnectionPublicId(value: string | null) {
   if (parsePublicId(value ?? "")?.prefix !== "conn") {
@@ -119,22 +123,18 @@ function requiredConnectionPublicId(value: string | null) {
   return value as string;
 }
 
-function connectionRankChecks(
+/** Logical completed rank checks this month, kept separate from ledger usage. */
+function connectionCheckCount(
   connection: ConnectionUsageInput,
   checks: readonly RecordedProviderCheckCost[],
   primaryConnectionId: string | null,
 ) {
-  const attributed = checks.filter(
+  return checks.filter(
     (check) =>
-      check.provider === connection.provider ||
-      (check.provider === "primary" && connection.id === primaryConnectionId),
-  );
-  return {
-    costCents: Number(
-      attributed.reduce((total, check) => total + recordedCostCents(check), 0).toFixed(6),
-    ),
-    count: attributed.filter((check) => check.status === "completed").length,
-  };
+      (check.provider === connection.provider ||
+        (check.provider === "primary" && connection.id === primaryConnectionId)) &&
+      check.status === "completed",
+  ).length;
 }
 
 function connectionCostPerCheck(
@@ -178,36 +178,75 @@ function supportedFeatures(providerId: string): readonly ProviderUsageFeature[] 
   });
 }
 
+function connectionUnit(connection: ConnectionUsageInput): "cents" | "units" {
+  const allocation = PROVIDER_CATALOG.find((entry) => entry.id === connection.provider)?.allocation;
+  return allocation?.kind === "billable" ? allocation.allocationUnit : "cents";
+}
+
+/**
+ * Feature usage comes from the confirmed ledger only: settled cost cents and
+ * measured native quantity. Unsettled and unmeasured rows are surfaced as
+ * unconfirmedCount so quota views never present a partial sum as complete.
+ * Nothing is derived from depth or from configured manual pricing.
+ */
+function ledgerFeatureStat(
+  connection: ConnectionUsageInput,
+  feature: ProviderUsageFeature,
+  sourceUsage: readonly ConnectionSourceUsageInput[],
+  checksCount?: number,
+): ProviderUsageStat {
+  const rows = sourceUsage.filter(
+    (row) => row.connectionId === connection.id && row.feature === feature,
+  );
+  const unit = connectionUnit(connection);
+  const measured = rows.filter((row) => row.quantity !== null);
+  return {
+    ...(checksCount == null ? {} : { checksCount }),
+    bySource: rows.map((row) => ({
+      count: row.count,
+      costCents: row.costCents,
+      scheduled: row.scheduled,
+      source: row.source,
+    })),
+    costCents: rows.reduce((total, row) => total + row.costCents, 0),
+    count: rows.reduce((total, row) => total + row.count, 0),
+    feature,
+    label: PROVIDER_USAGE_LABELS[feature],
+    quantity: measured.length
+      ? measured.reduce((total, row) => total + (row.quantity ?? 0), 0)
+      : null,
+    unconfirmedCount: rows.reduce(
+      (total, row) => total + row.unrecordedCount + (unit === "units" ? row.unmeasuredCount : 0),
+      0,
+    ),
+  };
+}
+
 function connectionFeatures(
   connection: ConnectionUsageInput,
   checks: readonly RecordedProviderCheckCost[],
-  lookups: readonly ConnectionLookupSpendInput[],
   primaryConnectionId: string | null,
+  sourceUsage: readonly ConnectionSourceUsageInput[],
 ): ProviderUsageStat[] {
-  const rankChecks = connectionRankChecks(connection, checks, primaryConnectionId);
-  return supportedFeatures(connection.provider).map((feature) => {
-    if (feature === "rank_check") {
-      return { ...rankChecks, feature, label: PROVIDER_USAGE_LABELS[feature] };
-    }
-    const rows = lookups.filter(
-      (row) => row.connectionId === connection.id && row.feature === feature,
-    );
-    return {
-      costCents: rows.reduce((total, row) => total + row.costCents, 0),
-      count: rows.reduce((total, row) => total + row.entryCount, 0),
-      feature,
-      label: PROVIDER_USAGE_LABELS[feature],
-    };
-  });
+  return supportedFeatures(connection.provider).map((feature) =>
+    feature === "rank_check"
+      ? ledgerFeatureStat(
+          connection,
+          feature,
+          sourceUsage,
+          connectionCheckCount(connection, checks, primaryConnectionId),
+        )
+      : ledgerFeatureStat(connection, feature, sourceUsage),
+  );
 }
 
 export function settingsConnectionUsage(
   connections: readonly ConnectionUsageInput[],
   checks: readonly RecordedProviderCheckCost[],
-  lookups: readonly ConnectionLookupSpendInput[],
   serpDepth: SerpDepth,
   rateContexts: ProviderRateContextMap,
   availability: ReadonlyMap<string, ProviderAvailabilityData | null> = new Map(),
+  sourceUsage: readonly ConnectionSourceUsageInput[] = [],
 ): ProviderConnectionUsageData[] {
   const primaryConnectionId = primaryProviderConnection(connections, "serp")?.id ?? null;
   return connections
@@ -224,7 +263,7 @@ export function settingsConnectionUsage(
           serpDepth,
           rateContexts,
         ),
-        features: connectionFeatures(connection, checks, lookups, primaryConnectionId),
+        features: connectionFeatures(connection, checks, primaryConnectionId, sourceUsage),
         primary: connection.id === primaryConnectionId,
         provider:
           PROVIDER_CATALOG.find((entry) => entry.id === connection.provider)?.label ??

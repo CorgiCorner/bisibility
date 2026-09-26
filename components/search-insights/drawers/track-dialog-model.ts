@@ -1,5 +1,7 @@
 import type { TrackingScheduleSelection } from "@/components/keywords/add/TrackingConfigurationFields";
-import { monthlyTrackingCostCents, unitCostCentsFor } from "@/lib/cost-estimate/project-estimate";
+import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
+import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
+import { monthlyNativeUsage } from "@/lib/cost-estimate/project-estimate";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import type { SerpDepth } from "@/lib/serp/constants";
@@ -23,7 +25,7 @@ function selectedFrequency(
 type TrackDialogTranslations = ReturnType<typeof useTranslations<"projectSearchInsights.copy">>;
 
 type TrackDialogPresentation = {
-  formatMoney: (cents: number) => string;
+  formatUsage: (estimate: Pick<NativeUsageEstimate, "unit" | "quantity">) => string;
   t: TrackDialogTranslations;
 };
 
@@ -62,30 +64,40 @@ export function trackConfirmLabel(
   return t("trackConfirmMonthly");
 }
 
-/** Prices the exact schedule and depth the dialog will submit. */
+/** Prices the exact schedule and depth the dialog will submit in the provider's own unit. */
 export function trackCostLine(
   costContext: ProjectCostContext,
   selection: TrackingScheduleSelection,
   depth: SerpDepth,
   presentation: TrackDialogPresentation,
 ) {
-  const { formatMoney, t } = presentation;
+  const { formatUsage, t } = presentation;
   const frequency = selectedFrequency(costContext, selection);
   const schedule = scheduleLine(frequency, t);
   if (frequency === "paused") return schedule;
   const rate = { overrideCents: costContext.costPerCheckCents, providerId: costContext.providerId };
-  const unitCents = unitCostCentsFor(rate, depth);
+  const unitEstimate = estimateRankUsage([depth], rate);
   if (frequency === "manual") {
-    return unitCents == null
+    return unitEstimate.quantity === null
       ? schedule
-      : t("trackCostManual", { price: formatMoney(unitCents), schedule });
+      : t("trackCostManual", { price: formatUsage(unitEstimate), schedule });
   }
-  const monthCents = monthlyTrackingCostCents(1, { ...costContext, ...rate, depth }, frequency);
-  if (unitCents == null || monthCents == null) return schedule;
+  const monthEstimate = monthlyNativeUsage(
+    {
+      cronExpression: costContext.cronExpression,
+      depth,
+      deviceCount: 1,
+      keywordCount: 1,
+      locationCount: 1,
+      frequency,
+    },
+    rate,
+  );
+  if (unitEstimate.quantity === null || monthEstimate.quantity === null) return schedule;
   return t("trackCostRecurring", {
-    month: formatMoney(monthCents),
+    month: formatUsage(monthEstimate),
     schedule,
-    unit: formatMoney(unitCents),
+    unit: formatUsage(unitEstimate),
   });
 }
 

@@ -7,6 +7,7 @@ import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
 import { listDemoBacklinksAction, readDemoBacklinksAction } from "@/lib/actions/demo-research";
+import { isBacklinksEstimate } from "@/lib/backlinks/types";
 import { getDemoResearchAccess } from "@/lib/queries/demo-research";
 import Link from "next/link";
 
@@ -123,8 +124,8 @@ export default async function BacklinksPage({
       }).catch(() => null)
     : null;
   const initialEstimateCents =
-    initialEstimateOutcome?.ok === true
-      ? (initialEstimateOutcome.estimatedCostCents ?? initialEstimateOutcome.costCents)
+    initialEstimateOutcome?.ok === true && isBacklinksEstimate(initialEstimateOutcome)
+      ? initialEstimateOutcome.estimatedCostCents
       : null;
 
   return (

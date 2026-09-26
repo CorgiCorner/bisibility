@@ -27,7 +27,7 @@ describe("OnboardingWizard final step", () => {
     const dialog = await screen.findByRole("dialog", { name: "Connect a provider" });
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
     expect(within(dialog).queryByRole("form")).toBeNull();
-    expect(within(dialog).queryByText("Provider")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("Rank data")).not.toBeInTheDocument();
     const cancel = within(dialog).getByRole("button", { name: "Cancel" });
     expect(cancel).toHaveAttribute("data-variant", "ghost");
     expect(cancel).toHaveAttribute("data-size", "md");

@@ -18,6 +18,15 @@ import { storySignals } from "./search-insights-story-fixtures";
 const mocks = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock("@/lib/analytics/client", () => ({ track: mocks.track }));
 
+// The cards now hold their tables in `layout="fill"`, whose body is virtualized. jsdom reports a
+// zero-height scroll element, so it renders no rows; a fixed offsetHeight lets the range resolve.
+Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+  configurable: true,
+  get() {
+    return 1200;
+  },
+});
+
 export function analyticsMock() {
   return mocks;
 }

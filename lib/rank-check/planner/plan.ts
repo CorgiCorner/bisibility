@@ -3,6 +3,8 @@ import "server-only";
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
+import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
+import { assertOperationAccess } from "@/lib/operations/access-extension";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
@@ -63,6 +65,23 @@ function boundedLimit(value?: number) {
 }
 
 export async function scheduleAdmission(schedule: ScheduleAdmissionInput, now: Date) {
+  try {
+    // Admission comes first: a denied schedule stays blocked under a neutral
+    // reason until the owner's entitlement returns, and nothing here marks a
+    // provider bad, alters a connection, or spends budget.
+    await assertOperationAccess(schedule.projectId);
+  } catch (error) {
+    if (isOperationAccessDeniedError(error)) {
+      return {
+        blockedReason: "operation_unavailable" as const,
+        connection: null,
+        estimatedCostCents: 0,
+        itemCosts: schedule.keywords.map(() => null),
+        usageQuantity: 0,
+      };
+    }
+    throw error;
+  }
   const connections = await loadSerpProviderChain(
     schedule.projectId,
     schedule.providerPolicy === "project" ? undefined : (schedule.providerPolicy ?? undefined),
@@ -86,7 +105,9 @@ export async function scheduleAdmission(schedule: ScheduleAdmissionInput, now: D
       connection.provider,
       depth,
       connection.costPerCheckCents,
-      connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
+      connection.credentialSource === "hosted"
+        ? LIST_PROVIDER_RATE_CONTEXT
+        : (connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT),
     ),
   );
   const estimatedCostCents = Math.ceil(
@@ -105,6 +126,7 @@ export async function scheduleAdmission(schedule: ScheduleAdmissionInput, now: D
       estimatedCostCents,
       itemCosts,
       usageQuantity: schedule.keywords.length * pagesPerCheck(depth),
+      depth,
     };
   } catch (error) {
     if (!isBudgetExhaustedError(error)) throw error;
@@ -114,6 +136,7 @@ export async function scheduleAdmission(schedule: ScheduleAdmissionInput, now: D
       estimatedCostCents,
       itemCosts,
       usageQuantity: schedule.keywords.length * pagesPerCheck(depth),
+      depth,
     };
   }
 }

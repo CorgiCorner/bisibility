@@ -1,4 +1,6 @@
-import type { Location } from "@/lib/generated/prisma/client";
+import type { PrismaClient } from "@/lib/generated/prisma/client";
+import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
+import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { type SerpRankLocation, serpRankLocation } from "@/lib/serp/location";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { serpApiProvider } from "./serpapi";
@@ -54,6 +56,35 @@ function rankInput(
 }
 
 describe("serpApiProvider", () => {
+  it("does not charge provider-cached searches", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          searchResponse([{ link: "https://example.com/", position: 1 }], {
+            search_metadata: { id: "cached-search", status: "Cached" },
+          }),
+        ),
+      ),
+    );
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20 }));
+    expect(result.billingUnits).toBe(0);
+  });
+
+  it("counts a successful paid response even when its organic payload is missing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          jsonResponse(searchResponse([{ link: "https://competitor.com/", position: 1 }])),
+        )
+        .mockResolvedValueOnce(jsonResponse({ search_metadata: { status: "Success" } })),
+    );
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20 }));
+    expect(result.billingUnits).toBe(2);
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.clearAllMocks();
@@ -221,7 +252,7 @@ describe("serpApiProvider", () => {
           primaryGeoCode: null,
           primaryGeoName: "Poland",
           secondaryGeoName: "Poland",
-        } as Location),
+        } as SerpRankLocation),
       }),
     );
 
@@ -455,7 +486,7 @@ describe("serpApiProvider", () => {
           primaryGeoCode: 1026339,
           primaryGeoName: "Austin,Texas,United States",
           secondaryGeoName: "Austin, Texas, United States",
-        } as Location),
+        } as SerpRankLocation),
       }),
     );
 
@@ -586,8 +617,10 @@ describe("serpApiProvider", () => {
         .mockResolvedValueOnce(jsonResponse({ search_metadata: {} })),
     );
 
+    // The last response carries no status metadata, so its usage stays explicitly
+    // unknown (null) instead of being counted or invented as a zero-cost success.
     await expect(serpApiProvider.fetchRank(rankInput({ depth: 20 }))).resolves.toMatchObject({
-      billingUnits: 1,
+      billingUnits: null,
       position: null,
       rankingUrl: null,
     });
@@ -864,5 +897,235 @@ describe("SerpApi observation completeness", () => {
     const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: false }));
 
     expect(result.observation?.completeness).toBe("unknown");
+  });
+});
+
+type JournalRow = Record<string, unknown> & { id: string };
+
+function journalMatches(row: JournalRow, where: Record<string, unknown> = {}): boolean {
+  return Object.entries(where).every(([key, value]) => {
+    if (key === "OR") {
+      return (value as Array<Record<string, unknown>>).some((clause) =>
+        journalMatches(row, clause),
+      );
+    }
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      if ("notIn" in value) return !(value as { notIn: unknown[] }).notIn.includes(row[key]);
+      if ("in" in value) return (value as { in: unknown[] }).in.includes(row[key]);
+      if ("not" in value) return row[key] !== (value as { not: unknown }).not;
+    }
+    if (value === null) return row[key] == null;
+    return row[key] === value;
+  });
+}
+
+// Small persistent fake ledger: the real journal and transport run against it.
+function createJournalLedger(seed: JournalRow[] = []) {
+  const rows: JournalRow[] = seed.map((row) => ({ ...row }));
+  const table = {
+    findFirst: vi.fn(
+      async ({ where }: { where: Record<string, unknown> }) =>
+        rows.find((row) => journalMatches(row, where)) ?? null,
+    ),
+    createMany: vi.fn(async ({ data }: { data: JournalRow[] }) => {
+      for (const entry of data) rows.push({ ...entry });
+      return { count: data.length };
+    }),
+    update: vi.fn(async ({ where, data }: { where: { id: string }; data: JournalRow }) => {
+      const row = rows.find((candidate) => candidate.id === where.id);
+      if (!row) throw Object.assign(new Error("Record not found."), { code: "P2025" });
+      Object.assign(row, data);
+      return row;
+    }),
+    deleteMany: vi.fn(async ({ where }: { where: Record<string, unknown> }) => {
+      const victims = rows.filter((row) => journalMatches(row, where));
+      for (const victim of victims) rows.splice(rows.indexOf(victim), 1);
+      return { count: victims.length };
+    }),
+  };
+  const db = {
+    providerCostEntry: table,
+    $transaction: vi.fn(async (run: (tx: unknown) => Promise<unknown>) => run(db)),
+  };
+  return { db: db as unknown as PrismaClient, rows, table };
+}
+
+function journalRankInput(ledger: ReturnType<typeof createJournalLedger>, depth: 10 | 20 = 20) {
+  const journal = createProviderRequestJournal(ledger.db, {
+    attribution: {
+      context: {
+        correlationId: "corr-1",
+        feature: "rank_check",
+        projectId: "project_1",
+        source: "app",
+        trigger: "manual",
+      },
+      tag: "app=bisibility;stage=dev;src=app;trg=manual;f=rank_check;p=project_1;c=corr-1",
+    },
+    connectionId: "connection_1",
+    projectId: "project_1",
+    provider: "serpapi",
+    unit: "units",
+  });
+  return {
+    ...rankInput({ depth }),
+    credentials: { apiKey: "serp-key", usageObserver: journal.observer },
+  };
+}
+
+describe("SerpApi provider request journal", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it("makes no HTTP request when journal persistence of the begin row fails", async () => {
+    const ledger = createJournalLedger();
+    ledger.table.createMany.mockRejectedValue(new Error("ledger unavailable"));
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(serpApiProvider.fetchRank(journalRankInput(ledger))).rejects.toBeInstanceOf(
+      ProviderUsagePersistenceError,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(ledger.rows).toEqual([]);
+  });
+
+  it("does not retry a paid request when settlement fails and keeps the unknown row", async () => {
+    const ledger = createJournalLedger();
+    ledger.table.update.mockRejectedValue(new Error("ledger unavailable"));
+    // HTTP 500 would normally be retried; the persistence failure must win first.
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ error: "Something went wrong" }, 500));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(serpApiProvider.fetchRank(journalRankInput(ledger))).rejects.toBeInstanceOf(
+      ProviderUsagePersistenceError,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(ledger.rows).toEqual([
+      expect.objectContaining({ costCents: 0, measurementStatus: "unknown" }),
+    ]);
+  });
+
+  it("preserves the first page receipt when a later page fails the run", async () => {
+    const ledger = createJournalLedger();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse(
+          searchResponse([{ link: "https://competitor.com/", position: 1 }], {
+            search_metadata: { id: "search-page-1", status: "Success" },
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(jsonResponse({ error: "Account quota exhausted" }, 403));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(serpApiProvider.fetchRank(journalRankInput(ledger))).rejects.toMatchObject({
+      message: "Account quota exhausted",
+      name: "SerpApiError",
+    });
+
+    const charged = ledger.rows.filter((row) => !row.failed);
+    expect(charged).toEqual([
+      expect.objectContaining({
+        measurementStatus: "recorded",
+        providerRequestId: "search-page-1",
+        usageQuantity: 1,
+      }),
+    ]);
+    expect(ledger.rows.filter((row) => row.failed)).toEqual([
+      expect.objectContaining({ measurementStatus: "recorded", usageQuantity: 0 }),
+    ]);
+  });
+
+  it("retains the charge when the logical rank check fails after a successful response", async () => {
+    const ledger = createJournalLedger();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          searchResponse([{ link: "https://example.com/missing-rank" }], {
+            search_metadata: { id: "search-contract", status: "Success" },
+          }),
+        ),
+      ),
+    );
+
+    await expect(serpApiProvider.fetchRank(journalRankInput(ledger, 10))).rejects.toMatchObject({
+      anomalyCodes: ["organic_rank_missing"],
+      name: "ProviderPayloadContractError",
+    });
+    expect(ledger.rows).toEqual([
+      expect.objectContaining({
+        failed: false,
+        measurementStatus: "recorded",
+        providerRequestId: "search-contract",
+        usageQuantity: 1,
+      }),
+    ]);
+  });
+
+  it("does not double-count a repeated provider request id across pages", async () => {
+    const ledger = createJournalLedger();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse(
+          searchResponse([{ link: "https://competitor.com/1", position: 1 }], {
+            search_metadata: { id: "search-dup", status: "Success" },
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(
+          searchResponse([{ link: "https://competitor.com/2", position: 1 }], {
+            search_metadata: { id: "search-dup", status: "Success" },
+            serpapi_pagination: undefined,
+          }),
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await serpApiProvider.fetchRank(journalRankInput(ledger));
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result.billingUnits).toBe(2);
+    // Only one durable row survives; the duplicate attempt row is withdrawn.
+    expect(ledger.rows).toEqual([
+      expect.objectContaining({
+        measurementStatus: "recorded",
+        providerRequestId: "search-dup",
+        usageQuantity: 1,
+      }),
+    ]);
+  });
+
+  it("keeps cached zero receipts distinct instead of deduplicating them", async () => {
+    const ledger = createJournalLedger();
+    const cachedPage = () =>
+      jsonResponse(
+        searchResponse([{ link: "https://competitor.com/", position: 1 }], {
+          search_metadata: { id: "cached-search", status: "Cached" },
+        }),
+      );
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(cachedPage()));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await serpApiProvider.fetchRank(journalRankInput(ledger));
+
+    expect(result.billingUnits).toBe(0);
+    expect(ledger.rows).toHaveLength(2);
+    for (const row of ledger.rows) {
+      expect(row).toMatchObject({
+        cached: true,
+        measurementStatus: "recorded",
+        providerRequestId: undefined,
+        usageQuantity: 0,
+      });
+    }
   });
 });

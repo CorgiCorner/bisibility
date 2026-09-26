@@ -21,6 +21,7 @@ const apiKeys = [
     lastUsedLabel: "last used 2 hours ago",
     maskedValue: "bsb_key_live_8f3c******a1f2",
     name: "CI deploy checks",
+    spendThisMonthCents: 123,
   },
   {
     createdAt: "2026-06-14T12:00:00.000Z",
@@ -33,6 +34,7 @@ const apiKeys = [
     lastUsedLabel: "last used 3 days ago",
     maskedValue: "bsb_key_live_21a9******77c4",
     name: "Reporting dashboard",
+    spendThisMonthCents: 4567,
   },
 ];
 

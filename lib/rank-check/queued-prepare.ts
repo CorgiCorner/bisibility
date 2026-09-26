@@ -1,17 +1,18 @@
 import "server-only";
 
-import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
+import { queuedDeploymentCredentialsAvailable } from "@/lib/providers/execution-extension";
 import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
 import type { QueuedRankCheckWorkflowInput } from "@/lib/temporal/queued-rank-check-contract";
-import { assertBudgetAvailable, isBudgetExhaustedError } from "./budget";
 import { serpProviderChainOrderBy } from "./provider-chain-order";
+import { queuedBatchBudgetDeferral, queuedBatchOrigin } from "./queued-attribution";
 import { queuedRankCheckConfig } from "./queued-config";
 import { unrunnableBatchReason } from "./queued-eligibility";
+import { writeQueuedRunningAudit } from "./queued-prepare-audit";
 import { dataForSeoQueuedEstimate } from "./queued-pricing";
 import { applyRunItemTransition } from "./runs/items";
 import { sha256Hex } from "./sha256";
@@ -23,11 +24,7 @@ type EffectiveSchedule = {
   frequency: string;
   serpDepth: number | null;
 };
-type ResolvedRunItem = {
-  id: string;
-  keywordId: string;
-  runId: string;
-};
+type ResolvedRunItem = { id: string; keywordId: string; runId: string };
 async function resolveRunItems(tx: Prisma.TransactionClient, input: QueuedRankCheckWorkflowInput) {
   if (input.runItemIds && input.runItemIds.length !== input.keywordIds.length) {
     throw new Error("runItemIds must align with keywordIds.");
@@ -106,12 +103,18 @@ async function loadContext(tx: Prisma.TransactionClient, input: QueuedRankCheckW
   }
   if (!eligibilityReason && connection) {
     try {
-      const credentials = resolveProviderCredentials(
-        connection.provider,
-        connection.credentialsEncrypted,
-      );
-      if (!credentials.login || !credentials.password) {
-        eligibilityReason = "DataForSEO credentials are unavailable.";
+      if (connection.credentialSource === "hosted") {
+        if (!queuedDeploymentCredentialsAvailable("dataforseo")) {
+          eligibilityReason = "DataForSEO credentials are unavailable.";
+        }
+      } else {
+        const credentials = resolveProviderCredentials(
+          connection.provider,
+          connection.credentialsEncrypted,
+        );
+        if (!credentials.login || !credentials.password) {
+          eligibilityReason = "DataForSEO credentials are unavailable.";
+        }
       }
     } catch {
       eligibilityReason = "DataForSEO credentials are unavailable.";
@@ -133,34 +136,6 @@ function preparedKeyword(keyword: PreparedKeyword, defaults: EffectiveSchedule |
 }
 function terminalExpiry(now: Date) {
   return new Date(now.getTime() + TERMINAL_RETENTION_DAYS * 86_400_000);
-}
-async function writeRunningAudit(
-  tx: Prisma.TransactionClient,
-  input: {
-    estimatedCostCents: number;
-    deferredReason: string | null;
-    keywordPublicId: string;
-    projectId: string;
-    publicId: string;
-  },
-) {
-  await writeAudit(
-    {
-      action: input.deferredReason ? "rank_check.deferred" : "rank_check.running",
-      actorId: null,
-      after: {
-        estimatedCostCents: input.deferredReason ? 0 : input.estimatedCostCents,
-        keywordId: requiredPublicAuditId(input.keywordPublicId, "kw", "Rank-check"),
-        provider: "dataforseo",
-        ...(input.deferredReason ? { reason: input.deferredReason } : {}),
-        status: input.deferredReason ? "deferred" : "running",
-      },
-      projectId: input.projectId,
-      targetId: requiredPublicAuditId(input.publicId, "check", "Rank-check"),
-      targetType: "rank_check",
-    },
-    tx,
-  );
 }
 export async function prepareQueuedRankCheckBatch(
   input: QueuedRankCheckWorkflowInput & { batchId: string; workflowRunId: string },
@@ -195,20 +170,23 @@ export async function prepareQueuedRankCheckBatch(
       ? "Queued DataForSEO rank checks were disabled before batch preparation."
       : (context.eligibilityReason ??
         (allScheduled ? null : "Keyword schedule no longer permits automatic work."));
-    if (!deferredReason && !context.project.providerAllocationsInitializedAt) {
-      try {
-        await assertBudgetAvailable(input.projectId, now, {
-          capCents: context.project.budgetCapCents,
-          client: tx,
+    const origin = await queuedBatchOrigin(tx, runItems.runId);
+    if (!deferredReason && context.connection?.credentialSource !== "hosted") {
+      deferredReason = await queuedBatchBudgetDeferral(
+        {
+          connectionId: context.connection?.id,
           estimatedCostCents: estimated,
-        });
-      } catch (error) {
-        if (!isBudgetExhaustedError(error)) throw error;
-        deferredReason = "Rank check monthly budget reached before queued batch submission.";
-      }
+          project: context.project,
+          source: origin.source,
+          tasks: prepared.flatMap((item) => (item ? [{ depth: item.depth }] : [])),
+        },
+        { now, priority: config.priority, projectId: input.projectId },
+        tx,
+      );
     }
     const batch = await tx.queuedRankCheckBatch.create({
       data: {
+        ...origin,
         claimedAt: new Date(input.claimedAt),
         connectionId: context.connection?.id,
         error: deferredReason,
@@ -274,7 +252,7 @@ export async function prepareQueuedRankCheckBatch(
           state: deferredReason ? "deferred" : "prepared",
         },
       });
-      await writeRunningAudit(tx, {
+      await writeQueuedRunningAudit(tx, {
         deferredReason,
         estimatedCostCents: estimate,
         keywordPublicId: keyword.publicId,

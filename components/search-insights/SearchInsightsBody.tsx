@@ -1,6 +1,9 @@
 "use client";
+import type { ExpandableCardView } from "@/components/ui/ExpandableCard";
+import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
 import type { LoadSearchInsightsRowsAction } from "@/lib/actions/search-insights-rows";
 import { appPath, asProjectRef } from "@/lib/routing/app-path";
+import { SEARCH_INSIGHTS_ROWS_CAP } from "@/lib/search-insights/constants";
 import type { SearchInsightsImportState } from "@/lib/search-insights/queries/context";
 import type { SearchInsightsFirstView } from "@/lib/search-insights/queries/first-view";
 import type {
@@ -19,8 +22,12 @@ import {
   SearchInsightsPagesTable,
 } from "./SearchInsightsPagesTable";
 import { SearchInsightsRowsCard } from "./SearchInsightsRowsCard";
-import { SearchInsightsQueriesTable } from "./SearchInsightsRowsTable";
-import { visibleRows } from "./search-insights-rows-model";
+import { type ModuleTablePaging, SearchInsightsQueriesTable } from "./SearchInsightsRowsTable";
+import {
+  type RowsState,
+  rowsReach,
+  type SearchInsightsRowKind,
+} from "./search-insights-rows-model";
 import { organicSessionsPendingPresentation } from "./search-insights-sessions-model";
 import { moduleTablesLayout } from "./search-insights-table-columns";
 import { useSearchInsightsRows } from "./useSearchInsightsRows";
@@ -36,6 +43,10 @@ export type SearchInsightsBodyProps = {
   signalChips: ReactNode;
   view: SearchInsightsFirstView;
 };
+/** The expanded card draws its controls a second time, so their ids and names take a suffix. */
+function viewIdSuffix(view: ExpandableCardView) {
+  return view === "expanded" ? "-expanded" : "";
+}
 export function SearchInsightsBody({
   importState,
   loadRowsAction,
@@ -56,8 +67,6 @@ export function SearchInsightsBody({
   // read together rather than waiting for the refresh to land.
   const tracked =
     drawers.tracked.size === 0 ? rows.tracked : new Set([...rows.tracked, ...drawers.tracked]);
-  const shownQueries = visibleRows(rows.queries.rows, rows.queries.show);
-  const shownPages = visibleRows(rows.pages.rows, rows.pages.show);
   const sessionsConnected = view.organicSessions.status === "connected";
   const sessionsDisconnected = view.organicSessions.status === "not_connected";
   const pendingSessionsKpi =
@@ -71,8 +80,9 @@ export function SearchInsightsBody({
     view.organicSessions.keyEventsConfigured,
   );
   const firstViewReady = importState?.facts?.readyThrough.d1.current === true;
-  const hasQueries = rows.queries.total > 0;
-  const hasPages = rows.pages.total > 0;
+  // The window totals, not the search's: a search with no match still has a table to search.
+  const hasQueries = view.queries.total > 0;
+  const hasPages = view.pages.total > 0;
   const waitingReason = t("body.waitingForDays");
   const noTrafficReason = t("body.noTraffic");
   const queriesEmptyReason = !firstViewReady
@@ -99,6 +109,54 @@ export function SearchInsightsBody({
     </span>
   );
 
+  function rowsPaging<TRow>(
+    kind: SearchInsightsRowKind,
+    state: RowsState<TRow>,
+    footerEnd?: ReactNode,
+  ): ModuleTablePaging {
+    const capNote =
+      state.total > SEARCH_INSIGHTS_ROWS_CAP
+        ? t("copy.showCapTitle", { count: SEARCH_INSIGHTS_ROWS_CAP })
+        : null;
+    return {
+      emptyState: (
+        <p className="m-0 px-4 py-8 text-center text-ui-body text-fg-muted">
+          {t("copy.noRowsMatch", { search: state.search.trim() })}
+        </p>
+      ),
+      footerStart:
+        capNote || footerEnd ? (
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {capNote ? <span>{capNote}</span> : null}
+            {footerEnd}
+          </span>
+        ) : undefined,
+      onChange: (next) => rows.paginate(kind, next),
+      page: state.page,
+      pageSize: state.pageSize,
+      pending: rows.loading[kind],
+      rowCount: rowsReach(state.total),
+    };
+  }
+
+  function rowsSearch<TRow>(
+    kind: SearchInsightsRowKind,
+    state: RowsState<TRow>,
+    label: string,
+    view: ExpandableCardView,
+  ) {
+    return (
+      <ToolbarSearch
+        className="min-w-0 flex-1 sm:max-w-[320px]"
+        id={`search-insights-${kind}-search${viewIdSuffix(view)}`}
+        label={label}
+        onChange={(value) => rows.search(kind, value)}
+        placeholder={label}
+        value={state.search}
+      />
+    );
+  }
+
   return (
     <div className="flex min-w-0 flex-col gap-2.5">
       <SearchInsightsKpiRow
@@ -111,54 +169,65 @@ export function SearchInsightsBody({
       <div className={moduleTablesLayout}>
         <SearchInsightsRowsCard
           caption={t("copy.queriesCaption")}
+          empty={!hasQueries}
           emptyReason={queriesEmptyReason}
-          loading={rows.loading.queries}
-          onCollapse={() => rows.collapse("queries")}
-          onMore={() => rows.expand("queries")}
-          show={rows.queries.show}
-          shown={shownQueries.length}
           title={t("copy.topQueries")}
-          total={rows.queries.total}
+          toolbar={(view) => rowsSearch("queries", rows.queries, t("copy.searchQueries"), view)}
         >
-          <SearchInsightsQueriesTable
-            adding={drawers.adding}
-            onOpen={onOpenQuery ?? drawers.openQuery}
-            onTrack={onTrack ?? drawers.track}
-            rows={shownQueries}
-            scroll={rows.queries.show === "all"}
-            sort={{
-              onSort: (key) => rows.sortBy("queries", key),
-              value: rows.sort.queries,
-            }}
-            tracked={tracked}
-          />
+          {(view) => (
+            <SearchInsightsQueriesTable
+              bordered={false}
+              adding={drawers.adding}
+              onOpen={onOpenQuery ?? drawers.openQuery}
+              onTrack={onTrack ?? drawers.track}
+              paging={rowsPaging("queries", rows.queries)}
+              rows={rows.queries.rows}
+              sort={{
+                onSort: (key) => rows.sortBy("queries", key),
+                value: rows.queries.sort,
+              }}
+              tracked={tracked}
+              view={view}
+            />
+          )}
         </SearchInsightsRowsCard>
         <SearchInsightsRowsCard
           caption={pagesCaption}
+          empty={!hasPages}
           emptyReason={pagesEmptyReason}
-          headerEnd={
-            sessionsReadable ? (
-              <SearchInsightsPagesLens lens={pagesLens} showSessions={sessionsReadable} />
-            ) : undefined
-          }
-          footerEnd={trafficMode && sessionsConnected ? manageGa4Link : undefined}
-          loading={rows.loading.pages}
-          onCollapse={() => rows.collapse("pages")}
-          onMore={() => rows.expand("pages")}
-          show={rows.pages.show}
-          shown={shownPages.length}
           title={t("copy.topPages")}
-          total={rows.pages.total}
+          toolbar={(cardView) => (
+            <>
+              {rowsSearch("pages", rows.pages, t("copy.searchPages"), cardView)}
+              {sessionsReadable ? (
+                <div className="ms-auto shrink-0">
+                  <SearchInsightsPagesLens
+                    lens={pagesLens}
+                    name={`search-insights-pages-lens${viewIdSuffix(cardView)}`}
+                    showSessions={sessionsReadable}
+                  />
+                </div>
+              ) : null}
+            </>
+          )}
         >
-          <SearchInsightsPagesTable
-            lens={pagesLens}
-            onOpen={onOpenPage ?? drawers.openPage}
-            rows={shownPages}
-            scroll={rows.pages.show === "all"}
-            keyEventsConfigured={view.organicSessions.keyEventsConfigured}
-            showSessions={sessionsReadable}
-            sort={{ onSort: (key) => rows.sortBy("pages", key), value: rows.sort.pages }}
-          />
+          {(cardView) => (
+            <SearchInsightsPagesTable
+              bordered={false}
+              lens={pagesLens}
+              onOpen={onOpenPage ?? drawers.openPage}
+              paging={rowsPaging(
+                "pages",
+                rows.pages,
+                trafficMode && sessionsConnected ? manageGa4Link : undefined,
+              )}
+              rows={rows.pages.rows}
+              keyEventsConfigured={view.organicSessions.keyEventsConfigured}
+              showSessions={sessionsReadable}
+              sort={{ onSort: (key) => rows.sortBy("pages", key), value: rows.pages.sort }}
+              view={cardView}
+            />
+          )}
         </SearchInsightsRowsCard>
       </div>
       {hasQueries && hasPages ? (

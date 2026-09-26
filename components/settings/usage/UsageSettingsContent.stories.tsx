@@ -6,6 +6,7 @@ import { ProviderUsageCard } from "./ProviderUsageCard";
 type UsageSettingsContentProps = ComponentProps<typeof ProviderUsageCard>;
 
 import type { ProviderSpendConnection, ProviderSpendSummary } from "@/lib/queries/provider-spend";
+import type { SurfaceSpend } from "@/lib/queries/provider-spend-surfaces";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const period = {
@@ -34,19 +35,40 @@ const usage = {
 
 function dataForSeoFeatures(costCents = 0, count = 0) {
   return [
-    { costCents, count, feature: "rank_check", label: "Rank checks" },
-    { costCents: 0, count: 0, feature: "keyword_research", label: "Keyword research" },
-    { costCents: 0, count: 0, feature: "keyword_metrics", label: "Keyword metrics" },
-    { costCents: 0, count: 0, feature: "ranked_keywords", label: "Ranked keywords" },
-    { costCents: 0, count: 0, feature: "backlinks", label: "Backlinks" },
-    { costCents: 0, count: 0, feature: "domain_overview", label: "Domain overview" },
+    { bySource: [], costCents, count, feature: "rank_check", label: "Rank checks" },
+    {
+      bySource: [],
+      costCents: 0,
+      count: 0,
+      feature: "keyword_research",
+      label: "Keyword research",
+    },
+    { bySource: [], costCents: 0, count: 0, feature: "keyword_metrics", label: "Keyword metrics" },
+    { bySource: [], costCents: 0, count: 0, feature: "ranked_keywords", label: "Ranked keywords" },
+    { bySource: [], costCents: 0, count: 0, feature: "backlinks", label: "Backlinks" },
+    { bySource: [], costCents: 0, count: 0, feature: "domain_overview", label: "Domain overview" },
   ] as ProviderSpendConnection["features"];
 }
 
 function serpApiFeatures(count = 0) {
   return [
-    { costCents: 0, count, feature: "rank_check", label: "Rank checks" },
+    { bySource: [], costCents: 0, count, feature: "rank_check", label: "Rank checks" },
   ] as ProviderSpendConnection["features"];
+}
+
+function surfaceSpendFixture(
+  allocation: ProviderSpendConnection["allocation"],
+  used: number,
+): SurfaceSpend {
+  const usedPercent = allocation ? Math.min(100, (used / allocation.amountPerMonth) * 100) : null;
+  return {
+    allocation,
+    projectedExhaustionAt: null,
+    remaining: allocation ? allocation.amountPerMonth - used : null,
+    state: usedPercent === null ? "no_allocation" : usedPercent >= 100 ? "capped" : "ok",
+    used,
+    usedPercent,
+  };
 }
 
 function connection(
@@ -55,6 +77,9 @@ function connection(
 ): ProviderSpendConnection {
   const { provider, providerId, ...overrides } = input;
   const unit = overrides.unit ?? "cents";
+  const programmaticAllocation = overrides.programmaticAllocation ?? null;
+  const appAllocation = overrides.allocation ?? null;
+  const used = overrides.used ?? 0;
   return {
     allocation: null,
     allocationSource: "none",
@@ -63,19 +88,62 @@ function connection(
     enabled: true,
     features: providerId === "serpapi" ? serpApiFeatures() : dataForSeoFeatures(),
     primary: false,
+    programmaticAllocation,
     projectedExhaustionAt: null,
     provider,
     providerId,
     quotaReset: unit === "units" ? "billing_cycle" : "none",
     remaining: null,
     requestCount: 0,
+    unconfirmedCount: 0,
     state: "no_allocation",
     status: "connected",
+    surfaces: {
+      app: surfaceSpendFixture(appAllocation, used),
+      programmatic: surfaceSpendFixture(programmaticAllocation, 0),
+    },
     unit,
     used: 0,
     usedPercent: null,
     usedPriorMonth: 0,
     ...overrides,
+    credentialSource: overrides.credentialSource ?? "own",
+    own: {
+      requestCount: overrides.requestCount ?? 0,
+      surfaces: overrides.surfaces ?? {
+        app: surfaceSpendFixture(appAllocation, used),
+        programmatic: surfaceSpendFixture(programmaticAllocation, 0),
+      },
+      unconfirmedCount: overrides.unconfirmedCount ?? 0,
+      unit,
+      used,
+      usedPriorMonth: overrides.usedPriorMonth ?? 0,
+    },
+    credits: {
+      requestCount: 0,
+      surfaces: {
+        app: {
+          allocation: null,
+          projectedExhaustionAt: null,
+          remaining: null,
+          state: "no_allocation",
+          used: 0,
+          usedPercent: null,
+        },
+        programmatic: {
+          allocation: null,
+          projectedExhaustionAt: null,
+          remaining: null,
+          state: "no_allocation",
+          used: 0,
+          usedPercent: null,
+        },
+      },
+      unconfirmedCount: 0,
+      unit: "cents",
+      used: 0,
+      usedPriorMonth: 0,
+    },
   };
 }
 
@@ -120,6 +188,7 @@ export const LegacyProject: Story = {
             providerId: "dataforseo",
             remaining: 3760,
             requestCount: 12,
+            unconfirmedCount: 0,
             state: "ok",
             used: 1240,
             usedPercent: 24.8,
@@ -130,9 +199,15 @@ export const LegacyProject: Story = {
           maxUsedPercent: 24.8,
           period,
           projected: { kind: "within_limits" },
-          recorded: { cents: 1240, units: 0 },
+          recorded: { cents: 1240, creditsCents: 0, units: 0 },
           requestCount: 12,
-          tightest: { connectionId: "conn_dataforseo", provider: "DataForSEO", usedPercent: 24.8 },
+          tightest: {
+            connectionId: "conn_dataforseo",
+            provider: "DataForSEO",
+            source: "own",
+            surface: "app",
+            usedPercent: 24.8,
+          },
         },
       ),
     } as UsageSettingsContentProps["usage"],
@@ -160,6 +235,7 @@ export const MixedCentsUnits: Story = {
             providerId: "serpapi",
             remaining: 72,
             requestCount: 28,
+            unconfirmedCount: 0,
             state: "ok",
             unit: "units",
             used: 28,
@@ -179,6 +255,7 @@ export const MixedCentsUnits: Story = {
             providerId: "dataforseo",
             remaining: 2990,
             requestCount: 1,
+            unconfirmedCount: 0,
             state: "ok",
             used: 10,
             usedPercent: 0.33,
@@ -189,9 +266,15 @@ export const MixedCentsUnits: Story = {
           maxUsedPercent: 28,
           period,
           projected: { kind: "within_limits" },
-          recorded: { cents: 10, units: 28 },
+          recorded: { cents: 10, creditsCents: 0, units: 28 },
           requestCount: 29,
-          tightest: { connectionId: "conn_serpapi", provider: "SerpApi", usedPercent: 28 },
+          tightest: {
+            connectionId: "conn_serpapi",
+            provider: "SerpApi",
+            source: "own",
+            surface: "app",
+            usedPercent: 28,
+          },
         },
       ),
     } as UsageSettingsContentProps["usage"],
@@ -219,6 +302,7 @@ export const CappedFallback: Story = {
             providerId: "serpapi",
             remaining: 0,
             requestCount: 100,
+            unconfirmedCount: 0,
             state: "fallback_active",
             unit: "units",
             used: 100,
@@ -238,6 +322,7 @@ export const CappedFallback: Story = {
             providerId: "dataforseo",
             remaining: 2990,
             requestCount: 1,
+            unconfirmedCount: 0,
             state: "ok",
             used: 10,
             usedPercent: 0.33,
@@ -248,9 +333,15 @@ export const CappedFallback: Story = {
           maxUsedPercent: 100,
           period,
           projected: { at: "2026-08-27T00:00:00.000Z", kind: "cap_by", provider: "SerpApi" },
-          recorded: { cents: 10, units: 100 },
+          recorded: { cents: 10, creditsCents: 0, units: 100 },
           requestCount: 101,
-          tightest: { connectionId: "conn_serpapi", provider: "SerpApi", usedPercent: 100 },
+          tightest: {
+            connectionId: "conn_serpapi",
+            provider: "SerpApi",
+            source: "own",
+            surface: "app",
+            usedPercent: 100,
+          },
         },
       ),
     } as UsageSettingsContentProps["usage"],
@@ -279,6 +370,7 @@ export const TopUpRequired: Story = {
             providerId: "dataforseo",
             remaining: 3760,
             requestCount: 12,
+            unconfirmedCount: 0,
             state: "top_up_required",
             used: 1240,
             usedPercent: 24.8,
@@ -289,14 +381,68 @@ export const TopUpRequired: Story = {
           maxUsedPercent: 24.8,
           period,
           projected: { kind: "within_limits" },
-          recorded: { cents: 1240, units: 0 },
+          recorded: { cents: 1240, creditsCents: 0, units: 0 },
           requestCount: 12,
-          tightest: { connectionId: "conn_dataforseo", provider: "DataForSEO", usedPercent: 24.8 },
+          tightest: {
+            connectionId: "conn_dataforseo",
+            provider: "DataForSEO",
+            source: "own",
+            surface: "app",
+            usedPercent: 24.8,
+          },
         },
       ),
     } as UsageSettingsContentProps["usage"],
   },
   name: "Provider spend/Top up required",
+};
+
+export const TwoBudgets: Story = {
+  args: {
+    usage: {
+      ...usage,
+      providerSpend: providerSpend(
+        [
+          connection({
+            allocation: { amountPerMonth: 3000, unit: "cents" },
+            allocationSource: "connection",
+            availableAtProvider: {
+              amount: 12.4,
+              checkedAt: "2026-08-24T16:57:00.000Z",
+              status: "available",
+              unit: "usd",
+            },
+            features: dataForSeoFeatures(3000, 30),
+            primary: true,
+            provider: "DataForSEO",
+            providerId: "dataforseo",
+            remaining: 0,
+            requestCount: 30,
+            unconfirmedCount: 0,
+            state: "capped",
+            used: 3000,
+            usedPercent: 100,
+          }),
+        ],
+        {
+          attention: ["conn_dataforseo"],
+          maxUsedPercent: 100,
+          period,
+          projected: { at: "2026-08-26T00:00:00.000Z", kind: "cap_by", provider: "DataForSEO" },
+          recorded: { cents: 3000, creditsCents: 0, units: 0 },
+          requestCount: 30,
+          tightest: {
+            connectionId: "conn_dataforseo",
+            provider: "DataForSEO",
+            source: "own",
+            surface: "app",
+            usedPercent: 100,
+          },
+        },
+      ),
+    } as UsageSettingsContentProps["usage"],
+  },
+  name: "Provider spend/Two budgets",
 };
 
 export const NoBudgets: Story = {
@@ -311,6 +457,7 @@ export const NoBudgets: Story = {
             provider: "SerpApi",
             providerId: "serpapi",
             requestCount: 28,
+            unconfirmedCount: 0,
             state: "no_allocation",
             unit: "units",
             used: 28,
@@ -320,6 +467,7 @@ export const NoBudgets: Story = {
             provider: "DataForSEO",
             providerId: "dataforseo",
             requestCount: 1,
+            unconfirmedCount: 0,
             state: "no_allocation",
             used: 10,
           }),
@@ -329,7 +477,7 @@ export const NoBudgets: Story = {
           maxUsedPercent: null,
           period,
           projected: { kind: "within_limits" },
-          recorded: { cents: 10, units: 28 },
+          recorded: { cents: 10, creditsCents: 0, units: 28 },
           requestCount: 29,
           tightest: null,
         },
@@ -372,9 +520,15 @@ export const NoUsage: Story = {
           maxUsedPercent: 0,
           period,
           projected: { kind: "no_usage" },
-          recorded: { cents: 0, units: 0 },
+          recorded: { cents: 0, creditsCents: 0, units: 0 },
           requestCount: 0,
-          tightest: { connectionId: "conn_serpapi", provider: "SerpApi", usedPercent: 0 },
+          tightest: {
+            connectionId: "conn_serpapi",
+            provider: "SerpApi",
+            source: "own",
+            surface: "app",
+            usedPercent: 0,
+          },
         },
       ),
     } as UsageSettingsContentProps["usage"],
@@ -391,7 +545,7 @@ export const NoProviders: Story = {
         maxUsedPercent: null,
         period,
         projected: { kind: "no_usage" },
-        recorded: { cents: 0, units: 0 },
+        recorded: { cents: 0, creditsCents: 0, units: 0 },
         requestCount: 0,
         tightest: null,
       }),

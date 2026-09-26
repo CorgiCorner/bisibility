@@ -260,7 +260,15 @@
       "projects": "プロジェクト",
       "sample": "サンプル",
       "switch": "プロジェクトを切り替え",
-      "keywordCount": "{count, plural, =0 {#件のキーワード} other {#件のキーワード}}"
+      "keywordCount": "{count, plural, =0 {#件のキーワード} other {#件のキーワード}}",
+      "defaultProject": {
+        "error": "デフォルトのプロジェクトを更新できませんでした。再試行してください。",
+        "isDefault": "デフォルトのプロジェクト",
+        "isDefaultDescription": "選択すると、このプロジェクトを最初に開かなくなります。",
+        "label": "デフォルトのプロジェクト: {name}",
+        "makeDefault": "デフォルトのプロジェクトに設定",
+        "makeDefaultDescription": "サインイン時に最初に開きます。"
+      }
     },
     "writeMode": {
       "migrationSettings": "移行設定",

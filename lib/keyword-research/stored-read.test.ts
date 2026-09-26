@@ -91,4 +91,57 @@ describe("stored keyword research", () => {
       expect.objectContaining({ requestKey: snapshot.requestKey, seed: "seed" }),
     ]);
   });
+
+  it("lists saved research with fractional provider costs throughout its freshness window", async () => {
+    mocks.findMany.mockResolvedValue([
+      { ...snapshot, sources: [{ ...snapshot.sources[0], costCents: 1.01 }] },
+    ]);
+
+    await expect(
+      listStoredKeywordResearch({
+        now: new Date("2026-08-30T12:00:00.000Z"),
+        projectId: "project_1",
+      }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        freshUntil: "2026-08-31T12:00:00.000Z",
+        requestKey: snapshot.requestKey,
+        seed: "seed",
+        stale: false,
+      }),
+    ]);
+  });
+
+  it("reads saved rows without charging again or rounding fractional source costs", async () => {
+    mocks.findUnique.mockResolvedValue({
+      ...snapshot,
+      sources: [{ ...snapshot.sources[0], costCents: 1.01 }],
+    });
+
+    await expect(
+      findStoredKeywordResearch({ projectId: "project_1", requestKey: snapshot.requestKey }),
+    ).resolves.toMatchObject({
+      cached: true,
+      costCents: 0,
+      rows: [{ keyword: "Saved keyword", alreadySaved: true, alreadyTracked: true }],
+      sources: [{ costCents: 1.01 }],
+    });
+  });
+
+  it.each(["1.01", Number.NaN, Number.POSITIVE_INFINITY])(
+    "still rejects invalid stored source costs (%s)",
+    async (costCents) => {
+      const invalidSnapshot = {
+        ...snapshot,
+        sources: [{ ...snapshot.sources[0], costCents }],
+      };
+      mocks.findMany.mockResolvedValue([invalidSnapshot]);
+      mocks.findUnique.mockResolvedValue(invalidSnapshot);
+
+      await expect(listStoredKeywordResearch({ projectId: "project_1" })).resolves.toEqual([]);
+      await expect(
+        findStoredKeywordResearch({ projectId: "project_1", requestKey: snapshot.requestKey }),
+      ).resolves.toBeNull();
+    },
+  );
 });

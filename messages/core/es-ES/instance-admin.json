@@ -10,7 +10,8 @@
       "label": "Secciones de administración de la instancia",
       "operations": "Operaciones",
       "administration": "Administración",
-      "audit": "Auditoría"
+      "audit": "Auditoría",
+      "metering": "Medición"
     },
     "controls": {
       "refresh": "Actualizar",
@@ -312,6 +313,40 @@
       "statusFailed": "Fallido",
       "copyTargetId": "Copiar el ID de objetivo de auditoría {targetId}",
       "targetUnavailable": "{targetType}:no disponible"
+    },
+    "metering": {
+      "title": "Medición",
+      "heading": "Comparación en modo shadow",
+      "description": "Compare los costes registrados sin cambiar las decisiones de acceso. Los importes exactos se expresan en centavos salvo que se indique otra unidad.",
+      "month": "Mes",
+      "project": "Proyecto",
+      "allProjects": "Todos los proyectos",
+      "usage": "Uso y totales anteriores",
+      "budgets": "Presupuestos actuales",
+      "exceptions": "Excepciones",
+      "emptyUsage": "No hay uso registrado para esta selección.",
+      "emptyBudgets": "No hay presupuestos reflejados para esta selección.",
+      "emptyExceptions": "No hay operaciones pendientes ni errores shadow.",
+      "unavailableNote": "Los datos de medición no están disponibles. Los importes y recuentos son desconocidos.",
+      "disagreements": "Discrepancias en los últimos 7 días",
+      "connection": "Conexión",
+      "surface": "Superficie",
+      "funding": "Financiación",
+      "meter": "Coste medido",
+      "reserved": "Reservado",
+      "legacy": "Coste anterior",
+      "difference": "Diferencia",
+      "certainty": "Certeza",
+      "used": "Utilizado",
+      "remaining": "Restante",
+      "resetsAt": "Restablecimiento",
+      "operation": "Operación",
+      "state": "Estado",
+      "updatedAt": "Actualizado",
+      "unavailable": "No disponible",
+      "unlimited": "Sin límite",
+      "truncated": "Se muestra una selección limitada. Filtre por proyecto para reducir los resultados.",
+      "budgetNote": "Los presupuestos muestran el ciclo actual, independientemente del mes de uso seleccionado."
     }
   }
 }

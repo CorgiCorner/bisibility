@@ -1,10 +1,12 @@
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import type { ProviderCredentials } from "@/lib/providers/types";
+import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
 import { resolveSerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { researchScopeForLocation } from "@/lib/serp/research-capability";
 import { DataForSeoError, redactedMessage } from "./dataforseo-errors";
 import { type DataForSeoResponse, dataForSeoResponseCostCents } from "./dataforseo-payload";
+import { dataForSeoUsageReceipt } from "./usage-receipts";
 
 export const DATA_FOR_SEO_OK_STATUS = 20000;
 
@@ -53,15 +55,11 @@ function safeStatusMessage(data: DataForSeoResponse | null, fallback: string) {
     : fallback;
 }
 
-async function readResponse(response: Response, creds: ProviderCredentials) {
-  let data: DataForSeoResponse | null = null;
-
-  try {
-    data = (await response.json()) as DataForSeoResponse;
-  } catch {
-    data = null;
-  }
-
+function readResponse(
+  response: Response,
+  data: DataForSeoResponse | null,
+  creds: ProviderCredentials,
+) {
   if (!response.ok) {
     const retryable = response.status === 429 || response.status >= 500;
     const message = safeStatusMessage(
@@ -167,7 +165,12 @@ export async function requestEnvelope(
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     try {
-      const data = await readResponse(await fetchWithTimeout(url, init, timeoutMs), creds);
+      const observed = await readObservedResponse<DataForSeoResponse>({
+        observer: init.method === "POST" ? creds.usageObserver : undefined,
+        request: () => fetchWithTimeout(url, init, timeoutMs),
+        measure: dataForSeoUsageReceipt,
+      });
+      const data = readResponse(observed.response, observed.data, creds);
 
       if (envelopeRetryable(data) && attempt < MAX_ATTEMPTS - 1) {
         await wait(retryDelay(attempt));
@@ -176,6 +179,7 @@ export async function requestEnvelope(
 
       return data;
     } catch (error) {
+      if (error instanceof ProviderUsagePersistenceError) throw error;
       // Timeouts (AbortError) are retried at most once so the fallback chain keeps headroom.
       const timedOut = error instanceof Error && error.name === "AbortError";
       lastError = providerError(error, creds);

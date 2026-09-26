@@ -6,36 +6,74 @@ import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { formatDisplayDateRange } from "@/lib/dates/format";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
-import type { ProviderUsageFeature } from "@/lib/settings/provider-usage-types";
-import { metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
+import type { SurfaceSpend } from "@/lib/queries/provider-spend-surfaces";
+import type { ProviderSpendSourceBlock } from "@/lib/queries/provider-spend-types";
+import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/ssr/CaretDown";
 import { useTranslations } from "next-intl";
+import { ProviderUsageFeatureList } from "./ProviderUsageFeatureList";
+import { ProviderUsageFreshnessNote } from "./ProviderUsageFreshnessNote";
+import {
+  formatCount as formatNumber,
+  formatUsdCents,
+  meterUnconfirmed,
+} from "./provider-usage-view";
 
-function formatUsdCents(cents: number, locale: string) {
-  const dollars = cents / 100;
-  const fractionDigits = Math.abs(dollars) < 100 ? 2 : 0;
-  return new Intl.NumberFormat(locale, {
-    currency: "USD",
-    currencyDisplay: "narrowSymbol",
-    maximumFractionDigits: fractionDigits,
-    minimumFractionDigits: fractionDigits,
-    style: "currency",
-  }).format(dollars);
+type SurfaceSpendBarProps = Readonly<{
+  allocationText: string;
+  ariaLabel: string;
+  label: string;
+  surface: SurfaceSpend;
+}>;
+
+function SurfaceSpendBar({ allocationText, ariaLabel, label, surface }: SurfaceSpendBarProps) {
+  const percent = surface.usedPercent ?? 0;
+  const tone = spendTone(percent, surface.allocation != null);
+  const toneClass = tone === "normal" ? "text-fg-muted" : spendToneTextClass[tone];
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <span className="shrink-0 font-sans text-[9px] font-semibold uppercase text-fg-muted">
+        {label}
+      </span>
+      <SpendBar
+        ariaLabel={ariaLabel}
+        className="h-1 min-w-[54px] flex-1 overflow-hidden rounded-full"
+        percent={percent}
+        tone={tone}
+      />
+      <span className={cn("shrink-0 font-sans tabular-nums text-[11px]", toneClass)}>
+        {allocationText}
+      </span>
+    </span>
+  );
 }
 
-function formatNumber(value: number, locale: string) {
-  return new Intl.NumberFormat(locale).format(value);
+type SpendSource = "own" | "credits";
+
+function activeSource(connection: ProviderSpendConnection): SpendSource {
+  return connection.credentialSource === "hosted" ? "credits" : "own";
 }
 
+function sourceIsEmpty(block: ProviderSpendSourceBlock) {
+  return (
+    block.surfaces.app.allocation === null &&
+    block.surfaces.programmatic.allocation === null &&
+    block.used === 0 &&
+    block.requestCount === 0
+  );
+}
+
+/**
+ * `creditsAvailable` is false in deployments without credits: the row then shows
+ * one set of meters for the project's own keys, exactly as before.
+ */
 export function ProviderUsageRow({
   connection,
+  creditsAvailable = false,
   now,
-}: Readonly<{ connection: ProviderSpendConnection; now: string }>) {
+}: Readonly<{ connection: ProviderSpendConnection; creditsAvailable?: boolean; now: string }>) {
   const dateContext = useDateDisplay();
   const t = useTranslations("projectSettingsUsage.provider");
-  const percent = connection.usedPercent ?? 0;
-  const tone = spendTone(percent, connection.allocation != null);
-  const allocationToneClass = tone === "normal" ? "text-fg-muted" : spendToneTextClass[tone];
 
   function relativePastLabel(value: Date) {
     const minutes = Math.max(0, Math.floor((new Date(now).getTime() - value.getTime()) / 60_000));
@@ -59,7 +97,8 @@ export function ProviderUsageRow({
 
   function availability() {
     const value = connection.availableAtProvider;
-    if (!value) return null;
+    // Connections on credits have no stored keys and no provider-side balance.
+    if (!value || connection.credentialSource === "hosted") return null;
     if (value.status === "reconnect_required") return t("reconnectRequired");
     if (value.status === "unreachable") return t("unreachable");
     const amount =
@@ -73,17 +112,100 @@ export function ProviderUsageRow({
     });
   }
 
-  function allocationText() {
-    if (!connection.allocation) return t("allocationNone");
-    const used =
-      connection.unit === "cents"
-        ? formatUsdCents(connection.used, dateContext.locale)
-        : formatNumber(connection.used, dateContext.locale);
-    const allocation =
-      connection.unit === "cents"
-        ? formatUsdCents(connection.allocation.amountPerMonth, dateContext.locale)
-        : t("searches", { count: connection.allocation.amountPerMonth });
-    return t("allocation", { allocation, used });
+  function meterAllocationText(
+    allocation: { amountPerMonth: number } | null,
+    used: number,
+    unconfirmedCount: number | undefined,
+    unit: ProviderSpendConnection["unit"],
+  ) {
+    if (!allocation) return t("allocationNone");
+    const { hasUnconfirmed, unconfirmedCount: unconfirmed } = meterUnconfirmed(unconfirmedCount);
+    const usedLabel =
+      unit === "cents"
+        ? formatUsdCents(used, dateContext.locale)
+        : formatNumber(used, dateContext.locale);
+    const allocationLabel =
+      unit === "cents"
+        ? formatUsdCents(allocation.amountPerMonth, dateContext.locale)
+        : t("searches", { count: allocation.amountPerMonth });
+    const base = hasUnconfirmed
+      ? t("atLeastAllocation", { allocation: allocationLabel, used: usedLabel })
+      : t("allocation", { allocation: allocationLabel, used: usedLabel });
+    return hasUnconfirmed ? `${base} · ${t("unconfirmedChip", { count: unconfirmed })}` : base;
+  }
+
+  function surfaceAllocationText(surface: SurfaceSpend, unit: ProviderSpendConnection["unit"]) {
+    return meterAllocationText(surface.allocation, surface.used, surface.unconfirmedCount, unit);
+  }
+
+  function sourceLabel(source: SpendSource) {
+    return source === "own" ? t("sourceLabel.own") : t("sourceLabel.credits");
+  }
+
+  function surfaceMeters(
+    surfaces: ProviderSpendConnection["surfaces"],
+    unit: ProviderSpendConnection["unit"],
+    source: SpendSource | null,
+  ) {
+    return (
+      <span className="grid min-w-0 gap-1.5">
+        <SurfaceSpendBar
+          allocationText={surfaceAllocationText(surfaces.app, unit)}
+          ariaLabel={
+            source
+              ? t("sourceAppMeterLabel", { provider: connection.provider, source })
+              : t("appMeterLabel", { provider: connection.provider })
+          }
+          label={t("surface.app")}
+          surface={surfaces.app}
+        />
+        <SurfaceSpendBar
+          allocationText={surfaceAllocationText(surfaces.programmatic, unit)}
+          ariaLabel={
+            source
+              ? t("sourceProgrammaticMeterLabel", { provider: connection.provider, source })
+              : t("programmaticMeterLabel", { provider: connection.provider })
+          }
+          label={t("surface.programmatic")}
+          surface={surfaces.programmatic}
+        />
+      </span>
+    );
+  }
+
+  function sourceSection(source: SpendSource) {
+    const block = source === "own" ? connection.own : connection.credits;
+    const active = activeSource(connection) === source;
+    const label = sourceLabel(source);
+    // The provider balance belongs to the project's own keys only.
+    const balance = source === "own" ? availabilityLabel : null;
+    if (sourceIsEmpty(block) && !balance) {
+      return (
+        <span
+          className={cn(
+            "flex items-center gap-2 font-sans text-[11px] text-fg-muted",
+            !active && "opacity-70",
+          )}
+          data-source={source}
+        >
+          <span className="font-semibold text-fg-muted">{label}</span>
+          <span>{t("sourceEmpty")}</span>
+        </span>
+      );
+    }
+    return (
+      <span
+        className={cn("grid min-w-0 gap-1.5", !active && "opacity-70")}
+        data-active={active ? "true" : "false"}
+        data-source={source}
+      >
+        <span className="font-sans text-[11px] font-semibold text-fg-muted">{label}</span>
+        {surfaceMeters(block.surfaces, block.unit, source)}
+        {balance ? (
+          <span className="block font-sans tabular-nums text-[10px] text-fg-muted">{balance}</span>
+        ) : null}
+      </span>
+    );
   }
 
   function statusLabel() {
@@ -93,23 +215,6 @@ export function ProviderUsageRow({
     if (connection.state === "top_up_required") return t("status.top_up_required");
     if (connection.state === "no_allocation") return t("status.no_allocation");
     return t("status.default", { state: connection.state });
-  }
-
-  function featureLabel(feature: ProviderUsageFeature) {
-    switch (feature) {
-      case "backlinks":
-        return t("featureLabel.backlinks");
-      case "domain_overview":
-        return t("featureLabel.domainOverview");
-      case "keyword_metrics":
-        return t("featureLabel.keywordMetrics");
-      case "keyword_research":
-        return t("featureLabel.keywordResearch");
-      case "rank_check":
-        return t("featureLabel.rankCheck");
-      case "ranked_keywords":
-        return t("featureLabel.rankedKeywords");
-    }
   }
 
   const availabilityLabel = availability();
@@ -124,6 +229,14 @@ export function ProviderUsageRow({
             {connection.primary ? (
               <StatusPill label={t("primary")} showDot={false} size="sm" status="optional" />
             ) : null}
+            {creditsAvailable ? (
+              <StatusPill
+                label={t("activeSource", { source: activeSource(connection) })}
+                showDot={false}
+                size="sm"
+                status="optional"
+              />
+            ) : null}
           </span>
           <span className="ml-auto flex min-w-[9rem] flex-1 flex-wrap items-center justify-end gap-2 text-right">
             <span className="rounded-full border border-border bg-bg-sunken px-2 py-1 font-sans tabular-nums text-[9px] font-semibold uppercase text-fg-muted">
@@ -137,39 +250,25 @@ export function ProviderUsageRow({
             />
           </span>
           <span className="basis-full">
-            <span className="flex min-w-0 items-center gap-2">
-              <SpendBar
-                ariaLabel={t("meterLabel", { provider: connection.provider })}
-                className="h-1 min-w-[72px] flex-1 overflow-hidden rounded-full"
-                percent={percent}
-                tone={tone}
-              />
-              <span
-                className={`shrink-0 font-sans tabular-nums text-[11px] ${allocationToneClass}`}
-              >
-                {allocationText()}
+            {creditsAvailable ? (
+              <span className="grid min-w-0 gap-2.5">
+                {sourceSection("own")}
+                {sourceSection("credits")}
               </span>
-            </span>
-            {availabilityLabel ? (
-              <span className="mt-1 block font-sans tabular-nums text-[10px] text-fg-muted">
-                {availabilityLabel}
-              </span>
-            ) : null}
+            ) : (
+              <>
+                {surfaceMeters(connection.surfaces, connection.unit, null)}
+                {availabilityLabel ? (
+                  <span className="mt-1 block font-sans tabular-nums text-[10px] text-fg-muted">
+                    {availabilityLabel}
+                  </span>
+                ) : null}
+              </>
+            )}
+            <ProviderUsageFreshnessNote freshness={connection.reconciliation} />
           </span>
         </summary>
-        <div className="grid gap-4 border-t border-border bg-bg-sunken/40 px-3 py-3 sm:grid-cols-2">
-          {connection.features.map((feature) => (
-            <div key={feature.feature}>
-              <span className={metricEyebrowClassName}>{featureLabel(feature.feature)}</span>
-              <p className="m-0 mt-1 text-[13px] font-semibold text-fg tabular-nums">
-                {t("feature", {
-                  amount: formatUsdCents(feature.costCents, dateContext.locale),
-                  count: feature.count,
-                })}
-              </p>
-            </div>
-          ))}
-        </div>
+        <ProviderUsageFeatureList connection={connection} />
       </details>
     </li>
   );

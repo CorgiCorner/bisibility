@@ -55,12 +55,15 @@ export function dispatchLoopClosureTool(name: string, input: JsonObject): RestCa
     return call(input, `${project(input, "exports/rank-history")}${exportQuery(input)}`, "GET");
   if (name === "listSitemapMonitors") return call(input, project(input, "sitemap-monitors"), "GET");
   if (name === "enableSitemapMonitor" || name === "disableSitemapMonitor") {
-    return call(
-      input,
-      `${project(input, "sitemap-monitors")}/${required(input, "monitor_id")}`,
-      "PATCH",
-      { enabled: name === "enableSitemapMonitor" },
-    );
+    // A project has exactly one sitemap monitor and its id equals the project id, so the
+    // monitor_id argument is optional and defaults to project_id.
+    const monitorId =
+      typeof input.monitor_id === "string" && input.monitor_id.trim()
+        ? required(input, "monitor_id")
+        : required(input, "project_id");
+    return call(input, `${project(input, "sitemap-monitors")}/${monitorId}`, "PATCH", {
+      enabled: name === "enableSitemapMonitor",
+    });
   }
   return null;
 }

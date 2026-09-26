@@ -590,6 +590,7 @@ describe("rankCheckWorkflow", () => {
     ["automatic_execution_disabled", "mode changed", "mode changed"],
     ["provider_rate_limited", "rate limited", "rate limited"],
     ["budget_exhausted", "monthly budget reached", "monthly budget reached"],
+    ["credits_exhausted", "Deployment credits are exhausted.", "Deployment credits are exhausted."],
     ["project_read_only", "read-only", "Project is in read-only mode."],
   ])("discards the running row when %s defers the check", async (type, message, reason) => {
     mocks.activities.runRankCheckActivity.mockRejectedValue(activityFailure(type, message));

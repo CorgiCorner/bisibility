@@ -8,16 +8,18 @@ import {
   canonicalKeywordResearchRequest,
   keywordResearchRequestKey,
 } from "./request-key";
-import type {
-  KeywordResearchOutcome,
-  KeywordResearchRow,
-  KeywordResearchSourceDiagnostic,
+import {
+  isKeywordResearchEstimate,
+  type KeywordResearchOutcome,
+  type KeywordResearchRow,
+  type KeywordResearchSourceDiagnostic,
+  type KeywordResearchSuccess,
 } from "./types";
 
 export type KeywordResearchSnapshotInput = {
   fetchedAt: Date;
   freshUntil: Date;
-  outcome: Pick<KeywordResearchOutcome & { ok: true }, "provider" | "rows" | "sources">;
+  outcome: Pick<KeywordResearchSuccess, "provider" | "rows" | "sources">;
   projectId: string;
   request: CanonicalKeywordResearchRequest;
 };
@@ -105,7 +107,9 @@ export async function maybePersistKeywordResearchSnapshot(input: {
   successfulFetchedAts: readonly string[];
 }) {
   if (!isEditableDemoResearchProject(input.project.publicId) || !input.outcome.ok) return null;
-  if (input.outcome.estimate || input.successfulFetchedAts.length === 0) return null;
+  if (isKeywordResearchEstimate(input.outcome) || input.successfulFetchedAts.length === 0) {
+    return null;
+  }
   const fetchedAt = new Date(input.outcome.fetchedAt);
   const freshUntil = demoResearchFreshUntil(input.successfulFetchedAts);
   if (!Number.isFinite(fetchedAt.getTime()) || !freshUntil) return null;

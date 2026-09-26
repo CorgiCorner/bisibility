@@ -1,3 +1,5 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProviderLookupSignal } from "./paid-call";
 import { researchKeywords } from "./service";
@@ -103,6 +105,7 @@ function run(overrides: Partial<Parameters<typeof researchKeywords>[0]> = {}) {
   return researchKeywords({
     includeClickstream: false,
     mode: "auto",
+    origin: APP_REQUEST_ORIGIN,
     projectId: "project_1",
     resultLimit: 2,
     seed: "Seed",
@@ -390,8 +393,22 @@ describe("keyword research service", () => {
       ],
     });
     expect(
-      outcome.ok ? new Date(outcome.cachedUntil).getTime() : Number.POSITIVE_INFINITY,
+      outcome.ok && "cachedUntil" in outcome
+        ? new Date(outcome.cachedUntil).getTime()
+        : Number.POSITIVE_INFINITY,
     ).toBeLessThanOrEqual(Date.now());
+  });
+
+  it("propagates deployment admission after an earlier paid source succeeded", async () => {
+    const admission = new DeploymentAdmissionExhaustedError("balance");
+    mocks.paidCall
+      .mockImplementationOnce(({ call }: { call: (credentials: object) => Promise<unknown> }) =>
+        call({}),
+      )
+      .mockRejectedValueOnce(admission);
+
+    await expect(run()).rejects.toBe(admission);
+    expect(mocks.snapshot).not.toHaveBeenCalled();
   });
 
   it("returns partial success when a later source has an unexpected provider failure", async () => {
@@ -446,15 +463,21 @@ describe("keyword research service", () => {
   });
 
   it("estimates each uncached source without calling the provider", async () => {
-    await expect(run({ estimateOnly: true })).resolves.toMatchObject({
+    const outcome = await run({ estimateOnly: true });
+    expect(outcome).toMatchObject({
+      cached: false,
       estimate: true,
-      rows: [],
+      ok: true,
       sources: [
-        { cached: false, source: "related", status: "ok" },
-        { cached: false, source: "suggestion", status: "ok" },
-        { cached: false, source: "idea", status: "ok" },
+        { cached: false, costCents: expect.any(Number), source: "related" },
+        { cached: false, costCents: expect.any(Number), source: "suggestion" },
+        { cached: false, costCents: expect.any(Number), source: "idea" },
       ],
     });
+    // A dry run must not look like an empty result: no rows, fetch time, or source statuses.
+    expect(outcome).not.toHaveProperty("rows");
+    expect(outcome).not.toHaveProperty("fetchedAt");
+    expect(outcome.ok && outcome.sources[0]).not.toHaveProperty("status");
     expect(mocks.paidCall).not.toHaveBeenCalled();
   });
 
@@ -485,6 +508,7 @@ describe("keyword research service", () => {
 
   it("returns 422 outcome when a sole research source exceeds max cost", async () => {
     await expect(run({ maxCostCents: 1, mode: "related" })).resolves.toEqual({
+      estimatedCostCents: 1.02,
       ok: false,
       reason: "cost_limit_exceeded",
     });
@@ -505,5 +529,22 @@ describe("keyword research service", () => {
       ok: false,
       reason: "no_source",
     });
+  });
+
+  it("threads the paying request origin into the source call", async () => {
+    const origin = {
+      credential: { id: "key_1", kind: "project_key" as const },
+      source: "sdk" as const,
+    };
+    await run({ origin });
+
+    expect(mocks.paidCall).toHaveBeenCalled();
+    for (const [input] of mocks.paidCall.mock.calls) {
+      expect(input).toMatchObject({
+        credential: { id: "key_1", kind: "project_key" },
+        source: "sdk",
+        trigger: "manual",
+      });
+    }
   });
 });

@@ -30,6 +30,7 @@ Errors use `application/problem+json`.
 | <span id="forbidden"></span>`forbidden` | 403 | API key scope or project scope does not allow the operation. |
 | <span id="not_found"></span>`not_found` | 404 | Route or resource was not found. |
 | <span id="method_not_allowed"></span>`method_not_allowed` | 405 | HTTP method is not handled by the router. |
+| <span id="credits_exhausted"></span>`credits_exhausted` | 402 | Deployment credits are exhausted. Ask the project owner to add credits in Billing or connect their own provider key. This is separate from a monthly budget cap. |
 | <span id="conflict"></span>`conflict` | 409 | Request conflicts with the current resource state. |
 | <span id="self_import"></span>`self_import` | 409 | Instance import package was exported from the destination project itself. |
 | <span id="unsupported_api_version"></span>`unsupported_api_version` | 409 | `Bisibility-API-Version` declares a version the server does not advertise. |
@@ -39,7 +40,7 @@ Errors use `application/problem+json`.
 | <span id="unsupported_target"></span>`unsupported_target` | 422 | Backlinks target is not a supported site, subdomain, or page target. |
 | <span id="unsupported_location"></span>`unsupported_location` | 422 | The provider cannot perform the requested lookup for that location. |
 | <span id="project_read_only"></span>`project_read_only` | 423 | Project writes are blocked by migration hold. |
-| <span id="budget_exhausted"></span>`budget_exhausted` | 429 | Monthly rank-check or provider budget is exhausted. |
+| <span id="budget_exhausted"></span>`budget_exhausted` | 429 | Monthly rank-check or provider budget is exhausted. Deployment cap failures also carry `details.scope` (`wallet` or `connection`). The problem carries `details.surface` (`programmatic` for every API, MCP and SDK request; `app` in session app routes) and `details.resets_at`, the first moment the budget resets, and sets `Retry-After`. |
 | <span id="lookup_in_progress"></span>`lookup_in_progress` | 429 | An identical cached provider lookup is still running. |
 | <span id="rate_limited"></span>`rate_limited` | 429 | Request or upstream provider exceeded a rate limit. |
 | <span id="internal_server_error"></span>`internal_server_error` | 500 | Unexpected API error. |
@@ -85,15 +86,28 @@ the likely cause and the next action.
 | HTTP | `404` |
 | Problem type | `not_found` |
 
+### 402 credits_exhausted
+
+| Field | Value |
+| - | - |
+| What happened | The deployment cannot admit another paid provider request because its credits are exhausted. |
+| Retry? | After the project owner adds credits or connects their own provider key. There is no reset timer or `Retry-After` header. |
+| Fix | Ask the project owner to open the local Billing path in `details.top_up_url` or connect their own provider key. |
+| HTTP | `402` |
+| Problem type | `credits_exhausted` |
+
+For a hosted wallet admission with a trusted affected project, `details.top_up_url` is the relative `/app/{projectPublicId}/settings/billing` route. `details.balance_cents` is the current spendable wallet balance, after holds, only when a personal token belongs to the project's current owner. It is `null` for project API keys, other members, a missing principal, or an owner without a wallet. The value is read when the error response is built and can differ from the admission-time balance. If the affected project cannot be verified, `balance_cents` is `null` and `top_up_url` is omitted. Self-hosted own-key requests have no hosted billing link or wallet read. Provider account billing errors for connected keys retain their existing provider error behavior.
+
 ### 429 rate_limited or budget_exhausted
 
 | Field | Value |
 | - | - |
 | What happened | The API or the project's monthly provider budget refused the request. |
 | Most likely cause | Burst traffic, or the project cap in **Settings > Provider usage**. |
-| Retry? | Yes after `Retry-After`, unless the problem type is `budget_exhausted`. |
+| Retry? | Yes after `Retry-After`. A `budget_exhausted` response also sets `Retry-After`, to the whole seconds until `details.resets_at`; the budget resets at the start of the next UTC month. |
 | HTTP | `429` |
 | Problem type | `rate_limited` or `budget_exhausted` |
+| Related details | `budget_exhausted` carries `details.surface` (`programmatic` for every API, MCP and SDK request; `app` in session app routes) and `details.resets_at`. Deployment caps also carry `details.scope` (`wallet` or `connection`). |
 
 ### 422 cost_limit_exceeded
 

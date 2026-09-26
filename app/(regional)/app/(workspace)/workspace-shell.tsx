@@ -1,6 +1,7 @@
 import { HeaderProviderSpend } from "@/components/cost-estimate/HeaderProviderSpend";
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { renderAccountNoticeExtension } from "@/components/shell/AccountNoticeExtension";
 import { AppFooter } from "@/components/shell/AppFooter";
 import { AppHeader } from "@/components/shell/AppHeader";
 import { AppRealtimeProvider } from "@/components/shell/AppRealtimeProvider";
@@ -106,6 +107,11 @@ export async function WorkspaceShell({
     notFound();
   }
   const canCreateWorkspace = !isDemo && Boolean(session.user.id);
+  // Demo identities are shared and their account settings are locked server-side.
+  const canSetDefault = !isDemo;
+  const accountNotice = isDemo
+    ? null
+    : await renderAccountNoticeExtension({ locale: runtime.locale });
 
   const cookieStore = await cookies();
   const theme = normalizeThemePreference(cookieStore.get("theme")?.value);
@@ -148,7 +154,7 @@ export async function WorkspaceShell({
         defaultTheme={serverThemeMode(theme)}
         data-shell-root
         data-collapsed={collapsed ? "true" : "false"}
-        className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[270px_minmax(0,1fr)] data-[collapsed=true]:lg:grid-cols-[80px_minmax(0,1fr)]"
+        className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[270px_minmax(0,1fr)] lg:[--app-sidebar-width:270px] data-[collapsed=true]:lg:grid-cols-[80px_minmax(0,1fr)] data-[collapsed=true]:lg:[--app-sidebar-width:80px]"
       >
         <ProjectWriteModeProvider
           projectRef={projectRef}
@@ -169,6 +175,7 @@ export async function WorkspaceShell({
                 <Sidebar
                   activeProjectId={active.publicId}
                   canCreateWorkspace={canCreateWorkspace}
+                  canSetDefault={canSetDefault}
                   enabledExperimentalModules={enabledExperimentalModules}
                   projectRef={projectRef}
                   setupCompleted={setupCompleted}
@@ -188,7 +195,7 @@ export async function WorkspaceShell({
                       capturedAt={demoCapturedAt}
                       mode={demo.kind}
                     />
-                  ) : (
+                  ) : accountNotice ? null : (
                     <CloudBetaBanner
                       dismissed={cloudBetaDismissed}
                       hasExportableData={active.keywordCount > 0}
@@ -201,6 +208,7 @@ export async function WorkspaceShell({
                       projectName={active.name}
                     />
                   )}
+                  {accountNotice?.content}
                   <AppHeader
                     actions={
                       <HeaderProviderSpend
@@ -213,6 +221,7 @@ export async function WorkspaceShell({
                     }
                     activeProjectId={active.publicId}
                     canCreateWorkspace={canCreateWorkspace}
+                    canSetDefault={canSetDefault}
                     context={context}
                     enabledExperimentalModules={enabledExperimentalModules}
                     projectRef={projectRef}

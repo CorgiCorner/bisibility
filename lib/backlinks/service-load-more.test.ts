@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BacklinksSnapshotExpiredError, loadMoreBacklinkRows } from "./service";
 
@@ -81,9 +82,9 @@ const snapshot = {
   totalRowsAvailable: 1685,
 };
 
-function run() {
+function run(origin = APP_REQUEST_ORIGIN) {
   return loadMoreBacklinkRows(
-    { projectId: "prj_1" },
+    { origin, projectId: "prj_1" },
     {
       includeSubdomains: true,
       limit: 100,
@@ -135,7 +136,27 @@ describe("backlinks load-more service", () => {
       expect.objectContaining({ limit: 100, mode: "one_per_domain", offset: 100 }),
     );
     expect(mocks.paidCall).toHaveBeenCalledWith(
-      expect.objectContaining({ feature: "backlinks", itemCount: 100 }),
+      expect.objectContaining({
+        feature: "backlinks",
+        itemCount: 100,
+        source: APP_REQUEST_ORIGIN.source,
+        trigger: "manual",
+      }),
+    );
+  });
+
+  it("threads the paying request origin into the load-more paid call", async () => {
+    const origin = {
+      credential: { id: "key_1", kind: "project_key" as const },
+      source: "mcp" as const,
+    };
+    await expect(run(origin)).resolves.toMatchObject({ ok: true });
+    expect(mocks.paidCall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        credential: { id: "key_1", kind: "project_key" },
+        source: "mcp",
+        trigger: "manual",
+      }),
     );
     expect(mocks.tx.backlinkRow.createMany).toHaveBeenCalledWith(
       expect.objectContaining({ data: [expect.objectContaining({ snapshotId: "snapshot_1" })] }),

@@ -1,4 +1,3 @@
-import { formatResearchEstimateCents } from "@/components/research/research-money";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import messages from "@/messages/core/en/project-search-insights.json";
@@ -21,10 +20,15 @@ const t = createTranslator({
   messages: messages.projectSearchInsights.copy,
 });
 const presentation = {
-  formatMoney: (cents: number) =>
-    formatResearchEstimateCents(cents, (value, options) =>
-      new Intl.NumberFormat("en", options).format(value),
-    ),
+  formatUsage: (estimate: { unit: "cents" | "units" | null; quantity: number | null }) => {
+    if (estimate.quantity === null || estimate.unit === null) return "Unknown";
+    if (estimate.unit === "units")
+      return `${new Intl.NumberFormat("en").format(estimate.quantity)} operations`;
+    if (estimate.quantity > 0 && estimate.quantity < 1) return "< $0.01";
+    return new Intl.NumberFormat("en", { currency: "USD", style: "currency" }).format(
+      estimate.quantity / 100,
+    );
+  },
   t,
 };
 
@@ -117,6 +121,16 @@ describe("trackCostLine", () => {
         presentation,
       ),
     ).toBe("1 check per week");
+  });
+
+  it("shows upper-bound operations, never plan dollars, for a quota provider", () => {
+    const quotaContext = { ...storyCostContext, costPerCheckCents: null, providerId: "serpapi" };
+    const daily = trackCostLine(quotaContext, "daily", 100, presentation);
+    expect(daily).toBe("1 check per day / 10 operations per check / 300 operations per month");
+    expect(daily).not.toContain("$");
+    expect(trackCostLine(quotaContext, "weekly", 20, presentation)).toBe(
+      "1 check per week / 2 operations per check / 8 operations per month",
+    );
   });
 });
 

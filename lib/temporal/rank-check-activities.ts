@@ -4,18 +4,24 @@ import { ApplicationFailure } from "@temporalio/common";
 import { prisma } from "../db/prisma";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
 import { Prisma } from "../generated/prisma/client";
+import { isOperationAccessDeniedError } from "../operations/access-error";
 import { ProjectDomainRequiredError } from "../projects/tracked-domain";
+import { DeploymentAdmissionExhaustedError } from "../providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "../providers/rate-limit";
+import { ProviderUsagePersistenceError } from "../providers/usage";
 import { isBudgetExhaustedError } from "../rank-check/budget";
 import { ProviderChainError, runKeywordCheckWithFallback } from "../rank-check/fallback";
 import { RankCheckClosedBeforePersistenceError } from "../rank-check/persistence-errors";
+import { resolveRankCheckAttribution } from "../rank-check/run-attribution";
 import { activeMarketLocationIds, unrunnableKeywordReason } from "../rank-check/runnable";
 import { cancelUnrunnableRankCheckRunItem } from "../rank-check/runs/cancel";
 import { SEND_UNCONFIRMED_REASON } from "../rank-check/runs/contract";
 import { finalizeRankCheckRun } from "../rank-check/runs/finalize";
 import {
   AUTOMATIC_EXECUTION_DISABLED_FAILURE,
+  BALANCE_EXHAUSTED_FAILURE,
   BUDGET_EXHAUSTED_FAILURE,
+  OPERATION_ACCESS_DENIED_FAILURE,
   PROJECT_DOMAIN_REQUIRED_FAILURE,
   PROJECT_READ_ONLY_FAILURE,
   PROVIDER_RATE_LIMITED_FAILURE,
@@ -135,14 +141,17 @@ export async function runRankCheckActivity(
   // and API runs, must pass this shared gate before a provider call regardless of their source.
   await guardPaidCall(input);
   if (input.rankCheckId) await claimPaidCall(input.rankCheckId);
+  const attribution = await resolveRankCheckAttribution(input, prisma);
   let outcome: Awaited<ReturnType<typeof runKeywordCheckWithFallback>>;
   try {
     outcome = await runKeywordCheckWithFallback({
+      credential: attribution.credential,
       depth: input.depth,
       keywordId: input.keywordId,
       providerId: input.providerId,
       rankCheckId: input.rankCheckId,
-      source: input.source === "manual" ? "app" : "worker",
+      source: attribution.source,
+      trigger: attribution.trigger,
     });
   } catch (error) {
     if (error instanceof RankCheckClosedBeforePersistenceError) {
@@ -159,6 +168,15 @@ export async function runRankCheckActivity(
         type: PROVIDER_RATE_LIMITED_FAILURE,
       });
     }
+    // A paid-operation denial is a deferral, not a provider fault: the check
+    // stays deferred and re-runs when the owner's entitlement returns.
+    if (isOperationAccessDeniedError(error)) {
+      throw ApplicationFailure.create({
+        message: error.message,
+        nonRetryable: true,
+        type: OPERATION_ACCESS_DENIED_FAILURE,
+      });
+    }
     if (error instanceof ProjectDomainRequiredError) {
       throw ApplicationFailure.create({
         message: error.message,
@@ -173,7 +191,15 @@ export async function runRankCheckActivity(
         type: PROJECT_READ_ONLY_FAILURE,
       });
     }
+    if (error instanceof ProviderUsagePersistenceError) {
+      throw ApplicationFailure.create({
+        message: error.message,
+        nonRetryable: true,
+        type: "provider_usage_unconfirmed",
+      });
+    }
     if (isBudgetExhaustedError(error)) {
+      if (input.inline) throw error;
       throw ApplicationFailure.create({
         message: error instanceof Error ? error.message : "Rank check budget exhausted.",
         nonRetryable: true,
@@ -192,11 +218,14 @@ export async function runRankCheckActivity(
       const allocationExhausted =
         error.attempts.length > 0 &&
         error.attempts.every((attempt) => attempt.reason === "allocation_exhausted");
-      if (allocationExhausted) {
+      if (allocationExhausted || error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError) {
+        if (input.inline && error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError) throw error;
         throw ApplicationFailure.create({
           message: error.message,
           nonRetryable: true,
-          type: BUDGET_EXHAUSTED_FAILURE,
+          type: error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError && error.admissionExhaustion.reason === "balance"
+            ? BALANCE_EXHAUSTED_FAILURE
+            : BUDGET_EXHAUSTED_FAILURE,
         });
       }
       const { dominantCode } = error;
@@ -213,7 +242,7 @@ export async function runRankCheckActivity(
   return {
     attempts: outcome.attempts,
     checkedAt: outcome.rankCheck.checkedAt.toISOString(),
-    costCents: Number(outcome.rankCheck.costCents ?? 0),
+    costCents: outcome.rankCheck.costCents == null ? null : Number(outcome.rankCheck.costCents),
     keywordId: outcome.rankCheck.keywordId,
     position: outcome.rankCheck.position,
     provider: outcome.provider,

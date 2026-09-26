@@ -1,4 +1,5 @@
 import type { ProviderLookupFailure } from "@/lib/provider-lookups/paid-call";
+import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type {
   DomainRankMetrics,
   HistoricalOverviewRow,
@@ -10,6 +11,7 @@ export type DomainOverviewScope = "root" | "subdomain";
 
 export type DomainOverviewServiceContext = {
   actorId?: string | null;
+  origin: ProviderRequestOrigin;
   projectId: string;
 };
 

@@ -4,6 +4,7 @@ import { queuedRankCheckRoute } from "./queued-routing";
 const mocks = vi.hoisted(() => ({
   findProject: vi.fn(),
   resolveCredentials: vi.fn(),
+  hostedCredentials: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -11,6 +12,9 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 vi.mock("@/lib/providers/credentials", () => ({
   resolveProviderCredentials: mocks.resolveCredentials,
+}));
+vi.mock("@/lib/providers/execution-extension", () => ({
+  queuedDeploymentCredentialsAvailable: mocks.hostedCredentials,
 }));
 
 const group = {
@@ -35,6 +39,7 @@ function project(provider = "dataforseo") {
     providerConnections: [
       {
         credentialsEncrypted: "encrypted",
+        credentialSource: "own",
         provider,
       },
     ],
@@ -48,6 +53,7 @@ describe("queued rank-check routing", () => {
     vi.stubEnv("DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED", "1");
     mocks.findProject.mockResolvedValue(project());
     mocks.resolveCredentials.mockReturnValue({ login: "login", password: "password" });
+    mocks.hostedCredentials.mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -88,5 +94,17 @@ describe("queued rank-check routing", () => {
       mode: "deferred",
       reason: "credentials_unavailable",
     });
+  });
+
+  it("routes a hosted primary using deployment credentials without reading an own key", async () => {
+    const hosted = project();
+    hosted.providerConnections[0].credentialSource = "hosted";
+    mocks.findProject.mockResolvedValue(hosted);
+    await expect(queuedRankCheckRoute(group)).resolves.toEqual({
+      mode: "queued",
+      provider: "dataforseo",
+    });
+    expect(mocks.resolveCredentials).not.toHaveBeenCalled();
+    expect(mocks.hostedCredentials).toHaveBeenCalledWith("dataforseo");
   });
 });

@@ -4,7 +4,13 @@ import { requireApiPublicId } from "@/lib/api/public-id";
 import { rankedKeywordPageRate } from "@/lib/cost-estimate/provider-rates";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeDomain } from "@/lib/domains/normalize";
-import { ProviderLookupSignal, paidProviderCall } from "@/lib/provider-lookups/paid-call";
+import {
+  ProviderLookupSignal,
+  paidProviderCall,
+  requiredEstimatedCostCents,
+} from "@/lib/provider-lookups/paid-call";
+import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
+import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import { getSerpProvider } from "@/lib/providers/registry";
 import type { RankedKeywordRow, SerpProvider } from "@/lib/providers/types";
 import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provider-chain-order";
@@ -32,9 +38,12 @@ export type RankedKeywordsSuccess = {
 export type RankedKeywordsOutcome =
   | ({ ok: true } & RankedKeywordsSuccess)
   | {
+      estimatedCostCents?: number;
       ok: false;
+      provider?: string;
       reason:
         | "budget_exhausted"
+        | "cost_limit_exceeded"
         | "needs_reauth"
         | "no_domain"
         | "no_source"
@@ -148,7 +157,9 @@ export async function fetchRankedKeywords(input: {
   connectionId?: string;
   fresh?: boolean;
   limit: number;
+  maxCostCents?: number;
   offset: number;
+  origin: ProviderRequestOrigin;
   projectId: string;
 }): Promise<RankedKeywordsOutcome> {
   const project = await projectState(input.projectId);
@@ -182,6 +193,23 @@ export async function fetchRankedKeywords(input: {
       fresh: input.fresh,
       key,
       load: async () => {
+        const rateContext = await loadProviderRateContext(
+          selected.connection.id,
+          "ranked_keywords",
+        );
+        const estimatedCostCents = requiredEstimatedCostCents({
+          context: rateContext,
+          itemCount: input.limit,
+          providerId: selected.provider.id,
+          rate: rankedKeywordPageRate(selected.provider.id),
+        });
+        if (input.maxCostCents !== undefined && estimatedCostCents > input.maxCostCents) {
+          throw new RankedKeywordsOutcomeSignal({
+            estimatedCostCents,
+            ok: false,
+            reason: "cost_limit_exceeded",
+          });
+        }
         const page = await paidProviderCall({
           call: (credentials, usage) =>
             selected.provider.fetchRankedKeywords(credentials, {
@@ -193,12 +221,14 @@ export async function fetchRankedKeywords(input: {
               tag: usage?.tag,
             }),
           connection: selected.connection,
+          credential: input.origin.credential,
           feature: "ranked_keywords",
           itemCount: input.limit,
           projectId: project.id,
           provider: selected.provider,
           rate: rankedKeywordPageRate(selected.provider.id),
-          source: "app",
+          rateContext,
+          source: input.origin.source,
           trigger: "manual",
         });
         const entry = { ...page, fetchedAt: new Date().toISOString() };
@@ -226,6 +256,9 @@ export async function fetchRankedKeywords(input: {
         return {
           ok: false,
           reason: error.outcome.reason,
+          ...(error.outcome.reason === "budget_exhausted" && error.outcome.provider !== undefined
+            ? { provider: error.outcome.provider }
+            : {}),
           ...(error.outcome.resetAt === undefined ? {} : { resetAt: error.outcome.resetAt }),
         };
       }

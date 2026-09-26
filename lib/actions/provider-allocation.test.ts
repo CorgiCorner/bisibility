@@ -96,7 +96,7 @@ describe("updateProviderConnectionAllocationAction", () => {
 
     expect(mocks.setAllocation).toHaveBeenCalledWith({
       actor,
-      allocation: null,
+      allocations: { app: null },
       catalog: expect.arrayContaining([expect.objectContaining({ id: "metered" })]),
       connectionPublicId: connectionId,
       projectPublicId: project.publicId,
@@ -116,7 +116,7 @@ describe("updateProviderConnectionAllocationAction", () => {
     });
     expect(mocks.setAllocation).toHaveBeenCalledWith({
       actor,
-      allocation: { amountPerMonth: 2500, unit: "cents" },
+      allocations: { app: { amountPerMonth: 2500, unit: "cents" } },
       catalog: expect.arrayContaining([expect.objectContaining({ id: "metered" })]),
       connectionPublicId: connectionId,
       projectPublicId: project.publicId,
@@ -124,6 +124,60 @@ describe("updateProviderConnectionAllocationAction", () => {
     expect(mocks.revalidate).toHaveBeenCalledOnce();
     expect(mocks.providerSpend).toHaveBeenCalledWith(
       expect.objectContaining({ catalog: expect.any(Array), projectId: "project_1" }),
+    );
+  });
+
+  it("omits the programmatic allocation when the action input has no programmaticAllocation", async () => {
+    await expect(
+      updateProviderConnectionAllocationAction(project.publicId, {
+        allocation: { amountDollars: "25.00", unit: "cents" },
+        connectionId,
+      }),
+    ).resolves.toEqual({ allocation: { amountPerMonth: 2500, unit: "cents" }, connectionId });
+
+    expect(mocks.setAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allocations: { app: { amountPerMonth: 2500, unit: "cents" } },
+      }),
+    );
+    expect("programmatic" in mocks.setAllocation.mock.calls[0][0].allocations).toBe(false);
+  });
+
+  it("converts programmaticAllocation dollars to cents and passes them as allocations.programmatic", async () => {
+    await expect(
+      updateProviderConnectionAllocationAction(project.publicId, {
+        allocation: { amountDollars: "25.00", unit: "cents" },
+        connectionId,
+        programmaticAllocation: { amountDollars: "10.00", unit: "cents" },
+      }),
+    ).resolves.toEqual({ allocation: { amountPerMonth: 2500, unit: "cents" }, connectionId });
+
+    expect(mocks.setAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allocations: {
+          app: { amountPerMonth: 2500, unit: "cents" },
+          programmatic: { amountPerMonth: 1000, unit: "cents" },
+        },
+      }),
+    );
+  });
+
+  it("passes a null programmaticAllocation through as allocations.programmatic", async () => {
+    await expect(
+      updateProviderConnectionAllocationAction(project.publicId, {
+        allocation: { amountDollars: "25.00", unit: "cents" },
+        connectionId,
+        programmaticAllocation: null,
+      }),
+    ).resolves.toEqual({ allocation: { amountPerMonth: 2500, unit: "cents" }, connectionId });
+
+    expect(mocks.setAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allocations: {
+          app: { amountPerMonth: 2500, unit: "cents" },
+          programmatic: null,
+        },
+      }),
     );
   });
 });

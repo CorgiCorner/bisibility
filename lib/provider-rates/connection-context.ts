@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { Prisma } from "@/lib/generated/prisma/client";
+import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
 import type { ProviderCostFeature } from "@/lib/generated/prisma/enums";
 import {
   PROVIDER_RATE_FEATURES,
@@ -32,9 +32,10 @@ export async function loadRecentProviderRateEntries(
   connectionIds: readonly string[],
   features: readonly ProviderRateFeature[],
   cutoff: Date,
+  client: Pick<PrismaClient, "$queryRaw"> = prisma,
 ) {
   if (connectionIds.length === 0 || features.length === 0) return [] as CostEntryRow[];
-  return prisma.$queryRaw<CostEntryRow[]>(Prisma.sql`
+  return client.$queryRaw<CostEntryRow[]>(Prisma.sql`
     SELECT
       "cached",
       "connectionId",
@@ -60,6 +61,11 @@ export async function loadRecentProviderRateEntries(
       WHERE
         "cached" = FALSE
         AND "connectionId" IN (${Prisma.join(connectionIds)})
+        AND EXISTS (
+          SELECT 1 FROM "provider_connections" connection
+          WHERE connection.id = "provider_cost_entries"."connectionId"
+            AND connection."credentialSource" = "provider_cost_entries"."credentialSource"
+        )
         AND "costCents" > 0
         AND "createdAt" >= ${cutoff}
         AND "failed" = FALSE
@@ -74,22 +80,28 @@ export async function loadProviderRateContexts(
   connectionIds: readonly string[],
   features: readonly ProviderRateFeature[] = PROVIDER_RATE_FEATURES,
   now = new Date(),
+  client: Pick<PrismaClient, "$queryRaw" | "providerConnectionRate"> = prisma,
 ): Promise<ProviderRateContextMap> {
   const uniqueConnectionIds = [...new Set(connectionIds)];
   const uniqueFeatures = [...new Set(features)];
   const cutoff = new Date(now.getTime() - TRAILING_DAYS * 24 * 60 * 60 * 1000);
-  const [manualRates, entries] = await Promise.all([
+  const manualRates =
     uniqueConnectionIds.length === 0 || uniqueFeatures.length === 0
       ? []
-      : prisma.providerConnectionRate.findMany({
+      : await client.providerConnectionRate.findMany({
           select: { amountCents: true, connectionId: true, feature: true },
           where: {
+            connection: { credentialSource: "own" },
             connectionId: { in: uniqueConnectionIds },
             feature: { in: uniqueFeatures },
           },
-        }),
-    loadRecentProviderRateEntries(uniqueConnectionIds, uniqueFeatures, cutoff),
-  ]);
+        });
+  const entries = await loadRecentProviderRateEntries(
+    uniqueConnectionIds,
+    uniqueFeatures,
+    cutoff,
+    client,
+  );
   const contexts = new Map<string, ProviderRateContext>();
   for (const connectionId of uniqueConnectionIds) {
     for (const feature of uniqueFeatures) {

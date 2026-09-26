@@ -100,6 +100,7 @@ export async function analyzeDomainOverview(
         connectionId: source.connection.id,
         estimatedCostCents,
         estimatedUsageQuantity: 1 + Number(!keywordsCached) + Number(!pagesCached),
+        origin: context.origin,
         projectId: project.id,
         provider: source.provider.id,
       });
@@ -109,6 +110,7 @@ export async function analyzeDomainOverview(
       beforeLoad: () => reserveCost(estimate.overview),
       fresh: options.fresh,
       key: keys.overview,
+      origin: context.origin,
       project,
       projectId: project.id,
       source,
@@ -174,6 +176,7 @@ export async function analyzeDomainOverview(
             ...input,
             budgetCapCents: project.budgetCapCents,
             limit: input.keywordLimit,
+            origin: context.origin,
             offset: 0,
             projectId: project.id,
             source,
@@ -190,6 +193,7 @@ export async function analyzeDomainOverview(
             ...input,
             budgetCapCents: project.budgetCapCents,
             limit: input.pageLimit,
+            origin: context.origin,
             offset: 0,
             projectId: project.id,
             source,
@@ -253,6 +257,7 @@ export async function loadDomainOverviewHistory(
         const result = await fetchDomainHistory({
           ...input,
           budgetCapCents: project.budgetCapCents,
+          origin: context.origin,
           projectId: project.id,
           source,
         });

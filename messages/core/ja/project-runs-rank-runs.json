@@ -146,8 +146,9 @@
         "completedNote": "順位を記録",
         "deferredNote": "次回の実行で再試行",
         "failedNote": "順位の記録なし",
-        "notTerminal": "未完了",
-        "skippedBeforeStart": "{count, plural, other {#件を開始前にスキップ}}"
+        "notTerminal": "待機中または実行中",
+        "skippedBeforeStart": "{count, plural, other {#件を開始前にスキップ}}",
+        "skippedOrBlocked": "{count} 件がスキップまたはブロック"
       },
       "facts": {
         "actual": "実績",
@@ -207,7 +208,8 @@
         "processed": "ターゲット{total, number}件のうち{processed, number}件を処理しました",
         "selected": "{count, plural, other {#件のターゲットを選択中}}",
         "skippedBy": "{name} が {date} にスキップ",
-        "skippedExplanation": "スキップしたターゲットはプロバイダーに送信されず、費用も発生しません。"
+        "skippedExplanation": "スキップしたターゲットはプロバイダーに送信されず、費用も発生しません。",
+        "skippedOrBlockedExplanation": "スキップまたはブロックされた対象の処理は終了しています。理由は各対象をご確認ください。"
       },
       "table": {
         "actual": "実績",
@@ -235,8 +237,14 @@
         "providerRestricted": "プロバイダーがこのアカウントを制限しています。",
         "providerTransient": "プロバイダーが一時的に利用できません。",
         "providerUnknown": "プロバイダーはこのチェックを完了できませんでした。",
-        "skippedBeforeStart": "開始前にスキップ"
-      }
+        "skippedBeforeStart": "開始前にスキップ",
+        "sendUnconfirmed": "結果を確認できませんでした。重複消費を避けるため再試行していません。",
+        "stoppedAfterStart": "開始後に停止"
+      },
+      "operations": "操作数",
+      "usageNotRecorded": "未記録",
+      "estimatedOperations": "推定 {count}",
+      "skippedOrBlocked": "スキップまたはブロック"
     }
   }
 }

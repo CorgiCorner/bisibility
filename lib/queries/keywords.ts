@@ -25,6 +25,7 @@ import {
   fetchProjectKeywordMetrics,
 } from "@/lib/queries/keyword-metrics-query";
 import { type KeywordRow, mapKeyword } from "@/lib/queries/keyword-row";
+import { keywordCheckScheduleSelect } from "@/lib/queries/keyword-row-types";
 import { fetchProjectKeywordTraffic, getKeywordTraffic } from "@/lib/queries/keyword-traffic";
 import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 
@@ -81,11 +82,6 @@ const scheduleSelect = {
   serpDepth: true,
   timezone: true,
 } as const;
-const checkScheduleSelect = {
-  serpDepth: true,
-  name: true,
-  publicId: true,
-} as const;
 const locationRefSelect = {
   canonicalKey: true,
   cityName: true,
@@ -111,7 +107,7 @@ async function loadKeywords(projectId: string) {
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     select: {
       createdAt: true,
-      checkSchedule: { select: checkScheduleSelect },
+      checkSchedule: { select: keywordCheckScheduleSelect },
       device: true,
       id: true,
       intent: true,
@@ -155,7 +151,7 @@ async function loadKeywordDetail(projectId: string, keywordId: string) {
         },
       },
     },
-    checkSchedule: { select: checkScheduleSelect },
+    checkSchedule: { select: keywordCheckScheduleSelect },
     locationRef: true,
     project: {
       include: {

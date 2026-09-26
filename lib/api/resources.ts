@@ -1,6 +1,7 @@
 import { whereExecutedChecks } from "@/lib/checks/status";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
+import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
 import { tierFromScopes } from "./key-scope";
 import {
   apiRankCheckStatus,
@@ -35,6 +36,7 @@ export const keywordInclude = {
 
 export const rankCheckSelect = {
   attempts: true,
+  billingUnits: true,
   checkedAt: true,
   costCents: true,
   id: true,
@@ -241,12 +243,33 @@ export async function keywordResources(
   );
 }
 
-export function rankCheckResource(check: RankCheckRecord) {
+export type RankCheckAccountingOverride = {
+  costCents: number | null;
+  usageQuantity: number | null;
+};
+
+export function rankCheckResource(
+  check: RankCheckRecord,
+  accounting?: RankCheckAccountingOverride,
+) {
   const failed = check.status === RANK_CHECK_FAILED_STATUS;
+  const allocation = providerAllocationMetadata(check.provider);
+  const quota = allocation?.kind === "billable" && allocation.billing === "quota";
+  const storedCost = decimalNumber(check.costCents);
+  const quantity = accounting
+    ? decimalNumber(accounting.usageQuantity)
+    : quota
+      ? decimalNumber(check.billingUnits)
+      : storedCost;
   return {
+    usage: {
+      quantity,
+      status: quantity === null ? "unconfirmed" : "confirmed",
+      unit: quota ? "operations" : "cents",
+    },
     attempts: rankCheckAttempts(check.attempts),
     checked_at: check.checkedAt.toISOString(),
-    cost_cents: decimalNumber(check.costCents),
+    cost_cents: accounting ? decimalNumber(accounting.costCents) : storedCost,
     error: failed ? (check.error ?? "Rank check failed.") : null,
     error_code: check.errorCode,
     id: requireApiPublicId(check.publicId, "check"),

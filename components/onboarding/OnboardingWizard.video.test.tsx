@@ -20,7 +20,7 @@ afterEach(() => {
 
 const setupVideos = [
   { label: "Watch setup video", step: 1, title: "Website", videoRef: "create-project" },
-  { label: "Watch provider setup", step: 2, title: "Provider", videoRef: "connect-source" },
+  { label: "Watch provider setup", step: 2, title: "Rank data", videoRef: "connect-source" },
   { label: "Watch setup video", step: 3, title: "Keywords", videoRef: "add-keywords" },
   { label: "Watch setup video", step: 4, title: "First check", videoRef: "first-check" },
 ] as const satisfies ReadonlyArray<{

@@ -131,10 +131,11 @@ export function AuditLogView({
         />
         <div className="min-w-0 overflow-hidden" data-testid="audit-grid-scroll-boundary">
           <div
-            className="h-[min(614px,calc(100dvh-260px))] min-h-[360px] w-full min-w-0 [&>[role=table]]:border-0"
+            className="h-[min(614px,calc(100dvh-260px))] min-h-[360px] w-full min-w-0"
             data-testid="audit-grid-viewport"
           >
             <DataTable
+              bordered={false}
               ariaLabel={logT("tableAria")}
               columns={columns}
               density={AUDIT_TABLE_DENSITY}

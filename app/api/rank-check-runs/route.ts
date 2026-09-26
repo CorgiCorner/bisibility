@@ -2,6 +2,7 @@ import { requireProjectScope } from "@/lib/actions/_shared";
 import { launchRankCheckRunActionSchema } from "@/lib/actions/rank-check-run-launch-result";
 import { withAppRoute } from "@/lib/api/app-route";
 import { dataResponse, listResponse } from "@/lib/api/responses";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { getRankCheckRun, listRankCheckRuns } from "@/lib/queries/rank-check-runs";
 import { launchRankCheckRun } from "@/lib/rank-check/runs/launch";
 import { isLaunchRankCheckRunNothingToRun } from "@/lib/rank-check/runs/launch-types";
@@ -34,6 +35,7 @@ export const POST = withAppRoute(async (request, actor) => {
     actorId: actor.id,
     depth: data.depth,
     idempotencyKey: data.idempotencyKey,
+    origin: APP_REQUEST_ORIGIN,
     previewToken: data.previewToken,
     project,
     providerId: data.providerId,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { ZonedTime } from "@/components/ui/ZonedTime";
 import type { UpcomingDayGroup } from "@/lib/checks/contract";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
@@ -7,7 +8,7 @@ import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/Car
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { formatEstimatedAmount } from "./upcoming-format";
+import { upcomingAmountParts } from "./upcoming-format";
 
 export type UpcomingDayRollupsProps = {
   days: UpcomingDayGroup[];
@@ -21,6 +22,7 @@ const manageLinkClassName =
   "inline-flex items-center gap-1 text-xs font-semibold text-accent-text outline-none hover:underline focus-visible:underline";
 
 function DaySummary({ day }: Readonly<{ day: UpcomingDayGroup }>) {
+  const usage = useNativeUsageFormat();
   const locale = useLocale();
   const t = useTranslations("projectRankTracker.checks");
   return (
@@ -32,10 +34,10 @@ function DaySummary({ day }: Readonly<{ day: UpcomingDayGroup }>) {
         </span>
       </span>
       <span className="shrink-0 font-sans tabular-nums text-[11px] font-semibold text-fg-muted">
-        {t("estimated", {
-          amount: formatEstimatedAmount(day.estimatedCostCents, locale),
-          isLessThanCent: String(day.estimatedCostCents > 0 && day.estimatedCostCents < 1),
-        })}
+        {t(
+          "estimated",
+          upcomingAmountParts(day.estimatedCostCents, day.nativeEstimate, locale, usage.format),
+        )}
       </span>
     </>
   );

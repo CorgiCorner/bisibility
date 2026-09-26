@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchKeywordMetrics } from "./metrics";
 import { ProviderLookupSignal } from "./paid-call";
@@ -80,6 +81,7 @@ function run(overrides: Partial<Parameters<typeof fetchKeywordMetrics>[0]> = {})
   return fetchKeywordMetrics({
     includeClickstream: false,
     keywords: ["Alpha", "Beta"],
+    origin: APP_REQUEST_ORIGIN,
     projectId: "project_1",
     ...overrides,
   });
@@ -220,4 +222,21 @@ describe("keyword metrics service", () => {
       expect(mocks.write).not.toHaveBeenCalled();
     },
   );
+
+  it("threads the paying request origin into the metrics paid call", async () => {
+    const origin = {
+      credential: { id: "key_1", kind: "personal_token" as const },
+      source: "mcp" as const,
+    };
+    mocks.read.mockResolvedValue(null);
+
+    await expect(run({ origin })).resolves.toMatchObject({ ok: true });
+    expect(mocks.paidCall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        credential: { id: "key_1", kind: "personal_token" },
+        source: "mcp",
+        trigger: "manual",
+      }),
+    );
+  });
 });

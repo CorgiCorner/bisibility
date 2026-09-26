@@ -1,14 +1,12 @@
 "use client";
 
-import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import type { KeywordDetailActions } from "@/components/keywords/action-utils";
-import { type CostRateInfo, runCostCents } from "@/lib/cost-estimate/project-estimate";
+import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import { runCheckNowSchema } from "@/lib/schemas/keyword";
-import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { useState } from "react";
-import { effectiveRowDepth } from "./run-check-depth";
 
 type RunChecksStatus = { failed: number; started: number; state: "done" | "idle" | "running" };
 
@@ -32,12 +30,11 @@ function statusLabel(status: RunChecksStatus) {
 export function useKeywordRunChecks(
   runCheckNowAction?: KeywordDetailActions["runCheckNowAction"],
   onSettled?: () => void,
-  spendOptions: {
+  _spendOptions: {
     providerRate?: CostRateInfo;
     rows?: Pick<KeywordRow, "id" | "projectSerpDepth" | "schedule">[];
   } = {},
 ) {
-  const { addSpend } = useSessionSpend();
   const [checkFailed, setCheckFailed] = useState(false);
   const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(() => new Set());
   const [status, setStatus] = useState<RunChecksStatus>({ failed: 0, started: 0, state: "idle" });
@@ -60,16 +57,6 @@ export function useKeywordRunChecks(
         result.status === "rejected" ||
         (result.status === "fulfilled" && isBudgetExhaustedResult(result.value)),
     ).length;
-    const rowById = new Map((spendOptions.rows ?? []).map((row) => [row.id, row]));
-    const successfulDepths = results.flatMap((result, index) => {
-      if (result.status === "rejected" || isBudgetExhaustedResult(result.value)) return [];
-      const row = rowById.get(ids[index] ?? "");
-      return [depth ?? (row ? effectiveRowDepth(row) : DEFAULT_SERP_DEPTH)];
-    });
-    const spend = spendOptions.providerRate
-      ? runCostCents(successfulDepths, spendOptions.providerRate)
-      : null;
-    if (spend != null) addSpend(spend);
     setCheckFailed((previous) => previous || failed > 0);
     setStatus({ failed, started: ids.length - failed, state: "done" });
     setPendingIds((previous) => {

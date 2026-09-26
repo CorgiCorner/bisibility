@@ -84,7 +84,7 @@
     "researchUnavailable": "{language}: no hay datos de volumen de búsqueda ni de dificultad para este mercado; las posiciones se siguen con normalidad.",
     "restore": "Restaurar",
     "restoreArchivedHint": "Aquí aparecen los mercados archivados. Restaura uno cuando quieras reanudar sus programaciones.",
-    "restoreBody": "Al restaurarlo, {count, plural, one {se reanudará # palabra clave en su programación} other {se reanudarán # palabras clave en sus programaciones}}: unos {cost} al mes.",
+    "restoreBody": "Al restaurarlo, {count, plural, one {se reanudará # palabra clave en su programación} other {se reanudarán # palabras clave en sus programaciones}}.",
     "restoreFailed": "No se ha podido restaurar el mercado. Inténtalo de nuevo.",
     "restoreMarket": "Restaurar mercado",
     "restoreTitle": "¿Restaurar {market}?",

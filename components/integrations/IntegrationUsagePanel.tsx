@@ -1,4 +1,5 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { renderAccountUsageBudgetExtension } from "@/components/settings/AccountDataSourceExtension";
 import { ProviderUsageCard } from "@/components/settings/usage/ProviderUsageCard";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
@@ -29,6 +30,12 @@ export async function IntegrationUsagePanel({
     "projectSettingsShell",
     "projectSettingsUsage",
   ]);
+  const budgetExtension = await renderAccountUsageBudgetExtension({
+    locale: runtime.locale,
+    principalId: access.actor.id,
+    projectId: access.project.id,
+    projectRef,
+  });
   const role = getProjectRole(access.actor, access.project.id);
   return (
     <FeatureMessagesProvider
@@ -36,17 +43,20 @@ export async function IntegrationUsagePanel({
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <div className="max-w-[760px]">
+      <div className="flex max-w-[760px] flex-col gap-4">
         <ProviderUsageCard
+          budgetExplanation={budgetExtension?.description}
           canEditBudget={
             access.project.writeMode === "active" && canProjectAction(role, "manage", "project")
           }
+          credits={budgetExtension?.credits ?? null}
           initialBudgetEditOpen={editBudget}
           projectId={settings.project.projectId}
           projectRef={projectRef}
           updateProviderAllocation={updateProviderConnectionAllocationAction}
           usage={settings.usage}
         />
+        {budgetExtension?.content}
       </div>
     </FeatureMessagesProvider>
   );

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
-import { backlinksCachedUntil, backlinksCacheKey, withBacklinksCache } from "./cache";
+import { backlinksCacheKey, withBacklinksCache } from "./cache";
 import { backlinksProject, backlinksSource } from "./context";
 import {
   assertBacklinksMaxCost,
@@ -22,27 +22,12 @@ import {
 import { normalizeBacklinksTarget } from "./target";
 import type {
   AnalyzeBacklinksOptions,
+  BacklinksEstimate,
   BacklinksOutcome,
+  BacklinksRowsOutcome,
   BacklinksServiceContext,
-  BacklinksSnapshot,
-  BacklinksSummary,
   LoadMoreBacklinkRowsOptions,
 } from "./types";
-
-const EMPTY_SUMMARY: BacklinksSummary = {
-  backlinksTotal: 0,
-  brokenBacklinks: 0,
-  brokenPages: 0,
-  dofollowPct: 0,
-  domainRank: 0,
-  lostBacklinks: 0,
-  lostReferringDomains: 0,
-  newBacklinks: 0,
-  newReferringDomains: 0,
-  referringDomainsTotal: 0,
-  referringPages: 0,
-  spamScore: 0,
-};
 
 export class BacklinksSnapshotExpiredError extends Error {
   readonly code = "snapshot_expired";
@@ -72,29 +57,21 @@ function estimateEnvelope(input: {
   cachedSnapshot: { expiresAt: Date; fetchedAt: Date } | null;
   estimatedCostCents: number;
   includeSubdomains: boolean;
-  now: Date;
   provider: string;
   scope: "page" | "site";
   target: string;
-}): BacklinksSnapshot {
-  const fetchedAt = (input.cachedSnapshot?.fetchedAt ?? input.now).toISOString();
+}): BacklinksEstimate {
   return {
     cached: input.cachedSnapshot !== null,
-    cachedUntil: input.cachedSnapshot?.expiresAt.toISOString() ?? backlinksCachedUntil(fetchedAt),
+    cachedUntil: input.cachedSnapshot?.expiresAt.toISOString() ?? null,
     costCents: input.cachedSnapshot ? 0 : input.estimatedCostCents,
     estimate: true,
     estimatedCostCents: input.estimatedCostCents,
-    fetchedAt,
-    fetchedRowCount: 0,
-    history: [],
     includeSubdomains: input.includeSubdomains,
     ok: true,
     provider: input.provider,
-    rows: [],
-    summary: EMPTY_SUMMARY,
     target: input.target,
     targetScope: input.scope,
-    totalRowsAvailable: 0,
   };
 }
 
@@ -141,7 +118,6 @@ export async function analyzeBacklinks(
       cachedSnapshot,
       estimatedCostCents: estimate.total,
       includeSubdomains: input.includeSubdomains,
-      now,
       provider: source.provider.id,
       scope: input.scope,
       target: input.target,
@@ -164,6 +140,7 @@ export async function analyzeBacklinks(
         const result = await fetchBacklinksAnalysis({
           ...input,
           budgetCapCents: project.budgetCapCents,
+          origin: context.origin,
           projectId: project.id,
           source,
         });
@@ -208,7 +185,7 @@ function normalizedLoadMore(options: LoadMoreBacklinkRowsOptions) {
 export async function loadMoreBacklinkRows(
   context: BacklinksServiceContext,
   options: LoadMoreBacklinkRowsOptions,
-): Promise<BacklinksOutcome> {
+): Promise<BacklinksRowsOutcome> {
   const input = normalizedLoadMore(options);
   const now = new Date();
   const project = await backlinksProject(context.projectId);
@@ -227,6 +204,7 @@ export async function loadMoreBacklinkRows(
       ...input,
       budgetCapCents: project.budgetCapCents,
       mode: snapshotMode(snapshot.summary),
+      origin: context.origin,
       offset: snapshot.fetchedRowCount,
       projectId: project.id,
       source,

@@ -1,4 +1,6 @@
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   analyzeDomainOverview,
@@ -116,16 +118,16 @@ function snapshotData(overview: typeof metrics | null = metrics) {
   };
 }
 
-function analyze(overrides: Record<string, unknown> = {}) {
+function analyze(overrides: Record<string, unknown> = {}, origin = APP_REQUEST_ORIGIN) {
   return analyzeDomainOverview(
-    { projectId: "prj_1" },
+    { origin, projectId: "prj_1" },
     { languageCode: "EN", locationCode: 2840, target: "https://www.example.com", ...overrides },
   );
 }
 
-function loadHistory(overrides: Record<string, unknown> = {}) {
+function loadHistory(overrides: Record<string, unknown> = {}, origin = APP_REQUEST_ORIGIN) {
   return loadDomainOverviewHistory(
-    { projectId: "prj_1" },
+    { origin, projectId: "prj_1" },
     { languageCode: "EN", locationCode: 2840, target: "example.com", ...overrides },
   );
 }
@@ -221,6 +223,7 @@ describe("domain overview service", () => {
       connectionId: "connection_1",
       estimatedCostCents: 6,
       estimatedUsageQuantity: 3,
+      origin: APP_REQUEST_ORIGIN,
       projectId: "project_1",
       provider: "dataforseo",
     });
@@ -547,9 +550,17 @@ describe("domain overview service", () => {
       connectionId: "connection_1",
       estimatedCostCents: 6,
       estimatedUsageQuantity: 3,
+      origin: APP_REQUEST_ORIGIN,
       projectId: "project_1",
       provider: "dataforseo",
     });
+  });
+
+  it("propagates deployment admission through the service boundary", async () => {
+    const admission = new DeploymentAdmissionExhaustedError("balance");
+    mocks.preflight.mockRejectedValue(admission);
+    await expect(analyze()).rejects.toBe(admission);
+    expect(mocks.resolveSnapshot).not.toHaveBeenCalled();
   });
 
   it("propagates a provider reauthentication signal", async () => {
@@ -656,8 +667,8 @@ describe("domain overview service", () => {
       target: "https://www.example.com",
     };
 
-    await loadDomainKeywordsPage({ projectId: "prj_1" }, options);
-    await loadDomainPagesPage({ projectId: "prj_1" }, options);
+    await loadDomainKeywordsPage({ origin: APP_REQUEST_ORIGIN, projectId: "prj_1" }, options);
+    await loadDomainPagesPage({ origin: APP_REQUEST_ORIGIN, projectId: "prj_1" }, options);
 
     expect(mocks.fetchKeywords).toHaveBeenCalledWith(
       expect.objectContaining({ limit: 250, offset: 1_250, target: "example.com" }),
@@ -668,5 +679,17 @@ describe("domain overview service", () => {
     expect(mocks.loadModule.mock.calls[0]?.[0].key).toContain(":keywords:");
     expect(mocks.loadModule.mock.calls[1]?.[0].key).toContain(":pages:");
     expect(mocks.loadModule.mock.calls[0]?.[0].key).toContain(":250:1250");
+  });
+
+  it("threads the request origin into the snapshot resolver and provider module calls", async () => {
+    const origin = {
+      credential: { id: "key_1", kind: "project_key" as const },
+      source: "sdk" as const,
+    };
+    await analyze({}, origin);
+
+    expect(mocks.resolveSnapshot).toHaveBeenCalledWith(expect.objectContaining({ origin }));
+    expect(mocks.fetchKeywords).toHaveBeenCalledWith(expect.objectContaining({ origin }));
+    expect(mocks.fetchPages).toHaveBeenCalledWith(expect.objectContaining({ origin }));
   });
 });

@@ -84,7 +84,7 @@
     "researchUnavailable": "{language}: no search volume or difficulty data for this market - positions are tracked normally.",
     "restore": "Restore",
     "restoreArchivedHint": "Archived markets appear here. Restore one when you are ready to resume its schedules.",
-    "restoreBody": "Restoring resumes {count, plural, one {# keyword} other {# keywords}} on their schedules - approx {cost} a month.",
+    "restoreBody": "Restoring resumes {count, plural, one {# keyword} other {# keywords}} on their schedules.",
     "restoreFailed": "Market could not be restored. Try again.",
     "restoreMarket": "Restore market",
     "restoreTitle": "Restore {market}?",

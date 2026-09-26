@@ -1,21 +1,34 @@
+import { DateDisplayProvider } from "@/components/dates/DateFormatProvider";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import messages from "@/messages/core/en/project-runs-rank-runs.json";
+import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "storybook/test";
 import { RunPage } from "./RunPage";
 import { runPageFixture } from "./RunPageFixtures";
+import { unconfirmedRunFixture } from "./RunPageUnconfirmedFixture";
 
 const meta = {
   args: { ...runPageFixture, canMutate: true, projectRef: "prj_example" },
   component: RunPage,
   decorators: [
     (Story, context) => (
-      <main
-        className="min-h-dvh bg-bg p-4 text-fg lg:p-8"
-        data-theme={context.parameters.theme ?? "light"}
+      <FeatureMessagesProvider
+        locale="en"
+        messages={{ ...sharedMessages, ...messages }}
+        timeZone="UTC"
       >
-        <div className="mx-auto max-w-[1400px]">
-          <Story />
-        </div>
-      </main>
+        <DateDisplayProvider>
+          <main
+            className="min-h-dvh bg-bg p-4 text-fg lg:p-8"
+            data-theme={context.parameters.theme ?? "light"}
+          >
+            <div className="mx-auto max-w-[1400px]">
+              <Story />
+            </div>
+          </main>
+        </DateDisplayProvider>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
@@ -32,7 +45,7 @@ export const RunstatePartial: Story = {
     run: {
       ...runPageFixture.run,
       costCents: 409,
-      counts: { ...runPageFixture.run.counts, completed: 678, deferred: 4, failed: 12 },
+      counts: { ...runPageFixture.run.counts, completed: 672, deferred: 4, failed: 12 },
       finishedAt: "2026-08-31T14:31:08.000Z",
       outcome: "partial",
       status: "completed",
@@ -46,7 +59,7 @@ export const RunstateSucceeded: Story = {
     run: {
       ...runPageFixture.run,
       costCents: 416,
-      counts: { ...runPageFixture.run.counts, completed: 694, failed: 0 },
+      counts: { ...runPageFixture.run.counts, completed: 694, deferred: 0, failed: 0, skipped: 0 },
       finishedAt: "2026-08-31T14:30:26.000Z",
       outcome: "succeeded",
       status: "completed",
@@ -68,7 +81,7 @@ export const ItemsSkippedFilter: Story = {
   name: "items-skipped-filter",
   play: async ({ canvasElement }) => {
     await userEvent.click(
-      within(canvasElement).getByRole("button", { name: "6 skipped before start" }),
+      within(canvasElement).getByRole("button", { name: "6 skipped or blocked" }),
     );
   },
 };
@@ -88,3 +101,5 @@ export const RunstatePlanned: Story = {
   },
   name: "runstate-planned",
 };
+
+export const Unconfirmed: Story = { args: unconfirmedRunFixture };

@@ -1,6 +1,5 @@
 "use client";
 
-import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import type { KeywordDetailActions } from "@/components/keywords/action-utils";
 import {
@@ -11,16 +10,15 @@ import { presentSafeActionError } from "@/components/keywords/safe-action-error"
 import type { RankCheckBatchPollAction } from "@/components/keywords/use-rank-check-batch-poll";
 import { useRankCheckBatchProgress } from "@/components/keywords/use-rank-check-batch-progress";
 import type { GetRankCheckStatusesResult } from "@/lib/actions/rank-check-status";
-import { type CostRateInfo, runCostCents } from "@/lib/cost-estimate/project-estimate";
+import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
 import { runCheckNowSchema } from "@/lib/schemas/keyword";
-import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { mapWithConcurrency } from "./bounded-dispatch";
 import type { RunChecksFlow } from "./RunChecksConfirmationModal";
-import { effectiveRowDepth } from "./run-check-depth";
 
 const DISPATCH_CONCURRENCY = 5;
 
@@ -73,11 +71,8 @@ export function useRunChecksModal({
   onSettled,
   pollAction,
   projectId,
-  providerRate,
-  rows,
   runCheckNowAction,
 }: Options) {
-  const { addSpend } = useSessionSpend();
   const sharedErrors = useSharedErrorMessages();
   const t = useTranslations("projectRankTracker.keywordImport.management.runConfirmation");
   const [flow, setFlow] = useState<RunChecksFlow | null>(null);
@@ -119,7 +114,6 @@ export function useRunChecksModal({
     const failures: RunChecksFlow["failures"] = [];
     const rankCheckIds: string[] = [];
     let completed = 0;
-    const successfulDepths: SerpDepth[] = [];
     for (let index = 0; index < results.length; index += 1) {
       const result = results[index];
       if (!result) continue;
@@ -148,8 +142,6 @@ export function useRunChecksModal({
         });
         continue;
       }
-      const row = rows.find((candidate) => candidate.id === keywordIds[index]);
-      successfulDepths.push(depth ?? (row ? effectiveRowDepth(row) : DEFAULT_SERP_DEPTH));
       if (outcome === "completed") {
         completed += 1;
         continue;
@@ -163,8 +155,6 @@ export function useRunChecksModal({
           rankCheckId: null,
         });
     }
-    const spend = providerRate ? runCostCents(successfulDepths, providerRate) : null;
-    if (spend != null) addSpend(spend);
     const step = rankCheckIds.length > 0 ? "running" : failures.length > 0 ? "failed" : "success";
     if (rankCheckIds.length > 0) {
       setActiveRankCheckIds((previous) => [...new Set([...previous, ...rankCheckIds])]);

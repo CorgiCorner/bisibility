@@ -1,5 +1,6 @@
 import "server-only";
 
+import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
 import { unitCostCentsFor } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
@@ -97,7 +98,24 @@ function scheduledRunProjectionCounts(
     },
     resolveSerpDepth(schedule.serpDepth ?? projectDepth ?? undefined),
   );
+  const nativePerTarget = estimateRankUsage(
+    [resolveSerpDepth(schedule.serpDepth ?? projectDepth ?? undefined)],
+    {
+      providerId: provider?.provider ?? null,
+      overrideCents:
+        provider?.costPerCheckCents == null ? null : Number(provider.costPerCheckCents),
+      rateContext: provider?.rateContext,
+    },
+  );
   return {
+    nativeEstimate: {
+      ...nativePerTarget,
+      quantity:
+        nativePerTarget.quantity === null
+          ? null
+          : Number((nativePerTarget.quantity * schedule.targetCount).toFixed(6)),
+      unknownTargets: nativePerTarget.unknownTargets * schedule.targetCount,
+    },
     estimatedCostCents:
       costPerCheck === null ? null : Math.ceil(costPerCheck * schedule.targetCount),
     keywordCount: schedule.keywordCount,
@@ -158,6 +176,7 @@ function scheduleListDto(
     memberDeviceCount: new Set(memberGroups.map((keyword) => keyword.device)).size,
     memberMarketCount: new Set(memberGroups.map((keyword) => keyword.locationId)).size,
     perRunCents: projection.estimatedCostCents,
+    nativeEstimate: projection.nativeEstimate,
     sharedTag: sharedTag(tagAssignments, projection.targetCount),
     targetCount: projection.targetCount,
     weekday:

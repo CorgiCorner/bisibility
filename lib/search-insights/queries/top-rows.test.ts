@@ -82,6 +82,29 @@ describe("getTopQueries", () => {
     expect(statement().values.slice(-2)).toEqual([ROWS_PAGE_LIMIT, 0]);
   });
 
+  it("matches the search as literal text, so the total counts only the matching rows", async () => {
+    await getTopQueries("project_1", "sc-domain:example.com", window, {
+      limit: 10,
+      offset: 0,
+      search: "  50%_off\\ ",
+    });
+
+    expect(statement().sql).toContain(`AND "query" ILIKE ? ESCAPE`);
+    expect(statement().sql).toContain("ESCAPE '\\'");
+    expect(statement().sql.indexOf("ILIKE")).toBeLessThan(statement().sql.indexOf("GROUP BY"));
+    expect(statement().values).toContain("%50\\%\\_off\\\\%");
+  });
+
+  it("reads the whole window when the search is blank", async () => {
+    await getTopQueries("project_1", "sc-domain:example.com", window, {
+      limit: 10,
+      offset: 0,
+      search: "   ",
+    });
+
+    expect(statement().sql).not.toContain("ILIKE");
+  });
+
   it("reports an empty window without asking the database for zero rows", async () => {
     await expect(
       getTopQueries("project_1", "sc-domain:example.com", window, { limit: 0, offset: 0 }),

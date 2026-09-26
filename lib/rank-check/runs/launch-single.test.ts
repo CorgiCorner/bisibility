@@ -27,11 +27,14 @@ const mocks = vi.hoisted(() => ({
     keyword: { findMany: vi.fn() },
     project: { findUnique: vi.fn() },
     projectMarket: { findMany: vi.fn() },
-    rankCheckRun: { findFirst: vi.fn(), findUnique: vi.fn() },
+    rankCheckRun: { count: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
   },
   tx: {
+    $executeRaw: vi.fn(),
+    $queryRaw: vi.fn(),
+    project: { findUnique: vi.fn() },
     projectMarket: { findMany: vi.fn() },
-    rankCheckRun: { create: vi.fn() },
+    rankCheckRun: { create: vi.fn(), findUnique: vi.fn() },
     rankCheckRunItem: { createMany: vi.fn() },
   },
   writeAudit: vi.fn(),
@@ -66,14 +69,19 @@ vi.mock("./selection", async (importOriginal) => {
   };
 });
 
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { KEYWORD_ARCHIVED_REASON, MARKET_INACTIVE_REASON } from "@/lib/rank-check/runnable-reasons";
+import { launchRankCheckRun } from "./launch";
 import { launchSingleRankCheckRun } from "./launch-single";
+import { LaunchRankCheckRunError } from "./launch-types";
+import { previewRankCheckRun } from "./preview";
 import { PreviewTokenError } from "./preview-token";
 
 const project = { domain: "example.com", id: PROJECT_ID, isSample: false };
 const input = {
   actorId: "user_1",
   keywordId: KEYWORD_PUBLIC_ID as `kw_${string}`,
+  origin: APP_REQUEST_ORIGIN,
   project,
   trigger: "manual" as const,
 };
@@ -125,10 +133,20 @@ describe("launchSingleRankCheckRun", () => {
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: null,
     });
+    mocks.tx.project.findUnique.mockResolvedValue({
+      budgetCapCents: 5_000,
+      defaults: { serpDepth: 100 },
+      providerAllocationsInitializedAt: null,
+    });
+    mocks.tx.$executeRaw.mockResolvedValue(1);
+    mocks.tx.$queryRaw.mockResolvedValue([]);
+    mocks.tx.rankCheckRun.findUnique.mockResolvedValue(null);
     mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: "location_active" }]);
     mocks.tx.projectMarket.findMany.mockResolvedValue([{ locationId: "location_active" }]);
     mocks.prisma.rankCheckRun.findFirst.mockResolvedValue(null);
     mocks.prisma.rankCheckRun.findUnique.mockResolvedValue(null);
+    mocks.prisma.rankCheckRun.findMany.mockResolvedValue([]);
+    mocks.prisma.rankCheckRun.count.mockResolvedValue(0);
     mocks.prisma.$transaction.mockImplementation(
       async (callback: (tx: typeof mocks.tx) => Promise<unknown>) => callback(mocks.tx),
     );
@@ -155,6 +173,68 @@ describe("launchSingleRankCheckRun", () => {
 
     expect(mocks.tx.rankCheckRunItem.createMany).toHaveBeenCalledWith({
       data: [expect.objectContaining({ keywordId: "keyword_1", status: "queued" })],
+    });
+    expect(mocks.tx.rankCheckRun.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ credentialId: null, credentialKind: null, source: "app" }),
+      }),
+    );
+  });
+
+  it("snapshots the native usage estimate on the single run for a quota provider", async () => {
+    mocks.loadProviderChain.mockResolvedValue([
+      { costPerCheckCents: null, id: "connection_1", provider: "serpapi" },
+    ]);
+
+    await launchSingleRankCheckRun(input);
+
+    expect(mocks.tx.rankCheckRun.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          selectionSpec: expect.objectContaining({
+            estimatedOperations: 5,
+            kind: "single",
+            nativeEstimate: {
+              providerId: "serpapi",
+              quantity: 5,
+              unit: "units",
+              unknownTargets: 0,
+            },
+          }),
+        }),
+      }),
+    );
+  });
+
+  it("refuses a launch whose estimate exceeds maxCostCents", async () => {
+    mocks.estimatedCost.mockReturnValue(12);
+
+    const launched = await launchSingleRankCheckRun({ ...input, maxCostCents: 5 }).catch(
+      (error: unknown) => error,
+    );
+
+    expect(launched).toBeInstanceOf(LaunchRankCheckRunError);
+    expect(launched).toMatchObject({ code: "cost_limit_exceeded", estimatedCostCents: 12 });
+    expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
+    expect(mocks.tx.rankCheckRunItem.createMany).not.toHaveBeenCalled();
+  });
+
+  it("launches when the estimate is within maxCostCents", async () => {
+    mocks.estimatedCost.mockReturnValue(12);
+
+    await expect(launchSingleRankCheckRun({ ...input, maxCostCents: 20 })).resolves.toMatchObject({
+      estimatedCostCents: 12,
+      keywordCount: 1,
+      status: "queued",
+    });
+  });
+
+  it("launches regardless of maxCostCents when the estimate is unknown", async () => {
+    mocks.estimatedCost.mockReturnValue(null);
+
+    await expect(launchSingleRankCheckRun({ ...input, maxCostCents: 5 })).resolves.toMatchObject({
+      keywordCount: 1,
+      status: "queued",
     });
   });
 
@@ -237,6 +317,70 @@ describe("launchSingleRankCheckRun", () => {
     await expect(launchSingleRankCheckRun(input)).resolves.toMatchObject({
       outcome: "nothing_to_run",
       reason: MARKET_INACTIVE_REASON,
+    });
+  });
+
+  describe("overlap with another run", () => {
+    const queuedElsewhere = () => keywordRow({ rankCheckRunItems: [{ status: "queued" }] });
+
+    it("runs a manual check of a keyword that only waits in another run's queue", async () => {
+      mocks.keywordRows = [queuedElsewhere()];
+
+      await expect(launchSingleRankCheckRun(input)).resolves.toMatchObject({
+        estimatedCostCents: 25,
+        status: "queued",
+        targetCount: 1,
+      });
+      expect(mocks.tx.rankCheckRunItem.createMany).toHaveBeenCalledWith({
+        data: [expect.objectContaining({ keywordId: "keyword_1" })],
+      });
+    });
+
+    it("keeps refusing that keyword for an API launch", async () => {
+      mocks.keywordRows = [queuedElsewhere()];
+
+      await expect(launchSingleRankCheckRun({ ...input, trigger: "api" })).resolves.toMatchObject({
+        outcome: "nothing_to_run",
+        reason: "already_in_progress",
+      });
+      expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["a running run item", { rankCheckRunItems: [{ status: "running" }] }],
+      ["an active provider task", { queuedRankCheckTasks: [{ state: "submitted" }] }],
+      ["a running rank check", { rankChecks: [{ status: "running" }] }],
+    ])("never sends a manual check while %s holds the keyword", async (_label, held) => {
+      mocks.keywordRows = [keywordRow(held)];
+
+      await expect(launchSingleRankCheckRun(input)).resolves.toMatchObject({
+        outcome: "nothing_to_run",
+        reason: "already_in_progress",
+      });
+      expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
+    });
+
+    it("binds the preview to its trigger so an API launch cannot reuse a manual token", async () => {
+      // A free keyword gives both triggers the same rows and estimate; only the trigger differs.
+      const spec = { kind: "single" as const, keywordId: input.keywordId, v: 1 as const };
+      const preview = await previewRankCheckRun({
+        origin: APP_REQUEST_ORIGIN,
+        project,
+        spec,
+        trigger: "manual",
+      });
+
+      expect(preview.executable).toBe(1);
+      await expect(
+        launchRankCheckRun({
+          actorId: "user_1",
+          origin: APP_REQUEST_ORIGIN,
+          previewToken: preview.previewToken,
+          project,
+          spec,
+          trigger: "api",
+        }),
+      ).rejects.toMatchObject({ code: "mismatch" });
     });
   });
 });

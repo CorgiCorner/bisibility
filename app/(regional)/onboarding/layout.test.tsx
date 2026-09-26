@@ -12,6 +12,9 @@ const mocks = vi.hoisted(() => ({
   supportWidget: vi.fn(() => <aside data-testid="support-extension" />),
 }));
 
+vi.mock("@/components/settings/AccountDataSourceExtension", () => ({
+  renderAccountDataSourceExtension: vi.fn(async (children: React.ReactNode) => children),
+}));
 vi.mock("@/components/onboarding/OnboardingLogoutButton", () => ({
   OnboardingLogoutButton: () => <span data-testid="logout-button">Log out</span>,
 }));

@@ -146,8 +146,9 @@
         "completedNote": "zapisano pozycje",
         "deferredNote": "ponowienie w kolejnym przebiegu",
         "failedNote": "nie zapisano pozycji",
-        "notTerminal": "stan nieostateczny",
-        "skippedBeforeStart": "{count, plural, one {# pominięty przed startem} few {# pominięte przed startem} many {# pominiętych przed startem} other {# pominiętego przed startem}}"
+        "notTerminal": "oczekujące lub w trakcie",
+        "skippedBeforeStart": "{count, plural, one {# pominięty przed startem} few {# pominięte przed startem} many {# pominiętych przed startem} other {# pominiętego przed startem}}",
+        "skippedOrBlocked": "Pominięte lub zablokowane: {count}"
       },
       "facts": {
         "actual": "rzeczywisty",
@@ -207,7 +208,8 @@
         "processed": "Przetworzono {processed, number} z {total, number} celów",
         "selected": "Wybrano {count, plural, one {# cel} few {# cele} many {# celów} other {# celu}}",
         "skippedBy": "Pominięto przez: {name} · {date}",
-        "skippedExplanation": "Pominięte cele nie trafiają do dostawcy i nic nie kosztują."
+        "skippedExplanation": "Pominięte cele nie trafiają do dostawcy i nic nie kosztują.",
+        "skippedOrBlockedExplanation": "Pominięte lub zablokowane zadania są zakończone. Powód podano przy każdym zadaniu."
       },
       "table": {
         "actual": "rzeczywisty",
@@ -235,8 +237,14 @@
         "providerRestricted": "Dostawca ograniczył to konto.",
         "providerTransient": "Dostawca jest tymczasowo niedostępny.",
         "providerUnknown": "Dostawca nie mógł ukończyć tego sprawdzenia.",
-        "skippedBeforeStart": "Pominięto przed startem"
-      }
+        "skippedBeforeStart": "Pominięto przed startem",
+        "sendUnconfirmed": "Wynik niepotwierdzony; bez ponowienia, aby uniknąć podwójnego zużycia.",
+        "stoppedAfterStart": "Zatrzymano po rozpoczęciu"
+      },
+      "operations": "Operacje",
+      "usageNotRecorded": "Brak danych",
+      "estimatedOperations": "szacunkowo {count}",
+      "skippedOrBlocked": "Pominięte lub zablokowane"
     }
   }
 }

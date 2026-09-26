@@ -3,7 +3,7 @@ import "server-only";
 import { type DeploymentMode, deploymentMode } from "@/lib/deployment/deployment";
 import {
   type DataIncident,
-  FIRST_VIEW_ROW_BUFFER,
+  FIRST_VIEW_ROWS,
   incidentsOverlapping,
 } from "@/lib/search-insights/constants";
 import type { FinalizedWindow } from "@/lib/search-insights/dates";
@@ -69,7 +69,7 @@ const NO_ORGANIC_SESSIONS: OrganicSessionsContext = {
   status: "not_connected",
 };
 
-const PAGE = { limit: FIRST_VIEW_ROW_BUFFER, offset: 0 };
+const PAGE = { limit: FIRST_VIEW_ROWS, offset: 0 };
 
 const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn) => fn;
 
@@ -139,7 +139,7 @@ export async function getSearchInsightsFirstView(
   const [totals, coverage, queries, pages, sessions] = await Promise.all([
     facts?.totals ?? getWindowTotals(scope.projectId, scope.property, scope.window),
     facts?.coverage ?? getQueryCoverage(scope.projectId, scope.property, current),
-    // The stored lens holds a hundred rows under the default sort; the first view shows fifty.
+    // The stored lens holds a hundred rows under the default sort; the first page shows ten.
     facts
       ? {
           rows: facts.defaultLensQueries.rows.slice(0, PAGE.limit),
@@ -206,7 +206,7 @@ export type SearchInsightsRowsPage =
   | { kind: "pages"; rows: readonly SearchInsightsPageRow[]; total: number };
 
 /**
- * One page of stored rows for the tables' Show more and Show all controls. The requested
+ * One page of stored rows for the tables' pagination and search. The requested
  * property is resolved through the authorized scope before stored rows are read.
  */
 export async function getSearchInsightsRowsPage(
@@ -217,6 +217,7 @@ export async function getSearchInsightsRowsPage(
     offset: number;
     period?: string;
     property: string;
+    search?: string;
     sort?: SearchInsightsSort;
   },
 ): Promise<SearchInsightsRowsPage> {
@@ -233,7 +234,7 @@ export async function getSearchInsightsRowsPage(
       : { kind: "queries", rows: [], total: 0, trackedTexts: [] };
   }
 
-  const page = { limit: input.limit, offset: input.offset, sort: input.sort };
+  const page = { limit: input.limit, offset: input.offset, search: input.search, sort: input.sort };
   if (input.kind === "pages") {
     const sessionsProperty = organicSessionsPropertyForWindow(organicSessions, finalized);
     const pages = await getTopPages(

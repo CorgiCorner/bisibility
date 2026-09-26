@@ -1,4 +1,5 @@
 import { initials as avatarInitials } from "@/lib/avatar/initials";
+import { nativeEstimateFromSelection } from "@/lib/cost-estimate/native-usage";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { RankCheckOperation, RunStatus } from "@/lib/rank-check/runs/contract";
 import { rankCheckProviderPresentation } from "@/lib/rank-check/runs/provider-presentation";
@@ -102,6 +103,7 @@ export function rankCheckRunDto(
       total: row.totalCount,
     },
     estimatedCostCents: row.estimatedCostCents,
+    nativeEstimate: nativeEstimateFromSelection(row.selectionSpec),
     finishedAt: iso(row.finishedAt),
     id: row.publicId,
     keywordCount: row.keywordCount,

@@ -54,6 +54,9 @@ export const connectProviderSchema = z.object({
   projectId: idSchema,
   providerId: providerIdSchema,
   secret: credentialSchema,
+  expectedConnectionId: idSchema.nullable().optional(),
+  expectedConnectionUpdatedAt: z.iso.datetime().nullable().optional(),
+  expectedCredentialSource: z.enum(["own", "hosted"]).optional(),
 });
 
 export const testProviderConnectionSchema = z.object({

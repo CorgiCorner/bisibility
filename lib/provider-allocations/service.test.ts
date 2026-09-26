@@ -56,6 +56,7 @@ function transaction() {
         allocationAmountPerMonth: null,
         allocationUnit: null,
         id: "connection_1",
+        programmaticAllocationAmountPerMonth: null,
         provider: "metered",
       }),
       update: vi.fn(),
@@ -65,7 +66,7 @@ function transaction() {
 }
 const input = {
   actor,
-  allocation: { amountPerMonth: 2500, unit: "cents" as const },
+  allocations: { app: { amountPerMonth: 2500, unit: "cents" as const } },
   catalog,
   connectionPublicId: "conn_abcdefghijklmnopqrstuvwx",
   projectPublicId: "prj_abcdefghijklmnopqrstuvwx",
@@ -124,6 +125,113 @@ describe("provider allocation service", () => {
       data: { allocationAmountPerMonth: 2500, allocationUnit: "cents" },
       where: { id: "connection_1" },
     });
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        after: {
+          app: { amountPerMonth: 2500, unit: "cents" },
+          credits: { app: null, programmatic: null },
+          programmatic: null,
+        },
+        before: {
+          app: null,
+          credits: { app: null, programmatic: null },
+          programmatic: null,
+        },
+      }),
+      tx,
+    );
+  });
+
+  it("persists a two-sided update and audits both surfaces", async () => {
+    const tx = transaction();
+    tx.providerConnection.findFirst.mockResolvedValue({
+      allocationAmountPerMonth: 1000,
+      allocationUnit: "cents",
+      id: "connection_1",
+      programmaticAllocationAmountPerMonth: 500,
+      provider: "metered",
+    });
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
+
+    await setProviderConnectionAllocation({
+      ...input,
+      allocations: {
+        app: { amountPerMonth: 2500, unit: "cents" },
+        programmatic: { amountPerMonth: 1200, unit: "cents" },
+      },
+    });
+
+    expect(tx.providerConnection.update).toHaveBeenCalledWith({
+      data: {
+        allocationAmountPerMonth: 2500,
+        allocationUnit: "cents",
+        programmaticAllocationAmountPerMonth: 1200,
+      },
+      where: { id: "connection_1" },
+    });
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        after: {
+          app: { amountPerMonth: 2500, unit: "cents" },
+          credits: { app: null, programmatic: null },
+          programmatic: { amountPerMonth: 1200, unit: "cents" },
+        },
+        before: {
+          app: { amountPerMonth: 1000, unit: "cents" },
+          credits: { app: null, programmatic: null },
+          programmatic: { amountPerMonth: 500, unit: "cents" },
+        },
+      }),
+      tx,
+    );
+  });
+
+  it("keeps the stored programmatic cap when the update omits it", async () => {
+    const tx = transaction();
+    tx.providerConnection.findFirst.mockResolvedValue({
+      allocationAmountPerMonth: 1000,
+      allocationUnit: "cents",
+      id: "connection_1",
+      programmaticAllocationAmountPerMonth: 500,
+      provider: "metered",
+    });
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
+
+    await setProviderConnectionAllocation(input);
+
+    const update = tx.providerConnection.update.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(update.data).toEqual({
+      allocationAmountPerMonth: 2500,
+      allocationUnit: "cents",
+    });
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        after: {
+          app: { amountPerMonth: 2500, unit: "cents" },
+          credits: { app: null, programmatic: null },
+          programmatic: { amountPerMonth: 500, unit: "cents" },
+        },
+      }),
+      tx,
+    );
+  });
+
+  it("rejects app and programmatic caps with different units", async () => {
+    const tx = transaction();
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
+
+    await expect(
+      setProviderConnectionAllocation({
+        ...input,
+        allocations: {
+          app: { amountPerMonth: 2500, unit: "cents" },
+          programmatic: { amountPerMonth: 100, unit: "units" },
+        },
+      }),
+    ).rejects.toThrow(TypeError("App and programmatic allocations must share one unit."));
+    expect(tx.providerConnection.update).not.toHaveBeenCalled();
   });
 
   it("does not write when authorization fails", async () => {

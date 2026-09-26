@@ -62,7 +62,7 @@ export function AdminAuditTable({ entries, filter, nextCursor }: Readonly<Instan
         {entries.length === 0 ? (
           <p className="mt-4 text-xs text-fg-muted">{t("empty")}</p>
         ) : (
-          <div className="mt-3 [&>[role=table]]:border-0">
+          <div className="mt-3">
             <AdminAuditDataTable entries={entries} />
           </div>
         )}

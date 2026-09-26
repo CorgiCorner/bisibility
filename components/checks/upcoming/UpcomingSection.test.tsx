@@ -163,13 +163,66 @@ describe("UpcomingSection", () => {
       "/app/rank-tracker",
     );
   });
+  it("shows quota operations instead of plan dollars for a quota provider", () => {
+    const [firstDay] = upcomingViewFixture.days;
+    const quotaDay = {
+      ...firstDay,
+      nativeEstimate: {
+        providerId: "serpapi",
+        quantity: 2_140,
+        unit: "units" as const,
+        unknownTargets: 0,
+      },
+    };
+    render(
+      <UpcomingSection
+        {...sharedProps}
+        view={{
+          blocked: [],
+          days: [quotaDay],
+          forecast: {
+            capCents: 5_000,
+            capLastsUntil: null,
+            next48hCents: 530,
+            next48hNative: {
+              providerId: "serpapi",
+              quantity: 530,
+              unit: "units",
+              unknownTargets: 0,
+            },
+            spentCents: 1_820,
+          },
+          providerSummary: "SerpApi",
+          timeZone: "Europe/Warsaw",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("~2,140 operations est.")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "P" &&
+          element.textContent ===
+            "The $50 cap has no projected end date at the current daily rate. Forecast for scheduled checks: ~530 operations/next 48h.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/~\$2,140/)).not.toBeInTheDocument();
+  });
+
   it("omits a zero-cost budget forecast", () => {
     render(
       <UpcomingSection
         {...sharedProps}
         view={{
           ...upcomingUnblockedView,
-          forecast: { capCents: 5_000, capLastsUntil: null, next48hCents: 0, spentCents: 0 },
+          forecast: {
+            capCents: 5_000,
+            capLastsUntil: null,
+            next48hCents: 0,
+            next48hNative: null,
+            spentCents: 0,
+          },
         }}
       />,
     );

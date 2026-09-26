@@ -2,7 +2,7 @@
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import type { AnalyzeBacklinksActionInput } from "@/lib/actions/backlinks";
-import type { BacklinksSnapshot } from "@/lib/backlinks/types";
+import { type BacklinksSnapshot, isBacklinksEstimate } from "@/lib/backlinks/types";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -120,6 +120,11 @@ export function BacklinksWorkspace({
       );
       if (!outcome.ok) {
         if (request.fallbackOnCostLimit && outcome.reason === "cost_limit_exceeded") return;
+        setFailure(true);
+        return;
+      }
+      // A paid request never yields a dry run; guard the union for the type system.
+      if (isBacklinksEstimate(outcome)) {
         setFailure(true);
         return;
       }

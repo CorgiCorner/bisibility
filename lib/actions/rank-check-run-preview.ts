@@ -1,5 +1,6 @@
 "use server";
 
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { previewRankCheckRun } from "@/lib/rank-check/runs/preview";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
 import {
@@ -15,8 +16,10 @@ export async function previewRankCheckRunAction(
   const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
   return previewRankCheckRun({
     depth: data.depth,
+    origin: APP_REQUEST_ORIGIN,
     project,
     providerId: data.providerId,
     spec: data.spec,
+    trigger: data.trigger ?? "api",
   });
 }

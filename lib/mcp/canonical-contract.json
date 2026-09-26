@@ -427,7 +427,7 @@
   {
     "name": "update_project_defaults",
     "title": "Update project defaults",
-    "description": "Update the project default rank-check schedule and SERP market. The schedule is replaced as a whole: omitted schedule fields reset to their defaults (jitter 60, timezone UTC, no cron). Provide country and device together, or a location_key, to move the default SERP market. Use search_locations and pass its location_key verbatim to preserve the exact location-language pair.",
+    "description": "Update the project default rank-check schedule, SERP depth, and SERP market. The schedule is replaced as a whole: omitted schedule fields (frequency, cron_expression, jitter_minutes, timezone) reset to their defaults (jitter 60, timezone UTC, no cron). serp_depth and serp_stop_on_match are independent of the schedule and keep their stored values when omitted. Provide country and device together, or a location_key, to move the default SERP market. Use search_locations and pass its location_key verbatim to preserve the exact location-language pair.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -492,6 +492,11 @@
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
+        "serp_depth": {
+          "description": "Default number of SERP results to scan per rank check (10, 20, 50, or 100). Omitted keeps the stored depth.",
+          "type": "integer",
+          "enum": [10, 20, 50, 100]
+        },
         "serp_stop_on_match": {
           "description": "Set false to fetch the full configured depth for competitor snapshots.",
           "type": "boolean"
@@ -516,7 +521,7 @@
   {
     "name": "list_keywords",
     "title": "List project keywords",
-    "description": "List keywords for a project with pagination, search, filters, and sorting. Each keyword includes location_key, language_code, and language_label for its exact market pair. latest_position is null after a failed check as well as when the domain is outside the requested depth; read latest_check and latest_successful_check to tell them apart.",
+    "description": "List the tracked keywords (search terms) of a project with their current rankings: latest_position, previous_position, ranking_url, target URL, tags, schedule, and market. Supports pagination, search, filters, and sorting. Use it for rank positions, rank tracking, keyword rankings, and SERP position lookups. Each keyword includes location_key, language_code, and language_label for its exact market pair. latest_position is null after a failed check as well as when the domain is outside the requested depth; read latest_check and latest_successful_check to tell them apart.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -604,7 +609,7 @@
   {
     "name": "list_ranked_keyword_suggestions",
     "title": "List ranked keyword suggestions",
-    "description": "Paid provider lookup on the project's own DataForSEO account, about $0.02 per 100-keyword page on a cache miss. Results are cached for 12 hours and shared with the UI and API. already_tracked marks keywords the project tracks.",
+    "description": "Paid provider lookup on the project's own DataForSEO account, about $0.02 per 100-keyword page on a cache miss. Results are cached for 12 hours and shared with the UI and API. already_tracked marks keywords the project tracks. Set max_cost_cents to have the server refuse a cache miss whose estimate is higher.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -621,6 +626,12 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 100
+        },
+        "max_cost_cents": {
+          "description": "Server-enforced maximum provider cost for a cache miss, in cents.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         },
         "offset": {
           "type": "integer",
@@ -2059,7 +2070,7 @@
   {
     "name": "run_rank_check",
     "title": "Run rank check",
-    "description": "Run a provider-backed rank check for one keyword. Requires write access and may incur provider cost. Ask for explicit user approval immediately before calling; this server cannot enforce the client's confirmation UI. By default the check runs synchronously and returns the completed result. Set async to true to enqueue the check and return a running rank check immediately; poll it with get_rank_check_result.",
+    "description": "Run a provider-backed rank check for one keyword. Requires write access and may incur provider cost. Ask for explicit user approval immediately before calling; this server cannot enforce the client's confirmation UI. By default the check runs synchronously and returns the completed result. Set async to true to enqueue the check and return a running rank check immediately; poll it with get_rank_check_result. Set max_cost_cents to have the server refuse the check when its preflight estimate is higher.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -2081,6 +2092,12 @@
           "description": "Identifier of the tracked keyword to operate on.",
           "type": "string",
           "pattern": "^kw_[a-z][a-z0-9]{23}$"
+        },
+        "max_cost_cents": {
+          "description": "Server-enforced maximum for the preflight cost estimate of this check, in cents.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         },
         "provider_id": {
           "description": "SERP provider id, validated server-side. Known values: dataforseo and serpapi.",
@@ -2246,7 +2263,7 @@
           "maxLength": 160
         },
         "monitor_id": {
-          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the sitemap monitor to update, as returned by list_sitemap_monitors. Optional: a project has one monitor whose id equals the project id, so it defaults to project_id.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -2256,7 +2273,7 @@
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
       },
-      "required": ["monitor_id", "project_id"]
+      "required": ["project_id"]
     },
     "annotations": {
       "destructiveHint": false,
@@ -2281,7 +2298,7 @@
           "maxLength": 160
         },
         "monitor_id": {
-          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "description": "Identifier of the sitemap monitor to update, as returned by list_sitemap_monitors. Optional: a project has one monitor whose id equals the project id, so it defaults to project_id.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
@@ -2291,7 +2308,7 @@
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         }
       },
-      "required": ["monitor_id", "project_id"]
+      "required": ["project_id"]
     },
     "annotations": {
       "destructiveHint": false,
@@ -3871,7 +3888,7 @@
   {
     "name": "list_providers",
     "title": "List providers",
-    "description": "List provider connection options and status for a project. status is the catalog state; connection_status says whether the project can use the provider.",
+    "description": "List the data provider connections of a project: SERP rank-check providers (dataforseo, serpapi) and analytics integrations (gsc, ga4, plausible), with connection status, priority, and enabled state. Use it for integrations, data sources, and provider credentials status. status is the catalog state; connection_status says whether the project can use the provider.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -3906,7 +3923,7 @@
   {
     "name": "connect_provider",
     "title": "Connect provider",
-    "description": "Connect or update credentials for a project provider. SERP providers are dataforseo and serpapi; analytics providers are ga4, gsc, and plausible. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL. Use priority for ordering; the deprecated primary=true alias promotes priority 0 and primary=false is a no-op.",
+    "description": "Connect or update credentials for a project provider. SERP providers are dataforseo and serpapi; analytics providers are ga4, gsc, and plausible. For Plausible, credentials.login is the site domain configured in Plausible (site_id, for example example.com) and defaults to the project domain when omitted; credentials.api_key is the Stats API token. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL. Use priority for ordering (0 promotes the provider to primary and renumbers the rest; omitted keeps a reconnected provider's place and appends a new one); the deprecated primary=true alias promotes priority 0 and primary=false is a no-op.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -3995,7 +4012,7 @@
   {
     "name": "test_provider_connection",
     "title": "Test provider connection",
-    "description": "Test provider credentials or the saved provider connection. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL.",
+    "description": "Test provider credentials or the saved provider connection. For Plausible, credentials.login is the site domain configured in Plausible (site_id) and defaults to the project domain when omitted; credentials.api_key is the Stats API token. Self-hosted providers such as Plausible accept an optional credentials.endpoint base URL. A successful test returns message \"Connected.\" or \"Connected · <detail>.\" for analytics providers.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -4821,7 +4838,7 @@
   {
     "name": "list_competitors",
     "title": "List competitors",
-    "description": "List tracked competitors, market data, and suggestions for a project.",
+    "description": "List the competitor domains tracked for a project (rival sites, competing domains) with their market data such as share of voice and positions, plus competitor suggestions. Use it for competitor analysis, competing sites, and rival rankings.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",

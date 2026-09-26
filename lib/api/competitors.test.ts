@@ -99,6 +99,12 @@ function context(): ApiContext {
     headers: new Headers(),
     instance: url.toString(),
     method: "GET",
+    origin: {
+      credentialId: "key_test",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
     path: ["projects", "prj_1", "competitors"],
     req: new Request(url),
     url,

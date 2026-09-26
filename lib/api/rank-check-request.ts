@@ -6,7 +6,9 @@ import { inlineRankCheckExecutionEnabled } from "@/lib/rank-check/inline-executi
 import { launchSingleRankCheckRun } from "@/lib/rank-check/runs/launch-single";
 import { isLaunchRankCheckRunNothingToRun } from "@/lib/rank-check/runs/launch-types";
 import type { ApiContext } from "./context";
-import { rankCheckResource, rankCheckSelect } from "./resources";
+import { rankCheckResources } from "./rank-check-accounting";
+import { providerOrigin } from "./request-origin";
+import { rankCheckSelect } from "./resources";
 import { errorResponse, resourceResponse } from "./responses";
 
 type ScopedKeyword = {
@@ -16,7 +18,7 @@ type ScopedKeyword = {
   publicId: string;
 };
 
-type RequestInput = { provider_id?: string };
+type RequestInput = { max_cost_cents?: number; provider_id?: string };
 
 export async function requestRankCheck(
   ctx: ApiContext,
@@ -27,6 +29,8 @@ export async function requestRankCheck(
   const launched = await launchSingleRankCheckRun({
     actorId: ctx.actorId ?? null,
     keywordId: keyword.publicId as `kw_${string}`,
+    maxCostCents: data.max_cost_cents,
+    origin: providerOrigin(ctx.origin),
     project: {
       domain: keyword.project.domain,
       id: keyword.projectId,
@@ -89,7 +93,8 @@ export async function requestRankCheck(
       targetId: launched.publicId,
       targetType: "rank_check_run",
     });
-    return resourceResponse(rankCheckResource({ ...rankCheck, keyword }), {
+    const [resource] = await rankCheckResources(keyword.projectId, [{ ...rankCheck, keyword }]);
+    return resourceResponse(resource, {
       headers: ctx.headers,
       status: 201,
     });

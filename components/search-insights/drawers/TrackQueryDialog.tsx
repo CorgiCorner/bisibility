@@ -1,7 +1,7 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import type { TrackingScheduleSelection } from "@/components/keywords/add/TrackingConfigurationFields";
-import { formatResearchEstimateCents } from "@/components/research/research-money";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
@@ -12,7 +12,7 @@ import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { type SerpDepth, type SerpDevice, serpDepthValues } from "@/lib/serp/constants";
 import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import {
   trackConfirmLabel,
@@ -94,7 +94,6 @@ export function TrackQueryDialog({
   query,
 }: Readonly<TrackQueryDialogProps>) {
   const { readOnly } = useProjectWriteMode();
-  const format = useFormatter();
   const t = useTranslations("projectSearchInsights.copy");
   const confirmRef = useRef<HTMLButtonElement>(null);
   const options = trackMarketOptions(markets);
@@ -137,8 +136,10 @@ export function TrackQueryDialog({
     { label: t("trackDeviceDesktop"), value: "desktop" },
     { label: t("trackDeviceMobile"), value: "mobile" },
   ] as const;
+  const nativeUsage = useNativeUsageFormat();
   const presentation = {
-    formatMoney: (cents: number) => formatResearchEstimateCents(cents, format.number),
+    formatUsage: (estimate: { unit: "cents" | "units" | null; quantity: number | null }) =>
+      nativeUsage.format(estimate),
     t,
   };
 

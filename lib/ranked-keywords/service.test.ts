@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     $queryRaw: vi.fn(),
     project: { findFirst: vi.fn(), findUnique: vi.fn() },
+    providerConnection: { findUnique: vi.fn() },
     providerConnectionRate: { findMany: vi.fn() },
     providerCostEntry: { createMany: vi.fn() },
   },
@@ -100,7 +102,13 @@ const cacheEntry = {
 };
 
 function run(overrides: Partial<Parameters<typeof fetchRankedKeywords>[0]> = {}) {
-  return fetchRankedKeywords({ limit: 100, offset: 0, projectId: projectPublicId, ...overrides });
+  return fetchRankedKeywords({
+    limit: 100,
+    offset: 0,
+    origin: APP_REQUEST_ORIGIN,
+    projectId: projectPublicId,
+    ...overrides,
+  });
 }
 
 describe("ranked-keyword service", () => {
@@ -123,6 +131,11 @@ describe("ranked-keyword service", () => {
     mocks.prisma.project.findUnique.mockResolvedValue({
       budgetCapCents: project.budgetCapCents,
       providerAllocationsInitializedAt: null,
+    });
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialSource: "own",
+      projectId: project.id,
+      provider: "dataforseo",
     });
     mocks.getProvider.mockReturnValue({
       id: "dataforseo",
@@ -219,7 +232,30 @@ describe("ranked-keyword service", () => {
           feature: "ranked_keywords",
           projectId: "project_1",
           provider: "dataforseo",
-          source: "app",
+          source: APP_REQUEST_ORIGIN.source,
+          trigger: "manual",
+        }),
+      ],
+      skipDuplicates: true,
+    });
+  });
+
+  it("threads the paying request origin through the paid call into the ledger", async () => {
+    await expect(
+      run({
+        origin: {
+          credential: { id: "key_1", kind: "project_key" },
+          source: "mcp",
+        },
+      }),
+    ).resolves.toMatchObject({ ok: true });
+
+    expect(mocks.prisma.providerCostEntry.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          credentialId: "key_1",
+          credentialKind: "project_key",
+          source: "mcp",
           trigger: "manual",
         }),
       ],
@@ -285,10 +321,26 @@ describe("ranked-keyword service", () => {
     });
   });
 
-  it("returns paid results when ledger, cache, or lock cleanup fails after the provider call", async () => {
+  it("refuses the paid call when the page estimate exceeds max_cost_cents", async () => {
+    await expect(run({ maxCostCents: 1 })).resolves.toEqual({
+      estimatedCostCents: 2,
+      ok: false,
+      reason: "cost_limit_exceeded",
+    });
+    expect(mocks.fetchPage).not.toHaveBeenCalled();
+    expect(mocks.consumeLimit).not.toHaveBeenCalled();
+    expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
+  });
+
+  it("proceeds when the page estimate is within max_cost_cents", async () => {
+    await expect(run({ maxCostCents: 2 })).resolves.toMatchObject({ ok: true });
+    expect(mocks.fetchPage).toHaveBeenCalledOnce();
+  });
+
+  it("surfaces a failed ledger write instead of reporting unrecorded usage as success", async () => {
     mocks.prisma.providerCostEntry.createMany.mockRejectedValue(new Error("database unavailable"));
 
-    await expect(run()).resolves.toMatchObject({ cached: false, costCents: 2, ok: true });
+    await expect(run()).rejects.toThrow("database unavailable");
     expect(mocks.fetchPage).toHaveBeenCalledOnce();
   });
 

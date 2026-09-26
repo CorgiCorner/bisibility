@@ -55,6 +55,56 @@ describe("app entry page", () => {
     expect(redirect).toHaveBeenCalledWith("/app/prj_complete/dashboard");
   });
 
+  it("opens the default project ahead of an older completed one", async () => {
+    mocks.listWorkspaces.mockResolvedValue([
+      {
+        isDefault: false,
+        onboardingCompletedAt: new Date("2026-08-01T07:30:00.000Z"),
+        publicId: "prj_oldest",
+      },
+      {
+        isDefault: true,
+        onboardingCompletedAt: new Date("2026-08-02T07:30:00.000Z"),
+        publicId: "prj_default",
+      },
+    ]);
+
+    await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_default/dashboard");
+
+    expect(mocks.getExperimentalModules).toHaveBeenCalledWith("prj_default");
+  });
+
+  it("ignores a default project whose onboarding is not completed", async () => {
+    mocks.listWorkspaces.mockResolvedValue([
+      {
+        isDefault: false,
+        onboardingCompletedAt: new Date("2026-08-01T07:30:00.000Z"),
+        publicId: "prj_oldest",
+      },
+      { isDefault: true, onboardingCompletedAt: null, publicId: "prj_default" },
+    ]);
+
+    await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_oldest/dashboard");
+  });
+
+  it("falls back to the oldest completed project when the default is no longer listed", async () => {
+    // listWorkspaces returns member projects only, so a default the user left is simply absent.
+    mocks.listWorkspaces.mockResolvedValue([
+      {
+        isDefault: false,
+        onboardingCompletedAt: new Date("2026-08-01T07:30:00.000Z"),
+        publicId: "prj_oldest",
+      },
+      {
+        isDefault: false,
+        onboardingCompletedAt: new Date("2026-08-02T07:30:00.000Z"),
+        publicId: "prj_newer",
+      },
+    ]);
+
+    await expect(AppEntryPage()).rejects.toThrow("NEXT_REDIRECT:/app/prj_oldest/dashboard");
+  });
+
   it("redirects to the stored landing preference for the completed workspace", async () => {
     mocks.listWorkspaces.mockResolvedValue([
       {

@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { previewRankCheckRunAction } from "./rank-check-run-preview";
 
@@ -48,9 +49,11 @@ describe("previewRankCheckRunAction", () => {
     });
     expect(mocks.preview).toHaveBeenCalledWith({
       depth: 50,
+      origin: APP_REQUEST_ORIGIN,
       project,
       providerId: "provider-a",
       spec: input.spec,
+      trigger: "api",
     });
   });
 

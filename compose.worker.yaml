@@ -15,7 +15,7 @@ services:
       <<: *temporal-env
 
   worker:
-    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.25.0}
+    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.26.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     environment:
@@ -72,6 +72,8 @@ services:
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      METERING_NAMESPACE: ${METERING_NAMESPACE:-default}
+      METERING_SHADOW: ${METERING_SHADOW:-off}
       OPS_EVENTS_ENABLED: ${OPS_EVENTS_ENABLED:-}
       OPS_HEARTBEAT_CRON: ${OPS_HEARTBEAT_CRON:-}
       OPS_HEARTBEAT_TZ: ${OPS_HEARTBEAT_TZ:-}

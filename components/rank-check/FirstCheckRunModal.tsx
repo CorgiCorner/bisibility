@@ -1,5 +1,6 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { displayProvider } from "@/components/onboarding/onboarding-form-utils";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -30,14 +31,8 @@ export type FirstCheckRunModalProps = {
 
 type FirstCheckTranslations = ReturnType<typeof useTranslations<"shared.firstCheck">>;
 
-const frequencyMessageKey = {
-  custom_cron: "frequency.custom_cron",
-  daily: "frequency.daily",
-  manual: "frequency.manual",
-  monthly: "frequency.monthly",
-  paused: "frequency.paused",
-  weekly: "frequency.weekly",
-} as const;
+// biome-ignore format: compact key map keeps this module under the project line cap.
+const frequencyMessageKey = { custom_cron: "frequency.custom_cron", daily: "frequency.daily", manual: "frequency.manual", monthly: "frequency.monthly", paused: "frequency.paused", weekly: "frequency.weekly" } as const;
 
 function estimateCurrency(
   cents: number,
@@ -98,8 +93,12 @@ function FirstCheckRunPlanRows({
     { label: t("scope.depth"), value: t("scope.depthValue", { value: plan.scope.depth }) },
     { label: t("scope.frequency"), value: t(frequencyMessageKey[plan.scope.frequency]) },
   ];
+  const usage = useNativeUsageFormat();
+  const nativeEstimate = runScope === "all" ? plan.nativeEstimate : plan.firstTargetEstimate;
   const checkCount = runScope === "all" ? plan.readyCount : Math.min(1, plan.readyCount);
-  if (plan.estimatedCostPerCheckCents != null) {
+  if (nativeEstimate) {
+    rows.push({ label: usage.estimatedLabel, value: usage.format(nativeEstimate) });
+  } else if (plan.estimatedCostPerCheckCents != null) {
     rows.push({
       label: t("cost.estimated"),
       value: t("cost.estimatedValue", {
@@ -107,17 +106,18 @@ function FirstCheckRunPlanRows({
       }),
     });
   }
-  rows.push({
-    label: t("scope.budget"),
-    value: hasMonthlyBudgetCap(plan.budget.capCents)
-      ? t("cost.budgetWithCap", {
-          cap: estimateCurrency(plan.budget.capCents, format, t),
-          spent: estimateCurrency(plan.budget.spentCents, format, t),
-        })
-      : t("cost.budgetWithoutCap", {
-          spent: estimateCurrency(plan.budget.spentCents, format, t),
-        }),
-  });
+  if (nativeEstimate?.unit !== "units")
+    rows.push({
+      label: t("scope.budget"),
+      value: hasMonthlyBudgetCap(plan.budget.capCents)
+        ? t("cost.budgetWithCap", {
+            cap: estimateCurrency(plan.budget.capCents, format, t),
+            spent: estimateCurrency(plan.budget.spentCents, format, t),
+          })
+        : t("cost.budgetWithoutCap", {
+            spent: estimateCurrency(plan.budget.spentCents, format, t),
+          }),
+    });
 
   return (
     <div className="overflow-hidden rounded-card border border-border">
@@ -147,14 +147,8 @@ function FirstCheckRunPlanBody({
 >) {
   const t = useTranslations("shared.firstCheck");
   const notices = guardNotices(plan, projectRef, t);
-  const options = [
-    { label: t("scope.firstKeyword"), value: "first" },
-    {
-      disabled: plan.readyCount <= 1,
-      label: t("scope.allReady", { count: plan.readyCount }),
-      value: "all",
-    },
-  ] as const;
+  // biome-ignore format: compact options list keeps this module under the project line cap.
+  const options = [{ label: t("scope.firstKeyword"), value: "first" }, { disabled: plan.readyCount <= 1, label: t("scope.allReady", { count: plan.readyCount }), value: "all" }] as const;
 
   return (
     <div className="grid gap-4.5">

@@ -42,6 +42,7 @@ const serverActionAliases = [
   "@/lib/actions/apiKey",
   "@/lib/actions/cloud",
   "@/lib/actions/competitors",
+  "@/lib/actions/default-project",
   "@/lib/actions/keyword",
   "@/lib/actions/keyword-import-export",
   "@/lib/actions/instance-migration",
@@ -66,8 +67,9 @@ const serverActionAliases = [
   "@/lib/actions/workspace",
 ];
 const serverActionPattern =
-  /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
+  /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|default-project|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
 const runtimeStubPatterns = [
+  /[\\/]credential-source-actions(?:\.ts)?$/,
   /^@\/components\/shell\/keyword-search$/,
   /^@\/lib\/api\/ratelimit$/,
   /^@\/lib\/auth\/(auth|client|otp-resend|request-login-code|session)$/,

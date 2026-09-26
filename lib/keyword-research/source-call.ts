@@ -6,6 +6,7 @@ import {
 } from "@/lib/cost-estimate/provider-rates";
 import { ProviderLookupSignal, requiredEstimatedCostCents } from "@/lib/provider-lookups/paid-call";
 import type { ProviderRateContext } from "@/lib/provider-rates/connection-context";
+import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type { ProviderCredentials, ResearchPage } from "@/lib/providers/types";
 import {
   researchProviderRankLocation,
@@ -57,6 +58,7 @@ export async function callResearchSource(input: {
   includeClickstream: boolean;
   limit: number;
   location: Awaited<ReturnType<typeof researchLocation>>["value"];
+  origin: ProviderRequestOrigin;
   projectId: string;
   rateContext: ProviderRateContext;
   seed: string;
@@ -87,6 +89,7 @@ export async function callResearchSource(input: {
         tag: usage?.tag,
       }),
     connection: input.selected.connection,
+    credential: input.origin.credential,
     feature: "keyword_research",
     includeClickstream: input.includeClickstream,
     itemCount: input.limit,
@@ -94,7 +97,7 @@ export async function callResearchSource(input: {
     provider: input.selected.provider,
     rateContext: input.rateContext,
     rate: sourceRate(input.selected, input.source),
-    source: "app",
+    source: input.origin.source,
     trigger: "manual",
   });
 }

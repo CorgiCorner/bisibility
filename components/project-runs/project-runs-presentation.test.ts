@@ -74,7 +74,6 @@ describe("applyOperationSnapshotToRuns", () => {
         ...importRun,
         progress: { completed: 28, total: 488, unit: "days" },
         snapshotState: "Importing",
-        snapshotPresentationTone: "info",
       },
     ]);
   });
@@ -101,7 +100,6 @@ describe("applyOperationSnapshotToRuns", () => {
         lifecycle: "waiting_to_resume",
         progress: { completed: 28, total: 488, unit: "days" },
         snapshotState: "Waiting for Google",
-        snapshotPresentationTone: "attention",
       },
     ]);
   });
@@ -117,7 +115,7 @@ describe("applyOperationSnapshotToRuns", () => {
           },
         ],
       ),
-    ).toMatchObject([{ snapshotState: "Delayed", snapshotPresentationTone: "attention" }]);
+    ).toMatchObject([{ snapshotState: "Delayed" }]);
   });
 
   it("does not infer coverage for another durable import row", () => {

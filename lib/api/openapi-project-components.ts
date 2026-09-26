@@ -174,6 +174,12 @@ export const projectSchemas = {
           "Updates the default market from a canonical location key. Country and city are resolved from the location catalog; device defaults to the current default device when omitted.",
         ),
       },
+      serp_depth: {
+        description:
+          "Default number of SERP results scanned per rank check. Omitted keeps the stored depth.",
+        enum: [10, 20, 50, 100],
+        type: "integer",
+      },
       serp_stop_on_match: {
         description: "Set false to fetch the full configured depth for competitor snapshots.",
         type: "boolean",

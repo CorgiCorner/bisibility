@@ -52,8 +52,9 @@ export function ScheduleEditorMembers({
       </header>
 
       {members.length ? (
-        <div className="min-w-0 [&>[role=table]]:border-0">
+        <div className="min-w-0">
           <DataTable
+            bordered={false}
             ariaLabel={t("editor.membersTable")}
             columns={scheduleMemberTableColumns(t)}
             id="schedule-editor-members"

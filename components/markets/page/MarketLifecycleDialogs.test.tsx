@@ -78,7 +78,7 @@ describe("market lifecycle dialogs", () => {
 
     expect(screen.getByRole("heading", { name: "Restore Malaga core?" })).toBeInTheDocument();
     expect(
-      screen.getByText("Restoring resumes 186 keywords on their schedules - approx $5.15 a month."),
+      screen.getByText("Restoring resumes 186 keywords on their schedules."),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Restore market" }));

@@ -1,4 +1,7 @@
 import { hashApiKey } from "@/lib/providers/crypto";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { ProviderChainError } from "@/lib/rank-check/provider-chain-error";
+import { LaunchRankCheckRunError } from "@/lib/rank-check/runs/launch-types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetIdempotencyForTests } from "./idempotency";
 import { resetRateLimitStateForTests } from "./ratelimit";
@@ -71,6 +74,7 @@ const mocks = vi.hoisted(() => {
       },
     },
     launchSingleRankCheckRun: vi.fn(),
+    runInlineRankCheck: vi.fn(),
     resolveKeywordLocation: vi.fn(
       async (input: {
         country?: string;
@@ -134,6 +138,7 @@ vi.mock("@/lib/providers/registry", async (importOriginal) => ({
 vi.mock("@/lib/rank-check/runs/launch-single", () => ({
   launchSingleRankCheckRun: mocks.launchSingleRankCheckRun,
 }));
+vi.mock("@/lib/rank-check/runs/inline", () => ({ runInlineRankCheck: mocks.runInlineRankCheck }));
 
 const rawKey = "bsb_key_test_1234567890abcdef";
 
@@ -921,7 +926,74 @@ describe("public API router", () => {
       status: "queued",
     });
     expect(mocks.launchSingleRankCheckRun).toHaveBeenCalledWith(
-      expect.objectContaining({ keywordId: "kw_a00000000000000000000000", trigger: "api" }),
+      expect.objectContaining({
+        keywordId: "kw_a00000000000000000000000",
+        origin: { credential: { id: "api_key_1", kind: "project_key" }, source: "api" },
+        trigger: "api",
+      }),
+    );
+  });
+
+  it.each([
+    ["balance", 402, null],
+    ["budget", 429, "connection"],
+  ] as const)(
+    "maps inline rank %s admission through authenticated dispatch",
+    async (reason, status, scope) => {
+      process.env.SCHEDULER_DRIVER = "none";
+      mocks.prisma.keyword.findFirst.mockResolvedValue({
+        id: "keyword_1",
+        project: { domain: "example.com", isSample: false },
+        projectId: "project_1",
+        publicId: "kw_a00000000000000000000000",
+        text: "rank tracker",
+      });
+      const admission = new DeploymentAdmissionExhaustedError(
+        reason,
+        scope ? { scope, surface: "programmatic" } : undefined,
+      );
+      mocks.runInlineRankCheck.mockRejectedValueOnce(
+        new ProviderChainError(
+          [{ provider: "dataforseo", message: admission.message, reason: "allocation_exhausted" }],
+          admission,
+        ),
+      );
+      const response = await call(
+        authedRequest("POST", "/keywords/kw_a00000000000000000000000/checks", {}),
+        "/keywords/kw_a00000000000000000000000/checks",
+      );
+      expect(response.status).toBe(status);
+      expect(response.headers.get("Retry-After") === null).toBe(reason === "balance");
+      const body = await response.json();
+      if (scope) expect(body.details).toMatchObject({ scope, surface: "programmatic" });
+    },
+  );
+
+  it("refuses a rank-check request whose estimate exceeds max_cost_cents", async () => {
+    mocks.prisma.keyword.findFirst.mockResolvedValue({
+      id: "keyword_1",
+      project: { domain: "example.com", isSample: false },
+      projectId: "project_1",
+      publicId: "kw_a00000000000000000000000",
+      text: "rank tracker",
+    });
+    mocks.launchSingleRankCheckRun.mockRejectedValue(
+      new LaunchRankCheckRunError("cost_limit_exceeded", 12),
+    );
+
+    const response = await call(
+      authedRequest("POST", "/keywords/kw_a00000000000000000000000/checks", {
+        max_cost_cents: 5,
+      }),
+      "/keywords/kw_a00000000000000000000000/checks",
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(body.details.estimated_cost_cents).toBe(12);
+    expect(body.type).toBe("https://bisibility.com/problems/cost_limit_exceeded");
+    expect(mocks.launchSingleRankCheckRun).toHaveBeenCalledWith(
+      expect.objectContaining({ maxCostCents: 5, trigger: "api" }),
     );
   });
 

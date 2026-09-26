@@ -1,12 +1,14 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
 import { Menu } from "@/components/ui/Menu";
 import { menuSelectPaperStyle } from "@/components/ui/MenuSelect";
 import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
-import { type CostRateInfo, runCostCents } from "@/lib/cost-estimate/project-estimate";
+import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
+import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react/dist/csr/DotsThree";
 import { useTranslations } from "next-intl";
@@ -26,19 +28,14 @@ type KeywordHeaderActionsProps = {
   showCheck?: boolean;
 };
 
-function checkCost(depth: SerpDepth, providerRate?: CostRateInfo) {
-  if (!providerRate) return null;
-  const costCents = runCostCents([depth], providerRate);
-  return costCents == null ? null : costCents / 100;
-}
-
 function depthOptionLabel(
   depth: SerpDepth,
   providerRate: CostRateInfo | undefined,
   t: ReturnType<typeof useTranslations<"projectRankTracker.keywordDetail.actions">>,
+  usage: ReturnType<typeof useNativeUsageFormat>,
 ) {
-  const cost = checkCost(depth, providerRate);
-  return t("topWithCost", { cost: cost == null ? "" : t("cost", { cost }), depth });
+  const estimate = providerRate ? estimateRankUsage([depth], providerRate) : null;
+  return t("topWithCost", { cost: estimate ? ` · ${usage.format(estimate)}` : "", depth });
 }
 
 function runCheckActionLabel(
@@ -64,6 +61,7 @@ export function KeywordHeaderActions({
   showCheck = true,
 }: Readonly<KeywordHeaderActionsProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail.actions");
+  const usage = useNativeUsageFormat();
   const [actionsMenuAnchor, setActionsMenuAnchor] = useState<HTMLElement | null>(null);
   const [depthSelection, setDepthSelection] = useState(() => ({
     effectiveDepth,
@@ -88,14 +86,14 @@ export function KeywordHeaderActions({
             copy={{
               changeDefault: t("changeDefault"),
               depthMenu: t("depthMenu"),
-              optionLabel: (depth) => depthOptionLabel(depth, providerRate, t),
+              optionLabel: (depth) => depthOptionLabel(depth, providerRate, t, usage),
               shallowVisibility: t("shallowVisibility"),
             }}
             currentDepth={selectedDepth}
             disabled={readOnly || runPending}
             onAction={() => onRunCheck(selectedDepth)}
             onDepthChange={(depth) => setDepthSelection({ effectiveDepth, selectedDepth: depth })}
-            optionLabel={(depth) => depthOptionLabel(depth, providerRate, t)}
+            optionLabel={(depth) => depthOptionLabel(depth, providerRate, t, usage)}
             spinning={runPending}
           />
         </ProjectReadOnlyTooltip>

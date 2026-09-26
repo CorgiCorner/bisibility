@@ -1,9 +1,11 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
 import { Button } from "@/components/ui/Button";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
+import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { appPath } from "@/lib/routing/app-path";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
 import { CaretLeftIcon as CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
@@ -92,7 +94,7 @@ export function SavedKeywordsBulkBar({
   canDelete,
   canTrack,
   count,
-  costCents,
+  nativeUsage,
   onClear,
   onRemove,
   onTrack,
@@ -101,23 +103,31 @@ export function SavedKeywordsBulkBar({
   canDelete: boolean;
   canTrack: boolean;
   count: number;
-  costCents: number | null;
+  nativeUsage: NativeUsageEstimate | null;
   onClear: () => void;
   onRemove: () => void;
   onTrack: () => void;
   trackDisabledReason?: string;
 }>) {
+  const usage = useNativeUsageFormat();
   const t = useTranslations("projectRankTracker.keywordImport.management.saved");
-  const cost = costCents == null ? null : costCents / 100;
+  const quota = nativeUsage?.unit === "units";
+  const known = nativeUsage != null && nativeUsage.quantity !== null && nativeUsage.unit !== null;
+  const cost = (nativeUsage?.quantity ?? 0) / 100;
+  const usageText = usage.format(nativeUsage);
+  const summary = trackDisabledReason
+    ? undefined
+    : !known
+      ? t("trackingUnavailable", { count })
+      : quota
+        ? t("trackingAllUsage", { count, usage: usageText })
+        : t("trackingAll", { cost, count });
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-[#e8d5c9] bg-accent-soft px-4 py-[9px]">
       <strong className="whitespace-nowrap text-[13px] text-accent-text">
         {t("selected", { count })}
       </strong>
-      <span className="font-sans tabular-nums text-[11px] text-[#a85c22]">
-        {trackDisabledReason ??
-          (cost == null ? t("trackingUnavailable", { count }) : t("trackingAll", { cost, count }))}
-      </span>
+      <span className="font-sans tabular-nums text-[11px] text-[#a85c22]">{summary}</span>
       <span className="flex-1" />
       {canDelete ? (
         <Button
@@ -136,18 +146,26 @@ export function SavedKeywordsBulkBar({
       ) : null}
       {canTrack ? (
         <Button
-          aria-label={cost == null ? t("track", { count }) : t("trackAria", { cost, count })}
+          aria-label={
+            !known
+              ? t("track", { count })
+              : quota
+                ? t("trackAriaUsage", { count, usage: usageText })
+                : t("trackAria", { cost, count })
+          }
           disabled={Boolean(trackDisabledReason)}
           onClick={onTrack}
           size="sm"
           style={{ minHeight: 30 }}
         >
           {t("track", { count })}
-          {cost == null ? null : (
+          {known ? (
             <span className="ml-1.5 font-sans tabular-nums text-[12px] font-medium">
-              {t("monthlyEstimate", { cost })}
+              {quota
+                ? t("monthlyEstimateUsage", { usage: usageText })
+                : t("monthlyEstimate", { cost })}
             </span>
-          )}
+          ) : null}
         </Button>
       ) : null}
       <button

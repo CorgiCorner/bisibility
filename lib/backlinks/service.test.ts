@@ -1,4 +1,5 @@
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { analyzeBacklinks } from "./service";
 import { UnsupportedBacklinksTargetError } from "./target";
@@ -128,9 +129,9 @@ function snapshot(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function run(overrides: Record<string, unknown> = {}) {
+function run(overrides: Record<string, unknown> = {}, origin = APP_REQUEST_ORIGIN) {
   return analyzeBacklinks(
-    { projectId: "prj_1" },
+    { origin, projectId: "prj_1" },
     { resultLimit: 100, target: "acme-store.com", ...overrides },
   );
 }
@@ -196,15 +197,24 @@ describe("backlinks analyze service", () => {
     expect(provider.fetchBacklinksRows).not.toHaveBeenCalled();
   });
 
-  it("returns a provider-rate estimate without any provider call", async () => {
-    await expect(run({ estimateOnly: true })).resolves.toMatchObject({
-      costCents: 5,
+  it("returns a cost-only estimate without any provider call", async () => {
+    const outcome = await run({ estimateOnly: true });
+    expect(outcome).toEqual({
+      cached: false,
+      cachedUntil: null,
+      costCents: 7,
       estimate: true,
-      estimatedCostCents: 5,
-      history: [],
+      estimatedCostCents: 7,
+      includeSubdomains: true,
       ok: true,
-      rows: [],
+      provider: "dataforseo",
+      target: "acme-store.com",
+      targetScope: "site",
     });
+    // A dry run must not look like an empty backlink profile.
+    expect(outcome).not.toHaveProperty("summary");
+    expect(outcome).not.toHaveProperty("rows");
+    expect(outcome).not.toHaveProperty("fetchedAt");
     expect(mocks.paidCall).not.toHaveBeenCalled();
   });
 
@@ -212,13 +222,11 @@ describe("backlinks analyze service", () => {
     mocks.prisma.backlinkSnapshot.findFirst.mockResolvedValue(snapshot());
     await expect(run({ estimateOnly: true })).resolves.toMatchObject({
       cached: true,
+      cachedUntil: expect.any(String),
       costCents: 0,
       estimate: true,
-      estimatedCostCents: 5,
-      fetchedRowCount: 0,
-      history: [],
+      estimatedCostCents: 7,
       ok: true,
-      rows: [],
     });
     expect(mocks.prisma.backlinkSnapshot.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -246,7 +254,7 @@ describe("backlinks analyze service", () => {
   it("skips history in a page-scope estimate", async () => {
     await expect(
       run({ estimateOnly: true, target: "https://acme-store.com/product", targetScope: "page" }),
-    ).resolves.toMatchObject({ estimatedCostCents: 3, targetScope: "page" });
+    ).resolves.toMatchObject({ estimatedCostCents: 5, targetScope: "page" });
   });
 
   it("surfaces provider status and lost date without self-diffing", async () => {
@@ -270,10 +278,9 @@ describe("backlinks analyze service", () => {
       }),
     );
     const result = await run();
-    expect(result.ok && result.rows.map((row) => row.sourceDomain)).toEqual([
-      "reddit.com",
-      "recent.example.org",
-    ]);
+    expect(
+      result.ok && !("estimate" in result) && result.rows.map((row) => row.sourceDomain),
+    ).toEqual(["reddit.com", "recent.example.org"]);
   });
 
   it("propagates budget exhaustion", async () => {
@@ -283,10 +290,11 @@ describe("backlinks analyze service", () => {
     await expect(run()).resolves.toEqual({ ok: false, reason: "budget_exhausted" });
     expect(mocks.preflightBudget).toHaveBeenCalledWith({
       connectionId: "connection_1",
-      estimatedCostCents: 5,
+      estimatedCostCents: 7,
       estimatedUsageQuantity: 3,
       projectId: "project_1",
       provider: "dataforseo",
+      surface: "app",
     });
     expect(mocks.paidCall).not.toHaveBeenCalled();
   });
@@ -308,6 +316,7 @@ describe("backlinks analyze service", () => {
 
   it("enforces max cost before any paid call", async () => {
     await expect(run({ maxCostCents: 4 })).resolves.toEqual({
+      estimatedCostCents: 7,
       ok: false,
       reason: "cost_limit_exceeded",
     });
@@ -316,10 +325,28 @@ describe("backlinks analyze service", () => {
 
   it("accepts a zero max cost and rejects any paid call", async () => {
     await expect(run({ maxCostCents: 0 })).resolves.toEqual({
+      estimatedCostCents: 7,
       ok: false,
       reason: "cost_limit_exceeded",
     });
     expect(mocks.paidCall).not.toHaveBeenCalled();
+  });
+
+  it("threads the paying request origin into every paid provider call", async () => {
+    const origin = {
+      credential: { id: "key_1", kind: "project_key" as const },
+      source: "sdk" as const,
+    };
+    await run({}, origin);
+
+    expect(mocks.paidCall).toHaveBeenCalled();
+    for (const [input] of mocks.paidCall.mock.calls) {
+      expect(input).toMatchObject({
+        credential: { id: "key_1", kind: "project_key" },
+        source: "sdk",
+        trigger: "manual",
+      });
+    }
   });
 
   it("coalesces concurrent analyses into one provider flight", async () => {

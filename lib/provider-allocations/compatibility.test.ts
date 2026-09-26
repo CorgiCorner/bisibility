@@ -56,6 +56,7 @@ const connection = (overrides: Partial<AllocationConnection>): AllocationConnect
   enabled: true,
   id: "conn",
   priority: 100,
+  programmaticAllocationAmountPerMonth: null,
   provider: "metered-a",
   status: "connected",
   ...overrides,
@@ -92,10 +93,18 @@ describe("provider allocation compatibility", () => {
     ).toEqual([
       {
         allocation: { amountPerMonth: 5000, unit: "cents" },
+        credits: { app: null, programmatic: null },
         internalConnectionId: "primary",
+        programmaticAllocation: { amountPerMonth: 5000, unit: "cents" },
         source: "legacy_project",
       },
-      { allocation: null, internalConnectionId: "other", source: "none" },
+      {
+        allocation: null,
+        credits: { app: null, programmatic: null },
+        internalConnectionId: "other",
+        programmaticAllocation: null,
+        source: "none",
+      },
     ]);
     expect(
       resolveEffectiveAllocations({
@@ -125,9 +134,57 @@ describe("provider allocation compatibility", () => {
       project: { budgetCapCents: 5000, providerAllocationsInitializedAt: new Date() },
     });
     expect(values).toEqual([
-      { allocation: null, internalConnectionId: "first", source: "none" },
-      { allocation: null, internalConnectionId: "later", source: "none" },
+      {
+        allocation: null,
+        credits: { app: null, programmatic: null },
+        internalConnectionId: "first",
+        programmaticAllocation: null,
+        source: "none",
+      },
+      {
+        allocation: null,
+        credits: { app: null, programmatic: null },
+        internalConnectionId: "later",
+        programmaticAllocation: null,
+        source: "none",
+      },
     ]);
+  });
+
+  it("reads the programmatic cap from its column beside the app cap", () => {
+    const values = resolveEffectiveAllocations({
+      catalog,
+      connections: [
+        connection({
+          allocationAmountPerMonth: 7000,
+          allocationUnit: "cents",
+          programmaticAllocationAmountPerMonth: 3000,
+        }),
+      ],
+      project: { budgetCapCents: 5000, providerAllocationsInitializedAt: new Date() },
+    });
+    expect(values[0]).toEqual({
+      allocation: { amountPerMonth: 7000, unit: "cents" },
+      credits: { app: null, programmatic: null },
+      internalConnectionId: "conn",
+      programmaticAllocation: { amountPerMonth: 3000, unit: "cents" },
+      source: "connection",
+    });
+  });
+
+  it("falls back to the catalog unit for a programmatic-only cap", () => {
+    const values = resolveEffectiveAllocations({
+      catalog,
+      connections: [
+        connection({ allocationUnit: null, programmaticAllocationAmountPerMonth: 2500 }),
+      ],
+      project: { budgetCapCents: 5000, providerAllocationsInitializedAt: new Date() },
+    });
+    expect(values[0]).toMatchObject({
+      allocation: null,
+      programmaticAllocation: { amountPerMonth: 2500, unit: "cents" },
+      source: "none",
+    });
   });
 
   it.each([0, -1, 1.5, Number.MAX_SAFE_INTEGER, 2_147_483_648])(

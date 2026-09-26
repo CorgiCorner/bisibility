@@ -7,6 +7,8 @@ type Bearer = (
 
 export { domainOverviewSchemas } from "./openapi-domain-overview-schemas";
 
+import { withCreditsExhausted } from "./openapi-operations";
+
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 
 const problemResponse = (description: string) => ({
@@ -26,7 +28,7 @@ function operation(
     requestBody?: object;
     responses: Record<string, object>;
   };
-  return {
+  return withCreditsExhausted({
     ...base,
     description: options.description,
     requestBody: { ...base.requestBody, required: true },
@@ -38,7 +40,7 @@ function operation(
       ),
       "429": problemResponse("budget_exhausted, in_progress, or rate_limited"),
     },
-  };
+  });
 }
 
 export function domainOverviewPaths(input: { bearer: Bearer }) {

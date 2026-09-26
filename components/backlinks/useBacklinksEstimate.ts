@@ -1,6 +1,7 @@
 "use client";
 
 import type { AnalyzeBacklinksAction, AnalyzeBacklinksActionInput } from "@/lib/actions/backlinks";
+import { isBacklinksEstimate } from "@/lib/backlinks/types";
 import { useRef, useState } from "react";
 import { type BacklinksEstimateView, EMPTY_BACKLINKS_ESTIMATE } from "./backlinks-workspace-model";
 
@@ -31,9 +32,10 @@ export function useBacklinksEstimate(
           requestInput(target, { ...overrides, estimateOnly: true }),
         );
         if (sequence !== requestSequence.current) return;
+        const dryRun = outcome.ok && isBacklinksEstimate(outcome) ? outcome : null;
         setEstimate({
-          cached: outcome.ok && outcome.cached,
-          costCents: outcome.ok ? (outcome.estimatedCostCents ?? outcome.costCents) : null,
+          cached: dryRun?.cached ?? false,
+          costCents: dryRun?.estimatedCostCents ?? null,
           loading: false,
           valid: true,
         });

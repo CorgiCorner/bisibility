@@ -42,6 +42,7 @@ describe("KeywordHeaderCard", () => {
       projectId: "prj_1",
       providerId: "dataforseo",
       spec: { kind: "single", keywordId: "keyword_1", v: 1 },
+      trigger: "manual",
     });
     expect(actions.runCheckNowAction).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Start run" }));

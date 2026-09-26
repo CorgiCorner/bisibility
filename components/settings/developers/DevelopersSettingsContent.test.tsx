@@ -21,6 +21,7 @@ const apiKeys = [
     lastUsedLabel: "last used 2 hours ago",
     maskedValue: "bsb_key_live_example******",
     name: "CI deploy checks",
+    spendThisMonthCents: 123,
   },
 ] as const;
 
@@ -85,6 +86,20 @@ describe("DevelopersSettingsContent", () => {
     expect(within(row as HTMLElement).getByText("bsb_key_live_example******")).toBeVisible();
     expect(within(row as HTMLElement).queryByText(/created by/i)).not.toBeInTheDocument();
     expect(within(row as HTMLElement).queryByText("Read and write")).not.toBeInTheDocument();
+  });
+
+  it("shows the formatted monthly spend with the programmatic budget tooltip", () => {
+    render(<DevelopersSettingsContent {...baseProps} />);
+
+    const copy = developersSettingsFeatureTestMessages.projectSettingsDevelopers.apiKeys;
+    const row = screen
+      .getByRole("region", { name: "API keys" })
+      .querySelector("[data-api-key-row]");
+    const spend = within(row as HTMLElement).getByText(
+      copy.spendThisMonth.replace("{amount}", "$1.23"),
+    );
+    expect(spend).toBeVisible();
+    expect(spend).toHaveAttribute("title", copy.spendTooltip);
   });
 
   it("renders the literal no-keys state as a quiet row", () => {

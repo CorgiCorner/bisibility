@@ -55,6 +55,10 @@ export async function saveAnalyticsConsent(values: { analytics: boolean; replay:
   };
 }
 
+export async function setDefaultProject(input: { projectId: string | null }) {
+  return { ok: true as const, value: { projectId: input.projectId } };
+}
+
 export async function addSignalNote() {
   return { id: "sig_preview" };
 }
@@ -627,6 +631,7 @@ export const bulkSetTargetUrl = asyncNoop;
 export const bulkTagKeywords = asyncNoop;
 export const changeMemberRole = asyncNoop;
 export const connectProvider = asyncNoop;
+export const switchProviderToHosted = asyncNoop;
 export const createAlertRule = asyncNoop;
 export const createCloudMigrationHandoffAction = asyncNoop;
 export const createCloudImportWorkspace = asyncNoop;

@@ -6,6 +6,7 @@ import type {
   KeywordResearchMode,
   KeywordResearchSource,
   KeywordResearchSourceDiagnostic,
+  KeywordResearchSourceEstimate,
   KeywordResearchSourceReason,
 } from "./types";
 
@@ -54,7 +55,7 @@ export async function estimateKeywordResearch(input: {
   projectId: string;
   seed: string;
   selected: ResearchSelection;
-}): Promise<{ cached: boolean; costCents: number; sources: KeywordResearchSourceDiagnostic[] }> {
+}): Promise<{ cached: boolean; costCents: number; sources: KeywordResearchSourceEstimate[] }> {
   const sources = sourcesForMode(input.mode);
   const diagnostics = await Promise.all(
     sources.map(async (source) => {
@@ -72,13 +73,7 @@ export async function estimateKeywordResearch(input: {
             }),
           );
       const cached = Boolean(cachedEntry);
-      return {
-        cached,
-        costCents: cached ? 0 : sourceEstimate({ ...input, source }),
-        returned: 0,
-        source,
-        status: "ok" as const,
-      };
+      return { cached, costCents: cached ? 0 : sourceEstimate({ ...input, source }), source };
     }),
   );
   return {

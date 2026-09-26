@@ -12,6 +12,7 @@ import {
   waitForProviderLookupCache,
 } from "@/lib/provider-lookups/cache";
 import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
+import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type { KeywordMetrics, ResearchKeywordRow } from "@/lib/providers/types";
 import {
   researchProviderRankLocation,
@@ -125,6 +126,7 @@ export async function fetchKeywordMetrics(input: {
   includeClickstream: boolean;
   keywords: string[];
   maxCostCents?: number;
+  origin: ProviderRequestOrigin;
   projectId: string;
 }): Promise<KeywordMetricsOutcome> {
   const project = await keywordResearchProject(input.projectId);
@@ -204,7 +206,11 @@ export async function fetchKeywordMetrics(input: {
         rate: keywordMetricsRate(selected.provider.id),
       });
       if (input.maxCostCents !== undefined && estimatedCostCents > input.maxCostCents) {
-        throw new ProviderLookupSignal({ ok: false, reason: "cost_limit_exceeded" });
+        throw new ProviderLookupSignal({
+          estimatedCostCents,
+          ok: false,
+          reason: "cost_limit_exceeded",
+        });
       }
       const page = await paidProviderCall({
         call: (credentials, usage) =>
@@ -216,6 +222,7 @@ export async function fetchKeywordMetrics(input: {
             tag: usage?.tag,
           }) ?? Promise.resolve({ costCents: 0, rows: [] }),
         connection: selected.connection,
+        credential: input.origin.credential,
         feature: "keyword_metrics",
         includeClickstream: input.includeClickstream,
         itemCount: chunk.length,
@@ -223,7 +230,7 @@ export async function fetchKeywordMetrics(input: {
         provider: selected.provider,
         rateContext,
         rate: keywordMetricsRate(selected.provider.id),
-        source: "app",
+        source: input.origin.source,
         trigger: "manual",
       });
       costCents += page.costCents;

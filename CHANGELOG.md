@@ -1,40 +1,84 @@
 # Changelog
 
+## [0.26.0] - 2026-09-26
+
+### Added
+
+- Separate monthly budgets for app/scheduled checks and API/MCP/SDK usage, with optional `X-Bisibility-Source`, `max_cost_cents`, and 429/Retry-After budget errors.
+
+### Changed
+
+- **Breaking:** Backlinks and keyword research dry runs return cost-only estimates without report fields, rows or source statuses.
+
+- Install explains Claude and ChatGPT setup separately; new ChatGPT OAuth approvals grant read-only access.
+
+- Provider connects honor priority and omitted SERP depth; cost estimates and Plausible domain guidance are corrected.
+
+### Fixed
+
+- Rank Tracker and Runs show assigned schedules, allow overlapping manual checks, keep Search Console paging and full-screen tables, and remember a default project.
+
 ## [0.25.0] - 2026-09-18
 
-- Responses state what they measure: latest vs latest successful check with failure codes, matrix data state and dates, readiness, stats scope; competitor removal stops its alerts.
+### Added
 
-- Stored research reports are readable without a provider, read-only cost estimates work with read-only access, and the MCP session exposes its effective profile.
+- Added read-only endpoints that list and read stored backlinks, domain overview and keyword research reports with a fresh or stale state, without calling a provider.
 
-- The install page and docs explain which MCP tools each client exposes, the capabilities catalog maps every entry to its MCP tool, and the language switcher shows locale flags.
+- Added MCP tools that estimate backlinks, domain overview and keyword research costs with read-only access, and `get_session_profile` for the effective session profile.
+
+### Changed
+
+- Keyword and rank-check responses separate the latest attempt from the latest successful check with a failure code; provider responses and projects state readiness.
+
+- Competitor lists return a market matrix with data state and check dates; search-performance stats accept page, match and metric filters and state their scope.
+
+- Install explains which MCP tools each client exposes, and the capabilities catalog maps every entry to its MCP tool without listing `api_key` inputs.
+
+### Fixed
+
+- Removing a competitor now disables its alert rules so they stop firing, and the Remove competitor dialog describes what removal hides.
 
 ## [0.24.0] - 2026-09-16
 
-- Added Spanish, Japanese and Polish interface languages with typed catalogs and account preferences; Spanish marketing uses `/es` redirects, `hreflang` and localized sitemaps.
+### Added
 
-- Split hosted, API and self-host documentation into audience guides, and added a dismissible ChatGPT connection guide, app icon and context-aware starter prompt to Install.
+- Added Spanish, Japanese and Polish interface languages on typed message catalogs, with automatic detection and a per-user language preference.
+
+- Added a ChatGPT connection guide, a downloadable app icon and a starter prompt that matches the project's progress to the Install page.
+
+### Changed
+
+- Split hosted, API and self-host documentation into audience guides and documented the Concept, Alpha and Beta maturity stages in the roadmap.
 
 - Simplified OAuth approval with app-specific actions, plain-language permissions, explicit API-token risks and optional technical details.
 
-- Documented Concept, Alpha and Beta roadmap maturity stages and added a purple status-text token with the same contrast guarantee as other status colors.
+- Release-asset upgrades run without a git checkout when verify.mjs and manifest.mjs sit next to upgrade.sh.
 
-- Let release-asset upgrades run without a git checkout when verify.mjs and manifest.mjs sit next to upgrade.sh.
+### Fixed
+
+- Purple status text now meets the same contrast guarantee as the other status colors through a new `purple-text` token.
 
 ## [0.23.0] - 2026-09-12
 
-- Made provider budgets and account errors clearer, added settings search and Usage, and let you remove completed runs without losing history.
+### Added
 
-- Refined dashboard and Runs layouts with header market and device controls, clearer tables and links, and a skippable onboarding keyword step.
+- Added an editable demo mode with separate Owner and read-only Viewer accounts and durable saved research results.
 
-- Added editable demos with Owner and Viewer roles, durable saved research, and reliable Backlinks and Domain Overview pages.
+- Added settings search, provider budget autofill from the account balance, deletion of completed runs from history, and a skippable onboarding keyword step.
 
-- Improved OpenAPI schemas, docs inventory and examples, with hosted, versioning, and Domain Overview guides.
+### Changed
 
-- Unified country and select menus across research and markets; **Breaking:** waitlist signups no longer sync Resend contacts or segments.
+- **Breaking:** Removed Resend contact and segment sync. Waitlist signups are stored only in the database; `RESEND_CONTACTS_API_KEY` and `RESEND_SEGMENT_*` are no longer read.
 
-- Clarified local and hosted quickstart success, made SDK first examples copyable, and linked REST guides to generated API reference pages.
+- Moved market and device controls into the page header, aligned the dashboard and Runs layouts, and moved Top 10 guidance from banners into control tooltips.
 
-- Simplified documentation navigation and added generated client references, SERP observation guidance, and project support links.
+- Country and select menus share one control with flags from a cached sprite, a pinned search field, and tracked countries listed first.
+
+- Reorganized documentation with named OpenAPI schemas, generated client references, copyable quickstarts, and hosted and versioning guides.
+
+### Fixed
+
+- Fixed restricted provider accounts shown as out of funds, stored Backlinks and Domain Overview demo pages, demo Owner login codes, and Runs table loading states.
 
 ## [0.22.1] - 2026-09-09
 

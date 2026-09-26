@@ -2,31 +2,25 @@
 
 import { useToast } from "@/components/ui/toast-context";
 import type { LoadSearchInsightsRowsAction } from "@/lib/actions/search-insights-rows";
-import {
-  FIRST_VIEW_ROWS,
-  ROWS_PAGE_LIMIT,
-  SEARCH_INSIGHTS_ROWS_CAP,
-} from "@/lib/search-insights/constants";
-import type { SearchInsightsFirstView } from "@/lib/search-insights/queries/first-view";
+import { FIRST_VIEW_ROWS } from "@/lib/search-insights/constants";
 import type {
-  SearchInsightsPageRow,
-  SearchInsightsQueryRow,
-} from "@/lib/search-insights/queries/top-rows-model";
+  SearchInsightsFirstView,
+  SearchInsightsRowsPage,
+} from "@/lib/search-insights/queries/first-view";
 import {
   SEARCH_INSIGHTS_DEFAULT_SORT,
-  type SearchInsightsSort,
   type SearchInsightsSortKey,
 } from "@/lib/search-insights/queries/top-rows-sort";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import {
-  nextShow,
   nextSort,
   type PageRowsState,
   type QueryRowsState,
-  type RowsShow,
-  rowsReach,
+  type RowsQuery,
+  rowsOffset,
+  rowsQuery,
   type SearchInsightsRowKind,
 } from "./search-insights-rows-model";
 
@@ -38,70 +32,63 @@ export type UseSearchInsightsRowsInput = {
   view: SearchInsightsFirstView;
 };
 
-type Loaded = {
-  pages: readonly SearchInsightsPageRow[];
-  queries: readonly SearchInsightsQueryRow[];
-  total: number;
-  tracked: readonly string[];
-};
-
 /** One spinner per table: each pages on its own, so neither request clears the other's. */
 type RowsLoading = Record<SearchInsightsRowKind, boolean>;
 
 const IDLE: RowsLoading = { pages: false, queries: false };
 
-/** The rows on screen, and the server view they were read for. */
+// Long enough that typing a word sends one request, short enough that the table keeps up.
+const SEARCH_DEBOUNCE_MS = 300;
+
+/** The page on screen for each table, and the server view it was read for. */
 type RowsSnapshot = {
   pages: PageRowsState;
   queries: QueryRowsState;
   property: string;
-  /** The order each table was read in. A new view resets both to the read's own default. */
-  sort: Record<SearchInsightsRowKind, SearchInsightsSort>;
   tracked: ReadonlySet<string>;
   view: SearchInsightsFirstView;
 };
 
 function seedRows(view: SearchInsightsFirstView, property: string): RowsSnapshot {
+  const firstPage: RowsQuery = {
+    page: 1,
+    pageSize: FIRST_VIEW_ROWS,
+    search: "",
+    sort: SEARCH_INSIGHTS_DEFAULT_SORT,
+  };
   return {
-    pages: { rows: view.pages.rows, show: FIRST_VIEW_ROWS, total: view.pages.total },
-    queries: { rows: view.queries.rows, show: FIRST_VIEW_ROWS, total: view.queries.total },
+    pages: { ...firstPage, rows: view.pages.rows, total: view.pages.total },
+    queries: { ...firstPage, rows: view.queries.rows, total: view.queries.total },
     property,
-    sort: { pages: SEARCH_INSIGHTS_DEFAULT_SORT, queries: SEARCH_INSIGHTS_DEFAULT_SORT },
     tracked: new Set(view.trackedTexts),
     view,
   };
 }
 
-function withShow(
+function withQuery(
   current: RowsSnapshot,
   kind: SearchInsightsRowKind,
-  show: RowsShow,
+  query: RowsQuery,
 ): RowsSnapshot {
-  if (kind === "queries") return { ...current, queries: { ...current.queries, show } };
-  return { ...current, pages: { ...current.pages, show } };
+  if (kind === "queries") return { ...current, queries: { ...current.queries, ...query } };
+  return { ...current, pages: { ...current.pages, ...query } };
 }
 
-function withLoaded(
-  current: RowsSnapshot,
-  kind: SearchInsightsRowKind,
-  show: RowsShow,
-  loaded: Loaded,
-): RowsSnapshot {
-  if (kind === "queries") {
+function withPage(current: RowsSnapshot, page: SearchInsightsRowsPage): RowsSnapshot {
+  if (page.kind === "queries") {
     return {
       ...current,
-      queries: { rows: loaded.queries, show, total: loaded.total },
-      tracked: new Set(loaded.tracked),
+      queries: { ...current.queries, rows: page.rows, total: page.total },
+      tracked: new Set(page.trackedTexts),
     };
   }
-  return { ...current, pages: { rows: loaded.pages, show, total: loaded.total } };
+  return { ...current, pages: { ...current.pages, rows: page.rows, total: page.total } };
 }
 
 /**
- * The tables hold what the first render loaded and ask for the rest only when the customer
- * asks for it. Every page comes from stored rows, so expanding costs nothing at the provider,
- * and the loop keeps going until it holds the window - or the cap, on a window too big for one
- * table, where the export takes over.
+ * The tables open on the page the first render loaded and read every other page from the server.
+ * A page, a page size, an order and a search are one request each: the rows come from stored
+ * data, so paging costs nothing at the provider, and the browser only holds the page on screen.
  */
 export function useSearchInsightsRows({
   loadRowsAction,
@@ -114,8 +101,9 @@ export function useSearchInsightsRows({
   const t = useTranslations("projectSearchInsights.copy");
   const [snapshot, setSnapshot] = useState<RowsSnapshot>(() => seedRows(view, property));
   const [loading, setLoading] = useState<RowsLoading>(IDLE);
-  // A newer read owns its table: an old expansion cannot replace a newer sort or clear its spinner.
+  // A newer read owns its table: an old page cannot replace a newer one or clear its spinner.
   const latestRequest = useRef<Record<SearchInsightsRowKind, number>>({ pages: 0, queries: 0 });
+  const searchTimers = useRef<Partial<Record<SearchInsightsRowKind, number>>>({});
 
   function beginRequest(kind: SearchInsightsRowKind) {
     latestRequest.current[kind] += 1;
@@ -127,7 +115,7 @@ export function useSearchInsightsRows({
   }
 
   // Another window or property arrives as a new view through a soft navigation, which keeps
-  // this instance alive: the rows read for the previous one are dropped here, during render,
+  // this instance alive: the pages read for the previous one are dropped here, during render,
   // so the tables never describe a window the rest of the page has already left.
   const rows =
     snapshot.view === view && snapshot.property === property ? snapshot : seedRows(view, property);
@@ -137,142 +125,82 @@ export function useSearchInsightsRows({
   }
 
   /**
-   * Reads pages in order until the table holds `target` rows. The sort travels with every request,
-   * so the order is the read's and a page boundary lands in the same place the server put it;
-   * reordering the loaded array instead would sort ten rows and misdescribe the other hundred.
+   * Reads one page. The query is already on screen, so the header, the search box and the footer
+   * show what was asked while the rows still show the last answer. A failed read puts the last
+   * answered page, size and order back and keeps the typed search.
    */
-  async function fetchUpTo(
-    kind: SearchInsightsRowKind,
-    sort: SearchInsightsSort,
-    loaded: Loaded,
-    target: (total: number) => number,
-  ): Promise<Loaded> {
-    const next = { ...loaded };
-    // One request per page, and never more of them than the cap allows: a saturated window
-    // would otherwise fire hundreds of full-window aggregations on a single click.
-    let guard = Math.ceil(SEARCH_INSIGHTS_ROWS_CAP / ROWS_PAGE_LIMIT);
-    while (next[kind].length < target(next.total) && guard > 0) {
-      guard -= 1;
+  async function load(kind: SearchInsightsRowKind, query: RowsQuery, previous: RowsQuery) {
+    const revision = beginRequest(kind);
+    setLoading((current) => ({ ...current, [kind]: true }));
+    try {
       const page = await loadRowsAction({
         kind,
-        limit: Math.min(ROWS_PAGE_LIMIT, target(next.total) - next[kind].length),
-        offset: next[kind].length,
+        limit: query.pageSize,
+        offset: rowsOffset(query),
         period,
         projectId,
         property,
-        sort,
+        search: query.search.trim() || undefined,
+        sort: query.sort,
       });
-      // Only a page that carries rows describes the window on screen. An empty answer means
-      // the scope moved on, and adopting its total would contradict the rows already shown.
-      if (page.rows.length === 0) break;
-      next.total = page.total;
-      if (page.kind === "queries") {
-        next.queries = [...next.queries, ...page.rows];
-        next.tracked = [...next.tracked, ...page.trackedTexts];
-      } else {
-        next.pages = [...next.pages, ...page.rows];
-      }
-    }
-    return next;
-  }
-
-  async function expand(kind: SearchInsightsRowKind) {
-    const state = rows[kind];
-    const requested = state.show;
-    const show = nextShow(state.show);
-    if (show !== "all") {
-      setSnapshot(withShow(rows, kind, show));
-      return;
-    }
-
-    const revision = beginRequest(kind);
-    setLoading((current) => ({ ...current, [kind]: true }));
-    try {
-      const loaded = await fetchUpTo(
-        kind,
-        rows.sort[kind],
-        {
-          pages: rows.pages.rows,
-          queries: rows.queries.rows,
-          total: state.total,
-          tracked: [...rows.tracked],
-        },
-        rowsReach,
-      );
       setSnapshot((current) => {
         if (!isLatestRequest(kind, revision)) return current;
-        // A window switch while the pages were in flight wins: those rows answer the old one.
+        // A window switch while the page was in flight wins: that page answers the old one.
         if (current.view !== view || current.property !== property) return current;
-        // Collapsing while they were in flight wins too, but only over the expansion: the rows
-        // are still this window's, so they are kept and the table stays at its ten.
-        const settled = current[kind].show === requested ? show : current[kind].show;
-        return withLoaded(current, kind, settled, loaded);
+        return withPage(current, page);
       });
     } catch (error) {
-      if (isLatestRequest(kind, revision)) {
-        showToast(actionErrorMessage(error, t("rowsFailed")), { severity: "error" });
-      }
-    } finally {
-      setLoading((current) =>
-        isLatestRequest(kind, revision) ? { ...current, [kind]: false } : current,
-      );
-    }
-  }
-
-  function collapse(kind: SearchInsightsRowKind) {
-    setSnapshot(withShow(rows, kind, FIRST_VIEW_ROWS));
-  }
-
-  /**
-   * A new order is a new read from the first row: the offsets already fetched describe the old
-   * one. The table keeps however many rows it was showing, so sorting an expanded table does not
-   * quietly collapse it back to ten.
-   */
-  async function sortBy(kind: SearchInsightsRowKind, key: SearchInsightsSortKey) {
-    const sort = nextSort(rows.sort[kind], key);
-    const held = Math.max(rows[kind].rows.length, FIRST_VIEW_ROWS);
-    const requested = rows[kind].show;
-    const revision = beginRequest(kind);
-    setSnapshot({ ...rows, sort: { ...rows.sort, [kind]: sort } });
-    setLoading((current) => ({ ...current, [kind]: true }));
-    try {
-      const loaded = await fetchUpTo(
-        kind,
-        sort,
-        { pages: [], queries: [], total: rows[kind].total, tracked: [] },
-        (total) => Math.min(held, rowsReach(total)),
-      );
-      setSnapshot((current) => {
-        if (!isLatestRequest(kind, revision)) return current;
-        if (current.view !== view || current.property !== property) return current;
-        // A later sort of the same table wins; this answer describes an order already left.
-        if (current.sort[kind] !== sort) return current;
-        return withLoaded(current, kind, current[kind].show, loaded);
-      });
-    } catch (error) {
+      if (!isLatestRequest(kind, revision)) return;
       setSnapshot((current) =>
-        isLatestRequest(kind, revision) && current.sort[kind] === sort
-          ? { ...current, [kind]: { ...current[kind], show: requested }, sort: rows.sort }
+        current.view === view && current.property === property
+          ? withQuery(current, kind, { ...previous, search: current[kind].search })
           : current,
       );
-      if (isLatestRequest(kind, revision)) {
-        showToast(actionErrorMessage(error, t("rowsFailed")), { severity: "error" });
-      }
+      showToast(actionErrorMessage(error, t("rowsFailed")), { severity: "error" });
     } finally {
       setLoading((current) =>
         isLatestRequest(kind, revision) ? { ...current, [kind]: false } : current,
       );
     }
+  }
+
+  function request(kind: SearchInsightsRowKind, patch: Partial<RowsQuery>) {
+    // A page change while a search is still waiting sends the search with it, once.
+    window.clearTimeout(searchTimers.current[kind]);
+    const previous = rowsQuery(rows[kind]);
+    const query = { ...previous, ...patch };
+    setSnapshot((current) => withQuery(current, kind, query));
+    void load(kind, query, previous);
+  }
+
+  /** A new order or page size starts again from the first page: the old offsets mean nothing. */
+  function sortBy(kind: SearchInsightsRowKind, key: SearchInsightsSortKey) {
+    request(kind, { page: 1, sort: nextSort(rows[kind].sort, key) });
+  }
+
+  function paginate(kind: SearchInsightsRowKind, next: { page: number; pageSize: number }) {
+    request(kind, { ...next, page: next.pageSize === rows[kind].pageSize ? next.page : 1 });
+  }
+
+  /** The box follows every key; the read waits until the typing stops. */
+  function search(kind: SearchInsightsRowKind, value: string) {
+    window.clearTimeout(searchTimers.current[kind]);
+    const previous = rowsQuery(rows[kind]);
+    const query = { ...previous, page: 1, search: value };
+    setSnapshot((current) => withQuery(current, kind, query));
+    searchTimers.current[kind] = window.setTimeout(
+      () => void load(kind, query, previous),
+      SEARCH_DEBOUNCE_MS,
+    );
   }
 
   return {
-    collapse,
-    expand: (kind: SearchInsightsRowKind) => void expand(kind),
     loading,
     pages: rows.pages,
+    paginate,
     queries: rows.queries,
-    sort: rows.sort,
-    sortBy: (kind: SearchInsightsRowKind, key: SearchInsightsSortKey) => void sortBy(kind, key),
+    search,
+    sortBy,
     tracked: rows.tracked,
   };
 }

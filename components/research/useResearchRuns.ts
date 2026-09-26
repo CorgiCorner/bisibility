@@ -4,7 +4,7 @@ import type {
   ResearchKeywordsAction,
   ResearchKeywordsActionInput,
 } from "@/lib/actions/keyword-research";
-import type { KeywordResearchMode } from "@/lib/keyword-research/types";
+import { isKeywordResearchEstimate, type KeywordResearchMode } from "@/lib/keyword-research/types";
 import {
   type ResearchScope,
   researchScopeForLocationKey,
@@ -90,9 +90,14 @@ export function useResearchRuns({
         async (seed) => {
           let outcome: UiResearchOutcome;
           try {
-            outcome = await researchAction(
+            const result = await researchAction(
               requestInput(seed, { ...withLocation, estimateOnly: false }),
             );
+            // A paid run never yields a dry run; guard the union for the type system.
+            outcome =
+              result.ok && isKeywordResearchEstimate(result)
+                ? { charged: null, ok: false, reason: "lookup_failed" }
+                : result;
           } catch {
             outcome = { charged: null, ok: false, reason: "lookup_failed" };
           }

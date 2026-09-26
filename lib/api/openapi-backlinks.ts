@@ -6,7 +6,15 @@ type Bearer = (
   parameters?: object[],
 ) => object;
 
-type BacklinksSchemaName = "BacklinksResponse" | "BacklinksRowsRequest" | "BacklinksSnapshot";
+import { backlinksEstimateSchema, backlinksSummary } from "./openapi-backlinks-parts";
+import { withCreditsExhausted } from "./openapi-operations";
+
+type BacklinksSchemaName =
+  | "BacklinksEstimate"
+  | "BacklinksResponse"
+  | "BacklinksRowsRequest"
+  | "BacklinksSnapshot"
+  | "BacklinksSnapshotResponse";
 
 const ref = (name: BacklinksSchemaName) => ({
   $ref: `#/components/schemas/${name}`,
@@ -25,7 +33,7 @@ function withBacklinksMetadata(
   conflictDescription?: string,
 ) {
   const responses = (operation as { responses: Record<string, object> }).responses;
-  return {
+  return withCreditsExhausted({
     ...operation,
     description,
     responses: {
@@ -36,7 +44,7 @@ function withBacklinksMetadata(
       ),
       "429": problemResponse("budget_exhausted, in_progress, or rate_limited"),
     },
-  };
+  });
 }
 
 function withRequiredBody(operation: object) {
@@ -45,54 +53,6 @@ function withRequiredBody(operation: object) {
     ? { ...operation, requestBody: { ...requestBody, required: true } }
     : operation;
 }
-
-const backlinksSummary = {
-  properties: {
-    backlinks_total: { minimum: 0, type: "integer" },
-    broken_backlinks: { minimum: 0, type: "integer" },
-    broken_pages: { minimum: 0, type: "integer" },
-    dofollow_pct: { maximum: 100, minimum: 0, type: "number" },
-    domain_rank: { maximum: 100, minimum: 0, type: "integer" },
-    lost_backlinks: {
-      description: "Provider-lifetime count.",
-      minimum: 0,
-      type: "integer",
-    },
-    lost_referring_domains: {
-      description: "Provider-lifetime count.",
-      minimum: 0,
-      type: "integer",
-    },
-    new_backlinks: {
-      description: "Provider-lifetime count.",
-      minimum: 0,
-      type: "integer",
-    },
-    new_referring_domains: {
-      description: "Provider-lifetime count.",
-      minimum: 0,
-      type: "integer",
-    },
-    referring_domains_total: { minimum: 0, type: "integer" },
-    referring_pages: { minimum: 0, type: "integer" },
-    spam_score: { minimum: 0, type: "number" },
-  },
-  required: [
-    "backlinks_total",
-    "referring_domains_total",
-    "domain_rank",
-    "spam_score",
-    "dofollow_pct",
-    "referring_pages",
-    "broken_backlinks",
-    "broken_pages",
-    "new_backlinks",
-    "lost_backlinks",
-    "new_referring_domains",
-    "lost_referring_domains",
-  ],
-  type: "object",
-} as const;
 
 const backlinkHistory = {
   items: {
@@ -164,8 +124,9 @@ const backlinkRows = {
 } as const;
 
 export const backlinksSchemas = {
+  BacklinksEstimate: backlinksEstimateSchema,
   BacklinksResponse: {
-    properties: { data: ref("BacklinksSnapshot") },
+    properties: { data: { oneOf: [ref("BacklinksEstimate"), ref("BacklinksSnapshot")] } },
     required: ["data"],
     type: "object",
   },
@@ -184,8 +145,6 @@ export const backlinksSchemas = {
       cached: { type: "boolean" },
       cached_until: { format: "date-time", type: "string" },
       cost_cents: { minimum: 0, type: "number" },
-      estimate: { type: "boolean" },
-      estimated_cost_cents: { minimum: 0, type: "number" },
       fetched_at: { format: "date-time", type: "string" },
       fetched_row_count: { minimum: 0, type: "integer" },
       history: backlinkHistory,
@@ -212,6 +171,11 @@ export const backlinksSchemas = {
       "fetched_row_count",
       "total_rows_available",
     ],
+    type: "object",
+  },
+  BacklinksSnapshotResponse: {
+    properties: { data: ref("BacklinksSnapshot") },
+    required: ["data"],
     type: "object",
   },
 } as const;
@@ -285,7 +249,7 @@ export function backlinksPaths(input: { bearer: Bearer }) {
           input.bearer(
             "Load more rows into an unexpired backlinks snapshot. Requires write scope.",
             "loadMoreBacklinkRows",
-            ref("BacklinksResponse"),
+            ref("BacklinksSnapshotResponse"),
             ref("BacklinksRowsRequest"),
           ),
         ),

@@ -2,6 +2,7 @@ import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { assertProviderAllocationAvailable } from "@/lib/provider-usage/enforcement";
+import type { ProviderRequestSurface } from "@/lib/provider-usage/surface";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { estimatedRankCheckCostCents } from "./default-cost";
@@ -14,6 +15,7 @@ export async function assertRankCheckConnectionAllocation(
     connection: RankCheckConnectionInput;
     depth: SerpDepth;
     projectId: string;
+    surface: ProviderRequestSurface;
   },
   db: Pick<PrismaClient, "project" | "providerConnection" | "providerCostEntry">,
 ) {
@@ -33,6 +35,8 @@ export async function assertRankCheckConnectionAllocation(
       projectId: input.projectId,
       provider: input.connection.provider,
       legacyBudgetCheck: async () => undefined,
+      surface: input.surface,
+      shadow: { feature: "rank_check", source: input.surface === "app" ? "worker" : "api" },
     },
     db,
   );
@@ -43,6 +47,7 @@ export async function assertQueuedRankCheckBatchAllocation(
     connection: { id: string };
     priority: DataForSeoQueuePriority;
     projectId: string;
+    surface: ProviderRequestSurface;
     tasks: readonly { depth: SerpDepth }[];
   },
   db: Pick<
@@ -67,6 +72,8 @@ export async function assertQueuedRankCheckBatchAllocation(
       projectId: input.projectId,
       provider: "dataforseo",
       legacyBudgetCheck: async () => undefined,
+      surface: input.surface,
+      shadow: { feature: "rank_check", source: input.surface === "app" ? "worker" : "api" },
     },
     db,
   );

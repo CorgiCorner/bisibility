@@ -127,7 +127,9 @@ export function ConnectDrawer({
   const formValues = form.watch();
   const currentCredentialSignature = credentialFieldsSignature(credentialFields, formValues);
   const credentialFieldsChanged = currentCredentialSignature !== initialCredentialSignature;
-  const requiresSuccessfulTest = authMode === "key" && (!isManage || credentialFieldsChanged);
+  const requiresSuccessfulTest =
+    authMode === "key" &&
+    (provider.credentialSource === "hosted" || !isManage || credentialFieldsChanged);
   const hasCurrentSuccessfulTest =
     !requiresSuccessfulTest ||
     (testState === "ok" && testedCredentialSignature === currentCredentialSignature);
@@ -135,7 +137,7 @@ export function ConnectDrawer({
   // server-side, so only the initial connect requires every field locally.
   const missingTestCredentials =
     requiresSuccessfulTest &&
-    !isManage &&
+    (!isManage || provider.credentialSource === "hosted") &&
     !hasRequiredCredentialFields(credentialFields, formValues);
   let displayedTestState: "idle" | "ok" | "testing" = "idle";
   if (pendingAction === "test") displayedTestState = "testing";
@@ -167,7 +169,13 @@ export function ConnectDrawer({
           title: t("testRequiredTitle"),
         };
       }
-      await activeActions.connectProvider(connectInput(values));
+      await activeActions.connectProvider(
+        connectInput(values, {
+          expectedConnectionId: provider.connectionId ?? null,
+          expectedConnectionUpdatedAt: provider.connectionUpdatedAt ?? null,
+          expectedCredentialSource: provider.credentialSource ?? "own",
+        }),
+      );
       const savedValues = { ...values, secret: "" };
       form.reset(savedValues);
       setInitialCredentialSignature(credentialFieldsSignature(credentialFields, savedValues));
@@ -275,6 +283,7 @@ export function ConnectDrawer({
             projectId={projectId}
             providerId={provider.id}
             rates={provider.drawer.rates}
+            readOnlyRates={provider.credentialSource === "hosted"}
             updateRate={activeActions.updateProviderRate}
           />
         ) : null}

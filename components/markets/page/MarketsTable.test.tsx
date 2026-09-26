@@ -135,6 +135,7 @@ describe("MarketsTable status queue", () => {
       "href",
       "/app/prj_abcdefghijklmnopqrstuvwx/m/pmkt_bbcdefghijklmnopqrstuvwx/rank-tracker",
     );
-    expect(screen.getAllByText("-")).toHaveLength(3);
+    expect(screen.getAllByText("-")).toHaveLength(2);
+    expect(screen.queryByRole("columnheader", { name: "Monthly cost" })).not.toBeInTheDocument();
   });
 });

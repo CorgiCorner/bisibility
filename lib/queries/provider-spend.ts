@@ -1,105 +1,74 @@
 import "server-only";
 
-import { projectedMonthlySpendCents } from "@/lib/cost-estimate/spend-pace";
 import { prisma } from "@/lib/db/prisma";
 import { resolveEffectiveAllocations } from "@/lib/provider-allocations/compatibility";
 import { loadProviderRateContexts } from "@/lib/provider-rates/connection-context";
-import type { ProviderCatalogEntry, ProviderStatus } from "@/lib/providers/types";
-import {
-  monthlyLookupSpendByConnection,
-  monthStartUtc,
-  monthUtcRange,
-} from "@/lib/rank-check/budget";
+import { providerUsageFreshness } from "@/lib/provider-usage/usage-freshness";
+import type { ProviderCatalogEntry } from "@/lib/providers/types";
+import { monthStartUtc, monthUtcRange } from "@/lib/rank-check/budget";
 import {
   primaryProviderConnection,
   providerChainOrderBy,
 } from "@/lib/rank-check/provider-chain-order";
 import { resolveSerpDepth } from "@/lib/serp/constants";
-import type { ProviderAvailabilityData, ProviderUsageStat } from "@/lib/settings/options";
 import { loadProviderAvailability } from "./provider-availability";
-import { loadProviderSpendUsage } from "./provider-spend-usage";
+import {
+  monthLabel,
+  surfaceSpend,
+  surfaceTightestEntries,
+  worseSurfaceState,
+} from "./provider-spend-surfaces";
+import {
+  loadProviderSpendUsage,
+  providerCostBySource,
+  recordedSpendBySource,
+  type SourceSpendUsage,
+} from "./provider-spend-usage";
 import { settingsConnectionUsage } from "./settings-provider-summaries";
-import { getRequestMonthlySpendCents } from "./workspace-request-data";
 
-export type ProviderSpendConnection = {
-  allocation: { amountPerMonth: number; unit: "cents" | "units" } | null;
-  allocationSource: "connection" | "legacy_project" | "none";
-  availableAtProvider?: ProviderAvailabilityData;
-  billing: "metered" | "quota";
-  connectionId: string;
-  enabled: boolean;
-  features: ProviderUsageStat[];
-  primary: boolean;
-  projectedExhaustionAt: string | null;
-  provider: string;
-  providerId: string;
-  quotaReset: "billing_cycle" | "calendar_month" | "none";
-  remaining: number | null;
-  requestCount: number;
-  state: "ok" | "capped" | "fallback_active" | "top_up_required" | "no_allocation";
-  status: ProviderStatus;
-  unit: "cents" | "units";
-  used: number;
-  usedPercent: number | null;
-  usedPriorMonth: number;
-};
+export type {
+  ProjectProviderSpend,
+  ProviderSpendConnection,
+  ProviderSpendSummary,
+} from "./provider-spend-types";
 
-export type ProviderSpendSummary = {
-  attention: ProviderSpendConnection["connectionId"][];
-  maxUsedPercent: number | null;
-  period: { daysUntilReset: number; endsAt: string; monthLabel: string; startsAt: string };
-  projected:
-    | { kind: "within_limits" }
-    | { at: string; kind: "cap_by"; provider: string }
-    | { kind: "no_usage" };
-  recorded: { cents: number; units: number };
-  requestCount: number;
-  tightest: { connectionId: string; provider: string; usedPercent: number } | null;
-};
-
-const MONTH_LABELS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
-
-function monthLabel(date: Date) {
-  return `${MONTH_LABELS[date.getUTCMonth()] ?? ""} ${date.getUTCFullYear()}`;
-}
-
-export type ProjectProviderSpend = {
-  connections: ProviderSpendConnection[];
-  summary: ProviderSpendSummary;
-};
-
-function projectedExhaustionAt(
-  allocation: { amountPerMonth: number; unit: "cents" | "units" } | null,
-  used: number,
-  now: Date,
-) {
-  if (!allocation || used <= 0) return null;
-  const projected = projectedMonthlySpendCents(used, now);
-  if (projected === null || projected <= allocation.amountPerMonth) return null;
-
-  const elapsedDays = now.getUTCDate();
-  const monthlyStart = monthStartUtc(now);
-  const exhaustion = new Date(
-    monthlyStart.getTime() + (allocation.amountPerMonth * elapsedDays * 86_400_000) / used,
-  );
-  return exhaustion.toISOString();
-}
+import type {
+  ProjectProviderSpend,
+  ProviderSpendConnection,
+  ProviderSpendSourceBlock,
+} from "./provider-spend-types";
 
 function providerLabel(catalog: readonly ProviderCatalogEntry[], providerId: string) {
   return catalog.find((entry) => entry.id === providerId)?.label ?? providerId;
+}
+
+function sourceBlock(input: {
+  allocations: {
+    app: ProviderSpendSourceBlock["surfaces"]["app"]["allocation"];
+    programmatic: ProviderSpendSourceBlock["surfaces"]["app"]["allocation"];
+  };
+  now: Date;
+  unit: ProviderSpendSourceBlock["unit"];
+  usage: SourceSpendUsage | undefined;
+}): ProviderSpendSourceBlock {
+  const surface = (name: "app" | "programmatic") => {
+    const current = input.usage?.surfaces[name].current;
+    return surfaceSpend({
+      allocation: input.allocations[name],
+      now: input.now,
+      requestCount: current?.requestCount ?? 0,
+      unconfirmedCount: current?.unconfirmedCount ?? 0,
+      used: current?.used ?? 0,
+    });
+  };
+  return {
+    requestCount: input.usage?.current.requestCount ?? 0,
+    surfaces: { app: surface("app"), programmatic: surface("programmatic") },
+    unconfirmedCount: input.usage?.current.unconfirmedCount ?? 0,
+    unit: input.unit,
+    used: input.usage?.current.used ?? 0,
+    usedPriorMonth: input.usage?.previous.used ?? 0,
+  };
 }
 
 function isAttention(
@@ -135,35 +104,40 @@ export async function loadProjectProviderSpend(input: {
       input.catalog.find((entry) => entry.id === connection.provider)?.allocation?.kind ===
       "billable",
   );
-  const [availability, rateContexts, rankChecks, lookups, recordedCents] = await Promise.all([
-    loadProviderAvailability(
-      connections,
-      connections.find((connection) => connection.publicId === input.refreshConnectionPublicId)?.id,
-    ),
-    loadProviderRateContexts(
-      connections.map((connection) => connection.id),
-      ["rank_check"],
-      input.now,
-    ),
-    prisma.rankCheck.findMany({
-      select: { costCents: true, estimatedCostCents: true, provider: true, status: true },
-      where: {
-        checkedAt: monthUtcRange(input.now),
-        keyword: { projectId: input.projectId },
-        status: { not: "deferred" },
-      },
-    }),
-    monthlyLookupSpendByConnection(input.projectId, input.now),
-    getRequestMonthlySpendCents(input.projectId, input.now),
-  ]);
+  const [availability, rateContexts, rankChecks, sourceUsage, recordedSpend, reconciliation] =
+    await Promise.all([
+      // A provider-side balance only exists for the project's own keys; connections on
+      // credits have no stored keys and never query the provider.
+      loadProviderAvailability(
+        connections.filter((connection) => connection.credentialSource !== "hosted"),
+        connections.find((connection) => connection.publicId === input.refreshConnectionPublicId)
+          ?.id,
+      ),
+      loadProviderRateContexts(
+        connections.map((connection) => connection.id),
+        ["rank_check"],
+        input.now,
+      ),
+      prisma.rankCheck.findMany({
+        select: { costCents: true, estimatedCostCents: true, provider: true, status: true },
+        where: {
+          checkedAt: monthUtcRange(input.now),
+          keyword: { projectId: input.projectId },
+          status: { not: "deferred" },
+        },
+      }),
+      providerCostBySource(input.projectId, input.now),
+      recordedSpendBySource(input.projectId, input.now),
+      providerUsageFreshness(prisma, { now: input.now }),
+    ]);
   const featureByConnection = new Map(
     settingsConnectionUsage(
       connections,
       rankChecks,
-      lookups,
       resolveSerpDepth(project.defaults?.serpDepth),
       rateContexts,
       availability,
+      sourceUsage,
     ).map((connection) => [connection.connectionId, [...connection.features]]),
   );
   const allocations = new Map(
@@ -184,36 +158,59 @@ export async function loadProjectProviderSpend(input: {
     const metadata = input.catalog.find((entry) => entry.id === connection.provider)?.allocation;
     if (metadata?.kind !== "billable") throw new Error("Provider catalog is incomplete.");
     const resolved = allocations.get(connection.id);
-    const allocation = resolved?.allocation ?? null;
     const connectionUsage = usage.get(connection.id);
-    const used = connectionUsage?.current.used ?? 0;
-    const usedPriorMonth = connectionUsage?.previous.used ?? 0;
-    const usedPercent = allocation ? Math.min(100, (used / allocation.amountPerMonth) * 100) : null;
-    const availableAtProvider = availability.get(connection.id) ?? undefined;
+    const own = sourceBlock({
+      allocations: {
+        app: resolved?.allocation ?? null,
+        programmatic: resolved?.programmaticAllocation ?? null,
+      },
+      now: input.now,
+      unit: metadata.allocationUnit,
+      usage: connectionUsage?.own,
+    });
+    const credits = sourceBlock({
+      allocations: resolved?.credits ?? { app: null, programmatic: null },
+      now: input.now,
+      unit: "cents",
+      usage: connectionUsage?.credits,
+    });
+    const credentialSource = connection.credentialSource;
+    const active = credentialSource === "hosted" ? credits : own;
+    const allocation = active.surfaces.app.allocation;
+    const used = active.surfaces.app.used;
+    const availableAtProvider =
+      credentialSource === "hosted" ? undefined : (availability.get(connection.id) ?? undefined);
     return {
       allocation,
       allocationSource: resolved?.source ?? "none",
       ...(availableAtProvider ? { availableAtProvider } : {}),
       billing: metadata.billing,
+      reconciliation,
       connectionId: connection.publicId,
+      credentialSource,
+      credits,
       enabled: connection.enabled,
       features: featureByConnection.get(connection.publicId) ?? [],
+      own,
       primary: connection.id === primaryConnectionId,
-      projectedExhaustionAt: projectedExhaustionAt(allocation, used, input.now),
+      programmaticAllocation: active.surfaces.programmatic.allocation,
+      projectedExhaustionAt: active.surfaces.app.projectedExhaustionAt,
       provider: providerLabel(input.catalog, connection.provider),
       providerId: connection.provider,
       quotaReset: metadata.quotaReset,
-      remaining: allocation ? allocation.amountPerMonth - used : null,
-      requestCount: connectionUsage?.current.requestCount ?? 0,
+      remaining: active.surfaces.app.remaining,
+      requestCount: active.requestCount,
+      unconfirmedCount: active.unconfirmedCount,
       status: connection.status,
-      unit: metadata.allocationUnit,
+      surfaces: active.surfaces,
+      unit: active.unit,
       used,
-      usedPercent,
-      usedPriorMonth,
+      usedPercent: active.surfaces.app.usedPercent,
+      usedPriorMonth: active.usedPriorMonth,
     };
   });
   const connectionsWithStates: ProviderSpendConnection[] = initial.map((connection) => {
-    const capped = connection.usedPercent !== null && connection.usedPercent >= 100;
+    const base = worseSurfaceState(connection.surfaces);
     const fallbackAvailable = initial.some(
       (candidate) =>
         candidate.connectionId !== connection.connectionId &&
@@ -226,15 +223,14 @@ export async function loadProjectProviderSpend(input: {
       connection.availableAtProvider.amount <= 0;
     return {
       ...connection,
-      state: capped
-        ? fallbackAvailable
-          ? "fallback_active"
-          : "capped"
-        : topUpRequired
-          ? "top_up_required"
-          : connection.allocation
-            ? "ok"
-            : "no_allocation",
+      state:
+        base === "capped"
+          ? fallbackAvailable
+            ? "fallback_active"
+            : "capped"
+          : topUpRequired
+            ? "top_up_required"
+            : base,
     };
   });
   connectionsWithStates.sort((left, right) => {
@@ -245,13 +241,19 @@ export async function loadProjectProviderSpend(input: {
     return left.provider.localeCompare(right.provider);
   });
 
-  const allocated = connectionsWithStates.filter(
-    (connection): connection is ProviderSpendConnection & { usedPercent: number } =>
-      connection.usedPercent !== null,
+  // Budgets are compared per source; only the source a connection runs on today can
+  // block it, so the inactive source never becomes the tightest budget.
+  const allocated = connectionsWithStates.flatMap((connection) =>
+    surfaceTightestEntries(
+      connection,
+      connection.credentialSource === "hosted" ? "credits" : "own",
+    ),
   );
   const tightest = [...allocated].sort(
     (left, right) =>
-      right.usedPercent - left.usedPercent || left.provider.localeCompare(right.provider),
+      right.usedPercent - left.usedPercent ||
+      left.provider.localeCompare(right.provider) ||
+      left.surface.localeCompare(right.surface),
   )[0];
   const exhaustion = connectionsWithStates
     .filter((connection) => connection.projectedExhaustionAt !== null)
@@ -277,7 +279,9 @@ export async function loadProjectProviderSpend(input: {
         monthLabel: monthLabel(monthStart),
         startsAt: monthStart.toISOString(),
       },
-      projected: connectionsWithStates.every((connection) => connection.used === 0)
+      projected: connectionsWithStates.every(
+        (connection) => connection.own.used === 0 && connection.credits.used === 0,
+      )
         ? { kind: "no_usage" }
         : exhaustion
           ? {
@@ -287,22 +291,17 @@ export async function loadProjectProviderSpend(input: {
             }
           : { kind: "within_limits" },
       recorded: {
-        cents: recordedCents,
+        cents: recordedSpend.ownCents,
+        creditsCents: recordedSpend.creditsCents,
         units: connectionsWithStates
-          .filter((connection) => connection.unit === "units")
-          .reduce((sum, connection) => sum + connection.used, 0),
+          .filter((connection) => connection.own.unit === "units")
+          .reduce((sum, connection) => sum + connection.own.used, 0),
       },
       requestCount: connectionsWithStates.reduce(
-        (sum, connection) => sum + connection.requestCount,
+        (sum, connection) => sum + connection.own.requestCount + connection.credits.requestCount,
         0,
       ),
-      tightest: tightest
-        ? {
-            connectionId: tightest.connectionId,
-            provider: tightest.provider,
-            usedPercent: tightest.usedPercent,
-          }
-        : null,
+      tightest: tightest ?? null,
     },
   };
 }

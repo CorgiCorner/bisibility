@@ -14,6 +14,12 @@ const mocks = vi.hoisted(() => {
       status: "running",
     },
     rankChecks: [] as Array<Record<string, unknown>>,
+    run: {
+      credentialId: null as string | null,
+      credentialKind: null as string | null,
+      source: null as string | null,
+      trigger: "scheduled" as string,
+    },
     tasks: [] as Array<Record<string, unknown>>,
   };
   const providerFacingCreate = vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
@@ -34,6 +40,7 @@ const mocks = vi.hoisted(() => {
       }
     }),
     $executeRaw: vi.fn(async () => 1),
+    $queryRaw: vi.fn(async () => []),
     auditLog: { create: vi.fn(async () => ({ id: "audit_1" })) },
     keyword: {
       findMany: vi.fn(async () => [
@@ -87,7 +94,10 @@ const mocks = vi.hoisted(() => {
       }),
       findUniqueOrThrow: vi.fn(async () => ({ costCents: null })),
     },
-    rankCheckRun: { update: vi.fn(async () => ({})) },
+    rankCheckRun: {
+      findUnique: vi.fn(async () => state.run),
+      update: vi.fn(async () => ({})),
+    },
     rankCheckRunItem: {
       findMany: vi.fn(async ({ where }: { where: Record<string, unknown> }) => {
         if ("id" in where) {
@@ -121,6 +131,7 @@ const mocks = vi.hoisted(() => {
     },
   };
   return {
+    assertQueuedRankCheckBatchAllocation: vi.fn(),
     prisma,
     providerFacingCreate,
     publishOperationChanged: vi.fn(() => Promise.resolve()),
@@ -130,6 +141,9 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("./allocation-enforcement", () => ({
+  assertQueuedRankCheckBatchAllocation: mocks.assertQueuedRankCheckBatchAllocation,
+}));
 vi.mock("@/lib/notifications/realtime", () => ({
   publishOperationChanged: mocks.publishOperationChanged,
 }));
@@ -170,7 +184,14 @@ describe("queued rank-check run-item preparation", () => {
       status: "running",
     };
     mocks.state.rankChecks = [];
+    mocks.state.run = {
+      credentialId: null,
+      credentialKind: null,
+      source: null,
+      trigger: "scheduled",
+    };
     mocks.state.tasks = [];
+    mocks.assertQueuedRankCheckBatchAllocation.mockResolvedValue(undefined);
   });
 
   afterEach(() => vi.unstubAllEnvs());
@@ -227,6 +248,107 @@ describe("queued rank-check run-item preparation", () => {
     ]);
     await prepareQueuedRankCheckBatch(baseInput);
     expect(mocks.state.rankChecks[0]).toMatchObject({ requestedDepth: 20 });
+  });
+
+  it("attributes a dispatcher batch without a run to the app surface as scheduled", async () => {
+    await prepareQueuedRankCheckBatch(baseInput);
+
+    expect(mocks.state.batches[0]).toMatchObject({
+      credentialId: null,
+      credentialKind: null,
+      source: "app",
+      trigger: "scheduled",
+    });
+  });
+
+  it("carries the launching run's origin onto a run batch", async () => {
+    mocks.state.run = {
+      credentialId: "pat_1",
+      credentialKind: "personal_token",
+      source: "sdk",
+      trigger: "api",
+    };
+
+    await prepareQueuedRankCheckBatch({ ...baseInput, runId: "run_1", runItemIds: ["item_1"] });
+
+    expect(mocks.state.batches[0]).toMatchObject({
+      credentialId: "pat_1",
+      credentialKind: "personal_token",
+      source: "sdk",
+      trigger: "manual",
+    });
+  });
+
+  it("defers an API-launched batch when the programmatic allocation is exhausted", async () => {
+    const { ProviderAllocationExhaustedError } = await import("@/lib/provider-usage/enforcement");
+    mocks.state.run = {
+      credentialId: "pat_1",
+      credentialKind: "personal_token",
+      source: "sdk",
+      trigger: "api",
+    };
+    mocks.assertQueuedRankCheckBatchAllocation.mockRejectedValueOnce(
+      new ProviderAllocationExhaustedError("connection_1", "programmatic"),
+    );
+
+    await expect(
+      prepareQueuedRankCheckBatch({ ...baseInput, runId: "run_1", runItemIds: ["item_1"] }),
+    ).resolves.toMatchObject({ state: "deferred" });
+
+    expect(mocks.assertQueuedRankCheckBatchAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        connection: expect.objectContaining({ id: "connection_1" }),
+        projectId: "project_1",
+        surface: "programmatic",
+      }),
+      mocks.prisma,
+    );
+    expect(mocks.state.batches[0]).toMatchObject({
+      error: "budget_exhausted:programmatic",
+      state: "deferred",
+    });
+    expect(mocks.state.rankChecks[0]).toMatchObject({
+      deferredReason: "budget_exhausted:programmatic",
+      status: "deferred",
+    });
+    expect(mocks.state.tasks[0]).toMatchObject({
+      error: "budget_exhausted:programmatic",
+      state: "deferred",
+    });
+  });
+
+  it("prepares an API-launched batch when the programmatic allocation has room", async () => {
+    mocks.state.run = {
+      credentialId: null,
+      credentialKind: null,
+      source: "sdk",
+      trigger: "api",
+    };
+
+    await expect(
+      prepareQueuedRankCheckBatch({ ...baseInput, runId: "run_1", runItemIds: ["item_1"] }),
+    ).resolves.toMatchObject({ state: "prepared" });
+
+    expect(mocks.state.batches[0]).toMatchObject({ error: null, state: "prepared" });
+    expect(mocks.assertQueuedRankCheckBatchAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({ surface: "programmatic" }),
+      mocks.prisma,
+    );
+  });
+
+  it("keeps a dispatcher batch prepared on the same exhausted connection", async () => {
+    const { ProviderAllocationExhaustedError } = await import("@/lib/provider-usage/enforcement");
+    mocks.assertQueuedRankCheckBatchAllocation.mockRejectedValueOnce(
+      new ProviderAllocationExhaustedError("connection_1", "programmatic"),
+    );
+
+    await expect(prepareQueuedRankCheckBatch(baseInput)).resolves.toMatchObject({
+      state: "prepared",
+    });
+
+    expect(mocks.state.batches[0]).toMatchObject({ error: null, state: "prepared" });
+    expect(mocks.state.rankChecks[0]).toMatchObject({ status: "running" });
+    expect(mocks.assertQueuedRankCheckBatchAllocation).not.toHaveBeenCalled();
   });
 
   it("replays old input without runItemIds through the original standalone writes", async () => {
@@ -295,7 +417,16 @@ describe("queued rank-check run-item preparation", () => {
             return [];
           },
           auditLog: { create: vi.fn() },
-          rankCheckRun: { update: vi.fn(), updateMany: vi.fn(async () => ({ count: 1 })) },
+          rankCheckRun: {
+            findUnique: vi.fn(async () => ({
+              credentialId: null,
+              credentialKind: null,
+              source: null,
+              trigger: "scheduled",
+            })),
+            update: vi.fn(),
+            updateMany: vi.fn(async () => ({ count: 1 })),
+          },
         };
         try {
           const result = await callback(tx);

@@ -7,7 +7,13 @@ export function effectiveRowDepth(row: DepthRow): SerpDepth {
   return row.schedule.serp_depth ?? row.projectSerpDepth ?? DEFAULT_SERP_DEPTH;
 }
 
-export function selectionDepthLabel(rows: readonly DepthRow[]) {
+export function selectionDepthLabel(
+  rows: readonly DepthRow[],
+  formatDepth: (depth: SerpDepth) => string = (depth) => `Top ${depth}`,
+) {
   const depths = new Set(rows.map(effectiveRowDepth));
-  return depths.size === 1 ? `Top ${depths.values().next().value}` : "keyword defaults";
+  return [...depths]
+    .sort((a, b) => a - b)
+    .map(formatDepth)
+    .join(" / ");
 }

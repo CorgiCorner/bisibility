@@ -18,5 +18,5 @@ it("separates the Runs toolbar from the table header without adding a table fram
   );
   const header = screen.getByRole("heading", { name: "0 runs" }).closest("header");
   expect(header).toHaveClass("border-b", "border-border");
-  expect(header?.closest("[data-slot=card]")).toHaveClass("[&_[role=table]]:border-0");
+  expect(screen.getByRole("table")).toHaveAttribute("data-bordered", "false");
 });

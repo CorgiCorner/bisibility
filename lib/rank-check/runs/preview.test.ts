@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { previewRankCheckRun } from "./preview";
 
@@ -20,7 +21,7 @@ const mocks = vi.hoisted(() => {
       keyword: { findMany: vi.fn() },
       project: { findUnique: vi.fn() },
       projectMarket: { findMany: vi.fn() },
-      rankCheckRun: { findFirst: vi.fn() },
+      rankCheckRun: { count: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
     },
     resolveSelection: vi.fn(),
     token: vi.fn(),
@@ -43,14 +44,23 @@ vi.mock("@/lib/rank-check/default-cost", () => ({
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadChain,
 }));
-vi.mock("./selection", () => ({ resolveRunSelection: mocks.resolveSelection }));
+vi.mock("./selection", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./selection")>()),
+  resolveRunSelection: mocks.resolveSelection,
+}));
 vi.mock("./preview-token", () => ({ createPreviewToken: mocks.token }));
 
 function row(
   id: string,
   publicId: string,
   text: string,
-  options: { archivedAt?: Date; inProgress?: boolean; locationId?: string } = {},
+  options: {
+    archivedAt?: Date;
+    heldByRun?: boolean;
+    inProgress?: boolean;
+    runningInRun?: boolean;
+    locationId?: string;
+  } = {},
 ) {
   return {
     archivedAt: options.archivedAt ?? null,
@@ -58,6 +68,11 @@ function row(
     locationId: options.locationId ?? "location_active",
     publicId,
     queuedRankCheckTasks: options.inProgress ? [{ state: "ready" }] : [],
+    rankCheckRunItems: options.runningInRun
+      ? [{ status: "running" }]
+      : options.heldByRun
+        ? [{ status: "queued" }]
+        : [],
     rankChecks: [],
     schedule: { serpDepth: 50 },
     text,
@@ -87,6 +102,8 @@ describe("rank-check run preview", () => {
     ]);
     mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: "location_active" }]);
     mocks.prisma.rankCheckRun.findFirst.mockResolvedValue(null);
+    mocks.prisma.rankCheckRun.findMany.mockResolvedValue([]);
+    mocks.prisma.rankCheckRun.count.mockResolvedValue(0);
     mocks.loadChain.mockResolvedValue([
       {
         costPerCheckCents: 10,
@@ -107,7 +124,11 @@ describe("rank-check run preview", () => {
 
   it("rejects a sample project before calculating a preview", async () => {
     await expect(
-      previewRankCheckRun({ project: { ...project, isSample: true }, spec: spec() }),
+      previewRankCheckRun({
+        origin: APP_REQUEST_ORIGIN,
+        project: { ...project, isSample: true },
+        spec: spec(),
+      }),
     ).rejects.toMatchObject({ code: "sample_project" });
 
     expect(mocks.prisma.keyword.findMany).not.toHaveBeenCalled();
@@ -116,7 +137,11 @@ describe("rank-check run preview", () => {
 
   it("requires a tracked domain before calculating a preview", async () => {
     await expect(
-      previewRankCheckRun({ project: { ...project, domain: null }, spec: spec() }),
+      previewRankCheckRun({
+        origin: APP_REQUEST_ORIGIN,
+        project: { ...project, domain: null },
+        spec: spec(),
+      }),
     ).rejects.toThrow("This project has no domain yet.");
 
     expect(mocks.prisma.keyword.findMany).not.toHaveBeenCalled();
@@ -130,7 +155,7 @@ describe("rank-check run preview", () => {
       .mockReturnValueOnce(null)
       .mockReturnValueOnce(20);
 
-    const result = await previewRankCheckRun({ project, spec: spec() });
+    const result = await previewRankCheckRun({ origin: APP_REQUEST_ORIGIN, project, spec: spec() });
 
     expect(result).toMatchObject({
       estimate: { costCents: 30, perTargetCents: null, unknownCostTargets: 1 },
@@ -149,7 +174,9 @@ describe("rank-check run preview", () => {
   it("returns null total cost when every executable target has unknown cost", async () => {
     mocks.cost.mockReturnValue(null);
 
-    await expect(previewRankCheckRun({ project, spec: spec() })).resolves.toMatchObject({
+    await expect(
+      previewRankCheckRun({ origin: APP_REQUEST_ORIGIN, project, spec: spec() }),
+    ).resolves.toMatchObject({
       estimate: { costCents: null, unknownCostTargets: 3 },
     });
   });
@@ -160,7 +187,11 @@ describe("rank-check run preview", () => {
       row("internal_a", KW_A, "text", { inProgress: true }),
     ]);
 
-    const result = await previewRankCheckRun({ project, spec: spec([KW_A, KW_B]) });
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      project,
+      spec: spec([KW_A, KW_B]),
+    });
 
     expect(result.matched).toBe(1);
     expect(result.excluded).toEqual([
@@ -170,6 +201,28 @@ describe("rank-check run preview", () => {
     expect(result.executable).toBe(0);
   });
 
+  it("signs the estimate launch will verify when another active run holds a keyword", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      row("internal_a", KW_A, "held text", { heldByRun: true }),
+      row("internal_b", KW_B, "free text"),
+    ]);
+
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      project,
+      spec: spec([KW_A, KW_B]),
+    });
+
+    expect(mocks.prisma.keyword.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({ publicId: true, rankCheckRunItems: expect.any(Object) }),
+      }),
+    );
+    expect(result.excluded).toContainEqual({ keywordId: KW_A, reason: "in_progress" });
+    expect(result.executable).toBe(1);
+    expect(mocks.token).toHaveBeenCalledWith(expect.objectContaining({ estimateCents: 10 }));
+  });
+
   it("blocks the legacy branch when the whole estimate exceeds remaining budget", async () => {
     const budgetError = Object.assign(new Error("budget"), {
       budget: { capCents: 100, projectId: "project_1", spentCents: 80 },
@@ -177,7 +230,9 @@ describe("rank-check run preview", () => {
     mocks.assertBudget.mockRejectedValue(budgetError);
     mocks.isBudgetError.mockImplementation((error) => error === budgetError);
 
-    await expect(previewRankCheckRun({ project, spec: spec() })).resolves.toMatchObject({
+    await expect(
+      previewRankCheckRun({ origin: APP_REQUEST_ORIGIN, project, spec: spec() }),
+    ).resolves.toMatchObject({
       budget: {
         blocked: true,
         capCents: 100,
@@ -196,7 +251,12 @@ describe("rank-check run preview", () => {
       providerAllocationsInitializedAt: new Date("2026-09-01T00:00:00.000Z"),
     });
 
-    const result = await previewRankCheckRun({ depth: 50, project, spec: spec() });
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      depth: 50,
+      project,
+      spec: spec(),
+    });
 
     expect(result.budget).toMatchObject({ blocked: false, mode: "allocation", reason: null });
     expect(mocks.assertBudget).not.toHaveBeenCalled();
@@ -212,10 +272,39 @@ describe("rank-check run preview", () => {
     );
   });
 
+  it("uses the programmatic cap for a programmatic origin and reports the blocked surface", async () => {
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      budgetCapCents: 100,
+      defaults: { serpDepth: 100 },
+      providerAllocationsInitializedAt: new Date("2026-09-01T00:00:00.000Z"),
+    });
+    const exhausted = Object.assign(new mocks.AllocationError("allocation reached"), {
+      surface: "programmatic" as const,
+    });
+    mocks.assertAllocation.mockRejectedValue(exhausted);
+
+    const result = await previewRankCheckRun({
+      origin: { credential: { id: "key_1", kind: "project_key" }, source: "api" },
+      project,
+      spec: spec(),
+    });
+
+    expect(mocks.assertAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({ surface: "programmatic" }),
+      mocks.prisma,
+    );
+    expect(result.budget).toMatchObject({
+      blocked: true,
+      mode: "allocation",
+      reason: "budget_exhausted",
+      surface: "programmatic",
+    });
+  });
+
   it("blocks an empty provider chain and excludes otherwise executable targets", async () => {
     mocks.loadChain.mockResolvedValue([]);
 
-    const result = await previewRankCheckRun({ project, spec: spec() });
+    const result = await previewRankCheckRun({ origin: APP_REQUEST_ORIGIN, project, spec: spec() });
 
     expect(result.budget).toMatchObject({ blocked: true, reason: "no_provider" });
     expect(result.excluded).toEqual([
@@ -231,7 +320,11 @@ describe("rank-check run preview", () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([row("internal_a", KW_A, "text")]);
     mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
 
-    const result = await previewRankCheckRun({ project, spec: spec([KW_A]) });
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      project,
+      spec: spec([KW_A]),
+    });
 
     expect(result.excluded).toEqual([{ keywordId: KW_A, reason: "market_inactive" }]);
     expect(result).toMatchObject({
@@ -247,7 +340,11 @@ describe("rank-check run preview", () => {
       row("internal_a", KW_A, "text", { locationId: "location_removed" }),
     ]);
 
-    const result = await previewRankCheckRun({ project, spec: spec([KW_A]) });
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      project,
+      spec: spec([KW_A]),
+    });
 
     expect(result.excluded).toEqual([{ keywordId: KW_A, reason: "market_inactive" }]);
     expect(result.executable).toBe(0);
@@ -259,7 +356,11 @@ describe("rank-check run preview", () => {
       row("internal_a", KW_A, "text", { archivedAt: new Date("2026-09-01T05:00:00.000Z") }),
     ]);
 
-    const result = await previewRankCheckRun({ project, spec: spec([KW_A]) });
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      project,
+      spec: spec([KW_A]),
+    });
 
     expect(result.excluded).toEqual([{ keywordId: KW_A, reason: "keyword_archived" }]);
     expect(result.executable).toBe(0);
@@ -270,7 +371,7 @@ describe("rank-check run preview", () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([row("internal_a", KW_A, "text")]);
     mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
 
-    await previewRankCheckRun({ project, spec: spec([KW_A]) });
+    await previewRankCheckRun({ origin: APP_REQUEST_ORIGIN, project, spec: spec([KW_A]) });
 
     expect(mocks.token).toHaveBeenCalledWith({
       depth: null,
@@ -278,11 +379,12 @@ describe("rank-check run preview", () => {
       projectId: "project_1",
       providerId: null,
       selectionHash: HASH,
+      trigger: "api",
     });
   });
 
   it("reads the active market registry for the previewed project", async () => {
-    await previewRankCheckRun({ project, spec: spec() });
+    await previewRankCheckRun({ origin: APP_REQUEST_ORIGIN, project, spec: spec() });
 
     expect(mocks.prisma.projectMarket.findMany).toHaveBeenCalledWith({
       select: { locationId: true },
@@ -293,7 +395,12 @@ describe("rank-check run preview", () => {
   it("blocks a duplicate active selection before budget enforcement", async () => {
     mocks.prisma.rankCheckRun.findFirst.mockResolvedValue({ id: "run_1" });
 
-    const result = await previewRankCheckRun({ project, providerId: "provider-a", spec: spec() });
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      project,
+      providerId: "provider-a",
+      spec: spec(),
+    });
 
     expect(result.budget).toMatchObject({ blocked: true, reason: "duplicate" });
     expect(mocks.assertBudget).not.toHaveBeenCalled();
@@ -303,6 +410,240 @@ describe("rank-check run preview", () => {
       projectId: "project_1",
       providerId: "provider-a",
       selectionHash: HASH,
+      trigger: "api",
     });
+    expect(result.overlaps).toEqual([]);
+    expect(mocks.prisma.rankCheckRun.findMany).not.toHaveBeenCalled();
+  });
+
+  it.each(["succeeded", "failed", "deferred"])(
+    "allows another manual check after a %s run when the next scheduled run is only planned",
+    async (outcome) => {
+      const runs = [
+        { id: "previous_manual", outcome, status: "completed" },
+        { id: "next_scheduled", outcome: null, status: "planned" },
+      ];
+      mocks.prisma.rankCheckRun.findFirst.mockImplementation(
+        ({ where }: { where: { status: { in: string[] } } }) =>
+          Promise.resolve(runs.find((run) => where.status.in.includes(run.status)) ?? null),
+      );
+
+      const result = await previewRankCheckRun({
+        origin: APP_REQUEST_ORIGIN,
+        project,
+        spec: spec(),
+      });
+
+      expect(result.executable).toBe(3);
+      expect(result.budget).toMatchObject({ blocked: false, reason: null });
+      expect(mocks.assertBudget).toHaveBeenCalled();
+    },
+  );
+
+  it.each(["queued", "running", "cancelling", "blocked"])(
+    "still prevents a duplicate manual check while the same scope is %s",
+    async (status) => {
+      mocks.prisma.rankCheckRun.findFirst.mockImplementation(
+        ({ where }: { where: { status: { in: string[] } } }) =>
+          Promise.resolve(where.status.in.includes(status) ? { id: "active_run" } : null),
+      );
+
+      const result = await previewRankCheckRun({
+        origin: APP_REQUEST_ORIGIN,
+        project,
+        spec: spec(),
+      });
+
+      expect(result.budget).toMatchObject({ blocked: true, reason: "duplicate" });
+      expect(mocks.assertBudget).not.toHaveBeenCalled();
+    },
+  );
+});
+
+describe("manual rank-check run preview", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.resolveSelection.mockResolvedValue({
+      keywordIds: ["internal_a", "internal_b", "internal_c"],
+      selectionHash: HASH,
+    });
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      budgetCapCents: 100,
+      defaults: { serpDepth: 100 },
+      providerAllocationsInitializedAt: null,
+    });
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: "location_active" }]);
+    mocks.prisma.rankCheckRun.findFirst.mockResolvedValue({ id: "active_run" });
+    mocks.prisma.rankCheckRun.findMany.mockResolvedValue([]);
+    mocks.prisma.rankCheckRun.count.mockResolvedValue(0);
+    mocks.loadChain.mockResolvedValue([
+      { costPerCheckCents: 10, id: "connection_1", provider: "provider-a" },
+    ]);
+    mocks.cost.mockReturnValue(10);
+    mocks.assertBudget.mockResolvedValue({ capCents: 100, spentCents: 20 });
+    mocks.isBudgetError.mockReturnValue(false);
+    mocks.token.mockReturnValue({ expiresAt: new Date("2026-09-02T10:10:00.000Z"), token: "t" });
+  });
+
+  it("keeps keywords that only wait in another run's queue and never blocks a duplicate", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      row("internal_a", KW_A, "queued elsewhere", { heldByRun: true }),
+      row("internal_b", KW_B, "free"),
+      row("internal_c", KW_C, "at the provider", { runningInRun: true }),
+    ]);
+
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      project,
+      spec: spec(),
+      trigger: "manual",
+    });
+
+    expect(result.excluded).toEqual([{ keywordId: KW_C, reason: "in_progress" }]);
+    expect(result.executable).toBe(2);
+    expect(result.budget).toMatchObject({ blocked: false, reason: null });
+    expect(mocks.prisma.rankCheckRun.findFirst).not.toHaveBeenCalled();
+    expect(mocks.token).toHaveBeenCalledWith(
+      expect.objectContaining({ estimateCents: 20, trigger: "manual" }),
+    );
+  });
+
+  it("leaves out a keyword whose provider task or rank check is in flight", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      row("internal_a", KW_A, "task", { inProgress: true }),
+      { ...row("internal_b", KW_B, "check"), rankChecks: [{ status: "running" }] },
+      row("internal_c", KW_C, "free"),
+    ]);
+
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      project,
+      spec: spec(),
+      trigger: "manual",
+    });
+
+    expect(result.excluded).toEqual([
+      { keywordId: KW_A, reason: "in_progress" },
+      { keywordId: KW_B, reason: "in_progress" },
+    ]);
+    expect(result.executable).toBe(1);
+  });
+
+  it("reports active runs first, then scheduled occurrences, over the executable keywords", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      row("internal_a", KW_A, "queued elsewhere", { heldByRun: true }),
+      row("internal_b", KW_B, "free"),
+      row("internal_c", KW_C, "at the provider", { runningInRun: true }),
+    ]);
+    const createdAt = new Date("2026-09-25T08:00:00.000Z");
+    mocks.prisma.rankCheckRun.findMany
+      .mockResolvedValueOnce([
+        {
+          _count: { items: 1 },
+          createdAt,
+          launchedAt: new Date("2026-09-25T08:01:00.000Z"),
+          plannedFor: null,
+          publicId: "rcr_queued",
+          status: "queued",
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          checkSchedule: { _count: { keywords: 2 } },
+          createdAt,
+          launchedAt: null,
+          plannedFor: new Date("2026-09-25T14:00:00.000Z"),
+          publicId: "rcr_planned",
+          status: "planned",
+        },
+        {
+          checkSchedule: { _count: { keywords: 0 } },
+          createdAt,
+          launchedAt: null,
+          plannedFor: new Date("2026-09-25T15:00:00.000Z"),
+          publicId: "rcr_empty",
+          status: "planned",
+        },
+      ]);
+    mocks.prisma.rankCheckRun.count.mockResolvedValueOnce(1).mockResolvedValueOnce(2);
+
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      project,
+      spec: spec(),
+      trigger: "manual",
+    });
+
+    expect(result.overlaps).toEqual([
+      {
+        at: "2026-09-25T08:01:00.000Z",
+        canCancel: true,
+        keywordCount: 1,
+        runId: "rcr_queued",
+        status: "queued",
+      },
+      {
+        at: "2026-09-25T14:00:00.000Z",
+        canCancel: true,
+        keywordCount: 2,
+        runId: "rcr_planned",
+        status: "planned",
+      },
+    ]);
+    expect(result.overlapRunCount).toBe(3);
+    const [activeQuery, scheduledQuery] = mocks.prisma.rankCheckRun.findMany.mock.calls.map(
+      ([query]) => query,
+    );
+    expect(activeQuery).toMatchObject({
+      take: 5,
+      where: {
+        items: {
+          some: {
+            keywordId: { in: ["internal_a", "internal_b"] },
+            status: { in: ["queued", "running"] },
+          },
+        },
+        projectId: "project_1",
+        status: { in: ["queued", "running", "cancelling"] },
+      },
+    });
+    expect(scheduledQuery).toMatchObject({
+      take: 5,
+      where: {
+        checkSchedule: {
+          archivedAt: null,
+          enabled: true,
+          keywords: { some: { id: { in: ["internal_a", "internal_b"] } } },
+        },
+        OR: [{ status: "blocked" }, { plannedFor: { lte: expect.any(Date) }, status: "planned" }],
+      },
+    });
+  });
+
+  it("does not offer to cancel a run that already sends checks", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      row("internal_a", KW_A, "held", { heldByRun: true }),
+    ]);
+    mocks.prisma.rankCheckRun.findMany.mockResolvedValueOnce([
+      {
+        _count: { items: 1 },
+        createdAt: new Date("2026-09-25T08:00:00.000Z"),
+        launchedAt: null,
+        plannedFor: null,
+        publicId: "rcr_running",
+        status: "running",
+      },
+    ]);
+
+    const result = await previewRankCheckRun({
+      origin: APP_REQUEST_ORIGIN,
+      project,
+      spec: spec([KW_A]),
+      trigger: "manual",
+    });
+
+    expect(result.overlaps).toEqual([
+      expect.objectContaining({ at: "2026-09-25T08:00:00.000Z", canCancel: false }),
+    ]);
   });
 });

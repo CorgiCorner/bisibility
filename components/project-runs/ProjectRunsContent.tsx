@@ -179,7 +179,7 @@ export function ProjectRunsContent({
       aria-label={query.view === "planned" ? t("upcomingRuns") : t("runs")}
     >
       <ProjectRunsTabs active="runs" projectRef={projectRef} query={query} />
-      <Card className="min-w-0 overflow-hidden p-0 [&_[role=table]]:border-0" size="sm">
+      <Card className="min-w-0 overflow-hidden p-0" size="sm">
         <TableCardHeader
           className="border-b border-border"
           titleId="runs-list-title"

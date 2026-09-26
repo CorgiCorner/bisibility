@@ -8,6 +8,7 @@ import {
 } from "@/lib/actions/_shared";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { budgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import { inlineRankCheckExecutionEnabled } from "@/lib/rank-check/inline-execution";
 import { launchSingleRankCheckRun } from "@/lib/rank-check/runs/launch-single";
@@ -54,6 +55,7 @@ export async function manualRunCheckNow(input: unknown): Promise<RunCheckNowResu
       actorId: actor.id,
       depth: data.depth,
       keywordId: keyword.publicId as `kw_${string}`,
+      origin: APP_REQUEST_ORIGIN,
       project,
       providerId: data.providerId,
       trigger: "manual",

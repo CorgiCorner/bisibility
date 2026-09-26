@@ -28,11 +28,11 @@ describe("testSuccessPresentation", () => {
       message: null,
     });
     expect(
-      testSuccessPresentation("plausible", { message: "Connection OK · example.com.", ok: true }),
+      testSuccessPresentation("plausible", { message: "Connected · example.com.", ok: true }),
     ).toEqual({ balance: null, kind: "application_connection", message: "example.com." });
     expect(
       testSuccessPresentation("gsc", {
-        message: "Connection OK · sc-domain:example.com (siteUnverifiedUser).",
+        message: "Connected · sc-domain:example.com (siteUnverifiedUser).",
         ok: true,
       }),
     ).toEqual({

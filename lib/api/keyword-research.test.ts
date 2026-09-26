@@ -19,6 +19,12 @@ function context(method: "GET" | "POST", resource: string, search = "", body?: u
     headers: new Headers({ "RateLimit-Remaining": "99" }),
     instance: "urn:test",
     method,
+    origin: {
+      credentialId: "key_test",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
     path: ["projects", projectId, resource],
     req: new Request(url, {
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -156,6 +162,50 @@ describe("keyword research REST handlers", () => {
       expect(response.headers.get("retry-after")).toBeTruthy();
   });
 
+  it("reports the exhausted budget with surface, reset, and retry headers", async () => {
+    mocks.research.mockResolvedValue({ ok: false, reason: "budget_exhausted" });
+    const response = await getKeywordResearch(
+      context("GET", "keyword-research", "?seed=test"),
+      projectId,
+    );
+    expect(response.status).toBe(429);
+    const body = await response.json();
+    expect(body.details.surface).toBe("programmatic");
+    expect(typeof body.details.resets_at).toBe("string");
+    expect(response.headers.get("retry-after")).toBeTruthy();
+    expect(response.headers.get("ratelimit-reset")).toBeTruthy();
+  });
+
+  it("names the provider the exhausted-budget outcome carries", async () => {
+    mocks.research.mockResolvedValue({
+      ok: false,
+      provider: "dataforseo",
+      reason: "budget_exhausted",
+    });
+    const response = await getKeywordResearch(
+      context("GET", "keyword-research", "?seed=test"),
+      projectId,
+    );
+    const body = await response.json();
+    expect(body.details.provider).toBe("dataforseo");
+    expect(body.detail).toContain("dataforseo");
+  });
+
+  it("reports the compared estimate on a cost-limit refusal", async () => {
+    mocks.research.mockResolvedValue({
+      estimatedCostCents: 12,
+      ok: false,
+      reason: "cost_limit_exceeded",
+    });
+    const response = await getKeywordResearch(
+      context("GET", "keyword-research", "?seed=test"),
+      projectId,
+    );
+    expect(response.status).toBe(422);
+    const body = await response.json();
+    expect(body.details.estimated_cost_cents).toBe(12);
+  });
+
   it.each(["?seed=", "?seed=x&mode=bad", "?seed=x&result_limit=200"])(
     "rejects invalid research query %s",
     async (search) => {
@@ -175,5 +225,50 @@ describe("keyword research REST handlers", () => {
         projectId,
       ),
     ).rejects.toThrow();
+  });
+
+  it("derives the service origin from the SDK request credential", async () => {
+    const sdkOrigin = {
+      credentialId: "key_1",
+      credentialKind: "project_key",
+      source: "sdk",
+      surface: "programmatic",
+    } as const;
+    const expectedOrigin = {
+      credential: { id: "key_1", kind: "project_key" },
+      source: "sdk",
+    };
+
+    mocks.research.mockResolvedValue({
+      cached: false,
+      connections: [],
+      costCents: 2,
+      fetchedAt: "2026-07-22T10:00:00.000Z",
+      ok: true,
+      provider: "DataForSEO",
+      rows: [],
+      sources: [],
+    });
+    const researchContext = context("GET", "keyword-research", "?seed=test");
+    researchContext.origin = sdkOrigin;
+    await getKeywordResearch(researchContext, projectId);
+    expect(mocks.research).toHaveBeenCalledWith(
+      expect.objectContaining({ origin: expectedOrigin }),
+    );
+
+    mocks.metrics.mockResolvedValue({
+      cachedCount: 0,
+      connections: [],
+      costCents: 1,
+      fetchedAt: "2026-07-22T10:00:00.000Z",
+      fetchedCount: 1,
+      ok: true,
+      provider: "DataForSEO",
+      rows: [],
+    });
+    const metricsContext = context("POST", "keyword-metrics", "", { keywords: ["test"] });
+    metricsContext.origin = sdkOrigin;
+    await postKeywordMetrics(metricsContext, projectId);
+    expect(mocks.metrics).toHaveBeenCalledWith(expect.objectContaining({ origin: expectedOrigin }));
   });
 });

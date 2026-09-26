@@ -109,6 +109,7 @@ describe("runInlineRankCheck", () => {
     });
     expect(mocks.run).toHaveBeenCalledWith({
       depth: undefined,
+      inline: true,
       keywordId: "keyword_1",
       providerId: "provider-a",
       rankCheckId: "rank_check_1",
@@ -177,6 +178,7 @@ describe("runInlineRankCheck", () => {
 
     expect(mocks.run).toHaveBeenCalledWith({
       depth: undefined,
+      inline: true,
       keywordId: "keyword_1",
       providerId: "provider-a",
       rankCheckId: "rank_check_1",

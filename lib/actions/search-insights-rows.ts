@@ -9,9 +9,9 @@ import { SEARCH_INSIGHTS_SORT_KEYS } from "@/lib/search-insights/queries/top-row
 import { z } from "zod";
 import { parseActionInput } from "./_shared";
 
-// One click can ask for a page, never for a saturated window: the client keeps asking until it
-// holds the window or reaches the cap. The offset is bounded by that same cap, because every page
-// re-aggregates the whole window before it skips - a deep offset is the expensive one.
+// One request reads one table page, never a saturated window. The offset is bounded by the cap,
+// because every page re-aggregates the whole window before it skips - a deep offset is the
+// expensive one.
 const rowsSchema = z.object({
   kind: z.enum(["pages", "queries"]),
   limit: z.number().int().min(1).max(ROWS_PAGE_LIMIT),
@@ -19,6 +19,7 @@ const rowsSchema = z.object({
   period: z.string().trim().max(8).optional(),
   projectId: z.string().trim().min(1).max(120),
   property: z.string().trim().min(1).max(300),
+  search: z.string().trim().max(200).optional(),
   // The sort key indexes the read's own expression table, so an unknown one is rejected here
   // rather than reaching a statement.
   sort: z
@@ -30,7 +31,7 @@ const rowsSchema = z.object({
 });
 
 /**
- * Paging for the tables' Show more and Show all controls. The read service authorizes the
+ * Server pages for the tables' pagination and search. The read service authorizes the
  * project reference and re-authorizes the requested property while resolving the window, so
  * the client cannot make a property readable by naming it.
  */
@@ -42,6 +43,7 @@ export async function loadSearchInsightsRows(input: unknown): Promise<SearchInsi
     offset: data.offset,
     period: data.period,
     property: data.property,
+    search: data.search,
     sort: data.sort,
   });
 }

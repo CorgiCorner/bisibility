@@ -37,6 +37,7 @@ export async function dispatchMcpRestCall(rest: RestCall, authorization: McpApiA
   if (rest.idempotencyKey) headers.set("Idempotency-Key", rest.idempotencyKey);
   if (rest.preferAsync) headers.set("Prefer", "respond-async");
   if (rest.projectId) headers.set("X-Bisibility-Project", rest.projectId);
+  headers.set("X-Bisibility-Source", "mcp");
   const url = new URL(`https://mcp.local/api/v1${rest.path}`);
   const request = new Request(url, { body: bodyInit, headers, method: rest.method });
   const path = routePath(url);

@@ -87,7 +87,7 @@ describe("gsc analytics provider", () => {
     await expect(
       gscAnalyticsProvider.testConnection({ apiKey: "refresh_token", login: "example.com" }),
     ).resolves.toEqual({
-      message: "Connection OK · sc-domain:example.com (siteOwner).",
+      message: "Connected · sc-domain:example.com (siteOwner).",
       ok: true,
     });
   });
@@ -116,7 +116,7 @@ describe("gsc analytics provider", () => {
         login: "sc-domain:new-site.test",
       }),
     ).resolves.toEqual({
-      message: "Connection OK · sc-domain:new-site.test (siteOwner).",
+      message: "Connected · sc-domain:new-site.test (siteOwner).",
       ok: true,
     });
     expect(

@@ -1,4 +1,5 @@
 import { appendFileSync } from "node:fs";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -142,6 +143,7 @@ describe("domain overview provider and service characterization", () => {
     await fetchMetrics({
       ...researchScope,
       budgetCapCents: 500,
+      origin: APP_REQUEST_ORIGIN,
       projectId: "project_1",
       scope: "root",
       source,
@@ -193,7 +195,7 @@ describe("domain overview provider and service characterization", () => {
       options: unknown,
     ) => Promise<unknown>;
     const result = await loadHistory(
-      { projectId: "project_1" },
+      { origin: APP_REQUEST_ORIGIN, projectId: "project_1" },
       { countryCode: "PL", languageCode: "pl", locationCode: 2616, target: "example.com" },
     );
     expect(

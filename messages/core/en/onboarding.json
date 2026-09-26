@@ -273,7 +273,9 @@
         "suggested": "Suggested",
         "backToMarket": "Back to market"
       },
-      "errors": { "createProjectFirst": "Create the project before adding markets." },
+      "errors": {
+        "createProjectFirst": "Create the project before adding markets."
+      },
       "maximum": "Maximum {count, number} markets selected.",
       "remove": "Remove {market} / {language}",
       "title": "Markets"
@@ -302,7 +304,7 @@
         },
         "getCredentials": "Get API credentials",
         "group": "SERP provider",
-        "label": "Rank data / powers rank checks",
+        "label": "Choose your provider",
         "notice": "Connections are saved per provider - switching does not disconnect.",
         "serpapi": {
           "capability": "Rank checks only.",
@@ -356,10 +358,10 @@
         "title": "Connect a provider"
       },
       "searchConsole": {
-        "label": "Your site's data / optional, free",
+        "label": "Search Console · Optional",
         "tooltip": "Search Console shows the queries your site already ranks for. Free import for keyword suggestions; it cannot check rankings."
       },
-      "title": "Provider",
+      "title": "Rank data",
       "skip": "Skip provider connection and add keywords as paused",
       "skipLabel": "Skip for now",
       "video": {
@@ -372,7 +374,8 @@
           "title": "SerpApi account setup"
         },
         "watch": "Watch setup guide"
-      }
+      },
+      "description": "Choose how to power your rank checks. You can change this later in Integrations."
     },
     "residency": {
       "message": "Your data is stored and processed in the {region}."
@@ -423,8 +426,8 @@
         "title": "Keywords"
       },
       "provider": {
-        "description": "SERP provider and search insights",
-        "title": "Provider"
+        "description": "Rank checks and search insights",
+        "title": "Rank data"
       },
       "website": {
         "description": "Name and domain",

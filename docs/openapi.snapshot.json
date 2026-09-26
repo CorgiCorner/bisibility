@@ -18,6 +18,16 @@
         "schema": {
           "type": "string"
         }
+      },
+      "SourceHeader": {
+        "description": "Declares the client that produced the request for usage reporting: sdk, cli or mcp. Optional; any other value counts as api. It never changes authentication or which budget applies (every bearer-authenticated request counts against the API, MCP and SDK budget).",
+        "in": "header",
+        "name": "X-Bisibility-Source",
+        "required": false,
+        "schema": {
+          "enum": ["sdk", "cli", "mcp"],
+          "type": "string"
+        }
       }
     },
     "schemas": {
@@ -339,10 +349,69 @@
           }
         ]
       },
+      "BacklinksEstimate": {
+        "description": "Free dry run returned for estimate_only=true. It carries cost facts only and never report fields, so it cannot be mistaken for an empty backlink profile.",
+        "properties": {
+          "cached": {
+            "description": "An unexpired snapshot exists, so the paid call would cost nothing.",
+            "type": "boolean"
+          },
+          "cached_until": {
+            "description": "Expiry of that snapshot; null when there is none.",
+            "format": "date-time",
+            "type": ["string", "null"]
+          },
+          "cost_cents": {
+            "description": "0 when cached, otherwise equal to estimated_cost_cents.",
+            "minimum": 0,
+            "type": "number"
+          },
+          "estimate": {
+            "const": true,
+            "type": "boolean"
+          },
+          "estimated_cost_cents": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "include_subdomains": {
+            "type": "boolean"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "target_scope": {
+            "enum": ["site", "page"],
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "target_scope",
+          "include_subdomains",
+          "cached",
+          "cached_until",
+          "provider",
+          "cost_cents",
+          "estimate",
+          "estimated_cost_cents"
+        ],
+        "type": "object"
+      },
       "BacklinksResponse": {
         "properties": {
           "data": {
-            "$ref": "#/components/schemas/BacklinksSnapshot"
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/BacklinksEstimate"
+              },
+              {
+                "$ref": "#/components/schemas/BacklinksSnapshot"
+              }
+            ]
           }
         },
         "required": ["data"],
@@ -380,13 +449,6 @@
             "type": "string"
           },
           "cost_cents": {
-            "minimum": 0,
-            "type": "number"
-          },
-          "estimate": {
-            "type": "boolean"
-          },
-          "estimated_cost_cents": {
             "minimum": 0,
             "type": "number"
           },
@@ -597,6 +659,15 @@
           "fetched_row_count",
           "total_rows_available"
         ],
+        "type": "object"
+      },
+      "BacklinksSnapshotResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BacklinksSnapshot"
+          }
+        },
+        "required": ["data"],
         "type": "object"
       },
       "Capability": {
@@ -3060,9 +3131,11 @@
         "required": [],
         "type": "object"
       },
-      "KeywordResearchResponse": {
+      "KeywordResearchEstimate": {
+        "description": "Free dry run returned for estimate_only=true. It carries per-source cost facts only and never rows, fetch times, or source statuses, so it cannot be mistaken for an empty result.",
         "properties": {
           "cached": {
+            "description": "Every planned source is cached.",
             "type": "boolean"
           },
           "connections": {
@@ -3089,7 +3162,73 @@
             "type": "number"
           },
           "estimate": {
+            "const": true,
             "type": "boolean"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "properties": {
+                "cached": {
+                  "type": "boolean"
+                },
+                "cost_cents": {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "source": {
+                  "enum": ["related", "suggestion", "idea"],
+                  "type": "string"
+                }
+              },
+              "required": ["source", "cost_cents", "cached"],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": ["estimate", "sources", "cost_cents", "cached", "provider", "connections"],
+        "type": "object"
+      },
+      "KeywordResearchResponse": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/KeywordResearchEstimate"
+          },
+          {
+            "$ref": "#/components/schemas/KeywordResearchResult"
+          }
+        ]
+      },
+      "KeywordResearchResult": {
+        "properties": {
+          "cached": {
+            "type": "boolean"
+          },
+          "connections": {
+            "items": {
+              "properties": {
+                "id": {
+                  "pattern": "^conn_[a-z][a-z0-9]{23}$",
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": ["id", "label", "provider"],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "cost_cents": {
+            "minimum": 0,
+            "type": "number"
           },
           "fetched_at": {
             "format": "date-time",
@@ -3612,6 +3751,10 @@
           "detail": {
             "type": "string"
           },
+          "details": {
+            "additionalProperties": true,
+            "type": "object"
+          },
           "docs_url": {
             "type": "string"
           },
@@ -3986,6 +4129,11 @@
             "example": "ES/Andalusia/Malaga@en",
             "type": "string"
           },
+          "serp_depth": {
+            "description": "Default number of SERP results scanned per rank check. Omitted keeps the stored depth.",
+            "enum": [10, 20, 50, 100],
+            "type": "integer"
+          },
           "serp_stop_on_match": {
             "description": "Set false to fetch the full configured depth for competitor snapshots.",
             "type": "boolean"
@@ -4190,6 +4338,256 @@
         ],
         "type": "object"
       },
+      "ProviderBudgets": {
+        "description": "Monthly budgets of one provider connection. Own keys and credits have separate budgets and separate usage; only the source the connection runs on today is enforced.",
+        "properties": {
+          "connection_id": {
+            "pattern": "^conn_[a-z][a-z0-9]{23}$",
+            "type": "string"
+          },
+          "credential_source": {
+            "description": "The source the connection runs on today: own keys or credits (hosted).",
+            "enum": ["own", "hosted"],
+            "type": "string"
+          },
+          "credits": {
+            "additionalProperties": false,
+            "properties": {
+              "app": {
+                "description": "App and schedules. Monthly budget on credits, in cents of credits spent. Null means no budget.",
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "amount_per_month": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "unit": {
+                        "enum": ["cents"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["amount_per_month", "unit"],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "programmatic": {
+                "description": "API, MCP, SDK and CLI. Monthly budget on credits, in cents of credits spent. Null means no budget.",
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "amount_per_month": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "unit": {
+                        "enum": ["cents"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["amount_per_month", "unit"],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": ["app", "programmatic"],
+            "type": "object"
+          },
+          "own": {
+            "additionalProperties": false,
+            "properties": {
+              "app": {
+                "description": "App and schedules. Monthly budget on the project's own keys, in the provider unit: cents of provider charges or native units (searches). Null means no budget.",
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "amount_per_month": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "unit": {
+                        "enum": ["cents", "units"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["amount_per_month", "unit"],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "programmatic": {
+                "description": "API, MCP, SDK and CLI. Monthly budget on the project's own keys, in the provider unit: cents of provider charges or native units (searches). Null means no budget.",
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "amount_per_month": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "unit": {
+                        "enum": ["cents", "units"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["amount_per_month", "unit"],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": ["app", "programmatic"],
+            "type": "object"
+          },
+          "provider": {
+            "description": "Natural provider catalog ID.",
+            "type": "string"
+          },
+          "source": {
+            "description": "Where the own-keys budget comes from: the connection, the legacy project cap, or none.",
+            "enum": ["connection", "legacy_project", "none"],
+            "type": "string"
+          }
+        },
+        "required": ["connection_id", "credential_source", "credits", "own", "provider", "source"],
+        "type": "object"
+      },
+      "ProviderBudgetsUpdate": {
+        "additionalProperties": false,
+        "description": "Omitted fields keep their stored budget; null clears a budget.",
+        "properties": {
+          "credits": {
+            "additionalProperties": false,
+            "properties": {
+              "app": {
+                "description": "App and schedules. Monthly budget on credits, in cents of credits spent. Null means no budget.",
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "amount_per_month": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "unit": {
+                        "enum": ["cents"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["amount_per_month", "unit"],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "programmatic": {
+                "description": "API, MCP, SDK and CLI. Monthly budget on credits, in cents of credits spent. Null means no budget.",
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "amount_per_month": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "unit": {
+                        "enum": ["cents"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["amount_per_month", "unit"],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "own": {
+            "additionalProperties": false,
+            "properties": {
+              "app": {
+                "description": "App and schedules. Monthly budget on the project's own keys, in the provider unit: cents of provider charges or native units (searches). Null means no budget.",
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "amount_per_month": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "unit": {
+                        "enum": ["cents", "units"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["amount_per_month", "unit"],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "programmatic": {
+                "description": "API, MCP, SDK and CLI. Monthly budget on the project's own keys, in the provider unit: cents of provider charges or native units (searches). Null means no budget.",
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "amount_per_month": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "unit": {
+                        "enum": ["cents", "units"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["amount_per_month", "unit"],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "ProviderConnect": {
         "additionalProperties": true,
         "properties": {
@@ -4324,6 +4722,25 @@
           "status": {
             "enum": ["completed", "failed", "running"],
             "type": "string"
+          },
+          "usage": {
+            "description": "Confirmed provider usage; null quantity means unconfirmed and is never inferred from requested depth. Costs may take up to 15 minutes to update.",
+            "properties": {
+              "quantity": {
+                "minimum": 0,
+                "type": ["number", "null"]
+              },
+              "status": {
+                "enum": ["confirmed", "unconfirmed"],
+                "type": "string"
+              },
+              "unit": {
+                "enum": ["operations", "cents"],
+                "type": "string"
+              }
+            },
+            "required": ["quantity", "status", "unit"],
+            "type": "object"
           }
         },
         "required": [
@@ -5732,6 +6149,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -5835,6 +6255,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -5950,6 +6373,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -6072,6 +6498,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -6187,6 +6616,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -6358,6 +6790,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -6540,6 +6975,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -6699,6 +7137,9 @@
               "enum": ["gzip"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -6849,6 +7290,9 @@
               "pattern": "^imp_[a-z][a-z0-9]{23}$",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -6998,6 +7442,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -7335,6 +7782,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -7438,6 +7888,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -7541,6 +7994,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -7647,8 +8103,28 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "max_cost_cents": {
+                    "description": "Best-effort pre-estimate provider cost gate, in cents. The launch is refused with cost_limit_exceeded when its preflight estimate exceeds it.",
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "201": {
             "content": {
@@ -7689,6 +8165,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
           },
           "403": {
             "content": {
@@ -7808,6 +8294,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -7931,6 +8420,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -8157,6 +8649,9 @@
               "minimum": 1,
               "type": "integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -8256,6 +8751,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -8350,6 +8848,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -8456,6 +8957,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -8569,6 +9073,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -8675,6 +9182,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -8777,6 +9287,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -8917,6 +9430,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -9033,6 +9549,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -9139,6 +9658,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -9236,6 +9758,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -9333,6 +9858,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -9432,6 +9960,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -9547,6 +10078,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -9756,6 +10290,9 @@
               "enum": ["equals", "contains"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -9865,6 +10402,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -10014,6 +10554,9 @@
               "minimum": 0,
               "type": "integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -10113,6 +10656,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -10229,6 +10775,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -10338,6 +10887,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -10465,6 +11017,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -10574,6 +11129,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -10673,6 +11231,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -10770,6 +11331,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -10936,6 +11500,9 @@
               "minimum": 1,
               "type": "integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -11040,6 +11607,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -11150,6 +11720,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -11192,6 +11765,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
           },
           "403": {
             "content": {
@@ -11341,6 +11924,9 @@
               "minimum": 1,
               "type": "integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -11373,6 +11959,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
           },
           "403": {
             "content": {
@@ -11566,6 +12162,9 @@
               ],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -11681,6 +12280,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -11790,6 +12392,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -11905,6 +12510,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -12004,6 +12612,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -12103,6 +12714,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -12200,6 +12814,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -12338,6 +12955,9 @@
               "maxLength": 48,
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -12424,6 +13044,126 @@
         "tags": ["analytics"]
       }
     },
+    "/projects/{project_id}/provider-budgets": {
+      "get": {
+        "operationId": "listProviderBudgets",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "items": {
+                        "$ref": "#/components/schemas/ProviderBudgets"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "next_cursor": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": ["next_cursor"],
+                      "type": "object"
+                    }
+                  },
+                  "required": ["data", "meta"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "JSON response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "List provider budgets",
+        "tags": ["providers"]
+      }
+    },
     "/projects/{project_id}/providers": {
       "get": {
         "operationId": "listProviders",
@@ -12437,6 +13177,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -12554,6 +13297,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -12651,6 +13397,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -12747,6 +13496,118 @@
         "tags": ["providers"]
       }
     },
+    "/projects/{project_id}/providers/{provider_id}/budgets": {
+      "patch": {
+        "operationId": "updateProviderBudgets",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderBudgetsUpdate"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderBudgets"
+                }
+              }
+            },
+            "description": "JSON response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Update provider budgets",
+        "tags": ["providers"]
+      }
+    },
     "/projects/{project_id}/providers/{provider_id}/connect": {
       "post": {
         "operationId": "connectProvider",
@@ -12760,6 +13621,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -12869,6 +13733,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -13015,6 +13882,18 @@
               "default": false,
               "type": "boolean"
             }
+          },
+          {
+            "description": "Best-effort pre-estimate provider cost gate, in cents.",
+            "in": "query",
+            "name": "max_cost_cents",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -13047,6 +13926,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
           },
           "403": {
             "content": {
@@ -13125,6 +14014,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -13319,6 +14211,9 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -13418,6 +14313,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -13602,6 +14500,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -13793,6 +14694,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -13963,6 +14867,9 @@
               "enum": ["keywords", "competitors"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -14097,6 +15004,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -14241,6 +15151,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -14404,6 +15317,9 @@
               "format": "date-time",
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -14522,6 +15438,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -14621,6 +15540,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -14730,6 +15652,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -14845,6 +15770,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -14954,6 +15882,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -15053,6 +15984,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -15152,6 +16086,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -15270,6 +16207,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -15368,6 +16308,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -15477,6 +16420,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -15594,6 +16540,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -15693,6 +16642,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -15792,6 +16744,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -15907,6 +16862,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -16016,6 +16974,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -16113,6 +17074,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -16295,6 +17259,9 @@
               "minimum": 1,
               "type": "integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -16327,6 +17294,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
           },
           "403": {
             "content": {
@@ -16405,6 +17382,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -16422,7 +17402,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BacklinksResponse"
+                  "$ref": "#/components/schemas/BacklinksSnapshotResponse"
                 }
               }
             },
@@ -16447,6 +17427,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
           },
           "403": {
             "content": {
@@ -16530,6 +17520,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -16572,6 +17565,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
           },
           "403": {
             "content": {
@@ -16650,6 +17653,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -16692,6 +17698,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
           },
           "403": {
             "content": {
@@ -16775,6 +17791,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -16817,6 +17836,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
           },
           "403": {
             "content": {
@@ -16900,6 +17929,9 @@
               "enum": ["v1"],
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -16942,6 +17974,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
           },
           "403": {
             "content": {
@@ -17090,6 +18132,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -17260,6 +18305,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {
@@ -17365,6 +18413,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "requestBody": {
@@ -17490,6 +18541,9 @@
           },
           {
             "$ref": "#/components/parameters/ProjectQuery"
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
           }
         ],
         "responses": {

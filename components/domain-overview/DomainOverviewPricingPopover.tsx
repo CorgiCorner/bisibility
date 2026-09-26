@@ -3,6 +3,7 @@
 import { PricingPopover } from "@/components/ui/PricingPopover";
 import { domainOverviewListEstimate } from "@/lib/cost-estimate/provider-rates";
 import { useLocale, useTranslations } from "next-intl";
+import { useDomainOverviewCacheDuration } from "./DomainOverviewCacheProvider";
 import { formatDomainEstimatedCost } from "./domain-overview-metrics";
 import type { DomainOverviewEstimateView } from "./domain-overview-workspace-model";
 
@@ -31,11 +32,12 @@ export function DomainOverviewPricingPopover({
   onClose,
 }: Readonly<DomainOverviewPricingPopoverProps>) {
   const locale = useLocale();
+  const cacheDuration = useDomainOverviewCacheDuration();
   const t = useTranslations("projectDomainOverview.workspace.ui");
   return (
     <PricingPopover
       anchor={anchor}
-      footer={<span>{t("pricingFooter")}</span>}
+      footer={<span>{t("pricingFooter", { duration: cacheDuration })}</span>}
       onClose={onClose}
       rows={[
         {
@@ -46,7 +48,7 @@ export function DomainOverviewPricingPopover({
           label: t("pricingHistory"),
           value: estimateLabel(estimate.historyCostCents, listEstimate.history, locale, t),
         },
-        { label: t("pricingRepeat"), value: t("priceFreeFromCache") },
+        { label: t("pricingRepeat", { duration: cacheDuration }), value: t("priceFreeFromCache") },
       ]}
     />
   );

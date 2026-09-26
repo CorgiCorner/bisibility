@@ -70,7 +70,9 @@
         "revoke": "Nie udało się unieważnić klucza API.",
         "notFound": "Nie znaleziono klucza API.",
         "action": "Nie udało się wykonać akcji na kluczu API."
-      }
+      },
+      "spendThisMonth": "Wydatki w tym miesiącu: {amount}",
+      "spendTooltip": "Liczy się do budżetu API, MCP i SDK"
     },
     "webhooks": {
       "title": "Webhooki wdrożeń",

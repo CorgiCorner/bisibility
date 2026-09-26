@@ -120,6 +120,12 @@ function context(
     headers: new Headers(),
     instance: `urn:bisibility:api:v1:${path}`,
     method,
+    origin: {
+      credentialId: "key_test",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
     path: path.split("/").filter(Boolean),
     req,
     url: new URL(req.url),

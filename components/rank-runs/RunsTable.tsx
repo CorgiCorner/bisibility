@@ -1,6 +1,8 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { useRunStatusCopy } from "@/components/project-runs/run-status-copy";
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/data-table/DataTable";
@@ -20,11 +22,13 @@ type RunsTableProps = {
 const ignoreSorting = () => undefined;
 
 export function RunsTable({ emptyActionHref, projectRef, rows }: Readonly<RunsTableProps>) {
+  const usage = useNativeUsageFormat();
   const dateFormat = useDateFormat();
   const deploymentMode = useDeploymentMode();
   const locale = useLocale();
   const t = useTranslations("projectRuns.rankRuns");
   const statusT = useTranslations("shared.controls.status");
+  const statusCopy = useRunStatusCopy();
   const router = useRouter();
   const tableRows: readonly RunsTableRow[] = rows.map((run) => ({ id: run.id, kind: "row", run }));
   if (rows.length === 0) {
@@ -45,10 +49,20 @@ export function RunsTable({ emptyActionHref, projectRef, rows }: Readonly<RunsTa
   }
 
   return (
-    <div className="min-w-0 [&>[role=table]]:border-0">
+    <div className="min-w-0">
       <DataTable
+        bordered={false}
         ariaLabel={t("runs")}
-        columns={runsTableColumns({ dateFormat, deploymentMode, locale, projectRef, statusT, t })}
+        columns={runsTableColumns({
+          usage,
+          dateFormat,
+          deploymentMode,
+          locale,
+          projectRef,
+          statusCopy,
+          statusT,
+          t,
+        })}
         density="standard"
         id="rank-runs-table"
         layout="auto"

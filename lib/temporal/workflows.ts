@@ -18,7 +18,9 @@ import type {
 } from "./rank-check-activities";
 import {
   AUTOMATIC_EXECUTION_DISABLED_FAILURE,
+  BALANCE_EXHAUSTED_FAILURE,
   BUDGET_EXHAUSTED_FAILURE,
+  OPERATION_ACCESS_DENIED_FAILURE,
   PROJECT_READ_ONLY_FAILURE,
   PROVIDER_RATE_LIMITED_FAILURE,
   RANK_CHECK_CLOSED_FAILURE,
@@ -38,6 +40,8 @@ const DEFERRED_FAILURE_TYPES = new Set([
   PROVIDER_RATE_LIMITED_FAILURE,
   PROJECT_READ_ONLY_FAILURE,
   BUDGET_EXHAUSTED_FAILURE,
+  BALANCE_EXHAUSTED_FAILURE,
+  OPERATION_ACCESS_DENIED_FAILURE,
 ]);
 
 type RankCheckActivities = {
@@ -136,7 +140,9 @@ export {
   syncPresenceWorkflow,
   syncSitemapsWorkflow,
 } from "./maintenance-workflows";
+export { maintainMeteringShadowWorkflow } from "./metering-maintenance-workflow";
 export { opsHeartbeatWorkflow } from "./ops-workflows";
+export { reconcileProviderUsageWorkflow } from "./provider-usage-reconcile-workflow";
 export { queuedRankCheckBatchWorkflow } from "./queued-rank-check-workflow";
 export {
   bootstrapRankCheckDispatcherWorkflow,

@@ -7,6 +7,7 @@ export function ProviderCardDescription({
   provider,
 }: Readonly<{ provider: IntegrationProviderData }>) {
   const t = useTranslations("projectIntegrations.provider");
+  if (provider.credentialSource === "hosted") return null;
   const description =
     provider.id === "gsc"
       ? t("gscDescription")

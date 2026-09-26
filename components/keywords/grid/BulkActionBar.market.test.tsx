@@ -208,7 +208,7 @@ describe("BulkActionBar inside one market", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "Sprawdź pozycje (ustawienia słów)" }),
+      screen.getByRole("button", { name: "Sprawdź pozycje (Pierwsze 10 / Pierwsze 20)" }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Wybierz głębokość" }));
     expect(

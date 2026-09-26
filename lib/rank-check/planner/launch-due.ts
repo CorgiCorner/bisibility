@@ -182,6 +182,11 @@ async function materializePlannedRun(runId: string, now: Date) {
       projectId: run.projectId,
       selectionSpec: run.selectionSpec,
       usageQuantity: admission.usageQuantity,
+      items: keywordIds.map((keywordId, index) => ({
+        keywordId,
+        cost: admission.itemCosts[index],
+        depth: admission.depth,
+      })),
     });
     if (!selectionSpec) return "allocation_exhausted" as const;
     const claimed = await tx.rankCheckRun.updateMany({

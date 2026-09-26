@@ -1,113 +1,63 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
 import {
-  FIRST_VIEW_ROW_BUFFER,
-  FIRST_VIEW_ROWS,
-  SEARCH_INSIGHTS_ROWS_CAP,
-} from "@/lib/search-insights/constants";
-import { cn } from "@/lib/ui/cn";
-import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
-import { useTranslations } from "next-intl";
+  ExpandableCard,
+  type ExpandableCardContent,
+  renderExpandableCardContent,
+} from "@/components/ui/ExpandableCard";
 import type { ReactNode } from "react";
-import type { RowsShow } from "./search-insights-rows-model";
 
 export type SearchInsightsRowsCardProps = {
   caption: ReactNode;
-  children?: ReactNode;
+  /** The table. The function form draws it once per view, so the expanded copy can fill the modal. */
+  children?: ExpandableCardContent;
+  /** The window holds no rows at all, so the card explains why instead of showing a table. */
+  empty: boolean;
   emptyReason?: string;
-  /** Control that belongs on the title row, opposite the heading. */
-  headerEnd?: ReactNode;
-  /** Action that belongs on the expander row, opposite the counter. */
-  footerEnd?: ReactNode;
-  loading?: boolean;
-  onCollapse: () => void;
-  onMore: () => void;
-  show: RowsShow;
-  shown: number;
+  /** Offers the full-screen view of the table. An empty card never offers it. */
+  expandable?: boolean;
   title: string;
-  total: number;
+  /**
+   * Controls between the heading and the table: the search, and the table's own switches. Use the
+   * function form when they hold ids, so the expanded copy can suffix them.
+   */
+  toolbar?: ExpandableCardContent;
 };
 
 export function SearchInsightsRowsCard({
   caption,
   children,
+  empty,
   emptyReason,
-  footerEnd,
-  headerEnd,
-  loading = false,
-  onCollapse,
-  onMore,
-  show,
-  shown,
+  expandable = true,
   title,
-  total,
+  toolbar,
 }: Readonly<SearchInsightsRowsCardProps>) {
-  const t = useTranslations("projectSearchInsights.copy");
-  const empty = total === 0;
-  const counter = t("rowsShownCounter", { shown, total });
-  const collapse = show === FIRST_VIEW_ROWS ? null : t("showTopTen");
-  const more =
-    show === "all" || total <= FIRST_VIEW_ROWS
-      ? null
-      : show === FIRST_VIEW_ROWS
-        ? t("showMore")
-        : FIRST_VIEW_ROW_BUFFER >= Math.min(total, SEARCH_INSIGHTS_ROWS_CAP)
-          ? null
-          : total > SEARCH_INSIGHTS_ROWS_CAP
-            ? t("showTopCount", { count: SEARCH_INSIGHTS_ROWS_CAP })
-            : t("showAllCount", { count: total });
-  const moreTitle =
-    show !== FIRST_VIEW_ROWS && total > SEARCH_INSIGHTS_ROWS_CAP
-      ? t("showCapTitle", { count: SEARCH_INSIGHTS_ROWS_CAP })
-      : t("showMoreTitle");
-  const showPager = !empty && Boolean(collapse || more);
-  const showFooter = !empty && (showPager || Boolean(footerEnd));
-
   return (
-    <section className="flex min-w-0 flex-col overflow-hidden rounded-card border border-border bg-bg-elev">
-      <div
-        className={cn(
-          "flex items-start justify-between gap-2.5 px-4 pb-3 pt-3.5",
-          empty && "border-b border-border",
-        )}
-      >
-        <div className="flex min-w-0 flex-col gap-1">
-          <h2 className="m-0 min-w-0 text-ui-body-relaxed font-semibold">{title}</h2>
-          <div className="min-w-0 text-ui-caption text-fg-muted">{caption}</div>
-        </div>
-        {headerEnd ? <div className="shrink-0">{headerEnd}</div> : null}
-      </div>
-      {empty ? (
-        <p className="m-0 px-4 py-5 text-ui-body text-fg-muted">{emptyReason}</p>
-      ) : (
-        <div className="[&_[role=table]]:border-0">{children}</div>
-      )}
-      {showFooter ? (
-        <div className="flex items-center gap-3 px-4 py-2.5">
-          {collapse ? (
-            <Button onClick={onCollapse} size="xs" title={t("collapseTitle")} variant="secondary">
-              {collapse}
-            </Button>
-          ) : null}
-          {more ? (
-            <Button
-              loading={loading}
-              onClick={onMore}
-              size="xs"
-              startIcon={<CaretDown weight="regular" size={12} />}
-              title={moreTitle}
-              variant="secondary"
-            >
-              {more}
-            </Button>
-          ) : null}
-          {showPager ? (
-            <span className="font-sans tabular-nums text-ui-caption text-fg-muted">{counter}</span>
-          ) : null}
-          {footerEnd ? <div className="ms-auto shrink-0">{footerEnd}</div> : null}
-        </div>
-      ) : null}
-    </section>
+    <ExpandableCard caption={caption} expandable={expandable && !empty} title={title}>
+      {(view) =>
+        empty ? (
+          <p className="m-0 border-t border-border px-4 py-5 text-ui-body text-fg-muted">
+            {emptyReason}
+          </p>
+        ) : (
+          <>
+            {toolbar ? (
+              <div className="flex min-w-0 flex-wrap items-center gap-2.5 px-4 pb-3">
+                {renderExpandableCardContent(toolbar, view)}
+              </div>
+            ) : null}
+            {view === "expanded" ? (
+              // The modal body has a fixed height: the table takes what the toolbar leaves.
+              <div className="flex min-h-0 flex-1 flex-col">
+                {renderExpandableCardContent(children, view)}
+              </div>
+            ) : (
+              renderExpandableCardContent(children, view)
+            )}
+          </>
+        )
+      }
+    </ExpandableCard>
   );
 }

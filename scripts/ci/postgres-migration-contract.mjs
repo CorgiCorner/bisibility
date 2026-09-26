@@ -100,7 +100,7 @@ export async function runPostgresMigrationContract() {
       "diff",
       "--from-config-datasource",
       "--to-schema",
-      "./prisma/schema.prisma",
+      "./prisma/schema",
       "--exit-code",
     ],
     configuredEnv,

@@ -167,6 +167,26 @@ describe("SavedKeywordsTable", () => {
     expect(screen.queryByText("standing desk mat")).not.toBeInTheDocument();
   });
 
+  it("prices the bulk bar in quota operations, never plan dollars, for a quota provider", () => {
+    renderTable({
+      costContext: makeCostContext({
+        costPerCheckCents: null,
+        projectName: "Acme",
+        providerId: "serpapi",
+      }),
+    });
+    for (const row of rows) {
+      fireEvent.click(screen.getByRole("checkbox", { name: `Select ${row.text}` }));
+    }
+
+    expect(
+      screen.getByText("tracking all 3 adds 900 operations/mo at daily checks"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Track 3, 900 operations/mo" })).toBeInTheDocument();
+    expect(screen.getByText("~900 operations/mo")).toBeInTheDocument();
+    expect(screen.getByText("3 selected").closest("div")?.textContent).not.toMatch(/\$/);
+  });
+
   it("promotes mixed saved pairs through the registry selector and consumes only selected pairs", async () => {
     const pairRows = [
       rows[0],

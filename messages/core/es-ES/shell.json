@@ -260,7 +260,15 @@
       "projects": "Proyectos",
       "sample": "Ejemplo",
       "switch": "Cambiar de proyecto",
-      "keywordCount": "{count, plural, =0 {# palabras clave} one {# palabra clave} other {# palabras clave}}"
+      "keywordCount": "{count, plural, =0 {# palabras clave} one {# palabra clave} other {# palabras clave}}",
+      "defaultProject": {
+        "error": "No se ha podido actualizar el proyecto predeterminado. Inténtalo de nuevo.",
+        "isDefault": "Proyecto predeterminado",
+        "isDefaultDescription": "Selecciónalo para que este proyecto deje de abrirse primero.",
+        "label": "Proyecto predeterminado: {name}",
+        "makeDefault": "Establecer como proyecto predeterminado",
+        "makeDefaultDescription": "Se abre primero al iniciar sesión."
+      }
     },
     "writeMode": {
       "migrationSettings": "Ajustes de migración",

@@ -31,7 +31,7 @@ describe("OnboardingStepper", () => {
     expect(links).toHaveLength(2);
     expect(links.map((link) => link.textContent)).toEqual([
       "WebsiteName and domain",
-      "2ProviderSERP provider and search insights",
+      "2Rank dataRank checks and search insights",
     ]);
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
       "/onboarding?step=1&projectId=prj_1",
@@ -55,7 +55,7 @@ describe("OnboardingStepper", () => {
       '[aria-label="Website, completed"] [data-step-dot-state="past"]',
     );
     const currentStep = rail.querySelector(
-      '[aria-label="Provider"] [data-step-dot-state="current"]',
+      '[aria-label="Rank data"] [data-step-dot-state="current"]',
     );
     const nextSteps = rail.querySelectorAll('[data-step-dot-state="upcoming"]');
 
@@ -78,7 +78,7 @@ describe("OnboardingStepper", () => {
       if (item === currentRailItem) continue;
       expect(item).not.toHaveClass("bg-bg-band");
     }
-    const currentCaption = within(rail).getByText("SERP provider and search insights");
+    const currentCaption = within(rail).getByText("Rank checks and search insights");
     expect(currentCaption).toHaveClass("font-normal", "text-fg-muted", "leading-snug");
     expect(currentCaption).not.toHaveClass("font-semibold", "font-medium");
     expect(currentCaption.parentElement).toHaveClass("gap-1");
@@ -99,7 +99,7 @@ describe("OnboardingStepper", () => {
     const doneStep = within(rail).getByRole("button", { name: "Website, completed" });
     expect(doneStep).not.toHaveAttribute("aria-current");
     fireEvent.click(doneStep);
-    fireEvent.click(within(rail).getByRole("button", { name: "Provider, completed" }));
+    fireEvent.click(within(rail).getByRole("button", { name: "Rank data, completed" }));
 
     const futureRailButton = within(rail).getByRole("button", { name: "First check" });
     expect(futureRailButton).toHaveAccessibleName("First check");

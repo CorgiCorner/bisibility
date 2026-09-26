@@ -1,3 +1,4 @@
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleApiRequest } from "./router";
 
@@ -5,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   metrics: vi.fn(),
   research: vi.fn(),
+  admissionDetails: vi.fn(),
+  personalScope: vi.fn(),
 }));
 
 vi.mock("./auth", () => ({
@@ -24,6 +27,10 @@ vi.mock("./ratelimit", () => ({
   rateLimitExceeded: vi.fn(),
 }));
 vi.mock("./idempotency", () => ({ withIdempotency: vi.fn((_input, execute) => execute()) }));
+vi.mock("./personal-scope", () => ({ resolvePersonalProjectScope: mocks.personalScope }));
+vi.mock("@/lib/providers/admission-error-details", () => ({
+  loadAdmissionErrorDetails: mocks.admissionDetails,
+}));
 vi.mock("@/lib/keyword-research/service", () => ({
   fetchKeywordMetrics: mocks.metrics,
   researchKeywords: mocks.research,
@@ -84,6 +91,92 @@ describe("keyword research router", () => {
     authenticate(["write"]);
     mocks.research.mockResolvedValue(researchSuccess);
     mocks.metrics.mockResolvedValue(metricsSuccess);
+    mocks.admissionDetails.mockResolvedValue(null);
+    mocks.personalScope.mockResolvedValue({
+      auth: { apiKey: { id: "key_1", projectId: project.id, scopes: ["write"] }, project },
+      role: "owner",
+    });
+  });
+
+  it("maps paid research admission through authenticated dispatch", async () => {
+    const route = "/projects/prj_a00000000000000000000000/keyword-research?seed=test";
+    const path = ["projects", "prj_a00000000000000000000000", "keyword-research"];
+    mocks.research.mockRejectedValueOnce(new DeploymentAdmissionExhaustedError());
+    const balance = await handleApiRequest(request("GET", route), path);
+    expect(balance.status).toBe(402);
+    expect(balance.headers.get("ratelimit-remaining")).toBe("99");
+    expect(balance.headers.get("Retry-After")).toBeNull();
+    await expect(balance.json()).resolves.toMatchObject({
+      type: "https://bisibility.com/problems/credits_exhausted",
+    });
+
+    mocks.research.mockRejectedValueOnce(
+      new DeploymentAdmissionExhaustedError("budget", { scope: "connection" }),
+    );
+    const budget = await handleApiRequest(request("GET", route), path);
+    expect(budget.status).toBe(429);
+    await expect(budget.json()).resolves.toMatchObject({
+      details: { scope: "connection", surface: "programmatic" },
+    });
+    expect(budget.headers.get("Retry-After")).toBeTruthy();
+  });
+
+  it("enriches only the authenticated owner's matching admission at the API boundary", async () => {
+    const path = ["projects", project.publicId, "keyword-research"];
+    const req = request("GET", `/projects/${project.publicId}/keyword-research?seed=test`);
+    mocks.auth.mockResolvedValue({
+      kind: "personal_token",
+      memberships: [{ projectId: project.id, role: "owner" }],
+      token: { id: "token_1", scopes: ["write"] },
+      user: { id: "owner_1" },
+    });
+    mocks.admissionDetails.mockResolvedValue({
+      balance_cents: 12.5,
+      top_up_url: `/app/${project.publicId}/settings/billing`,
+    });
+    mocks.research.mockRejectedValueOnce(
+      new DeploymentAdmissionExhaustedError("balance", { projectId: project.id }),
+    );
+    const response = await handleApiRequest(req, path);
+    expect(response.status).toBe(402);
+    expect(mocks.admissionDetails).toHaveBeenCalledWith(project.id, project.publicId, "owner_1");
+    await expect(response.json()).resolves.toMatchObject({
+      details: {
+        balance_cents: 12.5,
+        top_up_url: `/app/${project.publicId}/settings/billing`,
+      },
+    });
+
+    authenticate(["write"]);
+    mocks.research.mockRejectedValueOnce(
+      new DeploymentAdmissionExhaustedError("balance", { projectId: project.id }),
+    );
+    const keyResponse = await handleApiRequest(
+      new Request(req.url, {
+        headers: {
+          authorization: "Bearer bsb_key_live_test_key",
+          "x-bisibility-user-id": "owner_1",
+        },
+      }),
+      path,
+    );
+    expect(keyResponse.status).toBe(402);
+    expect(mocks.admissionDetails).toHaveBeenLastCalledWith(project.id, project.publicId, null);
+    expect((await keyResponse.json()).details.balance_cents).toBeNull();
+  });
+
+  it("does not enrich a forged or mismatched admission project", async () => {
+    const path = ["projects", project.publicId, "keyword-research"];
+    mocks.research.mockRejectedValueOnce(
+      new DeploymentAdmissionExhaustedError("balance", { projectId: "other_project" }),
+    );
+    const response = await handleApiRequest(
+      request("GET", `/projects/${project.publicId}/keyword-research?seed=test`),
+      path,
+    );
+    expect(response.status).toBe(402);
+    expect(mocks.admissionDetails).not.toHaveBeenCalled();
+    expect((await response.json()).details).toEqual({ balance_cents: null });
   });
 
   it("routes both operations with auth and rate-limit headers", async () => {

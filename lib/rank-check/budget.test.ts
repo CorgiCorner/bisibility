@@ -21,6 +21,16 @@ import {
   projectBudgetCapCents,
 } from "./budget";
 
+function mockOwnBudgetSpend(costCents: number) {
+  mocks.prisma.providerCostEntry.groupBy.mockResolvedValue([
+    {
+      _count: { _all: 1, priceCents: 0 },
+      _sum: { costCents: String(costCents), priceCents: null },
+      credentialSource: "own",
+    },
+  ]);
+}
+
 describe("projectBudgetCapCents", () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -51,6 +61,8 @@ describe("rank check budget", () => {
   beforeEach(() => {
     mocks.prisma.project.findUnique.mockResolvedValue({ budgetCapCents: 10 });
     mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: null } });
+    mocks.prisma.providerCostEntry.groupBy.mockResolvedValue([]);
+    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { estimatedCostCents: null } });
   });
 
   afterEach(() => {
@@ -63,29 +75,16 @@ describe("rank check budget", () => {
     );
   });
 
-  it("aggregates completed spend and running reservations for the current UTC calendar month", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({
-      _sum: { costCents: "42.1250", estimatedCostCents: "1.0000" },
-    });
+  it("reads confirmed monthly spend from the ledger without rank-check actuals or estimates", async () => {
     mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
-      _sum: { costCents: "2.5000" },
+      _sum: { costCents: "42.1250" },
     });
 
     await expect(
       monthlySpendCents("project_1", new Date("2026-07-14T12:00:00.000Z")),
-    ).resolves.toBe(45.625);
+    ).resolves.toBe(42.125);
 
-    expect(mocks.prisma.rankCheck.aggregate).toHaveBeenCalledWith({
-      _sum: { costCents: true, estimatedCostCents: true },
-      where: {
-        checkedAt: {
-          gte: new Date("2026-07-01T00:00:00.000Z"),
-          lt: new Date("2026-08-01T00:00:00.000Z"),
-        },
-        keyword: { projectId: "project_1" },
-        status: { not: "deferred" },
-      },
-    });
+    expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
     expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledWith({
       _sum: { costCents: true },
       where: {
@@ -94,28 +93,49 @@ describe("rank check budget", () => {
           gte: new Date("2026-07-01T00:00:00.000Z"),
           lt: new Date("2026-08-01T00:00:00.000Z"),
         },
-        feature: { not: "rank_check" },
+        measurementStatus: "recorded",
         projectId: "project_1",
       },
     });
   });
 
-  it("counts canonical failed rank-check cost without double-counting its evidence entry", async () => {
+  it("keeps a confirmed cents fraction unaffected by rank-check estimates", async () => {
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({
-      _sum: { costCents: "1.2000", estimatedCostCents: null },
+      _sum: { costCents: 100, estimatedCostCents: 40 },
     });
     mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
-      _sum: { costCents: null },
+      _sum: { costCents: "1.7500" },
+    });
+
+    await expect(
+      monthlySpendCents("project_1", new Date("2026-07-14T12:00:00.000Z")),
+    ).resolves.toBe(1.75);
+
+    expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
+  });
+
+  it("sums every ledger feature including rank checks and reads no keyword join", async () => {
+    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
+      _sum: { costCents: "1.2000" },
     });
 
     await expect(
       monthlySpendCents("project_1", new Date("2026-07-29T12:00:00.000Z")),
     ).resolves.toBe(1.2);
-    expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ feature: { not: "rank_check" } }),
-      }),
-    );
+
+    const where = mocks.prisma.providerCostEntry.aggregate.mock.calls[0]?.[0]?.where as Record<
+      string,
+      unknown
+    >;
+    expect(where).not.toHaveProperty("feature");
+    expect(where).not.toHaveProperty("keyword");
+    expect(where).not.toHaveProperty("keywordId");
+  });
+
+  it("returns zero when no monthly spend exists", async () => {
+    await expect(monthlySpendCents("project_1")).resolves.toBe(0);
+
+    expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
   });
 
   it("groups uncached monthly lookup spend by connection and feature", async () => {
@@ -152,21 +172,50 @@ describe("rank check budget", () => {
           lt: new Date("2026-08-01T00:00:00.000Z"),
         },
         feature: { not: "rank_check" },
+        measurementStatus: "recorded",
         projectId: "project_1",
       },
     });
   });
 
-  it("returns zero when no monthly spend exists", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({
-      _sum: { costCents: null, estimatedCostCents: null },
-    });
+  it("values a mixed monthly ledger with one bounded credential-source aggregate", async () => {
+    mocks.prisma.providerCostEntry.groupBy.mockResolvedValue([
+      {
+        _count: { _all: 2, priceCents: 0 },
+        _sum: { costCents: "2.5000", priceCents: null },
+        credentialSource: "own",
+      },
+      {
+        _count: { _all: 1, priceCents: 1 },
+        _sum: { costCents: "1.0000", priceCents: "6.5000" },
+        credentialSource: "hosted",
+      },
+    ]);
 
-    await expect(monthlySpendCents("project_1")).resolves.toBe(0);
+    await expect(
+      assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), {
+        estimatedCostCents: 1,
+      }),
+    ).resolves.toEqual({ capCents: 10, spentCents: 9 });
+    expect(mocks.prisma.providerCostEntry.aggregate).not.toHaveBeenCalled();
+    expect(mocks.prisma.providerCostEntry.groupBy).toHaveBeenCalledWith({
+      _count: { _all: true, priceCents: true },
+      _sum: { costCents: true, priceCents: true },
+      by: ["credentialSource"],
+      where: {
+        cached: false,
+        createdAt: {
+          gte: new Date("2026-07-01T00:00:00.000Z"),
+          lt: new Date("2026-08-01T00:00:00.000Z"),
+        },
+        measurementStatus: "recorded",
+        projectId: "project_1",
+      },
+    });
   });
 
   it("allows checks while spend is below the monthly cap", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 9.5 } });
+    mockOwnBudgetSpend(9.5);
 
     await expect(assertBudgetAvailable("project_1")).resolves.toEqual({
       capCents: 10,
@@ -176,7 +225,7 @@ describe("rank check budget", () => {
 
   it("treats a zero legacy cap as no cap when enforcing a rank-check launch", async () => {
     mocks.prisma.project.findUnique.mockResolvedValue({ budgetCapCents: 0 });
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 25 } });
+    mockOwnBudgetSpend(25);
 
     await expect(
       assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), {
@@ -186,7 +235,7 @@ describe("rank check budget", () => {
   });
 
   it("skips the cap query when a precomputed cap is provided", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 9.5 } });
+    mockOwnBudgetSpend(9.5);
 
     await expect(
       assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), { capCents: 20 }),
@@ -196,7 +245,7 @@ describe("rank check budget", () => {
   });
 
   it("enforces a provided precomputed cap", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 9.5 } });
+    mockOwnBudgetSpend(9.5);
 
     await expect(
       assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), { capCents: 9 }),
@@ -209,7 +258,7 @@ describe("rank check budget", () => {
   });
 
   it("falls back to the cap query when the provided cap is not finite", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 9.5 } });
+    mockOwnBudgetSpend(9.5);
 
     await expect(
       assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), {
@@ -221,7 +270,7 @@ describe("rank check budget", () => {
   });
 
   it("rejects when spend plus the current check estimate would exceed the monthly cap", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 9.5 } });
+    mockOwnBudgetSpend(9.5);
 
     await expect(
       assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), {
@@ -234,7 +283,7 @@ describe("rank check budget", () => {
   });
 
   it("allows a current check estimate that exactly fills the remaining cap", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 9.5 } });
+    mockOwnBudgetSpend(9.5);
 
     await expect(
       assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), {
@@ -247,7 +296,7 @@ describe("rank check budget", () => {
   });
 
   it("throws a typed budget error when spend reaches the monthly cap", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 10 } });
+    mockOwnBudgetSpend(10);
 
     const promise = assertBudgetAvailable("project_1");
 
@@ -261,20 +310,69 @@ describe("rank check budget", () => {
   });
 
   it("blocks another check once running reservations bring spend to the cap", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({
-      _sum: { costCents: 9, estimatedCostCents: 1 },
-    });
+    mockOwnBudgetSpend(9);
+    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { estimatedCostCents: 1 } });
 
     await expect(assertBudgetAvailable("project_1")).rejects.toMatchObject({
-      budget: { capCents: 10, projectId: "project_1", spentCents: 10 },
+      budget: { capCents: 10, projectId: "project_1", reservedCents: 1, spentCents: 9 },
+      code: "budget_exhausted",
+    });
+    expect(mocks.prisma.rankCheck.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _sum: { estimatedCostCents: true },
+        where: expect.objectContaining({ status: "running" }),
+      }),
+    );
+  });
+
+  it("does not represent an estimated reservation as actual spend", async () => {
+    mockOwnBudgetSpend(8);
+    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { estimatedCostCents: 1 } });
+
+    const state = await assertBudgetAvailable("project_1");
+
+    expect(state.spentCents).toBe(8);
+    expect(state.reservedCents).toBe(1);
+  });
+
+  it("does not reserve estimates retained on completed checks", async () => {
+    mockOwnBudgetSpend(9);
+    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { estimatedCostCents: null } });
+
+    await expect(
+      assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), {
+        estimatedCostCents: 1,
+      }),
+    ).resolves.toEqual({ capCents: 10, spentCents: 9 });
+  });
+
+  it("reports admitted running reservations separately from confirmed spend", async () => {
+    mockOwnBudgetSpend(8);
+    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { estimatedCostCents: 1 } });
+
+    await expect(
+      assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), {
+        estimatedCostCents: 1,
+      }),
+    ).resolves.toEqual({ capCents: 10, reservedCents: 1, spentCents: 8 });
+  });
+
+  it("keeps running reservations in admission alongside the next check estimate", async () => {
+    mockOwnBudgetSpend(8);
+    mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { estimatedCostCents: 1.5 } });
+
+    await expect(
+      assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), {
+        estimatedCostCents: 1,
+      }),
+    ).rejects.toMatchObject({
+      budget: { reservedCents: 1.5, spentCents: 8 },
       code: "budget_exhausted",
     });
   });
 
-  it("allows completion when excluding the running reservation leaves actual spend below cap", async () => {
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({
-      _sum: { costCents: 9.5, estimatedCostCents: null },
-    });
+  it("excludes a running reservation by rank-check id without carving the ledger sum", async () => {
+    mockOwnBudgetSpend(9.5);
 
     await expect(
       assertBudgetAvailable("project_1", new Date("2026-07-14T12:00:00.000Z"), {
@@ -282,17 +380,16 @@ describe("rank check budget", () => {
       }),
     ).resolves.toEqual({ capCents: 10, spentCents: 9.5 });
 
-    expect(mocks.prisma.rankCheck.aggregate).toHaveBeenCalledWith({
-      _sum: { costCents: true, estimatedCostCents: true },
-      where: {
-        checkedAt: {
-          gte: new Date("2026-07-01T00:00:00.000Z"),
-          lt: new Date("2026-08-01T00:00:00.000Z"),
-        },
-        id: { not: "rank_running_1" },
-        keyword: { projectId: "project_1" },
-        status: { not: "deferred" },
-      },
-    });
+    expect(mocks.prisma.rankCheck.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _sum: { estimatedCostCents: true },
+        where: expect.objectContaining({ id: { not: "rank_running_1" }, status: "running" }),
+      }),
+    );
+    const spendWhere = mocks.prisma.providerCostEntry.groupBy.mock.calls[0]?.[0]?.where as Record<
+      string,
+      unknown
+    >;
+    expect(spendWhere).not.toHaveProperty("id");
   });
 });

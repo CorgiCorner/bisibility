@@ -6,6 +6,7 @@ import { parsePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { fetchKeywordMetrics } from "@/lib/queries/keyword-metrics-query";
 import { type KeywordRow, mapKeyword } from "@/lib/queries/keyword-row";
+import { keywordCheckScheduleSelect } from "@/lib/queries/keyword-row-types";
 import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
 import { trackedProjectDomain } from "@/lib/schemas/project";
@@ -27,13 +28,7 @@ const include = {
       },
     },
   },
-  checkSchedule: {
-    select: {
-      serpDepth: true,
-      name: true,
-      publicId: true,
-    },
-  },
+  checkSchedule: { select: keywordCheckScheduleSelect },
   locationRef: true,
   queuedRankCheckTasks: {
     select: { state: true },

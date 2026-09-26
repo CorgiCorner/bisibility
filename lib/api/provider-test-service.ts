@@ -9,6 +9,7 @@ import { credentialsFromInput } from "@/lib/providers/credentials-input";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { TestProviderConnectionInput } from "@/lib/schemas/provider";
 import { auditProviderMutation } from "./provider-audit";
+import { withProviderCredentialDefaults } from "./provider-credential-defaults";
 import { probeProviderConnection } from "./provider-verification";
 import { requireApiPublicId } from "./public-id";
 
@@ -35,10 +36,10 @@ export async function testProviderConnection(
   if (!item) throw new Error(`Unknown provider: ${input.providerId}`);
   const targetId = await publicProjectId(context);
   try {
-    const credentials = await credentialsForProviderTest(
+    const credentials = await withProviderCredentialDefaults(
+      item,
       context.projectId,
-      item.id,
-      credentialsFromInput(input),
+      await credentialsForProviderTest(context.projectId, item.id, credentialsFromInput(input)),
     );
     const result = await probeProviderConnection({
       credentials,

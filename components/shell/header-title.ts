@@ -47,6 +47,8 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
     );
   }
 
+  if (matches(sectionPath, "/admin/metering")) return { title: "Instance administration" };
+
   if (matches(sectionPath, "/admin/audit")) {
     return sectionMeta("Instance administration", "Instance administrator activity and outcomes.");
   }

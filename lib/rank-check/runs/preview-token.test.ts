@@ -11,7 +11,15 @@ const expected = {
   projectId: "project_1",
   providerId: "provider-a",
   selectionHash: "a".repeat(64),
+  trigger: "manual" as const,
 };
+
+function primarySignature(canonical: string) {
+  const primaryKey = createHmac("sha256", Buffer.from(PRIMARY, "base64"))
+    .update("rank-check-run-preview")
+    .digest();
+  return createHmac("sha256", primaryKey).update(Buffer.from(canonical)).digest("base64url");
+}
 
 describe("rank-check preview token", () => {
   beforeEach(() => {
@@ -41,15 +49,23 @@ describe("rank-check preview token", () => {
       providerId: expected.providerId,
       estimateCents: expected.estimateCents,
       exp: Math.floor(now.getTime() / 1000) + 600,
+      trigger: expected.trigger,
     });
-    const primaryKey = createHmac("sha256", Buffer.from(PRIMARY, "base64"))
-      .update("rank-check-run-preview")
-      .digest();
-    const expectedSignature = createHmac("sha256", primaryKey)
-      .update(Buffer.from(canonical))
-      .digest("base64url");
 
-    expect(encodedSignature).toBe(expectedSignature);
+    expect(encodedSignature).toBe(primarySignature(canonical));
+  });
+
+  it("reads a token signed before the trigger field as an API preview", () => {
+    const { trigger: _trigger, ...legacy } = expected;
+    const canonical = JSON.stringify({ ...legacy, exp: Math.floor(now.getTime() / 1000) + 600 });
+    const token = `${Buffer.from(canonical).toString("base64url")}.${primarySignature(canonical)}`;
+
+    expect(verifyPreviewToken(token, { ...expected, trigger: "api" }, now)).toMatchObject({
+      trigger: "api",
+    });
+    expect(() => verifyPreviewToken(token, expected, now)).toThrowError(
+      expect.objectContaining<Partial<PreviewTokenError>>({ code: "mismatch" }),
+    );
   });
 
   it("rejects tampering with every signed payload field", () => {
@@ -63,6 +79,7 @@ describe("rank-check preview token", () => {
       { projectId: "project_2" },
       { providerId: "provider-b" },
       { selectionHash: "b".repeat(64) },
+      { trigger: "api" },
     ]) {
       const altered = Buffer.from(JSON.stringify({ ...decoded, ...change })).toString("base64url");
       expect(() => verifyPreviewToken(`${altered}.${signature}`, expected, now)).toThrowError(
@@ -82,6 +99,7 @@ describe("rank-check preview token", () => {
       { ...expected, selectionHash: "b".repeat(64) },
       { ...expected, depth: 100 as const },
       { ...expected, providerId: "provider-b" },
+      { ...expected, trigger: "api" as const },
     ]) {
       expect(() => verifyPreviewToken(token, mismatch, now)).toThrowError(
         expect.objectContaining<Partial<PreviewTokenError>>({ code: "mismatch" }),

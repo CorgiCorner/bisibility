@@ -2,10 +2,14 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { IntegrationUsagePanel } from "./IntegrationUsagePanel";
 
 const mocks = vi.hoisted(() => ({
+  budgetExtension: vi.fn(async () => null),
   loadCoreMessages: vi.fn(async () => ({})),
   readable: vi.fn(),
   role: vi.fn(),
   settings: vi.fn(),
+}));
+vi.mock("@/components/settings/AccountDataSourceExtension", () => ({
+  renderAccountUsageBudgetExtension: mocks.budgetExtension,
 }));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.readable }));
 vi.mock("@/lib/queries/settings", () => ({ getSettings: mocks.settings }));
@@ -37,7 +41,7 @@ it.each([
   mocks.role.mockReturnValue(role);
   mocks.readable.mockResolvedValue({ actor: {}, project: { id: "project_1", writeMode } });
   const result = await IntegrationUsagePanel({ projectRef: "prj_1", editBudget: true });
-  expect(result.props.children.props.children.props).toMatchObject({
+  expect(result.props.children.props.children[0].props).toMatchObject({
     canEditBudget,
     initialBudgetEditOpen: true,
     projectRef: "prj_1",

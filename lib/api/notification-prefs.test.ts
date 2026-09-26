@@ -42,6 +42,12 @@ function context(role: "admin" | "member", body: unknown, method: "GET" | "PATCH
     headers: new Headers(),
     instance: "urn:test",
     method,
+    origin: {
+      credentialId: "key_test",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
     path: [],
     req:
       method === "GET"

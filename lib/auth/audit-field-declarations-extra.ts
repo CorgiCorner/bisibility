@@ -31,9 +31,8 @@ export function registerAdditionalAuditDeclarations(
   };
   const checkSchedulePolicy = { after: checkSchedule, before: checkSchedule };
   declare(["check_schedule.create", "check_schedule.update"], checkSchedulePolicy);
-  declare(["check_schedule.delete"], checkSchedulePolicy);
+  declare(["check_schedule.delete", "check_schedule.assign"], checkSchedulePolicy);
   declare(["check_schedule.set_default"], checkSchedulePolicy);
-  declare(["check_schedule.assign"], checkSchedulePolicy);
   declare(["check_schedule.remove"], checkSchedulePolicy);
   declare(["check_schedule.archive", "check_schedule.restore"], checkSchedulePolicy);
   const notificationPreference = {
@@ -213,6 +212,10 @@ export function registerAdditionalAuditDeclarations(
     },
   );
   declare(["provider.disconnect"], { after: provider, before: provider });
+  declare(["provider.credential_source_changed"], {
+    after: strings("provider", "source"),
+    before: strings("provider", "source"),
+  });
   declare(["provider.update_rate"], {
     after: { ...f.numbers("amountCents"), ...strings("feature", "provider") },
     before: { ...f.numbers("amountCents"), ...strings("feature", "provider") },
@@ -251,16 +254,12 @@ export function registerAdditionalAuditDeclarations(
     after: { ...strings("email"), ...f.booleans("isInstanceAdmin") },
     before: f.booleans("isInstanceAdmin"),
   });
-  declare(["account.two_factor_backup_codes_regenerated"], {
-    after: f.booleans("regenerated"),
-  });
+  declare(["account.two_factor_backup_codes_regenerated"], { after: f.booleans("regenerated") });
   declare(["account.two_factor_disabled"], {
     after: f.booleans("enabled", "sessionsRevoked"),
     before: f.booleans("enabled"),
   });
-  declare(["account.two_factor_enrollment_verification_failed"], {
-    after: strings("mode"),
-  });
+  declare(["account.two_factor_enrollment_verification_failed"], { after: strings("mode") });
   declare(["account.two_factor_enrollment_started", "account.two_factor_replacement_started"], {
     after: { ...f.dates("expiresAt"), ...strings("mode") },
   });

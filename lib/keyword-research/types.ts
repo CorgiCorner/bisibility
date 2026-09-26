@@ -37,14 +37,42 @@ export type KeywordResearchSuccess = {
   connections: KeywordResearchConnection[];
   costCents: number;
   fetchedAt: string;
-  estimate?: boolean;
   ok: true;
   provider: string;
   rows: KeywordResearchRow[];
   sources: KeywordResearchSourceDiagnostic[];
 };
 
-export type KeywordResearchOutcome = KeywordResearchSuccess | ProviderLookupFailure;
+export type KeywordResearchSourceEstimate = {
+  cached: boolean;
+  costCents: number;
+  source: KeywordResearchSource;
+};
+
+/**
+ * A free dry run. It carries only the per-source cost facts, never rows, fetch times, or
+ * source statuses, so a caller cannot mistake it for an empty research result.
+ */
+export type KeywordResearchEstimate = {
+  cached: boolean;
+  connections: KeywordResearchConnection[];
+  costCents: number;
+  estimate: true;
+  ok: true;
+  provider: string;
+  sources: KeywordResearchSourceEstimate[];
+};
+
+export type KeywordResearchOutcome =
+  | KeywordResearchSuccess
+  | KeywordResearchEstimate
+  | ProviderLookupFailure;
+
+export function isKeywordResearchEstimate(
+  outcome: KeywordResearchEstimate | KeywordResearchSuccess,
+): outcome is KeywordResearchEstimate {
+  return "estimate" in outcome && outcome.estimate === true;
+}
 
 export type KeywordMetricsSuccess = {
   cachedCount: number;

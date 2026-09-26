@@ -104,7 +104,8 @@ export const rankCheckOperationSchema = z.object({
   budget: z
     .object({
       capCents: z.number().int().nonnegative(),
-      spentCents: z.number().int().nonnegative(),
+      // Confirmed ledger spend keeps fractional cents; it is never truncated.
+      spentCents: z.number().nonnegative(),
     })
     .nullable()
     .optional(),
@@ -123,8 +124,26 @@ export const rankCheckOperationSchema = z.object({
   scheduleTiming: runScheduleTimingSchema.nullable().optional(),
   provider: rankCheckProviderSchema.nullable().optional(),
   providerLabel: z.string().min(1).nullable().optional(),
+  nativeEstimate: z
+    .object({
+      providerId: z.string().nullable(),
+      unit: z.enum(["cents", "units"]).nullable(),
+      quantity: z.number().nonnegative().nullable(),
+      unknownTargets: nonNegativeIntegerSchema,
+    })
+    .optional(),
   estimatedCostCents: z.number().int(),
-  costCents: z.number().int(),
+  // Ledger actuals keep fractional cents and stay null while a receipt is
+  // unconfirmed; never zero-fill a missing measurement.
+  costCents: z.number().nonnegative().nullable(),
+  usage: z
+    .object({
+      actual: nonNegativeIntegerSchema.nullable(),
+      estimated: nonNegativeIntegerSchema.nullable(),
+      unit: z.literal("operations"),
+    })
+    .nullable()
+    .optional(),
   blockedReason: z.string().nullable(),
   etaSeconds: nonNegativeIntegerSchema.nullable().optional(),
   plannedFor: nullableIsoDatetimeSchema,

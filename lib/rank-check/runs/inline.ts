@@ -70,6 +70,7 @@ export async function runInlineRankCheck(input: RunInlineRankCheckInput) {
       providerId: input.providerId,
       rankCheckId: running.rankCheckId,
       runItemId: item.id,
+      inline: true,
       source: "manual",
     });
   } catch (error) {

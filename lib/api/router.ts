@@ -5,6 +5,7 @@ import { canProjectAction } from "@/lib/auth/capabilities";
 import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { handleAccountRequest } from "./account-router";
 import { isAccountRoute, isPersonalTokenOnlyRoute } from "./account-routes";
+import { apiAdmissionErrorDetails } from "./admission-error-details";
 import { unsupportedApiVersionResponse } from "./api-versions";
 import {
   type ApiAuth,
@@ -23,6 +24,7 @@ import { withIdempotency } from "./idempotency";
 import { operationPolicyForRequest } from "./operation-policy";
 import { resolvePersonalProjectScope } from "./personal-scope";
 import { checkRateLimit, rateLimitExceeded } from "./ratelimit";
+import { apiRequestOrigin } from "./request-origin";
 import { hasScope } from "./request-scope";
 import { errorResponse, methodNotAllowed, routeNotFound } from "./responses";
 import { dispatchRoute } from "./routes";
@@ -250,6 +252,7 @@ async function dispatchApiRequest(
     headers: authResult.headers,
     instance: instance(url),
     method,
+    origin: apiRequestOrigin(auth, req.headers),
     path,
     req,
     url,
@@ -259,7 +262,8 @@ async function dispatchApiRequest(
       const response = await dispatchRoute(ctx);
       return response ?? routeNotFound({ headers: ctx.headers, instance: ctx.instance });
     } catch (error) {
-      return errorFromUnknown(error, ctx.headers, url);
+      const details = await apiAdmissionErrorDetails(error, ctx);
+      return errorFromUnknown(error, ctx.headers, url, details);
     }
   };
 

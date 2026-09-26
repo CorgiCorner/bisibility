@@ -104,6 +104,12 @@ function context(body: Record<string, unknown>): ApiContext {
     headers: new Headers(),
     instance: url.pathname,
     method: "POST",
+    origin: {
+      credentialId: "key_test",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
     path: ["api-keys"],
     req: new Request(url, {
       body: JSON.stringify(body),
@@ -202,7 +208,13 @@ model Example {
       .filter(existsSync)
       .map((path) => [path, readFileSync(path, "utf8")] satisfies [string, string]);
 
-    const result = migrationColumnMismatches(source("prisma/schema.prisma"), migrations);
+    const schemaRoot = resolve(process.cwd(), "prisma/schema");
+    const schema = readdirSync(schemaRoot)
+      .filter((name) => name.endsWith(".prisma"))
+      .sort()
+      .map((name) => readFileSync(join(schemaRoot, name), "utf8"))
+      .join("\n");
+    const result = migrationColumnMismatches(schema, migrations);
 
     expect(migrations.length).toBeGreaterThan(0);
     expect(migrations.some(([, sql]) => sql.includes("CREATE TABLE"))).toBe(true);

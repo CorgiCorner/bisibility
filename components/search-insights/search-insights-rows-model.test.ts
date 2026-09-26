@@ -1,27 +1,18 @@
 import { SEARCH_INSIGHTS_ROWS_CAP } from "@/lib/search-insights/constants";
 import { describe, expect, it } from "vitest";
-import { nextShow, positionClassName, rowsReach, visibleRows } from "./search-insights-rows-model";
+import { positionClassName, rowsOffset, rowsReach } from "./search-insights-rows-model";
 
-describe("nextShow", () => {
-  it("walks ten to fifty to everything", () => {
-    expect(nextShow(10)).toBe(50);
-    expect(nextShow(50)).toBe("all");
+describe("rowsOffset", () => {
+  it("starts each page right after the last row of the one before", () => {
+    expect(rowsOffset({ page: 1, pageSize: 10 })).toBe(0);
+    expect(rowsOffset({ page: 3, pageSize: 25 })).toBe(50);
   });
 });
 
 describe("rowsReach", () => {
-  it("expands to the whole window until the window outgrows the cap", () => {
+  it("pages the whole window until the window outgrows the cap", () => {
     expect(rowsReach(1_284)).toBe(1_284);
     expect(rowsReach(SEARCH_INSIGHTS_ROWS_CAP * 4)).toBe(SEARCH_INSIGHTS_ROWS_CAP);
-  });
-});
-
-describe("visibleRows", () => {
-  const rows = [1, 2, 3, 4, 5];
-
-  it("shows the requested slice, and everything once expanded", () => {
-    expect(visibleRows(rows, 3)).toEqual([1, 2, 3]);
-    expect(visibleRows(rows, "all")).toEqual(rows);
   });
 });
 

@@ -14,17 +14,18 @@ type QueuedProviderPollOptions = {
   deadlineAt?: Date;
 };
 
-export function dataForSeoQueuedResponseTask(data: unknown) {
+export function dataForSeoQueuedResponseTask(data: unknown, providerTaskId?: string) {
   return (
     data as {
       tasks?: Array<{
+        id?: string;
         cost?: number;
         result?: Array<{ items?: DataForSeoItem[] }>;
         status_code?: number;
         status_message?: string;
       }>;
     }
-  ).tasks?.[0];
+  ).tasks?.find((task) => providerTaskId === undefined || task.id === providerTaskId);
 }
 
 export async function pollDataForSeoQueue<T>(

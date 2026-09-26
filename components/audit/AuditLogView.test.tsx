@@ -77,7 +77,8 @@ describe("AuditLogView", () => {
 
     expect(boundary).toHaveClass("min-w-0", "overflow-hidden");
     expect(boundary).not.toHaveClass("overflow-x-auto");
-    expect(viewport).toHaveClass("w-full", "min-w-0", "[&>[role=table]]:border-0");
+    expect(viewport).toHaveClass("w-full", "min-w-0");
+    expect(table).toHaveAttribute("data-bordered", "false");
     expect(viewport).not.toHaveClass("min-w-[920px]");
     expect(table).toHaveAttribute("data-layout", "fill");
     expect(table).not.toHaveAttribute("role", "grid");

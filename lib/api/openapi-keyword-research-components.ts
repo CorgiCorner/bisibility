@@ -84,12 +84,42 @@ export const keywordResearchSchemas = {
     ],
     type: "object",
   },
+  KeywordResearchEstimate: {
+    description:
+      "Free dry run returned for estimate_only=true. It carries per-source cost facts only and never rows, fetch times, or source statuses, so it cannot be mistaken for an empty result.",
+    properties: {
+      cached: { description: "Every planned source is cached.", type: "boolean" },
+      connections: { items: connection, type: "array" },
+      cost_cents: { minimum: 0, type: "number" },
+      estimate: { const: true, type: "boolean" },
+      provider: { type: "string" },
+      sources: {
+        items: {
+          properties: {
+            cached: { type: "boolean" },
+            cost_cents: { minimum: 0, type: "number" },
+            source: { enum: ["related", "suggestion", "idea"], type: "string" },
+          },
+          required: ["source", "cost_cents", "cached"],
+          type: "object",
+        },
+        type: "array",
+      },
+    },
+    required: ["estimate", "sources", "cost_cents", "cached", "provider", "connections"],
+    type: "object",
+  },
   KeywordResearchResponse: {
+    oneOf: [
+      { $ref: "#/components/schemas/KeywordResearchEstimate" },
+      { $ref: "#/components/schemas/KeywordResearchResult" },
+    ],
+  },
+  KeywordResearchResult: {
     properties: {
       cached: { type: "boolean" },
       connections: { items: connection, type: "array" },
       cost_cents: { minimum: 0, type: "number" },
-      estimate: { type: "boolean" },
       fetched_at: { format: "date-time", type: "string" },
       provider: { type: "string" },
       rows: {

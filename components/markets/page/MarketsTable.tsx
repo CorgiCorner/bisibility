@@ -1,6 +1,7 @@
 "use client";
 
 import { MarketsRowMenu } from "@/components/markets/page/MarketsRowMenu";
+import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -176,7 +177,7 @@ function marketTableColumns({
       cell: ({ row }) => (
         <div className="min-w-0">
           <Link
-            className="font-medium text-fg hover:text-accent-text"
+            className={`font-medium ${dataLinkClassName}`}
             href={marketPath(asProjectRef(projectId), asMarketRef(row.original.id), "rank-tracker")}
           >
             {row.original.name}
@@ -226,22 +227,6 @@ function marketTableColumns({
       meta: { align: "end", lockResize: true, sortable: false, title: t("topThree") },
       minSize: 72,
       size: 80,
-    },
-    {
-      accessorKey: "monthlyCostCents",
-      cell: ({ row }) =>
-        row.original.monthlyCostCents == null
-          ? "-"
-          : format.number(row.original.monthlyCostCents / 100, {
-              currency: "USD",
-              style: "currency",
-            }),
-      enableSorting: false,
-      header: () => sortableHeader(t("monthlyCost"), "monthlyCostCents"),
-      id: "monthlyCostCents",
-      meta: { align: "end", lockResize: true, sortable: false, title: t("monthlyCost") },
-      minSize: 128,
-      size: 136,
     },
     {
       cell: ({ row }) => {

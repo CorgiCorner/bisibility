@@ -128,3 +128,38 @@ export async function linkRunItemToRankCheck(
     runId: item.runId,
   };
 }
+
+/**
+ * Closes a queued item as deferred when another run's item is already checking its keyword. The
+ * running index admits one check per keyword, and a failed link would otherwise leave the item
+ * queued with no workflow left to start it, so the run could never finish.
+ */
+export async function deferRunItemForBusyKeyword(
+  tx: Prisma.TransactionClient,
+  input: { keywordId: string; now: Date; runItemId: string },
+) {
+  const busy = await tx.rankCheckRunItem.findFirst({
+    select: { id: true },
+    where: { id: { not: input.runItemId }, keywordId: input.keywordId, status: "running" },
+  });
+  if (!busy) return false;
+  const item = await tx.rankCheckRunItem.findUnique({
+    select: { run: { select: { id: true, projectId: true, requestedCount: true, status: true } } },
+    where: { id: input.runItemId },
+  });
+  if (!item) return false;
+  await tx.$queryRaw(Prisma.sql`
+    SELECT id FROM "rank_check_runs" WHERE id = ${item.run.id} FOR UPDATE
+  `);
+  const deferred = await tx.rankCheckRunItem.updateMany({
+    data: { claimExpiresAt: null, finishedAt: input.now, status: "deferred" },
+    where: { id: input.runItemId, rankCheckId: null, status: "queued" },
+  });
+  if (deferred.count === 0) return false;
+  await tx.rankCheckRun.update({
+    data: { deferredCount: { increment: 1 } },
+    where: { id: item.run.id },
+  });
+  await finalizeRankCheckRun(tx, { now: input.now, run: item.run });
+  return true;
+}

@@ -17,8 +17,11 @@ import type {
 } from "@/lib/domain-overview/types";
 import { READINESS_REASON } from "@/lib/projects/readiness";
 import { z } from "zod";
+import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
+import { providerOrigin } from "./request-origin";
 import { dataResponse, errorResponse } from "./responses";
+import { retryHeaders } from "./retry-headers";
 import { readJsonBody, scopedProject, snakeizeKeys } from "./surface";
 
 const commonFields = {
@@ -75,16 +78,6 @@ const relevantPageBodySchema = z
   })
   .strict();
 
-function retryHeaders(ctx: ApiContext, resetAt: number | undefined, fallbackMs: number) {
-  const headers = new Headers(ctx.headers);
-  const retryAfter = String(
-    Math.max(1, Math.ceil(((resetAt ?? Date.now() + fallbackMs) - Date.now()) / 1_000)),
-  );
-  headers.set("Retry-After", retryAfter);
-  headers.set("RateLimit-Reset", retryAfter);
-  return headers;
-}
-
 function failureDetails(outcome: DomainOverviewLookupFailure) {
   return {
     cost_cents: outcome.costCents,
@@ -110,14 +103,22 @@ function lookupError(ctx: ApiContext, outcome: DomainOverviewLookupFailure) {
     );
   }
   if (outcome.reason === "budget_exhausted") {
-    return errorResponse("budget_exhausted", "Monthly provider budget reached.", 429, common);
+    return budgetExhaustedResponse(ctx, {
+      surface: "programmatic",
+      ...(outcome.provider === undefined ? {} : { provider: outcome.provider }),
+    });
   }
   if (outcome.reason === "cost_limit_exceeded") {
     return errorResponse(
       "cost_limit_exceeded",
       "The estimated provider cost exceeds max_cost_cents.",
       422,
-      common,
+      {
+        ...common,
+        ...(outcome.estimatedCostCents === undefined
+          ? {}
+          : { problemDetails: { estimated_cost_cents: outcome.estimatedCostCents } }),
+      },
     );
   }
   if (outcome.reason === "in_progress") {
@@ -183,7 +184,11 @@ function typedErrorResponse(ctx: ApiContext, error: unknown) {
 }
 
 function serviceContext(ctx: ApiContext) {
-  return { actorId: ctx.actorId, projectId: ctx.auth.project.id };
+  return {
+    actorId: ctx.actorId,
+    origin: providerOrigin(ctx.origin),
+    projectId: ctx.auth.project.id,
+  };
 }
 
 function invalidTargetResponse(

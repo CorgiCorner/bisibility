@@ -8,6 +8,7 @@ import {
   requiredEstimatedCostCents,
 } from "@/lib/provider-lookups/paid-call";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import { type ProviderRequestOrigin, surfaceOf } from "@/lib/provider-usage/surface";
 import type {
   BacklinkRowMode,
   BacklinkTargetInput,
@@ -62,15 +63,17 @@ function providerTarget(input: {
 
 function paidCallInput(input: {
   budgetCapCents: number;
+  origin: ProviderRequestOrigin;
   projectId: string;
   source: BacklinksSource;
 }) {
   return {
     connection: input.source.connection,
+    credential: input.origin.credential,
     feature: "backlinks" as const,
     projectId: input.projectId,
     provider: input.source.provider,
-    source: "app" as const,
+    source: input.origin.source,
     trigger: "manual" as const,
   };
 }
@@ -79,6 +82,7 @@ export async function fetchBacklinksAnalysis(input: {
   budgetCapCents: number;
   includeSubdomains: boolean;
   mode: BacklinkRowMode;
+  origin: ProviderRequestOrigin;
   projectId: string;
   resultLimit: number;
   scope: BacklinkTargetScope;
@@ -93,6 +97,7 @@ export async function fetchBacklinksAnalysis(input: {
     estimatedUsageQuantity: input.scope === "site" ? 3 : 2,
     projectId: input.projectId,
     provider: input.source.provider.id,
+    surface: surfaceOf(input.origin.source),
   });
   const target = providerTarget(input);
   const common = paidCallInput(input);
@@ -157,6 +162,7 @@ export async function fetchMoreBacklinksRows(input: {
   limit: number;
   mode: BacklinkRowMode;
   offset: number;
+  origin: ProviderRequestOrigin;
   projectId: string;
   scope: BacklinkTargetScope;
   source: BacklinksSource;
@@ -182,6 +188,10 @@ export async function fetchMoreBacklinksRows(input: {
 
 export function assertBacklinksMaxCost(estimatedCostCents: number, maxCostCents?: number) {
   if (maxCostCents !== undefined && estimatedCostCents > maxCostCents) {
-    throw new ProviderLookupSignal({ ok: false, reason: "cost_limit_exceeded" });
+    throw new ProviderLookupSignal({
+      estimatedCostCents,
+      ok: false,
+      reason: "cost_limit_exceeded",
+    });
   }
 }

@@ -43,7 +43,7 @@ describe("RunPage", () => {
   it("keeps counts in targets", () => {
     renderPage();
     expect(screen.getByText("253 of 694 selected targets started")).toBeInTheDocument();
-    expect(screen.getByLabelText("Run progress: 252 of 694 targets processed")).toBeInTheDocument();
+    expect(screen.getByLabelText("Run progress: 258 of 694 targets processed")).toBeInTheDocument();
   });
 
   it("uses current target counters for a cancelled planned run", () => {
@@ -104,7 +104,7 @@ describe("RunPage", () => {
   it("implements a skipped filter with reasons", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(screen.getByRole("button", { name: "6 skipped before start" }));
+    await user.click(screen.getByRole("button", { name: "6 skipped or blocked" }));
     expect(screen.getByText("Paused target - resumes when you unpause it")).toBeInTheDocument();
     expect(screen.getByText("Off-catalog language and location pair")).toBeInTheDocument();
   });

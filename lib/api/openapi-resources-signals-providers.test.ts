@@ -168,7 +168,9 @@ describe("OpenAPI document", () => {
       },
       responses: { "201": expect.any(Object), "423": expect.any(Object) },
     });
-    expect((listSignals.parameters as Parameter[]).map((parameter) => parameter.name)).toEqual([
+    expect(
+      (listSignals.parameters as Parameter[]).map((parameter) => parameter.name ?? parameter.$ref),
+    ).toEqual([
       API_VERSION_HEADER,
       "limit",
       "cursor",
@@ -176,6 +178,7 @@ describe("OpenAPI document", () => {
       "type",
       "from",
       "to",
+      "#/components/parameters/SourceHeader",
     ]);
     expect(signal.required).toEqual(expect.arrayContaining(["public_id", "keyword_id"]));
     expect(signal.properties).toMatchObject({
@@ -260,7 +263,13 @@ describe("OpenAPI document", () => {
         connection_id: { pattern: "^conn_[a-z][a-z0-9]{23}$", type: "string" },
       },
     });
-    expect(schemas.KeywordResearchResponse).toMatchObject({
+    expect(schemas.KeywordResearchResponse).toEqual({
+      oneOf: [
+        { $ref: "#/components/schemas/KeywordResearchEstimate" },
+        { $ref: "#/components/schemas/KeywordResearchResult" },
+      ],
+    });
+    expect(schemas.KeywordResearchResult).toMatchObject({
       properties: {
         connections: {
           items: {

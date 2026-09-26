@@ -1,4 +1,5 @@
 import type { StatusChipPresentation } from "@/components/ui/status-chip-mapping";
+import { nativeUsageUnit } from "@/lib/cost-estimate/native-usage";
 import type {
   ItemStatus,
   OperationSnapshot,
@@ -14,6 +15,7 @@ export type RunItemFilter = "all" | ItemStatus;
 type CounterKind = "cancelled" | "completed" | "deferred" | "failed" | "remaining";
 type Counter = { count: number; label: string; note: string };
 type RunFact =
+  | { kind: "usage"; actual: number | null; estimated: number | null; beforeStart: boolean }
   | { kind: "selection"; keywordCount: number; targetCount: number }
   | { kind: "provider"; providerLabel: string | null; state: "chosen_at_launch" | "not_chosen" }
   | {
@@ -75,8 +77,8 @@ function timestamp(item: RunPageItem): string {
 }
 
 function terminalCount(run: RunPageData): number {
-  const { cancelled, completed, deferred, failed } = run.counts;
-  return cancelled + completed + deferred + failed;
+  const { cancelled, completed, deferred, failed, skipped } = run.counts;
+  return cancelled + completed + deferred + failed + skipped;
 }
 
 function hasCount(run: RunPageData, status: ItemStatus): boolean {
@@ -138,7 +140,12 @@ export function orderedRunItems(
   filter: RunItemFilter,
   run: RunPageData,
 ): RunPageItem[] {
-  const selected = filter === "all" ? items : items.filter((item) => item.status === filter);
+  const selected =
+    filter === "all"
+      ? items
+      : items.filter(
+          (item) => item.status === filter || (filter === "skipped" && item.status === "blocked"),
+        );
   if (isActiveRun(run.status) && filter === "all") {
     return [...selected].sort(
       (left, right) =>
@@ -176,23 +183,31 @@ export function runSummary(
     providerLabel: skipped ? null : (run.providerLabel ?? null),
     state: skipped || !run.providerLabel ? "not_chosen" : "chosen_at_launch",
   });
-  const cost = labels.fact({
-    costCents:
-      skipped || (beforeStart && run.estimatedCostCents === 0)
-        ? null
-        : beforeStart
-          ? run.estimatedCostCents
-          : run.costCents,
-    kind: "cost",
-    note: skipped
-      ? "nothing_billed"
-      : beforeStart
-        ? run.estimatedCostCents === 0
-          ? "no_rate_yet"
-          : "set_when_planned"
-        : "estimate",
-    phase: beforeStart ? "estimated" : active ? "spent" : "cost",
-  });
+  const cost =
+    nativeUsageUnit(run.provider) === "units" || run.usage
+      ? labels.fact({
+          kind: "usage",
+          actual: run.usage?.actual ?? null,
+          estimated: run.nativeEstimate?.quantity ?? run.usage?.estimated ?? null,
+          beforeStart,
+        })
+      : labels.fact({
+          costCents:
+            skipped || (beforeStart && run.estimatedCostCents === 0)
+              ? null
+              : beforeStart
+                ? run.estimatedCostCents
+                : run.costCents,
+          kind: "cost",
+          note: skipped
+            ? "nothing_billed"
+            : beforeStart
+              ? run.estimatedCostCents === 0
+                ? "no_rate_yet"
+                : "set_when_planned"
+              : "estimate",
+          phase: beforeStart ? "estimated" : active ? "spent" : "cost",
+        });
   const timing = waiting
     ? labels.fact({
         kind: "first_check",

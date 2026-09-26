@@ -148,6 +148,7 @@ export function AdminAdministrationConsumptionTable({
 
   return (
     <DataTable
+      bordered={false}
       ariaLabel={t("tableLabel")}
       columns={columns}
       id="admin-top-consumption-table"

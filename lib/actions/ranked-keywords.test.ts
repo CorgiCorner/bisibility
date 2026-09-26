@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchRankedKeywordSuggestions } from "./ranked-keywords";
 
@@ -41,8 +42,10 @@ describe("fetchRankedKeywordSuggestions action", () => {
       connectionId,
       limit: 100,
       offset: 100,
+      origin: APP_REQUEST_ORIGIN,
       projectId: "project_1",
     });
+    expect(mocks.fetch.mock.calls[0]?.[0].origin).toEqual(APP_REQUEST_ORIGIN);
   });
 
   it("rejects non-page-aligned offsets", async () => {

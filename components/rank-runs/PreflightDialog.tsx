@@ -20,9 +20,12 @@ import { useId, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { PreflightOptionGroups } from "./PreflightOptionGroups";
+import { type CancelOverlappingRunAction, PreflightOverlapNotice } from "./PreflightOverlapNotice";
 import {
   blockCodeFor,
   decisionLine,
+  idempotencyKey,
+  isNotStarted,
   type PreflightBlockCode,
   type PreflightProvider,
   type PreflightScope,
@@ -46,6 +49,7 @@ type PreflightActions = {
 
 export type PreflightDialogProps = PreflightActions & {
   budgetHref: string;
+  cancelRunAction?: CancelOverlappingRunAction;
   duplicateDetail?: string;
   duplicateRunHref: string;
   initialDepth?: SerpDepth;
@@ -72,20 +76,9 @@ function actionHref(
   return links.integrationsHref;
 }
 
-function idempotencyKey() {
-  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID()
-    : `preflight-${Date.now()}`;
-}
-
-function isNotStarted(
-  result: LaunchRankCheckRunActionResult,
-): result is Extract<LaunchRankCheckRunActionResult, { status: "not_started" }> {
-  return "status" in result && result.status === "not_started";
-}
-
 export function PreflightDialog({
   budgetHref,
+  cancelRunAction,
   duplicateDetail,
   duplicateRunHref,
   initialDepth = 20,
@@ -145,12 +138,12 @@ export function PreflightDialog({
     : null;
   const disabled = Boolean(block) || refreshing || submitting;
 
-  async function refreshPreview(next: Partial<PreflightFormInput>) {
+  async function refreshPreview(next: Partial<PreflightFormInput>, notice: string | null = null) {
     const input = preflightFormSchema.parse({ ...form.getValues(), ...next });
     form.setValue("depth", input.depth, { shouldValidate: true });
     form.setValue("providerId", input.providerId, { shouldValidate: true });
     const request = ++requestNumber.current;
-    setPreviewError(null);
+    setPreviewError(notice);
     setRefreshing(true);
     try {
       const nextPreview = await previewAction({ ...input, projectId, spec });
@@ -178,16 +171,15 @@ export function PreflightDialog({
         spec,
       });
       if (isNotStarted(result)) {
+        if (result.code === "preview_expired" || result.code === "preview_mismatch") {
+          // Re-sign the current estimate so the next start can succeed without reopening.
+          await refreshPreview({}, t("previewChanged"));
+          return;
+        }
         if (result.code === "no_provider" || result.code === "budget_exhausted") {
           setActionBlock(result.code);
         }
-        setPreviewError(
-          result.code === "preview_expired" || result.code === "preview_mismatch"
-            ? t("previewChanged")
-            : result.code === "sample_project"
-              ? t("sampleProject")
-              : t("couldNotStart"),
-        );
+        setPreviewError(result.code === "sample_project" ? t("sampleProject") : t("couldNotStart"));
         return;
       }
       if ("outcome" in result) {
@@ -247,24 +239,37 @@ export function PreflightDialog({
       <form className="grid gap-4" id={formId} onSubmit={form.handleSubmit(start)}>
         {block ? (
           <div
-            className="flex items-start gap-2.5 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
+            className="flex items-center gap-3 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
             role="alert"
           >
-            <StatusChip dot label={block.label} tone={block.tone} />
-            <div className="min-w-0">
+            <div className="grid min-w-0 flex-1 justify-items-start gap-1.5">
+              <StatusChip dot label={block.label} tone={block.tone} />
               <p className="m-0 text-[12.5px] leading-5 text-fg">{block.message}</p>
-              <a
-                className="mt-2 inline-block text-[11.5px] font-semibold text-fg underline-offset-3 hover:underline"
-                href={actionHref(blockCode as PreflightBlockCode, {
-                  budgetHref,
-                  duplicateRunHref,
-                  integrationsHref,
-                })}
-              >
-                {block.cta}
-              </a>
             </div>
+            <Button
+              className="shrink-0"
+              href={actionHref(blockCode as PreflightBlockCode, {
+                budgetHref,
+                duplicateRunHref,
+                integrationsHref,
+              })}
+              size="sm"
+              variant="secondary"
+            >
+              {block.cta}
+            </Button>
           </div>
+        ) : null}
+
+        {preview.overlaps.length > 0 ? (
+          <PreflightOverlapNotice
+            cancelAction={cancelRunAction}
+            disabled={refreshing || submitting}
+            onCancelled={() => refreshPreview({})}
+            overlapRunCount={preview.overlapRunCount}
+            overlaps={preview.overlaps}
+            projectId={projectId}
+          />
         ) : null}
 
         <section

@@ -67,6 +67,12 @@ function context(action: string, body: unknown) {
     headers: new Headers({ "RateLimit-Remaining": "99" }),
     instance: "urn:test",
     method: "POST",
+    origin: {
+      credentialId: "key_test",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
     path: ["projects", "prj_1", "domain-overview", action],
     req: new Request(url, {
       body: JSON.stringify(body),
@@ -117,7 +123,11 @@ describe("Domain Overview REST handlers", () => {
     );
 
     expect(mocks.analyze).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      {
+        actorId: "user_1",
+        origin: { credential: { id: "key_test", kind: "project_key" }, source: "api" },
+        projectId: "project_1",
+      },
       {
         estimateOnly: true,
         fresh: true,
@@ -198,6 +208,46 @@ describe("Domain Overview REST handlers", () => {
     await expect(response.json()).resolves.toMatchObject({
       data: { cached: false, cost_cents: 1.25, fetched_at: moduleSuccess.fetchedAt },
     });
+  });
+
+  it("derives the service origin from the SDK request credential for every handler", async () => {
+    const sdkOrigin = {
+      credentialId: "key_1",
+      credentialKind: "project_key",
+      source: "sdk",
+      surface: "programmatic",
+    } as const;
+    const expectedOrigin = {
+      origin: { credential: { id: "key_1", kind: "project_key" }, source: "sdk" },
+    };
+
+    const analyzeContext = context("analyze", commonBody);
+    analyzeContext.origin = sdkOrigin;
+    await postDomainOverviewAnalyze(analyzeContext, "prj_1");
+    expect(mocks.analyze).toHaveBeenCalledWith(
+      expect.objectContaining(expectedOrigin),
+      expect.anything(),
+    );
+
+    const handlers = [
+      ["history", postDomainOverviewHistory, mocks.history, commonBody],
+      [
+        "keywords",
+        postDomainOverviewKeywords,
+        mocks.keywords,
+        { ...commonBody, limit: 100, offset: 0 },
+      ],
+      ["pages", postDomainOverviewPages, mocks.pages, { ...commonBody, limit: 100, offset: 0 }],
+    ] as const;
+    for (const [action, handler, loader, body] of handlers) {
+      const moduleContext = context(action, body);
+      moduleContext.origin = sdkOrigin;
+      await handler(moduleContext, "prj_1");
+      expect(loader).toHaveBeenCalledWith(
+        expect.objectContaining(expectedOrigin),
+        expect.anything(),
+      );
+    }
   });
 
   it("serializes populated metrics and module rows with the documented field names", async () => {
@@ -344,7 +394,6 @@ describe("Domain Overview REST handlers", () => {
 
   it.each([
     ["no_source", 404, "not_found"],
-    ["budget_exhausted", 429, "budget_exhausted"],
     ["cost_limit_exceeded", 422, "cost_limit_exceeded"],
     ["in_progress", 429, "lookup_in_progress"],
     ["rate_limited", 429, "rate_limited"],
@@ -370,5 +419,46 @@ describe("Domain Overview REST handlers", () => {
     if (reason === "in_progress" || reason === "rate_limited") {
       expect(response.headers.get("retry-after")).toBeTruthy();
     }
+  });
+
+  it("reports the exhausted budget with surface, reset, and retry headers", async () => {
+    mocks.analyze.mockResolvedValue({ ok: false, reason: "budget_exhausted" });
+
+    const response = await postDomainOverviewAnalyze(context("analyze", commonBody), "prj_1");
+
+    expect(response.status).toBe(429);
+    const body = await response.json();
+    expect(body.details.surface).toBe("programmatic");
+    expect(typeof body.details.resets_at).toBe("string");
+    expect(response.headers.get("retry-after")).toBeTruthy();
+    expect(response.headers.get("ratelimit-reset")).toBeTruthy();
+  });
+
+  it("names the provider the exhausted-budget outcome carries", async () => {
+    mocks.analyze.mockResolvedValue({
+      ok: false,
+      provider: "dataforseo",
+      reason: "budget_exhausted",
+    });
+
+    const response = await postDomainOverviewAnalyze(context("analyze", commonBody), "prj_1");
+
+    const body = await response.json();
+    expect(body.details.provider).toBe("dataforseo");
+    expect(body.detail).toContain("dataforseo");
+  });
+
+  it("reports the compared estimate on a cost-limit refusal", async () => {
+    mocks.analyze.mockResolvedValue({
+      estimatedCostCents: 12,
+      ok: false,
+      reason: "cost_limit_exceeded",
+    });
+
+    const response = await postDomainOverviewAnalyze(context("analyze", commonBody), "prj_1");
+
+    expect(response.status).toBe(422);
+    const body = await response.json();
+    expect(body.details.estimated_cost_cents).toBe(12);
   });
 });

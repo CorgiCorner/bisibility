@@ -91,6 +91,7 @@ describe("BacklinksPage", () => {
     mocks.analyze.mockResolvedValue({
       cached: false,
       costCents: 5,
+      estimate: true,
       estimatedCostCents: 5,
       ok: true,
     });

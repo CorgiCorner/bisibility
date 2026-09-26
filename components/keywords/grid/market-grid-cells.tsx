@@ -53,7 +53,7 @@ export function MarketKeywordCell({
       <span className="flex w-full min-w-0 items-center">
         <span className="min-w-0 flex-1">
           <Tooltip content={row.keyword} wrapperClassName="w-full min-w-0">
-            <span className="bv-keyword-title block w-full truncate text-[13.5px] font-semibold text-fg group-hover:text-accent-text group-hover:underline">
+            <span className="bv-keyword-title block w-full truncate text-[13.5px] font-semibold text-fg group-hover:underline">
               {row.keyword}
             </span>
           </Tooltip>
@@ -70,7 +70,7 @@ export function MarketKeywordCell({
   return (
     <Tooltip content={row.keyword} wrapperClassName="w-full min-w-0">
       <Link
-        className={`bv-keyword-title block w-full min-w-0 truncate text-[13.5px] ${rankTrackerKeywordLinkClassName} group-hover:text-accent-text group-hover:underline`}
+        className={`bv-keyword-title block w-full min-w-0 truncate text-[13.5px] ${rankTrackerKeywordLinkClassName} group-hover:underline`}
         href={appPath(projectRef, "rank-tracker", row.id)}
         onClick={(event) => event.stopPropagation()}
       >

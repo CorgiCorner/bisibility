@@ -43,6 +43,7 @@ export function SavedKeywordsTableRows({
   }
   return (
     <DataTable
+      bordered={false}
       ariaLabel={t("tableAria")}
       columns={savedKeywordsTableColumns({
         canDelete,

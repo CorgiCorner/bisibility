@@ -1,24 +1,24 @@
 "use client";
 
+import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { useScheduleNameLabels } from "@/components/schedules/useScheduleNameLabels";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
-import { type CostRateInfo, frequencyDeltaCents } from "@/lib/cost-estimate/project-estimate";
+import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { newScheduleDefaults } from "@/lib/schedules/form-defaults";
 import { suggestedScheduleName } from "@/lib/schedules/suggested-name";
-import type { RankCheckFrequency } from "@/lib/settings/options";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { NewScheduleFromSelection } from "./NewScheduleFromSelection";
-import { effectiveRowDepth } from "./run-check-depth";
 import { SetScheduleModalChoices } from "./SetScheduleModalChoices";
+import { scheduleMonthlyDeltaLabel } from "./schedule-monthly-delta";
 import {
   type CheckScheduleSummary,
   type ModalView,
@@ -52,10 +52,6 @@ type SetScheduleModalProps = {
 
 const formId = "set-keyword-schedule";
 
-function scheduleFrequency(schedule: CheckScheduleSummary): RankCheckFrequency {
-  return schedule.enabled ? schedule.frequency : "paused";
-}
-
 function matchesSchedule(row: KeywordRow, schedule: CheckScheduleSummary) {
   return row.checkSchedule?.publicId === schedule.publicId;
 }
@@ -76,6 +72,7 @@ export function SetScheduleModal({
 }: Readonly<SetScheduleModalProps>) {
   const { showToast } = useToast();
   const t = useTranslations("projectRankTracker.keywordImport.management.schedule");
+  const usage = useNativeUsageFormat();
   const scheduleNames = useScheduleNameLabels();
   const sharedErrors = useSharedErrorMessages();
   const [view, setView] = useState<ModalView>(initialView);
@@ -141,43 +138,13 @@ export function SetScheduleModal({
   }
 
   function monthlyDelta(schedule: CheckScheduleSummary | null) {
-    if (!schedule && !currentScheduleId && !selectedRows.some((row) => row.checkSchedule))
-      return t("monthlyNoSpend");
-    if (!providerRate) return t("monthlyUnavailable");
-    const destinationFrequency = schedule ? scheduleFrequency(schedule) : "manual";
-    const delta = selectedRows
-      .map((row) =>
-        frequencyDeltaCents(
-          {
-            cronExpression:
-              destinationFrequency === "custom_cron"
-                ? (schedule?.cronExpression ?? null)
-                : row.schedule.cron_expression,
-            depth: effectiveRowDepth(row),
-            deviceCount: 1,
-            keywordCount: 1,
-            locationCount: 1,
-          },
-          row.schedule.frequency,
-          destinationFrequency,
-          providerRate,
-        ),
-      )
-      .reduce<number | null>(
-        (total, value) => (total == null || value == null ? null : total + value),
-        0,
-      );
-    if (delta == null) return t("monthlyUnavailable");
-    if (delta === 0) return t("monthlySame");
-    if (Math.abs(delta) < 1) {
-      return t("monthlyDeltaBelowCent", {
-        direction: delta > 0 ? "positive" : "negative",
-        minimum: 0.01,
-      });
-    }
-    return t("monthlyDelta", {
-      cost: Math.abs(delta) / 100,
-      direction: delta > 0 ? "positive" : "negative",
+    return scheduleMonthlyDeltaLabel({
+      currentScheduleId,
+      providerRate,
+      rows: selectedRows,
+      schedule,
+      t,
+      usage,
     });
   }
 

@@ -85,7 +85,7 @@ describe("MCP estimate tools with read-scope access", () => {
     expect(result.ok).toBe(true);
     expect(result.status).toBe(200);
     expect(result.payload).toMatchObject({
-      data: { estimate: true, estimated_cost_cents: 5 },
+      data: { estimate: true, estimated_cost_cents: 7 },
     });
     expect(mocks.paidCall).not.toHaveBeenCalled();
     expect(mocks.preflightBudget).not.toHaveBeenCalled();

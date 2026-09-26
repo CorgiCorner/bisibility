@@ -92,14 +92,36 @@
         "description": "Choose bisibility from the tools menu in a new chat. Try: \"{prompt}\"",
         "prompt": {
           "withChecks": "Which keywords lost positions this week?",
-          "withoutChecks": "Add my first keywords and run a rank check."
+          "withoutChecks": "Which projects and keywords can I view?"
         },
         "title": "3. Start a conversation"
       },
       "guideLink": "ChatGPT setup guide",
       "heading": "How to start",
       "note": "Developer mode may depend on your account or workspace settings.",
-      "show": "Show how to start"
+      "show": "Show how to start",
+      "clientSwitcher": "AI assistant",
+      "accessTitle": "Read-only access",
+      "accessDescription": "This ChatGPT connection can read project and rank data. It cannot change or delete projects, manage members or create API keys.",
+      "claude": {
+        "description": "Connect bisibility to Claude.",
+        "accessTitle": "Read and write access",
+        "accessDescription": "Claude can read data and use available write tools, within the scopes you approve and your existing project permissions.",
+        "developerMode": {
+          "title": "1. Open connectors",
+          "description": "In Claude, open Settings → Connectors and select Add custom connector."
+        },
+        "addApp": {
+          "title": "2. Add bisibility",
+          "description": "Name it bisibility and paste the MCP URL below. Add the connector, then select Connect and sign in to bisibility to review access.",
+          "copyMcpUrl": "Copy Claude MCP URL"
+        },
+        "firstChat": {
+          "description": "In a new chat, open the + menu, choose Connectors and enable bisibility. Try: \"{prompt}\""
+        },
+        "note": "Your workspace administrator may need to add or enable custom connectors.",
+        "guideLink": "Claude setup guide"
+      }
     }
   }
 }

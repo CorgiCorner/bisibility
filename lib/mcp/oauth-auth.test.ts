@@ -205,4 +205,50 @@ describe("MCP OAuth authentication", () => {
     expect(result.response.status).toBe(401);
     expect(mocks.userFindUnique).not.toHaveBeenCalled();
   });
+
+  it("carries the JWT client_id as the OAuth client credential id", async () => {
+    mocks.verifyAccessToken.mockResolvedValue({
+      client_id: "mcp-client-1",
+      scope: "read",
+      sub: "user_1",
+    });
+    mocks.userFindUnique.mockResolvedValue({
+      deactivatedAt: null,
+      email: "owner@example.com",
+      id: "user_1",
+      memberships: [],
+      name: "Owner",
+      publicId: "usr_a00000000000000000000000",
+    });
+
+    const result = await authenticateMcpOAuthRequest(request("oauth-access-token"));
+    if (!("auth" in result)) throw new Error("Expected an authenticated auth result.");
+
+    expect(result.auth.oauthClientId).toBe("mcp-client-1");
+  });
+
+  it("falls back to azp, then to a literal client id, for missing client claims", async () => {
+    mocks.verifyAccessToken.mockResolvedValue({
+      azp: "mcp-client-2",
+      scope: "read",
+      sub: "user_1",
+    });
+    mocks.userFindUnique.mockResolvedValue({
+      deactivatedAt: null,
+      email: "owner@example.com",
+      id: "user_1",
+      memberships: [],
+      name: "Owner",
+      publicId: "usr_a00000000000000000000000",
+    });
+
+    const azpResult = await authenticateMcpOAuthRequest(request("oauth-access-token"));
+    if (!("auth" in azpResult)) throw new Error("Expected an authenticated auth result.");
+    expect(azpResult.auth.oauthClientId).toBe("mcp-client-2");
+
+    mocks.verifyAccessToken.mockResolvedValue({ scope: "read", sub: "user_1" });
+    const fallbackResult = await authenticateMcpOAuthRequest(request("oauth-access-token"));
+    if (!("auth" in fallbackResult)) throw new Error("Expected an authenticated auth result.");
+    expect(fallbackResult.auth.oauthClientId).toBe("oauth");
+  });
 });

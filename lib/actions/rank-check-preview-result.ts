@@ -1,3 +1,4 @@
+import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { redactOpsText } from "@/lib/ops/redact-text";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
@@ -26,6 +27,8 @@ export type ListFirstCheckCandidatesResult = {
 };
 
 export type FirstCheckRunPlan = {
+  nativeEstimate?: NativeUsageEstimate;
+  firstTargetEstimate?: NativeUsageEstimate;
   budget: { capCents: number; spentCents: number };
   estimatedCostPerCheckCents: number | null;
   readyCount: number;

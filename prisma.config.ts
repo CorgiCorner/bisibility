@@ -8,7 +8,7 @@ const datasourceUrl =
   "postgresql://bisibility:bisibility@localhost:5432/bisibility";
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  schema: "prisma/schema",
   migrations: {
     path: "prisma/migrations",
     seed: "node --experimental-strip-types prisma/seed.ts",

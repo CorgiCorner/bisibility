@@ -4,6 +4,8 @@ import { ApiConflictError } from "@/lib/api/errors";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
+import { assertOperationAccess } from "@/lib/operations/access-extension";
+import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import {
   activeMarketLocationIds,
@@ -21,7 +23,11 @@ import {
   assertLaunchBudget,
   estimatedRunUsageQuantity,
   estimateRunRows,
+  lockLaunchSourceSnapshot,
   providerAllocationReservation,
+  quoteRankRunReservationForLaunch,
+  runUsageEstimate,
+  verifyLaunchPreviewToken,
 } from "./launch-preflight";
 import {
   LaunchRankCheckRunError,
@@ -33,11 +39,10 @@ import {
   type RetryParentRun,
   requireRankCheckRunProject,
 } from "./launch-types";
-import { verifyPreviewToken } from "./preview-token";
 import {
   lockRunSelectionKeywords,
   resolveRunSelection,
-  runSelectionKeywordInProgress,
+  runSelectionKeywordHeld,
   runSelectionKeywordSelect,
 } from "./selection";
 
@@ -45,6 +50,9 @@ export async function launchRankCheckRun(
   input: LaunchRankCheckRunInput & { retry?: RetryLaunch },
 ): Promise<LaunchRankCheckRunResult> {
   requireRankCheckRunProject(input.project);
+  // Early preflight: a manual request the gate refuses is rejected before any
+  // selection, connection, or run row is created.
+  await assertOperationAccess(input.project.id);
   const now = new Date();
   const resolved = await resolveRunSelection(input.project, input.spec);
   const activeLocationIds = await activeMarketLocationIds(input.project.id, prisma);
@@ -70,38 +78,28 @@ export async function launchRankCheckRun(
   ]);
   if (!project) throw new Error("Project not found.");
   // A retry may bypass the in-progress check, never runnability: a paused market or an
-  // archived row must not be bought again just because an earlier item failed.
+  // archived row must not be bought again just because an earlier item failed. A manual launch
+  // skips only keywords in flight, exactly as its preview does, so the signed estimate matches.
   const executable = rows.filter(
     (row) =>
       Boolean(connections[0]) &&
       isRunnableKeyword(row, activeLocationIds) &&
-      (input.retry ? true : !runSelectionKeywordInProgress(row)),
+      (input.retry ? true : !runSelectionKeywordHeld(row, input.trigger)),
   );
   const estimate = connections[0]
     ? estimateRunRows(executable, project.defaults?.serpDepth, input, connections[0])
-    : { costCents: null, targets: [] };
+    : {
+        native: { providerId: null, unit: null, quantity: null, unknownTargets: 0 },
+        costCents: null,
+        targets: [],
+      };
   if (!input.retry) {
-    verifyPreviewToken(
-      input.previewToken,
-      {
-        depth: input.depth ?? null,
-        estimateCents: estimate.costCents ?? -1,
-        projectId: input.project.id,
-        providerId: input.providerId ?? null,
-        selectionHash: resolved.selectionHash,
-      },
-      now,
-    );
+    verifyLaunchPreviewToken(input, estimate.costCents, resolved.selectionHash, now);
   }
   if (!connections[0]) throw new LaunchRankCheckRunError("no_provider");
-
   const idempotencyKey = apiIdempotencyKey(input.idempotencyKey);
   const existing = await findIdempotentRun(input.project.id, idempotencyKey);
   if (existing) return existing;
-  if (!project.providerAllocationsInitializedAt) {
-    await assertLaunchBudget(input, project, connections[0], estimate, now);
-  }
-
   const publicId = makePublicId("rcr");
   const orchestrationWorkflowId = `rank-check-run-${publicId}`;
   let created:
@@ -111,6 +109,8 @@ export async function launchRankCheckRun(
   try {
     created = await prisma.$transaction(
       async (tx) => {
+        const { connection: currentConnection, project: currentProject } =
+          await lockLaunchSourceSnapshot(tx, input.project.id, input.providerId);
         const lockedRows = await lockRunSelectionKeywords(
           tx,
           input.project.id,
@@ -119,7 +119,8 @@ export async function launchRankCheckRun(
         const lockedActiveLocationIds = await activeMarketLocationIds(input.project.id, tx);
         const executable = lockedRows.filter(
           (row) =>
-            isRunnableKeyword(row, lockedActiveLocationIds) && !runSelectionKeywordInProgress(row),
+            isRunnableKeyword(row, lockedActiveLocationIds) &&
+            !runSelectionKeywordHeld(row, input.trigger),
         );
         if (executable.length === 0) {
           // Nothing ran, so the operator is owed the cause rather than the most common guess. The
@@ -133,23 +134,40 @@ export async function launchRankCheckRun(
         }
         const estimate = estimateRunRows(
           executable,
-          project.defaults?.serpDepth,
+          currentProject.defaults?.serpDepth,
           input,
-          connections[0],
+          currentConnection,
         );
-        if (project.providerAllocationsInitializedAt) {
-          const concurrent = await findIdempotentRun(input.project.id, idempotencyKey, tx);
-          if (concurrent) return { existing: concurrent };
-          await assertLaunchBudget(input, project, connections[0], estimate, now, tx);
+        if (!input.retry) {
+          verifyLaunchPreviewToken(input, estimate.costCents, resolved.selectionHash, now);
         }
+        const concurrent = await findIdempotentRun(input.project.id, idempotencyKey, tx);
+        if (concurrent) return { existing: concurrent };
+        if (currentConnection.credentialSource !== "hosted") {
+          await assertLaunchBudget(input, currentProject, currentConnection, estimate, now, tx);
+        }
+        const rankReservation = await quoteRankRunReservationForLaunch(tx, {
+          connection: currentConnection,
+          projectId: input.project.id,
+          source: input.origin.source,
+          targets: estimate.targets,
+        });
         const estimatedCostCents = estimate.costCents ?? 0;
         const allocationReservation =
-          project.providerAllocationsInitializedAt && connections[0].id
-            ? providerAllocationReservation(connections[0].id, estimatedRunUsageQuantity(estimate))
-            : {};
+          currentProject.providerAllocationsInitializedAt && currentConnection.id
+            ? providerAllocationReservation(
+                currentConnection.id,
+                estimatedRunUsageQuantity(estimate),
+              )
+            : currentConnection.id
+              ? { providerConnectionId: currentConnection.id }
+              : {};
+        const usageEstimate = runUsageEstimate(currentConnection, estimate);
         const keywordCount = new Set(executable.map(({ text }) => text)).size;
         const run = await tx.rankCheckRun.create({
           data: {
+            credentialId: input.origin.credential?.id ?? null,
+            credentialKind: input.origin.credential?.kind ?? null,
             estimatedCostCents,
             idempotencyKey,
             keywordCount,
@@ -168,15 +186,20 @@ export async function launchRankCheckRun(
                   kind: input.retry.relation,
                   parentRunId: input.retry.parentRunPublicId,
                   v: 1,
+                  ...usageEstimate,
                   ...allocationReservation,
+                  ...rankReservation,
                 }
               : {
                   ...input.spec,
                   depth: input.depth ?? null,
                   providerId: input.providerId ?? null,
+                  ...usageEstimate,
                   ...allocationReservation,
+                  ...rankReservation,
                 },
             skippedCount: 0,
+            source: input.origin.source,
             status: "queued",
             targetCount: executable.length,
             totalCount: executable.length,
@@ -224,10 +247,8 @@ export async function launchRankCheckRun(
     if (!concurrent) throw error;
     return concurrent;
   }
-
   if ("outcome" in created) return created;
   if ("existing" in created) return created.existing;
-
   // The committed row is the intent; this wake only shortens the worker's pickup latency.
   void publishWorkerIntent("rank_run").catch(() => undefined);
   return {
@@ -238,9 +259,9 @@ export async function launchRankCheckRun(
     targetCount: created.targetCount,
   };
 }
-
 export function launchRetryRun(input: {
   actorId: string;
+  origin: ProviderRequestOrigin;
   parentRun: RetryParentRun;
   relation: RetryLaunch["relation"];
 }) {
@@ -252,6 +273,7 @@ export function launchRetryRun(input: {
   if (items.length === 0) throw new ApiConflictError("The run has no matching items to retry.");
   return launchRankCheckRun({
     actorId: input.actorId,
+    origin: input.origin,
     previewToken: "",
     project: input.parentRun.project,
     retry: {

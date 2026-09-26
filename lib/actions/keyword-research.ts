@@ -2,6 +2,7 @@
 
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { researchKeywords } from "@/lib/keyword-research/service";
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { canonicalKeySchema } from "@/lib/schemas/keyword";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
@@ -36,6 +37,7 @@ export async function researchKeywordsAction(input: unknown) {
   return researchKeywords({
     ...data,
     actorId: actor.id,
+    origin: APP_REQUEST_ORIGIN,
     projectId: project.id,
   });
 }

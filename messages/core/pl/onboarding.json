@@ -304,7 +304,7 @@
         },
         "getCredentials": "Pobierz dane uwierzytelniające API",
         "group": "Dostawca SERP",
-        "label": "Dane o pozycjach / zasila sprawdzenia pozycji",
+        "label": "Wybierz dostawcę",
         "notice": "Połączenia są zapisywane osobno dla każdego dostawcy – przełączenie nie rozłącza.",
         "serpapi": {
           "capability": "Tylko sprawdzenia pozycji.",
@@ -358,10 +358,10 @@
         "title": "Połącz dostawcę"
       },
       "searchConsole": {
-        "label": "Dane Twojej witryny / opcjonalne, bezpłatne",
+        "label": "Search Console · Opcjonalnie",
         "tooltip": "Search Console pokazuje zapytania, na które Twoja witryna już zajmuje pozycje. Bezpłatny import propozycji słów kluczowych; nie sprawdza pozycji."
       },
-      "title": "Dostawca",
+      "title": "Dane o pozycjach",
       "skip": "Pomiń łączenie dostawcy i dodaj słowa kluczowe jako wstrzymane",
       "skipLabel": "Pomiń na razie",
       "video": {
@@ -374,7 +374,8 @@
           "title": "Zakładanie konta SerpApi"
         },
         "watch": "Obejrzyj przewodnik konfiguracji"
-      }
+      },
+      "description": "Wybierz źródło danych do sprawdzania pozycji. Możesz je później zmienić w Integracjach."
     },
     "residency": {
       "message": "Twoje dane są przechowywane i przetwarzane w regionie {region}."
@@ -425,8 +426,8 @@
         "title": "Słowa kluczowe"
       },
       "provider": {
-        "description": "Dostawca SERP i statystyki wyszukiwania",
-        "title": "Dostawca"
+        "description": "Pozycje i dane o wyszukiwaniu",
+        "title": "Dane o pozycjach"
       },
       "website": {
         "description": "Nazwa i domena",

@@ -29,12 +29,12 @@ const rows = [
   },
 ] as const;
 
-const expandedRows = Array.from({ length: 5_000 }, (_, index) => ({
+const pagedRows = Array.from({ length: 25 }, (_, index) => ({
   clicks: 5_000 - index,
   ctr: 0.057,
   impressions: 37_410 - index,
   position: 4.2 + index / 10,
-  query: `expanded query ${index + 1}`,
+  query: `paged query ${index + 1}`,
 }));
 
 function QueriesStory() {
@@ -44,14 +44,11 @@ function QueriesStory() {
     <div className="max-w-3xl">
       <SearchInsightsRowsCard
         caption="Stored Search Console rows"
-        onCollapse={() => {}}
-        onMore={() => {}}
-        show={10}
-        shown={rows.length}
+        empty={false}
         title="Top queries"
-        total={rows.length}
       >
         <SearchInsightsQueriesTable
+          bordered={false}
           onOpen={() => {}}
           onTrack={(row) => setTracked((current) => new Set(current).add(row.query))}
           rows={rows}
@@ -84,20 +81,21 @@ export const CompactRows: Story = {
   render: () => <QueriesStory />,
 };
 
-export const ExpandedVirtualized: Story = {
-  args: { rows: expandedRows, scroll: true, tracked: new Set() },
+export const ServerPages: Story = {
+  args: { rows: pagedRows, tracked: new Set() },
   render: () => (
     <div className="max-w-3xl">
       <SearchInsightsRowsCard
         caption="Stored Search Console rows"
-        onCollapse={() => {}}
-        onMore={() => {}}
-        show="all"
-        shown={expandedRows.length}
+        empty={false}
         title="Top queries"
-        total={expandedRows.length}
       >
-        <SearchInsightsQueriesTable rows={expandedRows} scroll tracked={new Set()} />
+        <SearchInsightsQueriesTable
+          bordered={false}
+          paging={{ onChange: () => {}, page: 2, pageSize: 25, rowCount: 1_284 }}
+          rows={pagedRows}
+          tracked={new Set()}
+        />
       </SearchInsightsRowsCard>
     </div>
   ),

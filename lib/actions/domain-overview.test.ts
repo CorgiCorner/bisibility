@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   analyzeDomainOverviewAction,
@@ -60,7 +61,7 @@ describe("domain overview actions", () => {
       outcome,
     );
     expect(mocks.analyze).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      { actorId: "user_1", origin: APP_REQUEST_ORIGIN, projectId: "project_1" },
       expect.objectContaining({
         estimateOnly: true,
         fresh: false,
@@ -77,7 +78,7 @@ describe("domain overview actions", () => {
     await analyzeDomainOverviewAction({ ...base, countryCode: "es", estimateOnly: true });
 
     expect(mocks.analyze).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      { actorId: "user_1", origin: APP_REQUEST_ORIGIN, projectId: "project_1" },
       expect.objectContaining({ countryCode: "es", languageCode: "en", locationCode: 2840 }),
     );
   });
@@ -95,13 +96,34 @@ describe("domain overview actions", () => {
 
     const expected = expect.objectContaining({ limit: 250, offset: 1_250 });
     expect(mocks.keywords).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      { actorId: "user_1", origin: APP_REQUEST_ORIGIN, projectId: "project_1" },
       expected,
     );
     expect(mocks.pages).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      { actorId: "user_1", origin: APP_REQUEST_ORIGIN, projectId: "project_1" },
       expected,
     );
+  });
+
+  it("labels every paid action with the app request origin", async () => {
+    mocks.analyze.mockResolvedValue({ costCents: 0, ok: false, reason: "no_source" });
+    mocks.history.mockResolvedValue({ costCents: 0, ok: false, reason: "snapshot_expired" });
+    mocks.keywords.mockResolvedValue({ costCents: 1, data: [], ok: true });
+    mocks.pages.mockResolvedValue({ costCents: 1, data: [], ok: true });
+
+    await analyzeDomainOverviewAction({ ...base, estimateOnly: true });
+    await loadDomainHistoryAction({ ...base, maxCostCents: 5 });
+    await loadDomainKeywordsPageAction({ ...base, limit: 100, maxCostCents: 5, offset: 0 });
+    await loadDomainPagesPageAction({ ...base, limit: 100, maxCostCents: 5, offset: 0 });
+
+    for (const loader of [mocks.analyze, mocks.history, mocks.keywords, mocks.pages]) {
+      expect(loader).toHaveBeenCalledWith(
+        expect.objectContaining({ origin: { source: "app" } }),
+        expect.anything(),
+      );
+      const context = loader.mock.calls[0]?.[0] as { origin: unknown };
+      expect(context.origin).toEqual(APP_REQUEST_ORIGIN);
+    }
   });
 
   it("saves selected rows for later and refreshes both destinations", async () => {

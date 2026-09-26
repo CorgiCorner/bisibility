@@ -68,12 +68,12 @@ export const errorButtonForegroundTokens = {
 
 export const colorSchemes = {
   light: {
-    bg: "#FCF7ED",
+    bg: "#F5F3EE",
     "bg-elev": "#FBF9F4",
     "bg-sidebar": "#FFFFFF",
     // 30% of #ECE7DB so chips and chrome pick up the parent surface.
     "bg-sunken": "#ECE7DB4D",
-    "bg-band": "#F3EEE3",
+    "bg-band": "#EBE8E0",
     "bg-inset": "#E2DDD0",
     "contrast-bg": "#1C1A16",
     "contrast-surface": "#24211B",
@@ -87,8 +87,8 @@ export const colorSchemes = {
     border: "#DDD8CC",
     "border-soft": "#F0EEE6",
     // Control boundary: inputs, buttons, chips. Deliberately lighter than the
-    // 3:1 non-text floor (2.03 on --bg); the exemption is asserted in contrast.test.ts.
-    "border-control": "#B1A99A",
+    // 3:1 non-text floor; the exemption is asserted in contrast.test.ts.
+    "border-control": "#C5BFB4",
     "nav-active": "#EDEAE1",
     // Meter/progress tracks need contrast against the surface they sit on, not depth.
     // Recessed fills (--bg-sunken, --bg-inset) go darker than --bg in dark mode, which

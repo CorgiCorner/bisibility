@@ -1,14 +1,14 @@
 "use client";
 
 import { compactInputTypographyClassName, inputClassName } from "@/components/ui/input-styles";
-import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
 import { cn } from "@/lib/ui/cn";
 import { useTranslations } from "next-intl";
 import { forwardRef, type InputHTMLAttributes } from "react";
 
 type BudgetAmountFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "className"> & {
-  connection: ProviderSpendConnection;
   error?: string | null;
+  /** Money budgets show a dollar adornment; unit budgets show searches. */
+  unit: "cents" | "units";
 };
 
 const fieldClassName = cn(
@@ -20,8 +20,8 @@ const fieldClassName = cn(
 const adornmentClassName = "shrink-0 font-sans tabular-nums text-[12px] text-fg-muted select-none";
 
 export const BudgetAmountField = forwardRef<HTMLInputElement, BudgetAmountFieldProps>(
-  function BudgetAmountField({ connection, error, ...props }, ref) {
-    const isMoney = connection.unit === "cents";
+  function BudgetAmountField({ error, unit, ...props }, ref) {
+    const isMoney = unit === "cents";
     const t = useTranslations("projectSettingsUsage.provider.budgetDialog");
     return (
       <div className="min-w-0">

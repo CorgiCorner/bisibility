@@ -59,10 +59,11 @@ export function KeywordGridViewport({
   return (
     <div className="min-w-0 overflow-hidden">
       <div
-        className="h-[650px] min-h-[420px] max-h-[calc(100dvh-200px)] w-full min-w-0 [&>[role=table]]:border-0"
+        className="h-[650px] min-h-[420px] max-h-[calc(100dvh-200px)] w-full min-w-0"
         data-testid="keywords-grid-viewport"
       >
         <DataTable
+          bordered={false}
           ariaLabel={t("tableAria")}
           columnSizing={columnSizing}
           columns={columns}

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const source = (relativePath: string) =>
   readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), "utf8");
-const schema = source("../../prisma/schema.prisma");
+const schema = source("../../prisma/schema/core.prisma");
 const baseline = source("../../prisma/migrations/20260806000000_squashed_migrations/migration.sql");
 
 function model(name: string) {

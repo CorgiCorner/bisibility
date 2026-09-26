@@ -1,5 +1,5 @@
 import type { StoredResultFreshness } from "@/components/demo-research/StoredResultFreshness";
-import type { BacklinksOutcome, BacklinksSnapshot } from "@/lib/backlinks/types";
+import type { BacklinksRowsOutcome, BacklinksSnapshot } from "@/lib/backlinks/types";
 import { backlinksRates, estimatedFeatureCostCents } from "@/lib/cost-estimate/provider-rates";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { useTranslations } from "next-intl";
@@ -9,7 +9,7 @@ import { SummaryCards } from "./SummaryCards";
 
 type BacklinksResultsProps = {
   estimateCents: number | null;
-  onLoadMore?: () => Promise<BacklinksOutcome>;
+  onLoadMore?: () => Promise<BacklinksRowsOutcome>;
   onRefresh?: () => void;
   readOnly?: boolean;
   refreshing?: boolean;

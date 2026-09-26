@@ -43,7 +43,11 @@ export { DomainIconLayer, type DomainIconLayerProps } from "./DomainIconLayer";
 export { DataTable } from "./data-table/DataTable";
 export { DataTableColumnsMenu } from "./data-table/DataTableColumnsMenu";
 export { DataTableDensityMenu } from "./data-table/DataTableDensityMenu";
-export { dataTableRowHeight } from "./data-table/data-table-density";
+export {
+  type DataTableViewportHeightInput,
+  dataTableRowHeight,
+  dataTableViewportHeight,
+} from "./data-table/data-table-density";
 export { useDataTableLayout } from "./data-table/data-table-layout-store";
 export type {
   DataTableColumn,
@@ -68,6 +72,13 @@ export {
 } from "./domain-icon-url";
 export { EmptyState, type EmptyStateProps } from "./EmptyState";
 export {
+  ExpandableCard,
+  type ExpandableCardContent,
+  type ExpandableCardProps,
+  type ExpandableCardView,
+  renderExpandableCardContent,
+} from "./ExpandableCard";
+export {
   ExpiryChoiceGroup,
   type ExpiryChoiceGroupProps,
   type ExpiryChoiceOption,
@@ -76,6 +87,7 @@ export { ExternalLink, type ExternalLinkProps } from "./ExternalLink";
 export { FieldLabel, type FieldLabelProps } from "./FieldLabel";
 export { filterChipStateClassName } from "./filter-chip-styles";
 export { GithubStars, type GithubStarsProps, type GithubStarsSize } from "./GithubStars";
+export { headerIconButtonClassName } from "./header-icon-button-styles";
 export { IdChip, type IdChipProps, shortId } from "./IdChip";
 export { InfoTooltip, type InfoTooltipProps } from "./InfoTooltip";
 export {

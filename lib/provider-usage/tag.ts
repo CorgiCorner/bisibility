@@ -7,6 +7,7 @@ import {
   PROVIDER_INSTANCE_SLUG_SETTING_KEY,
   parseProviderInstanceSlug,
 } from "@/lib/instance-setting-definitions";
+import type { ProviderCredential } from "./surface";
 
 const DEFAULT_INSTANCE_SLUG = "bisibility";
 const INSTANCE_SLUG_CACHE_MS = 60_000;
@@ -15,7 +16,7 @@ const MAX_INSTANCE_SLUG_LENGTH = 48;
 const MAX_PROJECT_ID_LENGTH = 64;
 const MIN_NON_KEY_VALUE_LENGTH = 1;
 
-export const PROVIDER_REQUEST_SOURCES = ["app", "worker", "cli", "mcp", "sdk"] as const;
+export const PROVIDER_REQUEST_SOURCES = ["app", "worker", "api", "cli", "mcp", "sdk"] as const;
 export type ProviderRequestSource = (typeof PROVIDER_REQUEST_SOURCES)[number];
 export const PROVIDER_REQUEST_FEATURES = [
   "backlinks",
@@ -27,6 +28,8 @@ export const PROVIDER_REQUEST_FEATURES = [
 ] as const satisfies readonly ProviderCostFeature[];
 export const PROVIDER_REQUEST_TRIGGERS = ["manual", "scheduled"] as const;
 export type ProviderRequestTrigger = (typeof PROVIDER_REQUEST_TRIGGERS)[number];
+export const PROVIDER_CREDENTIAL_SOURCES = ["own", "hosted"] as const;
+export type ProviderCredentialSource = (typeof PROVIDER_CREDENTIAL_SOURCES)[number];
 
 export type ProviderRequestContext = Readonly<{
   correlationId: string;
@@ -38,11 +41,14 @@ export type ProviderRequestContext = Readonly<{
 
 export type ProviderRequestAttribution = Readonly<{
   context: ProviderRequestContext;
+  credential?: ProviderCredential;
   tag: string;
 }>;
 
 type BuildProviderTagInput = {
   context: ProviderRequestContext;
+  // Optional credential-source attribution; omitted keeps the legacy tag byte-for-byte.
+  credentialSource?: ProviderCredentialSource;
   instanceSlug: string | null | undefined;
   stage?: string;
 };
@@ -100,19 +106,31 @@ function normalizedContext(context: ProviderRequestContext): ProviderRequestCont
   return {
     correlationId: correlationId(context.correlationId),
     feature: oneOf(context.feature, "feature", PROVIDER_REQUEST_FEATURES),
-    projectId: sanitizedIdentifier(context.projectId, "projectId", MAX_PROJECT_ID_LENGTH),
+    projectId: trustedProjectId(context.projectId),
     source: oneOf(context.source, "source", PROVIDER_REQUEST_SOURCES),
     trigger: oneOf(context.trigger, "trigger", PROVIDER_REQUEST_TRIGGERS),
   };
 }
 
+function trustedProjectId(value: string) {
+  // Validate tag compatibility without changing the database identity.
+  sanitizedIdentifier(value, "projectId", MAX_PROJECT_ID_LENGTH);
+  return value;
+}
+
 export function buildProviderTag(input: BuildProviderTagInput) {
   const context = normalizedContext(input.context);
+  // Supplied sources are validated strictly; undefined is the legacy no-attribution path.
+  const credentialSource =
+    input.credentialSource === undefined
+      ? null
+      : oneOf(input.credentialSource, "credentialSource", PROVIDER_CREDENTIAL_SOURCES);
   const configuredSlug =
     typeof input.instanceSlug === "string" ? parseProviderInstanceSlug(input.instanceSlug) : null;
   let app = (configuredSlug ?? DEFAULT_INSTANCE_SLUG).slice(0, MAX_INSTANCE_SLUG_LENGTH);
-  let projectId = context.projectId;
-  const fixed = `app=;stage=${providerStage(input.stage)};src=${context.source};trg=${context.trigger};f=${context.feature};p=;c=${context.correlationId}`;
+  let projectId = sanitizedIdentifier(context.projectId, "projectId", MAX_PROJECT_ID_LENGTH);
+  const credentialPart = credentialSource === null ? "" : `;cs=${credentialSource}`;
+  const fixed = `app=;stage=${providerStage(input.stage)};src=${context.source}${credentialPart};trg=${context.trigger};f=${context.feature};p=;c=${context.correlationId}`;
   let excess = byteLength(fixed) + byteLength(app) + byteLength(projectId) - MAX_TAG_LENGTH;
   if (excess > 0) {
     const projectReduction = Math.min(excess, projectId.length - MIN_NON_KEY_VALUE_LENGTH);
@@ -127,7 +145,7 @@ export function buildProviderTag(input: BuildProviderTagInput) {
   if (excess > 0) {
     throw new Error("Provider request correlationId is too long for the 255-byte provider tag.");
   }
-  const tag = `app=${app};stage=${providerStage(input.stage)};src=${context.source};trg=${context.trigger};f=${context.feature};p=${projectId};c=${context.correlationId}`;
+  const tag = `app=${app};stage=${providerStage(input.stage)};src=${context.source}${credentialPart};trg=${context.trigger};f=${context.feature};p=${projectId};c=${context.correlationId}`;
   if (byteLength(tag) > MAX_TAG_LENGTH) {
     throw new Error("Provider request tag exceeds 255 bytes.");
   }
@@ -170,11 +188,17 @@ async function providerInstanceSlug() {
 
 export async function createProviderRequestAttribution(
   context: ProviderRequestContext,
+  credential?: ProviderCredential,
+  credentialSource?: ProviderCredentialSource,
 ): Promise<ProviderRequestAttribution> {
   const normalized = normalizedContext(context);
   const instanceSlug = await providerInstanceSlug();
-  return {
+  const tag = buildProviderTag({
     context: normalized,
-    tag: buildProviderTag({ context: normalized, instanceSlug, stage: process.env.DEPLOYMENT_ENV }),
-  };
+    credentialSource,
+    instanceSlug,
+    stage: process.env.DEPLOYMENT_ENV,
+  });
+  if (credential === undefined) return { context: normalized, tag };
+  return { context: normalized, credential, tag };
 }

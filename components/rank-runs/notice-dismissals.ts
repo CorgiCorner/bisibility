@@ -5,6 +5,7 @@ import { useCallback, useSyncExternalStore } from "react";
 export const NOTICE_DISMISSAL_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
 export type RankRunNoticeIdentity =
+  | { kind: "rank-tracker-failures"; projectId: string; checkId: string }
   | { kind: "checks-running" | "check-failures" | "market-slice"; runId: string }
   | { kind: "budget-forecast" | "budget-exhausted"; capPeriod: string };
 
@@ -19,6 +20,7 @@ function storage() {
 }
 
 function dismissalSubject(identity: RankRunNoticeIdentity) {
+  if (identity.kind === "rank-tracker-failures") return `${identity.projectId}:${identity.checkId}`;
   return "runId" in identity ? identity.runId : identity.capPeriod;
 }
 

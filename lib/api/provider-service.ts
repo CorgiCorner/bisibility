@@ -5,7 +5,10 @@ import { makePublicId } from "@/lib/db/public-id";
 import { dollarsToCents } from "@/lib/format/currency";
 import { initialProviderAllocation } from "@/lib/provider-allocations/initial-allocation";
 import { backfillLegacyProjectAllocationInLockedTransaction } from "@/lib/provider-allocations/legacy-backfill";
-import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
+import {
+  hasAcceptedConnectionRun,
+  lockProjectForProviderMutation,
+} from "@/lib/provider-allocations/project-lock";
 import { credentialsFromInput } from "@/lib/providers/credentials-input";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
@@ -19,6 +22,7 @@ import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 import { z } from "zod";
 import { auditConnection, auditProviderMutation, type ProviderClient } from "./provider-audit";
 import { renumberProviderChain } from "./provider-chain-writer";
+import { withProviderCredentialDefaults } from "./provider-credential-defaults";
 import { verifyProviderConnectionBeforeSave } from "./provider-verification";
 import { requireApiPublicId } from "./public-id";
 
@@ -26,6 +30,7 @@ const prioritySchema = z.coerce.number().int().min(0).max(1000);
 
 export const connectProviderActionSchema = connectProviderSchema.extend({
   enabled: z.coerce.boolean().default(true),
+  priority: prioritySchema.optional(),
 });
 export const providerSettingsSchema = providerConnectionRefSchema.extend({
   enabled: z.coerce.boolean().optional(),
@@ -40,7 +45,7 @@ type ProviderMutationContext = {
   projectPublicId?: string;
 };
 type ProviderMutationClient = ProviderClient &
-  Pick<typeof prisma, "$queryRaw" | "project" | "providerConnectionRate">;
+  Pick<typeof prisma, "$queryRaw" | "project" | "providerConnectionRate" | "rankCheckRun">;
 
 function wakeTrafficFirstSyncWorker() {
   void publishWorkerIntent("traffic_first_sync").catch(() => undefined);
@@ -69,13 +74,16 @@ export async function connectProviderConnection(
 ) {
   const item = providerCatalogItem(input.providerId);
   const stored = await findConnection(context.projectId, item.id);
-  const credentials = {
-    ...decryptProviderCredentials(stored?.credentialsEncrypted),
+  const credentials = await withProviderCredentialDefaults(item, context.projectId, {
+    ...(stored?.credentialSource === "hosted"
+      ? {}
+      : decryptProviderCredentials(stored?.credentialsEncrypted)),
     ...credentialsFromInput(input),
-  };
+  });
   const verification = await verifyProviderConnectionBeforeSave({
     credentials,
-    hasStoredCredentials: Boolean(stored?.credentialsEncrypted),
+    hasStoredCredentials:
+      stored?.credentialSource !== "hosted" && Boolean(stored?.credentialsEncrypted),
     projectId: context.projectId,
     provider: item,
   });
@@ -89,15 +97,31 @@ export async function connectProviderConnection(
     const before = await findConnection(context.projectId, item.id, client);
     if (
       before?.id !== stored?.id ||
-      before?.credentialsEncrypted !== stored?.credentialsEncrypted
+      before?.credentialsEncrypted !== stored?.credentialsEncrypted ||
+      before?.credentialSource !== stored?.credentialSource ||
+      (input.expectedCredentialSource !== undefined &&
+        (before?.credentialSource ?? "own") !== input.expectedCredentialSource) ||
+      (input.expectedConnectionId !== undefined &&
+        (before?.publicId ?? null) !== input.expectedConnectionId) ||
+      (input.expectedConnectionUpdatedAt !== undefined &&
+        (before?.updatedAt.toISOString() ?? null) !== input.expectedConnectionUpdatedAt)
     ) {
       throw new Error("Provider connection changed during verification. Try again.");
+    }
+    if (
+      before?.credentialSource === "hosted" &&
+      (await hasAcceptedConnectionRun(client, context.projectId, before.id))
+    ) {
+      throw new Error("Please wait for accepted checks to finish, then try again.");
     }
     const connections = await client.providerConnection.findMany({
       select: { priority: true },
       where: { kind: item.kind, projectId: context.projectId },
     });
+    // An explicit priority wins; otherwise a reconnect keeps its place and a new
+    // connection appends to the fallback chain.
     const priority =
+      input.priority ??
       before?.priority ??
       (connections.length === 0
         ? 0
@@ -125,6 +149,7 @@ export async function connectProviderConnection(
         ...initialProviderAllocation(item, verification),
         costPerCheckCents: cost,
         credentialsEncrypted: secret ?? null,
+        credentialSource: "own",
         enabled,
         ...firstSyncIntent,
         kind: item.kind,
@@ -139,12 +164,16 @@ export async function connectProviderConnection(
         enabled,
         ...firstSyncIntent,
         ...(secret ? { credentialsEncrypted: secret } : {}),
+        credentialSource: "own",
         ...(before?.publicId ? {} : { publicId: makePublicId("conn") }),
         priority,
         status: "connected",
       },
       where: { projectId_provider: { projectId: context.projectId, provider: item.id } },
     });
+    if (input.priority === 0) {
+      await renumberProviderChain(context.projectId, item.kind, item.id, client);
+    }
     if (cost !== null) {
       await client.providerConnectionRate.upsert({
         create: {
@@ -172,6 +201,19 @@ export async function connectProviderConnection(
       },
       client,
     );
+    if (before?.credentialSource === "hosted") {
+      await auditProviderMutation(
+        {
+          action: "provider.credential_source_changed",
+          actorId: context.actorId,
+          after: { provider: item.id, source: "own" },
+          before: { provider: item.id, source: "hosted" },
+          projectId: context.projectId,
+          targetId: requireApiPublicId(connection.publicId ?? "", "conn"),
+        },
+        client,
+      );
+    }
     return { connection, shouldWake: "firstSyncRequestedAt" in firstSyncIntent };
   };
 

@@ -84,9 +84,10 @@ function taskPayload(input: DataForSeoQueuedTaskInput, priority: DataForSeoQueue
   };
 }
 
-function costCents(value: unknown) {
-  const cost = Number(value ?? 0);
-  return Number.isFinite(cost) && cost > 0 ? Number((cost * 100).toFixed(4)) : 0;
+/** An explicit nonnegative provider cost in cents, or null when the cost is unknown. */
+function costCents(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return null;
+  return Number((value * 100).toFixed(4));
 }
 
 async function postTasks(
@@ -135,26 +136,37 @@ async function postTasks(
   }
 }
 
+export function assertQueuedTaskBatchSize(count: number) {
+  if (count === 0 || count > 100) {
+    throw new Error("DataForSEO queued submissions require between 1 and at most 100 tasks.");
+  }
+}
+
+export type DataForSeoQueuedSubmissionResult = {
+  accepted: Array<{
+    correlationId: string;
+    costCents: number | null;
+    providerTaskId: string;
+    tag: string;
+  }>;
+  failed: Array<{ correlationId: string; costCents: number | null; message: string }>;
+  unknown: Array<{ correlationId: string; message: string }>;
+};
+
 export async function submitDataForSeoQueuedTasks(input: {
   credentials: ProviderCredentials;
   priority: DataForSeoQueuePriority;
   tasks: DataForSeoQueuedTaskInput[];
-}) {
-  if (input.tasks.length === 0 || input.tasks.length > 100) {
-    throw new Error("DataForSEO queued submissions require between 1 and at most 100 tasks.");
-  }
+}): Promise<DataForSeoQueuedSubmissionResult> {
+  assertQueuedTaskBatchSize(input.tasks.length);
   const byTag = new Map(input.tasks.map((task) => [task.attribution.tag, task.correlationId]));
   const data = await postTasks(
     input.credentials,
     input.tasks.map((task) => taskPayload(task, input.priority)),
   );
-  const accepted: Array<{
-    correlationId: string;
-    costCents: number;
-    providerTaskId: string;
-    tag: string;
-  }> = [];
-  const failed: Array<{ correlationId: string; costCents: number; message: string }> = [];
+  const accepted: DataForSeoQueuedSubmissionResult["accepted"] = [];
+  const failed: DataForSeoQueuedSubmissionResult["failed"] = [];
+  const unknown: DataForSeoQueuedSubmissionResult["unknown"] = [];
   for (const task of data.tasks ?? []) {
     const tag = task.data?.tag;
     const correlationId = tag ? byTag.get(tag) : undefined;
@@ -177,14 +189,13 @@ export async function submitDataForSeoQueuedTasks(input: {
   const accounted = new Set([...accepted, ...failed].map((task) => task.correlationId));
   for (const task of input.tasks) {
     if (!accounted.has(task.correlationId)) {
-      failed.push({
+      unknown.push({
         correlationId: task.correlationId,
-        costCents: 0,
         message: "DataForSEO did not return a task result for this correlation.",
       });
     }
   }
-  return { accepted, failed };
+  return { accepted, failed, unknown };
 }
 
 type QueuedGetOptions = {

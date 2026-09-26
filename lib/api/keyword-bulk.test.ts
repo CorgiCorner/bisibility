@@ -41,6 +41,12 @@ function context(role: "admin" | "member", body: unknown) {
     headers: new Headers(),
     instance: "urn:test",
     method: "POST",
+    origin: {
+      credentialId: "key_test",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
     path: ["keywords", "bulk"],
     req: new Request(url, { body: JSON.stringify(body), method: "POST" }),
     url,

@@ -23,6 +23,8 @@ const defaultPreview: RankCheckRunPreview = {
   expiresAt: "2026-09-03T12:00:00.000Z",
   keywordCount: 248,
   matched: 248,
+  overlapRunCount: 0,
+  overlaps: [],
   previewToken: "story_preview_token",
   selectionHash: "story-selection",
   targetCount: 496,
@@ -50,6 +52,7 @@ const actions = {
 const baseArgs: PreflightDialogProps = {
   ...actions,
   budgetHref: "/app/prj_story/settings#provider-usage",
+  cancelRunAction: fn(async () => undefined),
   duplicateRunHref: projectRunsPath("prj_story"),
   initialDepth: 20,
   initialPreview: defaultPreview,
@@ -197,6 +200,26 @@ export const PreflightDuplicate: Story = {
     },
   },
   name: "preflight-duplicate",
+  render: DialogStory,
+};
+
+export const PreflightOverlap: Story = {
+  args: {
+    initialPreview: {
+      ...defaultPreview,
+      overlapRunCount: 2,
+      overlaps: [
+        {
+          at: "2026-09-25T12:00:00.000Z",
+          canCancel: true,
+          keywordCount: 12,
+          runId: "rcr_abcdefghijklmnopqrstuvwx",
+          status: "queued",
+        },
+      ],
+    },
+  },
+  name: "preflight-overlap",
   render: DialogStory,
 };
 

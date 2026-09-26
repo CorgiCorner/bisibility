@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
     keyword: { count: vi.fn() },
     notification: { create: vi.fn(), createMany: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     providerConnection: { groupBy: vi.fn() },
-    rankCheck: { aggregate: vi.fn() },
+    providerCostEntry: { aggregate: vi.fn() },
     user: { findFirst: vi.fn() },
   },
   writeAudit: vi.fn(),
@@ -57,8 +57,8 @@ describe("lookupInstanceAdminAccount", () => {
       { _count: { _all: 2 }, kind: "rank" },
       { _count: { _all: 1 }, kind: "traffic" },
     ]);
-    mocks.prisma.rankCheck.aggregate.mockResolvedValue({
-      _sum: { costCents: "12.2500", estimatedCostCents: "0.7500" },
+    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
+      _sum: { costCents: "12.2500" },
     });
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });
   });
@@ -76,7 +76,7 @@ describe("lookupInstanceAdminAccount", () => {
         id: "usr_abcdefghijklmnopqrstuvwx",
         keywordCount: 7,
         lastActiveAt: "2026-07-17T12:00:00.000Z",
-        monthlySpendCents: 13,
+        monthlySpendCents: 12.25,
         projectCount: 2,
         providerConnectionsByKind: [
           { count: 2, kind: "rank" },
@@ -91,15 +91,16 @@ describe("lookupInstanceAdminAccount", () => {
         where: { email: { equals: "member@example.com", mode: "insensitive" } },
       }),
     );
-    expect(mocks.prisma.rankCheck.aggregate).toHaveBeenCalledWith({
-      _sum: { costCents: true, estimatedCostCents: true },
+    expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledWith({
+      _sum: { costCents: true },
       where: {
-        checkedAt: {
+        cached: false,
+        createdAt: {
           gte: new Date("2026-07-01T00:00:00.000Z"),
           lt: new Date("2026-08-01T00:00:00.000Z"),
         },
-        keyword: { projectId: { in: ["project_1", "project_2"] } },
-        status: { not: "deferred" },
+        measurementStatus: "recorded",
+        projectId: { in: ["project_1", "project_2"] },
       },
     });
     expect(mocks.writeAudit).toHaveBeenCalledWith(

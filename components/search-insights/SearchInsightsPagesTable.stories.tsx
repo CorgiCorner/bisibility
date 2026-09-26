@@ -53,12 +53,6 @@ const trafficLensRows = [
   { ...storyPageRows[2], engagementRate: 0.57, keyEvents: 22, sessions: 5_180 },
 ];
 
-const expandedPageRows = Array.from({ length: 5_000 }, (_, index) => ({
-  ...storyPageRows[index % storyPageRows.length],
-  path: `/expanded-page-${index + 1}`,
-  url: `https://example.com/expanded-page-${index + 1}`,
-}));
-
 export const TrafficLensWithKeyEvents: Story = {
   args: {
     keyEventsConfigured: true,
@@ -92,26 +86,33 @@ function TrafficLensNoKeyEventsFrame() {
           {TABLE_CAPTIONS.pages} {KEY_EVENTS_NOT_CONFIGURED}
         </span>
       }
-      footerEnd={
-        <a
-          className="font-sans tabular-nums text-ui-caption text-fg-muted no-underline underline-offset-3 hover:text-fg hover:underline focus-visible:underline"
-          href="/app/prj_story/integrations?connect=ga4"
-        >
-          {MANAGE_SESSIONS_LABEL}
-        </a>
-      }
-      headerEnd={<SearchInsightsPagesLens lens="traffic" showSessions />}
+      empty={false}
       emptyReason="Google reported no search traffic for this property in this window."
-      onCollapse={() => undefined}
-      onMore={() => undefined}
-      show={trafficLensRows.length}
-      shown={trafficLensRows.length}
       title={TABLE_TITLES.pages}
-      total={trafficLensRows.length}
+      toolbar={
+        <div className="ms-auto shrink-0">
+          <SearchInsightsPagesLens lens="traffic" showSessions />
+        </div>
+      }
     >
       <SearchInsightsPagesTable
+        bordered={false}
         keyEventsConfigured={false}
         lens="traffic"
+        paging={{
+          footerStart: (
+            <a
+              className="font-sans tabular-nums text-ui-caption text-fg-muted no-underline underline-offset-3 hover:text-fg hover:underline focus-visible:underline"
+              href="/app/prj_story/integrations?connect=ga4"
+            >
+              {MANAGE_SESSIONS_LABEL}
+            </a>
+          ),
+          onChange: () => undefined,
+          page: 1,
+          pageSize: 10,
+          rowCount: trafficLensRows.length,
+        }}
         rows={trafficLensRows}
         showSessions
       />
@@ -124,21 +125,20 @@ export const TrafficLensNoKeyEvents: Story = {
   render: () => <TrafficLensNoKeyEventsFrame />,
 };
 
-export const ExpandedCardVirtualized: Story = {
-  args: { rows: expandedPageRows, scroll: true },
+export const ServerPages: Story = {
+  args: { rows: storyPageRows },
   render: () => (
     <div className="max-w-3xl">
       <SearchInsightsRowsCard
         caption={TABLE_CAPTIONS.pages}
-        emptyReason="Google reported no search traffic for this property in this window."
-        onCollapse={() => {}}
-        onMore={() => {}}
-        show="all"
-        shown={expandedPageRows.length}
+        empty={false}
         title={TABLE_TITLES.pages}
-        total={expandedPageRows.length}
       >
-        <SearchInsightsPagesTable rows={expandedPageRows} scroll />
+        <SearchInsightsPagesTable
+          bordered={false}
+          paging={{ onChange: () => {}, page: 3, pageSize: 10, rowCount: 184 }}
+          rows={storyPageRows}
+        />
       </SearchInsightsRowsCard>
     </div>
   ),

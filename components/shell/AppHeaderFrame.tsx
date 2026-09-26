@@ -12,6 +12,7 @@ export type AppHeaderFrameProps = {
   actions?: ReactNode;
   activeProjectId: string;
   canCreateWorkspace: boolean;
+  canSetDefault?: boolean;
   /**
    * The context slot, already rendered by the route that knows there is one. It is the market
    * axis today; an engine axis is coming, which is why neither this prop nor the slot names one.
@@ -37,6 +38,7 @@ export function AppHeaderFrame({
   actions,
   activeProjectId,
   canCreateWorkspace,
+  canSetDefault,
   context,
   enabledExperimentalModules = [],
   notificationControl,
@@ -58,6 +60,7 @@ export function AppHeaderFrame({
         <MobileNav
           activeProjectId={activeProjectId}
           canCreateWorkspace={canCreateWorkspace}
+          canSetDefault={canSetDefault}
           enabledExperimentalModules={enabledExperimentalModules}
           projectRef={projectRef}
           setupCompleted={setupCompleted}

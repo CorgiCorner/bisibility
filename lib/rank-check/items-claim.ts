@@ -70,7 +70,11 @@ async function selectCandidates(
         ROW_NUMBER() OVER (
           PARTITION BY run."projectId"
           ORDER BY COALESCE(item."notBefore", item."claimExpiresAt"), item.id
-        ) AS "projectRank"
+        ) AS "projectRank",
+        ROW_NUMBER() OVER (
+          PARTITION BY item."keywordId"
+          ORDER BY COALESCE(item."notBefore", item."claimExpiresAt"), item.id
+        ) AS "keywordRank"
       FROM "rank_check_run_items" item
       JOIN "rank_check_runs" run ON run.id = item."runId"
       JOIN "keywords" keyword ON keyword.id = item."keywordId"
@@ -84,11 +88,20 @@ async function selectCandidates(
             AND item."claimExpiresAt" < ${now}
           )
         )
+        -- One running item per keyword is a unique index; a second run's target waits its turn
+        -- instead of failing the whole claim.
+        AND NOT EXISTS (
+          SELECT 1
+          FROM "rank_check_run_items" other
+          WHERE other."keywordId" = item."keywordId"
+            AND other.status = 'running'
+            AND other.id <> item.id
+        )
     ),
     fair_candidates AS MATERIALIZED (
       SELECT id
       FROM eligible_items
-      WHERE "projectRank" <= ${perProjectCap}
+      WHERE "projectRank" <= ${perProjectCap} AND "keywordRank" = 1
       ORDER BY "projectRank", "dueAt", "projectId", id
       LIMIT ${limit}
     )

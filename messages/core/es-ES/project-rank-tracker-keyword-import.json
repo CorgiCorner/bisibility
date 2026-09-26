@@ -448,6 +448,7 @@
           "monthlyNoSpend": "Sin gasto programado",
           "monthlyUnavailable": "Estimación no disponible",
           "monthlySame": "Mismo gasto mensual",
+          "monthlyDeltaUsage": "{direction, select, positive {+{usage} / mes} negative {-{usage} / mes} other {{usage} / mes}}",
           "monthlyDelta": "{direction, select, positive {+{cost, number, ::currency/USD}} negative {-{cost, number, ::currency/USD}} other {{cost, number, ::currency/USD}}} / mes",
           "monthlyDeltaBelowCent": "{direction, select, positive {+} negative {-} other {}}< {minimum, number, ::currency/USD} / mes",
           "name": "Nombre",
@@ -581,7 +582,8 @@
           "deleting": "Eliminando…",
           "delete": "Eliminar",
           "clear": "Borrar",
-          "scheduleLoadFailed": "No se han podido cargar las programaciones. Inténtalo de nuevo."
+          "scheduleLoadFailed": "No se han podido cargar las programaciones. Inténtalo de nuevo.",
+          "toolbar": "Acciones para las palabras clave seleccionadas"
         },
         "filters": {
           "reset": "Restablecer",
@@ -716,11 +718,14 @@
           "downloadCsv": "Descargar CSV",
           "findMore": "Buscar más en Investigación",
           "selected": "{count, plural, one {# seleccionada} other {# seleccionadas}}",
+          "trackingAllUsage": "hacer seguimiento de las {count, number} añade {usage}/mes con comprobaciones diarias",
           "trackingAll": "hacer seguimiento de las {count, number} añade {cost, number, ::currency/USD}/mes con comprobaciones diarias",
           "trackingUnavailable": "hacer seguimiento de las {count, number} no tiene estimación disponible con comprobaciones diarias",
           "remove": "Quitar",
           "track": "Seguir {count, number}",
+          "trackAriaUsage": "Seguir {count, number}, {usage}/mes",
           "trackAria": "Seguir {count, number} por {cost, number, ::currency/USD}/mes",
+          "monthlyEstimateUsage": "~{usage}/mes",
           "monthlyEstimate": "~{cost, number, ::currency/USD}/mes",
           "clear": "Borrar",
           "snapshotNote": "Las métricas son una instantánea de la ejecución de investigación / guardar es gratis, no se comprueba nada hasta que inicias el seguimiento",

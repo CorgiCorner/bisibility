@@ -70,7 +70,9 @@
         "revoke": "API キーを取り消せませんでした。",
         "notFound": "API キーが見つかりません。",
         "action": "API キーの操作を完了できませんでした。"
-      }
+      },
+      "spendThisMonth": "今月の使用額: {amount}",
+      "spendTooltip": "API、MCP、SDKの予算に計上されます"
     },
     "webhooks": {
       "title": "デプロイ Webhook",

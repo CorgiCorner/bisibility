@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
     keywordTrafficSnapshot: { findMany: vi.fn() },
     project: { findFirst: vi.fn(), findUnique: vi.fn() },
     projectDefaults: { findUnique: vi.fn() },
+    projectMarket: { findMany: vi.fn() },
     providerConnection: { count: vi.fn() },
     user: { findUnique: vi.fn() },
   },
@@ -61,6 +62,7 @@ describe("rank check preview read actions", () => {
       writeModeChangedById: null,
     });
     mocks.loadSerpProviderChain.mockResolvedValue([]);
+    mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: "loc_us" }]);
     mocks.monthlySpendCents.mockResolvedValue(0);
     mocks.prisma.keyword.count.mockResolvedValue(2);
     mocks.prisma.keyword.findMany.mockReset().mockResolvedValue([]);
@@ -238,7 +240,12 @@ describe("rank check preview read actions", () => {
     // biome-ignore format: compact assertion keeps this test under the project line cap.
     expect(result).toMatchObject({ budget: { capCents: 100, spentCents: 0 }, estimatedCostPerCheckCents: 0.25, providerReady: true, providers: ["dataforseo", "secondary"], readyCount: 2, scope: { depth: 50, device: "mobile", engine: "google", frequency: "weekly", location: "Poland" } });
     expect(mocks.prisma.keyword.count).toHaveBeenCalledWith({
-      where: { projectId: "project_1", rankChecks: { none: { status: "completed" } } },
+      where: {
+        projectId: "project_1",
+        archivedAt: null,
+        locationId: { in: ["loc_us"] },
+        rankChecks: { none: { status: "completed" } },
+      },
     });
   });
 

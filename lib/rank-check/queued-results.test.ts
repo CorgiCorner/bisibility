@@ -18,9 +18,13 @@ const mocks = vi.hoisted(() => {
         id: string;
       };
       connectionId: string;
+      credentialId: string | null;
+      credentialKind: string | null;
       priority: string;
+      source: string | null;
+      trigger: string | null;
     };
-    costCents: number;
+    costCents: number | null;
     error: string | null;
     id: string;
     keyword: {
@@ -49,7 +53,11 @@ const mocks = vi.hoisted(() => {
           id: "connection_1",
         },
         connectionId: "connection_1",
+        credentialId: null,
+        credentialKind: null,
         priority: "high",
+        source: null,
+        trigger: null,
       },
       costCents,
       error,
@@ -123,6 +131,7 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn(async () => ({ state: "submitted" })),
     },
     queuedRankCheckTask: {
+      findFirst: vi.fn(async () => null),
       findMany: vi.fn(async ({ where }: { where: { state: { in: string[] } } }) =>
         tasks
           .filter((task) => where.state.in.includes(task.state))
@@ -317,6 +326,21 @@ describe("queued result persistence", () => {
     });
   });
 
+  it("does not infer a free submission from a zero-cost retrieval", async () => {
+    mocks.tasks.splice(1);
+    mocks.tasks[0].costCents = null;
+    mocks.fetchResult.mockResolvedValue({
+      status_code: 20000,
+      cost: 0,
+      tasks: [{ status_code: 20000, cost: 0, result: [{ items: [] }] }],
+    });
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    expect(mocks.persistRankCheck.mock.calls[0]?.[1]).toMatchObject({
+      rankCheck: { costCents: null, billingUnits: 1 },
+      providerCostCents: undefined,
+    });
+  });
+
   it("recovers a persisting task, isolates partial failure, and records actual cost once", async () => {
     await expect(persistReadyQueuedRankCheckTasks("batch_1")).resolves.toEqual({
       completed: 1,
@@ -330,7 +354,7 @@ describe("queued result persistence", () => {
       providerCostCents: 1.2,
       comparisonAllowed: true,
       rankCheck: {
-        billingUnits: 10,
+        billingUnits: 1,
         costCents: 1.2,
         normalizationVersion: "v2",
         position: 3,
@@ -365,6 +389,44 @@ describe("queued result persistence", () => {
     await persistReadyQueuedRankCheckTasks("batch_1");
     expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
     expect(mocks.persistFailed).toHaveBeenCalledOnce();
+  });
+
+  it("persists results under the batch's stored source, trigger and credential", async () => {
+    mocks.tasks.splice(0, mocks.tasks.length, mocks.makeTask("success", "ready", null));
+    Object.assign(mocks.tasks[0].batch, {
+      credentialId: "key_1",
+      credentialKind: "project_key",
+      source: "api",
+      trigger: "manual",
+    });
+
+    await persistReadyQueuedRankCheckTasks("batch_1");
+
+    expect(mocks.persistRankCheck).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerUsage: expect.objectContaining({
+          context: expect.objectContaining({ source: "api", trigger: "manual" }),
+          credential: { id: "key_1", kind: "project_key" },
+        }),
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("attributes a legacy batch without stored columns to app/scheduled with no credential", async () => {
+    mocks.tasks.splice(0, mocks.tasks.length, mocks.makeTask("failure", "provider_failed", "boom"));
+
+    await persistReadyQueuedRankCheckTasks("batch_1");
+
+    const usage = mocks.persistFailed.mock.calls[0]?.[0].providerUsage;
+    expect(usage.context).toEqual({
+      correlationId: "failure",
+      feature: "rank_check",
+      projectId: "project_1",
+      source: "app",
+      trigger: "scheduled",
+    });
+    expect(usage.credential).toBeUndefined();
   });
 
   it("persists a billable empty SERP without failing or retrying the task", async () => {

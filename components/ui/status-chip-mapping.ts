@@ -1,5 +1,6 @@
 import type { CoreMessages } from "@/i18n/core-messages.generated";
 import type { ItemStatus, RunOutcome, RunStatus } from "@/lib/rank-check/runs/contract";
+import { type RankRunStatusKey, rankRunStatusKey } from "@/lib/runs/run-status-vocabulary";
 import type { StatusChipTone } from "./StatusChip";
 
 export type StatusChipPresentation = {
@@ -8,22 +9,19 @@ export type StatusChipPresentation = {
   tone: StatusChipTone;
 };
 
-const RUN_STATUS_PRESENTATIONS = {
+const RANK_RUN_STATUS_PRESENTATIONS = {
   planned: { label: "Planned", messageKey: "planned", tone: "planned" },
   blocked: { label: "Blocked", messageKey: "blocked", tone: "attention" },
   queued: { label: "Queued", messageKey: "queued", tone: "info" },
   running: { label: "Running", messageKey: "running", tone: "info" },
   cancelling: { label: "Cancelling", messageKey: "cancelling", tone: "neutral" },
-  completed: { label: "Not confirmed", messageKey: "notConfirmed", tone: "neutral" },
-  cancelled: { label: "Cancelled", messageKey: "cancelled", tone: "neutral" },
-} as const satisfies Record<RunStatus, StatusChipPresentation>;
-
-const RUN_OUTCOME_PRESENTATIONS = {
   succeeded: { label: "Succeeded", messageKey: "succeeded", tone: "positive" },
   partial: { label: "Partial", messageKey: "partial", tone: "attention" },
-  failed: { label: "Failed", messageKey: "failed", tone: "critical" },
   deferred: { label: "Deferred", messageKey: "deferred", tone: "attention" },
-} as const satisfies Record<RunOutcome, StatusChipPresentation>;
+  failed: { label: "Failed", messageKey: "failed", tone: "critical" },
+  cancelled: { label: "Cancelled", messageKey: "cancelled", tone: "neutral" },
+  not_confirmed: { label: "Not confirmed", messageKey: "notConfirmed", tone: "neutral" },
+} as const satisfies Record<RankRunStatusKey, StatusChipPresentation>;
 
 const ITEM_STATUS_PRESENTATIONS = {
   queued: { label: "Queued", messageKey: "queued", tone: "info" },
@@ -46,14 +44,15 @@ function presentationFrom<T extends string>(
   return presentation;
 }
 
+export function rankRunStatusKeyChipPresentation(key: RankRunStatusKey): StatusChipPresentation {
+  return presentationFrom(RANK_RUN_STATUS_PRESENTATIONS, key, "run status");
+}
+
 export function runStatusChipPresentation(
   status: RunStatus,
   outcome: RunOutcome | null = null,
 ): StatusChipPresentation {
-  if (status === "completed") {
-    if (outcome) return presentationFrom(RUN_OUTCOME_PRESENTATIONS, outcome, "run outcome");
-  }
-  return presentationFrom(RUN_STATUS_PRESENTATIONS, status, "run status");
+  return rankRunStatusKeyChipPresentation(rankRunStatusKey(status, outcome));
 }
 
 export function itemStatusChipPresentation(status: ItemStatus): StatusChipPresentation {

@@ -39,11 +39,10 @@ describe("KeywordCell", () => {
     expect(screen.getByRole("link", { name: row.keyword })).toHaveClass(
       "font-medium",
       "text-fg",
-      "hover:text-accent-text",
       "hover:underline",
-      "focus-visible:text-accent-text",
       "focus-visible:underline",
     );
+    expect(screen.getByRole("link", { name: row.keyword }).className).not.toContain("accent");
     expect(screen.queryByRole("button", { name: "Copy keyword ID" })).not.toBeInTheDocument();
     expect(screen.queryByText(row.id)).not.toBeInTheDocument();
   });

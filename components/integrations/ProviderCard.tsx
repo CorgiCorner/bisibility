@@ -2,6 +2,7 @@
 import { ConnectDrawer } from "@/components/integrations/ConnectDrawer";
 import { ProviderCredentialWarning } from "@/components/integrations/ProviderCredentialWarning";
 import { ProviderSyncFailureAlert } from "@/components/integrations/ProviderSyncFailureAlert";
+import { ProviderDataSourceSlot } from "@/components/settings/AccountDataSourceSlot";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
@@ -53,14 +54,11 @@ export function ProviderCard({
   const [testResult, setTestResult] = useState<ProviderTestResult | null>(null);
   const [disconnectNotice, setDisconnectNotice] = useState<Notice | null>(null);
   const { readOnly } = useProjectWriteMode();
-  const primaryAction = provider.status !== "connected";
-  const actionVariant = primaryAction ? "primary" : "secondary";
-  const actionStyle = primaryAction ? undefined : outlineActionStyle;
-  const actionDisabled = readOnly && primaryAction;
-  const managementActionLabel =
-    provider.id === "gsc" && provider.status === "connected"
-      ? t("connectionSettings")
-      : t("manage");
+  const actionVariant = provider.status === "connected" ? "secondary" : "primary";
+  const actionStyle = provider.status === "connected" ? outlineActionStyle : undefined;
+  const managementActionLabel = t(
+    provider.id === "gsc" && provider.status === "connected" ? "connectionSettings" : "manage",
+  );
   const canSync =
     provider.kind === "analytics" && provider.status === "connected" && provider.enabled !== false;
   const consumerStatuses = providerConsumerStatuses(provider);
@@ -78,9 +76,7 @@ export function ProviderCard({
     syncProjectTraffic: actions?.syncProjectTraffic,
   });
   async function handleSecondaryAction() {
-    if (readOnly) {
-      return;
-    }
+    if (readOnly) return;
     if (provider.secondaryAction !== "Test") {
       setDrawerOpen(true);
       return;
@@ -191,6 +187,13 @@ export function ProviderCard({
           />
         ) : null}
         <div className="mt-auto">
+          {provider.kind === "serp" && canManageProviders ? (
+            <ProviderDataSourceSlot
+              onSelectOwn={() => setDrawerOpen(true)}
+              projectId={projectId}
+              provider={provider}
+            />
+          ) : null}
           <ProviderCardFeedback
             disconnectNotice={disconnectNotice}
             neverSynced={!hasConsumerRows && Boolean(provider.neverSynced)}
@@ -203,9 +206,7 @@ export function ProviderCard({
                 <ProjectReadOnlyTooltip className="inline-flex">
                   <Button
                     disabled={readOnly || testPending}
-                    onClick={() => {
-                      void handleSecondaryAction();
-                    }}
+                    onClick={() => void handleSecondaryAction()}
                     size="xs"
                     style={outlineActionStyle}
                     type="button"
@@ -223,9 +224,7 @@ export function ProviderCard({
                 <ProjectReadOnlyTooltip className="inline-flex">
                   <Button
                     disabled={readOnly || syncPending}
-                    onClick={() => {
-                      void handleTrafficSync();
-                    }}
+                    onClick={() => void handleTrafficSync()}
                     size="xs"
                     style={outlineActionStyle}
                     type="button"
@@ -235,7 +234,7 @@ export function ProviderCard({
                   </Button>
                 </ProjectReadOnlyTooltip>
               ) : null}
-              {canManageProviders && actionDisabled ? (
+              {canManageProviders && readOnly && provider.status !== "connected" ? (
                 <ProjectReadOnlyTooltip className="inline-flex">
                   <Button
                     disabled
@@ -244,11 +243,7 @@ export function ProviderCard({
                     type="button"
                     variant={actionVariant}
                   >
-                    {provider.status === "connected"
-                      ? managementActionLabel
-                      : provider.status === "needs_reauth"
-                        ? t("reconnect")
-                        : t("connect")}
+                    {provider.status === "needs_reauth" ? t("reconnect") : t("connect")}
                   </Button>
                 </ProjectReadOnlyTooltip>
               ) : canManageProviders ? (

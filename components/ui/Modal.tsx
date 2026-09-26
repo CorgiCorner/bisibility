@@ -1,6 +1,7 @@
 "use client";
 
 import { DialogSurface as Dialog } from "@/components/ui/DialogSurface";
+import { headerIconButtonClassName } from "@/components/ui/header-icon-button-styles";
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { MOTION_MODAL_ENTER, MOTION_MODAL_EXIT } from "@/lib/ui/motion";
@@ -9,7 +10,8 @@ import { cva } from "class-variance-authority";
 import { useTranslations } from "next-intl";
 import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useId } from "react";
 
-export type ModalSize = "sm" | "md" | "lg";
+/** `full` fills the viewport inside the same 24px gutter the fixed sizes keep. */
+export type ModalSize = "sm" | "md" | "lg" | "full";
 
 export type ModalProps = {
   ariaLabelledBy?: string;
@@ -33,7 +35,9 @@ export type ModalProps = {
   onExited?: () => void;
 };
 
+const MODAL_GUTTER = "48px";
 const modalWidth = {
+  full: `calc(100vw - ${MODAL_GUTTER})`,
   lg: 640,
   md: 480,
   sm: 440,
@@ -65,6 +69,7 @@ export function Modal({
   const titleId = useId();
   const descriptionId = useId();
   const hasHeader = title || description || showClose;
+  const full = size === "full" && width === undefined;
 
   function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
     const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229;
@@ -111,9 +116,10 @@ export function Modal({
           border: "1px solid var(--border)",
           boxShadow: "none",
           color: "var(--fg)",
+          ...(full ? { height: `calc(100dvh - ${MODAL_GUTTER})` } : {}),
           margin: 0,
-          maxHeight: "calc(100dvh - 48px)",
-          maxWidth: "calc(100% - 48px)",
+          maxHeight: `calc(100dvh - ${MODAL_GUTTER})`,
+          maxWidth: `calc(100% - ${MODAL_GUTTER})`,
           overflow: "hidden",
           width: width ?? modalWidth[size],
         },
@@ -122,7 +128,14 @@ export function Modal({
       onExited={onExited}
       duration={{ enter: MOTION_MODAL_ENTER, exit: MOTION_MODAL_EXIT }}
     >
-      <div className="flex max-h-[calc(100dvh-48px)] min-h-0 flex-col overflow-hidden">
+      <div
+        className={cn(
+          "flex max-h-[calc(100dvh-48px)] min-h-0 flex-col overflow-hidden",
+          // The panel's height is fixed, so the body takes what the header and footer leave.
+          full && "flex-1",
+        )}
+        data-size={full ? "full" : undefined}
+      >
         {hasHeader ? (
           <header
             className={cn(
@@ -151,7 +164,7 @@ export function Modal({
             {showClose ? (
               <button
                 aria-label={t("close")}
-                className="grid h-7.5 w-7.5 shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-[color,background-color,transform] duration-(--motion-press) hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
+                className={headerIconButtonClassName}
                 disabled={dismissDisabled}
                 onClick={onClose}
                 type="button"

@@ -1,3 +1,4 @@
+import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { analyzeBacklinksAction, loadMoreBacklinkRowsAction } from "./backlinks";
 
@@ -47,7 +48,7 @@ describe("backlinks actions", () => {
       type: "project",
     });
     expect(mocks.analyze).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      { actorId: "user_1", origin: APP_REQUEST_ORIGIN, projectId: "project_1" },
       {
         estimateOnly: true,
         fresh: false,
@@ -71,7 +72,7 @@ describe("backlinks actions", () => {
     });
 
     expect(mocks.analyze).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      { actorId: "user_1", origin: APP_REQUEST_ORIGIN, projectId: "project_1" },
       expect.objectContaining({ maxCostCents: 0 }),
     );
   });
@@ -91,7 +92,7 @@ describe("backlinks actions", () => {
     ).resolves.toBe(outcome);
 
     expect(mocks.loadMore).toHaveBeenCalledWith(
-      { actorId: "user_1", projectId: "project_1" },
+      { actorId: "user_1", origin: APP_REQUEST_ORIGIN, projectId: "project_1" },
       {
         includeSubdomains: true,
         limit: 500,

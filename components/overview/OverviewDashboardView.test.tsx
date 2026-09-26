@@ -21,6 +21,7 @@ const emptyOverview = {
 
 const healthyChecks = {
   budget: { capCents: 5000, exhausted: false, spentCents: 0 },
+  currentFailures: { count: 0, latestCheckId: null },
   failed24h: { count: 0, latest: null },
   providerConnected: false,
   providerRate: { overrideCents: null, providerId: null },
@@ -276,10 +277,11 @@ describe("OverviewDashboardView", () => {
     expect(screen.getByRole("link", { name: "https://rival.test" })).toHaveClass(
       "font-medium",
       "text-fg",
-      "hover:text-accent-text",
       "hover:underline",
-      "focus-visible:text-accent-text",
       "focus-visible:underline",
+    );
+    expect(screen.getByRole("link", { name: "https://rival.test" }).className).not.toContain(
+      "accent",
     );
     expect(screen.getByText("5 / 8")).toBeVisible();
     expect(screen.getByText("2 / 4")).toBeVisible();

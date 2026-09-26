@@ -227,3 +227,34 @@ describe("Modal token classes", () => {
     expect(footer).toHaveClass("px-5.5", "py-3.5", "gap-3");
   });
 });
+
+describe("Modal sizes", () => {
+  it("keeps a fixed width and a content-sized height for the md preset", () => {
+    render(
+      <Modal onClose={vi.fn()} open title="Medium">
+        <p>body</p>
+      </Modal>,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.style.width).toBe("480px");
+    expect(dialog.style.height).toBe("");
+  });
+
+  it("fills the viewport inside the gutter and lets the body take the remaining height", () => {
+    render(
+      <Modal onClose={vi.fn()} open size="full" title="Full">
+        <p>body</p>
+      </Modal>,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.style.width).toBe("calc(100vw - 48px)");
+    expect(dialog.style.height).toBe("calc(100dvh - 48px)");
+    expect(within(dialog).getByRole("button", { name: "Close modal" })).toBeVisible();
+    expect(within(dialog).getByRole("heading", { name: "Full" })).toBeVisible();
+    const content = screen.getByText("body").parentElement as HTMLElement;
+    expect(content).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
+    expect(content.parentElement).toHaveClass("flex-1");
+  });
+});

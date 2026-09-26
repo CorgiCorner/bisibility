@@ -6,6 +6,7 @@ import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { fetchKeywordMetricsByIds } from "./keyword-metrics-query";
 import { type KeywordRow, mapKeyword } from "./keyword-row";
+import { keywordCheckScheduleSelect } from "./keyword-row-types";
 import { fetchProjectKeywordTraffic } from "./keyword-traffic";
 import { getRequestProjectDefaults } from "./workspace-request-data";
 
@@ -58,6 +59,7 @@ async function loadKeywordRowsChunk(
   const [keywords, defaults, metricsMap, trafficMap] = await Promise.all([
     prisma.keyword.findMany({
       select: {
+        checkSchedule: { select: keywordCheckScheduleSelect },
         createdAt: true,
         device: true,
         id: true,

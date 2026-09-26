@@ -28,13 +28,32 @@ function renderWorkspace(overrides: Partial<ComponentProps<typeof BacklinksWorks
   );
 }
 
+function estimate(target: string) {
+  return {
+    cached: false,
+    cachedUntil: null,
+    costCents: 5,
+    estimate: true as const,
+    estimatedCostCents: 5,
+    includeSubdomains: true,
+    ok: true as const,
+    provider: "dataforseo",
+    target,
+    targetScope: "site" as const,
+  };
+}
+
+/** Mirrors the server: a dry run for estimateOnly, a snapshot for a paid call. */
+function outcome(input: unknown) {
+  const request = input as { estimateOnly?: boolean; target: string };
+  return request.estimateOnly ? estimate(request.target) : snapshot(request.target);
+}
+
 function snapshot(target: string) {
   return {
     cached: false,
     cachedUntil: "2026-07-25T10:00:00.000Z",
     costCents: 5,
-    estimate: true,
-    estimatedCostCents: 5,
     fetchedAt: "2026-07-24T10:00:00.000Z",
     fetchedRowCount: 0,
     history: [],
@@ -104,7 +123,7 @@ describe("BacklinksWorkspace", () => {
     const analyzeAction = vi.fn(async (input: unknown) => {
       const target = (input as { target: string }).target;
       if (target === "not-valid") throw new Error("unsupported target");
-      return snapshot(target);
+      return outcome(input);
     });
     renderWorkspace({ analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction });
 
@@ -131,10 +150,7 @@ describe("BacklinksWorkspace", () => {
     // moves the real price. Without a refetch the button kept the site-scope
     // number while the pricing popover showed the lower page-scope breakdown.
     vi.useFakeTimers();
-    const analyzeAction = vi.fn(async (input: unknown) => {
-      const target = (input as { target: string }).target;
-      return snapshot(target);
-    });
+    const analyzeAction = vi.fn(async (input: unknown) => outcome(input));
     renderWorkspace({ analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction });
 
     const input = screen.getByRole("textbox", { name: "Backlinks target" });
@@ -275,9 +291,7 @@ describe("BacklinksWorkspace", () => {
   it("only fills the form when a recent target snapshot has expired", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-24T15:00:00.000Z"));
-    const analyzeAction = vi.fn(async (input: unknown) =>
-      snapshot((input as { target: string }).target),
-    );
+    const analyzeAction = vi.fn(async (input: unknown) => outcome(input));
     renderWorkspace({
       analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
       context: {
@@ -321,7 +335,7 @@ describe("BacklinksWorkspace", () => {
       if (!request.estimateOnly) {
         return { ok: false as const, reason: "cost_limit_exceeded" as const };
       }
-      return snapshot(request.target);
+      return estimate(request.target);
     });
     renderWorkspace({
       analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
@@ -361,9 +375,7 @@ describe("BacklinksWorkspace", () => {
 
   it("requests the server estimate in page scope when Exact page is selected first", async () => {
     vi.useFakeTimers();
-    const analyzeAction = vi.fn(async (input: unknown) =>
-      snapshot((input as { target: string }).target),
-    );
+    const analyzeAction = vi.fn(async (input: unknown) => outcome(input));
     renderWorkspace({ analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction });
 
     fireEvent.click(screen.getByRole("radio", { name: "Exact page" }));

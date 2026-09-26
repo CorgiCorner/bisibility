@@ -56,6 +56,8 @@ export const runSelectionKeywordSelect = {
     where: { state: { in: ACTIVE_QUEUED_TASK_STATES } },
   },
   rankCheckRunItems: {
+    // Descending puts "running" before "queued", so an in-flight item is the one reported.
+    orderBy: { status: "desc" },
     select: { status: true },
     take: 1,
     where: {
@@ -77,12 +79,34 @@ export type RunSelectionKeyword = Prisma.KeywordGetPayload<{
   select: typeof runSelectionKeywordSelect;
 }>;
 
+/** Who asked for the run. Only a manual app launch may overlap another run's queued work. */
+export type RunLaunchTrigger = "api" | "manual";
+
 export function runSelectionKeywordInProgress(row: RunSelectionKeyword) {
   return (
     row.rankCheckRunItems.length > 0 ||
     row.queuedRankCheckTasks.length > 0 ||
     row.rankChecks[0]?.status === "running"
   );
+}
+
+/**
+ * A check for this keyword is at the provider right now. The running-item unique index allows one
+ * such check per keyword, so even a manual launch leaves it out; a keyword that only waits in
+ * another run's queue is not in flight.
+ */
+export function runSelectionKeywordInFlight(row: RunSelectionKeyword) {
+  return (
+    row.rankCheckRunItems[0]?.status === "running" ||
+    row.queuedRankCheckTasks.length > 0 ||
+    row.rankChecks[0]?.status === "running"
+  );
+}
+
+export function runSelectionKeywordHeld(row: RunSelectionKeyword, trigger: RunLaunchTrigger) {
+  return trigger === "manual"
+    ? runSelectionKeywordInFlight(row)
+    : runSelectionKeywordInProgress(row);
 }
 
 export async function lockRunSelectionKeywords(

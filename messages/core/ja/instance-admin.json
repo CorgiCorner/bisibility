@@ -10,7 +10,8 @@
       "label": "インスタンス管理のセクション",
       "operations": "運用",
       "administration": "管理",
-      "audit": "監査"
+      "audit": "監査",
+      "metering": "使用量計測"
     },
     "controls": {
       "refresh": "更新",
@@ -312,6 +313,40 @@
       "statusFailed": "失敗",
       "copyTargetId": "監査対象 ID {targetId} をコピー",
       "targetUnavailable": "{targetType}:利用不可"
+    },
+    "metering": {
+      "title": "使用量計測",
+      "heading": "シャドー比較",
+      "description": "アクセス判断を変更せずに記録されたプロバイダー費用を比較します。単位の表示がない金額は正確なセント値です。",
+      "month": "月",
+      "project": "プロジェクト",
+      "allProjects": "すべてのプロジェクト",
+      "usage": "使用量と従来の合計",
+      "budgets": "現在の予算",
+      "exceptions": "例外",
+      "emptyUsage": "選択した条件に記録済みの使用量はありません。",
+      "emptyBudgets": "選択した条件に対応する予算はありません。",
+      "emptyExceptions": "保留中の処理やシャドーエラーはありません。",
+      "unavailableNote": "計測データを取得できません。金額と件数は不明です。",
+      "disagreements": "過去7日間の不一致",
+      "connection": "接続",
+      "surface": "利用区分",
+      "funding": "資金源",
+      "meter": "計測費用",
+      "reserved": "予約済み",
+      "legacy": "従来の費用",
+      "difference": "差額",
+      "certainty": "確度",
+      "used": "使用済み",
+      "remaining": "残り",
+      "resetsAt": "リセット日時",
+      "operation": "操作",
+      "state": "状態",
+      "updatedAt": "更新日時",
+      "unavailable": "取得不可",
+      "unlimited": "無制限",
+      "truncated": "表示件数に上限があります。プロジェクトで絞り込んでください。",
+      "budgetNote": "予算は選択した使用月に関係なく現在の周期を表示します。"
     }
   }
 }

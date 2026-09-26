@@ -125,9 +125,7 @@ function TopConsumption({
         <p className="mt-4 text-xs text-fg-muted">{t("empty")}</p>
       ) : (
         <div className="mt-3">
-          <div className="[&>[role=table]]:border-0">
-            <AdminAdministrationConsumptionTable rows={boundedRows} />
-          </div>
+          <AdminAdministrationConsumptionTable rows={boundedRows} />
           <p className="mb-0 mt-2 text-[11px] leading-relaxed text-fg-muted">{t("note")}</p>
         </div>
       )}

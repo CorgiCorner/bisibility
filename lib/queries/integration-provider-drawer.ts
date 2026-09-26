@@ -21,10 +21,12 @@ import type { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { ProviderCredentials, ProviderKind } from "@/lib/providers/types";
 
 export type ProviderConnectionRow = {
+  credentialSource?: "own" | "hosted";
   costPerCheckCents: unknown;
   credentialsEncrypted: string | null;
   enabled: boolean;
   id: string;
+  publicId?: string;
   kind: ProviderKind;
   lastUsedAt: Date | null;
   priority: number;
@@ -137,9 +139,14 @@ export function providerRates(
   costEntries: readonly ProviderCostEntryRow[],
 ): ProviderRateData[] {
   const editableRates = providerRateFeatures(providerId).map((feature) => {
-    const manualRate = connection?.rates?.find((rate) => rate.feature === feature);
+    const manualRate =
+      connection?.credentialSource === "hosted"
+        ? undefined
+        : connection?.rates?.find((rate) => rate.feature === feature);
     const legacyRankRate =
-      feature === "rank_check" && !manualRate ? connection?.costPerCheckCents : null;
+      feature === "rank_check" && !manualRate && connection?.credentialSource !== "hosted"
+        ? connection?.costPerCheckCents
+        : null;
     const entries = connection
       ? costEntries.filter(
           (entry) => entry.connectionId === connection.id && entry.feature === feature,

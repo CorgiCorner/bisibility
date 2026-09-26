@@ -211,6 +211,7 @@ function ErrorMessage({
 }>) {
   const message = {
     budget_exhausted: messages.budgetExhausted,
+    cost_limit_exceeded: messages.lookupFailed,
     needs_reauth: messages.needsReauth,
     no_domain: messages.noDomain,
     no_source: messages.noSource,

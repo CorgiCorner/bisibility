@@ -38,11 +38,11 @@ describe("KeywordGridViewport", () => {
     expect(ancestorClasses).not.toContain("overflow-x-auto");
     expect(viewport).toHaveClass("w-full", "min-w-0");
     expect(viewport).not.toHaveClass("min-w-[1080px]");
-    expect(viewport).toHaveClass("[&>[role=table]]:border-0");
 
     const table = screen.getByRole("table", { name: "Rank tracker keywords" });
+    expect(table).toHaveAttribute("data-bordered", "false");
     expect(table.parentElement).toBe(viewport);
-    expect(table).toHaveClass("border", "border-border");
+    expect(table).toHaveClass("border-0");
     expect(screen.getAllByRole("row")[0]).toHaveClass("border-y", "border-t-0", "border-border");
     expect(screen.getByTestId("data-table-footer")).toHaveClass("border-t", "border-border");
   });

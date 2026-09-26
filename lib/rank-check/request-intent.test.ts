@@ -66,9 +66,14 @@ const mocks = vi.hoisted(() => ({
     keywordSchedule: { update: vi.fn() },
     project: { findUnique: vi.fn(), findUniqueOrThrow: vi.fn() },
     projectDefaults: { update: vi.fn() },
-    providerConnection: { findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    providerConnection: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
     projectMarket: { findMany: vi.fn() },
-    providerCostEntry: { createMany: vi.fn() },
+    providerCostEntry: { findFirst: vi.fn().mockResolvedValue(null), createMany: vi.fn() },
     rankCheck: {
       create: vi.fn(),
       findFirst: vi.fn(),
@@ -154,6 +159,12 @@ function context() {
     auth: { project: { id: "project_1" } },
     headers: new Headers(),
     instance: "https://example.com/api/v1",
+    origin: {
+      credentialId: "key_1",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
   } as never;
 }
 
@@ -211,6 +222,11 @@ describe("single rank-check request intent", () => {
         provider: "serpapi",
       },
     ]);
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialSource: "own",
+      projectId: "project_1",
+      provider: "serpapi",
+    });
     mocks.prisma.rankCheck.create.mockResolvedValue(rankCheck);
     mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
     mocks.prisma.rankCheck.findUnique.mockResolvedValue({ trigger: "manual" });
@@ -380,4 +396,41 @@ describe("single rank-check request intent", () => {
       expect(mocks.launchSingleRankCheckRun).not.toHaveBeenCalled();
     },
   );
+
+  it("launches the API request under the credential and source of its request origin", async () => {
+    await requestRankCheck(context(), {}, scopedKeyword());
+
+    expect(mocks.launchSingleRankCheckRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        origin: { credential: { id: "key_1", kind: "project_key" }, source: "api" },
+      }),
+    );
+  });
+  it("reports ledger actuals on the inline response instead of the stored final attempt", async () => {
+    vi.stubEnv("SCHEDULER_DRIVER", "none");
+    mocks.prisma.$queryRaw.mockImplementation(async (query: unknown) => {
+      const text = (query as { text?: string }).text ?? "";
+      return text.includes("provider_cost_entries")
+        ? [
+            {
+              receiptCount: 3,
+              unitProvider: "serpapi",
+              providerCount: 1,
+              recordedCostCents: "1.5",
+              recordedUnits: "3",
+              scopeId: "rank_check_1",
+              unconfirmedCount: 0,
+              unmeasuredCount: 0,
+            },
+          ]
+        : [];
+    });
+
+    const api = await requestRankCheck(context(), {}, scopedKeyword());
+    const body = await api.json();
+
+    expect(api.status).toBe(201);
+    expect(body.cost_cents).toBe(1.5);
+    expect(body.usage).toEqual({ quantity: 3, status: "confirmed", unit: "operations" });
+  });
 });

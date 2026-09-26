@@ -10,6 +10,7 @@ import {
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { parseCronExpression, type RankCheckFrequency, runsPerMonth } from "@/lib/settings/options";
+import { estimateRankUsage } from "./native-usage";
 
 export type CostRateInfo = {
   providerId: string | null;
@@ -114,6 +115,37 @@ export function monthlyChecksFor(volume: ProjectEstimateVolume): number | null {
   return scheduledRuns == null
     ? null
     : checksPerRun({ ...volume, frequency: "monthly" }) * scheduledRuns;
+}
+
+export function monthlyNativeUsage(volume: ProjectEstimateVolume, rate: CostRateInfo) {
+  const estimate = estimateRankUsage([volume.depth], rate);
+  const targets = checksPerRun({ ...volume, frequency: "monthly" });
+  const runs = scheduledRunsPerMonth(volume.frequency, volume.cronExpression);
+  return {
+    ...estimate,
+    quantity:
+      estimate.quantity === null || runs === null
+        ? null
+        : Number((estimate.quantity * targets * runs).toFixed(6)),
+    unknownTargets: estimate.unknownTargets * targets,
+  };
+}
+
+export function frequencyNativeUsageDelta(
+  volume: Omit<ProjectEstimateVolume, "frequency">,
+  from: RankCheckFrequency,
+  to: RankCheckFrequency,
+  rate: CostRateInfo,
+) {
+  const previous = monthlyNativeUsage({ ...volume, frequency: from }, rate);
+  const next = monthlyNativeUsage({ ...volume, frequency: to }, rate);
+  return {
+    ...next,
+    quantity:
+      previous.quantity === null || next.quantity === null
+        ? null
+        : next.quantity - previous.quantity,
+  };
 }
 
 export function formatEstimateCents(cents: number): string {

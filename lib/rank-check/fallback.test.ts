@@ -1,7 +1,10 @@
+import { errorFromUnknown } from "@/lib/api/error-mapper";
 import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
 import type { ObservationRunInput } from "@/lib/observation/types";
+import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ProviderCallError } from "@/lib/providers/call-error";
 import { encryptSecret } from "@/lib/providers/crypto";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { clearProviderRateLimitState, ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { dataForSeoProvider } from "@/lib/providers/serp/dataforseo";
 import { serpApiProvider } from "@/lib/providers/serp/serpapi";
@@ -43,6 +46,7 @@ function hasRequestHostname(input: string | URL | Request, hostname: string) {
 
 const mocks = vi.hoisted(() => ({
   assertBudgetAvailable: vi.fn(),
+  assertOperationAccess: vi.fn(),
   evaluateKeywordAlerts: vi.fn(() => Promise.resolve([])),
   notifyRankCheckCompleted: vi.fn(() => Promise.resolve()),
   requireReadableProject: vi.fn(),
@@ -56,14 +60,21 @@ const mocks = vi.hoisted(() => ({
     observationRun: { create: vi.fn().mockResolvedValue({ id: "obs_1" }) },
     project: { findUnique: vi.fn() },
     projectDefaults: { findUnique: vi.fn(), update: vi.fn() },
-    providerConnection: { findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    providerConnection: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
     providerConnectionRate: { findMany: vi.fn() },
     providerCostEntry: {
+      findFirst: vi.fn().mockResolvedValue(null),
       aggregate: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
       createMany: vi.fn(),
       findMany: vi.fn(),
+      groupBy: vi.fn(),
     },
     rankCheck: { create: vi.fn(), findFirst: vi.fn() },
     signal: { create: vi.fn() },
@@ -71,6 +82,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/operations/access-extension", () => ({
+  assertOperationAccess: mocks.assertOperationAccess,
+}));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
 vi.mock("@/lib/alerts/evaluate", () => ({ evaluateKeywordAlerts: mocks.evaluateKeywordAlerts }));
 vi.mock("@/lib/notifications/events", () => ({
@@ -101,9 +115,34 @@ beforeEach(() => {
     Promise.resolve({ id: "signal_1", ...data }),
   );
   mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
+  mocks.prisma.project.findUnique.mockResolvedValue({
+    budgetCapCents: 500,
+    providerAllocationsInitializedAt: null,
+  });
+  mocks.prisma.providerConnection.findMany.mockImplementation(({ where }) =>
+    Promise.resolve(
+      [
+        { id: "connection_quota", provider: "serpapi" },
+        { id: "connection_metered", provider: "dataforseo" },
+        { id: "connection_primary", provider: "dataforseo" },
+        { id: "connection_secondary", provider: "serpapi" },
+      ].filter((row) => !where.provider || row.provider === where.provider),
+    ),
+  );
+  mocks.prisma.providerConnection.findUnique.mockImplementation(({ where }) =>
+    Promise.resolve({
+      credentialSource: "own",
+      projectId: "project_1",
+      provider: /quota|secondary|serpapi|connection_2/.test(where.id) ? "serpapi" : "dataforseo",
+    }),
+  );
   mocks.prisma.$queryRaw.mockResolvedValue([]);
   mocks.prisma.providerCostEntry.create.mockResolvedValue({ id: "cost_1" });
   mocks.prisma.providerCostEntry.createMany.mockResolvedValue({ count: 1 });
+  mocks.prisma.providerCostEntry.groupBy.mockImplementation(async () => {
+    const result = await mocks.prisma.providerCostEntry.aggregate();
+    return [{ credentialSource: "own", _count: result._count, _sum: result._sum }];
+  });
   mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
 });
 
@@ -123,6 +162,74 @@ function ranked(position: number): SerpRankResult {
 describe("runCheckWithFallback", () => {
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it.each([
+    ["balance", 402, null, false],
+    ["balance", 402, null, true],
+    ["budget", 429, "connection", false],
+    ["budget", 429, "connection", true],
+  ] as const)(
+    "carries typed %s exhaustion through fallback to the API",
+    async (reason, status, scope, earlierFailure) => {
+      const admission = new DeploymentAdmissionExhaustedError(
+        reason,
+        scope ? { scope, surface: "programmatic" } : undefined,
+      );
+      let chain: unknown;
+      try {
+        await runCheckWithFallback({
+          connections: [
+            ...(earlierFailure ? [{ provider: "serpapi" }] : []),
+            { provider: "dataforseo" },
+          ],
+          keyword: KEYWORD,
+          resolveProvider: (id) => {
+            if (id === "serpapi")
+              throw new RankCheckRunnerError("provider_failed", "Temporary failure.");
+            throw admission;
+          },
+          schedule: { frequency: "manual" },
+          source: "api",
+        });
+      } catch (error) {
+        chain = error;
+      }
+      expect(chain).toBeInstanceOf(ProviderChainError);
+      expect((chain as ProviderChainError).attempts).toHaveLength(earlierFailure ? 2 : 1);
+      const response = errorFromUnknown(
+        chain,
+        new Headers({ "Retry-After": "1" }),
+        new URL("https://example.com/api/v1/keywords/kw_1/checks"),
+      );
+      expect(response.status).toBe(status);
+      expect(response.headers.get("Retry-After") === null).toBe(reason === "balance");
+      const body = await response.json();
+      if (scope) expect(body.details).toMatchObject({ scope, surface: "programmatic" });
+    },
+  );
+
+  it("does not reuse an earlier balance error when the last provider fails", async () => {
+    const admission = new DeploymentAdmissionExhaustedError("balance");
+    const chain = await runCheckWithFallback({
+      connections: [{ provider: "dataforseo" }, { provider: "serpapi" }],
+      keyword: KEYWORD,
+      resolveProvider: (id) => {
+        if (id === "dataforseo") throw admission;
+        throw new RankCheckRunnerError("provider_failed", "Temporary failure.");
+      },
+      schedule: { frequency: "manual" },
+      source: "api",
+    }).catch((error: unknown) => error);
+    expect(chain).toBeInstanceOf(ProviderChainError);
+    expect((chain as ProviderChainError).admissionExhaustion).toBeUndefined();
+    expect(
+      errorFromUnknown(
+        chain,
+        new Headers(),
+        new URL("https://example.com/api/v1/keywords/kw_1/checks"),
+      ).status,
+    ).toBe(502);
   });
 
   it("uses requested pages for quota allocation preflight", async () => {
@@ -206,8 +313,70 @@ describe("runCheckWithFallback", () => {
     expect(primary.fetchRank).not.toHaveBeenCalled();
     expect(secondary.fetchRank).toHaveBeenCalledOnce();
     expect(outcome.attempts).toEqual([
-      expect.objectContaining({ provider: "dataforseo", reason: "allocation_exhausted" }),
+      expect.objectContaining({
+        provider: "dataforseo",
+        reason: "allocation_exhausted",
+        surface: "app",
+      }),
     ]);
+  });
+
+  it("records the exhausted surface and derives it from the chain source", async () => {
+    const primary = provider("dataforseo", vi.fn().mockResolvedValue(ranked(2)));
+    const secondary = provider("serpapi", vi.fn().mockResolvedValue(ranked(4)));
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      budgetCapCents: 5000,
+      providerAllocationsInitializedAt: new Date(),
+    });
+    mocks.prisma.providerConnection.findFirst.mockImplementation(({ where }) =>
+      Promise.resolve(
+        where.id === "connection_primary"
+          ? {
+              allocationAmountPerMonth: null,
+              allocationUnit: null,
+              programmaticAllocationAmountPerMonth: 1,
+            }
+          : { allocationAmountPerMonth: null, allocationUnit: null },
+      ),
+    );
+    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
+      _count: { _all: 1 },
+      _sum: { costCents: 1, usageQuantity: 1 },
+    });
+
+    const outcome = await runCheckWithFallback({
+      connections: [
+        {
+          id: "connection_primary",
+          provider: "dataforseo",
+          credentials: { login: "a", password: "b" },
+        },
+        { id: "connection_secondary", provider: "serpapi", credentials: { apiKey: "c" } },
+      ],
+      keyword: KEYWORD,
+      projectId: "project_1",
+      resolveProvider: (id) => (id === "dataforseo" ? primary : secondary),
+      schedule: { frequency: "manual" },
+      source: "api",
+    });
+
+    expect(outcome.provider).toBe("serpapi");
+    expect(primary.fetchRank).not.toHaveBeenCalled();
+    expect(outcome.attempts).toEqual([
+      expect.objectContaining({
+        provider: "dataforseo",
+        reason: "allocation_exhausted",
+        surface: "programmatic",
+      }),
+    ]);
+    expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          credentialSource: "own",
+          source: { in: ["api", "sdk", "cli", "mcp"] },
+        }),
+      }),
+    );
   });
 
   it("falls back to the next provider when the primary fails", async () => {
@@ -431,6 +600,35 @@ describe("runCheckWithFallback", () => {
       expect(error.dominantCode).toBe("provider_auth");
     });
   });
+
+  it("lets an access denial escape the provider fallback chain", async () => {
+    mocks.assertOperationAccess.mockRejectedValueOnce(new OperationAccessDeniedError());
+    const primary = provider("dataforseo", vi.fn());
+    const secondary = provider("serpapi", vi.fn());
+
+    await expect(
+      runCheckWithFallback({
+        connections: [
+          {
+            id: "connection_primary",
+            provider: "dataforseo",
+            credentials: { login: "a", password: "b" },
+          },
+          { id: "connection_secondary", provider: "serpapi", credentials: { apiKey: "c" } },
+        ],
+        keyword: KEYWORD,
+        projectId: "project_1",
+        resolveProvider: (id) => (id === "dataforseo" ? primary : secondary),
+        schedule: { frequency: "manual" },
+      }),
+    ).rejects.toThrow(OperationAccessDeniedError);
+
+    // The denial is neither rate limiting nor a provider failure, so it must
+    // not fall through to the next provider or surface as a chain error.
+    expect(mocks.assertOperationAccess).toHaveBeenCalledTimes(1);
+    expect(primary.fetchRank).not.toHaveBeenCalled();
+    expect(secondary.fetchRank).not.toHaveBeenCalled();
+  });
 });
 
 describe("loadSerpProviderChain", () => {
@@ -534,12 +732,83 @@ describe("runKeywordCheckWithFallback", () => {
     vi.clearAllMocks();
   });
 
+  it("carries the origin source, trigger and paying credential into the provider attribution", async () => {
+    const fetchMock = vi.fn((_url: string | URL | Request, _init?: RequestInit) =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            cost: 0.0006,
+            status_code: 20000,
+            tasks: [{ cost: 0.0006, result: [{ items: [] }], status_code: 20000 }],
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    mocks.prisma.keyword.findUnique.mockResolvedValue({
+      device: "desktop",
+      id: "keyword_1",
+      publicId: "kw_a00000000000000000000000",
+      location: "United States",
+      locationRef: COUNTRY_LOCATION,
+      project: {
+        budgetCapCents: 500,
+        defaults: { frequency: "daily", jitterMinutes: 0, serpDepth: 100 },
+        domain: "example.com",
+        id: "project_1",
+        writeMode: "active",
+      },
+      projectId: "project_1",
+      rankChecks: [],
+      schedule: { frequency: "daily", jitterMinutes: 0, serpDepth: 10 },
+      text: "rank tracker",
+    });
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      {
+        costPerCheckCents: 1,
+        credentialsEncrypted: encryptSecret(JSON.stringify({ login: "login", password: "secret" })),
+        provider: "dataforseo",
+      },
+    ]);
+    mocks.prisma.providerConnection.findFirst.mockResolvedValue({ id: "connection_dataforseo" });
+    mocks.prisma.rankCheck.create.mockImplementation(({ data }) =>
+      Promise.resolve({ id: "rank_1", ...data }),
+    );
+
+    await runKeywordCheckWithFallback({
+      credential: { id: "key_1", kind: "project_key" },
+      keywordId: "keyword_1",
+      resolveProvider: () => dataForSeoProvider,
+      source: "api",
+      trigger: "scheduled",
+    });
+
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    expect(body[0].tag).toContain("src=api;trg=scheduled");
+    expect(mocks.prisma.providerCostEntry.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: [
+          expect.objectContaining({
+            credentialId: "key_1",
+            credentialKind: "project_key",
+            source: "api",
+            trigger: "scheduled",
+          }),
+        ],
+      }),
+    );
+  });
+
   it("integrates a top-10 schedule with provider requests, persistence, budget, and top-100 calculator prefill", async () => {
     const fetchMock = vi.fn((url: string | URL | Request, _init?: RequestInit) => {
       if (hasRequestHostname(url, "serpapi.com")) {
         return Promise.resolve(
           new Response(
-            JSON.stringify({ organic_results: [{ link: "https://example.com", position: 4 }] }),
+            JSON.stringify({
+              search_metadata: { id: "paid-top10", status: "Success" },
+              organic_results: [{ link: "https://example.com", position: 4 }],
+            }),
           ),
         );
       }
@@ -593,13 +862,23 @@ describe("runKeywordCheckWithFallback", () => {
     expect(
       fetchMock.mock.calls.filter(([url]) => hasRequestHostname(url, "serpapi.com")),
     ).toHaveLength(1);
-    expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith("project_1", expect.any(Date), {
-      capCents: 500,
-      excludeRankCheckId: undefined,
-      estimatedCostCents: 1,
-    });
+    expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith(
+      "project_1",
+      expect.any(Date),
+      expect.objectContaining({
+        capCents: 500,
+        excludeRankCheckId: undefined,
+        estimatedCostCents: 1,
+        client: mocks.prisma,
+      }),
+    );
     expect(mocks.prisma.rankCheck.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ estimatedCostCents: 1, requestedDepth: 10 }),
+      data: expect.objectContaining({
+        costCents: 0,
+        billingUnits: 1,
+        estimatedCostCents: null,
+        requestedDepth: 10,
+      }),
     });
 
     await dataForSeoProvider.fetchRank({
@@ -1129,16 +1408,25 @@ describe("runKeywordCheckWithFallback", () => {
     mocks.assertBudgetAvailable.mockRejectedValue(
       new BudgetExhaustedError({ capCents: 10, projectId: "project_1", spentCents: 9.5 }),
     );
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      budgetCapCents: 10,
+      providerAllocationsInitializedAt: null,
+    });
 
     await expect(
       runKeywordCheckWithFallback({ keywordId: "keyword_1", resolveProvider: () => primary }),
     ).rejects.toMatchObject({ code: "budget_exhausted", status: 429 });
 
-    expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith("project_1", expect.any(Date), {
-      capCents: 10,
-      excludeRankCheckId: undefined,
-      estimatedCostCents: 0.75,
-    });
+    expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith(
+      "project_1",
+      expect.any(Date),
+      expect.objectContaining({
+        capCents: 10,
+        excludeRankCheckId: undefined,
+        estimatedCostCents: 0.75,
+        client: mocks.prisma,
+      }),
+    );
     expect(primary.fetchRank).not.toHaveBeenCalled();
   });
 
@@ -1190,11 +1478,16 @@ describe("runKeywordCheckWithFallback", () => {
       }),
     ).rejects.toMatchObject({ code: "budget_exhausted", status: 429 });
 
-    expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith("project_1", expect.any(Date), {
-      capCents: 500,
-      excludeRankCheckId: undefined,
-      estimatedCostCents: 1,
-    });
+    expect(mocks.assertBudgetAvailable).toHaveBeenCalledWith(
+      "project_1",
+      expect.any(Date),
+      expect.objectContaining({
+        capCents: 500,
+        excludeRankCheckId: undefined,
+        estimatedCostCents: 1,
+        client: mocks.prisma,
+      }),
+    );
     expect(mocks.prisma.providerCostEntry.create).not.toHaveBeenCalled();
   });
 

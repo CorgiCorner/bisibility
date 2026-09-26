@@ -1,12 +1,17 @@
 import "server-only";
 
 import { fetchKeywordMetrics, researchKeywords } from "@/lib/keyword-research/service";
-import type { ProviderLookupFailure } from "@/lib/keyword-research/types";
+import {
+  isKeywordResearchEstimate,
+  type ProviderLookupFailure,
+} from "@/lib/keyword-research/types";
 import { READINESS_REASON } from "@/lib/projects/readiness";
 import type { KeywordMetrics } from "@/lib/providers/types";
 import { z } from "zod";
+import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
 import { requireApiPublicId } from "./public-id";
+import { providerOrigin } from "./request-origin";
 import { errorResponse, resourceResponse } from "./responses";
 import { scopedProject } from "./surface";
 
@@ -70,9 +75,9 @@ function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
     );
   }
   if (outcome.reason === "budget_exhausted") {
-    return errorResponse("budget_exhausted", "Monthly provider budget reached.", 429, {
-      headers: ctx.headers,
-      instance: ctx.instance,
+    return budgetExhaustedResponse(ctx, {
+      surface: "programmatic",
+      ...(outcome.provider === undefined ? {} : { provider: outcome.provider }),
     });
   }
   if (outcome.reason === "cost_limit_exceeded") {
@@ -80,7 +85,13 @@ function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
       "cost_limit_exceeded",
       "The estimated provider cost exceeds max_cost_cents.",
       422,
-      { headers: ctx.headers, instance: ctx.instance },
+      {
+        headers: ctx.headers,
+        instance: ctx.instance,
+        ...(outcome.estimatedCostCents === undefined
+          ? {}
+          : { problemDetails: { estimated_cost_cents: outcome.estimatedCostCents } }),
+      },
     );
   }
   if (outcome.reason === "in_progress") {
@@ -145,15 +156,33 @@ export async function getKeywordResearch(ctx: ApiContext, projectId: string) {
   const result = await researchKeywords({
     actorId: ctx.actorId,
     ...input,
+    origin: providerOrigin(ctx.origin),
     projectId: ctx.auth.project.id,
   });
   if (!result.ok) return lookupError(ctx, result);
+  if (isKeywordResearchEstimate(result)) {
+    // A dry run reports cost facts only; no rows, fetch time, or source statuses.
+    return resourceResponse(
+      {
+        cached: result.cached,
+        connections: connectionResources(result.connections),
+        cost_cents: result.costCents,
+        estimate: true,
+        provider: result.provider,
+        sources: result.sources.map((source) => ({
+          cached: source.cached,
+          cost_cents: source.costCents,
+          source: source.source,
+        })),
+      },
+      { headers: ctx.headers },
+    );
+  }
   return resourceResponse(
     {
       cached: result.cached,
       connections: connectionResources(result.connections),
       cost_cents: result.costCents,
-      ...(result.estimate === undefined ? {} : { estimate: result.estimate }),
       fetched_at: result.fetchedAt,
       provider: result.provider,
       rows: result.rows.map((row) => ({
@@ -191,6 +220,7 @@ export async function postKeywordMetrics(ctx: ApiContext, projectId: string) {
     includeClickstream: input.include_clickstream,
     keywords: input.keywords,
     maxCostCents: input.max_cost_cents,
+    origin: providerOrigin(ctx.origin),
     projectId: ctx.auth.project.id,
   });
   if (!result.ok) return lookupError(ctx, result);

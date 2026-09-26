@@ -1,13 +1,15 @@
 import { searchInsightsMessagesElement } from "@/i18n/test-support/render-with-feature-messages";
 import type { SearchInsightsRowsRequest } from "@/lib/actions/search-insights-rows";
-import { ROWS_PAGE_LIMIT, SEARCH_INSIGHTS_ROWS_CAP } from "@/lib/search-insights/constants";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { expect, it, vi } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { deferred, pageRows, queryRows, view } from "./search-insights-row-test-fixtures";
 import { type UseSearchInsightsRowsInput, useSearchInsightsRows } from "./useSearchInsightsRows";
 
-vi.mock("@/components/ui/toast-context", () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+const showToast = vi.fn();
+vi.mock("@/components/ui/toast-context", () => ({ useToast: () => ({ showToast }) }));
+
+type RowsPage = Awaited<ReturnType<UseSearchInsightsRowsInput["loadRowsAction"]>>;
 
 function SearchInsightsMessages({ children }: Readonly<{ children: ReactNode }>) {
   return searchInsightsMessagesElement(children);
@@ -24,177 +26,157 @@ function input(overrides: Partial<UseSearchInsightsRowsInput> = {}): UseSearchIn
   };
 }
 
-async function expandAll(
-  result: { current: ReturnType<typeof useSearchInsightsRows> },
-  kind: "pages" | "queries",
-) {
-  await act(async () => result.current.expand(kind));
-  await act(async () => result.current.expand(kind));
-  await waitFor(() => expect(result.current.loading[kind]).toBe(false));
+function queriesPage(rows: RowsPage["rows"], total: number): RowsPage {
+  return { kind: "queries", rows: rows as never, total, trackedTexts: [] };
 }
 
-it("drops loaded rows when the canonical property changes with the same view identity", async () => {
-  const initial = input({
-    view: view({ pages: { rows: pageRows(50), total: 59 } }),
-    loadRowsAction: vi.fn(async () => ({ kind: "pages" as const, rows: pageRows(9), total: 59 })),
-  });
-  const { result, rerender } = renderHook(useSearchInsightsRows, {
-    initialProps: initial,
-    wrapper: SearchInsightsMessages,
-  });
+function lastRequest(loadRowsAction: ReturnType<typeof vi.fn>) {
+  return loadRowsAction.mock.lastCall?.[0] as SearchInsightsRowsRequest;
+}
 
-  await expandAll(result, "pages");
-  expect(result.current.pages).toMatchObject({ show: "all", total: 59 });
-  expect(result.current.pages.rows).toHaveLength(59);
-
-  rerender({ ...initial, property: "sc-domain:archived.example.com" });
-  expect(result.current.pages).toEqual({ rows: initial.view.pages.rows, show: 10, total: 59 });
+afterEach(() => {
+  vi.useRealTimers();
+  showToast.mockReset();
 });
 
-it("shows the new window's rows after a period switch, not the previous window's", async () => {
-  const initial = input({
-    view: view({ queries: { rows: queryRows(50, "twentyeight"), total: 1_284 } }),
-  });
-  const { result, rerender } = renderHook(useSearchInsightsRows, {
-    initialProps: initial,
+it("opens each table on the first page the server view already holds", () => {
+  const { result } = renderHook(useSearchInsightsRows, {
+    initialProps: input({ view: view({ queries: { rows: queryRows(10), total: 1_284 } }) }),
     wrapper: SearchInsightsMessages,
   });
-  await act(async () => result.current.expand("queries"));
-  expect(result.current.queries.show).toBe(50);
-  expect(result.current.queries.rows[0].query).toBe("twentyeight 0");
-
-  const currentView = view({
-    queries: { rows: queryRows(12, "ninety"), total: 96 },
-    trackedTexts: [],
+  expect(result.current.queries).toMatchObject({
+    page: 1,
+    pageSize: 10,
+    search: "",
+    sort: { direction: "desc", key: "clicks" },
+    total: 1_284,
   });
-  rerender({ ...initial, period: "90", view: currentView });
-  expect(result.current.queries).toEqual({ rows: currentView.queries.rows, show: 10, total: 96 });
-  expect(result.current.queries.rows.some((row) => row.query.startsWith("twentyeight"))).toBe(
-    false,
-  );
+  expect(result.current.queries.rows).toHaveLength(10);
 });
 
-it("stops a saturated window at the cap instead of paging the whole property in", async () => {
-  const loadRowsAction = vi.fn<UseSearchInsightsRowsInput["loadRowsAction"]>(async (input) => {
-    const request = input as SearchInsightsRowsRequest;
-    return {
-      kind: "queries" as const,
-      rows: queryRows(request.limit).map((row, index) => ({
-        ...row,
-        clicks: 400,
-        query: `paged query ${request.offset + index}`,
-      })),
-      total: 120_000,
-      trackedTexts: [],
-    };
-  });
+it("reads one server page for a page change and replaces the rows on screen", async () => {
+  const second = queryRows(10, "second page");
+  const loadRowsAction = vi.fn(async () => queriesPage(second, 1_284));
   const { result } = renderHook(useSearchInsightsRows, {
     initialProps: input({
       loadRowsAction,
-      view: view({ queries: { rows: queryRows(50), total: 120_000 } }),
+      view: view({ queries: { rows: queryRows(10), total: 1_284 } }),
     }),
     wrapper: SearchInsightsMessages,
   });
 
-  await expandAll(result, "queries");
-  expect(result.current.queries.rows).toHaveLength(SEARCH_INSIGHTS_ROWS_CAP);
-  expect(result.current.queries).toMatchObject({ show: "all", total: 120_000 });
-  const asked = loadRowsAction.mock.calls.map(
-    ([input]) => (input as SearchInsightsRowsRequest).limit,
-  );
-  expect(asked.reduce((sum, limit) => sum + limit, 0)).toBe(SEARCH_INSIGHTS_ROWS_CAP - 50);
-  expect(asked.every((limit) => limit <= ROWS_PAGE_LIMIT)).toBe(true);
+  await act(async () => result.current.paginate("queries", { page: 2, pageSize: 10 }));
+
+  expect(lastRequest(loadRowsAction)).toMatchObject({ kind: "queries", limit: 10, offset: 10 });
+  expect(result.current.queries).toMatchObject({ page: 2, rows: second, total: 1_284 });
+  expect(result.current.loading.queries).toBe(false);
 });
 
-it("ignores a page that finishes after the canonical property changes", async () => {
-  const pending = deferred<Awaited<ReturnType<UseSearchInsightsRowsInput["loadRowsAction"]>>>();
-  const initial = input({
-    loadRowsAction: vi.fn(() => pending.promise),
-    view: view({ queries: { rows: queryRows(50, "old"), total: 51 } }),
+it("starts again from the first page when the page size changes", async () => {
+  const loadRowsAction = vi.fn(async () => queriesPage(queryRows(25), 1_284));
+  const { result } = renderHook(useSearchInsightsRows, {
+    initialProps: input({ loadRowsAction }),
+    wrapper: SearchInsightsMessages,
   });
+  await act(async () => result.current.paginate("queries", { page: 4, pageSize: 10 }));
+  await act(async () => result.current.paginate("queries", { page: 4, pageSize: 25 }));
+
+  expect(lastRequest(loadRowsAction)).toMatchObject({ limit: 25, offset: 0 });
+  expect(result.current.queries).toMatchObject({ page: 1, pageSize: 25 });
+});
+
+it("sends a new sort from the first page and flips the direction on a second ask", async () => {
+  const loadRowsAction = vi.fn(async () => queriesPage(queryRows(10, "resorted"), 80));
+  const { result } = renderHook(useSearchInsightsRows, {
+    initialProps: input({ loadRowsAction }),
+    wrapper: SearchInsightsMessages,
+  });
+  await act(async () => result.current.paginate("queries", { page: 3, pageSize: 10 }));
+  for (const direction of ["asc", "desc"] as const) {
+    await act(async () => result.current.sortBy("queries", "clicks"));
+    expect(lastRequest(loadRowsAction)).toMatchObject({
+      offset: 0,
+      sort: { direction, key: "clicks" },
+    });
+    expect(result.current.queries).toMatchObject({ page: 1, sort: { direction, key: "clicks" } });
+  }
+});
+
+it("shows the typed search at once and sends one read when the typing stops", async () => {
+  vi.useFakeTimers();
+  const loadRowsAction = vi.fn(async () => ({
+    kind: "pages" as const,
+    rows: pageRows(3),
+    total: 3,
+  }));
+  const { result } = renderHook(useSearchInsightsRows, {
+    initialProps: input({ loadRowsAction }),
+    wrapper: SearchInsightsMessages,
+  });
+
+  act(() => result.current.search("pages", "gu"));
+  act(() => result.current.search("pages", "guide"));
+  expect(result.current.pages.search).toBe("guide");
+  expect(loadRowsAction).not.toHaveBeenCalled();
+
+  await act(async () => vi.runAllTimersAsync());
+  expect(loadRowsAction).toHaveBeenCalledTimes(1);
+  expect(lastRequest(loadRowsAction)).toMatchObject({ kind: "pages", offset: 0, search: "guide" });
+  expect(result.current.pages).toMatchObject({ page: 1, total: 3 });
+});
+
+it("keeps the newest page when an older read settles after it", async () => {
+  const older = deferred<RowsPage>();
+  const newer = deferred<RowsPage>();
+  const loadRowsAction = vi
+    .fn<UseSearchInsightsRowsInput["loadRowsAction"]>()
+    .mockReturnValueOnce(older.promise)
+    .mockReturnValueOnce(newer.promise);
+  const { result } = renderHook(useSearchInsightsRows, {
+    initialProps: input({ loadRowsAction }),
+    wrapper: SearchInsightsMessages,
+  });
+  act(() => result.current.paginate("queries", { page: 2, pageSize: 10 }));
+  act(() => result.current.paginate("queries", { page: 3, pageSize: 10 }));
+
+  const third = queryRows(10, "third page");
+  await act(async () => newer.resolve(queriesPage(third, 80)));
+  await act(async () => older.resolve(queriesPage(queryRows(10, "second page"), 80)));
+
+  expect(result.current.queries).toMatchObject({ page: 3, rows: third });
+  expect(result.current.loading.queries).toBe(false);
+});
+
+it("drops a page that settles after the window or property changes", async () => {
+  const pending = deferred<RowsPage>();
+  const initial = input({ loadRowsAction: vi.fn(() => pending.promise) });
   const { result, rerender } = renderHook(useSearchInsightsRows, {
     initialProps: initial,
     wrapper: SearchInsightsMessages,
   });
-  await act(async () => result.current.expand("queries"));
-  act(() => result.current.expand("queries"));
+  act(() => result.current.paginate("queries", { page: 2, pageSize: 10 }));
   expect(result.current.loading.queries).toBe(true);
 
   const currentView = view({ queries: { rows: queryRows(2, "current"), total: 2 } });
   rerender({ ...initial, property: "sc-domain:current.example.com", view: currentView });
-  await act(async () => {
-    pending.resolve({ kind: "queries", rows: queryRows(1, "late"), total: 51, trackedTexts: [] });
-  });
+  await act(async () => pending.resolve(queriesPage(queryRows(10, "late"), 51)));
 
-  expect(result.current.queries).toEqual({ rows: currentView.queries.rows, show: 10, total: 2 });
+  expect(result.current.queries).toMatchObject({ page: 1, rows: currentView.queries.rows });
   expect(result.current.loading.queries).toBe(false);
 });
 
-it("keeps the sorted rows when an earlier Show all response settles afterwards", async () => {
-  const expansion = deferred<Awaited<ReturnType<UseSearchInsightsRowsInput["loadRowsAction"]>>>();
-  const sorted = deferred<Awaited<ReturnType<UseSearchInsightsRowsInput["loadRowsAction"]>>>();
-  const loadRowsAction = vi.fn<UseSearchInsightsRowsInput["loadRowsAction"]>((value) => {
-    const request = value as SearchInsightsRowsRequest;
-    if (request.sort?.key === "clicks" && request.offset === 50) return expansion.promise;
-    return sorted.promise;
+it("puts the last answered page back and says so when a read fails", async () => {
+  const loadRowsAction = vi.fn(async () => {
+    throw new Error("offline");
   });
   const { result } = renderHook(useSearchInsightsRows, {
-    initialProps: input({
-      loadRowsAction,
-      view: view({ queries: { rows: queryRows(50, "initial query"), total: 80 } }),
-    }),
+    initialProps: input({ loadRowsAction }),
     wrapper: SearchInsightsMessages,
   });
-  await act(async () => result.current.expand("queries"));
-  act(() => result.current.expand("queries"));
-  expect(loadRowsAction).toHaveBeenCalledWith(
-    expect.objectContaining({ offset: 50, sort: { direction: "desc", key: "clicks" } }),
-  );
-  act(() => result.current.sortBy("queries", "impressions"));
-  expect(loadRowsAction).toHaveBeenCalledWith(
-    expect.objectContaining({ offset: 0, sort: { direction: "desc", key: "impressions" } }),
-  );
-  const sortedRows = queryRows(50, "sorted query");
-  await act(async () =>
-    sorted.resolve({
-      kind: "queries",
-      rows: sortedRows,
-      total: 80,
-      trackedTexts: [],
-    }),
-  );
-  expect(result.current.queries.rows).toEqual(sortedRows);
-  await act(async () =>
-    expansion.resolve({
-      kind: "queries",
-      rows: queryRows(30, "expanded query"),
-      total: 80,
-      trackedTexts: [],
-    }),
-  );
-  expect(result.current.queries.rows).toEqual(sortedRows);
-  expect(result.current.loading.queries).toBe(false);
-});
+  const before = result.current.queries.rows;
 
-it("flips the direction when the active column is asked for again", async () => {
-  const loadRowsAction = vi.fn<UseSearchInsightsRowsInput["loadRowsAction"]>(async () => ({
-    kind: "queries",
-    rows: queryRows(10, "resorted query"),
-    total: 80,
-    trackedTexts: [],
-  }));
-  const { result } = renderHook(useSearchInsightsRows, {
-    initialProps: input({
-      loadRowsAction,
-      view: view({ queries: { rows: queryRows(10), total: 80 } }),
-    }),
-    wrapper: SearchInsightsMessages,
-  });
-  for (const direction of ["asc", "desc"] as const) {
-    await act(async () => result.current.sortBy("queries", "clicks"));
-    expect(loadRowsAction).toHaveBeenLastCalledWith(
-      expect.objectContaining({ sort: { direction, key: "clicks" } }),
-    );
-    expect(result.current.sort.queries).toEqual({ direction, key: "clicks" });
-  }
+  await act(async () => result.current.paginate("queries", { page: 2, pageSize: 10 }));
+
+  expect(result.current.queries).toMatchObject({ page: 1, rows: before });
+  expect(showToast).toHaveBeenCalledWith(expect.any(String), { severity: "error" });
 });

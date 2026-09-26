@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   firstRunGate: vi.fn(),
   getLocalePreferenceForUser: vi.fn(),
   loadCoreMessages: vi.fn(),
+  renderAccountDataSourceExtension: vi.fn(),
   renderOnboardingQuizSlot: vi.fn(),
   renderSupportWidget: vi.fn(() => <aside data-testid="support-extension" />),
   requireSession: vi.fn(),
@@ -54,6 +55,9 @@ vi.mock("@/lib/app-extensions", () => ({
     renderOnboardingQuizSlot: mocks.renderOnboardingQuizSlot,
     renderSupportWidget: mocks.renderSupportWidget,
   },
+}));
+vi.mock("@/components/settings/AccountDataSourceExtension", () => ({
+  renderAccountDataSourceExtension: mocks.renderAccountDataSourceExtension,
 }));
 vi.mock("@/lib/seo/noindex", () => ({ createNoindexMetadata: () => ({}) }));
 
@@ -110,6 +114,12 @@ describe("shared app layout", () => {
     });
     mocks.getLocalePreferenceForUser.mockResolvedValue({ locale: "en" });
     mocks.loadCoreMessages.mockResolvedValue({ shared: {} });
+    mocks.renderAccountDataSourceExtension.mockImplementation(async (children: ReactNode) => (
+      <>
+        <div data-credits-context />
+        {children}
+      </>
+    ));
   });
 
   afterEach(() => {
@@ -126,6 +136,7 @@ describe("shared app layout", () => {
     );
     expect(mocks.firstRunGate).toHaveBeenCalledOnce();
     expect(mocks.renderOnboardingQuizSlot).not.toHaveBeenCalled();
+    expect(mocks.renderAccountDataSourceExtension).not.toHaveBeenCalled();
     expect(mocks.renderSupportWidget).not.toHaveBeenCalled();
   });
 
@@ -138,6 +149,7 @@ describe("shared app layout", () => {
 
     expect(mocks.requireSession).not.toHaveBeenCalled();
     expect(mocks.renderOnboardingQuizSlot).not.toHaveBeenCalled();
+    expect(mocks.renderAccountDataSourceExtension).not.toHaveBeenCalled();
     expect(mocks.renderSupportWidget).not.toHaveBeenCalled();
   });
 
@@ -179,6 +191,7 @@ describe("shared app layout", () => {
     expect(mocks.renderSupportWidget).not.toHaveBeenCalled();
     if (demo.kind !== "disabled") {
       expect(mocks.renderOnboardingQuizSlot).not.toHaveBeenCalled();
+      expect(mocks.renderAccountDataSourceExtension).not.toHaveBeenCalled();
     }
   });
 
@@ -192,10 +205,18 @@ describe("shared app layout", () => {
     expect(markup).toContain("data-app-modal-background");
     expect(markup).toContain('data-testid="support-extension"');
     expect(markup.indexOf("Nested route layout")).toBeLessThan(markup.indexOf("Quiz slot"));
+    expect(mocks.renderAccountDataSourceExtension).toHaveBeenCalledOnce();
+    expect(markup).toContain("data-credits-context");
+    expect(markup.indexOf("data-credits-context")).toBeLessThan(
+      markup.indexOf("data-app-modal-background"),
+    );
   });
 
   it("renders just children when the decorator returns them undecorated", async () => {
     mocks.renderOnboardingQuizSlot.mockImplementation(async (children: ReactNode) => children);
+    mocks.renderAccountDataSourceExtension.mockImplementationOnce(
+      async (children: ReactNode) => children,
+    );
 
     const result = await AppLayout({ children: <div>Nested route layout</div> });
     const markup = renderToStaticMarkup(withDocumentLocale(result));

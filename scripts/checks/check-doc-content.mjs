@@ -96,7 +96,7 @@ const requiredGuides = {
     "Connect Search Console",
     "Pick the property to read",
   ],
-  "guides/runs.mdx": ["Upcoming", "Planned"],
+  "guides/runs.mdx": ["Planned", "Not confirmed"],
   "self-hosting/google-oauth.mdx": ["TRAFFIC_SYNC_ENABLED", "TRAFFIC_SNAPSHOT_RETENTION_DAYS"],
   "guides/competitors.mdx": ["keyword cap", "share of voice", "CSV"],
   "guides/migration.mdx": ["single-use", "mig_", "Instance import"],

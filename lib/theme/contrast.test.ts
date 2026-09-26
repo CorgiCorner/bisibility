@@ -311,15 +311,15 @@ function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
     // --border-control draws every interactive edge: inputs, buttons, chips, switches.
     // Both schemes use operator-chosen control edges below the WCAG 1.4.11 3:1 floor.
     // Dark #616060 was chosen visually; its narrower floor is asserted rather than
-    // skipped so any further regression still fails. Light keeps its existing palette
-    // exception for the same reason. --bg-inset is excluded because it is a momentary
-    // :active fill and a meter track, never a resting surface under a bordered control.
+    // skipped so any further regression still fails. Light #C5BFB4 on the requested
+    // #EBE8E0 section band has a 1.49:1 floor under the same palette exception.
+    // --bg-inset is excluded because it is a momentary :active fill and a meter track, never a resting surface under a bordered control.
     if (surface !== "bg-inset") {
       pairs.push({
         background: token(scheme, surface),
         description: `${scheme}: --border-control against --${surface}`,
         foreground: token(scheme, "border-control"),
-        minimum: scheme === "dark" ? 2.8 : 2,
+        minimum: scheme === "dark" ? 2.8 : 1.49,
       });
     }
 
@@ -520,11 +520,11 @@ describe("theme contrast contract", () => {
         '<><span className="text-red" /><span className="text-blue" /></>',
       ),
     ).toEqual([
-      "fixture.tsx:1: text-red on --bg (light) is 4.48:1, below 4.5:1",
-      "fixture.tsx:1: text-red on --bg-sunken (light) is 4.28:1, below 4.5:1",
-      "fixture.tsx:1: text-blue on --bg (light) is 3.33:1, below 4.5:1",
+      "fixture.tsx:1: text-red on --bg (light) is 4.31:1, below 4.5:1",
+      "fixture.tsx:1: text-red on --bg-sunken (light) is 4.16:1, below 4.5:1",
+      "fixture.tsx:1: text-blue on --bg (light) is 3.21:1, below 4.5:1",
       "fixture.tsx:1: text-blue on --bg-elev (light) is 3.38:1, below 4.5:1",
-      "fixture.tsx:1: text-blue on --bg-sunken (light) is 3.19:1, below 4.5:1",
+      "fixture.tsx:1: text-blue on --bg-sunken (light) is 3.10:1, below 4.5:1",
     ]);
   });
 });

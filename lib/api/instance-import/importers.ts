@@ -66,6 +66,12 @@ function createContext(project: Project, url: URL, keywords: ImportKeyword[]): A
     headers: new Headers(),
     instance: `urn:bisibility:api:cloud-import:${url.pathname}`,
     method: "POST",
+    origin: {
+      credentialId: "migration_token",
+      credentialKind: "project_key",
+      source: "api",
+      surface: "programmatic",
+    },
     path: ["cloud", "import"],
     req,
     url,
