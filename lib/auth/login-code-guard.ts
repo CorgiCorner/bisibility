@@ -6,6 +6,7 @@ import { withOtpSendState } from "@/lib/auth/otp-send-context";
 import { reserveEmailSignInCode } from "@/lib/auth/signin-capacity";
 import { EMAIL_CAPACITY_EXHAUSTED } from "@/lib/auth/signin-capacity-types";
 import { deploymentMode } from "@/lib/deployment/deployment";
+import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
 import { isEmailConfigured } from "@/lib/email/registry";
 import type { BetterAuthPlugin } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
@@ -42,6 +43,7 @@ export function loginCodeGuardPlugin({
               });
             }
 
+            await refreshInstanceMailRuntime();
             const noProductionMailer =
               !isEmailConfigured() && process.env.NODE_ENV === "production" && !fixedOtpEnabled;
             const firstRunFallback = noProductionMailer && (await isFirstRun());

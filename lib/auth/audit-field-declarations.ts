@@ -1,6 +1,7 @@
 import { registerAccountAuditDeclarations } from "@/lib/auth/audit-field-declarations-account";
 import { registerCompetitorAuditDeclarations } from "@/lib/auth/audit-field-declarations-competitors";
 import { registerAdditionalAuditDeclarations } from "@/lib/auth/audit-field-declarations-extra";
+import { registerMailAuditDeclarations } from "@/lib/auth/audit-field-declarations-mail";
 import { registerRankCheckRunAuditDeclarations } from "@/lib/auth/audit-field-declarations-runs";
 import {
   type AuditFieldPolicy,
@@ -216,6 +217,7 @@ declare(["instance_admin.account_limits_reset"], {
     ...strings("requestedTarget"),
   },
 });
+registerMailAuditDeclarations(declare);
 declare(["instance_admin.metering_viewed"], { after: strings("month", "project") });
 declare(["instance_admin.account_viewed"], { after: strings("result") });
 declare(

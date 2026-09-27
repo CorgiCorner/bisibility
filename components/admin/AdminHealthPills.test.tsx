@@ -45,7 +45,13 @@ describe("AdminHealthPills", () => {
     );
 
     const health = screen.getByLabelText("Operations health");
-    expect(within(health).getByText("Worker Unknown")).toHaveAttribute("data-tone", "unknown");
+    const worker = within(health).getByText("Worker Unknown");
+    expect(worker).toHaveAttribute("data-tone", "unknown");
+    expect(worker).toHaveAttribute("aria-describedby", expect.stringMatching(/.+/u));
+    expect(within(health).getByRole("link", { name: "How to run the worker" })).toHaveAttribute(
+      "href",
+      "https://bisibility.com/docs/self-hosting/temporal#scheduled-rank-checks",
+    );
     expect(within(health).getByText("Checks: 4.9% failed")).toHaveAttribute("data-tone", "ok");
     expect(within(health).getByText("gsc: 5.0% failed")).toHaveAttribute("data-tone", "stale");
     expect(within(health).getByText("ga4: 20.0% failed")).toHaveAttribute("data-tone", "stale");
@@ -68,6 +74,7 @@ describe("AdminHealthPills", () => {
     );
 
     expect(screen.getByText("plausible: 20.1% failed")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "How to run the worker" })).not.toBeInTheDocument();
     expect(screen.queryByText("gsc: 5.0% failed")).not.toBeInTheDocument();
     expect(screen.getByText("Checks: unknown")).toHaveAttribute("data-tone", "unknown");
     expect(screen.getByText("0 undelivered")).toHaveAttribute("data-tone", "ok");

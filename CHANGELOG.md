@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.27.0] - 2026-09-27
+
+### Added
+
+- Self-host administrators with two-factor authentication can save the outbound mail provider, sender, and credentials. Environment variables still win.
+
+- Added manual checks for an entire market, with keyword and device check counts, selectable depth, and safe retries after a lost start response.
+
+- Setup completion plays a short burst of confetti from both sides of the screen.
+
+### Changed
+
+- Self-hosted operations identify missing Slack configuration and explain when the site is up but the worker has no fresh heartbeat.
+
+### Fixed
+
+- Fixed false manual rank-check errors and missing keyword and dashboard history after depth changes or unranked results.
+
 ## [0.26.0] - 2026-09-26
 
 ### Added

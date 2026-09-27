@@ -33,6 +33,12 @@ describe("setup locale boundary", () => {
     });
 
     expect(renderToStaticMarkup(tree)).toContain('aria-label="Code"');
-    expect(mocks.loadCoreMessages).toHaveBeenCalledWith("en", ["shared", "auth", "setup"]);
+    expect(mocks.loadCoreMessages).toHaveBeenCalledWith("en", [
+      "shared",
+      "auth",
+      "setup",
+      "instanceAdmin",
+      "account",
+    ]);
   });
 });

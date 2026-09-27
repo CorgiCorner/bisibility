@@ -24,6 +24,7 @@ import {
 import { readDemoConfig } from "@/lib/demo/config";
 import { explicitDeploymentDataRegionLabel, isCloud } from "@/lib/deployment/deployment";
 import { legalConsentLinks } from "@/lib/deployment/legal";
+import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { getGitHubStars } from "@/lib/site/github-stars";
 import { LICENSE } from "@/lib/site/site";
@@ -116,6 +117,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
     getGitHubStars(),
     isFirstRun(),
   ]);
+  await refreshInstanceMailRuntime();
   const emailSignInUnavailable = isEmailSignInUnavailable({
     firstRun,
     fixedOtpEnabled: FIXED_OTP_ENABLED,

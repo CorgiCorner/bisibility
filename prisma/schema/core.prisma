@@ -1275,6 +1275,16 @@ model InstanceSetting {
   @@map("instance_settings")
 }
 
+model InstanceMailConfig {
+  id                 String   @id
+  provider           String
+  sender             String
+  credentialsCipher  String
+  updatedAt          DateTime @updatedAt
+
+  @@map("instance_mail_config")
+}
+
 model BacklinkSnapshot {
   id                 String        @id @default(cuid())
   projectId          String

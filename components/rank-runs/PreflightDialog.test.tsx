@@ -1,7 +1,7 @@
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
-import { screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PreflightDialog, type PreflightDialogProps } from "./PreflightDialog";
@@ -67,6 +67,62 @@ function props(overrides: Partial<PreflightDialogProps> = {}): PreflightDialogPr
 }
 
 describe("PreflightDialog", () => {
+  it("retries a lost launch response with the same idempotency key", async () => {
+    const user = userEvent.setup();
+    const launchAction = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("Response lost"))
+      .mockResolvedValue({
+        estimatedCostCents: 298,
+        keywordCount: 248,
+        publicId: "rcr_story",
+        status: "queued",
+        targetCount: 496,
+      });
+    render(<PreflightDialog {...props({ launchAction })} />);
+    await user.click(screen.getByRole("button", { name: "Start run" }));
+    expect(screen.getByRole("radio", { name: /Top 50/ })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Start run" }));
+    expect(launchAction).toHaveBeenCalledTimes(2);
+    expect(launchAction.mock.calls[1]?.[0]).toEqual(launchAction.mock.calls[0]?.[0]);
+  });
+
+  it("does not launch against an old estimate after a depth refresh fails", async () => {
+    const user = userEvent.setup();
+    const launchAction = vi.fn();
+    render(
+      <PreflightDialog
+        {...props({ launchAction, previewAction: vi.fn().mockRejectedValue(new Error("offline")) })}
+      />,
+    );
+    await user.click(screen.getByRole("radio", { name: /Top 50/ }));
+    expect(screen.getByRole("button", { name: "Start run" })).toBeDisabled();
+    expect(launchAction).not.toHaveBeenCalled();
+  });
+
+  it("sends only one launch for two form submissions before the response", async () => {
+    const launchAction = vi.fn(() => new Promise<never>(() => {}));
+    render(<PreflightDialog {...props({ launchAction })} />);
+    const form = document.querySelector("form");
+    if (!form) throw new Error("Missing form");
+    await act(async () => {
+      fireEvent.submit(form);
+      fireEvent.submit(form);
+    });
+    expect(launchAction).toHaveBeenCalledOnce();
+  });
+
+  it("blocks an empty server selection even without a budget block", () => {
+    render(
+      <PreflightDialog
+        {...props({
+          initialPreview: { ...preview, executable: 0, keywordCount: 0, targetCount: 0 },
+        })}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Start run" })).toBeDisabled();
+  });
+
   it("plan criterion: renders one scope box", () => {
     render(<PreflightDialog {...props()} />);
 

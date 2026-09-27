@@ -2,6 +2,7 @@
 
 import { launchRankCheckRunAction } from "@/lib/actions/rank-check-run-launch";
 import type { PreviewRankCheckRunActionInput } from "@/lib/actions/rank-check-run-preview-result";
+import { marketManualRunSelection } from "@/lib/markets/manual-run-selection";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import type { RunSelectionSpec } from "@/lib/rank-check/runs/selection";
@@ -9,7 +10,7 @@ import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { PreflightDialog } from "./PreflightDialog";
 import type { CancelOverlappingRunAction } from "./PreflightOverlapNotice";
 import type { PreflightProvider, PreflightScope } from "./preflight-presentation";
@@ -18,7 +19,8 @@ type PreviewEnvelope = { data: RankCheckRunPreview };
 
 type PreflightRequest = {
   depth: SerpDepth;
-  rows: readonly KeywordRow[];
+  rows?: readonly KeywordRow[];
+  market?: string;
   spec: RunSelectionSpec;
 };
 
@@ -102,33 +104,30 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
   const [active, setActive] = useState<ActivePreflight | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [opening, setOpening] = useState(false);
+  const requesting = useRef(false);
 
-  function preflightScope(rows: readonly KeywordRow[]): PreflightScope {
+  function preflightScope(request: PreflightRequest, preview: RankCheckRunPreview): PreflightScope {
+    const rows = request.rows ?? [];
     const markets = [...new Set(rows.map((row) => row.location.displayName))];
-    const devices = [...new Set(rows.map((row) => row.device))];
     const market =
-      markets.length === 1 ? (markets[0] ?? "-") : t("markets", { count: markets.length });
-    const device =
-      devices.length === 1 ? (devices[0] ?? "-") : t("devices", { count: devices.length });
+      request.market ??
+      (markets.length === 1 ? (markets[0] ?? "-") : t("markets", { count: markets.length }));
     return {
-      description: t("scopeDescription"),
-      equation: t("scopeEquation", {
-        devices: device,
-        market,
-        targets: rows.length,
-        keywords: rows.length,
-      }),
+      description: request.market ? t("marketDescription") : t("scopeDescription"),
+      equation: t("runCounts", { keywords: preview.keywordCount, targets: preview.targetCount }),
       startLabel: t("startRun"),
       subtitle: t("scopeSubtitle"),
-      title:
-        rows.length === 1
+      title: request.market
+        ? t("scopeMarket", { market })
+        : rows.length === 1
           ? t("scopeOne", { keyword: rows[0]?.keyword ?? "-", market })
-          : t("scopeMany", { count: rows.length, market }),
+          : t("scopeMany", { count: preview.keywordCount, market }),
     };
   }
 
   async function request(request: PreflightRequest) {
-    if (request.rows.length === 0) return;
+    if (requesting.current || (!request.market && !request.rows?.length)) return;
+    requesting.current = true;
     setError(null);
     setOpening(true);
     try {
@@ -142,6 +141,7 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
     } catch {
       setError(t("couldNotLoad"));
     } finally {
+      requesting.current = false;
       setOpening(false);
     }
   }
@@ -169,12 +169,33 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
           projectId={preflightProjectId(projectId)}
           previewAction={previewRankCheckRunFromApp}
           providers={providers(providerId, t)}
-          scope={preflightScope(active.rows)}
+          scope={(preview) => preflightScope(active, preview)}
           spec={active.spec}
         />
       ) : null}
     </>
   );
 
-  return { dialog, opening, request };
+  function requestMarket(
+    market: { canonicalKey: string; label: string },
+    depth: SerpDepth = DEFAULT_SERP_DEPTH,
+  ) {
+    return request({
+      depth,
+      market: market.label,
+      spec: marketManualRunSelection(market.canonicalKey),
+    });
+  }
+
+  function requestRows(rows: readonly KeywordRow[], depth?: SerpDepth, projectDepth?: SerpDepth) {
+    const first = rows[0];
+    if (!first) return;
+    const spec: RunSelectionSpec =
+      rows.length === 1
+        ? { kind: "single", keywordId: first.id as `kw_${string}`, v: 1 }
+        : { kind: "selected", keywordIds: rows.map((row) => row.id as `kw_${string}`), v: 1 };
+    return request({ depth: manualPreflightDepth(rows, depth, projectDepth), rows, spec });
+  }
+
+  return { dialog, opening, request, requestMarket, requestRows };
 }

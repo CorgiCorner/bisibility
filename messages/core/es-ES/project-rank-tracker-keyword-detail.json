@@ -191,7 +191,7 @@
       "position": {
         "title": "Historial de posiciones",
         "description": "Evolución de la posición en Google; cuanto más cerca del #1, mejor",
-        "normalization": "La comparación se ha reiniciado tras un cambio en la normalización de posiciones.",
+        "normalization": "Las comprobaciones con distintas profundidades o métodos de posicionamiento se muestran por separado.",
         "scope": "Alcance del historial de posiciones",
         "thisMarket": "Este mercado",
         "allMarkets": "Todos los mercados",

@@ -93,8 +93,19 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
     />
   );
 
-  // A keyword without a positive rank has no chart or ranking URL history to plot. The status
-  // detail distinguishes attempt states; stored SERPs stay readable even without a domain match.
+  const positionHistory = (
+    <PositionHistoryCard
+      chartState={detailState.chartState}
+      keyword={keyword}
+      marketTargets={marketTargets}
+      timeZone={costContext?.timezone ?? "UTC"}
+    />
+  );
+  const hasHistoricalPosition = (
+    keyword.positionObservations ??
+    keyword.positionHistory ??
+    []
+  ).some((point) => point.position !== null);
   if (detailState.rankState !== "normal") {
     return (
       <KeywordManagementMessagesBoundary>
@@ -105,6 +116,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
             costContext={costContext}
             createKeywordAlertAction={createKeywordAlertRule}
             keyword={keyword}
+            history={hasHistoricalPosition ? positionHistory : undefined}
             providerConnected={keyword.providerConnected}
             projectId={publicId}
             projectMarkets={projectMarkets}
@@ -121,6 +133,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
             trafficState={detailState.trafficState}
           />
           {retrievedResultsCard}
+          {keyword.rankingUrlHistory?.length ? <RankingUrlHistory keyword={keyword} /> : null}
         </PageContent>
       </KeywordManagementMessagesBoundary>
     );
@@ -143,12 +156,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
           tagSuggestions={tagSuggestions}
           updateKeywordAction={updateKeyword}
         />
-        <PositionHistoryCard
-          chartState={detailState.chartState}
-          keyword={keyword}
-          marketTargets={marketTargets}
-          timeZone={costContext?.timezone ?? "UTC"}
-        />
+        {positionHistory}
         <KeywordTrafficCard
           projectRef={publicId}
           traffic={keyword.traffic}

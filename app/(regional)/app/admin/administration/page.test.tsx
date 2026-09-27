@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   adminAdministration: vi.fn(),
   getAdministration: vi.fn(),
+  mailSettings: vi.fn(),
   requireAdmin: vi.fn(),
 }));
 
@@ -16,6 +17,9 @@ vi.mock("@/components/admin/AdminAdministration", () => ({
 vi.mock("@/lib/auth/instance-admin", () => ({
   requireInstanceAdmin: mocks.requireAdmin,
 }));
+vi.mock("@/lib/email/instance-mail-store", () => ({
+  loadInstanceMailSettingsView: mocks.mailSettings,
+}));
 vi.mock("@/lib/queries/instance-admin-administration", () => ({
   getInstanceAdminAdministration: mocks.getAdministration,
 }));
@@ -27,6 +31,7 @@ describe("instance administration page", () => {
 
   it("passes the page gate before loading administration data", async () => {
     mocks.requireAdmin.mockResolvedValue({ user: { id: "user_admin" } });
+    mocks.mailSettings.mockResolvedValue(null);
     mocks.getAdministration.mockResolvedValue({
       growth: {},
       mailerConfigured: false,

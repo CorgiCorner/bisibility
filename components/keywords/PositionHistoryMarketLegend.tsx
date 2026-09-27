@@ -1,5 +1,6 @@
+import type { PositionObservation } from "@/lib/checks/position-observations";
 import { keywordMarketLabel } from "@/lib/keywords/market-position-history";
-import type { KeywordRow, PositionPoint } from "@/lib/queries/keywords";
+import type { KeywordRow } from "@/lib/queries/keywords";
 import { chartColors } from "@/lib/theme/chart-colors";
 import { useTranslations } from "next-intl";
 
@@ -20,8 +21,8 @@ export function PositionHistoryMarketLegend({
   visibleMarkets,
 }: Readonly<{
   allMarkets: boolean;
-  comparisonPoints: readonly (readonly PositionPoint[])[];
-  history: readonly PositionPoint[];
+  comparisonPoints: readonly (readonly PositionObservation[])[];
+  history: readonly PositionObservation[];
   markets: readonly KeywordRow[];
   visibleMarkets: readonly KeywordRow[];
 }>) {

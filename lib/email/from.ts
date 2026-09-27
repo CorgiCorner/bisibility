@@ -1,10 +1,14 @@
+import { getInstanceMailRuntime } from "./instance-mail-runtime";
+
 // Environment reads stay literal so the environment-wiring test can assert them.
 function configuredValue(value: string | undefined) {
   return value?.trim() || null;
 }
 
 export function configuredEmailFrom() {
-  return configuredValue(process.env.EMAIL_FROM);
+  return (
+    configuredValue(process.env.EMAIL_FROM) ?? configuredValue(getInstanceMailRuntime()?.sender)
+  );
 }
 
 export function requireEmailFrom() {

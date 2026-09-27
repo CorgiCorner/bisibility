@@ -2,6 +2,7 @@ import {
   SessionSpendProvider,
   useSessionSpend,
 } from "@/components/cost-estimate/SessionSpendProvider";
+import type { RunCheckNowAction } from "@/components/keywords/action-utils";
 import type { RankCheckBatchPollAction } from "@/components/keywords/use-rank-check-batch-poll";
 import {
   featureMessagesElement,
@@ -14,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RunChecksConfirmationModal } from "./RunChecksConfirmationModal";
 import { useRunChecksModal } from "./useRunChecksModal";
 
-const CHECK_ID = "check_abcdefghijklmnopqrstuvwx";
+const CHECK_ID = "rcr_abcdefghijklmnopqrstuvwx";
 const wrapper = ({ children }: { children: ReactNode }) =>
   featureMessagesElement(<SessionSpendProvider>{children}</SessionSpendProvider>, {
     messages: projectRankTrackerFeatureTestMessages,
@@ -26,7 +27,9 @@ function RunChecksModalProbe({ pollAction }: { pollAction: RankCheckBatchPollAct
     pollAction,
     projectId: "prj_abcdefghijklmnopqrstuvwx",
     rows: [],
-    runCheckNowAction: vi.fn().mockResolvedValue({ ok: true, rankCheckId: CHECK_ID }),
+    runCheckNowAction: vi
+      .fn<RunCheckNowAction>()
+      .mockResolvedValue({ status: "queued", runId: CHECK_ID }),
   });
 
   return (
@@ -59,7 +62,9 @@ describe("useRunChecksModal", () => {
           projectId: "prj_abcdefghijklmnopqrstuvwx",
           providerRate: { overrideCents: 2, providerId: "dataforseo" },
           rows: [],
-          runCheckNowAction: vi.fn().mockResolvedValue({ ok: true, rankCheckId: CHECK_ID }),
+          runCheckNowAction: vi
+            .fn<RunCheckNowAction>()
+            .mockResolvedValue({ status: "queued", runId: CHECK_ID }),
         }),
         sessionCents: useSessionSpend().sessionCents,
       }),
@@ -86,7 +91,9 @@ describe("useRunChecksModal", () => {
         status: "completed",
       },
     ]);
-    const runCheckNowAction = vi.fn().mockResolvedValue({ ok: true, rankCheckId: CHECK_ID });
+    const runCheckNowAction = vi
+      .fn<RunCheckNowAction>()
+      .mockResolvedValue({ status: "queued", runId: CHECK_ID });
     const { result } = renderHook(
       () =>
         useRunChecksModal({
@@ -116,7 +123,9 @@ describe("useRunChecksModal", () => {
   it("settles a check that disappears from the project-scoped poll result", async () => {
     const onSettled = vi.fn();
     const pollAction = vi.fn().mockResolvedValue([]);
-    const runCheckNowAction = vi.fn().mockResolvedValue({ ok: true, rankCheckId: CHECK_ID });
+    const runCheckNowAction = vi
+      .fn<RunCheckNowAction>()
+      .mockResolvedValue({ status: "queued", runId: CHECK_ID });
     const { result } = renderHook(
       () =>
         useRunChecksModal({
@@ -158,7 +167,9 @@ describe("useRunChecksModal", () => {
         status: "deferred",
       },
     ]);
-    const runCheckNowAction = vi.fn().mockResolvedValue({ ok: true, rankCheckId: CHECK_ID });
+    const runCheckNowAction = vi
+      .fn<RunCheckNowAction>()
+      .mockResolvedValue({ status: "queued", runId: CHECK_ID });
     const { result } = renderHook(
       () =>
         useRunChecksModal({

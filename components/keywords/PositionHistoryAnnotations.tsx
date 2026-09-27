@@ -54,7 +54,7 @@ export function LatestPositionAnnotation({
   labels,
   positions,
   target,
-}: Readonly<{ labels: string[]; positions: number[]; target: number }>) {
+}: Readonly<{ labels: string[]; positions: (number | null)[]; target: number }>) {
   const t = useTranslations("projectRankTracker.keywordDetail.position");
   const area = usePlotArea();
   const xScale = useXAxisScale();
@@ -63,11 +63,11 @@ export function LatestPositionAnnotation({
   const { height, x: left, y: top, width } = area;
   const position = positions.at(-1);
   const label = labels.at(-1);
-  if (position === undefined || label === undefined) return null;
+  if (position == null || label === undefined) return null;
   const markerX = xScale(labels.length - 1);
   const markerY = yScale(position);
   const previousPosition = positions.at(-2);
-  const previousY = previousPosition === undefined ? null : yScale(previousPosition);
+  const previousY = previousPosition == null ? null : yScale(previousPosition);
   const targetY = yScale(target);
   if (typeof markerX !== "number" || typeof markerY !== "number") return null;
 

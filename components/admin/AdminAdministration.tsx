@@ -2,10 +2,14 @@
 
 import { AdminAccountLookup } from "@/components/admin/AdminAccountLookup";
 import { AdminAdministrationConsumptionTable } from "@/components/admin/admin-administration-tables";
+import { MailTwoFactorGate } from "@/components/admin/MailTwoFactorGate";
 import { Card } from "@/components/ui/Card";
+import { ExternalLink } from "@/components/ui/ExternalLink";
 import { SectionTitle } from "@/components/ui/SectionTitle";
+import type { InstanceMailSettingsView } from "@/lib/email/instance-mail-runtime";
 import type { InstanceAdminAdministration } from "@/lib/queries/instance-admin-administration";
-import { DOCS_URL, docsLinkProps } from "@/lib/site/site";
+import { appRootPath } from "@/lib/routing/app-path";
+import { DOCS_URL } from "@/lib/site/site";
 import { useFormatter, useTranslations } from "next-intl";
 
 type GrowthMetric = InstanceAdminAdministration["growth"]["users"];
@@ -135,8 +139,13 @@ function TopConsumption({
 
 export function AdminAdministration({
   data,
+  mailSettings = null,
   showMailerWarning = false,
-}: Readonly<{ data: InstanceAdminAdministration; showMailerWarning?: boolean }>) {
+}: Readonly<{
+  data: InstanceAdminAdministration;
+  mailSettings?: InstanceMailSettingsView | null;
+  showMailerWarning?: boolean;
+}>) {
   const t = useTranslations("instanceAdmin.administration.mailer");
 
   return (
@@ -145,15 +154,28 @@ export function AdminAdministration({
         <Card component="section" size="lg" aria-labelledby="admin-mailer-warning-heading">
           <SectionTitle id="admin-mailer-warning-heading">{t("title")}</SectionTitle>
           <p className="mb-0 mt-2 text-xs leading-relaxed text-fg-muted">
-            {t("description", { provider: "EMAIL_PROVIDER" })}
+            {mailSettings?.twoFactorEnabled
+              ? t("descriptionReady")
+              : t("description", { provider: "EMAIL_PROVIDER" })}
           </p>
-          <a
-            className="mt-3 inline-flex text-xs font-semibold text-accent-text hover:underline"
-            {...docsLinkProps(`${DOCS_URL}/self-hosting/email`)}
-          >
-            {t("link")}
-          </a>
+          {mailSettings ? null : (
+            <p className="mb-0 mt-2 text-xs leading-relaxed text-fg-muted">{t("locked")}</p>
+          )}
+          {mailSettings ? null : (
+            <ExternalLink
+              className="mt-3 text-xs font-semibold text-accent-text hover:underline"
+              href={`${DOCS_URL}/self-hosting/email`}
+            >
+              {t("link")}
+            </ExternalLink>
+          )}
         </Card>
+      ) : null}
+      {mailSettings ? (
+        <MailTwoFactorGate
+          returnTo={appRootPath("admin", "administration")}
+          settings={mailSettings}
+        />
       ) : null}
       <Growth data={data} />
       <TopConsumption rows={data.topConsumption} />

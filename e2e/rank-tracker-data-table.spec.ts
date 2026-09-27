@@ -64,8 +64,12 @@ test("Rank Tracker DataTable supports grouped and flat user flows", async ({ pag
       .nth(1)
       .getByRole("checkbox", { name: `Select ${fixture.firstGroupedKeyword}` })
       .check();
-    await expect(page.getByText("2 selected", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Clear", exact: true }).click();
+    const selectionActions = page.getByRole("toolbar", {
+      name: "Actions for selected keywords",
+    });
+    await expect(selectionActions.getByText("2 selected", { exact: true })).toBeVisible();
+    await selectionActions.getByRole("button", { name: "Clear", exact: true }).click();
+    await expect(selectionActions).toBeHidden();
 
     await grouping.getByText("Flat", { exact: true }).click();
     await expect(page).toHaveURL(hasQuery(trackerPath, { grouped: "0", pageSize: "25" }));

@@ -61,6 +61,8 @@
     "shellHealth": {
       "label": "Operations health",
       "worker": "Worker {status}",
+      "workerUnknownHint": "The app is running, but the separate worker has not published a fresh heartbeat. The web process does not start the worker.",
+      "workerUnknownDocs": "How to run the worker",
       "checks": "Checks: {value, number, ::.0}% failed",
       "checksUnknown": "Checks: unknown",
       "provider": "{provider}: {value, number, ::.0}% failed",
@@ -122,7 +124,9 @@
         "description": "Recent operator events show delivery metadata only; free-form payload fields are never exposed here.",
         "deliveryUnavailable": "Delivery diagnostics are unavailable.",
         "historyUnavailable": "Operational event history is unavailable.",
-        "empty": "No operational events recorded."
+        "empty": "No operational events recorded.",
+        "slackMissing": "Slack is not configured. Set OPS_SLACK_WEBHOOK_URL to deliver operator events.",
+        "slackMissingLink": "Configure Slack notifications"
       },
       "stats": {
         "title": "Instance stats",
@@ -241,7 +245,49 @@
       "mailer": {
         "title": "Email provider not configured",
         "description": "Email sign-in is unavailable because this instance cannot send sign-in codes. Set {provider} and its required credentials to restore email delivery.",
-        "link": "Configure email delivery"
+        "descriptionLocked": "Two-factor authentication is required to save or change mail settings. Settings already saved keep sending if it is turned off. Environment variables still override saved settings.",
+        "descriptionReady": "Email sign-in is unavailable until a provider is saved below. Environment variables still override saved settings.",
+        "locked": "The mail form appears after you turn on two-factor authentication.",
+        "link": "Configure email delivery",
+        "form": {
+          "title": "Outbound mail",
+          "description": "Saved settings are used only when the matching environment variables are empty. Environment variables win when both are set.",
+          "envOverride": "Environment variables are set, so they override these saved settings.",
+          "provider": "Provider",
+          "providerResend": "Resend",
+          "providerSes": "Amazon SES",
+          "providerSmtp": "SMTP",
+          "sender": "Sender",
+          "senderHint": "Name '<'address@example.com'>'",
+          "credentialsSaved": "Credentials are saved.",
+          "replace": "Replace credentials",
+          "resendApiKey": "API key",
+          "sesRegion": "Region",
+          "sesAccessKeyId": "Access key ID",
+          "sesSecretAccessKey": "Secret access key",
+          "sesKeysHint": "Optional. Leave both empty to use the server's default credential chain.",
+          "smtpHost": "Host",
+          "smtpPort": "Port",
+          "smtpUsername": "Username",
+          "smtpPassword": "Password",
+          "code": "Authenticator code",
+          "save": "Save mail settings",
+          "saving": "Saving...",
+          "clear": "Clear saved settings",
+          "clearing": "Clearing...",
+          "saved": "Mail settings saved.",
+          "cleared": "Saved mail settings cleared. Environment variables apply.",
+          "forbidden": "This action is not available.",
+          "invalid": "Check the form and try again.",
+          "stepUpFailed": "That authenticator code was not accepted.",
+          "rateLimited": "Too many attempts. Try again later.",
+          "unavailable": "Mail settings are temporarily unavailable.",
+          "validationSender": "Enter a sender as Name '<'address@example.com'>' or a plain address.",
+          "validationRequired": "Enter a value.",
+          "validationCode": "Enter the 6-digit authenticator code.",
+          "validationPort": "Enter a port from 1 to 65535.",
+          "validationSesPair": "Enter both the access key ID and the secret access key, or leave both empty."
+        }
       }
     },
     "account": {

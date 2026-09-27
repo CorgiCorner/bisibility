@@ -9,6 +9,9 @@ const { notifyOpsMock, recordResendSendMock, reserveBudgetMock, sendMock } = vi.
 }));
 
 vi.mock("@/lib/ops/notify", () => ({ notifyOps: notifyOpsMock }));
+vi.mock("./instance-mail-store", () => ({
+  refreshInstanceMailRuntime: vi.fn(async () => undefined),
+}));
 vi.mock("./budget", () => ({ reserveEmailDailyBudget: reserveBudgetMock }));
 vi.mock("./send-counter", () => ({ recordResendSend: recordResendSendMock }));
 vi.mock("@aws-sdk/client-sesv2", () => {

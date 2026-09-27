@@ -18,7 +18,7 @@ type UseRankTrackerCommandsInput = {
   onFilter: () => void;
   onImport: () => void;
   onRunChecks: () => void;
-  /** `scoped` is how many of the visible rows the run command would actually check. */
+  /** `scoped` is the server count for the entire market, or the visible project selection. */
   rowCounts: { all: number; scoped?: number; visible: number };
 };
 
@@ -39,7 +39,7 @@ export function useRankTrackerCommands({
   const canExport = rowCounts.visible > 0;
   const canFilter = rowCounts.all > 0;
   const runCheckRows = rowCounts.scoped ?? rowCounts.visible;
-  const canRunChecks = canUpdateKeyword && canExport && runCheckRows > 0;
+  const canRunChecks = canUpdateKeyword && marketScope?.status !== "paused" && runCheckRows > 0;
   const runChecksLabel = marketScope
     ? t("commands.runChecksInMarket", { market: marketScope.label })
     : t("commands.runChecks");

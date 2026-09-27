@@ -30,7 +30,9 @@ vi.mock("@/components/keywords/KeywordHeaderCard", () => ({
   KeywordHeaderCard: () => <div data-testid="header-card" />,
 }));
 vi.mock("@/components/keywords/KeywordPendingDetail", () => ({
-  KeywordPendingDetail: () => <div data-testid="pending-detail" />,
+  KeywordPendingDetail: ({ history }: { history?: React.ReactNode }) => (
+    <div data-testid="pending-detail">{history}</div>
+  ),
 }));
 vi.mock("@/components/keywords/add/KeywordManagementMessagesBoundary", async () => {
   const { featureMessagesElement, projectRankTrackerFeatureTestMessages } = await import(
@@ -189,6 +191,29 @@ describe("KeywordDetailPage", () => {
       },
       project: { id: "project_1" },
     });
+  });
+
+  it("keeps saved position and URL history visible when the latest check is not ranked", async () => {
+    mocks.getKeywordDetail.mockResolvedValue({
+      ...normalDetailState,
+      checkState: "not_ranked",
+      position: 101,
+      positionHistory: [],
+      positionObservations: [
+        { checkedAt: "2026-09-22T10:00:00Z", label: "Sep 22", position: 5 },
+        { checkedAt: "2026-09-26T23:35:00Z", label: "Sep 26", position: null },
+      ],
+      rankingUrlHistory: [{ url: "https://example.com/flow" }],
+      providerConnected: true,
+      traffic: { hasAnalyticsConnection: false, pages: [], query: null },
+    });
+    render(
+      await KeywordDetailPage({ params: Promise.resolve({ id: "kw_pending", project: "prj_1" }) }),
+    );
+    expect(screen.getByTestId("pending-detail")).toContainElement(
+      screen.getByTestId("position-history"),
+    );
+    expect(screen.getByTestId("ranking-history")).toBeInTheDocument();
   });
 
   it("renders traffic below pending rank-check detail", async () => {

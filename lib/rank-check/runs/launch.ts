@@ -53,6 +53,10 @@ export async function launchRankCheckRun(
   // Early preflight: a manual request the gate refuses is rejected before any
   // selection, connection, or run row is created.
   await assertOperationAccess(input.project.id);
+  // A lost response must recover the committed run even after its preview or membership changes.
+  const idempotencyKey = apiIdempotencyKey(input.idempotencyKey);
+  const existing = await findIdempotentRun(input.project.id, idempotencyKey);
+  if (existing) return existing;
   const now = new Date();
   const resolved = await resolveRunSelection(input.project, input.spec);
   const activeLocationIds = await activeMarketLocationIds(input.project.id, prisma);
@@ -97,9 +101,6 @@ export async function launchRankCheckRun(
     verifyLaunchPreviewToken(input, estimate.costCents, resolved.selectionHash, now);
   }
   if (!connections[0]) throw new LaunchRankCheckRunError("no_provider");
-  const idempotencyKey = apiIdempotencyKey(input.idempotencyKey);
-  const existing = await findIdempotentRun(input.project.id, idempotencyKey);
-  if (existing) return existing;
   const publicId = makePublicId("rcr");
   const orchestrationWorkflowId = `rank-check-run-${publicId}`;
   let created:

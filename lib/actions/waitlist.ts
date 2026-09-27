@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { configuredEmailFrom } from "@/lib/email/from";
+import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { sendEmail } from "@/lib/email/send";
 import {
@@ -86,6 +87,7 @@ function escapeHtml(value: string) {
 }
 
 async function notifyOwner(input: StoredWaitlist) {
+  await refreshInstanceMailRuntime();
   const to = resolveNotifyEmail();
   const isFeedback = settingsFeedbackSources.has(input.source);
   // Settings feedback shows only the dedicated hostedPrice as the current

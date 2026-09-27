@@ -17,7 +17,7 @@ export type EmailMessage = {
 export type EmailProvider = {
   readonly id: EmailProviderId;
   readonly label: string;
-  /** True when every environment key the transport needs is present. */
+  /** True when the transport has the credentials it needs. */
   isConfigured(): boolean;
   /** Delivers one message or throws EmailSendError. Never retries internally. */
   send(message: EmailMessage): Promise<void>;

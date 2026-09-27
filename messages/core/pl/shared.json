@@ -123,7 +123,16 @@
       "overlapCancelHint": "Anuluj tamten przebieg albo zostaw oba i zapłać dwa razy za te pozycje.",
       "overlapKeepHint": "Uruchomienie tego przebiegu oznacza podwójną opłatę za te pozycje.",
       "overlapMessage": "{count, plural, one {# z tych słów kluczowych jest} few {# z tych słów kluczowych są} many {# z tych słów kluczowych jest} other {# z tych słów kluczowych jest}} też w przebiegu, który {status, select, planned {jest zaplanowany na {time}} running {właśnie trwa} cancelling {jest anulowany} blocked {jest wstrzymany} other {czeka w kolejce}}.",
-      "overlapMore": "+{count, plural, one {# kolejny przebieg} few {# kolejne przebiegi} many {# kolejnych przebiegów} other {# kolejnego przebiegu}}"
+      "overlapMore": "+{count, plural, one {# kolejny przebieg} few {# kolejne przebiegi} many {# kolejnych przebiegów} other {# kolejnego przebiegu}}",
+      "runMarket": "Sprawdź cały market",
+      "scopeMarket": "Sprawdź wszystkie frazy w {market}",
+      "marketDescription": "Obejmuje wszystkie śledzone frazy i urządzenia w tym markecie, niezależnie od filtrów i strony tabeli. Harmonogram śledzenia pozostaje bez zmian.",
+      "runCounts": "{keywords, plural, one {# fraza} few {# frazy} many {# fraz} other {# frazy}} · {targets, plural, one {# sprawdzenie} few {# sprawdzenia} many {# sprawdzeń} other {# sprawdzenia}}",
+      "nothingToCheck": "Brak fraz dostępnych do sprawdzenia w tym zakresie.",
+      "startUnconfirmed": "Utracono odpowiedź na uruchomienie. Ponów, aby odzyskać ten sam przebieg bez uruchamiania go drugi raz.",
+      "refreshEstimate": "Odśwież wycenę",
+      "marketInactive": "Ten market nie jest już aktywny. Wznów go przed uruchomieniem sprawdzenia.",
+      "keywordsArchived": "Te frazy zostały zarchiwizowane. Odśwież stronę, aby wybrać inny zakres."
     },
     "globalError": {
       "description": "Aplikacja nie mogła wyrenderować tej strony. Odśwież, aby spróbować ponownie.",

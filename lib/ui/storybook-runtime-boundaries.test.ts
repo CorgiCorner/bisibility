@@ -64,6 +64,14 @@ function importedRankRunActions() {
 }
 
 describe("Storybook rank-run action boundaries", () => {
+  it("maps rank-check status polling to browser runtime stubs", async () => {
+    const aliases = await configuredAliases();
+
+    expect(aliases.get("@/lib/actions/rank-check-status")).toMatch(
+      /[\\/]\.storybook[\\/]browser-runtime-stubs\.tsx$/,
+    );
+  });
+
   it("maps every component runtime import to the dedicated browser stub", {
     timeout: componentScanTimeoutMs,
   }, () => {

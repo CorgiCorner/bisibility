@@ -103,6 +103,28 @@ describe("buildTrendTakeaway", () => {
 });
 
 describe("buildTrend", () => {
+  it("keeps recorded days after a depth change and leaves unranked days as gaps", () => {
+    const row = keyword("rank tracker", 6, 5);
+    row.rankChecks = [
+      { ...check(0, 1), position: null, requestedDepth: 50 },
+      { ...check(1, 5), requestedDepth: 20 },
+      { ...check(2, 6), requestedDepth: null, normalizationVersion: null },
+    ];
+    const trend = buildTrend([row]);
+    expect(trend.map((point) => point.value)).toEqual([6, 5, null]);
+    expect(buildTrendTakeaway([row], now)).toBeNull();
+  });
+
+  it("weights each keyword once per day using its latest completed observation", () => {
+    const first = keyword("first", 6, 5);
+    first.rankChecks = [
+      check(0, 10),
+      { ...check(0, 1), checkedAt: new Date("2026-07-22T09:00:00Z") },
+    ];
+    const second = keyword("second", 6, 5);
+    second.rankChecks = [check(0, 20)];
+    expect(buildTrend([first, second]).at(-1)?.value).toBe(15);
+  });
   it("preserves UTC calendar keys for client-side locale formatting", () => {
     const trend = buildTrend([keyword("calendar key", 4, 2, 10)]);
 

@@ -8,6 +8,7 @@ import { ChartRegion } from "@/components/ui/ChartRegion";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ZonedTime } from "@/components/ui/ZonedTime";
+import { observationSeries } from "@/lib/checks/position-observations";
 import { formatDisplayDate, formatDisplayDateRange } from "@/lib/dates/format";
 import type { KeywordDetailChartState } from "@/lib/keyword-detail/state-model";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
@@ -25,6 +26,7 @@ import { useState } from "react";
 import { DegradedPositionMarkers } from "./DegradedPositionMarkers";
 import { LatestPositionAnnotation, TargetReferenceLine } from "./PositionHistoryAnnotations";
 import { marketPositionPalette, PositionHistoryMarketLegend } from "./PositionHistoryMarketLegend";
+import { positionHistorySeries } from "./position-history-series";
 
 export { historyAnnotationTop } from "./PositionHistoryAnnotations";
 
@@ -60,6 +62,7 @@ export function PositionHistoryCard({
   timeZone,
 }: Readonly<PositionHistoryCardProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail.position");
+  const pending = useTranslations("projectRankTracker.keywordDetail.pending");
   const [range, setRange] = useState<RangeLabel>("30d");
   const [scope, setScope] = useState<"all" | "single">("single");
   const dateDisplay = useDateDisplay();
@@ -67,12 +70,14 @@ export function PositionHistoryCard({
   const activeRange = RANGES.find((option) => option.value === range) ?? RANGES[1];
   const now = new Date();
   const today = calendarDayKey(now);
-  const history = dailyPositionPoints(keyword.positionHistory, activeRange.days, now).map(
-    (point) => ({
-      ...point,
-      label: localizedDayLabel(calendarDayKey(new Date(point.checkedAt)), today, t, dateDisplay),
-    }),
-  );
+  const history = dailyPositionPoints(
+    keyword.positionObservations ?? keyword.positionHistory,
+    activeRange.days,
+    now,
+  ).map((point) => ({
+    ...point,
+    label: localizedDayLabel(calendarDayKey(new Date(point.checkedAt)), today, t, dateDisplay),
+  }));
   const markets = comparisonTargets(marketTargets, keyword);
   const visibleMarkets = markets.slice(0, 6);
   const showComparison = markets.length > 1;
@@ -82,27 +87,43 @@ export function PositionHistoryCard({
     localizedDayLabel(label, today, t, dateDisplay),
   );
   const boundaryVisible =
-    history.length > 0 &&
-    Boolean(
-      keyword.positionHistoryBoundaryAt &&
-        dailyPositionPoints(
-          [{ checkedAt: keyword.positionHistoryBoundaryAt }],
-          activeRange.days,
-          now,
-        ).length,
-    );
+    observationSeries(history).length > 1 ||
+    (history.length > 0 &&
+      Boolean(
+        keyword.positionHistoryBoundaryAt &&
+          dailyPositionPoints(
+            [{ checkedAt: keyword.positionHistoryBoundaryAt }],
+            activeRange.days,
+            now,
+          ).length,
+      ));
   const labels = history.map((point) => point.label);
   const positions = history.map((point) => point.position);
   const target = keyword.targetPosition ?? null;
   const comparisonPositions = comparison.values.flatMap((series) =>
     series.data.flatMap((position) => (position === null ? [] : [position])),
   );
-  const maxPosition = Math.max(20, ...(allMarkets ? comparisonPositions : positions), target ?? 1);
+  const maxPosition = Math.max(
+    20,
+    ...(allMarkets
+      ? comparisonPositions
+      : positions.filter((position): position is number => position !== null)),
+    target ?? 1,
+  );
   const rangeEmpty = positions.length === 0;
-  const notEnough = chartState === "one_check" || (!chartState && positions.length < 2);
+  const notEnough = allMarkets
+    ? comparison.labels.length === 0
+    : positions.every((position) => position === null) ||
+      ((chartState === "one_check" || !chartState) && history.length < 2);
   const chartLabels = allMarkets ? comparisonLabels : labels;
-  const chartPositions = positions;
-  const emptyStateTitle = rangeEmpty ? t("noChecks", { days: activeRange.days }) : t("notEnough");
+  const notRankedTitle = pending("notRankedTitle", {
+    depth: keyword.trackedDepth ?? keyword.projectSerpDepth ?? 20,
+  });
+  const emptyStateTitle = rangeEmpty
+    ? t("noChecks", { days: activeRange.days })
+    : positions.every((position) => position === null)
+      ? notRankedTitle
+      : t("notEnough");
   const latestForAria = positions.at(-1);
   const chartRegionLabel = notEnough
     ? `${keyword.keyword}: ${emptyStateTitle}`
@@ -119,7 +140,7 @@ export function PositionHistoryCard({
             )
             .join(", "),
         })
-      : latestForAria === undefined || target === null
+      : latestForAria == null || target === null
         ? t("historyAria", { keyword: keyword.keyword })
         : latestForAria > target
           ? t("historyAriaWithTarget", {
@@ -133,26 +154,17 @@ export function PositionHistoryCard({
               position: latestForAria,
               target,
             });
-  const chartSeries = allMarkets
-    ? comparison.values.map((series, index) => ({
-        color: marketPositionPalette[index % marketPositionPalette.length],
-        curve: "linear" as const,
-        values: series.data,
-        label: keywordMarketLabel(series.target),
-      }))
-    : [
-        {
-          fill: true,
-          baseline: maxPosition,
-          color: chartColors.accent,
-          curve: "linear" as const,
-          values: chartPositions,
-          label: t("positionSeries"),
-        },
-      ];
-  const latestPosition = keyword.positionHistory.at(-1)?.position ?? null;
+  const chartSeries = positionHistorySeries({
+    allMarkets,
+    comparison: comparison.values,
+    history,
+    maxPosition,
+    label: t("positionSeries"),
+  });
+  const latestObservation = (keyword.positionObservations ?? keyword.positionHistory).at(-1);
+  const latestPosition = latestObservation?.position ?? null;
   const displayedPosition = positions.at(-1) ?? latestPosition;
-  const latestCheckedAt = keyword.positionHistory.at(-1)?.checkedAt;
+  const latestCheckedAt = latestObservation?.checkedAt;
   const latestChip =
     latestPosition !== null && latestPosition > 0
       ? t("latest", {
@@ -164,7 +176,9 @@ export function PositionHistoryCard({
             : t("today"),
           position: latestPosition,
         })
-      : t("latestUnavailable");
+      : latestObservation?.position === null
+        ? notRankedTitle
+        : t("latestUnavailable");
   const effectiveSchedule = resolveEffectiveSchedule(keyword.schedule);
   const nextCheckLabel: ReactNode = readOnly ? (
     t("pausedMigration")

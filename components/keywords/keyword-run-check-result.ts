@@ -1,3 +1,4 @@
+import { isPublicIdOfType } from "@/lib/db/public-id";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 
 export type KeywordRunCheckOutcome = "blocked" | "completed" | "running";
@@ -33,6 +34,14 @@ export function keywordRunCheckBlockMessage(result: unknown, fallback: string) {
 }
 
 export function keywordRunCheckId(result: unknown): string | null {
+  if (
+    result &&
+    typeof result === "object" &&
+    "runId" in result &&
+    typeof result.runId === "string" &&
+    isPublicIdOfType(result.runId, "rcr")
+  )
+    return result.runId;
   if (!result || typeof result !== "object" || !("rankCheckId" in result)) return null;
   return typeof result.rankCheckId === "string" ? result.rankCheckId : null;
 }

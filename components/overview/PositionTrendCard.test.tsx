@@ -34,12 +34,14 @@ describe("PositionTrendCard", () => {
     expect(container.querySelector('[data-icon="ChartBarIcon"]')).not.toBeInTheDocument();
   });
 
-  it("shows an explicit next-check state for a single trend point", () => {
+  it("plots a single recorded day instead of asking for another check", () => {
     renderTrend({ data: [{ label: null, value: 1 }] });
 
-    expect(screen.getByText("Trend appears after the next check")).toBeInTheDocument();
-    expect(screen.getByText("complete one more check to compare positions")).toBeInTheDocument();
-    expect(screen.queryByTestId("line-chart")).not.toBeInTheDocument();
+    expect(screen.queryByText("Trend appears after the next check")).not.toBeInTheDocument();
+    expect(screen.getByTestId("line-chart")).toBeInTheDocument();
+    expect(lineChart).toHaveBeenLastCalledWith(
+      expect.objectContaining({ series: [expect.objectContaining({ values: [1], dots: true })] }),
+    );
   });
 
   it("shows the definition and a separate takeaway below the title", () => {

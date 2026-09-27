@@ -1,10 +1,9 @@
 "use client";
 
 import type { GetRankCheckStatusResult } from "@/lib/actions/rank-check-status";
-import type { RunCheckNowInput } from "@/lib/schemas/keyword";
 import type { SerpDepth } from "@/lib/serp/constants";
-import { useCallback, useState } from "react";
-import type { KeywordAction } from "./action-utils";
+import { useCallback, useRef, useState } from "react";
+import type { RunCheckNowAction } from "./action-utils";
 import { keywordRunCheckId, keywordRunCheckOutcome } from "./keyword-run-check-result";
 import { type RankCheckPollAction, useRankCheckPoll } from "./use-rank-check-poll";
 
@@ -24,7 +23,7 @@ export type UseFirstCheckFlowInput = {
   keywordId: string;
   pollAction?: RankCheckPollAction;
   refresh: () => void;
-  runCheckNowAction: KeywordAction<RunCheckNowInput>;
+  runCheckNowAction: RunCheckNowAction;
 };
 
 export type UseFirstCheckFlowResult = {
@@ -71,6 +70,7 @@ export function useFirstCheckFlow({
   const [modal, setModal] = useState<FirstCheckModalState | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const submitting = useRef(false);
 
   const activeRankCheckId =
     modal?.step === "running" && modal.rankCheckId ? modal.rankCheckId : null;
@@ -140,7 +140,8 @@ export function useFirstCheckFlow({
   }, []);
 
   const confirmRun = useCallback(async () => {
-    if (!modal || confirming) return;
+    if (modal?.step !== "confirm" || submitting.current) return;
+    submitting.current = true;
     setConfirming(true);
     setModal((prev) => (prev ? { ...prev, error: null } : prev));
     try {
@@ -201,9 +202,10 @@ export function useFirstCheckFlow({
           : prev,
       );
     } finally {
+      submitting.current = false;
       setConfirming(false);
     }
-  }, [keywordId, modal, confirming, runCheckNowAction, refresh]);
+  }, [keywordId, modal, runCheckNowAction, refresh]);
 
   return {
     closeCheckModal,

@@ -61,6 +61,8 @@
     "shellHealth": {
       "label": "Kondycja operacji",
       "worker": "Worker: {status}",
+      "workerUnknownHint": "Aplikacja działa, ale osobny proces workera nie opublikował świeżego pulsu. Sam proces strony nie uruchamia workera.",
+      "workerUnknownDocs": "Jak uruchomić workera",
       "checks": "Sprawdzenia: {value, number, ::.0}% nieudanych",
       "checksUnknown": "Sprawdzenia: nieznane",
       "provider": "{provider}: {value, number, ::.0}% nieudanych",
@@ -122,7 +124,9 @@
         "description": "Ostatnie zdarzenia operatora pokazują wyłącznie metadane dostarczania; pola z dowolną treścią nigdy nie są tu ujawniane.",
         "deliveryUnavailable": "Diagnostyka dostarczania jest niedostępna.",
         "historyUnavailable": "Historia zdarzeń operacyjnych jest niedostępna.",
-        "empty": "Nie zapisano żadnych zdarzeń operacyjnych."
+        "empty": "Nie zapisano żadnych zdarzeń operacyjnych.",
+        "slackMissing": "Slack nie jest skonfigurowany. Ustaw OPS_SLACK_WEBHOOK_URL, aby dostarczać zdarzenia operatora.",
+        "slackMissingLink": "Skonfiguruj powiadomienia Slack"
       },
       "stats": {
         "title": "Statystyki instancji",
@@ -241,7 +245,49 @@
       "mailer": {
         "title": "Nie skonfigurowano dostawcy poczty",
         "description": "Logowanie e-mailem jest niedostępne, ponieważ ta instancja nie może wysyłać kodów logowania. Ustaw {provider} i wymagane dane uwierzytelniające, aby przywrócić wysyłkę e-maili.",
-        "link": "Skonfiguruj wysyłkę e-maili"
+        "descriptionLocked": "Do zapisania lub zmiany ustawień poczty potrzebne jest uwierzytelnianie dwuskładnikowe. Już zapisane ustawienia dalej wysyłają pocztę po jego wyłączeniu. Zmienne środowiskowe nadal mają pierwszeństwo przed zapisanymi ustawieniami.",
+        "descriptionReady": "Logowanie e-mailem jest niedostępne, dopóki poniżej nie zapiszesz dostawcy. Zmienne środowiskowe nadal mają pierwszeństwo przed zapisanymi ustawieniami.",
+        "locked": "Formularz poczty pojawi się po włączeniu uwierzytelniania dwuskładnikowego.",
+        "link": "Skonfiguruj wysyłkę e-maili",
+        "form": {
+          "title": "Poczta wychodząca",
+          "description": "Zapisane ustawienia są używane tylko wtedy, gdy odpowiadające im zmienne środowiskowe są puste. Gdy ustawione są oba źródła, zmienne środowiskowe mają pierwszeństwo.",
+          "envOverride": "Zmienne środowiskowe są ustawione, więc zastępują te zapisane ustawienia.",
+          "provider": "Dostawca",
+          "providerResend": "Resend",
+          "providerSes": "Amazon SES",
+          "providerSmtp": "SMTP",
+          "sender": "Nadawca",
+          "senderHint": "Nazwa '<'adres@example.com'>'",
+          "credentialsSaved": "Dane uwierzytelniające są zapisane.",
+          "replace": "Zastąp dane uwierzytelniające",
+          "resendApiKey": "Klucz API",
+          "sesRegion": "Region",
+          "sesAccessKeyId": "Identyfikator klucza dostępu",
+          "sesSecretAccessKey": "Tajny klucz dostępu",
+          "sesKeysHint": "Opcjonalne. Zostaw oba pola puste, aby użyć domyślnego łańcucha poświadczeń serwera.",
+          "smtpHost": "Host",
+          "smtpPort": "Port",
+          "smtpUsername": "Nazwa użytkownika",
+          "smtpPassword": "Hasło",
+          "code": "Kod z aplikacji uwierzytelniającej",
+          "save": "Zapisz ustawienia poczty",
+          "saving": "Zapisywanie...",
+          "clear": "Wyczyść zapisane ustawienia",
+          "clearing": "Czyszczenie...",
+          "saved": "Ustawienia poczty zapisane.",
+          "cleared": "Zapisane ustawienia poczty zostały wyczyszczone. Obowiązują zmienne środowiskowe.",
+          "forbidden": "Ta akcja jest niedostępna.",
+          "invalid": "Sprawdź formularz i spróbuj ponownie.",
+          "stepUpFailed": "Ten kod uwierzytelniający nie został przyjęty.",
+          "rateLimited": "Zbyt wiele prób. Spróbuj ponownie później.",
+          "unavailable": "Ustawienia poczty są chwilowo niedostępne.",
+          "validationSender": "Podaj nadawcę jako Nazwa '<'adres@example.com'>' albo sam adres.",
+          "validationRequired": "Podaj wartość.",
+          "validationCode": "Podaj 6-cyfrowy kod z aplikacji uwierzytelniającej.",
+          "validationPort": "Podaj port od 1 do 65535.",
+          "validationSesPair": "Podaj identyfikator klucza dostępu i tajny klucz albo zostaw oba pola puste."
+        }
       }
     },
     "account": {

@@ -68,3 +68,17 @@ export const ShortHistory: Story = {
 export const LoadingTakeaway: Story = {
   args: { data: overviewFixture.trend, takeawayLoading: true },
 };
+
+export const HistoryAcrossDepths: Story = {
+  args: {
+    data: [6, 5, 4, null].map((value, index) => ({
+      dateKey: new Date(Date.now() - (3 - index) * 86400000).toISOString().slice(0, 10),
+      label:
+        index === 3
+          ? null
+          : new Date(Date.now() - (3 - index) * 86400000).toISOString().slice(0, 10),
+      comparisonKey: index < 2 ? "v2:20" : "v2:50",
+      value,
+    })),
+  },
+};

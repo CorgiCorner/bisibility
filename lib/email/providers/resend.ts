@@ -1,3 +1,4 @@
+import { storedMailProvider } from "@/lib/email/instance-mail-runtime";
 import { recordResendSend } from "@/lib/email/send-counter";
 import { type EmailMessage, type EmailProvider, EmailSendError } from "@/lib/email/types";
 import { parseRetryAfterSeconds } from "@/lib/http/retry-after";
@@ -14,7 +15,7 @@ async function send({
   text,
   sendCounterReserved = false,
 }: EmailMessage) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY || storedMailProvider("resend")?.resendApiKey;
   if (!apiKey) {
     throw new Error("RESEND_API_KEY is required to send email.");
   }
@@ -48,7 +49,8 @@ async function send({
 
 export const resendEmailProvider: EmailProvider = {
   id: "resend",
-  isConfigured: () => Boolean(process.env.RESEND_API_KEY),
+  isConfigured: () =>
+    Boolean(process.env.RESEND_API_KEY) || Boolean(storedMailProvider("resend")?.resendApiKey),
   label: "Resend",
   send,
 };

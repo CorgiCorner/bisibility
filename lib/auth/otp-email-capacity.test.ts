@@ -7,6 +7,9 @@ vi.mock("@/lib/email/registry", () => ({
   isEmailConfigured: vi.fn(() => true),
 }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
+vi.mock("@/lib/email/instance-mail-store", () => ({
+  refreshInstanceMailRuntime: vi.fn(async () => undefined),
+}));
 
 import { sendOtpEmail } from "./otp-email";
 import { withOtpSendState } from "./otp-send-context";

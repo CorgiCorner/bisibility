@@ -191,7 +191,7 @@
       "position": {
         "title": "Position history",
         "description": "Google rank over time, closer to #1 is better",
-        "normalization": "Comparison restarted after a ranking normalization change.",
+        "normalization": "Checks with different depths or ranking methods are shown separately.",
         "scope": "Position history scope",
         "thisMarket": "This market",
         "allMarkets": "All markets",

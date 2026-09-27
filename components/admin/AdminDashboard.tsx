@@ -10,8 +10,10 @@ import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavaila
 import { AdminWorkerHealth } from "@/components/admin/AdminWorkerHealth";
 import { AdminDashboardOpsEventsTable } from "@/components/admin/admin-dashboard-tables";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
+import { ExternalLink } from "@/components/ui/ExternalLink";
 import { checkFailureRate } from "@/lib/ops/instance-admin-health";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
+import { DOCS_URL } from "@/lib/site/site";
 import { useFormatter, useTranslations } from "next-intl";
 
 type AdminTranslations = ReturnType<typeof useTranslations<"instanceAdmin">>;
@@ -209,6 +211,19 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
         id="admin-ops-events"
         title={t("dashboard.ops.title")}
       >
+        {!data.ops.configured ? (
+          <div className="mb-3 rounded-card bg-yellow/10 p-3">
+            <p className="m-0 text-xs leading-relaxed text-yellow-text">
+              {t("dashboard.ops.slackMissing")}
+            </p>
+            <ExternalLink
+              className="mt-2 text-xs font-semibold text-accent-text hover:underline"
+              href={`${DOCS_URL}/self-hosting/operations`}
+            >
+              {t("dashboard.ops.slackMissingLink")}
+            </ExternalLink>
+          </div>
+        ) : null}
         <div className="mb-3">
           <AdminOpsActions slackConfigured={data.ops.configured && data.ops.enabled} />
         </div>

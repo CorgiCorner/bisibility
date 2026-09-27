@@ -113,7 +113,7 @@ describe("KeywordPendingDetail", () => {
     expect(screen.getByText("Set schedule for 1 keyword / 1 target")).toBeInTheDocument();
   });
 
-  it("uses the project default depth for both the pending position and Run check", () => {
+  it("uses the last completed depth for position while keeping the default for the next run", () => {
     renderDetail(
       pendingKeyword({
         projectSerpDepth: 50,
@@ -124,7 +124,7 @@ describe("KeywordPendingDetail", () => {
     );
 
     expect(screen.getByText("Not ranked")).toBeInTheDocument();
-    expect(screen.getByText(/Not in top 50/)).toBeInTheDocument();
+    expect(screen.getByText(/Not in top 20/)).toBeInTheDocument();
     expect(screen.getByText("Selected depth 50")).toBeInTheDocument();
   });
   it("opens keyword details including the target URL without requiring market management actions", async () => {

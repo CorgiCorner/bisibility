@@ -11,6 +11,7 @@ import {
   requireKeywordScope,
   requireProjectScope,
 } from "./_shared";
+import { singleRankCheckRunStatus, singleRankCheckRunStatuses } from "./rank-check-run-status";
 
 const rankCheckIdSchema = z.string().trim().min(1).max(120);
 const getRankCheckStatusSchema = z.object({ rankCheckId: rankCheckIdSchema });
@@ -33,6 +34,7 @@ export async function getRankCheckStatus(input: unknown): Promise<GetRankCheckSt
   const data = parseActionInput(getRankCheckStatusSchema, input);
   const actor = await getActionActor();
   const parsed = parsePublicId(data.rankCheckId);
+  if (parsed?.prefix === "rcr") return singleRankCheckRunStatus(data.rankCheckId, actor);
   if (parsed?.prefix !== "check") {
     throw new Error("Rank check not found.");
   }
@@ -82,7 +84,7 @@ export async function getRankCheckStatuses(input: unknown): Promise<GetRankCheck
   } catch {
     throw new Error("Rank checks not found.");
   }
-  if (data.rankCheckIds.some((id) => parsePublicId(id)?.prefix !== "check")) {
+  if (data.rankCheckIds.some((id) => !["check", "rcr"].includes(parsePublicId(id)?.prefix ?? ""))) {
     throw new Error("Rank checks not found.");
   }
   const actor = await getActionActor();
@@ -98,7 +100,12 @@ export async function getRankCheckStatuses(input: unknown): Promise<GetRankCheck
     }
     throw error;
   });
-  const ids = [...new Set(data.rankCheckIds)];
+  const uniqueIds = [...new Set(data.rankCheckIds)];
+  const ids = uniqueIds.filter((id) => parsePublicId(id)?.prefix === "check");
+  const runStatuses = await singleRankCheckRunStatuses(
+    uniqueIds.filter((id) => parsePublicId(id)?.prefix === "rcr"),
+    project.id,
+  );
   const rankChecks = [];
   for (let offset = 0; offset < ids.length; offset += RANK_CHECK_QUERY_CHUNK_SIZE) {
     const chunk = ids.slice(offset, offset + RANK_CHECK_QUERY_CHUNK_SIZE);
@@ -116,13 +123,16 @@ export async function getRankCheckStatuses(input: unknown): Promise<GetRankCheck
     });
     rankChecks.push(...rows);
   }
-  return rankChecks.map((rankCheck) => ({
-    error: rankCheck.error,
-    errorCode: rankCheck.errorCode,
-    finishedAt: rankCheck.finishedAt?.toISOString() ?? null,
-    position: rankCheck.position,
-    rankCheckId: rankCheck.publicId,
-    requestedDepth: rankCheck.requestedDepth,
-    status: rankCheck.status,
-  }));
+  return [
+    ...runStatuses,
+    ...rankChecks.map((rankCheck) => ({
+      error: rankCheck.error,
+      errorCode: rankCheck.errorCode,
+      finishedAt: rankCheck.finishedAt?.toISOString() ?? null,
+      position: rankCheck.position,
+      rankCheckId: rankCheck.publicId,
+      requestedDepth: rankCheck.requestedDepth,
+      status: rankCheck.status,
+    })),
+  ];
 }

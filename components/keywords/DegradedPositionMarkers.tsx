@@ -1,4 +1,5 @@
-import type { KeywordLocation, PositionPoint } from "@/lib/queries/keywords";
+import type { PositionObservation } from "@/lib/checks/position-observations";
+import type { KeywordLocation } from "@/lib/queries/keywords";
 import { useLocale, useTranslations } from "next-intl";
 import { useXAxisScale, useYAxisScale } from "recharts";
 
@@ -16,7 +17,7 @@ export function DegradedPositionMarkers({
   color: string;
   labels: readonly string[];
   location: KeywordLocation;
-  points: readonly PositionPoint[];
+  points: readonly PositionObservation[];
 }>) {
   const locale = useLocale();
   const t = useTranslations("projectRankTracker.keywordDetail.position");
@@ -28,7 +29,7 @@ export function DegradedPositionMarkers({
     requested: location.cityName ?? location.displayName,
   });
   return points.flatMap((point) => {
-    if (!point.degradedToCountry) return [];
+    if (!point.degradedToCountry || point.position === null) return [];
     const x = xScale(labels.indexOf(point.label));
     const y = yScale(point.position);
     if (typeof x !== "number" || typeof y !== "number") return [];

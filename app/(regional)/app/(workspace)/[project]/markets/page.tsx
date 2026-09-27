@@ -46,6 +46,7 @@ export default async function MarketsPage({ params, searchParams }: Readonly<Mar
           canArchive={canArchive}
           canEdit={canEdit}
           canRestore={canRestore}
+          canRunChecks={writable && canProjectAction(role, "update", "keyword")}
           createMarketAction={createProjectMarket}
           markets={markets}
           onArchive={removeProjectMarketFromProject}

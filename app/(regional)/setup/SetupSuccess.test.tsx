@@ -24,6 +24,7 @@ const stubs = {
   "@/lib/routing/app-path": "exports.appRootPath = (...segments) => '/app' + (segments.length ? '/' + segments.join('/') : '');",
   "next/link": "module.exports = ({ children, ...props }) => React.createElement('a', props, children);",
   "next-intl": "exports.useTranslations = () => (key) => key;",
+  "setup-confetti": "const SetupSuccessConfetti = registerClientReference({}, 'setup-confetti-client', 'SetupSuccessConfetti'); exports.SetupSuccessConfetti = SetupSuccessConfetti;",
 };
 
 async function main() {
@@ -43,6 +44,7 @@ async function main() {
       name: "rsc-boundary-stubs",
       setup(build) {
         build.onResolve({ filter: /^@\// }, (args) => ({ namespace: "stub", path: args.path }));
+        build.onResolve({ filter: /SetupSuccessConfetti$/ }, () => ({ namespace: "stub", path: "setup-confetti" }));
         build.onResolve({ filter: /^next\/link$/ }, () => ({ namespace: "stub", path: "next/link" }));
         build.onResolve({ filter: /^next-intl$/ }, () => ({ namespace: "stub", path: "next-intl" }));
         build.onLoad({ filter: /.*/, namespace: "stub" }, (args) => ({
@@ -66,6 +68,12 @@ async function main() {
         chunks: [],
         id: "setup-button-client",
         name: "Button",
+      },
+      "setup-confetti-client": {
+        async: false,
+        chunks: [],
+        id: "setup-confetti-client",
+        name: "SetupSuccessConfetti",
       },
     },
     { onError: (error) => { errors.push(error); } },
@@ -119,5 +127,13 @@ describe("SetupSuccess", () => {
     expect(
       screen.getByText(/Sign-in codes for other users need a working email provider/),
     ).toBeInTheDocument();
+  });
+
+  it("hides the server prompt when mail enrollment is on the page", () => {
+    render(<SetupSuccess emailNotice="hidden" mailerConfigured={false} />, {
+      messages: setupFeatureTestMessages,
+    });
+
+    expect(screen.queryByText("Next: configure email delivery.")).not.toBeInTheDocument();
   });
 });

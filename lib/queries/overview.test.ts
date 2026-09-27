@@ -432,7 +432,7 @@ describe("overview query", () => {
       },
     ]);
     expect(result.visibilityCoverage).toEqual({ limited: false, measured: 3, total: 5 });
-    expect(result.trend).toEqual([
+    expect(result.trend.map(({ comparisonKey: _comparisonKey, ...point }) => point)).toEqual([
       { dateKey: "2026-06-20", label: "2026-06-20", value: 12 },
       { dateKey: "2026-06-21", label: "2026-06-21", value: 7 },
       { dateKey: "2026-06-27", label: "2026-06-27", value: 9 },
@@ -687,7 +687,7 @@ describe("overview query", () => {
     expect(result.serpProviderState).toBe("missing");
     expect(result.isEmpty).toBe(false);
     expect(result.kpis[0]).toMatchObject({ delta: { kind: "awaitingFirstCheck" }, value: null });
-    expect(result.trend).toEqual([]);
+    expect(result.trend.map(({ comparisonKey: _comparisonKey, ...point }) => point)).toEqual([]);
     expect(result.highlights.find((list) => list.kind === "recentlyAdded")?.rows).toHaveLength(2);
     expect(result.dataSource.lastCheckAt).toBeNull();
     expect(result.dataSource.nextCheckAt).toBeNull();

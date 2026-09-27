@@ -1,3 +1,4 @@
+import { positionComparisonKey } from "@/lib/checks/position-observations";
 import { comparableCompletedWindow } from "@/lib/checks/status";
 
 export type Check = {
@@ -25,7 +26,12 @@ export type Keyword = {
   schedule: { frequency: string; nextCheckAt: Date | null } | null;
   text: string;
 };
-export type Trend = { dateKey?: string; label: string | null; value: number };
+export type Trend = {
+  comparisonKey?: string | null;
+  dateKey?: string;
+  label: string | null;
+  value: number | null;
+};
 export type TrendTakeaway = {
   days: number;
   kind: "improved" | "slipped" | "steady";
@@ -65,12 +71,35 @@ function dailyAverages(keywords: readonly Keyword[], start?: Date) {
 }
 
 export function buildTrend(keywords: readonly Keyword[], start?: Date): Trend[] {
-  const points = dailyAverages(keywords, start).slice(-12);
-  return points.map((point, index) => ({
-    dateKey: point.date.toISOString().slice(0, 10),
-    label: index === points.length - 1 ? null : point.date.toISOString().slice(0, 10),
-    value: Math.round(point.value * 10) / 10,
-  }));
+  const days = new Map<string, Map<string, Check>>();
+  for (const keyword of keywords) {
+    for (const check of keyword.rankChecks) {
+      if (check.status !== "completed" || (start && check.checkedAt < start)) continue;
+      if (check.position !== null && position(check.position) === null) continue;
+      const day = check.checkedAt.toISOString().slice(0, 10);
+      const observations = days.get(day) ?? new Map<string, Check>();
+      const previous = observations.get(keyword.id);
+      if (!previous || check.checkedAt > previous.checkedAt) observations.set(keyword.id, check);
+      days.set(day, observations);
+    }
+  }
+  return [...days.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12)
+    .map(([dateKey, observations], index, points) => {
+      const entries = [...observations.entries()].sort(([a], [b]) => a.localeCompare(b));
+      const positions = entries.flatMap(([, check]) => {
+        const value = position(check.position);
+        return value === null ? [] : [value];
+      });
+      const keys = entries.map(([id, check]) => [id, positionComparisonKey(check)]);
+      return {
+        comparisonKey: keys.some(([, key]) => key === null) ? null : JSON.stringify(keys),
+        dateKey,
+        label: index === points.length - 1 ? null : dateKey,
+        value: positions.length ? Math.round(average(positions) * 10) / 10 : null,
+      };
+    });
 }
 
 function trackedDays(first: Date, last: Date) {

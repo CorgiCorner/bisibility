@@ -61,6 +61,8 @@
     "shellHealth": {
       "label": "Estado de las operaciones",
       "worker": "Worker {status}",
+      "workerUnknownHint": "La aplicación está en marcha, pero el proceso separado del worker no ha publicado un latido reciente. El proceso web no arranca el worker.",
+      "workerUnknownDocs": "Cómo ejecutar el worker",
       "checks": "Comprobaciones: {value, number, ::.0} % de fallos",
       "checksUnknown": "Comprobaciones: desconocido",
       "provider": "{provider}: {value, number, ::.0} % de fallos",
@@ -122,7 +124,9 @@
         "description": "Los eventos de operador recientes muestran solo los metadatos de entrega; aquí nunca se exponen los campos de contenido libre.",
         "deliveryUnavailable": "El diagnóstico de entregas no está disponible.",
         "historyUnavailable": "El historial de eventos operativos no está disponible.",
-        "empty": "No hay eventos operativos registrados."
+        "empty": "No hay eventos operativos registrados.",
+        "slackMissing": "Slack no está configurado. Define OPS_SLACK_WEBHOOK_URL para entregar los eventos del operador.",
+        "slackMissingLink": "Configurar notificaciones de Slack"
       },
       "stats": {
         "title": "Estadísticas de la instancia",
@@ -241,7 +245,49 @@
       "mailer": {
         "title": "Proveedor de correo sin configurar",
         "description": "El inicio de sesión por correo no está disponible porque esta instancia no puede enviar códigos de acceso. Define {provider} y sus credenciales obligatorias para restablecer el envío de correo.",
-        "link": "Configurar el envío de correo"
+        "descriptionLocked": "La autenticación de dos factores es necesaria para guardar o cambiar la configuración de correo. La configuración ya guardada sigue enviando correo si se desactiva. Las variables de entorno siguen teniendo prioridad sobre la configuración guardada.",
+        "descriptionReady": "El inicio de sesión por correo no está disponible hasta que guardes un proveedor abajo. Las variables de entorno siguen teniendo prioridad sobre la configuración guardada.",
+        "locked": "El formulario de correo aparece después de activar la autenticación de dos factores.",
+        "link": "Configurar el envío de correo",
+        "form": {
+          "title": "Correo saliente",
+          "description": "La configuración guardada se usa solo cuando las variables de entorno correspondientes están vacías. Si ambas están definidas, prevalecen las variables de entorno.",
+          "envOverride": "Hay variables de entorno definidas, así que sustituyen esta configuración guardada.",
+          "provider": "Proveedor",
+          "providerResend": "Resend",
+          "providerSes": "Amazon SES",
+          "providerSmtp": "SMTP",
+          "sender": "Remitente",
+          "senderHint": "Nombre '<'direccion@example.com'>'",
+          "credentialsSaved": "Las credenciales están guardadas.",
+          "replace": "Sustituir credenciales",
+          "resendApiKey": "Clave de API",
+          "sesRegion": "Región",
+          "sesAccessKeyId": "ID de clave de acceso",
+          "sesSecretAccessKey": "Clave de acceso secreta",
+          "sesKeysHint": "Opcional. Deja ambos campos vacíos para usar la cadena de credenciales predeterminada del servidor.",
+          "smtpHost": "Host",
+          "smtpPort": "Puerto",
+          "smtpUsername": "Usuario",
+          "smtpPassword": "Contraseña",
+          "code": "Código del autenticador",
+          "save": "Guardar la configuración de correo",
+          "saving": "Guardando...",
+          "clear": "Borrar la configuración guardada",
+          "clearing": "Borrando...",
+          "saved": "Configuración de correo guardada.",
+          "cleared": "Se borró la configuración de correo guardada. Se aplican las variables de entorno.",
+          "forbidden": "Esta acción no está disponible.",
+          "invalid": "Revisa el formulario e inténtalo de nuevo.",
+          "stepUpFailed": "Ese código del autenticador no fue aceptado.",
+          "rateLimited": "Demasiados intentos. Inténtalo más tarde.",
+          "unavailable": "La configuración de correo no está disponible temporalmente.",
+          "validationSender": "Introduce un remitente como Nombre '<'direccion@example.com'>' o una dirección sola.",
+          "validationRequired": "Introduce un valor.",
+          "validationCode": "Introduce el código de 6 dígitos del autenticador.",
+          "validationPort": "Introduce un puerto del 1 al 65535.",
+          "validationSesPair": "Introduce el ID de la clave de acceso y la clave secreta, o deja ambos vacíos."
+        }
       }
     },
     "account": {

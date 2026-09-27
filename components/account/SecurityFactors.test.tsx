@@ -189,4 +189,32 @@ describe("SecurityFactors", () => {
     expect(routerMock.replace).toHaveBeenCalledWith("/login?next=%2Fapp%2Faccount%2Fsecurity");
     expect(routerMock.refresh).toHaveBeenCalled();
   });
+
+  it("keeps backup codes on screen until mail setup continues", async () => {
+    const onEnrolled = vi.fn();
+    render(
+      <SecurityFactors
+        hasPasswordCredential={false}
+        initiallyEnabled={false}
+        onEnrolled={onEnrolled}
+        returnTo="/setup"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Enable" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.change(await screen.findByLabelText("New authenticator code"), {
+      target: { value: "123456" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Verify" }));
+
+    expect(await screen.findByText("abcde-12345")).toBeInTheDocument();
+    expect(onEnrolled).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue to mail settings" }));
+
+    expect(onEnrolled).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
+  });
 });

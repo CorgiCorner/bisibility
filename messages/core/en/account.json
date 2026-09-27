@@ -102,6 +102,7 @@
         "backupCodes": "Backup codes",
         "backupCodesGenerated": "New backup codes generated. Save them now.",
         "cancel": "Cancel",
+        "continueToMail": "Continue to mail settings",
         "currentAuthenticatorCode": "Current authenticator code",
         "currentBackupCode": "Current backup code",
         "description": "Add a second step after the email login code.",

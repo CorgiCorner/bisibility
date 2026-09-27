@@ -2,6 +2,7 @@ import "server-only";
 
 import { otpSendState } from "@/lib/auth/otp-send-context";
 import { FIXED_OTP_ENABLED } from "@/lib/auth/runtime-config";
+import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { sendEmail } from "@/lib/email/send";
 import { SUPPORTED_EMAIL_PROVIDERS } from "@/lib/email/types";
@@ -31,6 +32,7 @@ function signInSubject(type: OtpEmail["type"]) {
 }
 
 export async function sendOtpEmail({ email, otp, type }: OtpEmail) {
+  await refreshInstanceMailRuntime();
   const emailConfigured = isEmailConfigured();
   const requestState = otpSendState();
   const firstRunFallback = requestState?.firstRunFallback === true;

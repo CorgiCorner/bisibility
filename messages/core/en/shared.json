@@ -123,7 +123,16 @@
       "overlapCancelHint": "Cancel that run, or keep both and pay twice for these positions.",
       "overlapKeepHint": "Starting this run pays twice for these positions.",
       "overlapMessage": "{count, plural, one {# of these keywords is} other {# of these keywords are}} also in a run that is {status, select, planned {planned for {time}} running {running} cancelling {cancelling} blocked {blocked} other {queued}}.",
-      "overlapMore": "+{count, plural, one {# more run} other {# more runs}}"
+      "overlapMore": "+{count, plural, one {# more run} other {# more runs}}",
+      "runMarket": "Run checks for entire market",
+      "scopeMarket": "Check all keywords in {market}",
+      "marketDescription": "Includes every tracked keyword and device in this market, regardless of table filters or page. Your tracking schedule stays the same.",
+      "runCounts": "{keywords, plural, one {# keyword} other {# keywords}} · {targets, plural, one {# check} other {# checks}}",
+      "nothingToCheck": "No keywords are available to check in this scope.",
+      "startUnconfirmed": "The start response was lost. Retry to recover the same run without starting it twice.",
+      "refreshEstimate": "Refresh estimate",
+      "marketInactive": "This market is no longer active. Resume it before starting a check.",
+      "keywordsArchived": "These keywords have been archived. Refresh the page to choose another scope."
     },
     "globalError": {
       "description": "The app could not render this page. Reload to try again.",

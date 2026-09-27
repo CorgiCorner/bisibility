@@ -9,24 +9,15 @@ import { authClient } from "@/lib/auth/client";
 import { loginErrorReturnTo } from "@/lib/auth/return-to";
 import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import type { TwoFactorManagementInput } from "@/lib/auth/two-factor-management-schema";
-import { completeTwoFactorEnrollmentSchema } from "@/lib/auth/two-factor-management-schema";
-import { zodResolver } from "@/lib/forms/zod-resolver";
 import { cn } from "@/lib/ui/cn";
 import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
 import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/csr/ShieldCheck";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { AccountSection } from "./AccountSection";
-import {
-  accentButtonClass,
-  feedbackClass,
-  fieldInputClass,
-  fieldLabelClass,
-  fieldValueClass,
-  ghostButtonClass,
-} from "./account-ui";
+import { AuthenticatorSetupForm } from "./AuthenticatorSetupForm";
+import { accentButtonClass, feedbackClass, ghostButtonClass } from "./account-ui";
 import { BackupCodes } from "./BackupCodes";
 import { factorStatusKey } from "./security-factor-utils";
 import { TwoFactorManagementForm } from "./TwoFactorManagementForm";
@@ -34,7 +25,12 @@ import { createTotpQrDataUrl } from "./totp-qr";
 
 type Mode = "backup" | "disable" | "replace" | "setup";
 type SetupData = { enrollmentId: string; qrDataUrl: string | null; secret: string };
-type SecurityFactorsProps = { hasPasswordCredential: boolean; initiallyEnabled: boolean };
+type SecurityFactorsProps = {
+  hasPasswordCredential: boolean;
+  initiallyEnabled: boolean;
+  onEnrolled?: () => void;
+  returnTo?: string;
+};
 function managementCopy(mode: Mode, t: ReturnType<typeof useTranslations>) {
   if (mode === "backup") {
     return {
@@ -62,6 +58,8 @@ function managementCopy(mode: Mode, t: ReturnType<typeof useTranslations>) {
 export function SecurityFactors({
   hasPasswordCredential,
   initiallyEnabled,
+  onEnrolled,
+  returnTo = "/app/account/security",
 }: Readonly<SecurityFactorsProps>) {
   const router = useRouter();
   const t = useTranslations("account.security.twoFactor");
@@ -72,11 +70,6 @@ export function SecurityFactors({
   const [pending, setPending] = useState(false);
   const [reauthRequired, setReauthRequired] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const verificationForm = useForm<{ code: string }>({
-    defaultValues: { code: "" },
-    mode: "onSubmit",
-    resolver: zodResolver(completeTwoFactorEnrollmentSchema.pick({ code: true })),
-  });
   function openMode(nextMode: Mode) {
     setMode((current) => (current === nextMode ? null : nextMode));
     setSetup(null);
@@ -99,7 +92,6 @@ export function SecurityFactors({
         qrDataUrl: createTotpQrDataUrl(totpURI),
         secret,
       });
-      verificationForm.reset({ code: "" });
       setMessage(t("scanAndVerify"));
       return;
     }
@@ -138,7 +130,7 @@ export function SecurityFactors({
     try {
       await authClient.signOut();
       notifyAuthenticatedSessionEnd();
-      router.replace(loginErrorReturnTo("/app/account/security"));
+      router.replace(loginErrorReturnTo(returnTo));
       router.refresh();
     } catch {
       setMessage(t("signOutError"));
@@ -164,7 +156,7 @@ export function SecurityFactors({
       setSetup(null);
       setMode(null);
       setMessage(result.value.replaced ? t("replaced") : t("enabled"));
-      router.refresh();
+      if (!onEnrolled) router.refresh();
     } catch {
       setMessage(t("verifyError"));
     } finally {
@@ -233,54 +225,25 @@ export function SecurityFactors({
         ) : null}
 
         {setup ? (
-          <form
-            className="grid gap-4"
-            onSubmit={verificationForm.handleSubmit(verifyNewAuthenticator)}
+          <AuthenticatorSetupForm
+            onCancel={() => setSetup(null)}
+            onSubmit={verifyNewAuthenticator}
+            pending={pending}
+            qrDataUrl={setup.qrDataUrl}
+            secret={setup.secret}
+          />
+        ) : null}
+        {onEnrolled && backupCodes.length > 0 ? (
+          <button
+            className={accentButtonClass}
+            onClick={() => {
+              onEnrolled();
+              router.refresh();
+            }}
+            type="button"
           >
-            <div className="grid gap-3 sm:grid-cols-[180px_minmax(0,1fr)]">
-              {setup.qrDataUrl ? (
-                // biome-ignore lint/performance/noImgElement: The generated QR code is an in-memory data URI.
-                <img
-                  alt={t("qrAlt")}
-                  className="h-[180px] w-[180px] rounded-card border border-border bg-white p-2"
-                  src={setup.qrDataUrl}
-                />
-              ) : (
-                <span className={cn(fieldValueClass, "h-[180px] text-center text-fg-muted")}>
-                  {t("qrUnavailable")}
-                </span>
-              )}
-              <div className="grid content-start gap-3">
-                <div className={fieldLabelClass}>
-                  {t("secret")}
-                  <span className={cn(fieldValueClass, "break-all font-sans tabular-nums")}>
-                    {setup.secret}
-                  </span>
-                </div>
-                <label className={fieldLabelClass}>
-                  {t("newCode")}
-                  <input
-                    autoComplete="one-time-code"
-                    className={fieldInputClass}
-                    inputMode="numeric"
-                    maxLength={6}
-                    {...verificationForm.register("code")}
-                  />
-                  {verificationForm.formState.errors.code ? (
-                    <span className={cn(feedbackClass, "text-red-text")}>{t("invalidInput")}</span>
-                  ) : null}
-                </label>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button className={accentButtonClass} disabled={pending} type="submit">
-                {pending ? t("verifying") : t("verify")}
-              </button>
-              <button className={ghostButtonClass} onClick={() => setSetup(null)} type="button">
-                {t("cancel")}
-              </button>
-            </div>
-          </form>
+            {t("continueToMail")}
+          </button>
         ) : null}
         <BackupCodes codes={backupCodes} />
         {reauthRequired ? (

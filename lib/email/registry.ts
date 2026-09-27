@@ -1,3 +1,4 @@
+import { getInstanceMailRuntime } from "./instance-mail-runtime";
 import { resendEmailProvider } from "./providers/resend";
 import { sesEmailProvider } from "./providers/ses";
 import { smtpEmailProvider } from "./providers/smtp";
@@ -10,12 +11,15 @@ const emailProviders: Record<EmailProviderId, EmailProvider> = {
 };
 
 /**
- * Only explicit EMAIL_PROVIDER selects a provider; ambient credentials never do.
+ * EMAIL_PROVIDER selects the transport when it is set. A stored self-host
+ * provider is used only when that variable is empty. Ambient credentials never
+ * select a provider on their own.
  */
 export function resolveEmailProvider(): EmailProvider | null {
   const requested = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
   if (!requested) {
-    return null;
+    const stored = getInstanceMailRuntime();
+    return stored ? emailProviders[stored.provider] : null;
   }
 
   const provider = emailProviders[requested as EmailProviderId];

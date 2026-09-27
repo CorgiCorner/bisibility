@@ -14,6 +14,9 @@
     pointer-events: none;
     transform-origin: var(--radix-tooltip-content-transform-origin);
   }
+  .content[data-interactive="true"] {
+    pointer-events: auto;
+  }
   .content[data-state="delayed-open"] {
     animation: tooltip-enter var(--motion-tooltip) var(--ease-out);
   }

@@ -7,7 +7,9 @@ import {
 } from "@/components/keywords/export-target-model";
 import { useKeywordImport } from "@/components/keywords/import/KeywordImportProvider";
 import { useMarketContext } from "@/components/markets/MarketContextProvider";
-import { manualPreflightDepth, useRunPreflight } from "@/components/rank-runs/useRunPreflight";
+import { useRunPreflight } from "@/components/rank-runs/useRunPreflight";
+import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
+import { Button } from "@/components/ui/Button";
 import { emptyKeywordFilters, removeFilterChip } from "@/lib/keywords/keyword-filter-model";
 import {
   filterFieldsForChip,
@@ -16,7 +18,6 @@ import {
   resetRankTrackerPage,
 } from "@/lib/keywords/rank-tracker-navigation";
 import { marketRunPartition, resolveMarketScope } from "@/lib/markets/market-scope";
-import type { RunSelectionSpec } from "@/lib/rank-check/runs/selection";
 import { appPath, marketPath } from "@/lib/routing/app-path";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { useTranslations } from "next-intl";
@@ -37,6 +38,7 @@ import { useRankTrackerNavigation } from "./use-flat-rank-tracker-navigation";
 import { useKeywordsGridViewState } from "./use-keywords-grid-view-state";
 
 export function KeywordsGrid(props: KeywordsGridProps) {
+  const runText = useTranslations("shared.rankPreflight");
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const {
     activeViewId = null,
@@ -63,6 +65,7 @@ export function KeywordsGrid(props: KeywordsGridProps) {
     totalCount,
     updateKeywordAction,
   } = props;
+  const { readOnly } = useProjectWriteMode();
   const { openKeywordImport } = useKeywordImport();
   // The URL, never a cookie, decides which market this page stands in; an unnameable market
   // resolves to null so no surface labels a spend with a guess.
@@ -124,19 +127,16 @@ export function KeywordsGrid(props: KeywordsGridProps) {
     });
   const requestRunChecks = (keywordIds: string[], depth?: SerpDepth) => {
     const selectedRows = targetRows.filter((row) => keywordIds.includes(row.id));
-    if (selectedRows.length === 0) return;
-    const first = selectedRows[0];
-    const resolvedDepth = manualPreflightDepth(selectedRows, depth, costContext?.depth);
-    const spec: RunSelectionSpec =
-      selectedRows.length === 1 && first
-        ? { kind: "single", keywordId: first.id as `kw_${string}`, v: 1 }
-        : {
-            kind: "selected",
-            keywordIds: selectedRows.map((row) => row.id as `kw_${string}`),
-            v: 1,
-          };
-    void preflight.request({ depth: resolvedDepth, rows: selectedRows, spec });
+    void preflight.requestRows(selectedRows, depth, costContext?.depth);
   };
+  const runMarket = () => {
+    if (!readOnly && props.canUpdateKeyword && marketScope && marketScope.status !== "paused") {
+      void preflight.requestMarket(marketScope, costContext?.depth);
+    }
+  };
+  const marketKeywordCount = marketScope
+    ? locations.find((location) => location.id === marketScope.canonicalKey)?.count
+    : undefined;
   const scopedRunIds = marketRunPartition(targetRows, marketScope).inMarketIds;
   const dialogs = (
     <KeywordsGridDialogBundle
@@ -155,19 +155,16 @@ export function KeywordsGrid(props: KeywordsGridProps) {
           initialMarketKey: marketScope?.canonicalKey,
         })
       }
-      onRunChecks={() => requestRunChecks(scopedRunIds)}
+      onRunChecks={marketScope ? runMarket : () => requestRunChecks(scopedRunIds)}
       openAddDrawer={openAddDrawer}
       pendingRows={targetRows.length}
       preflightDialog={preflight.dialog}
       requestRows={targetRows}
-      scopedRows={scopedRunIds.length}
+      scopedRows={marketScope ? (marketKeywordCount ?? 0) : scopedRunIds.length}
       setAddDraft={setAddDraft}
       setExportTarget={setExportTarget}
     />
   );
-  const marketKeywordCount = marketScope
-    ? locations.find((location) => location.id === marketScope.canonicalKey)?.count
-    : undefined;
   if ((marketKeywordCount ?? totalCount) === 0) {
     return (
       <KeywordsGridEmpty
@@ -212,6 +209,18 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         rows={targetRows}
         runCheckNowAction={props.canUpdateKeyword ? props.runCheckNowAction : undefined}
       />
+      {marketScope && props.canUpdateKeyword ? (
+        <div className="flex justify-end">
+          <Button
+            disabled={readOnly || preflight.opening || marketScope.status === "paused"}
+            onClick={runMarket}
+            size="sm"
+            variant="secondary"
+          >
+            {runText("runMarket")}
+          </Button>
+        </div>
+      ) : null}
       <KeywordDataTable
         {...props}
         bulkClearTargetAction={bulkClearTargetAction}

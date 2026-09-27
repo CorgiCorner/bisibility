@@ -19,6 +19,7 @@ export type TimeSeries = {
   color: string;
   values: readonly (number | null)[];
   fill?: boolean;
+  dots?: boolean;
   baseline?: number;
   curve?: "linear" | "monotoneX";
   formatValue?: (value: number) => string;
@@ -148,7 +149,7 @@ export function TimeSeriesChart({
         {series.map((item, index) =>
           item.fill ? (
             <Area
-              key={item.label}
+              key={`${item.label}-${index}`}
               name={item.label}
               dataKey={`value${index}`}
               type={item.curve ?? "linear"}
@@ -159,14 +160,25 @@ export function TimeSeriesChart({
               strokeLinejoin="round"
               fill={item.color}
               fillOpacity={areaOpacity}
-              dot={false}
+              dot={
+                item.dots
+                  ? {
+                      r: 3,
+                      fill: item.color,
+                      fillOpacity: 1,
+                      strokeOpacity: 1,
+                      stroke: "var(--bg-elev)",
+                      strokeWidth: 1,
+                    }
+                  : false
+              }
               activeDot={tooltip ? { r: 4 } : false}
               connectNulls={false}
               isAnimationActive={false}
             />
           ) : (
             <Line
-              key={item.label}
+              key={`${item.label}-${index}`}
               name={item.label}
               dataKey={`value${index}`}
               type={item.curve ?? "linear"}
@@ -174,7 +186,18 @@ export function TimeSeriesChart({
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
-              dot={false}
+              dot={
+                item.dots
+                  ? {
+                      r: 3,
+                      fill: item.color,
+                      fillOpacity: 1,
+                      strokeOpacity: 1,
+                      stroke: "var(--bg-elev)",
+                      strokeWidth: 1,
+                    }
+                  : false
+              }
               activeDot={tooltip ? { r: 4 } : false}
               connectNulls={false}
               isAnimationActive={false}

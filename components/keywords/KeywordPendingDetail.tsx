@@ -10,6 +10,7 @@ import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { resolveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import type { KeywordDetailActions } from "./action-utils";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
@@ -25,6 +26,7 @@ import type { RankCheckPollAction } from "./use-rank-check-poll";
 
 type KeywordPendingDetailProps = KeywordDetailActions & {
   canUpdateKeyword: boolean;
+  history?: ReactNode;
   costContext?: ProjectCostContext;
   keyword: KeywordRow;
   pollAction?: RankCheckPollAction;
@@ -54,6 +56,7 @@ export function KeywordPendingDetail({
   canUpdateKeyword,
   costContext,
   keyword,
+  history,
   pollAction,
   providerConnected,
   projectId,
@@ -95,7 +98,12 @@ export function KeywordPendingDetail({
           : "never_checked");
   const state = rankState ?? (checkState === "ranked" ? "not_ranked" : checkState);
   const defaultDepth = resolveSerpDepth(keyword.projectSerpDepth);
-  const copy = emptyRankCopy(state, projectRef, defaultDepth, providerConnected);
+  const copy = emptyRankCopy(
+    state,
+    projectRef,
+    keyword.trackedDepth ?? defaultDepth,
+    providerConnected,
+  );
   const canRunCheck = providerConnected;
   const providerRate = costContext
     ? { overrideCents: costContext.costPerCheckCents, providerId: costContext.providerId }
@@ -147,7 +155,7 @@ export function KeywordPendingDetail({
           updateKeywordAction={updateKeywordAction}
         />
       ) : null}
-      <KeywordPendingModules copy={copy} state={state} />
+      {history ?? <KeywordPendingModules copy={copy} state={state} />}
       {scheduleModal}
       {modal ? (
         <KeywordFirstCheckModal

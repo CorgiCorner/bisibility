@@ -191,7 +191,7 @@
       "position": {
         "title": "順位履歴",
         "description": "Google での順位の推移。数値が小さいほど良好です。",
-        "normalization": "順位の正規化変更後に比較をやり直しました。",
+        "normalization": "取得範囲や順位の算出方法が異なるチェックは、別々に表示されます。",
         "scope": "順位履歴の範囲",
         "thisMarket": "この市場",
         "allMarkets": "すべての市場",

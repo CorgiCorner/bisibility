@@ -61,6 +61,8 @@
     "shellHealth": {
       "label": "運用ヘルス",
       "worker": "ワーカー: {status}",
+      "workerUnknownHint": "アプリは起動していますが、別プロセスのワーカーが新しいハートビートを公開していません。Web プロセスはワーカーを起動しません。",
+      "workerUnknownDocs": "ワーカーの起動方法",
       "checks": "チェック: {value, number, ::.0}%が失敗",
       "checksUnknown": "チェック: 不明",
       "provider": "{provider}: {value, number, ::.0}%が失敗",
@@ -122,7 +124,9 @@
         "description": "最近のオペレーターイベントには配信メタデータのみが表示され、自由記述のペイロードフィールドはここには公開されません。",
         "deliveryUnavailable": "配信の診断情報は利用できません。",
         "historyUnavailable": "運用イベントの履歴は利用できません。",
-        "empty": "記録された運用イベントはありません。"
+        "empty": "記録された運用イベントはありません。",
+        "slackMissing": "Slack は未設定です。運用イベントを届けるには OPS_SLACK_WEBHOOK_URL を設定してください。",
+        "slackMissingLink": "Slack 通知を設定"
       },
       "stats": {
         "title": "インスタンス統計",
@@ -241,7 +245,49 @@
       "mailer": {
         "title": "メールプロバイダーが未設定です",
         "description": "このインスタンスはサインインコードを送信できないため、メールでのサインインを利用できません。メール配信を復旧するには {provider} と必要な認証情報を設定してください。",
-        "link": "メール配信を設定"
+        "descriptionLocked": "メール設定の保存や変更には二要素認証が必要です。すでに保存した設定は、二要素認証を無効にしても送信に使われ続けます。環境変数は保存した設定より優先されます。",
+        "descriptionReady": "下にプロバイダーを保存するまで、メールでのサインインは利用できません。環境変数は保存した設定より優先されます。",
+        "locked": "メールフォームは二要素認証を有効にすると表示されます。",
+        "link": "メール配信を設定",
+        "form": {
+          "title": "送信メール",
+          "description": "保存した設定は、対応する環境変数が空のときだけ使われます。両方ある場合は環境変数が優先されます。",
+          "envOverride": "環境変数が設定されているため、保存した設定より優先されます。",
+          "provider": "プロバイダー",
+          "providerResend": "Resend",
+          "providerSes": "Amazon SES",
+          "providerSmtp": "SMTP",
+          "sender": "送信者",
+          "senderHint": "名前 '<'address@example.com'>'",
+          "credentialsSaved": "認証情報は保存済みです。",
+          "replace": "認証情報を置き換える",
+          "resendApiKey": "API キー",
+          "sesRegion": "リージョン",
+          "sesAccessKeyId": "アクセスキー ID",
+          "sesSecretAccessKey": "シークレットアクセスキー",
+          "sesKeysHint": "任意です。両方を空にすると、サーバーの既定の認証情報チェーンを使います。",
+          "smtpHost": "ホスト",
+          "smtpPort": "ポート",
+          "smtpUsername": "ユーザー名",
+          "smtpPassword": "パスワード",
+          "code": "認証アプリのコード",
+          "save": "メール設定を保存",
+          "saving": "保存しています...",
+          "clear": "保存した設定を消去",
+          "clearing": "消去しています...",
+          "saved": "メール設定を保存しました。",
+          "cleared": "保存したメール設定を消去しました。環境変数が適用されます。",
+          "forbidden": "この操作は利用できません。",
+          "invalid": "フォームを確認して、もう一度お試しください。",
+          "stepUpFailed": "その認証コードは受け付けられませんでした。",
+          "rateLimited": "試行回数が多すぎます。しばらくしてからもう一度お試しください。",
+          "unavailable": "メール設定は一時的に利用できません。",
+          "validationSender": "送信者は 名前 '<'address@example.com'>' またはアドレスのみで入力してください。",
+          "validationRequired": "値を入力してください。",
+          "validationCode": "認証アプリの 6 桁のコードを入力してください。",
+          "validationPort": "1 から 65535 のポートを入力してください。",
+          "validationSesPair": "アクセスキー ID とシークレットアクセスキーの両方を入力するか、両方を空にしてください。"
+        }
       }
     },
     "account": {

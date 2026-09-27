@@ -7,6 +7,7 @@ import { MarketEditSheet } from "@/components/markets/page/MarketEditSheet";
 import { MarketsTable } from "@/components/markets/page/MarketsTable";
 import { RestoreMarketDialog } from "@/components/markets/page/RestoreMarketDialog";
 import { NewMarketSheet } from "@/components/markets/sheet/NewMarketSheet";
+import { useRunPreflight } from "@/components/rank-runs/useRunPreflight";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleMark } from "@/components/ui/ModuleMark";
@@ -19,6 +20,7 @@ import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
+import { archivedRow, normalRow } from "./market-page-rows";
 
 type MarketsPageContentProps = Pick<KeywordWorkspaceActions, "addKeywordsAction"> & {
   archivedMarkets: ArchivedProjectMarketsView;
@@ -27,6 +29,7 @@ type MarketsPageContentProps = Pick<KeywordWorkspaceActions, "addKeywordsAction"
   canArchive: boolean;
   canEdit: boolean;
   canRestore: boolean;
+  canRunChecks?: boolean;
   createMarketAction?: (input: unknown) => Promise<NewMarketCreateResult>;
   markets: ProjectMarketsView;
   onArchive: (input: { marketId: string; projectId: string }) => Promise<unknown>;
@@ -39,44 +42,6 @@ type MarketsPageContentProps = Pick<KeywordWorkspaceActions, "addKeywordsAction"
   }) => Promise<{ status: string }>;
   openNewMarket?: boolean;
 };
-
-function normalRow(market: ProjectMarketsView["markets"][number]): MarketsPageRow {
-  return {
-    activeKeywordCount: market.activeKeywordCount ?? 0,
-    canonicalKey: market.canonicalKey,
-    countryCode: market.countryCode,
-    currentVisibility: market.currentVisibility ?? null,
-    displayName: market.displayName,
-    futureKeywordDevices: market.futureKeywordDevices ?? ["desktop", "mobile"],
-    id: market.id,
-    keywordCount: market.keywordCount ?? 0,
-    languageLabel: market.languageLabel,
-    locationId: market.locationId ?? "",
-    monthlyCostCents: market.monthlyCostCents,
-    name: market.name ?? market.displayName,
-    status: market.status,
-    topThreeCount: market.topThreeCount ?? null,
-  };
-}
-
-function archivedRow(market: ArchivedProjectMarketsView["markets"][number]): MarketsPageRow {
-  return {
-    activeKeywordCount: market.keywordCount,
-    canonicalKey: "",
-    countryCode: "",
-    currentVisibility: null,
-    displayName: market.displayName,
-    futureKeywordDevices: market.futureKeywordDevices ?? ["desktop", "mobile"],
-    id: market.id,
-    keywordCount: market.keywordCount,
-    languageLabel: market.languageLabel,
-    locationId: market.locationId ?? "",
-    monthlyCostCents: market.monthlyCostCents ?? null,
-    name: market.name ?? market.displayName,
-    status: "removed",
-    topThreeCount: null,
-  };
-}
 
 function NewMarketSeam({
   canCreate,
@@ -120,6 +85,7 @@ export function MarketsPageContent({
   canArchive,
   canEdit,
   canRestore,
+  canRunChecks = false,
   createMarketAction,
   markets,
   onArchive,
@@ -137,6 +103,18 @@ export function MarketsPageContent({
   const [restoreTarget, setRestoreTarget] = useState<MarketsPageRow | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const panelId = useId();
+  const defaults = markets.marketCreation?.scheduleContext?.projectDefaults;
+  const preflight = useRunPreflight({
+    projectId: markets.projectId,
+    providerId: defaults?.provider?.value,
+  });
+  const runMarket = (market: MarketsPageRow) => {
+    if (!canRunChecks || market.status !== "active") return;
+    void preflight.requestMarket(
+      { canonicalKey: market.canonicalKey, label: market.name },
+      defaults?.serpDepth,
+    );
+  };
   const visibleRows = markets.markets.map(normalRow);
   const removedRows = archivedMarkets.markets.map(archivedRow);
   const rows = showArchived ? removedRows : visibleRows;
@@ -167,6 +145,7 @@ export function MarketsPageContent({
 
   return (
     <div className="grid gap-5" data-markets-page="">
+      {preflight.dialog}
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border">
         <Tabs
           ariaLabel={t("visibility")}
@@ -222,6 +201,8 @@ export function MarketsPageContent({
               canAddKeywords={canAddKeywords}
               canArchive={canArchive}
               canEdit={canEdit}
+              canRunChecks={canRunChecks && !preflight.opening}
+              onRunChecks={runMarket}
               key={`active:${visibleRows.map((market) => `${market.id}:${market.status}`).join(":")}`}
               onArchive={setArchiveTarget}
               onAddKeywords={setKeywordTarget}

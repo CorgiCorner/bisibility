@@ -1,3 +1,4 @@
+import { storedMailProvider } from "@/lib/email/instance-mail-runtime";
 import { type EmailMessage, type EmailProvider, EmailSendError } from "@/lib/email/types";
 import { createTransport } from "nodemailer";
 
@@ -32,12 +33,21 @@ function toEmailSendError(error: unknown) {
 
 async function send({ from, to, subject, html, replyTo, text }: EmailMessage) {
   const url = configuredValue(process.env.SMTP_URL);
-  if (!url) {
+  const stored = storedMailProvider("smtp");
+  if (!url && !stored?.smtpHost) {
     throw new Error("SMTP_URL is required to send email with SMTP.");
   }
 
   try {
-    const transport = createTransport(url, SMTP_TRANSPORT_OPTIONS);
+    const transport = url
+      ? createTransport(url, SMTP_TRANSPORT_OPTIONS)
+      : createTransport({
+          auth: { pass: stored?.smtpPassword ?? "", user: stored?.smtpUsername ?? "" },
+          host: stored?.smtpHost ?? "",
+          port: stored?.smtpPort ?? 587,
+          secure: stored?.smtpPort === 465,
+          ...SMTP_TRANSPORT_OPTIONS,
+        });
     try {
       await transport.sendMail({ from, html, replyTo, subject, text, to });
     } finally {
@@ -50,7 +60,8 @@ async function send({ from, to, subject, html, replyTo, text }: EmailMessage) {
 
 export const smtpEmailProvider: EmailProvider = {
   id: "smtp",
-  isConfigured: () => configuredValue(process.env.SMTP_URL) !== null,
+  isConfigured: () =>
+    configuredValue(process.env.SMTP_URL) !== null || Boolean(storedMailProvider("smtp")?.smtpHost),
   label: "SMTP",
   send,
 };

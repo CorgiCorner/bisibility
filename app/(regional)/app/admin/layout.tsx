@@ -14,7 +14,7 @@ export default async function InstanceAdminLayout({ children }: Readonly<{ child
     resolveRegionalDocumentLocale(),
     getResolvedDateFormat(),
   ]);
-  const messages = await loadCoreMessages(runtime.locale, ["shared", "instanceAdmin"]);
+  const messages = await loadCoreMessages(runtime.locale, ["shared", "instanceAdmin", "account"]);
 
   return (
     <FeatureMessagesProvider

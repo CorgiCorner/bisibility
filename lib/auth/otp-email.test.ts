@@ -4,6 +4,9 @@ const { sendEmailMock } = vi.hoisted(() => ({
   sendEmailMock: vi.fn(),
 }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: sendEmailMock }));
+vi.mock("@/lib/email/instance-mail-store", () => ({
+  refreshInstanceMailRuntime: vi.fn(async () => undefined),
+}));
 
 import { sendOtpEmail } from "./otp-email";
 import { withOtpSendState } from "./otp-send-context";

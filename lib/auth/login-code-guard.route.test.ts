@@ -21,6 +21,9 @@ vi.mock("@/lib/auth/signin-capacity", () => ({
 vi.mock("@/lib/deployment/deployment", () => ({ deploymentMode: mocks.deploymentMode }));
 vi.mock("@/lib/email/registry", () => ({ isEmailConfigured: mocks.isEmailConfigured }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
+vi.mock("@/lib/email/instance-mail-store", () => ({
+  refreshInstanceMailRuntime: vi.fn(async () => undefined),
+}));
 
 import { loginCodeGuardPlugin, withOtpEmailRequest } from "./login-code-guard";
 import { sendOtpEmail } from "./otp-email";

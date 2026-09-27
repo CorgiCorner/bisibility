@@ -102,6 +102,7 @@
         "backupCodes": "Códigos de recuperación",
         "backupCodesGenerated": "Se han generado códigos de recuperación nuevos. Guárdalos ahora.",
         "cancel": "Cancelar",
+        "continueToMail": "Continuar a la configuración de correo",
         "currentAuthenticatorCode": "Código de autenticación actual",
         "currentBackupCode": "Código de recuperación actual",
         "description": "Añade un segundo paso después del código de acceso por correo.",

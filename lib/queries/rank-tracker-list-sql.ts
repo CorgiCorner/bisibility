@@ -15,11 +15,12 @@ export function buildRankTrackerListSql(
     publicIds?: boolean;
     selectionLimit?: number;
     selectionOffset?: number;
+    strictLocation?: boolean;
     unpaginated?: boolean;
   } = {},
 ) {
   const offset = (query.page - 1) * query.pageSize;
-  const lens = lensPredicate(query.lens);
+  const lens = lensPredicate(query.lens, options.strictLocation);
   const content = contentPredicate(query.filters, query.search, {
     deferExactRowPredicates: options.candidatesOnly,
   });

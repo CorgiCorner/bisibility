@@ -1,12 +1,16 @@
 "use client";
 
 import { statusLabel } from "@/components/admin/AdminPrimitives";
+import { ExternalLink } from "@/components/ui/ExternalLink";
+import { Tooltip } from "@/components/ui/Tooltip";
 import {
   type HealthTone,
   healthToneForRate,
   type ProviderHealthRow,
 } from "@/lib/ops/instance-admin-health";
+import { DOCS_URL } from "@/lib/site/site";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 const toneClasses: Record<HealthTone, string> = {
   failed: "bg-red/10 text-red-text",
@@ -22,14 +26,38 @@ const dotClasses: Record<HealthTone, string> = {
   unknown: "bg-fg-muted",
 };
 
-function HealthPill({ label, tone }: Readonly<{ label: string; tone: HealthTone }>) {
-  return (
+const WORKER_DOCS = `${DOCS_URL}/self-hosting/temporal#scheduled-rank-checks`;
+
+function HealthPill({
+  hint,
+  label,
+  tone,
+}: Readonly<{ hint?: ReactNode; label: string; tone: HealthTone }>) {
+  const pill = (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${toneClasses[tone]}`}
       data-tone={tone}
     >
       <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${dotClasses[tone]}`} />
       {label}
+    </span>
+  );
+  if (!hint) return pill;
+  return (
+    <Tooltip content={hint} interactive placement="bottom" semantics="description">
+      {pill}
+    </Tooltip>
+  );
+}
+
+function WorkerUnknownHint() {
+  const t = useTranslations("instanceAdmin.shellHealth");
+  return (
+    <span className="block max-w-[240px] py-0.5 text-left font-medium">
+      {t("workerUnknownHint")}{" "}
+      <ExternalLink className="font-semibold text-inherit underline" href={WORKER_DOCS}>
+        {t("workerUnknownDocs")}
+      </ExternalLink>
     </span>
   );
 }
@@ -70,6 +98,7 @@ export function AdminHealthPills({
   return (
     <div aria-label={t("label")} className="flex flex-wrap items-center gap-1.5">
       <HealthPill
+        hint={workerStatus === "unknown" ? <WorkerUnknownHint /> : undefined}
         label={t("worker", { status: statusLabel(workerStatus, adminT) })}
         tone={workerStatus}
       />

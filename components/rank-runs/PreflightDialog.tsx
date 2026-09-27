@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { StatusChip } from "@/components/ui/StatusChip";
 import type {
   LaunchRankCheckRunActionInput,
   LaunchRankCheckRunActionResult,
@@ -19,6 +18,7 @@ import { useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { PreflightBlockNotice } from "./PreflightBlockNotice";
 import { PreflightOptionGroups } from "./PreflightOptionGroups";
 import { type CancelOverlappingRunAction, PreflightOverlapNotice } from "./PreflightOverlapNotice";
 import {
@@ -63,18 +63,9 @@ export type PreflightDialogProps = PreflightActions & {
   projectId: PreviewRankCheckRunActionInput["projectId"];
   providers: readonly PreflightProvider[];
   providerFallbackNote?: string;
-  scope: PreflightScope;
+  scope: PreflightScope | ((preview: RankCheckRunPreview) => PreflightScope);
   spec: RunSelectionSpec;
 };
-
-function actionHref(
-  code: PreflightBlockCode,
-  links: Pick<PreflightDialogProps, "budgetHref" | "duplicateRunHref" | "integrationsHref">,
-) {
-  if (code === "budget_exhausted") return links.budgetHref;
-  if (code === "duplicate") return links.duplicateRunHref;
-  return links.integrationsHref;
-}
 
 export function PreflightDialog({
   budgetHref,
@@ -107,6 +98,12 @@ export function PreflightDialog({
     resolver: zodResolver(preflightFormSchema),
   });
   const requestNumber = useRef(0);
+  const launching = useRef(false);
+  const validEstimate = useRef(true);
+  const launchKey = useRef<string | null>(null);
+  const launchUnknown = useRef(false);
+  const [previewValid, setPreviewValid] = useState(true);
+  const [unconfirmed, setUnconfirmed] = useState(false);
   const [actionBlock, setActionBlock] = useState<PreflightBlockCode | null>(null);
   const [preview, setPreview] = useState(initialPreview);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -114,31 +111,14 @@ export function PreflightDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const blockCode = blockCodeFor(preview, actionBlock);
-  const block = blockCode
-    ? {
-        budget_exhausted: {
-          cta: t("editBudget"),
-          label: t("budget"),
-          message: t("budgetBlocked"),
-          tone: "attention" as const,
-        },
-        duplicate: {
-          cta: t("openRun"),
-          label: t("runInProgress"),
-          message: duplicateDetail ?? t("duplicate"),
-          tone: "attention" as const,
-        },
-        no_provider: {
-          cta: t("openIntegrations"),
-          label: t("noProvider"),
-          message: t("noProviderBlocked"),
-          tone: "critical" as const,
-        },
-      }[blockCode]
-    : null;
-  const disabled = Boolean(block) || refreshing || submitting;
+  const currentScope = typeof scope === "function" ? scope(preview) : scope;
+  const disabled =
+    Boolean(blockCode) || !previewValid || refreshing || submitting || preview.targetCount === 0;
 
   async function refreshPreview(next: Partial<PreflightFormInput>, notice: string | null = null) {
+    if (launchUnknown.current) return;
+    validEstimate.current = false;
+    setPreviewValid(false);
     const input = preflightFormSchema.parse({ ...form.getValues(), ...next });
     form.setValue("depth", input.depth, { shouldValidate: true });
     form.setValue("providerId", input.providerId, { shouldValidate: true });
@@ -150,6 +130,8 @@ export function PreflightDialog({
       if (request === requestNumber.current) {
         setActionBlock(null);
         setPreview(nextPreview);
+        validEstimate.current = true;
+        setPreviewValid(true);
       }
     } catch {
       if (request === requestNumber.current) setPreviewError(t("couldNotRefresh"));
@@ -159,18 +141,23 @@ export function PreflightDialog({
   }
 
   async function start(input: PreflightFormInput) {
-    if (block) return;
+    if (launching.current || !validEstimate.current || disabled) return;
+    launching.current = true;
+    launchKey.current ??= idempotencyKey();
     setSubmitting(true);
     setPreviewError(null);
     try {
       const result = await launchAction({
         ...input,
-        idempotencyKey: idempotencyKey(),
+        idempotencyKey: launchKey.current,
         previewToken: preview.previewToken,
         projectId,
         spec,
       });
+      launchUnknown.current = false;
+      setUnconfirmed(false);
       if (isNotStarted(result)) {
+        launchKey.current = null;
         if (result.code === "preview_expired" || result.code === "preview_mismatch") {
           // Re-sign the current estimate so the next start can succeed without reopening.
           await refreshPreview({}, t("previewChanged"));
@@ -183,14 +170,25 @@ export function PreflightDialog({
         return;
       }
       if ("outcome" in result) {
-        setActionBlock("duplicate");
+        launchKey.current = null;
+        if (result.reason === "already_in_progress") setActionBlock("duplicate");
+        else {
+          validEstimate.current = false;
+          setPreviewValid(false);
+          setPreviewError(
+            t(result.reason === "market_inactive" ? "marketInactive" : "keywordsArchived"),
+          );
+        }
         return;
       }
       onStarted?.(result);
       onClose();
     } catch {
-      setPreviewError(t("couldNotStart"));
+      launchUnknown.current = true;
+      setUnconfirmed(true);
+      setPreviewError(t("startUnconfirmed"));
     } finally {
+      launching.current = false;
       setSubmitting(false);
     }
   }
@@ -211,10 +209,9 @@ export function PreflightDialog({
           form={formId}
           loading={submitting}
           loadingLabel={t("starting")}
-          title={block?.message}
           type="submit"
         >
-          {scope.startLabel}
+          {currentScope.startLabel}
         </Button>
       </div>
     </div>
@@ -224,47 +221,33 @@ export function PreflightDialog({
     <Modal
       contentClassName="px-5.5 py-4.5"
       footer={footer}
-      onClose={onClose}
+      onClose={() => {
+        if (!launching.current) onClose();
+      }}
       open={open}
       title={
         <>
-          <span className="block">{scope.title}</span>
+          <span className="block">{currentScope.title}</span>
           <span className="mt-1.5 block text-[12.5px] font-normal tracking-normal text-fg-muted">
-            {scope.subtitle}
+            {currentScope.subtitle}
           </span>
         </>
       }
       width={520}
     >
       <form className="grid gap-4" id={formId} onSubmit={form.handleSubmit(start)}>
-        {block ? (
-          <div
-            className="flex items-center gap-3 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
-            role="alert"
-          >
-            <div className="grid min-w-0 flex-1 justify-items-start gap-1.5">
-              <StatusChip dot label={block.label} tone={block.tone} />
-              <p className="m-0 text-[12.5px] leading-5 text-fg">{block.message}</p>
-            </div>
-            <Button
-              className="shrink-0"
-              href={actionHref(blockCode as PreflightBlockCode, {
-                budgetHref,
-                duplicateRunHref,
-                integrationsHref,
-              })}
-              size="sm"
-              variant="secondary"
-            >
-              {block.cta}
-            </Button>
-          </div>
-        ) : null}
+        <PreflightBlockNotice
+          code={blockCode}
+          duplicateDetail={duplicateDetail}
+          budgetHref={budgetHref}
+          duplicateRunHref={duplicateRunHref}
+          integrationsHref={integrationsHref}
+        />
 
         {preview.overlaps.length > 0 ? (
           <PreflightOverlapNotice
             cancelAction={cancelRunAction}
-            disabled={refreshing || submitting}
+            disabled={refreshing || submitting || unconfirmed}
             onCancelled={() => refreshPreview({})}
             overlapRunCount={preview.overlapRunCount}
             overlaps={preview.overlaps}
@@ -276,12 +259,16 @@ export function PreflightDialog({
           className="rounded-card border border-border px-4 py-[13px]"
           aria-label={t("runScope")}
         >
-          <p className="m-0 text-[13.5px] font-semibold tabular-nums text-fg">{scope.equation}</p>
-          <p className="m-0 mt-1 text-[11.5px] leading-[1.55] text-fg-muted">{scope.description}</p>
+          <p className="m-0 text-[13.5px] font-semibold tabular-nums text-fg">
+            {currentScope.equation}
+          </p>
+          <p className="m-0 mt-1 text-[11.5px] leading-[1.55] text-fg-muted">
+            {currentScope.description}
+          </p>
         </section>
 
         <PreflightOptionGroups
-          disabled={refreshing || submitting}
+          disabled={refreshing || submitting || unconfirmed}
           onDepthChange={(depth) => refreshPreview({ depth })}
           onProviderChange={(providerId) => refreshPreview({ providerId })}
           providerFallbackNote={providerFallbackNote}
@@ -290,6 +277,16 @@ export function PreflightDialog({
           selectedProvider={selectedProvider}
         />
 
+        {preview.targetCount === 0 ? (
+          <p className="m-0 text-[12px] text-fg-muted" role="status">
+            {t("nothingToCheck")}
+          </p>
+        ) : null}
+        {!previewValid && !refreshing ? (
+          <Button onClick={() => refreshPreview({})} type="button" variant="secondary">
+            {t("refreshEstimate")}
+          </Button>
+        ) : null}
         {previewError ? (
           <p className="m-0 text-[12px] leading-5 text-red-text" role="alert">
             {previewError}

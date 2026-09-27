@@ -42,7 +42,7 @@ describe("instance admin layout", () => {
     const result = await InstanceAdminLayout({ children: <p>Admin route</p> });
 
     expect(mocks.requireAdmin).toHaveBeenCalledOnce();
-    expect(mocks.loadMessages).toHaveBeenCalledWith("en", ["shared", "instanceAdmin"]);
+    expect(mocks.loadMessages).toHaveBeenCalledWith("en", ["shared", "instanceAdmin", "account"]);
     expect(renderToStaticMarkup(result)).toContain("data-admin-shell");
     expect(renderToStaticMarkup(result)).toContain("Admin route");
   });

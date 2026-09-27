@@ -22,6 +22,55 @@ const market = {
 };
 
 describe("MarketsRowMenu", () => {
+  it.each([true, false])(
+    "gates the whole-market manual run by permission: %s",
+    async (canRunChecks) => {
+      const onRunChecks = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <MarketsRowMenu
+          canAddKeywords
+          canArchive
+          canEdit
+          canRunChecks={canRunChecks}
+          market={market}
+          onArchive={vi.fn()}
+          onEdit={vi.fn()}
+          onRunChecks={onRunChecks}
+        />,
+      );
+      await user.click(screen.getByRole("button", { name: "Actions for Malaga core" }));
+      const action = screen.getByRole("menuitem", { name: "Run checks for entire market" });
+      await user.click(action);
+      if (canRunChecks) {
+        expect(onRunChecks).toHaveBeenCalledWith(market);
+      } else {
+        expect(action).toHaveAttribute("aria-disabled", "true");
+        expect(onRunChecks).not.toHaveBeenCalled();
+      }
+    },
+  );
+
+  it.each(["paused", "removed"] as const)("does not run an inactive market: %s", async (status) => {
+    const onRunChecks = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <MarketsRowMenu
+        canAddKeywords
+        canArchive
+        canEdit
+        canRunChecks
+        market={{ ...market, status }}
+        onArchive={vi.fn()}
+        onEdit={vi.fn()}
+        onRunChecks={onRunChecks}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Actions for Malaga core" }));
+    await user.click(screen.getByRole("menuitem", { name: "Run checks for entire market" }));
+    expect(onRunChecks).not.toHaveBeenCalled();
+  });
+
   it("supports keyboard trigger, navigation, selection, and escape through the real menu", async () => {
     const onAddKeywords = vi.fn();
     const user = userEvent.setup();

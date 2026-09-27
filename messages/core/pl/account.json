@@ -102,6 +102,7 @@
         "backupCodes": "Kody zapasowe",
         "backupCodesGenerated": "Wygenerowano nowe kody zapasowe. Zapisz je teraz.",
         "cancel": "Anuluj",
+        "continueToMail": "Przejdź do ustawień poczty",
         "currentAuthenticatorCode": "Bieżący kod z aplikacji uwierzytelniającej",
         "currentBackupCode": "Bieżący kod zapasowy",
         "description": "Dodaj drugi krok po kodzie logowania z e-maila.",

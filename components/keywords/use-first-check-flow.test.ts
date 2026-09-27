@@ -3,13 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/actions/rank-check-status", () => ({ getRankCheckStatus: vi.fn() }));
 
+import type { RunCheckNowResult } from "@/lib/actions/rankCheck";
+import type { RunCheckNowAction } from "./action-utils";
 import { useFirstCheckFlow } from "./use-first-check-flow";
 
 const KEYWORD_ID = "kw_abcdefghijklmnopqrstuvwx";
-const CHECK_ID = "check_abcdefghijklmnopqrstuvwx";
+const CHECK_ID = "rcr_abcdefghijklmnopqrstuvwx";
 
-function runningResult() {
-  return { rankCheckId: CHECK_ID, status: "running" };
+function queuedResult(): RunCheckNowResult {
+  return { runId: CHECK_ID, status: "queued" };
 }
 
 function completedResult(position = 12, requestedDepth = 100) {
@@ -47,7 +49,7 @@ function deferredResult() {
 
 function renderFlow(overrides: Partial<Parameters<typeof useFirstCheckFlow>[0]> = {}) {
   const refresh = vi.fn();
-  const runCheckNowAction = vi.fn();
+  const runCheckNowAction = vi.fn<RunCheckNowAction>();
   const result = renderHook(
     ({ pollAction }: { pollAction?: Parameters<typeof useFirstCheckFlow>[0]["pollAction"] }) =>
       useFirstCheckFlow({
@@ -63,6 +65,37 @@ function renderFlow(overrides: Partial<Parameters<typeof useFirstCheckFlow>[0]> 
 }
 
 describe("useFirstCheckFlow", () => {
+  it("tracks an accepted queued run through completion without offering a duplicate launch", async () => {
+    const runId = "rcr_abcdefghijklmnopqrstuvwx";
+    const accepted: RunCheckNowResult = { runId, status: "queued" };
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue(accepted);
+    const pollAction = vi.fn().mockResolvedValue(completedResult(12, 50));
+    const { result, refresh } = renderFlow({ runCheckNowAction, pollAction });
+
+    act(() => result.current.openCheckModal(50));
+    await act(async () => {
+      await result.current.confirmRun();
+    });
+    expect(result.current.modal).toMatchObject({
+      error: null,
+      rankCheckId: runId,
+      step: "running",
+    });
+    await act(async () => {
+      await result.current.confirmRun();
+    });
+    expect(runCheckNowAction).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000);
+    });
+    expect(pollAction).toHaveBeenCalledWith({ rankCheckId: runId });
+    expect(result.current.modal).toMatchObject({
+      position: 12,
+      requestedDepth: 50,
+      step: "success",
+    });
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -71,8 +104,8 @@ describe("useFirstCheckFlow", () => {
     vi.useRealTimers();
   });
 
-  it("shows running step for an async running action response", async () => {
-    const runCheckNowAction = vi.fn().mockResolvedValue(runningResult());
+  it("shows running step for an accepted queued run", async () => {
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue(queuedResult());
     const { result } = renderFlow({ runCheckNowAction });
 
     act(() => result.current.openCheckModal(20));
@@ -88,7 +121,7 @@ describe("useFirstCheckFlow", () => {
 
   it("shows failed step when poll returns failed with provider_billing", async () => {
     const pollAction = vi.fn().mockResolvedValue(failedResult("provider_billing"));
-    const runCheckNowAction = vi.fn().mockResolvedValue(runningResult());
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue(queuedResult());
     const { result } = renderFlow({ runCheckNowAction, pollAction });
 
     act(() => result.current.openCheckModal(20));
@@ -106,7 +139,7 @@ describe("useFirstCheckFlow", () => {
 
   it("shows failed step with null error code when poll returns deferred", async () => {
     const pollAction = vi.fn().mockResolvedValue(deferredResult());
-    const runCheckNowAction = vi.fn().mockResolvedValue(runningResult());
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue(queuedResult());
     const { result } = renderFlow({ runCheckNowAction, pollAction });
 
     act(() => result.current.openCheckModal(20));
@@ -124,7 +157,7 @@ describe("useFirstCheckFlow", () => {
 
   it("shows success step with position when poll returns completed", async () => {
     const pollAction = vi.fn().mockResolvedValue(completedResult(12, 100));
-    const runCheckNowAction = vi.fn().mockResolvedValue(runningResult());
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue(queuedResult());
     const { refresh, result } = renderFlow({ runCheckNowAction, pollAction });
 
     act(() => result.current.openCheckModal(100));
@@ -142,9 +175,16 @@ describe("useFirstCheckFlow", () => {
   });
 
   it("enters success immediately for a synchronous completed response", async () => {
-    const runCheckNowAction = vi
-      .fn()
-      .mockResolvedValue({ ...completedResult(5, 20), rankCheckId: CHECK_ID });
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue({
+      attempts: 1,
+      billingUnits: 2,
+      position: 5,
+      requestedDepth: 20,
+      provider: "serpapi",
+      status: "completed",
+      runId: CHECK_ID,
+      rankCheckId: "check_abcdefghijklmnopqrstuvwx",
+    });
     const { refresh, result } = renderFlow({ runCheckNowAction });
 
     act(() => result.current.openCheckModal(20));
@@ -157,8 +197,10 @@ describe("useFirstCheckFlow", () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
-  it("stays in confirm with an honest error when running response lacks a valid rankCheckId", async () => {
-    const runCheckNowAction = vi.fn().mockResolvedValue({ status: "running" });
+  it("stays in confirm with an honest error when a queued response lacks a valid runId", async () => {
+    const runCheckNowAction = vi
+      .fn<RunCheckNowAction>()
+      .mockResolvedValue({ status: "queued", runId: "invalid" });
     const { result } = renderFlow({ runCheckNowAction });
 
     act(() => result.current.openCheckModal(20));
@@ -171,7 +213,7 @@ describe("useFirstCheckFlow", () => {
 
   it("tryAgain returns to confirm and clears the terminal run reference", async () => {
     const pollAction = vi.fn().mockResolvedValue(failedResult("provider_billing"));
-    const runCheckNowAction = vi.fn().mockResolvedValue(runningResult());
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue(queuedResult());
     const { result } = renderFlow({ runCheckNowAction, pollAction });
 
     act(() => result.current.openCheckModal(20));
@@ -191,8 +233,15 @@ describe("useFirstCheckFlow", () => {
   });
 
   it("closing while running hides the modal but keeps the active run", async () => {
-    const pollAction = vi.fn().mockResolvedValue(runningResult());
-    const runCheckNowAction = vi.fn().mockResolvedValue(runningResult());
+    const pollAction = vi.fn().mockResolvedValue({
+      status: "running",
+      position: null,
+      requestedDepth: null,
+      error: null,
+      errorCode: null,
+      finishedAt: null,
+    });
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue(queuedResult());
     const { result } = renderFlow({ runCheckNowAction, pollAction });
 
     act(() => result.current.openCheckModal(20));
@@ -214,7 +263,7 @@ describe("useFirstCheckFlow", () => {
 
   it("terminal success calls refresh even while modal is hidden", async () => {
     const pollAction = vi.fn().mockResolvedValue(completedResult());
-    const runCheckNowAction = vi.fn().mockResolvedValue(runningResult());
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue(queuedResult());
     const { refresh, result } = renderFlow({ runCheckNowAction, pollAction });
 
     act(() => result.current.openCheckModal(20));
@@ -233,7 +282,7 @@ describe("useFirstCheckFlow", () => {
 
   it("does not auto-submit on tryAgain", async () => {
     const pollAction = vi.fn().mockResolvedValue(failedResult());
-    const runCheckNowAction = vi.fn().mockResolvedValue(runningResult());
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue(queuedResult());
     const { result } = renderFlow({ runCheckNowAction, pollAction });
 
     act(() => result.current.openCheckModal(20));
@@ -251,7 +300,7 @@ describe("useFirstCheckFlow", () => {
   });
 
   it("shows sample-project refusal as a final failed state", async () => {
-    const runCheckNowAction = vi.fn().mockResolvedValue({
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue({
       code: "sample_project",
       message: "Sample projects don't run real checks.",
       status: "not_started",
@@ -268,8 +317,9 @@ describe("useFirstCheckFlow", () => {
   });
 
   it("blocked action stays in confirm with the block message", async () => {
-    const runCheckNowAction = vi.fn().mockResolvedValue({
+    const runCheckNowAction = vi.fn<RunCheckNowAction>().mockResolvedValue({
       code: "check_in_progress",
+      status: "not_started",
       message: "A rank check is already queued or running.",
     });
     const { result } = renderFlow({ runCheckNowAction });

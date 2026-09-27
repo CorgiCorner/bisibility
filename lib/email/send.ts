@@ -4,6 +4,7 @@ import { readOnlyDemoConfig } from "@/lib/demo/config";
 import { notifyOps } from "@/lib/ops/notify";
 import { reserveEmailDailyBudget } from "./budget";
 import { requireEmailFrom } from "./from";
+import { refreshInstanceMailRuntime } from "./instance-mail-store";
 import { resolveEmailProvider } from "./registry";
 import { EmailBudgetExceededError, type EmailCategory, SUPPORTED_EMAIL_PROVIDERS } from "./types";
 
@@ -37,6 +38,7 @@ export async function sendEmail({
   sendCounterReserved = false,
 }: SendEmailInput) {
   if (readOnlyDemoConfig()) throw new Error("Email delivery is disabled in the demo.");
+  await refreshInstanceMailRuntime();
   const provider = resolveEmailProvider();
 
   if (!provider) {

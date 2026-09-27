@@ -159,7 +159,10 @@ export function renderCard(overrides: Record<string, unknown> = {}) {
     addKeywordsMatrixAction: vi.fn(),
     bulkDeleteAction: vi.fn(),
     createKeywordAlertAction: vi.fn(async () => ({})),
-    runCheckNowAction: vi.fn(async () => ({ status: "running" })),
+    runCheckNowAction: vi.fn(async () => ({
+      status: "queued" as const,
+      runId: "rcr_abcdefghijklmnopqrstuvwx",
+    })),
     updateKeywordAction: vi.fn(),
   };
   render(

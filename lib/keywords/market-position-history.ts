@@ -1,4 +1,5 @@
-import type { KeywordRow, PositionPoint } from "@/lib/queries/keywords";
+import { observationSeries } from "@/lib/checks/position-observations";
+import type { KeywordRow } from "@/lib/queries/keywords";
 import { calendarDayKey, dailyPositionPoints } from "./position-history";
 
 export function keywordMarketLabel(keyword: Pick<KeywordRow, "location">) {
@@ -18,7 +19,11 @@ export function marketComparisonData(
   now = new Date(),
 ) {
   const histories = targets.map((target) => ({
-    points: dailyPositionPoints(target.positionHistory, days, now).map((point) => ({
+    points: dailyPositionPoints(
+      target.positionObservations ?? target.positionHistory,
+      days,
+      now,
+    ).map((point) => ({
       ...point,
       label: calendarDayKey(new Date(point.checkedAt)),
     })),
@@ -44,7 +49,12 @@ export function marketComparisonData(
           const point = points.find((candidate) => candidate.label === label);
           return point ? (byDay.get(calendarDayKey(new Date(point.checkedAt))) ?? null) : null;
         }),
-        points: points.map((point): PositionPoint => ({ ...point, label: point.label })),
+        points: points,
+        segments: observationSeries(
+          labels.map(
+            (label) => points.find((point) => point.label === label) ?? { position: null },
+          ),
+        ),
         target,
       },
     ];

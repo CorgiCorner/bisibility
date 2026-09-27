@@ -61,6 +61,55 @@ describe("PositionHistoryCard", () => {
     else process.env.TZ = originalTZ;
   });
 
+  it("plots earlier ranks without joining changed depths or filling an unranked result", () => {
+    render(
+      <PositionHistoryCard
+        keyword={{
+          ...keywordRows[0],
+          position: 101,
+          positionHistory: [],
+          positionObservations: [
+            {
+              checkedAt: "2026-07-17T10:00:00Z",
+              label: "Jul 17",
+              position: 6,
+              comparisonKey: "v2:20",
+            },
+            {
+              checkedAt: "2026-07-18T10:00:00Z",
+              label: "Jul 18",
+              position: 5,
+              comparisonKey: "v2:20",
+            },
+            {
+              checkedAt: "2026-07-19T10:00:00Z",
+              label: "Jul 19",
+              position: 4,
+              comparisonKey: "v2:50",
+            },
+            {
+              checkedAt: "2026-07-20T10:00:00Z",
+              label: "Jul 20",
+              position: null,
+              comparisonKey: "v2:50",
+            },
+          ],
+        }}
+        timeZone="UTC"
+      />,
+    );
+    expect(screen.getByTestId("line-chart")).toBeInTheDocument();
+    expect(lineChart).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        series: [
+          expect.objectContaining({ values: [6, 5, null, null], dots: true }),
+          expect.objectContaining({ values: [null, null, 4, null], dots: true }),
+        ],
+      }),
+    );
+    expect(screen.queryByText(/^Latest #/)).not.toBeInTheDocument();
+  });
+
   it("shows a discontinuity marker only when the visible history crosses a contract boundary", () => {
     render(
       <PositionHistoryCard
@@ -73,14 +122,14 @@ describe("PositionHistoryCard", () => {
     );
 
     expect(
-      screen.getByText("Comparison restarted after a ranking normalization change."),
+      screen.getByText("Checks with different depths or ranking methods are shown separately."),
     ).toBeInTheDocument();
     expect(screen.getByText("Google rank over time, closer to #1 is better")).toBeInTheDocument();
     expect(screen.getByText(/^Latest #3/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("radio", { name: "7 days" }));
     expect(
-      screen.queryByText("Comparison restarted after a ranking normalization change."),
+      screen.queryByText("Checks with different depths or ranking methods are shown separately."),
     ).not.toBeInTheDocument();
   });
 

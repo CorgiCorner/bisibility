@@ -3,6 +3,7 @@
 import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
 import { Card } from "@/components/ui/Card";
 import { ChartRegion } from "@/components/ui/ChartRegion";
+import { observationSeries } from "@/lib/checks/position-observations";
 import { cn } from "@/lib/ui/cn";
 import { useTranslations } from "next-intl";
 import { ChartNoDataOverlay } from "./ChartNoDataOverlay";
@@ -18,7 +19,7 @@ export type PositionTrendCardProps = {
 };
 
 function positionMax(data: TrendPoint[]) {
-  const max = Math.max(20, ...data.map((point) => Math.ceil(point.value)));
+  const max = Math.max(20, ...data.map((point) => Math.ceil(point.value ?? 0)));
   return max + (max % 5 === 0 ? 0 : 5 - (max % 5));
 }
 
@@ -66,9 +67,10 @@ export function PositionTrendCard({
   const renderedSeriesLabel = seriesLabel ?? t("defaultSeriesLabel");
   const maxPosition = positionMax(data);
   const yAxisWidth = positionAxisWidth(maxPosition);
-  const insufficient = !empty && data.length < 2;
-  const renderedTakeaway = empty || insufficient ? null : takeawayCopy(t, takeaway ?? null);
-  const renderedTakeawayLoading = !empty && !insufficient && takeawayLoading;
+  const insufficient = !empty && data.every((point) => point.value === null);
+  const renderedTakeaway =
+    empty || insufficient || data.length < 2 ? null : takeawayCopy(t, takeaway ?? null);
+  const renderedTakeawayLoading = !empty && !insufficient && data.length >= 2 && takeawayLoading;
   // The latest point deliberately uses the localized "now" label. Keep its
   // calendar key out of the formatter so TimeSeriesChart falls back per point,
   // while preceding historical days still use the locale-aware date display.
@@ -97,10 +99,7 @@ export function PositionTrendCard({
       {empty || insufficient ? (
         <div className="relative mt-3 min-w-0 flex-1">
           <div aria-hidden className="h-[250px]" />
-          <ChartNoDataOverlay
-            description={insufficient ? t("singlePointDescription") : t("noDataDescription")}
-            title={insufficient ? t("singlePointTitle") : t("noDataTitle")}
-          />
+          <ChartNoDataOverlay description={t("noDataDescription")} title={t("noDataTitle")} />
         </div>
       ) : (
         <ChartRegion
@@ -114,15 +113,16 @@ export function PositionTrendCard({
             height={250}
             dateKeys={dateKeys}
             labels={data.map((point) => point.label ?? t("now"))}
-            series={[
-              {
-                label: renderedSeriesLabel,
-                values: data.map((point) => point.value),
-                color: "var(--accent)",
-                fill: true,
-                baseline: maxPosition,
-              },
-            ]}
+            series={observationSeries(
+              data.map((point) => ({ comparisonKey: point.comparisonKey, position: point.value })),
+            ).map((values) => ({
+              label: renderedSeriesLabel,
+              values,
+              color: "var(--accent)",
+              fill: true,
+              baseline: maxPosition,
+              dots: true,
+            }))}
             min={1}
             max={maxPosition}
             reversed

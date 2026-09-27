@@ -6,7 +6,13 @@ import type { ReactNode } from "react";
 /** Setup owns the auth controls it renders, without expanding the regional root payload. */
 export default async function SetupLocaleLayout({ children }: Readonly<{ children: ReactNode }>) {
   const runtime = await resolveRegionalDocumentLocale();
-  const messages = await loadCoreMessages(runtime.locale, ["shared", "auth", "setup"]);
+  const messages = await loadCoreMessages(runtime.locale, [
+    "shared",
+    "auth",
+    "setup",
+    "instanceAdmin",
+    "account",
+  ]);
   return (
     <FeatureMessagesProvider
       locale={runtime.locale}

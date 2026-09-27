@@ -118,6 +118,23 @@ describe("AdminDashboard", () => {
     expect(within(ranks).getByText("dataforseo")).toBeInTheDocument();
   });
 
+  it("shows that Slack delivery is missing when the webhook is unset", () => {
+    render(
+      <AdminDashboard
+        data={{
+          ...baseData,
+          ops: { ...baseData.ops, configured: false, enabled: false },
+        }}
+      />,
+    );
+
+    const ops = screen.getByRole("region", { name: "Ops events" });
+    expect(within(ops).getByText(/Slack is not configured/)).toBeInTheDocument();
+    const docsLink = within(ops).getByRole("link", { name: "Configure Slack notifications" });
+    expect(docsLink).toHaveAttribute("href", "https://bisibility.com/docs/self-hosting/operations");
+    expect(docsLink.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+  });
+
   it("shows a fallback-specific empty state when there are no fallbacks", () => {
     render(<AdminDashboard data={baseData} />);
 
@@ -153,6 +170,7 @@ describe("AdminDashboard", () => {
     expect(within(ops).getByTestId("admin-ops-actions")).toBeInTheDocument();
     expect(within(ops).queryByText("Undelivered")).not.toBeInTheDocument();
     expect(within(ops).queryByText("Slack")).not.toBeInTheDocument();
+    expect(within(ops).queryByText(/Slack is not configured/)).not.toBeInTheDocument();
     const table = within(ops).getByRole("table", { name: "Recent operational events" });
     expect(table.style.getPropertyValue("--dt-table-width")).toBe("1200px");
   });

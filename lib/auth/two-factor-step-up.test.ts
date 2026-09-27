@@ -45,6 +45,7 @@ vi.mock("./two-factor-material", () => ({
 
 import {
   authorizeTwoFactorOperation,
+  confirmEnabledTwoFactorCode,
   consumeTwoFactorGrant,
   type TwoFactorSecurityContext,
 } from "./two-factor-step-up";
@@ -370,6 +371,24 @@ describe("two-factor management step-up", () => {
         identifier: "two-factor-step-up:grant_1",
         value: "user_1:session_1:regenerate",
       },
+    });
+  });
+
+  it("rejects a mail confirmation when two-factor authentication is off", async () => {
+    await expect(
+      confirmEnabledTwoFactorCode({ ...context, twoFactorEnabled: false }, "123456"),
+    ).rejects.toMatchObject({ code: "step_up_failed" });
+    expect(mocks.consume).not.toHaveBeenCalled();
+    expect(mocks.totpVerify).not.toHaveBeenCalled();
+  });
+
+  it("confirms the current authenticator code for mail settings without a password", async () => {
+    await confirmEnabledTwoFactorCode(context, "123456");
+
+    expect(mocks.verifyPassword).not.toHaveBeenCalled();
+    expect(mocks.totpVerify).toHaveBeenCalledWith("123456");
+    expect(transaction.verification.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ value: "user_1:session_1:mail" }),
     });
   });
 });

@@ -2,6 +2,7 @@ import "server-only";
 
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { prisma } from "@/lib/db/prisma";
+import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
 import { isEmailConfigured } from "@/lib/email/registry";
 import {
   aggregateProviderReferenceUsage,
@@ -202,6 +203,8 @@ export async function getInstanceAdminAdministration(
         left.provider.localeCompare(right.provider),
     )
     .slice(0, 10);
+
+  await refreshInstanceMailRuntime();
 
   return {
     activeAccountsApprox: numeric(activeAccounts[0]?.count),

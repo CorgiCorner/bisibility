@@ -1,12 +1,14 @@
 import { alertPositionThreshold } from "@/lib/alerts/depth-conflict";
+import { positionObservations } from "@/lib/checks/position-observations";
 import { comparableCompletedWindow } from "@/lib/checks/status";
 import type { ExpectedUrlResolution } from "@/lib/expected-url/types";
 import { deriveRankingUrlPeriods } from "@/lib/keyword-detail/ranking-url-history";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
-import { earlierDayPosition, positionDateLabel } from "@/lib/keywords/position-history";
+import { earlierDayPosition } from "@/lib/keywords/position-history";
 import { type KeywordLocation, locationView } from "@/lib/queries/keyword-location";
 import type { Metrics } from "@/lib/queries/keyword-metrics";
 import { deviceLabel, pathFromUrl } from "@/lib/queries/keyword-row-format";
+import { comparablePositionPoints, urlPresenceView } from "@/lib/queries/keyword-row-history";
 import type {
   KeywordCheckState,
   KeywordRow,
@@ -14,7 +16,6 @@ import type {
   KeywordTrafficSummary,
   LastCheckStatus,
   LatestAttemptHealth,
-  UrlPresenceView,
 } from "@/lib/queries/keyword-row-types";
 import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
 import { resolveSerpDepth } from "@/lib/serp/constants";
@@ -138,20 +139,6 @@ export function fallbackSchedule(): KeywordSchedule {
   };
 }
 
-function urlPresenceView(presence: UrlPresenceSource | null | undefined): UrlPresenceView | null {
-  return presence
-    ? {
-        canonicalOk: presence.canonicalOk,
-        checkedAt: presence.checkedAt.toISOString(),
-        coverageState: presence.coverageState,
-        indexed: presence.verdict === "PASS",
-        lastCrawlAt: iso(presence.lastCrawlAt),
-        url: presence.url,
-        verdict: presence.verdict,
-      }
-    : null;
-}
-
 export function isCompletedCheck(check: { status?: string }) {
   return check.status === undefined || check.status === "completed";
 }
@@ -194,11 +181,11 @@ export function mapKeyword(
   const completedChecks = comparableWindow.checks;
   const completedUrlHistory = visibleChecks.filter(isCompletedCheck);
   const checks = completedChecks.slice().reverse();
-  const latest = completedChecks[0];
+  const latest = completedUrlHistory[0];
   const latestAttempt = visibleChecks[0] ?? null;
   const projectSerpDepth = resolveSerpDepth(project.defaults?.serpDepth ?? undefined);
   const configuredDepth = resolveSerpDepth(row.schedule?.serpDepth ?? projectSerpDepth);
-  const trackedDepth = resolveSerpDepth(latestAttempt?.requestedDepth ?? configuredDepth);
+  const trackedDepth = resolveSerpDepth(latest?.requestedDepth ?? configuredDepth);
   const positions = checks.flatMap((check) => (check.position === null ? [] : [check.position]));
   const position = latest?.position ?? 101;
   const previousPosition = latest?.previousPosition ?? null;
@@ -275,18 +262,8 @@ export function mapKeyword(
     position,
     positionBaseline,
     positionHistoryBoundaryAt: iso(comparableWindow.boundary?.checkedAt),
-    positionHistory: checks.flatMap((check) =>
-      check.position === null
-        ? []
-        : [
-            {
-              checkedAt: check.checkedAt.toISOString(),
-              ...(check.degradedToCountry ? { degradedToCountry: true } : {}),
-              label: positionDateLabel(check.checkedAt),
-              position: check.position,
-            },
-          ],
-    ),
+    positionObservations: positionObservations(visibleChecks),
+    positionHistory: comparablePositionPoints(checks),
     projectSerpDepth,
     projectTimezone: project.defaults?.timezone ?? "UTC",
     previousPosition,

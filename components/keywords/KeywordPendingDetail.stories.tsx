@@ -30,7 +30,10 @@ const actionArgs = {
   createKeywordAlertAction: async () => undefined,
   projectId: "prj_demo",
   projectRef: "prj_demo",
-  runCheckNowAction: async () => undefined,
+  runCheckNowAction: async () => ({
+    status: "queued" as const,
+    runId: "rcr_abcdefghijklmnopqrstuvwx",
+  }),
   updateKeywordAction: async () => undefined,
 };
 

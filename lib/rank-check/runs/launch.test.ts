@@ -114,10 +114,29 @@ function unrunnable(id: string, text: string, overrides: { archivedAt?: Date; lo
 }
 
 describe("launchRankCheckRun", () => {
+  it("recovers a committed run before validating a stale preview or changed membership", async () => {
+    const existing = {
+      estimatedCostCents: 50,
+      keywordCount: 2,
+      publicId: "rcr_existing",
+      status: "running",
+      targetCount: 2,
+    };
+    mocks.prisma.rankCheckRun.findUnique.mockResolvedValue(existing);
+    mocks.verifyToken.mockImplementation(() => {
+      throw new PreviewTokenError("expired");
+    });
+    await expect(launchRankCheckRun(input)).resolves.toEqual(existing);
+    expect(mocks.resolveSelection).not.toHaveBeenCalled();
+    expect(mocks.verifyToken).not.toHaveBeenCalled();
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+  });
+
   afterEach(() => vi.unstubAllEnvs());
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.verifyToken.mockReset();
     mocks.publishWorkerIntent.mockResolvedValue({ mode: "polling", ok: true });
     mocks.resolveSelection.mockResolvedValue({
       keywordIds: ["keyword_1", "keyword_2"],

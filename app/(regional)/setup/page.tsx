@@ -1,3 +1,4 @@
+import { MailTwoFactorGate } from "@/components/admin/MailTwoFactorGate";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { Card } from "@/components/ui/Card";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
@@ -6,6 +7,11 @@ import { createIntlTranslator } from "@/i18n/translator.server";
 import { isFirstRun, isFirstRunAdministratorPending } from "@/lib/auth/first-run";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { requireSession } from "@/lib/auth/session";
+import { isSelfHost } from "@/lib/deployment/deployment";
+import {
+  loadInstanceMailSettingsView,
+  refreshInstanceMailRuntime,
+} from "@/lib/email/instance-mail-store";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { createNoindexMetadata } from "@/lib/seo/noindex";
 import packageJson from "@/package.json";
@@ -53,6 +59,7 @@ function SetupFrame({
 
 export default async function SetupPage() {
   const t = await setupTranslator();
+  await refreshInstanceMailRuntime();
   const versionLabel = t("setup.frame.version", { version: packageJson.version });
   if (await isFirstRun()) {
     return (
@@ -66,14 +73,21 @@ export default async function SetupPage() {
 
   await requireSession();
   if (await getInstanceAdminSession()) {
+    const mailerConfigured = isEmailConfigured();
+    const mailSettings =
+      isSelfHost && !mailerConfigured ? await loadInstanceMailSettingsView() : null;
     return (
       <SetupFrame versionLabel={versionLabel}>
         <Card className="p-7" size="lg">
           <div className="flex flex-col gap-5.5">
             <SetupStepper current="done" />
-            <SetupSuccess mailerConfigured={isEmailConfigured()} />
+            <SetupSuccess
+              emailNotice={mailSettings ? "hidden" : undefined}
+              mailerConfigured={mailerConfigured}
+            />
           </div>
         </Card>
+        {mailSettings ? <MailTwoFactorGate returnTo="/setup" settings={mailSettings} /> : null}
       </SetupFrame>
     );
   }

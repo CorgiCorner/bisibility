@@ -157,10 +157,9 @@ describe("LoginEmailStep", () => {
     ).toBeInTheDocument();
     expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send login code" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Configure email delivery" })).toHaveAttribute(
-      "href",
-      "https://bisibility.com/docs/self-hosting/email",
-    );
+    const docsLink = screen.getByRole("link", { name: "Configure email delivery" });
+    expect(docsLink).toHaveAttribute("href", "https://bisibility.com/docs/self-hosting/email");
+    expect(docsLink.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
   });
 
   it("reminds users to keep the submitted inbox available", () => {

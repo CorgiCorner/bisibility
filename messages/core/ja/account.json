@@ -102,6 +102,7 @@
         "backupCodes": "バックアップコード",
         "backupCodesGenerated": "新しいバックアップコードを生成しました。今すぐ保存してください。",
         "cancel": "キャンセル",
+        "continueToMail": "メール設定に進む",
         "currentAuthenticatorCode": "現在の認証アプリのコード",
         "currentBackupCode": "現在のバックアップコード",
         "description": "メールのサインインコードの後に、もう一段階の認証を追加します。",

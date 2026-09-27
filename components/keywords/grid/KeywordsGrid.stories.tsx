@@ -39,7 +39,10 @@ const actionArgs = {
     queries: ["open source rank tracker", "rank tracking for agencies"],
   }),
   queueFirstChecksAction: async () => ({ queued: 11 }),
-  runCheckNowAction: async () => undefined,
+  runCheckNowAction: async () => ({
+    status: "queued" as const,
+    runId: "rcr_abcdefghijklmnopqrstuvwx",
+  }),
   tagSuggestions: ["Product", "Docs", "Comparison", "Integration"],
   updateKeywordAction: async () => undefined,
 };

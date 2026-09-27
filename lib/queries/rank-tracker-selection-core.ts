@@ -113,6 +113,7 @@ async function exactExportIds(
       candidateScan: true,
       candidatesOnly: true,
       selectionLimit: chunkSize,
+      strictLocation: true,
     });
     const candidateIds = raw.keywordIds.filter((id) => {
       if (seenCandidateIds.has(id)) return false;
@@ -142,6 +143,8 @@ export async function resolveRankTrackerExportKeywordIdsForProject(
   if (requiresExactFlatRows(query)) return exactExportIds(project, query, membershipLimit);
   const raw = await rawSelection(project.id, query, {
     publicIds: true,
+    // Mutation and export selections must never widen a stale market lens to the whole project.
+    strictLocation: true,
     ...(membershipLimit === null ? { unpaginated: true } : { selectionLimit: membershipLimit }),
   });
   if (membershipLimit !== null) assertKeywordExportMembershipLimit(raw.keywordIds.length);

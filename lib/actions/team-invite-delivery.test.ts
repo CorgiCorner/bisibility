@@ -4,6 +4,9 @@ import { assertInviteMailerReady, deliverInvite } from "./team-invite-delivery";
 const { sendEmailMock } = vi.hoisted(() => ({ sendEmailMock: vi.fn() }));
 
 vi.mock("@/lib/email/send", () => ({ sendEmail: sendEmailMock }));
+vi.mock("@/lib/email/instance-mail-store", () => ({
+  refreshInstanceMailRuntime: vi.fn(async () => undefined),
+}));
 
 function clearEmailEnv() {
   vi.stubEnv("EMAIL_PROVIDER", "");

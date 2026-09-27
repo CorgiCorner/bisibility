@@ -8,6 +8,7 @@ import { writeAudit } from "@/lib/auth/audit";
 import { type Actor, getProjectRole } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { isPublicIdOfType, makePublicId } from "@/lib/db/public-id";
+import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
 import { assertInviteCreateAllowed, assertInviteResendAllowed } from "./invite-rate-limit";
 import { removeMembershipSideEffects } from "./membership-cleanup";
 
@@ -66,6 +67,7 @@ export async function inviteTeamMember(
   data: { email: string; projectId: string; role: "admin" | "member" | "viewer" },
   context: TeamMutationContext,
 ) {
+  await refreshInstanceMailRuntime();
   assertInviteMailerReady();
   const project = await requireTeamManager(context, data.projectId);
   assertOwnerForAdminTier(context.actor, project.id, data.role);
@@ -135,6 +137,7 @@ export async function resendTeamInvite(
   data: { inviteId: string; projectId: string },
   context: TeamMutationContext,
 ) {
+  await refreshInstanceMailRuntime();
   assertInviteMailerReady();
   const project = await requireTeamManager(context, data.projectId);
   if (!isPublicIdOfType(data.inviteId, "inv")) throw new Error("Invite not found.");

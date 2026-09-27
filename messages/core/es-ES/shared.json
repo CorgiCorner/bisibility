@@ -123,7 +123,16 @@
       "overlapCancelHint": "Cancela esa ejecución o mantén las dos y paga dos veces por estas posiciones.",
       "overlapKeepHint": "Si inicias esta ejecución, pagarás dos veces por estas posiciones.",
       "overlapMessage": "{count, plural, one {# de estas palabras clave también está} other {# de estas palabras clave también están}} en una ejecución que {status, select, planned {está programada para {time}} running {está en curso} cancelling {se está cancelando} blocked {está bloqueada} other {está en cola}}.",
-      "overlapMore": "+{count, plural, one {# ejecución más} other {# ejecuciones más}}"
+      "overlapMore": "+{count, plural, one {# ejecución más} other {# ejecuciones más}}",
+      "runMarket": "Comprobar todo el mercado",
+      "scopeMarket": "Comprobar todas las palabras clave de {market}",
+      "marketDescription": "Incluye todas las palabras clave y dispositivos de este mercado, independientemente de los filtros o la página. La programación no cambia.",
+      "runCounts": "{keywords, plural, one {# palabra clave} other {# palabras clave}} · {targets, plural, one {# comprobación} other {# comprobaciones}}",
+      "nothingToCheck": "No hay palabras clave disponibles para comprobar en este alcance.",
+      "startUnconfirmed": "Se perdió la respuesta de inicio. Reintenta para recuperar la misma ejecución sin iniciarla dos veces.",
+      "refreshEstimate": "Actualizar estimación",
+      "marketInactive": "Este mercado ya no está activo. Reanúdalo antes de iniciar una comprobación.",
+      "keywordsArchived": "Estas palabras clave se han archivado. Actualiza la página para elegir otro alcance."
     },
     "globalError": {
       "description": "La aplicación no ha podido renderizar esta página. Recarga para volver a intentarlo.",

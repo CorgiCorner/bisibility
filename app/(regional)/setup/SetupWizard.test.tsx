@@ -23,6 +23,8 @@ vi.mock("./actions", () => ({
   completeSetupAction: mocks.complete,
   requestSetupCodeAction: mocks.requestCode,
 }));
+// Canvas rendering is covered separately; this suite verifies account setup in a DOM without it.
+vi.mock("./SetupSuccessConfetti", () => ({ SetupSuccessConfetti: () => null }));
 
 import { SetupWizard } from "./SetupWizard";
 

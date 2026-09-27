@@ -2,6 +2,7 @@ import "server-only";
 
 import { DATE_FORMAT_PREFERENCES, type DateFormatPreference } from "@/lib/dates/format";
 import { resolveDateFormat } from "@/lib/dates/resolve";
+import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { sendEmail } from "@/lib/email/send";
 import { teamInviteEmail } from "@/lib/email/team-invite-template";
@@ -42,6 +43,7 @@ export function assertInviteMailerReady() {
 }
 
 async function sendInviteEmail(input: InviteEmail) {
+  await refreshInstanceMailRuntime();
   if (!isEmailConfigured()) {
     console.info("[team] invite email skipped: no provider configured.");
     return;

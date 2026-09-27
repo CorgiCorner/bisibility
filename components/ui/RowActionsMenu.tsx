@@ -68,6 +68,7 @@ export function RowActionsMenu({ ariaLabel, items }: Readonly<RowActionsMenuProp
             disabled={item.disabled}
             key={item.label}
             onClick={() => {
+              if (item.disabled) return;
               closeMenu();
               item.onSelect();
             }}

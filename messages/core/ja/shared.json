@@ -123,7 +123,16 @@
       "overlapCancelHint": "その実行をキャンセルするか、両方を残してこれらの順位に二重で料金を支払うかを選べます。",
       "overlapKeepHint": "この実行を開始すると、これらの順位に二重で料金が発生します。",
       "overlapMessage": "このうち{count, plural, other {#件のキーワード}}は、{status, select, planned {{time} に予定されている} running {進行中の} cancelling {キャンセル中の} blocked {ブロック中の} other {待機中の}}別の実行にも含まれています。",
-      "overlapMore": "+{count, plural, other {#件の実行}}"
+      "overlapMore": "+{count, plural, other {#件の実行}}",
+      "runMarket": "マーケット全体をチェック",
+      "scopeMarket": "{market}の全キーワードをチェック",
+      "marketDescription": "テーブルのフィルターやページに関係なく、このマーケットのすべての追跡キーワードとデバイスが対象です。追跡スケジュールは変更されません。",
+      "runCounts": "{keywords, plural, other {#キーワード}} · {targets, plural, other {#チェック}}",
+      "nothingToCheck": "この範囲にチェック可能なキーワードはありません。",
+      "startUnconfirmed": "開始の応答を受信できませんでした。再試行すると、重複して開始せずに同じ実行を取得します。",
+      "refreshEstimate": "見積もりを更新",
+      "marketInactive": "このマーケットは有効ではありません。チェックを開始する前に再開してください。",
+      "keywordsArchived": "これらのキーワードはアーカイブされました。ページを更新して別の範囲を選択してください。"
     },
     "globalError": {
       "description": "アプリはこのページを表示できませんでした。再読み込みしてもう一度お試しください。",

@@ -9,11 +9,19 @@ import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/ssr/Car
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle";
 import { EnvelopeSimpleIcon as EnvelopeSimple } from "@phosphor-icons/react/dist/ssr/EnvelopeSimple";
 import { useTranslations } from "next-intl";
+import { SetupSuccessConfetti } from "./SetupSuccessConfetti";
 
-export function SetupSuccess({ mailerConfigured }: Readonly<{ mailerConfigured: boolean }>) {
+export type SetupEmailNotice = "hidden" | "server";
+
+export function SetupSuccess({
+  emailNotice,
+  mailerConfigured,
+}: Readonly<{ emailNotice?: SetupEmailNotice; mailerConfigured: boolean }>) {
   const t = useTranslations("setup.success");
+  const notice = emailNotice ?? (mailerConfigured ? "hidden" : "server");
   return (
     <>
+      <SetupSuccessConfetti />
       <div className="flex flex-col items-center gap-3.5 px-0 pt-2 pb-0.5 text-center">
         <span className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#e8f0e4] text-[#2f7f50]">
           <CheckCircle aria-hidden size={32} weight="regular" />
@@ -37,8 +45,8 @@ export function SetupSuccess({ mailerConfigured }: Readonly<{ mailerConfigured: 
       >
         {t("adminPanel")}
       </ExternalLink>
-      {!mailerConfigured ? (
-        <div className="flex items-start gap-2.5 rounded-control border border-border bg-bg p-[11px_13px]">
+      {notice === "server" ? (
+        <div className="flex items-start gap-2.5 rounded-control border border-border bg-bg p-[11px_13px] text-left">
           <EnvelopeSimple
             aria-hidden
             className="mt-px shrink-0 text-[#a06b2a]"

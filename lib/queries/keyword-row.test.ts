@@ -58,6 +58,27 @@ function rankCheck(
 }
 
 describe("mapKeyword traffic fields", () => {
+  it("retains recorded history across depth changes without comparing incompatible checks", () => {
+    const row = mapKeyword(
+      {
+        ...keywordRow(),
+        rankChecks: [
+          rankCheck("2026-07-03T10:00:00.000Z", "check_50", null, { requestedDepth: 50 }),
+          rankCheck("2026-07-02T10:00:00.000Z", "check_20", 5, { requestedDepth: 20 }),
+          rankCheck("2026-07-01T10:00:00.000Z", "check_legacy", 6, {
+            normalizationVersion: null,
+            requestedDepth: null,
+          }),
+        ],
+      },
+      project,
+      metrics,
+    );
+    expect(row.positionObservations.map((point) => point.position)).toEqual([6, 5, null]);
+    expect(row.completedComparableChecks).toHaveLength(1);
+    expect(row.positionBaseline).toBeNull();
+    expect(row.trackedDepth).toBe(50);
+  });
   afterEach(() => {
     vi.useRealTimers();
   });

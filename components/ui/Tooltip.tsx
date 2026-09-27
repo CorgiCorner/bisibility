@@ -42,6 +42,7 @@ export type TooltipProps = {
   content: ReactNode;
   placement?: TooltipPlacement;
   arrow?: boolean;
+  interactive?: boolean;
   semantics?: TooltipSemantics;
   wrapperClassName?: string;
 };
@@ -77,6 +78,7 @@ function TooltipContent({
   content,
   placement,
   arrow = false,
+  interactive = false,
   semantics = "label",
   wrapperClassName,
 }: Readonly<TooltipProps>) {
@@ -227,6 +229,7 @@ function TooltipContent({
             align={alignment ?? "center"}
             sideOffset={6}
             data-ui-tooltip
+            data-interactive={interactive || undefined}
             className={tooltipStyles.content}
             data-instant={warmCycle || reducedMotion || undefined}
           >

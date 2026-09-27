@@ -1,3 +1,4 @@
+import type { RunCheckNowResult } from "@/lib/rank-check/manual-run-result";
 import type {
   AddKeywordsInput,
   BulkKeywordFrequencyInput,
@@ -10,6 +11,7 @@ import type {
 import type { SerpDevice } from "@/lib/serp/constants";
 
 export type KeywordAction<TInput> = (input: TInput) => Promise<unknown>;
+export type RunCheckNowAction = (input: RunCheckNowInput) => Promise<RunCheckNowResult>;
 export type { AddKeywordsInput };
 export type CreateKeywordAlertInput = { keywordId: string; projectId: string };
 
@@ -24,7 +26,7 @@ export type KeywordWorkspaceActions = {
 
 export type KeywordDetailActions = {
   createKeywordAlertAction?: KeywordAction<CreateKeywordAlertInput>;
-  runCheckNowAction: KeywordAction<RunCheckNowInput>;
+  runCheckNowAction: RunCheckNowAction;
   updateKeywordAction: KeywordAction<UpdateKeywordInput>;
 };
 

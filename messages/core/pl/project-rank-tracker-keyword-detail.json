@@ -191,7 +191,7 @@
       "position": {
         "title": "Historia pozycji",
         "description": "Pozycja w Google w czasie – im bliżej pozycji 1, tym lepiej",
-        "normalization": "Porównanie zaczyna się od nowa po zmianie sposobu normalizacji pozycji.",
+        "normalization": "Wyniki sprawdzeń o różnej głębokości lub metodzie ustalania pozycji są pokazywane osobno.",
         "scope": "Zakres historii pozycji",
         "thisMarket": "Ten rynek",
         "allMarkets": "Wszystkie rynki",

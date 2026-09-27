@@ -232,3 +232,26 @@ export const PreflightCheckAll: Story = {
   },
   render: CheckAllStory,
 };
+
+export const PreflightMarket: Story = {
+  name: "preflight-market",
+  args: {
+    initialDepth: 50,
+    initialPreview: {
+      ...defaultPreview,
+      executable: 2400,
+      keywordCount: 1200,
+      matched: 2400,
+      targetCount: 2400,
+    },
+    scope: (preview) => ({
+      description:
+        "Includes every tracked keyword and device in this market, regardless of table filters or page. Your tracking schedule stays the same.",
+      equation: `${preview.keywordCount.toLocaleString("en-US")} keywords · ${preview.targetCount.toLocaleString("en-US")} checks`,
+      startLabel: "Start run",
+      subtitle: "Review the scope before starting.",
+      title: "Check all keywords in United States / English",
+    }),
+  },
+  render: DialogStory,
+};

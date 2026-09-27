@@ -2150,6 +2150,11 @@
       },
       {
         "arguments": [],
+        "key": "account.security.twoFactor.continueToMail",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "account.security.twoFactor.currentAuthenticatorCode",
         "tags": []
       },
@@ -4145,7 +4150,207 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.administration.mailer.descriptionLocked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.descriptionReady",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.clear",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.cleared",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.clearing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.code",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.credentialsSaved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.envOverride",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.forbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.invalid",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.provider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.providerResend",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.providerSes",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.providerSmtp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.rateLimited",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.replace",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.resendApiKey",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.save",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.saving",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.sender",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.senderHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.sesAccessKeyId",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.sesKeysHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.sesRegion",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.sesSecretAccessKey",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.smtpHost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.smtpPassword",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.smtpPort",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.smtpUsername",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.stepUpFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.validationCode",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.validationPort",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.validationRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.validationSender",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.form.validationSesPair",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.administration.mailer.link",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.administration.mailer.locked",
         "tags": []
       },
       {
@@ -4341,6 +4546,16 @@
       {
         "arguments": [],
         "key": "instanceAdmin.dashboard.ops.historyUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.ops.slackMissing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.ops.slackMissingLink",
         "tags": []
       },
       {
@@ -5081,6 +5296,16 @@
       {
         "arguments": [["status", 1]],
         "key": "instanceAdmin.shellHealth.worker",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shellHealth.workerUnknownDocs",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.shellHealth.workerUnknownHint",
         "tags": []
       },
       {
@@ -35574,6 +35799,21 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "shared.rankPreflight.keywordsArchived",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankPreflight.marketDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankPreflight.marketInactive",
+        "tags": []
+      },
+      {
         "arguments": [["count", 6]],
         "key": "shared.rankPreflight.markets",
         "tags": []
@@ -35586,6 +35826,11 @@
       {
         "arguments": [],
         "key": "shared.rankPreflight.noProviderBlocked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankPreflight.nothingToCheck",
         "tags": []
       },
       {
@@ -35640,7 +35885,22 @@
       },
       {
         "arguments": [],
+        "key": "shared.rankPreflight.refreshEstimate",
+        "tags": []
+      },
+      {
+        "arguments": [["keywords", 6], ["targets", 6]],
+        "key": "shared.rankPreflight.runCounts",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.rankPreflight.runInProgress",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankPreflight.runMarket",
         "tags": []
       },
       {
@@ -35674,6 +35934,11 @@
         "tags": []
       },
       {
+        "arguments": [["market", 1]],
+        "key": "shared.rankPreflight.scopeMarket",
+        "tags": []
+      },
+      {
         "arguments": [["keyword", 1], ["market", 1]],
         "key": "shared.rankPreflight.scopeOne",
         "tags": []
@@ -35691,6 +35956,11 @@
       {
         "arguments": [],
         "key": "shared.rankPreflight.startRun",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankPreflight.startUnconfirmed",
         "tags": []
       },
       {

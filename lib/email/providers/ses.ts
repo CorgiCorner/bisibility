@@ -1,3 +1,4 @@
+import { storedMailProvider } from "@/lib/email/instance-mail-runtime";
 import { type EmailMessage, type EmailProvider, EmailSendError } from "@/lib/email/types";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 
@@ -18,22 +19,34 @@ export function resolveSesRegion() {
   return (
     configuredValue(process.env.SES_REGION) ??
     configuredValue(process.env.AWS_REGION) ??
-    configuredValue(process.env.AWS_DEFAULT_REGION)
+    configuredValue(process.env.AWS_DEFAULT_REGION) ??
+    configuredValue(storedMailProvider("ses")?.sesRegion ?? undefined)
   );
 }
 
-export function sesClientFor(region: string) {
-  const existing = clientsByRegion.get(region);
+function storedSesCredentials() {
+  const stored = storedMailProvider("ses");
+  if (!stored?.sesAccessKeyId || !stored.sesSecretAccessKey) return undefined;
+  return { accessKeyId: stored.sesAccessKeyId, secretAccessKey: stored.sesSecretAccessKey };
+}
+
+export function sesClientFor(
+  region: string,
+  credentials?: { accessKeyId: string; secretAccessKey: string },
+) {
+  const cacheKey = credentials ? `${region}:${credentials.accessKeyId}` : region;
+  const existing = clientsByRegion.get(cacheKey);
   if (existing) {
     return existing;
   }
 
   const client = new SESv2Client({
+    ...(credentials ? { credentials } : {}),
     maxAttempts: SES_MAX_ATTEMPTS,
     region,
     requestHandler: { requestTimeout: SES_TIMEOUT_MS },
   });
-  clientsByRegion.set(region, client);
+  clientsByRegion.set(cacheKey, client);
   return client;
 }
 
@@ -69,7 +82,7 @@ async function send({ from, to, subject, html, replyTo, text }: EmailMessage) {
   });
 
   try {
-    await sesClientFor(region).send(command);
+    await sesClientFor(region, storedSesCredentials()).send(command);
   } catch (error) {
     throw toEmailSendError(error);
   }

@@ -136,8 +136,8 @@ export function deriveKeywordDetailState(
 
   return {
     chartState:
-      currentRankState === "normal" &&
-      dailyPositionPoints(keyword.positionHistory ?? [], 90).length < 2
+      dailyPositionPoints(keyword.positionObservations ?? keyword.positionHistory ?? [], 90)
+        .length < 2
         ? "one_check"
         : "normal",
     keywordContext: keywordContext(keyword),

@@ -230,6 +230,7 @@ export type CoreMessages = {
         readonly backupCodes: "Backup codes";
         readonly backupCodesGenerated: "New backup codes generated. Save them now.";
         readonly cancel: "Cancel";
+        readonly continueToMail: "Continue to mail settings";
         readonly currentAuthenticatorCode: "Current authenticator code";
         readonly currentBackupCode: "Current backup code";
         readonly description: "Add a second step after the email login code.";
@@ -735,7 +736,49 @@ export type CoreMessages = {
       };
       readonly mailer: {
         readonly description: "Email sign-in is unavailable because this instance cannot send sign-in codes. Set {provider} and its required credentials to restore email delivery.";
+        readonly descriptionLocked: "Two-factor authentication is required to save or change mail settings. Settings already saved keep sending if it is turned off. Environment variables still override saved settings.";
+        readonly descriptionReady: "Email sign-in is unavailable until a provider is saved below. Environment variables still override saved settings.";
+        readonly form: {
+          readonly clear: "Clear saved settings";
+          readonly cleared: "Saved mail settings cleared. Environment variables apply.";
+          readonly clearing: "Clearing...";
+          readonly code: "Authenticator code";
+          readonly credentialsSaved: "Credentials are saved.";
+          readonly description: "Saved settings are used only when the matching environment variables are empty. Environment variables win when both are set.";
+          readonly envOverride: "Environment variables are set, so they override these saved settings.";
+          readonly forbidden: "This action is not available.";
+          readonly invalid: "Check the form and try again.";
+          readonly provider: "Provider";
+          readonly providerResend: "Resend";
+          readonly providerSes: "Amazon SES";
+          readonly providerSmtp: "SMTP";
+          readonly rateLimited: "Too many attempts. Try again later.";
+          readonly replace: "Replace credentials";
+          readonly resendApiKey: "API key";
+          readonly save: "Save mail settings";
+          readonly saved: "Mail settings saved.";
+          readonly saving: "Saving...";
+          readonly sender: "Sender";
+          readonly senderHint: "Name '<'address@example.com'>'";
+          readonly sesAccessKeyId: "Access key ID";
+          readonly sesKeysHint: "Optional. Leave both empty to use the server's default credential chain.";
+          readonly sesRegion: "Region";
+          readonly sesSecretAccessKey: "Secret access key";
+          readonly smtpHost: "Host";
+          readonly smtpPassword: "Password";
+          readonly smtpPort: "Port";
+          readonly smtpUsername: "Username";
+          readonly stepUpFailed: "That authenticator code was not accepted.";
+          readonly title: "Outbound mail";
+          readonly unavailable: "Mail settings are temporarily unavailable.";
+          readonly validationCode: "Enter the 6-digit authenticator code.";
+          readonly validationPort: "Enter a port from 1 to 65535.";
+          readonly validationRequired: "Enter a value.";
+          readonly validationSender: "Enter a sender as Name '<'address@example.com'>' or a plain address.";
+          readonly validationSesPair: "Enter both the access key ID and the secret access key, or leave both empty.";
+        };
         readonly link: "Configure email delivery";
+        readonly locked: "The mail form appears after you turn on two-factor authentication.";
         readonly title: "Email provider not configured";
       };
     };
@@ -785,6 +828,8 @@ export type CoreMessages = {
         readonly description: "Recent operator events show delivery metadata only; free-form payload fields are never exposed here.";
         readonly empty: "No operational events recorded.";
         readonly historyUnavailable: "Operational event history is unavailable.";
+        readonly slackMissing: "Slack is not configured. Set OPS_SLACK_WEBHOOK_URL to deliver operator events.";
+        readonly slackMissingLink: "Configure Slack notifications";
         readonly title: "Ops events";
       };
       readonly presence: {
@@ -964,6 +1009,8 @@ export type CoreMessages = {
       readonly providerUnknown: "{provider}: unknown";
       readonly undelivered: "{count, plural, one {# undelivered} other {# undelivered}}";
       readonly worker: "Worker {status}";
+      readonly workerUnknownDocs: "How to run the worker";
+      readonly workerUnknownHint: "The app is running, but the separate worker has not published a fresh heartbeat. The web process does not start the worker.";
     };
     readonly status: {
       readonly active: "Active";
@@ -3877,7 +3924,7 @@ export type CoreMessages = {
         readonly moreMarkets: "+{count, number} more markets - filter in the grid to compare them";
         readonly nextCheckLabel: "Next check";
         readonly noChecks: "No checks in the last {days, number} days.";
-        readonly normalization: "Comparison restarted after a ranking normalization change.";
+        readonly normalization: "Checks with different depths or ranking methods are shown separately.";
         readonly notApplicable: "n/a";
         readonly notEnough: "Not enough history to chart yet.";
         readonly notScheduled: "Not scheduled";
@@ -8036,9 +8083,13 @@ export type CoreMessages = {
       readonly devices: "{count, plural, one {# device} other {# devices}}";
       readonly duplicate: "Every selected keyword is being checked by another run right now, so there is nothing to start.";
       readonly editBudget: "Edit budget";
+      readonly keywordsArchived: "These keywords have been archived. Refresh the page to choose another scope.";
+      readonly marketDescription: "Includes every tracked keyword and device in this market, regardless of table filters or page. Your tracking schedule stays the same.";
+      readonly marketInactive: "This market is no longer active. Resume it before starting a check.";
       readonly markets: "{count, plural, one {# market} other {# markets}}";
       readonly noProvider: "No provider";
       readonly noProviderBlocked: "No provider connected, so there is nowhere to send these targets. Your own key, billed to you directly.";
+      readonly nothingToCheck: "No keywords are available to check in this scope.";
       readonly openIntegrations: "Open Integrations";
       readonly openRun: "Open run";
       readonly overlapCancelHint: "Cancel that run, or keep both and pay twice for these positions.";
@@ -8049,17 +8100,22 @@ export type CoreMessages = {
       readonly pricePerTarget: "price per target";
       readonly primaryProvider: "Primary provider";
       readonly primaryProviderAria: "Primary provider";
+      readonly refreshEstimate: "Refresh estimate";
+      readonly runCounts: "{keywords, plural, one {# keyword} other {# keywords}} · {targets, plural, one {# check} other {# checks}}";
       readonly runInProgress: "Run in progress";
+      readonly runMarket: "Run checks for entire market";
       readonly runOptions: "Run options";
       readonly runScope: "Run scope";
       readonly sampleProject: "Sample projects do not run real checks.";
       readonly scopeDescription: "Nothing is sent to the provider until you start.";
       readonly scopeEquation: "{keywords, plural, one {# keyword} other {# keywords}} · {market} · {devices} = {targets, plural, one {# target} other {# targets}}";
       readonly scopeMany: "Check {count, plural, one {# selected keyword} other {# selected keywords}} in {market}";
+      readonly scopeMarket: "Check all keywords in {market}";
       readonly scopeOne: "Check {keyword} in {market}";
       readonly scopeSubtitle: "Review the scope before starting.";
       readonly starting: "Starting...";
       readonly startRun: "Start run";
+      readonly startUnconfirmed: "The start response was lost. Retry to recover the same run without starting it twice.";
       readonly topDepth: "Top {depth, number}";
     };
     readonly runStatuses: {

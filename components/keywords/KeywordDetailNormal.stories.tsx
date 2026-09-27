@@ -97,7 +97,10 @@ const actions = {
   costContext,
   createKeywordAlertAction: async () => undefined,
   projectId: "prj_demo",
-  runCheckNowAction: async () => undefined,
+  runCheckNowAction: async () => ({
+    status: "queued" as const,
+    runId: "rcr_abcdefghijklmnopqrstuvwx",
+  }),
   tagSuggestions: ["Product", "Docs", "Comparison"],
   updateKeywordAction: async () => undefined,
 };

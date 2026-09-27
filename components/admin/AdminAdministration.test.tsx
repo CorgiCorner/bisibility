@@ -9,6 +9,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/components/admin/AdminAccountLookup", () => ({
   AdminAccountLookup: () => <section aria-label="Account lookup" />,
 }));
+vi.mock("@/components/account/SecurityFactors", () => ({
+  SecurityFactors: () => <button type="button">Enable authenticator</button>,
+}));
+vi.mock("@/lib/actions/instance-mail-settings", () => ({
+  clearInstanceMailSettings: vi.fn(),
+  saveInstanceMailSettings: vi.fn(),
+}));
 
 import { AdminAdministration } from "./AdminAdministration";
 
@@ -172,10 +179,90 @@ describe("AdminAdministration", () => {
     expect(
       screen.getByRole("heading", { name: "Email provider not configured" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Configure email delivery" })).toHaveAttribute(
-      "href",
-      "https://bisibility.com/docs/self-hosting/email",
+    const docsLink = screen.getByRole("link", { name: "Configure email delivery" });
+    expect(docsLink).toHaveAttribute("href", "https://bisibility.com/docs/self-hosting/email");
+    expect(docsLink.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("keeps key fields hidden until the admin turns on two-factor authentication", () => {
+    render(
+      <AdminAdministration
+        data={data}
+        mailSettings={{
+          credentialsConfigured: false,
+          envOverridesSaved: false,
+          hasPasswordCredential: false,
+          provider: null,
+          sender: "",
+          twoFactorEnabled: false,
+        }}
+        showMailerWarning
+      />,
     );
+
+    expect(
+      screen.getByText(/Settings already saved keep sending if it is turned off/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enable authenticator" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Configure email delivery" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Turn on two-factor authentication" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Outbound mail" })).not.toBeInTheDocument();
+  });
+
+  it("explains that saved mail keeps sending after two-factor authentication is turned off", () => {
+    render(
+      <AdminAdministration
+        data={{ ...data, mailerConfigured: true }}
+        mailSettings={{
+          credentialsConfigured: true,
+          envOverridesSaved: false,
+          hasPasswordCredential: true,
+          provider: "resend",
+          sender: "Mail <ops@example.com>",
+          twoFactorEnabled: false,
+        }}
+        showMailerWarning={false}
+      />,
+    );
+
+    expect(
+      screen.getByText(/Two-factor authentication is required to save or change mail settings/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Email provider not configured" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Outbound mail" })).not.toBeInTheDocument();
+  });
+
+  it("shows a write-only mail form for an admin with two-factor authentication", () => {
+    render(
+      <AdminAdministration
+        data={data}
+        mailSettings={{
+          credentialsConfigured: true,
+          envOverridesSaved: true,
+          hasPasswordCredential: true,
+          provider: "resend",
+          sender: "Mail <ops@example.com>",
+          twoFactorEnabled: true,
+        }}
+        showMailerWarning
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Outbound mail" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Configure email delivery" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Credentials are saved.")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Mail <ops@example.com>")).toBeInTheDocument();
+    expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
+    expect(screen.getByText(/Environment variables are set/)).toBeInTheDocument();
   });
 
   it("does not show the mailer warning for Cloud", () => {

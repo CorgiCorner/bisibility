@@ -73,7 +73,7 @@ export function KeywordDetailHeaderChrome({
           })
         : null;
   const previousCheck = keyword.completedComparableChecks?.at(-2);
-  const projectDepth = resolveSerpDepth(keyword.projectSerpDepth);
+  const projectDepth = resolveSerpDepth(keyword.trackedDepth ?? keyword.projectSerpDepth);
   const previousPositionDetail =
     previousCheck?.position === null || previousCheck === undefined
       ? null

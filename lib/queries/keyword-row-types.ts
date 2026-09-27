@@ -1,3 +1,4 @@
+import type { PositionObservation } from "@/lib/checks/position-observations";
 import type { ExpectedUrlSource } from "@/lib/expected-url/types";
 import type { KeywordLocation } from "@/lib/queries/keyword-location";
 import type { SerpDepth } from "@/lib/serp/constants";
@@ -98,6 +99,7 @@ export type KeywordRow = {
   positionBaseline: number | null;
   positionHistoryBoundaryAt: string | null;
   positionHistory: PositionPoint[];
+  positionObservations?: PositionObservation[];
   projectSerpDepth?: SerpDepth;
   projectTimezone?: string;
   previousPosition: number | null;
